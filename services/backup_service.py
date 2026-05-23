@@ -13,6 +13,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import List, Dict, Optional
 import logging
+import glob
 
 logger = logging.getLogger(__name__)
 
@@ -134,6 +135,30 @@ class BackupService:
         except Exception as e:
             logger.error(f"Error parsing DB params: {e}")
             return None
+
+    @classmethod
+    def _resolve_pg_tool(cls, exe_name: str, env_var: str) -> Optional[str]:
+        value = (os.environ.get(env_var) or "").strip()
+        if value and os.path.exists(value):
+            return value
+
+        found = shutil.which(exe_name)
+        if found:
+            return found
+
+        candidates = []
+        program_files = [os.environ.get('ProgramFiles'), os.environ.get('ProgramFiles(x86)')]
+        for pf in [p for p in program_files if p]:
+            candidates.extend(glob.glob(os.path.join(pf, 'PostgreSQL', '*', 'bin', exe_name)))
+            candidates.extend(glob.glob(os.path.join(pf, 'PostgreSQL', '*', 'bin', exe_name + '.exe')))
+
+        candidates.extend(glob.glob(os.path.join('C:\\', 'PostgreSQL', '*', 'bin', exe_name)))
+        candidates.extend(glob.glob(os.path.join('C:\\', 'PostgreSQL', '*', 'bin', exe_name + '.exe')))
+
+        for c in candidates:
+            if os.path.exists(c):
+                return c
+        return None
     
     @classmethod
     def initialize(cls):
@@ -144,6 +169,47 @@ class BackupService:
         except Exception as e:
             logger.error(f"Failed to initialize backup directory: {e}")
             return False
+
+    @classmethod
+    def get_schedule_state(cls) -> Dict:
+        state = cls._load_json_file(cls._schedule_state_path()) or {}
+        return {
+            'last_run_at': state.get('last_run_at'),
+            'last_success_at': state.get('last_success_at'),
+            'last_error': state.get('last_error'),
+            'last_filename': state.get('last_filename'),
+            'last_manual': state.get('last_manual'),
+            'last_action': state.get('last_action'),
+        }
+
+    @classmethod
+    def _set_schedule_state(cls, **kwargs) -> None:
+        state = cls._load_json_file(cls._schedule_state_path()) or {}
+        state.update(kwargs)
+        cls._write_json_file(cls._schedule_state_path(), state)
+
+    @classmethod
+    def auto_backup_daily(cls) -> Optional[Dict]:
+        settings = cls.get_schedule_settings()
+        now_iso = datetime.now().isoformat()
+        cls._set_schedule_state(last_run_at=now_iso, last_action='auto_backup')
+        if not settings.get('enabled', True):
+            cls._set_schedule_state(last_error=None)
+            return None
+
+        backup = cls.create_backup(
+            manual=False,
+            compress=True,
+            description=f"Scheduled {settings.get('frequency', 'daily')} backup"
+        )
+        if backup:
+            cls._set_schedule_state(
+                last_success_at=now_iso,
+                last_error=None,
+                last_filename=backup.get('filename'),
+                last_manual=False,
+            )
+        return backup
     
     @classmethod
     def create_backup(cls, manual: bool = False, compress: bool = True, 
@@ -178,8 +244,16 @@ class BackupService:
             backup_name = f"{prefix}{timestamp}.sql.gz"
             backup_path = os.path.join(cls.BACKUP_DIR, backup_name)
             
-            pg_dump_env = os.environ.get('PG_DUMP_PATH', '').strip()
-            pg_dump = pg_dump_env if pg_dump_env else shutil.which('pg_dump') or 'pg_dump'
+            pg_dump = cls._resolve_pg_tool('pg_dump', 'PG_DUMP_PATH')
+            if not pg_dump:
+                cls._set_schedule_state(
+                    last_run_at=datetime.now().isoformat(),
+                    last_error='pg_dump not found',
+                    last_action='manual_backup' if manual else 'auto_backup',
+                    last_manual=bool(manual),
+                )
+                logger.warning("pg_dump not found. Set PG_DUMP_PATH to pg_dump.exe path.")
+                return None
             cmd = [
                 pg_dump,
                 '--host', params['host'],
@@ -189,7 +263,6 @@ class BackupService:
                 '--no-privileges',
                 '--clean',
                 '--if-exists',
-                params['dbname'],
             ]
             # Set environment variables for authentication
             # Update os.environ directly to ensure subprocess inherits everything correctly on Windows
@@ -204,13 +277,19 @@ class BackupService:
             temp_sql_path = os.path.join(temp_dir, f"backup_{datetime.now().strftime('%Y%m%d%H%M%S%f')}.sql")
             try:
                 process = subprocess.run(
-                    cmd + ['-f', temp_sql_path],
+                    cmd + ['-f', temp_sql_path, params['dbname']],
                     capture_output=True,
                     text=True
                     # env=env  <-- Removed to let it inherit modified os.environ
                 )
                 if process.returncode != 0:
                     err_text = (process.stderr or '').strip()
+                    cls._set_schedule_state(
+                        last_run_at=datetime.now().isoformat(),
+                        last_error=err_text[:800],
+                        last_action='manual_backup' if manual else 'auto_backup',
+                        last_manual=bool(manual),
+                    )
                     logger.error(f"pg_dump failed: {err_text}")
                     try:
                         if os.path.exists(temp_sql_path):
@@ -221,10 +300,13 @@ class BackupService:
                 # Compress to final destination
                 with open(temp_sql_path, 'rb') as f_in, gzip.open(backup_path, 'wb') as f_out:
                     shutil.copyfileobj(f_in, f_out)
-            except FileNotFoundError:
-                logger.warning(f"pg_dump not found. Set PG_DUMP_PATH to pg_dump.exe path.")
-                return None
             except Exception as e:
+                cls._set_schedule_state(
+                    last_run_at=datetime.now().isoformat(),
+                    last_error=str(e)[:800],
+                    last_action='manual_backup' if manual else 'auto_backup',
+                    last_manual=bool(manual),
+                )
                 logger.error(f"Error executing pg_dump: {e}")
                 try:
                     if os.path.exists(backup_path):
@@ -268,6 +350,14 @@ class BackupService:
                 json.dump(metadata, f, indent=2, ensure_ascii=False)
             
             logger.info(f"Backup created successfully: {backup_name}")
+            cls._set_schedule_state(
+                last_run_at=datetime.now().isoformat(),
+                last_success_at=datetime.now().isoformat(),
+                last_error=None,
+                last_filename=backup_name,
+                last_manual=bool(manual),
+                last_action='manual_backup' if manual else 'auto_backup',
+            )
             
             if not manual:
                 cls._cleanup_old_backups()
@@ -275,6 +365,12 @@ class BackupService:
             return metadata
         
         except Exception as e:
+            cls._set_schedule_state(
+                last_run_at=datetime.now().isoformat(),
+                last_error=str(e)[:800],
+                last_action='manual_backup' if manual else 'auto_backup',
+                last_manual=bool(manual),
+            )
             logger.error(f"Backup failed: {e}")
             return None
     
@@ -435,8 +531,8 @@ class BackupService:
             # Auto-backup current state before restore
             cls.create_backup(manual=True, description=f"Pre-restore before {backup_filename}")
             
-            psql = os.environ.get('PSQL_PATH', 'psql')
-            pg_restore = os.environ.get('PG_RESTORE_PATH', 'pg_restore')
+            psql = cls._resolve_pg_tool('psql', 'PSQL_PATH') or 'psql'
+            pg_restore = cls._resolve_pg_tool('pg_restore', 'PG_RESTORE_PATH') or 'pg_restore'
 
             env = os.environ.copy()
             dsn = f"postgresql://{params['username']}:{params['password']}@{params['host']}:{params['port']}/{params['dbname']}"
@@ -520,6 +616,59 @@ class BackupService:
 
         except Exception as e:
             logger.error(f"Restore failed: {e}")
+            return False
+
+    @classmethod
+    def restore_custom_tables(cls, backup_filename: str, tables: List[str]) -> bool:
+        try:
+            cls.initialize()
+            backup_path = os.path.join(cls.BACKUP_DIR, backup_filename)
+            if not os.path.exists(backup_path):
+                return False
+
+            if not backup_filename.endswith('.dump'):
+                return False
+
+            params = cls._parse_postgres_params()
+            if not params:
+                return False
+
+            pg_restore = cls._resolve_pg_tool('pg_restore', 'PG_RESTORE_PATH') or 'pg_restore'
+            env = os.environ.copy()
+            env['PGPASSWORD'] = params['password']
+
+            cls.create_backup(manual=True, description=f"Pre-restore before custom restore {backup_filename}")
+
+            temp_dir = tempfile.gettempdir()
+            temp_path = os.path.join(temp_dir, f"restore_{datetime.now().strftime('%f')}.dump")
+            shutil.copy2(backup_path, temp_path)
+
+            try:
+                for t in [x.strip() for x in (tables or []) if x and x.strip()]:
+                    cmd = [
+                        pg_restore,
+                        '--host', params['host'],
+                        '--port', params['port'],
+                        '--username', params['username'],
+                        '--dbname', params['dbname'],
+                        '--clean',
+                        '--if-exists',
+                        '--no-owner',
+                        '--no-privileges',
+                        '--table', t,
+                        temp_path,
+                    ]
+                    proc = subprocess.run(cmd, env=env, capture_output=True, text=True)
+                    if proc.returncode != 0:
+                        logger.error(f"pg_restore custom failed ({t}): {proc.stderr}")
+                        return False
+            finally:
+                if os.path.exists(temp_path):
+                    os.remove(temp_path)
+
+            return True
+        except Exception as e:
+            logger.error(f"Custom restore failed: {e}")
             return False
 
     @classmethod

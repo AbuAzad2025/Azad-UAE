@@ -1006,10 +1006,15 @@ def list_backups():
     
     backups = BackupService.list_backups()
     stats = BackupService.get_backup_stats()
+    schedule_settings = BackupService.get_schedule_settings()
+    schedule_state = BackupService.get_schedule_state()
     
     return render_template('owner/backups_list.html', 
                          backups=backups,
                          stats=stats,
+                         schedule_settings=schedule_settings,
+                         schedule_state=schedule_state,
+                         backup_dir=BackupService.BACKUP_DIR,
                          now=datetime.now())
 
 
@@ -1485,6 +1490,7 @@ def scheduled_backups():
     
     # قراءة الإعدادات الحالية
     settings = BackupService.get_schedule_settings()
+    schedule_state = BackupService.get_schedule_state()
     
     # قائمة النسخ التلقائية
     backups = BackupService.list_backups(auto_only=True)
@@ -1492,6 +1498,7 @@ def scheduled_backups():
     
     return render_template('owner/scheduled_backups.html',
                          settings=settings,
+                         schedule_state=schedule_state,
                          backups=backups,
                          stats=stats)
 

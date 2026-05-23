@@ -410,28 +410,75 @@ img {
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.60);
 }
 
-html[dir="rtl"] .main-sidebar {
+html[dir="rtl"] .nav-sidebar .nav-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+html[dir="rtl"] .nav-sidebar .nav-link > .nav-icon {
+  margin: 0 !important;
+}
+
+html[dir="rtl"] .nav-sidebar .nav-link > p {
+  margin: 0 !important;
+  flex: 1 1 auto;
+  text-align: right;
+}
+
+html[dir="rtl"] .nav-sidebar .nav-link > p > .right {
+  left: 12px;
+  right: auto;
+}
+
+html[dir="rtl"] .nav-sidebar .nav-treeview {
+  padding-right: 12px;
+  padding-left: 0;
+}
+
+body[data-sidebar-side="right"] .main-sidebar {
   left: auto !important;
   right: 0 !important;
 }
 
-html[dir="rtl"] .content-wrapper,
-html[dir="rtl"] .main-header,
-html[dir="rtl"] .main-footer {
+body[data-sidebar-side="right"] .content-wrapper,
+body[data-sidebar-side="right"] .main-header,
+body[data-sidebar-side="right"] .main-footer {
   margin-left: 0 !important;
   margin-right: 250px !important;
 }
 
-html[dir="rtl"] body.sidebar-mini.sidebar-collapse .content-wrapper,
-html[dir="rtl"] body.sidebar-mini.sidebar-collapse .main-header,
-html[dir="rtl"] body.sidebar-mini.sidebar-collapse .main-footer {
+body.sidebar-mini.sidebar-collapse[data-sidebar-side="right"] .content-wrapper,
+body.sidebar-mini.sidebar-collapse[data-sidebar-side="right"] .main-header,
+body.sidebar-mini.sidebar-collapse[data-sidebar-side="right"] .main-footer {
+  margin-left: 0 !important;
   margin-right: 4.6rem !important;
 }
 
+body[data-sidebar-side="left"] .main-sidebar {
+  left: 0 !important;
+  right: auto !important;
+}
+
+body[data-sidebar-side="left"] .content-wrapper,
+body[data-sidebar-side="left"] .main-header,
+body[data-sidebar-side="left"] .main-footer {
+  margin-left: 250px !important;
+  margin-right: 0 !important;
+}
+
+body.sidebar-mini.sidebar-collapse[data-sidebar-side="left"] .content-wrapper,
+body.sidebar-mini.sidebar-collapse[data-sidebar-side="left"] .main-header,
+body.sidebar-mini.sidebar-collapse[data-sidebar-side="left"] .main-footer {
+  margin-left: 4.6rem !important;
+  margin-right: 0 !important;
+}
+
 @media (max-width: 991.98px) {
-  html[dir="rtl"] .content-wrapper,
-  html[dir="rtl"] .main-header,
-  html[dir="rtl"] .main-footer {
+  body[data-sidebar-side] .content-wrapper,
+  body[data-sidebar-side] .main-header,
+  body[data-sidebar-side] .main-footer {
+    margin-left: 0 !important;
     margin-right: 0 !important;
   }
 }

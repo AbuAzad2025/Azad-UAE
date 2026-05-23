@@ -51,6 +51,60 @@
 {% endblock %}
 
 {% block content %}
+<div class="row mb-3">
+  <div class="col-md-12">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="card-title mb-0"><i class="fas fa-shield-alt mr-2"></i>حالة النسخ الاحتياطي</h5>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-4 mb-2">
+            <div><strong><i class="fas fa-folder-open mr-1"></i>مسار التخزين:</strong></div>
+            <div class="text-muted" style="word-break: break-all;">{{ backup_dir }}</div>
+          </div>
+          <div class="col-md-4 mb-2">
+            <div><strong><i class="fas fa-clock mr-1"></i>الجدولة:</strong></div>
+            <div class="text-muted">
+              {% if schedule_settings and schedule_settings.enabled %}
+                مفعلة ({{ schedule_settings.frequency }} @ {{ schedule_settings.backup_time }}) | احتفاظ: {{ schedule_settings.keep_count }}
+              {% else %}
+                غير مفعلة
+              {% endif %}
+            </div>
+          </div>
+          <div class="col-md-4 mb-2">
+            <div><strong><i class="fas fa-history mr-1"></i>آخر تشغيل:</strong></div>
+            <div class="text-muted">
+              {% if schedule_state and schedule_state.last_run_at %}
+                {{ schedule_state.last_run_at }}
+              {% else %}
+                لا يوجد
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        {% if schedule_state and schedule_state.last_error %}
+          <div class="alert alert-danger mt-3 mb-0">
+            <div><strong><i class="fas fa-exclamation-triangle mr-1"></i>آخر خطأ:</strong></div>
+            <div style="word-break: break-word;">{{ schedule_state.last_error }}</div>
+            <div class="mt-2 text-muted">
+              {% if schedule_state.last_action %}<span>العملية: {{ schedule_state.last_action }}</span>{% endif %}
+              {% if schedule_state.last_filename %}<span>{% if schedule_state.last_action %} | {% endif %}الملف: {{ schedule_state.last_filename }}</span>{% endif %}
+            </div>
+          </div>
+        {% elif schedule_state and schedule_state.last_success_at %}
+          <div class="alert alert-success mt-3 mb-0">
+            <strong><i class="fas fa-check-circle mr-1"></i>آخر نجاح:</strong> {{ schedule_state.last_success_at }}
+            {% if schedule_state.last_filename %}| <span class="text-muted">{{ schedule_state.last_filename }}</span>{% endif %}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- الإحصائيات العامة -->
 <div class="row">
   <div class="col-lg-3 col-6">

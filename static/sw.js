@@ -1,4 +1,4 @@
-const CACHE_NAME = 'azad-uae-ui-v3';
+const CACHE_NAME = 'azad-uae-ui-v5';
 const urlsToCache = [
   '/',
   '/static/css/erp-theme.css',
@@ -14,31 +14,49 @@ self.addEventListener('install', (event) => {
     caches.open(CACHE_NAME)
       .then((cache) => cache.addAll(urlsToCache))
   );
+  self.skipWaiting();
 });
 
 self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    caches.match(event.request)
-      .then((response) => {
-        if (response) {
-          return response;
-        }
-        return fetch(event.request).then(
-          (response) => {
-            if (!response || response.status !== 200 || response.type !== 'basic') {
-              return response;
-            }
+  if (!event.request || event.request.method !== 'GET') {
+    return;
+  }
+
+  const accept = event.request.headers.get('accept') || '';
+  const isHtml = event.request.mode === 'navigate' || accept.includes('text/html');
+
+  if (isHtml) {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          if (response && response.status === 200) {
             const responseToCache = response.clone();
-            caches.open(CACHE_NAME)
-              .then((cache) => {
-                cache.put(event.request, responseToCache);
-              });
-            return response;
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseToCache));
           }
-        );
-      }).catch(() => {
-        return caches.match('/offline.html');
-      })
+          return response;
+        })
+        .catch(() => {
+          return caches.match(event.request).then((cached) => cached || caches.match('/offline.html'));
+        })
+    );
+    return;
+  }
+
+  event.respondWith(
+    caches.match(event.request).then((cached) => {
+      if (cached) {
+        return cached;
+      }
+      return fetch(event.request)
+        .then((response) => {
+          if (response && response.status === 200) {
+            const responseToCache = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseToCache));
+          }
+          return response;
+        })
+        .catch(() => caches.match('/offline.html'));
+    })
   );
 });
 
@@ -55,5 +73,6 @@ self.addEventListener('activate', (event) => {
       );
     })
   );
+  self.clients.claim();
 });
 

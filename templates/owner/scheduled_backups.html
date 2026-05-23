@@ -55,6 +55,30 @@
   </div>
 </div>
 
+{% if schedule_state and schedule_state.last_error %}
+<div class="row mb-3">
+  <div class="col-md-12">
+    <div class="alert alert-danger">
+      <strong><i class="fas fa-exclamation-triangle mr-1"></i>آخر خطأ في النسخ التلقائي:</strong>
+      <div class="mt-2" style="word-break: break-word;">{{ schedule_state.last_error }}</div>
+      <div class="mt-2 text-muted">
+        {% if schedule_state.last_run_at %}<span>آخر تشغيل: {{ schedule_state.last_run_at }}</span>{% endif %}
+        {% if schedule_state.last_filename %}<span>{% if schedule_state.last_run_at %} | {% endif %}الملف: {{ schedule_state.last_filename }}</span>{% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% elif schedule_state and schedule_state.last_success_at %}
+<div class="row mb-3">
+  <div class="col-md-12">
+    <div class="alert alert-success">
+      <strong><i class="fas fa-check-circle mr-1"></i>آخر نسخة تلقائية ناجحة:</strong> {{ schedule_state.last_success_at }}
+      {% if schedule_state.last_filename %}| <span class="text-muted">{{ schedule_state.last_filename }}</span>{% endif %}
+    </div>
+  </div>
+</div>
+{% endif %}
+
 <div class="row">
   <!-- إعدادات الجدولة -->
   <div class="col-md-6">

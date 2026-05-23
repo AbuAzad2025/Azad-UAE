@@ -190,22 +190,29 @@ function showError(message) {
  * Show Alert
  */
 function showAlert(message, type = 'info') {
-    const html = `
-        <div class="alert alert-${type} alert-dismissible fade show" role="alert" style="position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 10000; min-width: 300px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
-            ${message}
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
-        </div>
-    `;
-    $('body').append(html);
-    
-    // إخفاء تلقائي بعد 10 ثواني (بدلاً من 5)
-    setTimeout(function() {
-        $('.alert').fadeOut(1500, function() {
-            $(this).remove();
-        });
-    }, 10000);
+    const normalized = type === 'danger' ? 'error' : type;
+    if (window.notify && typeof window.notify.show === 'function') {
+        window.notify.show({ type: normalized, title: '', message: String(message || '') });
+        return;
+    }
+
+    const $container = $('#flash-messages-container');
+    if ($container.length) {
+        const cls = normalized === 'success' ? 'success' : normalized === 'error' ? 'danger' : normalized;
+        const html = `
+            <div class="alert alert-${cls} alert-dismissible fade show flash-message erp-flash" role="alert">
+                <div class="erp-flash-body">${message}</div>
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+                <div class="progress mt-2 w-100">
+                    <div class="progress-bar flash-timer" role="progressbar"></div>
+                </div>
+            </div>
+        `;
+        $container.prepend(html);
+        return;
+    }
+
+    alert(message);
 }
 
 /**

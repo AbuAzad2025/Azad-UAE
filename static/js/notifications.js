@@ -202,9 +202,9 @@ class NotificationManager {
             type = 'info',
             title = '',
             message = '',
-            duration = 10000,
-            sound = true,
-            vibrate = true
+            duration = 8000,
+            sound = false,
+            vibrate = false
         } = options;
 
         // Create toast element
@@ -292,21 +292,5 @@ if (typeof $ !== 'undefined') {
     };
 }
 
-// Replace old flash messages with toasts
-$(document).ready(function() {
-    $('.alert').each(function() {
-        const $alert = $(this);
-        const message = $alert.text().trim();
-        let type = 'info';
-        
-        if ($alert.hasClass('alert-success')) type = 'success';
-        else if ($alert.hasClass('alert-danger') || $alert.hasClass('alert-error')) type = 'error';
-        else if ($alert.hasClass('alert-warning')) type = 'warning';
-        
-        if (message) {
-            notify.show({ type, message });
-            $alert.remove();
-        }
-    });
-});
+ 
 

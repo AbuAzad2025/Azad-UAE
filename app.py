@@ -150,7 +150,13 @@ def create_app(config_class=Config):
         # Catch-all for any other AI route to avoid crashes
         @ai_bp.route('/<path:path>')
         def catch_all(path):
-            flash(f"AI Feature '{path}' is currently unavailable due to system initialization error.", "warning")
+            try:
+                from flask import session
+                if not session.get('ai_unavailable_notified'):
+                    flash("المساعد الذكي غير متاح حالياً بسبب إعدادات غير مكتملة.", "warning")
+                    session['ai_unavailable_notified'] = True
+            except Exception:
+                pass
             return redirect(url_for('main.dashboard'))
     from routes.users import users_bp
     from routes.cheques import cheques_bp
