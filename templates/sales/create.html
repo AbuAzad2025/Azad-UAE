@@ -1,0 +1,712 @@
+{% extends 'base.html' %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - إنشاء فاتورة بيع{% endblock %}
+{% block page_title %}
+<div class="d-flex justify-content-between align-items-center">
+  <div>
+    <h1 class="mb-0"><i class="fas fa-file-invoice mr-2"></i>فاتورة بيع جديدة</h1>
+  </div>
+  <div>
+    <a href="{{ url_for('sales.index') }}" class="btn btn-secondary">
+      <i class="fas fa-arrow-right mr-2"></i>العودة للمبيعات
+    </a>
+    <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
+      <i class="fas fa-home mr-2"></i>الرئيسية
+    </a>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.product-line { 
+  background: #f8f9fa; 
+  padding: 15px; 
+  margin-bottom: 10px; 
+  border-radius: 8px;
+  border-right: 4px solid #667eea;
+  transition: all 0.3s;
+}
+.product-line:hover {
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+.total-box { 
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+  color: white; 
+  padding: 25px; 
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+.total-box h2, .total-box h3 { text-shadow: 2px 2px 4px rgba(0,0,0,0.2); }
+
+.sale-create-form .form-control,
+.sale-create-form .form-select {
+  min-height: 48px;
+  height: auto;
+  padding: 0.65rem 0.85rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.sale-create-form .form-control::placeholder {
+  text-align: center;
+  color: #6c757d;
+  opacity: 0.85;
+}
+
+.sale-create-form .input-group-text {
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+}
+
+.sale-create-form .select2-container--default .select2-selection--single {
+  height: 48px;
+  min-height: 48px;
+  border-radius: 12px;
+  border: 2px solid #e0e0e0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.75rem;
+}
+
+.sale-create-form .select2-container--default .select2-selection--single .select2-selection__rendered {
+  width: 100%;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  line-height: 1.5 !important;
+  text-align: center;
+  font-size: 1rem;
+}
+
+.sale-create-form .select2-container--default .select2-selection--single .select2-selection__arrow {
+  height: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.sale-create-form .select2-dropdown {
+  text-align: center;
+}
+
+.sale-create-form .select2-results__option {
+  padding-top: 0.6rem;
+  padding-bottom: 0.6rem;
+}
+
+.sale-create-form textarea.form-control {
+  text-align: right;
+  line-height: 1.6;
+}
+
+.sale-create-form textarea.form-control::placeholder {
+  text-align: right;
+}
+
+/* أزرار العنوان */
+a.btn.btn-secondary,
+.btn.btn-secondary {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%) !important;
+  border-color: #3498db !important;
+}
+a.btn.btn-secondary i,
+a.btn.btn-secondary span {
+  color: #ffffff !important;
+}
+
+a.btn.btn-outline-secondary,
+.btn.btn-outline-secondary {
+  color: #111827 !important;
+  -webkit-text-fill-color: #111827 !important;
+  background-color: #ffffff !important;
+  border-color: #334155 !important;
+}
+a.btn.btn-outline-secondary i,
+a.btn.btn-outline-secondary span {
+  color: #111827 !important;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<form method="POST" action="{{ url_for('sales.create') }}" id="saleForm" class="sale-create-form">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <input type="hidden" name="line_count" id="line_count" value="0">
+  
+  <div class="row">
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-header bg-gradient-primary">
+          <h3 class="card-title text-white"><i class="fas fa-file-invoice mr-2"></i>معلومات الفاتورة</h3>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-4">
+              <div class="form-group">
+                <label class="font-weight-bold">
+                  <i class="fas fa-user text-primary mr-1"></i>الزبون 
+                  <span class="text-danger">*</span>
+                  <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="اختر العميل - الفلتر الذكي: ابحث بالاسم أو الهاتف (إجباري)"></i>
+                </label>
+                <select name="customer_id" id="customer_id" class="form-control customer-select" required>
+                  <option value="" selected>بلا</option>
+                </select>
+                <small class="form-text text-muted">💡 الفلتر الذكي: ابحث بالاسم أو رقم الهاتف</small>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                <label class="font-weight-bold">
+                  <i class="fas fa-warehouse text-info mr-1"></i>المستودع 
+                  <span class="text-danger">*</span>
+                  <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="المستودع الذي سيُخصم منه المخزون (إجباري)"></i>
+                </label>
+                <select name="warehouse_id" id="warehouse_id" class="form-control" required>
+                  <option value="" selected>بلا</option>
+                  {% if warehouses %}
+                    {% for warehouse in warehouses %}
+                    <option value="{{ warehouse.id }}">
+                      {% if warehouse.is_main %}⭐{% elif warehouse.parent_id %}🔀{% else %}📦{% endif %}
+                      {{ warehouse.name_ar or warehouse.name }}
+                      {% if warehouse.code %}({{ warehouse.code }}){% endif %}
+                    </option>
+                    {% endfor %}
+                  {% else %}
+                    <option value="">لا توجد مستودعات متاحة</option>
+                  {% endif %}
+                </select>
+                <small class="form-text text-info">
+                  <i class="fas fa-info-circle"></i> سيُخصم المخزون من هذا المستودع
+                </small>
+              </div>
+            </div>
+            <div class="col-md-2">
+              <div class="form-group">
+                <label class="font-weight-bold">
+                  <i class="fas fa-money-bill-wave text-success mr-1"></i>عملة الدفع
+                  <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="العملة التي سيدفع بها العميل - الفاتورة بالدرهم دائماً (اختياري)"></i>
+                </label>
+                <select name="currency" id="currency" class="form-control">
+                  <option value="AED" selected>درهم إماراتي (AED)</option>
+                  <option value="USD">دولار أمريكي (USD)</option>
+                  <option value="ILS">شيقل إسرائيلي (ILS)</option>
+                  <option value="EUR">يورو (EUR)</option>
+                  <option value="GBP">جنيه استرليني (GBP)</option>
+                  <option value="SAR">ريال سعودي (SAR)</option>
+                  <option value="KWD">دينار كويتي (KWD)</option>
+                  <option value="QAR">ريال قطري (QAR)</option>
+                  <option value="OMR">ريال عماني (OMR)</option>
+                  <option value="BHD">دينار بحريني (BHD)</option>
+                </select>
+                <small class="form-text text-info">
+                  <i class="fas fa-lightbulb"></i> الأسعار بالدرهم - العملة فقط لتحويل المدفوع
+                </small>
+              </div>
+            </div>
+            <div class="col-md-2">
+              <div class="form-group">
+                <label class="font-weight-bold">
+                  <i class="fas fa-exchange-alt text-info mr-1"></i>سعر الصرف
+                  <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="سعر صرف العملة مقابل الدرهم - يمكن تعديله يدوياً (اختياري)"></i>
+                </label>
+                <input type="number" name="exchange_rate" id="exchange_rate" class="form-control" 
+                       value="1.000000" step="0.000001" min="0.000001" 
+                       placeholder="1.000000">
+                <small class="form-text text-muted">
+                  <i class="fas fa-edit"></i> قابل للتعديل اليدوي
+                </small>
+              </div>
+            </div>
+          </div>
+
+          <hr>
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5><i class="fas fa-list mr-2"></i>الأصناف (<span id="line_count_display">0</span>)</h5>
+            <button type="button" class="btn btn-success" onclick="addLine()">
+              <i class="fas fa-plus mr-2"></i>إضافة صنف
+            </button>
+          </div>
+          <div id="linesContainer"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card">
+        <div class="card-header bg-gradient-info">
+          <h3 class="card-title text-white"><i class="fas fa-calculator mr-2"></i>الإجماليات</h3>
+        </div>
+        <div class="card-body">
+          <div class="form-group">
+            <label class="font-weight-bold">
+              <i class="fas fa-percent text-danger mr-1"></i>الخصم الإجمالي
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="خصم إضافي على إجمالي الفاتورة بالدرهم (اختياري - افتراضي: 0)"></i>
+            </label>
+            <div class="input-group">
+              <input type="number" name="discount_amount" class="form-control" value="0" step="0.01" min="0" 
+                     onchange="calculateTotals()" onkeyup="calculateTotals()"
+                     placeholder="0.00">
+              <div class="input-group-append">
+                <span class="input-group-text">AED</span>
+              </div>
+            </div>
+            <small class="form-text text-muted">خصم بالدرهم على المجموع الفرعي</small>
+          </div>
+
+          <div class="form-group">
+            <label class="font-weight-bold">
+              <i class="fas fa-shipping-fast text-primary mr-1"></i>تكلفة الشحن
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="تكلفة الشحن والتوصيل بالدرهم (اختياري - افتراضي: 0)"></i>
+            </label>
+            <div class="input-group">
+              <input type="number" name="shipping_cost" class="form-control" value="0" step="0.01" min="0" 
+                     onchange="calculateTotals()" onkeyup="calculateTotals()"
+                     placeholder="0.00">
+              <div class="input-group-append">
+                <span class="input-group-text">AED</span>
+              </div>
+            </div>
+            <small class="form-text text-muted">تُضاف للمجموع قبل الضريبة</small>
+          </div>
+
+          <div class="form-group">
+            <label class="font-weight-bold">
+              <i class="fas fa-receipt text-warning mr-1"></i>نسبة الضريبة
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="نسبة ضريبة القيمة المضافة VAT% (اختياري - افتراضي: 5%)"></i>
+            </label>
+            <div class="input-group">
+              <input type="number" name="tax_rate" class="form-control" value="5" step="0.01" min="0" max="100" 
+                     onchange="calculateTotals()" onkeyup="calculateTotals()"
+                     placeholder="5.00">
+              <div class="input-group-append">
+                <span class="input-group-text">%</span>
+              </div>
+            </div>
+            <small class="form-text text-muted">ضريبة القيمة المضافة (VAT) - عادة 5% أو 16%</small>
+          </div>
+          
+          <div class="total-box text-center">
+            <div class="alert alert-info mb-3" style="background: rgba(255,255,255,0.2); border: none;">
+              <i class="fas fa-info-circle"></i>
+              <strong>ملاحظة:</strong> جميع الأسعار بالدرهم الإماراتي (AED)
+            </div>
+            <h6 class="mb-2">{{ t('Subtotal') }}</h6>
+            <h3 id="subtotal" class="mb-3">0.00</h3>
+            <hr style="border-color: rgba(255,255,255,0.3); margin: 15px 0;">
+            <h5 class="mb-2">{{ t('Final Total') }}</h5>
+            <h2 id="total" class="mb-0" style="font-size: 36px; font-weight: 700;">0.00</h2>
+            <small style="opacity: 0.9; font-size: 1.1rem;">
+              <i class="fas fa-coins"></i> <span id="total_currency_label">درهم إماراتي (AED)</span>
+            </small>
+          </div>
+
+          <div class="form-group mt-3">
+            <label class="font-weight-bold">
+              <i class="fas fa-credit-card text-info"></i> طريقة الدفع
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="اختر طريقة الدفع أو اتركها فارغة للدفع الآجل"></i>
+            </label>
+            <select name="payment_method" id="payment_method" class="form-control">
+              <option value="">آجل (بدون دفع)</option>
+              <option value="cash">💵 نقدي</option>
+              <option value="card">💳 بطاقة</option>
+              <option value="bank_transfer">🏦 تحويل بنكي</option>
+              <option value="cheque">📝 شيك</option>
+              <option value="e_wallet">💰 محفظة إلكترونية</option>
+            </select>
+            <small class="form-text text-muted">
+              <i class="fas fa-info-circle"></i> اترك فارغاً للدفع الآجل (على الحساب)
+            </small>
+          </div>
+
+          <!-- Dynamic payment fields will be inserted here -->
+          <div id="payment_fields_container"></div>
+
+          <div class="form-group" id="payment_amount_group" style="display:none;">
+            <label class="font-weight-bold">
+              <i class="fas fa-hand-holding-usd mr-1"></i>المبلغ المدفوع
+              <i class="fas fa-info-circle text-info" title="أدخل المبلغ بالعملة المختارة - سيتم تحويله للدرهم تلقائياً"></i>
+            </label>
+            <div class="input-group">
+              <input type="number" name="payment_amount" id="payment_amount" class="form-control" 
+                     value="0" step="0.01" min="0"
+                     title="المبلغ المدفوع بعملة الدفع المختارة">
+              <div class="input-group-append">
+                <span class="input-group-text" id="payment_currency_display">AED</span>
+              </div>
+            </div>
+            <small class="form-text text-success">
+              <i class="fas fa-calculator"></i> سيتم تحويل المبلغ للدرهم تلقائياً حسب سعر الصرف
+            </small>
+            <small class="text-muted d-block mt-1">اترك صفر للدفع الآجل</small>
+          </div>
+
+          <div class="form-group">
+            <label class="font-weight-bold">
+              <i class="fas fa-sticky-note text-warning"></i> {{ t('Notes') }}
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="أي ملاحظات أو تعليمات إضافية عن هذه الفاتورة"></i>
+            </label>
+            <textarea name="notes" class="form-control" rows="2" placeholder="ملاحظات إضافية عن الفاتورة..."></textarea>
+            <small class="form-text text-muted">
+              <i class="fas fa-lightbulb"></i> يمكنك كتابة أي ملاحظات أو تعليمات خاصة
+            </small>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block btn-lg">
+            <i class="fas fa-save mr-2"></i>حفظ الفاتورة
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+<!-- Serial Number Modal -->
+<div class="modal fade" id="serialNumberModal" tabindex="-1" role="dialog" aria-labelledby="serialNumberModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header bg-warning">
+        <h5 class="modal-title" id="serialNumberModalLabel">
+          <i class="fas fa-fingerprint mr-2"></i>إدخال الأرقام التسلسلية
+        </h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted">
+          هذا المنتج يتطلب رقم تسلسلي فريد لكل قطعة.
+          <br>
+          <strong>المنتج:</strong> <span id="serial_product_name" class="font-weight-bold"></span>
+          <br>
+          <strong>الكمية المطلوبة:</strong> <span id="serial_quantity_needed" class="badge badge-info">0</span>
+        </p>
+        
+        <div class="form-group">
+          <label>امسح الرقم التسلسلي (أو أدخله يدوياً):</label>
+          <div class="input-group mb-3">
+            <input type="text" id="serial_input" class="form-control" placeholder="Scan or type serial..." autofocus>
+            <div class="input-group-append">
+              <button class="btn btn-primary" type="button" id="add_serial_btn">
+                <i class="fas fa-plus"></i> إضافة
+              </button>
+              <button class="btn btn-secondary" type="button" id="generate_serial_btn" title="توليد رقم تلقائي">
+                <i class="fas fa-magic"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <ul class="list-group" id="serial_list">
+          <!-- Serials will be added here -->
+        </ul>
+      </div>
+      <div class="modal-footer justify-content-between">
+        <button type="button" class="btn btn-outline-info" id="print_serials_btn" style="display:none;">
+            <i class="fas fa-print mr-1"></i> طباعة ملصقات
+        </button>
+        <div>
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">إلغاء</button>
+            <button type="button" class="btn btn-success" id="save_serials_btn" disabled>
+              <i class="fas fa-check mr-2"></i>تأكيد (<span id="serial_count">0</span>)
+            </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Print Frame -->
+<iframe id="print_frame" style="display:none;"></iframe>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/sales-enhanced.js') }}"></script>
+<script src="{{ url_for('static', filename='js/ai-sales.js') }}"></script>
+<!-- Hidden input for collected serials -->
+<div id="serials_container"></div>
+
+<script>
+// Serial Number Management Logic
+let currentLineIndex = null;
+let currentRequiredQty = 0;
+let collectedSerials = {}; // Map: lineIndex -> [serial1, serial2]
+
+function openSerialModal(lineIndex, productName, qty) {
+    currentLineIndex = lineIndex;
+    currentRequiredQty = parseInt(qty);
+    
+    // Setup Modal
+    $('#serial_product_name').text(productName);
+    $('#serial_quantity_needed').text(currentRequiredQty);
+    $('#serial_count').text('0');
+    $('#serial_list').empty();
+    $('#serial_input').val('');
+    
+    // Load existing if any
+    if (collectedSerials[lineIndex]) {
+        collectedSerials[lineIndex].forEach(sn => addSerialToList(sn));
+    }
+    
+    $('#serialNumberModal').modal('show');
+    
+    // Auto focus
+    setTimeout(() => $('#serial_input').focus(), 500);
+}
+
+function addSerialToList(serial) {
+    // Check duplicates in current list
+    let exists = false;
+    $('#serial_list li').each(function() {
+        if ($(this).data('serial') === serial) exists = true;
+    });
+    
+    if (exists) {
+        alert('هذا الرقم التسلسلي مضاف بالفعل!');
+        return;
+    }
+    
+    // Check limit
+    if ($('#serial_list li').length >= currentRequiredQty) {
+        alert('لقد أدخلت العدد المطلوب من الأرقام التسلسلية.');
+        return;
+    }
+
+    const li = $(`
+        <li class="list-group-item d-flex justify-content-between align-items-center" data-serial="${serial}">
+            ${serial}
+            <button type="button" class="btn btn-sm btn-danger remove-serial">&times;</button>
+        </li>
+    `);
+    $('#serial_list').append(li);
+    updateSerialCount();
+}
+
+function updateSerialCount() {
+    const count = $('#serial_list li').length;
+    $('#serial_count').text(count + '/' + currentRequiredQty);
+    
+    if (count === currentRequiredQty) {
+        $('#save_serials_btn').prop('disabled', false).removeClass('btn-secondary').addClass('btn-success');
+    } else {
+        $('#save_serials_btn').prop('disabled', true).removeClass('btn-success').addClass('btn-secondary');
+    }
+    
+    // Show print button if we have serials
+    if (count > 0) {
+        $('#print_serials_btn').show();
+    } else {
+        $('#print_serials_btn').hide();
+    }
+}
+
+// Event Listeners
+$('#add_serial_btn').click(function() {
+    const sn = $('#serial_input').val().trim();
+    if (sn) {
+        addSerialToList(sn);
+        $('#serial_input').val('').focus();
+    }
+});
+
+$('#serial_input').keypress(function(e) {
+    if (e.which == 13) {
+        e.preventDefault();
+        $('#add_serial_btn').click();
+    }
+});
+
+$('#generate_serial_btn').click(function() {
+    // Generate simple SN: YYYYMMDD-RAND
+    const date = new Date().toISOString().slice(0,10).replace(/-/g,'');
+    const rand = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+    const sn = `SN-${date}-${rand}`;
+    $('#serial_input').val(sn);
+    $('#serial_input').focus();
+});
+
+$('#print_serials_btn').click(function() {
+    // Collect serials
+    const serials = [];
+    $('#serial_list li').each(function() {
+        serials.push($(this).data('serial'));
+    });
+    
+    if (serials.length === 0) return;
+    
+    // Create print content
+    const productName = $('#serial_product_name').text();
+    const today = new Date();
+    const purchaseDate = today.toISOString().slice(0,10);
+    
+    // Company Info (Injected from backend ideally, but for now hardcoded or fetched from DOM)
+    // Assuming we have these in some hidden fields or global JS object
+    const companyName = "{{ current_user.garage_name if current_user.garage_name else 'Garage System' }}";
+    const companyPhone = "{{ current_user.phone if current_user.phone else '' }}";
+    
+    let printContent = `
+        <html>
+        <head>
+            <style>
+                @page { size: 50mm 25mm; margin: 0; }
+                body { margin: 0; padding: 1mm; font-family: sans-serif; text-align: center; }
+                .label { width: 48mm; height: 23mm; border: 1px dashed #ccc; display: flex; flex-direction: column; justify-content: space-between; align-items: center; page-break-after: always; position: relative; overflow: hidden; }
+                
+                .header { font-size: 8px; font-weight: bold; width: 100%; border-bottom: 1px solid #000; padding-bottom: 1px; margin-bottom: 1px; }
+                .prod { font-size: 7px; white-space: nowrap; overflow: hidden; max-width: 100%; font-weight: bold; margin: 1px 0; }
+                .barcode { height: 18px; width: 90%; }
+                .sn { font-size: 9px; font-weight: bold; margin-top: 0; }
+                .footer { font-size: 6px; width: 100%; border-top: 1px solid #000; padding-top: 1px; margin-top: 1px; display: flex; justify-content: space-between; align-items: center; }
+            </style>
+            <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"><\/script>
+        </head>
+        <body>
+    `;
+    
+    serials.forEach(sn => {
+        printContent += `
+            <div class="label">
+                <div class="header">${companyName}</div>
+                <div class="prod">${productName}</div>
+                <svg class="barcode"
+                    jsbarcode-format="CODE128"
+                    jsbarcode-value="${sn}"
+                    jsbarcode-textmargin="0"
+                    jsbarcode-fontoptions="bold"
+                    jsbarcode-height="20"
+                    jsbarcode-displayValue="false">
+                </svg>
+                <div class="sn">${sn}</div>
+                <div class="footer">
+                    <span>Date: ${purchaseDate}</span>
+                    <span>${companyPhone}</span>
+                </div>
+            </div>
+        `;
+    });
+    
+    printContent += `
+        <script>
+            JsBarcode(".barcode").init();
+            window.onload = function() { window.print(); }
+        <\/script>
+        </body></html>
+    `;
+    
+    // Print via iframe
+    const frame = document.getElementById('print_frame');
+    frame.contentWindow.document.open();
+    frame.contentWindow.document.write(printContent);
+    frame.contentWindow.document.close();
+});
+
+$(document).on('click', '.remove-serial', function() {
+    $(this).closest('li').remove();
+    updateSerialCount();
+});
+
+$('#save_serials_btn').click(function() {
+    const serials = [];
+    $('#serial_list li').each(function() {
+        serials.push($(this).data('serial'));
+    });
+    
+    collectedSerials[currentLineIndex] = serials;
+    
+    // Update hidden inputs
+    renderHiddenSerials();
+    
+    $('#serialNumberModal').modal('hide');
+    
+    // Visual feedback on the line (if possible)
+    const btn = $(`#serial_btn_${currentLineIndex}`);
+    if(btn.length) {
+        btn.removeClass('btn-warning').addClass('btn-success').html('<i class="fas fa-check-circle"></i> تم الإدخال');
+    }
+});
+
+function renderHiddenSerials() {
+    const container = $('#serials_container');
+    container.empty();
+    
+    for (const [lineIdx, serials] of Object.entries(collectedSerials)) {
+        serials.forEach(sn => {
+            container.append(`<input type="hidden" name="lines[${lineIdx}][serials][]" value="${sn}">`);
+        });
+    }
+}
+
+// Hook into Product Selection to check if SN is needed
+// This requires modifying the addRow / product select logic in JS
+// For now, we assume the backend validation will catch missing serials,
+// or we add a "Serial" button to each row dynamically.
+</script>
+
+<script>
+$(document).ready(function() {
+  // تهيئة حقول الدفع الديناميكية
+  // تتم إدارة الحقول عبر sales-enhanced.js باستخدام API موحدة
+  // لا حاجة لتهيئة PaymentFieldsManager هنا
+  
+  // Initialize customer select - الفلتر الذكي سيعمل تلقائياً
+  // لكن نحتفظ بالكود القديم كـ fallback
+  if (!$('#customer_id').hasClass('select2-hidden-accessible')) {
+    $('#customer_id').select2({
+      ajax: {
+        url: "{{ url_for('api.api_search') }}",
+        dataType: 'json',
+        delay: 250,
+        data: function(params) {
+          return { q: params.term, type: 'customers' };
+        },
+        processResults: function(data) {
+          return {
+            results: (data.results || []).map(c => ({
+              id: c.id,
+              text: `${c.name} - ${c.phone}`,
+              balance: c.balance
+            }))
+          };
+        },
+        cache: true
+      },
+      language: 'ar',
+      dir: 'rtl',
+      placeholder: 'ابحث عن زبون...',
+      minimumInputLength: 2,
+      width: '100%'
+    });
+  }
+});
+
+function validateForm() {
+  const lineCount = parseInt($('#line_count').val()) || 0;
+  
+  if (lineCount === 0) {
+    alert('يجب إضافة منتج واحد على الأقل للفاتورة.\n\nاضغط "إضافة صف" واختر منتجاً.');
+    return false;
+  }
+  
+  // Check if at least one line has a product
+  let hasProduct = false;
+  for (let i = 0; i < lineCount; i++) {
+    const productId = $(`select[name="lines[${i}][product_id]"]`).val();
+    if (productId) {
+      hasProduct = true;
+      break;
+    }
+  }
+  
+  if (!hasProduct) {
+    alert('يجب اختيار منتج واحد على الأقل.\n\nاختر منتجاً من القائمة المنسدلة.');
+    return false;
+  } 
+  return true;
+}
+</script>
+<div id="customer_analysis"></div>
+{% endblock %}

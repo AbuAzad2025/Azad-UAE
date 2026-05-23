@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block title %}المصروفات المتقدمة{% endblock %}
+{% block content %}
+<div class="container-fluid">
+  <div class="card">
+    <div class="card-header">
+      <h3><i class="fas fa-money-bill-wave"></i> المصروفات المتقدمة</h3>
+      <div class="card-tools">
+        <a href="{{ url_for('advanced_ledger.add_advanced_expense') }}" class="btn btn-success"><i class="fas fa-plus"></i> إضافة مصروف</a>
+      </div>
+    </div>
+    <div class="card-body">
+      <table class="table table-bordered table-striped">
+        <thead>
+          <tr>
+            <th>التاريخ</th>
+            <th>الفرع</th>
+            <th>الفئة</th>
+            <th>المبلغ</th>
+            <th>البيان</th>
+            <th>الحالة</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for expense in expenses %}
+          <tr>
+            <td>{{ expense.expense_date.strftime('%Y-%m-%d') }}</td>
+            <td>
+              {% if expense.branch %}
+                <span class="badge badge-info">{{ expense.branch.name }}</span>
+              {% else %}
+                <span class="badge badge-secondary">عام</span>
+              {% endif %}
+            </td>
+            <td>{{ expense.category.name_ar if expense.category else '-' }}</td>
+            <td>{{ expense.amount }} AED</td>
+            <td>{{ expense.description }}</td>
+            <td>
+                {% if expense.is_reversed %}
+                    <span class="badge badge-danger">معكوس</span>
+                {% else %}
+                    <span class="badge badge-success">مسجل</span>
+                {% endif %}
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="6" class="text-center">لا توجد مصروفات</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

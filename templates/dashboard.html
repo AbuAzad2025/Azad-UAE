@@ -1,0 +1,316 @@
+{% extends 'base.html' %}
+
+{% block title %}شركة أزاد للأنظمة الذكية - لوحة التحكم الرئيسية{% endblock %}
+{% block page_title %}
+<div class="d-flex justify-content-between align-items-center">
+  <div>
+    <h1 class="text-gradient mb-0">{{ t('Dashboard') }}</h1>
+    <p class="text-muted">مرحباً بك، {{ current_user.full_name or current_user.username }}</p>
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Modern Stats Cards -->
+<div class="row mb-4">
+  <div class="col-lg-3 col-md-6 mb-4">
+    <div class="stat-card">
+      <div class="stat-icon" style="background: linear-gradient(135deg, #007A3D 0%, #1B4D89 100%);">
+        <i class="fas fa-shopping-cart"></i>
+      </div>
+      <div class="stat-value">{{ stats.today_sales_count|default(0) }}</div>
+      <div class="stat-label">مبيعات اليوم</div>
+      <div class="mt-2">
+        <strong style="color: #007A3D; font-size: 1.2rem;">
+          {{ "{:,.0f}".format(stats.today_sales_amount|default(0)) }}
+        </strong>
+        <small class="text-muted"> درهم</small>
+      </div>
+      <a href="{{ url_for('sales.index') }}" class="btn btn-sm btn-primary mt-2 w-100">
+        <i class="fas fa-arrow-left ml-2"></i> عرض الكل
+      </a>
+    </div>
+  </div>
+
+  <div class="col-lg-3 col-md-6 mb-4">
+    <div class="stat-card">
+      <div class="stat-icon" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
+        <i class="fas fa-users"></i>
+      </div>
+      <div class="stat-value">{{ stats.customers_count|default(0) }}</div>
+      <div class="stat-label">إجمالي الزبائن</div>
+      <div class="mt-2">
+        <small class="text-muted">زبائن نشطون</small>
+      </div>
+      <a href="{{ url_for('customers.index') }}" class="btn btn-sm btn-success mt-2 w-100 stretched-link">
+        <i class="fas fa-arrow-left ml-2"></i> عرض الكل
+      </a>
+    </div>
+  </div>
+
+  <div class="col-lg-3 col-md-6 mb-4">
+    <div class="stat-card">
+      <div class="stat-icon" style="background: linear-gradient(135deg, #D4AF37 0%, #C19A6B 100%);">
+        <i class="fas fa-file-invoice-dollar"></i>
+      </div>
+      <div class="stat-value">{{ "{:,.0f}".format(stats.total_receivables|default(0)) }}</div>
+      <div class="stat-label">الذمم المدينة</div>
+      <div class="mt-2">
+        <small class="text-muted">درهم إماراتي</small>
+      </div>
+      <a href="{{ url_for('reports.receivables') }}" class="btn btn-sm btn-warning mt-2 w-100 stretched-link">
+        <i class="fas fa-arrow-left ml-2"></i> عرض التفاصيل
+      </a>
+    </div>
+  </div>
+
+  <div class="col-lg-3 col-md-6 mb-4">
+    <div class="stat-card">
+      <div class="stat-icon" style="background: linear-gradient(135deg, #CE1126 0%, #dc3545 100%);">
+        <i class="fas fa-box-open"></i>
+      </div>
+      <div class="stat-value">{{ stats.products_count|default(0) }}</div>
+      <div class="stat-label">{{ t('Products') }}</div>
+      <div class="mt-2">
+        <small class="text-muted">منتجات نشطة</small>
+      </div>
+      <a href="{{ url_for('products.index') }}" class="btn btn-sm btn-danger mt-2 w-100 stretched-link">
+        <i class="fas fa-arrow-left ml-2"></i> عرض الكل
+      </a>
+    </div>
+  </div>
+</div>
+
+{% if current_user.can_see_costs() and stats.cash_balance is defined %}
+<!-- Financial Overview Cards -->
+<div class="row mb-4">
+  <div class="col-md-4 mb-3">
+    <div class="card glass-effect border-0">
+      <div class="card-body text-center">
+        <div class="mb-3">
+          <i class="fas fa-wallet fa-3x" style="color: #28a745;"></i>
+        </div>
+        <h5 class="text-muted">رصيد الصندوق</h5>
+        <h2 class="mb-0" style="color: #28a745; font-weight: 700;">
+          {{ "{:,.2f}".format(stats.cash_balance|default(0)) }}
+        </h2>
+        <small class="text-muted">درهم إماراتي</small>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4 mb-3">
+    <div class="card glass-effect border-0">
+      <div class="card-body text-center">
+        <div class="mb-3">
+          <i class="fas fa-university fa-3x" style="color: #1B4D89;"></i>
+        </div>
+        <h5 class="text-muted">رصيد البنك</h5>
+        <h2 class="mb-0" style="color: #1B4D89; font-weight: 700;">
+          {{ "{:,.2f}".format(stats.bank_balance|default(0)) }}
+        </h2>
+        <small class="text-muted">درهم إماراتي</small>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4 mb-3">
+    <div class="card glass-effect border-0">
+      <div class="card-body text-center">
+        <div class="mb-3">
+          <i class="fas fa-boxes fa-3x" style="color: #17a2b8;"></i>
+        </div>
+        <h5 class="text-muted">قيمة المخزون</h5>
+        <h2 class="mb-0" style="color: #17a2b8; font-weight: 700;">
+          {{ "{:,.2f}".format(stats.inventory_value_gl|default(0)) }}
+        </h2>
+        <small class="text-muted">درهم إماراتي</small>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- Recent Sales - Modern Table -->
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <div class="d-flex justify-content-between align-items-center">
+          <h3 class="card-title mb-0">
+            <i class="fas fa-clock mr-2"></i>آخر المبيعات
+          </h3>
+          <a href="{{ url_for('sales.create') }}" class="btn btn-primary btn-sm">
+            <i class="fas fa-plus mr-2"></i>فاتورة جديدة
+          </a>
+        </div>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0" id="recentSalesTable">
+            <thead>
+              <tr>
+                <th><i class="fas fa-hashtag mr-2"></i>{{ t('Invoice Number') }}</th>
+                <th><i class="fas fa-user mr-2"></i>الزبون</th>
+                <th><i class="far fa-calendar mr-2"></i>{{ t('Date') }}</th>
+                <th><i class="fas fa-money-bill-wave mr-2"></i>{{ t('Amount') }}</th>
+                <th><i class="fas fa-wallet mr-2"></i>الدفع</th>
+                <th><i class="fas fa-check-circle mr-2"></i>{{ t('Status') }}</th>
+                <th class="text-center"><i class="fas fa-cog mr-2"></i>{{ t('Actions') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% if stats.recent_sales %}
+                {% for sale in stats.recent_sales %}
+                <tr class="fade-in">
+                  <td>
+                    <a href="{{ url_for('sales.view', id=sale.id) }}" class="font-weight-bold text-primary">
+                      {{ sale.sale_number }}
+                    </a>
+                  </td>
+                  <td>
+                    <div class="d-flex align-items-center">
+                      <i class="fas fa-user-circle fa-2x text-muted mr-2"></i>
+                      <div>
+                        <strong>{{ sale.customer.name if sale.customer else '-' }}</strong>
+                        {% if sale.customer and sale.customer.phone %}
+                        <br><small class="text-muted">{{ sale.customer.phone }}</small>
+                        {% endif %}
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="text-muted">{{ sale.sale_date.strftime('%Y-%m-%d') }}</span>
+                    <br><small class="text-muted">{{ sale.sale_date.strftime('%H:%M') }}</small>
+                  </td>
+                  <td>
+                    <strong style="color: #007A3D;">{{ "{:,.2f}".format(sale.total_amount) }}</strong>
+                    <small class="text-muted">{{ sale.currency }}</small>
+                  </td>
+                  <td>
+                    {% if sale.payment_status == 'paid' %}
+                      <span class="badge badge-success">
+                        <i class="fas fa-check"></i> مدفوع
+                      </span>
+                    {% elif sale.payment_status == 'partial' %}
+                      <span class="badge badge-warning">
+                        <i class="fas fa-clock"></i> جزئي
+                      </span>
+                    {% else %}
+                      <span class="badge badge-danger">
+                        <i class="fas fa-times"></i> آجل
+                      </span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <span class="badge badge-success">
+                      <i class="fas fa-check-circle"></i> مؤكدة
+                    </span>
+                  </td>
+                  <td class="text-center">
+                    <div class="btn-group btn-group-sm">
+                      <a href="{{ url_for('sales.view', id=sale.id) }}" class="btn btn-info" title="{{ t('View') }}">
+                        <i class="fas fa-eye"></i>
+                      </a>
+                      <a href="{{ url_for('sales.print_invoice', id=sale.id) }}" class="btn btn-secondary" target="_blank" title="{{ t('Print') }}">
+                        <i class="fas fa-print"></i>
+                      </a>
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              {% else %}
+                <tr>
+                  <td colspan="7" class="text-center py-5">
+                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">لا توجد مبيعات حتى الآن</p>
+                    <a href="{{ url_for('sales.create') }}" class="btn btn-primary">
+                      <i class="fas fa-plus mr-2"></i>إنشاء فاتورة جديدة
+                    </a>
+                  </td>
+                </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% if stats.recent_sales and stats.recent_sales|length >= 10 %}
+      <div class="card-footer text-center">
+        <a href="{{ url_for('sales.index') }}" class="btn btn-link">
+          عرض جميع المبيعات <i class="fas fa-arrow-left mr-2"></i>
+        </a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row">
+  <div class="col-md-3 mb-3">
+    <a href="{{ url_for('sales.create') }}" class="card text-center text-decoration-none hover-card">
+      <div class="card-body">
+        <i class="fas fa-plus-circle fa-3x mb-3" style="color: #007A3D;"></i>
+        <h5 class="mb-0">{{ t('New Invoice') }}</h5>
+      </div>
+    </a>
+  </div>
+  <div class="col-md-3 mb-3">
+    <a href="{{ url_for('customers.create') }}" class="card text-center text-decoration-none hover-card">
+      <div class="card-body">
+        <i class="fas fa-user-plus fa-3x mb-3" style="color: #28a745;"></i>
+        <h5 class="mb-0">{{ t('New Customer') }}</h5>
+      </div>
+    </a>
+  </div>
+  <div class="col-md-3 mb-3">
+    <a href="{{ url_for('products.create') }}" class="card text-center text-decoration-none hover-card">
+      <div class="card-body">
+        <i class="fas fa-box fa-3x mb-3" style="color: #D4AF37;"></i>
+        <h5 class="mb-0">{{ t('New Product') }}</h5>
+      </div>
+    </a>
+  </div>
+  <div class="col-md-3 mb-3">
+    <a href="{{ url_for('reports.sales') }}" class="card text-center text-decoration-none hover-card">
+      <div class="card-body">
+        <i class="fas fa-chart-bar fa-3x mb-3" style="color: #1B4D89;"></i>
+        <h5 class="mb-0">{{ t('Reports') }}</h5>
+      </div>
+    </a>
+  </div>
+</div>
+
+<style>
+.hover-card {
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+.hover-card:hover {
+  transform: translateY(-8px) scale(1.05);
+  box-shadow: 0 12px 32px rgba(0, 122, 61, 0.2);
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Initialize DataTable for recent sales
+$(document).ready(function() {
+  {% if stats.recent_sales and stats.recent_sales|length > 0 %}
+  $('#recentSalesTable').DataTable({
+    language: { url: '{{ url_for("static", filename="datatables/Arabic.json") }}' },
+    pageLength: 10,
+    order: [[2, 'desc']],
+    dom: 'frtip',
+    responsive: true,
+    columnDefs: [{
+      targets: -1,
+      orderable: false
+    }]
+  });
+  {% endif %}
+});
+</script>
+{% endblock %}
+

@@ -1,0 +1,117 @@
+/* static/css/notes.css */
+.note-card {
+  border-radius: 14px;
+  padding: 1rem;
+  background: #fff;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+  transition: box-shadow 0.25s ease, transform 0.25s ease;
+}
+
+.note-card:hover {
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.25);
+  transform: translateY(-2px);
+}
+
+.pre-wrap {
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.8;
+  font-size: 0.95rem;
+  color: #212529;
+}
+
+.badge-pill {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  background-color: #e9ecef;
+  color: #212529;
+}
+
+#noteForm label.form-label {
+  font-weight: 600;
+  color: #444;
+}
+
+#noteForm textarea.form-control {
+  resize: none;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+#noteForm select.custom-select,
+#noteForm select.form-select {
+  font-size: 0.9rem;
+  padding: 0.45rem 0.75rem;
+  border-radius: 6px;
+}
+
+#noteForm .form-check {
+  display: flex;
+  align-items: center;
+}
+
+#noteForm .form-check-input {
+  margin: 0;
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+#noteForm .form-check-label {
+  font-size: 0.9rem;
+  color: #333;
+  cursor: pointer;
+  line-height: 1.2;
+  margin-right: 2rem;
+}
+
+#noteForm .btn {
+  min-width: 100px;
+  font-weight: 600;
+}
+
+#noteForm .btn-primary {
+  background-color: #155724;
+  border-color: #155724;
+}
+
+#noteForm .btn-outline-secondary {
+  color: #555;
+  border-color: #ccc;
+}
+
+#noteForm .btn-outline-secondary:hover {
+  background-color: #f8f9fa;
+}
+
+#noteModal .modal-content {
+  border-radius: 14px;
+  border: none;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.15);
+}
+
+#noteModal .modal-header {
+  border-bottom: 1px solid #eee;
+  padding: 1rem 1.25rem;
+}
+
+#noteModal .modal-title {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #222;
+}
+
+#noteModal .modal-body {
+  padding: 1.25rem;
+}
+
+#noteModal .modal-footer {
+  border-top: 1px solid #eee;
+  padding: 0.75rem 1.25rem;
+}
+
+#noteModal .modal-dialog {
+  max-width: 700px;
+}

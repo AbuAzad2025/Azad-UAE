@@ -1,0 +1,375 @@
+{% extends 'base.html' %}
+{% block title %}إعدادات النظام المحاسبي - Accounting Settings{% endblock %}
+{% block page_title %}إعدادات النظام المحاسبي{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+  <div class="col-12">
+    <a href="{{ url_for('ledger.admin_dashboard') }}" class="btn btn-secondary">
+      <i class="fas fa-arrow-right mr-2"></i>العودة للوحة التحكم
+    </a>
+  </div>
+</div>
+
+<div class="row">
+  <!-- الإعدادات العامة -->
+  <div class="col-lg-6">
+    <div class="card">
+      <div class="card-header bg-gradient-primary">
+        <h5 class="card-title text-white mb-0">
+          <i class="fas fa-cogs mr-2"></i>الإعدادات العامة
+        </h5>
+      </div>
+      <div class="card-body">
+        <form action="">
+          <div class="form-group">
+            <label>العملة الأساسية:</label>
+            <select class="form-control">
+              <option value="AED" selected>درهم إماراتي (AED)</option>
+              <option value="USD">دولار أمريكي (USD)</option>
+              <option value="EUR">يورو (EUR)</option>
+              <option value="SAR">ريال سعودي (SAR)</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label>السنة المالية:</label>
+            <select class="form-control">
+              <option value="calendar">تقويمي (يناير - ديسمبر)</option>
+              <option value="fiscal">مالي (أبريل - مارس)</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label>نظام الترقيم:</label>
+            <select class="form-control">
+              <option value="auto">تلقائي</option>
+              <option value="manual">يدوي</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label>عدد الأرقام العشرية:</label>
+            <select class="form-control">
+              <option value="2" selected>2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+            </select>
+          </div>
+          
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save mr-2"></i>حفظ الإعدادات
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+  
+  <!-- إعدادات الحسابات -->
+  <div class="col-lg-6">
+    <div class="card">
+      <div class="card-header bg-gradient-success">
+        <h5 class="card-title text-white mb-0">
+          <i class="fas fa-chart-line mr-2"></i>إعدادات الحسابات
+        </h5>
+      </div>
+      <div class="card-body">
+        <form action="">
+          <div class="form-group">
+            <label>طول كود الحساب:</label>
+            <select class="form-control">
+              <option value="4" selected>4 أرقام</option>
+              <option value="6">6 أرقام</option>
+              <option value="8">8 أرقام</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label>مستوى الحسابات:</label>
+            <select class="form-control">
+              <option value="3" selected>3 مستويات</option>
+              <option value="4">4 مستويات</option>
+              <option value="5">5 مستويات</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label>التحقق من التوازن:</label>
+            <div class="form-check">
+              <input type="checkbox" class="form-check-input" id="balance_check" checked>
+              <label class="form-check-label" for="balance_check">
+                التحقق من توازن القيود تلقائياً
+              </label>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label>التحقق من الحسابات الرئيسية:</label>
+            <div class="form-check">
+              <input type="checkbox" class="form-check-input" id="header_check" checked>
+              <label class="form-check-label" for="header_check">
+                منع القيود المباشرة على الحسابات الرئيسية
+              </label>
+            </div>
+          </div>
+          
+          <button type="submit" class="btn btn-success">
+            <i class="fas fa-save mr-2"></i>حفظ الإعدادات
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- إعدادات التقارير -->
+<div class="row mt-4">
+  <div class="col-lg-6">
+    <div class="card">
+      <div class="card-header bg-gradient-info">
+        <h5 class="card-title text-white mb-0">
+          <i class="fas fa-chart-pie mr-2"></i>إعدادات التقارير
+        </h5>
+      </div>
+      <div class="card-body">
+        <form action="">
+          <div class="form-group">
+            <label>تنسيق التواريخ:</label>
+            <select class="form-control">
+              <option value="dd/mm/yyyy" selected>يوم/شهر/سنة</option>
+              <option value="mm/dd/yyyy">شهر/يوم/سنة</option>
+              <option value="yyyy-mm-dd">سنة-شهر-يوم</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label>تنسيق الأرقام:</label>
+            <select class="form-control">
+              <option value="1,234.56" selected>1,234.56</option>
+              <option value="1.234,56">1.234,56</option>
+              <option value="1 234,56">1 234,56</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label>اللغة الافتراضية:</label>
+            <select class="form-control">
+              <option value="ar" selected>العربية</option>
+              <option value="en">الإنجليزية</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label>تضمين الصفحة الرئيسية:</label>
+            <div class="form-check">
+              <input type="checkbox" class="form-check-input" id="header_page" checked>
+              <label class="form-check-label" for="header_page">
+                إضافة رأس الصفحة في التقارير
+              </label>
+            </div>
+          </div>
+          
+          <button type="submit" class="btn btn-info">
+            <i class="fas fa-save mr-2"></i>حفظ الإعدادات
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+  
+  <!-- إعدادات الأمان -->
+  <div class="col-lg-6">
+    <div class="card">
+      <div class="card-header bg-gradient-warning">
+        <h5 class="card-title text-white mb-0">
+          <i class="fas fa-shield-alt mr-2"></i>إعدادات الأمان
+        </h5>
+      </div>
+      <div class="card-body">
+        <form action="">
+          <div class="form-group">
+            <label>مدة انتهاء الجلسة (دقيقة):</label>
+            <input type="number" class="form-control" value="30" min="5" max="480">
+          </div>
+          
+          <div class="form-group">
+            <label>عدد المحاولات المسموحة:</label>
+            <input type="number" class="form-control" value="3" min="1" max="10">
+          </div>
+          
+          <div class="form-group">
+            <label>تشفير البيانات:</label>
+            <div class="form-check">
+              <input type="checkbox" class="form-check-input" id="encryption" checked>
+              <label class="form-check-label" for="encryption">
+                تشفير البيانات الحساسة
+              </label>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label>سجل العمليات:</label>
+            <div class="form-check">
+              <input type="checkbox" class="form-check-input" id="audit_log" checked>
+              <label class="form-check-label" for="audit_log">
+                تسجيل جميع العمليات
+              </label>
+            </div>
+          </div>
+          
+          <button type="submit" class="btn btn-warning">
+            <i class="fas fa-save mr-2"></i>حفظ الإعدادات
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- إعدادات النسخ الاحتياطي -->
+<div class="row mt-4">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header bg-gradient-secondary">
+        <h5 class="card-title text-white mb-0">
+          <i class="fas fa-database mr-2"></i>إعدادات النسخ الاحتياطي
+        </h5>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6">
+            <form action="">
+              <div class="form-group">
+                <label>تكرار النسخ الاحتياطي:</label>
+                <select class="form-control">
+                  <option value="daily" selected>يومي</option>
+                  <option value="weekly">أسبوعي</option>
+                  <option value="monthly">شهري</option>
+                </select>
+              </div>
+              
+              <div class="form-group">
+                <label>وقت النسخ الاحتياطي:</label>
+                <input type="time" class="form-control" value="02:00">
+              </div>
+              
+              <div class="form-group">
+                <label>عدد النسخ المحفوظة:</label>
+                <input type="number" class="form-control" value="30" min="1" max="365">
+              </div>
+              
+              <button type="submit" class="btn btn-secondary">
+                <i class="fas fa-save mr-2"></i>حفظ الإعدادات
+              </button>
+            </form>
+          </div>
+          
+          <div class="col-md-6">
+            <div class="text-center">
+              <h5>النسخ الاحتياطي اليدوي</h5>
+              <p class="text-muted">إنشاء نسخة احتياطية فورية من قاعدة البيانات</p>
+              <button type="button" class="btn btn-primary btn-lg" onclick="createBackup()">
+                <i class="fas fa-download mr-2"></i>إنشاء نسخة احتياطية
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- إحصائيات النظام -->
+<div class="row mt-4">
+  <div class="col-md-3">
+    <div class="card bg-gradient-primary text-white">
+      <div class="card-body">
+        <div class="d-flex justify-content-between">
+          <div>
+            <h4 class="mb-0">50+</h4>
+            <p class="mb-0">حسابات محاسبية</p>
+          </div>
+          <div class="align-self-center">
+            <i class="fas fa-chart-line fa-2x"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-md-3">
+    <div class="card bg-gradient-success text-white">
+      <div class="card-body">
+        <div class="d-flex justify-content-between">
+          <div>
+            <h4 class="mb-0">12</h4>
+            <p class="mb-0">تقارير متاحة</p>
+          </div>
+          <div class="align-self-center">
+            <i class="fas fa-chart-pie fa-2x"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-md-3">
+    <div class="card bg-gradient-info text-white">
+      <div class="card-body">
+        <div class="d-flex justify-content-between">
+          <div>
+            <h4 class="mb-0">5</h4>
+            <p class="mb-0">أنواع قيود</p>
+          </div>
+          <div class="align-self-center">
+            <i class="fas fa-book fa-2x"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-md-3">
+    <div class="card bg-gradient-warning text-white">
+      <div class="card-body">
+        <div class="d-flex justify-content-between">
+          <div>
+            <h4 class="mb-0">100%</h4>
+            <p class="mb-0">أمان البيانات</p>
+          </div>
+          <div class="align-self-center">
+            <i class="fas fa-shield-alt fa-2x"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function createBackup() {
+  if (confirm('هل تريد إنشاء نسخة احتياطية الآن؟')) {
+    // إرسال طلب إنشاء نسخة احتياطية
+    fetch('{{ url_for("owner.backup_now") }}', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': document.querySelector('meta[name=csrf-token]').getAttribute('content')
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        alert('تم إنشاء النسخة الاحتياطية بنجاح!');
+      } else {
+        alert('فشل في إنشاء النسخة الاحتياطية: ' + data.message);
+      }
+    })
+    .catch(error => {      alert('حدث خطأ في إنشاء النسخة الاحتياطية');
+    });
+  }
+}
+</script>
+{% endblock %}

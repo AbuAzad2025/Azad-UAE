@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+{% block title %}إعدادات الرسائل{% endblock %}
+{% block content %}
+<div class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2 align-items-center">
+      <div class="col-sm-6">
+        <h1 class="m-0"><i class="fas fa-sms text-info"></i> إعدادات الرسائل النصية</h1>
+      </div>
+      <div class="col-sm-6 d-flex justify-content-end">
+        <div class="d-flex align-items-center">
+          <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary ml-2">
+            <i class="fas fa-arrow-right mr-1"></i> الرجوع للوحة المالك
+          </a>
+          <ol class="breadcrumb float-sm-left mb-0">
+            <li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">لوحة المالك</a></li>
+            <li class="breadcrumb-item active">إعدادات الرسائل</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-12">
+        <div class="btn-group quick-nav" role="group">
+          <a href="{{ url_for('owner.sms_settings') }}" class="btn btn-info">
+            <i class="fas fa-sms"></i> SMS
+          </a>
+          <a href="{{ url_for('owner.email_settings') }}" class="btn btn-outline-info">
+            <i class="fas fa-envelope"></i> البريد
+          </a>
+          <a href="{{ url_for('owner.whatsapp_settings') }}" class="btn btn-outline-success">
+            <i class="fab fa-whatsapp"></i> واتساب
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="content sms-settings-page">
+  <div class="container-fluid">
+    <div class="card">
+      <div class="card-header bg-gradient-info text-white">
+        <h3 class="card-title"><i class="fas fa-broadcast-tower mr-2"></i> إعداد الاتصال بمزود الرسائل</h3>
+      </div>
+      <div class="card-body">
+        <form method="POST" action="{{ url_for('owner.sms_settings') }}" class="sms-settings-form">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+          <div class="form-group">
+            <label>مزود الخدمة</label>
+            <select name="sms_provider" class="form-control">
+              <option value="" {{ 'selected' if not settings.sms_provider }}>بلا</option>
+              <option value="twilio" {{ 'selected' if settings.sms_provider == 'twilio' }}>Twilio</option>
+              <option value="nexmo" {{ 'selected' if settings.sms_provider == 'nexmo' }}>Nexmo (Vonage)</option>
+              <option value="local" {{ 'selected' if settings.sms_provider == 'local' }}>مزود محلي</option>
+            </select>
+            <small class="form-text text-muted mt-2">
+              اختر مزود الرسائل الذي تملك بياناته. يمكنك لاحقاً ربط API خارجي حسب الحاجة.
+            </small>
+          </div>
+
+          <div class="form-group">
+            <label>API Key</label>
+            <input type="password"
+                   name="sms_api_key"
+                   class="form-control"
+                   value="{{ settings.sms_api_key or '' }}"
+                   placeholder="API Key من المزود">
+            <small class="form-text text-muted">
+              أدخل مفتاح API الخاص بالحساب لدى المزود، سيتم حفظه بشكل آمن.
+            </small>
+          </div>
+
+          <div class="form-group">
+            <label>اسم المرسل</label>
+            <input type="text"
+                   name="sms_sender_name"
+                   class="form-control"
+                   value="{{ settings.sms_sender_name or '' }}"
+                   placeholder="Azad Garage"
+                   maxlength="11">
+            <small class="form-text text-muted">الحد الأقصى 11 حرفاً، بدون مسافات لمنتجات بعض المزودين.</small>
+          </div>
+
+          <div class="form-group">
+            <div class="custom-control custom-switch custom-switch-on-success">
+              <input type="checkbox"
+                     class="custom-control-input"
+                     id="sms_enabled"
+                     name="sms_enabled"
+                     {% if settings.sms_enabled %}checked{% endif %}>
+              <label class="custom-control-label" for="sms_enabled">
+                تفعيل الرسائل النصية
+              </label>
+            </div>
+            <small class="form-text text-muted mt-2">
+              عند التفعيل، سيستخدم النظام الرسائل النصية لإرسال الإشعارات للعملاء.
+            </small>
+          </div>
+
+          <button type="submit" class="btn btn-info btn-lg">
+            <i class="fas fa-save mr-1"></i> حفظ الإعدادات
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .sms-settings-form .form-control,
+  .sms-settings-form textarea.form-control,
+  .sms-settings-form select.form-control {
+    height: auto !important;
+    min-height: 56px;
+    padding: 0.95rem 1.35rem;
+    font-size: 0.95rem;
+    border-radius: 10px;
+    line-height: 1.7;
+    width: 100%;
+  }
+
+  .sms-settings-form select.form-control {
+    text-align-last: center;
+    padding-inline-start: 2.2rem;
+    padding-inline-end: 2.2rem;
+    appearance: none;
+    -webkit-appearance: none;
+    background-color: #fff;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23647894' d='M6 8a1 1 0 0 1-.707-.293l-5-5a1 1 0 0 1 1.414-1.414L6 5.586 10.293 1.293a1 1 0 0 1 1.414 1.414l-5 5A1 1 0 0 1 6 8'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: left 0.8rem center;
+    background-size: 12px;
+  }
+
+  .sms-settings-form select.form-control option {
+    text-align: center;
+    padding: 0.75rem 1rem;
+  }
+
+  .sms-settings-form .form-control::placeholder {
+    color: #64748b;
+    opacity: 0.85;
+    text-align: center;
+  }
+
+  .quick-nav .btn {
+    min-width: 140px;
+  }
+
+  .quick-nav .btn + .btn {
+    margin-left: 0.5rem;
+  }
+</style>
+{% endblock %}

@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}شركة أزاد للأنظمة الذكية - وحدة التحكم SQL المتقدمة{% endblock %}
+
+{% block content %}
+<div class="content-wrapper">
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">وحدة التحكم SQL</h1>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">تنفيذ استعلامات SQL</h3>
+                        </div>
+                        <div class="card-body">
+                            <form method="POST" action="">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <div class="form-group">
+                                    <label for="sql_query">استعلام SQL:</label>
+                                    <textarea class="form-control" id="sql_query" name="sql_query" rows="10" 
+                                              placeholder="أدخل استعلام SQL هنا...">{{ request.form.get('sql_query', '') }}</textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-play"></i> تنفيذ الاستعلام
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% if error %}
+            <div class="row">
+                <div class="col-12">
+                    <div class="alert alert-danger">
+                        <h5><i class="icon fas fa-ban"></i> خطأ!</h5>
+                        {{ error }}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if result %}
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">نتائج الاستعلام</h3>
+                        </div>
+                        <div class="card-body">
+                            {% if result.message %}
+                                <div class="alert alert-success">
+                                    <h5><i class="icon fas fa-check"></i> نجح!</h5>
+                                    {{ result.message }}
+                                </div>
+                            {% else %}
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-striped">
+                                        <thead>
+                                            <tr>
+                                                {% for column in result.columns %}
+                                                <th>{{ column }}</th>
+                                                {% endfor %}
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for row in result.rows %}
+                                            <tr>
+                                                {% for cell in row %}
+                                                <td>{{ cell }}</td>
+                                                {% endfor %}
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <p><strong>عدد النتائج:</strong> {{ result.count }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </section>
+</div>
+{% endblock %}

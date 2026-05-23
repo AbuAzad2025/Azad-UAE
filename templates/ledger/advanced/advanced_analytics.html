@@ -1,0 +1,281 @@
+{% extends 'base.html' %}
+{% block title %}نظام التحليل المالي المتقدم - Advanced Financial Analytics{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card bg-gradient-primary text-white">
+        <div class="card-body">
+          <h2><i class="fas fa-chart-area mr-2"></i>نظام التحليل المالي المتقدم</h2>
+          <p>تحليلات شاملة ونسب مالية ومؤشرات أداء وتوقعات مستقبلية</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- النسب المالية -->
+  <div class="row">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-header bg-info text-white">
+          <h4><i class="fas fa-percent mr-2"></i>النسب المالية الرئيسية</h4>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <!-- نسب السيولة -->
+            <div class="col-md-3">
+              <h5>نسب السيولة</h5>
+              <ul class="list-group">
+                <li class="list-group-item d-flex justify-content-between">
+                  <span>النسبة الجارية</span>
+                  <strong class="text-success">{{ "{:.2f}".format(ratios.liquidity.current_ratio) }}</strong>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                  <span>النسبة السريعة</span>
+                  <strong class="text-info">{{ "{:.2f}".format(ratios.liquidity.quick_ratio) }}</strong>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                  <span>نسبة النقدية</span>
+                  <strong class="text-primary">{{ "{:.2f}".format(ratios.liquidity.cash_ratio) }}</strong>
+                </li>
+              </ul>
+            </div>
+
+            <!-- نسب الربحية -->
+            <div class="col-md-3">
+              <h5>نسب الربحية</h5>
+              <ul class="list-group">
+                <li class="list-group-item d-flex justify-content-between">
+                  <span>هامش الربح الإجمالي</span>
+                  <strong class="text-success">{{ "{:.1f}".format(ratios.profitability.gross_profit_margin) }}%</strong>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                  <span>هامش الربح الصافي</span>
+                  <strong class="text-info">{{ "{:.1f}".format(ratios.profitability.net_profit_margin) }}%</strong>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                  <span>العائد على الأصول</span>
+                  <strong class="text-primary">{{ "{:.1f}".format(ratios.profitability.return_on_assets) }}%</strong>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                  <span>العائد على حقوق الملكية</span>
+                  <strong class="text-warning">{{ "{:.1f}".format(ratios.profitability.return_on_equity) }}%</strong>
+                </li>
+              </ul>
+            </div>
+
+            <!-- نسب الكفاءة -->
+            <div class="col-md-3">
+              <h5>نسب الكفاءة</h5>
+              <ul class="list-group">
+                <li class="list-group-item d-flex justify-content-between">
+                  <span>معدل دوران الأصول</span>
+                  <strong class="text-success">{{ "{:.2f}".format(ratios.efficiency.asset_turnover) }}</strong>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                  <span>نسبة المصروفات</span>
+                  <strong class="text-info">{{ "{:.1f}".format(ratios.efficiency.expense_ratio) }}%</strong>
+                </li>
+              </ul>
+            </div>
+
+            <!-- نسب المديونية -->
+            <div class="col-md-3">
+              <h5>نسب المديونية</h5>
+              <ul class="list-group">
+                <li class="list-group-item d-flex justify-content-between">
+                  <span>الدين إلى حقوق الملكية</span>
+                  <strong class="text-warning">{{ "{:.2f}".format(ratios.leverage.debt_to_equity) }}</strong>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                  <span>الدين إلى الأصول</span>
+                  <strong class="text-info">{{ "{:.2f}".format(ratios.leverage.debt_to_assets) }}</strong>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                  <span>مضاعف حقوق الملكية</span>
+                  <strong class="text-primary">{{ "{:.2f}".format(ratios.leverage.equity_multiplier) }}</strong>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- توزيع المصروفات والإيرادات -->
+  <div class="row mt-4">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header bg-danger text-white">
+          <h4><i class="fas fa-chart-pie mr-2"></i>توزيع المصروفات</h4>
+        </div>
+        <div class="card-body">
+          <canvas id="expenseChart" height="300"></canvas>
+          <div class="mt-3">
+            <h5>الإجمالي: {{ "{:,.2f}".format(expense_breakdown.total) }} د.إ</h5>
+            <table class="table table-sm">
+              <thead>
+                <tr>
+                  <th>الحساب</th>
+                  <th>المبلغ</th>
+                  <th>النسبة</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in expense_breakdown.items[:5] %}
+                <tr>
+                  <td>{{ item.account_name }}</td>
+                  <td>{{ "{:,.2f}".format(item.amount) }}</td>
+                  <td><span class="badge badge-danger">{{ "{:.1f}".format(item.percentage) }}%</span></td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header bg-success text-white">
+          <h4><i class="fas fa-chart-pie mr-2"></i>توزيع الإيرادات</h4>
+        </div>
+        <div class="card-body">
+          <canvas id="revenueChart" height="300"></canvas>
+          <div class="mt-3">
+            <h5>الإجمالي: {{ "{:,.2f}".format(revenue_breakdown.total) }} د.إ</h5>
+            <table class="table table-sm">
+              <thead>
+                <tr>
+                  <th>الحساب</th>
+                  <th>المبلغ</th>
+                  <th>النسبة</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in revenue_breakdown.items[:5] %}
+                <tr>
+                  <td>{{ item.account_name }}</td>
+                  <td>{{ "{:,.2f}".format(item.amount) }}</td>
+                  <td><span class="badge badge-success">{{ "{:.1f}".format(item.percentage) }}%</span></td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- التوقعات المالية -->
+  <div class="row mt-4">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-header bg-warning text-dark">
+          <h4><i class="fas fa-crystal-ball mr-2"></i>التوقعات المالية</h4>
+        </div>
+        <div class="card-body">
+          <canvas id="forecastChart" height="100"></canvas>
+          <div class="alert alert-info mt-3">
+            <i class="fas fa-info-circle mr-2"></i>
+            التوقعات مبنية على تحليل البيانات التاريخية ومعدلات النمو السابقة
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script>
+// رسم بياني للمصروفات
+const expenseData = {{ expense_breakdown.items|tojson }};
+const expenseLabels = expenseData.slice(0, 5).map(item => item.account_name);
+const expenseValues = expenseData.slice(0, 5).map(item => item.amount);
+
+new Chart(document.getElementById('expenseChart'), {
+  type: 'doughnut',
+  data: {
+    labels: expenseLabels,
+    datasets: [{
+      data: expenseValues,
+      backgroundColor: ['#dc3545', '#f5576c', '#ff6384', '#ff8fa3', '#ffb3c1']
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false
+  }
+});
+
+// رسم بياني للإيرادات
+const revenueData = {{ revenue_breakdown.items|tojson }};
+const revenueLabels = revenueData.slice(0, 5).map(item => item.account_name);
+const revenueValues = revenueData.slice(0, 5).map(item => item.amount);
+
+new Chart(document.getElementById('revenueChart'), {
+  type: 'doughnut',
+  data: {
+    labels: revenueLabels,
+    datasets: [{
+      data: revenueValues,
+      backgroundColor: ['#28a745', '#20c997', '#17a2b8', '#6610f2', '#6f42c1']
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false
+  }
+});
+
+// رسم بياني للتوقعات
+const forecastData = {{ forecast|tojson }};
+const forecastLabels = forecastData.map(item => item.month);
+const forecastRevenue = forecastData.map(item => item.revenue);
+const forecastExpenses = forecastData.map(item => item.expenses);
+const forecastProfit = forecastData.map(item => item.profit);
+
+new Chart(document.getElementById('forecastChart'), {
+  type: 'line',
+  data: {
+    labels: forecastLabels,
+    datasets: [
+      {
+        label: 'الإيرادات المتوقعة',
+        data: forecastRevenue,
+        borderColor: '#28a745',
+        backgroundColor: 'rgba(40, 167, 69, 0.1)',
+        fill: true,
+        borderDash: [5, 5]
+      },
+      {
+        label: 'المصروفات المتوقعة',
+        data: forecastExpenses,
+        borderColor: '#dc3545',
+        backgroundColor: 'rgba(220, 53, 69, 0.1)',
+        fill: true,
+        borderDash: [5, 5]
+      },
+      {
+        label: 'الربح المتوقع',
+        data: forecastProfit,
+        borderColor: '#007bff',
+        backgroundColor: 'rgba(0, 123, 255, 0.1)',
+        fill: true,
+        borderDash: [5, 5]
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false
+  }
+});
+</script>
+{% endblock %}

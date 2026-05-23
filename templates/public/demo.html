@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="{{ current_language }}" dir="{{ 'rtl' if is_rtl else 'ltr' }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>شركة أزاد للأنظمة الذكية - احجز عرضاً توضيحياً تفاعلياً</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='adminlte/plugins/fontawesome-free/css/all.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/accessibility.css') }}">
+    <style>
+        :root {
+            --gulf-gold: #D4AF37;
+            --gulf-blue: #1B4D89;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Tajawal', sans-serif; background: #0a0e27; color: white; }
+        
+        .demo-container {
+            max-width: 800px;
+            margin: 100px auto;
+            padding: 60px;
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 30px;
+            border: 2px solid var(--gulf-gold);
+        }
+        h1 {
+            text-align: center;
+            font-size: 3rem;
+            color: var(--gulf-gold);
+            margin-bottom: 20px;
+        }
+        p {
+            text-align: center;
+            font-size: 1.2rem;
+            margin-bottom: 40px;
+            color: rgba(255,255,255,0.8);
+        }
+        .demo-info {
+            background: rgba(212,175,55,0.1);
+            padding: 30px;
+            border-radius: 15px;
+            border-right: 5px solid var(--gulf-gold);
+            margin-bottom: 30px;
+        }
+        .demo-info h3 {
+            color: var(--gulf-gold);
+            margin-bottom: 15px;
+        }
+        .demo-info ul {
+            margin-right: 20px;
+            line-height: 2;
+        }
+        .whatsapp-btn {
+            display: block;
+            background: #25D366;
+            color: white;
+            padding: 20px;
+            border-radius: 50px;
+            text-align: center;
+            text-decoration: none;
+            font-size: 1.5rem;
+            font-weight: 700;
+            transition: all 0.3s;
+        }
+        .whatsapp-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 40px rgba(37,211,102,0.4);
+        }
+    </style>
+</head>
+<body class="keep-theme demo-page">
+
+    <!-- Language Switcher -->
+    <div style="position: fixed; top: 20px; right: 20px; z-index: 9999;">
+        <a href="{{ url_for('language.set_language', lang='en' if session.get('language', 'ar') == 'ar' else 'ar') }}" class="btn btn-sm" style="background: rgba(255,255,255,0.9); border-radius: 20px; padding: 8px 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+            <i class="fas fa-globe mr-2"></i>{{ 'English' if session.get('language', 'ar') == 'ar' else 'العربية' }}
+        </a>
+    </div>
+
+    <div class="demo-container">
+        <h1>🚀 احجز عرضاً توضيحياً مجانياً</h1>
+        <p>سنريك كيف يمكن لنظامنا تحويل إدارة أعمالك بالكامل</p>
+
+        <div class="demo-info">
+            <h3>ماذا ستحصل في العرض؟</h3>
+            <ul>
+                <li>جولة كاملة في النظام (30-45 دقيقة)</li>
+                <li>شرح مفصل لجميع الميزات</li>
+                <li>إجابات على جميع أسئلتك</li>
+                <li>تجربة مجانية لمدة 14 يوم</li>
+                <li>استشارة مجانية لاحتياجات شركتك</li>
+            </ul>
+        </div>
+
+        <a href="https://wa.me/{{ config.COMPANY_WHATSAPP }}?text=مرحباً، أرغب في حجز عرض توضيحي مجاني للنظام" class="whatsapp-btn" target="_blank">
+            <i class="fab fa-whatsapp"></i> احجز الآن عبر واتساب
+        </a>
+
+        <p style="margin-top: 30px; font-size: 1rem;">أو اتصل بنا على: {{ config.COMPANY_PHONE }} / {{ config.COMPANY_PHONE_2 }}</p>
+    </div>
+
+</body>
+</html>
+

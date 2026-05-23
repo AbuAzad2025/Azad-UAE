@@ -1,0 +1,248 @@
+{% extends 'base.html' %}
+
+{% block title %}شركة أزاد للأنظمة الذكية - النسخ الاحتياطي المجدول التلقائي{% endblock %}
+{% block page_title %}<i class="fas fa-clock"></i> النسخ الاحتياطي المجدول{% endblock %}
+
+{% block content %}
+<div class="row">
+  <!-- الإحصائيات -->
+  <div class="col-lg-3 col-6">
+    <div class="small-box bg-info">
+      <div class="inner">
+        <h3>{{ stats.auto_count }}</h3>
+        <p>نسخة تلقائية</p>
+      </div>
+      <div class="icon">
+        <i class="fas fa-robot"></i>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-3 col-6">
+    <div class="small-box bg-success">
+      <div class="inner">
+        <h3>{{ stats.total_size_mb }}</h3>
+        <p>MB مساحة</p>
+      </div>
+      <div class="icon">
+        <i class="fas fa-hdd"></i>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-3 col-6">
+    <div class="small-box bg-warning">
+      <div class="inner">
+        <h3>{{ settings.keep_count }}</h3>
+        <p>الحد الأقصى</p>
+      </div>
+      <div class="icon">
+        <i class="fas fa-layer-group"></i>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-3 col-6">
+    <div class="small-box {% if settings.enabled %}bg-success{% else %}bg-danger{% endif %}">
+      <div class="inner">
+        <h3>{% if settings.enabled %}<i class="fas fa-check"></i>{% else %}<i class="fas fa-times"></i>{% endif %}</h3>
+        <p>{% if settings.enabled %}مفعّل{% else %}معطّل{% endif %}</p>
+      </div>
+      <div class="icon">
+        <i class="fas fa-power-off"></i>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <!-- إعدادات الجدولة -->
+  <div class="col-md-6">
+    <div class="card card-primary">
+      <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-cog"></i> إعدادات النسخ التلقائي</h3>
+      </div>
+      <div class="card-body">
+        <div class="alert alert-info">
+          <i class="fas fa-info-circle"></i>
+          <strong>نظام ذكي:</strong> يحتفظ تلقائياً بآخر {{ settings.keep_count }} نسخ ويحذف الأقدم
+        </div>
+
+        <form method="POST" action="">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="form-group">
+            <label><i class="fas fa-sync"></i> التكرار:</label>
+            <select name="frequency" class="form-control" required>
+              <option value="hourly" {% if settings.frequency == 'hourly' %}selected{% endif %}>كل ساعة</option>
+              <option value="daily" {% if settings.frequency == 'daily' %}selected{% endif %}>يومياً (موصى به)</option>
+              <option value="weekly" {% if settings.frequency == 'weekly' %}selected{% endif %}>أسبوعياً</option>
+              <option value="monthly" {% if settings.frequency == 'monthly' %}selected{% endif %}>شهرياً</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label><i class="fas fa-clock"></i> الوقت المفضل:</label>
+            <input type="time" name="backup_time" class="form-control" 
+                   value="{{ settings.backup_time }}" required>
+            <small class="form-text text-muted">
+              يُنصح باختيار وقت قليل الاستخدام (مثل 2:00 صباحاً)
+            </small>
+          </div>
+
+          <div class="form-group">
+            <label><i class="fas fa-layer-group"></i> عدد النسخ المحفوظة:</label>
+            <input type="number" name="keep_count" class="form-control" 
+                   value="{{ settings.keep_count }}" min="3" max="50" required>
+            <small class="form-text text-muted">
+              الحد الأدنى: 3 | الحد الأقصى: 50
+            </small>
+          </div>
+
+          <div class="custom-control custom-switch mb-3">
+            <input type="checkbox" class="custom-control-input" id="enableSchedule" 
+                   name="enabled" {% if settings.enabled %}checked{% endif %}>
+            <label class="custom-control-label" for="enableSchedule">
+              <strong>تفعيل النسخ الاحتياطي التلقائي</strong>
+            </label>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block">
+            <i class="fas fa-save"></i> حفظ الإعدادات
+          </button>
+        </form>
+
+        <hr>
+
+        <div class="text-center">
+          <form method="POST" action="{{ url_for('owner.backup_now') }}" style="display: inline;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-success">
+              <i class="fas fa-download"></i> نسخة احتياطية الآن
+            </button>
+          </form>
+          
+          <a href="{{ url_for('owner.list_backups') }}" class="btn btn-info">
+            <i class="fas fa-list"></i> كل النسخ
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- آخر النسخ التلقائية -->
+  <div class="col-md-6">
+    <div class="card card-success">
+      <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-history"></i> آخر النسخ التلقائية</h3>
+      </div>
+      <div class="card-body">
+        {% if backups %}
+        <div class="table-responsive">
+          <table class="table table-sm table-hover">
+            <thead>
+              <tr>
+                <th>التاريخ والوقت</th>
+                <th>الحجم</th>
+                <th><i class="fas fa-check-circle text-success"></i></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for backup in backups[:10] %}
+              <tr>
+                <td>
+                  <small>
+                    <i class="far fa-calendar"></i>
+                    {{ backup.timestamp[:8] }}<br>
+                    <i class="far fa-clock"></i>
+                    {{ backup.timestamp[9:].replace('_', ':') }}
+                  </small>
+                </td>
+                <td>
+                  <span class="badge badge-info">
+                    {{ backup.size_mb }} MB
+                  </span>
+                </td>
+                <td>
+                  <i class="fas fa-check-circle text-success" title="متاح"></i>
+                  {% if backup.compressed %}
+                  <i class="fas fa-compress text-info" title="مضغوط"></i>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="alert alert-warning text-center">
+          <i class="fas fa-exclamation-triangle"></i>
+          <p class="mb-0">لا توجد نسخ تلقائية بعد</p>
+          <small>سيتم إنشاء أول نسخة في الموعد المحدد</small>
+        </div>
+        {% endif %}
+
+        {% if backups|length > 10 %}
+        <div class="text-center mt-3">
+          <a href="{{ url_for('owner.list_backups') }}" class="btn btn-sm btn-outline-primary">
+            عرض الكل ({{ backups|length }})
+          </a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- معلومات النظام -->
+<div class="row">
+  <div class="col-md-12">
+    <div class="card card-outline card-info">
+      <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-shield-alt"></i> معلومات الأمان</h3>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-4">
+            <div class="info-box bg-gradient-success">
+              <span class="info-box-icon"><i class="fas fa-lock"></i></span>
+              <div class="info-box-content">
+                <span class="info-box-text">الحماية</span>
+                <span class="info-box-number">تشفير + Checksum</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-4">
+            <div class="info-box bg-gradient-info">
+              <span class="info-box-icon"><i class="fas fa-compress"></i></span>
+              <div class="info-box-content">
+                <span class="info-box-text">الضغط</span>
+                <span class="info-box-number">GZIP - توفير 60%</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-4">
+            <div class="info-box bg-gradient-warning">
+              <span class="info-box-icon"><i class="fas fa-user-shield"></i></span>
+              <div class="info-box-content">
+                <span class="info-box-text">الاستعادة</span>
+                <span class="info-box-number">للمالك فقط</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <ul class="list-unstyled mt-3">
+          <li><i class="fas fa-check text-success"></i> النسخ الاحتياطية محمية بـ SHA256 checksum</li>
+          <li><i class="fas fa-check text-success"></i> ضغط تلقائي يوفر 60% من المساحة</li>
+          <li><i class="fas fa-check text-success"></i> حذف تلقائي للنسخ القديمة</li>
+          <li><i class="fas fa-check text-success"></i> الاستعادة تتطلب كلمة مرور المالك</li>
+          <li><i class="fas fa-check text-success"></i> نسخة احتياطية تلقائية قبل كل استعادة</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

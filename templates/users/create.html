@@ -1,0 +1,404 @@
+{% extends 'base.html' %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - إضافة مستخدم{% endblock %}
+{% block page_title %}
+<div class="d-flex justify-content-between align-items-center">
+  <div>
+    <h1 class="mb-0"><i class="fas fa-user-plus mr-2"></i>إضافة مستخدم جديد</h1>
+  </div>
+  <div>
+    <a href="{{ url_for('users.index') }}" class="btn btn-secondary">
+      <i class="fas fa-arrow-right mr-2"></i>العودة للمستخدمين
+    </a>
+    <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
+      <i class="fas fa-home mr-2"></i>الرئيسية
+    </a>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Visual distinction for required and optional fields */
+.required-field {
+  position: relative;
+}
+
+.required-field label {
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.required-field::before {
+  content: '';
+  position: absolute;
+  left: -10px;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  border-radius: 2px;
+}
+
+.optional-field label {
+  font-weight: 500;
+  color: #7f8c8d;
+}
+
+.optional-field::after {
+  content: '(اختياري)';
+  position: absolute;
+  left: 10px;
+  top: 8px;
+  font-size: 12px;
+  color: #95a5a6;
+  font-weight: normal;
+  background: #ecf0f1;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.form-control:focus {
+  border-color: #667eea !important;
+  box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25) !important;
+}
+
+.required-field .form-control {
+  border-left: 3px solid #e74c3c;
+}
+
+.optional-field .form-control {
+  border-left: 3px solid #95a5a6;
+}
+
+.field-section {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border: 2px solid #e9ecef;
+}
+
+.field-section h5 {
+  color: #667eea;
+  font-weight: 700;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #667eea;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="card shadow-lg">
+  <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+    <h3 class="card-title mb-0">
+      <i class="fas fa-user-plus mr-2"></i>إضافة مستخدم جديد
+    </h3>
+  </div>
+  
+  {% set form_data = form_data if form_data is defined else request.form %}
+  <form method="POST" action="{{ url_for('users.create') }}" id="createUserForm">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    
+    <div class="card-body">
+      
+      <!-- معلومات الحساب الأساسية -->
+      <div class="field-section">
+        <h5><i class="fas fa-user-circle mr-2"></i>معلومات الحساب الأساسية</h5>
+        
+        <div class="row">
+          <div class="col-md-6 required-field">
+            <div class="form-group">
+              <label>
+                <i class="fas fa-user text-primary"></i> اسم المستخدم
+                <span class="text-danger">*</span>
+              </label>
+              <input type="text" name="username" class="form-control" placeholder="مثال: ahmed123" required minlength="3" pattern="[a-zA-Z0-9_]+" title="أحرف إنجليزية وأرقام فقط"
+                     value="{{ form_data.get('username', '') }}">
+              <small class="form-text text-muted">اسم فريد للدخول (أحرف إنجليزية وأرقام فقط)</small>
+            </div>
+          </div>
+
+          <div class="col-md-6 required-field">
+            <div class="form-group">
+              <label>
+                <i class="fas fa-envelope text-info"></i> البريد الإلكتروني
+                <span class="text-danger">*</span>
+              </label>
+              <input type="email" name="email" class="form-control" placeholder="example@domain.com" required
+                     value="{{ form_data.get('email', '') }}">
+              <small class="form-text text-muted">بريد فريد للمستخدم (إجباري)</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- المعلومات الشخصية -->
+      <div class="field-section">
+        <h5><i class="fas fa-id-card mr-2"></i>المعلومات الشخصية</h5>
+        
+        <div class="row">
+          <div class="col-md-6 required-field">
+            <div class="form-group">
+              <label>
+                <i class="fas fa-user-tag text-success"></i> الاسم الكامل
+                <span class="text-danger">*</span>
+              </label>
+              <input type="text" name="full_name" class="form-control" placeholder="Ahmed Mohamed Ali" required minlength="3"
+                     value="{{ form_data.get('full_name', '') }}">
+              <small class="form-text text-muted">الاسم الكامل بالإنجليزية</small>
+            </div>
+          </div>
+
+          <div class="col-md-6 optional-field">
+            <div class="form-group">
+              <label>
+                <i class="fas fa-user-tag text-success"></i> الاسم بالعربية
+              </label>
+              <input type="text" name="full_name_ar" class="form-control" placeholder="أحمد محمد علي"
+                     value="{{ form_data.get('full_name_ar', '') }}">
+              <small class="form-text text-muted">الاسم الكامل بالعربية</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 optional-field">
+            <div class="form-group">
+              <label>
+                <i class="fas fa-phone text-warning"></i> رقم الهاتف
+              </label>
+              <input type="text" name="phone" class="form-control" placeholder="+971-50-123-4567"
+                     value="{{ form_data.get('phone', '') }}">
+              <small class="form-text text-muted">رقم الهاتف للتواصل</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- كلمة المرور -->
+      <div class="field-section">
+        <h5><i class="fas fa-lock mr-2"></i>كلمة المرور</h5>
+        
+        <div class="row">
+          <div class="col-md-6 required-field">
+            <div class="form-group">
+              <label>
+                <i class="fas fa-key text-danger"></i> كلمة المرور
+                <span class="text-danger">*</span>
+              </label>
+              <input type="password" name="password" id="password" class="form-control" placeholder="••••••••" required minlength="6">
+              <small class="form-text text-muted">6 أحرف على الأقل</small>
+            </div>
+          </div>
+
+          <div class="col-md-6 required-field">
+            <div class="form-group">
+              <label>
+                <i class="fas fa-check-circle text-success"></i> تأكيد كلمة المرور
+                <span class="text-danger">*</span>
+              </label>
+              <input type="password" name="confirm_password" id="confirm_password" class="form-control" placeholder="••••••••" required>
+              <small class="form-text text-muted">أعد كتابة كلمة المرور</small>
+              <div id="password-match-message" class="mt-2"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- الصلاحيات والحالة -->
+      <div class="field-section">
+        <h5><i class="fas fa-user-shield mr-2"></i>الصلاحيات والحالة</h5>
+        
+        <div class="row">
+          <div class="col-md-6 required-field">
+            <div class="form-group">
+              <label>
+                <i class="fas fa-users-cog text-primary"></i> الدور الوظيفي
+                <span class="text-danger">*</span>
+              </label>
+              {% set selected_role = form_data.get('role_id') %}
+              <select name="role_id" id="role_id" class="form-control" required>
+                <option value="" {% if not selected_role %}selected{% endif %}>بلا</option>
+                {% for role in roles %}
+                <option value="{{ role.id }}" data-role-slug="{{ role.slug }}" {% if selected_role and selected_role|int == role.id %}selected{% endif %}>
+                  {{ role.name_ar or role.name }}
+                  {% if role.description %}({{ role.description }}){% endif %}
+                </option>
+                {% endfor %}
+              </select>
+              <small class="form-text text-muted">يحدد الصلاحيات والإمكانيات</small>
+            </div>
+          </div>
+          
+          <div class="col-md-6 required-field">
+            <div class="form-group">
+              <label>
+                <i class="fas fa-building text-info"></i> الفرع
+                <span class="text-danger branch-required-indicator">*</span>
+              </label>
+              <select name="branch_id" id="branch_id" class="form-control">
+                <option value="">-- اختر الفرع --</option>
+                {% for branch in branches %}
+                <option value="{{ branch.id }}" {% if form_data.get('branch_id')|int == branch.id %}selected{% endif %}>
+                  {{ branch.name }} ({{ branch.code }})
+                </option>
+                {% endfor %}
+              </select>
+              <small class="form-text text-muted" id="branch-help-text">إجباري لكل مستخدم غير المالك وغير المطور/السوبر أدمن.</small>
+            </div>
+          </div>
+
+          <div class="col-md-6 optional-field">
+            <div class="form-group">
+              <label>
+                <i class="fas fa-toggle-on text-success"></i> حالة الحساب
+              </label>
+              {% set selected_active = form_data.get('is_active', '1') %}
+              <select name="is_active" class="form-control">
+                <option value="1" {% if selected_active != '0' %}selected{% endif %}>نشط (يمكنه تسجيل الدخول)</option>
+                <option value="0" {% if selected_active == '0' %}selected{% endif %}>غير نشط (محظور)</option>
+              </select>
+              <small class="form-text text-muted">الحالة الافتراضية: نشط</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="card-footer" style="background-color: #f8f9fa; border-top: 2px solid #667eea;">
+      <button type="submit" class="btn btn-success btn-lg shadow">
+        <i class="fas fa-save mr-2"></i>حفظ المستخدم
+      </button>
+      <a href="{{ url_for('users.index') }}" class="btn btn-secondary btn-lg">
+        <i class="fas fa-times mr-2"></i>إلغاء
+      </a>
+      <div class="float-right mt-2">
+        <small class="text-muted">
+          <i class="fas fa-star text-danger"></i> = حقل إجباري
+          &nbsp;&nbsp;|&nbsp;&nbsp;
+          <i class="fas fa-circle text-muted"></i> = حقل اختياري
+        </small>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(function () {
+  // Tooltips
+  $('[data-toggle="tooltip"]').tooltip({
+    placement: 'top',
+    trigger: 'hover'
+  });
+  
+  // Password strength indicator
+  $('#password').on('input', function() {
+    const password = $(this).val();
+    const strength = getPasswordStrength(password);
+    showPasswordStrength(strength);
+  });
+  
+  // Password match validation
+  function validatePasswordMatch() {
+    const password = $('#password').val();
+    const confirm = $('#confirm_password').val();
+    const messageDiv = $('#password-match-message');
+    
+    if (confirm.length === 0) {
+      messageDiv.html('');
+      return;
+    }
+    
+    if (password === confirm) {
+      messageDiv.html('<span class="text-success"><i class="fas fa-check-circle"></i> كلمة المرور متطابقة</span>');
+      $('#confirm_password').removeClass('is-invalid').addClass('is-valid');
+    } else {
+      messageDiv.html('<span class="text-danger"><i class="fas fa-times-circle"></i> كلمة المرور غير متطابقة</span>');
+      $('#confirm_password').removeClass('is-valid').addClass('is-invalid');
+    }
+  }
+  
+  $('#confirm_password').on('input', validatePasswordMatch);
+  $('#password').on('input', validatePasswordMatch);
+
+  function branchRequiredForSelectedRole() {
+    const selected = $('#role_id option:selected');
+    const slug = selected.data('role-slug');
+    return slug && !['developer', 'super_admin'].includes(slug);
+  }
+
+  function syncBranchRequirement() {
+    const required = branchRequiredForSelectedRole();
+    $('#branch_id').prop('required', !!required);
+    $('.branch-required-indicator').toggle(!!required);
+    $('#branch-help-text').text(required
+      ? 'إجباري لكل مستخدم غير المالك وغير المطور/السوبر أدمن.'
+      : 'اختياري فقط للمستخدمين العالميين.'
+    );
+  }
+
+  $('#role_id').on('change', syncBranchRequirement);
+  syncBranchRequirement();
+  
+  // Form submission validation
+  $('#createUserForm').on('submit', function(e) {
+    const password = $('#password').val();
+    const confirm = $('#confirm_password').val();
+    
+    if (password !== confirm) {
+      e.preventDefault();
+      Swal.fire({
+        icon: 'error',
+        title: 'خطأ في كلمة المرور',
+        text: 'كلمة المرور غير متطابقة. الرجاء التحقق والمحاولة مرة أخرى.',
+        confirmButtonText: 'حسناً'
+      });
+      $('#confirm_password').focus();
+      return false;
+    }
+    
+    if (password.length < 6) {
+      e.preventDefault();
+      Swal.fire({
+        icon: 'error',
+        title: 'كلمة مرور ضعيفة',
+        text: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل.',
+        confirmButtonText: 'حسناً'
+      });
+      $('#password').focus();
+      return false;
+    }
+
+    if (branchRequiredForSelectedRole() && !$('#branch_id').val()) {
+      e.preventDefault();
+      Swal.fire({
+        icon: 'error',
+        title: 'الفرع مطلوب',
+        text: 'يجب اختيار فرع لهذا المستخدم قبل الحفظ.',
+        confirmButtonText: 'حسناً'
+      });
+      $('#branch_id').focus();
+      return false;
+    }
+  });
+  
+  function getPasswordStrength(password) {
+    let strength = 0;
+    if (password.length >= 6) strength++;
+    if (password.length >= 10) strength++;
+    if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength++;
+    if (/\d/.test(password)) strength++;
+    if (/[^a-zA-Z\d]/.test(password)) strength++;
+    return strength;
+  }
+  
+  function showPasswordStrength(strength) {
+    // Optional: Add visual password strength indicator
+  }
+});
+</script>
+{% endblock %}

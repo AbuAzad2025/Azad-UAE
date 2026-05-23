@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block title %}إضافة مصروف متقدم{% endblock %}
+{% block content %}
+<div class="container-fluid">
+  <div class="card">
+    <div class="card-header"><h3><i class="fas fa-plus"></i> إضافة مصروف متقدم</h3></div>
+    <div class="card-body">
+      <form method="post" action="">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="row">
+          <div class="col-md-3">
+            <div class="form-group">
+              <label>التاريخ *</label>
+              <input type="date" name="expense_date" class="form-control" required value="{{ today }}">
+            </div>
+          </div>
+          <div class="col-md-3">
+             <div class="form-group">
+               <label>الفرع *</label>
+               <select name="branch_id" class="form-control" required>
+                 {% if current_user.is_super_admin() or current_user.is_owner %}
+                    <option value="">-- عام --</option>
+                    {% for branch in branches %}
+                        <option value="{{ branch.id }}">{{ branch.name }}</option>
+                    {% endfor %}
+                 {% else %}
+                    <option value="{{ current_user.branch_id }}" selected>{{ current_user.branch.name if current_user.branch else 'عام' }}</option>
+                 {% endif %}
+               </select>
+             </div>
+          </div>
+          <div class="col-md-3">
+            <div class="form-group">
+              <label>الفئة *</label>
+              <select name="category_id" class="form-control" required>
+                {% for cat in categories %}
+                <option value="{{ cat.id }}">{{ cat.name_ar }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="form-group">
+              <label>المبلغ *</label>
+              <input type="number" name="amount" class="form-control" step="0.01" required>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>البيان</label>
+          <textarea name="description" class="form-control" rows="3"></textarea>
+        </div>
+        <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> حفظ</button>
+        <a href="{{ url_for('advanced_ledger.advanced_expenses') }}" class="btn btn-secondary"><i class="fas fa-times"></i> إلغاء</a>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% block title %}سند صرف - {{ purchase.purchase_number }}{% endblock %}
+{% block page_title %}إنشاء سند صرف{% endblock %}
+
+{% block content %}
+{% set submitted = form_data if form_data is defined else None %}
+{% set selected_payment_method = submitted.get('payment_method') if submitted and submitted.get('payment_method') else 'cash' %}
+{% set submitted_amount = submitted.get('amount') if submitted and submitted.get('amount') else balance %}
+<div class="row">
+  <div class="col-md-8 offset-md-2">
+    <!-- معلومات الفاتورة -->
+    <div class="card card-primary">
+      <div class="card-header">
+        <h3 class="card-title">
+          <i class="fas fa-file-invoice mr-2"></i>معلومات فاتورة المشتريات
+        </h3>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6">
+            <dl>
+              <dt>رقم الفاتورة:</dt>
+              <dd><strong>{{ purchase.purchase_number }}</strong></dd>
+              
+              <dt>المورد:</dt>
+              <dd>{{ purchase.supplier_name }}</dd>
+              
+              <dt>تاريخ الفاتورة:</dt>
+              <dd>{{ purchase.purchase_date.strftime('%Y-%m-%d') }}</dd>
+            </dl>
+          </div>
+          <div class="col-md-6">
+            <dl>
+              <dt>إجمالي الفاتورة:</dt>
+              <dd><strong class="text-primary">{{ "{:,.2f}".format(purchase.total_amount) }} AED</strong></dd>
+              
+              <dt>المدفوع:</dt>
+              <dd class="text-success">{{ "{:,.2f}".format(purchase.paid_amount_aed or 0) }} AED</dd>
+              
+              <dt>المتبقي:</dt>
+              <dd><strong class="text-danger">{{ "{:,.2f}".format(balance) }} AED</strong></dd>
+            </dl>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- نموذج سند الصرف -->
+    <div class="card card-danger mt-3">
+      <div class="card-header">
+        <h3 class="card-title">
+          <i class="fas fa-money-bill-wave mr-2"></i>بيانات سند الصرف
+        </h3>
+      </div>
+      <form method="POST" action="{{ url_for('payments.create_payment', purchase_id=purchase.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="card-body">
+          <div class="form-group">
+            <label for="amount">المبلغ المدفوع <span class="text-danger">*</span></label>
+            <div class="input-group">
+              <input type="number" class="form-control" id="amount" name="amount" 
+                     step="0.01" min="0.01" max="{{ balance }}" 
+                     value="{{ submitted_amount }}" required>
+              <div class="input-group-append">
+                <span class="input-group-text">AED</span>
+              </div>
+            </div>
+            <small class="form-text text-muted">
+              الحد الأقصى: {{ "{:,.2f}".format(balance) }} AED
+            </small>
+          </div>
+
+          <div class="form-group">
+            <label for="payment_method">طريقة الدفع <span class="text-danger">*</span></label>
+            <select class="form-control" id="payment_method" name="payment_method" required>
+              <option value="cash" {% if selected_payment_method == 'cash' %}selected{% endif %}>نقدي</option>
+              <option value="bank_transfer" {% if selected_payment_method == 'bank_transfer' %}selected{% endif %}>تحويل بنكي</option>
+              <option value="cheque" {% if selected_payment_method == 'cheque' %}selected{% endif %}>شيك</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="notes">ملاحظات</label>
+            <textarea class="form-control" id="notes" name="notes" rows="3" 
+                      placeholder="أي ملاحظات إضافية...">دفعة لفاتورة مشتريات {{ purchase.purchase_number }}</textarea>
+          </div>
+        </div>
+
+        <div class="card-footer">
+          <button type="submit" class="btn btn-danger">
+            <i class="fas fa-save mr-2"></i>حفظ سند الصرف
+          </button>
+          <a href="{{ url_for('purchases.view', id=purchase.id) }}" class="btn btn-secondary">
+            <i class="fas fa-times mr-2"></i>إلغاء
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+  // التحقق من المبلغ
+  $('#amount').on('input', function() {
+    const value = parseFloat($(this).val());
+    const max = parseFloat($(this).attr('max'));
+    
+    if (value > max) {
+      $(this).val(max.toFixed(2));
+      toastr.warning('المبلغ لا يمكن أن يتجاوز المتبقي');
+    }
+  });
+});
+</script>
+{% endblock %}
+

@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="{{ current_language }}" dir="{{ 'rtl' if is_rtl else 'ltr' }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - فاتورة #{{ sale.sale_number }}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/accessibility.css') }}">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Tajawal', sans-serif;
+      font-size: 11px;
+      line-height: 1.3;
+      color: {{ settings.text_color if settings else '#333' }};
+      padding: 0;
+      margin: 0;
+    }
+    @page {
+      size: {{ settings.paper_size or 'A4' }} {{ settings.orientation or 'portrait' }};
+      margin: {{ settings.page_margin or '10mm' }};
+    }
+    .invoice-container {
+      max-width: 100%;
+      margin: 0;
+      background: white;
+      border: 2px solid {{ settings.header_color if settings else '#667eea' }};
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .invoice-header {
+      background: linear-gradient(135deg, {{ settings.header_color if settings else '#667eea' }} 0%, {{ settings.accent_color if settings else '#764ba2' }} 100%);
+      color: white;
+      padding: 15px 20px;
+      text-align: center;
+      position: relative;
+    }
+    .invoice-header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 200px;
+      height: 200px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 50%;
+      transform: translate(50%, -50%);
+    }
+    .company-logo {
+      height: {{ '50px' if settings and settings.logo_size == 'small' else '60px' if settings and settings.logo_size == 'medium' else '70px' }};
+      margin-bottom: 8px;
+    }
+    .company-name {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 3px;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+    }
+    .company-info {
+      font-size: 10px;
+      opacity: 0.95;
+    }
+    .invoice-title {
+      background: #f8f9fa;
+      padding: 12px 15px;
+      text-align: center;
+      border-bottom: 2px solid {{ settings.header_color if settings else '#667eea' }};
+    }
+    .invoice-title h2 {
+      color: {{ settings.header_color if settings else '#667eea' }};
+      font-size: 18px;
+      font-weight: 700;
+      margin: 0;
+    }
+    .invoice-number {
+      color: {{ settings.accent_color if settings else '#764ba2' }};
+      font-size: 14px;
+      margin-top: 3px;
+    }
+    .invoice-details {
+      padding: 15px 20px;
+    }
+    .details-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .detail-box {
+      flex: 1;
+      padding: 10px 12px;
+      background: #f8f9fa;
+      border-radius: 6px;
+      margin: 0 5px;
+      border-right: 3px solid {{ settings.header_color if settings else '#667eea' }};
+    }
+    .detail-box h3 {
+      color: {{ settings.header_color if settings else '#667eea' }};
+      font-size: 12px;
+      margin-bottom: 6px;
+      font-weight: 700;
+    }
+    .detail-box p {
+      margin: 3px 0;
+      font-size: 10px;
+    }
+    .items-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 10px 0;
+      font-size: 10px;
+    }
+    .items-table thead {
+      background: linear-gradient(135deg, {{ settings.header_color if settings else '#667eea' }} 0%, {{ settings.accent_color if settings else '#764ba2' }} 100%);
+      color: white;
+    }
+    .items-table th {
+      padding: 8px 6px;
+      text-align: center;
+      font-weight: 700;
+      font-size: 11px;
+    }
+    .items-table td {
+      padding: 6px 4px;
+      text-align: center;
+      border-bottom: 1px solid #e0e0e0;
+      font-size: 10px;
+    }
+    .items-table tbody tr:hover {
+      background: #f8f9fa;
+    }
+    .totals-section {
+      background: #f8f9fa;
+      padding: 12px 15px;
+      border-radius: 6px;
+      margin: 10px 0;
+    }
+    .total-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 5px 0;
+      font-size: 11px;
+    }
+    .total-row.grand-total {
+      border-top: 2px solid {{ settings.header_color if settings else '#667eea' }};
+      margin-top: 8px;
+      padding-top: 8px;
+      font-size: 14px;
+      font-weight: 700;
+      color: {{ settings.header_color if settings else '#667eea' }};
+    }
+    .invoice-footer {
+      background: linear-gradient(135deg, {{ settings.header_color if settings else '#667eea' }} 0%, {{ settings.accent_color if settings else '#764ba2' }} 100%);
+      color: white;
+      padding: 12px 15px;
+      text-align: center;
+    }
+    .footer-info {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 8px;
+      font-size: 9px;
+    }
+    .footer-info div {
+      flex: 1;
+    }
+    .signature-section {
+      display: flex;
+      justify-content: space-around;
+      padding: 20px 15px;
+      border-top: 1px dashed #ccc;
+    }
+    .signature-box {
+      text-align: center;
+      flex: 1;
+    }
+    .signature-line {
+      border-top: 2px solid #333;
+      width: 200px;
+      margin: 50px auto 10px;
+    }
+    .palestine-flag {
+      display: inline-block;
+      width: 30px;
+      height: 20px;
+      background: linear-gradient(180deg, #000 0%, #000 33.33%, #fff 33.33%, #fff 66.66%, #007A3D 66.66%, #007A3D 100%);
+      position: relative;
+      margin: 0 5px;
+      vertical-align: middle;
+    }
+    .palestine-flag::before {
+      content: '';
+      position: absolute;
+      right: 0;
+      top: 0;
+      width: 0;
+      height: 0;
+      border-style: solid;
+      border-width: 10px 0 10px 15px;
+      border-color: transparent transparent transparent #CE1126;
+    }
+    @media print {
+      body { padding: 0; margin: 0; }
+      .no-print { display: none !important; }
+      .invoice-container { 
+        border: none; 
+        max-width: 100%;
+        margin: 0;
+      }
+      @page {
+        margin: 8mm;
+      }
+    }
+  </style>
+</head>
+<body class="invoice-print sale-invoice">
+  <div class="no-print" style="text-align: center; margin-bottom: 20px;">
+    <button onclick="window.print()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 12px 30px; border-radius: 8px; font-size: 16px; font-weight: 700; cursor: pointer;">
+      <i class="fas fa-print"></i> طباعة الفاتورة
+    </button>
+    <button onclick="window.close()" style="background: #6c757d; color: white; border: none; padding: 12px 30px; border-radius: 8px; font-size: 16px; font-weight: 700; cursor: pointer; margin-right: 10px;">
+      إغلاق
+    </button>
+  </div>
+
+  <div class="invoice-container">
+    <!-- Header -->
+    <div class="invoice-header">
+      {% if settings.show_logo and (settings.logo_url or tenant_logo_url) %}
+      <img src="{{ settings.logo_url or tenant_logo_url or url_for('static', filename='img/garage_logo.png') }}" alt="{{ settings.company_name_ar or tenant_name_ar or company_name_ar }}"
+           class="company-logo" style="background: white; padding: 10px; border-radius: 10px;">
+      {% endif %}
+      <div class="company-name">{{ settings.company_name_ar or tenant_name_ar or company_name_ar or 'نظام المحاسبة' }}</div>
+      <div class="company-info">
+        <div>{{ settings.address_ar or tenant_address or company_address }}</div>
+        <div>
+          {% set ph = settings.phone_1 if settings and settings.phone_1 else (tenant_phone or company_phone) %}
+          {% set em = settings.email if settings and settings.email else (tenant_email or company_email) %}
+          {% if ph %}📞 {{ ph }}{% endif %}{% if em %} | 📧 {{ em }}{% endif %}
+        </div>
+        {% if settings.tax_number %}
+        <div style="margin-top: 5px; font-size: 11px;">الرقم الضريبي: {{ settings.tax_number }}</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Title -->
+    <div class="invoice-title">
+      <h2>فاتورة بيع <span class="palestine-flag"></span></h2>
+      <div class="invoice-number">رقم الفاتورة: <strong>{{ sale.sale_number }}</strong></div>
+    </div>
+
+    <!-- Details -->
+    <div class="invoice-details">
+      <div class="details-row">
+        <div class="detail-box">
+          <h3>🏢 بيانات الزبون</h3>
+          <p><strong>الاسم:</strong> {{ sale.customer.name if sale.customer else '-' }}</p>
+          <p><strong>الهاتف:</strong> {{ sale.customer.phone if sale.customer else '-' }}</p>
+          <p><strong>العنوان:</strong> {{ sale.customer.address if sale.customer else '-' }}</p>
+        </div>
+        <div class="detail-box">
+          <h3>📅 بيانات الفاتورة</h3>
+          <p><strong>التاريخ:</strong> {{ sale.sale_date.strftime('%Y-%m-%d') }}</p>
+          <p><strong>الوقت:</strong> {{ sale.sale_date.strftime('%H:%M') }}</p>
+          <p><strong>البائع:</strong> {{ sale.seller.username if sale.seller else '-' }}</p>
+        </div>
+      </div>
+
+      <!-- Items Table -->
+      <table class="items-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>المنتج</th>
+            <th>{{ t('Quantity') }}</th>
+            <th>{{ t('Price') }}</th>
+            <th>الخصم%</th>
+            <th>{{ t('Total') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for line in sale.lines %}
+          <tr>
+            <td>{{ loop.index }}</td>
+            <td><strong>{{ line.product.name if line.product else '-' }}</strong></td>
+            <td>{{ line.quantity }}</td>
+            <td>{{ "{:,.2f}".format(line.unit_price) }}</td>
+            <td>{{ line.discount_percent }}%</td>
+            <td><strong>{{ "{:,.2f}".format(line.line_total) }}</strong></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <!-- Totals -->
+      <div class="totals-section">
+        <div class="total-row">
+          <span>المجموع الفرعي:</span>
+          <span>{{ "{:,.2f}".format(sale.subtotal) }} {{ sale.currency }}</span>
+        </div>
+        {% if sale.discount_amount > 0 %}
+        <div class="total-row" style="color: #dc3545;">
+          <span>الخصم:</span>
+          <span>- {{ "{:,.2f}".format(sale.discount_amount) }} {{ sale.currency }}</span>
+        </div>
+        {% endif %}
+        {% if sale.shipping_cost > 0 %}
+        <div class="total-row">
+          <span>الشحن:</span>
+          <span>{{ "{:,.2f}".format(sale.shipping_cost) }} {{ sale.currency }}</span>
+        </div>
+        {% endif %}
+        {% if sale.tax_amount > 0 %}
+        <div class="total-row">
+          <span>الضريبة:</span>
+          <span>{{ "{:,.2f}".format(sale.tax_amount) }} {{ sale.currency }}</span>
+        </div>
+        {% endif %}
+        <div class="total-row grand-total">
+          <span>الإجمالي النهائي:</span>
+          <span>{{ "{:,.2f}".format(sale.total_amount) }} {{ sale.currency }}</span>
+        </div>
+        <div class="total-row" style="color: #28a745; font-weight: 600;">
+          <span>المدفوع:</span>
+          <span>{{ "{:,.2f}".format(sale.paid_amount) }} {{ sale.currency }}</span>
+        </div>
+        {% if sale.balance_due > 0 %}
+        <div class="total-row" style="color: #dc3545; font-weight: 600;">
+          <span>المتبقي:</span>
+          <span>{{ "{:,.2f}".format(sale.balance_due) }} {{ sale.currency }}</span>
+        </div>
+        {% endif %}
+      </div>
+
+      {% if sale.notes %}
+      <div style="background: #fff3cd; padding: 15px; border-radius: 8px; border-right: 4px solid #ffc107; margin: 20px 0;">
+        <strong>📝 ملاحظات:</strong> {{ sale.notes }}
+      </div>
+      {% endif %}
+
+      <!-- Signatures -->
+      <div class="signature-section">
+        <div class="signature-box">
+          <div class="signature-line"></div>
+          <strong>توقيع البائع</strong>
+        </div>
+        <div class="signature-box">
+          <div class="signature-line"></div>
+          <strong>توقيع الزبون</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- قسم الدفعات -->
+    {% if sale.payments %}
+    <div style="padding: 12px 15px; border-top: 1px dashed #ccc; margin-top: 10px;">
+      <h3 style="color: {{ settings.header_color if settings else '#667eea' }}; font-size: 12px; margin-bottom: 8px; font-weight: 700;">
+        💰 الدفعات
+      </h3>
+      <table style="width: 100%; border-collapse: collapse; font-size: 9px;">
+        <thead>
+          <tr style="background: #f8f9fa; border-bottom: 1px solid {{ settings.header_color if settings else '#667eea' }};">
+            <th style="padding: 5px; text-align: right; border: 1px solid #dee2e6; font-size: 10px;">رقم الدفعة</th>
+            <th style="padding: 5px; text-align: center; border: 1px solid #dee2e6; font-size: 10px;">التاريخ</th>
+            <th style="padding: 5px; text-align: center; border: 1px solid #dee2e6; font-size: 10px;">المبلغ</th>
+            <th style="padding: 5px; text-align: center; border: 1px solid #dee2e6; font-size: 10px;">الطريقة</th>
+            <th style="padding: 5px; text-align: right; border: 1px solid #dee2e6; font-size: 10px;">التفاصيل</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for payment in sale.payments %}
+          <tr>
+            <td style="padding: 4px 6px; border: 1px solid #dee2e6; font-size: 9px;"><strong>{{ payment.payment_number }}</strong></td>
+            <td style="padding: 4px 6px; text-align: center; border: 1px solid #dee2e6; font-size: 9px;">{{ payment.payment_date.strftime('%Y-%m-%d') }}</td>
+            <td style="padding: 4px 6px; text-align: center; border: 1px solid #dee2e6; color: #28a745; font-weight: bold; font-size: 10px;">{{ "{:,.2f}".format(payment.amount_aed) }} AED</td>
+            <td style="padding: 4px 6px; text-align: center; border: 1px solid #dee2e6; font-size: 9px;">
+              {% if payment.payment_method == 'cash' %}نقدي
+              {% elif payment.payment_method == 'card' %}بطاقة
+              {% elif payment.payment_method == 'bank_transfer' %}تحويل بنكي
+              {% elif payment.payment_method == 'cheque' %}شيك
+              {% else %}محفظة إلكترونية{% endif %}
+            </td>
+            <td style="padding: 4px 6px; border: 1px solid #dee2e6; font-size: 8px;">
+              {% if payment.payment_method == 'cheque' and payment.cheque_number %}
+                <div style="background: #fff3cd; padding: 4px 6px; border-radius: 3px; border-right: 2px solid #ffc107;">
+                  <strong>📝 شيك:</strong> {{ payment.cheque_number }}<br>
+                  <strong>📅 استحقاق:</strong> {{ payment.cheque_date.strftime('%Y-%m-%d') if payment.cheque_date else '-' }}<br>
+                  <strong>🏦 بنك:</strong> {{ payment.bank_name or '-' }}
+                </div>
+              {% elif payment.reference_number %}
+                {{ payment.reference_number }}
+              {% else %}
+                -
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+
+    <!-- Footer: بيانات المطور فقط -->
+    <div class="invoice-footer">
+      <div><strong>{{ developer_credit or config.DEVELOPER_CREDIT }}</strong></div>
+      <div class="footer-info">
+        <div>📞 {{ developer_phone or config.DEVELOPER_PHONE }}</div>
+        <div>📧 {{ developer_email or config.DEVELOPER_EMAIL }}</div>
+        <div>🌐 {{ developer_website or config.DEVELOPER_WEBSITE }}</div>
+      </div>
+      <div style="margin-top: 15px; font-size: 12px; opacity: 0.9;">
+        شكراً لتعاملكم معنا <span class="palestine-flag"></span> نتمنى لكم تجربة ممتازة
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+

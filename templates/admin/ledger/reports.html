@@ -1,0 +1,321 @@
+{% extends 'base.html' %}
+{% block title %}التقارير المالية المتقدمة - Advanced Reports{% endblock %}
+{% block page_title %}التقارير المالية المتقدمة{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+  <div class="col-12">
+    <a href="{{ url_for('ledger.admin_dashboard') }}" class="btn btn-secondary">
+      <i class="fas fa-arrow-right mr-2"></i>العودة للوحة التحكم
+    </a>
+  </div>
+</div>
+
+<div class="row">
+  <!-- التقارير الأساسية -->
+  <div class="col-lg-6">
+    <div class="card">
+      <div class="card-header bg-gradient-primary">
+        <h5 class="card-title text-white mb-0">
+          <i class="fas fa-chart-line mr-2"></i>التقارير الأساسية
+        </h5>
+      </div>
+      <div class="card-body">
+        <div class="list-group list-group-flush">
+          <a href="{{ url_for('ledger.admin_trial_balance') }}" class="list-group-item list-group-item-action">
+            <div class="d-flex w-100 justify-content-between">
+              <h6 class="mb-1">ميزان المراجعة</h6>
+              <small class="text-muted">Trial Balance</small>
+            </div>
+            <p class="mb-1">عرض أرصدة جميع الحسابات في تاريخ محدد</p>
+          </a>
+          
+          <a href="{{ url_for('ledger.admin_balance_sheet') }}" class="list-group-item list-group-item-action">
+            <div class="d-flex w-100 justify-content-between">
+              <h6 class="mb-1">الميزانية العمومية</h6>
+              <small class="text-muted">Balance Sheet</small>
+            </div>
+            <p class="mb-1">عرض الأصول والخصوم وحقوق الملكية</p>
+          </a>
+          
+          <a href="{{ url_for('ledger.admin_income_statement') }}" class="list-group-item list-group-item-action">
+            <div class="d-flex w-100 justify-content-between">
+              <h6 class="mb-1">قائمة الدخل</h6>
+              <small class="text-muted">Income Statement</small>
+            </div>
+            <p class="mb-1">عرض الإيرادات والمصروفات وصافي الدخل</p>
+          </a>
+          
+          <a href="{{ url_for('ledger.cash_flow') }}" class="list-group-item list-group-item-action">
+            <div class="d-flex w-100 justify-content-between">
+              <h6 class="mb-1">قائمة التدفقات النقدية</h6>
+              <small class="text-muted">Cash Flow Statement</small>
+            </div>
+            <p class="mb-1">عرض التدفقات النقدية التشغيلية والاستثمارية والتمويلية</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- التقارير المتقدمة -->
+  <div class="col-lg-6">
+    <div class="card">
+      <div class="card-header bg-gradient-success">
+        <h5 class="card-title text-white mb-0">
+          <i class="fas fa-chart-bar mr-2"></i>التقارير المتقدمة
+        </h5>
+      </div>
+      <div class="card-body">
+        <div class="list-group list-group-flush">
+          <a href="{{ url_for('ledger.aging_analysis', type='receivables') }}" class="list-group-item list-group-item-action">
+            <div class="d-flex w-100 justify-content-between">
+              <h6 class="mb-1">تحليل عمر الذمم المدينة</h6>
+              <small class="text-muted">Receivables Aging</small>
+            </div>
+            <p class="mb-1">تحليل أعمار الديون المستحقة على العملاء</p>
+          </a>
+          
+          <a href="{{ url_for('ledger.aging_analysis', type='payables') }}" class="list-group-item list-group-item-action">
+            <div class="d-flex w-100 justify-content-between">
+              <h6 class="mb-1">تحليل عمر الذمم الدائنة</h6>
+              <small class="text-muted">Payables Aging</small>
+            </div>
+            <p class="mb-1">تحليل أعمار الديون المستحقة للموردين</p>
+          </a>
+          
+          <a href="{{ url_for('ledger.accounts_tree') }}" class="list-group-item list-group-item-action">
+            <div class="d-flex w-100 justify-content-between">
+              <h6 class="mb-1">شجرة الحسابات</h6>
+              <small class="text-muted">Chart of Accounts</small>
+            </div>
+            <p class="mb-1">عرض هيكل الحسابات المحاسبية</p>
+          </a>
+          
+          <a href="{{ url_for('ledger.journal_entries') }}" class="list-group-item list-group-item-action">
+            <div class="d-flex w-100 justify-content-between">
+              <h6 class="mb-1">دفتر اليومية</h6>
+              <small class="text-muted">General Journal</small>
+            </div>
+            <p class="mb-1">عرض جميع القيود المحاسبية</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- تقارير مخصصة -->
+<div class="row mt-4">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header bg-gradient-info">
+        <h5 class="card-title text-white mb-0">
+          <i class="fas fa-cogs mr-2"></i>تقارير مخصصة
+        </h5>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6">
+            <h6>تقرير مخصص حسب التاريخ:</h6>
+            <form method="GET" action="{{ url_for('ledger.admin_trial_balance') }}" class="ledger-reports-form">
+              <div class="form-group">
+                <label>من تاريخ:</label>
+                <input type="date" name="date_from" class="form-control" required>
+              </div>
+              <div class="form-group">
+                <label>إلى تاريخ:</label>
+                <input type="date" name="date_to" class="form-control" required>
+              </div>
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-search mr-2"></i>إنشاء التقرير
+              </button>
+            </form>
+          </div>
+          
+          <div class="col-md-6">
+            <h6>تقرير مخصص حسب الحساب:</h6>
+            <form method="GET" action="{{ url_for('ledger.account_statement', id=0) }}" id="accountStatementForm" class="ledger-reports-form">
+              <div class="form-group">
+                <label>اختر الحساب:</label>
+                <select name="account_id" class="form-control" required>
+                  <option value="">بلا</option>
+                  <!-- سيتم ملء هذا من JavaScript -->
+                </select>
+              </div>
+              <div class="form-group">
+                <label>من تاريخ:</label>
+                <input type="date" name="date_from" class="form-control">
+              </div>
+              <div class="form-group">
+                <label>إلى تاريخ:</label>
+                <input type="date" name="date_to" class="form-control">
+              </div>
+              <button type="submit" class="btn btn-success">
+                <i class="fas fa-file-alt mr-2"></i>كشف الحساب
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- إحصائيات سريعة -->
+<div class="row mt-4">
+  <div class="col-md-3">
+    <div class="card bg-gradient-primary text-white">
+      <div class="card-body">
+        <div class="d-flex justify-content-between">
+          <div>
+            <h4 class="mb-0">12</h4>
+            <p class="mb-0">تقارير متاحة</p>
+          </div>
+          <div class="align-self-center">
+            <i class="fas fa-chart-pie fa-2x"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-md-3">
+    <div class="card bg-gradient-success text-white">
+      <div class="card-body">
+        <div class="d-flex justify-content-between">
+          <div>
+            <h4 class="mb-0">4</h4>
+            <p class="mb-0">تقارير أساسية</p>
+          </div>
+          <div class="align-self-center">
+            <i class="fas fa-chart-line fa-2x"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-md-3">
+    <div class="card bg-gradient-info text-white">
+      <div class="card-body">
+        <div class="d-flex justify-content-between">
+          <div>
+            <h4 class="mb-0">6</h4>
+            <p class="mb-0">تقارير متقدمة</p>
+          </div>
+          <div class="align-self-center">
+            <i class="fas fa-chart-bar fa-2x"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-md-3">
+    <div class="card bg-gradient-warning text-white">
+      <div class="card-body">
+        <div class="d-flex justify-content-between">
+          <div>
+            <h4 class="mb-0">2</h4>
+            <p class="mb-0">تقارير مخصصة</p>
+          </div>
+          <div class="align-self-center">
+            <i class="fas fa-cogs fa-2x"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// ملء قائمة الحسابات
+document.addEventListener('DOMContentLoaded', function() {
+  const select = document.querySelector('select[name="account_id"]');
+  if (!select) {
+    return;
+  }
+
+  fetch('{{ url_for("ledger.api_search_accounts") }}?q=')
+    .then(response => response.json())
+    .then(data => {
+      const accounts = Array.isArray(data) ? data : (data.accounts || []);
+      accounts.forEach(account => {
+        if (!account || !account.id) {
+          return;
+        }
+        const option = document.createElement('option');
+        option.value = account.id;
+        const nameText = account.full_name
+          || `${account.code || ''} - ${account.name_ar || account.name || ''}`.trim();
+        option.textContent = nameText || account.code || `حساب رقم ${account.id}`;
+        select.appendChild(option);
+      });
+    })
+    .catch(error => {
+      console.warn('فشل تحميل الحسابات', error);
+    });
+});
+
+// تحديث رابط كشف الحساب
+document.getElementById('accountStatementForm').addEventListener('submit', function(e) {
+  const accountId = document.querySelector('select[name="account_id"]').value;
+  if (accountId) {
+    this.action = `/ledger/account/${accountId}/statement`;
+  } else {
+    e.preventDefault();
+    alert('يرجى اختيار حساب');
+  }
+});
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  .ledger-reports-form .form-control,
+  .ledger-reports-form textarea.form-control,
+  .ledger-reports-form select.form-control {
+    min-height: 56px;
+    height: auto !important;
+    padding: 0.95rem 1.35rem;
+    font-size: 0.95rem;
+    line-height: 1.7;
+    text-align: center;
+  }
+
+  .ledger-reports-form .form-control::placeholder {
+    text-align: center;
+    color: #64748b;
+    opacity: 0.85;
+  }
+
+  .ledger-reports-form textarea.form-control {
+    text-align: right;
+  }
+
+  .ledger-reports-form textarea.form-control::placeholder {
+    text-align: right;
+  }
+
+  .ledger-reports-form select.form-control {
+    text-align-last: center;
+    padding-inline-start: 2.2rem;
+    padding-inline-end: 2.2rem;
+    appearance: none;
+    -webkit-appearance: none;
+    background-color: #fff;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23647894' d='M6 8a1 1 0 0 1-.707-.293l-5-5a1 1 0 0 1 1.414-1.414L6 5.586 10.293 1.293a1 1 0 0 1 1.414 1.414l-5 5A1 1 0 0 1 6 8'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: left 0.8rem center;
+    background-size: 12px;
+  }
+
+  .ledger-reports-form select.form-control option {
+    text-align: center;
+    padding: 0.75rem 1rem;
+  }
+</style>
+{% endblock %}

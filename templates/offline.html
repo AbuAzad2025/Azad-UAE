@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>غير متصل - UAE Sale</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/accessibility.css') }}">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #0b1e3a 0%, #06101f 100%);
+            color: #f8fafc;
+            text-align: center;
+        }
+        .offline-container {
+            padding: 40px;
+            max-width: 500px;
+        }
+        .offline-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+        h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        p {
+            font-size: 18px;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+        .retry-btn {
+            background: #0b5ed7;
+            color: #ffffff;
+            border: 2px solid #0b5ed7;
+            padding: 15px 40px;
+            font-size: 16px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s;
+        }
+        .retry-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 12px 30px rgba(11, 94, 215, 0.35);
+        }
+    </style>
+</head>
+<body class="keep-theme offline-page">
+    <div class="offline-container">
+        <div class="offline-icon">📡❌</div>
+        <h1>غير متصل بالإنترنت</h1>
+        <p>يبدو أنك غير متصل بالإنترنت. تحقق من اتصالك وحاول مرة أخرى.</p>
+        <button class="retry-btn" onclick="window.location.reload()">إعادة المحاولة</button>
+    </div>
+</body>
+</html>
+

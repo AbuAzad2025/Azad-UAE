@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block title %}التحقق من النسخ{% endblock %}
+{% block content %}
+<div class="container-fluid">
+  <div class="mb-3">
+    {% if current_user.is_owner or (current_user.role and current_user.role.slug == 'developer') %}
+      <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-right"></i> رجوع للوحة المالك
+      </a>
+    {% else %}
+      <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-right"></i> رجوع للوحة التحكم
+      </a>
+    {% endif %}
+    <a href="{{ url_for('owner.list_backups') }}" class="btn btn-info">
+      <i class="fas fa-archive"></i> النسخ الاحتياطية
+    </a>
+    <a href="{{ url_for('owner.data_cleanup') }}" class="btn btn-danger">
+      <i class="fas fa-trash"></i> التنظيف
+    </a>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <h3><i class="fas fa-check-double"></i> التحقق من النسخ الاحتياطية</h3>
+    </div>
+    <div class="card-body">
+      <table class="table table-bordered table-hover">
+        <thead class="thead-light">
+          <tr>
+            <th width="40%">اسم الملف</th>
+            <th width="15%">الحجم</th>
+            <th width="25%">تاريخ الإنشاء</th>
+            <th width="20%">الحالة</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if backups %}
+            {% for backup in backups %}
+            <tr class="{{ 'table-success' if backup.valid else 'table-danger' }}">
+              <td><code>{{ backup.filename }}</code></td>
+              <td>{{ backup.size }} MB</td>
+              <td>{{ backup.created }}</td>
+              <td>
+                {% if backup.valid %}
+                <span class="badge badge-success">
+                  <i class="fas fa-check"></i> صحيح
+                </span>
+                {% else %}
+                <span class="badge badge-danger">
+                  <i class="fas fa-times"></i> تالف
+                </span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="4" class="text-center text-muted">
+                <i class="fas fa-info-circle"></i> لا توجد نسخ احتياطية
+              </td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

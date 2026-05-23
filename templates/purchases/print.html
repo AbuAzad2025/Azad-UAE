@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block title %}طباعة فاتورة الشراء #{{ purchase.purchase_number }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">فاتورة شراء #{{ purchase.purchase_number }}</h3>
+          <div class="card-tools">
+            <button onclick="window.print()" class="btn btn-primary">
+              <i class="fas fa-print"></i> طباعة
+            </button>
+            <a href="{{ url_for('purchases.view', id=purchase.id) }}" class="btn btn-secondary">
+              <i class="fas fa-arrow-left"></i> رجوع
+            </a>
+          </div>
+        </div>
+        <div class="card-body">
+          <!-- معلومات المورد -->
+          <div class="row mb-4">
+            <div class="col-md-6">
+              <h4>معلومات المورد</h4>
+              <p><strong>المورد:</strong> {{ purchase.supplier_name }}</p>
+              <p><strong>الهاتف:</strong> {{ purchase.supplier_phone }}</p>
+            </div>
+            <div class="col-md-6 text-right">
+              <h4>معلومات الفاتورة</h4>
+              <p><strong>التاريخ:</strong> {{ purchase.purchase_date.strftime('%Y-%m-%d') }}</p>
+              <p><strong>المبلغ الإجمالي:</strong> {{ purchase.total_amount }} AED</p>
+              <p><strong>المدفوع:</strong> {{ purchase.get_paid_amount() }} AED</p>
+              <p><strong>المتبقي:</strong> {{ purchase.total_amount - purchase.get_paid_amount() }} AED</p>
+            </div>
+          </div>
+
+          <!-- جدول المنتجات -->
+          <table class="table table-bordered">
+            <thead>
+              <tr>
+                <th>المنتج</th>
+                <th>الكمية</th>
+                <th>السعر</th>
+                <th>الإجمالي</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for line in purchase.lines %}
+              <tr>
+                <td>{{ line.product.name }}</td>
+                <td>{{ line.quantity }}</td>
+                <td>{{ line.unit_cost }}</td>
+                <td>{{ line.line_total }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+
+          <!-- الملاحظات -->
+          {% if purchase.notes %}
+          <div class="mt-3">
+            <strong>ملاحظات:</strong>
+            <p>{{ purchase.notes }}</p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+@media print {
+  .card-tools, .main-sidebar, .main-header, .main-footer {
+    display: none !important;
+  }
+}
+</style>
+{% endblock %}
+

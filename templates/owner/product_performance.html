@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block title %}أداء المنتجات{% endblock %}
+{% block content %}
+<div class="container-fluid">
+  <div class="mb-3">
+    <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary">
+      <i class="fas fa-arrow-right"></i> رجوع للوحة المالك
+    </a>
+    <a href="{{ url_for('owner.sales_insights') }}" class="btn btn-primary">
+      <i class="fas fa-shopping-cart"></i> المبيعات
+    </a>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <h3><i class="fas fa-box"></i> أداء المنتجات (آخر 90 يوم)</h3>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-bordered table-striped table-hover">
+          <thead class="thead-dark">
+            <tr>
+              <th>#</th>
+              <th>المنتج</th>
+              <th>الكود</th>
+              <th>المبيعات</th>
+              <th>الإيرادات</th>
+              <th>الهامش</th>
+              <th>النسبة %</th>
+              <th>الحالة</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in products %}
+            <tr>
+              <td>{{ loop.index }}</td>
+              <td>{{ p.name }}</td>
+              <td><code>{{ p.code }}</code></td>
+              <td>{{ "%.0f"|format(p.sold) }}</td>
+              <td>{{ "%.2f"|format(p.revenue) }} AED</td>
+              <td>{{ "%.2f"|format(p.margin) }} AED</td>
+              <td>{{ "%.1f"|format(p.margin_percent) }}%</td>
+              <td>
+                <span class="badge badge-{{ 'success' if p.status == 'ممتاز' else 'info' if p.status == 'جيد' else 'warning' }}">
+                  {{ p.status }}
+                </span>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

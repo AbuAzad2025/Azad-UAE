@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - نفاد المخزون{% endblock %}
+{% block page_title %}
+<div class="d-flex justify-content-between align-items-center">
+  <div>
+    <h1 class="mb-0" style="color: #dc3545;">
+      <i class="fas fa-ban mr-3"></i>نفاد المخزون
+    </h1>
+    <p class="text-muted">منتجات منفذة تماماً - تحتاج إعادة تموين فورية</p>
+  </div>
+  <div>
+    <a href="{{ url_for('warehouse.index') }}" class="btn btn-info btn-lg">
+      <i class="fas fa-warehouse mr-2"></i>المستودع
+    </a>
+    <a href="{{ url_for('purchases.create') }}" class="btn btn-success btn-lg pulse">
+      <i class="fas fa-shopping-cart mr-2"></i>طلب شراء عاجل
+    </a>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.alert-critical {
+  background: linear-gradient(135deg, rgba(220, 53, 69, 0.1) 0%, rgba(206, 17, 38, 0.1) 100%);
+  border-right: 4px solid #dc3545;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  animation: pulse-danger 2s infinite;
+}
+@keyframes pulse-danger {
+  0%, 100% { 
+    box-shadow: 0 0 20px rgba(220, 53, 69, 0.3);
+    border-right-color: #dc3545;
+  }
+  50% { 
+    box-shadow: 0 0 50px rgba(220, 53, 69, 0.6);
+    border-right-color: #ff6b6b;
+  }
+}
+.out-of-stock-row {
+  animation: blink-row 3s infinite;
+}
+@keyframes blink-row {
+  0%, 100% { background: rgba(220, 53, 69, 0.05); }
+  50% { background: rgba(220, 53, 69, 0.1); }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="alert-critical">
+  <div class="d-flex justify-content-between align-items-center">
+    <div>
+      <h4 class="mb-2" style="color: #dc3545;">
+        <i class="fas fa-ban mr-2"></i>تحذير عاجل - نفاد مخزون!
+      </h4>
+      <p class="mb-0">
+        <strong style="color: #dc3545;">{{ products|length }}</strong> منتج منفذ تماماً من المخزون
+        <br><small class="text-muted">يجب اتخاذ إجراء فوري لتجنب فقدان المبيعات</small>
+      </p>
+    </div>
+    <div>
+      <i class="fas fa-box-open fa-4x" style="opacity: 0.3; color: #dc3545;"></i>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header" style="background: linear-gradient(135deg, #dc3545 0%, #CE1126 100%); color: white;">
+    <h3 class="card-title text-white mb-0">
+      <i class="fas fa-times-circle mr-2"></i>منتجات منفذة من المخزون
+    </h3>
+  </div>
+  <div class="card-body">
+    <div class="table-responsive">
+      <table id="outOfStockTable" class="table table-hover">
+        <thead style="background: linear-gradient(135deg, #007A3D 0%, #1B4D89 100%); color: white;">
+          <tr>
+            <th><i class="fas fa-box mr-2"></i>المنتج</th>
+            <th><i class="fas fa-barcode mr-2"></i>SKU</th>
+            <th><i class="fas fa-ban mr-2"></i>{{ t('Inventory') }}</th>
+            <th><i class="fas fa-bell mr-2"></i>حد التنبيه</th>
+            <th><i class="fas fa-money-bill-wave mr-2"></i>{{ t('Price') }}</th>
+            <th><i class="fas fa-map-marker-alt mr-2"></i>الموقع</th>
+            <th class="text-center"><i class="fas fa-cog mr-2"></i>{{ t('Actions') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for product in products %}
+          <tr class="out-of-stock-row">
+            <td>
+              <div class="d-flex align-items-center">
+                {% if product.image_url %}
+                  <img src="{{ url_for('static', filename=product.image_url) }}" 
+                       class="warehouse-product-img mr-2" alt="{{ product.name }}">
+                {% else %}
+                  <div class="warehouse-product-img mr-2 d-flex align-items-center justify-content-center"
+                       style="background: linear-gradient(135deg, #dc3545 0%, #CE1126 100%); color: white;">
+                    <i class="fas fa-box"></i>
+                  </div>
+                {% endif %}
+                <div>
+                  <strong>{{ product.name }}</strong>
+                  {% if product.name_ar %}
+                  <br><small class="text-muted">{{ product.name_ar }}</small>
+                  {% endif %}
+                </div>
+              </div>
+            </td>
+            <td><code class="bg-light px-2 py-1 rounded">{{ product.sku }}</code></td>
+            <td>
+              <span class="badge badge-danger px-3 py-2" style="font-size: 1.2rem; animation: pulse 2s infinite;">
+                <i class="fas fa-times mr-1"></i>{{ product.current_stock }}
+              </span>
+              <br><small class="text-muted">{{ product.unit or 'بلا' }}</small>
+            </td>
+            <td>
+              <span class="badge badge-secondary">{{ product.min_stock_alert }}</span>
+            </td>
+            <td>
+              <strong style="color: #007A3D;">{{ "{:,.2f}".format(product.regular_price) }}</strong>
+              <small class="text-muted">AED</small>
+            </td>
+            <td>
+              <i class="fas fa-map-marker-alt text-danger mr-1"></i>
+              {{ product.location or 'غير محدد' }}
+            </td>
+            <td class="text-center">
+              <div class="btn-group btn-group-sm">
+                <a href="{{ url_for('products.view', id=product.id) }}" 
+                   class="btn btn-info" title="{{ t('View') }}">
+                  <i class="fas fa-eye"></i>
+                </a>
+                <a href="{{ url_for('products.edit', id=product.id) }}" 
+                   class="btn btn-warning" title="{{ t('Edit') }}">
+                  <i class="fas fa-edit"></i>
+                </a>
+                <a href="{{ url_for('purchases.create') }}" 
+                   class="btn btn-success" title="طلب شراء عاجل">
+                  <i class="fas fa-shopping-cart"></i>
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<style>
+.warehouse-product-img {
+  width: 45px;
+  height: 45px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 2px solid #e0e0e0;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+  $('#outOfStockTable').DataTable({
+    language: { url: "{{ url_for('static', filename='datatables/Arabic.json') }}" },
+    pageLength: 50,
+    responsive: true,
+    dom: 'Bfrtip',
+    buttons: [
+      {
+        extend: 'excel', 
+        text: '<i class="fas fa-file-excel mr-1"></i> تصدير للشراء', 
+        className: 'btn-sm btn-success'
+      },
+      {extend: 'pdf', text: '<i class="fas fa-file-pdf mr-1"></i> PDF', className: 'btn-sm btn-danger'},
+      {extend: 'print', text: '<i class="fas fa-print mr-1"></i> طباعة', className: 'btn-sm btn-info'}
+    ]
+  });
+
+  // Show urgent notification
+  if ({{ products|length }} > 0) {
+    setTimeout(function() {
+      UI.toast(
+        '🚨 يوجد {{ products|length }} منتج منفذ من المخزون - يتطلب إجراء عاجل!',
+        'error',
+        5000
+      );
+    }, 500);
+  }
+});
+</script>
+{% endblock %}

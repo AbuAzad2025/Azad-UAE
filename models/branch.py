@@ -1,0 +1,34 @@
+from datetime import datetime, timezone
+from extensions import db
+
+class Branch(db.Model):
+    __tablename__ = 'branches'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True)
+    name = db.Column(db.String(100), nullable=False, unique=True)
+    code = db.Column(db.String(20), nullable=False, unique=True) # e.g., RAM, HEB
+    
+    # Location & Contact
+    address = db.Column(db.String(255), nullable=True)
+    city = db.Column(db.String(50), nullable=True)
+    phone = db.Column(db.String(20), nullable=True)
+    
+    # Status
+    is_active = db.Column(db.Boolean, default=True)
+    is_main = db.Column(db.Boolean, default=False) # Is this the HQ?
+    
+    # Timestamps
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+    tenant = db.relationship('Tenant', backref='branches')
+    
+    # Relationships (Will be populated by backrefs from other models)
+    # users = db.relationship('User', backref='branch')
+    # warehouses = db.relationship('Warehouse', backref='branch')
+    # sales = db.relationship('Sale', backref='branch')
+    # ...
+    
+    def __repr__(self):
+        return f'<Branch {self.name} ({self.code})>'

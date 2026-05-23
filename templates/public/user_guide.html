@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="{{ current_language }}" dir="{{ 'rtl' if is_rtl else 'ltr' }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>شركة أزاد للأنظمة الذكية - دليل المستخدم</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/accessibility.css') }}">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Tajawal', sans-serif; background: #f8f9fa; }
+        
+        .navbar { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .navbar a { color: white; text-decoration: none; margin: 0 15px; }
+        .navbar .logo { font-size: 1.5rem; font-weight: 900; }
+        
+        .guide-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 60px 20px; text-align: center; }
+        .guide-header h1 { font-size: 3rem; margin-bottom: 15px; }
+        
+        .guide-container { max-width: 1200px; margin: 40px auto; padding: 0 20px; display: flex; gap: 40px; }
+        .sidebar { flex: 0 0 280px; background: white; padding: 25px; border-radius: 15px; height: fit-content; position: sticky; top: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
+        .sidebar h3 { margin-bottom: 20px; color: #2d3748; }
+        .sidebar ul { list-style: none; }
+        .sidebar li { padding: 12px; margin: 5px 0; border-radius: 8px; cursor: pointer; transition: all 0.3s; }
+        .sidebar li:hover { background: #f7fafc; }
+        .sidebar li.active { background: #667eea; color: white; }
+        .sidebar li i { margin-left: 10px; }
+        
+        .content { flex: 1; }
+        .section { background: white; padding: 40px; border-radius: 15px; margin-bottom: 30px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
+        .section h2 { color: #667eea; margin-bottom: 20px; font-size: 2rem; }
+        .section h3 { color: #2d3748; margin: 25px 0 15px; font-size: 1.5rem; }
+        .section p { line-height: 1.8; color: #4a5568; margin-bottom: 15px; }
+        .section ul { margin: 15px 0 15px 30px; }
+        .section li { margin: 10px 0; line-height: 1.6; color: #4a5568; }
+        .step-box { background: #f7fafc; padding: 20px; border-radius: 10px; border-right: 4px solid #667eea; margin: 15px 0; }
+        .step-box h4 { color: #667eea; margin-bottom: 10px; }
+        .note { background: #fff5f5; border-right: 4px solid #f56565; padding: 15px; border-radius: 8px; margin: 20px 0; }
+        .tip { background: #f0fff4; border-right: 4px solid #48bb78; padding: 15px; border-radius: 8px; margin: 20px 0; }
+        
+        .video-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 15px; margin: 20px 0; }
+        .video-container iframe { position: absolute; top: 0; right: 0; width: 100%; height: 100%; }
+        
+        footer { background: #2d3748; color: white; padding: 40px 20px; text-align: center; margin-top: 60px; }
+        
+        @media (max-width: 768px) {
+            .guide-container { flex-direction: column; }
+            .sidebar { position: static; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="logo">{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }}</div>
+        <div>
+            <a href="{{ url_for('public.landing') }}">{{ t('Dashboard') }}</a>
+            <a href="{{ url_for('public.pricing') }}">الأسعار</a>
+            <a href="{{ url_for('auth.login') }}"><i class="fas fa-sign-in-alt"></i> دخول</a>
+        </div>
+    </nav>
+
+    <header class="guide-header">
+        <h1>📚 دليل المستخدم الشامل</h1>
+        <p>كل ما تحتاج معرفته لاستخدام النظام بكفاءة</p>
+    </header>
+
+    <div class="guide-container">
+        <aside class="sidebar">
+            <h3>المحتويات</h3>
+            <ul>
+                <li class="active" onclick="scrollToSection('start')"><i class="fas fa-play-circle"></i> البداية السريعة</li>
+                <li onclick="scrollToSection('login')"><i class="fas fa-sign-in-alt"></i> تسجيل الدخول</li>
+                <li onclick="scrollToSection('products')"><i class="fas fa-boxes"></i> إدارة المنتجات</li>
+                <li onclick="scrollToSection('customers')"><i class="fas fa-users"></i> إدارة العملاء</li>
+                <li onclick="scrollToSection('sales')"><i class="fas fa-cash-register"></i> المبيعات</li>
+                <li onclick="scrollToSection('purchases')"><i class="fas fa-shopping-cart"></i> المشتريات</li>
+                <li onclick="scrollToSection('payments')"><i class="fas fa-money-bill-wave"></i> المدفوعات</li>
+                <li onclick="scrollToSection('reports')"><i class="fas fa-chart-line"></i> التقارير</li>
+                <li onclick="scrollToSection('ai')"><i class="fas fa-brain"></i> الذكاء الاصطناعي</li>
+            </ul>
+        </aside>
+
+        <main class="content">
+            <!-- Start Section -->
+            <section id="start" class="section">
+                <h2><i class="fas fa-rocket"></i> البداية السريعة</h2>
+                <p>مرحباً بك في نظام إدارة المستودعات والمبيعات الأكثر تطوراً في المنطقة. هذا الدليل سيساعدك على الانطلاق بسرعة.</p>
+                
+                <div class="step-box">
+                    <h4>الخطوة 1: الحصول على حساب</h4>
+                    <p>للحصول على بيانات تسجيل الدخول تواصل مع المطور عبر واتساب {{ developer_whatsapp or config.DEVELOPER_WHATSAPP or config.COMPANY_WHATSAPP }}.</p>
+                </div>
+                
+                <div class="step-box">
+                    <h4>الخطوة 2: تسجيل الدخول</h4>
+                    <p>استخدم اسم المستخدم وكلمة المرور المرسلة إليك للدخول على http://localhost:5000</p>
+                </div>
+                
+                <div class="step-box">
+                    <h4>الخطوة 3: إعداد الشركة</h4>
+                    <p>من لوحة التحكم، قم بإعداد معلومات شركتك والعملات والمستودعات.</p>
+                </div>
+                
+                <div class="tip">
+                    <strong><i class="fas fa-lightbulb"></i> نصيحة:</strong> شاهد فيديو البداية السريعة أدناه للحصول على نظرة عامة.
+                </div>
+            </section>
+
+            <!-- Login Section -->
+            <section id="login" class="section">
+                <h2><i class="fas fa-sign-in-alt"></i> تسجيل الدخول</h2>
+                
+                <h3>الأدوار والصلاحيات</h3>
+                <p>النظام يدعم 3 مستويات من المستخدمين:</p>
+                <ul>
+                    <li><strong>Super Admin:</strong> صلاحيات كاملة على النظام</li>
+                    <li><strong>Manager:</strong> إدارة المبيعات والمشتريات والتقارير</li>
+                    <li><strong>Seller:</strong> المبيعات فقط</li>
+                </ul>
+                
+                <div class="note">
+                    <strong><i class="fas fa-exclamation-triangle"></i> تحذير:</strong> حساب Owner (المالك) سري للغاية ولا يجب مشاركته. يُستخدم فقط لإدارة قاعدة البيانات والإعدادات الحرجة.
+                </div>
+                
+                <h3>تغيير كلمة المرور</h3>
+                <p>من ملفك الشخصي، يمكنك تغيير كلمة المرور في أي وقت. يُنصح بتغييرها بعد أول دخول.</p>
+            </section>
+
+            <!-- Products Section -->
+            <section id="products" class="section">
+                <h2><i class="fas fa-boxes"></i> إدارة المنتجات</h2>
+                
+                <h3>إضافة منتج جديد</h3>
+                <ol>
+                    <li>من القائمة الجانبية، اختر "المنتجات"</li>
+                    <li>اضغط على "منتج جديد"</li>
+                    <li>أدخل المعلومات الأساسية:</li>
+                    <ul>
+                        <li>الاسم (عربي/إنجليزي)</li>
+                        <li>رقم القطعة (Part Number)</li>
+                        <li>{{ t('Barcode') }}</li>
+                        <li>بلد المنشأ</li>
+                    </ul>
+                    <li>حدد الأسعار:</li>
+                    <ul>
+                        <li><strong>سعر عادي:</strong> للعملاء العاديين</li>
+                        <li><strong>سعر تاجر:</strong> للتجار (خصم)</li>
+                        <li><strong>سعر شريك:</strong> للشركاء (خصم أكبر)</li>
+                    </ul>
+                    <li>أدخل الكمية الحالية والحد الأدنى للتنبيه</li>
+                </ol>
+                
+                <div class="tip">
+                    <strong><i class="fas fa-magic"></i> ميزة الذكاء الاصطناعي:</strong> النظام يمكنه البحث عن المنتج في الأسواق العالمية واقتراح السعر المناسب تلقائياً!
+                </div>
+                
+                <h3>تصنيفات المنتجات</h3>
+                <p>يمكنك تنظيم المنتجات في تصنيفات لسهولة البحث والفلترة.</p>
+            </section>
+
+            <!-- Customers Section -->
+            <section id="customers" class="section">
+                <h2><i class="fas fa-users"></i> إدارة العملاء</h2>
+                
+                <h3>أنواع العملاء</h3>
+                <ul>
+                    <li><strong>عادي:</strong> سعر البيع الكامل</li>
+                    <li><strong>تاجر:</strong> سعر مخفض</li>
+                    <li><strong>شريك:</strong> سعر الشراكة (الأقل)</li>
+                </ul>
+                
+                <h3>التصنيف التلقائي</h3>
+                <p>النظام يصنف العملاء تلقائياً حسب حجم المشتريات:</p>
+                <ul>
+                    <li><strong>VIP:</strong> أكثر من 50,000 درهم</li>
+                    <li><strong>Premium:</strong> 20,000 - 50,000 درهم</li>
+                    <li><strong>Regular:</strong> أقل من 20,000 درهم</li>
+                </ul>
+                
+                <h3>كشف الحساب</h3>
+                <p>من صفحة العميل، يمكنك عرض:</p>
+                <ul>
+                    <li>جميع الفواتير والمدفوعات</li>
+                    <li>الرصيد الحالي</li>
+                    <li>المنتجات المشتراة</li>
+                    <li>المرتجعات</li>
+                </ul>
+            </section>
+
+            <!-- Sales Section -->
+            <section id="sales" class="section">
+                <h2><i class="fas fa-cash-register"></i> المبيعات</h2>
+                
+                <h3>إنشاء فاتورة بيع</h3>
+                <div class="step-box">
+                    <h4>الخطوات:</h4>
+                    <ol>
+                        <li>اختر العميل</li>
+                        <li>اختر العملة (درهم/دولار/يورو)</li>
+                        <li>أضف المنتجات (يظهر السعر تلقائياً حسب نوع العميل)</li>
+                        <li>أضف خصم إن وجد</li>
+                        <li>أضف تكلفة الشحن والضريبة</li>
+                        <li>اختر طريقة الدفع</li>
+                        <li>احفظ الفاتورة</li>
+                    </ol>
+                </div>
+                
+                <div class="tip">
+                    <strong><i class="fas fa-robot"></i> الذكاء الاصطناعي يساعدك في:</strong>
+                    <ul>
+                        <li>اقتراح السعر المناسب</li>
+                        <li>تنبيه نقص المخزون</li>
+                        <li>عرض السيارات المتوافقة مع القطعة</li>
+                        <li>اقتراح سعر الصرف</li>
+                    </ul>
+                </div>
+                
+                <h3>طباعة الفاتورة</h3>
+                <p>بعد حفظ الفاتورة، يمكنك طباعتها بتصميم احترافي خليجي يتضمن شعار الشركة والعلم الفلسطيني.</p>
+            </section>
+
+            <!-- Payments Section -->
+            <section id="payments" class="section">
+                <h2><i class="fas fa-money-bill-wave"></i> المدفوعات</h2>
+                
+                <h3>طرق الدفع المدعومة</h3>
+                <ul>
+                    <li>نقدي</li>
+                    <li>بطاقة ائتمان</li>
+                    <li>تحويل بنكي</li>
+                    <li>شيك</li>
+                    <li>محفظة إلكترونية</li>
+                </ul>
+                
+                <h3>سند القبض</h3>
+                <p>لكل دفعة يتم إصدار سند قبض يحتوي على:</p>
+                <ul>
+                    <li>رقم السند</li>
+                    <li>{{ t('Date') }}</li>
+                    <li>اسم العميل</li>
+                    <li>المبلغ بالعملات</li>
+                    <li>طريقة الدفع</li>
+                </ul>
+                
+                <div class="note">
+                    <strong><i class="fas fa-shield-alt"></i> أمان:</strong> بيانات البطاقات الائتمانية مشفرة ولا يمكن الوصول إليها إلا من حساب Owner.
+                </div>
+            </section>
+
+            <!-- Reports Section -->
+            <section id="reports" class="section">
+                <h2><i class="fas fa-chart-line"></i> التقارير</h2>
+                
+                <h3>التقارير المتوفرة</h3>
+                <ul>
+                    <li><strong>تقارير المبيعات:</strong> يومي/شهري/سنوي</li>
+                    <li><strong>تقارير المشتريات:</strong> حسب المورد</li>
+                    <li><strong>تقارير المخزون:</strong> كميات وقيم</li>
+                    <li><strong>الذمم المدينة:</strong> Accounts Receivable Aging</li>
+                    <li><strong>دفتر الأستاذ:</strong> General Ledger كامل</li>
+                </ul>
+                
+                <h3>التصدير</h3>
+                <p>يمكن تصدير جميع التقارير إلى:</p>
+                <ul>
+                    <li>PDF (للطباعة)</li>
+                    <li>Excel (للتحليل)</li>
+                    <li>CSV (لنقل البيانات)</li>
+                </ul>
+            </section>
+
+            <!-- AI Section -->
+            <section id="ai" class="section">
+                <h2><i class="fas fa-brain"></i> الذكاء الاصطناعي</h2>
+                
+                <h3>{{ t('AI Assistant') }}</h3>
+                <p>يمكنك الوصول للمساعد الذكي من دفتر الأستاذ. المساعد يمكنه:</p>
+                <ul>
+                    <li>الإجابة عن أسئلة مالية</li>
+                    <li>تحليل البيانات</li>
+                    <li>توليد تقارير فورية</li>
+                    <li>اقتراح حلول للمشاكل</li>
+                </ul>
+                
+                <h3>البحث في الأسواق العالمية</h3>
+                <p>عند إضافة منتج، النظام يبحث تلقائياً عن:</p>
+                <ul>
+                    <li>سعر القطعة في الأسواق</li>
+                    <li>أفضل الموردين</li>
+                    <li>نطاق الأسعار</li>
+                </ul>
+                
+                <h3>معرفة التوافق</h3>
+                <p>يعرض لك النظام السيارات والمعدات المتوافقة مع كل قطعة، مع تفاصيل:</p>
+                <ul>
+                    <li>الماركات</li>
+                    <li>الموديلات</li>
+                    <li>سنوات الصنع</li>
+                    <li>نوع المحرك</li>
+                </ul>
+                
+                <div class="tip">
+                    <strong><i class="fas fa-key"></i> التفعيل:</strong> للاستفادة الكاملة من AI، تحتاج مفتاح API. تواصل معنا للحصول عليه.
+                </div>
+            </section>
+
+            <!-- Contact Support -->
+            <section class="section" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                <h2 style="color: white;"><i class="fas fa-headset"></i> الدعم الفني</h2>
+                <p>الدعم الفني — تواصل مع المطور في أي وقت:</p>
+                <div style="display: flex; gap: 30px; margin-top: 20px; flex-wrap: wrap;">
+                    <div>
+                        <i class="fab fa-whatsapp" style="font-size: 2rem;"></i><br>
+                        <strong>واتساب:</strong> {{ developer_whatsapp or config.DEVELOPER_WHATSAPP }}
+                    </div>
+                    <div>
+                        <i class="fas fa-phone" style="font-size: 2rem;"></i><br>
+                        <strong>جوال:</strong> {{ developer_phone or config.DEVELOPER_PHONE }}
+                    </div>
+                    <div>
+                        <i class="fas fa-mobile-alt" style="font-size: 2rem;"></i><br>
+                        <strong>بريد:</strong> {{ developer_email or config.DEVELOPER_EMAIL }}
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <footer>
+        <p>&copy; 2025 {{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }}. جميع الحقوق محفوظة.</p>
+        <p style="margin-top: 10px;">{{ developer_credit or config.DEVELOPER_CREDIT }}</p>
+    </footer>
+
+    <script>
+        function scrollToSection(id) {
+            document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+            document.querySelectorAll('.sidebar li').forEach(li => li.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+    </script>
+
+</body>
+</html>
+

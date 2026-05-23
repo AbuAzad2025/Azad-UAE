@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - المنتجات الأكثر مبيعاً{% endblock %}
+
+{% block content %}
+<div class="content-wrapper">
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">{{ t('Top Selling') }}</h1>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">المنتجات الأكثر مبيعاً</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>الترتيب</th>
+                                            <th>اسم المنتج</th>
+                                            <th>الكمية المباعة</th>
+                                            <th>إجمالي المبيعات</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for product in products %}
+                                        <tr>
+                                            <td>{{ loop.index }}</td>
+                                            <td>{{ product.name }}</td>
+                                            <td>{{ product.total_quantity }}</td>
+                                            <td>{{ "%.2f"|format(product.total_sales) }} درهم</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}

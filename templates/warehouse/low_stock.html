@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - مخزون منخفض{% endblock %}
+{% block page_title %}
+<div class="d-flex justify-content-between align-items-center">
+  <div>
+    <h1 class="mb-0" style="color: #ffc107;">
+      <i class="fas fa-exclamation-triangle mr-3"></i>مخزون منخفض
+    </h1>
+    <p class="text-muted">منتجات تحتاج إلى إعادة تموين عاجلة</p>
+  </div>
+  <div>
+    <a href="{{ url_for('warehouse.index') }}" class="btn btn-info btn-lg">
+      <i class="fas fa-warehouse mr-2"></i>المستودع
+    </a>
+    <a href="{{ url_for('purchases.create') }}" class="btn btn-success btn-lg">
+      <i class="fas fa-shopping-cart mr-2"></i>شراء جديد
+    </a>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.alert-priority {
+  background: linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 152, 0, 0.1) 100%);
+  border-right: 4px solid #ffc107;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  animation: pulse-warning 2s infinite;
+}
+@keyframes pulse-warning {
+  0%, 100% { box-shadow: 0 0 20px rgba(255, 193, 7, 0.2); }
+  50% { box-shadow: 0 0 40px rgba(255, 193, 7, 0.4); }
+}
+.urgency-meter {
+  width: 100%;
+  height: 8px;
+  background: #e9ecef;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+.urgency-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #ff6b6b 0%, #ffc107 100%);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="alert-priority">
+  <div class="d-flex justify-content-between align-items-center">
+    <div>
+      <h4 class="mb-2">
+        <i class="fas fa-exclamation-triangle mr-2"></i>تنبيه مخزون!
+      </h4>
+      <p class="mb-0">
+        يوجد <strong>{{ products|length }}</strong> منتج بحاجة إلى إعادة تموين فورية
+      </p>
+    </div>
+    <div>
+      <i class="fas fa-warehouse fa-4x" style="opacity: 0.3; color: #ffc107;"></i>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header" style="background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%); color: white;">
+    <h3 class="card-title text-white mb-0">
+      <i class="fas fa-boxes mr-2"></i>المنتجات ذات المخزون المنخفض
+    </h3>
+  </div>
+  <div class="card-body">
+    <div class="table-responsive">
+      <table id="lowStockTable" class="table table-hover">
+        <thead style="background: linear-gradient(135deg, #007A3D 0%, #1B4D89 100%); color: white;">
+          <tr>
+            <th><i class="fas fa-exclamation-circle mr-2"></i>الأولوية</th>
+            <th><i class="fas fa-box mr-2"></i>المنتج</th>
+            <th><i class="fas fa-barcode mr-2"></i>SKU</th>
+            <th><i class="fas fa-layer-group mr-2"></i>{{ t('Inventory') }}</th>
+            <th><i class="fas fa-bell mr-2"></i>حد التنبيه</th>
+            <th><i class="fas fa-percentage mr-2"></i>النسبة</th>
+            <th><i class="fas fa-money-bill-wave mr-2"></i>{{ t('Price') }}</th>
+            <th class="text-center"><i class="fas fa-cog mr-2"></i>{{ t('Actions') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for product in products %}
+          {% set stock_percent = (product.current_stock / product.min_stock_alert * 100) if product.min_stock_alert > 0 else 0 %}
+          {% set urgency = 100 - stock_percent %}
+          <tr class="fade-in" data-urgency="{{ urgency }}">
+            <td>
+              <div class="urgency-meter">
+                <div class="urgency-bar" style="width: {{ urgency }}%"></div>
+              </div>
+              <small class="text-muted">{{ "{:.0f}".format(urgency) }}% نقص</small>
+            </td>
+            <td>
+              <div class="d-flex align-items-center">
+                {% if product.image_url %}
+                  <img src="{{ url_for('static', filename=product.image_url) }}" 
+                       class="warehouse-product-img mr-2" alt="{{ product.name }}">
+                {% else %}
+                  <div class="warehouse-product-img mr-2 d-flex align-items-center justify-content-center"
+                       style="background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%); color: white;">
+                    <i class="fas fa-box"></i>
+                  </div>
+                {% endif %}
+                <div>
+                  <strong>{{ product.name }}</strong>
+                  {% if product.name_ar %}
+                  <br><small class="text-muted">{{ product.name_ar }}</small>
+                  {% endif %}
+                </div>
+              </div>
+            </td>
+            <td><code class="bg-light px-2 py-1 rounded">{{ product.sku }}</code></td>
+            <td>
+              <span class="badge badge-warning px-3 py-2" style="font-size: 1.1rem;">
+                <i class="fas fa-exclamation-triangle mr-1"></i>{{ product.current_stock }}
+              </span>
+              <br><small class="text-muted">{{ product.unit or 'بلا' }}</small>
+            </td>
+            <td>
+              <span class="badge badge-secondary">{{ product.min_stock_alert }}</span>
+            </td>
+            <td>
+              <div class="progress" style="height: 25px;">
+                <div class="progress-bar bg-warning" style="width: {{ stock_percent }}%">
+                  {{ "{:.0f}".format(stock_percent) }}%
+                </div>
+              </div>
+            </td>
+            <td>
+              <strong style="color: #007A3D;">{{ "{:,.2f}".format(product.regular_price) }}</strong>
+              <small class="text-muted">AED</small>
+            </td>
+            <td class="text-center">
+              <div class="btn-group btn-group-sm">
+                <a href="{{ url_for('products.view', id=product.id) }}" 
+                   class="btn btn-info" title="{{ t('View') }}">
+                  <i class="fas fa-eye"></i>
+                </a>
+                <a href="{{ url_for('products.edit', id=product.id) }}" 
+                   class="btn btn-warning" title="{{ t('Edit') }}">
+                  <i class="fas fa-edit"></i>
+                </a>
+                <a href="{{ url_for('purchases.create') }}" 
+                   class="btn btn-success" title="طلب شراء">
+                  <i class="fas fa-shopping-cart"></i>
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<style>
+.warehouse-product-img {
+  width: 45px;
+  height: 45px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 2px solid #e0e0e0;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+  $('#lowStockTable').DataTable({
+    language: { url: "{{ url_for('static', filename='datatables/Arabic.json') }}" },
+    pageLength: 50,
+    order: [[5, 'asc']],  // Sort by percentage (most urgent first)
+    responsive: true,
+    dom: 'Bfrtip',
+    buttons: [
+      {extend: 'excel', text: '<i class="fas fa-file-excel mr-1"></i> Excel', className: 'btn-sm btn-success'},
+      {extend: 'pdf', text: '<i class="fas fa-file-pdf mr-1"></i> PDF', className: 'btn-sm btn-danger'},
+      {extend: 'print', text: '<i class="fas fa-print mr-1"></i> طباعة', className: 'btn-sm btn-info'}
+    ]
+  });
+});
+</script>
+{% endblock %}

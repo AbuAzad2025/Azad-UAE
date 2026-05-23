@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block title %}لوحة المراقبة - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">لوحة مراقبة النظام</h1>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-info">
+                    <div class="inner">
+                        <h3>{{ health.database.healthy and '✅' or '❌' }}</h3>
+                        <p>قاعدة البيانات</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-database"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-success">
+                    <div class="inner">
+                        <h3>{{ health.disk.percent }}%</h3>
+                        <p>استخدام القرص</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-hdd"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-warning">
+                    <div class="inner">
+                        <h3>{{ health.memory.percent }}%</h3>
+                        <p>استخدام الذاكرة</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-memory"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-danger">
+                    <div class="inner">
+                        <h3>{{ health.cpu.percent }}%</h3>
+                        <p>استخدام المعالج</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-microchip"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">إحصائيات التطبيق</h3>
+                    </div>
+                    <div class="card-body">
+                        <table class="table">
+                            <tr>
+                                <td>إجمالي الفواتير</td>
+                                <td><strong>{{ metrics.total_sales or 0 }}</strong></td>
+                            </tr>
+                            <tr>
+                                <td>إجمالي العملاء</td>
+                                <td><strong>{{ metrics.total_customers or 0 }}</strong></td>
+                            </tr>
+                            <tr>
+                                <td>إجمالي المنتجات</td>
+                                <td><strong>{{ metrics.total_products or 0 }}</strong></td>
+                            </tr>
+                            <tr>
+                                <td>عملاء نشطين</td>
+                                <td><strong>{{ metrics.active_customers or 0 }}</strong></td>
+                            </tr>
+                            <tr>
+                                <td>منتجات منخفضة المخزون</td>
+                                <td><strong class="text-danger">{{ metrics.low_stock_products or 0 }}</strong></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">معلومات الموارد</h3>
+                    </div>
+                    <div class="card-body">
+                        <table class="table">
+                            <tr>
+                                <td>إجمالي المساحة</td>
+                                <td><strong>{{ health.disk.total_gb }} GB</strong></td>
+                            </tr>
+                            <tr>
+                                <td>المساحة المستخدمة</td>
+                                <td><strong>{{ health.disk.used_gb }} GB</strong></td>
+                            </tr>
+                            <tr>
+                                <td>المساحة المتاحة</td>
+                                <td><strong>{{ health.disk.free_gb }} GB</strong></td>
+                            </tr>
+                            <tr>
+                                <td>إجمالي الذاكرة</td>
+                                <td><strong>{{ health.memory.total_mb }} MB</strong></td>
+                            </tr>
+                            <tr>
+                                <td>عدد المعالجات</td>
+                                <td><strong>{{ health.cpu.cores }}</strong></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+

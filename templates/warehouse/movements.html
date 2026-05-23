@@ -1,0 +1,275 @@
+{% extends "base.html" %}
+
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - حركات المخزون{% endblock %}
+{% block page_title %}
+<div class="d-flex justify-content-between align-items-center">
+  <div>
+    <h1 class="text-gradient mb-0"><i class="fas fa-exchange-alt mr-3"></i>{{ t('Stock Movements') }}</h1>
+    <p class="text-muted">سجل كامل لجميع حركات الدخول والخروج</p>
+  </div>
+  <div>
+    <a href="{{ url_for('warehouse.index') }}" class="btn btn-info btn-lg">
+      <i class="fas fa-warehouse mr-2"></i>المستودع الرئيسي
+    </a>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.movement-in {
+  border-right: 4px solid #28a745;
+  background: linear-gradient(90deg, rgba(40, 167, 69, 0.05) 0%, transparent 100%);
+}
+.movement-out {
+  border-right: 4px solid #dc3545;
+  background: linear-gradient(90deg, rgba(220, 53, 69, 0.05) 0%, transparent 100%);
+}
+.movement-adjustment {
+  border-right: 4px solid #ffc107;
+  background: linear-gradient(90deg, rgba(255, 193, 7, 0.05) 0%, transparent 100%);
+}
+.timeline-badge {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <div class="d-flex justify-content-between align-items-center flex-wrap" style="gap: .75rem;">
+      <div>
+        <h3 class="card-title mb-0">
+          <i class="fas fa-history mr-2"></i>سجل الحركات
+        </h3>
+        {% if current_warehouse %}
+        <small class="text-muted d-block mt-1">
+          <i class="fas fa-warehouse mr-1"></i>المستودع الحالي: {{ current_warehouse.name_ar or current_warehouse.name }}
+        </small>
+        {% endif %}
+      </div>
+      <form method="GET" class="form-inline d-flex align-items-center" style="gap: .5rem;">
+        <label class="sr-only" for="warehouseFilter">المستودع</label>
+        <select name="warehouse" id="warehouseFilter" class="form-control select2" style="min-width: 220px;" data-placeholder="اختر مستودع...">
+          <option value="">كل المستودعات</option>
+          {% for w in warehouses %}
+          <option value="{{ w.id }}" {% if current_warehouse and w.id == current_warehouse.id %}selected{% endif %}>
+            {{ w.name_ar or w.name }}
+          </option>
+          {% endfor %}
+        </select>
+        <button type="submit" class="btn btn-outline-primary">
+          <i class="fas fa-filter mr-1"></i>تصفية
+        </button>
+        {% if current_warehouse %}
+        <a href="{{ url_for('warehouse.movements') }}" class="btn btn-outline-secondary">
+          <i class="fas fa-times mr-1"></i>إزالة التصفية
+        </a>
+        {% endif %}
+      </form>
+      <div class="btn-group">
+        <button type="button" class="btn btn-sm btn-outline-primary active" id="filterAll">
+          <i class="fas fa-list mr-1"></i>الكل
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-success" id="filterIn">
+          <i class="fas fa-arrow-down mr-1"></i>دخول
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-danger" id="filterOut">
+          <i class="fas fa-arrow-up mr-1"></i>خروج
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-warning" id="filterAdjust">
+          <i class="fas fa-edit mr-1"></i>تعديل
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="card-body">
+    <div class="table-responsive">
+      <table id="movementsTable" class="table table-hover">
+        <thead style="background: linear-gradient(135deg, #007A3D 0%, #1B4D89 100%); color: white;">
+          <tr>
+            <th><i class="far fa-calendar mr-2"></i>{{ t('Date') }}</th>
+            <th><i class="fas fa-box mr-2"></i>المنتج</th>
+            <th><i class="fas fa-tag mr-2"></i>نوع الحركة</th>
+            <th><i class="fas fa-sort-numeric-down mr-2"></i>{{ t('Quantity') }}</th>
+            <th><i class="fas fa-layer-group mr-2"></i>قبل</th>
+            <th><i class="fas fa-layer-group mr-2"></i>بعد</th>
+            <th><i class="fas fa-link mr-2"></i>المرجع</th>
+            <th><i class="fas fa-sticky-note mr-2"></i>{{ t('Notes') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for movement in movements %}
+          <tr class="fade-in 
+                     {% if movement.movement_type == 'in' %}movement-in
+                     {% elif movement.movement_type == 'out' %}movement-out
+                     {% else %}movement-adjustment{% endif %}"
+              data-type="{{ movement.movement_type }}">
+            <td>
+              <div class="d-flex align-items-center">
+                <div class="timeline-badge mr-2" 
+                     style="background: {% if movement.movement_type == 'in' %}#28a745{% elif movement.movement_type == 'out' %}#dc3545{% else %}#ffc107{% endif %};">
+                  <i class="fas fa-{% if movement.movement_type == 'in' %}arrow-down{% elif movement.movement_type == 'out' %}arrow-up{% else %}edit{% endif %}"></i>
+                </div>
+                <div>
+                  <span>{{ movement.created_at.strftime('%Y-%m-%d') }}</span>
+                  <br><small class="text-muted">{{ movement.created_at.strftime('%H:%M:%S') }}</small>
+                </div>
+              </div>
+            </td>
+            <td>
+              <strong>{{ movement.product.name if movement.product else 'غير محدد' }}</strong>
+              {% if movement.product and movement.product.sku %}
+              <br><small class="text-muted">SKU: {{ movement.product.sku }}</small>
+              {% endif %}
+            </td>
+            <td>
+              {% if movement.movement_type == 'in' %}
+                <span class="badge badge-success px-3">
+                  <i class="fas fa-arrow-down mr-1"></i>دخول
+                </span>
+              {% elif movement.movement_type == 'out' %}
+                <span class="badge badge-danger px-3">
+                  <i class="fas fa-arrow-up mr-1"></i>خروج
+                </span>
+              {% elif movement.movement_type == 'adjustment' %}
+                <span class="badge badge-warning px-3">
+                  <i class="fas fa-edit mr-1"></i>تعديل
+                </span>
+              {% else %}
+                <span class="badge badge-secondary px-3">{{ movement.movement_type }}</span>
+              {% endif %}
+            </td>
+            <td>
+              <strong class="{% if movement.movement_type in ['purchase', 'return', 'adjustment'] %}text-success{% else %}text-danger{% endif %}">
+                {% if movement.movement_type in ['purchase', 'return', 'adjustment'] %}+{% else %}-{% endif %}{{ movement.quantity }}
+              </strong>
+            </td>
+            <td>
+              <span class="badge badge-info">
+                {{ movement.product.current_stock|default(0) }}
+              </span>
+            </td>
+            <td>
+              <span class="badge {% if movement.product.current_stock <= 0 %}badge-danger{% elif movement.product.current_stock <= movement.product.min_stock_alert %}badge-warning{% else %}badge-success{% endif %}">
+                {{ movement.product.current_stock|default(0) }}
+              </span>
+            </td>
+            <td>
+              {% if movement.reference %}
+                <code class="bg-light px-2 py-1 rounded">{{ movement.reference }}</code>
+              {% else %}
+                <span class="text-muted">-</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if movement.notes %}
+                <small class="text-muted">{{ movement.notes[:50] }}{% if movement.notes|length > 50 %}...{% endif %}</small>
+              {% else %}
+                <span class="text-muted">-</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    
+    {% if pagination %}
+    <div class="d-flex justify-content-center mt-3">
+      <nav>
+        <ul class="pagination">
+          {% if pagination.has_prev %}
+          <li class="page-item">
+            <a class="page-link" href="{{ url_for('warehouse.movements', page=pagination.prev_num, warehouse=request.args.get('warehouse')) }}">
+              <i class="fas fa-chevron-right"></i>
+            </a>
+          </li>
+          {% endif %}
+          
+          {% for page_num in pagination.iter_pages(left_edge=2, right_edge=2, left_current=2, right_current=2) %}
+            {% if page_num %}
+              <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
+                <a class="page-link" href="{{ url_for('warehouse.movements', page=page_num, warehouse=request.args.get('warehouse')) }}">{{ page_num }}</a>
+              </li>
+            {% else %}
+              <li class="page-item disabled"><span class="page-link">...</span></li>
+            {% endif %}
+          {% endfor %}
+          
+          {% if pagination.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="{{ url_for('warehouse.movements', page=pagination.next_num, warehouse=request.args.get('warehouse')) }}">
+              <i class="fas fa-chevron-left"></i>
+            </a>
+          </li>
+          {% endif %}
+        </ul>
+      </nav>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+  if ($.fn.select2) {
+    $('#warehouseFilter').select2({
+      placeholder: $('#warehouseFilter').data('placeholder') || 'اختر مستودع...',
+      allowClear: true,
+      width: 'resolve',
+      dir: 'rtl'
+    });
+  }
+
+  const table = $('#movementsTable').DataTable({
+    language: { url: "{{ url_for('static', filename='datatables/Arabic.json') }}" },
+    pageLength: 50,
+    order: [[0, 'desc']],
+    responsive: true,
+    dom: 'Bfrtip',
+    buttons: [
+      {extend: 'excel', text: '<i class="fas fa-file-excel mr-1"></i> Excel', className: 'btn-sm btn-success'},
+      {extend: 'pdf', text: '<i class="fas fa-file-pdf mr-1"></i> PDF', className: 'btn-sm btn-danger'},
+      {extend: 'print', text: '<i class="fas fa-print mr-1"></i> طباعة', className: 'btn-sm btn-info'}
+    ]
+  });
+
+  // Filter buttons
+  $('#filterAll').click(function() {
+    table.search('').draw();
+    $('.btn-group .btn').removeClass('active');
+    $(this).addClass('active');
+  });
+
+  $('#filterIn').click(function() {
+    table.column(2).search('دخول').draw();
+    $('.btn-group .btn').removeClass('active');
+    $(this).addClass('active');
+  });
+
+  $('#filterOut').click(function() {
+    table.column(2).search('خروج').draw();
+    $('.btn-group .btn').removeClass('active');
+    $(this).addClass('active');
+  });
+
+  $('#filterAdjust').click(function() {
+    table.column(2).search('تعديل').draw();
+    $('.btn-group .btn').removeClass('active');
+    $(this).addClass('active');
+  });
+});
+</script>
+{% endblock %}

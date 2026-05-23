@@ -1,0 +1,266 @@
+{% extends "base.html" %}
+
+{% block title %}مشتريات النظام - الخزينة السرية{% endblock %}
+
+{% block page_title %}
+<div class="d-flex justify-content-between align-items-center">
+    <div>
+        <h1 class="mb-0"><i class="fas fa-shopping-bag text-primary"></i> مشتريات النظام</h1>
+        <p class="text-muted mb-0">متابعة جميع عمليات شراء الباقات وتفعيلها</p>
+    </div>
+    <a href="{{ url_for('payment_vault.dashboard') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-right"></i> العودة للوحة التحكم
+    </a>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .purchase-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 15px;
+        padding: 20px;
+        color: white;
+        margin-bottom: 20px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    
+    .purchase-card h3 {
+        margin-bottom: 15px;
+        font-weight: 700;
+    }
+    
+    .purchase-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 30px;
+    }
+    
+    .stat-box {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        text-align: center;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 900;
+        color: #667eea;
+        margin-bottom: 5px;
+    }
+    
+    .stat-label {
+        color: #666;
+        font-size: 0.9rem;
+    }
+    
+    .purchase-table {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .status-badge {
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+    
+    .status-completed {
+        background: #d4edda;
+        color: #155724;
+    }
+    
+    .status-pending {
+        background: #fff3cd;
+        color: #856404;
+    }
+    
+    .status-refunded {
+        background: #f8d7da;
+        color: #721c24;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Security Alert -->
+<div class="alert alert-warning">
+                <i class="fas fa-shield-alt"></i>
+                <strong>تنبيه أمني:</strong> هذه الصفحة محمية بكلمة مرور الخزينة. جميع العمليات مسجلة ومراقبة.
+            </div>
+
+<!-- Purchase Stats -->
+<div class="purchase-stats">
+                <div class="stat-box">
+                    <div class="stat-number">{{ stats.total }}</div>
+                    <div class="stat-label">إجمالي المشتريات</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number">${{ "{:,.2f}".format(stats.revenue) }}</div>
+                    <div class="stat-label">المبلغ الإجمالي</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number">{{ stats.completed }}</div>
+                    <div class="stat-label">مشتريات مكتملة</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number">{{ stats.pending }}</div>
+                    <div class="stat-label">مشتريات قيد الانتظار</div>
+                </div>
+            </div>
+
+<!-- Purchases Table -->
+<div class="purchase-table">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3><i class="fas fa-list"></i> قائمة المشتريات</h3>
+                    <a href="{{ url_for('payment_vault.dashboard') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> العودة للوحة التحكم
+                    </a>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead style="background: #f8f9fa;">
+                            <tr>
+                                <th>#</th>
+                                <th>التاريخ</th>
+                                <th>الباقة</th>
+                                <th>العميل</th>
+                                <th>المبلغ</th>
+                                <th>طريقة الدفع</th>
+                                <th>الحالة</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if purchases %}
+                                {% for purchase in purchases %}
+                                <tr>
+                                    <td>{{ loop.index }}</td>
+                                    <td>{{ purchase.created_at.strftime('%Y-%m-%d %H:%M') if purchase.created_at else 'N/A' }}</td>
+                                    <td>
+                                        {% if purchase.package %}
+                                            {{ purchase.package.icon }} {{ purchase.package.name_ar }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {{ purchase.customer_name }}<br>
+                                        <small class="text-muted">{{ purchase.customer_email }}</small>
+                                        {% if purchase.company_name %}
+                                        <br><small><i class="fas fa-building"></i> {{ purchase.company_name }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td><strong>${{ "{:,.2f}".format(purchase.amount_paid) }}</strong></td>
+                                    <td>
+                                        {% if purchase.payment_method == 'crypto' %}
+                                            <i class="fab fa-bitcoin"></i> عملات رقمية
+                                        {% elif purchase.payment_method == 'card' %}
+                                            <i class="fas fa-credit-card"></i> بطاقة
+                                        {% elif purchase.payment_method == 'paypal' %}
+                                            <i class="fab fa-paypal"></i> PayPal
+                                        {% elif purchase.payment_method == 'bank' %}
+                                            <i class="fas fa-university"></i> تحويل بنكي
+                                        {% else %}
+                                            {{ purchase.payment_method }}
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="status-badge status-{{ purchase.payment_status }}">
+                                            {% if purchase.payment_status == 'completed' %}
+                                                ✓ مكتملة
+                                            {% elif purchase.payment_status == 'pending' %}
+                                                ⏳ قيد الانتظار
+                                            {% elif purchase.payment_status == 'failed' %}
+                                                ✗ فشلت
+                                            {% elif purchase.payment_status == 'refunded' %}
+                                                ↩ مسترجعة
+                                            {% else %}
+                                                {{ purchase.payment_status }}
+                                            {% endif %}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('payment_vault.purchase_detail', id=purchase.id) }}" class="btn btn-sm btn-info">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        {% if purchase.payment_status == 'pending' and purchase.activation_status != 'activated' %}
+                                        <form method="POST" action="{{ url_for('payment_vault.activate_purchase', id=purchase.id) }}" style="display: inline;">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('هل تريد تفعيل هذه الباقة؟')">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="8" class="text-center text-muted">
+                                        <i class="fas fa-inbox fa-3x mb-3" style="display: block;"></i>
+                                        لا توجد مشتريات حتى الآن
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                    
+                    <!-- Pagination -->
+                    {% if pagination and pagination.pages > 1 %}
+                    <nav aria-label="Page navigation" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            <!-- Previous -->
+                            <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+                                <a class="page-link" href="{{ url_for('payment_vault.view_purchases', page=pagination.prev_num) if pagination.has_prev else '#' }}">
+                                    <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </li>
+                            
+                            <!-- Page numbers -->
+                            {% for page_num in pagination.iter_pages(left_edge=2, right_edge=2, left_current=2, right_current=2) %}
+                                {% if page_num %}
+                                    {% if page_num == pagination.page %}
+                                        <li class="page-item active">
+                                            <span class="page-link">{{ page_num }}</span>
+                                        </li>
+                                    {% else %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="{{ url_for('payment_vault.view_purchases', page=page_num) }}">{{ page_num }}</a>
+                                        </li>
+                                    {% endif %}
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            <!-- Next -->
+                            <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+                                <a class="page-link" href="{{ url_for('payment_vault.view_purchases', page=pagination.next_num) if pagination.has_next else '#' }}">
+                                    <i class="fas fa-chevron-left"></i>
+                                </a>
+                            </li>
+                        </ul>
+                        
+                        <p class="text-center text-muted">
+                            {% set range_start = ((pagination.page - 1) * pagination.per_page) + 1 %}
+                            {% set range_end = pagination.page * pagination.per_page %}
+                            <small>عرض {{ range_start }} - {{ range_end if range_end <= pagination.total else pagination.total }} من {{ pagination.total }} مشترية</small>
+                        </p>
+                    </nav>
+                    {% endif %}
+                </div>
+            </div>
+</div>
+
+{% endblock %}
+

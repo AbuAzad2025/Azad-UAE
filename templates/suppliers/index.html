@@ -1,0 +1,374 @@
+{% extends 'base.html' %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - إدارة الموردين والمتاجر{% endblock %}
+{% block page_title %}
+<div class="d-flex justify-content-between align-items-center">
+  <div>
+    <h1 class="text-gradient mb-0"><i class="fas fa-truck mr-3"></i>إدارة الموردين</h1>
+    <p class="text-muted">قاعدة بيانات شاملة لجميع الموردين والشركات</p>
+  </div>
+  <div>
+    <a href="{{ url_for('suppliers.create') }}" class="btn btn-success btn-lg">
+      <i class="fas fa-plus-circle mr-2"></i>مورد جديد
+    </a>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.supplier-card {
+  transition: all 0.3s ease;
+  border-radius: 12px;
+  border: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.supplier-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 122, 61, 0.2);
+}
+.verified-badge {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+}
+.rating-stars {
+  color: #FFD700;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 10mm;
+  }
+
+  body {
+    -webkit-print-color-adjust: exact !important;
+    font-size: 11pt;
+    direction: rtl;
+  }
+
+  .main-sidebar,
+  .main-header,
+  .main-footer,
+  .content-header,
+  .btn,
+  .small-box,
+  .card-header,
+  .card-footer,
+  .filter-controls,
+  .dataTables_filter,
+  .dataTables_length,
+  .dt-buttons,
+  .dataTables_info,
+  .dataTables_paginate {
+    display: none !important;
+  }
+
+  .content-wrapper {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .card {
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  .table-responsive {
+    overflow: visible !important;
+  }
+
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+  }
+
+  table th,
+  table td {
+    border: 1px solid #dee2e6 !important;
+    padding: 6px 8px !important;
+    text-align: center !important;
+  }
+
+  table thead th {
+    background: #17a2b8 !important;
+    color: #fff !important;
+  }
+
+  table tbody tr:nth-child(even) {
+    background: #f8f9fa !important;
+  }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Statistics Cards -->
+<div class="row mb-4">
+  <div class="col-lg-3 col-6">
+    <div class="small-box bg-info">
+      <div class="inner">
+        <h3>{{ stats.total }}</h3>
+        <p>إجمالي الموردين</p>
+      </div>
+      <div class="icon">
+        <i class="fas fa-truck"></i>
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-lg-3 col-6">
+    <div class="small-box bg-success">
+      <div class="inner">
+        <h3>{{ stats.verified }}</h3>
+        <p>موردين موثوقين</p>
+      </div>
+      <div class="icon">
+        <i class="fas fa-check-circle"></i>
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-lg-3 col-6">
+    <div class="small-box bg-warning">
+      <div class="inner">
+        <h3>{{ stats.parts }}</h3>
+        <p>موردي قطع</p>
+      </div>
+      <div class="icon">
+        <i class="fas fa-cogs"></i>
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-lg-3 col-6">
+    <div class="small-box bg-primary">
+      <div class="inner">
+        <h3>{{ stats.equipment }}</h3>
+        <p>موردي معدات</p>
+      </div>
+      <div class="icon">
+        <i class="fas fa-tools"></i>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <div class="d-flex justify-content-between align-items-center">
+      <h3 class="card-title mb-0">
+        <i class="fas fa-list mr-2"></i>قائمة الموردين
+      </h3>
+      <div class="btn-group">
+        <button type="button" class="btn btn-sm btn-outline-info" id="printSuppliersBtn">
+          <i class="fas fa-print mr-1"></i>طباعة
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-primary" onclick="filterSuppliers('all')">
+          <i class="fas fa-list mr-1"></i>الكل
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-success" onclick="filterSuppliers('verified')">
+          <i class="fas fa-check-circle mr-1"></i>موثوق
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-warning" onclick="filterSuppliers('parts')">
+          <i class="fas fa-cogs mr-1"></i>قطع
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-info" onclick="filterSuppliers('equipment')">
+          <i class="fas fa-tools mr-1"></i>معدات
+        </button>
+      </div>
+    </div>
+  </div>
+  
+  <div class="card-body">
+    <div class="table-responsive">
+      <table id="suppliersTable" class="table table-hover">
+        <thead style="background: linear-gradient(135deg, #17a2b8 0%, #007bff 100%); color: white;">
+          <tr>
+            <th><i class="fas fa-building mr-2"></i>المورد</th>
+            <th><i class="fas fa-tag mr-2"></i>النوع</th>
+            <th><i class="fas fa-star mr-2"></i>التقييم</th>
+            <th><i class="fas fa-phone mr-2"></i>{{ t('Phone') }}</th>
+            <th><i class="fas fa-globe mr-2"></i>{{ t('Country') }}</th>
+            <th><i class="fas fa-coins mr-2"></i>إجمالي المشتريات</th>
+            <th><i class="fas fa-wallet mr-2"></i>{{ t('Balance') }}</th>
+            {% if show_branch_columns %}
+            <th><i class="fas fa-code-branch mr-2"></i>الفرع</th>
+            {% endif %}
+            <th class="text-center"><i class="fas fa-cog mr-2"></i>الإجراءات</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for supplier in suppliers %}
+          <tr data-verified="{{ supplier.is_verified }}" data-type="{{ supplier.supplier_type }}">
+            <td>
+              <div class="d-flex align-items-center">
+                <div class="supplier-icon mr-2" style="font-size: 24px;">
+                  {% if supplier.is_verified %}
+                    <i class="fas fa-check-circle text-success" title="مورد موثوق"></i>
+                  {% else %}
+                    <i class="fas fa-truck text-muted"></i>
+                  {% endif %}
+                </div>
+                <div>
+                  <strong>{{ supplier.name }}</strong>
+                  {% if supplier.company_name %}
+                    <br><small class="text-muted">{{ supplier.company_name }}</small>
+                  {% endif %}
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="badge badge-info">
+                <i class="fas fa-tag mr-1"></i>{{ supplier.get_type_display() }}
+              </span>
+            </td>
+            <td>
+              <span class="rating-stars">
+                {{ supplier.get_rating_stars() }}
+              </span>
+            </td>
+            <td>
+              <i class="fas fa-phone text-muted mr-1"></i>
+              {{ supplier.phone or 'لا يوجد' }}
+            </td>
+            <td>
+              <i class="fas fa-map-marker-alt text-muted mr-1"></i>
+              {{ supplier.country or 'غير محدد' }}
+            </td>
+            <td class="text-success">
+              <strong>{{ '{:,.2f}'.format(supplier.total_purchases_aed or 0) }}</strong> AED
+            </td>
+            <td>
+              {% set balance = supplier.get_balance_aed() %}
+              <span class="{% if balance > 0 %}text-danger{% else %}text-success{% endif %}">
+                <strong>{{ '{:,.2f}'.format(balance) }}</strong> AED
+              </span>
+            </td>
+            {% if show_branch_columns %}
+            <td>
+              {% if supplier.branch_labels %}
+                {% for label in supplier.branch_labels %}
+                  <span class="badge badge-light border">{{ label }}</span>{% if not loop.last %}<br>{% endif %}
+                {% endfor %}
+              {% else %}
+                <span class="text-muted">-</span>
+              {% endif %}
+            </td>
+            {% endif %}
+            <td class="text-center">
+              <div class="btn-group btn-group-sm">
+                <a href="{{ url_for('suppliers.view', id=supplier.id) }}" 
+                   class="btn btn-info" title="{{ t('View') }}">
+                  <i class="fas fa-eye"></i>
+                </a>
+                <a href="{{ url_for('suppliers.edit', id=supplier.id) }}" 
+                   class="btn btn-warning" title="{{ t('Edit') }}">
+                  <i class="fas fa-edit"></i>
+                </a>
+                <a href="{{ url_for('suppliers.statement', id=supplier.id) }}" 
+                   class="btn btn-success" title="كشف الحساب">
+                  <i class="fas fa-file-invoice"></i>
+                </a>
+                <button type="button" class="btn btn-danger" 
+                        onclick="deleteItem('suppliers', {{ supplier.id }}, '{{ supplier.name }}')" 
+                        title="حذف">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  
+  {% if pagination %}
+  <div class="card-footer">
+    <nav>
+      <ul class="pagination justify-content-center mb-0">
+        {% if pagination.has_prev %}
+        <li class="page-item">
+          <a class="page-link" href="{{ url_for('suppliers.index', page=pagination.prev_num) }}">
+            <i class="fas fa-chevron-right"></i>
+          </a>
+        </li>
+        {% endif %}
+        
+        {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+          {% if page_num %}
+            <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
+              <a class="page-link" href="{{ url_for('suppliers.index', page=page_num) }}">{{ page_num }}</a>
+            </li>
+          {% else %}
+            <li class="page-item disabled"><span class="page-link">...</span></li>
+          {% endif %}
+        {% endfor %}
+        
+        {% if pagination.has_next %}
+        <li class="page-item">
+          <a class="page-link" href="{{ url_for('suppliers.index', page=pagination.next_num) }}">
+            <i class="fas fa-chevron-left"></i>
+          </a>
+        </li>
+        {% endif %}
+      </ul>
+    </nav>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+  const $tableEl = $('#suppliersTable');
+  const printOptions = {
+    title: 'قائمة الموردين',
+    headerColor: '#17a2b8'
+  };
+
+  let table;
+  if ($.fn.DataTable.isDataTable($tableEl)) {
+    table = $tableEl.DataTable();
+  } else {
+    table = $tableEl.DataTable({
+      language: {
+        url: '{{ url_for("static", filename="datatables/Arabic.json") }}'
+      },
+      order: [[0, 'asc']],
+      pageLength: 25,
+      dom: 'Bfrtip',
+      buttons: SmartPrint.buildButtons(printOptions)
+    });
+  }
+
+  if (!$tableEl.data('smartPrintInit')) {
+    SmartPrint.attachTrigger(table, '#printSuppliersBtn', printOptions);
+    $tableEl.data('smartPrintInit', true);
+  }
+});
+
+function filterSuppliers(type) {
+  const $tableEl = $('#suppliersTable');
+  const table = $.fn.DataTable.isDataTable($tableEl) ? $tableEl.DataTable() : null;
+  if (!table) {
+    return;
+  }
+  
+  if (type === 'all') {
+    table.search('').columns().search('').draw();
+  } else if (type === 'verified') {
+    table.column(0).search('✓').draw();
+  } else {
+    table.column(1).search(type).draw();
+  }
+}
+</script>
+{% endblock %}
+

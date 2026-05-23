@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+
+{% block title %}التقارير - Reports{% endblock %}
+
+{% block page_title %}
+<div class="d-flex align-items-center">
+    <i class="fas fa-chart-line text-primary mr-3" style="font-size: 2rem;"></i>
+    <div>
+        <h1 class="mb-0">📊 التقارير والإحصائيات</h1>
+        <p class="text-muted mb-0">نظرة شاملة على أداء النظام</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="content-wrapper">
+    <div class="container-fluid">
+        <!-- إحصائيات عامة -->
+        <div class="row">
+            <div class="col-md-3">
+                <div class="card bg-primary text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h4 class="mb-0">{{ stats.total_users }}</h4>
+                                <p class="mb-0">المستخدمين</p>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-users fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h4 class="mb-0">{{ stats.total_customers }}</h4>
+                                <p class="mb-0">العملاء</p>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-user-friends fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3">
+                <div class="card bg-info text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h4 class="mb-0">{{ stats.total_products }}</h4>
+                                <p class="mb-0">المنتجات</p>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-box fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3">
+                <div class="card bg-warning text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h4 class="mb-0">{{ stats.total_sales }}</h4>
+                                <p class="mb-0">المبيعات</p>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-shopping-cart fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- إحصائيات الفواتير والإيصالات -->
+        <div class="row mt-4">
+            <div class="col-md-4">
+                <div class="card bg-secondary text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h4 class="mb-0">{{ stats.total_invoices }}</h4>
+                                <p class="mb-0">الفواتير</p>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-file-invoice fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card bg-dark text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h4 class="mb-0">{{ stats.total_receipts }}</h4>
+                                <p class="mb-0">الإيصالات</p>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-receipt fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card bg-danger text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h4 class="mb-0">{{ stats.total_donations }}</h4>
+                                <p class="mb-0">التبرعات</p>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-heart fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- حالة الخزينة السرية -->
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0">
+                            <i class="fas fa-vault mr-2"></i>حالة الخزينة السرية
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">الخزينة السرية</h6>
+                                <p class="text-muted mb-0">حالة أمان الدفع والتبرعات</p>
+                            </div>
+                            <div>
+                                {% if stats.vault_status %}
+                                    <span class="badge badge-danger">مقفلة</span>
+                                {% else %}
+                                    <span class="badge badge-success">مفتوحة</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-chart-pie mr-2"></i>إحصائيات الدفع
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <h4 class="text-primary">{{ stats.total_donations }}</h4>
+                                <p class="mb-0">التبرعات</p>
+                            </div>
+                            <div class="col-6">
+                                <h4 class="text-success">{{ stats.total_payments }}</h4>
+                                <p class="mb-0">المدفوعات</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- تقارير مفصلة -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-chart-bar mr-2"></i>التقارير المفصلة
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="info-box">
+                                    <span class="info-box-icon bg-primary">
+                                        <i class="fas fa-users"></i>
+                                    </span>
+                                    <div class="info-box-content">
+                                        <span class="info-box-text">المستخدمين</span>
+                                        <span class="info-box-number">{{ stats.total_users }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-3">
+                                <div class="info-box">
+                                    <span class="info-box-icon bg-success">
+                                        <i class="fas fa-user-friends"></i>
+                                    </span>
+                                    <div class="info-box-content">
+                                        <span class="info-box-text">العملاء</span>
+                                        <span class="info-box-number">{{ stats.total_customers }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-3">
+                                <div class="info-box">
+                                    <span class="info-box-icon bg-info">
+                                        <i class="fas fa-box"></i>
+                                    </span>
+                                    <div class="info-box-content">
+                                        <span class="info-box-text">المنتجات</span>
+                                        <span class="info-box-number">{{ stats.total_products }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-3">
+                                <div class="info-box">
+                                    <span class="info-box-icon bg-warning">
+                                        <i class="fas fa-shopping-cart"></i>
+                                    </span>
+                                    <div class="info-box-content">
+                                        <span class="info-box-text">المبيعات</span>
+                                        <span class="info-box-number">{{ stats.total_sales }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- أزرار الإجراءات -->
+        <div class="row mt-4">
+            <div class="col-12 text-center">
+                <a href="{{ url_for('owner.dashboard') }}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-arrow-right mr-2"></i>
+                    العودة للوحة المالك
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

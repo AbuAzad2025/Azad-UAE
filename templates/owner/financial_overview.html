@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}شركة أزاد للأنظمة الذكية - النظرة المالية الشاملة والتقارير{% endblock %}
+
+{% block content %}
+<div class="content-wrapper">
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0"><i class="fas fa-chart-line mr-2"></i>النظرة المالية</h1>
+                </div>
+                <div class="col-sm-6">
+                    <div class="float-left">
+                        <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-right mr-2"></i>العودة للوحة التحكم
+                        </a>
+                        <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-home mr-2"></i>الرئيسية
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">النظرة المالية - {{ period }}</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="info-box">
+                                        <span class="info-box-icon bg-success"><i class="fas fa-chart-line"></i></span>
+                                        <div class="info-box-content">
+                                            <span class="info-box-text">إجمالي المبيعات</span>
+                                            <span class="info-box-number">{{ "%.2f"|format(financial_data.sales_total) }} درهم</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="info-box">
+                                        <span class="info-box-icon bg-info"><i class="fas fa-money-bill-wave"></i></span>
+                                        <div class="info-box-content">
+                                            <span class="info-box-text">المبلغ المدفوع</span>
+                                            <span class="info-box-number">{{ "%.2f"|format(financial_data.sales_paid) }} درهم</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="info-box">
+                                        <span class="info-box-icon bg-warning"><i class="fas fa-shopping-cart"></i></span>
+                                        <div class="info-box-content">
+                                            <span class="info-box-text">إجمالي المشتريات</span>
+                                            <span class="info-box-number">{{ "%.2f"|format(financial_data.purchases_total) }} درهم</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="info-box">
+                                        <span class="info-box-icon bg-primary"><i class="fas fa-calculator"></i></span>
+                                        <div class="info-box-content">
+                                            <span class="info-box-text">صافي الإيرادات</span>
+                                            <span class="info-box-number">{{ "%.2f"|format(financial_data.net_revenue) }} درهم</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row mt-4">
+                                <div class="col-md-6">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h3 class="card-title">تفاصيل المبيعات</h3>
+                                        </div>
+                                        <div class="card-body">
+                                            <p><strong>عدد الفواتير:</strong> {{ financial_data.sales_count }}</p>
+                                            <p><strong>إجمالي المبيعات:</strong> {{ "%.2f"|format(financial_data.sales_total) }} درهم</p>
+                                            <p><strong>المبلغ المدفوع:</strong> {{ "%.2f"|format(financial_data.sales_paid) }} درهم</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h3 class="card-title">تفاصيل المشتريات</h3>
+                                        </div>
+                                        <div class="card-body">
+                                            <p><strong>عدد فواتير الشراء:</strong> {{ financial_data.purchases_count }}</p>
+                                            <p><strong>إجمالي المشتريات:</strong> {{ "%.2f"|format(financial_data.purchases_total) }} درهم</p>
+                                            <p><strong>إجمالي الإيصالات:</strong> {{ "%.2f"|format(financial_data.receipts_total) }} درهم</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}

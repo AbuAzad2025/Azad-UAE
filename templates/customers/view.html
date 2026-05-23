@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - تفاصيل العميل {{ customer.name }}{% endblock %}
+{% block page_title %}
+<div class="d-flex justify-content-between align-items-center">
+  <div>
+    <h1 class="mb-0"><i class="fas fa-user mr-2"></i>تفاصيل الزبون: {{ customer.name }}</h1>
+  </div>
+  <div>
+    <a href="{{ url_for('customers.index') }}" class="btn btn-secondary">
+      <i class="fas fa-arrow-right mr-2"></i>العودة للقائمة
+    </a>
+    <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
+      <i class="fas fa-home mr-2"></i>الرئيسية
+    </a>
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-4">
+    <div class="card card-primary card-outline">
+      <div class="card-body box-profile">
+        <h3 class="profile-username text-center">{{ customer.name }}</h3>
+        <p class="text-muted text-center">
+          {% if customer.customer_type == 'regular' %}زبون عادي
+          {% elif customer.customer_type == 'merchant' %}تاجر
+          {% else %}شريك{% endif %}
+        </p>
+        <ul class="list-group list-group-unbordered mb-3">
+          <li class="list-group-item">
+            <b>التصنيف</b>
+            <span class="float-left">
+              {% if customer.customer_classification == 'vip' %}<span class="badge badge-danger">VIP</span>
+              {% elif customer.customer_classification == 'premium' %}<span class="badge badge-warning">مميز</span>
+              {% else %}<span class="badge badge-secondary">عادي</span>{% endif %}
+            </span>
+          </li>
+          <li class="list-group-item">
+            <b>{{ t('Balance') }}</b>
+            <span class="float-left {% if customer.get_balance_aed() < 0 %}text-danger{% elif customer.get_balance_aed() > 0 %}text-success{% else %}text-muted{% endif %}">
+              {{ "{:,.2f}".format(customer.get_balance_aed()) }} AED
+            </span>
+          </li>
+          <li class="list-group-item">
+            <b>إجمالي المشتريات</b>
+            <span class="float-left">{{ "{:,.2f}".format(customer.total_purchases) }} AED</span>
+          </li>
+        </ul>
+        {% if customer.balance < 0 %}
+        <a href="{{ url_for('payments.create_receipt') }}?customer_id={{ customer.id }}" class="btn btn-primary btn-block">
+          <i class="fas fa-money-bill-wave"></i> إضافة دفعة
+        </a>
+        {% endif %}
+        <a href="{{ url_for('customers.edit', id=customer.id) }}" class="btn btn-warning btn-block"><i class="fas fa-edit"></i> تعديل</a>
+        <a href="{{ url_for('customers.statement', id=customer.id) }}" class="btn btn-success btn-block"><i class="fas fa-file-alt"></i> كشف حساب</a>
+        <button type="button" class="btn btn-danger btn-block" 
+                onclick="deleteItem('customers', {{ customer.id }}, '{{ customer.name }}', '{{ url_for('customers.index') }}')">
+          <i class="fas fa-trash"></i> حذف
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-8">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">معلومات الاتصال</h3>
+      </div>
+      <div class="card-body">
+        <dl class="row">
+          <dt class="col-sm-4">الهاتف:</dt>
+          <dd class="col-sm-8">{{ customer.phone or '-' }}</dd>
+          <dt class="col-sm-4">البريد:</dt>
+          <dd class="col-sm-8">{{ customer.email or '-' }}</dd>
+          <dt class="col-sm-4">العنوان:</dt>
+          <dd class="col-sm-8">{{ customer.address or '-' }}</dd>
+          <dt class="col-sm-4">العملة الافتراضية:</dt>
+          <dd class="col-sm-8">{{ customer.default_currency }}</dd>
+        </dl>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">آخر المبيعات</h3>
+      </div>
+      <div class="card-body p-0">
+        <table class="table table-sm">
+          <thead>
+            <tr>
+              <th>{{ t('Invoice Number') }}</th>
+              <th>{{ t('Date') }}</th>
+              <th>{{ t('Amount') }}</th>
+              <th>{{ t('Paid') }}</th>
+              <th>الباقي</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for sale in customer.sales[:10] %}
+            <tr>
+              <td><a href="{{ url_for('sales.view', id=sale.id) }}">{{ sale.sale_number }}</a></td>
+              <td>{{ sale.sale_date.strftime('%Y-%m-%d') }}</td>
+              <td>{{ "{:,.2f}".format(sale.total_amount) }} {{ sale.currency }}</td>
+              <td>{{ "{:,.2f}".format(sale.paid_amount) }}</td>
+              <td class="text-danger">{{ "{:,.2f}".format(sale.balance_due) }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

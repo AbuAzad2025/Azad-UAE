@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - التقارير والإحصائيات{% endblock %}
+{% block page_title %}التقارير{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header bg-gradient-primary">
+        <h3 class="card-title text-white">
+          <i class="fas fa-chart-bar mr-2"></i>
+          التقارير والإحصائيات
+        </h3>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          
+          <!-- تقرير المبيعات -->
+          <div class="col-md-4">
+            <div class="info-box bg-gradient-success">
+              <span class="info-box-icon"><i class="fas fa-shopping-cart"></i></span>
+              <div class="info-box-content">
+                <span class="info-box-text">{{ t('Sales Report') }}</span>
+                <span class="info-box-number">Sales Report</span>
+                <a href="{{ url_for('reports.sales') }}" class="btn btn-light btn-sm mt-2 stretched-link">
+                  عرض التقرير <i class="fas fa-arrow-left mr-1"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- تقرير المخزون -->
+          <div class="col-md-4">
+            <div class="info-box bg-gradient-warning">
+              <span class="info-box-icon"><i class="fas fa-boxes"></i></span>
+              <div class="info-box-content">
+                <span class="info-box-text">{{ t('Inventory Report') }}</span>
+                <span class="info-box-number">Inventory Report</span>
+                <a href="{{ url_for('reports.inventory') }}" class="btn btn-light btn-sm mt-2 stretched-link">
+                  عرض التقرير <i class="fas fa-arrow-left mr-1"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- الذمم المدينة -->
+          <div class="col-md-4">
+            <div class="info-box bg-gradient-danger">
+              <span class="info-box-icon"><i class="fas fa-user-clock"></i></span>
+              <div class="info-box-content">
+                <span class="info-box-text">الذمم المدينة</span>
+                <span class="info-box-number">Receivables</span>
+                <a href="{{ url_for('reports.receivables') }}" class="btn btn-light btn-sm mt-2 stretched-link">
+                  عرض التقرير <i class="fas fa-arrow-left mr-1"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="row mt-3">
+          
+          <!-- التقارير المالية -->
+          <div class="col-md-4">
+            <div class="card card-outline card-primary">
+              <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-book mr-2"></i>التقارير المالية</h3>
+              </div>
+              <div class="card-body">
+                <div class="list-group">
+                  <a href="{{ url_for('ledger.trial_balance') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-balance-scale mr-2"></i>ميزان المراجعة
+                  </a>
+                  <a href="{{ url_for('ledger.income_statement') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-chart-line mr-2"></i>قائمة الدخل
+                  </a>
+                  <a href="{{ url_for('ledger.balance_sheet') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-file-invoice-dollar mr-2"></i>الميزانية العمومية
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- تقارير العمليات -->
+          <div class="col-md-4">
+            <div class="card card-outline card-success">
+              <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-clipboard-list mr-2"></i>تقارير العمليات</h3>
+              </div>
+              <div class="card-body">
+                <div class="list-group">
+                  <a href="{{ url_for('sales.index') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-file-invoice mr-2"></i>فواتير المبيعات
+                  </a>
+                  <a href="{{ url_for('purchases.index') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-shopping-bag mr-2"></i>فواتير المشتريات
+                  </a>
+                  <a href="{{ url_for('payments.receipts') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-money-bill-wave mr-2"></i>المدفوعات
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- تقارير أخرى -->
+          <div class="col-md-4">
+            <div class="card card-outline card-info">
+              <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-list mr-2"></i>تقارير أخرى</h3>
+              </div>
+              <div class="card-body">
+                <div class="list-group">
+                  <a href="{{ url_for('customers.index') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-users mr-2"></i>العملاء
+                  </a>
+                  <a href="{{ url_for('products.index') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-cubes mr-2"></i>المنتجات
+                  </a>
+                  <a href="{{ url_for('expenses.index') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-wallet mr-2"></i>المصروفات
+                  </a>
+                  <a href="{{ url_for('reports.partners') }}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-handshake mr-2"></i>تقرير الشركاء والتجار
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% block title %}مراقبة النشاط{% endblock %}
+{% block content %}
+<div class="container-fluid">
+  <div class="mb-3">
+    <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary">
+      <i class="fas fa-arrow-right"></i> رجوع للوحة المالك
+    </a>
+    <a href="{{ url_for('owner.system_health') }}" class="btn btn-success">
+      <i class="fas fa-link"></i> صحة النظام
+    </a>
+    <a href="{{ url_for('owner.error_logs') }}" class="btn btn-danger">
+      <i class="fas fa-link"></i> الأخطاء
+    </a>
+    <a href="{{ url_for('owner.login_history') }}" class="btn btn-primary">
+      <i class="fas fa-link"></i> سجل الدخول
+    </a>
+  </div>
+  
+  <div class="row">
+    <div class="col-md-4">
+      <div class="small-box bg-success">
+        <div class="inner">
+          <h3>{{ stats.active_now }}</h3>
+          <p>مستخدمون نشطون الآن</p>
+        </div>
+        <div class="icon">
+          <i class="fas fa-users"></i>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-4">
+      <div class="small-box bg-info">
+        <div class="inner">
+          <h3>{{ stats.today_sales }}</h3>
+          <p>مبيعات اليوم</p>
+        </div>
+        <div class="icon">
+          <i class="fas fa-shopping-cart"></i>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-4">
+      <div class="small-box bg-warning">
+        <div class="inner">
+          <h3>{{ stats.recent_actions }}</h3>
+          <p>إجراءات أخيرة</p>
+        </div>
+        <div class="icon">
+          <i class="fas fa-clipboard-list"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="row">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">مستخدمون نشطون</h3>
+        </div>
+        <div class="card-body">
+          <table class="table table-sm table-hover">
+            <thead>
+              <tr>
+                <th>المستخدم</th>
+                <th>آخر ظهور</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for user in active_users %}
+              <tr>
+                <td>
+                  <i class="fas fa-circle text-success"></i>
+                  {{ user.full_name }}
+                </td>
+                <td>{{ user.last_seen.strftime('%H:%M') if user.last_seen else '-' }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">آخر الإجراءات</h3>
+        </div>
+        <div class="card-body" style="max-height:400px;overflow-y:auto">
+          <table class="table table-sm">
+            <thead>
+              <tr>
+                <th>الإجراء</th>
+                <th>المستخدم</th>
+                <th>الوقت</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for audit in recent_audits %}
+              <tr>
+                <td><span class="badge badge-primary">{{ audit.action }}</span></td>
+                <td>{{ audit.user.username if audit.user else 'System' }}</td>
+                <td>{{ audit.created_at.strftime('%H:%M') if audit.created_at else '-' }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

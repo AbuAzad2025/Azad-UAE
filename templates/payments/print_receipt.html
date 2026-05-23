@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>طباعة إيصال - {{ doc_number or receipt.receipt_number or receipt.payment_number }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/accessibility.css') }}">
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 10px;
+      font-family: 'Tajawal', 'Arial', sans-serif;
+      direction: rtl;
+      text-align: right;
+      background: #e5e7eb;
+      font-size: 9px;
+    }
+    @page {
+      size: {{ settings.paper_size if settings else 'A4' }} {{ settings.orientation if settings else 'portrait' }};
+      margin: 5mm;
+    }
+    .receipt {
+      {% if settings and settings.paper_size == 'A5' %}
+      width: 212mm;
+      height: {{ '210mm' if settings.orientation == 'portrait' else '148mm' }};
+      {% elif settings and settings.paper_size == 'Letter' %}
+      width: 212mm;
+      height: {{ '279mm' if settings.orientation == 'portrait' else '216mm' }};
+      {% else %}
+      width: {{ '210mm' if (not settings or settings.orientation == 'portrait') else '297mm' }};
+      height: {{ '297mm' if (not settings or settings.orientation == 'portrait') else '210mm' }};
+      {% endif %}
+      margin: 0 auto;
+      padding: 12px 14px;
+      border: 1px solid #334155;
+      background: #fff;
+      overflow: auto;
+      box-shadow: 0 0 16px rgba(0,0,0,0.25);
+    }
+    .header {
+      text-align: center;
+      border-bottom: 2px solid #0f766e;
+      padding-bottom: 10px;
+      margin-bottom: 10px;
+    }
+    .header h1 {
+      margin: 0 0 5px 0;
+      color: #0f766e;
+      font-size: 18px;
+    }
+    .header p { margin: 2px 0; }
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+    .info-label { font-weight: 700; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0;
+    }
+    th, td {
+      padding: 8px;
+      border: 1px solid #d1d5db;
+      text-align: right;
+      font-size: 9px;
+    }
+    th {
+      background: #0f766e;
+      color: #fff;
+    }
+    .total {
+      font-weight: 700;
+      background: #f3f4f6;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 14px;
+      padding-top: 8px;
+      border-top: 1px solid #cbd5e1;
+    }
+    @media print {
+      body { background: #fff; padding: 0; margin: 0; }
+      .no-print { display: none !important; }
+      .receipt {
+        width: 100% !important;
+        height: auto !important;
+        max-width: none !important;
+        margin: 0 !important;
+        box-shadow: none !important;
+        border: none !important;
+        padding: 6mm 5mm !important;
+      }
+    }
+  </style>
+</head>
+<body class="receipt-print payment-receipt">
+  <div class="receipt">
+    <div class="header">
+      <h1>{{ company.name_ar if company else (tenant_name_ar or company_name_ar or 'نظام المحاسبة') }}</h1>
+      <p>{{ company.address or '' }}</p>
+      <p>هاتف: {{ company.phone or '' }}</p>
+      {% if print_branch %}
+      <p><strong>الفرع:</strong> {{ print_branch.name }}{% if print_branch.code %} ({{ print_branch.code }}){% endif %}</p>
+      {% if print_branch.address %}
+      <p><strong>عنوان الفرع:</strong> {{ print_branch.address }}</p>
+      {% endif %}
+      {% endif %}
+      <h2 style="margin: 8px 0 0 0; font-size: 14px;">{{ 'سند صرف' if is_payment else 'سند قبض' }}</h2>
+    </div>
+    
+    {% set doc_title = ('💸 سند صرف' if is_payment else '💵 سند قبض') %}
+    {% set doc_number = doc_number or receipt.receipt_number or receipt.payment_number %}
+    {% include 'partials/print_unified_banner.html' %}
+    
+    <div class="info-row">
+      <div><span class="info-label">رقم السند:</span> {{ doc_number or receipt.receipt_number or receipt.payment_number }}</div>
+      <div><span class="info-label">التاريخ:</span> {{ (receipt.receipt_date or receipt.payment_date).strftime('%Y-%m-%d') if (receipt.receipt_date or receipt.payment_date) else '' }}</div>
+    </div>
+    
+    <div class="info-row">
+      <div>
+        <span class="info-label">{{ 'المورد' if is_payment else 'العميل' }}:</span>
+        {{ receipt.supplier_name if is_payment else (receipt.customer.name if receipt.customer else 'عميل نقدي') }}
+      </div>
+      <div><span class="info-label">المستخدم:</span> {{ print_user_name or (receipt.user.full_name if receipt.user else 'موظف') }}</div>
+    </div>
+    
+    <table>
+      <thead>
+        <tr>
+          <th>البيان</th>
+          <th>المبلغ</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>المبلغ ({{ receipt.currency or 'AED' }})</td>
+          <td>{{ "%.2f"|format(receipt.amount_aed) }} {{ receipt.currency or 'AED' }}</td>
+        </tr>
+        {% if receipt.payment_method %}
+        <tr>
+          <td>طريقة الدفع</td>
+          <td>
+            {% if receipt.payment_method == 'cash' %}نقدي
+            {% elif receipt.payment_method == 'card' %}بطاقة
+            {% elif receipt.payment_method == 'bank_transfer' %}تحويل بنكي
+            {% elif receipt.payment_method == 'cheque' %}شيك
+            {% elif receipt.payment_method == 'e_wallet' %}محفظة إلكترونية
+            {% else %}{{ receipt.payment_method }}{% endif %}
+          </td>
+        </tr>
+        {% endif %}
+        {% if receipt.reference_number %}
+        <tr>
+          <td>رقم المرجع</td>
+          <td>{{ receipt.reference_number }}</td>
+        </tr>
+        {% endif %}
+      </tbody>
+      <tfoot>
+        <tr class="total">
+          <td>الإجمالي</td>
+          <td>{{ "%.2f"|format(receipt.amount_aed) }} {{ receipt.currency or 'AED' }}</td>
+        </tr>
+      </tfoot>
+    </table>
+
+    {% set _payment_words = amount_in_words or (number_to_arabic_words(receipt.amount_aed or receipt.amount or 0, receipt.currency or 'AED') if number_to_arabic_words is defined else '') %}
+    <div style="margin: 10px 0; padding: 8px 10px; background: #f8fafc; border-right: 4px solid #64748b; border-radius: 6px; font-size: 9px; color: #1f2937;">
+      <strong>المبلغ بالحروف:</strong> {{ _payment_words or ("{:.2f}".format(receipt.amount_aed) + " " + (receipt.currency or 'AED')) }}
+    </div>
+    {% if qr_data_url %}
+    <div style="margin: 10px 0 6px 0; text-align: center;">
+      <img src="{{ qr_data_url }}" alt="QR" style="width: 110px; height: 110px; border: 1px solid #e2e8f0; border-radius: 8px; padding: 4px; background: #fff;">
+      <div style="font-size: 8px; color: #64748b; margin-top: 4px;">رمز تحقق السند</div>
+    </div>
+    {% endif %}
+    
+    {% if receipt.notes %}
+    <div style="margin-top: 20px;">
+      <strong>ملاحظات:</strong> {{ receipt.notes }}
+    </div>
+    {% endif %}
+    
+    <div class="footer">
+      <p>شكراً لتعاملكم معنا</p>
+      <p style="font-size: 0.9em; color: #666;">تم الطباعة: {{ printed_at.strftime('%Y-%m-%d %H:%M') }}</p>
+    </div>
+  </div>
+  
+  <div class="no-print" style="text-align: center; margin-top: 20px;">
+    <button onclick="window.print()" class="btn btn-primary" style="padding: 10px 30px; font-size: 1.1em;">
+      <i class="fas fa-print"></i> طباعة
+    </button>
+    <button onclick="window.close()" class="btn btn-secondary" style="padding: 10px 30px; font-size: 1.1em; margin-right: 10px;">
+      إغلاق
+    </button>
+  </div>
+</body>
+</html>

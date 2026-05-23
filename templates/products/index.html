@@ -1,0 +1,446 @@
+{% extends 'base.html' %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - إدارة المنتجات والمخزون{% endblock %}
+{% block page_title %}
+<div class="d-flex justify-content-between align-items-center">
+  <div>
+    <h1 class="text-gradient mb-0"><i class="fas fa-box-open mr-3"></i>{{ t('Products Management') }}</h1>
+    <p class="text-muted">{{ t('Complete inventory for all products and parts') }}</p>
+  </div>
+  <div>
+    <a href="{{ url_for('products.import_products') }}" class="btn btn-secondary btn-lg mr-2">
+      <i class="fas fa-file-import mr-2"></i>استيراد
+    </a>
+    <a href="{{ url_for('products.create') }}" class="btn btn-primary btn-lg">
+      <i class="fas fa-plus mr-2"></i>منتج جديد
+    </a>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.product-image {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 2px solid #e0e0e0;
+  transition: all 0.3s ease;
+}
+.product-image:hover {
+  transform: scale(3);
+  z-index: 1000;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+}
+.stock-low {
+  animation: pulse-red 2s infinite;
+}
+@keyframes pulse-red {
+  0%, 100% { background-color: #dc3545; }
+  50% { background-color: #ff6b6b; }
+}
+.stock-good {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+}
+
+.btn-group .btn-outline-success.active {
+  background: #16a34a !important;
+  color: #ffffff !important;
+  border-color: #16a34a !important;
+  box-shadow: 0 0 10px rgba(22, 163, 74, 0.3) !important;
+}
+.btn-group .btn-outline-success.active i,
+.btn-group .btn-outline-success.active span {
+  color: #ffffff !important;
+}
+
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 10mm;
+  }
+
+  body {
+    -webkit-print-color-adjust: exact !important;
+    font-size: 11pt;
+    direction: rtl;
+  }
+
+  .main-sidebar,
+  .main-header,
+  .main-footer,
+  .content-header,
+  .btn,
+  .card-header,
+  .card-footer,
+  .btn-group,
+  .dataTables_filter,
+  .dataTables_length,
+  .dataTables_paginate,
+  .dataTables_info,
+  .dt-buttons {
+    display: none !important;
+  }
+
+  .content-wrapper {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .card {
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  .table-responsive {
+    overflow: visible !important;
+  }
+
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+  }
+
+  table th,
+  table td {
+    border: 1px solid #dee2e6 !important;
+    padding: 6px 8px !important;
+    text-align: center !important;
+  }
+
+  table thead th {
+    background: #007A3D !important;
+    color: #fff !important;
+  }
+
+  table tbody tr:nth-child(even) {
+    background: #f8f9fa !important;
+  }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <div class="d-flex justify-content-between align-items-center">
+      <h3 class="card-title mb-0">
+        <i class="fas fa-list mr-2"></i>كتالوج المنتجات
+      </h3>
+      <div class="btn-group">
+        <button type="button" class="btn btn-sm btn-outline-info" id="printProductsBtn">
+          <i class="fas fa-print mr-1"></i>طباعة
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-success active" id="filterAll">
+          <i class="fas fa-boxes mr-1"></i>الكل
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-danger" id="filterLow">
+          <i class="fas fa-exclamation-triangle mr-1"></i>مخزون منخفض
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-warning" id="filterOut">
+          <i class="fas fa-ban mr-1"></i>نفذ
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="card-body">
+    <div class="table-responsive">
+      <table id="productsTable" class="table table-hover table-bordered">
+        <thead style="background: linear-gradient(135deg, #007A3D 0%, #1B4D89 100%); color: white;">
+          <tr>
+            <th><i class="fas fa-image mr-2"></i>صورة</th>
+            <th><i class="fas fa-box mr-2"></i>المنتج</th>
+            <th><i class="fas fa-barcode mr-2"></i>SKU</th>
+            <th><i class="fas fa-tag mr-2"></i>الفئة</th>
+            <th><i class="fas fa-money-bill-wave mr-2"></i>{{ t('Price') }}</th>
+            {% if show_branch_columns %}
+            <th><i class="fas fa-code-branch mr-2"></i>الفرع</th>
+            <th><i class="fas fa-warehouse mr-2"></i>المستودع</th>
+            {% endif %}
+            <th><i class="fas fa-warehouse mr-2"></i>{{ t('Inventory') }}</th>
+            <th class="text-center"><i class="fas fa-cog mr-2"></i>{{ t('Actions') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for product in products %}
+          {% set shown_stock = product.visible_stock if product.visible_stock is defined else product.current_stock %}
+          <tr class="fade-in" data-stock="{{ shown_stock }}" data-min="{{ product.min_stock_alert }}">
+            <td>
+              {% if product.image_url %}
+                <img src="{{ url_for('static', filename=product.image_url) }}" 
+                     alt="{{ product.name }}" class="product-image">
+              {% else %}
+                <div class="product-image d-flex align-items-center justify-content-center" 
+                     style="background: linear-gradient(135deg, #007A3D 0%, #1B4D89 100%);">
+                  <i class="fas fa-box text-white"></i>
+                </div>
+              {% endif %}
+            </td>
+            <td>
+              <div>
+                <strong>{{ product.name }}</strong>
+                {% if product.name_ar %}
+                <br><small class="text-muted">{{ product.name_ar }}</small>
+                {% endif %}
+              </div>
+            </td>
+            <td><code>{{ product.sku }}</code></td>
+            <td>
+              {% if product.category %}
+                <span class="badge badge-primary">{{ product.category.name }}</span>
+              {% else %}
+                <span class="text-muted">-</span>
+              {% endif %}
+            </td>
+            <td>
+              <strong style="color: #007A3D;">{{ "{:,.2f}".format(product.regular_price) }}</strong>
+              <small class="text-muted">AED</small>
+            </td>
+            {% if show_branch_columns %}
+            <td>
+              {% if product.visible_branch_names %}
+                {% for label in product.visible_branch_names %}
+                  <span class="badge badge-light border">{{ label }}</span>{% if not loop.last %}<br>{% endif %}
+                {% endfor %}
+              {% else %}
+                <span class="text-muted">-</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if product.visible_warehouse_names %}
+                {% for label in product.visible_warehouse_names %}
+                  <span class="badge badge-info">{{ label }}</span>{% if not loop.last %}<br>{% endif %}
+                {% endfor %}
+              {% else %}
+                <span class="text-muted">-</span>
+              {% endif %}
+            </td>
+            {% endif %}
+            <td>
+              {% if shown_stock <= 0 %}
+                <span class="badge badge-danger stock-low px-3 py-2">
+                  <i class="fas fa-times mr-1"></i>نفذ ({{ shown_stock }})
+                </span>
+              {% elif shown_stock <= product.min_stock_alert %}
+                <span class="badge badge-warning px-3 py-2">
+                  <i class="fas fa-exclamation-triangle mr-1"></i>{{ shown_stock }}
+                </span>
+              {% else %}
+                <span class="badge stock-good text-white px-3 py-2">
+                  <i class="fas fa-check mr-1"></i>{{ shown_stock }}
+                </span>
+              {% endif %}
+              <small class="text-muted d-block">{{ product.unit or 'بلا' }}</small>
+            </td>
+            <td class="text-center">
+              <div class="btn-group btn-group-sm">
+                <a href="{{ url_for('products.view', id=product.id) }}" 
+                   class="btn btn-info" title="{{ t('View') }}">
+                  <i class="fas fa-eye"></i>
+                </a>
+                <a href="{{ url_for('products.edit', id=product.id) }}" 
+                   class="btn btn-warning" title="{{ t('Edit') }}">
+                  <i class="fas fa-edit"></i>
+                </a>
+                <button type="button" class="btn btn-danger" 
+                        onclick="deleteItem('products', {{ product.id }}, '{{ product.name }}')" 
+                        title="حذف">
+                  <i class="fas fa-trash"></i>
+                </button>
+                <a href="{{ url_for('sales.create', product_id=product.id) }}" 
+                   class="btn btn-success" title="بيع">
+                  <i class="fas fa-shopping-cart"></i>
+                </a>
+                <button type="button" class="btn btn-primary" title="إضافة كمية" 
+                        onclick="adjustStock({{ product.id }}, '{{ product.name }}', {{ shown_stock }})">
+                  <i class="fas fa-plus"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Stock Adjustment Modal -->
+<div class="modal fade" id="stockModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">تعديل المخزون</h5>
+        <button type="button" class="close" data-dismiss="modal">
+          <span>&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="stockForm" method="POST" action="">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" id="productId" name="product_id">
+          <div class="form-group">
+            <label for="productName">اسم المنتج</label>
+            <input type="text" id="productName" name="product_name" class="form-control" readonly autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label for="currentStock">المخزون الحالي</label>
+            <input type="number" id="currentStock" name="current_stock" class="form-control" readonly autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label for="adjustmentType">نوع التعديل</label>
+            <select id="adjustmentType" name="adjustment_type" class="form-control" required autocomplete="off">
+              <option value="" selected>بلا</option>
+              <option value="add">{{ t('Add') }}</option>
+              <option value="subtract">خصم</option>
+              <option value="set">تعيين</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="adjustmentQuantity">{{ t('Quantity') }}</label>
+            <input type="number" id="adjustmentQuantity" name="adjustment_quantity" class="form-control" step="0.001" min="0" required autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label for="adjustmentReason">السبب</label>
+            <select id="adjustmentReason" name="adjustment_reason" class="form-control" required autocomplete="off">
+              <option value="" selected>بلا</option>
+              <option value="purchase">شراء</option>
+              <option value="return">إرجاع</option>
+              <option value="adjustment">{{ t('Edit') }}</option>
+              <option value="damage">تلف</option>
+              <option value="other">{{ t('Other') }}</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="adjustmentNotes">{{ t('Notes') }}</label>
+            <textarea id="adjustmentNotes" name="adjustment_notes" class="form-control" rows="3" autocomplete="off"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ t('Cancel') }}</button>
+        <button type="button" class="btn btn-primary" onclick="saveStockAdjustment()">{{ t('Save') }}</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+  const $tableEl = $('#productsTable');
+  const printOptions = {
+    title: 'كتالوج المنتجات',
+    headerColor: '#007A3D'
+  };
+
+  let table;
+  if ($.fn.DataTable.isDataTable($tableEl)) {
+    table = $tableEl.DataTable();
+  } else {
+    table = $tableEl.DataTable({
+      language: { url: "{{ url_for('static', filename='datatables/Arabic.json') }}" },
+      pageLength: 25,
+      order: [[5, 'asc']],  // Sort by stock (low first)
+      responsive: true,
+      dom: 'Bfrtip',
+      buttons: SmartPrint.buildButtons(printOptions)
+    });
+  }
+
+  if (!$tableEl.data('smartPrintInit')) {
+    SmartPrint.attachTrigger(table, '#printProductsBtn', printOptions);
+    $tableEl.data('smartPrintInit', true);
+  }
+
+  // Smart filtering
+  $('#filterAll').off('click.smartPrint').on('click.smartPrint', function() {
+    table.search('').column(5).search('').draw();
+    $('.btn-group .btn').removeClass('active');
+    $(this).addClass('active');
+  });
+
+  $('#filterLow').off('click.smartPrint').on('click.smartPrint', function() {
+    $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+      const stock = parseFloat(data[5].match(/\d+/)?.[0] || 0);
+      const row = table.row(dataIndex).node();
+      const min = parseFloat($(row).data('min')) || 0;
+      return stock > 0 && stock <= min;
+    });
+    table.draw();
+    $.fn.dataTable.ext.search.pop();
+    $('.btn-group .btn').removeClass('active');
+    $(this).addClass('active');
+  });
+
+  $('#filterOut').off('click.smartPrint').on('click.smartPrint', function() {
+    $.fn.dataTable.ext.search.push(function(settings, data) {
+      return data[5].includes('نفذ');
+    });
+    table.draw();
+    $.fn.dataTable.ext.search.pop();
+    $('.btn-group .btn').removeClass('active');
+    $(this).addClass('active');
+  });
+});
+
+function adjustStock(productId, productName, currentStock) {
+  $('#productId').val(productId);
+  $('#productName').val(productName);
+  $('#currentStock').val(currentStock);
+  $('#adjustmentType').val('');
+  $('#adjustmentQuantity').val('');
+  $('#adjustmentReason').val('');
+  $('#adjustmentNotes').val('');
+  $('#stockModal').modal('show');
+}
+
+function saveStockAdjustment() {
+  const productId = $('#productId').val();
+  const adjustmentType = $('#adjustmentType').val();
+  const quantity = parseFloat($('#adjustmentQuantity').val());
+  const reason = $('#adjustmentReason').val();
+  const notes = $('#adjustmentNotes').val();
+  
+  if (!adjustmentType) {
+    alert('يرجى اختيار نوع التعديل');
+    return;
+  }
+  
+  if (!reason) {
+    alert('يرجى اختيار سبب التعديل');
+    return;
+  }
+  
+  if (!quantity || quantity <= 0) {
+    alert('يرجى إدخال كمية صحيحة');
+    return;
+  }
+  
+  $.ajax({
+    url: `/products/${productId}/adjust-stock`,
+    method: 'POST',
+    data: {
+      adjustment_type: adjustmentType,
+      quantity: quantity,
+      reason: reason,
+      notes: notes,
+      csrf_token: $('meta[name=csrf-token]').attr('content')
+    },
+    success: function(response) {
+      if (response.success) {
+        $('#stockModal').modal('hide');
+        location.reload();
+      } else {
+        alert('حدث خطأ: ' + response.message);
+      }
+    },
+    error: function() {
+      alert('حدث خطأ في الاتصال');
+    }
+  });
+}
+</script>
+{% endblock %}
+

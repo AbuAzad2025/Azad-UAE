@@ -1,0 +1,281 @@
+{% extends 'base.html' %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - تنبيهات الشيكات{% endblock %}
+{% block page_title %}<i class="fas fa-bell"></i> تنبيهات الشيكات{% endblock %}
+
+{% block content %}
+<!-- الإحصائيات -->
+<div class="row">
+  <div class="col-lg-4">
+    <div class="small-box bg-warning">
+      <div class="inner">
+        <h3>{{ due_soon|length }}</h3>
+        <p>شيكات قريبة الاستحقاق (7 أيام)</p>
+      </div>
+      <div class="icon">
+        <i class="fas fa-clock"></i>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="small-box bg-danger">
+      <div class="inner">
+        <h3>{{ overdue|length }}</h3>
+        <p>شيكات متأخرة</p>
+      </div>
+      <div class="icon">
+        <i class="fas fa-exclamation-triangle"></i>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="small-box bg-dark">
+      <div class="inner">
+        <h3>{{ bounced|length }}</h3>
+        <p>شيكات مرتدة</p>
+      </div>
+      <div class="icon">
+        <i class="fas fa-ban"></i>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- الشيكات القريبة من الاستحقاق -->
+{% if due_soon %}
+<div class="card card-warning">
+  <div class="card-header">
+    <h3 class="card-title">
+      <i class="fas fa-clock mr-2"></i>شيكات قريبة الاستحقاق (خلال 7 أيام)
+    </h3>
+  </div>
+  <div class="card-body p-0">
+    <table class="table table-sm">
+      <thead>
+        <tr>
+          <th>رقم الشيك</th>
+          <th>النوع</th>
+          <th>البنك</th>
+          <th>المبلغ</th>
+          <th>الاستحقاق</th>
+          <th>متبقي</th>
+          {% if show_branch_columns %}
+          <th>الفرع</th>
+          {% endif %}
+          <th>إجراءات</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for cheque in due_soon %}
+        <tr class="table-warning">
+          <td><strong>{{ cheque.cheque_bank_number }}</strong></td>
+          <td>
+            {% if cheque.cheque_type == 'incoming' %}
+            <span class="badge badge-success">وارد</span>
+            {% else %}
+            <span class="badge badge-danger">صادر</span>
+            {% endif %}
+          </td>
+          <td>{{ cheque.bank_name }}</td>
+          <td>{{ "{:,.2f}".format(cheque.amount) }} {{ cheque.currency }}</td>
+          <td>{{ cheque.due_date.strftime('%Y-%m-%d') }}</td>
+          <td>
+            <span class="badge badge-warning">
+              <i class="fas fa-clock mr-1"></i>{{ cheque.days_until_due }} يوم
+            </span>
+          </td>
+          {% if show_branch_columns %}
+          <td>
+            {% if cheque.branch %}
+              <span class="badge badge-light border">{{ cheque.branch.name }}{% if cheque.branch.code %} ({{ cheque.branch.code }}){% endif %}</span>
+            {% else %}
+              <span class="text-muted">-</span>
+            {% endif %}
+          </td>
+          {% endif %}
+          <td>
+            <div class="btn-group btn-group-sm">
+              <a href="{{ url_for('cheques.view', id=cheque.id) }}" class="btn btn-info" title="عرض">
+                <i class="fas fa-eye"></i>
+              </a>
+              <button type="button" class="btn btn-danger delete-cheque-btn" data-id="{{ cheque.id }}" title="حذف">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+<!-- الشيكات المتأخرة -->
+{% if overdue %}
+<div class="card card-danger mt-3">
+  <div class="card-header">
+    <h3 class="card-title">
+      <i class="fas fa-exclamation-triangle mr-2"></i>شيكات متأخرة - تحتاج متابعة فورية!
+    </h3>
+  </div>
+  <div class="card-body p-0">
+    <table class="table table-sm">
+      <thead>
+        <tr>
+          <th>رقم الشيك</th>
+          <th>النوع</th>
+          <th>الطرف</th>
+          <th>المبلغ</th>
+          <th>الاستحقاق</th>
+          <th>التأخير</th>
+          {% if show_branch_columns %}
+          <th>الفرع</th>
+          {% endif %}
+          <th>إجراءات</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for cheque in overdue %}
+        <tr class="table-danger">
+          <td><strong>{{ cheque.cheque_bank_number }}</strong></td>
+          <td>
+            {% if cheque.cheque_type == 'incoming' %}
+            <span class="badge badge-success">وارد</span>
+            {% else %}
+            <span class="badge badge-danger">صادر</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if cheque.cheque_type == 'incoming' %}
+              {{ cheque.drawer_name or (cheque.customer.name if cheque.customer else '-') }}
+            {% else %}
+              {{ cheque.payee_name or (cheque.supplier.name if cheque.supplier else '-') }}
+            {% endif %}
+          </td>
+          <td>
+            <strong class="text-danger">{{ "{:,.2f}".format(cheque.amount) }}</strong>
+            <small>{{ cheque.currency }}</small>
+          </td>
+          <td>{{ cheque.due_date.strftime('%Y-%m-%d') }}</td>
+          <td>
+            <span class="badge badge-danger">
+              <i class="fas fa-exclamation-circle mr-1"></i>{{ cheque.days_until_due|abs }} يوم
+            </span>
+          </td>
+          {% if show_branch_columns %}
+          <td>
+            {% if cheque.branch %}
+              <span class="badge badge-light border">{{ cheque.branch.name }}{% if cheque.branch.code %} ({{ cheque.branch.code }}){% endif %}</span>
+            {% else %}
+              <span class="text-muted">-</span>
+            {% endif %}
+          </td>
+          {% endif %}
+          <td>
+            <div class="btn-group btn-group-sm">
+              <a href="{{ url_for('cheques.view', id=cheque.id) }}" class="btn btn-info" title="عرض">
+                <i class="fas fa-eye"></i>
+              </a>
+              <button type="button" class="btn btn-danger delete-cheque-btn" data-id="{{ cheque.id }}" title="حذف">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+<!-- الشيكات المرتدة -->
+{% if bounced %}
+<div class="card card-dark mt-3">
+  <div class="card-header">
+    <h3 class="card-title">
+      <i class="fas fa-ban mr-2"></i>شيكات مرتدة
+    </h3>
+  </div>
+  <div class="card-body p-0">
+    <table class="table table-sm">
+      <thead>
+        <tr>
+          <th>رقم الشيك</th>
+          <th>البنك</th>
+          <th>الطرف</th>
+          <th>المبلغ</th>
+          <th>سبب الإرتداد</th>
+          {% if show_branch_columns %}
+          <th>الفرع</th>
+          {% endif %}
+          <th>إجراءات</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for cheque in bounced %}
+        <tr>
+          <td><strong>{{ cheque.cheque_bank_number }}</strong></td>
+          <td>{{ cheque.bank_name }}</td>
+          <td>
+            {% if cheque.cheque_type == 'incoming' %}
+              {{ cheque.drawer_name or '-' }}
+            {% else %}
+              {{ cheque.payee_name or '-' }}
+            {% endif %}
+          </td>
+          <td>{{ "{:,.2f}".format(cheque.amount) }} {{ cheque.currency }}</td>
+          <td>
+            <span class="text-danger">
+              <i class="fas fa-info-circle mr-1"></i>
+              {{ cheque.bounce_reason or 'غير محدد' }}
+            </span>
+          </td>
+          {% if show_branch_columns %}
+          <td>
+            {% if cheque.branch %}
+              <span class="badge badge-light border">{{ cheque.branch.name }}{% if cheque.branch.code %} ({{ cheque.branch.code }}){% endif %}</span>
+            {% else %}
+              <span class="text-muted">-</span>
+            {% endif %}
+          </td>
+          {% endif %}
+          <td>
+            <div class="btn-group btn-group-sm">
+              <a href="{{ url_for('cheques.view', id=cheque.id) }}" class="btn btn-info" title="عرض">
+                <i class="fas fa-eye"></i>
+              </a>
+              <button type="button" class="btn btn-danger delete-cheque-btn" data-id="{{ cheque.id }}" title="حذف">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+<!-- لا توجد تنبيهات -->
+{% if not due_soon and not overdue and not bounced %}
+<div class="card">
+  <div class="card-body text-center py-5">
+    <i class="fas fa-check-circle fa-5x text-success mb-3"></i>
+    <h4>لا توجد تنبيهات</h4>
+    <p class="text-muted">جميع الشيكات في حالة جيدة!</p>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+  // Any other initialization code
+});
+</script>
+{% endblock %}

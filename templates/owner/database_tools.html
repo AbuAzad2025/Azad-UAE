@@ -1,0 +1,244 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - أدوات قاعدة البيانات{% endblock %}
+
+{% block page_title %}
+<div class="d-flex justify-content-between align-items-center">
+  <div>
+    <h1 class="mb-0"><i class="fas fa-database mr-2"></i>أدوات قاعدة البيانات المتقدمة</h1>
+  </div>
+  <div>
+    {% if current_user.is_owner or (current_user.role and current_user.role.slug == 'developer') %}
+      <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-right mr-2"></i>لوحة المالك
+      </a>
+    {% else %}
+      <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-right mr-2"></i>لوحة التحكم
+      </a>
+    {% endif %}
+    <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
+      <i class="fas fa-home mr-2"></i>الرئيسية
+    </a>
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-12">
+    <div class="card card-danger">
+      <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-exclamation-triangle"></i> منطقة خطرة - Owner فقط</h3>
+      </div>
+      <div class="card-body">
+        <div class="alert alert-danger">
+          <i class="fas fa-skull-crossbones"></i>
+          <strong>تحذير:</strong> هذه الأدوات قوية جداً. استخدمها بحذر شديد!
+        </div>
+
+        <div class="row">
+          <div class="col-md-4">
+            <div class="small-box bg-info">
+              <div class="inner">
+                <h3>{{ tables|length }}</h3>
+                <p>عدد الجداول</p>
+              </div>
+              <div class="icon">
+                <i class="fas fa-table"></i>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="small-box bg-success">
+              <div class="inner">
+                <h3>{{ tables|sum(attribute='rows_count')|default(0) }}</h3>
+                <p>إجمالي السجلات</p>
+              </div>
+              <div class="icon">
+                <i class="fas fa-database"></i>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="small-box bg-warning">
+              <div class="inner">
+                <h3>PostgreSQL</h3>
+                <p>نوع قاعدة البيانات</p>
+              </div>
+              <div class="icon">
+                <i class="fas fa-hdd"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <h4 class="mt-4">الجداول</h4>
+        <div class="table-responsive">
+          <table class="table table-striped table-hover">
+            <thead>
+              <tr>
+                <th>اسم الجدول</th>
+                <th>الوصف</th>
+                <th>عدد السجلات</th>
+                <th>الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for table in tables %}
+              <tr>
+                <td><code>{{ table.name }}</code></td>
+                <td>
+                  <small class="text-muted">
+                    {% if table.name == 'sales' %}
+                      📊 فواتير المبيعات - العمليات التجارية الرئيسية
+                    {% elif table.name == 'customers' %}
+                      👥 بيانات العملاء - معلومات الزبائن والاتصال
+                    {% elif table.name == 'products' %}
+                      📦 المنتجات - قطع الغيار والخدمات
+                    {% elif table.name == 'users' %}
+                      🔐 المستخدمين - حسابات الدخول للنظام
+                    {% elif table.name == 'payments' %}
+                      💰 المدفوعات - سندات القبض والدفع
+                    {% elif table.name == 'purchases' %}
+                      🛒 المشتريات - فواتير الشراء من الموردين
+                    {% elif table.name == 'suppliers' %}
+                      🏪 الموردين - بيانات الموردين والتواصل
+                    {% elif table.name == 'expenses' %}
+                      💸 المصروفات - النفقات والتكاليف
+                    {% elif table.name == 'cheques' %}
+                      📝 الشيكات - إدارة الشيكات الواردة والصادرة
+                    {% elif table.name == 'gl_accounts' %}
+                      📗 حسابات الأستاذ - الحسابات المحاسبية
+                    {% elif table.name == 'gl_entries' %}
+                      📘 القيود المحاسبية - العمليات المالية
+                    {% elif table.name == 'currencies' %}
+                      💱 العملات - أنواع العملات المستخدمة
+                    {% elif table.name == 'exchange_rates' %}
+                      📈 أسعار الصرف - تحويل العملات
+                    {% elif table.name == 'invoice_settings' %}
+                      🎨 إعدادات الفواتير - قوالب وترويسات
+                    {% elif table.name == 'system_settings' %}
+                      ⚙️ إعدادات النظام - التكوين العام
+                    {% elif table.name == 'audit_logs' %}
+                      📋 سجل التدقيق - مراقبة العمليات
+                    {% elif table.name == 'card_vault' %}
+                      🛡️ خزينة البطاقات - بطاقات مشفرة
+                    {% elif table.name == 'product_categories' %}
+                      📑 تصنيفات المنتجات - تنظيم القطع
+                    {% elif table.name == 'warehouses' %}
+                      🏭 المستودعات - مواقع التخزين
+                    {% elif table.name == 'archived_records' %}
+                      📁 السجلات المؤرشفة - بيانات محفوظة
+                    {% elif table.name == 'alembic_version' %}
+                      🔄 إصدار قاعدة البيانات - للتهجيرات
+                    {% else %}
+                      📄 جدول بيانات
+                    {% endif %}
+                  </small>
+                </td>
+                <td><strong>{{ table.rows_count }}</strong></td>
+                <td>
+                  <a href="{{ url_for('owner.browse_table', table_name=table.name) }}" 
+                     class="btn btn-sm btn-browse" 
+                     title="عرض البيانات فقط - آمن">
+                    <i class="fas fa-eye"></i> تصفح
+                  </a>
+                  {% if table.name not in ['alembic_version'] %}
+                  <a href="{{ url_for('owner.edit_table_data', table_name=table.name) }}" 
+                     class="btn btn-sm btn-edit"
+                     title="تعديل مرئي سهل - متوسط الخطورة">
+                    <i class="fas fa-edit"></i> تعديل مرئي
+                  </a>
+                  <a href="{{ url_for('owner.sql_console') }}" 
+                     class="btn btn-sm btn-sql"
+                     title="تعديل متقدم بـ SQL - خطير!">
+                    <i class="fas fa-code"></i> SQL
+                  </a>
+                  {% endif %}
+                  {% if table.name not in ['users', 'alembic_version', 'system_settings'] %}
+                  <button class="btn btn-sm btn-danger" 
+                          onclick="truncateTable('{{ table.name }}')"
+                          title="حذف كل البيانات - خطير جداً!">
+                    <i class="fas fa-trash"></i> مسح الكل
+                  </button>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <hr>
+
+        <div class="row mt-4">
+          <div class="col-md-4">
+            <a href="{{ url_for('owner.sql_console') }}" class="btn btn-primary btn-block btn-lg">
+              <i class="fas fa-terminal"></i> SQL Console
+            </a>
+          </div>
+          <div class="col-md-4">
+            <form action="{{ url_for('owner.export_database') }}" method="POST" style="display: inline;">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="format" value="json">
+              <button type="submit" class="btn btn-success btn-block btn-lg">
+                <i class="fas fa-file-export"></i> تصدير JSON
+              </button>
+            </form>
+          </div>
+          <div class="col-md-4">
+            <a href="{{ url_for('owner.convert_database') }}" class="btn btn-warning btn-block btn-lg">
+              <i class="fas fa-exchange-alt"></i> تحويل Database
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<form id="truncateForm" method="POST" action="{{ url_for('owner.truncate_table') }}" style="display: none;">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <input type="hidden" name="table_name" id="truncateTableName">
+  <input type="hidden" name="confirm" id="truncateConfirm">
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='adminlte/plugins/sweetalert2/sweetalert2.all.min.js') }}"></script>
+<script>
+function truncateTable(tableName) {
+  Swal.fire({
+    title: 'تحذير خطير!',
+    html: `
+      <p>أنت على وشك مسح <strong>جميع</strong> البيانات من جدول:</p>
+      <h3 style="color: red;">${tableName}</h3>
+      <p>هذا الإجراء <strong>لا يمكن التراجع عنه!</strong></p>
+      <p>اكتب <code>YES_DELETE_ALL</code> للتأكيد:</p>
+    `,
+    input: 'text',
+    inputPlaceholder: 'YES_DELETE_ALL',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#3085d6',
+    confirmButtonText: 'نعم، احذف الكل!',
+    cancelButtonText: 'إلغاء',
+    preConfirm: (value) => {
+      if (value !== 'YES_DELETE_ALL') {
+        Swal.showValidationMessage('يجب كتابة YES_DELETE_ALL بالضبط');
+      }
+      return value;
+    }
+  }).then((result) => {
+    if (result.isConfirmed && result.value === 'YES_DELETE_ALL') {
+      document.getElementById('truncateTableName').value = tableName;
+      document.getElementById('truncateConfirm').value = result.value;
+      document.getElementById('truncateForm').submit();
+    }
+  });
+}
+</script>
+{% endblock %}
+

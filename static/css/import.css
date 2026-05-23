@@ -1,0 +1,70 @@
+/* static/css/import.css */
+.stat {
+  border: 1px solid #dee2e6;
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: #f8f9fa;
+  display: inline-block;
+  min-width: 140px;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.stat-label {
+  font-size: 0.85rem;
+  color: #495057;
+  margin-bottom: 0.2rem;
+}
+
+.stat-value {
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: #212529;
+}
+
+#previewTable td,
+#previewTable th,
+#extraTable td,
+#extraTable th {
+  vertical-align: middle;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.9rem;
+}
+
+.row-missing {
+  background-color: #f8d7da;
+}
+
+.row-warning:not(.row-missing) {
+  background-color: #fff3cd;
+}
+
+.row-matched {
+  outline: 2px solid rgba(0, 86, 179, 0.4);
+  outline-offset: -2px;
+  background-color: #cfe2ff;
+}
+
+.row-new {
+  outline: 2px solid rgba(21, 87, 36, 0.4);
+  outline-offset: -2px;
+  background-color: #d1e7dd;
+}
+
+.compact #previewTable input.form-control,
+.compact #extraTable input.form-control {
+  padding: 0.15rem 0.35rem;
+  height: 30px;
+  font-size: 0.85rem;
+}
+
+.compact #previewTable .form-select,
+.compact #extraTable .form-select {
+  padding: 0.15rem 0.35rem;
+  height: 30px;
+  font-size: 0.85rem;
+}
+
+.table thead th {
+  white-space: nowrap;
+}

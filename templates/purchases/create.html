@@ -1,0 +1,818 @@
+{% extends 'base.html' %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - إنشاء فاتورة شراء{% endblock %}
+{% block page_title %}
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+  <div>
+    <h1 class="mb-0"><i class="fas fa-file-invoice-dollar mr-2"></i>فاتورة شراء جديدة</h1>
+  </div>
+  <div class="purchase-header-actions">
+    <a href="{{ url_for('purchases.index') }}" class="purchase-header-link purchase-header-link--primary">
+      <i class="fas fa-arrow-right mr-2"></i>العودة للمشتريات
+    </a>
+    <a href="{{ url_for('main.dashboard') }}" class="purchase-header-link purchase-header-link--secondary">
+      <i class="fas fa-home mr-2"></i>الرئيسية
+    </a>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.purchase-create-form .form-control,
+.purchase-create-form textarea.form-control,
+.purchase-create-form select.form-control {
+  min-height: 56px;
+  height: auto !important;
+  padding: 0.95rem 1.35rem;
+  font-size: 0.95rem;
+  line-height: 1.7;
+  text-align: center;
+}
+
+.purchase-create-form .form-control::placeholder {
+  text-align: center;
+  color: #6c757d;
+  opacity: 0.85;
+}
+
+.purchase-create-form select.form-control {
+  text-align-last: center;
+  padding-inline-start: 2.2rem;
+  padding-inline-end: 2.2rem;
+  appearance: none;
+  -webkit-appearance: none;
+  background-color: #fff;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23647894' d='M6 8a1 1 0 0 1-.707-.293l-5-5a1 1 0 0 1 1.414-1.414L6 5.586 10.293 1.293a1 1 0 0 1 1.414 1.414l-5 5A1 1 0 0 1 6 8'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: left 0.8rem center;
+  background-size: 12px;
+}
+
+.purchase-create-form select.form-control option {
+  text-align: center;
+  padding: 0.75rem 1rem;
+}
+
+.purchase-create-form .input-group-text {
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+}
+
+.purchase-create-form .select2-container--default .select2-selection--single {
+  height: 56px;
+  min-height: 56px;
+  border-radius: 12px;
+  border: 2px solid #e0e0e0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.75rem;
+}
+
+.purchase-create-form .select2-container--default .select2-selection--single .select2-selection__rendered {
+  width: 100%;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  line-height: 1.5 !important;
+  text-align: center;
+  font-size: 1rem;
+}
+
+.purchase-create-form .select2-container--default .select2-selection--single .select2-selection__arrow {
+  height: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.purchase-create-form .select2-dropdown {
+  text-align: center;
+}
+
+.purchase-create-form .select2-results__option {
+  padding-top: 0.6rem;
+  padding-bottom: 0.6rem;
+}
+
+.purchase-create-form textarea.form-control {
+  text-align: right;
+  line-height: 1.6;
+}
+
+.purchase-create-form textarea.form-control::placeholder {
+  text-align: right;
+}
+
+.purchase-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.purchase-header-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  padding: 0.7rem 1.8rem;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 1rem;
+  text-decoration: none;
+  position: relative;
+  z-index: 1;
+}
+
+.purchase-header-link i {
+  font-size: 0.95rem;
+  color: inherit !important;
+}
+.purchase-header-link span {
+  color: inherit !important;
+}
+
+.purchase-header-link--primary {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%) !important;
+  border: 2px solid #3498db !important;
+  box-shadow: 0 0 10px rgba(52, 152, 219, 0.3) !important;
+  text-shadow: none !important;
+}
+
+.purchase-header-link--secondary {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%) !important;
+  border: 2px solid #3498db !important;
+  box-shadow: 0 0 10px rgba(52, 152, 219, 0.3) !important;
+  text-shadow: none !important;
+}
+
+.purchase-header-link--owner {
+  color: #0d9488 !important;
+  background: rgba(13, 148, 136, 0.12);
+  border: 2px solid rgba(13, 148, 136, 0.3);
+  box-shadow: 0 6px 18px rgba(13, 148, 136, 0.22);
+}
+</style>
+<style>
+.purchase-header-actions .purchase-header-link + .purchase-header-link {
+  margin-left: 0.65rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="card card-primary">
+  <div class="card-header">
+    <h3 class="card-title"><i class="fas fa-shopping-cart"></i> بيانات فاتورة الشراء</h3>
+  </div>
+  
+  <form method="POST" action="{{ url_for('purchases.create') }}" id="purchaseForm" class="purchase-create-form">
+    {{ form.hidden_tag() if form else '' }}
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="line_count" id="line_count" value="0">
+    
+    <div class="card-body">
+      <!-- ================== معلومات المورد ================== -->
+      <div class="row">
+        <div class="col-md-12">
+          <h5 class="text-primary mb-3">
+            <i class="fas fa-truck"></i> معلومات المورد
+          </h5>
+        </div>
+      </div>
+      
+      <div class="row">
+        <div class="col-md-4">
+          <div class="form-group">
+            <label for="supplier_id">
+              <i class="fas fa-truck text-success"></i> المورد 
+              <span class="text-danger">*</span>
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="اختر المورد - الفلتر الذكي (إجباري)"></i>
+            </label>
+            <div class="input-group">
+              <select name="supplier_id" id="supplier_id" class="form-control supplier-select" required>
+                <option value="" selected>بلا</option>
+              </select>
+              <div class="input-group-append">
+                <a href="{{ url_for('suppliers.create') }}" class="btn btn-success" target="_blank" title="إضافة مورد جديد">
+                  <i class="fas fa-plus"></i>
+                </a>
+              </div>
+            </div>
+            <small class="form-text text-muted">
+              💡 لا يوجد المورد؟ اضغط زر الإضافة لفتح صفحة الموردين في نافذة جديدة.
+            </small>
+          </div>
+        </div>
+        
+        <div class="col-md-4">
+          <div class="form-group">
+            <label for="warehouse_id">
+              <i class="fas fa-warehouse text-info"></i> المستودع
+              <span class="text-danger">*</span>
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="المستودع الذي ستُضاف إليه البضاعة (إجباري)"></i>
+            </label>
+            <select name="warehouse_id" id="warehouse_id" class="form-control" required>
+              <option value="" selected>بلا</option>
+              {% if warehouses %}
+                {% for warehouse in warehouses %}
+                <option value="{{ warehouse.id }}">
+                  {% if warehouse.is_main %}⭐{% elif warehouse.parent_id %}🔀{% else %}📦{% endif %}
+                  {{ warehouse.name_ar or warehouse.name }}
+                  {% if warehouse.code %}({{ warehouse.code }}){% endif %}
+                </option>
+                {% endfor %}
+              {% endif %}
+            </select>
+            <small class="form-text text-info">
+              <i class="fas fa-info-circle"></i> ستُضاف البضاعة لهذا المستودع
+            </small>
+          </div>
+        </div>
+        
+        <div class="col-md-2">
+          <div class="form-group">
+            <label for="supplier_phone">
+              <i class="fas fa-phone text-info"></i> هاتف المورد
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="يُملأ تلقائياً عند اختيار المورد"></i>
+            </label>
+            <input type="text" name="supplier_phone" id="supplier_phone" class="form-control" readonly>
+          </div>
+        </div>
+        
+        <div class="col-md-2">
+          <div class="form-group">
+            <label for="supplier_email">
+              <i class="fas fa-envelope text-secondary"></i> بريد المورد
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="يُملأ تلقائياً عند اختيار المورد"></i>
+            </label>
+            <input type="email" name="supplier_email" id="supplier_email" class="form-control" readonly>
+          </div>
+        </div>
+      </div>
+      
+      <!-- ================== العملة والضريبة ================== -->
+      <div class="row mt-3">
+        <div class="col-md-12">
+          <h5 class="text-primary mb-3">
+            <i class="fas fa-dollar-sign"></i> العملة والضريبة
+          </h5>
+        </div>
+      </div>
+      
+      <div class="row">
+        <div class="col-md-4">
+          <div class="form-group">
+            <label for="currency">
+              <i class="fas fa-dollar-sign text-success"></i> العملة
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="عملة الفاتورة (افتراضي: AED)"></i>
+            </label>
+            <select name="currency" id="currency" class="form-control">
+              <option value="AED" selected>درهم إماراتي (AED)</option>
+              <option value="USD">دولار أمريكي (USD)</option>
+              <option value="EUR">يورو (EUR)</option>
+              <option value="GBP">جنيه إسترليني (GBP)</option>
+              <option value="SAR">ريال سعودي (SAR)</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="col-md-4">
+          <div class="form-group">
+            <label for="exchange_rate">سعر الصرف</label>
+            <input type="number" name="exchange_rate" id="exchange_rate" 
+                   class="form-control" value="1.000000" step="0.000001" min="0">
+            <small class="form-text text-muted">سعر الصرف مقابل الدرهم</small>
+          </div>
+        </div>
+        
+        <div class="col-md-4">
+          <div class="form-group">
+            <label for="tax_rate">نسبة الضريبة %</label>
+            <input type="number" name="tax_rate" id="tax_rate" 
+                   class="form-control" value="0" step="0.01" min="0" max="100">
+            <small class="form-text text-muted">مثال: 5 للضريبة 5%</small>
+          </div>
+        </div>
+      </div>
+      
+      <!-- ================== المنتجات ================== -->
+      <div class="row mt-4">
+        <div class="col-md-12">
+          <h5 class="text-primary mb-3">
+            <i class="fas fa-boxes"></i> المنتجات المشتراة
+          </h5>
+        </div>
+      </div>
+      
+      <div id="linesContainer" class="mb-3"></div>
+      
+      <button type="button" class="btn btn-success btn-sm" onclick="addLine()">
+        <i class="fas fa-plus-circle"></i> إضافة منتج
+      </button>
+      
+      <!-- ================== الملخص المالي ================== -->
+      <div class="row mt-4">
+        <div class="col-md-8">
+          <div class="form-group">
+            <label for="notes">{{ t('Notes') }}</label>
+            <textarea name="notes" id="notes" class="form-control" rows="4" 
+                      placeholder="أي ملاحظات إضافية عن فاتورة الشراء..."></textarea>
+          </div>
+        </div>
+        
+        <div class="col-md-4">
+          <div class="card bg-light">
+            <div class="card-body">
+              <h6 class="text-center mb-3"><i class="fas fa-calculator"></i> ملخص الفاتورة</h6>
+              <table class="table table-sm">
+                <tr>
+                  <td>المجموع الفرعي:</td>
+                  <td class="text-left" id="summary_subtotal">0.00 AED</td>
+                </tr>
+                <tr>
+                  <td>الضريبة:</td>
+                  <td class="text-left" id="summary_tax">0.00 AED</td>
+                </tr>
+                <tr class="font-weight-bold border-top">
+                  <td>الإجمالي:</td>
+                  <td class="text-left text-primary" id="summary_total">0.00 AED</td>
+                </tr>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- ================== الأزرار ================== -->
+    <div class="card-footer">
+      <button type="submit" class="btn btn-primary btn-lg">
+        <i class="fas fa-save mr-2"></i> حفظ فاتورة الشراء
+      </button>
+      <a href="{{ url_for('purchases.index') }}" class="btn btn-secondary btn-lg">
+        <i class="fas fa-times mr-2"></i> إلغاء
+      </a>
+      <button type="button" class="btn btn-info btn-lg float-left" onclick="calculateTotals();">
+        <i class="fas fa-calculator mr-2"></i> إعادة الحساب
+      </button>
+      <button type="button" class="btn btn-warning btn-lg float-left ml-2" onclick="debugTotals()">
+        <i class="fas fa-bug mr-2"></i> Debug
+      </button>
+      <button type="button" class="btn btn-success btn-lg float-left ml-2" onclick="forceCalculate()">
+        <i class="fas fa-bolt mr-2"></i> حساب فوري
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let lineIndex = 0;
+
+// =====================================
+// إضافة سطر منتج جديد
+// =====================================
+function addLine() {
+  const html = `
+    <div class="product-line mb-3 p-3" id="line_${lineIndex}" 
+         style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px;">
+      <div class="row align-items-end">
+        <!-- المنتج -->
+        <div class="col-md-4">
+          <label class="small" for="line_${lineIndex}_product_id"><i class="fas fa-box"></i> المنتج</label>
+          <select name="lines[${lineIndex}][product_id]" 
+                  id="line_${lineIndex}_product_id"
+                  class="form-control product-select line-product" 
+                  data-line="${lineIndex}" required>
+            <option value="">بلا</option>
+          </select>
+        </div>
+        
+        <!-- الكمية -->
+        <div class="col-md-2">
+          <label class="small" for="line_${lineIndex}_quantity"><i class="fas fa-sort-numeric-up"></i> الكمية</label>
+          <input type="number" name="lines[${lineIndex}][quantity]" 
+                 id="line_${lineIndex}_quantity"
+                 class="form-control line-quantity" data-line="${lineIndex}"
+                 placeholder="{{ t('Quantity') }}" value="1" step="0.01" min="0.01" required>
+        </div>
+        
+        <!-- التكلفة -->
+        <div class="col-md-2">
+          <label class="small" for="line_${lineIndex}_unit_cost"><i class="fas fa-dollar-sign"></i> التكلفة</label>
+          <input type="number" name="lines[${lineIndex}][unit_cost]" 
+                 id="line_${lineIndex}_unit_cost"
+                 class="form-control line-cost" data-line="${lineIndex}"
+                 placeholder="0.00" step="0.01" min="0" required>
+        </div>
+        
+        <!-- الخصم -->
+        <div class="col-md-2">
+          <label class="small" for="line_${lineIndex}_discount"><i class="fas fa-percentage"></i> خصم%</label>
+          <input type="number" name="lines[${lineIndex}][discount_percent]" 
+                 id="line_${lineIndex}_discount"
+                 class="form-control line-discount" data-line="${lineIndex}"
+                 placeholder="0" value="0" step="0.01" min="0" max="100">
+        </div>
+        
+        <!-- الإجمالي -->
+        <div class="col-md-1">
+          <label class="small" for="line_total_${lineIndex}"><i class="fas fa-equals"></i> المجموع</label>
+          <input type="text" class="form-control line-total bg-light" 
+                 id="line_total_${lineIndex}" data-line="${lineIndex}" value="0.00" readonly>
+        </div>
+        
+        <!-- حذف -->
+        <div class="col-md-1">
+          <button type="button" class="btn btn-danger btn-block" 
+                  onclick="removeLine(${lineIndex})" title="{{ t('Delete') }}">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  $('#linesContainer').append(html);
+  
+  // تفعيل Select2 للمنتج باستخدام الفلتر الذكي
+  const $productSelect = $(`select[name="lines[${lineIndex}][product_id]"]`);
+  
+  // استخدام نفس التكوين من customer-select.js
+  if (window.SmartSelectors) {
+    window.SmartSelectors.initProducts($productSelect[0]);
+  } else {
+    // Fallback: تكوين يدوي
+    $productSelect.select2({
+      ajax: {
+        url: "{{ url_for('api.api_search') }}",
+        dataType: 'json',
+        delay: 250,
+        data: function(params) {
+          return {
+            q: params.term || '',
+            type: 'products',
+            purpose: 'purchase',
+            warehouse_id: $('#warehouse_id').val() || '',
+            page: params.page || 1
+          };
+        },
+        processResults: function(data) {
+          return {
+            results: data.results.map(p => ({
+              id: p.id,
+              text: p.name,
+              name: p.name,
+              sku: p.sku,
+              cost_price: p.cost_price || 0,
+              current_stock: p.current_stock || 0
+            })),
+            pagination: { more: data.has_more || false }
+          };
+        },
+        cache: true
+      },
+      placeholder: 'ابحث عن منتج...',
+      allowClear: true,
+      minimumInputLength: 0,
+      dir: 'rtl',
+      width: '100%',
+      language: 'ar',
+      templateResult: function(p) {
+        if (p.loading) return 'جاري البحث...';
+        if (!p.id) return p.text;
+        
+        const stockIcon = (p.current_stock || 0) > 0 ? '✅' : '❌';
+        const stockClass = (p.current_stock || 0) > 0 ? 'text-success' : 'text-danger';
+        
+        return $(`
+          <div style="padding: 5px;">
+            <div class="d-flex justify-content-between">
+              <div>
+                <strong>📦 ${p.text}</strong>
+                <br><small class="text-muted">SKU: ${p.sku || '-'}</small>
+              </div>
+              <div class="text-left">
+                <small><strong>${(p.cost_price || 0).toFixed(2)} AED</strong></small>
+                <br><small class="${stockClass}">${stockIcon} ${p.current_stock || 0}</small>
+              </div>
+            </div>
+          </div>
+        `);
+      },
+      templateSelection: function(p) {
+        return p.id ? `📦 ${p.text}` : p.text;
+      },
+      escapeMarkup: function(m) { return m; }
+    });
+  }
+  
+  // حساب الإجمالي عند التغيير - استخدام setTimeout للتأكد من التحميل
+  setTimeout(function() {
+    $(`.line-quantity[data-line="${lineIndex}"], .line-cost[data-line="${lineIndex}"], .line-discount[data-line="${lineIndex}"]`)
+      .on('input change keyup', function() {        calculateLineTotal(lineIndex);
+        calculateTotals();
+      });
+  }, 100);
+  
+  // تعبئة السعر عند اختيار المنتج
+  $productSelect.on('select2:select', function(e) {
+    const data = e.params.data;
+    if (data && data.cost_price) {
+      $(`.line-cost[data-line="${lineIndex}"]`).val(data.cost_price);
+      calculateLineTotal(lineIndex);
+      calculateTotals();
+    }
+  });
+  
+  lineIndex++;
+  $('#line_count').val(lineIndex);
+}
+
+// =====================================
+// حذف سطر
+// =====================================
+function removeLine(index) {
+  $(`#line_${index}`).remove();
+  calculateTotals();
+}
+
+// =====================================
+// حساب إجمالي السطر
+// =====================================
+function calculateLineTotal(index) {
+  const qty = parseFloat($(`.line-quantity[data-line="${index}"]`).val()) || 0;
+  const cost = parseFloat($(`.line-cost[data-line="${index}"]`).val()) || 0;
+  const discount = parseFloat($(`.line-discount[data-line="${index}"]`).val()) || 0;
+  
+  const subtotal = qty * cost;
+  const discountAmount = subtotal * (discount / 100);
+  const total = subtotal - discountAmount;
+  
+  $(`#line_total_${index}`).val(total.toFixed(2));
+}
+
+// =====================================
+// حساب إجمالي الفاتورة - Backend Calculation
+// =====================================
+async function calculateTotals() {
+  try {
+    // جمع البيانات من الفورم
+    const lines = [];
+    $('.product-line').each(function() {
+      const lineId = $(this).attr('id');
+      const lineNumber = lineId.split('_')[1];
+      
+      const qty = parseFloat($(`.line-quantity[data-line="${lineNumber}"]`).val()) || 0;
+      const cost = parseFloat($(`.line-cost[data-line="${lineNumber}"]`).val()) || 0;
+      const discount = parseFloat($(`.line-discount[data-line="${lineNumber}"]`).val()) || 0;
+      
+      if (qty > 0 || cost > 0) {
+        lines.push({
+          quantity: qty,
+          unit_cost: cost,
+          discount_percent: discount
+        });
+      }
+    });
+    
+    const tax_rate = parseFloat($('#tax_rate').val()) || 0;
+    
+    // إرسال للـ backend
+    const response = await fetch('{{ url_for("purchases.api_calculate_purchase_totals") }}', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        lines: lines,
+        tax_rate: tax_rate
+      })
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      // تحديث الواجهة
+      $('#summary_subtotal').text(result.subtotal.toFixed(2) + ' AED');
+      $('#summary_tax').text(result.tax_amount.toFixed(2) + ' AED');
+      $('#summary_total').text(result.total.toFixed(2) + ' AED');    } else {      // Fallback to client-side
+      calculateTotalsClientSide();
+    }
+  } catch (error) {    // Fallback to client-side
+    calculateTotalsClientSide();
+  }
+}
+
+// Fallback: حساب محلي
+function calculateTotalsClientSide() {
+  let subtotal = 0;
+  
+  $('.product-line').each(function() {
+    const lineId = $(this).attr('id');
+    const lineNumber = lineId.split('_')[1];
+    
+    const qty = parseFloat($(`.line-quantity[data-line="${lineNumber}"]`).val()) || 0;
+    const cost = parseFloat($(`.line-cost[data-line="${lineNumber}"]`).val()) || 0;
+    const discount = parseFloat($(`.line-discount[data-line="${lineNumber}"]`).val()) || 0;
+    
+    const lineSubtotal = qty * cost;
+    const lineDiscountAmount = lineSubtotal * (discount / 100);
+    const lineTotal = lineSubtotal - lineDiscountAmount;
+    
+    $(`#line_total_${lineNumber}`).val(lineTotal.toFixed(2));
+    subtotal += lineTotal;
+  });
+  
+  const taxRate = parseFloat($('#tax_rate').val()) || 0;
+  const taxAmount = subtotal * (taxRate / 100);
+  const total = subtotal + taxAmount;
+  
+  $('#summary_subtotal').text(subtotal.toFixed(2) + ' AED');
+  $('#summary_tax').text(taxAmount.toFixed(2) + ' AED');
+  $('#summary_total').text(total.toFixed(2) + ' AED');}
+
+// =====================================
+// Debug function
+// =====================================
+function debugTotals() {  
+  $('.product-line').each(function(index) {
+    const lineId = $(this).attr('id');
+    const lineNumber = lineId.split('_')[1];
+    
+    const qty = $(`.line-quantity[data-line="${lineNumber}"]`).val();
+    const cost = $(`.line-cost[data-line="${lineNumber}"]`).val();
+    const discount = $(`.line-discount[data-line="${lineNumber}"]`).val();  });
+  
+  calculateTotals();
+}
+
+// =====================================
+// Force Calculate - حساب فوري قوي
+// =====================================
+function forceCalculate() {  
+  let subtotal = 0;
+  let lineCount = 0;
+  
+  // إجبار حساب كل سطر
+  $('.product-line').each(function() {
+    const lineId = $(this).attr('id');
+    const lineNumber = lineId.split('_')[1];
+    
+    const qty = parseFloat($(`.line-quantity[data-line="${lineNumber}"]`).val()) || 0;
+    const cost = parseFloat($(`.line-cost[data-line="${lineNumber}"]`).val()) || 0;
+    const discount = parseFloat($(`.line-discount[data-line="${lineNumber}"]`).val()) || 0;    
+    const lineSubtotal = qty * cost;
+    const lineDiscountAmount = lineSubtotal * (discount / 100);
+    const lineTotal = lineSubtotal - lineDiscountAmount;
+    
+    $(`#line_total_${lineNumber}`).val(lineTotal.toFixed(2));
+    subtotal += lineTotal;
+    lineCount++;
+  });
+  
+  const taxRate = parseFloat($('#tax_rate').val()) || 0;
+  const taxAmount = subtotal * (taxRate / 100);
+  const total = subtotal + taxAmount;
+  
+  const currency = $('#currency').val();
+  $('#summary_subtotal').text(subtotal.toFixed(2) + ' ' + currency);
+  $('#summary_tax').text(taxAmount.toFixed(2) + ' ' + currency);
+  $('#summary_total').text(total.toFixed(2) + ' ' + currency);  
+  // إظهار رسالة للمستخدم
+  if (subtotal > 0) {
+    alert(`تم الحساب بنجاح.\nالمجموع الفرعي: ${subtotal.toFixed(2)} ${currency}\nالإجمالي: ${total.toFixed(2)} ${currency}`);
+  } else {
+    alert('لم يتم العثور على بيانات للحساب.');
+  }
+}
+
+// =====================================
+// تحديث أسعار التكلفة عند تغيير العملة
+// =====================================
+function updateLineCosts() {
+    const currency = $('#currency').val();
+    const rate = parseFloat($('#exchange_rate').val()) || 1;
+    
+    $('.line-cost').each(function() {
+        const baseCost = parseFloat($(this).data('base-cost'));
+        if (!isNaN(baseCost)) {
+            let finalCost = baseCost;
+            if (currency !== 'AED' && rate > 0) {
+                finalCost = baseCost / rate;
+            }
+            $(this).val(finalCost.toFixed(2));
+            
+            // Recalculate line total
+            const lineId = $(this).data('line');
+            calculateLineTotal(lineId);
+        }
+    });
+    calculateTotals();
+}
+
+// =====================================
+// تغيير العملة - جلب سعر الصرف
+// =====================================
+$('#currency').on('change', function() {
+  const currency = $(this).val();
+  
+  if (currency !== 'AED') {
+    $.ajax({
+      url: `/api/currency-rate/${currency}/AED`,
+      success: function(data) {
+        if (data.rate) {
+          $('#exchange_rate').val(data.rate.toFixed(6));
+          updateLineCosts();
+        } else {
+          toastr.warning('يرجى إدخال سعر الصرف يدوياً');
+        }
+      },
+      error: function() {
+        toastr.warning('يرجى إدخال سعر الصرف يدوياً');
+      }
+    });
+  } else {
+    $('#exchange_rate').val('1.000000');
+    updateLineCosts();
+  }
+});
+
+$('#exchange_rate').on('input change', function() {
+    updateLineCosts();
+});
+
+// =====================================
+// اختيار المورد - تعبئة البيانات
+// =====================================
+$('#supplier_id').on('change', function() {
+  const selectedData = $(this).select2('data')[0];
+  
+  if (selectedData) {
+    $('#supplier_phone').val(selectedData.phone || '');
+    $('#supplier_email').val(selectedData.email || '');
+    
+    // عرض معلومات المورد
+    if (selectedData.is_verified) {
+      toastr.success(`✅ مورد موثوق: ${selectedData.name}`);
+    }
+  }
+});
+
+// =====================================
+// Event Delegation - للتعامل مع العناصر المضافة ديناميكياً
+// =====================================
+$(document).on('input change keyup', '.line-quantity, .line-cost, .line-discount', function() {  const lineNumber = $(this).data('line');
+  if (lineNumber !== undefined) {
+    calculateLineTotal(lineNumber);
+    calculateTotals();
+  }
+});
+
+// =====================================
+// التهيئة عند تحميل الصفحة
+// =====================================
+$(document).ready(function() {  
+  // إضافة أول سطر
+  addLine();
+  
+  // حساب عند تغيير الضريبة
+  $('#tax_rate').on('input change', function() {    calculateTotals();
+  });
+  
+  // التحقق قبل الإرسال
+  $('#purchaseForm').on('submit', function(e) {    
+    const lineCount = $('.product-line').length;    
+    if (lineCount === 0) {
+      e.preventDefault();
+      toastr.error('يجب إضافة منتج واحد على الأقل');
+      return false;
+    }
+    
+    // التحقق من اختيار المورد
+    if (!$('#supplier_id').val()) {
+      e.preventDefault();
+      toastr.error('يجب اختيار المورد');
+      return false;
+    }
+    
+    // طباعة جميع البيانات قبل الإرسال    
+    // طباعة بيانات كل سطر
+    $('.product-line').each(function(index) {
+      const lineId = $(this).attr('id');
+      const lineNumber = lineId.split('_')[1];
+      
+      const productId = $(`.line-product[data-line="${lineNumber}"]`).val();
+      const quantity = $(`.line-quantity[data-line="${lineNumber}"]`).val();
+      const cost = $(`.line-cost[data-line="${lineNumber}"]`).val();
+      const discount = $(`.line-discount[data-line="${lineNumber}"]`).val();    });  });
+});
+</script>
+{% endblock %}

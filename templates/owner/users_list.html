@@ -1,0 +1,246 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - إدارة المستخدمين والصلاحيات{% endblock %}
+
+{% block content %}
+<div class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1 class="m-0">👥 إدارة المستخدمين</h1>
+      </div>
+      <div class="col-sm-6">
+        <ol class="breadcrumb float-sm-left">
+          <li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">لوحة المالك</a></li>
+          <li class="breadcrumb-item active">{{ t('Users') }}</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="content">
+  <div class="container-fluid">
+    
+    <!-- إحصائيات سريعة -->
+    <div class="row mb-4">
+      <div class="col-lg-3 col-6">
+        <div class="small-box bg-info">
+          <div class="inner">
+            <h3>{{ stats.total }}</h3>
+            <p>إجمالي المستخدمين</p>
+          </div>
+          <div class="icon">
+            <i class="fas fa-users"></i>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-lg-3 col-6">
+        <div class="small-box bg-success">
+          <div class="inner">
+            <h3>{{ stats.active }}</h3>
+            <p>المستخدمون النشطون</p>
+          </div>
+          <div class="icon">
+            <i class="fas fa-user-check"></i>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-lg-3 col-6">
+        <div class="small-box bg-warning">
+          <div class="inner">
+            <h3 style="color: #000;">{{ stats.admins + stats.managers }}</h3>
+            <p style="color: #000;">المدراء والإداريون</p>
+          </div>
+          <div class="icon">
+            <i class="fas fa-user-tie"></i>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-lg-3 col-6">
+        <div class="small-box bg-danger">
+          <div class="inner">
+            <h3>{{ stats.sellers }}</h3>
+            <p>البائعون</p>
+          </div>
+          <div class="icon">
+            <i class="fas fa-user-tag"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- أزرار الإجراءات -->
+    <div class="row mb-3">
+      <div class="col-12">
+        <a href="{{ url_for('owner.create_user') }}" class="btn btn-primary btn-lg">
+          <i class="fas fa-user-plus mr-2"></i>إضافة مستخدم جديد
+        </a>
+        <button type="button" class="btn btn-info btn-lg" onclick="$('#users-table').DataTable().search('').draw();">
+          <i class="fas fa-sync mr-2"></i>تحديث
+        </button>
+      </div>
+    </div>
+    
+    <!-- جدول المستخدمين -->
+    <div class="card">
+      <div class="card-header bg-gradient-primary">
+        <h3 class="card-title text-white">
+          <i class="fas fa-users mr-2"></i>قائمة المستخدمين
+        </h3>
+      </div>
+      <div class="card-body">
+        <table id="users-table" class="table table-hover table-striped">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>الصورة</th>
+              <th>{{ t('Username') }}</th>
+              <th>{{ t('Full Name') }}</th>
+              <th>{{ t('Email') }}</th>
+              <th>الدور</th>
+              <th>الفرع</th>
+              <th>{{ t('Status') }}</th>
+              <th>آخر دخول</th>
+              <th>الإجراءات</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for user in users %}
+            <tr class="{{ 'table-warning' if not user.is_active else '' }}">
+              <td>{{ user.id }}</td>
+              <td>
+                <div class="user-avatar">
+                  {% if user.is_owner %}
+                    <span class="badge badge-danger badge-lg" style="font-size: 1.2rem;">
+                      <i class="fas fa-crown"></i>
+                    </span>
+                  {% elif user.role and user.role.name == 'Super Admin' %}
+                    <span class="badge badge-primary badge-lg" style="font-size: 1.2rem;">
+                      <i class="fas fa-user-shield"></i>
+                    </span>
+                  {% elif user.role and user.role.name == 'Manager' %}
+                    <span class="badge badge-info badge-lg" style="font-size: 1.2rem;">
+                      <i class="fas fa-user-tie"></i>
+                    </span>
+                  {% else %}
+                    <span class="badge badge-secondary badge-lg" style="font-size: 1.2rem;">
+                      <i class="fas fa-user"></i>
+                    </span>
+                  {% endif %}
+                </div>
+              </td>
+              <td>
+                <strong>{{ user.username }}</strong>
+                {% if user.is_owner %}
+                  <span class="badge badge-danger ml-2">مالك</span>
+                {% endif %}
+              </td>
+              <td>{{ user.full_name or '-' }}</td>
+              <td>{{ user.email or '-' }}</td>
+              <td>
+                {% if user.role %}
+                  <span class="badge badge-{{ 'danger' if user.role.name == 'Super Admin' else 'info' if user.role.name == 'Manager' else 'secondary' }}">
+                    {{ user.role.name }}
+                  </span>
+                {% else %}
+                  <span class="badge badge-secondary">{{ t('Not Specified') }}</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if user.branch %}
+                  <span class="badge badge-primary">
+                    {{ user.branch.name }}{% if user.branch.code %} ({{ user.branch.code }}){% endif %}
+                  </span>
+                {% elif user.is_owner or (user.role and user.role.slug in ['super_admin', 'developer']) %}
+                  <span class="badge badge-success">
+                    كل الفروع
+                  </span>
+                {% else %}
+                  <span class="text-muted">غير محدد</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if user.is_active %}
+                  <span class="badge badge-success">
+                    <i class="fas fa-check"></i> نشط
+                  </span>
+                {% else %}
+                  <span class="badge badge-danger">
+                    <i class="fas fa-times"></i> معطل
+                  </span>
+                {% endif %}
+              </td>
+              <td>
+                {% if user.last_login %}
+                  <small>{{ user.last_login.strftime('%Y-%m-%d %H:%M') }}</small>
+                {% else %}
+                  <span class="text-muted">لم يسجل دخول</span>
+                {% endif %}
+              </td>
+              <td>
+                <div class="btn-group btn-group-sm">
+                  <a href="{{ url_for('owner.user_profile', user_id=user.id) }}" class="btn btn-info" title="الملف الشخصي">
+                    <i class="fas fa-eye"></i>
+                  </a>
+                  <a href="{{ url_for('owner.edit_user', user_id=user.id) }}" class="btn btn-primary" title="{{ t('Edit') }}">
+                    <i class="fas fa-edit"></i>
+                  </a>
+                  {% if not user.is_owner and user.id != current_user.id %}
+                  <form method="POST" action="{{ url_for('owner.delete_user', user_id=user.id) }}" style="display: inline;" onsubmit="return confirm('هل تريد تعطيل هذا المستخدم؟');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-danger" title="تعطيل">
+                      <i class="fas fa-ban"></i>
+                    </button>
+                  </form>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+  </div>
+</div>
+
+<style>
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.small-box {
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.small-box .icon {
+  font-size: 70px;
+}
+</style>
+
+<script>
+$(document).ready(function() {
+  $('#users-table').DataTable({
+    "language": {
+      "url": "{{ url_for('static', filename='datatables/Arabic.json') }}"
+    },
+    "order": [[0, "desc"]],
+    "pageLength": 25,
+    "dom": 'Bfrtip',
+    "buttons": [
+      'copy', 'csv', 'excel', 'print'
+    ]
+  });
+});
+</script>
+{% endblock %}

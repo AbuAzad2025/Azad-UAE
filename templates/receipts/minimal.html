@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>سند قبض - {{ receipt.receipt_number }}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/accessibility.css') }}">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Cairo', 'Arial', sans-serif;
+      background: #34495e;
+      padding: 10px;
+      margin: 0;
+      font-size: 8px;
+      color: #2c3e50;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+    }
+    @page {
+      size: {{ settings.paper_size or 'A4' }} {{ settings.orientation or 'portrait' }};
+      margin: 5mm;
+    }
+    .receipt {
+      {% if settings.paper_size == 'A5' %}
+        width: 212mm;
+        height: {{ '210mm' if settings.orientation == 'portrait' else '148mm' }};
+      {% elif settings.paper_size == 'Letter' %}
+        width: 212mm;
+        height: {{ '279mm' if settings.orientation == 'portrait' else '216mm' }};
+      {% else %}
+        width: {{ '210mm' if settings.orientation == 'portrait' else '297mm' }};
+        height: {{ '297mm' if settings.orientation == 'portrait' else '210mm' }};
+      {% endif %}
+      margin: 0 auto;
+      background: white;
+      padding: 0;
+      box-shadow: 0 0 30px rgba(0,0,0,0.5);
+      overflow: auto;
+    }
+    .header {
+      background: {{ settings.header_color or '#28a745' }};
+      color: white;
+      padding: 10px;
+      border-bottom: 4px solid {{ settings.accent_color or '#20c997' }};
+    }
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .company-info-left {
+      text-align: right;
+      flex: 1;
+    }
+    .company-name { font-size: 9px; font-weight: 700; margin-bottom: 5px; }
+    .company-details { font-size: 9px; line-height: 1.6; opacity: 0.95; }
+    .receipt-info-right {
+      text-align: left;
+    }
+    .receipt-label { font-size: 9px; font-weight: 300; opacity: 0.9; }
+    .receipt-number-large { font-size: 20px; font-weight: 700; }
+    .content { padding: 10px; }
+    .section {
+      margin-bottom: 10px;
+      padding: 8px;
+      background: #f8f9fa;
+      border-left: 4px solid {{ settings.accent_color or '#20c997' }};
+    }
+    .section-title {
+      font-size: 9px;
+      color: {{ settings.header_color or '#28a745' }};
+      margin-bottom: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 5px 0;
+      font-size: 8px;
+      border-bottom: 1px solid #dee2e6;
+    }
+    .info-row:last-child { border-bottom: none; }
+    .info-row label { color: #7f8c8d; }
+    .info-row value { font-weight: 600; color: #2c3e50; }
+    .amount-display {
+      text-align: center;
+      padding: 20px;
+      margin: 20px 0;
+      background: linear-gradient(135deg, {{ settings.header_color or '#28a745' }} 0%, {{ settings.accent_color or '#20c997' }} 100%);
+      color: white;
+      border-radius: 10px;
+    }
+    .amount-text { font-size: 9px; opacity: 0.9; margin-bottom: 5px; }
+    .amount-big { font-size: 32px; font-weight: 700; }
+    .payment-box {
+      background: white;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      padding: 6px;
+      margin: 15px 0;
+    }
+    .payment-method-badge {
+      display: inline-block;
+      padding: 6px 12px;
+      background: {{ settings.accent_color or '#20c997' }};
+      color: white;
+      border-radius: 20px;
+      font-size: 9px;
+      font-weight: 700;
+    }
+    .cheque-card {
+      background: linear-gradient(to right, #fff3cd 0%, #ffeaa7 100%);
+      border: 1px solid #fdcb6e;
+      border-radius: 8px;
+      padding: 6px;
+      margin-top: 10px;
+    }
+    .cheque-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 8px;
+      text-align: center;
+    }
+    .cheque-item {
+      background: white;
+      padding: 8px;
+      border-radius: 5px;
+    }
+    .cheque-item-label {
+      font-size: 8px;
+      color: #856404;
+      text-transform: uppercase;
+      margin-bottom: 3px;
+    }
+    .cheque-item-value {
+      font-size: 8px;
+      font-weight: 700;
+      color: #1a1a1a;
+    }
+    .allocations-list {
+      background: #e3f2fd;
+      border-left: 4px solid #2196f3;
+      padding: 6px;
+      margin: 15px 0;
+    }
+    .allocation-item {
+      background: white;
+      padding: 8px;
+      margin-bottom: 6px;
+      border-radius: 5px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 9px;
+    }
+    .allocation-item:last-child { margin-bottom: 0; }
+    .notes-box {
+      background: #fff9e6;
+      border-left: 4px solid #ff9800;
+      padding: 6px;
+      margin: 15px 0;
+    }
+    .notes-title {
+      color: #e65100;
+      font-size: 9px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .notes-text {
+      font-size: 8px;
+      line-height: 1.6;
+      color: #333;
+    }
+    .footer {
+      background: #ecf0f1;
+      padding: 8px;
+      text-align: center;
+      font-size: 9px;
+      color: #7f8c8d;
+      border-top: 1px solid #dee2e6;
+    }
+    .signatures {
+      display: flex;
+      justify-content: space-around;
+      padding: 30px 20px;
+    }
+    .sig-box {
+      text-align: center;
+      width: 140px;
+    }
+    .sig-line {
+      border-top: 2px solid #95a5a6;
+      margin-top: 35px;
+      padding-top: 6px;
+      font-size: 9px;
+      color: #7f8c8d;
+    }
+    @media print {
+      body { padding: 0; background: white; }
+      .no-print { display: none !important; }
+    }
+  </style>
+</head>
+<body class="receipt-print minimal-receipt">
+  <div class="no-print" style="position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 1000;">
+    <button onclick="window.print()" style="background: {{ settings.header_color or '#28a745' }}; color: white; border: none; padding: 10px 25px; border-radius: 5px; cursor: pointer;">
+      طباعة
+    </button>
+  </div>
+
+  <div class="receipt">
+    <div class="header">
+      <div class="header-content">
+        <div class="company-info-left">
+          {% if settings and settings.show_logo %}
+          <img src="{{ url_for('static', filename=settings.logo_path if settings and settings.logo_path else 'img/garage_logo.png') }}" alt="Logo" style="height: 40px; background: white; padding: 5px; border-radius: 5px; margin-bottom: 8px;">
+          {% endif %}
+          <div class="company-name">{{ (settings.company_name_ar if settings and settings.company_name_ar else none) or tenant_name_ar or company_name_ar or 'نظام المحاسبة' }}</div>
+          <div class="company-details">
+            {{ (settings.address_ar if settings and settings.address_ar else none) or tenant_address or company_address }}<br>
+            📞 {{ (settings.phone_1 if settings and settings.phone_1 else none) or tenant_phone or company_phone }} | 📧 {{ (settings.email if settings and settings.email else none) or tenant_email or company_email }}<br>
+            {% if settings and settings.website and settings.website != 'None' %}🌐 {{ settings.website }}{% endif %}
+            {% if print_branch %}
+            <br>🏢 الفرع: {{ print_branch.name }}{% if print_branch.code %} ({{ print_branch.code }}){% endif %}
+            {% if print_branch.address %}<br>📍 عنوان الفرع: {{ print_branch.address }}{% endif %}
+            {% endif %}
+          </div>
+        </div>
+        <div class="receipt-info-right">
+          <div class="receipt-label">RECEIPT</div>
+          <div class="receipt-number-large">{{ receipt.receipt_number }}</div>
+        </div>
+      </div>
+    </div>
+
+    {% set doc_title = '💵 سند قبض' %}
+    {% set doc_number = doc_number or receipt.receipt_number %}
+    {% include 'partials/print_unified_banner.html' %}
+
+    <div class="content">
+      <div class="section">
+        <div class="section-title">معلومات العميل</div>
+        <div class="info-row">
+          <label>الاسم:</label>
+          <value>{{ receipt.customer.name }}</value>
+        </div>
+        {% if receipt.customer.phone %}
+        <div class="info-row">
+          <label>الهاتف:</label>
+          <value>{{ receipt.customer.phone }}</value>
+        </div>
+        {% endif %}
+        <div class="info-row">
+          <label>التاريخ:</label>
+          <value>{{ receipt.receipt_date.strftime('%Y-%m-%d %H:%M') }}</value>
+        </div>
+        <div class="info-row">
+          <label>المستخدم:</label>
+          <value>{{ print_user_name or (receipt.user.full_name if receipt.user else 'النظام') }}</value>
+        </div>
+      </div>
+
+      <div class="amount-display">
+        <div class="amount-text">المبلغ المستلم</div>
+        <div class="amount-big">{{ "{:,.2f}".format(receipt.amount_aed) }}</div>
+        <div class="amount-text">درهم إماراتي</div>
+      </div>
+
+      <div class="payment-box">
+        <div style="margin-bottom: 10px;">
+          <span style="font-size: 8px; color: #7f8c8d;">طريقة الدفع:</span>
+          <span class="payment-method-badge">
+            {% if receipt.payment_method == 'cash' %}💵 نقدي
+            {% elif receipt.payment_method == 'card' %}💳 بطاقة
+            {% elif receipt.payment_method == 'bank_transfer' %}🏦 تحويل
+            {% elif receipt.payment_method == 'cheque' %}📝 شيك
+            {% else %}💰 محفظة{% endif %}
+          </span>
+        </div>
+
+        {% if receipt.payment_method == 'cheque' and receipt.cheque_number %}
+        <div class="cheque-card">
+          <div style="text-align: center; color: #856404; font-weight: 700; margin-bottom: 8px; font-size: 8px;">
+            معلومات الشيك
+          </div>
+          <div class="cheque-grid">
+            <div class="cheque-item">
+              <div class="cheque-item-label">رقم الشيك</div>
+              <div class="cheque-item-value">{{ receipt.cheque_number }}</div>
+            </div>
+            <div class="cheque-item">
+              <div class="cheque-item-label">تاريخ الاستحقاق</div>
+              <div class="cheque-item-value">{{ receipt.cheque_date.strftime('%Y-%m-%d') if receipt.cheque_date else '-' }}</div>
+            </div>
+            <div class="cheque-item">
+              <div class="cheque-item-label">البنك</div>
+              <div class="cheque-item-value">{{ receipt.bank_name or '-' }}</div>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+
+      {% set source_info = receipt.get_source_info() %}
+      {% if source_info %}
+      <div class="allocations-list">
+        <div style="font-size: 9px; font-weight: 700; color: #1565c0; margin-bottom: 8px;">
+          📋 تفاصيل الفاتورة
+        </div>
+        <div class="allocation-item">
+          <div>
+            <strong>{{ source_info.number }}</strong>
+            <span style="color: #999; margin: 0 5px;">•</span>
+            <span style="color: #666;">{{ source_info.date }}</span>
+          </div>
+          <div style="font-weight: 700; color: #28a745;">
+            {{ "{:,.2f}".format(receipt.amount) }} AED
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      {% if receipt.notes %}
+      <div class="notes-box">
+        <div class="notes-title">📝 ملاحظات وسبب الدفع</div>
+        <div class="notes-text">{{ receipt.notes }}</div>
+      </div>
+      {% endif %}
+
+      {% include 'partials/print_unified_amount_qr.html' %}
+
+      <div class="signatures">
+        <div class="sig-box">
+          <div style="font-size: 9px; color: #7f8c8d; margin-bottom: 5px;">المحصل</div>
+          <div class="sig-line"></div>
+        </div>
+        <div class="sig-box">
+          <div style="font-size: 9px; color: #7f8c8d; margin-bottom: 5px;">العميل</div>
+          <div class="sig-line"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <!-- Bank Info -->
+      {% if settings and ((settings.bank_name and settings.bank_name != 'None') or (settings.iban and settings.iban != 'None') or (settings.swift_code and settings.swift_code != 'None')) %}
+      <div style="margin-bottom: 12px; padding: 10px; background: #f8f9fa; border-radius: 5px; border-left: 3px solid {{ settings.header_color or '#2c3e50' }};">
+        <div style="font-weight: 700; font-size: 8px; margin-bottom: 5px; color: {{ settings.header_color or '#2c3e50' }};">🏦 Bank Details</div>
+        <div style="font-size: 8px; line-height: 1.5; color: #555;">
+          {% if settings.bank_name and settings.bank_name != 'None' %}{{ settings.bank_name }}{% if settings.iban and settings.iban != 'None' %} • {% endif %}{% endif %}
+          {% if settings.iban and settings.iban != 'None' %}IBAN: {{ settings.iban }}{% endif %}
+          {% if settings.swift_code and settings.swift_code != 'None' %}<br>SWIFT: {{ settings.swift_code }}{% endif %}
+        </div>
+      </div>
+      {% endif %}
+      
+      <!-- Business Registration -->
+      {% if settings and ((settings.commercial_register and settings.commercial_register != 'None') or (settings.license_number and settings.license_number != 'None')) %}
+      <div style="font-size: 8px; color: #7f8c8d; margin-bottom: 8px; text-align: center;">
+        {% if settings.commercial_register and settings.commercial_register != 'None' %}CR: {{ settings.commercial_register }}{% endif %}
+        {% if settings.commercial_register and settings.license_number %} • {% endif %}
+        {% if settings.license_number and settings.license_number != 'None' %}Lic: {{ settings.license_number }}{% endif %}
+      </div>
+      {% endif %}
+      
+      <!-- Default Note -->
+      {% if settings and settings.default_receipt_note_ar and settings.default_receipt_note_ar != 'None' %}
+      <div style="background: #fff3cd; border-left: 2px solid #ffc107; padding: 6px; margin-bottom: 10px; border-radius: 3px;">
+        <div style="font-size: 9px; color: #856404;">💬 {{ settings.default_receipt_note_ar }}</div>
+      </div>
+      {% endif %}
+      
+      <div>{{ settings.footer_text_ar if settings and settings.footer_text_ar else 'شكراً لثقتكم' }}</div>
+      {% if settings and settings.website and settings.website != 'None' %}<div style="margin-top: 5px;">🌐 {{ settings.website }}</div>{% endif %}
+      
+      <!-- Social Media -->
+      {% if settings and (settings.facebook_url or settings.instagram_url or settings.whatsapp_number) %}
+      <div style="margin-top: 8px; font-size: 9px;">
+        {% if settings.facebook_url %}<a href="{{ settings.facebook_url }}" style="margin: 0 4px; color: #1877f2; text-decoration: none;">FB</a>{% endif %}
+        {% if settings.instagram_url %}<a href="{{ settings.instagram_url }}" style="margin: 0 4px; color: #e4405f; text-decoration: none;">IG</a>{% endif %}
+        {% if settings.whatsapp_number %}<a href="https://wa.me/{{ settings.whatsapp_number }}" style="margin: 0 4px; color: #25d366; text-decoration: none;">WA</a>{% endif %}
+      </div>
+      {% endif %}
+    </div>
+    
+    <!-- Watermark -->
+    {% if settings and settings.enable_watermark %}
+      {% if settings.watermark_image_path %}
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 0.03; z-index: 0; pointer-events: none;">
+          <img src="{{ url_for('static', filename=settings.watermark_image_path) }}" alt="Watermark" style="width: 100%;">
+        </div>
+      {% elif settings.watermark_text %}
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg); font-size: 70px; color: rgba(44,62,80,0.03); font-weight: 300; z-index: 0; pointer-events: none;">
+          {{ settings.watermark_text }}
+        </div>
+      {% endif %}
+    {% endif %}
+  </div>
+</body>
+</html>
+

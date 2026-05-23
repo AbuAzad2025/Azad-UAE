@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>فاتورة #{{ sale.sale_number }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/accessibility.css') }}">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Arial', sans-serif;
+      padding: 8px;
+      font-size: 9px;
+      background: white;
+    }
+    @page {
+      size: {{ settings.paper_size if settings else 'A4' }} {{ settings.orientation if settings else 'portrait' }};
+      margin: 2mm;
+    }
+    .invoice {
+      max-width: 100%;
+      margin: 0 auto;
+      background: white;
+    }
+    .header {
+      text-align: center;
+      border-bottom: 1px solid #000;
+      padding-bottom: 10px;
+      margin-bottom: 8px;
+    }
+    .branch-name {
+      text-align: center;
+      font-size: 14px;
+      font-weight: bold;
+      color: #555;
+      margin-bottom: 5px;
+    }
+    .logo { 
+      height: 40px; 
+      margin-bottom: 8px;
+    }
+    .company-name { 
+      font-size: 9px; 
+      font-weight: bold; 
+      margin: 5px 0;
+    }
+    .company-info { 
+      font-size: 8px; 
+      color: #555; 
+      line-height: 1.4;
+    }
+    .title {
+      text-align: center;
+      font-size: 20px;
+      font-weight: bold;
+      margin: 15px 0;
+      text-transform: uppercase;
+    }
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      margin: 8px 0;
+      font-size: 9px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 15px 0;
+    }
+    th, td {
+      border: 1px solid #000;
+      padding: 8px;
+      text-align: right;
+    }
+    th {
+      background: #f0f0f0;
+      font-weight: bold;
+    }
+    .totals {
+      margin-top: 8px;
+      text-align: left;
+      margin-left: auto;
+      width: 250px;
+    }
+    .total-line {
+      display: flex;
+      justify-content: space-between;
+      padding: 5px 0;
+      border-bottom: 1px solid #ddd;
+    }
+    .total-final {
+      font-size: 16px;
+      font-weight: bold;
+      border-top: 2px solid #000;
+      border-bottom: 3px double #000;
+      padding: 8px 0;
+      margin-top: 5px;
+    }
+    .footer {
+      margin-top: 20px;
+      padding-top: 15px;
+      border-top: 1px solid #000;
+      text-align: center;
+      font-size: 8px;
+      color: #555;
+    }
+    .bank-info {
+      background: #f9f9f9;
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin: 10px 0;
+      font-size: 9px;
+    }
+    .signature {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 40px;
+    }
+    .sig-box {
+      text-align: center;
+      width: 150px;
+    }
+    .sig-line {
+      border-top: 1px solid #000;
+      margin-top: 40px;
+      padding-top: 5px;
+      font-size: 8px;
+    }
+    @media print {
+      .no-print { display: none !important; }
+    }
+  
+    @media print {
+      .invoice {
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 !important;
+        box-shadow: none !important;
+        border: none !important;
+      }
+      body {
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+    }
+  </style>
+</head>
+<body class="invoice-print">
+  <div class="no-print" style="text-align: center; margin-bottom: 10px;">
+    <button onclick="window.print()" style="background: #000; color: white; border: none; padding: 8px 20px; cursor: pointer; border-radius: 3px;">
+      طباعة
+    </button>
+  </div>
+
+  <div class="invoice">
+    <!-- Header -->
+    <div class="header">
+      {% if settings and settings.show_logo %}
+      <img src="{{ url_for('static', filename=settings.logo_path if settings and settings.logo_path else 'img/garage_logo.png') }}" alt="Logo" class="logo">
+      {% endif %}
+      <div class="company-name">{{ (settings.company_name_ar if settings and settings.company_name_ar else none) or tenant_name_ar or company_name_ar or 'نظام المحاسبة' }}</div>
+      <div class="company-info">
+        {{ settings.address_ar if settings and settings.address_ar else 'العنوان' }}<br>
+        📞 {{ settings.phone_1 if settings and settings.phone_1 else '---' }}
+        {% if settings and settings.email %} • 📧 {{ settings.email }}{% endif %}
+      </div>
+      {% if print_branch or sale.branch %}
+      {% set header_branch = print_branch or sale.branch %}
+      <div class="branch-name">فرع: {{ header_branch.name }}{% if header_branch.code %} ({{ header_branch.code }}){% endif %}</div>
+      {% if header_branch.address %}
+      <div class="company-info">📍 عنوان الفرع: {{ header_branch.address }}</div>
+      {% endif %}
+      {% endif %}
+    </div>
+
+    {% set doc_title = '🧾 فاتورة' %}
+    {% set doc_number = sale.sale_number %}
+    {% include 'partials/print_unified_banner.html' %}
+
+    <!-- Basic Info -->
+    <div class="info-row">
+      <div><strong>رقم الفاتورة:</strong> {{ sale.sale_number }}</div>
+      <div><strong>التاريخ:</strong> {{ sale.sale_date.strftime('%Y-%m-%d') }}</div>
+    </div>
+    <div class="info-row">
+      <div><strong>العميل:</strong> {{ sale.customer.name if sale.customer else '-' }}</div>
+      <div><strong>المستخدم:</strong> {{ print_user_name or (sale.seller.full_name if sale.seller else '-') }}</div>
+    </div>
+
+    <!-- Items Table -->
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 5%;">#</th>
+          <th style="width: 45%;">المنتج</th>
+          <th style="width: 15%;">الكمية</th>
+          <th style="width: 15%;">السعر</th>
+          <th style="width: 20%;">المجموع</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for line in sale.lines %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td>{{ line.product.name if line.product else '-' }}</td>
+          <td>{{ "{:,.2f}".format(line.quantity) }}</td>
+          <td>{{ "{:,.2f}".format(line.unit_price) }}</td>
+          <td><strong>{{ "{:,.2f}".format(line.line_total) }}</strong></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <!-- Totals -->
+    <div class="totals">
+      <div class="total-line">
+        <span>المجموع:</span>
+        <strong>{{ "{:,.2f}".format(sale.subtotal) }} {{ sale.currency }}</strong>
+      </div>
+      {% if sale.tax_amount > 0 %}
+      <div class="total-line">
+        <span>الضريبة ({{ sale.tax_rate }}%):</span>
+        <strong>{{ "{:,.2f}".format(sale.tax_amount) }} {{ sale.currency }}</strong>
+      </div>
+      {% endif %}
+      <div class="total-line total-final">
+        <span>الإجمالي:</span>
+        <strong>{{ "{:,.2f}".format(sale.total_amount) }} {{ sale.currency }}</strong>
+      </div>
+      {% include 'partials/print_unified_amount_qr.html' %}
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <!-- Bank Info -->
+      {% if settings and (settings.bank_name or settings.iban) %}
+      <div class="bank-info">
+        <strong>معلومات التحويل:</strong><br>
+        {% if settings.bank_name and settings.bank_name != 'None' %}البنك: {{ settings.bank_name }} • {% endif %}
+        {% if settings.iban and settings.iban != 'None' %}IBAN: {{ settings.iban }}{% endif %}
+      </div>
+      {% endif %}
+      
+      <!-- Business Info -->
+      {% if settings and (settings.tax_number or settings.commercial_register) %}
+      <div style="font-size: 9px; margin: 5px 0;">
+        {% if settings.tax_number %}ض.ر: {{ settings.tax_number }}{% endif %}
+        {% if settings.tax_number and settings.commercial_register %} • {% endif %}
+        {% if settings.commercial_register and settings.commercial_register != 'None' %}س.ت: {{ settings.commercial_register }}{% endif %}
+      </div>
+      {% endif %}
+      
+      <!-- Default Note -->
+      {% if settings and settings.default_invoice_note_ar and settings.default_invoice_note_ar != 'None' %}
+      <div style="margin: 10px 0; padding: 5px; border: 1px dashed #999; font-size: 8px;">
+        {{ settings.default_invoice_note_ar }}
+      </div>
+      {% endif %}
+      
+      <div style="margin-top: 10px;">شكراً لتعاملكم معنا</div>
+    </div>
+
+    <!-- Signature -->
+    <div class="signature">
+      <div class="sig-box">
+        <div class="sig-line">البائع</div>
+      </div>
+      <div class="sig-box">
+        <div class="sig-line">العميل</div>
+      </div>
+    </div>
+    
+    <!-- Watermark -->
+    {% if settings and settings.enable_watermark %}
+      {% if settings.watermark_image_path %}
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 0.02; z-index: -1; pointer-events: none;">
+          <img src="{{ url_for('static', filename=settings.watermark_image_path) }}" alt="Watermark" style="width: 100%;">
+        </div>
+      {% elif settings.watermark_text %}
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg); font-size: 100px; color: rgba(0,0,0,0.02); font-weight: bold; z-index: -1;">
+          {{ settings.watermark_text }}
+        </div>
+      {% endif %}
+    {% endif %}
+  </div>
+</body>
+</html>
+

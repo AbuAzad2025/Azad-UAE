@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+{% block title %}مرتجع #{{ product_return.return_number }}{% endblock %}
+{% block page_title %}
+<div class="d-flex justify-content-between align-items-center">
+  <div>
+    <h1 class="mb-0">مرتجع رقم: {{ product_return.return_number }}</h1>
+  </div>
+  <div>
+    <a href="{{ url_for('returns.index') }}" class="btn btn-secondary">
+      <i class="fas fa-arrow-right mr-2"></i>العودة للقائمة
+    </a>
+    <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
+      <i class="fas fa-home mr-2"></i>الرئيسية
+    </a>
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-8">
+    <div class="card">
+      <div class="card-header bg-gradient-primary">
+        <h3 class="card-title text-white">تفاصيل المرتجع</h3>
+      </div>
+      <div class="card-body">
+        <dl class="row">
+          <dt class="col-sm-4">رقم المرتجع:</dt>
+          <dd class="col-sm-8"><strong>{{ product_return.return_number }}</strong></dd>
+
+          <dt class="col-sm-4">فاتورة البيع:</dt>
+          <dd class="col-sm-8">
+            {% if product_return.sale %}
+              <a href="{{ url_for('sales.view', id=product_return.sale.id) }}" class="text-primary font-weight-bold">
+                {{ product_return.sale.sale_number }}
+              </a>
+            {% else %}
+              -
+            {% endif %}
+          </dd>
+
+          <dt class="col-sm-4">العميل:</dt>
+          <dd class="col-sm-8">{{ product_return.customer.name if product_return.customer else '-' }}</dd>
+
+          <dt class="col-sm-4">التاريخ:</dt>
+          <dd class="col-sm-8">{{ product_return.return_date.strftime('%Y-%m-%d %H:%M') if product_return.return_date else '-' }}</dd>
+
+          <dt class="col-sm-4">الحالة:</dt>
+          <dd class="col-sm-8">
+            {% if product_return.status == 'approved' %}
+              <span class="badge badge-success">معتمد</span>
+            {% elif product_return.status == 'rejected' %}
+              <span class="badge badge-danger">مرفوض</span>
+            {% else %}
+              <span class="badge badge-warning">قيد المراجعة</span>
+            {% endif %}
+          </dd>
+        </dl>
+
+        {% if product_return.notes %}
+        <div class="alert alert-info">
+          {{ product_return.notes }}
+        </div>
+        {% endif %}
+
+        <h5 class="mt-4">عناصر المرتجع</h5>
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>المنتج</th>
+              <th>الكمية</th>
+              <th>السعر</th>
+              <th>الإجمالي</th>
+              <th>الحالة</th>
+              <th>ملاحظات</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for line in product_return.lines %}
+            <tr>
+              <td>{{ line.product.name if line.product else '-' }}</td>
+              <td>{{ line.quantity }}</td>
+              <td>{{ "{:,.2f}".format(line.unit_price or 0) }}</td>
+              <td>{{ "{:,.2f}".format(line.line_total or 0) }}</td>
+              <td>{{ line.condition or '-' }}</td>
+              <td>{{ line.notes or '-' }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="card mb-3">
+      <div class="card-header bg-gradient-success">
+        <h3 class="card-title text-white">الإجماليات</h3>
+      </div>
+      <div class="card-body">
+        <dl class="row">
+          <dt class="col-6">الإجمالي:</dt>
+          <dd class="col-6 text-left">{{ "{:,.2f}".format(product_return.total_amount or 0) }} {{ product_return.currency }}</dd>
+
+          <dt class="col-6">سعر الصرف:</dt>
+          <dd class="col-6 text-left">{{ "{:,.6f}".format(product_return.exchange_rate or 1) }}</dd>
+
+          <dt class="col-6">بالدرهم (AED):</dt>
+          <dd class="col-6 text-left">{{ "{:,.2f}".format(product_return.amount_aed or 0) }}</dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

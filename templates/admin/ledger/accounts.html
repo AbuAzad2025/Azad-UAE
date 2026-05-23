@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+{% block title %}إدارة الحسابات المحاسبية - Accounts Management{% endblock %}
+{% block page_title %}إدارة الحسابات المحاسبية{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+  <div class="col-12">
+    <a href="{{ url_for('admin_ledger.dashboard') }}" class="btn btn-secondary">
+      <i class="fas fa-arrow-right mr-2"></i>العودة للوحة التحكم
+    </a>
+    <a href="{{ url_for('admin_ledger.add_account') }}" class="btn btn-success">
+      <i class="fas fa-plus mr-2"></i>إضافة حساب جديد
+    </a>
+    <a href="{{ url_for('ledger.accounts_tree') }}" class="btn btn-info">
+      <i class="fas fa-sitemap mr-2"></i>شجرة الحسابات
+    </a>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header bg-gradient-primary">
+    <h3 class="card-title text-white">
+      <i class="fas fa-chart-line mr-2"></i>جميع الحسابات المحاسبية
+    </h3>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0" id="accountsTable">
+        <thead class="bg-light">
+          <tr>
+            <th>الكود</th>
+            <th>اسم الحساب</th>
+            <th>النوع</th>
+            <th>المستوى</th>
+            <th>الحساب الرئيسي</th>
+            <th>الرصيد</th>
+            <th>الحالة</th>
+            <th>الإجراءات</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for account in accounts %}
+          <tr>
+            <td>
+              <span class="badge badge-light">{{ account.code }}</span>
+            </td>
+            <td>
+              <strong>{{ account.full_name }}</strong>
+              {% if account.description %}
+                <br><small class="text-muted">{{ account.description[:50] }}{% if account.description|length > 50 %}...{% endif %}</small>
+              {% endif %}
+            </td>
+            <td>
+              <span class="badge badge-{{ 'success' if account.type == 'asset' else 'warning' if account.type == 'liability' else 'info' if account.type == 'equity' else 'primary' if account.type == 'revenue' else 'danger' }}">
+                {{ account.type_ar }}
+              </span>
+            </td>
+            <td>
+              <span class="badge badge-secondary">{{ account.level }}</span>
+            </td>
+            <td>
+              {% if account.parent %}
+                <small>{{ account.parent.full_name }}</small>
+              {% else %}
+                <span class="text-muted">-</span>
+              {% endif %}
+            </td>
+            <td>
+              {% set balance = account.get_balance() %}
+              <span class="badge badge-{{ 'success' if balance > 0 else 'danger' if balance < 0 else 'secondary' }}">
+                {{ "{:,.2f}".format(balance) }}
+              </span>
+            </td>
+            <td>
+              {% if account.is_active %}
+                <span class="badge badge-success">نشط</span>
+              {% else %}
+                <span class="badge badge-danger">غير نشط</span>
+              {% endif %}
+              {% if account.is_header %}
+                <br><span class="badge badge-info">حساب رئيسي</span>
+              {% endif %}
+            </td>
+            <td>
+              <div class="btn-group btn-group-sm">
+                <a href="{{ url_for('admin_ledger.edit_account', id=account.id) }}" class="btn btn-outline-primary btn-sm">
+                  <i class="fas fa-edit"></i>
+                </a>
+                <a href="{{ url_for('ledger.account_statement', id=account.id) }}" class="btn btn-outline-info btn-sm">
+                  <i class="fas fa-file-alt"></i>
+                </a>
+                <button type="button" class="btn btn-outline-danger btn-sm" onclick="deleteAccount({{ account.id }}, '{{ account.full_name }}')">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- نموذج حذف الحساب -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title">تأكيد الحذف</h5>
+        <button type="button" class="close text-white" data-dismiss="modal">
+          <span>&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>هل أنت متأكد من حذف الحساب <strong id="accountName"></strong>؟</p>
+        <div class="alert alert-warning">
+          <i class="fas fa-exclamation-triangle mr-2"></i>
+          <strong>تحذير:</strong> لا يمكن حذف الحساب إذا كان مرتبطاً بقيود محاسبية أو حسابات فرعية.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">إلغاء</button>
+        <form method="POST" id="deleteForm" style="display: inline;" action="">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-danger">حذف</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// حذف الحساب
+function deleteAccount(accountId, accountName) {
+  document.getElementById('accountName').textContent = accountName;
+  document.getElementById('deleteForm').action = "{{ url_for('admin_ledger.delete_account', id=0) }}".replace('0', accountId);
+  $('#deleteModal').modal('show');
+}
+
+// البحث في الجدول
+$(document).ready(function() {
+  $('#accountsTable').DataTable({
+    "language": {
+      "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Arabic.json"
+    },
+    "pageLength": 25,
+    "order": [[ 0, "asc" ]],
+    "columnDefs": [
+      { "orderable": false, "targets": 7 }
+    ]
+  });
+});
+</script>
+{% endblock %}

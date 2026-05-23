@@ -1,0 +1,436 @@
+{% extends 'base.html' %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - إضافة مورد جديد{% endblock %}
+{% block page_title %}
+<div class="d-flex justify-content-between align-items-center">
+  <div>
+    <h1 class="mb-0"><i class="fas fa-truck mr-2"></i>إضافة مورد جديد</h1>
+  </div>
+  <div>
+    <a href="{{ url_for('suppliers.index') }}" class="btn btn-secondary">
+      <i class="fas fa-arrow-right mr-2"></i>العودة للموردين
+    </a>
+    <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
+      <i class="fas fa-home mr-2"></i>الرئيسية
+    </a>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.content-header .btn-secondary,
+.content-header .btn-outline-secondary {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%) !important;
+  border-color: #3498db !important;
+  box-shadow: 0 0 10px rgba(52, 152, 219, 0.3) !important;
+}
+.content-header .btn-secondary i,
+.content-header .btn-secondary span,
+.content-header .btn-outline-secondary i,
+.content-header .btn-outline-secondary span {
+  color: #ffffff !important;
+}
+
+.supplier-create-form .form-control,
+.supplier-create-form .form-select {
+  min-height: 48px;
+  height: auto;
+  padding: 0.65rem 0.85rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.supplier-create-form .form-control::placeholder {
+  text-align: center;
+  color: #6c757d;
+  opacity: 0.85;
+}
+
+.supplier-create-form .select2-container--default .select2-selection--single {
+  height: 48px;
+  min-height: 48px;
+  border-radius: 12px;
+  border: 2px solid #e0e0e0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.75rem;
+}
+
+.supplier-create-form .select2-container--default .select2-selection--single .select2-selection__rendered {
+  width: 100%;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  line-height: 1.5 !important;
+  text-align: center;
+  font-size: 1rem;
+}
+
+.supplier-create-form .select2-container--default .select2-selection--single .select2-selection__arrow {
+  height: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.supplier-create-form textarea.form-control {
+  text-align: right;
+  line-height: 1.6;
+}
+
+.supplier-create-form textarea.form-control::placeholder {
+  text-align: right;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="card card-success">
+  <div class="card-header">
+    <h3 class="card-title"><i class="fas fa-plus-circle mr-2"></i>بيانات المورد</h3>
+  </div>
+  
+  <form method="POST" action="{{ url_for('suppliers.create') }}" class="supplier-create-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    
+    <div class="card-body">
+      <!-- معلومات أساسية -->
+      {% set supplier_type_value = request.form.get('supplier_type', '') %}
+      {% set rating_value = request.form.get('rating', '') %}
+      <div class="row">
+        <div class="col-md-12">
+          <h5 class="text-success mb-3">
+            <i class="fas fa-info-circle"></i> المعلومات الأساسية
+          </h5>
+        </div>
+      </div>
+      
+      <div class="row">
+        <div class="col-md-4">
+          <div class="form-group">
+            <label>
+              <i class="fas fa-truck text-success"></i> الاسم 
+              <span class="text-danger">*</span>
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="اسم المورد بالعربية (إجباري)"></i>
+            </label>
+            <input type="text" name="name" class="form-control" required
+                   placeholder="اسم المورد بالعربي">
+          </div>
+        </div>
+        
+        <div class="col-md-4">
+          <div class="form-group">
+            <label>
+              <i class="fas fa-font text-info"></i> الاسم بالإنجليزية
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="الاسم بالإنجليزية (اختياري)"></i>
+            </label>
+            <input type="text" name="name_en" class="form-control"
+                   placeholder="Supplier Name">
+          </div>
+        </div>
+        
+        <div class="col-md-4">
+          <div class="form-group">
+            <label>
+              <i class="fas fa-building text-primary"></i> اسم الشركة
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="الاسم التجاري الرسمي (اختياري)"></i>
+            </label>
+            <input type="text" name="company_name" class="form-control"
+                   placeholder="Company Name LLC">
+          </div>
+        </div>
+      </div>
+      
+      <div class="row">
+        <div class="col-md-3">
+          <div class="form-group">
+            <label>
+              <i class="fas fa-tag text-success"></i> نوع المورد 
+              <span class="text-danger">*</span>
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="تصنيف نوع التوريد (إجباري)"></i>
+            </label>
+            <select name="supplier_type" class="form-control" required>
+              <option value="" {% if supplier_type_value == '' %}selected{% endif %}>بلا</option>
+              <option value="parts" {% if supplier_type_value == 'parts' %}selected{% endif %}>قطع غيار</option>
+              <option value="equipment" {% if supplier_type_value == 'equipment' %}selected{% endif %}>معدات</option>
+              <option value="services" {% if supplier_type_value == 'services' %}selected{% endif %}>خدمات</option>
+              <option value="materials" {% if supplier_type_value == 'materials' %}selected{% endif %}>مواد خام</option>
+              <option value="other" {% if supplier_type_value == 'other' %}selected{% endif %}>{{ t('Other') }}</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="col-md-3">
+          <div class="form-group">
+            <label>
+              <i class="fas fa-star text-warning"></i> التقييم
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="تقييم جودة المورد (افتراضي: 3 نجوم)"></i>
+            </label>
+            <select name="rating" class="form-control">
+              <option value="" {% if rating_value == '' %}selected{% endif %}>بلا</option>
+              <option value="1" {% if rating_value == '1' %}selected{% endif %}>⭐ نجمة واحدة</option>
+              <option value="2" {% if rating_value == '2' %}selected{% endif %}>⭐⭐ نجمتان</option>
+              <option value="3" {% if rating_value == '3' %}selected{% endif %}>⭐⭐⭐ 3 نجوم</option>
+              <option value="4" {% if rating_value == '4' %}selected{% endif %}>⭐⭐⭐⭐ 4 نجوم</option>
+              <option value="5" {% if rating_value == '5' %}selected{% endif %}>⭐⭐⭐⭐⭐ 5 نجوم</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="col-md-3">
+          <div class="form-group">
+            <label>
+              <i class="fas fa-dollar-sign text-success"></i> العملة المفضلة
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="العملة المفضلة للتعامل (افتراضي: AED)"></i>
+            </label>
+            <select name="preferred_currency" class="form-control">
+              <option value="AED">AED - درهم</option>
+              <option value="USD">USD - دولار</option>
+              <option value="EUR">EUR - يورو</option>
+              <option value="SAR">SAR - ريال</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="col-md-3">
+          <div class="form-group">
+            <label>&nbsp;</label>
+            <div class="custom-control custom-checkbox">
+              <input type="checkbox" class="custom-control-input" id="is_verified" name="is_verified">
+              <label class="custom-control-label" for="is_verified">
+                <i class="fas fa-check-circle text-success"></i> مورد موثوق
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- معلومات الاتصال -->
+      <hr class="my-4">
+      <div class="row">
+        <div class="col-md-12">
+          <h5 class="text-success mb-3">
+            <i class="fas fa-phone"></i> معلومات الاتصال
+          </h5>
+        </div>
+      </div>
+      
+      <div class="row">
+        <div class="col-md-3">
+          <div class="form-group">
+            <label>
+              <i class="fas fa-phone text-primary"></i> الهاتف 1
+              <span class="text-danger">*</span>
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="رقم الهاتف الرئيسي (إجباري - فريد)"></i>
+            </label>
+            <input type="text" name="phone" class="form-control" required
+                   placeholder="+971-5x-xxx-xxxx">
+          </div>
+        </div>
+        
+        <div class="col-md-3">
+          <div class="form-group">
+            <label>
+              <i class="fas fa-mobile-alt text-info"></i> الهاتف 2
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="رقم بديل للتواصل (اختياري)"></i>
+            </label>
+            <input type="text" name="phone2" class="form-control"
+                   placeholder="+971-xx-xxx-xxxx">
+          </div>
+        </div>
+        
+        <div class="col-md-3">
+          <div class="form-group">
+            <label>
+              <i class="fas fa-envelope text-danger"></i> {{ t('Email') }}
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="البريد الإلكتروني (اختياري - للمراسلات)"></i>
+            </label>
+            <input type="email" name="email" class="form-control"
+                   placeholder="supplier@example.com">
+          </div>
+        </div>
+        
+        <div class="col-md-3">
+          <div class="form-group">
+            <label>
+              <i class="fas fa-globe text-success"></i> الموقع الإلكتروني
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="موقع المورد على الإنترنت (اختياري)"></i>
+            </label>
+            <input type="url" name="website" class="form-control"
+                   placeholder="https://example.com">
+          </div>
+        </div>
+      </div>
+      
+      <div class="row">
+        <div class="col-md-4">
+          <div class="form-group">
+            <label>{{ t('City') }}</label>
+            <input type="text" name="city" class="form-control" placeholder="دبي">
+          </div>
+        </div>
+        
+        <div class="col-md-4">
+          <div class="form-group">
+            <label>{{ t('Country') }}</label>
+            <input type="text" name="country" class="form-control" value="UAE">
+          </div>
+        </div>
+        
+        <div class="col-md-4">
+          <div class="form-group">
+            <label>{{ t('Address') }}</label>
+            <input type="text" name="address" class="form-control"
+                   placeholder="{{ t('Full Address') }}">
+          </div>
+        </div>
+      </div>
+      
+      <!-- معلومات قانونية ومالية -->
+      <hr class="my-4">
+      <div class="row">
+        <div class="col-md-12">
+          <h5 class="text-success mb-3">
+            <i class="fas fa-file-contract"></i> المعلومات القانونية والمالية
+          </h5>
+        </div>
+      </div>
+      
+      <div class="row">
+        <div class="col-md-3">
+          <div class="form-group">
+            <label>
+              <i class="fas fa-file-invoice text-info"></i> الرقم الضريبي (TRN)
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="الرقم الضريبي للمورد (15 رقم)"></i>
+            </label>
+            <input type="text" name="tax_number" class="form-control"
+                   placeholder="123456789012345">
+          </div>
+        </div>
+        
+        <div class="col-md-3">
+          <div class="form-group">
+            <label>
+              <i class="fas fa-certificate text-warning"></i> السجل التجاري
+            </label>
+            <input type="text" name="commercial_registration" class="form-control"
+                   placeholder="رقم السجل التجاري">
+          </div>
+        </div>
+        
+        <div class="col-md-3">
+          <div class="form-group">
+            <label>
+              <i class="fas fa-wallet text-success"></i> الرصيد الابتدائي (AED)
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="المبلغ المستحق للمورد عند بداية التسجيل"></i>
+            </label>
+            <input type="number" name="initial_balance" class="form-control"
+                   value="0" step="0.01" min="0" placeholder="0.00">
+            <small class="form-text text-muted">
+              <i class="fas fa-info-circle"></i> المبلغ المستحق للمورد من قبل (إن وجد)
+            </small>
+          </div>
+        </div>
+        
+        <div class="col-md-3">
+          <div class="form-group">
+            <label>
+              <i class="fas fa-coins text-info"></i> الحد الائتماني (AED)
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="الحد الأقصى للديون المسموح به"></i>
+            </label>
+            <input type="number" name="credit_limit" class="form-control"
+                   value="0" step="0.01" min="0" placeholder="0.00">
+          </div>
+        </div>
+      </div>
+      
+      <div class="row">
+        <div class="col-md-3">
+          <div class="form-group">
+            <label>
+              <i class="fas fa-calendar-alt text-primary"></i> شروط الدفع (أيام)
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="عدد الأيام المسموح للدفع (30 يوم افتراضي)"></i>
+            </label>
+            <input type="number" name="payment_terms_days" class="form-control"
+                   value="30" min="0" placeholder="30">
+          </div>
+        </div>
+        
+        <div class="col-md-9">
+          <div class="alert alert-info mb-0">
+            <i class="fas fa-lightbulb"></i> 
+            <strong>ملاحظة:</strong> الرصيد الابتدائي يُستخدم لتسجيل المبالغ المستحقة للمورد من قبل تفعيل النظام
+          </div>
+        </div>
+      </div>
+      
+      <!-- معلومات إضافية -->
+      <hr class="my-4">
+      <div class="row">
+        <div class="col-md-6">
+          <div class="form-group">
+            <label>الوسوم (Tags)</label>
+            <input type="text" name="tags" class="form-control"
+                   placeholder="مثال: محلي، سريع، مضمون (افصل بفاصلة)">
+            <small class="form-text text-muted">
+              <i class="fas fa-info-circle"></i> افصل الوسوم بفاصلة
+            </small>
+          </div>
+        </div>
+        
+        <div class="col-md-6">
+          <div class="form-group">
+            <label>{{ t('Notes') }}</label>
+            <textarea name="notes" class="form-control" rows="3"
+                      placeholder="أي ملاحظات إضافية عن المورد..."></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card-footer">
+      <button type="submit" class="btn btn-success btn-lg">
+        <i class="fas fa-save mr-2"></i> حفظ المورد
+      </button>
+      <a href="{{ url_for('suppliers.index') }}" class="btn btn-secondary btn-lg">
+        <i class="fas fa-times mr-2"></i> إلغاء
+      </a>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+  // تفعيل Tooltips
+  $('[data-toggle="tooltip"]').tooltip({
+    placement: 'top',
+    trigger: 'hover'
+  });
+  
+  // التحقق من النموذج
+  $('form').on('submit', function(e) {
+    const name = $('input[name="name"]').val().trim();
+    const phone = $('input[name="phone"]').val().trim();
+    
+    if (!name) {
+      e.preventDefault();
+      toastr.error('❌ يجب إدخال اسم المورد');
+      $('input[name="name"]').focus();
+      return false;
+    }
+    
+    if (!phone) {
+      e.preventDefault();
+      toastr.error('❌ يجب إدخال رقم الهاتف');
+      $('input[name="phone"]').focus();
+      return false;
+    }
+  });
+});
+</script>
+{% endblock %}
+

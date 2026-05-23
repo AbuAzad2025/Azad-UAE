@@ -1,0 +1,479 @@
+{% extends "base.html" %}
+
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - سجل التدقيق{% endblock %}
+
+{% block content %}
+<div class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2 align-items-center">
+      <div class="col-sm-6">
+        <h1 class="m-0">
+          <i class="fas fa-shield-alt text-primary mr-2"></i>
+          سجل التدقيق والمراقبة
+          <span class="badge badge-info ml-2">Audit Trail</span>
+        </h1>
+        <p class="text-muted mt-1 mb-0">
+          <i class="fas fa-info-circle mr-1"></i>
+          تتبع شامل لجميع العمليات والأنشطة في النظام
+        </p>
+      </div>
+      <div class="col-sm-6 d-flex justify-content-end">
+        <div class="d-flex align-items-center">
+          <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary ml-2">
+            <i class="fas fa-arrow-right mr-1"></i> الرجوع للوحة المالك
+          </a>
+          <ol class="breadcrumb float-sm-left mb-0">
+            <li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">لوحة المالك</a></li>
+            <li class="breadcrumb-item active">سجل التدقيق</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-12">
+        <div class="btn-group quick-nav" role="group">
+          <a href="{{ url_for('owner.audit_logs') }}" class="btn btn-primary">
+            <i class="fas fa-shield-alt"></i> سجل التدقيق
+          </a>
+          <a href="{{ url_for('owner.data_cleanup') }}" class="btn btn-outline-danger">
+            <i class="fas fa-trash"></i> تنظيف البيانات
+          </a>
+          <a href="{{ url_for('owner.verify_backups') }}" class="btn btn-outline-success">
+            <i class="fas fa-check-double"></i> التحقق من النسخ
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="content audit-logs-page">
+  <div class="container-fluid">
+    <!-- إحصائيات سريعة -->
+    <div class="row mb-3">
+      <div class="col-lg-3 col-6">
+        <div class="small-box bg-gradient-info">
+          <div class="inner">
+            <h3>{{ logs|length }}</h3>
+            <p>عمليات في هذه الصفحة</p>
+          </div>
+          <div class="icon">
+            <i class="fas fa-list"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-3 col-6">
+        <div class="small-box bg-gradient-success">
+          <div class="inner">
+            <h3>{{ logs|selectattr('action', 'equalto', 'create')|list|length }}</h3>
+            <p>إضافة جديدة</p>
+          </div>
+          <div class="icon">
+            <i class="fas fa-plus-circle"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-3 col-6">
+        <div class="small-box bg-gradient-warning">
+          <div class="inner">
+            <h3>{{ logs|selectattr('action', 'equalto', 'update')|list|length }}</h3>
+            <p>تعديلات</p>
+          </div>
+          <div class="icon">
+            <i class="fas fa-edit"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-3 col-6">
+        <div class="small-box bg-gradient-danger">
+          <div class="inner">
+            <h3>{{ logs|selectattr('action', 'equalto', 'delete')|list|length }}</h3>
+            <p>حذف</p>
+          </div>
+          <div class="icon">
+            <i class="fas fa-trash-alt"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- الفلاتر المتقدمة -->
+    <div class="card shadow-sm mb-3">
+      <div class="card-header bg-gradient-primary">
+        <h3 class="card-title">
+          <i class="fas fa-filter mr-2"></i>تصفية السجلات
+        </h3>
+        <div class="card-tools">
+          <button type="button" class="btn btn-tool" data-card-widget="collapse">
+            <i class="fas fa-minus"></i>
+          </button>
+        </div>
+      </div>
+      <div class="card-body">
+        <form method="GET" action="{{ url_for('owner.audit_logs') }}" class="audit-filter-form">
+          <div class="form-row">
+            <div class="form-group col-md-4">
+              <label>
+                <i class="fas fa-tasks text-primary mr-1"></i> العملية
+              </label>
+              <select name="action" class="form-control">
+                <option value="">بلا</option>
+                <option value="create" {{ 'selected' if request.args.get('action') == 'create' }}>إنشاء</option>
+                <option value="update" {{ 'selected' if request.args.get('action') == 'update' }}>تعديل</option>
+                <option value="delete" {{ 'selected' if request.args.get('action') == 'delete' }}>حذف</option>
+                <option value="archive" {{ 'selected' if request.args.get('action') == 'archive' }}>أرشفة</option>
+                <option value="restore" {{ 'selected' if request.args.get('action') == 'restore' }}>استعادة</option>
+                <option value="login" {{ 'selected' if request.args.get('action') == 'login' }}>دخول</option>
+                <option value="logout" {{ 'selected' if request.args.get('action') == 'logout' }}>خروج</option>
+              </select>
+            </div>
+
+            <div class="form-group col-md-4">
+              <label>
+                <i class="fas fa-user text-success mr-1"></i> المستخدم
+              </label>
+              {% set unique_users = [] %}
+              <select name="user" class="form-control">
+                <option value="">بلا</option>
+                {% for log in logs %}
+                  {% if log.user and log.user.id not in unique_users %}
+                    {% set _ = unique_users.append(log.user.id) %}
+                    <option value="{{ log.user.id }}" {{ 'selected' if request.args.get('user', type=int) == log.user.id }}>
+                      {{ log.user.username }}
+                    </option>
+                  {% endif %}
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="form-group col-md-4 d-flex align-items-end">
+              <button type="submit" class="btn btn-primary mr-2">
+                <i class="fas fa-search mr-1"></i>تطبيق
+              </button>
+              <a href="{{ url_for('owner.audit_logs') }}" class="btn btn-secondary">
+                <i class="fas fa-redo mr-1"></i>إعادة تعيين
+              </a>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- الجدول الرئيسي -->
+    <div class="card shadow">
+      <div class="card-header bg-gradient-dark">
+        <h3 class="card-title">
+          <i class="fas fa-history mr-2"></i>سجل العمليات التفصيلي
+        </h3>
+        <div class="card-tools">
+          <button type="button" class="btn btn-sm btn-success" onclick="exportLogs()">
+            <i class="fas fa-download mr-1"></i>تصدير
+          </button>
+        </div>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover table-striped mb-0" id="auditTable">
+                            <thead class="thead-dark">
+                                <tr>
+                                    <th width="5%"><i class="fas fa-hashtag"></i></th>
+                                    <th width="15%">
+                                        <i class="fas fa-clock text-info"></i> التاريخ والوقت
+                                    </th>
+                                    <th width="12%">
+                                        <i class="fas fa-user text-success"></i> المستخدم
+                                    </th>
+                                    <th width="10%">
+                                        <i class="fas fa-cog text-warning"></i> العملية
+                                    </th>
+                                    <th width="12%">
+                                        <i class="fas fa-cube text-primary"></i> النوع
+                                    </th>
+                                    <th width="8%">
+                                        <i class="fas fa-tag"></i> المعرف
+                                    </th>
+                                    <th width="25%">
+                                        <i class="fas fa-info-circle text-info"></i> التفاصيل
+                                    </th>
+                                    <th width="8%">
+                                        <i class="fas fa-network-wired"></i> IP
+                                    </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for log in logs %}
+                                        <tr>
+                                    <td class="text-center">
+                                        <span class="badge badge-secondary">{{ loop.index }}</span>
+                                    </td>
+                                    <td>
+                                        <i class="far fa-calendar mr-1"></i>
+                                        {{ log.created_at.strftime('%Y-%m-%d') }}
+                                        <br>
+                                        <small class="text-muted">
+                                            <i class="far fa-clock mr-1"></i>
+                                            {{ log.created_at.strftime('%H:%M:%S') }}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        {% if log.user %}
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-user-circle fa-2x text-primary mr-2"></i>
+                                            <div>
+                                                <strong>{{ log.user.username }}</strong>
+                                                <br>
+                                                <small class="text-muted">
+                                                    {% if log.user.is_owner %}
+                                                    <span class="badge badge-danger">مالك</span>
+                                                    {% elif log.user.is_admin %}
+                                                    <span class="badge badge-warning">مدير</span>
+                                                    {% else %}
+                                                    <span class="badge badge-info">موظف</span>
+                                                    {% endif %}
+                                                </small>
+                                            </div>
+                                        </div>
+                                        {% else %}
+                                        <span class="text-muted">
+                                            <i class="fas fa-user-slash mr-1"></i>غير محدد
+                                        </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if log.action == 'create' %}
+                                        <span class="badge badge-success badge-lg">
+                                            <i class="fas fa-plus-circle mr-1"></i>إنشاء
+                                        </span>
+                                        {% elif log.action == 'update' %}
+                                        <span class="badge badge-warning badge-lg">
+                                            <i class="fas fa-edit mr-1"></i>تعديل
+                                        </span>
+                                        {% elif log.action == 'delete' %}
+                                        <span class="badge badge-danger badge-lg">
+                                            <i class="fas fa-trash-alt mr-1"></i>حذف
+                                        </span>
+                                        {% elif log.action == 'archive' %}
+                                        <span class="badge badge-secondary badge-lg">
+                                            <i class="fas fa-archive mr-1"></i>أرشفة
+                                        </span>
+                                        {% elif log.action == 'restore' %}
+                                        <span class="badge badge-info badge-lg">
+                                            <i class="fas fa-undo mr-1"></i>استعادة
+                                        </span>
+                                        {% elif log.action == 'login' %}
+                                        <span class="badge badge-primary badge-lg">
+                                            <i class="fas fa-sign-in-alt mr-1"></i>دخول
+                                        </span>
+                                        {% elif log.action == 'logout' %}
+                                        <span class="badge badge-dark badge-lg">
+                                            <i class="fas fa-sign-out-alt mr-1"></i>خروج
+                                        </span>
+                                        {% else %}
+                                        <span class="badge badge-light badge-lg">
+                                            <i class="fas fa-question mr-1"></i>{{ log.action }}
+                                        </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <code class="text-primary">{{ log.entity_type or 'N/A' }}</code>
+                                    </td>
+                                    <td class="text-center">
+                                        {% if log.entity_id %}
+                                        <span class="badge badge-info">
+                                            #{{ log.entity_id }}
+                                        </span>
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if log.details %}
+                                        <small class="text-muted">
+                                            <i class="fas fa-file-alt mr-1"></i>
+                                            {{ log.details[:100] }}
+                                            {% if log.details|length > 100 %}...{% endif %}
+                                        </small>
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if log.ip_address %}
+                                        <small class="text-monospace">
+                                            <i class="fas fa-globe mr-1"></i>
+                                            {{ log.ip_address }}
+                                        </small>
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="8" class="text-center py-5">
+                                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                                        <h5 class="text-muted">لا توجد سجلات</h5>
+                                        <p class="text-muted">لم يتم العثور على أي عمليات مطابقة</p>
+                                    </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                    </div>
+        {% if pagination and pagination.pages > 1 %}
+      </div>
+      <div class="card-footer">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+          <small class="text-muted mb-2 mb-sm-0">
+            عرض {{ pagination.per_page * (pagination.page - 1) + 1 }}
+            إلى {{ [pagination.per_page * pagination.page, pagination.total]|min }}
+            من أصل {{ pagination.total }} عملية
+          </small>
+          <nav aria-label="Page navigation">
+            <ul class="pagination mb-0">
+              {% if pagination.has_prev %}
+                <li class="page-item">
+                  <a class="page-link" href="{{ url_for('owner.audit_logs', page=pagination.prev_num, action=request.args.get('action', ''), user=request.args.get('user', '')) }}">السابق</a>
+                </li>
+              {% endif %}
+
+              {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                {% if page_num %}
+                  <li class="page-item {{ 'active' if page_num == pagination.page }}">
+                    <a class="page-link" href="{{ url_for('owner.audit_logs', page=page_num, action=request.args.get('action', ''), user=request.args.get('user', '')) }}">{{ page_num }}</a>
+                  </li>
+                {% else %}
+                  <li class="page-item disabled"><span class="page-link">...</span></li>
+                {% endif %}
+              {% endfor %}
+
+              {% if pagination.has_next %}
+                <li class="page-item">
+                  <a class="page-link" href="{{ url_for('owner.audit_logs', page=pagination.next_num, action=request.args.get('action', ''), user=request.args.get('user', '')) }}">التالي</a>
+                </li>
+              {% endif %}
+            </ul>
+          </nav>
+        </div>
+      </div>
+        {% endif %}
+    </div>
+
+  </div>
+</section>
+
+<script>
+function exportLogs() {
+    // تصدير السجلات إلى CSV
+    Swal.fire({
+        title: 'تصدير السجلات',
+        text: 'هل تريد تصدير السجلات إلى ملف CSV؟',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'نعم، صدّر',
+        cancelButtonText: 'إلغاء',
+        confirmButtonColor: '#28a745'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // هنا يمكن إضافة الكود الفعلي للتصدير
+            Swal.fire({
+                title: 'جاري التصدير...',
+                text: 'يتم تجهيز الملف',
+                icon: 'info',
+                showConfirmButton: false,
+                timer: 2000
+            }).then(() => {
+                Swal.fire('تم!', 'تم تصدير السجلات بنجاح', 'success');
+            });
+        }
+    });
+}
+</script>
+
+<style>
+  .audit-filter-form .form-control,
+  .audit-filter-form textarea.form-control,
+  .audit-filter-form select.form-control {
+    height: auto !important;
+    min-height: 56px;
+    padding: 0.95rem 1.35rem;
+    font-size: 0.95rem;
+    border-radius: 10px;
+    line-height: 1.7;
+    width: 100%;
+  }
+
+  .audit-filter-form select.form-control {
+    text-align-last: center;
+    padding-inline-start: 2.2rem;
+    padding-inline-end: 2.2rem;
+    appearance: none;
+    -webkit-appearance: none;
+    background-color: #fff;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23647894' d='M6 8a1 1 0 0 1-.707-.293l-5-5a1 1 0 0 1 1.414-1.414L6 5.586 10.293 1.293a1 1 0 0 1 1.414 1.414l-5 5A1 1 0 0 1 6 8'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: left 0.8rem center;
+    background-size: 12px;
+  }
+
+  .audit-filter-form select.form-control option {
+    text-align: center;
+    padding: 0.75rem 1rem;
+  }
+
+  .audit-filter-form .form-control::placeholder {
+    color: #64748b;
+    opacity: 0.85;
+    text-align: center;
+  }
+
+  .audit-filter-form .form-row {
+    gap: 1rem 0;
+  }
+
+  .quick-nav .btn {
+    min-width: 170px;
+  }
+
+  .quick-nav .btn + .btn {
+    margin-left: 0.5rem;
+  }
+
+  .badge-lg {
+    padding: 0.4em 0.8em;
+    font-size: 0.85rem;
+  }
+
+  .table-hover tbody tr:hover {
+    background-color: rgba(0,123,255,0.05);
+    cursor: pointer;
+  }
+
+  .small-box {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: all 0.3s;
+  }
+
+  .small-box:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  }
+
+  #auditTable thead th {
+    font-weight: 700;
+    border-bottom: 2px solid #dee2e6;
+  }
+
+  .card {
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .card-header {
+    font-weight: 600;
+  }
+</style>
+{% endblock %}

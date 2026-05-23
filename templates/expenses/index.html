@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% block title %}دفتر المصروفات{% endblock %}
+{% block page_title %}
+<div class="card card-primary card-outline">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h3 class="card-title mb-0"><i class="fas fa-receipt mr-2"></i>سجل المصروفات</h3>
+        <div class="btn-group" role="group">
+            <a href="{{ url_for('expenses.create') }}" class="btn btn-success">
+                <i class="fas fa-plus mr-1"></i>مصروف جديد
+            </a>
+            <button type="button" id="printExpensesBtn" class="btn btn-primary font-weight-bold text-white">
+                <i class="fas fa-print mr-1"></i>طباعة
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/reports-print.css') }}">
+<style>
+#expensesTable_wrapper .dt-buttons {
+  display: none;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table id="expensesTable" class="table table-striped table-bordered">
+                <thead>
+                    <tr>
+                        <th>المعرف</th>
+                        <th>التصنيف</th>
+                        <th>الوصف</th>
+                        <th>{{ t('Amount') }}</th>
+                        <th>{{ t('Currency') }}</th>
+                        <th>{{ t('Amount') }} (AED)</th>
+                        <th>{{ t('Date') }}</th>
+                        <th>{{ t('Payment Method') }}</th>
+                        {% if show_branch_columns %}
+                        <th>الفرع</th>
+                        {% endif %}
+                        <th>{{ t('Actions') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for expense in expenses %}
+                    <tr>
+                        <td>{{ expense.expense_number }}</td>
+                        <td><span class="badge badge-primary">{{ expense.category.name }}</span></td>
+                        <td>{{ expense.description or '-' }}</td>
+                        <td>{{ '{:,.2f}'.format(expense.amount) }}</td>
+                        <td>{{ expense.currency }}</td>
+                        <td>{{ '{:,.2f}'.format(expense.amount_aed) }}</td>
+                        <td>{{ expense.expense_date.strftime('%Y-%m-%d') }}</td>
+                        <td><span class="badge badge-info">{{ expense.payment_method }}</span></td>
+                        {% if show_branch_columns %}
+                        <td>
+                            {% if expense.branch %}
+                                <span class="badge badge-light border">{{ expense.branch.name }}{% if expense.branch.code %} ({{ expense.branch.code }}){% endif %}</span>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        {% endif %}
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ url_for('expenses.view', id=expense.id) }}" class="btn btn-info" title="عرض">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <button type="button" class="btn btn-danger" 
+                                        onclick="deleteItem('expenses', {{ expense.id }}, '{{ expense.expense_number }}')" 
+                                        title="حذف">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+  const tableSelector = '#expensesTable';
+  const printButtonSelector = '#printExpensesBtn';
+  const languageUrl = "{{ url_for('static', filename='datatables/Arabic.json') }}";
+
+  function initExpensesPrint() {
+    const $table = $(tableSelector);
+    const options = {
+      title: 'سجل المصروفات',
+      headerColor: '#0d6efd'
+    };
+
+    if (!$table.length || !$.fn.DataTable) {
+      return;
+    }
+
+    let dataTable;
+    if ($.fn.DataTable.isDataTable($table)) {
+      dataTable = $table.DataTable();
+    } else {
+      dataTable = $table.DataTable({
+        language: { url: languageUrl },
+        order: [[5, 'desc']],
+        pageLength: 25,
+        dom: 'Bfrtip',
+        buttons: SmartPrint.buildButtons(options)
+      });
+    }
+
+    SmartPrint.attachTrigger(dataTable, printButtonSelector, options);
+  }
+
+  $(document).ready(initExpensesPrint);
+})();
+</script>
+{% endblock %}

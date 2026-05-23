@@ -1,0 +1,438 @@
+/* ========== تحسينات Badge محسّنة ========== */
+.badge-status {
+  font-weight: 700;
+  padding: 0.5em 1em;
+  font-size: 0.875rem;
+  border-radius: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  white-space: nowrap;
+  position: relative;
+  line-height: 1.5;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+.badge-status:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+.badge-status::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 8px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  transform: translateY(-50%);
+  background-color: currentColor;
+  opacity: 0.8;
+  animation: pulse-badge 2s infinite ease-in-out;
+}
+
+@keyframes pulse-badge {
+  0%, 100% {
+    transform: translateY(-50%) scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translateY(-50%) scale(1.3);
+    opacity: 0.3;
+  }
+}
+
+.badge-pending {
+  background-color: #6c757d;
+  color: #fff;
+}
+
+.badge-diagnosis {
+  background-color: #0dcaf0;
+  color: #000;
+}
+
+.badge-inprogress {
+  background-color: #007bff;
+  color: #fff;
+}
+
+.badge-completed {
+  background-color: #198754;
+  color: #fff;
+}
+
+.badge-cancelled {
+  background-color: #dc3545;
+  color: #fff;
+}
+
+.badge-onhold {
+  background-color: #ffc107;
+  color: #000;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.toolbar .btn {
+  min-width: 165px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.55rem 1rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border-radius: 0.5rem;
+}
+
+.toolbar .btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
+}
+
+.toolbar .btn i {
+  margin-inline-end: 6px;
+}
+
+.table td,
+.table th {
+  vertical-align: middle;
+  font-size: 0.9rem;
+}
+
+.table-hover tbody tr:hover {
+  background-color: #f1f3f5;
+  transition: background-color 0.25s ease;
+}
+
+.table .text-nowrap i {
+  margin-inline-end: 6px;
+  color: #6c757d;
+}
+
+.chip-fieldset {
+  border: 1px solid #dee2e6;
+  border-radius: 0.75rem;
+  padding: 1rem 1.25rem;
+  background-color: #f8f9fa;
+  margin-bottom: 1rem;
+}
+
+.chip-fieldset legend {
+  font-size: 1rem;
+  font-weight: 700;
+  padding: 0 0.5rem;
+  width: auto;
+  margin-bottom: 0.75rem;
+  color: #333;
+}
+
+.chip-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.chip-group .btn {
+  min-width: 120px;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  padding: 0.45rem 0.85rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  background-color: #e9ecef;
+  color: #495057;
+}
+
+.chip-group .btn:hover {
+  background-color: #dee2e6;
+  color: #000;
+}
+
+.filter-help {
+  font-size: 0.8rem;
+  color: #6c757d;
+  margin-top: 0.35rem;
+}
+
+@media (max-width: 575.98px) {
+  .chip-group .btn {
+    flex: 1 1 45%;
+  }
+
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .toolbar .btn {
+    width: 100%;
+  }
+}
+
+/* ========== صناديق الإحصائيات المحسّنة ========== */
+.small-box {
+  border-radius: 1rem;
+  position: relative;
+  display: block;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  background: linear-gradient(135deg, var(--box-color, #fff) 0%, var(--box-color-light, #f8f9fa) 100%);
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.small-box:hover {
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.small-box > .inner {
+  padding: 20px;
+  position: relative;
+  z-index: 2;
+}
+
+.small-box > .inner h3 {
+  font-size: 2.5rem;
+  font-weight: 900;
+  margin: 0 0 8px 0;
+  color: #fff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.small-box > .inner p {
+  font-size: 1rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.95);
+  margin: 0;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.small-box .icon {
+  position: absolute;
+  top: 50%;
+  left: 20px;
+  transform: translateY(-50%);
+  font-size: 60px;
+  color: rgba(255, 255, 255, 0.3);
+  transition: all 0.3s ease;
+  z-index: 1;
+}
+
+.small-box:hover .icon {
+  transform: translateY(-50%) scale(1.1) rotate(5deg);
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* ألوان محسّنة للصناديق */
+.small-box.bg-info {
+  --box-color: #17a2b8;
+  --box-color-light: #1fc8e3;
+}
+
+.small-box.bg-warning {
+  --box-color: #ffc107;
+  --box-color-light: #ffcd39;
+}
+
+.small-box.bg-primary {
+  --box-color: #007bff;
+  --box-color-light: #0d6efd;
+}
+
+.small-box.bg-success {
+  --box-color: #28a745;
+  --box-color-light: #2dce5d;
+}
+
+/* ========== تحسينات Pagination ========== */
+.pagination {
+  margin: 0;
+  gap: 0.25rem;
+}
+
+.pagination .page-item .page-link {
+  border-radius: 0.5rem;
+  margin: 0 2px;
+  padding: 0.5rem 0.75rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.pagination .page-item.active .page-link {
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  border-color: #007bff;
+  box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
+}
+
+.pagination .page-item:not(.active):not(.disabled) .page-link:hover {
+  background-color: #e9ecef;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* ========== تحسينات الجدول ========== */
+.table-hover tbody tr {
+  transition: all 0.2s ease;
+}
+
+.table-hover tbody tr:hover {
+  background-color: #f8f9fa !important;
+  transform: scale(1.01);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.table thead th {
+  background-color: #f8f9fa;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid #dee2e6;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+/* ========== تحسينات الأزرار ========== */
+.btn {
+  border-radius: 0.5rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.btn:active::before {
+  width: 300px;
+  height: 300px;
+}
+
+.btn-sm {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.85rem;
+}
+
+/* ========== تحسينات Card ========== */
+.card {
+  border-radius: 1rem;
+  border: none;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
+  margin-bottom: 1.5rem;
+}
+
+.card-header {
+  border-radius: 1rem 1rem 0 0 !important;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-bottom: 2px solid #dee2e6;
+  padding: 1rem 1.25rem;
+}
+
+.card-footer {
+  border-radius: 0 0 1rem 1rem !important;
+  background-color: #f8f9fa;
+  border-top: 1px solid #dee2e6;
+  padding: 1rem 1.25rem;
+}
+
+/* ========== Loading States ========== */
+.loading {
+  position: relative;
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+.loading::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #007bff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ========== Responsive ========== */
+@media (max-width: 991.98px) {
+  .small-box > .inner h3 {
+    font-size: 2rem;
+  }
+  
+  .small-box .icon {
+    font-size: 48px;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .pagination .page-link {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.875rem;
+  }
+  
+  .btn-sm {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.8rem;
+  }
+}
+
+/* ========== Print Styles ========== */
+@media print {
+  .btn,
+  .breadcrumb,
+  .page-header,
+  .toolbar,
+  .card-header,
+  .pagination,
+  .card-footer {
+    display: none !important;
+  }
+
+  body {
+    font-size: 12pt;
+    color: #000;
+    background: #fff !important;
+  }
+  
+  .card {
+    box-shadow: none;
+    border: 1px solid #000;
+  }
+  
+  .table {
+    font-size: 10pt;
+  }
+}

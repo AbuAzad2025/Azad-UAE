@@ -1,0 +1,390 @@
+{% extends "base.html" %}
+
+{% block title %}إعدادات الخزينة السرية - Vault Settings{% endblock %}
+
+{% block page_title %}
+<div class="d-flex align-items-center">
+    <i class="fas fa-cog text-primary mr-3" style="font-size: 2rem;"></i>
+    <div>
+        <h1 class="mb-0">⚙️ إعدادات الخزينة السرية</h1>
+        <p class="text-muted mb-0">تكوين إعدادات الدفع والأمان</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-cog mr-2"></i>إعدادات الخزينة
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="{{ url_for('payment_vault.settings') }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <!-- Payment Settings -->
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="nowpayments_api_key">
+                                            <i class="fas fa-key mr-2"></i>NOWPayments API Key
+                                        </label>
+                                        <input type="text" 
+                                               class="form-control" 
+                                               id="nowpayments_api_key" 
+                                               name="nowpayments_api_key" 
+                                               value="{{ vault.nowpayments_api_key or '' }}"
+                                               placeholder="your-nowpayments-api-key">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="nowpayments_ipn_secret">
+                                            <i class="fas fa-shield-alt mr-2"></i>IPN Secret
+                                        </label>
+                                        <input type="text" 
+                                               class="form-control" 
+                                               id="nowpayments_ipn_secret" 
+                                               name="nowpayments_ipn_secret" 
+                                               value="{{ vault.nowpayments_ipn_secret or '' }}"
+                                               placeholder="your-ipn-secret-here">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Crypto Addresses -->
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="bitcoin_address">
+                                            <i class="fab fa-bitcoin mr-2"></i>Bitcoin Address
+                                        </label>
+                                        <input type="text" 
+                                               class="form-control" 
+                                               id="bitcoin_address" 
+                                               name="bitcoin_address" 
+                                               value="{{ vault.bitcoin_address or '' }}"
+                                               placeholder="bc1qyourbtcaddresshere">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="ethereum_address">
+                                            <i class="fab fa-ethereum mr-2"></i>Ethereum Address
+                                        </label>
+                                        <input type="text" 
+                                               class="form-control" 
+                                               id="ethereum_address" 
+                                               name="ethereum_address" 
+                                               value="{{ vault.ethereum_address or '' }}"
+                                               placeholder="0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="usdt_address">
+                                            <i class="fas fa-dollar-sign mr-2"></i>USDT Address
+                                        </label>
+                                        <input type="text" 
+                                               class="form-control" 
+                                               id="usdt_address" 
+                                               name="usdt_address" 
+                                               value="{{ vault.usdt_address or '' }}"
+                                               placeholder="TYASr5UV6HEcXatwdFQfmLVUqQQQMUxHLS">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <hr>
+                            
+                            <!-- PayPal Settings -->
+                            <h5 class="border-bottom pb-2 mb-3">
+                                <i class="fab fa-paypal text-primary"></i> إعدادات PayPal
+                            </h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label><i class="fas fa-envelope mr-2"></i>البريد التجاري PayPal</label>
+                                        <input type="email" class="form-control" name="paypal_business_email" 
+                                               value="{{ vault.paypal_business_email or '' }}" 
+                                               placeholder="business@company.com">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label><i class="fas fa-cog mr-2"></i>وضع PayPal</label>
+                                        <select class="form-control" name="paypal_mode">
+                                            <option value="sandbox" {% if vault.paypal_mode == 'sandbox' %}selected{% endif %}>Sandbox (اختبار)</option>
+                                            <option value="live" {% if vault.paypal_mode == 'live' %}selected{% endif %}>Live (إنتاج)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label><i class="fas fa-key mr-2"></i>PayPal Client ID</label>
+                                        <input type="text" class="form-control" name="paypal_client_id" 
+                                               value="{{ vault.paypal_client_id or '' }}" 
+                                               placeholder="Client ID">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label><i class="fas fa-lock mr-2"></i>PayPal Secret</label>
+                                        <input type="password" class="form-control" name="paypal_client_secret" 
+                                               value="{{ vault.paypal_client_secret or '' }}" 
+                                               placeholder="Secret Key">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <hr>
+                            
+                            <!-- Bank Account Settings -->
+                            <h5 class="border-bottom pb-2 mb-3">
+                                <i class="fas fa-university text-success"></i> معلومات الحساب البنكي
+                            </h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label><i class="fas fa-building mr-2"></i>اسم البنك</label>
+                                        <input type="text" class="form-control" name="bank_name" 
+                                               value="{{ vault.bank_name or '' }}" 
+                                               placeholder="البنك العربي">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label><i class="fas fa-user mr-2"></i>اسم صاحب الحساب</label>
+                                        <input type="text" class="form-control" name="bank_account_name" 
+                                               value="{{ vault.bank_account_name or '' }}" 
+                                               placeholder="Azad Systems LLC">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label><i class="fas fa-hashtag mr-2"></i>رقم الحساب</label>
+                                        <input type="text" class="form-control" name="bank_account_number" 
+                                               value="{{ vault.bank_account_number or '' }}" 
+                                               placeholder="123456789">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label><i class="fas fa-barcode mr-2"></i>IBAN</label>
+                                        <input type="text" class="form-control" name="bank_iban" 
+                                               value="{{ vault.bank_iban or '' }}" 
+                                               placeholder="AE123456789012345678901">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label><i class="fas fa-globe mr-2"></i>SWIFT Code</label>
+                                        <input type="text" class="form-control" name="bank_swift_code" 
+                                               value="{{ vault.bank_swift_code or '' }}" 
+                                               placeholder="ARABAEADXXX">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label><i class="fas fa-map-marker-alt mr-2"></i>الفرع</label>
+                                        <input type="text" class="form-control" name="bank_branch" 
+                                               value="{{ vault.bank_branch or '' }}" 
+                                               placeholder="دبي - الفرع الرئيسي">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label><i class="fas fa-flag mr-2"></i>البلد</label>
+                                        <input type="text" class="form-control" name="bank_country" 
+                                               value="{{ vault.bank_country or '' }}" 
+                                               placeholder="الإمارات">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <hr>
+                            
+                            <!-- Stripe Settings -->
+                            <h5 class="border-bottom pb-2 mb-3">
+                                <i class="fab fa-stripe-s text-info"></i> إعدادات Stripe
+                            </h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label><i class="fas fa-key mr-2"></i>Publishable Key</label>
+                                        <input type="text" class="form-control" name="stripe_publishable_key" 
+                                               value="{{ vault.stripe_publishable_key or '' }}" 
+                                               placeholder="pk_test_...">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label><i class="fas fa-lock mr-2"></i>Secret Key</label>
+                                        <input type="password" class="form-control" name="stripe_secret_key" 
+                                               value="{{ vault.stripe_secret_key or '' }}" 
+                                               placeholder="sk_test_...">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Payment Limits -->
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="min_donation_amount">
+                                            <i class="fas fa-arrow-up mr-2"></i>الحد الأدنى ($)
+                                        </label>
+                                        <input type="number" 
+                                               class="form-control" 
+                                               id="min_donation_amount" 
+                                               name="min_donation_amount" 
+                                               value="{{ vault.min_donation_amount or 1 }}"
+                                               min="1" step="0.01">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="max_donation_amount">
+                                            <i class="fas fa-arrow-down mr-2"></i>الحد الأقصى ($)
+                                        </label>
+                                        <input type="number" 
+                                               class="form-control" 
+                                               id="max_donation_amount" 
+                                               name="max_donation_amount" 
+                                               value="{{ vault.max_donation_amount or 10000 }}"
+                                               min="1" step="0.01">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="daily_limit">
+                                            <i class="fas fa-calendar-day mr-2"></i>الحد اليومي ($)
+                                        </label>
+                                        <input type="number" 
+                                               class="form-control" 
+                                               id="daily_limit" 
+                                               name="daily_limit" 
+                                               value="{{ vault.daily_limit or 50000 }}"
+                                               min="1" step="0.01">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Security Settings -->
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <div class="form-check">
+                                            <input type="checkbox" 
+                                                   class="form-check-input" 
+                                                   id="require_2fa" 
+                                                   name="require_2fa" 
+                                                   {% if vault.require_2fa %}checked{% endif %}>
+                                            <label class="form-check-label" for="require_2fa">
+                                                <i class="fas fa-shield-alt mr-2"></i>يتطلب مصادقة ثنائية
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="auto_lock_minutes">
+                                            <i class="fas fa-clock mr-2"></i>قفل تلقائي (دقيقة)
+                                        </label>
+                                        <input type="number" 
+                                               class="form-control" 
+                                               id="auto_lock_minutes" 
+                                               name="auto_lock_minutes" 
+                                               value="{{ vault.auto_lock_minutes or 30 }}"
+                                               min="1" max="1440">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="max_failed_attempts">
+                                            <i class="fas fa-ban mr-2"></i>محاولات فاشلة
+                                        </label>
+                                        <input type="number" 
+                                               class="form-control" 
+                                               id="max_failed_attempts" 
+                                               name="max_failed_attempts" 
+                                               value="{{ vault.max_failed_attempts or 3 }}"
+                                               min="1" max="10">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="text-center mt-4">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-save mr-2"></i>
+                                    حفظ الإعدادات
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-info-circle mr-2"></i>معلومات الخزينة
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <strong>حالة الخزينة:</strong>
+                            <span class="badge badge-success">مفتوحة</span>
+                        </div>
+                        <div class="mb-3">
+                            <strong>آخر وصول:</strong>
+                            <br>{{ vault.last_access.strftime('%Y-%m-%d %H:%M:%S') }}
+                        </div>
+                        <div class="mb-3">
+                            <strong>المحاولات الفاشلة:</strong>
+                            <span class="badge badge-{% if vault.failed_attempts > 0 %}warning{% else %}success{% endif %}">
+                                {{ vault.failed_attempts }}/{{ vault.max_failed_attempts }}
+                            </span>
+                        </div>
+                        <div class="mb-3">
+                            <strong>قفل تلقائي:</strong>
+                            <span class="badge badge-info">{{ vault.auto_lock_minutes }} دقيقة</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mt-3">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0">
+                            <i class="fas fa-tools mr-2"></i>إجراءات سريعة
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a href="{{ url_for('payment_vault.change_password') }}" class="btn btn-outline-warning">
+                                <i class="fas fa-key mr-2"></i>
+                                تغيير كلمة المرور
+                            </a>
+                            <a href="{{ url_for('payment_vault.lock_vault') }}" class="btn btn-outline-danger">
+                                <i class="fas fa-lock mr-2"></i>
+                                قفل الخزينة
+                            </a>
+                            <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-right mr-2"></i>
+                                العودة للوحة المالك
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+</div>
+{% endblock %}

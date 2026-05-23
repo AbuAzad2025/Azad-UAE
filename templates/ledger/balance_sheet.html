@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - الميزانية العمومية{% endblock %}
+{% block page_title %}الميزانية العمومية - Balance Sheet{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+  <div class="col-12">
+    <button onclick="window.print()" class="btn btn-secondary">
+      <i class="fas fa-print mr-2"></i>طباعة
+    </button>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header bg-gradient-success">
+    <h3 class="card-title text-white">الميزانية العمومية</h3>
+  </div>
+  <div class="card-body">
+    <div class="row">
+      <div class="col-md-6">
+        <h4 class="text-success"><i class="fas fa-coins"></i> الأصول (Assets)</h4>
+        <table class="table table-sm table-bordered">
+          <tbody>
+            {% for name, amount in assets.items() %}
+            <tr>
+              <td>{{ name }}</td>
+              <td class="text-left">{{ "{:,.2f}".format(amount) }} AED</td>
+            </tr>
+            {% endfor %}
+            <tr class="font-weight-bold bg-light">
+              <td>إجمالي الأصول</td>
+              <td class="text-left text-success">{{ "{:,.2f}".format(total_assets) }} AED</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="col-md-6">
+        <h4 class="text-danger"><i class="fas fa-file-invoice-dollar"></i> الخصوم (Liabilities)</h4>
+        <table class="table table-sm table-bordered">
+          <tbody>
+            {% for name, amount in liabilities.items() %}
+            <tr>
+              <td>{{ name }}</td>
+              <td class="text-left">{{ "{:,.2f}".format(amount) }} AED</td>
+            </tr>
+            {% endfor %}
+            <tr class="font-weight-bold bg-light">
+              <td>إجمالي الخصوم</td>
+              <td class="text-left text-danger">{{ "{:,.2f}".format(total_liabilities) }} AED</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h4 class="text-info mt-4"><i class="fas fa-hand-holding-usd"></i> حقوق الملكية (Equity)</h4>
+        <table class="table table-sm table-bordered">
+          <tbody>
+            {% for name, amount in equity.items() %}
+            <tr>
+              <td>{{ name }}</td>
+              <td class="text-left">{{ "{:,.2f}".format(amount) }} AED</td>
+            </tr>
+            {% endfor %}
+            <tr class="font-weight-bold bg-light">
+              <td>إجمالي حقوق الملكية</td>
+              <td class="text-left text-info">{{ "{:,.2f}".format(total_equity) }} AED</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <hr>
+
+    <div class="alert alert-primary text-center">
+      <h4>المعادلة المحاسبية</h4>
+      <h3>الأصول ({{ "{:,.0f}".format(total_assets) }}) = الخصوم ({{ "{:,.0f}".format(total_liabilities) }}) + حقوق الملكية ({{ "{:,.0f}".format(total_equity) }})</h3>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+@media print {
+  @page {
+    size: A4 {{ 'landscape' if request.args.get('orientation') == 'landscape' else 'portrait' }};
+    margin: 15mm;
+  }
+  /* إخفاء عناصر UI */
+  .main-sidebar, .main-header, .main-footer, 
+  .content-header, .no-print, button, .btn,
+  .breadcrumb, .navbar, .sidebar {
+    display: none !important;
+  }
+  /* تحسين المحتوى للطباعة */
+  .content-wrapper {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  .card {
+    border: 1px solid #dee2e6 !important;
+    box-shadow: none !important;
+    page-break-inside: avoid;
+  }
+  body {
+    background: white !important;
+  }
+  /* تحسين الجداول */
+  table {
+    page-break-inside: auto;
+  }
+  tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+  thead {
+    display: table-header-group;
+  }
+  tfoot {
+    display: table-footer-group;
+  }
+}
+</style>
+{% endblock %}
+
+

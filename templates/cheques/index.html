@@ -1,0 +1,383 @@
+{% extends 'base.html' %}
+{% block title %}سجل الشيكات{% endblock %}
+{% block page_title %}
+<div class="card card-primary card-outline mb-3">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h3 class="card-title mb-0"><i class="fas fa-money-check-alt mr-2"></i>سجل الشيكات</h3>
+    <div class="btn-group" role="group">
+      <a href="{{ url_for('cheques.create') }}" class="btn btn-success">
+        <i class="fas fa-plus mr-1"></i>شيك جديد
+      </a>
+      <button type="button" id="printChequesBtn" class="btn btn-primary font-weight-bold text-white px-4">
+        <i class="fas fa-print mr-1"></i>طباعة
+      </button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+#chequesTable thead.cheques-table-head th {
+  background: linear-gradient(135deg, #0d6efd 0%, #1b4d89 100%);
+  color: #ffffff;
+  font-weight: 700;
+}
+
+#chequesTable tbody tr.table-warning {
+  background-color: #fff4d6 !important;
+  color: #7a4c00 !important;
+}
+
+#chequesTable tbody tr.table-danger {
+  background-color: #ffe0e0 !important;
+  color: #8a1c1c !important;
+}
+
+#chequesTable tbody tr.table-warning a,
+#chequesTable tbody tr.table-danger a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+#chequesTable_wrapper .dt-buttons {
+  display: none;
+}
+
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 10mm;
+  }
+
+  body {
+    -webkit-print-color-adjust: exact !important;
+    font-size: 11pt;
+    direction: rtl;
+  }
+
+  .main-sidebar,
+  .main-header,
+  .main-footer,
+  .content-header,
+  .btn,
+  .card-header,
+  .card-footer,
+  .small-box,
+  .info-box,
+  .btn-group,
+  .dataTables_filter,
+  .dataTables_length,
+  .dataTables_info,
+  .dataTables_paginate,
+  .dt-buttons {
+    display: none !important;
+  }
+
+  .content-wrapper {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .card {
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  .table-responsive {
+    overflow: visible !important;
+  }
+
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+  }
+
+  table th,
+  table td {
+    border: 1px solid #dee2e6 !important;
+    padding: 6px 8px !important;
+    text-align: center !important;
+  }
+
+  table thead th {
+    background: #0d6efd !important;
+    color: #fff !important;
+  }
+
+  table tbody tr:nth-child(even) {
+    background: #f8f9fa !important;
+  }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- الإحصائيات -->
+<div class="row">
+  <div class="col-lg-3 col-6">
+    <div class="small-box bg-success">
+      <div class="inner">
+        <h3>{{ stats.total_incoming }}</h3>
+        <p>شيكات واردة</p>
+      </div>
+      <div class="icon">
+        <i class="fas fa-arrow-down"></i>
+      </div>
+      <a href="{{ url_for('cheques.incoming') }}" class="small-box-footer" style="color: #ffffff !important;">
+        المزيد <i class="fas fa-arrow-circle-left"></i>
+      </a>
+    </div>
+  </div>
+
+  <div class="col-lg-3 col-6">
+    <div class="small-box bg-danger">
+      <div class="inner">
+        <h3>{{ stats.total_outgoing }}</h3>
+        <p>شيكات صادرة</p>
+      </div>
+      <div class="icon">
+        <i class="fas fa-arrow-up"></i>
+      </div>
+      <a href="{{ url_for('cheques.outgoing') }}" class="small-box-footer">
+        المزيد <i class="fas fa-arrow-circle-left"></i>
+      </a>
+    </div>
+  </div>
+
+  <div class="col-lg-3 col-6">
+    <div class="small-box bg-warning">
+      <div class="inner">
+        <h3>{{ stats.due_soon }}</h3>
+        <p>قريبة الاستحقاق</p>
+      </div>
+      <div class="icon">
+        <i class="fas fa-exclamation-triangle"></i>
+      </div>
+      <a href="{{ url_for('cheques.alerts') }}" class="small-box-footer">
+        عرض <i class="fas fa-arrow-circle-left"></i>
+      </a>
+    </div>
+  </div>
+
+  <div class="col-lg-3 col-6">
+    <div class="small-box bg-info">
+      <div class="inner">
+        <h3>{{ stats.overdue }}</h3>
+        <p>متأخرة</p>
+      </div>
+      <div class="icon">
+        <i class="fas fa-clock"></i>
+      </div>
+      <a href="{{ url_for('cheques.alerts') }}" class="small-box-footer">
+        عرض <i class="fas fa-arrow-circle-left"></i>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- الفلاتر -->
+<div class="card">
+  <div class="card-header">
+    <div class="d-flex justify-content-between align-items-center">
+      <h3 class="card-title mb-0">
+        <i class="fas fa-filter mr-2"></i>فلاتر البحث
+      </h3>
+      <div class="btn-group">
+        <a href="{{ url_for('cheques.index') }}" class="btn btn-sm btn-outline-primary">
+          <i class="fas fa-list mr-1"></i>الكل
+        </a>
+        <a href="{{ url_for('cheques.incoming') }}" class="btn btn-sm btn-outline-success">
+          <i class="fas fa-arrow-down mr-1"></i>واردة
+        </a>
+        <a href="{{ url_for('cheques.outgoing') }}" class="btn btn-sm btn-outline-danger">
+          <i class="fas fa-arrow-up mr-1"></i>صادرة
+        </a>
+        <a href="{{ url_for('cheques.alerts') }}" class="btn btn-sm btn-outline-warning">
+          <i class="fas fa-bell mr-1"></i>تنبيهات
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- جدول الشيكات -->
+<div class="card mt-3">
+  <div class="card-body">
+    <div class="table-responsive">
+      <table id="chequesTable" class="table table-hover table-bordered">
+        <thead class="cheques-table-head text-white">
+          <tr>
+            <th><i class="fas fa-hashtag mr-2"></i>رقم الشيك</th>
+            <th><i class="fas fa-exchange-alt mr-2"></i>النوع</th>
+            <th><i class="fas fa-university mr-2"></i>البنك</th>
+            <th><i class="fas fa-user mr-2"></i>الطرف</th>
+            <th><i class="fas fa-money-bill-wave mr-2"></i>المبلغ</th>
+            <th><i class="far fa-calendar mr-2"></i>الاستحقاق</th>
+            {% if show_branch_columns %}
+            <th><i class="fas fa-code-branch mr-2"></i>الفرع</th>
+            {% endif %}
+            <th><i class="fas fa-info-circle mr-2"></i>الحالة</th>
+            <th class="text-center"><i class="fas fa-cog mr-2"></i>الإجراءات</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for cheque in cheques %}
+          <tr class="{% if cheque.is_overdue %}table-danger{% elif cheque.is_due_soon %}table-warning{% endif %}">
+            <td>
+              <a href="{{ url_for('cheques.view', id=cheque.id) }}" class="font-weight-bold">
+                {{ cheque.cheque_bank_number }}
+              </a>
+              <br><small class="text-muted">{{ cheque.cheque_number }}</small>
+            </td>
+            <td>
+              {% if cheque.cheque_type == 'incoming' %}
+                <span class="badge badge-success">
+                  <i class="fas fa-arrow-down mr-1"></i>وارد
+                </span>
+              {% else %}
+                <span class="badge badge-danger">
+                  <i class="fas fa-arrow-up mr-1"></i>صادر
+                </span>
+              {% endif %}
+            </td>
+            <td>
+              <strong>{{ cheque.bank_name }}</strong>
+              {% if cheque.bank_branch %}
+              <br><small class="text-muted">{{ cheque.bank_branch }}</small>
+              {% endif %}
+            </td>
+            <td>
+              {% if cheque.cheque_type == 'incoming' %}
+                {{ cheque.drawer_name or '-' }}
+                {% if cheque.customer %}
+                <br><small class="text-muted"><i class="fas fa-user"></i> {{ cheque.customer.name }}</small>
+                {% endif %}
+              {% else %}
+                {{ cheque.payee_name or '-' }}
+                {% if cheque.supplier %}
+                <br><small class="text-muted"><i class="fas fa-truck"></i> {{ cheque.supplier.name }}</small>
+                {% endif %}
+              {% endif %}
+            </td>
+            <td>
+              <strong>{{ "{:,.2f}".format(cheque.amount) }}</strong>
+              <small class="text-muted">{{ cheque.currency }}</small>
+            </td>
+            <td>
+              {{ cheque.due_date.strftime('%Y-%m-%d') }}
+              {% if cheque.days_until_due is not none %}
+              <br>
+              {% if cheque.is_overdue %}
+                <small class="text-danger">
+                  <i class="fas fa-exclamation-circle"></i>
+                  متأخر {{ cheque.days_until_due|abs }} يوم
+                </small>
+              {% elif cheque.is_due_soon %}
+                <small class="text-warning">
+                  <i class="fas fa-clock"></i>
+                  باقي {{ cheque.days_until_due }} يوم
+                </small>
+              {% endif %}
+              {% endif %}
+            </td>
+            {% if show_branch_columns %}
+            <td>
+              {% if cheque.branch %}
+                <span class="badge badge-light border">{{ cheque.branch.name }}{% if cheque.branch.code %} ({{ cheque.branch.code }}){% endif %}</span>
+              {% else %}
+                <span class="text-muted">-</span>
+              {% endif %}
+            </td>
+            {% endif %}
+            <td>
+              {% if cheque.status == 'pending' %}
+                <span class="badge badge-warning">
+                  <i class="fas fa-clock mr-1"></i>معلق
+                </span>
+              {% elif cheque.status == 'cleared' %}
+                <span class="badge badge-success">
+                  <i class="fas fa-check mr-1"></i>تم الصرف
+                </span>
+              {% elif cheque.status == 'bounced' %}
+                <span class="badge badge-danger">
+                  <i class="fas fa-ban mr-1"></i>مرتد
+                </span>
+              {% elif cheque.status == 'cancelled' %}
+                <span class="badge badge-secondary">
+                  <i class="fas fa-times mr-1"></i>ملغي
+                </span>
+              {% elif cheque.status == 'under_collection' %}
+                <span class="badge badge-info">
+                  <i class="fas fa-spinner mr-1"></i>تحت التحصيل
+                </span>
+              {% endif %}
+            </td>
+            <td class="text-center">
+              <div class="btn-group btn-group-sm">
+                <a href="{{ url_for('cheques.view', id=cheque.id) }}" 
+                   class="btn btn-info" title="عرض">
+                  <i class="fas fa-eye"></i>
+                </a>
+                {% if cheque.status == 'pending' %}
+                <a href="{{ url_for('cheques.edit', id=cheque.id) }}" 
+                   class="btn btn-warning" title="تعديل">
+                  <i class="fas fa-edit"></i>
+                </a>
+                {% endif %}
+                <button type="button" class="btn btn-danger" 
+                        onclick='deleteItem("cheques", {{ cheque.id }}, {{ cheque.cheque_bank_number|tojson }})' 
+                        title="حذف">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+  const tableSelector = '#chequesTable';
+  const printButtonSelector = '#printChequesBtn';
+  const languageUrl = "{{ url_for('static', filename='datatables/Arabic.json') }}";
+
+  function initChequesPrint() {
+    const $table = $(tableSelector);
+    const options = {
+      title: 'سجل الشيكات',
+      headerColor: '#007A3D'
+    };
+
+    if (!$table.length || !$.fn.DataTable) {
+      return;
+    }
+
+    let dataTable;
+    if ($.fn.DataTable.isDataTable($table)) {
+      dataTable = $table.DataTable();
+    } else {
+      dataTable = $table.DataTable({
+        language: { url: languageUrl },
+        order: [[5, 'asc']],
+        pageLength: 25,
+        responsive: true,
+        dom: 'Bfrtip',
+        buttons: SmartPrint.buildButtons(options)
+      });
+    }
+
+    SmartPrint.attachTrigger(dataTable, printButtonSelector, options);
+  }
+
+  $(document).ready(initChequesPrint);
+})();
+</script>
+{% endblock %}
+

@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}لوحة المتصدرين - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">🏆 لوحة المتصدرين</h1>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">أفضل الموظفين</h3>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>المركز</th>
+                                    <th>الاسم</th>
+                                    <th>النقاط</th>
+                                    <th>الشارة</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in leaderboard %}
+                                <tr class="{% if user.rank <= 3 %}font-weight-bold{% endif %}">
+                                    <td>
+                                        {% if user.rank == 1 %}🥇
+                                        {% elif user.rank == 2 %}🥈
+                                        {% elif user.rank == 3 %}🥉
+                                        {% else %}{{ user.rank }}
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ user.full_name }}</td>
+                                    <td><span class="badge badge-primary">{{ user.points }}</span></td>
+                                    <td>{{ user.badge.icon }} {{ user.badge.name_ar }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">الشارات المتاحة</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="list-group">
+                            <div class="list-group-item">
+                                <h5>🌱 مبتدئ</h5>
+                                <small>0 نقطة</small>
+                            </div>
+                            <div class="list-group-item">
+                                <h5>🥉 برونزي</h5>
+                                <small>100 نقطة</small>
+                            </div>
+                            <div class="list-group-item">
+                                <h5>🥈 فضي</h5>
+                                <small>500 نقطة</small>
+                            </div>
+                            <div class="list-group-item">
+                                <h5>🥇 ذهبي</h5>
+                                <small>1,000 نقطة</small>
+                            </div>
+                            <div class="list-group-item">
+                                <h5>💎 بلاتيني</h5>
+                                <small>5,000 نقطة</small>
+                            </div>
+                            <div class="list-group-item">
+                                <h5>👑 أسطوري</h5>
+                                <small>10,000 نقطة</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+

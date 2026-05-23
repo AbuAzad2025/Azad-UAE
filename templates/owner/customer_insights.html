@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% block title %}تحليلات العملاء{% endblock %}
+{% block content %}
+<div class="container-fluid">
+  <div class="mb-3">
+    <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary">
+      <i class="fas fa-arrow-right"></i> رجوع للوحة المالك
+    </a>
+    <a href="{{ url_for('owner.sales_insights') }}" class="btn btn-primary">
+      <i class="fas fa-shopping-cart"></i> المبيعات
+    </a>
+    <a href="{{ url_for('owner.forecasting') }}" class="btn btn-success">
+      <i class="fas fa-chart-line"></i> التنبؤ
+    </a>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <h3><i class="fas fa-users"></i> تحليلات العملاء (أفضل 50)</h3>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-bordered table-striped table-hover">
+          <thead class="thead-dark">
+            <tr>
+              <th>#</th>
+              <th>العميل</th>
+              <th>إجمالي المشتريات</th>
+              <th>عدد الفواتير</th>
+              <th>متوسط الفاتورة</th>
+              <th>آخر شراء</th>
+              <th>الحالة</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for c in customers %}
+            <tr>
+              <td>{{ loop.index }}</td>
+              <td><strong>{{ c.name }}</strong></td>
+              <td>{{ "%.2f"|format(c.lifetime_value) }} AED</td>
+              <td>{{ c.sales_count }}</td>
+              <td>{{ "%.2f"|format(c.avg_sale) }} AED</td>
+              <td>{{ c.days_since_last }} يوم</td>
+              <td>
+                <span class="badge badge-{{ 'success' if c.status == 'نشط' else 'warning' if c.status == 'خامل' else 'danger' }}">
+                  {{ c.status }}
+                </span>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

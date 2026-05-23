@@ -1,0 +1,190 @@
+{% extends 'base.html' %}
+{% block title %}شركة أزاد للأنظمة الذكية - تفاصيل المنتج {{ product.name }}{% endblock %}
+{% block page_title %}
+<div class="d-flex justify-content-between align-items-center">
+  <div>
+    <h1 class="mb-0"><i class="fas fa-box mr-2"></i>تفاصيل المنتج: {{ product.name }}</h1>
+  </div>
+  <div>
+    <a href="{{ url_for('products.index') }}" class="btn btn-secondary">
+      <i class="fas fa-arrow-right mr-2"></i>العودة للقائمة
+    </a>
+    <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
+      <i class="fas fa-home mr-2"></i>الرئيسية
+    </a>
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-4">
+    <div class="card card-primary card-outline">
+      <div class="card-body box-profile">
+        <h3 class="profile-username text-center">{{ product.name }}</h3>
+        {% if product.name_ar %}
+        <p class="text-muted text-center">{{ product.name_ar }}</p>
+        {% endif %}
+        
+        <ul class="list-group list-group-unbordered mb-3">
+          <li class="list-group-item">
+            <b>رقم القطعة</b>
+            <span class="float-left">{{ product.part_number or '-' }}</span>
+          </li>
+          <li class="list-group-item">
+            <b>{{ t('Barcode') }}</b>
+            <span class="float-left">{{ product.barcode or '-' }}</span>
+          </li>
+          <li class="list-group-item">
+            <b>{{ t('Inventory') }}</b>
+            {% set shown_stock = product.visible_stock if product.visible_stock is defined else product.current_stock %}
+            <span class="float-left {% if product.min_stock_alert and shown_stock < product.min_stock_alert %}text-danger{% else %}text-success{% endif %}">
+            {{ shown_stock }} {{ product.unit or 'بلا' }}
+            </span>
+          </li>
+          <li class="list-group-item">
+            <b>{{ t('Price') }}</b>
+            <span class="float-left text-success">{{ "{:,.2f}".format(product.regular_price) }} AED</span>
+          </li>
+        </ul>
+        
+        <a href="{{ url_for('products.edit', id=product.id) }}" class="btn btn-warning btn-block mb-2">
+          <i class="fas fa-edit"></i> تعديل
+        </a>
+        <button type="button" class="btn btn-danger btn-block" 
+                onclick="deleteItem('products', {{ product.id }}, '{{ product.name }}')">
+          <i class="fas fa-trash"></i> حذف
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-8">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">معلومات المنتج</h3>
+      </div>
+      <div class="card-body">
+        <dl class="row">
+          <dt class="col-sm-4">الاسم التجاري:</dt>
+          <dd class="col-sm-8">{{ product.commercial_name or '-' }}</dd>
+          
+          <dt class="col-sm-4">بلد المنشأ:</dt>
+          <dd class="col-sm-8">{{ product.country_of_origin or '-' }}</dd>
+          
+          <dt class="col-sm-4">الفئة:</dt>
+          <dd class="col-sm-8">{{ product.category.name if product.category else '-' }}</dd>
+
+          <dt class="col-sm-4">التاجر المالك:</dt>
+          <dd class="col-sm-8 text-primary">{{ product.merchant_customer.name if product.merchant_customer else '-' }}</dd>
+
+          {% if product.partner_shares %}
+          <dt class="col-sm-4">الشركاء:</dt>
+          <dd class="col-sm-8">
+            <ul class="list-unstyled mb-0">
+              {% for share in product.partner_shares %}
+              <li><i class="fas fa-user-tag text-info"></i> {{ share.partner_customer.name }} ({{ share.percentage }}%)</li>
+              {% endfor %}
+            </ul>
+          </dd>
+          {% endif %}
+          
+          <dt class="col-sm-4">سعر التكلفة:</dt>
+          <dd class="col-sm-8">{{ "{:,.2f}".format(product.cost_price or 0) }} AED</dd>
+          
+          <dt class="col-sm-4">خصم التاجر:</dt>
+          <dd class="col-sm-8">
+            {% if product.merchant_price %}
+              {{ product.merchant_price }}% 
+              <span class="text-muted">({{ "{:,.2f}".format(product.regular_price * (1 - product.merchant_price/100)) }} AED)</span>
+            {% else %}
+              -
+            {% endif %}
+          </dd>
+          
+          <dt class="col-sm-4">خصم الشريك:</dt>
+          <dd class="col-sm-8">
+            {% if product.partner_price %}
+              {{ product.partner_price }}%
+              <span class="text-muted">({{ "{:,.2f}".format(product.regular_price * (1 - product.partner_price/100)) }} AED)</span>
+            {% else %}
+              -
+            {% endif %}
+          </dd>
+          
+          <dt class="col-sm-4">الكفالة:</dt>
+          <dd class="col-sm-8">{{ product.warranty_period or 0 }} {{ product.warranty_unit or 'شهر' }}</dd>
+          
+          <dt class="col-sm-4">قابل للإرجاع:</dt>
+          <dd class="col-sm-8">
+            {% if product.is_returnable %}
+            <span class="badge badge-success">نعم ({{ product.return_period_days }} يوم)</span>
+            {% else %}
+            <span class="badge badge-danger">{{ t('No') }}</span>
+            {% endif %}
+          </dd>
+        </dl>
+
+        {% if product.description %}
+        <hr>
+        <h5>الوصف:</h5>
+        <p>{{ product.description }}</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">آخر الحركات</h3>
+      </div>
+      <div class="card-body p-0">
+        <table class="table table-sm">
+          <thead>
+            <tr>
+              <th>النوع</th>
+              <th>{{ t('Quantity') }}</th>
+              <th>{{ t('Date') }}</th>
+              <th>المرجع</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for movement in movements %}
+            <tr>
+              <td>
+                {% if movement.movement_type in ['in', 'purchase'] %}
+                <span class="badge badge-success">إدخال</span>
+                {% elif movement.movement_type in ['out', 'sale'] %}
+                <span class="badge badge-danger">إخراج</span>
+                {% elif movement.movement_type == 'adjustment' %}
+                    {% if movement.quantity > 0 %}
+                    <span class="badge badge-info">تعديل (إضافة)</span>
+                    {% else %}
+                    <span class="badge badge-warning">تعديل (خصم)</span>
+                    {% endif %}
+                {% else %}
+                <span class="badge badge-secondary">{{ movement.movement_type }}</span>
+                {% endif %}
+              </td>
+              <td dir="ltr" class="text-left">{{ movement.quantity }}</td>
+              <td>{{ movement.created_at.strftime('%Y-%m-%d') }}</td>
+              <td>
+                {% if movement.reference_type and movement.reference_id %}
+                  {{ movement.reference_type }} #{{ movement.reference_id }}
+                {% else %}
+                  -
+                {% endif %}
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="4" class="text-center text-muted">لا توجد حركات ضمن نطاقك الحالي</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

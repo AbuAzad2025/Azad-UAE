@@ -1,0 +1,72 @@
+from datetime import datetime, timezone
+from decimal import Decimal, ROUND_HALF_UP
+from extensions import db
+
+
+class ProductReturn(db.Model):
+    __tablename__ = 'product_returns'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    return_number = db.Column(db.String(50), unique=True, nullable=False, index=True)
+    
+    sale_id = db.Column(db.Integer, db.ForeignKey('sales.id'), nullable=False, index=True)
+    customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'), nullable=False)
+    branch_id = db.Column(db.Integer, db.ForeignKey('branches.id'), nullable=True, index=True) # New Branch ID
+    
+    return_date = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
+    
+    total_amount = db.Column(db.Numeric(15, 3), nullable=False)
+    refund_amount = db.Column(db.Numeric(15, 3), default=0)
+    
+    currency = db.Column(db.String(3), default='AED', nullable=False)
+    exchange_rate = db.Column(db.Numeric(15, 6), default=1)
+    amount_aed = db.Column(db.Numeric(15, 3), nullable=False)
+    
+    return_reason = db.Column(db.String(255))
+    status = db.Column(db.String(20), default='pending', index=True)
+    
+    notes = db.Column(db.Text)
+    
+    processed_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    
+    sale = db.relationship('Sale', backref='returns')
+    customer = db.relationship('Customer', backref='returns')
+    branch = db.relationship('Branch', backref='returns', foreign_keys=[branch_id])
+    user = db.relationship('User', foreign_keys=[processed_by])
+    lines = db.relationship('ProductReturnLine', back_populates='product_return', lazy='joined', cascade='all, delete-orphan')
+    
+    def __repr__(self):
+        return f'<ProductReturn {self.return_number}>'
+    
+    def calculate_totals(self):
+        """Calculate return totals with proper decimal precision"""
+        self.total_amount = sum((Decimal(str(line.line_total)) for line in self.lines), Decimal('0'))
+        exchange_rate_decimal = Decimal(str(self.exchange_rate)) if self.exchange_rate else Decimal('1')
+        self.amount_aed = (self.total_amount * exchange_rate_decimal).quantize(
+            Decimal('0.001'), rounding=ROUND_HALF_UP
+        )
+
+
+class ProductReturnLine(db.Model):
+    __tablename__ = 'product_return_lines'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    return_id = db.Column(db.Integer, db.ForeignKey('product_returns.id'), nullable=False, index=True)
+    sale_line_id = db.Column(db.Integer, db.ForeignKey('sale_lines.id'))
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
+    
+    quantity = db.Column(db.Numeric(15, 3), nullable=False)
+    unit_price = db.Column(db.Numeric(15, 3), nullable=False)
+    line_total = db.Column(db.Numeric(15, 3), nullable=False)
+    
+    condition = db.Column(db.String(50))
+    notes = db.Column(db.String(255))
+    
+    product_return = db.relationship('ProductReturn', back_populates='lines')
+    sale_line = db.relationship('SaleLine')
+    product = db.relationship('Product')
+    
+    def __repr__(self):
+        return f'<ProductReturnLine {self.product_id} x {self.quantity}>'
+

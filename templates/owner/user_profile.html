@@ -1,0 +1,248 @@
+{% extends 'base.html' %}
+
+{% block title %}شركة أزاد للأنظمة الذكية - الملف الشخصي {{ user.username }}{% endblock %}
+
+{% block content %}
+<div class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1 class="m-0">👤 الملف الشخصي: {{ user.username }}</h1>
+      </div>
+      <div class="col-sm-6">
+        <ol class="breadcrumb float-sm-left">
+          <li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">لوحة المالك</a></li>
+          <li class="breadcrumb-item"><a href="{{ url_for('owner.users_list') }}">{{ t('Users') }}</a></li>
+          <li class="breadcrumb-item active">{{ user.username }}</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="content">
+  <div class="container-fluid">
+    
+    <div class="row">
+      <!-- البطاقة الشخصية -->
+      <div class="col-md-4">
+        <div class="card card-primary card-outline">
+          <div class="card-body box-profile">
+            <div class="text-center">
+              <div class="profile-user-img" style="width: 150px; height: 150px; margin: 0 auto; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);">
+                {% if user.is_owner %}
+                  <i class="fas fa-crown text-white" style="font-size: 4rem;"></i>
+                {% elif user.role and user.role.name == 'Super Admin' %}
+                  <i class="fas fa-user-shield text-white" style="font-size: 4rem;"></i>
+                {% elif user.role and user.role.name == 'Manager' %}
+                  <i class="fas fa-user-tie text-white" style="font-size: 4rem;"></i>
+                {% else %}
+                  <i class="fas fa-user text-white" style="font-size: 4rem;"></i>
+                {% endif %}
+              </div>
+            </div>
+
+            <h3 class="profile-username text-center mt-3">{{ user.full_name or user.username }}</h3>
+
+            <p class="text-muted text-center">
+              {% if user.is_owner %}
+                <span class="badge badge-danger badge-lg">👑 مالك النظام</span>
+              {% elif user.role %}
+                <span class="badge badge-{{ 'danger' if user.role.name == 'Super Admin' else 'info' if user.role.name == 'Manager' else 'secondary' }} badge-lg">
+                  {{ user.role.name }}
+                </span>
+              {% endif %}
+            </p>
+
+            <ul class="list-group list-group-unbordered mb-3">
+              <li class="list-group-item">
+                <b><i class="fas fa-user mr-2"></i>{{ t('Username') }}</b>
+                <span class="float-left">{{ user.username }}</span>
+              </li>
+              <li class="list-group-item">
+                <b><i class="fas fa-envelope mr-2"></i>البريد</b>
+                <span class="float-left">{{ user.email or '-' }}</span>
+              </li>
+              <li class="list-group-item">
+                <b><i class="fas fa-check-circle mr-2"></i>{{ t('Status') }}</b>
+                <span class="float-left">
+                  {% if user.is_active %}
+                    <span class="badge badge-success">{{ t('Active') }}</span>
+                  {% else %}
+                    <span class="badge badge-danger">معطل</span>
+                  {% endif %}
+                </span>
+              </li>
+              <li class="list-group-item">
+                <b><i class="fas fa-calendar-plus mr-2"></i>تاريخ التسجيل</b>
+                <span class="float-left">{{ user.created_at.strftime('%Y-%m-%d') if user.created_at }}</span>
+              </li>
+              <li class="list-group-item">
+                <b><i class="fas fa-sign-in-alt mr-2"></i>آخر دخول</b>
+                <span class="float-left">
+                  {% if user.last_login %}
+                    {{ user.last_login.strftime('%Y-%m-%d %H:%M') }}
+                  {% else %}
+                    <span class="text-muted">لم يسجل دخول</span>
+                  {% endif %}
+                </span>
+              </li>
+            </ul>
+
+            <a href="{{ url_for('owner.edit_user', user_id=user.id) }}" class="btn btn-primary btn-block">
+              <i class="fas fa-edit"></i> <b>تعديل المستخدم</b>
+            </a>
+            
+            {% if not user.is_owner and user.id != current_user.id %}
+            <form method="POST" action="{{ url_for('owner.delete_user', user_id=user.id) }}" onsubmit="return confirm('هل تريد تعطيل هذا المستخدم؟');">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-danger btn-block mt-2">
+                <i class="fas fa-ban"></i> <b>تعطيل المستخدم</b>
+              </button>
+            </form>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      
+      <!-- الإحصائيات والنشاطات -->
+      <div class="col-md-8">
+        <!-- إحصائيات -->
+        <div class="row">
+          <div class="col-md-3">
+            <div class="info-box bg-info">
+              <span class="info-box-icon"><i class="fas fa-shopping-cart"></i></span>
+              <div class="info-box-content">
+                <span class="info-box-text">{{ t('Sales') }}</span>
+                <span class="info-box-number">{{ stats.sales_count }}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-3">
+            <div class="info-box bg-success">
+              <span class="info-box-icon"><i class="fas fa-dollar-sign"></i></span>
+              <div class="info-box-content">
+                <span class="info-box-text">إجمالي المبيعات</span>
+                <span class="info-box-number">{{ '{:,.0f}'.format(stats.sales_total) }}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-3">
+            <div class="info-box bg-warning">
+              <span class="info-box-icon"><i class="fas fa-receipt"></i></span>
+              <div class="info-box-content">
+                <span class="info-box-text" style="color: #000;">{{ t('Payments') }}</span>
+                <span class="info-box-number" style="color: #000;">{{ stats.payments_count }}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-3">
+            <div class="info-box bg-danger">
+              <span class="info-box-icon"><i class="fas fa-clipboard-list"></i></span>
+              <div class="info-box-content">
+                <span class="info-box-text">سجل التدقيق</span>
+                <span class="info-box-number">{{ stats.audits_count }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- آخر المبيعات -->
+        <div class="card">
+          <div class="card-header bg-gradient-primary">
+            <h3 class="card-title text-white">
+              <i class="fas fa-shopping-cart mr-2"></i>آخر المبيعات (5)
+            </h3>
+          </div>
+          <div class="card-body p-0">
+            <table class="table table-sm table-hover">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>الزبون</th>
+                  <th>{{ t('Amount') }}</th>
+                  <th>{{ t('Status') }}</th>
+                  <th>{{ t('Date') }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for sale in recent_sales %}
+                <tr>
+                  <td><a href="{{ url_for('sales.view', id=sale.id) }}" target="_blank">#{{ sale.id }}</a></td>
+                  <td>{{ sale.customer.name if sale.customer else 'زبون عام' }}</td>
+                  <td>{{ '{:,.2f}'.format(sale.amount_aed) }} AED</td>
+                  <td>
+                    <span class="badge badge-{{ 'success' if sale.status == 'confirmed' else 'warning' if sale.status == 'pending' else 'danger' }}">
+                      {{ sale.status }}
+                    </span>
+                  </td>
+                  <td>{{ sale.sale_date.strftime('%Y-%m-%d %H:%M') if sale.sale_date }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                  <td colspan="5" class="text-center text-muted">لا توجد مبيعات بعد</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        
+        <!-- سجل التدقيق -->
+        <div class="card">
+          <div class="card-header bg-gradient-warning">
+            <h3 class="card-title" style="color: #000;">
+              <i class="fas fa-clipboard-list mr-2"></i>آخر النشاطات (10)
+            </h3>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+              <table class="table table-sm">
+                <thead style="position: sticky; top: 0; background: white;">
+                  <tr>
+                    <th>النوع</th>
+                    <th>الإجراء</th>
+                    <th>التفاصيل</th>
+                    <th>{{ t('Date') }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for audit in recent_audits %}
+                  <tr>
+                    <td>
+                      <span class="badge badge-{{ 'success' if audit.action_type == 'create' else 'primary' if audit.action_type == 'update' else 'danger' }}">
+                        {{ audit.action_type }}
+                      </span>
+                    </td>
+                    <td>{{ audit.table_name }}</td>
+                    <td>
+                      <small>
+                        {% if audit.details %}
+                          {{ audit.details[:50] }}...
+                        {% else %}
+                          -
+                        {% endif %}
+                      </small>
+                    </td>
+                    <td><small>{{ audit.timestamp.strftime('%Y-%m-%d %H:%M:%S') if audit.timestamp }}</small></td>
+                  </tr>
+                  {% else %}
+                  <tr>
+                    <td colspan="4" class="text-center text-muted">لا توجد نشاطات مسجلة</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+  </div>
+</div>
+{% endblock %}
+

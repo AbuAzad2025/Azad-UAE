@@ -1,0 +1,348 @@
+{% extends 'base.html' %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - إدارة المستودع والمخزون{% endblock %}
+{% block page_title %}
+<div class="d-flex justify-content-between align-items-center">
+  <div>
+    <h1 class="text-gradient mb-0"><i class="fas fa-warehouse mr-3"></i>إدارة المستودع</h1>
+    <p class="text-muted">المخزون والحركات وإدارة القطع</p>
+  </div>
+  <div>
+    <div class="btn-group">
+      <a href="{{ url_for('warehouse.movements') }}" class="btn btn-info btn-lg">
+        <i class="fas fa-exchange-alt mr-2"></i>حركات المخزون
+      </a>
+      <a href="{{ url_for('warehouse.low_stock') }}" class="btn btn-warning btn-lg">
+        <i class="fas fa-exclamation-triangle mr-2"></i>مخزون منخفض
+      </a>
+      <a href="{{ url_for('warehouse.out_of_stock') }}" class="btn btn-danger btn-lg">
+        <i class="fas fa-ban mr-2"></i>نفاد المخزون
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.warehouse-card {
+  border-radius: 16px;
+  border: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
+}
+.warehouse-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 32px rgba(0, 122, 61, 0.2);
+}
+.stock-indicator {
+  width: 100%;
+  height: 8px;
+  background: #e9ecef;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+.stock-indicator-bar {
+  height: 100%;
+  transition: width 0.5s ease;
+}
+.stock-critical {
+  background: linear-gradient(90deg, #dc3545 0%, #ff6b6b 100%);
+  animation: pulse 2s infinite;
+}
+.stock-low {
+  background: linear-gradient(90deg, #ffc107 0%, #ffca2c 100%);
+}
+.stock-good {
+  background: linear-gradient(90deg, #28a745 0%, #20c997 100%);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Stock Overview -->
+<div class="row mb-4">
+  <div class="col-md-3">
+    <div class="stat-card">
+      <div class="stat-icon" style="background: linear-gradient(135deg, #007A3D 0%, #1B4D89 100%);">
+        <i class="fas fa-boxes"></i>
+      </div>
+      <div class="stat-value">{{ summary.total_products if summary else (products|length) }}</div>
+      <div class="stat-label">إجمالي المنتجات</div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="stat-card">
+      <div class="stat-icon" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
+        <i class="fas fa-check-circle"></i>
+      </div>
+      <div class="stat-value">
+        {{ summary.good_stock if summary else 0 }}
+      </div>
+      <div class="stat-label">مخزون جيد</div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="stat-card">
+      <div class="stat-icon" style="background: linear-gradient(135deg, #ffc107 0%, #ffca2c 100%);">
+        <i class="fas fa-exclamation-triangle"></i>
+      </div>
+      <div class="stat-value">
+        {{ summary.low_stock if summary else 0 }}
+      </div>
+      <div class="stat-label">مخزون منخفض</div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="stat-card">
+      <div class="stat-icon" style="background: linear-gradient(135deg, #dc3545 0%, #ff6b6b 100%);">
+        <i class="fas fa-times-circle"></i>
+      </div>
+      <div class="stat-value">
+        {{ summary.out_of_stock if summary else 0 }}
+      </div>
+      <div class="stat-label">نفاد مخزون</div>
+    </div>
+  </div>
+</div>
+
+<!-- Products in Warehouse -->
+<div class="card">
+  <div class="card-header">
+    <div class="d-flex justify-content-between align-items-center">
+      <h3 class="card-title mb-0">
+        <i class="fas fa-inventory mr-2"></i>المخزون الحالي
+      </h3>
+      <div class="btn-group">
+        <button type="button" class="btn btn-sm btn-outline-success active" id="filterAll">
+          <i class="fas fa-boxes mr-1"></i>الكل
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-warning" id="filterLow">
+          <i class="fas fa-exclamation-triangle mr-1"></i>منخفض
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-danger" id="filterOut">
+          <i class="fas fa-ban mr-1"></i>نفذ
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="card-body">
+    <div class="table-responsive">
+      <table id="warehouseTable" class="table table-hover">
+        <thead style="background: linear-gradient(135deg, #007A3D 0%, #1B4D89 100%); color: white;">
+          <tr>
+            <th><i class="fas fa-barcode mr-2"></i>SKU</th>
+            <th><i class="fas fa-box mr-2"></i>المنتج</th>
+            <th><i class="fas fa-layer-group mr-2"></i>المخزون الحالي</th>
+            <th><i class="fas fa-bell mr-2"></i>حد التنبيه</th>
+            <th><i class="fas fa-chart-bar mr-2"></i>{{ t('Status') }}</th>
+            <th><i class="fas fa-map-marker-alt mr-2"></i>الموقع</th>
+            <th class="text-center"><i class="fas fa-cog mr-2"></i>{{ t('Actions') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for product in products %}
+          <tr class="fade-in warehouse-row" 
+              data-stock="{{ product.visible_stock }}" 
+              data-min="{{ product.min_stock_alert }}"
+              data-status="{% if product.visible_stock <= 0 %}out{% elif product.visible_stock <= (product.min_stock_alert or 0) %}low{% else %}good{% endif %}">
+            <td><code class="bg-light px-2 py-1 rounded">{{ product.sku }}</code></td>
+            <td>
+              <div class="d-flex align-items-center">
+                {% if product.image_url %}
+                  <img src="{{ url_for('static', filename=product.image_url) }}" 
+                       class="warehouse-product-img mr-2" alt="{{ product.name }}">
+                {% else %}
+                  <div class="warehouse-product-img mr-2 bg-primary text-white d-flex align-items-center justify-content-center">
+                    <i class="fas fa-box"></i>
+                  </div>
+                {% endif %}
+                <div>
+                  <strong>{{ product.name }}</strong>
+                  {% if product.name_ar %}
+                  <br><small class="text-muted">{{ product.name_ar }}</small>
+                  {% endif %}
+                </div>
+              </div>
+            </td>
+            <td>
+              <div>
+                <h5 class="mb-0 {% if product.visible_stock <= 0 %}text-danger{% elif product.visible_stock <= (product.min_stock_alert or 0) %}text-warning{% else %}text-success{% endif %}">
+                  {{ "{:.0f}".format(product.visible_stock) }}
+                </h5>
+                <small class="text-muted">{{ product.unit or 'بلا' }}</small>
+              </div>
+            </td>
+            <td>
+              <span class="badge badge-secondary">{{ product.min_stock_alert }}</span>
+            </td>
+            <td>
+              {% if product.visible_stock <= 0 %}
+                <div>
+                  <span class="badge badge-danger px-3 py-2">
+                    <i class="fas fa-times mr-1"></i>نفذ
+                  </span>
+                  <div class="stock-indicator">
+                    <div class="stock-indicator-bar stock-critical" style="width: 0%"></div>
+                  </div>
+                </div>
+              {% elif product.visible_stock <= (product.min_stock_alert or 0) %}
+                <div>
+                  <span class="badge badge-warning px-3 py-2">
+                    <i class="fas fa-exclamation-triangle mr-1"></i>منخفض
+                  </span>
+                  {% set stock_percent = (product.visible_stock / product.min_stock_alert * 100) if product.min_stock_alert > 0 else 0 %}
+                  <div class="stock-indicator">
+                    <div class="stock-indicator-bar stock-low" style="width: {{ stock_percent }}%"></div>
+                  </div>
+                </div>
+              {% else %}
+                <div>
+                  <span class="badge badge-success px-3 py-2">
+                    <i class="fas fa-check mr-1"></i>جيد
+                  </span>
+                  {% set stock_calc = (product.visible_stock / (product.min_stock_alert * 3) * 100) if product.min_stock_alert > 0 else 100 %}
+                  {% set stock_percent = stock_calc if stock_calc < 100 else 100 %}
+                  <div class="stock-indicator">
+                    <div class="stock-indicator-bar stock-good" style="width: {{ stock_percent }}%"></div>
+                  </div>
+                </div>
+              {% endif %}
+            </td>
+            <td>
+              <i class="fas fa-map-marker-alt text-muted mr-1"></i>
+              {{ product.location or 'غير محدد' }}
+            </td>
+            <td class="text-center">
+              <div class="btn-group btn-group-sm">
+                <a href="{{ url_for('products.view', id=product.id) }}" 
+                   class="btn btn-info" title="{{ t('View') }}">
+                  <i class="fas fa-eye"></i>
+                </a>
+                <button type="button" class="btn btn-warning" 
+                        onclick="adjustStock({{ product.id }}, '{{ product.name }}')"
+                        title="تعديل المخزون">
+                  <i class="fas fa-edit"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Stock Adjustment Modal -->
+<div class="modal fade" id="adjustStockModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header" style="background: linear-gradient(135deg, #007A3D 0%, #1B4D89 100%); color: white;">
+        <h5 class="modal-title">
+          <i class="fas fa-edit mr-2"></i>تعديل المخزون
+        </h5>
+        <button type="button" class="close text-white" data-dismiss="modal">
+          <span>&times;</span>
+        </button>
+      </div>
+      <form id="adjustStockForm" method="POST" action="">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" id="product_id" name="product_id">
+        <div class="modal-body">
+          <h6 id="product_name" class="mb-3"></h6>
+          <div class="form-group">
+            <label class="font-weight-bold">الكمية:</label>
+            <input type="number" name="quantity" class="form-control" step="0.001" required>
+            <small class="form-text text-muted">أدخل قيمة موجبة للإضافة أو سالبة للخصم</small>
+          </div>
+          <div class="form-group">
+            <label class="font-weight-bold">ملاحظات:</label>
+            <textarea name="notes" class="form-control" rows="3"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">
+            <i class="fas fa-times mr-2"></i>إلغاء
+          </button>
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save mr-2"></i>حفظ التعديل
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<style>
+.warehouse-row {
+  transition: all 0.2s ease;
+}
+.warehouse-row:hover {
+  background: rgba(0, 122, 61, 0.05);
+}
+.warehouse-product-img {
+  width: 45px;
+  height: 45px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 2px solid #e0e0e0;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+  const table = $('#warehouseTable').DataTable({
+    language: { url: "{{ url_for('static', filename='datatables/Arabic.json') }}" },
+    pageLength: 50,
+    order: [[2, 'asc']],  // Sort by stock (low first)
+    responsive: true,
+    dom: 'Bfrtip',
+    buttons: [
+      {extend: 'excel', text: '<i class="fas fa-file-excel mr-1"></i> Excel', className: 'btn-sm btn-success'},
+      {extend: 'pdf', text: '<i class="fas fa-file-pdf mr-1"></i> PDF', className: 'btn-sm btn-danger'},
+      {extend: 'print', text: '<i class="fas fa-print mr-1"></i> طباعة', className: 'btn-sm btn-info'}
+    ]
+  });
+
+  // Smart filters
+  $('#filterAll').click(function() {
+    table.search('').draw();
+    $('.btn-group .btn').removeClass('active');
+    $(this).addClass('active');
+  });
+
+  $('#filterLow').click(function() {
+    $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+      const row = table.row(dataIndex).node();
+      return $(row).data('status') === 'low';
+    });
+    table.draw();
+    $.fn.dataTable.ext.search.pop();
+    $('.btn-group .btn').removeClass('active');
+    $(this).addClass('active');
+  });
+
+  $('#filterOut').click(function() {
+    $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+      const row = table.row(dataIndex).node();
+      return $(row).data('status') === 'out';
+    });
+    table.draw();
+    $.fn.dataTable.ext.search.pop();
+    $('.btn-group .btn').removeClass('active');
+    $(this).addClass('active');
+  });
+});
+
+function adjustStock(productId, productName) {
+  $('#product_id').val(productId);
+  $('#product_name').text(productName);
+  $('#adjustStockForm').attr('action', `/products/${productId}/adjust-stock`);
+  $('#adjustStockModal').modal('show');
+}
+</script>
+{% endblock %}
+

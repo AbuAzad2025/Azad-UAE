@@ -1,0 +1,376 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - الأدوار والصلاحيات{% endblock %}
+
+{% block content %}
+<div class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2 align-items-center">
+      <div class="col-sm-6">
+        <h1 class="m-0">🔐 الأدوار والصلاحيات</h1>
+      </div>
+      <div class="col-sm-6 d-flex justify-content-end">
+        <div class="d-flex align-items-center">
+          <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary ml-2">
+            <i class="fas fa-arrow-right mr-1"></i> الرجوع للوحة المالك
+          </a>
+          <ol class="breadcrumb float-sm-left mb-0">
+            <li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">لوحة المالك</a></li>
+            <li class="breadcrumb-item active">الأدوار والصلاحيات</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container-fluid mb-3">
+  <div class="btn-group quick-nav" role="group">
+    <a href="{{ url_for('owner.roles_permissions') }}" class="btn btn-primary">
+      <i class="fas fa-user-shield"></i> الأدوار والصلاحيات
+    </a>
+    <a href="{{ url_for('owner.users_list') }}" class="btn btn-outline-primary">
+      <i class="fas fa-users"></i> إدارة المستخدمين
+    </a>
+    <a href="{{ url_for('owner.audit_logs') }}" class="btn btn-outline-secondary">
+      <i class="fas fa-history"></i> سجل التدقيق
+    </a>
+  </div>
+</div>
+
+<div class="content roles-permissions-page">
+  <div class="container-fluid">
+    
+    <!-- نظرة عامة -->
+    <div class="alert alert-info">
+      <h5><i class="fas fa-info-circle"></i> نظام الصلاحيات</h5>
+      <p class="mb-0">يتحكم النظام بـ 4 أدوار رئيسية. كل دور له صلاحيات محددة لضمان الأمان والتنظيم.</p>
+    </div>
+    
+    <!-- بطاقات الأدوار -->
+    <div class="row">
+      
+      <!-- Owner -->
+      <div class="col-md-6 mb-4">
+        <div class="card card-danger card-outline">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-crown text-warning"></i> <strong>Owner - المالك</strong>
+            </h3>
+            <span class="badge badge-danger float-left">صلاحيات كاملة</span>
+          </div>
+          <div class="card-body">
+            <h5>الصلاحيات الكاملة:</h5>
+            <ul>
+              <li>✅ <strong>كل شيء بدون قيود</strong></li>
+              <li>✅ الوصول لـ Owner Mode</li>
+              <li>✅ إدارة المستخدمين والأدوار</li>
+              <li>✅ إدارة قاعدة البيانات</li>
+              <li>✅ تصدير واستيراد البيانات</li>
+              <li>✅ عرض وتعديل كل شيء</li>
+              <li>✅ إدارة النظام والإعدادات</li>
+              <li>✅ الوصول للبطاقات المحفوظة</li>
+            </ul>
+            
+            <div class="alert alert-danger mt-3">
+              <i class="fas fa-exclamation-triangle"></i>
+              <strong>تحذير:</strong> لا تمنح هذا الدور إلا لمن تثق به تماماً!
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Super Admin -->
+      <div class="col-md-6 mb-4">
+        <div class="card card-primary card-outline">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-user-shield"></i> <strong>Super Admin - مدير عام</strong>
+            </h3>
+            <span class="badge badge-primary float-left">إدارة عالية</span>
+          </div>
+          <div class="card-body">
+            <h5>الصلاحيات:</h5>
+            <ul>
+              <li>✅ إدارة المبيعات والمشتريات</li>
+              <li>✅ إدارة الزبائن والمنتجات</li>
+              <li>✅ إدارة المدفوعات والمخزون</li>
+              <li>✅ عرض جميع التقارير</li>
+              <li>✅ إدارة المصروفات</li>
+              <li>✅ عرض دفتر الأستاذ</li>
+              <li>✅ إلغاء وتعديل الفواتير</li>
+              <li>❌ لا يمكنه الوصول لـ Owner Mode</li>
+            </ul>
+            
+            <div class="alert alert-info mt-3">
+              <i class="fas fa-info-circle"></i>
+              الدور المناسب لمدير الفرع أو المدير التنفيذي
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Manager -->
+      <div class="col-md-6 mb-4">
+        <div class="card card-info card-outline">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-user-tie"></i> <strong>Manager - مدير</strong>
+            </h3>
+            <span class="badge badge-info float-left">إدارة متوسطة</span>
+          </div>
+          <div class="card-body">
+            <h5>الصلاحيات:</h5>
+            <ul>
+              <li>✅ إنشاء وعرض المبيعات</li>
+              <li>✅ إنشاء وعرض المشتريات</li>
+              <li>✅ إدارة الزبائن والمنتجات</li>
+              <li>✅ إنشاء المدفوعات</li>
+              <li>✅ عرض بعض التقارير</li>
+              <li>✅ إدارة المخزون</li>
+              <li>❌ لا يمكنه حذف المستخدمين</li>
+              <li>❌ لا يمكنه عرض دفتر الأستاذ</li>
+            </ul>
+            
+            <div class="alert alert-success mt-3">
+              <i class="fas fa-check-circle"></i>
+              الدور المناسب لمدير المخزون أو مدير المبيعات
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Seller -->
+      <div class="col-md-6 mb-4">
+        <div class="card card-secondary card-outline">
+          <div class="card-header">
+            <h3 class="card-title">
+              <i class="fas fa-user"></i> <strong>Seller - بائع</strong>
+            </h3>
+            <span class="badge badge-secondary float-left">صلاحيات محدودة</span>
+          </div>
+          <div class="card-body">
+            <h5>الصلاحيات:</h5>
+            <ul>
+              <li>✅ إنشاء فواتير بيع فقط</li>
+              <li>✅ عرض فواتيره الخاصة فقط</li>
+              <li>✅ البحث عن المنتجات والزبائن</li>
+              <li>✅ طباعة الفواتير</li>
+              <li>❌ لا يمكنه حذف أو إلغاء</li>
+              <li>❌ لا يمكنه عرض التقارير</li>
+              <li>❌ لا يمكنه إدارة المخزون</li>
+              <li>❌ لا يمكنه عرض أسعار التكلفة</li>
+            </ul>
+            
+            <div class="alert alert-secondary mt-3">
+              <i class="fas fa-shopping-cart"></i>
+              الدور المناسب للبائعين والموظفين الميدانيين
+            </div>
+          </div>
+        </div>
+      </div>
+      
+    </div>
+    
+    <!-- جدول الصلاحيات المفصل -->
+    <div class="card">
+      <div class="card-header bg-gradient-primary">
+        <h3 class="card-title text-white">
+          <i class="fas fa-table mr-2"></i>جدول الصلاحيات المفصل
+        </h3>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead class="bg-light">
+              <tr>
+                <th style="width: 30%;">الوظيفة / الصلاحية</th>
+                <th class="text-center" style="background: #dc3545; color: white;">
+                  <i class="fas fa-crown"></i><br>Owner
+                </th>
+                <th class="text-center" style="background: #007bff; color: white;">
+                  <i class="fas fa-user-shield"></i><br>Super Admin
+                </th>
+                <th class="text-center" style="background: #17a2b8; color: white;">
+                  <i class="fas fa-user-tie"></i><br>Manager
+                </th>
+                <th class="text-center" style="background: #6c757d; color: white;">
+                  <i class="fas fa-user"></i><br>Seller
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>{{ t('Sales') }}</strong></td>
+                <td class="text-center"><i class="fas fa-check text-success fa-2x"></i></td>
+                <td class="text-center"><i class="fas fa-check text-success fa-2x"></i></td>
+                <td class="text-center"><i class="fas fa-check text-success fa-2x"></i></td>
+                <td class="text-center"><i class="fas fa-check text-success fa-2x"></i></td>
+              </tr>
+              <tr>
+                <td><strong>إلغاء/حذف المبيعات</strong></td>
+                <td class="text-center"><i class="fas fa-check text-success fa-2x"></i></td>
+                <td class="text-center"><i class="fas fa-check text-success fa-2x"></i></td>
+                <td class="text-center"><i class="fas fa-check text-warning fa-2x"></i></td>
+                <td class="text-center"><i class="fas fa-times text-danger fa-2x"></i></td>
+              </tr>
+              <tr>
+                <td><strong>{{ t('Purchases') }}</strong></td>
+                <td class="text-center"><i class="fas fa-check text-success fa-2x"></i></td>
+                <td class="text-center"><i class="fas fa-check text-success fa-2x"></i></td>
+                <td class="text-center"><i class="fas fa-check text-success fa-2x"></i></td>
+                <td class="text-center"><i class="fas fa-times text-danger fa-2x"></i></td>
+              </tr>
+              <tr>
+                <td><strong>الزبائن (إضافة/تعديل)</strong></td>
+                <td class="text-center"><i class="fas fa-check text-success fa-2x"></i></td>
+                <td class="text-center"><i class="fas fa-check text-success fa-2x"></i></td>
+                <td class="text-center"><i class="fas fa-check text-success fa-2x"></i></td>
+                <td class="text-center"><i class="fas fa-check text-warning fa-2x"></i></td>
+              </tr>
+              <tr>
+                <td><strong>المنتجات (إضافة/تعديل)</strong></td>
+                <td class="text-center"><i class="fas fa-check text-success fa-2x"></i></td>
+                <td class="text-center"><i class="fas fa-check text-success fa-2x"></i></td>
+                <td class="text-center"><i class="fas fa-check text-success fa-2x"></i></td>
+                <td class="text-center"><i class="fas fa-times text-danger fa-2x"></i></td>
+              </tr>
+              <tr>
+                <td><strong>المخزون (تعديل الكميات)</strong></td>
+                <td class="text-center"><i class="fas fa-check text-success fa-2x"></i></td>
+                <td class="text-center"><i class="fas fa-check text-success fa-2x"></i></td>
+                <td class="text-center"><i class="fas fa-check text-success fa-2x"></i></td>
+                <td class="text-center"><i class="fas fa-times text-danger fa-2x"></i></td>
+              </tr>
+              <tr>
+                <td><strong>{{ t('Payments') }}</strong></td>
+                <td class="text-center"><i class="fas fa-check text-success fa-2x"></i></td>
+                <td class="text-center"><i class="fas fa-check text-success fa-2x"></i></td>
+                <td class="text-center"><i class="fas fa-check text-success fa-2x"></i></td>
+                <td class="text-center"><i class="fas fa-times text-danger fa-2x"></i></td>
+              </tr>
+              <tr>
+                <td><strong>التقارير المالية</strong></td>
+                <td class="text-center"><i class="fas fa-check text-success fa-2x"></i></td>
+                <td class="text-center"><i class="fas fa-check text-success fa-2x"></i></td>
+                <td class="text-center"><i class="fas fa-check text-warning fa-2x"></i></td>
+                <td class="text-center"><i class="fas fa-times text-danger fa-2x"></i></td>
+              </tr>
+              <tr>
+                <td><strong>{{ t('Ledger') }}</strong></td>
+                <td class="text-center"><i class="fas fa-check text-success fa-2x"></i></td>
+                <td class="text-center"><i class="fas fa-check text-success fa-2x"></i></td>
+                <td class="text-center"><i class="fas fa-times text-danger fa-2x"></i></td>
+                <td class="text-center"><i class="fas fa-times text-danger fa-2x"></i></td>
+              </tr>
+              <tr>
+                <td><strong>{{ t('Expenses') }}</strong></td>
+                <td class="text-center"><i class="fas fa-check text-success fa-2x"></i></td>
+                <td class="text-center"><i class="fas fa-check text-success fa-2x"></i></td>
+                <td class="text-center"><i class="fas fa-times text-danger fa-2x"></i></td>
+                <td class="text-center"><i class="fas fa-times text-danger fa-2x"></i></td>
+              </tr>
+              <tr>
+                <td><strong>إدارة المستخدمين</strong></td>
+                <td class="text-center"><i class="fas fa-check text-success fa-2x"></i></td>
+                <td class="text-center"><i class="fas fa-times text-danger fa-2x"></i></td>
+                <td class="text-center"><i class="fas fa-times text-danger fa-2x"></i></td>
+                <td class="text-center"><i class="fas fa-times text-danger fa-2x"></i></td>
+              </tr>
+              <tr>
+                <td><strong>Owner Mode</strong></td>
+                <td class="text-center"><i class="fas fa-check text-success fa-2x"></i></td>
+                <td class="text-center"><i class="fas fa-times text-danger fa-2x"></i></td>
+                <td class="text-center"><i class="fas fa-times text-danger fa-2x"></i></td>
+                <td class="text-center"><i class="fas fa-times text-danger fa-2x"></i></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    
+    <!-- الأمان -->
+    <div class="card card-warning">
+      <div class="card-header">
+        <h3 class="card-title" style="color: #000;">
+          <i class="fas fa-shield-alt mr-2"></i>معايير الأمان
+        </h3>
+      </div>
+      <div class="card-body" style="color: #000;">
+        <div class="row">
+          <div class="col-md-6">
+            <h5>✅ ما يُسمح به:</h5>
+            <ul>
+              <li>كل مستخدم يرى بياناته فقط (ما لم يكن مديراً)</li>
+              <li>البائع لا يرى أسعار التكلفة</li>
+              <li>البائع لا يرى أرباح الفواتير</li>
+              <li>المدير يرى تقارير محدودة</li>
+              <li>فقط Owner يرى البطاقات المحفوظة</li>
+            </ul>
+          </div>
+          <div class="col-md-6">
+            <h5>❌ ما لا يُسمح به:</h5>
+            <ul>
+              <li>البائع لا يمكنه حذف أو إلغاء</li>
+              <li>البائع لا يمكنه تعديل الأسعار</li>
+              <li>المدير لا يمكنه إدارة المستخدمين</li>
+              <li>Super Admin لا يمكنه الوصول لـ Owner Mode</li>
+              <li>لا أحد يمكنه حذف بيانات Owner</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- إرشادات -->
+    <div class="card card-success">
+      <div class="card-header">
+        <h3 class="card-title text-white">
+          <i class="fas fa-lightbulb mr-2"></i>إرشادات الاستخدام
+        </h3>
+      </div>
+      <div class="card-body">
+        <h5>📝 نصائح مهمة:</h5>
+        <ol>
+          <li><strong>لا تمنح Owner إلا لشخص واحد موثوق</strong></li>
+          <li>استخدم Super Admin للمدير التنفيذي</li>
+          <li>استخدم Manager لمدراء الأقسام</li>
+          <li>استخدم Seller للبائعين العاديين</li>
+          <li>راجع الصلاحيات دورياً</li>
+          <li>غيّر كلمات المرور الافتراضية فوراً</li>
+          <li>عطّل المستخدمين غير النشطين بدلاً من حذفهم</li>
+        </ol>
+        
+        <div class="alert alert-warning mt-3" style="color: #000;">
+          <i class="fas fa-exclamation-triangle"></i>
+          <strong>تذكر:</strong> النظام يسجل كل العمليات في سجل التدقيق!
+        </div>
+      </div>
+    </div>
+    
+    <!-- زر العودة -->
+    <div class="row">
+      <div class="col-12">
+        <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary btn-lg">
+          <i class="fas fa-arrow-left mr-2"></i>العودة للوحة المالك
+        </a>
+        <a href="{{ url_for('owner.users_list') }}" class="btn btn-primary btn-lg">
+          <i class="fas fa-users mr-2"></i>إدارة المستخدمين
+        </a>
+      </div>
+    </div>
+    
+  </div>
+</div>
+<style>
+  .quick-nav .btn {
+    min-width: 170px;
+  }
+
+  .quick-nav .btn + .btn {
+    margin-left: 0.5rem;
+  }
+</style>
+{% endblock %}
+

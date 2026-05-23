@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+{% block title %}استيراد المنتجات{% endblock %}
+{% block page_title %}
+<div class="d-flex justify-content-between align-items-center">
+  <h1 class="text-gradient mb-0"><i class="fas fa-file-import mr-3"></i>استيراد المنتجات</h1>
+  <a href="{{ url_for('products.index') }}" class="btn btn-secondary">
+    <i class="fas fa-arrow-left mr-2"></i>عودة للقائمة
+  </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="card shadow-lg">
+  <div class="card-header bg-primary text-white">
+    <h3 class="card-title mb-0"><i class="fas fa-upload mr-2"></i>استيراد ملف Excel/CSV</h3>
+  </div>
+  <div class="card-body">
+    <div class="alert alert-info">
+      <h5><i class="fas fa-info-circle mr-2"></i>تعليمات الاستيراد:</h5>
+      <ul class="mb-0">
+        <li>الملف يجب أن يكون بصيغة <strong>.xlsx</strong> أو <strong>.csv</strong>.</li>
+        <li>الأعمدة المطلوبة: <code>اسم المنتج</code>, <code>السعر</code>.</li>
+        <li>الأعمدة الاختيارية: <code>SKU</code>, <code>الباركود</code>, <code>التكلفة</code>, <code>المخزون</code>.</li>
+        <li>إذا تركت <code>SKU</code> أو <code>الباركود</code> فارغاً، سيقوم النظام بتوليدهما تلقائياً.</li>
+      </ul>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data" id="importForm">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      
+      <div class="form-group">
+        <label for="file">اختر الملف</label>
+        <div class="custom-file">
+          <input type="file" class="custom-file-input" id="file" name="file" accept=".xlsx, .xls, .csv" required>
+          <label class="custom-file-label" for="file">اختر ملف...</label>
+        </div>
+      </div>
+
+      <div class="form-group form-check">
+        <input type="checkbox" class="form-check-input" id="update_existing" name="update_existing">
+        <label class="form-check-label" for="update_existing">تحديث المنتجات الموجودة (إذا تطابق SKU)</label>
+      </div>
+
+      <button type="submit" class="btn btn-success btn-lg btn-block" id="submitBtn">
+        <i class="fas fa-cloud-upload-alt mr-2"></i>بدء الاستيراد
+      </button>
+    </form>
+    
+    <div id="progressArea" class="mt-4 d-none">
+        <div class="progress" style="height: 25px;">
+            <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%">0%</div>
+        </div>
+        <p class="text-center mt-2 text-muted">جاري المعالجة... يرجى الانتظار</p>
+    </div>
+  </div>
+</div>
+
+<div class="card mt-4 shadow-lg">
+  <div class="card-header bg-success text-white">
+    <h3 class="card-title mb-0"><i class="fas fa-edit mr-2"></i>إدخال سريع (Grid Entry)</h3>
+  </div>
+  <div class="card-body">
+    <div class="alert alert-light border">
+      <i class="fas fa-keyboard mr-2"></i> أدخل المنتجات مباشرة في الجدول أدناه (اضغط Tab للانتقال للخلية التالية).
+    </div>
+    
+    <form method="POST" action="{{ url_for('products.import_grid') }}" id="gridForm">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="table-responsive">
+        <table class="table table-bordered table-sm" id="gridTable">
+          <thead class="thead-light">
+            <tr>
+              <th style="width: 20%">اسم المنتج *</th>
+              <th style="width: 15%">السعر *</th>
+              <th style="width: 15%">التكلفة</th>
+              <th style="width: 15%">المخزون</th>
+              <th style="width: 15%">SKU (اختياري)</th>
+              <th style="width: 15%">الباركود (اختياري)</th>
+              <th style="width: 5%"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for i in range(10) %}
+            <tr class="product-row">
+              <td><input type="text" name="name[]" class="form-control form-control-sm" placeholder="اسم المنتج"></td>
+              <td><input type="number" name="price[]" class="form-control form-control-sm" step="0.01" min="0"></td>
+              <td><input type="number" name="cost[]" class="form-control form-control-sm" step="0.01" min="0"></td>
+              <td><input type="number" name="stock[]" class="form-control form-control-sm" step="1" min="0"></td>
+              <td><input type="text" name="sku[]" class="form-control form-control-sm" placeholder="Auto"></td>
+              <td><input type="text" name="barcode[]" class="form-control form-control-sm" placeholder="Auto"></td>
+              <td class="text-center">
+                <button type="button" class="btn btn-sm btn-outline-danger remove-row" tabindex="-1"><i class="fas fa-times"></i></button>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      
+      <div class="d-flex justify-content-between mt-3">
+        <button type="button" class="btn btn-outline-secondary" id="addRowBtn">
+          <i class="fas fa-plus mr-1"></i> إضافة 10 صفوف
+        </button>
+        <button type="submit" class="btn btn-success px-5">
+          <i class="fas fa-save mr-2"></i> حفظ المنتجات
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card mt-4">
+  <div class="card-header">
+    <h3 class="card-title"><i class="fas fa-download mr-2"></i>نموذج الاستيراد</h3>
+  </div>
+  <div class="card-body">
+    <p>يمكنك تحميل ملف نموذج جاهز لتعبئته:</p>
+    <a href="{{ url_for('products.download_import_template') }}" class="btn btn-outline-primary">
+      <i class="fas fa-file-excel mr-2"></i>تحميل النموذج (Excel)
+    </a>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Show file name
+$('.custom-file-input').on('change', function() {
+  var fileName = $(this).val().split('\\').pop();
+  $(this).next('.custom-file-label').addClass("selected").html(fileName);
+});
+
+$('#importForm').on('submit', function() {
+    $('#submitBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-2"></i>جاري الرفع...');
+    $('#progressArea').removeClass('d-none');
+    
+    // Simulate progress for UX (Real progress requires WebSocket/SSE)
+    let width = 0;
+    const interval = setInterval(function() {
+        width += 5;
+        if (width > 90) clearInterval(interval);
+        $('#progressBar').css('width', width + '%').text(width + '%');
+    }, 200);
+});
+
+// Grid Functionality
+$('#addRowBtn').click(function() {
+    const template = $('.product-row').first().clone();
+    template.find('input').val(''); // Clear values
+    for(let i=0; i<10; i++) {
+        $('#gridTable tbody').append(template.clone());
+    }
+});
+
+$(document).on('click', '.remove-row', function() {
+    if($('#gridTable tbody tr').length > 1) {
+        $(this).closest('tr').remove();
+    }
+});
+
+// Barcode Scanner Auto-Tab Logic
+$(document).on('keydown', 'input[name="barcode[]"]', function(e) {
+    if (e.key === 'Enter' || e.keyCode === 13) {
+        e.preventDefault();
+        
+        // Find current row
+        let currentRow = $(this).closest('tr');
+        
+        // If next row exists, focus on its Name input
+        let nextRow = currentRow.next('tr');
+        if (nextRow.length > 0) {
+            nextRow.find('input[name="name[]"]').focus();
+        } else {
+            // Add new row if we are at the end
+            $('#addRowBtn').click();
+            // Focus on the newly added row (last one)
+            $('#gridTable tbody tr:last').find('input[name="name[]"]').focus();
+        }
+    }
+});
+</script>
+{% endblock %}

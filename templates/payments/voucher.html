@@ -1,0 +1,226 @@
+{% extends 'base.html' %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - سند مالي موحد{% endblock %}
+{% block page_title %}إنشاء سند مالي (قبض/صرف){% endblock %}
+
+{% block extra_css %}
+<style>
+.voucher-form .form-control,
+.voucher-form .form-select {
+  min-height: 48px;
+  height: auto;
+  padding: 0.65rem 0.85rem;
+  font-size: 1rem;
+}
+.voucher-form .select2-container--default .select2-selection--single {
+  height: 48px;
+  min-height: 48px;
+  border-radius: 4px;
+  border: 1px solid #ced4da;
+  display: flex;
+  align-items: center;
+}
+.voucher-form .select2-container--default .select2-selection--single .select2-selection__rendered {
+  line-height: 48px;
+  padding-left: 10px;
+}
+.voucher-form .select2-container--default .select2-selection--single .select2-selection__arrow {
+  height: 48px;
+}
+.type-card {
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.3s;
+}
+.type-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+.type-card.selected {
+  border-color: #007bff;
+  background-color: #f8f9fa;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="card voucher-form">
+  <div class="card-header bg-primary text-white">
+    <h3 class="card-title mb-0"><i class="fas fa-money-bill-wave mr-2"></i>سند مالي جديد</h3>
+  </div>
+  <form method="POST" action="{{ url_for('payments.create_voucher_submit') }}" id="voucherForm">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    
+    <div class="card-body">
+      
+      <!-- 1. Voucher Direction (In/Out) -->
+      <div class="row mb-4 justify-content-center">
+        <div class="col-md-5">
+          <div class="card type-card text-center p-3 selected" id="card-incoming" onclick="selectDirection('incoming')">
+            <i class="fas fa-arrow-down fa-2x text-success mb-2"></i>
+            <h4>سند قبض (وارد)</h4>
+            <p class="text-muted small mb-0">استلام أموال من عميل أو مورد</p>
+            <input type="radio" name="direction" value="incoming" checked style="display:none;">
+          </div>
+        </div>
+        <div class="col-md-5">
+          <div class="card type-card text-center p-3" id="card-outgoing" onclick="selectDirection('outgoing')">
+            <i class="fas fa-arrow-up fa-2x text-danger mb-2"></i>
+            <h4>سند صرف (صادر)</h4>
+            <p class="text-muted small mb-0">دفع أموال لمورد أو عميل</p>
+            <input type="radio" name="direction" value="outgoing" style="display:none;">
+          </div>
+        </div>
+      </div>
+
+      <hr>
+
+      <!-- 2. Party Selection -->
+      <div class="row">
+        <div class="col-md-4">
+          <div class="form-group">
+            <label class="font-weight-bold">نوع الجهة</label>
+            <select class="form-control" name="party_type" id="party_type" onchange="updatePartyList()">
+              <option value="customer">عميل / شريك / تاجر</option>
+              <option value="supplier">مورد</option>
+            </select>
+          </div>
+        </div>
+        <div class="col-md-8">
+          <div class="form-group">
+            <label class="font-weight-bold">اسم الجهة</label>
+            <select class="form-control select2" name="party_id" id="party_id" required>
+              <option value="">اختر الجهة...</option>
+              <!-- Populated via JS -->
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-4">
+          <div class="form-group">
+            <label class="font-weight-bold">المبلغ</label>
+            <div class="input-group">
+              <input type="number" step="0.01" class="form-control font-weight-bold text-center" name="amount" required placeholder="0.00">
+              <div class="input-group-append">
+                <span class="input-group-text">AED</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="form-group">
+            <label class="font-weight-bold">طريقة الدفع</label>
+            <select class="form-control" name="payment_method" id="payment_method" onchange="toggleChequeFields()">
+              <option value="cash">نقدي</option>
+              <option value="bank_transfer">تحويل بنكي</option>
+              <option value="cheque">شيك</option>
+              <option value="card">بطاقة</option>
+            </select>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="form-group">
+            <label>التاريخ</label>
+            <input type="date" class="form-control" name="date" value="{{ today_date }}">
+          </div>
+        </div>
+      </div>
+
+      <!-- Cheque Fields -->
+      <div class="row bg-light p-3 rounded mb-3" id="cheque_fields" style="display: none;">
+        <div class="col-md-4">
+          <div class="form-group mb-0">
+            <label>رقم الشيك</label>
+            <input type="text" class="form-control" name="cheque_number">
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="form-group mb-0">
+            <label>تاريخ الاستحقاق</label>
+            <input type="date" class="form-control" name="cheque_date">
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="form-group mb-0">
+            <label>اسم البنك</label>
+            <input type="text" class="form-control" name="bank_name">
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-12">
+          <div class="form-group">
+            <label>ملاحظات / البيان</label>
+            <textarea class="form-control" name="notes" rows="3" placeholder="أدخل تفاصيل السند..."></textarea>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <div class="card-footer text-right">
+      <button type="submit" class="btn btn-primary btn-lg px-5"><i class="fas fa-save mr-2"></i>حفظ السند</button>
+      <a href="{{ url_for('payments.receipts') }}" class="btn btn-secondary btn-lg ml-2">إلغاء</a>
+    </div>
+  </form>
+</div>
+
+<!-- Data Store for JS -->
+<div id="customers-data" style="display:none;">{{ customers_json|safe }}</div>
+<div id="suppliers-data" style="display:none;">{{ suppliers_json|safe }}</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function selectDirection(dir) {
+  $('.type-card').removeClass('selected');
+  $('#card-' + dir).addClass('selected');
+  $('input[name="direction"][value="' + dir + '"]').prop('checked', true);
+}
+
+function toggleChequeFields() {
+  if ($('#payment_method').val() === 'cheque') {
+    $('#cheque_fields').slideDown();
+  } else {
+    $('#cheque_fields').slideUp();
+  }
+}
+
+// Parse data
+var customers = JSON.parse(document.getElementById('customers-data').textContent || '[]');
+var suppliers = JSON.parse(document.getElementById('suppliers-data').textContent || '[]');
+
+function updatePartyList() {
+  var type = $('#party_type').val();
+  var select = $('#party_id');
+  select.empty();
+  select.append('<option value="">اختر الجهة...</option>');
+  
+  var list = (type === 'customer') ? customers : suppliers;
+  
+  list.forEach(function(item) {
+    var typeLabel = '';
+    if (type === 'customer' && item.type !== 'regular') {
+      typeLabel = ' (' + (item.type === 'merchant' ? 'تاجر' : 'شريك') + ')';
+    }
+    select.append('<option value="' + item.id + '">' + item.name + typeLabel + '</option>');
+  });
+  
+  // Refresh Select2
+  // Assuming select2 is initialized globally or we trigger it
+  if ($.fn.select2) {
+      select.trigger('change');
+  }
+}
+
+$(document).ready(function() {
+  $('.select2').select2({
+    theme: 'bootstrap4',
+    width: '100%'
+  });
+  updatePartyList(); // Init
+});
+</script>
+{% endblock %}

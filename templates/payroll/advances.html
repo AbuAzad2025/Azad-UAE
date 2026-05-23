@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% block title %}السلف المقدمة{% endblock %}
+{% block content %}
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-gradient-warning text-white">
+                <h3 class="card-title">تسجيل سلفة جديدة</h3>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="form-group">
+                        <label>الموظف</label>
+                        <select name="employee_id" class="form-control select2" required>
+                            {% for emp in employees %}
+                            <option value="{{ emp.id }}">{{ emp.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>قيمة السلفة</label>
+                        <input type="number" step="0.01" name="amount" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>ملاحظات</label>
+                        <textarea name="description" class="form-control" rows="3"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-warning btn-block">صرف السلفة</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">آخر السلف</h3>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>التاريخ</th>
+                            <th>الموظف</th>
+                            <th>المبلغ</th>
+                            <th>الحالة</th>
+                            <th>البيان</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for adv in advances %}
+                        <tr>
+                            <td>{{ adv.date }}</td>
+                            <td>{{ adv.employee.name }}</td>
+                            <td>{{ adv.amount }}</td>
+                            <td>
+                                {% if adv.is_deducted %}
+                                <span class="badge badge-success">تم الخصم</span>
+                                {% else %}
+                                <span class="badge badge-warning">معلق</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ adv.description }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block title %}تعديل الفرع{% endblock %}
+{% block content %}
+<div class="container-fluid">
+  <div class="card">
+    <div class="card-header">
+      <h3><i class="fas fa-edit"></i> تعديل الفرع: {{ branch.name }}</h3>
+    </div>
+    <div class="card-body">
+      <form method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label>الاسم *</label>
+              <input type="text" name="name" class="form-control" value="{{ branch.name }}" required>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label>الكود *</label>
+              <input type="text" name="code" class="form-control" value="{{ branch.code }}" required disabled>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label>المدينة</label>
+              <input type="text" name="city" class="form-control" value="{{ branch.city }}">
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group">
+              <label>رقم الهاتف</label>
+              <input type="text" name="phone" class="form-control" value="{{ branch.phone }}">
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>العنوان</label>
+          <textarea name="address" class="form-control">{{ branch.address }}</textarea>
+        </div>
+        <div class="form-group form-check">
+          <input type="checkbox" name="is_main" class="form-check-input" id="isMain" {% if branch.is_main %}checked{% endif %}>
+          <label class="form-check-label" for="isMain">هذا هو الفرع الرئيسي</label>
+        </div>
+        <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> حفظ</button>
+        <a href="{{ url_for('branches.index') }}" class="btn btn-secondary"><i class="fas fa-times"></i> إلغاء</a>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

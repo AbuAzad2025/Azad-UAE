@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block title %}التنبؤ بالمبيعات{% endblock %}
+{% block content %}
+<div class="container-fluid">
+  <div class="mb-3">
+    <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary">
+      <i class="fas fa-arrow-right"></i> رجوع للوحة المالك
+    </a>
+    <a href="{{ url_for('owner.financial_dashboard_advanced') }}" class="btn btn-success">
+      <i class="fas fa-link"></i> اللوحة المالية
+    </a>
+    <a href="{{ url_for('owner.sales_insights') }}" class="btn btn-primary">
+      <i class="fas fa-link"></i> المبيعات
+    </a>
+  </div>
+  
+<div class="row">
+<div class="col-md-6"><div class="card bg-gradient-success"><div class="card-body"><h4>التنبؤ للشهر القادم</h4><h2>{{ "%.0f"|format(forecast.next_month) }} AED</h2><p>الثقة: {{ forecast.confidence }}</p></div></div></div>
+<div class="col-md-6"><div class="card bg-gradient-info"><div class="card-body"><h4>التنبؤ لـ 3 أشهر</h4><h2>{{ "%.0f"|format(forecast.next_3_months) }} AED</h2><p>الثقة: {{ forecast.confidence }}</p></div></div></div>
+</div>
+<div class="card"><div class="card-header"><h3>البيانات التاريخية</h3></div><div class="card-body"><canvas id="forecastChart" height="80"></canvas></div></div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3"></script>
+<script>
+new Chart(document.getElementById('forecastChart'), {
+  type: 'line',
+  data: {
+    labels: {{ historical|map(attribute='month')|list|tojson }},
+    datasets: [{
+      label: 'الإيرادات الشهرية',
+      data: {{ historical|map(attribute='revenue')|list|tojson }},
+      borderColor: 'rgb(75, 192, 192)',
+      tension: 0.1
+    }]
+  }
+});
+</script>
+{% endblock %}

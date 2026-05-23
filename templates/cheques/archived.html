@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+
+{% block title %}الشيكات المؤرشفة{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="fas fa-archive"></i> الشيكات المؤرشفة
+          </h3>
+          <div class="card-tools">
+            <a href="{{ url_for('cheques.index') }}" class="btn btn-secondary">
+              <i class="fas fa-arrow-left"></i> رجوع
+            </a>
+          </div>
+        </div>
+        <div class="card-body">
+          <table class="table table-bordered table-striped">
+            <thead>
+              <tr>
+                <th>رقم الشيك</th>
+                <th>النوع</th>
+                <th>المبلغ</th>
+                <th>البنك</th>
+                <th>تاريخ الاستحقاق</th>
+                <th>الحالة</th>
+                <th>تاريخ الأرشفة</th>
+                <th>الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for cheque in cheques %}
+              <tr>
+                <td>{{ cheque.cheque_number }}</td>
+                <td>
+                  {% if cheque.cheque_type == 'incoming' %}
+                    <span class="badge badge-success">وارد</span>
+                  {% else %}
+                    <span class="badge badge-warning">صادر</span>
+                  {% endif %}
+                </td>
+                <td>{{ cheque.amount }} {{ cheque.currency }}</td>
+                <td>{{ cheque.bank_name }}</td>
+                <td>{{ cheque.due_date.strftime('%Y-%m-%d') }}</td>
+                <td>
+                  <span class="badge badge-secondary">{{ cheque.status }}</span>
+                </td>
+                <td>{{ cheque.archived_at.strftime('%Y-%m-%d %H:%M') if cheque.archived_at else '-' }}</td>
+                <td>
+                  <form method="post" action="{{ url_for('cheques.restore', id=cheque.id) }}" style="display: inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('استعادة هذا الشيك؟')">
+                      <i class="fas fa-undo"></i> استعادة
+                    </button>
+                  </form>
+                </td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="8" class="text-center">لا توجد شيكات مؤرشفة</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+
+          <!-- Pagination -->
+          {% if pagination %}
+          <nav>
+            <ul class="pagination justify-content-center">
+              {% if pagination.has_prev %}
+              <li class="page-item">
+                <a class="page-link" href="{{ url_for('cheques.archived', page=pagination.prev_num) }}">السابق</a>
+              </li>
+              {% endif %}
+              
+              {% for page_num in pagination.iter_pages() %}
+                {% if page_num %}
+                  <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
+                    <a class="page-link" href="{{ url_for('cheques.archived', page=page_num) }}">{{ page_num }}</a>
+                  </li>
+                {% endif %}
+              {% endfor %}
+              
+              {% if pagination.has_next %}
+              <li class="page-item">
+                <a class="page-link" href="{{ url_for('cheques.archived', page=pagination.next_num) }}">التالي</a>
+              </li>
+              {% endif %}
+            </ul>
+          </nav>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,272 @@
+{% extends "base.html" %}
+
+{% block title %}تفاصيل الشراء #{{ purchase.id }}{% endblock %}
+
+{% block page_title %}
+<div class="d-flex justify-content-between align-items-center">
+    <div>
+        <h1 class="mb-0"><i class="fas fa-receipt text-primary"></i> تفاصيل الشراء #{{ purchase.id }}</h1>
+        <p class="text-muted mb-0">مراجعة عملية الشراء والتفعيل من الخزينة السرية</p>
+    </div>
+    <a href="{{ url_for('payment_vault.view_purchases') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-right"></i> العودة للمشتريات
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+                <!-- معلومات الشراء -->
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                            <h3 class="card-title"><i class="fas fa-info-circle"></i> معلومات الشراء</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h5 class="border-bottom pb-2 mb-3"><i class="fas fa-box"></i> تفاصيل الباقة</h5>
+                                    <table class="table table-sm">
+                                        <tr>
+                                            <th style="width: 40%;">الباقة:</th>
+                                            <td>
+                                                {% if purchase.package %}
+                                                    {{ purchase.package.icon }} <strong>{{ purchase.package.name_ar }}</strong>
+                                                {% else %}
+                                                    -
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th>السعر:</th>
+                                            <td><strong style="color: #28a745; font-size: 1.3rem;">${{ "{:,.2f}".format(purchase.amount_paid) }}</strong></td>
+                                        </tr>
+                                        <tr>
+                                            <th>العملة:</th>
+                                            <td>{{ purchase.currency }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>التاريخ:</th>
+                                            <td>{{ purchase.created_at.strftime('%Y-%m-%d %H:%M:%S') if purchase.created_at else 'N/A' }}</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <h5 class="border-bottom pb-2 mb-3"><i class="fas fa-user"></i> بيانات العميل</h5>
+                                    <table class="table table-sm">
+                                        <tr>
+                                            <th style="width: 40%;">الاسم:</th>
+                                            <td><strong>{{ purchase.customer_name }}</strong></td>
+                                        </tr>
+                                        <tr>
+                                            <th>البريد:</th>
+                                            <td>
+                                                <a href="mailto:{{ purchase.customer_email }}">{{ purchase.customer_email }}</a>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th>الجوال:</th>
+                                            <td>
+                                                {% if purchase.customer_phone %}
+                                                    <a href="https://wa.me/{{ purchase.customer_phone.replace('+', '').replace(' ', '') }}" target="_blank">
+                                                        <i class="fab fa-whatsapp text-success"></i> {{ purchase.customer_phone }}
+                                                    </a>
+                                                {% else %}
+                                                    -
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th>الشركة:</th>
+                                            <td>{{ purchase.company_name or '-' }}</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                            
+                            <hr>
+                            
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <h5 class="border-bottom pb-2 mb-3"><i class="fas fa-credit-card"></i> تفاصيل الدفع</h5>
+                                    <table class="table table-sm">
+                                        <tr>
+                                            <th style="width: 20%;">طريقة الدفع:</th>
+                                            <td>
+                                                {% if purchase.payment_method == 'crypto' %}
+                                                    <span class="badge badge-warning"><i class="fab fa-bitcoin"></i> عملات رقمية</span>
+                                                {% elif purchase.payment_method == 'card' %}
+                                                    <span class="badge badge-primary"><i class="fas fa-credit-card"></i> بطاقة بنكية</span>
+                                                {% elif purchase.payment_method == 'paypal' %}
+                                                    <span class="badge badge-info"><i class="fab fa-paypal"></i> PayPal</span>
+                                                {% elif purchase.payment_method == 'bank' %}
+                                                    <span class="badge badge-success"><i class="fas fa-university"></i> تحويل بنكي</span>
+                                                {% else %}
+                                                    {{ purchase.payment_method }}
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th>Transaction ID:</th>
+                                            <td><code>{{ purchase.transaction_id or '-' }}</code></td>
+                                        </tr>
+                                        {% if purchase.payment_details %}
+                                        <tr>
+                                            <th>تحويل لـ Bitcoin:</th>
+                                            <td>
+                                                {% if purchase.payment_details.get('converted_to_crypto') %}
+                                                    <span class="badge badge-warning">✓ تم التحويل</span>
+                                                    <br><small class="text-muted">العنوان: {{ purchase.payment_details.get('pay_address', 'N/A') }}</small>
+                                                {% else %}
+                                                    <span class="badge badge-secondary">✗ بدون تحويل</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endif %}
+                                    </table>
+                                    
+                                    {% if purchase.payment_details %}
+                                    <div class="alert alert-info">
+                                        <h6><i class="fas fa-info-circle"></i> تفاصيل إضافية:</h6>
+                                        <pre style="max-height: 200px; overflow-y: auto;">{{ purchase.payment_details | tojson(indent=2) }}</pre>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            {% if purchase.notes %}
+                            <hr>
+                            <div class="alert alert-secondary">
+                                <h6><i class="fas fa-sticky-note"></i> ملاحظات:</h6>
+                                <p>{{ purchase.notes }}</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- الحالة والإجراءات -->
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header bg-info text-white">
+                            <h3 class="card-title"><i class="fas fa-tasks"></i> الحالة والإجراءات</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-4">
+                                <h6>حالة الدفع:</h6>
+                                <h3>
+                                    {% if purchase.payment_status == 'completed' %}
+                                        <span class="badge badge-success badge-lg">
+                                            <i class="fas fa-check-circle"></i> مكتملة
+                                        </span>
+                                    {% elif purchase.payment_status == 'pending' %}
+                                        <span class="badge badge-warning badge-lg">
+                                            <i class="fas fa-clock"></i> قيد الانتظار
+                                        </span>
+                                    {% elif purchase.payment_status == 'failed' %}
+                                        <span class="badge badge-danger badge-lg">
+                                            <i class="fas fa-times-circle"></i> فشلت
+                                        </span>
+                                    {% else %}
+                                        <span class="badge badge-secondary badge-lg">{{ purchase.payment_status }}</span>
+                                    {% endif %}
+                                </h3>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <h6>حالة التفعيل:</h6>
+                                <h3>
+                                    {% if purchase.activation_status == 'activated' %}
+                                        <span class="badge badge-success badge-lg">
+                                            <i class="fas fa-check-double"></i> مفعلة
+                                        </span>
+                                    {% elif purchase.activation_status == 'pending' %}
+                                        <span class="badge badge-warning badge-lg">
+                                            <i class="fas fa-hourglass-half"></i> غير مفعلة
+                                        </span>
+                                    {% elif purchase.activation_status == 'expired' %}
+                                        <span class="badge badge-danger badge-lg">
+                                            <i class="fas fa-ban"></i> منتهية
+                                        </span>
+                                    {% else %}
+                                        <span class="badge badge-secondary badge-lg">{{ purchase.activation_status }}</span>
+                                    {% endif %}
+                                </h3>
+                            </div>
+                            
+                            {% if purchase.activation_date %}
+                            <div class="mb-4">
+                                <h6>تاريخ التفعيل:</h6>
+                                <p><i class="fas fa-calendar-check text-success"></i> {{ purchase.activation_date.strftime('%Y-%m-%d %H:%M') }}</p>
+                            </div>
+                            {% endif %}
+                            
+                            <hr>
+                            
+                            <!-- Actions -->
+                            <div class="d-grid gap-2">
+                                {% if purchase.payment_status == 'pending' and purchase.activation_status != 'activated' %}
+                                <form method="POST" action="{{ url_for('payment_vault.activate_purchase', id=purchase.id) }}" onsubmit="return confirm('هل تريد تفعيل هذه الباقة؟')">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-success btn-block btn-lg">
+                                        <i class="fas fa-check-circle"></i> تفعيل الباقة
+                                    </button>
+                                </form>
+                                {% endif %}
+                                
+                                <a href="{{ url_for('payment_vault.view_purchases') }}" class="btn btn-secondary btn-block">
+                                    <i class="fas fa-arrow-left"></i> العودة للمشتريات
+                                </a>
+                                
+                                <button class="btn btn-primary btn-block" onclick="sendEmailToCustomer()">
+                                    <i class="fas fa-envelope"></i> إرسال إيميل للعميل
+                                </button>
+                                
+                                <a href="https://wa.me/{{ purchase.customer_phone.replace('+', '').replace(' ', '') if purchase.customer_phone else (developer_whatsapp_link or '972562150193') }}" 
+                                   target="_blank" 
+                                   class="btn btn-success btn-block">
+                                    <i class="fab fa-whatsapp"></i> تواصل عبر WhatsApp
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- ميزات الباقة -->
+                    {% if purchase.package and purchase.package.features %}
+                    <div class="card mt-3">
+                        <div class="card-header bg-gradient-primary text-white">
+                            <h3 class="card-title"><i class="fas fa-list-check"></i> ميزات الباقة</h3>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-unstyled">
+                                {% for feature in purchase.package.features %}
+                                <li class="mb-2">
+                                    <i class="fas fa-check-circle text-success"></i> {{ feature }}
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+</div>
+
+<style>
+.badge-lg {
+    font-size: 1.1rem;
+    padding: 10px 20px;
+}
+</style>
+
+<script>
+function sendEmailToCustomer() {
+    const email = '{{ purchase.customer_email }}';
+    const subject = 'تأكيد شراء الباقة - {{ developer_name_ar or developer_name or "Azad Systems" }}';
+    const body = `مرحباً {{ purchase.customer_name }},\n\nشكراً لشرائك ${purchase.package.name_ar if purchase.package else ''}\nرقم الطلب: #{{ purchase.id }}\nالمبلغ: ${{ purchase.amount_paid }}\n\nسنتواصل معك قريباً لإكمال التفعيل.`;
+    
+    window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
+</script>
+{% endblock %}
+

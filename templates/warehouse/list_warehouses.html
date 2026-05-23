@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - قائمة المستودعات{% endblock %}
+
+{% block extra_css %}
+<style>
+  #warehousesTable th,
+  #warehousesTable td {
+    vertical-align: middle;
+  }
+
+  #warehousesTable .actions-cell {
+    white-space: nowrap;
+  }
+
+  .warehouses-summary .badge {
+    font-size: 0.9rem;
+    padding: 0.5rem 0.7rem;
+  }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  (function() {
+    const tableSelector = '#warehousesTable';
+    const languageUrl = "{{ url_for('static', filename='datatables/Arabic.json') }}";
+
+    function initWarehousesTable() {
+      const $table = $(tableSelector);
+      if (!$table.length || !$.fn.DataTable) {
+        return;
+      }
+
+      if ($.fn.DataTable.isDataTable($table)) {
+        return;
+      }
+
+      $table.DataTable({
+        language: { url: languageUrl },
+        pageLength: 25,
+        lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "الكل"]],
+        order: [[0, 'asc']],
+        autoWidth: false,
+        responsive: true,
+        columnDefs: [
+          { orderable: false, targets: -1 },
+          { searchable: false, targets: -1 }
+        ]
+      });
+    }
+
+    $(document).ready(initWarehousesTable);
+  })();
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1 class="m-0"><i class="fas fa-warehouse"></i> المستودعات</h1>
+      </div>
+      <div class="col-sm-6">
+        <ol class="breadcrumb float-sm-left">
+          <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">{{ t('Dashboard') }}</a></li>
+          <li class="breadcrumb-item active">المستودعات</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="content">
+  <div class="container-fluid">
+    <div class="row mb-3">
+      <div class="col-12 d-flex flex-wrap align-items-center" style="gap: .5rem;">
+        <a href="{{ url_for('warehouse.create_warehouse') }}" class="btn btn-primary mb-2">
+          <i class="fas fa-plus"></i> إضافة مستودع جديد
+        </a>
+        <a href="{{ url_for('products.create') }}" class="btn btn-success mb-2">
+          <i class="fas fa-plus-circle"></i> إضافة منتج
+        </a>
+      </div>
+    </div>
+
+    <div class="warehouses-summary mb-3 d-flex flex-wrap" style="gap:.5rem;">
+      <span class="badge badge-primary">
+        <i class="fas fa-warehouse"></i> الإجمالي: {{ warehouses|length }}
+      </span>
+      <span class="badge badge-warning">
+        <i class="fas fa-star"></i> رئيسي: {{ warehouses|selectattr('is_main')|list|length }}
+      </span>
+      <span class="badge badge-success">
+        <i class="fas fa-sitemap"></i> فرعي: {{ warehouses|selectattr('parent_id')|list|length }}
+      </span>
+    </div>
+
+    {% if warehouses %}
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title mb-0"><i class="fas fa-list mr-2"></i>قائمة المستودعات</h3>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table id="warehousesTable" class="table table-hover table-bordered mb-0">
+            <thead class="thead-light">
+              <tr>
+                <th>المستودع</th>
+                <th>الرمز</th>
+                <th>الموقع</th>
+                {% if show_branch_columns %}
+                <th>الفرع</th>
+                {% endif %}
+                <th>المدير</th>
+                <th>الهيكل</th>
+                <th>حركات المخزون</th>
+                <th>الحالة</th>
+                <th class="text-center">الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for warehouse in warehouses %}
+              <tr>
+                <td>
+                  <a href="{{ url_for('warehouse.view_warehouse', id=warehouse.id) }}" class="font-weight-bold text-primary">
+                    {% if warehouse.is_main %}
+                    <i class="fas fa-star text-warning"></i>
+                    {% elif warehouse.parent_id %}
+                    <i class="fas fa-level-down-alt text-success"></i>
+                    {% else %}
+                    <i class="fas fa-warehouse text-secondary"></i>
+                    {% endif %}
+                    {{ warehouse.name_ar or warehouse.name }}
+                  </a>
+                </td>
+                <td>
+                  <span class="badge badge-secondary">{{ warehouse.code or '-' }}</span>
+                </td>
+                <td>{{ warehouse.location or '-' }}</td>
+                {% if show_branch_columns %}
+                <td>
+                  {% if warehouse.branch %}
+                    <span class="badge badge-light border">{{ warehouse.branch.name }}{% if warehouse.branch.code %} ({{ warehouse.branch.code }}){% endif %}</span>
+                  {% else %}
+                    <span class="text-muted">-</span>
+                  {% endif %}
+                </td>
+                {% endif %}
+                <td>{{ warehouse.manager.username if warehouse.manager else '-' }}</td>
+                <td>
+                  {% if warehouse.parent %}
+                  <div><small class="text-muted">الأب:</small> {{ warehouse.parent.name_ar or warehouse.parent.name }}</div>
+                  {% endif %}
+                  <div>
+                    <small class="text-muted">فرعي:</small>
+                    <span class="badge badge-warning">{{ warehouse.sub_warehouses|length }}</span>
+                  </div>
+                </td>
+                <td>
+                  <span class="badge badge-info">{{ warehouse.stock_movements.count() }}</span>
+                </td>
+                <td>
+                  {% if warehouse.is_main %}
+                  <span class="badge badge-primary mb-1"><i class="fas fa-star"></i> رئيسي</span>
+                  {% endif %}
+                  {% if warehouse.parent_id %}
+                  <span class="badge badge-success mb-1"><i class="fas fa-sitemap"></i> فرعي</span>
+                  {% endif %}
+                  {% if warehouse.is_active %}
+                  <span class="badge badge-success mb-1"><i class="fas fa-check"></i> نشط</span>
+                  {% else %}
+                  <span class="badge badge-danger mb-1"><i class="fas fa-times"></i> غير نشط</span>
+                  {% endif %}
+                </td>
+                <td class="text-center actions-cell">
+                  <div class="btn-group btn-group-sm" role="group">
+                    <a href="{{ url_for('warehouse.view_warehouse', id=warehouse.id) }}" class="btn btn-primary" title="عرض">
+                      <i class="fas fa-eye"></i>
+                    </a>
+                    <a href="{{ url_for('products.create', warehouse_id=warehouse.id) }}" class="btn btn-success" title="إضافة منتج">
+                      <i class="fas fa-plus-circle"></i>
+                    </a>
+                    <a href="{{ url_for('warehouse.movements', warehouse=warehouse.id) }}" class="btn btn-outline-secondary" title="الحركات">
+                      <i class="fas fa-exchange-alt"></i>
+                    </a>
+                    <button type="button" class="btn btn-outline-danger" onclick='deleteItem("warehouses", {{ warehouse.id }}, {{ (warehouse.name_ar or warehouse.name)|tojson }})' title="حذف">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if not warehouses %}
+    <div class="alert alert-info text-center">
+      <i class="fas fa-info-circle"></i>
+      لا توجد مستودعات مسجلة. يمكنك إضافة مستودع جديد الآن.
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}
+

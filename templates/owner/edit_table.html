@@ -1,0 +1,205 @@
+{% extends 'base.html' %}
+
+{% block title %}تعديل جدول {{ table_name }}{% endblock %}
+{% block page_title %}
+<div class="d-flex justify-content-between align-items-center">
+  <div>
+    <h1 class="mb-0"><i class="fas fa-edit mr-2"></i>تعديل: {{ table_name }}</h1>
+  </div>
+  <div>
+    <a href="{{ url_for('owner.database_tools') }}" class="btn btn-secondary">
+      <i class="fas fa-arrow-right mr-2"></i>العودة
+    </a>
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header bg-primary text-white">
+    <h3 class="card-title">
+      <i class="fas fa-edit mr-2"></i>
+      تعديل مرئي: <code>{{ table_name }}</code>
+    </h3>
+  </div>
+  <div class="card-body">
+    <div class="alert alert-warning">
+      <i class="fas fa-exclamation-triangle mr-2"></i>
+      <strong>تحذير:</strong> يمكنك تعديل البيانات مباشرة. التعديلات ستحفظ في قاعدة البيانات فوراً!
+    </div>
+
+    <div class="alert alert-info">
+      <strong>📝 طريقة التعديل:</strong>
+      <ol class="mb-0">
+        <li>اضغط زر <span class="badge badge-warning">تعديل</span> على السطر المطلوب</li>
+        <li>عدّل البيانات في الخانات</li>
+        <li>اضغط <span class="badge badge-success">حفظ</span> لحفظ التغييرات</li>
+      </ol>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-bordered table-hover table-sm" id="editTable">
+        <thead class="thead-dark">
+          <tr>
+            {% for col in columns %}
+            <th><i class="fas fa-database mr-1"></i>{{ col }}</th>
+            {% endfor %}
+            <th width="200"><i class="fas fa-tools mr-1"></i>الإجراءات</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+          <tr data-row-id="{{ row[0] }}">
+            {% for col in columns %}
+            <td>
+              <input type="text" 
+                     class="form-control form-control-sm row-input" 
+                     value="{{ row[loop.index0] if row[loop.index0] is not none else '' }}"
+                     data-column="{{ col }}"
+                     data-original="{{ row[loop.index0] if row[loop.index0] is not none else '' }}"
+                     readonly>
+            </td>
+            {% endfor %}
+            <td class="text-center">
+              <button class="btn btn-sm btn-warning edit-btn" onclick="enableEdit(this)">
+                <i class="fas fa-pencil-alt"></i> تعديل
+              </button>
+              <button class="btn btn-sm btn-success save-btn" onclick="saveRow(this)" style="display: none;">
+                <i class="fas fa-save"></i> حفظ
+              </button>
+              <button class="btn btn-sm btn-secondary cancel-btn" onclick="cancelEdit(this)" style="display: none;">
+                <i class="fas fa-times"></i> إلغاء
+              </button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if not rows %}
+    <div class="alert alert-warning text-center">
+      <i class="fas fa-exclamation-triangle mr-2"></i>
+      لا توجد بيانات في هذا الجدول
+    </div>
+    {% endif %}
+  </div>
+  <div class="card-footer">
+    <a href="{{ url_for('owner.database_tools') }}" class="btn btn-secondary">
+      <i class="fas fa-arrow-right mr-2"></i> العودة للجداول
+    </a>
+    <a href="{{ url_for('owner.sql_console') }}" class="btn btn-warning">
+      <i class="fas fa-code mr-2"></i> التعديل المتقدم (SQL)
+    </a>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='adminlte/plugins/sweetalert2/sweetalert2.all.min.js') }}"></script>
+<script>
+function enableEdit(btn) {
+  const row = btn.closest('tr');
+  const inputs = row.querySelectorAll('input');
+  const saveBtn = row.querySelector('.btn-success');
+  const cancelBtn = row.querySelector('.btn-secondary');
+  
+  inputs.forEach(input => input.removeAttribute('readonly'));
+  btn.style.display = 'none';
+  saveBtn.style.display = 'inline-block';
+  cancelBtn.style.display = 'inline-block';
+}
+
+function cancelEdit(btn) {
+  const row = btn.closest('tr');
+  const inputs = row.querySelectorAll('input');
+  const editBtn = row.querySelector('.btn-warning');
+  const saveBtn = row.querySelector('.btn-success');
+  
+  inputs.forEach(input => {
+    input.setAttribute('readonly', true);
+    input.value = input.defaultValue;
+  });
+  
+  btn.style.display = 'none';
+  saveBtn.style.display = 'none';
+  editBtn.style.display = 'inline-block';
+}
+
+function saveRow(btn) {
+  const row = btn.closest('tr');
+  const rowId = row.dataset.rowId;
+  const inputs = row.querySelectorAll('input.row-input');
+  
+  // جمع البيانات المعدلة
+  const updates = {};
+  let hasChanges = false;
+  
+  inputs.forEach(input => {
+    const column = input.dataset.column;
+    const newValue = input.value;
+    const originalValue = input.dataset.original;
+    
+    if (newValue !== originalValue) {
+      updates[column] = newValue;
+      hasChanges = true;
+    }
+  });
+  
+  if (!hasChanges) {
+    Swal.fire({
+      title: 'لا توجد تعديلات',
+      text: 'لم تقم بتعديل أي بيانات',
+      icon: 'info'
+    });
+    return;
+  }
+  
+  Swal.fire({
+    title: 'تأكيد الحفظ',
+    html: `
+      <p>هل أنت متأكد من حفظ التعديلات؟</p>
+      <p class="text-muted small">الجدول: <code>{{ table_name }}</code></p>
+      <p class="text-muted small">السطر ID: ${rowId}</p>
+    `,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#28a745',
+    cancelButtonColor: '#6c757d',
+    confirmButtonText: 'نعم، احفظ',
+    cancelButtonText: 'إلغاء'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      // إرسال البيانات للخادم
+      fetch('/owner/update-row/{{ table_name }}/' + rowId, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updates)
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          Swal.fire('نجح!', 'تم حفظ التعديلات بنجاح', 'success');
+          
+          // تحديث القيم الأصلية
+          inputs.forEach(input => {
+            input.dataset.original = input.value;
+          });
+          
+          // إلغاء وضع التعديل
+          cancelEdit(btn);
+        } else {
+          Swal.fire('خطأ!', data.error || 'فشل الحفظ', 'error');
+        }
+      })
+      .catch(error => {
+        Swal.fire('خطأ!', 'حدث خطأ في الاتصال', 'error');
+      });
+    }
+  });
+}
+</script>
+{% endblock %}
+

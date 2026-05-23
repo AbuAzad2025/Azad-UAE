@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}شركة أزاد للأنظمة الذكية - إحصائيات النظام والأداء{% endblock %}
+
+{% block content %}
+<div class="content-wrapper">
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0"><i class="fas fa-chart-bar mr-2"></i>إحصائيات النظام</h1>
+                </div>
+                <div class="col-sm-6">
+                    <div class="float-left">
+                        <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-right mr-2"></i>لوحة المالك
+                        </a>
+                        <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-home mr-2"></i>الرئيسية
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">إحصائيات قاعدة البيانات</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>{{ t('Table') }}</th>
+                                            <th>عدد السجلات</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for table_name, count in db_stats.items() %}
+                                        <tr>
+                                            <td>{{ table_name }}</td>
+                                            <td>{{ count }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}

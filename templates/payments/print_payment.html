@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% block title %}طباعة سند صرف - {{ payment.payment_number }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body">
+          <div class="text-center mb-4">
+            <h2>سند صرف</h2>
+            <h4>رقم: {{ payment.payment_number }}</h4>
+          </div>
+          
+          <div class="row">
+            <div class="col-md-6">
+              <table class="table table-borderless">
+                <tr>
+                  <td><strong>المورد:</strong></td>
+                  <td>{{ payment.supplier_name if payment.supplier_name else '-' }}</td>
+                </tr>
+                <tr>
+                  <td><strong>تاريخ السند:</strong></td>
+                  <td>{{ payment.payment_date.strftime('%Y-%m-%d') }}</td>
+                </tr>
+                <tr>
+                  <td><strong>نوع الدفع:</strong></td>
+                  <td>
+                    {% if payment.payment_type == 'supplier_payment' %}
+                      دفع مورد
+                    {% elif payment.payment_type == 'customer_payment' %}
+                      دفع عميل
+                    {% elif payment.payment_type == 'refund' %}
+                      استرداد
+                    {% else %}
+                      {{ payment.payment_type }}
+                    {% endif %}
+                  </td>
+                </tr>
+              </table>
+            </div>
+            <div class="col-md-6">
+              <table class="table table-borderless">
+                <tr>
+                  <td><strong>المبلغ:</strong></td>
+                  <td><strong>{{ "{:,.2f}".format(payment.amount) }} {{ payment.currency }}</strong></td>
+                </tr>
+                <tr>
+                  <td><strong>المبلغ بالدرهم:</strong></td>
+                  <td><strong>{{ "{:,.2f}".format(payment.amount_aed) }} AED</strong></td>
+                </tr>
+                <tr>
+                  <td><strong>طريقة الدفع:</strong></td>
+                  <td>{{ payment.get_method_display() }}</td>
+                </tr>
+                <tr>
+                  <td><strong>الحالة:</strong></td>
+                  <td>
+                    {% if payment.payment_confirmed %}
+                      <span class="badge badge-success">{{ payment.status_ar }}</span>
+                    {% else %}
+                      <span class="badge badge-warning">{{ payment.status_ar }}</span>
+                    {% endif %}
+                  </td>
+                </tr>
+              </table>
+            </div>
+          </div>
+          
+          {% if payment.notes %}
+          <div class="row mt-3">
+            <div class="col-12">
+              <h5>ملاحظات:</h5>
+              <p>{{ payment.notes }}</p>
+            </div>
+          </div>
+          {% endif %}
+          
+          <div class="row mt-4">
+            <div class="col-6">
+              <p>_________________</p>
+              <p>توقيع المحاسب</p>
+            </div>
+            <div class="col-6">
+              <p>_________________</p>
+              <p>توقيع المدير</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+window.onload = function() {
+  window.print();
+}
+</script>
+{% endblock %}

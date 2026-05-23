@@ -1,0 +1,270 @@
+{% extends 'base.html' %}
+
+{% block title %}شركة أزاد للأنظمة الذكية - إعدادات النظام المتقدمة{% endblock %}
+
+{% block content %}
+<div class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2 align-items-center">
+      <div class="col-sm-6">
+        <h1 class="m-0">⚙️ إعدادات النظام</h1>
+      </div>
+      <div class="col-sm-6 d-flex justify-content-end">
+        <div class="d-flex align-items-center">
+          <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary ml-2">
+            <i class="fas fa-arrow-right mr-1"></i> الرجوع للوحة المالك
+          </a>
+          <ol class="breadcrumb float-sm-left mb-0">
+            <li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">لوحة المالك</a></li>
+            <li class="breadcrumb-item active">{{ t('System Settings') }}</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="content">
+  <div class="container-fluid">
+    <form method="POST" action="{{ url_for('owner.system_config') }}" class="system-config-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      
+      <!-- الوحدات -->
+      <div class="card">
+        <div class="card-header bg-gradient-primary">
+          <h3 class="card-title text-white">📦 الوحدات (Modules)</h3>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-3">
+              <div class="custom-control custom-switch">
+                <input type="checkbox" class="custom-control-input" id="enable_sales" name="enable_sales" {{ 'checked' if settings.enable_sales }}>
+                <label class="custom-control-label" for="enable_sales">
+                  <i class="fas fa-shopping-cart text-success"></i> المبيعات
+                </label>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="custom-control custom-switch">
+                <input type="checkbox" class="custom-control-input" id="enable_purchases" name="enable_purchases" {{ 'checked' if settings.enable_purchases }}>
+                <label class="custom-control-label" for="enable_purchases">
+                  <i class="fas fa-truck text-primary"></i> المشتريات
+                </label>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="custom-control custom-switch">
+                <input type="checkbox" class="custom-control-input" id="enable_inventory" name="enable_inventory" {{ 'checked' if settings.enable_inventory }}>
+                <label class="custom-control-label" for="enable_inventory">
+                  <i class="fas fa-boxes text-warning"></i> المخزون
+                </label>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="custom-control custom-switch">
+                <input type="checkbox" class="custom-control-input" id="enable_customers" name="enable_customers" {{ 'checked' if settings.enable_customers }}>
+                <label class="custom-control-label" for="enable_customers">
+                  <i class="fas fa-users text-info"></i> الزبائن
+                </label>
+              </div>
+            </div>
+          </div>
+          <hr>
+          <div class="row mt-3">
+            <div class="col-md-3">
+              <div class="custom-control custom-switch">
+                <input type="checkbox" class="custom-control-input" id="enable_expenses" name="enable_expenses" {{ 'checked' if settings.enable_expenses }}>
+                <label class="custom-control-label" for="enable_expenses">
+                  <i class="fas fa-money-bill-wave text-danger"></i> المصروفات
+                </label>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="custom-control custom-switch">
+                <input type="checkbox" class="custom-control-input" id="enable_gl" name="enable_gl" {{ 'checked' if settings.enable_gl }}>
+                <label class="custom-control-label" for="enable_gl">
+                  <i class="fas fa-book text-secondary"></i> دفتر الأستاذ
+                </label>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="custom-control custom-switch">
+                <input type="checkbox" class="custom-control-input" id="enable_reports" name="enable_reports" {{ 'checked' if settings.enable_reports }}>
+                <label class="custom-control-label" for="enable_reports">
+                  <i class="fas fa-chart-line text-success"></i> التقارير
+                </label>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="custom-control custom-switch">
+                <input type="checkbox" class="custom-control-input" id="enable_ai_assistant" name="enable_ai_assistant" {{ 'checked' if settings.enable_ai_assistant }}>
+                <label class="custom-control-label" for="enable_ai_assistant">
+                  <i class="fas fa-robot text-primary"></i> المساعد الذكي
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- المميزات -->
+      <div class="card">
+        <div class="card-header bg-gradient-success">
+          <h3 class="card-title text-white">✨ المميزات (Features)</h3>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-4">
+              <div class="custom-control custom-switch">
+                <input type="checkbox" class="custom-control-input" id="enable_barcode_scanner" name="enable_barcode_scanner" {{ 'checked' if settings.enable_barcode_scanner }}>
+                <label class="custom-control-label" for="enable_barcode_scanner">
+                  <i class="fas fa-barcode"></i> قارئ الباركود
+                </label>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="custom-control custom-switch">
+                <input type="checkbox" class="custom-control-input" id="enable_multi_warehouse" name="enable_multi_warehouse" {{ 'checked' if settings.enable_multi_warehouse }}>
+                <label class="custom-control-label" for="enable_multi_warehouse">
+                  <i class="fas fa-warehouse"></i> مستودعات متعددة
+                </label>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="custom-control custom-switch">
+                <input type="checkbox" class="custom-control-input" id="enable_multi_currency" name="enable_multi_currency" {{ 'checked' if settings.enable_multi_currency }}>
+                <label class="custom-control-label" for="enable_multi_currency">
+                  <i class="fas fa-dollar-sign"></i> عملات متعددة
+                </label>
+              </div>
+            </div>
+          </div>
+          <hr>
+          <div class="row mt-3">
+            <div class="col-md-4">
+              <div class="custom-control custom-switch">
+                <input type="checkbox" class="custom-control-input" id="enable_discounts" name="enable_discounts" {{ 'checked' if settings.enable_discounts }}>
+                <label class="custom-control-label" for="enable_discounts">
+                  <i class="fas fa-percent"></i> الخصومات
+                </label>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="custom-control custom-switch">
+                <input type="checkbox" class="custom-control-input" id="enable_returns" name="enable_returns" {{ 'checked' if settings.enable_returns }}>
+                <label class="custom-control-label" for="enable_returns">
+                  <i class="fas fa-undo"></i> المرتجعات
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- إعدادات عامة -->
+      <div class="card">
+        <div class="card-header bg-gradient-warning">
+          <h3 class="card-title text-white">🔧 إعدادات عامة</h3>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-3">
+              <div class="form-group">
+                <label>العملة الافتراضية</label>
+                <select name="default_currency" class="form-control">
+                  <option value="AED" {{ 'selected' if settings.default_currency == 'AED' }}>AED - درهم إماراتي</option>
+                  <option value="USD" {{ 'selected' if settings.default_currency == 'USD' }}>USD - دولار أمريكي</option>
+                  <option value="EUR" {{ 'selected' if settings.default_currency == 'EUR' }}>EUR - يورو</option>
+                  <option value="SAR" {{ 'selected' if settings.default_currency == 'SAR' }}>SAR - ريال سعودي</option>
+                </select>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="form-group">
+                <label>اللغة الافتراضية</label>
+                <select name="default_language" class="form-control">
+                  <option value="ar" {{ 'selected' if settings.default_language == 'ar' }}>العربية</option>
+                  <option value="en" {{ 'selected' if settings.default_language == 'en' }}>English</option>
+                </select>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="form-group">
+                <label>المنطقة الزمنية</label>
+                <select name="timezone" class="form-control">
+                  <option value="Asia/Dubai" {{ 'selected' if settings.timezone == 'Asia/Dubai' }}>Asia/Dubai (GST +4)</option>
+                  <option value="Asia/Riyadh" {{ 'selected' if settings.timezone == 'Asia/Riyadh' }}>Asia/Riyadh (AST +3)</option>
+                  <option value="Asia/Jerusalem" {{ 'selected' if settings.timezone == 'Asia/Jerusalem' }}>Asia/Jerusalem (IST +2)</option>
+                </select>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="form-group">
+                <label>عناصر لكل صفحة</label>
+                <input type="number" name="items_per_page" class="form-control" value="{{ settings.items_per_page or 25 }}" min="10" max="100">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- أزرار -->
+      <div class="row">
+        <div class="col-12">
+          <button type="submit" class="btn btn-primary btn-lg">
+            <i class="fas fa-save mr-2"></i>حفظ الإعدادات
+          </button>
+          <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary btn-lg">
+            <i class="fas fa-times mr-2"></i>إلغاء
+          </a>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+<style>
+  .system-config-form .form-control,
+  .system-config-form textarea.form-control,
+  .system-config-form select.form-control {
+    height: auto !important;
+    min-height: 56px;
+    padding: 0.95rem 1.35rem;
+    font-size: 0.95rem;
+    border-radius: 10px;
+    line-height: 1.7;
+    width: 100%;
+  }
+
+  .system-config-form select.form-control {
+    text-align-last: center;
+    padding-inline-start: 2.2rem;
+    padding-inline-end: 2.2rem;
+    appearance: none;
+    -webkit-appearance: none;
+    background-color: #fff;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23647894' d='M6 8a1 1 0 0 1-.707-.293l-5-5a1 1 0 0 1 1.414-1.414L6 5.586 10.293 1.293a1 1 0 0 1 1.414 1.414l-5 5A1 1 0 0 1 6 8'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: left 0.8rem center;
+    background-size: 12px;
+  }
+
+  .system-config-form select.form-control option {
+    text-align: center;
+    padding: 0.75rem 1rem;
+  }
+
+  .system-config-form .form-control::placeholder {
+    color: #64748b;
+    opacity: 0.85;
+    text-align: center;
+  }
+  
+  .system-config-form textarea.form-control {
+    text-align: right;
+  }
+
+  .system-config-form textarea.form-control::placeholder {
+    text-align: right;
+  }
+</style>
+{% endblock %}

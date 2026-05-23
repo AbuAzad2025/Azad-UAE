@@ -1,0 +1,275 @@
+{% extends 'base.html' %}
+{% block title %}قائمة الدخل - Income Statement{% endblock %}
+{% block page_title %}قائمة الدخل{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+  <div class="col-12">
+    <a href="{{ url_for('ledger.admin_reports') }}" class="btn btn-secondary">
+      <i class="fas fa-arrow-right mr-2"></i>العودة للتقارير
+    </a>
+    <button class="btn btn-success" onclick="window.print()">
+      <i class="fas fa-print mr-2"></i>طباعة
+    </button>
+  </div>
+</div>
+
+<!-- فلتر التاريخ -->
+<div class="card mb-4">
+  <div class="card-header bg-gradient-primary">
+    <h5 class="card-title text-white mb-0">
+      <i class="fas fa-filter mr-2"></i>فلتر التاريخ
+    </h5>
+  </div>
+  <div class="card-body">
+    <form method="GET" class="row" action="">
+      <div class="col-md-4">
+        <div class="form-group">
+          <label>من تاريخ:</label>
+          <input type="date" name="date_from" class="form-control" value="{{ date_from.strftime('%Y-%m-%d') }}">
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="form-group">
+          <label>إلى تاريخ:</label>
+          <input type="date" name="date_to" class="form-control" value="{{ date_to.strftime('%Y-%m-%d') }}">
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="form-group">
+          <label>&nbsp;</label>
+          <button type="submit" class="btn btn-primary btn-block">
+            <i class="fas fa-search mr-2"></i>تحديث التقرير
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header bg-gradient-success">
+    <h3 class="card-title text-white">
+      <i class="fas fa-chart-line mr-2"></i>قائمة الدخل
+    </h3>
+    <div class="card-tools">
+      <small class="text-white">
+        من {{ date_from.strftime('%Y-%m-%d') }} إلى {{ date_to.strftime('%Y-%m-%d') }}
+      </small>
+    </div>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-bordered mb-0">
+        <thead class="bg-light">
+          <tr>
+            <th width="20%">الكود</th>
+            <th width="50%">اسم الحساب</th>
+            <th width="30%" class="text-center">المبلغ</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- الإيرادات -->
+          <tr class="bg-success text-white">
+            <th colspan="3" class="text-center">
+              <i class="fas fa-arrow-up mr-2"></i>الإيرادات
+            </th>
+          </tr>
+          {% for revenue in revenues %}
+          {% set balance = revenue.get_balance(date_from, date_to) %}
+          {% if balance < 0 %}
+          <tr>
+            <td><strong>{{ revenue.code }}</strong></td>
+            <td>{{ revenue.full_name }}</td>
+            <td class="text-center text-success">{{ "{:,.2f}".format(abs(balance)) }}</td>
+          </tr>
+          {% endif %}
+          {% endfor %}
+          <tr class="bg-light">
+            <th colspan="2" class="text-center">إجمالي الإيرادات</th>
+            <th class="text-center text-success">{{ "{:,.2f}".format(revenues_total) }}</th>
+          </tr>
+          
+          <!-- المصروفات -->
+          <tr class="bg-danger text-white">
+            <th colspan="3" class="text-center">
+              <i class="fas fa-arrow-down mr-2"></i>المصروفات
+            </th>
+          </tr>
+          {% for expense in expenses %}
+          {% set balance = expense.get_balance(date_from, date_to) %}
+          {% if balance > 0 %}
+          <tr>
+            <td><strong>{{ expense.code }}</strong></td>
+            <td>{{ expense.full_name }}</td>
+            <td class="text-center text-danger">{{ "{:,.2f}".format(balance) }}</td>
+          </tr>
+          {% endif %}
+          {% endfor %}
+          <tr class="bg-light">
+            <th colspan="2" class="text-center">إجمالي المصروفات</th>
+            <th class="text-center text-danger">{{ "{:,.2f}".format(expenses_total) }}</th>
+          </tr>
+          
+          <!-- صافي الدخل -->
+          <tr class="bg-primary text-white">
+            <th colspan="2" class="text-center">
+              <i class="fas fa-calculator mr-2"></i>صافي الدخل
+            </th>
+            <th class="text-center">
+              {% if net_income > 0 %}
+                <span class="text-success">{{ "{:,.2f}".format(net_income) }}</span>
+              {% elif net_income < 0 %}
+                <span class="text-danger">{{ "{:,.2f}".format(net_income) }}</span>
+              {% else %}
+                <span class="text-white">0.00</span>
+              {% endif %}
+            </th>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- تحليل الأداء -->
+<div class="row mt-4">
+  <div class="col-md-4">
+    <div class="card bg-gradient-success text-white">
+      <div class="card-body">
+        <div class="d-flex justify-content-between">
+          <div>
+            <h4 class="mb-0">{{ "{:,.0f}".format(revenues_total) }}</h4>
+            <p class="mb-0">إجمالي الإيرادات</p>
+          </div>
+          <div class="align-self-center">
+            <i class="fas fa-arrow-up fa-2x"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-md-4">
+    <div class="card bg-gradient-danger text-white">
+      <div class="card-body">
+        <div class="d-flex justify-content-between">
+          <div>
+            <h4 class="mb-0">{{ "{:,.0f}".format(expenses_total) }}</h4>
+            <p class="mb-0">إجمالي المصروفات</p>
+          </div>
+          <div class="align-self-center">
+            <i class="fas fa-arrow-down fa-2x"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-md-4">
+    <div class="card bg-gradient-{{ 'success' if net_income > 0 else 'danger' if net_income < 0 else 'secondary' }} text-white">
+      <div class="card-body">
+        <div class="d-flex justify-content-between">
+          <div>
+            <h4 class="mb-0">{{ "{:,.0f}".format(net_income) }}</h4>
+            <p class="mb-0">صافي الدخل</p>
+          </div>
+          <div class="align-self-center">
+            <i class="fas fa-{{ 'chart-line' if net_income > 0 else 'chart-line-down' if net_income < 0 else 'minus' }} fa-2x"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- نسب الأداء -->
+<div class="row mt-4">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header bg-gradient-info">
+        <h5 class="card-title text-white mb-0">
+          <i class="fas fa-percentage mr-2"></i>نسب الأداء
+        </h5>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-4">
+            <div class="text-center">
+              <h5 class="text-primary">
+                {% if revenues_total > 0 %}
+                  {{ "{:.1f}".format((expenses_total / revenues_total) * 100) }}%
+                {% else %}
+                  -
+                {% endif %}
+              </h5>
+              <p class="mb-0">نسبة المصروفات للإيرادات</p>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="text-center">
+              <h5 class="text-success">
+                {% if revenues_total > 0 %}
+                  {{ "{:.1f}".format((net_income / revenues_total) * 100) }}%
+                {% else %}
+                  -
+                {% endif %}
+              </h5>
+              <p class="mb-0">هامش الربح</p>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="text-center">
+              <h5 class="text-info">
+                {% if expenses_total > 0 %}
+                  {{ "{:.1f}".format((revenues_total / expenses_total) * 100) }}%
+                {% else %}
+                  -
+                {% endif %}
+              </h5>
+              <p class="mb-0">نسبة الإيرادات للمصروفات</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ملاحظات -->
+<div class="card mt-4">
+  <div class="card-header bg-gradient-warning">
+    <h5 class="card-title text-white mb-0">
+      <i class="fas fa-info-circle mr-2"></i>ملاحظات
+    </h5>
+  </div>
+  <div class="card-body">
+    <ul class="mb-0">
+      <li>قائمة الدخل تعرض الأداء المالي للشركة خلال فترة محددة</li>
+      <li>الإيرادات تظهر كقيم موجبة (دائنة)</li>
+      <li>المصروفات تظهر كقيم سالبة (مدينة)</li>
+      <li>صافي الدخل = الإيرادات - المصروفات</li>
+      <li>صافي الدخل الموجب يعني ربح، والسالب يعني خسارة</li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+@media print {
+  .btn, .card-header .card-tools {
+    display: none !important;
+  }
+  
+  .card {
+    border: none !important;
+    box-shadow: none !important;
+  }
+  
+  .table {
+    font-size: 12px;
+  }
+}
+</style>
+{% endblock %}

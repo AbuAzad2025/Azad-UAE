@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block title %}تحليلات المبيعات{% endblock %}
+{% block content %}
+<div class="container-fluid">
+  <div class="mb-3">
+    <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary">
+      <i class="fas fa-arrow-right"></i> رجوع للوحة المالك
+    </a>
+    <a href="{{ url_for('owner.financial_dashboard_advanced') }}" class="btn btn-success">
+      <i class="fas fa-link"></i> اللوحة المالية
+    </a>
+    <a href="{{ url_for('owner.customer_insights') }}" class="btn btn-info">
+      <i class="fas fa-link"></i> العملاء
+    </a>
+    <a href="{{ url_for('owner.product_performance') }}" class="btn btn-warning">
+      <i class="fas fa-link"></i> المنتجات
+    </a>
+  </div>
+  <div class="card"><div class="card-header"><h3>تحليلات المبيعات (30 يوم)</h3></div><div class="card-body"><canvas id="salesChart" height="100"></canvas><hr><h5 class="mt-4">أفضل 10 منتجات</h5><table class="table table-bordered"><thead><tr><th>المنتج</th><th>الكمية المباعة</th><th>الإيرادات</th></tr></thead><tbody>{% for p in insights.top_products %}<tr><td>{{ p.name }}</td><td>{{ p.qty }}</td><td>{{ "%.2f"|format(p.revenue) }} AED</td></tr>{% endfor %}</tbody></table></div></div></div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3"></script>
+<script>
+new Chart(document.getElementById('salesChart'), {
+  type: 'bar',
+  data: {
+    labels: {{ insights.daily_sales|map(attribute='date')|list|tojson }},
+    datasets: [{
+      label: 'المبيعات اليومية',
+      data: {{ insights.daily_sales|map(attribute='total')|list|tojson }},
+      backgroundColor: 'rgba(54, 162, 235, 0.5)'
+    }]
+  }
+});
+</script>
+{% endblock %}

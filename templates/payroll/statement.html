@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block title %}كشف حساب موظف{% endblock %}
+{% block content %}
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header bg-gradient-info text-white">
+            <h3 class="card-title">كشف حساب: {{ employee.name }}</h3>
+            <div class="card-tools">
+                <button onclick="window.print()" class="btn btn-tool"><i class="fas fa-print"></i></button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <p><strong>الاسم:</strong> {{ employee.name }}</p>
+                    <p><strong>الفرع:</strong> {{ employee.branch.name if employee.branch else 'عام' }}</p>
+                </div>
+                <div class="col-md-6 text-left">
+                    <p><strong>الراتب الأساسي:</strong> {{ employee.basic_salary }}</p>
+                    <p><strong>تاريخ الطباعة:</strong> {{ now }}</p>
+                </div>
+            </div>
+            
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>التاريخ</th>
+                        <th>النوع</th>
+                        <th>البيان</th>
+                        <th class="text-center">المبلغ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in history %}
+                    <tr>
+                        <td>{{ item.date }}</td>
+                        <td>
+                            {% if item.type == 'سلفة' %}
+                            <span class="badge badge-warning">{{ item.type }}</span>
+                            {% else %}
+                            <span class="badge badge-success">{{ item.type }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ item.desc }}</td>
+                        <td class="text-center" dir="ltr">
+                            {% if item.amount < 0 %}
+                            <span class="text-danger">{{ item.amount }}</span>
+                            {% else %}
+                            <span class="text-success">+{{ item.amount }}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

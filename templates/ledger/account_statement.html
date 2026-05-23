@@ -1,0 +1,177 @@
+{% extends 'base.html' %}
+{% block title %}كشف الحساب - {{ statement.account.full_name }}{% endblock %}
+{% block page_title %}كشف الحساب التفصيلي{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+  <div class="col-12">
+    <a href="{{ url_for('ledger.accounts_tree') }}" class="btn btn-secondary">
+      <i class="fas fa-arrow-right mr-2"></i>العودة
+    </a>
+    <button class="btn btn-primary" onclick="window.print()">
+      <i class="fas fa-print mr-2"></i>طباعة
+    </button>
+    <a href="{{ url_for('ledger.account_statement', id=statement.account.id) }}?export=excel" class="btn btn-success">
+      <i class="fas fa-file-excel mr-2"></i>تصدير Excel
+    </a>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header bg-gradient-primary">
+    <h3 class="card-title text-white">
+      <i class="fas fa-file-invoice mr-2"></i>
+      كشف حساب: {{ statement.account.full_name }}
+    </h3>
+    <div class="card-tools">
+      <span class="badge badge-light">{{ statement.account.type_ar }}</span>
+    </div>
+  </div>
+  <div class="card-body">
+    <!-- فلتر التاريخ والفرع (عزل الفروع عند اللزوم) -->
+    <form method="get" class="form-inline mb-3 flex-wrap" action="">
+      <label class="ml-2 mr-2">الفرع:</label>
+      <select name="branch_id" class="form-control mr-3" style="min-width: 140px;">
+        <option value="">كل الفروع</option>
+        {% for b in branches or [] %}
+        <option value="{{ b.id }}" {{ 'selected' if selected_branch == b.id else '' }}>{{ b.name }} ({{ b.code }})</option>
+        {% endfor %}
+      </select>
+      <label class="ml-2 mr-2">من تاريخ:</label>
+      <input type="date" name="date_from" class="form-control mr-3" value="{{ date_from or '' }}">
+      <label class="ml-2 mr-2">إلى تاريخ:</label>
+      <input type="date" name="date_to" class="form-control mr-3" value="{{ date_to or '' }}">
+      <button type="submit" class="btn btn-primary">
+        <i class="fas fa-filter mr-2"></i>فلتر
+      </button>
+      {% if date_from or date_to or selected_branch %}
+      <a href="{{ url_for('ledger.account_statement', id=statement.account.id) }}" class="btn btn-secondary mr-2">
+        <i class="fas fa-times mr-2"></i>إلغاء الفلتر
+      </a>
+      {% endif %}
+    </form>
+
+    <!-- معلومات الحساب -->
+    <div class="row mb-3">
+      <div class="col-md-4">
+        <div class="info-box bg-light">
+          <span class="info-box-icon bg-primary"><i class="fas fa-calculator"></i></span>
+          <div class="info-box-content">
+            <span class="info-box-text">الرصيد الافتتاحي</span>
+            <span class="info-box-number">
+              {{ "{:,.2f}".format(statement.opening_balance) }} AED
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="info-box bg-light">
+          <span class="info-box-icon bg-success"><i class="fas fa-arrow-up"></i></span>
+          <div class="info-box-content">
+            <span class="info-box-text">إجمالي المدين</span>
+            <span class="info-box-number text-success">
+              {{ "{:,.2f}".format(statement.total_debit) }} AED
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="info-box bg-light">
+          <span class="info-box-icon bg-danger"><i class="fas fa-arrow-down"></i></span>
+          <div class="info-box-content">
+            <span class="info-box-text">إجمالي الدائن</span>
+            <span class="info-box-number text-danger">
+              {{ "{:,.2f}".format(statement.total_credit) }} AED
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- جدول المعاملات -->
+    <div class="table-responsive">
+      <table class="table table-bordered table-striped table-hover">
+        <thead class="bg-light">
+          <tr>
+            <th width="100">التاريخ</th>
+            <th width="120">رقم القيد</th>
+            <th width="100">النوع</th>
+            <th>البيان</th>
+            <th width="100">المرجع</th>
+            <th width="120" class="text-center">مدين</th>
+            <th width="120" class="text-center">دائن</th>
+            <th width="120" class="text-center">الرصيد</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if statement.opening_balance != 0 %}
+          <tr class="table-info">
+            <td colspan="7" class="text-center"><strong>الرصيد الافتتاحي</strong></td>
+            <td class="text-center">
+              <strong>{{ "{:,.2f}".format(statement.opening_balance) }}</strong>
+            </td>
+          </tr>
+          {% endif %}
+          
+          {% for trans in statement.transactions %}
+          <tr>
+            <td>{{ trans.date.strftime('%Y-%m-%d') }}</td>
+            <td>
+              <a href="{{ url_for('ledger.view_entry', id=trans.entry_number.split('-')[1]) }}" class="badge badge-primary">
+                {{ trans.entry_number }}
+              </a>
+            </td>
+            <td><small class="badge badge-secondary">{{ trans.entry_type }}</small></td>
+            <td>{{ trans.description }}</td>
+            <td><small>{{ trans.reference }}</small></td>
+            <td class="text-center text-success">
+              {% if trans.debit > 0 %}{{ "{:,.2f}".format(trans.debit) }}{% else %}-{% endif %}
+            </td>
+            <td class="text-center text-danger">
+              {% if trans.credit > 0 %}{{ "{:,.2f}".format(trans.credit) }}{% else %}-{% endif %}
+            </td>
+            <td class="text-center">
+              <strong class="{{ 'text-success' if trans.balance > 0 else 'text-danger' if trans.balance < 0 else '' }}">
+                {{ "{:,.2f}".format(trans.balance) }}
+              </strong>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot class="bg-light">
+          <tr>
+            <th colspan="5" class="text-left">الإجمالي:</th>
+            <th class="text-center text-success">{{ "{:,.2f}".format(statement.total_debit) }}</th>
+            <th class="text-center text-danger">{{ "{:,.2f}".format(statement.total_credit) }}</th>
+            <th class="text-center">
+              <strong class="{{ 'text-success' if statement.closing_balance > 0 else 'text-danger' if statement.closing_balance < 0 else '' }}">
+                {{ "{:,.2f}".format(statement.closing_balance) }}
+              </strong>
+            </th>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    {% if not statement.transactions %}
+    <div class="alert alert-info text-center">
+      <i class="fas fa-info-circle mr-2"></i>
+      لا توجد حركات على هذا الحساب في الفترة المحددة
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<style>
+@media print {
+  .btn, .form-inline, .card-tools {
+    display: none !important;
+  }
+  .card {
+    border: none !important;
+    box-shadow: none !important;
+  }
+}
+</style>
+{% endblock %}
+

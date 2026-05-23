@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block title %}الأحداث المحاسبية الفورية{% endblock %}
+{% block content %}
+<div class="container-fluid">
+  <div class="card">
+    <div class="card-header"><h3><i class="fas fa-stream"></i> الأحداث المحاسبية الفورية</h3></div>
+    <div class="card-body">
+      <div class="row mb-4">
+        {% for event_type, count in event_stats.items() %}
+        <div class="col-md-3">
+          <div class="info-box">
+            <span class="info-box-icon bg-info"><i class="fas fa-bell"></i></span>
+            <div class="info-box-content">
+              <span class="info-box-text">{{ event_type }}</span>
+              <span class="info-box-number">{{ count }}</span>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      <h5>الأحداث الأخيرة</h5>
+      <table class="table table-bordered table-striped">
+        <thead>
+          <tr><th>الوقت</th><th>النوع</th><th>الوصف</th><th>المستخدم</th><th>القيد المرتبط</th></tr>
+        </thead>
+        <tbody>
+          {% for event in recent_events %}
+          <tr>
+            <td>{{ event.created_at.strftime('%Y-%m-%d %H:%M:%S') if event.created_at else '-' }}</td>
+            <td><span class="badge badge-primary">{{ event.event_type }}</span></td>
+            <td>{{ event.description }}</td>
+            <td>{{ event.user.username if event.user else 'نظام' }}</td>
+            <td>{{ event.journal_entry_id or '-' }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="5" class="text-center">لا توجد أحداث</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

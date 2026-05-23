@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+{% block title %}شركة أزاد للأنظمة الذكية - إنشاء مستودع جديد{% endblock %}
+
+{% block content %}
+<div class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1 class="m-0"><i class="fas fa-warehouse"></i> إنشاء مستودع جديد</h1>
+      </div>
+      <div class="col-sm-6">
+        <ol class="breadcrumb float-sm-left">
+          <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">{{ t('Dashboard') }}</a></li>
+          <li class="breadcrumb-item"><a href="{{ url_for('warehouse.list_warehouses') }}">المستودعات</a></li>
+          <li class="breadcrumb-item active">إنشاء جديد</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="content">
+  <div class="container-fluid">
+    <div class="row justify-content-center">
+      <div class="col-md-8">
+        <div class="card">
+          <div class="card-header bg-success">
+            <h3 class="card-title text-white"><i class="fas fa-plus-circle"></i> معلومات المستودع</h3>
+          </div>
+          {% set form_data = form_data if form_data is defined else request.form %}
+          <form method="POST" action="{{ url_for('warehouse.create_warehouse') }}" class="warehouse-create-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label>
+                      <i class="fas fa-warehouse text-primary"></i> الاسم بالإنجليزية 
+                      <span class="text-danger">*</span>
+                      <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="اسم المستودع بالإنجليزية (إجباري)"></i>
+                    </label>
+                    <input type="text" class="form-control" id="name" name="name" placeholder="Main Warehouse" required value="{{ form_data.get('name', '') }}">
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label>
+                      <i class="fas fa-font text-info"></i> الاسم بالعربية
+                      <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="اسم المستودع بالعربية (اختياري)"></i>
+                    </label>
+                    <input type="text" class="form-control" id="name_ar" name="name_ar" placeholder="المستودع الرئيسي" value="{{ form_data.get('name_ar', '') }}">
+                  </div>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label>
+                      <i class="fas fa-barcode text-secondary"></i> رمز المستودع
+                      <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="رمز مختصر للمستودع (اختياري)"></i>
+                    </label>
+                    <input type="text" class="form-control" id="code" name="code" placeholder="WH001" value="{{ form_data.get('code', '') }}">
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label>
+                      <i class="fas fa-map-marker-alt text-danger"></i> الموقع
+                      <span class="text-danger">*</span>
+                      <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="موقع المستودع الجغرافي (إجباري)"></i>
+                    </label>
+                    <input type="text" class="form-control" id="location" name="location" placeholder="دبي - الإمارات" required value="{{ form_data.get('location', '') }}">
+                  </div>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label>
+                      <i class="fas fa-sitemap text-success"></i> المستودع الأب (للفروع)
+                      <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="إذا كان هذا مستودع فرعي، اختر المستودع الرئيسي (اختياري)"></i>
+                    </label>
+                    <select class="form-control" id="parent_id" name="parent_id">
+                      <option value="" {% if not form_data.get('parent_id') %}selected{% endif %}>بلا</option>
+                      {% if parent_warehouses %}
+                        {% for parent in parent_warehouses %}
+                        <option value="{{ parent.id }}" {% if form_data.get('parent_id') and form_data.get('parent_id')|int == parent.id %}selected{% endif %}>
+                          {{ parent.name_ar or parent.name }} ({{ parent.code or parent.id }})
+                        </option>
+                        {% endfor %}
+                      {% endif %}
+                    </select>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label>
+                      <i class="fas fa-user-tie text-primary"></i> المدير المسؤول
+                      <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="اختر المدير المسؤول عن هذا المستودع (اختياري)"></i>
+                    </label>
+                    <select class="form-control" id="manager_id" name="manager_id">
+                      <option value="" {% if not form_data.get('manager_id') %}selected{% endif %}>بلا</option>
+                      {% if users %}
+                        {% for user in users %}
+                        <option value="{{ user.id }}" {% if form_data.get('manager_id') and form_data.get('manager_id')|int == user.id %}selected{% endif %}>
+                          {{ user.username }} - {{ user.full_name or '' }}
+                        </option>
+                        {% endfor %}
+                      {% endif %}
+                    </select>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-group">
+                    <label>
+                      <i class="fas fa-building text-info"></i> الفرع
+                      <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="الفرع الذي يتبع له هذا المستودع (اختياري)"></i>
+                    </label>
+                    <select class="form-control" id="branch_id" name="branch_id">
+                      <option value="" {% if not form_data.get('branch_id') %}selected{% endif %}>-- عام (بدون فرع محدد) --</option>
+                      {% if branches %}
+                        {% for branch in branches %}
+                        <option value="{{ branch.id }}" {% if form_data.get('branch_id') and form_data.get('branch_id')|int == branch.id %}selected{% endif %}>
+                          {{ branch.name }} ({{ branch.code }})
+                        </option>
+                        {% endfor %}
+                      {% endif %}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <div class="custom-control custom-checkbox">
+                  <input type="checkbox" class="custom-control-input" id="is_main" name="is_main" {% if form_data.get('is_main') %}checked{% endif %}>
+                  <label class="custom-control-label" for="is_main">
+                    <i class="fas fa-star text-warning"></i> مستودع رئيسي
+                    <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="هل هذا المستودع الرئيسي؟ (اختياري)"></i>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div class="card-footer">
+              <button type="submit" class="btn btn-success btn-lg">
+                <i class="fas fa-save mr-2"></i> إنشاء المستودع
+              </button>
+              <a href="{{ url_for('warehouse.list_warehouses') }}" class="btn btn-secondary btn-lg">
+                <i class="fas fa-times mr-2"></i> إلغاء
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% block extra_js %}
+<script>
+$(function () {
+  $('[data-toggle="tooltip"]').tooltip({
+    placement: 'top',
+    trigger: 'hover'
+  });
+});
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  .warehouse-create-form .form-control,
+  .warehouse-create-form textarea.form-control,
+  .warehouse-create-form select.form-control {
+    min-height: 56px;
+    height: auto !important;
+    padding: 0.95rem 1.35rem;
+    font-size: 0.95rem;
+    line-height: 1.7;
+    text-align: center;
+  }
+
+  .warehouse-create-form .form-control::placeholder {
+    text-align: center;
+    color: #64748b;
+    opacity: 0.85;
+  }
+
+  .warehouse-create-form textarea.form-control {
+    text-align: right;
+  }
+
+  .warehouse-create-form textarea.form-control::placeholder {
+    text-align: right;
+  }
+
+  .warehouse-create-form select.form-control {
+    text-align-last: center;
+    padding-inline-start: 2.2rem;
+    padding-inline-end: 2.2rem;
+    appearance: none;
+    -webkit-appearance: none;
+    background-color: #fff;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23647894' d='M6 8a1 1 0 0 1-.707-.293l-5-5a1 1 0 0 1 1.414-1.414L6 5.586 10.293 1.293a1 1 0 0 1 1.414 1.414l-5 5A1 1 0 0 1 6 8'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: left 0.8rem center;
+    background-size: 12px;
+  }
+
+  .warehouse-create-form select.form-control option {
+    text-align: center;
+    padding: 0.75rem 1rem;
+  }
+</style>
+{% endblock %}
+{% endblock %}

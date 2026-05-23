@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>شركة أزاد للأنظمة الذكية - فاتورة مبيعات #{{ sale.sale_number }}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/accessibility.css') }}">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Cairo', 'Arial', sans-serif;
+      background: #34495e;
+      padding: 10px;
+      margin: 0;
+      font-size: 8px;
+      color: #2c3e50;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+    }
+    @page {
+      size: {{ settings.paper_size or 'A4' }} {{ settings.orientation or 'portrait' }};
+      margin: 5mm;
+    }
+    .invoice {
+      {% if settings.paper_size == 'A5' %}
+        width: 212mm;
+        height: {{ '210mm' if settings.orientation == 'portrait' else '148mm' }};
+      {% elif settings.paper_size == 'Letter' %}
+        width: 212mm;
+        height: {{ '279mm' if settings.orientation == 'portrait' else '216mm' }};
+      {% else %}
+        width: {{ '210mm' if settings.orientation == 'portrait' else '297mm' }};
+        height: {{ '297mm' if settings.orientation == 'portrait' else '210mm' }};
+      {% endif %}
+      margin: 0 auto;
+      background: white;
+      padding: 8px;
+      box-shadow: 0 0 30px rgba(0,0,0,0.5);
+      overflow: auto;
+    }
+    .header {
+      border-bottom: 1px solid {{ settings.header_color or '#2c3e50' }};
+      padding-bottom: 15px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .header-left {
+      flex: 1;
+    }
+    .header-right {
+      text-align: left;
+    }
+    .company-name { 
+      font-size: 20px; 
+      font-weight: 700; 
+      color: {{ settings.header_color or '#2c3e50' }}; 
+      margin-bottom: 5px;
+    }
+    .company-info { font-size: 9px; color: #7f8c8d; line-height: 1.6; }
+    .invoice-title {
+      font-size: 16px;
+      font-weight: 300;
+      color: #95a5a6;
+      text-align: left;
+    }
+    .invoice-number {
+      font-size: 16px;
+      font-weight: 700;
+      color: {{ settings.header_color or '#2c3e50' }};
+      text-align: left;
+    }
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .info-item {
+      padding: 10px;
+      background: #ecf0f1;
+      border-left: 3px solid {{ settings.accent_color or '#3498db' }};
+    }
+    .info-item label { 
+      font-size: 9px; 
+      color: #7f8c8d; 
+      text-transform: uppercase; 
+      display: block;
+      margin-bottom: 3px;
+    }
+    .info-item value { 
+      font-size: 9px; 
+      font-weight: 600; 
+      color: #2c3e50;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 15px 0;
+      font-size: 8px;
+    }
+    thead {
+      background: {{ settings.header_color or '#2c3e50' }};
+      color: white;
+    }
+    th {
+      padding: 8px;
+      text-align: right;
+      font-weight: 600;
+      font-size: 8px;
+    }
+    td {
+      padding: 8px;
+      border-bottom: 1px solid #ecf0f1;
+    }
+    tbody tr:hover { background: #f8f9fa; }
+    .totals {
+      margin-top: 10px;
+      width: 350px;
+      margin-right: 0;
+      margin-left: auto;
+    }
+    .total-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 10px;
+      font-size: 9px;
+    }
+    .total-row.final {
+      background: {{ settings.header_color or '#2c3e50' }};
+      color: white;
+      padding: 10px;
+      margin-top: 5px;
+      font-size: 9px;
+      font-weight: 700;
+    }
+    .payments-section {
+      margin-top: 10px;
+      padding: 8px;
+      background: #f8f9fa;
+      border-left: 4px solid {{ settings.accent_color or '#3498db' }};
+    }
+    .payments-section h4 {
+      font-size: 9px;
+      color: {{ settings.header_color or '#2c3e50' }};
+      margin-bottom: 10px;
+      font-weight: 700;
+    }
+    .payment-item {
+      padding: 8px;
+      margin-bottom: 8px;
+      background: white;
+      border: 1px solid #dee2e6;
+      border-radius: 4px;
+      font-size: 9px;
+    }
+    .cheque-box {
+      background: #fff3cd;
+      border: 1px solid #ffc107;
+      border-radius: 3px;
+      padding: 5px 8px;
+      margin-top: 5px;
+      font-size: 8px;
+    }
+    .footer {
+      margin-top: 20px;
+      padding-top: 15px;
+      border-top: 1px solid #dee2e6;
+      text-align: center;
+      font-size: 9px;
+      color: #7f8c8d;
+    }
+    @media print {
+      body { padding: 0; }
+      .no-print { display: none !important; }
+    }
+  
+    @media print {
+      .invoice {
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 !important;
+        box-shadow: none !important;
+        border: none !important;
+      }
+      body {
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+    }
+  </style>
+</head>
+<body class="invoice-print minimal-invoice">
+  <div class="no-print" style="text-align: center; margin-bottom: 8px;">
+    <button onclick="window.print()" style="background: {{ settings.header_color or '#2c3e50' }}; color: white; border: none; padding: 10px 25px; border-radius: 5px; cursor: pointer;">
+      طباعة
+    </button>
+  </div>
+
+  <div class="invoice">
+    <div class="header">
+      <div class="header-left">
+        {% if settings and settings.show_logo %}
+        <img src="{{ url_for('static', filename=settings.logo_path if settings and settings.logo_path else 'img/garage_logo.png') }}" alt="Logo" style="height: 40px; margin-bottom: 8px;">
+        {% endif %}
+        <div class="company-name">{{ (settings.company_name_ar if settings and settings.company_name_ar else none) or tenant_name_ar or company_name_ar or 'نظام المحاسبة' }}</div>
+        <div class="company-info">
+          {{ (settings.address_ar if settings and settings.address_ar else none) or tenant_address or company_address }}<br>
+          📞 {{ (settings.phone_1 if settings and settings.phone_1 else none) or tenant_phone or company_phone }} | 📧 {{ (settings.email if settings and settings.email else none) or tenant_email or company_email }}<br>
+          {% if settings and settings.website and settings.website != 'None' %}🌐 {{ settings.website }}<br>{% endif %}
+          {% if settings and settings.tax_number and settings.tax_number != 'None' %}ض.ر: {{ settings.tax_number }}{% endif %}
+          {% if print_branch %}
+          <br>🏢 الفرع: {{ print_branch.name }}{% if print_branch.code %} ({{ print_branch.code }}){% endif %}
+          {% if print_branch.address %}<br>📍 عنوان الفرع: {{ print_branch.address }}{% endif %}
+          {% endif %}
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="invoice-title">INVOICE</div>
+        <div class="invoice-number">{{ sale.sale_number }}</div>
+      </div>
+    </div>
+
+    {% set doc_title = '🧾 فاتورة بيع' %}
+    {% set doc_number = sale.sale_number %}
+    {% include 'partials/print_unified_banner.html' %}
+
+    <div class="info-grid">
+      <div class="info-item">
+        <label>العميل</label>
+        <value><strong>{{ sale.customer.name }}</strong></value>
+        {% if sale.customer.phone %}<br><small style="font-size: 9px;">{{ sale.customer.phone }}</small>{% endif %}
+      </div>
+      <div class="info-item">
+        <label>التاريخ / المستخدم</label>
+        <value>{{ sale.sale_date.strftime('%Y-%m-%d %H:%M') }}</value>
+        <br><small style="font-size: 9px;">{{ print_user_name or (sale.seller.full_name if sale.seller else '-') }}</small>
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 5%;">#</th>
+          <th style="width: 40%;">المنتج</th>
+          <th style="width: 15%;">الكمية</th>
+          <th style="width: 15%;">السعر</th>
+          <th style="width: 10%;">خصم</th>
+          <th style="width: 15%;">الإجمالي</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for line in sale.lines %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td><strong>{{ line.product.name if line.product else '-' }}</strong></td>
+          <td>{{ line.quantity }}</td>
+          <td>{{ "{:,.2f}".format(line.unit_price) }}</td>
+          <td>{{ line.discount_percent if line.discount_percent else '-' }}</td>
+          <td><strong>{{ "{:,.2f}".format(line.line_total) }}</strong></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div class="totals">
+      <div class="total-row">
+        <span>المجموع:</span>
+        <strong>{{ "{:,.2f}".format(sale.subtotal) }} {{ sale.currency }}</strong>
+      </div>
+      {% if sale.discount_amount > 0 %}
+      <div class="total-row">
+        <span>الخصم:</span>
+        <strong>- {{ "{:,.2f}".format(sale.discount_amount) }}</strong>
+      </div>
+      {% endif %}
+      {% if sale.tax_amount > 0 %}
+      <div class="total-row">
+        <span>الضريبة:</span>
+        <strong>{{ "{:,.2f}".format(sale.tax_amount) }}</strong>
+      </div>
+      {% endif %}
+      <div class="total-row final">
+        <span>الإجمالي:</span>
+        <strong>{{ "{:,.2f}".format(sale.total_amount) }} {{ sale.currency }}</strong>
+      </div>
+      {% include 'partials/print_unified_amount_qr.html' %}
+    </div>
+
+    <!-- قسم الدفعات -->
+    {% if sale.payments %}
+    <div class="payments-section">
+      <h4>💳 الدفعات</h4>
+      {% for payment in sale.payments %}
+      <div class="payment-item">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <strong>{{ payment.payment_number }}</strong> | 
+            {{ payment.payment_date.strftime('%Y-%m-%d') }}
+          </div>
+          <div style="font-weight: bold; color: #28a745;">
+            {{ "{:,.2f}".format(payment.amount_aed) }} AED
+          </div>
+        </div>
+        <div style="margin-top: 3px;">
+          طريقة الدفع: 
+          {% if payment.payment_method == 'cash' %}💵 نقدي
+          {% elif payment.payment_method == 'card' %}💳 بطاقة
+          {% elif payment.payment_method == 'bank_transfer' %}🏦 تحويل
+          {% elif payment.payment_method == 'cheque' %}📝 شيك
+          {% else %}💰 محفظة{% endif %}
+        </div>
+        {% if payment.payment_method == 'cheque' and payment.cheque_number %}
+        <div class="cheque-box">
+          <strong>📝 رقم الشيك:</strong> {{ payment.cheque_number }} | 
+          <strong>📅 الاستحقاق:</strong> {{ payment.cheque_date.strftime('%Y-%m-%d') if payment.cheque_date else '-' }} | 
+          <strong>🏦 البنك:</strong> {{ payment.bank_name or '-' }}
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="footer">
+      <!-- Bank Info -->
+      {% if settings and ((settings.bank_name and settings.bank_name != 'None') or (settings.iban and settings.iban != 'None') or (settings.swift_code and settings.swift_code != 'None')) %}
+      <div style="margin-bottom: 8px; padding: 10px; background: #f8f9fa; border-radius: 5px; border-left: 3px solid {{ settings.header_color or '#2c3e50' }};">
+        <p style="font-weight: 700; font-size: 8px; color: {{ settings.header_color or '#2c3e50' }}; margin-bottom: 5px;">🏦 Bank Transfer Details</p>
+        <div style="font-size: 9px; line-height: 1.6;">
+          {% if settings.bank_name and settings.bank_name != 'None' %}<p style="margin: 2px 0;"><strong>Bank:</strong> {{ settings.bank_name }}</p>{% endif %}
+          {% if settings.bank_account_number %}<p style="margin: 2px 0;"><strong>Account:</strong> {{ settings.bank_account_number }}</p>{% endif %}
+          {% if settings.iban and settings.iban != 'None' %}<p style="margin: 2px 0;"><strong>IBAN:</strong> {{ settings.iban }}</p>{% endif %}
+          {% if settings.swift_code and settings.swift_code != 'None' %}<p style="margin: 2px 0;"><strong>SWIFT:</strong> {{ settings.swift_code }}</p>{% endif %}
+        </div>
+      </div>
+      {% endif %}
+      
+      <!-- Business Registration -->
+      {% if settings and ((settings.commercial_register and settings.commercial_register != 'None') or (settings.license_number and settings.license_number != 'None')) %}
+      <p style="font-size: 8px; color: #7f8c8d; margin-bottom: 8px; text-align: center;">
+        {% if settings.commercial_register and settings.commercial_register != 'None' %}CR: {{ settings.commercial_register }}{% endif %}
+        {% if settings.commercial_register and settings.license_number %} | {% endif %}
+        {% if settings.license_number and settings.license_number != 'None' %}License: {{ settings.license_number }}{% endif %}
+      </p>
+      {% endif %}
+      
+      <!-- Default Note -->
+      {% if settings and settings.default_invoice_note_ar and settings.default_invoice_note_ar != 'None' %}
+      <div style="background: #fff3cd; border-left: 3px solid #ffc107; padding: 8px; margin-bottom: 10px; border-radius: 4px;">
+        <p style="font-size: 9px; color: #856404; margin: 0;">💬 {{ settings.default_invoice_note_ar }}</p>
+      </div>
+      {% endif %}
+      
+      <p>{{ settings.footer_text_ar if settings and settings.footer_text_ar else 'شكراً لثقتكم' }}</p>
+      {% if settings and settings.website and settings.website != 'None' %}<p style="margin-top: 5px;">🌐 {{ settings.website }}</p>{% endif %}
+      
+      <!-- Social Media -->
+      {% if settings and (settings.facebook_url or settings.instagram_url or settings.whatsapp_number) %}
+      <div style="margin-top: 10px; font-size: 9px; text-align: center;">
+        {% if settings.facebook_url %}<a href="{{ settings.facebook_url }}" style="margin: 0 4px; color: #1877f2; text-decoration: none;">Facebook</a>{% endif %}
+        {% if settings.instagram_url %}<a href="{{ settings.instagram_url }}" style="margin: 0 4px; color: #e4405f; text-decoration: none;">Instagram</a>{% endif %}
+        {% if settings.whatsapp_number %}<a href="https://wa.me/{{ settings.whatsapp_number }}" style="margin: 0 4px; color: #25d366; text-decoration: none;">WhatsApp</a>{% endif %}
+      </div>
+      {% endif %}
+    </div>
+    
+    <!-- Watermark -->
+    {% if settings and settings.enable_watermark %}
+      {% if settings.watermark_image_path %}
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 0.03; z-index: 0; pointer-events: none;">
+          <img src="{{ url_for('static', filename=settings.watermark_image_path) }}" alt="Watermark" style="width: 100%;">
+        </div>
+      {% elif settings.watermark_text %}
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg); font-size: 70px; color: rgba(44,62,80,0.03); font-weight: 300; z-index: 0; pointer-events: none;">
+          {{ settings.watermark_text }}
+        </div>
+      {% endif %}
+    {% endif %}
+  </div>
+</body>
+</html>

@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+
+{% block title %}تفاصيل التبرع - الخزينة السرية{% endblock %}
+
+{% block page_title %}
+<div class="d-flex justify-content-between align-items-center">
+    <div>
+        <h1 class="mb-0"><i class="fas fa-heart text-danger"></i> تفاصيل التبرع #{{ donation.id }}</h1>
+        <p class="text-muted mb-0">مراجعة بيانات المتبرع وحالة المعاملة</p>
+    </div>
+    <a href="{{ url_for('payment_vault.donations') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-right"></i> العودة للتبرعات
+    </a>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .detail-card {
+        background: white;
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+    }
+    
+    .detail-header {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 30px;
+    }
+    
+    .info-row {
+        padding: 15px 0;
+        border-bottom: 1px solid #e0e0e0;
+    }
+    
+    .info-row:last-child {
+        border-bottom: none;
+    }
+    
+    .info-label {
+        font-weight: bold;
+        color: #666;
+        margin-bottom: 5px;
+    }
+    
+    .info-value {
+        font-size: 1.1rem;
+        color: #333;
+    }
+    
+    .status-badge {
+        font-size: 1.2rem;
+        padding: 10px 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+            <div class="col-md-8 offset-md-2">
+                
+                <!-- Header -->
+                <div class="detail-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2 class="mb-0">
+                                <i class="fas fa-heart"></i> تفاصيل التبرع #{{ donation.id }}
+                            </h2>
+                            <p class="mb-0 mt-2" style="opacity: 0.9;">
+                                {{ donation.created_at.strftime('%Y-%m-%d %H:%M') if donation.created_at else 'N/A' }}
+                            </p>
+                        </div>
+                        <div>
+                            {% if donation.status == 'completed' %}
+                                <span class="badge badge-success status-badge">✓ مكتمل</span>
+                            {% elif donation.status == 'pending' %}
+                                <span class="badge badge-warning status-badge">⏳ قيد الانتظار</span>
+                            {% elif donation.status == 'failed' %}
+                                <span class="badge badge-danger status-badge">✗ فاشل</span>
+                            {% else %}
+                                <span class="badge badge-secondary status-badge">{{ donation.status }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- معلومات المتبرع -->
+                <div class="detail-card">
+                    <h4 class="mb-4">
+                        <i class="fas fa-user text-primary"></i> معلومات المتبرع
+                    </h4>
+                    
+                    <div class="info-row">
+                        <div class="info-label">الاسم:</div>
+                        <div class="info-value">{{ donation.donor_name or 'غير محدد' }}</div>
+                    </div>
+                    
+                    <div class="info-row">
+                        <div class="info-label">البريد الإلكتروني:</div>
+                        <div class="info-value">{{ donation.donor_email or 'غير محدد' }}</div>
+                    </div>
+                    
+                    {% if donation.donor_message %}
+                    <div class="info-row">
+                        <div class="info-label">الرسالة:</div>
+                        <div class="info-value">
+                            <div class="alert alert-info">
+                                <i class="fas fa-comment"></i> {{ donation.donor_message }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- معلومات الدفع -->
+                <div class="detail-card">
+                    <h4 class="mb-4">
+                        <i class="fas fa-dollar-sign text-success"></i> معلومات الدفع
+                    </h4>
+                    
+                    <div class="info-row">
+                        <div class="info-label">المبلغ:</div>
+                        <div class="info-value text-success">
+                            <h3 class="mb-0">${{ donation.amount_usd }}</h3>
+                        </div>
+                    </div>
+                    
+                    <div class="info-row">
+                        <div class="info-label">طريقة الدفع:</div>
+                        <div class="info-value">
+                            {% if donation.payment_method == 'crypto' %}
+                                <i class="fab fa-bitcoin text-warning"></i> عملة رقمية
+                            {% elif donation.payment_method == 'card' %}
+                                <i class="fas fa-credit-card text-primary"></i> بطاقة
+                            {% elif donation.payment_method == 'paypal' %}
+                                <i class="fab fa-paypal text-info"></i> PayPal
+                            {% elif donation.payment_method == 'bank' %}
+                                <i class="fas fa-university text-secondary"></i> تحويل بنكي
+                            {% else %}
+                                {{ donation.payment_method }}
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    {% if donation.crypto_type %}
+                    <div class="info-row">
+                        <div class="info-label">نوع العملة الرقمية:</div>
+                        <div class="info-value">{{ donation.crypto_type|upper }}</div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if donation.transaction_hash %}
+                    <div class="info-row">
+                        <div class="info-label">رقم المعاملة:</div>
+                        <div class="info-value">
+                            <code style="background: #f5f5f5; padding: 5px 10px; border-radius: 5px;">
+                                {{ donation.transaction_hash }}
+                            </code>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if donation.wallet_address %}
+                    <div class="info-row">
+                        <div class="info-label">عنوان المحفظة:</div>
+                        <div class="info-value">
+                            <code style="background: #f5f5f5; padding: 5px 10px; border-radius: 5px; font-size: 0.85rem;">
+                                {{ donation.wallet_address }}
+                            </code>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if donation.completed_at %}
+                    <div class="info-row">
+                        <div class="info-label">تاريخ الإكمال:</div>
+                        <div class="info-value">{{ donation.completed_at.strftime('%Y-%m-%d %H:%M') }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- معلومات تقنية -->
+                <div class="detail-card">
+                    <h4 class="mb-4">
+                        <i class="fas fa-info-circle text-info"></i> معلومات تقنية
+                    </h4>
+                    
+                    <div class="info-row">
+                        <div class="info-label">IP Address:</div>
+                        <div class="info-value"><code>{{ donation.ip_address or 'N/A' }}</code></div>
+                    </div>
+                    
+                    {% if donation.user_agent %}
+                    <div class="info-row">
+                        <div class="info-label">User Agent:</div>
+                        <div class="info-value">
+                            <small style="color: #999;">{{ donation.user_agent[:100] }}...</small>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if donation.gateway_name %}
+                    <div class="info-row">
+                        <div class="info-label">Payment Gateway:</div>
+                        <div class="info-value">{{ donation.gateway_name }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Actions -->
+                <div class="detail-card">
+                    <div class="row">
+                        {% if donation.status == 'pending' %}
+                        <div class="col-md-6">
+                            <form method="POST" action="{{ url_for('payment_vault.approve_donation', donation_id=donation.id) }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-success btn-block btn-lg" onclick="return confirm('قبول هذا التبرع؟')">
+                                    <i class="fas fa-check-circle"></i> قبول التبرع
+                                </button>
+                            </form>
+                        </div>
+                        <div class="col-md-6">
+                            <form method="POST" action="{{ url_for('payment_vault.reject_donation', donation_id=donation.id) }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-danger btn-block btn-lg" onclick="return confirm('رفض هذا التبرع؟')">
+                                    <i class="fas fa-times-circle"></i> رفض التبرع
+                                </button>
+                            </form>
+                        </div>
+                        {% endif %}
+                        
+                        {% if donation.donor_email %}
+                        <div class="col-md-6 mt-3">
+                            <button class="btn btn-primary btn-block btn-lg" onclick="sendThankYou('{{ donation.donor_email }}', '{{ donation.donor_name or "متبرع" }}', {{ donation.amount_usd }})">
+                                <i class="fas fa-envelope"></i> إرسال شكر
+                            </button>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="col-md-{% if donation.donor_email and donation.status == 'pending' %}6{% elif donation.donor_email %}12{% else %}12{% endif %} mt-3">
+                            <a href="{{ url_for('payment_vault.donations') }}" class="btn btn-secondary btn-block btn-lg">
+                                <i class="fas fa-arrow-left"></i> العودة للتبرعات
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function sendThankYou(email, name, amount) {
+    const subject = encodeURIComponent('شكراً على تبرعك الكريم');
+    const body = encodeURIComponent(`عزيزي ${name},\n\nنشكرك على تبرعك الكريم بمبلغ $${amount}.\n\nمع أطيب التحيات,\nفريق {{ developer_name_ar or developer_name or 'Azad Systems' }}`);
+    window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+}
+</script>
+{% endblock %}
+

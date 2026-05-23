@@ -1,0 +1,364 @@
+{% extends 'base.html' %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - إضافة شيك جديد{% endblock %}
+{% block page_title %}
+<div class="d-flex justify-content-between align-items-center">
+  <div>
+    <h1 class="mb-0"><i class="fas fa-plus-circle mr-2"></i>إضافة شيك جديد</h1>
+  </div>
+  <div>
+    <a href="{{ url_for('cheques.index') }}" class="btn btn-secondary">
+      <i class="fas fa-arrow-right mr-2"></i>العودة للشيكات
+    </a>
+    <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
+      <i class="fas fa-home mr-2"></i>الرئيسية
+    </a>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.cheque-create-form .form-control,
+.cheque-create-form .form-select {
+  min-height: 48px;
+  height: auto;
+  padding: 0.65rem 0.85rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.cheque-create-form .form-control::placeholder {
+  text-align: center;
+  color: #6c757d;
+  opacity: 0.85;
+}
+
+.cheque-create-form .select2-container--default .select2-selection--single {
+  height: 48px;
+  min-height: 48px;
+  border-radius: 12px;
+  border: 2px solid #e0e0e0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.75rem;
+}
+
+.cheque-create-form .select2-container--default .select2-selection--single .select2-selection__rendered {
+  width: 100%;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  line-height: 1.5 !important;
+  text-align: center;
+  font-size: 1rem;
+}
+
+.cheque-create-form .select2-container--default .select2-selection--single .select2-selection__arrow {
+  height: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.cheque-create-form textarea.form-control {
+  text-align: right;
+  line-height: 1.6;
+}
+
+.cheque-create-form textarea.form-control::placeholder {
+  text-align: right;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header bg-primary">
+    <h3 class="card-title text-white">
+      <i class="fas fa-money-check mr-2"></i>معلومات الشيك
+    </h3>
+  </div>
+  <div class="card-body">
+    <form method="POST" action="{{ url_for('cheques.create') }}" id="chequeForm" class="cheque-create-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      
+      <!-- النوع -->
+      <div class="row">
+        <div class="col-md-6">
+          <div class="form-group">
+            <label><i class="fas fa-exchange-alt"></i> نوع الشيك: <span class="text-danger">*</span></label>
+            <select name="cheque_type" id="cheque_type" class="form-control" required>
+              <option value="">بلا</option>
+              <option value="incoming">وارد (من عميل)</option>
+              <option value="outgoing">صادر (لمورد)</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="col-md-6">
+          <div class="form-group">
+            <label><i class="fas fa-hashtag"></i> رقم الشيك: <span class="text-danger">*</span></label>
+            <input type="text" name="cheque_bank_number" class="form-control" 
+                   placeholder="رقم الشيك من البنك" required>
+          </div>
+        </div>
+      </div>
+
+      <!-- المعلومات البنكية -->
+      <div class="row">
+        <div class="col-md-4">
+          <div class="form-group">
+            <label><i class="fas fa-university"></i> البنك: <span class="text-danger">*</span></label>
+            <input type="text" name="bank_name" class="form-control" 
+                   placeholder="اسم البنك" required>
+          </div>
+        </div>
+        
+        <div class="col-md-4">
+          <div class="form-group">
+            <label><i class="fas fa-map-marker-alt"></i> الفرع:</label>
+            <input type="text" name="bank_branch" class="form-control" 
+                   placeholder="فرع البنك">
+          </div>
+        </div>
+        
+        <div class="col-md-4">
+          <div class="form-group">
+            <label><i class="fas fa-credit-card"></i> رقم الحساب:</label>
+            <input type="text" name="account_number" class="form-control" 
+                   placeholder="رقم الحساب">
+          </div>
+        </div>
+      </div>
+
+      <!-- المبلغ والعملة -->
+      <div class="row">
+        <div class="col-md-4">
+          <div class="form-group">
+            <label><i class="fas fa-money-bill-wave"></i> المبلغ: <span class="text-danger">*</span></label>
+            <input type="number" name="amount" step="0.01" class="form-control" 
+                   placeholder="0.00" required>
+          </div>
+        </div>
+        
+        <div class="col-md-4">
+          <div class="form-group">
+            <label><i class="fas fa-dollar-sign"></i> العملة:</label>
+            <select name="currency" id="currency" class="form-control">
+              <option value="AED" selected>AED - درهم إماراتي</option>
+              <option value="USD">USD - دولار أمريكي</option>
+              <option value="EUR">EUR - يورو</option>
+              <option value="SAR">SAR - ريال سعودي</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="col-md-4">
+          <div class="form-group">
+            <label><i class="fas fa-exchange-alt"></i> سعر الصرف:</label>
+            <input type="number" name="exchange_rate" step="0.000001" class="form-control" 
+                   placeholder="1.0">
+          </div>
+        </div>
+      </div>
+
+      <!-- التواريخ -->
+      <div class="row">
+        <div class="col-md-6">
+          <div class="form-group">
+            <label><i class="far fa-calendar"></i> تاريخ الإصدار: <span class="text-danger">*</span></label>
+            <input type="date" name="issue_date" class="form-control" 
+                   value="{{ today }}" required>
+          </div>
+        </div>
+        
+        <div class="col-md-6">
+          <div class="form-group">
+            <label><i class="far fa-calendar-check"></i> تاريخ الاستحقاق: <span class="text-danger">*</span></label>
+            <input type="date" name="due_date" class="form-control" required>
+          </div>
+        </div>
+      </div>
+
+      <!-- معلومات الطرف الآخر (تتغير حسب النوع) -->
+      <div id="incomingFields" style="display: none;">
+        <div class="alert alert-success">
+          <i class="fas fa-arrow-down mr-2"></i><strong>شيك وارد</strong> - من عميل
+        </div>
+        
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label><i class="fas fa-user"></i> العميل (اختياري):</label>
+              <select name="customer_id" class="form-control customer-select">
+                <option value="">بلا</option>
+                {% for customer in customers %}
+                <option value="{{ customer.id }}">{{ customer.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          
+          <div class="col-md-6">
+            <div class="form-group">
+              <label><i class="fas fa-signature"></i> اسم الساحب:</label>
+              <input type="text" name="drawer_name" class="form-control" 
+                     placeholder="اسم الشخص الساحب للشيك">
+            </div>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label><i class="fas fa-id-card"></i> رقم الهوية:</label>
+          <input type="text" name="drawer_id_number" class="form-control" 
+                 placeholder="رقم الهوية أو الجواز">
+        </div>
+      </div>
+
+      <div id="outgoingFields" style="display: none;">
+        <div class="alert alert-danger">
+          <i class="fas fa-arrow-up mr-2"></i><strong>شيك صادر</strong> - لمورد أو مستفيد
+        </div>
+        
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label><i class="fas fa-truck"></i> المورد (اختياري):</label>
+              <select name="supplier_id" class="form-control supplier-select">
+                <option value="">بلا</option>
+                {% for supplier in suppliers %}
+                <option value="{{ supplier.id }}">{{ supplier.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          
+          <div class="col-md-6">
+            <div class="form-group">
+              <label><i class="fas fa-user-tie"></i> اسم المستفيد:</label>
+              <input type="text" name="payee_name" class="form-control" 
+                     placeholder="اسم المستفيد من الشيك">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ملاحظات -->
+      <div class="form-group">
+        <label><i class="fas fa-sticky-note"></i> ملاحظات:</label>
+        <textarea name="notes" class="form-control" rows="3" 
+                  placeholder="أي ملاحظات إضافية..."></textarea>
+      </div>
+
+      <!-- الأزرار -->
+      <div class="form-group">
+        <button type="submit" class="btn btn-success">
+          <i class="fas fa-save mr-2"></i>حفظ الشيك
+        </button>
+        <a href="{{ url_for('cheques.index') }}" class="btn btn-secondary">
+          <i class="fas fa-times mr-2"></i>إلغاء
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(function() {
+  // تغيير الحقول حسب نوع الشيك
+  $('#cheque_type').on('change', function() {
+    const type = $(this).val();
+    
+    if (type === 'incoming') {
+      $('#incomingFields').slideDown();
+      $('#outgoingFields').slideUp();
+    } else if (type === 'outgoing') {
+      $('#outgoingFields').slideDown();
+      $('#incomingFields').slideUp();
+    } else {
+      $('#incomingFields').slideUp();
+      $('#outgoingFields').slideUp();
+    }
+  }).trigger('change');
+  
+  // Select2 للعملاء والموردين (تأكد من تحميل الإضافة)
+  if (window.jQuery && $.fn && $.fn.select2) {
+    $('.customer-select, .supplier-select').select2({
+      theme: 'bootstrap4',
+      language: 'ar',
+      placeholder: 'اختر...',
+      allowClear: true
+    });
+  } else {
+    console.warn('Select2 لم يتم تحميله، سيتم استخدام القائمة العادية.');
+  }
+  
+  // تحديث سعر الصرف ديناميكياً
+  $('#currency').on('change', function() {
+    const currency = $(this).val();
+    
+    if (!currency || currency === 'AED') {
+      $('input[name="exchange_rate"]').val('1.000000');
+      return;
+    }
+    
+    $.ajax({
+      url: `/api/currency-rate/${currency}/AED`,
+      method: 'GET',
+      success: function(data) {
+        if (data && data.rate) {
+          $('input[name="exchange_rate"]').val(parseFloat(data.rate).toFixed(6));
+        } else if (window.toastr) {
+          toastr.warning('تعذر جلب سعر الصرف، يرجى إدخال القيمة يدوياً.');
+        } else {
+          alert('تعذر جلب سعر الصرف، يرجى إدخال القيمة يدوياً.');
+        }
+      },
+      error: function() {
+        if (window.toastr) {
+          toastr.warning('تعذر جلب سعر الصرف، يرجى إدخال القيمة يدوياً.');
+        } else {
+          alert('تعذر جلب سعر الصرف، يرجى إدخال القيمة يدوياً.');
+        }
+      }
+    });
+  }).trigger('change');
+  
+  // تاريخ افتراضي للاستحقاق (30 يوم من اليوم)
+  $('input[name="issue_date"]').on('change', function() {
+    const raw = $(this).val();
+    if (!raw) {
+      $('input[name="due_date"]').val('');
+      return;
+    }
+    
+    const issueDate = new Date(raw);
+    if (isNaN(issueDate.getTime())) {
+      console.warn('Invalid issue date value:', raw);
+      $('input[name="due_date"]').val('');
+      return;
+    }
+    
+    const dueDate = new Date(issueDate);
+    dueDate.setDate(dueDate.getDate() + 30);
+    $('input[name="due_date"]').val(dueDate.toISOString().split('T')[0]);
+  });
+  
+  // ضبط تاريخ الإصدار افتراضياً إلى اليوم إذا كان فارغاً، ثم حدّث الاستحقاق
+  (function ensureIssueDateDefault() {
+    const $issue = $('input[name="issue_date"]');
+    if (!$issue.val()) {
+      const today = new Date();
+      const yyyy = today.getFullYear();
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const dd = String(today.getDate()).padStart(2, '0');
+      $issue.val(`${yyyy}-${mm}-${dd}`);
+    }
+    $issue.trigger('change');
+  })();
+});
+</script>
+{% endblock %}
+

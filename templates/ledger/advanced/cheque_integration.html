@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block title %}ربط الشيكات بالمحاسبة{% endblock %}
+{% block content %}
+<div class="container-fluid">
+  <div class="card">
+    <div class="card-header"><h3><i class="fas fa-link"></i> ربط الشيكات بالمحاسبة</h3></div>
+    <div class="card-body">
+      <div class="row mb-4">
+        <div class="col-md-3">
+          <div class="small-box bg-info">
+            <div class="inner"><h3>{{ stats.total_cheques }}</h3><p>إجمالي الشيكات</p></div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="small-box bg-warning">
+            <div class="inner"><h3>{{ stats.pending_cheques }}</h3><p>قيد الانتظار</p></div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="small-box bg-success">
+            <div class="inner"><h3>{{ stats.cleared_cheques }}</h3><p>تم الصرف</p></div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="small-box bg-primary">
+            <div class="inner"><h3>{{ "{:,.2f}".format(stats.total_amount) }}</h3><p>إجمالي المبالغ</p></div>
+          </div>
+        </div>
+      </div>
+      <h5>الشيكات الأخيرة</h5>
+      <table class="table table-bordered">
+        <thead>
+          <tr><th>رقم الشيك</th><th>المبلغ</th><th>تاريخ الاستحقاق</th><th>الحالة</th><th>القيد المحاسبي</th></tr>
+        </thead>
+        <tbody>
+          {% for cheque in recent_cheques %}
+          <tr>
+            <td>{{ cheque.cheque_number }}</td>
+            <td>{{ cheque.amount_aed }} AED</td>
+            <td>{{ cheque.due_date.strftime('%Y-%m-%d') }}</td>
+            <td><span class="badge badge-{{ 'success' if cheque.status == 'cleared' else 'warning' }}">{{ cheque.status }}</span></td>
+            <td>{{ cheque.gl_entry_number or '-' }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="5" class="text-center">لا توجد شيكات</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

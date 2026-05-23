@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}403 - غير مصرح{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="row justify-content-center mt-5">
+    <div class="col-md-6">
+      <div class="card shadow">
+        <div class="card-body text-center p-5">
+          <h1 class="display-4 text-danger mb-3">403</h1>
+          <h3 class="mb-4">غير مصرح بالوصول</h3>
+          <p class="text-muted mb-4">
+            عذراً، ليس لديك صلاحيات كافية للوصول إلى هذه الصفحة.
+          </p>
+          <div class="mt-4">
+            <a href="{{ url_for('main.dashboard') }}" class="btn btn-primary">
+              العودة للرئيسية
+            </a>
+            <a href="javascript:history.back()" class="btn btn-secondary">
+              رجوع
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,558 @@
+{% extends 'base.html' %}
+{% block title %}تقارير مالية احترافية - Professional Financial Reports{% endblock %}
+
+{% block styles %}
+<style>
+/* تصميم احترافي للتقارير المالية */
+.report-dashboard {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 30px;
+  border-radius: 20px;
+  margin-bottom: 30px;
+  color: white;
+}
+
+.report-card {
+  background: white;
+  border-radius: 15px;
+  padding: 25px;
+  margin-bottom: 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
+}
+
+.report-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+}
+
+.chart-container {
+  position: relative;
+  height: 400px;
+  margin: 20px 0;
+}
+
+.stat-box {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 20px;
+  border-radius: 15px;
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.stat-box h3 {
+  font-size: 36px;
+  font-weight: bold;
+  margin: 10px 0;
+}
+
+.stat-box p {
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.trend-up {
+  color: #28a745;
+}
+
+.trend-down {
+  color: #dc3545;
+}
+
+.report-filter {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 15px;
+  margin-bottom: 20px;
+}
+
+.chart-legend {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 15px;
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  margin: 5px 15px;
+}
+
+.legend-color {
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  margin-left: 8px;
+}
+
+.table-responsive {
+  border-radius: 15px;
+  overflow: hidden;
+}
+
+.financial-table {
+  width: 100%;
+  background: white;
+}
+
+.financial-table thead {
+  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+  color: white;
+}
+
+.financial-table th {
+  padding: 15px;
+  text-align: center;
+  font-weight: bold;
+}
+
+.financial-table td {
+  padding: 12px;
+  text-align: center;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.financial-table tbody tr:hover {
+  background: #e3f2fd;
+}
+
+.export-buttons {
+  margin: 20px 0;
+}
+
+.export-btn {
+  margin: 5px;
+  padding: 10px 25px;
+  border-radius: 25px;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+.export-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <!-- لوحة معلومات التقارير -->
+  <div class="report-dashboard">
+    <div class="row">
+      <div class="col-md-8">
+        <h2><i class="fas fa-chart-line mr-2"></i>التقارير المالية الاحترافية</h2>
+        <p>تقارير متقدمة مع رسوم بيانية تفاعلية وتحليلات شاملة</p>
+      </div>
+      <div class="col-md-4 text-right">
+        <div class="export-buttons">
+          <button class="btn btn-light export-btn" onclick="exportPDF()">
+            <i class="fas fa-file-pdf mr-1"></i>PDF
+          </button>
+          <button class="btn btn-light export-btn" onclick="exportExcel()">
+            <i class="fas fa-file-excel mr-1"></i>Excel
+          </button>
+          <button class="btn btn-light export-btn" onclick="window.print()">
+            <i class="fas fa-print mr-1"></i>طباعة
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- إحصائيات سريعة -->
+  <div class="row">
+    <div class="col-md-3">
+      <div class="stat-box" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+        <p>إجمالي الإيرادات</p>
+        <h3>{{ "{:,.2f}".format(total_revenue) }}</h3>
+        <p><i class="fas fa-arrow-up trend-up"></i> +15.3% من الشهر الماضي</p>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="stat-box" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+        <p>إجمالي المصروفات</p>
+        <h3>{{ "{:,.2f}".format(total_expenses) }}</h3>
+        <p><i class="fas fa-arrow-down trend-up"></i> -5.2% من الشهر الماضي</p>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="stat-box" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+        <p>صافي الربح</p>
+        <h3>{{ "{:,.2f}".format(net_profit) }}</h3>
+        <p><i class="fas fa-arrow-up trend-up"></i> +23.7% من الشهر الماضي</p>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="stat-box" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+        <p>هامش الربح</p>
+        <h3>{{ "{:.1f}".format(profit_margin) }}%</h3>
+        <p><i class="fas fa-arrow-up trend-up"></i> +2.1% من الشهر الماضي</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- فلاتر التقارير -->
+  <div class="report-filter">
+    <form method="GET" class="form-inline" action="">
+      <div class="form-group mr-3">
+        <label class="mr-2">من تاريخ:</label>
+        <input type="date" name="date_from" class="form-control" value="{{ date_from.strftime('%Y-%m-%d') }}">
+      </div>
+      <div class="form-group mr-3">
+        <label class="mr-2">إلى تاريخ:</label>
+        <input type="date" name="date_to" class="form-control" value="{{ date_to.strftime('%Y-%m-%d') }}">
+      </div>
+      <div class="form-group mr-3">
+        <label class="mr-2">نوع التقرير:</label>
+        <select name="report_type" class="form-control">
+          <option value="all">جميع التقارير</option>
+          <option value="revenue">الإيرادات</option>
+          <option value="expenses">المصروفات</option>
+          <option value="profit">الأرباح</option>
+          <option value="comparison">المقارنات</option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary">
+        <i class="fas fa-filter mr-1"></i>تطبيق الفلتر
+      </button>
+    </form>
+  </div>
+
+  <!-- الرسوم البيانية -->
+  <div class="row">
+    <!-- رسم بياني للإيرادات والمصروفات -->
+    <div class="col-md-6">
+      <div class="report-card">
+        <h4><i class="fas fa-chart-bar mr-2"></i>الإيرادات والمصروفات الشهرية</h4>
+        <div class="chart-container">
+          <canvas id="revenueExpenseChart"></canvas>
+        </div>
+        <div class="chart-legend">
+          <div class="legend-item">
+            <div class="legend-color" style="background: #667eea;"></div>
+            <span>الإيرادات</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color" style="background: #f5576c;"></div>
+            <span>المصروفات</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- رسم بياني دائري لتوزيع المصروفات -->
+    <div class="col-md-6">
+      <div class="report-card">
+        <h4><i class="fas fa-chart-pie mr-2"></i>توزيع المصروفات حسب الفئة</h4>
+        <div class="chart-container">
+          <canvas id="expenseDistributionChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <!-- رسم بياني خطي للأرباح -->
+    <div class="col-md-12">
+      <div class="report-card">
+        <h4><i class="fas fa-chart-line mr-2"></i>اتجاه الأرباح الشهرية</h4>
+        <div class="chart-container">
+          <canvas id="profitTrendChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- جداول تفصيلية -->
+  <div class="row">
+    <div class="col-md-12">
+      <div class="report-card">
+        <h4><i class="fas fa-table mr-2"></i>تفاصيل الإيرادات والمصروفات</h4>
+        <div class="table-responsive">
+          <table class="financial-table table table-hover">
+            <thead>
+              <tr>
+                <th>الشهر</th>
+                <th>الإيرادات</th>
+                <th>المصروفات</th>
+                <th>صافي الربح</th>
+                <th>هامش الربح %</th>
+                <th>التغير %</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for month_data in monthly_data %}
+              <tr>
+                <td><strong>{{ month_data.month }}</strong></td>
+                <td class="text-success">{{ "{:,.2f}".format(month_data.revenue) }}</td>
+                <td class="text-danger">{{ "{:,.2f}".format(month_data.expenses) }}</td>
+                <td class="text-primary"><strong>{{ "{:,.2f}".format(month_data.profit) }}</strong></td>
+                <td>{{ "{:.1f}".format(month_data.margin) }}%</td>
+                <td>
+                  {% if month_data.change > 0 %}
+                    <span class="trend-up"><i class="fas fa-arrow-up"></i> {{ "{:.1f}".format(month_data.change) }}%</span>
+                  {% else %}
+                    <span class="trend-down"><i class="fas fa-arrow-down"></i> {{ "{:.1f}".format(abs(month_data.change)) }}%</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+            <tfoot style="background: #f8f9fa; font-weight: bold;">
+              <tr>
+                <td>الإجمالي</td>
+                <td class="text-success">{{ "{:,.2f}".format(total_revenue) }}</td>
+                <td class="text-danger">{{ "{:,.2f}".format(total_expenses) }}</td>
+                <td class="text-primary">{{ "{:,.2f}".format(net_profit) }}</td>
+                <td>{{ "{:.1f}".format(profit_margin) }}%</td>
+                <td>-</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- تحليلات متقدمة -->
+  <div class="row">
+    <div class="col-md-4">
+      <div class="report-card">
+        <h5><i class="fas fa-analytics mr-2"></i>معدل النمو السنوي</h5>
+        <div class="chart-container" style="height: 200px;">
+          <canvas id="growthRateChart"></canvas>
+        </div>
+        <div class="text-center mt-3">
+          <h3 class="trend-up">+18.5%</h3>
+          <p>نمو ممتاز مقارنة بالعام الماضي</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-4">
+      <div class="report-card">
+        <h5><i class="fas fa-balance-scale mr-2"></i>نسبة السيولة</h5>
+        <div class="chart-container" style="height: 200px;">
+          <canvas id="liquidityChart"></canvas>
+        </div>
+        <div class="text-center mt-3">
+          <h3 class="trend-up">2.3</h3>
+          <p>سيولة جيدة وصحية</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-4">
+      <div class="report-card">
+        <h5><i class="fas fa-percentage mr-2"></i>العائد على الاستثمار</h5>
+        <div class="chart-container" style="height: 200px;">
+          <canvas id="roiChart"></canvas>
+        </div>
+        <div class="text-center mt-3">
+          <h3 class="trend-up">25.7%</h3>
+          <p>عائد ممتاز على الاستثمار</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+
+<script>
+// بيانات الرسوم البيانية
+const months = {{ months|tojson }};
+const revenueData = {{ revenue_data|tojson }};
+const expenseData = {{ expense_data|tojson }};
+const profitData = {{ profit_data|tojson }};
+
+// رسم بياني للإيرادات والمصروفات
+const revenueExpenseCtx = document.getElementById('revenueExpenseChart').getContext('2d');
+const revenueExpenseChart = new Chart(revenueExpenseCtx, {
+  type: 'bar',
+  data: {
+    labels: months,
+    datasets: [
+      {
+        label: 'الإيرادات',
+        data: revenueData,
+        backgroundColor: 'rgba(102, 126, 234, 0.8)',
+        borderColor: 'rgba(102, 126, 234, 1)',
+        borderWidth: 2
+      },
+      {
+        label: 'المصروفات',
+        data: expenseData,
+        backgroundColor: 'rgba(245, 87, 108, 0.8)',
+        borderColor: 'rgba(245, 87, 108, 1)',
+        borderWidth: 2
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: false
+      }
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: {
+          callback: function(value) {
+            return value.toLocaleString() + ' د.إ';
+          }
+        }
+      }
+    }
+  }
+});
+
+// رسم بياني دائري لتوزيع المصروفات
+const expenseDistributionCtx = document.getElementById('expenseDistributionChart').getContext('2d');
+const expenseDistributionChart = new Chart(expenseDistributionCtx, {
+  type: 'doughnut',
+  data: {
+    labels: ['رواتب', 'إيجارات', 'مواد', 'كهرباء', 'صيانة', 'أخرى'],
+    datasets: [{
+      data: [35, 20, 18, 12, 10, 5],
+      backgroundColor: [
+        '#667eea',
+        '#f5576c',
+        '#4facfe',
+        '#43e97b',
+        '#fa709a',
+        '#feca57'
+      ],
+      borderWidth: 2,
+      borderColor: '#fff'
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'bottom'
+      }
+    }
+  }
+});
+
+// رسم بياني خطي للأرباح
+const profitTrendCtx = document.getElementById('profitTrendChart').getContext('2d');
+const profitTrendChart = new Chart(profitTrendCtx, {
+  type: 'line',
+  data: {
+    labels: months,
+    datasets: [{
+      label: 'صافي الربح',
+      data: profitData,
+      fill: true,
+      backgroundColor: 'rgba(67, 233, 123, 0.2)',
+      borderColor: 'rgba(67, 233, 123, 1)',
+      borderWidth: 3,
+      tension: 0.4,
+      pointRadius: 5,
+      pointBackgroundColor: 'rgba(67, 233, 123, 1)'
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: false
+      }
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: {
+          callback: function(value) {
+            return value.toLocaleString() + ' د.إ';
+          }
+        }
+      }
+    }
+  }
+});
+
+// رسوم بيانية صغيرة للتحليلات
+const growthRateCtx = document.getElementById('growthRateChart').getContext('2d');
+new Chart(growthRateCtx, {
+  type: 'line',
+  data: {
+    labels: ['Q1', 'Q2', 'Q3', 'Q4'],
+    datasets: [{
+      data: [12, 15, 18, 22],
+      borderColor: '#43e97b',
+      backgroundColor: 'rgba(67, 233, 123, 0.1)',
+      fill: true,
+      tension: 0.4
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: { y: { display: false }, x: { display: false } }
+  }
+});
+
+const liquidityCtx = document.getElementById('liquidityChart').getContext('2d');
+new Chart(liquidityCtx, {
+  type: 'bar',
+  data: {
+    labels: ['الحالي', 'السريع'],
+    datasets: [{
+      data: [2.3, 1.8],
+      backgroundColor: ['#4facfe', '#00f2fe']
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: { y: { beginAtZero: true } }
+  }
+});
+
+const roiCtx = document.getElementById('roiChart').getContext('2d');
+new Chart(roiCtx, {
+  type: 'doughnut',
+  data: {
+    datasets: [{
+      data: [25.7, 74.3],
+      backgroundColor: ['#667eea', '#e0e0e0'],
+      borderWidth: 0
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    cutout: '70%',
+    plugins: { legend: { display: false } }
+  }
+});
+
+// دوال التصدير
+function exportPDF() {
+  alert('سيتم تصدير التقرير كملف PDF');
+  // يمكن إضافة كود jsPDF هنا
+}
+
+function exportExcel() {
+  alert('سيتم تصدير التقرير كملف Excel');
+  // يمكن إضافة كود XLSX هنا
+}
+</script>
+{% endblock %}

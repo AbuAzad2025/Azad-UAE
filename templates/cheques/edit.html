@@ -1,0 +1,242 @@
+{% extends 'base.html' %}
+{% block title %}شركة أزاد للأنظمة الذكية - تعديل الشيك #{{ cheque.cheque_number }}{% endblock %}
+{% block page_title %}
+<div class="d-flex justify-content-between align-items-center">
+  <div>
+    <h1 class="mb-0"><i class="fas fa-edit mr-2"></i>تعديل شيك - {{ cheque.cheque_number }}</h1>
+  </div>
+  <div>
+    <a href="{{ url_for('cheques.view', id=cheque.id) }}" class="btn btn-info">
+      <i class="fas fa-eye mr-2"></i>عرض
+    </a>
+    <a href="{{ url_for('cheques.index') }}" class="btn btn-secondary">
+      <i class="fas fa-arrow-right mr-2"></i>العودة للقائمة
+    </a>
+    <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
+      <i class="fas fa-home mr-2"></i>الرئيسية
+    </a>
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header bg-warning">
+    <h3 class="card-title text-white">
+      <i class="fas fa-money-check mr-2"></i>تعديل معلومات الشيك
+    </h3>
+  </div>
+  <div class="card-body">
+    <form method="POST" action="{{ url_for('cheques.edit', id=cheque.id) }}" id="chequeForm">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      
+      <!-- النوع -->
+      <div class="row">
+        <div class="col-md-6">
+          <div class="form-group">
+            <label><i class="fas fa-exchange-alt"></i> نوع الشيك: <span class="text-danger">*</span></label>
+            <select name="cheque_type" id="cheque_type" class="form-control" required>
+              <option value="incoming" {% if cheque.cheque_type == 'incoming' %}selected{% endif %}>وارد (من عميل)</option>
+              <option value="outgoing" {% if cheque.cheque_type == 'outgoing' %}selected{% endif %}>صادر (لمورد)</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="col-md-6">
+          <div class="form-group">
+            <label><i class="fas fa-hashtag"></i> رقم الشيك: <span class="text-danger">*</span></label>
+            <input type="text" name="cheque_bank_number" class="form-control" 
+                   value="{{ cheque.cheque_bank_number }}" required>
+          </div>
+        </div>
+      </div>
+
+      <!-- المعلومات البنكية -->
+      <div class="row">
+        <div class="col-md-4">
+          <div class="form-group">
+            <label><i class="fas fa-university"></i> البنك: <span class="text-danger">*</span></label>
+            <input type="text" name="bank_name" class="form-control" 
+                   value="{{ cheque.bank_name }}" required>
+          </div>
+        </div>
+        
+        <div class="col-md-4">
+          <div class="form-group">
+            <label><i class="fas fa-map-marker-alt"></i> الفرع:</label>
+            <input type="text" name="bank_branch" class="form-control" 
+                   value="{{ cheque.bank_branch or '' }}">
+          </div>
+        </div>
+        
+        <div class="col-md-4">
+          <div class="form-group">
+            <label><i class="fas fa-credit-card"></i> رقم الحساب:</label>
+            <input type="text" name="account_number" class="form-control" 
+                   value="{{ cheque.account_number or '' }}">
+          </div>
+        </div>
+      </div>
+
+      <!-- المبلغ والعملة -->
+      <div class="row">
+        <div class="col-md-4">
+          <div class="form-group">
+            <label><i class="fas fa-money-bill-wave"></i> المبلغ: <span class="text-danger">*</span></label>
+            <input type="number" name="amount" step="0.01" class="form-control" 
+                   value="{{ cheque.amount }}" required>
+          </div>
+        </div>
+        
+        <div class="col-md-4">
+          <div class="form-group">
+            <label><i class="fas fa-dollar-sign"></i> العملة:</label>
+            <select name="currency" class="form-control">
+              <option value="AED" {% if cheque.currency == 'AED' %}selected{% endif %}>AED - درهم إماراتي</option>
+              <option value="USD" {% if cheque.currency == 'USD' %}selected{% endif %}>USD - دولار أمريكي</option>
+              <option value="EUR" {% if cheque.currency == 'EUR' %}selected{% endif %}>EUR - يورو</option>
+              <option value="SAR" {% if cheque.currency == 'SAR' %}selected{% endif %}>SAR - ريال سعودي</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="col-md-4">
+          <div class="form-group">
+            <label><i class="fas fa-exchange-alt"></i> سعر الصرف:</label>
+            <input type="number" name="exchange_rate" step="0.000001" class="form-control" 
+                   value="{{ cheque.exchange_rate }}">
+          </div>
+        </div>
+      </div>
+
+      <!-- التواريخ -->
+      <div class="row">
+        <div class="col-md-6">
+          <div class="form-group">
+            <label><i class="far fa-calendar"></i> تاريخ الإصدار: <span class="text-danger">*</span></label>
+            <input type="date" name="issue_date" class="form-control" 
+                   value="{{ cheque.issue_date.strftime('%Y-%m-%d') }}" required>
+          </div>
+        </div>
+        
+        <div class="col-md-6">
+          <div class="form-group">
+            <label><i class="far fa-calendar-check"></i> تاريخ الاستحقاق: <span class="text-danger">*</span></label>
+            <input type="date" name="due_date" class="form-control" 
+                   value="{{ cheque.due_date.strftime('%Y-%m-%d') }}" required>
+          </div>
+        </div>
+      </div>
+
+      <!-- معلومات الطرف الآخر -->
+      <div id="incomingFields" style="display: {% if cheque.cheque_type == 'incoming' %}block{% else %}none{% endif %};">
+        <div class="alert alert-success">
+          <i class="fas fa-arrow-down mr-2"></i><strong>شيك وارد</strong> - من عميل
+        </div>
+        
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label><i class="fas fa-user"></i> العميل (اختياري):</label>
+              <select name="customer_id" class="form-control customer-select">
+                <option value="">بلا</option>
+                {% for customer in customers %}
+                <option value="{{ customer.id }}" {% if cheque.customer_id == customer.id %}selected{% endif %}>
+                  {{ customer.name }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          
+          <div class="col-md-6">
+            <div class="form-group">
+              <label><i class="fas fa-signature"></i> اسم الساحب:</label>
+              <input type="text" name="drawer_name" class="form-control" 
+                     value="{{ cheque.drawer_name or '' }}">
+            </div>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label><i class="fas fa-id-card"></i> رقم الهوية:</label>
+          <input type="text" name="drawer_id_number" class="form-control" 
+                 value="{{ cheque.drawer_id_number or '' }}">
+        </div>
+      </div>
+
+      <div id="outgoingFields" style="display: {% if cheque.cheque_type == 'outgoing' %}block{% else %}none{% endif %};">
+        <div class="alert alert-danger">
+          <i class="fas fa-arrow-up mr-2"></i><strong>شيك صادر</strong> - لمورد أو مستفيد
+        </div>
+        
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label><i class="fas fa-truck"></i> المورد (اختياري):</label>
+              <select name="supplier_id" class="form-control supplier-select">
+                <option value="">بلا</option>
+                {% for supplier in suppliers %}
+                <option value="{{ supplier.id }}" {% if cheque.supplier_id == supplier.id %}selected{% endif %}>
+                  {{ supplier.name }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          
+          <div class="col-md-6">
+            <div class="form-group">
+              <label><i class="fas fa-user-tie"></i> اسم المستفيد:</label>
+              <input type="text" name="payee_name" class="form-control" 
+                     value="{{ cheque.payee_name or '' }}">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ملاحظات -->
+      <div class="form-group">
+        <label><i class="fas fa-sticky-note"></i> ملاحظات:</label>
+        <textarea name="notes" class="form-control" rows="3">{{ cheque.notes or '' }}</textarea>
+      </div>
+
+      <!-- الأزرار -->
+      <div class="form-group">
+        <button type="submit" class="btn btn-success">
+          <i class="fas fa-save mr-2"></i>حفظ التعديلات
+        </button>
+        <a href="{{ url_for('cheques.view', id=cheque.id) }}" class="btn btn-secondary">
+          <i class="fas fa-times mr-2"></i>إلغاء
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// تغيير الحقول حسب نوع الشيك
+$('#cheque_type').change(function() {
+  const type = $(this).val();
+  
+  if (type === 'incoming') {
+    $('#incomingFields').slideDown();
+    $('#outgoingFields').slideUp();
+  } else if (type === 'outgoing') {
+    $('#outgoingFields').slideDown();
+    $('#incomingFields').slideUp();
+  }
+});
+
+// Select2 للعملاء والموردين
+$('.customer-select, .supplier-select').select2({
+  theme: 'bootstrap4',
+  language: 'ar',
+  placeholder: 'اختر...',
+  allowClear: true
+});
+</script>
+{% endblock %}
+

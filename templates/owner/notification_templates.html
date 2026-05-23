@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% block title %}قوالب الإشعارات{% endblock %}
+{% block content %}
+<div class="container-fluid">
+  <div class="mb-3">
+    <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary">
+      <i class="fas fa-arrow-right"></i> رجوع للوحة المالك
+    </a>
+    <a href="{{ url_for('owner.email_settings') }}" class="btn btn-info">
+      <i class="fas fa-envelope"></i> البريد
+    </a>
+    <a href="{{ url_for('owner.sms_settings') }}" class="btn btn-warning">
+      <i class="fas fa-sms"></i> الرسائل
+    </a>
+    <a href="{{ url_for('owner.whatsapp_settings') }}" class="btn btn-success">
+      <i class="fab fa-whatsapp"></i> واتساب
+    </a>
+  </div>
+  
+  <div class="card">
+    <div class="card-header">
+      <h3><i class="fas fa-bell"></i> قوالب الإشعارات</h3>
+    </div>
+    <div class="card-body">
+      <form method="post" action="">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        
+        <div class="form-group">
+          <label><i class="fas fa-envelope"></i> قالب البريد للفواتير</label>
+          <textarea name="invoice_email_template" class="form-control" rows="5" placeholder="مرحباً {customer_name}، تم إصدار فاتورة رقم {sale_number} بمبلغ {total_amount} AED">{{ templates.invoice_email or '' }}</textarea>
+          <small class="text-muted">
+            <i class="fas fa-info-circle"></i>
+            المتغيرات المتاحة: <code>{customer_name}</code>, <code>{sale_number}</code>, <code>{total_amount}</code>, <code>{date}</code>
+          </small>
+        </div>
+        
+        <div class="form-group">
+          <label><i class="fas fa-sms"></i> قالب الرسائل النصية للدفعات</label>
+          <textarea name="payment_sms_template" class="form-control" rows="4" placeholder="شكراً لدفعك {amount} AED. رقم الإيصال: {receipt_number}">{{ templates.payment_sms or '' }}</textarea>
+          <small class="text-muted">
+            <i class="fas fa-info-circle"></i>
+            المتغيرات المتاحة: <code>{amount}</code>, <code>{receipt_number}</code>, <code>{customer_name}</code>, <code>{date}</code>
+          </small>
+        </div>
+        
+        <div class="form-group">
+          <label><i class="fab fa-whatsapp"></i> قالب واتساب للتذكير</label>
+          <textarea name="reminder_whatsapp_template" class="form-control" rows="4" placeholder="عزيزنا {customer_name}، لديك مبلغ مستحق: {balance} AED. نرجو المراجعة.">{{ templates.reminder_whatsapp or '' }}</textarea>
+          <small class="text-muted">
+            <i class="fas fa-info-circle"></i>
+            المتغيرات المتاحة: <code>{customer_name}</code>, <code>{balance}</code>, <code>{phone}</code>, <code>{last_invoice}</code>
+          </small>
+        </div>
+        
+        <div class="alert alert-info">
+          <i class="fas fa-lightbulb"></i>
+          <strong>نصيحة:</strong> استخدم المتغيرات المذكورة أعلاه لجعل الرسائل ديناميكية. سيتم استبدالها تلقائياً عند الإرسال.
+        </div>
+        
+        <button type="submit" class="btn btn-success btn-lg">
+          <i class="fas fa-save"></i> حفظ جميع القوالب
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

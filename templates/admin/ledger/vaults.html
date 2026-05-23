@@ -1,0 +1,202 @@
+{% extends 'base.html' %}
+{% block title %}إدارة الصناديق والمحافظ - Vaults Management{% endblock %}
+{% block page_title %}إدارة الصناديق والمحافظ{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+  <div class="col-12">
+    <a href="{{ url_for('ledger.admin_dashboard') }}" class="btn btn-secondary">
+      <i class="fas fa-arrow-right mr-2"></i>العودة للوحة التحكم
+    </a>
+    <a href="{{ url_for('payment_vault.dashboard') }}" class="btn btn-primary">
+      <i class="fas fa-vault mr-2"></i>إدارة المحافظ
+    </a>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header bg-gradient-primary">
+    <h3 class="card-title text-white">
+      <i class="fas fa-vault mr-2"></i>جميع المحافظ والصناديق
+    </h3>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="bg-light">
+          <tr>
+            <th>اسم المحفظة</th>
+            <th>الحالة</th>
+            <th>آخر وصول</th>
+            <th>المحاولات الفاشلة</th>
+            <th>تاريخ الإنشاء</th>
+            <th>الإجراءات</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for vault in vaults %}
+          <tr>
+            <td>
+              <strong>{{ vault.vault_name }}</strong>
+            </td>
+            <td>
+              {% if vault.is_locked %}
+                <span class="badge badge-danger">مقفلة</span>
+              {% else %}
+                <span class="badge badge-success">مفتوحة</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if vault.last_access %}
+                {{ vault.last_access.strftime('%Y-%m-%d %H:%M') }}
+              {% else %}
+                <span class="text-muted">لم يتم الوصول</span>
+              {% endif %}
+            </td>
+            <td>
+              <span class="badge badge-{{ 'danger' if vault.failed_attempts > 3 else 'warning' if vault.failed_attempts > 0 else 'success' }}">
+                {{ vault.failed_attempts }}
+              </span>
+            </td>
+            <td>{{ vault.created_at.strftime('%Y-%m-%d') }}</td>
+            <td>
+              <div class="btn-group btn-group-sm">
+                <a href="{{ url_for('payment_vault.dashboard') }}" class="btn btn-outline-primary btn-sm">
+                  <i class="fas fa-eye"></i>
+                </a>
+                {% if vault.is_locked %}
+                <button type="button" class="btn btn-outline-success btn-sm" onclick="unlockVault({{ vault.id }})">
+                  <i class="fas fa-unlock"></i>
+                </button>
+                {% else %}
+                <button type="button" class="btn btn-outline-warning btn-sm" onclick="lockVault({{ vault.id }})">
+                  <i class="fas fa-lock"></i>
+                </button>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- إحصائيات سريعة -->
+<div class="row mt-4">
+  <div class="col-md-3">
+    <div class="card bg-gradient-primary text-white">
+      <div class="card-body">
+        <div class="d-flex justify-content-between">
+          <div>
+            <h4 class="mb-0">{{ vaults|length }}</h4>
+            <p class="mb-0">إجمالي المحافظ</p>
+          </div>
+          <div class="align-self-center">
+            <i class="fas fa-vault fa-2x"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-md-3">
+    <div class="card bg-gradient-success text-white">
+      <div class="card-body">
+        <div class="d-flex justify-content-between">
+          <div>
+            <h4 class="mb-0">{{ vaults|selectattr('is_locked', 'equalto', False)|list|length }}</h4>
+            <p class="mb-0">محافظ مفتوحة</p>
+          </div>
+          <div class="align-self-center">
+            <i class="fas fa-unlock fa-2x"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-md-3">
+    <div class="card bg-gradient-danger text-white">
+      <div class="card-body">
+        <div class="d-flex justify-content-between">
+          <div>
+            <h4 class="mb-0">{{ vaults|selectattr('is_locked', 'equalto', True)|list|length }}</h4>
+            <p class="mb-0">محافظ مقفلة</p>
+          </div>
+          <div class="align-self-center">
+            <i class="fas fa-lock fa-2x"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-md-3">
+    <div class="card bg-gradient-warning text-white">
+      <div class="card-body">
+        <div class="d-flex justify-content-between">
+          <div>
+            <h4 class="mb-0">{{ vaults|selectattr('failed_attempts', 'gt', 0)|list|length }}</h4>
+            <p class="mb-0">محاولات فاشلة</p>
+          </div>
+          <div class="align-self-center">
+            <i class="fas fa-exclamation-triangle fa-2x"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function unlockVault(vaultId) {
+  if (confirm('هل أنت متأكد من فتح المحفظة؟')) {
+    // إرسال طلب فتح المحفظة
+    fetch(`/payment-vault/unlock/${vaultId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': document.querySelector('meta[name=csrf-token]').getAttribute('content')
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        location.reload();
+      } else {
+        alert('فشل في فتح المحفظة: ' + data.message);
+      }
+    })
+    .catch(error => {      alert('حدث خطأ في فتح المحفظة');
+    });
+  }
+}
+
+function lockVault(vaultId) {
+  if (confirm('هل أنت متأكد من قفل المحفظة؟')) {
+    // إرسال طلب قفل المحفظة
+    fetch(`/payment-vault/lock/${vaultId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': document.querySelector('meta[name=csrf-token]').getAttribute('content')
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        location.reload();
+      } else {
+        alert('فشل في قفل المحفظة: ' + data.message);
+      }
+    })
+    .catch(error => {      alert('حدث خطأ في قفل المحفظة');
+    });
+  }
+}
+</script>
+{% endblock %}

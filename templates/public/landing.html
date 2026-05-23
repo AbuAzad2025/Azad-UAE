@@ -1,0 +1,1461 @@
+<!DOCTYPE html>
+<html lang="{{ current_language }}" dir="{{ 'rtl' if is_rtl else 'ltr' }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ 'شركة أزاد للأنظمة الذكية - أفضل برنامج إدارة مستودعات ومبيعات في الإمارات ودبي 2025' if current_language == 'ar' else 'Azad Smart Systems - Best Warehouse & Sales Management Software in UAE 2025' }}</title>
+    
+    <!-- SEO Meta Tags المحسنة -->
+    <meta name="description" content="شركة أزاد للأنظمة الذكية - نظام إدارة مستودعات ومبيعات ومشتريات متكامل مع ذكاء اصطناعي. برنامج محاسبة احترافي للشركات في الإمارات ودبي وأبوظبي. فواتير إلكترونية، إدارة مخزون، كشوفات حسابات، تقارير مالية شاملة. حل متكامل لقطع غيار السيارات والمحلات التجارية.">
+    <meta name="keywords" content="نظام إدارة مستودعات الإمارات، برنامج محاسبة دبي، فواتير إلكترونية الإمارات، إدارة المخزون، برنامج مبيعات، نظام نقاط البيع POS، قطع غيار سيارات، ذكاء اصطناعي محاسبة، ERP الإمارات، كشف حساب، برنامج حسابات، سندات قبض، إدارة شيكات، تقارير مالية، نظام محاسبي، cloud accounting، المحاسبة السحابية، دبي، أبوظبي، الشارقة، عجمان، رأس الخيمة">
+    <meta name="author" content="شركة أزاد للأنظمة الذكية">
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+    <meta name="language" content="{{ 'Arabic' if current_language == 'ar' else 'English' }}">
+    <meta name="geo.region" content="AE">
+    <meta name="geo.placename" content="Dubai, UAE">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ request.url }}">
+    <meta property="og:title" content="شركة أزاد للأنظمة الذكية - أفضل نظام إدارة مستودعات في الإمارات">
+    <meta property="og:description" content="نظام متكامل لإدارة المستودعات والمبيعات مع ذكاء اصطناعي متقدم. حل احترافي للشركات في دبي والإمارات.">
+    <meta property="og:image" content="{{ url_for('static', filename='img/azad_logo_white_on_dark.png', _external=True) }}">
+    <meta property="og:locale" content="{{ 'ar_AE' if current_language == 'ar' else 'en_US' }}">
+    <meta property="og:site_name" content="شركة أزاد للأنظمة الذكية">
+    
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="شركة أزاد للأنظمة الذكية - نظام إدارة مستودعات ذكي">
+    <meta name="twitter:description" content="نظام متكامل لإدارة المستودعات والمبيعات مع ذكاء اصطناعي. فواتير، مخزون، حسابات، تقارير.">
+    <meta name="twitter:image" content="{{ url_for('static', filename='img/azad_logo_white_on_dark.png', _external=True) }}">
+    
+    <!-- Canonical -->
+    <link rel="canonical" href="{{ request.url }}">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/accessibility.css') }}">
+    
+    <!-- Schema.org JSON-LD للتحسين المتقدم -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "نظام أزاد لإدارة المستودعات",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "Web, Cloud",
+      "offers": {
+        "@type": "AggregateOffer",
+        "lowPrice": "99",
+        "highPrice": "599",
+        "priceCurrency": "AED",
+        "availability": "https://schema.org/InStock"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.9",
+        "reviewCount": "150",
+        "bestRating": "5"
+      },
+      "provider": {
+        "@type": "Organization",
+        "name": "شركة أزاد للأنظمة الذكية",
+        "url": "{{ request.url_root }}"
+      }
+    }
+    </script>
+    
+    <!-- FAQPage Schema -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "ما هو نظام إدارة المستودعات من شركة أزاد؟",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "نظام أزاد هو برنامج محاسبة ومستودعات متكامل مصمم خصيصاً للشركات في الإمارات ودبي وأبوظبي. يوفر النظام إدارة شاملة للمبيعات، المشتريات، المخزون، الفواتير الإلكترونية، كشوفات الحسابات، إدارة الشيكات، والتقارير المالية مع ذكاء اصطناعي متقدم."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "هل البرنامج مناسب لمحلات قطع غيار السيارات؟",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "نعم بالتأكيد! النظام مصمم خصيصاً لمحلات قطع غيار السيارات في الإمارات. يتضمن ميزات متخصصة مثل: معرفة توافق القطع مع موديلات السيارات، إدارة 3 مستويات أسعار، تتبع المخزون بدقة، فواتير احترافية، وتحليل المبيعات."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "كم يكلف برنامج إدارة المستودعات؟",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "نوفر 3 باقات مرنة تناسب جميع أحجام الأعمال. الباقة الأساسية تبدأ من 99 درهم شهرياً، الباقة الاحترافية 299 درهم، والباقة المتقدمة 599 درهم. جميع الباقات تشمل: دعم فني، تحديثات مجانية، تدريب، وذكاء اصطناعي."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "هل يدعم النظام الفواتير الإلكترونية المعتمدة في الإمارات؟",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "نعم! النظام يدعم الفواتير الإلكترونية بالكامل. يمكنك إنشاء فواتير احترافية بتصاميم متعددة، طباعة بأحجام مختلفة، إضافة شعارك وبياناتك، QR Code، وتصدير PDF. متوافق 100% مع قوانين الإمارات."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "ما هي مميزات الذكاء الاصطناعي في البرنامج؟",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "الذكاء الاصطناعي يوفر: توصيات أسعار ذكية، تحليل سلوك العملاء، تنبؤ بالمبيعات، تحليل أداء المنتجات، كشف الأنماط المخفية، توصيات لزيادة الأرباح، ومساعد محادثة ذكي يتعلم من بياناتك."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "هل يمكن استخدام البرنامج في أكثر من فرع؟",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "نعم! النظام يدعم إدارة متعددة المستودعات والفروع. يمكنك متابعة المخزون في كل فرع، نقل البضائع بين المستودعات، تقارير منفصلة لكل فرع. مثالي للشركات التي لديها عدة فروع في دبي، أبوظبي، الشارقة."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "كيف أبدأ باستخدام نظام أزاد للمستودعات؟",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "البداية سهلة جداً! 3 خطوات فقط: (1) احجز عرضاً توضيحياً مجانياً، (2) اختر الباقة المناسبة، (3) ابدأ فوراً! نوفر تدريب مجاني لفريقك، استيراد بياناتك القديمة، دعم فني 24/7، ومتابعة مستمرة."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "هل النظام آمن ويحمي بياناتي؟",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "الأمان أولويتنا! نستخدم: تشفير SSL كامل، نسخ احتياطي تلقائي يومي، حماية من الاختراق، صلاحيات متقدمة، سجل تدقيق شامل، وخزنة آمنة للبطاقات. بياناتك محمية بأعلى معايير الأمان العالمية ومتوافق 100% مع قوانين حماية البيانات في الإمارات."
+          }
+        }
+      ]
+    }
+    </script>
+    
+    <style>
+        :root {
+            --gulf-gold: #D4AF37;
+            --gulf-blue: #1B4D89;
+            --palestine-red: #CE1126;
+            --palestine-green: #007A3D;
+            --luxury-purple: #6B46C1;
+            --gradient-gulf: linear-gradient(135deg, #1B4D89 0%, #6B46C1 50%, #D4AF37 100%);
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Tajawal', sans-serif; background: #0a0e27; overflow-x: hidden; }
+
+        .landing-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 10000;
+            padding: 14px 20px;
+            background: rgba(0, 0, 0, 0.55);
+            backdrop-filter: blur(14px);
+            border-bottom: 1px solid rgba(255,255,255,0.10);
+            overflow: hidden;
+        }
+        .landing-nav::before {
+            content: '';
+            position: absolute;
+            inset: -120px -140px -120px -140px;
+            background:
+                radial-gradient(40% 60% at 18% 35%, rgba(255, 0, 128, 0.55), transparent 60%),
+                radial-gradient(45% 70% at 42% 55%, rgba(0, 255, 255, 0.40), transparent 62%),
+                radial-gradient(50% 70% at 68% 40%, rgba(138, 43, 226, 0.45), transparent 64%),
+                radial-gradient(40% 70% at 84% 62%, rgba(0, 255, 128, 0.30), transparent 62%),
+                radial-gradient(45% 70% at 58% 20%, rgba(255, 140, 0, 0.25), transparent 62%);
+            filter: blur(26px) saturate(1.35);
+            opacity: 0.8;
+            transform: translate3d(0,0,0);
+            animation: neonFlow 10s ease-in-out infinite alternate;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .landing-nav::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, rgba(255,255,255,0.12), rgba(255,255,255,0));
+            opacity: 0.15;
+            pointer-events: none;
+            z-index: 0;
+        }
+        @keyframes neonFlow {
+            0% { transform: translateX(-2%) translateY(0%) scale(1.03); }
+            50% { transform: translateX(2%) translateY(-1%) scale(1.06); }
+            100% { transform: translateX(0%) translateY(1%) scale(1.04); }
+        }
+        .landing-nav-inner {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            position: relative;
+            z-index: 1;
+        }
+        .landing-brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            color: white;
+            text-decoration: none;
+            font-weight: 800;
+        }
+        .landing-brand img {
+            height: 34px;
+            width: auto;
+            filter: brightness(0) invert(1);
+        }
+        .landing-nav-links {
+            display: flex;
+            gap: 14px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .landing-nav-links a {
+            color: rgba(255,255,255,0.85);
+            text-decoration: none;
+            font-weight: 700;
+            padding: 8px 12px;
+            border-radius: 999px;
+            transition: background 0.2s ease, color 0.2s ease;
+        }
+        .landing-nav-links a:hover {
+            background: rgba(255,255,255,0.08);
+            color: white;
+        }
+        .landing-nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .landing-icon-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 42px;
+            height: 42px;
+            border-radius: 999px;
+            border: 1px solid rgba(255,255,255,0.25);
+            background: rgba(255,255,255,0.08);
+            color: white;
+            text-decoration: none;
+            transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+        }
+        .landing-icon-btn:hover {
+            transform: translateY(-1px);
+            background: rgba(255,255,255,0.12);
+            border-color: rgba(212,175,55,0.5);
+        }
+        .landing-login-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 16px;
+            border-radius: 999px;
+            border: 1px solid rgba(212,175,55,0.65);
+            background: rgba(212,175,55,0.95);
+            color: #111827;
+            font-weight: 900;
+            text-decoration: none;
+            box-shadow: 0 10px 24px rgba(212,175,55,0.22);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+        }
+        .landing-login-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 16px 32px rgba(212,175,55,0.30);
+            filter: brightness(1.02);
+        }
+        .landing-lang-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+            border-radius: 999px;
+            border: 1px solid rgba(255,255,255,0.25);
+            background: rgba(255,255,255,0.08);
+            color: white;
+            text-decoration: none;
+            font-weight: 800;
+        }
+        .landing-lang-btn:hover {
+            border-color: rgba(212,175,55,0.55);
+        }
+        .landing-menu-btn {
+            display: none;
+        }
+
+        .landing-sidebar-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 10001;
+            background: rgba(0,0,0,0.55);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+        .landing-sidebar {
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            width: min(360px, 92vw);
+            z-index: 10002;
+            background: rgba(0, 0, 0, 0.92);
+            border-inline-start: 1px solid rgba(255,255,255,0.10);
+            transform: translateX(110%);
+            transition: transform 0.25s ease;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            overflow: hidden;
+        }
+        .landing-sidebar::before {
+            content: '';
+            position: absolute;
+            inset: -200px -220px -200px -220px;
+            background:
+                conic-gradient(from 220deg,
+                    rgba(255, 0, 128, 0.55),
+                    rgba(0, 255, 255, 0.40),
+                    rgba(138, 43, 226, 0.45),
+                    rgba(0, 255, 128, 0.30),
+                    rgba(255, 140, 0, 0.25),
+                    rgba(255, 0, 128, 0.55)
+                );
+            filter: blur(40px) saturate(1.45);
+            opacity: 0.65;
+            animation: neonSpin 14s linear infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .landing-sidebar::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(60% 70% at 50% 20%, rgba(255,255,255,0.10), transparent 60%);
+            opacity: 0.35;
+            pointer-events: none;
+            z-index: 0;
+        }
+        @keyframes neonSpin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        html[dir="rtl"] .landing-sidebar {
+            right: 0;
+            left: auto;
+            transform: translateX(110%);
+        }
+        html[dir="ltr"] .landing-sidebar {
+            left: 0;
+            right: auto;
+            transform: translateX(-110%);
+            border-inline-start: none;
+            border-inline-end: 1px solid rgba(212,175,55,0.18);
+        }
+        body.landing-sidebar-open .landing-sidebar-backdrop {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        html[dir="rtl"] body.landing-sidebar-open .landing-sidebar {
+            transform: translateX(0);
+        }
+        html[dir="ltr"] body.landing-sidebar-open .landing-sidebar {
+            transform: translateX(0);
+        }
+        .landing-sidebar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            position: relative;
+            z-index: 1;
+        }
+        .landing-sidebar-header .title {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            font-weight: 900;
+        }
+        .landing-sidebar-header img {
+            height: 30px;
+            filter: brightness(0) invert(1);
+        }
+        .landing-sidebar-links {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            position: relative;
+            z-index: 1;
+        }
+        .landing-sidebar-links a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 12px;
+            border-radius: 12px;
+            color: rgba(255,255,255,0.9);
+            text-decoration: none;
+            border: 1px solid rgba(255,255,255,0.10);
+            background: rgba(0,0,0,0.35);
+            font-weight: 800;
+        }
+        .landing-sidebar-links a:hover {
+            border-color: rgba(255,255,255,0.22);
+            background: rgba(0,0,0,0.46);
+        }
+        
+        /* Animated Background */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(212, 175, 55, 0.3); }
+            50% { box-shadow: 0 0 40px rgba(212, 175, 55, 0.6); }
+        }
+        @keyframes shimmer {
+            0% { background-position: -1000px 0; }
+            100% { background-position: 1000px 0; }
+        }
+        
+        /* Hero Section - Compact */
+        .hero {
+            background: var(--gradient-gulf);
+            min-height: 90vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            padding: 40px 20px;
+        }
+        .hero {
+            padding-top: 110px;
+        }
+        .hero::before {
+            content: '';
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(212,175,55,0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: float 20s ease-in-out infinite;
+        }
+        .hero-pattern {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0.1;
+            background-image: 
+                repeating-linear-gradient(45deg, transparent, transparent 35px, var(--gulf-gold) 35px, var(--gulf-gold) 70px),
+                repeating-linear-gradient(-45deg, transparent, transparent 35px, var(--palestine-green) 35px, var(--palestine-green) 70px);
+        }
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            color: white;
+            padding: 20px;
+        }
+        .logo-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.15);
+            padding: 12px 30px;
+            border-radius: 100px;
+            backdrop-filter: blur(10px);
+            margin-bottom: 15px;
+            border: 2px solid var(--gulf-gold);
+            animation: glow 3s ease-in-out infinite;
+        }
+        .flag-icon {
+            display: inline-flex;
+            gap: 8px;
+            font-size: 1.5rem;
+        }
+        .hero h1 {
+            font-family: 'Amiri', serif;
+            font-size: 3rem;
+            font-weight: 900;
+            margin-bottom: 12px;
+            background: linear-gradient(to right, #fff, var(--gulf-gold), #fff);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: shimmer 3s linear infinite;
+        }
+        .hero-subtitle {
+            font-size: 1.3rem;
+            margin-bottom: 8px;
+            color: rgba(255,255,255,0.95);
+            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+        .hero-tagline {
+            font-size: 1rem;
+            color: var(--gulf-gold);
+            margin-bottom: 25px;
+            font-weight: 500;
+        }
+        .hero-buttons { 
+            display: flex; 
+            gap: 25px; 
+            justify-content: center; 
+            flex-wrap: wrap;
+        }
+        .btn-hero {
+            padding: 12px 30px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-weight: 700;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+        .btn-hero:hover::before {
+            left: 100%;
+        }
+        .btn-primary {
+            background: var(--gulf-gold);
+            color: var(--gulf-blue);
+            box-shadow: 0 10px 30px rgba(212,175,55,0.4);
+        }
+        .btn-primary:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 15px 40px rgba(212,175,55,0.6);
+        }
+        .btn-success {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            box-shadow: 0 10px 30px rgba(40, 167, 69, 0.4);
+        }
+        .btn-success:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 15px 40px rgba(40, 167, 69, 0.6);
+        }
+        .btn-warning {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            box-shadow: 0 10px 30px rgba(245, 87, 108, 0.4);
+        }
+        .btn-warning:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 15px 40px rgba(245, 87, 108, 0.6);
+        }
+        .btn-outline {
+            background: rgba(8, 12, 32, 0.38);
+            color: #f7e7a8;
+            border: 2px solid rgba(212, 175, 55, 0.88);
+            box-shadow: 0 10px 28px rgba(11, 18, 32, 0.22);
+            text-shadow: 0 1px 8px rgba(0,0,0,0.28);
+        }
+        .btn-outline:hover {
+            background: rgba(212, 175, 55, 0.96);
+            color: #111827;
+            box-shadow: 0 16px 34px rgba(212, 175, 55, 0.30);
+            transform: translateY(-5px) scale(1.05);
+        }
+        .btn-login {
+            background: rgba(212,175,55,0.98);
+            color: #0b1220;
+            border: 3px solid rgba(255,255,255,0.25);
+            box-shadow: 0 14px 40px rgba(212,175,55,0.30);
+            text-shadow: none;
+        }
+        .btn-login:hover {
+            background: rgba(255,255,255,0.95);
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 18px 50px rgba(255,255,255,0.22);
+            border-color: rgba(212,175,55,0.65);
+        }
+        
+        /* Features Section - Compact */
+        .features {
+            padding: 50px 20px;
+            background: linear-gradient(to bottom, #0a0e27, #1a1f3a);
+            position: relative;
+        }
+        .features h2 {
+            text-align: center;
+            font-family: 'Amiri', serif;
+            font-size: 2rem;
+            margin-bottom: 10px;
+            color: var(--gulf-gold);
+            text-shadow: 0 0 30px rgba(212,175,55,0.5);
+        }
+        .features-subtitle {
+            text-align: center;
+            color: rgba(255,255,255,0.8);
+            font-size: 1rem;
+            margin-bottom: 30px;
+        }
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .feature-card {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px solid rgba(212,175,55,0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(212,175,55,0.1), transparent);
+            transform: rotate(45deg);
+            transition: all 0.8s;
+        }
+        .feature-card:hover {
+            transform: translateY(-15px) scale(1.03);
+            border-color: var(--gulf-gold);
+            box-shadow: 0 20px 60px rgba(212,175,55,0.3);
+        }
+        .feature-card:hover::before {
+            top: -100%;
+            right: -100%;
+        }
+        .feature-icon {
+            font-size: 2.5rem;
+            background: var(--gradient-gulf);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+        }
+        .feature-card h3 {
+            font-size: 1.2rem;
+            margin-bottom: 8px;
+            color: white;
+            position: relative;
+            z-index: 1;
+        }
+        .feature-card p {
+            color: rgba(255,255,255,0.7);
+            line-height: 1.5;
+            font-size: 0.9rem;
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* Pricing Preview - Compact */
+        .pricing-preview {
+            padding: 50px 20px;
+            background: linear-gradient(to bottom, #1a1f3a, #0a0e27);
+            position: relative;
+        }
+        .pricing-preview h2 {
+            text-align: center;
+            font-family: 'Amiri', serif;
+            font-size: 2rem;
+            margin-bottom: 10px;
+            color: var(--gulf-gold);
+            text-shadow: 0 0 30px rgba(212,175,55,0.5);
+        }
+        .pricing-preview p {
+            text-align: center;
+            color: rgba(255,255,255,0.8);
+            margin-bottom: 30px;
+            font-size: 1rem;
+        }
+        .pricing-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .price-card {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
+            padding: 25px;
+            border-radius: 20px;
+            text-align: center;
+            transition: all 0.5s;
+            border: 2px solid rgba(212,175,55,0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        .price-card::before {
+            content: '★';
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 5rem;
+            color: rgba(212,175,55,0.1);
+        }
+        .price-card:hover {
+            transform: translateY(-15px) scale(1.05);
+            border-color: var(--gulf-gold);
+            box-shadow: 0 25px 70px rgba(212,175,55,0.4);
+        }
+        .price-card.featured {
+            background: rgba(212,175,55,0.15);
+            border: 3px solid var(--gulf-gold);
+            transform: scale(1.08);
+        }
+        .price-card.featured::after {
+            content: attr(data-badge);
+            position: absolute;
+            top: -15px;
+            right: 50%;
+            transform: translateX(50%);
+            background: var(--gulf-gold);
+            color: var(--gulf-blue);
+            padding: 8px 25px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+        .price-card h3 {
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+            color: white;
+            position: relative;
+            z-index: 1;
+        }
+        .price-card .price {
+            font-size: 2.5rem;
+            font-weight: 900;
+            background: var(--gradient-gulf);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 12px 0;
+            position: relative;
+            z-index: 1;
+        }
+        .price-card ul {
+            list-style: none;
+            margin: 15px 0;
+            text-align: start;
+            position: relative;
+            z-index: 1;
+        }
+        .price-card li {
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.8);
+            font-size: 0.85rem;
+        }
+        .price-card li i {
+            color: var(--gulf-gold);
+            margin-left: 8px;
+            font-size: 0.9rem;
+        }
+        
+        /* Contact Section - Compact */
+        .contact {
+            background: var(--gradient-gulf);
+            padding: 50px 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .contact::before {
+            content: '🇵🇸';
+            position: absolute;
+            font-size: 15rem;
+            opacity: 0.05;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .contact h2 {
+            font-family: 'Amiri', serif;
+            font-size: 2rem;
+            margin-bottom: 10px;
+            color: white;
+            text-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
+        .contact-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            max-width: 1200px;
+            margin: 30px auto;
+        }
+        .contact-item {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid rgba(212,175,55,0.3);
+            transition: all 0.4s;
+        }
+        .contact-item:hover {
+            transform: translateY(-8px);
+            border-color: var(--gulf-gold);
+            box-shadow: 0 15px 50px rgba(212,175,55,0.4);
+        }
+        .contact-item i {
+            font-size: 2rem;
+            color: var(--gulf-gold);
+            margin-bottom: 10px;
+        }
+        .contact-item strong {
+            display: block;
+            font-size: 1rem;
+            margin-bottom: 8px;
+        }
+        .contact-item a {
+            color: white;
+            text-decoration: none;
+            font-size: 1rem;
+            font-weight: 700;
+        }
+        
+        /* Footer - Compact */
+        footer {
+            background: #0a0e27;
+            color: rgba(255,255,255,0.8);
+            padding: 30px 20px;
+            text-align: center;
+            border-top: 3px solid var(--gulf-gold);
+        }
+        footer .developer {
+            color: var(--gulf-gold);
+            font-weight: 700;
+            margin-top: 10px;
+        }
+        
+        @media (max-width: 992px) {
+            .landing-nav-links { display: none; }
+            .landing-menu-btn { display: inline-flex; }
+        }
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 2rem; }
+            .hero-subtitle { font-size: 1.1rem; }
+            .hero-buttons { flex-direction: column; gap: 15px; }
+            .features-grid, .pricing-cards { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    {% set is_en = (current_language == 'en') %}
+    {% set company_name_display = (tenant_name_ar or company_name_ar or 'نظام المحاسبة') if not is_en else (tenant_name or company_name or 'Accounting System') %}
+
+    <div class="landing-sidebar-backdrop" id="landingSidebarBackdrop"></div>
+    <aside class="landing-sidebar" id="landingSidebar" aria-hidden="true">
+        <div class="landing-sidebar-header">
+            <div class="title">
+                {% if tenant_logo_url %}<img src="{{ tenant_logo_url }}" alt="{{ company_name_display }}">{% else %}<img src="{{ url_for('static', filename=developer_logo or config.DEVELOPER_LOGO) }}" alt="{{ company_name_display }}">{% endif %}
+                <span>{{ company_name_display }}</span>
+            </div>
+            <button type="button" class="landing-icon-btn" id="landingSidebarClose" aria-label="{{ 'إغلاق' if not is_en else 'Close' }}">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="landing-sidebar-links">
+            <a href="#features" class="landing-scroll-link"><i class="fas fa-star"></i><span>{{ 'المميزات' if not is_en else 'Features' }}</span></a>
+            <a href="#pricing" class="landing-scroll-link"><i class="fas fa-tags"></i><span>{{ 'الأسعار' if not is_en else 'Pricing' }}</span></a>
+            <a href="#about" class="landing-scroll-link"><i class="fas fa-building"></i><span>{{ 'من نحن' if not is_en else 'About' }}</span></a>
+            <a href="#benefits" class="landing-scroll-link"><i class="fas fa-users-cog"></i><span>{{ 'لمن' if not is_en else 'Who it is for' }}</span></a>
+            <a href="#faq" class="landing-scroll-link"><i class="fas fa-question-circle"></i><span>{{ 'الأسئلة الشائعة' if not is_en else 'FAQ' }}</span></a>
+            <a href="#contact" class="landing-scroll-link"><i class="fas fa-phone-alt"></i><span>{{ 'تواصل' if not is_en else 'Contact' }}</span></a>
+            <a href="{{ url_for('auth.login') }}"><i class="fas fa-sign-in-alt"></i><span>{{ 'تسجيل الدخول' if not is_en else 'Login' }}</span></a>
+            <a href="{{ url_for('language.set_language', lang='ar' if is_en else 'en') }}"><i class="fas fa-globe"></i><span>{{ 'English' if not is_en else 'العربية' }}</span></a>
+        </div>
+    </aside>
+
+    <nav class="landing-nav">
+        <div class="landing-nav-inner">
+            <a class="landing-brand" href="{{ url_for('public.landing') }}">
+                {% if tenant_logo_url %}<img src="{{ tenant_logo_url }}" alt="{{ company_name_display }}">{% else %}<img src="{{ url_for('static', filename=developer_logo or config.DEVELOPER_LOGO) }}" alt="{{ company_name_display }}">{% endif %}
+                <span>{{ company_name_display }}</span>
+            </a>
+            <div class="landing-nav-links">
+                <a href="#features"><i class="fas fa-star"></i> {{ 'المميزات' if not is_en else 'Features' }}</a>
+                <a href="#pricing"><i class="fas fa-tags"></i> {{ 'الأسعار' if not is_en else 'Pricing' }}</a>
+                <a href="#about"><i class="fas fa-building"></i> {{ 'من نحن' if not is_en else 'About' }}</a>
+                <a href="#faq"><i class="fas fa-question-circle"></i> {{ 'الأسئلة الشائعة' if not is_en else 'FAQ' }}</a>
+                <a href="#contact"><i class="fas fa-phone-alt"></i> {{ 'تواصل' if not is_en else 'Contact' }}</a>
+            </div>
+            <div class="landing-nav-actions">
+                <a class="landing-lang-btn" href="{{ url_for('language.set_language', lang='ar' if is_en else 'en') }}">
+                    <i class="fas fa-globe"></i>
+                    <span>{{ 'EN' if not is_en else 'AR' }}</span>
+                </a>
+                <a class="landing-login-btn" href="{{ url_for('auth.login') }}">
+                    <i class="fas fa-sign-in-alt"></i>
+                    <span>{{ 'تسجيل الدخول' if not is_en else 'Login' }}</span>
+                </a>
+                <button type="button" class="landing-icon-btn landing-menu-btn" id="landingSidebarOpen" aria-label="{{ 'القائمة' if not is_en else 'Menu' }}">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-pattern"></div>
+        <div class="hero-content">
+            <div class="logo-badge">
+                <div class="flag-icon">
+                    🇦🇪 🇵🇸
+                </div>
+            </div>
+            <h1>{{ company_name_display }}</h1>
+            <p class="hero-subtitle">
+                <strong>{{ t('Best inventory and sales management system in UAE 2025') }}</strong>
+            </p>
+            <p class="hero-tagline" style="font-size: 1.2rem; margin-top: 15px;">
+                {{ t('Complete accounting software | E-invoices | Inventory | Advanced AI') }}
+            </p>
+            <p class="hero-tagline" style="font-size: 1rem; margin-top: 10px; color: rgba(255,255,255,0.9);">
+                {{ t('Professional solutions for auto parts and retail in UAE') }}
+            </p>
+            <div class="hero-buttons" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; max-width: 900px; margin: 0 auto;">
+                <a href="{{ url_for('auth.support') }}?tab=purchase" class="btn-hero btn-success" style="flex: 1;">
+                    <i class="fas fa-shopping-cart"></i> {{ t('Buy Now') }}
+                </a>
+                <a href="{{ url_for('public.contact') }}" class="btn-hero btn-primary" style="flex: 1;">
+                    <i class="fas fa-phone-alt"></i> {{ 'تواصل معنا' if not is_en else 'Contact us' }}
+                </a>
+                <a href="{{ url_for('auth.support') }}?tab=donation" class="btn-hero btn-warning" style="flex: 1;">
+                    <i class="fas fa-heart"></i> {{ t('Support Project') }}
+                </a>
+                <a href="{{ url_for('auth.login') }}" class="btn-hero btn-login" style="flex: 1;">
+                    <i class="fas fa-sign-in-alt"></i> {{ t('Login') }}
+                </a>
+            </div>
+
+            <div style="margin-top: 18px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+                <a href="https://wa.me/{{ developer_whatsapp_link }}?text={{ ('مرحباً، أريد شراء نظام أزاد' if not is_en else 'Hello, I want to buy Azad system') | urlencode }}" class="btn-hero btn-outline" style="display: inline-flex; min-width: 240px;">
+                    <i class="fab fa-whatsapp"></i> {{ 'شراء النظام عبر واتساب' if not is_en else 'Buy via WhatsApp' }}
+                </a>
+                <a href="mailto:{{ developer_email or config.DEVELOPER_EMAIL }}?subject={{ ('طلب شراء الكود أو تخصيص النظام' if not is_en else 'Source code or customization request') | urlencode }}" class="btn-hero btn-outline" style="display: inline-flex; min-width: 240px;">
+                    <i class="fas fa-envelope"></i> {{ 'شراء الكود أو التخصيص' if not is_en else 'Buy code / customize' }}
+                </a>
+            </div>
+            
+            <div style="margin-top: 30px; text-align: center;">
+                <a href="{{ url_for('public.pricing') }}" class="btn-hero btn-outline" style="display: inline-block; min-width: 250px;">
+                    <i class="fas fa-gem"></i> {{ t('View All Plans and Pricing') }}
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <h2>{{ t('Why choose Azad system for warehouses in UAE?') }}</h2>
+        <p class="features-subtitle">
+            {% if not is_en %}
+                نقدم لك أفضل <strong>برنامج محاسبة ومستودعات</strong> مع ميزات متقدمة تجعل إدارة أعمالك أسهل وأسرع وأكثر ربحية. 
+                مصمم خصيصاً للشركات في <strong>دبي، أبوظبي، الشارقة، عجمان</strong> وجميع إمارات الدولة.
+            {% else %}
+                A complete <strong>accounting & inventory</strong> system designed for businesses across <strong>Dubai, Abu Dhabi</strong> and all UAE emirates.
+            {% endif %}
+        </p>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-brain"></i></div>
+                <h3>{{ 'ذكاء اصطناعي متقدم' if not is_en else 'Advanced AI' }}</h3>
+                <p>
+                    {% if not is_en %}
+                        <strong>مساعد AI ذكي</strong> يوفر توصيات أسعار تنافسية، تحليل السوق في الإمارات، تنبؤ بالمبيعات، معرفة توافق قطع السيارات مع الموديلات، واقتراحات لزيادة أرباحك. <strong>يتعلم من بيانات عملك</strong> ويتحسن باستمرار.
+                    {% else %}
+                        Smart recommendations, sales forecasting, customer insights, and business analytics that get better over time.
+                    {% endif %}
+                </p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-warehouse"></i></div>
+                <h3>{{ 'إدارة مخزون احترافية' if not is_en else 'Inventory Management' }}</h3>
+                <p>
+                    {% if not is_en %}
+                        <strong>تتبع دقيق للمخزون</strong> في الوقت الفعلي، تنبيهات تلقائية عند انخفاض الكميات، إدارة متعددة المستودعات والفروع، باركود وQR Code، جرد سريع، ونقل بضائع بين الفروع. مثالي لـ <strong>محلات قطع غيار السيارات</strong>.
+                    {% else %}
+                        Real-time stock tracking, low-stock alerts, multi-warehouse support, barcode/QR, fast stocktaking, and transfers.
+                    {% endif %}
+                </p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-cash-register"></i></div>
+                <h3>{{ 'مبيعات ومشتريات متكاملة' if not is_en else 'Sales & Purchases' }}</h3>
+                <p>
+                    {% if not is_en %}
+                        <strong>فواتير إلكترونية احترافية</strong> بتصاميم متعددة، 3 مستويات أسعار (جملة، نص جملة، قطاعي)، تحويل عملات تلقائي (درهم، دولار، دينار)، طباعة حرارية، <strong>متوافق مع قوانين الإمارات</strong>، وربط مع نقاط البيع POS.
+                    {% else %}
+                        Professional e-invoices, multi-price levels, multi-currency, thermal printing, and POS-friendly workflows.
+                    {% endif %}
+                </p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-users"></i></div>
+                <h3>{{ 'إدارة عملاء وموردين' if not is_en else 'Customers & Suppliers' }}</h3>
+                <p>
+                    {% if not is_en %}
+                        قاعدة بيانات شاملة للعملاء والموردين، <strong>كشوفات حساب تفصيلية</strong>، تصنيف ذكي، تحليل سلوك الشراء، إدارة الشيكات والسندات، متابعة المستحقات، وتقارير الذمم المدينة. <strong>كل عميل بملف كامل!</strong>
+                    {% else %}
+                        Full customer and supplier profiles, statements, collections tracking, cheque/receipt management, and AR insights.
+                    {% endif %}
+                </p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-chart-line"></i></div>
+                <h3>{{ 'تقارير شاملة' if not is_en else 'Reports & Analytics' }}</h3>
+                <p>{{ 'لوحات تحكم تفاعلية، تقارير مالية دقيقة، دفتر أستاذ GL' if not is_en else 'Dashboards, financial reports, and general ledger (GL) insights.' }}</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-shield-alt"></i></div>
+                <h3>{{ 'أمان متقدم' if not is_en else 'Advanced Security' }}</h3>
+                <p>{{ 'حماية من SQL Injection و XSS، تشفير البيانات، سجل تدقيق كامل' if not is_en else 'Strong security controls, encryption, and full audit logs.' }}</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Preview -->
+    <section class="pricing-preview" id="pricing">
+        <h2>{{ 'باقات مرنة لجميع الأعمال' if not is_en else 'Flexible Plans for Every Business' }}</h2>
+        <p>{{ 'اختر الباقة المناسبة لك - حلول احترافية بأسعار تنافسية' if not is_en else 'Choose the plan that fits you. Professional solutions with competitive pricing.' }}</p>
+        <div class="pricing-cards">
+            <div class="price-card">
+                <h3>{{ 'الباقة الأساسية' if not is_en else 'Basic Plan' }}</h3>
+                <div class="price">$299<small>{{ '/شهرياً' if not is_en else '/month' }}</small></div>
+                <ul>
+                    <li><i class="fas fa-check"></i> {{ 'مستخدم واحد' if not is_en else '1 user' }}</li>
+                    <li><i class="fas fa-check"></i> {{ 'مبيعات ومشتريات' if not is_en else 'Sales & purchases' }}</li>
+                    <li><i class="fas fa-check"></i> {{ 'إدارة مخزون' if not is_en else 'Inventory management' }}</li>
+                    <li><i class="fas fa-check"></i> {{ 'تقارير أساسية' if not is_en else 'Basic reports' }}</li>
+                </ul>
+                <a href="{{ url_for('public.pricing') }}" class="btn-hero btn-primary" style="margin-top: 20px; display: inline-block;">{{ 'اختر الباقة' if not is_en else 'Choose plan' }}</a>
+            </div>
+            
+            <div class="price-card featured" data-badge="{{ '⭐ الأكثر شعبية' if not is_en else '⭐ Most popular' }}">
+                <span style="background: #667eea; color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.9rem;">{{ 'الأكثر شعبية' if not is_en else 'Most popular' }}</span>
+                <h3>{{ 'الباقة الاحترافية' if not is_en else 'Professional Plan' }}</h3>
+                <div class="price">$599<small>{{ '/شهرياً' if not is_en else '/month' }}</small></div>
+                <ul>
+                    <li><i class="fas fa-check"></i> {{ '5 مستخدمين' if not is_en else 'Up to 5 users' }}</li>
+                    <li><i class="fas fa-check"></i> {{ 'كل ميزات الأساسية' if not is_en else 'Everything in Basic' }}</li>
+                    <li><i class="fas fa-check"></i> {{ 'ذكاء اصطناعي' if not is_en else 'AI features' }}</li>
+                    <li><i class="fas fa-check"></i> {{ 'دفتر أستاذ GL' if not is_en else 'General Ledger (GL)' }}</li>
+                    <li><i class="fas fa-check"></i> {{ 'دعم فني 24/7' if not is_en else '24/7 support' }}</li>
+                </ul>
+                <a href="{{ url_for('public.pricing') }}" class="btn-hero btn-primary" style="margin-top: 20px; display: inline-block;">{{ 'اختر الباقة' if not is_en else 'Choose plan' }}</a>
+            </div>
+            
+            <div class="price-card">
+                <h3>{{ 'باقة المؤسسات' if not is_en else 'Enterprise' }}</h3>
+                <div class="price">{{ 'تواصل معنا' if not is_en else 'Contact us' }}</div>
+                <ul>
+                    <li><i class="fas fa-check"></i> {{ 'مستخدمين غير محدودين' if not is_en else 'Unlimited users' }}</li>
+                    <li><i class="fas fa-check"></i> {{ 'كل الميزات المتقدمة' if not is_en else 'All advanced features' }}</li>
+                    <li><i class="fas fa-check"></i> {{ 'تخصيص كامل' if not is_en else 'Full customization' }}</li>
+                    <li><i class="fas fa-check"></i> {{ 'تدريب مجاني' if not is_en else 'Free training' }}</li>
+                    <li><i class="fas fa-check"></i> {{ 'API مخصص' if not is_en else 'Custom API' }}</li>
+                </ul>
+                <a href="{{ url_for('public.contact') }}" class="btn-hero btn-primary" style="margin-top: 20px; display: inline-block;">{{ 'اتصل بنا' if not is_en else 'Contact' }}</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section class="contact" id="contact">
+        <h2>{{ 'تواصل معنا' if not is_en else 'Contact Us' }}</h2>
+        <p style="color: rgba(255,255,255,0.9); font-size: 1rem; margin-bottom: 8px;">{{ 'فريقنا جاهز لمساعدتك' if not is_en else 'Our team is ready to help you.' }}</p>
+        <p style="color: var(--gulf-gold); font-weight: 700; font-size: 1rem;">{{ '🇵🇸 من فلسطين للعالم العربي 🇦🇪' if not is_en else 'From Palestine to the Arab world' }}</p>
+        <div class="contact-info">
+            <div class="contact-item">
+                <i class="fab fa-whatsapp"></i>
+                <strong>{{ 'واتساب' if not is_en else 'WhatsApp' }}</strong>
+                <a href="https://wa.me/{{ developer_whatsapp_link }}" target="_blank">{{ developer_whatsapp or config.DEVELOPER_WHATSAPP or '—' }}</a>
+            </div>
+            <div class="contact-item">
+                <i class="fas fa-phone"></i>
+                <strong>{{ 'جوال' if not is_en else 'Phone' }}</strong>
+                <a href="tel:{{ developer_phone or config.DEVELOPER_PHONE }}">{{ developer_phone or config.DEVELOPER_PHONE or '—' }}</a>
+            </div>
+            <div class="contact-item">
+                <i class="fas fa-map-marker-alt"></i>
+                <strong>{{ t('Address') }}</strong>
+                <a style="cursor: default;">{{ tenant_address or company_address or '—' }}</a>
+            </div>
+        </div>
+        <div style="margin-top: 30px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+            <a href="{{ url_for('public.user_guide') }}" class="btn-hero btn-primary">
+                <i class="fas fa-book"></i> {{ 'دليل المستخدم' if not is_en else 'User guide' }}
+            </a>
+            <a href="{{ url_for('public.pricing') }}" class="btn-hero btn-outline">
+                <i class="fas fa-tags"></i> {{ 'الأسعار' if not is_en else 'Pricing' }}
+            </a>
+            <a href="https://wa.me/{{ developer_whatsapp_link }}?text={{ ('مرحباً، أريد شراء النظام أو التحدث مع المبيعات' if not is_en else 'Hello, I want to buy the system or talk to sales') | urlencode }}" class="btn-hero btn-outline" target="_blank">
+                <i class="fab fa-whatsapp"></i> {{ 'واتساب المبيعات' if not is_en else 'Sales WhatsApp' }}
+            </a>
+            <a href="{{ url_for('public.contact') }}" class="btn-hero btn-outline">
+                <i class="fas fa-envelope"></i> {{ 'راسلنا' if not is_en else 'Message us' }}
+            </a>
+        </div>
+    </section>
+
+    <!-- من نحن Section -->
+    <section id="about" style="padding: 80px 20px; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
+        <div style="max-width: 1000px; margin: 0 auto;">
+            <h2 style="text-align: center; font-size: 2.5rem; margin-bottom: 30px; color: var(--gulf-blue);">
+                <i class="fas fa-building" style="margin-inline-start: 10px;"></i>
+                {{ 'من نحن - شركة أزاد للأنظمة الذكية' if not is_en else 'About Azad Smart Systems' }}
+            </h2>
+            <div style="background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+                <p style="font-size: 1.15rem; line-height: 2; color: #333; text-align: justify; margin-bottom: 25px;">
+                    {% if not is_en %}
+                        <strong>شركة أزاد للأنظمة الذكية</strong> هي شركة رائدة في تطوير <strong>حلول برمجيات إدارة الأعمال</strong> في الإمارات العربية المتحدة. نتخصص في تقديم <strong>أنظمة إدارة المستودعات والمبيعات</strong> المدعومة بالذكاء الاصطناعي لمساعدة الشركات في <strong>دبي، أبوظبي، الشارقة</strong> وجميع الإمارات على تحقيق النمو والكفاءة.
+                    {% else %}
+                        <strong>Azad Smart Systems</strong> builds modern <strong>business management software</strong> for companies across the UAE. We focus on <strong>warehouse, sales, and accounting</strong> systems enhanced with AI to help businesses grow efficiently.
+                    {% endif %}
+                </p>
+                <p style="font-size: 1.15rem; line-height: 2; color: #333; text-align: justify; margin-bottom: 25px;">
+                    {% if not is_en %}
+                        يجمع <strong>نظام أزاد</strong> بين التكنولوجيا المتقدمة والتصميم السهل الاستخدام، مما يجعله <strong>الخيار الأمثل</strong> لأصحاب الأعمال الذين يبحثون عن <strong>برنامج محاسبة شامل</strong> يوفر الوقت ويزيد الأرباح. نحن نفهم تحديات <strong>محلات قطع غيار السيارات، المحلات التجارية، والشركات الصغيرة والمتوسطة</strong> في السوق الإماراتي.
+                    {% else %}
+                        Azad combines advanced technology with an easy user experience, making it an ideal choice for auto parts stores, retail shops, and SMEs that need accurate accounting and fast operations.
+                    {% endif %}
+                </p>
+                <p style="font-size: 1.15rem; line-height: 2; color: #333; text-align: justify;">
+                    {% if not is_en %}
+                        مع <strong>أكثر من 150 عميل</strong> في مختلف أنحاء الإمارات، نفتخر بتقديم <strong>دعم فني عربي متميز</strong>، تدريب شامل، وتحديثات مجانية مستمرة. فريقنا المتخصص جاهز لمساعدتك في <strong>التحول الرقمي</strong> وتحسين إدارة أعمالك بأحدث التقنيات.
+                    {% else %}
+                        With 150+ customers across the UAE, we provide training, ongoing updates, and dedicated support to help your business digitize and scale.
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- من يستفيد من نظامنا -->
+    <section id="benefits" style="padding: 80px 20px; background: white;">
+        <div style="max-width: 1000px; margin: 0 auto;">
+            <h2 style="text-align: center; font-size: 2.5rem; margin-bottom: 20px; color: var(--gulf-blue);">
+                <i class="fas fa-users-cog" style="margin-inline-start: 10px;"></i>
+                {{ 'من يستفيد من نظام أزاد لإدارة المستودعات؟' if not is_en else 'Who benefits from Azad?' }}
+            </h2>
+            <p style="text-align: center; color: #666; margin-bottom: 50px; font-size: 1.1rem;">
+                {{ 'حلول مخصصة لمختلف القطاعات التجارية في الإمارات' if not is_en else 'Tailored solutions for multiple business sectors in the UAE.' }}
+            </p>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px;">
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 35px; border-radius: 15px; color: white; box-shadow: 0 5px 20px rgba(0,0,0,0.1);">
+                    <h3 style="font-size: 1.5rem; margin-bottom: 15px;">
+                        <i class="fas fa-car" style="margin-inline-start: 10px;"></i>
+                        {{ 'محلات قطع غيار السيارات' if not is_en else 'Auto Parts Stores' }}
+                    </h3>
+                    <p style="line-height: 1.8; opacity: 0.95;">
+                        {% if not is_en %}
+                            نظام متخصص لـ <strong>قطع غيار السيارات</strong> مع ميزات فريدة: معرفة توافق القطع، 3 مستويات أسعار، باركود، وإدارة مخزون دقيقة. مثالي لمحلات قطع الغيار في <strong>دبي والإمارات</strong>.
+                        {% else %}
+                            Built for <strong>auto parts</strong> with compatibility insights, multi-price levels, barcode, and accurate stock control.
+                        {% endif %}
+                    </p>
+                </div>
+                
+                <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 35px; border-radius: 15px; color: white; box-shadow: 0 5px 20px rgba(0,0,0,0.1);">
+                    <h3 style="font-size: 1.5rem; margin-bottom: 15px;">
+                        <i class="fas fa-store" style="margin-inline-start: 10px;"></i>
+                        {{ 'المحلات التجارية والسوبرماركت' if not is_en else 'Retail & Supermarkets' }}
+                    </h3>
+                    <p style="line-height: 1.8; opacity: 0.95;">
+                        {% if not is_en %}
+                            <strong>نظام نقاط بيع POS</strong> سريع وسهل، باركود، طباعة حرارية، إدارة موردين، كشوفات حساب، وتقارير يومية. حل متكامل للـ <strong>retail</strong> في الإمارات.
+                        {% else %}
+                            Fast POS workflows, barcode scanning, thermal printing, supplier management, statements, and daily reports.
+                        {% endif %}
+                    </p>
+                </div>
+                
+                <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); padding: 35px; border-radius: 15px; color: white; box-shadow: 0 5px 20px rgba(0,0,0,0.1);">
+                    <h3 style="font-size: 1.5rem; margin-bottom: 15px;">
+                        <i class="fas fa-industry" style="margin-inline-start: 10px;"></i>
+                        {{ 'الشركات الصغيرة والمتوسطة' if not is_en else 'SMEs' }}
+                    </h3>
+                    <p style="line-height: 1.8; opacity: 0.95;">
+                        {% if not is_en %}
+                            <strong>ERP متكامل</strong> لإدارة جميع عملياتك: مبيعات، مشتريات، مخزون، حسابات، موارد بشرية، وتقارير شاملة. <strong>سحابي 100%</strong> - تابع أعمالك من أي مكان.
+                        {% else %}
+                            A complete system for sales, purchases, inventory, accounting, and reporting. Access your business from anywhere.
+                        {% endif %}
+                    </p>
+                </div>
+                
+                <div style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); padding: 35px; border-radius: 15px; color: white; box-shadow: 0 5px 20px rgba(0,0,0,0.1);">
+                    <h3 style="font-size: 1.5rem; margin-bottom: 15px;">
+                        <i class="fas fa-wrench" style="margin-inline-start: 10px;"></i>
+                        {{ 'ورش الصيانة والخدمات' if not is_en else 'Workshops & Services' }}
+                    </h3>
+                    <p style="line-height: 1.8; opacity: 0.95;">
+                        {% if not is_en %}
+                            إدارة <strong>أوامر العمل</strong>، تتبع القطع المستخدمة، فواتير خدمات، جدولة المواعيد، وإدارة عملاء مع سجل كامل. مثالي لـ <strong>ورش السيارات والصيانة</strong>.
+                        {% else %}
+                            Track work orders, parts usage, service invoicing, appointments, and complete customer history.
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section - الأسئلة الشائعة -->
+    <section class="faq-section" id="faq" style="padding: 80px 20px; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: white;">
+        <div style="max-width: 900px; margin: 0 auto;">
+            <h2 style="text-align: center; font-size: 2.5rem; margin-bottom: 20px; background: var(--gradient-gulf); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                {{ 'الأسئلة الشائعة - FAQ' if not is_en else 'FAQ' }}
+            </h2>
+            <p style="text-align: center; color: rgba(255,255,255,0.8); margin-bottom: 50px; font-size: 1.1rem;">
+                {{ 'إجابات على أكثر الأسئلة شيوعاً حول نظام إدارة المستودعات والمبيعات' if not is_en else 'Answers to the most common questions about the system.' }}
+            </p>
+            
+            <div class="faq-container">
+                <!-- السؤال 1 -->
+                <div class="faq-item" style="background: rgba(255,255,255,0.05); border-radius: 15px; padding: 25px; margin-bottom: 20px; border: 1px solid rgba(212, 175, 55, 0.2);">
+                    <h3 style="color: var(--gulf-gold); margin-bottom: 15px; font-size: 1.3rem;">
+                        <i class="fas fa-question-circle" style="margin-inline-start: 10px;"></i>
+                        {{ 'ما هو نظام إدارة المستودعات من شركة أزاد؟' if not is_en else 'What is Azad warehouse & sales system?' }}
+                    </h3>
+                    <p style="color: rgba(255,255,255,0.9); line-height: 1.8; font-size: 1.05rem;">
+                        {% if not is_en %}
+                            نظام أزاد هو <strong>برنامج محاسبة ومستودعات متكامل</strong> مصمم خصيصاً للشركات في <strong>الإمارات ودبي وأبوظبي</strong>. يوفر النظام إدارة شاملة للمبيعات، المشتريات، المخزون، الفواتير الإلكترونية، كشوفات الحسابات، إدارة الشيكات، والتقارير المالية. مع <strong>ذكاء اصطناعي متقدم</strong> يساعدك في اتخاذ قرارات ذكية لتنمية أعمالك.
+                        {% else %}
+                            Azad is an all-in-one <strong>accounting and inventory</strong> system built for businesses in the UAE. It covers sales, purchases, inventory, e-invoices, statements, cheques/receipts, and financial reporting with AI-powered insights.
+                        {% endif %}
+                    </p>
+                </div>
+                
+                <!-- السؤال 2 -->
+                <div class="faq-item" style="background: rgba(255,255,255,0.05); border-radius: 15px; padding: 25px; margin-bottom: 20px; border: 1px solid rgba(212, 175, 55, 0.2);">
+                    <h3 style="color: var(--gulf-gold); margin-bottom: 15px; font-size: 1.3rem;">
+                        <i class="fas fa-question-circle" style="margin-inline-start: 10px;"></i>
+                        {{ 'هل البرنامج مناسب لمحلات قطع غيار السيارات؟' if not is_en else 'Is it suitable for auto parts stores?' }}
+                    </h3>
+                    <p style="color: rgba(255,255,255,0.9); line-height: 1.8; font-size: 1.05rem;">
+                        {% if not is_en %}
+                            نعم بالتأكيد! النظام مصمم خصيصاً لـ <strong>محلات قطع غيار السيارات</strong> في الإمارات. يتضمن ميزات متخصصة مثل: معرفة توافق القطع مع موديلات السيارات، إدارة 3 مستويات أسعار (جملة، نص جملة، قطاعي)، تتبع المخزون بدقة، <strong>فواتير احترافية</strong> مع شعار شركتك، وتحليل المبيعات بالذكاء الاصطناعي.
+                        {% else %}
+                            Yes. It supports multi-price levels, accurate stock tracking, professional invoices, and auto-parts workflows.
+                        {% endif %}
+                    </p>
+                </div>
+                
+                <!-- السؤال 3 -->
+                <div class="faq-item" style="background: rgba(255,255,255,0.05); border-radius: 15px; padding: 25px; margin-bottom: 20px; border: 1px solid rgba(212, 175, 55, 0.2);">
+                    <h3 style="color: var(--gulf-gold); margin-bottom: 15px; font-size: 1.3rem;">
+                        <i class="fas fa-question-circle" style="margin-inline-start: 10px;"></i>
+                        {{ 'كم يكلف برنامج إدارة المستودعات؟' if not is_en else 'How much does it cost?' }}
+                    </h3>
+                    <p style="color: rgba(255,255,255,0.9); line-height: 1.8; font-size: 1.05rem;">
+                        {% if not is_en %}
+                            نوفر <strong>3 باقات مرنة</strong> تناسب جميع أحجام الأعمال في الإمارات. الباقة الأساسية تبدأ من <strong>99 درهم شهرياً</strong>، الباقة الاحترافية 299 درهم، والباقة المتقدمة 599 درهم. جميع الباقات تشمل: دعم فني، تحديثات مجانية، تدريب، وذكاء اصطناعي. <a href="{{ url_for('public.pricing') }}" style="color: var(--gulf-gold); text-decoration: underline;">شاهد تفاصيل الباقات</a>
+                        {% else %}
+                            We offer multiple flexible plans based on your needs. <a href="{{ url_for('public.pricing') }}" style="color: var(--gulf-gold); text-decoration: underline;">View pricing details</a>
+                        {% endif %}
+                    </p>
+                </div>
+                
+                <!-- السؤال 4 -->
+                <div class="faq-item" style="background: rgba(255,255,255,0.05); border-radius: 15px; padding: 25px; margin-bottom: 20px; border: 1px solid rgba(212, 175, 55, 0.2);">
+                    <h3 style="color: var(--gulf-gold); margin-bottom: 15px; font-size: 1.3rem;">
+                        <i class="fas fa-question-circle" style="margin-inline-start: 10px;"></i>
+                        {{ 'هل يدعم النظام الفواتير الإلكترونية المعتمدة في الإمارات؟' if not is_en else 'Does it support e-invoices in the UAE?' }}
+                    </h3>
+                    <p style="color: rgba(255,255,255,0.9); line-height: 1.8; font-size: 1.05rem;">
+                        {% if not is_en %}
+                            نعم! النظام يدعم <strong>الفواتير الإلكترونية</strong> بالكامل. يمكنك إنشاء فواتير احترافية بتصاميم متعددة (كلاسيكية، خليجية، عصرية)، طباعة بأحجام مختلفة (A4, A5, Thermal)، إضافة شعارك وبياناتك، QR Code، وتصدير PDF. كل هذا متوافق مع <strong>قوانين الإمارات</strong> وجاهز للضريبة.
+                        {% else %}
+                            Yes. Create professional invoices with templates, print sizes (A4/A5/Thermal), QR code, and PDF export.
+                        {% endif %}
+                    </p>
+                </div>
+                
+                <!-- السؤال 5 -->
+                <div class="faq-item" style="background: rgba(255,255,255,0.05); border-radius: 15px; padding: 25px; margin-bottom: 20px; border: 1px solid rgba(212, 175, 55, 0.2);">
+                    <h3 style="color: var(--gulf-gold); margin-bottom: 15px; font-size: 1.3rem;">
+                        <i class="fas fa-question-circle" style="margin-inline-start: 10px;"></i>
+                        {{ 'ما هي مميزات الذكاء الاصطناعي في البرنامج؟' if not is_en else 'What AI features are included?' }}
+                    </h3>
+                    <p style="color: rgba(255,255,255,0.9); line-height: 1.8; font-size: 1.05rem;">
+                        {% if not is_en %}
+                            <strong>الذكاء الاصطناعي المتقدم</strong> في نظام أزاد يوفر: توصيات أسعار ذكية بناءً على السوق، تحليل سلوك العملاء، تنبؤ بالمبيعات المستقبلية، تحليل أداء المنتجات، كشف الأنماط المخفية، توصيات لزيادة الأرباح، مساعد محادثة ذكي يجيب عن أسئلتك، ويتعلم من بيانات عملك لتحسين الأداء باستمرار.
+                        {% else %}
+                            AI-driven insights including pricing recommendations, forecasting, customer behavior analysis, and smart assistance.
+                        {% endif %}
+                    </p>
+                </div>
+                
+                <!-- السؤال 6 -->
+                <div class="faq-item" style="background: rgba(255,255,255,0.05); border-radius: 15px; padding: 25px; margin-bottom: 20px; border: 1px solid rgba(212, 175, 55, 0.2);">
+                    <h3 style="color: var(--gulf-gold); margin-bottom: 15px; font-size: 1.3rem;">
+                        <i class="fas fa-question-circle" style="margin-inline-start: 10px;"></i>
+                        {{ 'هل يمكن استخدام البرنامج في أكثر من فرع؟' if not is_en else 'Can I use it for multiple branches?' }}
+                    </h3>
+                    <p style="color: rgba(255,255,255,0.9); line-height: 1.8; font-size: 1.05rem;">
+                        {% if not is_en %}
+                            نعم! النظام يدعم <strong>إدارة متعددة المستودعات</strong> والفروع. يمكنك متابعة المخزون في كل فرع، نقل البضائع بين المستودعات، تقارير منفصلة لكل فرع، ومركزية كاملة في الإدارة. مثالي للشركات التي لديها <strong>عدة فروع في دبي، أبوظبي، الشارقة</strong> أو مدن الإمارات الأخرى.
+                        {% else %}
+                            Yes. Multi-warehouse and multi-branch support with centralized management and branch-level reporting.
+                        {% endif %}
+                    </p>
+                </div>
+                
+                <!-- السؤال 7 -->
+                <div class="faq-item" style="background: rgba(255,255,255,0.05); border-radius: 15px; padding: 25px; margin-bottom: 20px; border: 1px solid rgba(212, 175, 55, 0.2);">
+                    <h3 style="color: var(--gulf-gold); margin-bottom: 15px; font-size: 1.3rem;">
+                        <i class="fas fa-question-circle" style="margin-inline-start: 10px;"></i>
+                        {{ 'كيف أبدأ باستخدام نظام أزاد للمستودعات؟' if not is_en else 'How do I get started?' }}
+                    </h3>
+                    <p style="color: rgba(255,255,255,0.9); line-height: 1.8; font-size: 1.05rem;">
+                        {% if not is_en %}
+                            البداية سهلة جداً! <strong>3 خطوات فقط:</strong> (1) <a href="{{ url_for('public.contact') }}" style="color: var(--gulf-gold); text-decoration: underline;">تواصل معنا</a>، (2) اختر الباقة المناسبة، (3) ابدأ فوراً! نوفر <strong>تدريب مجاني</strong> لفريقك، استيراد بياناتك القديمة، دعم فني 24/7، ومتابعة مستمرة. <strong>لا حاجة لخبرة تقنية</strong> - النظام بسيط وسهل الاستخدام.
+                        {% else %}
+                            It is easy: (1) Contact us, (2) choose your plan, (3) start immediately. We provide training, data import, and support.
+                        {% endif %}
+                    </p>
+                </div>
+                
+                <!-- السؤال 8 -->
+                <div class="faq-item" style="background: rgba(255,255,255,0.05); border-radius: 15px; padding: 25px; border: 1px solid rgba(212, 175, 55, 0.2);">
+                    <h3 style="color: var(--gulf-gold); margin-bottom: 15px; font-size: 1.3rem;">
+                        <i class="fas fa-question-circle" style="margin-inline-start: 10px;"></i>
+                        {{ 'هل النظام آمن ويحمي بياناتي؟' if not is_en else 'Is my data secure?' }}
+                    </h3>
+                    <p style="color: rgba(255,255,255,0.9); line-height: 1.8; font-size: 1.05rem;">
+                        {% if not is_en %}
+                            <strong>الأمان أولويتنا!</strong> نستخدم: تشفير SSL كامل، نسخ احتياطي تلقائي يومي، حماية من الاختراق، صلاحيات متقدمة للمستخدمين، سجل تدقيق شامل، وخزنة آمنة للبطاقات الائتمانية. بياناتك محمية بأعلى معايير الأمان العالمية. <strong>متوافق 100% مع قوانين حماية البيانات</strong> في الإمارات.
+                        {% else %}
+                            Security-first: SSL, automatic backups, strict permissions, audit logs, and secure storage options.
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+            
+            <div style="text-align: center; margin-top: 50px;">
+                <a href="{{ url_for('public.contact') }}" class="btn-hero btn-primary" style="display: inline-block; padding: 18px 45px; background: var(--gulf-gold); color: var(--gulf-blue); border-radius: 50px; text-decoration: none; font-weight: 700; font-size: 1.2rem; box-shadow: 0 10px 30px rgba(212, 175, 55, 0.3);">
+                    <i class="fas fa-phone-alt" style="margin-inline-start: 10px;"></i>
+                    {{ 'تواصل معنا للمزيد من المعلومات' if not is_en else 'Contact us for more information' }}
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div style="margin-bottom: 15px;">
+            <img src="{{ url_for('static', filename=developer_logo or config.DEVELOPER_LOGO) }}" alt="{{ developer_name_ar or config.DEVELOPER_NAME_AR }}" style="max-height: 50px; filter: brightness(0) invert(1);">
+        </div>
+        <p style="font-size: 0.95rem;">&copy; 2025 {{ company_name_display }}. {{ 'جميع الحقوق محفوظة.' if not is_en else 'All rights reserved.' }}</p>
+        <p class="developer" style="font-size: 0.9rem;">{{ developer_credit or config.DEVELOPER_CREDIT }}</p>
+        <div style="margin-top: 15px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; font-size: 0.85rem;">
+            <a href="{{ url_for('public.pricing') }}" style="color: rgba(255,255,255,0.7); text-decoration: none;">{{ 'الأسعار' if not is_en else 'Pricing' }}</a>
+            <span style="color: rgba(255,255,255,0.3);">|</span>
+            <a href="{{ url_for('public.features') }}" style="color: rgba(255,255,255,0.7); text-decoration: none;">{{ 'المميزات' if not is_en else 'Features' }}</a>
+            <span style="color: rgba(255,255,255,0.3);">|</span>
+            <a href="{{ url_for('public.user_guide') }}" style="color: rgba(255,255,255,0.7); text-decoration: none;">{{ 'دليل' if not is_en else 'Guide' }}</a>
+            <span style="color: rgba(255,255,255,0.3);">|</span>
+            <a href="{{ url_for('public.contact') }}" style="color: rgba(255,255,255,0.7); text-decoration: none;">{{ 'اتصل بنا' if not is_en else 'Contact' }}</a>
+        </div>
+        <p style="margin-top: 15px; color: var(--gulf-gold); font-size: 0.85rem;">
+            <i class="fas fa-shield-alt"></i> {{ 'محمي بأعلى معايير الأمان' if not is_en else 'Protected with strong security standards' }}
+        </p>
+    </footer>
+
+    <script>
+        // Smooth scroll
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+
+        // Animate on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.feature-card, .price-card').forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(50px)';
+            el.style.transition = 'all 0.8s ease-out';
+            observer.observe(el);
+        });
+
+        const openBtn = document.getElementById('landingSidebarOpen');
+        const closeBtn = document.getElementById('landingSidebarClose');
+        const backdrop = document.getElementById('landingSidebarBackdrop');
+        const sidebar = document.getElementById('landingSidebar');
+        const openSidebar = () => {
+            document.body.classList.add('landing-sidebar-open');
+            sidebar.setAttribute('aria-hidden', 'false');
+        };
+        const closeSidebar = () => {
+            document.body.classList.remove('landing-sidebar-open');
+            sidebar.setAttribute('aria-hidden', 'true');
+        };
+        if (openBtn) openBtn.addEventListener('click', openSidebar);
+        if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
+        if (backdrop) backdrop.addEventListener('click', closeSidebar);
+        document.querySelectorAll('.landing-scroll-link').forEach(a => {
+            a.addEventListener('click', () => closeSidebar());
+        });
+    </script>
+
+    <!-- Bootstrap JS for dropdown -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>
+

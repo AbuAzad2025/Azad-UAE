@@ -1,0 +1,359 @@
+{% extends 'base.html' %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - تعديل المورد{% endblock %}
+{% block page_title %}
+<div class="d-flex justify-content-between align-items-center">
+  <div>
+    <h1 class="mb-0"><i class="fas fa-edit mr-2"></i>تعديل بيانات المورد: {{ supplier.name }}</h1>
+  </div>
+  <div>
+    <a href="{{ url_for('suppliers.view', id=supplier.id) }}" class="btn btn-info">
+      <i class="fas fa-eye mr-2"></i>عرض
+    </a>
+    <a href="{{ url_for('suppliers.index') }}" class="btn btn-secondary">
+      <i class="fas fa-arrow-right mr-2"></i>العودة للقائمة
+    </a>
+    <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
+      <i class="fas fa-home mr-2"></i>الرئيسية
+    </a>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  .supplier-edit-form .form-control,
+  .supplier-edit-form textarea.form-control,
+  .supplier-edit-form select.form-control {
+    min-height: 56px;
+    height: auto !important;
+    padding: 0.95rem 1.35rem;
+    font-size: 0.95rem;
+    line-height: 1.7;
+    text-align: center;
+  }
+
+  .supplier-edit-form .form-control::placeholder {
+    text-align: center;
+    color: #64748b;
+    opacity: 0.85;
+  }
+
+  .supplier-edit-form textarea.form-control {
+    text-align: right;
+  }
+
+  .supplier-edit-form textarea.form-control::placeholder {
+    text-align: right;
+  }
+
+  .supplier-edit-form select.form-control {
+    text-align-last: center;
+    padding-inline-start: 2.2rem;
+    padding-inline-end: 2.2rem;
+    appearance: none;
+    -webkit-appearance: none;
+    background-color: #fff;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23647894' d='M6 8a1 1 0 0 1-.707-.293l-5-5a1 1 0 0 1 1.414-1.414L6 5.586 10.293 1.293a1 1 0 0 1 1.414 1.414l-5 5A1 1 0 0 1 6 8'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: left 0.8rem center;
+    background-size: 12px;
+  }
+
+  .supplier-edit-form select.form-control option {
+    text-align: center;
+    padding: 0.75rem 1rem;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="card card-warning">
+  <div class="card-header">
+    <h3 class="card-title"><i class="fas fa-edit mr-2"></i>تعديل بيانات المورد</h3>
+  </div>
+  
+  <form method="POST" action="{{ url_for('suppliers.edit', id=supplier.id) }}" class="supplier-edit-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    
+    <div class="card-body">
+      <!-- معلومات أساسية -->
+      <div class="row">
+        <div class="col-md-12">
+          <h5 class="text-warning mb-3">
+            <i class="fas fa-info-circle"></i> المعلومات الأساسية
+          </h5>
+        </div>
+      </div>
+      
+      <div class="row">
+        <div class="col-md-4">
+          <div class="form-group">
+            <label>
+              <i class="fas fa-truck text-warning"></i> الاسم 
+              <span class="text-danger">*</span>
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="اسم المورد (إجباري)"></i>
+            </label>
+            <input type="text" name="name" class="form-control" required
+                   value="{{ supplier.name }}">
+          </div>
+        </div>
+        
+        <div class="col-md-4">
+          <div class="form-group">
+            <label>
+              <i class="fas fa-font text-info"></i> الاسم بالإنجليزية
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="الاسم بالإنجليزية (اختياري)"></i>
+            </label>
+            <input type="text" name="name_en" class="form-control"
+                   value="{{ supplier.name_en or '' }}">
+          </div>
+        </div>
+        
+        <div class="col-md-4">
+          <div class="form-group">
+            <label>
+              <i class="fas fa-building text-primary"></i> اسم الشركة
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="الاسم التجاري (اختياري)"></i>
+            </label>
+            <input type="text" name="company_name" class="form-control"
+                   value="{{ supplier.company_name or '' }}">
+          </div>
+        </div>
+      </div>
+      
+      <div class="row">
+        <div class="col-md-3">
+          <div class="form-group">
+            <label>نوع المورد</label>
+            <select name="supplier_type" class="form-control">
+              <option value="" {% if not supplier.supplier_type %}selected{% endif %}>بلا</option>
+              <option value="parts" {% if supplier.supplier_type == 'parts' %}selected{% endif %}>قطع غيار</option>
+              <option value="equipment" {% if supplier.supplier_type == 'equipment' %}selected{% endif %}>معدات</option>
+              <option value="services" {% if supplier.supplier_type == 'services' %}selected{% endif %}>خدمات</option>
+              <option value="materials" {% if supplier.supplier_type == 'materials' %}selected{% endif %}>مواد خام</option>
+              <option value="other" {% if supplier.supplier_type == 'other' %}selected{% endif %}>{{ t('Other') }}</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="col-md-3">
+          <div class="form-group">
+            <label>التقييم</label>
+            <select name="rating" class="form-control">
+              <option value="" {% if supplier.rating is none %}selected{% endif %}>بلا</option>
+              <option value="1" {% if supplier.rating == 1 %}selected{% endif %}>⭐ نجمة واحدة</option>
+              <option value="2" {% if supplier.rating == 2 %}selected{% endif %}>⭐⭐ نجمتان</option>
+              <option value="3" {% if supplier.rating == 3 %}selected{% endif %}>⭐⭐⭐ 3 نجوم</option>
+              <option value="4" {% if supplier.rating == 4 %}selected{% endif %}>⭐⭐⭐⭐ 4 نجوم</option>
+              <option value="5" {% if supplier.rating == 5 %}selected{% endif %}>⭐⭐⭐⭐⭐ 5 نجوم</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="col-md-3">
+          <div class="form-group">
+            <label>العملة المفضلة</label>
+            <select name="preferred_currency" class="form-control">
+              <option value="AED" {% if supplier.preferred_currency == 'AED' %}selected{% endif %}>AED - درهم</option>
+              <option value="USD" {% if supplier.preferred_currency == 'USD' %}selected{% endif %}>USD - دولار</option>
+              <option value="EUR" {% if supplier.preferred_currency == 'EUR' %}selected{% endif %}>EUR - يورو</option>
+              <option value="SAR" {% if supplier.preferred_currency == 'SAR' %}selected{% endif %}>SAR - ريال</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="col-md-3">
+          <div class="form-group">
+            <label>&nbsp;</label>
+            <div class="custom-control custom-checkbox">
+              <input type="checkbox" class="custom-control-input" id="is_verified" name="is_verified"
+                     {% if supplier.is_verified %}checked{% endif %}>
+              <label class="custom-control-label" for="is_verified">
+                <i class="fas fa-check-circle text-success"></i> مورد موثوق
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- معلومات الاتصال -->
+      <hr class="my-4">
+      <div class="row">
+        <div class="col-md-12">
+          <h5 class="text-warning mb-3">
+            <i class="fas fa-phone"></i> معلومات الاتصال
+          </h5>
+        </div>
+      </div>
+      
+      <div class="row">
+        <div class="col-md-3">
+          <div class="form-group">
+            <label>الهاتف 1</label>
+            <input type="text" name="phone" class="form-control"
+                   value="{{ supplier.phone or '' }}">
+          </div>
+        </div>
+        
+        <div class="col-md-3">
+          <div class="form-group">
+            <label>الهاتف 2</label>
+            <input type="text" name="phone2" class="form-control"
+                   value="{{ supplier.phone2 or '' }}">
+          </div>
+        </div>
+        
+        <div class="col-md-3">
+          <div class="form-group">
+            <label>{{ t('Email') }}</label>
+            <input type="email" name="email" class="form-control"
+                   value="{{ supplier.email or '' }}">
+          </div>
+        </div>
+        
+        <div class="col-md-3">
+          <div class="form-group">
+            <label>الموقع الإلكتروني</label>
+            <input type="url" name="website" class="form-control"
+                   value="{{ supplier.website or '' }}">
+          </div>
+        </div>
+      </div>
+      
+      <div class="row">
+        <div class="col-md-4">
+          <div class="form-group">
+            <label>{{ t('City') }}</label>
+            <input type="text" name="city" class="form-control"
+                   value="{{ supplier.city or '' }}">
+          </div>
+        </div>
+        
+        <div class="col-md-4">
+          <div class="form-group">
+            <label>{{ t('Country') }}</label>
+            <input type="text" name="country" class="form-control"
+                   value="{{ supplier.country or 'UAE' }}">
+          </div>
+        </div>
+        
+        <div class="col-md-4">
+          <div class="form-group">
+            <label>{{ t('Address') }}</label>
+            <input type="text" name="address" class="form-control"
+                   value="{{ supplier.address or '' }}">
+          </div>
+        </div>
+      </div>
+      
+      <!-- معلومات قانونية ومالية -->
+      <hr class="my-4">
+      <div class="row">
+        <div class="col-md-12">
+          <h5 class="text-warning mb-3">
+            <i class="fas fa-file-contract"></i> المعلومات القانونية والمالية
+          </h5>
+        </div>
+      </div>
+      
+      <div class="row">
+        <div class="col-md-3">
+          <div class="form-group">
+            <label>الرقم الضريبي (TRN)</label>
+            <input type="text" name="tax_number" class="form-control"
+                   value="{{ supplier.tax_number or '' }}">
+          </div>
+        </div>
+        
+        <div class="col-md-3">
+          <div class="form-group">
+            <label>السجل التجاري</label>
+            <input type="text" name="commercial_registration" class="form-control"
+                   value="{{ supplier.commercial_registration or '' }}">
+          </div>
+        </div>
+        
+        <div class="col-md-3">
+          <div class="form-group">
+            <label>الحد الائتماني (AED)</label>
+            <input type="number" name="credit_limit" class="form-control"
+                   value="{{ supplier.credit_limit or 0 }}" step="0.01" min="0">
+          </div>
+        </div>
+        
+        <div class="col-md-3">
+          <div class="form-group">
+            <label>شروط الدفع (أيام)</label>
+            <input type="number" name="payment_terms_days" class="form-control"
+                   value="{{ supplier.payment_terms_days or 30 }}" min="0">
+          </div>
+        </div>
+      </div>
+      
+      <!-- معلومات إضافية -->
+      <hr class="my-4">
+      <div class="row">
+        <div class="col-md-6">
+          <div class="form-group">
+            <label>الوسوم (Tags)</label>
+            <input type="text" name="tags" class="form-control"
+                   value="{{ supplier.tags or '' }}">
+          </div>
+        </div>
+        
+        <div class="col-md-6">
+          <div class="form-group">
+            <label>{{ t('Notes') }}</label>
+            <textarea name="notes" class="form-control" rows="3">{{ supplier.notes or '' }}</textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card-footer">
+      <button type="submit" class="btn btn-warning btn-lg">
+        <i class="fas fa-save mr-2"></i> حفظ التعديلات
+      </button>
+      <a href="{{ url_for('suppliers.view', id=supplier.id) }}" class="btn btn-secondary btn-lg">
+        <i class="fas fa-times mr-2"></i> إلغاء
+      </a>
+      <button type="button" class="btn btn-danger btn-lg float-left" 
+              onclick="deleteSupplier({{ supplier.id }})">
+        <i class="fas fa-trash mr-2"></i> حذف المورد
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// تفعيل Tooltips
+$(function () {
+  $('[data-toggle="tooltip"]').tooltip({
+    placement: 'top',
+    trigger: 'hover'
+  });
+});
+
+function deleteSupplier(id) {
+  if (confirm('هل أنت متأكد من حذف هذا المورد؟')) {
+    $.ajax({
+      url: `/suppliers/${id}/delete`,
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': $('input[name="csrf_token"]').val()
+      },
+      success: function() {
+        toastr.success('✅ تم حذف المورد بنجاح');
+        window.location.href = '{{ url_for("suppliers.index") }}';
+      },
+      error: function() {
+        toastr.error('❌ خطأ في حذف المورد');
+      }
+    });
+  }
+}
+</script>
+{% endblock %}
+

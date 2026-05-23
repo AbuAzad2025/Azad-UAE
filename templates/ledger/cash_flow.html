@@ -1,0 +1,243 @@
+{% extends 'base.html' %}
+{% block title %}قائمة التدفقات النقدية - Cash Flow Statement{% endblock %}
+{% block page_title %}قائمة التدفقات النقدية{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+  <div class="col-12">
+    <a href="{{ url_for('ledger.index') }}" class="btn btn-secondary">
+      <i class="fas fa-arrow-right mr-2"></i>العودة
+    </a>
+    <button class="btn btn-primary" onclick="window.print()">
+      <i class="fas fa-print mr-2"></i>طباعة
+    </button>
+  </div>
+</div>
+
+<!-- فلتر الفترة -->
+<div class="card mb-3">
+  <div class="card-body">
+    <form method="get" class="form-inline" action="">
+      <label class="ml-2 mr-2">من تاريخ:</label>
+      <input type="date" name="date_from" class="form-control mr-3" value="{{ date_from }}" required>
+      
+      <label class="ml-2 mr-2">إلى تاريخ:</label>
+      <input type="date" name="date_to" class="form-control mr-3" value="{{ date_to }}" required>
+      
+      <button type="submit" class="btn btn-primary">
+        <i class="fas fa-filter mr-2"></i>عرض
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- قائمة التدفقات -->
+<div class="card">
+  <div class="card-header bg-gradient-primary">
+    <h3 class="card-title text-white">
+      <i class="fas fa-money-bill-wave mr-2"></i>
+      قائمة التدفقات النقدية
+    </h3>
+    <div class="card-tools">
+      <span class="badge badge-light">
+        من {{ report.period_start.strftime('%d/%m/%Y') }} إلى {{ report.period_end.strftime('%d/%m/%Y') }}
+      </span>
+    </div>
+  </div>
+  <div class="card-body">
+    
+    <!-- 1. الأنشطة التشغيلية -->
+    <div class="mb-4">
+      <h4 class="bg-success text-white p-2">
+        <i class="fas fa-cog mr-2"></i>التدفقات النقدية من الأنشطة التشغيلية
+      </h4>
+      <table class="table table-bordered">
+        <tbody>
+          {% for item in report.operating_activities.items %}
+          <tr>
+            <td width="70%">{{ item.description }}</td>
+            <td width="30%" class="text-center {{ 'text-success' if item.type == 'inflow' else 'text-danger' }}">
+              {{ "+" if item.type == 'inflow' else "-" }}{{ "{:,.2f}".format(item.amount) }}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot class="bg-light">
+          <tr>
+            <th class="text-left">صافي النقدية من الأنشطة التشغيلية:</th>
+            <th class="text-center {{ 'text-success' if report.operating_activities.net_cash_from_operating > 0 else 'text-danger' }}">
+              {{ "{:,.2f}".format(report.operating_activities.net_cash_from_operating) }} AED
+            </th>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <!-- 2. الأنشطة الاستثمارية -->
+    <div class="mb-4">
+      <h4 class="bg-info text-white p-2">
+        <i class="fas fa-chart-line mr-2"></i>التدفقات النقدية من الأنشطة الاستثمارية
+      </h4>
+      <table class="table table-bordered">
+        <tbody>
+          {% for item in report.investing_activities.items %}
+          {% if item.amount > 0 %}
+          <tr>
+            <td width="70%">{{ item.description }}</td>
+            <td width="30%" class="text-center {{ 'text-success' if item.type == 'inflow' else 'text-danger' }}">
+              {{ "+" if item.type == 'inflow' else "-" }}{{ "{:,.2f}".format(item.amount) }}
+            </td>
+          </tr>
+          {% endif %}
+          {% endfor %}
+        </tbody>
+        <tfoot class="bg-light">
+          <tr>
+            <th class="text-left">صافي النقدية من الأنشطة الاستثمارية:</th>
+            <th class="text-center {{ 'text-success' if report.investing_activities.net_cash_from_investing > 0 else 'text-danger' }}">
+              {{ "{:,.2f}".format(report.investing_activities.net_cash_from_investing) }} AED
+            </th>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <!-- 3. الأنشطة التمويلية -->
+    <div class="mb-4">
+      <h4 class="bg-warning text-white p-2">
+        <i class="fas fa-hand-holding-usd mr-2"></i>التدفقات النقدية من الأنشطة التمويلية
+      </h4>
+      <table class="table table-bordered">
+        <tbody>
+          {% for item in report.financing_activities.items %}
+          {% if item.amount > 0 %}
+          <tr>
+            <td width="70%">{{ item.description }}</td>
+            <td width="30%" class="text-center {{ 'text-success' if item.type == 'inflow' else 'text-danger' }}">
+              {{ "+" if item.type == 'inflow' else "-" }}{{ "{:,.2f}".format(item.amount) }}
+            </td>
+          </tr>
+          {% endif %}
+          {% endfor %}
+        </tbody>
+        <tfoot class="bg-light">
+          <tr>
+            <th class="text-left">صافي النقدية من الأنشطة التمويلية:</th>
+            <th class="text-center {{ 'text-success' if report.financing_activities.net_cash_from_financing > 0 else 'text-danger' }}">
+              {{ "{:,.2f}".format(report.financing_activities.net_cash_from_financing) }} AED
+            </th>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <!-- الملخص النهائي -->
+    <div class="card bg-gradient-dark">
+      <div class="card-body">
+        <table class="table table-borderless text-white mb-0">
+          <tr>
+            <td width="70%"><strong>صافي التغير في النقدية:</strong></td>
+            <td width="30%" class="text-center">
+              <strong class="{{ 'text-success' if report.net_change_in_cash > 0 else 'text-danger' }}">
+                {{ "{:,.2f}".format(report.net_change_in_cash) }} AED
+              </strong>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>النقدية في بداية الفترة:</strong></td>
+            <td class="text-center">
+              <strong>{{ "{:,.2f}".format(report.cash_beginning) }} AED</strong>
+            </td>
+          </tr>
+          <tr class="border-top">
+            <td><strong>النقدية في نهاية الفترة:</strong></td>
+            <td class="text-center">
+              <strong class="text-warning">{{ "{:,.2f}".format(report.cash_ending) }} AED</strong>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- رسم بياني -->
+    <div class="card mt-4">
+      <div class="card-header">
+        <h5 class="mb-0">
+          <i class="fas fa-chart-bar mr-2"></i>التحليل البياني
+        </h5>
+      </div>
+      <div class="card-body">
+        <canvas id="cashFlowChart" height="80"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script>
+const ctx = document.getElementById('cashFlowChart').getContext('2d');
+new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: ['الأنشطة التشغيلية', 'الأنشطة الاستثمارية', 'الأنشطة التمويلية', 'صافي التغير'],
+        datasets: [{
+            label: 'التدفق النقدي (AED)',
+            data: [
+                {{ report.operating_activities.net_cash_from_operating }},
+                {{ report.investing_activities.net_cash_from_investing }},
+                {{ report.financing_activities.net_cash_from_financing }},
+                {{ report.net_change_in_cash }}
+            ],
+            backgroundColor: [
+                'rgba(40, 167, 69, 0.7)',   // أخضر
+                'rgba(23, 162, 184, 0.7)',  // أزرق
+                'rgba(255, 193, 7, 0.7)',   // أصفر
+                'rgba(108, 117, 125, 0.7)'  // رمادي
+            ],
+            borderColor: [
+                'rgb(40, 167, 69)',
+                'rgb(23, 162, 184)',
+                'rgb(255, 193, 7)',
+                'rgb(108, 117, 125)'
+            ],
+            borderWidth: 2
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+            legend: {
+                display: false
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        return context.parsed.y.toLocaleString('ar-AE') + ' AED';
+                    }
+                }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: function(value) {
+                        return value.toLocaleString('ar-AE') + ' AED';
+                    }
+                }
+            }
+        }
+    }
+});
+</script>
+
+<style>
+@media print {
+  .btn, form, canvas {
+    display: none !important;
+  }
+}
+</style>
+{% endblock %}
+

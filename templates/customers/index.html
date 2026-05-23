@@ -1,0 +1,268 @@
+{% extends 'base.html' %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - إدارة العملاء{% endblock %}
+{% block page_title %}
+<div class="d-flex justify-content-between align-items-center">
+  <div>
+    <h1 class="text-gradient mb-0"><i class="fas fa-users mr-3"></i>إدارة الزبائن</h1>
+    <p class="text-muted">قاعدة بيانات شاملة لجميع العملاء</p>
+  </div>
+  <div>
+    <a href="{{ url_for('customers.create') }}" class="btn btn-primary btn-lg">
+      <i class="fas fa-user-plus mr-2"></i>زبون جديد
+    </a>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.customer-card {
+  transition: all 0.3s ease;
+  border-radius: 12px;
+  border: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.customer-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 122, 61, 0.2);
+}
+.vip-badge {
+  background: linear-gradient(135deg, #D4AF37 0%, #FFD700 100%);
+  color: #000;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(212, 175, 55, 0.3);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <div class="d-flex justify-content-between align-items-center">
+      <h3 class="card-title mb-0">
+        <i class="fas fa-list mr-2"></i>قائمة الزبائن
+      </h3>
+      <div class="btn-group">
+        <button type="button" class="btn btn-sm btn-outline-primary" id="filterAll">
+          <i class="fas fa-users mr-1"></i>الكل
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-warning" id="filterVIP">
+          <i class="fas fa-crown mr-1"></i>VIP
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-info" id="filterMerchant">
+          <i class="fas fa-store mr-1"></i>تجار
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-success" id="filterRegular">
+          <i class="fas fa-user mr-1"></i>عادي
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-danger" id="filterOverdue">
+          <i class="fas fa-exclamation-triangle mr-1"></i>متأخر
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="card-body">
+    <div class="table-responsive">
+      <table id="customersTable" class="table table-hover">
+        <thead style="background: linear-gradient(135deg, #007A3D 0%, #1B4D89 100%); color: white;">
+          <tr>
+            <th><i class="fas fa-user mr-2"></i>{{ t('Name') }}</th>
+            <th><i class="fas fa-tag mr-2"></i>النوع</th>
+            <th><i class="fas fa-star mr-2"></i>التصنيف</th>
+            <th><i class="fas fa-phone mr-2"></i>{{ t('Phone') }}</th>
+            <th><i class="fas fa-wallet mr-2"></i>{{ t('Balance') }}</th>
+            {% if show_branch_columns %}
+            <th><i class="fas fa-code-branch mr-2"></i>الفرع</th>
+            {% endif %}
+            <th class="text-center"><i class="fas fa-cog mr-2"></i>الإجراءات</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for customer in customers %}
+          <tr class="fade-in" data-type="{{ customer.customer_type }}" data-classification="{{ customer.customer_classification }}">
+            <td>
+              <div class="d-flex align-items-center">
+                <div class="avatar-circle mr-2" style="background: linear-gradient(135deg, #007A3D 0%, #1B4D89 100%);">
+                  {{ customer.name[0] }}
+                </div>
+                <div>
+                  <strong>{{ customer.name }}</strong>
+                  {% if customer.name_ar %}
+                  <br><small class="text-muted">{{ customer.name_ar }}</small>
+                  {% endif %}
+                </div>
+              </div>
+            </td>
+            <td>
+              {% if customer.customer_type == 'regular' %}
+                <span class="badge badge-info"><i class="fas fa-user mr-1"></i>عادي</span>
+              {% elif customer.customer_type == 'merchant' %}
+                <span class="badge badge-warning"><i class="fas fa-store mr-1"></i>تاجر</span>
+              {% else %}
+                <span class="badge badge-success"><i class="fas fa-handshake mr-1"></i>شريك</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if customer.customer_classification == 'vip' %}
+                <span class="vip-badge"><i class="fas fa-crown mr-1"></i>VIP</span>
+              {% elif customer.customer_classification == 'premium' %}
+                <span class="badge badge-warning"><i class="fas fa-medal mr-1"></i>مميز</span>
+              {% else %}
+                <span class="badge badge-secondary">عادي</span>
+              {% endif %}
+            </td>
+            <td>
+              <a href="tel:{{ customer.phone }}" class="text-primary">
+                <i class="fas fa-phone mr-1"></i>{{ customer.phone or '-' }}
+              </a>
+            </td>
+            <td>
+              {% set balance = customer.get_balance_aed() %}
+              {% if balance < 0 %}
+                {# رصيد سالب: لنا على العميل (ذمم) => أحمر #}
+                <strong class="text-danger">{{ "{:,.2f}".format(balance) }}</strong>
+              {% elif balance > 0 %}
+                {# رصيد موجب: للعميل علينا => أخضر #}
+                <strong class="text-success">{{ "{:,.2f}".format(balance) }}</strong>
+              {% else %}
+                <span class="text-muted">0.00</span>
+              {% endif %}
+              <small class="text-muted">AED</small>
+            </td>
+            {% if show_branch_columns %}
+            <td>
+              {% if customer.branch_labels %}
+                {% for label in customer.branch_labels %}
+                  <span class="badge badge-light border">{{ label }}</span>{% if not loop.last %}<br>{% endif %}
+                {% endfor %}
+              {% else %}
+                <span class="text-muted">-</span>
+              {% endif %}
+            </td>
+            {% endif %}
+            <td class="text-center">
+              <div class="btn-group btn-group-sm">
+                <a href="{{ url_for('customers.view', id=customer.id) }}" 
+                   class="btn btn-info" title="{{ t('View') }}">
+                  <i class="fas fa-eye"></i>
+                </a>
+                <a href="{{ url_for('customers.edit', id=customer.id) }}" 
+                   class="btn btn-warning" title="{{ t('Edit') }}">
+                  <i class="fas fa-edit"></i>
+                </a>
+                <button type="button" class="btn btn-danger" 
+                        onclick="deleteItem('customers', {{ customer.id }}, '{{ customer.name }}')" 
+                        title="حذف">
+                  <i class="fas fa-trash"></i>
+                </button>
+                <a href="{{ url_for('customers.statement', id=customer.id) }}" 
+                   class="btn btn-success" title="كشف حساب" style="color: #ffffff !important;">
+                  <i class="fas fa-file-invoice" style="color: #ffffff !important;"></i>
+                </a>
+                <a href="{{ url_for('payments.create_voucher', party_type='customer', party_id=customer.id) }}" 
+                   class="btn btn-primary" title="قبض / دفع">
+                  <i class="fas fa-money-bill-wave"></i>
+                </a>
+                <a href="{{ url_for('sales.create', customer_id=customer.id) }}" 
+                   class="btn btn-success" title="بيع" style="color: #ffffff !important;">
+                  <i class="fas fa-shopping-cart" style="color: #ffffff !important;"></i>
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<style>
+.avatar-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: 1.2rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+  const table = $('#customersTable').DataTable({
+    language: { url: "{{ url_for('static', filename='datatables/Arabic.json') }}" },
+    pageLength: 25,
+    order: [[4, 'desc']],  // Sort by balance
+    responsive: true,
+    dom: 'Bfrtip',
+    buttons: [
+      {
+        extend: 'excel', 
+        text: '<i class="fas fa-file-excel mr-1"></i> Excel', 
+        className: 'btn-sm btn-success',
+        attr: {
+          style: 'color: #ffffff !important;'
+        }
+      },
+      {
+        extend: 'pdf', 
+        text: '<i class="fas fa-file-pdf mr-1"></i> PDF', 
+        className: 'btn-sm btn-danger',
+        attr: {
+          style: 'color: #ffffff !important;'
+        }
+      },
+      {
+        extend: 'print', 
+        text: '<i class="fas fa-print mr-1"></i> طباعة', 
+        className: 'btn-sm btn-info',
+        attr: {
+          style: 'color: #ffffff !important;'
+        }
+      }
+    ]
+  });
+
+  // Filter buttons
+  $('#filterAll').click(function() {
+    table.search('').draw();
+    $('.btn-group .btn').removeClass('active');
+    $(this).addClass('active');
+  });
+
+  $('#filterVIP').click(function() {
+    table.search('vip').draw();
+    $('.btn-group .btn').removeClass('active');
+    $(this).addClass('active');
+  });
+
+  $('#filterMerchant').click(function() {
+    table.search('تاجر').draw();
+    $('.btn-group .btn').removeClass('active');
+    $(this).addClass('active');
+  });
+
+  $('#filterRegular').click(function() {
+    table.search('عادي').draw();
+    $('.btn-group .btn').removeClass('active');
+    $(this).addClass('active');
+  });
+
+  $('#filterOverdue').click(function() {
+    table.column(4).search('^[1-9]', true, false).draw();
+    $('.btn-group .btn').removeClass('active');
+    $(this).addClass('active');
+  });
+});
+</script>
+{% endblock %}
+

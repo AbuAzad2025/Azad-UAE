@@ -1,0 +1,435 @@
+{% extends "base.html" %}
+
+{% block title %}تقرير الشركاء والتجار{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-handshake fa-fw me-2 text-primary"></i>تقرير الشركاء والتجار
+        </h1>
+        <div class="d-flex gap-2">
+            <button onclick="window.print()" class="btn btn-outline-secondary">
+                <i class="fas fa-print me-1"></i> طباعة
+            </button>
+        </div>
+    </div>
+
+    <!-- Search Card for Detailed Report -->
+    <div class="card shadow mb-4 border-bottom-primary">
+        <div class="card-header py-3 bg-gradient-dark text-white d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold"><i class="fas fa-search me-2"></i>بحث تفصيلي (Statement of Account)</h6>
+            <small class="text-white-50">بحث عن مورد، زبون، شريك، أو تاجر</small>
+        </div>
+        <div class="card-body">
+            <div class="row g-3 align-items-center">
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">نوع الحساب</label>
+                    <select class="form-control" id="searchType">
+                        <option value="supplier">مورد (Supplier)</option>
+                        <option value="customer">زبون (Customer)</option>
+                        <option value="partner">شريك (Partner)</option>
+                        <option value="merchant">تاجر (Merchant)</option>
+                    </select>
+                </div>
+                <div class="col-md-9 position-relative">
+                    <label class="form-label fw-bold">بحث بالاسم أو الهاتف</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                        <input type="text" class="form-control" id="searchInput" placeholder="ابدأ بالكتابة للبحث..." autocomplete="off">
+                    </div>
+                    <div id="searchResults" class="list-group position-absolute w-100 shadow mt-1" style="z-index: 1000; display: none; max-height: 300px; overflow-y: auto;"></div>
+                </div>
+            </div>
+            
+            <div id="entityDetailsContainer" class="mt-4">
+                <!-- Details will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- فلتر التاريخ -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">تصفية التقرير</h6>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label">من تاريخ</label>
+                    <input type="date" name="date_from" class="form-control" value="{{ request.args.get('date_from', '') }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">إلى تاريخ</label>
+                    <input type="date" name="date_to" class="form-control" value="{{ request.args.get('date_to', '') }}">
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-filter me-1"></i> عرض النتائج
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- تبويبات التقرير -->
+    <ul class="nav nav-tabs mb-4" id="reportTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="partners-tab" data-toggle="tab" data-target="#partners" type="button" role="tab">
+                <i class="fas fa-users me-2"></i>حصص الشركاء (Partners)
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="merchants-tab" data-toggle="tab" data-target="#merchants" type="button" role="tab">
+                <i class="fas fa-store me-2"></i>منتجات التجار (Merchants)
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="suppliers-tab" data-toggle="tab" data-target="#suppliers" type="button" role="tab">
+                <i class="fas fa-truck me-2"></i>الموردين (Suppliers)
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="reportTabsContent">
+        <!-- جدول الشركاء -->
+        <div class="tab-pane fade show active" id="partners" role="tabpanel">
+            
+            <!-- ملخص الشركاء المالي -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 bg-gradient-info text-white">
+                    <h6 class="m-0 font-weight-bold"><i class="fas fa-file-invoice-dollar me-2"></i>الملخص المالي للشركاء</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover text-center">
+                            <thead class="table-secondary">
+                                <tr>
+                                    <th>الشريك</th>
+                                    <th>إجمالي الحصص المستحقة (Revenue)</th>
+                                    <th>مقبوضات من الشريك (Received)</th>
+                                    <th>مدفوعات للشريك (Paid To)</th>
+                                    <th>صافي الرصيد (Net Balance)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for partner in partners_summary %}
+                                <tr>
+                                    <td class="fw-bold">{{ partner.name }}</td>
+                                    <td class="text-success">{{ "{:,.2f}".format(partner.total_share) }}</td>
+                                    <td class="text-primary">{{ "{:,.2f}".format(partner.received_from) }}</td>
+                                    <td class="text-danger">{{ "{:,.2f}".format(partner.paid_to) }}</td>
+                                    <td class="fw-bold {% if partner.net_balance >= 0 %}text-success{% else %}text-danger{% endif %}" style="font-size: 1.1em;">
+                                        {{ "{:,.2f}".format(partner.net_balance) }}
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-muted">لا توجد حركات مالية للشركاء في الفترة المحددة</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <small class="text-muted">* صافي الرصيد = (الحصص المستحقة + المقبوضات) - المدفوعات</small>
+                </div>
+            </div>
+
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 bg-gradient-primary text-white">
+                    <h6 class="m-0 font-weight-bold">تفاصيل حصص الشركاء من المبيعات (حسب المنتج)</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped" width="100%" cellspacing="0">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>المنتج</th>
+                                    <th>الشريك</th>
+                                    <th>نسبة الشراكة</th>
+                                    <th>سعر الوحدة (Avg)</th>
+                                    <th>الكمية المباعة</th>
+                                    <th>إجمالي المبيعات (AED)</th>
+                                    <th>حصة الشريك المستحقة (AED)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in partners_data %}
+                                <tr>
+                                    <td class="fw-bold">{{ item.product_name }}</td>
+                                    <td>{{ item.partner_name }}</td>
+                                    <td><span class="badge bg-info">{{ item.percentage }}%</span></td>
+                                    <td>{{ "{:,.2f}".format(item.avg_unit_price) }}</td>
+                                    <td>{{ item.total_qty }}</td>
+                                    <td>{{ "{:,.2f}".format(item.total_revenue) }}</td>
+                                    <td class="table-success fw-bold text-success">{{ "{:,.2f}".format(item.partner_share_amount) }}</td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="7" class="text-center py-4 text-muted">لا توجد مبيعات لمنتجات مشتركة في الفترة المحددة</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            {% if partners_data %}
+                            <tfoot class="table-light fw-bold">
+                                <tr>
+                                    <td colspan="5" class="text-end">الإجمالي الكلي:</td>
+                                    <td>{{ "{:,.2f}".format(partners_data|sum(attribute='total_revenue')) }}</td>
+                                    <td class="text-success">{{ "{:,.2f}".format(partners_data|sum(attribute='partner_share_amount')) }}</td>
+                                </tr>
+                            </tfoot>
+                            {% endif %}
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- جدول التجار -->
+        <div class="tab-pane fade" id="merchants" role="tabpanel">
+            
+            <!-- ملخص التجار المالي -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 bg-gradient-info text-white">
+                    <h6 class="m-0 font-weight-bold"><i class="fas fa-file-invoice-dollar me-2"></i>الملخص المالي للتجار</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover text-center">
+                            <thead class="table-secondary">
+                                <tr>
+                                    <th>التاجر</th>
+                                    <th>إجمالي المستحقات من المبيعات (Revenue)</th>
+                                    <th>مقبوضات من التاجر (Received)</th>
+                                    <th>مدفوعات للتاجر (Paid To)</th>
+                                    <th>صافي الرصيد (Net Balance)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for merchant in merchants_summary %}
+                                <tr>
+                                    <td class="fw-bold">{{ merchant.name }}</td>
+                                    <td class="text-success">{{ "{:,.2f}".format(merchant.total_share) }}</td>
+                                    <td class="text-primary">{{ "{:,.2f}".format(merchant.received_from) }}</td>
+                                    <td class="text-danger">{{ "{:,.2f}".format(merchant.paid_to) }}</td>
+                                    <td class="fw-bold {% if merchant.net_balance >= 0 %}text-success{% else %}text-danger{% endif %}" style="font-size: 1.1em;">
+                                        {{ "{:,.2f}".format(merchant.net_balance) }}
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-muted">لا توجد حركات مالية للتجار في الفترة المحددة</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <small class="text-muted">* صافي الرصيد = (المستحقات + المقبوضات) - المدفوعات</small>
+                </div>
+            </div>
+
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 bg-gradient-success text-white">
+                    <h6 class="m-0 font-weight-bold">تفاصيل مستحقات التجار (المنتجات الخارجية)</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped" width="100%" cellspacing="0">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>المنتج</th>
+                                    <th>التاجر المورد</th>
+                                    <th>النسبة المتفق عليها</th>
+                                    <th>سعر الوحدة (Avg)</th>
+                                    <th>الكمية المباعة</th>
+                                    <th>إجمالي المبيعات (AED)</th>
+                                    <th>حصة التاجر المستحقة (AED)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in merchants_data %}
+                                <tr>
+                                    <td class="fw-bold">{{ item.product_name }}</td>
+                                    <td>{{ item.merchant_name }}</td>
+                                    <td><span class="badge bg-warning text-dark">{{ item.percentage }}%</span></td>
+                                    <td>{{ "{:,.2f}".format(item.avg_unit_price) }}</td>
+                                    <td>{{ item.total_qty }}</td>
+                                    <td>{{ "{:,.2f}".format(item.total_revenue) }}</td>
+                                    <td class="table-success fw-bold text-success">{{ "{:,.2f}".format(item.merchant_share_amount) }}</td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="7" class="text-center py-4 text-muted">لا توجد مبيعات لمنتجات تجار في الفترة المحددة</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            {% if merchants_data %}
+                            <tfoot class="table-light fw-bold">
+                                <tr>
+                                    <td colspan="5" class="text-end">الإجمالي الكلي:</td>
+                                    <td>{{ "{:,.2f}".format(merchants_data|sum(attribute='total_revenue')) }}</td>
+                                    <td class="text-success">{{ "{:,.2f}".format(merchants_data|sum(attribute='merchant_share_amount')) }}</td>
+                                </tr>
+                            </tfoot>
+                            {% endif %}
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- جدول الموردين -->
+        <div class="tab-pane fade" id="suppliers" role="tabpanel">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 bg-gradient-warning text-dark">
+                    <h6 class="m-0 font-weight-bold"><i class="fas fa-truck me-2"></i>ملخص حسابات الموردين</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped" width="100%" cellspacing="0">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>المورد</th>
+                                    <th>إجمالي المشتريات (Purchases)</th>
+                                    <th>المدفوع للمورد (Paid To)</th>
+                                    <th>مرتجع من المورد (Refunds)</th>
+                                    <th>الرصيد المستحق للمورد (Balance Due)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for supplier in suppliers_summary %}
+                                <tr>
+                                    <td class="fw-bold">{{ supplier.name }}</td>
+                                    <td>{{ "{:,.2f}".format(supplier.total_purchases) }}</td>
+                                    <td class="text-success">{{ "{:,.2f}".format(supplier.paid_to) }}</td>
+                                    <td class="text-primary">{{ "{:,.2f}".format(supplier.received_from) }}</td>
+                                    <td class="fw-bold {% if supplier.balance_due > 0 %}text-danger{% else %}text-success{% endif %}">
+                                        {{ "{:,.2f}".format(supplier.balance_due) }}
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-4 text-muted">لا توجد بيانات موردين في الفترة المحددة</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            {% if suppliers_summary %}
+                            <tfoot class="table-light fw-bold">
+                                <tr>
+                                    <td class="text-end">الإجمالي الكلي:</td>
+                                    <td>{{ "{:,.2f}".format(suppliers_summary|sum(attribute='total_purchases')) }}</td>
+                                    <td class="text-success">{{ "{:,.2f}".format(suppliers_summary|sum(attribute='paid_to')) }}</td>
+                                    <td class="text-primary">{{ "{:,.2f}".format(suppliers_summary|sum(attribute='received_from')) }}</td>
+                                    <td class="text-danger">{{ "{:,.2f}".format(suppliers_summary|sum(attribute='balance_due')) }}</td>
+                                </tr>
+                            </tfoot>
+                            {% endif %}
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // Force tab switching for mixed Bootstrap environments
+        $('#reportTabs button').on('click', function (e) {
+            e.preventDefault();
+            // Remove active class from all contents
+            $('.tab-pane').removeClass('show active');
+            $('.nav-link').removeClass('active');
+            
+            // Add active to clicked tab
+            $(this).addClass('active');
+            
+            // Show target content
+            var targetId = $(this).data('target');
+            $(targetId).addClass('show active');
+        });
+
+        // --- Entity Search Logic ---
+        let searchTimeout;
+        const searchInput = $('#searchInput');
+        const searchType = $('#searchType');
+        const searchResults = $('#searchResults');
+        const detailsContainer = $('#entityDetailsContainer');
+
+        searchInput.on('input', function() {
+            clearTimeout(searchTimeout);
+            const query = $(this).val().trim();
+            const type = searchType.val();
+            
+            if (query.length < 2) {
+                searchResults.hide();
+                return;
+            }
+
+            searchTimeout = setTimeout(() => {
+                $.get(`/reports/api/entity-search?q=${encodeURIComponent(query)}&type=${type}`, function(data) {
+                    searchResults.empty();
+                    if (data.length > 0) {
+                        data.forEach(item => {
+                            // Backend returns specific type (e.g. partner, merchant, regular)
+                            // We need to map it nicely
+                            let typeLabel = item.type;
+                            if (item.type === 'supplier') typeLabel = 'مورد';
+                            else if (item.type === 'partner') typeLabel = 'شريك';
+                            else if (item.type === 'merchant') typeLabel = 'تاجر';
+                            else if (item.type === 'regular' || item.type === 'customer') typeLabel = 'زبون';
+                            
+                            // For the loadEntityDetails call, if it's not supplier, we can pass the specific type 
+                            // or just 'customer' since the ID is unique per table usually? 
+                            // No, IDs can overlap between tables. 
+                            // But Supplier is one table, Customer is another (containing partner/merchant/regular).
+                            // So we need to know if it's Supplier or Customer-based.
+                            // The backend 'api_entity_search' returns 'type': 'supplier' OR 'partner'/'merchant'/'regular'.
+                            // The backend 'entity_report_fragment' logic is: if type == 'supplier' ... else ... (treat as Customer).
+                            // So passing the specific type is fine.
+                            
+                            searchResults.append(`
+                                <a href="#" class="list-group-item list-group-item-action" 
+                                   onclick="loadEntityDetails('${item.type}', ${item.id}, '${item.name}'); return false;">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">${item.name}</h6>
+                                        <small class="badge bg-secondary text-white">${typeLabel}</small>
+                                    </div>
+                                    <small class="text-muted"><i class="fas fa-phone fa-xs"></i> ${item.phone || '---'}</small>
+                                </a>
+                            `);
+                        });
+                        searchResults.show();
+                    } else {
+                        searchResults.append('<div class="list-group-item text-muted">لا توجد نتائج</div>');
+                        searchResults.show();
+                    }
+                });
+            }, 300);
+        });
+
+        // Hide results on click outside
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('.position-relative').length) {
+                searchResults.hide();
+            }
+        });
+
+        window.loadEntityDetails = function(type, id, name) {
+            searchResults.hide();
+            searchInput.val(name); 
+            
+            detailsContainer.html('<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2">جاري تحميل التقرير التفصيلي...</p></div>');
+            
+            $.get(`/reports/entity_report_fragment/${type}/${id}`, function(html) {
+                detailsContainer.html(html);
+            }).fail(function(err) {
+                console.error(err);
+                detailsContainer.html('<div class="alert alert-danger">حدث خطأ أثناء تحميل التقرير. يرجى المحاولة مرة أخرى.</div>');
+            });
+        };
+    });
+</script>
+{% endblock %}

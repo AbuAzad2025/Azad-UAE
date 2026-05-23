@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+{% block title %}API Keys{% endblock %}
+{% block content %}
+<div class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2 align-items-center">
+      <div class="col-sm-6">
+        <h1 class="m-0"><i class="fas fa-key text-warning"></i> إدارة مفاتيح API</h1>
+      </div>
+      <div class="col-sm-6 d-flex justify-content-end">
+        <div class="d-flex align-items-center">
+          <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary ml-2">
+            <i class="fas fa-arrow-right mr-1"></i> الرجوع للوحة المالك
+          </a>
+          <ol class="breadcrumb float-sm-left mb-0">
+            <li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">لوحة المالك</a></li>
+            <li class="breadcrumb-item active">API Keys</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-12">
+        <div class="btn-group quick-nav" role="group">
+          <a href="{{ url_for('owner.api_keys') }}" class="btn btn-warning">
+            <i class="fas fa-key"></i> API Keys
+          </a>
+          <a href="{{ url_for('owner.ip_whitelist') }}" class="btn btn-outline-warning">
+            <i class="fas fa-network-wired"></i> IP Whitelist
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="content api-keys-page">
+  <div class="container-fluid">
+    <div class="card">
+      <div class="card-header bg-gradient-warning text-white">
+        <h3 class="card-title"><i class="fas fa-user-shield mr-2"></i> إنشاء مفتاح جديد</h3>
+      </div>
+      <div class="card-body">
+        <form method="POST" action="{{ url_for('owner.api_keys') }}" class="api-keys-form mb-4">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="row align-items-end">
+            <div class="col-md-5">
+              <div class="form-group">
+                <label>اسم المفتاح</label>
+                <input type="text" name="name" class="form-control" placeholder="My API Key" required>
+                <small class="form-text text-muted">اسم واضح يساعدك على تمييز استخدام المفتاح لاحقاً.</small>
+              </div>
+            </div>
+            <div class="col-md-5">
+              <div class="form-group">
+                <label>الخدمة</label>
+                <select name="service" class="form-control" required>
+                  <option value="api">API عام</option>
+                  <option value="integration">Integration</option>
+                  <option value="webhook">Webhook</option>
+                  <option value="mobile">Mobile App</option>
+                </select>
+                <small class="form-text text-muted">حدد الغرض من المفتاح لضبط الصلاحيات المناسبة.</small>
+              </div>
+            </div>
+            <div class="col-md-2">
+              <button type="submit" class="btn btn-warning btn-block">
+                <i class="fas fa-plus mr-1"></i> إنشاء
+              </button>
+            </div>
+          </div>
+        </form>
+
+        <h5 class="mb-3"><i class="fas fa-list-alt text-warning"></i> مفاتيح مفعّلة</h5>
+        <div class="table-responsive">
+          <table class="table table-bordered table-hover">
+            <thead class="thead-light">
+              <tr>
+                <th>الاسم</th>
+                <th>الخدمة</th>
+                <th>جزء من المفتاح</th>
+                <th>آخر استخدام</th>
+                <th>الحالة</th>
+                <th class="text-center">إجراء</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% if keys %}
+                {% for key in keys %}
+                <tr>
+                  <td>{{ key.name }}</td>
+                  <td><span class="badge badge-secondary">{{ key.service }}</span></td>
+                  <td><code>{{ key.key[:20] }}...</code></td>
+                  <td>{{ key.last_used.strftime('%Y-%m-%d %H:%M') if key.last_used else 'لم يُستخدم بعد' }}</td>
+                  <td>
+                    {% if key.is_active %}
+                    <span class="badge badge-success">نشط</span>
+                    {% else %}
+                    <span class="badge badge-secondary">معطل</span>
+                    {% endif %}
+                  </td>
+                  <td class="text-center">
+                    <form method="POST" action="{{ url_for('owner.toggle_api_key', id=key.id) }}" class="d-inline">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <button type="submit" class="btn btn-sm btn-outline-warning" title="تفعيل/تعطيل">
+                        <i class="fas fa-toggle-on"></i>
+                      </button>
+                    </form>
+                  </td>
+                </tr>
+                {% endfor %}
+              {% else %}
+                <tr>
+                  <td colspan="6" class="text-center text-muted">
+                    <i class="fas fa-info-circle"></i> لا توجد مفاتيح API حتى الآن.
+                  </td>
+                </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .api-keys-form .form-control,
+  .api-keys-form textarea.form-control,
+  .api-keys-form select.form-control {
+    height: auto !important;
+    min-height: 56px;
+    padding: 0.95rem 1.35rem;
+    font-size: 0.95rem;
+    border-radius: 10px;
+    line-height: 1.7;
+    width: 100%;
+  }
+
+  .api-keys-form select.form-control {
+    text-align-last: center;
+    padding-inline-start: 2.2rem;
+    padding-inline-end: 2.2rem;
+    appearance: none;
+    -webkit-appearance: none;
+    background-color: #fff;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23647894' d='M6 8a1 1 0 0 1-.707-.293l-5-5a1 1 0 0 1 1.414-1.414L6 5.586 10.293 1.293a1 1 0 0 1 1.414 1.414l-5 5A1 1 0 0 1 6 8'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: left 0.8rem center;
+    background-size: 12px;
+  }
+
+  .api-keys-form select.form-control option {
+    text-align: center;
+    padding: 0.75rem 1rem;
+  }
+
+  .api-keys-form .form-control::placeholder {
+    color: #64748b;
+    opacity: 0.85;
+    text-align: center;
+  }
+
+  .quick-nav .btn {
+    min-width: 150px;
+  }
+
+  .quick-nav .btn + .btn {
+    margin-left: 0.5rem;
+  }
+</style>
+{% endblock %}

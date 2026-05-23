@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+{% block title %}شركة أزاد للأنظمة الذكية - إنشاء سند قبض جديد{% endblock %}
+{% block page_title %}
+<div class="d-flex justify-content-between align-items-center">
+  <div>
+    <h1 class="mb-0"><i class="fas fa-receipt mr-2"></i>سند قبض جديد</h1>
+  </div>
+  <div>
+    <a href="{{ url_for('payments.receipts') }}" class="btn btn-secondary">
+      <i class="fas fa-arrow-right mr-2"></i>العودة للمدفوعات
+    </a>
+    <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
+      <i class="fas fa-home mr-2"></i>الرئيسية
+    </a>
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+  {% set form_data = request.form %}
+  <form method="POST" action="{{ url_for('payments.create_receipt') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-6">
+          <div class="form-group">
+            <label>
+              <i class="fas fa-user text-primary"></i> الزبون 
+              <span class="text-danger">*</span>
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="اختر العميل - يظهر رصيده الحالي (إجباري)"></i>
+            </label>
+            <select name="customer_id" id="customer_id" class="form-control customer-select" required onchange="loadCustomerSales()">
+              <option value="" {% if not form_data.get('customer_id') %}selected{% endif %}>بلا</option>
+              {% for customer in customers %}
+              <option value="{{ customer.id }}" {% if form_data.get('customer_id') and form_data.get('customer_id')|int == customer.id %}selected{% endif %}>
+                {{ customer.name }} - {{ "{:,.2f}".format(customer.get_balance_aed()) }} AED
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <div class="col-md-3">
+          <div class="form-group">
+            <label>
+              <i class="fas fa-money-bill-wave text-success"></i> المبلغ 
+              <span class="text-danger">*</span>
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="المبلغ المستلم (إجباري)"></i>
+            </label>
+            <input type="number" name="amount" class="form-control" step="0.01" min="0.01" placeholder="0.00" required>
+          </div>
+        </div>
+
+        <div class="col-md-3">
+          <div class="form-group">
+            <label>
+              <i class="fas fa-dollar-sign text-warning"></i> العملة
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="عملة الدفع (افتراضي: AED)"></i>
+            </label>
+            <select name="currency" id="currency" class="form-control">
+              <option value="AED">درهم</option>
+              <option value="USD">دولار</option>
+              <option value="EUR">يورو</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-6">
+          <div class="form-group">
+            <label>
+              <i class="fas fa-credit-card text-primary"></i> طريقة الدفع 
+              <span class="text-danger">*</span>
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="كيف تم استلام المبلغ؟ (إجباري)"></i>
+            </label>
+            <select name="payment_method" id="payment_method" class="form-control" required>
+              <option value="cash">نقدي</option>
+              <option value="card">بطاقة</option>
+              <option value="bank_transfer">تحويل بنكي</option>
+              <option value="cheque">شيك</option>
+              <option value="e_wallet">محفظة إلكترونية</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <div class="form-group">
+            <label>
+              <i class="fas fa-hashtag text-info"></i> {{ t('Reference Number') }}
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="رقم مرجعي (اختياري)"></i>
+            </label>
+            <input type="text" name="reference_number" class="form-control" placeholder="رقم الإيصال/التحويل">
+          </div>
+        </div>
+      </div>
+
+      <!-- حقول طريقة الدفع الديناميكية -->
+      <div id="paymentFieldsContainer"></div>
+
+      <div class="form-group">
+        <label>
+          <i class="fas fa-sticky-note text-secondary"></i> {{ t('Notes') }}
+          <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="ملاحظات عن الدفعة (اختياري)"></i>
+        </label>
+        <textarea name="notes" class="form-control" rows="3" placeholder="أي ملاحظات..."></textarea>
+      </div>
+
+      <div class="alert alert-info" id="customerSales" style="display:none;">
+        <h5><i class="fas fa-file-invoice mr-2"></i>الفواتير المستحقة:</h5>
+        <div id="salesList"></div>
+      </div>
+    </div>
+
+    <div class="card-footer">
+      <button type="submit" class="btn btn-success btn-lg">
+        <i class="fas fa-save mr-2"></i>حفظ سند القبض
+      </button>
+      <a href="{{ url_for('payments.receipts') }}" class="btn btn-secondary btn-lg">
+        <i class="fas fa-times mr-2"></i>{{ t('Cancel') }}
+      </a>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(function () {
+  $('[data-toggle="tooltip"]').tooltip({
+    placement: 'top',
+    trigger: 'hover'
+  });
+});
+
+// إدارة حقول الدفع الديناميكية
+if (window.PaymentFieldsManager) {
+  PaymentFieldsManager.initSelector('#payment_method', '#paymentFieldsContainer');
+}
+
+function loadCustomerSales() {
+  const customerId = $('#customer_id').val();
+  if (!customerId) {
+    $('#customerSales').hide();
+    return;
+  }
+  
+  $.get(`/api/customer/${customerId}/unpaid-sales`, function(data) {
+    if (data.sales && data.sales.length > 0) {
+      let html = '<table class="table table-sm"><tbody>';
+      data.sales.forEach(sale => {
+        html += `<tr>
+          <td>${sale.sale_number}</td>
+          <td class="text-danger">${sale.balance_due} AED</td>
+        </tr>`;
+      });
+      html += '</tbody></table>';
+      $('#salesList').html(html);
+      $('#customerSales').slideDown();
+    } else {
+      $('#customerSales').hide();
+    }
+  });
+}
+</script>
+{% endblock %}

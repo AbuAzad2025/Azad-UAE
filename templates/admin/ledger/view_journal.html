@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+
+{% block title %}قيد محاسبي #{{ entry.entry_number }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="fas fa-file-alt"></i> قيد محاسبي #{{ entry.entry_number }}
+          </h3>
+          <div class="card-tools">
+            <button onclick="window.print()" class="btn btn-primary">
+              <i class="fas fa-print"></i> طباعة
+            </button>
+            <a href="{{ url_for('admin_ledger.journals_management') }}" class="btn btn-secondary">
+              <i class="fas fa-arrow-left"></i> رجوع
+            </a>
+          </div>
+        </div>
+        <div class="card-body">
+          <!-- معلومات القيد -->
+          <div class="row mb-4">
+            <div class="col-md-6">
+              <h5>معلومات القيد</h5>
+              <table class="table table-bordered">
+                <tr>
+                  <th width="40%">رقم القيد</th>
+                  <td>{{ entry.entry_number }}</td>
+                </tr>
+                <tr>
+                  <th>التاريخ</th>
+                  <td>{{ entry.entry_date.strftime('%Y-%m-%d') }}</td>
+                </tr>
+                <tr>
+                  <th>النوع</th>
+                  <td>{{ entry.entry_type }}</td>
+                </tr>
+                <tr>
+                  <th>البيان</th>
+                  <td>{{ entry.description }}</td>
+                </tr>
+              </table>
+            </div>
+            
+            <div class="col-md-6">
+              <h5>الإجماليات</h5>
+              <table class="table table-bordered">
+                <tr>
+                  <th width="40%">إجمالي المدين</th>
+                  <td class="text-success">{{ entry.total_debit }} AED</td>
+                </tr>
+                <tr>
+                  <th>إجمالي الدائن</th>
+                  <td class="text-danger">{{ entry.total_credit }} AED</td>
+                </tr>
+                <tr>
+                  <th>الحالة</th>
+                  <td>
+                    {% if entry.total_debit == entry.total_credit %}
+                      <span class="badge badge-success">متوازن ✓</span>
+                    {% else %}
+                      <span class="badge badge-danger">غير متوازن ✗</span>
+                    {% endif %}
+                  </td>
+                </tr>
+              </table>
+            </div>
+          </div>
+
+          <!-- تفاصيل القيد -->
+          <h5>تفاصيل القيد</h5>
+          <table class="table table-bordered table-striped">
+            <thead>
+              <tr>
+                <th>الحساب</th>
+                <th>البيان</th>
+                <th class="text-success">مدين</th>
+                <th class="text-danger">دائن</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for line in entry.lines %}
+              <tr>
+                <td>{{ line.account.code }} - {{ line.account.name_ar }}</td>
+                <td>{{ line.description }}</td>
+                <td class="text-success">{{ line.debit if line.debit > 0 else '-' }}</td>
+                <td class="text-danger">{{ line.credit if line.credit > 0 else '-' }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+            <tfoot>
+              <tr class="font-weight-bold">
+                <td colspan="2" class="text-left">الإجمالي</td>
+                <td class="text-success">{{ entry.total_debit }}</td>
+                <td class="text-danger">{{ entry.total_credit }}</td>
+              </tr>
+            </tfoot>
+          </table>
+
+          <!-- الإجراءات -->
+          {% if current_user.is_admin %}
+          <div class="mt-4">
+            <form method="post" action="{{ url_for('admin_ledger.reverse_journal', id=entry.id) }}" style="display: inline;">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-warning" onclick="return confirm('هل تريد عكس هذا القيد؟')">
+                <i class="fas fa-undo"></i> عكس القيد
+              </button>
+            </form>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+@media print {
+  .card-tools, .btn, .main-sidebar, .main-header, .main-footer {
+    display: none !important;
+  }
+}
+</style>
+{% endblock %}
+

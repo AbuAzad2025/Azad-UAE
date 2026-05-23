@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="{{ current_language }}" dir="{{ 'rtl' if is_rtl else 'ltr' }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>شركة أزاد للأنظمة الذكية - الأسعار والعروض</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/accessibility.css') }}">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Tajawal', sans-serif; background: #f8f9fa; }
+        
+        .navbar { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .navbar a { color: white; text-decoration: none; margin: 0 15px; }
+        .navbar .logo { font-size: 1.5rem; font-weight: 900; }
+        
+        .pricing-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 80px 20px; text-align: center; }
+        .pricing-header h1 { font-size: 3rem; margin-bottom: 20px; }
+        .pricing-header p { font-size: 1.3rem; }
+        
+        .pricing-container { max-width: 1400px; margin: -50px auto 80px; padding: 0 20px; }
+        .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 30px; }
+        
+        .price-card { background: white; border-radius: 20px; padding: 40px; text-align: center; position: relative; transition: transform 0.3s; box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
+        .price-card:hover { transform: translateY(-10px); }
+        .price-card.featured { border: 4px solid #667eea; transform: scale(1.05); z-index: 1; }
+        .badge { background: #667eea; color: white; padding: 8px 20px; border-radius: 20px; font-size: 0.9rem; display: inline-block; margin-bottom: 20px; }
+        .plan-name { font-size: 2rem; font-weight: 700; margin-bottom: 15px; color: #2d3748; }
+        .price { font-size: 3.5rem; font-weight: 900; color: #667eea; margin: 20px 0; }
+        .price small { font-size: 1.2rem; font-weight: 400; }
+        .price-note { color: #718096; margin-bottom: 30px; }
+        .features-list { list-style: none; margin: 30px 0; text-align: right; }
+        .features-list li { padding: 12px 0; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; }
+        .features-list li i { color: #48bb78; margin-left: 12px; font-size: 1.2rem; }
+        .btn-select { background: #667eea; color: white; border: none; padding: 15px 40px; border-radius: 50px; font-size: 1.1rem; font-weight: 700; cursor: pointer; width: 100%; transition: background 0.3s; }
+        .btn-select:hover { background: #764ba2; }
+        
+        .comparison { max-width: 1400px; margin: 80px auto; padding: 0 20px; }
+        .comparison h2 { text-align: center; font-size: 2.5rem; margin-bottom: 40px; color: #2d3748; }
+        .comparison-table { background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        table { width: 100%; }
+        th, td { padding: 20px; text-align: center; }
+        th { background: #667eea; color: white; font-size: 1.2rem; }
+        tr:nth-child(even) { background: #f7fafc; }
+        .check { color: #48bb78; font-size: 1.5rem; }
+        .cross { color: #f56565; font-size: 1.5rem; }
+        
+        .cta-section { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 80px 20px; text-align: center; }
+        .cta-section h2 { font-size: 2.5rem; margin-bottom: 20px; }
+        .cta-section p { font-size: 1.3rem; margin-bottom: 40px; }
+        .cta-buttons { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
+        .btn-cta { padding: 15px 40px; border-radius: 50px; font-size: 1.1rem; text-decoration: none; transition: transform 0.3s; display: inline-block; }
+        .btn-white { background: white; color: #667eea; font-weight: 700; }
+        .btn-outline { background: transparent; color: white; border: 2px solid white; }
+        .btn-cta:hover { transform: translateY(-3px); }
+        
+        footer { background: #2d3748; color: white; padding: 40px 20px; text-align: center; }
+    </style>
+</head>
+<body>
+
+    <!-- Language Switcher -->
+    <div style="position: fixed; top: 20px; left: 20px; z-index: 9999;">
+        <a href="{{ url_for('language.set_language', lang='en' if session.get('language', 'ar') == 'ar' else 'ar') }}" class="btn btn-sm" style="background: rgba(255,255,255,0.9); border-radius: 20px; padding: 8px 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+            <i class="fas fa-globe mr-2"></i>{{ 'English' if session.get('language', 'ar') == 'ar' else 'العربية' }}
+        </a>
+    </div>
+
+    <nav class="navbar">
+        <div class="logo">{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }}</div>
+        <div>
+            <a href="{{ url_for('public.landing') }}">{{ t('Dashboard') }}</a>
+            <a href="{{ url_for('public.features') }}">المميزات</a>
+            <a href="{{ url_for('public.pricing') }}">الأسعار</a>
+            <a href="{{ url_for('public.user_guide') }}">دليل المستخدم</a>
+            <a href="{{ url_for('auth.login') }}"><i class="fas fa-sign-in-alt"></i> دخول</a>
+        </div>
+    </nav>
+
+    <header class="pricing-header">
+        <h1>🎯 الأسعار والعروض</h1>
+        <p>اختر الباقة المناسبة لحجم أعمالك - بدون رسوم خفية</p>
+    </header>
+
+    <div class="pricing-container">
+        <div class="pricing-grid">
+            
+            <!-- Starter Plan -->
+            <div class="price-card">
+                <div class="plan-name">الباقة التجريبية</div>
+                <div class="price">$99<small>/شهرياً</small></div>
+                <div class="price-note">مثالية للشركات الصغيرة</div>
+                <ul class="features-list">
+                    <li><i class="fas fa-check"></i> مستخدم واحد</li>
+                    <li><i class="fas fa-check"></i> 100 منتج</li>
+                    <li><i class="fas fa-check"></i> مبيعات ومشتريات</li>
+                    <li><i class="fas fa-check"></i> إدارة عملاء</li>
+                    <li><i class="fas fa-check"></i> تقارير أساسية</li>
+                    <li><i class="fas fa-check"></i> دعم بريد إلكتروني</li>
+                </ul>
+                <button class="btn-select" onclick="contact('starter')">ابدأ الآن</button>
+            </div>
+
+            <!-- Basic Plan -->
+            <div class="price-card">
+                <div class="plan-name">الباقة الأساسية</div>
+                <div class="price">$299<small>/شهرياً</small></div>
+                <div class="price-note">للشركات المتوسطة</div>
+                <ul class="features-list">
+                    <li><i class="fas fa-check"></i> 3 مستخدمين</li>
+                    <li><i class="fas fa-check"></i> منتجات غير محدودة</li>
+                    <li><i class="fas fa-check"></i> كل ميزات التجريبية</li>
+                    <li><i class="fas fa-check"></i> إدارة مخزون متقدمة</li>
+                    <li><i class="fas fa-check"></i> 3 عملات + تحويل</li>
+                    <li><i class="fas fa-check"></i> طباعة فواتير احترافية</li>
+                    <li><i class="fas fa-check"></i> دعم واتساب</li>
+                </ul>
+                <button class="btn-select" onclick="contact('basic')">اختر الباقة</button>
+            </div>
+
+            <!-- Professional Plan -->
+            <div class="price-card featured">
+                <div class="badge">⭐ الأكثر شعبية</div>
+                <div class="plan-name">الباقة الاحترافية</div>
+                <div class="price">$599<small>/شهرياً</small></div>
+                <div class="price-note">للشركات الكبيرة</div>
+                <ul class="features-list">
+                    <li><i class="fas fa-check"></i> 10 مستخدمين</li>
+                    <li><i class="fas fa-check"></i> كل ميزات الأساسية</li>
+                    <li><i class="fas fa-check"></i> 🤖 ذكاء اصطناعي كامل</li>
+                    <li><i class="fas fa-check"></i> بحث في الأسواق العالمية</li>
+                    <li><i class="fas fa-check"></i> دفتر أستاذ GL</li>
+                    <li><i class="fas fa-check"></i> تقارير متقدمة</li>
+                    <li><i class="fas fa-check"></i> API مفتوح</li>
+                    <li><i class="fas fa-check"></i> دعم فني 24/7</li>
+                </ul>
+                <button class="btn-select" onclick="contact('professional')">اختر الباقة</button>
+            </div>
+
+            <!-- Enterprise Plan -->
+            <div class="price-card">
+                <div class="plan-name">باقة المؤسسات</div>
+                <div class="price">{{ t('Custom') }}</div>
+                <div class="price-note">حلول مخصصة للمؤسسات</div>
+                <ul class="features-list">
+                    <li><i class="fas fa-check"></i> مستخدمين غير محدودين</li>
+                    <li><i class="fas fa-check"></i> كل الميزات المتقدمة</li>
+                    <li><i class="fas fa-check"></i> تخصيص كامل للنظام</li>
+                    <li><i class="fas fa-check"></i> تدريب مجاني للموظفين</li>
+                    <li><i class="fas fa-check"></i> استضافة خاصة</li>
+                    <li><i class="fas fa-check"></i> ربط مع أنظمة أخرى</li>
+                    <li><i class="fas fa-check"></i> مدير حساب مخصص</li>
+                    <li><i class="fas fa-check"></i> SLA مضمون</li>
+                </ul>
+                <button class="btn-select" onclick="contact('enterprise')">تواصل معنا</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Comparison Table -->
+    <div class="comparison">
+        <h2>مقارنة تفصيلية بين الباقات</h2>
+        <div class="comparison-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>الميزة</th>
+                        <th>تجريبية</th>
+                        <th>أساسية</th>
+                        <th>احترافية</th>
+                        <th>مؤسسات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="text-align: right;">عدد المستخدمين</td>
+                        <td>1</td>
+                        <td>3</td>
+                        <td>10</td>
+                        <td>غير محدود</td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: right;">{{ t('Products') }}</td>
+                        <td>100</td>
+                        <td>غير محدود</td>
+                        <td>غير محدود</td>
+                        <td>غير محدود</td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: right;">ذكاء اصطناعي</td>
+                        <td><i class="cross fas fa-times"></i></td>
+                        <td><i class="cross fas fa-times"></i></td>
+                        <td><i class="check fas fa-check"></i></td>
+                        <td><i class="check fas fa-check"></i></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: right;">دفتر أستاذ GL</td>
+                        <td><i class="cross fas fa-times"></i></td>
+                        <td><i class="cross fas fa-times"></i></td>
+                        <td><i class="check fas fa-check"></i></td>
+                        <td><i class="check fas fa-check"></i></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: right;">API</td>
+                        <td><i class="cross fas fa-times"></i></td>
+                        <td><i class="cross fas fa-times"></i></td>
+                        <td><i class="check fas fa-check"></i></td>
+                        <td><i class="check fas fa-check"></i></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: right;">دعم فني</td>
+                        <td>بريد</td>
+                        <td>واتساب</td>
+                        <td>24/7</td>
+                        <td>مدير مخصص</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <h2>جاهز للبدء؟</h2>
+        <p>ابدأ تجربتك المجانية لمدة 14 يوم - بدون بطاقة ائتمان</p>
+        <div class="cta-buttons">
+            <a href="#" onclick="contact('demo')" class="btn-cta btn-white">جرب مجاناً</a>
+            <a href="https://wa.me/{{ developer_whatsapp_link }}" class="btn-cta btn-outline" target="_blank">
+                <i class="fab fa-whatsapp"></i> تحدث معنا
+            </a>
+            <a href="mailto:{{ developer_email or config.DEVELOPER_EMAIL }}?subject={{ 'طلب شراء الكود أو تخصيص النظام' | urlencode }}" class="btn-cta btn-outline">
+                <i class="fas fa-envelope"></i> شراء الكود أو التخصيص
+            </a>
+        </div>
+    </section>
+
+    <footer>
+        <p>&copy; 2025 {{ config.COMPANY_NAME_AR }}. جميع الحقوق محفوظة.</p>
+        <p style="margin-top: 10px;">{{ config.DEVELOPER_CREDIT }}</p>
+    </footer>
+
+    <script>
+        function contact(plan) {
+            const whatsapp = "{{ developer_whatsapp_link }}";
+            const message = `مرحباً، أرغب في الاشتراك في الباقة: ${plan}`;
+            window.open(`https://wa.me/${whatsapp}?text=${encodeURIComponent(message)}`, '_blank');
+        }
+    </script>
+
+</body>
+</html>
+

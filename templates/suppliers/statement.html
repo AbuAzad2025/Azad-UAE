@@ -1,0 +1,293 @@
+{% extends 'base.html' %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - كشف حساب المورد {{ supplier.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 15mm;
+  }
+  .main-sidebar, .main-header, .main-footer,
+  .content-header, .no-print, button, .btn {
+    display: none !important;
+  }
+  .content-wrapper {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  .card {
+    border: none !important;
+    box-shadow: none !important;
+  }
+  body {
+    background: white !important;
+    padding: 20px;
+  }
+}
+
+.statement-header {
+  background: linear-gradient(135deg, #17a2b8 0%, #007bff 100%);
+  color: white;
+  padding: 30px;
+  border-radius: 8px 8px 0 0;
+}
+
+.statement-info {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+</style>
+{% endblock %}
+
+{% block page_title %}
+<div class="d-flex justify-content-between align-items-center">
+  <div>
+    <h1 class="mb-0"><i class="fas fa-file-invoice mr-2"></i>كشف حساب المورد</h1>
+    <p class="text-muted mb-0">{{ supplier.name }}</p>
+  </div>
+  <div>
+    <button onclick="window.print()" class="btn btn-primary">
+      <i class="fas fa-print mr-2"></i>طباعة
+    </button>
+    <a href="{{ url_for('suppliers.view', id=supplier.id) }}" class="btn btn-info">
+      <i class="fas fa-truck mr-2"></i>تفاصيل المورد
+    </a>
+    <a href="{{ url_for('suppliers.index') }}" class="btn btn-secondary">
+      <i class="fas fa-arrow-right mr-2"></i>العودة للقائمة
+    </a>
+    <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
+      <i class="fas fa-home mr-2"></i>الرئيسية
+    </a>
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="statement-header">
+    <div class="row">
+      <div class="col-md-6">
+        <h2 class="mb-3">
+          <i class="fas fa-truck mr-2"></i>{{ supplier.name }}
+          {% if supplier.is_verified %}
+            <span class="badge badge-success">✓ موثوق</span>
+          {% endif %}
+        </h2>
+        {% if supplier.company_name %}
+          <p class="mb-1"><strong>{{ supplier.company_name }}</strong></p>
+        {% endif %}
+        {% if supplier.phone %}
+          <p class="mb-1"><i class="fas fa-phone mr-2"></i>{{ supplier.phone }}</p>
+        {% endif %}
+        {% if supplier.email %}
+          <p class="mb-1"><i class="fas fa-envelope mr-2"></i>{{ supplier.email }}</p>
+        {% endif %}
+      </div>
+      <div class="col-md-6 text-left">
+        <h4 class="mb-3">كشف الحساب</h4>
+        <p class="mb-1"><i class="fas fa-calendar mr-2"></i>التاريخ: {{ now().strftime('%Y-%m-%d') }}</p>
+        <p class="mb-1"><i class="fas fa-hashtag mr-2"></i>رقم المورد: #{{ supplier.id }}</p>
+        {% if supplier.tax_number %}
+          <p class="mb-1"><i class="fas fa-receipt mr-2"></i>الرقم الضريبي: {{ supplier.tax_number }}</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  
+  <div class="card-body">
+    <!-- Summary -->
+    <div class="statement-info">
+      <div class="row text-center">
+        <div class="col-md-3">
+          <h6 class="text-muted">إجمالي المشتريات</h6>
+          <h3 class="text-info">{{ purchases|length }}</h3>
+        </div>
+        <div class="col-md-3">
+          <h6 class="text-muted">إجمالي المبلغ</h6>
+          <h3 class="text-success">{{ '{:,.2f}'.format(supplier.total_purchases_aed or 0) }} AED</h3>
+        </div>
+        <div class="col-md-3">
+          <h6 class="text-muted">{{ t('Paid') }}</h6>
+          <h3 class="text-primary">{{ '{:,.2f}'.format(supplier.total_paid_aed or 0) }} AED</h3>
+        </div>
+        <div class="col-md-3">
+          <h6 class="text-muted">الرصيد المستحق</h6>
+          <h3 class="{% if supplier.get_balance_aed() > 0 %}text-danger{% else %}text-success{% endif %}">
+            {{ '{:,.2f}'.format(supplier.get_balance_aed()) }} AED
+          </h3>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Purchases Table -->
+    {% if purchases %}
+    <div class="table-responsive">
+      <table class="table table-bordered table-striped">
+        <thead style="background: #007bff; color: white;">
+          <tr>
+            <th class="text-center">#</th>
+            <th>رقم الشراء</th>
+            <th>{{ t('Date') }}</th>
+            <th>العملة</th>
+            <th><i class="fas fa-exchange-alt mr-1"></i>سعر الصرف</th>
+            <th class="text-center">عدد المنتجات</th>
+            <th class="text-left">{{ t('Amount') }}</th>
+            <th class="text-left">المبلغ (AED)</th>
+            <th class="text-center">{{ t('Status') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for purchase in purchases %}
+          <tr>
+            <td class="text-center">{{ loop.index }}</td>
+            <td><strong>{{ purchase.purchase_number }}</strong></td>
+            <td>{{ purchase.purchase_date.strftime('%Y-%m-%d') }}</td>
+            <td><span class="badge badge-info">{{ purchase.currency }}</span></td>
+            <td>
+              {% if purchase.exchange_rate and purchase.exchange_rate != 1 %}
+                <span class="badge badge-info" title="سعر الصرف وقت المعاملة">
+                  <i class="fas fa-exchange-alt mr-1"></i>{{ "{:.4f}".format(purchase.exchange_rate) }}
+                </span>
+              {% else %}
+                <span class="text-muted">1.0000</span>
+              {% endif %}
+            </td>
+            <td class="text-center">{{ purchase.lines|length }}</td>
+            <td class="text-left">{{ '{:,.2f}'.format(purchase.total_amount) }}</td>
+            <td class="text-left text-success"><strong>{{ '{:,.2f}'.format(purchase.amount_aed) }}</strong></td>
+            <td class="text-center">
+              <span class="badge badge-success">
+                <i class="fas fa-check"></i> مؤكد
+              </span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot style="background: #f8f9fa; font-weight: bold;">
+          <tr>
+            <td colspan="7" class="text-left">الإجمالي:</td>
+            <td class="text-left text-success">
+              <h5 class="mb-0">{{ '{:,.2f}'.format(supplier.total_purchases_aed or 0) }} AED</h5>
+            </td>
+            <td></td>
+          </tr>
+          <tr>
+            <td colspan="7" class="text-left">الرصيد المستحق:</td>
+            <td class="text-left {% if supplier.get_balance_aed() > 0 %}text-danger{% else %}text-success{% endif %}">
+              <h5 class="mb-0">{{ '{:,.2f}'.format(supplier.get_balance_aed()) }} AED</h5>
+            </td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    {% else %}
+    <div class="text-center text-muted py-5">
+      <i class="fas fa-inbox fa-4x mb-3"></i>
+      <h4>لا توجد مشتريات</h4>
+      <p>لم يتم تسجيل أي مشتريات من هذا المورد حتى الآن</p>
+    </div>
+    {% endif %}
+    
+    {% if payments %}
+    <div class="mt-4">
+      <h4 class="mb-3"><i class="fas fa-money-check-alt mr-2"></i>الدفعات إلى المورد</h4>
+      <div class="table-responsive">
+        <table class="table table-bordered table-striped">
+          <thead style="background: #17a2b8; color: white;">
+            <tr>
+              <th class="text-center">#</th>
+              <th>رقم السند</th>
+              <th>التاريخ</th>
+              <th>الطريقة</th>
+              <th>الحالة</th>
+              <th>تاريخ الاستحقاق/الصرف</th>
+              <th class="text-left">المبلغ (AED)</th>
+              <th>ملاحظات</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in payments %}
+            {% set is_cheque = (p.payment_method == 'cheque') %}
+            {% set method_display = (p.get_method_display('ar') if p.get_method_display else p.payment_method) %}
+            {% set status_badge = ('badge-success' if p.payment_confirmed else 'badge-warning') %}
+            {% set status_text = ('مؤكدة ✅' if p.payment_confirmed else 'معلقة ⏳') %}
+            {% set due_date = (p.cheque.due_date if p.cheque else p.cheque_date) %}
+            {% set clearance_date = (p.cheque.clearance_date if p.cheque else None) %}
+            <tr>
+              <td class="text-center">{{ loop.index }}</td>
+              <td><strong>{{ p.payment_number }}</strong></td>
+              <td>{{ (p.payment_date or now()).strftime('%Y-%m-%d') }}</td>
+              <td>{{ method_display }}</td>
+              <td>
+                <span class="badge {{ status_badge }}">{{ status_text }}</span>
+              </td>
+              <td>
+                {% if is_cheque %}
+                  {% if p.payment_confirmed %}
+                    {{ (clearance_date.strftime('%Y-%m-%d') if clearance_date else '-') }}
+                  {% else %}
+                    {{ (due_date.strftime('%Y-%m-%d') if due_date else '-') }}
+                  {% endif %}
+                {% else %}
+                  -
+                {% endif %}
+              </td>
+              <td class="text-left text-primary"><strong>{{ '{:,.2f}'.format(p.amount_aed or 0) }}</strong></td>
+              <td>{{ p.notes or '-' }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+          <tfoot style="background: #f8f9fa; font-weight: bold;">
+            <tr>
+              <td colspan="6" class="text-left">إجمالي الدفعات:</td>
+              <td class="text-left text-primary">
+                <h5 class="mb-0">
+                  {{ '{:,.2f}'.format(payments|sum(attribute='amount_aed') or 0) }} AED
+                </h5>
+              </td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      <small class="text-muted d-block mt-2">
+        الشيكات المعلقة تُظهر هنا كـ "معلقة" مع تاريخ الاستحقاق، ولا تُحسب في الرصيد حتى تأكيد الصرف.
+      </small>
+    </div>
+    {% endif %}
+    
+    <!-- Footer -->
+    <div class="mt-5 pt-4 border-top">
+      <div class="row">
+        <div class="col-md-6">
+          <small class="text-muted">
+            <i class="fas fa-info-circle mr-1"></i>
+            تم إنشاء هذا الكشف بواسطة نظام إدارة المشتريات
+          </small>
+        </div>
+        <div class="col-md-6 text-left">
+          <small class="text-muted">
+            <i class="fas fa-calendar mr-1"></i>
+            تاريخ الطباعة: {{ now().strftime('%Y-%m-%d %H:%M') }}
+          </small>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Print Button (hidden on print) -->
+<div class="text-center mt-3 no-print">
+  <button onclick="window.print()" class="btn btn-lg btn-primary">
+    <i class="fas fa-print mr-2"></i>طباعة كشف الحساب
+  </button>
+  <a href="{{ url_for('suppliers.view', id=supplier.id) }}" class="btn btn-lg btn-secondary">
+    <i class="fas fa-arrow-right mr-2"></i>العودة للمورد
+  </a>
+</div>
+{% endblock %}
+

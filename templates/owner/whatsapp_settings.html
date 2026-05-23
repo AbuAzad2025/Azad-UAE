@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block title %}إعدادات واتساب{% endblock %}
+{% block content %}
+<div class="container-fluid">
+  <div class="mb-3">
+    <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary">
+      <i class="fas fa-arrow-right"></i> رجوع للوحة المالك
+    </a>
+    <a href="{{ url_for('owner.email_settings') }}" class="btn btn-info">
+      <i class="fas fa-envelope"></i> البريد
+    </a>
+    <a href="{{ url_for('owner.sms_settings') }}" class="btn btn-warning">
+      <i class="fas fa-sms"></i> الرسائل
+    </a>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <h3><i class="fab fa-whatsapp"></i> إعدادات واتساب</h3>
+    </div>
+    <div class="card-body">
+      <form method="post" action="">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        
+        <div class="form-group">
+          <label>API URL</label>
+          <input type="url" 
+                 name="whatsapp_api_url" 
+                 class="form-control" 
+                 value="{{ settings.whatsapp_api_url or '' }}" 
+                 placeholder="https://api.whatsapp.com">
+        </div>
+        
+        <div class="form-group">
+          <label>API Key</label>
+          <input type="password" 
+                 name="whatsapp_api_key" 
+                 class="form-control" 
+                 value="{{ settings.whatsapp_api_key or '' }}">
+        </div>
+        
+        <div class="form-group">
+          <label>رقم الهاتف</label>
+          <input type="text" 
+                 name="whatsapp_phone_number" 
+                 class="form-control" 
+                 value="{{ settings.whatsapp_phone_number or '' }}" 
+                 placeholder="+971501234567">
+        </div>
+        
+        <div class="form-group">
+          <div class="custom-control custom-switch">
+            <input type="checkbox" 
+                   class="custom-control-input" 
+                   id="whatsapp_enabled" 
+                   name="whatsapp_enabled" 
+                   {% if settings.whatsapp_enabled %}checked{% endif %}>
+            <label class="custom-control-label" for="whatsapp_enabled">
+              تفعيل واتساب
+            </label>
+          </div>
+        </div>
+        
+        <button type="submit" class="btn btn-success btn-lg">
+          <i class="fas fa-save"></i> حفظ
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

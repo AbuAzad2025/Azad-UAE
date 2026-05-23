@@ -1,0 +1,146 @@
+{% if error %}
+<div class="alert alert-danger">{{ error }}</div>
+{% else %}
+<div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between bg-primary text-white">
+        <h6 class="m-0 font-weight-bold">
+            <i class="fas fa-user-circle fa-lg ml-2"></i>
+            {{ entity.name }}
+            <span class="badge badge-light text-primary ml-2">{{ type_label }}</span>
+        </h6>
+        <div class="text-white">
+            <span class="ml-3"><i class="fas fa-phone ml-1"></i> {{ entity.phone or '---' }}</span>
+            <span class="font-weight-bold ml-3">
+                الرصيد: {{ "{:,.2f}".format(balance) }} AED
+                <small>({{ balance_label }})</small>
+            </span>
+        </div>
+    </div>
+    <div class="card-body">
+        <!-- Tabs -->
+        <ul class="nav nav-tabs" id="entityReportTabs" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link active" id="products-tab" data-toggle="tab" href="#products" role="tab" aria-controls="products" aria-selected="true">
+                    <i class="fas fa-box-open text-info"></i> المنتجات
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="invoices-tab" data-toggle="tab" href="#invoices" role="tab" aria-controls="invoices" aria-selected="false">
+                    <i class="fas fa-file-invoice text-warning"></i> الفواتير
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="payments-tab" data-toggle="tab" href="#payments" role="tab" aria-controls="payments" aria-selected="false">
+                    <i class="fas fa-money-bill-wave text-success"></i> الدفعات والقبض
+                </a>
+            </li>
+        </ul>
+
+        <div class="tab-content pt-3" id="entityReportTabsContent">
+            
+            <!-- Products Tab -->
+            <div class="tab-pane fade show active" id="products" role="tabpanel" aria-labelledby="products-tab">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm table-hover">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>المنتج</th>
+                                <th>الكمية</th>
+                                <th>المجموع (AED)</th>
+                                <th>آخر حركة</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for prod in products %}
+                            <tr>
+                                <td>{{ prod.name }}</td>
+                                <td>{{ prod.quantity }}</td>
+                                <td>{{ "{:,.2f}".format(prod.total) }}</td>
+                                <td>{{ prod.last_date }}</td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="4" class="text-center text-muted">لا توجد منتجات</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Invoices/Bills Tab -->
+            <div class="tab-pane fade" id="invoices" role="tabpanel" aria-labelledby="invoices-tab">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm table-hover">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>رقم الفاتورة</th>
+                                <th>التاريخ</th>
+                                <th>الحالة</th>
+                                <th>المبلغ (AED)</th>
+                                <th>المدفوع</th>
+                                <th>المتبقي</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for inv in invoices %}
+                            <tr>
+                                <td>{{ inv.number }}</td>
+                                <td>{{ inv.date }}</td>
+                                <td>
+                                    <span class="badge badge-{{ 'success' if inv.status == 'confirmed' else 'secondary' }}">
+                                        {{ inv.status }}
+                                    </span>
+                                </td>
+                                <td>{{ "{:,.2f}".format(inv.amount) }}</td>
+                                <td class="text-success">{{ "{:,.2f}".format(inv.paid) }}</td>
+                                <td class="text-danger">{{ "{:,.2f}".format(inv.balance) }}</td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="6" class="text-center text-muted">لا توجد فواتير</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Payments Tab -->
+            <div class="tab-pane fade" id="payments" role="tabpanel" aria-labelledby="payments-tab">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm table-hover">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>رقم السند</th>
+                                <th>النوع</th>
+                                <th>التاريخ</th>
+                                <th>المبلغ (AED)</th>
+                                <th>طريقة الدفع</th>
+                                <th>البيان</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for trans in transactions %}
+                            <tr>
+                                <td>{{ trans.number }}</td>
+                                <td>
+                                    {% if trans.type == 'in' %}
+                                    <span class="badge badge-success"><i class="fas fa-arrow-down"></i> قبض</span>
+                                    {% else %}
+                                    <span class="badge badge-danger"><i class="fas fa-arrow-up"></i> صرف</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ trans.date }}</td>
+                                <td class="font-weight-bold">{{ "{:,.2f}".format(trans.amount) }}</td>
+                                <td>{{ trans.method }}</td>
+                                <td>{{ trans.notes }}</td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="6" class="text-center text-muted">لا توجد حركات مالية</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endif %}

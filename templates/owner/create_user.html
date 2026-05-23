@@ -1,0 +1,481 @@
+{% extends 'base.html' %}
+
+{% block title %}شركة أزاد للأنظمة الذكية - إضافة مستخدم جديد وإدارة الصلاحيات{% endblock %}
+
+{% block content %}
+<div class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2 align-items-center">
+      <div class="col-sm-6">
+        <h1 class="m-0">➕ إضافة مستخدم جديد</h1>
+      </div>
+      <div class="col-sm-6 d-flex justify-content-end">
+        <div class="d-flex align-items-center">
+          <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary ml-2">
+            <i class="fas fa-arrow-right mr-1"></i> الرجوع للوحة المالك
+          </a>
+          <ol class="breadcrumb float-sm-left mb-0">
+            <li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">لوحة المالك</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('owner.users_list') }}">{{ t('Users') }}</a></li>
+            <li class="breadcrumb-item active">إضافة مستخدم</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container-fluid mb-3">
+  <div class="btn-group quick-nav" role="group">
+    <a href="{{ url_for('owner.users_list') }}" class="btn btn-primary">
+      <i class="fas fa-users"></i> قائمة المستخدمين
+    </a>
+    <a href="{{ url_for('owner.create_user') }}" class="btn btn-outline-primary active">
+      <i class="fas fa-user-plus"></i> إضافة مستخدم
+    </a>
+    <a href="{{ url_for('owner.roles_permissions') }}" class="btn btn-outline-secondary">
+      <i class="fas fa-user-shield"></i> الأدوار والصلاحيات
+    </a>
+  </div>
+</div>
+
+<div class="content create-user-page">
+  <div class="container-fluid">
+    {% set form_data = form_data if form_data is defined else request.form %}
+    <form method="POST" action="{{ url_for('owner.create_user') }}" id="userForm" class="create-user-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      
+      <div class="row">
+        <!-- المعلومات الأساسية -->
+        <div class="col-md-6">
+          <div class="card">
+            <div class="card-header bg-gradient-primary">
+              <h3 class="card-title text-white">📋 المعلومات الأساسية</h3>
+            </div>
+            <div class="card-body">
+              <div class="form-group">
+                <label>اسم المستخدم * <small class="text-muted">(للدخول)</small></label>
+                <input type="text" name="username" class="form-control" required 
+                       pattern="[a-zA-Z0-9_]{3,20}" 
+                       placeholder="مثال: ahmad_manager"
+                       value="{{ form_data.get('username', '') }}">
+                <small class="text-muted">حروف إنجليزية وأرقام و_ فقط (3-20 حرف)</small>
+              </div>
+              
+              <div class="form-group">
+                <label>{{ t('Full Name') }}</label>
+                <input type="text" name="full_name" class="form-control" placeholder="أحمد محمود"
+                       value="{{ form_data.get('full_name', '') }}">
+              </div>
+              
+              <div class="form-group">
+                <label>{{ t('Email') }}</label>
+                <input type="email" name="email" class="form-control" placeholder="ahmad@example.com"
+                       value="{{ form_data.get('email', '') }}">
+              </div>
+              
+              <div class="form-group">
+                <label>كلمة المرور * <small class="text-muted">(10+ أحرف، حرف كبير، رقم، رمز خاص)</small></label>
+                <input type="password" name="password" class="form-control" required minlength="10" 
+                       placeholder="••••••••" id="password">
+                <div class="mt-2" id="password-strength" style="display: none;">
+                  <div class="progress" style="height: 8px;">
+                    <div class="progress-bar" id="password-strength-bar" role="progressbar" style="width: 0%"></div>
+                  </div>
+                  <small id="password-strength-text" class="text-muted"></small>
+                </div>
+                <div id="password-requirements" class="mt-2" style="font-size: 0.85em;">
+                  <div><i class="fas fa-circle text-muted" id="req-length"></i> <span id="req-length-text">10 أحرف على الأقل</span></div>
+                  <div><i class="fas fa-circle text-muted" id="req-upper"></i> حرف كبير (A-Z)</div>
+                  <div><i class="fas fa-circle text-muted" id="req-lower"></i> حرف صغير (a-z)</div>
+                  <div><i class="fas fa-circle text-muted" id="req-digit"></i> رقم (0-9)</div>
+                  <div><i class="fas fa-circle text-muted" id="req-special"></i> رمز خاص (!@#$...)</div>
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label>تأكيد كلمة المرور *</label>
+                <input type="password" name="confirm_password" class="form-control" required minlength="10" 
+                       placeholder="••••••••" id="confirm_password">
+                <small class="form-text" id="password-match-text"></small>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- الصلاحيات والدور -->
+        <div class="col-md-6">
+          <div class="card">
+            <div class="card-header bg-gradient-success">
+              <h3 class="card-title text-white">🔐 الدور والصلاحيات</h3>
+            </div>
+            <div class="card-body">
+              <div class="form-group">
+                <label>الدور الوظيفي *</label>
+                {% set selected_role = form_data.get('role_id') %}
+                <select name="role_id" class="form-control" required id="role_select">
+                  <option value="" {% if not selected_role %}selected{% endif %}>بلا</option>
+                  {% for role in roles %}
+                  <option value="{{ role.id }}" data-role-slug="{{ role.slug }}" {% if selected_role and selected_role|int == role.id %}selected{% endif %}>
+                    {{ role.name }}
+                  </option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>الفرع <span class="text-danger branch-required-indicator">*</span></label>
+                <select name="branch_id" id="branch_id" class="form-control">
+                  <option value="">-- اختر الفرع --</option>
+                  {% for branch in branches %}
+                  <option value="{{ branch.id }}" {% if form_data.get('branch_id')|int == branch.id %}selected{% endif %}>
+                    {{ branch.name }} ({{ branch.code }})
+                  </option>
+                  {% endfor %}
+                </select>
+                <small class="text-muted" id="branch-help-text">إجباري لكل مستخدم غير المالك وغير المطور/السوبر أدمن.</small>
+              </div>
+              
+              <div class="alert alert-info" id="role-description">
+                <i class="fas fa-info-circle"></i>
+                <strong>اختر الدور لعرض الصلاحيات</strong>
+              </div>
+              
+              <div class="form-group">
+                <div class="custom-control custom-switch">
+                  <input type="checkbox" class="custom-control-input" id="is_owner" name="is_owner"
+                         {% if form_data.get('is_owner') == 'on' %}checked{% endif %}>
+                  <label class="custom-control-label" for="is_owner">
+                    <i class="fas fa-crown text-warning"></i> <strong>مالك النظام</strong>
+                    <br><small class="text-danger">⚠️ صلاحيات كاملة - استخدم بحذر!</small>
+                  </label>
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <div class="custom-control custom-switch">
+                  <input type="checkbox" class="custom-control-input" id="is_active" name="is_active"
+                         {% if form_data.get('is_active', 'on') == 'on' %}checked{% endif %}>
+                  <label class="custom-control-label" for="is_active">
+                    <i class="fas fa-check-circle text-success"></i> تفعيل الحساب
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- نصائح -->
+          <div class="card">
+            <div class="card-header bg-gradient-warning">
+              <h3 class="card-title" style="color: #000;">💡 نصائح</h3>
+            </div>
+            <div class="card-body">
+              <ul class="mb-0" style="color: #000;">
+                <li><strong>Owner</strong>: كل الصلاحيات بدون قيود</li>
+                <li><strong>Super Admin</strong>: إدارة + تقارير كاملة</li>
+                <li><strong>Manager</strong>: مبيعات + مشتريات + زبائن</li>
+                <li><strong>Seller</strong>: مبيعات فقط</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- أزرار الحفظ -->
+      <div class="row">
+        <div class="col-12">
+          <button type="submit" class="btn btn-primary btn-lg">
+            <i class="fas fa-save mr-2"></i>حفظ المستخدم
+          </button>
+          <a href="{{ url_for('owner.users_list') }}" class="btn btn-secondary btn-lg">
+            <i class="fas fa-times mr-2"></i>إلغاء
+          </a>
+        </div>
+      </div>
+    </form>
+    
+  </div>
+</div>
+
+<script>
+// Password Strength Checker
+function checkPasswordStrength(password) {
+  let score = 0;
+  const requirements = {
+    length: password.length >= 10,
+    upper: /[A-Z]/.test(password),
+    lower: /[a-z]/.test(password),
+    digit: /\d/.test(password),
+    special: /[!@#$%^&*()_+\-=\[\]{}|;:,.<>?]/.test(password)
+  };
+  
+  // Update requirements indicators
+  $('#req-length').removeClass('text-muted text-success text-danger')
+                  .addClass(requirements.length ? 'text-success' : 'text-danger')
+                  .removeClass('fa-circle').addClass(requirements.length ? 'fa-check-circle' : 'fa-times-circle');
+  
+  $('#req-upper').removeClass('text-muted text-success text-danger')
+                 .addClass(requirements.upper ? 'text-success' : 'text-danger')
+                 .removeClass('fa-circle').addClass(requirements.upper ? 'fa-check-circle' : 'fa-times-circle');
+  
+  $('#req-lower').removeClass('text-muted text-success text-danger')
+                 .addClass(requirements.lower ? 'text-success' : 'text-danger')
+                 .removeClass('fa-circle').addClass(requirements.lower ? 'fa-check-circle' : 'fa-times-circle');
+  
+  $('#req-digit').removeClass('text-muted text-success text-danger')
+                 .addClass(requirements.digit ? 'text-success' : 'text-danger')
+                 .removeClass('fa-circle').addClass(requirements.digit ? 'fa-check-circle' : 'fa-times-circle');
+  
+  $('#req-special').removeClass('text-muted text-success text-danger')
+                   .addClass(requirements.special ? 'text-success' : 'text-danger')
+                   .removeClass('fa-circle').addClass(requirements.special ? 'fa-check-circle' : 'fa-times-circle');
+  
+  // Calculate score
+  if (password.length >= 10) score += 30;
+  if (password.length >= 15) score += 10;
+  if (requirements.upper) score += 15;
+  if (requirements.lower) score += 15;
+  if (requirements.digit) score += 15;
+  if (requirements.special) score += 15;
+  
+  // Update strength bar
+  const bar = $('#password-strength-bar');
+  const text = $('#password-strength-text');
+  
+  bar.css('width', score + '%');
+  
+  if (score < 30) {
+    bar.removeClass().addClass('progress-bar bg-danger');
+    text.text('ضعيف جداً').removeClass().addClass('text-danger');
+  } else if (score < 50) {
+    bar.removeClass().addClass('progress-bar bg-warning');
+    text.text('ضعيف').removeClass().addClass('text-warning');
+  } else if (score < 70) {
+    bar.removeClass().addClass('progress-bar bg-info');
+    text.text('متوسط').removeClass().addClass('text-info');
+  } else if (score < 90) {
+    bar.removeClass().addClass('progress-bar bg-primary');
+    text.text('قوي').removeClass().addClass('text-primary');
+  } else {
+    bar.removeClass().addClass('progress-bar bg-success');
+    text.text('قوي جداً').removeClass().addClass('text-success');
+  }
+  
+  return score;
+}
+
+$(document).ready(function() {
+  // Password strength check on input
+  $('#password').on('input', function() {
+    const password = $(this).val();
+    if (password.length > 0) {
+      $('#password-strength').show();
+      checkPasswordStrength(password);
+    } else {
+      $('#password-strength').hide();
+    }
+  });
+  
+  // Password match check
+  $('#confirm_password').on('input', function() {
+    const password = $('#password').val();
+    const confirm = $(this).val();
+    const matchText = $('#password-match-text');
+    
+    if (confirm.length > 0) {
+      if (password === confirm) {
+        $(this).removeClass('is-invalid').addClass('is-valid');
+        matchText.html('<i class="fas fa-check-circle text-success"></i> كلمات المرور متطابقة').removeClass().addClass('text-success');
+      } else {
+        $(this).removeClass('is-valid').addClass('is-invalid');
+        matchText.html('<i class="fas fa-times-circle text-danger"></i> كلمات المرور غير متطابقة').removeClass().addClass('text-danger');
+      }
+    } else {
+      $(this).removeClass('is-valid is-invalid');
+      matchText.text('');
+    }
+  });
+  
+  // وصف الأدوار
+  const roleDescriptions = {
+    '1': {
+      title: 'Super Admin - مدير عام',
+      permissions: [
+        '✅ إدارة المستخدمين',
+        '✅ إدارة الصلاحيات',
+        '✅ عرض كل التقارير',
+        '✅ تعديل الإعدادات (محدود)',
+        '❌ الوصول للمالك فقط'
+      ],
+      color: 'danger'
+    },
+    '2': {
+      title: 'Manager - مدير',
+      permissions: [
+        '✅ إدارة المبيعات والمشتريات',
+        '✅ إدارة الزبائن والمنتجات',
+        '✅ عرض التقارير',
+        '✅ إدارة المخزون',
+        '❌ لا يمكنه حذف المستخدمين'
+      ],
+      color: 'info'
+    },
+    '3': {
+      title: 'Seller - بائع',
+      permissions: [
+        '✅ إنشاء فواتير بيع فقط',
+        '✅ عرض فواتيره فقط',
+        '✅ بحث عن منتجات وزبائن',
+        '❌ لا يمكنه الحذف أو الإلغاء',
+        '❌ لا يمكنه عرض التقارير'
+      ],
+      color: 'secondary'
+    }
+  };
+  
+  $('#role_select').change(function() {
+    const roleId = $(this).val();
+    const descDiv = $('#role-description');
+    
+    if (roleId && roleDescriptions[roleId]) {
+      const role = roleDescriptions[roleId];
+      let html = `<i class="fas fa-shield-alt"></i> <strong>${role.title}</strong><hr>`;
+      html += '<ul class="mb-0">';
+      role.permissions.forEach(perm => {
+        html += `<li>${perm}</li>`;
+      });
+      html += '</ul>';
+      descDiv.html(html).removeClass().addClass('alert alert-' + role.color);
+    } else {
+      descDiv.html('<i class="fas fa-info-circle"></i> <strong>اختر الدور لعرض الصلاحيات</strong>')
+             .removeClass().addClass('alert alert-info');
+    }
+  });
+
+  function branchRequiredForSelectedRole() {
+    const slug = $('#role_select option:selected').data('role-slug');
+    return !$('#is_owner').is(':checked') && slug && !['developer', 'super_admin'].includes(slug);
+  }
+
+  function syncBranchRequirement() {
+    const required = branchRequiredForSelectedRole();
+    $('#branch_id').prop('required', !!required);
+    $('.branch-required-indicator').toggle(!!required);
+    $('#branch-help-text').text(required
+      ? 'إجباري لكل مستخدم غير المالك وغير المطور/السوبر أدمن.'
+      : 'اختياري فقط للمستخدمين العالميين.'
+    );
+  }
+
+  $('#role_select, #is_owner').on('change', syncBranchRequirement);
+  syncBranchRequirement();
+  
+  // التحقق من تطابق كلمة المرور
+  $('#userForm').submit(function(e) {
+    const password = $('#password').val();
+    const confirm = $('#confirm_password').val();
+    
+    if (password !== confirm) {
+      e.preventDefault();
+      if (window.Swal) {
+        Swal.fire({
+          icon: 'error',
+          title: '⚠️ كلمات المرور غير متطابقة',
+          html: '<p>كلمة المرور في الحقلين مختلفة.</p><p class="text-muted">💡 تأكد من كتابة نفس كلمة المرور في كلا الحقلين.</p>',
+          confirmButtonText: 'حسناً'
+        });
+      } else {
+        alert('⚠️ كلمات المرور غير متطابقة!\n💡 تأكد من كتابة نفس كلمة المرور في كلا الحقلين.');
+      }
+      $('#confirm_password').focus();
+      return false;
+    }
+    
+    // التحقق من قوة كلمة المرور
+    const score = checkPasswordStrength(password);
+    if (score < 70) {
+      e.preventDefault();
+      if (window.Swal) {
+        Swal.fire({
+          icon: 'warning',
+          title: '🔒 كلمة المرور ضعيفة',
+          html: '<p>كلمة المرور الحالية ضعيفة.</p><p class="text-muted">💡 استخدم 10+ أحرف مع حروف كبيرة وصغيرة وأرقام ورموز خاصة.</p>',
+          showCancelButton: true,
+          confirmButtonText: 'متابعة بأي حال',
+          cancelButtonText: 'تحسين كلمة المرور'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            $('#userForm').off('submit').submit();
+          } else {
+            $('#password').focus();
+          }
+        });
+      } else {
+        const proceed = confirm('⚠️ كلمة المرور ضعيفة!\n\n💡 يُنصح باستخدام كلمة مرور أقوى.\n\nهل تريد المتابعة بأي حال؟');
+        if (!proceed) {
+          $('#password').focus();
+          return false;
+        }
+      }
+      return false;
+    }
+
+    if (branchRequiredForSelectedRole() && !$('#branch_id').val()) {
+      e.preventDefault();
+      alert('يجب اختيار فرع لهذا المستخدم قبل الحفظ.');
+      $('#branch_id').focus();
+      return false;
+    }
+    
+    return true;
+  });
+});
+</script>
+
+<style>
+  .quick-nav .btn {
+    min-width: 170px;
+  }
+
+  .quick-nav .btn + .btn {
+    margin-left: 0.5rem;
+  }
+
+  .create-user-form .form-control,
+  .create-user-form textarea.form-control,
+  .create-user-form select.form-control {
+    height: auto !important;
+    min-height: 56px;
+    padding: 0.95rem 1.35rem;
+    font-size: 0.95rem;
+    border-radius: 10px;
+    line-height: 1.7;
+    width: 100%;
+  }
+
+  .create-user-form .form-control::placeholder {
+    color: #64748b;
+    opacity: 0.85;
+    text-align: center;
+  }
+
+  .create-user-form select.form-control {
+    text-align-last: center;
+    padding-inline-start: 2.2rem;
+    padding-inline-end: 2.2rem;
+    appearance: none;
+    -webkit-appearance: none;
+    background-color: #fff;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23647894' d='M6 8a1 1 0 0 1-.707-.293l-5-5a1 1 0 0 1 1.414-1.414L6 5.586 10.293 1.293a1 1 0 0 1 1.414 1.414l-5 5A1 1 0 0 1 6 8'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: left 0.8rem center;
+    background-size: 12px;
+  }
+
+  .create-user-form select.form-control option {
+    text-align: center;
+    padding: 0.75rem 1rem;
+  }
+</style>
+{% endblock %}
+

@@ -1,0 +1,183 @@
+{% extends 'base.html' %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - إضافة عميل جديد{% endblock %}
+{% block page_title %}
+<div class="d-flex justify-content-between align-items-center">
+  <div>
+    <h1 class="mb-0"><i class="fas fa-user-plus mr-2"></i>إضافة زبون جديد</h1>
+  </div>
+  <div>
+    <a href="{{ url_for('customers.index') }}" class="btn btn-secondary">
+      <i class="fas fa-arrow-right mr-2"></i>العودة للزبائن
+    </a>
+    <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
+      <i class="fas fa-home mr-2"></i>الرئيسية
+    </a>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.customer-create-form .form-control,
+.customer-create-form .form-select {
+  min-height: 48px;
+  height: auto;
+  padding: 0.65rem 0.85rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.customer-create-form .form-control::placeholder {
+  text-align: center;
+  color: #6c757d;
+  opacity: 0.85;
+}
+
+.customer-create-form textarea.form-control {
+  text-align: right;
+  line-height: 1.6;
+}
+
+.customer-create-form textarea.form-control::placeholder {
+  text-align: right;
+}
+
+a.btn.btn-secondary,
+.btn.btn-secondary {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%) !important;
+  border-color: #3498db !important;
+}
+a.btn.btn-secondary i,
+a.btn.btn-secondary span {
+  color: #ffffff !important;
+}
+
+a.btn.btn-outline-secondary,
+.btn.btn-outline-secondary {
+  color: #111827 !important;
+  -webkit-text-fill-color: #111827 !important;
+  background-color: #ffffff !important;
+  border-color: #334155 !important;
+}
+a.btn.btn-outline-secondary i,
+a.btn.btn-outline-secondary span {
+  color: #111827 !important;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+  <form method="POST" action="{{ url_for('customers.create') }}" class="customer-create-form">
+    {{ form.hidden_tag() }}
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-6">
+          <div class="form-group">
+            <label>
+              <i class="fas fa-user text-primary"></i> الاسم 
+              <span class="text-danger">*</span>
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="اسم العميل الكامل (إجباري)"></i>
+            </label>
+            {{ form.name(class="form-control", placeholder="اسم الزبون", required=true) }}
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="form-group">
+            <label>
+              <i class="fas fa-tag text-primary"></i> نوع الزبون 
+              <span class="text-danger">*</span>
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="عادي: سعر التجزئة | تاجر: خصم 10% | شريك: خصم 15%"></i>
+            </label>
+            {{ form.customer_type(class="form-control", required=true) }}
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="form-group">
+            <label>
+              <i class="fas fa-toggle-on text-success"></i> {{ t('Status') }}
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="حالة تفعيل العميل (افتراضي: مفعّل)"></i>
+            </label>
+            <div class="custom-control custom-switch">
+              {{ form.is_active(class="custom-control-input") }}
+              <label class="custom-control-label" for="is_active">{{ t('Active') }}</label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-4">
+          <div class="form-group">
+            <label>
+              <i class="fas fa-phone text-primary"></i> {{ t('Phone') }} 
+              <span class="text-danger">*</span>
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="رقم الهاتف (يجب أن يكون فريداً)"></i>
+            </label>
+            {{ form.phone(class="form-control", placeholder="+971-5x-xxx-xxxx", required=true) }}
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="form-group">
+            <label>
+              <i class="fas fa-envelope text-info"></i> {{ t('Email') }}
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="البريد الإلكتروني (اختياري - للإشعارات)"></i>
+            </label>
+            {{ form.email(class="form-control", placeholder="email@example.com") }}
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="form-group">
+            <label>
+              <i class="fas fa-dollar-sign text-success"></i> العملة الافتراضية
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="العملة المفضلة (افتراضي: AED)"></i>
+            </label>
+            {{ form.preferred_currency(class="form-control") }}
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>
+          <i class="fas fa-map-marker-alt text-warning"></i> {{ t('Address') }}
+          <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="عنوان العميل (اختياري - للتوصيل)"></i>
+        </label>
+        {{ form.address(class="form-control", rows=2, placeholder="العنوان الكامل...") }}
+      </div>
+
+      <div class="form-group">
+        <label>
+          <i class="fas fa-sticky-note text-secondary"></i> {{ t('Notes') }}
+          <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="ملاحظات إضافية (اختياري)"></i>
+        </label>
+        {{ form.notes(class="form-control", rows=3, placeholder="أي ملاحظات عن العميل...") }}
+      </div>
+    </div>
+
+    <div class="card-footer">
+      <button type="submit" class="btn btn-primary">
+        <i class="fas fa-save mr-2"></i>حفظ
+      </button>
+      <a href="{{ url_for('customers.index') }}" class="btn btn-secondary">
+        <i class="fas fa-times mr-2"></i>إلغاء
+      </a>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// تفعيل tooltips
+$(function () {
+  $('[data-toggle="tooltip"]').tooltip({
+    placement: 'top',
+    trigger: 'hover'
+  });
+});
+</script>
+{% endblock %}
+

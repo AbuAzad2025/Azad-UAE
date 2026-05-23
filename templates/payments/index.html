@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - سندات القبض والدفع{% endblock %}
+{% block page_title %}سندات القبض{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+  <div class="col-12">
+    <a href="{{ url_for('payments.create_receipt') }}" class="btn btn-success">
+      <i class="fas fa-plus mr-2"></i>سند قبض جديد
+    </a>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <table id="receiptsTable" class="table table-bordered table-striped" data-lang-url="{{ url_for('static', filename='datatables/Arabic.json') }}">
+      <thead>
+        <tr>
+          <th>رقم السند</th>
+          <th>الزبون</th>
+          <th>{{ t('Date') }}</th>
+          <th>{{ t('Amount') }}</th>
+          <th><i class="fas fa-exchange-alt mr-1"></i>سعر الصرف</th>
+          <th>الطريقة</th>
+          <th>الإجراءات</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for receipt in receipts %}
+        <tr>
+          <td><strong>{{ receipt.receipt_number }}</strong></td>
+          <td>{{ receipt.customer.name if receipt.customer else '-' }}</td>
+          <td>{{ receipt.receipt_date.strftime('%Y-%m-%d') }}</td>
+          <td>{{ "{:,.2f}".format(receipt.amount) }} {{ receipt.currency }}</td>
+          <td>
+            {% if receipt.exchange_rate and receipt.exchange_rate != 1 %}
+              <span class="badge badge-info" title="سعر الصرف وقت المعاملة">
+                <i class="fas fa-exchange-alt mr-1"></i>{{ "{:.4f}".format(receipt.exchange_rate) }}
+              </span>
+            {% else %}
+              <span class="text-muted">1.0000</span>
+            {% endif %}
+          </td>
+          <td><span class="badge badge-success">{{ receipt.payment_method }}</span></td>
+          <td>
+            <a href="{{ url_for('payments.view_receipt', id=receipt.id) }}" class="btn btn-sm btn-info">
+              <i class="fas fa-eye"></i>
+            </a>
+            <button
+              type="button"
+              class="btn btn-sm btn-secondary js-print-receipt"
+              data-print-url="{{ url_for('payments.print_receipt', id=receipt.id) }}"
+            >
+              <i class="fas fa-print"></i>
+            </button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script defer src="{{ url_for('static', filename='js/payments-index-page.js') }}"></script>
+{% endblock %}
+

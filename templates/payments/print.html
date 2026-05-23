@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="{{ current_language }}" dir="{{ 'rtl' if is_rtl else 'ltr' }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - سند قبض #{{ receipt.receipt_number }}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/accessibility.css') }}">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    @page {
+      size: A4 portrait;
+      margin: 10mm;
+    }
+    body { font-family: 'Tajawal', sans-serif; padding: 20px; }
+    .receipt-container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: white;
+      border: 3px solid #28a745;
+      border-radius: 15px;
+    }
+    .receipt-header {
+      background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+      color: white;
+      padding: 25px;
+      text-align: center;
+    }
+    .receipt-title {
+      background: #f8f9fa;
+      padding: 15px;
+      text-align: center;
+      border-bottom: 3px solid #28a745;
+    }
+    .receipt-title h2 { color: #28a745; font-size: 22px; margin: 0; }
+    .receipt-body { padding: 25px; }
+    .info-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed #ccc; }
+    .amount-box {
+      background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+      color: white;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+      margin: 20px 0;
+    }
+    .amount-box h3 { font-size: 32px; margin: 0; }
+    @media print {
+      body { padding: 0; }
+      .no-print { display: none !important; }
+    }
+  </style>
+</head>
+<body class="receipt-print payment-receipt">
+  <div class="no-print" style="text-align: center; margin-bottom: 20px;">
+    <button onclick="window.print()" style="background: #28a745; color: white; border: none; padding: 10px 25px; border-radius: 8px; font-size: 16px; cursor: pointer;">
+      <i class="fas fa-print"></i> طباعة
+    </button>
+  </div>
+
+  <div class="receipt-container">
+    <div class="receipt-header">
+      {% if tenant_logo_url %}
+      <img src="{{ tenant_logo_url }}" style="height: 60px; max-width: 160px; object-fit: contain;" alt="{{ tenant_name_ar or company_name_ar }}">
+      {% else %}
+      <span style="font-size: 1.3rem; font-weight: 700;">{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }}</span>
+      {% endif %}
+      <h3 style="margin: 10px 0;">{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }}</h3>
+      <p style="font-size: 13px;">{{ tenant_address or company_address }}</p>
+    </div>
+
+    <div class="receipt-title">
+      <h2>
+        {% if is_payment %}
+          سند صرف 💸
+        {% else %}
+          سند قبض 💵
+        {% endif %}
+      </h2>
+      <p style="color: #28a745; margin: 5px 0; font-weight: 700;">رقم: 
+        {% if is_payment %}
+          {{ receipt.payment_number }}
+        {% else %}
+          {{ receipt.receipt_number }}
+        {% endif %}
+      </p>
+    </div>
+
+    <div class="receipt-body">
+      <div class="info-row">
+        <span><strong>التاريخ:</strong></span>
+        <span>
+          {% if is_payment %}
+            {{ receipt.payment_date.strftime('%Y-%m-%d %H:%M') }}
+          {% else %}
+            {{ receipt.receipt_date.strftime('%Y-%m-%d %H:%M') }}
+          {% endif %}
+        </span>
+      </div>
+
+      <div class="info-row">
+        <span><strong>اسم الزبون:</strong></span>
+        <span>
+          {% if is_payment %}
+            {% if receipt.customer %}
+              {{ receipt.customer.name }}
+            {% else %}
+              {{ receipt.supplier_name or '-' }}
+            {% endif %}
+          {% else %}
+            {{ receipt.customer.name if receipt.customer else '-' }}
+          {% endif %}
+        </span>
+      </div>
+
+      <div class="info-row">
+        <span><strong>طريقة الدفع:</strong></span>
+        <span>
+          {% if receipt.payment_method == 'cash' %}نقدي
+          {% elif receipt.payment_method == 'card' %}بطاقة
+          {% elif receipt.payment_method == 'bank_transfer' %}تحويل بنكي
+          {% elif receipt.payment_method == 'cheque' %}شيك
+          {% else %}محفظة إلكترونية{% endif %}
+        </span>
+      </div>
+
+      {% if receipt.reference_number %}
+      <div class="info-row">
+        <span><strong>رقم المرجع:</strong></span>
+        <span>{{ receipt.reference_number }}</span>
+      </div>
+      {% endif %}
+
+      {% if receipt.cheque_number %}
+      <div class="info-row" style="background: #e7f3ff; padding: 12px; margin: 10px 0; border-radius: 8px;">
+        <div style="width: 100%;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+            <span><strong>رقم الشيك:</strong></span>
+            <span>{{ receipt.cheque_number }}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+            <span><strong>البنك:</strong></span>
+            <span>{{ receipt.bank_name }}</span>
+          </div>
+          {% if receipt.cheque_date %}
+          <div style="display: flex; justify-content: space-between;">
+            <span><strong>تاريخ الاستحقاق:</strong></span>
+            <span style="color: #28a745; font-weight: bold;">{{ receipt.cheque_date.strftime('%Y-%m-%d') }}</span>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+
+      <div class="amount-box">
+        <p style="margin: 0; font-size: 16px;">المبلغ المستلم</p>
+        <h3>{{ "{:,.2f}".format(receipt.amount) }} {{ receipt.currency }}</h3>
+        {% if receipt.currency != 'AED' %}
+        <p style="margin: 5px 0; font-size: 14px;">= {{ "{:,.2f}".format(receipt.amount_aed) }} AED</p>
+        {% endif %}
+      </div>
+
+      {% if receipt.notes %}
+      <div style="background: #fff3cd; padding: 12px; border-radius: 8px; border-right: 4px solid #ffc107;">
+        <strong>ملاحظات:</strong> {{ receipt.notes }}
+      </div>
+      {% endif %}
+
+      <div style="margin-top: 40px; text-align: center;">
+        <div style="border-top: 2px solid #333; width: 200px; margin: 0 auto; padding-top: 10px;">
+          <strong>توقيع المحاسب</strong>
+        </div>
+      </div>
+    </div>
+
+    <div style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 15px; text-align: center;">
+      <p style="margin: 0; font-size: 13px;">{{ developer_credit or config.DEVELOPER_CREDIT }}</p>
+      <p style="margin: 5px 0; font-size: 12px;">📞 {{ developer_phone or config.DEVELOPER_PHONE }} | 📧 {{ developer_email or config.DEVELOPER_EMAIL }}</p>
+    </div>
+  </div>
+</body>
+</html>
+

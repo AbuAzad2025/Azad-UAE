@@ -1,0 +1,275 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - إعدادات الذكاء الاصطناعي{% endblock %}
+{% block page_title %}إعدادات الذكاء الاصطناعي{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{{ url_for('ai.assistant_page') }}">{{ t('AI Assistant') }}</a></li>
+<li class="breadcrumb-item active">{{ t('Settings') }}</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-8">
+    <!-- Groq API Key -->
+    <div class="card card-success">
+      <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-bolt"></i> Groq API (مجاني - تحديث يومي)</h3>
+      </div>
+      <form id="groqForm" method="POST" class="api-key-form" action="">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="card-body">
+          {% if groq_key_exists %}
+          <div class="alert alert-success">
+            <i class="fas fa-check-circle"></i> <strong>مفعّل حالياً</strong>
+            <p class="mb-0 mt-2"><small>المفتاح: {{ groq_key_preview }}</small></p>
+            <p class="mb-0 text-warning"><small><i class="fas fa-clock"></i> ينتهي كل 24 ساعة - حدّثه يومياً</small></p>
+          </div>
+          {% endif %}
+          
+          <input type="hidden" name="provider" value="groq">
+          
+          <div class="form-group">
+            <label><i class="fas fa-key"></i> مفتاح Groq الجديد</label>
+            <div class="input-group">
+              <input type="password" name="api_key" id="groq_key" class="form-control"
+                     placeholder="gsk_..." value="{{ groq_key_preview if groq_key_exists else '' }}">
+              <div class="input-group-append">
+                <button type="button" class="btn btn-outline-secondary toggle-key" data-target="groq_key">
+                  <i class="fas fa-eye"></i>
+                </button>
+              </div>
+            </div>
+            <small class="form-text text-muted">
+              🔗 احصل على مفتاح جديد: <a href="https://console.groq.com/keys" target="_blank" class="font-weight-bold">console.groq.com/keys</a>
+            </small>
+          </div>
+          
+          <div class="alert alert-info">
+            <strong>💡 نصيحة:</strong> كل صباح، جيب مفتاح جديد من Groq وحدّثه هنا (30 ثانية فقط!)
+          </div>
+        </div>
+        <div class="card-footer">
+          <button type="submit" class="btn btn-success btn-lg">
+            <i class="fas fa-save"></i> تحديث مفتاح Groq
+          </button>
+        </div>
+      </form>
+    </div>
+    
+    <!-- OpenAI / Gemini API Key -->
+    <div class="card card-primary mt-3">
+      <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-robot"></i> مفاتيح أخرى (اختياري)</h3>
+      </div>
+      <form id="otherForm" method="POST" class="api-key-form" action="">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="card-body">
+          {% if openai_key_exists %}
+          <div class="alert alert-primary">
+            <i class="fas fa-check-circle"></i> <strong>OpenAI/Gemini مفعّل</strong>
+            <p class="mb-0 mt-2"><small>{{ openai_key_preview }}</small></p>
+          </div>
+          {% endif %}
+          
+          <div class="form-group">
+            <label>نوع المزود</label>
+            <select name="provider" id="other_provider" class="form-control">
+              <option value="openai">OpenAI (GPT-4)</option>
+              <option value="gemini">Google Gemini</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label><i class="fas fa-key"></i> مفتاح API</label>
+            <div class="input-group">
+              <input type="password" name="api_key" id="other_key" class="form-control"
+                     placeholder="sk-... أو AIza...">
+              <div class="input-group-append">
+                <button type="button" class="btn btn-outline-secondary toggle-key" data-target="other_key">
+                  <i class="fas fa-eye"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-footer">
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> حفظ
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+  
+  <div class="col-md-4">
+    <div class="card card-info">
+      <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-question-circle"></i> المساعدة</h3>
+      </div>
+      <div class="card-body">
+        <h5>الحصول على مفتاح Groq (مجاني)</h5>
+        <ol>
+          <li>سجل في <a href="https://console.groq.com" target="_blank">console.groq.com</a></li>
+          <li>انتقل إلى API Keys</li>
+          <li>اضغط "Create API Key"</li>
+          <li>انسخ المفتاح والصقه هنا</li>
+        </ol>
+        
+        <hr>
+        
+        <h5>الحصول على مفتاح OpenAI</h5>
+        <ol>
+          <li>سجل في <a href="https://platform.openai.com" target="_blank">platform.openai.com</a></li>
+          <li>أضف رصيد (مدفوع)</li>
+          <li>أنشئ مفتاح API</li>
+          <li>انسخه والصقه هنا</li>
+        </ol>
+        
+        <div class="alert alert-warning mt-3">
+          <i class="fas fa-exclamation-triangle"></i>
+          <strong>تحذير:</strong> احتفظ بالمفتاح آمناً ولا تشاركه
+        </div>
+      </div>
+    </div>
+    
+    <div class="card card-success">
+      <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-check-circle"></i> الحالة</h3>
+      </div>
+      <div class="card-body">
+        {% if ai_enabled %}
+          <div class="alert alert-success">
+            <i class="fas fa-check-circle"></i> AI مفعّل وجاهز!
+          </div>
+        {% else %}
+          <div class="alert alert-secondary">
+            <i class="fas fa-robot"></i> يعمل في الوضع المحلي
+          </div>
+          <p class="text-muted">أضف مفتاح API لتفعيل الميزات الكاملة</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  .api-key-form .form-control,
+  .api-key-form textarea.form-control,
+  .api-key-form select.form-control {
+    min-height: 56px;
+    height: auto !important;
+    padding: 0.95rem 1.35rem;
+    font-size: 0.95rem;
+    line-height: 1.7;
+    text-align: center;
+  }
+
+  .api-key-form .form-control::placeholder {
+    text-align: center;
+    color: #64748b;
+    opacity: 0.85;
+  }
+
+  .api-key-form textarea.form-control {
+    text-align: right;
+  }
+
+  .api-key-form textarea.form-control::placeholder {
+    text-align: right;
+  }
+
+  .api-key-form select.form-control {
+    text-align-last: center;
+    padding-inline-start: 2.2rem;
+    padding-inline-end: 2.2rem;
+    appearance: none;
+    -webkit-appearance: none;
+    background-color: #fff;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23647894' d='M6 8a1 1 0 0 1-.707-.293l-5-5a1 1 0 0 1 1.414-1.414L6 5.586 10.293 1.293a1 1 0 0 1 1.414 1.414l-5 5A1 1 0 0 1 6 8'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: left 0.8rem center;
+    background-size: 12px;
+  }
+
+  .api-key-form select.form-control option {
+    text-align: center;
+    padding: 0.75rem 1rem;
+  }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+  // إظهار/إخفاء المفتاح
+  $('.toggle-key').click(function() {
+    const target = $(this).data('target');
+    const input = $('#' + target);
+    const icon = $(this).find('i');
+    
+    if (input.attr('type') === 'password') {
+      input.attr('type', 'text');
+      icon.removeClass('fa-eye').addClass('fa-eye-slash');
+    } else {
+      input.attr('type', 'password');
+      icon.removeClass('fa-eye-slash').addClass('fa-eye');
+    }
+  });
+  
+  // حفظ النماذج
+  $('.api-key-form').submit(function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const submitBtn = $(this).find('button[type="submit"]');
+    const originalText = submitBtn.html();
+    
+    // تعطيل الزر
+    submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...');
+    
+    $.ajax({
+      url: '{{ url_for("ai.config") }}',
+      method: 'POST',
+      data: formData,
+      processData: false,
+      contentType: false,
+      success: function(response) {
+        submitBtn.prop('disabled', false).html(originalText);
+        
+        if (response.success) {
+          Swal.fire({
+            icon: 'success',
+            title: 'تم الحفظ! ✅',
+            html: `<p>${response.message}</p>
+                   <p class="text-muted"><small>صلاحية: ${response.expires_in}</small></p>`,
+            confirmButtonText: 'تمام',
+            timer: 3000
+          }).then(() => {
+            location.reload();
+          });
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'خطأ',
+            text: response.message
+          });
+        }
+      },
+      error: function(xhr) {
+        submitBtn.prop('disabled', false).html(originalText);
+        
+        Swal.fire({
+          icon: 'error',
+          title: 'خطأ في الحفظ',
+          text: 'تأكد من صلاحيتك وحاول مرة أخرى'
+        });
+      }
+    });
+  });
+});
+</script>
+{% endblock %}
+

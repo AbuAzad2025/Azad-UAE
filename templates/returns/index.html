@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+{% block title %}المرتجعات{% endblock %}
+
+{% block extra_css %}
+<style>
+  #returnsTable th,
+  #returnsTable td {
+    vertical-align: middle;
+  }
+
+  #returnsTable .actions-cell {
+    white-space: nowrap;
+  }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  (function() {
+    const tableSelector = '#returnsTable';
+    const languageUrl = "{{ url_for('static', filename='datatables/Arabic.json') }}";
+
+    function initReturnsTable() {
+      const $table = $(tableSelector);
+      if (!$table.length || !$.fn.DataTable) {
+        return;
+      }
+      if ($.fn.DataTable.isDataTable($table)) {
+        return;
+      }
+
+      // Keep backend pagination active; enable search/sort only for current page.
+      $table.DataTable({
+        language: { url: languageUrl },
+        paging: false,
+        info: false,
+        responsive: true,
+        autoWidth: false,
+        order: [[3, 'desc']],
+        columnDefs: [
+          { orderable: false, targets: -1 },
+          { searchable: false, targets: -1 }
+        ]
+      });
+    }
+
+    $(document).ready(initReturnsTable);
+  })();
+</script>
+{% endblock %}
+
+{% block page_title %}
+<div class="d-flex justify-content-between align-items-center">
+  <div>
+    <h1 class="mb-0"><i class="fas fa-undo-alt mr-2"></i>المرتجعات</h1>
+    <p class="text-muted mb-0">سجل مرتجعات فواتير البيع</p>
+  </div>
+  <div>
+    <a href="{{ url_for('sales.index') }}" class="btn btn-outline-secondary">
+      <i class="fas fa-file-invoice mr-2"></i>المبيعات
+    </a>
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="mb-3 d-flex flex-wrap" style="gap:.5rem;">
+  <span class="badge badge-primary">
+    <i class="fas fa-undo-alt"></i> الإجمالي: {{ returns|length }}
+  </span>
+  <span class="badge badge-success">
+    <i class="fas fa-check"></i> معتمد: {{ returns|selectattr('status', 'equalto', 'approved')|list|length }}
+  </span>
+  <span class="badge badge-warning">
+    <i class="fas fa-hourglass-half"></i> قيد المراجعة: {{ returns|selectattr('status', 'equalto', 'pending')|list|length }}
+  </span>
+  <span class="badge badge-danger">
+    <i class="fas fa-times"></i> مرفوض: {{ returns|selectattr('status', 'equalto', 'rejected')|list|length }}
+  </span>
+</div>
+<div class="card">
+  <div class="card-header">
+    <h3 class="card-title mb-0"><i class="fas fa-list mr-2"></i>قائمة المرتجعات</h3>
+  </div>
+  <div class="card-body">
+    <div class="table-responsive">
+      <table id="returnsTable" class="table table-hover table-bordered">
+        <thead>
+          <tr>
+            <th>رقم المرتجع</th>
+            <th>فاتورة البيع</th>
+            <th>العميل</th>
+            <th>التاريخ</th>
+            {% if show_branch_columns %}
+            <th>الفرع</th>
+            {% endif %}
+            <th>الحالة</th>
+            <th class="text-left">الإجمالي</th>
+            <th class="text-center">إجراءات</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in returns %}
+          <tr>
+            <td><strong>{{ r.return_number }}</strong></td>
+            <td>
+              {% if r.sale %}
+                <a href="{{ url_for('sales.view', id=r.sale.id) }}" class="text-primary font-weight-bold">{{ r.sale.sale_number }}</a>
+              {% else %}
+                -
+              {% endif %}
+            </td>
+            <td>{{ r.customer.name if r.customer else '-' }}</td>
+            <td>{{ r.return_date.strftime('%Y-%m-%d %H:%M') if r.return_date else '-' }}</td>
+            {% if show_branch_columns %}
+            <td>
+              {% if r.sale and r.sale.branch %}
+                <span class="badge badge-light border">{{ r.sale.branch.name }}{% if r.sale.branch.code %} ({{ r.sale.branch.code }}){% endif %}</span>
+              {% else %}
+                <span class="text-muted">-</span>
+              {% endif %}
+            </td>
+            {% endif %}
+            <td>
+              {% if r.status == 'approved' %}
+                <span class="badge badge-success">معتمد</span>
+              {% elif r.status == 'rejected' %}
+                <span class="badge badge-danger">مرفوض</span>
+              {% else %}
+                <span class="badge badge-warning">قيد المراجعة</span>
+              {% endif %}
+            </td>
+            <td class="text-left">{{ "{:,.2f}".format(r.total_amount or 0) }} {{ r.currency }}</td>
+            <td class="text-center actions-cell">
+              <a href="{{ url_for('returns.view', id=r.id) }}" class="btn btn-sm btn-outline-primary">
+                <i class="fas fa-eye mr-1"></i>عرض
+              </a>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="{{ 8 if show_branch_columns else 7 }}" class="text-center text-muted">لا توجد مرتجعات</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% if pagination %}
+  <div class="card-footer">
+    <nav>
+      <ul class="pagination mb-0">
+        <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+          <a class="page-link" href="{{ url_for('returns.index', page=pagination.prev_num) }}">السابق</a>
+        </li>
+        <li class="page-item disabled">
+          <span class="page-link">صفحة {{ pagination.page }} من {{ pagination.pages or 1 }}</span>
+        </li>
+        <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+          <a class="page-link" href="{{ url_for('returns.index', page=pagination.next_num) }}">التالي</a>
+        </li>
+      </ul>
+    </nav>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+

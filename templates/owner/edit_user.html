@@ -1,0 +1,282 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - تعديل مستخدم {{ user.username }}{% endblock %}
+
+{% block content %}
+<div class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2 align-items-center">
+      <div class="col-sm-6">
+        <h1 class="m-0">✏️ تعديل مستخدم: {{ user.username }}</h1>
+      </div>
+      <div class="col-sm-6 d-flex justify-content-end">
+        <div class="d-flex align-items-center">
+          <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary ml-2">
+            <i class="fas fa-arrow-right mr-1"></i> الرجوع للوحة المالك
+          </a>
+          <ol class="breadcrumb float-sm-left mb-0">
+            <li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">لوحة المالك</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('owner.users_list') }}">{{ t('Users') }}</a></li>
+            <li class="breadcrumb-item active">{{ t('Edit') }}</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container-fluid mb-3">
+  <div class="btn-group quick-nav" role="group">
+    <a href="{{ url_for('owner.users_list') }}" class="btn btn-primary">
+      <i class="fas fa-users"></i> قائمة المستخدمين
+    </a>
+    <a href="{{ url_for('owner.create_user') }}" class="btn btn-outline-primary">
+      <i class="fas fa-user-plus"></i> إضافة مستخدم
+    </a>
+    <a href="{{ url_for('owner.roles_permissions') }}" class="btn btn-outline-secondary">
+      <i class="fas fa-user-shield"></i> الأدوار والصلاحيات
+    </a>
+  </div>
+</div>
+
+<div class="content edit-user-page">
+  <div class="container-fluid">
+    <form method="POST" action="{{ url_for('owner.edit_user', user_id=user.id) }}" id="editUserForm" class="edit-user-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      
+      <div class="row">
+        <!-- المعلومات الأساسية -->
+        <div class="col-md-6">
+          <div class="card">
+            <div class="card-header bg-gradient-primary">
+              <h3 class="card-title text-white">📋 المعلومات الأساسية</h3>
+            </div>
+            <div class="card-body">
+              <div class="form-group">
+                <label>اسم المستخدم *</label>
+                <input type="text" name="username" class="form-control" value="{{ user.username }}" required 
+                       pattern="[a-zA-Z0-9_]{3,20}">
+              </div>
+              
+              <div class="form-group">
+                <label>{{ t('Full Name') }}</label>
+                <input type="text" name="full_name" class="form-control" value="{{ user.full_name or '' }}">
+              </div>
+              
+              <div class="form-group">
+                <label>{{ t('Email') }}</label>
+                <input type="email" name="email" class="form-control" value="{{ user.email or '' }}">
+              </div>
+              
+              <hr>
+              
+              <div class="alert alert-warning" style="color: #000;">
+                <i class="fas fa-key"></i> <strong>تغيير كلمة المرور</strong>
+                <p class="mb-0">اترك الحقول فارغة إذا لم ترد تغيير كلمة المرور</p>
+              </div>
+              
+              <div class="form-group">
+                <label>كلمة المرور الجديدة</label>
+                <input type="password" name="new_password" class="form-control" minlength="8" 
+                       placeholder="••••••••" id="new_password">
+              </div>
+              
+              <div class="form-group">
+                <label>تأكيد كلمة المرور الجديدة</label>
+                <input type="password" name="confirm_new_password" class="form-control" minlength="8" 
+                       placeholder="••••••••" id="confirm_new_password">
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- الصلاحيات -->
+        <div class="col-md-6">
+          <div class="card">
+            <div class="card-header bg-gradient-success">
+              <h3 class="card-title text-white">🔐 الدور والصلاحيات</h3>
+            </div>
+            <div class="card-body">
+              <div class="form-group">
+                <label>الدور الوظيفي *</label>
+                <select name="role_id" class="form-control" required id="role_select">
+                  {% for role in roles %}
+                  <option value="{{ role.id }}" data-role-slug="{{ role.slug }}" {{ 'selected' if user.role_id == role.id }}>
+                    {{ role.name }}
+                  </option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>الفرع <span class="text-danger branch-required-indicator">*</span></label>
+                <select name="branch_id" id="branch_id" class="form-control">
+                  <option value="">-- اختر الفرع --</option>
+                  {% for branch in branches %}
+                  <option value="{{ branch.id }}" {{ 'selected' if user.branch_id == branch.id }}>
+                    {{ branch.name }} ({{ branch.code }})
+                  </option>
+                  {% endfor %}
+                </select>
+                <small class="text-muted" id="branch-help-text">إجباري لكل مستخدم غير المالك وغير المطور/السوبر أدمن.</small>
+              </div>
+              
+              <div class="form-group">
+                <div class="custom-control custom-switch custom-control-lg">
+                  <input type="checkbox" class="custom-control-input" id="is_owner" name="is_owner" 
+                         {{ 'checked' if user.is_owner }}>
+                  <label class="custom-control-label" for="is_owner">
+                    <i class="fas fa-crown text-warning"></i> <strong>مالك النظام</strong>
+                    <br><small class="text-danger">⚠️ صلاحيات كاملة غير محدودة!</small>
+                  </label>
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <div class="custom-control custom-switch custom-control-lg">
+                  <input type="checkbox" class="custom-control-input" id="is_active" name="is_active" 
+                         {{ 'checked' if user.is_active }}>
+                  <label class="custom-control-label" for="is_active">
+                    <i class="fas fa-check-circle text-success"></i> حساب نشط
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- معلومات إضافية -->
+          <div class="card">
+            <div class="card-header bg-gradient-info">
+              <h3 class="card-title text-white">📊 المعلومات</h3>
+            </div>
+            <div class="card-body">
+              <p><i class="fas fa-calendar-plus"></i> <strong>تاريخ الإنشاء:</strong> {{ user.created_at.strftime('%Y-%m-%d %H:%M') if user.created_at }}</p>
+              <p><i class="fas fa-sign-in-alt"></i> <strong>آخر دخول:</strong> {{ user.last_login.strftime('%Y-%m-%d %H:%M') if user.last_login else 'لم يسجل دخول' }}</p>
+              <p><i class="fas fa-user-clock"></i> <strong>المستخدم منذ:</strong> {{ user.created_at.strftime('%Y-%m-%d') if user.created_at else 'غير محدد' }}</p>
+              {% if user.updated_at %}
+              <p><i class="fas fa-edit"></i> <strong>آخر تحديث:</strong> {{ user.updated_at.strftime('%Y-%m-%d %H:%M') }}</p>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- أزرار -->
+      <div class="row">
+        <div class="col-12">
+          <button type="submit" class="btn btn-primary btn-lg">
+            <i class="fas fa-save mr-2"></i>حفظ التعديلات
+          </button>
+          <a href="{{ url_for('owner.user_profile', user_id=user.id) }}" class="btn btn-info btn-lg">
+            <i class="fas fa-eye mr-2"></i>الملف الشخصي
+          </a>
+          <a href="{{ url_for('owner.users_list') }}" class="btn btn-secondary btn-lg">
+            <i class="fas fa-times mr-2"></i>إلغاء
+          </a>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+$(document).ready(function() {
+  function branchRequiredForSelectedRole() {
+    const slug = $('#role_select option:selected').data('role-slug');
+    return !$('#is_owner').is(':checked') && slug && !['developer', 'super_admin'].includes(slug);
+  }
+
+  function syncBranchRequirement() {
+    const required = branchRequiredForSelectedRole();
+    $('#branch_id').prop('required', !!required);
+    $('.branch-required-indicator').toggle(!!required);
+    $('#branch-help-text').text(required
+      ? 'إجباري لكل مستخدم غير المالك وغير المطور/السوبر أدمن.'
+      : 'اختياري فقط للمستخدمين العالميين.'
+    );
+  }
+
+  $('#role_select, #is_owner').on('change', syncBranchRequirement);
+  syncBranchRequirement();
+
+  // التحقق من تطابق كلمة المرور
+  $('#editUserForm').submit(function(e) {
+    const newPass = $('#new_password').val();
+    const confirmPass = $('#confirm_new_password').val();
+    
+    // إذا تم إدخال كلمة مرور جديدة
+    if (newPass && newPass !== confirmPass) {
+      e.preventDefault();
+      alert('كلمة المرور الجديدة غير متطابقة!');
+      $('#confirm_new_password').focus();
+      return false;
+    }
+
+    if (branchRequiredForSelectedRole() && !$('#branch_id').val()) {
+      e.preventDefault();
+      alert('يجب اختيار فرع لهذا المستخدم قبل الحفظ.');
+      $('#branch_id').focus();
+      return false;
+    }
+    
+    return true;
+  });
+  
+  // تحذير عند تفعيل Owner
+  $('#is_owner').change(function() {
+    if ($(this).is(':checked')) {
+      if (!confirm('⚠️ تحذير!\n\nالمالك لديه صلاحيات كاملة غير محدودة!\n\nهل أنت متأكد؟')) {
+        $(this).prop('checked', false);
+      }
+    }
+  });
+});
+</script>
+
+<style>
+  .quick-nav .btn {
+    min-width: 170px;
+  }
+
+  .quick-nav .btn + .btn {
+    margin-left: 0.5rem;
+  }
+
+  .edit-user-form .form-control,
+  .edit-user-form textarea.form-control,
+  .edit-user-form select.form-control {
+    height: auto !important;
+    min-height: 56px;
+    padding: 0.95rem 1.35rem;
+    font-size: 0.95rem;
+    border-radius: 10px;
+    line-height: 1.7;
+    width: 100%;
+  }
+
+  .edit-user-form .form-control::placeholder {
+    color: #64748b;
+    opacity: 0.85;
+    text-align: center;
+  }
+
+  .edit-user-form select.form-control {
+    text-align-last: center;
+    padding-inline-start: 2.2rem;
+    padding-inline-end: 2.2rem;
+    appearance: none;
+    -webkit-appearance: none;
+    background-color: #fff;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23647894' d='M6 8a1 1 0 0 1-.707-.293l-5-5a1 1 0 0 1 1.414-1.414L6 5.586 10.293 1.293a1 1 0 0 1 1.414 1.414l-5 5A1 1 0 0 1 6 8'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: left 0.8rem center;
+    background-size: 12px;
+  }
+
+  .edit-user-form select.form-control option {
+    text-align: center;
+    padding: 0.75rem 1rem;
+  }
+</style>
+{% endblock %}
+

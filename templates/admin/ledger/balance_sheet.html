@@ -1,0 +1,228 @@
+{% extends 'base.html' %}
+{% block title %}الميزانية العمومية - Balance Sheet{% endblock %}
+{% block page_title %}الميزانية العمومية{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+  <div class="col-12">
+    <a href="{{ url_for('ledger.admin_reports') }}" class="btn btn-secondary">
+      <i class="fas fa-arrow-right mr-2"></i>العودة للتقارير
+    </a>
+    <button class="btn btn-success" onclick="window.print()">
+      <i class="fas fa-print mr-2"></i>طباعة
+    </button>
+  </div>
+</div>
+
+<!-- فلتر التاريخ -->
+<div class="card mb-4">
+  <div class="card-header bg-gradient-primary">
+    <h5 class="card-title text-white mb-0">
+      <i class="fas fa-filter mr-2"></i>فلتر التاريخ
+    </h5>
+  </div>
+  <div class="card-body">
+    <form method="GET" class="row" action="">
+      <div class="col-md-6">
+        <div class="form-group">
+          <label>اعتباراً من تاريخ:</label>
+          <input type="date" name="as_of_date" class="form-control" value="{{ as_of_date.strftime('%Y-%m-%d') }}">
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="form-group">
+          <label>&nbsp;</label>
+          <button type="submit" class="btn btn-primary btn-block">
+            <i class="fas fa-search mr-2"></i>تحديث التقرير
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="row">
+  <!-- الأصول -->
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header bg-gradient-success">
+        <h3 class="card-title text-white">
+          <i class="fas fa-chart-line mr-2"></i>الأصول
+        </h3>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-bordered mb-0">
+            <thead class="bg-light">
+              <tr>
+                <th width="20%">الكود</th>
+                <th width="50%">اسم الحساب</th>
+                <th width="30%" class="text-center">الرصيد</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for asset in assets %}
+              {% set balance = asset.get_balance(as_of_date=as_of_date) %}
+              {% if balance > 0 %}
+              <tr>
+                <td><strong>{{ asset.code }}</strong></td>
+                <td>{{ asset.full_name }}</td>
+                <td class="text-center text-success">{{ "{:,.2f}".format(balance) }}</td>
+              </tr>
+              {% endif %}
+              {% endfor %}
+            </tbody>
+            <tfoot class="bg-light">
+              <tr>
+                <th colspan="2" class="text-center">إجمالي الأصول</th>
+                <th class="text-center text-success">{{ "{:,.2f}".format(assets_total) }}</th>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- الخصوم وحقوق الملكية -->
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header bg-gradient-danger">
+        <h3 class="card-title text-white">
+          <i class="fas fa-chart-bar mr-2"></i>الخصوم وحقوق الملكية
+        </h3>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-bordered mb-0">
+            <thead class="bg-light">
+              <tr>
+                <th width="20%">الكود</th>
+                <th width="50%">اسم الحساب</th>
+                <th width="30%" class="text-center">الرصيد</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- الخصوم -->
+              {% for liability in liabilities %}
+              {% set balance = liability.get_balance(as_of_date=as_of_date) %}
+              {% if balance < 0 %}
+              <tr>
+                <td><strong>{{ liability.code }}</strong></td>
+                <td>{{ liability.full_name }}</td>
+                <td class="text-center text-danger">{{ "{:,.2f}".format(abs(balance)) }}</td>
+              </tr>
+              {% endif %}
+              {% endfor %}
+              
+              <!-- حقوق الملكية -->
+              {% for equity_item in equity %}
+              {% set balance = equity_item.get_balance(as_of_date=as_of_date) %}
+              {% if balance < 0 %}
+              <tr>
+                <td><strong>{{ equity_item.code }}</strong></td>
+                <td>{{ equity_item.full_name }}</td>
+                <td class="text-center text-info">{{ "{:,.2f}".format(abs(balance)) }}</td>
+              </tr>
+              {% endif %}
+              {% endfor %}
+            </tbody>
+            <tfoot class="bg-light">
+              <tr>
+                <th colspan="2" class="text-center">إجمالي الخصوم</th>
+                <th class="text-center text-danger">{{ "{:,.2f}".format(liabilities_total) }}</th>
+              </tr>
+              <tr>
+                <th colspan="2" class="text-center">إجمالي حقوق الملكية</th>
+                <th class="text-center text-info">{{ "{:,.2f}".format(equity_total) }}</th>
+              </tr>
+              <tr>
+                <th colspan="2" class="text-center">إجمالي الخصوم وحقوق الملكية</th>
+                <th class="text-center text-primary">{{ "{:,.2f}".format(liabilities_total + equity_total) }}</th>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ملخص التوازن -->
+<div class="row mt-4">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header bg-gradient-warning">
+        <h5 class="card-title text-white mb-0">
+          <i class="fas fa-balance-scale mr-2"></i>ملخص التوازن
+        </h5>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-4">
+            <div class="text-center">
+              <h4 class="text-success">{{ "{:,.2f}".format(assets_total) }}</h4>
+              <p class="mb-0">إجمالي الأصول</p>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="text-center">
+              <h4 class="text-primary">{{ "{:,.2f}".format(liabilities_total + equity_total) }}</h4>
+              <p class="mb-0">إجمالي الخصوم وحقوق الملكية</p>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="text-center">
+              {% set difference = assets_total - (liabilities_total + equity_total) %}
+              {% if difference == 0 %}
+                <h4 class="text-success">متوازن</h4>
+                <p class="mb-0">الميزانية متوازنة</p>
+              {% else %}
+                <h4 class="text-danger">{{ "{:,.2f}".format(difference) }}</h4>
+                <p class="mb-0">الفرق</p>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ملاحظات -->
+<div class="card mt-4">
+  <div class="card-header bg-gradient-info">
+    <h5 class="card-title text-white mb-0">
+      <i class="fas fa-info-circle mr-2"></i>ملاحظات
+    </h5>
+  </div>
+  <div class="card-body">
+    <ul class="mb-0">
+      <li>الميزانية العمومية تعرض الوضع المالي للشركة في تاريخ محدد</li>
+      <li>الأصول تمثل ما تملكه الشركة</li>
+      <li>الخصوم تمثل ما تدين به الشركة للآخرين</li>
+      <li>حقوق الملكية تمثل رأس المال والأرباح المحتجزة</li>
+      <li>المعادلة الأساسية: الأصول = الخصوم + حقوق الملكية</li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+@media print {
+  .btn, .card-header .card-tools {
+    display: none !important;
+  }
+  
+  .card {
+    border: none !important;
+    box-shadow: none !important;
+  }
+  
+  .table {
+    font-size: 12px;
+  }
+}
+</style>
+{% endblock %}

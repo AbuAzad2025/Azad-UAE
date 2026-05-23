@@ -1,0 +1,99 @@
+{
+  "timestamp": "2025-10-20T10:28:35.586578",
+  "sources_accessed": 13,
+  "successful_learning": 21,
+  "failed_attempts": 6,
+  "learning_rate": "77.8%",
+  "log": [
+    {
+      "timestamp": "2025-10-20T10:28:01.655461",
+      "source": "Wikipedia - محاسبة",
+      "status": "error",
+      "message": "خطأ 403"
+    },
+    {
+      "timestamp": "2025-10-20T10:28:04.024077",
+      "source": "Wikipedia - ضريبة القيمة المضافة",
+      "status": "error",
+      "message": "خطأ 403"
+    },
+    {
+      "timestamp": "2025-10-20T10:28:06.116066",
+      "source": "Wikipedia - محرك احتراق داخلي",
+      "status": "error",
+      "message": "خطأ 403"
+    },
+    {
+      "timestamp": "2025-10-20T10:28:08.958439",
+      "source": "Wikipedia - نظام مانع انغلاق المكابح",
+      "status": "error",
+      "message": "خطأ 403"
+    },
+    {
+      "timestamp": "2025-10-20T10:28:10.697772",
+      "source": "Wikipedia - إدارة المخزون",
+      "status": "error",
+      "message": "خطأ 403"
+    },
+    {
+      "timestamp": "2025-10-20T10:28:13.045978",
+      "source": "Wikipedia - التحليل المالي",
+      "status": "error",
+      "message": "خطأ 403"
+    },
+    {
+      "timestamp": "2025-10-20T10:28:14.047167",
+      "source": "OBD-II Database",
+      "status": "success",
+      "message": "تعلم 8 كود تشخيصي"
+    },
+    {
+      "timestamp": "2025-10-20T10:28:15.132104",
+      "source": "GitHub - flask",
+      "status": "success",
+      "message": "تعلم (70,588 نجمة)"
+    },
+    {
+      "timestamp": "2025-10-20T10:28:17.293153",
+      "source": "GitHub - sqlalchemy",
+      "status": "warning",
+      "message": "محدود 404"
+    },
+    {
+      "timestamp": "2025-10-20T10:28:19.854147",
+      "source": "GitHub - scikit-learn",
+      "status": "warning",
+      "message": "محدود 404"
+    },
+    {
+      "timestamp": "2025-10-20T10:28:22.910862",
+      "source": "ArXiv - machine learning",
+      "status": "success",
+      "message": "تعلم من 3 بحث علمي"
+    },
+    {
+      "timestamp": "2025-10-20T10:28:26.190466",
+      "source": "ArXiv - neural networks",
+      "status": "success",
+      "message": "تعلم من 3 بحث علمي"
+    },
+    {
+      "timestamp": "2025-10-20T10:28:29.956200",
+      "source": "ArXiv - transformers",
+      "status": "success",
+      "message": "تعلم من 3 بحث علمي"
+    },
+    {
+      "timestamp": "2025-10-20T10:28:33.585433",
+      "source": "ArXiv - deep learning",
+      "status": "success",
+      "message": "تعلم من 3 بحث علمي"
+    }
+  ],
+  "new_knowledge": {
+    "wikipedia_articles": 6,
+    "obd_codes": 8,
+    "github_repos": 3,
+    "arxiv_papers": 4
+  }
+}

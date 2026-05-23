@@ -1,0 +1,603 @@
+{% extends 'base.html' %}
+{% block title %}إضافة قيد يدوي - Manual Journal Entry{% endblock %}
+{% block page_title %}إضافة قيد يدوي{% endblock %}
+
+{% block content %}
+
+<!-- ملخص سريع - FIXED -->
+<div class="card border-info mb-3" id="quickSummaryCard" style="position: relative;">
+  <div class="card-header bg-info text-white">
+    <h5 class="mb-0">
+      <i class="fas fa-info-circle mr-2"></i>ملخص سريع - كيف تُنشئ قيد يدوي
+      <button type="button" class="btn btn-sm btn-light float-left" onclick="toggleCard('quickSummary')" style="padding: 2px 8px;">
+        <i class="fas fa-minus" id="quickSummaryIcon"></i>
+      </button>
+    </h5>
+  </div>
+  <div class="card-body" id="quickSummaryBody">
+    <ol class="mb-0 text-right">
+      <li class="mb-2"><strong>أدخل وصف القيد</strong> (مثال: شراء معدات، قيد تسوية)</li>
+      <li class="mb-2"><strong>اختر الحسابات</strong> من القائمة المنسدلة</li>
+      <li class="mb-2"><strong>أدخل المبالغ</strong> في المدين أو الدائن (ليس الاثنين معاً)</li>
+      <li class="mb-2"><strong>تأكد من التوازن</strong>: إجمالي المدين = إجمالي الدائن</li>
+      <li class="mb-2"><strong>اضغط حفظ القيد</strong> عندما يتحول الزر للأخضر ✅</li>
+    </ol>
+  </div>
+</div>
+
+<!-- قوالب سريعة - FIXED -->
+<div class="card border-success mb-3" id="quickTemplatesCard" style="position: relative;">
+  <div class="card-header bg-success text-white">
+    <h5 class="mb-0">
+      <i class="fas fa-magic mr-2"></i>قوالب سريعة
+      <button type="button" class="btn btn-sm btn-light float-left" onclick="toggleCard('quickTemplates')" style="padding: 2px 8px;">
+        <i class="fas fa-minus" id="quickTemplatesIcon"></i>
+      </button>
+    </h5>
+  </div>
+  <div class="card-body" id="quickTemplatesBody">
+    <div class="row">
+      <div class="col-md-3 mb-2">
+        <button type="button" class="btn btn-success btn-block" onclick="loadTemplate('cash_sale')">
+          <i class="fas fa-cash-register mr-1"></i>مبيعة نقدية
+        </button>
+      </div>
+      <div class="col-md-3 mb-2">
+        <button type="button" class="btn btn-primary btn-block" onclick="loadTemplate('credit_sale')">
+          <i class="fas fa-credit-card mr-1"></i>مبيعة آجلة
+        </button>
+      </div>
+      <div class="col-md-3 mb-2">
+        <button type="button" class="btn btn-warning btn-block" onclick="loadTemplate('expense')">
+          <i class="fas fa-receipt mr-1"></i>مصروف
+        </button>
+      </div>
+      <div class="col-md-3 mb-2">
+        <button type="button" class="btn btn-info btn-block" onclick="loadTemplate('adjustment')">
+          <i class="fas fa-balance-scale mr-1"></i>تسوية
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row mb-3">
+  <div class="col-12">
+    <a href="{{ url_for('ledger.index') }}" class="btn btn-secondary">
+      <i class="fas fa-arrow-right mr-2"></i>العودة
+    </a>
+    <a href="{{ url_for('ledger.journal_entries') }}" class="btn btn-info">
+      <i class="fas fa-book mr-2"></i>عرض القيود
+    </a>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header bg-gradient-success">
+    <h3 class="card-title text-white">
+      <i class="fas fa-plus-circle mr-2"></i>قيد يدوي جديد
+    </h3>
+  </div>
+  <div class="card-body">
+    <form method="post" action="{{ url_for('ledger.manual_entry') }}" id="journalEntryForm" class="manual-entry-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="line_count" id="lineCountHidden" value="2">
+      
+      <!-- معلومات القيد -->
+      <div class="row">
+        <div class="col-md-6">
+          <div class="form-group">
+            <label>وصف القيد <span class="text-danger">*</span></label>
+            <input type="text" name="description" class="form-control" required 
+                   placeholder="مثال: قيد تسوية، شراء معدات، تعديل رصيد">
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="form-group">
+            <label>التاريخ <span class="text-danger">*</span></label>
+            <input type="date" name="entry_date" class="form-control" required>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="form-group">
+            <label>الفرع (عزل محاسبي)</label>
+            <select name="branch_id" class="form-control">
+              <option value="">— اختياري —</option>
+              {% for b in branches or [] %}
+              <option value="{{ b.id }}">{{ b.name }} ({{ b.code }})</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-12">
+          <div class="form-group">
+            <label>ملاحظات (اختياري)</label>
+            <textarea name="notes" class="form-control" rows="2" 
+                      placeholder="أي ملاحظات إضافية..."></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- جدول السطور -->
+      <div class="card">
+        <div class="card-header bg-light">
+          <h5 class="mb-0">
+            <i class="fas fa-list mr-2"></i>سطور القيد
+          </h5>
+        </div>
+        
+        <!-- توضيح المدين والدائن - بسيط وواضح -->
+        <div class="alert alert-light border-info m-3 mb-0" style="background: linear-gradient(135deg, #e8f5e9 0%, #fff3e0 100%); border-width: 2px;">
+          <div class="row text-center">
+            <div class="col-md-6 border-left">
+              <h6 class="text-success mb-2">
+                <i class="fas fa-plus-circle mr-2"></i><strong>مدين (Debit)</strong>
+              </h6>
+              <div class="badge badge-success mb-2" style="font-size: 14px;">لنا ↓ ما يدخل للشركة</div>
+              <p class="mb-1 small"><strong>أمثلة:</strong></p>
+              <ul class="text-right small mb-0" style="list-style: none; padding-right: 0;">
+                <li>💰 استلام فلوس → صندوق <strong>مدين</strong></li>
+                <li>📦 شراء بضاعة → مخزون <strong>مدين</strong></li>
+                <li>📋 مصروف → حساب المصروف <strong>مدين</strong></li>
+              </ul>
+            </div>
+            <div class="col-md-6">
+              <h6 class="text-danger mb-2">
+                <i class="fas fa-minus-circle mr-2"></i><strong>دائن (Credit)</strong>
+              </h6>
+              <div class="badge badge-danger mb-2" style="font-size: 14px;">علينا ↑ ما يطلع من الشركة</div>
+              <p class="mb-1 small"><strong>أمثلة:</strong></p>
+              <ul class="text-right small mb-0" style="list-style: none; padding-right: 0;">
+                <li>💸 دفع فلوس → صندوق <strong>دائن</strong></li>
+                <li>📈 مبيعات → إيرادات <strong>دائن</strong></li>
+                <li>👥 قرض → خصوم <strong>دائن</strong></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-bordered mb-0" id="linesTable">
+              <thead class="bg-light">
+                <tr>
+                  <th width="5%">#</th>
+                  <th width="35%">الحساب <span class="text-danger">*</span></th>
+                  <th width="30%">البيان</th>
+                  <th width="15%" class="text-center">
+                    <i class="fas fa-arrow-down text-success mr-1"></i>
+                    <strong class="text-success">مدين</strong>
+                    <br>
+                    <small class="text-muted">(لنا)</small>
+                  </th>
+                  <th width="15%" class="text-center">
+                    <i class="fas fa-arrow-up text-danger mr-1"></i>
+                    <strong class="text-danger">دائن</strong>
+                    <br>
+                    <small class="text-muted">(علينا)</small>
+                  </th>
+                </tr>
+              </thead>
+              <tbody id="linesTableBody">
+                <!-- سطور القيد ستضاف هنا بواسطة JavaScript -->
+              </tbody>
+              <tfoot class="bg-light">
+                <tr>
+                  <th colspan="3" class="text-left">الإجمالي:</th>
+                  <th class="text-center text-success">
+                    <span id="totalDebit">0.00</span>
+                  </th>
+                  <th class="text-center text-danger">
+                    <span id="totalCredit">0.00</span>
+                  </th>
+                </tr>
+                <tr id="balanceRow">
+                  <th colspan="3" class="text-left">الفرق:</th>
+                  <th colspan="2" class="text-center" id="balanceCell">
+                    <span id="difference" class="badge badge-secondary">0.00</span>
+                  </th>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- أزرار الحفظ -->
+      <div class="row mt-3">
+        <div class="col-12">
+          <button type="submit" class="btn btn-success btn-lg" id="submitBtn" disabled>
+            <i class="fas fa-save mr-2"></i>حفظ القيد
+          </button>
+          <button type="button" class="btn btn-primary" onclick="addLine()">
+            <i class="fas fa-plus mr-2"></i>إضافة سطر
+          </button>
+          <button type="button" class="btn btn-secondary" onclick="resetForm()">
+            <i class="fas fa-redo mr-2"></i>إعادة تعيين
+          </button>
+          <div class="float-left">
+            <div id="balanceStatus" class="alert alert-warning d-inline-block mb-0 py-2">
+              <i class="fas fa-exclamation-triangle mr-2"></i>
+              القيد غير متوازن! المدين يجب أن يساوي الدائن
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+// قائمة الحسابات (من Backend)
+const accounts = [
+  {% for account in accounts %}
+  {
+    id: {{ account.id }},
+    code: '{{ account.code }}',
+    name_ar: '{{ account.name_ar }}',
+    name_en: '{{ account.name }}',
+    full_name: '{{ account.code }} - {{ account.name_ar or account.name }}'
+  }{{ ',' if not loop.last else '' }}
+  {% endfor %}
+];
+
+let lineCounter = 0;
+
+// إضافة سطر جديد
+function addLine() {
+  const tbody = document.getElementById('linesTableBody');
+  const row = document.createElement('tr');
+  row.id = `line_${lineCounter}`;
+  row.innerHTML = `
+    <td class="text-center">${lineCounter + 1}</td>
+    <td>
+      <select name="line_${lineCounter}_account" class="form-control account-select" required>
+        <option value="">بلا</option>
+        ${accounts.map(acc => `<option value="${acc.code}">${acc.full_name}</option>`).join('')}
+      </select>
+    </td>
+    <td>
+      <input type="text" name="line_${lineCounter}_description" class="form-control" 
+             placeholder="البيان (اختياري)">
+    </td>
+    <td>
+      <input type="number" name="line_${lineCounter}_debit" class="form-control text-center debit-input" 
+             step="0.01" min="0" value="0" oninput="handleDebitChange(this)" onchange="handleDebitChange(this)" onkeyup="calculateJournalTotals()">
+    </td>
+    <td>
+      <input type="number" name="line_${lineCounter}_credit" class="form-control text-center credit-input" 
+             step="0.01" min="0" value="0" oninput="handleCreditChange(this)" onchange="handleCreditChange(this)" onkeyup="calculateTotals()">
+    </td>
+  `;
+  tbody.appendChild(row);
+  lineCounter++;
+  document.getElementById('lineCountHidden').value = lineCounter;
+}
+
+// عند تغيير المدين، صفّر الدائن
+function handleDebitChange(input) {
+  const value = parseFloat(input.value) || 0;
+  if (value > 0) {
+    const row = input.closest('tr');
+    const creditInput = row.querySelector('.credit-input');
+    creditInput.value = 0;
+  }
+  calculateJournalTotals();
+}
+
+// عند تغيير الدائن، صفّر المدين
+function handleCreditChange(input) {
+  const value = parseFloat(input.value) || 0;
+  if (value > 0) {
+    const row = input.closest('tr');
+    const debitInput = row.querySelector('.debit-input');
+    debitInput.value = 0;
+  }
+  calculateJournalTotals();
+}
+
+// حساب الإجماليات والتوازن للقيد اليدوي - CLIENT SIDE
+function calculateJournalTotals() {
+  const debitInputs = document.querySelectorAll('.debit-input');
+  const creditInputs = document.querySelectorAll('.credit-input');
+  
+  let totalDebit = 0;
+  let totalCredit = 0;
+  
+  debitInputs.forEach(input => {
+    totalDebit += parseFloat(input.value) || 0;
+  });
+  
+  creditInputs.forEach(input => {
+    totalCredit += parseFloat(input.value) || 0;
+  });
+  
+  document.getElementById('totalDebit').textContent = totalDebit.toFixed(2);
+  document.getElementById('totalCredit').textContent = totalCredit.toFixed(2);
+  
+  const difference = Math.abs(totalDebit - totalCredit);
+  const differenceSpan = document.getElementById('difference');
+  const balanceStatus = document.getElementById('balanceStatus');
+  const submitBtn = document.getElementById('submitBtn');
+  
+  if (!differenceSpan || !submitBtn) return; // Safety check
+  
+  differenceSpan.textContent = difference.toFixed(2);
+  
+  if (difference < 0.01 && totalDebit > 0 && totalCredit > 0) {
+    // متوازن ✅
+    differenceSpan.className = 'badge badge-success';
+    differenceSpan.innerHTML = '<i class="fas fa-check mr-1"></i> متوازن';
+    if (balanceStatus) {
+      balanceStatus.className = 'alert alert-success d-inline-block mb-0 py-2';
+      balanceStatus.innerHTML = '<i class="fas fa-check-circle mr-2"></i>القيد متوازن - يمكنك الحفظ الآن';
+    }
+    submitBtn.disabled = false;
+    submitBtn.removeAttribute('disabled');
+    submitBtn.className = 'btn btn-success btn-lg';
+  } else {
+    // غير متوازن ❌
+    differenceSpan.className = 'badge badge-danger';
+    if (balanceStatus) {
+      balanceStatus.className = 'alert alert-warning d-inline-block mb-0 py-2';
+      balanceStatus.innerHTML = '<i class="fas fa-exclamation-triangle mr-2"></i>القيد غير متوازن! المدين يجب أن يساوي الدائن';
+    }
+    submitBtn.disabled = true;
+    submitBtn.setAttribute('disabled', 'disabled');
+    submitBtn.className = 'btn btn-secondary btn-lg';
+  }
+}
+
+// إعادة تعيين النموذج
+function resetForm() {
+  if (confirm('هل أنت متأكد من إعادة تعيين النموذج؟ سيتم مسح جميع البيانات.')) {
+    document.getElementById('journalEntryForm').reset();
+    document.getElementById('linesTableBody').innerHTML = '';
+    lineCounter = 0;
+    // إضافة سطرين افتراضيين
+    addLine();
+    addLine();
+    calculateJournalTotals();
+  }
+}
+
+// قوالب سريعة
+function loadTemplate(templateType) {
+  // مسح السطور الحالية
+  document.getElementById('linesTableBody').innerHTML = '';
+  lineCounter = 0;
+  
+  // تعيين الوصف
+  const descriptionInput = document.querySelector('input[name="description"]');
+  
+  switch(templateType) {
+    case 'cash_sale':
+      descriptionInput.value = 'مبيعة نقدية';
+      addLineWithData('1110', 'صندوق', 1000, 0); // مدين - الصندوق يزيد
+      addLineWithData('4100', 'إيرادات المبيعات', 0, 1000); // دائن - الإيرادات
+      break;
+      
+    case 'credit_sale':
+      descriptionInput.value = 'مبيعة آجلة';
+      addLineWithData('1130', 'الذمم المدينة', 1000, 0); // مدين - الذمم تزيد
+      addLineWithData('4100', 'إيرادات المبيعات', 0, 1000); // دائن - الإيرادات
+      break;
+      
+    case 'expense':
+      descriptionInput.value = 'مصروف';
+      addLineWithData('6100', 'مصروف رواتب', 500, 0); // مدين - المصروف يزيد
+      addLineWithData('1110', 'صندوق', 0, 500); // دائن - الصندوق ينقص
+      break;
+      
+    case 'adjustment':
+      descriptionInput.value = 'قيد تسوية';
+      addLineWithData('1110', 'صندوق', 200, 0); // مدين - الصندوق يزيد
+      addLineWithData('1130', 'الذمم المدينة', 0, 200); // دائن - الذمم تنقص
+      break;
+  }
+  
+  // حساب الإجماليات فوراً + احتياطي
+  calculateJournalTotals();
+  setTimeout(() => calculateJournalTotals(), 100);
+}
+
+// إضافة سطر مع بيانات محددة
+function addLineWithData(accountCode, accountName, debit, credit) {
+  const tbody = document.getElementById('linesTableBody');
+  const row = document.createElement('tr');
+  row.id = `line_${lineCounter}`;
+  row.innerHTML = `
+    <td class="text-center">${lineCounter + 1}</td>
+    <td>
+      <select name="line_${lineCounter}_account" class="form-control account-select" required>
+        <option value="">بلا</option>
+        ${accounts.map(acc => `<option value="${acc.code}" ${acc.code === accountCode ? 'selected' : ''}>${acc.full_name}</option>`).join('')}
+      </select>
+    </td>
+    <td>
+      <input type="text" name="line_${lineCounter}_description" class="form-control" 
+             value="${accountName}" placeholder="البيان (اختياري)">
+    </td>
+    <td>
+      <input type="number" name="line_${lineCounter}_debit" class="form-control text-center debit-input" 
+             step="0.01" min="0" value="${debit}" oninput="handleDebitChange(this)" onchange="handleDebitChange(this)" onkeyup="calculateJournalTotals()">
+    </td>
+    <td>
+      <input type="number" name="line_${lineCounter}_credit" class="form-control text-center credit-input" 
+             step="0.01" min="0" value="${credit}" oninput="handleCreditChange(this)" onchange="handleCreditChange(this)" onkeyup="calculateJournalTotals()">
+    </td>
+  `;
+  tbody.appendChild(row);
+  
+  // تعيين القيم بعد إضافة الصف للـ DOM (مهم جداً!)
+  const debitInput = row.querySelector('.debit-input');
+  const creditInput = row.querySelector('.credit-input');
+  if (debitInput) debitInput.value = debit;
+  if (creditInput) creditInput.value = credit;
+  
+  lineCounter++;
+  document.getElementById('lineCountHidden').value = lineCounter;
+}
+
+// دالة لإظهار/إخفاء البطاقات
+function toggleCard(cardName) {
+  const body = document.getElementById(cardName + 'Body');
+  const icon = document.getElementById(cardName + 'Icon');
+  
+  if (body.style.display === 'none') {
+    body.style.display = 'block';
+    icon.classList.remove('fa-plus');
+    icon.classList.add('fa-minus');
+  } else {
+    body.style.display = 'none';
+    icon.classList.remove('fa-minus');
+    icon.classList.add('fa-plus');
+  }
+}
+
+// عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', function() {
+  // تعيين التاريخ الحالي
+  const today = new Date().toISOString().split('T')[0];
+  document.querySelector('input[name="entry_date"]').value = today;
+  
+  // إضافة سطرين افتراضيين
+  addLine();
+  addLine();
+  calculateJournalTotals();
+  
+  // التأكد من أن البطاقات مرئية
+  document.getElementById('quickSummaryBody').style.display = 'block';
+  document.getElementById('quickTemplatesBody').style.display = 'block';
+});
+</script>
+
+<style>
+  .manual-entry-form .form-control,
+  .manual-entry-form textarea.form-control,
+  .manual-entry-form select.form-control {
+    min-height: 56px;
+    height: auto !important;
+    padding: 0.95rem 1.35rem;
+    font-size: 0.95rem;
+    line-height: 1.7;
+    text-align: center;
+  }
+
+  .manual-entry-form .form-control::placeholder {
+    text-align: center;
+    color: #64748b;
+    opacity: 0.85;
+  }
+
+  .manual-entry-form textarea.form-control {
+    text-align: right;
+  }
+
+  .manual-entry-form textarea.form-control::placeholder {
+    text-align: right;
+  }
+
+  .manual-entry-form select.form-control {
+    text-align-last: center;
+    padding-inline-start: 2.2rem;
+    padding-inline-end: 2.2rem;
+    appearance: none;
+    -webkit-appearance: none;
+    background-color: #fff;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23647894' d='M6 8a1 1 0 0 1-.707-.293l-5-5a1 1 0 0 1 1.414-1.414L6 5.586 10.293 1.293a1 1 0 0 1 1.414 1.414l-5 5A1 1 0 0 1 6 8'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: left 0.8rem center;
+    background-size: 12px;
+  }
+
+  .manual-entry-form select.form-control option {
+    text-align: center;
+    padding: 0.75rem 1rem;
+  }
+
+/* تنسيق البطاقات الثابتة */
+#quickSummaryCard, #quickTemplatesCard {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-width: 2px !important;
+  animation: fadeIn 0.5s ease-in;
+}
+
+#quickSummaryCard .card-header,
+#quickTemplatesCard .card-header {
+  font-weight: bold;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+#quickSummaryBody,
+#quickTemplatesBody {
+  display: block !important;
+  padding: 1.5rem;
+  background: #f8f9fa;
+}
+
+#quickSummaryBody ol li,
+#quickTemplatesBody .row {
+  animation: slideIn 0.3s ease-out;
+}
+
+/* تنسيق الأزرار */
+#quickTemplatesBody .btn {
+  font-weight: bold;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+#quickTemplatesBody .btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* تنسيق الحسابات */
+.account-select {
+  font-size: 0.9rem;
+}
+
+#balanceStatus {
+  font-weight: bold;
+}
+
+.table input, .table select {
+  border-radius: 0.25rem;
+}
+
+/* رسوم متحركة */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* منع الاختفاء */
+.card-body {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+</style>
+{% endblock %}
+

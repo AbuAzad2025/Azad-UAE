@@ -1,0 +1,476 @@
+{% extends 'base.html' %}
+{% block title %}نظام الطباعة الاحترافي - Professional Printing System{% endblock %}
+
+{% block styles %}
+<style>
+/* تصميم خليجي فاخر للطباعة */
+@media print {
+  body {
+    font-family: 'Arial', 'Tahoma', sans-serif;
+    direction: rtl;
+    margin: 0;
+    padding: 20px;
+    background: white !important;
+    color: black !important;
+  }
+  
+  .print-header {
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    color: white;
+    padding: 30px;
+    margin-bottom: 30px;
+    border-radius: 15px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+  }
+  
+  .company-logo {
+    width: 120px;
+    height: 120px;
+    background: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    color: #1e3c72;
+    margin: 0 auto 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  }
+  
+  .company-name {
+    font-size: 32px;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+  }
+  
+  .company-details {
+    font-size: 16px;
+    text-align: center;
+    opacity: 0.9;
+  }
+  
+  .report-title {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px;
+    text-align: center;
+    font-size: 24px;
+    font-weight: bold;
+    margin: 30px 0;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  }
+  
+  .report-info {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 30px;
+    border-right: 5px solid #1e3c72;
+  }
+  
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid #e9ecef;
+  }
+  
+  .info-label {
+    font-weight: bold;
+    color: #1e3c72;
+    min-width: 150px;
+  }
+  
+  .info-value {
+    color: #495057;
+  }
+  
+  /* جداول فاخرة */
+  .luxury-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 30px 0;
+    background: white;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  }
+  
+  .luxury-table thead {
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    color: white;
+  }
+  
+  .luxury-table th {
+    padding: 20px 15px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 16px;
+    border: none;
+    position: relative;
+  }
+  
+  .luxury-table th:after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #ffd700, #ffed4e);
+  }
+  
+  .luxury-table tbody tr {
+    transition: all 0.3s ease;
+  }
+  
+  .luxury-table tbody tr:nth-child(even) {
+    background: #f8f9fa;
+  }
+  
+  .luxury-table tbody tr:hover {
+    background: #e3f2fd;
+    transform: scale(1.01);
+  }
+  
+  .luxury-table td {
+    padding: 15px;
+    text-align: center;
+    border: none;
+    border-bottom: 1px solid #e9ecef;
+    font-size: 14px;
+  }
+  
+  .luxury-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+  
+  /* ألوان خاصة للأرقام */
+  .amount-positive {
+    color: #28a745;
+    font-weight: bold;
+  }
+  
+  .amount-negative {
+    color: #dc3545;
+    font-weight: bold;
+  }
+  
+  .amount-zero {
+    color: #6c757d;
+  }
+  
+  /* تذييل فاخر */
+  .print-footer {
+    margin-top: 50px;
+    padding: 30px;
+    background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+    color: white;
+    border-radius: 15px;
+    text-align: center;
+  }
+  
+  .footer-signatures {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 30px;
+  }
+  
+  .signature-box {
+    text-align: center;
+    min-width: 200px;
+  }
+  
+  .signature-line {
+    border-bottom: 2px solid white;
+    margin: 20px 0 10px;
+    height: 40px;
+  }
+  
+  /* إخفاء العناصر غير المرغوبة */
+  .no-print {
+    display: none !important;
+  }
+  
+  /* تحسين الخطوط */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+}
+
+/* تصميم الشاشة */
+.print-controls {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px;
+  border-radius: 15px;
+  margin-bottom: 30px;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.print-btn {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+  border: none;
+  padding: 15px 30px;
+  border-radius: 25px;
+  font-weight: bold;
+  margin: 5px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.print-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+}
+
+.preview-area {
+  background: white;
+  border-radius: 15px;
+  padding: 30px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  margin-bottom: 30px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <!-- عناصر التحكم -->
+  <div class="print-controls no-print">
+    <div class="row">
+      <div class="col-md-6">
+        <h3 class="text-white mb-3">
+          <i class="fas fa-print mr-2"></i>نظام الطباعة الاحترافي
+        </h3>
+        <p class="text-white-50">طباعة تقارير فاخرة بتصميم خليجي مميز</p>
+      </div>
+      <div class="col-md-6 text-right">
+        <button class="print-btn" onclick="printReport()">
+          <i class="fas fa-print mr-2"></i>طباعة فاخرة
+        </button>
+        <button class="print-btn" onclick="printPDF()">
+          <i class="fas fa-file-pdf mr-2"></i>تصدير PDF
+        </button>
+        <button class="print-btn" onclick="printExcel()">
+          <i class="fas fa-file-excel mr-2"></i>تصدير Excel
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- منطقة المعاينة -->
+  <div class="preview-area" id="printContent">
+    
+    <!-- رأس الشركة الفاخر -->
+    <div class="print-header">
+      <div class="company-logo">
+        <i class="fas fa-building"></i>
+      </div>
+      <div class="company-name">شركة الإمارات للمرائب</div>
+      <div class="company-details">
+        دولة الإمارات العربية المتحدة | دبي | ص.ب: 12345<br>
+        هاتف: +971 4 123 4567 | فاكس: +971 4 123 4568<br>
+        البريد الإلكتروني: info@emirates-garage.ae
+      </div>
+    </div>
+
+    <!-- عنوان التقرير -->
+    <div class="report-title">
+      <i class="fas fa-chart-line mr-2"></i>
+      تقرير ميزان المراجعة الشامل
+    </div>
+
+    <!-- معلومات التقرير -->
+    <div class="report-info">
+      <div class="info-row">
+        <span class="info-label">تاريخ التقرير:</span>
+        <span class="info-value">{{ date.today().strftime('%Y-%m-%d') }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">فترة التقرير:</span>
+        <span class="info-value">من {{ date_from.strftime('%Y-%m-%d') }} إلى {{ date_to.strftime('%Y-%m-%d') }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">العملة:</span>
+        <span class="info-value">درهم إماراتي (AED)</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">رقم التقرير:</span>
+        <span class="info-value">TB-{{ date.today().strftime('%Y%m%d') }}-001</span>
+      </div>
+    </div>
+
+    <!-- الجدول الفاخر -->
+    <table class="luxury-table">
+      <thead>
+        <tr>
+          <th>كود الحساب</th>
+          <th>اسم الحساب</th>
+          <th>نوع الحساب</th>
+          <th>الرصيد المدين</th>
+          <th>الرصيد الدائن</th>
+          <th>الرصيد الصافي</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in trial_balance_data %}
+        <tr>
+          <td><strong>{{ item.account.code }}</strong></td>
+          <td>{{ item.account.full_name }}</td>
+          <td>
+            <span class="badge badge-{{ 'success' if item.account.type == 'asset' else 'danger' if item.account.type == 'liability' else 'info' if item.account.type == 'equity' else 'warning' if item.account.type == 'revenue' else 'secondary' }}">
+              {{ item.account.type_ar }}
+            </span>
+          </td>
+          <td class="amount-{{ 'positive' if item.debit > 0 else 'zero' }}">
+            {{ "{:,.2f}".format(item.debit) if item.debit > 0 else '-' }}
+          </td>
+          <td class="amount-{{ 'positive' if item.credit > 0 else 'zero' }}">
+            {{ "{:,.2f}".format(item.credit) if item.credit > 0 else '-' }}
+          </td>
+          <td class="amount-{{ 'positive' if item.account.get_balance() > 0 else 'negative' if item.account.get_balance() < 0 else 'zero' }}">
+            {{ "{:,.2f}".format(item.account.get_balance()) }}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; font-weight: bold;">
+          <td colspan="3"><strong>الإجمالي</strong></td>
+          <td>{{ "{:,.2f}".format(total_debit) }}</td>
+          <td>{{ "{:,.2f}".format(total_credit) }}</td>
+          <td>
+            {% set difference = total_debit - total_credit %}
+            {% if difference == 0 %}
+              <span class="badge badge-success">متوازن</span>
+            {% else %}
+              {{ "{:,.2f}".format(difference) }}
+            {% endif %}
+          </td>
+        </tr>
+      </tfoot>
+    </table>
+
+    <!-- ملاحظات مهمة -->
+    <div class="alert alert-info" style="margin-top: 30px; border-radius: 15px; border-right: 5px solid #17a2b8;">
+      <h5><i class="fas fa-info-circle mr-2"></i>ملاحظات مهمة:</h5>
+      <ul class="mb-0">
+        <li>تم إعداد هذا التقرير وفقاً للمعايير المحاسبية الدولية</li>
+        <li>جميع المبالغ بالدرهم الإماراتي</li>
+        <li>التقرير معتمد من النظام المحاسبي المتقدم</li>
+        <li>تاريخ الطباعة: {{ datetime.now().strftime('%Y-%m-%d %H:%M') }}</li>
+      </ul>
+    </div>
+
+    <!-- التذييل الفاخر -->
+    <div class="print-footer">
+      <h5><i class="fas fa-certificate mr-2"></i>شهادة صحة البيانات</h5>
+      <p>نؤكد أن البيانات الواردة في هذا التقرير صحيحة ومطابقة للسجلات المحاسبية</p>
+      
+      <div class="footer-signatures">
+        <div class="signature-box">
+          <div class="signature-line"></div>
+          <div>المحاسب المختص</div>
+          <div>توقيع وختم</div>
+        </div>
+        <div class="signature-box">
+          <div class="signature-line"></div>
+          <div>مدير المالية</div>
+          <div>توقيع وختم</div>
+        </div>
+        <div class="signature-box">
+          <div class="signature-line"></div>
+          <div>المدير العام</div>
+          <div>توقيع وختم</div>
+        </div>
+      </div>
+      
+      <div style="margin-top: 30px; font-size: 12px; opacity: 0.8;">
+        <p>© 2025 شركة الإمارات للمرائب - جميع الحقوق محفوظة</p>
+        <p>تم إنشاء هذا التقرير بواسطة النظام المحاسبي المتقدم</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function printReport() {
+  // إخفاء عناصر التحكم
+  document.querySelectorAll('.no-print').forEach(el => {
+    el.style.display = 'none';
+  });
+  
+  // طباعة
+  window.print();
+  
+  // إعادة إظهار عناصر التحكم
+  setTimeout(() => {
+    document.querySelectorAll('.no-print').forEach(el => {
+      el.style.display = '';
+    });
+  }, 1000);
+}
+
+function printPDF() {
+  // استخدام jsPDF لإنشاء PDF
+  if (typeof jsPDF !== 'undefined') {
+    const doc = new jsPDF('p', 'mm', 'a4');
+    const element = document.getElementById('printContent');
+    
+    // إضافة النص
+    doc.setFontSize(20);
+    doc.text('تقرير ميزان المراجعة', 105, 20, { align: 'center' });
+    
+    // حفظ الملف
+    doc.save('trial_balance_' + new Date().toISOString().split('T')[0] + '.pdf');
+  } else {
+    alert('مكتبة jsPDF غير متوفرة');
+  }
+}
+
+function printExcel() {
+  // إنشاء ملف Excel
+  const data = [];
+  
+  // إضافة البيانات
+  {% for item in trial_balance_data %}
+  data.push([
+    '{{ item.account.code }}',
+    '{{ item.account.full_name }}',
+    '{{ item.account.type_ar }}',
+    {{ item.debit }},
+    {{ item.credit }},
+    {{ item.account.get_balance() }}
+  ]);
+  {% endfor %}
+  
+  // تصدير Excel
+  const ws = XLSX.utils.aoa_to_sheet([
+    ['كود الحساب', 'اسم الحساب', 'نوع الحساب', 'مدين', 'دائن', 'رصيد صافي'],
+    ...data
+  ]);
+  
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'ميزان المراجعة');
+  
+  XLSX.writeFile(wb, 'trial_balance_' + new Date().toISOString().split('T')[0] + '.xlsx');
+}
+
+// تحسين الطباعة
+window.addEventListener('beforeprint', function() {
+  document.body.style.fontSize = '12px';
+});
+
+window.addEventListener('afterprint', function() {
+  document.body.style.fontSize = '';
+});
+</script>
+{% endblock %}

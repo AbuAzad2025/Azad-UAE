@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - أرشيف المصروفات{% endblock %}
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2><i class="fas fa-archive me-2"></i>أرشيف المصروفات</h2>
+            <a href="{{ url_for('expenses.index') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-right me-2"></i>رجوع
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table id="expensesTable" class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>رقم المصروف</th>
+                        <th>الفئة</th>
+                        <th>{{ t('Description') }}</th>
+                        <th>{{ t('Amount') }}</th>
+                        <th>{{ t('Date') }}</th>
+                        <th>طريقة الدفع</th>
+                        <th>تاريخ الأرشفة</th>
+                        <th>الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for expense in expenses %}
+                    <tr>
+                        <td><strong>{{ expense.expense_number }}</strong></td>
+                        <td>{{ expense.category_name }}</td>
+                        <td>{{ expense.description }}</td>
+                        <td><strong>{{ "{:,.2f}".format(expense.amount) }} {{ expense.currency }}</strong></td>
+                        <td>{{ expense.expense_date.strftime('%Y-%m-%d') }}</td>
+                        <td><span class="badge bg-info">{{ expense.payment_method }}</span></td>
+                        <td><small>{{ expense.archived_at.strftime('%Y-%m-%d %H:%M') }}</small></td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ url_for('expenses.view', id=expense.id) }}" 
+                                   class="btn btn-info" title="عرض">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <button type="button" class="btn btn-success restore-expense-btn" 
+                                        data-id="{{ expense.id }}" title="استعادة">
+                                    <i class="fas fa-undo"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+  $('#expensesTable').DataTable({
+    language: { url: "{{ url_for('static', filename='datatables/Arabic.json') }}" },
+    order: [[6, 'desc']],
+    pageLength: 25
+  });
+  
+  // استعادة مصروف
+  $(document).on('click', '.restore-expense-btn', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    var id = $(this).data('id');
+    var csrfToken = $('meta[name="csrf-token"]').attr('content');
+    
+    $.ajax({
+      url: '/expenses/' + id + '/restore',
+      type: 'POST',
+      headers: {
+        'X-CSRFToken': csrfToken
+      },
+      success: function(response) {
+        location.reload();
+      },
+      error: function(xhr) {
+        location.reload();
+      }
+    });
+  });
+});
+</script>
+{% endblock %}
+

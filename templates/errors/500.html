@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block title %}500 - خطأ في الخادم{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="row justify-content-center mt-5">
+    <div class="col-md-6">
+      <div class="card shadow">
+        <div class="card-body text-center p-5">
+          <h1 class="display-4 text-danger mb-3">500</h1>
+          <h3 class="mb-4">حدث خطأ غير متوقع</h3>
+          <p class="text-muted mb-4">
+            يرجى المحاولة لاحقاً. إذا استمرت المشكلة اتصل بالدعم.
+          </p>
+          {% if error %}
+          <div class="alert alert-danger text-left" dir="ltr" style="max-height: 200px; overflow: auto;">
+            <strong>Error Details:</strong><br>
+            {{ error }}
+          </div>
+          {% endif %}
+          {% if error_id %}
+          <p class="text-muted mb-4">رقم المرجع: {{ error_id }}</p>
+          {% endif %}
+          <div class="mt-4">
+            <a href="{{ url_for('main.dashboard') }}" class="btn btn-danger">
+              العودة للرئيسية
+            </a>
+            <a href="javascript:location.reload()" class="btn btn-secondary">
+              إعادة المحاولة
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+

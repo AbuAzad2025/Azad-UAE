@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}تفاصيل المستودع - {{ warehouse.name_ar or warehouse.name }}{% endblock %}
+
+{% block content %}
+<div class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2">
+      <div class="col-sm-6">
+        <h1 class="m-0">
+          <i class="fas fa-warehouse"></i> {{ warehouse.name_ar or warehouse.name }}
+          {% if warehouse.is_main %}
+          <span class="badge badge-primary text-sm ml-2">رئيسي</span>
+          {% endif %}
+        </h1>
+      </div>
+      <div class="col-sm-6">
+        <ol class="breadcrumb float-sm-left">
+          <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">الرئيسية</a></li>
+          <li class="breadcrumb-item"><a href="{{ url_for('warehouse.list_warehouses') }}">المستودعات</a></li>
+          <li class="breadcrumb-item active">{{ warehouse.name_ar or warehouse.name }}</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="content">
+  <div class="container-fluid">
+    
+    <!-- Warehouse Info Card -->
+    <div class="card mb-4">
+      <div class="card-header bg-gradient-light">
+        <h3 class="card-title"><i class="fas fa-info-circle"></i> معلومات المستودع</h3>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-3">
+            <strong>الاسم:</strong> {{ warehouse.name_ar or warehouse.name }}
+          </div>
+          <div class="col-md-3">
+            <strong>الرمز:</strong> {{ warehouse.code or '-' }}
+          </div>
+          <div class="col-md-3">
+            <strong>الموقع:</strong> {{ warehouse.location or '-' }}
+          </div>
+          <div class="col-md-3">
+            <strong>المدير:</strong> {{ warehouse.manager.username if warehouse.manager else '-' }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stock Table -->
+    <div class="card">
+      <div class="card-header bg-primary">
+        <h3 class="card-title"><i class="fas fa-boxes"></i> المخزون الحالي في المستودع</h3>
+        <div class="card-tools">
+            <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                <i class="fas fa-minus"></i>
+            </button>
+        </div>
+      </div>
+      <div class="card-body table-responsive p-0">
+        <table class="table table-hover text-nowrap">
+          <thead>
+            <tr>
+              <th>المنتج</th>
+              <th>SKU</th>
+              <th>التصنيف</th>
+              <th class="text-center">الكمية</th>
+              <th>الوحدة</th>
+              <th>إجراءات</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in stock %}
+            <tr>
+              <td>
+                <a href="{{ url_for('products.edit', id=item.product.id) }}">
+                  {{ item.product.name_ar or item.product.name }}
+                </a>
+              </td>
+              <td>{{ item.product.sku or '-' }}</td>
+              <td>
+                {% if item.product.category %}
+                <span class="badge badge-info">{{ item.product.category.name_ar or item.product.category.name }}</span>
+                {% else %}
+                -
+                {% endif %}
+              </td>
+              <td class="text-center">
+                <span class="badge {% if item.quantity <= 0 %}badge-danger{% elif item.quantity <= item.product.min_stock_alert %}badge-warning{% else %}badge-success{% endif %} p-2" style="font-size: 1rem;">
+                  {{ item.quantity }}
+                </span>
+              </td>
+              <td>{{ item.product.unit or 'قطعة' }}</td>
+              <td>
+                <a href="{{ url_for('warehouse.movements', product=item.product.id, warehouse=warehouse.id) }}" class="btn btn-xs btn-info" title="حركات المخزون">
+                  <i class="fas fa-history"></i>
+                </a>
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="6" class="text-center text-muted p-4">
+                <i class="fas fa-box-open fa-3x mb-3"></i><br>
+                لا يوجد منتجات في هذا المستودع حالياً
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</section>
+{% endblock %}

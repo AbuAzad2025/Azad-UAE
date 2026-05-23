@@ -1,0 +1,235 @@
+{% extends 'base.html' %}
+{% block title %}قيد رقم {{ entry.entry_number }}{% endblock %}
+{% block page_title %}تفاصيل القيد{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+  <div class="col-12">
+    <a href="{{ url_for('ledger.journal_entries') }}" class="btn btn-secondary">
+      <i class="fas fa-arrow-right mr-2"></i>العودة للقيود
+    </a>
+    <button class="btn btn-primary" onclick="window.print()">
+      <i class="fas fa-print mr-2"></i>طباعة
+    </button>
+    {% if not entry.is_reversed and entry.entry_type != 'reversing' %}
+    <button class="btn btn-warning" data-toggle="modal" data-target="#reverseModal">
+      <i class="fas fa-undo mr-2"></i>عكس القيد
+    </button>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header bg-gradient-{{ 'success' if entry.is_balanced() else 'danger' }}">
+    <h3 class="card-title text-white">
+      <i class="fas fa-file-invoice mr-2"></i>
+      قيد رقم: {{ entry.entry_number }}
+    </h3>
+    <div class="card-tools">
+      {% if entry.is_reversed %}
+      <span class="badge badge-danger"><i class="fas fa-ban mr-1"></i>تم عكسه</span>
+      {% endif %}
+      {% if entry.entry_type == 'reversing' %}
+      <span class="badge badge-warning"><i class="fas fa-undo mr-1"></i>قيد عكسي</span>
+      {% endif %}
+    </div>
+  </div>
+  <div class="card-body">
+    <!-- معلومات القيد -->
+    <div class="row mb-3">
+      <div class="col-md-3">
+        <strong>رقم القيد:</strong>
+        <p>{{ entry.entry_number }}</p>
+      </div>
+      <div class="col-md-3">
+        <strong>التاريخ:</strong>
+        <p>{{ entry.entry_date.strftime('%Y-%m-%d %H:%M') }}</p>
+      </div>
+      <div class="col-md-3">
+        <strong>النوع:</strong>
+        <p>
+          <span class="badge badge-{{ 'primary' if entry.entry_type == 'manual' else ('success' if entry.entry_type == 'auto' else 'warning') }}">
+            {{ entry.entry_type_ar }}
+          </span>
+        </p>
+      </div>
+      <div class="col-md-3">
+        <strong>الحالة:</strong>
+        <p>
+          {% if entry.is_balanced() %}
+          <span class="badge badge-success"><i class="fas fa-check-circle mr-1"></i>متوازن</span>
+          {% else %}
+          <span class="badge badge-danger"><i class="fas fa-exclamation-triangle mr-1"></i>غير متوازن</span>
+          {% endif %}
+        </p>
+      </div>
+    </div>
+
+    <div class="row mb-3">
+      <div class="col-md-6">
+        <strong>الوصف:</strong>
+        <p>{{ entry.description }}</p>
+      </div>
+      <div class="col-md-6">
+        {% if entry.reference_type and entry.reference_id %}
+        <strong>المرجع:</strong>
+        <p>{{ entry.reference_type }} #{{ entry.reference_id }}</p>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if entry.notes %}
+    <div class="row mb-3">
+      <div class="col-12">
+        <strong>ملاحظات:</strong>
+        <p class="text-muted">{{ entry.notes }}</p>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if entry.reversed_entry_id %}
+    <div class="alert alert-info">
+      <i class="fas fa-info-circle mr-2"></i>
+      هذا القيد هو عكس للقيد رقم: 
+      <a href="{{ url_for('ledger.view_entry', id=entry.reversed_entry_id) }}">
+        JE-{{ entry.reversed_entry_id }}
+      </a>
+    </div>
+    {% endif %}
+
+    <!-- جدول السطور -->
+    <h5 class="mt-4 mb-3">
+      <i class="fas fa-list mr-2"></i>سطور القيد
+    </h5>
+    <div class="table-responsive">
+      <table class="table table-bordered table-striped">
+        <thead class="bg-light">
+          <tr>
+            <th width="5%">#</th>
+            <th width="15%">كود الحساب</th>
+            <th width="30%">اسم الحساب</th>
+            <th width="25%">البيان</th>
+            <th width="12%" class="text-center">مدين</th>
+            <th width="13%" class="text-center">دائن</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for line in lines %}
+          <tr>
+            <td class="text-center">{{ loop.index }}</td>
+            <td>
+              <a href="{{ url_for('ledger.account_statement', id=line.account.id) }}" class="badge badge-info">
+                {{ line.account.code }}
+              </a>
+            </td>
+            <td>{{ line.account.name_ar or line.account.name }}</td>
+            <td>{{ line.description }}</td>
+            <td class="text-center text-success">
+              {% if line.debit > 0 %}
+              <strong>{{ "{:,.2f}".format(line.debit) }}</strong>
+              {% else %}
+              -
+              {% endif %}
+            </td>
+            <td class="text-center text-danger">
+              {% if line.credit > 0 %}
+              <strong>{{ "{:,.2f}".format(line.credit) }}</strong>
+              {% else %}
+              -
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot class="bg-light">
+          <tr>
+            <th colspan="4" class="text-left">الإجمالي:</th>
+            <th class="text-center text-success">
+              {{ "{:,.2f}".format(entry.total_debit) }}
+            </th>
+            <th class="text-center text-danger">
+              {{ "{:,.2f}".format(entry.total_credit) }}
+            </th>
+          </tr>
+          <tr>
+            <th colspan="4" class="text-left">الفرق:</th>
+            <th colspan="2" class="text-center">
+              {% set diff = entry.total_debit - entry.total_credit %}
+              <span class="badge badge-{{ 'success' if diff|abs < 0.01 else 'danger' }}">
+                {{ "{:,.2f}".format(diff|abs) }}
+              </span>
+            </th>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <!-- معلومات إضافية -->
+    <div class="row mt-3">
+      <div class="col-md-6">
+        {% if entry.user %}
+        <small class="text-muted">
+          <i class="fas fa-user mr-1"></i>
+          أنشأه: {{ entry.user.name }}
+        </small>
+        {% endif %}
+      </div>
+      <div class="col-md-6 text-left">
+        <small class="text-muted">
+          <i class="fas fa-clock mr-1"></i>
+          تاريخ الإنشاء: {{ entry.created_at.strftime('%Y-%m-%d %H:%M:%S') }}
+        </small>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal عكس القيد -->
+<div class="modal fade" id="reverseModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <form method="post" action="{{ url_for('ledger.reverse_entry', id=entry.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="modal-header bg-warning">
+          <h5 class="modal-title">
+            <i class="fas fa-undo mr-2"></i>عكس القيد
+          </h5>
+          <button type="button" class="close" data-dismiss="modal">
+            <span>&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle mr-2"></i>
+            <strong>تحذير:</strong> سيتم إنشاء قيد جديد معاكس لهذا القيد. هل أنت متأكد؟
+          </div>
+          <div class="form-group">
+            <label>سبب العكس:</label>
+            <textarea name="description" class="form-control" rows="3" 
+                      placeholder="اختياري: اذكر سبب عكس هذا القيد"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">إلغاء</button>
+          <button type="submit" class="btn btn-warning">
+            <i class="fas fa-undo mr-2"></i>تأكيد العكس
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<style>
+@media print {
+  .btn, .modal {
+    display: none !important;
+  }
+  .card {
+    border: none !important;
+    box-shadow: none !important;
+  }
+}
+</style>
+{% endblock %}
+

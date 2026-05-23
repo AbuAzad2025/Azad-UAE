@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - تحويل قاعدة البيانات{% endblock %}
+{% block page_title %}
+<div class="d-flex justify-content-between align-items-center">
+  <div>
+    <h1 class="mb-0"><i class="fas fa-exchange-alt mr-2"></i>تحويل قاعدة البيانات</h1>
+  </div>
+  <div>
+    <a href="{{ url_for('owner.database_tools') }}" class="btn btn-info">
+      <i class="fas fa-tools mr-2"></i>أدوات DB
+    </a>
+    <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary">
+      <i class="fas fa-arrow-right mr-2"></i>لوحة المالك
+    </a>
+    <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
+      <i class="fas fa-home mr-2"></i>الرئيسية
+    </a>
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-8 offset-md-2">
+    <div class="card card-primary">
+      <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-database"></i> تحويل احترافي بين أنواع قواعد البيانات</h3>
+      </div>
+      <form method="POST" action="">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="card-body">
+          <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i>
+            <strong>ملاحظة:</strong> النظام حالياً يعمل على SQLite. يمكنك التحويل إلى PostgreSQL أو MySQL.
+          </div>
+
+          <div class="form-group">
+            <label>قاعدة البيانات المستهدفة:</label>
+            <select name="target_db" id="target_db" class="form-control" onchange="toggleConfig()">
+              <option value="">بلا</option>
+              <option value="postgresql">PostgreSQL (موصى به للإنتاج)</option>
+              <option value="mysql">MySQL (قريباً)</option>
+            </select>
+          </div>
+
+          <div id="postgresqlConfig" style="display: none;">
+            <div class="form-group">
+              <label>PostgreSQL Connection URI:</label>
+              <input type="text" name="postgresql_uri" class="form-control" placeholder="postgresql://user:password@host:port/dbname">
+              <small class="form-text text-muted">
+                مثال: postgresql://myuser:mypass@localhost:5432/garage_db
+              </small>
+            </div>
+          </div>
+
+          <div class="alert alert-warning">
+            <h5><i class="fas fa-exclamation-triangle"></i> تحذيرات مهمة:</h5>
+            <ul>
+              <li>تأكد من وجود نسخة احتياطية قبل التحويل</li>
+              <li>قاعدة البيانات المستهدفة يجب أن تكون فارغة</li>
+              <li>قد يستغرق التحويل عدة دقائق</li>
+              <li>لا تغلق المتصفح أثناء التحويل</li>
+            </ul>
+          </div>
+        </div>
+        <div class="card-footer">
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-sync"></i> ابدأ التحويل
+          </button>
+          <a href="{{ url_for('owner.database_tools') }}" class="btn btn-secondary">
+            <i class="fas fa-times"></i> إلغاء
+          </a>
+        </div>
+      </form>
+    </div>
+
+    <div class="card card-info">
+      <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-question-circle"></i> معلومات التحويل</h3>
+      </div>
+      <div class="card-body">
+        <h5>لماذا PostgreSQL؟</h5>
+        <ul>
+          <li>أداء أفضل للأنظمة الكبيرة</li>
+          <li>دعم أفضل للـ concurrent connections</li>
+          <li>ميزات محاسبية متقدمة</li>
+          <li>أمان أعلى</li>
+          <li>موصى به في الإنتاج</li>
+        </ul>
+
+        <h5 class="mt-3">الخطوات:</h5>
+        <ol>
+          <li>ثبت PostgreSQL على السيرفر</li>
+          <li>أنشئ قاعدة بيانات فارغة</li>
+          <li>احصل على connection URI</li>
+          <li>أدخله هنا واضغط "ابدأ التحويل"</li>
+          <li>انتظر حتى يكتمل</li>
+          <li>حدث DATABASE_URL في .env</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleConfig() {
+  const target = document.getElementById('target_db').value;
+  document.getElementById('postgresqlConfig').style.display = target === 'postgresql' ? 'block' : 'none';
+}
+</script>
+{% endblock %}
+

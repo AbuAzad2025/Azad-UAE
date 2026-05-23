@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+
+{% block title %}تفاصيل المستخدم - {{ user.username }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="fas fa-user"></i> تفاصيل المستخدم - {{ user.username }}
+          </h3>
+          <div class="card-tools">
+            <a href="{{ url_for('users.edit', id=user.id) }}" class="btn btn-warning">
+              <i class="fas fa-edit"></i> تعديل
+            </a>
+            <a href="{{ url_for('users.index') }}" class="btn btn-secondary">
+              <i class="fas fa-arrow-left"></i> رجوع
+            </a>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <!-- المعلومات الأساسية -->
+            <div class="col-md-6">
+              <h4>المعلومات الأساسية</h4>
+              <table class="table table-bordered">
+                <tr>
+                  <th width="40%">اسم المستخدم</th>
+                  <td>{{ user.username }}</td>
+                </tr>
+                <tr>
+                  <th>الاسم الكامل</th>
+                  <td>{{ user.full_name }}</td>
+                </tr>
+                <tr>
+                  <th>البريد الإلكتروني</th>
+                  <td>{{ user.email or '-' }}</td>
+                </tr>
+                <tr>
+                  <th>الدور</th>
+                  <td>
+                    {% if user.is_owner %}
+                      <span class="badge badge-danger">مالك</span>
+                    {% elif user.is_admin %}
+                      <span class="badge badge-warning">مدير</span>
+                    {% else %}
+                      <span class="badge badge-info">{{ user.role }}</span>
+                    {% endif %}
+                  </td>
+                </tr>
+                <tr>
+                  <th>الحالة</th>
+                  <td>
+                    {% if user.is_active %}
+                      <span class="badge badge-success">نشط</span>
+                    {% else %}
+                      <span class="badge badge-secondary">غير نشط</span>
+                    {% endif %}
+                  </td>
+                </tr>
+              </table>
+            </div>
+
+            <!-- معلومات إضافية -->
+            <div class="col-md-6">
+              <h4>معلومات إضافية</h4>
+              <table class="table table-bordered">
+                <tr>
+                  <th width="40%">تاريخ الإنشاء</th>
+                  <td>{{ user.created_at.strftime('%Y-%m-%d %H:%M') if user.created_at else '-' }}</td>
+                </tr>
+                <tr>
+                  <th>آخر ظهور</th>
+                  <td>{{ user.last_seen.strftime('%Y-%m-%d %H:%M') if user.last_seen else '-' }}</td>
+                </tr>
+                <tr>
+                  <th>عدد المبيعات</th>
+                  <td>{{ user.sales.count() if user.sales else 0 }}</td>
+                </tr>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="card-footer">
+          {% if current_user.is_admin %}
+          <button type="button" class="btn btn-danger" 
+                  onclick="deleteItem('users', {{ user.id }}, '{{ user.username }}', '{{ url_for('users.index') }}')">
+            <i class="fas fa-trash"></i> حذف
+          </button>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

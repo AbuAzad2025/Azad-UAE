@@ -1,0 +1,573 @@
+{% extends 'base.html' %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - إضافة منتج جديد{% endblock %}
+{% block page_title %}
+<div class="d-flex justify-content-between align-items-center">
+  <div>
+    <h1 class="mb-0"><i class="fas fa-plus-circle mr-2"></i>إضافة منتج جديد</h1>
+  </div>
+  <div>
+    <a href="{{ url_for('products.index') }}" class="btn btn-secondary">
+      <i class="fas fa-arrow-right mr-2"></i>العودة للمنتجات
+    </a>
+    <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
+      <i class="fas fa-home mr-2"></i>الرئيسية
+    </a>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.content-header .btn-secondary,
+.content-header .btn-outline-secondary {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%) !important;
+  border-color: #3498db !important;
+  box-shadow: 0 0 10px rgba(52, 152, 219, 0.3) !important;
+}
+.content-header .btn-secondary i,
+.content-header .btn-secondary span,
+.content-header .btn-outline-secondary i,
+.content-header .btn-outline-secondary span {
+  color: #ffffff !important;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+  {% set form_data = request.form %}
+  {% set selected_warehouse = form_data.get('warehouse_id') %}
+  {% if not selected_warehouse and preselected_warehouse_id %}
+    {% set selected_warehouse = preselected_warehouse_id|string %}
+  {% endif %}
+  <form method="POST" action="{{ url_for('products.create') }}" enctype="multipart/form-data">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="card-body">
+      <!-- المعلومات الأساسية -->
+      <div class="row">
+        <div class="col-md-6">
+          <div class="form-group">
+            <label for="product_name">
+              <i class="fas fa-box text-primary"></i> الاسم 
+              <span class="text-danger">*</span>
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="اسم المنتج بالإنجليزية (إجباري)"></i>
+            </label>
+            <input type="text" id="product_name" name="name" class="form-control" placeholder="Product Name" required autocomplete="off">
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-group">
+            <label for="product_name_ar">
+              <i class="fas fa-font text-info"></i> الاسم بالعربية
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="اسم المنتج بالعربية (اختياري)"></i>
+            </label>
+            <input type="text" id="product_name_ar" name="name_ar" class="form-control" placeholder="اسم المنتج" autocomplete="off">
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-6 col-lg-3">
+          <div class="form-group">
+            <label for="product_part_number">
+              <i class="fas fa-hashtag text-primary"></i> رقم القطعة (Part Number)
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="رقم القطعة الداخلي أو رقم المورد (اختياري)"></i>
+            </label>
+            <input type="text" id="product_part_number" name="part_number" class="form-control" placeholder="مثال: PN-12345" autocomplete="off">
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+          <div class="form-group">
+            <label for="product_sku">
+              <i class="fas fa-hashtag text-primary"></i> رقم القطعة (SKU)
+              <span class="text-danger">*</span>
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="رقم القطعة الفريد - يتم توليده تلقائياً إن لم يُدخل"></i>
+            </label>
+            <input type="text" id="product_sku" name="sku" class="form-control" placeholder="يتم توليده تلقائياً" autocomplete="off">
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+          <div class="form-group">
+            <label for="product_barcode">
+              <i class="fas fa-barcode text-secondary"></i> {{ t('Barcode') }}
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="الباركود للمسح - يتم توليده تلقائياً إن لم يُدخل"></i>
+            </label>
+            <input type="text" id="product_barcode" name="barcode" class="form-control" placeholder="يتم توليده تلقائياً" autocomplete="off">
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+          <div class="form-group">
+            <label for="product_category">
+              <i class="fas fa-folder text-warning"></i> الفئة
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="يمكن تركها بلا لتصنيف المنتج لاحقاً (اختياري)"></i>
+            </label>
+            <div class="input-group">
+              {% set selected_category = form_data.get('category_id') %}
+              <select name="category_id" id="product_category" class="form-control select2" style="flex: 1;" data-placeholder="اختر الفئة..." autocomplete="off">
+                <option value="0" {% if not selected_category or selected_category == '0' %}selected{% endif %}>بلا</option>
+                {% for category in categories %}
+                <option value="{{ category.id }}" {% if selected_category and selected_category|int == category.id %}selected{% endif %}>
+                  {{ category.name }}
+                </option>
+                {% endfor %}
+              </select>
+              <div class="input-group-append">
+                <button type="button" class="btn btn-success" data-toggle="modal" data-target="#addCategoryModal" title="إضافة فئة جديدة">
+                  <i class="fas fa-plus"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- الأسعار -->
+      <hr>
+      <h5 class="text-success"><i class="fas fa-money-bill-wave"></i> الأسعار</h5>
+      <div class="row">
+        <div class="col-md-3">
+          <div class="form-group">
+            <label for="product_cost_price">
+              <i class="fas fa-dollar-sign text-danger"></i> سعر التكلفة
+              <span class="text-danger">*</span>
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="سعر الشراء من المورد (إجباري)"></i>
+            </label>
+            <input type="number" id="product_cost_price" name="cost_price" class="form-control" step="0.01" min="0" value="0" placeholder="0.00" required autocomplete="off">
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="form-group">
+            <label for="product_regular_price">
+              <i class="fas fa-tag text-success"></i> سعر عادي
+              <span class="text-danger">*</span>
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="سعر التجزئة للعملاء العاديين (إجباري)"></i>
+            </label>
+            <input type="number" id="product_regular_price" name="regular_price" class="form-control" step="0.01" min="0" placeholder="0.00" required autocomplete="off">
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="form-group">
+            <label for="product_merchant_price">
+              <i class="fas fa-store text-primary"></i> خصم التاجر (%)
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="نسبة الخصم للتجار (مثال: 10 تعني 10%)"></i>
+            </label>
+            <input type="number" id="product_merchant_price" name="merchant_price" class="form-control" step="0.01" min="0" max="100" placeholder="10" autocomplete="off">
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="form-group">
+            <label for="product_partner_price">
+              <i class="fas fa-handshake text-info"></i> خصم الشريك (%)
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="نسبة الخصم للشركاء (مثال: 15 تعني 15%)"></i>
+            </label>
+            <input type="number" id="product_partner_price" name="partner_price" class="form-control" step="0.01" min="0" max="100" placeholder="15" autocomplete="off">
+          </div>
+        </div>
+      </div>
+
+      <!-- المخزون -->
+      <hr>
+      <h5 class="text-warning"><i class="fas fa-warehouse"></i> المخزون والضمان</h5>
+      <div class="row">
+        <div class="col-12 col-lg-6">
+          <div class="form-group">
+            <label for="warehouse_id">
+              <i class="fas fa-warehouse text-info"></i> المستودع
+              <span class="text-danger">*</span>
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="المستودع الذي سيُضاف إليه المنتج (إجباري)"></i>
+            </label>
+            <select id="warehouse_id" name="warehouse_id" class="form-control warehouse-select" required autocomplete="off">
+              <option value="" {% if not selected_warehouse %}selected{% endif %}>بلا</option>
+              {% if warehouses %}
+                {% for warehouse in warehouses %}
+                <option value="{{ warehouse.id }}" {% if selected_warehouse and selected_warehouse|int == warehouse.id %}selected{% endif %}>
+                  {% if warehouse.is_main %}⭐{% elif warehouse.parent_id %}🔀{% else %}📦{% endif %}
+                  {{ warehouse.name_ar or warehouse.name }}
+                  {% if warehouse.code %}({{ warehouse.code }}){% endif %}
+                </option>
+                {% endfor %}
+              {% else %}
+                <option value="" disabled>لا توجد مستودعات متاحة</option>
+              {% endif %}
+            </select>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+          <div class="form-group">
+            <label for="product_current_stock">
+              <i class="fas fa-cubes text-warning"></i> المخزون الحالي
+              <span class="text-danger">*</span>
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="الكمية المتوفرة حالياً في المستودع"></i>
+            </label>
+            <input type="number" id="product_current_stock" name="current_stock" class="form-control" step="1" min="0" value="0" placeholder="0" required autocomplete="off">
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+          <div class="form-group">
+            <label for="product_min_stock_alert">
+              <i class="fas fa-bell text-danger"></i> تنبيه الحد الأدنى
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="إرسال تنبيه عندما ينخفض المخزون عن هذا الرقم"></i>
+            </label>
+            <input type="number" id="product_min_stock_alert" name="min_stock_alert" class="form-control" step="1" min="0" value="5" placeholder="5" autocomplete="off">
+          </div>
+        </div>
+      </div>
+      
+      <div class="row mt-2">
+        <div class="col-md-6">
+          <div class="form-group">
+            <div class="custom-control custom-switch mt-4">
+              <input type="checkbox" class="custom-control-input" id="has_serial_number" name="has_serial_number">
+              <label class="custom-control-label font-weight-bold" for="has_serial_number">
+                <i class="fas fa-fingerprint text-info mr-1"></i> تتبع الأرقام التسلسلية (Serial Number Tracking)
+              </label>
+              <small class="form-text text-muted">فعّل هذا الخيار للأجهزة والبطاريات التي تتطلب إدخال رقم تسلسلي فريد لكل قطعة عند البيع.</small>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-group">
+            <label for="warranty_days">
+              <i class="fas fa-shield-alt text-success"></i> مدة الكفالة (بالأيام)
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="مدة الضمان/الكفالة بالأيام (مثال: 365 لسنة واحدة)"></i>
+            </label>
+            <div class="input-group">
+              <input type="number" id="warranty_days" name="warranty_days" class="form-control" min="0" value="0" placeholder="0">
+              <div class="input-group-append">
+                <span class="input-group-text">يوم</span>
+              </div>
+            </div>
+            <div class="mt-2">
+              <button type="button" class="btn btn-xs btn-outline-info" onclick="$('#warranty_days').val(30)">شهر</button>
+              <button type="button" class="btn btn-xs btn-outline-info" onclick="$('#warranty_days').val(180)">6 شهور</button>
+              <button type="button" class="btn btn-xs btn-outline-info" onclick="$('#warranty_days').val(365)">سنة</button>
+              <button type="button" class="btn btn-xs btn-outline-info" onclick="$('#warranty_days').val(730)">سنتين</button>
+            </div>
+          </div>
+        </div>
+      </div>
+              <i class="fas fa-boxes text-success"></i> الكمية المُدخلة
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="الكمية التي سيتم إضافتها مباشرةً إلى المخزون عند إنشاء المنتج (افتراضي: 0)"></i>
+            </label>
+            <input type="number" id="product_current_stock" name="current_stock" class="form-control" step="0.001" min="0" value="0" placeholder="أدخل الكمية الأولية" autocomplete="off">
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-2">
+          <div class="form-group">
+            <label for="product_min_stock_alert">
+              <i class="fas fa-exclamation-triangle text-warning"></i> حد التنبيه
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="عند الوصول لهذا الحد يظهر تنبيه (افتراضي: 10)"></i>
+            </label>
+            <input type="number" id="product_min_stock_alert" name="min_stock_alert" class="form-control" step="0.001" min="0" value="10" placeholder="10" autocomplete="off">
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-2">
+          <div class="form-group">
+            <label for="product_unit">
+              <i class="fas fa-balance-scale text-primary"></i> الوحدة
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="يمكن اختيار الوحدة أو تركها بلا للمنتجات غير المقيسة"></i>
+            </label>
+            {% set selected_unit = form_data.get('unit') if form_data.get('unit') is not none else 'piece' %}
+            <select id="product_unit" name="unit" class="form-control select2" data-placeholder="اختر الوحدة..." data-allow-clear="true" autocomplete="off">
+              <option value="" {% if not selected_unit %}selected{% endif %}>بلا</option>
+              <option value="piece" {% if selected_unit == 'piece' %}selected{% endif %}>قطعة</option>
+              <option value="kg" {% if selected_unit == 'kg' %}selected{% endif %}>كيلو</option>
+              <option value="liter" {% if selected_unit == 'liter' %}selected{% endif %}>لتر</option>
+              <option value="meter" {% if selected_unit == 'meter' %}selected{% endif %}>متر</option>
+              <option value="box" {% if selected_unit == 'box' %}selected{% endif %}>صندوق</option>
+              <option value="set" {% if selected_unit == 'set' %}selected{% endif %}>طقم</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- حقوق الملكية والشركاء -->
+      <hr>
+      <h5 class="text-primary"><i class="fas fa-users-cog"></i> حقوق الملكية والشركاء</h5>
+      <div class="row">
+        <!-- Merchant Selection -->
+        <div class="col-md-6">
+          <div class="form-group">
+            <label for="merchant_customer_id">
+              <i class="fas fa-user-tie text-purple"></i> التاجر المالك (اختياري)
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="اختر التاجر إذا كان هذا المنتج مملوكاً لتاجر معين"></i>
+            </label>
+            <div class="input-group">
+              <select name="merchant_customer_id" id="merchant_customer_id" class="form-control select2">
+                <option value="">-- اختر التاجر --</option>
+                {% for merchant in merchants %}
+                <option value="{{ merchant.id }}" {% if request.form.get('merchant_customer_id') == merchant.id|string %}selected{% endif %}>{{ merchant.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6" id="merchantShareContainer" style="display: {% if request.form.get('merchant_customer_id') %}block{% else %}none{% endif %};">
+          <div class="form-group">
+            <label for="merchant_share">
+              <i class="fas fa-percentage text-warning"></i> نسبة التاجر من المبيعات (%)
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="النسبة التي يحصل عليها التاجر عند بيع المنتج (الافتراضي 100%)"></i>
+            </label>
+            <div class="input-group">
+              <input type="number" id="merchant_share" name="merchant_share" class="form-control" step="0.01" min="0" max="100" value="{{ request.form.get('merchant_share', 100) }}" placeholder="100">
+              <div class="input-group-append">
+                <span class="input-group-text">%</span>
+              </div>
+            </div>
+            <small class="form-text text-muted">
+              المتبقي من النسبة يعتبر ربحاً للشركة.
+            </small>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Partners Table -->
+      <div class="row">
+        <div class="col-12">
+          <label>
+            <i class="fas fa-handshake text-info"></i> الشركاء ونسب الأرباح
+          </label>
+          <table class="table table-bordered table-sm">
+            <thead>
+              <tr>
+                <th style="width: 50%">الشريك</th>
+                <th style="width: 40%">النسبة (%)</th>
+                <th style="width: 10%">حذف</th>
+              </tr>
+            </thead>
+            <tbody id="partnersList">
+              <!-- Rows added via JS -->
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colspan="3">
+                  <button type="button" class="btn btn-sm btn-outline-primary" id="addPartnerBtn">
+                    <i class="fas fa-plus"></i> إضافة شريك
+                  </button>
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+
+      <!-- معلومات إضافية -->
+      <hr>
+      <h5 class="text-info"><i class="fas fa-info-circle"></i> معلومات إضافية</h5>
+      <div class="row">
+        <div class="col-md-6">
+          <div class="form-group">
+            <label for="product_location">
+              <i class="fas fa-map-marker-alt text-danger"></i> الموقع
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="موقع المنتج في المستودع (اختياري)"></i>
+            </label>
+            <input type="text" id="product_location" name="location" class="form-control" placeholder="رقم الرف، المخزن..." autocomplete="off">
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-group">
+            <label for="product_image">
+              <i class="fas fa-image text-success"></i> صورة المنتج
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="صورة توضيحية للمنتج (اختياري)"></i>
+            </label>
+            <input type="file" id="product_image" name="image" class="form-control-file" accept="image/*">
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="product_description">
+          <i class="fas fa-align-left text-secondary"></i> {{ t('Description') }}
+          <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="وصف تفصيلي للمنتج (اختياري)"></i>
+        </label>
+        <textarea id="product_description" name="description" class="form-control" rows="3" placeholder="وصف المنتج وميزاته..." autocomplete="off"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="product_notes">
+          <i class="fas fa-sticky-note text-warning"></i> {{ t('Notes') }}
+          <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="ملاحظات داخلية عن المنتج (اختياري)"></i>
+        </label>
+        <textarea id="product_notes" name="notes" class="form-control" rows="2" placeholder="ملاحظات إضافية..." autocomplete="off"></textarea>
+      </div>
+    </div>
+
+    <div class="card-footer">
+      <button type="submit" class="btn btn-success btn-lg">
+        <i class="fas fa-save mr-2"></i>حفظ المنتج
+      </button>
+      <a href="{{ url_for('products.index') }}" class="btn btn-secondary btn-lg">
+        <i class="fas fa-times mr-2"></i>إلغاء
+      </a>
+    </div>
+  </form>
+</div>
+
+<!-- Modal: إضافة فئة منتجات -->
+<div class="modal fade" id="addCategoryModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title">
+          <i class="fas fa-folder-plus mr-2"></i>إضافة فئة منتجات جديدة
+        </h5>
+        <button type="button" class="close text-white" data-dismiss="modal">
+          <span>&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="addCategoryForm" method="POST" action="">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="form-group">
+            <label for="category_name">
+              <i class="fas fa-font text-primary"></i> اسم الفئة
+              <span class="text-danger">*</span>
+            </label>
+            <input type="text" id="category_name" name="category_name" class="form-control" placeholder="مثال: زيوت، فلاتر، إطارات..." required autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label for="category_description">
+              <i class="fas fa-align-right text-info"></i> الوصف
+            </label>
+            <textarea id="category_description" name="category_description" class="form-control" rows="3" placeholder="وصف الفئة (اختياري)" autocomplete="off"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">
+          <i class="fas fa-times mr-2"></i>إلغاء
+        </button>
+        <button type="button" class="btn btn-success" id="saveCategoryBtn">
+          <i class="fas fa-save mr-2"></i>حفظ الفئة
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+  // تفعيل Tooltips
+  $('[data-toggle="tooltip"]').tooltip({
+    placement: 'top',
+    trigger: 'hover'
+  });
+  
+  // إدارة جدول الشركاء
+  const partnersList = $('#partnersList');
+  const addPartnerBtn = $('#addPartnerBtn');
+  
+  // قائمة الشركاء المتاحين
+  let partnerOptions = '<option value="">اختر الشريك...</option>';
+  {% for partner in partners %}
+  partnerOptions += `<option value="{{ partner.id }}">{{ partner.name }}</option>`;
+  {% endfor %}
+
+  function addPartnerRow(partnerId = '', percentage = '') {
+    const rowId = Date.now() + Math.floor(Math.random() * 1000);
+    const html = `
+      <tr id="row-${rowId}">
+        <td>
+          <select name="partner_customer_id[]" class="form-control form-control-sm" required>
+            ${partnerOptions}
+          </select>
+        </td>
+        <td>
+          <div class="input-group input-group-sm">
+            <input type="number" name="partner_percentage[]" class="form-control" min="0.01" max="100" step="0.01" value="${percentage}" required placeholder="0">
+            <div class="input-group-append">
+              <span class="input-group-text">%</span>
+            </div>
+          </div>
+        </td>
+        <td>
+          <button type="button" class="btn btn-danger btn-sm remove-partner-btn" data-row="row-${rowId}">
+            <i class="fas fa-trash"></i>
+          </button>
+        </td>
+      </tr>
+    `;
+    partnersList.append(html);
+    
+    // تحديد القيمة المختارة إذا وجدت
+    if (partnerId) {
+      $(`#row-${rowId} select`).val(partnerId);
+    }
+  }
+
+  addPartnerBtn.click(function() {
+    addPartnerRow();
+  });
+
+  $(document).on('click', '.remove-partner-btn', function() {
+    const rowId = $(this).data('row');
+    $('#' + rowId).remove();
+  });
+  
+  // حفظ الفئة الجديدة
+  $('#saveCategoryBtn').click(function() {
+    const name = $('#category_name').val().trim();
+    const description = $('#category_description').val().trim();
+    
+    if (!name) {
+      alert('الرجاء إدخال اسم الفئة');
+      return;
+    }
+    
+    // الحصول على CSRF token
+  const csrfToken = $('input[name="csrf_token"]').val();
+  
+  $.ajax({
+    url: "{{ url_for('products.create_category') }}",
+    method: 'POST',
+      contentType: 'application/json',
+      headers: {
+        'X-CSRFToken': csrfToken
+      },
+      data: JSON.stringify({
+        name: name,
+        description: description
+      }),
+      success: function(response) {
+        if (response.success) {
+          // إضافة الفئة الجديدة للقائمة
+          const newOption = new Option(response.category.name, response.category.id, true, true);
+          $('#product_category').append(newOption).trigger('change');
+          
+          // إغلاق النافذة وتنظيف الحقول
+          $('#addCategoryModal').modal('hide');
+          $('#category_name').val('');
+          $('#category_description').val('');
+          
+          // رسالة نجاح
+          if (typeof UI !== 'undefined') {
+            UI.success('تم إضافة الفئة بنجاح!');
+          } else {
+            alert('تم إضافة الفئة بنجاح!');
+          }
+        } else {
+          alert('خطأ: ' + (response.error || 'فشل إضافة الفئة'));
+        }
+      },
+      error: function(xhr) {
+        const error = xhr.responseJSON?.error || 'حدث خطأ أثناء الحفظ';
+        alert('خطأ: ' + error);
+      }
+    });
+  });
+
+  // Toggle merchant share field
+  $('#merchant_customer_id').change(function() {
+    if ($(this).val()) {
+      $('#merchantShareContainer').slideDown();
+    } else {
+      $('#merchantShareContainer').slideUp();
+    }
+  });
+});
+</script>
+{% endblock %}

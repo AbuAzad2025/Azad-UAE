@@ -1,0 +1,238 @@
+{% extends "base.html" %}
+
+{% block title %}إدارة التبرعات - Manage Donations{% endblock %}
+
+{% block page_title %}
+<div class="d-flex justify-content-between align-items-center">
+    <div>
+        <h1 class="mb-0"><i class="fas fa-heart text-danger"></i> إدارة التبرعات</h1>
+        <p class="text-muted mb-0">جميع التبرعات والدعم المالي</p>
+    </div>
+    <div>
+        <a href="{{ url_for('payment_vault.dashboard') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-right"></i> العودة للوحة التحكم
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .donation-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 30px;
+    }
+    
+    .stat-box {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        text-align: center;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        border-top: 4px solid;
+    }
+    
+    .stat-box.primary { border-color: #667eea; }
+    .stat-box.success { border-color: #28a745; }
+    .stat-box.warning { border-color: #ffc107; }
+    .stat-box.danger { border-color: #dc3545; }
+    
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 900;
+        margin-bottom: 5px;
+    }
+    
+    .filters-card {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="donation-stats">
+            <div class="stat-box primary">
+                <div class="stat-number text-primary">{{ total_donations }}</div>
+                <div class="stat-label">إجمالي التبرعات</div>
+            </div>
+            
+            <div class="stat-box success">
+                <div class="stat-number text-success">${{ total_amount|default(0) }}</div>
+                <div class="stat-label">المبلغ الإجمالي</div>
+            </div>
+            
+            <div class="stat-box success">
+                <div class="stat-number text-success">{{ completed_count }}</div>
+                <div class="stat-label">مكتملة</div>
+            </div>
+            
+            <div class="stat-box warning">
+                <div class="stat-number text-warning">{{ pending_count }}</div>
+                <div class="stat-label">قيد الانتظار</div>
+            </div>
+        </div>
+        
+        <!-- فلاتر البحث -->
+        <div class="filters-card">
+            <form method="GET" class="row" action="">
+                <div class="col-md-3">
+                    <label>الحالة</label>
+                    <select name="status" class="form-control" onchange="this.form.submit()">
+                        <option value="">بلا</option>
+                        <option value="completed" {% if request.args.get('status') == 'completed' %}selected{% endif %}>مكتملة</option>
+                        <option value="pending" {% if request.args.get('status') == 'pending' %}selected{% endif %}>قيد الانتظار</option>
+                        <option value="failed" {% if request.args.get('status') == 'failed' %}selected{% endif %}>فاشلة</option>
+                    </select>
+                </div>
+                
+                <div class="col-md-3">
+                    <label>العملة الرقمية</label>
+                    <select name="crypto" class="form-control" onchange="this.form.submit()">
+                        <option value="">بلا</option>
+                        <option value="btc" {% if request.args.get('crypto') == 'btc' %}selected{% endif %}>Bitcoin</option>
+                        <option value="eth" {% if request.args.get('crypto') == 'eth' %}selected{% endif %}>Ethereum</option>
+                        <option value="usdttrc20" {% if request.args.get('crypto') == 'usdttrc20' %}selected{% endif %}>USDT</option>
+                    </select>
+                </div>
+                
+                <div class="col-md-4">
+                    <label>بحث</label>
+                    <input type="text" name="search" class="form-control" 
+                           placeholder="ابحث باسم المتبرع أو البريد..." 
+                           value="{{ request.args.get('search', '') }}">
+                </div>
+                
+                <div class="col-md-2">
+                    <label>&nbsp;</label>
+                    <button type="submit" class="btn btn-primary btn-block">
+                        <i class="fas fa-search"></i> بحث
+                    </button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- جدول التبرعات -->
+        <div class="card">
+            <div class="card-header bg-gradient-danger">
+                <h5 class="mb-0 text-white">
+                    <i class="fas fa-list"></i> قائمة التبرعات
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>التاريخ</th>
+                                <th>المتبرع</th>
+                                <th>المبلغ</th>
+                                <th>العملة</th>
+                                <th>الحالة</th>
+                                <th>Gateway</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if donations %}
+                                {% for donation in donations %}
+                                <tr>
+                                    <td>{{ loop.index }}</td>
+                                    <td>{{ donation.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                    <td>
+                                        {{ donation.donor_name or 'مجهول' }}<br>
+                                        <small class="text-muted">{{ donation.donor_email or '-' }}</small>
+                                    </td>
+                                    <td><strong class="text-primary">${{ donation.amount_usd }}</strong></td>
+                                    <td>
+                                        <span class="badge badge-info">{{ donation.crypto_type|upper }}</span>
+                                    </td>
+                                    <td>
+                                        {% if donation.status == 'completed' %}
+                                            <span class="badge badge-success">✓ مكتملة</span>
+                                        {% elif donation.status == 'pending' %}
+                                            <span class="badge badge-warning">⏳ قيد الانتظار</span>
+                                        {% elif donation.status == 'failed' %}
+                                            <span class="badge badge-danger">✗ فاشلة</span>
+                                        {% else %}
+                                            <span class="badge badge-secondary">{{ donation.status }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <small>{{ donation.gateway_name or 'N/A' }}</small>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-info" onclick="viewDonation({{ donation.id }})">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        {% if donation.status == 'pending' %}
+                                        <form method="POST" action="{{ url_for('payment_vault.approve_donation', donation_id=donation.id) }}" style="display: inline;">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('قبول هذا التبرع؟')">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                        </form>
+                                        <form method="POST" action="{{ url_for('payment_vault.reject_donation', donation_id=donation.id) }}" style="display: inline;">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('رفض هذا التبرع؟')">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                        {% if donation.donor_email %}
+                                        <button class="btn btn-sm btn-primary" onclick="sendThankYou('{{ donation.donor_email }}', '{{ donation.donor_name or "متبرع" }}', {{ donation.amount_usd }})">
+                                            <i class="fas fa-envelope"></i>
+                                        </button>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="8" class="text-center text-muted">
+                                        <i class="fas fa-inbox fa-3x mb-3" style="display: block; opacity: 0.3;"></i>
+                                        لا توجد تبرعات
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination -->
+                {% if pagination %}
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <div>
+                        عرض {{ donations|length }} من أصل {{ total_donations }}
+                    </div>
+                    <nav>
+                        {{ pagination.links }}
+                    </nav>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function viewDonation(id) {
+    window.location.href = `/payment-vault/donation/${id}`;
+}
+
+function sendThankYou(email, name, amount) {
+    const subject = 'شكراً على تبرعك - {{ developer_name_ar or developer_name or "Azad Systems" }}';
+    const body = `عزيزي/عزيزتي ${name},\n\nشكراً جزيلاً على تبرعك الكريم بمبلغ $${amount}\n\nتبرعك يساعدنا في تطوير النظام وتقديم خدمات أفضل.\n\nمع خالص الشكر والتقدير،\nفريق {{ developer_name_ar or developer_name or "Azad Systems" }}`;
+    
+    window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
+</script>
+{% endblock %}
+

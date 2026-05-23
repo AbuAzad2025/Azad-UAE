@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+
+{% block title %}تقرير المخزون{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="fas fa-boxes"></i> تقرير المخزون
+          </h3>
+          <div class="card-tools">
+            <form method="get" class="form-inline d-inline mr-2">
+              <label class="mr-2">الفرع:</label>
+              <select name="branch_id" class="form-control form-control-sm mr-2" onchange="this.form.submit()" style="min-width: 140px;">
+                <option value="">كل الفروع</option>
+                {% for b in branches or [] %}
+                <option value="{{ b.id }}" {{ 'selected' if selected_branch_id == b.id else '' }}>{{ b.name }} ({{ b.code }})</option>
+                {% endfor %}
+              </select>
+              {% if category_id %}<input type="hidden" name="category" value="{{ category_id }}">{% endif %}
+            </form>
+            <button onclick="window.print()" class="btn btn-primary">
+              <i class="fas fa-print"></i> طباعة
+            </button>
+          </div>
+        </div>
+        <div class="card-body">
+          <!-- إحصائيات سريعة -->
+          {% if stats %}
+          <div class="row mb-4">
+            <div class="col-md-3">
+              <div class="info-box">
+                <span class="info-box-icon bg-info"><i class="fas fa-boxes"></i></span>
+                <div class="info-box-content">
+                  <span class="info-box-text">إجمالي المنتجات</span>
+                  <span class="info-box-number">{{ stats.total_products }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="info-box">
+                <span class="info-box-icon bg-success"><i class="fas fa-check"></i></span>
+                <div class="info-box-content">
+                  <span class="info-box-text">متوفر</span>
+                  <span class="info-box-number">{{ stats.in_stock }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="info-box">
+                <span class="info-box-icon bg-warning"><i class="fas fa-exclamation-triangle"></i></span>
+                <div class="info-box-content">
+                  <span class="info-box-text">ناقص</span>
+                  <span class="info-box-number">{{ stats.low_stock }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="info-box">
+                <span class="info-box-icon bg-danger"><i class="fas fa-times"></i></span>
+                <div class="info-box-content">
+                  <span class="info-box-text">نفذ</span>
+                  <span class="info-box-number">{{ stats.out_of_stock }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          {% endif %}
+
+          <!-- جدول المخزون -->
+          <table class="table table-bordered table-striped">
+            <thead>
+              <tr>
+                <th>المنتج</th>
+                <th>الكود</th>
+                <th>الكمية المتاحة</th>
+                <th>الحد الأدنى</th>
+                <th>سعر التكلفة</th>
+                <th>سعر البيع</th>
+                <th>القيمة الإجمالية</th>
+                <th>الحالة</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for product in products %}
+              {% set qty = (branch_stock.get(product.id, 0) if branch_stock is not none else (product.current_stock or 0)) %}
+              <tr>
+                <td>{{ product.name }}</td>
+                <td>{{ product.sku }}</td>
+                <td>{{ qty }}</td>
+                <td>{{ product.min_stock_alert }}</td>
+                <td>{{ product.cost_price }}</td>
+                <td>{{ product.regular_price }}</td>
+                <td>{{ (qty * (product.cost_price or 0))|round(2) }}</td>
+                <td>
+                  {% if qty == 0 %}
+                    <span class="badge badge-danger">نفذ</span>
+                  {% elif qty <= (product.min_stock_alert or 0) %}
+                    <span class="badge badge-warning">ناقص</span>
+                  {% else %}
+                    <span class="badge badge-success">متوفر</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="8" class="text-center">لا توجد منتجات</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

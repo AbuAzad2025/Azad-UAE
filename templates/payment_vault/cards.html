@@ -1,0 +1,341 @@
+{% extends "base.html" %}
+
+{% block title %}إدارة البطاقات - Card Management{% endblock %}
+
+{% block page_title %}
+<div class="d-flex justify-content-between align-items-center">
+    <div>
+        <h1 class="mb-0"><i class="fas fa-credit-card text-primary"></i> إدارة البطاقات المحفوظة</h1>
+        <p class="text-muted mb-0">جميع بطاقات الدفع المسجلة (مشفرة وآمنة)</p>
+    </div>
+    <div>
+        <button class="btn btn-warning" onclick="toggleDecryption()">
+            <i class="fas fa-eye" id="decrypt-icon"></i> <span id="decrypt-text">عرض البيانات المشفرة</span>
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .card-item {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 20px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        border-right: 5px solid;
+        transition: all 0.3s;
+    }
+    
+    .card-item.visa { border-color: #1A1F71; }
+    .card-item.mastercard { border-color: #EB001B; }
+    .card-item.amex { border-color: #006FCF; }
+    
+    .card-item:hover {
+        transform: translateX(-5px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    
+    .card-visual {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 10px;
+        padding: 20px;
+        color: white;
+        min-height: 150px;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .card-visual.visa {
+        background: linear-gradient(135deg, #1A1F71 0%, #4A5FD6 100%);
+    }
+    
+    .card-visual.mastercard {
+        background: linear-gradient(135deg, #EB001B 0%, #F79E1B 100%);
+    }
+    
+    .card-visual.amex {
+        background: linear-gradient(135deg, #006FCF 0%, #0099CC 100%);
+    }
+    
+    .card-visual::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    }
+    
+    .card-number {
+        font-family: 'Courier New', monospace;
+        font-size: 1.4rem;
+        letter-spacing: 2px;
+        font-weight: 700;
+        margin: 20px 0;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .card-details {
+        display: flex;
+        justify-content: space-between;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .encrypted-data {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+        margin-top: 15px;
+        border: 2px dashed #dc3545;
+        display: none;
+    }
+    
+    .encrypted-data.show {
+        display: block;
+    }
+    
+    .stat-box {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        text-align: center;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 900;
+        margin-bottom: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- تحذير أمني -->
+<div class="alert alert-danger">
+            <i class="fas fa-exclamation-triangle"></i>
+            <strong>تحذير أمني:</strong> هذه البيانات حساسة للغاية! لا تشاركها مع أحد. جميع العمليات مسجلة ومراقبة.
+        </div>
+        
+<!-- إحصائيات البطاقات -->
+<div class="row mb-4">
+            <div class="col-md-3">
+                <div class="stat-box">
+                    <div class="stat-number text-primary">{{ total_cards }}</div>
+                    <div class="stat-label">إجمالي البطاقات</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-box">
+                    <div class="stat-number text-success">${{ total_amount|default(0) }}</div>
+                    <div class="stat-label">المبلغ الإجمالي</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-box">
+                    <div class="stat-number text-info">{{ visa_count }}</div>
+                    <div class="stat-label">Visa</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-box">
+                    <div class="stat-number text-danger">{{ mastercard_count }}</div>
+                    <div class="stat-label">Mastercard</div>
+                </div>
+            </div>
+        </div>
+        
+<!-- قائمة البطاقات -->
+<div class="row">
+            {% if cards %}
+                {% for card in cards %}
+                <div class="col-md-6">
+                    <div class="card-item {{ card.card_type|lower }}">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card-visual {{ card.card_type|lower }}">
+                                    <div style="position: relative; z-index: 1;">
+                                        <div style="font-size: 0.9rem; margin-bottom: 10px;">
+                                            {{ card.card_type|upper }}
+                                        </div>
+                                        <div class="card-number">
+                                            **** **** **** {{ card.card_last_4 }}
+                                        </div>
+                                        <div class="card-details">
+                                            <div>
+                                                <small>CARDHOLDER</small><br>
+                                                <strong>{{ card.customer_name }}</strong>
+                                            </div>
+                                            <div>
+                                                <small>BIN</small><br>
+                                                <strong>{{ card.card_bin or 'N/A' }}</strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <h6 class="text-primary">معلومات المعاملة</h6>
+                                <table class="table table-sm">
+                                    <tr>
+                                        <td><strong>النوع:</strong></td>
+                                        <td>
+                                            {% if card.transaction_type == 'purchase' %}
+                                                🛒 مشترية
+                                            {% else %}
+                                                💝 تبرع
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% if card.package %}
+                                    <tr>
+                                        <td><strong>الباقة:</strong></td>
+                                        <td>{{ card.package }}</td>
+                                    </tr>
+                                    {% endif %}
+                                    <tr>
+                                        <td><strong>المبلغ:</strong></td>
+                                        <td><strong class="text-success">${{ card.amount }}</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>التاريخ:</strong></td>
+                                        <td>{{ card.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>الحالة:</strong></td>
+                                        <td>
+                                            {% if card.status == 'completed' %}
+                                                <span class="badge badge-success">✓ مكتملة</span>
+                                            {% else %}
+                                                <span class="badge badge-warning">⏳ {{ card.status }}</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                </table>
+                                
+                                <button class="btn btn-sm btn-info btn-block" onclick="viewCard({{ card.id }})">
+                                    <i class="fas fa-eye"></i> عرض التفاصيل
+                                </button>
+                                
+                                <!-- البيانات المشفرة (تظهر عند الطلب فقط) -->
+                                <div class="encrypted-data" id="encrypted-{{ card.id }}">
+                                    <h6 class="text-danger"><i class="fas fa-lock-open"></i> بيانات مفكوكة التشفير</h6>
+                                    <div class="card-decrypted-info">
+                                        جاري التحميل...
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="col-12">
+                    <div class="alert alert-info text-center">
+                        <i class="fas fa-info-circle fa-3x mb-3" style="display: block;"></i>
+                        <h5>لا توجد بطاقات محفوظة</h5>
+                        <p>سيتم حفظ البطاقات تلقائياً عند إجراء عمليات دفع جديدة</p>
+                    </div>
+                </div>
+            {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let decryptionEnabled = false;
+    
+    function toggleDecryption() {
+        decryptionEnabled = !decryptionEnabled;
+        const icon = document.getElementById('decrypt-icon');
+        const text = document.getElementById('decrypt-text');
+        
+        if (decryptionEnabled) {
+            icon.className = 'fas fa-eye-slash';
+            text.textContent = 'إخفاء البيانات المشفرة';
+            
+            Swal.fire({
+                title: 'تحذير أمني!',
+                text: 'أنت على وشك عرض بيانات حساسة. تأكد من أنك وحدك!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'متابعة',
+                cancelButtonText: 'إلغاء',
+                confirmButtonColor: '#d33'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.querySelectorAll('.encrypted-data').forEach(el => {
+                        el.classList.add('show');
+                    });
+                } else {
+                    decryptionEnabled = false;
+                    icon.className = 'fas fa-eye';
+                    text.textContent = 'عرض البيانات المشفرة';
+                }
+            });
+        } else {
+            document.querySelectorAll('.encrypted-data').forEach(el => {
+                el.classList.remove('show');
+            });
+        }
+    }
+    
+    function viewCard(id) {
+        // جلب البيانات من الخادم
+        fetch(`/payment-vault/card/${id}/decrypt`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token() }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.card) {
+                const cardInfo = `
+                    <div style="text-align: right; font-family: monospace;">
+                        <p><strong>رقم البطاقة:</strong> ${data.card.card_number}</p>
+                        <p><strong>CVV:</strong> ${data.card.cvv}</p>
+                        <p><strong>تاريخ الانتهاء:</strong> ${data.card.expiry}</p>
+                        <hr>
+                        <p class="text-danger"><strong>⚠️ لا تشارك هذه المعلومات!</strong></p>
+                    </div>
+                `;
+                
+                Swal.fire({
+                    title: 'بيانات البطاقة',
+                    html: cardInfo,
+                    icon: 'info',
+                    confirmButtonText: 'إغلاق',
+                    confirmButtonColor: '#667eea'
+                });
+                
+                // تحديث في الصفحة
+                document.querySelector(`#encrypted-${id} .card-decrypted-info`).innerHTML = cardInfo;
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'خطأ',
+                    text: data.error || 'فشل فك التشفير',
+                    confirmButtonText: 'حسناً'
+                });
+            }
+        })
+        .catch(error => {
+            Swal.fire({
+                icon: 'error',
+                title: 'خطأ',
+                text: 'حدث خطأ في الاتصال بالخادم',
+                confirmButtonText: 'حسناً'
+            });
+        });
+    }
+</script>
+{% endblock %}
+

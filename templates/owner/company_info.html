@@ -1,0 +1,585 @@
+{% extends 'base.html' %}
+
+{% block title %}إعدادات التينانت (النشاط) | لوحة المالك{% endblock %}
+
+{% block content %}
+<div class="company-profile-wrapper">
+  <aside class="company-profile__sidebar">
+    <div class="profile-card">
+      <div class="profile-card__header">
+        <div class="profile-card__logo">
+          {% if tenant.logo_url %}
+          <img src="{{ tenant.logo_url }}" alt="Company Logo">
+          {% else %}
+          <div class="logo-placeholder">{{ tenant.name_ar[:2] if tenant.name_ar else 'AZ' }}</div>
+          {% endif %}
+        </div>
+        <div>
+          <h2 class="profile-card__name">{{ tenant.name_ar or 'اسم الشركة' }}</h2>
+          <p class="profile-card__industry">
+            <i class="fas fa-industry"></i>
+            {{ tenant.get_industry_display() if tenant.get_industry_display else 'مجال العمل' }}
+          </p>
+        </div>
+      </div>
+      <div class="profile-card__body">
+        <div class="profile-card__stat">
+          <span class="label">نوع النشاط</span>
+          <span class="value">{{ tenant.get_business_type_display() if tenant.get_business_type_display else 'غير محدد' }}</span>
+        </div>
+        <div class="profile-card__stat">
+          <span class="label">الدولة</span>
+          <span class="value">{{ tenant.get_country_display() if tenant.get_country_display else 'غير محددة' }}</span>
+        </div>
+        <div class="profile-card__stat">
+          <span class="label">المدينة</span>
+          <span class="value">{{ tenant.city or '---' }}</span>
+        </div>
+      </div>
+      <div class="profile-card__footer">
+        <div class="brand-colors">
+          <span>ألوان الهوية</span>
+          <div class="brand-colors__swatches">
+            <div class="color" style="--color: {{ tenant.brand_color_primary or '#007A3D' }}"></div>
+            <div class="color" style="--color: {{ tenant.brand_color_secondary or '#D4AF37' }}"></div>
+          </div>
+        </div>
+        <div class="profile-card__actions">
+          <span class="badge badge-pill badge-info">
+            <i class="fas fa-sync-alt"></i>
+            آخر تحديث: {{ tenant.updated_at.strftime('%Y-%m-%d') if tenant.updated_at else '---' }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="quick-links card">
+      <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-tools mr-2"></i>روابط سريعة</h3>
+      </div>
+      <div class="card-body">
+        <a href="{{ url_for('owner.invoice_settings') }}" class="quick-link">
+          <i class="fas fa-file-invoice"></i>
+          <span>إعدادات الفواتير</span>
+        </a>
+        <a href="#" class="quick-link disabled-link" title="قريباً">
+          <i class="fas fa-palette"></i>
+          <span>الهوية البصرية</span>
+        </a>
+        <a href="#" class="quick-link disabled-link" title="قريباً">
+          <i class="fas fa-warehouse"></i>
+          <span>المستودعات الرئيسية</span>
+        </a>
+      </div>
+    </div>
+  </aside>
+
+  <main class="company-profile__form">
+<div class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2 align-items-center">
+      <div class="col-sm-6">
+        <h1 class="m-0">🏢 إعدادات التينانت (النشاط/العميل)</h1>
+      </div>
+      <div class="col-sm-6 d-flex justify-content-end">
+        <div class="d-flex align-items-center">
+          <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary ml-2">
+            <i class="fas fa-arrow-right mr-1"></i> الرجوع للوحة المالك
+          </a>
+          <ol class="breadcrumb float-sm-left mb-0">
+            <li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">لوحة المالك</a></li>
+            <li class="breadcrumb-item active">بيانات التينانت</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="content">
+  <div class="container-fluid">
+    <form method="POST" action="{{ url_for('owner.company_info') }}" enctype="multipart/form-data">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      
+      <!-- معلومات أساسية -->
+      <div class="card">
+        <div class="card-header bg-gradient-primary">
+          <h3 class="card-title text-white">📋 المعلومات الأساسية</h3>
+        </div>
+        <div class="card-body">
+          <div class="row gy-3">
+            <div class="col-xl-4 col-lg-6">
+              <div class="form-group">
+                <label>الاسم بالعربي *</label>
+                <input type="text" name="name_ar" class="form-control compact-control" value="{{ tenant.name_ar or '' }}" required>
+              </div>
+            </div>
+            <div class="col-xl-4 col-lg-6">
+              <div class="form-group">
+                <label>الاسم بالإنجليزي</label>
+                <input type="text" name="name_en" class="form-control compact-control" value="{{ tenant.name_en or '' }}">
+              </div>
+            </div>
+            <div class="col-xl-4 col-lg-12">
+              <div class="form-group">
+                <label>الكود (Slug)</label>
+                <input type="text" name="slug" class="form-control compact-control" value="{{ tenant.slug or '' }}" pattern="[a-z0-9-]+">
+                <small class="text-muted">حروف صغيرة وأرقام وشرطة فقط</small>
+              </div>
+            </div>
+          </div>
+          <div class="row gy-3">
+            <div class="col-lg-8 col-md-7">
+              <div class="form-group">
+                <label>نوع النشاط</label>
+                <select name="business_type" class="form-control compact-control select-center">
+                  <option value="garage" {{ 'selected' if tenant.business_type == 'garage' }}>كراج</option>
+                  <option value="workshop" {{ 'selected' if tenant.business_type == 'workshop' }}>ورشة</option>
+                  <option value="parts_shop" {{ 'selected' if tenant.business_type == 'parts_shop' }}>محل قطع</option>
+                  <option value="equipment" {{ 'selected' if tenant.business_type == 'equipment' }}>معدات ثقيلة</option>
+                </select>
+              </div>
+            </div>
+            <div class="col-lg-8 col-md-7">
+              <div class="form-group">
+                <label>الصناعة</label>
+                <select name="industry" class="form-control compact-control select-center">
+                  <option value="automotive" {{ 'selected' if tenant.industry == 'automotive' }}>سيارات</option>
+                  <option value="heavy_equipment" {{ 'selected' if tenant.industry == 'heavy_equipment' }}>معدات ثقيلة</option>
+                  <option value="mixed" {{ 'selected' if tenant.industry == 'mixed' }}>مختلط</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- معلومات الاتصال -->
+      <div class="card">
+        <div class="card-header bg-gradient-success">
+          <h3 class="card-title text-white">📞 معلومات الاتصال</h3>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label>العنوان بالعربي</label>
+                <textarea name="address_ar" class="form-control" rows="2">{{ tenant.address_ar or '' }}</textarea>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label>العنوان بالإنجليزي</label>
+                <textarea name="address_en" class="form-control" rows="2">{{ tenant.address_en or '' }}</textarea>
+              </div>
+            </div>
+          </div>
+          <div class="row gy-3">
+            <div class="col-xl-4 col-lg-5 col-md-6 col-sm-8">
+              <div class="form-group">
+                <label>{{ t('City') }}</label>
+                <input type="text" name="city" class="form-control compact-control" value="{{ tenant.city or '' }}">
+              </div>
+            </div>
+            <div class="col-xl-4 col-lg-6 col-md-7">
+              <div class="form-group">
+                <label>{{ t('Country') }}</label>
+                <select name="country" class="form-control compact-control select-center">
+                  <option value="UAE" {{ 'selected' if tenant.country == 'UAE' }}>الإمارات</option>
+                  <option value="Saudi" {{ 'selected' if tenant.country == 'Saudi' }}>السعودية</option>
+                  <option value="Palestine" {{ 'selected' if tenant.country == 'Palestine' }}>فلسطين</option>
+                  <option value="Jordan" {{ 'selected' if tenant.country == 'Jordan' }}>الأردن</option>
+                  <option value="Other" {{ 'selected' if tenant.country == 'Other' }}>{{ t('Other') }}</option>
+                </select>
+              </div>
+            </div>
+            <div class="col-xl-4 col-lg-6 col-md-7">
+              <div class="form-group">
+                <label>الموقع الجغرافي</label>
+                <input type="text" name="location_coords" class="form-control compact-control" value="{{ tenant.location_coords or '' }}" placeholder="25.2048,55.2708">
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-3">
+              <div class="form-group">
+                <label>هاتف 1</label>
+                <input type="tel" name="phone_1" class="form-control" value="{{ tenant.phone_1 or '' }}">
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="form-group">
+                <label>هاتف 2</label>
+                <input type="tel" name="phone_2" class="form-control" value="{{ tenant.phone_2 or '' }}">
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="form-group">
+                <label>موبايل</label>
+                <input type="tel" name="mobile" class="form-control" value="{{ tenant.mobile or '' }}">
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="form-group">
+                <label>{{ t('Email') }}</label>
+                <input type="email" name="email" class="form-control" value="{{ tenant.email or '' }}">
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>الموقع الإلكتروني</label>
+            <input type="url" name="website" class="form-control" value="{{ tenant.website or '' }}" placeholder="https://example.com">
+          </div>
+        </div>
+      </div>
+
+      <!-- معلومات قانونية -->
+      <div class="card">
+        <div class="card-header bg-gradient-warning">
+          <h3 class="card-title text-white">⚖️ المعلومات القانونية</h3>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-4">
+              <div class="form-group">
+                <label>الرقم الضريبي (TRN)</label>
+                <input type="text" name="tax_number" class="form-control" value="{{ tenant.tax_number or '' }}">
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                <label>السجل التجاري</label>
+                <input type="text" name="commercial_register" class="form-control" value="{{ tenant.commercial_register or '' }}">
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                <label>رقم الترخيص</label>
+                <input type="text" name="license_number" class="form-control" value="{{ tenant.license_number or '' }}">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- العلامة التجارية -->
+      <div class="card">
+        <div class="card-header bg-gradient-info">
+          <h3 class="card-title text-white">🎨 العلامة التجارية</h3>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label>اللون الأساسي</label>
+                <input type="color" name="brand_color_primary" class="form-control" value="{{ tenant.brand_color_primary or '#007A3D' }}">
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label>اللون الثانوي</label>
+                <input type="color" name="brand_color_secondary" class="form-control" value="{{ tenant.brand_color_secondary or '#D4AF37' }}">
+              </div>
+            </div>
+          </div>
+          <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i>
+            <strong>ملاحظة:</strong> لتغيير الشعار، استخدم إعدادات ترويسات الفواتير.
+          </div>
+        </div>
+      </div>
+
+      <!-- أزرار -->
+      <div class="row">
+        <div class="col-12">
+          <button type="submit" class="btn btn-primary btn-lg">
+            <i class="fas fa-save mr-2"></i>حفظ المعلومات
+          </button>
+          <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary btn-lg">
+            <i class="fas fa-times mr-2"></i>إلغاء
+          </a>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+  </main>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.company-profile-wrapper {
+  display: grid;
+  grid-template-columns: minmax(260px, 320px) 1fr;
+  gap: 24px;
+}
+
+.company-profile__sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  position: sticky;
+  top: 100px;
+  align-self: start;
+}
+
+.profile-card {
+  background: linear-gradient(180deg, #ffffff 0%, #f8f9fc 100%);
+  border-radius: 18px;
+  box-shadow: 0 15px 35px rgba(15, 23, 42, 0.12);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.profile-card__header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 22px 24px;
+  background: linear-gradient(135deg, rgba(0, 122, 61, 0.12) 0%, rgba(212, 175, 55, 0.12) 100%);
+}
+
+.profile-card__logo {
+  width: 64px;
+  height: 64px;
+  border-radius: 20px;
+  background: #0f172a;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.profile-card__logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.logo-placeholder {
+  font-size: 22px;
+  color: #fff;
+  font-weight: 700;
+}
+
+.profile-card__name {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+  color: #0f172a;
+}
+
+.profile-card__industry {
+  margin: 6px 0 0;
+  color: #475569;
+  font-weight: 600;
+}
+
+.profile-card__body {
+  padding: 18px 24px;
+  display: grid;
+  gap: 12px;
+}
+
+.profile-card__stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.profile-card__stat .label {
+  font-size: 0.85rem;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.profile-card__stat .value {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.profile-card__footer {
+  border-top: 1px solid rgba(15, 23, 42, 0.06);
+  padding: 18px 24px;
+  display: grid;
+  gap: 14px;
+}
+
+.brand-colors {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #475569;
+  font-weight: 600;
+}
+
+.brand-colors__swatches {
+  display: flex;
+  gap: 10px;
+}
+
+.brand-colors__swatches .color {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 5px 10px rgba(15, 23, 42, 0.2);
+  background: var(--color);
+}
+
+.quick-links .card-body {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+}
+
+.quick-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  transition: all 0.25s ease;
+  color: #0f172a;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.quick-link i {
+  font-size: 1.15rem;
+  color: #007A3D;
+}
+
+.quick-link:hover {
+  transform: translateX(-4px);
+  border-color: rgba(0, 122, 61, 0.25);
+  background: rgba(0, 122, 61, 0.06);
+}
+
+.company-profile__form .card {
+  border-radius: 18px;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.04);
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+.company-profile__form .card-header {
+  padding: 16px 22px;
+}
+
+.company-profile__form .card-body {
+  padding: 24px;
+}
+
+.company-profile__form .form-control,
+.company-profile__form textarea.form-control,
+.company-profile__form select.form-control,
+.form-control.compact-control,
+.form-control.compact-textarea {
+  min-height: 56px;
+  padding: 0.95rem 1.35rem;
+  font-size: 0.95rem;
+  border-radius: 10px;
+  text-align: center;
+  line-height: 1.7;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  width: 100%;
+  height: auto !important;
+}
+
+.company-profile__form .form-control::placeholder,
+.company-profile__form select.form-control:not([multiple]) {
+  text-align: center;
+  color: #64748b;
+  opacity: 0.8;
+}
+
+.company-profile__form textarea.form-control,
+.form-control.compact-textarea {
+  min-height: 96px;
+  text-align: right;
+  line-height: 1.6;
+}
+
+.company-profile__form textarea.form-control::placeholder {
+  text-align: right;
+}
+
+.company-profile__form select.form-control,
+.select-center {
+  text-align-last: center;
+  padding-inline-start: 2.2rem;
+  padding-inline-end: 2.2rem;
+  appearance: none;
+  -webkit-appearance: none;
+  background-color: #fff;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23647894' d='M6 8a1 1 0 0 1-.707-.293l-5-5a1 1 0 0 1 1.414-1.414L6 5.586 10.293 1.293a1 1 0 0 1 1.414 1.414l-5 5A1 1 0 0 1 6 8'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: left 0.8rem center;
+  background-size: 12px;
+}
+
+.company-profile__form select.form-control option,
+.select-center option {
+  padding: 0.75rem 1rem;
+}
+
+.company-profile__form select.form-control:focus,
+.select-center:focus {
+  border-color: rgba(0, 122, 61, 0.35);
+  box-shadow: 0 0 0 0.15rem rgba(0, 122, 61, 0.15);
+}
+
+.company-profile__form .form-group {
+  margin-bottom: 1.35rem;
+}
+
+.company-profile__form .input-group .input-group-text {
+  border-radius: 12px;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+}
+
+.company-profile__form input[type="color"].form-control {
+  padding: 0;
+  height: 52px;
+  cursor: pointer;
+}
+
+.company-profile__form label {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.company-profile__form .btn-lg {
+  border-radius: 14px;
+  padding: 14px 28px;
+  font-weight: 700;
+}
+
+@media (max-width: 992px) {
+  .company-profile-wrapper {
+    grid-template-columns: 1fr;
+  }
+  
+  .company-profile__sidebar {
+    position: relative;
+    top: 0;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  
+  .profile-card {
+    flex: 1 1 100%;
+  }
+}
+</style>
+{% endblock %}

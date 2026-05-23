@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+{% block title %}ميزان المراجعة - Trial Balance{% endblock %}
+{% block page_title %}ميزان المراجعة{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+  <div class="col-12">
+    <a href="{{ url_for('ledger.admin_reports') }}" class="btn btn-secondary">
+      <i class="fas fa-arrow-right mr-2"></i>العودة للتقارير
+    </a>
+    <button class="btn btn-success" onclick="window.print()">
+      <i class="fas fa-print mr-2"></i>طباعة
+    </button>
+  </div>
+</div>
+
+<!-- فلتر التاريخ -->
+<div class="card mb-4">
+  <div class="card-header bg-gradient-primary">
+    <h5 class="card-title text-white mb-0">
+      <i class="fas fa-filter mr-2"></i>فلتر التاريخ
+    </h5>
+  </div>
+  <div class="card-body">
+    <form method="GET" class="row" action="">
+      <div class="col-md-4">
+        <div class="form-group">
+          <label>من تاريخ:</label>
+          <input type="date" name="date_from" class="form-control" value="{{ date_from.strftime('%Y-%m-%d') }}">
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="form-group">
+          <label>إلى تاريخ:</label>
+          <input type="date" name="date_to" class="form-control" value="{{ date_to.strftime('%Y-%m-%d') }}">
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="form-group">
+          <label>&nbsp;</label>
+          <button type="submit" class="btn btn-primary btn-block">
+            <i class="fas fa-search mr-2"></i>تحديث التقرير
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header bg-gradient-success">
+    <h3 class="card-title text-white">
+      <i class="fas fa-balance-scale mr-2"></i>ميزان المراجعة
+    </h3>
+    <div class="card-tools">
+      <small class="text-white">
+        من {{ date_from.strftime('%Y-%m-%d') }} إلى {{ date_to.strftime('%Y-%m-%d') }}
+      </small>
+    </div>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-bordered mb-0">
+        <thead class="bg-light">
+          <tr>
+            <th width="15%">كود الحساب</th>
+            <th width="35%">اسم الحساب</th>
+            <th width="25%" class="text-center">مدين</th>
+            <th width="25%" class="text-center">دائن</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in trial_balance_data %}
+          <tr>
+            <td><strong>{{ item.account.code }}</strong></td>
+            <td>{{ item.account.full_name }}</td>
+            <td class="text-center">
+              {% if item.debit > 0 %}
+                <span class="text-success">{{ "{:,.2f}".format(item.debit) }}</span>
+              {% else %}
+                <span class="text-muted">-</span>
+              {% endif %}
+            </td>
+            <td class="text-center">
+              {% if item.credit > 0 %}
+                <span class="text-danger">{{ "{:,.2f}".format(item.credit) }}</span>
+              {% else %}
+                <span class="text-muted">-</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot class="bg-light">
+          <tr>
+            <th colspan="2" class="text-center">الإجمالي</th>
+            <th class="text-center text-success">{{ "{:,.2f}".format(total_debit) }}</th>
+            <th class="text-center text-danger">{{ "{:,.2f}".format(total_credit) }}</th>
+          </tr>
+          <tr>
+            <th colspan="2" class="text-center">الفرق</th>
+            <th colspan="2" class="text-center">
+              {% set difference = total_debit - total_credit %}
+              {% if difference == 0 %}
+                <span class="badge badge-success">متوازن</span>
+              {% else %}
+                <span class="badge badge-danger">{{ "{:,.2f}".format(difference) }}</span>
+              {% endif %}
+            </th>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ملاحظات -->
+<div class="card mt-4">
+  <div class="card-header bg-gradient-info">
+    <h5 class="card-title text-white mb-0">
+      <i class="fas fa-info-circle mr-2"></i>ملاحظات
+    </h5>
+  </div>
+  <div class="card-body">
+    <ul class="mb-0">
+      <li>ميزان المراجعة يعرض أرصدة جميع الحسابات في الفترة المحددة</li>
+      <li>الحسابات ذات الرصيد المدين تظهر في عمود المدين</li>
+      <li>الحسابات ذات الرصيد الدائن تظهر في عمود الدائن</li>
+      <li>الميزان يجب أن يكون متوازناً (إجمالي المدين = إجمالي الدائن)</li>
+      <li>إذا كان هناك فرق، يجب مراجعة القيود المحاسبية</li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+@media print {
+  .btn, .card-header .card-tools {
+    display: none !important;
+  }
+  
+  .card {
+    border: none !important;
+    box-shadow: none !important;
+  }
+  
+  .table {
+    font-size: 12px;
+  }
+}
+</style>
+{% endblock %}

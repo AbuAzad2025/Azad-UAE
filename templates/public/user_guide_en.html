@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Azad Smart Systems - Complete User Guide</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/accessibility.css') }}">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #f8f9fa; }
+        
+        .navbar { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .navbar a { color: white; text-decoration: none; margin: 0 15px; }
+        .navbar .logo { font-size: 1.5rem; font-weight: 900; }
+        
+        .guide-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 60px 20px; text-align: center; }
+        .guide-header h1 { font-size: 3rem; margin-bottom: 15px; }
+        
+        .guide-container { max-width: 1200px; margin: 40px auto; padding: 0 20px; display: flex; gap: 40px; }
+        .sidebar { flex: 0 0 280px; background: white; padding: 25px; border-radius: 15px; height: fit-content; position: sticky; top: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
+        .sidebar h3 { margin-bottom: 20px; color: #2d3748; }
+        .sidebar ul { list-style: none; }
+        .sidebar li { padding: 12px; margin: 5px 0; border-radius: 8px; cursor: pointer; transition: all 0.3s; }
+        .sidebar li:hover { background: #f7fafc; }
+        .sidebar li.active { background: #667eea; color: white; }
+        .sidebar li i { margin-right: 10px; }
+        
+        .content { flex: 1; }
+        .section { background: white; padding: 40px; border-radius: 15px; margin-bottom: 30px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
+        .section h2 { color: #2d3748; margin-bottom: 25px; font-size: 2rem; }
+        .section h3 { color: #4a5568; margin: 25px 0 15px; font-size: 1.4rem; }
+        .section p { color: #718096; line-height: 1.8; margin-bottom: 15px; }
+        .section ul, .section ol { margin: 15px 0 15px 30px; color: #718096; }
+        .section li { margin: 8px 0; line-height: 1.6; }
+        
+        .tip-box { background: #e6fffa; border-left: 4px solid #38b2ac; padding: 20px; margin: 20px 0; border-radius: 8px; }
+        .warning-box { background: #fff5f5; border-left: 4px solid #fc8181; padding: 20px; margin: 20px 0; border-radius: 8px; }
+        
+        .button-demo { display: inline-block; background: #667eea; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; margin: 10px 10px 10px 0; }
+        
+        @media (max-width: 768px) {
+            .guide-container { flex-direction: column; }
+            .sidebar { position: static; }
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div class="logo">{{ tenant_name or company_name or 'Accounting System' }} - User Guide</div>
+        <div>
+            <a href="{{ url_for('public.landing') }}">Home</a>
+            <a href="{{ url_for('main.dashboard') }}">Dashboard</a>
+        </div>
+    </div>
+
+    <div class="guide-header">
+        <h1><i class="fas fa-book"></i> Complete User Guide</h1>
+        <p>Everything you need to know about the system</p>
+    </div>
+
+    <div class="guide-container">
+        <aside class="sidebar">
+            <h3>Quick Navigation</h3>
+            <ul>
+                <li class="active" onclick="scrollToSection('intro')"><i class="fas fa-home"></i> Introduction</li>
+                <li onclick="scrollToSection('sales')"><i class="fas fa-file-invoice"></i> Sales</li>
+                <li onclick="scrollToSection('customers')"><i class="fas fa-users"></i> Customers</li>
+                <li onclick="scrollToSection('products')"><i class="fas fa-boxes"></i> Products Management</li>
+                <li onclick="scrollToSection('warehouse')"><i class="fas fa-warehouse"></i> Warehouse</li>
+                <li onclick="scrollToSection('reports')"><i class="fas fa-chart-bar"></i> Reports</li>
+                <li onclick="scrollToSection('tips')"><i class="fas fa-lightbulb"></i> Tips & Tricks</li>
+            </ul>
+        </aside>
+
+        <main class="content">
+            <section class="section" id="intro">
+                <h2><i class="fas fa-home"></i> Introduction</h2>
+                <p>Welcome to the complete warehouse and sales management system. This guide will help you master all system features.</p>
+                
+                <h3>What Can This System Do?</h3>
+                <ul>
+                    <li>Complete sales management</li>
+                    <li>Purchase tracking</li>
+                    <li>Customer and supplier management</li>
+                    <li>Inventory and warehouse control</li>
+                    <li>Financial reports and accounting</li>
+                    <li>AI-powered smart assistant</li>
+                </ul>
+            </section>
+
+            <section class="section" id="sales">
+                <h2><i class="fas fa-file-invoice"></i> Sales Management</h2>
+                
+                <h3>How to Create a New Invoice</h3>
+                <ol>
+                    <li>From the sidebar, select "Sales"</li>
+                    <li>Click "New Invoice"</li>
+                    <li>Choose customer (or add new)</li>
+                    <li>Add products (price appears automatically based on customer type)</li>
+                    <li>Select payment method</li>
+                    <li>Save invoice</li>
+                </ol>
+
+                <div class="tip-box">
+                    <strong><i class="fas fa-lightbulb"></i> Tip:</strong> Use the smart filter to quickly search for customers!
+                </div>
+            </section>
+
+            <section class="section" id="customers">
+                <h2><i class="fas fa-users"></i> Customer Management</h2>
+                
+                <h3>Add New Customer</h3>
+                <ol>
+                    <li>Go to "Customers" from menu</li>
+                    <li>Click "New Customer"</li>
+                    <li>Enter basic information (name, phone, email)</li>
+                    <li>Set customer type (retail, wholesale, VIP)</li>
+                    <li>Save</li>
+                </ol>
+
+                <h3>Customer Statement</h3>
+                <p>View complete financial transactions for any customer, including all invoices and payments.</p>
+            </section>
+
+            <section class="section" id="products">
+                <h2><i class="fas fa-boxes"></i> Products Management</h2>
+                
+                <h3>Add New Product</h3>
+                <ol>
+                    <li>From sidebar, select "Products"</li>
+                    <li>Click "New Product"</li>
+                    <li>Enter product details</li>
+                    <li>Select category</li>
+                    <li>Set prices (purchase and sale)</li>
+                    <li>Set stock alert level</li>
+                    <li>Upload product image (optional)</li>
+                    <li>Save</li>
+                </ol>
+
+                <h3>Product Categories</h3>
+                <p>Organize products into categories for easy searching and filtering.</p>
+            </section>
+
+            <section class="section" id="warehouse">
+                <h2><i class="fas fa-warehouse"></i> Warehouse Management</h2>
+                
+                <h3>Inventory Tracking</h3>
+                <p>The system automatically tracks inventory with every:</p>
+                <ul>
+                    <li>Sale invoice (decreases stock)</li>
+                    <li>Purchase invoice (increases stock)</li>
+                    <li>Stock movement (manual adjustment)</li>
+                </ul>
+
+                <div class="warning-box">
+                    <strong><i class="fas fa-exclamation-triangle"></i> Important:</strong> Low stock alerts help you reorder before running out!
+                </div>
+            </section>
+
+            <section class="section" id="reports">
+                <h2><i class="fas fa-chart-bar"></i> Reports & Analytics</h2>
+                
+                <h3>Available Reports</h3>
+                <ul>
+                    <li><strong>Sales Report:</strong> Detailed sales analysis</li>
+                    <li><strong>Inventory Report:</strong> Current stock levels</li>
+                    <li><strong>Top Selling:</strong> Best-selling products</li>
+                    <li><strong>Receivables:</strong> Customer balances</li>
+                    <li><strong>Trial Balance:</strong> Accounting overview</li>
+                </ul>
+            </section>
+
+            <section class="section" id="tips">
+                <h2><i class="fas fa-lightbulb"></i> Tips & Tricks</h2>
+                
+                <div class="tip-box">
+                    <h3><i class="fas fa-keyboard"></i> Keyboard Shortcuts</h3>
+                    <ul>
+                        <li><strong>Alt + H:</strong> Home</li>
+                        <li><strong>Alt + S:</strong> Sales</li>
+                        <li><strong>Alt + C:</strong> Customers</li>
+                        <li><strong>Alt + P:</strong> Products</li>
+                        <li><strong>Ctrl + K:</strong> Quick search</li>
+                    </ul>
+                </div>
+
+                <div class="tip-box">
+                    <h3><i class="fas fa-robot"></i> AI Assistant</h3>
+                    <p>Use the smart AI assistant to get instant answers about:</p>
+                    <ul>
+                        <li>Tax regulations</li>
+                        <li>Spare parts information</li>
+                        <li>Sales predictions</li>
+                        <li>Customer service tips</li>
+                    </ul>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        function scrollToSection(id) {
+            document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+            document.querySelectorAll('.sidebar li').forEach(li => li.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>
+
