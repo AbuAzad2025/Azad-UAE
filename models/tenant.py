@@ -103,6 +103,18 @@ class Tenant(db.Model):
     @staticmethod
     def get_current():
         """Get current tenant (single tenant for now, multi-tenant ready). Order by id for deterministic result when multiple exist."""
+        try:
+            from flask_login import current_user
+            from utils.tenanting import get_active_tenant_id
+            if current_user and getattr(current_user, "is_authenticated", False):
+                active_tid = get_active_tenant_id(current_user)
+                if active_tid:
+                    tenant = Tenant.query.filter_by(id=int(active_tid), is_active=True).first()
+                    if tenant:
+                        return tenant
+        except Exception:
+            pass
+
         tenant = Tenant.query.filter_by(is_active=True).order_by(Tenant.id.asc()).first()
         if not tenant:
             # Create default tenant

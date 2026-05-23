@@ -67,7 +67,12 @@ def create():
             expense_branch_id = branch_scope_id() or getattr(current_user, 'branch_id', None)
             expense_number = generate_number('EXP', Expense, 'expense_number', branch_id=expense_branch_id)
             
-            currency = request.form.get('currency', 'AED')
+            try:
+                from models import Tenant
+                default_currency = (Tenant.get_current().default_currency or '').strip() or 'AED'
+            except Exception:
+                default_currency = 'AED'
+            currency = request.form.get('currency') or default_currency
             user_exchange_rate = request.form.get('exchange_rate', type=float)
             
             exchange_rate = CurrencyService.get_exchange_rate(
@@ -87,6 +92,7 @@ def create():
                     pass
 
             expense = Expense(
+                tenant_id=getattr(current_user, 'tenant_id', None),
                 expense_number=expense_number,
                 category_id=request.form.get('category_id', type=int),
                 description=request.form.get('description'),
@@ -116,6 +122,7 @@ def create():
                 cheque_date_val = datetime.strptime(cheque_date_str, '%Y-%m-%d').date() if cheque_date_str else datetime.now().date()
                 
                 cheque = Cheque(
+                    tenant_id=getattr(current_user, 'tenant_id', None),
                     cheque_number=expense.cheque_number or f'CHQ-{expense.expense_number}',
                     cheque_bank_number=expense.cheque_number or f'CHQ-{expense.expense_number}',
                     cheque_type='outgoing',

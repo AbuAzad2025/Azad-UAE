@@ -7,11 +7,12 @@ from services.currency_service import CurrencyService
 from services.gl_service import GLService
 from utils.branching import ensure_warehouse_access
 from utils.helpers import generate_number, create_audit_log
+from utils.tenanting import get_active_tenant_id
 
 class PurchaseService:
     @staticmethod
     def create_purchase(user, supplier_data, lines_data, warehouse_id=None, 
-                       currency='AED', user_exchange_rate=None, 
+                       currency=None, user_exchange_rate=None, 
                        discount_amount=0, tax_rate=0, notes=None):
         """
         Create a new purchase invoice with stock update and GL entries.
@@ -30,6 +31,12 @@ class PurchaseService:
         Returns:
             Purchase object
         """
+        if not currency:
+            try:
+                from models import Tenant
+                currency = (Tenant.get_current().default_currency or '').strip() or 'AED'
+            except Exception:
+                currency = 'AED'
         # Validate Warehouse
         if not warehouse_id:
             raise ValueError('⚠️ يجب اختيار المستودع الذي ستُضاف إليه البضاعة.')
@@ -63,7 +70,9 @@ class PurchaseService:
         )
         
         # Create Purchase Header
+        tenant_id = get_active_tenant_id(user) or getattr(user, 'tenant_id', None) or getattr(warehouse, 'tenant_id', None) or (getattr(supplier, 'tenant_id', None) if supplier else None)
         purchase = Purchase(
+            tenant_id=tenant_id,
             purchase_number=purchase_number,
             supplier_id=supplier_id,
             warehouse_id=warehouse_id,
@@ -100,6 +109,7 @@ class PurchaseService:
                 product = Product.query.get(product_id)
                 if product:
                     line = PurchaseLine(
+                        tenant_id=tenant_id,
                         purchase_id=purchase.id,
                         product_id=product_id,
                         quantity=quantity,

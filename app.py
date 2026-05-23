@@ -91,6 +91,7 @@ def create_app(config_class=Config):
     # from routes.notifications import notifications_bp
     from routes.warehouse import warehouse_bp
     from routes.language import language_bp
+    from routes.tenants import tenants_bp
     from routes.payroll import payroll_bp
     try:
         from routes.ai import ai_bp
@@ -182,6 +183,7 @@ def create_app(config_class=Config):
     app.register_blueprint(payments_bp)
     app.register_blueprint(warehouse_bp)
     app.register_blueprint(language_bp)
+    app.register_blueprint(tenants_bp)
     # app.register_blueprint(branches_bp) # Duplicate removed
     app.register_blueprint(payroll_bp)
     app.register_blueprint(public_bp)
@@ -226,6 +228,7 @@ def create_app(config_class=Config):
         tenant_email = ''
         tenant_address = ''
         tenant_logo_url = ''
+        tenant_default_currency = ''
         try:
             from models import Tenant
             from models.invoice_settings import InvoiceSettings
@@ -237,6 +240,7 @@ def create_app(config_class=Config):
                 tenant_email = (tenant.email or '').strip()
                 tenant_address = (tenant.address_ar or tenant.address_en or '').strip()
                 tenant_logo_url = (tenant.logo_url or '').strip()
+                tenant_default_currency = (tenant.default_currency or '').strip()
             if not tenant_name_ar:
                 inv = InvoiceSettings.get_active()
                 if inv:
@@ -260,6 +264,10 @@ def create_app(config_class=Config):
             developer_website = (sys_settings.get_custom_setting('developer_website') or app.config.get('DEVELOPER_WEBSITE', ''))
             developer_whatsapp = (sys_settings.get_custom_setting('developer_whatsapp') or app.config.get('DEVELOPER_WHATSAPP', ''))
             developer_logo = (sys_settings.get_custom_setting('developer_logo') or app.config.get('DEVELOPER_LOGO', 'img/azad_logo_white_on_dark.png'))
+            system_default_currency = (sys_settings.default_currency or '').strip() or 'AED'
+            system_currency_symbol = (sys_settings.currency_symbol or '').strip() or system_default_currency
+            system_currency_position = (sys_settings.currency_position or '').strip() or 'after'
+            system_decimal_places = sys_settings.decimal_places if isinstance(sys_settings.decimal_places, int) else 2
         except Exception:
             developer_name_ar = app.config.get('DEVELOPER_NAME_AR', '')
             developer_name = app.config.get('DEVELOPER_NAME', '')
@@ -269,6 +277,10 @@ def create_app(config_class=Config):
             developer_website = app.config.get('DEVELOPER_WEBSITE', '')
             developer_whatsapp = app.config.get('DEVELOPER_WHATSAPP', '')
             developer_logo = app.config.get('DEVELOPER_LOGO', 'img/azad_logo_white_on_dark.png')
+            system_default_currency = 'AED'
+            system_currency_symbol = 'AED'
+            system_currency_position = 'after'
+            system_decimal_places = 2
 
         def _normalize_whatsapp_link(value):
             digits = re.sub(r"\D+", "", value or "")
@@ -286,6 +298,17 @@ def create_app(config_class=Config):
             current_user_permissions = [c for c in PERMISSION_CODES if current_user.has_permission(c)]
         active_branch = get_active_branch(current_user) if current_user.is_authenticated else None
         active_branch_mode = get_active_branch_mode() if current_user.is_authenticated else "single"
+
+        available_tenants = []
+        active_tenant_id = None
+        try:
+            from utils.tenanting import get_active_tenant_id, is_global_tenant_user
+            if current_user.is_authenticated and is_global_tenant_user(current_user):
+                active_tenant_id = get_active_tenant_id(current_user)
+                from models.tenant import Tenant as TenantModel
+                available_tenants = TenantModel.query.filter_by(is_active=True).order_by(TenantModel.id.asc()).all()
+        except Exception:
+            pass
         app_enums = {
             'permissions': PERMISSIONS,
             'permission_codes': PERMISSION_CODES,
@@ -314,11 +337,17 @@ def create_app(config_class=Config):
             'tenant_email': tenant_email,
             'tenant_address': tenant_address,
             'tenant_logo_url': tenant_logo_url,
+            'tenant_default_currency': tenant_default_currency or system_default_currency,
             'company_name': tenant_name or 'Garage Manager',
             'company_name_ar': tenant_name_ar or 'نظام المحاسبة',
             'company_phone': tenant_phone,
             'company_email': tenant_email,
             'company_address': tenant_address,
+            'company_default_currency': tenant_default_currency or system_default_currency,
+            'system_default_currency': system_default_currency,
+            'system_currency_symbol': system_currency_symbol,
+            'system_currency_position': system_currency_position,
+            'system_decimal_places': system_decimal_places,
             'developer_name_ar': developer_name_ar,
             'developer_name': developer_name,
             'developer_credit': developer_credit,
@@ -330,6 +359,8 @@ def create_app(config_class=Config):
             'developer_logo': developer_logo,
             'active_branch': active_branch,
             'active_branch_mode': active_branch_mode,
+            'available_tenants': available_tenants,
+            'active_tenant_id': active_tenant_id,
             'current_year': datetime.now().year,
             'now': datetime.now(),
             'ai_enabled': 'ai' in app.blueprints

@@ -1189,6 +1189,7 @@ def register_neural_training_listeners():
     def neural_auto_retrain_on_milestones(mapper, connection, target):
         try:
             from ai_knowledge.auto_retraining import AutoRetrainingScheduler
+            from flask import current_app
             
             total_sales = connection.execute(
                 Sale.__table__.select().where(
@@ -1202,8 +1203,12 @@ def register_neural_training_listeners():
                 logger.info(f"🧠 Neural Milestone: {sales_count} sales - Checking auto-retraining...")
                 try:
                     import threading
+                    app = current_app._get_current_object()
+                    def _run():
+                        with app.app_context():
+                            AutoRetrainingScheduler.check_and_train_if_needed()
                     thread = threading.Thread(
-                        target=AutoRetrainingScheduler.check_and_train_if_needed
+                        target=_run
                     )
                     thread.daemon = True
                     thread.start()

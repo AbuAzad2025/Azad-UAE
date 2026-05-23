@@ -16,6 +16,7 @@ class Cheque(db.Model):
     __tablename__ = 'cheques'
     
     id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True)
     
     # معلومات الشيك الأساسية
     cheque_number = db.Column(db.String(50), nullable=False, unique=True, index=True)
@@ -97,6 +98,7 @@ class Cheque(db.Model):
     expense = db.relationship('Expense', backref='cheques', foreign_keys=[expense_id])
     branch = db.relationship('Branch', foreign_keys=[branch_id])
     user = db.relationship('User', foreign_keys=[user_id])
+    tenant = db.relationship('Tenant', backref='cheques', foreign_keys=[tenant_id])
     
     def __repr__(self):
         return f'<Cheque {self.cheque_number} - {self.cheque_type} - {self.status}>'

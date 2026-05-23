@@ -206,7 +206,12 @@ def create():
                                      suppliers=suppliers,
                                      exchange_rates=exchange_rates)
             amount = Decimal(str(request.form.get('amount')))
-            currency = request.form.get('currency', 'AED')
+            try:
+                from models import Tenant
+                default_currency = (Tenant.get_current().default_currency or '').strip() or 'AED'
+            except Exception:
+                default_currency = 'AED'
+            currency = request.form.get('currency') or default_currency
             
             # حساب سعر الصرف
             exchange_rate = CurrencyService.get_exchange_rate(
@@ -240,6 +245,7 @@ def create():
                                      exchange_rates=exchange_rates)
             
             cheque = Cheque(
+                tenant_id=getattr(current_user, 'tenant_id', None),
                 cheque_number=cheque_number,
                 cheque_bank_number=request.form.get('cheque_bank_number'),
                 cheque_type=cheque_type,
@@ -335,7 +341,12 @@ def edit(id):
             cheque.account_number = request.form.get('account_number')
             
             cheque.amount = Decimal(str(request.form.get('amount')))
-            cheque.currency = request.form.get('currency', 'AED')
+            try:
+                from models import Tenant
+                default_currency = (Tenant.get_current().default_currency or '').strip() or 'AED'
+            except Exception:
+                default_currency = 'AED'
+            cheque.currency = request.form.get('currency') or default_currency
             
             exchange_rate = CurrencyService.get_exchange_rate(
                 cheque.currency,

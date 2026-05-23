@@ -6,6 +6,7 @@ class GLAccount(db.Model):
     __tablename__ = 'gl_accounts'
 
     id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True)
     code = db.Column(db.String(20), unique=True, nullable=False, index=True)
     name = db.Column(db.String(200), nullable=False)  # English name
     name_ar = db.Column(db.String(200))  # Arabic name
@@ -21,6 +22,7 @@ class GLAccount(db.Model):
                           onupdate=lambda: datetime.now(timezone.utc))
 
     parent = db.relationship('GLAccount', remote_side=[id], backref='children')
+    tenant = db.relationship('Tenant', backref='gl_accounts', foreign_keys=[tenant_id])
 
     def __repr__(self):
         return f'<GLAccount {self.code} {self.name}>'
@@ -67,6 +69,7 @@ class GLJournalEntry(db.Model):
     __tablename__ = 'gl_journal_entries'
 
     id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True)
     entry_number = db.Column(db.String(50), unique=True, nullable=False, index=True)
     entry_date = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
     description = db.Column(db.String(255))
@@ -91,6 +94,7 @@ class GLJournalEntry(db.Model):
     reversed_entry = db.relationship('GLJournalEntry', remote_side=[id], foreign_keys=[reversed_entry_id])
     user = db.relationship('User', foreign_keys=[created_by])
     branch = db.relationship('Branch', backref='journal_entries', foreign_keys=[branch_id])
+    tenant = db.relationship('Tenant', backref='journal_entries', foreign_keys=[tenant_id])
 
     def __repr__(self):
         return f'<GLEntry {self.entry_number}>'
@@ -131,6 +135,7 @@ class GLJournalEntry(db.Model):
                 last_db = 0
         next_num = last_db + 1
         reversed_entry = GLJournalEntry(
+            tenant_id=self.tenant_id,
             entry_number=f'JE-{y}-{next_num:04d}',
             entry_date=datetime.now(timezone.utc),
             description=description or f'عكس قيد: {self.description}',
@@ -171,6 +176,7 @@ class GLJournalLine(db.Model):
     __tablename__ = 'gl_journal_lines'
 
     id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True)
     entry_id = db.Column(db.Integer, db.ForeignKey('gl_journal_entries.id'), nullable=False, index=True)
     account_id = db.Column(db.Integer, db.ForeignKey('gl_accounts.id'), nullable=False, index=True)
     description = db.Column(db.String(255))
@@ -184,6 +190,7 @@ class GLJournalLine(db.Model):
     entry = db.relationship('GLJournalEntry', back_populates='lines')
     account = db.relationship('GLAccount')
     cost_center = db.relationship('CostCenter')
+    tenant = db.relationship('Tenant', backref='journal_lines', foreign_keys=[tenant_id])
 
     def __repr__(self):
         return f'<GLLine acc={self.account_id} d={self.debit} c={self.credit}>'

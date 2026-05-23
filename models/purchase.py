@@ -7,6 +7,7 @@ class Purchase(db.Model):
     __tablename__ = 'purchases'
     
     id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True)
     purchase_number = db.Column(db.String(50), unique=True, nullable=False, index=True)
     
     supplier_id = db.Column(db.Integer, db.ForeignKey('suppliers.id'), index=True)
@@ -41,6 +42,7 @@ class Purchase(db.Model):
     supplier = db.relationship('Supplier', back_populates='purchases')
     branch = db.relationship('Branch', backref='purchases', foreign_keys=[branch_id])
     lines = db.relationship('PurchaseLine', back_populates='purchase', lazy='joined', cascade='all, delete-orphan')
+    tenant = db.relationship('Tenant', backref='purchases', foreign_keys=[tenant_id])
     
     @property
     def warehouse(self):
@@ -125,6 +127,7 @@ class PurchaseLine(db.Model):
     __tablename__ = 'purchase_lines'
     
     id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True)
     purchase_id = db.Column(db.Integer, db.ForeignKey('purchases.id'), nullable=False, index=True)
     product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
     
@@ -137,6 +140,7 @@ class PurchaseLine(db.Model):
     
     purchase = db.relationship('Purchase', back_populates='lines')
     product = db.relationship('Product', back_populates='purchase_lines')
+    tenant = db.relationship('Tenant', backref='purchase_lines', foreign_keys=[tenant_id])
     
     def __repr__(self):
         return f'<PurchaseLine {self.product_id} x {self.quantity}>'

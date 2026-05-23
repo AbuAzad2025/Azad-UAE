@@ -6,6 +6,7 @@ class ExpenseCategory(db.Model):
     __tablename__ = 'expense_categories'
     
     id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True)
     name = db.Column(db.String(100), nullable=False, unique=True)
     name_ar = db.Column(db.String(100))
     gl_account_code = db.Column(db.String(20))
@@ -13,6 +14,7 @@ class ExpenseCategory(db.Model):
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     
     expenses = db.relationship('Expense', back_populates='category', lazy='dynamic')
+    tenant = db.relationship('Tenant', backref='expense_categories', foreign_keys=[tenant_id])
     
     def __repr__(self):
         return f'<ExpenseCategory {self.name}>'
@@ -22,6 +24,7 @@ class Expense(db.Model):
     __tablename__ = 'expenses'
     
     id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True)
     expense_number = db.Column(db.String(50), unique=True, nullable=False, index=True)
     
     category_id = db.Column(db.Integer, db.ForeignKey('expense_categories.id'), nullable=False, index=True)
@@ -58,6 +61,7 @@ class Expense(db.Model):
     is_reversed = db.Column(db.Boolean, default=False, index=True)
     
     category = db.relationship('ExpenseCategory', back_populates='expenses')
+    tenant = db.relationship('Tenant', backref='expenses', foreign_keys=[tenant_id])
     user = db.relationship('User', foreign_keys=[user_id])
     branch = db.relationship('Branch', backref='simple_expenses', foreign_keys=[branch_id])
     

@@ -69,8 +69,19 @@ class GLService:
                 pass
         next_num = last_num + 1
         entry_number = f'JE-{y}-{next_num:04d}'
+
+        tenant_id = None
+        if branch_id:
+            from models import Branch
+            b = Branch.query.get(branch_id)
+            tenant_id = getattr(b, "tenant_id", None) if b else None
+        if tenant_id is None and user_id:
+            from models import User
+            u = User.query.get(user_id)
+            tenant_id = getattr(u, "tenant_id", None) if u else None
         
         entry = GLJournalEntry(
+            tenant_id=tenant_id,
             entry_number=entry_number,
             entry_date=date,
             description=description,
@@ -102,6 +113,7 @@ class GLService:
             credit = Decimal(str(line.get('credit', 0)))
             
             gl_line = GLJournalLine(
+                tenant_id=tenant_id,
                 entry_id=entry.id,
                 account_id=account.id,
                 debit=debit,
@@ -335,8 +347,22 @@ class GLService:
                 if user: branch_id = user.branch_id
             elif hasattr(current_user, 'is_authenticated') and current_user.is_authenticated:
                  branch_id = current_user.branch_id
+
+        tenant_id = None
+        if branch_id:
+            from models import Branch
+            b = Branch.query.get(branch_id)
+            tenant_id = getattr(b, "tenant_id", None) if b else None
+        if tenant_id is None:
+            if created_by:
+                from models import User
+                u = User.query.get(created_by)
+                tenant_id = getattr(u, "tenant_id", None) if u else None
+            elif hasattr(current_user, 'is_authenticated') and current_user.is_authenticated:
+                tenant_id = getattr(current_user, "tenant_id", None)
             
         entry = GLJournalEntry(
+            tenant_id=tenant_id,
             entry_number=entry_number,
             entry_date=entry_date or datetime.now(timezone.utc),
             description=description,
@@ -368,6 +394,7 @@ class GLService:
             credit = Decimal(str(line_data.get('credit', 0) or 0))
             
             line = GLJournalLine(
+                tenant_id=tenant_id,
                 entry_id=entry.id,
                 account_id=account.id,
                 description=line_data.get('description', ''),

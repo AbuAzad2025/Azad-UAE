@@ -68,6 +68,7 @@ class PaymentService:
             )
             
             payment = Payment(
+                tenant_id=getattr(supplier, 'tenant_id', None) or (getattr(current_user, 'tenant_id', None) if current_user and getattr(current_user, 'is_authenticated', False) else None),
                 payment_number=payment_number,
                 payment_type='supplier_payment',
                 direction='outgoing',
@@ -193,6 +194,7 @@ class PaymentService:
             )
             
             receipt = Receipt(
+                tenant_id=getattr(customer, 'tenant_id', None) or (getattr(current_user, 'tenant_id', None) if current_user and getattr(current_user, 'is_authenticated', False) else None),
                 receipt_number=receipt_number,
                 source_type=source_type,
                 source_id=source_id,
@@ -219,6 +221,7 @@ class PaymentService:
             if payment_method == 'cheque' and cheque_number:
                 from models import Cheque
                 cheque = Cheque(
+                    tenant_id=getattr(customer, 'tenant_id', None) or (getattr(current_user, 'tenant_id', None) if current_user and getattr(current_user, 'is_authenticated', False) else None),
                     cheque_number=cheque_number,
                     cheque_bank_number=cheque_number,  # نفس رقم الشيك
                     cheque_type='incoming',
@@ -284,6 +287,7 @@ class PaymentService:
                     # Create Payment record linked to Sale (Crucial for recalculation)
                     from models import Payment
                     sale_payment = Payment(
+                        tenant_id=getattr(sale, 'tenant_id', None) or getattr(customer, 'tenant_id', None),
                         payment_number=generate_number('PAY-S', Payment, 'payment_number', branch_id=sale.branch_id),
                         payment_type='sale_payment',
                         direction='incoming',

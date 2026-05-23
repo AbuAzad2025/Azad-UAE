@@ -1,7 +1,8 @@
-const CACHE_NAME = 'uae-sale-v2';
+const CACHE_NAME = 'azad-uae-ui-v3';
 const urlsToCache = [
   '/',
-  '/static/css/style.css',
+  '/static/css/erp-theme.css',
+  '/static/js/ui-theme.js',
   '/static/js/app.js',
   '/static/adminlte/js/adminlte.min.js',
   '/static/img/azad_logo_white_on_dark.png',

@@ -111,8 +111,21 @@ class StockService:
                 user_id = current_user.id if current_user and current_user.is_authenticated else None
             except:
                 user_id = None
+
+            tenant_id = getattr(warehouse, "tenant_id", None)
+            if tenant_id is None:
+                try:
+                    if current_user and current_user.is_authenticated:
+                        tenant_id = getattr(current_user, "tenant_id", None)
+                except Exception:
+                    tenant_id = None
+            if tenant_id is None:
+                tenant_id = getattr(product, "tenant_id", None)
+            if getattr(warehouse, "tenant_id", None) is None and tenant_id is not None:
+                warehouse.tenant_id = tenant_id
             
             movement = StockMovement(
+                tenant_id=tenant_id,
                 product_id=product_id,
                 warehouse_id=warehouse.id,
                 movement_type=movement_type,

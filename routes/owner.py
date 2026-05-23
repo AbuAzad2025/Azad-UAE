@@ -1666,7 +1666,14 @@ def system_config():
             settings.enable_returns = request.form.get('enable_returns') == 'on'
             
             # General
-            settings.default_currency = request.form.get('default_currency', 'AED')
+            default_currency = request.form.get('default_currency', 'AED')
+            settings.default_currency = default_currency
+            try:
+                from models import Tenant
+                tenant = Tenant.get_current()
+                tenant.default_currency = default_currency
+            except Exception:
+                pass
             settings.default_language = request.form.get('default_language', 'ar')
             settings.timezone = request.form.get('timezone', 'Asia/Dubai')
             settings.items_per_page = int(request.form.get('items_per_page', 25))
@@ -2414,7 +2421,14 @@ def currency_settings():
     if request.method == 'POST':
         settings = SystemSettings.get_current()
         
-        settings.default_currency = request.form.get('default_currency', 'AED')
+        default_currency = request.form.get('default_currency', 'AED')
+        settings.default_currency = default_currency
+        try:
+            from models import Tenant
+            tenant = Tenant.get_current()
+            tenant.default_currency = default_currency
+        except Exception:
+            pass
         settings.auto_update_rates = request.form.get('auto_update_rates') == 'on'
         
         db.session.commit()

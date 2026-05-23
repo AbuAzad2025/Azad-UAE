@@ -272,12 +272,13 @@
               <i class="fas fa-dollar-sign text-success"></i> العملة
               <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="عملة الفاتورة (افتراضي: AED)"></i>
             </label>
+            {% set dc = company_default_currency or system_default_currency or 'AED' %}
             <select name="currency" id="currency" class="form-control">
-              <option value="AED" selected>درهم إماراتي (AED)</option>
-              <option value="USD">دولار أمريكي (USD)</option>
-              <option value="EUR">يورو (EUR)</option>
-              <option value="GBP">جنيه إسترليني (GBP)</option>
-              <option value="SAR">ريال سعودي (SAR)</option>
+              <option value="AED" {% if dc == 'AED' %}selected{% endif %}>درهم إماراتي (AED)</option>
+              <option value="USD" {% if dc == 'USD' %}selected{% endif %}>دولار أمريكي (USD)</option>
+              <option value="EUR" {% if dc == 'EUR' %}selected{% endif %}>يورو (EUR)</option>
+              <option value="GBP" {% if dc == 'GBP' %}selected{% endif %}>جنيه إسترليني (GBP)</option>
+              <option value="SAR" {% if dc == 'SAR' %}selected{% endif %}>ريال سعودي (SAR)</option>
             </select>
           </div>
         </div>

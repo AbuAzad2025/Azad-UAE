@@ -530,7 +530,12 @@ def create_from_sale(sale_id):
     if request.method == 'POST':
         try:
             amount = request.form.get('amount', type=float)
-            currency = request.form.get('currency', 'AED')
+            try:
+                from models import Tenant
+                default_currency = (sale.currency or '').strip() or (Tenant.get_current().default_currency or '').strip() or 'AED'
+            except Exception:
+                default_currency = (sale.currency or '').strip() or 'AED'
+            currency = request.form.get('currency') or default_currency
             user_exchange_rate = request.form.get('exchange_rate', type=float)
             payment_method_value = (request.form.get('payment_method') or '').strip()
             if not payment_method_value:
@@ -636,7 +641,12 @@ def create_voucher_submit():
         branch_id = _current_branch_id()
         
         # العملة وسعر الصرف (افتراضي: AED بمعدل 1)
-        currency = request.form.get('currency', 'AED')
+        try:
+            from models import Tenant
+            default_currency = (Tenant.get_current().default_currency or '').strip() or 'AED'
+        except Exception:
+            default_currency = 'AED'
+        currency = request.form.get('currency') or default_currency
         user_exchange_rate = request.form.get('exchange_rate', type=float, default=1.0)
         
         # بيانات الشيك
@@ -690,6 +700,7 @@ def create_voucher_submit():
                     flash('المورد المحدد خارج نطاق الفرع الحالي', 'danger')
                     return redirect(url_for('payments.create_voucher'))
                 payment = Payment(
+                    tenant_id=getattr(current_user, 'tenant_id', None),
                     payment_number=generate_number('PAY', Payment, 'payment_number', branch_id=branch_id), # ربما نحتاج تسلسل منفصل؟
                     payment_type='refund', # استرداد
                     direction='incoming',
@@ -729,6 +740,7 @@ def create_voucher_submit():
                     flash('المورد المحدد خارج نطاق الفرع الحالي', 'danger')
                     return redirect(url_for('payments.create_voucher'))
                 payment = Payment(
+                    tenant_id=getattr(current_user, 'tenant_id', None),
                     payment_number=generate_number('PAY', Payment, 'payment_number', branch_id=branch_id),
                     payment_type='bill_payment',
                     direction='outgoing',
@@ -753,6 +765,7 @@ def create_voucher_submit():
                 if payment_method == 'cheque' and cheque_number:
                     from models import Cheque
                     cheque = Cheque(
+                        tenant_id=getattr(current_user, 'tenant_id', None),
                         cheque_number=cheque_number,
                         cheque_bank_number=cheque_number,
                         cheque_type='outgoing',
@@ -818,6 +831,7 @@ def create_voucher_submit():
                     flash('العميل المحدد خارج نطاق الفرع الحالي', 'danger')
                     return redirect(url_for('payments.create_voucher'))
                 payment = Payment(
+                    tenant_id=getattr(current_user, 'tenant_id', None),
                     payment_number=generate_number('PAY', Payment, 'payment_number', branch_id=branch_id),
                     payment_type='refund',
                     direction='outgoing',
@@ -841,6 +855,7 @@ def create_voucher_submit():
                 if payment_method == 'cheque' and cheque_number:
                     from models import Cheque
                     cheque = Cheque(
+                        tenant_id=getattr(current_user, 'tenant_id', None),
                         cheque_number=cheque_number,
                         cheque_bank_number=cheque_number,
                         cheque_type='outgoing',
@@ -1334,7 +1349,12 @@ def create_payment(purchase_id):
                                      form_data=request.form)
             notes = request.form.get('notes', '')
             exchange_rate = request.form.get('exchange_rate', type=float, default=1.0)
-            currency = request.form.get('currency', default='AED')
+            try:
+                from models import Tenant
+                default_currency = (purchase.currency or '').strip() or (Tenant.get_current().default_currency or '').strip() or 'AED'
+            except Exception:
+                default_currency = (purchase.currency or '').strip() or 'AED'
+            currency = request.form.get('currency') or default_currency
             
             reference_number = request.form.get('reference_number')
             cheque_number = request.form.get('cheque_number')
@@ -1358,6 +1378,7 @@ def create_payment(purchase_id):
             # إنشاء سند الصرف
             payment_number = generate_number('PAY', Payment, 'payment_number', branch_id=purchase.branch_id)
             payment = Payment(
+                tenant_id=getattr(current_user, 'tenant_id', None),
                 payment_number=payment_number,
                 supplier_id=purchase.supplier_id,
                 supplier_name=purchase.supplier_name,
@@ -1396,6 +1417,7 @@ def create_payment(purchase_id):
             if payment_method_value == 'cheque' and cheque_number:
                 from models import Cheque
                 cheque = Cheque(
+                    tenant_id=getattr(current_user, 'tenant_id', None),
                     cheque_number=cheque_number,
                     cheque_bank_number=cheque_number,
                     cheque_type='outgoing',

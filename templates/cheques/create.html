@@ -144,11 +144,12 @@
         <div class="col-md-4">
           <div class="form-group">
             <label><i class="fas fa-dollar-sign"></i> العملة:</label>
+            {% set dc = company_default_currency or system_default_currency or 'AED' %}
             <select name="currency" id="currency" class="form-control">
-              <option value="AED" selected>AED - درهم إماراتي</option>
-              <option value="USD">USD - دولار أمريكي</option>
-              <option value="EUR">EUR - يورو</option>
-              <option value="SAR">SAR - ريال سعودي</option>
+              <option value="AED" {% if dc == 'AED' %}selected{% endif %}>AED - درهم إماراتي</option>
+              <option value="USD" {% if dc == 'USD' %}selected{% endif %}>USD - دولار أمريكي</option>
+              <option value="EUR" {% if dc == 'EUR' %}selected{% endif %}>EUR - يورو</option>
+              <option value="SAR" {% if dc == 'SAR' %}selected{% endif %}>SAR - ريال سعودي</option>
             </select>
           </div>
         </div>

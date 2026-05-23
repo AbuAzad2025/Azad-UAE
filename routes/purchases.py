@@ -84,6 +84,12 @@ def create():
                     })
             
             # Create Purchase via Service
+            try:
+                from models import Tenant
+                default_currency = (Tenant.get_current().default_currency or '').strip() or 'AED'
+            except Exception:
+                default_currency = 'AED'
+
             purchase = PurchaseService.create_purchase(
                 user=current_user,
                 supplier_data={
@@ -94,7 +100,7 @@ def create():
                 },
                 lines_data=lines_data,
                 warehouse_id=warehouse_id_val,
-                currency=request.form.get('currency', 'AED'),
+                currency=request.form.get('currency') or default_currency,
                 user_exchange_rate=request.form.get('exchange_rate', type=float),
                 discount_amount=request.form.get('discount_amount', type=float, default=0),
                 tax_rate=request.form.get('tax_rate', type=float, default=0),

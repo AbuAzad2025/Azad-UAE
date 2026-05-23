@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ current_language }}" dir="{{ 'rtl' if is_rtl else 'ltr' }}">
+<html lang="{{ current_language }}" dir="{{ 'rtl' if is_rtl else 'ltr' }}" data-ui-variant="palestinian" data-ui-mode="light">
 <head>
   <meta charset="utf-8">
   <title>{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }}{% endblock %}</title>
@@ -24,7 +24,10 @@
   <meta property="og:url" content="{{ request.url }}">
   <meta property="og:title" content="{% block og_title %}{{ self.title() }}{% endblock %}">
   <meta property="og:description" content="{% block og_description %}{{ self.meta_description() }}{% endblock %}">
-  <meta property="og:image" content="{{ url_for('static', filename=developer_logo or 'img/azad_logo_white_on_dark.png', _external=True) }}">
+  {% set _logo_path = tenant_logo_url or developer_logo or 'img/azad_logo_white_on_dark.png' %}
+  {% set _logo_external = _logo_path if _logo_path.startswith('http') else url_for('static', filename=_logo_path, _external=True) %}
+  {% set _logo_internal = _logo_path if _logo_path.startswith('http') else url_for('static', filename=_logo_path) %}
+  <meta property="og:image" content="{{ _logo_external }}">
   <meta property="og:locale" content="{{ 'ar_AE' if current_language == 'ar' else 'en_US' }}">
   <meta property="og:site_name" content="{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }}">
   
@@ -33,7 +36,7 @@
   <meta name="twitter:url" content="{{ request.url }}">
   <meta name="twitter:title" content="{{ self.title() }}">
   <meta name="twitter:description" content="{{ self.meta_description() }}">
-  <meta name="twitter:image" content="{{ url_for('static', filename='img/azad_logo_white_on_dark.png', _external=True) }}">
+  <meta name="twitter:image" content="{{ _logo_external }}">
   
   <!-- Canonical URL -->
   <link rel="canonical" href="{{ request.url }}">
@@ -48,12 +51,9 @@
   <link rel="preconnect" href="https://cdn.jsdelivr.net">
   
   <!-- Critical CSS - تحميل فوري (Bootstrap 4 قبل AdminLTE) -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/dark-mode.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/enhancements.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/animations.css') }}">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/erp-theme.css') }}">
   
   <!-- Non-Critical CSS - تحميل متأخر -->
   <link rel="preload" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
@@ -62,13 +62,6 @@
   <link rel="preload" href="{{ url_for('static', filename='adminlte/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <link rel="preload" href="{{ url_for('static', filename='adminlte/plugins/datatables-buttons/css/buttons.bootstrap4.min.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <link rel="preload" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-  <link rel="preload" href="{{ url_for('static', filename='css/azad-style.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
-  <link rel="preload" href="{{ url_for('static', filename='css/modern-arabic-style.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
-  <link rel="preload" href="{{ url_for('static', filename='css/flash-messages.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
-  <link rel="preload" href="{{ url_for('static', filename='css/select2-enhanced.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
-
-  <!-- Accessibility overrides (load last) -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/accessibility.css') }}">
   
   <noscript>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
@@ -78,11 +71,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='adminlte/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='adminlte/plugins/datatables-buttons/css/buttons.bootstrap4.min.css') }}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/azad-style.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/modern-arabic-style.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/flash-messages.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/select2-enhanced.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/accessibility.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/erp-theme.css') }}">
   </noscript>
   {% block extra_css %}{% endblock %}
   
@@ -94,7 +83,7 @@
     "name": "{{ developer_name_ar or developer_name or 'شركة أزاد للأنظمة الذكية' }}",
     "alternateName": "{{ developer_name or 'Azad Smart Systems' }}",
     "url": "{{ request.url_root }}",
-    "logo": "{{ url_for('static', filename='img/azad_logo_white_on_dark.png', _external=True) }}",
+    "logo": "{{ _logo_external }}",
     "description": "نظام متكامل لإدارة المستودعات والمبيعات والمشتريات مع ذكاء اصطناعي متقدم",
     "address": {
       "@type": "PostalAddress",
@@ -110,37 +99,6 @@
   }
   </script>
   
-  <style>
-    /* تحسينات سريعة للأداء */
-    * { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
-    img { will-change: transform; }
-    .content-wrapper { min-height: calc(100vh - 120px); }
-    
-    /* Custom Scrollbar للسايدبار */
-    .sidebar::-webkit-scrollbar {
-      width: 8px;
-    }
-    
-    .sidebar::-webkit-scrollbar-track {
-      background: #1a1a2e;
-      border-radius: 10px;
-    }
-    
-    .sidebar::-webkit-scrollbar-thumb {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      border-radius: 10px;
-      transition: all 0.3s;
-    }
-    
-    .sidebar::-webkit-scrollbar-thumb:hover {
-      background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
-    }
-    
-    /* Smooth scroll */
-    .sidebar {
-      scroll-behavior: smooth;
-    }
-  </style>
 </head>
 
 <body class="hold-transition sidebar-mini layout-fixed">
@@ -156,29 +114,29 @@
       </li>
     </ul>
 
-    <ul class="navbar-nav ml-auto">
+    <ul class="navbar-nav ml-auto erp-header-controls">
       <!-- الساعة والتاريخ وسعر الصرف -->
       <li class="nav-item d-none d-lg-inline-block">
-        <div class="nav-link" style="padding: 8px 15px;">
-          <div class="d-flex align-items-center" style="gap: 15px;">
+        <div class="nav-link erp-nav-metrics">
+          <div class="erp-nav-metrics-row">
             <!-- الساعة والتاريخ -->
-            <div class="text-center" style="min-width: 120px;">
-              <div id="current-time" style="font-size: 14px; font-weight: 700; color: #ffffff; text-shadow: 0 1px 3px rgba(0,0,0,0.7);">
-                <i class="fas fa-clock mr-1" style="color: #ffffff;"></i>
+            <div class="erp-metric-block">
+              <div id="current-time" class="erp-metric-primary">
+                <i class="fas fa-clock mr-1"></i>
                 <span id="time-display">--:--</span>
               </div>
-              <div id="current-date" style="font-size: 12px; color: #ffffff; font-weight: 600; text-shadow: 0 1px 2px rgba(0,0,0,0.6);">
-                <i class="fas fa-calendar mr-1" style="color: #ffffff;"></i>
+              <div id="current-date" class="erp-metric-secondary">
+                <i class="fas fa-calendar mr-1"></i>
                 <span id="date-display">--/--/----</span>
               </div>
             </div>
             
             <!-- سعر الصرف -->
-            <div class="text-center" style="min-width: 100px; padding: 5px 10px; background: linear-gradient(135deg, #6c757d 0%, #495057 100%); border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); border: 1px solid #adb5bd;">
-              <div style="font-size: 12px; color: #ffffff; font-weight: 600; text-shadow: 0 1px 2px rgba(0,0,0,0.5);">
+            <div class="erp-exchange-box">
+              <div class="erp-exchange-label">
                 <i class="fas fa-exchange-alt mr-1"></i>USD/AED
               </div>
-              <div id="exchange-rate" style="font-size: 14px; color: #ffffff; font-weight: 800; text-shadow: 0 1px 2px rgba(0,0,0,0.6);">
+              <div id="exchange-rate" class="erp-exchange-value">
                 <i class="fas fa-dollar-sign mr-1"></i>
                 <span id="rate-display">3.67</span>
               </div>
@@ -189,7 +147,7 @@
       
       <li class="nav-item d-none d-md-inline-block">
         <span class="nav-link">
-          <img src="{{ url_for('static', filename='img/azad_logo_white_on_dark.png') }}" alt="Garage" style="height: 32px; vertical-align: middle;">
+          <img src="{{ _logo_internal }}" alt="Garage" class="erp-navbar-logo-img">
         </span>
       </li>
 
@@ -211,12 +169,46 @@
         </span>
       </li>
       {% endif %}
+
+      {% if is_global_scope_user %}
+      <li class="nav-item dropdown erp-header-control">
+        <a class="nav-link" data-toggle="dropdown" href="#" title="تبديل الشركة">
+          <i class="fas fa-building mr-1"></i>
+          <span class="d-none d-md-inline">{{ tenant_name_ar or company_name_ar }}</span>
+        </a>
+        <div class="dropdown-menu dropdown-menu-right">
+          <a class="dropdown-item {% if not active_tenant_id %}active{% endif %}" href="{{ url_for('tenants.switch', tenant_id=0) }}">
+            كل الشركات
+          </a>
+          <div class="dropdown-divider"></div>
+          {% for tnt in available_tenants %}
+          <a class="dropdown-item {% if active_tenant_id == tnt.id %}active{% endif %}" href="{{ url_for('tenants.switch', tenant_id=tnt.id) }}">
+            {{ tnt.name_ar or tnt.name }}
+          </a>
+          {% endfor %}
+        </div>
+      </li>
+      {% endif %}
+
+      <li class="nav-item erp-header-control d-none d-lg-flex">
+        <select class="custom-select custom-select-sm" data-ui-action="set-variant" aria-label="اختيار النسخة">
+          <option value="palestinian">فلسطيني</option>
+          <option value="gulf">خليجي</option>
+        </select>
+      </li>
+
+      <li class="nav-item erp-header-control">
+        <button type="button" class="btn btn-sm btn-outline-light" data-ui-action="toggle-mode">
+          <i class="fas fa-sun" data-ui-role="mode-icon"></i>
+          <span class="d-none d-md-inline ml-2" data-ui-role="mode-label">فاتح</span>
+        </button>
+      </li>
       
       <!-- AI Assistant -->
       {% if current_user.is_authenticated and (current_user.is_owner or (current_user.role and current_user.role.slug == 'developer')) %}
       <li class="nav-item">
         <a href="{{ url_for('ai.assistant_page') }}" class="nav-link" title="المساعد الذكي">
-          <i class="fas fa-robot mr-1" style="color: #667eea; font-size: 1.1em;"></i>
+          <i class="fas fa-robot mr-1 erp-ai-icon"></i>
           <span class="d-none d-md-inline">المساعد</span>
         </a>
       </li>
@@ -225,7 +217,7 @@
       <!-- Sidebar Direction Toggle -->
       <li class="nav-item">
         <a class="nav-link" href="#" onclick="toggleSidebarDirection(); return false;" title="تبديل موقع القائمة الجانبية">
-          <i class="fas fa-exchange-alt" style="transform: rotate(90deg);"></i>
+          <i class="fas fa-exchange-alt erp-sidebar-toggle-icon"></i>
           <span class="d-none d-md-inline">تبديل القائمة</span>
         </a>
       </li>
@@ -250,13 +242,15 @@
       
       <li class="nav-item dropdown">
         <a class="nav-link" data-toggle="dropdown" href="#">
-          <i class="far fa-user mr-1"></i>
-          <strong>{{ current_user.username }}</strong>
-          {% if current_user.is_authenticated and current_user.is_owner %}
-          <span class="badge badge-danger">OWNER</span>
-          {% endif %}
+          <span class="erp-user-block">
+            <span class="erp-user-avatar"><i class="far fa-user"></i></span>
+            <span class="d-none d-md-inline">
+              <div class="erp-user-name">{{ current_user.username }}</div>
+              <div class="erp-user-role">{{ current_user.role.name_ar if (current_user.is_authenticated and current_user.role) else 'مستخدم' }}</div>
+            </span>
+          </span>
         </a>
-        <div class="dropdown-menu dropdown-menu-lg dropdown-menu-left">
+        <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
           <span class="dropdown-item dropdown-header">{{ current_user.username }}</span>
           <div class="dropdown-divider"></div>
           <a href="{{ url_for('auth.logout') }}" class="dropdown-item">
@@ -268,11 +262,11 @@
   </nav>
 
   <aside class="main-sidebar sidebar-dark-primary elevation-4">
-    <a href="{{ url_for('main.dashboard') }}" class="brand-link text-center" style="padding: 15px;">
-      <img src="{{ url_for('static', filename='img/azad_logo_white_on_dark.png') }}" alt="Azad" style="height: 60px;">
+    <a href="{{ url_for('main.dashboard') }}" class="brand-link text-center erp-sidebar-brand-link">
+      <img src="{{ _logo_internal }}" alt="Azad" class="erp-sidebar-brand-logo">
     </a>
 
-    <div class="sidebar" style="overflow-y: auto; max-height: calc(100vh - 100px); scrollbar-width: thin; scrollbar-color: #667eea #1a1a2e;">
+    <div class="sidebar erp-scrollbar">
       <div class="user-panel mt-3 pb-3 mb-3 d-flex">
         <div class="image">
           <i class="fas fa-user-circle fa-2x text-white"></i>
@@ -761,27 +755,26 @@
       <div class="container-fluid">
         {% with messages = get_flashed_messages(with_categories=true) %}
           {% if messages %}
-            <div id="flash-messages-container" style="position: sticky; top: 60px; z-index: 1040; margin-bottom: 20px;">
+            <div id="flash-messages-container" class="erp-flash-container">
               {% for category, message in messages %}
-                <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show flash-message" 
-                     style="font-size: 18px; font-weight: 600; padding: 20px 25px; border-radius: 12px; box-shadow: 0 6px 20px rgba(0,0,0,0.2); animation: slideDown 0.4s ease-out; border-left: 5px solid {{ 'var(--success-color)' if category == 'success' else ('var(--danger-color)' if category in ['error', 'danger'] else ('var(--warning-color)' if category == 'warning' else 'var(--info-color)')) }};">
-                  <div class="d-flex align-items-center">
-                    <div class="mr-3" style="font-size: 28px;">
-                      {% if category == 'success' %}
-                        <i class="fas fa-check-circle text-success"></i>
-                      {% elif category == 'danger' or category == 'error' %}
-                        <i class="fas fa-exclamation-circle text-danger"></i>
-                      {% elif category == 'warning' %}
-                        <i class="fas fa-exclamation-triangle text-warning"></i>
-                      {% else %}
-                        <i class="fas fa-info-circle text-info"></i>
-                      {% endif %}
-                    </div>
-                    <div class="flex-grow-1" style="line-height: 1.6;">{{ message }}</div>
-                    <button type="button" class="close ml-3" data-dismiss="alert" style="font-size: 28px; opacity: 0.8;">&times;</button>
+                {% set _cat = 'danger' if category == 'error' else category %}
+                {% set _erp_class = 'erp-flash-success' if _cat == 'success' else ('erp-flash-danger' if _cat in ['danger'] else ('erp-flash-warning' if _cat == 'warning' else 'erp-flash-info')) %}
+                <div class="alert alert-{{ _cat }} alert-dismissible fade show flash-message erp-flash {{ _erp_class }}">
+                  <div class="erp-flash-icon">
+                    {% if _cat == 'success' %}
+                      <i class="fas fa-check-circle"></i>
+                    {% elif _cat == 'danger' %}
+                      <i class="fas fa-exclamation-circle"></i>
+                    {% elif _cat == 'warning' %}
+                      <i class="fas fa-exclamation-triangle"></i>
+                    {% else %}
+                      <i class="fas fa-info-circle"></i>
+                    {% endif %}
                   </div>
-                  <div class="progress mt-2" style="height: 5px; background-color: rgba(0,0,0,0.1); border-radius: 4px; overflow: hidden;">
-                    <div class="progress-bar flash-timer" role="progressbar" style="width: 100%; transition: width 20s linear; background: linear-gradient(90deg, rgba(102, 126, 234, 0.8) 0%, rgba(118, 75, 162, 0.8) 100%);"></div>
+                  <div class="erp-flash-body">{{ message }}</div>
+                  <button type="button" class="close" data-dismiss="alert">&times;</button>
+                  <div class="progress mt-2 w-100">
+                    <div class="progress-bar flash-timer" role="progressbar"></div>
                   </div>
                 </div>
               {% endfor %}
@@ -793,35 +786,67 @@
     </section>
   </div>
 
-  <footer class="main-footer text-center" style="padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
-    <div class="mb-3">
-      {% if tenant_logo_url %}
-      <img src="{{ tenant_logo_url }}" alt="{{ tenant_name_ar or company_name_ar }}" style="height: 70px; max-width: 180px; object-fit: contain; background: white; padding: 10px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
-      {% else %}
-      <span style="font-size: 1.4rem; font-weight: 700;">{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }}</span>
-      {% endif %}
-    </div>
-    <div>
-      <p class="mb-2"><strong style="font-size: 1.1em;">{{ tenant_name_ar or company_name_ar }}</strong>{% if tenant_name %} <span class="text-white-50">| {{ tenant_name }}</span>{% endif %}</p>
-      {% if tenant_phone or tenant_email or tenant_address %}
-      <p class="mb-2">
-        {% if tenant_phone %}<i class="fab fa-whatsapp"></i> {{ tenant_phone }}{% endif %}
-        {% if tenant_email %}{% if tenant_phone %} | {% endif %}<i class="fas fa-envelope"></i> {{ tenant_email }}{% endif %}
-      </p>
-      <p class="mb-2 text-white-50"><i class="fas fa-map-marker-alt"></i> {{ tenant_address or company_address }}</p>
-      {% endif %}
-      <hr style="border-color: rgba(255,255,255,0.2); margin: 15px 0;">
-      <p class="mb-0" style="opacity: 0.9;">
-        <small>
-          <span class="text-white-50">الشركة المطورة:</span> <i class="fas fa-code"></i> {{ developer_credit or config.DEVELOPER_CREDIT }}
-          {% if developer_name_ar or developer_name %} ({{ developer_name_ar or developer_name }}){% endif %} |
-          {% if developer_whatsapp_link or developer_phone %}<a href="https://wa.me/{{ developer_whatsapp_link or developer_phone }}" target="_blank" class="text-white">واتساب المطور</a> | {% endif %}
-          <i class="fas fa-robot"></i> مدعوم بالذكاء الاصطناعي |
-          v{{ config.APP_VERSION }}
-        </small>
-      </p>
+  <footer class="main-footer erp-footer">
+    <div class="erp-footer-inner">
+      <div class="container-fluid">
+        <div class="erp-footer-grid">
+          <div>
+            <div class="erp-footer-title">{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }}</div>
+            <div class="erp-footer-muted">
+              {% if tenant_phone %}<span><i class="fab fa-whatsapp"></i> {{ tenant_phone }}</span>{% endif %}
+              {% if tenant_email %}{% if tenant_phone %} | {% endif %}<span><i class="fas fa-envelope"></i> {{ tenant_email }}</span>{% endif %}
+            </div>
+          </div>
+          <div>
+            {% if tenant_logo_url %}
+              <img src="{{ tenant_logo_url }}" alt="{{ tenant_name_ar or company_name_ar }}" class="erp-footer-logo">
+            {% endif %}
+            <div class="erp-footer-muted">v{{ config.APP_VERSION }} | <i class="fas fa-robot"></i> مدعوم بالذكاء الاصطناعي</div>
+          </div>
+          <div>
+            <div class="erp-footer-title">{{ developer_name_ar or developer_name or (developer_credit or config.DEVELOPER_CREDIT) }}</div>
+            <div class="erp-footer-muted">
+              <span><i class="fas fa-code"></i> {{ developer_credit or config.DEVELOPER_CREDIT }}</span>
+              {% if developer_whatsapp_link or developer_phone %}
+                | <a href="https://wa.me/{{ developer_whatsapp_link or developer_phone }}" target="_blank" rel="noopener" class="erp-link">واتساب المطور</a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </footer>
+
+  <nav class="erp-mobile-nav d-md-none" aria-label="تنقل سريع">
+    <a href="{{ url_for('main.dashboard') }}" class="{% if request.endpoint == 'main.dashboard' %}active{% endif %}">
+      <i class="fas fa-home"></i>
+      <span>الرئيسية</span>
+    </a>
+    {% if current_user.is_authenticated and current_user.has_permission('manage_sales') %}
+    <a href="{{ url_for('sales.index') }}" class="{% if request.endpoint and 'sales' in request.endpoint %}active{% endif %}">
+      <i class="fas fa-file-invoice"></i>
+      <span>المبيعات</span>
+    </a>
+    {% endif %}
+    {% if current_user.is_authenticated and current_user.has_permission('manage_purchases') %}
+    <a href="{{ url_for('purchases.index') }}" class="{% if request.endpoint and 'purchases' in request.endpoint %}active{% endif %}">
+      <i class="fas fa-shopping-cart"></i>
+      <span>المشتريات</span>
+    </a>
+    {% endif %}
+    {% if current_user.is_authenticated and current_user.has_permission('manage_products') %}
+    <a href="{{ url_for('products.index') }}" class="{% if request.endpoint and 'products' in request.endpoint %}active{% endif %}">
+      <i class="fas fa-box"></i>
+      <span>المنتجات</span>
+    </a>
+    {% endif %}
+    {% if current_user.is_authenticated and current_user.has_permission('view_reports') %}
+    <a href="{{ url_for('reports.sales') }}" class="{% if request.endpoint and 'reports' in request.endpoint %}active{% endif %}">
+      <i class="fas fa-chart-bar"></i>
+      <span>التقارير</span>
+    </a>
+    {% endif %}
+  </nav>
 </div>
 
 <!-- مصدر موحد للصلاحيات والـ ENUMs (Backend = Frontend) -->
@@ -854,7 +879,7 @@
 <script defer src="{{ url_for('static', filename='js/action-helpers.js') }}"></script>
 <script defer src="{{ url_for('static', filename='js/notifications.js') }}"></script>
 <script defer src="{{ url_for('static', filename='js/keyboard-shortcuts.js') }}"></script>
-<script defer src="{{ url_for('static', filename='js/dark-mode.js') }}"></script>
+<script defer src="{{ url_for('static', filename='js/ui-theme.js') }}"></script>
 <script defer src="{{ url_for('static', filename='js/performance.js') }}"></script>
 <script defer src="{{ url_for('static', filename='js/smart-print.js') }}"></script>
 {% block extra_js %}{% endblock %}

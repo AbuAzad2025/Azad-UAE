@@ -191,17 +191,18 @@ a.btn.btn-outline-secondary span {
                   <i class="fas fa-money-bill-wave text-success mr-1"></i>عملة الدفع
                   <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="العملة التي سيدفع بها العميل - الفاتورة بالدرهم دائماً (اختياري)"></i>
                 </label>
+                {% set dc = company_default_currency or system_default_currency or 'AED' %}
                 <select name="currency" id="currency" class="form-control">
-                  <option value="AED" selected>درهم إماراتي (AED)</option>
-                  <option value="USD">دولار أمريكي (USD)</option>
-                  <option value="ILS">شيقل إسرائيلي (ILS)</option>
-                  <option value="EUR">يورو (EUR)</option>
-                  <option value="GBP">جنيه استرليني (GBP)</option>
-                  <option value="SAR">ريال سعودي (SAR)</option>
-                  <option value="KWD">دينار كويتي (KWD)</option>
-                  <option value="QAR">ريال قطري (QAR)</option>
-                  <option value="OMR">ريال عماني (OMR)</option>
-                  <option value="BHD">دينار بحريني (BHD)</option>
+                  <option value="AED" {% if dc == 'AED' %}selected{% endif %}>درهم إماراتي (AED)</option>
+                  <option value="USD" {% if dc == 'USD' %}selected{% endif %}>دولار أمريكي (USD)</option>
+                  <option value="ILS" {% if dc == 'ILS' %}selected{% endif %}>شيقل إسرائيلي (ILS)</option>
+                  <option value="EUR" {% if dc == 'EUR' %}selected{% endif %}>يورو (EUR)</option>
+                  <option value="GBP" {% if dc == 'GBP' %}selected{% endif %}>جنيه استرليني (GBP)</option>
+                  <option value="SAR" {% if dc == 'SAR' %}selected{% endif %}>ريال سعودي (SAR)</option>
+                  <option value="KWD" {% if dc == 'KWD' %}selected{% endif %}>دينار كويتي (KWD)</option>
+                  <option value="QAR" {% if dc == 'QAR' %}selected{% endif %}>ريال قطري (QAR)</option>
+                  <option value="OMR" {% if dc == 'OMR' %}selected{% endif %}>ريال عماني (OMR)</option>
+                  <option value="BHD" {% if dc == 'BHD' %}selected{% endif %}>دينار بحريني (BHD)</option>
                 </select>
                 <small class="form-text text-info">
                   <i class="fas fa-lightbulb"></i> الأسعار بالدرهم - العملة فقط لتحويل المدفوع

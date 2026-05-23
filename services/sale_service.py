@@ -14,7 +14,7 @@ from utils.tenanting import get_active_tenant_id
 class SaleService:
     
     @staticmethod
-    def create_sale(customer, seller, lines_data, warehouse_id=None, currency='AED', user_exchange_rate=None, 
+    def create_sale(customer, seller, lines_data, warehouse_id=None, currency=None, user_exchange_rate=None, 
                     discount_amount=0, shipping_cost=0, tax_rate=0, notes=None, payment_data=None):
         """
         Create a new sale with proper validations and decimal precision
@@ -30,6 +30,13 @@ class SaleService:
         
         if not lines_data or len(lines_data) == 0:
             raise ValueError('⚠️ يجب إضافة منتج واحد على الأقل للفاتورة.\n💡 اضغط زر "➕ إضافة صف" واختر منتجاً.')
+
+        if not currency:
+            try:
+                from models import Tenant
+                currency = (Tenant.get_current().default_currency or '').strip() or 'AED'
+            except Exception:
+                currency = 'AED'
         
         # Validate discount and tax
         discount_decimal = Decimal(str(discount_amount)) if discount_amount else Decimal('0')
@@ -482,6 +489,7 @@ class SaleService:
         if payment_method == 'cheque' and cheque_number:
             from models import Cheque
             cheque = Cheque(
+                tenant_id=getattr(sale, 'tenant_id', None),
                 cheque_number=cheque_number,
                 cheque_bank_number=cheque_number,  # نفس رقم الشيك
                 cheque_type='incoming',

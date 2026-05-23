@@ -118,8 +118,13 @@ def create():
                 flash(ErrorMessages.sale_no_lines(), 'danger')
                 return redirect(url_for('sales.create'))
             
+            try:
+                from models import Tenant
+                default_currency = (Tenant.get_current().default_currency or '').strip() or 'AED'
+            except Exception:
+                default_currency = 'AED'
             currency_value = request.form.get('currency')
-            currency = currency_value if currency_value else 'AED'
+            currency = currency_value if currency_value else default_currency
             user_exchange_rate = request.form.get('exchange_rate', type=float)
             
             # Track manual exchange rate changes for audit
