@@ -281,6 +281,17 @@ img {
 .main-sidebar {
   background: var(--ui-sidebar-bg) !important;
   box-shadow: var(--ui-shadow-strong);
+  z-index: 1040 !important;
+}
+
+.content-wrapper {
+  position: relative;
+  z-index: 1;
+}
+
+.main-header {
+  position: relative;
+  z-index: 1050;
 }
 
 .main-sidebar .brand-link {
