@@ -224,7 +224,7 @@ class Config:
     APP_VERSION = os.environ.get("APP_VERSION", "1.0.0")
     ITEMS_PER_PAGE = _int("ITEMS_PER_PAGE", 20)
     
-    DEFAULT_PRODUCT_IMAGE = "img/product-placeholder.png"
+    DEFAULT_PRODUCT_IMAGE = "products/default.png"
     
     BACKUP_DIR = os.path.join(instance_dir, "backups")
     os.makedirs(BACKUP_DIR, exist_ok=True)

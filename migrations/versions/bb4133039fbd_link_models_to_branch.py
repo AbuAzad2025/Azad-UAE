@@ -1,7 +1,7 @@
 """link_models_to_branch
 
 Revision ID: bb4133039fbd
-Revises: 11c273f17b28
+Revises: branch_init_001
 Create Date: 2026-03-01 00:44:31.877527
 
 """
