@@ -8,9 +8,6 @@ from sqlalchemy import inspect
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.exc import NoSuchTableError
 
-from app import create_app
-from extensions import db
-
 
 def _build_alembic_config() -> Config:
     project_root = Path(__file__).resolve().parent
@@ -24,6 +21,8 @@ def _build_alembic_config() -> Config:
 
 def _ensure_declared_indexes() -> tuple[int, int]:
     """Create any SQLAlchemy-declared indexes that are still missing."""
+    from extensions import db
+
     engine = db.engine
     inspector = inspect(engine)
 
@@ -50,6 +49,9 @@ def run() -> None:
     os.environ.setdefault("APP_ENV", "development")
     os.environ.setdefault("DEBUG", "1")
     os.environ.setdefault("SKIP_SYSTEM_INTEGRITY", "1")
+
+    from app import create_app
+    from extensions import db
 
     app = create_app()
     with app.app_context():

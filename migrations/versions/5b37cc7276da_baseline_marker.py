@@ -1,4 +1,4 @@
-"""empty message
+"""baseline marker (no-op)
 
 Revision ID: 5b37cc7276da
 Revises: 1a6dadd0ddb4
