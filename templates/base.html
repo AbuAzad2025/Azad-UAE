@@ -42,7 +42,8 @@
   <link rel="canonical" href="{{ request.url }}">
   
   <!-- Favicon -->
-  <link rel="icon" href="{{ url_for('static', filename='img/azad_favicon.png') }}">
+  {% set _favicon_path = tenant_favicon_url or 'img/azad_favicon.png' %}
+  <link rel="icon" href="{{ _favicon_path if _favicon_path.startswith('http') else url_for('static', filename=_favicon_path) }}">
   <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/icon-192.png') }}">
   
   <!-- Preload Critical Resources -->
@@ -134,11 +135,11 @@
             <!-- سعر الصرف -->
             <div class="erp-exchange-box">
               <div class="erp-exchange-label">
-                <i class="fas fa-exchange-alt mr-1"></i>USD/AED
+                <i class="fas fa-exchange-alt mr-1"></i>USD/{{ (tenant_default_currency or company_default_currency or 'AED')|upper }}
               </div>
               <div id="exchange-rate" class="erp-exchange-value">
                 <i class="fas fa-dollar-sign mr-1"></i>
-                <span id="rate-display">3.67</span>
+                <span id="rate-display" data-fx-from="USD" data-fx-to="{{ (tenant_default_currency or company_default_currency or 'AED')|upper }}">--</span>
               </div>
             </div>
           </div>
@@ -147,7 +148,7 @@
       
       <li class="nav-item d-none d-md-inline-block">
         <span class="nav-link">
-          <img src="{{ _logo_internal }}" alt="Garage" class="erp-navbar-logo-img">
+          <img src="{{ _logo_internal }}" alt="{{ tenant_name_ar or company_name_ar }}" class="erp-navbar-logo-img">
         </span>
       </li>
 
@@ -789,28 +790,46 @@
   <footer class="main-footer erp-footer">
     <div class="erp-footer-inner">
       <div class="container-fluid">
-        <div class="erp-footer-grid">
-          <div>
-            <div class="erp-footer-title">{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }}</div>
-            <div class="erp-footer-muted">
-              {% if tenant_phone %}<span><i class="fab fa-whatsapp"></i> {{ tenant_phone }}</span>{% endif %}
-              {% if tenant_email %}{% if tenant_phone %} | {% endif %}<span><i class="fas fa-envelope"></i> {{ tenant_email }}</span>{% endif %}
+        {% set _developer_title = (developer_name_ar or developer_name or 'AZAD') %}
+        {% set _developer_credit_text = (developer_credit or config.DEVELOPER_CREDIT) %}
+        {% set _developer_logo_path = (developer_logo or config.DEVELOPER_LOGO or 'img/logo.png')|trim %}
+        {% set _developer_logo_rel = _developer_logo_path %}
+        {% if _developer_logo_rel.startswith('/static/') %}
+          {% set _developer_logo_rel = _developer_logo_rel[8:] %}
+        {% endif %}
+        {% if _developer_logo_rel.startswith('static/') %}
+          {% set _developer_logo_rel = _developer_logo_rel[7:] %}
+        {% endif %}
+        {% set _footer_phone = (developer_phone or '')|trim %}
+        {% set _footer_email = (developer_email or '')|trim %}
+        <div class="erp-footer-row">
+          <div class="erp-footer-brand">
+            <img src="{{ _developer_logo_path if (_developer_logo_path.startswith('http') or _developer_logo_path.startswith('/')) else url_for('static', filename=_developer_logo_rel) }}" alt="{{ _developer_title }}" class="erp-footer-logo">
+            <div class="erp-footer-brand-text">
+              <div class="erp-footer-title">{{ _developer_title }}</div>
+              <div class="erp-footer-muted"><i class="fas fa-code"></i> {{ _developer_credit_text }}</div>
             </div>
           </div>
-          <div>
-            {% if tenant_logo_url %}
-              <img src="{{ tenant_logo_url }}" alt="{{ tenant_name_ar or company_name_ar }}" class="erp-footer-logo">
+          <div class="erp-footer-center">
+            <span class="erp-footer-chip">v{{ config.APP_VERSION }}</span>
+            <span class="erp-footer-chip"><i class="fas fa-robot"></i> مدعوم بالذكاء الاصطناعي</span>
+          </div>
+          <div class="erp-footer-actions">
+            {% if developer_whatsapp_link %}
+              <a href="https://wa.me/{{ developer_whatsapp_link }}" target="_blank" rel="noopener" class="erp-footer-action">
+                <i class="fab fa-whatsapp"></i><span>واتساب</span>
+              </a>
             {% endif %}
-            <div class="erp-footer-muted">v{{ config.APP_VERSION }} | <i class="fas fa-robot"></i> مدعوم بالذكاء الاصطناعي</div>
-          </div>
-          <div>
-            <div class="erp-footer-title">{{ developer_name_ar or developer_name or (developer_credit or config.DEVELOPER_CREDIT) }}</div>
-            <div class="erp-footer-muted">
-              <span><i class="fas fa-code"></i> {{ developer_credit or config.DEVELOPER_CREDIT }}</span>
-              {% if developer_whatsapp_link or developer_phone %}
-                | <a href="https://wa.me/{{ developer_whatsapp_link or developer_phone }}" target="_blank" rel="noopener" class="erp-link">واتساب المطور</a>
-              {% endif %}
-            </div>
+            {% if _footer_phone %}
+              <a href="tel:{{ _footer_phone }}" class="erp-footer-action">
+                <i class="fas fa-phone"></i><span>اتصال</span>
+              </a>
+            {% endif %}
+            {% if _footer_email %}
+              <a href="mailto:{{ _footer_email }}" class="erp-footer-action">
+                <i class="fas fa-envelope"></i><span>بريد</span>
+              </a>
+            {% endif %}
           </div>
         </div>
       </div>
@@ -972,23 +991,32 @@ $(function() {
   }
   
   // تحديث سعر الصرف
-  function updateExchangeRate() {
-    // يمكن استبدال هذا بـ API حقيقي لسعر الصرف
-    const baseRate = 3.67;
-    const variation = (Math.random() - 0.5) * 0.02; // تغيير عشوائي صغير
-    const currentRate = (baseRate + variation).toFixed(4);
-    
+  async function updateExchangeRate() {
     const rateDisplay = document.getElementById('rate-display');
-    if (rateDisplay) {
-      rateDisplay.textContent = currentRate;
+    if (!rateDisplay) return;
+    
+    const fromCurrency = (rateDisplay.dataset.fxFrom || 'USD').toUpperCase();
+    const toCurrency = (rateDisplay.dataset.fxTo || 'AED').toUpperCase();
+    
+    try {
+      const res = await fetch(`/api/currency-rate/${encodeURIComponent(fromCurrency)}/${encodeURIComponent(toCurrency)}`, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' },
+        credentials: 'same-origin'
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (!data || !data.success || typeof data.rate !== 'number') return;
       
-      // تأثير بصري للتحديث
+      rateDisplay.textContent = data.rate.toFixed(4);
       rateDisplay.style.transform = 'scale(1.1)';
       rateDisplay.style.color = '#f39c12';
       setTimeout(() => {
         rateDisplay.style.transform = 'scale(1)';
         rateDisplay.style.color = '#ffffff';
-      }, 300);
+      }, 250);
+    } catch (e) {
+      return;
     }
   }
   

@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, current_app
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, current_app, send_file
 from flask_login import login_required, current_user
 from sqlalchemy import select
 from extensions import db, limiter
@@ -9,6 +9,7 @@ from utils.helpers import create_audit_log
 from services.payment_service import PaymentService
 from decimal import Decimal
 from datetime import datetime
+from utils.tenanting import get_active_tenant_id, tenant_query, tenant_get_or_404, assert_tenant_record
 
 customers_bp = Blueprint('customers', __name__, url_prefix='/customers')
 
@@ -16,7 +17,7 @@ customers_bp = Blueprint('customers', __name__, url_prefix='/customers')
 def _scoped_customer_query():
     from models import Payment, Receipt
 
-    query = Customer.query
+    query = tenant_query(Customer)
     scoped_branch_id = branch_scope_id()
     if scoped_branch_id is None:
         return query
@@ -50,7 +51,7 @@ def _get_customer_balance(customer_id):
 
     scoped_branch_id = branch_scope_id()
     if scoped_branch_id is None:
-        customer = Customer.query.get_or_404(customer_id)
+        customer = tenant_get_or_404(Customer, customer_id)
         return PaymentService.get_customer_balance_aed(customer)
 
     sales_total = db.session.query(db.func.sum(Sale.amount_aed)).filter(
@@ -163,6 +164,117 @@ def index():
         customers=pagination.items,
         pagination=pagination,
         show_branch_columns=show_branch_columns,
+    )
+
+
+@customers_bp.route('/export')
+@login_required
+@permission_required('manage_customers')
+def export():
+    from services.export_service import ExportService
+    from models import Payment, Receipt
+
+    fmt = (request.args.get('format') or 'csv').strip().lower()
+    search = request.args.get('search', '', type=str)
+    customer_type = request.args.get('type', '', type=str)
+
+    tenant_id = get_active_tenant_id(current_user)
+    query = _scoped_customer_query()
+    if tenant_id is not None:
+        query = query.filter(Customer.tenant_id == tenant_id)
+    if search:
+        search_filter = f'%{search}%'
+        query = query.filter(
+            db.or_(
+                Customer.name.ilike(search_filter),
+                Customer.phone.ilike(search_filter),
+                Customer.email.ilike(search_filter)
+            )
+        )
+    if customer_type:
+        query = query.filter_by(customer_type=customer_type)
+    query = query.filter_by(is_active=True)
+    customers = query.order_by(Customer.name).all()
+
+    scoped_branch = branch_scope_id()
+    balance_map = {}
+    if scoped_branch is not None and customers:
+        customer_ids = [c.id for c in customers]
+        sales_rows = db.session.query(
+            Sale.customer_id,
+            db.func.coalesce(db.func.sum(Sale.amount_aed), 0).label('sales_total'),
+        ).filter(
+            Sale.status == 'confirmed',
+            Sale.branch_id == scoped_branch,
+            Sale.customer_id.in_(customer_ids),
+        ).group_by(Sale.customer_id).all()
+        receipts_rows = db.session.query(
+            Receipt.customer_id,
+            db.func.coalesce(db.func.sum(Receipt.amount_aed), 0).label('receipts_total'),
+        ).filter(
+            Receipt.branch_id == scoped_branch,
+            Receipt.customer_id.in_(customer_ids),
+        ).group_by(Receipt.customer_id).all()
+        outgoing_rows = db.session.query(
+            Payment.customer_id,
+            db.func.coalesce(db.func.sum(Payment.amount_aed), 0).label('outgoing_total'),
+        ).filter(
+            Payment.direction == 'outgoing',
+            Payment.branch_id == scoped_branch,
+            Payment.customer_id.in_(customer_ids),
+        ).group_by(Payment.customer_id).all()
+
+        sales_map = {cid: Decimal(str(total or 0)) for cid, total in sales_rows}
+        receipts_map = {cid: Decimal(str(total or 0)) for cid, total in receipts_rows}
+        outgoing_map = {cid: Decimal(str(total or 0)) for cid, total in outgoing_rows}
+
+        for cid in customer_ids:
+            balance_map[cid] = sales_map.get(cid, Decimal('0')) + outgoing_map.get(cid, Decimal('0')) - receipts_map.get(cid, Decimal('0'))
+
+    headers = [
+        'الاسم',
+        'الاسم (ع)',
+        'النوع',
+        'الهاتف',
+        'الإيميل',
+        'العملة المفضلة',
+        'الرصيد (AED)',
+        'تاريخ الإنشاء',
+    ]
+
+    data = []
+    for c in customers:
+        if scoped_branch is not None:
+            bal = balance_map.get(c.id, Decimal('0'))
+        else:
+            bal = Decimal(str(c.balance or 0))
+        data.append([
+            c.name,
+            c.name_ar or '',
+            c.customer_type or '',
+            c.phone or '',
+            c.email or '',
+            c.preferred_currency or '',
+            float(bal),
+            c.created_at.strftime('%Y-%m-%d') if c.created_at else '',
+        ])
+
+    base_name = f"customers_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    if fmt == 'xlsx':
+        output = ExportService.export_to_xlsx(data, headers, filename=f'{base_name}.xlsx', sheet_name='Customers')
+        return send_file(
+            output,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            as_attachment=True,
+            download_name=f'{base_name}.xlsx',
+        )
+
+    output = ExportService.export_to_csv(data, headers, filename=f'{base_name}.csv')
+    return send_file(
+        output,
+        mimetype='text/csv; charset=utf-8',
+        as_attachment=True,
+        download_name=f'{base_name}.csv',
     )
 
 

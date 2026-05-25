@@ -44,6 +44,35 @@ class ExportService:
         
         output.seek(0)
         return output
+
+    @staticmethod
+    def export_to_xlsx(data, headers, filename='export.xlsx', sheet_name='Report'):
+        from openpyxl import Workbook
+        from openpyxl.utils import get_column_letter
+
+        wb = Workbook()
+        ws = wb.active
+        ws.title = (sheet_name or 'Report')[:31]
+
+        ws.append(list(headers))
+        for row in data:
+            ws.append(list(row))
+
+        for col_idx, header in enumerate(headers, start=1):
+            max_len = len(str(header or ""))
+            for cell in ws[get_column_letter(col_idx)]:
+                try:
+                    v = "" if cell.value is None else str(cell.value)
+                    if len(v) > max_len:
+                        max_len = len(v)
+                except Exception:
+                    continue
+            ws.column_dimensions[get_column_letter(col_idx)].width = min(max(max_len + 2, 10), 60)
+
+        output = BytesIO()
+        wb.save(output)
+        output.seek(0)
+        return output
     
     @staticmethod
     def export_purchases_to_csv(purchases):

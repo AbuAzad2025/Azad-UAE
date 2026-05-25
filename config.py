@@ -185,8 +185,8 @@ class Config:
     DEVELOPER_WEBSITE = os.environ.get("DEVELOPER_WEBSITE", "https://azadsystems.com")
     DEVELOPER_PHONE = os.environ.get("DEVELOPER_PHONE", "+971500000000")
     DEVELOPER_EMAIL = os.environ.get("DEVELOPER_EMAIL", "dev@example.com")
-    DEVELOPER_WHATSAPP = os.environ.get("DEVELOPER_WHATSAPP", os.environ.get("COMPANY_WHATSAPP", "+971500000000"))
-    DEVELOPER_LOGO = os.environ.get("DEVELOPER_LOGO", "img/azad_logo_white_on_dark.png")
+    DEVELOPER_WHATSAPP = os.environ.get("DEVELOPER_WHATSAPP", "+972562150193")
+    DEVELOPER_LOGO = os.environ.get("DEVELOPER_LOGO", "img/logo.png")
     APP_VERSION = "2.0.0"
     
     BABEL_DEFAULT_LOCALE = os.environ.get("BABEL_DEFAULT_LOCALE", "ar")

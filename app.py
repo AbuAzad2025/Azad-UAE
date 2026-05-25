@@ -93,21 +93,10 @@ def create_app(config_class=Config):
     from routes.language import language_bp
     from routes.tenants import tenants_bp
     from routes.payroll import payroll_bp
-    try:
-        from routes.ai import ai_bp
-        _ai_enabled = True
-    except Exception as e:
-        ai_import_error = str(e)
-        print(f"AI Blueprint Import Error: {ai_import_error}")
-        import traceback
-        traceback.print_exc()
-        _ai_enabled = False
-        
-        # Fallback Blueprint to prevent url_for BuildError
-        # This ensures the dashboard doesn't crash even if AI modules are missing
-        from flask import Blueprint, render_template, flash, redirect, url_for
+    def _make_ai_fallback(ai_import_error: str):
+        from flask import Blueprint, flash, redirect, url_for
         ai_bp = Blueprint('ai', __name__, url_prefix='/ai')
-        
+
         @ai_bp.route('/assistant')
         @login_required
         def assistant_page():
@@ -119,13 +108,11 @@ def create_app(config_class=Config):
         def config():
             flash(f"AI Module failed to load on server start. Please check logs. Error: {ai_import_error}", "error")
             return redirect(url_for('main.dashboard'))
-            
+
         @ai_bp.route('/chat', methods=['POST'])
         def chat():
             return {"error": "AI Module Unavailable"}, 503
 
-        # Fallback for all other potential AI routes found in routes/ai.py
-        # This prevents 404 or BuildError if referenced elsewhere dynamically
         @ai_bp.route('/recommend-price', methods=['POST'])
         def recommend_price(): return {"error": "AI Module Unavailable"}, 503
 
@@ -137,17 +124,16 @@ def create_app(config_class=Config):
 
         @ai_bp.route('/exchange-rate/<currency>', methods=['GET'])
         def exchange_rate(currency): return {"error": "AI Module Unavailable"}, 503
-        
+
         @ai_bp.route('/search-market-price/<int:product_id>', methods=['GET'])
         def search_market_price(product_id): return {"error": "AI Module Unavailable"}, 503
-        
+
         @ai_bp.route('/find-compatible/<int:product_id>', methods=['GET'])
         def find_compatible(product_id): return {"error": "AI Module Unavailable"}, 503
-        
+
         @ai_bp.route('/upload-excel', methods=['POST'])
         def upload_excel(): return {"error": "AI Module Unavailable"}, 503
 
-        # Catch-all for any other AI route to avoid crashes
         @ai_bp.route('/<path:path>')
         def catch_all(path):
             try:
@@ -157,6 +143,24 @@ def create_app(config_class=Config):
                     session['ai_unavailable_notified'] = True
             except Exception:
                 pass
+            return redirect(url_for('main.dashboard'))
+
+        return ai_bp
+
+    if os.environ.get("DISABLE_AI"):
+        _ai_enabled = False
+        ai_bp = _make_ai_fallback("AI disabled by server configuration")
+    else:
+        try:
+            from routes.ai import ai_bp
+            _ai_enabled = True
+        except Exception as e:
+            ai_import_error = str(e)
+            print(f"AI Blueprint Import Error: {ai_import_error}")
+            import traceback
+            traceback.print_exc()
+            _ai_enabled = False
+            ai_bp = _make_ai_fallback(ai_import_error)
             return redirect(url_for('main.dashboard'))
     from routes.users import users_bp
     from routes.cheques import cheques_bp
@@ -234,7 +238,11 @@ def create_app(config_class=Config):
         tenant_email = ''
         tenant_address = ''
         tenant_logo_url = ''
+        tenant_logo_dark_url = ''
+        tenant_favicon_url = ''
         tenant_default_currency = ''
+        tenant_enable_tax = None
+        tenant_default_tax_rate = None
         try:
             from models import Tenant
             from models.invoice_settings import InvoiceSettings
@@ -246,7 +254,11 @@ def create_app(config_class=Config):
                 tenant_email = (tenant.email or '').strip()
                 tenant_address = (tenant.address_ar or tenant.address_en or '').strip()
                 tenant_logo_url = (tenant.logo_url or '').strip()
+                tenant_logo_dark_url = (tenant.logo_dark_url or '').strip()
+                tenant_favicon_url = (tenant.favicon_url or '').strip()
                 tenant_default_currency = (tenant.default_currency or '').strip()
+                tenant_enable_tax = bool(getattr(tenant, "enable_tax", True))
+                tenant_default_tax_rate = getattr(tenant, "default_tax_rate", None)
             if not tenant_name_ar:
                 inv = InvoiceSettings.get_active()
                 if inv:
@@ -262,18 +274,27 @@ def create_app(config_class=Config):
         try:
             from models.system_settings import SystemSettings
             sys_settings = SystemSettings.get_current()
-            developer_name_ar = (sys_settings.get_custom_setting('developer_name_ar') or app.config.get('DEVELOPER_NAME_AR', ''))
-            developer_name = (sys_settings.get_custom_setting('developer_name') or app.config.get('DEVELOPER_NAME', ''))
-            developer_credit = (sys_settings.get_custom_setting('developer_credit') or app.config.get('DEVELOPER_CREDIT', ''))
-            developer_phone = (sys_settings.get_custom_setting('developer_phone') or app.config.get('DEVELOPER_PHONE', ''))
-            developer_email = (sys_settings.get_custom_setting('developer_email') or app.config.get('DEVELOPER_EMAIL', ''))
-            developer_website = (sys_settings.get_custom_setting('developer_website') or app.config.get('DEVELOPER_WEBSITE', ''))
-            developer_whatsapp = (sys_settings.get_custom_setting('developer_whatsapp') or app.config.get('DEVELOPER_WHATSAPP', ''))
-            developer_logo = (sys_settings.get_custom_setting('developer_logo') or app.config.get('DEVELOPER_LOGO', 'img/azad_logo_white_on_dark.png'))
+            developer_name_ar = (sys_settings.get_custom_setting('developer_name_ar') or '').strip() or app.config.get('DEVELOPER_NAME_AR', '')
+            developer_name = (sys_settings.get_custom_setting('developer_name') or '').strip() or app.config.get('DEVELOPER_NAME', '')
+            developer_credit = (sys_settings.get_custom_setting('developer_credit') or '').strip() or app.config.get('DEVELOPER_CREDIT', '')
+            developer_phone = (sys_settings.get_custom_setting('developer_phone') or '').strip() or app.config.get('DEVELOPER_PHONE', '')
+            developer_email = (sys_settings.get_custom_setting('developer_email') or '').strip() or app.config.get('DEVELOPER_EMAIL', '')
+            developer_website = (sys_settings.get_custom_setting('developer_website') or '').strip() or app.config.get('DEVELOPER_WEBSITE', '')
+            developer_whatsapp = (sys_settings.get_custom_setting('developer_whatsapp') or '').strip() or app.config.get('DEVELOPER_WHATSAPP', '')
+            developer_logo_raw = (sys_settings.get_custom_setting('developer_logo') or '').strip()
+            if developer_logo_raw and (":\\" in developer_logo_raw or ":/" in developer_logo_raw):
+                developer_logo_raw = ""
+            if developer_logo_raw.startswith("/static/"):
+                developer_logo_raw = developer_logo_raw[len("/static/"):]
+            if developer_logo_raw.startswith("static/"):
+                developer_logo_raw = developer_logo_raw[len("static/"):]
+            developer_logo = developer_logo_raw or app.config.get('DEVELOPER_LOGO', 'img/azad_logo_white_on_dark.png')
             system_default_currency = (sys_settings.default_currency or '').strip() or 'AED'
             system_currency_symbol = (sys_settings.currency_symbol or '').strip() or system_default_currency
             system_currency_position = (sys_settings.currency_position or '').strip() or 'after'
             system_decimal_places = sys_settings.decimal_places if isinstance(sys_settings.decimal_places, int) else 2
+            system_enable_tax = bool(getattr(sys_settings, "enable_tax", True))
+            system_default_tax_rate = getattr(sys_settings, "default_tax_rate", None)
         except Exception:
             developer_name_ar = app.config.get('DEVELOPER_NAME_AR', '')
             developer_name = app.config.get('DEVELOPER_NAME', '')
@@ -287,6 +308,8 @@ def create_app(config_class=Config):
             system_currency_symbol = 'AED'
             system_currency_position = 'after'
             system_decimal_places = 2
+            system_enable_tax = True
+            system_default_tax_rate = None
 
         def _normalize_whatsapp_link(value):
             digits = re.sub(r"\D+", "", value or "")
@@ -343,17 +366,25 @@ def create_app(config_class=Config):
             'tenant_email': tenant_email,
             'tenant_address': tenant_address,
             'tenant_logo_url': tenant_logo_url,
+            'tenant_logo_dark_url': tenant_logo_dark_url,
+            'tenant_favicon_url': tenant_favicon_url,
             'tenant_default_currency': tenant_default_currency or system_default_currency,
-            'company_name': tenant_name or 'Garage Manager',
+            'tenant_enable_tax': tenant_enable_tax if tenant_enable_tax is not None else system_enable_tax,
+            'tenant_default_tax_rate': tenant_default_tax_rate if tenant_default_tax_rate is not None else system_default_tax_rate,
+            'company_name': tenant_name or 'ERP System',
             'company_name_ar': tenant_name_ar or 'نظام المحاسبة',
             'company_phone': tenant_phone,
             'company_email': tenant_email,
             'company_address': tenant_address,
             'company_default_currency': tenant_default_currency or system_default_currency,
+            'company_enable_tax': tenant_enable_tax if tenant_enable_tax is not None else system_enable_tax,
+            'company_default_tax_rate': tenant_default_tax_rate if tenant_default_tax_rate is not None else system_default_tax_rate,
             'system_default_currency': system_default_currency,
             'system_currency_symbol': system_currency_symbol,
             'system_currency_position': system_currency_position,
             'system_decimal_places': system_decimal_places,
+            'system_enable_tax': system_enable_tax,
+            'system_default_tax_rate': system_default_tax_rate,
             'developer_name_ar': developer_name_ar,
             'developer_name': developer_name,
             'developer_credit': developer_credit,
@@ -380,6 +411,17 @@ def create_app(config_class=Config):
         from utils.i18n import get_current_language, is_rtl
         g.lang_code = get_current_language()
         g.rtl = is_rtl()
+
+        from flask_login import current_user as _cu
+        from utils.tenanting import get_active_tenant_id, is_platform_owner
+        g.active_tenant_id = None
+        if _cu.is_authenticated:
+            g.active_tenant_id = get_active_tenant_id(_cu)
+            _bp = request.blueprint or ""
+            _skip = {"", "auth", "public", "language", "tenants"}
+            if _bp not in _skip and request.endpoint != "static":
+                if not is_platform_owner(_cu) and g.active_tenant_id is None:
+                    abort(403)
         
     # Security Headers
     @app.after_request

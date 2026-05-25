@@ -414,10 +414,12 @@ html[dir="rtl"] .nav-sidebar .nav-link {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-direction: row-reverse;
 }
 
 html[dir="rtl"] .nav-sidebar .nav-link > .nav-icon {
   margin: 0 !important;
+  margin-left: 8px !important;
 }
 
 html[dir="rtl"] .nav-sidebar .nav-link > p {
@@ -432,8 +434,8 @@ html[dir="rtl"] .nav-sidebar .nav-link > p > .right {
 }
 
 html[dir="rtl"] .nav-sidebar .nav-treeview {
-  padding-right: 12px;
-  padding-left: 0;
+  padding-right: 0;
+  padding-left: 12px;
 }
 
 body[data-sidebar-side="right"] .main-sidebar {
@@ -812,36 +814,115 @@ html[data-ui-mode="dark"] .erp-footer::before {
   padding: 18px 12px;
 }
 
-.erp-footer .erp-footer-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 12px;
+.erp-footer-row {
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
+  justify-content: space-between;
+  gap: 14px;
   text-align: center;
 }
 
 @media (min-width: 992px) {
-  .erp-footer .erp-footer-grid {
-    grid-template-columns: 1fr 1fr 1fr;
-    text-align: center;
+  .erp-footer-row {
+    text-align: start;
   }
+}
+
+.erp-footer-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1 1 360px;
+  min-width: 240px;
+}
+
+.erp-footer-brand-text {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
 }
 
 .erp-footer .erp-footer-title {
   font-weight: 900;
   font-size: 1.05rem;
+  line-height: 1.1;
 }
 
 .erp-footer .erp-footer-muted {
   opacity: 0.85;
   font-weight: 600;
+  font-size: 0.92rem;
+  line-height: 1.3;
 }
 
 .erp-footer-logo {
-  max-height: 56px;
-  max-width: 240px;
+  max-height: 52px;
+  max-width: 200px;
   object-fit: contain;
   display: inline-block;
+}
+
+.erp-footer-center {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex: 0 1 320px;
+}
+
+.erp-footer-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--ui-border);
+  background: rgba(255, 255, 255, 0.04);
+  font-weight: 800;
+  font-size: 0.86rem;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+html[data-ui-mode="light"] .erp-footer-chip {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.erp-footer-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex: 1 1 260px;
+}
+
+.erp-footer-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--ui-border);
+  background: rgba(255, 255, 255, 0.04);
+  color: inherit;
+  text-decoration: none;
+  font-weight: 900;
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+html[data-ui-mode="light"] .erp-footer-action {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.erp-footer-action:hover {
+  background: rgba(255, 255, 255, 0.08);
+  text-decoration: none;
+}
+
+html[data-ui-mode="light"] .erp-footer-action:hover {
+  background: rgba(0, 0, 0, 0.06);
 }
 
 .erp-link {
@@ -925,7 +1006,7 @@ html[data-ui-mode="dark"] .erp-mobile-nav {
 }
 
 .login-page .login-box {
-  width: 450px;
+  width: 560px;
   max-width: 94vw;
 }
 
@@ -933,24 +1014,301 @@ html[data-ui-mode="dark"] .erp-mobile-nav {
   border-radius: var(--ui-radius-lg) !important;
   box-shadow: var(--ui-shadow-strong);
   overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .login-page .card-header {
-  background: var(--ui-navbar-bg);
-  padding: 26px 18px;
+  background: linear-gradient(135deg, rgba(2, 68, 45, 0.92), rgba(15, 23, 42, 0.88));
+  padding: 20px 18px;
   text-align: center;
   border-bottom: 1px solid rgba(255, 255, 255, 0.16);
 }
 
 .erp-auth-logo {
   background: rgba(255, 255, 255, 0.96);
-  padding: 10px;
-  border-radius: 12px;
-  max-height: 70px;
+  padding: 8px;
+  border-radius: 14px;
+  max-height: 60px;
   max-width: 220px;
   object-fit: contain;
   display: inline-block;
-  margin-bottom: 14px;
+  margin-bottom: 10px;
+}
+
+.erp-auth-header {
+  display: grid;
+  gap: 14px;
+  justify-items: center;
+}
+
+.erp-auth-logos {
+  display: flex;
+  align-items: stretch;
+  gap: 14px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.erp-auth-logo-item {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+}
+
+.erp-auth-logo-caption {
+  font-weight: 900;
+  font-size: 0.92rem;
+  color: rgba(255, 255, 255, 0.92);
+  text-align: center;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.erp-auth-logo-sep {
+  width: 1px;
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  align-self: center;
+  height: 64px;
+}
+
+.erp-auth-tenant-logo {
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.erp-auth-tenant-placeholder {
+  width: 76px;
+  height: 76px;
+  border-radius: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--ui-primary);
+  font-weight: 900;
+  font-size: 1.4rem;
+}
+
+.erp-auth-system {
+  display: grid;
+  gap: 6px;
+  text-align: center;
+}
+
+.erp-auth-system-title {
+  color: #fff;
+  font-weight: 1000;
+  letter-spacing: 0.6px;
+  font-size: 1.75rem;
+  line-height: 1.1;
+}
+
+.erp-auth-system-subtitle {
+  color: rgba(255, 255, 255, 0.86);
+  font-weight: 800;
+  font-size: 1.02rem;
+  line-height: 1.25;
+}
+
+.erp-auth-tenant {
+  display: grid;
+  gap: 6px;
+  text-align: center;
+}
+
+.erp-auth-tenant-title {
+  color: rgba(255, 255, 255, 0.95);
+  font-weight: 1000;
+  font-size: 1.1rem;
+  line-height: 1.2;
+}
+
+.erp-auth-tenant-sub {
+  color: rgba(255, 255, 255, 0.72);
+  font-weight: 700;
+  font-size: 0.92rem;
+  line-height: 1.3;
+}
+
+.erp-auth-tenant-meta {
+  display: inline-flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.78);
+  font-weight: 800;
+  font-size: 0.9rem;
+}
+
+.erp-auth-tenant-meta i {
+  opacity: 0.9;
+  margin-inline-end: 6px;
+}
+
+.erp-auth-advanced {
+  border-radius: 14px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.7);
+  padding: 10px 12px;
+}
+
+html[data-ui-mode="dark"] .erp-auth-advanced {
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.erp-auth-advanced-summary {
+  cursor: pointer;
+  font-weight: 1000;
+  color: var(--ui-text);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.erp-auth-advanced summary::-webkit-details-marker {
+  display: none;
+}
+
+.erp-auth-advanced-summary::after {
+  content: "\f078";
+  font-family: "Font Awesome 5 Free";
+  font-weight: 900;
+  opacity: 0.7;
+}
+
+.erp-auth-advanced[open] .erp-auth-advanced-summary::after {
+  content: "\f077";
+}
+
+.erp-auth-footer-single {
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  background: rgba(255, 255, 255, 0.6);
+  text-align: start;
+}
+
+.erp-auth-footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.erp-auth-footer-links a,
+.erp-auth-footer-links span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  background: rgba(255, 255, 255, 0.75);
+  color: inherit;
+  text-decoration: none;
+  font-weight: 900;
+  font-size: 0.9rem;
+}
+
+html[data-ui-mode="dark"] .erp-auth-footer-links a,
+html[data-ui-mode="dark"] .erp-auth-footer-links span {
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.erp-auth-footer-links a:hover {
+  text-decoration: none;
+  background: rgba(255, 255, 255, 0.95);
+}
+
+html[data-ui-mode="dark"] .erp-auth-footer-links a:hover {
+  background: rgba(255, 255, 255, 0.10);
+}
+
+.erp-auth-footer-links i {
+  opacity: 0.9;
+}
+
+.erp-auth-form-title {
+  font-weight: 1000;
+  font-size: 1.1rem;
+  margin: 4px 0 14px 0;
+  text-align: center;
+}
+
+.erp-auth-help {
+  text-align: center;
+  font-weight: 800;
+  opacity: 0.75;
+  margin-bottom: 10px;
+  font-size: 0.92rem;
+}
+
+html[data-ui-mode="dark"] .erp-auth-footer-single {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.erp-auth-footer {
+  display: grid;
+  gap: 12px;
+  text-align: start;
+}
+
+@media (min-width: 520px) {
+  .erp-auth-footer {
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+}
+
+.erp-auth-footer-col {
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  background: rgba(255, 255, 255, 0.6);
+}
+
+html[data-ui-mode="dark"] .erp-auth-footer-col {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.erp-auth-footer-title {
+  font-weight: 1000;
+  margin-bottom: 6px;
+}
+
+.erp-auth-footer-muted {
+  font-weight: 800;
+  opacity: 0.85;
+  font-size: 0.88rem;
+  line-height: 1.3;
+  margin-bottom: 8px;
+}
+
+.erp-auth-footer-links {
+  display: grid;
+  gap: 6px;
+  font-weight: 900;
+  font-size: 0.9rem;
+}
+
+.erp-auth-footer-links a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.erp-auth-footer-links a:hover {
+  text-decoration: underline;
+}
+
+.erp-auth-footer-links i {
+  margin-inline-end: 8px;
+  opacity: 0.9;
 }
 
 .erp-auth-logo-fallback {
@@ -974,7 +1332,7 @@ html[data-ui-mode="dark"] .erp-mobile-nav {
 }
 
 .login-page .card-body {
-  background: rgba(255, 255, 255, 0.96);
+  background: rgba(255, 255, 255, 0.97);
 }
 
 html[data-ui-mode="dark"] .login-page .card-body {
@@ -995,7 +1353,28 @@ html[data-ui-mode="dark"] .login-page .card-footer {
   padding: 0.95rem 1.35rem;
   font-size: 0.95rem;
   line-height: 1.7;
-  text-align: center;
+  text-align: start;
+}
+
+.login-page .input-group-text {
+  border-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+html[data-ui-mode="dark"] .login-page .input-group-text {
+  border-color: rgba(255, 255, 255, 0.10) !important;
+}
+
+.login-page .btn.btn-primary.btn-block {
+  border-radius: 14px;
+  font-weight: 1000;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: linear-gradient(135deg, var(--ui-primary), var(--ui-accent));
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.18);
+}
+
+.login-page .btn.btn-primary.btn-block:hover {
+  filter: brightness(1.03);
 }
 
 .login-page .auth-input-group .form-control:focus {

@@ -8,6 +8,7 @@ from services.currency_service import CurrencyService
 from utils.decorators import permission_required
 from utils.branching import ensure_warehouse_access, get_accessible_warehouses, should_show_all_branch_columns
 from utils.helpers import create_audit_log
+from utils.tenanting import tenant_query, tenant_get_or_404
 from utils.number_to_arabic import number_to_arabic_words
 from utils.qr_generator import generate_qr_data_url
 
@@ -24,7 +25,7 @@ def index():
     status = request.args.get('status', '', type=str)
     payment_status = request.args.get('payment_status', '', type=str)
     
-    query = Sale.query
+    query = tenant_query(Sale)
     
     # إخفاء المبيعات المؤرشفة
     from models import ArchivedRecord
@@ -77,7 +78,7 @@ def create():
     if request.method == 'POST':
         try:
             customer_id = request.form.get('customer_id', type=int)
-            customer = Customer.query.get_or_404(customer_id)
+            customer = tenant_get_or_404(Customer, customer_id)
             
             lines_data = []
             line_count = int(request.form.get('line_count', 0))
@@ -100,7 +101,7 @@ def create():
                     serials = request.form.getlist(f'lines[{i}][serials][]')
                     
                     if product_id and quantity and quantity > 0:
-                        product = Product.query.get(product_id)
+                        product = tenant_get_or_404(Product, product_id)
                         if product:
                             lines_data.append({
                                 'product': product,
@@ -199,7 +200,7 @@ def create():
 @login_required
 @permission_required('manage_sales')
 def view(id):
-    sale = Sale.query.get_or_404(id)
+    sale = tenant_get_or_404(Sale, id)
     from utils.decorators import branch_scope_id
     scoped_branch_id = branch_scope_id()
     if scoped_branch_id is not None and sale.branch_id != scoped_branch_id:
@@ -217,7 +218,7 @@ def view(id):
 @login_required
 @permission_required('manage_sales')
 def print_invoice(id):
-    sale = Sale.query.get_or_404(id)
+    sale = tenant_get_or_404(Sale, id)
     from utils.decorators import branch_scope_id
     scoped_branch_id = branch_scope_id()
     if scoped_branch_id is not None and sale.branch_id != scoped_branch_id:
@@ -291,7 +292,7 @@ def print_invoice(id):
 @permission_required('manage_sales')
 def edit(id):
     """تعديل فاتورة - فقط الفواتير غير المدفوعة وغير الملغاة"""
-    sale = Sale.query.get_or_404(id)
+    sale = tenant_get_or_404(Sale, id)
     from utils.decorators import branch_scope_id
     scoped_branch_id = branch_scope_id()
     if scoped_branch_id is not None and sale.branch_id != scoped_branch_id:
@@ -338,7 +339,7 @@ def cancel(id):
         flash(ErrorMessages.permission_denied('إلغاء الفواتير'), 'danger')
         return redirect(url_for('sales.index'))
     
-    sale = Sale.query.get_or_404(id)
+    sale = tenant_get_or_404(Sale, id)
     from utils.decorators import branch_scope_id
     scoped_branch_id = branch_scope_id()
     if scoped_branch_id is not None and sale.branch_id != scoped_branch_id:
@@ -368,8 +369,8 @@ def api_get_price():
     if not product_id or not customer_id:
         return jsonify({'error': 'Missing parameters'}), 400
     
-    product = Product.query.get(product_id)
-    customer = Customer.query.get(customer_id)
+    product = tenant_get_or_404(Product, product_id)
+    customer = tenant_get_or_404(Customer, customer_id)
     
     if not product or not customer:
         return jsonify({'error': 'Not found'}), 404
@@ -402,7 +403,7 @@ def archived():
     for archived in archived_sales_query.all():
         data = archived.data
         # Get the actual sale to retrieve customer name
-        sale = Sale.query.get(archived.record_id)
+        sale = tenant_get_or_404(Sale, archived.record_id) if archived.record_id else None
         archived_items.append({
             'id': archived.record_id,
             'sale_number': data.get('sale_number'),
@@ -428,7 +429,7 @@ def delete(id):
     from models import Payment, Cheque, GLJournalEntry
     from services.gl_service import GLService
     
-    sale = Sale.query.get_or_404(id)
+    sale = tenant_get_or_404(Sale, id)
     
     # التحقق من الارتباطات
     has_links = False
@@ -495,7 +496,7 @@ def archive(id):
     """أرشفة فاتورة"""
     from services.archive_service import ArchiveService
     
-    sale = Sale.query.get_or_404(id)
+    sale = tenant_get_or_404(Sale, id)
     
     try:
         # عكس القيد المحاسبي قبل الأرشفة (إذا لم تكن ملغاة)

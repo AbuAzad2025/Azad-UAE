@@ -6,7 +6,7 @@ from sqlalchemy import func, select
 from extensions import db
 from models import PartnerCommissionEntry, Sale, SaleLine, Purchase, Product, Customer, ProductPartner
 from utils.decorators import permission_required, branch_scope_id
-from utils.tenanting import get_active_tenant_id
+from utils.tenanting import get_active_tenant_id, tenant_query, apply_tenant_scope
 
 reports_bp = Blueprint('reports', __name__, url_prefix='/reports')
 
@@ -14,7 +14,7 @@ reports_bp = Blueprint('reports', __name__, url_prefix='/reports')
 def _scoped_customer_query():
     from models import Payment, Receipt
 
-    query = Customer.query
+    query = tenant_query(Customer)
     scoped_branch_id = branch_scope_id()
     if scoped_branch_id is None:
         return query
@@ -31,12 +31,12 @@ def _scoped_supplier_query():
     scoped_branch_id = branch_scope_id()
     if scoped_branch_id is None:
         from models import Supplier
-        return Supplier.query
+        return tenant_query(Supplier)
 
     from models import Supplier
     purchase_ids = select(Purchase.supplier_id).where(Purchase.supplier_id.isnot(None), Purchase.branch_id == scoped_branch_id)
     payment_ids = select(Payment.supplier_id).where(Payment.supplier_id.isnot(None), Payment.branch_id == scoped_branch_id)
-    return Supplier.query.filter(Supplier.id.in_(purchase_ids.union(payment_ids)))
+    return tenant_query(Supplier).filter(Supplier.id.in_(purchase_ids.union(payment_ids)))
 
 
 @reports_bp.route('/')
@@ -350,8 +350,11 @@ def sales():
     customer_id = request.args.get('customer', type=int)
     seller_id = request.args.get('seller', type=int)
     
-    query = Sale.query.filter_by(status='confirmed')
+    query = tenant_query(Sale).filter_by(status='confirmed')
     scoped_branch_id = branch_scope_id()
+    tenant_id = get_active_tenant_id(current_user)
+    if tenant_id is not None:
+        query = query.filter(Sale.tenant_id == tenant_id)
     if scoped_branch_id is not None:
         query = query.filter(Sale.branch_id == scoped_branch_id)
     
@@ -392,10 +395,123 @@ def sales():
         'total_pending_aed': float(total_due),
         'total_profit': float(total_profit) if current_user.can_see_costs() else None
     }
+
+    customers_query = Customer.query
+    if tenant_id is not None:
+        customers_query = customers_query.filter(Customer.tenant_id == tenant_id)
+    if scoped_branch_id is not None:
+        customer_ids = select(Sale.customer_id).where(Sale.branch_id == scoped_branch_id, Sale.customer_id.isnot(None))
+        customers_query = customers_query.filter(Customer.id.in_(customer_ids))
+    customers = customers_query.order_by(Customer.name).limit(500).all()
+
+    if current_user.is_seller():
+        sellers = [current_user]
+    else:
+        from models import User
+        sellers_query = User.query.filter(User.is_active == True)
+        if tenant_id is not None:
+            sellers_query = sellers_query.filter(User.tenant_id == tenant_id)
+        if scoped_branch_id is not None:
+            seller_ids = select(Sale.seller_id).where(Sale.branch_id == scoped_branch_id, Sale.seller_id.isnot(None))
+            sellers_query = sellers_query.filter(User.id.in_(seller_ids))
+        sellers = sellers_query.order_by(User.username).limit(500).all()
     
     return render_template('reports/sales.html',
                          sales=sales_list,
-                         summary=summary)
+                         summary=summary,
+                         date_from=date_from,
+                         date_to=date_to,
+                         customer_id=customer_id,
+                         seller_id=seller_id,
+                         customers=customers,
+                         sellers=sellers)
+
+
+@reports_bp.route('/sales/export')
+@login_required
+@permission_required('view_reports')
+def sales_export():
+    from flask import send_file
+    from services.export_service import ExportService
+
+    fmt = (request.args.get('format') or 'csv').strip().lower()
+    date_from = request.args.get('date_from', '', type=str)
+    date_to = request.args.get('date_to', '', type=str)
+    customer_id = request.args.get('customer', type=int)
+    seller_id = request.args.get('seller', type=int)
+
+    query = tenant_query(Sale).filter_by(status='confirmed')
+    scoped_branch_id = branch_scope_id()
+    tenant_id = get_active_tenant_id(current_user)
+    if tenant_id is not None:
+        query = query.filter(Sale.tenant_id == tenant_id)
+    if scoped_branch_id is not None:
+        query = query.filter(Sale.branch_id == scoped_branch_id)
+    if date_from:
+        query = query.filter(func.date(Sale.sale_date) >= date_from)
+    if date_to:
+        query = query.filter(func.date(Sale.sale_date) <= date_to)
+    if customer_id:
+        query = query.filter_by(customer_id=customer_id)
+    if seller_id:
+        query = query.filter_by(seller_id=seller_id)
+    elif current_user.is_seller():
+        query = query.filter_by(seller_id=current_user.id)
+
+    sales_list = query.order_by(Sale.sale_date.desc()).all()
+
+    headers = [
+        'رقم الفاتورة',
+        'تاريخ الفاتورة',
+        'الزبون',
+        'البائع',
+        'الفرع',
+        'المستودع',
+        'العملة',
+        'سعر الصرف',
+        'إجمالي (AED)',
+        'مدفوع (AED)',
+        'المتبقي (AED)',
+        'حالة الدفع',
+    ]
+
+    data = []
+    for s in sales_list:
+        total_aed = Decimal(str(s.amount_aed or 0))
+        paid_aed = Decimal(str(s.paid_amount_aed or 0))
+        due_aed = total_aed - paid_aed
+        data.append([
+            s.sale_number,
+            s.sale_date.strftime('%Y-%m-%d') if s.sale_date else '',
+            s.customer.name if s.customer else '',
+            s.seller.get_display_name() if s.seller else '',
+            (s.branch.name if s.branch else ''),
+            (s.warehouse.name_ar or s.warehouse.name) if getattr(s, 'warehouse', None) else '',
+            s.currency or '',
+            float(s.exchange_rate or 1),
+            float(total_aed),
+            float(paid_aed),
+            float(due_aed),
+            s.payment_status or '',
+        ])
+
+    base_name = f"sales_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    if fmt == 'xlsx':
+        output = ExportService.export_to_xlsx(data, headers, filename=f'{base_name}.xlsx', sheet_name='Sales')
+        return send_file(
+            output,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            as_attachment=True,
+            download_name=f'{base_name}.xlsx',
+        )
+
+    output = ExportService.export_to_csv(data, headers, filename=f'{base_name}.csv')
+    return send_file(
+        output,
+        mimetype='text/csv; charset=utf-8',
+        as_attachment=True,
+        download_name=f'{base_name}.csv',
+    )
 
 
 @reports_bp.route('/purchases')
@@ -409,8 +525,11 @@ def purchases():
     date_to = request.args.get('end_date', '', type=str)
     supplier_id = request.args.get('supplier_id', type=int)
     
-    query = Purchase.query.filter_by(status='confirmed')
+    query = tenant_query(Purchase).filter_by(status='confirmed')
     scoped_branch_id = branch_scope_id()
+    tenant_id = get_active_tenant_id(current_user)
+    if tenant_id is not None:
+        query = query.filter(Purchase.tenant_id == tenant_id)
     if scoped_branch_id is not None:
         query = query.filter(Purchase.branch_id == scoped_branch_id)
     
@@ -480,18 +599,103 @@ def purchases():
                          supplier_id=supplier_id)
 
 
+@reports_bp.route('/purchases/export')
+@login_required
+@permission_required('view_reports')
+def purchases_export():
+    from flask import send_file
+    from services.export_service import ExportService
+
+    if current_user.is_seller():
+        return render_template('errors/403.html'), 403
+
+    fmt = (request.args.get('format') or 'csv').strip().lower()
+    date_from = request.args.get('start_date', '', type=str)
+    date_to = request.args.get('end_date', '', type=str)
+    supplier_id = request.args.get('supplier_id', type=int)
+
+    query = tenant_query(Purchase).filter_by(status='confirmed')
+    scoped_branch_id = branch_scope_id()
+    tenant_id = get_active_tenant_id(current_user)
+    if tenant_id is not None:
+        query = query.filter(Purchase.tenant_id == tenant_id)
+    if scoped_branch_id is not None:
+        query = query.filter(Purchase.branch_id == scoped_branch_id)
+    if date_from:
+        query = query.filter(func.date(Purchase.purchase_date) >= date_from)
+    if date_to:
+        query = query.filter(func.date(Purchase.purchase_date) <= date_to)
+    if supplier_id:
+        query = query.filter_by(supplier_id=supplier_id)
+
+    purchases_list = query.order_by(Purchase.purchase_date.desc()).all()
+
+    headers = [
+        'رقم الفاتورة',
+        'تاريخ الفاتورة',
+        'المورد',
+        'الفرع',
+        'المستودع',
+        'العملة',
+        'سعر الصرف',
+        'الإجمالي (AED)',
+        'الإجمالي (عملة الفاتورة)',
+        'الحالة',
+    ]
+
+    data = []
+    for p in purchases_list:
+        data.append([
+            p.purchase_number,
+            p.purchase_date.strftime('%Y-%m-%d') if p.purchase_date else '',
+            p.supplier.name if p.supplier else '',
+            (p.branch.name if p.branch else ''),
+            (p.warehouse.name_ar or p.warehouse.name) if getattr(p, 'warehouse', None) else '',
+            p.currency or '',
+            float(p.exchange_rate or 1),
+            float(Decimal(str(p.amount_aed or 0))),
+            float(Decimal(str(p.total_amount or 0))),
+            p.status or '',
+        ])
+
+    base_name = f"purchases_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    if fmt == 'xlsx':
+        output = ExportService.export_to_xlsx(data, headers, filename=f'{base_name}.xlsx', sheet_name='Purchases')
+        return send_file(
+            output,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            as_attachment=True,
+            download_name=f'{base_name}.xlsx',
+        )
+
+    output = ExportService.export_to_csv(data, headers, filename=f'{base_name}.csv')
+    return send_file(
+        output,
+        mimetype='text/csv; charset=utf-8',
+        as_attachment=True,
+        download_name=f'{base_name}.csv',
+    )
+
+
 @reports_bp.route('/receivables')
 @login_required
 @permission_required('view_reports')
 def receivables():
     now = datetime.now(timezone.utc)
     
-    all_sales = Sale.query.filter(
+    all_sales = tenant_query(Sale).filter(
         Sale.status == 'confirmed'
     )
     scoped_branch_id = branch_scope_id()
+    tenant_id = get_active_tenant_id(current_user)
+    if tenant_id is not None:
+        all_sales = all_sales.filter(Sale.tenant_id == tenant_id)
     if scoped_branch_id is not None:
         all_sales = all_sales.filter(Sale.branch_id == scoped_branch_id)
+
+    customer_id = request.args.get('customer', type=int)
+    if customer_id:
+        all_sales = all_sales.filter(Sale.customer_id == customer_id)
     all_sales = all_sales.all()
     
     all_sales = [sale for sale in all_sales if (sale.amount_aed or Decimal('0')) > (sale.paid_amount_aed or Decimal('0'))]
@@ -540,10 +744,105 @@ def receivables():
         'days_90': float(aging_data['days_90']['total']),
         'over_90': float(aging_data['over_90']['total']),
     }
+
+    customers_query = Customer.query
+    if tenant_id is not None:
+        customers_query = customers_query.filter(Customer.tenant_id == tenant_id)
+    if scoped_branch_id is not None:
+        customer_ids = select(Sale.customer_id).where(Sale.branch_id == scoped_branch_id, Sale.customer_id.isnot(None))
+        customers_query = customers_query.filter(Customer.id.in_(customer_ids))
+    customers = customers_query.order_by(Customer.name).limit(500).all()
     
     return render_template('reports/receivables.html',
                          aging_data=aging_data,
-                         summary=summary)
+                         summary=summary,
+                         customers=customers,
+                         customer_id=customer_id)
+
+
+@reports_bp.route('/receivables/export')
+@login_required
+@permission_required('view_reports')
+def receivables_export():
+    from flask import send_file
+    from services.export_service import ExportService
+
+    fmt = (request.args.get('format') or 'csv').strip().lower()
+    customer_id = request.args.get('customer', type=int)
+
+    now = datetime.now(timezone.utc)
+    all_sales = tenant_query(Sale).filter(Sale.status == 'confirmed')
+    scoped_branch_id = branch_scope_id()
+    tenant_id = get_active_tenant_id(current_user)
+    if tenant_id is not None:
+        all_sales = all_sales.filter(Sale.tenant_id == tenant_id)
+    if scoped_branch_id is not None:
+        all_sales = all_sales.filter(Sale.branch_id == scoped_branch_id)
+    if customer_id:
+        all_sales = all_sales.filter(Sale.customer_id == customer_id)
+    all_sales = all_sales.all()
+
+    all_sales = [sale for sale in all_sales if (sale.amount_aed or Decimal('0')) > (sale.paid_amount_aed or Decimal('0'))]
+
+    def bucket_for(days_old: int) -> str:
+        if days_old <= 30:
+            return 'حالي (0-30)'
+        if days_old <= 60:
+            return '31-60'
+        if days_old <= 90:
+            return '61-90'
+        if days_old <= 120:
+            return '91-120'
+        return '+120'
+
+    headers = [
+        'الفئة',
+        'رقم الفاتورة',
+        'تاريخ الفاتورة',
+        'العمر (يوم)',
+        'الزبون',
+        'الفرع',
+        'العملة',
+        'سعر الصرف',
+        'الرصيد المستحق (AED)',
+    ]
+
+    data = []
+    for sale in all_sales:
+        sale_date = sale.sale_date
+        if sale_date and sale_date.tzinfo is None:
+            sale_date = sale_date.replace(tzinfo=timezone.utc)
+        days_old = (now - sale_date).days if sale_date else 0
+        balance = (sale.amount_aed or Decimal('0')) - (sale.paid_amount_aed or Decimal('0'))
+        data.append([
+            bucket_for(days_old),
+            sale.sale_number,
+            sale.sale_date.strftime('%Y-%m-%d') if sale.sale_date else '',
+            days_old,
+            sale.customer.name if sale.customer else '',
+            (sale.branch.name if sale.branch else ''),
+            sale.currency or '',
+            float(sale.exchange_rate or 1),
+            float(Decimal(str(balance or 0))),
+        ])
+
+    base_name = f"receivables_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    if fmt == 'xlsx':
+        output = ExportService.export_to_xlsx(data, headers, filename=f'{base_name}.xlsx', sheet_name='Receivables')
+        return send_file(
+            output,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            as_attachment=True,
+            download_name=f'{base_name}.xlsx',
+        )
+
+    output = ExportService.export_to_csv(data, headers, filename=f'{base_name}.csv')
+    return send_file(
+        output,
+        mimetype='text/csv; charset=utf-8',
+        as_attachment=True,
+        download_name=f'{base_name}.csv',
+    )
 
 
 @reports_bp.route('/inventory')
@@ -552,44 +851,137 @@ def receivables():
 def inventory():
     from models import StockMovement, Warehouse
     from utils.decorators import branch_scope_id
-    from utils.branching import user_can_access_branch, get_accessible_branches
+    from utils.branching import (
+        user_can_access_branch,
+        get_accessible_branches,
+        get_accessible_warehouse_ids,
+    )
 
     category_id = request.args.get('category', type=int)
+    include_zero = (request.args.get('include_zero') or '').strip() in ('1', 'true', 'yes', 'on')
+    warehouse_id = request.args.get('warehouse_id', type=int)
+    in_date_from = (request.args.get('in_date_from') or '').strip()
+    in_date_to = (request.args.get('in_date_to') or '').strip()
+    out_date_from = (request.args.get('out_date_from') or '').strip()
+    out_date_to = (request.args.get('out_date_to') or '').strip()
+
     branch_id = request.args.get('branch_id', type=int)
     scoped_branch_id = branch_scope_id()
     if branch_id is None:
         branch_id = scoped_branch_id
     elif scoped_branch_id is not None and branch_id != scoped_branch_id:
         return render_template('errors/403.html'), 403
-    elif scoped_branch_id is None and not user_can_access_branch(branch_id, current_user):
+    elif scoped_branch_id is None and branch_id is not None and not user_can_access_branch(branch_id, current_user):
         return render_template('errors/403.html'), 403
 
-    query = Product.query.filter_by(is_active=True)
+    tenant_id = get_active_tenant_id(current_user)
+
+    warehouses_query = tenant_query(Warehouse).filter_by(is_active=True)
+    if tenant_id is not None:
+        warehouses_query = warehouses_query.filter(Warehouse.tenant_id == tenant_id)
+    if branch_id is not None:
+        warehouses_query = warehouses_query.filter(Warehouse.branch_id == branch_id)
+    else:
+        accessible_ids = get_accessible_warehouse_ids(current_user)
+        if accessible_ids:
+            warehouses_query = warehouses_query.filter(Warehouse.id.in_(accessible_ids))
+        elif not current_user.is_admin():
+            warehouses_query = warehouses_query.filter(Warehouse.id < 0)
+    warehouses = warehouses_query.order_by(Warehouse.is_main.desc(), Warehouse.name).all()
+
+    selected_warehouse = None
+    if warehouse_id is not None:
+        selected_warehouse = next((w for w in warehouses if w.id == warehouse_id), None)
+        if not selected_warehouse and not current_user.is_admin():
+            return render_template('errors/403.html'), 403
+        if not selected_warehouse:
+            selected_warehouse = Warehouse.query.filter_by(id=warehouse_id, is_active=True).first()
+            if not selected_warehouse:
+                return render_template('errors/404.html'), 404
+            if tenant_id is not None and selected_warehouse.tenant_id != tenant_id:
+                return render_template('errors/403.html'), 403
+            if branch_id is not None and selected_warehouse.branch_id != branch_id:
+                return render_template('errors/403.html'), 403
+            warehouses.append(selected_warehouse)
+
+    if selected_warehouse:
+        warehouse_ids = [selected_warehouse.id]
+    elif warehouses:
+        warehouse_ids = [w.id for w in warehouses]
+    else:
+        warehouse_ids = [-1]
+
+    stock_query = db.session.query(
+        StockMovement.product_id,
+        func.coalesce(func.sum(StockMovement.quantity), 0).label('qty')
+    ).filter(StockMovement.warehouse_id.in_(warehouse_ids))
+    if tenant_id is not None:
+        stock_query = stock_query.filter(StockMovement.tenant_id == tenant_id)
+    stock_map = dict(stock_query.group_by(StockMovement.product_id).all())
+
+    in_query = db.session.query(
+        StockMovement.product_id,
+        func.coalesce(func.sum(StockMovement.quantity), 0).label('qty')
+    ).filter(
+        StockMovement.warehouse_id.in_(warehouse_ids),
+        StockMovement.quantity > 0
+    )
+    if tenant_id is not None:
+        in_query = in_query.filter(StockMovement.tenant_id == tenant_id)
+    if in_date_from:
+        in_query = in_query.filter(func.date(StockMovement.created_at) >= in_date_from)
+    if in_date_to:
+        in_query = in_query.filter(func.date(StockMovement.created_at) <= in_date_to)
+    in_map = dict(in_query.group_by(StockMovement.product_id).all())
+
+    out_query = db.session.query(
+        StockMovement.product_id,
+        func.coalesce(func.sum(-StockMovement.quantity), 0).label('qty')
+    ).filter(
+        StockMovement.warehouse_id.in_(warehouse_ids),
+        StockMovement.quantity < 0
+    )
+    if tenant_id is not None:
+        out_query = out_query.filter(StockMovement.tenant_id == tenant_id)
+    if out_date_from:
+        out_query = out_query.filter(func.date(StockMovement.created_at) >= out_date_from)
+    if out_date_to:
+        out_query = out_query.filter(func.date(StockMovement.created_at) <= out_date_to)
+    out_map = dict(out_query.group_by(StockMovement.product_id).all())
+
+    sold_query = db.session.query(
+        StockMovement.product_id,
+        func.coalesce(func.sum(-StockMovement.quantity), 0).label('qty')
+    ).filter(
+        StockMovement.warehouse_id.in_(warehouse_ids),
+        StockMovement.movement_type == 'sale',
+        StockMovement.quantity < 0
+    )
+    if tenant_id is not None:
+        sold_query = sold_query.filter(StockMovement.tenant_id == tenant_id)
+    if out_date_from:
+        sold_query = sold_query.filter(func.date(StockMovement.created_at) >= out_date_from)
+    if out_date_to:
+        sold_query = sold_query.filter(func.date(StockMovement.created_at) <= out_date_to)
+    sold_map = dict(sold_query.group_by(StockMovement.product_id).all())
+
+    query = tenant_query(Product).filter_by(is_active=True)
     if category_id:
         query = query.filter_by(category_id=category_id)
 
-    branch_stock = {}
-    if branch_id is not None:
-        warehouse_ids = [w.id for w in Warehouse.query.filter_by(is_active=True, branch_id=branch_id).all()]
-        if not warehouse_ids:
-            warehouse_ids = [-1]
-        branch_stock = dict(
-            db.session.query(StockMovement.product_id, func.sum(StockMovement.quantity).label('qty'))
-            .filter(StockMovement.warehouse_id.in_(warehouse_ids))
-            .group_by(StockMovement.product_id)
-            .all()
-        )
-        product_ids = [pid for pid, qty in branch_stock.items() if (qty or 0) != 0]
+    if not include_zero:
+        product_ids = [pid for pid, qty in stock_map.items() if (qty or 0) != 0]
         if product_ids:
             query = query.filter(Product.id.in_(product_ids))
         else:
             query = query.filter(Product.id < 0)
+
     products = query.order_by(Product.name).all()
 
     total_value = Decimal('0')
     total_items = Decimal('0')
     for p in products:
-        qty = (branch_stock.get(p.id) or Decimal('0')) if branch_id is not None else (p.current_stock or Decimal('0'))
+        qty = Decimal(str(stock_map.get(p.id) or 0))
         total_items += qty
         if current_user.can_see_costs():
             total_value += qty * (p.cost_price or Decimal('0'))
@@ -603,20 +995,223 @@ def inventory():
     stats = None
     if products:
         def qty_for(p):
-            return (branch_stock.get(p.id) or Decimal('0')) if branch_id is not None else (p.current_stock or Decimal('0'))
+            return Decimal(str(stock_map.get(p.id) or 0))
         in_stock = sum(1 for p in products if qty_for(p) > 0)
         low = sum(1 for p in products if 0 < qty_for(p) <= (p.min_stock_alert or 0))
         out = sum(1 for p in products if qty_for(p) <= 0)
         stats = {'total_products': len(products), 'in_stock': in_stock, 'low_stock': low, 'out_of_stock': out}
 
-    return render_template('reports/inventory.html',
-                         products=products,
-                         summary=summary,
-                         branches=branches,
-                         selected_branch_id=branch_id,
-                         branch_stock=branch_stock if branch_id is not None else None,
-                         stats=stats,
-                         category_id=category_id)
+    return render_template(
+        'reports/inventory.html',
+        products=products,
+        summary=summary,
+        branches=branches,
+        selected_branch_id=branch_id,
+        warehouses=warehouses,
+        selected_warehouse_id=warehouse_id,
+        stock_map=stock_map,
+        in_map=in_map,
+        out_map=out_map,
+        sold_map=sold_map,
+        stats=stats,
+        category_id=category_id,
+        include_zero=include_zero,
+        in_date_from=in_date_from,
+        in_date_to=in_date_to,
+        out_date_from=out_date_from,
+        out_date_to=out_date_to,
+    )
+
+
+@reports_bp.route('/inventory/export')
+@login_required
+@permission_required('view_reports')
+def inventory_export():
+    from flask import send_file
+    from models import StockMovement, Warehouse
+    from utils.decorators import branch_scope_id
+    from utils.branching import (
+        user_can_access_branch,
+        get_accessible_warehouse_ids,
+    )
+    from services.export_service import ExportService
+
+    fmt = (request.args.get('format') or 'csv').strip().lower()
+    category_id = request.args.get('category', type=int)
+    include_zero = (request.args.get('include_zero') or '').strip() in ('1', 'true', 'yes', 'on')
+    warehouse_id = request.args.get('warehouse_id', type=int)
+    in_date_from = (request.args.get('in_date_from') or '').strip()
+    in_date_to = (request.args.get('in_date_to') or '').strip()
+    out_date_from = (request.args.get('out_date_from') or '').strip()
+    out_date_to = (request.args.get('out_date_to') or '').strip()
+
+    branch_id = request.args.get('branch_id', type=int)
+    scoped_branch_id = branch_scope_id()
+    if branch_id is None:
+        branch_id = scoped_branch_id
+    elif scoped_branch_id is not None and branch_id != scoped_branch_id:
+        return render_template('errors/403.html'), 403
+    elif scoped_branch_id is None and branch_id is not None and not user_can_access_branch(branch_id, current_user):
+        return render_template('errors/403.html'), 403
+
+    tenant_id = get_active_tenant_id(current_user)
+
+    warehouses_query = tenant_query(Warehouse).filter_by(is_active=True)
+    if tenant_id is not None:
+        warehouses_query = warehouses_query.filter(Warehouse.tenant_id == tenant_id)
+    if branch_id is not None:
+        warehouses_query = warehouses_query.filter(Warehouse.branch_id == branch_id)
+    else:
+        accessible_ids = get_accessible_warehouse_ids(current_user)
+        if accessible_ids:
+            warehouses_query = warehouses_query.filter(Warehouse.id.in_(accessible_ids))
+        elif not current_user.is_admin():
+            warehouses_query = warehouses_query.filter(Warehouse.id < 0)
+    warehouses = warehouses_query.all()
+
+    selected_warehouse = None
+    if warehouse_id is not None:
+        selected_warehouse = next((w for w in warehouses if w.id == warehouse_id), None)
+        if not selected_warehouse and not current_user.is_admin():
+            return render_template('errors/403.html'), 403
+        if not selected_warehouse:
+            selected_warehouse = Warehouse.query.filter_by(id=warehouse_id, is_active=True).first()
+            if not selected_warehouse:
+                return render_template('errors/404.html'), 404
+            if tenant_id is not None and selected_warehouse.tenant_id != tenant_id:
+                return render_template('errors/403.html'), 403
+            if branch_id is not None and selected_warehouse.branch_id != branch_id:
+                return render_template('errors/403.html'), 403
+            warehouses = [selected_warehouse]
+
+    if selected_warehouse:
+        warehouse_ids = [selected_warehouse.id]
+        warehouse_label = selected_warehouse.name_ar or selected_warehouse.name
+    elif warehouses:
+        warehouse_ids = [w.id for w in warehouses]
+        warehouse_label = 'متعدد'
+    else:
+        warehouse_ids = [-1]
+        warehouse_label = ''
+
+    stock_query = db.session.query(
+        StockMovement.product_id,
+        func.coalesce(func.sum(StockMovement.quantity), 0).label('qty')
+    ).filter(StockMovement.warehouse_id.in_(warehouse_ids))
+    if tenant_id is not None:
+        stock_query = stock_query.filter(StockMovement.tenant_id == tenant_id)
+    stock_map = dict(stock_query.group_by(StockMovement.product_id).all())
+
+    in_query = db.session.query(
+        StockMovement.product_id,
+        func.coalesce(func.sum(StockMovement.quantity), 0).label('qty')
+    ).filter(
+        StockMovement.warehouse_id.in_(warehouse_ids),
+        StockMovement.quantity > 0
+    )
+    if tenant_id is not None:
+        in_query = in_query.filter(StockMovement.tenant_id == tenant_id)
+    if in_date_from:
+        in_query = in_query.filter(func.date(StockMovement.created_at) >= in_date_from)
+    if in_date_to:
+        in_query = in_query.filter(func.date(StockMovement.created_at) <= in_date_to)
+    in_map = dict(in_query.group_by(StockMovement.product_id).all())
+
+    out_query = db.session.query(
+        StockMovement.product_id,
+        func.coalesce(func.sum(-StockMovement.quantity), 0).label('qty')
+    ).filter(
+        StockMovement.warehouse_id.in_(warehouse_ids),
+        StockMovement.quantity < 0
+    )
+    if tenant_id is not None:
+        out_query = out_query.filter(StockMovement.tenant_id == tenant_id)
+    if out_date_from:
+        out_query = out_query.filter(func.date(StockMovement.created_at) >= out_date_from)
+    if out_date_to:
+        out_query = out_query.filter(func.date(StockMovement.created_at) <= out_date_to)
+    out_map = dict(out_query.group_by(StockMovement.product_id).all())
+
+    sold_query = db.session.query(
+        StockMovement.product_id,
+        func.coalesce(func.sum(-StockMovement.quantity), 0).label('qty')
+    ).filter(
+        StockMovement.warehouse_id.in_(warehouse_ids),
+        StockMovement.movement_type == 'sale',
+        StockMovement.quantity < 0
+    )
+    if tenant_id is not None:
+        sold_query = sold_query.filter(StockMovement.tenant_id == tenant_id)
+    if out_date_from:
+        sold_query = sold_query.filter(func.date(StockMovement.created_at) >= out_date_from)
+    if out_date_to:
+        sold_query = sold_query.filter(func.date(StockMovement.created_at) <= out_date_to)
+    sold_map = dict(sold_query.group_by(StockMovement.product_id).all())
+
+    query = tenant_query(Product).filter_by(is_active=True)
+    if category_id:
+        query = query.filter_by(category_id=category_id)
+    if not include_zero:
+        product_ids = [pid for pid, qty in stock_map.items() if (qty or 0) != 0]
+        if product_ids:
+            query = query.filter(Product.id.in_(product_ids))
+        else:
+            query = query.filter(Product.id < 0)
+    products = query.order_by(Product.name).all()
+
+    headers = [
+        'المنتج',
+        'SKU',
+        'Barcode',
+        'المستودع',
+        'الكمية المتاحة',
+        'إدخال (حسب التاريخ)',
+        'إخراج (حسب التاريخ)',
+        'مباع (حسب التاريخ)',
+        'سعر التكلفة',
+        'سعر البيع',
+        'قيمة المخزون (تكلفة)',
+    ]
+
+    data = []
+    for p in products:
+        qty = Decimal(str(stock_map.get(p.id) or 0))
+        in_qty = Decimal(str(in_map.get(p.id) or 0))
+        out_qty = Decimal(str(out_map.get(p.id) or 0))
+        sold_qty = Decimal(str(sold_map.get(p.id) or 0))
+        cost = p.cost_price or Decimal('0')
+        total_cost_value = qty * cost if current_user.can_see_costs() else None
+        data.append([
+            p.name,
+            p.sku or '',
+            getattr(p, 'barcode', '') or '',
+            warehouse_label,
+            float(qty),
+            float(in_qty),
+            float(out_qty),
+            float(sold_qty),
+            float(cost) if current_user.can_see_costs() else '',
+            float(p.regular_price or 0),
+            float(total_cost_value) if current_user.can_see_costs() else '',
+        ])
+
+    base_name = f"inventory_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    if fmt == 'xlsx':
+        output = ExportService.export_to_xlsx(data, headers, filename=f'{base_name}.xlsx', sheet_name='Inventory')
+        return send_file(
+            output,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            as_attachment=True,
+            download_name=f'{base_name}.xlsx',
+        )
+
+    output = ExportService.export_to_csv(data, headers, filename=f'{base_name}.csv')
+    return send_file(
+        output,
+        mimetype='text/csv; charset=utf-8',
+        as_attachment=True,
+        download_name=f'{base_name}.csv',
+    )
 
 
 @reports_bp.route('/api/model_fields')

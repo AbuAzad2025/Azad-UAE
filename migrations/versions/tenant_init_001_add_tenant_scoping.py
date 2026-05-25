@@ -26,10 +26,10 @@ def _ensure_default_tenant(conn):
             "VALUES (:name, :name_ar, :slug, :business_type, TRUE, CURRENT_TIMESTAMP)"
         ),
         {
-            "name": "Default Garage",
-            "name_ar": "كراج افتراضي",
+            "name": "Default System",
+            "name_ar": "النظام الافتراضي",
             "slug": "default",
-            "business_type": "garage",
+            "business_type": "general",
         },
     )
     row2 = conn.execute(sa.text("SELECT id FROM tenants WHERE is_active = TRUE ORDER BY id ASC LIMIT 1")).fetchone()

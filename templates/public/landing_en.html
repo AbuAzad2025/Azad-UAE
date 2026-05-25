@@ -508,8 +508,109 @@
     .contact-item i { font-size: 2rem; color: var(--gulf-gold); margin-bottom: 10px; }
     .contact-item strong { display: block; font-size: 1rem; margin-bottom: 8px; }
     .contact-item a { color: white; text-decoration: none; font-size: 1rem; font-weight: 900; }
-    footer { background: #0a0e27; color: rgba(255,255,255,0.8); padding: 30px 20px; text-align: center; border-top: 1px solid rgba(255,255,255,0.10); }
-    footer .developer { color: rgba(255,255,255,0.75); font-weight: 700; margin-top: 10px; }
+    .landing-footer {
+      background: linear-gradient(180deg, rgba(10,14,39,0.72), rgba(10,14,39,0.95));
+      color: rgba(255,255,255,0.86);
+      padding: 34px 20px;
+      border-top: 1px solid rgba(255,255,255,0.18);
+    }
+    .landing-footer-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 18px;
+      align-items: center;
+      text-align: center;
+    }
+    @media (min-width: 992px) {
+      .landing-footer-inner {
+        grid-template-columns: 1.4fr 1fr 1fr;
+        text-align: start;
+      }
+    }
+    .landing-footer-brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      justify-content: center;
+    }
+    @media (min-width: 992px) {
+      .landing-footer-brand { justify-content: flex-start; }
+    }
+    .landing-footer-brand img {
+      height: 44px;
+      width: auto;
+      filter: brightness(0) invert(1);
+    }
+    .landing-footer-title {
+      font-weight: 900;
+      color: #fff;
+      line-height: 1.1;
+    }
+    .landing-footer-sub {
+      font-weight: 700;
+      color: rgba(255,255,255,0.82);
+      font-size: 0.92rem;
+      line-height: 1.35;
+    }
+    .landing-footer-col h4 {
+      margin: 0 0 10px 0;
+      font-size: 0.95rem;
+      font-weight: 900;
+      color: rgba(255,255,255,0.92);
+    }
+    .landing-footer-links {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    @media (min-width: 992px) {
+      .landing-footer-links { justify-content: flex-start; }
+    }
+    .landing-footer-links a {
+      color: rgba(255,255,255,0.85);
+      text-decoration: none;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.06);
+      font-weight: 800;
+      font-size: 0.9rem;
+    }
+    .landing-footer-links a:hover { background: rgba(255,255,255,0.10); }
+    .landing-footer-meta {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+    }
+    @media (min-width: 992px) {
+      .landing-footer-meta { justify-content: flex-start; }
+    }
+    .landing-footer-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.92);
+      font-weight: 900;
+      font-size: 0.9rem;
+      text-decoration: none;
+    }
+    .landing-footer-bottom {
+      margin-top: 18px;
+      padding-top: 14px;
+      border-top: 1px solid rgba(255,255,255,0.10);
+      text-align: center;
+      font-weight: 700;
+      color: rgba(255,255,255,0.75);
+    }
 
     @media (max-width: 992px) {
       .landing-nav-links { display: none; }
@@ -708,9 +809,40 @@
     </div>
   </section>
 
-  <footer>
-    <p style="font-size: 0.95rem;">&copy; 2025 {{ tenant_name or company_name or 'Accounting System' }}. All rights reserved.</p>
-    <p class="developer" style="font-size: 0.9rem;">{{ developer_credit or config.DEVELOPER_CREDIT }}</p>
+  <footer class="landing-footer">
+    <div class="landing-footer-inner">
+      <div class="landing-footer-brand">
+        <img src="{{ url_for('static', filename=developer_logo or config.DEVELOPER_LOGO) }}" alt="{{ developer_name or config.DEVELOPER_NAME }}">
+        <div>
+          <div class="landing-footer-title">{{ developer_name or config.DEVELOPER_NAME }}</div>
+          <div class="landing-footer-sub">{{ developer_credit or config.DEVELOPER_CREDIT }}</div>
+        </div>
+      </div>
+      <div class="landing-footer-col">
+        <h4>Quick links</h4>
+        <div class="landing-footer-links">
+          <a href="{{ url_for('public.features') }}">Features</a>
+          <a href="{{ url_for('public.pricing') }}">Pricing</a>
+          <a href="{{ url_for('public.user_guide') }}">Guide</a>
+          <a href="{{ url_for('public.contact') }}">Contact</a>
+        </div>
+      </div>
+      <div class="landing-footer-col">
+        <h4>Support</h4>
+        <div class="landing-footer-meta">
+          <span class="landing-footer-chip">v{{ config.APP_VERSION }}</span>
+          <span class="landing-footer-chip"><i class="fas fa-robot"></i> AI-powered</span>
+          {% if developer_whatsapp_link %}
+          <a class="landing-footer-chip" href="https://wa.me/{{ developer_whatsapp_link }}" target="_blank" rel="noopener">
+            <i class="fab fa-whatsapp"></i> WhatsApp
+          </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    <div class="landing-footer-bottom">
+      &copy; 2025 {{ tenant_name or company_name or 'Accounting System' }}. All rights reserved.
+    </div>
   </footer>
 
   <script>

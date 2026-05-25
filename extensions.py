@@ -238,6 +238,12 @@ def init_extensions(app):
         mail.init_app(app)
     
     babel.init_app(app, locale_selector=get_locale)
+
+    try:
+        from utils.tenant_orm import register_tenant_orm_scoping
+        register_tenant_orm_scoping(app)
+    except Exception as exc:
+        app.logger.error("[ERROR] Tenant ORM scoping failed: %s", exc)
     
     app.logger.info("[OK] Extensions initialized")
 

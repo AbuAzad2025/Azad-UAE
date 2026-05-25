@@ -6,6 +6,7 @@ from utils.decorators import admin_required, permission_required
 from utils.branching import branch_scope_id_for, role_requires_branch
 from utils.helpers import create_audit_log
 from utils.auth_helpers import role_level_for, role_level_for_user
+from utils.tenanting import get_active_tenant_id, assign_tenant_id
 
 users_bp = Blueprint('users', __name__, url_prefix='/users')
 
@@ -55,6 +56,9 @@ def index():
     search = request.args.get('search', '', type=str)
     
     query = User.query.filter_by(is_owner=False, is_active=True)
+    tenant_id = get_active_tenant_id(current_user)
+    if tenant_id is not None:
+        query = query.filter(User.tenant_id == tenant_id)
     scoped_branch_id = branch_scope_id_for(current_user)
     if scoped_branch_id is not None:
         query = query.filter(User.branch_id == scoped_branch_id)
@@ -117,7 +121,8 @@ def create():
             
             password = request.form.get('password')
             user.set_password(password)
-            
+            assign_tenant_id(user)
+
             db.session.add(user)
             db.session.flush()
             

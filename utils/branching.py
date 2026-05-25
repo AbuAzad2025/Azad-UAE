@@ -6,7 +6,7 @@ from sqlalchemy import func
 
 from extensions import db
 from models import Branch, Product, StockMovement, Warehouse
-from utils.tenanting import get_active_tenant_id
+from utils.tenanting import get_active_tenant_id, apply_tenant_scope
 
 
 GLOBAL_ROLE_SLUGS = {"developer", "super_admin"}
@@ -229,7 +229,11 @@ def get_product_stock(product_id, *, warehouse_id=None, warehouse_ids=None, user
 
 
 def get_visible_products_query(user=None):
-    query = Product.query.filter(Product.is_active == True)
+    query = apply_tenant_scope(
+        Product.query.filter(Product.is_active == True),
+        Product,
+        user,
+    )
     warehouse_ids = get_accessible_warehouse_ids(user)
     if branch_scope_id_for(user) is None:
         return query

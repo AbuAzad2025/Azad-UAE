@@ -7,6 +7,7 @@ from services.gl_service import GLService
 from utils.decorators import permission_required, branch_scope_id
 from utils.branching import should_show_all_branch_columns
 from utils.helpers import create_audit_log, generate_number
+from utils.tenanting import tenant_query, tenant_get_or_404
 from decimal import Decimal
 from datetime import datetime
 
@@ -26,7 +27,7 @@ def index():
     per_page = request.args.get('per_page', 20, type=int)
     category_id = request.args.get('category', type=int)
     
-    query = Expense.query.filter_by(status='confirmed')
+    query = tenant_query(Expense).filter_by(status='confirmed')
     
     # إخفاء المصروفات المؤرشفة
     from models import ArchivedRecord
@@ -48,7 +49,7 @@ def index():
         error_out=False
     )
     
-    categories = ExpenseCategory.query.filter_by(is_active=True).all()
+    categories = tenant_query(ExpenseCategory).filter_by(is_active=True).all()
     
     return render_template('expenses/index.html',
                          expenses=pagination.items,
@@ -190,7 +191,7 @@ def create():
             db.session.rollback()
             flash(f'❌ حدث خطأ: {str(e)}\n💡 تحقق من البيانات المدخلة وحاول مرة أخرى.', 'danger')
     
-    categories = ExpenseCategory.query.filter_by(is_active=True).all()
+    categories = tenant_query(ExpenseCategory).filter_by(is_active=True).all()
     exchange_rates = CurrencyService.get_all_rates('AED')
     
     return render_template('expenses/create.html',
@@ -202,7 +203,7 @@ def create():
 @login_required
 @permission_required('manage_expenses')
 def view(id):
-    expense = Expense.query.get_or_404(id)
+    expense = tenant_get_or_404(Expense, id)
     if not _expense_in_scope(expense):
         return render_template('errors/403.html'), 403
     return render_template('expenses/view.html', expense=expense)
@@ -212,7 +213,7 @@ def view(id):
 @login_required
 @permission_required('manage_expenses')
 def print_expense(id):
-    expense = Expense.query.get_or_404(id)
+    expense = tenant_get_or_404(Expense, id)
     if not _expense_in_scope(expense):
         return render_template('errors/403.html'), 403
     from flask import current_app
@@ -229,10 +230,10 @@ def print_expense(id):
 @permission_required('manage_expenses')
 def edit(id):
     """تعديل مصروف"""
-    expense = Expense.query.get_or_404(id)
+    expense = tenant_get_or_404(Expense, id)
     if not _expense_in_scope(expense):
         return render_template('errors/403.html'), 403
-    categories = ExpenseCategory.query.filter_by(is_active=True).all()
+    categories = tenant_query(ExpenseCategory).filter_by(is_active=True).all()
     
     if request.method == 'POST':
         try:
@@ -271,7 +272,7 @@ def delete(id):
     from models import Cheque, GLJournalEntry
     from services.archive_service import ArchiveService
     
-    expense = Expense.query.get_or_404(id)
+    expense = tenant_get_or_404(Expense, id)
     if not _expense_in_scope(expense):
         return render_template('errors/403.html'), 403
     
@@ -340,7 +341,7 @@ def delete(id):
 @login_required
 @permission_required('manage_expenses')
 def categories():
-    categories = ExpenseCategory.query.filter_by(is_active=True).order_by(ExpenseCategory.name).all()
+    categories = tenant_query(ExpenseCategory).filter_by(is_active=True).order_by(ExpenseCategory.name).all()
     return render_template('expenses/categories.html', categories=categories)
 
 
@@ -432,7 +433,7 @@ def archive(id):
     """أرشفة مصروف"""
     from services.archive_service import ArchiveService
     
-    expense = Expense.query.get_or_404(id)
+    expense = tenant_get_or_404(Expense, id)
     if not _expense_in_scope(expense):
         return render_template('errors/403.html'), 403
     

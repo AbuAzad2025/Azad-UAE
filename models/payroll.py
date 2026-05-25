@@ -5,6 +5,7 @@ class Employee(db.Model):
     __tablename__ = 'employees'
 
     id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True)
     name = db.Column(db.String(100), nullable=False)
     name_ar = db.Column(db.String(100))
     phone = db.Column(db.String(20))
@@ -46,6 +47,7 @@ class SalaryAdvance(db.Model):
     __tablename__ = 'salary_advances'
 
     id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True)
     employee_id = db.Column(db.Integer, db.ForeignKey('employees.id'), nullable=False)
     amount = db.Column(db.Numeric(10, 2), nullable=False)
     date = db.Column(db.Date, default=datetime.now)
@@ -65,6 +67,7 @@ class PayrollTransaction(db.Model):
     __tablename__ = 'payroll_transactions'
 
     id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True)
     employee_id = db.Column(db.Integer, db.ForeignKey('employees.id'), nullable=False)
     
     # Period

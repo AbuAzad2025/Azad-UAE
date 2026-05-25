@@ -3,7 +3,7 @@ from flask_login import login_required, current_user
 from extensions import db
 from models import Branch
 from utils.decorators import admin_required
-from utils.tenanting import get_active_tenant_id
+from utils.tenanting import get_active_tenant_id, tenant_query
 
 branches_bp = Blueprint('branches', __name__, url_prefix='/branches')
 
@@ -12,9 +12,7 @@ branches_bp = Blueprint('branches', __name__, url_prefix='/branches')
 @admin_required
 def index():
     tenant_id = get_active_tenant_id(current_user)
-    q = Branch.query
-    if tenant_id is not None:
-        q = q.filter(Branch.tenant_id == tenant_id)
+    q = tenant_query(Branch)
     branches = q.order_by(Branch.is_main.desc(), Branch.code, Branch.name).all()
     return render_template('branches/index.html', branches=branches)
 
@@ -35,7 +33,7 @@ def create():
             return redirect(url_for('branches.create'))
             
         # Check if code exists
-        if Branch.query.filter_by(code=code).first():
+        if tenant_query(Branch).filter_by(code=code).first():
             flash('الكود مستخدم مسبقاً', 'danger')
             return redirect(url_for('branches.create'))
             

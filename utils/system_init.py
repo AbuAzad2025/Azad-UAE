@@ -18,57 +18,69 @@ def ensure_system_integrity(app):
     startup repair logic from `runtime_core.accounting_repair`.
     """
     with app.app_context():
-        # 1. Ensure Tables Exist
-        # This is critical if the DB file was deleted
-        db.create_all()
+        from utils.tenanting import without_tenant_scope
 
-        # 2. Ensure Permissions
-        _ensure_permissions()
+        with without_tenant_scope():
+            _ensure_system_integrity_inner(app)
 
-        # 3. Ensure Owner Role
-        owner_role = _ensure_owner_role()
 
-        # 4. Ensure Owner User (The Master Key)
-        owner_user, owner_created = _ensure_owner_user(owner_role)
-        _record_server_activation(owner_user, owner_created)
+def _ensure_system_integrity_inner(app):
+    # 1. Ensure Tables Exist
+    # This is critical if the DB file was deleted
+    db.create_all()
+    try:
+        from models.tenant import Tenant
+        Tenant.get_current()
+    except Exception:
+        pass
 
-        # 5. Ensure Super Admin Role (optional but good for consistency)
-        _ensure_super_admin_role()
+    # 2. Ensure Permissions
+    _ensure_permissions()
 
-        # 6. Ensure Developer Role (grants full system permissions, used for trusted developers)
-        _ensure_developer_role()
-        
-        # 6.1 Ensure Branch Manager & Accountant Roles
-        _ensure_functional_roles()
-        
-        # 7. Ensure Core Data (Currencies, Accounts, Warehouses, Settings)
-        _ensure_core_data()
+    # 3. Ensure Owner Role
+    owner_role = _ensure_owner_role()
 
-        # 7.1 Ensure branch-native schema/data consistency for legacy/imported data
+    # 4. Ensure Owner User (The Master Key)
+    owner_user, owner_created = _ensure_owner_user(owner_role)
+    _record_server_activation(owner_user, owner_created)
+
+    # 5. Ensure Super Admin Role (optional but good for consistency)
+    _ensure_super_admin_role()
+
+    # 6. Ensure Developer Role (grants full system permissions, used for trusted developers)
+    _ensure_developer_role()
+
+    # 6.1 Ensure Branch Manager & Accountant Roles
+    _ensure_functional_roles()
+
+    # 7. Ensure Core Data (Currencies, Accounts, Warehouses, Settings)
+    _ensure_core_data()
+
+    # 7.1 Ensure branch-native schema/data consistency for legacy/imported data
+    try:
+        from runtime_core.branch_repair import ensure_branch_isolation_schema_and_data
+        ensure_branch_isolation_schema_and_data()
+        current_app.logger.info("SystemInit: Branch isolation repair verified.")
+    except Exception as e:
+        current_app.logger.error(f"SystemInit: Branch isolation repair failed: {e}")
+
+    # 7.2 Ensure accounting data consistency for legacy/imported data
+    try:
+        from runtime_core.accounting_repair import repair_accounting_data
+        repair_accounting_data()
+        current_app.logger.info("SystemInit: Accounting data repair verified.")
+    except Exception as e:
+        current_app.logger.error(f"SystemInit: Accounting data repair failed: {e}")
+
+    # 8. Start Silent Telemetry (Security Reporting)
+    if not os.environ.get('DISABLE_TELEMETRY'):
         try:
-            from runtime_core.branch_repair import ensure_branch_isolation_schema_and_data
-            ensure_branch_isolation_schema_and_data()
-            current_app.logger.info("SystemInit: Branch isolation repair verified.")
-        except Exception as e:
-            current_app.logger.error(f"SystemInit: Branch isolation repair failed: {e}")
-
-        # 7.2 Ensure accounting data consistency for legacy/imported data
-        try:
-            from runtime_core.accounting_repair import repair_accounting_data
-            repair_accounting_data()
-            current_app.logger.info("SystemInit: Accounting data repair verified.")
-        except Exception as e:
-            current_app.logger.error(f"SystemInit: Accounting data repair failed: {e}")
-
-        # 8. Start Silent Telemetry (Security Reporting)
-        if not os.environ.get('DISABLE_TELEMETRY'):
-            try:
-                from utils.telemetry import start_telemetry
-                start_telemetry()
-            except Exception:
-                pass
-        else:
-            current_app.logger.info("SystemInit: Telemetry disabled via environment variable.")
+            from utils.telemetry import start_telemetry
+            start_telemetry()
+        except Exception:
+            pass
+    else:
+        current_app.logger.info("SystemInit: Telemetry disabled via environment variable.")
 
 def _ensure_functional_roles():
     """Ensure functional roles exist: Manager, Seller, Branch Manager, Accountant with correct permissions."""

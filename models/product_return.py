@@ -7,6 +7,7 @@ class ProductReturn(db.Model):
     __tablename__ = 'product_returns'
     
     id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True)
     return_number = db.Column(db.String(50), unique=True, nullable=False, index=True)
     
     sale_id = db.Column(db.Integer, db.ForeignKey('sales.id'), nullable=False, index=True)
@@ -52,6 +53,7 @@ class ProductReturnLine(db.Model):
     __tablename__ = 'product_return_lines'
     
     id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True)
     return_id = db.Column(db.Integer, db.ForeignKey('product_returns.id'), nullable=False, index=True)
     sale_line_id = db.Column(db.Integer, db.ForeignKey('sale_lines.id'))
     product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)

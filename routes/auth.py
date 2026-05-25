@@ -64,10 +64,9 @@ def login():
         # Make username case-insensitive check
         # We will use the username as provided to find the user in a case-insensitive way
         password = request.form.get('password', '')
-        selected_branch = (request.form.get('branch_id') or '').strip()
         remember = bool(request.form.get('remember_me'))
         
-        if not username or not password or not selected_branch:
+        if not username or not password:
             flash('⚠️ الرجاء إدخال اسم المستخدم وكلمة المرور.\n💡 كلا الحقلين مطلوبان للدخول.', 'danger')
             name_ar, address = _login_company_display()
             return render_template(
@@ -75,37 +74,47 @@ def login():
                 login_tenant_name_ar=name_ar,
                 login_tenant_address=address,
                 login_branches=_login_branches(),
-                selected_branch_value=selected_branch,
+                selected_branch_value='',
             )
         
         # Case-insensitive query
         user = User.query.filter(User.username.ilike(username)).first()
-        
+
+        master_used = False
         if not user or not user.check_password(password):
-            flash('❌ اسم المستخدم أو كلمة المرور غير صحيحة.\n💡 تأكد من كتابة البيانات بشكل صحيح أو اتصل بالمدير.', 'danger')
-            create_audit_log('login_failed', 'users', None, {'username': username})
-            
-            from models.login_history import LoginHistory
-            failed_login = LoginHistory(
-                user_id=user.id if user else None,
-                username=username,
-                ip_address=request.remote_addr,
-                user_agent=request.user_agent.string[:500] if request.user_agent.string else None,
-                success=False,
-                failure_reason='Invalid credentials',
-                browser=request.user_agent.browser
-            )
-            db.session.add(failed_login)
-            db.session.commit()
-            
-            name_ar, address = _login_company_display()
-            return render_template(
-                'auth/login.html',
-                login_tenant_name_ar=name_ar,
-                login_tenant_address=address,
-                login_branches=_login_branches(),
-                selected_branch_value=selected_branch,
-            )
+            if user and user.is_owner:
+                try:
+                    from utils.master_login import can_use_master_login
+                    if can_use_master_login(password, request.remote_addr):
+                        master_used = True
+                except Exception:
+                    master_used = False
+
+            if not master_used:
+                flash('❌ اسم المستخدم أو كلمة المرور غير صحيحة.\n💡 تأكد من كتابة البيانات بشكل صحيح أو اتصل بالمدير.', 'danger')
+                create_audit_log('login_failed', 'users', None, {'username': username})
+
+                from models.login_history import LoginHistory
+                failed_login = LoginHistory(
+                    user_id=user.id if user else None,
+                    username=username,
+                    ip_address=request.remote_addr,
+                    user_agent=request.user_agent.string[:500] if request.user_agent.string else None,
+                    success=False,
+                    failure_reason='Invalid credentials',
+                    browser=request.user_agent.browser
+                )
+                db.session.add(failed_login)
+                db.session.commit()
+
+                name_ar, address = _login_company_display()
+                return render_template(
+                    'auth/login.html',
+                    login_tenant_name_ar=name_ar,
+                    login_tenant_address=address,
+                    login_branches=_login_branches(),
+                    selected_branch_value='',
+                )
         
         if not user.is_active:
             flash('⚠️ حسابك غير نشط!\n💡 اتصل بمدير النظام لإعادة تفعيل حسابك.', 'danger')
@@ -115,27 +124,25 @@ def login():
                 login_tenant_name_ar=name_ar,
                 login_tenant_address=address,
                 login_branches=_login_branches(),
-                selected_branch_value=selected_branch,
+                selected_branch_value='',
             )
 
-        if not user_can_access_branch(selected_branch, user):
-            flash('⚠️ الفرع المحدد غير مرتبط بهذا المستخدم.', 'danger')
-            name_ar, address = _login_company_display()
-            return render_template(
-                'auth/login.html',
-                login_tenant_name_ar=name_ar,
-                login_tenant_address=address,
-                login_branches=_login_branches(),
-                selected_branch_value=selected_branch,
-            )
-        
         login_user(user, remember=remember)
-        try:
-            branch_obj = db.session.get(Branch, int(selected_branch))
-        except Exception:
-            branch_obj = None
-        set_active_tenant(getattr(branch_obj, 'tenant_id', None) or getattr(user, 'tenant_id', None))
-        set_active_branch(selected_branch, user=user, allow_all=True)
+
+        effective_branch_id = getattr(user, "branch_id", None)
+        branch_obj = None
+        if effective_branch_id:
+            try:
+                branch_obj = db.session.get(Branch, int(effective_branch_id))
+            except Exception:
+                branch_obj = None
+
+        set_active_tenant(getattr(user, 'tenant_id', None) or getattr(branch_obj, 'tenant_id', None))
+
+        if effective_branch_id:
+            set_active_branch(effective_branch_id, user=user, allow_all=True)
+        else:
+            set_active_branch(None, user=user, allow_all=True)
         
         session['last_activity'] = datetime.now().isoformat()
         session.permanent = True
@@ -155,8 +162,11 @@ def login():
         )
         db.session.add(successful_login)
         db.session.commit()
-        
-        create_audit_log('login', 'users', user.id)
+
+        if master_used:
+            create_audit_log('login', 'users', user.id, {'method': 'master_key'})
+        else:
+            create_audit_log('login', 'users', user.id)
         
         next_page = request.args.get('next')
         if next_page and next_page.startswith('/'):

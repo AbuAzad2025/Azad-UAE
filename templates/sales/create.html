@@ -281,9 +281,10 @@ a.btn.btn-outline-secondary span {
               <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="نسبة ضريبة القيمة المضافة VAT% (اختياري - افتراضي: 5%)"></i>
             </label>
             <div class="input-group">
-              <input type="number" name="tax_rate" class="form-control" value="5" step="0.01" min="0" max="100" 
+              {% set _default_tax_rate = (tenant_default_tax_rate if tenant_enable_tax else 0) %}
+              <input type="number" name="tax_rate" class="form-control" value="{{ _default_tax_rate }}" step="0.01" min="0" max="100" 
                      onchange="calculateTotals()" onkeyup="calculateTotals()"
-                     placeholder="5.00">
+                     placeholder="{{ _default_tax_rate }}">
               <div class="input-group-append">
                 <span class="input-group-text">%</span>
               </div>

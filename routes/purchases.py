@@ -10,6 +10,7 @@ from utils.decorators import permission_required
 from utils.branching import ensure_warehouse_access, get_accessible_warehouses, should_show_all_branch_columns
 from utils.helpers import create_audit_log, generate_number
 from decimal import Decimal
+from utils.tenanting import tenant_query, tenant_get_or_404
 
 purchases_bp = Blueprint('purchases', __name__, url_prefix='/purchases')
 
@@ -22,7 +23,7 @@ def index():
     per_page = request.args.get('per_page', 20, type=int)
     search = request.args.get('search', '', type=str)
     
-    query = Purchase.query
+    query = tenant_query(Purchase)
     if search:
         search_filter = f'%{search}%'
         query = query.filter(
@@ -131,7 +132,7 @@ def create():
 @login_required
 @permission_required('manage_purchases')
 def view(id):
-    purchase = Purchase.query.get_or_404(id)
+    purchase = tenant_get_or_404(Purchase, id)
     from utils.decorators import branch_scope_id
     scoped_branch_id = branch_scope_id()
     if scoped_branch_id is not None and purchase.branch_id != scoped_branch_id:
@@ -143,7 +144,7 @@ def view(id):
 @login_required
 @permission_required('manage_purchases')
 def print_purchase(id):
-    purchase = Purchase.query.get_or_404(id)
+    purchase = tenant_get_or_404(Purchase, id)
     from utils.decorators import branch_scope_id
     scoped_branch_id = branch_scope_id()
     if scoped_branch_id is not None and purchase.branch_id != scoped_branch_id:
@@ -165,7 +166,7 @@ def print_purchase(id):
 @permission_required('manage_purchases')
 def edit(id):
     """تعديل فاتورة شراء - الملاحظات والخصم فقط"""
-    purchase = Purchase.query.get_or_404(id)
+    purchase = tenant_get_or_404(Purchase, id)
     from utils.decorators import branch_scope_id
     scoped_branch_id = branch_scope_id()
     if scoped_branch_id is not None and purchase.branch_id != scoped_branch_id:
@@ -203,7 +204,7 @@ def delete(id):
     from models import Payment, Cheque, GLJournalEntry, PurchaseLine
     from services.gl_service import GLService
     
-    purchase = Purchase.query.get_or_404(id)
+    purchase = tenant_get_or_404(Purchase, id)
     from utils.decorators import branch_scope_id
     scoped_branch_id = branch_scope_id()
     if scoped_branch_id is not None and purchase.branch_id != scoped_branch_id:

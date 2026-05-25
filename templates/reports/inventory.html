@@ -14,13 +14,48 @@
           <div class="card-tools">
             <form method="get" class="form-inline d-inline mr-2">
               <label class="mr-2">الفرع:</label>
-              <select name="branch_id" class="form-control form-control-sm mr-2" onchange="this.form.submit()" style="min-width: 140px;">
+              <select name="branch_id" class="form-control form-control-sm mr-2" style="min-width: 140px;">
                 <option value="">كل الفروع</option>
                 {% for b in branches or [] %}
                 <option value="{{ b.id }}" {{ 'selected' if selected_branch_id == b.id else '' }}>{{ b.name }} ({{ b.code }})</option>
                 {% endfor %}
               </select>
+
+              <label class="mr-2">المستودع:</label>
+              <select name="warehouse_id" class="form-control form-control-sm mr-2" style="min-width: 160px;">
+                <option value="">كل المستودعات</option>
+                {% for w in warehouses or [] %}
+                <option value="{{ w.id }}" {{ 'selected' if selected_warehouse_id == w.id else '' }}>{{ w.name_ar or w.name }}</option>
+                {% endfor %}
+              </select>
+
+              <label class="mr-2">تاريخ الإدخال:</label>
+              <input type="date" name="in_date_from" value="{{ in_date_from or '' }}" class="form-control form-control-sm mr-2">
+              <input type="date" name="in_date_to" value="{{ in_date_to or '' }}" class="form-control form-control-sm mr-2">
+
+              <label class="mr-2">تاريخ الإخراج:</label>
+              <input type="date" name="out_date_from" value="{{ out_date_from or '' }}" class="form-control form-control-sm mr-2">
+              <input type="date" name="out_date_to" value="{{ out_date_to or '' }}" class="form-control form-control-sm mr-2">
+
+              <div class="form-check mr-2">
+                <input class="form-check-input" type="checkbox" id="includeZero" name="include_zero" value="1" {{ 'checked' if include_zero else '' }}>
+                <label class="form-check-label" for="includeZero">عرض الصفر</label>
+              </div>
+
               {% if category_id %}<input type="hidden" name="category" value="{{ category_id }}">{% endif %}
+              <button type="submit" class="btn btn-outline-primary btn-sm mr-2">
+                تطبيق
+              </button>
+
+              <div class="btn-group mr-2">
+                <button type="button" class="btn btn-outline-success btn-sm dropdown-toggle" data-toggle="dropdown">
+                  تصدير
+                </button>
+                <div class="dropdown-menu dropdown-menu-right">
+                  <a class="dropdown-item" href="{{ url_for('reports.inventory_export', branch_id=selected_branch_id, warehouse_id=selected_warehouse_id, category=category_id, include_zero=('1' if include_zero else ''), in_date_from=in_date_from, in_date_to=in_date_to, out_date_from=out_date_from, out_date_to=out_date_to, format='csv') }}">CSV</a>
+                  <a class="dropdown-item" href="{{ url_for('reports.inventory_export', branch_id=selected_branch_id, warehouse_id=selected_warehouse_id, category=category_id, include_zero=('1' if include_zero else ''), in_date_from=in_date_from, in_date_to=in_date_to, out_date_from=out_date_from, out_date_to=out_date_to, format='xlsx') }}">Excel</a>
+                </div>
+              </div>
             </form>
             <button onclick="window.print()" class="btn btn-primary">
               <i class="fas fa-print"></i> طباعة
@@ -77,6 +112,9 @@
                 <th>المنتج</th>
                 <th>الكود</th>
                 <th>الكمية المتاحة</th>
+                <th>إدخال (حسب التاريخ)</th>
+                <th>إخراج (حسب التاريخ)</th>
+                <th>مباع (حسب التاريخ)</th>
                 <th>الحد الأدنى</th>
                 <th>سعر التكلفة</th>
                 <th>سعر البيع</th>
@@ -86,11 +124,17 @@
             </thead>
             <tbody>
               {% for product in products %}
-              {% set qty = (branch_stock.get(product.id, 0) if branch_stock is not none else (product.current_stock or 0)) %}
+              {% set qty = (stock_map.get(product.id, 0) if stock_map is not none else (product.current_stock or 0)) %}
+              {% set in_qty = (in_map.get(product.id, 0) if in_map is not none else 0) %}
+              {% set out_qty = (out_map.get(product.id, 0) if out_map is not none else 0) %}
+              {% set sold_qty = (sold_map.get(product.id, 0) if sold_map is not none else 0) %}
               <tr>
                 <td>{{ product.name }}</td>
                 <td>{{ product.sku }}</td>
                 <td>{{ qty }}</td>
+                <td>{{ in_qty }}</td>
+                <td>{{ out_qty }}</td>
+                <td>{{ sold_qty }}</td>
                 <td>{{ product.min_stock_alert }}</td>
                 <td>{{ product.cost_price }}</td>
                 <td>{{ product.regular_price }}</td>
@@ -107,7 +151,7 @@
               </tr>
               {% else %}
               <tr>
-                <td colspan="8" class="text-center">لا توجد منتجات</td>
+                <td colspan="11" class="text-center">لا توجد منتجات</td>
               </tr>
               {% endfor %}
             </tbody>

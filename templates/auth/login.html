@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{ login_tenant_name_ar or 'نظام المحاسبة' }} - تسجيل الدخول</title>
+  <title>AZAD ERP - تسجيل الدخول</title>
   <link rel="icon" href="{{ url_for('static', filename='img/azad_favicon.png') }}">
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
@@ -37,18 +37,29 @@
 <div class="login-box">
   <div class="card card-outline">
     <div class="card-header">
-      <div class="login-logo">
-        {% if tenant_logo_url %}
-        <img src="{{ tenant_logo_url }}" alt="{{ login_tenant_name_ar or 'نظام المحاسبة' }}" class="erp-auth-logo">
-        {% else %}
-        <span class="erp-auth-logo-fallback">{{ login_tenant_name_ar or 'نظام المحاسبة' }}</span>
-        {% endif %}
+      {% set _developer_logo_path = (developer_logo or config.DEVELOPER_LOGO or 'img/logo.png')|trim %}
+      {% set _developer_logo_rel = _developer_logo_path %}
+      {% if _developer_logo_rel.startswith('/static/') %}
+        {% set _developer_logo_rel = _developer_logo_rel[8:] %}
+      {% endif %}
+      {% if _developer_logo_rel.startswith('static/') %}
+        {% set _developer_logo_rel = _developer_logo_rel[7:] %}
+      {% endif %}
+
+      <div class="erp-auth-header">
+        <div class="login-logo">
+          <img src="{{ _developer_logo_path if (_developer_logo_path.startswith('http') or _developer_logo_path.startswith('/')) else url_for('static', filename=_developer_logo_rel) }}" alt="AZAD" class="erp-auth-logo">
+        </div>
+        <div class="erp-auth-system">
+          <div class="erp-auth-system-title">AZAD ERP</div>
+          <div class="erp-auth-system-subtitle">{{ developer_name_ar or config.DEVELOPER_NAME_AR }}</div>
+          <div class="erp-auth-system-subtitle">{{ developer_credit or config.DEVELOPER_CREDIT }}</div>
+        </div>
       </div>
-      <h3 class="text-white mb-0"><b>{{ login_tenant_name_ar or 'نظام المحاسبة' }}</b></h3>
-      <p class="text-white-50 mt-2">{{ login_tenant_address or '' }}</p>
     </div>
     <div class="card-body">
-      <p class="login-box-msg">{{ t('Sign in to start your session') }} <span class="palestine-flag"></span></p>
+      <div class="erp-auth-form-title">تسجيل الدخول للنظام <span class="palestine-flag"></span></div>
+      <div class="erp-auth-help">أدخل اسم المستخدم وكلمة المرور للمتابعة</div>
 
       {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
@@ -65,8 +76,8 @@
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         
         <div class="input-group mb-3 auth-input-group">
-          <label class="sr-only" for="username">{{ t('Username') }}</label>
-          <input type="text" id="username" name="username" class="form-control auth-input" placeholder="{{ t('Username') }}" required autofocus autocomplete="username">
+          <label class="sr-only" for="username">اسم المستخدم</label>
+          <input type="text" id="username" name="username" class="form-control auth-input" placeholder="اسم المستخدم" required autofocus autocomplete="username">
           <div class="input-group-append">
             <div class="input-group-text">
               <span class="fas fa-user"></span>
@@ -75,40 +86,22 @@
         </div>
 
         <div class="input-group mb-3 auth-input-group">
-          <label class="sr-only" for="password">{{ t('Password') }}</label>
-          <input type="password" name="password" id="password" class="form-control auth-input" placeholder="{{ t('Password') }}" required autocomplete="current-password">
+          <label class="sr-only" for="password">كلمة المرور</label>
+          <div class="input-group-prepend">
+            <button type="button" class="btn btn-light erp-auth-toggle-pass" id="togglePassword" aria-label="{{ t('Show/Hide password') }}">
+              <i class="fas fa-eye" aria-hidden="true"></i>
+            </button>
+          </div>
+          <input type="password" name="password" id="password" class="form-control auth-input" placeholder="كلمة المرور" required autocomplete="current-password">
           <div class="input-group-append">
             <div class="input-group-text">
               <span class="fas fa-lock"></span>
             </div>
           </div>
-          <div class="input-group-append">
-            <button type="button" class="input-group-text btn btn-link text-secondary erp-auth-toggle-pass" id="togglePassword" aria-label="{{ t('Show/Hide password') }}">
-              <i class="fas fa-eye" aria-hidden="true"></i>
-            </button>
-          </div>
-        </div>
-
-        <div class="input-group mb-3 auth-input-group">
-          <label class="sr-only" for="branch_id">الفرع</label>
-          <select id="branch_id" name="branch_id" class="form-control auth-input" required>
-            <option value="" disabled {% if not selected_branch_value %}selected{% endif %}>اختر الفرع للدخول</option>
-            <option value="all" {% if selected_branch_value == 'all' %}selected{% endif %}>كل الفروع (للمالك/المطور فقط)</option>
-            {% for branch in login_branches or [] %}
-            <option value="{{ branch.id }}" {% if selected_branch_value|string == branch.id|string %}selected{% endif %}>
-              {{ branch.name }}{% if branch.code %} - {{ branch.code }}{% endif %}{% if branch.is_main %} (الرئيسي){% endif %}
-            </option>
-            {% endfor %}
-          </select>
-          <div class="input-group-append">
-            <div class="input-group-text">
-              <span class="fas fa-code-branch"></span>
-            </div>
-          </div>
         </div>
 
         <div class="row">
-          <div class="col-7">
+          <div class="col-7 d-flex align-items-center">
             <div class="icheck-primary">
               <input type="checkbox" name="remember_me" id="remember">
               <label for="remember">{{ t('Remember Me') }}</label>
@@ -124,12 +117,23 @@
     </div>
     
     <div class="card-footer text-center bg-light">
-      <p class="mb-1"><small class="text-muted">الشركة المطورة: {{ developer_credit or config.DEVELOPER_CREDIT }}{% if developer_name_ar %} ({{ developer_name_ar }}){% endif %}</small></p>
-      <p class="mb-0">
-        <a href="https://wa.me/{{ developer_whatsapp_link }}" target="_blank" class="text-success">
-          <i class="fab fa-whatsapp"></i> واتساب المطور: {{ developer_phone or config.DEVELOPER_PHONE }}
-        </a>
-      </p>
+      {% set _dev_phone = (developer_phone or config.DEVELOPER_PHONE or '')|trim %}
+      {% set _dev_email = (developer_email or config.DEVELOPER_EMAIL or '')|trim %}
+      <div class="erp-auth-footer-single">
+        <div class="erp-auth-footer-title">معلومات أزاد</div>
+        <div class="erp-auth-footer-muted">{{ developer_credit or config.DEVELOPER_CREDIT }}</div>
+        <div class="erp-auth-footer-links">
+          {% if developer_whatsapp_link %}
+            <a href="https://wa.me/{{ developer_whatsapp_link }}" target="_blank" rel="noopener"><i class="fab fa-whatsapp"></i> واتساب</a>
+          {% endif %}
+          {% if _dev_phone %}
+            <a href="tel:{{ _dev_phone }}"><i class="fas fa-phone"></i> اتصال</a>
+          {% endif %}
+          {% if _dev_email %}
+            <a href="mailto:{{ _dev_email }}"><i class="fas fa-envelope"></i> بريد</a>
+          {% endif %}
+        </div>
+      </div>
     </div>
   </div>
 </div>

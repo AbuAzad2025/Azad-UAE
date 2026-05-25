@@ -13,6 +13,7 @@ from utils.branching import should_show_all_branch_columns
 from utils.helpers import create_audit_log
 from utils.number_to_arabic import number_to_arabic_words
 from utils.qr_generator import generate_qr_data_url
+from utils.tenanting import tenant_query, tenant_get_or_404, tenant_get
 
 payments_bp = Blueprint('payments', __name__, url_prefix='/payments')
 
@@ -79,7 +80,7 @@ def _scoped_customer_balance(customer_id):
 def _scoped_customer_unpaid_sales(customer_id):
     from models import Sale
 
-    query = Sale.query.filter(
+    query = tenant_query(Sale).filter(
         Sale.customer_id == customer_id,
         Sale.status == 'confirmed',
         Sale.balance_due > 0,
@@ -95,7 +96,7 @@ def _scoped_customers_query():
     from utils.decorators import branch_scope_id
 
     scoped_branch_id = branch_scope_id()
-    query = Customer.query.filter(Customer.is_active == True)
+    query = tenant_query(Customer).filter(Customer.is_active == True)
     if scoped_branch_id is None:
         return query
 
@@ -119,7 +120,7 @@ def _scoped_suppliers_query():
     from utils.decorators import branch_scope_id
 
     scoped_branch_id = branch_scope_id()
-    query = Supplier.query.filter(Supplier.is_active == True)
+    query = tenant_query(Supplier).filter(Supplier.is_active == True)
     if scoped_branch_id is None:
         return query
 
@@ -147,8 +148,8 @@ def receipts():
     direction_filter = request.args.get('direction', '', type=str)  # incoming, outgoing, all
     
     # جمع سندات القبض والصرف
-    receipts_query = Receipt.query
-    payments_query = Payment.query
+    receipts_query = tenant_query(Receipt)
+    payments_query = tenant_query(Payment)
     
     if search:
         search_filter = f'%{search}%'
@@ -391,7 +392,7 @@ def search_entities():
 def view_payment(id):
     """عرض سند صرف - يستخدم نفس قالب سندات القبض"""
     from models import Payment
-    payment = Payment.query.get_or_404(id)
+    payment = tenant_get_or_404(Payment, id)
     payment_branch_id = payment.branch_id
     if not _in_scope_branch(payment_branch_id):
         return render_template('errors/403.html'), 403
@@ -404,7 +405,7 @@ def view_payment(id):
 def print_payment(id):
     """طباعة سند صرف - يستخدم نفس قالب طباعة سندات القبض"""
     from models import Payment
-    payment = Payment.query.get_or_404(id)
+    payment = tenant_get_or_404(Payment, id)
     payment_branch_id = payment.branch_id
     if not _in_scope_branch(payment_branch_id):
         return render_template('errors/403.html'), 403
@@ -459,7 +460,7 @@ def archive_payment(id):
     from models import Payment
     from services.archive_service import ArchiveService
     
-    payment = Payment.query.get_or_404(id)
+    payment = tenant_get_or_404(Payment, id)
     if not _in_scope_branch(payment.branch_id):
         return render_template('errors/403.html'), 403
     
@@ -523,7 +524,7 @@ def create_from_sale(sale_id):
     """إنشاء سند دفع من فاتورة بيع معينة"""
     from models import Sale
     
-    sale = Sale.query.get_or_404(sale_id)
+    sale = tenant_get_or_404(Sale, sale_id)
     if not _in_scope_branch(sale.branch_id):
         return render_template('errors/403.html'), 403
     
@@ -934,17 +935,17 @@ def create_receipt():
 @login_required
 @permission_required('manage_payments')
 def view_receipt(id):
-    receipt = Receipt.query.get(id)
+    receipt = tenant_get(Receipt, id, or_404=False)
     if not receipt:
         # Fallback: if this id belongs to a payment voucher, redirect to its proper view route.
-        payment = Payment.query.get(id)
+        payment = tenant_get(Payment, id, or_404=False)
         if payment:
             return redirect(url_for('payments.view_payment', id=id))
         abort(404)
     receipt_branch_id = receipt.branch_id
     if receipt.source_type == 'sale' and receipt.source_id:
         from models import Sale
-        sale = Sale.query.get(receipt.source_id)
+        sale = tenant_get(Sale, receipt.source_id, or_404=False)
         receipt_branch_id = sale.branch_id if sale else None
     if not _in_scope_branch(receipt_branch_id):
         return render_template('errors/403.html'), 403
@@ -960,17 +961,17 @@ def view_receipt(id):
 @login_required
 @permission_required('manage_payments')
 def print_receipt(id):
-    receipt = Receipt.query.get(id)
+    receipt = tenant_get(Receipt, id, or_404=False)
     if not receipt:
         # Fallback: if this id belongs to a payment voucher, redirect to the proper print route.
-        payment = Payment.query.get(id)
+        payment = tenant_get(Payment, id, or_404=False)
         if payment:
             return redirect(url_for('payments.print_payment', id=id))
         abort(404)
     receipt_branch_id = receipt.branch_id
     if receipt.source_type == 'sale' and receipt.source_id:
         from models import Sale
-        sale = Sale.query.get(receipt.source_id)
+        sale = tenant_get(Sale, receipt.source_id, or_404=False)
         receipt_branch_id = sale.branch_id if sale else None
     if not _in_scope_branch(receipt_branch_id):
         return render_template('errors/403.html'), 403
@@ -1108,7 +1109,7 @@ def archive_receipt(id):
     """أرشفة سند قبض"""
     from services.archive_service import ArchiveService
     
-    receipt = Receipt.query.get_or_404(id)
+    receipt = tenant_get_or_404(Receipt, id)
     if not _in_scope_branch(receipt.branch_id):
         return render_template('errors/403.html'), 403
     
@@ -1154,7 +1155,7 @@ def delete_receipt(id):
     from models import Receipt, Cheque
     from services.archive_service import ArchiveService
     
-    receipt = Receipt.query.get_or_404(id)
+    receipt = tenant_get_or_404(Receipt, id)
     if not _in_scope_branch(receipt.branch_id):
         return render_template('errors/403.html'), 403
     
@@ -1247,7 +1248,7 @@ def delete_payment(id):
     from models import Payment, Cheque
     from services.archive_service import ArchiveService
 
-    payment = Payment.query.get_or_404(id)
+    payment = tenant_get_or_404(Payment, id)
     if not _in_scope_branch(payment.branch_id):
         return render_template('errors/403.html'), 403
     
@@ -1316,10 +1317,10 @@ def create_payment(purchase_id):
     from utils.helpers import generate_number
     from sqlalchemy import func
     
-    purchase = Purchase.query.get_or_404(purchase_id)
+    purchase = tenant_get_or_404(Purchase, purchase_id)
     if not _in_scope_branch(purchase.branch_id):
         return render_template('errors/403.html'), 403
-    supplier = Supplier.query.get(purchase.supplier_id) if purchase.supplier_id else None
+    supplier = tenant_get(Supplier, purchase.supplier_id, or_404=False) if purchase.supplier_id else None
     
     # حساب المبلغ المدفوع من جدول payments
     paid_amount = db.session.query(func.sum(Payment.amount_aed)).filter(

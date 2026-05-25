@@ -7,6 +7,12 @@ try:
 except ImportError:
     FOREX_AVAILABLE = False
 
+try:
+    import requests
+    REQUESTS_AVAILABLE = True
+except Exception:
+    REQUESTS_AVAILABLE = False
+
 class CurrencyService:
     
     CACHE_TTL_SECONDS = 300  # 5 دقائق
@@ -24,6 +30,31 @@ class CurrencyService:
         'QAR': Decimal('0.99'),
         'ILS': Decimal('0.98')  # 1 AED = 0.98 ILS (approx 1 ILS = 1.02 AED)
     }
+
+    @staticmethod
+    def _fetch_open_er_api_rates(base: str) -> dict:
+        if not REQUESTS_AVAILABLE:
+            return {}
+        base = (base or "AED").upper()
+        url = f"https://open.er-api.com/v6/latest/{base}"
+        try:
+            res = requests.get(url, timeout=4)
+            if res.status_code != 200:
+                return {}
+            data = res.json() or {}
+            if data.get("result") != "success":
+                return {}
+            raw_rates = data.get("rates") or {}
+            rates: dict[str, Decimal] = {}
+            for code, rate in raw_rates.items():
+                try:
+                    rates[str(code).upper()] = Decimal(str(rate))
+                except Exception:
+                    continue
+            rates[base] = Decimal("1.00")
+            return rates
+        except Exception:
+            return {}
     
     @staticmethod
     def get_all_rates(base='AED'):
@@ -57,6 +88,11 @@ class CurrencyService:
             except Exception as e:
                 # Log error if possible, or just continue to fallback
                 print(f"Forex API failed: {e}")
+
+        http_rates = CurrencyService._fetch_open_er_api_rates(base)
+        if http_rates:
+            CurrencyService._rates_cache[base] = {'timestamp': time.time(), 'rates': http_rates}
+            return http_rates.copy()
         
         # Fallback if API fails or not available
         # Recalculate fallback rates based on the requested base
@@ -135,6 +171,13 @@ class CurrencyService:
             except Exception as e:
                 # Log error if possible
                 pass
+
+        http_rates = CurrencyService._fetch_open_er_api_rates(from_currency)
+        if http_rates:
+            rate = http_rates.get(to_currency)
+            if rate and rate > Decimal("0"):
+                CurrencyService._rates_cache[from_currency] = {'timestamp': time.time(), 'rates': http_rates}
+                return Decimal(str(rate)).quantize(Decimal('0.000001'), rounding=ROUND_HALF_UP)
         
         # Fallback to static rates
         def get_aed_value(target):

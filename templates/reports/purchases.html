@@ -12,6 +12,15 @@
             <i class="fas fa-shopping-cart"></i> تقرير المشتريات
           </h3>
           <div class="card-tools">
+            <div class="btn-group mr-2">
+              <button type="button" class="btn btn-outline-success dropdown-toggle" data-toggle="dropdown">
+                <i class="fas fa-download mr-1"></i>تصدير
+              </button>
+              <div class="dropdown-menu dropdown-menu-right">
+                <a class="dropdown-item" href="{{ url_for('reports.purchases_export', start_date=start_date, end_date=end_date, supplier_id=supplier_id, format='csv') }}">CSV</a>
+                <a class="dropdown-item" href="{{ url_for('reports.purchases_export', start_date=start_date, end_date=end_date, supplier_id=supplier_id, format='xlsx') }}">Excel</a>
+              </div>
+            </div>
             <button onclick="window.print()" class="btn btn-primary">
               <i class="fas fa-print"></i> طباعة
             </button>

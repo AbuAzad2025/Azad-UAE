@@ -15,6 +15,7 @@ from utils.branching import (
 )
 from utils.helpers import create_audit_log, generate_sku, generate_barcode, save_uploaded_file
 from services.stock_service import StockService
+from utils.tenanting import tenant_query, tenant_get_or_404
 
 products_bp = Blueprint('products', __name__, url_prefix='/products')
 
@@ -22,7 +23,7 @@ products_bp = Blueprint('products', __name__, url_prefix='/products')
 def _scoped_customers_query(customer_type=None):
     from models import Payment, Receipt, Sale
 
-    query = Customer.query.filter(Customer.is_active == True)
+    query = tenant_query(Customer).filter(Customer.is_active == True)
     if customer_type:
         query = query.filter(Customer.customer_type == customer_type)
 
@@ -665,7 +666,7 @@ def create():
 @login_required
 @permission_required('manage_products')
 def view(id):
-    product = Product.query.get_or_404(id)
+    product = tenant_get_or_404(Product, id)
     if not _ensure_product_scope(product):
         return render_template('errors/403.html'), 403
     movements_query = product.stock_movements
@@ -686,7 +687,7 @@ def view(id):
 @login_required
 @permission_required('manage_products')
 def edit(id):
-    product = Product.query.get_or_404(id)
+    product = tenant_get_or_404(Product, id)
     if not _ensure_product_scope(product):
         return render_template('errors/403.html'), 403
     from forms.product import ProductForm
@@ -811,7 +812,7 @@ def edit(id):
 @permission_required('manage_products')
 def delete(id):
     """حذف (إلغاء تفعيل) المنتج - soft delete"""
-    product = Product.query.get_or_404(id)
+    product = tenant_get_or_404(Product, id)
     if not _ensure_product_scope(product):
         return render_template('errors/403.html'), 403
     
@@ -964,7 +965,7 @@ def create_category():
 @login_required
 @permission_required('manage_products')
 def adjust_stock(id):
-    product = Product.query.get_or_404(id)
+    product = tenant_get_or_404(Product, id)
     if not _ensure_product_scope(product):
         return jsonify({'success': False, 'message': 'المنتج خارج نطاق الفرع الحالي'}), 403
     

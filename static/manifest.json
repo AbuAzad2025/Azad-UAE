@@ -1,7 +1,7 @@
 {
-  "name": "UAE Sale - نظام إدارة المبيعات",
-  "short_name": "UAE Sale",
-  "description": "نظام إدارة مبيعات ومستودعات احترافي",
+  "name": "AZAD ERP - نظام الإدارة",
+  "short_name": "AZAD ERP",
+  "description": "نظام إدارة شامل للمبيعات والمشتريات والمخزون والتقارير",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

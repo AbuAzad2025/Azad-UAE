@@ -10,13 +10,14 @@ from models import Supplier, Purchase, Payment
 from utils.decorators import permission_required, admin_required, branch_scope_id
 from utils.branching import should_show_all_branch_columns
 from utils.helpers import create_audit_log
+from utils.tenanting import tenant_query, tenant_get_or_404
 from sqlalchemy import func, desc
 
 suppliers_bp = Blueprint('suppliers', __name__, url_prefix='/suppliers')
 
 
 def _scoped_supplier_query():
-    query = Supplier.query
+    query = tenant_query(Supplier)
     scoped_branch_id = branch_scope_id()
     if scoped_branch_id is None:
         return query
@@ -217,7 +218,7 @@ def create():
 @permission_required('manage_suppliers')
 def view(id):
     """عرض تفاصيل المورد"""
-    supplier = Supplier.query.get_or_404(id)
+    supplier = tenant_get_or_404(Supplier, id)
     if not _supplier_in_scope(id):
         return render_template('errors/403.html'), 403
     
@@ -250,7 +251,7 @@ def view(id):
 @permission_required('manage_suppliers')
 def edit(id):
     """تعديل المورد"""
-    supplier = Supplier.query.get_or_404(id)
+    supplier = tenant_get_or_404(Supplier, id)
     if not _supplier_in_scope(id):
         return render_template('errors/403.html'), 403
     
@@ -299,7 +300,7 @@ def edit(id):
 @permission_required('manage_suppliers')
 def delete(id):
     """حذف (إلغاء تفعيل) المورد"""
-    supplier = Supplier.query.get_or_404(id)
+    supplier = tenant_get_or_404(Supplier, id)
     if not _supplier_in_scope(id):
         return render_template('errors/403.html'), 403
     
@@ -342,7 +343,7 @@ def delete(id):
 @admin_required
 def statement(id):
     """كشف حساب المورد"""
-    supplier = Supplier.query.get_or_404(id)
+    supplier = tenant_get_or_404(Supplier, id)
     if not _supplier_in_scope(id):
         return render_template('errors/403.html'), 403
     
