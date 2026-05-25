@@ -113,9 +113,9 @@
                 <i class="fas fa-user text-primary"></i> اسم المستخدم
                 <span class="text-danger">*</span>
               </label>
-              <input type="text" name="username" class="form-control" placeholder="مثال: ahmed123" required minlength="3" pattern="[a-zA-Z0-9_]+" title="أحرف إنجليزية وأرقام فقط"
+              <input type="text" name="username" class="form-control" placeholder="مثال: {{ username_example or 'DEF_ahmad' }}" required minlength="3" pattern="[A-Za-z][A-Za-z0-9_]{2,48}" title="بادئة الشركة ثم شرطة سفلية ثم الاسم"
                      value="{{ form_data.get('username', '') }}">
-              <small class="form-text text-muted">اسم فريد للدخول (أحرف إنجليزية وأرقام فقط)</small>
+              <small class="form-text text-muted">صيغة إلزامية: <strong>{{ username_example or 'CODE_ahmad' }}</strong> — owner و azad محجوزان للمنصة فقط</small>
             </div>
           </div>
 

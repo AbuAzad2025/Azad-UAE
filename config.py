@@ -177,7 +177,7 @@ class Config:
     COMPANY_WEBSITE = os.environ.get("COMPANY_WEBSITE", "https://azadsystems.com")
     COMPANY_WHATSAPP = os.environ.get("COMPANY_WHATSAPP", "+971500000000")
     COMPANY_TAX_NUMBER = os.environ.get("COMPANY_TAX_NUMBER", "")
-    COMPANY_LOGO = os.environ.get("COMPANY_LOGO", "img/azad_logo_white_on_dark.png")
+    COMPANY_LOGO = os.environ.get("COMPANY_LOGO", "img/logo.png")
     
     DEVELOPER_NAME_AR = os.environ.get("DEVELOPER_NAME_AR", "شركة أزاد للأنظمة الذكية")
     DEVELOPER_NAME = os.environ.get("DEVELOPER_NAME", "Azad Smart Systems")

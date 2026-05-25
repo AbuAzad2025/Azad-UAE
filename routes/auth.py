@@ -5,7 +5,12 @@ from extensions import db, limiter
 from models import Branch, User, Donation
 from utils.helpers import create_audit_log
 from services.nowpayments_service import NOWPaymentsService
-from utils.branching import clear_active_branch, set_active_branch, user_can_access_branch
+from utils.branching import (
+    clear_active_branch,
+    is_global_user,
+    set_active_branch,
+    user_can_access_branch,
+)
 from utils.tenanting import set_active_tenant, clear_active_tenant
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
@@ -44,6 +49,28 @@ def _login_branches():
     return Branch.query.filter_by(is_active=True).order_by(Branch.is_main.desc(), Branch.code, Branch.name).all()
 
 
+def _render_login(**extra):
+    """Render unified AZAD login page without tenant selector."""
+    access_mode = (extra.pop('access_mode', None) or request.args.get('mode') or 'users').strip().lower()
+    if access_mode not in ('users', 'developer'):
+        access_mode = 'users'
+    return render_template(
+        'auth/login.html',
+        access_mode=access_mode,
+        username_value=extra.pop('username_value', ''),
+        remember_checked=bool(extra.pop('remember_checked', False)),
+        **extra,
+    )
+
+
+def _post_login_redirect(user, access_mode):
+    if access_mode == 'developer':
+        if getattr(user, 'is_owner', False):
+            return redirect(url_for('owner.dashboard'))
+        flash('⚠️ دخول المطور متاح لحساب مالك المنصة فقط.', 'warning')
+    return redirect(url_for('main.dashboard'))
+
+
 @auth_bp.route('/support')
 def support():
     """صفحة الدعم والشراء - متاحة قبل تسجيل الدخول"""
@@ -61,20 +88,18 @@ def login():
     
     if request.method == 'POST':
         username = request.form.get('username', '').strip()
-        # Make username case-insensitive check
-        # We will use the username as provided to find the user in a case-insensitive way
         password = request.form.get('password', '')
         remember = bool(request.form.get('remember_me'))
+        access_mode = (request.form.get('access_mode') or 'users').strip().lower()
+        if access_mode not in ('users', 'developer'):
+            access_mode = 'users'
         
         if not username or not password:
             flash('⚠️ الرجاء إدخال اسم المستخدم وكلمة المرور.\n💡 كلا الحقلين مطلوبان للدخول.', 'danger')
-            name_ar, address = _login_company_display()
-            return render_template(
-                'auth/login.html',
-                login_tenant_name_ar=name_ar,
-                login_tenant_address=address,
-                login_branches=_login_branches(),
-                selected_branch_value='',
+            return _render_login(
+                access_mode=access_mode,
+                username_value=username,
+                remember_checked=remember,
             )
         
         # Case-insensitive query
@@ -107,24 +132,18 @@ def login():
                 db.session.add(failed_login)
                 db.session.commit()
 
-                name_ar, address = _login_company_display()
-                return render_template(
-                    'auth/login.html',
-                    login_tenant_name_ar=name_ar,
-                    login_tenant_address=address,
-                    login_branches=_login_branches(),
-                    selected_branch_value='',
+                return _render_login(
+                    access_mode=access_mode,
+                    username_value=username,
+                    remember_checked=remember,
                 )
         
         if not user.is_active:
             flash('⚠️ حسابك غير نشط!\n💡 اتصل بمدير النظام لإعادة تفعيل حسابك.', 'danger')
-            name_ar, address = _login_company_display()
-            return render_template(
-                'auth/login.html',
-                login_tenant_name_ar=name_ar,
-                login_tenant_address=address,
-                login_branches=_login_branches(),
-                selected_branch_value='',
+            return _render_login(
+                access_mode=access_mode,
+                username_value=username,
+                remember_checked=remember,
             )
 
         login_user(user, remember=remember)
@@ -137,12 +156,22 @@ def login():
             except Exception:
                 branch_obj = None
 
-        set_active_tenant(getattr(user, 'tenant_id', None) or getattr(branch_obj, 'tenant_id', None))
+        tenant_id = getattr(user, 'tenant_id', None) or getattr(branch_obj, 'tenant_id', None)
+        set_active_tenant(tenant_id)
 
-        if effective_branch_id:
-            set_active_branch(effective_branch_id, user=user, allow_all=True)
+        branch_to_activate = getattr(user, 'branch_id', None)
+        if branch_to_activate and not user_can_access_branch(branch_to_activate, user):
+            branch_to_activate = None
+
+        if is_global_user(user):
+            if effective_branch_id and user_can_access_branch(effective_branch_id, user):
+                set_active_branch(effective_branch_id, user=user, allow_all=True)
+            else:
+                set_active_branch(None, user=user, allow_all=True)
+        elif branch_to_activate:
+            set_active_branch(branch_to_activate, user=user, allow_all=False)
         else:
-            set_active_branch(None, user=user, allow_all=True)
+            set_active_branch(None, user=user, allow_all=False)
         
         session['last_activity'] = datetime.now().isoformat()
         session.permanent = True
@@ -172,16 +201,9 @@ def login():
         if next_page and next_page.startswith('/'):
             return redirect(next_page)
         
-        return redirect(url_for('main.dashboard'))
+        return _post_login_redirect(user, access_mode)
     
-    name_ar, address = _login_company_display()
-    return render_template(
-        'auth/login.html',
-        login_tenant_name_ar=name_ar,
-        login_tenant_address=address,
-        login_branches=_login_branches(),
-        selected_branch_value='',
-    )
+    return _render_login()
 
 
 @auth_bp.route('/logout')
@@ -190,10 +212,9 @@ def logout():
         create_audit_log('logout', 'users', current_user.id)
         logout_user()
         session.pop('last_activity', None)
-        clear_active_branch()
-        clear_active_tenant()
         flash('✅ تم تسجيل الخروج بنجاح. نراك قريباً!', 'success')
-    
+    clear_active_branch()
+    clear_active_tenant()
     return redirect(url_for('auth.login'))
 
 

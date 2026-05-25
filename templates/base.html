@@ -24,7 +24,7 @@
   <meta property="og:url" content="{{ request.url }}">
   <meta property="og:title" content="{% block og_title %}{{ self.title() }}{% endblock %}">
   <meta property="og:description" content="{% block og_description %}{{ self.meta_description() }}{% endblock %}">
-  {% set _logo_path = tenant_logo_url or developer_logo or 'img/azad_logo_white_on_dark.png' %}
+  {% set _logo_path = tenant_logo_url or developer_logo or 'img/logo.png' %}
   {% set _logo_external = _logo_path if _logo_path.startswith('http') else url_for('static', filename=_logo_path, _external=True) %}
   {% set _logo_internal = _logo_path if _logo_path.startswith('http') else url_for('static', filename=_logo_path) %}
   <meta property="og:image" content="{{ _logo_external }}">

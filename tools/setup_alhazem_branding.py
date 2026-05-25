@@ -94,26 +94,32 @@ def update_tenant_and_invoice_settings(branding: dict) -> None:
     from app import create_app
     from extensions import db
     from models.tenant import Tenant
+    from utils.tenant_assets import branding_paths_for_folder
 
     app = create_app()
     with app.app_context():
-        tenant = Tenant.query.order_by(Tenant.id.asc()).first()
+        tenant = Tenant.query.filter(
+            db.func.lower(Tenant.slug).in_(["alhazem", "alhazem-batteries"])
+        ).first()
         if not tenant:
             tenant = Tenant(
                 name="Al Hazem Batteries",
                 name_ar="شركة الحازم للبطاريات",
                 name_en="Al Hazem Batteries",
-                slug="alhazem-batteries",
+                slug="alhazem",
                 business_type="spare_parts",
                 industry="automotive",
             )
             db.session.add(tenant)
             db.session.commit()
 
+        disk_branding = branding_paths_for_folder("alhazem")
+        branding = {**disk_branding, **branding}
+
         tenant.name_ar = "شركة الحازم للبطاريات"
         tenant.name = "Al Hazem Batteries"
         tenant.name_en = "Al Hazem Batteries"
-        tenant.slug = "alhazem-batteries"
+        tenant.slug = "alhazem"
         tenant.business_type = tenant.business_type or "spare_parts"
         tenant.industry = tenant.industry or "automotive"
         tenant.logo_url = branding.get("logo_url") or tenant.logo_url

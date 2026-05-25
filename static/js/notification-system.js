@@ -15,7 +15,7 @@ class NotificationSystem {
         if (this.permission === 'granted') {
             const notification = new Notification(title, {
                 body: options.body || '',
-                icon: options.icon || '/static/img/azad_logo_white_on_dark.png',
+                icon: options.icon || '/static/img/logo.png',
                 badge: '/static/img/azad_favicon.png',
                 tag: options.tag || 'default',
                 requireInteraction: options.requireInteraction || false,

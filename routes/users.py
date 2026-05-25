@@ -7,6 +7,8 @@ from utils.branching import branch_scope_id_for, role_requires_branch
 from utils.helpers import create_audit_log
 from utils.auth_helpers import role_level_for, role_level_for_user
 from utils.tenanting import get_active_tenant_id, assign_tenant_id
+from utils.username_policy import validate_username_for_user, tenant_username_prefix, is_platform_reserved
+from models.tenant import Tenant
 
 users_bp = Blueprint('users', __name__, url_prefix='/users')
 
@@ -23,6 +25,13 @@ def _clean_branch_id(raw_value):
     if raw_value in (None, '', 'None'):
         return None
     return int(raw_value)
+
+
+def _username_example():
+    tid = get_active_tenant_id(current_user)
+    tenant = Tenant.query.get(int(tid)) if tid else None
+    prefix = tenant_username_prefix(tenant) if tenant else 'CODE'
+    return f'{prefix}_ahmad'
 
 
 def _validate_user_branch(role_id, branch_id):
@@ -101,14 +110,62 @@ def create():
                 flash('⚠️ يرجى اختيار الدور الوظيفي.', 'warning')
                 form_values = request.form.to_dict()
                 form_values['is_active'] = request.form.get('is_active', '1')
-                return render_template('users/create.html', roles=roles, branches=branches, form_data=form_values)
+                return render_template(
+                    'users/create.html',
+                    roles=roles,
+                    branches=branches,
+                    form_data=form_values,
+                    username_example=_username_example(),
+                )
             
             is_active = request.form.get('is_active', '1') == '1'
             branch_id = _clean_branch_id(request.form.get('branch_id'))
             _validate_user_branch(role_id, branch_id)
+
+            username = (request.form.get('username') or '').strip()
+            if is_platform_reserved(username):
+                flash('⚠️ اسم المستخدم محجوز للمنصة (owner / azad).', 'danger')
+                form_values = request.form.to_dict()
+                form_values['is_active'] = request.form.get('is_active', '1')
+                return render_template(
+                    'users/create.html',
+                    roles=roles,
+                    branches=branches,
+                    form_data=form_values,
+                    username_example=_username_example(),
+                )
+
+            tid = get_active_tenant_id(current_user)
+            tenant = Tenant.query.get(int(tid)) if tid else None
+            uname_err = validate_username_for_user(username, is_owner=False, tenant=tenant)
+            if uname_err:
+                prefix = tenant_username_prefix(tenant) if tenant else 'CODE'
+                flash(f'⚠️ {uname_err}\n💡 مثال: {prefix}_ahmad', 'danger')
+                form_values = request.form.to_dict()
+                form_values['is_active'] = request.form.get('is_active', '1')
+                return render_template(
+                    'users/create.html',
+                    roles=roles,
+                    branches=branches,
+                    form_data=form_values,
+                    username_example=_username_example(),
+                )
+
+            conflict = User.query.filter(User.username.ilike(username)).first()
+            if conflict:
+                flash('⚠️ اسم المستخدم مستخدم مسبقاً على مستوى النظام.', 'danger')
+                form_values = request.form.to_dict()
+                form_values['is_active'] = request.form.get('is_active', '1')
+                return render_template(
+                    'users/create.html',
+                    roles=roles,
+                    branches=branches,
+                    form_data=form_values,
+                    username_example=_username_example(),
+                )
             
             user = User(
-                username=request.form.get('username'),
+                username=username,
                 email=request.form.get('email'),
                 full_name=request.form.get('full_name'),
                 full_name_ar=request.form.get('full_name_ar'),
@@ -141,9 +198,21 @@ def create():
             flash(f'❌ حدث خطأ: {str(e)}\n💡 تحقق من البيانات المدخلة وحاول مرة أخرى.', 'danger')
             form_values = request.form.to_dict()
             form_values['is_active'] = request.form.get('is_active', '1')
-            return render_template('users/create.html', roles=roles, branches=branches, form_data=form_values)
+            return render_template(
+                    'users/create.html',
+                    roles=roles,
+                    branches=branches,
+                    form_data=form_values,
+                    username_example=_username_example(),
+                )
     
-    return render_template('users/create.html', roles=roles, branches=branches, form_data=default_form)
+    return render_template(
+        'users/create.html',
+        roles=roles,
+        branches=branches,
+        form_data=default_form,
+        username_example=_username_example(),
+    )
 
 
 @users_bp.route('/<int:id>')

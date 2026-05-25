@@ -1,0 +1,12 @@
+{
+  "meta": {
+    "name": "azad_unified_multi_tenant_login_design",
+    "version": "1.0.0"
+  },
+  "assets": {
+    "logo": "img/logo.png",
+    "logoFallback": "img/azad_logo_white_on_dark.png",
+    "favicon": "img/azad_favicon.png",
+    "icon192": "img/icon-192.png"
+  }
+}

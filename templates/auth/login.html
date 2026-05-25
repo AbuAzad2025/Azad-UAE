@@ -1,162 +1,280 @@
 <!DOCTYPE html>
-<html lang="{{ current_language }}" dir="{{ 'rtl' if is_rtl else 'ltr' }}" data-ui-variant="palestinian" data-ui-mode="light">
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AZAD ERP - تسجيل الدخول</title>
-  <link rel="icon" href="{{ url_for('static', filename='img/azad_favicon.png') }}">
-  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
-  <link rel="stylesheet" href="{{ url_for('static', filename='adminlte/plugins/icheck-bootstrap/icheck-bootstrap.min.css') }}">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/erp-theme.css') }}">
-  <script defer src="{{ url_for('static', filename='js/ui-theme.js') }}"></script>
+  <meta name="robots" content="noindex, nofollow">
+  <title>شركة ازاد للأنظمة الذكية — دخول آمن</title>
+  <link rel="icon" href="{{ url_for('static', filename='img/azad_favicon.png') }}" type="image/png">
+  <link rel="icon" href="{{ url_for('static', filename='img/favicon.png') }}" type="image/png" sizes="32x32">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/icon-192.png') }}">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=Tajawal:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/azad-login.css') }}">
 </head>
-<body class="hold-transition login-page erp-auth-body">
+<body class="azad-login-page">
 
-<!-- Language Switcher (Floating) -->
-<div class="erp-auth-lang-switcher">
-    <div class="dropdown">
-        <button class="btn btn-outline-light dropdown-toggle erp-auth-lang-btn" type="button" id="langDropdown" data-toggle="dropdown">
-            <i class="fas fa-globe mr-2"></i>{{ session.get('language', 'ar')|upper }}
-        </button>
-        <div class="dropdown-menu dropdown-menu-right">
-            <a class="dropdown-item {% if session.get('language', 'ar') == 'ar' %}active{% endif %}" href="{{ url_for('language.set_language', lang='ar') }}">
-                <i class="fas fa-check mr-2 {% if session.get('language', 'ar') != 'ar' %}invisible{% endif %}"></i>
-                العربية
-            </a>
-            <a class="dropdown-item {% if session.get('language') == 'en' %}active{% endif %}" href="{{ url_for('language.set_language', lang='en') }}">
-                <i class="fas fa-check mr-2 {% if session.get('language') != 'en' %}invisible{% endif %}"></i>
-                English
-            </a>
-        </div>
-    </div>
-</div>
-
-<div class="login-box">
-  <div class="card card-outline">
-    <div class="card-header">
-      {% set _developer_logo_path = (developer_logo or config.DEVELOPER_LOGO or 'img/logo.png')|trim %}
-      {% set _developer_logo_rel = _developer_logo_path %}
-      {% if _developer_logo_rel.startswith('/static/') %}
-        {% set _developer_logo_rel = _developer_logo_rel[8:] %}
-      {% endif %}
-      {% if _developer_logo_rel.startswith('static/') %}
-        {% set _developer_logo_rel = _developer_logo_rel[7:] %}
-      {% endif %}
-
-      <div class="erp-auth-header">
-        <div class="login-logo">
-          <img src="{{ _developer_logo_path if (_developer_logo_path.startswith('http') or _developer_logo_path.startswith('/')) else url_for('static', filename=_developer_logo_rel) }}" alt="AZAD" class="erp-auth-logo">
-        </div>
-        <div class="erp-auth-system">
-          <div class="erp-auth-system-title">AZAD ERP</div>
-          <div class="erp-auth-system-subtitle">{{ developer_name_ar or config.DEVELOPER_NAME_AR }}</div>
-          <div class="erp-auth-system-subtitle">{{ developer_credit or config.DEVELOPER_CREDIT }}</div>
-        </div>
-      </div>
-    </div>
-    <div class="card-body">
-      <div class="erp-auth-form-title">تسجيل الدخول للنظام <span class="palestine-flag"></span></div>
-      <div class="erp-auth-help">أدخل اسم المستخدم وكلمة المرور للمتابعة</div>
-
-      {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-          {% for category, message in messages %}
-            <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible">
-              <button type="button" class="close" data-dismiss="alert">&times;</button>
-              {{ message }}
-            </div>
-          {% endfor %}
-        {% endif %}
-      {% endwith %}
-
-      <form method="POST" action="{{ url_for('auth.login') }}">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        
-        <div class="input-group mb-3 auth-input-group">
-          <label class="sr-only" for="username">اسم المستخدم</label>
-          <input type="text" id="username" name="username" class="form-control auth-input" placeholder="اسم المستخدم" required autofocus autocomplete="username">
-          <div class="input-group-append">
-            <div class="input-group-text">
-              <span class="fas fa-user"></span>
-            </div>
-          </div>
-        </div>
-
-        <div class="input-group mb-3 auth-input-group">
-          <label class="sr-only" for="password">كلمة المرور</label>
-          <div class="input-group-prepend">
-            <button type="button" class="btn btn-light erp-auth-toggle-pass" id="togglePassword" aria-label="{{ t('Show/Hide password') }}">
-              <i class="fas fa-eye" aria-hidden="true"></i>
-            </button>
-          </div>
-          <input type="password" name="password" id="password" class="form-control auth-input" placeholder="كلمة المرور" required autocomplete="current-password">
-          <div class="input-group-append">
-            <div class="input-group-text">
-              <span class="fas fa-lock"></span>
-            </div>
-          </div>
-        </div>
-
-        <div class="row">
-          <div class="col-7 d-flex align-items-center">
-            <div class="icheck-primary">
-              <input type="checkbox" name="remember_me" id="remember">
-              <label for="remember">{{ t('Remember Me') }}</label>
-            </div>
-          </div>
-          <div class="col-5">
-            <button type="submit" class="btn btn-primary btn-block">
-              <i class="fas fa-sign-in-alt {{ 'mr-2' if is_rtl else 'ml-2' }}"></i>{{ t('Sign In') }}
-            </button>
-          </div>
-        </div>
-      </form>
-    </div>
-    
-    <div class="card-footer text-center bg-light">
-      {% set _dev_phone = (developer_phone or config.DEVELOPER_PHONE or '')|trim %}
-      {% set _dev_email = (developer_email or config.DEVELOPER_EMAIL or '')|trim %}
-      <div class="erp-auth-footer-single">
-        <div class="erp-auth-footer-title">معلومات أزاد</div>
-        <div class="erp-auth-footer-muted">{{ developer_credit or config.DEVELOPER_CREDIT }}</div>
-        <div class="erp-auth-footer-links">
-          {% if developer_whatsapp_link %}
-            <a href="https://wa.me/{{ developer_whatsapp_link }}" target="_blank" rel="noopener"><i class="fab fa-whatsapp"></i> واتساب</a>
-          {% endif %}
-          {% if _dev_phone %}
-            <a href="tel:{{ _dev_phone }}"><i class="fas fa-phone"></i> اتصال</a>
-          {% endif %}
-          {% if _dev_email %}
-            <a href="mailto:{{ _dev_email }}"><i class="fas fa-envelope"></i> بريد</a>
-          {% endif %}
-        </div>
-      </div>
+  <div class="azad-login-bg" aria-hidden="true">
+    <div class="azad-login-bg__noise"></div>
+    <div class="azad-login-bg__grid"></div>
+    <div class="azad-login-bg__particles" aria-hidden="true">
+      <span></span><span></span><span></span><span></span><span></span><span></span>
     </div>
   </div>
-</div>
-<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
-<script src="{{ url_for('static', filename='adminlte/js/adminlte.min.js') }}"></script>
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-    var pwd = document.getElementById('password');
-    var toggle = document.getElementById('togglePassword');
-    if (pwd && toggle) {
-      toggle.addEventListener('click', function () {
-        var isText = pwd.type === 'text';
-        pwd.type = isText ? 'password' : 'text';
-        var icon = toggle.querySelector('i');
-        if (icon) {
-          icon.classList.toggle('fa-eye');
-          icon.classList.toggle('fa-eye-slash');
-        }
-        toggle.setAttribute('aria-pressed', (!isText).toString());
+
+  <nav class="azad-login-lang" aria-label="تغيير اللغة">
+    <a href="{{ url_for('language.set_language', lang='ar') }}" class="{% if session.get('language', 'ar') == 'ar' %}is-active{% endif %}">AR</a>
+    <a href="{{ url_for('language.set_language', lang='en') }}" class="{% if session.get('language') == 'en' %}is-active{% endif %}">EN</a>
+  </nav>
+
+  <div class="azad-login-shell">
+    <!-- Left panel: AZAD brand only (no tenant branding) -->
+    <aside class="azad-login-brand">
+      <header class="azad-login-brand__head">
+        <div class="azad-login-brand__logo-banner">
+          <img
+            class="azad-login-brand__logo-official"
+            src="{{ url_for('static', filename='img/logo.png') }}"
+            alt="شعار شركة ازاد — AZAD Company"
+            width="420"
+            height="auto"
+            loading="eager"
+            decoding="async"
+          >
+        </div>
+        <div class="azad-login-brand__titles">
+          <h1 class="azad-login-brand__title-ar">شركة ازاد للأنظمة الذكية</h1>
+          <p class="azad-login-brand__title-en">AZAD Company — Smart Systems &amp; ERP</p>
+          <div class="azad-login-brand__manager">
+            <span>بإدارة المهندس أحمد غنام</span>
+          </div>
+        </div>
+      </header>
+
+      <div class="azad-login-hero" aria-hidden="true">
+        <div class="azad-login-hero__glow"></div>
+        <span class="azad-login-hero__float azad-login-hero__float--1" title="خوادم"><i class="fas fa-server"></i></span>
+        <span class="azad-login-hero__float azad-login-hero__float--2" title="شبكة"><i class="fas fa-network-wired"></i></span>
+        <span class="azad-login-hero__float azad-login-hero__float--3" title="أمان"><i class="fas fa-lock"></i></span>
+        <div class="azad-login-hero__shield">
+          <i class="fas fa-shield-halved" aria-hidden="true"></i>
+        </div>
+      </div>
+
+      <p class="azad-login-desc">
+        بوابة موحّدة لجميع المستخدمين، مع توجيه ذكي تلقائي وصلاحيات مرنة لإدارة المنصة والمؤسسات.
+      </p>
+
+      <div class="azad-login-features">
+        <article class="azad-login-feature">
+          <div class="azad-login-feature__icon"><i class="fas fa-users"></i></div>
+          <h3>دخول موحد</h3>
+          <p>دخول واحد للوصول إلى جميع خدمات المنصة بأمان وكفاءة.</p>
+        </article>
+        <article class="azad-login-feature">
+          <div class="azad-login-feature__icon"><i class="fas fa-route"></i></div>
+          <h3>توجيه تلقائي</h3>
+          <p>توجيه ذكي تلقائي إلى المؤسسة المرتبطة باسم الدخول الخاص بك.</p>
+        </article>
+        <article class="azad-login-feature">
+          <div class="azad-login-feature__icon"><i class="fas fa-user-shield"></i></div>
+          <h3>حجز اسم المستخدم</h3>
+          <p>اسم مستخدم فريد ومحجوز على مستوى النظام بالكامل لضمان الأمان والخصوصية.</p>
+        </article>
+        <article class="azad-login-feature">
+          <div class="azad-login-feature__icon"><i class="fas fa-shield-halved"></i></div>
+          <h3>صلاحيات متقدمة</h3>
+          <p>نظام صلاحيات مرن ودقيق للتحكم في الوصول وإدارة المهام باحترافية.</p>
+        </article>
+      </div>
+
+      <div class="azad-login-trust">
+        <span class="azad-login-trust__item"><i class="fas fa-shield-halved"></i> أمان متقدم</span>
+        <span class="azad-login-trust__item"><i class="fas fa-server"></i> موثوقية عالية</span>
+        <span class="azad-login-trust__item"><i class="fas fa-gauge-high"></i> أداء استثنائي</span>
+        <span class="azad-login-trust__item"><i class="fas fa-cloud"></i> منصة سحابية متكاملة</span>
+      </div>
+    </aside>
+
+    <!-- Right panel: login card -->
+    <main class="azad-login-card-wrap">
+      <div class="azad-login-card">
+        <div class="azad-login-tabs" role="tablist" aria-label="نوع الدخول">
+          <button type="button" class="azad-login-tab is-active" data-access-mode="users" role="tab" aria-selected="true">
+            <i class="fas fa-user" aria-hidden="true"></i>
+            دخول المستخدمين
+          </button>
+          <button type="button" class="azad-login-tab" data-access-mode="developer" role="tab" aria-selected="false">
+            <i class="fas fa-code" aria-hidden="true"></i>
+            دخول المطور
+          </button>
+        </div>
+
+        <div class="azad-login-card__head">
+          <h2 class="azad-login-card__title">مرحباً بك</h2>
+          <p class="azad-login-card__subtitle">سجّل دخولك للوصول الآمن إلى المنصة</p>
+          <div class="azad-login-card__divider" aria-hidden="true"></div>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              {% set alert_class = 'danger' if category in ('error', 'danger') else ('success' if category == 'success' else 'warning') %}
+              <div class="azad-login-alert azad-login-alert--{{ alert_class }}" role="alert">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="{{ url_for('auth.login') }}" id="azadLoginForm" class="azad-login-form" autocomplete="on">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="access_mode" id="access_mode" value="{{ access_mode or 'users' }}">
+
+          <div class="azad-login-field">
+            <label for="username">اسم المستخدم</label>
+            <div class="azad-login-input-wrap">
+              <span class="azad-login-input-wrap__icon" aria-hidden="true"><i class="fas fa-user"></i></span>
+              <input
+                type="text"
+                id="username"
+                name="username"
+                class="azad-ltr"
+                value="{{ username_value or '' }}"
+                placeholder="AZD_ahmad أو CMP01_sara"
+                required
+                autofocus
+                autocomplete="username"
+              >
+            </div>
+            <ul class="azad-login-helpers">
+              <li>
+                <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i>
+                <span>يتم توجيهك تلقائياً إلى مؤسستك حسب اسم الدخول المحجوز</span>
+              </li>
+              <li>
+                <i class="fas fa-shield-halved" aria-hidden="true"></i>
+                <span>لا حاجة لاختيار المؤسسة — اسم المستخدم <span class="azad-highlight">فريد</span> على مستوى النظام</span>
+              </li>
+            </ul>
+          </div>
+
+          <div class="azad-login-field">
+            <label for="password">كلمة المرور</label>
+            <div class="azad-login-input-wrap">
+              <span class="azad-login-input-wrap__icon" aria-hidden="true"><i class="fas fa-lock"></i></span>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                placeholder="••••••••••••"
+                required
+                autocomplete="current-password"
+              >
+              <button type="button" class="azad-login-toggle-pass" id="togglePassword" aria-label="إظهار أو إخفاء كلمة المرور">
+                <i class="fas fa-eye" aria-hidden="true"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="azad-login-row">
+            <label class="azad-login-remember">
+              <input type="checkbox" name="remember_me" id="remember" value="1" {% if remember_checked %}checked{% endif %}>
+              <span>تذكرني</span>
+            </label>
+            <a class="azad-login-forgot" href="{{ url_for('auth.support') }}">
+              <i class="fas fa-key" aria-hidden="true"></i>
+              نسيت كلمة المرور؟
+            </a>
+          </div>
+
+          <button type="submit" class="azad-login-submit" id="loginSubmitBtn">
+            <i class="fas fa-shield-halved" aria-hidden="true"></i>
+            دخول آمن
+          </button>
+        </form>
+
+        <div class="azad-login-devbox" id="developerAccessBox" role="button" tabindex="0" aria-label="التبديل إلى دخول المطور">
+          <div class="azad-login-devbox__icon" aria-hidden="true">
+            <i class="fas fa-display"></i>
+          </div>
+          <div class="azad-login-devbox__text">
+            <strong>وصول المطور</strong>
+            <span>لوحة المنصة • إدارة المؤسسات • إدارة المستخدمين • الصلاحيات • الإعدادات المتقدمة</span>
+          </div>
+          <i class="fas fa-chevron-left azad-login-devbox__chevron" aria-hidden="true"></i>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <footer class="azad-login-footer">
+    <div class="azad-login-footer__decor" aria-hidden="true"><span class="azad-login-footer__dot"></span></div>
+    <div class="azad-login-footer__line1">
+      Developed by <span class="azad-brand-highlight">شركة ازاد للأنظمة الذكية</span>
+    </div>
+    <div class="azad-login-footer__line2">بإدارة المهندس أحمد غنام</div>
+    <div class="azad-login-footer__line3">ERP • Automation • Smart Systems</div>
+  </footer>
+
+  <script>
+    (function () {
+      var modeInput = document.getElementById('access_mode');
+      var tabs = document.querySelectorAll('.azad-login-tab');
+      var devBox = document.getElementById('developerAccessBox');
+      var pwd = document.getElementById('password');
+      var toggle = document.getElementById('togglePassword');
+      var form = document.getElementById('azadLoginForm');
+      var submitBtn = document.getElementById('loginSubmitBtn');
+
+      function setAccessMode(mode) {
+        if (!modeInput) return;
+        modeInput.value = mode;
+        tabs.forEach(function (tab) {
+          var active = tab.getAttribute('data-access-mode') === mode;
+          tab.classList.toggle('is-active', active);
+          tab.setAttribute('aria-selected', active ? 'true' : 'false');
+        });
+      }
+
+      tabs.forEach(function (tab) {
+        tab.addEventListener('click', function () {
+          setAccessMode(tab.getAttribute('data-access-mode') || 'users');
+        });
       });
-    }
-  });
-</script>
+
+      if (devBox) {
+        var openDev = function () { setAccessMode('developer'); };
+        devBox.addEventListener('click', openDev);
+        devBox.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            openDev();
+          }
+        });
+      }
+
+      if ('{{ access_mode or "users" }}' === 'developer') {
+        setAccessMode('developer');
+      }
+
+      if (pwd && toggle) {
+        toggle.addEventListener('click', function () {
+          var show = pwd.type === 'password';
+          pwd.type = show ? 'text' : 'password';
+          var icon = toggle.querySelector('i');
+          if (icon) {
+            icon.classList.toggle('fa-eye', !show);
+            icon.classList.toggle('fa-eye-slash', show);
+          }
+        });
+      }
+
+      if (form && submitBtn) {
+        form.addEventListener('submit', function () {
+          submitBtn.classList.add('is-loading');
+          submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin" aria-hidden="true"></i> جاري التحقق...';
+        });
+      }
+    })();
+  </script>
 </body>
 </html>

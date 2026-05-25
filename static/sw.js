@@ -5,8 +5,8 @@ const urlsToCache = [
   '/static/js/ui-theme.js',
   '/static/js/app.js',
   '/static/adminlte/js/adminlte.min.js',
-  '/static/img/azad_logo_white_on_dark.png',
   '/static/img/logo.png',
+  '/static/img/azad_logo_white_on_dark.png',
   '/offline.html'
 ];
 
