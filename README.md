@@ -31,7 +31,7 @@
 | `services/` | منطق الأعمال (مبيعات، GL، متجر، مدفوعات، …) |
 | `templates/` | واجهات HTML (Jinja2) |
 | `static/` | أصول CSS/JS والملفات الثابتة |
-| `migrations/` | ترحيلات Alembic (head: `accounting_scope_001`) |
+| `migrations/` | ترحيلات Alembic (head: `store_init_005`) |
 | `runtime_core/` | إصلاحات idempotent عند startup |
 | `utils/system_init.py` | تهيئة owner، الأدوار، COA، tenant افتراضي |
 | `utils/tenanting.py` / `utils/tenant_orm.py` | عزل المستأجرين على مستوى ORM والاستعلامات |
@@ -99,7 +99,7 @@ NOWPAYMENTS_IPN_SECRET=CHANGE_ME
 3. `pip install -r requirements.txt`
 4. إنشاء PostgreSQL من تبويب Databases.
 5. إنشاء `.env` على الخادم فقط (`chmod 600`).
-6. `flask db upgrade` → التحقق من head: `accounting_scope_001`.
+6. `flask db upgrade` → التحقق من head: `store_init_005`.
 7. ضبط **WSGI** → `application = create_app()`.
 8. ربط `/static/` في تبويب Web.
 9. **Reload** — لا تستخدم `python app.py` في الإنتاج.
@@ -116,7 +116,7 @@ pip install -r requirements.txt
 
 # انسخ env.example إلى .env وعدّل DATABASE_URL
 python -m flask db upgrade
-python -m flask db current      # accounting_scope_001 (head)
+python -m flask db current      # store_init_005 (head)
 python app.py                   # تطوير محلي فقط
 ```
 
@@ -209,7 +209,7 @@ This repository contains a **production-grade** multi-branch sales and accountin
 
 ### 1. Core Components
 
-See the Arabic table above — same layout: `app.py`, `routes/`, `models/`, `services/`, `templates/`, `static/`, `migrations/` (head: `accounting_scope_001`), `runtime_core/`, tenant isolation utils, GL posting, shop/store routes, and `tools/qa/`.
+See the Arabic table above — same layout: `app.py`, `routes/`, `models/`, `services/`, `templates/`, `static/`, `migrations/` (head: `store_init_005`), `runtime_core/`, tenant isolation utils, GL posting, shop/store routes, and `tools/qa/`.
 
 ---
 
