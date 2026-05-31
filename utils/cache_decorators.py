@@ -10,9 +10,9 @@ def cached_query(timeout=300, key_prefix=None):
         @wraps(f)
         def decorated_function(*args, **kwargs):
             if key_prefix:
-                cache_key = f"{key_prefix}:{hashlib.md5(json.dumps(str(args) + str(kwargs)).encode()).hexdigest()}"
+                cache_key = f"{key_prefix}:{hashlib.sha256(json.dumps(str(args) + str(kwargs)).encode(), usedforsecurity=False).hexdigest()}"
             else:
-                cache_key = f"{f.__name__}:{hashlib.md5(json.dumps(str(args) + str(kwargs)).encode()).hexdigest()}"
+                cache_key = f"{f.__name__}:{hashlib.sha256(json.dumps(str(args) + str(kwargs)).encode(), usedforsecurity=False).hexdigest()}"
             
             result = cache.get(cache_key)
             if result is not None:

@@ -34,11 +34,13 @@
               </div>
               <div class="col-md-6">
                 <h5>الإجماليات</h5>
+                {% set paid_amount = purchase.get_paid_amount() %}
+                {% set balance_due = purchase.total_amount - paid_amount %}
                 <p><strong>المجموع الفرعي:</strong> {{ purchase.subtotal }} {{ purchase.currency }}</p>
                 <p><strong>الضريبة:</strong> {{ purchase.tax_amount }} {{ purchase.currency }}</p>
                 <p><strong>الإجمالي:</strong> {{ purchase.total_amount }} {{ purchase.currency }}</p>
-                <p><strong>المدفوع:</strong> {{ purchase.paid_amount }} AED</p>
-                <p><strong>المتبقي:</strong> {{ purchase.balance }} AED</p>
+                <p><strong>المدفوع:</strong> {{ paid_amount }} AED</p>
+                <p><strong>المتبقي:</strong> {{ balance_due }} AED</p>
               </div>
             </div>
 
@@ -61,7 +63,7 @@
                   <td>{{ line.quantity }}</td>
                   <td>{{ line.unit_cost }} {{ purchase.currency }}</td>
                   <td>{{ line.discount_percent or 0 }}%</td>
-                  <td>{{ line.total_cost }} {{ purchase.currency }}</td>
+                  <td>{{ line.line_total }} {{ purchase.currency }}</td>
                 </tr>
                 {% endfor %}
               </tbody>

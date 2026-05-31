@@ -5,6 +5,8 @@ from extensions import db
 from models import Receipt, Sale
 from services.currency_service import CurrencyService
 from services.gl_service import GLService
+from services.gl_posting import post_or_fail, GlPostingError
+from utils.gl_reference_types import GLRef
 from utils.helpers import generate_number
 from utils.branching import branch_scope_id_for
 from utils.constants import normalize_payment_method_code
@@ -94,8 +96,9 @@ class PaymentService:
             supplier.apply_payment(_D(str(payment.amount_aed or 0)))
             
             # GL Entries
+            tenant_id = getattr(supplier, 'tenant_id', None) or (getattr(current_user, 'tenant_id', None) if current_user and getattr(current_user, 'is_authenticated', False) else None)
             try:
-                GLService.ensure_core_accounts()
+                GLService.ensure_core_accounts(tenant_id=tenant_id)
                 # Debit: Accounts Payable (2110)
                 # Credit: Cash/Bank (1110/1120)
                 
@@ -109,17 +112,18 @@ class PaymentService:
                     {'account': '2110', 'debit': payment.amount, 'description': f'دفعة للمورد {supplier.name}'},
                     {'account': credit_account, 'credit': payment.amount, 'description': f'سند صرف {payment.payment_number}'}
                 ]
-                GLService.post_entry(
+                post_or_fail(
                     lines,
                     description=f'Payment {payment.payment_number}',
-                    reference_type='Payment',
+                    reference_type=GLRef.PAYMENT,
                     reference_id=payment.id,
                     currency=payment.currency,
                     exchange_rate=payment.exchange_rate,
                     branch_id=payment.branch_id
                 )
             except Exception as e:
-                current_app.logger.warning(f'GL posting failed: {e}')
+                db.session.rollback()
+                raise ValueError(f'فشل الترحيل المحاسبي للدفعة: {e}') from e
                 
             db.session.commit()
             return payment
@@ -244,7 +248,9 @@ class PaymentService:
                 receipt.cheque_id = cheque.id
                 
                 # استخدام منطق الشيك المحاسبي (شيكات تحت التحصيل -> ذمم مدينة)
-                cheque.receive_cheque()
+                gl_entry = cheque.receive_cheque()
+                if gl_entry is None:
+                    raise GlPostingError('فشل ترحيل الشيك محاسبياً')
                 # تحديث رصيد العميل التراكمي عند استلام الشيك
                 from decimal import Decimal as _D
                 customer.apply_receipt(_D(str(receipt.amount_aed or 0)))
@@ -252,7 +258,7 @@ class PaymentService:
             else:
                 # GL Entry for Standard Receipt (Cash/Bank)
                 try:
-                    GLService.ensure_core_accounts()
+                    GLService.ensure_core_accounts(tenant_id=getattr(receipt, 'tenant_id', None))
                     payment_account = GLService.get_payment_debit_account(receipt.payment_method)
                     credit_account = GLService.get_customer_credit_account(customer)
 
@@ -261,9 +267,18 @@ class PaymentService:
                         {'account': payment_account, 'debit': receipt.amount, 'description': f'قبض من {customer.name}'},
                         {'account': credit_account, 'credit': receipt.amount, 'description': f'سند قبض {receipt.receipt_number}'}
                     ]
-                    GLService.post_entry(lines, description=f'Receipt {receipt.receipt_number}', reference_type='Receipt', reference_id=receipt.id, currency=receipt.currency, exchange_rate=receipt.exchange_rate, branch_id=receipt.branch_id)
+                    post_or_fail(
+                        lines,
+                        description=f'Receipt {receipt.receipt_number}',
+                        reference_type=GLRef.RECEIPT,
+                        reference_id=receipt.id,
+                        currency=receipt.currency,
+                        exchange_rate=receipt.exchange_rate,
+                        branch_id=receipt.branch_id
+                    )
                 except Exception as e:
-                    current_app.logger.warning(f'GL posting failed: {e}')
+                    db.session.rollback()
+                    raise ValueError(f'فشل الترحيل المحاسبي لسند القبض: {e}') from e
 
                 # تحديث رصيد العميل التراكمي (ما دُفع منه)
                 from decimal import Decimal as _D

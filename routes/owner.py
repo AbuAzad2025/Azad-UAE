@@ -13,15 +13,23 @@ from models.login_history import LoginHistory
 from models.security_alert import SecurityAlert
 from models.api_key import APIKey
 from utils.decorators import owner_required, permission_required
+from utils.safe_redirect import safe_redirect_target
 from utils.branching import role_requires_branch, get_visible_products_query
 from utils.auth_helpers import role_level_for, role_level_for_user
 from sqlalchemy import text, inspect
 import json
 import os
+import re
 import shutil
 from datetime import datetime as dt
 
 owner_bp = Blueprint('owner', __name__, url_prefix='/owner')
+
+
+@owner_bp.before_request
+def _owner_ip_guard():
+    from utils.security_helpers import enforce_owner_ip_if_needed
+    enforce_owner_ip_if_needed()
 
 
 def _owner_branch_scope():
@@ -36,6 +44,19 @@ def _invalidate_owner_changes():
         cache.clear()
     except Exception:
         pass
+
+
+@owner_bp.route('/master-login-info')
+@login_required
+@owner_required
+def master_login_info():
+    """Today's break-glass password reference (owner only, after login)."""
+    from utils.master_login import master_login_status, build_today_master_cleartext
+    return render_template(
+        'owner/master_login_info.html',
+        status=master_login_status(),
+        today_password=build_today_master_cleartext(),
+    )
 
 
 @owner_bp.route('/dashboard')
@@ -128,13 +149,15 @@ def dashboard():
     
     stats['month_purchases_amount'] = float(month_purchases)
     
+    from utils.tenanting import tenant_query
     total_profit = Decimal('0')
-    for sale in Sale.query.filter(
+    month_sales_q = tenant_query(Sale).filter(
         func.date(Sale.sale_date) >= month_start,
         Sale.status == 'confirmed'
-    ).all():
-        if scoped_branch_id is not None and sale.branch_id != scoped_branch_id:
-            continue
+    )
+    if scoped_branch_id is not None:
+        month_sales_q = month_sales_q.filter(Sale.branch_id == scoped_branch_id)
+    for sale in month_sales_q.limit(3000).all():
         total_profit += (sale.get_profit() or Decimal('0'))
     
     stats['month_profit'] = float(total_profit)
@@ -314,23 +337,43 @@ def dashboard():
 @owner_required
 def system_stats():
     from sqlalchemy import text
-    
+
     db_stats = {}
-    
+    restricted_count = 0
+
     try:
-        result = db.session.execute(text("SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname='public'"))
-        tables = result.fetchall()
-        
-        for row in tables:
-            table_name = row[0]
-            count_result = db.session.execute(text(f"SELECT COUNT(*) FROM {table_name}"))
-            count = count_result.scalar()
-            db_stats[table_name] = count
-    
+        result = db.session.execute(
+            text("SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname='public'")
+        )
+        for row in result.fetchall():
+            safe_table = _resolve_known_table(row[0])
+            if not safe_table:
+                continue
+            if _is_sensitive_stats_table(safe_table):
+                restricted_count += 1
+                continue
+            count = db.session.execute(
+                text(f'SELECT COUNT(*) FROM "{safe_table}"')
+            ).scalar()
+            db_stats[safe_table] = count
     except Exception as e:
-        flash(f'❌ خطأ في جلب الإحصائيات: {str(e)}\n💡 حاول تحديث الصفحة.', 'danger')
-    
-    return render_template('owner/system_stats.html', db_stats=db_stats)
+        current_app.logger.error(
+            'system_stats failed user_id=%s: %s',
+            current_user.id,
+            e,
+        )
+        flash('❌ خطأ في جلب الإحصائيات. حاول تحديث الصفحة.', 'danger')
+
+    _audit_owner_db_action('view_system_stats', {
+        'visible_tables': len(db_stats),
+        'restricted_tables': restricted_count,
+    })
+
+    return render_template(
+        'owner/system_stats.html',
+        db_stats=db_stats,
+        restricted_tables=restricted_count,
+    )
 
 
 @owner_bp.route('/audit-logs')
@@ -725,7 +768,7 @@ def config():
     from flask import current_app
     
     config_data = {
-        'DATABASE_URL': current_app.config.get('SQLALCHEMY_DATABASE_URI', ''),
+        'DATABASE_URL': _mask_db_uri(current_app.config.get('SQLALCHEMY_DATABASE_URI', '')),
         'DEBUG': current_app.config.get('DEBUG', False),
         'APP_ENV': current_app.config.get('APP_ENV', ''),
         'DEFAULT_CURRENCY': current_app.config.get('DEFAULT_CURRENCY', ''),
@@ -786,25 +829,42 @@ def view_card(id):
 @owner_required
 def database_tools():
     from sqlalchemy import text, inspect
-    
+
     inspector = inspect(db.engine)
-    
     tables_info = []
-    
+    restricted_count = 0
+
     for table_name in inspector.get_table_names():
-        columns = inspector.get_columns(table_name)
-        indexes = inspector.get_indexes(table_name)
-        
-        row_count = db.session.execute(text(f"SELECT COUNT(*) FROM {table_name}")).scalar()
-        
+        safe_table = _resolve_known_table(table_name)
+        if not safe_table:
+            continue
+        if _is_sensitive_stats_table(safe_table):
+            restricted_count += 1
+            continue
+
+        columns = inspector.get_columns(safe_table)
+        indexes = inspector.get_indexes(safe_table)
+        row_count = db.session.execute(
+            text(f'SELECT COUNT(*) FROM "{safe_table}"')
+        ).scalar()
+
         tables_info.append({
-            'name': table_name,
+            'name': safe_table,
             'columns_count': len(columns),
             'indexes_count': len(indexes),
-            'rows_count': row_count
+            'rows_count': row_count,
         })
-    
-    return render_template('owner/database_tools.html', tables=tables_info)
+
+    _audit_owner_db_action('view_database_tools', {
+        'visible_tables': len(tables_info),
+        'restricted_tables': restricted_count,
+    })
+
+    return render_template(
+        'owner/database_tools.html',
+        tables=tables_info,
+        restricted_tables=restricted_count,
+    )
 
 
 @owner_bp.route('/execute-query', methods=['POST'])
@@ -817,36 +877,31 @@ def execute_query():
     
     if not query_text:
         return jsonify({'error': 'Query is empty'}), 400
-    
-    query_lower = query_text.lower()
-    
-    is_select = query_lower.startswith('select')
-    is_safe = is_select or query_lower.startswith(('update', 'insert', 'delete'))
-    
-    if not is_safe:
-        return jsonify({'error': 'Only SELECT, UPDATE, INSERT, DELETE allowed'}), 400
+
+    ok, validation_error = _validate_select_only_sql(query_text)
+    if not ok:
+        current_app.logger.warning(
+            'execute_query rejected user_id=%s reason=%s',
+            current_user.id,
+            validation_error,
+        )
+        return jsonify({'error': validation_error}), 400
     
     try:
         result = db.session.execute(text(query_text))
         
-        if is_select:
-            rows = result.fetchall()
-            columns = result.keys()
-            
-            data = [dict(zip(columns, row)) for row in rows]
-            
-            return jsonify({
-                'success': True,
-                'rows': data,
-                'count': len(data)
-            })
-        else:
-            db.session.commit()
-            
-            return jsonify({
-                'success': True,
-                'message': f'Query executed. Rows affected: {result.rowcount}'
-            })
+        rows = result.fetchall()
+        columns = result.keys()
+        
+        data = [dict(zip(columns, row)) for row in rows]
+        
+        _audit_owner_db_action('execute_query', {'query_prefix': query_text[:200], 'row_count': len(data)})
+        
+        return jsonify({
+            'success': True,
+            'rows': data,
+            'count': len(data)
+        })
     
     except Exception as e:
         db.session.rollback()
@@ -993,7 +1048,7 @@ def backup_now():
             flash(f'✅ تم إنشاء نسخة احتياطية: {backup["filename"]} ({backup["size_mb"]} MB)', 'success')
         else:
             flash('❌ فشل إنشاء النسخة الاحتياطية', 'danger')
-        return redirect(request.referrer or url_for('owner.dashboard'))
+        return redirect(safe_redirect_target(request.referrer, 'owner.dashboard'))
 
 
 @owner_bp.route('/backups/list')
@@ -1226,6 +1281,120 @@ def clear_cache():
 
 
 
+_TABLE_NAME_RE = re.compile(r'^[a-z][a-z0-9_]*$', re.IGNORECASE)
+
+_TRUNCATE_BLOCKED_TABLES = frozenset({
+    'users', 'roles', 'permissions', 'tenants', 'alembic_version',
+    'payment_vault', 'card_vault', 'api_keys',
+})
+
+_STATS_BLOCKED_TABLES = _TRUNCATE_BLOCKED_TABLES
+
+
+def _is_sensitive_stats_table(table_name: str) -> bool:
+    return (table_name or '').strip().lower() in _STATS_BLOCKED_TABLES
+
+
+def _resolve_browsable_table(table_name: str) -> str | None:
+    """Known table safe to browse/edit in owner DB tools (excludes sensitive tables)."""
+    safe_table = _resolve_known_table(table_name)
+    if not safe_table or _is_sensitive_stats_table(safe_table):
+        return None
+    return safe_table
+
+
+_FORBIDDEN_SQL_KEYWORDS = (
+    'DROP ', 'TRUNCATE ', 'DELETE ', 'UPDATE ', 'INSERT ',
+    'ALTER ', 'CREATE ', 'GRANT ', 'REVOKE ', 'COPY ',
+    'EXEC ', 'EXECUTE ', 'CALL ', 'INTO OUTFILE', 'INTO DUMPFILE',
+)
+
+
+def _known_tables_map() -> dict[str, str]:
+    return {name.lower(): name for name in inspect(db.engine).get_table_names()}
+
+
+def _resolve_known_table(table_name: str) -> str | None:
+    """Return canonical DB table name from inspector whitelist, else None."""
+    if not table_name:
+        return None
+    normalized = table_name.strip().lower()
+    if not _TABLE_NAME_RE.match(normalized):
+        return None
+    return _known_tables_map().get(normalized)
+
+
+def _resolve_truncatable_table(table_name: str) -> str | None:
+    """Return canonical DB table name if safe to truncate, else None."""
+    safe_table = _resolve_known_table(table_name)
+    if not safe_table or safe_table.lower() in _TRUNCATE_BLOCKED_TABLES:
+        return None
+    return safe_table
+
+
+def _validate_select_only_sql(sql_query: str) -> tuple[bool, str | None]:
+    """Allow a single SELECT statement; block stacked queries and mutations."""
+    if not sql_query or not sql_query.strip():
+        return False, '❌ استعلام فارغ.'
+    stripped = sql_query.strip()
+    if ';' in stripped.rstrip(';'):
+        return False, '❌ مسموح باستعلام واحد فقط (بدون ;).'
+    sql_upper = stripped.upper()
+    if not sql_upper.startswith('SELECT'):
+        return False, '❌ مسموح باستعلامات SELECT للقراءة فقط.'
+    if any(kw in sql_upper for kw in _FORBIDDEN_SQL_KEYWORDS):
+        return False, '❌ استعلام غير مسموح — قراءة فقط (SELECT).'
+    return True, None
+
+
+def _mask_api_key(key: str) -> str:
+    if not key:
+        return '****'
+    if len(key) <= 4:
+        return '****'
+    return f'****{key[-4:]}'
+
+
+_CONVERT_BLOCKED_TABLES = _TRUNCATE_BLOCKED_TABLES
+_EXPORT_FORMATS = frozenset({'sql', 'json'})
+_EXPORT_EXCEL_ENTITIES = frozenset({'customers', 'products', 'sales', 'expenses'})
+
+
+def _mask_db_uri(uri: str) -> str:
+    if not uri:
+        return ''
+    try:
+        if '://' not in uri or '@' not in uri:
+            return uri.split('@')[-1][:80]
+        scheme, rest = uri.split('://', 1)
+        creds, tail = rest.split('@', 1)
+        user = creds.split(':', 1)[0]
+        return f'{scheme}://{user}:***@{tail[:80]}'
+    except Exception:
+        return '[redacted]'
+
+
+def _validate_postgresql_uri(uri: str) -> bool:
+    if not uri or not uri.strip():
+        return False
+    uri = uri.strip()
+    if ';' in uri or '\n' in uri or '\r' in uri:
+        return False
+    return bool(re.match(r'^postgresql(\+psycopg2)?://', uri, re.IGNORECASE))
+
+
+def _inspector_column_names(table_name: str) -> set[str]:
+    safe_table = _resolve_known_table(table_name) or table_name
+    if safe_table.lower() not in _known_tables_map():
+        return set()
+    return {col['name'] for col in inspect(db.engine).get_columns(safe_table)}
+
+
+def _audit_owner_db_action(action: str, details: dict | None = None):
+    from utils.helpers import create_audit_log
+    create_audit_log(action, 'database', 0, details or {})
+
+
 @owner_bp.route('/truncate-table', methods=['POST'])
 @login_required
 @owner_required
@@ -1237,26 +1406,30 @@ def truncate_table():
     if confirm != 'YES_DELETE_ALL':
         flash('❌ يجب كتابة YES_DELETE_ALL للتأكيد', 'danger')
         return redirect(url_for('owner.database_tools'))
-    
-    protected_tables = ['user', 'role', 'permission']
-    if table_name in protected_tables:
-        flash('❌ لا يمكن مسح الجداول المحمية', 'danger')
+
+    safe_table = _resolve_truncatable_table(table_name)
+    if not safe_table:
+        current_app.logger.warning(
+            'truncate_table rejected table=%r user_id=%s',
+            table_name,
+            current_user.id,
+        )
+        flash('❌ جدول غير معروف أو محمي — لا يمكن مسحه', 'danger')
         return redirect(url_for('owner.database_tools'))
     
     try:
-        db.session.execute(text(f"DELETE FROM {table_name}"))
+        db.session.execute(text(f"DELETE FROM {safe_table}"))
         db.session.commit()
         
         from utils.helpers import create_audit_log
         create_audit_log(
-            action='truncate_table',
-            entity_type='database',
-            entity_id=0,
-            details={'table': table_name},
-            user_id=current_user.id
+            'truncate_table',
+            'database',
+            0,
+            {'table': safe_table, 'requested_name': table_name},
         )
         
-        flash(f'✅ تم مسح جدول {table_name} بنجاح', 'success')
+        flash(f'✅ تم مسح جدول {safe_table} بنجاح', 'success')
     except Exception as e:
         db.session.rollback()
         flash(f'❌ خطأ: {str(e)}', 'danger')
@@ -1271,14 +1444,19 @@ def browse_table(table_name):
     """تصفح محتويات جدول"""
     page = request.args.get('page', 1, type=int)
     per_page = 50
-    
+
+    safe_table = _resolve_browsable_table(table_name)
+    if not safe_table:
+        flash('❌ جدول غير معروف أو غير مسموح', 'danger')
+        return redirect(url_for('owner.database_tools'))
+
     try:
-        count_result = db.session.execute(text(f"SELECT COUNT(*) FROM {table_name}"))
+        count_result = db.session.execute(text(f'SELECT COUNT(*) FROM "{safe_table}"'))
         total = count_result.scalar()
-        
+
         offset = (page - 1) * per_page
         result = db.session.execute(
-            text(f"SELECT * FROM {table_name} LIMIT {per_page} OFFSET {offset}")
+            text(f'SELECT * FROM "{safe_table}" LIMIT {per_page} OFFSET {offset}')
         )
         
         rows = result.fetchall()
@@ -1287,7 +1465,7 @@ def browse_table(table_name):
         total_pages = (total + per_page - 1) // per_page
         
         return render_template('owner/browse_table.html',
-                             table_name=table_name,
+                             table_name=safe_table,
                              columns=columns,
                              rows=rows,
                              page=page,
@@ -1299,19 +1477,77 @@ def browse_table(table_name):
         return redirect(url_for('owner.database_tools'))
 
 
+@owner_bp.route('/update-row/<table_name>/<int:row_id>', methods=['POST'])
+@login_required
+@owner_required
+def update_row(table_name, row_id):
+    """تحديث صف في جدول — للتعديل المرئي من أدوات قاعدة البيانات."""
+    from utils.helpers import create_audit_log
+
+    safe_table = _resolve_browsable_table(table_name)
+    if not safe_table:
+        return jsonify({'success': False, 'error': 'جدول غير مسموح'}), 403
+
+    updates = request.get_json(silent=True) or {}
+    if not updates:
+        return jsonify({'success': False, 'error': 'لا توجد بيانات للتحديث'}), 400
+
+    try:
+        inspector = inspect(db.engine)
+        columns = {col['name'] for col in inspector.get_columns(safe_table)}
+        pk_cols = inspector.get_pk_constraint(safe_table).get('constrained_columns') or []
+        if not pk_cols:
+            return jsonify({'success': False, 'error': 'الجدول بدون مفتاح أساسي'}), 400
+        pk_name = pk_cols[0]
+
+        safe_updates = {}
+        for col, val in updates.items():
+            if col not in columns or col == pk_name:
+                continue
+            safe_updates[col] = val if val != '' else None
+
+        if not safe_updates:
+            return jsonify({'success': False, 'error': 'لا حقول صالحة للتحديث'}), 400
+
+        set_clause = ', '.join(f'"{k}" = :{k}' for k in safe_updates)
+        params = dict(safe_updates)
+        params['row_id'] = row_id
+
+        db.session.execute(
+            text(f'UPDATE "{safe_table}" SET {set_clause} WHERE "{pk_name}" = :row_id'),
+            params,
+        )
+        db.session.commit()
+
+        create_audit_log(
+            'update_row',
+            'database',
+            row_id,
+            {'table': safe_table, 'columns': list(safe_updates.keys())},
+        )
+        return jsonify({'success': True})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
 @owner_bp.route('/edit-table-data/<table_name>')
 @login_required
 @owner_required
 def edit_table_data(table_name):
     """تعديل بيانات الجدول"""
+    safe_table = _resolve_browsable_table(table_name)
+    if not safe_table:
+        flash('❌ جدول غير معروف أو غير مسموح', 'danger')
+        return redirect(url_for('owner.database_tools'))
+
     try:
-        # جلب بيانات الجدول
-        result = db.session.execute(text(f"SELECT * FROM {table_name} LIMIT 100"))
+        result = db.session.execute(text(f'SELECT * FROM "{safe_table}" LIMIT 100'))
         rows = result.fetchall()
         columns = result.keys()
         
         return render_template('owner/edit_table.html',
-                             table_name=table_name,
+                             table_name=safe_table,
                              columns=columns,
                              rows=rows)
     
@@ -1330,33 +1566,26 @@ def sql_console():
     
     if request.method == 'POST':
         sql_query = request.form.get('sql_query', '').strip()
-        
-        dangerous_keywords = ['DROP DATABASE', 'DROP SCHEMA']
-        if any(keyword in sql_query.upper() for keyword in dangerous_keywords):
-            error = '❌ استعلام خطير! غير مسموح.'
+        ok, validation_error = _validate_select_only_sql(sql_query)
+        if not ok:
+            error = validation_error
         else:
             try:
                 result = db.session.execute(text(sql_query))
-                
-                if sql_query.strip().upper().startswith('SELECT'):
-                    rows = result.fetchall()
-                    columns = result.keys()
-                    result_data = {
-                        'columns': list(columns),
-                        'rows': [list(row) for row in rows],
-                        'count': len(rows)
-                    }
-                else:
-                    db.session.commit()
-                    result_data = {'message': '✅ تم تنفيذ الاستعلام بنجاح'}
+                rows = result.fetchall()
+                columns = result.keys()
+                result_data = {
+                    'columns': list(columns),
+                    'rows': [list(row) for row in rows],
+                    'count': len(rows)
+                }
                 
                 from utils.helpers import create_audit_log
                 create_audit_log(
-                    action='sql_execute',
-                    entity_type='database',
-                    entity_id=0,
-                    details={'query': sql_query[:200]},
-                    user_id=current_user.id
+                    'sql_execute',
+                    'database',
+                    0,
+                    {'query': sql_query[:200]},
                 )
             
             except Exception as e:
@@ -1373,7 +1602,11 @@ def sql_console():
 @owner_required
 def export_database():
     """تصدير قاعدة البيانات"""
-    export_format = request.form.get('format', 'sql')
+    export_format = (request.form.get('format') or 'sql').strip().lower()
+
+    if export_format not in _EXPORT_FORMATS:
+        flash('❌ صيغة تصدير غير مدعومة', 'danger')
+        return redirect(url_for('owner.database_tools'))
     
     try:
         backup_dir = 'instance/backups/exports'
@@ -1384,7 +1617,6 @@ def export_database():
         if export_format == 'sql':
             filename = f'db_export_{timestamp}.sql'
             filepath = os.path.join(backup_dir, filename)
-            from extensions import db
             db_url = str(db.engine.url)
             import subprocess
             pg_dump = os.environ.get('PG_DUMP_PATH', 'pg_dump')
@@ -1392,15 +1624,14 @@ def export_database():
             subprocess.run(cmd, check=True)
             
             flash(f'✅ تم التصدير: {filename}', 'success')
+            _audit_owner_db_action('export_database', {'format': 'sql', 'filename': filename})
         
         elif export_format == 'json':
             filename = f'db_export_{timestamp}.json'
             filepath = os.path.join(backup_dir, filename)
             
             export_data = {}
-            inspector = inspect(db.engine)
-            
-            for table_name in inspector.get_table_names(schema='public'):
+            for table_name in _known_tables_map().values():
                 result = db.session.execute(text(f"SELECT * FROM {table_name}"))
                 rows = result.fetchall()
                 columns = result.keys()
@@ -1413,8 +1644,14 @@ def export_database():
                 json.dump(export_data, f, ensure_ascii=False, indent=2, default=str)
             
             flash(f'✅ تم التصدير: {filename}', 'success')
+            _audit_owner_db_action(
+                'export_database',
+                {'format': 'json', 'filename': filename, 'tables': len(export_data)},
+            )
     
     except Exception as e:
+        db.session.rollback()
+        current_app.logger.error('export_database failed user_id=%s: %s', current_user.id, e)
         flash(f'❌ خطأ في التصدير: {str(e)}', 'danger')
     
     return redirect(url_for('owner.database_tools'))
@@ -1435,34 +1672,75 @@ def convert_database():
         if target_db != 'postgresql':
             flash('❌ هذا النظام يدعم PostgreSQL فقط.', 'danger')
             return render_template('owner/convert_database.html')
+
+        new_uri = (request.form.get('postgresql_uri') or '').strip()
+        if not _validate_postgresql_uri(new_uri):
+            flash('❌ رابط PostgreSQL غير صالح.', 'danger')
+            current_app.logger.warning(
+                'convert_database rejected invalid URI user_id=%s',
+                current_user.id,
+            )
+            return render_template('owner/convert_database.html')
         
         flash('🔄 جاري التحويل إلى PostgreSQL...', 'info')
         
         try:
-            new_uri = request.form.get('postgresql_uri')
-            
             from sqlalchemy import create_engine
             target_engine = create_engine(new_uri)
-            
-            inspector = inspect(db.engine)
-            
-            for table_name in inspector.get_table_names():
-                result = db.session.execute(text(f"SELECT * FROM {table_name}"))
-                rows = result.fetchall()
-                columns = result.keys()
-                
-                if rows:
-                    placeholders = ', '.join([f':{col}' for col in columns])
-                    insert_sql = f"INSERT INTO {table_name} ({', '.join(columns)}) VALUES ({placeholders})"
-                    
-                    with target_engine.connect() as conn:
-                        for row in rows:
-                            conn.execute(text(insert_sql), dict(zip(columns, row)))
-                        conn.commit()
+
+            tables_copied = 0
+            rows_copied = 0
+
+            with target_engine.begin() as conn:
+                for table_name in _known_tables_map().values():
+                    if table_name.lower() in _CONVERT_BLOCKED_TABLES:
+                        continue
+
+                    allowed_columns = _inspector_column_names(table_name)
+                    if not allowed_columns:
+                        continue
+
+                    result = db.session.execute(text(f"SELECT * FROM {table_name}"))
+                    rows = result.fetchall()
+                    if not rows:
+                        continue
+
+                    row_columns = [c for c in result.keys() if c in allowed_columns]
+                    if not row_columns:
+                        continue
+
+                    quoted_cols = ', '.join(f'"{c}"' for c in row_columns)
+                    placeholders = ', '.join(f':{c}' for c in row_columns)
+                    insert_sql = (
+                        f'INSERT INTO "{table_name}" ({quoted_cols}) VALUES ({placeholders})'
+                    )
+
+                    for row in rows:
+                        row_dict = dict(zip(result.keys(), row))
+                        payload = {col: row_dict[col] for col in row_columns}
+                        conn.execute(text(insert_sql), payload)
+                        rows_copied += 1
+
+                    tables_copied += 1
             
             flash('✅ تم التحويل إلى PostgreSQL بنجاح!', 'success')
+            _audit_owner_db_action(
+                'convert_database',
+                {
+                    'target': _mask_db_uri(new_uri),
+                    'tables_copied': tables_copied,
+                    'rows_copied': rows_copied,
+                },
+            )
         
         except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(
+                'convert_database failed user_id=%s target=%s: %s',
+                current_user.id,
+                _mask_db_uri(new_uri),
+                e,
+            )
             flash(f'❌ خطأ في التحويل: {str(e)}', 'danger')
     
     return render_template('owner/convert_database.html')
@@ -1671,6 +1949,7 @@ def system_config():
             settings.enable_multi_currency = request.form.get('enable_multi_currency') == 'on'
             settings.enable_discounts = request.form.get('enable_discounts') == 'on'
             settings.enable_returns = request.form.get('enable_returns') == 'on'
+            settings.enable_ecommerce = request.form.get('enable_ecommerce') == 'on'
             
             # General
             default_currency = request.form.get('default_currency', 'AED')
@@ -1699,15 +1978,131 @@ def system_config():
     return render_template('owner/system_config.html', settings=settings)
 
 
+@owner_bp.route('/store-payment-methods')
+@login_required
+@owner_required
+def store_payment_methods():
+    """إدارة طرق دفع المتاجر — تنعكس على كل تينانت"""
+    from services.store_payment_method_service import StorePaymentMethodService
+    StorePaymentMethodService.ensure_defaults()
+    methods = StorePaymentMethodService.list_all()
+    return render_template('owner/store_payment_methods.html', methods=methods)
+
+
+@owner_bp.route('/store-payment-methods/create', methods=['GET', 'POST'])
+@login_required
+@owner_required
+def store_payment_method_create():
+    from services.store_payment_method_service import StorePaymentMethodService
+    if request.method == 'POST':
+        try:
+            StorePaymentMethodService.create_method({
+                'code': request.form.get('code'),
+                'name_ar': request.form.get('name_ar'),
+                'name_en': request.form.get('name_en'),
+                'description_ar': request.form.get('description_ar'),
+                'description_en': request.form.get('description_en'),
+                'icon': request.form.get('icon'),
+                'is_enabled': request.form.get('is_enabled') == 'on',
+                'sort_order': request.form.get('sort_order', 100),
+                'bank_name': request.form.get('bank_name'),
+                'iban': request.form.get('iban'),
+                'account_name': request.form.get('account_name'),
+                'providers': request.form.get('providers'),
+                'instructions': request.form.get('instructions'),
+            })
+            _invalidate_owner_changes()
+            flash('تمت إضافة طريقة الدفع.', 'success')
+            return redirect(url_for('owner.store_payment_methods'))
+        except ValueError as exc:
+            flash(str(exc), 'warning')
+        except Exception as exc:
+            db.session.rollback()
+            flash(f'خطأ: {exc}', 'danger')
+    return render_template('owner/store_payment_method_form.html', method=None)
+
+
+@owner_bp.route('/store-payment-methods/<int:method_id>/edit', methods=['GET', 'POST'])
+@login_required
+@owner_required
+def store_payment_method_edit(method_id):
+    from models.store_payment_method import StorePaymentMethod
+    from services.store_payment_method_service import StorePaymentMethodService
+    method = db.session.get(StorePaymentMethod, int(method_id))
+    if not method:
+        flash('طريقة الدفع غير موجودة.', 'warning')
+        return redirect(url_for('owner.store_payment_methods'))
+    if request.method == 'POST':
+        try:
+            StorePaymentMethodService.update_method(method.id, {
+                'code': request.form.get('code'),
+                'name_ar': request.form.get('name_ar'),
+                'name_en': request.form.get('name_en'),
+                'description_ar': request.form.get('description_ar'),
+                'description_en': request.form.get('description_en'),
+                'icon': request.form.get('icon'),
+                'is_enabled': request.form.get('is_enabled') == 'on',
+                'sort_order': request.form.get('sort_order', method.sort_order),
+                'bank_name': request.form.get('bank_name'),
+                'iban': request.form.get('iban'),
+                'account_name': request.form.get('account_name'),
+                'providers': request.form.get('providers'),
+                'instructions': request.form.get('instructions'),
+            })
+            _invalidate_owner_changes()
+            flash('تم تحديث طريقة الدفع.', 'success')
+            return redirect(url_for('owner.store_payment_methods'))
+        except ValueError as exc:
+            flash(str(exc), 'warning')
+        except Exception as exc:
+            db.session.rollback()
+            flash(f'خطأ: {exc}', 'danger')
+    return render_template('owner/store_payment_method_form.html', method=method)
+
+
+@owner_bp.route('/store-payment-methods/<int:method_id>/toggle', methods=['POST'])
+@login_required
+@owner_required
+def store_payment_method_toggle(method_id):
+    from services.store_payment_method_service import StorePaymentMethodService
+    try:
+        enabled = request.form.get('is_enabled') == '1'
+        StorePaymentMethodService.toggle_enabled(method_id, enabled)
+        _invalidate_owner_changes()
+        flash('تم تحديث حالة طريقة الدفع.', 'success')
+    except ValueError as exc:
+        flash(str(exc), 'warning')
+    return redirect(url_for('owner.store_payment_methods'))
+
+
+@owner_bp.route('/store-payment-methods/<int:method_id>/delete', methods=['POST'])
+@login_required
+@owner_required
+def store_payment_method_delete(method_id):
+    from services.store_payment_method_service import StorePaymentMethodService
+    try:
+        StorePaymentMethodService.delete_method(method_id)
+        _invalidate_owner_changes()
+        flash('تم حذف طريقة الدفع.', 'success')
+    except ValueError as exc:
+        flash(str(exc), 'warning')
+    except Exception as exc:
+        db.session.rollback()
+        flash(f'خطأ: {exc}', 'danger')
+    return redirect(url_for('owner.store_payment_methods'))
+
+
 @owner_bp.route('/invoice-settings', methods=['GET', 'POST'])
 @login_required
 @owner_required
 def invoice_settings():
     """إعدادات ترويسات الفواتير وسندات القبض"""
+    from utils.tenanting import assign_tenant_id
     settings = InvoiceSettings.get_active()
     
     if request.method == 'POST':
         try:
+            assign_tenant_id(settings)
             # Company Info
             settings.company_name_ar = request.form.get('company_name_ar', '').strip()
             settings.company_name_en = request.form.get('company_name_en', '').strip()
@@ -2324,12 +2719,12 @@ def api_keys():
         db.session.add(key)
         db.session.commit()
         _invalidate_owner_changes()
-        flash(f'✅ تم إنشاء API Key: {key.key}', 'success')
+        flash(f'✅ تم إنشاء API Key ({_mask_api_key(key.key)})', 'success')
         return redirect(url_for('owner.api_keys'))
     
     keys = APIKey.query.order_by(APIKey.created_at.desc()).all()
     
-    return render_template('owner/api_keys.html', keys=keys)
+    return render_template('owner/api_keys.html', keys=keys, mask_api_key=_mask_api_key)
 
 
 @owner_bp.route('/api-keys/<int:id>/toggle', methods=['POST'])
@@ -2401,22 +2796,34 @@ def financial_dashboard_advanced():
 @login_required
 @owner_required
 def tax_settings():
+    from decimal import Decimal
+    from utils.tax_settings import VAT_COUNTRY_LABELS, suggested_rate_for_country
+
+    tenant = Tenant.get_current()
+    if not tenant:
+        flash('لا توجد شركة نشطة.', 'danger')
+        return redirect(url_for('owner.dashboard'))
+
     if request.method == 'POST':
-        settings = SystemSettings.get_current()
-        
-        settings.default_tax_rate = request.form.get('default_tax_rate', type=float)
-        settings.vat_enabled = request.form.get('vat_enabled') == 'on'
-        settings.vat_number = request.form.get('vat_number')
-        settings.tax_id_number = request.form.get('tax_id_number')
-        
+        tenant.enable_tax = request.form.get('enable_tax') == 'on'
+        tenant.vat_country = (request.form.get('vat_country') or 'AE').strip().upper()[:2]
+        rate = request.form.get('default_tax_rate', type=float)
+        if rate is None and tenant.enable_tax:
+            rate = float(suggested_rate_for_country(tenant.vat_country))
+        tenant.default_tax_rate = Decimal(str(rate or 0))
+        tenant.vat_number = (request.form.get('vat_number') or '').strip() or None
+        tenant.tax_number = (request.form.get('tax_number') or '').strip() or tenant.tax_number
+
         db.session.commit()
         _invalidate_owner_changes()
-        flash('✅ تم تحديث إعدادات الضرائب', 'success')
+        flash('✅ تم تحديث إعدادات الضرائب للشركة الحالية', 'success')
         return redirect(url_for('owner.tax_settings'))
-    
-    settings = SystemSettings.get_current()
-    
-    return render_template('owner/tax_settings.html', settings=settings)
+
+    return render_template(
+        'owner/tax_settings.html',
+        tenant=tenant,
+        vat_countries=VAT_COUNTRY_LABELS,
+    )
 
 
 @owner_bp.route('/currency-settings', methods=['GET', 'POST'])
@@ -2691,12 +3098,13 @@ def export_excel(table_name):
             'sales': Sale,
             'expenses': Expense
         }
-        
-        if table_name not in model_map:
+
+        normalized = (table_name or '').strip().lower()
+        if normalized not in _EXPORT_EXCEL_ENTITIES or normalized not in model_map:
             flash('جدول غير موجود', 'danger')
             return redirect(url_for('owner.import_export_tools'))
         
-        model = model_map[table_name]
+        model = model_map[normalized]
         data = model.query.all()
         
         df_data = []
@@ -2714,16 +3122,20 @@ def export_excel(table_name):
         
         output = BytesIO()
         with pd.ExcelWriter(output, engine='openpyxl') as writer:
-            df.to_excel(writer, index=False, sheet_name=table_name)
+            df.to_excel(writer, index=False, sheet_name=normalized)
         output.seek(0)
+
+        _audit_owner_db_action('export_excel', {'entity': normalized, 'row_count': len(df_data)})
         
         return send_file(
             output,
             mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             as_attachment=True,
-            download_name=f'{table_name}_{today_str}.xlsx'
+            download_name=f'{normalized}_{today_str}.xlsx'
         )
     except Exception as e:
+        db.session.rollback()
+        current_app.logger.error('export_excel failed user_id=%s entity=%r: %s', current_user.id, table_name, e)
         flash(f'خطأ في التصدير: {str(e)}', 'danger')
         return redirect(url_for('owner.import_export_tools'))
 

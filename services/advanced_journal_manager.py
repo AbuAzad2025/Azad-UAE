@@ -27,6 +27,16 @@ class JournalEntryAudit(db.Model):
 
 class AdvancedJournalEntryManager:
     """مدير القيود المحاسبية المتقدم"""
+
+    @staticmethod
+    def _entry_or_404(entry_id, tenant_id=None):
+        from flask import abort
+        from utils.gl_tenant import gl_entry_query, active_tenant_id
+        tid = tenant_id if tenant_id is not None else active_tenant_id()
+        entry = gl_entry_query(tenant_id=tid).filter_by(id=entry_id).first()
+        if not entry:
+            abort(404)
+        return entry
     
     @staticmethod
     def create_entry_with_validation(description, lines, entry_date=None, notes=None, created_by=None, **kwargs):
@@ -45,7 +55,8 @@ class AdvancedJournalEntryManager:
             account_code = line.get('account_code')
             if account_code:
                 from models.gl import GLAccount
-                account = GLAccount.query.filter_by(code=account_code).first()
+                from utils.gl_tenant import get_gl_account_by_code, active_tenant_id
+                account = get_gl_account_by_code(account_code, tenant_id=kwargs.get('tenant_id') or active_tenant_id())
                 if account and account.is_header:
                     raise ValueError(f"لا يمكن القيد على الحساب الرئيسي: {account.full_name}")
         
@@ -71,7 +82,7 @@ class AdvancedJournalEntryManager:
     @staticmethod
     def update_entry(entry_id, updates, updated_by, reason=None):
         """تحديث قيد محاسبي"""
-        entry = GLJournalEntry.query.get_or_404(entry_id)
+        entry = AdvancedJournalEntryManager._entry_or_404(entry_id)
         
         if entry.is_posted:
             raise ValueError("لا يمكن تعديل قيد مرحل")
@@ -109,7 +120,7 @@ class AdvancedJournalEntryManager:
     @staticmethod
     def reverse_entry_advanced(entry_id, reversed_by, reason, create_reversal_entry=True):
         """عكس قيد محاسبي متقدم"""
-        entry = GLJournalEntry.query.get_or_404(entry_id)
+        entry = AdvancedJournalEntryManager._entry_or_404(entry_id)
         
         if entry.is_reversed:
             raise ValueError("القيد معكوس مسبقاً")
@@ -164,7 +175,7 @@ class AdvancedJournalEntryManager:
     @staticmethod
     def delete_entry(entry_id, deleted_by, reason):
         """حذف قيد محاسبي"""
-        entry = GLJournalEntry.query.get_or_404(entry_id)
+        entry = AdvancedJournalEntryManager._entry_or_404(entry_id)
         
         if entry.is_posted:
             raise ValueError("لا يمكن حذف قيد مرحل - استخدم العكس بدلاً من ذلك")
@@ -197,7 +208,7 @@ class AdvancedJournalEntryManager:
     @staticmethod
     def approve_entry(entry_id, approved_by, approval_notes=None):
         """الموافقة على قيد محاسبي"""
-        entry = GLJournalEntry.query.get_or_404(entry_id)
+        entry = AdvancedJournalEntryManager._entry_or_404(entry_id)
         
         if entry.is_posted:
             raise ValueError("القيد مرحل مسبقاً")

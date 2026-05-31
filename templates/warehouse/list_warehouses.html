@@ -114,6 +114,7 @@
                 <th>الفرع</th>
                 {% endif %}
                 <th>المدير</th>
+                <th>النوع</th>
                 <th>الهيكل</th>
                 <th>حركات المخزون</th>
                 <th>الحالة</th>
@@ -149,6 +150,13 @@
                 </td>
                 {% endif %}
                 <td>{{ warehouse.manager.username if warehouse.manager else '-' }}</td>
+                <td>
+                  {% if warehouse.is_online %}
+                  <span class="badge badge-info"><i class="fas fa-globe"></i> أونلاين</span>
+                  {% else %}
+                  <span class="badge badge-secondary">فعلي</span>
+                  {% endif %}
+                </td>
                 <td>
                   {% if warehouse.parent %}
                   <div><small class="text-muted">الأب:</small> {{ warehouse.parent.name_ar or warehouse.parent.name }}</div>

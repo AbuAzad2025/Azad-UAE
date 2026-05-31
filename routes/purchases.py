@@ -11,6 +11,7 @@ from utils.branching import ensure_warehouse_access, get_accessible_warehouses, 
 from utils.helpers import create_audit_log, generate_number
 from decimal import Decimal
 from utils.tenanting import tenant_query, tenant_get_or_404
+from utils.gl_reference_types import GLRef, delete_entries_by_ref
 
 purchases_bp = Blueprint('purchases', __name__, url_prefix='/purchases')
 
@@ -149,15 +150,8 @@ def print_purchase(id):
     scoped_branch_id = branch_scope_id()
     if scoped_branch_id is not None and purchase.branch_id != scoped_branch_id:
         return render_template('errors/403.html'), 403
-    from models import Tenant
     from models.invoice_settings import InvoiceSettings
-    tenant = Tenant.get_current() if hasattr(Tenant, 'get_current') else None
-    inv = InvoiceSettings.get_active() if tenant is None else None
-    company = {
-        'name_ar': (tenant.name_ar if tenant else (inv.company_name_ar if inv else '')) or 'نظام المحاسبة',
-        'address': (tenant.address_ar or tenant.address_en if tenant else (inv.address_ar or inv.address_en if inv else '')) or '',
-        'phone': (tenant.phone_1 or tenant.mobile if tenant else (inv.phone_1 if inv else '')) or '',
-    }
+    tenant, settings, company = InvoiceSettings.company_print_context()
     return render_template('purchases/print.html', purchase=purchase, company=company)
 
 
@@ -230,14 +224,12 @@ def delete(id):
             # أرشفة (Soft Delete)
             # عكس القيد المحاسبي
             if purchase.status != 'cancelled':
-                try:
-                    GLService.reverse_entry(
-                        reference_type='Purchase',
-                        reference_id=purchase.id,
-                        description=f'Reverse Purchase {purchase.purchase_number} (Archived)'
-                    )
-                except Exception as e:
-                    current_app.logger.error(f'Failed to reverse GL entry for archived purchase {purchase.id}: {e}')
+                from utils.gl_tenant import reverse_document_gl
+                reverse_document_gl(
+                    GLRef.PURCHASE, purchase.id,
+                    f'Reverse Purchase {purchase.purchase_number} (Archived)',
+                    tenant_id=getattr(purchase, 'tenant_id', None),
+                )
 
             archive_service = ArchiveService()
             archive_service.archive_record('purchases', purchase, reason='تم أرشفة الفاتورة لوجود مدفوعات أو شيكات', commit=False)
@@ -251,7 +243,7 @@ def delete(id):
             PurchaseLine.query.filter_by(purchase_id=purchase.id).delete()
             
             # 2. حذف القيود المحاسبية
-            GLJournalEntry.query.filter_by(reference_type='Purchase', reference_id=purchase.id).delete()
+            delete_entries_by_ref(purchase.id, GLRef.PURCHASE)
             
             # 3. حذف الفاتورة
             db.session.delete(purchase)
@@ -285,6 +277,8 @@ def api_calculate_purchase_totals():
         
         lines = data.get('lines', [])
         tax_rate = Decimal(str(data.get('tax_rate', 0)))
+        from utils.tax_settings import normalize_tax_rate
+        tax_rate = normalize_tax_rate(tax_rate)
         
         # حساب المجموع الفرعي
         subtotal = Decimal('0')

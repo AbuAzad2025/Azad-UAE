@@ -89,10 +89,10 @@
               <i class="fas fa-dollar-sign text-success"></i> العملة الافتراضية
               <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="العملة المفضلة (افتراضي: AED)"></i>
             </label>
-            <select name="default_currency" class="form-control">
-              <option value="AED" {% if customer.default_currency == 'AED' %}selected{% endif %}>درهم</option>
-              <option value="USD" {% if customer.default_currency == 'USD' %}selected{% endif %}>دولار</option>
-              <option value="EUR" {% if customer.default_currency == 'EUR' %}selected{% endif %}>يورو</option>
+            <select name="preferred_currency" class="form-control">
+              <option value="AED" {% if customer.preferred_currency == 'AED' %}selected{% endif %}>درهم</option>
+              <option value="USD" {% if customer.preferred_currency == 'USD' %}selected{% endif %}>دولار</option>
+              <option value="EUR" {% if customer.preferred_currency == 'EUR' %}selected{% endif %}>يورو</option>
             </select>
           </div>
         </div>

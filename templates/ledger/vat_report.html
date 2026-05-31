@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block title %}تقرير ضريبة القيمة المضافة{% endblock %}
+
+{% block content %}
+
+<div class="container py-4">
+
+  <h2 class="mb-2">تقرير VAT — ضريبة القيمة المضافة</h2>
+
+  {% if vat_country %}
+
+  <p class="text-muted mb-4">دولة الضريبة: {{ vat_country }}</p>
+
+  {% endif %}
+
+  <form method="get" class="form-row mb-4 align-items-end">
+
+    <div class="col-md-3 mb-2"><label class="small text-muted d-block">من</label><input type="date" name="date_from" class="form-control" value="{{ date_from or '' }}"></div>
+
+    <div class="col-md-3 mb-2"><label class="small text-muted d-block">إلى</label><input type="date" name="date_to" class="form-control" value="{{ date_to or '' }}"></div>
+
+    <div class="col-md-3 mb-2">
+      <label class="small text-muted d-block">الفرع</label>
+      <select name="branch_id" class="form-control">
+        <option value="">-- الكل --</option>
+        {% for branch in branches %}
+        <option value="{{ branch.id }}" {% if selected_branch == branch.id %}selected{% endif %}>{{ branch.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="col-md-2 mb-2"><button class="btn btn-primary btn-block">عرض</button></div>
+
+  </form>
+
+  <div class="row">
+
+    <div class="col-md-4"><div class="card"><div class="card-body"><h6>VAT Output (2130) — مبيعات</h6><h3>{{ '{:,.2f}'.format(report.vat_output) }}</h3></div></div></div>
+
+    <div class="col-md-4"><div class="card"><div class="card-body"><h6>VAT Input (1170) — مشتريات</h6><h3>{{ '{:,.2f}'.format(report.vat_input) }}</h3></div></div></div>
+
+    <div class="col-md-4"><div class="card border-primary"><div class="card-body"><h6>صافي VAT مستحق</h6><h3>{{ '{:,.2f}'.format(report.net_vat) }}</h3></div></div></div>
+
+  </div>
+
+</div>
+
+{% endblock %}
+

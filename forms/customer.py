@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, SelectField, TextAreaField, SubmitField
+from wtforms import StringField, SelectField, TextAreaField, SubmitField, BooleanField
 from wtforms.validators import DataRequired, Optional, Email
 
 
@@ -20,10 +20,7 @@ class CustomerForm(FlaskForm):
         ('USD', 'دولار'),
         ('EUR', 'يورو')
     ], default='AED', validators=[Optional()])
-    is_active = SelectField('الحالة', choices=[
-        ('1', 'نشط'),
-        ('0', 'غير نشط')
-    ], default='1', coerce=int, validators=[Optional()])
+    is_active = BooleanField('نشط', default=True)
     notes = TextAreaField('ملاحظات', validators=[Optional()])
     submit = SubmitField('حفظ')
 

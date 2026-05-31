@@ -90,7 +90,7 @@
                 <tr>
                   <td>{{ key.name }}</td>
                   <td><span class="badge badge-secondary">{{ key.service }}</span></td>
-                  <td><code>{{ key.key[:20] }}...</code></td>
+                  <td><code>{{ mask_api_key(key.key) }}</code></td>
                   <td>{{ key.last_used.strftime('%Y-%m-%d %H:%M') if key.last_used else 'لم يُستخدم بعد' }}</td>
                   <td>
                     {% if key.is_active %}

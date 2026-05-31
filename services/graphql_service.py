@@ -1,6 +1,18 @@
 import graphene
+from flask_login import current_user
+
 from models import Sale, Customer, Product, Payment
 from extensions import db
+from utils.tenanting import tenant_query, assign_tenant_id
+
+
+def _require_permission(permission_code):
+    if not current_user.is_authenticated:
+        raise PermissionError('Authentication required')
+    if getattr(current_user, 'is_owner', False):
+        return
+    if not current_user.has_permission(permission_code):
+        raise PermissionError(f'Missing permission: {permission_code}')
 
 
 class SaleType(graphene.ObjectType):
@@ -52,30 +64,37 @@ class Query(graphene.ObjectType):
     product = graphene.Field(ProductType, id=graphene.Int())
     
     def resolve_all_sales(self, info, limit=50, offset=0):
-        sales = Sale.query.limit(limit).offset(offset).all()
-        return [self._convert_sale_to_type(sale) for sale in sales]
+        _require_permission('manage_sales')
+        sales = tenant_query(Sale).limit(limit).offset(offset).all()
+        return [Query._convert_sale_to_type(sale) for sale in sales]
     
     def resolve_sale(self, info, id):
-        sale = Sale.query.get(id)
-        return self._convert_sale_to_type(sale) if sale else None
+        _require_permission('manage_sales')
+        sale = tenant_query(Sale).filter_by(id=id).first()
+        return Query._convert_sale_to_type(sale) if sale else None
     
     def resolve_all_customers(self, info, limit=50):
-        customers = Customer.query.limit(limit).all()
-        return [self._convert_customer_to_type(customer) for customer in customers]
+        _require_permission('manage_customers')
+        customers = tenant_query(Customer).limit(limit).all()
+        return [Query._convert_customer_to_type(customer) for customer in customers]
     
     def resolve_customer(self, info, id):
-        customer = Customer.query.get(id)
-        return self._convert_customer_to_type(customer) if customer else None
+        _require_permission('manage_customers')
+        customer = tenant_query(Customer).filter_by(id=id).first()
+        return Query._convert_customer_to_type(customer) if customer else None
     
     def resolve_all_products(self, info, limit=50):
-        products = Product.query.limit(limit).all()
-        return [self._convert_product_to_type(product) for product in products]
+        _require_permission('manage_products')
+        products = tenant_query(Product).limit(limit).all()
+        return [Query._convert_product_to_type(product) for product in products]
     
     def resolve_product(self, info, id):
-        product = Product.query.get(id)
-        return self._convert_product_to_type(product) if product else None
+        _require_permission('manage_products')
+        product = tenant_query(Product).filter_by(id=id).first()
+        return Query._convert_product_to_type(product) if product else None
     
-    def _convert_sale_to_type(self, sale):
+    @staticmethod
+    def _convert_sale_to_type(sale):
         return SaleType(
             id=sale.id,
             sale_number=sale.sale_number,
@@ -86,7 +105,8 @@ class Query(graphene.ObjectType):
             created_at=sale.created_at
         )
     
-    def _convert_customer_to_type(self, customer):
+    @staticmethod
+    def _convert_customer_to_type(customer):
         return CustomerType(
             id=customer.id,
             name=customer.name,
@@ -96,7 +116,8 @@ class Query(graphene.ObjectType):
             balance=float(customer.balance) if customer.balance else 0
         )
     
-    def _convert_product_to_type(self, product):
+    @staticmethod
+    def _convert_product_to_type(product):
         return ProductType(
             id=product.id,
             name=product.name,
@@ -117,21 +138,30 @@ class CreateSale(graphene.Mutation):
     success = graphene.Boolean()
     
     def mutate(self, info, customer_id, total_amount):
+        _require_permission('manage_sales')
         from utils.helpers import generate_number
         from decimal import Decimal
         
+        seller_id = current_user.id if current_user.is_authenticated else None
+        if not seller_id:
+            raise PermissionError('Authentication required')
+
+        customer = tenant_query(Customer).filter_by(id=customer_id).first()
+        if customer is None:
+            raise ValueError('Customer not found or not accessible')
+
         sale = Sale(
             sale_number=generate_number('INV', Sale, 'sale_number'),
-            customer_id=customer_id,
-            seller_id=1,
+            customer_id=customer.id,
+            seller_id=seller_id,
             total_amount=Decimal(str(total_amount)),
             amount_aed=Decimal(str(total_amount)),
-            status='confirmed'
+            status='pending',
         )
+        assign_tenant_id(sale)
         db.session.add(sale)
         db.session.commit()
         
-        # Convert to SaleType
         sale_type = SaleType(
             id=sale.id,
             sale_number=sale.sale_number,
@@ -149,5 +179,10 @@ class Mutation(graphene.ObjectType):
     create_sale = CreateSale.Field()
 
 
-schema = graphene.Schema(query=Query, mutation=Mutation)
+def build_schema(*, allow_mutations=False):
+    if allow_mutations:
+        return graphene.Schema(query=Query, mutation=Mutation)
+    return graphene.Schema(query=Query)
 
+
+schema = build_schema(allow_mutations=False)

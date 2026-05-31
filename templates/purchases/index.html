@@ -168,6 +168,8 @@
       </tbody>
       </table>
     </div>
+    {% set endpoint = 'purchases.index' %}
+    {% include 'partials/flask_pagination.html' %}
   </div>
 </div>
 {% endblock %}

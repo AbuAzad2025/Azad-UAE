@@ -13,8 +13,12 @@ from services.real_time_listeners import accounting_event_stream
 from services.advanced_analytics import AdvancedFinancialAnalytics
 from utils.decorators import permission_required, admin_required
 from utils.helpers import create_audit_log
+from utils.gl_tenant import gl_account_query, gl_entry_query, active_tenant_id
 
 advanced_ledger_bp = Blueprint('advanced_ledger', __name__, url_prefix='/ledger/advanced')
+
+def _accounts():
+    return gl_account_query()
 
 @advanced_ledger_bp.route('/professional-printing')
 @login_required
@@ -23,7 +27,7 @@ def professional_printing():
     """نظام الطباعة الاحترافي"""
     # بيانات تجريبية للطباعة
     trial_balance_data = []
-    accounts = GLAccount.query.filter_by(is_active=True, is_header=False).limit(20).all()
+    accounts = _accounts().filter_by(is_active=True, is_header=False).limit(20).all()
     
     total_debit = total_credit = 0
     
@@ -58,7 +62,7 @@ def customs_taxes():
 @admin_required
 def add_customs_tax():
     """إضافة ضريبة أو جمرك جديد"""
-    accounts = GLAccount.query.filter_by(is_active=True, is_header=False).order_by(GLAccount.code).all()
+    accounts = _accounts().filter_by(is_active=True, is_header=False).order_by(GLAccount.code).all()
     
     if request.method == 'POST':
         try:
@@ -112,7 +116,7 @@ def expense_categories():
 def add_expense_category():
     """إضافة فئة مصروفات جديدة"""
     parent_categories = ExpenseCategory.query.filter_by(is_active=True).all()
-    accounts = GLAccount.query.filter_by(is_active=True, is_header=False).order_by(GLAccount.code).all()
+    accounts = _accounts().filter_by(is_active=True, is_header=False).order_by(GLAccount.code).all()
     
     if request.method == 'POST':
         try:
@@ -126,7 +130,7 @@ def add_expense_category():
             
             parent_id = request.form.get('parent_id', type=int) if request.form.get('parent_id') else None
             
-            account = GLAccount.query.get(gl_account_id)
+            account = _accounts().filter_by(id=gl_account_id).first()
             category = ExpenseCategory(
                 name=request.form.get('name'),
                 name_ar=request.form.get('name_ar'),
@@ -230,7 +234,7 @@ def journal_management():
     page = request.args.get('page', 1, type=int)
     per_page = 20
     
-    entries = GLJournalEntry.query.order_by(GLJournalEntry.created_at.desc()).paginate(
+    entries = gl_entry_query().order_by(GLJournalEntry.created_at.desc()).paginate(
         page=page, per_page=per_page, error_out=False
     )
     

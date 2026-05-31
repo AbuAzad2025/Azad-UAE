@@ -1,0 +1,298 @@
+{% extends 'base.html' %}
+
+{% block title %}طلب {{ order.sale_number }}{% endblock %}
+
+
+
+{% block page_title %}
+
+<div class="d-flex justify-content-between align-items-center flex-wrap">
+
+  <div>
+
+    <h1 class="mb-0"><i class="fas fa-file-invoice mr-2"></i>طلب <code>{{ order.sale_number }}</code></h1>
+
+    <p class="text-muted mb-0 small">{{ status_label }} · {{ order.sale_date.strftime('%Y-%m-%d %H:%M') if order.sale_date else '' }}</p>
+
+  </div>
+
+  <div class="mt-2 mt-md-0">
+
+    <a href="{{ url_for('store.admin_orders') }}" class="btn btn-secondary btn-sm">كل الطلبات</a>
+
+    <a href="{{ url_for('sales.view', id=order.id) }}" class="btn btn-outline-primary btn-sm">عرض في المبيعات</a>
+
+  </div>
+
+</div>
+
+{% endblock %}
+
+
+
+{% block content %}
+
+{% if stock_issues %}
+
+<div class="alert alert-warning">
+
+  <strong><i class="fas fa-exclamation-triangle"></i> مخزون غير كافٍ للتأكيد:</strong>
+
+  <ul class="mb-0 mt-2">
+
+    {% for issue in stock_issues %}<li>{{ issue }}</li>{% endfor %}
+
+  </ul>
+
+</div>
+
+{% endif %}
+
+
+
+<div class="row">
+
+  <div class="col-lg-8">
+
+    <div class="card">
+
+      <div class="card-header"><h3 class="card-title mb-0">بنود الطلب</h3></div>
+
+      <div class="card-body table-responsive p-0">
+
+        <table class="table table-sm mb-0">
+
+          <thead>
+
+            <tr>
+
+              <th>المنتج</th>
+
+              <th class="text-center">الكمية</th>
+
+              <th class="text-right">السعر</th>
+
+              <th class="text-right">الإجمالي</th>
+
+            </tr>
+
+          </thead>
+
+          <tbody>
+
+            {% for line in order.lines %}
+
+            <tr>
+
+              <td>{{ line.product.name if line.product else '—' }}</td>
+
+              <td class="text-center">{{ '%.0f'|format(line.quantity) if line.quantity == line.quantity|int else line.quantity }}</td>
+
+              <td class="text-right">{{ '%.2f'|format(line.unit_price) }}</td>
+
+              <td class="text-right">{{ '%.2f'|format(line.line_total) }}</td>
+
+            </tr>
+
+            {% endfor %}
+
+          </tbody>
+
+          <tfoot>
+
+            <tr>
+
+              <th colspan="3" class="text-right">المجموع</th>
+
+              <th class="text-right">{{ '%.2f'|format(order.subtotal or 0) }} {{ order.currency }}</th>
+
+            </tr>
+
+            {% if order.discount_amount and order.discount_amount > 0 %}
+
+            <tr>
+
+              <td colspan="3" class="text-right">خصم</td>
+
+              <td class="text-right">-{{ '%.2f'|format(order.discount_amount) }}</td>
+
+            </tr>
+
+            {% endif %}
+
+            {% if order.tax_amount and order.tax_amount > 0 %}
+
+            <tr>
+
+              <td colspan="3" class="text-right">ضريبة</td>
+
+              <td class="text-right">{{ '%.2f'|format(order.tax_amount) }}</td>
+
+            </tr>
+
+            {% endif %}
+
+            <tr class="table-active">
+
+              <th colspan="3" class="text-right">الإجمالي</th>
+
+              <th class="text-right">{{ '%.2f'|format(order.total_amount) }} {{ order.currency }}</th>
+
+            </tr>
+
+          </tfoot>
+
+        </table>
+
+      </div>
+
+    </div>
+
+
+
+    {% if order.notes %}
+
+    <div class="card">
+
+      <div class="card-header"><h3 class="card-title mb-0">ملاحظات</h3></div>
+
+      <div class="card-body"><pre class="mb-0" style="white-space:pre-wrap;font-family:inherit;">{{ order.notes }}</pre></div>
+
+    </div>
+
+    {% endif %}
+
+  </div>
+
+
+
+  <div class="col-lg-4">
+
+    <div class="card">
+
+      <div class="card-header"><h3 class="card-title mb-0">العميل</h3></div>
+
+      <div class="card-body">
+
+        <p class="mb-1"><strong>{{ order.customer.name if order.customer else '—' }}</strong></p>
+
+        {% if order.customer and order.customer.phone %}<p class="mb-1"><i class="fas fa-phone mr-1"></i>{{ order.customer.phone }}</p>{% endif %}
+
+        {% if order.customer and order.customer.address %}<p class="mb-0 text-muted small">{{ order.customer.address }}</p>{% endif %}
+
+      </div>
+
+    </div>
+
+
+
+    <div class="card">
+
+      <div class="card-header"><h3 class="card-title mb-0">الدفع والحالة</h3></div>
+
+      <div class="card-body">
+
+        <dl class="row mb-0 small">
+
+          <dt class="col-5">طريقة الدفع</dt>
+
+          <dd class="col-7">
+
+            {% if pay_method %}<i class="{{ pay_method.icon }}"></i> {{ pay_method.name_ar }}{% else %}{{ order.checkout_payment_method or 'cod' }}{% endif %}
+
+          </dd>
+
+          <dt class="col-5">حالة الطلب</dt>
+
+          <dd class="col-7">{{ status_label }}</dd>
+
+          <dt class="col-5">حالة الدفع</dt>
+
+          <dd class="col-7">{{ order.payment_status or 'unpaid' }}</dd>
+
+          <dt class="col-5">المخزون</dt>
+
+          <dd class="col-7">{% if is_fulfilled %}<span class="text-success">مُخصَم</span>{% else %}<span class="text-warning">محجوز — يُخصَم عند التأكيد</span>{% endif %}</dd>
+
+        </dl>
+
+      </div>
+
+      {% if order.status == 'pending' %}
+
+      <div class="card-footer">
+
+        <form method="post" action="{{ url_for('store.admin_order_confirm', order_id=order.id) }}" class="mb-2">
+
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+          {% if order.checkout_payment_method != 'cod' and order.payment_status != 'paid' %}
+
+          <div class="custom-control custom-checkbox mb-2">
+
+            <input type="checkbox" class="custom-control-input" id="mark_paid" name="mark_paid">
+
+            <label class="custom-control-label" for="mark_paid">تسجيل الدفع مع التأكيد</label>
+
+          </div>
+
+          {% elif order.checkout_payment_method == 'cod' %}
+
+          <div class="custom-control custom-checkbox mb-2">
+
+            <input type="checkbox" class="custom-control-input" id="mark_paid" name="mark_paid">
+
+            <label class="custom-control-label" for="mark_paid">استلام نقداً (COD) — تسجيل الدفع</label>
+
+          </div>
+
+          {% endif %}
+
+          <button type="submit" class="btn btn-success btn-block" {% if stock_issues %}disabled title="المخزون غير كافٍ"{% endif %}>
+
+            <i class="fas fa-check mr-1"></i>تأكيد الطلب
+
+          </button>
+
+        </form>
+
+        <form method="post" action="{{ url_for('store.admin_order_cancel', order_id=order.id) }}" onsubmit="return confirm('إلغاء الطلب {{ order.sale_number }}؟');">
+
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+          <button type="submit" class="btn btn-outline-danger btn-block"><i class="fas fa-times mr-1"></i>إلغاء الطلب</button>
+
+        </form>
+
+      </div>
+
+      {% elif order.status == 'confirmed' %}
+
+      <div class="card-footer">
+
+        <form method="post" action="{{ url_for('store.admin_order_cancel', order_id=order.id) }}" onsubmit="return confirm('إلغاء طلب مؤكد سيُعيد المخزون ويعكس القيود — متابعة؟');">
+
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+          <button type="submit" class="btn btn-outline-danger btn-block"><i class="fas fa-ban mr-1"></i>إلغاء (مع عكس المخزون)</button>
+
+        </form>
+
+      </div>
+
+      {% endif %}
+
+      {% if wa_admin_url %}
+      <div class="card-footer border-top-0 pt-0">
+        <a href="{{ wa_admin_url }}" target="_blank" rel="noopener" class="btn btn-success btn-block"><i class="fab fa-whatsapp mr-1"></i>مشاركة الطلب عبر واتساب</a>
+      </div>
+      {% endif %}
+
+    </div>
+
+  </div>
+
+</div>
+
+{% endblock %}
+

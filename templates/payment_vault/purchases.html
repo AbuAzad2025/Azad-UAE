@@ -213,50 +213,9 @@
                         </tbody>
                     </table>
                     
-                    <!-- Pagination -->
-                    {% if pagination and pagination.pages > 1 %}
-                    <nav aria-label="Page navigation" class="mt-4">
-                        <ul class="pagination justify-content-center">
-                            <!-- Previous -->
-                            <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
-                                <a class="page-link" href="{{ url_for('payment_vault.view_purchases', page=pagination.prev_num) if pagination.has_prev else '#' }}">
-                                    <i class="fas fa-chevron-right"></i>
-                                </a>
-                            </li>
-                            
-                            <!-- Page numbers -->
-                            {% for page_num in pagination.iter_pages(left_edge=2, right_edge=2, left_current=2, right_current=2) %}
-                                {% if page_num %}
-                                    {% if page_num == pagination.page %}
-                                        <li class="page-item active">
-                                            <span class="page-link">{{ page_num }}</span>
-                                        </li>
-                                    {% else %}
-                                        <li class="page-item">
-                                            <a class="page-link" href="{{ url_for('payment_vault.view_purchases', page=page_num) }}">{{ page_num }}</a>
-                                        </li>
-                                    {% endif %}
-                                {% else %}
-                                    <li class="page-item disabled">
-                                        <span class="page-link">...</span>
-                                    </li>
-                                {% endif %}
-                            {% endfor %}
-                            
-                            <!-- Next -->
-                            <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
-                                <a class="page-link" href="{{ url_for('payment_vault.view_purchases', page=pagination.next_num) if pagination.has_next else '#' }}">
-                                    <i class="fas fa-chevron-left"></i>
-                                </a>
-                            </li>
-                        </ul>
-                        
-                        <p class="text-center text-muted">
-                            {% set range_start = ((pagination.page - 1) * pagination.per_page) + 1 %}
-                            {% set range_end = pagination.page * pagination.per_page %}
-                            <small>عرض {{ range_start }} - {{ range_end if range_end <= pagination.total else pagination.total }} من {{ pagination.total }} مشترية</small>
-                        </p>
-                    </nav>
+                    {% if pagination %}
+                    {% set endpoint = 'payment_vault.view_purchases' %}
+                    {% include 'partials/flask_pagination.html' %}
                     {% endif %}
                 </div>
             </div>

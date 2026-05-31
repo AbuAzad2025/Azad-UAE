@@ -481,7 +481,7 @@
             </a>
             <ul class="nav nav-treeview">
               <li class="nav-item">
-                <a href="{{ url_for('payments.create_receipt') }}" class="nav-link">
+                <a href="{{ url_for('payments.create_voucher') }}" class="nav-link">
                   <i class="fas fa-plus-circle nav-icon text-success"></i>
                   <p>سند قبض جديد</p>
                 </a>
@@ -548,7 +548,7 @@
           </li>
           {% endif %}
 
-          {% if current_user.is_authenticated and (current_user.is_owner or (current_user.role and current_user.role.slug in ['manager', 'accountant'])) %}
+          {% if current_user.is_authenticated and current_user.has_permission('manage_payroll') %}
           <li class="nav-item has-treeview {% if request.endpoint and 'payroll' in request.endpoint %}menu-open{% endif %}">
             <a href="#" class="nav-link {% if request.endpoint and 'payroll' in request.endpoint %}active{% endif %}">
               <i class="nav-icon fas fa-users-cog"></i>
@@ -664,6 +664,44 @@
               <i class="nav-icon fas fa-database"></i>
               <p>النسخ الاحتياطية</p>
             </a>
+          </li>
+          {% endif %}
+
+          {% if current_user.is_authenticated and current_user.has_permission('manage_store') %}
+          <li class="nav-item has-treeview {% if request.endpoint and 'store' in request.endpoint %}menu-open{% endif %}">
+            <a href="#" class="nav-link {% if request.endpoint and 'store' in request.endpoint %}active{% endif %}">
+              <i class="nav-icon fas fa-store"></i>
+              <p>
+                المتجر الإلكتروني
+                <i class="right fas fa-angle-left"></i>
+              </p>
+            </a>
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <a href="{{ url_for('store.admin_index') }}" class="nav-link">
+                  <i class="fas fa-tachometer-alt nav-icon text-info"></i>
+                  <p>لوحة المتجر</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{{ url_for('store.admin_catalog') }}" class="nav-link">
+                  <i class="fas fa-boxes nav-icon text-success"></i>
+                  <p>منتجات المتجر</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{{ url_for('store.admin_transfer') }}" class="nav-link">
+                  <i class="fas fa-exchange-alt nav-icon text-warning"></i>
+                  <p>تحويل مخزون</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{{ url_for('store.admin_settings') }}" class="nav-link">
+                  <i class="fas fa-cog nav-icon"></i>
+                  <p>إعدادات المتجر</p>
+                </a>
+              </li>
+            </ul>
           </li>
           {% endif %}
 

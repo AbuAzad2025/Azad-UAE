@@ -4,10 +4,13 @@ from extensions import db
 from models import Purchase, PurchaseLine, Product, Supplier, Warehouse
 from services.stock_service import StockService
 from services.currency_service import CurrencyService
-from services.gl_service import GLService
+from services.gl_service import GLService, GL_ACCOUNTS
+from services.gl_posting import post_or_fail
+from utils.gl_reference_types import GLRef
 from utils.branching import ensure_warehouse_access
 from utils.helpers import generate_number, create_audit_log
 from utils.tenanting import get_active_tenant_id
+from utils.tax_settings import normalize_tax_rate, should_post_vat_gl
 
 class PurchaseService:
     @staticmethod
@@ -71,6 +74,7 @@ class PurchaseService:
         
         # Create Purchase Header
         tenant_id = get_active_tenant_id(user) or getattr(user, 'tenant_id', None) or getattr(warehouse, 'tenant_id', None) or (getattr(supplier, 'tenant_id', None) if supplier else None)
+        effective_tax_rate = normalize_tax_rate(tax_rate, tenant_id)
         purchase = Purchase(
             tenant_id=tenant_id,
             purchase_number=purchase_number,
@@ -83,7 +87,7 @@ class PurchaseService:
             currency=currency,
             exchange_rate=exchange_rate,
             discount_amount=Decimal(str(discount_amount or 0)),
-            tax_rate=Decimal(str(tax_rate or 0)),
+            tax_rate=effective_tax_rate,
             notes=notes,
             user_id=user.id,
             subtotal=Decimal('0'),
@@ -132,12 +136,8 @@ class PurchaseService:
             db.session.rollback()
             raise ValueError('⚠️ يجب إضافة منتج واحد على الأقل للفاتورة.')
             
-        # Update Totals
         purchase.subtotal = subtotal
-        purchase.tax_amount = subtotal * (purchase.tax_rate / Decimal('100'))
-        purchase.total_amount = subtotal + purchase.tax_amount - purchase.discount_amount
-        
-        purchase.amount_aed = purchase.total_amount * purchase.exchange_rate
+        purchase.calculate_totals()
         
         db.session.flush()
         
@@ -145,30 +145,28 @@ class PurchaseService:
         StockService.process_purchase_lines(purchase, warehouse_id)
         
         # GL Entries
-        GLService.ensure_core_accounts()
+        GLService.ensure_core_accounts(tenant_id=tenant_id)
         
         inventory_debit = (purchase.subtotal or Decimal('0')) - (purchase.discount_amount or Decimal('0'))
         if inventory_debit < Decimal('0'):
             inventory_debit = Decimal('0')
 
         lines = [
-            # Debit: Inventory (Amount before tax)
-            {'account': '1140', 'debit': inventory_debit, 'description': f'شراء بضاعة {purchase.purchase_number}'},
-            # Credit: Accounts Payable (Total Amount)
-            {'account': '2110', 'credit': purchase.total_amount, 'description': f'ذمم دائنة - مورد: {purchase.supplier_name}'}
+            {'account': GL_ACCOUNTS['inventory'], 'debit': inventory_debit, 'description': f'شراء بضاعة {purchase.purchase_number}'},
+            {'account': GL_ACCOUNTS['payable'], 'credit': purchase.total_amount, 'description': f'ذمم دائنة - مورد: {purchase.supplier_name}'}
         ]
         
-        if purchase.tax_amount > 0:
+        if purchase.tax_amount > 0 and should_post_vat_gl(tenant_id):
             lines.append({
-                'account': '2130', 
+                'account': GL_ACCOUNTS['vat_input'],
                 'debit': purchase.tax_amount, 
-                'description': f'ضريبة القيمة المضافة (شراء) {purchase.purchase_number}'
+                'description': f'ضريبة مدخلات (شراء) {purchase.purchase_number}'
             })
             
-        GLService.post_entry(
+        post_or_fail(
                 lines, 
                 description=f'Purchase {purchase.purchase_number}', 
-                reference_type='Purchase', 
+                reference_type=GLRef.PURCHASE, 
                 reference_id=purchase.id, 
                 currency=purchase.currency, 
                 exchange_rate=purchase.exchange_rate,

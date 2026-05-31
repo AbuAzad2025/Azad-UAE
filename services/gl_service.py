@@ -2,6 +2,7 @@ from decimal import Decimal
 from datetime import datetime, timezone
 from extensions import db
 from models import GLAccount, GLJournalEntry, GLJournalLine, Currency
+from services import gl_helpers
 from utils.helpers import generate_number
 
 _JE_SEQ = {}
@@ -19,6 +20,8 @@ GL_ACCOUNTS = {
     'inventory': '1140',
     'cheques_under_collection': '1150',
     'employee_advances': '1160',
+    'vat_input': '1170',
+    'vat_clearing': '1175',
     'payable': '2110',
     'merchants_payable': '2115',
     'deferred_cheques': '2120',
@@ -33,6 +36,9 @@ GL_ACCOUNTS = {
     'inventory_adjustments': '5150',
     'discounts_given': '5200',
     'salaries_expense': '6100',
+    'commission_expense': '6150',
+    'depreciation_expense': '6180',
+    'accumulated_depreciation': '1290',
     'rent': '6200',
     'utilities': '6300',
     'maintenance': '6400',
@@ -58,27 +64,9 @@ class GLService:
     def create_journal_entry(date, description, lines, user_id=None, branch_id=None, reference_type=None, reference_id=None):
         """Standardized GL Entry Creation"""
         
-        # Determine entry number
-        y = date.strftime('%Y')
-        latest = GLJournalEntry.query.filter(GLJournalEntry.entry_number.like(f'JE-{y}-%')).order_by(GLJournalEntry.entry_number.desc()).first()
-        last_num = 0
-        if latest:
-            try:
-                last_num = int(latest.entry_number.split('-')[-1])
-            except:
-                pass
-        next_num = last_num + 1
-        entry_number = f'JE-{y}-{next_num:04d}'
-
-        tenant_id = None
-        if branch_id:
-            from models import Branch
-            b = Branch.query.get(branch_id)
-            tenant_id = getattr(b, "tenant_id", None) if b else None
-        if tenant_id is None and user_id:
-            from models import User
-            u = User.query.get(user_id)
-            tenant_id = getattr(u, "tenant_id", None) if u else None
+        tenant_id = gl_helpers.resolve_tenant_id(branch_id=branch_id, user_id=user_id)
+        gl_helpers.assert_period_open(date, tenant_id)
+        entry_number = gl_helpers.next_entry_number(tenant_id, date)
         
         entry = GLJournalEntry(
             tenant_id=tenant_id,
@@ -95,18 +83,18 @@ class GLService:
         db.session.add(entry)
         db.session.flush()
         
-        total_debit = 0
-        total_credit = 0
+        total_debit = Decimal('0')
+        total_credit = Decimal('0')
         
         for line in lines:
-            account = GLAccount.query.filter_by(code=line['account_code']).first()
+            account_code = line['account_code']
+            account = gl_helpers.get_account(account_code, tenant_id)
             if not account:
-                if line['account_code'] == '1160':
-                    account = GLAccount(code='1160', name='Employee Advances', name_ar='سلف الموظفين', type='asset', parent_id=None)
-                    db.session.add(account)
-                    db.session.flush()
-                else:
-                    raise ValueError(f"GL Account not found: {line['account_code']}")
+                if tenant_id is not None:
+                    GLService.ensure_core_accounts(tenant_id=tenant_id)
+                    account = gl_helpers.get_account(account_code, tenant_id)
+                if not account:
+                    raise ValueError(f"GL Account not found: {account_code}")
             if getattr(account, 'is_header', False):
                 raise ValueError(f"لا يمكن القيد على الحساب الرئيسي: {getattr(account, 'full_name', account.code)}")
             debit = Decimal(str(line.get('debit', 0)))
@@ -134,9 +122,10 @@ class GLService:
         return entry
 
     @staticmethod
-    def ensure_core_accounts():
-        """Create enhanced GL accounts with hierarchical structure"""
-        # (code, name_ar, name_en, type, parent_code, is_header, level)
+    def ensure_core_accounts(tenant_id=None):
+        """Create chart of accounts for the active or specified tenant."""
+        if tenant_id is None:
+            tenant_id = gl_helpers.resolve_tenant_id()
         core = [
             # === الأصول Assets ===
             ('1000', 'الأصول', 'Assets', 'asset', None, True, 0),
@@ -148,6 +137,8 @@ class GLService:
             ('1140', 'المخزون', 'Inventory', 'asset', '1100', False, 2),
             ('1150', 'شيكات تحت التحصيل', 'Cheques Under Collection', 'asset', '1100', False, 2),
             ('1160', 'سلف الموظفين', 'Employee Advances', 'asset', '1100', False, 2),
+            ('1170', 'ضريبة مدخلات', 'VAT Input', 'asset', '1100', False, 2),
+            ('1175', 'تسوية ضريبة', 'VAT Clearing', 'asset', '1100', False, 2),
             
             ('1200', 'الأصول الثابتة', 'Fixed Assets', 'asset', '1000', True, 1),
             ('1210', 'أراضي', 'Land', 'asset', '1200', False, 2),
@@ -155,6 +146,7 @@ class GLService:
             ('1230', 'سيارات', 'Vehicles', 'asset', '1200', False, 2),
             ('1240', 'معدات', 'Equipment', 'asset', '1200', False, 2),
             ('1250', 'أثاث', 'Furniture', 'asset', '1200', False, 2),
+            ('1290', 'مجمع الاستهلاك', 'Accumulated Depreciation', 'asset', '1200', False, 2),
             
             # === الخصوم Liabilities ===
             ('2000', 'الخصوم', 'Liabilities', 'liability', None, True, 0),
@@ -193,6 +185,8 @@ class GLService:
             
             ('6000', 'المصروفات التشغيلية', 'Operating Expenses', 'expense', None, True, 0),
             ('6100', 'رواتب وأجور', 'Salaries & Wages', 'expense', '6000', False, 1),
+            ('6150', 'مصروف عمولات شركاء', 'Partner Commission Expense', 'expense', '6000', False, 1),
+            ('6180', 'مصروف استهلاك', 'Depreciation Expense', 'expense', '6000', False, 1),
             ('6200', 'إيجار', 'Rent', 'expense', '6000', False, 1),
             ('6300', 'كهرباء وماء', 'Utilities', 'expense', '6000', False, 1),
             ('6400', 'صيانة', 'Maintenance', 'expense', '6000', False, 1),
@@ -209,18 +203,19 @@ class GLService:
         created_cache = {}
         
         for code, name_ar, name_en, acc_type, parent_code, is_header, level in core:
-            acc = GLAccount.query.filter_by(code=code).first()
+            acc = gl_helpers.get_account(code, tenant_id)
             if acc:
                 created_cache[code] = acc
                 continue
             
             parent_id = None
             if parent_code:
-                parent_acc = created_cache.get(parent_code) or GLAccount.query.filter_by(code=parent_code).first()
+                parent_acc = created_cache.get(parent_code) or gl_helpers.get_account(parent_code, tenant_id)
                 if parent_acc:
                     parent_id = parent_acc.id
             
             acc = GLAccount(
+                tenant_id=tenant_id,
                 code=code,
                 name=name_en,
                 name_ar=name_ar,
@@ -241,7 +236,7 @@ class GLService:
 
     
     @staticmethod
-    def post_entry(lines, description, reference_type=None, reference_id=None, date=None, currency='AED', exchange_rate=1.0, branch_id=None):
+    def post_entry(lines, description, reference_type=None, reference_id=None, date=None, currency='AED', exchange_rate=1.0, branch_id=None, user_id=None):
         """
         Wrapper for create_journal_entry: converts amounts to AED and creates balanced entry.
         """
@@ -263,7 +258,7 @@ class GLService:
             entry_date,
             description,
             adapted_lines,
-            user_id=None,
+            user_id=user_id,
             branch_id=branch_id,
             reference_type=reference_type,
             reference_id=reference_id
@@ -271,19 +266,81 @@ class GLService:
         return entry
     
     @staticmethod
-    def reverse_entry(reference_type=None, reference_id=None, description=None):
+    def get_vat_report(date_from=None, date_to=None, branch_id=None, tenant_id=None):
+        """VAT summary: output (2130 credits) vs input (1170 debits)."""
+        from sqlalchemy import func
+        from utils.tax_settings import is_tax_enabled
+
+        tenant_id = tenant_id or gl_helpers.resolve_tenant_id(branch_id=branch_id)
+        if tenant_id is not None and not is_tax_enabled(tenant_id):
+            return {
+                'vat_output': 0.0,
+                'vat_input': 0.0,
+                'net_vat': 0.0,
+                'tenant_id': tenant_id,
+                'date_from': date_from,
+                'date_to': date_to,
+                'branch_id': branch_id,
+                'tax_disabled': True,
+            }
+        output_acc = gl_helpers.get_account(GL_ACCOUNTS['tax_payable'], tenant_id)
+        input_acc = gl_helpers.get_account(GL_ACCOUNTS['vat_input'], tenant_id)
+        result = {
+            'vat_output': 0.0,
+            'vat_input': 0.0,
+            'net_vat': 0.0,
+            'tenant_id': tenant_id,
+            'date_from': date_from,
+            'date_to': date_to,
+            'branch_id': branch_id,
+        }
+        if not output_acc and not input_acc:
+            return result
+
+        def _sum_side(account, side):
+            if not account:
+                return Decimal('0')
+            q = db.session.query(func.coalesce(func.sum(getattr(GLJournalLine, side)), 0)).join(
+                GLJournalEntry, GLJournalLine.entry_id == GLJournalEntry.id
+            ).filter(GLJournalLine.account_id == account.id, GLJournalEntry.is_reversed == False)
+            if tenant_id is not None:
+                q = q.filter(GLJournalEntry.tenant_id == int(tenant_id))
+            if branch_id:
+                q = q.filter(GLJournalEntry.branch_id == branch_id)
+            if date_from:
+                q = q.filter(func.date(GLJournalEntry.entry_date) >= date_from)
+            if date_to:
+                q = q.filter(func.date(GLJournalEntry.entry_date) <= date_to)
+            return Decimal(str(q.scalar() or 0))
+
+        vat_output = _sum_side(output_acc, 'credit') - _sum_side(output_acc, 'debit')
+        vat_input = _sum_side(input_acc, 'debit') - _sum_side(input_acc, 'credit')
+        result['vat_output'] = float(vat_output)
+        result['vat_input'] = float(vat_input)
+        result['net_vat'] = float(vat_output - vat_input)
+        return result
+    
+    @staticmethod
+    def reverse_entry(reference_type=None, reference_id=None, description=None, tenant_id=None):
         """عكس جميع القيود المرتبطة بمرجع (مثل فاتورة بيع/شراء/سند)."""
+        from utils.gl_reference_types import ref_variants
+
         if not reference_type or reference_id is None:
             return
-        entries = GLJournalEntry.query.filter_by(
-            reference_type=reference_type,
-            reference_id=reference_id,
-            is_reversed=False
-        ).order_by(GLJournalEntry.id.desc()).all()
+        variants = ref_variants(reference_type)
+        query = GLJournalEntry.query.filter(
+            GLJournalEntry.reference_type.in_(variants),
+            GLJournalEntry.reference_id == reference_id,
+            GLJournalEntry.is_reversed == False,
+        )
+        if tenant_id is None:
+            tenant_id = gl_helpers.resolve_tenant_id()
+        if tenant_id is not None:
+            query = query.filter_by(tenant_id=int(tenant_id))
+        entries = query.order_by(GLJournalEntry.id.desc()).all()
         for entry in entries:
             entry.reverse_entry(description=description)
-        if entries:
-            db.session.commit()
+        return entries
 
     @staticmethod
     def get_payment_debit_account(method):
@@ -309,62 +366,39 @@ class GLService:
     def create_manual_entry(description, lines, entry_date=None, notes=None, created_by=None, currency='AED', exchange_rate=1.0, branch_id=None):
         """إنشاء قيد يدوي"""
         from flask_login import current_user
-        
-        def _unique_entry_number():
-            y = datetime.now().strftime('%Y')
-            from models import GLJournalEntry as _JE
-            latest = db.session.query(_JE).filter(_JE.entry_number.like(f'JE-{y}-%')).order_by(_JE.entry_number.desc()).first()
-            last_db = 0
-            if latest:
-                try:
-                    last_db = int(latest.entry_number.split('-')[-1])
-                except Exception:
-                    last_db = 0
-            last_mem = _JE_SEQ.get(y, last_db)
-            next_num = max(last_db, last_mem) + 1
-            _JE_SEQ[y] = next_num
-            return f'JE-{y}-{next_num:04d}'
-        entry_number = _unique_entry_number()
-        
-        total_debit = Decimal('0')
-        total_credit = Decimal('0')
-        
-        # التحقق من التوازن
-        for line in lines:
-            total_debit += Decimal(str(line.get('debit', 0) or 0))
-            total_credit += Decimal(str(line.get('credit', 0) or 0))
-        
-        if total_debit != total_credit:
-            raise ValueError(f'القيد غير متوازن: مدين={total_debit}, دائن={total_credit}')
-        
-        # إنشاء القيد
-        
-        # Get branch from user context if not provided
+
+        entry_date = entry_date or datetime.now(timezone.utc)
+
         if not branch_id:
             if created_by:
                 from models import User
                 user = User.query.get(created_by)
-                if user: branch_id = user.branch_id
+                if user:
+                    branch_id = user.branch_id
             elif hasattr(current_user, 'is_authenticated') and current_user.is_authenticated:
-                 branch_id = current_user.branch_id
+                branch_id = current_user.branch_id
 
-        tenant_id = None
-        if branch_id:
-            from models import Branch
-            b = Branch.query.get(branch_id)
-            tenant_id = getattr(b, "tenant_id", None) if b else None
-        if tenant_id is None:
-            if created_by:
-                from models import User
-                u = User.query.get(created_by)
-                tenant_id = getattr(u, "tenant_id", None) if u else None
-            elif hasattr(current_user, 'is_authenticated') and current_user.is_authenticated:
-                tenant_id = getattr(current_user, "tenant_id", None)
-            
+        user_id = created_by or (
+            current_user.id if hasattr(current_user, 'is_authenticated') and current_user.is_authenticated else None
+        )
+        tenant_id = gl_helpers.resolve_tenant_id(branch_id=branch_id, user_id=user_id)
+        gl_helpers.assert_period_open(entry_date, tenant_id)
+        entry_number = gl_helpers.next_entry_number(tenant_id, entry_date)
+
+        total_debit = Decimal('0')
+        total_credit = Decimal('0')
+
+        for line in lines:
+            total_debit += Decimal(str(line.get('debit', 0) or 0))
+            total_credit += Decimal(str(line.get('credit', 0) or 0))
+
+        if total_debit != total_credit:
+            raise ValueError(f'القيد غير متوازن: مدين={total_debit}, دائن={total_credit}')
+
         entry = GLJournalEntry(
             tenant_id=tenant_id,
             entry_number=entry_number,
-            entry_date=entry_date or datetime.now(timezone.utc),
+            entry_date=entry_date,
             description=description,
             entry_type='manual',
             branch_id=branch_id,
@@ -373,26 +407,27 @@ class GLService:
             total_debit=total_debit,
             total_credit=total_credit,
             notes=notes,
-            created_by=created_by or (current_user.id if hasattr(current_user, 'is_authenticated') and current_user.is_authenticated else None),
+            created_by=user_id,
             is_posted=True
         )
         db.session.add(entry)
         db.session.flush()
-        
-        # إنشاء السطور
+
         for line_data in lines:
             account_code = line_data.get('account_code') or line_data.get('account')
-            account = GLAccount.query.filter_by(code=account_code).first()
-            
+            account = gl_helpers.get_account(account_code, tenant_id)
+            if not account:
+                GLService.ensure_core_accounts(tenant_id=tenant_id)
+                account = gl_helpers.get_account(account_code, tenant_id)
             if not account:
                 raise ValueError(f'الحساب {account_code} غير موجود')
-            
+
             if account.is_header:
                 raise ValueError(f'الحساب {account.full_name} هو حساب رئيسي ولا يمكن إضافة قيود عليه')
-            
+
             debit = Decimal(str(line_data.get('debit', 0) or 0))
             credit = Decimal(str(line_data.get('credit', 0) or 0))
-            
+
             line = GLJournalLine(
                 tenant_id=tenant_id,
                 entry_id=entry.id,
@@ -403,7 +438,7 @@ class GLService:
                 amount_aed=debit - credit
             )
             db.session.add(line)
-        
+
         db.session.commit()
         return entry
     
@@ -499,10 +534,13 @@ class GLService:
         }
     
     @staticmethod
-    def get_accounts_tree():
+    def get_accounts_tree(tenant_id=None):
         """الحصول على شجرة الحسابات"""
-        # الحصول على الحسابات الرئيسية (بدون parent)
-        root_accounts = GLAccount.query.filter_by(parent_id=None, is_active=True).order_by(GLAccount.code).all()
+        tenant_id = tenant_id or gl_helpers.resolve_tenant_id()
+        root_query = GLAccount.query.filter_by(parent_id=None, is_active=True)
+        if tenant_id is not None:
+            root_query = root_query.filter_by(tenant_id=int(tenant_id))
+        root_accounts = root_query.order_by(GLAccount.code).all()
         
         def build_tree(account):
             """بناء الشجرة بشكل متكرر"""
@@ -523,11 +561,15 @@ class GLService:
         return [build_tree(acc) for acc in root_accounts]
 
     @staticmethod
-    def get_trial_balance(date_from=None, date_to=None, branch_id=None):
+    def get_trial_balance(date_from=None, date_to=None, branch_id=None, tenant_id=None):
         """ميزان المراجعة. عند تمرير branch_id يُعزل العرض لقيود الفرع فقط."""
         from sqlalchemy import func
         
-        accounts = GLAccount.query.filter_by(is_active=True).order_by(GLAccount.code).all()
+        tenant_id = tenant_id or gl_helpers.resolve_tenant_id(branch_id=branch_id)
+        accounts_query = GLAccount.query.filter_by(is_active=True)
+        if tenant_id is not None:
+            accounts_query = accounts_query.filter_by(tenant_id=int(tenant_id))
+        accounts = accounts_query.order_by(GLAccount.code).all()
         result = []
         
         total_debit = Decimal('0')

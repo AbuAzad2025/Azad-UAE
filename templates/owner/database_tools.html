@@ -36,6 +36,12 @@
           <i class="fas fa-skull-crossbones"></i>
           <strong>تحذير:</strong> هذه الأدوات قوية جداً. استخدمها بحذر شديد!
         </div>
+        {% if restricted_tables %}
+        <div class="alert alert-info">
+          <i class="fas fa-shield-alt"></i>
+          <strong>حماية:</strong> {{ restricted_tables }} جدول حساس مخفي (مثل المستخدمين والصلاحيات والخزائن).
+        </div>
+        {% endif %}
 
         <div class="row">
           <div class="col-md-4">
@@ -122,16 +128,12 @@
                       ⚙️ إعدادات النظام - التكوين العام
                     {% elif table.name == 'audit_logs' %}
                       📋 سجل التدقيق - مراقبة العمليات
-                    {% elif table.name == 'card_vault' %}
-                      🛡️ خزينة البطاقات - بطاقات مشفرة
                     {% elif table.name == 'product_categories' %}
                       📑 تصنيفات المنتجات - تنظيم القطع
                     {% elif table.name == 'warehouses' %}
                       🏭 المستودعات - مواقع التخزين
                     {% elif table.name == 'archived_records' %}
                       📁 السجلات المؤرشفة - بيانات محفوظة
-                    {% elif table.name == 'alembic_version' %}
-                      🔄 إصدار قاعدة البيانات - للتهجيرات
                     {% else %}
                       📄 جدول بيانات
                     {% endif %}

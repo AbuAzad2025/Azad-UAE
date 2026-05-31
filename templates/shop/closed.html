@@ -1,0 +1,21 @@
+{% extends 'shop/base.html' %}
+{% block title %}{{ t('store_closed') }}{% endblock %}
+
+{% block content %}
+<div class="ps-closed">
+  <div class="ps-closed-box">
+    <div style="font-size:3rem;color:var(--ps-red);margin-bottom:1rem;"><i class="fas fa-store-slash"></i></div>
+    <h2 style="margin:0 0 0.75rem;font-weight:800;">{{ t('store_closed') }}</h2>
+    <p style="color:var(--ps-muted);margin:0;">
+      {% if reason == 'platform' %}
+      {{ t('platform_closed') }}
+      {% else %}
+      {{ store.title or tenant.name }} — {{ t('store_closed') }}
+      {% endif %}
+    </p>
+    {% if store.phone %}
+    <p style="margin-top:1.25rem;"><i class="fas fa-phone"></i> {{ store.phone }}</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

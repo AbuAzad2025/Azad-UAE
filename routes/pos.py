@@ -16,7 +16,12 @@ pos_bp = Blueprint('pos', __name__, url_prefix='/pos')
 @login_required
 @permission_required('manage_sales')
 def index():
-    warehouses = Warehouse.query.filter_by(is_active=True).order_by(Warehouse.is_main.desc(), Warehouse.name).all()
+    warehouses = (
+        Warehouse.query.filter_by(is_active=True)
+        .filter(Warehouse.warehouse_type != Warehouse.TYPE_ONLINE)
+        .order_by(Warehouse.is_main.desc(), Warehouse.name)
+        .all()
+    )
     return render_template('pos/index.html', warehouses=warehouses)
 
 

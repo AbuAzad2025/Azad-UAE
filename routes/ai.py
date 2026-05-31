@@ -5,7 +5,7 @@
 import os
 from flask import Blueprint, request, jsonify, render_template, current_app, abort
 from flask_login import login_required, current_user
-from extensions import csrf, db
+from extensions import csrf, db, limiter
 from services.ai_service import AIService
 from werkzeug.utils import secure_filename
 import pandas as pd
@@ -20,6 +20,7 @@ from ai_knowledge.advanced_laws import advanced_laws
 from ai_knowledge.automotive_ecu_knowledge import get_automotive_ecu_knowledge
 from ai_knowledge.external_learning import get_external_learning, LEARNING_SOURCES_CATALOG
 from utils.decorators import permission_required, owner_required, admin_required
+from utils.tenanting import assign_tenant_id
 from datetime import datetime, timezone
 
 ai_bp = Blueprint('ai', __name__, url_prefix='/ai')
@@ -157,8 +158,8 @@ def create_final_options(action_name, item_name, item_id):
 
 
 @ai_bp.route('/recommend-price', methods=['POST'])
-@csrf.exempt
 @login_required
+@limiter.limit("60 per minute")
 def recommend_price():
     """API: توصية السعر"""
     data = request.get_json()
@@ -177,8 +178,8 @@ def recommend_price():
 
 
 @ai_bp.route('/check-stock', methods=['POST'])
-@csrf.exempt
 @login_required
+@limiter.limit("60 per minute")
 def check_stock():
     """API: فحص المخزون"""
     data = request.get_json()
@@ -249,8 +250,8 @@ def find_compatible(product_id):
 
 
 @ai_bp.route('/chat', methods=['POST'])
-@csrf.exempt
 @login_required
+@limiter.limit("30 per minute")
 def chat():
     """API: الدردشة مع المساعد الذكي"""
     data = request.get_json()
@@ -270,7 +271,9 @@ def chat():
     if not message:
         return jsonify({'error': 'Message required'}), 400
     
-    action_result = _process_user_action(message, current_user)
+    action_result = None
+    if _user_can_ai_execute_actions(current_user):
+        action_result = _process_user_action(message, current_user)
     if action_result:
         return jsonify({
             'response': action_result,
@@ -286,6 +289,20 @@ def chat():
         'ai_mode': ai_mode,
         'user_role': 'owner' if current_user.is_owner else 'user'
     })
+
+def _user_can_ai_execute_actions(user):
+    """Allow DB-mutating AI actions only for owner or users with relevant ERP permissions."""
+    if not user or not getattr(user, 'is_authenticated', False):
+        return False
+    if getattr(user, 'is_owner', False):
+        return True
+    mutation_perms = (
+        'manage_sales', 'manage_payments', 'manage_purchases',
+        'manage_expenses', 'manage_customers', 'manage_products',
+        'manage_cheques', 'manage_warehouse',
+    )
+    return any(user.has_permission(code) for code in mutation_perms)
+
 
 def _process_user_action(message, user):
     """معالجة أوامر المستخدم المباشرة - جميع عمليات النظام"""
@@ -879,6 +896,7 @@ def _process_user_action(message, user):
                         current_stock=data['quantity'],
                         unit='قطعة'
                     )
+                    assign_tenant_id(product, user)
                     db.session.add(product)
                     db.session.commit()
                     
@@ -2253,7 +2271,8 @@ def _process_user_action(message, user):
         
         if msg_lower.strip() == '2' and user_id in conversation_context and conversation_context[user_id].get('last_action') == 'مستخدم':
             from models.user import User
-            users = User.query.filter_by(is_active=True).all()
+            from utils.tenanting import scoped_user_query
+            users = scoped_user_query(active_only=True).all()
             del conversation_context[user_id]
             if users:
                 users_list = "\n".join([f"• {u.username} - {u.role}" for u in users[:10]])
@@ -2534,6 +2553,7 @@ http://localhost:5000/ai/assistant
                         current_stock=quantity,
                         is_active=True
                     )
+                    assign_tenant_id(product, user)
                     db.session.add(product)
                     db.session.commit()
                     
@@ -2893,7 +2913,8 @@ def assistant_page():
     """صفحة المساعد الذكي"""
     try:
         from models import Warehouse
-        warehouses = Warehouse.query.all()
+        from utils.branching import get_accessible_warehouses
+        warehouses = get_accessible_warehouses(current_user)
         return render_template('ai/assistant.html',
                              ai_enabled=AIService.is_enabled(),
                              warehouses=warehouses,
@@ -2904,7 +2925,6 @@ def assistant_page():
 
 
 @ai_bp.route('/config', methods=['GET', 'POST'])
-@csrf.exempt
 @login_required
 @owner_required
 def config():
@@ -2973,17 +2993,19 @@ def config():
     return render_template('ai/config.html',
                          ai_enabled=AIService.is_enabled(),
                          groq_key_exists=bool(current_groq),
-                         openai_key_exists=bool(current_openai or current_gemini),
-                         groq_key_preview=current_groq[:20] + '...' if current_groq else '',
-                         openai_key_preview=(current_openai or current_gemini)[:20] + '...' if (current_openai or current_gemini) else '')
+                         openai_key_exists=bool(current_openai or current_gemini))
 
 
 @ai_bp.route('/upload-excel', methods=['POST'])
-@csrf.exempt
 @login_required
+@permission_required('manage_products')
 def upload_excel():
     """رفع ومعالجة ملف Excel للمنتجات - المعالج الذكي الخارق"""
     try:
+        max_bytes = int(current_app.config.get('MAX_CONTENT_LENGTH') or (16 * 1024 * 1024))
+        if request.content_length and request.content_length > max_bytes:
+            return jsonify({'success': False, 'error': 'حجم الملف كبير جداً'}), 413
+
         if 'file' not in request.files:
             return jsonify({'success': False, 'error': 'لم يتم رفع ملف'}), 400
         
@@ -2997,11 +3019,18 @@ def upload_excel():
             if warehouse:
                 warehouse_id = warehouse.id
         
-        if file.filename == '':
+        filename = secure_filename(file.filename or '')
+        if not filename:
             return jsonify({'success': False, 'error': 'لم يتم اختيار ملف'}), 400
         
-        if not file.filename.endswith(('.xlsx', '.xls')):
-            return jsonify({'success': False, 'error': 'الملف يجب أن يكون Excel'}), 400
+        if not filename.lower().endswith(('.xlsx', '.xls')):
+            return jsonify({'success': False, 'error': 'الملف يجب أن يكون Excel (.xlsx أو .xls)'}), 400
+
+        file.stream.seek(0, 2)
+        file_size = file.stream.tell()
+        file.stream.seek(0)
+        if file_size > max_bytes:
+            return jsonify({'success': False, 'error': 'حجم الملف كبير جداً'}), 413
         
         result = _process_excel_intelligently(file, warehouse_id, current_user)
         
@@ -3069,6 +3098,7 @@ def _process_excel_intelligently(file, warehouse_id, user):
                         current_stock=quantity,
                         is_active=True
                     )
+                    assign_tenant_id(product, user)
                     db.session.add(product)
                     products_created += 1
                 
@@ -3778,10 +3808,11 @@ def external_sources():
 
 
 @ai_bp.route('/ask-genius', methods=['POST'])
-@csrf.exempt
 @login_required
+@permission_required('view_reports')
+@limiter.limit("30 per minute")
 def ask_genius():
-    """🌟 API: اسأل العبقري - الواجهة الموحدة"""
+    """🌟 API: اسأل العبقري - الواجهة الموحدة (JSON callers must send X-CSRFToken)."""
     try:
         data = request.get_json()
         question = data.get('question', '')
@@ -3813,8 +3844,9 @@ def ask_genius():
 @ai_bp.route('/quick-calc', methods=['POST'])
 @csrf.exempt
 @login_required
+@limiter.limit("30 per minute")
 def quick_calc():
-    """⚡ API: حسابات سريعة"""
+    """⚡ API: حسابات سريعة — whitelist formulas only; no DB, files, or external calls."""
     try:
         data = request.get_json()
         formula = data.get('formula', '')
@@ -3842,8 +3874,9 @@ def quick_calc():
 @ai_bp.route('/transformers-understand', methods=['POST'])
 @csrf.exempt
 @login_required
+@limiter.limit("30 per minute")
 def transformers_understand():
-    """🤖 API: فهم بالـ Transformers"""
+    """🤖 API: فهم بالـ Transformers — local in-memory only; no DB, files, or ERP actions."""
     try:
         data = request.get_json()
         text = data.get('text', '')

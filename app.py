@@ -169,6 +169,8 @@ def create_app(config_class=Config):
     from routes.admin_ledger import admin_ledger_bp
     from routes.gamification import gamification_bp
     from routes.pos import pos_bp
+    from routes.store import store_bp
+    from routes.shop import shop_bp
     from routes.whatsapp import whatsapp_bp
     from routes.monitoring import monitoring_bp
     from routes.public import public_bp
@@ -204,6 +206,8 @@ def create_app(config_class=Config):
     app.register_blueprint(admin_ledger_bp)
     app.register_blueprint(gamification_bp)
     app.register_blueprint(pos_bp)
+    app.register_blueprint(store_bp)
+    app.register_blueprint(shop_bp)
     app.register_blueprint(ai_bp)
     app.register_blueprint(owner_bp)
     app.register_blueprint(whatsapp_bp)
@@ -214,6 +218,19 @@ def create_app(config_class=Config):
     app.register_blueprint(graphql_bp)
     app.register_blueprint(branches_bp)
     
+    @app.before_request
+    def storefront_custom_domain_redirect():
+        """Route custom domain / subdomain to the tenant storefront catalog."""
+        path = request.path or '/'
+        if path.startswith(('/s/', '/static/', '/auth/', '/store/', '/api/', '/owner/', '/admin')):
+            return None
+        from services.store_service import StoreService
+        store = StoreService.get_store_by_host(request.host)
+        if store and store.is_enabled and StoreService.stores_globally_enabled():
+            from flask import redirect, url_for
+            return redirect(url_for('shop.catalog', slug=store.store_slug))
+        return None
+
     # Error Handlers
     # from utils.error_handlers import register_error_handlers
     # register_error_handlers(app)
@@ -413,14 +430,15 @@ def create_app(config_class=Config):
         g.rtl = is_rtl()
 
         from flask_login import current_user as _cu
-        from utils.tenanting import get_active_tenant_id, is_platform_owner
+        from utils.tenanting import get_active_tenant_id
+        from utils.auth_helpers import is_global_owner_user
         g.active_tenant_id = None
         if _cu.is_authenticated:
             g.active_tenant_id = get_active_tenant_id(_cu)
             _bp = request.blueprint or ""
             _skip = {"", "auth", "public", "language", "tenants"}
             if _bp not in _skip and request.endpoint != "static":
-                if not is_platform_owner(_cu) and g.active_tenant_id is None:
+                if not is_global_owner_user(_cu) and g.active_tenant_id is None:
                     abort(403)
         
     # Security Headers
@@ -429,6 +447,9 @@ def create_app(config_class=Config):
         response.headers['X-Content-Type-Options'] = 'nosniff'
         response.headers['X-Frame-Options'] = 'SAMEORIGIN'
         response.headers['X-XSS-Protection'] = '1; mode=block'
+        response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+        if not app.debug and app.config.get('APP_ENV', '').lower() == 'production':
+            response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
         return response
 
     # Models Import (to ensure they are known to SQLAlchemy)

@@ -12,6 +12,7 @@ from models import (
     Cheque
 )
 from utils.helpers import generate_number
+from utils.gl_reference_types import GLRef
 
 
 class BankReconciliationService:
@@ -210,11 +211,13 @@ class BankReconciliationService:
             })
         
         if lines:
-            GLService.post_entry(
+            from services.gl_posting import post_or_fail
+            post_or_fail(
                 lines=lines,
                 description=f'قيد تسوية بنك - {reconciliation.reconciliation_number}',
-                reference_type='bank_reconciliation',
-                reference_id=reconciliation.id
+                reference_type=GLRef.BANK_RECONCILIATION,
+                reference_id=reconciliation.id,
+                branch_id=getattr(reconciliation, 'branch_id', None),
             )
         
         # تحديث الحالة

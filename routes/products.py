@@ -15,7 +15,8 @@ from utils.branching import (
 )
 from utils.helpers import create_audit_log, generate_sku, generate_barcode, save_uploaded_file
 from services.stock_service import StockService
-from utils.tenanting import tenant_query, tenant_get_or_404
+from utils.gl_reference_types import GLRef
+from utils.tenanting import tenant_query, tenant_get_or_404, assign_tenant_id
 
 products_bp = Blueprint('products', __name__, url_prefix='/products')
 
@@ -47,13 +48,11 @@ def _scoped_customers_query(customer_type=None):
 
 
 def _ensure_product_scope(product):
-    scoped_branch_id = branch_scope_id()
-    if scoped_branch_id is None:
-        return product
+    """Tenant isolation is enforced by tenant_get_or_404 on CRUD routes.
 
-    visible = StockService.get_visible_products_query(current_user).filter(Product.id == product.id).first()
-    if not visible:
-        return None
+    Branch stock visibility (get_visible_products_query) applies to listings,
+    POS, and warehouse pickers — not to product master view/edit/delete.
+    """
     return product
 
 def _parse_product_partners(form):
@@ -220,8 +219,12 @@ def import_products():
         
         if file:
             try:
-                # Save file temporarily
-                filename = secure_filename(file.filename)
+                import uuid
+                ext = os.path.splitext(secure_filename(file.filename))[1].lower()
+                if ext not in ('.csv', '.xlsx', '.xls'):
+                    flash('⚠️ نوع الملف غير مدعوم', 'danger')
+                    return redirect(request.url)
+                filename = f"import_{uuid.uuid4().hex}{ext}"
                 filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
                 file.save(filepath)
                 
@@ -328,6 +331,7 @@ def import_products():
                             else:
                                 # Create category on fly? Or skip. Let's create.
                                 new_cat = ProductCategory(name=category_name)
+                                assign_tenant_id(new_cat, current_user)
                                 db.session.add(new_cat)
                                 db.session.flush()
                                 category_id = new_cat.id
@@ -342,6 +346,7 @@ def import_products():
                             warranty_days=warranty_days,
                             current_stock=0 # Will adjust via service
                         )
+                        assign_tenant_id(new_product, current_user)
                         db.session.add(new_product)
                         db.session.flush()
                         
@@ -416,6 +421,7 @@ def import_grid():
                 cost_price=cost,
                 current_stock=0
             )
+            assign_tenant_id(new_product, current_user)
             db.session.add(new_product)
             db.session.flush()
             
@@ -579,6 +585,12 @@ def create():
                     return render_template('products/create.html', form=form, categories=categories, warehouses=warehouses, merchants=merchants, partners=partners)
                 
                 unit_value = request.form.get('unit') or None
+                has_serial_number = request.form.get('has_serial_number') in ('on', 'true', '1', True)
+                warranty_days_raw = request.form.get('warranty_days', '0')
+                try:
+                    warranty_days = int(float(warranty_days_raw or 0))
+                except (ValueError, TypeError):
+                    warranty_days = 0
                 
                 product = Product(
                     name=request.form.get('name'),
@@ -599,7 +611,10 @@ def create():
                     description=request.form.get('description'),
                     notes=request.form.get('notes'),
                     merchant_customer_id=merchant_customer_id or None,
+                    has_serial_number=has_serial_number,
+                    warranty_days=warranty_days,
                 )
+                assign_tenant_id(product, current_user)
                 
                 if 'image' in request.files:
                     file = request.files['image']
@@ -613,22 +628,23 @@ def create():
                 
                 if partner_rows:
                     for row in partner_rows:
-                        product.partner_shares.append(ProductPartner(
+                        partner_row = ProductPartner(
                             product_id=product.id,
                             partner_customer_id=row['partner_customer_id'],
                             percentage=row['percentage'],
-                        ))
+                        )
+                        assign_tenant_id(partner_row, current_user)
+                        product.partner_shares.append(partner_row)
                 
                 # إضافة حركة مخزون إذا كانت الكمية أكبر من صفر
                 if initial_stock > 0:
-                    StockService.create_movement(
+                    StockService.adjust_stock(
                         product_id=product.id,
                         quantity=initial_stock,
-                        movement_type='adjustment',
-                        reference_type='Product Creation',
-                        reference_id=product.id,
                         notes=f'مخزون أولي عند إضافة المنتج إلى المستودع: {warehouse.name_ar or warehouse.name}',
-                        warehouse_id=warehouse_id
+                        warehouse_id=warehouse_id,
+                        reference_type=GLRef.PRODUCT_CREATION,
+                        reference_id=product.id,
                     )
                 
                 db.session.commit()
@@ -774,14 +790,13 @@ def edit(id):
                 if scoped_branch_id is not None and not warehouse_id:
                     flash('⚠️ يجب اختيار مستودع التعديل عند تغيير مخزون هذا الفرع.', 'warning')
                     return render_template('products/edit.html', form=form, product=product, categories=categories, warehouses=warehouses, merchants=merchants, partners=partners)
-                StockService.create_movement(
+                StockService.adjust_stock(
                     product_id=product.id,
                     quantity=new_stock - old_stock,
-                    movement_type='adjustment',
-                    reference_type='Product Update',
-                    reference_id=product.id,
                     notes=f'تعديل مخزون من {old_stock} إلى {new_stock}',
-                    warehouse_id=warehouse_id
+                    warehouse_id=warehouse_id,
+                    reference_type=GLRef.PRODUCT_UPDATE,
+                    reference_id=product.id,
                 )
             
             if 'image' in request.files:

@@ -48,6 +48,12 @@
                                             <td>{{ count }}</td>
                                         </tr>
                                         {% endfor %}
+                                        {% if restricted_tables %}
+                                        <tr class="table-secondary">
+                                            <td><em>جداول محمية (أسماء وعدد السجلات مخفية)</em></td>
+                                            <td>{{ restricted_tables }}</td>
+                                        </tr>
+                                        {% endif %}
                                     </tbody>
                                 </table>
                             </div>

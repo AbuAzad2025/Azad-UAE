@@ -66,6 +66,8 @@ class WebhookService:
                 return WebhookService._process_purchase_webhook(data)
             elif order_id.startswith('DONATION_'):
                 return WebhookService._process_donation_webhook(data)
+            elif order_id.startswith('STORE_'):
+                return WebhookService._process_store_order_webhook(data)
             else:
                 logger.warning(f'Unknown order type: {order_id}')
                 return {'success': False, 'error': 'Unknown order type'}
@@ -144,6 +146,47 @@ class WebhookService:
         
         return {'success': True, 'message': f'Donation updated to {payment_status}'}
     
+    @staticmethod
+    def _process_store_order_webhook(data):
+        """Confirm online store order after gateway payment."""
+        from models import Sale
+        from services.store_online_payment_service import StoreOnlinePaymentService
+        from services.store_order_service import StoreOrderService
+
+        payment_status = data.get('payment_status')
+        payment_id = str(data.get('payment_id', ''))
+        order_id = data.get('order_id', '')
+
+        parsed = StoreOnlinePaymentService.parse_store_order_id(order_id)
+        if not parsed:
+            return {'success': False, 'error': 'Invalid store order id'}
+
+        sale_id, tenant_id = parsed
+        sale = Sale.query.filter_by(
+            id=sale_id,
+            tenant_id=tenant_id,
+            source='online_store',
+        ).first()
+        if not sale:
+            return {'success': False, 'error': 'Store sale not found'}
+
+        if payment_id and sale.checkout_gateway_ref and sale.checkout_gateway_ref != payment_id:
+            logger.warning('Gateway ref mismatch for sale %s', sale.sale_number)
+
+        if payment_status == 'finished':
+            if sale.status != 'confirmed':
+                try:
+                    StoreOrderService.confirm_order(sale, mark_paid=True)
+                except ValueError as exc:
+                    logger.warning('Store order confirm skipped: %s', exc)
+            logger.info('Store order %s paid via gateway', sale.sale_number)
+        elif payment_status in ('failed', 'expired', 'refunded'):
+            if sale.status == 'pending':
+                StoreOrderService.cancel_order(sale)
+            logger.warning('Store order %s payment %s', sale.sale_number, payment_status)
+
+        return {'success': True, 'message': f'Store order updated to {payment_status}'}
+
     @staticmethod
     def verify_stripe_signature(payload, signature, webhook_secret):
         """

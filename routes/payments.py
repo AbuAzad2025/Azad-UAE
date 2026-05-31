@@ -8,6 +8,8 @@ from extensions import db
 from models import Receipt, Customer, InvoiceSettings, Supplier, Payment
 from services.payment_service import PaymentService
 from services.currency_service import CurrencyService
+from services.gl_posting import post_or_fail, GlPostingError
+from utils.gl_reference_types import GLRef, delete_entries_by_ref
 from utils.decorators import permission_required
 from utils.branching import should_show_all_branch_columns
 from utils.helpers import create_audit_log
@@ -16,6 +18,13 @@ from utils.qr_generator import generate_qr_data_url
 from utils.tenanting import tenant_query, tenant_get_or_404, tenant_get
 
 payments_bp = Blueprint('payments', __name__, url_prefix='/payments')
+
+
+@payments_bp.route('/')
+@login_required
+@permission_required('manage_payments')
+def index():
+    return redirect(url_for('payments.receipts'))
 
 
 def _in_scope_branch(entity_branch_id):
@@ -194,9 +203,11 @@ def receipts():
     if branch_id is not None:
         receipts_query = receipts_query.filter(Receipt.branch_id == branch_id)
         payments_query = payments_query.filter(Payment.branch_id == branch_id)
-    # جمع النتائج
-    all_receipts = receipts_query.all()
-    all_payments = payments_query.all()
+    # جمع النتائج مع حد ذكي لتجنب تحميل الجدول كاملاً
+    fetch_limit = max(page * per_page, per_page)
+    total = receipts_query.count() + payments_query.count()
+    all_receipts = receipts_query.order_by(Receipt.receipt_date.desc()).limit(fetch_limit).all()
+    all_payments = payments_query.order_by(Payment.payment_date.desc()).limit(fetch_limit).all()
     
     # دمج النتائج مع إضافة نوع السند
     combined_items = []
@@ -269,11 +280,24 @@ def receipts():
             self.has_next = page < self.pages
             self.prev_num = page - 1 if self.has_prev else None
             self.next_num = page + 1 if self.has_next else None
-    
+
+        def iter_pages(self, left_edge=1, right_edge=1, left_current=2, right_current=2):
+            last = 0
+            for num in range(1, self.pages + 1):
+                if (
+                    num <= left_edge
+                    or (self.page - left_current - 1 < num < self.page + right_current)
+                    or num > self.pages - right_edge
+                ):
+                    if last + 1 != num:
+                        yield None
+                    yield num
+                    last = num
+
     pagination = SimplePagination(
         page=page,
         per_page=per_page,
-        total=len(combined_items),
+        total=total,
         items=paginated_items
     )
 
@@ -410,14 +434,7 @@ def print_payment(id):
     if not _in_scope_branch(payment_branch_id):
         return render_template('errors/403.html'), 403
     from models import Tenant, Branch
-    tenant = Tenant.get_current() if hasattr(Tenant, 'get_current') else None
-    settings = InvoiceSettings.get_active()
-    inv = InvoiceSettings.get_active() if tenant is None else None
-    company = {
-        'name_ar': (tenant.name_ar if tenant else (inv.company_name_ar if inv else '')) or 'نظام المحاسبة',
-        'address': (tenant.address_ar or tenant.address_en if tenant else (inv.address_ar or inv.address_en if inv else '')) or '',
-        'phone': (tenant.phone_1 or tenant.mobile if tenant else (inv.phone_1 if inv else '')) or '',
-    }
+    tenant, settings, company = InvoiceSettings.company_print_context()
     print_branch = Branch.query.get(payment_branch_id) if payment_branch_id else None
     print_user_name = (
         payment.user.get_display_name('ar')
@@ -472,11 +489,11 @@ def archive_payment(id):
         create_audit_log('archive', 'payments', payment.id)
         
         # 2. Reverse GL Entry (Must succeed)
-        from services.gl_service import GLService
-        GLService.reverse_entry(
-            reference_type='Payment',
-            reference_id=id,
-            description=f'Reverse Payment {payment.payment_number}'
+        from utils.gl_tenant import reverse_document_gl
+        reverse_document_gl(
+            GLRef.PAYMENT, id,
+            f'Reverse Payment {payment.payment_number}',
+            tenant_id=getattr(payment, 'tenant_id', None),
         )
         
         # 3. Commit all
@@ -585,17 +602,13 @@ def create_from_sale(sale_id):
         except Exception as e:
             flash(f'حدث خطأ: {str(e)}\nتحقق من البيانات المدخلة وحاول مرة أخرى.', 'danger')
     
-    # استخدام القالب الموحد مع بيانات إضافية
-    customers = [sale.customer]  # العميل من الفاتورة
-    suggested_amount = sale.balance_due
-    exchange_rates = CurrencyService.get_all_rates('AED')
-    
-    return render_template('payments/create_receipt.html',
-                         customers=customers,
-                         preselected_customer=sale.customer,
-                         suggested_amount=suggested_amount,
-                         exchange_rates=exchange_rates,
-                         sale=sale)  # تمرير بيانات الفاتورة
+    return redirect(url_for(
+        'payments.create_voucher',
+        direction='incoming',
+        party_type='customer',
+        party_id=sale.customer_id,
+        amount=float(sale.balance_due or 0),
+    ))
 
 
 @payments_bp.route('/voucher/create', methods=['GET'])
@@ -620,10 +633,22 @@ def create_voucher():
         'name': s.name
     } for s in suppliers]
     
+    preselected_direction = request.args.get('direction', 'incoming')
+    preselected_party_type = request.args.get('party_type', 'customer')
+    preselected_party_id = (
+        request.args.get('party_id', type=int)
+        or request.args.get('customer_id', type=int)
+    )
+    preselected_amount = request.args.get('amount', type=float)
+
     return render_template('payments/voucher.html',
                          customers_json=json.dumps(customers_data),
                          suppliers_json=json.dumps(suppliers_data),
-                         today_date=datetime.now().date().isoformat())
+                         today_date=datetime.now().date().isoformat(),
+                         preselected_direction=preselected_direction,
+                         preselected_party_type=preselected_party_type,
+                         preselected_party_id=preselected_party_id,
+                         preselected_amount=preselected_amount)
 
 
 @payments_bp.route('/voucher/submit', methods=['POST'])
@@ -720,6 +745,23 @@ def create_voucher_submit():
                     branch_id=branch_id,
                 )
                 db.session.add(payment)
+                db.session.flush()
+                from services.gl_service import GLService
+                tenant_id = getattr(payment, 'tenant_id', None)
+                GLService.ensure_core_accounts(tenant_id=tenant_id)
+                credit_account = GLService.get_payment_debit_account(payment_method)
+                post_or_fail(
+                    [
+                        {'account': credit_account, 'debit': payment.amount, 'description': f'استرداد من مورد {supplier.name}'},
+                        {'account': '2110', 'credit': payment.amount, 'description': f'سند قبض {payment.payment_number}'},
+                    ],
+                    description=f'Supplier refund {payment.payment_number}',
+                    reference_type=GLRef.PAYMENT,
+                    reference_id=payment.id,
+                    currency=currency,
+                    exchange_rate=exchange_rate,
+                    branch_id=payment.branch_id,
+                )
                 db.session.commit()
                 flash('تم إنشاء سند قبض من مورد بنجاح', 'success')
                 return redirect(url_for('payments.receipts'))
@@ -794,31 +836,25 @@ def create_voucher_submit():
                     cheque.issue_cheque()
                     
                 else:
-                    # GL Entry for Standard Payment (Cash/Bank)
-                    try:
-                        from services.gl_service import GLService
-                        GLService.ensure_core_accounts()
-                        
-                        # Credit: Cash/Bank
-                        credit_account = '1110' # Cash
-                        if payment_method == 'bank_transfer' or payment_method == 'card':
-                            credit_account = '1120' # Bank
-
-                        lines = [
-                            {'account': '2110', 'debit': payment.amount, 'description': f'سداد للمورد {payment.supplier_name}'},
-                            {'account': credit_account, 'credit': payment.amount, 'description': f'سند صرف {payment.payment_number}'}
-                        ]
-                        GLService.post_entry(
-                            lines,
-                            description=f'Payment {payment.payment_number}',
-                            reference_type='Payment',
-                            reference_id=payment.id,
-                            currency=currency,
-                            exchange_rate=exchange_rate,
-                            branch_id=payment.branch_id,
-                        )
-                    except Exception as e:
-                        current_app.logger.error(f"GL Posting failed for supplier payment: {e}")
+                    from services.gl_service import GLService
+                    tenant_id = getattr(payment, 'tenant_id', None)
+                    GLService.ensure_core_accounts(tenant_id=tenant_id)
+                    credit_account = '1110'
+                    if payment_method == 'bank_transfer' or payment_method == 'card':
+                        credit_account = '1120'
+                    lines = [
+                        {'account': '2110', 'debit': payment.amount, 'description': f'سداد للمورد {payment.supplier_name}'},
+                        {'account': credit_account, 'credit': payment.amount, 'description': f'سند صرف {payment.payment_number}'}
+                    ]
+                    post_or_fail(
+                        lines,
+                        description=f'Payment {payment.payment_number}',
+                        reference_type=GLRef.PAYMENT,
+                        reference_id=payment.id,
+                        currency=currency,
+                        exchange_rate=exchange_rate,
+                        branch_id=payment.branch_id,
+                    )
 
                 db.session.commit()
                 flash('تم إنشاء سند صرف لمورد بنجاح', 'success')
@@ -887,28 +923,24 @@ def create_voucher_submit():
                         current_app.logger.error(f"Cheque issue accounting failed: {e}")
 
                 else:
-                    # GL Entry for Customer/Partner/Merchant Payment (Non-Cheque)
-                    try:
-                        from services.gl_service import GLService
-                        GLService.ensure_core_accounts()
-                        
-                        credit_account = GLService.get_payment_credit_account(payment_method)
-                        debit_account = GLService.get_customer_credit_account(customer)
-                        lines = [
-                            {'account': debit_account, 'debit': payment.amount, 'description': f'سداد/سحب {customer.name}'},
-                            {'account': credit_account, 'credit': payment.amount, 'description': f'سند صرف {payment.payment_number}'}
-                        ]
-                        GLService.post_entry(
-                            lines,
-                            description=f'Payment {payment.payment_number}',
-                            reference_type='Payment',
-                            reference_id=payment.id,
-                            currency=currency,
-                            exchange_rate=exchange_rate,
-                            branch_id=payment.branch_id,
-                        )
-                    except Exception as e:
-                        current_app.logger.error(f"GL Posting failed for customer payment: {e}")
+                    from services.gl_service import GLService
+                    tenant_id = getattr(payment, 'tenant_id', None)
+                    GLService.ensure_core_accounts(tenant_id=tenant_id)
+                    credit_account = GLService.get_payment_credit_account(payment_method)
+                    debit_account = GLService.get_customer_credit_account(customer)
+                    lines = [
+                        {'account': debit_account, 'debit': payment.amount, 'description': f'سداد/سحب {customer.name}'},
+                        {'account': credit_account, 'credit': payment.amount, 'description': f'سند صرف {payment.payment_number}'}
+                    ]
+                    post_or_fail(
+                        lines,
+                        description=f'Payment {payment.payment_number}',
+                        reference_type=GLRef.PAYMENT,
+                        reference_id=payment.id,
+                        currency=currency,
+                        exchange_rate=exchange_rate,
+                        branch_id=payment.branch_id,
+                    )
 
                 db.session.commit()
                 flash('تم إنشاء سند صرف لعميل/شريك بنجاح', 'success')
@@ -927,8 +959,8 @@ def create_voucher_submit():
 @login_required
 @permission_required('manage_payments')
 def create_receipt():
-    # Redirect legacy route to new unified voucher
-    return redirect(url_for('payments.create_voucher'))
+    """إعادة توجيه المسار القديم إلى سند موحد مع الحفاظ على معاملات الرابط."""
+    return redirect(url_for('payments.create_voucher', **request.args.to_dict()))
 
 
 @payments_bp.route('/receipts/<int:id>')
@@ -988,13 +1020,7 @@ def print_receipt(id):
     template_path = f'receipts/{template}.html'
     
     from models import Tenant, Branch
-    tenant = Tenant.get_current() if hasattr(Tenant, 'get_current') else None
-    inv = InvoiceSettings.get_active() if tenant is None else None
-    company = {
-        'name_ar': (tenant.name_ar if tenant else (inv.company_name_ar if inv else '')) or 'نظام المحاسبة',
-        'address': (tenant.address_ar or tenant.address_en if tenant else (inv.address_ar or inv.address_en if inv else '')) or '',
-        'phone': (tenant.phone_1 or tenant.mobile if tenant else (inv.phone_1 if inv else '')) or '',
-    }
+    tenant, settings, company = InvoiceSettings.company_print_context()
     print_branch = Branch.query.get(receipt_branch_id) if receipt_branch_id else None
     print_user_name = (
         receipt.user.get_display_name('ar')
@@ -1196,15 +1222,12 @@ def delete_receipt(id):
         # 2. القرار: أرشفة أو حذف
         if has_links:
             # عكس القيد المحاسبي (للحفاظ على السجل)
-            try:
-                from services.gl_service import GLService
-                GLService.reverse_entry(
-                    reference_type='Receipt',
-                    reference_id=receipt.id,
-                    description=f'Reverse Receipt {receipt.receipt_number}'
-                )
-            except Exception as e:
-                current_app.logger.warning(f'GL reversal warning: {e}')
+            from utils.gl_tenant import reverse_document_gl
+            reverse_document_gl(
+                GLRef.RECEIPT, receipt.id,
+                f'Reverse Receipt {receipt.receipt_number}',
+                tenant_id=getattr(receipt, 'tenant_id', None),
+            )
 
             # أرشفة (Soft Delete)
             archive_service = ArchiveService()
@@ -1220,7 +1243,7 @@ def delete_receipt(id):
         else:
             # حذف القيود المحاسبية المرتبطة (تنظيف شامل)
             from models import GLJournalEntry
-            GLJournalEntry.query.filter_by(reference_type='Receipt', reference_id=receipt.id).delete()
+            delete_entries_by_ref(receipt.id, GLRef.RECEIPT)
 
             # حذف نهائي (Hard Delete)
             # حذف الشيكات المرتبطة أولاً لتجنب خطأ المفتاح الأجنبي
@@ -1264,15 +1287,12 @@ def delete_payment(id):
         # 1. القرار: أرشفة أو حذف
         if has_links:
             # عكس القيد المحاسبي
-            try:
-                from services.gl_service import GLService
-                GLService.reverse_entry(
-                    reference_type='Payment',
-                    reference_id=payment.id,
-                    description=f'Reverse Payment {payment.payment_number}'
-                )
-            except Exception as e:
-                current_app.logger.warning(f"GL Reversal warning: {e}")
+            from utils.gl_tenant import reverse_document_gl
+            reverse_document_gl(
+                GLRef.PAYMENT, payment.id,
+                f'Reverse Payment {payment.payment_number}',
+                tenant_id=getattr(payment, 'tenant_id', None),
+            )
 
             # أرشفة
             archive_service = ArchiveService()
@@ -1288,7 +1308,7 @@ def delete_payment(id):
         else:
             # حذف القيود المحاسبية المرتبطة
             from models import GLJournalEntry
-            GLJournalEntry.query.filter_by(reference_type='Payment', reference_id=payment.id).delete()
+            delete_entries_by_ref(payment.id, GLRef.PAYMENT)
 
             # حذف نهائي
             # حذف الشيكات المرتبطة أولاً
@@ -1333,6 +1353,15 @@ def create_payment(purchase_id):
     # حساب المبلغ المتبقي
     balance = float(purchase.total_amount) - float(paid_amount)
     suggested_amount = balance if balance > 0 else 0
+
+    if request.method == 'GET':
+        return redirect(url_for(
+            'payments.create_voucher',
+            direction='outgoing',
+            party_type='supplier',
+            party_id=purchase.supplier_id,
+            amount=suggested_amount,
+        ))
     
     if request.method == 'POST':
         try:
@@ -1440,26 +1469,23 @@ def create_payment(purchase_id):
                 payment.cheque_id = cheque.id
                 payment.payment_confirmed = False
             
-            # قيد محاسبي لسند الصرف
-            try:
-                from services.gl_service import GLService
-                GLService.ensure_core_accounts()
-                cash_or_bank = '1110' if payment_method_value == 'cash' else '1120'
-                lines = [
-                    {'account': '2110', 'debit': payment.amount_aed, 'description': f'سداد للمورد {payment.supplier_name}'},
-                    {'account': cash_or_bank, 'credit': payment.amount_aed, 'description': f'سند صرف {payment.payment_number}'}
-                ]
-                GLService.post_entry(
-                    lines,
-                    description=f'Payment {payment.payment_number}',
-                    reference_type='Payment',
-                    reference_id=payment.id,
-                    currency=payment.currency,
-                    exchange_rate=payment.exchange_rate,
-                    branch_id=payment.branch_id,
-                )
-            except Exception as e:
-                pass
+            from services.gl_service import GLService
+            tenant_id = getattr(payment, 'tenant_id', None)
+            GLService.ensure_core_accounts(tenant_id=tenant_id)
+            cash_or_bank = '1110' if payment_method_value == 'cash' else '1120'
+            lines = [
+                {'account': '2110', 'debit': payment.amount, 'description': f'سداد للمورد {payment.supplier_name}'},
+                {'account': cash_or_bank, 'credit': payment.amount, 'description': f'سند صرف {payment.payment_number}'}
+            ]
+            post_or_fail(
+                lines,
+                description=f'Payment {payment.payment_number}',
+                reference_type=GLRef.PAYMENT,
+                reference_id=payment.id,
+                currency=payment.currency,
+                exchange_rate=payment.exchange_rate,
+                branch_id=payment.branch_id,
+            )
             
             db.session.commit()
             

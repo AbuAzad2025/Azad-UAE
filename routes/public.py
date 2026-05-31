@@ -1,7 +1,7 @@
 """
 Public Routes - Landing Page, Pricing, User Guide, SEO
 """
-from flask import Blueprint, render_template, redirect, url_for, Response, request, session
+from flask import Blueprint, render_template, redirect, url_for, Response, request, session, abort
 from flask_login import current_user
 from datetime import datetime
 
@@ -56,13 +56,76 @@ def contact():
     return render_template('public/contact.html')
 
 
+@public_bp.route('/donate')
+@public_bp.route('/support-azad')
+def donate_azad():
+    """صفحة تبرع لشركة أزاد — تُتحكم من الخزينة السرية"""
+    from models.payment_vault import PaymentVault
+    vault = PaymentVault.query.first()
+    lang = session.get('language', 'ar')
+    if not vault or not vault.donations_enabled or not vault.donation_page_enabled:
+        from flask import abort
+        abort(404)
+    return render_template(
+        'public/donate_azad.html',
+        vault=vault,
+        lang=lang,
+        is_en=lang == 'en',
+    )
+
+
+@public_bp.route('/donate/submit', methods=['POST'])
+def donate_azad_submit():
+    from decimal import Decimal
+    from flask import flash
+    from extensions import db
+    from models.donation import Donation
+    from models.payment_vault import PaymentVault
+
+    vault = PaymentVault.query.first()
+    lang = session.get('language', 'ar')
+    is_en = lang == 'en'
+    if not vault or not vault.donations_enabled or not vault.donation_page_enabled:
+        abort(404)
+
+    try:
+        amount = Decimal(str(request.form.get('amount', 0)))
+        if amount < Decimal(str(vault.min_donation_amount or 10)):
+            raise ValueError('المبلغ أقل من الحد الأدنى.' if not is_en else 'Amount below minimum.')
+        if amount > Decimal(str(vault.max_donation_amount or 10000)):
+            raise ValueError('المبلغ يتجاوز الحد الأقصى.' if not is_en else 'Amount exceeds maximum.')
+
+        method = (request.form.get('payment_method') or 'bank_transfer').strip()
+        donation = Donation(
+            amount_usd=amount,
+            payment_method=method,
+            transaction_type='donation',
+            status='pending',
+            donor_name=(request.form.get('donor_name') or '').strip(),
+            donor_email=(request.form.get('donor_email') or '').strip(),
+            donor_message=(request.form.get('donor_message') or '').strip(),
+            ip_address=request.remote_addr,
+            user_agent=(request.headers.get('User-Agent') or '')[:500],
+        )
+        db.session.add(donation)
+        db.session.commit()
+        return render_template('public/donate_thanks.html', vault=vault, donation=donation, lang=lang, is_en=is_en)
+    except ValueError as exc:
+        flash(str(exc), 'danger')
+        return redirect(url_for('public.donate_azad'))
+    except Exception:
+        db.session.rollback()
+        flash('تعذر إرسال التبرع.' if not is_en else 'Could not submit donation.', 'danger')
+        return redirect(url_for('public.donate_azad'))
+
+
 @public_bp.route('/sitemap.xml')
 def sitemap():
     """
     خريطة الموقع الديناميكية لمحركات البحث
     Dynamic Sitemap for Search Engines (Google, Bing, etc.)
     """
-    from models import Product, Customer, Sale
+    from flask import Response
     
     # الحصول على URL الأساسي
     base_url = request.url_root.rstrip('/')
@@ -88,21 +151,8 @@ def sitemap():
          'keywords': 'تسجيل دخول'},
     ]
     
-    # المنتجات النشطة (آخر 100)
-    try:
-        products = Product.query.filter_by(is_active=True).order_by(
-            Product.updated_at.desc()
-        ).limit(100).all()
-        
-        for product in products:
-            static_pages.append({
-                'loc': f'{base_url}/products/{product.id}',
-                'priority': '0.7',
-                'changefreq': 'weekly',
-                'lastmod': product.updated_at.strftime('%Y-%m-%d') if product.updated_at else None
-            })
-    except:
-        pass
+    # المنتجات النشطة — لا تُدرج في sitemap العام (تسريب بيانات multi-tenant)
+    # استخدم sitemap المتجر: /s/{slug}/sitemap.xml
     
     # بناء XML
     xml_content = '<?xml version="1.0" encoding="UTF-8"?>\n'

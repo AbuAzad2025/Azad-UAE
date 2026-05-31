@@ -171,10 +171,11 @@ function saveRow(btn) {
   }).then((result) => {
     if (result.isConfirmed) {
       // إرسال البيانات للخادم
-      fetch('/owner/update-row/{{ table_name }}/' + rowId, {
+      fetch('{{ url_for("owner.update_row", table_name=table_name, row_id=0) }}'.replace('/0', '/' + rowId), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'X-CSRFToken': '{{ csrf_token() }}'
         },
         body: JSON.stringify(updates)
       })

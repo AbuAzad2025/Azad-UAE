@@ -197,7 +197,7 @@ class Config:
     }
     
     OWNER_USERNAME = os.environ.get("OWNER_USERNAME", "owner")
-    OWNER_PASSWORD = os.environ.get("OWNER_PASSWORD", "owner@2025!secure")
+    OWNER_PASSWORD = os.environ.get("OWNER_PASSWORD", "")
     OWNER_EMAIL = os.environ.get("OWNER_EMAIL", "owner@example.com")
     
     CARD_ENCRYPTION_KEY = os.environ.get("CARD_ENCRYPTION_KEY", "")
@@ -251,6 +251,17 @@ class Config:
     NOWPAYMENTS_IPN_SECRET = os.environ.get("NOWPAYMENTS_IPN_SECRET", "")
     BASE_URL = os.environ.get("BASE_URL", "http://localhost:5000")
     PREFERRED_URL_SCHEME = os.environ.get("PREFERRED_URL_SCHEME", "https")
+
+    _vault_origins_raw = (
+        os.environ.get("PAYMENT_VAULT_TRUSTED_ORIGINS")
+        or os.environ.get("TRUSTED_ORIGINS")
+        or ""
+    ).strip()
+    PAYMENT_VAULT_TRUSTED_ORIGINS = [
+        origin.strip().rstrip("/")
+        for origin in _vault_origins_raw.split(",")
+        if origin.strip()
+    ]
     
     WHATSAPP_ENABLED = _bool(os.environ.get("WHATSAPP_ENABLED"), False)
     WHATSAPP_API_KEY = os.environ.get("WHATSAPP_API_KEY", "")

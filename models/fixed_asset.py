@@ -12,9 +12,13 @@ class FixedAsset(db.Model):
     الأصول الثابتة
     """
     __tablename__ = 'fixed_assets'
-    
+    __table_args__ = (
+        db.UniqueConstraint('tenant_id', 'asset_number', name='uq_fixed_assets_tenant_asset_number'),
+    )
+
     id = db.Column(db.Integer, primary_key=True)
-    asset_number = db.Column(db.String(50), unique=True, nullable=False, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True)
+    asset_number = db.Column(db.String(50), nullable=False, index=True)
     name_ar = db.Column(db.String(200), nullable=False)
     name_en = db.Column(db.String(200))
     description = db.Column(db.Text)
@@ -67,6 +71,7 @@ class FixedAsset(db.Model):
                           onupdate=lambda: datetime.now(timezone.utc))
     
     # Relationships
+    tenant = db.relationship('Tenant', backref='fixed_assets', foreign_keys=[tenant_id])
     asset_account = db.relationship('GLAccount', foreign_keys=[asset_account_id])
     depreciation_account = db.relationship('GLAccount', foreign_keys=[depreciation_account_id])
     expense_account = db.relationship('GLAccount', foreign_keys=[expense_account_id])
@@ -169,8 +174,10 @@ class FixedAsset(db.Model):
         if depreciation_amount == 0:
             return None
         
-        # إنشاء قيد محاسبي
+        from services.gl_posting import post_or_fail
+        from utils.gl_reference_types import GLRef
         from services.gl_service import GLService
+        GLService.ensure_core_accounts(tenant_id=getattr(self, 'tenant_id', None))
         
         lines = [
             {
@@ -187,12 +194,12 @@ class FixedAsset(db.Model):
             }
         ]
         
-        entry = GLService.post_entry(
+        entry = post_or_fail(
             lines=lines,
             description=f'قيد استهلاك شهري - {self.asset_number}',
-            reference_type='depreciation',
+            reference_type=GLRef.DEPRECIATION,
             reference_id=self.id,
-            branch_id=self.branch_id
+            branch_id=self.branch_id,
         )
         
         # تحديث الأصل
@@ -215,7 +222,7 @@ class FixedAsset(db.Model):
         if self.book_value <= self.salvage_value:
             self.status = 'fully_depreciated'
         
-        db.session.commit()
+        db.session.flush()
         return schedule
     
     def dispose(self, disposal_date, disposal_price, notes=None):
@@ -286,7 +293,7 @@ class FixedAsset(db.Model):
         GLService.post_entry(
             lines=lines,
             description=f'قيد {disposal_type} أصل - {self.asset_number}',
-            reference_type='asset_disposal',
+            reference_type=GLRef.ASSET_DISPOSAL,
             reference_id=self.id,
             branch_id=self.branch_id
         )

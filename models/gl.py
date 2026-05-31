@@ -4,10 +4,13 @@ from extensions import db
 
 class GLAccount(db.Model):
     __tablename__ = 'gl_accounts'
+    __table_args__ = (
+        db.UniqueConstraint('tenant_id', 'code', name='uq_gl_accounts_tenant_code'),
+    )
 
     id = db.Column(db.Integer, primary_key=True)
     tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True)
-    code = db.Column(db.String(20), unique=True, nullable=False, index=True)
+    code = db.Column(db.String(20), nullable=False, index=True)
     name = db.Column(db.String(200), nullable=False)  # English name
     name_ar = db.Column(db.String(200))  # Arabic name
     parent_id = db.Column(db.Integer, db.ForeignKey('gl_accounts.id'))
@@ -67,10 +70,13 @@ class GLAccount(db.Model):
 
 class GLJournalEntry(db.Model):
     __tablename__ = 'gl_journal_entries'
+    __table_args__ = (
+        db.UniqueConstraint('tenant_id', 'entry_number', name='uq_gl_journal_entries_tenant_number'),
+    )
 
     id = db.Column(db.Integer, primary_key=True)
     tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True)
-    entry_number = db.Column(db.String(50), unique=True, nullable=False, index=True)
+    entry_number = db.Column(db.String(50), nullable=False, index=True)
     entry_date = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
     description = db.Column(db.String(255))
     reference_type = db.Column(db.String(50))  # sale, purchase, payment, expense, manual, adjustment, closing, reversing
@@ -122,21 +128,10 @@ class GLJournalEntry(db.Model):
         
         from utils.helpers import generate_number
         
-        # إنشاء قيد معكوس
-        from utils.helpers import generate_number
-        y = datetime.now().strftime('%Y')
-        from models import GLJournalEntry as _JE
-        latest = db.session.query(_JE).filter(_JE.entry_number.like(f'JE-{y}-%')).order_by(_JE.entry_number.desc()).first()
-        last_db = 0
-        if latest:
-            try:
-                last_db = int(latest.entry_number.split('-')[-1])
-            except Exception:
-                last_db = 0
-        next_num = last_db + 1
+        from services import gl_helpers
         reversed_entry = GLJournalEntry(
             tenant_id=self.tenant_id,
-            entry_number=f'JE-{y}-{next_num:04d}',
+            entry_number=gl_helpers.next_entry_number(self.tenant_id),
             entry_date=datetime.now(timezone.utc),
             description=description or f'عكس قيد: {self.description}',
             reference_type=self.reference_type,
@@ -156,6 +151,7 @@ class GLJournalEntry(db.Model):
         # عكس السطور
         for line in self.lines:
             reversed_line = GLJournalLine(
+                tenant_id=self.tenant_id,
                 entry_id=reversed_entry.id,
                 account_id=line.account_id,
                 description=line.description,
@@ -170,6 +166,26 @@ class GLJournalEntry(db.Model):
         
         db.session.flush()
         return reversed_entry
+
+
+class GLPeriod(db.Model):
+    """Accounting period lock — prevents posting into closed months."""
+    __tablename__ = 'gl_periods'
+    __table_args__ = (
+        db.UniqueConstraint('tenant_id', 'year', 'month', name='uq_gl_periods_tenant_ym'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
+    year = db.Column(db.Integer, nullable=False)
+    month = db.Column(db.Integer, nullable=False)
+    is_closed = db.Column(db.Boolean, default=False, nullable=False)
+    closed_at = db.Column(db.DateTime)
+    closed_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    notes = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+
+    tenant = db.relationship('Tenant', backref='gl_periods', foreign_keys=[tenant_id])
 
 
 class GLJournalLine(db.Model):

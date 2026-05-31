@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}" dir="{{ 'rtl' if not is_en else 'ltr' }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ vault.donation_title_ar if not is_en else vault.donation_title_en }} — Azad</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/azad-donation-palestine.css') }}">
+</head>
+<body class="az-donate {{ 'ltr' if is_en else 'rtl' }}">
+  <div class="az-donate-bg">
+    <div class="az-tatreez-top"></div>
+    <div class="az-wrap">
+      <div class="az-emblem"><i class="fas fa-hand-holding-heart"></i></div>
+      <h1 class="az-title">{{ vault.donation_title_ar if not is_en else vault.donation_title_en }}</h1>
+      <p class="az-intro">{{ vault.donation_intro_ar if not is_en else vault.donation_intro_en }}</p>
+
+      <div class="az-card">
+        <form method="post" action="{{ url_for('public.donate_azad_submit') }}" id="donate-form">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+          <div class="az-field">
+            <label>{{ 'المبلغ (USD)' if not is_en else 'Amount (USD)' }}</label>
+            <input type="number" name="amount" min="{{ vault.min_donation_amount or 10 }}" max="{{ vault.max_donation_amount or 10000 }}" step="0.01" required>
+          </div>
+
+          <div class="az-field">
+            <label>{{ 'طريقة الدفع' if not is_en else 'Payment method' }}</label>
+            <div class="az-methods">
+              {% if vault.bitcoin_address or vault.nowpayments_api_key %}
+              <label class="az-method"><input type="radio" name="payment_method" value="crypto" checked> <i class="fab fa-bitcoin"></i> Crypto</label>
+              {% endif %}
+              {% if vault.bank_iban or vault.bank_account_number %}
+              <label class="az-method"><input type="radio" name="payment_method" value="bank_transfer" {% if not vault.bitcoin_address %}checked{% endif %}> <i class="fas fa-university"></i> {{ 'تحويل بنكي' if not is_en else 'Bank transfer' }}</label>
+              {% endif %}
+              {% if vault.paypal_business_email %}
+              <label class="az-method"><input type="radio" name="payment_method" value="paypal"> <i class="fab fa-paypal"></i> PayPal</label>
+              {% endif %}
+            </div>
+          </div>
+
+          {% if vault.bank_iban %}
+          <div class="az-bank-hint" id="bank-hint">
+            {% if not is_en %}بعد التحويل أدخل بياناتك — سنؤكد التبرع ونُرحّل القيد المحاسبي.{% else %}After transfer, submit your details — we confirm and post the GL entry.{% endif %}
+            <br><strong>{{ vault.bank_name or '' }}</strong>
+            {% if vault.bank_iban %}<br>IBAN: {{ vault.bank_iban }}{% endif %}
+          </div>
+          {% endif %}
+
+          <div class="az-field">
+            <label>{{ 'الاسم' if not is_en else 'Name' }}</label>
+            <input type="text" name="donor_name" required>
+          </div>
+          <div class="az-field">
+            <label>Email</label>
+            <input type="email" name="donor_email" dir="ltr">
+          </div>
+          <div class="az-field">
+            <label>{{ 'رسالة (اختياري)' if not is_en else 'Message (optional)' }}</label>
+            <textarea name="donor_message" rows="3"></textarea>
+          </div>
+
+          <button type="submit" class="az-btn">
+            <i class="fas fa-seedling"></i> {{ 'ادعم أزاد' if not is_en else 'Support Azad' }}
+          </button>
+        </form>
+      </div>
+
+      <p class="az-footer">
+        {{ 'فلسطين في القلب — Azad Systems' if not is_en else 'Palestine in our heart — Azad Systems' }}
+        · <a href="{{ url_for('public.landing') }}">{{ 'الرئيسية' if not is_en else 'Home' }}</a>
+      </p>
+    </div>
+    <div class="az-tatreez-top"></div>
+  </div>
+</body>
+</html>

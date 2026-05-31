@@ -9,33 +9,22 @@ class AdvancedFinancialAnalytics:
     """نظام التحليل المالي المتقدم"""
     
     @staticmethod
-    def get_financial_ratios(date_from=None, date_to=None):
+    def get_financial_ratios(date_from=None, date_to=None, tenant_id=None):
         """حساب النسب المالية"""
+        from utils.gl_tenant import active_tenant_id
+        tenant_id = tenant_id if tenant_id is not None else active_tenant_id()
         if not date_from:
             date_from = date.today() - timedelta(days=365)
         if not date_to:
             date_to = date.today()
         
-        # حساب الأصول المتداولة (يبدأ الكود بـ 11)
-        current_assets = AdvancedFinancialAnalytics._calculate_balance_by_prefix('11', date_to)
-        
-        # حساب إجمالي الأصول (يبدأ الكود بـ 1)
-        total_assets = AdvancedFinancialAnalytics._calculate_balance_by_prefix('1', date_to)
-        
-        # حساب الخصوم المتداولة (يبدأ الكود بـ 21)
-        current_liabilities = AdvancedFinancialAnalytics._calculate_balance_by_prefix('21', date_to)
-        
-        # حساب إجمالي الخصوم (يبدأ الكود بـ 2)
-        total_liabilities = AdvancedFinancialAnalytics._calculate_balance_by_prefix('2', date_to)
-        
-        # حساب حقوق الملكية (يبدأ الكود بـ 3)
-        equity = AdvancedFinancialAnalytics._calculate_balance_by_prefix('3', date_to)
-        
-        # حساب الإيرادات (يبدأ الكود بـ 4)
-        revenue = AdvancedFinancialAnalytics._calculate_balance_by_prefix('4', date_from, date_to, is_pl=True)
-        
-        # حساب المصروفات (يبدأ الكود بـ 5 أو 6)
-        expenses = AdvancedFinancialAnalytics._calculate_balance_by_prefix(['5', '6'], date_from, date_to, is_pl=True)
+        current_assets = AdvancedFinancialAnalytics._calculate_balance_by_prefix('11', date_to, tenant_id=tenant_id)
+        total_assets = AdvancedFinancialAnalytics._calculate_balance_by_prefix('1', date_to, tenant_id=tenant_id)
+        current_liabilities = AdvancedFinancialAnalytics._calculate_balance_by_prefix('21', date_to, tenant_id=tenant_id)
+        total_liabilities = AdvancedFinancialAnalytics._calculate_balance_by_prefix('2', date_to, tenant_id=tenant_id)
+        equity = AdvancedFinancialAnalytics._calculate_balance_by_prefix('3', date_to, tenant_id=tenant_id)
+        revenue = AdvancedFinancialAnalytics._calculate_balance_by_prefix('4', date_from, date_to, is_pl=True, tenant_id=tenant_id)
+        expenses = AdvancedFinancialAnalytics._calculate_balance_by_prefix(['5', '6'], date_from, date_to, is_pl=True, tenant_id=tenant_id)
         
         # صافي الربح
         net_profit = revenue - expenses
@@ -86,17 +75,16 @@ class AdvancedFinancialAnalytics:
         return ratios
     
     @staticmethod
-    def _calculate_balance_by_prefix(prefix, date_from=None, date_to=None, is_pl=False):
+    def _calculate_balance_by_prefix(prefix, date_from=None, date_to=None, is_pl=False, tenant_id=None):
         """
         حساب رصيد الحسابات التي تبدأ برمز معين
-        
-        Args:
-            prefix (str|list): رمز بداية الحساب أو قائمة رموز
-            date_from (date): تاريخ البدء (اختياري)
-            date_to (date): تاريخ الانتهاء (مطلوب للميزانية العمومية)
-            is_pl (bool): هل هو حساب قائمة دخل؟ (يؤثر على طريقة حساب الرصيد التراكمي)
         """
-        query = GLAccount.query.filter(GLAccount.is_active == True, GLAccount.is_header == False)
+        from utils.gl_tenant import scope_gl_accounts, active_tenant_id
+        tenant_id = tenant_id if tenant_id is not None else active_tenant_id()
+        query = scope_gl_accounts(
+            GLAccount.query.filter(GLAccount.is_active == True, GLAccount.is_header == False),
+            tenant_id=tenant_id,
+        )
         
         if isinstance(prefix, list):
             from sqlalchemy import or_
@@ -119,9 +107,10 @@ class AdvancedFinancialAnalytics:
         for account in accounts:
             lines_query = GLJournalLine.query.join(GLJournalEntry).filter(
                 GLJournalLine.account_id == account.id,
-                GLJournalEntry.is_posted == True
+                GLJournalEntry.is_posted == True,
             )
-            
+            if tenant_id is not None:
+                lines_query = lines_query.filter(GLJournalEntry.tenant_id == int(tenant_id))
             if filter_start:
                 lines_query = lines_query.filter(GLJournalEntry.entry_date >= filter_start)
             
@@ -149,9 +138,14 @@ class AdvancedFinancialAnalytics:
         return total
 
     @staticmethod
-    def _calculate_account_type_balance(account_type, date_from=None, date_to=None):
+    def _calculate_account_type_balance(account_type, date_from=None, date_to=None, tenant_id=None):
         """حساب رصيد نوع حساب معين"""
-        accounts = GLAccount.query.filter_by(type=account_type, is_active=True, is_header=False).all()
+        from utils.gl_tenant import scope_gl_accounts, active_tenant_id
+        tenant_id = tenant_id if tenant_id is not None else active_tenant_id()
+        accounts = scope_gl_accounts(
+            GLAccount.query.filter_by(type=account_type, is_active=True, is_header=False),
+            tenant_id=tenant_id,
+        ).all()
         total = Decimal(0)
         
         # Ensure date_to includes the full day if it's a date object
@@ -160,13 +154,15 @@ class AdvancedFinancialAnalytics:
         
         for account in accounts:
             if date_from and date_to:
-                # حساب الحركة في الفترة
-                lines = GLJournalLine.query.join(GLJournalEntry).filter(
+                lines_q = GLJournalLine.query.join(GLJournalEntry).filter(
                     GLJournalLine.account_id == account.id,
                     GLJournalEntry.entry_date >= date_from,
                     GLJournalEntry.entry_date <= date_to,
-                    GLJournalEntry.is_posted == True
-                ).all()
+                    GLJournalEntry.is_posted == True,
+                )
+                if tenant_id is not None:
+                    lines_q = lines_q.filter(GLJournalEntry.tenant_id == int(tenant_id))
+                lines = lines_q.all()
                 
                 for line in lines:
                     if account_type in ['asset', 'expense']:
@@ -260,9 +256,14 @@ class AdvancedFinancialAnalytics:
         return periods_data
     
     @staticmethod
-    def get_expense_breakdown():
+    def get_expense_breakdown(tenant_id=None):
         """تحليل تفصيلي للمصروفات"""
-        expense_accounts = GLAccount.query.filter_by(type='expense', is_active=True, is_header=False).all()
+        from utils.gl_tenant import scope_gl_accounts, active_tenant_id
+        tenant_id = tenant_id if tenant_id is not None else active_tenant_id()
+        expense_accounts = scope_gl_accounts(
+            GLAccount.query.filter_by(type='expense', is_active=True, is_header=False),
+            tenant_id=tenant_id,
+        ).all()
         
         breakdown = []
         total_expenses = Decimal(0)
@@ -293,9 +294,14 @@ class AdvancedFinancialAnalytics:
         }
     
     @staticmethod
-    def get_revenue_breakdown():
+    def get_revenue_breakdown(tenant_id=None):
         """تحليل تفصيلي للإيرادات"""
-        revenue_accounts = GLAccount.query.filter_by(type='revenue', is_active=True, is_header=False).all()
+        from utils.gl_tenant import scope_gl_accounts, active_tenant_id
+        tenant_id = tenant_id if tenant_id is not None else active_tenant_id()
+        revenue_accounts = scope_gl_accounts(
+            GLAccount.query.filter_by(type='revenue', is_active=True, is_header=False),
+            tenant_id=tenant_id,
+        ).all()
         
         breakdown = []
         total_revenue = Decimal(0)

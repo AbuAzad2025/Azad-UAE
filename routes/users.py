@@ -6,7 +6,7 @@ from utils.decorators import admin_required, permission_required
 from utils.branching import branch_scope_id_for, role_requires_branch
 from utils.helpers import create_audit_log
 from utils.auth_helpers import role_level_for, role_level_for_user
-from utils.tenanting import get_active_tenant_id, assign_tenant_id
+from utils.tenanting import get_active_tenant_id, assign_tenant_id, scoped_user_query
 from utils.username_policy import validate_username_for_user, tenant_username_prefix, is_platform_reserved
 from models.tenant import Tenant
 
@@ -64,10 +64,7 @@ def index():
     per_page = request.args.get('per_page', 20, type=int)
     search = request.args.get('search', '', type=str)
     
-    query = User.query.filter_by(is_owner=False, is_active=True)
-    tenant_id = get_active_tenant_id(current_user)
-    if tenant_id is not None:
-        query = query.filter(User.tenant_id == tenant_id)
+    query = scoped_user_query(exclude_owners=True, active_only=True)
     scoped_branch_id = branch_scope_id_for(current_user)
     if scoped_branch_id is not None:
         query = query.filter(User.branch_id == scoped_branch_id)

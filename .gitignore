@@ -41,6 +41,7 @@ logs/
 .env
 .env.local
 .env.production
+.env.production.local
 env.pythonanywhere
 production_db_info.txt
 postgres_console_commands.txt
@@ -120,3 +121,9 @@ ai_knowledge/*.pkl
 ai_knowledge/models/*.pkl
 ai_knowledge/models/*.joblib
 
+
+# Local analysis/cache files
+.codegraph/
+security-reports/
+*.patch
+*-status.txt

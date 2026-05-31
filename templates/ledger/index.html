@@ -23,6 +23,14 @@
     <a href="{{ url_for('ledger.balance_sheet') }}" class="btn btn-dark">
       <i class="fas fa-file-invoice mr-2"></i>الميزانية
     </a>
+    {% if tenant_enable_tax %}
+    <a href="{{ url_for('ledger.vat_report') }}" class="btn btn-outline-warning">
+      <i class="fas fa-percent mr-2"></i>تقرير VAT
+    </a>
+    {% endif %}
+    <a href="{{ url_for('ledger.gl_periods') }}" class="btn btn-outline-secondary">
+      <i class="fas fa-lock mr-2"></i>الفترات المحاسبية
+    </a>
   </div>
 </div>
 

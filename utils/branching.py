@@ -53,6 +53,22 @@ def branch_scope_id_for(user=None):
     return selected_branch_id or getattr(user, "branch_id", None)
 
 
+def report_branch_scope_id_for(user=None):
+    """
+    Branch scope for reports: global non-owner users default to home branch
+    instead of all branches within the tenant.
+    """
+    user = _resolve_user(user)
+    selected = branch_scope_id_for(user)
+    if selected is not None:
+        return selected
+    if is_global_user(user) and not getattr(user, "is_owner", False):
+        home_branch_id = getattr(user, "branch_id", None)
+        if home_branch_id:
+            return int(home_branch_id)
+    return None
+
+
 def role_requires_branch(role=None, *, is_owner=False):
     if is_owner:
         return False

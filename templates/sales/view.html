@@ -331,7 +331,7 @@
         </div>
 
         {% if sale.balance_due > 0 %}
-        <a href="{{ url_for('payments.create_receipt') }}?customer_id={{ sale.customer_id }}" 
+        <a href="{{ url_for('payments.create_voucher', direction='incoming', party_type='customer', party_id=sale.customer_id, amount=sale.balance_due) }}" 
            class="btn btn-success btn-block btn-lg">
           <i class="fas fa-money-bill-wave mr-2"></i>إضافة دفعة
         </a>
@@ -358,7 +358,7 @@
           <a href="{{ url_for('sales.index') }}" class="btn btn-info mb-2">
             <i class="fas fa-list mr-2"></i>كل الفواتير
           </a>
-          {% if current_user.is_owner and sale.status != 'cancelled' %}
+          {% if not current_user.is_seller() and sale.status != 'cancelled' %}
           <button type="button" class="btn btn-danger" onclick="confirmCancel()">
             <i class="fas fa-ban mr-2"></i>إلغاء الفاتورة
           </button>

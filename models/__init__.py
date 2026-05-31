@@ -15,10 +15,14 @@ from .audit import AuditLog
 from .archive import ArchivedRecord
 from .product_return import ProductReturn, ProductReturnLine
 from .card_vault import CardVault
-from .gl import GLAccount, GLJournalEntry, GLJournalLine
+from .gl import GLAccount, GLJournalEntry, GLJournalLine, GLPeriod
 from .expense import Expense, ExpenseCategory
 from .invoice_settings import InvoiceSettings
 from .tenant import Tenant
+from .tenant_store import TenantStore
+from .store_payment_method import StorePaymentMethod
+from .shop_customer_account import ShopCustomerAccount
+from .store_coupon import StoreCoupon
 from .system_settings import SystemSettings
 from .integration_settings import IntegrationSettings
 from .donation import Donation
@@ -54,10 +58,14 @@ __all__ = [
     'ArchivedRecord',
     'ProductReturn', 'ProductReturnLine',
     'CardVault',
-    'GLAccount', 'GLJournalEntry', 'GLJournalLine',
+    'GLAccount', 'GLJournalEntry', 'GLJournalLine', 'GLPeriod',
     'Expense', 'ExpenseCategory',
     'InvoiceSettings',
     'Tenant',
+    'TenantStore',
+    'StorePaymentMethod',
+    'ShopCustomerAccount',
+    'StoreCoupon',
     'SystemSettings',
     'IntegrationSettings',
     'Donation',

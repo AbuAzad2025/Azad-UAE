@@ -1,21 +1,30 @@
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
-from flask import Blueprint, render_template, request, jsonify
+
+from flask import Blueprint, render_template, request, jsonify, abort
 from flask_login import login_required, current_user
 from sqlalchemy import func, select
 from extensions import db
 from models import PartnerCommissionEntry, Sale, SaleLine, Purchase, Product, Customer, ProductPartner
-from utils.decorators import permission_required, branch_scope_id
-from utils.tenanting import get_active_tenant_id, tenant_query, apply_tenant_scope
+from utils.decorators import permission_required, report_branch_scope_id
+from utils.tenanting import get_active_tenant_id, tenant_query, apply_tenant_scope, require_report_tenant_id, tenant_get_or_404
 
 reports_bp = Blueprint('reports', __name__, url_prefix='/reports')
+
+
+@reports_bp.before_request
+def _enforce_report_tenant_scope():
+    if request.endpoint == 'reports.index':
+        return
+    if request.endpoint and request.endpoint.startswith('reports.'):
+        require_report_tenant_id()
 
 
 def _scoped_customer_query():
     from models import Payment, Receipt
 
     query = tenant_query(Customer)
-    scoped_branch_id = branch_scope_id()
+    scoped_branch_id = report_branch_scope_id()
     if scoped_branch_id is None:
         return query
 
@@ -28,7 +37,7 @@ def _scoped_customer_query():
 def _scoped_supplier_query():
     from models import Payment
 
-    scoped_branch_id = branch_scope_id()
+    scoped_branch_id = report_branch_scope_id()
     if scoped_branch_id is None:
         from models import Supplier
         return tenant_query(Supplier)
@@ -55,7 +64,7 @@ def partners():
     
     date_from = request.args.get('date_from', '', type=str)
     date_to = request.args.get('date_to', '', type=str)
-    scoped_branch_id = branch_scope_id()
+    scoped_branch_id = report_branch_scope_id()
     
     tenant_id = get_active_tenant_id(current_user)
 
@@ -202,10 +211,12 @@ def partners():
         if total_revenue > 0:
             merchant_percentage = float(product.merchant_share or 100)
             merchant_amount = total_revenue * (Decimal(merchant_percentage) / 100)
-            
+            merchant = product.merchant_customer
+            merchant_name = merchant.name if merchant else 'غير محدد'
+
             merchants_data.append({
                 'product_name': product.name,
-                'merchant_name': product.merchant_customer.name,
+                'merchant_name': merchant_name,
                 'percentage': merchant_percentage,
                 'avg_unit_price': avg_unit_price,
                 'total_qty': total_qty,
@@ -214,8 +225,9 @@ def partners():
             })
             
             # Aggregate for summary
-            m_id = product.merchant_customer.id
-            merchant_share_totals[m_id] = merchant_share_totals.get(m_id, Decimal('0')) + merchant_amount
+            m_id = merchant.id if merchant else product.merchant_customer_id
+            if m_id is not None:
+                merchant_share_totals[m_id] = merchant_share_totals.get(m_id, Decimal('0')) + merchant_amount
 
     # --- 2. FINANCIAL SUMMARIES (Partners & Merchants) ---
     # Helper to get payments/receipts
@@ -345,13 +357,16 @@ def partners():
 @login_required
 @permission_required('view_reports')
 def sales():
+    from utils.gl_tenant import default_report_date_range
     date_from = request.args.get('date_from', '', type=str)
     date_to = request.args.get('date_to', '', type=str)
+    if not date_from and not date_to:
+        date_from, date_to = default_report_date_range(365)
     customer_id = request.args.get('customer', type=int)
     seller_id = request.args.get('seller', type=int)
     
     query = tenant_query(Sale).filter_by(status='confirmed')
-    scoped_branch_id = branch_scope_id()
+    scoped_branch_id = report_branch_scope_id()
     tenant_id = get_active_tenant_id(current_user)
     if tenant_id is not None:
         query = query.filter(Sale.tenant_id == tenant_id)
@@ -372,7 +387,7 @@ def sales():
     elif current_user.is_seller():
         query = query.filter_by(seller_id=current_user.id)
     
-    sales_list = query.order_by(Sale.sale_date.desc()).all()
+    sales_list = query.order_by(Sale.sale_date.desc()).limit(5000).all()
     
     total_sales = Decimal('0')
     total_paid = Decimal('0')
@@ -408,9 +423,8 @@ def sales():
         sellers = [current_user]
     else:
         from models import User
-        sellers_query = User.query.filter(User.is_active == True)
-        if tenant_id is not None:
-            sellers_query = sellers_query.filter(User.tenant_id == tenant_id)
+        from utils.tenanting import scoped_user_query
+        sellers_query = scoped_user_query(active_only=True)
         if scoped_branch_id is not None:
             seller_ids = select(Sale.seller_id).where(Sale.branch_id == scoped_branch_id, Sale.seller_id.isnot(None))
             sellers_query = sellers_query.filter(User.id.in_(seller_ids))
@@ -437,11 +451,14 @@ def sales_export():
     fmt = (request.args.get('format') or 'csv').strip().lower()
     date_from = request.args.get('date_from', '', type=str)
     date_to = request.args.get('date_to', '', type=str)
+    if not date_from and not date_to:
+        from utils.gl_tenant import default_report_date_range
+        date_from, date_to = default_report_date_range(365)
     customer_id = request.args.get('customer', type=int)
     seller_id = request.args.get('seller', type=int)
 
     query = tenant_query(Sale).filter_by(status='confirmed')
-    scoped_branch_id = branch_scope_id()
+    scoped_branch_id = report_branch_scope_id()
     tenant_id = get_active_tenant_id(current_user)
     if tenant_id is not None:
         query = query.filter(Sale.tenant_id == tenant_id)
@@ -458,7 +475,7 @@ def sales_export():
     elif current_user.is_seller():
         query = query.filter_by(seller_id=current_user.id)
 
-    sales_list = query.order_by(Sale.sale_date.desc()).all()
+    sales_list = query.order_by(Sale.sale_date.desc()).limit(5000).all()
 
     headers = [
         'رقم الفاتورة',
@@ -521,12 +538,15 @@ def purchases():
     if current_user.is_seller():
         return render_template('errors/403.html'), 403
     
+    from utils.gl_tenant import default_report_date_range
     date_from = request.args.get('start_date', '', type=str)
     date_to = request.args.get('end_date', '', type=str)
+    if not date_from and not date_to:
+        date_from, date_to = default_report_date_range(365)
     supplier_id = request.args.get('supplier_id', type=int)
     
     query = tenant_query(Purchase).filter_by(status='confirmed')
-    scoped_branch_id = branch_scope_id()
+    scoped_branch_id = report_branch_scope_id()
     tenant_id = get_active_tenant_id(current_user)
     if tenant_id is not None:
         query = query.filter(Purchase.tenant_id == tenant_id)
@@ -542,7 +562,7 @@ def purchases():
     if supplier_id:
         query = query.filter_by(supplier_id=supplier_id)
     
-    purchases_list = query.order_by(Purchase.purchase_date.desc()).all()
+    purchases_list = query.order_by(Purchase.purchase_date.desc()).limit(5000).all()
     
     total_amount = Decimal('0')
     
@@ -558,10 +578,12 @@ def purchases():
 
     # Calculate total paid from Payments table
     from models import Payment
-    payment_query = Payment.query.filter(
+    payment_query = tenant_query(Payment).filter(
         Payment.direction == 'outgoing',
         Payment.supplier_id != None
     )
+    if tenant_id is not None:
+        payment_query = payment_query.filter(Payment.tenant_id == tenant_id)
     if scoped_branch_id is not None:
         payment_query = payment_query.filter(Payment.branch_id == scoped_branch_id)
     
@@ -610,12 +632,15 @@ def purchases_export():
         return render_template('errors/403.html'), 403
 
     fmt = (request.args.get('format') or 'csv').strip().lower()
+    from utils.gl_tenant import default_report_date_range
     date_from = request.args.get('start_date', '', type=str)
     date_to = request.args.get('end_date', '', type=str)
+    if not date_from and not date_to:
+        date_from, date_to = default_report_date_range(365)
     supplier_id = request.args.get('supplier_id', type=int)
 
     query = tenant_query(Purchase).filter_by(status='confirmed')
-    scoped_branch_id = branch_scope_id()
+    scoped_branch_id = report_branch_scope_id()
     tenant_id = get_active_tenant_id(current_user)
     if tenant_id is not None:
         query = query.filter(Purchase.tenant_id == tenant_id)
@@ -628,7 +653,7 @@ def purchases_export():
     if supplier_id:
         query = query.filter_by(supplier_id=supplier_id)
 
-    purchases_list = query.order_by(Purchase.purchase_date.desc()).all()
+    purchases_list = query.order_by(Purchase.purchase_date.desc()).limit(5000).all()
 
     headers = [
         'رقم الفاتورة',
@@ -677,6 +702,33 @@ def purchases_export():
     )
 
 
+@reports_bp.route('/ar-reconciliation')
+@login_required
+@permission_required('view_reports')
+def ar_reconciliation():
+    from services.ar_reconciliation_service import ARReconciliationService
+    from utils.branching import get_accessible_branches, user_can_access_branch
+
+    branch_id = request.args.get('branch_id', type=int)
+    scoped_branch_id = report_branch_scope_id()
+    if branch_id is None:
+        branch_id = scoped_branch_id
+    elif scoped_branch_id is not None and branch_id != scoped_branch_id:
+        return render_template('errors/403.html'), 403
+    elif scoped_branch_id is None and branch_id is not None and not user_can_access_branch(branch_id, current_user):
+        return render_template('errors/403.html'), 403
+
+    tenant_id = get_active_tenant_id(current_user)
+    report = ARReconciliationService.build_report(tenant_id=tenant_id, branch_id=branch_id)
+    branches = get_accessible_branches(current_user)
+    return render_template(
+        'reports/ar_reconciliation.html',
+        report=report,
+        branches=branches,
+        selected_branch=branch_id,
+    )
+
+
 @reports_bp.route('/receivables')
 @login_required
 @permission_required('view_reports')
@@ -686,7 +738,7 @@ def receivables():
     all_sales = tenant_query(Sale).filter(
         Sale.status == 'confirmed'
     )
-    scoped_branch_id = branch_scope_id()
+    scoped_branch_id = report_branch_scope_id()
     tenant_id = get_active_tenant_id(current_user)
     if tenant_id is not None:
         all_sales = all_sales.filter(Sale.tenant_id == tenant_id)
@@ -696,7 +748,7 @@ def receivables():
     customer_id = request.args.get('customer', type=int)
     if customer_id:
         all_sales = all_sales.filter(Sale.customer_id == customer_id)
-    all_sales = all_sales.all()
+    all_sales = all_sales.order_by(Sale.sale_date.desc()).limit(5000).all()
     
     all_sales = [sale for sale in all_sales if (sale.amount_aed or Decimal('0')) > (sale.paid_amount_aed or Decimal('0'))]
     
@@ -772,7 +824,7 @@ def receivables_export():
 
     now = datetime.now(timezone.utc)
     all_sales = tenant_query(Sale).filter(Sale.status == 'confirmed')
-    scoped_branch_id = branch_scope_id()
+    scoped_branch_id = report_branch_scope_id()
     tenant_id = get_active_tenant_id(current_user)
     if tenant_id is not None:
         all_sales = all_sales.filter(Sale.tenant_id == tenant_id)
@@ -780,7 +832,7 @@ def receivables_export():
         all_sales = all_sales.filter(Sale.branch_id == scoped_branch_id)
     if customer_id:
         all_sales = all_sales.filter(Sale.customer_id == customer_id)
-    all_sales = all_sales.all()
+    all_sales = all_sales.order_by(Sale.sale_date.desc()).limit(5000).all()
 
     all_sales = [sale for sale in all_sales if (sale.amount_aed or Decimal('0')) > (sale.paid_amount_aed or Decimal('0'))]
 
@@ -850,7 +902,6 @@ def receivables_export():
 @permission_required('view_reports')
 def inventory():
     from models import StockMovement, Warehouse
-    from utils.decorators import branch_scope_id
     from utils.branching import (
         user_can_access_branch,
         get_accessible_branches,
@@ -866,7 +917,7 @@ def inventory():
     out_date_to = (request.args.get('out_date_to') or '').strip()
 
     branch_id = request.args.get('branch_id', type=int)
-    scoped_branch_id = branch_scope_id()
+    scoped_branch_id = report_branch_scope_id()
     if branch_id is None:
         branch_id = scoped_branch_id
     elif scoped_branch_id is not None and branch_id != scoped_branch_id:
@@ -1029,7 +1080,6 @@ def inventory():
 def inventory_export():
     from flask import send_file
     from models import StockMovement, Warehouse
-    from utils.decorators import branch_scope_id
     from utils.branching import (
         user_can_access_branch,
         get_accessible_warehouse_ids,
@@ -1046,7 +1096,7 @@ def inventory_export():
     out_date_to = (request.args.get('out_date_to') or '').strip()
 
     branch_id = request.args.get('branch_id', type=int)
-    scoped_branch_id = branch_scope_id()
+    scoped_branch_id = report_branch_scope_id()
     if branch_id is None:
         branch_id = scoped_branch_id
     elif scoped_branch_id is not None and branch_id != scoped_branch_id:
@@ -1304,7 +1354,7 @@ def api_entity_search():
 def entity_report_fragment(type, id):
     try:
         from models import Receipt, Payment, PurchaseLine, Supplier
-        scoped_branch_id = branch_scope_id()
+        scoped_branch_id = report_branch_scope_id()
 
 
         
@@ -1319,8 +1369,8 @@ def entity_report_fragment(type, id):
         }
         
         if type == 'supplier':
-            entity = Supplier.query.get_or_404(id)
-            if branch_scope_id() is not None and not db.session.query(_scoped_supplier_query().filter_by(id=id).exists()).scalar():
+            entity = tenant_get_or_404(Supplier, id)
+            if report_branch_scope_id() is not None and not db.session.query(_scoped_supplier_query().filter_by(id=id).exists()).scalar():
                 return render_template('errors/403.html'), 403
             context['entity'] = entity
             context['type_label'] = 'مورد'
@@ -1408,8 +1458,8 @@ def entity_report_fragment(type, id):
             } for p in payments]
             
         else: # Customer/Partner/Merchant
-            entity = Customer.query.get_or_404(id)
-            if branch_scope_id() is not None and not db.session.query(_scoped_customer_query().filter_by(id=id).exists()).scalar():
+            entity = tenant_get_or_404(Customer, id)
+            if report_branch_scope_id() is not None and not db.session.query(_scoped_customer_query().filter_by(id=id).exists()).scalar():
                 return render_template('errors/403.html'), 403
             context['entity'] = entity
             context['type_label'] = {
@@ -1595,7 +1645,7 @@ def top_selling():
     ).filter(
         Sale.status == 'confirmed'
     )
-    scoped_branch_id = branch_scope_id()
+    scoped_branch_id = report_branch_scope_id()
     if scoped_branch_id is not None:
         query = query.filter(Sale.branch_id == scoped_branch_id)
     

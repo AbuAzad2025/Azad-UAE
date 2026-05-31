@@ -4,7 +4,10 @@ from extensions import db
 from models import Sale, SaleLine, ProductReturn, ProductReturnLine, Product
 from services.stock_service import StockService
 from services.gl_service import GLService
+from services.gl_posting import post_or_fail
 from utils.helpers import generate_number
+from utils.gl_reference_types import GLRef
+from utils.tax_settings import should_post_vat_gl
 
 class ReturnService:
     
@@ -165,7 +168,7 @@ class ReturnService:
                     product_id=sale_line.product_id,
                     quantity=quantity,
                     movement_type='return',
-                    reference_type='ProductReturn',
+                    reference_type=GLRef.PRODUCT_RETURN,
                     reference_id=product_return.id,
                     notes=f"Return for Sale {sale.sale_number}",
                     warehouse_id=sale.warehouse_id # Return to same warehouse
@@ -203,6 +206,8 @@ class ReturnService:
             # 4. Financial GL Entries (Revenue Reversal)
             
             tax_rate = sale.tax_rate or Decimal('0')
+            if not should_post_vat_gl(getattr(sale, 'tenant_id', None)):
+                tax_rate = Decimal('0')
             
             net_return_amount = total_return_amount # This is now (Gross - Discount + Shipping)
             
@@ -229,7 +234,7 @@ class ReturnService:
             })
             
             # Debit Tax Liability (Reducing liability)
-            if tax_amount > 0:
+            if tax_amount > 0 and should_post_vat_gl(getattr(sale, 'tenant_id', None)):
                 gl_lines.append({
                     'account': '2130', # Taxes Payable
                     'debit': tax_amount,
@@ -247,10 +252,10 @@ class ReturnService:
             
             # Post GL Entry
             if gl_lines:
-                GLService.post_entry(
+                post_or_fail(
                     lines=gl_lines,
                     description=f'Sales Return {product_return.return_number} for Sale {sale.sale_number}',
-                    reference_type='ProductReturn',
+                    reference_type=GLRef.PRODUCT_RETURN,
                     reference_id=product_return.id,
                     branch_id=product_return.branch_id
                 )

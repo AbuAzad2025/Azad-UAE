@@ -10,11 +10,12 @@ from decimal import Decimal
 
 class InvoiceSettings(db.Model):
     """
-    إعدادات ترويسات الفواتير وسندات القبض
+    إعدادات ترويسات الفواتير وسندات القبض — لكل شركة (tenant) سجل مستقل.
     """
     __tablename__ = 'invoice_settings'
     
     id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True)
     
     # Company Info - معلومات الشركة
     company_name_ar = db.Column(db.String(200), nullable=False, default='شركة أزاد')
@@ -112,20 +113,76 @@ class InvoiceSettings(db.Model):
     updated_by = db.Column(db.Integer, db.ForeignKey('users.id'))
     
     # Relationships
+    tenant = db.relationship('Tenant', backref='invoice_settings', foreign_keys=[tenant_id])
     user = db.relationship('User', foreign_keys=[updated_by])
     
     def __repr__(self):
         return f'<InvoiceSettings {self.company_name_ar}>'
     
     @staticmethod
-    def get_active():
-        """Get active settings or create default"""
-        settings = InvoiceSettings.query.filter_by(is_active=True).first()
-        if not settings:
-            settings = InvoiceSettings()
-            db.session.add(settings)
-            db.session.commit()
+    def _seed_from_tenant(settings, tenant):
+        if not tenant:
+            return settings
+        settings.company_name_ar = tenant.name_ar or tenant.name or settings.company_name_ar
+        settings.company_name_en = tenant.name_en or tenant.name or settings.company_name_en
+        settings.address_ar = tenant.address_ar or settings.address_ar
+        settings.address_en = tenant.address_en or settings.address_en
+        settings.phone_1 = tenant.phone_1 or tenant.mobile or settings.phone_1
+        settings.email = tenant.email or settings.email
+        settings.tax_number = tenant.tax_number or settings.tax_number
+        settings.commercial_register = tenant.commercial_register or settings.commercial_register
+        settings.license_number = tenant.license_number or settings.license_number
         return settings
+
+    @staticmethod
+    def get_active(tenant_id=None):
+        """Active invoice settings for the given or current tenant."""
+        from flask_login import current_user
+
+        if tenant_id is None:
+            try:
+                if current_user and getattr(current_user, 'is_authenticated', False):
+                    from utils.tenanting import get_active_tenant_id
+                    tenant_id = get_active_tenant_id()
+            except Exception:
+                pass
+
+        query = InvoiceSettings.query.filter_by(is_active=True)
+        if tenant_id is not None:
+            query = query.filter(InvoiceSettings.tenant_id == int(tenant_id))
+        else:
+            query = query.filter(InvoiceSettings.tenant_id.is_(None))
+
+        settings = query.first()
+        if settings:
+            return settings
+
+        settings = InvoiceSettings(is_active=True)
+        if tenant_id is not None:
+            from models.tenant import Tenant
+            tenant = db.session.get(Tenant, int(tenant_id))
+            settings.tenant_id = int(tenant_id)
+            InvoiceSettings._seed_from_tenant(settings, tenant)
+        db.session.add(settings)
+        db.session.commit()
+        return settings
+
+    @staticmethod
+    def company_print_context():
+        """Tenant branding with per-tenant invoice settings fallback for print views."""
+        from models.tenant import Tenant
+
+        tenant = Tenant.get_current()
+        settings = InvoiceSettings.get_active()
+        return tenant, settings, {
+            'name_ar': (tenant.name_ar if tenant else settings.company_name_ar) or 'نظام المحاسبة',
+            'address': (
+                (tenant.address_ar or tenant.address_en)
+                if tenant
+                else (settings.address_ar or settings.address_en)
+            ) or '',
+            'phone': (tenant.phone_1 or tenant.mobile if tenant else settings.phone_1) or '',
+        }
     
     def to_dict(self):
         """Convert to dictionary"""

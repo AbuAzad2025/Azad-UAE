@@ -1,0 +1,50 @@
+{% extends 'shop/base.html' %}
+{% block title %}{{ product.get_display_name(lang) }} — {{ store.title }}{% endblock %}
+{% block meta %}
+{{ super() }}
+<meta property="og:type" content="product">
+{% endblock %}
+
+{% block content %}
+<a href="{{ url_for('shop.catalog', slug=store.store_slug) }}" class="ps-btn ps-btn-outline" style="margin-bottom:1rem;display:inline-flex;"><i class="fas fa-arrow-{{ 'right' if is_rtl else 'left' }}"></i> {{ t('continue_shopping') }}</a>
+
+<div class="ps-product-detail">
+  <div class="ps-product-gallery">
+    {% if product.image_url %}
+    <img src="{{ product.image_url }}" alt="{{ product.get_display_name(lang) }}">
+    {% else %}
+    <div class="ps-placeholder" style="height:100%;display:grid;place-items:center;font-size:4rem;color:var(--ps-green);opacity:.3;"><i class="fas fa-box-open"></i></div>
+    {% endif %}
+  </div>
+  <div>
+    <h2 style="margin:0 0 0.5rem;font-size:1.6rem;font-weight:800;">{{ product.get_display_name(lang) }}</h2>
+    {% if product.sku %}<p class="ps-card-meta">{{ product.sku }}</p>{% endif %}
+    <p class="ps-price" style="font-size:1.5rem;margin:1rem 0;">{{ '%.2f'|format(product.regular_price) }} {{ tenant.default_currency or 'AED' }}</p>
+    <p class="ps-stock-ok"><i class="fas fa-check-circle"></i> {{ t('in_stock') }} — {{ available|int }}</p>
+    {% if product.description %}
+    <div style="margin:1.25rem 0;color:var(--ps-muted);font-size:0.92rem;line-height:1.7;">{{ product.description }}</div>
+    {% endif %}
+
+    {% if is_shop_logged_in %}
+    <form method="post" action="{{ url_for('shop.cart_add', slug=store.store_slug) }}" style="margin-top:1.5rem;">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="product_id" value="{{ product.id }}">
+      <div class="ps-form-group">
+        <label>{{ t('quantity') }}</label>
+        <div class="ps-qty-wrap" style="display:flex;align-items:center;gap:0.5rem;max-width:160px;">
+          <button type="button" class="ps-btn ps-btn-outline" data-qty-minus style="padding:0.4rem 0.65rem;">−</button>
+          <input type="number" name="quantity" value="1" min="1" max="{{ available|int }}" step="1" class="ps-qty-input" style="flex:1;">
+          <button type="button" class="ps-btn ps-btn-outline" data-qty-plus style="padding:0.4rem 0.65rem;">+</button>
+        </div>
+      </div>
+      <button type="submit" class="ps-btn ps-btn-primary ps-btn-block" style="margin-top:0.5rem;padding:0.85rem;"><i class="fas fa-shopping-basket"></i> {{ t('add_to_cart') }}</button>
+    </form>
+    {% elif wa_url %}
+    <a href="{{ wa_url }}" target="_blank" rel="noopener" class="ps-btn ps-btn-wa ps-btn-block" style="margin-top:1.5rem;padding:0.95rem;font-size:1rem;"><i class="fab fa-whatsapp"></i> {{ t('order_whatsapp') }}</a>
+    <p class="ps-card-meta" style="margin-top:0.75rem;">{{ t('login_required') }} — <a href="{{ url_for('shop.account_login', slug=store.store_slug) }}">{{ t('login') }}</a></p>
+    {% else %}
+    <a href="{{ url_for('shop.account_register', slug=store.store_slug) }}" class="ps-btn ps-btn-primary ps-btn-block" style="margin-top:1.5rem;">{{ t('register') }}</a>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

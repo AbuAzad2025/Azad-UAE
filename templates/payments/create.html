@@ -19,7 +19,7 @@
 {% block content %}
 <div class="card">
   {% set form_data = request.form %}
-  <form method="POST" action="{{ url_for('payments.create_receipt') }}">
+  <form method="POST" action="{{ url_for('payments.create_voucher_submit') }}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     
     <div class="card-body">
@@ -148,10 +148,10 @@ function loadCustomerSales() {
     return;
   }
   
-  $.get(`/api/customer/${customerId}/unpaid-sales`, function(data) {
-    if (data.sales && data.sales.length > 0) {
+  $.get(`/customers/${customerId}/balance`, function(data) {
+    if (data.unpaid_sales && data.unpaid_sales.length > 0) {
       let html = '<table class="table table-sm"><tbody>';
-      data.sales.forEach(sale => {
+      data.unpaid_sales.forEach(sale => {
         html += `<tr>
           <td>${sale.sale_number}</td>
           <td class="text-danger">${sale.balance_due} AED</td>

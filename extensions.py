@@ -176,7 +176,7 @@ def _rate_limit_key():
 limiter = Limiter(
     key_func=_rate_limit_key,
     default_limits=[],
-    storage_uri="memory://",
+    storage_uri=os.environ.get("RATELIMIT_STORAGE_URI", "memory://"),
 )
 
 babel = Babel()
@@ -206,6 +206,7 @@ def init_extensions(app):
     cache.init_app(app)
     
     limiter.init_app(app)
+    limiter.storage_uri = app.config.get('RATELIMIT_STORAGE_URI', 'memory://')
     
     if compress:
         compress.init_app(app)
@@ -222,16 +223,6 @@ def init_extensions(app):
     
     @limiter.request_filter
     def _exempt_super():
-        try:
-            from flask_login import current_user
-            if getattr(current_user, "is_authenticated", False):
-                if getattr(current_user, "is_owner", False):
-                    return True
-                role = getattr(current_user, "role", None)
-                if role and role.slug == "super_admin":
-                    return True
-        except Exception:
-            pass
         return False
     
     if app.config.get("MAIL_USERNAME"):

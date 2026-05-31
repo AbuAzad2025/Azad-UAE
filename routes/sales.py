@@ -8,7 +8,10 @@ from services.currency_service import CurrencyService
 from utils.decorators import permission_required
 from utils.branching import ensure_warehouse_access, get_accessible_warehouses, should_show_all_branch_columns
 from utils.helpers import create_audit_log
-from utils.tenanting import tenant_query, tenant_get_or_404
+from utils.tenanting import tenant_query, tenant_get_or_404, tenant_get, get_active_tenant_id
+from services.store_service import StoreService
+from utils.gl_tenant import reverse_document_gl
+from utils.gl_reference_types import GLRef, delete_entries_by_ref
 from utils.number_to_arabic import number_to_arabic_words
 from utils.qr_generator import generate_qr_data_url
 
@@ -190,10 +193,21 @@ def create():
             flash(ErrorMessages.database_error(str(e)), 'danger')
     
     # تحميل المستودعات للقالب
-    warehouses = get_accessible_warehouses(current_user)
+    tid = get_active_tenant_id(current_user)
+    if tid:
+        warehouses = StoreService.get_physical_warehouses(tid, user=current_user)
+    else:
+        warehouses = [wh for wh in get_accessible_warehouses(current_user) if not wh.is_online]
+    preselected_customer = None
+    preselected_customer_id = request.args.get('customer_id', type=int)
+    if preselected_customer_id:
+        preselected_customer = tenant_get(Customer, preselected_customer_id)
     
-    # No need to load customers or exchange rates - loaded via AJAX for speed
-    return render_template('sales/create.html', warehouses=warehouses)
+    return render_template(
+        'sales/create.html',
+        warehouses=warehouses,
+        preselected_customer=preselected_customer,
+    )
 
 
 @sales_bp.route('/<int:id>')
@@ -398,12 +412,18 @@ def archived():
         ArchivedRecord.table_name == 'sales'
     )
     
+    from utils.tenanting import get_active_tenant_id
+    tenant_id = get_active_tenant_id(current_user)
+    
     archived_items = []
     
-    for archived in archived_sales_query.all():
+    for archived in archived_sales_query.order_by(ArchivedRecord.archived_at.desc()).limit(500).all():
         data = archived.data
-        # Get the actual sale to retrieve customer name
-        sale = tenant_get_or_404(Sale, archived.record_id) if archived.record_id else None
+        sale = tenant_get(Sale, archived.record_id) if archived.record_id else None
+        if sale is None:
+            continue
+        if tenant_id is not None and getattr(sale, 'tenant_id', None) not in (None, tenant_id):
+            continue
         archived_items.append({
             'id': archived.record_id,
             'sale_number': data.get('sale_number'),
@@ -425,6 +445,11 @@ def archived():
 @permission_required('manage_sales')
 def delete(id):
     """حذف (أرشفة) فاتورة مبيعات"""
+    if not current_user.is_owner:
+        from utils.error_messages import ErrorMessages
+        flash(ErrorMessages.permission_denied('حذف الفواتير'), 'danger')
+        return redirect(url_for('sales.index'))
+
     from services.archive_service import ArchiveService
     from models import Payment, Cheque, GLJournalEntry
     from services.gl_service import GLService
@@ -449,14 +474,11 @@ def delete(id):
             # أرشفة (Soft Delete)
             # عكس القيد المحاسبي
             if sale.status != 'cancelled':
-                try:
-                    GLService.reverse_entry(
-                        reference_type='Sale',
-                        reference_id=sale.id,
-                        description=f'Reverse Sale {sale.sale_number} (Archived)'
-                    )
-                except Exception as e:
-                    current_app.logger.error(f'Failed to reverse GL entry for archived sale {sale.id}: {e}')
+                reverse_document_gl(
+                    [GLRef.SALE, GLRef.SALE_COGS], sale.id,
+                    f'Reverse Sale {sale.sale_number} (Archived)',
+                    tenant_id=getattr(sale, 'tenant_id', None),
+                )
 
             archive_service = ArchiveService()
             archive_service.archive_record('sales', sale, reason='تم أرشفة الفاتورة لوجود ارتباطات مالية', commit=False)
@@ -473,7 +495,7 @@ def delete(id):
             SaleLine.query.filter_by(sale_id=sale.id).delete()
             
             # 2. حذف القيود المحاسبية
-            GLJournalEntry.query.filter_by(reference_type='Sale', reference_id=sale.id).delete()
+            delete_entries_by_ref(sale.id, GLRef.SALE, GLRef.SALE_COGS)
             
             # 3. حذف الفاتورة
             db.session.delete(sale)
@@ -501,15 +523,11 @@ def archive(id):
     try:
         # عكس القيد المحاسبي قبل الأرشفة (إذا لم تكن ملغاة)
         if sale.status != 'cancelled':
-            from services.gl_service import GLService
-            try:
-                GLService.reverse_entry(
-                    reference_type='Sale',
-                    reference_id=sale.id,
-                    description=f'Reverse Sale {sale.sale_number} (Archived)'
-                )
-            except Exception as e:
-                current_app.logger.error(f'Failed to reverse GL entry for archived sale {sale.id}: {e}')
+            reverse_document_gl(
+                [GLRef.SALE, GLRef.SALE_COGS], sale.id,
+                f'Reverse Sale {sale.sale_number} (Archived)',
+                tenant_id=getattr(sale, 'tenant_id', None),
+            )
 
         archive_service = ArchiveService()
         archive_service.archive_record('sales', sale, reason='تم أرشفة فاتورة المبيعات')
@@ -562,6 +580,8 @@ def api_calculate_sale_totals():
         discount_amount = Decimal(str(data.get('discount_amount', 0)))
         shipping_cost = Decimal(str(data.get('shipping_cost', 0)))
         tax_rate = Decimal(str(data.get('tax_rate', 0)))
+        from utils.tax_settings import normalize_tax_rate
+        tax_rate = normalize_tax_rate(tax_rate)
         
         # حساب المجموع الفرعي
         subtotal = Decimal('0')

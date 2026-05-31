@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+
+
+
+{% block title %}الفترات المحاسبية{% endblock %}
+
+
+
+{% block content %}
+
+
+
+<div class="container py-4">
+
+
+
+  <h2 class="mb-4">إقفال / فتح الفترات المحاسبية</h2>
+
+
+
+  <form method="post" class="form-row mb-4">
+
+
+
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+
+
+    <div class="col-md-2 mb-2"><input type="number" name="year" class="form-control" placeholder="السنة" required></div>
+
+
+
+    <div class="col-md-2 mb-2"><input type="number" name="month" min="1" max="12" class="form-control" placeholder="الشهر" required></div>
+
+
+
+    <div class="col-md-2 mb-2">
+
+
+
+      <select name="action" class="form-control">
+
+
+
+        <option value="close">إقفال</option>
+
+
+
+        <option value="open">فتح</option>
+
+
+
+      </select>
+
+
+
+    </div>
+
+
+
+    <div class="col-md-2 mb-2"><button class="btn btn-warning btn-block">تطبيق</button></div>
+
+
+
+  </form>
+
+
+
+
+
+
+
+  <div class="card mb-4">
+
+
+
+    <div class="card-header">استهلاك الأصول الثابتة (شهري)</div>
+
+
+
+    <div class="card-body">
+
+
+
+      <form method="post" action="{{ url_for('ledger.run_depreciation') }}" class="form-row">
+
+
+
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+
+
+        <div class="col-md-2 mb-2"><input type="number" name="year" class="form-control" placeholder="السنة (اختياري)"></div>
+
+
+
+        <div class="col-md-2 mb-2"><input type="number" name="month" min="1" max="12" class="form-control" placeholder="الشهر (اختياري)"></div>
+
+
+
+        <div class="col-md-3 mb-2"><button class="btn btn-primary btn-block">ترحيل الاستهلاك الشهري</button></div>
+
+
+
+      </form>
+
+
+
+      <small class="text-muted">يُرحّل استهلاك الأصول النشطة للشركة الحالية فقط — لا يُكرّر الشهر إذا رُحّل مسبقاً.</small>
+
+
+
+    </div>
+
+
+
+  </div>
+
+
+
+
+
+
+
+  <table class="table table-striped">
+
+
+
+    <thead><tr><th>السنة</th><th>الشهر</th><th>الحالة</th></tr></thead>
+
+
+
+    <tbody>
+
+
+
+      {% for p in periods %}
+
+
+
+      <tr><td>{{ p.year }}</td><td>{{ p.month }}</td><td>{{ 'مقفلة' if p.is_closed else 'مفتوحة' }}</td></tr>
+
+
+
+      {% else %}
+
+
+
+      <tr><td colspan="3">لا توجد فترات مسجلة بعد.</td></tr>
+
+
+
+      {% endfor %}
+
+
+
+    </tbody>
+
+
+
+  </table>
+
+
+
+</div>
+
+
+
+{% endblock %}
+
+

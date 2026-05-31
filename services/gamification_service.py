@@ -79,9 +79,9 @@ class GamificationService:
     @staticmethod
     def get_leaderboard(limit: int = 10) -> List[Dict]:
         from models import User
-        
-        # Exclude owner from leaderboard
-        users = User.query.filter_by(is_active=True, is_owner=False).order_by(
+        from utils.tenanting import scoped_user_query
+
+        users = scoped_user_query(active_only=True, exclude_owners=True).order_by(
             User.points.desc() if hasattr(User, 'points') else User.id
         ).limit(limit).all()
         

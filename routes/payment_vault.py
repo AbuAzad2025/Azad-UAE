@@ -14,9 +14,75 @@ import secrets
 import string
 import logging
 import re
+import os
+from urllib.parse import urlparse
 
 payment_vault_bp = Blueprint('payment_vault', __name__, url_prefix='/payment-vault')
 logger = logging.getLogger(__name__)
+
+_DEV_VAULT_ORIGINS = frozenset({
+    'http://localhost:5000',
+    'http://127.0.0.1:5000',
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+})
+
+
+def _is_production_env() -> bool:
+    app_env = (os.environ.get('APP_ENV') or 'production').strip().lower()
+    debug = (os.environ.get('DEBUG') or '').strip().lower() in ('1', 'true', 'yes', 'y')
+    return app_env == 'production' and not debug
+
+
+def _payment_vault_trusted_origins() -> frozenset[str]:
+    from flask import current_app
+
+    configured = current_app.config.get('PAYMENT_VAULT_TRUSTED_ORIGINS') or []
+    origins = {str(o).strip().rstrip('/') for o in configured if o}
+    if origins:
+        return frozenset(origins)
+
+    if _is_production_env():
+        base = (current_app.config.get('BASE_URL') or '').strip().rstrip('/')
+        return frozenset({base}) if base else frozenset()
+
+    return _DEV_VAULT_ORIGINS
+
+
+def _origin_from_referer(referer: str) -> str | None:
+    try:
+        parsed = urlparse(referer)
+        if parsed.scheme and parsed.netloc:
+            return f'{parsed.scheme}://{parsed.netloc}'.rstrip('/')
+    except Exception:
+        return None
+    return None
+
+
+def _validate_public_api_origin():
+    """Reject cross-site POSTs; require Origin/Referer in trusted allowlist."""
+    trusted = _payment_vault_trusted_origins()
+    if not trusted:
+        logger.warning('Payment vault public API rejected: trusted origins not configured')
+        return jsonify({'success': False, 'error': 'Origin policy not configured'}), 503
+
+    origin = (request.headers.get('Origin') or '').strip().rstrip('/')
+    referer = (request.headers.get('Referer') or '').strip()
+
+    if origin:
+        if origin not in trusted:
+            logger.warning('Payment vault public API rejected: origin=%s', origin)
+            return jsonify({'success': False, 'error': 'Origin غير مسموح'}), 403
+        return None
+
+    if referer:
+        ref_origin = _origin_from_referer(referer)
+        if ref_origin and ref_origin in trusted:
+            return None
+        logger.warning('Payment vault public API rejected: referer=%s', referer[:120])
+        return jsonify({'success': False, 'error': 'Referer غير مسموح'}), 403
+
+    return jsonify({'success': False, 'error': 'Origin أو Referer مطلوب'}), 403
 
 
 @payment_vault_bp.before_request
@@ -33,18 +99,8 @@ def _protect_owner_vault_pages():
         flash('❌ غير مصرح - الخزينة السرية للمالك فقط!', 'danger')
         return redirect(url_for('main.dashboard'))
 
-    return None
-
-
-def _validate_public_api_origin():
-    """Reject obvious cross-site POSTs for public JSON endpoints."""
-    origin = (request.headers.get('Origin') or '').strip().rstrip('/')
-    if not origin:
-        return None
-
-    trusted_origin = request.host_url.rstrip('/')
-    if origin != trusted_origin:
-        return jsonify({'success': False, 'error': 'Origin غير مسموح'}), 403
+    from utils.security_helpers import enforce_owner_ip_if_needed
+    enforce_owner_ip_if_needed()
 
     return None
 
@@ -278,6 +334,15 @@ def settings():
         vault.min_donation_amount = _as_float(request.form.get('min_donation_amount'), vault.min_donation_amount)
         vault.max_donation_amount = _as_float(request.form.get('max_donation_amount'), vault.max_donation_amount)
         vault.daily_limit = _as_float(request.form.get('daily_limit'), vault.daily_limit)
+
+        vault.donations_enabled = bool(request.form.get('donations_enabled'))
+        vault.donation_page_enabled = bool(request.form.get('donation_page_enabled'))
+        vault.donation_title_ar = request.form.get('donation_title_ar') or vault.donation_title_ar
+        vault.donation_title_en = request.form.get('donation_title_en') or vault.donation_title_en
+        vault.donation_intro_ar = request.form.get('donation_intro_ar') or vault.donation_intro_ar
+        vault.donation_intro_en = request.form.get('donation_intro_en') or vault.donation_intro_en
+        vault.donation_debit_account = (request.form.get('donation_debit_account') or '1120').strip()
+        vault.donation_credit_account = (request.form.get('donation_credit_account') or '4200').strip()
         
         # تحديث إعدادات الأمان
         vault.require_2fa = bool(request.form.get('require_2fa'))
@@ -321,6 +386,8 @@ def donations():
     # الفلاتر
     status_filter = request.args.get('status', '')
     crypto_filter = request.args.get('crypto', '')
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 20, type=int)
     search_query = request.args.get('search', '')
     
     # Query
@@ -338,16 +405,21 @@ def donations():
             )
         )
     
-    donations = query.order_by(Donation.created_at.desc()).all()
-    
-    # إحصائيات
-    total_donations = len(donations)
-    completed_count = sum(1 for d in donations if d.status == 'completed')
-    pending_count = sum(1 for d in donations if d.status == 'pending')
-    total_amount = sum(float(d.amount_usd or 0) for d in donations)
+    pagination = query.order_by(Donation.created_at.desc()).paginate(
+        page=page, per_page=per_page, error_out=False
+    )
+    donations = pagination.items
+
+    total_donations = pagination.total
+    completed_count = query.filter(Donation.status == 'completed').count()
+    pending_count = query.filter(Donation.status == 'pending').count()
+    total_amount = float(
+        query.with_entities(db.func.coalesce(db.func.sum(Donation.amount_usd), 0)).scalar() or 0
+    )
     
     return render_template('payment_vault/donations.html',
                          donations=donations,
+                         pagination=pagination,
                          total_donations=total_donations,
                          completed_count=completed_count,
                          pending_count=pending_count,
@@ -1304,6 +1376,8 @@ def approve_donation(donation_id):
     try:
         donation.status = 'completed'
         donation.completed_at = datetime.now(timezone.utc)
+        from services.donation_gl_service import DonationGLService
+        DonationGLService.post_completed_donation(donation)
         db.session.commit()
         
         create_audit_log(
@@ -1542,16 +1616,18 @@ def nowpayments_webhook():
         
         # التحقق من التوقيع
         vault = PaymentVault.query.first()
-        if vault and vault.nowpayments_ipn_secret:
-            if not signature:
-                return jsonify({'error': 'Missing signature'}), 400
-            if not WebhookService.verify_nowpayments_signature(
-                payload,
-                signature,
-                vault.nowpayments_ipn_secret
-            ):
-                logger.warning('❌ NOWPayments webhook signature verification failed')
-                return jsonify({'error': 'Invalid signature'}), 403
+        if not vault or not vault.nowpayments_ipn_secret:
+            logger.warning('NOWPayments webhook rejected: IPN secret not configured')
+            return jsonify({'error': 'Webhook not configured'}), 503
+        if not signature:
+            return jsonify({'error': 'Missing signature'}), 400
+        if not WebhookService.verify_nowpayments_signature(
+            payload,
+            signature,
+            vault.nowpayments_ipn_secret
+        ):
+            logger.warning('NOWPayments webhook signature verification failed')
+            return jsonify({'error': 'Invalid signature'}), 403
         
         # معالجة الـ webhook
         data = request.get_json()
@@ -1590,14 +1666,18 @@ def stripe_webhook():
         
         # التحقق من التوقيع
         vault = PaymentVault.query.first()
-        if vault and vault.stripe_webhook_secret:
-            if not WebhookService.verify_stripe_signature(
-                payload,
-                signature,
-                vault.stripe_webhook_secret
-            ):
-                logger.warning('❌ Stripe webhook signature verification failed')
-                return jsonify({'error': 'Invalid signature'}), 403
+        if not vault or not vault.stripe_webhook_secret:
+            logger.warning('Stripe webhook rejected: webhook secret not configured')
+            return jsonify({'error': 'Webhook not configured'}), 503
+        if not signature:
+            return jsonify({'error': 'Missing signature'}), 400
+        if not WebhookService.verify_stripe_signature(
+            payload,
+            signature,
+            vault.stripe_webhook_secret
+        ):
+            logger.warning('Stripe webhook signature verification failed')
+            return jsonify({'error': 'Invalid signature'}), 403
         
         # معالجة الـ webhook
         data = request.get_json()
@@ -1624,8 +1704,11 @@ def stripe_webhook():
 # ==================== Health & Monitoring Routes - المراقبة ====================
 
 @payment_vault_bp.route('/health', methods=['GET'])
+@login_required
 def health_check():
-    """فحص صحة النظام"""
+    """فحص صحة النظام — للمالك فقط"""
+    if not current_user.is_owner:
+        return jsonify({'error': 'Unauthorized'}), 403
     from services.health_service import HealthCheckService
     
     result = HealthCheckService.run_full_health_check()

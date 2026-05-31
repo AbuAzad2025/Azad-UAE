@@ -100,7 +100,11 @@ def assert_tenant_record(record, *, user=None, or_404: bool = True) -> bool:
     rec_tid = getattr(record, "tenant_id", None)
 
     if rec_tid is None:
-        return True
+        if is_platform_owner(user):
+            return True
+        if or_404:
+            abort(404)
+        return False
 
     if tid is None:
         if or_404:
@@ -133,6 +137,30 @@ def assign_tenant_id(record, user=None):
         return record
     record.tenant_id = require_active_tenant_id(user)
     return record
+
+
+def scoped_user_query(user=None, *, active_only: bool = False, exclude_owners: bool = False):
+    """User queries with tenant isolation (User is exempt from ORM auto-scoping)."""
+    from models.user import User
+
+    user = _resolve_user(user)
+    query = User.query
+    if exclude_owners:
+        query = query.filter(User.is_owner == False)
+    if active_only:
+        query = query.filter(User.is_active == True)
+
+    tid = get_active_tenant_id(user)
+    if tid is not None:
+        return query.filter(User.tenant_id == tid)
+    if is_platform_owner(user):
+        return query
+    return query.filter(User.tenant_id < 0)
+
+
+def require_report_tenant_id(user=None) -> int:
+    """Reports require an active tenant — blocks cross-tenant views for platform owner without selection."""
+    return require_active_tenant_id(user)
 
 
 def set_active_tenant(tenant_id):

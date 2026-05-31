@@ -220,7 +220,26 @@ $(document).ready(function() {
     theme: 'bootstrap4',
     width: '100%'
   });
-  updatePartyList(); // Init
+  updatePartyList();
+
+  var preDirection = {{ preselected_direction|default('incoming')|tojson }};
+  var prePartyType = {{ preselected_party_type|default('customer')|tojson }};
+  var prePartyId = {{ preselected_party_id|default(none)|tojson }};
+  var preAmount = {{ preselected_amount|default(none)|tojson }};
+
+  if (preDirection && preDirection !== 'incoming') {
+    selectDirection(preDirection);
+  }
+  if (prePartyType) {
+    $('#party_type').val(prePartyType);
+    updatePartyList();
+  }
+  if (prePartyId) {
+    $('#party_id').val(String(prePartyId)).trigger('change');
+  }
+  if (preAmount) {
+    $('#amount').val(preAmount);
+  }
 });
 </script>
 {% endblock %}

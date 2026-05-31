@@ -7,11 +7,15 @@ from utils.decorators import permission_required, admin_required, branch_scope_i
 from flask import abort
 from decimal import Decimal
 from utils.branching import (
+    get_accessible_warehouses,
+    get_accessible_branches_query,
     get_accessible_warehouse_ids,
     get_branch_stock_map,
     ensure_warehouse_access,
     should_show_all_branch_columns,
 )
+from utils.tenanting import tenant_get_or_404
+from utils.tenanting import scoped_user_query, get_active_tenant_id
 
 warehouse_bp = Blueprint('warehouse', __name__, url_prefix='/warehouse')
 
@@ -184,7 +188,7 @@ def out_of_stock():
 @login_required
 @permission_required('manage_warehouse')
 def view_warehouse(id):
-    warehouse = Warehouse.query.get_or_404(id)
+    warehouse = tenant_get_or_404(Warehouse, id)
     branch_id = branch_scope_id()
     if branch_id is not None and warehouse.branch_id != branch_id:
         abort(403)
@@ -220,9 +224,8 @@ def create_warehouse():
     from models import User
     
     parent_warehouses = Warehouse.query.filter_by(is_active=True, parent_id=None).all()
-    # Filter out owner to hide them from selection
-    users = User.query.filter_by(is_active=True, is_owner=False).all()
-    branches = Branch.query.all()
+    users = scoped_user_query(active_only=True, exclude_owners=True).all()
+    branches = get_accessible_branches_query(current_user).order_by(Branch.is_main.desc(), Branch.code, Branch.name).all()
     
     if request.method == 'POST':
         try:
@@ -234,7 +237,20 @@ def create_warehouse():
             manager_id = request.form.get('manager_id', type=int) or None
             branch_id = request.form.get('branch_id', type=int) or None
             is_main = request.form.get('is_main') == 'on'
-            
+            warehouse_type = request.form.get('warehouse_type') or Warehouse.TYPE_PHYSICAL
+            if warehouse_type not in Warehouse.WAREHOUSE_TYPES:
+                warehouse_type = Warehouse.TYPE_PHYSICAL
+
+            tenant_id = get_active_tenant_id(current_user)
+            if warehouse_type == Warehouse.TYPE_ONLINE:
+                is_main = False
+                parent_id = None
+                if tenant_id:
+                    from services.store_service import StoreService
+                    StoreService.assert_single_online_warehouse(tenant_id)
+                if not location:
+                    location = 'Online / أونلاين'
+
             if not name:
                 flash('اسم المستودع مطلوب', 'warning')
                 return render_template('warehouse/create_warehouse.html',
@@ -279,6 +295,7 @@ def create_warehouse():
                                            form_data=request.form)
             
             warehouse = Warehouse(
+                tenant_id=tenant_id,
                 name=name,
                 name_ar=name_ar,
                 code=code,
@@ -287,16 +304,33 @@ def create_warehouse():
                 parent_id=parent_id,
                 is_main=is_main,
                 manager_id=manager_id,
+                warehouse_type=warehouse_type,
                 is_active=True
             )
             
             db.session.add(warehouse)
+            db.session.flush()
+
+            if warehouse_type == Warehouse.TYPE_ONLINE and tenant_id:
+                from services.store_service import StoreService
+                store = StoreService.get_tenant_store(tenant_id, create=True)
+                if store and store.warehouse_id != warehouse.id:
+                    store.warehouse_id = warehouse.id
+
             db.session.commit()
             
-            warehouse_type = "فرعي" if parent_id else "مستقل"
-            flash(f'✓ تم إنشاء المستودع {warehouse_type} "{name}" بنجاح', 'success')
+            type_label = 'أونلاين' if warehouse_type == Warehouse.TYPE_ONLINE else ('فرعي' if parent_id else 'مستقل')
+            flash(f'✓ تم إنشاء المستودع ({type_label}) "{name}" بنجاح', 'success')
             return redirect(url_for('warehouse.list_warehouses'))
             
+        except ValueError as e:
+            db.session.rollback()
+            flash(str(e), 'warning')
+            return render_template('warehouse/create_warehouse.html',
+                                   parent_warehouses=parent_warehouses,
+                                   users=users,
+                                   branches=branches,
+                                   form_data=request.form)
         except Exception as e:
             db.session.rollback()
             flash(f'خطأ في إنشاء المستودع: {str(e)}', 'error')
@@ -333,7 +367,7 @@ def list_warehouses():
 @admin_required
 def delete_warehouse(id):
     """حذف مستودع"""
-    warehouse = Warehouse.query.get_or_404(id)
+    warehouse = tenant_get_or_404(Warehouse, id)
     
     # Check if main warehouse
     if warehouse.is_main:
@@ -365,7 +399,7 @@ def delete_warehouse(id):
 @permission_required('manage_warehouse')
 def add_stock(product_id):
     try:
-        product = Product.query.get_or_404(product_id)
+        product = tenant_get_or_404(Product, product_id)
         quantity = Decimal(request.form.get('quantity', 0))
         notes = request.form.get('notes', '').strip()
         warehouse_id = request.form.get('warehouse_id', type=int)

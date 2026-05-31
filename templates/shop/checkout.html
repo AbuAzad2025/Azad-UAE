@@ -1,0 +1,106 @@
+{% extends 'shop/base.html' %}
+{% block title %}{{ t('checkout') }} — {{ store.title }}{% endblock %}
+
+{% block content %}
+<h2 style="margin:0 0 1.25rem;font-weight:800;">{{ t('checkout') }}</h2>
+
+{% if not payment_methods %}
+<div class="ps-alert ps-alert-warning">{{ t('no_payment_methods') }}</div>
+{% else %}
+
+<div class="ps-layout-2">
+  <div class="ps-panel">
+    <h3>{{ t('place_order') }}</h3>
+    {% if store.delivery_note %}
+    <p style="margin:0 0 1rem;font-size:0.88rem;color:var(--ps-muted);">{{ store.delivery_note }}</p>
+    {% endif %}
+
+    <form method="post" action="{{ url_for('shop.checkout', slug=store.store_slug) }}" id="checkout-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="ps-hp" aria-hidden="true">
+        <label>Website</label>
+        <input type="text" name="website" tabindex="-1" autocomplete="off">
+      </div>
+
+      <div class="ps-form-group">
+        <label>{{ t('payment_method') }} *</label>
+        <div class="ps-pay-methods" role="radiogroup">
+          {% for pm in payment_methods %}
+          <label class="ps-pay-option">
+            <input type="radio" name="payment_method" value="{{ pm.code }}" {% if loop.first %}checked{% endif %} required data-hint="{{ payment_hint(pm)|e }}">
+            <span class="ps-pay-card">
+              <i class="{{ pm.icon }}"></i>
+              <span class="ps-pay-name">{{ pm.display_name(lang) }}</span>
+            </span>
+          </label>
+          {% endfor %}
+        </div>
+        <div id="ps-pay-hint" class="ps-pay-hint" style="display:none;"></div>
+      </div>
+
+      <div class="ps-form-group">
+        <label for="customer_name">{{ t('name') }} *</label>
+        <input type="text" id="customer_name" name="customer_name" required minlength="2" autocomplete="name" value="{{ prefilled.name or '' }}">
+      </div>
+      <div class="ps-form-group">
+        <label for="phone">{{ t('phone') }} *</label>
+        <input type="tel" id="phone" name="phone" required autocomplete="tel" value="{{ prefilled.phone or '' }}">
+      </div>
+      <div class="ps-form-group">
+        <label for="address">{{ t('address') }} *</label>
+        <textarea id="address" name="address" rows="3" required autocomplete="street-address">{{ prefilled.address or '' }}</textarea>
+      </div>
+      <div class="ps-form-group">
+        <label for="coupon_code">{{ t('coupon_code') }}</label>
+        <input type="text" id="coupon_code" name="coupon_code" class="form-control" dir="ltr" value="{{ coupon_code or '' }}" placeholder="PALESTINE10">
+      </div>
+      <div class="ps-form-group">
+        <label for="notes">{{ t('notes') }}</label>
+        <textarea id="notes" name="notes" rows="2"></textarea>
+      </div>
+      <p style="font-size:0.82rem;color:var(--ps-muted);margin-bottom:1rem;"><i class="fas fa-lock"></i> {{ t('secure_checkout') }}</p>
+      <button type="submit" class="ps-btn ps-btn-primary ps-btn-block" style="padding:0.9rem;">{{ t('place_order') }}</button>
+    </form>
+  </div>
+
+  <div class="ps-panel">
+    <h3>{{ t('cart') }}</h3>
+    {% for line in totals.lines %}
+    <div class="ps-summary-row">
+      <span>{{ line.product.get_display_name(lang) }} × {{ line.quantity|int }}</span>
+      <span>{{ '%.2f'|format(line.line_total) }}</span>
+    </div>
+    {% endfor %}
+    <div class="ps-summary-row total">
+      <span>{{ t('total') }}</span>
+      <span>{{ '%.2f'|format(totals.subtotal) }} {{ tenant.default_currency or 'AED' }}</span>
+    </div>
+    {% if min_order and min_order > 0 %}
+    <p style="font-size:0.82rem;color:var(--ps-muted);margin-top:0.75rem;">{{ t('free_from') }}: {{ '%.2f'|format(min_order) }}</p>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  var hintEl = document.getElementById('ps-pay-hint');
+  var radios = document.querySelectorAll('input[name="payment_method"]');
+  function updateHint() {
+    var sel = document.querySelector('input[name="payment_method"]:checked');
+    if (!sel || !hintEl) return;
+    var text = (sel.getAttribute('data-hint') || '').trim();
+    if (text) {
+      hintEl.textContent = text;
+      hintEl.style.display = 'block';
+    } else {
+      hintEl.style.display = 'none';
+    }
+  }
+  radios.forEach(function (r) { r.addEventListener('change', updateHint); });
+  updateHint();
+})();
+</script>
+{% endblock %}

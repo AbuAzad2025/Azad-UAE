@@ -90,12 +90,13 @@ COUNTRIES = [
 # مصدر واحد لرموز الصلاحيات (Backend + Frontend)
 PERMISSION_CODES = [
     'manage_sales', 'manage_purchases', 'manage_products', 'manage_customers', 'manage_suppliers',
-    'manage_payments', 'manage_expenses', 'view_reports', 'manage_warehouse', 'view_ledger', 'manage_ledger',
+    'manage_payments', 'manage_expenses', 'view_reports', 'manage_warehouse', 'manage_store', 'view_ledger', 'manage_ledger',
     'admin', 'manage_users', 'manage_backups', 'manage_payroll',
 ]
 
 # --- Unified Enums (canonical values only) ---
 SALE_PAYMENT_STATUSES = ('paid', 'partial', 'unpaid')
+SALE_SOURCES = ('internal', 'online_store')
 CHEQUE_STATUSES = ('pending', 'deposited', 'cleared', 'bounced', 'cancelled', 'under_collection')
 PAYMENT_TYPES = (
     'sale_payment', 'supplier_payment', 'bill_payment', 'refund',
@@ -137,6 +138,7 @@ PERMISSIONS = {
     'manage_expenses': {'ar': 'إدارة المصروفات', 'en': 'Manage Expenses'},
     'view_reports': {'ar': 'عرض التقارير', 'en': 'View Reports'},
     'manage_warehouse': {'ar': 'إدارة المستودعات', 'en': 'Manage Warehouse'},
+    'manage_store': {'ar': 'إدارة المتجر الإلكتروني', 'en': 'Manage Online Store'},
     'view_ledger': {'ar': 'عرض دفتر الأستاذ', 'en': 'View Ledger'},
     'manage_ledger': {'ar': 'إدارة دفتر الأستاذ', 'en': 'Manage Ledger'},
     'admin': {'ar': 'لوحة التحكم الإدارية', 'en': 'Admin Dashboard'},

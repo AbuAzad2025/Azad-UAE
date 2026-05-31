@@ -18,8 +18,9 @@
 - `services/`: منطق الأعمال والخدمات.
 - `templates/`: واجهات HTML.
 - `static/`: الأصول الأمامية (CSS/JS).
-- `migrations/`: ملفات ترحيل قاعدة البيانات.
-- `seed_comprehensive.py`: بذور بيانات تشغيلية للتجهيز الأولي.
+- `migrations/`: ترحيلات Alembic (head: `accounting_scope_001`).
+- `runtime_core/`: إصلاحات idempotent عند startup.
+- `utils/system_init.py`: تهيئة owner، أدوار، COA، tenant افتراضي.
 
 ### متطلبات التشغيل
 
@@ -27,7 +28,7 @@
 - PostgreSQL
 - ملف إعدادات بيئة مبني على `env.example`
 
-### تشغيل سريع (تهيئة أولية)
+### النشر (قاعدة بيانات نظيفة)
 
 ```bash
 python -m venv .venv
@@ -35,10 +36,29 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-ثم:
-- اضبط متغيرات البيئة عبر نسخة من `env.example`.
-- شغّل migrations.
-- شغّل `seed_comprehensive.py` عند الحاجة.
+```bash
+# .env من env.example — DATABASE_URL, MASTER_KEY, APP_ENV=production
+python -m flask db upgrade
+python -m flask db current    # accounting_scope_001 (head)
+python app.py
+```
+
+**لا تضبط `SKIP_SYSTEM_INTEGRITY=1` في الإنتاج.**
+
+### ما يحدث تلقائياً عند التشغيل
+
+| العنصر | المصدر |
+|--------|--------|
+| الجداول، الصلاحيات، owner | `ensure_system_integrity` في `app.py` |
+| عملات، COA أساسي، مستودع | `_ensure_core_data()` |
+| tenant افتراضي | `Tenant.get_current()` |
+| COA كامل per tenant | `GLService.ensure_core_accounts()` عند أول قيد |
+| ترحيل GL | `post_or_fail` في services |
+| استهلاك الأصول | واجهة `/ledger/run-depreciation` |
+
+بعد أول تشغيل: سجّل دخول `owner` بـ `MASTER_KEY`، ثم أنشئ الشركات والفروع والمستخدمين من الواجهة.
+
+**لا سكriptات CLI خارجية** — أي تجهيز إضاف يُبنى داخل النظام (routes/services).
 
 ### سياسة الأمان
 
@@ -72,8 +92,9 @@ The purpose of this repository is to maintain a stable, clean, and deployment-re
 - `services/`: business logic layer.
 - `templates/`: HTML views.
 - `static/`: frontend assets (CSS/JS).
-- `migrations/`: database migration files.
-- `seed_comprehensive.py`: initial operational seed data.
+- `migrations/`: Alembic migrations (head: `accounting_scope_001`).
+- `runtime_core/`: idempotent startup repairs.
+- `utils/system_init.py`: owner, roles, COA, default tenant bootstrap.
 
 ### Runtime Requirements
 
@@ -81,7 +102,7 @@ The purpose of this repository is to maintain a stable, clean, and deployment-re
 - PostgreSQL
 - environment configuration based on `env.example`
 
-### Quick Start (initial setup)
+### Deployment (clean database)
 
 ```bash
 python -m venv .venv
@@ -89,10 +110,18 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-Then:
-- configure environment variables from `env.example`;
-- run migrations;
-- run `seed_comprehensive.py` if seed data is needed.
+```bash
+# .env from env.example — DATABASE_URL, MASTER_KEY, APP_ENV=production
+python -m flask db upgrade
+python -m flask db current
+python app.py
+```
+
+Do **not** set `SKIP_SYSTEM_INTEGRITY=1` in production.
+
+On first start the app creates owner, roles, core COA, and default tenant automatically. Sign in as `owner` with `MASTER_KEY`, then configure companies, branches, and users in the UI.
+
+No external CLI scripts — extend via routes/services inside the codebase.
 
 ### Security Policy
 

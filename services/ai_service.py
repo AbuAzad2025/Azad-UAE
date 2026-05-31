@@ -974,12 +974,20 @@ class AIService:
             from extensions import db
             from datetime import datetime, timedelta
             from flask import current_app
+            from flask_login import current_user as flask_current_user
             from sqlalchemy import func
-            
+            from utils.tenanting import scoped_user_query
+
             data_parts = []
-            
-            # 📊 إحصائيات شاملة للنظام (دائماً)
-            users_count = User.query.count()
+
+            ctx_user = None
+            if local_result.get('context'):
+                ctx_user = local_result.get('context', {}).get('current_user')
+            if ctx_user is None and flask_current_user.is_authenticated:
+                ctx_user = flask_current_user
+
+            # 📊 إحصائيات الشركة النشطة (User معفى من ORM — scoped يدوياً)
+            users_count = scoped_user_query(ctx_user, exclude_owners=True).count()
             customers_count = Customer.query.filter_by(is_active=True).count()
             suppliers_count = Supplier.query.filter_by(is_active=True).count()
             products_count = Product.query.filter_by(is_active=True).count()

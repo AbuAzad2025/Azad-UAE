@@ -4,18 +4,24 @@ from extensions import db
 from models import PartnerCommissionEntry, Sale, SaleLine, Payment
 from services.stock_service import StockService
 from services.currency_service import CurrencyService
+from services.gl_posting import post_or_fail, GlPostingError
+from utils.gl_reference_types import GLRef
+from services.commission_gl_service import post_sale_commissions
 from services.gl_service import GLService
 from utils.branching import ensure_warehouse_access
 from utils.constants import normalize_payment_method_code
 from utils.helpers import generate_number
 from utils.tenanting import get_active_tenant_id
+from utils.tax_settings import normalize_tax_rate, should_post_vat_gl
 
 
 class SaleService:
     
     @staticmethod
     def create_sale(customer, seller, lines_data, warehouse_id=None, currency=None, user_exchange_rate=None, 
-                    discount_amount=0, shipping_cost=0, tax_rate=0, notes=None, payment_data=None):
+                    discount_amount=0, shipping_cost=0, tax_rate=0, notes=None, payment_data=None,
+                    source='internal', sale_status=None, checkout_payment_method=None,
+                    defer_fulfillment=False):
         """
         Create a new sale with proper validations and decimal precision
         All financial calculations use Decimal for accuracy
@@ -38,19 +44,16 @@ class SaleService:
             except Exception:
                 currency = 'AED'
         
-        # Validate discount and tax
+        # Validate discount and tax (rate finalized after tenant/warehouse resolved)
         discount_decimal = Decimal(str(discount_amount)) if discount_amount else Decimal('0')
         shipping_decimal = Decimal(str(shipping_cost)) if shipping_cost else Decimal('0')
-        tax_rate_decimal = Decimal(str(tax_rate)) if tax_rate else Decimal('0')
+        raw_tax_rate = Decimal(str(tax_rate)) if tax_rate else Decimal('0')
         
         if discount_decimal < Decimal('0'):
             raise ValueError('قيمة الخصم لا يمكن أن تكون سالبة')
         
         if shipping_decimal < Decimal('0'):
             raise ValueError('تكلفة الشحن لا يمكن أن تكون سالبة')
-        
-        if tax_rate_decimal < Decimal('0') or tax_rate_decimal > Decimal('100'):
-            raise ValueError('نسبة الضريبة يجب أن تكون بين 0 و 100')
         
         # تحديد المستودع بطريقة ذكية
         from models import Warehouse
@@ -71,6 +74,7 @@ class SaleService:
         
         sale_branch_id = warehouse.branch_id or seller.branch_id
         tenant_id = get_active_tenant_id(seller) or getattr(seller, 'tenant_id', None) or getattr(customer, 'tenant_id', None)
+        tax_rate_decimal = normalize_tax_rate(raw_tax_rate, tenant_id)
 
         try:
             sale_number = generate_number('S', Sale, 'sale_number', branch_id=sale_branch_id)
@@ -283,126 +287,19 @@ class SaleService:
             sale.calculate_totals()
             
             db.session.flush()
-            
-            # تمرير warehouse_id لحركات المخزون
-            StockService.process_sale_lines(sale, warehouse_id)
-            
-            if payment_data and payment_data.get('amount', 0) > 0:
-                payment = SaleService.create_payment_for_sale(
-                    sale=sale,
-                    amount=payment_data['amount'],
-                    payment_method=payment_data['payment_method'],
-                    currency=payment_data.get('currency', 'AED'),
-                    exchange_rate=payment_data.get('exchange_rate', 1.0),
-                    reference_number=payment_data.get('reference_number'),
-                    cheque_number=payment_data.get('cheque_number'),
-                    cheque_date=payment_data.get('cheque_date'),
-                    bank_name=payment_data.get('bank_name'),
-                    notes=payment_data.get('notes')
-                )
-            
-            customer.total_purchases += sale.amount_aed
-            customer.update_classification()
-            
-            # Post to General Ledger with proper decimal precision
-            GLService.ensure_core_accounts()
-            
-            # Calculate COGS with proper decimal precision
-            cogs_total = sum(
-                (Decimal(str(line.cost_price)) * Decimal(str(line.quantity)) 
-                    for line in sale.lines), 
-                Decimal('0')
-            )
-            cogs_total_aed = (cogs_total * exchange_rate).quantize(
-                Decimal('0.001'), rounding=ROUND_HALF_UP
-            )
-            
-            # Determine AR Account based on Customer Type
-            ar_account = '1130' # Default Accounts Receivable
-            if customer.customer_type == 'partner':
-                ar_account = '3350' # Partner Current Account
-            elif customer.customer_type == 'merchant':
-                ar_account = '2115' # Merchants Payable
 
-            # Prepare GL lines with proper decimal precision
-            # AR and Revenue should be in Transaction Currency (Foreign)
-            # GLService.post_entry will handle conversion to AED
-            
-            lines = [
-                {
-                    'account': ar_account,
-                    'debit': sale.total_amount, # Use Foreign Amount
-                    'description': f'فاتورة {sale.sale_number}'
-                },
-                {
-                    'account': '4100',
-                    'credit': sale.subtotal, # Use Foreign Amount (Gross Revenue)
-                    'description': 'إيرادات المبيعات'
-                },
-            ]
-            
-            if sale.shipping_cost > Decimal('0'):
-                lines.append({
-                    'account': '4300',
-                    'credit': sale.shipping_cost, # Use Foreign Amount
-                    'description': 'إيرادات الشحن'
-                })
-            
-            if sale.discount_amount > Decimal('0'):
-                lines.append({
-                    'account': '5200',
-                    'debit': sale.discount_amount, # Use Foreign Amount
-                    'description': 'خصومات ممنوحة'
-                })
-            
-            if sale.tax_amount > Decimal('0'):
-                lines.append({
-                    'account': '2130',
-                    'credit': sale.tax_amount, # Use Foreign Amount
-                    'description': 'ضرائب مستحقة'
-                })
-            
-            # Post Sales Revenue Entry (in Transaction Currency)
-            GLService.post_entry(
-                lines, 
-                description=f'Sale {sale.sale_number}', 
-                reference_type='Sale', 
-                reference_id=sale.id, 
-                currency=sale.currency, 
-                exchange_rate=sale.exchange_rate,
-                branch_id=sale.branch_id
-            )
-            
-            # COGS Entry (Always in Base Currency AED)
-            if cogs_total_aed > Decimal('0'):
-                cogs_lines = [
-                    {
-                        'account': '5100',
-                        'debit': cogs_total_aed,
-                        'description': 'تكلفة البضاعة المباعة'
-                    },
-                    {
-                        'account': '1140',
-                        'credit': cogs_total_aed,
-                        'description': 'خصم من المخزون'
-                    }
-                ]
-                
-                GLService.post_entry(
-                    cogs_lines,
-                    description=f'COGS - Sale {sale.sale_number}',
-                    reference_type='Sale',
-                    reference_id=sale.id,
-                    currency='AED',
-                    exchange_rate=1.0,
-                    branch_id=sale.branch_id
-                )
+            sale.source = source or 'internal'
+            if sale_status:
+                sale.status = sale_status
+            if checkout_payment_method:
+                sale.checkout_payment_method = str(checkout_payment_method).strip().lower()[:50]
 
-            # تحديث رصيد العميل التراكمي بالدرهم (ذمم علينا) بناءً على amount_aed
-            from decimal import Decimal as _D
-            customer.apply_sale(_D(str(sale.amount_aed or 0)))
-            if paid_amount_aed > Decimal('0'):
-                customer.apply_receipt(_D(str(paid_amount_aed)))
+            if defer_fulfillment:
+                db.session.commit()
+                current_app.logger.info(f'Sale created (deferred): {sale.sale_number}')
+                return sale
+
+            SaleService.fulfill_sale(sale, payment_data=payment_data, paid_amount_aed=paid_amount_aed)
 
             db.session.commit()
             
@@ -416,7 +313,176 @@ class SaleService:
             raise
     
     @staticmethod
-    def create_payment_for_sale(sale, amount, payment_method, currency='AED', exchange_rate=1.0, 
+    def fulfill_sale(sale, payment_data=None, paid_amount_aed=None):
+        """
+        Deduct stock, post GL, commissions, and customer balances for an existing sale.
+        Used at POS checkout and when confirming deferred online store orders.
+        """
+        customer = sale.customer
+        if not customer:
+            raise ValueError('العميل غير موجود')
+
+        warehouse_id = sale.warehouse_id
+        tenant_id = getattr(sale, 'tenant_id', None)
+        exchange_rate = Decimal(str(sale.exchange_rate or 1))
+
+        if SaleService.has_inventory_posted(sale):
+            raise ValueError('تم تنفيذ المخزون لهذه الفاتورة مسبقاً')
+
+        for line in sale.lines:
+            available, msg = StockService.check_availability_in_warehouse(
+                line.product_id, line.quantity, warehouse_id
+            )
+            if not available:
+                product_name = line.product.name if line.product else str(line.product_id)
+                raise ValueError(f'{product_name}: {msg}')
+
+        StockService.process_sale_lines(sale, warehouse_id)
+
+        paid_aed = Decimal(str(paid_amount_aed)) if paid_amount_aed is not None else Decimal('0')
+        if payment_data and payment_data.get('amount', 0) > 0:
+            paid_amount = Decimal(str(payment_data.get('amount', 0)))
+            payment_exchange_rate = payment_data.get('exchange_rate', 1.0)
+            payment_exchange_decimal = Decimal(str(payment_exchange_rate)) if payment_exchange_rate else Decimal('1')
+            paid_aed = (paid_amount * payment_exchange_decimal).quantize(
+                Decimal('0.001'), rounding=ROUND_HALF_UP
+            )
+            if paid_aed < Decimal('0'):
+                raise ValueError('مبلغ الدفع لا يمكن أن يكون سالب')
+
+            sale.paid_amount = paid_amount
+            sale.paid_amount_aed = paid_aed
+            if paid_aed > sale.amount_aed:
+                overpayment = paid_aed - sale.amount_aed
+                payment_note = f"\n[دفع زائد] مبلغ {overpayment} AED سُجّل كرصيد للزبون"
+                sale.notes = (sale.notes or '') + payment_note
+
+            payment_currency = payment_data.get('currency', 'AED')
+            if payment_currency != 'AED':
+                payment_note = (
+                    f"\n[دفعة] {paid_amount} {payment_currency} = {paid_aed} AED "
+                    f"(سعر: {payment_exchange_rate})"
+                )
+                sale.notes = (sale.notes or '') + payment_note
+
+            SaleService.create_payment_for_sale(
+                sale=sale,
+                amount=payment_data['amount'],
+                payment_method=payment_data['payment_method'],
+                currency=payment_data.get('currency', 'AED'),
+                exchange_rate=payment_data.get('exchange_rate', 1.0),
+                reference_number=payment_data.get('reference_number'),
+                cheque_number=payment_data.get('cheque_number'),
+                cheque_date=payment_data.get('cheque_date'),
+                bank_name=payment_data.get('bank_name'),
+                notes=payment_data.get('notes'),
+            )
+
+        sale.calculate_totals()
+        customer.total_purchases += sale.amount_aed
+        customer.update_classification()
+
+        GLService.ensure_core_accounts(tenant_id=tenant_id)
+
+        cogs_total = sum(
+            (Decimal(str(line.cost_price)) * Decimal(str(line.quantity)) for line in sale.lines),
+            Decimal('0'),
+        )
+        cogs_total_aed = (cogs_total * exchange_rate).quantize(
+            Decimal('0.001'), rounding=ROUND_HALF_UP
+        )
+
+        ar_account = '1130'
+        if customer.customer_type == 'partner':
+            ar_account = '3350'
+        elif customer.customer_type == 'merchant':
+            ar_account = '2115'
+
+        gl_lines = [
+            {
+                'account': ar_account,
+                'debit': sale.total_amount,
+                'description': f'فاتورة {sale.sale_number}',
+            },
+            {
+                'account': '4100',
+                'credit': sale.subtotal,
+                'description': 'إيرادات المبيعات',
+            },
+        ]
+
+        if sale.shipping_cost > Decimal('0'):
+            gl_lines.append({
+                'account': '4300',
+                'credit': sale.shipping_cost,
+                'description': 'إيرادات الشحن',
+            })
+
+        if sale.discount_amount > Decimal('0'):
+            gl_lines.append({
+                'account': '5200',
+                'debit': sale.discount_amount,
+                'description': 'خصومات ممنوحة',
+            })
+
+        if sale.tax_amount > Decimal('0') and should_post_vat_gl(tenant_id):
+            gl_lines.append({
+                'account': '2130',
+                'credit': sale.tax_amount,
+                'description': 'ضرائب مستحقة',
+            })
+
+        post_or_fail(
+            gl_lines,
+            description=f'Sale {sale.sale_number}',
+            reference_type=GLRef.SALE,
+            reference_id=sale.id,
+            currency=sale.currency,
+            exchange_rate=sale.exchange_rate,
+            branch_id=sale.branch_id,
+        )
+
+        if cogs_total_aed > Decimal('0'):
+            cogs_lines = [
+                {
+                    'account': '5100',
+                    'debit': cogs_total_aed,
+                    'description': 'تكلفة البضاعة المباعة',
+                },
+                {
+                    'account': '1140',
+                    'credit': cogs_total_aed,
+                    'description': 'خصم من المخزون',
+                },
+            ]
+            post_or_fail(
+                cogs_lines,
+                description=f'COGS - Sale {sale.sale_number}',
+                reference_type=GLRef.SALE_COGS,
+                reference_id=sale.id,
+                currency='AED',
+                exchange_rate=1.0,
+                branch_id=sale.branch_id,
+            )
+
+        post_sale_commissions(sale)
+
+        from decimal import Decimal as _D
+        customer.apply_sale(_D(str(sale.amount_aed or 0)))
+        if paid_aed > Decimal('0'):
+            customer.apply_receipt(_D(str(paid_aed)))
+
+    @staticmethod
+    def has_inventory_posted(sale):
+        from models.warehouse import StockMovement
+        return StockMovement.query.filter_by(
+            reference_type=GLRef.SALE,
+            reference_id=sale.id,
+            movement_type='sale',
+        ).first() is not None
+    
+    @staticmethod
+    def create_payment_for_sale(sale, amount, payment_method, currency='AED', exchange_rate=1.0,
                                 reference_number=None, cheque_number=None, cheque_date=None, 
                                 bank_name=None, notes=None):
         """
@@ -512,40 +578,34 @@ class SaleService:
 
         # GL Integration for Payment
         try:
-            GLService.ensure_core_accounts()
-            
-            # Debit: Cash/Bank (Asset)
-            # Credit: Account Receivable (Asset - Reducing it)
+            GLService.ensure_core_accounts(tenant_id=getattr(sale, 'tenant_id', None))
             
             debit_account = GLService.get_payment_debit_account(payment_method)
-            
-            # Determine Credit Account (AR)
             credit_account = GLService.get_customer_credit_account(sale.customer)
 
-            lines = [
-                {
-                    'account': debit_account, 
-                    'debit': amount_decimal, 
-                    'description': f'Payment for Sale {sale.sale_number} ({payment_method})'
-                },
-                {
-                    'account': credit_account, # Accounts Receivable
-                    'credit': amount_decimal, 
-                    'description': f'Payment Received {payment.payment_number}'
-                }
-            ]
-            
-            GLService.post_entry(
-                lines, 
+            post_or_fail(
+                [
+                    {
+                        'account': debit_account, 
+                        'debit': amount_decimal, 
+                        'description': f'Payment for Sale {sale.sale_number} ({payment_method})'
+                    },
+                    {
+                        'account': credit_account,
+                        'credit': amount_decimal, 
+                        'description': f'Payment Received {payment.payment_number}'
+                    }
+                ],
                 description=f'Payment {payment.payment_number}', 
-                reference_type='Payment', 
+                reference_type=GLRef.PAYMENT, 
                 reference_id=payment.id, 
                 currency=currency, 
                 exchange_rate=exchange_rate_decimal,
                 branch_id=sale.branch_id
             )
         except Exception as e:
-            current_app.logger.warning(f'GL posting failed for payment: {e}')
+            current_app.logger.error(f'GL posting failed for payment: {e}')
+            raise
         
         return payment
     
@@ -556,17 +616,26 @@ class SaleService:
         
         sale.status = 'cancelled'
         
-        StockService.reverse_sale(sale)
+        if SaleService.has_inventory_posted(sale):
+            StockService.reverse_sale(sale)
         
-        # Reverse GL Entry for Sale (Revenue & AR)
-        try:
-            GLService.reverse_entry(
-                reference_type='Sale',
-                reference_id=sale.id,
-                description=f'Reverse Sale {sale.sale_number} (Cancelled)'
-            )
-        except Exception as e:
-            current_app.logger.error(f'Failed to reverse GL entry for cancelled sale {sale.id}: {e}')
+            # Reverse GL Entry for Sale (Revenue & AR)
+            try:
+                GLService.reverse_entry(
+                    reference_type=GLRef.SALE,
+                    reference_id=sale.id,
+                    description=f'Reverse Sale {sale.sale_number} (Cancelled)',
+                    tenant_id=getattr(sale, 'tenant_id', None),
+                )
+                GLService.reverse_entry(
+                    reference_type=GLRef.SALE_COGS,
+                    reference_id=sale.id,
+                    description=f'Reverse COGS {sale.sale_number} (Cancelled)',
+                    tenant_id=getattr(sale, 'tenant_id', None),
+                )
+            except Exception as e:
+                db.session.rollback()
+                raise ValueError(f'فشل عكس القيد المحاسبي: {e}') from e
             
         db.session.commit()
         

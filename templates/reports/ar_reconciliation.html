@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - مطابقة الذمم{% endblock %}
+{% block page_title %}مطابقة الذمم — GL vs العمليات{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-body py-2">
+        <form method="get" class="form-inline">
+          <label class="mr-2">الفرع:</label>
+          <select name="branch_id" class="form-control mr-2" onchange="this.form.submit()">
+            <option value="">-- الكل --</option>
+            {% for branch in branches %}
+            <option value="{{ branch.id }}" {% if selected_branch == branch.id %}selected{% endif %}>{{ branch.name }}</option>
+            {% endfor %}
+          </select>
+          <a href="{{ url_for('reports.receivables') }}" class="btn btn-outline-secondary ml-auto">
+            <i class="fas fa-user-clock mr-1"></i>تقرير أعمار الذمم
+          </a>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header bg-gradient-primary d-flex justify-content-between align-items-center">
+    <h3 class="card-title text-white mb-0">
+      <i class="fas fa-balance-scale mr-2"></i>مطابقة الذمم (1130 + 3350 + 2115)
+    </h3>
+    {% if report.all_matched %}
+    <span class="badge badge-success"><i class="fas fa-check"></i> متطابق</span>
+    {% else %}
+    <span class="badge badge-warning"><i class="fas fa-exclamation-triangle"></i> فروقات</span>
+    {% endif %}
+  </div>
+  <div class="card-body p-0">
+    <table class="table table-bordered table-striped mb-0">
+      <thead class="thead-light">
+        <tr>
+          <th>كود الحساب</th>
+          <th>الوصف</th>
+          <th class="text-left">رصيد GL (AED)</th>
+          <th class="text-left">ذمم تشغيلية — فواتير غير مدفوعة (AED)</th>
+          <th class="text-left">الفرق (GL − تشغيلي)</th>
+          <th class="text-center">الحالة</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in report.rows %}
+        <tr>
+          <td><code>{{ row.code }}</code></td>
+          <td>{{ row.label }}</td>
+          <td class="text-left">{{ '{:,.2f}'.format(row.gl_balance) }}</td>
+          <td class="text-left">{{ '{:,.2f}'.format(row.ops_balance) }}</td>
+          <td class="text-left {% if row.difference|abs > 1 %}text-danger font-weight-bold{% endif %}">
+            {{ '{:,.2f}'.format(row.difference) }}
+          </td>
+          <td class="text-center">
+            {% if row.matched %}
+            <span class="badge badge-success">OK</span>
+            {% else %}
+            <span class="badge badge-warning">مراجعة</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot class="bg-light font-weight-bold">
+        <tr>
+          <td colspan="2">الإجمالي</td>
+          <td class="text-left">{{ '{:,.2f}'.format(report.total_gl) }}</td>
+          <td class="text-left">{{ '{:,.2f}'.format(report.total_ops) }}</td>
+          <td class="text-left">{{ '{:,.2f}'.format(report.total_difference) }}</td>
+          <td></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+  <div class="card-footer text-muted small">
+    <strong>1130</strong> — عملاء عاديون &nbsp;|&nbsp;
+    <strong>3350</strong> — شركاء &nbsp;|&nbsp;
+    <strong>2115</strong> — تجار. الذمم التشغيلية = مجموع (إجمالي الفاتورة − المدفوع) للفواتير المؤكدة حسب نوع العميل.
+  </div>
+</div>
+{% endblock %}

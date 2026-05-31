@@ -235,6 +235,37 @@
                                 </div>
                             </div>
                             
+                            <hr>
+                            <h5 class="border-bottom pb-2 mb-3" style="border-color:#006233!important;">
+                                <i class="fas fa-hand-holding-heart text-success"></i> تبرعات شركة أزاد
+                            </h5>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <div class="custom-control custom-switch">
+                                        <input type="checkbox" class="custom-control-input" id="donations_enabled" name="donations_enabled" {% if vault.donations_enabled %}checked{% endif %}>
+                                        <label class="custom-control-label" for="donations_enabled">تفعيل التبرعات</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="custom-control custom-switch">
+                                        <input type="checkbox" class="custom-control-input" id="donation_page_enabled" name="donation_page_enabled" {% if vault.donation_page_enabled %}checked{% endif %}>
+                                        <label class="custom-control-label" for="donation_page_enabled">صفحة <code>/donate</code></label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 form-group"><label>عنوان (عربي)</label><input class="form-control" name="donation_title_ar" value="{{ vault.donation_title_ar or 'ادعم شركة أزاد' }}"></div>
+                                <div class="col-md-6 form-group"><label>Title (EN)</label><input class="form-control" name="donation_title_en" value="{{ vault.donation_title_en or 'Support Azad' }}" dir="ltr"></div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 form-group"><label>مقدمة عربي</label><textarea class="form-control" name="donation_intro_ar" rows="2">{{ vault.donation_intro_ar or '' }}</textarea></div>
+                                <div class="col-md-6 form-group"><label>Intro EN</label><textarea class="form-control" name="donation_intro_en" rows="2" dir="ltr">{{ vault.donation_intro_en or '' }}</textarea></div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 form-group"><label>GL مدين (1120 بنك)</label><input class="form-control" name="donation_debit_account" value="{{ vault.donation_debit_account or '1120' }}" dir="ltr"></div>
+                                <div class="col-md-6 form-group"><label>GL دائن (4200 إيراد)</label><input class="form-control" name="donation_credit_account" value="{{ vault.donation_credit_account or '4200' }}" dir="ltr"></div>
+                            </div>
+                            
                             <!-- Payment Limits -->
                             <div class="row">
                                 <div class="col-md-4">

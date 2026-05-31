@@ -40,6 +40,10 @@ class Sale(db.Model):
     
     payment_status = db.Column(db.String(20), default='unpaid', index=True)
     status = db.Column(db.String(20), default='confirmed', index=True)
+    source = db.Column(db.String(30), default='internal', nullable=False, index=True)
+    checkout_payment_method = db.Column(db.String(50), nullable=True, index=True)
+    checkout_gateway_ref = db.Column(db.String(120), nullable=True)
+    coupon_code = db.Column(db.String(50), nullable=True)
     
     # Active status for consistency with other models
     is_active = db.Column(db.Boolean, default=True, nullable=False, index=True)

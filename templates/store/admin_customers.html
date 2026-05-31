@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}عملاء المتجر المسجّلون{% endblock %}
+{% block page_title %}
+<h1 class="mb-0"><i class="fas fa-user-friends mr-2"></i>عملاء المتجر (حسابات أونلاين)</h1>
+{% endblock %}
+{% block content %}
+<div class="alert alert-info"><i class="fas fa-info-circle mr-1"></i> الزوار غير المسجّلين يتصفحون فقط ويطلبون عبر واتساب. هنا من سجّل حساباً ويمكنه الشراء.</div>
+<div class="card">
+  <div class="card-body table-responsive p-0">
+    <table class="table table-hover mb-0">
+      <thead><tr><th>الاسم</th><th>Email</th><th>الهاتف</th><th>تاريخ التسجيل</th><th>آخر دخول</th><th></th></tr></thead>
+      <tbody>
+        {% for acc in accounts %}
+        <tr>
+          <td>{{ acc.name }}</td>
+          <td><code>{{ acc.email }}</code></td>
+          <td>{{ acc.phone or '—' }}</td>
+          <td>{{ acc.created_at.strftime('%Y-%m-%d') if acc.created_at else '—' }}</td>
+          <td>{{ acc.last_login_at.strftime('%Y-%m-%d %H:%M') if acc.last_login_at else '—' }}</td>
+          <td>{% if acc.customer_id %}<a href="{{ url_for('customers.view', id=acc.customer_id) }}" class="btn btn-xs btn-outline-primary">CRM</a>{% endif %}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="text-center text-muted py-4">لا حسابات بعد</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+<a href="{{ url_for('store.admin_index') }}" class="btn btn-secondary mt-3">رجوع</a>
+{% endblock %}

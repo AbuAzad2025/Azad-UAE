@@ -264,16 +264,18 @@ a.btn.btn-warning span {
                   <i class="fas fa-print"></i>
                 </a>
                 {% if sale.balance_due > 0 %}
-                <a href="{{ url_for('payments.create_from_sale', sale_id=sale.id) }}" 
+                <a href="{{ url_for('payments.create_voucher', direction='incoming', party_type='customer', party_id=sale.customer_id, amount=sale.balance_due) }}" 
                    class="btn btn-success" title="سند دفع">
                   <i class="fas fa-credit-card"></i>
                 </a>
                 {% endif %}
+                {% if current_user.is_owner %}
                 <button type="button" class="btn btn-danger" 
                         onclick="deleteItem('sales', {{ sale.id }}, '{{ sale.sale_number }}')" 
                         title="حذف">
                   <i class="fas fa-trash"></i>
                 </button>
+                {% endif %}
               </div>
             </td>
           </tr>
@@ -281,6 +283,8 @@ a.btn.btn-warning span {
         </tbody>
       </table>
     </div>
+    {% set endpoint = 'sales.index' %}
+    {% include 'partials/flask_pagination.html' %}
   </div>
 </div>
 {% endblock %}

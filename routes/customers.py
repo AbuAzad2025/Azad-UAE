@@ -297,6 +297,7 @@ def create():
                 address=form.address.data,
                 tax_number=form.tax_number.data,
                 preferred_currency=form.preferred_currency.data,
+                is_active=bool(form.is_active.data),
                 notes=form.notes.data
             )
             
@@ -320,7 +321,7 @@ def create():
 @login_required
 @permission_required('manage_customers')
 def view(id):
-    customer = Customer.query.get_or_404(id)
+    customer = tenant_get_or_404(Customer, id)
     if not _customer_in_scope(id):
         return render_template('errors/403.html'), 403
     
@@ -344,7 +345,7 @@ def view(id):
 @login_required
 @permission_required('manage_customers')
 def edit(id):
-    customer = Customer.query.get_or_404(id)
+    customer = tenant_get_or_404(Customer, id)
     if not _customer_in_scope(id):
         return render_template('errors/403.html'), 403
     
@@ -357,7 +358,9 @@ def edit(id):
             customer.email = request.form.get('email')
             customer.address = request.form.get('address')
             customer.tax_number = request.form.get('tax_number')
-            customer.preferred_currency = request.form.get('preferred_currency')
+            customer.preferred_currency = request.form.get('preferred_currency') or request.form.get('default_currency') or 'AED'
+            is_active_raw = request.form.get('is_active', '1')
+            customer.is_active = str(is_active_raw) in ('1', 'true', 'on', 'True')
             customer.notes = request.form.get('notes')
             
             db.session.commit()
@@ -379,7 +382,7 @@ def edit(id):
 @login_required
 @permission_required('manage_customers')
 def delete(id):
-    customer = Customer.query.get_or_404(id)
+    customer = tenant_get_or_404(Customer, id)
     if not _customer_in_scope(id):
         return render_template('errors/403.html'), 403
     
@@ -430,7 +433,7 @@ def delete(id):
 @login_required
 @permission_required('manage_customers')
 def statement(id):
-    customer = Customer.query.get_or_404(id)
+    customer = tenant_get_or_404(Customer, id)
     if not _customer_in_scope(id):
         return render_template('errors/403.html'), 403
     
@@ -656,7 +659,7 @@ def api_search():
 @permission_required('manage_payments')
 def customer_balance(id):
     """رصيد العميل + فواتير غير المدفوعة - API موحد (مصدر واحد مع payments)."""
-    customer = Customer.query.get_or_404(id)
+    customer = tenant_get_or_404(Customer, id)
     if not _customer_in_scope(id):
         return jsonify({'error': 'forbidden'}), 403
     return jsonify({
@@ -677,7 +680,7 @@ def customer_balance(id):
 @login_required
 @permission_required('manage_customers')
 def customer_sales(id):
-    customer = Customer.query.get_or_404(id)
+    customer = tenant_get_or_404(Customer, id)
     if not _customer_in_scope(id):
         return render_template('errors/403.html'), 403
     

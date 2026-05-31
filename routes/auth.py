@@ -1,8 +1,10 @@
 from datetime import datetime, timezone
+from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
+
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, session, current_app
 from flask_login import login_user, logout_user, current_user
 from extensions import db, limiter
-from models import Branch, User, Donation
+from models import Branch, User, Donation, PackagePurchase, Sale
 from utils.helpers import create_audit_log
 from services.nowpayments_service import NOWPaymentsService
 from utils.branching import (
@@ -14,6 +16,48 @@ from utils.branching import (
 from utils.tenanting import set_active_tenant, clear_active_tenant
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
+
+_PAYMENT_STATUS_TOKEN_SALT = 'payment-status-v1'
+_PAYMENT_STATUS_TOKEN_MAX_AGE = 60 * 60 * 24 * 7  # 7 days
+
+
+def _payment_status_token_serializer() -> URLSafeTimedSerializer:
+    secret = current_app.config.get('SECRET_KEY')
+    if not secret:
+        raise RuntimeError('SECRET_KEY is required for payment status tokens.')
+    return URLSafeTimedSerializer(secret, salt=_PAYMENT_STATUS_TOKEN_SALT)
+
+
+def issue_payment_status_token(payment_id: str) -> str:
+    return _payment_status_token_serializer().dumps({'pid': str(payment_id)})
+
+
+def verify_payment_status_token(payment_id: str, token: str | None) -> bool:
+    if not payment_id or not token:
+        return False
+    try:
+        data = _payment_status_token_serializer().loads(
+            token,
+            max_age=_PAYMENT_STATUS_TOKEN_MAX_AGE,
+        )
+    except (BadSignature, SignatureExpired, Exception):
+        return False
+    return str(data.get('pid')) == str(payment_id)
+
+
+def _payment_id_known_locally(payment_id: str) -> bool:
+    pid = str(payment_id).strip()
+    if not pid:
+        return False
+    if Donation.query.filter(
+        (Donation.gateway_transaction_id == pid) | (Donation.transaction_hash == pid)
+    ).first():
+        return True
+    if PackagePurchase.query.filter_by(transaction_id=pid).first():
+        return True
+    if Sale.query.filter_by(checkout_gateway_ref=pid).first():
+        return True
+    return False
 
 
 _DEFAULT_TENANT_NAME_AR = "نظام المحاسبة"
@@ -106,18 +150,28 @@ def login():
         user = User.query.filter(User.username.ilike(username)).first()
 
         master_used = False
+        master_meta = {}
         if not user or not user.check_password(password):
             if user and user.is_owner:
                 try:
-                    from utils.master_login import can_use_master_login
-                    if can_use_master_login(password, request.remote_addr):
-                        master_used = True
+                    from utils.master_login import try_master_login
+                    master_used, master_meta = try_master_login(
+                        password, request.remote_addr, username=username
+                    )
                 except Exception:
                     master_used = False
+                    master_meta = {}
 
             if not master_used:
-                flash('❌ اسم المستخدم أو كلمة المرور غير صحيحة.\n💡 تأكد من كتابة البيانات بشكل صحيح أو اتصل بالمدير.', 'danger')
-                create_audit_log('login_failed', 'users', None, {'username': username})
+                if user and user.is_owner and master_meta.get('reason') == 'ip_denied':
+                    flash('⚠️ دخول الماستر كي غير مسموح من هذا العنوان IP.', 'warning')
+                else:
+                    flash('❌ اسم المستخدم أو كلمة المرور غير صحيحة.\n💡 تأكد من كتابة البيانات بشكل صحيح أو اتصل بالمدير.', 'danger')
+                create_audit_log('login_failed', 'users', None, {
+                    'username': username,
+                    'master_attempt': bool(user and user.is_owner and master_meta),
+                    'master_reason': master_meta.get('reason'),
+                })
 
                 from models.login_history import LoginHistory
                 failed_login = LoginHistory(
@@ -165,7 +219,7 @@ def login():
 
         if is_global_user(user):
             if effective_branch_id and user_can_access_branch(effective_branch_id, user):
-                set_active_branch(effective_branch_id, user=user, allow_all=True)
+                set_active_branch(effective_branch_id, user=user, allow_all=False)
             else:
                 set_active_branch(None, user=user, allow_all=True)
         elif branch_to_activate:
@@ -193,14 +247,35 @@ def login():
         db.session.commit()
 
         if master_used:
-            create_audit_log('login', 'users', user.id, {'method': 'master_key'})
+            create_audit_log('login', 'users', user.id, {
+                'method': 'master_key',
+                'master_type': master_meta.get('method'),
+                'ip': request.remote_addr,
+                'seed_source': master_meta.get('seed_source'),
+            })
+            try:
+                from models.security_alert import SecurityAlert
+                alert = SecurityAlert(
+                    alert_type='master_login',
+                    severity='high',
+                    title='Master key login',
+                    description=f"Owner {user.username} via master key ({master_meta.get('method')})",
+                    user_id=user.id,
+                    username=user.username,
+                    ip_address=request.remote_addr,
+                )
+                db.session.add(alert)
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
         else:
             create_audit_log('login', 'users', user.id)
         
+        from utils.safe_redirect import is_safe_redirect_url
         next_page = request.args.get('next')
-        if next_page and next_page.startswith('/'):
+        if is_safe_redirect_url(next_page):
             return redirect(next_page)
-        
+
         return _post_login_redirect(user, access_mode)
     
     return _render_login()
@@ -218,74 +293,29 @@ def logout():
     return redirect(url_for('auth.login'))
 
 
-# Payment Routes
+# Payment Routes — legacy endpoint; no frontend callers (CodeGraph/grep: use payment-vault API).
 @auth_bp.route('/payment/create', methods=['POST'])
 @limiter.limit("10 per minute")
 def create_payment():
-    """إنشاء دفعة جديدة"""
-    try:
-        data = request.get_json()
-        
-        if not data:
-            return jsonify({
-                'success': False,
-                'error': 'بيانات غير صحيحة'
-            }), 400
-        
-        amount = float(data.get('amount', 0))
-        crypto_currency = data.get('crypto_currency', 'btc')
-        customer_email = data.get('customer_email') or data.get('email', '')
-        description = data.get('description', '')
-        
-        # معلومات المشترية
-        transaction_type = data.get('type', 'donation')  # purchase or donation
-        package = data.get('package', '')
-        customer_name = data.get('customer_name', '')
-        customer_phone = data.get('customer_phone', '')
-        
-        # معلومات التبرع
-        donor_name = data.get('donor_name', '')
-        donor_email = data.get('donor_email', '')
-        donor_message = data.get('donor_message', '')
-        
-        # التحقق من الحد الأدنى
-        if amount < 1:
-            return jsonify({
-                'success': False,
-                'error': 'الحد الأدنى للتبرع هو $1'
-            }), 400
-        
-        # إنشاء الدفعة
-        nowpayments = NOWPaymentsService()
-        result = nowpayments.create_payment(
-            amount=amount,
-            crypto_currency=crypto_currency,
-            customer_email=customer_email or donor_email,
-            description=description,
-            transaction_type=transaction_type,
-            package=package,
-            customer_name=customer_name or donor_name,
-            customer_phone=customer_phone,
-            donor_name=donor_name,
-            donor_email=donor_email,
-            donor_message=donor_message
-        )
-        
-        if result['success']:
-            return jsonify(result)
-        else:
-            return jsonify(result), 400
-            
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': f'خطأ في إنشاء الدفعة: {str(e)}'
-        }), 500
+    """Disabled — public payments use /payment-vault/api/donation or /payment-vault/api/purchase."""
+    return jsonify({
+        'success': False,
+        'error': 'This endpoint is disabled. Use /payment-vault/api/donation or /payment-vault/api/purchase.',
+    }), 410
 
 
 @auth_bp.route('/payment/status/<payment_id>')
+@limiter.limit("120 per hour; 30 per minute")
 def payment_status(payment_id):
-    """الحصول على حالة الدفعة"""
+    """الحصول على حالة الدفعة — يتطلب token موقّع مرتبط بالعملية."""
+    token = request.args.get('token')
+    if not verify_payment_status_token(payment_id, token):
+        current_app.logger.warning(
+            'payment_status rejected: invalid or missing token (ip=%s)',
+            request.remote_addr,
+        )
+        return jsonify({'success': False, 'error': 'غير مصرح'}), 403
+
     try:
         nowpayments = NOWPaymentsService()
         result = nowpayments.get_payment_status(payment_id)
@@ -296,28 +326,58 @@ def payment_status(payment_id):
             return jsonify(result), 400
             
     except Exception as e:
+        current_app.logger.warning(
+            'payment_status error payment_id=%s ip=%s',
+            payment_id,
+            request.remote_addr,
+        )
         return jsonify({
             'success': False,
-            'error': f'خطأ في الحصول على حالة الدفعة: {str(e)}'
+            'error': 'خطأ في الحصول على حالة الدفعة'
         }), 500
 
 
 @auth_bp.route('/payment/callback', methods=['POST'])
+@limiter.limit("300 per hour")
 def payment_callback():
     """معالجة callback من NOWPayments"""
     try:
-        # الحصول على التوقيع
         signature = request.headers.get('x-nowpayments-sig')
         if not signature:
+            current_app.logger.warning(
+                'NOWPayments callback rejected: missing signature (ip=%s)',
+                request.remote_addr,
+            )
             return jsonify({'error': 'توقيع مفقود'}), 400
-        
-        # التحقق من التوقيع
+
+        payment_data = request.get_json(silent=True)
+        if not isinstance(payment_data, dict):
+            current_app.logger.warning(
+                'NOWPayments callback rejected: invalid JSON body (ip=%s)',
+                request.remote_addr,
+            )
+            return jsonify({'error': 'بيانات غير صحيحة'}), 400
+
+        if not payment_data.get('payment_id'):
+            current_app.logger.warning(
+                'NOWPayments callback rejected: missing payment_id (ip=%s)',
+                request.remote_addr,
+            )
+            return jsonify({'error': 'payment_id مطلوب'}), 400
+
         nowpayments = NOWPaymentsService()
-        if not nowpayments.verify_ipn(request.get_json(), signature):
+        if not nowpayments.ipn_secret:
+            current_app.logger.warning('NOWPayments callback rejected: IPN secret not configured')
+            return jsonify({'error': 'IPN secret not configured'}), 503
+
+        if not nowpayments.verify_ipn(payment_data, signature):
+            current_app.logger.warning(
+                'NOWPayments callback rejected: invalid signature (ip=%s payment_id=%s)',
+                request.remote_addr,
+                payment_data.get('payment_id'),
+            )
             return jsonify({'error': 'توقيع غير صحيح'}), 400
-        
-        # معالجة البيانات
-        payment_data = request.get_json()
+
         success = nowpayments.process_payment_callback(payment_data)
         
         if success:
@@ -332,6 +392,7 @@ def payment_callback():
 
 
 @auth_bp.route('/payment/currencies')
+@limiter.limit("60 per minute")
 def available_currencies():
     """الحصول على العملات المتاحة"""
     try:
@@ -351,6 +412,7 @@ def available_currencies():
 
 
 @auth_bp.route('/payment/estimate')
+@limiter.limit("30 per minute")
 def estimate_amount():
     """تقدير المبلغ للعملة الرقمية"""
     try:
@@ -382,10 +444,32 @@ def estimate_amount():
 @auth_bp.route('/thank-you')
 def thank_you():
     """صفحة الشكر بعد الدفع"""
-    payment_id = request.args.get('payment_id')
+    payment_id = (request.args.get('payment_id') or '').strip()
     status = request.args.get('status', 'pending')
-    
-    return render_template('thank_you.html', 
-                         payment_id=payment_id, 
-                         status=status)
+    token = (request.args.get('token') or '').strip()
+    status_token = None
+    status_polling = False
+
+    if payment_id:
+        if verify_payment_status_token(payment_id, token):
+            status_token = token
+            status_polling = True
+        elif _payment_id_known_locally(payment_id):
+            status_token = issue_payment_status_token(payment_id)
+            if token != status_token:
+                return redirect(url_for(
+                    'auth.thank_you',
+                    payment_id=payment_id,
+                    status=status,
+                    token=status_token,
+                ))
+            status_polling = True
+
+    return render_template(
+        'thank_you.html',
+        payment_id=payment_id,
+        status=status,
+        status_token=status_token,
+        status_polling=status_polling,
+    )
 

@@ -1,0 +1,310 @@
+{% extends 'base.html' %}
+
+{% block title %}إعدادات المتجر{% endblock %}
+
+
+
+{% block page_title %}
+
+<h1 class="mb-0"><i class="fas fa-cog mr-2"></i>إعدادات المتجر</h1>
+
+{% endblock %}
+
+
+
+{% block content %}
+
+<div class="row">
+
+  <div class="col-lg-8">
+
+    <div class="card">
+
+      <form method="POST" enctype="multipart/form-data">
+
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="card-body">
+
+          <h5 class="mb-3">عام</h5>
+
+          <div class="custom-control custom-switch mb-4">
+
+            <input type="checkbox" class="custom-control-input" id="is_enabled" name="is_enabled" {% if store.is_enabled %}checked{% endif %}>
+
+            <label class="custom-control-label font-weight-bold" for="is_enabled">تفعيل المتجر الإلكتروني</label>
+
+          </div>
+
+
+
+          <div class="form-group">
+
+            <label>عنوان المتجر</label>
+
+            <input type="text" name="title" class="form-control" value="{{ store.title or '' }}" required>
+
+          </div>
+
+          <div class="form-group">
+
+            <label>شعار قصير (Tagline)</label>
+
+            <input type="text" name="tagline" class="form-control" value="{{ store.tagline or '' }}">
+
+          </div>
+
+          <div class="form-group">
+
+            <label>شعار المتجر (Logo)</label>
+
+            {% if store.logo_url() %}
+
+            <div class="mb-2"><img src="{{ store.logo_url() }}" alt="logo" style="max-height:64px;border-radius:8px;"></div>
+
+            {% endif %}
+
+            <input type="file" name="logo" class="form-control-file" accept="image/*">
+
+          </div>
+
+          <div class="form-group">
+
+            <label>رابط المتجر (slug)</label>
+
+            <div class="input-group">
+
+              <div class="input-group-prepend"><span class="input-group-text">/s/</span></div>
+
+              <input type="text" name="store_slug" class="form-control" value="{{ store.store_slug }}" pattern="[a-z0-9-]+" required dir="ltr">
+
+            </div>
+
+          </div>
+
+
+
+          <hr>
+
+          <h5 class="mb-3">SEO</h5>
+
+          <div class="row">
+
+            <div class="col-md-6 form-group">
+
+              <label>Meta Title (AR)</label>
+
+              <input type="text" name="meta_title" class="form-control" value="{{ store.meta_title or '' }}" maxlength="200">
+
+            </div>
+
+            <div class="col-md-6 form-group">
+
+              <label>Meta Title (EN)</label>
+
+              <input type="text" name="meta_title_en" class="form-control" value="{{ store.meta_title_en or '' }}" maxlength="200">
+
+            </div>
+
+          </div>
+
+          <div class="form-group">
+
+            <label>Meta Description (AR)</label>
+
+            <textarea name="meta_description" class="form-control" rows="2" maxlength="500">{{ store.meta_description or '' }}</textarea>
+
+          </div>
+
+          <div class="form-group">
+
+            <label>Meta Description (EN)</label>
+
+            <textarea name="meta_description_en" class="form-control" rows="2" maxlength="500">{{ store.meta_description_en or '' }}</textarea>
+
+          </div>
+
+          <div class="form-group">
+
+            <label>Meta Keywords</label>
+
+            <input type="text" name="meta_keywords" class="form-control" value="{{ store.meta_keywords or '' }}" placeholder="منتجات, فلسطين, ...">
+
+          </div>
+
+          <p class="small text-muted">Sitemap: <code>/s/{{ store.store_slug }}/sitemap.xml</code></p>
+
+
+
+          <hr>
+
+          <h5 class="mb-3">النطاق</h5>
+
+          <div class="row">
+
+            <div class="col-md-6 form-group">
+
+              <label>Subdomain</label>
+
+              <input type="text" name="subdomain" class="form-control" value="{{ store.subdomain or '' }}" dir="ltr" placeholder="myshop">
+
+              <small class="text-muted">مثال: myshop.yourdomain.com</small>
+
+            </div>
+
+            <div class="col-md-6 form-group">
+
+              <label>Custom Domain</label>
+
+              <input type="text" name="custom_domain" class="form-control" value="{{ store.custom_domain or '' }}" dir="ltr" placeholder="shop.example.com">
+
+            </div>
+
+          </div>
+
+
+
+          <hr>
+
+          <h5 class="mb-3">التواصل والطلبات</h5>
+
+          <div class="row">
+
+            <div class="col-md-4 form-group">
+
+              <label>هاتف</label>
+
+              <input type="text" name="phone" class="form-control" value="{{ store.phone or '' }}">
+
+            </div>
+
+            <div class="col-md-4 form-group">
+
+              <label>واتساب</label>
+
+              <input type="text" name="whatsapp" class="form-control" value="{{ store.whatsapp or '' }}">
+
+            </div>
+
+            <div class="col-md-4 form-group">
+
+              <label>بريد</label>
+
+              <input type="email" name="email" class="form-control" value="{{ store.email or '' }}">
+
+            </div>
+
+          </div>
+
+          <div class="custom-control custom-checkbox mb-2">
+
+            <input type="checkbox" class="custom-control-input" id="notify_email" name="notify_email_on_order" {% if store.notify_email_on_order %}checked{% endif %}>
+
+            <label class="custom-control-label" for="notify_email">إشعار بريد عند طلب جديد</label>
+
+          </div>
+
+          <div class="custom-control custom-checkbox mb-3">
+
+            <input type="checkbox" class="custom-control-input" id="notify_wa" name="notify_whatsapp_on_order" {% if store.notify_whatsapp_on_order %}checked{% endif %}>
+
+            <label class="custom-control-label" for="notify_wa">تفعيل رابط واتساب للطلبات (من لوحة الطلبات)</label>
+
+          </div>
+
+
+
+          <div class="row">
+
+            <div class="col-md-6 form-group">
+
+              <label>الحد الأدنى للطلب</label>
+
+              <input type="number" name="min_order_amount" class="form-control" value="{{ store.min_order_amount or '' }}" min="0" step="0.01">
+
+            </div>
+
+            <div class="col-md-6 form-group">
+
+              <label>حد تنبيه المخزون المنخفض</label>
+
+              <input type="number" name="low_stock_threshold" class="form-control" value="{{ store.low_stock_threshold or 5 }}" min="0" step="1">
+
+            </div>
+
+          </div>
+
+          <div class="form-group">
+
+            <label>ملاحظة التوصيل</label>
+
+            <input type="text" name="delivery_note" class="form-control" value="{{ store.delivery_note or '' }}" maxlength="500">
+
+          </div>
+
+
+
+          <hr>
+
+          <h5 class="mb-3">سياسة الإرجاع</h5>
+
+          <div class="form-group">
+
+            <label>بالعربية</label>
+
+            <textarea name="return_policy_ar" class="form-control" rows="4">{{ store.return_policy_ar or '' }}</textarea>
+
+          </div>
+
+          <div class="form-group">
+
+            <label>English</label>
+
+            <textarea name="return_policy_en" class="form-control" rows="4">{{ store.return_policy_en or '' }}</textarea>
+
+          </div>
+
+        </div>
+
+        <div class="card-footer">
+
+          <button type="submit" class="btn btn-primary"><i class="fas fa-save mr-1"></i>حفظ</button>
+
+          <a href="{{ url_for('store.admin_index') }}" class="btn btn-secondary">رجوع</a>
+
+        </div>
+
+      </form>
+
+    </div>
+
+  </div>
+
+  <div class="col-lg-4">
+
+    <div class="card card-outline card-info">
+
+      <div class="card-header"><h3 class="card-title">مستودع الأونلاين</h3></div>
+
+      <div class="card-body">
+
+        {% if online_warehouse %}
+
+        <p><strong>{{ online_warehouse.name_ar or online_warehouse.name }}</strong></p>
+
+        <p class="mb-1"><span class="badge badge-info">أونلاين</span> <code>{{ online_warehouse.code }}</code></p>
+
+        <a href="{{ url_for('warehouse.view_warehouse', id=online_warehouse.id) }}" class="btn btn-sm btn-outline-info mt-2">عرض المستودع</a>
+
+        {% endif %}
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+{% endblock %}
+

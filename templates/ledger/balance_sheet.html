@@ -3,11 +3,25 @@
 {% block page_title %}الميزانية العمومية - Balance Sheet{% endblock %}
 
 {% block content %}
-<div class="row mb-3">
+<div class="row mb-3 d-print-none">
   <div class="col-12">
-    <button onclick="window.print()" class="btn btn-secondary">
-      <i class="fas fa-print mr-2"></i>طباعة
-    </button>
+    <div class="card">
+      <div class="card-body py-2">
+        <form method="get" class="form-inline">
+          <label class="mr-2">حتى تاريخ:</label>
+          <input type="date" name="date_to" class="form-control mr-2" value="{{ date_to or '' }}">
+          <label class="mr-2">الفرع:</label>
+          <select name="branch_id" class="form-control mr-2">
+            <option value="">-- الكل --</option>
+            {% for branch in branches %}
+            <option value="{{ branch.id }}" {% if selected_branch == branch.id %}selected{% endif %}>{{ branch.name }}</option>
+            {% endfor %}
+          </select>
+          <button type="submit" class="btn btn-primary mr-2"><i class="fas fa-filter"></i> تصفية</button>
+          <button type="button" onclick="window.print()" class="btn btn-secondary"><i class="fas fa-print mr-2"></i>طباعة</button>
+        </form>
+      </div>
+    </div>
   </div>
 </div>
 

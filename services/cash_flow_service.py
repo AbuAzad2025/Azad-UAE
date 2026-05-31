@@ -15,7 +15,7 @@ from models import (
 class CashFlowService:
     
     @staticmethod
-    def generate_cash_flow(period_start, period_end, branch_id=None):
+    def generate_cash_flow(period_start, period_end, branch_id=None, tenant_id=None):
         """
         إنشاء قائمة التدفقات النقدية
         
@@ -33,18 +33,23 @@ class CashFlowService:
             period_end = datetime.strptime(period_end, '%Y-%m-%d').date()
         
         # 1. الأنشطة التشغيلية (Operating Activities)
-        operating = CashFlowService._get_operating_activities(period_start, period_end, branch_id=branch_id)
+        operating = CashFlowService._get_operating_activities(period_start, period_end, branch_id=branch_id, tenant_id=tenant_id)
         
         # 2. الأنشطة الاستثمارية (Investing Activities)
-        investing = CashFlowService._get_investing_activities(period_start, period_end, branch_id=branch_id)
+        investing = CashFlowService._get_investing_activities(period_start, period_end, branch_id=branch_id, tenant_id=tenant_id)
         
         # 3. الأنشطة التمويلية (Financing Activities)
-        financing = CashFlowService._get_financing_activities(period_start, period_end, branch_id=branch_id)
+        financing = CashFlowService._get_financing_activities(period_start, period_end, branch_id=branch_id, tenant_id=tenant_id)
         
         # 4. حساب النقدية
-        cash_accounts = GLAccount.query.filter(
-            GLAccount.code.in_(['1110', '1120'])  # الصندوق والبنك
-        ).all()
+        from utils.gl_tenant import get_gl_account_by_code, active_tenant_id
+        tenant_id = tenant_id if tenant_id is not None else active_tenant_id()
+        
+        cash_accounts = []
+        for code in ('1110', '1120'):
+            acc = get_gl_account_by_code(code, tenant_id=tenant_id)
+            if acc:
+                cash_accounts.append(acc)
         
         cash_beginning = CashFlowService._get_cash_balance(cash_accounts, period_start, is_beginning=True, branch_id=branch_id)
         
@@ -69,8 +74,9 @@ class CashFlowService:
         }
     
     @staticmethod
-    def _get_operating_activities(period_start, period_end, branch_id=None):
+    def _get_operating_activities(period_start, period_end, branch_id=None, tenant_id=None):
         """حساب التدفقات النقدية من الأنشطة التشغيلية"""
+        from utils.gl_tenant import get_gl_account_by_code
         
         # المقبوضات من العملاء
         receipts_query = db.session.query(
@@ -118,7 +124,7 @@ class CashFlowService:
         expense_payments = expense_payments_query.scalar() or Decimal('0')
         
         # الرواتب (من حساب الرواتب)
-        salary_account = GLAccount.query.filter_by(code='6100').first()
+        salary_account = get_gl_account_by_code('6100', tenant_id=tenant_id)
         salaries = Decimal('0')
         if salary_account:
             salaries_query = db.session.query(

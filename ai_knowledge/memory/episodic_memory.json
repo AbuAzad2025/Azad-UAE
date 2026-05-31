@@ -881,6 +881,123 @@
       "assistant_response": "📦 **تحليل المخزون:**\n\n⚠️ **منتجات بمخزون منخفض:** 8\n\n**أبرزها:**\n• DIESEL WASHING MACHINE: 0 (الحد الأدنى: 5)\n• TOYOTA SKID STEER LOADER: 0 (الحد الأدنى: 5)\n• TOYOTA 8FD20 FORKLIFT: 0 (الحد الأدنى: 5)\n• TOYOTA 8FD18 FORKLIFT: 0 (الحد الأدنى: 5)\n• TCM 605 SKID STEER LOADER: 0 (الحد الأدنى: 5)\n\n💡 **رؤى:**\n📊 العجز الكلي: 40 وحدة\n\n⚠️ **تنبيهات:**\n🔴 8 منتج بمخزون منخفض - عاجل!\n\n🎯 **توصياتي لك:**\n💡 اطلب من الموردين فوراً!\n",
       "context": {},
       "type": "conversation"
+    },
+    {
+      "id": 99,
+      "timestamp": "2026-05-31T17:40:54.078013",
+      "user_id": 1,
+      "user_message": "ping",
+      "assistant_response": "",
+      "context": {},
+      "type": "conversation"
+    },
+    {
+      "id": 100,
+      "timestamp": "2026-05-31T22:02:15.882783",
+      "user_id": 22,
+      "user_message": "مرحبا",
+      "assistant_response": "يا هلا! 🌹 أنا أزاد، مساعدك الذكي. آمرني؟",
+      "context": {},
+      "type": "conversation"
+    },
+    {
+      "id": 101,
+      "timestamp": "2026-05-31T22:08:40.335335",
+      "user_id": 22,
+      "user_message": "مرحبا",
+      "assistant_response": "هلا والله! جاهز للمساعدة في أي وقت 💪",
+      "context": {},
+      "type": "conversation"
+    },
+    {
+      "id": 102,
+      "timestamp": "2026-05-31T22:09:02.026343",
+      "user_id": 22,
+      "user_message": "مرحبا",
+      "assistant_response": "يا هلا! 🌹 أنا أزاد، مساعدك الذكي. آمرني؟",
+      "context": {},
+      "type": "conversation"
+    },
+    {
+      "id": 103,
+      "timestamp": "2026-05-31T22:10:42.567105",
+      "user_id": 22,
+      "user_message": "مرحبا",
+      "assistant_response": "يا هلا! 🌹 أنا أزاد، مساعدك الذكي. آمرني؟",
+      "context": {},
+      "type": "conversation"
+    },
+    {
+      "id": 104,
+      "timestamp": "2026-05-31T22:19:30.123388",
+      "user_id": 22,
+      "user_message": "مرحبا",
+      "assistant_response": "يا هلا! 🌹 أنا أزاد، مساعدك الذكي. آمرني؟",
+      "context": {},
+      "type": "conversation"
+    },
+    {
+      "id": 105,
+      "timestamp": "2026-05-31T22:26:40.664070",
+      "user_id": 22,
+      "user_message": "مرحبا",
+      "assistant_response": "وعليكم السلام! كيف أقدر أساعدك اليوم في الكراج؟ 🚗",
+      "context": {},
+      "type": "conversation"
+    },
+    {
+      "id": 106,
+      "timestamp": "2026-05-31T22:31:45.608744",
+      "user_id": 22,
+      "user_message": "مرحبا",
+      "assistant_response": "أهلاً بك! معك أزاد، المحاسب والمهندس والمدير المالي 😉",
+      "context": {},
+      "type": "conversation"
+    },
+    {
+      "id": 107,
+      "timestamp": "2026-05-31T22:32:48.228206",
+      "user_id": 22,
+      "user_message": "مرحبا",
+      "assistant_response": "يا هلا! 🌹 أنا أزاد، مساعدك الذكي. آمرني؟",
+      "context": {},
+      "type": "conversation"
+    },
+    {
+      "id": 108,
+      "timestamp": "2026-05-31T22:37:32.182021",
+      "user_id": 22,
+      "user_message": "مرحبا",
+      "assistant_response": "هلا والله! جاهز للمساعدة في أي وقت 💪",
+      "context": {},
+      "type": "conversation"
+    },
+    {
+      "id": 109,
+      "timestamp": "2026-05-31T22:42:58.943131",
+      "user_id": 22,
+      "user_message": "مرحبا",
+      "assistant_response": "وعليكم السلام! كيف أقدر أساعدك اليوم في الكراج؟ 🚗",
+      "context": {},
+      "type": "conversation"
+    },
+    {
+      "id": 110,
+      "timestamp": "2026-05-31T22:48:54.587557",
+      "user_id": 22,
+      "user_message": "مرحبا",
+      "assistant_response": "يا هلا! 🌹 أنا أزاد، مساعدك الذكي. آمرني؟",
+      "context": {},
+      "type": "conversation"
+    },
+    {
+      "id": 111,
+      "timestamp": "2026-05-31T23:09:38.283908",
+      "user_id": 22,
+      "user_message": "مرحبا",
+      "assistant_response": "هلا والله! جاهز للمساعدة في أي وقت 💪",
+      "context": {},
+      "type": "conversation"
     }
   ],
   "metadata": {

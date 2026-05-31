@@ -821,9 +821,15 @@ $('#excelUploadForm').on('submit', function(e) {
     return;
   }
   
+  const csrfToken = $(this).find('input[name="csrf_token"]').val()
+    || $('meta[name="csrf-token"]').attr('content');
+
   const formData = new FormData();
   formData.append('file', fileInput.files[0]);
   formData.append('warehouse_id', warehouseId);
+  if (csrfToken) {
+    formData.append('csrf_token', csrfToken);
+  }
   
   $('#uploadExcelBtn').prop('disabled', true);
   $('#uploadProgress').show();
@@ -834,6 +840,7 @@ $('#excelUploadForm').on('submit', function(e) {
     data: formData,
     processData: false,
     contentType: false,
+    headers: csrfToken ? { 'X-CSRFToken': csrfToken } : {},
     success: function(response) {
       if (response.success) {
         addMessage('bot', response.message, true);

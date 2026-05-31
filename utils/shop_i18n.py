@@ -1,0 +1,88 @@
+"""Bilingual UI strings for public storefront."""
+from flask import session
+
+STRINGS = {
+    'home': {'ar': 'الرئيسية', 'en': 'Home'},
+    'shop': {'ar': 'المتجر', 'en': 'Shop'},
+    'cart': {'ar': 'السلة', 'en': 'Cart'},
+    'checkout': {'ar': 'إتمام الطلب', 'en': 'Checkout'},
+    'add_to_cart': {'ar': 'أضف للسلة', 'en': 'Add to cart'},
+    'buy_now': {'ar': 'اطلب الآن', 'en': 'Order now'},
+    'out_of_stock': {'ar': 'غير متوفر', 'en': 'Out of stock'},
+    'in_stock': {'ar': 'متوفر', 'en': 'In stock'},
+    'price': {'ar': 'السعر', 'en': 'Price'},
+    'quantity': {'ar': 'الكمية', 'en': 'Qty'},
+    'total': {'ar': 'الإجمالي', 'en': 'Total'},
+    'subtotal': {'ar': 'المجموع', 'en': 'Subtotal'},
+    'empty_cart': {'ar': 'سلتك فارغة', 'en': 'Your cart is empty'},
+    'continue_shopping': {'ar': 'متابعة التسوق', 'en': 'Continue shopping'},
+    'place_order': {'ar': 'تأكيد الطلب', 'en': 'Place order'},
+    'name': {'ar': 'الاسم الكامل', 'en': 'Full name'},
+    'phone': {'ar': 'رقم الهاتف', 'en': 'Phone'},
+    'address': {'ar': 'عنوان التوصيل', 'en': 'Delivery address'},
+    'notes': {'ar': 'ملاحظات', 'en': 'Notes'},
+    'order_success': {'ar': 'تم استلام طلبك', 'en': 'Order received'},
+    'order_number': {'ar': 'رقم الطلب', 'en': 'Order #'},
+    'cod': {'ar': 'الدفع عند الاستلام', 'en': 'Cash on delivery'},
+    'made_in_palestine': {'ar': 'فخر فلسطيني — جودة وثقة', 'en': 'Palestinian pride — quality & trust'},
+    'email': {'ar': 'البريد الإلكتروني', 'en': 'Email'},
+    'payment_method': {'ar': 'طريقة الدفع', 'en': 'Payment method'},
+    'no_payment_methods': {'ar': 'لا توجد طرق دفع متاحة حالياً.', 'en': 'No payment methods available right now.'},
+    'select_payment': {'ar': 'اختر طريقة الدفع', 'en': 'Select payment method'},
+    'store_closed': {'ar': 'المتجر متوقف مؤقتاً', 'en': 'Store temporarily closed'},
+    'platform_closed': {'ar': 'المتاجر متوقفة على مستوى المنصة', 'en': 'Stores paused platform-wide'},
+    'search': {'ar': 'ابحث عن منتج...', 'en': 'Search products...'},
+    'categories': {'ar': 'التصنيفات', 'en': 'Categories'},
+    'all_products': {'ar': 'كل المنتجات', 'en': 'All products'},
+    'whatsapp': {'ar': 'واتساب', 'en': 'WhatsApp'},
+    'secure_checkout': {'ar': 'دفع آمن', 'en': 'Secure checkout'},
+    'free_from': {'ar': 'الحد الأدنى للطلب', 'en': 'Minimum order'},
+    'remove': {'ar': 'حذف', 'en': 'Remove'},
+    'update': {'ar': 'تحديث', 'en': 'Update'},
+    'product_details': {'ar': 'تفاصيل المنتج', 'en': 'Product details'},
+    'login_required': {'ar': 'سجّل الدخول للشراء من المتجر', 'en': 'Sign in to purchase from the store'},
+    'login_success': {'ar': 'مرحباً بعودتك!', 'en': 'Welcome back!'},
+    'register_success': {'ar': 'تم إنشاء حسابك — يمكنك الشراء الآن', 'en': 'Account created — you can shop now'},
+    'logout_success': {'ar': 'تم تسجيل الخروج', 'en': 'Signed out'},
+    'login': {'ar': 'دخول', 'en': 'Sign in'},
+    'register': {'ar': 'تسجيل', 'en': 'Register'},
+    'logout': {'ar': 'خروج', 'en': 'Sign out'},
+    'order_whatsapp': {'ar': 'اطلب عبر واتساب', 'en': 'Order on WhatsApp'},
+    'guest_browse': {'ar': 'تصفّح كزائر — للشراء سجّل الدخول أو اطلب عبر واتساب', 'en': 'Browsing as guest — sign in to buy or order via WhatsApp'},
+    'my_account': {'ar': 'حسابي', 'en': 'My account'},
+    'my_orders': {'ar': 'طلباتي', 'en': 'My orders'},
+    'order_status': {'ar': 'حالة الطلب', 'en': 'Order status'},
+    'order_date': {'ar': 'تاريخ الطلب', 'en': 'Order date'},
+    'no_orders': {'ar': 'لا توجد طلبات بعد', 'en': 'No orders yet'},
+    'order_pending': {'ar': 'بانتظار التأكيد', 'en': 'Pending confirmation'},
+    'order_confirmed': {'ar': 'مؤكد', 'en': 'Confirmed'},
+    'order_cancelled': {'ar': 'ملغى', 'en': 'Cancelled'},
+    'view_order': {'ar': 'عرض الطلب', 'en': 'View order'},
+    'order_details': {'ar': 'تفاصيل الطلب', 'en': 'Order details'},
+    'items': {'ar': 'المنتجات', 'en': 'Items'},
+    'payment_status': {'ar': 'حالة الدفع', 'en': 'Payment'},
+    'paid': {'ar': 'مدفوع', 'en': 'Paid'},
+    'unpaid': {'ar': 'غير مدفوع', 'en': 'Unpaid'},
+    'partial': {'ar': 'جزئي', 'en': 'Partial'},
+    'return_policy': {'ar': 'سياسة الإرجاع', 'en': 'Return policy'},
+    'coupon_code': {'ar': 'كود الخصم', 'en': 'Coupon code'},
+    'forgot_password': {'ar': 'نسيت كلمة المرور؟', 'en': 'Forgot password?'},
+    'reset_password': {'ar': 'إعادة تعيين كلمة المرور', 'en': 'Reset password'},
+    'reset_email_sent': {'ar': 'إذا كان البريد مسجّلاً ستصلك رسالة خلال دقائق.', 'en': 'If the email is registered, you will receive a message shortly.'},
+    'reset_success': {'ar': 'تم تحديث كلمة المرور — يمكنك تسجيل الدخول.', 'en': 'Password updated — you can sign in now.'},
+    'new_password': {'ar': 'كلمة المرور الجديدة', 'en': 'New password'},
+    'send_reset_link': {'ar': 'إرسال رابط الاستعادة', 'en': 'Send reset link'},
+    'lang_ar': {'ar': 'عربي', 'en': 'Arabic'},
+    'lang_en': {'ar': 'English', 'en': 'English'},
+}
+
+
+def shop_lang(default='ar'):
+    lang = (session.get('shop_lang') or session.get('language') or default or 'ar').lower()
+    return 'en' if lang.startswith('en') else 'ar'
+
+
+def t(key, lang=None):
+    lang = lang or shop_lang()
+    entry = STRINGS.get(key, {})
+    return entry.get(lang) or entry.get('ar') or key

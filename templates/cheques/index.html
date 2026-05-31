@@ -337,6 +337,9 @@
         </tbody>
       </table>
     </div>
+
+    {% set endpoint = 'cheques.index' %}
+    {% include 'partials/flask_pagination.html' %}
   </div>
 </div>
 {% endblock %}
@@ -366,7 +369,9 @@
       dataTable = $table.DataTable({
         language: { url: languageUrl },
         order: [[5, 'asc']],
-        pageLength: 25,
+        paging: false,
+        info: false,
+        searching: true,
         responsive: true,
         dom: 'Bfrtip',
         buttons: SmartPrint.buildButtons(options)

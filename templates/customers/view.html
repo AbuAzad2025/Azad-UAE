@@ -48,7 +48,7 @@
           </li>
         </ul>
         {% if customer.balance < 0 %}
-        <a href="{{ url_for('payments.create_receipt') }}?customer_id={{ customer.id }}" class="btn btn-primary btn-block">
+        <a href="{{ url_for('payments.create_voucher', direction='incoming', party_type='customer', party_id=customer.id) }}" class="btn btn-primary btn-block">
           <i class="fas fa-money-bill-wave"></i> إضافة دفعة
         </a>
         {% endif %}
@@ -76,7 +76,7 @@
           <dt class="col-sm-4">العنوان:</dt>
           <dd class="col-sm-8">{{ customer.address or '-' }}</dd>
           <dt class="col-sm-4">العملة الافتراضية:</dt>
-          <dd class="col-sm-8">{{ customer.default_currency }}</dd>
+          <dd class="col-sm-8">{{ customer.preferred_currency or 'AED' }}</dd>
         </dl>
       </div>
     </div>

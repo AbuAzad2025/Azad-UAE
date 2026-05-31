@@ -1,0 +1,130 @@
+{% extends 'shop/base.html' %}
+
+{% block title %}{{ t('order_details') }} — {{ order.sale_number }}{% endblock %}
+
+
+
+{% block content %}
+
+<div class="ps-panel">
+
+  <div class="ps-breadcrumb">
+
+    <a href="{{ url_for('shop.account_orders', slug=store.store_slug) }}"><i class="fas fa-arrow-{% if is_rtl %}right{% else %}left{% endif %}"></i> {{ t('my_orders') }}</a>
+
+  </div>
+
+
+
+  <h2 class="ps-page-title">{{ t('order_number') }} {{ order.sale_number }}</h2>
+
+  <p class="ps-order-meta">{{ order.sale_date.strftime('%Y-%m-%d %H:%M') if order.sale_date else '' }} · {{ status_label }}</p>
+
+
+
+  <div class="ps-order-detail-grid">
+
+    <section class="ps-order-section">
+
+      <h3>{{ t('items') }}</h3>
+
+      <table class="ps-table">
+
+        <thead>
+
+          <tr>
+
+            <th>{{ t('shop') }}</th>
+
+            <th>{{ t('quantity') }}</th>
+
+            <th>{{ t('price') }}</th>
+
+            <th>{{ t('total') }}</th>
+
+          </tr>
+
+        </thead>
+
+        <tbody>
+
+          {% for line in order.lines %}
+
+          <tr>
+
+            <td>{{ line.product.name if line.product else '—' }}</td>
+
+            <td>{{ line.quantity|int if line.quantity == line.quantity|int else line.quantity }}</td>
+
+            <td>{{ '%.2f'|format(line.unit_price) }}</td>
+
+            <td>{{ '%.2f'|format(line.line_total) }}</td>
+
+          </tr>
+
+          {% endfor %}
+
+        </tbody>
+
+        <tfoot>
+
+          <tr>
+
+            <td colspan="3" class="text-right">{{ t('total') }}</td>
+
+            <td><strong>{{ '%.2f'|format(order.total_amount) }} {{ order.currency }}</strong></td>
+
+          </tr>
+
+        </tfoot>
+
+      </table>
+
+    </section>
+
+
+
+    <aside class="ps-order-aside">
+
+      <div class="ps-order-info-box">
+
+        <h4>{{ t('payment_method') }}</h4>
+
+        <p>
+
+          {% if pay_method %}<i class="{{ pay_method.icon }}"></i> {{ pay_method.display_name(lang) }}{% else %}{{ t('cod') }}{% endif %}
+
+        </p>
+
+      </div>
+
+      <div class="ps-order-info-box">
+
+        <h4>{{ t('order_status') }}</h4>
+
+        <p><span class="ps-order-badge ps-order-badge-{{ order.status or 'pending' }}">{{ status_label }}</span></p>
+
+      </div>
+
+      <div class="ps-order-info-box">
+
+        <h4>{{ t('payment_status') }}</h4>
+
+        <p>{% if order.payment_status == 'paid' %}{{ t('paid') }}{% elif order.payment_status == 'partial' %}{{ t('partial') }}{% else %}{{ t('unpaid') }}{% endif %}</p>
+
+      </div>
+
+      {% if order.status == 'pending' %}
+
+      <p class="ps-order-hint"><i class="fas fa-info-circle"></i> {{ t('order_pending') }}</p>
+
+      {% endif %}
+
+    </aside>
+
+  </div>
+
+</div>
+
+{% endblock %}
+

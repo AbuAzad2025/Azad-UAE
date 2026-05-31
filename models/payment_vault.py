@@ -61,6 +61,16 @@ class PaymentVault(db.Model):
     min_donation_amount = db.Column(db.Numeric(10, 2), default=Decimal('10.00'))  # الحد الأدنى
     max_donation_amount = db.Column(db.Numeric(10, 2), default=Decimal('10000.00'))  # الحد الأقصى
     daily_limit = db.Column(db.Numeric(15, 2), default=Decimal('50000.00'))  # الحد اليومي
+
+    # Azad Donation Page — controlled from secret vault
+    donations_enabled = db.Column(db.Boolean, default=False)
+    donation_page_enabled = db.Column(db.Boolean, default=False)
+    donation_title_ar = db.Column(db.String(200), default='ادعم شركة أزاد')
+    donation_title_en = db.Column(db.String(200), default='Support Azad Systems')
+    donation_intro_ar = db.Column(db.Text)
+    donation_intro_en = db.Column(db.Text)
+    donation_debit_account = db.Column(db.String(20), default='1120')
+    donation_credit_account = db.Column(db.String(20), default='4200')
     
     # Security Settings - إعدادات الأمان
     require_2fa = db.Column(db.Boolean, default=True)  # يتطلب مصادقة ثنائية

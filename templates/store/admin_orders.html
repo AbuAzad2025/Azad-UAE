@@ -1,0 +1,276 @@
+{% extends 'base.html' %}
+
+{% block title %}طلبات المتجر{% endblock %}
+
+
+
+{% block page_title %}
+
+<div class="d-flex justify-content-between align-items-center flex-wrap">
+
+  <h1 class="mb-0"><i class="fas fa-receipt mr-2"></i>طلبات المتجر الإلكتروني</h1>
+
+  <a href="{{ url_for('store.admin_index') }}" class="btn btn-secondary btn-sm">رجوع</a>
+
+</div>
+
+{% endblock %}
+
+
+
+{% block content %}
+
+<div class="row mb-3">
+
+  <div class="col-md-3 col-sm-6 mb-2">
+
+    <div class="info-box mb-0">
+
+      <span class="info-box-icon bg-warning"><i class="fas fa-clock"></i></span>
+
+      <div class="info-box-content">
+
+        <span class="info-box-text">بانتظار التأكيد</span>
+
+        <span class="info-box-number">{{ order_counts.pending }}</span>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="col-md-3 col-sm-6 mb-2">
+
+    <div class="info-box mb-0">
+
+      <span class="info-box-icon bg-success"><i class="fas fa-check"></i></span>
+
+      <div class="info-box-content">
+
+        <span class="info-box-text">مؤكدة</span>
+
+        <span class="info-box-number">{{ order_counts.confirmed }}</span>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="col-md-3 col-sm-6 mb-2">
+
+    <div class="info-box mb-0">
+
+      <span class="info-box-icon bg-secondary"><i class="fas fa-ban"></i></span>
+
+      <div class="info-box-content">
+
+        <span class="info-box-text">ملغاة</span>
+
+        <span class="info-box-number">{{ order_counts.cancelled }}</span>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="col-md-3 col-sm-6 mb-2">
+
+    <div class="info-box mb-0">
+
+      <span class="info-box-icon bg-info"><i class="fas fa-list"></i></span>
+
+      <div class="info-box-content">
+
+        <span class="info-box-text">إجمالي الطلبات</span>
+
+        <span class="info-box-number">{{ order_counts.total }}</span>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+
+<div class="card mb-3">
+
+  <div class="card-body py-2">
+
+    <div class="btn-group btn-group-sm flex-wrap" role="group">
+
+      <a href="{{ url_for('store.admin_orders') }}" class="btn btn-{% if not status_filter %}primary{% else %}outline-secondary{% endif %}">الكل</a>
+
+      <a href="{{ url_for('store.admin_orders', status='pending') }}" class="btn btn-{% if status_filter == 'pending' %}warning{% else %}outline-secondary{% endif %}">معلّقة</a>
+
+      <a href="{{ url_for('store.admin_orders', status='confirmed') }}" class="btn btn-{% if status_filter == 'confirmed' %}success{% else %}outline-secondary{% endif %}">مؤكدة</a>
+
+      <a href="{{ url_for('store.admin_orders', status='cancelled') }}" class="btn btn-{% if status_filter == 'cancelled' %}secondary{% else %}outline-secondary{% endif %}">ملغاة</a>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+
+<div class="card">
+
+  <div class="card-body table-responsive p-0">
+
+    <table class="table table-hover mb-0">
+
+      <thead>
+
+        <tr>
+
+          <th>رقم الطلب</th>
+
+          <th>التاريخ</th>
+
+          <th>العميل</th>
+
+          <th>طريقة الدفع</th>
+
+          <th>الإجمالي</th>
+
+          <th>الدفع</th>
+
+          <th>الحالة</th>
+
+          <th></th>
+
+        </tr>
+
+      </thead>
+
+      <tbody>
+
+        {% for order in orders %}
+
+        {% set pm = payment_methods.get(order.checkout_payment_method or 'cod') %}
+
+        <tr>
+
+          <td><code>{{ order.sale_number }}</code></td>
+
+          <td>{{ order.sale_date.strftime('%Y-%m-%d %H:%M') if order.sale_date else '—' }}</td>
+
+          <td>
+
+            {{ order.customer.name if order.customer else '—' }}
+
+            {% if order.customer and order.customer.phone %}<br><small class="text-muted">{{ order.customer.phone }}</small>{% endif %}
+
+          </td>
+
+          <td>
+
+            {% if pm %}<i class="{{ pm.icon }} mr-1"></i>{{ pm.name_ar }}{% else %}<code>{{ order.checkout_payment_method or 'cod' }}</code>{% endif %}
+
+          </td>
+
+          <td>{{ '%.2f'|format(order.total_amount) }} {{ order.currency }}</td>
+
+          <td>
+
+            <span class="badge badge-{% if order.payment_status == 'paid' %}success{% elif order.payment_status == 'partial' %}info{% else %}light border{% endif %}">
+
+              {{ order.payment_status or 'unpaid' }}
+
+            </span>
+
+          </td>
+
+          <td>
+
+            {% set st = order.status or 'pending' %}
+
+            <span class="badge badge-{% if st == 'pending' %}warning{% elif st == 'confirmed' %}success{% elif st == 'cancelled' %}secondary{% else %}info{% endif %}">
+
+              {{ status_labels.get(st, st) }}
+
+            </span>
+
+          </td>
+
+          <td class="text-nowrap">
+
+            <a href="{{ url_for('store.admin_order_detail', order_id=order.id) }}" class="btn btn-xs btn-primary">تفاصيل</a>
+
+            {% if order.status == 'pending' %}
+
+            <form method="post" action="{{ url_for('store.admin_order_confirm', order_id=order.id) }}" class="d-inline" onsubmit="return confirm('تأكيد الطلب {{ order.sale_number }}؟');">
+
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+              <button type="submit" class="btn btn-xs btn-success">تأكيد</button>
+
+            </form>
+
+            {% endif %}
+
+          </td>
+
+        </tr>
+
+        {% else %}
+
+        <tr><td colspan="8" class="text-center text-muted py-4">لا طلبات أونلاين بعد</td></tr>
+
+        {% endfor %}
+
+      </tbody>
+
+    </table>
+
+  </div>
+
+  {% if pagination.pages > 1 %}
+
+  <div class="card-footer">
+
+    <nav>
+
+      <ul class="pagination pagination-sm mb-0 justify-content-center">
+
+        {% if pagination.has_prev %}
+
+        <li class="page-item"><a class="page-link" href="{{ url_for('store.admin_orders', page=pagination.prev_num, status=status_filter or none) }}">السابق</a></li>
+
+        {% endif %}
+
+        <li class="page-item disabled"><span class="page-link">{{ pagination.page }} / {{ pagination.pages }}</span></li>
+
+        {% if pagination.has_next %}
+
+        <li class="page-item"><a class="page-link" href="{{ url_for('store.admin_orders', page=pagination.next_num, status=status_filter or none) }}">التالي</a></li>
+
+        {% endif %}
+
+      </ul>
+
+    </nav>
+
+  </div>
+
+  {% endif %}
+
+</div>
+
+<p class="text-muted small mt-2">
+
+  <i class="fas fa-info-circle"></i>
+
+  الطلبات الجديدة لا تخصم المخزون حتى التأكيد — عند التأكيد يُرحّل المخزون والمحاسبة تلقائياً.
+
+</p>
+
+{% endblock %}
+

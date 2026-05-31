@@ -67,6 +67,8 @@
         {% endfor %}
       </tbody>
     </table>
+    {% set endpoint = 'users.index' %}
+    {% include 'partials/flask_pagination.html' %}
   </div>
 </div>
 {% endblock %}

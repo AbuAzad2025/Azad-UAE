@@ -148,19 +148,8 @@
   </div>
   {% if pagination %}
   <div class="card-footer">
-    <nav>
-      <ul class="pagination mb-0">
-        <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
-          <a class="page-link" href="{{ url_for('returns.index', page=pagination.prev_num) }}">السابق</a>
-        </li>
-        <li class="page-item disabled">
-          <span class="page-link">صفحة {{ pagination.page }} من {{ pagination.pages or 1 }}</span>
-        </li>
-        <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
-          <a class="page-link" href="{{ url_for('returns.index', page=pagination.next_num) }}">التالي</a>
-        </li>
-      </ul>
-    </nav>
+    {% set endpoint = 'returns.index' %}
+    {% include 'partials/flask_pagination.html' %}
   </div>
   {% endif %}
 </div>

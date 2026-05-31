@@ -1,0 +1,180 @@
+{% extends 'base.html' %}
+
+{% block title %}إحصائيات المتجر{% endblock %}
+
+
+
+{% block page_title %}
+
+<div class="d-flex justify-content-between align-items-center flex-wrap">
+
+  <h1 class="mb-0"><i class="fas fa-chart-line mr-2"></i>إحصائيات المتجر</h1>
+
+  <a href="{{ url_for('store.admin_index') }}" class="btn btn-secondary btn-sm">رجوع</a>
+
+</div>
+
+{% endblock %}
+
+
+
+{% block content %}
+
+<div class="row">
+
+  <div class="col-md-3 col-sm-6"><div class="info-box"><span class="info-box-icon bg-primary"><i class="fas fa-shopping-bag"></i></span><div class="info-box-content"><span class="info-box-text">طلبات اليوم</span><span class="info-box-number">{{ stats.orders_today }}</span></div></div></div>
+
+  <div class="col-md-3 col-sm-6"><div class="info-box"><span class="info-box-icon bg-success"><i class="fas fa-coins"></i></span><div class="info-box-content"><span class="info-box-text">إيراد اليوم</span><span class="info-box-number">{{ '%.2f'|format(stats.revenue_today) }}</span></div></div></div>
+
+  <div class="col-md-3 col-sm-6"><div class="info-box"><span class="info-box-icon bg-info"><i class="fas fa-calendar-week"></i></span><div class="info-box-content"><span class="info-box-text">طلبات 7 أيام</span><span class="info-box-number">{{ stats.orders_week }}</span></div></div></div>
+
+  <div class="col-md-3 col-sm-6"><div class="info-box"><span class="info-box-icon bg-warning"><i class="fas fa-calendar-alt"></i></span><div class="info-box-content"><span class="info-box-text">إيراد 30 يوم</span><span class="info-box-number">{{ '%.2f'|format(stats.revenue_month) }}</span></div></div></div>
+
+</div>
+
+
+
+<div class="row">
+
+  <div class="col-lg-7">
+
+    <div class="card">
+
+      <div class="card-header"><h3 class="card-title mb-0">أكثر المنتجات مبيعاً</h3></div>
+
+      <div class="card-body table-responsive p-0">
+
+        <table class="table table-sm mb-0">
+
+          <thead><tr><th>المنتج</th><th>الكمية</th><th>الإيراد</th></tr></thead>
+
+          <tbody>
+
+            {% for row in top_products %}
+
+            <tr>
+
+              <td>{{ row.product.name }}</td>
+
+              <td>{{ row.quantity|int if row.quantity == row.quantity|int else row.quantity }}</td>
+
+              <td>{{ '%.2f'|format(row.total) }}</td>
+
+            </tr>
+
+            {% else %}
+
+            <tr><td colspan="3" class="text-center text-muted py-3">لا بيانات بعد</td></tr>
+
+            {% endfor %}
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </div>
+
+
+
+    <div class="card">
+
+      <div class="card-header"><h3 class="card-title mb-0">طلبات يومية (14 يوم)</h3></div>
+
+      <div class="card-body">
+
+        {% if chart %}
+
+        <ul class="list-unstyled mb-0 small">
+
+          {% for row in chart %}
+
+          <li class="d-flex justify-content-between border-bottom py-1"><span>{{ row.day }}</span><strong>{{ row.count }}</strong></li>
+
+          {% endfor %}
+
+        </ul>
+
+        {% else %}
+
+        <p class="text-muted mb-0">لا طلبات في الفترة.</p>
+
+        {% endif %}
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+
+  <div class="col-lg-5">
+
+    <div class="card card-outline card-warning">
+
+      <div class="card-header"><h3 class="card-title mb-0">تنبيه مخزون منخفض (WH_O)</h3></div>
+
+      <div class="card-body p-0">
+
+        <table class="table table-sm mb-0">
+
+          <thead><tr><th>المنتج</th><th>المتوفر</th></tr></thead>
+
+          <tbody>
+
+            {% for row in low_stock %}
+
+            <tr>
+
+              <td>{{ row.product.name }}</td>
+
+              <td><span class="badge badge-{% if row.quantity <= 0 %}danger{% else %}warning{% endif %}">{{ row.quantity|int if row.quantity == row.quantity|int else row.quantity }}</span></td>
+
+            </tr>
+
+            {% else %}
+
+            <tr><td colspan="2" class="text-center text-muted py-3">المخزون جيد ✓</td></tr>
+
+            {% endfor %}
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+      <div class="card-footer"><a href="{{ url_for('store.admin_transfer') }}" class="btn btn-sm btn-warning">تحويل مخزون</a></div>
+
+    </div>
+
+
+
+    <div class="card">
+
+      <div class="card-body">
+
+        <dl class="row mb-0 small">
+
+          <dt class="col-6">معلّقة</dt><dd class="col-6">{{ stats.pending }}</dd>
+
+          <dt class="col-6">مؤكدة</dt><dd class="col-6">{{ stats.confirmed }}</dd>
+
+          <dt class="col-6">ملغاة</dt><dd class="col-6">{{ stats.cancelled }}</dd>
+
+          <dt class="col-6">إجمالي</dt><dd class="col-6">{{ stats.total_orders }}</dd>
+
+        </dl>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+{% endblock %}
+

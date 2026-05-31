@@ -4,6 +4,7 @@ from flask_login import current_user
 from extensions import db
 from models import Product, StockMovement, Warehouse
 from utils.branching import get_accessible_warehouse_ids, get_branch_stock_map
+from utils.gl_reference_types import GLRef
 
 
 class StockService:
@@ -33,53 +34,56 @@ class StockService:
         )
     
     @staticmethod
-    def adjust_stock(product_id, quantity, notes=None, warehouse_id=None):
-        movement = StockService.create_movement(
-            product_id=product_id,
-            quantity=Decimal(str(quantity)),
-            movement_type='adjustment',
-            notes=notes,
-            warehouse_id=warehouse_id
+    def _post_adjustment_gl(movement):
+        from services.gl_posting import post_or_fail
+        from services.gl_service import GLService
+
+        product = Product.query.get(movement.product_id)
+        if not product or not product.cost_price:
+            return
+        cost_value = abs(Decimal(str(movement.quantity))) * Decimal(str(product.cost_price))
+        if cost_value <= 0:
+            return
+        if Decimal(str(movement.quantity)) < 0:
+            lines = [
+                {'account': '5150', 'debit': cost_value, 'credit': 0, 'description': f'Inventory Adjustment (Loss) - {product.name}'},
+                {'account': '1140', 'debit': 0, 'credit': cost_value, 'description': f'Stock Decrease - {product.name}'},
+            ]
+        else:
+            lines = [
+                {'account': '1140', 'debit': cost_value, 'credit': 0, 'description': f'Stock Increase - {product.name}'},
+                {'account': '5150', 'debit': 0, 'credit': cost_value, 'description': f'Inventory Adjustment (Gain) - {product.name}'},
+            ]
+        warehouse = Warehouse.query.get(movement.warehouse_id) if getattr(movement, 'warehouse_id', None) else None
+        branch_id = warehouse.branch_id if warehouse else None
+        tenant_id = getattr(movement, 'tenant_id', None) or getattr(product, 'tenant_id', None)
+        GLService.ensure_core_accounts(tenant_id=tenant_id)
+        post_or_fail(
+            lines=lines,
+            description=f'Stock Adjustment - {product.name}',
+            reference_type=movement.reference_type or GLRef.STOCK_ADJUSTMENT,
+            reference_id=movement.id,
+            branch_id=branch_id,
         )
-        
-        # GL Integration for Adjustment (لا يُنشأ قيد إذا المنتج بلا سعر تكلفة)
+
+    @staticmethod
+    def adjust_stock(product_id, quantity, notes=None, warehouse_id=None, reference_type=None, reference_id=None):
         try:
-            from services.gl_service import GLService
-            product = Product.query.get(product_id)
-            if product and product.cost_price:
-                cost_value = abs(Decimal(str(quantity))) * Decimal(str(product.cost_price))
-                
-                if cost_value > 0:
-                    lines = []
-                    if Decimal(str(quantity)) < 0:
-                        # Loss (Decrease in Stock)
-                        # Debit Expense (Inventory Adjustment), Credit Inventory
-                        lines = [
-                            {'account': '5150', 'debit': cost_value, 'credit': 0, 'description': f'Inventory Adjustment (Loss) - {product.name}'},
-                            {'account': '1140', 'debit': 0, 'credit': cost_value, 'description': f'Stock Decrease - {product.name}'}
-                        ]
-                    else:
-                        # Gain (Increase in Stock)
-                        # Debit Inventory, Credit Expense (Contra) or Revenue
-                        # Using 5150 as Credit (reducing expense)
-                        lines = [
-                            {'account': '1140', 'debit': cost_value, 'credit': 0, 'description': f'Stock Increase - {product.name}'},
-                            {'account': '5150', 'debit': 0, 'credit': cost_value, 'description': f'Inventory Adjustment (Gain) - {product.name}'}
-                        ]
-                    
-                    warehouse = Warehouse.query.get(movement.warehouse_id) if getattr(movement, 'warehouse_id', None) else None
-                    branch_id = warehouse.branch_id if warehouse else None
-                    GLService.post_entry(
-                        lines=lines,
-                        description=f'Stock Adjustment - {product.name}',
-                        reference_type='stock_adjustment',
-                        reference_id=movement.id,
-                        branch_id=branch_id
-                    )
+            movement = StockService.create_movement(
+                product_id=product_id,
+                quantity=Decimal(str(quantity)),
+                movement_type='adjustment',
+                notes=notes,
+                warehouse_id=warehouse_id,
+                reference_type=reference_type or GLRef.STOCK_ADJUSTMENT,
+                reference_id=reference_id,
+            )
+            StockService._post_adjustment_gl(movement)
+            return movement
         except Exception as e:
-            current_app.logger.error(f"Failed to post GL entry for stock adjustment: {e}")
-            
-        return movement
+            db.session.rollback()
+            current_app.logger.error(f"Failed stock adjustment: {e}")
+            raise
     
     @staticmethod
     def create_movement(product_id, quantity, movement_type, reference_type=None, reference_id=None, notes=None, warehouse_id=None):
@@ -155,6 +159,44 @@ class StockService:
             db.session.rollback()
             current_app.logger.error(f'Stock movement failed: {e}')
             raise
+
+    @staticmethod
+    def transfer_stock(product_id, from_warehouse_id, to_warehouse_id, quantity, notes=None):
+        """Transfer quantity between warehouses (net zero on product.current_stock)."""
+        qty = abs(Decimal(str(quantity)))
+        if qty <= 0:
+            raise ValueError('الكمية يجب أن تكون أكبر من صفر.')
+
+        from_wh = Warehouse.query.filter_by(id=int(from_warehouse_id), is_active=True).first()
+        to_wh = Warehouse.query.filter_by(id=int(to_warehouse_id), is_active=True).first()
+        if not from_wh or not to_wh:
+            raise ValueError('المستودع المصدر أو الوجهة غير موجود أو غير نشط.')
+        if from_wh.id == to_wh.id:
+            raise ValueError('لا يمكن التحويل إلى نفس المستودع.')
+
+        available = StockService.get_product_stock(product_id, warehouse_id=from_wh.id)
+        if available < qty:
+            raise ValueError(f'الكمية غير متوفرة في المستودع المصدر (المتوفر: {available}).')
+
+        label = notes or f'تحويل من {from_wh.name_ar or from_wh.name} إلى {to_wh.name_ar or to_wh.name}'
+        out_movement = StockService.create_movement(
+            product_id=product_id,
+            quantity=-qty,
+            movement_type='transfer',
+            reference_type=GLRef.STOCK_TRANSFER,
+            notes=label,
+            warehouse_id=from_wh.id,
+        )
+        in_movement = StockService.create_movement(
+            product_id=product_id,
+            quantity=qty,
+            movement_type='transfer',
+            reference_type=GLRef.STOCK_TRANSFER,
+            reference_id=out_movement.id,
+            notes=label,
+            warehouse_id=to_wh.id,
+        )
+        return out_movement, in_movement
     
     @staticmethod
     def process_sale_lines(sale, warehouse_id=None):
@@ -167,7 +209,7 @@ class StockService:
             StockService.remove_stock(
                 product_id=line.product_id,
                 quantity=line.quantity,
-                reference_type='Sale',
+                reference_type=GLRef.SALE,
                 reference_id=sale.id,
                 notes=f'بيع: {sale.sale_number}',
                 warehouse_id=warehouse_id  # ← تمرير المستودع
@@ -182,7 +224,7 @@ class StockService:
             StockService.add_stock(
                 product_id=line.product_id,
                 quantity=line.quantity,
-                reference_type='Purchase',
+                reference_type=GLRef.PURCHASE,
                 reference_id=purchase.id,
                 notes=f'شراء: {purchase.purchase_number}',
                 warehouse_id=warehouse_id
@@ -207,7 +249,7 @@ class StockService:
             StockService.add_stock(
                 product_id=line.product_id,
                 quantity=line.quantity,
-                reference_type='Sale-Reversed',
+                reference_type=GLRef.SALE_REVERSED,
                 reference_id=sale.id,
                 notes=f'إلغاء بيع: {sale.sale_number}',
                 warehouse_id=warehouse_id  # ← نفس المستودع

@@ -83,6 +83,8 @@ class Tenant(db.Model):
     fiscal_year_start = db.Column(db.Integer, default=1)  # Month: 1-12
     enable_tax = db.Column(db.Boolean, default=True)
     default_tax_rate = db.Column(db.Numeric(5, 2), default=Decimal('5.00'))
+    vat_country = db.Column(db.String(2), default='AE')  # AE, IL, PS
+    vat_number = db.Column(db.String(100))
     
     # Status - الحالة
     is_active = db.Column(db.Boolean, default=True, nullable=False, index=True)

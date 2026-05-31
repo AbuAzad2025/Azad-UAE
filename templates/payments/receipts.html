@@ -80,7 +80,7 @@
       <button type="button" class="btn btn-sm btn-outline-info" id="printReceiptsBtn">
         <i class="fas fa-print mr-1"></i>طباعة
       </button>
-      <a href="{{ url_for('payments.create_receipt') }}" class="btn btn-success">
+      <a href="{{ url_for('payments.create_voucher') }}" class="btn btn-success">
         <i class="fas fa-plus mr-2"></i>سند قبض جديد
       </a>
       <a href="{{ url_for('payments.archived_receipts') }}" class="btn btn-warning">
@@ -256,6 +256,8 @@
       </table>
     </div>
   </div>
+  {% set endpoint = 'payments.receipts' %}
+  {% include 'partials/flask_pagination.html' %}
 </div>
 {% endblock %}
 

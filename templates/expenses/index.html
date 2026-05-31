@@ -26,6 +26,24 @@
 {% endblock %}
 
 {% block content %}
+<div class="card mb-3">
+    <div class="card-body py-2">
+        <form method="get" class="form-inline">
+            <label class="mr-2">التصنيف:</label>
+            <select name="category" class="form-control mr-2" onchange="this.form.submit()">
+                <option value="">-- الكل --</option>
+                {% for category in categories %}
+                <option value="{{ category.id }}" {% if request.args.get('category', type=int) == category.id %}selected{% endif %}>
+                    {{ category.name_ar or category.name }}
+                </option>
+                {% endfor %}
+            </select>
+            {% if request.args.get('category') %}
+            <a href="{{ url_for('expenses.index') }}" class="btn btn-outline-secondary btn-sm">إزالة الفلتر</a>
+            {% endif %}
+        </form>
+    </div>
+</div>
 <div class="card">
     <div class="card-body">
         <div class="table-responsive">
@@ -83,6 +101,8 @@
                 </tbody>
             </table>
         </div>
+    {% set endpoint = 'expenses.index' %}
+    {% include 'partials/flask_pagination.html' %}
     </div>
 </div>
 {% endblock %}
@@ -111,8 +131,9 @@
     } else {
       dataTable = $table.DataTable({
         language: { url: languageUrl },
-        order: [[5, 'desc']],
-        pageLength: 25,
+        order: [[6, 'desc']],
+        paging: false,
+        info: false,
         dom: 'Bfrtip',
         buttons: SmartPrint.buildButtons(options)
       });

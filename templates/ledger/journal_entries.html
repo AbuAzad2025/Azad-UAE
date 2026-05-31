@@ -74,9 +74,8 @@
                             </div>
                             
                             {% if pagination %}
-                            <div class="d-flex justify-content-center">
-                                {{ pagination.links }}
-                            </div>
+                            {% set endpoint = 'ledger.journal_entries' %}
+                            {% include 'partials/flask_pagination.html' %}
                             {% endif %}
                         </div>
                     </div>

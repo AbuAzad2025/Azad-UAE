@@ -1,0 +1,92 @@
+{% extends 'shop/base.html' %}
+
+{% block title %}{{ t('my_orders') }} — {{ store.title }}{% endblock %}
+
+
+
+{% block content %}
+
+<div class="ps-panel">
+
+  <h2 class="ps-page-title"><i class="fas fa-receipt"></i> {{ t('my_orders') }}</h2>
+
+
+
+  {% if orders %}
+
+  <div class="ps-orders-list">
+
+    {% for order in orders %}
+
+    {% set pm = payment_methods.get(order.checkout_payment_method or 'cod') %}
+
+    {% set st = order.status or 'pending' %}
+
+    <article class="ps-order-card">
+
+      <div class="ps-order-card-head">
+
+        <div>
+
+          <strong>{{ t('order_number') }} {{ order.sale_number }}</strong>
+
+          <div class="ps-order-meta">{{ order.sale_date.strftime('%Y-%m-%d %H:%M') if order.sale_date else '' }}</div>
+
+        </div>
+
+        <span class="ps-order-badge ps-order-badge-{{ st }}">{{ t('order_' + st) if st in ['pending','confirmed','cancelled'] else st }}</span>
+
+      </div>
+
+      <div class="ps-order-card-body">
+
+        <div class="ps-summary-row">
+
+          <span>{{ t('total') }}</span>
+
+          <span>{{ '%.2f'|format(order.total_amount) }} {{ order.currency }}</span>
+
+        </div>
+
+        <div class="ps-summary-row">
+
+          <span>{{ t('payment_method') }}</span>
+
+          <span>{% if pm %}{{ pm.display_name(lang) }}{% else %}{{ order.checkout_payment_method or t('cod') }}{% endif %}</span>
+
+        </div>
+
+        <div class="ps-summary-row">
+
+          <span>{{ t('payment_status') }}</span>
+
+          <span>{% if order.payment_status == 'paid' %}{{ t('paid') }}{% elif order.payment_status == 'partial' %}{{ t('partial') }}{% else %}{{ t('unpaid') }}{% endif %}</span>
+
+        </div>
+
+      </div>
+
+      <div class="ps-order-card-foot">
+
+        <a href="{{ url_for('shop.account_order_detail', slug=store.store_slug, order_id=order.id) }}" class="ps-btn ps-btn-outline">{{ t('view_order') }}</a>
+
+      </div>
+
+    </article>
+
+    {% endfor %}
+
+  </div>
+
+  {% else %}
+
+  <p class="ps-empty-state">{{ t('no_orders') }}</p>
+
+  <a href="{{ url_for('shop.catalog', slug=store.store_slug) }}" class="ps-btn ps-btn-primary">{{ t('continue_shopping') }}</a>
+
+  {% endif %}
+
+</div>
+
+{% endblock %}
+

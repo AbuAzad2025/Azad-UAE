@@ -35,7 +35,7 @@ function archiveSale(saleId) {
         
         const form = document.createElement('form');
         form.method = 'POST';
-        form.action = `/sales/archive/${saleId}`;        
+        form.action = `/sales/${saleId}/archive`;        
         const csrfToken = document.createElement('input');
         csrfToken.type = 'hidden';
         csrfToken.name = 'csrf_token';
@@ -62,7 +62,7 @@ function archiveExpense(expenseId) {
     if (confirm('هل أنت متأكد من أرشفة هذه النفقة؟')) {        
         const form = document.createElement('form');
         form.method = 'POST';
-        form.action = `/expenses/archive/${expenseId}`;        
+        form.action = `/expenses/${expenseId}/archive`;        
         const csrfToken = document.createElement('input');
         csrfToken.type = 'hidden';
         csrfToken.name = 'csrf_token';

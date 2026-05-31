@@ -124,9 +124,8 @@
                             </div>
                             
                             {% if pagination %}
-                            <div class="d-flex justify-content-center">
-                                {{ pagination.links }}
-                            </div>
+                            {% set endpoint = 'owner.cards_vault' %}
+                            {% include 'partials/flask_pagination.html' %}
                             {% endif %}
                         </div>
                     </div>

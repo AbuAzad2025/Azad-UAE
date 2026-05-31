@@ -288,9 +288,9 @@
     
     <script>
         // تحديث حالة الدفع كل 30 ثانية إذا كانت في الانتظار
-        {% if status == 'pending' and payment_id %}
+        {% if status_polling and status == 'pending' and payment_id and status_token %}
         function checkPaymentStatus() {
-            fetch(`/auth/payment/status/{{ payment_id }}`)
+            fetch(`/auth/payment/status/{{ payment_id }}?token={{ status_token | urlencode }}`)
                 .then(response => response.json())
                 .then(data => {
                     if (!data.success || !data.data) {

@@ -2,13 +2,18 @@ from functools import wraps
 from flask import abort, flash, redirect, url_for
 from flask_login import current_user
 
-from utils.branching import branch_scope_id_for
+from utils.branching import branch_scope_id_for, report_branch_scope_id_for
 from utils.auth_helpers import is_admin_surface_user, is_global_owner_user
 
 
 def branch_scope_id():
     """يرجع branch_id لأي مستخدم غير عالمي لتطبيق عزل البيانات حسب الفرع."""
     return branch_scope_id_for(current_user)
+
+
+def report_branch_scope_id():
+    """نطاق الفرع في التقارير — المستخدم العالمي يبدأ من فرعه الافتراضي."""
+    return report_branch_scope_id_for(current_user)
 
 
 def permission_required(permission_code):

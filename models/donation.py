@@ -72,6 +72,7 @@ class Donation(db.Model):
     # Notes - ملاحظات
     notes = db.Column(db.Text)
     admin_notes = db.Column(db.Text)  # ملاحظات إدارية
+    gl_posted = db.Column(db.Boolean, default=False, nullable=False)
     
     def __repr__(self):
         return f'<Donation ${self.amount_usd} via {self.payment_method} - {self.status}>'

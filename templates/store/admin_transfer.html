@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% block title %}تحويل مخزون المتجر{% endblock %}
+
+{% block page_title %}
+<h1 class="mb-0"><i class="fas fa-exchange-alt mr-2"></i>تحويل مخزون — المتجر ↔ مستودعات فعلية</h1>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-lg-7">
+    <div class="card">
+      <form method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="card-body">
+          <div class="form-group">
+            <label>نوع التحويل</label>
+            <select name="direction" id="direction" class="form-control" required>
+              <option value="to_online">إلى مستودع الأونلاين (نشر للمتجر)</option>
+              <option value="from_online">من مستودع الأونلاين (سحب من المتجر)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>المنتج</label>
+            <select name="product_id" id="product_id" class="form-control select2" required>
+              <option value="">— اختر —</option>
+              {% for product in products %}
+              <option value="{{ product.id }}" {% if request.args.get('product_id', type=int) == product.id %}selected{% endif %}>
+                {{ product.name_ar or product.name }} — أونلاين: {{ '{:,.0f}'.format(online_stock.get(product.id, 0)) }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group" id="source_wh_group">
+            <label id="source_wh_label">المستودع الفعلي (المصدر)</label>
+            <select name="source_warehouse_id" class="form-control" required>
+              <option value="">— اختر —</option>
+              {% for wh in physical_warehouses %}
+              <option value="{{ wh.id }}">{{ wh.name_ar or wh.name }} ({{ wh.code or wh.id }})</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>الكمية</label>
+            <input type="number" name="quantity" class="form-control" min="0.001" step="any" required>
+          </div>
+          <div class="form-group">
+            <label>ملاحظات</label>
+            <textarea name="notes" class="form-control" rows="2"></textarea>
+          </div>
+        </div>
+        <div class="card-footer">
+          <button type="submit" class="btn btn-success"><i class="fas fa-check mr-1"></i>تنفيذ التحويل</button>
+          <a href="{{ url_for('store.admin_catalog') }}" class="btn btn-secondary">الكتalog</a>
+        </div>
+      </form>
+    </div>
+  </div>
+  <div class="col-lg-5">
+    <div class="card card-outline card-info">
+      <div class="card-header"><h3 class="card-title">مستودع الأونلاين</h3></div>
+      <div class="card-body">
+        <p class="mb-1"><strong>{{ online_warehouse.name_ar or online_warehouse.name }}</strong></p>
+        <p class="text-muted small">التحويل لا يغيّر إجمالي مخزون المنتج — ينقل بين المستودعات فقط. المتجر يعرض ما في هذا المستودع.</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(function() {
+  function syncDirection() {
+    var toOnline = $('#direction').val() === 'to_online';
+    $('#source_wh_label').text(toOnline ? 'المستودع الفعلي (المصدر)' : 'المستودع الفعلي (الوجهة)');
+    if (!toOnline && $('select[name="source_warehouse_id"] option').length === 2) {
+      /* keep selection */
+    }
+  }
+  $('#direction').on('change', syncDirection);
+  syncDirection();
+  if ($.fn.select2) {
+    $('.select2').select2({ theme: 'bootstrap4', width: '100%' });
+  }
+});
+</script>
+{% endblock %}

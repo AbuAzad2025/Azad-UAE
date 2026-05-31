@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% block title %}كتalog المتجر{% endblock %}
+
+{% block page_title %}
+<div class="d-flex justify-content-between align-items-center flex-wrap">
+  <h1 class="mb-0"><i class="fas fa-boxes mr-2"></i>كتalog المتجر (مستودع أونلاين)</h1>
+  <div>
+    {% if include_zero %}
+    <a href="{{ url_for('store.admin_catalog') }}" class="btn btn-outline-secondary btn-sm">إخفاء بدون مخزون</a>
+    {% else %}
+    <a href="{{ url_for('store.admin_catalog', all=1) }}" class="btn btn-outline-secondary btn-sm">عرض الكل</a>
+    {% endif %}
+    <a href="{{ url_for('store.admin_transfer') }}" class="btn btn-success btn-sm"><i class="fas fa-plus mr-1"></i>تحويل مخزون</a>
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+{% if not online_warehouse %}
+<div class="alert alert-warning">لم يُنشأ مستودع أونلاين بعد. افتح <a href="{{ url_for('store.admin_settings') }}">الإعدادات</a> واحفظ لتوليده.</div>
+{% else %}
+<div class="alert alert-info py-2">
+  <i class="fas fa-warehouse mr-1"></i>
+  المصدر: <strong>{{ online_warehouse.name_ar or online_warehouse.name }}</strong>
+  — {% if include_zero %}كل المنتجات النشطة{% else %}منتجات بمخزون &gt; 0 فقط{% endif %}
+</div>
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-striped mb-0">
+      <thead class="thead-light">
+        <tr>
+          <th>المنتج</th>
+          <th>SKU</th>
+          <th>السعر</th>
+          <th>مخزون الأونلاين</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+        <tr>
+          <td>{{ row.product.name_ar or row.product.name }}</td>
+          <td><code>{{ row.product.sku or '—' }}</code></td>
+          <td>{{ '{:,.2f}'.format(row.product.regular_price) }} AED</td>
+          <td>
+            {% if row.quantity > 0 %}
+            <span class="badge badge-success">{{ '{:,.3f}'.format(row.quantity) }}</span>
+            {% else %}
+            <span class="badge badge-secondary">0</span>
+            {% endif %}
+          </td>
+          <td>
+            <a href="{{ url_for('store.admin_transfer', product_id=row.product.id) }}" class="btn btn-xs btn-outline-primary">تحويل</a>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="text-center text-muted py-4">لا منتجات{% if not include_zero %} بمخزون في مستودع الأونلاين{% endif %}.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

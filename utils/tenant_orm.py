@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session, with_loader_criteria
 
 from extensions import db
 
-_SKIP_BLUEPRINTS = frozenset({"auth", "public", "language", "tenants"})
+_SKIP_BLUEPRINTS = frozenset({"auth", "public", "language", "tenants", "shop"})
 # User is exempt: Flask-Login loads by id; tenant filtering is applied in user-management routes.
 _ORM_EXEMPT_MODELS = frozenset({"User"})
 _TENANT_MODELS: list[type] | None = None
@@ -93,7 +93,9 @@ def _validate_instance_tenant(obj) -> bool:
     tid = _active_tenant_for_orm()
     rec_tid = getattr(obj, "tenant_id", None)
     if rec_tid is None:
-        return True
+        from utils.tenanting import is_platform_owner
+
+        return is_platform_owner()
     if tid is None:
         return False
     return int(rec_tid) == int(tid)

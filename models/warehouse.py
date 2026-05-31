@@ -4,6 +4,10 @@ from extensions import db
 
 class Warehouse(db.Model):
     __tablename__ = 'warehouses'
+
+    TYPE_PHYSICAL = 'physical'
+    TYPE_ONLINE = 'online'
+    WAREHOUSE_TYPES = (TYPE_PHYSICAL, TYPE_ONLINE)
     
     id = db.Column(db.Integer, primary_key=True)
     tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True)
@@ -11,6 +15,7 @@ class Warehouse(db.Model):
     name_ar = db.Column(db.String(100))
     code = db.Column(db.String(50), unique=True)
     location = db.Column(db.String(255))
+    warehouse_type = db.Column(db.String(20), default=TYPE_PHYSICAL, nullable=False, index=True)
     
     parent_id = db.Column(db.Integer, db.ForeignKey('warehouses.id'))
     branch_id = db.Column(db.Integer, db.ForeignKey('branches.id'), nullable=True, index=True) # Linked Branch
@@ -28,6 +33,13 @@ class Warehouse(db.Model):
     
     def __repr__(self):
         return f'<Warehouse {self.name}>'
+
+    @property
+    def is_online(self):
+        return (self.warehouse_type or self.TYPE_PHYSICAL) == self.TYPE_ONLINE
+
+    def type_label_ar(self):
+        return 'أونلاين' if self.is_online else 'فعلي'
 
 
 class StockMovement(db.Model):
@@ -66,6 +78,7 @@ class StockMovement(db.Model):
             'adjustment': {'ar': 'تسوية', 'en': 'Adjustment'},
             'return': {'ar': 'إرجاع', 'en': 'Return'},
             'damage': {'ar': 'تالف', 'en': 'Damage'},
+            'transfer': {'ar': 'تحويل', 'en': 'Transfer'},
         }
         return types.get(self.movement_type, {}).get(lang, self.movement_type)
     

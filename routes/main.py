@@ -118,7 +118,9 @@ def dashboard():
         
         if current_user.can_see_costs():
             try:
-                cash_acc = GLAccount.query.filter_by(code='1000').first()
+                from utils.gl_tenant import get_gl_account_by_code, active_tenant_id
+                tid = active_tenant_id()
+                cash_acc = get_gl_account_by_code('1110', tenant_id=tid)
                 if cash_acc:
                     cash_debit_query = db.session.query(func.sum(GLJournalLine.debit)).filter_by(account_id=cash_acc.id)
                     cash_credit_query = db.session.query(func.sum(GLJournalLine.credit)).filter_by(account_id=cash_acc.id)
@@ -129,7 +131,7 @@ def dashboard():
                     cash_credit = cash_credit_query.scalar() or Decimal('0')
                     stats['cash_balance'] = float(cash_debit - cash_credit)
                 
-                bank_acc = GLAccount.query.filter_by(code='1010').first()
+                bank_acc = get_gl_account_by_code('1120', tenant_id=tid)
                 if bank_acc:
                     bank_debit_query = db.session.query(func.sum(GLJournalLine.debit)).filter_by(account_id=bank_acc.id)
                     bank_credit_query = db.session.query(func.sum(GLJournalLine.credit)).filter_by(account_id=bank_acc.id)
@@ -140,7 +142,7 @@ def dashboard():
                     bank_credit = bank_credit_query.scalar() or Decimal('0')
                     stats['bank_balance'] = float(bank_debit - bank_credit)
                 
-                inventory_acc = GLAccount.query.filter_by(code='1200').first()
+                inventory_acc = get_gl_account_by_code('1140', tenant_id=tid)
                 if inventory_acc:
                     inv_debit_query = db.session.query(func.sum(GLJournalLine.debit)).filter_by(account_id=inventory_acc.id)
                     inv_credit_query = db.session.query(func.sum(GLJournalLine.credit)).filter_by(account_id=inventory_acc.id)

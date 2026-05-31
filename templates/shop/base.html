@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}" dir="{{ 'rtl' if is_rtl else 'ltr' }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}{{ store.seo_title(lang) or store.title or tenant.name }}{% endblock %}</title>
+  {% block meta %}
+  <meta name="description" content="{{ store.seo_description(lang) }}">
+  {% if store.meta_keywords %}<meta name="keywords" content="{{ store.meta_keywords }}">{% endif %}
+  <meta property="og:title" content="{{ store.seo_title(lang) or store.title }}">
+  <meta property="og:description" content="{{ store.seo_description(lang) }}">
+  {% if store.logo_url() %}<meta property="og:image" content="{{ request.url_root.rstrip('/') }}{{ store.logo_url() }}">{% endif %}
+  <link rel="canonical" href="{{ request.url }}">
+  {% endblock %}
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700;800&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/shop-palestine.css') }}">
+  <style>:root { --theme-primary: {{ theme_primary }}; --theme-secondary: {{ theme_secondary }}; }</style>
+  {% block extra_head %}{% endblock %}
+</head>
+<body class="ps-shop {{ 'rtl' if is_rtl else 'ltr' }}">
+  <div class="ps-tatreez-bar" aria-hidden="true"></div>
+  {% if not is_shop_logged_in %}
+  <div class="ps-guest-banner"><i class="fas fa-eye"></i> {{ t('guest_browse') }}</div>
+  {% endif %}
+  <header class="ps-header">
+    <div class="ps-header-inner">
+      <a href="{{ url_for('shop.catalog', slug=store.store_slug) }}" class="ps-brand">
+        {% if store.logo_url() %}
+        <img src="{{ store.logo_url() }}" alt="{{ store.title }}" class="ps-brand-logo" style="width:48px;height:48px;object-fit:contain;border-radius:10px;">
+        {% else %}
+        <div class="ps-brand-mark">{{ (store.title or tenant.name or 'S')[:1] }}</div>
+        {% endif %}
+        <div class="ps-brand-text">
+          <h1>{{ store.title or tenant.name }}</h1>
+          {% if store.tagline %}<p>{{ store.tagline }}</p>{% endif %}
+        </div>
+      </a>
+      <nav class="ps-nav">
+        <a href="{{ url_for('shop.catalog', slug=store.store_slug) }}"><i class="fas fa-store"></i> {{ t('shop') }}</a>
+        <a href="{{ url_for('shop.set_lang', slug=store.store_slug, lang_code=('en' if lang == 'ar' else 'ar')) }}" class="ps-lang-toggle">{{ t('lang_en') if lang == 'ar' else t('lang_ar') }}</a>
+        {% if is_shop_logged_in %}
+        <span class="ps-nav-user"><i class="fas fa-user-check"></i> {{ shop_account.name.split()[0] }}</span>
+        <a href="{{ url_for('shop.account_orders', slug=store.store_slug) }}"><i class="fas fa-receipt"></i> {{ t('my_orders') }}</a>
+        <a href="{{ url_for('shop.cart_view', slug=store.store_slug) }}" class="ps-cart-link">
+          <i class="fas fa-shopping-basket"></i> {{ t('cart') }}
+          {% if cart_count %}<span class="ps-cart-badge">{{ cart_count|int }}</span>{% endif %}
+        </a>
+        <form method="post" action="{{ url_for('shop.account_logout', slug=store.store_slug) }}" style="display:inline;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="ps-btn ps-btn-outline" style="padding:0.45rem 0.75rem;font-size:0.82rem;">{{ t('logout') }}</button>
+        </form>
+        {% else %}
+        <a href="{{ url_for('shop.account_login', slug=store.store_slug) }}" class="ps-btn ps-btn-outline" style="padding:0.45rem 0.85rem;font-size:0.85rem;">{{ t('login') }}</a>
+        <a href="{{ url_for('shop.account_register', slug=store.store_slug) }}" class="ps-btn ps-btn-primary" style="padding:0.45rem 0.85rem;font-size:0.85rem;">{{ t('register') }}</a>
+        {% endif %}
+      </nav>
+    </div>
+  </header>
+  <main class="ps-main">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="ps-alert ps-alert-{{ 'danger' if category == 'danger' else ('warning' if category == 'warning' else 'success') }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="ps-footer">
+    <div class="ps-tatreez-bar" style="margin-bottom:1rem;"></div>
+    <p>{{ t('made_in_palestine') }}</p>
+    {% if store.phone or store.whatsapp %}
+    <p style="margin-top:0.5rem;">
+      {% if store.phone %}{{ store.phone }}{% endif %}
+      {% if store.whatsapp %} · <a href="https://wa.me/{{ store.whatsapp|replace('+','')|replace(' ','') }}" target="_blank" rel="noopener"><i class="fab fa-whatsapp"></i> {{ t('whatsapp') }}</a>{% endif %}
+    </p>
+    {% endif %}
+    {% if store.return_policy(lang) %}
+    <p style="margin-top:0.5rem;"><a href="{{ url_for('shop.return_policy', slug=store.store_slug) }}">{{ t('return_policy') }}</a></p>
+    {% endif %}
+  </footer>
+  <script src="{{ url_for('static', filename='js/shop-storefront.js') }}" defer></script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

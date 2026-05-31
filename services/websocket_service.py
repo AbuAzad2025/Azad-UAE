@@ -9,12 +9,38 @@ logger = logging.getLogger(__name__)
 socketio = None
 
 
+def _socketio_cors_origins(app: Flask):
+    """Production: CORS_ORIGINS from config only. Dev: localhost / 127.0.0.1."""
+    debug = bool(app.config.get('DEBUG'))
+    app_env = (app.config.get('APP_ENV') or 'production').strip().lower()
+    is_prod = not debug and app_env == 'production'
+
+    if is_prod:
+        origins = [
+            origin.strip().rstrip('/')
+            for origin in (app.config.get('CORS_ORIGINS') or [])
+            if origin and origin.strip()
+        ]
+        if not origins:
+            logger.warning('[WebSocket] CORS_ORIGINS empty in production; cross-origin Socket.IO disabled')
+        return origins
+
+    port = int(app.config.get('PORT', 5000))
+    return [
+        f'http://localhost:{port}',
+        f'http://127.0.0.1:{port}',
+        'http://localhost:5000',
+        'http://127.0.0.1:5000',
+    ]
+
+
 def init_socketio(app: Flask):
     global socketio
-    
+
+    cors_origins = _socketio_cors_origins(app)
     socketio = SocketIO(
         app,
-        cors_allowed_origins="*",
+        cors_allowed_origins=cors_origins,
         async_mode='threading',
         logger=False,
         engineio_logger=False

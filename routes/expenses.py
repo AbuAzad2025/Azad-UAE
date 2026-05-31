@@ -4,10 +4,12 @@ from extensions import db, limiter
 from models import Expense, ExpenseCategory, Cheque
 from services.currency_service import CurrencyService
 from services.gl_service import GLService
+from services.gl_posting import post_or_fail
 from utils.decorators import permission_required, branch_scope_id
 from utils.branching import should_show_all_branch_columns
 from utils.helpers import create_audit_log, generate_number
 from utils.tenanting import tenant_query, tenant_get_or_404
+from utils.gl_reference_types import GLRef
 from decimal import Decimal
 from datetime import datetime
 
@@ -145,10 +147,16 @@ def create():
                 db.session.flush()
             
             try:
-                GLService.ensure_core_accounts()
+                from utils.tenanting import get_active_tenant_id
+                GLService.ensure_core_accounts(tenant_id=getattr(expense, 'tenant_id', None) or get_active_tenant_id())
                 
                 category = expense.category
                 expense_account = category.gl_account_code if category and category.gl_account_code else '6990'
+                from models import GLAccount
+                tid = getattr(expense, 'tenant_id', None) or get_active_tenant_id()
+                acc_check = GLAccount.query.filter_by(code=str(expense_account), tenant_id=int(tid) if tid else None).first()
+                if acc_check and acc_check.is_header:
+                    expense_account = '6990'
                 
                 # Determine Payment Account
                 if expense.payment_method == 'cash':
@@ -163,22 +171,25 @@ def create():
                     {'account': payment_account, 'credit': expense.amount, 'description': f'دفع {expense.payment_method}'}
                 ]
                 
-                GLService.post_entry(
+                post_or_fail(
                     lines,
                     description=f'Expense {expense.expense_number}',
-                    reference_type='Expense',
+                    reference_type=GLRef.EXPENSE,
                     reference_id=expense.id,
                     currency=expense.currency,
                     exchange_rate=expense.exchange_rate,
                     branch_id=expense.branch_id
                 )
                 
-                # If Cheque, issue it (GL: Debit 2110, Credit 2120)
                 if cheque:
                     cheque.issue_cheque()
                     
             except Exception as e:
-                current_app.logger.warning(f'GL posting failed: {e}')
+                db.session.rollback()
+                flash(f'❌ فشل الترحيل المحاسبي: {str(e)}', 'danger')
+                return render_template('expenses/create.html',
+                                     categories=tenant_query(ExpenseCategory).filter_by(is_active=True).all(),
+                                     exchange_rates=CurrencyService.get_all_rates('AED'))
             
             db.session.commit()
             
@@ -288,14 +299,12 @@ def delete(id):
         if has_links:
             # أرشفة (Soft Delete)
             # عكس القيد المحاسبي للحفاظ على السجل
-            try:
-                GLService.reverse_entry(
-                    reference_type='Expense',
-                    reference_id=expense.id,
-                    description=f'Reverse Expense {expense.expense_number}'
-                )
-            except Exception as e:
-                current_app.logger.warning(f'GL reversal warning: {e}')
+            from utils.gl_tenant import reverse_document_gl
+            reverse_document_gl(
+                GLRef.EXPENSE, expense.id,
+                f'Reverse Expense {expense.expense_number}',
+                tenant_id=getattr(expense, 'tenant_id', None),
+            )
                 
             archive_service = ArchiveService()
             archive_service.archive_record('expenses', expense, reason='تم أرشفة المصروف لوجود ارتباطات', commit=False)
@@ -310,12 +319,19 @@ def delete(id):
         else:
             # حذف نهائي (Hard Delete)
             # 1. حذف القيود المحاسبية للمصروف
-            GLJournalEntry.query.filter_by(reference_type='Expense', reference_id=expense.id).delete()
+            from utils.gl_reference_types import delete_entries_by_ref, GLRef
+            delete_entries_by_ref(expense.id, GLRef.EXPENSE)
             
             # 2. حذف الشيك إذا كان معلقاً (وحذف قيوده إن وجدت)
             if cheque:
                 # حذف قيود الشيك (نظرياً الشيك المعلق ليس له قيود، لكن للاحتياط)
-                ref_types = ['cheque_receive', 'cheque_issue', 'cheque_cancel', 'cheque_clear', 'cheque_bounce', 'Cheque']
+                from utils.gl_reference_types import ref_variants
+                ref_types = []
+                for rt in (
+                    GLRef.CHEQUE_RECEIVE, GLRef.CHEQUE_ISSUE, GLRef.CHEQUE_CANCEL,
+                    GLRef.CHEQUE_CLEAR, GLRef.CHEQUE_BOUNCE,
+                ):
+                    ref_types.extend(ref_variants(rt))
                 GLJournalEntry.query.filter(
                     GLJournalEntry.reference_type.in_(ref_types),
                     GLJournalEntry.reference_id == cheque.id

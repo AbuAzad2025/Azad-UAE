@@ -262,10 +262,10 @@
         </tbody>
       </table>
     </div>
+    {% set endpoint = 'products.index' %}
+    {% include 'partials/flask_pagination.html' %}
   </div>
 </div>
-
-<!-- Stock Adjustment Modal -->
 <div class="modal fade" id="stockModal" tabindex="-1">
   <div class="modal-dialog">
     <div class="modal-content">

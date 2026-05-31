@@ -110,7 +110,7 @@ def _ensure_functional_roles():
     manager_role = Role.query.filter_by(slug='manager').first()
     if manager_role:
         manager_codes = ['manage_sales', 'manage_purchases', 'manage_products', 'manage_customers', 'manage_suppliers',
-                         'manage_payments', 'manage_expenses', 'view_reports', 'manage_warehouse', 'view_ledger', 'manage_ledger', 'manage_payroll']
+                         'manage_payments', 'manage_expenses', 'view_reports', 'manage_warehouse', 'manage_store', 'view_ledger', 'manage_ledger', 'manage_payroll']
         manager_role.permissions = get_perms(*manager_codes)
         db.session.commit()
 
@@ -123,7 +123,7 @@ def _ensure_functional_roles():
     branch_mgr_role = Role.query.filter_by(slug='branch_manager').first()
     if branch_mgr_role:
         branch_mgr_codes = ['manage_sales', 'manage_purchases', 'manage_products', 'manage_customers', 'manage_suppliers',
-                            'manage_payments', 'manage_expenses', 'view_reports', 'manage_warehouse', 'view_ledger', 'manage_ledger', 'manage_payroll']
+                            'manage_payments', 'manage_expenses', 'view_reports', 'manage_warehouse', 'manage_store', 'view_ledger', 'manage_ledger', 'manage_payroll']
         branch_mgr_role.permissions = get_perms(*branch_mgr_codes)
         db.session.commit()
 
@@ -314,6 +314,12 @@ def _ensure_core_data():
     db.session.commit()
     current_app.logger.info("SystemInit: Core Data Verification Complete.")
 
+    try:
+        from services.store_payment_method_service import StorePaymentMethodService
+        StorePaymentMethodService.ensure_defaults()
+    except Exception as e:
+        current_app.logger.warning(f"SystemInit: store payment methods seed skipped: {e}")
+
 
 def _ensure_permissions():
     """Create all necessary permissions from single source (utils.constants)."""
@@ -321,7 +327,7 @@ def _ensure_permissions():
     category_map = {
         'manage_sales': 'sales', 'manage_purchases': 'purchases', 'manage_products': 'products',
         'manage_customers': 'customers', 'manage_suppliers': 'suppliers', 'manage_payments': 'finance',
-        'manage_expenses': 'finance', 'view_reports': 'reports', 'manage_warehouse': 'warehouse',
+        'manage_expenses': 'finance', 'view_reports': 'reports', 'manage_warehouse': 'warehouse', 'manage_store': 'store',
         'view_ledger': 'finance', 'manage_ledger': 'finance', 'admin': 'admin',
         'manage_users': 'admin', 'manage_backups': 'admin', 'manage_payroll': 'admin',
     }

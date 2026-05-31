@@ -1,10 +1,28 @@
 """
 API Documentation using OpenAPI/Swagger
 """
-from flask import Blueprint, jsonify, render_template_string, current_app
+import os
 import copy
 
+from flask import Blueprint, jsonify, render_template_string, current_app, abort
+from flask_login import current_user
+
 api_docs_bp = Blueprint('api_docs', __name__, url_prefix='/api-docs')
+
+
+def _api_docs_public() -> bool:
+    app_env = (os.environ.get('APP_ENV') or 'production').strip().lower()
+    debug = (os.environ.get('DEBUG') or '').strip().lower() in ('1', 'true', 'yes', 'y')
+    return debug or app_env != 'production'
+
+
+@api_docs_bp.before_request
+def _protect_api_docs_in_production():
+    if _api_docs_public():
+        return None
+    if not current_user.is_authenticated:
+        abort(404)
+    return None
 
 
 # OpenAPI 3.0 Specification
@@ -210,9 +228,17 @@ OPENAPI_SPEC = {
 def openapi_spec():
     """Return OpenAPI specification as JSON"""
     spec = copy.deepcopy(OPENAPI_SPEC)
-    spec["info"]["contact"]["name"] = current_app.config.get("DEVELOPER_NAME", spec["info"]["contact"].get("name"))
-    spec["info"]["contact"]["email"] = current_app.config.get("DEVELOPER_EMAIL", spec["info"]["contact"].get("email"))
-    spec["info"]["contact"]["url"] = current_app.config.get("DEVELOPER_WEBSITE", spec["info"]["contact"].get("url"))
+    spec["info"]["contact"]["name"] = current_app.config.get(
+        "DEVELOPER_NAME", spec["info"]["contact"].get("name")
+    )
+    spec["info"]["contact"]["email"] = current_app.config.get(
+        "DEVELOPER_EMAIL", spec["info"]["contact"].get("email")
+    )
+    spec["info"]["contact"]["url"] = current_app.config.get(
+        "DEVELOPER_WEBSITE", spec["info"]["contact"].get("url")
+    )
+    if not _api_docs_public():
+        spec.pop("servers", None)
     return jsonify(spec)
 
 

@@ -437,15 +437,16 @@ def register_gl_listeners():
             debit = target.total_debit or Decimal('0')
             credit = target.total_credit or Decimal('0')
             
-            if abs(debit - credit) > Decimal('0.01'):
+            if (debit > 0 or credit > 0) and abs(debit - credit) > Decimal('0.01'):
                 logger.error(f"❌ Journal entry {target.entry_number} is UNBALANCED! Debit: {debit}, Credit: {credit}")
-                # يمكن رفع استثناء هنا لمنع الحفظ:
-                # raise ValueError(f"القيد غير متوازن! المدين: {debit}, الدائن: {credit}")
-            else:
-                logger.info(f"✅ Journal entry {target.entry_number} is balanced: {debit} = {credit}")
+                raise ValueError(f"القيد غير متوازن! المدين: {debit}, الدائن: {credit}")
+            logger.info(f"✅ Journal entry {target.entry_number} is balanced: {debit} = {credit}")
         
+        except ValueError:
+            raise
         except Exception as e:
             logger.error(f"❌ Failed to validate journal entry: {e}")
+            raise
 
 
 # ============================================================================
