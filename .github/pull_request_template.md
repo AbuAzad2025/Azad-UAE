@@ -1,6 +1,6 @@
 ## ⚠️ Pull Requests Not Accepted
 
-**UAE-Sale** is proprietary software.
+**Azad-UAE** is proprietary software.
 
 Public pull requests are **NOT** accepted.
 

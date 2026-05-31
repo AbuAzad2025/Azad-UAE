@@ -61,7 +61,7 @@ Replace `USERNAME` and paths as needed.
 ```bash
 # Clone or upload project
 cd ~
-git clone https://github.com/YOUR_ORG/Azad-UAE.git
+git clone https://github.com/AbuAzad2025/Azad-UAE.git
 cd ~/Azad-UAE
 
 # Virtualenv (Python 3.11)
@@ -218,7 +218,7 @@ flask db upgrade
 flask db current
 ```
 
-Expected head (per README): `accounting_scope_001` (verify after upgrade).
+Expected head (verify after upgrade): **`store_init_005`** (`flask db heads`).
 
 **Do not** set `SKIP_SYSTEM_INTEGRITY=1` in production — first reload runs `ensure_system_integrity` (owner, roles, COA bootstrap).
 
@@ -257,12 +257,16 @@ Expected head (per README): `accounting_scope_001` (verify after upgrade).
 | 9 | GraphQL playground | 200 or auth-gated |
 | 10 | Tenant isolation | T2 manager cannot open T4 product (404/403) |
 
-Optional automated check on **staging** (not production DB with real data):
+Optional automated checks on **staging** (not production DB with real data):
 
 ```bash
 # Only on staging — never against live tenant data without approval
-SKIP_SYSTEM_INTEGRITY=1 python tools/uat_operational_test.py
+python tools/qa/uat_operational_check.py
+python tools/qa/storefront_isolation_check.py
+python tools/qa/storefront_verify_cleanup_check.py
 ```
+
+See [`tools/qa/README.md`](tools/qa/README.md). Last verified UAT result: **59/59 PASS**.
 
 ---
 

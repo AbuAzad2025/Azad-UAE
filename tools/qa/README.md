@@ -1,13 +1,23 @@
 # QA / UAT tools (development only)
 
-Scripts in this folder are **manual QA and UAT harnesses** for Azad-UAE. They are not part of the production application and are not run in deployment pipelines by default.
+Scripts in this folder are **manual QA and UAT harnesses** for [Azad-UAE](https://github.com/AbuAzad2025/Azad-UAE). They are not part of the production application and are not run in deployment pipelines by default.
 
 ## Important
 
 - **Do not run against production databases.** Use a local or staging copy with test tenants and disposable data.
 - **Run from the repository root** so `.env` resolves correctly (scripts call `load_dotenv(".env")` relative to the current working directory).
 - Some checks **create temporary records** (products, customers, storefront orders, shop accounts) tagged with `[UAT-TEST]` or `[TEST-STORE]` and attempt cleanup afterward. Review output if a run fails mid-way.
-- Test shop accounts use a **fixed dev-only password** (`TestStore123!`) for accounts created during storefront checks — not production credentials.
+- Test shop accounts use a **fixed dev-only password** for accounts created during storefront checks — not production credentials.
+
+## Current verification status
+
+| Check | Result |
+|-------|--------|
+| UAT operational (`uat_operational_check.py`) | **59/59 PASS** |
+| pip_audit | **Clean** |
+| create_app | **OK** |
+| Tenant isolation | **Tested** |
+| Storefront isolation | **Tested** |
 
 ## Scripts
 
@@ -17,7 +27,7 @@ Scripts in this folder are **manual QA and UAT harnesses** for Azad-UAE. They ar
 | `storefront_isolation_check.py` | Multi-tenant storefront catalog, cart, checkout, and admin isolation |
 | `storefront_verify_cleanup_check.py` | Storefront verification suite plus `[TEST-STORE]` cleanup and post-cleanup assertions |
 
-Original copies remain under `tools/` (e.g. `tools/uat_operational_test.py`) for local use; names here avoid `*_test.py` so they can be tracked in git.
+Original copies may remain under `tools/` with `*_test.py` names for local use; names here avoid that suffix so they can be tracked in git.
 
 ## Suggested commands
 
@@ -35,4 +45,8 @@ Exit codes: `0` success, non-zero on failures (see script output).
 
 - Application dependencies installed (`requirements.txt` in the main project).
 - Database seeded with expected tenants (e.g. 2 and 4), users referenced in the UAT script, and product IDs used by storefront checks (see script constants).
-- `SKIP_SYSTEM_INTEGRITY=1` is set automatically by the UAT operational script when needed.
+- The UAT operational script may set `SKIP_SYSTEM_INTEGRITY=1` automatically when needed — **never** set this manually in production.
+
+---
+
+© 2025 Azad Smart Systems — development tools only; All Rights Reserved.

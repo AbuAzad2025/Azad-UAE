@@ -6,12 +6,17 @@
 
 **Description:**
 ```
-Intelligent warehouse & sales management system with real AI - نظام إدارة مستودعات ومبيعات ذكي
+Multi-branch sales & accounting system — نظام إدارة المبيعات والمحاسبة متعدد الفروع
 ```
 
 **Website:**
 ```
-https://uaesale-azad.pythonanywhere.com/
+https://azad.pythonanywhere.com/
+```
+
+**Repository:**
+```
+https://github.com/AbuAzad2025/Azad-UAE
 ```
 
 **Topics (Keywords):**
@@ -37,7 +42,7 @@ smart-systems
 
 ## How to Apply These Settings
 
-1. Go to: https://github.com/AbuAzad2025/UAE-Sale/settings
+1. Go to: https://github.com/AbuAzad2025/Azad-UAE/settings
 2. In "About" section (top right):
    - Add description
    - Add website URL

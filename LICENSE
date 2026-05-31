@@ -32,6 +32,10 @@ You may NOT:
 
 3) Limited Authorization
 Access to this repository does NOT grant any license rights.
+Presence of this code on GitHub (or any other hosting platform) does NOT
+constitute a public license, open-source grant, or permission to use.
+This is NOT licensed under MIT, Apache, GPL, or any other permissive or
+copyleft open-source license.
 Any use is forbidden unless a separate signed written license is issued.
 
 4) No Warranty
@@ -72,6 +76,9 @@ shall apply.
 
 3) صلاحية الاستخدام
 الوصول إلى المستودع لا يمنح أي حق ترخيص.
+وجود الشيفرة على GitHub (أو أي منصة استضافة) لا يُعد ترخيصاً عاماً أو
+منحاً مفتوح المصدر أو إذناً بالاستخدام.
+هذا البرنامج ليس مرخصاً بموجب MIT أو Apache أو GPL أو أي ترخيص مفتوح آخر.
 أي استخدام ممنوع ما لم يوجد عقد ترخيص خطي موقّع بشكل مستقل.
 
 4) إخلاء المسؤولية
