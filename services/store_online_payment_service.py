@@ -8,6 +8,7 @@ from flask import current_app
 
 from extensions import db
 from models.payment_vault import PaymentVault
+from utils.nowpayments_ipn import get_nowpayments_ipn_url
 
 
 class StoreOnlinePaymentService:
@@ -39,8 +40,7 @@ class StoreOnlinePaymentService:
 
         currency = (sale.currency or 'AED').lower()
         order_id = f'{StoreOnlinePaymentService.ORDER_PREFIX}{sale.id}_{store.tenant_id}'
-        base_url = (current_app.config.get('BASE_URL') or '').rstrip('/')
-        ipn_url = f'{base_url}/auth/payment/callback' if base_url else None
+        ipn_url = get_nowpayments_ipn_url()
 
         payload = {
             'price_amount': amount,
@@ -48,11 +48,10 @@ class StoreOnlinePaymentService:
             'pay_currency': (crypto_currency or 'btc').lower(),
             'order_id': order_id,
             'order_description': f'Store order {sale.sale_number} — {store.title}',
+            'ipn_callback_url': ipn_url,
         }
         if customer_email:
             payload['customer_email'] = customer_email
-        if ipn_url:
-            payload['ipn_callback_url'] = ipn_url
 
         headers = {
             'x-api-key': StoreOnlinePaymentService._api_key(),

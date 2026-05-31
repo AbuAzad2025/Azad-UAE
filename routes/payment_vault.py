@@ -1616,7 +1616,10 @@ def nowpayments_webhook():
         
         # التحقق من التوقيع
         vault = PaymentVault.query.first()
-        if not vault or not vault.nowpayments_ipn_secret:
+        from utils.nowpayments_ipn import resolve_nowpayments_ipn_secret
+
+        ipn_secret = resolve_nowpayments_ipn_secret(vault)
+        if not ipn_secret:
             logger.warning('NOWPayments webhook rejected: IPN secret not configured')
             return jsonify({'error': 'Webhook not configured'}), 503
         if not signature:
@@ -1624,7 +1627,7 @@ def nowpayments_webhook():
         if not WebhookService.verify_nowpayments_signature(
             payload,
             signature,
-            vault.nowpayments_ipn_secret
+            ipn_secret
         ):
             logger.warning('NOWPayments webhook signature verification failed')
             return jsonify({'error': 'Invalid signature'}), 403

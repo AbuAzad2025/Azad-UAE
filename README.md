@@ -86,6 +86,10 @@ NOWPAYMENTS_IPN_SECRET=CHANGE_ME
 
 > **ممنوع في الإنتاج:** `SKIP_SYSTEM_INTEGRITY=1`
 
+> **NOWPayments IPN (canonical):** `https://YOUR-DOMAIN/payment-vault/webhook/nowpayments` — سجّل **URL واحد فقط** في لوحة NOWPayments. الكود يُرسل `ipn_callback_url` canonical لكل دفعة جديدة. `/auth/payment/callback` legacy fallback مؤقت فقط.
+
+> **AI ORM listeners:** معطّلة افتراضيًا في الإنتاج (`AI_ORM_LISTENERS_ENABLED=false`). للتطوير يمكن تفعيلها.
+
 ---
 
 ### 4. النشر على PythonAnywhere + PostgreSQL
@@ -239,6 +243,10 @@ AZAD_MASTER_DAILY_SEED=CHANGE_ME
 ```
 
 `DEBUG=false` requires **HTTPS** (`SESSION_COOKIE_SECURE=True`). Never set `SKIP_SYSTEM_INTEGRITY=1` in production.
+
+**NOWPayments IPN (canonical):** `https://YOUR-DOMAIN/payment-vault/webhook/nowpayments` — register **one** URL in the NOWPayments dashboard only. New payments embed this canonical `ipn_callback_url` per request (`order_id`: `DONATION_*`, `PURCHASE_*`, `STORE_*`). `/auth/payment/callback` is a temporary legacy fallback.
+
+**AI ORM listeners:** disabled by default in production (`AI_ORM_LISTENERS_ENABLED=false`).
 
 ---
 

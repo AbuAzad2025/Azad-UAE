@@ -340,8 +340,16 @@ def payment_status(payment_id):
 @auth_bp.route('/payment/callback', methods=['POST'])
 @limiter.limit("300 per hour")
 def payment_callback():
-    """معالجة callback من NOWPayments"""
+    """Legacy NOWPayments IPN handler (donations via NOWPaymentsService).
+
+    Canonical IPN for new deployments: ``/payment-vault/webhook/nowpayments``
+    (WebhookService — purchases, donations, storefront). Register only ONE IPN URL
+    in the NOWPayments dashboard to avoid duplicate status updates.
+    """
     try:
+        current_app.logger.warning(
+            'Legacy NOWPayments callback used; canonical is /payment-vault/webhook/nowpayments'
+        )
         signature = request.headers.get('x-nowpayments-sig')
         if not signature:
             current_app.logger.warning(

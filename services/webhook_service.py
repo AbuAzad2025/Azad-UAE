@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 from extensions import db
 from models import Donation, PackagePurchase, PaymentLog
 from services.notification_service import NotificationService
+from sqlalchemy import or_
 import hmac
 import hashlib
 import logging
@@ -88,7 +89,14 @@ class WebhookService:
         if not purchase:
             logger.warning(f'Purchase not found for payment_id: {payment_id}')
             return {'success': False, 'error': 'Purchase not found'}
-        
+
+        if (
+            payment_status == 'finished'
+            and purchase.payment_status == 'completed'
+            and purchase.activation_status == 'activated'
+        ):
+            return {'success': True, 'message': 'Purchase already activated (idempotent)'}
+
         # تحديث الحالة
         if payment_status == 'finished':
             purchase.payment_status = 'completed'
@@ -118,12 +126,20 @@ class WebhookService:
         payment_id = data.get('payment_id')
         
         # البحث عن التبرع
-        donation = Donation.query.filter_by(transaction_hash=payment_id).first()
-        
+        donation = Donation.query.filter(
+            or_(
+                Donation.transaction_hash == payment_id,
+                Donation.gateway_transaction_id == payment_id,
+            )
+        ).first()
+
         if not donation:
             logger.warning(f'Donation not found for payment_id: {payment_id}')
             return {'success': False, 'error': 'Donation not found'}
-        
+
+        if donation.status == 'completed' and payment_status == 'finished':
+            return {'success': True, 'message': 'Donation already completed (idempotent)'}
+
         # تحديث الحالة
         if payment_status == 'finished':
             donation.status = 'completed'
@@ -172,6 +188,9 @@ class WebhookService:
 
         if payment_id and sale.checkout_gateway_ref and sale.checkout_gateway_ref != payment_id:
             logger.warning('Gateway ref mismatch for sale %s', sale.sale_number)
+
+        if payment_status == 'finished' and sale.status == 'confirmed':
+            return {'success': True, 'message': 'Store order already confirmed (idempotent)'}
 
         if payment_status == 'finished':
             if sale.status != 'confirmed':

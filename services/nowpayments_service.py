@@ -13,6 +13,7 @@ from decimal import Decimal
 from flask import current_app
 from extensions import db
 from models import Donation
+from utils.nowpayments_ipn import get_nowpayments_ipn_url
 
 
 class NOWPaymentsService:
@@ -60,8 +61,10 @@ class NOWPaymentsService:
                 'price_currency': currency.lower(),
                 'pay_currency': crypto_currency.lower(),
                 'order_description': description or f"تبرع لمشروع Azad Systems - ${amount}",
-                'ipn_callback_url': f"{current_app.config.get('BASE_URL')}/auth/payment/callback"
+                'ipn_callback_url': get_nowpayments_ipn_url(),
             }
+            if order_id:
+                data['order_id'] = order_id
             
             # إضافة إيميل العميل إذا كان متوفراً
             if customer_email:

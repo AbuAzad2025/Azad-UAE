@@ -118,6 +118,9 @@ PAYMENT_VAULT_TRUSTED_ORIGINS=https://USERNAME.pythonanywhere.com
 NOWPAYMENTS_IPN_SECRET=CHANGE_ME
 # NOWPAYMENTS_API_KEY=CHANGE_ME
 
+# SQLAlchemy AI/neural ORM listeners — off in production by default (see config.py)
+# AI_ORM_LISTENERS_ENABLED=false
+
 # Cache / rate limit (no Redis on PA unless external)
 CACHE_TYPE=simple
 RATELIMIT_STORAGE_URI=memory://
@@ -301,6 +304,29 @@ When using a custom domain instead of `USERNAME.pythonanywhere.com`:
 4. Reload web app
 
 No code changes required — environment and provider URLs only.
+
+---
+
+## NOWPayments IPN (canonical vs legacy)
+
+| Route | Role | Use for new deployments? |
+|-------|------|--------------------------|
+| **`/payment-vault/webhook/nowpayments`** | **Canonical** — `WebhookService` handles `PURCHASE_*`, `DONATION_*`, `STORE_*` order prefixes | **Yes** — register this URL only in NOWPayments |
+| `/auth/payment/callback` | **Legacy** — `NOWPaymentsService.process_payment_callback` (donations) | No — kept for backward compatibility |
+
+**Important:** Register **one** IPN URL in the NOWPayments provider dashboard. If both URLs are active, the same payment may be processed twice.
+
+**Canonical IPN URL:**
+
+```
+https://YOUR-DOMAIN/payment-vault/webhook/nowpayments
+```
+
+Requires `NOWPAYMENTS_IPN_SECRET` in `.env` and/or `PaymentVault.nowpayments_ipn_secret` in the vault settings UI. CSRF is exempt; signature verification is required (SHA512 on raw body).
+
+**Per-payment IPN (code):** `NOWPaymentsService` and `StoreOnlinePaymentService` set `ipn_callback_url` to the canonical route for every new payment. Do **not** register a second global dashboard URL pointing at `/auth/payment/callback`.
+
+**Legacy fallback:** `/auth/payment/callback` remains active for in-flight payments created before migration; it logs a warning and updates `Donation` by `payment_id` only.
 
 ---
 
