@@ -90,6 +90,9 @@ test_*.py
 check_db.py
 verify_*.py
 scripts/
+!tools/qa/
+!tools/qa/*.py
+!tools/qa/README.md
 
 # Neural models (can be large)
 ai_knowledge/models/*.pkl
