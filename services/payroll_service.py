@@ -16,7 +16,24 @@ from utils.gl_reference_types import GLRef
 
 class PayrollService:
 
-    
+    @staticmethod
+    def _branch_tenant_id(branch_id):
+        from models import Branch
+
+        branch = db.session.get(Branch, int(branch_id))
+        if not branch:
+            raise ValueError('الفرع المحدد غير موجود.')
+        tenant_id = getattr(branch, 'tenant_id', None)
+        if tenant_id is None:
+            raise ValueError('الفرع المحدد غير مرتبط بشركة نشطة.')
+        return int(tenant_id)
+
+    @staticmethod
+    def _require_employee_tenant_id(employee):
+        tenant_id = getattr(employee, 'tenant_id', None)
+        if tenant_id is None:
+            raise ValueError('الموظف غير مرتبط بشركة — لا يمكن إتمام العملية.')
+        return int(tenant_id)
 
     @staticmethod
 
@@ -28,7 +45,7 @@ class PayrollService:
 
             raise ValueError('يجب ربط الموظف بفرع محدد.')
 
-
+        tenant_id = PayrollService._branch_tenant_id(branch_id)
 
         employee = Employee(
 
@@ -45,6 +62,8 @@ class PayrollService:
             basic_salary=Decimal(data.get('basic_salary', 0)),
 
             branch_id=int(branch_id),
+
+            tenant_id=tenant_id,
 
             joined_date=datetime.strptime(data.get('joined_date'), '%Y-%m-%d') if data.get('joined_date') else datetime.now()
 
@@ -64,7 +83,7 @@ class PayrollService:
 
         employee = Employee.query.get_or_404(employee_id)
 
-        
+        tenant_id = PayrollService._require_employee_tenant_id(employee)
 
         advance = SalaryAdvance(
 
@@ -76,21 +95,15 @@ class PayrollService:
 
             created_by=user_id,
 
-            status='approved'
+            status='approved',
+
+            tenant_id=tenant_id,
 
         )
 
         db.session.add(advance)
 
         db.session.flush()
-
-        
-
-        from models import Branch
-
-        branch = Branch.query.get(employee.branch_id) if employee.branch_id else None
-
-        tenant_id = getattr(branch, 'tenant_id', None) if branch else None
 
         GLService.ensure_core_accounts(tenant_id=tenant_id)
 
@@ -134,7 +147,7 @@ class PayrollService:
 
         employee = Employee.query.get_or_404(employee_id)
 
-        
+        tenant_id = PayrollService._require_employee_tenant_id(employee)
 
         basic_amount = Decimal(0)
 
@@ -188,6 +201,8 @@ class PayrollService:
 
             branch_id=employee.branch_id,
 
+            tenant_id=tenant_id,
+
             created_by=user_id,
 
             status='paid'
@@ -226,15 +241,7 @@ class PayrollService:
 
 
 
-        from models import Branch
-
-        branch = Branch.query.get(employee.branch_id) if employee.branch_id else None
-
-        tenant_id = getattr(branch, 'tenant_id', None) if branch else None
-
         GLService.ensure_core_accounts(tenant_id=tenant_id)
-
-
 
         gl_entry = post_or_fail(
 

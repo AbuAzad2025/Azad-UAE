@@ -777,13 +777,27 @@ def edit(id):
             if current_user.can_see_costs():
                 product.cost_price = safe_float(request.form.get('cost_price'), default=0)
             
+            if partner_rows and not product.tenant_id:
+                flash('⚠️ المنتج غير مرتبط بشركة — لا يمكن حفظ شركاء المنتج.', 'warning')
+                return render_template('products/edit.html', form=form, product=product, categories=categories, warehouses=warehouses, merchants=merchants, partners=partners)
+
             product.partner_shares.clear()
             if partner_rows:
+                product_tid = int(product.tenant_id)
                 for row in partner_rows:
+                    partner_customer = Customer.query.get(row['partner_customer_id'])
+                    if not partner_customer:
+                        flash('⚠️ الشريك المحدد غير موجود.', 'warning')
+                        return render_template('products/edit.html', form=form, product=product, categories=categories, warehouses=warehouses, merchants=merchants, partners=partners)
+                    p_tid = getattr(partner_customer, 'tenant_id', None)
+                    if p_tid is not None and int(p_tid) != product_tid:
+                        flash('⚠️ الشريك المحدد ينتمي لشركة أخرى.', 'warning')
+                        return render_template('products/edit.html', form=form, product=product, categories=categories, warehouses=warehouses, merchants=merchants, partners=partners)
                     product.partner_shares.append(ProductPartner(
                         product_id=product.id,
                         partner_customer_id=row['partner_customer_id'],
                         percentage=row['percentage'],
+                        tenant_id=product_tid,
                     ))
             
             if new_stock is not None and abs(new_stock - old_stock) > 1e-6:
