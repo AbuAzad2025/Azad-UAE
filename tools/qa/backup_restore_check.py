@@ -13,11 +13,13 @@ import argparse
 import glob
 import hashlib
 import json
+import logging
 import os
 import re
 import shutil
-import subprocess
 import sys
+
+logger = logging.getLogger(__name__)
 import tarfile
 import tempfile
 from datetime import datetime, timezone
@@ -56,17 +58,13 @@ def _load_env() -> str:
 
 def _git_short_head() -> str:
     try:
-        proc = subprocess.run(
-            ["git", "rev-parse", "--short", "HEAD"],
-            cwd=ROOT,
-            capture_output=True,
-            text=True,
-            timeout=15,
-        )
+        from services.backup_exec import run_git
+
+        proc = run_git(["git", "rev-parse", "--short", "HEAD"], cwd=ROOT, timeout=15)
         if proc.returncode == 0:
             return (proc.stdout or "").strip()
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.debug("git head: %s", exc)
     return ""
 
 
@@ -91,9 +89,10 @@ def _admin_urls(base_url: str) -> List[str]:
             continue
         try:
             candidate = str(u.set(database=db))
-        except Exception:
-            continue
-        if candidate not in seen:
+        except (ValueError, TypeError) as exc:
+            logger.debug("admin url for db %s: %s", db, exc)
+            candidate = None
+        if candidate and candidate not in seen:
             seen.add(candidate)
             urls.append(candidate)
     return urls
@@ -130,7 +129,9 @@ def _create_temp_database(base_url: str, dbname: str) -> Tuple[bool, str]:
             env = os.environ.copy()
             if params.get("password"):
                 env["PGPASSWORD"] = params["password"]
-            proc = subprocess.run(
+            from services.backup_exec import run_pg_tool
+
+            proc = run_pg_tool(
                 [
                     createdb,
                     "-h",
@@ -141,8 +142,6 @@ def _create_temp_database(base_url: str, dbname: str) -> Tuple[bool, str]:
                     params["username"],
                     dbname,
                 ],
-                capture_output=True,
-                text=True,
                 env=env,
                 timeout=120,
             )
@@ -185,7 +184,9 @@ def _drop_temp_database(base_url: str, dbname: str) -> Tuple[bool, str]:
             env = os.environ.copy()
             if params.get("password"):
                 env["PGPASSWORD"] = params["password"]
-            subprocess.run(
+            from services.backup_exec import run_pg_tool
+
+            run_pg_tool(
                 [
                     dropdb,
                     "-h",
@@ -197,8 +198,6 @@ def _drop_temp_database(base_url: str, dbname: str) -> Tuple[bool, str]:
                     "--if-exists",
                     dbname,
                 ],
-                capture_output=True,
-                text=True,
                 env=env,
                 timeout=120,
             )
@@ -418,12 +417,13 @@ def _verify_restored_db(
 
 
 def _run_predeploy_on_target(target_url: str) -> Dict[str, Any]:
+    from services.backup_exec import run_repo_python_script
+
     env = os.environ.copy()
     env.setdefault("SKIP_SYSTEM_INTEGRITY", "1")
-    proc = subprocess.run(
+    proc = run_repo_python_script(
+        "tools/qa/predeploy_check.py",
         [
-            sys.executable,
-            os.path.join(ROOT, "tools", "qa", "predeploy_check.py"),
             "--profile",
             "local",
             "--skip-uat",
@@ -432,10 +432,6 @@ def _run_predeploy_on_target(target_url: str) -> Dict[str, Any]:
         ],
         cwd=ROOT,
         env=env,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
         timeout=600,
     )
     out = (proc.stdout or "") + (proc.stderr or "")
@@ -712,6 +708,34 @@ def restore_to_temp_local(
                     target_url, manifest, expected_tenant_id=tgt_tid, scope=scope
                 )
                 proof["scoped_restore"] = outcome
+                imp = outcome.get("import") or {}
+                manifest_counts = manifest.get("row_counts_per_table") or {}
+                proof["products_source_count"] = int(manifest_counts.get("products") or 0)
+                proof["products_restored_count"] = int(
+                    imp.get("products_inserted")
+                    or (db_verify.get("counts") or {}).get("products")
+                    or 0
+                )
+                proof["rows_skipped"] = int(imp.get("rows_skipped") or 0)
+                proof["target_tenant_id"] = tgt_tid if scope != "system" else None
+                if proof["products_source_count"] and proof[
+                    "products_restored_count"
+                ] != proof["products_source_count"]:
+                    proof["restore_success"] = False
+                    proof["restore_errors"] = proof.get("restore_errors") or []
+                    proof["restore_errors"].append(
+                        "products count mismatch: source="
+                        f"{proof['products_source_count']} restored="
+                        f"{proof['products_restored_count']}"
+                    )
+                    BackupService.write_restore_proof(backup_filename, proof)
+                    return 1
+                if proof.get("rows_skipped", 0) > 0:
+                    proof["restore_success"] = False
+                    proof["restore_errors"] = proof.get("restore_errors") or []
+                    proof["restore_errors"].append(f"rows_skipped={proof['rows_skipped']}")
+                    BackupService.write_restore_proof(backup_filename, proof)
+                    return 1
 
             proof["db_verify"] = db_verify
             print("DB_VERIFY", json.dumps(db_verify, indent=2, default=str))

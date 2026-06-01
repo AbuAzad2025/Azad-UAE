@@ -9,7 +9,6 @@ import hashlib
 import json
 import logging
 import os
-import subprocess
 import sys
 import tarfile
 from dataclasses import dataclass, field
@@ -300,7 +299,10 @@ def ensure_target_schema(target_database_url: str) -> Tuple[bool, str]:
         if src and tgt and pg_dump and pg_restore:
             import tempfile
 
-            schema_file = tempfile.mktemp(suffix=".sql")
+            with tempfile.NamedTemporaryFile(
+                mode="w", suffix=".sql", delete=False, encoding="utf-8"
+            ) as schema_tmp:
+                schema_file = schema_tmp.name
             env = os.environ.copy()
             if src.get("password"):
                 env["PGPASSWORD"] = src["password"]
@@ -320,9 +322,9 @@ def ensure_target_schema(target_database_url: str) -> Tuple[bool, str]:
                 "-f",
                 schema_file,
             ]
-            proc = subprocess.run(
-                dump_cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", env=env, timeout=600
-            )
+            from services.backup_exec import run_pg_tool
+
+            proc = run_pg_tool(dump_cmd, env=env, timeout=600)
             if proc.returncode == 0 and os.path.isfile(schema_file):
                 env2 = os.environ.copy()
                 if tgt.get("password"):
@@ -343,15 +345,7 @@ def ensure_target_schema(target_database_url: str) -> Tuple[bool, str]:
                     "-f",
                     schema_file,
                 ]
-                proc2 = subprocess.run(
-                    restore_cmd,
-                    capture_output=True,
-                    text=True,
-                    encoding="utf-8",
-                    errors="replace",
-                    env=env2,
-                    timeout=600,
-                )
+                proc2 = run_pg_tool(restore_cmd, env=env2, timeout=600)
                 try:
                     os.remove(schema_file)
                 except OSError:
@@ -370,8 +364,8 @@ def ensure_target_schema(target_database_url: str) -> Tuple[bool, str]:
                             )
                         ).scalar():
                             return True, ""
-                except Exception:
-                    pass
+                except Exception as exc:
+                    logger.debug("alembic_version probe after pg_restore: %s", exc)
                 err = (proc2.stderr or proc2.stdout or "pg_restore schema failed")[:800]
                 return False, err
 
@@ -379,16 +373,9 @@ def ensure_target_schema(target_database_url: str) -> Tuple[bool, str]:
     env["DATABASE_URL"] = target_database_url
     env["SQLALCHEMY_DATABASE_URI"] = target_database_url
     env.setdefault("SKIP_SYSTEM_INTEGRITY", "1")
-    proc = subprocess.run(
-        [sys.executable, "-m", "flask", "db", "upgrade"],
-        cwd=ROOT,
-        env=env,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        timeout=600,
-    )
+    from services.backup_exec import run_python_module
+
+    proc = run_python_module("flask", ["db", "upgrade"], cwd=ROOT, env=env, timeout=600)
     if proc.returncode != 0:
         err = (proc.stderr or proc.stdout or "flask db upgrade failed")[:800]
         return False, err
@@ -542,8 +529,8 @@ def restore_scoped_to_target(
         with engine.begin() as conn:
             try:
                 conn.execute(text("SET session_replication_role = replica"))
-            except Exception:
-                pass
+            except Exception as exc:
+                logger.debug("session_replication_role replica: %s", exc)
             if not table_exists(conn, table):
                 outcome["warnings"].append(f"skip missing table {table}")
                 continue
@@ -614,8 +601,8 @@ def restore_scoped_to_target(
                     )
             try:
                 conn.execute(text("SET session_replication_role = DEFAULT"))
-            except Exception:
-                pass
+            except Exception as exc:
+                logger.debug("session_replication_role default: %s", exc)
 
     outcome["id_maps"] = {k: len(v) for k, v in id_maps.items()}
     outcome["ok"] = True

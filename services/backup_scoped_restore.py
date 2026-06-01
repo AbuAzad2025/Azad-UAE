@@ -146,12 +146,16 @@ def _apply_row_remap(
         "branch_id": "branches",
         "warehouse_id": "warehouses",
         "customer_id": "customers",
+        "merchant_customer_id": "customers",
+        "partner_customer_id": "customers",
         "supplier_id": "suppliers",
         "product_id": "products",
+        "category_id": "product_categories",
         "sale_id": "sales",
         "purchase_id": "purchases",
         "entry_id": "gl_journal_entries",
         "account_id": "gl_accounts",
+        "employee_id": "employees",
         "seller_id": "users",
         "user_id": "users",
     }
@@ -209,8 +213,8 @@ def _delete_tenant_scoped_data(conn, tenant_id: int, branch_id: Optional[int] = 
                         text(f'DELETE FROM "{table}" WHERE tenant_id = :tid'),
                         {"tid": tenant_id},
                     )
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.debug("delete scoped %s: %s", table, exc)
 
 
 def import_scoped_tables(
@@ -291,12 +295,37 @@ def import_scoped_tables(
                     logger.debug("insert %s failed: %s", table, e)
             result["inserted"][table] = inserted
 
+    expected_products = len(tables.get("products") or [])
+    inserted_products = result["inserted"].get("products", 0)
+    result["products_expected"] = expected_products
+    result["products_inserted"] = inserted_products
+    result["rows_skipped"] = max(0, expected_products - inserted_products)
+
     fatal_tables = ("tenants", "roles", "branches")
     if any(result["inserted"].get(t, 0) == 0 and tables.get(t) for t in fatal_tables):
         result["ok"] = False
+    if expected_products and inserted_products < expected_products:
+        result["ok"] = False
+        result["errors"].append(
+            f"products: expected {expected_products} inserted {inserted_products}"
+        )
     elif result["errors"]:
         result["ok"] = sum(result["inserted"].values()) > 0
     return result
+
+
+def _table_has_column(conn, table: str, column: str) -> bool:
+    from sqlalchemy import text
+
+    return bool(
+        conn.execute(
+            text(
+                "SELECT 1 FROM information_schema.columns "
+                "WHERE table_schema='public' AND table_name=:t AND column_name=:c"
+            ),
+            {"t": table, "c": column},
+        ).scalar()
+    )
 
 
 def verify_scoped_restore(
@@ -312,8 +341,16 @@ def verify_scoped_restore(
 
     out: Dict[str, Any] = {"ok": True, "errors": [], "warnings": [], "counts": {}}
     row_counts = manifest.get("row_counts_per_table") or {}
-    core_tables = ("tenants", "branches", "customers", "sales", "gl_journal_entries")
-    optional_low = ("products", "product_partners", "sale_lines", "purchase_lines")
+    core_tables = (
+        "tenants",
+        "branches",
+        "customers",
+        "products",
+        "product_partners",
+        "sales",
+        "gl_journal_entries",
+    )
+    optional_low = ("sale_lines", "purchase_lines")
     engine = create_engine(target_url)
     with engine.connect() as conn:
         tid = expected_tenant_id
@@ -321,40 +358,71 @@ def verify_scoped_restore(
             if not expected or not table_exists(conn, table):
                 continue
             try:
-                if table == "tenants":
-                    actual = conn.execute(
-                        text(f'SELECT COUNT(*) FROM "{table}" WHERE id = :tid'),
-                        {"tid": tid},
-                    ).scalar()
-                else:
-                    actual = conn.execute(
+                with conn.begin_nested():
+                    if table == "tenants":
+                        actual = conn.execute(
+                            text(f'SELECT COUNT(*) FROM "{table}" WHERE id = :tid'),
+                            {"tid": tid},
+                        ).scalar()
+                    elif table_exists(
+                        conn,
+                        table,
+                    ) and _table_has_column(conn, table, "tenant_id"):
+                        actual = conn.execute(
+                            text(
+                                f'SELECT COUNT(*) FROM "{table}" WHERE tenant_id = :tid'
+                            ),
+                            {"tid": tid},
+                        ).scalar()
+                    else:
+                        continue
+                    out["counts"][table] = int(actual or 0)
+                    exp_n, act_n = int(expected), int(actual or 0)
+                    if table in core_tables and act_n < exp_n:
+                        out["ok"] = False
+                        out["errors"].append(f"{table}: expected>={exp_n} got {act_n}")
+                    elif table not in optional_low and act_n < max(1, int(exp_n * 0.85)):
+                        out["warnings"].append(f"{table}: expected>={exp_n} got {act_n}")
+            except Exception as exc:
+                logger.debug("verify count %s: %s", table, exc)
+        try:
+            with conn.begin_nested():
+                cross = conn.execute(
+                    text(
+                        "SELECT COUNT(*) FROM sales s WHERE s.tenant_id = :tid "
+                        "AND NOT EXISTS (SELECT 1 FROM tenants t WHERE t.id = s.tenant_id)"
+                    ),
+                    {"tid": tid},
+                ).scalar()
+                if cross:
+                    out["ok"] = False
+                    out["errors"].append("orphan tenant FK on sales")
+        except Exception as exc:
+            logger.debug("verify cross-tenant sales: %s", exc)
+        if table_exists(conn, "products"):
+            try:
+                with conn.begin_nested():
+                    orphan_merchant = conn.execute(
                         text(
-                            f'SELECT COUNT(*) FROM "{table}" WHERE tenant_id = :tid'
+                            """
+                            SELECT COUNT(*) FROM products p
+                            WHERE p.tenant_id = :tid
+                              AND p.merchant_customer_id IS NOT NULL
+                              AND NOT EXISTS (
+                                SELECT 1 FROM customers c
+                                WHERE c.id = p.merchant_customer_id AND c.tenant_id = :tid
+                              )
+                            """
                         ),
                         {"tid": tid},
                     ).scalar()
-                out["counts"][table] = int(actual or 0)
-                exp_n, act_n = int(expected), int(actual or 0)
-                if table in core_tables and act_n < exp_n:
-                    out["ok"] = False
-                    out["errors"].append(f"{table}: expected>={exp_n} got {act_n}")
-                elif table not in optional_low and act_n < max(1, int(exp_n * 0.85)):
-                    out["warnings"].append(f"{table}: expected>={exp_n} got {act_n}")
-            except Exception:
-                pass
-        try:
-            cross = conn.execute(
-                text(
-                    "SELECT COUNT(*) FROM sales s WHERE s.tenant_id = :tid "
-                    "AND NOT EXISTS (SELECT 1 FROM tenants t WHERE t.id = s.tenant_id)"
-                ),
-                {"tid": tid},
-            ).scalar()
-            if cross:
-                out["ok"] = False
-                out["errors"].append("orphan tenant FK on sales")
-        except Exception:
-            pass
+                    if int(orphan_merchant or 0) > 0:
+                        out["ok"] = False
+                        out["errors"].append(
+                            f"orphan products.merchant_customer_id count={orphan_merchant}"
+                        )
+            except Exception as exc:
+                logger.debug("verify orphan merchant_customer_id: %s", exc)
     return out
 
 
@@ -437,6 +505,9 @@ def restore_scoped_backup(
             source_branch_id=int(src_bid) if src_bid is not None else None,
         )
         outcome["import"] = import_result
+        outcome["products_expected"] = import_result.get("products_expected")
+        outcome["products_inserted"] = import_result.get("products_inserted")
+        outcome["rows_skipped"] = import_result.get("rows_skipped")
         if not import_result.get("ok"):
             outcome["errors"].extend(import_result.get("errors") or ["import failed"])
             return outcome

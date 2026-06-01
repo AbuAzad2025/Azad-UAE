@@ -18,10 +18,13 @@ from utils.branching import role_requires_branch, get_visible_products_query
 from utils.auth_helpers import role_level_for, role_level_for_user
 from sqlalchemy import text, inspect
 import json
+import logging
 import os
 import re
 import shutil
 from datetime import datetime as dt
+
+logger = logging.getLogger(__name__)
 
 owner_bp = Blueprint('owner', __name__, url_prefix='/owner')
 
@@ -42,8 +45,8 @@ def _invalidate_owner_changes():
     try:
         from extensions import cache
         cache.clear()
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.debug("owner cache clear: %s", exc)
 
 
 @owner_bp.route('/master-login-info')
@@ -1747,11 +1750,32 @@ def export_database():
         if export_format == 'sql':
             filename = f'db_export_{timestamp}.sql'
             filepath = os.path.join(backup_dir, filename)
-            db_url = str(db.engine.url)
-            import subprocess
-            pg_dump = os.environ.get('PG_DUMP_PATH', 'pg_dump')
-            cmd = [pg_dump, '--dbname', db_url, '--file', filepath]
-            subprocess.run(cmd, check=True)
+            from services.backup_service import BackupService
+            from services.backup_exec import run_pg_tool
+
+            params = BackupService._parse_db_url()
+            pg_dump = BackupService._resolve_pg_tool("pg_dump", "PG_DUMP_PATH")
+            if not params or not pg_dump:
+                flash("pg_dump غير متوفر", "danger")
+                return redirect(url_for("owner.backups_list"))
+            env = os.environ.copy()
+            if params.get("password"):
+                env["PGPASSWORD"] = params["password"]
+            cmd = [
+                pg_dump,
+                "--host",
+                params["host"],
+                "--port",
+                params["port"],
+                "--username",
+                params["username"],
+                "--file",
+                filepath,
+                params["dbname"],
+            ]
+            proc = run_pg_tool(cmd, env=env, timeout=3600)
+            if proc.returncode != 0:
+                raise RuntimeError((proc.stderr or proc.stdout or "pg_dump failed")[:200])
             
             flash(f'✅ تم التصدير: {filename}', 'success')
             _audit_owner_db_action('export_database', {'format': 'sql', 'filename': filename})
@@ -1994,9 +2018,9 @@ def company_info():
                     inv.email = tenant.email or inv.email
                     inv.website = tenant.website or inv.website
                     inv.tax_number = tenant.tax_number or inv.tax_number
-            except Exception:
-                pass
-            
+            except Exception as exc:
+                logger.debug("sync invoice from tenant: %s", exc)
+
             db.session.commit()
             _invalidate_owner_changes()
             flash('تم حفظ معلومات الشركة بنجاح', 'success')
@@ -2088,8 +2112,8 @@ def system_config():
                 from models import Tenant
                 tenant = Tenant.get_current()
                 tenant.default_currency = default_currency
-            except Exception:
-                pass
+            except Exception as exc:
+                logger.debug("tenant default_currency sync: %s", exc)
             settings.default_language = request.form.get('default_language', 'ar')
             settings.timezone = request.form.get('timezone', 'Asia/Dubai')
             settings.items_per_page = int(request.form.get('items_per_page', 25))
@@ -2971,8 +2995,8 @@ def currency_settings():
             from models import Tenant
             tenant = Tenant.get_current()
             tenant.default_currency = default_currency
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.debug("tenant currency settings sync: %s", exc)
         settings.auto_update_rates = request.form.get('auto_update_rates') == 'on'
         
         db.session.commit()

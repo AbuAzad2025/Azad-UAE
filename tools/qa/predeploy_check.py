@@ -12,7 +12,9 @@ import argparse
 import glob
 import json
 import os
-import subprocess
+# subprocess only via _run() (sys.executable scripts or backup_exec.run_git).
+import subprocess  # nosec B404
+
 import sys
 from datetime import datetime, timezone
 from dataclasses import dataclass, field
@@ -131,17 +133,50 @@ def _env() -> dict:
     return env
 
 
+def _is_safe_python_cmd(cmd: list[str], *, cwd: str | None = None) -> bool:
+    import sys
+
+    if len(cmd) < 2:
+        return False
+    py_exes = {
+        os.path.basename(sys.executable),
+        "python",
+        "python.exe",
+        "python3",
+        "python3.exe",
+    }
+    if os.path.basename(cmd[0]) not in py_exes:
+        return False
+    if cmd[1] == "-m":
+        if len(cmd) < 3:
+            return False
+        return all(part.isidentifier() for part in str(cmd[2]).split("."))
+    if cmd[1] == "-c":
+        return len(cmd) == 3
+    if str(cmd[1]).endswith(".py"):
+        script = cmd[1]
+        return os.path.isfile(script) or os.path.isfile(os.path.join(cwd or ROOT, script))
+    return False
+
+
 def _run(cmd: list[str], *, cwd: str | None = None, timeout: int = 600) -> subprocess.CompletedProcess:
-    return subprocess.run(
-        cmd,
-        cwd=cwd or ROOT,
-        env=_env(),
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        timeout=timeout,
-    )
+    if _is_safe_python_cmd(cmd, cwd=cwd):
+        return subprocess.run(  # nosec B603
+            cmd,
+            cwd=cwd or ROOT,
+            env=_env(),
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=timeout,
+            shell=False,
+        )
+    if len(cmd) >= 1 and os.path.basename(cmd[0]) in ("git", "git.exe"):
+        from services.backup_exec import run_git
+
+        return run_git(cmd, cwd=cwd or ROOT, timeout=timeout)
+    raise ValueError(f"unsupported _run command: {cmd[:3]!r}")
 
 
 def check_py_compile(report: Report) -> None:
@@ -451,6 +486,74 @@ def _git_short_head() -> str:
     return ""
 
 
+def _load_json_file(path: str) -> dict | None:
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except (OSError, json.JSONDecodeError):
+        return None
+
+
+def _proof_within_age(verified: str, max_age_hours: float) -> bool:
+    try:
+        dt = datetime.fromisoformat(verified.replace("Z", "+00:00"))
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return (datetime.now(timezone.utc) - dt).total_seconds() / 3600.0 <= max_age_hours
+    except (ValueError, TypeError):
+        return False
+
+
+def _scan_restore_proofs(max_age_hours: float = 168) -> dict:
+    """Aggregate recent restore proof files by scope."""
+    from services.backup_service import BackupService
+
+    BackupService.initialize()
+    proofs_dir = BackupService.BACKUP_DIR
+    out = {
+        "system": None,
+        "tenant": None,
+        "tenant_remap": None,
+        "branch": None,
+        "store": None,
+    }
+    for pfile in sorted(
+        glob.glob(os.path.join(proofs_dir, "*restore_proof.json")),
+        key=os.path.getmtime,
+        reverse=True,
+    ):
+        p = _load_json_file(pfile)
+        if not p or not p.get("restore_success"):
+            continue
+        verified = p.get("verified_at", "")
+        if not verified or not _proof_within_age(verified, max_age_hours):
+            continue
+        scope = p.get("backup_scope") or "system"
+        if p.get("remap") and scope == "tenant":
+            key = "tenant_remap"
+        else:
+            key = scope if scope in out else "system"
+        if out.get(key) is None:
+            out[key] = p
+    return out
+
+
+def _proof_has_gaps(proof: dict) -> list[str]:
+    gaps: list[str] = []
+    if not proof:
+        return gaps
+    if int(proof.get("rows_skipped") or 0) > 0:
+        gaps.append(f"rows_skipped={proof.get('rows_skipped')}")
+    src = int(proof.get("products_source_count") or 0)
+    restored = int(proof.get("products_restored_count") or 0)
+    if src and restored != src:
+        gaps.append(f"products {restored}/{src}")
+    dbv = proof.get("db_verify") or {}
+    if dbv and not dbv.get("ok"):
+        gaps.extend(dbv.get("errors") or ["db_verify failed"])
+    return gaps
+
+
 def _load_latest_restore_proof() -> dict | None:
     from services.backup_service import BackupService
 
@@ -543,56 +646,19 @@ def check_backup_readiness(report: Report, profile: str) -> None:
             if head and m_commit and m_commit != head:
                 warns.append(f"manifest git_commit={m_commit} != HEAD={head}")
 
-    proof = _load_latest_restore_proof()
-    proof_ok = False
-    tenant_proof_ok = False
-    branch_store_warn = False
-    if proof and proof.get("restore_success"):
-        try:
-            verified = proof.get("verified_at", "")
-            if verified:
-                dt = datetime.fromisoformat(verified.replace("Z", "+00:00"))
-                if dt.tzinfo is None:
-                    dt = dt.replace(tzinfo=timezone.utc)
-                age_h = (datetime.now(timezone.utc) - dt).total_seconds() / 3600.0
-                fresh = age_h <= 168
-                proof_ok = fresh and proof.get("backup_scope") in (None, "system")
-                tenant_proof_ok = fresh and proof.get("backup_scope") == "tenant"
-                branch_store_warn = fresh and proof.get("backup_scope") in (
-                    "branch",
-                    "store",
-                )
-        except Exception:
-            proof_ok = bool(
-                proof.get("restore_success") and proof.get("backup_scope") in (None, "system")
-            )
-            tenant_proof_ok = bool(
-                proof.get("restore_success") and proof.get("backup_scope") == "tenant"
-            )
+    proofs = _scan_restore_proofs()
+    proof_ok = proofs.get("system") is not None
+    tenant_proof_ok = proofs.get("tenant") is not None
+    tenant_remap_ok = proofs.get("tenant_remap") is not None
+    branch_store_warn = proofs.get("branch") is not None or proofs.get("store") is not None
 
-    proofs_dir = BackupService.BACKUP_DIR
-    for pfile in glob.glob(os.path.join(proofs_dir, "*restore_proof.json")):
-        try:
-            with open(pfile, "r", encoding="utf-8") as f:
-                p = json.load(f)
-            if not p.get("restore_success"):
-                continue
-            verified = p.get("verified_at", "")
-            if not verified:
-                continue
-            dt = datetime.fromisoformat(verified.replace("Z", "+00:00"))
-            if dt.tzinfo is None:
-                dt = dt.replace(tzinfo=timezone.utc)
-            if (datetime.now(timezone.utc) - dt).total_seconds() / 3600.0 > 168:
-                continue
-            if p.get("backup_scope") == "tenant":
-                tenant_proof_ok = True
-            if p.get("backup_scope") in ("branch", "store"):
-                branch_store_warn = True
-            if p.get("backup_scope") in (None, "system"):
-                proof_ok = True
-        except Exception:
-            pass
+    gap_msgs: list[str] = []
+    for label, p in proofs.items():
+        if not p:
+            continue
+        gaps = _proof_has_gaps(p)
+        if gaps:
+            gap_msgs.append(f"{label}: " + "; ".join(gaps[:3]))
 
     if profile == "production-readiness":
         if not proof_ok:
@@ -605,13 +671,24 @@ def check_backup_readiness(report: Report, profile: str) -> None:
                 "no recent tenant restore proof "
                 "(backup_restore_check --scope tenant --restore-to-temp-local)"
             )
+        if not tenant_remap_ok:
+            fails.append(
+                "no recent tenant restore-as-new proof "
+                "(backup_restore_check --scope tenant --restore-as-new-tenant)"
+            )
+        if gap_msgs:
+            fails.extend(gap_msgs)
     else:
         if not proof_ok:
             warns.append("no system restore proof yet")
         if not tenant_proof_ok:
             warns.append("no tenant restore proof yet")
+        if not tenant_remap_ok:
+            warns.append("no tenant restore-as-new proof yet")
         if not branch_store_warn:
             warns.append("no branch/store restore proof yet (optional)")
+        if gap_msgs:
+            fails.extend(gap_msgs)
 
     if fails:
         report.add("Backup readiness", "FAIL", "; ".join(fails))

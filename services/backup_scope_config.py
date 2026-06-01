@@ -6,8 +6,11 @@ Scoped exports use SQL filters only (no cross-tenant rows).
 from __future__ import annotations
 
 import json
+import logging
 import os
 import re
+
+logger = logging.getLogger(__name__)
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 SCOPE_SYSTEM = "system"
@@ -40,10 +43,10 @@ TABLE_EXPORT_ORDER: Tuple[str, ...] = (
     "branches",
     "users",
     "product_categories",
-    "products",
-    "product_partners",
     "customers",
     "suppliers",
+    "products",
+    "product_partners",
     "warehouses",
     "gl_accounts",
     "invoice_settings",
@@ -206,6 +209,68 @@ def _fetch_child_rows(
     return [_serialize_row(dict(zip(result.keys(), row))) for row in result.fetchall()]
 
 
+def _merge_product_customer_dependencies(
+    conn,
+    tables_out: Dict[str, List[Dict[str, Any]]],
+    row_counts: Dict[str, int],
+    included: List[str],
+    tenant_id: int,
+    unresolved: List[str],
+) -> None:
+    """Ensure customers referenced by products/product_partners are in the export."""
+    from sqlalchemy import text
+
+    if not table_exists(conn, "customers"):
+        return
+    needed: Set[int] = set()
+    for product in tables_out.get("products") or []:
+        mid = product.get("merchant_customer_id")
+        if mid is not None:
+            needed.add(int(mid))
+    for partner in tables_out.get("product_partners") or []:
+        pid = partner.get("partner_customer_id")
+        if pid is not None:
+            needed.add(int(pid))
+    if not needed:
+        return
+    existing = {
+        int(row["id"])
+        for row in (tables_out.get("customers") or [])
+        if row.get("id") is not None
+    }
+    missing = sorted(needed - existing)
+    if not missing:
+        return
+    placeholders = ", ".join(f":c{i}" for i in range(len(missing)))
+    params: Dict[str, Any] = {"tid": tenant_id}
+    params.update({f"c{i}": cid for i, cid in enumerate(missing)})
+    try:
+        result = conn.execute(
+            text(
+                f'SELECT * FROM customers WHERE tenant_id = :tid AND id IN ({placeholders})'
+            ),
+            params,
+        )
+        extra = [
+            _serialize_row(dict(zip(result.keys(), row))) for row in result.fetchall()
+        ]
+        found_ids = {int(r["id"]) for r in extra if r.get("id") is not None}
+        if extra:
+            tables_out.setdefault("customers", []).extend(extra)
+            row_counts["customers"] = len(tables_out["customers"])
+            if "customers" not in included:
+                included.append("customers")
+        for mid in missing:
+            if mid not in found_ids:
+                unresolved.append(f"customers:missing_merchant_ref_id={mid}")
+    except Exception as exc:
+        unresolved.append(f"customers:merge_refs_error_{type(exc).__name__}")
+        try:
+            conn.rollback()
+        except Exception as rb_exc:
+            logger.debug("rollback after merge_refs: %s", rb_exc)
+
+
 def export_scoped_database(
     conn,
     scope: str,
@@ -274,8 +339,8 @@ def export_scoped_database(
             skipped.append(f"{table}:error_{type(exc).__name__}")
             try:
                 conn.rollback()
-            except Exception:
-                pass
+            except Exception as rb_exc:
+                logger.debug("rollback after export %s: %s", table, rb_exc)
 
     for child_table, parent_table, parent_pk, child_fk in child_specs:
         if child_table in direct_tables:
@@ -301,8 +366,8 @@ def export_scoped_database(
             skipped.append(f"{child_table}:error_{type(exc).__name__}")
             try:
                 conn.rollback()
-            except Exception:
-                pass
+            except Exception as rb_exc:
+                logger.debug("rollback after child %s: %s", child_table, rb_exc)
 
     # Branch/store validation
     if scope == SCOPE_BRANCH:
@@ -313,6 +378,11 @@ def export_scoped_database(
         st = tables_out.get("tenant_stores") or []
         if len(st) != 1:
             unresolved.append(f"tenant_stores:expected_1_got_{len(st)}")
+
+    if scope in (SCOPE_TENANT, SCOPE_BRANCH, SCOPE_STORE):
+        _merge_product_customer_dependencies(
+            conn, tables_out, row_counts, included, tenant_id, unresolved
+        )
 
     if scope in (SCOPE_TENANT, SCOPE_BRANCH, SCOPE_STORE) and table_exists(conn, "roles"):
         role_ids = {
@@ -339,11 +409,12 @@ def export_scoped_database(
                     row_counts["roles"] = len(rows)
                     if "roles" not in included:
                         included.append("roles")
-            except Exception:
+            except Exception as role_exc:
+                logger.debug("roles export: %s", role_exc)
                 try:
                     conn.rollback()
-                except Exception:
-                    pass
+                except Exception as rb_exc:
+                    logger.debug("rollback after roles: %s", rb_exc)
 
     return tables_out, row_counts, included, skipped, unresolved
 
@@ -489,11 +560,12 @@ def collect_scoped_upload_paths(
                     resolved.add(p)
                 elif row[0]:
                     unresolved.append(f"{table}.{column}:{str(row[0])[:120]}")
-        except Exception:
+        except Exception as path_exc:
+            logger.debug("collect upload path %s.%s: %s", table, column, path_exc)
             try:
                 conn.rollback()
-            except Exception:
-                pass
+            except Exception as rb_exc:
+                logger.debug("rollback after upload path: %s", rb_exc)
 
     bind: Dict[str, Any] = {"tid": tenant_id}
     if branch_id is not None:

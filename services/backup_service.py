@@ -17,7 +17,6 @@ import logging
 import os
 import re
 import shutil
-import subprocess
 import sys
 import tarfile
 import tempfile
@@ -168,12 +167,9 @@ class BackupService:
         version = None
         if dump:
             try:
-                proc = subprocess.run(
-                    [dump, "--version"],
-                    capture_output=True,
-                    text=True,
-                    timeout=15,
-                )
+                from services.backup_exec import run_pg_tool
+
+                proc = run_pg_tool([dump, "--version"], timeout=15)
                 version = (proc.stdout or proc.stderr or "").strip().split("\n")[0]
             except Exception:
                 version = None
@@ -271,34 +267,34 @@ class BackupService:
     @classmethod
     def _git_short_sha(cls) -> str:
         try:
-            proc = subprocess.run(
+            from services.backup_exec import run_git
+
+            proc = run_git(
                 ["git", "rev-parse", "--short", "HEAD"],
                 cwd=cls._BASEDIR,
-                capture_output=True,
-                text=True,
                 timeout=10,
             )
             if proc.returncode == 0:
                 return (proc.stdout or "").strip()[:12] or "unknown"
-        except Exception:
-            pass
+        except Exception as exc:
+            logging.getLogger(__name__).debug("git short sha: %s", exc)
         return "unknown"
 
     @classmethod
     def _git_branch(cls) -> Optional[str]:
         try:
-            proc = subprocess.run(
+            from services.backup_exec import run_git
+
+            proc = run_git(
                 ["git", "branch", "--show-current"],
                 cwd=cls._BASEDIR,
-                capture_output=True,
-                text=True,
                 timeout=10,
             )
             if proc.returncode == 0:
                 br = (proc.stdout or "").strip()
                 return br or None
-        except Exception:
-            pass
+        except Exception as exc:
+            logging.getLogger(__name__).debug("git branch: %s", exc)
         return None
 
     @classmethod
@@ -330,8 +326,8 @@ class BackupService:
                 )
                 if abs_folder not in roots and os.path.isdir(abs_folder):
                     roots.append(abs_folder)
-        except Exception:
-            pass
+        except Exception as exc:
+            logging.getLogger(__name__).debug("upload roots: %s", exc)
         return [r for r in roots if os.path.isdir(r)]
 
     @classmethod
@@ -459,7 +455,9 @@ class BackupService:
             dest_file,
             params["dbname"],
         ]
-        proc = subprocess.run(cmd, capture_output=True, text=True, env=env, timeout=3600)
+        from services.backup_exec import run_pg_tool
+
+        proc = run_pg_tool(cmd, env=env, timeout=3600)
         if proc.returncode != 0:
             err = (proc.stderr or proc.stdout or "pg_dump failed").strip()
             return False, err[:800]
@@ -1056,8 +1054,8 @@ class BackupService:
                             ).scalar()
                             or 0
                         )
-            except Exception:
-                pass
+            except Exception as exc:
+                logging.getLogger(__name__).debug("approx row count: %s", exc)
 
             file_hashes = {
                 "db.dump": cls._sha256_file(db_dump_path),
@@ -1250,8 +1248,8 @@ This archive does NOT include secrets, .env, or AI runtime memory.
             try:
                 with open(sidecar, "r", encoding="utf-8") as f:
                     info["sidecar"] = json.load(f)
-            except Exception:
-                pass
+            except Exception as exc:
+                logging.getLogger(__name__).debug("backup sidecar: %s", exc)
         if filename.endswith(".tar.gz"):
             try:
                 with tarfile.open(path, "r:gz") as tar:
@@ -1323,12 +1321,9 @@ This archive does NOT include secrets, .env, or AI runtime memory.
             pg_restore = cls._resolve_pg_tool("pg_restore", "PG_RESTORE_PATH")
             if not pg_restore:
                 return os.path.getsize(path) > 0
-            proc = subprocess.run(
-                [pg_restore, "--list", path],
-                capture_output=True,
-                text=True,
-                timeout=120,
-            )
+            from services.backup_exec import run_pg_tool
+
+            proc = run_pg_tool([pg_restore, "--list", path], timeout=120)
             return proc.returncode == 0
         return False
 
@@ -1399,12 +1394,9 @@ This archive does NOT include secrets, .env, or AI runtime memory.
                     return result
                 pg_restore = cls._resolve_pg_tool("pg_restore", "PG_RESTORE_PATH")
                 if pg_restore:
-                    proc = subprocess.run(
-                        [pg_restore, "--list", db_path],
-                        capture_output=True,
-                        text=True,
-                        timeout=180,
-                    )
+                    from services.backup_exec import run_pg_tool
+
+                    proc = run_pg_tool([pg_restore, "--list", db_path], timeout=180)
                     if proc.returncode != 0:
                         result["errors"].append("pg_restore --list failed")
                         return result
@@ -1553,8 +1545,8 @@ This archive does NOT include secrets, .env, or AI runtime memory.
                     f"postgresql://{p.username or 'USER'}:***@"
                     f"{cls._mask_db_host(p.hostname)}:{p.port or 5432}/{p.path.lstrip('/')}"
                 )
-        except Exception:
-            pass
+        except Exception as exc:
+            logging.getLogger(__name__).debug("mask restore target url: %s", exc)
         pg_restore = cls._resolve_pg_tool("pg_restore", "PG_RESTORE_PATH") or "pg_restore"
         lines = [
             "# Extract archive first",
@@ -1665,7 +1657,9 @@ This archive does NOT include secrets, .env, or AI runtime memory.
                 "--no-privileges",
                 dump_path,
             ]
-            proc = subprocess.run(cmd, capture_output=True, text=True, env=env, timeout=3600)
+            from services.backup_exec import run_pg_tool
+
+            proc = run_pg_tool(cmd, env=env, timeout=3600)
             if proc.returncode != 0:
                 err = (proc.stderr or proc.stdout or "pg_restore failed")[:800]
                 outcome["errors"].append(err)
