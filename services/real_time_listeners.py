@@ -8,11 +8,16 @@ import json
 
 class RealTimeAccountingListeners:
     """مستمعات لحظية للأحداث المحاسبية"""
-    
+
+    _listeners_registered = False
+
     @staticmethod
     def setup_listeners():
-        """إعداد جميع المستمعات"""
-        
+        """إعداد جميع المستمعات (idempotent — safe if called more than once)."""
+        if RealTimeAccountingListeners._listeners_registered:
+            return
+        RealTimeAccountingListeners._listeners_registered = True
+
         # مستمع إنشاء القيود
         @event.listens_for(GLJournalEntry, 'after_insert')
         def journal_entry_created(mapper, connection, target):

@@ -24,6 +24,8 @@ from datetime import datetime, timezone, timedelta
 import logging
 import json
 
+from config import ai_orm_listeners_enabled
+
 logger = logging.getLogger(__name__)
 
 
@@ -46,17 +48,22 @@ def register_all_listeners():
     register_gl_listeners()
     register_validation_listeners()
     register_audit_listeners()
-    
-    # مستمعات المساعد الذكي (AI)
-    register_ai_listeners()
-    
-    # مستمعات التدريب العصبي التلقائي
-    register_neural_training_listeners()
-    
+
+    # AI / neural ORM listeners (learning file I/O, full-table scans) — gated by AI_ORM_LISTENERS_ENABLED
+    if ai_orm_listeners_enabled():
+        register_ai_listeners()
+        register_neural_training_listeners()
+    else:
+        logger.info(
+            "AI ORM listeners skipped (AI_ORM_LISTENERS_ENABLED=false or production default)"
+        )
+
+    # DO NOT call register_advanced_sale_listener() — legacy stored-balance sync (disabled/guarded).
+
     # مستمعات القيود المحاسبية التلقائية
     register_automatic_gl_listeners()
-    
-    logger.info("[OK] All event listeners registered successfully - Full coverage + AI + Neural Networks + Auto GL enabled")
+
+    logger.info("[OK] Event listeners registered (core + validation + audit; AI=%s)", ai_orm_listeners_enabled())
 
 
 # ============================================================================
@@ -239,16 +246,29 @@ def ensure_balance_consistency(connection, model, record_id):
 
 # ============================================================================
 # Example: Advanced Listener with Transaction Handling
-# مثال: مستمع متقدم مع معالجة المعاملات
+# LEGACY / DISABLED — do not register from register_all_listeners().
 # ============================================================================
+
+_ADVANCED_SALE_LISTENER_ALLOWED = False
+
 
 def register_advanced_sale_listener():
     """
-    مثال على مستمع متقدم مع معالجة المعاملات
-    
-    ملاحظة: معطل افتراضياً - قم بتفعيله إذا كنت تريد
-    التحديث التلقائي الكامل للأرصدة المخزنة
+    LEGACY / DISABLED — stored customer balance sync from ORM events.
+
+    Duplicates sale_service / payment_service balance logic and can race with
+    service-layer updates. Intentionally not called from register_all_listeners().
+
+    To enable (not recommended): set _ADVANCED_SALE_LISTENER_ALLOWED = True
+    after explicit review — never in production without migration plan.
     """
+    if not _ADVANCED_SALE_LISTENER_ALLOWED:
+        logger.warning(
+            "register_advanced_sale_listener() is legacy/disabled; "
+            "use sale_service / payment_service for balance updates."
+        )
+        return
+
     from models import Sale, Customer
     
     @event.listens_for(Sale, 'after_insert')

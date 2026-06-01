@@ -34,12 +34,32 @@ def _float(env_name: str, default: float) -> float:
         return default
 
 
+def ai_orm_listeners_enabled() -> bool:
+    """
+    Register SQLAlchemy AI/neural ORM listeners (file I/O, learning, full-table scans).
+
+    Explicit AI_ORM_LISTENERS_ENABLED overrides defaults.
+    Production default: off (safe). Non-production / DEBUG: on (dev learning).
+    """
+    explicit = os.environ.get("AI_ORM_LISTENERS_ENABLED")
+    if explicit is not None:
+        return _bool(explicit, False)
+    app_env = (os.environ.get("APP_ENV") or os.environ.get("FLASK_ENV") or "production").strip().lower()
+    debug = _bool(os.environ.get("DEBUG"), False)
+    if app_env == "production" and not debug:
+        return False
+    return True
+
+
 class Config:
     """Application Configuration"""
     
     FLASK_APP = os.environ.get("FLASK_APP", "app:create_app")
     APP_ENV = os.environ.get("APP_ENV", os.environ.get("FLASK_ENV", "production"))
     DEBUG = _bool(os.environ.get("DEBUG"), False)
+
+    # SQLAlchemy AI/neural listeners (models/events.py) — off in production by default
+    AI_ORM_LISTENERS_ENABLED = ai_orm_listeners_enabled()
     
     SECRET_KEY = os.environ.get("SECRET_KEY")
     if not SECRET_KEY:
