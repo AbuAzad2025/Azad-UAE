@@ -9,9 +9,12 @@ Uses DATABASE_URL from .env; never prints secrets.
 from __future__ import annotations
 
 import argparse
+import glob
+import json
 import os
 import subprocess
 import sys
+from datetime import datetime, timezone
 from dataclasses import dataclass, field
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -441,6 +444,42 @@ def check_schema_hardening(report: Report) -> None:
         report.add("Schema hardening", "PASS", "per-tenant unique + NOT NULL OK")
 
 
+def _git_short_head() -> str:
+    r = _run(["git", "rev-parse", "--short", "HEAD"], cwd=ROOT)
+    if r.returncode == 0:
+        return (r.stdout or "").strip()
+    return ""
+
+
+def _load_latest_restore_proof() -> dict | None:
+    from services.backup_service import BackupService
+
+    BackupService.initialize()
+    marker = os.path.join(BackupService.BACKUP_DIR, ".latest_restore_proof.json")
+    proof_path = None
+    if os.path.isfile(marker):
+        try:
+            with open(marker, "r", encoding="utf-8") as f:
+                meta = json.load(f)
+            proof_path = os.path.join(BackupService.BACKUP_DIR, meta.get("proof_file", ""))
+        except Exception:
+            proof_path = None
+    if not proof_path or not os.path.isfile(proof_path):
+        proofs = sorted(
+            glob.glob(os.path.join(BackupService.BACKUP_DIR, "*restore_proof.json")),
+            key=os.path.getmtime,
+            reverse=True,
+        )
+        proof_path = proofs[0] if proofs else None
+    if not proof_path:
+        return None
+    try:
+        with open(proof_path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return None
+
+
 def check_backup_readiness(report: Report, profile: str) -> None:
     try:
         from services.backup_service import BackupService
@@ -492,6 +531,88 @@ def check_backup_readiness(report: Report, profile: str) -> None:
     elif profile == "production-readiness" and latest_age_hours is not None and latest_age_hours > 168:
         warns.append(f"latest backup age {latest_age_hours:.0f}h (>7d)")
 
+    if backups:
+        latest_fn = backups[0]["filename"]
+        v = BackupService.verify_backup(latest_fn)
+        if not v.get("valid"):
+            fails.append(f"latest backup verify failed: {latest_fn}")
+        else:
+            manifest = v.get("manifest") or {}
+            m_commit = (manifest.get("git_commit") or "").strip()
+            head = _git_short_head()
+            if head and m_commit and m_commit != head:
+                warns.append(f"manifest git_commit={m_commit} != HEAD={head}")
+
+    proof = _load_latest_restore_proof()
+    proof_ok = False
+    tenant_proof_ok = False
+    branch_store_warn = False
+    if proof and proof.get("restore_success"):
+        try:
+            verified = proof.get("verified_at", "")
+            if verified:
+                dt = datetime.fromisoformat(verified.replace("Z", "+00:00"))
+                if dt.tzinfo is None:
+                    dt = dt.replace(tzinfo=timezone.utc)
+                age_h = (datetime.now(timezone.utc) - dt).total_seconds() / 3600.0
+                fresh = age_h <= 168
+                proof_ok = fresh and proof.get("backup_scope") in (None, "system")
+                tenant_proof_ok = fresh and proof.get("backup_scope") == "tenant"
+                branch_store_warn = fresh and proof.get("backup_scope") in (
+                    "branch",
+                    "store",
+                )
+        except Exception:
+            proof_ok = bool(
+                proof.get("restore_success") and proof.get("backup_scope") in (None, "system")
+            )
+            tenant_proof_ok = bool(
+                proof.get("restore_success") and proof.get("backup_scope") == "tenant"
+            )
+
+    proofs_dir = BackupService.BACKUP_DIR
+    for pfile in glob.glob(os.path.join(proofs_dir, "*restore_proof.json")):
+        try:
+            with open(pfile, "r", encoding="utf-8") as f:
+                p = json.load(f)
+            if not p.get("restore_success"):
+                continue
+            verified = p.get("verified_at", "")
+            if not verified:
+                continue
+            dt = datetime.fromisoformat(verified.replace("Z", "+00:00"))
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=timezone.utc)
+            if (datetime.now(timezone.utc) - dt).total_seconds() / 3600.0 > 168:
+                continue
+            if p.get("backup_scope") == "tenant":
+                tenant_proof_ok = True
+            if p.get("backup_scope") in ("branch", "store"):
+                branch_store_warn = True
+            if p.get("backup_scope") in (None, "system"):
+                proof_ok = True
+        except Exception:
+            pass
+
+    if profile == "production-readiness":
+        if not proof_ok:
+            fails.append(
+                "no recent system restore proof "
+                "(backup_restore_check --scope system --restore-to-temp-local)"
+            )
+        if not tenant_proof_ok:
+            fails.append(
+                "no recent tenant restore proof "
+                "(backup_restore_check --scope tenant --restore-to-temp-local)"
+            )
+    else:
+        if not proof_ok:
+            warns.append("no system restore proof yet")
+        if not tenant_proof_ok:
+            warns.append("no tenant restore proof yet")
+        if not branch_store_warn:
+            warns.append("no branch/store restore proof yet (optional)")
+
     if fails:
         report.add("Backup readiness", "FAIL", "; ".join(fails))
     elif warns:
@@ -500,6 +621,8 @@ def check_backup_readiness(report: Report, profile: str) -> None:
         detail = "pg_dump OK" if tools.get("pg_dump") else "tools OK"
         if backups:
             detail += f"; latest={backups[0].get('filename')}"
+        if proof_ok:
+            detail += "; restore_proof=PASS"
         report.add("Backup readiness", "PASS", detail)
 
 
@@ -557,11 +680,19 @@ def main() -> int:
         help="Check profile (same checks for now)",
     )
     parser.add_argument("--skip-uat", action="store_true", help="Skip UAT (faster)")
+    parser.add_argument(
+        "--database-url",
+        default="",
+        help="Override DATABASE_URL for DB checks only (restore proof)",
+    )
     args = parser.parse_args()
 
     from dotenv import load_dotenv
 
     load_dotenv(os.path.join(ROOT, ".env"))
+    if args.database_url:
+        os.environ["DATABASE_URL"] = args.database_url.strip()
+        os.environ["SQLALCHEMY_DATABASE_URI"] = args.database_url.strip()
 
     report = Report()
     check_py_compile(report)

@@ -28,8 +28,13 @@ from urllib.parse import urlparse
 
 logger = logging.getLogger(__name__)
 
-BACKUP_VERSION = 1
+BACKUP_VERSION = 3
 BACKUP_BASENAME_RE = re.compile(
+    r"^azad_backup_(?:system|tenant_[a-z0-9_-]+|branch_[a-z0-9_-]+|store_[a-z0-9_-]+)"
+    r"_\d{8}_\d{6}_[0-9a-f]+\.tar\.gz$",
+    re.IGNORECASE,
+)
+BACKUP_BASENAME_LEGACY_RE = re.compile(
     r"^azad_backup_\d{8}_\d{6}_[0-9a-f]+\.tar\.gz$",
     re.IGNORECASE,
 )
@@ -472,9 +477,37 @@ class BackupService:
         if not filename or ".." in filename or "/" in filename or "\\" in filename:
             return None
         base = os.path.basename(filename)
-        if BACKUP_BASENAME_RE.match(base) or LEGACY_NAME_RE.match(base):
+        if (
+            BACKUP_BASENAME_RE.match(base)
+            or BACKUP_BASENAME_LEGACY_RE.match(base)
+            or LEGACY_NAME_RE.match(base)
+        ):
             return base
         return None
+
+    @classmethod
+    def _archive_basename(
+        cls,
+        scope: str,
+        timestamp: str,
+        short_sha: str,
+        tenant_slug: Optional[str] = None,
+        branch_id: Optional[int] = None,
+        store_id: Optional[int] = None,
+    ) -> str:
+        from services.backup_scope_config import SCOPE_SYSTEM, sanitize_slug
+
+        if scope == SCOPE_SYSTEM:
+            label = "system"
+        elif scope == "tenant":
+            label = f"tenant_{sanitize_slug(tenant_slug, 'tenant')}"
+        elif scope == "branch":
+            label = f"branch_{branch_id or 'x'}"
+        elif scope == "store":
+            label = f"store_{store_id or 'x'}"
+        else:
+            label = scope[:24]
+        return f"{cls.BACKUP_PREFIX}{label}_{timestamp}_{short_sha}.tar.gz"
 
     @classmethod
     def _backup_path(cls, filename: str) -> Optional[str]:
@@ -487,12 +520,485 @@ class BackupService:
         return path
 
     @classmethod
+    def _build_manifest(
+        cls,
+        *,
+        scope: str,
+        short_sha: str,
+        alembic_current: Optional[str],
+        alembic_heads: Optional[str],
+        params: Dict[str, str],
+        pre_checks: Dict[str, Any],
+        approx_rows: int,
+        file_hashes: Dict[str, str],
+        tools: Dict[str, Any],
+        uploads_meta: Dict[str, Any],
+        manual: bool,
+        description: str,
+        created_by: Optional[Dict[str, Any]],
+        tables_included: List[str],
+        tables_excluded: List[str],
+        row_counts_per_table: Dict[str, int],
+        allowed_restore_scope: str,
+        tenant_id: Optional[int] = None,
+        tenant_slug: Optional[str] = None,
+        tenant_name: Optional[str] = None,
+        branch_id: Optional[int] = None,
+        store_id: Optional[int] = None,
+        data_filter_summary: Optional[str] = None,
+        uploads_unresolved: Optional[List[str]] = None,
+        extra_includes: Optional[List[str]] = None,
+    ) -> Dict[str, Any]:
+        includes = list(extra_includes or ["manifest", "env.example.redacted", "README_RESTORE.txt"])
+        return {
+            "app_name": "Azad-UAE",
+            "backup_version": BACKUP_VERSION,
+            "format": "azad_tar_v1",
+            "backup_scope": scope,
+            "tenant_id": tenant_id,
+            "tenant_slug": tenant_slug,
+            "tenant_name": tenant_name,
+            "branch_id": branch_id,
+            "store_id": store_id,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "created_by_user_id": (created_by or {}).get("user_id"),
+            "created_by_role": (created_by or {}).get("role"),
+            "git_commit": short_sha,
+            "git_branch": cls._git_branch(),
+            "alembic_current": alembic_current,
+            "alembic_heads": alembic_heads,
+            "database_driver": "postgresql",
+            "database_host_masked": cls._mask_db_host(params["host"]),
+            "database_name": params["dbname"],
+            "tables_count": pre_checks.get("tables_count"),
+            "approximate_rows": approx_rows,
+            "includes": includes,
+            "sha256": file_hashes,
+            "command_versions": {
+                "pg_dump": tools.get("pg_dump_version"),
+                "python": sys.version.split()[0],
+            },
+            "uploads_meta": uploads_meta,
+            "uploads_included_count": uploads_meta.get("files_packed", 0),
+            "uploads_unresolved_count": len(uploads_unresolved or []),
+            "uploads_unresolved": (uploads_unresolved or [])[:50],
+            "pre_backup_checks": pre_checks,
+            "manual": bool(manual),
+            "description": description or "",
+            "allowed_restore_scope": allowed_restore_scope,
+            "data_filter_summary": data_filter_summary or "",
+            "tables_included": tables_included,
+            "tables_excluded": tables_excluded,
+            "row_counts_per_table": row_counts_per_table,
+        }
+
+    @classmethod
+    def _build_sidecar(
+        cls,
+        archive_name: str,
+        archive_path: str,
+        manifest: Dict[str, Any],
+        timestamp: str,
+        size: int,
+        short_sha: str,
+        alembic_current: Optional[str],
+        manual: bool,
+        description: str,
+    ) -> Dict[str, Any]:
+        return {
+            "filename": archive_name,
+            "path": archive_path,
+            "format": "azad_tar_v1",
+            "backup_scope": manifest.get("backup_scope"),
+            "tenant_id": manifest.get("tenant_id"),
+            "tenant_slug": manifest.get("tenant_slug"),
+            "timestamp": timestamp,
+            "datetime": manifest["created_at"],
+            "size": size,
+            "size_mb": round(size / (1024 * 1024), 2),
+            "git_commit": short_sha,
+            "alembic_current": alembic_current,
+            "manual": bool(manual),
+            "description": description,
+            "checksum": cls._sha256_file(archive_path),
+        }
+
+    @classmethod
+    def _fetch_tenant_row(cls, tenant_id: int) -> Optional[Dict[str, Any]]:
+        from sqlalchemy import create_engine, text
+
+        url = os.environ.get("DATABASE_URL") or os.environ.get("SQLALCHEMY_DATABASE_URI")
+        if not url:
+            return None
+        with create_engine(url).connect() as conn:
+            row = conn.execute(
+                text("SELECT id, slug, name FROM tenants WHERE id = :tid"),
+                {"tid": tenant_id},
+            ).fetchone()
+            if not row:
+                return None
+            return {"id": row[0], "slug": row[1], "name": row[2]}
+
+    @classmethod
+    def _write_checksums_file(cls, work_dir: str, members: List[str]) -> str:
+        lines: List[str] = []
+        for member in members:
+            path = os.path.join(work_dir, member)
+            if os.path.isfile(path):
+                lines.append(f"{cls._sha256_file(path)}  {member}")
+            elif member == "data" and os.path.isdir(path):
+                for root, _, files in os.walk(path):
+                    for fn in sorted(files):
+                        rel = os.path.relpath(os.path.join(root, fn), work_dir).replace(
+                            "\\", "/"
+                        )
+                        lines.append(
+                            f"{cls._sha256_file(os.path.join(work_dir, rel))}  {rel}"
+                        )
+        checksums_path = os.path.join(work_dir, "checksums.sha256")
+        with open(checksums_path, "w", encoding="utf-8") as f:
+            f.write("\n".join(lines) + ("\n" if lines else ""))
+        return checksums_path
+
+    @classmethod
+    def _create_scoped_backup(
+        cls,
+        scope: str,
+        tenant_id: int,
+        *,
+        branch_id: Optional[int] = None,
+        store_id: Optional[int] = None,
+        manual: bool = True,
+        description: str = "",
+        created_by: Optional[Dict[str, Any]] = None,
+    ) -> Optional[Dict[str, Any]]:
+        from services.backup_scope_config import (
+            SCOPE_BRANCH,
+            SCOPE_STORE,
+            SCOPE_TENANT,
+            build_tenant_uploads_archive,
+            collect_scoped_upload_paths,
+            export_scoped_database,
+            scope_filter_summary,
+            write_data_directory,
+        )
+
+        cls.initialize()
+        tenant = cls._fetch_tenant_row(tenant_id)
+        if not tenant:
+            cls._set_schedule_state(
+                last_run_at=datetime.now(timezone.utc).isoformat(),
+                last_error=f"tenant_id {tenant_id} not found",
+                last_action="create_backup",
+            )
+            return None
+
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        short_sha = cls._git_short_sha()
+        archive_name = cls._archive_basename(
+            scope,
+            timestamp,
+            short_sha,
+            tenant_slug=tenant.get("slug"),
+            branch_id=branch_id,
+            store_id=store_id,
+        )
+        archive_path = os.path.join(cls.BACKUP_DIR, archive_name)
+        work_dir = tempfile.mkdtemp(prefix=f"azad_{scope}_backup_")
+
+        try:
+            from sqlalchemy import create_engine
+
+            url = os.environ.get("DATABASE_URL") or os.environ.get("SQLALCHEMY_DATABASE_URI")
+            params = cls._parse_db_url(url)
+            if not params:
+                return None
+
+            with create_engine(url).connect() as conn:
+                tables_payload, row_counts, included, skipped, unresolved = (
+                    export_scoped_database(
+                        conn,
+                        scope,
+                        tenant_id=tenant_id,
+                        branch_id=branch_id,
+                        store_id=store_id,
+                    )
+                )
+                upload_paths, upload_unresolved = collect_scoped_upload_paths(
+                    conn,
+                    scope,
+                    tenant_id,
+                    cls._BASEDIR,
+                    branch_id=branch_id,
+                    store_id=store_id,
+                )
+            unresolved = list(unresolved) + upload_unresolved
+
+            data_dir = os.path.join(work_dir, "data")
+            write_data_directory(
+                data_dir,
+                tables_payload,
+                scope=scope,
+                tenant_id=tenant_id,
+                branch_id=branch_id,
+                store_id=store_id,
+            )
+
+            uploads_path = os.path.join(work_dir, "uploads.tar.gz")
+            uploads_meta = build_tenant_uploads_archive(
+                upload_paths, uploads_path, cls._BASEDIR
+            )
+
+            alembic_current, alembic_heads = cls._alembic_info()
+            pre_checks = cls._pre_backup_checks_summary()
+            tools = cls.pg_tools_status()
+
+            archive_members = [
+                "data",
+                "uploads.tar.gz",
+                "manifest.json",
+                "env.example.redacted",
+                "README_RESTORE.txt",
+            ]
+            cls._write_checksums_file(work_dir, archive_members)
+
+            file_hashes: Dict[str, str] = {}
+            for member in archive_members + ["checksums.sha256"]:
+                p = os.path.join(work_dir, member)
+                if os.path.isfile(p):
+                    file_hashes[member] = cls._sha256_file(p)
+                elif member == "data" and os.path.isdir(p):
+                    for root, _, files in os.walk(p):
+                        for fn in files:
+                            rel = os.path.relpath(os.path.join(root, fn), work_dir).replace(
+                                "\\", "/"
+                            )
+                            file_hashes[rel] = cls._sha256_file(
+                                os.path.join(work_dir, rel)
+                            )
+
+            restore_scope_map = {
+                SCOPE_TENANT: "tenant_same_or_new_with_remap",
+                SCOPE_BRANCH: "branch_same_or_new_with_remap",
+                SCOPE_STORE: "store_same_or_new_with_remap",
+            }
+            manifest = cls._build_manifest(
+                scope=scope,
+                short_sha=short_sha,
+                alembic_current=alembic_current,
+                alembic_heads=alembic_heads,
+                params=params,
+                pre_checks=pre_checks,
+                approx_rows=sum(row_counts.values()),
+                file_hashes=file_hashes,
+                tools=tools,
+                uploads_meta=uploads_meta,
+                manual=manual,
+                description=description,
+                created_by=created_by,
+                tables_included=included,
+                tables_excluded=skipped,
+                row_counts_per_table=row_counts,
+                allowed_restore_scope=restore_scope_map.get(scope, scope),
+                tenant_id=tenant_id,
+                tenant_slug=tenant.get("slug"),
+                tenant_name=tenant.get("name"),
+                branch_id=branch_id,
+                store_id=store_id,
+                data_filter_summary=scope_filter_summary(
+                    scope, tenant_id, branch_id=branch_id, store_id=store_id
+                ),
+                uploads_unresolved=unresolved,
+                extra_includes=archive_members + ["checksums.sha256"],
+            )
+            manifest["unresolved_references"] = unresolved[:100]
+
+            with open(os.path.join(work_dir, "manifest.json"), "w", encoding="utf-8") as f:
+                json.dump(manifest, f, indent=2, ensure_ascii=False)
+            with open(os.path.join(work_dir, "env.example.redacted"), "w", encoding="utf-8") as f:
+                json.dump(cls._build_env_redacted(), f, indent=2)
+            cls._write_readme_restore(os.path.join(work_dir, "README_RESTORE.txt"))
+
+            with tarfile.open(archive_path, "w:gz") as tar:
+                for member in archive_members + ["checksums.sha256"]:
+                    full = os.path.join(work_dir, member)
+                    if os.path.isdir(full):
+                        for root, _, files in os.walk(full):
+                            for fn in files:
+                                abs_p = os.path.join(root, fn)
+                                arc = os.path.relpath(abs_p, work_dir).replace("\\", "/")
+                                tar.add(abs_p, arcname=arc)
+                    elif os.path.isfile(full):
+                        tar.add(full, arcname=member)
+
+            size = os.path.getsize(archive_path)
+            sidecar = cls._build_sidecar(
+                archive_name,
+                archive_path,
+                manifest,
+                timestamp,
+                size,
+                short_sha,
+                alembic_current,
+                manual,
+                description,
+            )
+            with open(archive_path + ".meta.json", "w", encoding="utf-8") as f:
+                json.dump(sidecar, f, indent=2, ensure_ascii=False)
+
+            cls._apply_retention()
+            cls._set_schedule_state(
+                last_run_at=datetime.now(timezone.utc).isoformat(),
+                last_success_at=datetime.now(timezone.utc).isoformat(),
+                last_error=None,
+                last_filename=archive_name,
+                last_manual=bool(manual),
+                last_action=f"{scope}_backup",
+            )
+            return sidecar
+        except Exception as e:
+            cls._set_schedule_state(
+                last_run_at=datetime.now(timezone.utc).isoformat(),
+                last_error=str(e)[:800],
+                last_action=f"{scope}_backup",
+            )
+            logger.exception("%s backup failed", scope)
+            return None
+        finally:
+            shutil.rmtree(work_dir, ignore_errors=True)
+
+    @classmethod
+    def list_backups_for_user(cls, user) -> List[Dict]:
+        """Filter backups by scope permissions."""
+        from utils.auth_helpers import is_global_owner_user
+        from utils.tenanting import get_active_tenant_id
+
+        backups = cls.list_backups()
+        if is_global_owner_user(user):
+            return backups
+        active_tid = get_active_tenant_id(user)
+        user_branch_id = getattr(user, "branch_id", None)
+        filtered = []
+        for meta in backups:
+            scope = meta.get("backup_scope")
+            fn = meta.get("filename", "")
+            if not scope and fn.startswith("azad_backup_system_"):
+                scope = "system"
+            if scope == "system":
+                continue
+            if scope == "tenant" and active_tid and meta.get("tenant_id") == active_tid:
+                filtered.append(meta)
+            elif scope == "branch" and active_tid and meta.get("tenant_id") == active_tid:
+                if user_branch_id and meta.get("branch_id") == user_branch_id:
+                    filtered.append(meta)
+            elif scope == "store" and active_tid and meta.get("tenant_id") == active_tid:
+                filtered.append(meta)
+        return filtered
+
+    @classmethod
+    def user_may_access_backup(cls, user, filename: str) -> bool:
+        from utils.auth_helpers import is_global_owner_user
+
+        safe = cls.sanitize_filename(filename)
+        if not safe:
+            return False
+        if is_global_owner_user(user):
+            return True
+        info = cls.get_backup_info(safe) or {}
+        manifest = info.get("manifest") or {}
+        scope = manifest.get("backup_scope")
+        if scope == "system":
+            return False
+        from utils.tenanting import get_active_tenant_id
+
+        active_tid = get_active_tenant_id(user)
+        if manifest.get("tenant_id") != active_tid:
+            return False
+        if scope == "branch":
+            return manifest.get("branch_id") == getattr(user, "branch_id", None)
+        return True
+
+    @classmethod
     def create_backup(
         cls,
         manual: bool = True,
         description: str = "",
+        scope: str = "system",
+        tenant_id: Optional[int] = None,
+        branch_id: Optional[int] = None,
+        store_id: Optional[int] = None,
+        created_by: Optional[Dict[str, Any]] = None,
     ) -> Optional[Dict[str, Any]]:
-        """Create unified tar.gz backup (PostgreSQL custom dump + uploads)."""
+        """Create scoped backup archive (system full DB or tenant-scoped export)."""
+        from services.backup_scope_config import SCOPE_BRANCH, SCOPE_STORE, SCOPE_SYSTEM, SCOPE_TENANT
+
+        scope_n = (scope or SCOPE_SYSTEM).strip().lower()
+        if scope_n == SCOPE_SYSTEM:
+            return cls._create_system_backup(manual, description, created_by=created_by)
+        if scope_n == SCOPE_TENANT:
+            if not tenant_id:
+                cls._set_schedule_state(
+                    last_run_at=datetime.now(timezone.utc).isoformat(),
+                    last_error="tenant_id required for tenant backup",
+                    last_action="create_backup",
+                )
+                return None
+            return cls._create_scoped_backup(
+                SCOPE_TENANT,
+                int(tenant_id),
+                manual=manual,
+                description=description,
+                created_by=created_by,
+            )
+        if scope_n == SCOPE_BRANCH:
+            if not tenant_id or not branch_id:
+                cls._set_schedule_state(
+                    last_run_at=datetime.now(timezone.utc).isoformat(),
+                    last_error="tenant_id and branch_id required for branch backup",
+                    last_action="create_backup",
+                )
+                return None
+            return cls._create_scoped_backup(
+                SCOPE_BRANCH,
+                int(tenant_id),
+                branch_id=int(branch_id),
+                manual=manual,
+                description=description,
+                created_by=created_by,
+            )
+        if scope_n == SCOPE_STORE:
+            if not tenant_id or not store_id:
+                cls._set_schedule_state(
+                    last_run_at=datetime.now(timezone.utc).isoformat(),
+                    last_error="tenant_id and store_id required for store backup",
+                    last_action="create_backup",
+                )
+                return None
+            return cls._create_scoped_backup(
+                SCOPE_STORE,
+                int(tenant_id),
+                store_id=int(store_id),
+                manual=manual,
+                description=description,
+                created_by=created_by,
+            )
+        cls._set_schedule_state(
+            last_run_at=datetime.now(timezone.utc).isoformat(),
+            last_error=f"unknown backup scope: {scope_n}",
+            last_action="create_backup",
+        )
+        return None
+
+    @classmethod
+    def _create_system_backup(
+        cls,
+        manual: bool,
+        description: str,
+        created_by: Optional[Dict[str, Any]] = None,
+    ) -> Optional[Dict[str, Any]]:
+        """Full PostgreSQL custom dump + all uploads."""
+        from services.backup_scope_config import SCOPE_SYSTEM
+
         cls.initialize()
         params = cls._parse_db_url()
         if not params:
@@ -505,18 +1011,16 @@ class BackupService:
 
         tools = cls.pg_tools_status()
         if not tools.get("pg_dump"):
-            msg = tools.get("pg_dump") or "pg_dump not found"
             cls._set_schedule_state(
                 last_run_at=datetime.now(timezone.utc).isoformat(),
                 last_error="pg_dump not found. Set PG_DUMP_PATH.",
                 last_action="create_backup",
             )
-            logger.error(msg)
             return None
 
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         short_sha = cls._git_short_sha()
-        archive_name = f"{cls.BACKUP_PREFIX}{timestamp}_{short_sha}.tar.gz"
+        archive_name = cls._archive_basename(SCOPE_SYSTEM, timestamp, short_sha)
         archive_path = os.path.join(cls.BACKUP_DIR, archive_name)
         work_dir = tempfile.mkdtemp(prefix="azad_backup_")
 
@@ -560,31 +1064,25 @@ class BackupService:
                 "uploads.tar.gz": cls._sha256_file(uploads_path),
             }
 
-            manifest = {
-                "app_name": "Azad-UAE",
-                "backup_version": BACKUP_VERSION,
-                "format": "azad_tar_v1",
-                "created_at": datetime.now(timezone.utc).isoformat(),
-                "git_commit": short_sha,
-                "git_branch": cls._git_branch(),
-                "alembic_current": alembic_current,
-                "alembic_heads": alembic_heads,
-                "database_driver": "postgresql",
-                "database_host_masked": cls._mask_db_host(params["host"]),
-                "database_name": params["dbname"],
-                "tables_count": pre_checks.get("tables_count"),
-                "approximate_rows": approx_rows,
-                "includes": ["db_dump", "uploads", "manifest", "env.example.redacted", "README_RESTORE.txt"],
-                "sha256": file_hashes,
-                "command_versions": {
-                    "pg_dump": tools.get("pg_dump_version"),
-                    "python": sys.version.split()[0],
-                },
-                "uploads_meta": uploads_meta,
-                "pre_backup_checks": pre_checks,
-                "manual": bool(manual),
-                "description": description or "",
-            }
+            manifest = cls._build_manifest(
+                scope="system",
+                short_sha=short_sha,
+                alembic_current=alembic_current,
+                alembic_heads=alembic_heads,
+                params=params,
+                pre_checks=pre_checks,
+                approx_rows=approx_rows,
+                file_hashes=file_hashes,
+                tools=tools,
+                uploads_meta=uploads_meta,
+                manual=manual,
+                description=description,
+                created_by=created_by,
+                tables_included=["full_database"],
+                tables_excluded=[],
+                row_counts_per_table={},
+                allowed_restore_scope="system_new_database_only",
+            )
 
             manifest_path = os.path.join(work_dir, "manifest.json")
             with open(manifest_path, "w", encoding="utf-8") as f:
@@ -597,31 +1095,31 @@ class BackupService:
             readme_path = os.path.join(work_dir, "README_RESTORE.txt")
             cls._write_readme_restore(readme_path)
 
+            sys_members = [
+                "db.dump",
+                "uploads.tar.gz",
+                "manifest.json",
+                "env.example.redacted",
+                "README_RESTORE.txt",
+            ]
+            cls._write_checksums_file(work_dir, sys_members)
+            sys_members.append("checksums.sha256")
             with tarfile.open(archive_path, "w:gz") as tar:
-                for member in (
-                    "db.dump",
-                    "uploads.tar.gz",
-                    "manifest.json",
-                    "env.example.redacted",
-                    "README_RESTORE.txt",
-                ):
+                for member in sys_members:
                     tar.add(os.path.join(work_dir, member), arcname=member)
 
             size = os.path.getsize(archive_path)
-            sidecar = {
-                "filename": archive_name,
-                "path": archive_path,
-                "format": "azad_tar_v1",
-                "timestamp": timestamp,
-                "datetime": manifest["created_at"],
-                "size": size,
-                "size_mb": round(size / (1024 * 1024), 2),
-                "git_commit": short_sha,
-                "alembic_current": alembic_current,
-                "manual": bool(manual),
-                "description": description,
-                "checksum": cls._sha256_file(archive_path),
-            }
+            sidecar = cls._build_sidecar(
+                archive_name,
+                archive_path,
+                manifest,
+                timestamp,
+                size,
+                short_sha,
+                alembic_current,
+                manual,
+                description,
+            )
             with open(archive_path + ".meta.json", "w", encoding="utf-8") as f:
                 json.dump(sidecar, f, indent=2, ensure_ascii=False)
 
@@ -698,6 +1196,7 @@ This archive does NOT include secrets, .env, or AI runtime memory.
         return cls.create_backup(
             manual=False,
             description=f"Scheduled {settings.get('frequency', 'daily')} backup",
+            scope="system",
         )
 
     @classmethod
@@ -835,39 +1334,83 @@ This archive does NOT include secrets, .env, or AI runtime memory.
 
     @classmethod
     def _verify_modern_archive(cls, path: str, result: Dict[str, Any]) -> Dict[str, Any]:
-        required = {"db.dump", "uploads.tar.gz", "manifest.json"}
         work = tempfile.mkdtemp(prefix="azad_verify_")
         try:
             with tarfile.open(path, "r:gz") as tar:
-                names = set(tar.getnames())
-                missing = required - names
-                if missing:
-                    result["errors"].append(f"missing members: {sorted(missing)}")
+                archive_names = set(tar.getnames())
+                if "manifest.json" not in archive_names:
+                    result["errors"].append("missing manifest.json")
                     return result
                 tar.extract("manifest.json", work, filter="data")
-                tar.extract("db.dump", work, filter="data")
             manifest_path = os.path.join(work, "manifest.json")
             with open(manifest_path, "r", encoding="utf-8") as f:
                 manifest = json.load(f)
             result["manifest"] = manifest
-            db_path = os.path.join(work, "db.dump")
-            expected = (manifest.get("sha256") or {}).get("db.dump")
-            if expected and cls._sha256_file(db_path) != expected:
-                result["errors"].append("db.dump checksum mismatch")
-                return result
-            pg_restore = cls._resolve_pg_tool("pg_restore", "PG_RESTORE_PATH")
-            if pg_restore:
-                proc = subprocess.run(
-                    [pg_restore, "--list", db_path],
-                    capture_output=True,
-                    text=True,
-                    timeout=180,
-                )
-                if proc.returncode != 0:
-                    result["errors"].append("pg_restore --list failed")
+            scope = manifest.get("backup_scope") or "system"
+            result["backup_scope"] = scope
+
+            if scope in ("tenant", "branch", "store"):
+                has_data = any(n.startswith("data/") for n in archive_names)
+                has_legacy = "tenant_export.json" in archive_names
+                if not has_data and not has_legacy:
+                    result["errors"].append("missing data/ or tenant_export.json")
                     return result
+                if has_legacy:
+                    with tarfile.open(path, "r:gz") as tar:
+                        tar.extract("tenant_export.json", work, filter="data")
+                    export_path = os.path.join(work, "tenant_export.json")
+                    expected = (manifest.get("sha256") or {}).get("tenant_export.json")
+                    if expected and cls._sha256_file(export_path) != expected:
+                        result["errors"].append("tenant_export.json checksum mismatch")
+                        return result
+                    tenant_ok = cls._verify_tenant_export(export_path, manifest)
+                else:
+                    with tarfile.open(path, "r:gz") as tar:
+                        for n in archive_names:
+                            if n.startswith("data/"):
+                                tar.extract(n, work, filter="data")
+                    from services.backup_scope_config import read_data_directory
+
+                    tables, _meta = read_data_directory(os.path.join(work, "data"))
+                    export_doc = {
+                        "tenant_id": manifest.get("tenant_id"),
+                        "tables": tables,
+                    }
+                    export_path = os.path.join(work, "_verify_export.json")
+                    with open(export_path, "w", encoding="utf-8") as f:
+                        json.dump(export_doc, f)
+                    tenant_ok = cls._verify_tenant_export(export_path, manifest)
+                if not tenant_ok.get("ok"):
+                    result["errors"].extend(tenant_ok.get("errors", []))
+                    return result
+                result["scoped_verify"] = tenant_ok
             else:
-                result["warnings"].append("pg_restore not available; skipped dump list check")
+                required = {"db.dump", "uploads.tar.gz", "manifest.json"}
+                missing = required - archive_names
+                if missing:
+                    result["errors"].append(f"missing members: {sorted(missing)}")
+                    return result
+                with tarfile.open(path, "r:gz") as tar:
+                    tar.extract("db.dump", work, filter="data")
+                db_path = os.path.join(work, "db.dump")
+                expected = (manifest.get("sha256") or {}).get("db.dump")
+                if expected and cls._sha256_file(db_path) != expected:
+                    result["errors"].append("db.dump checksum mismatch")
+                    return result
+                pg_restore = cls._resolve_pg_tool("pg_restore", "PG_RESTORE_PATH")
+                if pg_restore:
+                    proc = subprocess.run(
+                        [pg_restore, "--list", db_path],
+                        capture_output=True,
+                        text=True,
+                        timeout=180,
+                    )
+                    if proc.returncode != 0:
+                        result["errors"].append("pg_restore --list failed")
+                        return result
+                else:
+                    result["warnings"].append("pg_restore not available; skipped dump list check")
+
             result["valid"] = True
             result["format"] = "azad_tar_v1"
             return result
@@ -878,13 +1421,129 @@ This archive does NOT include secrets, .env, or AI runtime memory.
             shutil.rmtree(work, ignore_errors=True)
 
     @classmethod
+    def _verify_tenant_export(cls, export_path: str, manifest: Dict[str, Any]) -> Dict[str, Any]:
+        out: Dict[str, Any] = {"ok": True, "errors": []}
+        try:
+            with open(export_path, "r", encoding="utf-8") as f:
+                doc = json.load(f)
+        except Exception as e:
+            return {"ok": False, "errors": [f"tenant_export unreadable: {e}"]}
+
+        scope = manifest.get("backup_scope") or "tenant"
+        tid = manifest.get("tenant_id")
+        if doc.get("tenant_id") is not None and int(doc.get("tenant_id", -1)) != int(tid):
+            out["ok"] = False
+            out["errors"].append("export tenant_id mismatch manifest")
+
+        tenants_rows = (doc.get("tables") or {}).get("tenants") or []
+        if len(tenants_rows) != 1:
+            out["ok"] = False
+            out["errors"].append(f"tenants row count expected 1 got {len(tenants_rows)}")
+        elif tenants_rows and int(tenants_rows[0].get("id", -1)) != int(tid):
+            out["ok"] = False
+            out["errors"].append("tenants row id mismatch")
+
+        bid = manifest.get("branch_id")
+        sid = manifest.get("store_id")
+        for table, rows in (doc.get("tables") or {}).items():
+            if table == "tenants":
+                continue
+            for row in rows:
+                row_tid = row.get("tenant_id")
+                if row_tid is not None and int(row_tid) != int(tid):
+                    out["ok"] = False
+                    out["errors"].append(f"cross-tenant row in {table}")
+                    break
+                if scope == "branch" and bid is not None and table != "branches":
+                    rb = row.get("branch_id")
+                    if rb is not None and int(rb) != int(bid):
+                        out["ok"] = False
+                        out["errors"].append(f"cross-branch row in {table}")
+                        break
+                if scope == "store" and sid is not None and table == "tenant_stores":
+                    if int(row.get("id", -1)) != int(sid):
+                        out["ok"] = False
+                        out["errors"].append("tenant_stores id mismatch")
+                        break
+            if not out["ok"]:
+                break
+
+        if scope == "branch" and bid is not None:
+            br_rows = (doc.get("tables") or {}).get("branches") or []
+            if len(br_rows) != 1 or int(br_rows[0].get("id", -1)) != int(bid):
+                out["ok"] = False
+                out["errors"].append("branches isolation failed")
+
+        users_rows = (doc.get("tables") or {}).get("users") or []
+        for row in users_rows:
+            if row.get("tenant_id") in (None, "") or row.get("is_owner"):
+                out["ok"] = False
+                out["errors"].append("global/owner user in tenant backup")
+                break
+
+        manifest_counts = manifest.get("row_counts_per_table") or {}
+        for table, expected in manifest_counts.items():
+            actual = len((doc.get("tables") or {}).get(table) or [])
+            if actual != expected:
+                out["ok"] = False
+                out["errors"].append(f"row count mismatch {table}: {actual} vs {expected}")
+        return out
+
+    @classmethod
+    def prepare_restore(
+        cls,
+        filename: str,
+        target_database_url: Optional[str] = None,
+        target_tenant_id: Optional[int] = None,
+        remap: bool = False,
+    ) -> Dict[str, Any]:
+        """Prepare restore plan/commands (system DB restore or tenant verify-only)."""
+        return cls.prepare_restore_command(
+            filename,
+            target_database_url=target_database_url,
+            target_tenant_id=target_tenant_id,
+            remap=remap,
+        )
+
+    @classmethod
     def prepare_restore_command(
-        cls, filename: str, target_database_url: Optional[str] = None
+        cls,
+        filename: str,
+        target_database_url: Optional[str] = None,
+        target_tenant_id: Optional[int] = None,
+        remap: bool = False,
     ) -> Dict[str, Any]:
         """Return safe pg_restore instructions (never restores in-place)."""
         info = cls.get_backup_info(filename)
         if not info:
             return {"ok": False, "error": "backup not found"}
+        manifest = info.get("manifest") or {}
+        scope = manifest.get("backup_scope") or "system"
+        if scope in ("tenant", "branch", "store"):
+            src_tid = manifest.get("tenant_id")
+            if target_tenant_id and int(target_tenant_id) != int(src_tid) and not remap:
+                return {
+                    "ok": False,
+                    "error": f"{scope} restore to a different tenant_id requires remap=True",
+                }
+            confirm = "REMAP CONFIRM" if remap else "RESTORE CONFIRM"
+            return {
+                "ok": True,
+                "mode": f"{scope}_restore_to_new_db",
+                "warning": "Never restore over the live DATABASE_URL.",
+                "commands": [
+                    "tar -xzf BACKUP.tar.gz",
+                    "Set TARGET_TEST_DATABASE_URL to a NEW empty PostgreSQL database",
+                    "flask db upgrade  # schema on target",
+                    f"POST restore with confirmation={confirm!r}",
+                    "python tools/qa/backup_restore_check.py --scope "
+                    f"{scope} --restore-to-temp-local",
+                ],
+                "tenant_id": src_tid,
+                "target_tenant_id": target_tenant_id,
+                "remap": remap,
+                "confirmation_required": confirm,
+            }
         target = (target_database_url or "").strip() or "postgresql://USER:***@HOST:PORT/NEW_DB_NAME"
         masked_target = "***"
         try:
@@ -938,9 +1597,8 @@ This archive does NOT include secrets, .env, or AI runtime memory.
         """
         outcome: Dict[str, Any] = {"ok": False, "errors": [], "warnings": []}
         if confirmation.strip() != "RESTORE CONFIRM":
-            if os.environ.get("ALLOW_DESTRUCTIVE_RESTORE") != "1":
-                outcome["errors"].append("Typed confirmation RESTORE CONFIRM required")
-                return outcome
+            outcome["errors"].append("Typed confirmation RESTORE CONFIRM required")
+            return outcome
 
         path = cls._backup_path(filename)
         if not path:
@@ -957,7 +1615,7 @@ This archive does NOT include secrets, .env, or AI runtime memory.
         if cls._urls_same_database(current_url, target_database_url):
             outcome["errors"].append(
                 "Target database is the same as current DATABASE_URL. "
-                "Use a different TARGET database or set ALLOW_DESTRUCTIVE_RESTORE=1 explicitly."
+                "Use a different TARGET database."
             )
             return outcome
 
@@ -1028,6 +1686,95 @@ This archive does NOT include secrets, .env, or AI runtime memory.
             return outcome
         finally:
             shutil.rmtree(work, ignore_errors=True)
+
+    @classmethod
+    def restore_scoped_backup_to_target_db(
+        cls,
+        filename: str,
+        target_database_url: str,
+        *,
+        confirmation: str = "",
+        remap: bool = False,
+        target_tenant_id: Optional[int] = None,
+        restore_uploads: bool = False,
+        uploads_dest_root: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        import shutil
+        import tempfile
+
+        from services.backup_scoped_engine import restore_scoped_to_target
+
+        verify = cls.verify_backup(filename)
+        if not verify.get("valid"):
+            return {
+                "ok": False,
+                "errors": ["backup verification failed"],
+                "details": verify,
+            }
+        manifest = verify.get("manifest") or {}
+        path = cls._backup_path(filename)
+        if not path:
+            return {"ok": False, "errors": ["invalid filename"]}
+
+        work = tempfile.mkdtemp(prefix="azad_scoped_restore_")
+        try:
+            with tarfile.open(path, "r:gz") as tar:
+                tar.extractall(work, filter="data")
+            outcome = restore_scoped_to_target(
+                work,
+                manifest,
+                target_database_url,
+                confirmation=confirmation,
+                remap=remap,
+                target_tenant_id=target_tenant_id,
+                restore_uploads_dir=uploads_dest_root if restore_uploads else None,
+                base_dir=cls._BASEDIR,
+            )
+            if outcome.get("ok"):
+                from services.backup_scoped_engine import verify_scoped_isolation
+                from services.backup_scoped_restore import verify_scoped_restore
+
+                iso = verify_scoped_isolation(manifest, work)
+                outcome["archive_verify"] = iso
+                tgt_tid = int(outcome.get("target_tenant_id") or manifest.get("tenant_id") or 0)
+                db_v = verify_scoped_restore(
+                    target_database_url,
+                    manifest,
+                    expected_tenant_id=tgt_tid,
+                    scope=manifest.get("backup_scope") or "tenant",
+                )
+                outcome["scoped_verify"] = db_v
+                if not iso.get("ok"):
+                    outcome.setdefault("warnings", []).append(
+                        "archive isolation check: " + "; ".join(iso.get("errors") or [])[:200]
+                    )
+                if not db_v.get("ok"):
+                    outcome["ok"] = False
+                    outcome.setdefault("errors", []).extend(db_v.get("errors") or [])
+            return outcome
+        finally:
+            shutil.rmtree(work, ignore_errors=True)
+
+    @classmethod
+    def write_restore_proof(
+        cls, backup_filename: str, payload: Dict[str, Any]
+    ) -> str:
+        cls.initialize()
+        base = backup_filename.replace(".tar.gz", "")
+        path = os.path.join(cls.BACKUP_DIR, f"{base}.restore_proof.json")
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(payload, f, indent=2, ensure_ascii=False)
+        marker = os.path.join(cls.BACKUP_DIR, ".latest_restore_proof.json")
+        with open(marker, "w", encoding="utf-8") as f:
+            json.dump(
+                {
+                    "proof_file": os.path.basename(path),
+                    "verified_at": payload.get("verified_at"),
+                    "backup_scope": payload.get("backup_scope"),
+                },
+                f,
+            )
+        return path
 
     @classmethod
     def restore_backup(cls, backup_filename: str) -> bool:

@@ -31,10 +31,18 @@ For faster iteration without UAT: `python tools/qa/predeploy_check.py --profile 
 
 ```bash
 python tools/qa/backup_restore_check.py --verify-tools
-python tools/qa/backup_restore_check.py --create-and-verify
-# Restore only when TARGET_TEST_DATABASE_URL ≠ DATABASE_URL:
+python tools/qa/backup_restore_check.py --scope system --create-and-verify --restore-to-temp-local
+python tools/qa/backup_restore_check.py --scope tenant --tenant-id 1 --create-and-verify --restore-to-temp-local
+python tools/qa/backup_restore_check.py --scope tenant --tenant-id 1 --create-and-verify --restore-to-temp-local --restore-as-new-tenant
+python tools/qa/backup_restore_check.py --scope branch --tenant-id 1 --branch-id 1 --create-and-verify --restore-to-temp-local
+python tools/qa/backup_restore_check.py --scope store --tenant-id 1 --with-temp-source-store --create-and-verify --restore-to-temp-local
+# Or explicit target URL (must differ from DATABASE_URL):
 python tools/qa/backup_restore_check.py --restore-to-target
 ```
+
+Scoped archives: `data/*.jsonl`, `uploads.tar.gz`, `manifest.json`, `checksums.sha256` (system also includes `db.dump`).
+
+Writes `instance/backups/*.restore_proof.json` (gitignored). `production-readiness` requires recent **system** and **tenant** restore proofs; branch/store proofs are optional (WARN if missing on local profile).
 
 Never restore onto the live dev/prod DB from this repo without a separate empty database URL.
 

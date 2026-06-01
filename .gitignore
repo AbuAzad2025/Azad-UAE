@@ -60,9 +60,11 @@ desktop.ini
 
 # Backups
 instance/backups/
+instance/restore_test_uploads/
 *.dump
 azad_backup_*.tar.gz
 backup_restore_*.json
+*restore_proof*.json
 deploy_dump.sql
 _private/
 

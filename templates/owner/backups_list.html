@@ -164,7 +164,9 @@
       <div>
         <h5 class="mb-2"><i class="fas fa-question-circle mr-2"></i>كيف تعمل النسخ الاحتياطية؟</h5>
         <ul class="mb-0" style="padding-right: 20px;">
-          <li><strong>الصيغة الحديثة:</strong> <code>azad_backup_*.tar.gz</code> — PostgreSQL (<code>pg_dump -Fc</code>) + <code>static/uploads</code> + manifest</li>
+          <li><strong>مستويات النسخ:</strong> System · Tenant · Branch · Store</li>
+          <li><strong>System:</strong> <code>azad_backup_system_*.tar.gz</code> — <code>pg_dump -Fc</code> + كل uploads</li>
+          <li><strong>Scoped:</strong> <code>data/*.jsonl</code> + uploads + <code>checksums.sha256</code></li>
           <li><strong>لا يشمل:</strong> ملف <code>.env</code> الحقيقي، أسرار، أو ذاكرة AI التشغيلية</li>
           <li><strong>الاستعادة:</strong> إلى قاعدة PostgreSQL <strong>جديدة</strong> فقط — لا تستعد فوق DB الإنتاج الحية</li>
           <li><strong>التحقق:</strong> checksums + <code>pg_restore --list</code> على <code>db.dump</code></li>
@@ -191,27 +193,70 @@
       </div>
       <div class="card-body">
         <div class="row">
-          <!-- نسخة يدوية فورية -->
+          {% if is_platform_owner %}
           <div class="col-md-6 mb-3 mb-md-0">
             <form method="POST" action="{{ url_for('owner.backup_now') }}">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <label class="font-weight-bold mb-2">
-                <i class="fas fa-hand-pointer text-success mr-1"></i>
-                نسخة احتياطية يدوية فورية
+                <i class="fas fa-server text-danger mr-1"></i>
+                نسخة نظام كاملة (System)
               </label>
               <div class="input-group">
-                <input type="text" name="description" placeholder="وصف النسخة (اختياري)" 
-                       class="form-control">
+                <input type="text" name="description" placeholder="وصف (اختياري)" class="form-control">
                 <div class="input-group-append">
-                  <button type="submit" class="btn btn-success">
-                    <i class="fas fa-download mr-1"></i> نسخ الآن
+                  <button type="submit" class="btn btn-danger">
+                    <i class="fas fa-database mr-1"></i> System backup
                   </button>
                 </div>
               </div>
-              <small class="form-text text-muted">
-                <i class="fas fa-info-circle mr-1"></i>
-                تُنشأ نسخة فورية من كامل قاعدة البيانات - مضغوطة وآمنة
-              </small>
+              <small class="form-text text-muted">للمالك/المطوّر فقط — كل tenants وكل البيانات</small>
+            </form>
+          </div>
+          {% endif %}
+          <div class="col-md-6 mb-3 mb-md-0">
+            <form method="POST" action="{{ url_for('owner.create_scoped_backup') }}" id="scopedBackupForm">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <label class="font-weight-bold mb-2">
+                <i class="fas fa-layer-group text-success mr-1"></i>
+                نسخة محددة النطاق
+              </label>
+              <select name="scope" id="backupScopeSelect" class="form-control mb-2" required>
+                <option value="tenant">Tenant — شركة</option>
+                {% if is_platform_owner or branches %}
+                <option value="branch">Branch — فرع</option>
+                {% endif %}
+                {% if is_platform_owner or stores %}
+                <option value="store">Store — متجر</option>
+                {% endif %}
+              </select>
+              {% if is_platform_owner and tenants %}
+              <select name="tenant_id" class="form-control mb-2" required>
+                {% for t in tenants %}
+                <option value="{{ t.id }}">{{ t.name }} ({{ t.slug }})</option>
+                {% endfor %}
+              </select>
+              {% endif %}
+              <select name="branch_id" id="backupBranchSelect" class="form-control mb-2" style="display:none;">
+                <option value="">— اختر الفرع —</option>
+                {% for b in branches %}
+                <option value="{{ b.id }}">{{ b.name }} ({{ b.code }})</option>
+                {% endfor %}
+              </select>
+              <select name="store_id" id="backupStoreSelect" class="form-control mb-2" style="display:none;">
+                <option value="">— اختر المتجر —</option>
+                {% for s in stores %}
+                <option value="{{ s.id }}">{{ s.store_slug }} (tenant {{ s.tenant_id }})</option>
+                {% endfor %}
+              </select>
+              <div class="input-group">
+                <input type="text" name="description" placeholder="وصف (اختياري)" class="form-control">
+                <div class="input-group-append">
+                  <button type="submit" class="btn btn-success">
+                    <i class="fas fa-download mr-1"></i> إنشاء
+                  </button>
+                </div>
+              </div>
+              <small class="form-text text-muted">data/ JSONL + uploads — لا تستعد على DATABASE_URL الحالية</small>
             </form>
           </div>
           
@@ -313,7 +358,14 @@
           </p>
           {% endif %}
 
-          <!-- اسم الملف -->
+          <p class="mb-1">
+            {% if backup.backup_scope %}
+            <span class="badge badge-secondary">{{ backup.backup_scope }}</span>
+            {% if backup.tenant_slug %}<span class="badge badge-info">{{ backup.tenant_slug }}</span>{% endif %}
+            {% else %}
+            <span class="badge badge-secondary">system</span>
+            {% endif %}
+          </p>
           <p class="mb-0">
             <small class="text-muted">
               <i class="fas fa-file"></i> {{ backup.filename }}
@@ -326,10 +378,10 @@
              class="btn btn-sm btn-warning" title="تعليمات استعادة آمنة">
             <i class="fas fa-book mr-1"></i> تعليمات الاستعادة
           </a>
-          {% if backup.format == 'azad_tar_v1' or backup.filename.startswith('azad_backup_') %}
+          {% if is_platform_owner and (backup.backup_scope == 'system' or backup.filename.startswith('azad_backup_system_') or 'system' in backup.filename) %}
           <button type="button" class="btn btn-sm btn-outline-warning"
                   onclick="openTargetRestore('{{ backup.filename }}')"
-                  title="استعادة إلى قاعدة اختبار جديدة فقط">
+                  title="استعادة system إلى قاعدة جديدة فقط">
             <i class="fas fa-database mr-1"></i> استعادة لقاعدة جديدة
           </button>
           {% endif %}
@@ -456,6 +508,28 @@
 
 {% block extra_js %}
 <script>
+(function() {
+  const scopeSel = document.getElementById('backupScopeSelect');
+  const branchSel = document.getElementById('backupBranchSelect');
+  const storeSel = document.getElementById('backupStoreSelect');
+  function syncScopeFields() {
+    if (!scopeSel) return;
+    const v = scopeSel.value;
+    if (branchSel) {
+      branchSel.style.display = v === 'branch' ? '' : 'none';
+      branchSel.required = v === 'branch';
+    }
+    if (storeSel) {
+      storeSel.style.display = v === 'store' ? '' : 'none';
+      storeSel.required = v === 'store';
+    }
+  }
+  if (scopeSel) {
+    scopeSel.addEventListener('change', syncScopeFields);
+    syncScopeFields();
+  }
+})();
+
 function openTargetRestore(filename) {
   $('#targetRestoreFilename').text(filename);
   $('#targetRestoreForm').attr('action', '{{ url_for("owner.restore_backup_target", filename="__FILENAME__") }}'.replace('__FILENAME__', encodeURIComponent(filename)));

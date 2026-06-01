@@ -1026,25 +1026,45 @@ def _owner_backup_filename(filename: str):
     return BackupService.sanitize_filename(filename)
 
 
+def _backup_created_by_payload():
+    role = None
+    if getattr(current_user, 'role', None):
+        role = getattr(current_user.role, 'slug', None)
+    return {
+        'user_id': getattr(current_user, 'id', None),
+        'role': role,
+        'username': getattr(current_user, 'username', None),
+    }
+
+
 @owner_bp.route('/backup-now', methods=['POST'])
 @login_required
 @owner_required
 def backup_now():
-    """نسخة احتياطية يدوية فورية (PostgreSQL custom + uploads)."""
+    """نسخة نظام كاملة — platform owner/developer فقط."""
     from services.backup_service import BackupService
     
     payload = request.get_json(silent=True) if request.is_json else None
     description = (
         (payload or {}).get('description')
         or request.form.get('description')
-        or f'Manual backup by {getattr(current_user, "username", "user")}'
+        or f'System backup by {getattr(current_user, "username", "user")}'
     )
     
-    backup = BackupService.create_backup(manual=True, description=description)
+    backup = BackupService.create_backup(
+        manual=True,
+        description=description,
+        scope='system',
+        created_by=_backup_created_by_payload(),
+    )
     if backup:
         _audit_owner_db_action(
             'create_backup',
-            {'filename': backup.get('filename'), 'size_mb': backup.get('size_mb')},
+            {
+                'filename': backup.get('filename'),
+                'size_mb': backup.get('size_mb'),
+                'backup_scope': 'system',
+            },
         )
     
     if request.is_json:
@@ -1063,15 +1083,111 @@ def backup_now():
         return redirect(safe_redirect_target(request.referrer, 'owner.dashboard'))
 
 
+@owner_bp.route('/backups/create', methods=['POST'])
+@login_required
+def create_scoped_backup():
+    """إنشاء نسخة حسب النطاق: system | tenant | branch | store."""
+    from services.backup_service import BackupService
+    from utils.auth_helpers import is_global_owner_user
+    from utils.tenanting import get_active_tenant_id
+    from models.tenant import Tenant
+
+    scope = (request.form.get('scope') or 'system').strip().lower()
+    tenant_id = request.form.get('tenant_id', type=int)
+    branch_id = request.form.get('branch_id', type=int)
+    store_id = request.form.get('store_id', type=int)
+    description = request.form.get('description') or ''
+
+    if scope == 'system':
+        if not is_global_owner_user(current_user):
+            _audit_owner_db_action('create_backup_denied', {'scope': scope, 'reason': 'not_global_owner'})
+            abort(403)
+    elif scope in ('tenant', 'branch', 'store'):
+        if is_global_owner_user(current_user):
+            if not tenant_id:
+                flash('اختر الشركة (tenant) للنسخة', 'warning')
+                return redirect(url_for('owner.list_backups'))
+        else:
+            active_tid = get_active_tenant_id(current_user)
+            if not active_tid:
+                abort(403)
+            if tenant_id and int(tenant_id) != int(active_tid):
+                _audit_owner_db_action(
+                    'create_backup_denied',
+                    {'scope': scope, 'requested_tenant_id': tenant_id, 'active_tenant_id': active_tid},
+                )
+                abort(403)
+            tenant_id = active_tid
+        if scope == 'branch':
+            if not branch_id:
+                flash('اختر الفرع', 'warning')
+                return redirect(url_for('owner.list_backups'))
+            if not is_global_owner_user(current_user):
+                if getattr(current_user, 'branch_id', None) != branch_id:
+                    _audit_owner_db_action(
+                        'create_backup_denied',
+                        {'scope': scope, 'branch_id': branch_id},
+                    )
+                    abort(403)
+        if scope == 'store' and not store_id:
+            flash('اختر المتجر', 'warning')
+            return redirect(url_for('owner.list_backups'))
+    else:
+        flash('نطاق النسخ غير مدعوم', 'warning')
+        return redirect(url_for('owner.list_backups'))
+
+    backup = BackupService.create_backup(
+        manual=True,
+        description=description or f'{scope} backup',
+        scope=scope,
+        tenant_id=tenant_id,
+        branch_id=branch_id,
+        store_id=store_id,
+        created_by=_backup_created_by_payload(),
+    )
+    if backup:
+        _audit_owner_db_action(
+            'create_backup',
+            {
+                'filename': backup.get('filename'),
+                'backup_scope': scope,
+                'tenant_id': tenant_id,
+            },
+        )
+        flash(f'تم إنشاء النسخة: {backup["filename"]}', 'success')
+    else:
+        flash('فشل إنشاء النسخة الاحتياطية', 'danger')
+    return redirect(url_for('owner.list_backups'))
+
+
 @owner_bp.route('/backups/list')
 @login_required
-@owner_required
 def list_backups():
-    """قائمة النسخ الاحتياطية"""
+    """قائمة النسخ الاحتياطية (مفلترة حسب الصلاحية)."""
     from services.backup_service import BackupService
+    from utils.auth_helpers import is_global_owner_user
+    from utils.tenanting import get_active_tenant_id
+    from models.tenant import Tenant
     from datetime import datetime
+    from models.tenant_store import TenantStore
+
+    branches = []
+    stores = []
+    if is_global_owner_user(current_user):
+        backups = BackupService.list_backups()
+        tenants = Tenant.query.filter_by(is_active=True).order_by(Tenant.name).all()
+        branches = Branch.query.filter_by(is_active=True).order_by(Branch.name).all()
+        stores = TenantStore.query.order_by(TenantStore.store_slug).all()
+    else:
+        backups = BackupService.list_backups_for_user(current_user)
+        tenants = []
+        active_tid = get_active_tenant_id(current_user)
+        if active_tid:
+            branches = Branch.query.filter_by(
+                tenant_id=active_tid, is_active=True
+            ).order_by(Branch.name).all()
+            stores = TenantStore.query.filter_by(tenant_id=active_tid).all()
     
-    backups = BackupService.list_backups()
     stats = BackupService.get_backup_stats()
     schedule_settings = BackupService.get_schedule_settings()
     schedule_state = BackupService.get_schedule_state()
@@ -1084,6 +1200,10 @@ def list_backups():
                          schedule_state=schedule_state,
                          backup_dir=BackupService.BACKUP_DIR,
                          pg_tools=pg_tools,
+                         tenants=tenants,
+                         branches=branches,
+                         stores=stores,
+                         is_platform_owner=is_global_owner_user(current_user),
                          now=datetime.now())
 
 
@@ -1094,7 +1214,7 @@ def backup_info(filename):
     from services.backup_service import BackupService
 
     safe = _owner_backup_filename(filename)
-    if not safe:
+    if not safe or not BackupService.user_may_access_backup(current_user, safe):
         return jsonify({'success': False, 'message': 'Invalid filename'}), 400
     info = BackupService.get_backup_info(safe)
     if not info:
@@ -1104,14 +1224,13 @@ def backup_info(filename):
 
 @owner_bp.route('/backups/verify/<filename>', methods=['POST'])
 @login_required
-@owner_required
 def verify_backup(filename):
     """التحقق من سلامة نسخة احتياطية"""
     from services.backup_service import BackupService
 
     safe = _owner_backup_filename(filename)
-    if not safe:
-        return jsonify({'success': False, 'message': 'Invalid filename'}), 400
+    if not safe or not BackupService.user_may_access_backup(current_user, safe):
+        return jsonify({'success': False, 'message': 'Invalid filename'}), 403
 
     result = BackupService.verify_backup(safe)
     if result.get('valid'):
@@ -1122,18 +1241,24 @@ def verify_backup(filename):
 
 @owner_bp.route('/backups/prepare-restore/<filename>', methods=['GET', 'POST'])
 @login_required
-@owner_required
 def prepare_restore_backup(filename):
     """عرض أوامر الاستعادة الآمنة — لا يكتب على DB الحالية."""
     from services.backup_service import BackupService
 
     safe = _owner_backup_filename(filename)
-    if not safe:
-        flash('❌ اسم ملف غير صالح', 'danger')
+    if not safe or not BackupService.user_may_access_backup(current_user, safe):
+        flash('❌ غير مصرح بالوصول لهذه النسخة', 'danger')
         return redirect(url_for('owner.list_backups'))
 
     target_hint = (request.form.get('target_database_url') or '').strip()
-    payload = BackupService.prepare_restore_command(safe, target_hint or None)
+    target_tenant_id = request.form.get('target_tenant_id', type=int)
+    remap = request.form.get('remap') == '1'
+    payload = BackupService.prepare_restore(
+        safe,
+        target_database_url=target_hint or None,
+        target_tenant_id=target_tenant_id,
+        remap=remap,
+    )
     if request.method == 'POST' or request.args.get('format') == 'json':
         return jsonify(payload)
     if not payload.get('ok'):
@@ -1152,14 +1277,18 @@ def prepare_restore_backup(filename):
 @login_required
 @owner_required
 def restore_backup_target(filename):
-    """استعادة إلى قاعدة بيانات جديدة فقط (TARGET_DATABASE_URL ≠ الحالية)."""
+    """استعادة system backup إلى قاعدة بيانات جديدة فقط."""
     from services.backup_service import BackupService
+    from utils.auth_helpers import is_global_owner_user
 
     safe = _owner_backup_filename(filename)
-    if not safe:
-        flash('❌ اسم ملف غير صالح', 'danger')
+    if not safe or not is_global_owner_user(current_user):
+        flash('❌ غير مصرح', 'danger')
         return redirect(url_for('owner.list_backups'))
 
+    info = BackupService.get_backup_info(safe) or {}
+    manifest = info.get('manifest') or {}
+    scope = manifest.get('backup_scope') or 'system'
     target_url = (request.form.get('target_database_url') or '').strip()
     if not target_url:
         target_url = (os.environ.get('TARGET_TEST_DATABASE_URL') or '').strip()
@@ -1168,12 +1297,24 @@ def restore_backup_target(filename):
         return redirect(url_for('owner.list_backups'))
 
     confirmation = (request.form.get('restore_confirm') or '').strip()
-    result = BackupService.restore_backup_to_target_db(
-        safe,
-        target_url,
-        confirmation=confirmation,
-        restore_uploads=request.form.get('restore_uploads') == '1',
-    )
+    remap = request.form.get('remap') == '1'
+    target_tenant_id = request.form.get('target_tenant_id', type=int)
+    if scope in ('tenant', 'branch', 'store'):
+        result = BackupService.restore_scoped_backup_to_target_db(
+            safe,
+            target_url,
+            confirmation=confirmation,
+            remap=remap,
+            target_tenant_id=target_tenant_id,
+            restore_uploads=request.form.get('restore_uploads') == '1',
+        )
+    else:
+        result = BackupService.restore_backup_to_target_db(
+            safe,
+            target_url,
+            confirmation=confirmation,
+            restore_uploads=request.form.get('restore_uploads') == '1',
+        )
     if result.get('ok'):
         _audit_owner_db_action(
             'restore_backup_target',
@@ -1192,18 +1333,17 @@ def restore_backup_target(filename):
 
 @owner_bp.route('/backups/delete', methods=['POST'])
 @login_required
-@owner_required
 def delete_backup():
     """حذف نسخة احتياطية - يدوية فقط"""
     from services.backup_service import BackupService
     
     filename = request.form.get('filename')
     safe = _owner_backup_filename(filename or '')
-    if not safe:
+    if not safe or not BackupService.user_may_access_backup(current_user, safe):
         flash('❌ اسم الملف مطلوب أو غير صالح!', 'danger')
         return redirect(url_for('owner.list_backups'))
     
-    backups = BackupService.list_backups()
+    backups = BackupService.list_backups_for_user(current_user)
     backup_exists = any(b['filename'] == safe for b in backups)
     
     if not backup_exists:
@@ -1223,7 +1363,6 @@ def delete_backup():
 
 @owner_bp.route('/backups/download/<filename>')
 @login_required
-@owner_required
 def download_backup(filename):
     """تحميل نسخة احتياطية"""
     from services.backup_service import BackupService
@@ -1231,8 +1370,9 @@ def download_backup(filename):
     import os
     
     safe = _owner_backup_filename(filename)
-    if not safe:
-        flash('❌ اسم ملف غير صالح', 'danger')
+    if not safe or not BackupService.user_may_access_backup(current_user, safe):
+        _audit_owner_db_action('download_backup_denied', {'filename': filename})
+        flash('❌ غير مصرح', 'danger')
         return redirect(url_for('owner.list_backups'))
     backup_path = os.path.join(BackupService.BACKUP_DIR, safe)
     

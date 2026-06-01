@@ -360,7 +360,15 @@ Covers: migrations head/current, `create_app`, `pip_audit`, DB integrity (`gl_re
 
 ## Backup & restore (production)
 
-**Artifact:** `instance/backups/azad_backup_YYYYMMDD_HHMMSS_<gitsha>.tar.gz`
+**Scopes:**
+
+| Scope | Filename pattern | Contents |
+|-------|------------------|----------|
+| **system** | `azad_backup_system_*` | Full `pg_dump -Fc` + all uploads |
+| **tenant** | `azad_backup_tenant_{slug}_*` | `tenant_export.json` + tenant-linked uploads only |
+| branch/store | (planned) | Per branch/store |
+
+**System artifact:** `instance/backups/azad_backup_system_YYYYMMDD_HHMMSS_<gitsha>.tar.gz`
 
 | Included | Excluded |
 |----------|----------|
@@ -382,7 +390,8 @@ Covers: migrations head/current, `create_app`, `pip_audit`, DB integrity (`gl_re
 
 ```bash
 python tools/qa/backup_restore_check.py --verify-tools
-python tools/qa/backup_restore_check.py --create-and-verify   # needs pg_dump
+python tools/qa/backup_restore_check.py --scope system --create-and-verify --restore-to-temp-local
+python tools/qa/backup_restore_check.py --scope tenant --tenant-id TENANT_ID --create-and-verify --restore-to-temp-local
 # Optional isolated DB:
 # TARGET_TEST_DATABASE_URL=postgresql://.../azad_restore_test \
 #   python tools/qa/backup_restore_check.py --restore-to-target
