@@ -322,8 +322,89 @@ def main() -> int:
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump(report, f, indent=2, default=str)
 
-    print(json.dumps(report, indent=2, default=str))
+    critical = {
+        "cross_tenant_gl_lines": cross_tenant_gl,
+        "active_invoice_settings_tenant_null_active": active_invoice_null,
+    }
+    for row in tenant_id_model_checks:
+        if row.get("tenant_id_column_in_db") and row.get("table_exists"):
+            tbl = row["table"]
+            if tbl in (
+                "products",
+                "product_categories",
+                "product_partners",
+                "employees",
+                "salary_advances",
+                "payroll_transactions",
+            ):
+                critical[f"{tbl}_tenant_null"] = row.get("null_count") or 0
+
+    test_store = 0
+    uat_test = 0
+    with engine.connect() as conn:
+        test_store = conn.execute(
+            text(
+                "SELECT COUNT(*) FROM customers "
+                "WHERE name ILIKE '%[TEST-STORE]%' OR name ILIKE '%TEST-STORE%'"
+            )
+        ).scalar()
+        uat_test = conn.execute(
+            text(
+                "SELECT COUNT(*) FROM customers "
+                "WHERE name ILIKE '%[UAT-TEST]%' OR name ILIKE '%UAT-TEST%' "
+                "OR name ILIKE '%UAT-2-TMP%'"
+            )
+        ).scalar()
+    critical["test_store_leftovers"] = test_store
+    critical["uat_test_leftovers"] = uat_test
+
+    warnings = {}
+    with engine.connect() as conn:
+        warnings["invoice_settings_tenant_null_total"] = conn.execute(
+            text("SELECT COUNT(*) FROM invoice_settings WHERE tenant_id IS NULL")
+        ).scalar()
+        warnings["users_tenant_null"] = conn.execute(
+            text("SELECT COUNT(*) FROM users WHERE tenant_id IS NULL")
+        ).scalar()
+        warnings["users_tenant_null_not_global"] = conn.execute(
+            text(
+                """
+                SELECT COUNT(*) FROM users u
+                LEFT JOIN roles r ON r.id = u.role_id
+                WHERE u.tenant_id IS NULL AND u.is_owner = false
+                  AND COALESCE(r.slug, '') NOT IN ('developer')
+                """
+            )
+        ).scalar()
+        warnings["backup_tables_count"] = conn.execute(
+            text(
+                "SELECT COUNT(*) FROM pg_tables "
+                "WHERE schemaname = 'public' AND tablename LIKE '%backup%'"
+            )
+        ).scalar()
+        warnings["test_tenants_active"] = conn.execute(
+            text(
+                "SELECT COUNT(*) FROM tenants "
+                "WHERE slug IN ('t-aed', 't-usd', 't-ils') AND is_active = true"
+            )
+        ).scalar()
+
+    report["gate"] = {"critical": critical, "warnings": warnings}
+    critical_fail = any((v or 0) > 0 for v in critical.values())
+    policy_fail = (warnings.get("users_tenant_null_not_global") or 0) > 0
+
+    print("NULL_AUDIT_CRITICAL", critical, "FAIL" if critical_fail else "OK")
+    print("NULL_AUDIT_WARN", warnings)
+    print(json.dumps({"summary": report["summary"], "gate": report["gate"]}, indent=2, default=str))
     print(f"\nWrote: {out_path}", file=sys.stderr)
+
+    if critical_fail or policy_fail:
+        print("NULL_AUDIT", "FAIL", file=sys.stderr)
+        return 1
+    if any((warnings.get(k) or 0) > 0 for k in warnings):
+        print("NULL_AUDIT", "OK_WITH_WARNINGS", file=sys.stderr)
+    else:
+        print("NULL_AUDIT", "OK", file=sys.stderr)
     return 0
 
 

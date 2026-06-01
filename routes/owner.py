@@ -544,6 +544,8 @@ def create_user():
                 flash('⚠️ يجب ربط هذا المستخدم بفرع محدد.', 'warning')
                 return render_template('owner/create_user.html', roles=roles, branches=branches, form_data=_form_values())
             
+            from utils.auth_helpers import enforce_company_user_tenant
+
             # إنشاء المستخدم
             user = User(
                 username=username,
@@ -555,6 +557,7 @@ def create_user():
                 is_owner=is_owner,
                 is_active=is_active
             )
+            enforce_company_user_tenant(user, role=role, is_owner=is_owner)
             
             db.session.add(user)
             db.session.commit()
@@ -604,6 +607,9 @@ def edit_user(user_id):
             user.branch_id = branch_id
             user.is_owner = is_owner
             user.is_active = request.form.get('is_active') == 'on'
+            from utils.auth_helpers import enforce_company_user_tenant
+
+            enforce_company_user_tenant(user, role=role, is_owner=is_owner)
             
             # تغيير كلمة المرور إن وجدت
             new_password = request.form.get('new_password', '').strip()

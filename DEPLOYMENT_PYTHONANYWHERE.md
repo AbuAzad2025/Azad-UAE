@@ -342,4 +342,32 @@ Requires `NOWPAYMENTS_IPN_SECRET` in `.env` and/or `PaymentVault.nowpayments_ipn
 
 ---
 
+## Database hygiene before production go-live
+
+If this PostgreSQL instance was used for **dev/UAT** (not a fresh prod database):
+
+| Item | Dev/staging | Before production cutover |
+|------|-------------|---------------------------|
+| Test tenants `t-aed`, `t-usd`, `t-ils` | Keep **active** while UAT runs | **Disable** or use a clean prod DB — do not delete |
+| Remediation `*_backup_20260601` tables | Keep for rollback | `pg_dump` full backup, then `DROP` after sign-off |
+| Global developer user (`azad`, `tenant_id` NULL) | Allowed | Document policy; do not assign random tenant |
+
+Optional SQL (run only at **production cutover**, not during UAT):
+
+```sql
+-- Disable UAT test tenants (do not DELETE)
+UPDATE tenants SET is_active = false
+WHERE slug IN ('t-aed', 't-usd', 't-ils');
+```
+
+Pre-deploy QA from repo root (see `tools/qa/README.md`):
+
+```bash
+python tools/qa/gl_remediation_verify.py
+python tools/qa/null_column_audit.py
+python tools/qa/uat_operational_check.py
+```
+
+---
+
 *Last saved for go-live execution. Project status at save time: Final PASS, UAT 59/59.*

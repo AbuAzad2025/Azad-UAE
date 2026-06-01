@@ -29,6 +29,41 @@ Scripts in this folder are **manual QA and UAT harnesses** for [Azad-UAE](https:
 
 Original copies may remain under `tools/` with `*_test.py` names for local use; names here avoid that suffix so they can be tracked in git.
 
+## Pre-deploy command sequence (dev/staging)
+
+From the repository root, with venv active and `.env` pointing at a **non-production** database:
+
+```bash
+python -m py_compile app.py config.py
+$env:SKIP_SYSTEM_INTEGRITY="1"   # PowerShell; use export on Linux
+python -c "from app import create_app; create_app(); print('create_app OK')"
+python tools/qa/gl_remediation_verify.py
+python tools/qa/null_column_audit.py
+python tools/qa/uat_operational_check.py
+```
+
+Optional one-time remediation (only with backup + approval):
+
+```bash
+python tools/qa/invoice_settings_inactive_null_cleanup.py
+```
+
+**Do not run remediation or audits on production** without a full `pg_dump` backup and explicit sign-off.
+
+### PASS / WARN / FAIL
+
+| Tool | Exit 0 | Exit 1 |
+|------|--------|--------|
+| `gl_remediation_verify.py` | All **critical** checks = 0; no company user with NULL `tenant_id` | GL/tenant NULL/test leftovers, or non-global user with NULL tenant |
+| `null_column_audit.py` | Same critical gates | Same |
+| `uat_operational_check.py` | 59/59 tests | Any failure |
+
+**WARN (exit 0):** backup tables present, test tenants `t-aed`/`t-usd`/`t-ils` active, global `developer` user with NULL `tenant_id` (e.g. `azad`).
+
+**FAIL:** any critical `tenant_id` NULL on operational tables, GL cross-tenant, active `invoice_settings` with NULL tenant, UAT/[TEST-STORE] leftovers, or manager/seller without tenant.
+
+Audit JSON/CSV under `tools/qa/null_column_audit_*` are **gitignored** — do not commit them.
+
 ## Suggested commands
 
 From the project root, with venv active and `.env` pointing at **dev/staging**:

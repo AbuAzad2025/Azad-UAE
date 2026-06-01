@@ -5,7 +5,7 @@ from models import User, Role, Branch
 from utils.decorators import admin_required, permission_required
 from utils.branching import branch_scope_id_for, role_requires_branch
 from utils.helpers import create_audit_log
-from utils.auth_helpers import role_level_for, role_level_for_user
+from utils.auth_helpers import role_level_for, role_level_for_user, enforce_company_user_tenant
 from utils.tenanting import get_active_tenant_id, assign_tenant_id, scoped_user_query
 from utils.username_policy import validate_username_for_user, tenant_username_prefix, is_platform_reserved
 from models.tenant import Tenant
@@ -241,9 +241,10 @@ def edit(id):
             user.phone = request.form.get('phone')
             role_id = request.form.get('role_id', type=int)
             branch_id = _clean_branch_id(request.form.get('branch_id'))
-            _validate_user_branch(role_id, branch_id)
+            role = _validate_user_branch(role_id, branch_id)
             user.role_id = role_id
             user.branch_id = branch_id
+            enforce_company_user_tenant(user, role=role, is_owner=False)
             
             new_password = request.form.get('new_password')
             if new_password:

@@ -1,8 +1,11 @@
 """
 Read-only post-remediation database verification (GL + Phase 2 tenant integrity).
 
-QA tool only — SELECT queries; no writes. Uses DATABASE_URL from .env locally;
+QA / pre-deploy only. SELECT queries; no writes. Uses DATABASE_URL from .env;
 does not embed or print credentials.
+
+Exit 0 = all critical checks pass (warnings may remain).
+Exit 1 = one or more critical checks failed.
 
 Run: python tools/qa/gl_remediation_verify.py
 """
@@ -17,7 +20,7 @@ load_dotenv()
 
 from sqlalchemy import create_engine, text
 
-CHECKS = {
+CRITICAL_CHECKS = {
     "cross_tenant_gl_lines": """
         SELECT COUNT(*) FROM gl_journal_lines jl
         JOIN gl_journal_entries je ON je.id = jl.entry_id
@@ -55,16 +58,57 @@ CHECKS = {
     """,
 }
 
+WARN_CHECKS = {
+    "invoice_settings_tenant_null_total": (
+        "SELECT COUNT(*) FROM invoice_settings WHERE tenant_id IS NULL"
+    ),
+    "users_tenant_null": "SELECT COUNT(*) FROM users WHERE tenant_id IS NULL",
+    "users_tenant_null_not_global": """
+        SELECT COUNT(*) FROM users u
+        LEFT JOIN roles r ON r.id = u.role_id
+        WHERE u.tenant_id IS NULL
+          AND u.is_owner = false
+          AND COALESCE(r.slug, '') NOT IN ('developer')
+    """,
+    "backup_tables_count": """
+        SELECT COUNT(*) FROM pg_tables
+        WHERE schemaname = 'public' AND tablename LIKE '%backup%'
+    """,
+    "test_tenants_active": """
+        SELECT COUNT(*) FROM tenants
+        WHERE slug IN ('t-aed', 't-usd', 't-ils') AND is_active = true
+    """,
+}
+
 
 def main():
     engine = create_engine(os.environ["DATABASE_URL"])
-    results = {}
+    critical = {}
+    warnings = {}
     with engine.connect() as conn:
-        for name, sql in CHECKS.items():
-            results[name] = conn.execute(text(sql)).scalar()
-    ok = all(v == 0 for v in results.values())
-    print("DB_VERIFICATION", results, "ALL_OK" if ok else "FAIL")
-    return 0 if ok else 1
+        for name, sql in CRITICAL_CHECKS.items():
+            critical[name] = conn.execute(text(sql)).scalar()
+        for name, sql in WARN_CHECKS.items():
+            warnings[name] = conn.execute(text(sql)).scalar()
+
+    critical_ok = all(v == 0 for v in critical.values())
+    policy_fail = (warnings.get("users_tenant_null_not_global") or 0) > 0
+
+    print(
+        "DB_VERIFICATION_CRITICAL",
+        critical,
+        "OK" if critical_ok else "CRITICAL_FAIL",
+    )
+    print("DB_VERIFICATION_WARN", warnings)
+
+    if not critical_ok or policy_fail:
+        print("DB_VERIFICATION", "FAIL")
+        return 1
+    if any((warnings.get(k) or 0) > 0 for k in warnings):
+        print("DB_VERIFICATION", "ALL_OK_WITH_WARNINGS")
+    else:
+        print("DB_VERIFICATION", "ALL_OK")
+    return 0
 
 
 if __name__ == "__main__":

@@ -47,3 +47,38 @@ def is_global_owner_user(user):
     role = getattr(user, 'role', None)
     slug = getattr(role, 'slug', None) if role else None
     return slug == 'developer'
+
+
+def user_may_have_null_tenant(*, is_owner=False, role=None):
+    """tenant_id=NULL is allowed only for platform owner or developer role."""
+    if is_owner:
+        return True
+    slug = getattr(role, 'slug', None) if role else None
+    return slug == 'developer'
+
+
+def enforce_company_user_tenant(user, *, role=None, is_owner=None):
+    """
+    Ensure company users have tenant_id. Global owner/developer may stay NULL.
+    Raises ValueError when a company role cannot be assigned a tenant.
+    """
+    role = role or getattr(user, 'role', None)
+    is_owner = is_owner if is_owner is not None else getattr(user, 'is_owner', False)
+    if user_may_have_null_tenant(is_owner=is_owner, role=role):
+        return user
+    if getattr(user, 'tenant_id', None):
+        return user
+    branch_id = getattr(user, 'branch_id', None)
+    if branch_id:
+        from models import Branch
+
+        branch = Branch.query.get(int(branch_id))
+        if branch and getattr(branch, 'tenant_id', None):
+            user.tenant_id = int(branch.tenant_id)
+            return user
+    from utils.tenanting import assign_tenant_id
+
+    assign_tenant_id(user)
+    if not getattr(user, 'tenant_id', None):
+        raise ValueError('يجب ربط مستخدم الشركة بشركة نشطة (tenant_id).')
+    return user
