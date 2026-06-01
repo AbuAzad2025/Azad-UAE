@@ -120,6 +120,7 @@ static/uploads/products/*
 # AI Runtime Memory
 ai_knowledge/*.json
 ai_knowledge/memory/*.json
+!ai_knowledge/memory/*.example.json
 ai_knowledge/*.pkl
 ai_knowledge/models/*.pkl
 ai_knowledge/models/*.joblib
