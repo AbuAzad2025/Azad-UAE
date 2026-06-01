@@ -151,8 +151,18 @@ def print_purchase(id):
     if scoped_branch_id is not None and purchase.branch_id != scoped_branch_id:
         return render_template('errors/403.html'), 403
     from models.invoice_settings import InvoiceSettings
-    tenant, settings, company = InvoiceSettings.company_print_context()
-    return render_template('purchases/print.html', purchase=purchase, company=company)
+    from utils.tenant_branding import get_print_header_context
+    tid = purchase.tenant_id
+    tenant, settings, company = InvoiceSettings.company_print_context(tid)
+    print_branding = get_print_header_context(tid)
+    return render_template(
+        'purchases/print.html',
+        purchase=purchase,
+        company=company,
+        settings=settings,
+        print_branding=print_branding,
+        print_tenant_id=tid,
+    )
 
 
 @purchases_bp.route('/<int:id>/edit', methods=['GET', 'POST'])

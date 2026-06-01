@@ -172,20 +172,27 @@ class InvoiceSettings(db.Model):
         ).first()
 
     @staticmethod
-    def company_print_context():
+    def company_print_context(tenant_id=None):
         """Tenant branding with per-tenant invoice settings fallback for print views."""
         from models.tenant import Tenant
+        from utils.tenant_branding import get_print_header_context
 
-        tenant = Tenant.get_current()
-        settings = InvoiceSettings.get_active(tenant.id if tenant else None)
+        if tenant_id is None:
+            tenant = Tenant.get_current()
+            tenant_id = tenant.id if tenant else None
+        else:
+            tenant = db.session.get(Tenant, int(tenant_id))
+
+        branding = get_print_header_context(tenant_id)
+        settings = InvoiceSettings.get_active(tenant_id)
         return tenant, settings, {
-            'name_ar': (tenant.name_ar if tenant else settings.company_name_ar) or 'نظام المحاسبة',
-            'address': (
-                (tenant.address_ar or tenant.address_en)
-                if tenant
-                else (settings.address_ar or settings.address_en)
-            ) or '',
-            'phone': (tenant.phone_1 or tenant.mobile if tenant else settings.phone_1) or '',
+            'name_ar': branding['company_name_ar'],
+            'name_en': branding['company_name_en'],
+            'address': branding['address_ar'] or branding['address_en'],
+            'phone': branding['phone'],
+            'email': branding['email'],
+            'tax_number': branding['tax_number'],
+            'logo_url': branding['logo_url'],
         }
     
     def to_dict(self):

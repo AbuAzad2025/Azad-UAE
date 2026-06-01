@@ -243,10 +243,12 @@ def print_invoice(id):
         flash(ErrorMessages.permission_denied('طباعة هذه الفاتورة'), 'danger')
         return redirect(url_for('sales.index'))
     
-    # Get invoice settings
     from config import Config
     from models import Branch
-    settings = InvoiceSettings.get_active()
+    from utils.tenant_branding import get_print_header_context
+    tid = sale.tenant_id
+    settings = InvoiceSettings.get_active(tid)
+    print_branding = get_print_header_context(tid)
     print_branch = Branch.query.get(sale.branch_id) if sale.branch_id else None
     print_user_name = (
         sale.seller.get_display_name('ar')
@@ -286,6 +288,8 @@ def print_invoice(id):
             print_user_name=print_user_name,
             amount_in_words=amount_in_words,
             qr_data_url=qr_data_url,
+            print_branding=print_branding,
+            print_tenant_id=tid,
         )
     except:
         # إذا لم يوجد القالب، استخدام modern كافتراضي
@@ -298,6 +302,8 @@ def print_invoice(id):
             print_user_name=print_user_name,
             amount_in_words=amount_in_words,
             qr_data_url=qr_data_url,
+            print_branding=print_branding,
+            print_tenant_id=tid,
         )
 
 

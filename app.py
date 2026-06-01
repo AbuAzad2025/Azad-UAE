@@ -235,6 +235,11 @@ def create_app(config_class=Config):
     # from utils.error_handlers import register_error_handlers
     # register_error_handlers(app)
     
+    @app.template_global()
+    def tenant_document_logo(settings=None, tenant_id=None):
+        from utils.tenant_branding import document_logo_relative_path
+        return document_logo_relative_path(settings, tenant_id)
+
     # Context Processors
     @app.context_processor
     def utility_processor():
@@ -285,6 +290,16 @@ def create_app(config_class=Config):
                     tenant_email = (inv.email or '').strip() or tenant_email
                     tenant_address = (inv.address_ar or inv.address_en or '').strip() or tenant_address
                     tenant_logo_url = (inv.logo_url or '').strip() or tenant_logo_url
+            if tenant:
+                from utils.tenant_branding import resolve_tenant_branding
+                branding = resolve_tenant_branding(tenant.id)
+                tenant_logo_url = branding.get('logo_url') or tenant_logo_url
+                tenant_logo_dark_url = branding.get('logo_dark_url') or tenant_logo_dark_url
+                tenant_favicon_url = branding.get('favicon_url') or tenant_favicon_url
+                if not tenant_name_ar:
+                    tenant_name_ar = branding.get('company_name_ar') or tenant_name_ar
+                if not tenant_name:
+                    tenant_name = branding.get('company_name_en') or tenant_name
         except Exception:
             pass
 

@@ -19,6 +19,18 @@
           </div>
         </div>
         <div class="card-body">
+          <div class="row mb-4 align-items-center">
+            <div class="col-md-3 text-center">
+              {% include 'partials/print_tenant_logo.html' %}
+            </div>
+            <div class="col-md-9">
+              <h4>{{ print_branding.company_name_ar if print_branding is defined else (company.name_ar if company else company_name_ar) }}</h4>
+              <p class="mb-1">{{ print_branding.address_ar if print_branding is defined else (company.address if company else '') }}</p>
+              {% if print_branding is defined and print_branding.phone %}
+              <p class="mb-0">هاتف: {{ print_branding.phone }}</p>
+              {% endif %}
+            </div>
+          </div>
           <!-- معلومات المورد -->
           <div class="row mb-4">
             <div class="col-md-6">

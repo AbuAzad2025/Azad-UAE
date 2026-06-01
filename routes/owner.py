@@ -2388,7 +2388,13 @@ def invoice_settings():
 @owner_required
 def preview_invoice(template):
     """معاينة قالب الفاتورة"""
-    settings = InvoiceSettings.get_active()
+    from models.invoice_settings import InvoiceSettings
+    from utils.tenant_branding import get_print_header_context
+    from utils.tenanting import get_active_tenant_id
+
+    tid = get_active_tenant_id(current_user)
+    settings = InvoiceSettings.get_active(tid)
+    print_branding = get_print_header_context(tid)
     from utils.number_to_arabic import number_to_arabic_words
     from utils.qr_generator import generate_qr_data_url
     
@@ -2478,6 +2484,8 @@ def preview_invoice(template):
         amount_in_words=sample_amount_in_words,
         qr_data_url=sample_qr_data_url,
         doc_number=sample_sale.sale_number,
+        print_branding=print_branding,
+        print_tenant_id=tid,
     )
 
 
@@ -2486,7 +2494,13 @@ def preview_invoice(template):
 @owner_required
 def preview_receipt(template):
     """معاينة قالب سند القبض"""
-    settings = InvoiceSettings.get_active()
+    from models.invoice_settings import InvoiceSettings
+    from utils.tenant_branding import get_print_header_context
+    from utils.tenanting import get_active_tenant_id
+
+    tid = get_active_tenant_id(current_user)
+    settings = InvoiceSettings.get_active(tid)
+    print_branding = get_print_header_context(tid)
     from utils.number_to_arabic import number_to_arabic_words
     from utils.qr_generator import generate_qr_data_url
     
@@ -2573,6 +2587,8 @@ def preview_receipt(template):
         amount_in_words=sample_amount_in_words,
         qr_data_url=sample_qr_data_url,
         doc_number=sample_receipt.receipt_number,
+        print_branding=print_branding,
+        print_tenant_id=tid,
     )
 
 

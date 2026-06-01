@@ -218,9 +218,7 @@
     <div class="header">
       <div class="header-content">
         <div class="company-info-left">
-          {% if settings and settings.show_logo %}
-          <img src="{{ url_for('static', filename=settings.logo_path if settings and settings.logo_path else 'assets/brand/azad/logos/logo.png') }}" alt="Logo" style="height: 40px; background: white; padding: 5px; border-radius: 5px; margin-bottom: 8px;">
-          {% endif %}
+          {% with logo_style='height: 40px; background: white; padding: 5px; border-radius: 5px; margin-bottom: 8px;' %}{% include 'partials/print_tenant_logo.html' %}{% endwith %}
           <div class="company-name">{{ (settings.company_name_ar if settings and settings.company_name_ar else none) or tenant_name_ar or company_name_ar or 'نظام المحاسبة' }}</div>
           <div class="company-details">
             {{ (settings.address_ar if settings and settings.address_ar else none) or tenant_address or company_address }}<br>

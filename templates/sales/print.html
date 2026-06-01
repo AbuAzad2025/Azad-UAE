@@ -225,11 +225,12 @@
   <div class="invoice-container">
     <!-- Header -->
     <div class="invoice-header">
-      {% if settings.show_logo and (settings.logo_url or tenant_logo_url) %}
-      <img src="{{ settings.logo_url or tenant_logo_url or url_for('static', filename='assets/brand/azad/logos/logo.png') }}" alt="{{ settings.company_name_ar or tenant_name_ar or company_name_ar }}"
-           class="company-logo" style="background: white; padding: 10px; border-radius: 10px;">
+      {% if settings.show_logo != false %}
+      {% with logo_class='company-logo', logo_style='background: white; padding: 10px; border-radius: 10px;' %}
+      {% include 'partials/print_tenant_logo.html' %}
+      {% endwith %}
       {% endif %}
-      <div class="company-name">{{ settings.company_name_ar or tenant_name_ar or company_name_ar or 'نظام المحاسبة' }}</div>
+      <div class="company-name">{{ print_branding.company_name_ar if print_branding is defined else (settings.company_name_ar or tenant_name_ar or company_name_ar or 'نظام المحاسبة') }}</div>
       <div class="company-info">
         <div>{{ settings.address_ar or tenant_address or company_address }}</div>
         <div>

@@ -1,0 +1,10 @@
+{# Tenant document header logo — never hardcode tenant slug or Azad here. #}
+{% if settings is not defined or settings is none or settings.show_logo != false %}
+  {% set _doc_logo = tenant_document_logo(settings, print_tenant_id|default(none)) %}
+  {% if _doc_logo %}
+  <img src="{{ _doc_logo if _doc_logo.startswith('http') else url_for('static', filename=_doc_logo) }}"
+       alt="{{ (print_branding.company_name_ar if print_branding is defined else none) or (settings.company_name_ar if settings and settings.company_name_ar else none) or tenant_name_ar or 'Logo' }}"
+       class="{{ logo_class|default('logo') }}"
+       {% if logo_style is defined %}style="{{ logo_style }}"{% endif %}>
+  {% endif %}
+{% endif %}

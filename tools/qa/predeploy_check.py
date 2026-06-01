@@ -724,6 +724,18 @@ def check_static_assets(report: Report) -> None:
         report.add("Static assets", "PASS", "paths + DB + manifest OK")
 
 
+def check_tenant_branding(report: Report) -> None:
+    from tools.qa.tenant_branding_check import run_tenant_branding_check
+
+    fails, warns = run_tenant_branding_check()
+    if fails:
+        report.add("Tenant branding", "FAIL", "; ".join(fails[:6]))
+    elif warns:
+        report.add("Tenant branding", "WARN", "; ".join(warns[:4]))
+    else:
+        report.add("Tenant branding", "PASS", "alhazem/nasrallah isolation OK")
+
+
 def check_git_hygiene(report: Report) -> None:
     issues = []
     r = _run(["git", "status", "--porcelain"], cwd=ROOT)
@@ -819,6 +831,7 @@ def main() -> int:
     if not args.skip_uat:
         check_uat(report)
     check_static_assets(report)
+    check_tenant_branding(report)
     check_git_hygiene(report)
 
     print_report(report, args.profile)

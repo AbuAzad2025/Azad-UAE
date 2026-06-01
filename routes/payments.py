@@ -433,8 +433,11 @@ def print_payment(id):
     payment_branch_id = payment.branch_id
     if not _in_scope_branch(payment_branch_id):
         return render_template('errors/403.html'), 403
-    from models import Tenant, Branch
-    tenant, settings, company = InvoiceSettings.company_print_context()
+    from models import Branch
+    from utils.tenant_branding import get_print_header_context
+    tid = getattr(payment, 'tenant_id', None)
+    tenant, settings, company = InvoiceSettings.company_print_context(tid)
+    print_branding = get_print_header_context(tid)
     print_branch = Branch.query.get(payment_branch_id) if payment_branch_id else None
     print_user_name = (
         payment.user.get_display_name('ar')
@@ -466,6 +469,8 @@ def print_payment(id):
         amount_in_words=amount_in_words,
         qr_data_url=qr_data_url,
         doc_number=payment.payment_number,
+        print_branding=print_branding,
+        print_tenant_id=tid,
     )
 
 
@@ -1012,15 +1017,16 @@ def print_receipt(id):
         flash('ليس لديك صلاحية لطباعة هذا السند', 'danger')
         return redirect(url_for('payments.receipts'))
     
-    # Get invoice settings
-    settings = InvoiceSettings.get_active()
-    
-    # استخدام القالب النشط من الإعدادات
+    from utils.tenant_branding import get_print_header_context
+    tid = receipt.tenant_id
+    settings = InvoiceSettings.get_active(tid)
+    print_branding = get_print_header_context(tid)
+
     template = settings.active_template if settings and settings.active_template else 'modern'
     template_path = f'receipts/{template}.html'
     
-    from models import Tenant, Branch
-    tenant, settings, company = InvoiceSettings.company_print_context()
+    from models import Branch
+    tenant, settings, company = InvoiceSettings.company_print_context(tid)
     print_branch = Branch.query.get(receipt_branch_id) if receipt_branch_id else None
     print_user_name = (
         receipt.user.get_display_name('ar')
@@ -1052,6 +1058,8 @@ def print_receipt(id):
             amount_in_words=amount_in_words,
             qr_data_url=qr_data_url,
             doc_number=receipt.receipt_number,
+            print_branding=print_branding,
+            print_tenant_id=tid,
         )
     except Exception:
         return render_template(
@@ -1065,6 +1073,8 @@ def print_receipt(id):
             amount_in_words=amount_in_words,
             qr_data_url=qr_data_url,
             doc_number=receipt.receipt_number,
+            print_branding=print_branding,
+            print_tenant_id=tid,
         )
 
 

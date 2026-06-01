@@ -42,12 +42,20 @@ def professional_printing():
             total_debit += balance if balance > 0 else 0
             total_credit += abs(balance) if balance < 0 else 0
     
+    from models.invoice_settings import InvoiceSettings
+    from utils.tenant_branding import get_print_header_context
+
+    print_branding = get_print_header_context()
+    settings = InvoiceSettings.get_active()
+
     return render_template('ledger/professional_printing.html',
                          trial_balance_data=trial_balance_data,
                          total_debit=total_debit,
                          total_credit=total_credit,
                          date_from=date.today() - timedelta(days=30),
-                         date_to=date.today())
+                         date_to=date.today(),
+                         print_branding=print_branding,
+                         settings=settings)
 
 @advanced_ledger_bp.route('/customs-taxes')
 @login_required

@@ -59,13 +59,9 @@
 
   <div class="receipt-container">
     <div class="receipt-header">
-      {% if tenant_logo_url %}
-      <img src="{{ tenant_logo_url }}" style="height: 60px; max-width: 160px; object-fit: contain;" alt="{{ tenant_name_ar or company_name_ar }}">
-      {% else %}
-      <span style="font-size: 1.3rem; font-weight: 700;">{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }}</span>
-      {% endif %}
-      <h3 style="margin: 10px 0;">{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }}</h3>
-      <p style="font-size: 13px;">{{ tenant_address or company_address }}</p>
+      {% include 'partials/print_tenant_logo.html' %}
+      <h3 style="margin: 10px 0;">{{ print_branding.company_name_ar if print_branding is defined else (tenant_name_ar or company_name_ar or 'نظام المحاسبة') }}</h3>
+      <p style="font-size: 13px;">{{ print_branding.address_ar if print_branding is defined else (tenant_address or company_address) }}</p>
     </div>
 
     <div class="receipt-title">

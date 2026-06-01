@@ -267,16 +267,18 @@
   <!-- منطقة المعاينة -->
   <div class="preview-area" id="printContent">
     
-    <!-- رأس الشركة الفاخر -->
+    <!-- رأس الشركة -->
     <div class="print-header">
       <div class="company-logo">
-        <i class="fas fa-building"></i>
+        {% include 'partials/print_tenant_logo.html' %}
       </div>
-      <div class="company-name">شركة الإمارات للمرائب</div>
+      <div class="company-name">{{ print_branding.company_name_ar if print_branding is defined else (settings.company_name_ar if settings else company_name_ar) }}</div>
       <div class="company-details">
-        دولة الإمارات العربية المتحدة | دبي | ص.ب: 12345<br>
-        هاتف: +971 4 123 4567 | فاكس: +971 4 123 4568<br>
-        البريد الإلكتروني: info@emirates-garage.ae
+        {{ print_branding.address_ar if print_branding is defined else (settings.address_ar if settings else tenant_address) }}<br>
+        {% set _phone = print_branding.phone if print_branding is defined else (settings.phone_1 if settings else tenant_phone) %}
+        {% if _phone %}هاتف: {{ _phone }}<br>{% endif %}
+        {% set _email = print_branding.email if print_branding is defined else (settings.email if settings else tenant_email) %}
+        {% if _email %}البريد الإلكتروني: {{ _email }}{% endif %}
       </div>
     </div>
 
@@ -298,7 +300,7 @@
       </div>
       <div class="info-row">
         <span class="info-label">العملة:</span>
-        <span class="info-value">درهم إماراتي (AED)</span>
+        <span class="info-value">{{ print_branding.default_currency if print_branding is defined else (tenant_default_currency or 'AED') }}</span>
       </div>
       <div class="info-row">
         <span class="info-label">رقم التقرير:</span>

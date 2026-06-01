@@ -310,13 +310,97 @@ def scan_git_uploads_staging() -> tuple[list[str], list[str]]:
     return fails, []
 
 
+TENANT_DOC_TEMPLATE_PATHS = (
+    "templates/invoices",
+    "templates/receipts",
+    "templates/sales/print.html",
+    "templates/payments/print.html",
+    "templates/payments/print_receipt.html",
+    "templates/purchases/print.html",
+    "templates/ledger/professional_printing.html",
+)
+
+TENANT_SLUG_HARDCODE = re.compile(
+    r"assets/tenants/(alhazem|nasrallah)/", re.I
+)
+AZAD_LOGO_IN_DOC = re.compile(
+    r"assets/brand/azad/logos/logo\.png"
+)
+LEGACY_TENANT_IMG = re.compile(r"(?<![\w/])img/tenants/")
+
+
+def scan_tenant_document_templates() -> tuple[list[str], list[str]]:
+    """FAIL on hardcoded tenant slug or Azad header logo in tenant document templates."""
+    fails: list[str] = []
+    warns: list[str] = []
+    for rel_dir in TENANT_DOC_TEMPLATE_PATHS:
+        path = os.path.join(ROOT, rel_dir.replace("/", os.sep))
+        paths: list[str]
+        if os.path.isfile(path):
+            paths = [path]
+        elif os.path.isdir(path):
+            paths = []
+            for dirpath, _, filenames in os.walk(path):
+                for fn in filenames:
+                    if fn.endswith(".html"):
+                        paths.append(os.path.join(dirpath, fn))
+        else:
+            continue
+        for fpath in paths:
+            rel = os.path.relpath(fpath, ROOT).replace("\\", "/")
+            try:
+                content = open(fpath, encoding="utf-8", errors="replace").read()
+            except OSError:
+                continue
+            if TENANT_SLUG_HARDCODE.search(content):
+                fails.append(f"tenant doc hardcoded tenant slug in {rel}")
+            if AZAD_LOGO_IN_DOC.search(content):
+                fails.append(f"tenant doc hardcoded Azad header logo in {rel}")
+            if LEGACY_TENANT_IMG.search(content):
+                fails.append(f"tenant doc legacy img/tenants path in {rel}")
+            if "<img" in content and "print_tenant_logo" not in content and "tenant_document_logo" not in content:
+                if "logo" in content.lower():
+                    warns.append(f"tenant doc may lack print_tenant_logo partial in {rel}")
+    return fails, warns
+
+
+def scan_invoice_settings_assets(database_url: str) -> tuple[list[str], list[str]]:
+    fails: list[str] = []
+    if not database_url:
+        return fails, []
+    engine = create_engine(database_url)
+    with engine.connect() as conn:
+        rows = conn.execute(
+            text(
+                "SELECT tenant_id, logo_path, logo_url FROM invoice_settings "
+                "WHERE is_active = true AND (logo_path IS NOT NULL OR logo_url IS NOT NULL)"
+            )
+        ).fetchall()
+        for tid, lp, lu in rows:
+            for label, val in (("logo_path", lp), ("logo_url", lu)):
+                v = (val or "").strip()
+                if not v or v.startswith("http"):
+                    continue
+                if v.startswith("static/"):
+                    fails.append(f"invoice_settings tenant {tid} {label} uses static/ prefix")
+                    continue
+                if v.startswith("img/") or "static/img" in v:
+                    fails.append(f"invoice_settings tenant {tid} legacy {label}: {v}")
+                    continue
+                if not _static_exists(v):
+                    fails.append(f"invoice_settings tenant {tid} {label} file missing: {v}")
+    return fails, []
+
+
 def run_static_asset_audit(database_url: str) -> tuple[list[str], list[str]]:
     fails: list[str] = []
     warns: list[str] = []
     for chunk in (
         scan_code_references(),
         scan_config_and_manifest(),
+        scan_tenant_document_templates(),
         scan_db_asset_paths(database_url),
+        scan_invoice_settings_assets(database_url),
         scan_git_uploads_staging(),
     ):
         f, w = chunk
