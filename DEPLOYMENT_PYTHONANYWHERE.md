@@ -336,9 +336,21 @@ Requires `NOWPAYMENTS_IPN_SECRET` in `.env` and/or `PaymentVault.nowpayments_ipn
 2. Clone/upload code  
 3. Virtualenv + `pip install -r requirements.txt`  
 4. Create PostgreSQL + `.env`  
-5. `flask db upgrade`  
+5. `flask db upgrade` (includes `perf_idx_round1_001` performance indexes)  
 6. Configure WSGI + static mapping + virtualenv  
 7. Reload → smoke test  
+
+### Pre-deploy verification (single command)
+
+From repo root on the server (or locally against staging DB):
+
+```bash
+python tools/qa/predeploy_check.py --profile local
+```
+
+Covers: migrations head/current, `create_app`, `pip_audit`, DB integrity (`gl_remediation_verify`, `null_column_audit`), UAT 59/59, eight required performance indexes, git hygiene.
+
+**Deferred (separate migrations later):** `pg_trgm` search indexes, NOT NULL `tenant_id` constraints, `before_flush` ORM guard.
 
 ---
 
@@ -363,9 +375,7 @@ WHERE slug IN ('t-aed', 't-usd', 't-ils');
 Pre-deploy QA from repo root (see `tools/qa/README.md`):
 
 ```bash
-python tools/qa/gl_remediation_verify.py
-python tools/qa/null_column_audit.py
-python tools/qa/uat_operational_check.py
+python tools/qa/predeploy_check.py --profile local
 ```
 
 ---
