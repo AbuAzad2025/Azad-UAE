@@ -354,7 +354,41 @@ Covers: migrations head/current, `create_app`, `pip_audit`, DB integrity (`gl_re
 
 **Production schema hardening** (`prod_schema_hardening_001`): per-tenant business UNIQUE keys, operational `tenant_id` NOT NULL, GL rounding fix + CHECK constraints. `predeploy_check` fails if legacy global uniques reappear.
 
-**Deferred (later migrations / business decisions):** per-tenant UNIQUE business keys, bulk NOT NULL `tenant_id`, `pg_trgm` search indexes, `before_flush` ORM guard, DB CHECK on status columns.
+**Deferred (later):** `pg_trgm`, `before_flush`, status DB CHECKs, scheduled remote backup storage.
+
+---
+
+## Backup & restore (production)
+
+**Artifact:** `instance/backups/azad_backup_YYYYMMDD_HHMMSS_<gitsha>.tar.gz`
+
+| Included | Excluded |
+|----------|----------|
+| `db.dump` (`pg_dump -Fc`) | Real `.env` / secrets |
+| `static/uploads` (as `uploads.tar.gz`) | `ai_knowledge/memory/` runtime |
+| `manifest.json` (checksums, alembic, git) | Application code |
+
+**Create (owner panel):** `/owner/backups/list` → **نسخ الآن** (requires `pg_dump` on PATH or `PG_DUMP_PATH`).
+
+**PythonAnywhere paths:**
+
+- Backups: `/home/USERNAME/Azad-UAE/instance/backups/` (not under `static/`)
+- Uploads: `/home/USERNAME/Azad-UAE/static/uploads/`
+- WSGI loads the app module — do not use `python app.py` in production.
+
+**Restore:** Always to a **new** PostgreSQL database first. The UI blocks restore onto the current `DATABASE_URL`. After restore: `flask db current` and `python tools/qa/predeploy_check.py --profile production-readiness`.
+
+**QA:**
+
+```bash
+python tools/qa/backup_restore_check.py --verify-tools
+python tools/qa/backup_restore_check.py --create-and-verify   # needs pg_dump
+# Optional isolated DB:
+# TARGET_TEST_DATABASE_URL=postgresql://.../azad_restore_test \
+#   python tools/qa/backup_restore_check.py --restore-to-target
+```
+
+Retention: `BACKUP_RETENTION_COUNT` (default 10 modern archives).
 
 ---
 

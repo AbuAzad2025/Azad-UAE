@@ -1021,11 +1021,16 @@ def update_integration(service):
     return redirect(url_for('owner.integrations'))
 
 
+def _owner_backup_filename(filename: str):
+    from services.backup_service import BackupService
+    return BackupService.sanitize_filename(filename)
+
+
 @owner_bp.route('/backup-now', methods=['POST'])
 @login_required
-@permission_required('manage_backups')
+@owner_required
 def backup_now():
-    """نسخة احتياطية يدوية فورية"""
+    """نسخة احتياطية يدوية فورية (PostgreSQL custom + uploads)."""
     from services.backup_service import BackupService
     
     payload = request.get_json(silent=True) if request.is_json else None
@@ -1035,11 +1040,12 @@ def backup_now():
         or f'Manual backup by {getattr(current_user, "username", "user")}'
     )
     
-    backup = BackupService.create_backup(
-        manual=True,
-        compress=True,
-        description=description
-    )
+    backup = BackupService.create_backup(manual=True, description=description)
+    if backup:
+        _audit_owner_db_action(
+            'create_backup',
+            {'filename': backup.get('filename'), 'size_mb': backup.get('size_mb')},
+        )
     
     if request.is_json:
         if backup:
@@ -1059,7 +1065,7 @@ def backup_now():
 
 @owner_bp.route('/backups/list')
 @login_required
-@permission_required('manage_backups')
+@owner_required
 def list_backups():
     """قائمة النسخ الاحتياطية"""
     from services.backup_service import BackupService
@@ -1069,6 +1075,7 @@ def list_backups():
     stats = BackupService.get_backup_stats()
     schedule_settings = BackupService.get_schedule_settings()
     schedule_state = BackupService.get_schedule_state()
+    pg_tools = BackupService.pg_tools_status()
     
     return render_template('owner/backups_list.html', 
                          backups=backups,
@@ -1076,130 +1083,111 @@ def list_backups():
                          schedule_settings=schedule_settings,
                          schedule_state=schedule_state,
                          backup_dir=BackupService.BACKUP_DIR,
+                         pg_tools=pg_tools,
                          now=datetime.now())
+
+
+@owner_bp.route('/backups/info/<filename>')
+@login_required
+@owner_required
+def backup_info(filename):
+    from services.backup_service import BackupService
+
+    safe = _owner_backup_filename(filename)
+    if not safe:
+        return jsonify({'success': False, 'message': 'Invalid filename'}), 400
+    info = BackupService.get_backup_info(safe)
+    if not info:
+        return jsonify({'success': False, 'message': 'Backup not found'}), 404
+    return jsonify({'success': True, 'info': info})
 
 
 @owner_bp.route('/backups/verify/<filename>', methods=['POST'])
 @login_required
-@permission_required('manage_backups')
+@owner_required
 def verify_backup(filename):
     """التحقق من سلامة نسخة احتياطية"""
     from services.backup_service import BackupService
-    import os
 
-    backup_path = os.path.join(BackupService.BACKUP_DIR, filename)
-    if not os.path.exists(backup_path):
-        return jsonify({'success': False, 'message': 'Backup not found'}), 404
+    safe = _owner_backup_filename(filename)
+    if not safe:
+        return jsonify({'success': False, 'message': 'Invalid filename'}), 400
 
-    is_valid = BackupService.verify_backup(filename)
-    if is_valid:
-        return jsonify({'success': True, 'verified': True, 'message': 'Backup verified'})
-    return jsonify({'success': True, 'verified': False, 'message': 'Backup corrupted or invalid'})
+    result = BackupService.verify_backup(safe)
+    if result.get('valid'):
+        _audit_owner_db_action('verify_backup', {'filename': safe, 'format': result.get('format')})
+        return jsonify({'success': True, 'verified': True, 'result': result})
+    return jsonify({'success': True, 'verified': False, 'result': result}), 200
 
 
-@owner_bp.route('/backups/restore/<filename>', methods=['POST'])
+@owner_bp.route('/backups/prepare-restore/<filename>', methods=['GET', 'POST'])
 @login_required
 @owner_required
-def restore_backup(filename):
-    """استعادة نسخة احتياطية - للمالك فقط!"""
+def prepare_restore_backup(filename):
+    """عرض أوامر الاستعادة الآمنة — لا يكتب على DB الحالية."""
     from services.backup_service import BackupService
-    
-    # أمان إضافي - التأكد من أن المستخدم هو المالك
-    if not current_user.is_owner:
-        flash('❌ غير مصرح - الاستعادة للمالك فقط!', 'danger')
-        return redirect(url_for('main.dashboard'))
-    
-    # طلب تأكيد بكلمة المرور
-    password = request.form.get('confirm_password')
-    
-    if not password:
-        flash('❌ يرجى إدخال كلمة المرور للتأكيد', 'warning')
-        return redirect(url_for('owner.list_backups'))
-    
-    # التحقق من كلمة المرور
-    from werkzeug.security import check_password_hash
-    if not check_password_hash(current_user.password_hash, password):
-        flash('❌ كلمة المرور غير صحيحة!', 'danger')
-        return redirect(url_for('owner.list_backups'))
-    
-    # التحقق من سلامة النسخة
-    if not BackupService.verify_backup(filename):
-        flash('❌ النسخة الاحتياطية تالفة أو غير صالحة!', 'danger')
-        return redirect(url_for('owner.list_backups'))
-    
-    # الاستعادة
-    success = BackupService.restore_backup(filename)
-    
-    if success:
-        flash('✅ تمت الاستعادة بنجاح! سيتم إعادة تحميل النظام...', 'success')
-        
-        # تسجيل في Audit Log
-        # AuditLog.log_action(
-        #     user_id=current_user.id,
-        #     action='restore_backup',
-        #     table_name='system',
-        #     description=f'Restored from backup: {filename}'
-        # )
-        db.session.commit()
-        
-        # إعادة تشغيل التطبيق (optional)
-        return redirect(url_for('owner.list_backups'))
-    else:
-        flash('❌ فشلت الاستعادة!', 'danger')
+
+    safe = _owner_backup_filename(filename)
+    if not safe:
+        flash('❌ اسم ملف غير صالح', 'danger')
         return redirect(url_for('owner.list_backups'))
 
+    target_hint = (request.form.get('target_database_url') or '').strip()
+    payload = BackupService.prepare_restore_command(safe, target_hint or None)
+    if request.method == 'POST' or request.args.get('format') == 'json':
+        return jsonify(payload)
+    if not payload.get('ok'):
+        flash(payload.get('error', 'فشل تجهيز الأوامر'), 'danger')
+        return redirect(url_for('owner.list_backups'))
+    return render_template(
+        'owner/backup_restore_instructions.html',
+        filename=safe,
+        commands=payload.get('commands', []),
+        warning=payload.get('warning'),
+        info=BackupService.get_backup_info(safe),
+    )
 
-@owner_bp.route('/backups/custom-restore/<filename>', methods=['POST'])
+
+@owner_bp.route('/backups/restore-target/<filename>', methods=['POST'])
 @login_required
 @owner_required
-def custom_restore_backup(filename):
-    """استعادة مخصصة - جداول محددة فقط"""
+def restore_backup_target(filename):
+    """استعادة إلى قاعدة بيانات جديدة فقط (TARGET_DATABASE_URL ≠ الحالية)."""
     from services.backup_service import BackupService
-    
-    if not str(filename or '').endswith('.dump'):
-        flash('❌ الاستعادة المخصصة تتطلب نسخة بصيغة .dump', 'danger')
+
+    safe = _owner_backup_filename(filename)
+    if not safe:
+        flash('❌ اسم ملف غير صالح', 'danger')
         return redirect(url_for('owner.list_backups'))
-    
-    # التحقق من الصلاحيات
-    if not current_user.is_owner:
-        flash('❌ غير مصرح - الاستعادة للمالك فقط!', 'danger')
-        return redirect(url_for('main.dashboard'))
-    
-    # كلمة المرور
-    password = request.form.get('confirm_password')
-    if not password:
-        flash('❌ يرجى إدخال كلمة المرور للتأكيد', 'warning')
+
+    target_url = (request.form.get('target_database_url') or '').strip()
+    if not target_url:
+        target_url = (os.environ.get('TARGET_TEST_DATABASE_URL') or '').strip()
+    if not target_url:
+        flash('❌ حدد TARGET_DATABASE_URL لقاعدة اختبار جديدة', 'danger')
         return redirect(url_for('owner.list_backups'))
-    
-    # التحقق من كلمة المرور
-    from werkzeug.security import check_password_hash
-    if not check_password_hash(current_user.password_hash, password):
-        flash('❌ كلمة المرور غير صحيحة!', 'danger')
-        return redirect(url_for('owner.list_backups'))
-    
-    # الحصول على الجداول المحددة
-    selected_tables = request.form.getlist('tables[]')
-    
-    if not selected_tables:
-        flash('❌ يرجى اختيار جدول واحد على الأقل!', 'warning')
-        return redirect(url_for('owner.list_backups'))
-    
-    # التحقق من سلامة النسخة
-    if not BackupService.verify_backup(filename):
-        flash('❌ النسخة الاحتياطية تالفة أو غير صالحة!', 'danger')
-        return redirect(url_for('owner.list_backups'))
-    
-    # الاستعادة المخصصة
-    success = BackupService.restore_custom_tables(filename, selected_tables)
-    
-    if success:
-        tables_list = ', '.join(selected_tables)
-        flash(f'✅ تمت استعادة الجداول بنجاح: {tables_list}', 'success')
-        db.session.commit()
-        return redirect(url_for('owner.list_backups'))
+
+    confirmation = (request.form.get('restore_confirm') or '').strip()
+    result = BackupService.restore_backup_to_target_db(
+        safe,
+        target_url,
+        confirmation=confirmation,
+        restore_uploads=request.form.get('restore_uploads') == '1',
+    )
+    if result.get('ok'):
+        _audit_owner_db_action(
+            'restore_backup_target',
+            {
+                'filename': safe,
+                'target_db': result.get('target_db'),
+                'masked_host': result.get('masked_host'),
+            },
+        )
+        flash('✅ تمت الاستعادة إلى قاعدة الهدف', 'success')
     else:
-        flash('❌ فشلت الاستعادة المخصصة!', 'danger')
-        return redirect(url_for('owner.list_backups'))
+        err = '; '.join(result.get('errors') or ['restore failed'])
+        flash(f'❌ فشلت الاستعادة: {err[:300]}', 'danger')
+    return redirect(url_for('owner.list_backups'))
 
 
 @owner_bp.route('/backups/delete', methods=['POST'])
@@ -1210,31 +1198,23 @@ def delete_backup():
     from services.backup_service import BackupService
     
     filename = request.form.get('filename')
-    if not filename:
-        flash('❌ اسم الملف مطلوب!', 'danger')
+    safe = _owner_backup_filename(filename or '')
+    if not safe:
+        flash('❌ اسم الملف مطلوب أو غير صالح!', 'danger')
         return redirect(url_for('owner.list_backups'))
     
-    # التحقق من الصلاحيات
-    if not current_user.is_owner:
-        flash('❌ غير مصرح - الحذف للمالك فقط!', 'danger')
-        return redirect(url_for('owner.list_backups'))
-    
-    # تم إزالة حماية النسخ التلقائية للسماح للمالك بحذفها
-    # if BackupService.BACKUP_PREFIX in filename: ...
-    
-    # التحقق من أن النسخة موجودة
     backups = BackupService.list_backups()
-    backup_exists = any(b['filename'] == filename for b in backups)
+    backup_exists = any(b['filename'] == safe for b in backups)
     
     if not backup_exists:
         flash('❌ النسخة الاحتياطية غير موجودة!', 'danger')
         return redirect(url_for('owner.list_backups'))
     
-    # حذف النسخة
-    success = BackupService.delete_backup(filename)
+    success = BackupService.delete_backup(safe)
     
     if success:
-        flash(f'✅ تم حذف النسخة الاحتياطية: {filename}', 'success')
+        _audit_owner_db_action('delete_backup', {'filename': safe})
+        flash(f'✅ تم حذف النسخة الاحتياطية: {safe}', 'success')
     else:
         flash('❌ فشل حذف النسخة الاحتياطية!', 'danger')
     
@@ -1243,26 +1223,30 @@ def delete_backup():
 
 @owner_bp.route('/backups/download/<filename>')
 @login_required
-@permission_required('manage_backups')
+@owner_required
 def download_backup(filename):
     """تحميل نسخة احتياطية"""
     from services.backup_service import BackupService
     from flask import send_file
     import os
     
-    # التحقق من أن النسخة موجودة
-    backup_path = os.path.join(BackupService.BACKUP_DIR, filename)
+    safe = _owner_backup_filename(filename)
+    if not safe:
+        flash('❌ اسم ملف غير صالح', 'danger')
+        return redirect(url_for('owner.list_backups'))
+    backup_path = os.path.join(BackupService.BACKUP_DIR, safe)
     
     if not os.path.exists(backup_path):
         flash('❌ النسخة الاحتياطية غير موجودة!', 'danger')
         return redirect(url_for('owner.list_backups'))
     
     try:
-        mimetype = 'application/gzip' if filename.endswith('.gz') else 'application/octet-stream'
+        mimetype = 'application/gzip' if safe.endswith('.gz') else 'application/octet-stream'
+        _audit_owner_db_action('download_backup', {'filename': safe})
         return send_file(
             backup_path,
             as_attachment=True,
-            download_name=filename,
+            download_name=safe,
             mimetype=mimetype
         )
     except Exception as e:
@@ -3008,7 +2992,7 @@ def database_optimize():
 
 @owner_bp.route('/verify-backups')
 @login_required
-@permission_required('manage_backups')
+@owner_required
 def verify_backups():
     try:
         from services.backup_service import BackupService
@@ -3017,15 +3001,15 @@ def verify_backups():
         
         verified = []
         for backup in backups:
-            file_path = backup.get('path') or os.path.join(BackupService.BACKUP_DIR, backup.get('filename', ''))
-            
-            is_valid = os.path.exists(file_path) and os.path.getsize(file_path) > 1000
-            
+            fn = backup.get('filename', '')
+            result = BackupService.verify_backup(fn) if fn else {'valid': False}
             verified.append({
-                'filename': backup.get('filename', 'Unknown'),
+                'filename': fn or 'Unknown',
                 'size': backup.get('size_mb', 0),
                 'created': backup.get('datetime', backup.get('timestamp', 'Unknown')),
-                'valid': is_valid
+                'valid': bool(result.get('valid')),
+                'format': result.get('format'),
+                'errors': result.get('errors', []),
             })
         
         return render_template('owner/verify_backups.html', backups=verified)

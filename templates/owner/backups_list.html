@@ -164,12 +164,17 @@
       <div>
         <h5 class="mb-2"><i class="fas fa-question-circle mr-2"></i>كيف تعمل النسخ الاحتياطية؟</h5>
         <ul class="mb-0" style="padding-right: 20px;">
-          <li><strong>نسخة يدوية:</strong> تُنشأ فوراً عند الضغط على الزر - تحفظ كل البيانات الحالية</li>
-          <li><strong>نسخة تلقائية:</strong> تُنشأ تلقائياً حسب الجدولة (كل 24 ساعة افتراضياً)</li>
-          <li><strong>استعادة كاملة:</strong> تستعيد قاعدة البيانات بالكامل (يُنشأ نسخة احتياطية قبل الاستعادة)</li>
-          <li><strong>استعادة مخصصة:</strong> تستعيد جداول محددة فقط (للحالات الطارئة)</li>
-          <li><strong>التحقق:</strong> فحص سلامة النسخة والتأكد من عدم تلفها</li>
+          <li><strong>الصيغة الحديثة:</strong> <code>azad_backup_*.tar.gz</code> — PostgreSQL (<code>pg_dump -Fc</code>) + <code>static/uploads</code> + manifest</li>
+          <li><strong>لا يشمل:</strong> ملف <code>.env</code> الحقيقي، أسرار، أو ذاكرة AI التشغيلية</li>
+          <li><strong>الاستعادة:</strong> إلى قاعدة PostgreSQL <strong>جديدة</strong> فقط — لا تستعد فوق DB الإنتاج الحية</li>
+          <li><strong>التحقق:</strong> checksums + <code>pg_restore --list</code> على <code>db.dump</code></li>
         </ul>
+        {% if pg_tools %}
+        <p class="mb-0 mt-2 small">
+          <strong>pg_dump:</strong>
+          {% if pg_tools.available %}متاح ({{ pg_tools.pg_dump_version or 'OK' }}){% else %}<span class="text-danger">غير متاح — عيّن PG_DUMP_PATH</span>{% endif %}
+        </p>
+        {% endif %}
       </div>
     </div>
   </div>
@@ -317,27 +322,16 @@
         </div>
 
         <div class="card-footer">
-          <!-- أزرار الاستعادة -->
-          {% if current_user.is_owner %}
-          <div class="btn-group" role="group">
-            <button type="button" class="btn btn-sm btn-warning" 
-                    onclick="confirmRestore('{{ backup.filename }}')"
-                    title="استعادة كاملة لقاعدة البيانات">
-              <i class="fas fa-undo mr-1"></i> استعادة كاملة
-            </button>
-            {% if backup.filename.endswith('.dump') %}
-            <button type="button" class="btn btn-sm btn-outline-warning" 
-                    onclick="customRestore('{{ backup.filename }}')"
-                    title="اختيار جداول محددة للاستعادة">
-              <i class="fas fa-list-check mr-1"></i> استعادة مخصصة
-            </button>
-            {% else %}
-            <button type="button" class="btn btn-sm btn-outline-secondary" disabled
-                    title="الاستعادة المخصصة تتطلب نسخة بصيغة .dump">
-              <i class="fas fa-list-check mr-1"></i> استعادة مخصصة
-            </button>
-            {% endif %}
-          </div>
+          <a href="{{ url_for('owner.prepare_restore_backup', filename=backup.filename) }}"
+             class="btn btn-sm btn-warning" title="تعليمات استعادة آمنة">
+            <i class="fas fa-book mr-1"></i> تعليمات الاستعادة
+          </a>
+          {% if backup.format == 'azad_tar_v1' or backup.filename.startswith('azad_backup_') %}
+          <button type="button" class="btn btn-sm btn-outline-warning"
+                  onclick="openTargetRestore('{{ backup.filename }}')"
+                  title="استعادة إلى قاعدة اختبار جديدة فقط">
+            <i class="fas fa-database mr-1"></i> استعادة لقاعدة جديدة
+          </button>
           {% endif %}
 
           <!-- زر الحذف -->
@@ -424,177 +418,35 @@
 </div>
 {% endif %}
 
-<!-- Modal للاستعادة الكاملة -->
-<div class="modal fade" id="restoreModal" tabindex="-1">
+<!-- Modal: restore to NEW database only -->
+<div class="modal fade" id="targetRestoreModal" tabindex="-1">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header bg-warning">
-        <h5 class="modal-title">
-          <i class="fas fa-exclamation-triangle"></i> تأكيد الاستعادة الكاملة
-        </h5>
-        <button type="button" class="close" data-dismiss="modal">
-          <span>&times;</span>
-        </button>
+        <h5 class="modal-title"><i class="fas fa-database"></i> استعادة لقاعدة جديدة</h5>
+        <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
       </div>
-      <form method="POST" id="restoreForm" action="">
+      <form method="POST" id="targetRestoreForm" action="">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="modal-body">
           <div class="alert alert-danger">
-            <i class="fas fa-shield-alt"></i>
-            <strong>تحذير:</strong> الاستعادة ستستبدل قاعدة البيانات الحالية بالكامل!
+            ممنوع استخدام <code>DATABASE_URL</code> الحالية. استخدم قاعدة اختبار/جديدة فقط.
           </div>
-          
-          <p><i class="fas fa-check-circle text-success mr-1"></i>سيتم إنشاء نسخة احتياطية من الوضع الحالي قبل الاستعادة.</p>
-          
+          <p class="small text-muted">الملف: <strong id="targetRestoreFilename"></strong></p>
           <div class="form-group">
-            <label><i class="fas fa-key mr-1"></i>أدخل كلمة المرور للتأكيد:</label>
-            <input type="password" name="confirm_password" class="form-control" 
-                   required placeholder="كلمة مرور المالك">
+            <label>رابط PostgreSQL للهدف (TARGET_TEST_DATABASE_URL)</label>
+            <input type="password" name="target_database_url" class="form-control" autocomplete="off"
+                   placeholder="postgresql://user:pass@host:5432/new_db" required>
           </div>
-
-          <p class="text-muted">
-            <small>
-              <i class="fas fa-file mr-1"></i>
-              ملف الاستعادة: <strong id="restoreFilename"></strong>
-            </small>
-          </p>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-dismiss="modal">
-            <i class="fas fa-times mr-1"></i>إلغاء
-          </button>
-          <button type="submit" class="btn btn-warning">
-            <i class="fas fa-undo mr-1"></i> استعادة الآن
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
-
-<!-- Modal للاستعادة المخصصة -->
-<div class="modal fade" id="customRestoreModal" tabindex="-1">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header bg-gradient-warning">
-        <h5 class="modal-title">
-          <i class="fas fa-sliders-h"></i> استعادة مخصصة - اختيار الجداول
-        </h5>
-        <button type="button" class="close" data-dismiss="modal">
-          <span>&times;</span>
-        </button>
-      </div>
-      <form method="POST" id="customRestoreForm" action="">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <div class="modal-body">
-          <!-- تحذير -->
-          <div class="alert alert-warning">
-            <i class="fas fa-exclamation-circle"></i>
-            <strong>ملاحظة:</strong> سيتم استعادة الجداول المحددة فقط من النسخة الاحتياطية
-          </div>
-          
-          <!-- معلومات النسخة -->
-          <div class="mb-3 p-3 bg-light border rounded">
-            <p class="mb-1"><i class="fas fa-file text-primary mr-1"></i><strong>النسخة:</strong> <span id="customRestoreFilename"></span></p>
-            <p class="mb-0"><i class="fas fa-info-circle text-info mr-1"></i><strong>نوع الاستعادة:</strong> استعادة جداول محددة فقط</p>
-          </div>
-          
-          <!-- قائمة الجداول -->
-          <h6 class="mb-3"><i class="fas fa-table mr-2"></i>اختر الجداول المراد استعادتها:</h6>
-          <div class="row" id="tablesCheckboxList">
-            <!-- سيتم ملؤها ديناميكياً -->
-            <div class="col-md-6">
-              <div class="form-check mb-2">
-                <input class="form-check-input" type="checkbox" name="tables[]" value="sales" id="table_sales">
-                <label class="form-check-label" for="table_sales">
-                  <i class="fas fa-shopping-cart text-success mr-1"></i> المبيعات (sales)
-                </label>
-              </div>
-              <div class="form-check mb-2">
-                <input class="form-check-input" type="checkbox" name="tables[]" value="customers" id="table_customers">
-                <label class="form-check-label" for="table_customers">
-                  <i class="fas fa-users text-info mr-1"></i> العملاء (customers)
-                </label>
-              </div>
-              <div class="form-check mb-2">
-                <input class="form-check-input" type="checkbox" name="tables[]" value="products" id="table_products">
-                <label class="form-check-label" for="table_products">
-                  <i class="fas fa-box text-warning mr-1"></i> المنتجات (products)
-                </label>
-              </div>
-              <div class="form-check mb-2">
-                <input class="form-check-input" type="checkbox" name="tables[]" value="purchases" id="table_purchases">
-                <label class="form-check-label" for="table_purchases">
-                  <i class="fas fa-cart-plus text-primary mr-1"></i> المشتريات (purchases)
-                </label>
-              </div>
-              <div class="form-check mb-2">
-                <input class="form-check-input" type="checkbox" name="tables[]" value="suppliers" id="table_suppliers">
-                <label class="form-check-label" for="table_suppliers">
-                  <i class="fas fa-truck text-secondary mr-1"></i> الموردين (suppliers)
-                </label>
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="form-check mb-2">
-                <input class="form-check-input" type="checkbox" name="tables[]" value="payments" id="table_payments">
-                <label class="form-check-label" for="table_payments">
-                  <i class="fas fa-money-bill text-success mr-1"></i> المدفوعات (payments)
-                </label>
-              </div>
-              <div class="form-check mb-2">
-                <input class="form-check-input" type="checkbox" name="tables[]" value="expenses" id="table_expenses">
-                <label class="form-check-label" for="table_expenses">
-                  <i class="fas fa-receipt text-danger mr-1"></i> المصروفات (expenses)
-                </label>
-              </div>
-              <div class="form-check mb-2">
-                <input class="form-check-input" type="checkbox" name="tables[]" value="cheques" id="table_cheques">
-                <label class="form-check-label" for="table_cheques">
-                  <i class="fas fa-money-check text-info mr-1"></i> الشيكات (cheques)
-                </label>
-              </div>
-              <div class="form-check mb-2">
-                <input class="form-check-input" type="checkbox" name="tables[]" value="users" id="table_users">
-                <label class="form-check-label" for="table_users">
-                  <i class="fas fa-user-shield text-danger mr-1"></i> المستخدمين (users)
-                </label>
-              </div>
-              <div class="form-check mb-2">
-                <input class="form-check-input" type="checkbox" name="tables[]" value="invoice_settings" id="table_invoice_settings">
-                <label class="form-check-label" for="table_invoice_settings">
-                  <i class="fas fa-file-invoice text-warning mr-1"></i> إعدادات الفواتير (invoice_settings)
-                </label>
-              </div>
-            </div>
-          </div>
-          
-          <hr>
-          
-          <!-- خيارات سريعة -->
-          <div class="mb-3">
-            <button type="button" class="btn btn-sm btn-outline-primary" onclick="selectAllTables()">
-              <i class="fas fa-check-double mr-1"></i>تحديد الكل
-            </button>
-            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="deselectAllTables()">
-              <i class="fas fa-times mr-1"></i>إلغاء الكل
-            </button>
-          </div>
-          
-          <!-- كلمة المرور -->
           <div class="form-group">
-            <label><i class="fas fa-key mr-1"></i>أدخل كلمة المرور للتأكيد:</label>
-            <input type="password" name="confirm_password" class="form-control" 
-                   required placeholder="كلمة مرور المالك">
+            <label>اكتب للتأكيد: <code>RESTORE CONFIRM</code></label>
+            <input type="text" name="restore_confirm" class="form-control" required
+                   placeholder="RESTORE CONFIRM">
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-dismiss="modal">
-            <i class="fas fa-times mr-1"></i>إلغاء
-          </button>
-          <button type="submit" class="btn btn-warning">
-            <i class="fas fa-check mr-1"></i> استعادة الجداول المحددة
-          </button>
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">إلغاء</button>
+          <button type="submit" class="btn btn-warning">تنفيذ على قاعدة الهدف</button>
         </div>
       </form>
     </div>
@@ -604,32 +456,10 @@
 
 {% block extra_js %}
 <script>
-// تأكيد الاستعادة الكاملة
-function confirmRestore(filename) {
-  $('#restoreFilename').text(filename);
-  $('#restoreForm').attr('action', '{{ url_for("owner.restore_backup", filename="__FILENAME__") }}'.replace('__FILENAME__', filename));
-  $('#restoreModal').modal('show');
-}
-
-// فتح نافذة الاستعادة المخصصة
-function customRestore(filename) {
-  $('#customRestoreFilename').text(filename);
-  $('#customRestoreForm').attr('action', '{{ url_for("owner.custom_restore_backup", filename="__FILENAME__") }}'.replace('__FILENAME__', filename));
-  $('#customRestoreModal').modal('show');
-}
-
-// تحديد كل الجداول
-function selectAllTables() {
-  document.querySelectorAll('#tablesCheckboxList input[type="checkbox"]').forEach(cb => {
-    cb.checked = true;
-  });
-}
-
-// إلغاء تحديد كل الجداول
-function deselectAllTables() {
-  document.querySelectorAll('#tablesCheckboxList input[type="checkbox"]').forEach(cb => {
-    cb.checked = false;
-  });
+function openTargetRestore(filename) {
+  $('#targetRestoreFilename').text(filename);
+  $('#targetRestoreForm').attr('action', '{{ url_for("owner.restore_backup_target", filename="__FILENAME__") }}'.replace('__FILENAME__', encodeURIComponent(filename)));
+  $('#targetRestoreModal').modal('show');
 }
 
 // التحقق من سلامة النسخة

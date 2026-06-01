@@ -17,13 +17,26 @@ From the repository root, with venv active and `.env` pointing at a **non-produc
 python tools/qa/predeploy_check.py --profile local
 ```
 
-This runs (in order): `py_compile`, `create_app`, migration head/current, `pip_audit`, `gl_remediation_verify`, `null_column_audit`, `uat_operational_check`, required performance indexes, and git hygiene checks.
+This runs (in order): `py_compile`, `create_app`, migration head/current, `pip_audit`, `gl_remediation_verify`, `null_column_audit`, field/schema gates, **backup readiness**, `uat_operational_check`, and git hygiene checks.
 
 Exit `0` = **PASS** or **PASS_WITH_WARNINGS** (operational warnings such as backup tables or test tenants are OK for dev/staging).
 
 Exit `1` = **FAIL** on any critical item (DB integrity, UAT, missing indexes, migration mismatch, secrets staged, etc.).
 
 For faster iteration without UAT: `python tools/qa/predeploy_check.py --profile local --skip-uat`
+
+`--profile production-readiness`: missing `pg_dump` or no recent `azad_backup_*.tar.gz` → **FAIL** (local profile → **WARN**).
+
+## Backup / restore QA
+
+```bash
+python tools/qa/backup_restore_check.py --verify-tools
+python tools/qa/backup_restore_check.py --create-and-verify
+# Restore only when TARGET_TEST_DATABASE_URL ≠ DATABASE_URL:
+python tools/qa/backup_restore_check.py --restore-to-target
+```
+
+Never restore onto the live dev/prod DB from this repo without a separate empty database URL.
 
 Individual scripts below remain available for debugging; you do not need to run them separately before deploy if `predeploy_check` passes.
 

@@ -33,7 +33,9 @@ PY_COMPILE_FILES = [
     "app.py",
     "config.py",
     "utils/field_validators.py",
+    "services/backup_service.py",
     "tools/qa/predeploy_check.py",
+    "tools/qa/backup_restore_check.py",
     "tools/qa/gl_remediation_verify.py",
     "tools/qa/null_column_audit.py",
 ]
@@ -439,6 +441,68 @@ def check_schema_hardening(report: Report) -> None:
         report.add("Schema hardening", "PASS", "per-tenant unique + NOT NULL OK")
 
 
+def check_backup_readiness(report: Report, profile: str) -> None:
+    try:
+        from services.backup_service import BackupService
+    except Exception as e:
+        report.add("Backup readiness", "FAIL", f"import backup_service: {e}")
+        return
+
+    BackupService.initialize()
+    writable = os.path.isdir(BackupService.BACKUP_DIR) and os.access(
+        BackupService.BACKUP_DIR, os.W_OK | os.X_OK
+    )
+    if not writable:
+        report.add("Backup readiness", "FAIL", "instance/backups not writable")
+        return
+
+    tools = BackupService.pg_tools_status()
+    backups = [b for b in BackupService.list_backups() if str(b.get("filename", "")).startswith("azad_backup_")]
+    latest_age_hours = None
+    if backups:
+        try:
+            from datetime import datetime, timezone
+
+            dt_s = backups[0].get("datetime") or ""
+            if dt_s:
+                created = datetime.fromisoformat(dt_s.replace("Z", "+00:00"))
+                if created.tzinfo is None:
+                    created = created.replace(tzinfo=timezone.utc)
+                latest_age_hours = (
+                    datetime.now(timezone.utc) - created
+                ).total_seconds() / 3600.0
+        except Exception:
+            latest_age_hours = None
+
+    fails: list[str] = []
+    warns: list[str] = []
+
+    if not tools.get("pg_dump"):
+        msg = "pg_dump not available (set PG_DUMP_PATH)"
+        if profile == "production-readiness":
+            fails.append(msg)
+        else:
+            warns.append(msg)
+
+    if not backups:
+        if profile == "production-readiness":
+            fails.append("no azad_backup_*.tar.gz found")
+        else:
+            warns.append("no modern backup yet")
+    elif profile == "production-readiness" and latest_age_hours is not None and latest_age_hours > 168:
+        warns.append(f"latest backup age {latest_age_hours:.0f}h (>7d)")
+
+    if fails:
+        report.add("Backup readiness", "FAIL", "; ".join(fails))
+    elif warns:
+        report.add("Backup readiness", "WARN", "; ".join(warns))
+    else:
+        detail = "pg_dump OK" if tools.get("pg_dump") else "tools OK"
+        if backups:
+            detail += f"; latest={backups[0].get('filename')}"
+        report.add("Backup readiness", "PASS", detail)
+
+
 def check_git_hygiene(report: Report) -> None:
     issues = []
     r = _run(["git", "status", "--porcelain"], cwd=ROOT)
@@ -509,6 +573,7 @@ def main() -> int:
     check_required_indexes(report)
     check_field_quality(report)
     check_schema_hardening(report)
+    check_backup_readiness(report, args.profile)
     if not args.skip_uat:
         check_uat(report)
     check_git_hygiene(report)
