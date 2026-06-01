@@ -136,7 +136,12 @@ class InvoiceSettings(db.Model):
 
     @staticmethod
     def get_active(tenant_id=None):
-        """Active invoice settings for the given or current tenant."""
+        """Active invoice settings for the given or current tenant.
+
+        Tenant-specific rows are created on demand when tenant_id is known.
+        Without tenant context, returns an existing legacy global row if any —
+        never auto-creates active tenant_id=NULL settings.
+        """
         from flask_login import current_user
 
         if tenant_id is None:
@@ -147,25 +152,24 @@ class InvoiceSettings(db.Model):
             except Exception:
                 pass
 
-        query = InvoiceSettings.query.filter_by(is_active=True)
         if tenant_id is not None:
-            query = query.filter(InvoiceSettings.tenant_id == int(tenant_id))
-        else:
-            query = query.filter(InvoiceSettings.tenant_id.is_(None))
-
-        settings = query.first()
-        if settings:
+            tid = int(tenant_id)
+            settings = InvoiceSettings.query.filter_by(
+                is_active=True, tenant_id=tid
+            ).first()
+            if settings:
+                return settings
+            from models.tenant import Tenant
+            tenant = db.session.get(Tenant, tid)
+            settings = InvoiceSettings(is_active=True, tenant_id=tid)
+            InvoiceSettings._seed_from_tenant(settings, tenant)
+            db.session.add(settings)
+            db.session.commit()
             return settings
 
-        settings = InvoiceSettings(is_active=True)
-        if tenant_id is not None:
-            from models.tenant import Tenant
-            tenant = db.session.get(Tenant, int(tenant_id))
-            settings.tenant_id = int(tenant_id)
-            InvoiceSettings._seed_from_tenant(settings, tenant)
-        db.session.add(settings)
-        db.session.commit()
-        return settings
+        return InvoiceSettings.query.filter_by(is_active=True).filter(
+            InvoiceSettings.tenant_id.is_(None)
+        ).first()
 
     @staticmethod
     def company_print_context():
@@ -173,7 +177,7 @@ class InvoiceSettings(db.Model):
         from models.tenant import Tenant
 
         tenant = Tenant.get_current()
-        settings = InvoiceSettings.get_active()
+        settings = InvoiceSettings.get_active(tenant.id if tenant else None)
         return tenant, settings, {
             'name_ar': (tenant.name_ar if tenant else settings.company_name_ar) or 'نظام المحاسبة',
             'address': (
