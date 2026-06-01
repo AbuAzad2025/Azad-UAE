@@ -4,9 +4,9 @@
     "version": "1.0.0"
   },
   "assets": {
-    "logo": "img/logo.png",
-    "logoFallback": "img/azad_logo_white_on_dark.png",
-    "favicon": "img/azad_favicon.png",
-    "icon192": "img/icon-192.png"
+    "logo": "assets/brand/azad/logos/logo.png",
+    "logoFallback": "assets/brand/azad/logos/logo-dark.png",
+    "favicon": "assets/brand/azad/favicons/favicon.png",
+    "icon192": "assets/brand/azad/icons/icon-192.png"
   }
 }

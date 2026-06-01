@@ -226,7 +226,7 @@
     <!-- Header -->
     <div class="invoice-header">
       {% if settings.show_logo and (settings.logo_url or tenant_logo_url) %}
-      <img src="{{ settings.logo_url or tenant_logo_url or url_for('static', filename='img/logo.png') }}" alt="{{ settings.company_name_ar or tenant_name_ar or company_name_ar }}"
+      <img src="{{ settings.logo_url or tenant_logo_url or url_for('static', filename='assets/brand/azad/logos/logo.png') }}" alt="{{ settings.company_name_ar or tenant_name_ar or company_name_ar }}"
            class="company-logo" style="background: white; padding: 10px; border-radius: 10px;">
       {% endif %}
       <div class="company-name">{{ settings.company_name_ar or tenant_name_ar or company_name_ar or 'نظام المحاسبة' }}</div>

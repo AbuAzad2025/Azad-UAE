@@ -38,8 +38,12 @@ PY_COMPILE_FILES = [
     "app.py",
     "config.py",
     "utils/field_validators.py",
+    "utils/static_asset_paths.py",
+    "utils/tenant_assets.py",
+    "routes/products.py",
     "services/backup_service.py",
     "tools/qa/predeploy_check.py",
+    "tools/qa/static_asset_audit.py",
     "tools/qa/backup_restore_check.py",
     "tools/qa/gl_remediation_verify.py",
     "tools/qa/null_column_audit.py",
@@ -91,12 +95,16 @@ PHONE_VARCHAR50_COLUMNS = (
 STAGED_FORBIDDEN_PATTERNS = (
     ".env",
     "null_column_audit_",
-    ".json",
-    ".csv",
     "ai_knowledge/memory/",
     "episodic_memory.json",
     "security-reports/",
     ".sql",
+)
+
+STAGED_FORBIDDEN_JSON_GLOBS = (
+    "null_column_audit_",
+    "security-reports/",
+    "ai_knowledge/",
 )
 
 
@@ -703,6 +711,19 @@ def check_backup_readiness(report: Report, profile: str) -> None:
         report.add("Backup readiness", "PASS", detail)
 
 
+def check_static_assets(report: Report) -> None:
+    from tools.qa.static_asset_audit import run_static_asset_audit
+
+    url = os.environ.get("DATABASE_URL") or os.environ.get("SQLALCHEMY_DATABASE_URI") or ""
+    fails, warns = run_static_asset_audit(url)
+    if fails:
+        report.add("Static assets", "FAIL", "; ".join(fails[:8]))
+    elif warns:
+        report.add("Static assets", "WARN", "; ".join(warns[:6]))
+    else:
+        report.add("Static assets", "PASS", "paths + DB + manifest OK")
+
+
 def check_git_hygiene(report: Report) -> None:
     issues = []
     r = _run(["git", "status", "--porcelain"], cwd=ROOT)
@@ -710,16 +731,29 @@ def check_git_hygiene(report: Report) -> None:
         report.add("Git hygiene", "WARN", "git status failed")
         return
     for line in r.stdout.splitlines():
-        path = line[3:].strip() if len(line) > 3 else line
-        staged = line[:2]
-        if path.startswith("??"):
+        if len(line) < 4:
+            continue
+        index_status = line[0]
+        path = line[3:].strip()
+        norm = path.replace("\\", "/")
+        if index_status == "?":
             for pat in STAGED_FORBIDDEN_PATTERNS:
-                if pat in path.replace("\\", "/"):
+                if pat in norm:
                     issues.append(f"untracked: {path}")
-        if "A" in staged or "M" in staged[:2]:
+            if norm.endswith(".json") and any(g in norm for g in STAGED_FORBIDDEN_JSON_GLOBS):
+                issues.append(f"untracked json: {path}")
+            if norm.endswith(".csv") and "security-reports" in norm:
+                issues.append(f"untracked csv: {path}")
+        if index_status in ("A", "M", "R", "C"):
             for pat in STAGED_FORBIDDEN_PATTERNS:
-                if pat in path.replace("\\", "/"):
+                if pat in norm:
                     issues.append(f"staged: {path}")
+            if norm.endswith(".json") and any(g in norm for g in STAGED_FORBIDDEN_JSON_GLOBS):
+                issues.append(f"staged json: {path}")
+            if norm.endswith(".csv"):
+                issues.append(f"staged csv: {path}")
+            if norm.startswith("static/uploads/tenants/") and not norm.endswith(".gitkeep"):
+                issues.append(f"staged runtime upload: {path}")
     tracked_memory = _run(
         ["git", "ls-files", "ai_knowledge/memory/"],
         cwd=ROOT,
@@ -784,6 +818,7 @@ def main() -> int:
     check_backup_readiness(report, args.profile)
     if not args.skip_uat:
         check_uat(report)
+    check_static_assets(report)
     check_git_hygiene(report)
 
     print_report(report, args.profile)

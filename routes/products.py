@@ -14,6 +14,7 @@ from utils.branching import (
     should_show_all_branch_columns,
 )
 from utils.helpers import create_audit_log, generate_sku, generate_barcode, save_uploaded_file
+from utils.static_asset_paths import tenant_upload_dir
 from services.stock_service import StockService
 from utils.gl_reference_types import GLRef
 from utils.tenanting import tenant_query, tenant_get_or_404, assign_tenant_id
@@ -626,8 +627,10 @@ def create():
                 
                 if 'image' in request.files:
                     file = request.files['image']
-                    if file.filename:
-                        image_path = save_uploaded_file(file, 'products')
+                    if file.filename and product.tenant_id:
+                        image_path = save_uploaded_file(
+                            file, tenant_upload_dir(product.tenant_id, "products")
+                        )
                         if image_path:
                             product.image_url = image_path
                 
@@ -823,8 +826,10 @@ def edit(id):
             
             if 'image' in request.files:
                 file = request.files['image']
-                if file.filename:
-                    image_path = save_uploaded_file(file, 'products')
+                if file.filename and product.tenant_id:
+                    image_path = save_uploaded_file(
+                        file, tenant_upload_dir(product.tenant_id, "products")
+                    )
                     if image_path:
                         product.image_url = image_path
             

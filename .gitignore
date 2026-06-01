@@ -117,12 +117,12 @@ ai_knowledge/models/*.joblib
 # check_db.py
 # test_db.py
 
-# Uploads
-static/uploads/*
+# Uploads (runtime — per tenant; only .gitkeep tracked)
+static/uploads/**
 !static/uploads/.gitkeep
-!static/uploads/products/
-static/uploads/products/*
-!static/uploads/products/.gitkeep
+!static/uploads/tenants/
+static/uploads/tenants/**
+!static/uploads/tenants/**/.gitkeep
 
 # AI Runtime Memory
 ai_knowledge/*.json

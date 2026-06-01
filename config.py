@@ -197,7 +197,7 @@ class Config:
     COMPANY_WEBSITE = os.environ.get("COMPANY_WEBSITE", "https://azadsystems.com")
     COMPANY_WHATSAPP = os.environ.get("COMPANY_WHATSAPP", "+971500000000")
     COMPANY_TAX_NUMBER = os.environ.get("COMPANY_TAX_NUMBER", "")
-    COMPANY_LOGO = os.environ.get("COMPANY_LOGO", "img/logo.png")
+    COMPANY_LOGO = os.environ.get("COMPANY_LOGO", "assets/brand/azad/logos/logo.png")
     
     DEVELOPER_NAME_AR = os.environ.get("DEVELOPER_NAME_AR", "شركة أزاد للأنظمة الذكية")
     DEVELOPER_NAME = os.environ.get("DEVELOPER_NAME", "Azad Smart Systems")
@@ -206,7 +206,7 @@ class Config:
     DEVELOPER_PHONE = os.environ.get("DEVELOPER_PHONE", "+971500000000")
     DEVELOPER_EMAIL = os.environ.get("DEVELOPER_EMAIL", "dev@example.com")
     DEVELOPER_WHATSAPP = os.environ.get("DEVELOPER_WHATSAPP", "+972562150193")
-    DEVELOPER_LOGO = os.environ.get("DEVELOPER_LOGO", "img/logo.png")
+    DEVELOPER_LOGO = os.environ.get("DEVELOPER_LOGO", "assets/brand/azad/logos/logo.png")
     APP_VERSION = "2.0.0"
     
     BABEL_DEFAULT_LOCALE = os.environ.get("BABEL_DEFAULT_LOCALE", "ar")
@@ -244,7 +244,7 @@ class Config:
     APP_VERSION = os.environ.get("APP_VERSION", "1.0.0")
     ITEMS_PER_PAGE = _int("ITEMS_PER_PAGE", 20)
     
-    DEFAULT_PRODUCT_IMAGE = "products/default.png"
+    DEFAULT_PRODUCT_IMAGE = "assets/shared/placeholders/no-product.png"
     
     BACKUP_DIR = os.path.join(instance_dir, "backups")
     os.makedirs(BACKUP_DIR, exist_ok=True)

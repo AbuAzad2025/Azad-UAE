@@ -657,7 +657,7 @@
               <div class="invoice-preview p-3" style="background: white; border: 2px solid #ddd; border-radius: 8px; min-height: 400px;">
                 <div class="header" style="border-bottom: 3px solid var(--header-color, #667eea); padding-bottom: 15px; margin-bottom: 15px;">
                   {% if settings.show_logo %}
-                  {% set _logo_path = settings.logo_url or tenant_logo_url or 'img/logo.png' %}
+                  {% set _logo_path = settings.logo_url or tenant_logo_url or 'assets/brand/azad/logos/logo.png' %}
                   {% if _logo_path.startswith('http') %}
                     <img src="{{ _logo_path }}" alt="Logo" style="height: 50px; margin-bottom: 10px;">
                   {% else %}

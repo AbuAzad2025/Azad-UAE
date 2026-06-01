@@ -198,7 +198,7 @@
   <div class="receipt">
     <div class="header">
       {% if settings and settings.show_logo %}
-      <img src="{{ url_for('static', filename=settings.logo_path if settings and settings.logo_path else 'img/garage_logo.png') }}" alt="Logo" class="logo">
+      <img src="{{ url_for('static', filename=settings.logo_path if settings and settings.logo_path else 'assets/brand/azad/logos/logo.png') }}" alt="Logo" class="logo">
       {% endif %}
       <div class="company-name">{{ (settings.company_name_ar if settings and settings.company_name_ar else none) or tenant_name_ar or company_name_ar or 'نظام المحاسبة' }}</div>
       <div class="company-info">

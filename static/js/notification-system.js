@@ -15,8 +15,8 @@ class NotificationSystem {
         if (this.permission === 'granted') {
             const notification = new Notification(title, {
                 body: options.body || '',
-                icon: options.icon || '/static/img/logo.png',
-                badge: '/static/img/azad_favicon.png',
+                icon: options.icon || '/static/assets/brand/azad/logos/logo.png',
+                badge: '/static/assets/brand/azad/favicons/favicon.png',
                 tag: options.tag || 'default',
                 requireInteraction: options.requireInteraction || false,
                 ...options
@@ -60,7 +60,7 @@ class NotificationSystem {
     notifyNewSale(saleData) {
         this.show('فاتورة جديدة', {
             body: `${saleData.sale_number} - ${saleData.total_amount} درهم`,
-            icon: '/static/img/invoice-icon.png',
+            icon: '/static/assets/brand/azad/favicons/favicon.png',
             tag: 'new-sale',
             url: `/sales/view/${saleData.id}`
         });
@@ -69,7 +69,7 @@ class NotificationSystem {
     notifyPayment(paymentData) {
         this.show('دفعة جديدة', {
             body: `استلام ${paymentData.amount} درهم`,
-            icon: '/static/img/payment-icon.png',
+            icon: '/static/assets/brand/azad/favicons/favicon.png',
             tag: 'new-payment',
             type: 'success'
         });
@@ -78,7 +78,7 @@ class NotificationSystem {
     notifyLowStock(productData) {
         this.show('تنبيه مخزون', {
             body: `${productData.name} - المخزون منخفض`,
-            icon: '/static/img/alert-icon.png',
+            icon: '/static/assets/brand/azad/favicons/favicon.png',
             tag: 'low-stock',
             requireInteraction: true,
             type: 'warning'

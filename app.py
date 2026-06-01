@@ -305,7 +305,7 @@ def create_app(config_class=Config):
                 developer_logo_raw = developer_logo_raw[len("/static/"):]
             if developer_logo_raw.startswith("static/"):
                 developer_logo_raw = developer_logo_raw[len("static/"):]
-            developer_logo = developer_logo_raw or app.config.get('DEVELOPER_LOGO', 'img/logo.png')
+            developer_logo = developer_logo_raw or app.config.get('DEVELOPER_LOGO', 'assets/brand/azad/logos/logo.png')
             system_default_currency = (sys_settings.default_currency or '').strip() or 'AED'
             system_currency_symbol = (sys_settings.currency_symbol or '').strip() or system_default_currency
             system_currency_position = (sys_settings.currency_position or '').strip() or 'after'
@@ -320,7 +320,7 @@ def create_app(config_class=Config):
             developer_email = app.config.get('DEVELOPER_EMAIL', '')
             developer_website = app.config.get('DEVELOPER_WEBSITE', '')
             developer_whatsapp = app.config.get('DEVELOPER_WHATSAPP', '')
-            developer_logo = app.config.get('DEVELOPER_LOGO', 'img/logo.png')
+            developer_logo = app.config.get('DEVELOPER_LOGO', 'assets/brand/azad/logos/logo.png')
             system_default_currency = 'AED'
             system_currency_symbol = 'AED'
             system_currency_position = 'after'
