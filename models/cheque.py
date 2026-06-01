@@ -15,12 +15,15 @@ class Cheque(db.Model):
     نموذج الشيكات - وارد وصادر
     """
     __tablename__ = 'cheques'
-    
+    __table_args__ = (
+        db.UniqueConstraint('tenant_id', 'cheque_number', name='uq_cheques_tenant_cheque_number'),
+    )
+
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True)
-    
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
+
     # معلومات الشيك الأساسية
-    cheque_number = db.Column(db.String(50), nullable=False, unique=True, index=True)
+    cheque_number = db.Column(db.String(50), nullable=False, index=True)
     cheque_bank_number = db.Column(db.String(50), nullable=False)  # رقم الشيك من البنك
     
     # النوع: incoming (وارد) أو outgoing (صادر)

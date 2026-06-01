@@ -66,7 +66,13 @@ class PaymentService:
              raise ValueError('المورد غير موجود')
              
         try:
-            payment_number = generate_number('PAY', Payment, 'payment_number', branch_id=branch_id)
+            payment_number = generate_number(
+                'PAY',
+                Payment,
+                'payment_number',
+                branch_id=branch_id,
+                tenant_id=getattr(supplier, 'tenant_id', None),
+            )
             
             exchange_rate = CurrencyService.get_exchange_rate(
                 currency,
@@ -308,7 +314,13 @@ class PaymentService:
                     from models import Payment
                     sale_payment = Payment(
                         tenant_id=getattr(sale, 'tenant_id', None) or getattr(customer, 'tenant_id', None),
-                        payment_number=generate_number('PAY-S', Payment, 'payment_number', branch_id=sale.branch_id),
+                        payment_number=generate_number(
+                            'PAY-S',
+                            Payment,
+                            'payment_number',
+                            branch_id=sale.branch_id,
+                            tenant_id=getattr(sale, 'tenant_id', None),
+                        ),
                         payment_type='sale_payment',
                         direction='incoming',
                         sale_id=sale.id,

@@ -84,7 +84,9 @@ class SaleService:
         tax_rate_decimal = normalize_tax_rate(raw_tax_rate, tenant_id)
 
         try:
-            sale_number = generate_number('S', Sale, 'sale_number', branch_id=sale_branch_id)
+            sale_number = generate_number(
+                'S', Sale, 'sale_number', branch_id=sale_branch_id, tenant_id=tenant_id
+            )
             paid_amount_aed = Decimal('0')
             
             exchange_rate = CurrencyService.get_exchange_rate(
@@ -523,7 +525,13 @@ class SaleService:
                 except ValueError:
                     raise ValueError('تاريخ الشيك غير صالح')
         
-        payment_number = generate_number('PAY', Payment, 'payment_number', branch_id=sale.branch_id)
+        payment_number = generate_number(
+            'PAY',
+            Payment,
+            'payment_number',
+            branch_id=sale.branch_id,
+            tenant_id=getattr(sale, 'tenant_id', None),
+        )
         
         # Calculate AED amount with proper rounding using PROVIDED exchange rate
         exchange_rate_decimal = Decimal(str(exchange_rate))

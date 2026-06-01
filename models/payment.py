@@ -4,10 +4,13 @@ from extensions import db
 
 class Payment(db.Model):
     __tablename__ = 'payments'
-    
+    __table_args__ = (
+        db.UniqueConstraint('tenant_id', 'payment_number', name='uq_payments_tenant_payment_number'),
+    )
+
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True)
-    payment_number = db.Column(db.String(50), unique=True, nullable=False, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
+    payment_number = db.Column(db.String(50), nullable=False, index=True)
     
     payment_type = db.Column(db.String(20), nullable=False, index=True)
     

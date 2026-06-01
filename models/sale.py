@@ -5,16 +5,17 @@ from extensions import db
 
 class Sale(db.Model):
     __tablename__ = 'sales'
-    
+
     __table_args__ = (
+        db.UniqueConstraint('tenant_id', 'sale_number', name='uq_sales_tenant_sale_number'),
         db.Index('idx_sale_customer_date', 'customer_id', 'sale_date'),
         db.Index('idx_sale_status_date', 'status', 'sale_date'),
         db.Index('idx_sale_payment_status', 'payment_status', 'customer_id'),
     )
-    
+
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True)
-    sale_number = db.Column(db.String(50), unique=True, nullable=False, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
+    sale_number = db.Column(db.String(50), nullable=False, index=True)
     
     customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'), nullable=False, index=True)
     seller_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
@@ -218,7 +219,7 @@ class SaleLine(db.Model):
     __tablename__ = 'sale_lines'
     
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
     sale_id = db.Column(db.Integer, db.ForeignKey('sales.id'), nullable=False, index=True)
     product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
     

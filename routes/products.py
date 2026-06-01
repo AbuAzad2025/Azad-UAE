@@ -298,8 +298,16 @@ def import_products():
                             # Auto-generate barcode if missing (using SKU or random)
                             barcode = sku 
                         
-                        # Check existing
-                        existing = Product.query.filter((Product.sku == sku) | (Product.barcode == barcode)).first()
+                        # Check existing (per-tenant)
+                        from utils.tenanting import get_active_tenant_id
+
+                        tid = get_active_tenant_id()
+                        dup_q = Product.query.filter(
+                            (Product.sku == sku) | (Product.barcode == barcode)
+                        )
+                        if tid is not None:
+                            dup_q = dup_q.filter(Product.tenant_id == tid)
+                        existing = dup_q.first()
                         
                         if existing:
                             if request.form.get('update_existing'):

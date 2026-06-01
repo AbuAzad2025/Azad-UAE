@@ -5,10 +5,13 @@ from extensions import db
 
 class Purchase(db.Model):
     __tablename__ = 'purchases'
-    
+    __table_args__ = (
+        db.UniqueConstraint('tenant_id', 'purchase_number', name='uq_purchases_tenant_purchase_number'),
+    )
+
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True)
-    purchase_number = db.Column(db.String(50), unique=True, nullable=False, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
+    purchase_number = db.Column(db.String(50), nullable=False, index=True)
     
     supplier_id = db.Column(db.Integer, db.ForeignKey('suppliers.id'), index=True)
     warehouse_id = db.Column(db.Integer, db.ForeignKey('warehouses.id'), nullable=True, index=True)
@@ -127,7 +130,7 @@ class PurchaseLine(db.Model):
     __tablename__ = 'purchase_lines'
     
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
     purchase_id = db.Column(db.Integer, db.ForeignKey('purchases.id'), nullable=False, index=True)
     product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
     

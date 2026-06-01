@@ -6,7 +6,7 @@ class ExpenseCategory(db.Model):
     __tablename__ = 'expense_categories'
     
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
     name = db.Column(db.String(100), nullable=False, unique=True)
     name_ar = db.Column(db.String(100))
     gl_account_code = db.Column(db.String(20))
@@ -24,7 +24,7 @@ class Expense(db.Model):
     __tablename__ = 'expenses'
     
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
     expense_number = db.Column(db.String(50), unique=True, nullable=False, index=True)
     
     category_id = db.Column(db.Integer, db.ForeignKey('expense_categories.id'), nullable=False, index=True)

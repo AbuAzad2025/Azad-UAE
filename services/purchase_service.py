@@ -65,7 +65,13 @@ class PurchaseService:
 
         # Generate Number
         purchase_branch_id = warehouse.branch_id or user.branch_id
-        purchase_number = generate_number('P', Purchase, 'purchase_number', branch_id=purchase_branch_id)
+        purchase_number = generate_number(
+            'P',
+            Purchase,
+            'purchase_number',
+            branch_id=purchase_branch_id,
+            tenant_id=tenant_id,
+        )
         
         # Currency Handling
         exchange_rate = CurrencyService.get_exchange_rate(

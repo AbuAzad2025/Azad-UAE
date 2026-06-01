@@ -3,11 +3,15 @@ from extensions import db
 
 class Branch(db.Model):
     __tablename__ = 'branches'
-    
+    __table_args__ = (
+        db.UniqueConstraint('tenant_id', 'name', name='uq_branches_tenant_name'),
+        db.UniqueConstraint('tenant_id', 'code', name='uq_branches_tenant_code'),
+    )
+
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True)
-    name = db.Column(db.String(100), nullable=False, unique=True)
-    code = db.Column(db.String(20), nullable=False, unique=True) # e.g., RAM, HEB
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
+    name = db.Column(db.String(100), nullable=False)
+    code = db.Column(db.String(20), nullable=False)  # e.g., RAM, HEB
     
     # Location & Contact
     address = db.Column(db.String(255), nullable=True)

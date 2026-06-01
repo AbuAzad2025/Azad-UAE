@@ -9,7 +9,7 @@ class GLAccount(db.Model):
     )
 
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
     code = db.Column(db.String(20), nullable=False, index=True)
     name = db.Column(db.String(200), nullable=False)  # English name
     name_ar = db.Column(db.String(200))  # Arabic name
@@ -75,7 +75,7 @@ class GLJournalEntry(db.Model):
     )
 
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
     entry_number = db.Column(db.String(50), nullable=False, index=True)
     entry_date = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
     description = db.Column(db.String(255))
@@ -192,7 +192,7 @@ class GLJournalLine(db.Model):
     __tablename__ = 'gl_journal_lines'
 
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
     entry_id = db.Column(db.Integer, db.ForeignKey('gl_journal_entries.id'), nullable=False, index=True)
     account_id = db.Column(db.Integer, db.ForeignKey('gl_accounts.id'), nullable=False, index=True)
     description = db.Column(db.String(255))

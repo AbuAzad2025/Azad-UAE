@@ -4,16 +4,20 @@ from extensions import db
 
 class Warehouse(db.Model):
     __tablename__ = 'warehouses'
+    __table_args__ = (
+        db.UniqueConstraint('tenant_id', 'name', name='uq_warehouses_tenant_name'),
+        db.UniqueConstraint('tenant_id', 'code', name='uq_warehouses_tenant_code'),
+    )
 
     TYPE_PHYSICAL = 'physical'
     TYPE_ONLINE = 'online'
     WAREHOUSE_TYPES = (TYPE_PHYSICAL, TYPE_ONLINE)
     
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True)
-    name = db.Column(db.String(100), nullable=False, unique=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
+    name = db.Column(db.String(100), nullable=False)
     name_ar = db.Column(db.String(100))
-    code = db.Column(db.String(50), unique=True)
+    code = db.Column(db.String(50))
     location = db.Column(db.String(255))
     warehouse_type = db.Column(db.String(20), default=TYPE_PHYSICAL, nullable=False, index=True)
     
@@ -46,8 +50,8 @@ class StockMovement(db.Model):
     __tablename__ = 'stock_movements'
     
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True)
-    
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
+
     product_id = db.Column(db.Integer, db.ForeignKey('products.id', ondelete='CASCADE'), nullable=False, index=True)
     warehouse_id = db.Column(db.Integer, db.ForeignKey('warehouses.id'), nullable=False)
     

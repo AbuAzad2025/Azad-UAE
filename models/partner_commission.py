@@ -6,7 +6,7 @@ class PartnerCommissionEntry(db.Model):
     __tablename__ = 'partner_commission_entries'
 
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
     branch_id = db.Column(db.Integer, db.ForeignKey('branches.id'), nullable=True, index=True)
 
     sale_id = db.Column(db.Integer, db.ForeignKey('sales.id'), nullable=False, index=True)

@@ -38,8 +38,40 @@ PY_COMPILE_FILES = [
     "tools/qa/null_column_audit.py",
 ]
 
-KNOWN_GL_DUAL_SIDE_IDS = frozenset({721, 995, 1405})
 GL_DUAL_SIDE_THRESHOLD = 0.01
+
+LEGACY_GLOBAL_UNIQUE_INDEXES = (
+    "ix_products_sku",
+    "ix_products_barcode",
+    "ix_product_categories_name",
+    "ix_sales_sale_number",
+    "ix_purchases_purchase_number",
+    "ix_payments_payment_number",
+    "ix_cheques_cheque_number",
+)
+
+REQUIRED_PER_TENANT_UNIQUE_INDEXES = (
+    "uq_products_tenant_sku",
+    "uq_products_tenant_barcode",
+    "uq_product_categories_tenant_name",
+    "uq_branches_tenant_name",
+    "uq_branches_tenant_code",
+    "uq_warehouses_tenant_name",
+    "uq_warehouses_tenant_code",
+    "uq_sales_tenant_sale_number",
+    "uq_purchases_tenant_purchase_number",
+    "uq_payments_tenant_payment_number",
+    "uq_cheques_tenant_cheque_number",
+)
+
+TENANT_NOT_NULL_TABLES = [
+    "branches", "products", "product_categories", "product_partners",
+    "customers", "suppliers", "sales", "sale_lines", "purchases", "purchase_lines",
+    "payments", "expenses", "warehouses", "stock_movements",
+    "gl_accounts", "gl_journal_entries", "gl_journal_lines",
+    "partner_commission_entries", "employees", "salary_advances", "payroll_transactions",
+    "tenant_stores", "shop_customer_accounts", "store_coupons", "invoice_settings",
+]
 
 PHONE_VARCHAR50_COLUMNS = (
     ("customers", "phone"),
@@ -298,31 +330,18 @@ def check_field_quality(report: Report) -> None:
         ):
             fails.append("products empty SKU strings")
 
-        dual_rows = conn.execute(
-            text(
-                "SELECT id FROM gl_journal_lines "
-                "WHERE debit > 0 AND credit > 0"
-            ),
-        ).fetchall()
-        dual_ids = {int(r[0]) for r in dual_rows}
-        material_dual = conn.execute(
-            text(
-                "SELECT id FROM gl_journal_lines "
-                "WHERE debit > :thr AND credit > :thr"
-            ),
-            {"thr": GL_DUAL_SIDE_THRESHOLD},
-        ).fetchall()
-        material_ids = {int(r[0]) for r in material_dual}
-        unknown_material = material_ids - KNOWN_GL_DUAL_SIDE_IDS
-        if unknown_material:
-            fails.append(f"new GL dual-side lines: {sorted(unknown_material)[:10]}")
-        elif dual_ids and dual_ids <= KNOWN_GL_DUAL_SIDE_IDS:
-            warns.append(
-                f"known GL dual-side historical lines ({len(dual_ids)}): "
-                f"{sorted(dual_ids)}"
-            )
-        elif dual_ids:
-            fails.append(f"unexpected GL dual-side lines: {sorted(dual_ids)[:10]}")
+        dual_count = scalar(
+            "SELECT COUNT(*) FROM gl_journal_lines WHERE debit > 0 AND credit > 0"
+        )
+        if dual_count:
+            fails.append(f"GL dual-side lines count={dual_count}")
+
+        unbalanced = scalar(
+            "SELECT COUNT(*) FROM gl_journal_entries "
+            "WHERE ABS(COALESCE(total_debit,0)-COALESCE(total_credit,0)) > 0.001"
+        )
+        if unbalanced:
+            fails.append(f"unbalanced journal entries={unbalanced}")
 
         legacy_pt = scalar(
             "SELECT COUNT(*) FROM payments WHERE payment_type = 'sale'"
@@ -357,6 +376,67 @@ def check_field_quality(report: Report) -> None:
         report.add("Field quality", "WARN", "; ".join(warns[:6]))
     else:
         report.add("Field quality", "PASS", "schema + data gates OK")
+
+
+def check_schema_hardening(report: Report) -> None:
+    from dotenv import load_dotenv
+    from sqlalchemy import create_engine, text
+
+    load_dotenv(os.path.join(ROOT, ".env"))
+    url = os.environ.get("DATABASE_URL")
+    if not url:
+        report.add("Schema hardening", "FAIL", "DATABASE_URL not set")
+        return
+
+    engine = create_engine(url)
+    fails: list[str] = []
+    warns: list[str] = []
+
+    with engine.connect() as conn:
+        for idx in LEGACY_GLOBAL_UNIQUE_INDEXES:
+            exists = conn.execute(
+                text("SELECT 1 FROM pg_indexes WHERE schemaname='public' AND indexname=:n"),
+                {"n": idx},
+            ).scalar()
+            if exists:
+                fails.append(f"legacy global index still present: {idx}")
+
+        for idx in REQUIRED_PER_TENANT_UNIQUE_INDEXES:
+            exists = conn.execute(
+                text("SELECT 1 FROM pg_indexes WHERE schemaname='public' AND indexname=:n"),
+                {"n": idx},
+            ).scalar()
+            if not exists:
+                fails.append(f"missing per-tenant index: {idx}")
+
+        for table in TENANT_NOT_NULL_TABLES:
+            row = conn.execute(
+                text(
+                    "SELECT is_nullable FROM information_schema.columns "
+                    "WHERE table_schema='public' AND table_name=:t AND column_name='tenant_id'"
+                ),
+                {"t": table},
+            ).fetchone()
+            if not row:
+                warns.append(f"{table}: no tenant_id column")
+            elif row[0] == "YES":
+                fails.append(f"{table}.tenant_id still nullable")
+
+        active_inv = conn.execute(
+            text(
+                "SELECT COUNT(*) FROM invoice_settings "
+                "WHERE is_active = true AND tenant_id IS NULL"
+            )
+        ).scalar()
+        if active_inv:
+            fails.append(f"active invoice_settings null tenant={active_inv}")
+
+    if fails:
+        report.add("Schema hardening", "FAIL", "; ".join(fails[:8]))
+    elif warns:
+        report.add("Schema hardening", "WARN", "; ".join(warns[:4]))
+    else:
+        report.add("Schema hardening", "PASS", "per-tenant unique + NOT NULL OK")
 
 
 def check_git_hygiene(report: Report) -> None:
@@ -428,6 +508,7 @@ def main() -> int:
     check_null_audit(report)
     check_required_indexes(report)
     check_field_quality(report)
+    check_schema_hardening(report)
     if not args.skip_uat:
         check_uat(report)
     check_git_hygiene(report)

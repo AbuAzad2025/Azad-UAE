@@ -36,7 +36,15 @@ def _resolve_branch_code(branch_code=None, branch_id=None):
     return f'BR{int(branch_id):02d}'
 
 
-def generate_number(prefix, model, field_name='sale_number', date_format='%Y', branch_code=None, branch_id=None):
+def generate_number(
+    prefix,
+    model,
+    field_name='sale_number',
+    date_format='%Y',
+    branch_code=None,
+    branch_id=None,
+    tenant_id=None,
+):
     year = datetime.now().strftime(date_format)
 
     resolved_branch_code = _resolve_branch_code(branch_code=branch_code, branch_id=branch_id)
@@ -45,9 +53,10 @@ def generate_number(prefix, model, field_name='sale_number', date_format='%Y', b
     else:
         pattern = f'{prefix}-{year}-%'
 
-    latest = db.session.query(model).filter(
-        getattr(model, field_name).like(pattern)
-    ).order_by(
+    q = db.session.query(model).filter(getattr(model, field_name).like(pattern))
+    if tenant_id is not None and hasattr(model, 'tenant_id'):
+        q = q.filter(model.tenant_id == tenant_id)
+    latest = q.order_by(
         getattr(model, field_name).desc()
     ).first()
     

@@ -11,7 +11,7 @@ class Customer(db.Model):
     )
     
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
     name = db.Column(db.String(200), nullable=False, index=True)
     name_ar = db.Column(db.String(200))
     

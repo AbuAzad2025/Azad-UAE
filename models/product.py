@@ -1,13 +1,17 @@
 from datetime import datetime, timezone
+from sqlalchemy import Index, text
 from extensions import db
 
 
 class ProductCategory(db.Model):
     __tablename__ = 'product_categories'
-    
+    __table_args__ = (
+        db.UniqueConstraint('tenant_id', 'name', name='uq_product_categories_tenant_name'),
+    )
+
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True)
-    name = db.Column(db.String(100), nullable=False, unique=True, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
+    name = db.Column(db.String(100), nullable=False, index=True)
     name_ar = db.Column(db.String(100))
     description = db.Column(db.Text)
     parent_id = db.Column(db.Integer, db.ForeignKey('product_categories.id'))
@@ -38,7 +42,7 @@ class ProductPartner(db.Model):
     )
     
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
     product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
     partner_customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'), nullable=False)
     percentage = db.Column(db.Numeric(5, 2), nullable=False, default=0)
@@ -55,17 +59,31 @@ class Product(db.Model):
     __table_args__ = (
         db.Index('idx_product_active_stock', 'is_active', 'current_stock'),
         db.Index('idx_product_category_active', 'category_id', 'is_active'),
+        Index(
+            'uq_products_tenant_sku',
+            'tenant_id',
+            'sku',
+            unique=True,
+            postgresql_where=text("(sku IS NOT NULL) AND (TRIM(sku::text) <> '')"),
+        ),
+        Index(
+            'uq_products_tenant_barcode',
+            'tenant_id',
+            'barcode',
+            unique=True,
+            postgresql_where=text("(barcode IS NOT NULL) AND (TRIM(barcode::text) <> '')"),
+        ),
     )
-    
+
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
     name = db.Column(db.String(200), nullable=False, index=True)
     name_ar = db.Column(db.String(200))
     commercial_name = db.Column(db.String(200))
     
-    sku = db.Column(db.String(50), unique=True, index=True)
+    sku = db.Column(db.String(50), index=True)
     part_number = db.Column(db.String(100), index=True)
-    barcode = db.Column(db.String(100), unique=True, index=True)
+    barcode = db.Column(db.String(100), index=True)
     
     country_of_origin = db.Column(db.String(100))
     

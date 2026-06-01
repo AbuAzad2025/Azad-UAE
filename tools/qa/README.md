@@ -44,6 +44,13 @@ Individual scripts below remain available for debugging; you do not need to run 
 - Service/form validation: currency ISO-3, phone normalize, canonical payment types, GL single-sided new lines
 - Field quality section: PASS/FAIL/WARN (GL dual-side historical ids 721/995/1405 = WARN only)
 
+## Production schema hardening (`prod_schema_hardening_001`)
+
+- Per-tenant UNIQUE on SKU, sale/payment numbers, branches, warehouses, etc.
+- `tenant_id` NOT NULL on operational tables (not `users` — global developer allowed)
+- GL dual-side historical lines normalized; CHECK on single-sided GL amounts
+- `predeploy_check` **FAIL** if legacy global unique indexes return or `tenant_id` becomes nullable again
+
 ## Deferred (not in this gate)
 
 - Per-tenant UNIQUE on SKU / sale_number / warehouse name (business decision)

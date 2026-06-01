@@ -15,7 +15,7 @@ class InvoiceSettings(db.Model):
     __tablename__ = 'invoice_settings'
     
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
     
     # Company Info - معلومات الشركة
     company_name_ar = db.Column(db.String(200), nullable=False, default='شركة أزاد')
