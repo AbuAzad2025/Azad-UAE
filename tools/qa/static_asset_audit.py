@@ -250,6 +250,26 @@ def scan_db_asset_paths(database_url: str) -> tuple[list[str], list[str]]:
                 else:
                     fails.append(f"product {pid} asset missing: {u}")
 
+        nasrallah_dir = os.path.join(STATIC, "assets", "tenants", "nasrallah")
+        if os.path.isdir(nasrallah_dir):
+            row = conn.execute(
+                text(
+                    "SELECT id, logo_url, favicon_url FROM tenants WHERE slug = 'nasrallah' LIMIT 1"
+                )
+            ).fetchone()
+            if not row:
+                fails.append("nasrallah assets on disk but tenant slug=nasrallah missing in DB")
+            else:
+                _tid, logo, fav = row
+                for label, val in (("logo_url", logo), ("favicon_url", fav)):
+                    v = (val or "").strip()
+                    if not v:
+                        fails.append(f"nasrallah tenant missing {label}")
+                    elif v.startswith("img/") or v.startswith("static/img"):
+                        fails.append(f"nasrallah tenant legacy {label}: {v}")
+                    elif not _static_exists(v):
+                        fails.append(f"nasrallah tenant {label} file missing: {v}")
+
     return fails, warns
 
 
