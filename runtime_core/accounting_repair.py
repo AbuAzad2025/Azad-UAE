@@ -28,8 +28,16 @@ def repair_accounting_data():
     from models import Cheque, Customer, Product
     from models.gl import GLAccount, GLJournalEntry, GLJournalLine
     from services.gl_service import GLService
+    from services import gl_helpers
+    from utils.tenanting import get_active_tenant_id
 
-    GLService.ensure_core_accounts()
+    tenant_id = get_active_tenant_id()
+    if tenant_id is None:
+        from models import Tenant
+        default_tenant = Tenant.query.filter_by(is_active=True).order_by(Tenant.id.asc()).first()
+        tenant_id = default_tenant.id if default_tenant else None
+
+    GLService.ensure_core_accounts(tenant_id=tenant_id)
 
     merchant = Customer.query.filter_by(customer_type="merchant").order_by(Customer.id.asc()).first()
     if not merchant:
@@ -77,23 +85,34 @@ def repair_accounting_data():
         entry.reference_id = cheque.id
         backfilled_entries += 1
 
-    inventory_account = GLAccount.query.filter_by(code="1140").first()
-    equity_account = GLAccount.query.filter_by(code="3200").first()
+    if tenant_id is None:
+        raise RuntimeError("inventory migration requires an active tenant context")
+
+    inventory_account = gl_helpers.get_account("1140", tenant_id)
+    equity_account = gl_helpers.get_account("3200", tenant_id)
     if not inventory_account or not equity_account:
-        raise RuntimeError("الحسابات 1140 أو 3200 غير موجودة في شجرة الحسابات.")
+        raise RuntimeError(f"الحسابات 1140 أو 3200 غير موجودة لـ tenant_id={tenant_id}.")
 
     gl_inventory = sum(
         Decimal(str(line.debit or 0)) - Decimal(str(line.credit or 0))
         for line in GLJournalLine.query.filter(GLJournalLine.account_id == inventory_account.id).all()
     )
+    from utils.tenant_orm import tenant_query
+
     estimated_inventory = sum(
         Decimal(str(product.current_stock or 0)) * Decimal(str(product.cost_price or 0))
-        for product in Product.query.all()
+        for product in tenant_query(Product).all()
     )
     inventory_diff = estimated_inventory - gl_inventory
 
     posted_inventory_adjustment = Decimal("0")
-    if abs(inventory_diff) > Decimal("0.01"):
+    existing_migration = GLJournalEntry.query.filter_by(
+        reference_type="inventory_migration",
+        tenant_id=int(tenant_id),
+    ).first()
+    if existing_migration:
+        posted_inventory_adjustment = Decimal("0")
+    elif abs(inventory_diff) > Decimal("0.01"):
         posted_inventory_adjustment = inventory_diff
         if inventory_diff > 0:
             lines = [
@@ -123,6 +142,12 @@ def repair_accounting_data():
                 },
             ]
 
+        from models import Branch
+
+        branch = (
+            Branch.query.filter_by(tenant_id=int(tenant_id), is_main=True).first()
+            or Branch.query.filter_by(tenant_id=int(tenant_id)).order_by(Branch.id.asc()).first()
+        )
         GLService.post_entry(
             lines=lines,
             description="Initial inventory migration adjustment",
@@ -130,7 +155,10 @@ def repair_accounting_data():
             reference_id=None,
             currency="AED",
             exchange_rate=1.0,
+            branch_id=branch.id if branch else None,
         )
+    else:
+        posted_inventory_adjustment = Decimal("0")
 
     db.session.commit()
 

@@ -26,10 +26,16 @@ def resolve_tenant_id(branch_id=None, user_id=None):
     return int(tenant_id) if tenant_id else None
 
 
+import logging
+
+logger = logging.getLogger(__name__)
+
+
 def get_account(code, tenant_id=None):
     code = str(code)
     if tenant_id is not None:
         return GLAccount.query.filter_by(code=code, tenant_id=int(tenant_id)).first()
+    logger.warning("get_account(%s) without tenant_id — first chart match (legacy fallback)", code)
     return GLAccount.query.filter_by(code=code).order_by(GLAccount.id.asc()).first()
 
 
