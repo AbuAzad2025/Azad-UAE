@@ -328,14 +328,14 @@ def check_field_quality(report: Report) -> None:
             "SELECT COUNT(*) FROM payments WHERE payment_type = 'sale'"
         )
         if legacy_pt:
-            warns.append(f"payments.payment_type legacy 'sale' rows={legacy_pt}")
+            fails.append(f"payments.payment_type legacy 'sale' rows={legacy_pt}")
 
-        ref_dup = scalar(
+        ref_lowercase = scalar(
             "SELECT COUNT(*) FROM gl_journal_entries "
-            "WHERE reference_type IN ('InventoryMigration', 'inventory_migration')"
+            "WHERE reference_type = 'inventory_migration'"
         )
-        if ref_dup:
-            warns.append("reference_type InventoryMigration case variants present")
+        if ref_lowercase:
+            fails.append(f"gl_journal_entries.reference_type lowercase rows={ref_lowercase}")
 
         unknown_pt = conn.execute(
             text(

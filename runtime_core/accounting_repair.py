@@ -107,7 +107,7 @@ def repair_accounting_data():
 
     posted_inventory_adjustment = Decimal("0")
     existing_migration = GLJournalEntry.query.filter_by(
-        reference_type="inventory_migration",
+        reference_type="InventoryMigration",
         tenant_id=int(tenant_id),
     ).first()
     if existing_migration:
@@ -151,7 +151,7 @@ def repair_accounting_data():
         GLService.post_entry(
             lines=lines,
             description="Initial inventory migration adjustment",
-            reference_type="inventory_migration",
+            reference_type="InventoryMigration",
             reference_id=None,
             currency="AED",
             exchange_rate=1.0,
