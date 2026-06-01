@@ -93,6 +93,8 @@ scripts/
 !tools/qa/
 !tools/qa/*.py
 !tools/qa/README.md
+tools/qa/null_column_audit_*.json
+tools/qa/null_column_audit_*.csv
 
 # Neural models (can be large)
 ai_knowledge/models/*.pkl
