@@ -20,7 +20,7 @@ class Supplier(db.Model):
     company_name = db.Column(db.String(200))
     
     # معلومات الاتصال
-    phone = db.Column(db.String(20))
+    phone = db.Column(db.String(50))
     phone2 = db.Column(db.String(20))
     email = db.Column(db.String(120))
     website = db.Column(db.String(200))

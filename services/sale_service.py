@@ -10,6 +10,12 @@ from services.commission_gl_service import post_sale_commissions
 from services.gl_service import GLService
 from utils.branching import ensure_warehouse_access
 from utils.constants import normalize_payment_method_code
+from utils.field_validators import (
+    canonical_payment_type,
+    validate_currency_code,
+    validate_payment_method,
+    validate_sale_status,
+)
 from utils.helpers import generate_number
 from utils.tenanting import get_active_tenant_id
 from utils.tax_settings import normalize_tax_rate, should_post_vat_gl
@@ -43,7 +49,8 @@ class SaleService:
                 currency = (Tenant.get_current().default_currency or '').strip() or 'AED'
             except Exception:
                 currency = 'AED'
-        
+        currency = validate_currency_code(currency)
+
         # Validate discount and tax (rate finalized after tenant/warehouse resolved)
         discount_decimal = Decimal(str(discount_amount)) if discount_amount else Decimal('0')
         shipping_decimal = Decimal(str(shipping_cost)) if shipping_cost else Decimal('0')
@@ -290,7 +297,7 @@ class SaleService:
 
             sale.source = source or 'internal'
             if sale_status:
-                sale.status = sale_status
+                sale.status = validate_sale_status(sale_status)
             if checkout_payment_method:
                 sale.checkout_payment_method = str(checkout_payment_method).strip().lower()[:50]
 
@@ -497,12 +504,8 @@ class SaleService:
         if amount_decimal <= Decimal('0'):
             raise ValueError('مبلغ الدفع يجب أن يكون أكبر من صفر')
         
-        payment_method = normalize_payment_method_code(payment_method)
-
-        # Validate payment method
-        valid_methods = ['cash', 'card', 'bank_transfer', 'cheque', 'e_wallet']
-        if payment_method not in valid_methods:
-            raise ValueError(f'طريقة الدفع غير صالحة: {payment_method}')
+        payment_method = validate_payment_method(payment_method)
+        currency = validate_currency_code(currency)
         
         # Validate cheque details if payment method is cheque
         if payment_method == 'cheque':
@@ -531,7 +534,7 @@ class SaleService:
         payment = Payment(
             tenant_id=getattr(sale, 'tenant_id', None),
             payment_number=payment_number,
-            payment_type='sale',
+            payment_type=canonical_payment_type('sale_payment'),
             sale_id=sale.id,
             customer_id=sale.customer_id,
             amount=amount_decimal,

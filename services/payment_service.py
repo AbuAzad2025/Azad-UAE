@@ -10,6 +10,11 @@ from utils.gl_reference_types import GLRef
 from utils.helpers import generate_number
 from utils.branching import branch_scope_id_for
 from utils.constants import normalize_payment_method_code
+from utils.field_validators import (
+    canonical_payment_type,
+    validate_currency_code,
+    validate_payment_method,
+)
 
 
 class PaymentService:
@@ -46,8 +51,8 @@ class PaymentService:
         
         supplier_id = payment_data.get('supplier_id')
         amount = payment_data.get('amount')
-        currency = payment_data.get('currency', 'AED')
-        payment_method = normalize_payment_method_code(payment_data.get('payment_method', 'cash'))
+        currency = validate_currency_code(payment_data.get('currency', 'AED'))
+        payment_method = validate_payment_method(payment_data.get('payment_method', 'cash'))
         notes = payment_data.get('notes')
         user_exchange_rate = payment_data.get('user_exchange_rate')
         reference_number = payment_data.get('reference_number')
@@ -72,7 +77,7 @@ class PaymentService:
             payment = Payment(
                 tenant_id=getattr(supplier, 'tenant_id', None) or (getattr(current_user, 'tenant_id', None) if current_user and getattr(current_user, 'is_authenticated', False) else None),
                 payment_number=payment_number,
-                payment_type='supplier_payment',
+                payment_type=canonical_payment_type('supplier_payment'),
                 direction='outgoing',
                 supplier_id=supplier.id,
                 supplier_name=supplier.name,
@@ -151,8 +156,8 @@ class PaymentService:
         
         customer_id = payment_data.get('customer_id')
         amount = payment_data.get('amount')
-        currency = payment_data.get('currency', 'AED')
-        payment_method = normalize_payment_method_code(payment_data.get('payment_method', 'cash'))
+        currency = validate_currency_code(payment_data.get('currency', 'AED'))
+        payment_method = validate_payment_method(payment_data.get('payment_method', 'cash'))
         notes = payment_data.get('notes')
         user_exchange_rate = payment_data.get('user_exchange_rate')
         reference_number = payment_data.get('reference_number')

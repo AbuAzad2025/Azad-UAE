@@ -8,7 +8,7 @@ class Employee(db.Model):
     tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True)
     name = db.Column(db.String(100), nullable=False)
     name_ar = db.Column(db.String(100))
-    phone = db.Column(db.String(20))
+    phone = db.Column(db.String(50))
     email = db.Column(db.String(100))
     
     # Employment Details

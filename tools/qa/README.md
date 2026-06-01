@@ -37,11 +37,20 @@ Individual scripts below remain available for debugging; you do not need to run 
 | create_app | **OK** |
 | Performance indexes round 1 | **Migration `perf_idx_round1_001`** |
 
+## Field Quality Round 1 (in `predeploy_check`)
+
+- Phone columns widened to `varchar(50)` (customers, users, suppliers, branches, employees)
+- Boolean drift: `products.has_serial_number`, `donations.gl_posted` NOT NULL + default false
+- Service/form validation: currency ISO-3, phone normalize, canonical payment types, GL single-sided new lines
+- Field quality section: PASS/FAIL/WARN (GL dual-side historical ids 721/995/1405 = WARN only)
+
 ## Deferred (not in this gate)
 
+- Per-tenant UNIQUE on SKU / sale_number / warehouse name (business decision)
+- NOT NULL `tenant_id` migrations (bulk)
 - `pg_trgm` / GIN search indexes (Round 2)
-- NOT NULL `tenant_id` migrations
 - `before_flush` tenant guard
+- Status CHECK constraints in DB
 - Test tenants: operational decision at production cutover (see `DEPLOYMENT_PYTHONANYWHERE.md`)
 
 ## Scripts

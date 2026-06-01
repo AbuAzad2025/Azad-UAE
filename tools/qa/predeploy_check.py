@@ -32,10 +32,22 @@ REQUIRED_INDEXES = [
 PY_COMPILE_FILES = [
     "app.py",
     "config.py",
+    "utils/field_validators.py",
     "tools/qa/predeploy_check.py",
     "tools/qa/gl_remediation_verify.py",
     "tools/qa/null_column_audit.py",
 ]
+
+KNOWN_GL_DUAL_SIDE_IDS = frozenset({721, 995, 1405})
+GL_DUAL_SIDE_THRESHOLD = 0.01
+
+PHONE_VARCHAR50_COLUMNS = (
+    ("customers", "phone"),
+    ("users", "phone"),
+    ("suppliers", "phone"),
+    ("branches", "phone"),
+    ("employees", "phone"),
+)
 
 STAGED_FORBIDDEN_PATTERNS = (
     ".env",
@@ -224,6 +236,129 @@ def check_uat(report: Report) -> None:
         report.add("UAT", "FAIL", out[-800:])
 
 
+def check_field_quality(report: Report) -> None:
+    from dotenv import load_dotenv
+    from sqlalchemy import create_engine, text
+
+    load_dotenv(os.path.join(ROOT, ".env"))
+    url = os.environ.get("DATABASE_URL")
+    if not url:
+        report.add("Field quality", "FAIL", "DATABASE_URL not set")
+        return
+
+    engine = create_engine(url)
+    fails: list[str] = []
+    warns: list[str] = []
+
+    with engine.connect() as conn:
+        def scalar(sql: str) -> int:
+            return int(conn.execute(text(sql)).scalar() or 0)
+
+        def table_exists(table: str) -> bool:
+            return bool(
+                conn.execute(
+                    text(
+                        "SELECT 1 FROM information_schema.tables "
+                        "WHERE table_schema='public' AND table_name=:t"
+                    ),
+                    {"t": table},
+                ).scalar()
+            )
+
+        if table_exists("products"):
+            if scalar("SELECT COUNT(*) FROM products WHERE has_serial_number IS NULL") > 0:
+                fails.append("products.has_serial_number NULL rows")
+
+        if table_exists("donations"):
+            if scalar("SELECT COUNT(*) FROM donations WHERE gl_posted IS NULL") > 0:
+                fails.append("donations.gl_posted NULL rows")
+
+        for table, col in PHONE_VARCHAR50_COLUMNS:
+            if not table_exists(table):
+                warns.append(f"missing table {table}")
+                continue
+            row = conn.execute(
+                text(
+                    "SELECT character_maximum_length FROM information_schema.columns "
+                    "WHERE table_schema='public' AND table_name=:t AND column_name=:c"
+                ),
+                {"t": table, "c": col},
+            ).fetchone()
+            if not row or row[0] != 50:
+                fails.append(f"{table}.{col} length={row[0] if row else 'missing'} (expected 50)")
+
+        if scalar(
+            "SELECT COUNT(*) FROM sales WHERE currency IS NOT NULL "
+            "AND LENGTH(TRIM(currency)) <> 3"
+        ):
+            fails.append("sales invalid currency length")
+
+        if table_exists("products") and scalar(
+            "SELECT COUNT(*) FROM products WHERE sku IS NOT NULL AND TRIM(sku) = ''"
+        ):
+            fails.append("products empty SKU strings")
+
+        dual_rows = conn.execute(
+            text(
+                "SELECT id FROM gl_journal_lines "
+                "WHERE debit > 0 AND credit > 0"
+            ),
+        ).fetchall()
+        dual_ids = {int(r[0]) for r in dual_rows}
+        material_dual = conn.execute(
+            text(
+                "SELECT id FROM gl_journal_lines "
+                "WHERE debit > :thr AND credit > :thr"
+            ),
+            {"thr": GL_DUAL_SIDE_THRESHOLD},
+        ).fetchall()
+        material_ids = {int(r[0]) for r in material_dual}
+        unknown_material = material_ids - KNOWN_GL_DUAL_SIDE_IDS
+        if unknown_material:
+            fails.append(f"new GL dual-side lines: {sorted(unknown_material)[:10]}")
+        elif dual_ids and dual_ids <= KNOWN_GL_DUAL_SIDE_IDS:
+            warns.append(
+                f"known GL dual-side historical lines ({len(dual_ids)}): "
+                f"{sorted(dual_ids)}"
+            )
+        elif dual_ids:
+            fails.append(f"unexpected GL dual-side lines: {sorted(dual_ids)[:10]}")
+
+        legacy_pt = scalar(
+            "SELECT COUNT(*) FROM payments WHERE payment_type = 'sale'"
+        )
+        if legacy_pt:
+            warns.append(f"payments.payment_type legacy 'sale' rows={legacy_pt}")
+
+        ref_dup = scalar(
+            "SELECT COUNT(*) FROM gl_journal_entries "
+            "WHERE reference_type IN ('InventoryMigration', 'inventory_migration')"
+        )
+        if ref_dup:
+            warns.append("reference_type InventoryMigration case variants present")
+
+        unknown_pt = conn.execute(
+            text(
+                "SELECT DISTINCT payment_type FROM payments "
+                "WHERE payment_type IS NOT NULL AND payment_type NOT IN "
+                "('sale', 'sale_payment', 'supplier_payment', 'bill_payment', "
+                "'refund', 'customer_payment', 'manual')"
+            )
+        ).fetchall()
+        if unknown_pt:
+            fails.append(
+                "unknown payment_type: "
+                + ", ".join(r[0] for r in unknown_pt[:5])
+            )
+
+    if fails:
+        report.add("Field quality", "FAIL", "; ".join(fails))
+    elif warns:
+        report.add("Field quality", "WARN", "; ".join(warns[:6]))
+    else:
+        report.add("Field quality", "PASS", "schema + data gates OK")
+
+
 def check_git_hygiene(report: Report) -> None:
     issues = []
     r = _run(["git", "status", "--porcelain"], cwd=ROOT)
@@ -292,6 +427,7 @@ def main() -> int:
     check_gl_remediation(report)
     check_null_audit(report)
     check_required_indexes(report)
+    check_field_quality(report)
     if not args.skip_uat:
         check_uat(report)
     check_git_hygiene(report)

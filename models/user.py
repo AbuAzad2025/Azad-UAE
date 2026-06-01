@@ -85,7 +85,7 @@ class User(UserMixin, db.Model):
     # Profile
     full_name = db.Column(db.String(100))
     full_name_ar = db.Column(db.String(100))
-    phone = db.Column(db.String(20))
+    phone = db.Column(db.String(50))
     
     # Role
     role_id = db.Column(db.Integer, db.ForeignKey('roles.id'), nullable=False)

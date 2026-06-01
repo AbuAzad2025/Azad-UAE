@@ -25,7 +25,9 @@ def create():
         code = request.form.get('code')
         city = request.form.get('city')
         address = request.form.get('address')
-        phone = request.form.get('phone')
+        from utils.field_validators import normalize_phone_optional
+
+        phone = normalize_phone_optional(request.form.get('phone'))
         is_main = request.form.get('is_main') == 'on'
         
         if not name or not code:
@@ -68,7 +70,9 @@ def edit(id):
         branch.name = request.form.get('name')
         branch.city = request.form.get('city')
         branch.address = request.form.get('address')
-        branch.phone = request.form.get('phone')
+        from utils.field_validators import normalize_phone_optional
+
+        branch.phone = normalize_phone_optional(request.form.get('phone'))
         branch.is_main = request.form.get('is_main') == 'on'
         
         db.session.commit()

@@ -161,12 +161,14 @@ def create():
                     username_example=_username_example(),
                 )
             
+            from utils.field_validators import normalize_phone_optional
+
             user = User(
                 username=username,
                 email=request.form.get('email'),
                 full_name=request.form.get('full_name'),
                 full_name_ar=request.form.get('full_name_ar'),
-                phone=request.form.get('phone'),
+                phone=normalize_phone_optional(request.form.get('phone')),
                 role_id=role_id,
                 branch_id=branch_id,
                 is_owner=False,
@@ -238,7 +240,9 @@ def edit(id):
             user.email = request.form.get('email')
             user.full_name = request.form.get('full_name')
             user.full_name_ar = request.form.get('full_name_ar')
-            user.phone = request.form.get('phone')
+            from utils.field_validators import normalize_phone_optional
+
+            user.phone = normalize_phone_optional(request.form.get('phone'))
             role_id = request.form.get('role_id', type=int)
             branch_id = _clean_branch_id(request.form.get('branch_id'))
             role = _validate_user_branch(role_id, branch_id)

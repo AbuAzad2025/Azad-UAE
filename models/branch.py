@@ -12,7 +12,7 @@ class Branch(db.Model):
     # Location & Contact
     address = db.Column(db.String(255), nullable=True)
     city = db.Column(db.String(50), nullable=True)
-    phone = db.Column(db.String(20), nullable=True)
+    phone = db.Column(db.String(50), nullable=True)
     
     # Status
     is_active = db.Column(db.Boolean, default=True)

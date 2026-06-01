@@ -11,6 +11,7 @@ from services.gl_service import GLService
 from services.gl_posting import post_or_fail
 
 from utils.gl_reference_types import GLRef
+from utils.field_validators import normalize_phone_optional
 
 
 
@@ -53,7 +54,7 @@ class PayrollService:
 
             name_ar=data.get('name_ar'),
 
-            phone=data.get('phone'),
+            phone=normalize_phone_optional(data.get('phone')),
 
             email=data.get('email'),
 

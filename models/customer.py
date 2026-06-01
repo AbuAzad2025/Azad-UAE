@@ -19,7 +19,7 @@ class Customer(db.Model):
     
     customer_classification = db.Column(db.String(20), default='regular', index=True)
     
-    phone = db.Column(db.String(20))
+    phone = db.Column(db.String(50))
     email = db.Column(db.String(120))
     address = db.Column(db.Text)
     tax_number = db.Column(db.String(50))

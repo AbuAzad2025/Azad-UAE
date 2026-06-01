@@ -350,7 +350,9 @@ python tools/qa/predeploy_check.py --profile local
 
 Covers: migrations head/current, `create_app`, `pip_audit`, DB integrity (`gl_remediation_verify`, `null_column_audit`), UAT 59/59, eight required performance indexes, git hygiene.
 
-**Deferred (separate migrations later):** `pg_trgm` search indexes, NOT NULL `tenant_id` constraints, `before_flush` ORM guard.
+**Field Quality Round 1** (migration `field_quality_round1`): phone `varchar(50)`, boolean NOT NULL drift fix, extended `predeploy_check` field-quality gates, service-layer validators (`utils/field_validators.py`).
+
+**Deferred (later migrations / business decisions):** per-tenant UNIQUE business keys, bulk NOT NULL `tenant_id`, `pg_trgm` search indexes, `before_flush` ORM guard, DB CHECK on status columns.
 
 ---
 

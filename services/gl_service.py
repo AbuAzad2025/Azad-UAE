@@ -68,6 +68,8 @@ class GLService:
         gl_helpers.assert_period_open(date, tenant_id)
         entry_number = gl_helpers.next_entry_number(tenant_id, date)
         
+        from utils.field_validators import validate_gl_line_sides, validate_reference_type_write
+
         entry = GLJournalEntry(
             tenant_id=tenant_id,
             entry_number=entry_number,
@@ -77,7 +79,7 @@ class GLService:
             branch_id=branch_id,
             entry_type='auto',
             is_posted=True,
-            reference_type=reference_type,
+            reference_type=validate_reference_type_write(reference_type),
             reference_id=reference_id
         )
         db.session.add(entry)
@@ -99,7 +101,8 @@ class GLService:
                 raise ValueError(f"لا يمكن القيد على الحساب الرئيسي: {getattr(account, 'full_name', account.code)}")
             debit = Decimal(str(line.get('debit', 0)))
             credit = Decimal(str(line.get('credit', 0)))
-            
+            validate_gl_line_sides(debit, credit)
+
             gl_line = GLJournalLine(
                 tenant_id=tenant_id,
                 entry_id=entry.id,
@@ -366,6 +369,7 @@ class GLService:
     def create_manual_entry(description, lines, entry_date=None, notes=None, created_by=None, currency='AED', exchange_rate=1.0, branch_id=None):
         """إنشاء قيد يدوي"""
         from flask_login import current_user
+        from utils.field_validators import validate_gl_line_sides
 
         entry_date = entry_date or datetime.now(timezone.utc)
 
@@ -427,6 +431,7 @@ class GLService:
 
             debit = Decimal(str(line_data.get('debit', 0) or 0))
             credit = Decimal(str(line_data.get('credit', 0) or 0))
+            validate_gl_line_sides(debit, credit)
 
             line = GLJournalLine(
                 tenant_id=tenant_id,

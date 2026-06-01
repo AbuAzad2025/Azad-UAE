@@ -170,14 +170,16 @@ def create():
                     flash('⚠️ قيمة التقييم غير صحيحة.', 'warning')
                     return render_template('suppliers/create.html')
             
+            from utils.field_validators import normalize_phone_optional, validate_currency_code
+
             initial_balance = request.form.get('initial_balance', type=float, default=0)
             
             supplier = Supplier(
                 name=request.form.get('name'),
                 name_en=request.form.get('name_en'),
                 company_name=request.form.get('company_name'),
-                phone=request.form.get('phone'),
-                phone2=request.form.get('phone2'),
+                phone=normalize_phone_optional(request.form.get('phone')),
+                phone2=normalize_phone_optional(request.form.get('phone2'), field_label='phone2'),
                 email=request.form.get('email'),
                 website=request.form.get('website'),
                 address=request.form.get('address'),
@@ -189,7 +191,7 @@ def create():
                 rating=rating if rating is not None else None,
                 credit_limit=request.form.get('credit_limit', type=float, default=0),
                 payment_terms_days=request.form.get('payment_terms_days', type=int, default=30),
-                preferred_currency=request.form.get('preferred_currency', 'AED'),
+                preferred_currency=validate_currency_code(request.form.get('preferred_currency', 'AED')),
                 total_purchases_aed=initial_balance,
                 total_paid_aed=0,
                 notes=request.form.get('notes'),
@@ -260,8 +262,10 @@ def edit(id):
             supplier.name = request.form.get('name')
             supplier.name_en = request.form.get('name_en')
             supplier.company_name = request.form.get('company_name')
-            supplier.phone = request.form.get('phone')
-            supplier.phone2 = request.form.get('phone2')
+            from utils.field_validators import normalize_phone_optional, validate_currency_code
+
+            supplier.phone = normalize_phone_optional(request.form.get('phone'))
+            supplier.phone2 = normalize_phone_optional(request.form.get('phone2'), field_label='phone2')
             supplier.email = request.form.get('email')
             supplier.website = request.form.get('website')
             supplier.address = request.form.get('address')
@@ -276,7 +280,9 @@ def edit(id):
             supplier.rating = int(rating_value) if rating_value else None
             supplier.credit_limit = request.form.get('credit_limit', type=float)
             supplier.payment_terms_days = request.form.get('payment_terms_days', type=int)
-            supplier.preferred_currency = request.form.get('preferred_currency')
+            supplier.preferred_currency = validate_currency_code(
+                request.form.get('preferred_currency') or supplier.preferred_currency or 'AED'
+            )
             supplier.notes = request.form.get('notes')
             supplier.tags = request.form.get('tags')
             supplier.is_verified = request.form.get('is_verified') == 'on'

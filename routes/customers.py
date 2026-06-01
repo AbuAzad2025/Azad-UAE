@@ -288,15 +288,17 @@ def create():
     
     if form.validate_on_submit():
         try:
+            from utils.field_validators import normalize_phone_optional, validate_currency_code
+
             customer = Customer(
                 name=form.name.data,
                 name_ar=form.name_ar.data,
                 customer_type=form.customer_type.data,
-                phone=form.phone.data,
+                phone=normalize_phone_optional(form.phone.data),
                 email=form.email.data,
                 address=form.address.data,
                 tax_number=form.tax_number.data,
-                preferred_currency=form.preferred_currency.data,
+                preferred_currency=validate_currency_code(form.preferred_currency.data or 'AED'),
                 is_active=bool(form.is_active.data),
                 notes=form.notes.data
             )
@@ -354,11 +356,15 @@ def edit(id):
             customer.name = request.form.get('name')
             customer.name_ar = request.form.get('name_ar')
             customer.customer_type = request.form.get('customer_type')
-            customer.phone = request.form.get('phone')
+            from utils.field_validators import normalize_phone_optional, validate_currency_code
+
+            customer.phone = normalize_phone_optional(request.form.get('phone'))
             customer.email = request.form.get('email')
             customer.address = request.form.get('address')
             customer.tax_number = request.form.get('tax_number')
-            customer.preferred_currency = request.form.get('preferred_currency') or request.form.get('default_currency') or 'AED'
+            customer.preferred_currency = validate_currency_code(
+                request.form.get('preferred_currency') or request.form.get('default_currency') or 'AED'
+            )
             is_active_raw = request.form.get('is_active', '1')
             customer.is_active = str(is_active_raw) in ('1', 'true', 'on', 'True')
             customer.notes = request.form.get('notes')

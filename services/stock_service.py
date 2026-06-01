@@ -87,6 +87,9 @@ class StockService:
     
     @staticmethod
     def create_movement(product_id, quantity, movement_type, reference_type=None, reference_id=None, notes=None, warehouse_id=None):
+        from utils.field_validators import validate_stock_movement_type
+
+        movement_type = validate_stock_movement_type(movement_type)
         try:
             product = Product.query.get(product_id)
             
