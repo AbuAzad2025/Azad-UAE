@@ -7,10 +7,10 @@
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="ps-hp" aria-hidden="true"><input type="text" name="website" tabindex="-1"></div>
     <div class="ps-form-group"><label>{{ t('name') }} *</label><input type="text" name="name" required minlength="2"></div>
-    <div class="ps-form-group"><label>Email *</label><input type="email" name="email" required dir="ltr"></div>
+    <div class="ps-form-group"><label>{{ t('email') }} *</label><input type="email" name="email" required dir="ltr"></div>
     <div class="ps-form-group"><label>{{ t('phone') }} *</label><input type="tel" name="phone" required></div>
     <div class="ps-form-group"><label>{{ t('address') }}</label><textarea name="address" rows="2"></textarea></div>
-    <div class="ps-form-group"><label>Password *</label><input type="password" name="password" required minlength="6" autocomplete="new-password"></div>
+    <div class="ps-form-group"><label>{{ t('password') }} *</label><input type="password" name="password" required minlength="6" autocomplete="new-password"></div>
     <button type="submit" class="ps-btn ps-btn-primary ps-btn-block">{{ t('register') }}</button>
   </form>
   <p style="margin-top:1rem;text-align:center;"><a href="{{ url_for('shop.account_login', slug=store.store_slug) }}">{{ t('login') }}</a></p>

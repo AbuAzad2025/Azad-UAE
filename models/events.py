@@ -599,7 +599,7 @@ def register_ai_learning_listeners():
         متكامل مع: ai_knowledge.learning_system
         """
         try:
-            from ai_knowledge.learning_system import AzadLearningSystem
+            from ai_knowledge.core.learning_system import AzadLearningSystem
             
             # بيانات التعلم
             day_of_week = target.sale_date.strftime('%A') if target.sale_date else 'Unknown'
@@ -646,7 +646,7 @@ def register_ai_learning_listeners():
         متكامل مع: services.ai_service.AIService
         """
         try:
-            from ai_knowledge.learning_system import AzadLearningSystem
+            from ai_knowledge.core.learning_system import AzadLearningSystem
             
             # تحليل متعدد الأبعاد
             customer_insights = {
@@ -697,7 +697,7 @@ def register_ai_learning_listeners():
         متكامل مع: ai_knowledge.learning_system
         """
         try:
-            from ai_knowledge.learning_system import AzadLearningSystem
+            from ai_knowledge.core.learning_system import AzadLearningSystem
             
             # بيانات المنتج
             product_data = {
@@ -755,7 +755,7 @@ def register_ai_learning_listeners():
         متكامل مع: services.ai_service
         """
         try:
-            from ai_knowledge.learning_system import AzadLearningSystem
+            from ai_knowledge.core.learning_system import AzadLearningSystem
             
             anomalies = []
             insights = []
@@ -814,7 +814,7 @@ def register_ai_linguistic_listeners():
     def ai_learn_product_terminology(mapper, connection, target):
         """التعلم من مصطلحات المنتجات"""
         try:
-            from ai_knowledge.learning_system import AzadLearningSystem
+            from ai_knowledge.core.learning_system import AzadLearningSystem
             
             # تعلم المصطلحات التقنية
             terminology = {
@@ -842,7 +842,7 @@ def register_ai_linguistic_listeners():
     def ai_learn_customer_names(mapper, connection, target):
         """التعلم من أسماء العملاء والشركات"""
         try:
-            from ai_knowledge.learning_system import AzadLearningSystem
+            from ai_knowledge.core.learning_system import AzadLearningSystem
             
             # تعلم الأسماء باللغتين
             names_data = {
@@ -882,7 +882,7 @@ def register_ai_professional_listeners():
     def ai_learn_sales_practices(mapper, connection, target):
         """التعلم من الممارسات التجارية في المبيعات"""
         try:
-            from ai_knowledge.learning_system import AzadLearningSystem
+            from ai_knowledge.core.learning_system import AzadLearningSystem
             
             # تحليل الممارسة التجارية
             practice_data = {
@@ -917,7 +917,7 @@ def register_ai_professional_listeners():
     def ai_learn_procurement_strategy(mapper, connection, target):
         """التعلم من استراتيجيات الشراء"""
         try:
-            from ai_knowledge.learning_system import AzadLearningSystem
+            from ai_knowledge.core.learning_system import AzadLearningSystem
             
             # تحليل استراتيجية الشراء
             procurement_data = {
@@ -944,7 +944,7 @@ def register_ai_professional_listeners():
     def ai_learn_expense_patterns(mapper, connection, target):
         """التعلم من أنماط المصروفات"""
         try:
-            from ai_knowledge.learning_system import AzadLearningSystem
+            from ai_knowledge.core.learning_system import AzadLearningSystem
             
             # تحليل نمط المصروف
             expense_data = {
@@ -983,7 +983,7 @@ def register_ai_accounting_listeners():
     def ai_learn_accounting_entries(mapper, connection, target):
         """التعلم من القيود المحاسبية"""
         try:
-            from ai_knowledge.learning_system import AzadLearningSystem
+            from ai_knowledge.core.learning_system import AzadLearningSystem
             from sqlalchemy import inspect
             
             # التحقق الآمن من السطور لتجنب تعارض الجلسة
@@ -1025,7 +1025,7 @@ def register_ai_accounting_listeners():
     def ai_learn_revenue_recognition(mapper, connection, target):
         """التعلم من مبادئ الاعتراف بالإيراد"""
         try:
-            from ai_knowledge.learning_system import AzadLearningSystem
+            from ai_knowledge.core.learning_system import AzadLearningSystem
             
             # مبدأ الاعتراف بالإيراد
             revenue_data = {
@@ -1054,7 +1054,7 @@ def register_ai_accounting_listeners():
     def ai_learn_expense_recognition(mapper, connection, target):
         """التعلم من مبادئ الاعتراف بالمصروف"""
         try:
-            from ai_knowledge.learning_system import AzadLearningSystem
+            from ai_knowledge.core.learning_system import AzadLearningSystem
             
             # مبدأ المقابلة المحاسبية
             matching_data = {
@@ -1186,7 +1186,7 @@ def register_ai_predictive_listeners():
                     churn_risk = 'low'
                 
                 # حفظ التوقع للتعلم
-                from ai_knowledge.learning_system import AzadLearningSystem
+                from ai_knowledge.core.learning_system import AzadLearningSystem
                 learning_system = AzadLearningSystem()
                 learning_system.learn_from_interaction(
                     question=f"Customer churn prediction - {target.id}",
@@ -1209,7 +1209,7 @@ def register_neural_training_listeners():
     @event.listens_for(Sale, 'after_insert')
     def neural_auto_retrain_on_milestones(mapper, connection, target):
         try:
-            from ai_knowledge.auto_retraining import AutoRetrainingScheduler
+            from ai_knowledge.learning.auto_retraining import AutoRetrainingScheduler
             from flask import current_app
             
             total_sales = connection.execute(
@@ -1304,7 +1304,7 @@ def register_intelligent_assistant_listeners():
                 return
             
             # تحليل باستخدام Data Analyzer
-            from ai_knowledge.data_analyzer import data_analyzer
+            from ai_knowledge.analytics.data_analyzer import data_analyzer
             
             # معلومات البيع
             sale_context = {
@@ -1357,7 +1357,7 @@ def register_intelligent_assistant_listeners():
             if current_app and current_app.config.get('TESTING'):
                 return
             # تحليل الرصيد باستخدام Data Analyzer
-            from ai_knowledge.data_analyzer import data_analyzer
+            from ai_knowledge.analytics.data_analyzer import data_analyzer
             debt_analysis = data_analyzer.analyze_customer_debt(target.id)
             
             if debt_analysis['success']:

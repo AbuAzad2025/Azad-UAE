@@ -42,7 +42,7 @@ class AutoRetrainingScheduler:
         try:
             logger.info("🧠 Auto-retraining triggered...")
             
-            from ai_knowledge.neural_engine import get_neural_engine
+            from ai_knowledge.neural.neural_engine import get_neural_engine
             neural = get_neural_engine()
             
             results = neural.train_all_models()
@@ -96,4 +96,8 @@ class AutoRetrainingScheduler:
             logger.info("📊 Training threshold reached - initiating auto-retraining")
             return AutoRetrainingScheduler.trigger_retraining()
         return {'message': 'No retraining needed'}
+
+
+# إنشاء instance عام
+auto_retraining = AutoRetrainingScheduler()
 

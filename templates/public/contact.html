@@ -27,7 +27,9 @@
         }
         .navbar a { color: white; text-decoration: none; margin: 0 15px; transition: color 0.3s; }
         .navbar a:hover { color: var(--gulf-gold); }
-        .logo { font-size: 1.8rem; font-weight: 900; color: var(--gulf-gold); }
+        .logo { display:flex; align-items:center; gap:10px; color: var(--gulf-gold); text-decoration:none; }
+        .logo img { width:42px; height:42px; object-fit:contain; border-radius:8px; background:rgba(255,255,255,.9); padding:4px; }
+        .logo span { font-size: 1.3rem; font-weight: 900; color: var(--gulf-gold); }
         
         .contact-container {
             max-width: 1200px;
@@ -90,6 +92,8 @@
     </style>
 </head>
 <body class="keep-theme contact-page">
+    {% set platform_name_ar = config.COMPANY_NAME_AR or 'شركة أزاد للأنظمة الذكية' %}
+    {% set platform_logo = config.COMPANY_LOGO or 'assets/brand/azad/logos/logo.png' %}
 
     <!-- Language Switcher -->
     <div style="position: fixed; top: 20px; left: 20px; z-index: 9999;">
@@ -99,7 +103,10 @@
     </div>
 
     <nav class="navbar">
-        <div class="logo">{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }}</div>
+        <a class="logo" href="{{ url_for('public.landing') }}">
+            <img src="{{ url_for('static', filename=platform_logo) }}" alt="{{ platform_name_ar }}">
+            <span>{{ platform_name_ar }}</span>
+        </a>
         <div>
             <a href="{{ url_for('public.landing') }}">{{ t('Dashboard') }}</a>
             <a href="{{ url_for('public.pricing') }}">الأسعار</a>
@@ -139,7 +146,7 @@
             <div class="contact-card">
                 <i class="fas fa-map-marker-alt"></i>
                 <h3>{{ t('Address') }}</h3>
-                <p style="font-size: 1.2rem; font-weight: 700;">{{ tenant_address or company_address or '—' }}</p>
+                <p style="font-size: 1.2rem; font-weight: 700;">{{ config.COMPANY_ADDRESS_AR or company_address or tenant_address or '—' }}</p>
             </div>
         </div>
 

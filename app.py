@@ -380,6 +380,9 @@ def create_app(config_class=Config):
             'user_roles': USER_ROLES,
         }
         # tenant_* = التينانت (الشركة المستخدمة للنظام). developer_* = الشركة المطورة (مثل أزاد). company_* = alias لـ tenant للتوافق.
+        from utils.ai_access import get_ai_access_state
+        ai_access_state = get_ai_access_state(current_user if current_user.is_authenticated else None)
+
         return {
             'format_currency': format_currency,
             'timeago': timeago,
@@ -432,7 +435,16 @@ def create_app(config_class=Config):
             'active_tenant_id': active_tenant_id,
             'current_year': datetime.now().year,
             'now': datetime.now(),
-            'ai_enabled': 'ai' in app.blueprints
+            'ai_enabled': 'ai' in app.blueprints,
+            'ai_access_state': ai_access_state,
+            'ai_nav_visible': bool(ai_access_state.get('allowed')),
+            'ai_effective_enabled': bool(
+                ai_access_state.get('allowed')
+                and ai_access_state.get('global_enabled')
+                and (
+                    ai_access_state.get('tenant_enabled') is not False
+                )
+            ),
         }
         
     @app.before_request

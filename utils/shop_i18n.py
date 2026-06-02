@@ -26,6 +26,7 @@ STRINGS = {
     'cod': {'ar': 'الدفع عند الاستلام', 'en': 'Cash on delivery'},
     'made_in_palestine': {'ar': 'فخر فلسطيني — جودة وثقة', 'en': 'Palestinian pride — quality & trust'},
     'email': {'ar': 'البريد الإلكتروني', 'en': 'Email'},
+    'password': {'ar': 'كلمة المرور', 'en': 'Password'},
     'payment_method': {'ar': 'طريقة الدفع', 'en': 'Payment method'},
     'no_payment_methods': {'ar': 'لا توجد طرق دفع متاحة حالياً.', 'en': 'No payment methods available right now.'},
     'select_payment': {'ar': 'اختر طريقة الدفع', 'en': 'Select payment method'},

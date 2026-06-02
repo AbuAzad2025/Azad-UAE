@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block title %}التحكم بالمساعد الذكي للتينانتس{% endblock %}
+{% block page_title %}التحكم بالمساعد الذكي للتينانتس{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">لوحة المالك</a></li>
+<li class="breadcrumb-item active">AI للتينانتس</li>
+{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm border-0">
+  <div class="card-header bg-light">
+    <h3 class="card-title mb-0">
+      <i class="fas fa-robot mr-2 text-primary"></i>تفعيل/إيقاف AI لكل تينانت
+    </h3>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-striped table-hover mb-0">
+        <thead class="thead-light">
+          <tr>
+            <th>التينانت</th>
+            <th>Slug</th>
+            <th>حالة AI</th>
+            <th>المستوى</th>
+            <th class="text-center">إجراء</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for tenant in tenants %}
+          <tr>
+            <td>
+              <strong>{{ tenant.name_ar or tenant.name }}</strong>
+              {% if tenant.name_ar and tenant.name %}
+              <div class="text-muted small">{{ tenant.name }}</div>
+              {% endif %}
+            </td>
+            <td><code>{{ tenant.slug }}</code></td>
+            <td>
+              {% if tenant.enable_ai %}
+                <span class="badge badge-success">مفعّل</span>
+              {% else %}
+                <span class="badge badge-secondary">موقوف</span>
+              {% endif %}
+            </td>
+            <td>
+              {% set level = (tenant_ai_levels.get(tenant.id, 'execute') or 'execute')|lower %}
+              {% if level == 'basic' %}
+                <span class="badge badge-info">Basic</span>
+              {% elif level == 'advanced' %}
+                <span class="badge badge-primary">Advanced</span>
+              {% else %}
+                <span class="badge badge-dark">Execute</span>
+              {% endif %}
+            </td>
+            <td class="text-center">
+              <form method="POST" action="{{ url_for('owner.tenant_ai_toggle', tenant_id=tenant.id) }}" class="d-inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <select name="ai_access_level" class="form-control form-control-sm d-inline-block" style="width: 120px;">
+                  <option value="basic" {% if (tenant_ai_levels.get(tenant.id, 'execute') or 'execute')|lower == 'basic' %}selected{% endif %}>Basic</option>
+                  <option value="advanced" {% if (tenant_ai_levels.get(tenant.id, 'execute') or 'execute')|lower == 'advanced' %}selected{% endif %}>Advanced</option>
+                  <option value="execute" {% if (tenant_ai_levels.get(tenant.id, 'execute') or 'execute')|lower == 'execute' %}selected{% endif %}>Execute</option>
+                </select>
+                {% if tenant.enable_ai %}
+                  <input type="hidden" name="enable_ai" value="0">
+                  <button type="submit" class="btn btn-sm btn-outline-danger">
+                    <i class="fas fa-ban mr-1"></i>إيقاف للتينانت
+                  </button>
+                {% else %}
+                  <input type="hidden" name="enable_ai" value="1">
+                  <button type="submit" class="btn btn-sm btn-outline-success">
+                    <i class="fas fa-power-off mr-1"></i>تفعيل للتينانت
+                  </button>
+                {% endif %}
+              </form>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="5" class="text-center text-muted py-4">لا توجد تينانتس نشطة.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

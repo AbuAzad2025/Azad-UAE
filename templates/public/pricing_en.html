@@ -12,7 +12,9 @@
     body { font-family: 'Inter', sans-serif; background: #f8f9fa; }
     .navbar { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center; }
     .navbar a { color: white; text-decoration: none; margin: 0 15px; font-weight: 700; }
-    .navbar .logo { font-size: 1.4rem; font-weight: 900; }
+    .navbar .logo { display:flex; align-items:center; gap:10px; text-decoration:none; color:#fff; }
+    .navbar .logo img { width:40px; height:40px; object-fit:contain; border-radius:8px; background:rgba(255,255,255,.92); padding:4px; }
+    .navbar .logo span { font-size: 1.15rem; font-weight: 900; color:#fff; }
     .pricing-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 80px 20px; text-align: center; }
     .pricing-header h1 { font-size: 3rem; margin-bottom: 20px; }
     .pricing-header p { font-size: 1.2rem; opacity: 0.95; }
@@ -53,6 +55,8 @@
   </style>
 </head>
 <body>
+  {% set platform_name_en = config.COMPANY_NAME if config.COMPANY_NAME != config.COMPANY_NAME_AR else 'Azad Smart Systems' %}
+  {% set platform_logo = config.COMPANY_LOGO or 'assets/brand/azad/logos/logo.png' %}
   <div style="position: fixed; top: 20px; left: 20px; z-index: 9999;">
     <a href="{{ url_for('language.set_language', lang='ar') }}" class="btn btn-sm" style="background: rgba(255,255,255,0.9); border-radius: 20px; padding: 8px 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); text-decoration:none; color:#111827; font-weight:900;">
       <i class="fas fa-globe" style="margin-right: 8px;"></i>AR
@@ -60,7 +64,10 @@
   </div>
 
   <nav class="navbar">
-    <div class="logo">{{ tenant_name or company_name or 'Accounting System' }}</div>
+    <a class="logo" href="{{ url_for('public.landing') }}">
+      <img src="{{ url_for('static', filename=platform_logo) }}" alt="{{ platform_name_en }}">
+      <span>{{ platform_name_en }}</span>
+    </a>
     <div>
       <a href="{{ url_for('public.landing') }}">Home</a>
       <a href="{{ url_for('public.features') }}">Features</a>
@@ -223,7 +230,7 @@
 
   <footer>
     <p>&copy; 2025 {{ config.COMPANY_NAME if config.COMPANY_NAME != config.COMPANY_NAME_AR else 'Azad Smart Systems' }}. All rights reserved.</p>
-    <p style="margin-top: 10px;">Developed by Eng. Ahmad Ghannam - Azad Systems</p>
+    <p style="margin-top: 10px;">{{ developer_credit or config.DEVELOPER_CREDIT }}</p>
   </footer>
 
   <script>

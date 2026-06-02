@@ -3,29 +3,120 @@
 المساعد الذكي الخارق - Superhuman AI Assistant
 """
 import os
-from flask import Blueprint, request, jsonify, render_template, current_app, abort
+from flask import Blueprint, request, jsonify, render_template, current_app, abort, flash, redirect, url_for, g
 from flask_login import login_required, current_user
 from extensions import csrf, db, limiter
 from services.ai_service import AIService
 from werkzeug.utils import secure_filename
 import pandas as pd
-from ai_knowledge.learning_system import learning_system
-from ai_knowledge.global_knowledge import global_connector, expertise_updater
-from ai_knowledge.self_improvement import self_improvement
-from ai_knowledge.system_integration import system_integrator
-from ai_knowledge.data_analyzer import data_analyzer
-from ai_knowledge.knowledge_expansion import knowledge_expander
-from ai_knowledge.document_generator import document_generator
-from ai_knowledge.advanced_laws import advanced_laws
-from ai_knowledge.automotive_ecu_knowledge import get_automotive_ecu_knowledge
-from ai_knowledge.external_learning import get_external_learning, LEARNING_SOURCES_CATALOG
+from ai_knowledge.core.learning_system import learning_system
+from ai_knowledge.core.system_integration import system_integrator
+from ai_knowledge.expansion.global_knowledge import global_connector, expertise_updater
+from ai_knowledge.improvement.self_improvement import self_improvement
+from ai_knowledge.analytics.data_analyzer import data_analyzer
+from ai_knowledge.expansion.knowledge_expansion import knowledge_expander
+from ai_knowledge.generation.document_generator import document_generator
+from ai_knowledge.specialized.advanced_laws import advanced_laws
+from ai_knowledge.knowledge.automotive_ecu_knowledge import get_automotive_ecu_knowledge
+from ai_knowledge.learning.external_learning import get_external_learning, LEARNING_SOURCES_CATALOG
 from utils.decorators import permission_required, owner_required, admin_required
 from utils.tenanting import assign_tenant_id
+from utils.ai_access import get_ai_access_state, ai_level_allows
+from utils.helpers import create_audit_log
 from datetime import datetime, timezone
 
 ai_bp = Blueprint('ai', __name__, url_prefix='/ai')
 
 # Note: CSRF exemptions are added to individual routes that need them
+
+
+@ai_bp.before_request
+def _enforce_ai_access_policy():
+    """Apply effective AI availability (global + tenant) before serving AI routes."""
+    state = get_ai_access_state(current_user)
+    g.ai_access_state = state
+
+    # Keep assistant/config UI reachable so we can display exact disable reason.
+    if request.endpoint in ('ai.config', 'ai.assistant_page'):
+        return None
+
+    if state.get('allowed'):
+        endpoint_caps = {
+            'ai.chat': 'basic',
+            'ai.predict_sales': 'advanced',
+            'ai.analyze_margins': 'advanced',
+            'ai.detect_patterns': 'advanced',
+            'ai.inventory_health': 'advanced',
+            'ai.business_insights': 'advanced',
+            'ai.deep_analysis': 'advanced',
+            'ai.cash_flow_prediction': 'advanced',
+            'ai.churn_prediction': 'advanced',
+            'ai.optimize_inventory': 'advanced',
+            'ai.ask_genius': 'advanced',
+            'ai.upload_excel': 'execute',
+            'ai.add_customer': 'execute',
+            'ai.system_add_customer': 'execute',
+        }
+        required_cap = endpoint_caps.get(request.endpoint or '', 'basic')
+        if not state.get('is_platform_user') and not ai_level_allows(state.get('ai_level'), required_cap):
+            msg = f"مستوى AI الحالي ({state.get('ai_level')}) لا يسمح بهذه العملية."
+            wants_json = request.path.startswith('/ai/') and (
+                request.is_json or 'application/json' in (request.headers.get('Accept') or '')
+            )
+            if wants_json:
+                return jsonify({'success': False, 'error': msg, 'required': required_cap}), 403
+            flash(msg, 'warning')
+            return redirect(url_for('ai.assistant_page'))
+        return None
+
+    reason = state.get('reason')
+    message = 'المساعد الذكي غير متاح لهذا الحساب حالياً.'
+    if reason == 'global_disabled':
+        message = 'تم إيقاف المساعد الذكي من إعدادات المنصة.'
+    elif reason == 'tenant_disabled':
+        message = 'تم إيقاف المساعد الذكي لهذا التينانت من لوحة المنصة.'
+    elif reason == 'missing_tenant':
+        message = 'لا يوجد تينانت نشط مرتبط بهذا الحساب.'
+
+    wants_json = request.path.startswith('/ai/') and (
+        request.is_json or 'application/json' in (request.headers.get('Accept') or '')
+    )
+    if wants_json:
+        return jsonify({'success': False, 'error': message, 'reason': reason}), 403
+
+    flash(message, 'warning')
+    return redirect(url_for('ai.assistant_page'))
+
+
+@ai_bp.after_request
+def _audit_ai_requests(response):
+    """Unified AI audit trail: endpoint, tenant context, status, success/failure."""
+    try:
+        endpoint = request.endpoint or ''
+        if not endpoint.startswith('ai.'):
+            return response
+        state = getattr(g, 'ai_access_state', None) or get_ai_access_state(current_user)
+        status = int(getattr(response, 'status_code', 0) or 0)
+        create_audit_log(
+            action='ai_request',
+            table_name='ai',
+            record_id=0,
+            changes={
+                'endpoint': endpoint,
+                'method': request.method,
+                'path': request.path,
+                'status_code': status,
+                'ok': status < 400,
+                'tenant_id': state.get('tenant_id'),
+                'global_enabled': state.get('global_enabled'),
+                'tenant_enabled': state.get('tenant_enabled'),
+                'ai_level': state.get('ai_level'),
+                'is_platform_user': state.get('is_platform_user'),
+            },
+        )
+    except Exception:
+        pass
+    return response
 
 # ========== نظام حفظ السياق المتقدم للمحادثة ==========
 conversation_context = {}  # {user_id: {'last_action': 'عميل', 'step': 1, 'option': '1', 'data': {}, 'history': []}}
@@ -56,7 +147,7 @@ def smart_listener(message, context):
 def train_local_ai(action, data, result):
     """تدريب الذكاء المحلي من كل عملية"""
     try:
-        from ai_knowledge.learning_system import learning_system
+        from ai_knowledge.core.learning_system import learning_system
         
         training_data = {
             'action': action,
@@ -159,6 +250,7 @@ def create_final_options(action_name, item_name, item_id):
 
 @ai_bp.route('/recommend-price', methods=['POST'])
 @login_required
+@permission_required('view_products')
 @limiter.limit("60 per minute")
 def recommend_price():
     """API: توصية السعر"""
@@ -179,6 +271,7 @@ def recommend_price():
 
 @ai_bp.route('/check-stock', methods=['POST'])
 @login_required
+@permission_required('view_products')
 @limiter.limit("60 per minute")
 def check_stock():
     """API: فحص المخزون"""
@@ -199,6 +292,7 @@ def check_stock():
 
 @ai_bp.route('/analyze-customer/<int:customer_id>', methods=['GET'])
 @login_required
+@permission_required('view_customers')
 def analyze_customer(customer_id):
     """API: تحليل سلوك العميل"""
     analysis = AIService.analyze_customer_behavior(customer_id)
@@ -211,6 +305,7 @@ def analyze_customer(customer_id):
 
 @ai_bp.route('/exchange-rate/<currency>', methods=['GET'])
 @login_required
+@permission_required('view_reports')
 def exchange_rate(currency):
     """API: اقتراح سعر الصرف"""
     suggestion = AIService.get_exchange_rate_suggestion(currency)
@@ -219,6 +314,7 @@ def exchange_rate(currency):
 
 @ai_bp.route('/search-market-price/<int:product_id>', methods=['GET'])
 @login_required
+@permission_required('view_products')
 def search_market_price(product_id):
     """API: البحث عن سعر القطعة في الأسواق العالمية"""
     from models import Product
@@ -235,6 +331,7 @@ def search_market_price(product_id):
 
 @ai_bp.route('/find-compatible/<int:product_id>', methods=['GET'])
 @login_required
+@permission_required('view_products')
 def find_compatible(product_id):
     """API: البحث عن السيارات المتوافقة"""
     from models import Product
@@ -251,6 +348,7 @@ def find_compatible(product_id):
 
 @ai_bp.route('/chat', methods=['POST'])
 @login_required
+@permission_required('view_reports')
 @limiter.limit("30 per minute")
 def chat():
     """API: الدردشة مع المساعد الذكي"""
@@ -272,7 +370,9 @@ def chat():
         return jsonify({'error': 'Message required'}), 400
     
     action_result = None
-    if _user_can_ai_execute_actions(current_user):
+    ai_state = getattr(g, 'ai_access_state', None) or get_ai_access_state(current_user)
+    can_execute_mutations = ai_state.get('is_platform_user') or ai_level_allows(ai_state.get('ai_level'), 'execute')
+    if can_execute_mutations and _user_can_ai_execute_actions(current_user):
         action_result = _process_user_action(message, current_user)
     if action_result:
         return jsonify({
@@ -283,9 +383,10 @@ def chat():
     
     response = AIService.chat_response(message, context)
     
+    state = get_ai_access_state(current_user)
     return jsonify({
         'response': response,
-        'ai_enabled': AIService.is_enabled(),
+        'ai_enabled': bool(state.get('allowed') and state.get('global_enabled') and state.get('tenant_enabled') is not False),
         'ai_mode': ai_mode,
         'user_role': 'owner' if current_user.is_owner else 'user'
     })
@@ -2915,10 +3016,18 @@ def assistant_page():
         from models import Warehouse
         from utils.branching import get_accessible_warehouses
         warehouses = get_accessible_warehouses(current_user)
-        return render_template('ai/assistant.html',
-                             ai_enabled=AIService.is_enabled(),
-                             warehouses=warehouses,
-                             current_user=current_user)
+        state = get_ai_access_state(current_user)
+        disable_reason = None
+        if not state.get('allowed'):
+            disable_reason = state.get('reason')
+        return render_template(
+            'ai/assistant.html',
+            ai_enabled=bool(state.get('allowed') and state.get('global_enabled') and state.get('tenant_enabled') is not False),
+            ai_access_state=state,
+            ai_disable_reason=disable_reason,
+            warehouses=warehouses,
+            current_user=current_user,
+        )
     except Exception as e:
         import traceback
         return f"Error: {str(e)}\n\n{traceback.format_exc()}", 500
@@ -2990,8 +3099,9 @@ def config():
     current_openai = os.environ.get('OPENAI_API_KEY', '')
     current_gemini = os.environ.get('GEMINI_API_KEY', '')
     
+    state = get_ai_access_state(current_user)
     return render_template('ai/config.html',
-                         ai_enabled=AIService.is_enabled(),
+                         ai_enabled=bool(state.get('global_enabled')),
                          groq_key_exists=bool(current_groq),
                          openai_key_exists=bool(current_openai or current_gemini))
 
@@ -3198,6 +3308,7 @@ def _train_ai_from_excel(df, created, updated, user_id):
 
 @ai_bp.route('/predict-sales', methods=['GET'])
 @login_required
+@permission_required('view_reports')
 def predict_sales():
     """🔮 API: توقع المبيعات"""
     days = request.args.get('days', 7, type=int)
@@ -3207,6 +3318,7 @@ def predict_sales():
 
 @ai_bp.route('/analyze-margins', methods=['GET'])
 @login_required
+@permission_required('view_reports')
 def analyze_margins():
     """💰 API: تحليل هوامش الربح"""
     analysis = AIService.analyze_profit_margins()
@@ -3215,6 +3327,7 @@ def analyze_margins():
 
 @ai_bp.route('/detect-patterns', methods=['GET'])
 @login_required
+@permission_required('view_reports')
 def detect_patterns():
     """🔍 API: كشف الأنماط"""
     patterns = AIService.detect_sales_patterns()
@@ -3223,6 +3336,7 @@ def detect_patterns():
 
 @ai_bp.route('/inventory-health', methods=['GET'])
 @login_required
+@permission_required('manage_warehouse')
 def inventory_health():
     """📦 API: صحة المخزون"""
     health = AIService.analyze_inventory_health()
@@ -3250,6 +3364,7 @@ def cash_flow_prediction():
 
 @ai_bp.route('/smart-price', methods=['POST'])
 @login_required
+@permission_required('view_products')
 def smart_price():
     """💎 API: محرك التسعير الذكي الخارق"""
     data = request.get_json()
@@ -3288,6 +3403,7 @@ def optimize_inventory():
 
 @ai_bp.route('/business-insights', methods=['GET'])
 @login_required
+@permission_required('view_reports')
 def business_insights():
     """💡 API: رؤى الأعمال التلقائية"""
     insights = AIService.generate_business_insights()
@@ -3309,6 +3425,7 @@ def business_insights():
 
 @ai_bp.route('/contextual-help/<page>', methods=['GET'])
 @login_required
+@permission_required('view_reports')
 def contextual_help(page):
     """❓ API: مساعدة سياقية"""
     user_role = current_user.role.name if current_user.role else 'user'
@@ -3545,6 +3662,7 @@ def get_product_stock(product_name):
 
 @ai_bp.route('/system/summary')
 @login_required
+@permission_required('view_reports')
 def get_system_summary():
     """ملخص النظام الشامل"""
     try:
@@ -3565,6 +3683,7 @@ def get_system_summary():
 
 @ai_bp.route('/system/search/<search_term>')
 @login_required
+@permission_required('view_reports')
 def search_system_data(search_term):
     """البحث في بيانات النظام"""
     try:
@@ -3695,6 +3814,7 @@ def add_knowledge_document():
 
 @ai_bp.route('/knowledge/search')
 @login_required
+@permission_required('view_reports')
 def search_knowledge():
     """البحث في المعرفة الموسعة"""
     try:
@@ -3718,6 +3838,7 @@ def search_knowledge():
 
 @ai_bp.route('/knowledge/summary')
 @login_required
+@permission_required('view_reports')
 def get_knowledge_summary():
     """📚 API: ملخص المعرفة الموسعة"""
     try:
@@ -3732,6 +3853,7 @@ def get_knowledge_summary():
 
 @ai_bp.route('/neural-status', methods=['GET'])
 @login_required
+@permission_required('view_reports')
 def neural_status():
     """🧠 API: حالة الشبكات العصبية"""
     try:
@@ -3749,6 +3871,7 @@ def neural_status():
 
 @ai_bp.route('/automotive-ecu/<code>', methods=['GET'])
 @login_required
+@permission_required('view_products')
 def automotive_ecu_code(code):
     """🚗 API: تشخيص كود OBD-II"""
     try:
@@ -3768,6 +3891,7 @@ def automotive_ecu_code(code):
 
 @ai_bp.route('/automotive-sensor/<sensor>', methods=['GET'])
 @login_required
+@permission_required('view_products')
 def automotive_sensor(sensor):
     """🔧 API: معلومات حساس محدد"""
     try:
@@ -3787,6 +3911,7 @@ def automotive_sensor(sensor):
 
 @ai_bp.route('/external-sources', methods=['GET'])
 @login_required
+@permission_required('view_reports')
 def external_sources():
     """📚 API: قائمة مصادر التعلم الخارجية"""
     try:

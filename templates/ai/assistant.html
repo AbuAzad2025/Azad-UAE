@@ -183,6 +183,21 @@
 {% endblock %}
 
 {% block content %}
+{% if ai_disable_reason %}
+<div class="alert alert-warning">
+  <h5 class="mb-2"><i class="fas fa-ban mr-2"></i>المساعد الذكي غير مفعّل لهذا السياق</h5>
+  {% if ai_disable_reason == 'global_disabled' %}
+    <p class="mb-0">تم تعطيل AI من إعدادات المنصة العامة.</p>
+  {% elif ai_disable_reason == 'tenant_disabled' %}
+    <p class="mb-0">تم تعطيل AI لهذا التينانت من لوحة مالك المنصة.</p>
+  {% elif ai_disable_reason == 'missing_tenant' %}
+    <p class="mb-0">لا يوجد تينانت نشط لهذا الحساب.</p>
+  {% else %}
+    <p class="mb-0">AI غير متاح حاليًا.</p>
+  {% endif %}
+</div>
+{% endif %}
+
 <!-- Super AI Features -->
 <div class="row mb-4">
   <div class="col-md-3 mb-3">

@@ -13,7 +13,13 @@
   <meta property="og:url" content="{{ request.url }}">
   <meta property="og:title" content="Azad Smart Systems - Warehouse & Sales Management in UAE">
   <meta property="og:description" content="Warehouse, sales, purchases, and accounting with AI-powered insights.">
-  {% set _logo_path = tenant_logo_url or developer_logo or 'assets/brand/azad/logos/logo.png' %}
+  {% set _logo_path = (config.COMPANY_LOGO or 'assets/brand/azad/logos/logo.png') %}
+  {% if _logo_path.startswith('/static/') %}
+    {% set _logo_path = _logo_path[8:] %}
+  {% elif _logo_path.startswith('static/') %}
+    {% set _logo_path = _logo_path[7:] %}
+  {% endif %}
+  {% set platform_name_en = config.COMPANY_NAME if config.COMPANY_NAME != config.COMPANY_NAME_AR else 'Azad Smart Systems' %}
   {% set _logo_external = _logo_path if _logo_path.startswith('http') else url_for('static', filename=_logo_path, _external=True) %}
   <meta property="og:image" content="{{ _logo_external }}">
   <meta property="og:locale" content="en_US">
@@ -99,7 +105,10 @@
     .landing-brand img {
       height: 34px;
       width: auto;
-      filter: brightness(0) invert(1);
+      filter: none;
+      background: rgba(255,255,255,0.94);
+      border-radius: 8px;
+      padding: 3px 5px;
     }
     .landing-nav-links {
       display: flex;
@@ -108,7 +117,7 @@
       flex-wrap: wrap;
     }
     .landing-nav-links a {
-      color: rgba(255,255,255,0.85);
+      color: rgba(255,255,255,0.96);
       text-decoration: none;
       font-weight: 800;
       padding: 8px 12px;
@@ -255,7 +264,10 @@
     }
     .landing-sidebar-header img {
       height: 30px;
-      filter: brightness(0) invert(1);
+      filter: none;
+      background: rgba(255,255,255,0.94);
+      border-radius: 6px;
+      padding: 2px 4px;
     }
     .landing-sidebar-links {
       display: flex;
@@ -395,7 +407,7 @@
     }
     .features-subtitle {
       text-align: center;
-      color: rgba(255,255,255,0.82);
+      color: rgba(255,255,255,0.95);
       font-size: 1rem;
       margin-bottom: 30px;
       max-width: 1100px;
@@ -432,7 +444,7 @@
       margin-bottom: 10px;
     }
     .feature-card h3 { font-size: 1.15rem; margin-bottom: 8px; color: white; }
-    .feature-card p { color: rgba(255,255,255,0.75); line-height: 1.6; font-size: 0.95rem; }
+    .feature-card p { color: rgba(255,255,255,0.9); line-height: 1.6; font-size: 0.95rem; }
 
     .pricing-preview {
       padding: 50px 20px;
@@ -445,7 +457,7 @@
       color: var(--gulf-gold);
       text-shadow: 0 0 30px rgba(212,175,55,0.5);
     }
-    .pricing-preview p { text-align: center; color: rgba(255,255,255,0.82); margin-bottom: 30px; font-size: 1rem; }
+    .pricing-preview p { text-align: center; color: rgba(255,255,255,0.95); margin-bottom: 30px; font-size: 1rem; }
     .pricing-cards {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -510,7 +522,7 @@
     .contact-item a { color: white; text-decoration: none; font-size: 1rem; font-weight: 900; }
     .landing-footer {
       background: linear-gradient(180deg, rgba(10,14,39,0.72), rgba(10,14,39,0.95));
-      color: rgba(255,255,255,0.86);
+      color: rgba(255,255,255,0.96);
       padding: 34px 20px;
       border-top: 1px solid rgba(255,255,255,0.18);
     }
@@ -541,7 +553,7 @@
     .landing-footer-brand img {
       height: 44px;
       width: auto;
-      filter: brightness(0) invert(1);
+      filter: none;
     }
     .landing-footer-title {
       font-weight: 900;
@@ -550,7 +562,7 @@
     }
     .landing-footer-sub {
       font-weight: 700;
-      color: rgba(255,255,255,0.82);
+      color: rgba(255,255,255,0.94);
       font-size: 0.92rem;
       line-height: 1.35;
     }
@@ -558,7 +570,7 @@
       margin: 0 0 10px 0;
       font-size: 0.95rem;
       font-weight: 900;
-      color: rgba(255,255,255,0.92);
+      color: rgba(255,255,255,0.98);
     }
     .landing-footer-links {
       display: flex;
@@ -570,7 +582,7 @@
       .landing-footer-links { justify-content: flex-start; }
     }
     .landing-footer-links a {
-      color: rgba(255,255,255,0.85);
+      color: rgba(255,255,255,0.96);
       text-decoration: none;
       padding: 8px 12px;
       border-radius: 999px;
@@ -609,7 +621,7 @@
       border-top: 1px solid rgba(255,255,255,0.10);
       text-align: center;
       font-weight: 700;
-      color: rgba(255,255,255,0.75);
+      color: rgba(255,255,255,0.92);
     }
 
     @media (max-width: 992px) {
@@ -624,12 +636,12 @@
   </style>
 </head>
 <body>
-  {% set company_address_en = tenant_address or company_address or config.COMPANY_ADDRESS_EN %}
+  {% set company_address_en = config.COMPANY_ADDRESS_EN or company_address or tenant_address %}
   <div class="landing-sidebar-backdrop" id="landingSidebarBackdrop"></div>
   <aside class="landing-sidebar" id="landingSidebar" aria-hidden="true">
     <div class="landing-sidebar-header">
       <div class="title">
-        <img src="{{ url_for('static', filename=config.COMPANY_LOGO) }}" alt="{{ config.COMPANY_NAME }}">
+        <img src="{{ url_for('static', filename=_logo_path) }}" alt="{{ platform_name_en }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='assets/brand/azad/logos/logo.png') }}';">
         <span>{{ config.COMPANY_NAME if config.COMPANY_NAME != config.COMPANY_NAME_AR else 'Azad Smart Systems' }}</span>
       </div>
       <button type="button" class="landing-icon-btn" id="landingSidebarClose" aria-label="Close">
@@ -651,8 +663,8 @@
   <nav class="landing-nav">
     <div class="landing-nav-inner">
       <a class="landing-brand" href="{{ url_for('public.landing') }}">
-        {% if tenant_logo_url %}<img src="{{ tenant_logo_url }}" alt="{{ tenant_name or company_name }}">{% else %}<img src="{{ url_for('static', filename=developer_logo or config.DEVELOPER_LOGO) }}" alt="{{ tenant_name or company_name }}">{% endif %}
-        <span>{{ tenant_name or company_name or 'Accounting System' }}</span>
+        <img src="{{ url_for('static', filename=_logo_path) }}" alt="{{ platform_name_en }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='assets/brand/azad/logos/logo.png') }}';">
+        <span>{{ platform_name_en }}</span>
       </a>
       <div class="landing-nav-links">
         <a href="#features"><i class="fas fa-star"></i> Features</a>
@@ -680,7 +692,7 @@
     <div class="hero-pattern"></div>
     <div class="hero-content">
       <div class="logo-badge">UAE-ready • Fast • Modern</div>
-      <h1>{{ tenant_name or company_name or 'Accounting System' }}</h1>
+      <h1>{{ platform_name_en }}</h1>
       <p class="hero-subtitle"><strong>Best warehouse &amp; sales management system in UAE 2025</strong></p>
       <p class="hero-tagline">Accounting • E-invoices • Inventory • AI insights</p>
       <div class="hero-buttons">
@@ -812,7 +824,7 @@
   <footer class="landing-footer">
     <div class="landing-footer-inner">
       <div class="landing-footer-brand">
-        <img src="{{ url_for('static', filename=developer_logo or config.DEVELOPER_LOGO) }}" alt="{{ developer_name or config.DEVELOPER_NAME }}">
+        <img src="{{ url_for('static', filename=_logo_path) }}" alt="{{ platform_name_en }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='assets/brand/azad/logos/logo.png') }}';">
         <div>
           <div class="landing-footer-title">{{ developer_name or config.DEVELOPER_NAME }}</div>
           <div class="landing-footer-sub">{{ developer_credit or config.DEVELOPER_CREDIT }}</div>
@@ -841,7 +853,7 @@
       </div>
     </div>
     <div class="landing-footer-bottom">
-      &copy; 2025 {{ tenant_name or company_name or 'Accounting System' }}. All rights reserved.
+      &copy; 2025 {{ platform_name_en }}. All rights reserved.
     </div>
   </footer>
 

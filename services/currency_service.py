@@ -30,6 +30,42 @@ class CurrencyService:
         'QAR': Decimal('0.99'),
         'ILS': Decimal('0.98')  # 1 AED = 0.98 ILS (approx 1 ILS = 1.02 AED)
     }
+    COMMON_CURRENCIES = (
+        'AED', 'USD', 'EUR', 'GBP', 'SAR', 'QAR', 'KWD', 'BHD', 'OMR', 'ILS',
+        'JPY', 'CNY', 'INR', 'TRY', 'EGP', 'JOD',
+    )
+    CURRENCY_NAMES = {
+        'AED': 'UAE Dirham',
+        'USD': 'US Dollar',
+        'EUR': 'Euro',
+        'GBP': 'British Pound',
+        'SAR': 'Saudi Riyal',
+        'QAR': 'Qatari Riyal',
+        'KWD': 'Kuwaiti Dinar',
+        'BHD': 'Bahraini Dinar',
+        'OMR': 'Omani Rial',
+        'ILS': 'Israeli Shekel',
+        'JPY': 'Japanese Yen',
+        'CNY': 'Chinese Yuan',
+        'INR': 'Indian Rupee',
+        'TRY': 'Turkish Lira',
+        'EGP': 'Egyptian Pound',
+        'JOD': 'Jordanian Dinar',
+    }
+
+    @staticmethod
+    def get_supported_currencies() -> list[str]:
+        codes = set(CurrencyService.FALLBACK_RATES.keys())
+        for base in ('USD', 'AED', 'EUR'):
+            rates = CurrencyService.get_all_rates(base)
+            codes.update(str(k).upper() for k in (rates or {}).keys())
+        codes.update(CurrencyService.COMMON_CURRENCIES)
+        return sorted(c for c in codes if len(c) == 3 and c.isalpha())
+
+    @staticmethod
+    def get_currency_label(code: str) -> str:
+        code = str(code or '').upper()
+        return f"{code} - {CurrencyService.CURRENCY_NAMES.get(code, 'Currency')}"
 
     @staticmethod
     def _fetch_open_er_api_rates(base: str) -> dict:
@@ -130,62 +166,106 @@ class CurrencyService:
         return rates
 
     @staticmethod
-    def get_exchange_rate(from_currency, to_currency='AED', user_rate=None):
+    def get_exchange_rate_details(from_currency, to_currency='AED', user_rate=None):
         """
-        Get exchange rate between two currencies.
-        Prioritises user-supplied rate, then checks CACHE, then live Forex,
-        and finally uses static fallback rates.
+        Detailed exchange-rate resolver with source metadata.
+        Source priority:
+          1) user input
+          2) parity for same currency
+          3) fresh in-memory cache
+          4) live HTTP provider (open.er-api.com)
+          5) forex-python provider
+          6) static fallback table
         """
-        if not from_currency: from_currency = 'AED'
-        if not to_currency: to_currency = 'AED'
+        if not from_currency:
+            from_currency = 'AED'
+        if not to_currency:
+            to_currency = 'AED'
 
         from_currency = from_currency.upper()
         to_currency = to_currency.upper()
+        now_ts = time.time()
 
-        # 1. Smart Handling for User Rate (Priority #1)
-        # Only use user_rate if it is explicitly provided, valid, and positive.
-        # If it's None, 0, empty string, or invalid, we fall back to system rates.
         if user_rate is not None:
             try:
                 rate = Decimal(str(user_rate))
                 if rate > Decimal('0'):
-                    return rate.quantize(Decimal('0.000001'), rounding=ROUND_HALF_UP)
+                    return {
+                        'rate': rate.quantize(Decimal('0.000001'), rounding=ROUND_HALF_UP),
+                        'source': 'user_input',
+                        'cached': False,
+                        'age_seconds': 0,
+                    }
             except (ValueError, TypeError):
-                # Invalid user input (e.g. "abc"), ignore it and proceed to system rate
                 pass
 
         if from_currency == to_currency:
-            return Decimal('1')
+            return {
+                'rate': Decimal('1.000000'),
+                'source': 'parity',
+                'cached': False,
+                'age_seconds': 0,
+            }
 
-        # 2. Online / Fallback (Priority #2)
-        # Skip cache logic as requested. Fetch fresh or use fallback immediately.
-        # This ensures we either get the LATEST live rate or the RELIABLE fallback.
-        
-        # Try fetching live rates
-        if FOREX_AVAILABLE:
-            try:
-                c = CurrencyRates()
-                # Attempt to get direct rate
-                rate = c.get_rate(from_currency, to_currency)
-                return Decimal(str(rate)).quantize(Decimal('0.000001'), rounding=ROUND_HALF_UP)
-            except Exception as e:
-                # Log error if possible
-                pass
+        cache_entry = CurrencyService._rates_cache.get(from_currency)
+        if cache_entry:
+            age = max(0, int(now_ts - float(cache_entry.get('timestamp', 0))))
+            cached_rates = cache_entry.get('rates') or {}
+            cached_rate = cached_rates.get(to_currency)
+            if cached_rate and age < CurrencyService.CACHE_TTL_SECONDS:
+                return {
+                    'rate': Decimal(str(cached_rate)).quantize(Decimal('0.000001'), rounding=ROUND_HALF_UP),
+                    'source': 'cache',
+                    'cached': True,
+                    'age_seconds': age,
+                }
 
         http_rates = CurrencyService._fetch_open_er_api_rates(from_currency)
         if http_rates:
+            CurrencyService._rates_cache[from_currency] = {'timestamp': now_ts, 'rates': http_rates}
             rate = http_rates.get(to_currency)
             if rate and rate > Decimal("0"):
-                CurrencyService._rates_cache[from_currency] = {'timestamp': time.time(), 'rates': http_rates}
-                return Decimal(str(rate)).quantize(Decimal('0.000001'), rounding=ROUND_HALF_UP)
-        
-        # Fallback to static rates
+                return {
+                    'rate': Decimal(str(rate)).quantize(Decimal('0.000001'), rounding=ROUND_HALF_UP),
+                    'source': 'open_er_api',
+                    'cached': False,
+                    'age_seconds': 0,
+                }
+
+        if FOREX_AVAILABLE:
+            try:
+                c = CurrencyRates()
+                rate = c.get_rate(from_currency, to_currency)
+                rate = Decimal(str(rate)).quantize(Decimal('0.000001'), rounding=ROUND_HALF_UP)
+                CurrencyService._rates_cache[from_currency] = {
+                    'timestamp': now_ts,
+                    'rates': {from_currency: Decimal('1.000000'), to_currency: rate},
+                }
+                return {
+                    'rate': rate,
+                    'source': 'forex_python',
+                    'cached': False,
+                    'age_seconds': 0,
+                }
+            except Exception:
+                pass
+
         def get_aed_value(target):
-            if target == 'AED': return Decimal('1')
+            if target == 'AED':
+                return Decimal('1')
             return CurrencyService.FALLBACK_RATES.get(target, Decimal('1'))
 
         val_target = get_aed_value(to_currency)
         val_base = get_aed_value(from_currency)
-        
-        # Cross rate: Base -> Target
-        return (val_target / val_base).quantize(Decimal('0.000001'), rounding=ROUND_HALF_UP)
+        fallback_rate = (val_target / val_base).quantize(Decimal('0.000001'), rounding=ROUND_HALF_UP)
+        return {
+            'rate': fallback_rate,
+            'source': 'fallback_static',
+            'cached': False,
+            'age_seconds': 0,
+        }
+
+    @staticmethod
+    def get_exchange_rate(from_currency, to_currency='AED', user_rate=None):
+        details = CurrencyService.get_exchange_rate_details(from_currency, to_currency, user_rate=user_rate)
+        return details['rate']

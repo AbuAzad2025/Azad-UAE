@@ -8,6 +8,13 @@ from models import TenantStore
 
 class StoreNotificationService:
     @staticmethod
+    def _safe_log_text(text: str) -> str:
+        """Return ASCII-safe text to avoid console encoding crashes."""
+        if text is None:
+            return ''
+        return str(text).encode('ascii', errors='replace').decode('ascii', errors='replace')
+
+    @staticmethod
     def _order_summary(sale, store: TenantStore, lang: str = 'ar') -> str:
         customer = sale.customer
         lines = []
@@ -38,7 +45,10 @@ class StoreNotificationService:
     @staticmethod
     def notify_new_order(sale, store: TenantStore):
         summary = StoreNotificationService._order_summary(sale, store)
-        current_app.logger.info('Store new order: %s', summary.replace('\n', ' | '))
+        current_app.logger.info(
+            'Store new order: %s',
+            StoreNotificationService._safe_log_text(summary.replace('\n', ' | ')),
+        )
 
         if not getattr(store, 'notify_email_on_order', True):
             return

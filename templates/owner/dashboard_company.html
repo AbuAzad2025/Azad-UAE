@@ -83,7 +83,9 @@
         {% if current_user.has_permission('manage_store') %}
         <a href="{{ url_for('store.admin_index') }}" class="btn btn-outline-warning btn-sm mb-1"><i class="fas fa-store"></i> المتجر</a>
         {% endif %}
+        {% if current_user.is_owner or (current_user.role and current_user.role.slug == 'super_admin') %}
         <a href="{{ url_for('ledger.admin_dashboard') }}" class="btn btn-outline-dark btn-sm mb-1"><i class="fas fa-book"></i> دفتر الأستاذ</a>
+        {% endif %}
         <p class="text-muted small mt-2 mb-0">نسخ احتياطية لهذه الشركة: {{ tenant_backup_count }} — لا يمكن إنشاء نسخة نظام كاملة من هنا.</p>
       </div>
     </div>

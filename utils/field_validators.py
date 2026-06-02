@@ -21,7 +21,8 @@ _PHONE_MAX_LEN = 50
 _PHONE_ALLOWED_RE = re.compile(r"^[\d\s+\-().#/]+$")
 
 # sale.status values observed in DB + constants
-ALLOWED_SALE_STATUSES = frozenset({"confirmed", "cancelled", "completed"})
+# pending is required for deferred online-store checkout flow before fulfillment.
+ALLOWED_SALE_STATUSES = frozenset({"pending", "confirmed", "cancelled", "completed"})
 ALLOWED_PAYMENT_TYPES = frozenset(PAYMENT_TYPES) | frozenset({"sale"})  # legacy read
 CANONICAL_PAYMENT_TYPE_SALE = "sale_payment"
 PAYMENT_TYPE_LEGACY_WRITE = {"sale": CANONICAL_PAYMENT_TYPE_SALE}

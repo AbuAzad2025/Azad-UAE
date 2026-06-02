@@ -300,7 +300,7 @@ class ConversationManager:
     def _save_to_long_term_memory(self, user_id: int, message: str, response: str):
         """حفظ في الذاكرة طويلة المدى"""
         try:
-            from ai_knowledge.memory_system import get_memory_system
+            from ai_knowledge.core.memory_system import get_memory_system
             
             memory = get_memory_system()
             memory.remember_conversation(user_id, message, response)

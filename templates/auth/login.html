@@ -22,8 +22,8 @@
   </div>
 
   <nav class="azad-login-lang" aria-label="تغيير اللغة">
-    <a href="{{ url_for('language.set_language', lang='ar') }}" class="{% if session.get('language', 'ar') == 'ar' %}is-active{% endif %}">AR</a>
-    <a href="{{ url_for('language.set_language', lang='en') }}" class="{% if session.get('language') == 'en' %}is-active{% endif %}">EN</a>
+    <a href="{{ url_for('language.set_language', lang='ar', next=request.full_path) }}" class="{% if session.get('language', 'ar') == 'ar' %}is-active{% endif %}">AR</a>
+    <a href="{{ url_for('language.set_language', lang='en', next=request.full_path) }}" class="{% if session.get('language') == 'en' %}is-active{% endif %}">EN</a>
   </nav>
 
   <div class="azad-login-shell">
@@ -61,29 +61,19 @@
       </div>
 
       <p class="azad-login-desc">
-        بوابة موحّدة لجميع المستخدمين، مع توجيه ذكي تلقائي وصلاحيات مرنة لإدارة المنصة والمؤسسات.
+        اختر نوع الدخول الصحيح: دخول المنصة (Owner/Developer) أو دخول مستخدمي الشركات.
       </p>
 
       <div class="azad-login-features">
         <article class="azad-login-feature">
           <div class="azad-login-feature__icon"><i class="fas fa-users"></i></div>
-          <h3>دخول موحد</h3>
-          <p>دخول واحد للوصول إلى جميع خدمات المنصة بأمان وكفاءة.</p>
+          <h3>دخول الشركات</h3>
+          <p>لمستخدمي التينانت والفروع حسب اسم المستخدم المرتبط بالشركة.</p>
         </article>
         <article class="azad-login-feature">
           <div class="azad-login-feature__icon"><i class="fas fa-route"></i></div>
-          <h3>توجيه تلقائي</h3>
-          <p>توجيه ذكي تلقائي إلى المؤسسة المرتبطة باسم الدخول الخاص بك.</p>
-        </article>
-        <article class="azad-login-feature">
-          <div class="azad-login-feature__icon"><i class="fas fa-user-shield"></i></div>
-          <h3>حجز اسم المستخدم</h3>
-          <p>اسم مستخدم فريد ومحجوز على مستوى النظام بالكامل لضمان الأمان والخصوصية.</p>
-        </article>
-        <article class="azad-login-feature">
-          <div class="azad-login-feature__icon"><i class="fas fa-shield-halved"></i></div>
-          <h3>صلاحيات متقدمة</h3>
-          <p>نظام صلاحيات مرن ودقيق للتحكم في الوصول وإدارة المهام باحترافية.</p>
+          <h3>دخول المنصة</h3>
+          <p>مخصص فقط لمالك/مطور المنصة للوصول إلى أدوات الإدارة الشاملة.</p>
         </article>
       </div>
 
@@ -101,17 +91,17 @@
         <div class="azad-login-tabs" role="tablist" aria-label="نوع الدخول">
           <button type="button" class="azad-login-tab is-active" data-access-mode="users" role="tab" aria-selected="true">
             <i class="fas fa-user" aria-hidden="true"></i>
-            دخول المستخدمين
+            دخول الشركات
           </button>
           <button type="button" class="azad-login-tab" data-access-mode="developer" role="tab" aria-selected="false">
             <i class="fas fa-code" aria-hidden="true"></i>
-            دخول المطور
+            دخول المنصة (Owner/Developer)
           </button>
         </div>
 
         <div class="azad-login-card__head">
-          <h2 class="azad-login-card__title">مرحباً بك</h2>
-          <p class="azad-login-card__subtitle">سجّل دخولك للوصول الآمن إلى المنصة</p>
+          <h2 class="azad-login-card__title">تسجيل الدخول</h2>
+          <p class="azad-login-card__subtitle" id="loginModeHint">دخول مستخدمي الشركات والتينانت</p>
           <div class="azad-login-card__divider" aria-hidden="true"></div>
         </div>
 
@@ -138,7 +128,7 @@
                 name="username"
                 class="azad-ltr"
                 value="{{ username_value or '' }}"
-                placeholder="AZD_ahmad أو CMP01_sara"
+                placeholder="مثال: HZM_ahmad أو DEF_sara"
                 required
                 autofocus
                 autocomplete="username"
@@ -147,11 +137,11 @@
             <ul class="azad-login-helpers">
               <li>
                 <i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i>
-                <span>يتم توجيهك تلقائياً إلى مؤسستك حسب اسم الدخول المحجوز</span>
+                <span>سيتم توجيهك تلقائياً حسب صلاحيتك (منصة أو شركة)</span>
               </li>
               <li>
                 <i class="fas fa-shield-halved" aria-hidden="true"></i>
-                <span>لا حاجة لاختيار المؤسسة — اسم المستخدم <span class="azad-highlight">فريد</span> على مستوى النظام</span>
+                <span>أسماء المنصة المحجوزة: <span class="azad-highlight">owner</span> و <span class="azad-highlight">azad</span></span>
               </li>
             </ul>
           </div>
@@ -223,10 +213,16 @@
       var toggle = document.getElementById('togglePassword');
       var form = document.getElementById('azadLoginForm');
       var submitBtn = document.getElementById('loginSubmitBtn');
+      var modeHint = document.getElementById('loginModeHint');
 
       function setAccessMode(mode) {
         if (!modeInput) return;
         modeInput.value = mode;
+        if (modeHint) {
+          modeHint.textContent = mode === 'developer'
+            ? 'دخول المنصة (مالك/مطور) فقط'
+            : 'دخول مستخدمي الشركات والتينانت';
+        }
         tabs.forEach(function (tab) {
           var active = tab.getAttribute('data-access-mode') === mode;
           tab.classList.toggle('is-active', active);

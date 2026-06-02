@@ -14,6 +14,7 @@ from utils.branching import (
     user_can_access_branch,
 )
 from utils.tenanting import set_active_tenant, clear_active_tenant
+from utils.auth_helpers import is_global_owner_user
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
@@ -108,10 +109,13 @@ def _render_login(**extra):
 
 
 def _post_login_redirect(user, access_mode):
+    if is_global_owner_user(user):
+        return redirect(url_for('owner.dashboard'))
     if access_mode == 'developer':
-        if getattr(user, 'is_owner', False):
-            return redirect(url_for('owner.dashboard'))
         flash('⚠️ دخول المطور متاح لحساب مالك المنصة فقط.', 'warning')
+    role_slug = getattr(getattr(user, 'role', None), 'slug', None)
+    if role_slug in ('super_admin', 'manager') and not is_global_owner_user(user):
+        return redirect(url_for('owner.company_dashboard'))
     return redirect(url_for('main.dashboard'))
 
 
@@ -128,7 +132,7 @@ def support():
 @limiter.limit("100 per hour; 50 per minute")
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('main.dashboard'))
+        return _post_login_redirect(current_user, request.args.get('mode') or 'users')
     
     if request.method == 'POST':
         username = request.form.get('username', '').strip()

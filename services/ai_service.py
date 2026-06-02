@@ -24,46 +24,49 @@ from sqlalchemy.orm import joinedload
 from extensions import db
 
 # التكامل الكامل مع جميع وحدات AI
-# from ai_knowledge.azad_responses import AzadResponses
-# from ai_knowledge.learning_system import AzadLearningSystem
-# from ai_knowledge.context_engine import ContextEngine
-# from ai_knowledge.analytics_predictions import SalesAnalytics, InventoryAnalytics, ProfitAnalytics
-# from ai_knowledge.data_analyzer import DataAnalyzer
-# from ai_knowledge.azad_personality import AzadPersonality
-# from ai_knowledge.system_integration import SystemIntegrator
-# from ai_knowledge.knowledge_expansion import KnowledgeExpander
-# from ai_knowledge.self_improvement import AzadSelfImprovement
-# from ai_knowledge.document_generator import DocumentGenerator
-# from ai_knowledge.global_knowledge import GlobalKnowledgeConnector
-# from ai_knowledge.dialects import DialectManager
-# from ai_knowledge.security_rules import SecurityRules
-# from ai_knowledge.beginners_mode import BeginnersGuide
-# from ai_knowledge.neural_engine import AzadNeuralEngine, get_neural_engine
-# from ai_knowledge.reasoning_engine import ReasoningEngine, get_reasoning_engine
-# from ai_knowledge.memory_system import LongTermMemory, get_memory_system
-# from ai_knowledge.code_generator import CodeGenerator, get_code_generator
-# from ai_knowledge.multi_agent_system import MultiAgentCoordinator, get_agent_coordinator
-# from ai_knowledge.self_reflection import SelfReflectionEngine, get_reflection_engine
-# from ai_knowledge.conversation_manager import ConversationManager, get_conversation_manager
-# from ai_knowledge.vision_processor import VisionProcessor, get_vision_processor
-# from ai_knowledge.master_brain import MasterBrain, get_master_brain, ask_azad, quick_calc, explain_concept
-# from ai_knowledge.transformers_brain import TransformersBrain, get_transformers_brain
-# from ai_knowledge.automotive_ecu_knowledge import get_automotive_ecu_knowledge
-# from ai_knowledge.external_learning import get_external_learning
+# from ai_knowledge.personality.azad_responses import AzadResponses
+# from ai_knowledge.core.learning_system import AzadLearningSystem
+# from ai_knowledge.core.context_engine import ContextEngine
+# from ai_knowledge.analytics.analytics_predictions import SalesAnalytics, InventoryAnalytics, ProfitAnalytics
+# from ai_knowledge.analytics.data_analyzer import DataAnalyzer
+# from ai_knowledge.personality.azad_personality import AzadPersonality
+# from ai_knowledge.core.system_integration import SystemIntegrator
+# from ai_knowledge.expansion.knowledge_expansion import KnowledgeExpander
+# from ai_knowledge.improvement.self_improvement import AzadSelfImprovement
+# from ai_knowledge.generation.document_generator import DocumentGenerator
+# from ai_knowledge.expansion.global_knowledge import GlobalKnowledgeConnector
+# from ai_knowledge.personality.dialects import DialectManager
+# from ai_knowledge.specialized.security_rules import SecurityRules
+# from ai_knowledge.personality.beginners_mode import BeginnersGuide
+# from ai_knowledge.neural.neural_engine import AzadNeuralEngine, get_neural_engine
+# from ai_knowledge.core.reasoning_engine import ReasoningEngine, get_reasoning_engine
+# from ai_knowledge.core.memory_system import LongTermMemory, get_memory_system
+# from ai_knowledge.generation.code_generator import CodeGenerator, get_code_generator
+# from ai_knowledge.agents.multi_agent_system import MultiAgentCoordinator, get_agent_coordinator
+# from ai_knowledge.improvement.self_reflection import SelfReflectionEngine, get_reflection_engine
+# from ai_knowledge.core.conversation_manager import ConversationManager, get_conversation_manager
+# from ai_knowledge.neural.vision_processor import VisionProcessor, get_vision_processor
+# from ai_knowledge.agents.master_brain import MasterBrain, get_master_brain, ask_azad, quick_calc, explain_concept
+# from ai_knowledge.neural.transformers_brain import TransformersBrain, get_transformers_brain
+# from ai_knowledge.learning.external_learning import get_external_learning
 
 # قواعد المعرفة المتخصصة
-from ai_knowledge import (
-    parts_knowledge,
-    tax_customs_knowledge,
-    customs,
-    tax_system,
-    market_insights,
-    customer_service,
-    system_guide,
-    user_guide,
-    system_knowledge,
-    company_info,
-    advanced_laws
+from ai_knowledge.knowledge import (
+    get_part_info,
+    get_tax_info,
+    get_customs_advice,
+    get_module_help,
+    COMPANY_INFO,
+)
+from ai_knowledge.specialized import (
+    get_customer_service_tip,
+    get_system_guide,
+    get_guide,
+    get_tax_advice,
+    advanced_laws,
+)
+from ai_knowledge.analytics import (
+    get_market_insights,
 )
 
 
@@ -116,7 +119,7 @@ class AIService:
     def get_learning_system(cls):
         """الحصول على نظام التعلم"""
         if cls._learning_system is None:
-            from ai_knowledge.learning_system import AzadLearningSystem
+            from ai_knowledge.core.learning_system import AzadLearningSystem
             cls._learning_system = AzadLearningSystem()
         return cls._learning_system
     
@@ -124,7 +127,7 @@ class AIService:
     def get_context_engine(cls):
         """الحصول على محرك السياق"""
         if cls._context_engine is None:
-            from ai_knowledge.context_engine import ContextEngine
+            from ai_knowledge.core.context_engine import ContextEngine
             cls._context_engine = ContextEngine()
         return cls._context_engine
     
@@ -132,7 +135,7 @@ class AIService:
     def get_personality(cls):
         """الحصول على شخصية أزاد"""
         if cls._personality is None:
-            from ai_knowledge.azad_personality import AzadPersonality
+            from ai_knowledge.personality.azad_personality import AzadPersonality
             cls._personality = AzadPersonality()
         return cls._personality
     
@@ -140,7 +143,7 @@ class AIService:
     def get_dialect_manager(cls):
         """الحصول على مدير اللهجات"""
         if cls._dialect_manager is None:
-            from ai_knowledge.dialects import DialectManager
+            from ai_knowledge.personality.dialects import DialectManager
             cls._dialect_manager = DialectManager()
         return cls._dialect_manager
     
@@ -148,7 +151,7 @@ class AIService:
     def get_security_rules(cls):
         """الحصول على قواعد الأمان"""
         if cls._security_rules is None:
-            from ai_knowledge.security_rules import SecurityRules
+            from ai_knowledge.specialized.security_rules import SecurityRules
             cls._security_rules = SecurityRules()
         return cls._security_rules
     
@@ -156,7 +159,7 @@ class AIService:
     def get_neural_engine(cls):
         """الحصول على محرك الشبكات العصبية"""
         if cls._neural_engine is None:
-            from ai_knowledge.neural_engine import get_neural_engine
+            from ai_knowledge.neural.neural_engine import get_neural_engine
             cls._neural_engine = get_neural_engine()
         return cls._neural_engine
     
@@ -164,7 +167,7 @@ class AIService:
     def get_reasoning_engine(cls):
         """الحصول على محرك التفكير المنطقي"""
         if cls._reasoning_engine is None:
-            from ai_knowledge.reasoning_engine import get_reasoning_engine
+            from ai_knowledge.core.reasoning_engine import get_reasoning_engine
             cls._reasoning_engine = get_reasoning_engine()
         return cls._reasoning_engine
     
@@ -172,7 +175,7 @@ class AIService:
     def get_memory_system(cls):
         """الحصول على نظام الذاكرة"""
         if cls._memory_system is None:
-            from ai_knowledge.memory_system import get_memory_system
+            from ai_knowledge.core.memory_system import get_memory_system
             cls._memory_system = get_memory_system()
         return cls._memory_system
     
@@ -180,7 +183,7 @@ class AIService:
     def get_code_generator(cls):
         """الحصول على مولد الأكواد"""
         if cls._code_generator is None:
-            from ai_knowledge.code_generator import get_code_generator
+            from ai_knowledge.generation.code_generator import get_code_generator
             cls._code_generator = get_code_generator()
         return cls._code_generator
     
@@ -188,7 +191,7 @@ class AIService:
     def get_agent_coordinator(cls):
         """الحصول على منسق الوكلاء"""
         if cls._agent_coordinator is None:
-            from ai_knowledge.multi_agent_system import get_agent_coordinator
+            from ai_knowledge.agents.multi_agent_system import get_agent_coordinator
             cls._agent_coordinator = get_agent_coordinator()
         return cls._agent_coordinator
     
@@ -196,7 +199,7 @@ class AIService:
     def get_reflection_engine(cls):
         """الحصول على محرك التأمل الذاتي"""
         if cls._reflection_engine is None:
-            from ai_knowledge.self_reflection import get_reflection_engine
+            from ai_knowledge.improvement.self_reflection import get_reflection_engine
             cls._reflection_engine = get_reflection_engine()
         return cls._reflection_engine
     
@@ -204,7 +207,7 @@ class AIService:
     def get_conversation_manager(cls):
         """الحصول على مدير المحادثات"""
         if cls._conversation_manager is None:
-            from ai_knowledge.conversation_manager import get_conversation_manager
+            from ai_knowledge.core.conversation_manager import get_conversation_manager
             cls._conversation_manager = get_conversation_manager()
         return cls._conversation_manager
     
@@ -212,7 +215,7 @@ class AIService:
     def get_vision_processor(cls):
         """الحصول على معالج الرؤية"""
         if cls._vision_processor is None:
-            from ai_knowledge.vision_processor import get_vision_processor
+            from ai_knowledge.neural.vision_processor import get_vision_processor
             cls._vision_processor = get_vision_processor()
         return cls._vision_processor
     
@@ -220,7 +223,7 @@ class AIService:
     def get_master_brain(cls):
         """الحصول على العقل الرئيسي الموحد"""
         if cls._master_brain is None:
-            from ai_knowledge.master_brain import get_master_brain
+            from ai_knowledge.agents.master_brain import get_master_brain
             cls._master_brain = get_master_brain()
         return cls._master_brain
     
@@ -228,7 +231,7 @@ class AIService:
     def get_transformers_brain(cls):
         """الحصول على دماغ المحولات (Transformers)"""
         if cls._transformers_brain is None:
-            from ai_knowledge.transformers_brain import get_transformers_brain
+            from ai_knowledge.neural.transformers_brain import get_transformers_brain
             cls._transformers_brain = get_transformers_brain()
         return cls._transformers_brain
     
@@ -798,7 +801,7 @@ class AIService:
     @staticmethod
     def chat_response(message, context=None):
         """🤖 أزاد يرد على سؤالك - تعاون متكامل بين المحلي وGroq"""
-        from ai_knowledge.intelligent_assistant import intelligent_assistant
+        from ai_knowledge.agents.intelligent_assistant import intelligent_assistant
         
         # ========== المرحلة 1: التحليل المحلي الشامل ==========
         user_id = context.get('current_user').id if context and context.get('current_user') else None
@@ -951,7 +954,7 @@ class AIService:
     def _train_local_from_groq(question, local_answer, groq_answer, user_id):
         """Groq يدرب ويحدث النظام المحلي"""
         try:
-            from ai_knowledge.learning_system import learning_system
+            from ai_knowledge.core.learning_system import learning_system
             
             learning_data = {
                 'question': question,
@@ -1183,7 +1186,7 @@ class AIService:
     @staticmethod
     def _local_response(message, context=None):
         """رد محلي ذكي - Backward Compatibility"""
-        from ai_knowledge.azad_responses import AzadResponses
+        from ai_knowledge.personality.azad_responses import AzadResponses
         return AzadResponses.smart_response(message, context)
     
     # ========================================================================
@@ -1222,7 +1225,7 @@ class AIService:
         
         except Exception as e:
             try:
-                from ai_knowledge.azad_responses import AzadResponses
+                from ai_knowledge.personality.azad_responses import AzadResponses
                 return AzadResponses.get_error_response()
             except Exception:
                 return "عذراً، حدث خطأ. يرجى المحاولة مرة أخرى."

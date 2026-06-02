@@ -69,13 +69,13 @@ class MasterBrain:
         
         # استيراد المعرفة الإضافية
         try:
-            from ai_knowledge.automotive_ecu_knowledge import get_automotive_ecu_knowledge
+            from ai_knowledge.knowledge.automotive_ecu_knowledge import get_automotive_ecu_knowledge
             automotive_kb = get_automotive_ecu_knowledge().knowledge_base
         except:
             automotive_kb = {}
         
         try:
-            from ai_knowledge.external_learning import get_external_learning
+            from ai_knowledge.learning.external_learning import get_external_learning
             external_sources = get_external_learning().learning_sources
         except:
             external_sources = {}

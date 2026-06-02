@@ -21,6 +21,7 @@ from utils.decorators import (
 from utils.safe_redirect import safe_redirect_target
 from utils.branching import role_requires_branch, get_visible_products_query
 from utils.auth_helpers import role_level_for, role_level_for_user
+from utils.ai_access import get_tenant_ai_level, set_tenant_ai_level
 from sqlalchemy import text, inspect
 import json
 import logging
@@ -2029,10 +2030,6 @@ def scheduled_backups():
 @owner_required
 def reports():
     """صفحة التقارير"""
-    if not current_user.is_owner:
-        flash('غير مصرح لك بالوصول لهذه الصفحة', 'error')
-        return redirect(url_for('main.dashboard'))
-    
     # إحصائيات عامة
     from models import User, Customer, Product, Sale, Receipt, PaymentVault, Donation, Payment
     
@@ -2262,6 +2259,51 @@ def tenant_stores():
         rows=rows,
         global_enabled=StoreService.stores_globally_enabled(),
     )
+
+
+@owner_bp.route('/tenant-ai')
+@login_required
+@owner_required
+def tenant_ai():
+    """Platform-level per-tenant AI visibility toggle."""
+    tenants = Tenant.query.filter_by(is_active=True).order_by(Tenant.name.asc()).all()
+    tenant_ai_levels = {int(t.id): get_tenant_ai_level(int(t.id), default='execute') for t in tenants}
+    return render_template('owner/tenant_ai.html', tenants=tenants, tenant_ai_levels=tenant_ai_levels)
+
+
+@owner_bp.route('/tenant-ai/<int:tenant_id>/toggle', methods=['POST'])
+@login_required
+@owner_required
+def tenant_ai_toggle(tenant_id):
+    tenant = db.session.get(Tenant, int(tenant_id))
+    if not tenant:
+        flash('التينانت غير موجود.', 'warning')
+        return redirect(url_for('owner.tenant_ai'))
+
+    enabled = request.form.get('enable_ai') == '1'
+    ai_access_level = (request.form.get('ai_access_level') or get_tenant_ai_level(int(tenant.id), default='execute')).strip().lower()
+    if ai_access_level not in ('basic', 'advanced', 'execute'):
+        ai_access_level = 'execute'
+    try:
+        tenant.enable_ai = enabled
+        ai_access_level = set_tenant_ai_level(int(tenant.id), ai_access_level)
+        db.session.commit()
+        from utils.helpers import create_audit_log
+        create_audit_log(
+            'platform_tenant_ai_enable' if enabled else 'platform_tenant_ai_disable',
+            'tenants',
+            tenant.id,
+            {'tenant_name': tenant.name, 'enabled': enabled, 'ai_access_level': ai_access_level},
+        )
+        _invalidate_owner_changes()
+        flash(
+            f"تم {'تفعيل' if enabled else 'إيقاف'} المساعد الذكي للتينانت: {tenant.name_ar or tenant.name}",
+            'success',
+        )
+    except Exception as exc:
+        db.session.rollback()
+        flash(f'تعذر تحديث إعداد AI: {exc}', 'danger')
+    return redirect(url_for('owner.tenant_ai'))
 
 
 @owner_bp.route('/tenant-stores/<int:store_id>/platform-toggle', methods=['POST'])

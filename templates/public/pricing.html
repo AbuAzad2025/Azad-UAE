@@ -13,7 +13,9 @@
         
         .navbar { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center; }
         .navbar a { color: white; text-decoration: none; margin: 0 15px; }
-        .navbar .logo { font-size: 1.5rem; font-weight: 900; }
+        .navbar .logo { display:flex; align-items:center; gap:10px; text-decoration:none; color:#fff; }
+        .navbar .logo img { width:40px; height:40px; object-fit:contain; border-radius:8px; background:rgba(255,255,255,.9); padding:4px; }
+        .navbar .logo span { font-size: 1.2rem; font-weight: 900; color:#fff; }
         
         .pricing-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 80px 20px; text-align: center; }
         .pricing-header h1 { font-size: 3rem; margin-bottom: 20px; }
@@ -59,6 +61,8 @@
     </style>
 </head>
 <body>
+    {% set platform_name_ar = config.COMPANY_NAME_AR or 'شركة أزاد للأنظمة الذكية' %}
+    {% set platform_logo = config.COMPANY_LOGO or 'assets/brand/azad/logos/logo.png' %}
 
     <!-- Language Switcher -->
     <div style="position: fixed; top: 20px; left: 20px; z-index: 9999;">
@@ -68,7 +72,10 @@
     </div>
 
     <nav class="navbar">
-        <div class="logo">{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }}</div>
+        <a class="logo" href="{{ url_for('public.landing') }}">
+            <img src="{{ url_for('static', filename=platform_logo) }}" alt="{{ platform_name_ar }}">
+            <span>{{ platform_name_ar }}</span>
+        </a>
         <div>
             <a href="{{ url_for('public.landing') }}">{{ t('Dashboard') }}</a>
             <a href="{{ url_for('public.features') }}">المميزات</a>

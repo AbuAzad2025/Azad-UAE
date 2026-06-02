@@ -347,3 +347,7 @@ def evaluate_and_learn(qa_tests: list, ai_service=None):
                     pass
     return results
 
+
+# إنشاء instance عام
+continuous_learner = ContinuousLearner()
+

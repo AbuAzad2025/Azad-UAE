@@ -1,4 +1,5 @@
-from flask import Blueprint, jsonify, request
+from datetime import datetime, timezone
+from flask import Blueprint, jsonify, request, make_response
 from flask_login import login_required, current_user
 from sqlalchemy import select
 from extensions import db
@@ -163,19 +164,48 @@ def currency_rate(from_currency, to_currency):
     from services.currency_service import CurrencyService
     
     try:
-        rate = CurrencyService.get_exchange_rate(from_currency, to_currency)
-        return jsonify({
+        details = CurrencyService.get_exchange_rate_details(from_currency, to_currency)
+        payload = {
             'from': from_currency,
             'to': to_currency,
-            'rate': float(rate),
-            'success': True
-        })
+            'rate': float(details['rate']),
+            'success': True,
+            'source': details.get('source', 'unknown'),
+            'cached': bool(details.get('cached', False)),
+            'age_seconds': int(details.get('age_seconds') or 0),
+            'fetched_at': datetime.now(timezone.utc).isoformat(),
+        }
+        resp = make_response(jsonify(payload), 200)
+        resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+        resp.headers['Pragma'] = 'no-cache'
+        resp.headers['Expires'] = '0'
+        return resp
     except Exception as e:
-        return jsonify({
+        resp = make_response(jsonify({
             'success': False,
             'error': str(e),
             'manual_input_required': True
-        }), 400
+        }), 400)
+        resp.headers['Cache-Control'] = 'no-store'
+        return resp
+
+
+@api_bp.route('/currencies')
+@login_required
+def currencies():
+    from services.currency_service import CurrencyService
+
+    codes = CurrencyService.get_supported_currencies()
+    currency_items = [
+        {'code': c, 'label': CurrencyService.get_currency_label(c)}
+        for c in codes
+    ]
+    return jsonify({
+        'success': True,
+        'currencies': codes,
+        'currency_items': currency_items,
+        'common': list(CurrencyService.COMMON_CURRENCIES),
+    })
 
 
 @api_bp.route('/search')

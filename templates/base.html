@@ -135,7 +135,24 @@
             <!-- سعر الصرف -->
             <div class="erp-exchange-box">
               <div class="erp-exchange-label">
-                <i class="fas fa-exchange-alt mr-1"></i>USD/{{ (tenant_default_currency or company_default_currency or 'AED')|upper }}
+                <i class="fas fa-exchange-alt mr-1"></i>
+                <span id="fx-pair-label">USD/{{ (tenant_default_currency or company_default_currency or 'AED')|upper }}</span>
+              </div>
+              <div class="d-flex align-items-center mb-1" style="gap:4px;">
+                <input id="fx-from-search" type="text" class="form-control form-control-sm" placeholder="بحث FROM" style="width:86px;">
+                <select id="fx-from-select" class="custom-select custom-select-sm" style="min-width:76px;">
+                  <option value="USD">USD</option>
+                </select>
+                <span style="font-size:11px;opacity:.75;">/</span>
+                <input id="fx-to-search" type="text" class="form-control form-control-sm" placeholder="بحث TO" style="width:86px;">
+                <select id="fx-to-select" class="custom-select custom-select-sm" style="min-width:76px;">
+                  <option value="{{ (tenant_default_currency or company_default_currency or 'AED')|upper }}">{{ (tenant_default_currency or company_default_currency or 'AED')|upper }}</option>
+                </select>
+              </div>
+              <div class="d-flex align-items-center mb-1" style="gap:4px;">
+                <input id="fx-from-custom" type="text" class="form-control form-control-sm" maxlength="3" placeholder="FROM" style="width:68px;">
+                <input id="fx-to-custom" type="text" class="form-control form-control-sm" maxlength="3" placeholder="TO" style="width:68px;">
+                <button id="fx-apply-custom" type="button" class="btn btn-xs btn-outline-light" style="padding:0.1rem 0.35rem;">تطبيق</button>
               </div>
               <div id="exchange-rate" class="erp-exchange-value">
                 <i class="fas fa-dollar-sign mr-1"></i>
@@ -152,7 +169,7 @@
         </span>
       </li>
 
-      {% set is_global_scope_user = current_user.is_authenticated and (current_user.is_owner or (current_user.role and current_user.role.slug in ['developer', 'super_admin'])) %}
+      {% set is_global_scope_user = current_user.is_authenticated and (current_user.is_owner or (current_user.role and current_user.role.slug == 'developer')) %}
       {% if is_global_scope_user %}
       <li class="nav-item d-none d-lg-inline-block">
         <span class="nav-link py-1">
@@ -204,9 +221,22 @@
           <span class="d-none d-md-inline ml-2" data-ui-role="mode-label">فاتح</span>
         </button>
       </li>
+
+      <li class="nav-item erp-header-control">
+        <button
+          type="button"
+          class="btn btn-sm btn-outline-light"
+          data-toggle="modal"
+          data-target="#navbarCalculatorModal"
+          title="الآلة الحاسبة"
+        >
+          <i class="fas fa-calculator"></i>
+          <span class="d-none d-md-inline ml-2">حاسبة</span>
+        </button>
+      </li>
       
       <!-- AI Assistant -->
-      {% if current_user.is_authenticated and (current_user.is_owner or (current_user.role and current_user.role.slug == 'developer')) %}
+      {% if current_user.is_authenticated and ai_nav_visible %}
       <li class="nav-item">
         <a href="{{ url_for('ai.assistant_page') }}" class="nav-link" title="المساعد الذكي">
           <i class="fas fa-robot mr-1 erp-ai-icon"></i>
@@ -230,11 +260,11 @@
           <span class="d-none d-md-inline">{{ session.get('language', 'ar')|upper }}</span>
         </a>
         <div class="dropdown-menu dropdown-menu-sm dropdown-menu-left">
-          <a href="{{ url_for('language.set_language', lang='ar') }}" class="dropdown-item {% if session.get('language', 'ar') == 'ar' %}active{% endif %}">
+          <a href="{{ url_for('language.set_language', lang='ar', next=request.full_path) }}" class="dropdown-item {% if session.get('language', 'ar') == 'ar' %}active{% endif %}">
             <i class="fas fa-check mr-2 {% if session.get('language', 'ar') != 'ar' %}invisible{% endif %}"></i>
             العربية
           </a>
-          <a href="{{ url_for('language.set_language', lang='en') }}" class="dropdown-item {% if session.get('language') == 'en' %}active{% endif %}">
+          <a href="{{ url_for('language.set_language', lang='en', next=request.full_path) }}" class="dropdown-item {% if session.get('language') == 'en' %}active{% endif %}">
             <i class="fas fa-check mr-2 {% if session.get('language') != 'en' %}invisible{% endif %}"></i>
             English
           </a>
@@ -882,7 +912,13 @@
         {% set _footer_email = (developer_email or '')|trim %}
         <div class="erp-footer-row">
           <div class="erp-footer-brand">
-            <img src="{{ _developer_logo_path if (_developer_logo_path.startswith('http') or _developer_logo_path.startswith('/')) else url_for('static', filename=_developer_logo_rel) }}" alt="{{ _developer_title }}" class="erp-footer-logo">
+            <img
+              src="{{ _developer_logo_path if (_developer_logo_path.startswith('http') or _developer_logo_path.startswith('/')) else url_for('static', filename=_developer_logo_rel) }}"
+              data-fallback="{{ url_for('static', filename='assets/brand/azad/logos/logo.png') }}"
+              onerror="if(this.dataset.fallback){this.onerror=null;this.src=this.dataset.fallback;}"
+              alt="{{ _developer_title }}"
+              class="erp-footer-logo"
+            >
             <div class="erp-footer-brand-text">
               <div class="erp-footer-title">{{ _developer_title }}</div>
               <div class="erp-footer-muted"><i class="fas fa-code"></i> {{ _developer_credit_text }}</div>
@@ -981,6 +1017,55 @@
 <script defer src="{{ url_for('static', filename='js/smart-print.js') }}"></script>
 {% block extra_js %}{% endblock %}
 
+<div class="modal fade" id="navbarCalculatorModal" tabindex="-1" role="dialog" aria-labelledby="navbarCalculatorTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="navbarCalculatorTitle"><i class="fas fa-calculator mr-2"></i>الآلة الحاسبة</h5>
+        <button type="button" class="close ml-0 mr-auto" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <ul class="nav nav-pills mb-3" id="calcTabs" role="tablist">
+          <li class="nav-item"><a class="nav-link active" id="tab-classic" data-toggle="pill" href="#calc-classic" role="tab">كلاسيكية</a></li>
+          <li class="nav-item"><a class="nav-link" id="tab-financial" data-toggle="pill" href="#calc-financial" role="tab">مالية</a></li>
+          <li class="nav-item"><a class="nav-link" id="tab-scientific" data-toggle="pill" href="#calc-scientific" role="tab">علمية</a></li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane fade show active" id="calc-classic" role="tabpanel">
+            <input id="calcDisplayClassic" class="form-control form-control-lg mb-2 text-right" type="text" readonly value="0">
+            <div id="calcClassicButtons" class="d-flex flex-wrap"></div>
+          </div>
+          <div class="tab-pane fade" id="calc-financial" role="tabpanel">
+            <div class="row">
+              <div class="col-md-6 mb-2">
+                <h6>قسط التمويل الشهري</h6>
+                <input class="form-control mb-2" id="loanPrincipal" type="number" placeholder="قيمة القرض">
+                <input class="form-control mb-2" id="loanRate" type="number" step="0.01" placeholder="الفائدة السنوية %">
+                <input class="form-control mb-2" id="loanMonths" type="number" placeholder="عدد الأشهر">
+                <button type="button" class="btn btn-primary btn-sm" id="btnLoanCalc">احسب</button>
+                <div class="small text-muted mt-2" id="loanResult">--</div>
+              </div>
+              <div class="col-md-6 mb-2">
+                <h6>الربح والهامش</h6>
+                <input class="form-control mb-2" id="costValue" type="number" step="0.01" placeholder="التكلفة">
+                <input class="form-control mb-2" id="sellValue" type="number" step="0.01" placeholder="سعر البيع">
+                <button type="button" class="btn btn-success btn-sm" id="btnMarginCalc">احسب</button>
+                <div class="small text-muted mt-2" id="marginResult">--</div>
+              </div>
+            </div>
+          </div>
+          <div class="tab-pane fade" id="calc-scientific" role="tabpanel">
+            <input id="calcDisplayScientific" class="form-control form-control-lg mb-2 text-right" type="text" readonly value="0">
+            <div id="calcScientificButtons" class="d-flex flex-wrap"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 // CSRF: attach token to all jQuery AJAX requests
 $(function() {
@@ -1069,6 +1154,106 @@ $(function() {
   }
   
   // تحديث سعر الصرف
+  function normalizeCurrencyCode(code, fallbackCode) {
+    const normalized = String(code || '').trim().toUpperCase();
+    if (/^[A-Z]{3}$/.test(normalized)) return normalized;
+    return fallbackCode;
+  }
+
+  function updateFxPairLabel(fromCurrency, toCurrency) {
+    const pairLabel = document.getElementById('fx-pair-label');
+    if (pairLabel) pairLabel.textContent = `${fromCurrency}/${toCurrency}`;
+  }
+
+  async function loadSupportedCurrencies() {
+    const fromSelect = document.getElementById('fx-from-select');
+    const toSelect = document.getElementById('fx-to-select');
+    const rateDisplay = document.getElementById('rate-display');
+    if (!fromSelect || !toSelect || !rateDisplay) return;
+
+    let list = [];
+    let itemList = [];
+    try {
+      const res = await fetch(`/api/currencies?ts=${Date.now()}`, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' },
+        credentials: 'same-origin',
+        cache: 'no-store'
+      });
+      if (res.ok) {
+        const data = await res.json();
+        list = Array.isArray(data.currencies) ? data.currencies : [];
+        itemList = Array.isArray(data.currency_items) ? data.currency_items : [];
+      }
+    } catch (_) {}
+
+    const defaults = ['USD', 'AED', 'EUR', 'GBP', 'SAR', 'QAR', 'KWD', 'BHD', 'OMR', 'ILS'];
+    const merged = Array.from(new Set(defaults.concat(list))).filter(c => /^[A-Z]{3}$/.test(c)).sort();
+    const labelMap = new Map(itemList.map(it => [String(it.code || '').toUpperCase(), String(it.label || '').trim()]));
+    function optionHtml(c) {
+      const lbl = labelMap.get(c) || `${c} - Currency`;
+      return `<option value="${c}">${lbl}</option>`;
+    }
+    fromSelect.innerHTML = merged.map(optionHtml).join('');
+    toSelect.innerHTML = merged.map(optionHtml).join('');
+
+    const savedFrom = normalizeCurrencyCode(localStorage.getItem('erp_fx_from'), rateDisplay.dataset.fxFrom || 'USD');
+    const savedTo = normalizeCurrencyCode(localStorage.getItem('erp_fx_to'), rateDisplay.dataset.fxTo || 'AED');
+    fromSelect.value = merged.includes(savedFrom) ? savedFrom : 'USD';
+    toSelect.value = merged.includes(savedTo) ? savedTo : (rateDisplay.dataset.fxTo || 'AED').toUpperCase();
+    rateDisplay.dataset.fxFrom = fromSelect.value;
+    rateDisplay.dataset.fxTo = toSelect.value;
+    updateFxPairLabel(fromSelect.value, toSelect.value);
+  }
+
+  function bindFxControls() {
+    const fromSelect = document.getElementById('fx-from-select');
+    const toSelect = document.getElementById('fx-to-select');
+    const fromSearch = document.getElementById('fx-from-search');
+    const toSearch = document.getElementById('fx-to-search');
+    const fromCustom = document.getElementById('fx-from-custom');
+    const toCustom = document.getElementById('fx-to-custom');
+    const applyCustom = document.getElementById('fx-apply-custom');
+    const rateDisplay = document.getElementById('rate-display');
+    if (!fromSelect || !toSelect || !rateDisplay) return;
+
+    function applyPair(fromCode, toCode) {
+      const from = normalizeCurrencyCode(fromCode, 'USD');
+      const to = normalizeCurrencyCode(toCode, 'AED');
+      rateDisplay.dataset.fxFrom = from;
+      rateDisplay.dataset.fxTo = to;
+      if ([...fromSelect.options].some(o => o.value === from)) fromSelect.value = from;
+      if ([...toSelect.options].some(o => o.value === to)) toSelect.value = to;
+      localStorage.setItem('erp_fx_from', from);
+      localStorage.setItem('erp_fx_to', to);
+      updateFxPairLabel(from, to);
+      updateExchangeRate();
+    }
+
+    function filterSelectOptions(selectEl, term) {
+      const q = String(term || '').trim().toLowerCase();
+      if (!selectEl || !selectEl.options) return;
+      for (const opt of selectEl.options) {
+        const txt = String(opt.textContent || '').toLowerCase();
+        const val = String(opt.value || '').toLowerCase();
+        opt.hidden = q ? !(txt.includes(q) || val.includes(q)) : false;
+      }
+    }
+
+    fromSelect.addEventListener('change', () => applyPair(fromSelect.value, toSelect.value));
+    toSelect.addEventListener('change', () => applyPair(fromSelect.value, toSelect.value));
+    if (fromSearch) fromSearch.addEventListener('input', () => filterSelectOptions(fromSelect, fromSearch.value));
+    if (toSearch) toSearch.addEventListener('input', () => filterSelectOptions(toSelect, toSearch.value));
+
+    if (applyCustom) {
+      applyCustom.addEventListener('click', () => {
+        applyPair(fromCustom ? fromCustom.value : '', toCustom ? toCustom.value : '');
+        if (fromCustom) fromCustom.value = '';
+        if (toCustom) toCustom.value = '';
+      });
+    }
+  }
+
   async function updateExchangeRate() {
     const rateDisplay = document.getElementById('rate-display');
     if (!rateDisplay) return;
@@ -1077,16 +1262,21 @@ $(function() {
     const toCurrency = (rateDisplay.dataset.fxTo || 'AED').toUpperCase();
     
     try {
-      const res = await fetch(`/api/currency-rate/${encodeURIComponent(fromCurrency)}/${encodeURIComponent(toCurrency)}`, {
+      const endpoint = `/api/currency-rate/${encodeURIComponent(fromCurrency)}/${encodeURIComponent(toCurrency)}?ts=${Date.now()}`;
+      const res = await fetch(endpoint, {
         method: 'GET',
         headers: { 'Accept': 'application/json' },
-        credentials: 'same-origin'
+        credentials: 'same-origin',
+        cache: 'no-store'
       });
       if (!res.ok) return;
       const data = await res.json();
       if (!data || !data.success || typeof data.rate !== 'number') return;
       
       rateDisplay.textContent = data.rate.toFixed(4);
+      const sourceText = data.source ? `المصدر: ${data.source}` : 'المصدر: غير معروف';
+      const ageText = Number.isFinite(data.age_seconds) ? `العمر: ${data.age_seconds}s` : '';
+      rateDisplay.title = `${sourceText}${ageText ? ` | ${ageText}` : ''}`;
       rateDisplay.style.transform = 'scale(1.1)';
       rateDisplay.style.color = '#f39c12';
       setTimeout(() => {
@@ -1100,13 +1290,109 @@ $(function() {
   
   // تشغيل التحديثات
   updateDateTime();
-  updateExchangeRate();
+  loadSupportedCurrencies().then(() => {
+    bindFxControls();
+    updateExchangeRate();
+  }).catch(() => {
+    bindFxControls();
+    updateExchangeRate();
+  });
   
   // تحديث الساعة كل ثانية
   setInterval(updateDateTime, 1000);
   
   // تحديث سعر الصرف كل 30 ثانية
   setInterval(updateExchangeRate, 30000);
+
+  function initNavbarCalculator() {
+    const classicDisplay = document.getElementById('calcDisplayClassic');
+    const scientificDisplay = document.getElementById('calcDisplayScientific');
+    const classicContainer = document.getElementById('calcClassicButtons');
+    const scientificContainer = document.getElementById('calcScientificButtons');
+
+    function safeEval(expr) {
+      const normalized = String(expr || '')
+        .replace(/÷/g, '/')
+        .replace(/×/g, '*')
+        .replace(/\^/g, '**')
+        .replace(/π/g, 'Math.PI')
+        .replace(/\be\b/g, 'Math.E')
+        .replace(/sin\(/g, 'Math.sin(')
+        .replace(/cos\(/g, 'Math.cos(')
+        .replace(/tan\(/g, 'Math.tan(')
+        .replace(/log\(/g, 'Math.log10(')
+        .replace(/ln\(/g, 'Math.log(')
+        .replace(/sqrt\(/g, 'Math.sqrt(');
+      if (!/^[0-9+\-*/().,\sA-Za-z_]*$/.test(normalized)) return 'ERR';
+      try {
+        const val = Function(`"use strict"; return (${normalized});`)();
+        if (!Number.isFinite(val)) return 'ERR';
+        return String(Math.round((val + Number.EPSILON) * 100000000) / 100000000);
+      } catch (e) {
+        return 'ERR';
+      }
+    }
+
+    function wirePad(container, display, buttons) {
+      if (!container || !display) return;
+      container.innerHTML = buttons.map((b) => `<button type="button" class="btn btn-outline-secondary btn-sm m-1" data-calc="${b}">${b}</button>`).join('');
+      container.addEventListener('click', function(e) {
+        const btn = e.target.closest('[data-calc]');
+        if (!btn) return;
+        const v = btn.getAttribute('data-calc');
+        if (v === 'C') {
+          display.value = '0';
+          return;
+        }
+        if (v === '=') {
+          display.value = safeEval(display.value);
+          return;
+        }
+        if (v === 'DEL') {
+          display.value = display.value.length > 1 ? display.value.slice(0, -1) : '0';
+          return;
+        }
+        display.value = display.value === '0' ? v : (display.value + v);
+      });
+    }
+
+    wirePad(classicContainer, classicDisplay, ['7', '8', '9', '÷', '4', '5', '6', '×', '1', '2', '3', '-', '0', '.', '=', '+', '(', ')', 'DEL', 'C']);
+    wirePad(scientificContainer, scientificDisplay, ['sin(', 'cos(', 'tan(', 'sqrt(', 'log(', 'ln(', 'π', 'e', '7', '8', '9', '÷', '4', '5', '6', '×', '1', '2', '3', '-', '0', '.', '^', '+', '(', ')', 'DEL', 'C', '=']);
+
+    const btnLoanCalc = document.getElementById('btnLoanCalc');
+    const btnMarginCalc = document.getElementById('btnMarginCalc');
+    if (btnLoanCalc) {
+      btnLoanCalc.addEventListener('click', function() {
+        const p = parseFloat(document.getElementById('loanPrincipal').value || '0');
+        const annual = parseFloat(document.getElementById('loanRate').value || '0');
+        const months = parseInt(document.getElementById('loanMonths').value || '0', 10);
+        const out = document.getElementById('loanResult');
+        if (!(p > 0) || !(months > 0)) {
+          out.textContent = 'أدخل قيم صحيحة.';
+          return;
+        }
+        const r = (annual / 100) / 12;
+        const emi = r > 0 ? (p * r * Math.pow(1 + r, months)) / (Math.pow(1 + r, months) - 1) : (p / months);
+        out.textContent = `القسط الشهري: ${emi.toFixed(2)}`;
+      });
+    }
+    if (btnMarginCalc) {
+      btnMarginCalc.addEventListener('click', function() {
+        const cost = parseFloat(document.getElementById('costValue').value || '0');
+        const sell = parseFloat(document.getElementById('sellValue').value || '0');
+        const out = document.getElementById('marginResult');
+        if (!(cost >= 0) || !(sell > 0)) {
+          out.textContent = 'أدخل قيم صحيحة.';
+          return;
+        }
+        const profit = sell - cost;
+        const margin = (profit / sell) * 100;
+        const markup = cost > 0 ? (profit / cost) * 100 : 0;
+        out.textContent = `الربح: ${profit.toFixed(2)} | Margin: ${margin.toFixed(2)}% | Markup: ${markup.toFixed(2)}%`;
+      });
+    }
+  }
+  initNavbarCalculator();
   
 })();
 

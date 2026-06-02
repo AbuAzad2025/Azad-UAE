@@ -14,5 +14,8 @@ def set_language(lang):
         session['language'] = lang
         flash(f'تم تغيير اللغة إلى {"العربية" if lang == "ar" else "English"}', 'success')
     
-    return redirect(safe_redirect_target(request.referrer, 'public.landing'))
+    next_url = request.args.get('next')
+    if not next_url:
+        next_url = request.referrer
+    return redirect(safe_redirect_target(next_url, 'public.landing'))
 

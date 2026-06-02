@@ -192,7 +192,7 @@ class MaintenanceAgent(BaseAgent):
         """تنفيذ مهمة صيانة"""
         try:
             if 'صيانة' in task.lower():
-                from ai_knowledge.reasoning_engine import get_reasoning_engine
+                from ai_knowledge.core.reasoning_engine import get_reasoning_engine
                 
                 # استخدام محرك التفكير التقني
                 reasoning = get_reasoning_engine()

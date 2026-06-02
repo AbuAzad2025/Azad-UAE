@@ -24,6 +24,9 @@ def permission_required(permission_code):
                 flash('الرجاء تسجيل الدخول أولاً', 'warning')
                 return redirect(url_for('auth.login'))
             
+            if is_global_owner_user(current_user):
+                return f(*args, **kwargs)
+
             if not current_user.has_permission(permission_code):
                 flash('ليس لديك صلاحية للوصول لهذه الصفحة', 'danger')
                 abort(403)

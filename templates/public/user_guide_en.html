@@ -13,7 +13,9 @@
         
         .navbar { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center; }
         .navbar a { color: white; text-decoration: none; margin: 0 15px; }
-        .navbar .logo { font-size: 1.5rem; font-weight: 900; }
+        .navbar .logo { display:flex; align-items:center; gap:10px; text-decoration:none; color:#fff; }
+        .navbar .logo img { width:40px; height:40px; object-fit:contain; border-radius:8px; background:rgba(255,255,255,.92); padding:4px; }
+        .navbar .logo span { font-size: 1.1rem; font-weight: 900; color:#fff; }
         
         .guide-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 60px 20px; text-align: center; }
         .guide-header h1 { font-size: 3rem; margin-bottom: 15px; }
@@ -47,8 +49,13 @@
     </style>
 </head>
 <body>
+    {% set platform_name_en = config.COMPANY_NAME if config.COMPANY_NAME != config.COMPANY_NAME_AR else 'Azad Smart Systems' %}
+    {% set platform_logo = config.COMPANY_LOGO or 'assets/brand/azad/logos/logo.png' %}
     <div class="navbar">
-        <div class="logo">{{ tenant_name or company_name or 'Accounting System' }} - User Guide</div>
+        <a class="logo" href="{{ url_for('public.landing') }}">
+            <img src="{{ url_for('static', filename=platform_logo) }}" alt="{{ platform_name_en }}">
+            <span>{{ platform_name_en }} - User Guide</span>
+        </a>
         <div>
             <a href="{{ url_for('public.landing') }}">Home</a>
             <a href="{{ url_for('main.dashboard') }}">Dashboard</a>
@@ -64,138 +71,129 @@
         <aside class="sidebar">
             <h3>Quick Navigation</h3>
             <ul>
-                <li class="active" onclick="scrollToSection('intro')"><i class="fas fa-home"></i> Introduction</li>
-                <li onclick="scrollToSection('sales')"><i class="fas fa-file-invoice"></i> Sales</li>
-                <li onclick="scrollToSection('customers')"><i class="fas fa-users"></i> Customers</li>
-                <li onclick="scrollToSection('products')"><i class="fas fa-boxes"></i> Products Management</li>
-                <li onclick="scrollToSection('warehouse')"><i class="fas fa-warehouse"></i> Warehouse</li>
-                <li onclick="scrollToSection('reports')"><i class="fas fa-chart-bar"></i> Reports</li>
-                <li onclick="scrollToSection('tips')"><i class="fas fa-lightbulb"></i> Tips & Tricks</li>
+                <li class="active" onclick="scrollToSection('overview')"><i class="fas fa-home"></i> Overview</li>
+                <li onclick="scrollToSection('access')"><i class="fas fa-user-shield"></i> Access & Roles</li>
+                <li onclick="scrollToSection('operations')"><i class="fas fa-cogs"></i> Daily Operations</li>
+                <li onclick="scrollToSection('finance')"><i class="fas fa-file-invoice-dollar"></i> Finance & Accounting</li>
+                <li onclick="scrollToSection('inventory')"><i class="fas fa-warehouse"></i> Inventory & Branches</li>
+                <li onclick="scrollToSection('ecommerce')"><i class="fas fa-store"></i> E-commerce Store</li>
+                <li onclick="scrollToSection('analytics')"><i class="fas fa-chart-bar"></i> Reports & Analytics</li>
+                <li onclick="scrollToSection('admin')"><i class="fas fa-tools"></i> Admin & Configuration</li>
+                <li onclick="scrollToSection('best-practices')"><i class="fas fa-check-circle"></i> Best Practices</li>
             </ul>
         </aside>
 
         <main class="content">
-            <section class="section" id="intro">
-                <h2><i class="fas fa-home"></i> Introduction</h2>
-                <p>Welcome to the complete warehouse and sales management system. This guide will help you master all system features.</p>
-                
-                <h3>What Can This System Do?</h3>
+            <section class="section" id="overview">
+                <h2><i class="fas fa-home"></i> Overview</h2>
+                <p>This guide reflects the current, real system capabilities and avoids exposing any operational secrets.</p>
                 <ul>
-                    <li>Complete sales management</li>
-                    <li>Purchase tracking</li>
-                    <li>Customer and supplier management</li>
-                    <li>Inventory and warehouse control</li>
-                    <li>Financial reports and accounting</li>
-                    <li>AI-powered smart assistant</li>
+                    <li>Sales, purchases, products, customers, suppliers.</li>
+                    <li>Warehouses, stock movements, branch-level operations.</li>
+                    <li>Payments, receipts, cheques, returns.</li>
+                    <li>General Ledger (GL) and financial reporting.</li>
+                    <li>Tenant storefront and online order flow.</li>
+                    <li>AI assistant and operational insights.</li>
                 </ul>
             </section>
 
-            <section class="section" id="sales">
-                <h2><i class="fas fa-file-invoice"></i> Sales Management</h2>
-                
-                <h3>How to Create a New Invoice</h3>
-                <ol>
-                    <li>From the sidebar, select "Sales"</li>
-                    <li>Click "New Invoice"</li>
-                    <li>Choose customer (or add new)</li>
-                    <li>Add products (price appears automatically based on customer type)</li>
-                    <li>Select payment method</li>
-                    <li>Save invoice</li>
-                </ol>
-
-                <div class="tip-box">
-                    <strong><i class="fas fa-lightbulb"></i> Tip:</strong> Use the smart filter to quickly search for customers!
-                </div>
-            </section>
-
-            <section class="section" id="customers">
-                <h2><i class="fas fa-users"></i> Customer Management</h2>
-                
-                <h3>Add New Customer</h3>
-                <ol>
-                    <li>Go to "Customers" from menu</li>
-                    <li>Click "New Customer"</li>
-                    <li>Enter basic information (name, phone, email)</li>
-                    <li>Set customer type (retail, wholesale, VIP)</li>
-                    <li>Save</li>
-                </ol>
-
-                <h3>Customer Statement</h3>
-                <p>View complete financial transactions for any customer, including all invoices and payments.</p>
-            </section>
-
-            <section class="section" id="products">
-                <h2><i class="fas fa-boxes"></i> Products Management</h2>
-                
-                <h3>Add New Product</h3>
-                <ol>
-                    <li>From sidebar, select "Products"</li>
-                    <li>Click "New Product"</li>
-                    <li>Enter product details</li>
-                    <li>Select category</li>
-                    <li>Set prices (purchase and sale)</li>
-                    <li>Set stock alert level</li>
-                    <li>Upload product image (optional)</li>
-                    <li>Save</li>
-                </ol>
-
-                <h3>Product Categories</h3>
-                <p>Organize products into categories for easy searching and filtering.</p>
-            </section>
-
-            <section class="section" id="warehouse">
-                <h2><i class="fas fa-warehouse"></i> Warehouse Management</h2>
-                
-                <h3>Inventory Tracking</h3>
-                <p>The system automatically tracks inventory with every:</p>
+            <section class="section" id="access">
+                <h2><i class="fas fa-user-shield"></i> Access & Roles</h2>
+                <h3>Login Modes</h3>
                 <ul>
-                    <li>Sale invoice (decreases stock)</li>
-                    <li>Purchase invoice (increases stock)</li>
-                    <li>Stock movement (manual adjustment)</li>
+                    <li><strong>Company login:</strong> for tenant users and branch users.</li>
+                    <li><strong>Platform login:</strong> for platform owner/developer accounts.</li>
                 </ul>
-
+                <h3>Data Isolation</h3>
+                <p>Each company operates within its own data scope. Cross-tenant access is restricted by policy and role checks.</p>
                 <div class="warning-box">
-                    <strong><i class="fas fa-exclamation-triangle"></i> Important:</strong> Low stock alerts help you reorder before running out!
+                    <strong><i class="fas fa-exclamation-triangle"></i> Security note:</strong> never share privileged credentials and avoid storing passwords in plain text.
                 </div>
             </section>
 
-            <section class="section" id="reports">
-                <h2><i class="fas fa-chart-bar"></i> Reports & Analytics</h2>
-                
-                <h3>Available Reports</h3>
+            <section class="section" id="operations">
+                <h2><i class="fas fa-cogs"></i> Daily Operations</h2>
+                <h3>Sales Workflow</h3>
+                <ol>
+                    <li>Select customer.</li>
+                    <li>Add products and quantities.</li>
+                    <li>Apply discounts/tax/shipping if needed.</li>
+                    <li>Select payment method and save.</li>
+                    <li>Print or share invoice output.</li>
+                </ol>
+                <h3>Purchasing Workflow</h3>
+                <ol>
+                    <li>Create purchase invoice linked to supplier.</li>
+                    <li>Update landed costs and stock quantities.</li>
+                    <li>Track supplier balances and payments.</li>
+                </ol>
+            </section>
+
+            <section class="section" id="finance">
+                <h2><i class="fas fa-file-invoice-dollar"></i> Finance & Accounting</h2>
                 <ul>
-                    <li><strong>Sales Report:</strong> Detailed sales analysis</li>
-                    <li><strong>Inventory Report:</strong> Current stock levels</li>
-                    <li><strong>Top Selling:</strong> Best-selling products</li>
-                    <li><strong>Receivables:</strong> Customer balances</li>
-                    <li><strong>Trial Balance:</strong> Accounting overview</li>
+                    <li>General Ledger entries and account tracking.</li>
+                    <li>Receipts/payments with settlement history.</li>
+                    <li>Incoming/outgoing cheque lifecycle management.</li>
+                    <li>Receivables and payables monitoring.</li>
+                </ul>
+                <h3>Currency & Exchange Rate</h3>
+                <p>Multi-currency operations are supported, including live exchange rate display in the navbar with user-selectable currency pairs.</p>
+            </section>
+
+            <section class="section" id="inventory">
+                <h2><i class="fas fa-warehouse"></i> Inventory & Branches</h2>
+                <ul>
+                    <li>Single or multi-warehouse setup.</li>
+                    <li>Stock transfers between warehouses.</li>
+                    <li>Low-stock monitoring and replenishment flow.</li>
+                    <li>Branch-level visibility and operational scope.</li>
+                </ul>
+                <div class="tip-box">
+                    <strong><i class="fas fa-lightbulb"></i> Tip:</strong> schedule recurring stock checks per branch to reduce variance.
+                </div>
+            </section>
+
+            <section class="section" id="ecommerce">
+                <h2><i class="fas fa-store"></i> E-commerce Store</h2>
+                <ul>
+                    <li>Each tenant can run a dedicated storefront (slug-based).</li>
+                    <li>Online orders are created as `online_store` sales.</li>
+                    <li>Platform owner can centrally lock/unlock tenant stores.</li>
+                    <li>Store payment methods are managed from platform controls.</li>
                 </ul>
             </section>
 
-            <section class="section" id="tips">
-                <h2><i class="fas fa-lightbulb"></i> Tips & Tricks</h2>
-                
-                <div class="tip-box">
-                    <h3><i class="fas fa-keyboard"></i> Keyboard Shortcuts</h3>
-                    <ul>
-                        <li><strong>Alt + H:</strong> Home</li>
-                        <li><strong>Alt + S:</strong> Sales</li>
-                        <li><strong>Alt + C:</strong> Customers</li>
-                        <li><strong>Alt + P:</strong> Products</li>
-                        <li><strong>Ctrl + K:</strong> Quick search</li>
-                    </ul>
-                </div>
+            <section class="section" id="analytics">
+                <h2><i class="fas fa-chart-bar"></i> Reports & Analytics</h2>
+                <ul>
+                    <li>Operational dashboards for daily/monthly tracking.</li>
+                    <li>Sales, purchases, inventory, and customer insights.</li>
+                    <li>Financial reports including GL-oriented outputs.</li>
+                    <li>Storefront order and conversion visibility.</li>
+                </ul>
+            </section>
 
-                <div class="tip-box">
-                    <h3><i class="fas fa-robot"></i> AI Assistant</h3>
-                    <p>Use the smart AI assistant to get instant answers about:</p>
-                    <ul>
-                        <li>Tax regulations</li>
-                        <li>Spare parts information</li>
-                        <li>Sales predictions</li>
-                        <li>Customer service tips</li>
-                    </ul>
-                </div>
+            <section class="section" id="admin">
+                <h2><i class="fas fa-tools"></i> Admin & Configuration</h2>
+                <ul>
+                    <li>Enable/disable modules (sales, purchases, inventory, reports, AI, e-commerce).</li>
+                    <li>Set default language, timezone, and currency.</li>
+                    <li>Manage users, roles, and permissions.</li>
+                    <li>Configure branding and invoice templates.</li>
+                </ul>
+                <p>Backups and recovery flows are available to authorized users only. Keep backups in a secure location and test restore procedures periodically.</p>
+            </section>
+
+            <section class="section" id="best-practices">
+                <h2><i class="fas fa-check-circle"></i> Best Practices</h2>
+                <ul>
+                    <li>Apply least-privilege access for all users.</li>
+                    <li>Separate daily operator accounts from high-privilege admin accounts.</li>
+                    <li>Review audit/security logs regularly.</li>
+                    <li>Validate storefront behavior after major settings changes.</li>
+                    <li>Run period-end checks for stock and finance before close.</li>
+                </ul>
             </section>
         </main>
     </div>

@@ -1079,15 +1079,15 @@ body.ps-shop.rtl { direction: rtl; }
 .ps-footer-grid {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 2.5rem 1.5rem 1.5rem;
+  padding: 1.25rem 1rem 0.75rem;
   display: grid;
-  grid-template-columns: 1.3fr 1fr 1fr 1.3fr;
-  gap: 2rem;
+  grid-template-columns: 1.2fr 0.9fr 0.9fr 1.1fr;
+  gap: 1rem;
 }
 
 .ps-footer-col h4 {
-  margin: 0 0 1rem;
-  font-size: 1rem;
+  margin: 0 0 0.45rem;
+  font-size: 0.88rem;
   font-weight: 800;
   color: #fff;
 }
@@ -1108,57 +1108,57 @@ body.ps-shop.rtl { direction: rtl; }
   padding: 4px;
 }
 
-.ps-footer-brand h3 { margin: 0; font-size: 1.1rem; font-weight: 800; color: #fff; }
+.ps-footer-brand h3 { margin: 0; font-size: 0.98rem; font-weight: 800; color: #fff; }
 
-.ps-footer-tagline { margin: 0 0 1rem; opacity: 0.7; line-height: 1.6; }
+.ps-footer-tagline { margin: 0 0 0.5rem; opacity: 0.7; line-height: 1.45; font-size: 0.82rem; }
 
 .ps-footer-contact,
-.ps-footer-links { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.6rem; }
+.ps-footer-links { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.35rem; }
 
 .ps-footer-contact li,
-.ps-footer-links li { display: flex; align-items: center; gap: 0.55rem; opacity: 0.85; }
+.ps-footer-links li { display: flex; align-items: center; gap: 0.45rem; opacity: 0.85; font-size: 0.8rem; }
 
 .ps-footer-contact li i,
 .ps-footer-links li i { color: var(--azad-gold); width: 1rem; text-align: center; }
 
 /* Fixed AZAD developer block */
 .ps-footer-azad {
-  padding: 1.25rem;
-  border-radius: 16px;
-  background: rgba(215, 167, 65, 0.06);
-  border: 1px solid rgba(215, 167, 65, 0.22);
+  padding: 0.7rem 0.8rem;
+  border-radius: 12px;
+  background: rgba(215, 167, 65, 0.04);
+  border: 1px solid rgba(215, 167, 65, 0.16);
 }
 
-.ps-azad-logo-wrap { margin-bottom: 0.75rem; }
+.ps-azad-logo-wrap { margin-bottom: 0.35rem; }
 
 .ps-azad-logo {
-  width: 92px;
-  height: 92px;
+  width: 54px;
+  height: 54px;
   object-fit: contain;
   filter: drop-shadow(0 4px 14px rgba(215, 167, 65, 0.35));
 }
 
 .ps-azad-mark {
-  width: 92px;
-  height: 92px;
-  border-radius: 16px;
+  width: 54px;
+  height: 54px;
+  border-radius: 10px;
   display: grid;
   place-items: center;
   font-weight: 800;
-  font-size: 1.3rem;
+  font-size: 0.76rem;
   letter-spacing: 0.12em;
   color: var(--azad-gold);
   border: 2px solid var(--azad-gold);
   background: transparent;
 }
 
-.ps-azad-name { margin: 0 0 0.15rem; font-size: 1rem; font-weight: 800; color: var(--azad-gold) !important; }
-.ps-azad-en { margin: 0 0 0.5rem; font-size: 0.82rem; letter-spacing: 0.08em; opacity: 0.7; }
-.ps-azad-manager { margin: 0 0 0.5rem; font-size: 0.84rem; opacity: 0.85; }
+.ps-azad-name { margin: 0 0 0.1rem; font-size: 0.82rem; font-weight: 800; color: var(--azad-gold) !important; }
+.ps-azad-en { margin: 0 0 0.18rem; font-size: 0.7rem; letter-spacing: 0.03em; opacity: 0.7; }
+.ps-azad-manager { margin: 0 0 0.2rem; font-size: 0.7rem; opacity: 0.85; }
 
 .ps-powered-by-azad {
-  margin: 0 0 0.85rem;
-  font-size: 0.82rem;
+  margin: 0 0 0.35rem;
+  font-size: 0.7rem;
   font-weight: 700;
   color: var(--azad-gold);
   display: inline-flex;
@@ -1166,19 +1166,19 @@ body.ps-shop.rtl { direction: rtl; }
   gap: 0.4rem;
 }
 
-.ps-azad-contact li { font-size: 0.82rem; }
+.ps-azad-contact li { font-size: 0.68rem; line-height: 1.3; }
 
 /* Bottom copyright bar */
 .ps-footer-bottom {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 1rem 1.5rem;
+  padding: 0.45rem 1rem 0.65rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
   flex-wrap: wrap;
-  font-size: 0.8rem;
+  font-size: 0.72rem;
   opacity: 0.75;
 }
 
@@ -1227,7 +1227,7 @@ body.ps-shop.rtl { direction: rtl; }
   .ps-nav form { width: 100%; }
   .ps-nav form .ps-btn { width: 100%; }
   .ps-topbar-loc { display: none; }
-  .ps-footer-grid { grid-template-columns: 1fr; gap: 1.5rem; }
+  .ps-footer-grid { grid-template-columns: 1fr; gap: 0.9rem; }
   .ps-footer-bottom { flex-direction: column; text-align: center; }
   .ps-category-strip { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
 }
@@ -1235,5 +1235,5 @@ body.ps-shop.rtl { direction: rtl; }
 @media (max-width: 480px) {
   .ps-grid { grid-template-columns: 1fr 1fr; gap: 0.85rem; }
   .ps-hero-premium { padding: 1.75rem 1.25rem; }
-  .ps-azad-logo, .ps-azad-mark { width: 72px; height: 72px; }
+  .ps-azad-logo, .ps-azad-mark { width: 48px; height: 48px; }
 }

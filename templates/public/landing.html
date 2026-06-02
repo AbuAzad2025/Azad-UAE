@@ -19,7 +19,12 @@
     <meta property="og:url" content="{{ request.url }}">
     <meta property="og:title" content="شركة أزاد للأنظمة الذكية - أفضل نظام إدارة مستودعات في الإمارات">
     <meta property="og:description" content="نظام متكامل لإدارة المستودعات والمبيعات مع ذكاء اصطناعي متقدم. حل احترافي للشركات في دبي والإمارات.">
-    {% set _logo_path = tenant_logo_url or developer_logo or 'assets/brand/azad/logos/logo.png' %}
+    {% set _logo_path = (config.COMPANY_LOGO or 'assets/brand/azad/logos/logo.png') %}
+    {% if _logo_path.startswith('/static/') %}
+        {% set _logo_path = _logo_path[8:] %}
+    {% elif _logo_path.startswith('static/') %}
+        {% set _logo_path = _logo_path[7:] %}
+    {% endif %}
     {% set _logo_external = _logo_path if _logo_path.startswith('http') else url_for('static', filename=_logo_path, _external=True) %}
     <meta property="og:image" content="{{ _logo_external }}">
     <meta property="og:locale" content="{{ 'ar_AE' if current_language == 'ar' else 'en_US' }}">
@@ -48,8 +53,6 @@
       "operatingSystem": "Web, Cloud",
       "offers": {
         "@type": "AggregateOffer",
-        "lowPrice": "99",
-        "highPrice": "599",
         "priceCurrency": "AED",
         "availability": "https://schema.org/InStock"
       },
@@ -94,7 +97,7 @@
           "name": "كم يكلف برنامج إدارة المستودعات؟",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "نوفر 3 باقات مرنة تناسب جميع أحجام الأعمال. الباقة الأساسية تبدأ من 99 درهم شهرياً، الباقة الاحترافية 299 درهم، والباقة المتقدمة 599 درهم. جميع الباقات تشمل: دعم فني، تحديثات مجانية، تدريب، وذكاء اصطناعي."
+                            "text": "نوفر باقات مرنة تناسب أحجام الأعمال المختلفة. تختلف الأسعار حسب عدد المستخدمين والميزات المطلوبة، مع دعم فني وتحديثات مستمرة."
           }
         },
         {
@@ -218,7 +221,10 @@
         .landing-brand img {
             height: 34px;
             width: auto;
-            filter: brightness(0) invert(1);
+            filter: none;
+            background: rgba(255,255,255,0.94);
+            border-radius: 8px;
+            padding: 3px 5px;
         }
         .landing-nav-links {
             display: flex;
@@ -227,7 +233,7 @@
             flex-wrap: wrap;
         }
         .landing-nav-links a {
-            color: rgba(255,255,255,0.85);
+            color: rgba(255,255,255,0.96);
             text-decoration: none;
             font-weight: 700;
             padding: 8px 12px;
@@ -395,7 +401,10 @@
         }
         .landing-sidebar-header img {
             height: 30px;
-            filter: brightness(0) invert(1);
+            filter: none;
+            background: rgba(255,255,255,0.94);
+            border-radius: 6px;
+            padding: 2px 4px;
         }
         .landing-sidebar-links {
             display: flex;
@@ -614,7 +623,7 @@
         }
         .features-subtitle {
             text-align: center;
-            color: rgba(255,255,255,0.8);
+            color: rgba(255,255,255,0.95);
             font-size: 1rem;
             margin-bottom: 30px;
         }
@@ -674,7 +683,7 @@
             z-index: 1;
         }
         .feature-card p {
-            color: rgba(255,255,255,0.7);
+            color: rgba(255,255,255,0.9);
             line-height: 1.5;
             font-size: 0.9rem;
             position: relative;
@@ -697,7 +706,7 @@
         }
         .pricing-preview p {
             text-align: center;
-            color: rgba(255,255,255,0.8);
+            color: rgba(255,255,255,0.95);
             margin-bottom: 30px;
             font-size: 1rem;
         }
@@ -850,7 +859,7 @@
         
         .landing-footer {
             background: linear-gradient(180deg, rgba(10,14,39,0.72), rgba(10,14,39,0.95));
-            color: rgba(255,255,255,0.86);
+            color: rgba(255,255,255,0.96);
             padding: 34px 20px;
             border-top: 1px solid rgba(212,175,55,0.45);
         }
@@ -883,7 +892,7 @@
         .landing-footer-brand img {
             height: 44px;
             width: auto;
-            filter: brightness(0) invert(1);
+            filter: none;
         }
         .landing-footer-title {
             font-weight: 900;
@@ -892,7 +901,7 @@
         }
         .landing-footer-sub {
             font-weight: 700;
-            color: rgba(255,255,255,0.82);
+            color: rgba(255,255,255,0.94);
             font-size: 0.92rem;
             line-height: 1.35;
         }
@@ -908,7 +917,7 @@
             margin: 0 0 10px 0;
             font-size: 0.95rem;
             font-weight: 900;
-            color: rgba(255,255,255,0.92);
+            color: rgba(255,255,255,0.98);
         }
         .landing-footer-links {
             display: flex;
@@ -922,7 +931,7 @@
             }
         }
         .landing-footer-links a {
-            color: rgba(255,255,255,0.85);
+            color: rgba(255,255,255,0.96);
             text-decoration: none;
             padding: 8px 12px;
             border-radius: 999px;
@@ -964,7 +973,7 @@
             border-top: 1px solid rgba(255,255,255,0.10);
             text-align: center;
             font-weight: 700;
-            color: rgba(255,255,255,0.75);
+            color: rgba(255,255,255,0.92);
         }
         
         @media (max-width: 992px) {
@@ -981,13 +990,13 @@
 </head>
 <body>
     {% set is_en = (current_language == 'en') %}
-    {% set company_name_display = (tenant_name_ar or company_name_ar or 'نظام المحاسبة') if not is_en else (tenant_name or company_name or 'Accounting System') %}
+    {% set company_name_display = (config.COMPANY_NAME_AR or 'شركة أزاد للأنظمة الذكية') if not is_en else (config.COMPANY_NAME or 'Azad Smart Systems') %}
 
     <div class="landing-sidebar-backdrop" id="landingSidebarBackdrop"></div>
     <aside class="landing-sidebar" id="landingSidebar" aria-hidden="true">
         <div class="landing-sidebar-header">
             <div class="title">
-                {% if tenant_logo_url %}<img src="{{ tenant_logo_url }}" alt="{{ company_name_display }}">{% else %}<img src="{{ url_for('static', filename=developer_logo or config.DEVELOPER_LOGO) }}" alt="{{ company_name_display }}">{% endif %}
+                <img src="{{ url_for('static', filename=_logo_path) }}" alt="{{ company_name_display }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='assets/brand/azad/logos/logo.png') }}';">
                 <span>{{ company_name_display }}</span>
             </div>
             <button type="button" class="landing-icon-btn" id="landingSidebarClose" aria-label="{{ 'إغلاق' if not is_en else 'Close' }}">
@@ -1009,7 +1018,7 @@
     <nav class="landing-nav">
         <div class="landing-nav-inner">
             <a class="landing-brand" href="{{ url_for('public.landing') }}">
-                {% if tenant_logo_url %}<img src="{{ tenant_logo_url }}" alt="{{ company_name_display }}">{% else %}<img src="{{ url_for('static', filename=developer_logo or config.DEVELOPER_LOGO) }}" alt="{{ company_name_display }}">{% endif %}
+                <img src="{{ url_for('static', filename=_logo_path) }}" alt="{{ company_name_display }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='assets/brand/azad/logos/logo.png') }}';">
                 <span>{{ company_name_display }}</span>
             </a>
             <div class="landing-nav-links">
@@ -1220,7 +1229,7 @@
             <div class="contact-item">
                 <i class="fas fa-map-marker-alt"></i>
                 <strong>{{ t('Address') }}</strong>
-                <a style="cursor: default;">{{ tenant_address or company_address or '—' }}</a>
+                <a style="cursor: default;">{{ config.COMPANY_ADDRESS_AR or company_address or tenant_address or '—' }}</a>
             </div>
         </div>
         <div style="margin-top: 30px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
@@ -1263,7 +1272,7 @@
                 </p>
                 <p style="font-size: 1.15rem; line-height: 2; color: #333; text-align: justify;">
                     {% if not is_en %}
-                        مع <strong>أكثر من 150 عميل</strong> في مختلف أنحاء الإمارات، نفتخر بتقديم <strong>دعم فني عربي متميز</strong>، تدريب شامل، وتحديثات مجانية مستمرة. فريقنا المتخصص جاهز لمساعدتك في <strong>التحول الرقمي</strong> وتحسين إدارة أعمالك بأحدث التقنيات.
+                        نوفر <strong>دعماً فنياً عربياً مميزاً</strong>، تدريباً عملياً، وتحديثات مستمرة. فريقنا المتخصص جاهز لمساعدتك في <strong>التحول الرقمي</strong> وتحسين إدارة أعمالك بأحدث التقنيات.
                     {% else %}
                         With 150+ customers across the UAE, we provide training, ongoing updates, and dedicated support to help your business digitize and scale.
                     {% endif %}
@@ -1392,7 +1401,7 @@
                     </h3>
                     <p style="color: rgba(255,255,255,0.9); line-height: 1.8; font-size: 1.05rem;">
                         {% if not is_en %}
-                            نوفر <strong>3 باقات مرنة</strong> تناسب جميع أحجام الأعمال في الإمارات. الباقة الأساسية تبدأ من <strong>99 درهم شهرياً</strong>، الباقة الاحترافية 299 درهم، والباقة المتقدمة 599 درهم. جميع الباقات تشمل: دعم فني، تحديثات مجانية، تدريب، وذكاء اصطناعي. <a href="{{ url_for('public.pricing') }}" style="color: var(--gulf-gold); text-decoration: underline;">شاهد تفاصيل الباقات</a>
+                            نوفر <strong>باقات مرنة</strong> تناسب أحجام الأعمال المختلفة في الإمارات. السعر النهائي يعتمد على احتياجك الفعلي وعدد المستخدمين والميزات المطلوبة. <a href="{{ url_for('public.pricing') }}" style="color: var(--gulf-gold); text-decoration: underline;">شاهد تفاصيل الباقات</a>
                         {% else %}
                             We offer multiple flexible plans based on your needs. <a href="{{ url_for('public.pricing') }}" style="color: var(--gulf-gold); text-decoration: underline;">View pricing details</a>
                         {% endif %}
@@ -1488,7 +1497,7 @@
     <footer class="landing-footer">
         <div class="landing-footer-inner">
             <div class="landing-footer-brand">
-                <img src="{{ url_for('static', filename=developer_logo or config.DEVELOPER_LOGO) }}" alt="{{ developer_name_ar or config.DEVELOPER_NAME_AR }}">
+                <img src="{{ url_for('static', filename=_logo_path) }}" alt="{{ config.COMPANY_NAME_AR or 'شركة أزاد للأنظمة الذكية' }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='assets/brand/azad/logos/logo.png') }}';">
                 <div>
                     <div class="landing-footer-title">{{ developer_name_ar or config.DEVELOPER_NAME_AR }}</div>
                     <div class="landing-footer-sub">{{ developer_credit or config.DEVELOPER_CREDIT }}</div>

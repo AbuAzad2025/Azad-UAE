@@ -6,33 +6,33 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-from .company_info import get_welcome_message
-from .system_knowledge import ALL_MODULES, get_module_help, search_knowledge
-from .tax_customs_knowledge import TAX_CUSTOMS_GUIDE, get_tax_info, get_customs_info
-from .parts_knowledge import PARTS_DATABASE, get_part_info, search_parts
-from .user_guide import USER_GUIDE, get_guide, get_help_for_task
-from .analytics_predictions import ANALYTICS_LIBRARY, SalesAnalytics, InventoryAnalytics
-from .knowledge_sources import knowledge_manager, KNOWLEDGE_SOURCES, recommend_sources_for_query, SOURCES_GUIDE
-from .dialects import dialect_manager, apply_dialect, get_dialectal_greeting
-from .beginners_mode import beginners_guide, BEGINNERS_TUTORIALS
-from .tax_system import get_tax_advice
-from .customs import get_customs_advice
-from .customer_service import get_customer_service_tip
-from .system_guide import get_system_guide
-from .market_insights import get_market_insights
-from .learning_system import learning_system
-from .global_knowledge import global_connector, expertise_updater
-from .self_improvement import self_improvement
-from .system_integration import system_integrator
-from .data_analyzer import data_analyzer
-from .knowledge_expansion import knowledge_expander
-from .azad_personality import azad_personality
-from .security_rules import security_rules
-from .document_generator import document_generator
-from .advanced_laws import advanced_laws
-from .context_engine import context_engine
-from .semantic_matcher import semantic_matcher, understand_message  # 🚀 النظام الذكي الجديد!
-from .intelligent_assistant import intelligent_assistant  # 🧠 الذكاء الحقيقي!
+from ai_knowledge.knowledge.company_info import get_welcome_message
+from ai_knowledge.knowledge.system_knowledge import ALL_MODULES, get_module_help, search_knowledge
+from ai_knowledge.knowledge.tax_customs_knowledge import TAX_CUSTOMS_GUIDE, get_tax_info, get_customs_info
+from ai_knowledge.knowledge.parts_knowledge import PARTS_DATABASE, get_part_info, search_parts
+from ai_knowledge.specialized.user_guide import USER_GUIDE, get_guide, get_help_for_task
+from ai_knowledge.analytics.analytics_predictions import get_analytics, SalesAnalytics, InventoryAnalytics
+from ai_knowledge.expansion.knowledge_sources import knowledge_manager, KNOWLEDGE_SOURCES, recommend_sources_for_query, SOURCES_GUIDE
+from ai_knowledge.personality.dialects import dialect_manager, apply_dialect, get_dialectal_greeting
+from ai_knowledge.personality.beginners_mode import beginners_guide, BEGINNERS_TUTORIALS
+from ai_knowledge.specialized.tax_system import get_tax_advice
+from ai_knowledge.knowledge.customs import get_customs_advice
+from ai_knowledge.specialized.customer_service import get_customer_service_tip
+from ai_knowledge.specialized.system_guide import get_system_guide
+from ai_knowledge.analytics.market_insights import get_market_insights
+from ai_knowledge.core.learning_system import learning_system
+from ai_knowledge.expansion.global_knowledge import global_connector, expertise_updater
+from ai_knowledge.improvement.self_improvement import self_improvement
+from ai_knowledge.core.system_integration import system_integrator
+from ai_knowledge.analytics.data_analyzer import data_analyzer
+from ai_knowledge.expansion.knowledge_expansion import knowledge_expander
+from ai_knowledge.personality.azad_personality import azad_personality
+from ai_knowledge.specialized.security_rules import security_rules
+from ai_knowledge.generation.document_generator import document_generator
+from ai_knowledge.specialized.advanced_laws import advanced_laws
+from ai_knowledge.core.context_engine import context_engine
+from ai_knowledge.neural.semantic_matcher import semantic_matcher, understand_message  # 🚀 النظام الذكي الجديد!
+from ai_knowledge.agents.intelligent_assistant import intelligent_assistant  # 🧠 الذكاء الحقيقي!
 
 
 class AzadResponses:
@@ -2301,3 +2301,7 @@ class AzadResponses:
 
 ✨ **القاعدة الذهبية:**
 "الناس تشتري من الذي تثق به، ليس الأرخص!" 🌟"""
+
+
+# إنشاء instance عام
+azad_responses = AzadResponses()

@@ -3,12 +3,12 @@
 يفهم السياق ويربط جميع ملفات المعرفة والمحركات
 """
 from .system_integration import system_integrator
-from .data_analyzer import data_analyzer
+from ai_knowledge.analytics.data_analyzer import data_analyzer
 from .learning_system import learning_system
-from .global_knowledge import global_connector
-from .knowledge_expansion import knowledge_expander
-from .document_generator import document_generator
-from .advanced_laws import advanced_laws
+from ai_knowledge.expansion.global_knowledge import global_connector
+from ai_knowledge.expansion.knowledge_expansion import knowledge_expander
+from ai_knowledge.generation.document_generator import document_generator
+from ai_knowledge.specialized.advanced_laws import advanced_laws
 
 
 class ContextEngine:
