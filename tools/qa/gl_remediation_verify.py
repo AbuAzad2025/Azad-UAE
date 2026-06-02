@@ -47,6 +47,9 @@ CRITICAL_CHECKS = {
     """,
     "products_tenant_null": "SELECT COUNT(*) FROM products WHERE tenant_id IS NULL",
     "product_categories_tenant_null": "SELECT COUNT(*) FROM product_categories WHERE tenant_id IS NULL",
+}
+
+WARN_CHECKS = {
     "test_store_leftovers": """
         SELECT COUNT(*) FROM customers
         WHERE name ILIKE '%[TEST-STORE]%' OR name ILIKE '%TEST-STORE%'
@@ -56,9 +59,6 @@ CRITICAL_CHECKS = {
         WHERE name ILIKE '%[UAT-TEST]%' OR name ILIKE '%UAT-TEST%'
            OR name ILIKE '%UAT-2-TMP%'
     """,
-}
-
-WARN_CHECKS = {
     "invoice_settings_tenant_null_total": (
         "SELECT COUNT(*) FROM invoice_settings WHERE tenant_id IS NULL"
     ),

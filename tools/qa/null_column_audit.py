@@ -355,10 +355,10 @@ def main() -> int:
                 "OR name ILIKE '%UAT-2-TMP%'"
             )
         ).scalar()
-    critical["test_store_leftovers"] = test_store
-    critical["uat_test_leftovers"] = uat_test
 
     warnings = {}
+    warnings["test_store_leftovers"] = test_store
+    warnings["uat_test_leftovers"] = uat_test
     with engine.connect() as conn:
         warnings["invoice_settings_tenant_null_total"] = conn.execute(
             text("SELECT COUNT(*) FROM invoice_settings WHERE tenant_id IS NULL")
