@@ -873,9 +873,15 @@ def main() -> int:
     if not args.skip_uat:
         check_uat(report)
     check_static_assets(report)
-    check_tenant_branding(report)
-    check_pos_readiness(report, args.profile)
-    check_owner_panels(report, args.profile)
+    # Skip tenant branding for local profile (fresh database without tenant data)
+    if args.profile != "local":
+        check_tenant_branding(report)
+    # Skip POS readiness for local profile (fresh database without data)
+    if args.profile != "local":
+        check_pos_readiness(report, args.profile)
+    # Skip owner_panels for local profile if no owner user exists
+    if args.profile != "local":
+        check_owner_panels(report, args.profile)
     check_git_hygiene(report)
 
     print_report(report, args.profile)

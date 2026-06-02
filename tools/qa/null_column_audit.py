@@ -27,6 +27,10 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# Set DATABASE_URL if not set (for local development)
+if not os.environ.get("DATABASE_URL"):
+    os.environ["DATABASE_URL"] = "postgresql+psycopg2://postgres:123@localhost:5432/azad_uae"
+
 from sqlalchemy import create_engine, text
 
 TARGET_COLUMNS = frozenset({
