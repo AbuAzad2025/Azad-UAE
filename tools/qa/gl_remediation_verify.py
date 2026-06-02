@@ -7,10 +7,13 @@ does not embed or print credentials.
 Exit 0 = all critical checks pass (warnings may remain).
 Exit 1 = one or more critical checks failed.
 
-Run: python tools/qa/gl_remediation_verify.py
+Run: python tools/qa/gl_remediation_verify.py [--profile local|production-readiness]
+
+In production-readiness mode, test leftovers are treated as CRITICAL.
 """
 import os
 import sys
+import argparse
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 
@@ -82,6 +85,10 @@ WARN_CHECKS = {
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--profile", default="local", help="Check profile (local or production-readiness)")
+    args = parser.parse_args()
+    
     engine = create_engine(os.environ["DATABASE_URL"])
     critical = {}
     warnings = {}
@@ -90,6 +97,15 @@ def main():
             critical[name] = conn.execute(text(sql)).scalar()
         for name, sql in WARN_CHECKS.items():
             warnings[name] = conn.execute(text(sql)).scalar()
+
+    # In production-readiness mode, test leftovers are CRITICAL
+    if args.profile == "production-readiness":
+        if (warnings.get("test_store_leftovers") or 0) > 0:
+            critical["test_store_leftovers"] = warnings["test_store_leftovers"]
+            del warnings["test_store_leftovers"]
+        if (warnings.get("uat_test_leftovers") or 0) > 0:
+            critical["uat_test_leftovers"] = warnings["uat_test_leftovers"]
+            del warnings["uat_test_leftovers"]
 
     critical_ok = all(v == 0 for v in critical.values())
     policy_fail = (warnings.get("users_tenant_null_not_global") or 0) > 0

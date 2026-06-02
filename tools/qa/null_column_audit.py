@@ -8,10 +8,13 @@ print credentials or passwords.
 Do NOT run against production without a full backup and explicit approval.
 Do NOT commit JSON/CSV outputs from this script (gitignored under tools/qa/).
 
-Run: python tools/qa/null_column_audit.py
+Run: python tools/qa/null_column_audit.py [--profile local|production-readiness]
+
+In production-readiness mode, test leftovers are treated as CRITICAL.
 """
 from __future__ import annotations
 
+import argparse
 import json
 import os
 import re
@@ -89,6 +92,10 @@ def qident(*parts: str) -> str:
 
 
 def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--profile", default="local", help="Check profile (local or production-readiness)")
+    args = parser.parse_args()
+    
     db_url = os.environ.get("DATABASE_URL")
     if not db_url:
         print("ERROR: DATABASE_URL not set", file=sys.stderr)
@@ -390,6 +397,16 @@ def main() -> int:
         ).scalar()
 
     report["gate"] = {"critical": critical, "warnings": warnings}
+    
+    # In production-readiness mode, test leftovers are CRITICAL
+    if args.profile == "production-readiness":
+        if (warnings.get("test_store_leftovers") or 0) > 0:
+            critical["test_store_leftovers"] = warnings["test_store_leftovers"]
+            del warnings["test_store_leftovers"]
+        if (warnings.get("uat_test_leftovers") or 0) > 0:
+            critical["uat_test_leftovers"] = warnings["uat_test_leftovers"]
+            del warnings["uat_test_leftovers"]
+    
     critical_fail = any((v or 0) > 0 for v in critical.values())
     policy_fail = (warnings.get("users_tenant_null_not_global") or 0) > 0
 

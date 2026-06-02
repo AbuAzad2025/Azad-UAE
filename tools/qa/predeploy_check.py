@@ -256,9 +256,9 @@ def check_pip_audit(report: Report) -> None:
         report.add("App: pip_audit", "PASS", "clean")
 
 
-def check_gl_remediation(report: Report) -> None:
+def check_gl_remediation(report: Report, profile: str) -> None:
     script = os.path.join(ROOT, "tools", "qa", "gl_remediation_verify.py")
-    r = _run([sys.executable, script])
+    r = _run([sys.executable, script, "--profile", profile])
     out = (r.stdout or "") + (r.stderr or "")
     if r.returncode != 0:
         report.add("DB: gl_remediation_verify", "FAIL", out[-600:])
@@ -268,9 +268,9 @@ def check_gl_remediation(report: Report) -> None:
         report.add("DB: gl_remediation_verify", "PASS", "ALL_OK")
 
 
-def check_null_audit(report: Report) -> None:
+def check_null_audit(report: Report, profile: str) -> None:
     script = os.path.join(ROOT, "tools", "qa", "null_column_audit.py")
-    r = _run([sys.executable, script], timeout=120)
+    r = _run([sys.executable, script, "--profile", profile], timeout=120)
     err = r.stderr or ""
     out = r.stdout or ""
     if r.returncode != 0:
@@ -864,8 +864,8 @@ def main() -> int:
     check_create_app(report)
     check_migrations(report)
     check_pip_audit(report)
-    check_gl_remediation(report)
-    check_null_audit(report)
+    check_gl_remediation(report, args.profile)
+    check_null_audit(report, args.profile)
     check_required_indexes(report)
     check_field_quality(report)
     check_schema_hardening(report)
