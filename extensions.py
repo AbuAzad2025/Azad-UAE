@@ -117,10 +117,16 @@ def setup_logging(app):
 
     if sys.platform == 'win32':
         import io
-        if hasattr(sys.stdout, 'buffer'):
-            sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
-        if hasattr(sys.stderr, 'buffer'):
-            sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+        # Avoid re-wrapping stdio on repeated create_app() calls (QA tools),
+        # which can close underlying streams when old wrappers are collected.
+        if hasattr(sys.stdout, 'buffer') and not getattr(sys.stdout, '_azad_utf8_wrapped', False):
+            wrapped_out = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+            setattr(wrapped_out, '_azad_utf8_wrapped', True)
+            sys.stdout = wrapped_out
+        if hasattr(sys.stderr, 'buffer') and not getattr(sys.stderr, '_azad_utf8_wrapped', False):
+            wrapped_err = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+            setattr(wrapped_err, '_azad_utf8_wrapped', True)
+            sys.stderr = wrapped_err
 
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(level)

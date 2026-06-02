@@ -46,6 +46,9 @@ PY_COMPILE_FILES = [
     "routes/users.py",
     "tools/qa/predeploy_check.py",
     "tools/qa/owner_panel_check.py",
+    "tools/qa/pos_flow_check.py",
+    "routes/pos.py",
+    "utils/pos_helpers.py",
     "tools/qa/static_asset_audit.py",
     "tools/qa/backup_restore_check.py",
     "tools/qa/gl_remediation_verify.py",
@@ -739,6 +742,24 @@ def check_tenant_branding(report: Report) -> None:
         report.add("Tenant branding", "PASS", "alhazem/nasrallah isolation OK")
 
 
+def check_pos_readiness(report: Report, profile: str) -> None:
+    from tools.qa.pos_flow_check import run_pos_flow_check
+
+    status, fails, warns = run_pos_flow_check(profile)
+    detail_parts = []
+    if fails:
+        detail_parts.extend(fails[:6])
+    if warns:
+        detail_parts.extend(warns[:4])
+    detail = "; ".join(detail_parts) if detail_parts else "lookup + checkout + RBAC OK"
+    if status == "FAIL":
+        report.add("POS readiness", "FAIL", detail)
+    elif status == "WARN":
+        report.add("POS readiness", "WARN", detail)
+    else:
+        report.add("POS readiness", "PASS", detail)
+
+
 def check_owner_panels(report: Report, profile: str) -> None:
     from tools.qa.owner_panel_check import run_owner_panel_check
 
@@ -853,6 +874,7 @@ def main() -> int:
         check_uat(report)
     check_static_assets(report)
     check_tenant_branding(report)
+    check_pos_readiness(report, args.profile)
     check_owner_panels(report, args.profile)
     check_git_hygiene(report)
 

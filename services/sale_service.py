@@ -318,7 +318,7 @@ class SaleService:
         
         except Exception as e:
             db.session.rollback()
-            current_app.logger.error(f'Sale creation failed: {e}')
+            current_app.logger.error("Sale creation failed (%s)", e.__class__.__name__)
             raise
     
     @staticmethod
