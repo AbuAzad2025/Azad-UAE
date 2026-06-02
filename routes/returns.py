@@ -71,6 +71,7 @@ def api_create_return():
         sale_id = data.get('sale_id')
         lines = data.get('lines', [])
         notes = data.get('notes')
+        manual_refund_amount = data.get('manual_refund_amount', data.get('refund_amount'))
 
         if not sale_id or not lines:
             return jsonify({'success': False, 'message': 'Missing sale_id or lines'}), 400
@@ -79,7 +80,8 @@ def api_create_return():
             sale_id=sale_id,
             return_lines_data=lines,
             user=current_user,
-            notes=notes
+            notes=notes,
+            manual_refund_amount=manual_refund_amount
         )
 
         create_audit_log(
@@ -90,6 +92,7 @@ def api_create_return():
                 'return_number': result.return_number,
                 'sale_id': result.sale_id,
                 'refund_amount': float(result.refund_amount or 0),
+                'manual_refund_amount': manual_refund_amount,
             }
         )
 
@@ -97,7 +100,9 @@ def api_create_return():
             'success': True,
             'message': 'Return processed successfully',
             'return_id': result.id,
-            'return_number': result.return_number
+            'return_number': result.return_number,
+            'refund_amount': float(result.refund_amount or 0),
+            'amount_aed': float(result.amount_aed or 0)
         })
 
     except ValueError as e:
