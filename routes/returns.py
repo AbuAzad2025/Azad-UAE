@@ -1,7 +1,8 @@
 from flask import Blueprint, request, jsonify, render_template, current_app, abort
 from flask_login import login_required, current_user
+from sqlalchemy import or_
 
-from extensions import db, limiter
+from extensions import limiter
 from services.return_service import ReturnService
 from models import Sale, ProductReturn
 from utils.decorators import permission_required, branch_scope_id
@@ -19,7 +20,7 @@ def _scoped_returns_query():
     tenant_id = get_active_tenant_id(current_user)
     if tenant_id is not None:
         query = query.filter(Sale.tenant_id == tenant_id).filter(
-            db.or_(ProductReturn.tenant_id == tenant_id, ProductReturn.tenant_id.is_(None))
+            or_(ProductReturn.tenant_id == tenant_id, ProductReturn.tenant_id.is_(None))
         )
     elif not is_platform_owner(current_user):
         query = query.filter(Sale.tenant_id < 0)
