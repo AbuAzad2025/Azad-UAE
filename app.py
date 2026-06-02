@@ -457,16 +457,26 @@ def create_app(config_class=Config):
         g.rtl = is_rtl()
 
         from flask_login import current_user as _cu
-        from utils.tenanting import get_active_tenant_id
+        from utils.tenanting import get_active_tenant_id, get_tenant_status
         from utils.auth_helpers import is_global_owner_user
         g.active_tenant_id = None
         if _cu.is_authenticated:
             g.active_tenant_id = get_active_tenant_id(_cu)
             _bp = request.blueprint or ""
-            _skip = {"", "auth", "public", "language", "tenants"}
+            _skip = {"", "auth", "public", "language", "tenants", "owner"}
             if _bp not in _skip and request.endpoint != "static":
                 if not is_global_owner_user(_cu) and g.active_tenant_id is None:
                     abort(403)
+                # Check if tenant is suspended / inactive
+                if g.active_tenant_id is not None and not is_global_owner_user(_cu):
+                    status = get_tenant_status(g.active_tenant_id)
+                    if not status["ok"]:
+                        from flask import render_template
+                        return render_template(
+                            "public/tenant_suspended.html",
+                            tenant=status.get("tenant"),
+                            reason=status.get("reason") or "Tenant suspended",
+                        ), 503
         
     # Security Headers
     @app.after_request

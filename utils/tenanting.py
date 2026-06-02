@@ -185,3 +185,24 @@ def without_tenant_scope():
     finally:
         if has_request_context():
             g.skip_tenant_scope = prev
+
+
+def get_tenant_status(tenant_id: int | None) -> dict:
+    """Return tenant status dict; used by middleware and public pages."""
+    from models.tenant import Tenant
+
+    if tenant_id is None:
+        return {"ok": True, "suspended": False, "reason": None}
+
+    tenant = db.session.get(Tenant, int(tenant_id))
+    if tenant is None:
+        return {"ok": False, "suspended": True, "reason": "Tenant not found", "tenant": None}
+
+    if not tenant.is_active or getattr(tenant, "is_suspended", False):
+        return {
+            "ok": False,
+            "suspended": True,
+            "reason": tenant.suspension_reason or "Tenant suspended",
+            "tenant": tenant,
+        }
+    return {"ok": True, "suspended": False, "reason": None, "tenant": tenant}

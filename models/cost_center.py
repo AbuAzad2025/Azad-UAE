@@ -11,9 +11,13 @@ class CostCenter(db.Model):
     مراكز التكلفة - لتتبع الأرباح والمصاريف حسب الفرع/القسم/المشروع
     """
     __tablename__ = 'cost_centers'
+    __table_args__ = (
+        db.UniqueConstraint('tenant_id', 'code', name='uq_cost_centers_tenant_code'),
+    )
     
     id = db.Column(db.Integer, primary_key=True)
-    code = db.Column(db.String(20), unique=True, nullable=False, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
+    code = db.Column(db.String(20), nullable=False, index=True)
     name_ar = db.Column(db.String(200), nullable=False)
     name_en = db.Column(db.String(200))
     
@@ -43,6 +47,7 @@ class CostCenter(db.Model):
     # Relationships
     parent = db.relationship('CostCenter', remote_side=[id], backref='children')
     manager = db.relationship('User', foreign_keys=[manager_id])
+    tenant = db.relationship('Tenant', backref='cost_centers', foreign_keys=[tenant_id])
     
     def __repr__(self):
         return f'<CostCenter {self.code} - {self.name_ar}>'

@@ -3703,3 +3703,164 @@ def forecasting():
                          forecast=forecast)
 
 
+# ───────────────────────────────────────────────────────────────
+# Tenant Management — full control for the owner
+# ───────────────────────────────────────────────────────────────
+
+@owner_bp.route('/tenants')
+@login_required
+@owner_required
+def tenants_list():
+    """List all tenants with full management controls."""
+    from models.tenant_store import TenantStore
+
+    tenants = Tenant.query.order_by(Tenant.created_at.desc()).all()
+    tenant_ids = [t.id for t in tenants]
+
+    user_counts = dict(
+        db.session.query(User.tenant_id, func.count(User.id))
+        .filter(User.tenant_id.in_(tenant_ids))
+        .group_by(User.tenant_id)
+        .all()
+    )
+    branch_counts = dict(
+        db.session.query(Branch.tenant_id, func.count(Branch.id))
+        .filter(Branch.tenant_id.in_(tenant_ids))
+        .group_by(Branch.tenant_id)
+        .all()
+    )
+    store_counts = dict(
+        db.session.query(TenantStore.tenant_id, func.count(TenantStore.id))
+        .filter(TenantStore.tenant_id.in_(tenant_ids))
+        .group_by(TenantStore.tenant_id)
+        .all()
+    )
+
+    return render_template(
+        'owner/tenants_list.html',
+        tenants=tenants,
+        user_counts=user_counts,
+        branch_counts=branch_counts,
+        store_counts=store_counts,
+    )
+
+
+@owner_bp.route('/tenants/<int:tenant_id>/suspend', methods=['POST'])
+@login_required
+@owner_required
+def tenant_suspend(tenant_id):
+    """Suspend a tenant (soft-disable all operations)."""
+    tenant = Tenant.query.get_or_404(tenant_id)
+    reason = request.form.get('reason', '').strip()
+
+    # Protect default tenant (id==1) from suspension
+    if tenant.id == 1:
+        flash('⚠️ لا يمكن تعليق التينانت الرئيسي.', 'danger')
+        return redirect(url_for('owner.tenants_list'))
+
+    tenant.is_active = False
+    tenant.is_suspended = True
+    tenant.suspension_reason = reason or 'Suspended by owner'
+    tenant.updated_at = datetime.now(timezone.utc)
+
+    db.session.commit()
+    _invalidate_owner_changes()
+    _audit_owner_db_action('tenant_suspend', {'tenant_id': tenant_id, 'reason': reason})
+    flash(f'تم تعليق التينانت "{tenant.name_ar or tenant.name}" بنجاح.', 'success')
+    return redirect(url_for('owner.tenants_list'))
+
+
+@owner_bp.route('/tenants/<int:tenant_id>/activate', methods=['POST'])
+@login_required
+@owner_required
+def tenant_activate(tenant_id):
+    """Re-activate a suspended tenant."""
+    tenant = Tenant.query.get_or_404(tenant_id)
+
+    tenant.is_active = True
+    tenant.is_suspended = False
+    tenant.suspension_reason = None
+    tenant.updated_at = datetime.now(timezone.utc)
+
+    db.session.commit()
+    _invalidate_owner_changes()
+    _audit_owner_db_action('tenant_activate', {'tenant_id': tenant_id})
+    flash(f'تم تفعيل التينانت "{tenant.name_ar or tenant.name}" بنجاح.', 'success')
+    return redirect(url_for('owner.tenants_list'))
+
+
+@owner_bp.route('/tenants/<int:tenant_id>/edit', methods=['GET', 'POST'])
+@login_required
+@owner_required
+def tenant_edit(tenant_id):
+    """Edit tenant core settings."""
+    tenant = Tenant.query.get_or_404(tenant_id)
+
+    if request.method == 'POST':
+        try:
+            tenant.name = request.form.get('name', tenant.name).strip()
+            tenant.name_ar = request.form.get('name_ar', tenant.name_ar).strip()
+            tenant.name_en = request.form.get('name_en', tenant.name_en).strip()
+            tenant.slug = request.form.get('slug', tenant.slug).strip()
+            tenant.business_type = request.form.get('business_type', tenant.business_type).strip()
+            tenant.phone_1 = request.form.get('phone_1', tenant.phone_1).strip() or None
+            tenant.phone_2 = request.form.get('phone_2', tenant.phone_2).strip() or None
+            tenant.email = request.form.get('email', tenant.email).strip() or None
+            tenant.address_ar = request.form.get('address_ar', tenant.address_ar).strip() or None
+            tenant.default_currency = request.form.get('default_currency', tenant.default_currency).strip() or 'AED'
+            tenant.max_users = int(request.form.get('max_users', tenant.max_users or 5))
+            tenant.max_products = int(request.form.get('max_products', tenant.max_products or 1000))
+            tenant.max_customers = int(request.form.get('max_customers', tenant.max_customers or 500))
+            tenant.updated_at = datetime.now(timezone.utc)
+
+            db.session.commit()
+            _invalidate_owner_changes()
+            _audit_owner_db_action('tenant_edit', {'tenant_id': tenant_id})
+            flash(f'تم تحديث بيانات التينانت "{tenant.name_ar}" بنجاح.', 'success')
+            return redirect(url_for('owner.tenants_list'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'خطأ في تحديث التينانت: {str(e)}', 'danger')
+
+    return render_template('owner/tenant_edit.html', tenant=tenant)
+
+
+@owner_bp.route('/tenants/<int:tenant_id>/delete', methods=['POST'])
+@login_required
+@owner_required
+def tenant_delete(tenant_id):
+    """Soft-delete a tenant (mark as inactive, do not purge)."""
+    tenant = Tenant.query.get_or_404(tenant_id)
+
+    # Protect default tenant (id==1) from deletion
+    if tenant.id == 1:
+        flash('⚠️ لا يمكن حذف التينانت الرئيسي.', 'danger')
+        return redirect(url_for('owner.tenants_list'))
+
+    # Check for active users
+    active_users = User.query.filter_by(tenant_id=tenant_id, is_active=True).count()
+    if active_users > 0:
+        flash(f'⚠️ التينانت يحتوي على {active_users} مستخدمين نشطين. قم بتعطيلهم أولاً أو قم بالتعليق.', 'warning')
+        return redirect(url_for('owner.tenants_list'))
+
+    tenant.is_active = False
+    tenant.is_suspended = True
+    tenant.suspension_reason = 'Deleted by owner'
+    tenant.updated_at = datetime.now(timezone.utc)
+
+    db.session.commit()
+    _invalidate_owner_changes()
+    _audit_owner_db_action('tenant_soft_delete', {'tenant_id': tenant_id})
+    flash(f'تم حذف التينانت "{tenant.name_ar or tenant.name}" بنجاح.', 'success')
+    return redirect(url_for('owner.tenants_list'))
+
+
+@owner_bp.route('/tenants/<int:tenant_id>/suspend-page')
+def tenant_suspend_page(tenant_id):
+    """Public page shown when a tenant is suspended."""
+    tenant = Tenant.query.get_or_404(tenant_id)
+    return render_template(
+        'public/tenant_suspended.html',
+        tenant=tenant,
+        reason=tenant.suspension_reason or 'Tenant suspended',
+    )

@@ -1,0 +1,148 @@
+{% extends "owner/base.html" %}
+
+{% block title %}إدارة التينانتس{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold"><i class="bi bi-building me-2"></i>إدارة الشركات (التينانتس)</h2>
+    <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left me-1"></i> العودة للوحة التحكم
+    </a>
+  </div>
+
+  <div class="card shadow-sm">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>#</th>
+              <th>الاسم</th>
+              <th>الSlug</th>
+              <th>العملة</th>
+              <th>المستخدمين</th>
+              <th>الفروع</th>
+              <th>المتاجر</th>
+              <th>الحالة</th>
+              <th>السبب</th>
+              <th class="text-end">الإجراءات</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for t in tenants %}
+            <tr class="{% if t.is_suspended %}table-warning{% elif not t.is_active %}table-secondary{% endif %}">
+              <td>{{ t.id }}</td>
+              <td>
+                <div class="fw-semibold">{{ t.name_ar or t.name }}</div>
+                <small class="text-muted">{{ t.name_en or '' }}</small>
+              </td>
+              <td><code>{{ t.slug }}</code></td>
+              <td>{{ t.default_currency or 'AED' }}</td>
+              <td>{{ user_counts.get(t.id, 0) }}</td>
+              <td>{{ branch_counts.get(t.id, 0) }}</td>
+              <td>{{ store_counts.get(t.id, 0) }}</td>
+              <td>
+                {% if t.is_suspended %}
+                  <span class="badge bg-danger"><i class="bi bi-pause-circle me-1"></i>معلق</span>
+                {% elif not t.is_active %}
+                  <span class="badge bg-secondary"><i class="bi bi-x-circle me-1"></i>معطل</span>
+                {% else %}
+                  <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>نشط</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if t.suspension_reason %}
+                  <span class="text-muted small" style="max-width:200px; display:inline-block;">{{ t.suspension_reason }}</span>
+                {% else %}
+                  <span class="text-muted small">—</span>
+                {% endif %}
+              </td>
+              <td class="text-end">
+                <div class="btn-group btn-group-sm">
+                  <a href="{{ url_for('owner.tenant_edit', tenant_id=t.id) }}" class="btn btn-outline-primary" title="تعديل">
+                    <i class="bi bi-pencil"></i>
+                  </a>
+
+                  {% if t.is_active and not t.is_suspended %}
+                  <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#suspendModal{{ t.id }}" title="تعليق">
+                    <i class="bi bi-pause-circle"></i>
+                  </button>
+                  {% else %}
+                  <form method="POST" action="{{ url_for('owner.tenant_activate', tenant_id=t.id) }}" class="d-inline" onsubmit="return confirm('تأكيد تفعيل التينانت؟');">
+                    <button type="submit" class="btn btn-outline-success" title="تفعيل">
+                      <i class="bi bi-play-circle"></i>
+                    </button>
+                  </form>
+                  {% endif %}
+
+                  <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ t.id }}" title="حذف">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Suspend Modals -->
+{% for t in tenants %}
+{% if t.is_active and not t.is_suspended %}
+<div class="modal fade" id="suspendModal{{ t.id }}" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="POST" action="{{ url_for('owner.tenant_suspend', tenant_id=t.id) }}">
+        <div class="modal-header bg-warning text-dark">
+          <h5 class="modal-title"><i class="bi bi-pause-circle me-2"></i>تعليق تينانت</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <p>هل أنت متأكد من تعليق تينانت <strong>{{ t.name_ar or t.name }}</strong>؟</p>
+          <p class="text-muted small">سيتم إيقاف جميع المستخدمين والعمليات لهذه الشركة.</p>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">سبب التعليق (سيظهر للمستخدمين):</label>
+            <textarea name="reason" class="form-control" rows="3" placeholder="مثال: تأخر الدفع، صيانة النظام، انتهاك شروط الاستخدام..." required></textarea>
+            <div class="form-text">هذا النص سيظهر للمستخدمين عند محاولتهم الدخول.</div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+          <button type="submit" class="btn btn-warning"><i class="bi bi-pause-circle me-1"></i>تعليق</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- Delete Modals -->
+<div class="modal fade" id="deleteModal{{ t.id }}" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="POST" action="{{ url_for('owner.tenant_delete', tenant_id=t.id) }}">
+        <div class="modal-header bg-danger text-white">
+          <h5 class="modal-title"><i class="bi bi-trash me-2"></i>حذف تينانت</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <p>هل أنت متأكد من حذف <strong>{{ t.name_ar or t.name }}</strong>؟</p>
+          <div class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle me-1"></i>
+            سيتم تعطيل التينانت. لن يتم حذف البيانات فعلياً، لكنها ستصبح غير متاحة.
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+          <button type="submit" class="btn btn-danger"><i class="bi bi-trash me-1"></i>حذف</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endfor %}
+{% endblock %}

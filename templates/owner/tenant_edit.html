@@ -1,0 +1,120 @@
+{% extends "owner/base.html" %}
+
+{% block title %}تعديل تينانت{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold"><i class="bi bi-building-gear me-2"></i>تعديل بيانات الشركة</h2>
+    <a href="{{ url_for('owner.tenants_list') }}" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left me-1"></i> العودة للقائمة
+    </a>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-8">
+      <form method="POST" class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+          <i class="bi bi-pencil-square me-2"></i>بيانات التينانت
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">الاسم العربي</label>
+              <input type="text" name="name_ar" class="form-control" value="{{ tenant.name_ar or '' }}" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">الاسم الإنجليزي</label>
+              <input type="text" name="name_en" class="form-control" value="{{ tenant.name_en or '' }}">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">الاسم الفريد (Slug)</label>
+              <input type="text" name="slug" class="form-control" value="{{ tenant.slug or '' }}" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">نوع النشاط</label>
+              <input type="text" name="business_type" class="form-control" value="{{ tenant.business_type or '' }}">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">الهاتف 1</label>
+              <input type="text" name="phone_1" class="form-control" value="{{ tenant.phone_1 or '' }}">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">الهاتف 2</label>
+              <input type="text" name="phone_2" class="form-control" value="{{ tenant.phone_2 or '' }}">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">البريد الإلكتروني</label>
+              <input type="email" name="email" class="form-control" value="{{ tenant.email or '' }}">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">العملة الافتراضية</label>
+              <select name="default_currency" class="form-select">
+                <option value="AED" {% if tenant.default_currency == 'AED' %}selected{% endif %}>AED - درهم إماراتي</option>
+                <option value="ILS" {% if tenant.default_currency == 'ILS' %}selected{% endif %}>ILS - شيكل</option>
+                <option value="USD" {% if tenant.default_currency == 'USD' %}selected{% endif %}>USD - دولار</option>
+              </select>
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-semibold">العنوان</label>
+              <textarea name="address_ar" class="form-control" rows="2">{{ tenant.address_ar or '' }}</textarea>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">حد المستخدمين</label>
+              <input type="number" name="max_users" class="form-control" value="{{ tenant.max_users or 5 }}" min="1">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">حد المنتجات</label>
+              <input type="number" name="max_products" class="form-control" value="{{ tenant.max_products or 1000 }}" min="1">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">حد العملاء</label>
+              <input type="number" name="max_customers" class="form-control" value="{{ tenant.max_customers or 500 }}" min="1">
+            </div>
+          </div>
+        </div>
+        <div class="card-footer d-flex justify-content-between">
+          <a href="{{ url_for('owner.tenants_list') }}" class="btn btn-secondary">إلغاء</a>
+          <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i>حفظ التغييرات</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card shadow-sm border-0 mb-3">
+        <div class="card-header bg-info text-white">
+          <i class="bi bi-info-circle me-2"></i>حالة التينانت
+        </div>
+        <div class="card-body">
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item d-flex justify-content-between">
+              <span>الحالة</span>
+              {% if tenant.is_suspended %}
+                <span class="badge bg-danger">معلق</span>
+              {% elif not tenant.is_active %}
+                <span class="badge bg-secondary">معطل</span>
+              {% else %}
+                <span class="badge bg-success">نشط</span>
+              {% endif %}
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+              <span>تاريخ الإنشاء</span>
+              <span class="text-muted">{{ tenant.created_at.strftime('%Y-%m-%d') if tenant.created_at else '—' }}</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+              <span>آخر تحديث</span>
+              <span class="text-muted">{{ tenant.updated_at.strftime('%Y-%m-%d %H:%M') if tenant.updated_at else '—' }}</span>
+            </li>
+            {% if tenant.suspension_reason %}
+            <li class="list-group-item">
+              <span class="text-danger fw-semibold">سبب التعليق:</span>
+              <p class="mb-0 mt-1">{{ tenant.suspension_reason }}</p>
+            </li>
+            {% endif %}
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
