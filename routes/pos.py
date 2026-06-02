@@ -143,10 +143,11 @@ def api_walkin_customer():
 
 
 @pos_bp.route("/api/checkout", methods=["POST"])
-@csrf.exempt
 @login_required
 @permission_required("manage_sales")
 def api_checkout():
+    if not request.is_json:
+        return jsonify({"success": False, "error": "Content-Type يجب أن يكون application/json."}), 415
     payload = request.get_json(silent=True) or {}
 
     use_quick = bool(payload.get("quick_customer") or payload.get("walkin"))
