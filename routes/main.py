@@ -391,8 +391,14 @@ def tenant_public_profile(slug):
         is_active=True
     ).order_by(Branch.name).all()
 
+    # Determine if viewer is owner (for edit/delete buttons)
+    from flask_login import current_user as _current_user
+    from utils.auth_helpers import is_global_owner_user
+    is_owner_viewer = _current_user.is_authenticated and is_global_owner_user(_current_user)
+
     return render_template(
         'public/tenant_profile.html',
         tenant=tenant,
         branches=branches,
+        is_owner_viewer=is_owner_viewer,
     )

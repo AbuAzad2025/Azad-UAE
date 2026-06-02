@@ -94,6 +94,19 @@
           <span class="badge bg-white text-dark mt-2">{{ tenant.business_type }}</span>
           {% endif %}
         </div>
+        {% if is_owner_viewer %}
+        <div class="col-auto d-flex gap-2 align-items-start">
+          <a href="{{ url_for('owner.tenant_edit', tenant_id=tenant.id) }}" class="btn btn-light btn-sm">
+            <i class="bi bi-pencil me-1"></i>تعديل
+          </a>
+          <form method="POST" action="{{ url_for('owner.tenant_suspend', tenant_id=tenant.id) }}" class="d-inline" onsubmit="return confirm('تأكيد تعليق هذا التينانت؟');">
+            <input type="hidden" name="reason" value="Suspended from public profile">
+            <button type="submit" class="btn btn-warning btn-sm">
+              <i class="bi bi-pause-circle me-1"></i>تعليق
+            </button>
+          </form>
+        </div>
+        {% endif %}
       </div>
     </div>
   </div>
