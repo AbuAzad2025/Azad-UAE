@@ -63,6 +63,14 @@ class PurchaseService:
         if not supplier_name:
             raise ValueError('⚠️ يجب إدخال اسم المورد.')
 
+        # Resolve tenant before numbering, tax normalization, header, lines, and GL posting.
+        tenant_id = (
+            get_active_tenant_id(user)
+            or getattr(user, 'tenant_id', None)
+            or getattr(warehouse, 'tenant_id', None)
+            or (getattr(supplier, 'tenant_id', None) if supplier else None)
+        )
+
         # Generate Number
         purchase_branch_id = warehouse.branch_id or user.branch_id
         purchase_number = generate_number(
@@ -81,14 +89,13 @@ class PurchaseService:
         )
         
         # Create Purchase Header
-        tenant_id = get_active_tenant_id(user) or getattr(user, 'tenant_id', None) or getattr(warehouse, 'tenant_id', None) or (getattr(supplier, 'tenant_id', None) if supplier else None)
         effective_tax_rate = normalize_tax_rate(tax_rate, tenant_id)
         purchase = Purchase(
             tenant_id=tenant_id,
             purchase_number=purchase_number,
             supplier_id=supplier_id,
             warehouse_id=warehouse_id,
-            branch_id=warehouse.branch_id or user.branch_id,
+            branch_id=purchase_branch_id,
             supplier_name=supplier_name,
             supplier_phone=supplier_data.get('phone'),
             supplier_email=supplier_data.get('email'),
