@@ -19,6 +19,8 @@
 
 {% block content %}
 
+{% include 'owner/_platform_dashboard_sections.html' %}
+
 <!-- بطاقة تحذير ثابتة دائمة - لا يمكن إخفاؤها أبداً -->
 <div class="owner-warning-permanent d-flex align-items-center mb-4" style="padding: 15px 25px; border-radius: 10px; border: 3px solid #ff6b6b; background: linear-gradient(135deg, #c0392b 0%, #e74c3c 100%); box-shadow: 0 4px 15px rgba(0,0,0,0.3); opacity: 1 !important; display: flex !important; visibility: visible !important; transition: none !important;">
   <i class="fas fa-exclamation-triangle mr-3" style="font-size: 2rem; color: #ffc107; animation: pulse 2s infinite;"></i>

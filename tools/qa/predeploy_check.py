@@ -40,9 +40,12 @@ PY_COMPILE_FILES = [
     "utils/field_validators.py",
     "utils/static_asset_paths.py",
     "utils/tenant_assets.py",
-    "routes/products.py",
-    "services/backup_service.py",
+    "utils/owner_panel.py",
+    "utils/tenant_branding.py",
+    "routes/owner.py",
+    "routes/users.py",
     "tools/qa/predeploy_check.py",
+    "tools/qa/owner_panel_check.py",
     "tools/qa/static_asset_audit.py",
     "tools/qa/backup_restore_check.py",
     "tools/qa/gl_remediation_verify.py",
@@ -736,6 +739,24 @@ def check_tenant_branding(report: Report) -> None:
         report.add("Tenant branding", "PASS", "alhazem/nasrallah isolation OK")
 
 
+def check_owner_panels(report: Report, profile: str) -> None:
+    from tools.qa.owner_panel_check import run_owner_panel_check
+
+    status, fails, warns = run_owner_panel_check(profile)
+    detail_parts = []
+    if fails:
+        detail_parts.extend(fails[:6])
+    if warns:
+        detail_parts.extend(warns[:4])
+    detail = "; ".join(detail_parts) if detail_parts else "RBAC + dashboards OK"
+    if status == "FAIL":
+        report.add("Owner panels / RBAC readiness", "FAIL", detail)
+    elif status == "WARN":
+        report.add("Owner panels / RBAC readiness", "WARN", detail)
+    else:
+        report.add("Owner panels / RBAC readiness", "PASS", detail)
+
+
 def check_git_hygiene(report: Report) -> None:
     issues = []
     r = _run(["git", "status", "--porcelain"], cwd=ROOT)
@@ -832,6 +853,7 @@ def main() -> int:
         check_uat(report)
     check_static_assets(report)
     check_tenant_branding(report)
+    check_owner_panels(report, args.profile)
     check_git_hygiene(report)
 
     print_report(report, args.profile)

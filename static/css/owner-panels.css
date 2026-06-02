@@ -1,0 +1,22 @@
+/* Owner / company admin panels — scoped UI polish */
+.owner-panel-card {
+  border-radius: 10px;
+  border: 0;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+.owner-badge-active { background: #28a745; color: #fff; }
+.owner-badge-suspended { background: #6c757d; color: #fff; }
+.owner-badge-missing { background: #dc3545; color: #fff; }
+.owner-badge-warn { background: #ffc107; color: #212529; }
+.owner-tenant-logo {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  border-radius: 6px;
+  background: #f8f9fa;
+}
+.owner-table-tenants td { vertical-align: middle; }
+@media (max-width: 768px) {
+  .owner-table-tenants { font-size: 0.85rem; }
+  .owner-tenant-logo { width: 32px; height: 32px; }
+}

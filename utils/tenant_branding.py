@@ -172,3 +172,24 @@ def get_print_header_context(tenant_id: int | None = None) -> dict[str, Any]:
 
 def get_invoice_branding(tenant_id: int | None = None) -> dict[str, Any]:
     return resolve_tenant_branding(tenant_id)
+
+
+def branding_path_warnings(branding: dict[str, Any] | None) -> list[str]:
+    """Display-only warnings for owner panel (does not change branding resolution)."""
+    if not branding:
+        return ["no branding resolved"]
+    warns: list[str] = []
+    for key in ("logo_url", "favicon_url", "letterhead_url"):
+        raw = branding.get(key) or ""
+        if _WINDOWS_ABS.match(raw):
+            warns.append(f"{key}: absolute Windows path")
+        elif raw and not raw.startswith("http"):
+            rel = normalize_static_rel(raw)
+            if rel and not _static_exists(rel):
+                warns.append(f"{key}: file missing ({rel})")
+    slug = (branding.get("tenant_slug") or "").strip()
+    logo = normalize_static_rel(branding.get("logo_url") or "")
+    if slug and logo and f"assets/tenants/{slug}" not in logo and "uploads/" not in logo:
+        if "azad" in logo.lower() and slug not in ("azad",):
+            warns.append("logo may be platform default, not tenant asset")
+    return warns

@@ -103,6 +103,56 @@ def owner_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+
+def platform_owner_required(f):
+    """Platform routes — same gate as owner_required (owner / developer)."""
+    return owner_required(f)
+
+
+def company_admin_required(f):
+    """Tenant company admin surface — super_admin or manager with active tenant."""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated:
+            flash('الرجاء تسجيل الدخول أولاً', 'warning')
+            return redirect(url_for('auth.login'))
+
+        if is_global_owner_user(current_user):
+            abort(404)
+
+        from utils.tenanting import get_active_tenant_id
+
+        slug = getattr(getattr(current_user, 'role', None), 'slug', None)
+        if slug not in ('super_admin', 'manager') and not current_user.is_super_admin():
+            abort(403)
+        if not get_active_tenant_id(current_user):
+            abort(403)
+
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+def owner_or_company_admin(f):
+    """Platform owner/developer or tenant super_admin/manager."""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated:
+            flash('الرجاء تسجيل الدخول أولاً', 'warning')
+            return redirect(url_for('auth.login'))
+
+        if is_global_owner_user(current_user):
+            return f(*args, **kwargs)
+
+        from utils.tenanting import get_active_tenant_id
+
+        slug = getattr(getattr(current_user, 'role', None), 'slug', None)
+        if slug in ('super_admin', 'manager') or current_user.is_super_admin():
+            if get_active_tenant_id(current_user):
+                return f(*args, **kwargs)
+        abort(403)
+
+    return decorated_function
+
 def branch_manager_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):

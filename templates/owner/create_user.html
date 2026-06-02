@@ -123,6 +123,21 @@
                 </select>
               </div>
 
+              {% if show_tenant_picker and tenants %}
+              <div class="form-group">
+                <label>الشركة (Tenant) *</label>
+                <select name="tenant_id" class="form-control" required>
+                  <option value="">-- اختر الشركة --</option>
+                  {% for t in tenants %}
+                  <option value="{{ t.id }}" {% if form_data.get('tenant_id')|string == t.id|string %}selected{% endif %}>
+                    {{ t.name_ar or t.name }} ({{ t.slug }})
+                  </option>
+                  {% endfor %}
+                </select>
+                <small class="text-muted">مستخدمي المنصة (owner/developer) فقط بدون tenant — اختر دوراً مناسباً.</small>
+              </div>
+              {% endif %}
+
               <div class="form-group">
                 <label>الفرع <span class="text-danger branch-required-indicator">*</span></label>
                 <select name="branch_id" id="branch_id" class="form-control">

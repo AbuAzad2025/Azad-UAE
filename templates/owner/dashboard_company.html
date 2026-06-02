@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% block title %}لوحة الشركة | {{ tenant.name_ar or tenant.name }}{% endblock %}
+{% block page_title %}<i class="fas fa-building text-info"></i> لوحة مدير الشركة{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/owner-panels.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="alert alert-info owner-panel-card">
+  <i class="fas fa-info-circle"></i>
+  <strong>{{ tenant.name_ar or tenant.name }}</strong> — عرض بيانات شركتك فقط. لا يظهر هنا نسخ النظام الكامل ولا شركات أخرى.
+</div>
+
+{% if readiness_warnings %}
+<div class="alert alert-warning">
+  <ul class="mb-0">
+    {% for w in readiness_warnings %}<li>{{ w }}</li>{% endfor %}
+  </ul>
+</div>
+{% endif %}
+
+<div class="row mb-3">
+  <div class="col-md-3">
+    <div class="small-box bg-success owner-panel-card">
+      <div class="inner">
+        <h3>{{ "{:,.0f}".format(month_sales_amount) }}</h3>
+        <p>مبيعات الشهر ({{ tenant.default_currency or 'AED' }})</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="small-box bg-info owner-panel-card">
+      <div class="inner">
+        <h3>{{ month_sales_count }}</h3>
+        <p>فواتير الشهر</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="small-box bg-warning owner-panel-card">
+      <div class="inner">
+        <h3>{{ products_count }}</h3>
+        <p>منتجات نشطة</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="small-box bg-secondary owner-panel-card">
+      <div class="inner">
+        <h3>{{ users_count }}</h3>
+        <p>مستخدمون</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-4">
+    <div class="card owner-panel-card">
+      <div class="card-header">معاينة العلامة</div>
+      <div class="card-body text-center">
+        {% if logo_url %}
+        <img src="{{ logo_url if logo_url.startswith('http') else url_for('static', filename=logo_url.replace('/static/','').lstrip('/')) }}" alt="logo" class="img-fluid mb-2" style="max-height:80px">
+        {% endif %}
+        <p class="mb-1"><strong>{{ branding.company_name_ar }}</strong></p>
+        <p class="text-muted small">{{ branding.company_name_en }}</p>
+        <a href="{{ url_for('owner.preview_invoice', template='modern') }}" target="_blank" class="btn btn-sm btn-outline-primary">معاينة فاتورة</a>
+        <a href="{{ url_for('owner.invoice_settings') }}" class="btn btn-sm btn-outline-secondary">إعدادات الترويسة</a>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-8">
+    <div class="card owner-panel-card">
+      <div class="card-header">إجراءات سريعة</div>
+      <div class="card-body">
+        <a href="{{ url_for('users.index') }}" class="btn btn-outline-primary btn-sm mb-1"><i class="fas fa-users"></i> المستخدمون</a>
+        {% if current_user.has_permission('manage_backups') %}
+        <a href="{{ url_for('owner.list_backups') }}" class="btn btn-outline-info btn-sm mb-1"><i class="fas fa-database"></i> نسخ الشركة</a>
+        {% endif %}
+        <a href="{{ url_for('owner.company_info') }}" class="btn btn-outline-success btn-sm mb-1"><i class="fas fa-building"></i> بيانات الشركة</a>
+        <a href="{{ url_for('branches.index') }}" class="btn btn-outline-info btn-sm mb-1"><i class="fas fa-sitemap"></i> الفروع ({{ branches_count }})</a>
+        {% if current_user.has_permission('manage_store') %}
+        <a href="{{ url_for('store.admin_index') }}" class="btn btn-outline-warning btn-sm mb-1"><i class="fas fa-store"></i> المتجر</a>
+        {% endif %}
+        <a href="{{ url_for('ledger.admin_dashboard') }}" class="btn btn-outline-dark btn-sm mb-1"><i class="fas fa-book"></i> دفتر الأستاذ</a>
+        <p class="text-muted small mt-2 mb-0">نسخ احتياطية لهذه الشركة: {{ tenant_backup_count }} — لا يمكن إنشاء نسخة نظام كاملة من هنا.</p>
+      </div>
+    </div>
+    {% if scoped_branch_id %}
+    <div class="alert alert-secondary mt-2 mb-0">
+      <i class="fas fa-code-branch"></i> عرض مفلتر على فرعك الحالي (#{{ scoped_branch_id }}).
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

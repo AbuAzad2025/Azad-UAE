@@ -760,21 +760,61 @@
           {% if current_user.is_authenticated and (current_user.is_owner or (current_user.role and current_user.role.slug == 'developer')) %}
           <li class="nav-header">OWNER MODE</li>
           <li class="nav-item">
-            <a href="{{ url_for('owner.dashboard') }}" class="nav-link">
+            <a href="{{ url_for('owner.dashboard') }}" class="nav-link {% if request.endpoint == 'owner.dashboard' %}active{% endif %}">
               <i class="nav-icon fas fa-crown text-warning"></i>
               <p>لوحة المالك</p>
             </a>
           </li>
           <li class="nav-item">
-            <a href="{{ url_for('branches.index') }}" class="nav-link">
-              <i class="nav-icon fas fa-sitemap text-info"></i>
-              <p>الفروع</p>
+            <a href="{{ url_for('owner.users_list') }}" class="nav-link">
+              <i class="nav-icon fas fa-users-cog"></i>
+              <p>مستخدمي المنصة</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="{{ url_for('owner.list_backups') }}" class="nav-link">
+              <i class="nav-icon fas fa-database"></i>
+              <p>نسخ النظام</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="{{ url_for('owner.system_health') }}" class="nav-link">
+              <i class="nav-icon fas fa-heartbeat"></i>
+              <p>صحة النظام</p>
             </a>
           </li>
           <li class="nav-item">
             <a href="{{ url_for('ai.config') }}" class="nav-link">
               <i class="nav-icon fas fa-key text-info"></i>
               <p>مفاتيح AI (Groq)</p>
+            </a>
+          </li>
+          {% elif current_user.is_authenticated and current_user.role and current_user.role.slug in ['super_admin', 'manager'] %}
+          <li class="nav-header">إدارة الشركة</li>
+          <li class="nav-item">
+            <a href="{{ url_for('owner.company_dashboard') }}" class="nav-link {% if request.endpoint == 'owner.company_dashboard' %}active{% endif %}">
+              <i class="nav-icon fas fa-building text-info"></i>
+              <p>لوحة الشركة</p>
+            </a>
+          </li>
+          {% if current_user.has_permission('manage_backups') %}
+          <li class="nav-item">
+            <a href="{{ url_for('owner.list_backups') }}" class="nav-link">
+              <i class="nav-icon fas fa-database"></i>
+              <p>نسخ الشركة</p>
+            </a>
+          </li>
+          {% endif %}
+          <li class="nav-item">
+            <a href="{{ url_for('owner.company_info') }}" class="nav-link">
+              <i class="nav-icon fas fa-id-card"></i>
+              <p>بيانات الشركة</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="{{ url_for('owner.invoice_settings') }}" class="nav-link">
+              <i class="nav-icon fas fa-file-invoice"></i>
+              <p>ترويسات الفواتير</p>
             </a>
           </li>
           {% endif %}

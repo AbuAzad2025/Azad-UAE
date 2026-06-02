@@ -12,7 +12,12 @@ from models import (
 from models.login_history import LoginHistory
 from models.security_alert import SecurityAlert
 from models.api_key import APIKey
-from utils.decorators import owner_required, permission_required
+from utils.decorators import (
+    owner_required,
+    permission_required,
+    company_admin_required,
+    owner_or_company_admin,
+)
 from utils.safe_redirect import safe_redirect_target
 from utils.branching import role_requires_branch, get_visible_products_query
 from utils.auth_helpers import role_level_for, role_level_for_user
@@ -323,7 +328,28 @@ def dashboard():
             'net_profit_indicator': float(b_sales[1] or 0) - float(b_expenses)
         })
     
-    # Explicit template vars (dashboard expects these names)
+    from utils.auth_helpers import is_global_owner_user
+    from utils.owner_panel import (
+        build_platform_overview,
+        build_tenant_management_rows,
+        build_branding_overview_rows,
+        build_system_health_summary,
+    )
+
+    panel_mode = 'platform' if is_global_owner_user(current_user) else 'legacy'
+    platform_overview = None
+    tenant_rows = []
+    branding_rows = []
+    health_summary = None
+    if panel_mode == 'platform':
+        from services.backup_service import BackupService
+
+        backups = BackupService.list_backups()
+        platform_overview = build_platform_overview(backups)
+        tenant_rows = build_tenant_management_rows(backups)
+        branding_rows = build_branding_overview_rows()
+        health_summary = build_system_health_summary()
+
     return render_template(
         'owner/dashboard.html',
         stats=stats,
@@ -331,7 +357,31 @@ def dashboard():
         total_users=stats['total_users'],
         total_customers=stats['total_customers'],
         total_sales=stats.get('month_sales_count', 0),
-        latest_audit_logs=stats['recent_actions']
+        latest_audit_logs=stats['recent_actions'],
+        panel_mode=panel_mode,
+        platform_overview=platform_overview,
+        tenant_rows=tenant_rows,
+        branding_rows=branding_rows,
+        health_summary=health_summary,
+    )
+
+
+@owner_bp.route('/company-dashboard')
+@login_required
+@company_admin_required
+def company_dashboard():
+    """لوحة مدير الشركة — نطاق تينانت واحد فقط."""
+    from utils.tenanting import get_active_tenant_id
+    from utils.owner_panel import build_company_dashboard_context
+    from utils.decorators import branch_scope_id
+
+    tid = get_active_tenant_id(current_user)
+    scoped_branch_id = branch_scope_id()
+    ctx = build_company_dashboard_context(tid, scoped_branch_id)
+    return render_template(
+        'owner/dashboard_company.html',
+        panel_mode='company',
+        **ctx,
     )
 
 
@@ -454,32 +504,41 @@ def archived():
 @login_required
 @owner_required
 def users_list():
-    """قائمة المستخدمين"""
+    """قائمة المستخدمين — platform: all or filtered by active tenant."""
     from sqlalchemy.orm import joinedload
+    from utils.tenanting import get_active_tenant_id, scoped_user_query
 
-    users = (
-        User.query
+    query = (
+        scoped_user_query(exclude_owners=True)
         .options(
             joinedload(User.role),
             joinedload(User.branch),
         )
         .order_by(User.created_at.desc())
-        .all()
     )
-    
-    # إحصائيات
+    active_tid = get_active_tenant_id(current_user)
+    users = query.all()
+    tenants = Tenant.query.filter_by(is_active=True).order_by(Tenant.name_ar).all()
+
     from models import Role
+    base = scoped_user_query(exclude_owners=True)
     stats = {
-        'total': User.query.count(),
-        'active': User.query.filter_by(is_active=True).count(),
-        'inactive': User.query.filter_by(is_active=False).count(),
+        'total': base.count(),
+        'active': base.filter_by(is_active=True).count(),
+        'inactive': base.filter_by(is_active=False).count(),
         'owners': User.query.filter_by(is_owner=True).count(),
-        'admins': db.session.query(User).join(Role).filter(Role.slug == 'super_admin').count(),
-        'managers': db.session.query(User).join(Role).filter(Role.slug == 'manager').count(),
-        'sellers': db.session.query(User).join(Role).filter(Role.slug == 'seller').count(),
+        'admins': base.join(Role).filter(Role.slug == 'super_admin').count(),
+        'managers': base.join(Role).filter(Role.slug == 'manager').count(),
+        'sellers': base.join(Role).filter(Role.slug == 'seller').count(),
     }
-    
-    return render_template('owner/users_list.html', users=users, stats=stats)
+
+    return render_template(
+        'owner/users_list.html',
+        users=users,
+        stats=stats,
+        active_tenant_id=active_tid,
+        tenants=tenants,
+    )
 
 
 @owner_bp.route('/users/create', methods=['GET', 'POST'])
@@ -492,12 +551,18 @@ def create_user():
     from werkzeug.security import generate_password_hash
     from utils.password_validator import PasswordValidator
     
+    from utils.tenanting import get_active_tenant_id
+    from utils.auth_helpers import is_global_owner_user, user_may_have_null_tenant
+
     current_level = role_level_for_user(current_user)
     roles = Role.query.filter_by(is_active=True).all()
     roles = [r for r in roles if role_level_for(getattr(r, 'slug', None)) <= current_level]
+    roles = [r for r in roles if getattr(r, 'slug', None) not in ('owner', 'developer')]
     branches = Branch.query.filter_by(is_active=True).order_by(Branch.code, Branch.name).all()
+    tenants = Tenant.query.filter_by(is_active=True).order_by(Tenant.name_ar).all()
     default_form = {'is_active': 'on'}
-    
+    preselect_tenant_id = request.args.get('tenant_id', type=int)
+
     if request.method == 'POST':
         try:
             from utils.sanitizer import InputSanitizer
@@ -522,34 +587,43 @@ def create_user():
             if not username or not password:
                 from utils.error_messages import ErrorMessages
                 flash(ErrorMessages.user_required_fields(), 'error')
-                return render_template('owner/create_user.html', roles=roles, branches=branches, form_data=_form_values())
+                return render_template('owner/create_user.html', roles=roles, branches=branches, tenants=tenants, show_tenant_picker=True, form_data=_form_values())
             
             if not role_id:
                 flash('⚠️ يرجى اختيار الدور الوظيفي.', 'warning')
-                return render_template('owner/create_user.html', roles=roles, branches=branches, form_data=_form_values())
+                return render_template('owner/create_user.html', roles=roles, branches=branches, tenants=tenants, show_tenant_picker=True, form_data=_form_values())
             
             # التحقق من قوة كلمة المرور
             is_valid, errors = PasswordValidator.validate(password)
             if not is_valid:
                 from utils.error_messages import ErrorMessages
                 flash(ErrorMessages.weak_password(errors), 'danger')
-                return render_template('owner/create_user.html', roles=roles, branches=branches, form_data=_form_values())
+                return render_template('owner/create_user.html', roles=roles, branches=branches, tenants=tenants, show_tenant_picker=True, form_data=_form_values())
             
             # التحقق من عدم وجود المستخدم
             existing = User.query.filter_by(username=username).first()
             if existing:
                 from utils.error_messages import ErrorMessages
                 flash(ErrorMessages.user_exists(username), 'error')
-                return render_template('owner/create_user.html', roles=roles, branches=branches, form_data=_form_values())
+                return render_template('owner/create_user.html', roles=roles, branches=branches, tenants=tenants, show_tenant_picker=True, form_data=_form_values())
 
             role = Role.query.get(role_id)
             if role_requires_branch(role, is_owner=is_owner) and not branch_id:
                 flash('⚠️ يجب ربط هذا المستخدم بفرع محدد.', 'warning')
-                return render_template('owner/create_user.html', roles=roles, branches=branches, form_data=_form_values())
+                return render_template('owner/create_user.html', roles=roles, branches=branches, tenants=tenants, show_tenant_picker=True, form_data=_form_values())
             
             from utils.auth_helpers import enforce_company_user_tenant
 
             # إنشاء المستخدم
+            form_tenant_id = request.form.get('tenant_id', type=int)
+            if is_global_owner_user(current_user):
+                if role and user_may_have_null_tenant(is_owner=is_owner, role=role):
+                    user_tenant_id = None
+                else:
+                    user_tenant_id = form_tenant_id or get_active_tenant_id(current_user)
+            else:
+                user_tenant_id = get_active_tenant_id(current_user)
+
             user = User(
                 username=username,
                 email=email,
@@ -557,6 +631,7 @@ def create_user():
                 full_name=full_name,
                 role_id=role_id,
                 branch_id=branch_id,
+                tenant_id=user_tenant_id,
                 is_owner=is_owner,
                 is_active=is_active
             )
@@ -572,9 +647,24 @@ def create_user():
             db.session.rollback()
             from utils.error_messages import ErrorMessages
             flash(ErrorMessages.user_update_failed(str(e)), 'error')
-            return render_template('owner/create_user.html', roles=roles, branches=branches, form_data=_form_values())
+            return render_template(
+                'owner/create_user.html',
+                roles=roles,
+                branches=branches,
+                tenants=tenants,
+                form_data=_form_values(),
+            )
     
-    return render_template('owner/create_user.html', roles=roles, branches=branches, form_data=default_form)
+    if preselect_tenant_id:
+        default_form['tenant_id'] = str(preselect_tenant_id)
+    return render_template(
+        'owner/create_user.html',
+        roles=roles,
+        branches=branches,
+        tenants=tenants,
+        form_data=default_form,
+        show_tenant_picker=True,
+    )
 
 
 @owner_bp.route('/users/<int:user_id>/edit', methods=['GET', 'POST'])
@@ -1902,7 +1992,7 @@ def convert_database():
 
 @owner_bp.route('/scheduled-backups', methods=['GET', 'POST'])
 @login_required
-@permission_required('manage_backups')
+@owner_required
 def scheduled_backups():
     """النسخ الاحتياطي المجدول"""
     from services.backup_service import BackupService
@@ -1968,7 +2058,7 @@ def reports():
 
 @owner_bp.route('/company-info', methods=['GET', 'POST'])
 @login_required
-@owner_required
+@owner_or_company_admin
 def company_info():
     """معلومات الشركة/الكراج"""
     tenant = Tenant.get_current()
@@ -2248,7 +2338,7 @@ def store_payment_method_delete(method_id):
 
 @owner_bp.route('/invoice-settings', methods=['GET', 'POST'])
 @login_required
-@owner_required
+@owner_or_company_admin
 def invoice_settings():
     """إعدادات ترويسات الفواتير وسندات القبض"""
     from utils.tenanting import assign_tenant_id
@@ -2385,14 +2475,17 @@ def invoice_settings():
 
 @owner_bp.route('/preview-invoice/<template>')
 @login_required
-@owner_required
+@owner_or_company_admin
 def preview_invoice(template):
     """معاينة قالب الفاتورة"""
     from models.invoice_settings import InvoiceSettings
     from utils.tenant_branding import get_print_header_context
     from utils.tenanting import get_active_tenant_id
+    from utils.auth_helpers import is_global_owner_user
 
-    tid = get_active_tenant_id(current_user)
+    tid = request.args.get('tenant_id', type=int) or get_active_tenant_id(current_user)
+    if request.args.get('tenant_id') and not is_global_owner_user(current_user):
+        abort(403)
     settings = InvoiceSettings.get_active(tid)
     print_branding = get_print_header_context(tid)
     from utils.number_to_arabic import number_to_arabic_words
@@ -2491,14 +2584,17 @@ def preview_invoice(template):
 
 @owner_bp.route('/preview-receipt/<template>')
 @login_required
-@owner_required
+@owner_or_company_admin
 def preview_receipt(template):
     """معاينة قالب سند القبض"""
     from models.invoice_settings import InvoiceSettings
     from utils.tenant_branding import get_print_header_context
     from utils.tenanting import get_active_tenant_id
+    from utils.auth_helpers import is_global_owner_user
 
-    tid = get_active_tenant_id(current_user)
+    tid = request.args.get('tenant_id', type=int) or get_active_tenant_id(current_user)
+    if request.args.get('tenant_id') and not is_global_owner_user(current_user):
+        abort(403)
     settings = InvoiceSettings.get_active(tid)
     print_branding = get_print_header_context(tid)
     from utils.number_to_arabic import number_to_arabic_words
