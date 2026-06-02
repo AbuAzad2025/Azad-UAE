@@ -4,6 +4,7 @@
 from .user import User, Role, Permission
 from .customer import Customer
 from .supplier import Supplier
+from .branch import Branch
 from .cheque import Cheque
 from .product import Product, ProductCategory, ProductPartner
 from .warehouse import Warehouse, StockMovement
@@ -38,7 +39,6 @@ from .login_history import LoginHistory
 from .security_alert import SecurityAlert
 from .api_key import APIKey
 from .product_serial import ProductSerial
-from .branch import Branch
 from .payroll import Employee, SalaryAdvance, PayrollTransaction
 from .partner_commission import PartnerCommissionEntry
 

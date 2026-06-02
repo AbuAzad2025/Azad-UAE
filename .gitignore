@@ -104,6 +104,8 @@ tools/qa/null_column_audit_*.csv
 # Neural models (can be large)
 ai_knowledge/models/*.pkl
 ai_knowledge/models/*.joblib
+ai_knowledge/data/models/*.pkl
+ai_knowledge/data/models/*.joblib
 
 # Temporary files
 *.tmp
@@ -131,6 +133,9 @@ ai_knowledge/memory/*.json
 ai_knowledge/*.pkl
 ai_knowledge/models/*.pkl
 ai_knowledge/models/*.joblib
+ai_knowledge/data/training/*.json
+!ai_knowledge/data/training/.gitkeep
+!ai_knowledge/data/training/improvement_goals.json
 
 
 # Local analysis/cache files
