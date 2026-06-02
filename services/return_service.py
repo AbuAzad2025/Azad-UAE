@@ -1,6 +1,7 @@
 from decimal import Decimal, ROUND_HALF_UP
 
 from flask import current_app
+from sqlalchemy import or_
 
 from extensions import db
 from models import Sale, SaleLine, ProductReturn, ProductReturnLine, Product, ProductSerial
@@ -25,7 +26,19 @@ class ReturnService:
             return 'good'
         if condition in ReturnService.DAMAGED_CONDITIONS:
             return 'damaged'
-        raise ValueError(f'حالة المنتج غير مدعومة: {value}')
+        raise ValueError(f'Unsupported return condition: {value}')
+
+    @staticmethod
+    def _optional_money(value, field_name='amount'):
+        if value is None or value == '':
+            return None
+        try:
+            amount = Decimal(str(value)).quantize(Decimal('0.001'), rounding=ROUND_HALF_UP)
+        except Exception:
+            raise ValueError(f'{field_name} is invalid.')
+        if amount < 0:
+            raise ValueError(f'{field_name} cannot be negative.')
+        return amount
 
     @staticmethod
     def _validate_sale_access(sale, user=None):
@@ -37,18 +50,18 @@ class ReturnService:
 
         if platform_owner:
             if active_tenant_id is not None and int(sale.tenant_id) != int(active_tenant_id):
-                raise ValueError('الفاتورة خارج الشركة النشطة الحالية.')
+                raise ValueError('Sale is outside the active tenant.')
         else:
             if active_tenant_id is None or int(sale.tenant_id) != int(active_tenant_id):
-                raise ValueError('الفاتورة خارج نطاق شركتك.')
+                raise ValueError('Sale is outside your tenant scope.')
 
         scoped_branch_id = branch_scope_id_for(user)
         if scoped_branch_id is not None and int(sale.branch_id or 0) != int(scoped_branch_id):
-            raise ValueError('الفاتورة خارج نطاق الفرع المسموح.')
+            raise ValueError('Sale is outside the allowed branch scope.')
 
         is_seller = getattr(user, 'is_seller', None)
         if callable(is_seller) and is_seller() and int(sale.seller_id) != int(user.id):
-            raise ValueError('لا يمكنك إنشاء مرتجع لفاتورة بائع آخر.')
+            raise ValueError('Seller cannot return another seller sale.')
 
     @staticmethod
     def _serials_from_line_data(line_data):
@@ -57,22 +70,24 @@ class ReturnService:
             serials = serials.replace('\r', '\n').replace(',', '\n').split('\n')
         cleaned = [str(sn).strip() for sn in serials if str(sn).strip()]
         if len(cleaned) != len(set(cleaned)):
-            raise ValueError('لا يجوز تكرار نفس الرقم التسلسلي في المرتجع.')
+            raise ValueError('Duplicate serial numbers are not allowed on the same return.')
         return cleaned
 
     @staticmethod
-    def create_return(sale_id, return_lines_data, user=None, user_id=None, notes=None):
+    def create_return(sale_id, return_lines_data, user=None, user_id=None, notes=None, manual_refund_amount=None):
         try:
             sale = Sale.query.get(sale_id)
             if not sale:
-                raise ValueError(f"Sale with ID {sale_id} not found.")
+                raise ValueError(f'Sale with ID {sale_id} not found.')
 
             ReturnService._validate_sale_access(sale, user)
 
             if sale.status == 'cancelled':
-                raise ValueError("Cannot create return for a cancelled sale.")
+                raise ValueError('Cannot create return for a cancelled sale.')
             if sale.status == 'pending':
-                raise ValueError("Cannot create return for a pending sale.")
+                raise ValueError('Cannot create return for a pending sale.')
+
+            manual_refund_amount = ReturnService._optional_money(manual_refund_amount, 'manual_refund_amount')
 
             tenant_id = sale.tenant_id
             processed_by = getattr(user, 'id', None) or user_id
@@ -114,24 +129,24 @@ class ReturnService:
                 try:
                     quantity = Decimal(str(line_data.get('quantity', 0) or 0))
                 except Exception:
-                    raise ValueError('كمية المرتجع غير صالحة.')
+                    raise ValueError('Invalid return quantity.')
 
                 if quantity <= 0:
                     continue
 
                 sale_line = SaleLine.query.get(sale_line_id)
                 if not sale_line:
-                    raise ValueError(f"Sale line {sale_line_id} not found.")
+                    raise ValueError(f'Sale line {sale_line_id} not found.')
 
                 if sale_line.sale_id != sale.id:
-                    raise ValueError(f"Sale line {sale_line_id} does not belong to sale {sale.id}.")
+                    raise ValueError(f'Sale line {sale_line_id} does not belong to sale {sale.id}.')
 
                 if int(sale_line.tenant_id) != int(tenant_id):
-                    raise ValueError('سطر الفاتورة خارج نطاق الشركة.')
+                    raise ValueError('Sale line is outside tenant scope.')
 
                 product = sale_line.product or Product.query.get(sale_line.product_id)
                 if not product:
-                    raise ValueError('المنتج المرتجع غير موجود.')
+                    raise ValueError('Returned product was not found.')
 
                 condition = ReturnService._normalize_condition(line_data.get('condition'))
                 is_good = condition == 'good'
@@ -140,25 +155,23 @@ class ReturnService:
                     .join(ProductReturn)\
                     .filter(ProductReturnLine.sale_line_id == sale_line.id)\
                     .filter(ProductReturn.status != 'rejected')\
-                    .filter(db.or_(ProductReturn.tenant_id == tenant_id, ProductReturn.tenant_id.is_(None)))\
+                    .filter(or_(ProductReturn.tenant_id == tenant_id, ProductReturn.tenant_id.is_(None)))\
                     .scalar() or Decimal('0')
 
                 if (previous_returned + quantity) > sale_line.quantity:
                     raise ValueError(
-                        f"Cannot return {quantity} of {product.name}. "
-                        f"Already returned: {previous_returned}, Sold: {sale_line.quantity}."
+                        f'Cannot return {quantity} of {product.name}. '
+                        f'Already returned: {previous_returned}, Sold: {sale_line.quantity}.'
                     )
 
                 if product.has_serial_number:
                     if quantity != quantity.to_integral_value():
-                        raise ValueError(f'المنتج "{product.name}" يتطلب كمية صحيحة لأنه يستخدم أرقاماً تسلسلية.')
+                        raise ValueError(f'Product {product.name} requires a whole-number quantity because it uses serial numbers.')
 
                     serials_to_return = ReturnService._serials_from_line_data(line_data)
                     required_qty = int(quantity)
                     if len(serials_to_return) != required_qty:
-                        raise ValueError(
-                            f'المنتج "{product.name}" يتطلب اختيار {required_qty} رقم تسلسلي للمرتجع.'
-                        )
+                        raise ValueError(f'Product {product.name} requires {required_qty} serial number(s) for this return.')
 
                     for serial_number in serials_to_return:
                         serial_obj = ProductSerial.query.filter_by(
@@ -168,13 +181,9 @@ class ReturnService:
                         ).first()
 
                         if not serial_obj:
-                            raise ValueError(
-                                f'الرقم التسلسلي "{serial_number}" غير مرتبط بهذا السطر من الفاتورة.'
-                            )
+                            raise ValueError(f'Serial {serial_number} is not linked to this sale line.')
                         if serial_obj.status != 'sold':
-                            raise ValueError(
-                                f'الرقم التسلسلي "{serial_number}" ليس بحالة مباع ولا يمكن إرجاعه.'
-                            )
+                            raise ValueError(f'Serial {serial_number} is not sold and cannot be returned.')
 
                         serial_obj.status = 'available' if is_good else 'defective'
                         serial_obj.sale_line_id = None
@@ -184,11 +193,11 @@ class ReturnService:
                 else:
                     unexpected_serials = ReturnService._serials_from_line_data(line_data)
                     if unexpected_serials:
-                        raise ValueError(f'المنتج "{product.name}" لا يستخدم أرقاماً تسلسلية.')
+                        raise ValueError(f'Product {product.name} does not use serial numbers.')
 
                 sold_qty = Decimal(str(sale_line.quantity or 0))
                 if sold_qty <= 0:
-                    raise ValueError('كمية سطر الفاتورة غير صالحة.')
+                    raise ValueError('Invalid sale line quantity.')
 
                 effective_unit_price = (
                     Decimal(str(sale_line.line_total or 0)) / sold_qty
@@ -239,7 +248,7 @@ class ReturnService:
                         movement_type='return',
                         reference_type=GLRef.PRODUCT_RETURN,
                         reference_id=product_return.id,
-                        notes=f"Return for Sale {sale.sale_number}",
+                        notes=f'Return for Sale {sale.sale_number}',
                         warehouse_id=sale.warehouse_id
                     )
 
@@ -263,7 +272,7 @@ class ReturnService:
                         })
 
             if lines_added == 0:
-                raise ValueError('يجب تحديد كمية مرتجعة لمنتج واحد على الأقل.')
+                raise ValueError('At least one returned item is required.')
 
             product_return.total_amount = total_gross_return.quantize(
                 Decimal('0.001'), rounding=ROUND_HALF_UP
@@ -273,17 +282,35 @@ class ReturnService:
             if not should_post_vat_gl(tenant_id):
                 tax_rate = Decimal('0')
 
-            net_return_amount = total_net_return.quantize(Decimal('0.001'), rounding=ROUND_HALF_UP)
-            tax_amount = (net_return_amount * (tax_rate / Decimal('100'))).quantize(
+            auto_net_return_amount = total_net_return.quantize(Decimal('0.001'), rounding=ROUND_HALF_UP)
+            auto_tax_amount = (auto_net_return_amount * (tax_rate / Decimal('100'))).quantize(
                 Decimal('0.001'), rounding=ROUND_HALF_UP
             )
-            gross_return_amount = net_return_amount + tax_amount
+            auto_gross_return_amount = auto_net_return_amount + auto_tax_amount
 
-            product_return.refund_amount = gross_return_amount
+            final_refund_amount = manual_refund_amount if manual_refund_amount is not None else auto_gross_return_amount
+            if manual_refund_amount is not None:
+                if tax_rate > 0:
+                    net_return_amount = (final_refund_amount / (Decimal('1') + (tax_rate / Decimal('100')))).quantize(
+                        Decimal('0.001'), rounding=ROUND_HALF_UP
+                    )
+                    tax_amount = final_refund_amount - net_return_amount
+                else:
+                    net_return_amount = final_refund_amount
+                    tax_amount = Decimal('0')
+            else:
+                net_return_amount = auto_net_return_amount
+                tax_amount = auto_tax_amount
+
+            product_return.refund_amount = final_refund_amount
             exchange_rate = Decimal(str(product_return.exchange_rate or 1))
-            product_return.amount_aed = (gross_return_amount * exchange_rate).quantize(
+            product_return.amount_aed = (final_refund_amount * exchange_rate).quantize(
                 Decimal('0.001'), rounding=ROUND_HALF_UP
             )
+
+            if manual_refund_amount is not None:
+                marker = f' | Manual refund override. Auto={auto_gross_return_amount} {product_return.currency}'
+                product_return.notes = f'{product_return.notes or ""}{marker}'
 
             if net_return_amount > 0:
                 gl_lines.append({
@@ -301,11 +328,11 @@ class ReturnService:
                     'description': f'Sales Return Tax Reversal {sale.sale_number}'
                 })
 
-            if gross_return_amount > 0:
+            if final_refund_amount > 0:
                 gl_lines.append({
                     'account': GLService.get_customer_credit_account(sale.customer),
                     'debit': 0,
-                    'credit': gross_return_amount,
+                    'credit': final_refund_amount,
                     'description': f'Credit Customer for Return {sale.sale_number}'
                 })
 
@@ -334,5 +361,5 @@ class ReturnService:
 
         except Exception as e:
             db.session.rollback()
-            current_app.logger.error(f"Failed to create return: {e}")
+            current_app.logger.error(f'Failed to create return: {e}')
             raise
