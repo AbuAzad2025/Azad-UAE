@@ -332,7 +332,7 @@
             </table>
           </div>
           <p class="text-muted small text-center mb-0 mt-2">
-            <i class="fas fa-info-circle mr-1"></i>أسعار تقريبية — آخر تحديث: يومي
+            <i class="fas fa-info-circle mr-1"></i>أسعار حية — <span id="fx-last-updated">اضغط لتحديث</span>
           </p>
         </div>
       </div>
@@ -1202,46 +1202,85 @@ $(function() {
     if (dateDisplay) dateDisplay.textContent = dateString;
   }
   
-  // أسعار الصرف الثابتة (تقريبية — بدون استدعاءات أونلاين)
-  const FX_RATES = {
-    // Rates vs USD base
-    USD: { USD: 1.00, ILS: 3.65, JOD: 0.71, AED: 3.67, SAR: 3.75, QAR: 3.64, KWD: 0.31, BHD: 0.38, OMR: 0.38, EGP: 30.90 },
-    ILS: { USD: 0.274, ILS: 1.00, JOD: 0.194, AED: 1.005, SAR: 1.027, QAR: 0.997, KWD: 0.085, BHD: 0.104, OMR: 0.104, EGP: 8.47 },
-    JOD: { USD: 1.41,  ILS: 5.15, JOD: 1.00, AED: 5.18, SAR: 5.29, QAR: 5.14, KWD: 0.436, BHD: 0.535, OMR: 0.535, EGP: 43.60 },
-    AED: { USD: 0.272, ILS: 0.995, JOD: 0.193, AED: 1.00, SAR: 1.02, QAR: 0.99, KWD: 0.084, BHD: 0.103, OMR: 0.103, EGP: 8.42 },
-    SAR: { USD: 0.267, ILS: 0.974, JOD: 0.189, AED: 0.98,  SAR: 1.00, QAR: 0.97, KWD: 0.083, BHD: 0.101, OMR: 0.101, EGP: 8.25 },
-    QAR: { USD: 0.275, ILS: 1.003, JOD: 0.195, AED: 1.01,  SAR: 1.03, QAR: 1.00, KWD: 0.085, BHD: 0.104, OMR: 0.104, EGP: 8.49 },
-    KWD: { USD: 3.25,  ILS: 11.86, JOD: 2.29, AED: 11.93, SAR: 12.16, QAR: 11.83, KWD: 1.00, BHD: 1.23, OMR: 1.23, EGP: 100.45 },
-    BHD: { USD: 2.65,  ILS: 9.66,  JOD: 1.87, AED: 9.71,  SAR: 9.90, QAR: 9.63, KWD: 0.814, BHD: 1.00, OMR: 1.00, EGP: 81.85 },
-    OMR: { USD: 2.65,  ILS: 9.66,  JOD: 1.87, AED: 9.71,  SAR: 9.90, QAR: 9.63, KWD: 0.814, BHD: 1.00, OMR: 1.00, EGP: 81.85 },
-    EGP: { USD: 0.032, ILS: 0.118, JOD: 0.023, AED: 0.119, SAR: 0.121, QAR: 0.118, KWD: 0.010, BHD: 0.012, OMR: 0.012, EGP: 1.00 }
-  };
+  // أسعار صرف حية من API (يُستدعى عند فتح النافذة فقط)
+  const FX_FALLBACK = { USD: 1.0, ILS: 3.65, JOD: 0.709, AED: 3.67, SAR: 3.75, EGP: 50.5 };
+  let fxCache = null;
+  let fxCacheTime = 0;
 
   function formatFxRate(val) {
+    if (!Number.isFinite(val)) return '--';
     if (val >= 100) return val.toFixed(2);
     if (val >= 1) return val.toFixed(3);
     return val.toFixed(4);
   }
 
-  function populateFxModal() {
+  async function loadFxRates() {
     const tenantCurrency = '{{ (tenant_default_currency or company_default_currency or 'AED')|upper }}';
-    const rates = FX_RATES[tenantCurrency] || FX_RATES['AED'];
+    const now = Date.now();
 
-    // Modal table: tenant vs ILS, JOD, USD
-    const els = {
-      'tenant-ils': rates['ILS'],
-      'tenant-jod': rates['JOD'],
-      'tenant-usd': rates['USD']
-    };
-    for (const [id, rate] of Object.entries(els)) {
-      const el = document.getElementById(id);
-      if (el) el.textContent = formatFxRate(rate);
+    // استخدم cache لمدة 5 دقائق
+    if (fxCache && (now - fxCacheTime) < 300000) {
+      populateFxTable(fxCache, tenantCurrency);
+      return;
+    }
+
+    // إظهار حالة التحميل
+    const ids = ['usd-ils','usd-jod','usd-usd','jod-ils','jod-jod','jod-usd','ils-ils','ils-jod','ils-usd','tenant-ils','tenant-jod','tenant-usd'];
+    ids.forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = '<span class="spinner-border spinner-border-sm text-muted"></span>'; });
+
+    try {
+      // API مجاني وسريع — يعطي أسعار مقابل USD
+      const res = await fetch('https://api.exchangerate-api.com/v4/latest/USD', { cache: 'no-store' });
+      if (!res.ok) throw new Error('API error');
+      const data = await res.json();
+      fxCache = data.rates || {};
+      fxCacheTime = now;
+      populateFxTable(fxCache, tenantCurrency);
+    } catch (e) {
+      populateFxTable(FX_FALLBACK, tenantCurrency);
     }
   }
 
+  function populateFxTable(rates, tenantCurrency) {
+    const usdIls = rates['ILS'] || 3.65;
+    const usdJod = rates['JOD'] || 0.709;
+    const usdTenant = rates[tenantCurrency] || rates['AED'] || 3.67;
+
+    // USD row (1 USD = X)
+    setFxCell('usd-ils', usdIls);
+    setFxCell('usd-jod', usdJod);
+    setFxCell('usd-usd', 1.0);
+
+    // JOD row (1 JOD = X)
+    setFxCell('jod-ils', usdIls / usdJod);
+    setFxCell('jod-jod', 1.0);
+    setFxCell('jod-usd', 1.0 / usdJod);
+
+    // ILS row (1 ILS = X)
+    setFxCell('ils-ils', 1.0);
+    setFxCell('ils-jod', usdJod / usdIls);
+    setFxCell('ils-usd', 1.0 / usdIls);
+
+    // Tenant row (1 Tenant = X)
+    setFxCell('tenant-ils', usdIls / usdTenant);
+    setFxCell('tenant-jod', usdJod / usdTenant);
+    setFxCell('tenant-usd', 1.0 / usdTenant);
+
+    // Update timestamp
+    const timeStr = new Date().toLocaleTimeString('ar-AE', {hour: '2-digit', minute:'2-digit'});
+    document.getElementById('fx-last-updated').textContent = 'آخر تحديث: ' + timeStr;
+  }
+
+  function setFxCell(id, val) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = formatFxRate(val);
+  }
+
+  // Listen for modal open to fetch rates
+  $('#fxModal').on('show.bs.modal', loadFxRates);
+
   // تشغيل التحديثات
   updateDateTime();
-  populateFxModal();
 
   // تحديث الساعة كل ثانية
   setInterval(updateDateTime, 1000);
