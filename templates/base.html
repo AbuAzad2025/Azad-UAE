@@ -138,22 +138,6 @@
                 <i class="fas fa-exchange-alt mr-1"></i>
                 <span id="fx-pair-label">USD/{{ (tenant_default_currency or company_default_currency or 'AED')|upper }}</span>
               </div>
-              <div class="d-flex align-items-center mb-1" style="gap:4px;">
-                <input id="fx-from-search" type="text" class="form-control form-control-sm" placeholder="بحث FROM" style="width:86px;">
-                <select id="fx-from-select" class="custom-select custom-select-sm" style="min-width:76px;">
-                  <option value="USD">USD</option>
-                </select>
-                <span style="font-size:11px;opacity:.75;">/</span>
-                <input id="fx-to-search" type="text" class="form-control form-control-sm" placeholder="بحث TO" style="width:86px;">
-                <select id="fx-to-select" class="custom-select custom-select-sm" style="min-width:76px;">
-                  <option value="{{ (tenant_default_currency or company_default_currency or 'AED')|upper }}">{{ (tenant_default_currency or company_default_currency or 'AED')|upper }}</option>
-                </select>
-              </div>
-              <div class="d-flex align-items-center mb-1" style="gap:4px;">
-                <input id="fx-from-custom" type="text" class="form-control form-control-sm" maxlength="3" placeholder="FROM" style="width:68px;">
-                <input id="fx-to-custom" type="text" class="form-control form-control-sm" maxlength="3" placeholder="TO" style="width:68px;">
-                <button id="fx-apply-custom" type="button" class="btn btn-xs btn-outline-light" style="padding:0.1rem 0.35rem;">تطبيق</button>
-              </div>
               <div id="exchange-rate" class="erp-exchange-value">
                 <i class="fas fa-dollar-sign mr-1"></i>
                 <span id="rate-display" data-fx-from="USD" data-fx-to="{{ (tenant_default_currency or company_default_currency or 'AED')|upper }}">--</span>
@@ -164,8 +148,9 @@
       </li>
       
       <li class="nav-item d-none d-md-inline-block">
-        <span class="nav-link">
-          <img src="{{ _logo_internal }}" alt="{{ tenant_name_ar or company_name_ar }}" class="erp-navbar-logo-img">
+        <span class="nav-link erp-navbar-brand-text" title="{{ tenant_name_ar or company_name_ar or 'أزاد' }}">
+          <i class="fas fa-cube mr-1"></i>
+          <span class="d-none d-lg-inline">{{ tenant_name_ar or company_name_ar or 'أزاد' }}</span>
         </span>
       </li>
 
@@ -298,7 +283,9 @@
 
   <aside class="main-sidebar sidebar-dark-primary elevation-4">
     <a href="{{ url_for('main.dashboard') }}" class="brand-link text-center erp-sidebar-brand-link">
-      <img src="{{ _logo_internal }}" alt="Azad" class="erp-sidebar-brand-logo">
+      <span class="brand-text font-weight-light">
+        <i class="fas fa-cube mr-1"></i>{{ tenant_name_ar or company_name_ar or 'أزاد' }}
+      </span>
     </a>
 
     <div class="sidebar erp-scrollbar">

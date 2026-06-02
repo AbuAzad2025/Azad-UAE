@@ -996,7 +996,7 @@
     <aside class="landing-sidebar" id="landingSidebar" aria-hidden="true">
         <div class="landing-sidebar-header">
             <div class="title">
-                <img src="{{ url_for('static', filename=_logo_path) }}" alt="{{ company_name_display }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='assets/brand/azad/logos/logo.png') }}';">
+                <i class="fas fa-cube" style="font-size:24px; color:rgba(212,175,55,0.9);"></i>
                 <span>{{ company_name_display }}</span>
             </div>
             <button type="button" class="landing-icon-btn" id="landingSidebarClose" aria-label="{{ 'إغلاق' if not is_en else 'Close' }}">
@@ -1018,7 +1018,7 @@
     <nav class="landing-nav">
         <div class="landing-nav-inner">
             <a class="landing-brand" href="{{ url_for('public.landing') }}">
-                <img src="{{ url_for('static', filename=_logo_path) }}" alt="{{ company_name_display }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='assets/brand/azad/logos/logo.png') }}';">
+                <i class="fas fa-cube" style="font-size:28px; color:rgba(212,175,55,0.9);"></i>
                 <span>{{ company_name_display }}</span>
             </a>
             <div class="landing-nav-links">
@@ -1497,7 +1497,7 @@
     <footer class="landing-footer">
         <div class="landing-footer-inner">
             <div class="landing-footer-brand">
-                <img src="{{ url_for('static', filename=_logo_path) }}" alt="{{ config.COMPANY_NAME_AR or 'شركة أزاد للأنظمة الذكية' }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='assets/brand/azad/logos/logo.png') }}';">
+                <i class="fas fa-cube" style="font-size:36px; color:rgba(212,175,55,0.9);"></i>
                 <div>
                     <div class="landing-footer-title">{{ developer_name_ar or config.DEVELOPER_NAME_AR }}</div>
                     <div class="landing-footer-sub">{{ developer_credit or config.DEVELOPER_CREDIT }}</div>
