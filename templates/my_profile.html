@@ -97,7 +97,7 @@
         </div>
         <div class="card-body">
           <form method="POST" action="{{ url_for('main.my_profile_update') }}">
-            {{ csrf_token() }}
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="row g-3">
               <div class="col-md-6">
                 <label class="form-label fw-semibold">الاسم الكامل (إنجليزي)</label>
