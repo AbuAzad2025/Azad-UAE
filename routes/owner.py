@@ -1,6 +1,6 @@
 from datetime import datetime, timezone, timedelta
 from decimal import Decimal
-from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for, current_app
+from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for, current_app, abort
 from flask_login import login_required, current_user
 from sqlalchemy import func, desc
 from extensions import db, limiter
@@ -565,6 +565,13 @@ def create_user():
     preselect_tenant_id = request.args.get('tenant_id', type=int)
 
     if request.method == 'POST':
+        # Capture form values helper (defined outside try to survive exceptions)
+        def _form_values():
+            values = request.form.to_dict()
+            values['is_owner'] = 'on' if request.form.get('is_owner') == 'on' else 'off'
+            values['is_active'] = 'on' if request.form.get('is_active') == 'on' else 'off'
+            return values
+
         try:
             from utils.sanitizer import InputSanitizer
             
@@ -577,12 +584,6 @@ def create_user():
             is_owner = requested_is_owner if current_user.is_owner else False
             is_active = request.form.get('is_active') == 'on'
             branch_id = request.form.get('branch_id', type=int) or None
-            
-            def _form_values():
-                values = request.form.to_dict()
-                values['is_owner'] = 'on' if is_owner else 'off'
-                values['is_active'] = 'on' if is_active else 'off'
-                return values
             
             # التحقق من البيانات
             if not username or not password:
@@ -1179,6 +1180,7 @@ def backup_now():
 
 @owner_bp.route('/backups/create', methods=['POST'])
 @login_required
+@owner_required
 def create_scoped_backup():
     """إنشاء نسخة حسب النطاق: system | tenant | branch | store."""
     from services.backup_service import BackupService
@@ -1256,6 +1258,7 @@ def create_scoped_backup():
 
 @owner_bp.route('/backups/list')
 @login_required
+@owner_required
 def list_backups():
     """قائمة النسخ الاحتياطية (مفلترة حسب الصلاحية)."""
     from services.backup_service import BackupService
@@ -1318,6 +1321,7 @@ def backup_info(filename):
 
 @owner_bp.route('/backups/verify/<filename>', methods=['POST'])
 @login_required
+@owner_required
 def verify_backup(filename):
     """التحقق من سلامة نسخة احتياطية"""
     from services.backup_service import BackupService
@@ -1335,6 +1339,7 @@ def verify_backup(filename):
 
 @owner_bp.route('/backups/prepare-restore/<filename>', methods=['GET', 'POST'])
 @login_required
+@owner_required
 def prepare_restore_backup(filename):
     """عرض أوامر الاستعادة الآمنة — لا يكتب على DB الحالية."""
     from services.backup_service import BackupService
@@ -1427,6 +1432,7 @@ def restore_backup_target(filename):
 
 @owner_bp.route('/backups/delete', methods=['POST'])
 @login_required
+@owner_required
 def delete_backup():
     """حذف نسخة احتياطية - يدوية فقط"""
     from services.backup_service import BackupService
@@ -1457,6 +1463,7 @@ def delete_backup():
 
 @owner_bp.route('/backups/download/<filename>')
 @login_required
+@owner_required
 def download_backup(filename):
     """تحميل نسخة احتياطية"""
     from services.backup_service import BackupService
