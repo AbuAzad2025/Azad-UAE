@@ -23,10 +23,10 @@
 <div class="row">
   <div class="col-md-3 col-sm-6">
     <div class="info-box">
-      <span class="info-box-icon bg-{% if store.is_enabled %}success{% else %}secondary{% endif %}"><i class="fas fa-power-off"></i></span>
+      <span class="info-box-icon bg-{% if store.platform_disabled %}danger{% elif store.is_enabled %}success{% else %}secondary{% endif %}"><i class="fas fa-power-off"></i></span>
       <div class="info-box-content">
         <span class="info-box-text">حالة المتجر</span>
-        <span class="info-box-number">{% if store.is_enabled %}مفعّل{% else %}متوقف{% endif %}</span>
+        <span class="info-box-number">{% if store.platform_disabled %}مقفول من المنصة{% elif store.is_enabled %}مفعّل{% else %}متوقف{% endif %}</span>
       </div>
     </div>
   </div>
@@ -63,6 +63,9 @@
   </div>
 </div>
 
+{% if store.platform_disabled %}
+<div class="alert alert-danger"><i class="fas fa-lock mr-1"></i>تم تعطيل متجرك من قبل مالك المنصة. لا يمكن تفعيله حتى يفك مالك المنصة القفل.</div>
+{% endif %}
 {% if not platform_stores_on %}
 <div class="alert alert-danger"><i class="fas fa-globe mr-1"></i>المتاجر متوقفة على مستوى المنصة — تواصل مع مالك النظام لتفعيل «المتاجر الإلكترونية» من إعدادات المنصة.</div>
 {% else %}

@@ -207,6 +207,23 @@ class StoreService:
         db.session.commit()
 
     @staticmethod
+    def is_platform_locked(store: 'TenantStore | None') -> bool:
+        """True when the platform owner has force-disabled this tenant store."""
+        return bool(store and getattr(store, 'platform_disabled', False))
+
+    @staticmethod
+    def effective_enabled(store: 'TenantStore | None') -> bool:
+        """Tenant store is effectively on only if enabled and not platform-locked."""
+        return bool(store and store.is_enabled and not StoreService.is_platform_locked(store))
+
+    @staticmethod
+    def set_platform_disabled(store: 'TenantStore', disabled: bool):
+        """Platform-owner only: hard force-OFF lock. Tenant cannot re-enable while locked."""
+        store.platform_disabled = bool(disabled)
+        db.session.commit()
+        return store
+
+    @staticmethod
     def get_store_by_slug(slug: str) -> TenantStore | None:
         normalized = StoreService.normalize_slug(slug)
         return TenantStore.query.filter_by(store_slug=normalized).first()
@@ -251,6 +268,8 @@ class StoreService:
     @staticmethod
     def is_store_publicly_available(store: TenantStore | None) -> bool:
         if not store or not store.is_enabled:
+            return False
+        if StoreService.is_platform_locked(store):
             return False
         if not StoreService.stores_globally_enabled():
             return False

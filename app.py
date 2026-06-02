@@ -226,7 +226,7 @@ def create_app(config_class=Config):
             return None
         from services.store_service import StoreService
         store = StoreService.get_store_by_host(request.host)
-        if store and store.is_enabled and StoreService.stores_globally_enabled():
+        if store and StoreService.is_store_publicly_available(store):
             from flask import redirect, url_for
             return redirect(url_for('shop.catalog', slug=store.store_slug))
         return None

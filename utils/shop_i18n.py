@@ -74,6 +74,43 @@ STRINGS = {
     'send_reset_link': {'ar': 'إرسال رابط الاستعادة', 'en': 'Send reset link'},
     'lang_ar': {'ar': 'عربي', 'en': 'Arabic'},
     'lang_en': {'ar': 'English', 'en': 'English'},
+    # Navigation / sections
+    'offers': {'ar': 'العروض', 'en': 'Offers'},
+    'about_us': {'ar': 'من نحن', 'en': 'About us'},
+    'contact_us': {'ar': 'تواصل معنا', 'en': 'Contact us'},
+    'quick_links': {'ar': 'روابط سريعة', 'en': 'Quick links'},
+    'customer_service': {'ar': 'خدمة العملاء', 'en': 'Customer service'},
+    'shop_now': {'ar': 'تسوّق الآن', 'en': 'Shop now'},
+    'shop_by_category': {'ar': 'تسوّق حسب القسم', 'en': 'Shop by category'},
+    'featured_products': {'ar': 'منتجات مميزة', 'en': 'Featured products'},
+    'view_all': {'ar': 'عرض الكل', 'en': 'View all'},
+    'menu': {'ar': 'القائمة', 'en': 'Menu'},
+    # Benefits row
+    'benefit_authentic': {'ar': 'منتجات أصلية', 'en': 'Authentic products'},
+    'benefit_authentic_sub': {'ar': 'جودة موثوقة', 'en': 'Trusted quality'},
+    'benefit_quality': {'ar': 'جودة عالية', 'en': 'Premium quality'},
+    'benefit_quality_sub': {'ar': 'مصدر موثوق', 'en': 'Trusted source'},
+    'benefit_delivery': {'ar': 'توصيل سريع', 'en': 'Fast delivery'},
+    'benefit_delivery_sub': {'ar': 'لكل المناطق', 'en': 'To all regions'},
+    'benefit_secure': {'ar': 'دفع آمن', 'en': 'Secure payment'},
+    'benefit_secure_sub': {'ar': 'حماية كاملة', 'en': 'Fully protected'},
+    'benefit_support': {'ar': 'دعم العملاء', 'en': 'Customer support'},
+    'benefit_support_sub': {'ar': 'متواصل معك', 'en': 'Always available'},
+    # Fixed AZAD developer brand (shown in every tenant store footer)
+    'azad_company': {'ar': 'شركة ازاد للأنظمة الذكية', 'en': 'AZAD Smart Systems'},
+    'azad_systems_en': {'ar': 'AZAD Smart Systems', 'en': 'AZAD Smart Systems'},
+    'azad_managed_by': {'ar': 'بإدارة المهندس أحمد غنام', 'en': 'Managed by Eng. Ahmad Ghannam'},
+    'azad_powered_by': {'ar': 'مدعوم بواسطة AZAD Smart Systems', 'en': 'Powered by AZAD Smart Systems'},
+    'azad_developed_by': {'ar': 'من إنتاج شركة ازاد للأنظمة الذكية', 'en': 'Developed by AZAD Smart Systems'},
+    'azad_system_note': {
+        'ar': 'نظام المتجر الإلكتروني مدعوم بواسطة AZAD Smart Systems',
+        'en': 'Storefront system powered by AZAD Smart Systems',
+    },
+    'azad_rights': {
+        'ar': 'جميع الحقوق محفوظة — نظام المتجر الإلكتروني من إنتاج شركة ازاد للأنظمة الذكية',
+        'en': 'All rights reserved — Storefront system powered by AZAD Smart Systems',
+    },
+    'all_rights': {'ar': 'جميع الحقوق محفوظة', 'en': 'All rights reserved'},
 }
 
 

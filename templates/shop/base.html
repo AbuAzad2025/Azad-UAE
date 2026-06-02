@@ -20,14 +20,29 @@
 </head>
 <body class="ps-shop {{ 'rtl' if is_rtl else 'ltr' }}">
   <div class="ps-tatreez-bar" aria-hidden="true"></div>
+
+  {# Top premium thin bar: location + language + currency #}
+  <div class="ps-topbar">
+    <div class="ps-topbar-inner">
+      <span class="ps-topbar-loc"><i class="fas fa-location-dot"></i> {{ tenant.address_ar if is_rtl else (tenant.address_en or tenant.address_ar) }}</span>
+      <span class="ps-topbar-spacer"></span>
+      <a href="{{ url_for('shop.set_lang', slug=store.store_slug, lang_code=('en' if lang == 'ar' else 'ar')) }}" class="ps-topbar-link">
+        <i class="fas fa-globe"></i> {{ t('lang_en') if lang == 'ar' else t('lang_ar') }}
+      </a>
+      <span class="ps-topbar-cur"><i class="fas fa-tag"></i> {{ tenant.default_currency or 'AED' }}</span>
+    </div>
+  </div>
+
   {% if not is_shop_logged_in %}
   <div class="ps-guest-banner"><i class="fas fa-eye"></i> {{ t('guest_browse') }}</div>
   {% endif %}
+
   <header class="ps-header">
     <div class="ps-header-inner">
-      <a href="{{ url_for('shop.catalog', slug=store.store_slug) }}" class="ps-brand">
+      {# Tenant brand only — never AZAD here #}
+      <a href="{{ url_for('shop.catalog', slug=store.store_slug) }}" class="ps-brand ps-tenant-brand">
         {% if store.logo_url() %}
-        <img src="{{ store.logo_url() }}" alt="{{ store.title }}" class="ps-brand-logo" style="width:48px;height:48px;object-fit:contain;border-radius:10px;">
+        <img src="{{ store.logo_url() }}" alt="{{ store.title or tenant.name }}" class="ps-brand-logo">
         {% else %}
         <div class="ps-brand-mark">{{ (store.title or tenant.name or 'S')[:1] }}</div>
         {% endif %}
@@ -36,9 +51,14 @@
           {% if store.tagline %}<p>{{ store.tagline }}</p>{% endif %}
         </div>
       </a>
+
+      <button type="button" class="ps-nav-toggle" aria-label="{{ t('menu') }}" aria-expanded="false">
+        <i class="fas fa-bars"></i>
+      </button>
+
       <nav class="ps-nav">
         <a href="{{ url_for('shop.catalog', slug=store.store_slug) }}"><i class="fas fa-store"></i> {{ t('shop') }}</a>
-        <a href="{{ url_for('shop.set_lang', slug=store.store_slug, lang_code=('en' if lang == 'ar' else 'ar')) }}" class="ps-lang-toggle">{{ t('lang_en') if lang == 'ar' else t('lang_ar') }}</a>
+        <a href="{{ url_for('shop.catalog', slug=store.store_slug) }}#categories"><i class="fas fa-layer-group"></i> {{ t('categories') }}</a>
         {% if is_shop_logged_in %}
         <span class="ps-nav-user"><i class="fas fa-user-check"></i> {{ shop_account.name.split()[0] }}</span>
         <a href="{{ url_for('shop.account_orders', slug=store.store_slug) }}"><i class="fas fa-receipt"></i> {{ t('my_orders') }}</a>
@@ -48,15 +68,16 @@
         </a>
         <form method="post" action="{{ url_for('shop.account_logout', slug=store.store_slug) }}" style="display:inline;">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <button type="submit" class="ps-btn ps-btn-outline" style="padding:0.45rem 0.75rem;font-size:0.82rem;">{{ t('logout') }}</button>
+          <button type="submit" class="ps-btn ps-btn-outline ps-btn-sm">{{ t('logout') }}</button>
         </form>
         {% else %}
-        <a href="{{ url_for('shop.account_login', slug=store.store_slug) }}" class="ps-btn ps-btn-outline" style="padding:0.45rem 0.85rem;font-size:0.85rem;">{{ t('login') }}</a>
-        <a href="{{ url_for('shop.account_register', slug=store.store_slug) }}" class="ps-btn ps-btn-primary" style="padding:0.45rem 0.85rem;font-size:0.85rem;">{{ t('register') }}</a>
+        <a href="{{ url_for('shop.account_login', slug=store.store_slug) }}" class="ps-btn ps-btn-outline ps-btn-sm">{{ t('login') }}</a>
+        <a href="{{ url_for('shop.account_register', slug=store.store_slug) }}" class="ps-btn ps-btn-primary ps-btn-sm">{{ t('register') }}</a>
         {% endif %}
       </nav>
     </div>
   </header>
+
   <main class="ps-main">
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
@@ -67,19 +88,88 @@
     {% endwith %}
     {% block content %}{% endblock %}
   </main>
+
   <footer class="ps-footer">
-    <div class="ps-tatreez-bar" style="margin-bottom:1rem;"></div>
-    <p>{{ t('made_in_palestine') }}</p>
-    {% if store.phone or store.whatsapp %}
-    <p style="margin-top:0.5rem;">
-      {% if store.phone %}{{ store.phone }}{% endif %}
-      {% if store.whatsapp %} · <a href="https://wa.me/{{ store.whatsapp|replace('+','')|replace(' ','') }}" target="_blank" rel="noopener"><i class="fab fa-whatsapp"></i> {{ t('whatsapp') }}</a>{% endif %}
-    </p>
-    {% endif %}
-    {% if store.return_policy(lang) %}
-    <p style="margin-top:0.5rem;"><a href="{{ url_for('shop.return_policy', slug=store.store_slug) }}">{{ t('return_policy') }}</a></p>
-    {% endif %}
+    <div class="ps-footer-grid">
+      {# Column 1 — tenant store identity #}
+      <div class="ps-footer-col ps-footer-tenant">
+        <div class="ps-footer-brand">
+          {% if store.logo_url() %}
+          <img src="{{ store.logo_url() }}" alt="{{ store.title or tenant.name }}" class="ps-footer-logo">
+          {% else %}
+          <div class="ps-brand-mark">{{ (store.title or tenant.name or 'S')[:1] }}</div>
+          {% endif %}
+          <h3>{{ store.title or tenant.name }}</h3>
+        </div>
+        {% if store.tagline %}<p class="ps-footer-tagline">{{ store.tagline }}</p>{% endif %}
+        <ul class="ps-footer-contact">
+          {% if store.phone %}<li><i class="fas fa-phone"></i> {{ store.phone }}</li>{% endif %}
+          {% if store.whatsapp %}<li><a href="https://wa.me/{{ store.whatsapp|replace('+','')|replace(' ','') }}" target="_blank" rel="noopener"><i class="fab fa-whatsapp"></i> {{ store.whatsapp }}</a></li>{% endif %}
+          {% if store.email %}<li><i class="fas fa-envelope"></i> {{ store.email }}</li>{% endif %}
+        </ul>
+      </div>
+
+      {# Column 2 — quick links (dynamic, based on auth state) #}
+      <div class="ps-footer-col">
+        <h4>{{ t('quick_links') }}</h4>
+        <ul class="ps-footer-links">
+          <li><a href="{{ url_for('shop.catalog', slug=store.store_slug) }}">{{ t('shop') }}</a></li>
+          <li><a href="{{ url_for('shop.catalog', slug=store.store_slug) }}#categories">{{ t('categories') }}</a></li>
+          {% if is_shop_logged_in %}
+          <li><a href="{{ url_for('shop.account_orders', slug=store.store_slug) }}">{{ t('my_orders') }}</a></li>
+          <li><a href="{{ url_for('shop.cart_view', slug=store.store_slug) }}">{{ t('cart') }}</a></li>
+          {% else %}
+          <li><a href="{{ url_for('shop.account_login', slug=store.store_slug) }}">{{ t('login') }}</a></li>
+          <li><a href="{{ url_for('shop.account_register', slug=store.store_slug) }}">{{ t('register') }}</a></li>
+          {% endif %}
+          {% if store.return_policy(lang) %}
+          <li><a href="{{ url_for('shop.return_policy', slug=store.store_slug) }}">{{ t('return_policy') }}</a></li>
+          {% endif %}
+        </ul>
+      </div>
+
+      {# Column 3 — customer service (only real, available info) #}
+      <div class="ps-footer-col">
+        <h4>{{ t('customer_service') }}</h4>
+        <ul class="ps-footer-links">
+          {% if store.delivery_note %}<li><i class="fas fa-truck"></i> {{ store.delivery_note }}</li>{% endif %}
+          {% if store.return_policy(lang) %}<li><a href="{{ url_for('shop.return_policy', slug=store.store_slug) }}"><i class="fas fa-rotate-left"></i> {{ t('return_policy') }}</a></li>{% endif %}
+          {% if store.min_order_amount %}<li><i class="fas fa-coins"></i> {{ t('free_from') }}: {{ '%.2f'|format(store.min_order_amount) }} {{ tenant.default_currency or 'AED' }}</li>{% endif %}
+          {% if store.whatsapp %}<li><a href="https://wa.me/{{ store.whatsapp|replace('+','')|replace(' ','') }}" target="_blank" rel="noopener"><i class="fab fa-whatsapp"></i> {{ t('contact_us') }}</a></li>{% endif %}
+        </ul>
+      </div>
+
+      {# Column 4 — FIXED AZAD developer brand (always present) #}
+      <div class="ps-footer-col ps-footer-azad" aria-label="AZAD Smart Systems">
+        {% set _azad_logo = url_for('static', filename='img/logo.png') %}
+        <div class="ps-azad-logo-wrap">
+          <img src="{{ _azad_logo }}" alt="AZAD Smart Systems"
+               class="ps-azad-logo"
+               onerror="this.style.display='none';this.nextElementSibling.style.display='grid';">
+          <div class="ps-azad-mark" style="display:none;" aria-hidden="true">AZAD</div>
+        </div>
+        <h4 class="ps-azad-name">{{ t('azad_company') }}</h4>
+        <p class="ps-azad-en">AZAD Smart Systems</p>
+        <p class="ps-azad-manager">{{ t('azad_managed_by') }}</p>
+        <p class="ps-powered-by-azad"><i class="fas fa-bolt"></i> {{ t('azad_powered_by') }}</p>
+        <ul class="ps-footer-contact ps-azad-contact">
+          <li><i class="fas fa-globe"></i> <a href="https://www.azad.ae" target="_blank" rel="noopener">www.azad.ae</a></li>
+          <li><i class="fas fa-envelope"></i> info@azad.ae</li>
+          <li><i class="fas fa-phone"></i> +971 50 123 4567</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="ps-tatreez-bar" aria-hidden="true"></div>
+
+    {# Bottom copyright bar — tenant left, AZAD center #}
+    <div class="ps-footer-bottom">
+      <span class="ps-footer-bottom-left">{{ store.title or tenant.name }} © {{ current_year }}</span>
+      <span class="ps-footer-bottom-center">{{ t('azad_powered_by') }}</span>
+      <span class="ps-footer-bottom-right" aria-hidden="true"><span class="ps-flag-accent"></span></span>
+    </div>
   </footer>
+
   <script src="{{ url_for('static', filename='js/shop-storefront.js') }}" defer></script>
   {% block extra_js %}{% endblock %}
 </body>

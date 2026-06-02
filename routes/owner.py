@@ -2233,6 +2233,72 @@ def store_payment_methods():
     return render_template('owner/store_payment_methods.html', methods=methods)
 
 
+@owner_bp.route('/tenant-stores')
+@login_required
+@owner_required
+def tenant_stores():
+    """التحكم الهرمي بمتاجر التينانتس — قفل/فك قفل من مالك المنصة."""
+    from models.tenant_store import TenantStore
+    from models.tenant import Tenant
+    from services.store_service import StoreService
+
+    stores = (
+        db.session.query(TenantStore, Tenant)
+        .join(Tenant, Tenant.id == TenantStore.tenant_id)
+        .order_by(Tenant.name.asc())
+        .all()
+    )
+    rows = []
+    for store, tenant in stores:
+        rows.append({
+            'store': store,
+            'tenant': tenant,
+            'is_enabled': store.is_enabled,
+            'platform_disabled': store.platform_disabled,
+            'public_available': StoreService.is_store_publicly_available(store),
+        })
+    return render_template(
+        'owner/tenant_stores.html',
+        rows=rows,
+        global_enabled=StoreService.stores_globally_enabled(),
+    )
+
+
+@owner_bp.route('/tenant-stores/<int:store_id>/platform-toggle', methods=['POST'])
+@login_required
+@owner_required
+def tenant_store_platform_toggle(store_id):
+    """قفل (force-OFF) أو فك قفل متجر تينانت من مالك المنصة."""
+    from models.tenant_store import TenantStore
+    from services.store_service import StoreService
+    from utils.helpers import create_audit_log
+
+    store = db.session.get(TenantStore, int(store_id))
+    if not store:
+        flash('المتجر غير موجود.', 'warning')
+        return redirect(url_for('owner.tenant_stores'))
+
+    # disabled=1 means platform force-OFF lock; disabled=0 means unlock (delegate to tenant)
+    disabled = request.form.get('platform_disabled') == '1'
+    try:
+        StoreService.set_platform_disabled(store, disabled)
+        create_audit_log(
+            'platform_store_lock' if disabled else 'platform_store_unlock',
+            'tenant_stores',
+            store.id,
+        )
+        _invalidate_owner_changes()
+        flash(
+            'تم تعطيل المتجر من مستوى المنصة. لا يستطيع مالك التينانت تفعيله.' if disabled
+            else 'تم فك القفل. أصبح التحكم بيد مالك التينانت.',
+            'success',
+        )
+    except Exception as exc:
+        db.session.rollback()
+        flash(f'تعذر تحديث حالة المتجر: {exc}', 'danger')
+    return redirect(url_for('owner.tenant_stores'))
+
+
 @owner_bp.route('/store-payment-methods/create', methods=['GET', 'POST'])
 @login_required
 @owner_required

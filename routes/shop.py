@@ -59,21 +59,32 @@ def _resolve_store(slug):
 
 
 
+def _closed_response(store, reason):
+    # closed.html extends base.html, which needs the full shop context
+    # (tenant, lang, t, theme...). Build it so the page never 500s.
+    ctx = _store_context(store)
+    return render_template('shop/closed.html', reason=reason, **ctx), 503
+
+
 def _require_open_store(store):
 
     if not StoreService.stores_globally_enabled():
 
-        return render_template('shop/closed.html', store=store, reason='platform'), 503
+        return _closed_response(store, 'platform')
+
+    if StoreService.is_platform_locked(store):
+
+        return _closed_response(store, 'platform')
 
     if not store.is_enabled:
 
-        return render_template('shop/closed.html', store=store, reason='tenant'), 503
+        return _closed_response(store, 'tenant')
 
     tenant = db.session.get(Tenant, store.tenant_id)
 
     if not tenant or not tenant.is_active or getattr(tenant, 'is_suspended', False):
 
-        return render_template('shop/closed.html', store=store, reason='tenant'), 503
+        return _closed_response(store, 'tenant')
 
     return None
 

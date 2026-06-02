@@ -2,70 +2,123 @@
 {% block title %}{{ store.title or tenant.name }} — {{ t('shop') }}{% endblock %}
 
 {% block content %}
-<section class="ps-hero">
+{# Premium dynamic hero — tenant identity only #}
+<section class="ps-hero-premium">
+  <span class="ps-hero-eyebrow"><i class="fas fa-leaf"></i> {{ store.tagline or t('made_in_palestine') }}</span>
   <h2>{{ store.title or tenant.name }}</h2>
-  <p>{{ store.tagline or t('made_in_palestine') }}</p>
-  <span class="ps-pride"><i class="fas fa-leaf"></i> {{ t('made_in_palestine') }}</span>
+  <p class="ps-hero-sub">{{ store.seo_description(lang) or store.tagline or t('made_in_palestine') }}</p>
+  <div class="ps-hero-cta">
+    <a href="#products" class="ps-btn ps-btn-primary"><i class="fas fa-bag-shopping"></i> {{ t('shop_now') }}</a>
+    {% if categories %}<a href="#categories" class="ps-btn ps-btn-ghost"><i class="fas fa-layer-group"></i> {{ t('categories') }}</a>{% endif %}
+  </div>
 </section>
 
+{# Search #}
 <div class="ps-toolbar">
   <form class="ps-search-form" method="get" action="{{ url_for('shop.catalog', slug=store.store_slug) }}">
     {% if category_id %}<input type="hidden" name="category" value="{{ category_id }}">{% endif %}
     <input type="search" name="q" value="{{ search or '' }}" placeholder="{{ t('search') }}" aria-label="{{ t('search') }}">
     <button type="submit"><i class="fas fa-search"></i></button>
   </form>
-  {% if categories %}
-  <nav class="ps-categories" aria-label="{{ t('categories') }}">
-    <a href="{{ url_for('shop.catalog', slug=store.store_slug, q=search or none) }}" class="ps-cat-chip {% if not category_id %}active{% endif %}">{{ t('all_products') }}</a>
-    {% for cat in categories %}
-    <a href="{{ url_for('shop.catalog', slug=store.store_slug, category=cat.id, q=search or none) }}" class="ps-cat-chip {% if category_id == cat.id %}active{% endif %}">{{ cat.get_display_name(lang) }}</a>
-    {% endfor %}
-  </nav>
-  {% endif %}
 </div>
 
-{% if items %}
-<div class="ps-grid">
-  {% for row in items %}
-  {% set product = row.product %}
-  <article class="ps-card">
-    <a href="{{ url_for('shop.product_detail', slug=store.store_slug, product_id=product.id) }}" class="ps-card-img">
-      {% if product.image_url %}
-      <img src="{{ product.image_url }}" alt="{{ product.get_display_name(lang) }}" loading="lazy">
-      {% else %}
-      <div class="ps-placeholder"><i class="fas fa-box-open"></i></div>
-      {% endif %}
+{# Category cards — dynamic, hidden when empty #}
+{% if categories %}
+<section id="categories">
+  <div class="ps-section-head">
+    <h2><i class="fas fa-layer-group"></i> {{ t('shop_by_category') }}</h2>
+    <a href="{{ url_for('shop.catalog', slug=store.store_slug) }}" class="ps-section-link">{{ t('all_products') }}</a>
+  </div>
+  <div class="ps-category-strip">
+    <a href="{{ url_for('shop.catalog', slug=store.store_slug, q=search or none) }}"
+       class="ps-cat-card {% if not category_id %}active{% endif %}">
+      <span class="ps-cat-card-icon"><i class="fas fa-table-cells-large"></i></span>
+      <span class="ps-cat-card-name">{{ t('all_products') }}</span>
     </a>
-    <div class="ps-card-body">
-      <h3 class="ps-card-title">
-        <a href="{{ url_for('shop.product_detail', slug=store.store_slug, product_id=product.id) }}">{{ product.get_display_name(lang) }}</a>
-      </h3>
-      {% if product.sku %}<div class="ps-card-meta">{{ product.sku }}</div>{% endif %}
-      <div class="ps-card-footer">
-        <span class="ps-price">{{ '%.2f'|format(product.regular_price) }} {{ tenant.default_currency or 'AED' }}</span>
-        {% if is_shop_logged_in %}
-        <form method="post" action="{{ url_for('shop.cart_add', slug=store.store_slug) }}">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <input type="hidden" name="product_id" value="{{ product.id }}">
-          <input type="hidden" name="quantity" value="1">
-          <button type="submit" class="ps-btn ps-btn-primary"><i class="fas fa-plus"></i> {{ t('add_to_cart') }}</button>
-        </form>
-        {% elif wa_digits %}
-        {% set wa_text = ('مرحباً، أريد: ' ~ product.get_display_name(lang) ~ ' — ' ~ product.regular_price ~ ' ' ~ (tenant.default_currency or 'AED')) if lang == 'ar' else ('Hello, I want: ' ~ product.get_display_name(lang) ~ ' — ' ~ product.regular_price ~ ' ' ~ (tenant.default_currency or 'AED')) %}
-        <a href="https://wa.me/{{ wa_digits }}?text={{ wa_text|urlencode }}" target="_blank" rel="noopener" class="ps-btn ps-btn-wa"><i class="fab fa-whatsapp"></i> {{ t('order_whatsapp') }}</a>
-        {% else %}
-        <a href="{{ url_for('shop.account_register', slug=store.store_slug) }}" class="ps-btn ps-btn-outline">{{ t('register') }}</a>
-        {% endif %}
-      </div>
-    </div>
-  </article>
-  {% endfor %}
-</div>
-{% else %}
-<div class="ps-empty">
-  <div class="ps-empty-icon"><i class="fas fa-box-open"></i></div>
-  <h3>{{ t('out_of_stock') if search else t('empty_cart') }}</h3>
-  <p>{{ t('continue_shopping') }}</p>
-</div>
+    {% for cat in categories %}
+    <a href="{{ url_for('shop.catalog', slug=store.store_slug, category=cat.id, q=search or none) }}"
+       class="ps-cat-card {% if category_id == cat.id %}active{% endif %}">
+      <span class="ps-cat-card-icon"><i class="fas fa-tags"></i></span>
+      <span class="ps-cat-card-name">{{ cat.get_display_name(lang) }}</span>
+    </a>
+    {% endfor %}
+  </div>
+</section>
 {% endif %}
+
+{# Products #}
+<section id="products">
+  <div class="ps-section-head">
+    <h2><i class="fas fa-store"></i> {{ t('featured_products') }}</h2>
+  </div>
+
+  {% if items %}
+  <div class="ps-grid">
+    {% for row in items %}
+    {% set product = row.product %}
+    <article class="ps-card">
+      <a href="{{ url_for('shop.product_detail', slug=store.store_slug, product_id=product.id) }}" class="ps-card-img">
+        {% if product.image_url %}
+        <img src="{{ product.image_url }}" alt="{{ product.get_display_name(lang) }}" loading="lazy">
+        {% else %}
+        <div class="ps-placeholder"><i class="fas fa-box-open"></i></div>
+        {% endif %}
+      </a>
+      <div class="ps-card-body">
+        <h3 class="ps-card-title">
+          <a href="{{ url_for('shop.product_detail', slug=store.store_slug, product_id=product.id) }}">{{ product.get_display_name(lang) }}</a>
+        </h3>
+        {% if product.sku %}<div class="ps-card-meta">{{ product.sku }}</div>{% endif %}
+        <div class="ps-card-footer">
+          <span class="ps-price">{{ '%.2f'|format(product.regular_price) }} {{ tenant.default_currency or 'AED' }}</span>
+          {% if is_shop_logged_in %}
+          <form method="post" action="{{ url_for('shop.cart_add', slug=store.store_slug) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="product_id" value="{{ product.id }}">
+            <input type="hidden" name="quantity" value="1">
+            <button type="submit" class="ps-btn ps-btn-primary"><i class="fas fa-plus"></i> {{ t('add_to_cart') }}</button>
+          </form>
+          {% elif wa_digits %}
+          {% set wa_text = ('مرحباً، أريد: ' ~ product.get_display_name(lang) ~ ' — ' ~ product.regular_price ~ ' ' ~ (tenant.default_currency or 'AED')) if lang == 'ar' else ('Hello, I want: ' ~ product.get_display_name(lang) ~ ' — ' ~ product.regular_price ~ ' ' ~ (tenant.default_currency or 'AED')) %}
+          <a href="https://wa.me/{{ wa_digits }}?text={{ wa_text|urlencode }}" target="_blank" rel="noopener" class="ps-btn ps-btn-wa"><i class="fab fa-whatsapp"></i> {{ t('order_whatsapp') }}</a>
+          {% else %}
+          <a href="{{ url_for('shop.account_register', slug=store.store_slug) }}" class="ps-btn ps-btn-outline">{{ t('register') }}</a>
+          {% endif %}
+        </div>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="ps-empty">
+    <div class="ps-empty-icon"><i class="fas fa-box-open"></i></div>
+    <h3>{{ t('out_of_stock') if search else t('empty_cart') }}</h3>
+    <p>{{ t('continue_shopping') }}</p>
+  </div>
+  {% endif %}
+</section>
+
+{# Benefits row #}
+<section class="ps-benefits" aria-label="{{ t('customer_service') }}">
+  <div class="ps-benefit">
+    <span class="ps-benefit-icon"><i class="fas fa-certificate"></i></span>
+    <div><div class="ps-benefit-title">{{ t('benefit_authentic') }}</div><div class="ps-benefit-sub">{{ t('benefit_authentic_sub') }}</div></div>
+  </div>
+  <div class="ps-benefit">
+    <span class="ps-benefit-icon"><i class="fas fa-gem"></i></span>
+    <div><div class="ps-benefit-title">{{ t('benefit_quality') }}</div><div class="ps-benefit-sub">{{ t('benefit_quality_sub') }}</div></div>
+  </div>
+  <div class="ps-benefit">
+    <span class="ps-benefit-icon"><i class="fas fa-truck-fast"></i></span>
+    <div><div class="ps-benefit-title">{{ t('benefit_delivery') }}</div><div class="ps-benefit-sub">{{ t('benefit_delivery_sub') }}</div></div>
+  </div>
+  <div class="ps-benefit">
+    <span class="ps-benefit-icon"><i class="fas fa-shield-halved"></i></span>
+    <div><div class="ps-benefit-title">{{ t('benefit_secure') }}</div><div class="ps-benefit-sub">{{ t('benefit_secure_sub') }}</div></div>
+  </div>
+  <div class="ps-benefit">
+    <span class="ps-benefit-icon"><i class="fas fa-headset"></i></span>
+    <div><div class="ps-benefit-title">{{ t('benefit_support') }}</div><div class="ps-benefit-sub">{{ t('benefit_support_sub') }}</div></div>
+  </div>
+</section>
 {% endblock %}

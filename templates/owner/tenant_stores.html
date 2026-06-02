@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% block title %}متاجر التينانتس{% endblock %}
+
+{% block content %}
+<div class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2 align-items-center">
+      <div class="col-sm-6">
+        <h1 class="m-0"><i class="fas fa-store mr-2"></i>متاجر التينانتس — تحكم المنصة</h1>
+        <p class="text-muted small mb-0">مالك المنصة يستطيع تعطيل أي متجر؛ عند التعطيل لا يستطيع مالك التينانت تفعيله.</p>
+      </div>
+      <div class="col-sm-6 text-left">
+        <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary btn-sm">رجوع</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="content">
+  <div class="container-fluid">
+    {% if not global_enabled %}
+    <div class="alert alert-warning">
+      <i class="fas fa-globe mr-1"></i>
+      المتاجر متوقفة على مستوى المنصة (المفتاح العام). فعّل «المتاجر الإلكترونية» من <a href="{{ url_for('owner.system_config') }}">إعدادات النظام</a> ليظهر أي متجر للعملاء.
+    </div>
+    {% endif %}
+
+    <div class="alert alert-info">
+      <i class="fas fa-shield-halved mr-1"></i>
+      صلاحية مالك المنصة أقوى: «قفل» يفرض إيقاف المتجر ويمنع مالك التينانت من تفعيله. «فك القفل» يعيد التحكم لمالك التينانت.
+    </div>
+
+    <div class="card">
+      <div class="card-body table-responsive p-0">
+        <table class="table table-hover mb-0 align-middle">
+          <thead>
+            <tr>
+              <th>التينانت</th>
+              <th>المعرّف</th>
+              <th>حالة التينانت</th>
+              <th>قفل المنصة</th>
+              <th>متاح للعملاء</th>
+              <th class="text-left">إجراء</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in rows %}
+            <tr>
+              <td>
+                <strong>{{ row.tenant.name_ar or row.tenant.name }}</strong>
+                <div class="text-muted small">{{ row.tenant.slug }}</div>
+              </td>
+              <td><code>/s/{{ row.store.store_slug }}</code></td>
+              <td>
+                {% if row.is_enabled %}
+                <span class="badge badge-success">مفعّل</span>
+                {% else %}
+                <span class="badge badge-secondary">متوقف</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if row.platform_disabled %}
+                <span class="badge badge-danger"><i class="fas fa-lock mr-1"></i>مقفول</span>
+                {% else %}
+                <span class="badge badge-light border">مفوّض للتينانت</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if row.public_available %}
+                <span class="badge badge-success"><i class="fas fa-check mr-1"></i>متاح</span>
+                {% else %}
+                <span class="badge badge-secondary">غير متاح</span>
+                {% endif %}
+              </td>
+              <td class="text-left">
+                <form method="POST" action="{{ url_for('owner.tenant_store_platform_toggle', store_id=row.store.id) }}" style="display:inline;">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  {% if row.platform_disabled %}
+                  <input type="hidden" name="platform_disabled" value="0">
+                  <button type="submit" class="btn btn-outline-success btn-sm"><i class="fas fa-unlock mr-1"></i>فك القفل</button>
+                  {% else %}
+                  <input type="hidden" name="platform_disabled" value="1">
+                  <button type="submit" class="btn btn-outline-danger btn-sm"
+                          onclick="return confirm('تعطيل هذا المتجر من مستوى المنصة؟ لن يتمكن مالك التينانت من تفعيله.');">
+                    <i class="fas fa-lock mr-1"></i>قفل (تعطيل)
+                  </button>
+                  {% endif %}
+                </form>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="6" class="text-center text-muted py-4">لا توجد متاجر بعد.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

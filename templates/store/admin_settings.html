@@ -28,9 +28,16 @@
 
           <h5 class="mb-3">عام</h5>
 
+          {% if store.platform_disabled %}
+          <div class="alert alert-danger d-flex align-items-center">
+            <i class="fas fa-lock mr-2"></i>
+            <span>تم تعطيل هذا المتجر من قبل مالك المنصة. لا يمكنك تفعيله حتى يقوم مالك المنصة بفك القفل.</span>
+          </div>
+          {% endif %}
+
           <div class="custom-control custom-switch mb-4">
 
-            <input type="checkbox" class="custom-control-input" id="is_enabled" name="is_enabled" {% if store.is_enabled %}checked{% endif %}>
+            <input type="checkbox" class="custom-control-input" id="is_enabled" name="is_enabled" {% if store.is_enabled %}checked{% endif %} {% if store.platform_disabled %}disabled{% endif %}>
 
             <label class="custom-control-label font-weight-bold" for="is_enabled">تفعيل المتجر الإلكتروني</label>
 

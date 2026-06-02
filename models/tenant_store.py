@@ -12,6 +12,9 @@ class TenantStore(db.Model):
     warehouse_id = db.Column(db.Integer, db.ForeignKey('warehouses.id'), nullable=False, index=True)
 
     is_enabled = db.Column(db.Boolean, default=False, nullable=False)
+    # Platform-owner hard lock (force-OFF). When True the store is forced closed
+    # regardless of is_enabled, and the tenant owner cannot re-enable it.
+    platform_disabled = db.Column(db.Boolean, default=False, nullable=False, server_default='false')
     store_slug = db.Column(db.String(100), unique=True, nullable=False, index=True)
     title = db.Column(db.String(200))
     tagline = db.Column(db.String(255))

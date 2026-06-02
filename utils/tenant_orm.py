@@ -156,3 +156,19 @@ def register_tenant_orm_scoping(app):
         "[OK] Tenant ORM scoping active (%s models)",
         len(_discover_tenant_models()),
     )
+
+
+# --- Backward-compatibility shims -------------------------------------------
+# Some older modules import these helpers from utils.tenant_orm. The canonical
+# implementations live in utils.tenanting; re-export them here (lazy import to
+# avoid any import-cycle) without changing tenant logic.
+def tenant_query(model, user=None):
+    from utils.tenanting import tenant_query as _tenant_query
+
+    return _tenant_query(model, user)
+
+
+def model_has_tenant(model) -> bool:
+    from utils.tenanting import model_has_tenant as _model_has_tenant
+
+    return _model_has_tenant(model)

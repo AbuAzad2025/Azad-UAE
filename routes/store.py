@@ -68,6 +68,9 @@ def admin_settings():
     if request.method == 'POST':
         try:
             is_enabled = request.form.get('is_enabled') == 'on'
+            if store.platform_disabled and is_enabled:
+                is_enabled = False
+                flash('تم تعطيل هذا المتجر من قبل مالك المنصة، ولا يمكنك تفعيله.', 'warning')
             title = (request.form.get('title') or '').strip()
             tagline = (request.form.get('tagline') or '').strip()
             phone = (request.form.get('phone') or '').strip()

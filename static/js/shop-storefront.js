@@ -15,6 +15,15 @@
     });
   });
 
+  var navToggle = document.querySelector('.ps-nav-toggle');
+  var nav = document.querySelector('.ps-nav');
+  if (navToggle && nav) {
+    navToggle.addEventListener('click', function () {
+      var open = nav.classList.toggle('is-open');
+      navToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+  }
+
   var alerts = document.querySelectorAll('.ps-alert[data-auto-dismiss]');
   alerts.forEach(function (el) {
     setTimeout(function () {
