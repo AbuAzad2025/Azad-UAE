@@ -201,3 +201,198 @@ def dashboard():
             </body>
         </html>
         """, 500
+
+
+# ───────────────────────────────────────────────────────────────
+# User Self-Profile — view and edit own data only
+# ───────────────────────────────────────────────────────────────
+
+@main_bp.route('/my-profile')
+@login_required
+def my_profile():
+    """Current user's own profile — view-only with edit form."""
+    from models.tenant import Tenant
+    from models.user import User
+
+    user = current_user
+    tenant = Tenant.query.get(user.tenant_id) if user.tenant_id else None
+
+    # Personal stats
+    today = datetime.now(timezone.utc).date()
+    month_start = today.replace(day=1)
+
+    stats = {}
+
+    # Sales stats
+    from models import Sale
+    today_sales = db.session.query(
+        func.count(Sale.id),
+        func.sum(Sale.amount_aed)
+    ).filter(
+        Sale.seller_id == user.id,
+        func.date(Sale.sale_date) == today,
+        Sale.status == 'confirmed'
+    ).first()
+    stats['today_sales_count'] = today_sales[0] or 0
+    stats['today_sales_amount'] = float(today_sales[1] or 0)
+
+    month_sales = db.session.query(
+        func.count(Sale.id),
+        func.sum(Sale.amount_aed)
+    ).filter(
+        Sale.seller_id == user.id,
+        func.date(Sale.sale_date) >= month_start,
+        Sale.status == 'confirmed'
+    ).first()
+    stats['month_sales_count'] = month_sales[0] or 0
+    stats['month_sales_amount'] = float(month_sales[1] or 0)
+
+    total_sales = db.session.query(
+        func.count(Sale.id),
+        func.sum(Sale.amount_aed)
+    ).filter(
+        Sale.seller_id == user.id,
+        Sale.status == 'confirmed'
+    ).first()
+    stats['total_sales_count'] = total_sales[0] or 0
+    stats['total_sales_amount'] = float(total_sales[1] or 0)
+
+    # Payment stats
+    from models import Payment
+    payment_stats = db.session.query(
+        func.count(Payment.id),
+        func.sum(Payment.amount_aed)
+    ).filter(
+        Payment.user_id == user.id
+    ).first()
+    stats['payments_count'] = payment_stats[0] or 0
+    stats['payments_amount'] = float(payment_stats[1] or 0)
+
+    # Recent sales
+    recent_sales = Sale.query.filter_by(
+        seller_id=user.id,
+        status='confirmed'
+    ).order_by(Sale.sale_date.desc()).limit(10).all()
+
+    return render_template(
+        'my_profile.html',
+        user=user,
+        tenant=tenant,
+        stats=stats,
+        recent_sales=recent_sales,
+    )
+
+
+@main_bp.route('/my-profile/update', methods=['POST'])
+@login_required
+def my_profile_update():
+    """Update own profile — strict whitelist of allowed fields."""
+    from werkzeug.security import generate_password_hash, check_password_hash
+    from utils.sanitizer import InputSanitizer
+
+    user = current_user
+
+    try:
+        # Whitelist: only these fields may be changed by the user
+        allowed_fields = {
+            'full_name', 'full_name_ar', 'email', 'phone',
+        }
+
+        # Sanitize and update allowed fields
+        if 'full_name' in request.form:
+            user.full_name = InputSanitizer.sanitize_text(
+                request.form.get('full_name', ''), max_length=100
+            ) or user.full_name
+
+        if 'full_name_ar' in request.form:
+            user.full_name_ar = InputSanitizer.sanitize_text(
+                request.form.get('full_name_ar', ''), max_length=100
+            ) or user.full_name_ar
+
+        if 'email' in request.form:
+            email = InputSanitizer.sanitize_email(request.form.get('email', ''))
+            if email:
+                # Check email uniqueness (excluding self)
+                existing = User.query.filter(
+                    User.email == email,
+                    User.id != user.id
+                ).first()
+                if existing:
+                    flash('⚠️ هذا البريد الإلكتروني مستخدم من قبل.', 'warning')
+                    return redirect(url_for('main.my_profile'))
+                user.email = email
+
+        if 'phone' in request.form:
+            from utils.field_validators import normalize_phone_optional
+            user.phone = normalize_phone_optional(request.form.get('phone', ''))
+
+        # Password change (requires current password)
+        current_password = request.form.get('current_password', '').strip()
+        new_password = request.form.get('new_password', '').strip()
+        confirm_password = request.form.get('confirm_password', '').strip()
+
+        if new_password:
+            if not current_password:
+                flash('⚠️ يجب إدخال كلمة المرور الحالية.', 'warning')
+                return redirect(url_for('main.my_profile'))
+
+            if not check_password_hash(user.password_hash, current_password):
+                flash('❌ كلمة المرور الحالية غير صحيحة.', 'danger')
+                return redirect(url_for('main.my_profile'))
+
+            if new_password != confirm_password:
+                flash('❌ كلمة المرور الجديدة غير متطابقة.', 'danger')
+                return redirect(url_for('main.my_profile'))
+
+            from utils.password_validator import PasswordValidator
+            is_valid, errors = PasswordValidator.validate(new_password)
+            if not is_valid:
+                from utils.error_messages import ErrorMessages
+                flash(ErrorMessages.weak_password(errors), 'danger')
+                return redirect(url_for('main.my_profile'))
+
+            user.password_hash = generate_password_hash(new_password, method='pbkdf2:sha256')
+            flash('✅ تم تغيير كلمة المرور بنجاح.', 'success')
+
+        db.session.commit()
+        flash('✅ تم تحديث البيانات بنجاح.', 'success')
+
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"My profile update error: {e}")
+        flash(f'❌ خطأ في التحديث: {str(e)}', 'danger')
+
+    return redirect(url_for('main.my_profile'))
+
+
+# ───────────────────────────────────────────────────────────────
+# Tenant Public Profile — read-only company info page
+# ───────────────────────────────────────────────────────────────
+
+@main_bp.route('/tenant/<slug>')
+def tenant_public_profile(slug):
+    """Public company profile page — no login required."""
+    from models.tenant import Tenant
+    from models.branch import Branch
+
+    tenant = Tenant.query.filter_by(slug=slug).first_or_404()
+
+    # Only show active tenants
+    if not tenant.is_active or getattr(tenant, 'is_suspended', False):
+        return render_template(
+            'public/tenant_suspended.html',
+            tenant=tenant,
+            reason=tenant.suspension_reason or 'Tenant suspended',
+        ), 503
+
+    # Public-safe info only
+    branches = Branch.query.filter_by(
+        tenant_id=tenant.id,
+        is_active=True
+    ).order_by(Branch.name).all()
+
+    return render_template(
+        'public/tenant_profile.html',
+        tenant=tenant,
+        branches=branches,
+    )

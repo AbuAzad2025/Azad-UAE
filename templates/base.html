@@ -284,6 +284,10 @@
         <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
           <span class="dropdown-item dropdown-header">{{ current_user.username }}</span>
           <div class="dropdown-divider"></div>
+          <a href="{{ url_for('main.my_profile') }}" class="dropdown-item">
+            <i class="fas fa-user-circle mr-2"></i>بروفايلي
+          </a>
+          <div class="dropdown-divider"></div>
           <a href="{{ url_for('auth.logout') }}" class="dropdown-item">
             <i class="fas fa-sign-out-alt mr-2"></i>تسجيل خروج
           </a>

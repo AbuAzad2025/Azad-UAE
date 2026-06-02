@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ tenant.name_ar or tenant.name }} — معلومات الشركة</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    :root {
+      --primary: {{ tenant.brand_color_primary or '#1B7A4E' }};
+      --secondary: {{ tenant.brand_color_secondary or '#CE1126' }};
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f8f9fa;
+    }
+    .hero {
+      background: linear-gradient(135deg, var(--primary) 0%, #0d4a2e 100%);
+      color: white;
+      padding: 3rem 0;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::after {
+      content: '';
+      position: absolute;
+      bottom: -40px;
+      left: 0; right: 0;
+      height: 80px;
+      background: #f8f9fa;
+      border-radius: 50% 50% 0 0;
+    }
+    .logo-container {
+      width: 120px; height: 120px;
+      background: white;
+      border-radius: 20px;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+      overflow: hidden;
+    }
+    .logo-container img {
+      max-width: 90%; max-height: 90%; object-fit: contain;
+    }
+    .info-card {
+      border: none;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+      transition: transform 0.2s;
+    }
+    .info-card:hover {
+      transform: translateY(-3px);
+    }
+    .info-icon {
+      width: 50px; height: 50px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem;
+      margin-left: 1rem;
+    }
+    .branch-card {
+      border: none;
+      border-radius: 12px;
+      background: white;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+    }
+    .footer-bar {
+      background: var(--primary);
+      color: white;
+      padding: 1.5rem 0;
+      margin-top: 3rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="container">
+      <div class="row align-items-center">
+        <div class="col-auto">
+          <div class="logo-container">
+            {% if tenant.logo_url %}
+            <img src="{{ tenant.logo_url }}" alt="{{ tenant.name_ar or tenant.name }}">
+            {% else %}
+            <i class="bi bi-building text-primary" style="font-size:3rem;"></i>
+            {% endif %}
+          </div>
+        </div>
+        <div class="col">
+          <h1 class="fw-bold mb-1">{{ tenant.name_ar or tenant.name }}</h1>
+          <p class="mb-0 opacity-75">{{ tenant.name_en or '' }}</p>
+          {% if tenant.business_type %}
+          <span class="badge bg-white text-dark mt-2">{{ tenant.business_type }}</span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container" style="margin-top:-20px; position:relative; z-index:2;">
+    <div class="row g-4">
+
+      <!-- Contact Info -->
+      <div class="col-lg-8">
+        <div class="card info-card mb-4">
+          <div class="card-body">
+            <h5 class="fw-bold mb-4"><i class="bi bi-info-circle-fill text-primary me-2"></i>معلومات التواصل</h5>
+            <div class="row g-4">
+              {% if tenant.phone_1 %}
+              <div class="col-md-6 d-flex align-items-center">
+                <div class="info-icon bg-success bg-opacity-10 text-success">
+                  <i class="bi bi-telephone"></i>
+                </div>
+                <div>
+                  <div class="text-muted small">الهاتف الرئيسي</div>
+                  <div class="fw-semibold" dir="ltr">{{ tenant.phone_1 }}</div>
+                </div>
+              </div>
+              {% endif %}
+              {% if tenant.phone_2 %}
+              <div class="col-md-6 d-flex align-items-center">
+                <div class="info-icon bg-info bg-opacity-10 text-info">
+                  <i class="bi bi-telephone"></i>
+                </div>
+                <div>
+                  <div class="text-muted small">الهاتف الثانوي</div>
+                  <div class="fw-semibold" dir="ltr">{{ tenant.phone_2 }}</div>
+                </div>
+              </div>
+              {% endif %}
+              {% if tenant.mobile %}
+              <div class="col-md-6 d-flex align-items-center">
+                <div class="info-icon bg-warning bg-opacity-10 text-warning">
+                  <i class="bi bi-phone"></i>
+                </div>
+                <div>
+                  <div class="text-muted small">الجوال / واتساب</div>
+                  <div class="fw-semibold" dir="ltr">{{ tenant.mobile }}</div>
+                </div>
+              </div>
+              {% endif %}
+              {% if tenant.email %}
+              <div class="col-md-6 d-flex align-items-center">
+                <div class="info-icon bg-primary bg-opacity-10 text-primary">
+                  <i class="bi bi-envelope"></i>
+                </div>
+                <div>
+                  <div class="text-muted small">البريد الإلكتروني</div>
+                  <div class="fw-semibold">{{ tenant.email }}</div>
+                </div>
+              </div>
+              {% endif %}
+              {% if tenant.address_ar %}
+              <div class="col-12 d-flex align-items-center">
+                <div class="info-icon bg-secondary bg-opacity-10 text-secondary">
+                  <i class="bi bi-geo-alt"></i>
+                </div>
+                <div>
+                  <div class="text-muted small">العنوان</div>
+                  <div class="fw-semibold">{{ tenant.address_ar }}</div>
+                </div>
+              </div>
+              {% endif %}
+              {% if tenant.website %}
+              <div class="col-12 d-flex align-items-center">
+                <div class="info-icon bg-dark bg-opacity-10 text-dark">
+                  <i class="bi bi-globe"></i>
+                </div>
+                <div>
+                  <div class="text-muted small">الموقع الإلكتروني</div>
+                  <a href="{{ tenant.website }}" target="_blank" class="fw-semibold">{{ tenant.website }}</a>
+                </div>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Branches -->
+        {% if branches %}
+        <div class="card info-card">
+          <div class="card-body">
+            <h5 class="fw-bold mb-4"><i class="bi bi-shop text-primary me-2"></i>الفروع</h5>
+            <div class="row g-3">
+              {% for branch in branches %}
+              <div class="col-md-6">
+                <div class="branch-card p-3">
+                  <div class="d-flex align-items-center mb-2">
+                    <i class="bi bi-shop text-primary me-2 fs-4"></i>
+                    <div class="fw-bold">{{ branch.name }}</div>
+                  </div>
+                  {% if branch.code %}
+                  <div class="text-muted small mb-1"><i class="bi bi-hash me-1"></i>{{ branch.code }}</div>
+                  {% endif %}
+                  {% if branch.address %}
+                  <div class="text-muted small"><i class="bi bi-geo-alt me-1"></i>{{ branch.address }}</div>
+                  {% endif %}
+                  {% if branch.phone %}
+                  <div class="text-muted small"><i class="bi bi-telephone me-1"></i>{{ branch.phone }}</div>
+                  {% endif %}
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Sidebar -->
+      <div class="col-lg-4">
+        <!-- Legal Info -->
+        <div class="card info-card mb-4">
+          <div class="card-body">
+            <h6 class="fw-bold mb-3"><i class="bi bi-file-text text-primary me-2"></i>البيانات القانونية</h6>
+            <ul class="list-group list-group-flush">
+              {% if tenant.commercial_register %}
+              <li class="list-group-item d-flex justify-content-between px-0">
+                <span class="text-muted small">السجل التجاري</span>
+                <span class="fw-semibold small">{{ tenant.commercial_register }}</span>
+              </li>
+              {% endif %}
+              {% if tenant.tax_number %}
+              <li class="list-group-item d-flex justify-content-between px-0">
+                <span class="text-muted small">الرقم الضريبي (TRN)</span>
+                <span class="fw-semibold small">{{ tenant.tax_number }}</span>
+              </li>
+              {% endif %}
+              {% if tenant.license_number %}
+              <li class="list-group-item d-flex justify-content-between px-0">
+                <span class="text-muted small">رقم الترخيص</span>
+                <span class="fw-semibold small">{{ tenant.license_number }}</span>
+              </li>
+              {% endif %}
+              {% if tenant.country %}
+              <li class="list-group-item d-flex justify-content-between px-0">
+                <span class="text-muted small">الدولة</span>
+                <span class="fw-semibold small">{{ tenant.country }}</span>
+              </li>
+              {% endif %}
+              {% if tenant.city %}
+              <li class="list-group-item d-flex justify-content-between px-0">
+                <span class="text-muted small">المدينة</span>
+                <span class="fw-semibold small">{{ tenant.city }}</span>
+              </li>
+              {% endif %}
+            </ul>
+          </div>
+        </div>
+
+        <!-- Online Store -->
+        {% if tenant.enable_store %}
+        <div class="card info-card">
+          <div class="card-body text-center">
+            <h6 class="fw-bold mb-3"><i class="bi bi-bag text-primary me-2"></i>المتجر الإلكتروني</h6>
+            <p class="text-muted small">تصفح منتجاتنا واطلب أونلاين</p>
+            <a href="{{ url_for('shop.catalog', slug=tenant.slug) }}" class="btn btn-primary w-100">
+              <i class="bi bi-bag me-1"></i>تصفح المتجر
+            </a>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer-bar text-center">
+    <div class="container">
+      <div class="mb-2">
+        <i class="bi bi-building me-2"></i>{{ tenant.name_ar or tenant.name }}
+      </div>
+      <small class="opacity-75">نظام أزاد المحاسبي — Azad Accounting System</small>
+    </div>
+  </div>
+
+</body>
+</html>
