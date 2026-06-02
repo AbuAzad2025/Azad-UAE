@@ -1,0 +1,19 @@
+{
+  "tenant_slug": "abudhabi_construction",
+  "tenant_name": "أبوظبي للإنشاءات",
+  "business_type": "construction",
+  "expertise_areas": [
+    {
+      "domain": "construction",
+      "topic": "مواد البناء",
+      "knowledge": "مواد البناء المتوفرة: أسمنت، حديد تسليح، رمل، طوب، بلوك، طابوق، عازل مائي، عازل حراري، دهانات خارجية وداخلية.",
+      "priority": 5
+    },
+    {
+      "domain": "construction",
+      "topic": "المقاولات",
+      "knowledge": "خدمات المقاولات: بناء منازل، ترميم، توسعات، بناء مستودعات، أعمال صحية، أعمال كهربائية، دهانات، أرضيات.",
+      "priority": 5
+    }
+  ]
+}

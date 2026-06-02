@@ -1,11 +1,15 @@
-"""Seed AI tables from training data files.
+"""Seed AI tables from organized training data files.
 
-Reads ai_training/*.json files and populates ai_memories, ai_interactions, ai_expertise.
+Reads ai_training/GLOBAL/<type>/*.json and ai_training/<tenant_slug>/<type>/*.json
 Safe to run multiple times — uses upsert logic.
+
+Usage:
+    python ai_training/seed_ai_from_training.py
 """
 import os
 import sys
 import json
+import glob
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -18,159 +22,230 @@ from sqlalchemy import text
 
 TRAINING_DIR = os.path.dirname(os.path.abspath(__file__))
 
+# Tenant slug -> tenant_id cache (filled at runtime)
+TENANT_CACHE = {}
+
+
+def _get_tenant_id(conn, slug):
+    """Resolve tenant slug to ID, caching results."""
+    if slug == "GLOBAL":
+        return None
+    if slug in TENANT_CACHE:
+        return TENANT_CACHE[slug]
+    row = conn.execute(
+        text("SELECT id FROM tenants WHERE slug = :slug AND is_active = true"),
+        {"slug": slug}
+    ).fetchone()
+    tid = row[0] if row else None
+    TENANT_CACHE[slug] = tid
+    return tid
+
+
+def _list_json_files(subpath):
+    """List all JSON files under a training subfolder."""
+    full = os.path.join(TRAINING_DIR, subpath)
+    if not os.path.isdir(full):
+        return []
+    return sorted(glob.glob(os.path.join(full, "**", "*.json"), recursive=True))
+
 
 def seed_memories(conn):
-    path = os.path.join(TRAINING_DIR, "learned_knowledge_seed.json")
-    if not os.path.exists(path):
-        print("  No learned_knowledge_seed.json found")
-        return 0
-
-    with open(path, "r", encoding="utf-8") as f:
-        data = json.load(f)
-
+    """Seed ai_memories from GLOBAL/memories and <tenant>/memories."""
+    files = _list_json_files("GLOBAL/memories") + _list_json_files("*/memories")
     count = 0
-    for key, value in data.items():
-        if isinstance(value, (list, dict)) and len(value) == 0:
+    for path in files:
+        rel = os.path.relpath(path, TRAINING_DIR)
+        parts = rel.split(os.sep)
+        tenant_slug = parts[0]
+        tenant_id = _get_tenant_id(conn, tenant_slug)
+
+        with open(path, "r", encoding="utf-8") as f:
+            try:
+                data = json.load(f)
+            except json.JSONDecodeError:
+                print(f"  ⚠️ Skipping invalid JSON: {rel}")
+                continue
+
+        # learned_knowledge.json has dict with keys
+        if isinstance(data, dict):
+            items = []
+            for key, value in data.items():
+                if isinstance(value, (list, dict)) and len(value) == 0:
+                    continue
+                value_str = json.dumps(value, ensure_ascii=False) if isinstance(value, (list, dict)) else str(value)
+                items.append((key, value_str))
+        elif isinstance(data, list):
+            items = [(it.get("key", f"item_{i}"), json.dumps(it, ensure_ascii=False)) for i, it in enumerate(data)]
+        else:
             continue
-        value_str = json.dumps(value, ensure_ascii=False) if isinstance(value, (list, dict)) else str(value)
-        # Upsert: skip if key already exists
-        existing = conn.execute(
-            text("SELECT id FROM ai_memories WHERE key = :key"),
-            {"key": key}
-        ).fetchone()
-        if existing:
-            continue
-        conn.execute(
-            text("""
-                INSERT INTO ai_memories (category, key, value, confidence, source)
-                VALUES (:category, :key, :value, :confidence, :source)
-            """),
-            {
-                "category": "learned",
-                "key": key,
-                "value": value_str,
-                "confidence": 0.85,
-                "source": "learned_knowledge_seed.json",
-            }
-        )
-        count += 1
+
+        for key, value in items:
+            existing = conn.execute(
+                text("SELECT id FROM ai_memories WHERE key = :key AND (tenant_id IS NOT DISTINCT FROM :tid)"),
+                {"key": key, "tid": tenant_id}
+            ).fetchone()
+            if existing:
+                continue
+            conn.execute(
+                text("""
+                    INSERT INTO ai_memories (tenant_id, category, key, value, confidence, source)
+                    VALUES (:tid, :category, :key, :value, :confidence, :source)
+                """),
+                {
+                    "tid": tenant_id,
+                    "category": "learned",
+                    "key": key,
+                    "value": value,
+                    "confidence": 0.85,
+                    "source": rel,
+                }
+            )
+            count += 1
     return count
 
 
 def seed_interactions(conn):
-    path = os.path.join(TRAINING_DIR, "interactions_log_seed.json")
-    if not os.path.exists(path):
-        print("  No interactions_log_seed.json found")
-        return 0
-
-    with open(path, "r", encoding="utf-8") as f:
-        data = json.load(f)
-
-    if not isinstance(data, list):
-        print("  interactions_log_seed.json is not a list")
-        return 0
-
+    """Seed ai_interactions from GLOBAL/interactions and <tenant>/interactions."""
+    files = _list_json_files("GLOBAL/interactions") + _list_json_files("*/interactions")
     count = 0
-    for item in data[:500]:  # Cap at 500 to avoid bloat
-        query = item.get("query") or item.get("question") or item.get("user_message")
-        if not query:
+    for path in files:
+        rel = os.path.relpath(path, TRAINING_DIR)
+        parts = rel.split(os.sep)
+        tenant_slug = parts[0]
+        tenant_id = _get_tenant_id(conn, tenant_slug)
+
+        with open(path, "r", encoding="utf-8") as f:
+            try:
+                data = json.load(f)
+            except json.JSONDecodeError:
+                print(f"  ⚠️ Skipping invalid JSON: {rel}")
+                continue
+
+        if not isinstance(data, list):
+            print(f"  ⚠️ Expected list in {rel}, got {type(data).__name__}")
             continue
-        response = item.get("response") or item.get("answer") or ""
-        # Skip duplicates
-        existing = conn.execute(
-            text("SELECT id FROM ai_interactions WHERE query = :query LIMIT 1"),
-            {"query": query[:255]}
-        ).fetchone()
-        if existing:
-            continue
-        conn.execute(
-            text("""
-                INSERT INTO ai_interactions (query, response, intent, was_successful, is_training_sample)
-                VALUES (:query, :response, :intent, :success, true)
-            """),
-            {
-                "query": query[:2000],
-                "response": str(response)[:4000],
-                "intent": item.get("intent", "general"),
-                "success": item.get("was_successful", True),
-            }
-        )
-        count += 1
+
+        for item in data[:500]:
+            query = item.get("query") or item.get("question") or item.get("user_message")
+            if not query:
+                continue
+            response = item.get("response") or item.get("answer") or ""
+            existing = conn.execute(
+                text("SELECT id FROM ai_interactions WHERE query = :query AND (tenant_id IS NOT DISTINCT FROM :tid) LIMIT 1"),
+                {"query": query[:255], "tid": tenant_id}
+            ).fetchone()
+            if existing:
+                continue
+            conn.execute(
+                text("""
+                    INSERT INTO ai_interactions (tenant_id, query, response, intent, was_successful, is_training_sample)
+                    VALUES (:tid, :query, :response, :intent, :success, true)
+                """),
+                {
+                    "tid": tenant_id,
+                    "query": query[:2000],
+                    "response": str(response)[:4000],
+                    "intent": item.get("intent", "general"),
+                    "success": item.get("was_successful", True),
+                }
+            )
+            count += 1
     return count
 
 
 def seed_expertise(conn):
-    """Seed automotive / accounting expertise from existing knowledge base."""
-    expertise_areas = [
-        {
-            "domain": "accounting",
-            "topic": "المحاسبة العامة",
-            "knowledge": "المحاسبة العامة تشمل: القيود اليومية، دفتر الأستاذ، ميزان المراجعة، القوائم المالية. النظام يدعم العملة المتعددة والفروع."
-        },
-        {
-            "domain": "accounting",
-            "topic": "المخزون",
-            "knowledge": "إدارة المخزون: إضافة منتجات، تتبع الكميات، تنبيهات نقص المخزون، حركات المستودعات، الجرد الدوري."
-        },
-        {
-            "domain": "sales",
-            "topic": "المبيعات",
-            "knowledge": "المبيعات: إنشاء فواتير، خصومات، ضريبة القيمة المضافة، الدفع الجزئي، إيصالات القبض، المرتجعات."
-        },
-        {
-            "domain": "purchases",
-            "topic": "المشتريات",
-            "knowledge": "المشتريات: أوامر الشراء، فواتير الموردين، الدفعات، حسابات الموردين، المرتجعات."
-        },
-        {
-            "domain": "payroll",
-            "topic": "الرواتب",
-            "knowledge": "الرواتب: الموظفون، الرواتب الشهرية، السلف، الحضور والانصراف، التأمينات الاجتماعية."
-        },
-        {
-            "domain": "reports",
-            "topic": "التقارير",
-            "knowledge": "التقارير: تقارير المبيعات، تقارير المخزون، التقارير المالية، التقارير الضريبية، التصدير إلى Excel/PDF."
-        },
-        {
-            "domain": "automotive",
-            "topic": "السيارات",
-            "knowledge": "السيارات: فحص السيارات، تشخيص الأعطال، قطع الغيار، الصيانة الدورية، ضمانات."
-        },
-        {
-            "domain": "system",
-            "topic": "استخدام النظام",
-            "knowledge": "استخدام النظام: تسجيل الدخول، لوحة التحكم، إدارة المستخدمين، الفروع، التينانتس، النسخ الاحتياطي."
-        },
-    ]
-
+    """Seed ai_expertise from GLOBAL/expertise and <tenant>/expertise JSON files."""
+    files = _list_json_files("GLOBAL/expertise") + _list_json_files("*/expertise")
     count = 0
-    for area in expertise_areas:
-        existing = conn.execute(
-            text("SELECT id FROM ai_expertise WHERE topic = :topic"),
-            {"topic": area["topic"]}
-        ).fetchone()
-        if existing:
-            continue
-        conn.execute(
-            text("""
-                INSERT INTO ai_expertise (domain, topic, knowledge, priority)
-                VALUES (:domain, :topic, :knowledge, :priority)
-            """),
-            {
-                "domain": area["domain"],
-                "topic": area["topic"],
-                "knowledge": area["knowledge"],
-                "priority": 5,
-            }
-        )
-        count += 1
+    for path in files:
+        rel = os.path.relpath(path, TRAINING_DIR)
+        parts = rel.split(os.sep)
+        tenant_slug = parts[0]
+        tenant_id = _get_tenant_id(conn, tenant_slug)
+
+        with open(path, "r", encoding="utf-8") as f:
+            try:
+                data = json.load(f)
+            except json.JSONDecodeError:
+                print(f"  ⚠️ Skipping invalid JSON: {rel}")
+                continue
+
+        areas = data.get("expertise_areas", []) if isinstance(data, dict) else data
+        for area in areas:
+            topic = area.get("topic", "")
+            if not topic:
+                continue
+            existing = conn.execute(
+                text("SELECT id FROM ai_expertise WHERE topic = :topic AND (tenant_id IS NOT DISTINCT FROM :tid)"),
+                {"topic": topic, "tid": tenant_id}
+            ).fetchone()
+            if existing:
+                continue
+            conn.execute(
+                text("""
+                    INSERT INTO ai_expertise (tenant_id, domain, topic, knowledge, priority)
+                    VALUES (:tid, :domain, :topic, :knowledge, :priority)
+                """),
+                {
+                    "tid": tenant_id,
+                    "domain": area.get("domain", "general"),
+                    "topic": topic,
+                    "knowledge": area.get("knowledge", ""),
+                    "priority": area.get("priority", 5),
+                }
+            )
+            count += 1
+    return count
+
+
+def seed_documents(conn):
+    """Seed ai_memories from documents (treated as memories with category=document)."""
+    files = _list_json_files("GLOBAL/documents") + _list_json_files("*/documents")
+    count = 0
+    for path in files:
+        rel = os.path.relpath(path, TRAINING_DIR)
+        parts = rel.split(os.sep)
+        tenant_slug = parts[0]
+        tenant_id = _get_tenant_id(conn, tenant_slug)
+
+        with open(path, "r", encoding="utf-8") as f:
+            try:
+                data = json.load(f)
+            except json.JSONDecodeError:
+                print(f"  ⚠️ Skipping invalid JSON: {rel}")
+                continue
+
+        title = data.get("title", os.path.basename(path))
+        sections = data.get("sections", [])
+        for sec in sections:
+            heading = sec.get("heading", "")
+            content = sec.get("content", "")
+            key = f"doc:{title}:{heading}" if heading else f"doc:{title}"
+            existing = conn.execute(
+                text("SELECT id FROM ai_memories WHERE key = :key AND (tenant_id IS NOT DISTINCT FROM :tid)"),
+                {"key": key, "tid": tenant_id}
+            ).fetchone()
+            if existing:
+                continue
+            conn.execute(
+                text("""
+                    INSERT INTO ai_memories (tenant_id, category, key, value, confidence, source)
+                    VALUES (:tid, 'document', :key, :value, 0.90, :source)
+                """),
+                {
+                    "tid": tenant_id,
+                    "key": key,
+                    "value": content,
+                    "source": rel,
+                }
+            )
+            count += 1
     return count
 
 
 def main():
     print("=" * 60)
-    print("  SEED AI TABLES FROM TRAINING DATA")
+    print("  SEED AI TABLES FROM ORGANIZED TRAINING DATA")
     print("=" * 60)
 
     app = create_app()
@@ -178,7 +253,8 @@ def main():
         with db.engine.connect() as conn:
             print("\n📌 Seeding ai_memories...")
             mem_count = seed_memories(conn)
-            print(f"  Added {mem_count} memories")
+            doc_count = seed_documents(conn)
+            print(f"  Added {mem_count} memories + {doc_count} documents")
 
             print("\n📌 Seeding ai_interactions...")
             int_count = seed_interactions(conn)
@@ -191,7 +267,7 @@ def main():
             conn.commit()
 
     print("\n" + "=" * 60)
-    print(f"  Done: {mem_count} memories, {int_count} interactions, {exp_count} expertise")
+    print(f"  Done: {mem_count} memories, {doc_count} docs, {int_count} interactions, {exp_count} expertise")
     print("=" * 60)
 
 
