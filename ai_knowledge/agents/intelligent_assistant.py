@@ -49,7 +49,7 @@ class IntelligentAssistant:
     def quick_learner(self):
         """المتعلم السريع"""
         if self._quick_learner is None:
-            from .quick_learner import quick_learner
+            from ai_knowledge.learning.quick_learner import quick_learner
             self._quick_learner = quick_learner
         return self._quick_learner
     
@@ -57,7 +57,7 @@ class IntelligentAssistant:
     def neural_engine(self):
         """محرك الشبكات العصبية"""
         if self._neural_engine is None:
-            from .neural_engine import get_neural_engine
+            from ai_knowledge.neural.neural_engine import get_neural_engine
             self._neural_engine = get_neural_engine()
         return self._neural_engine
     
@@ -65,7 +65,7 @@ class IntelligentAssistant:
     def reasoning_engine(self):
         """محرك الاستنتاج المنطقي"""
         if self._reasoning_engine is None:
-            from .reasoning_engine import get_reasoning_engine
+            from ai_knowledge.core.reasoning_engine import get_reasoning_engine
             self._reasoning_engine = get_reasoning_engine()
         return self._reasoning_engine
     
@@ -73,7 +73,7 @@ class IntelligentAssistant:
     def data_analyzer(self):
         """محلل البيانات"""
         if self._data_analyzer is None:
-            from .data_analyzer import data_analyzer
+            from ai_knowledge.analytics.data_analyzer import data_analyzer
             self._data_analyzer = data_analyzer
         return self._data_analyzer
     
@@ -81,7 +81,7 @@ class IntelligentAssistant:
     def memory_system(self):
         """نظام الذاكرة"""
         if self._memory_system is None:
-            from .memory_system import get_memory_system
+            from ai_knowledge.core.memory_system import get_memory_system
             self._memory_system = get_memory_system()
         return self._memory_system
     
@@ -89,7 +89,7 @@ class IntelligentAssistant:
     def context_engine(self):
         """محرك السياق"""
         if self._context_engine is None:
-            from .context_engine import context_engine
+            from ai_knowledge.core.context_engine import context_engine
             self._context_engine = context_engine
         return self._context_engine
     
@@ -160,7 +160,7 @@ class IntelligentAssistant:
         """فهم الرسالة بذكاء"""
         try:
             # استخدام semantic matcher للنية الأساسية
-            from .semantic_matcher import understand_message
+            from ai_knowledge.neural.semantic_matcher import understand_message
             semantic_result = understand_message(message)
             
             # تعميق الفهم بـ Neural Engine
@@ -515,7 +515,7 @@ class IntelligentAssistant:
                 self.memory_system.remember_conversation(user_id, message, response)
             
             # التعلم الذاتي
-            from .learning_system import learning_system
+            from ai_knowledge.core.learning_system import learning_system
             learning_system.learn_from_interaction(message, response, context={'user_id': user_id})
         
         except Exception as e:

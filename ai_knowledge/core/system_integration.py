@@ -161,8 +161,19 @@ class SystemIntegrator:
                         'error': f'المجال "{field}" مطلوب'
                     }
             
+            # تحديد التينانت
+            from models.tenant import Tenant
+            tenant = Tenant.get_current()
+            tenant_id = tenant.id if tenant else customer_data.get('tenant_id')
+            if not tenant_id:
+                return {
+                    'success': False,
+                    'error': 'لا يوجد تينانت نشط — يرجى تسجيل الدخول لشركة محددة'
+                }
+
             # إنشاء العميل
             customer = Customer(
+                tenant_id=tenant_id,
                 name=customer_data['name'],
                 customer_type=customer_data['customer_type'],
                 phone=customer_data.get('phone', ''),
