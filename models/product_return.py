@@ -5,14 +5,17 @@ from extensions import db
 
 class ProductReturn(db.Model):
     __tablename__ = 'product_returns'
+    __table_args__ = (
+        db.UniqueConstraint('tenant_id', 'return_number', name='uq_product_returns_tenant_return_number'),
+    )
     
     id = db.Column(db.Integer, primary_key=True)
     tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True)
-    return_number = db.Column(db.String(50), unique=True, nullable=False, index=True)
+    return_number = db.Column(db.String(50), nullable=False, index=True)
     
     sale_id = db.Column(db.Integer, db.ForeignKey('sales.id'), nullable=False, index=True)
     customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'), nullable=False)
-    branch_id = db.Column(db.Integer, db.ForeignKey('branches.id'), nullable=True, index=True) # New Branch ID
+    branch_id = db.Column(db.Integer, db.ForeignKey('branches.id'), nullable=True, index=True)
     
     return_date = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
     
@@ -36,15 +39,17 @@ class ProductReturn(db.Model):
     branch = db.relationship('Branch', backref='returns', foreign_keys=[branch_id])
     user = db.relationship('User', foreign_keys=[processed_by])
     lines = db.relationship('ProductReturnLine', back_populates='product_return', lazy='joined', cascade='all, delete-orphan')
+    tenant = db.relationship('Tenant', backref='product_returns', foreign_keys=[tenant_id])
     
     def __repr__(self):
         return f'<ProductReturn {self.return_number}>'
     
     def calculate_totals(self):
-        """Calculate return totals with proper decimal precision"""
+        """Calculate return totals with proper decimal precision."""
         self.total_amount = sum((Decimal(str(line.line_total)) for line in self.lines), Decimal('0'))
         exchange_rate_decimal = Decimal(str(self.exchange_rate)) if self.exchange_rate else Decimal('1')
-        self.amount_aed = (self.total_amount * exchange_rate_decimal).quantize(
+        refund = Decimal(str(self.refund_amount or self.total_amount or 0))
+        self.amount_aed = (refund * exchange_rate_decimal).quantize(
             Decimal('0.001'), rounding=ROUND_HALF_UP
         )
 
@@ -68,7 +73,7 @@ class ProductReturnLine(db.Model):
     product_return = db.relationship('ProductReturn', back_populates='lines')
     sale_line = db.relationship('SaleLine')
     product = db.relationship('Product')
+    tenant = db.relationship('Tenant', backref='product_return_lines', foreign_keys=[tenant_id])
     
     def __repr__(self):
         return f'<ProductReturnLine {self.product_id} x {self.quantity}>'
-
