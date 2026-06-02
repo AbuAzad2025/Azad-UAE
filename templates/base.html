@@ -133,14 +133,15 @@
             </div>
             
             <!-- سعر الصرف -->
-            <div class="erp-exchange-box">
+            <div class="erp-exchange-box" style="cursor:pointer;" data-toggle="modal" data-target="#fxModal" title="اضغط لعرض أسعار الصرف">
               <div class="erp-exchange-label">
                 <i class="fas fa-exchange-alt mr-1"></i>
-                <span id="fx-pair-label">USD/{{ (tenant_default_currency or company_default_currency or 'AED')|upper }}</span>
+                <span>أسعار العملات</span>
               </div>
-              <div id="exchange-rate" class="erp-exchange-value">
-                <i class="fas fa-dollar-sign mr-1"></i>
-                <span id="rate-display" data-fx-from="USD" data-fx-to="{{ (tenant_default_currency or company_default_currency or 'AED')|upper }}">--</span>
+              <div class="erp-exchange-value" style="font-size:11px;">
+                <span class="badge badge-light text-dark mr-1">$</span>
+                <span class="badge badge-light text-dark mr-1">JD</span>
+                <span class="badge badge-light text-dark">₪</span>
               </div>
             </div>
           </div>
@@ -280,6 +281,63 @@
       </li>
     </ul>
   </nav>
+
+  <!-- Currency Exchange Modal -->
+  <div class="modal fade" id="fxModal" tabindex="-1" role="dialog" aria-labelledby="fxModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="fxModalLabel"><i class="fas fa-exchange-alt mr-2"></i>أسعار الصرف</h5>
+          <button type="button" class="close text-white" data-dismiss="modal" aria-label="إغلاق">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="table-responsive">
+            <table class="table table-sm table-striped text-center" id="fx-rates-table">
+              <thead class="thead-dark">
+                <tr>
+                  <th>العملة</th>
+                  <th>الشيقل ₪</th>
+                  <th>الدينار JD</th>
+                  <th>الدولار $</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="font-weight-bold">1 USD ($)</td>
+                  <td id="usd-ils">3.65</td>
+                  <td id="usd-jod">0.71</td>
+                  <td id="usd-usd">1.00</td>
+                </tr>
+                <tr>
+                  <td class="font-weight-bold">1 JOD (JD)</td>
+                  <td id="jod-ils">5.15</td>
+                  <td id="jod-jod">1.00</td>
+                  <td id="jod-usd">1.41</td>
+                </tr>
+                <tr>
+                  <td class="font-weight-bold">1 ILS (₪)</td>
+                  <td id="ils-ils">1.00</td>
+                  <td id="ils-jod">0.19</td>
+                  <td id="ils-usd">0.27</td>
+                </tr>
+                <tr class="table-info">
+                  <td class="font-weight-bold" id="tenant-currency-label">{{ (tenant_default_currency or company_default_currency or 'AED')|upper }}</td>
+                  <td id="tenant-ils">--</td>
+                  <td id="tenant-jod">--</td>
+                  <td id="tenant-usd">--</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="text-muted small text-center mb-0 mt-2">
+            <i class="fas fa-info-circle mr-1"></i>أسعار تقريبية — آخر تحديث: يومي
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <aside class="main-sidebar sidebar-dark-primary elevation-4">
     <a href="{{ url_for('main.dashboard') }}" class="brand-link text-center erp-sidebar-brand-link">
@@ -1144,156 +1202,49 @@ $(function() {
     if (dateDisplay) dateDisplay.textContent = dateString;
   }
   
-  // تحديث سعر الصرف
-  function normalizeCurrencyCode(code, fallbackCode) {
-    const normalized = String(code || '').trim().toUpperCase();
-    if (/^[A-Z]{3}$/.test(normalized)) return normalized;
-    return fallbackCode;
+  // أسعار الصرف الثابتة (تقريبية — بدون استدعاءات أونلاين)
+  const FX_RATES = {
+    // Rates vs USD base
+    USD: { USD: 1.00, ILS: 3.65, JOD: 0.71, AED: 3.67, SAR: 3.75, QAR: 3.64, KWD: 0.31, BHD: 0.38, OMR: 0.38, EGP: 30.90 },
+    ILS: { USD: 0.274, ILS: 1.00, JOD: 0.194, AED: 1.005, SAR: 1.027, QAR: 0.997, KWD: 0.085, BHD: 0.104, OMR: 0.104, EGP: 8.47 },
+    JOD: { USD: 1.41,  ILS: 5.15, JOD: 1.00, AED: 5.18, SAR: 5.29, QAR: 5.14, KWD: 0.436, BHD: 0.535, OMR: 0.535, EGP: 43.60 },
+    AED: { USD: 0.272, ILS: 0.995, JOD: 0.193, AED: 1.00, SAR: 1.02, QAR: 0.99, KWD: 0.084, BHD: 0.103, OMR: 0.103, EGP: 8.42 },
+    SAR: { USD: 0.267, ILS: 0.974, JOD: 0.189, AED: 0.98,  SAR: 1.00, QAR: 0.97, KWD: 0.083, BHD: 0.101, OMR: 0.101, EGP: 8.25 },
+    QAR: { USD: 0.275, ILS: 1.003, JOD: 0.195, AED: 1.01,  SAR: 1.03, QAR: 1.00, KWD: 0.085, BHD: 0.104, OMR: 0.104, EGP: 8.49 },
+    KWD: { USD: 3.25,  ILS: 11.86, JOD: 2.29, AED: 11.93, SAR: 12.16, QAR: 11.83, KWD: 1.00, BHD: 1.23, OMR: 1.23, EGP: 100.45 },
+    BHD: { USD: 2.65,  ILS: 9.66,  JOD: 1.87, AED: 9.71,  SAR: 9.90, QAR: 9.63, KWD: 0.814, BHD: 1.00, OMR: 1.00, EGP: 81.85 },
+    OMR: { USD: 2.65,  ILS: 9.66,  JOD: 1.87, AED: 9.71,  SAR: 9.90, QAR: 9.63, KWD: 0.814, BHD: 1.00, OMR: 1.00, EGP: 81.85 },
+    EGP: { USD: 0.032, ILS: 0.118, JOD: 0.023, AED: 0.119, SAR: 0.121, QAR: 0.118, KWD: 0.010, BHD: 0.012, OMR: 0.012, EGP: 1.00 }
+  };
+
+  function formatFxRate(val) {
+    if (val >= 100) return val.toFixed(2);
+    if (val >= 1) return val.toFixed(3);
+    return val.toFixed(4);
   }
 
-  function updateFxPairLabel(fromCurrency, toCurrency) {
-    const pairLabel = document.getElementById('fx-pair-label');
-    if (pairLabel) pairLabel.textContent = `${fromCurrency}/${toCurrency}`;
-  }
+  function populateFxModal() {
+    const tenantCurrency = '{{ (tenant_default_currency or company_default_currency or 'AED')|upper }}';
+    const rates = FX_RATES[tenantCurrency] || FX_RATES['AED'];
 
-  async function loadSupportedCurrencies() {
-    const fromSelect = document.getElementById('fx-from-select');
-    const toSelect = document.getElementById('fx-to-select');
-    const rateDisplay = document.getElementById('rate-display');
-    if (!fromSelect || !toSelect || !rateDisplay) return;
-
-    let list = [];
-    let itemList = [];
-    try {
-      const res = await fetch(`/api/currencies?ts=${Date.now()}`, {
-        method: 'GET',
-        headers: { 'Accept': 'application/json' },
-        credentials: 'same-origin',
-        cache: 'no-store'
-      });
-      if (res.ok) {
-        const data = await res.json();
-        list = Array.isArray(data.currencies) ? data.currencies : [];
-        itemList = Array.isArray(data.currency_items) ? data.currency_items : [];
-      }
-    } catch (_) {}
-
-    const defaults = ['USD', 'AED', 'EUR', 'GBP', 'SAR', 'QAR', 'KWD', 'BHD', 'OMR', 'ILS'];
-    const merged = Array.from(new Set(defaults.concat(list))).filter(c => /^[A-Z]{3}$/.test(c)).sort();
-    const labelMap = new Map(itemList.map(it => [String(it.code || '').toUpperCase(), String(it.label || '').trim()]));
-    function optionHtml(c) {
-      const lbl = labelMap.get(c) || `${c} - Currency`;
-      return `<option value="${c}">${lbl}</option>`;
-    }
-    fromSelect.innerHTML = merged.map(optionHtml).join('');
-    toSelect.innerHTML = merged.map(optionHtml).join('');
-
-    const savedFrom = normalizeCurrencyCode(localStorage.getItem('erp_fx_from'), rateDisplay.dataset.fxFrom || 'USD');
-    const savedTo = normalizeCurrencyCode(localStorage.getItem('erp_fx_to'), rateDisplay.dataset.fxTo || 'AED');
-    fromSelect.value = merged.includes(savedFrom) ? savedFrom : 'USD';
-    toSelect.value = merged.includes(savedTo) ? savedTo : (rateDisplay.dataset.fxTo || 'AED').toUpperCase();
-    rateDisplay.dataset.fxFrom = fromSelect.value;
-    rateDisplay.dataset.fxTo = toSelect.value;
-    updateFxPairLabel(fromSelect.value, toSelect.value);
-  }
-
-  function bindFxControls() {
-    const fromSelect = document.getElementById('fx-from-select');
-    const toSelect = document.getElementById('fx-to-select');
-    const fromSearch = document.getElementById('fx-from-search');
-    const toSearch = document.getElementById('fx-to-search');
-    const fromCustom = document.getElementById('fx-from-custom');
-    const toCustom = document.getElementById('fx-to-custom');
-    const applyCustom = document.getElementById('fx-apply-custom');
-    const rateDisplay = document.getElementById('rate-display');
-    if (!fromSelect || !toSelect || !rateDisplay) return;
-
-    function applyPair(fromCode, toCode) {
-      const from = normalizeCurrencyCode(fromCode, 'USD');
-      const to = normalizeCurrencyCode(toCode, 'AED');
-      rateDisplay.dataset.fxFrom = from;
-      rateDisplay.dataset.fxTo = to;
-      if ([...fromSelect.options].some(o => o.value === from)) fromSelect.value = from;
-      if ([...toSelect.options].some(o => o.value === to)) toSelect.value = to;
-      localStorage.setItem('erp_fx_from', from);
-      localStorage.setItem('erp_fx_to', to);
-      updateFxPairLabel(from, to);
-      updateExchangeRate();
-    }
-
-    function filterSelectOptions(selectEl, term) {
-      const q = String(term || '').trim().toLowerCase();
-      if (!selectEl || !selectEl.options) return;
-      for (const opt of selectEl.options) {
-        const txt = String(opt.textContent || '').toLowerCase();
-        const val = String(opt.value || '').toLowerCase();
-        opt.hidden = q ? !(txt.includes(q) || val.includes(q)) : false;
-      }
-    }
-
-    fromSelect.addEventListener('change', () => applyPair(fromSelect.value, toSelect.value));
-    toSelect.addEventListener('change', () => applyPair(fromSelect.value, toSelect.value));
-    if (fromSearch) fromSearch.addEventListener('input', () => filterSelectOptions(fromSelect, fromSearch.value));
-    if (toSearch) toSearch.addEventListener('input', () => filterSelectOptions(toSelect, toSearch.value));
-
-    if (applyCustom) {
-      applyCustom.addEventListener('click', () => {
-        applyPair(fromCustom ? fromCustom.value : '', toCustom ? toCustom.value : '');
-        if (fromCustom) fromCustom.value = '';
-        if (toCustom) toCustom.value = '';
-      });
+    // Modal table: tenant vs ILS, JOD, USD
+    const els = {
+      'tenant-ils': rates['ILS'],
+      'tenant-jod': rates['JOD'],
+      'tenant-usd': rates['USD']
+    };
+    for (const [id, rate] of Object.entries(els)) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = formatFxRate(rate);
     }
   }
 
-  async function updateExchangeRate() {
-    const rateDisplay = document.getElementById('rate-display');
-    if (!rateDisplay) return;
-    
-    const fromCurrency = (rateDisplay.dataset.fxFrom || 'USD').toUpperCase();
-    const toCurrency = (rateDisplay.dataset.fxTo || 'AED').toUpperCase();
-    
-    try {
-      const endpoint = `/api/currency-rate/${encodeURIComponent(fromCurrency)}/${encodeURIComponent(toCurrency)}?ts=${Date.now()}`;
-      const res = await fetch(endpoint, {
-        method: 'GET',
-        headers: { 'Accept': 'application/json' },
-        credentials: 'same-origin',
-        cache: 'no-store'
-      });
-      if (!res.ok) return;
-      const data = await res.json();
-      if (!data || !data.success || typeof data.rate !== 'number') return;
-      
-      rateDisplay.textContent = data.rate.toFixed(4);
-      const sourceText = data.source ? `المصدر: ${data.source}` : 'المصدر: غير معروف';
-      const ageText = Number.isFinite(data.age_seconds) ? `العمر: ${data.age_seconds}s` : '';
-      rateDisplay.title = `${sourceText}${ageText ? ` | ${ageText}` : ''}`;
-      rateDisplay.style.transform = 'scale(1.1)';
-      rateDisplay.style.color = '#f39c12';
-      setTimeout(() => {
-        rateDisplay.style.transform = 'scale(1)';
-        rateDisplay.style.color = '#ffffff';
-      }, 250);
-    } catch (e) {
-      return;
-    }
-  }
-  
   // تشغيل التحديثات
   updateDateTime();
-  loadSupportedCurrencies().then(() => {
-    bindFxControls();
-    updateExchangeRate();
-  }).catch(() => {
-    bindFxControls();
-    updateExchangeRate();
-  });
-  
+  populateFxModal();
+
   // تحديث الساعة كل ثانية
   setInterval(updateDateTime, 1000);
-  
-  // تحديث سعر الصرف كل 30 ثانية
-  setInterval(updateExchangeRate, 30000);
 
   function initNavbarCalculator() {
     const classicDisplay = document.getElementById('calcDisplayClassic');
