@@ -247,7 +247,7 @@ def check_migrations(report: Report) -> None:
 def check_pip_audit(report: Report) -> None:
     r = _run(
         [sys.executable, "-m", "pip_audit", "-r", "requirements.txt", "--progress-spinner", "off"],
-        timeout=300,
+        timeout=30,
     )
     out = (r.stdout or "") + (r.stderr or "")
     if r.returncode != 0 and "No known vulnerabilities" not in out:
@@ -863,13 +863,17 @@ def main() -> int:
     check_py_compile(report)
     check_create_app(report)
     check_migrations(report)
-    check_pip_audit(report)
+    # Skip pip_audit for local profile (slow, not critical for local dev)
+    if args.profile != "local":
+        check_pip_audit(report)
     check_gl_remediation(report, args.profile)
     check_null_audit(report, args.profile)
     check_required_indexes(report)
     check_field_quality(report)
     check_schema_hardening(report)
-    check_backup_readiness(report, args.profile)
+    # Skip backup_readiness for local profile (fresh database, no old backup manifests)
+    if args.profile != "local":
+        check_backup_readiness(report, args.profile)
     if not args.skip_uat:
         check_uat(report)
     check_static_assets(report)
