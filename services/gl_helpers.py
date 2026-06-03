@@ -8,7 +8,17 @@ from models import GLAccount, GLJournalEntry
 
 
 def resolve_tenant_id(branch_id=None, user_id=None):
-    """Resolve tenant_id with multiple fallbacks. Never returns None in normal operation."""
+    """Resolve tenant_id safely in multi-tenant mode.
+
+    Priority:
+      1) branch_id → Branch.tenant_id
+      2) user_id  → User.tenant_id
+      3) active tenant context (session / g)
+      4) Exactly ONE active tenant in DB → auto-pick it
+      5) Zero or >1 active tenants → raise ValueError (never guess)
+
+    This prevents GL entries from being silently posted to the wrong company.
+    """
     tenant_id = None
     if branch_id:
         from models import Branch
@@ -24,15 +34,35 @@ def resolve_tenant_id(branch_id=None, user_id=None):
             tenant_id = get_active_tenant_id()
         except Exception:
             pass
-    # ── LAST RESORT: pick first active tenant to avoid NULL constraint ──
+
+    # ── LAST RESORT: only safe when exactly 1 active tenant exists ──
     if tenant_id is None:
         try:
             from models import Tenant
-            t = Tenant.query.filter_by(is_active=True).order_by(Tenant.id.asc()).first()
-            tenant_id = t.id if t else None
-        except Exception:
-            pass
-    return int(tenant_id) if tenant_id else None
+            active_count = Tenant.query.filter_by(is_active=True).count()
+            if active_count == 1:
+                t = Tenant.query.filter_by(is_active=True).first()
+                tenant_id = t.id if t else None
+            elif active_count == 0:
+                raise ValueError(
+                    "resolve_tenant_id failed: no active tenants in database. "
+                    "Cannot create GL entries without a tenant context."
+                )
+            else:
+                raise ValueError(
+                    f"resolve_tenant_id failed: {active_count} active tenants found. "
+                    "Auto-selecting one would post to the wrong company. "
+                    "Please provide an explicit branch_id, user_id, or active tenant context."
+                )
+        except ValueError:
+            raise
+        except Exception as e:
+            raise RuntimeError(f"resolve_tenant_id database lookup failed: {e}")
+
+    if tenant_id is None:
+        raise ValueError("resolve_tenant_id: could not determine tenant_id under any fallback.")
+
+    return int(tenant_id)
 
 
 import logging
