@@ -334,9 +334,17 @@ class ExchangeRateService:
           2) user_rate   — manual input from the user (has absolute priority)
           3) CurrencyService.get_exchange_rate()  — system rate at creation time
 
-        Once returned, the caller MUST store the rate inside the document.
-        The rate must NEVER be re-fetched or updated after the document
-        is saved, even if online rates change later.
+        Return dict includes 'rate_mode':
+          - "frozen"   : rate already saved in document; never touch again.
+          - "editable" : rate resolved BEFORE saving; caller MAY still let user
+                         edit it, but once the document is saved the rate MUST
+                         be treated as frozen forever.
+
+        Contract for callers:
+          - On CREATE: call this once, store the returned 'rate' in the document's
+            exchange_rate field, then never update that field automatically.
+          - On READ/UPDATE: pass the stored rate as fixed_rate so this method
+            returns rate_mode="frozen" and refuses any automatic change.
         """
         from_currency = (from_currency or "AED").upper()
         to_currency = (to_currency or "AED").upper()
@@ -352,13 +360,13 @@ class ExchangeRateService:
                         "to": to_currency,
                         "rate": float(rate.quantize(Decimal("0.000001"))),
                         "source": "document_fixed",
-                        "mutable": False,
-                        "note": "Rate frozen in document.  Do NOT change.",
+                        "rate_mode": "frozen",
+                        "note": "Rate is already frozen inside the saved document. Never auto-update.",
                     }
             except Exception:
                 pass
 
-        # 2. Manual/user rate has absolute priority
+        # 2. Manual/user rate has absolute priority (pre-save, editable until saved)
         if user_rate is not None:
             try:
                 rate = Decimal(str(user_rate))
@@ -369,13 +377,13 @@ class ExchangeRateService:
                         "to": to_currency,
                         "rate": float(rate.quantize(Decimal("0.000001"))),
                         "source": "user_manual",
-                        "mutable": True,
-                        "note": "User-provided rate.  Store in document and freeze.",
+                        "rate_mode": "editable",
+                        "note": "User-provided rate. Caller MUST store in document on save and then treat as frozen.",
                     }
             except (ValueError, TypeError):
                 pass
 
-        # 3. Same currency → parity
+        # 3. Same currency → parity (pre-save, editable until saved)
         if from_currency == to_currency:
             return {
                 "ok": True,
@@ -383,8 +391,8 @@ class ExchangeRateService:
                 "to": to_currency,
                 "rate": 1.0,
                 "source": "parity",
-                "mutable": True,
-                "note": "Same currency.  Store 1.0 in document and freeze.",
+                "rate_mode": "editable",
+                "note": "Same currency. Caller MUST store 1.0 in document on save and then treat as frozen.",
             }
 
         # 4. System rate at creation time — fetch once, store forever
@@ -398,8 +406,8 @@ class ExchangeRateService:
             "to": to_currency,
             "rate": float(rate_decimal.quantize(Decimal("0.000001"))),
             "source": "system_at_creation",
-            "mutable": True,
-            "note": "System rate fetched at creation time.  Store in document and freeze.",
+            "rate_mode": "editable",
+            "note": "System rate at creation time. Caller MUST store in document on save and then treat as frozen.",
         }
 
     @staticmethod

@@ -1,3 +1,17 @@
+"""
+CurrencyService — LEGACY INTERNAL PROVIDER
+
+This module fetches system exchange rates for ACCOUNTING calculations.
+It is NOT the public API for exchange-rate resolution.
+
+For NEW code, use:
+  - ExchangeRateService.resolve_exchange_rate_for_transaction()  (for invoices/payments)
+  - ExchangeRateService.get_online_exchange_rates_for_display()  (for navbar only)
+
+CurrencyService remains as the low-level provider that those methods call
+when a system rate is needed. Do NOT call it directly from routes/forms.
+"""
+
 from decimal import Decimal, ROUND_HALF_UP
 import time
 
