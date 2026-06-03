@@ -1,12 +1,23 @@
 """
-Exchange Rate Service — Display-Only Online Rates
+Exchange Rate Service — Unified Rate Resolution
 
-Separation of concerns:
-- Manual/internal rates  →  CurrencyService.get_exchange_rate()  (accounting)
-- Online/display rates   →  ExchangeRateService.get_online_rates_for_display()  (UI only)
+Separation of concerns (no overlap, no conflict):
 
-This module MUST NOT be used for invoices, payments, GL entries, or any
-accounting calculation. It is strictly for the navbar / fxModal display.
+1. DISPLAY  →  get_online_exchange_rates_for_display()
+   Online rates for navbar / fxModal ONLY.  Never used in accounting.
+
+2. TRANSACTION  →  resolve_exchange_rate_for_transaction()
+   Resolves rate at document-creation time:
+     - user_rate (manual) has absolute priority
+     - if missing, fetches system rate via CurrencyService
+     - once stored in the document, the rate is FIXED and never changes
+
+3. LEGACY ACCOUNTING  →  CurrencyService.get_exchange_rate()
+   Still used directly by existing sale/payment/purchase services.
+   ExchangeRateService.resolve_exchange_rate_for_transaction()
+   is the preferred path for NEW code.
+
+This module is the SINGLE organized source for all exchange-rate needs.
 """
 
 from __future__ import annotations
@@ -307,23 +318,100 @@ class ExchangeRateService:
         }
 
     @staticmethod
+    def resolve_exchange_rate_for_transaction(
+        from_currency: str,
+        to_currency: str = "AED",
+        *,
+        user_rate: float | Decimal | None = None,
+        fixed_rate: float | Decimal | None = None,
+    ) -> dict[str, Any]:
+        """
+        Resolve the rate to store inside a transaction document (invoice, payment,
+        receipt, purchase order, etc.).
+
+        Priority:
+          1) fixed_rate  — already frozen in an existing document (read-only)
+          2) user_rate   — manual input from the user (has absolute priority)
+          3) CurrencyService.get_exchange_rate()  — system rate at creation time
+
+        Once returned, the caller MUST store the rate inside the document.
+        The rate must NEVER be re-fetched or updated after the document
+        is saved, even if online rates change later.
+        """
+        from_currency = (from_currency or "AED").upper()
+        to_currency = (to_currency or "AED").upper()
+
+        # 1. Already frozen in document — read-only
+        if fixed_rate is not None:
+            try:
+                rate = Decimal(str(fixed_rate))
+                if rate > Decimal("0"):
+                    return {
+                        "ok": True,
+                        "from": from_currency,
+                        "to": to_currency,
+                        "rate": float(rate.quantize(Decimal("0.000001"))),
+                        "source": "document_fixed",
+                        "mutable": False,
+                        "note": "Rate frozen in document.  Do NOT change.",
+                    }
+            except Exception:
+                pass
+
+        # 2. Manual/user rate has absolute priority
+        if user_rate is not None:
+            try:
+                rate = Decimal(str(user_rate))
+                if rate > Decimal("0"):
+                    return {
+                        "ok": True,
+                        "from": from_currency,
+                        "to": to_currency,
+                        "rate": float(rate.quantize(Decimal("0.000001"))),
+                        "source": "user_manual",
+                        "mutable": True,
+                        "note": "User-provided rate.  Store in document and freeze.",
+                    }
+            except (ValueError, TypeError):
+                pass
+
+        # 3. Same currency → parity
+        if from_currency == to_currency:
+            return {
+                "ok": True,
+                "from": from_currency,
+                "to": to_currency,
+                "rate": 1.0,
+                "source": "parity",
+                "mutable": True,
+                "note": "Same currency.  Store 1.0 in document and freeze.",
+            }
+
+        # 4. System rate at creation time — fetch once, store forever
+        from services.currency_service import CurrencyService
+        rate_decimal = CurrencyService.get_exchange_rate(
+            from_currency, to_currency, user_rate=None
+        )
+        return {
+            "ok": True,
+            "from": from_currency,
+            "to": to_currency,
+            "rate": float(rate_decimal.quantize(Decimal("0.000001"))),
+            "source": "system_at_creation",
+            "mutable": True,
+            "note": "System rate fetched at creation time.  Store in document and freeze.",
+        }
+
+    @staticmethod
     def get_manual_rate_for_calculation(
         from_currency: str, to_currency: str = "AED", user_rate: float | None = None
     ) -> dict[str, Any]:
         """
-        Return the manual/internal rate for ACCOUNTING calculations.
-        This is a thin wrapper around CurrencyService that enforces
-        manual-rate priority and makes the source explicit.
+        LEGACY wrapper — kept for backward compatibility.
+        New code should use resolve_exchange_rate_for_transaction().
         """
-        from services.currency_service import CurrencyService
-        rate_decimal = CurrencyService.get_exchange_rate(
-            from_currency, to_currency, user_rate=user_rate
+        return ExchangeRateService.resolve_exchange_rate_for_transaction(
+            from_currency=from_currency,
+            to_currency=to_currency,
+            user_rate=user_rate,
         )
-        return {
-            "ok": True,
-            "from": (from_currency or "AED").upper(),
-            "to": (to_currency or "AED").upper(),
-            "rate": float(rate_decimal),
-            "source": "manual_or_system",
-            "note": "For accounting only.  Do NOT use for display.",
-        }
