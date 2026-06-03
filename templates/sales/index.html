@@ -166,15 +166,14 @@ a.btn.btn-warning span {
         <thead style="background: linear-gradient(135deg, #007A3D 0%, #1B4D89 100%); color: white;">
           <tr>
             <th><i class="fas fa-hashtag mr-2"></i>{{ t('Invoice Number') }}</th>
+            <th><i class="fas fa-building mr-2"></i>الشركة</th>
             <th><i class="fas fa-user mr-2"></i>الزبون</th>
             <th><i class="far fa-calendar mr-2"></i>{{ t('Date') }}</th>
             <th><i class="fas fa-money-bill-wave mr-2"></i>{{ t('Amount') }}</th>
             <th><i class="fas fa-check-circle mr-2"></i>{{ t('Paid') }}</th>
             <th><i class="fas fa-exclamation-circle mr-2"></i>الباقي</th>
             <th><i class="fas fa-exchange-alt mr-2"></i>سعر الصرف</th>
-            {% if show_branch_columns %}
             <th><i class="fas fa-code-branch mr-2"></i>الفرع</th>
-            {% endif %}
             <th><i class="fas fa-wallet mr-2"></i>{{ t('Status') }}</th>
             <th class="text-center"><i class="fas fa-cog mr-2"></i>{{ t('Actions') }}</th>
           </tr>
@@ -186,6 +185,9 @@ a.btn.btn-warning span {
               <a href="{{ url_for('sales.view', id=sale.id) }}" class="font-weight-bold text-primary">
                 {{ sale.sale_number }}
               </a>
+            </td>
+            <td>
+              <span class="badge badge-light border">{{ tenant_name_ar or company_name_ar or '-' }}</span>
             </td>
             <td>
               <div class="d-flex align-items-center">
@@ -229,7 +231,6 @@ a.btn.btn-warning span {
                 <span class="text-muted">-</span>
               {% endif %}
             </td>
-            {% if show_branch_columns %}
             <td>
               {% if sale.branch %}
                 <span class="badge badge-light border">{{ sale.branch.name }}{% if sale.branch.code %} ({{ sale.branch.code }}){% endif %}</span>
@@ -237,7 +238,6 @@ a.btn.btn-warning span {
                 <span class="text-muted">-</span>
               {% endif %}
             </td>
-            {% endif %}
             <td>
               {% if sale.payment_status == 'paid' %}
                 <span class="badge badge-success px-3">

@@ -17,6 +17,8 @@
       <thead>
         <tr>
           <th>رقم السند</th>
+          <th>الشركة</th>
+          <th>الفرع</th>
           <th>الزبون</th>
           <th>{{ t('Date') }}</th>
           <th>{{ t('Amount') }}</th>
@@ -29,6 +31,14 @@
         {% for receipt in receipts %}
         <tr>
           <td><strong>{{ receipt.receipt_number }}</strong></td>
+          <td><span class="badge badge-light border">{{ tenant_name_ar or company_name_ar or '-' }}</span></td>
+          <td>
+            {% if receipt.branch %}
+              <span class="badge badge-light border">{{ receipt.branch.name }}{% if receipt.branch.code %} ({{ receipt.branch.code }}){% endif %}</span>
+            {% else %}
+              <span class="text-muted">-</span>
+            {% endif %}
+          </td>
           <td>{{ receipt.customer.name if receipt.customer else '-' }}</td>
           <td>{{ receipt.receipt_date.strftime('%Y-%m-%d') }}</td>
           <td>{{ "{:,.2f}".format(receipt.amount) }} {{ receipt.currency }}</td>

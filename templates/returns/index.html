@@ -88,12 +88,11 @@
         <thead>
           <tr>
             <th>رقم المرتجع</th>
+            <th>الشركة</th>
+            <th>الفرع</th>
             <th>فاتورة البيع</th>
             <th>العميل</th>
             <th>التاريخ</th>
-            {% if show_branch_columns %}
-            <th>الفرع</th>
-            {% endif %}
             <th>الحالة</th>
             <th class="text-left">الإجمالي</th>
             <th class="text-center">إجراءات</th>
@@ -103,6 +102,14 @@
           {% for r in returns %}
           <tr>
             <td><strong>{{ r.return_number }}</strong></td>
+            <td><span class="badge badge-light border">{{ tenant_name_ar or company_name_ar or '-' }}</span></td>
+            <td>
+              {% if r.sale and r.sale.branch %}
+                <span class="badge badge-light border">{{ r.sale.branch.name }}{% if r.sale.branch.code %} ({{ r.sale.branch.code }}){% endif %}</span>
+              {% else %}
+                <span class="text-muted">-</span>
+              {% endif %}
+            </td>
             <td>
               {% if r.sale %}
                 <a href="{{ url_for('sales.view', id=r.sale.id) }}" class="text-primary font-weight-bold">{{ r.sale.sale_number }}</a>
@@ -112,15 +119,6 @@
             </td>
             <td>{{ r.customer.name if r.customer else '-' }}</td>
             <td>{{ r.return_date.strftime('%Y-%m-%d %H:%M') if r.return_date else '-' }}</td>
-            {% if show_branch_columns %}
-            <td>
-              {% if r.sale and r.sale.branch %}
-                <span class="badge badge-light border">{{ r.sale.branch.name }}{% if r.sale.branch.code %} ({{ r.sale.branch.code }}){% endif %}</span>
-              {% else %}
-                <span class="text-muted">-</span>
-              {% endif %}
-            </td>
-            {% endif %}
             <td>
               {% if r.status == 'approved' %}
                 <span class="badge badge-success">معتمد</span>
@@ -139,7 +137,7 @@
           </tr>
           {% else %}
           <tr>
-            <td colspan="{{ 8 if show_branch_columns else 7 }}" class="text-center text-muted">لا توجد مرتجعات</td>
+            <td colspan="9" class="text-center text-muted">لا توجد مرتجعات</td>
           </tr>
           {% endfor %}
         </tbody>

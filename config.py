@@ -2,6 +2,7 @@ import os
 import re
 import secrets
 import logging
+import socket
 from datetime import timedelta
 from dotenv import load_dotenv
 
@@ -10,6 +11,17 @@ instance_dir = os.path.join(basedir, "instance")
 os.makedirs(instance_dir, exist_ok=True)
 
 load_dotenv(os.path.join(basedir, ".env"))
+
+
+def _redis_available(host: str = "localhost", port: int = 6379, timeout: float = 0.5) -> bool:
+    """Check if Redis is reachable without importing redis library."""
+    try:
+        with socket.create_connection((host, port), timeout=timeout) as sock:
+            sock.sendall(b"PING\r\n")
+            response = sock.recv(1024)
+            return b"PONG" in response or b"+PONG" in response
+    except Exception:
+        return False
 
 
 def _bool(v: str | None, default: bool = False) -> bool:
@@ -151,7 +163,13 @@ class Config:
     RATELIMIT_API = "600 per hour;10 per second"
     
     REDIS_URL = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
-    CACHE_TYPE = os.environ.get("CACHE_TYPE", "redis")
+    _env_cache_type = os.environ.get("CACHE_TYPE", "")
+    if _env_cache_type:
+        CACHE_TYPE = _env_cache_type
+    elif _redis_available():
+        CACHE_TYPE = "redis"
+    else:
+        CACHE_TYPE = "NullCache"
     CACHE_REDIS_URL = os.environ.get("CACHE_REDIS_URL", REDIS_URL)
     CACHE_DEFAULT_TIMEOUT = _int("CACHE_DEFAULT_TIMEOUT", 300)
     CACHE_KEY_PREFIX = "garage_simple"

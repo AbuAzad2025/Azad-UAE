@@ -99,13 +99,12 @@
         <thead style="background: linear-gradient(135deg, #007A3D 0%, #1B4D89 100%); color: white;">
           <tr>
             <th><i class="fas fa-user mr-2"></i>{{ t('Name') }}</th>
+            <th><i class="fas fa-building mr-2"></i>الشركة</th>
             <th><i class="fas fa-tag mr-2"></i>النوع</th>
             <th><i class="fas fa-star mr-2"></i>التصنيف</th>
             <th><i class="fas fa-phone mr-2"></i>{{ t('Phone') }}</th>
             <th><i class="fas fa-wallet mr-2"></i>{{ t('Balance') }}</th>
-            {% if show_branch_columns %}
             <th><i class="fas fa-code-branch mr-2"></i>الفرع</th>
-            {% endif %}
             <th class="text-center"><i class="fas fa-cog mr-2"></i>الإجراءات</th>
           </tr>
         </thead>
@@ -124,6 +123,9 @@
                   {% endif %}
                 </div>
               </div>
+            </td>
+            <td>
+              <span class="badge badge-light border">{{ tenant_name_ar or company_name_ar or '-' }}</span>
             </td>
             <td>
               {% if customer.customer_type == 'regular' %}
@@ -161,7 +163,6 @@
               {% endif %}
               <small class="text-muted">AED</small>
             </td>
-            {% if show_branch_columns %}
             <td>
               {% if customer.branch_labels %}
                 {% for label in customer.branch_labels %}
@@ -171,7 +172,6 @@
                 <span class="text-muted">-</span>
               {% endif %}
             </td>
-            {% endif %}
             <td class="text-center">
               <div class="btn-group btn-group-sm">
                 <a href="{{ url_for('customers.view', id=customer.id) }}" 

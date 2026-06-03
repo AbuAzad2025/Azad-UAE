@@ -110,9 +110,8 @@
                 <th>المستودع</th>
                 <th>الرمز</th>
                 <th>الموقع</th>
-                {% if show_branch_columns %}
+                <th>الشركة</th>
                 <th>الفرع</th>
-                {% endif %}
                 <th>المدير</th>
                 <th>النوع</th>
                 <th>الهيكل</th>
@@ -140,7 +139,9 @@
                   <span class="badge badge-secondary">{{ warehouse.code or '-' }}</span>
                 </td>
                 <td>{{ warehouse.location or '-' }}</td>
-                {% if show_branch_columns %}
+                <td>
+                  <span class="badge badge-light border">{{ tenant_name_ar or company_name_ar or '-' }}</span>
+                </td>
                 <td>
                   {% if warehouse.branch %}
                     <span class="badge badge-light border">{{ warehouse.branch.name }}{% if warehouse.branch.code %} ({{ warehouse.branch.code }}){% endif %}</span>
@@ -148,7 +149,6 @@
                     <span class="text-muted">-</span>
                   {% endif %}
                 </td>
-                {% endif %}
                 <td>{{ warehouse.manager.username if warehouse.manager else '-' }}</td>
                 <td>
                   {% if warehouse.is_online %}

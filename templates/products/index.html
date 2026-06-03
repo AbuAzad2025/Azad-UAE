@@ -152,11 +152,9 @@
             <th><i class="fas fa-box mr-2"></i>المنتج</th>
             <th><i class="fas fa-barcode mr-2"></i>SKU</th>
             <th><i class="fas fa-tag mr-2"></i>الفئة</th>
-            <th><i class="fas fa-money-bill-wave mr-2"></i>{{ t('Price') }}</th>
-            {% if show_branch_columns %}
+            <th><i class="fas fa-building mr-2"></i>الشركة</th>
             <th><i class="fas fa-code-branch mr-2"></i>الفرع</th>
             <th><i class="fas fa-warehouse mr-2"></i>المستودع</th>
-            {% endif %}
             <th><i class="fas fa-warehouse mr-2"></i>{{ t('Inventory') }}</th>
             <th class="text-center"><i class="fas fa-cog mr-2"></i>{{ t('Actions') }}</th>
           </tr>
@@ -196,7 +194,9 @@
               <strong style="color: #007A3D;">{{ "{:,.2f}".format(product.regular_price) }}</strong>
               <small class="text-muted">AED</small>
             </td>
-            {% if show_branch_columns %}
+            <td>
+              <span class="badge badge-light border">{{ tenant_name_ar or company_name_ar or '-' }}</span>
+            </td>
             <td>
               {% if product.visible_branch_names %}
                 {% for label in product.visible_branch_names %}
@@ -215,7 +215,6 @@
                 <span class="text-muted">-</span>
               {% endif %}
             </td>
-            {% endif %}
             <td>
               {% if shown_stock <= 0 %}
                 <span class="badge badge-danger stock-low px-3 py-2">

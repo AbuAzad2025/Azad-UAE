@@ -51,6 +51,7 @@
                 <thead>
                     <tr>
                         <th>المعرف</th>
+                        <th>الشركة</th>
                         <th>التصنيف</th>
                         <th>الوصف</th>
                         <th>{{ t('Amount') }}</th>
@@ -58,9 +59,7 @@
                         <th>{{ t('Amount') }} (AED)</th>
                         <th>{{ t('Date') }}</th>
                         <th>{{ t('Payment Method') }}</th>
-                        {% if show_branch_columns %}
                         <th>الفرع</th>
-                        {% endif %}
                         <th>{{ t('Actions') }}</th>
                     </tr>
                 </thead>
@@ -68,6 +67,7 @@
                     {% for expense in expenses %}
                     <tr>
                         <td>{{ expense.expense_number }}</td>
+                        <td><span class="badge badge-light border">{{ tenant_name_ar or company_name_ar or '-' }}</span></td>
                         <td><span class="badge badge-primary">{{ expense.category.name }}</span></td>
                         <td>{{ expense.description or '-' }}</td>
                         <td>{{ '{:,.2f}'.format(expense.amount) }}</td>
@@ -75,7 +75,6 @@
                         <td>{{ '{:,.2f}'.format(expense.amount_aed) }}</td>
                         <td>{{ expense.expense_date.strftime('%Y-%m-%d') }}</td>
                         <td><span class="badge badge-info">{{ expense.payment_method }}</span></td>
-                        {% if show_branch_columns %}
                         <td>
                             {% if expense.branch %}
                                 <span class="badge badge-light border">{{ expense.branch.name }}{% if expense.branch.code %} ({{ expense.branch.code }}){% endif %}</span>
@@ -83,7 +82,6 @@
                                 <span class="text-muted">-</span>
                             {% endif %}
                         </td>
-                        {% endif %}
                         <td>
                             <div class="btn-group btn-group-sm">
                                 <a href="{{ url_for('expenses.view', id=expense.id) }}" class="btn btn-info" title="عرض">

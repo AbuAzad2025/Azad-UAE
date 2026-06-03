@@ -1,60 +1,185 @@
 {% extends 'base.html' %}
-{% block title %}سجلات الأخطاء{% endblock %}
+{% block title %}سجلات الأخطاء — لوحة المالك{% endblock %}
+{% block extra_css %}
+<style>
+  .error-card { border-right: 5px solid #dc3545; transition: all .2s; }
+  .error-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,.12); }
+  .error-card.error-WARNING { border-right-color: #ffc107; }
+  .error-card.error-CRITICAL { border-right-color: #6f42c1; }
+  .error-card.error-ERROR   { border-right-color: #dc3545; }
+  .badge-level-ERROR   { background:#dc3545; }
+  .badge-level-WARNING { background:#ffc107; color:#212529; }
+  .badge-level-CRITICAL{ background:#6f42c1; }
+  .badge-level-UNKNOWN { background:#6c757d; }
+  .traceback-box {
+    background:#1e1e1e; color:#d4d4d4; padding:16px; border-radius:6px;
+    font-family: 'SF Mono', 'Consolas', 'Courier New', monospace; font-size:12.5px;
+    line-height:1.7; direction:ltr; text-align:left;
+    max-height:420px; overflow:auto; white-space:pre-wrap; word-break:break-word;
+  }
+  .traceback-box .tb-file { color:#9cdcfe; }
+  .traceback-box .tb-line { color:#b5cea8; }
+  .traceback-box .tb-func { color:#dcdcaa; }
+  .traceback-box .tb-exc  { color:#f48771; font-weight:700; }
+  .stat-pill { border-radius:20px; padding:6px 14px; font-size:.85rem; font-weight:600; }
+  .module-chip { background:#e9ecef; color:#495057; border-radius:12px; padding:2px 10px; font-size:.78rem; }
+</style>
+{% endblock %}
 {% block content %}
 <div class="container-fluid">
-  <div class="mb-3">
-    <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right"></i> رجوع للوحة المالك
-    </a>
-    <a href="{{ url_for('owner.activity_monitor') }}" class="btn btn-info">
-      <i class="fas fa-chart-line"></i> النشاط
-    </a>
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="m-0"><i class="fas fa-bug text-danger mr-2"></i> سجلات الأخطاء</h3>
+    <div>
+      <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="fas fa-arrow-right ml-1"></i> رجوع
+      </a>
+      <a href="{{ url_for('owner.activity_monitor') }}" class="btn btn-info btn-sm">
+        <i class="fas fa-chart-line ml-1"></i> النشاط
+      </a>
+    </div>
   </div>
-  <div class="card">
-    <div class="card-header">
-      <h3><i class="fas fa-exclamation-triangle"></i> سجلات الأخطاء</h3>
-      <div class="card-tools">
-        <span class="badge badge-danger">{{ total_errors }} خطأ</span>
+
+  <!-- Stats Row -->
+  {% if stats %}
+  <div class="row mb-3">
+    <div class="col-md-3">
+      <div class="small-box bg-gradient-danger">
+        <div class="inner"><h3>{{ stats.total or 0 }}</h3><p>إجمالي الأخطاء المعروضة</p></div>
+        <div class="icon"><i class="fas fa-bug"></i></div>
       </div>
     </div>
-    <div class="card-body">
-      <div style="background:#1e1e1e;color:#fff;padding:20px;border-radius:8px;max-height:600px;overflow-y:auto;font-family:monospace;font-size:13px">
-        {% if errors %}
-          {% for error in errors %}
-          <div style="margin-bottom:12px;padding:12px;background:#2d2d2d;border-left:4px solid #dc3545;line-height:1.6">
-            {{ error }}
-          </div>
-          {% endfor %}
-        {% else %}
-          <div class="text-center text-white-50 py-5">
-            <i class="fas fa-check-circle fa-3x mb-3"></i>
-            <p>لا توجد أخطاء مسجلة</p>
-          </div>
+    {% for lvl, cnt in stats.by_level.items() %}
+    <div class="col-md-2">
+      <div class="small-box bg-gradient-dark">
+        <div class="inner"><h3>{{ cnt }}</h3><p>{{ lvl }}</p></div>
+        <div class="icon"><i class="fas fa-exclamation-circle"></i></div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Filters -->
+  <div class="card card-outline card-secondary mb-3">
+    <div class="card-body p-2">
+      <form method="GET" action="{{ url_for('owner.error_logs') }}" class="form-inline">
+        <div class="input-group input-group-sm mr-2" style="min-width:280px">
+          <div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-search"></i></span></div>
+          <input type="text" name="search" class="form-control" placeholder="ابحث في الرسالة / الموديول / المسار..."
+                 value="{{ search or '' }}">
+        </div>
+        <select name="level" class="form-control form-control-sm mr-2">
+          <option value="">كل المستويات</option>
+          <option value="ERROR" {% if level_filter=='ERROR' %}selected{% endif %}>ERROR</option>
+          <option value="WARNING" {% if level_filter=='WARNING' %}selected{% endif %}>WARNING</option>
+          <option value="CRITICAL" {% if level_filter=='CRITICAL' %}selected{% endif %}>CRITICAL</option>
+        </select>
+        <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-filter mr-1"></i> تصفية</button>
+        {% if search or level_filter %}
+        <a href="{{ url_for('owner.error_logs') }}" class="btn btn-outline-secondary btn-sm mr-2">
+          <i class="fas fa-times mr-1"></i> إلغاء
+        </a>
         {% endif %}
-      </div>
-      
-      {% if total_pages > 1 %}
-      <nav class="mt-4">
-        <ul class="pagination justify-content-center">
-          {% if page > 1 %}
-          <li class="page-item">
-            <a class="page-link" href="?page={{ page-1 }}">السابق</a>
-          </li>
-          {% endif %}
-          
-          <li class="page-item active">
-            <span class="page-link">{{ page }} / {{ total_pages }}</span>
-          </li>
-          
-          {% if page < total_pages %}
-          <li class="page-item">
-            <a class="page-link" href="?page={{ page+1 }}">التالي</a>
-          </li>
-          {% endif %}
-        </ul>
-      </nav>
-      {% endif %}
+      </form>
     </div>
   </div>
+
+  <!-- Errors List -->
+  {% if errors %}
+    {% for err in errors %}
+    <div class="card error-card error-{{ err.level }} mb-3" id="err-{{ err.hash }}">
+      <div class="card-header bg-light d-flex justify-content-between align-items-center py-2">
+        <div class="d-flex align-items-center">
+          <span class="badge badge-level-{{ err.level }} stat-pill mr-2">{{ err.level }}</span>
+          <span class="text-muted mr-3"><i class="far fa-clock mr-1"></i>{{ err.timestamp }}</span>
+          <span class="module-chip"><i class="fas fa-code mr-1"></i>{{ err.module }}:{{ err.lineno }}</span>
+        </div>
+        <div>
+          <button class="btn btn-outline-dark btn-xs mr-1" onclick="copyErr('{{ err.hash }}')"
+                  title="نسخ الخطأ كامل"><i class="fas fa-copy"></i></button>
+          <button class="btn btn-outline-primary btn-xs" data-toggle="collapse" data-target="#tb-{{ err.hash }}"
+                  title="عرض/إخفاء التفاصيل"><i class="fas fa-expand-alt"></i></button>
+        </div>
+      </div>
+      <div class="card-body py-3">
+        <!-- Message -->
+        <div class="mb-2">
+          <strong class="text-dark"><i class="fas fa-comment-alt text-secondary mr-1"></i> الرسالة:</strong>
+          <p class="m-0 mt-1 text-break" style="font-size:1.05rem">{{ err.message or '(بدون رسالة)' }}</p>
+        </div>
+        <!-- Path -->
+        {% if err.path %}
+        <div class="mb-2">
+          <strong class="text-muted"><i class="fas fa-file-code text-secondary mr-1"></i> الملف:</strong>
+          <code class="bg-light px-2 py-1 rounded" style="font-size:.9rem">{{ err.path }}</code>
+        </div>
+        {% endif %}
+        <!-- Collapsible Traceback -->
+        <div class="collapse" id="tb-{{ err.hash }}">
+          {% if err.traceback %}
+          <div class="mt-3">
+            <strong class="text-muted d-block mb-2"><i class="fas fa-terminal text-secondary mr-1"></i> التتبع الكامل (Traceback):</strong>
+            <div class="traceback-box">{{ err.traceback }}</div>
+          </div>
+          {% else %}
+          <div class="mt-3 alert alert-light border"><i class="fas fa-info-circle mr-1"></i> لا يوجد تتبع لهذا الخطأ.</div>
+          {% endif %}
+          <!-- Raw -->
+          <div class="mt-3">
+            <strong class="text-muted d-block mb-2"><i class="fas fa-align-left text-secondary mr-1"></i> النص الخام (Raw):</strong>
+            <textarea class="form-control font-monospace" rows="6" readonly style="direction:ltr;text-align:left;font-size:12px">{{ err.raw }}</textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  {% else %}
+  <div class="alert alert-success text-center py-5">
+    <i class="fas fa-check-circle fa-3x mb-3 d-block"></i>
+    <h4>لا توجد أخطاء مسجلة</h4>
+    <p class="text-muted mb-0">النظام يعمل بشكل طبيعي أو لا توجد أخطاء تطابق معايير البحث.</p>
+  </div>
+  {% endif %}
+
+  <!-- Pagination -->
+  {% if total_pages > 1 %}
+  <nav class="mt-4 mb-5">
+    <ul class="pagination justify-content-center">
+      {% if page > 1 %}
+      <li class="page-item">
+        <a class="page-link" href="?page={{ page-1 }}{% if search %}&search={{ search|urlencode }}{% endif %}{% if level_filter %}&level={{ level_filter }}{% endif %}">السابق</a>
+      </li>
+      {% endif %}
+      {% for p in range(1, total_pages+1) %}
+        {% if p == page %}
+        <li class="page-item active"><span class="page-link">{{ p }}</span></li>
+        {% elif (p - page)|abs <= 2 or p == 1 or p == total_pages %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ p }}{% if search %}&search={{ search|urlencode }}{% endif %}{% if level_filter %}&level={{ level_filter }}{% endif %}">{{ p }}</a>
+        </li>
+        {% elif (p - page)|abs == 3 %}
+        <li class="page-item disabled"><span class="page-link">...</span></li>
+        {% endif %}
+      {% endfor %}
+      {% if page < total_pages %}
+      <li class="page-item">
+        <a class="page-link" href="?page={{ page+1 }}{% if search %}&search={{ search|urlencode }}{% endif %}{% if level_filter %}&level={{ level_filter }}{% endif %}">التالي</a>
+      </li>
+      {% endif %}
+    </ul>
+  </nav>
+  {% endif %}
 </div>
+
+<script>
+function copyErr(hash) {
+  const raw = document.querySelector('#err-'+hash+' textarea');
+  if (raw) { raw.select(); document.execCommand('copy'); }
+  // fallback
+  const card = document.getElementById('err-'+hash);
+  const text = card.innerText;
+  navigator.clipboard.writeText(text).then(() => alert('تم النسخ ✅'));
+}
+</script>
 {% endblock %}

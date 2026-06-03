@@ -300,10 +300,10 @@
   {% if backups %}
     {% for backup in backups %}
     <div class="col-md-6 col-lg-4">
-      <div class="card backup-card {% if backup.manual %}manual{% else %}auto{% endif %} mb-3">
+      <div class="card backup-card {% if backup.get('manual') %}manual{% else %}auto{% endif %} mb-3">
         <div class="card-header">
           <h5 class="card-title mb-0">
-            {% if backup.manual %}
+            {% if backup.get('manual') %}
             <i class="fas fa-hand-pointer text-success"></i> يدوية
             {% else %}
             <i class="fas fa-robot text-info"></i> تلقائية
@@ -315,72 +315,72 @@
           <p class="mb-2">
             <i class="far fa-calendar-alt text-primary"></i>
             <strong>التاريخ:</strong> 
-            {{ backup.timestamp[:4] }}-{{ backup.timestamp[4:6] }}-{{ backup.timestamp[6:8] }}
+            {% set ts = backup.get('timestamp', '') %}{{ ts[:4] }}-{{ ts[4:6] }}-{{ ts[6:8] }}
           </p>
           
           <p class="mb-2">
             <i class="far fa-clock text-info"></i>
             <strong>الوقت:</strong> 
-            {{ backup.timestamp[9:11] }}:{{ backup.timestamp[11:13] }}:{{ backup.timestamp[13:15] }}
+            {% set ts2 = backup.get('timestamp', '') %}{{ ts2[9:11] }}:{{ ts2[11:13] }}:{{ ts2[13:15] }}
           </p>
 
           <!-- الحجم -->
           <p class="mb-2">
             <i class="fas fa-hdd text-warning"></i>
             <strong>الحجم:</strong> 
-            <span class="badge badge-warning">{{ backup.size_mb }} MB</span>
+            <span class="badge badge-warning">{{ backup.get('size_mb', 0) }} MB</span>
           </p>
 
           <!-- المواصفات -->
           <p class="mb-2">
             <i class="fas fa-info-circle text-secondary"></i>
-            {% if backup.compressed %}
+            {% if backup.get('compressed') %}
             <span class="badge badge-info"><i class="fas fa-compress"></i> مضغوط</span>
             {% endif %}
-            {% if backup.encrypted %}
+            {% if backup.get('encrypted') %}
             <span class="badge badge-success"><i class="fas fa-lock"></i> مشفّر</span>
             {% endif %}
           </p>
 
-          {% if backup.description %}
+          {% if backup.get('description') %}
           <p class="mb-2 text-muted">
             <i class="fas fa-comment-dots"></i>
-            <small>{{ backup.description }}</small>
+            <small>{{ backup.get('description') }}</small>
           </p>
           {% endif %}
 
-          {% if backup.checksum %}
+          {% if backup.get('checksum') %}
           <p class="mb-2">
             <small class="text-muted">
               <i class="fas fa-fingerprint"></i> Checksum:<br>
-              <code class="checksum-badge">{{ backup.checksum[:16] }}...</code>
+              <code class="checksum-badge">{{ backup.get('checksum')[:16] }}...</code>
             </small>
           </p>
           {% endif %}
 
           <p class="mb-1">
-            {% if backup.backup_scope %}
-            <span class="badge badge-secondary">{{ backup.backup_scope }}</span>
-            {% if backup.tenant_slug %}<span class="badge badge-info">{{ backup.tenant_slug }}</span>{% endif %}
+            {% if backup.get('backup_scope') %}
+            <span class="badge badge-secondary">{{ backup.get('backup_scope') }}</span>
+            {% if backup.get('tenant_slug') %}<span class="badge badge-info">{{ backup.get('tenant_slug') }}</span>{% endif %}
             {% else %}
             <span class="badge badge-secondary">system</span>
             {% endif %}
           </p>
           <p class="mb-0">
             <small class="text-muted">
-              <i class="fas fa-file"></i> {{ backup.filename }}
+              <i class="fas fa-file"></i> {{ backup.get('filename') }}
             </small>
           </p>
         </div>
 
         <div class="card-footer">
-          <a href="{{ url_for('owner.prepare_restore_backup', filename=backup.filename) }}"
+          <a href="{{ url_for('owner.prepare_restore_backup', filename=backup.get('filename')) }}"
              class="btn btn-sm btn-warning" title="تعليمات استعادة آمنة">
             <i class="fas fa-book mr-1"></i> تعليمات الاستعادة
           </a>
-          {% if is_platform_owner and (backup.backup_scope == 'system' or backup.filename.startswith('azad_backup_system_') or 'system' in backup.filename) %}
+          {% if is_platform_owner and (backup.get('backup_scope') == 'system' or backup.get('filename').startswith('azad_backup_system_') or 'system' in backup.get('filename')) %}
           <button type="button" class="btn btn-sm btn-outline-warning"
-                  onclick="openTargetRestore('{{ backup.filename }}')"
+                  onclick="openTargetRestore('{{ backup.get('filename') }}')"
                   title="استعادة system إلى قاعدة جديدة فقط">
             <i class="fas fa-database mr-1"></i> استعادة لقاعدة جديدة
           </button>
@@ -389,16 +389,16 @@
           <!-- زر الحذف -->
           <form method="POST" action="{{ url_for('owner.delete_backup') }}" 
                 style="display: inline-block;"
-                onsubmit="return confirm('⚠️ هل أنت متأكد من حذف النسخة الاحتياطية؟\n\n📁 {{ backup.filename }}\n\n{% if not backup.manual %}⚠️ تنبيه: هذه نسخة تلقائية.\n{% endif %}⚠️ لا يمكن التراجع عن هذا الإجراء!');">
+                onsubmit="return confirm('⚠️ هل أنت متأكد من حذف النسخة الاحتياطية؟\n\n📁 {{ backup.get('filename') }}\n\n{% if not backup.get('manual') %}⚠️ تنبيه: هذه نسخة تلقائية.\n{% endif %}⚠️ لا يمكن التراجع عن هذا الإجراء!');">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <input type="hidden" name="filename" value="{{ backup.filename }}">
+            <input type="hidden" name="filename" value="{{ backup.get('filename') }}">
             <button type="submit" class="btn btn-sm btn-danger" title="حذف النسخة نهائياً">
               <i class="fas fa-trash mr-1"></i> حذف
             </button>
           </form>
 
           <!-- زر التحميل -->
-          <a href="{{ url_for('owner.download_backup', filename=backup.filename) }}" 
+          <a href="{{ url_for('owner.download_backup', filename=backup.get('filename')) }}" 
              class="btn btn-sm btn-success"
              title="تحميل النسخة الاحتياطية"
              download>
@@ -407,7 +407,7 @@
 
           <!-- زر التحقق -->
           <button type="button" class="btn btn-sm btn-info" 
-                  onclick="verifyBackup('{{ backup.filename }}')"
+                  onclick="verifyBackup('{{ backup.get('filename') }}')"
                   title="التحقق من سلامة النسخة">
             <i class="fas fa-check-circle mr-1"></i> تحقق
           </button>
@@ -447,15 +447,15 @@
         <div class="row">
           <div class="col-md-3">
             <strong>التاريخ:</strong><br>
-            {{ stats.latest_backup.timestamp[:8] }}
+            {% set latest_ts = stats.latest_backup.get('timestamp', '') %}{{ latest_ts[:8] }}
           </div>
           <div class="col-md-3">
             <strong>الحجم:</strong><br>
-            {{ stats.latest_backup.size_mb }} MB
+            {{ stats.latest_backup.get('size_mb') }} MB
           </div>
           <div class="col-md-3">
             <strong>النوع:</strong><br>
-            {% if stats.latest_backup.manual %}يدوية{% else %}تلقائية{% endif %}
+            {% if stats.latest_backup.get('manual') %}يدوية{% else %}تلقائية{% endif %}
           </div>
           <div class="col-md-3">
             <strong>الحالة:</strong><br>

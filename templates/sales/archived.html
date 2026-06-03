@@ -35,6 +35,8 @@
       <thead>
         <tr>
           <th>رقم الفاتورة</th>
+          <th>الشركة</th>
+          <th>الفرع</th>
           <th>التاريخ</th>
           <th>العميل</th>
           <th>المبلغ</th>
@@ -47,6 +49,14 @@
         {% for sale in sales %}
         <tr>
           <td><strong>{{ sale.sale_number }}</strong></td>
+          <td><span class="badge badge-light border">{{ tenant_name_ar or company_name_ar or '-' }}</span></td>
+          <td>
+            {% if sale.branch %}
+              <span class="badge badge-light border">{{ sale.branch.name }}{% if sale.branch.code %} ({{ sale.branch.code }}){% endif %}</span>
+            {% else %}
+              <span class="text-muted">-</span>
+            {% endif %}
+          </td>
           <td>{{ sale.sale_date.strftime('%Y-%m-%d') }}</td>
           <td>{{ sale.customer.name if sale.customer else '-' }}</td>
           <td><strong>{{ "{:,.2f}".format(sale.total_amount) }} {{ sale.currency }}</strong></td>
