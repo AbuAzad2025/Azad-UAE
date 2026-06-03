@@ -169,7 +169,7 @@ class Config:
     elif _redis_available():
         CACHE_TYPE = "redis"
     else:
-        CACHE_TYPE = "NullCache"
+        CACHE_TYPE = "null"
     CACHE_REDIS_URL = os.environ.get("CACHE_REDIS_URL", REDIS_URL)
     CACHE_DEFAULT_TIMEOUT = _int("CACHE_DEFAULT_TIMEOUT", 300)
     CACHE_KEY_PREFIX = "garage_simple"

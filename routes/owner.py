@@ -1500,19 +1500,20 @@ def download_backup(filename):
 @owner_required
 def clear_cache():
     from extensions import cache
-    from flask_caching import NullCache
 
     try:
         cache.clear()
         flash('✅ تم مسح الذاكرة المؤقتة بنجاح', 'success')
     except Exception as e:
-        # If Redis is down, gracefully degrade to NullCache temporarily
+        # If Redis is down, gracefully degrade to null cache temporarily
         try:
-            if not isinstance(cache.cache, NullCache):
+            cache_type = getattr(cache, 'cache', None)
+            type_name = type(cache_type).__name__ if cache_type else 'unknown'
+            if type_name != 'NullCache':
                 app = cache.app if hasattr(cache, 'app') else None
                 if app:
-                    cache.init_app(app, config={'CACHE_TYPE': 'NullCache'})
-            flash('⚠️ Redis غير متاح — تم التبديل لـ NullCache وتجاوز الخطأ', 'warning')
+                    cache.init_app(app, config={'CACHE_TYPE': 'null'})
+            flash('⚠️ Redis غير متاح — تم التبديل لـ null cache وتجاوز الخطأ', 'warning')
         except Exception:
             flash(f'❌ خطأ: {str(e)}', 'danger')
 
