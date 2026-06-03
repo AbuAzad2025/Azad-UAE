@@ -1,5 +1,8 @@
 from datetime import datetime, timezone
-from flask import Blueprint, jsonify, request, make_response
+from urllib.parse import urlparse
+import os
+
+from flask import Blueprint, jsonify, request, make_response, current_app, abort
 from flask_login import login_required, current_user
 from sqlalchemy import select
 from extensions import db, limiter, csrf
@@ -9,6 +12,81 @@ from utils.branching import get_accessible_warehouse_ids, get_branch_stock_map
 from utils.decorators import branch_scope_id, permission_required
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
+
+_DEV_TRUSTED_ORIGINS = frozenset({
+    'http://localhost:5000',
+    'http://127.0.0.1:5000',
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+})
+
+
+def _is_production_env() -> bool:
+    app_env = (current_app.config.get('APP_ENV') or os.environ.get('APP_ENV') or 'production').strip().lower()
+    debug = bool(current_app.config.get('DEBUG')) or (os.environ.get('DEBUG') or '').strip().lower() in ('1', 'true', 'yes', 'y')
+    return app_env == 'production' and not debug
+
+
+def _origin_from_referer(referer: str) -> str | None:
+    try:
+        parsed = urlparse(referer or '')
+        if parsed.scheme and parsed.netloc:
+            return f'{parsed.scheme}://{parsed.netloc}'.rstrip('/')
+    except Exception:
+        return None
+    return None
+
+
+def _split_origins(value) -> set[str]:
+    if not value:
+        return set()
+    if isinstance(value, (list, tuple, set)):
+        raw_items = value
+    else:
+        raw_items = str(value).split(',')
+    return {str(item).strip().rstrip('/') for item in raw_items if str(item).strip()}
+
+
+def _trusted_telemetry_origins() -> frozenset[str]:
+    origins: set[str] = set()
+    for key in ('CLIENT_ERROR_TRUSTED_ORIGINS', 'TRUSTED_ORIGINS', 'CORS_ORIGINS', 'PAYMENT_VAULT_TRUSTED_ORIGINS'):
+        origins.update(_split_origins(current_app.config.get(key) or os.environ.get(key)))
+    if origins:
+        return frozenset(origins)
+    if _is_production_env():
+        base = (current_app.config.get('BASE_URL') or os.environ.get('BASE_URL') or '').strip().rstrip('/')
+        return frozenset({base}) if base else frozenset()
+    return _DEV_TRUSTED_ORIGINS
+
+
+def _validate_public_telemetry_origin():
+    """Protect the public JS-error collector from cross-site log spam."""
+    origin = (request.headers.get('Origin') or '').strip().rstrip('/')
+    referer = (request.headers.get('Referer') or '').strip()
+
+    # Native clients / local curl in development often omit Origin/Referer.
+    if not _is_production_env() and not origin and not referer:
+        return None
+
+    trusted = _trusted_telemetry_origins()
+    if not trusted:
+        current_app.logger.warning('client_error telemetry rejected: no trusted origins configured')
+        return jsonify({'success': False, 'error': 'Origin policy not configured'}), 503
+
+    if origin:
+        if origin in trusted:
+            return None
+        current_app.logger.warning('client_error telemetry rejected: origin=%s', origin[:120])
+        return jsonify({'success': False, 'error': 'Origin غير مسموح'}), 403
+
+    if referer:
+        ref_origin = _origin_from_referer(referer)
+        if ref_origin and ref_origin in trusted:
+            return None
+        current_app.logger.warning('client_error telemetry rejected: referer=%s', referer[:120])
+        return jsonify({'success': False, 'error': 'Referer غير مسموح'}), 403
+
+    return jsonify({'success': False, 'error': 'Origin أو Referer مطلوب'}), 403
 
 
 def _scoped_customer_query():
@@ -142,7 +220,7 @@ def payment_fields(payment_method):
         'e_wallet': {
             'fields': [
                 {'name': 'reference_number', 'type': 'text', 'label_ar': 'رقم المعاملة', 'label_en': 'Transaction ID', 'required': True},
-                {'name': 'wallet_provider', 'type': 'select', 'label_ar': 'المحفظة', 'label_en': 'Wallet Provider', 'required': False, 
+                {'name': 'wallet_provider', 'type': 'select', 'label_ar': 'المحفظة', 'label_en': 'Wallet Provider', 'required': False,
                  'options': [
                      {'value': 'apple_pay', 'label_ar': 'Apple Pay', 'label_en': 'Apple Pay'},
                      {'value': 'google_pay', 'label_ar': 'Google Pay', 'label_en': 'Google Pay'},
@@ -154,7 +232,7 @@ def payment_fields(payment_method):
             'en_title': 'E-Wallet'
         }
     }
-    
+
     return jsonify(fields.get(payment_method, {'fields': []}))
 
 
@@ -162,7 +240,7 @@ def payment_fields(payment_method):
 @login_required
 def currency_rate(from_currency, to_currency):
     from services.currency_service import CurrencyService
-    
+
     try:
         details = CurrencyService.get_exchange_rate_details(from_currency, to_currency)
         payload = {
@@ -180,10 +258,11 @@ def currency_rate(from_currency, to_currency):
         resp.headers['Pragma'] = 'no-cache'
         resp.headers['Expires'] = '0'
         return resp
-    except Exception as e:
+    except Exception:
+        current_app.logger.exception('currency_rate failed from=%s to=%s', from_currency, to_currency)
         resp = make_response(jsonify({
             'success': False,
-            'error': str(e),
+            'error': 'تعذر جلب سعر الصرف الآن. الرجاء المحاولة لاحقاً أو إدخال السعر يدوياً.',
             'manual_input_required': True
         }), 400)
         resp.headers['Cache-Control'] = 'no-store'
@@ -219,7 +298,7 @@ def api_search():
     search_type = request.args.get('type', 'customers')
     page = request.args.get('page', 1, type=int)
     per_page = 20
-    
+
     # ========================================
     # 1. البحث عن المنتجات
     # ========================================
@@ -244,7 +323,7 @@ def api_search():
             product_ids=[p.id for p in products],
             warehouse_ids=warehouse_ids,
         ) if warehouse_ids else {}
-        
+
         results = [{
             'id': p.id,
             'text': p.name,
@@ -260,15 +339,15 @@ def api_search():
             'unit': p.unit,
             'is_low_stock': p.is_low_stock(),
         } for p in products]
-        
+
         return jsonify({'results': results, 'has_more': len(results) >= per_page})
-    
+
     # ========================================
     # 2. البحث عن الموردين
     # ========================================
     elif search_type == 'suppliers':
         base_query = _scoped_supplier_query().filter(Supplier.is_active == True).order_by(Supplier.name)
-        
+
         if query:
             base_query = base_query.filter(
                 db.or_(
@@ -278,12 +357,12 @@ def api_search():
                     Supplier.email.ilike(f'%{query}%')
                 )
             )
-        
+
         offset = (page - 1) * per_page
         suppliers = base_query.limit(per_page + 1).offset(offset).all()
         has_more = len(suppliers) > per_page
         suppliers = suppliers[:per_page]
-        
+
         results = [{
             'id': s.id,
             'text': f"{s.name} {('- ' + s.company_name) if s.company_name else ''} - {s.phone or 'لا يوجد رقم'}",
@@ -297,15 +376,15 @@ def api_search():
             'rating': s.rating,
             'is_verified': s.is_verified
         } for s in suppliers]
-        
+
         return jsonify({'results': results, 'has_more': has_more})
-    
+
     # ========================================
     # 3. البحث عن الزبائن (الافتراضي)
     # ========================================
     else:
         base_query = _scoped_customer_query().filter(Customer.is_active == True).order_by(Customer.name)
-        
+
         if query:
             base_query = base_query.filter(
                 db.or_(
@@ -314,12 +393,12 @@ def api_search():
                     Customer.email.ilike(f'%{query}%') if Customer.email else False
                 )
             )
-        
+
         offset = (page - 1) * per_page
         customers = base_query.limit(per_page + 1).offset(offset).all()
         has_more = len(customers) > per_page
         customers = customers[:per_page]
-        
+
         results = [{
             'id': c.id,
             'text': f"{c.name} - {c.phone or 'لا يوجد رقم'}",
@@ -329,7 +408,7 @@ def api_search():
             'customer_type': c.customer_type,
             'balance_aed': _customer_balance(c.id)
         } for c in customers]
-        
+
         return jsonify({'results': results, 'has_more': has_more})
 
 
@@ -338,27 +417,26 @@ def api_search():
 def check_username():
     """التحقق من توفر اسم المستخدم"""
     username = request.args.get('username', '').strip()
-    
+
     if not username or len(username) < 3:
         return jsonify({'available': False, 'error': 'اسم المستخدم قصير جداً'})
-    
+
     import re
     if not re.match(r'^[a-zA-Z0-9_]{3,20}$', username):
         return jsonify({'available': False, 'error': 'استخدم حروف إنجليزية وأرقام و_ فقط'})
-    
+
     existing = User.query.filter_by(username=username).first()
-    
+
     if existing:
-        from datetime import datetime
         year = datetime.now().year
         suggestions = [f'{username}_{year}', f'{username}_2024', f'{username}_admin']
-        
+
         return jsonify({
             'available': False,
             'message': f'اسم المستخدم "{username}" موجود مسبقاً',
             'suggestions': suggestions
         })
-    
+
     return jsonify({'available': True, 'message': 'اسم المستخدم متاح ✓'})
 
 
@@ -379,18 +457,20 @@ def products_low_stock():
                 'min_stock_alert': float(product.min_stock_alert or 0),
                 'needed': float((product.min_stock_alert or 0) - (getattr(product, 'visible_stock', product.current_stock or 0)))
             })
-        
+
         return jsonify({
             'success': True,
             'products': products_data,
             'count': len(products_data)
         })
-    
-    except Exception as e:
+
+    except Exception:
+        current_app.logger.exception('products_low_stock failed')
         return jsonify({
             'success': False,
-            'error': str(e)
+            'error': 'تعذر تحميل المنتجات قليلة المخزون حالياً'
         }), 500
+
 
 @api_bp.route('/exchange-rates/display')
 @login_required
@@ -418,6 +498,9 @@ def exchange_rates_display():
 @api_bp.route('/echo', methods=['PUT', 'PATCH', 'DELETE'])
 @login_required
 def echo():
+    """Development-only HTTP method echo. Hidden in production."""
+    if _is_production_env():
+        abort(404)
     payload = request.get_json(silent=True) or {}
     return jsonify({'success': True, 'data': payload}), 200
 
@@ -429,11 +512,16 @@ def log_client_error():
     """Receive JS errors from the browser and store them via ErrorAuditService.
 
     Defenses:
-    - Rate limit: 30/min per user.
+    - Origin/Referer allowlist to prevent cross-site log spam.
+    - Rate limit: 30/min per user/IP.
     - Payload capped at 50 KB (Nginx / WAF layer recommended for stricter limit).
     - Stack trace truncated by service layer.
     - Cookies / auth headers explicitly excluded from storage.
     """
+    origin_error = _validate_public_telemetry_origin()
+    if origin_error:
+        return origin_error
+
     from services.error_audit_service import ErrorAuditService
 
     if request.content_length and request.content_length > 50 * 1024:
@@ -507,4 +595,3 @@ def log_client_error():
         extra=extra,
     )
     return '', 204
-
