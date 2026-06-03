@@ -84,14 +84,16 @@ def create_app(config_class=Config):
             mod = __import__(module_path, fromlist=[var_name])
             return getattr(mod, var_name)
         except Exception as exc:
-            # Log via ErrorAuditService if db is available
+            # Log via ErrorAuditService if db is available.
+            # Must wrap in app.app_context() because db.engine requires it.
             try:
                 from services.error_audit_service import ErrorAuditService
-                ErrorAuditService.log_exception(
-                    exc,
-                    category="SYSTEM_INIT",
-                    source=f"app.create_app.import_bp({module_path})",
-                )
+                with app.app_context():
+                    ErrorAuditService.log_exception(
+                        exc,
+                        category="SYSTEM_INIT",
+                        source=f"app.create_app.import_bp({module_path})",
+                    )
             except Exception:
                 pass
             _import_errors.append(f"{module_path}.{var_name}: {exc}")
