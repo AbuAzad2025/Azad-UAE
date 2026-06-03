@@ -156,6 +156,7 @@ def repair_accounting_data():
             currency="AED",
             exchange_rate=1.0,
             branch_id=branch.id if branch else None,
+            tenant_id=int(tenant_id),
         )
     else:
         posted_inventory_adjustment = Decimal("0")

@@ -61,10 +61,10 @@ class GLService:
 
 
     @staticmethod
-    def create_journal_entry(date, description, lines, user_id=None, branch_id=None, reference_type=None, reference_id=None):
+    def create_journal_entry(date, description, lines, user_id=None, branch_id=None, reference_type=None, reference_id=None, tenant_id=None):
         """Standardized GL Entry Creation"""
         
-        tenant_id = gl_helpers.resolve_tenant_id(branch_id=branch_id, user_id=user_id)
+        tenant_id = tenant_id or gl_helpers.resolve_tenant_id(branch_id=branch_id, user_id=user_id)
         gl_helpers.assert_period_open(date, tenant_id)
         entry_number = gl_helpers.next_entry_number(tenant_id, date)
         
@@ -239,7 +239,7 @@ class GLService:
 
     
     @staticmethod
-    def post_entry(lines, description, reference_type=None, reference_id=None, date=None, currency='AED', exchange_rate=1.0, branch_id=None, user_id=None):
+    def post_entry(lines, description, reference_type=None, reference_id=None, date=None, currency='AED', exchange_rate=1.0, branch_id=None, user_id=None, tenant_id=None):
         """
         Wrapper for create_journal_entry: converts amounts to AED and creates balanced entry.
         """
@@ -264,7 +264,8 @@ class GLService:
             user_id=user_id,
             branch_id=branch_id,
             reference_type=reference_type,
-            reference_id=reference_id
+            reference_id=reference_id,
+            tenant_id=tenant_id
         )
         return entry
     
