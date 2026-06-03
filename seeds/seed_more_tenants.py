@@ -6,7 +6,8 @@ os.environ["SKIP_SYSTEM_INTEGRITY"] = "1"
 
 from app import create_app
 from extensions import db
-from models import Tenant, User, Role, Branch, Warehouse, GLAccount, GLPeriod, InvoiceSettings
+from models import Tenant, User, Role, Branch, Warehouse, GLPeriod, InvoiceSettings
+from services.gl_tree_builder import GLTreeBuilder
 from werkzeug.security import generate_password_hash
 from decimal import Decimal
 
@@ -108,27 +109,9 @@ def seed():
             )
             db.session.add(warehouse); db.session.flush()
             
-            # Create basic GL accounts
-            accounts = [
-                ("1100", "Cash", "نقد", "asset"),
-                ("1130", "Accounts Receivable", "ذمم العملاء", "asset"),
-                ("1140", "Inventory", "المخزون", "asset"),
-                ("2100", "Accounts Payable", "ذمم الموردين", "liability"),
-                ("3100", "Owner's Equity", "حقوق المالك", "equity"),
-                ("4100", "Sales Revenue", "إيرادات المبيعات", "revenue"),
-                ("5100", "Cost of Goods Sold", "تكلفة البضاعة المباعة", "expense"),
-                ("6100", "Operating Expenses", "المصاريف التشغيلية", "expense"),
-            ]
-            for code, name, name_ar, acc_type in accounts:
-                gl = GLAccount(
-                    tenant_id=tenant.id,
-                    code=code,
-                    name=name,
-                    name_ar=name_ar,
-                    type=acc_type,
-                    is_active=True
-                )
-                db.session.add(gl)
+            # Create complete GL tree using GLTreeBuilder
+            audit_report = GLTreeBuilder.build(tenant.id)
+            print(f"  GL Tree built: {len(audit_report['created'])} accounts created, {len(audit_report['updated'])} updated")
             db.session.flush()
             
             # Create GL period

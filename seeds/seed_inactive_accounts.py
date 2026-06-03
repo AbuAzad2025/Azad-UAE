@@ -48,10 +48,10 @@ def seed():
             
             print(f"  Found {len(inactive)} inactive accounts")
             
-            # Find cash account for balancing
+            # Find cash account for balancing (1110 is cash in our core tree)
             cash_result = conn.execute(text("""
                 SELECT id FROM gl_accounts 
-                WHERE tenant_id = :tenant_id AND code = '1100'
+                WHERE tenant_id = :tenant_id AND code = '1110'
                 LIMIT 1
             """), {"tenant_id": tenant_id})
             
