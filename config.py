@@ -188,10 +188,15 @@ class Config:
         "https://open.er-api.com/v6/latest/{base}",
         "https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/{base_lower}.json",
         "https://api.freecurrencyapi.com/v1/latest?base_currency={base}",
+        "https://api.frankfurter.dev/v1/latest?base={base}",
     ]
-    
+
+    # Cache for accounting currency service (CurrencyService)
     CURRENCY_CACHE_TIMEOUT = _int("CURRENCY_CACHE_TIMEOUT", 3600)
-    
+
+    # Cache for display-only online rates (ExchangeRateService) — navbar / fxModal
+    CURRENCY_ONLINE_CACHE_TIMEOUT = _int("CURRENCY_ONLINE_CACHE_TIMEOUT", 43200)
+
     CURRENCY_API_TIMEOUT = _int("CURRENCY_API_TIMEOUT", 5)
     
     COMPANY_NAME = os.environ.get("COMPANY_NAME", "Azad Smart Systems")

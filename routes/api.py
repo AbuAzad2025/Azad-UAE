@@ -392,6 +392,29 @@ def products_low_stock():
             'error': str(e)
         }), 500
 
+@api_bp.route('/exchange-rates/display')
+@login_required
+def exchange_rates_display():
+    """
+    Display-only exchange rates for the navbar / fxModal.
+    NEVER use these for accounting, invoicing, payments, or GL entries.
+    Use /api/currency-rate/<from>/<to> for accounting rates.
+    """
+    from services.exchange_rate_service import ExchangeRateService
+
+    base = request.args.get('base', 'USD').upper()
+    symbols_str = request.args.get('symbols', '')
+    if symbols_str:
+        symbols = tuple(s.strip().upper() for s in symbols_str.split(',') if s.strip())
+    else:
+        symbols = ExchangeRateService.DISPLAY_CURRENCIES
+
+    result = ExchangeRateService.get_online_rates_for_display(base=base, symbols=symbols)
+    resp = make_response(jsonify(result), 200)
+    resp.headers['Cache-Control'] = 'private, max-age=300'
+    return resp
+
+
 @api_bp.route('/echo', methods=['PUT', 'PATCH', 'DELETE'])
 @login_required
 def echo():

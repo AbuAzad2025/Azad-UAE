@@ -132,17 +132,20 @@
               </div>
             </div>
             
-            <!-- سعر الصرف -->
-            <div class="erp-exchange-box" style="cursor:pointer;" data-toggle="modal" data-target="#fxModal" title="اضغط لعرض أسعار الصرف">
-              <div class="erp-exchange-label">
-                <i class="fas fa-exchange-alt mr-1"></i>
-                <span>أسعار العملات</span>
-              </div>
-              <div class="erp-exchange-value" style="font-size:11px;">
-                <span class="badge badge-light text-dark mr-1">$</span>
-                <span class="badge badge-light text-dark mr-1">JD</span>
-                <span class="badge badge-light text-dark">₪</span>
-              </div>
+            <!-- سعر الصرف (عرض فقط — لا يستخدم في الحسابات) -->
+            <div class="erp-exchange-box" data-toggle="modal" data-target="#fxModal" title="أسعار صرف حية (عرض فقط)">
+              <span class="d-none d-lg-inline erp-exchange-label">
+                <i class="fas fa-coins mr-1"></i>
+                <small>العملات</small>
+              </span>
+              <span class="d-inline d-lg-none">
+                <i class="fas fa-coins text-white"></i>
+              </span>
+              <span class="erp-exchange-live-badges ml-1" id="fx-nav-badges">
+                <span class="badge badge-light text-dark" title="دولار">$</span>
+                <span class="badge badge-light text-dark" title="دينار">JD</span>
+                <span class="badge badge-light text-dark" title="شيقل">₪</span>
+              </span>
             </div>
           </div>
         </div>
@@ -282,58 +285,37 @@
     </ul>
   </nav>
 
-  <!-- Currency Exchange Modal -->
+  <!-- Currency Exchange Modal (عرض فقط — لا يُستخدم في الحسابات) -->
   <div class="modal fade" id="fxModal" tabindex="-1" role="dialog" aria-labelledby="fxModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 520px;">
+    <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 480px;">
       <div class="modal-content">
-        <div class="modal-header bg-primary text-white">
-          <h5 class="modal-title" id="fxModalLabel"><i class="fas fa-exchange-alt mr-2"></i>أسعار الصرف</h5>
+        <div class="modal-header bg-primary text-white py-2">
+          <h6 class="modal-title" id="fxModalLabel"><i class="fas fa-coins mr-2"></i>أسعار الصرف (عرض فقط)</h6>
           <button type="button" class="close text-white" data-dismiss="modal" aria-label="إغلاق">
             <span aria-hidden="true">&times;</span>
           </button>
         </div>
-        <div class="modal-body">
-          <div class="table-responsive">
-            <table class="table table-sm table-striped text-center" id="fx-rates-table">
+        <div class="modal-body p-0">
+          <div class="table-responsive" style="max-height: 320px; overflow-y: auto;">
+            <table class="table table-sm table-striped table-hover text-center mb-0" id="fx-rates-table">
               <thead class="thead-dark">
                 <tr>
-                  <th>العملة</th>
-                  <th>الشيقل ₪</th>
-                  <th>الدينار JD</th>
-                  <th>الدولار $</th>
+                  <th class="text-right">العملة</th>
+                  <th>القيمة</th>
+                  <th class="text-muted small">مقابل USD</th>
                 </tr>
               </thead>
-              <tbody>
-                <tr>
-                  <td class="font-weight-bold">1 USD ($)</td>
-                  <td id="usd-ils">3.65</td>
-                  <td id="usd-jod">0.709</td>
-                  <td id="usd-usd">1.00</td>
-                </tr>
-                <tr>
-                  <td class="font-weight-bold">1 JOD (JD)</td>
-                  <td id="jod-ils">5.15</td>
-                  <td id="jod-jod">1.00</td>
-                  <td id="jod-usd">1.41</td>
-                </tr>
-                <tr>
-                  <td class="font-weight-bold">1 ILS (₪)</td>
-                  <td id="ils-ils">1.00</td>
-                  <td id="ils-jod">0.194</td>
-                  <td id="ils-usd">0.274</td>
-                </tr>
-                <tr class="table-info">
-                  <td class="font-weight-bold" id="tenant-currency-label">{{ (tenant_default_currency or company_default_currency or 'AED')|upper }}</td>
-                  <td id="tenant-ils">--</td>
-                  <td id="tenant-jod">--</td>
-                  <td id="tenant-usd">--</td>
-                </tr>
+              <tbody id="fx-rates-body">
+                <!-- يُملأ ديناميكياً -->
               </tbody>
             </table>
           </div>
-          <p class="text-muted small text-center mb-0 mt-2">
-            <i class="fas fa-info-circle mr-1"></i>أسعار حية — <span id="fx-last-updated">اضغط لتحديث</span>
-          </p>
+          <div class="p-2 bg-light border-top text-center">
+            <small class="text-muted" id="fx-last-updated">
+              <i class="fas fa-sync-alt mr-1"></i>اضغط للتحديث
+            </small>
+            <span id="fx-source-badge" class="badge badge-secondary ml-1" style="display:none;"></span>
+          </div>
         </div>
       </div>
     </div>
@@ -1202,81 +1184,108 @@ $(function() {
     if (dateDisplay) dateDisplay.textContent = dateString;
   }
   
-  // أسعار صرف حية من API (يُستدعى عند فتح النافذة فقط)
-  const FX_FALLBACK = { USD: 1.0, ILS: 3.65, JOD: 0.709, AED: 3.67, SAR: 3.75, EGP: 50.5 };
-  let fxCache = null;
-  let fxCacheTime = 0;
+  // ── أسعار صرف حية — عرض فقط (لا تُستخدم في الحسابات) ──
+  // يستدعي endpoint داخلي بدل API خارجي مباشر من المتصفح
+  let fxDisplayCache = null;
+  let fxDisplayCacheTime = 0;
+  const FX_DISPLAY_CACHE_MS = 300000; // 5 دقائق في الواجهة
 
   function formatFxRate(val) {
-    if (!Number.isFinite(val)) return '--';
-    if (val >= 100) return val.toFixed(2);
-    if (val >= 1) return val.toFixed(3);
-    return val.toFixed(4);
+    if (val === null || val === undefined) return '--';
+    const n = Number(val);
+    if (!Number.isFinite(n)) return '--';
+    if (n >= 100) return n.toFixed(2);
+    if (n >= 1) return n.toFixed(3);
+    return n.toFixed(4);
   }
 
   async function loadFxRates() {
-    const tenantCurrency = '{{ (tenant_default_currency or company_default_currency or 'AED')|upper }}';
     const now = Date.now();
 
-    // استخدم cache لمدة 5 دقائق
-    if (fxCache && (now - fxCacheTime) < 300000) {
-      populateFxTable(fxCache, tenantCurrency);
+    // استخدم cache محلي في المتصفح
+    if (fxDisplayCache && (now - fxDisplayCacheTime) < FX_DISPLAY_CACHE_MS) {
+      populateFxDisplay(fxDisplayCache);
       return;
     }
 
-    // إظهار حالة التحميل
-    const ids = ['usd-ils','usd-jod','usd-usd','jod-ils','jod-jod','jod-usd','ils-ils','ils-jod','ils-usd','tenant-ils','tenant-jod','tenant-usd'];
-    ids.forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = '<span class="spinner-border spinner-border-sm text-muted"></span>'; });
+    const tbody = document.getElementById('fx-rates-body');
+    if (tbody) tbody.innerHTML = '<tr><td colspan="3"><span class="spinner-border spinner-border-sm text-muted"></span> جارٍ التحميل...</td></tr>';
 
     try {
-      // API مجاني وسريع — يعطي أسعار مقابل USD
-      const res = await fetch('https://api.exchangerate-api.com/v4/latest/USD', { cache: 'no-store' });
-      if (!res.ok) throw new Error('API error');
+      const res = await fetch('{{ url_for("api.exchange_rates_display") }}?base=USD', { cache: 'no-store' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
-      fxCache = data.rates || {};
-      fxCacheTime = now;
-      populateFxTable(fxCache, tenantCurrency);
+      if (!data.ok) throw new Error(data.error || 'data not ok');
+      fxDisplayCache = data;
+      fxDisplayCacheTime = now;
+      populateFxDisplay(data);
     } catch (e) {
-      populateFxTable(FX_FALLBACK, tenantCurrency);
+      // fallback عرضي محلي — لا يؤثر على الحسابات
+      populateFxDisplay({
+        ok: false,
+        base: 'USD',
+        rates: { USD: 1.0, ILS: 3.65, JOD: 0.709, AED: 3.67, EUR: 0.92, SAR: 3.75, EGP: 50.5, GBP: 0.79 },
+        source: 'fallback_static',
+        stale: true,
+        last_updated: new Date().toISOString(),
+      });
     }
   }
 
-  function populateFxTable(rates, tenantCurrency) {
-    const usdIls = rates['ILS'] || 3.65;
-    const usdJod = rates['JOD'] || 0.709;
-    const usdTenant = rates[tenantCurrency] || rates['AED'] || 3.67;
+  function populateFxDisplay(data) {
+    const rates = data.rates || {};
+    const base = data.base || 'USD';
+    const stale = data.stale || false;
+    const source = data.source || 'unknown';
 
-    // USD row (1 USD = X)
-    setFxCell('usd-ils', usdIls);
-    setFxCell('usd-jod', usdJod);
-    setFxCell('usd-usd', 1.0);
+    const labels = {
+      USD: { ar: 'دولار أمريكي', sym: '$' },
+      ILS: { ar: 'شيقل إسرائيلي', sym: '₪' },
+      JOD: { ar: 'دينار أردني', sym: 'JD' },
+      EUR: { ar: 'يورو', sym: '€' },
+      AED: { ar: 'درهم إماراتي', sym: 'د.إ' },
+      SAR: { ar: 'ريال سعودي', sym: 'ر.س' },
+      EGP: { ar: 'جنيه مصري', sym: 'ج.م' },
+      GBP: { ar: 'جنيه إسترليني', sym: '£' },
+    };
 
-    // JOD row (1 JOD = X)
-    setFxCell('jod-ils', usdIls / usdJod);
-    setFxCell('jod-jod', 1.0);
-    setFxCell('jod-usd', 1.0 / usdJod);
+    const tbody = document.getElementById('fx-rates-body');
+    if (!tbody) return;
 
-    // ILS row (1 ILS = X)
-    setFxCell('ils-ils', 1.0);
-    setFxCell('ils-jod', usdJod / usdIls);
-    setFxCell('ils-usd', 1.0 / usdIls);
+    let html = '';
+    for (const [code, rate] of Object.entries(rates)) {
+      const lbl = labels[code] || { ar: code, sym: code };
+      html += `<tr>
+        <td class="text-right"><strong>${lbl.sym}</strong> <small class="text-muted">${lbl.ar}</small></td>
+        <td class="font-weight-bold">${formatFxRate(rate)}</td>
+        <td class="text-muted small">1 ${base} = ${formatFxRate(rate)} ${code}</td>
+      </tr>`;
+    }
+    tbody.innerHTML = html;
 
-    // Tenant row (1 Tenant = X)
-    setFxCell('tenant-ils', usdIls / usdTenant);
-    setFxCell('tenant-jod', usdJod / usdTenant);
-    setFxCell('tenant-usd', 1.0 / usdTenant);
+    // شارة المصدر
+    const badge = document.getElementById('fx-source-badge');
+    if (badge) {
+      badge.style.display = 'inline-block';
+      if (stale || source === 'fallback_static') {
+        badge.className = 'badge badge-warning ml-1';
+        badge.textContent = 'آخر سعر محفوظ';
+      } else {
+        badge.className = 'badge badge-success ml-1';
+        badge.textContent = 'مباشر';
+      }
+    }
 
-    // Update timestamp
-    const timeStr = new Date().toLocaleTimeString('ar-AE', {hour: '2-digit', minute:'2-digit'});
-    document.getElementById('fx-last-updated').textContent = 'آخر تحديث: ' + timeStr;
+    // وقت التحديث
+    const updatedEl = document.getElementById('fx-last-updated');
+    if (updatedEl && data.last_updated) {
+      const d = new Date(data.last_updated);
+      const timeStr = isNaN(d) ? '--' : d.toLocaleTimeString('ar-AE', { hour: '2-digit', minute: '2-digit' });
+      updatedEl.innerHTML = '<i class="fas fa-clock mr-1"></i>آخر تحديث: ' + timeStr;
+    }
   }
 
-  function setFxCell(id, val) {
-    const el = document.getElementById(id);
-    if (el) el.textContent = formatFxRate(val);
-  }
-
-  // Listen for modal open to fetch rates
+  // فتح النافذة يُحمل الأسعار
   $('#fxModal').on('show.bs.modal', loadFxRates);
 
   // تشغيل التحديثات
