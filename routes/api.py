@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from flask import Blueprint, jsonify, request, make_response
 from flask_login import login_required, current_user
 from sqlalchemy import select
-from extensions import db
+from extensions import db, limiter
 from models import Customer, Supplier, Product, User
 from services.stock_service import StockService
 from utils.branching import get_accessible_warehouse_ids, get_branch_stock_map
@@ -424,34 +424,45 @@ def echo():
 
 @api_bp.route('/log-client-error', methods=['POST'])
 @login_required
+@limiter.limit("30 per minute")
 def log_client_error():
-    """Receive JS errors from the browser and store them via ErrorAuditService."""
+    """Receive JS errors from the browser and store them via ErrorAuditService.
+
+    Defenses:
+    - Rate limit: 30/min per user.
+    - Payload capped at 50 KB (Nginx / WAF layer recommended for stricter limit).
+    - Stack trace truncated by service layer.
+    - Cookies / auth headers explicitly excluded from storage.
+    """
     from services.error_audit_service import ErrorAuditService
 
     data = request.get_json(silent=True) or {}
-    message = data.get('message', 'Unknown JS error')
-    source_file = data.get('source', 'frontend.unknown')
+    message = str(data.get('message', 'Unknown JS error'))[:2000]
+    source_file = str(data.get('source', 'frontend.unknown'))[:500]
     lineno = data.get('lineno')
     colno = data.get('colno')
-    stack = data.get('stack')
-    url = data.get('url', request.referrer or request.url)
+    stack = str(data.get('stack', '')) if data.get('stack') else None
+    url = str(data.get('url', request.referrer or request.url))[:500]
 
     enriched_message = message
     if lineno:
         enriched_message += f" (line {lineno}, col {colno})"
 
+    # Build extra WITHOUT cookies, tokens, or auth headers
+    extra = {
+        'source_file': source_file,
+        'line': lineno,
+        'column': colno,
+        'user_id': getattr(current_user, 'id', None),
+        'tenant_id': getattr(current_user, 'tenant_id', None),
+    }
+
     ErrorAuditService.log_frontend(
         message=enriched_message,
         url=url,
-        user_agent=request.headers.get('User-Agent', ''),
+        user_agent=request.headers.get('User-Agent', '')[:255],
         stack=stack,
-        extra={
-            'source_file': source_file,
-            'line': lineno,
-            'column': colno,
-            'user_id': getattr(current_user, 'id', None),
-            'tenant_id': getattr(current_user, 'tenant_id', None),
-        },
+        extra=extra,
     )
     return jsonify({'success': True}), 204
 

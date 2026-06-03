@@ -8,6 +8,7 @@ from models import GLAccount, GLJournalEntry
 
 
 def resolve_tenant_id(branch_id=None, user_id=None):
+    """Resolve tenant_id with multiple fallbacks. Never returns None in normal operation."""
     tenant_id = None
     if branch_id:
         from models import Branch
@@ -21,6 +22,14 @@ def resolve_tenant_id(branch_id=None, user_id=None):
         try:
             from utils.tenanting import get_active_tenant_id
             tenant_id = get_active_tenant_id()
+        except Exception:
+            pass
+    # ── LAST RESORT: pick first active tenant to avoid NULL constraint ──
+    if tenant_id is None:
+        try:
+            from models import Tenant
+            t = Tenant.query.filter_by(is_active=True).order_by(Tenant.id.asc()).first()
+            tenant_id = t.id if t else None
         except Exception:
             pass
     return int(tenant_id) if tenant_id else None

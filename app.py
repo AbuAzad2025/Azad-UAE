@@ -526,11 +526,14 @@ def create_app(config_class=Config):
                             reason=status.get("reason") or "Tenant suspended",
                         ), 503
         
-    # Security Headers
+    # Security Headers + Request ID
     @app.after_request
     def add_security_headers(response):
         response.headers['X-Content-Type-Options'] = 'nosniff'
         response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+        # Propagate request_id so client logs can correlate with server logs
+        if hasattr(g, 'request_id') and g.request_id:
+            response.headers['X-Request-Id'] = g.request_id
         response.headers['X-XSS-Protection'] = '1; mode=block'
         response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
         if not app.debug and app.config.get('APP_ENV', '').lower() == 'production':

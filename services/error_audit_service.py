@@ -4,22 +4,27 @@ Design principle: even if db.session is in a broken / rolled-back state,
 this service MUST still be able to persist error records.
 
 It uses db.engine.connect() directly (fresh connection) and performs an
-explicit INSERT, bypassing the ORM session entirely.  This is a deliberate
-trade-off: we lose ORM convenience but gain crash-proof durability.
+explicit INSERT / UPDATE, bypassing the ORM session entirely.
 
-Sanitization: passwords, tokens, API keys, and other secrets are
-redacted from request_data before storage.
+Features:
+- Deduplication: same fingerprint within 10 min → updates occurrence_count.
+- Fingerprint: SHA-256 of category + exception_type + source + endpoint.
+- Request ID: carried across app logs, error logs, and response headers.
+- Sanitization: passwords, tokens, API keys redacted.
 """
 
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
+import os
 import traceback
-from datetime import datetime, timezone
+import uuid
+from datetime import datetime, timezone, timedelta
 from typing import Any
 
-from flask import has_request_context, request
+from flask import current_app, g, has_request_context, request
 from flask_login import current_user
 from sqlalchemy import text
 
@@ -27,45 +32,29 @@ from extensions import db
 
 logger = logging.getLogger(__name__)
 
+# ── Limits ──────────────────────────────────────────────────────
+_MAX_MESSAGE_LEN = 4000
+_MAX_TRACE_LEN = 4000  # smaller for client-side
+_MAX_URL_LEN = 500
+_MAX_UA_LEN = 255
+_DEDUP_WINDOW_MINUTES = 10
+
 # Sensitive field patterns (case-insensitive)
 _SECRET_KEYS = frozenset(
     {
-        "password",
-        "password_hash",
-        "password_confirmation",
-        "current_password",
-        "new_password",
-        "token",
-        "access_token",
-        "refresh_token",
-        "api_key",
-        "api_secret",
-        "secret",
-        "secret_key",
-        "csrf_token",
-        "auth_token",
-        "session_token",
-        "credit_card",
-        "cvv",
-        "cvc",
-        "card_number",
-        "bank_account",
-        "iban",
+        "password", "password_hash", "password_confirmation",
+        "current_password", "new_password", "token", "access_token",
+        "refresh_token", "api_key", "api_secret", "secret", "secret_key",
+        "csrf_token", "auth_token", "session_token", "credit_card",
+        "cvv", "cvc", "card_number", "bank_account", "iban",
     }
 )
 
-_MAX_MESSAGE_LEN = 4000
-_MAX_TRACE_LEN = 16000
-_MAX_URL_LEN = 500
-_MAX_UA_LEN = 255
-
 
 class ErrorAuditService:
-    """Unified error logger — backend, DB, frontend, system-init, API."""
+    """Unified error logger with deduplication and fingerprinting."""
 
-    # ------------------------------------------------------------------
-    # Public API
-    # ------------------------------------------------------------------
+    # ── Public API ──────────────────────────────────────────────
 
     @staticmethod
     def log(
@@ -77,11 +66,7 @@ class ErrorAuditService:
         exception: BaseException | None = None,
         extra: dict[str, Any] | None = None,
     ) -> int | None:
-        """
-        Persist one error record using a FRESH engine connection.
-
-        Returns the inserted row id, or None if even the raw connection fails.
-        """
+        """Persist one error record (or bump existing fingerprint)."""
         row_id = ErrorAuditService._persist(
             message=message,
             category=category,
@@ -90,14 +75,10 @@ class ErrorAuditService:
             exception=exception,
             extra=extra,
         )
-        # Also mirror to Python logger so file logs stay complete
         try:
             logger.error(
                 "[ErrorAuditLog %s] %s | source=%s | id=%s",
-                category,
-                message[:200],
-                source,
-                row_id,
+                category, message[:200], source, row_id,
             )
         except Exception:
             pass
@@ -111,7 +92,6 @@ class ErrorAuditService:
         source: str = "unknown",
         extra: dict[str, Any] | None = None,
     ) -> int | None:
-        """Convenience: derive message & traceback from an exception."""
         message = str(exc) or f"{type(exc).__name__} (no message)"
         return ErrorAuditService.log(
             message=message,
@@ -131,7 +111,10 @@ class ErrorAuditService:
         stack: str | None = None,
         extra: dict[str, Any] | None = None,
     ) -> int | None:
-        """Called by the JS-error endpoint."""
+        """Called by the JS-error endpoint (pre-validated payload)."""
+        # Client-side stack traces can be huge — truncate
+        if stack and len(stack) > _MAX_TRACE_LEN:
+            stack = stack[:_MAX_TRACE_LEN] + "\n...[truncated]"
         return ErrorAuditService._persist(
             message=message,
             category="FRONTEND",
@@ -145,7 +128,6 @@ class ErrorAuditService:
 
     @staticmethod
     def mark_resolved(log_id: int, user_id: int, note: str = "") -> bool:
-        """Mark an error record as resolved."""
         try:
             sql = text(
                 """
@@ -172,9 +154,21 @@ class ErrorAuditService:
         except Exception:
             return False
 
-    # ------------------------------------------------------------------
-    # Internal: raw INSERT via fresh engine connection
-    # ------------------------------------------------------------------
+    # ── Request ID ──────────────────────────────────────────────
+
+    @staticmethod
+    def get_or_create_request_id() -> str:
+        """Return existing request_id or generate a new UUID-4."""
+        if has_request_context():
+            rid = getattr(g, "request_id", None)
+            if rid:
+                return rid
+            rid = str(uuid.uuid4())
+            g.request_id = rid
+            return rid
+        return str(uuid.uuid4())
+
+    # ── Internal persistence with dedup ───────────────────────────
 
     @staticmethod
     def _persist(
@@ -199,31 +193,41 @@ class ErrorAuditService:
             )
             trace = "".join(trace)
 
-        # Gather request context if inside a request
+        # Request context
+        _url = url
+        _method = method
+        _ua = user_agent
+        _ip = ip_address
         if has_request_context() and request:
-            url = url or request.url[:_MAX_URL_LEN]
-            method = method or request.method
-            user_agent = user_agent or (
-                request.headers.get("User-Agent", "")[:_MAX_UA_LEN]
-            )
-            ip_address = ip_address or (
-                request.headers.get("X-Forwarded-For", request.remote_addr) or ""
-            )
+            _url = _url or request.url[:_MAX_URL_LEN]
+            _method = _method or request.method
+            _ua = _ua or (request.headers.get("User-Agent", "")[:_MAX_UA_LEN])
+            _ip = _ip or (request.headers.get("X-Forwarded-For", request.remote_addr) or "")
 
-        # Resolve user / tenant from current request context
+        # User / tenant
         user_id = None
         tenant_id = None
         try:
             if has_request_context():
-                from flask_login import current_user
-
                 if getattr(current_user, "is_authenticated", False):
                     user_id = int(current_user.get_id())
                     tenant_id = getattr(current_user, "tenant_id", None)
         except Exception:
             pass
 
-        # Sanitize request data
+        # Request ID
+        request_id = ErrorAuditService.get_or_create_request_id()
+
+        # Environment / version
+        environment = "production"
+        app_version = ""
+        try:
+            environment = current_app.config.get("FLASK_ENV", "production")
+            app_version = current_app.config.get("APP_VERSION", "")
+        except Exception:
+            pass
+
+        # Sanitize
         request_data = None
         if extra:
             request_data = ErrorAuditService._sanitize_dict(extra)
@@ -238,40 +242,67 @@ class ErrorAuditService:
                 pass
             request_data = ErrorAuditService._sanitize_dict(payload)
 
+        # Endpoint path (for fingerprint consistency)
+        endpoint_path = ""
+        try:
+            if has_request_context() and request:
+                endpoint_path = request.path or ""
+        except Exception:
+            pass
+
+        # Fingerprint
+        fingerprint = ErrorAuditService._make_fingerprint(
+            category, exc_type or "", source, endpoint_path
+        )
+
+        # ── Deduplication check ────────────────────────────────
+        dup_id = ErrorAuditService._find_duplicate(fingerprint)
+        if dup_id:
+            updated = ErrorAuditService._bump_duplicate(dup_id, message, trace)
+            if updated:
+                return dup_id
+
+        # ── Fresh INSERT ───────────────────────────────────────
         sql = text(
             """
             INSERT INTO error_audit_logs (
+                fingerprint, occurrence_count, first_seen_at, last_seen_at,
                 level, category, source, message, exception_type,
-                stack_trace, url, method, ip_address, user_agent,
-                user_id, tenant_id, request_data, is_resolved, created_at
+                stack_trace, request_id, url, method, ip_address, user_agent,
+                environment, app_version, user_id, tenant_id, request_data,
+                is_resolved, created_at
             ) VALUES (
+                :fingerprint, 1, :now, :now,
                 :level, :category, :source, :message, :exception_type,
-                :stack_trace, :url, :method, :ip_address, :user_agent,
-                :user_id, :tenant_id, :request_data, false, :now
+                :stack_trace, :request_id, :url, :method, :ip_address, :user_agent,
+                :environment, :app_version, :user_id, :tenant_id, :request_data,
+                false, :now
             ) RETURNING id
             """
         )
 
         params = {
+            "fingerprint": fingerprint,
             "level": (level or "ERROR")[:20],
             "category": (category or "BACKEND")[:30],
             "source": (source or "unknown")[:100],
             "message": (message or "")[:_MAX_MESSAGE_LEN],
             "exception_type": (exc_type or "")[:200],
             "stack_trace": (trace or "")[:_MAX_TRACE_LEN],
-            "url": (url or "")[:_MAX_URL_LEN],
-            "method": (method or "")[:10],
-            "ip_address": (ip_address or "")[:50],
-            "user_agent": (user_agent or "")[:_MAX_UA_LEN],
+            "request_id": request_id,
+            "url": (_url or "")[:_MAX_URL_LEN],
+            "method": (_method or "")[:10],
+            "ip_address": (_ip or "")[:50],
+            "user_agent": (_ua or "")[:_MAX_UA_LEN],
+            "environment": environment[:20],
+            "app_version": (app_version or "")[:30],
             "user_id": user_id,
             "tenant_id": tenant_id,
             "request_data": json.dumps(request_data, ensure_ascii=False, default=str)
-            if request_data
-            else None,
+            if request_data else None,
             "now": datetime.now(timezone.utc),
         }
 
-        # ---- CRITICAL: use a FRESH engine connection, NOT db.session ----
         try:
             with db.engine.connect() as conn:
                 result = conn.execute(sql, params)
@@ -279,10 +310,8 @@ class ErrorAuditService:
                 row = result.fetchone()
                 return row[0] if row else None
         except Exception as engine_exc:
-            # Even the raw engine failed — write to stderr as last resort
             try:
                 import sys
-
                 sys.stderr.write(
                     f"[ERROR_AUDIT_FALLBACK] {category} | {message[:200]} | "
                     f"engine_error={engine_exc}\n"
@@ -291,13 +320,68 @@ class ErrorAuditService:
                 pass
             return None
 
-    # ------------------------------------------------------------------
-    # Sanitization helpers
-    # ------------------------------------------------------------------
+    # ── Deduplication helpers ─────────────────────────────────────
+
+    @staticmethod
+    def _make_fingerprint(category: str, exc_type: str, source: str, endpoint: str) -> str:
+        raw = f"{category}::{exc_type}::{source}::{endpoint}"
+        return hashlib.sha256(raw.encode("utf-8")).hexdigest()[:32]
+
+    @staticmethod
+    def _find_duplicate(fingerprint: str) -> int | None:
+        """Look for an existing unresolved record with same fingerprint within dedup window."""
+        try:
+            cutoff = datetime.now(timezone.utc) - timedelta(minutes=_DEDUP_WINDOW_MINUTES)
+            sql = text(
+                """
+                SELECT id FROM error_audit_logs
+                WHERE fingerprint = :fp
+                  AND is_resolved = false
+                  AND last_seen_at > :cutoff
+                ORDER BY last_seen_at DESC
+                LIMIT 1
+                """
+            )
+            with db.engine.connect() as conn:
+                result = conn.execute(sql, {"fp": fingerprint, "cutoff": cutoff})
+                row = result.fetchone()
+                return row[0] if row else None
+        except Exception:
+            return None
+
+    @staticmethod
+    def _bump_duplicate(log_id: int, new_message: str, new_trace: str | None) -> bool:
+        """Increment occurrence_count and update last_seen_at / message."""
+        try:
+            sql = text(
+                """
+                UPDATE error_audit_logs
+                SET occurrence_count = occurrence_count + 1,
+                    last_seen_at = :now,
+                    message = :message,
+                    stack_trace = COALESCE(:stack_trace, stack_trace)
+                WHERE id = :log_id
+                """
+            )
+            with db.engine.connect() as conn:
+                conn.execute(
+                    sql,
+                    {
+                        "now": datetime.now(timezone.utc),
+                        "message": (new_message or "")[:_MAX_MESSAGE_LEN],
+                        "stack_trace": (new_trace or "")[:_MAX_TRACE_LEN] if new_trace else None,
+                        "log_id": log_id,
+                    },
+                )
+                conn.commit()
+            return True
+        except Exception:
+            return False
+
+    # ── Sanitization helpers ──────────────────────────────────────
 
     @staticmethod
     def _sanitize_dict(data: dict[str, Any]) -> dict[str, Any]:
-        """Return a copy with sensitive keys redacted."""
         if not isinstance(data, dict):
             return {}
         clean: dict[str, Any] = {}
@@ -315,23 +399,3 @@ class ErrorAuditService:
             else:
                 clean[key] = value
         return clean
-
-    @staticmethod
-    def _sanitize_string(value: str | None) -> str:
-        if not value:
-            return ""
-        s = str(value)
-        # Simple pattern redaction for common secret formats
-        for pattern in (
-            r"password['\"\s]*[:=]['\"\s]*[^\s&\"']+",
-            r"token['\"\s]*[:=]['\"\s]*[^\s&\"']+",
-            r"api_key['\"\s]*[:=]['\"\s]*[^\s&\"']+",
-            r"Bearer\s+\S+",
-        ):
-            try:
-                import re
-
-                s = re.sub(pattern, "***REDACTED***", s, flags=re.IGNORECASE)
-            except Exception:
-                pass
-        return s

@@ -14,7 +14,19 @@ class ErrorAuditLog(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
 
-    # Classification
+    # ── Deduplication ────────────────────────────────────────────
+    fingerprint = db.Column(db.String(64), nullable=False, index=True)
+    # SHA-256 hex of: category + exception_type + source + endpoint_path
+
+    occurrence_count = db.Column(db.Integer, nullable=False, default=1)
+    first_seen_at = db.Column(
+        db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True
+    )
+    last_seen_at = db.Column(
+        db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True
+    )
+
+    # ── Classification ─────────────────────────────────────────
     level = db.Column(db.String(20), nullable=False, default="ERROR", index=True)
     # CRITICAL, ERROR, WARNING, INFO
 
@@ -24,25 +36,31 @@ class ErrorAuditLog(db.Model):
     source = db.Column(db.String(100), nullable=False, index=True)
     # module path or file name, e.g. "utils.system_init", "routes.api"
 
-    # Content (never store secrets here)
+    # ── Content (never store secrets here) ──────────────────────
     message = db.Column(db.Text, nullable=False)
     exception_type = db.Column(db.String(200))
     stack_trace = db.Column(db.Text)
 
-    # Request context
+    # ── Request context ────────────────────────────────────────
+    request_id = db.Column(db.String(36), index=True)
     url = db.Column(db.String(500))
     method = db.Column(db.String(10))
     ip_address = db.Column(db.String(50))
     user_agent = db.Column(db.String(255))
 
-    # User / tenant context
+    # ── Environment ────────────────────────────────────────────
+    environment = db.Column(db.String(20), default="production")
+    # production, staging, development
+    app_version = db.Column(db.String(30))
+
+    # ── User / tenant context ──────────────────────────────────
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), index=True)
     tenant_id = db.Column(db.Integer, db.ForeignKey("tenants.id"), index=True)
 
     # Sanitized request data (no passwords, tokens, secrets)
     request_data = db.Column(db.JSON)
 
-    # Resolution tracking
+    # ── Resolution tracking ────────────────────────────────────
     is_resolved = db.Column(db.Boolean, default=False, index=True)
     resolved_at = db.Column(db.DateTime)
     resolved_by = db.Column(db.Integer, db.ForeignKey("users.id"))
@@ -58,14 +76,21 @@ class ErrorAuditLog(db.Model):
     def to_dict(self):
         return {
             "id": self.id,
+            "fingerprint": self.fingerprint,
+            "occurrence_count": self.occurrence_count,
+            "first_seen_at": self.first_seen_at.isoformat() if self.first_seen_at else None,
+            "last_seen_at": self.last_seen_at.isoformat() if self.last_seen_at else None,
             "level": self.level,
             "category": self.category,
             "source": self.source,
             "message": self.message,
             "exception_type": self.exception_type,
+            "request_id": self.request_id,
             "url": self.url,
             "method": self.method,
             "ip_address": self.ip_address,
+            "environment": self.environment,
+            "app_version": self.app_version,
             "user_id": self.user_id,
             "tenant_id": self.tenant_id,
             "is_resolved": self.is_resolved,

@@ -120,14 +120,15 @@
           <thead class="thead-light">
             <tr>
               <th style="width: 60px;">#</th>
-              <th style="width: 90px;">المستوى</th>
-              <th style="width: 110px;">الفئة</th>
+              <th style="width: 80px;">المستوى</th>
+              <th style="width: 100px;">الفئة</th>
               <th>الرسالة</th>
-              <th style="width: 120px;">المصدر</th>
-              <th style="width: 120px;">المستخدم</th>
-              <th style="width: 160px;">الوقت</th>
-              <th style="width: 100px;">الحالة</th>
-              <th style="width: 100px;"></th>
+              <th style="width: 70px;">التكرار</th>
+              <th style="width: 100px;">المصدر</th>
+              <th style="width: 110px;">المستخدم</th>
+              <th style="width: 140px;">آخر ظهور</th>
+              <th style="width: 90px;">الحالة</th>
+              <th style="width: 90px;"></th>
             </tr>
           </thead>
           <tbody>
@@ -155,6 +156,9 @@
                 <div class="text-muted" style="font-size: 11px;"><i class="fas fa-link"></i> {{ log.url[:80] }}</div>
                 {% endif %}
               </td>
+              <td class="small text-center">
+                <span class="badge badge-light border">{{ log.occurrence_count or 1 }}</span>
+              </td>
               <td class="small">{{ log.source }}</td>
               <td class="small">
                 {% if log.user_id %}{{ log.user_id }}{% else %}-{% endif %}
@@ -162,7 +166,7 @@
                 <div class="text-muted" style="font-size: 10px;">tenant:{{ log.tenant_id }}</div>
                 {% endif %}
               </td>
-              <td class="small text-muted">{{ log.created_at.strftime('%Y-%m-%d %H:%M') if log.created_at else '-' }}</td>
+              <td class="small text-muted">{{ log.last_seen_at.strftime('%Y-%m-%d %H:%M') if log.last_seen_at else '-' }}</td>
               <td>
                 {% if log.is_resolved %}
                 <span class="badge badge-success"><i class="fas fa-check"></i> محلول</span>
@@ -244,7 +248,12 @@
           <dt class="col-sm-3">الفئة</dt><dd class="col-sm-9">{{ log.category }}</dd>
           <dt class="col-sm-3">المستوى</dt><dd class="col-sm-9">{{ log.level }}</dd>
           <dt class="col-sm-3">المصدر</dt><dd class="col-sm-9">{{ log.source }}</dd>
-          <dt class="col-sm-3">الوقت</dt><dd class="col-sm-9">{{ log.created_at }}</dd>
+          <dt class="col-sm-3">Fingerprint</dt><dd class="col-sm-9"><code>{{ log.fingerprint[:16] }}...</code></dd>
+          <dt class="col-sm-3">التكرار</dt><dd class="col-sm-9">{{ log.occurrence_count or 1 }}</dd>
+          <dt class="col-sm-3">أول ظهور</dt><dd class="col-sm-9">{{ log.first_seen_at or '-' }}</dd>
+          <dt class="col-sm-3">آخر ظهور</dt><dd class="col-sm-9">{{ log.last_seen_at or '-' }}</dd>
+          <dt class="col-sm-3">Request ID</dt><dd class="col-sm-9"><code>{{ log.request_id or '-' }}</code></dd>
+          <dt class="col-sm-3">البيئة</dt><dd class="col-sm-9">{{ log.environment or '-' }} {{ log.app_version or '' }}</dd>
           <dt class="col-sm-3">الرابط</dt><dd class="col-sm-9">{{ log.url or '-' }}</dd>
           <dt class="col-sm-3">الطريقة</dt><dd class="col-sm-9">{{ log.method or '-' }}</dd>
           <dt class="col-sm-3">IP</dt><dd class="col-sm-9">{{ log.ip_address or '-' }}</dd>
