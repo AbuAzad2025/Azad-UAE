@@ -1061,6 +1061,7 @@ def adjust_stock(id):
             'new_stock': new_stock
         })
         
-    except Exception as e:
+    except Exception:
         db.session.rollback()
-        return jsonify({'success': False, 'message': f'حدث خطأ: {str(e)}'})
+        current_app.logger.exception('Product stock update failed')
+        return jsonify({'success': False, 'message': 'تعذر تحديث المخزون حالياً'})

@@ -156,8 +156,8 @@ def api_checkout():
     if use_quick or not customer_id:
         try:
             customer = get_pos_walkin_customer()
-        except ValueError as e:
-            return jsonify({"success": False, "error": str(e)}), 400
+        except ValueError:
+            return jsonify({"success": False, "error": "بيانات العميل غير صالحة."}), 400
     else:
         customer = tenant_get(Customer, int(customer_id))
         if not customer or not customer.is_active:
@@ -168,8 +168,8 @@ def api_checkout():
         try:
             warehouse = ensure_warehouse_access(int(warehouse_id), user=current_user)
             warehouse_id = warehouse.id
-        except ValueError as e:
-            return jsonify({"success": False, "error": str(e)}), 400
+        except ValueError:
+            return jsonify({"success": False, "error": "بيانات المستودع غير صالحة."}), 400
     else:
         warehouse_id = None
 
@@ -182,8 +182,8 @@ def api_checkout():
 
     try:
         merged = merge_checkout_lines(lines)
-    except ValueError as e:
-        return jsonify({"success": False, "error": str(e)}), 400
+    except ValueError:
+        return jsonify({"success": False, "error": "بيانات السلة غير صالحة."}), 400
 
     lines_data = []
     for row in merged:
@@ -242,8 +242,8 @@ def api_checkout():
             notes=notes,
             payment_data=payment_data,
         )
-    except ValueError as e:
-        return jsonify({"success": False, "error": str(e)}), 400
+    except ValueError:
+        return jsonify({"success": False, "error": "تعذر إنشاء الفاتورة من البيانات المرسلة."}), 400
     except Exception:
         return jsonify(
             {"success": False, "error": "فشل إنشاء الفاتورة. تحقق من البيانات وحاول مرة أخرى."}

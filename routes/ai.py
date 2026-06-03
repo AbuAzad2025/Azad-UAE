@@ -3028,9 +3028,9 @@ def assistant_page():
             warehouses=warehouses,
             current_user=current_user,
         )
-    except Exception as e:
-        import traceback
-        return f"Error: {str(e)}\n\n{traceback.format_exc()}", 500
+    except Exception:
+        current_app.logger.exception("AI assistant page failed")
+        return render_template('errors/500.html'), 500
 
 
 @ai_bp.route('/config', methods=['GET', 'POST'])
@@ -3090,10 +3090,9 @@ def config():
                 'expires_in': '24 ساعة' if provider == 'groq' else 'حسب اشتراكك'
             })
         
-        except Exception as e:
-            from flask import current_app
-            current_app.logger.error(f"Failed to save API key: {e}")
-            return jsonify({'success': False, 'message': f'خطأ في الحفظ: {str(e)}'})
+        except Exception:
+            current_app.logger.exception("Failed to save AI API key")
+            return jsonify({'success': False, 'message': 'تعذر حفظ إعدادات AI حالياً'})
     
     current_groq = os.environ.get('GROQ_API_KEY', '')
     current_openai = os.environ.get('OPENAI_API_KEY', '')

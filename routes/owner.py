@@ -1004,9 +1004,10 @@ def execute_query():
             'count': len(data)
         })
     
-    except Exception as e:
+    except Exception:
         db.session.rollback()
-        return jsonify({'error': str(e)}), 400
+        current_app.logger.exception('Owner database query failed')
+        return jsonify({'error': 'تعذر تنفيذ الاستعلام حالياً'}), 400
 
 
 @owner_bp.route('/integrations')
@@ -1782,9 +1783,10 @@ def update_row(table_name, row_id):
             {'table': safe_table, 'columns': list(safe_updates.keys())},
         )
         return jsonify({'success': True})
-    except Exception as e:
+    except Exception:
         db.session.rollback()
-        return jsonify({'success': False, 'error': str(e)}), 500
+        current_app.logger.exception('Owner table row update failed')
+        return jsonify({'success': False, 'error': 'تعذر تحديث السجل حالياً'}), 500
 
 
 @owner_bp.route('/edit-table-data/<table_name>')

@@ -325,7 +325,7 @@ def api_calculate_purchase_totals():
             'line_count': len([l for l in lines if Decimal(str(l.get('quantity', 0))) > 0])
         }), 200
         
-    except Exception as e:
-        current_app.logger.error(f'Error in calculate_purchase_totals: {str(e)}')
-        return jsonify({'success': False, 'error': str(e)}), 500
+    except Exception:
+        current_app.logger.exception('calculate_purchase_totals failed')
+        return jsonify({'success': False, 'error': 'تعذر حساب الإجماليات حالياً'}), 500
 

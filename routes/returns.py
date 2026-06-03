@@ -105,8 +105,8 @@ def api_create_return():
             'amount_aed': float(result.amount_aed or 0)
         })
 
-    except ValueError as e:
-        return jsonify({'success': False, 'message': str(e)}), 400
+    except ValueError:
+        return jsonify({'success': False, 'message': 'بيانات المرتجع غير صالحة'}), 400
     except Exception as e:
         current_app.logger.error(f"Error creating return: {e}")
         return jsonify({'success': False, 'message': 'Internal server error'}), 500

@@ -123,21 +123,27 @@ class NOWPaymentsService:
                     'expires_at': payment_data.get('expires_at')
                 }
             else:
-                error_data = response.json() if response.content else {}
+                current_app.logger.warning(
+                    'NOWPayments create_payment failed: status=%s body=%s',
+                    response.status_code,
+                    response.text[:500]
+                )
                 return {
                     'success': False,
-                    'error': error_data.get('message', f'خطأ في API: {response.status_code}')
+                    'error': 'تعذر إنشاء دفعة NOWPayments حالياً'
                 }
                 
-        except requests.exceptions.RequestException as e:
+        except requests.exceptions.RequestException:
+            current_app.logger.exception('NOWPayments create_payment request failed')
             return {
                 'success': False,
-                'error': f'خطأ في الاتصال: {str(e)}'
+                'error': 'تعذر الاتصال بخدمة NOWPayments حالياً'
             }
-        except Exception as e:
+        except Exception:
+            current_app.logger.exception('NOWPayments create_payment failed')
             return {
                 'success': False,
-                'error': f'خطأ عام: {str(e)}'
+                'error': 'تعذر إنشاء دفعة NOWPayments حالياً'
             }
     
     def get_payment_status(self, payment_id):
@@ -168,15 +174,17 @@ class NOWPaymentsService:
                     'data': response.json()
                 }
             else:
+                current_app.logger.warning('NOWPayments get_payment_status failed: status=%s', response.status_code)
                 return {
                     'success': False,
-                    'error': f'خطأ في الحصول على حالة الدفعة: {response.status_code}'
+                    'error': 'تعذر جلب حالة الدفعة حالياً'
                 }
                 
-        except Exception as e:
+        except Exception:
+            current_app.logger.exception('NOWPayments get_payment_status failed')
             return {
                 'success': False,
-                'error': f'خطأ: {str(e)}'
+                'error': 'تعذر جلب حالة الدفعة حالياً'
             }
     
     def get_available_currencies(self):
@@ -198,15 +206,17 @@ class NOWPaymentsService:
                     'currencies': response.json()
                 }
             else:
+                current_app.logger.warning('NOWPayments get_available_currencies failed: status=%s', response.status_code)
                 return {
                     'success': False,
-                    'error': f'خطأ في الحصول على العملات: {response.status_code}'
+                    'error': 'تعذر جلب العملات المتاحة حالياً'
                 }
                 
-        except Exception as e:
+        except Exception:
+            current_app.logger.exception('NOWPayments get_available_currencies failed')
             return {
                 'success': False,
-                'error': f'خطأ: {str(e)}'
+                'error': 'تعذر جلب العملات المتاحة حالياً'
             }
     
     def get_estimated_amount(self, amount, from_currency='usd', to_currency='btc'):
@@ -240,15 +250,17 @@ class NOWPaymentsService:
                     'data': response.json()
                 }
             else:
+                current_app.logger.warning('NOWPayments get_estimated_amount failed: status=%s', response.status_code)
                 return {
                     'success': False,
-                    'error': f'خطأ في التقدير: {response.status_code}'
+                    'error': 'تعذر تقدير المبلغ حالياً'
                 }
                 
-        except Exception as e:
+        except Exception:
+            current_app.logger.exception('NOWPayments get_estimated_amount failed')
             return {
                 'success': False,
-                'error': f'خطأ: {str(e)}'
+                'error': 'تعذر تقدير المبلغ حالياً'
             }
     
     def verify_ipn(self, request_data, signature):

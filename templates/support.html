@@ -1579,6 +1579,12 @@
             `;
         }
 
+        function escapeHtml(value) {
+            const div = document.createElement('div');
+            div.textContent = value || '';
+            return div.innerHTML;
+        }
+
         function showSupportAssistanceModal(title, introHtml, kind, amountOverride = null, recordId = '') {
             Swal.fire({
                 icon: 'info',
@@ -2028,7 +2034,7 @@
                 } else {
                     showSupportAssistanceModal(
                         'تعذر إنشاء الطلب',
-                        `<p>${data.error || 'حدث خطأ أثناء إنشاء الطلب.'}</p><p>يمكنك إعادة المحاولة أو إكمال العملية مباشرة مع شركة أزاد.</p>`,
+                        `<p>${escapeHtml(data.error || 'حدث خطأ أثناء إنشاء الطلب.')}</p><p>يمكنك إعادة المحاولة أو إكمال العملية مباشرة مع شركة أزاد.</p>`,
                         'payment_help',
                         paymentAmount
                     );
@@ -2215,7 +2221,7 @@
                 } else {
                     showSupportAssistanceModal(
                         'تعذر إكمال طلب PayPal',
-                        `<p>${data.error || 'تعذر حفظ طلب PayPal حالياً.'}</p><p>يمكنك المتابعة مباشرة مع أزاد عبر واتساب أو البريد.</p>`,
+                        `<p>${escapeHtml(data.error || 'تعذر حفظ طلب PayPal حالياً.')}</p><p>يمكنك المتابعة مباشرة مع أزاد عبر واتساب أو البريد.</p>`,
                         'payment_help',
                         paymentAmount
                     );
@@ -2391,7 +2397,7 @@
                 } else {
                     showSupportAssistanceModal(
                         'تعذر تجهيز طلب البطاقة',
-                        `<p>${data.error || 'تعذر حفظ طلب البطاقة حالياً.'}</p><p>يمكنك إكمال العملية مباشرة مع أزاد عبر واتساب أو البريد.</p>`,
+                        `<p>${escapeHtml(data.error || 'تعذر حفظ طلب البطاقة حالياً.')}</p><p>يمكنك إكمال العملية مباشرة مع أزاد عبر واتساب أو البريد.</p>`,
                         'payment_help',
                         paymentAmount
                     );
@@ -2457,4 +2463,3 @@
     </div>
 </body>
 </html>
-

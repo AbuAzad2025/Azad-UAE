@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, current_app
 from flask_login import login_required, current_user
 from extensions import db, csrf, limiter
 from models import Sale, Customer, Product, InvoiceSettings
@@ -637,5 +637,6 @@ def api_calculate_sale_totals():
             'line_count': len([l for l in lines if Decimal(str(l.get('quantity', 0))) > 0])
         }), 200
         
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
+    except Exception:
+        current_app.logger.exception('calculate_sale_totals failed')
+        return jsonify({'success': False, 'error': 'تعذر حساب الإجماليات حالياً'}), 500
