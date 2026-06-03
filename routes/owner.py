@@ -1500,11 +1500,19 @@ def download_backup(filename):
 @owner_required
 def clear_cache():
     from extensions import cache
+    from services.error_audit_service import ErrorAuditService
 
     try:
         cache.clear()
         flash('✅ تم مسح الذاكرة المؤقتة بنجاح', 'success')
     except Exception as e:
+        ErrorAuditService.log(
+            message=f"Cache clear failed: {e}",
+            category="BACKEND",
+            level="WARNING",
+            source="routes.owner.clear_cache",
+            exception=e,
+        )
         # If Redis is down, gracefully degrade to null cache temporarily
         try:
             cache_type = getattr(cache, 'cache', None)
@@ -1514,7 +1522,14 @@ def clear_cache():
                 if app:
                     cache.init_app(app, config={'CACHE_TYPE': 'null'})
             flash('⚠️ Redis غير متاح — تم التبديل لـ null cache وتجاوز الخطأ', 'warning')
-        except Exception:
+        except Exception as inner:
+            ErrorAuditService.log(
+                message=f"Cache fallback to null also failed: {inner}",
+                category="BACKEND",
+                level="ERROR",
+                source="routes.owner.clear_cache.fallback",
+                exception=inner,
+            )
             flash(f'❌ خطأ: {str(e)}', 'danger')
 
     return redirect(url_for('owner.dashboard'))

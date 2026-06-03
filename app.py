@@ -72,27 +72,50 @@ def create_app(config_class=Config):
     # Proxy Fix for Nginx/Cloudflare
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
     
+    # ── Blueprint Import Auditor ──────────────────────────────────
+    # Wraps every blueprint import so ImportErrors (e.g. NullCache)
+    # are logged in error_audit_logs even before Flask error handlers
+    # are registered.
+    _import_errors = []
+
+    def _import_bp(module_path: str, var_name: str):
+        """Import a blueprint, log any ImportError, but still raise it."""
+        try:
+            mod = __import__(module_path, fromlist=[var_name])
+            return getattr(mod, var_name)
+        except Exception as exc:
+            # Log via ErrorAuditService if db is available
+            try:
+                from services.error_audit_service import ErrorAuditService
+                ErrorAuditService.log_exception(
+                    exc,
+                    category="SYSTEM_INIT",
+                    source=f"app.create_app.import_bp({module_path})",
+                )
+            except Exception:
+                pass
+            _import_errors.append(f"{module_path}.{var_name}: {exc}")
+            raise
+
     # Register Blueprints
-    from routes.auth import auth_bp
-    from routes.main import main_bp
-    from routes.sales import sales_bp
-    from routes.products import products_bp
-    from routes.customers import customers_bp
-    from routes.reports import reports_bp
-    # from routes.settings import settings_bp
-    from routes.api import api_bp
-    from routes.api_enhanced import api_enhanced_bp
-    from routes.suppliers import suppliers_bp
-    from routes.purchases import purchases_bp
-    from routes.expenses import expenses_bp
-    from routes.ledger import ledger_bp
-    from routes.owner import owner_bp
-    from routes.payments import payments_bp
-    # from routes.notifications import notifications_bp
-    from routes.warehouse import warehouse_bp
-    from routes.language import language_bp
-    from routes.tenants import tenants_bp
-    from routes.payroll import payroll_bp
+    auth_bp          = _import_bp("routes.auth", "auth_bp")
+    main_bp          = _import_bp("routes.main", "main_bp")
+    sales_bp         = _import_bp("routes.sales", "sales_bp")
+    products_bp      = _import_bp("routes.products", "products_bp")
+    customers_bp     = _import_bp("routes.customers", "customers_bp")
+    reports_bp       = _import_bp("routes.reports", "reports_bp")
+    api_bp           = _import_bp("routes.api", "api_bp")
+    api_enhanced_bp  = _import_bp("routes.api_enhanced", "api_enhanced_bp")
+    suppliers_bp     = _import_bp("routes.suppliers", "suppliers_bp")
+    purchases_bp     = _import_bp("routes.purchases", "purchases_bp")
+    expenses_bp      = _import_bp("routes.expenses", "expenses_bp")
+    ledger_bp        = _import_bp("routes.ledger", "ledger_bp")
+    owner_bp         = _import_bp("routes.owner", "owner_bp")
+    payments_bp      = _import_bp("routes.payments", "payments_bp")
+    warehouse_bp     = _import_bp("routes.warehouse", "warehouse_bp")
+    language_bp      = _import_bp("routes.language", "language_bp")
+    tenants_bp       = _import_bp("routes.tenants", "tenants_bp")
+    payroll_bp       = _import_bp("routes.payroll", "payroll_bp")
     def _make_ai_fallback(ai_import_error: str):
         from flask import Blueprint, flash, redirect, url_for
         ai_bp = Blueprint('ai', __name__, url_prefix='/ai')
@@ -162,23 +185,23 @@ def create_app(config_class=Config):
             _ai_enabled = False
             ai_bp = _make_ai_fallback(ai_import_error)
             return redirect(url_for('main.dashboard'))
-    from routes.users import users_bp
-    from routes.cheques import cheques_bp
-    from routes.returns import returns_bp
-    from routes.advanced_ledger import advanced_ledger_bp
-    from routes.admin_ledger import admin_ledger_bp
-    from routes.gamification import gamification_bp
-    from routes.pos import pos_bp
-    from routes.store import store_bp
-    from routes.shop import shop_bp
-    from routes.whatsapp import whatsapp_bp
-    from routes.monitoring import monitoring_bp
-    from routes.public import public_bp
-    from routes.payment_vault import payment_vault_bp
-    from routes.api_analytics import api_analytics_bp
-    from routes.api_docs import api_docs_bp
-    from routes.graphql import graphql_bp
-    from routes.branches import branches_bp
+    users_bp           = _import_bp("routes.users", "users_bp")
+    cheques_bp         = _import_bp("routes.cheques", "cheques_bp")
+    returns_bp         = _import_bp("routes.returns", "returns_bp")
+    advanced_ledger_bp = _import_bp("routes.advanced_ledger", "advanced_ledger_bp")
+    admin_ledger_bp    = _import_bp("routes.admin_ledger", "admin_ledger_bp")
+    gamification_bp    = _import_bp("routes.gamification", "gamification_bp")
+    pos_bp             = _import_bp("routes.pos", "pos_bp")
+    store_bp           = _import_bp("routes.store", "store_bp")
+    shop_bp            = _import_bp("routes.shop", "shop_bp")
+    whatsapp_bp        = _import_bp("routes.whatsapp", "whatsapp_bp")
+    monitoring_bp      = _import_bp("routes.monitoring", "monitoring_bp")
+    public_bp          = _import_bp("routes.public", "public_bp")
+    payment_vault_bp   = _import_bp("routes.payment_vault", "payment_vault_bp")
+    api_analytics_bp   = _import_bp("routes.api_analytics", "api_analytics_bp")
+    api_docs_bp        = _import_bp("routes.api_docs", "api_docs_bp")
+    graphql_bp         = _import_bp("routes.graphql", "graphql_bp")
+    branches_bp        = _import_bp("routes.branches", "branches_bp")
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(main_bp)
