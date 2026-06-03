@@ -164,7 +164,7 @@
             <label>
               <i class="fas fa-truck text-danger"></i> المورد 
             </label>
-            <input type="text" class="form-control" value="{{ supplier.name if supplier else purchase.supplier_name }}" readonly>
+            <input type="text" class="form-control" id="supplier_display" name="supplier_display" value="{{ supplier.name if supplier else purchase.supplier_name }}" readonly>
           </div>
         </div>
         {% endif %}

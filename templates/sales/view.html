@@ -413,17 +413,17 @@
                   <td>{{ line.product.name }}</td>
                   <td>{{ line.quantity }}</td>
                   <td>
-                    <input type="number" class="form-control return-qty" 
+                    <input type="number" class="form-control return-qty" id="return_qty_{{ line.id }}" name="return_qty_{{ line.id }}"
                            min="0" max="{{ line.quantity }}" value="0" step="any">
                   </td>
                   <td>
-                    <select class="form-control return-condition">
+                    <select class="form-control return-condition" id="return_condition_{{ line.id }}" name="return_condition_{{ line.id }}">
                       <option value="good">سليم (لإعادة البيع)</option>
                       <option value="damaged">تالف (للإتلاف)</option>
                     </select>
                   </td>
                   <td>
-                    <input type="text" class="form-control return-notes" placeholder="سبب الإرجاع">
+                    <input type="text" class="form-control return-notes" id="return_notes_{{ line.id }}" name="return_notes_{{ line.id }}" placeholder="سبب الإرجاع">
                   </td>
                 </tr>
                 {% endfor %}
@@ -432,7 +432,7 @@
           </div>
           <div class="form-group">
             <label>ملاحظات عامة على المرتجع</label>
-            <textarea class="form-control" id="return_general_notes" rows="3"></textarea>
+            <textarea class="form-control" id="return_general_notes" name="return_general_notes" rows="3"></textarea>
           </div>
         </form>
       </div>
