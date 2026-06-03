@@ -183,7 +183,7 @@
                   </button>
                 </form>
                 {% endif %}
-                <button class="btn btn-xs btn-info" data-toggle="modal" data-target="#detailModal{{ log.id }}" title="تفاصيل">
+                <button class="btn btn-xs btn-info" data-error-id="{{ log.id }}" title="تفاصيل">
                   <i class="fas fa-eye"></i>
                 </button>
               </td>
@@ -234,47 +234,18 @@
   </div>
 </section>
 
-{# Detail modals #}
-{% for log in logs %}
-<div class="modal fade" id="detailModal{{ log.id }}" tabindex="-1" role="dialog">
-  <div class="modal-dialog modal-lg" role="document">
+{# Shared detail modal — populated dynamically to avoid DOM bloat #}
+<div class="modal fade" id="errorDetailModal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
     <div class="modal-content">
       <div class="modal-header bg-dark">
-        <h5 class="modal-title">تفاصيل الخطأ #{{ log.id }}</h5>
-        <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+        <h5 class="modal-title" id="errorDetailTitle">تفاصيل الخطأ</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
       </div>
-      <div class="modal-body">
-        <dl class="row small">
-          <dt class="col-sm-3">الفئة</dt><dd class="col-sm-9">{{ log.category }}</dd>
-          <dt class="col-sm-3">المستوى</dt><dd class="col-sm-9">{{ log.level }}</dd>
-          <dt class="col-sm-3">المصدر</dt><dd class="col-sm-9">{{ log.source }}</dd>
-          <dt class="col-sm-3">Fingerprint</dt><dd class="col-sm-9"><code>{{ log.fingerprint[:16] }}...</code></dd>
-          <dt class="col-sm-3">التكرار</dt><dd class="col-sm-9">{{ log.occurrence_count or 1 }}</dd>
-          <dt class="col-sm-3">أول ظهور</dt><dd class="col-sm-9">{{ log.first_seen_at or '-' }}</dd>
-          <dt class="col-sm-3">آخر ظهور</dt><dd class="col-sm-9">{{ log.last_seen_at or '-' }}</dd>
-          <dt class="col-sm-3">Request ID</dt><dd class="col-sm-9"><code>{{ log.request_id or '-' }}</code></dd>
-          <dt class="col-sm-3">البيئة</dt><dd class="col-sm-9">{{ log.environment or '-' }} {{ log.app_version or '' }}</dd>
-          <dt class="col-sm-3">الرابط</dt><dd class="col-sm-9">{{ log.url or '-' }}</dd>
-          <dt class="col-sm-3">الطريقة</dt><dd class="col-sm-9">{{ log.method or '-' }}</dd>
-          <dt class="col-sm-3">IP</dt><dd class="col-sm-9">{{ log.ip_address or '-' }}</dd>
-          <dt class="col-sm-3">المستخدم</dt><dd class="col-sm-9">{{ log.user_id or '-' }}</dd>
-          <dt class="col-sm-3">التينانت</dt><dd class="col-sm-9">{{ log.tenant_id or '-' }}</dd>
-        </dl>
-        <hr>
-        <h6>الرسالة</h6>
-        <pre class="bg-light p-2 small" style="white-space: pre-wrap;">{{ log.message }}</pre>
-        {% if log.exception_type %}
-        <h6>نوع الاستثناء</h6>
-        <pre class="bg-light p-2 small">{{ log.exception_type }}</pre>
-        {% endif %}
-        {% if log.stack_trace %}
-        <h6>Stack Trace</h6>
-        <pre class="bg-light p-2 small" style="max-height: 300px; overflow: auto;">{{ log.stack_trace }}</pre>
-        {% endif %}
-        {% if log.request_data %}
-        <h6>Request Data (sanitized)</h6>
-        <pre class="bg-light p-2 small">{{ log.request_data | tojson(indent=2) }}</pre>
-        {% endif %}
+      <div class="modal-body" id="errorDetailBody">
+        {# Populated by JavaScript #}
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">إغلاق</button>
@@ -282,6 +253,86 @@
     </div>
   </div>
 </div>
-{% endfor %}
+
+<script>
+(function() {
+  // Inline data for the current page (safe — no secrets, all server-side rendered)
+  window.ERROR_LOG_DATA = {
+    {% for log in logs %}
+    "{{ log.id }}": {
+      id: {{ log.id }},
+      category: {{ log.category | tojson }},
+      level: {{ log.level | tojson }},
+      source: {{ log.source | tojson }},
+      fingerprint: {{ (log.fingerprint or '') | tojson }},
+      occurrence_count: {{ log.occurrence_count or 1 }},
+      first_seen_at: {{ (log.first_seen_at.isoformat() if log.first_seen_at else '') | tojson }},
+      last_seen_at: {{ (log.last_seen_at.isoformat() if log.last_seen_at else '') | tojson }},
+      request_id: {{ (log.request_id or '') | tojson }},
+      environment: {{ (log.environment or '') | tojson }},
+      app_version: {{ (log.app_version or '') | tojson }},
+      url: {{ (log.url or '') | tojson }},
+      method: {{ (log.method or '') | tojson }},
+      ip_address: {{ (log.ip_address or '') | tojson }},
+      user_id: {{ log.user_id or 'null' }},
+      tenant_id: {{ log.tenant_id or 'null' }},
+      message: {{ log.message | tojson }},
+      exception_type: {{ (log.exception_type or '') | tojson }},
+      stack_trace: {{ (log.stack_trace or '') | tojson }},
+      request_data: {{ (log.request_data | tojson(indent=0) if log.request_data else 'null') | safe }}
+    }{% if not loop.last %},{% endif %}
+    {% endfor %}
+  };
+
+  function esc(str) {
+    var div = document.createElement('div');
+    div.appendChild(document.createTextNode(str || ''));
+    return div.innerHTML;
+  }
+
+  function buildDetailHtml(data) {
+    var html = '<dl class="row small">' +
+      '<dt class="col-sm-3">الفئة</dt><dd class="col-sm-9">' + esc(data.category) + '</dd>' +
+      '<dt class="col-sm-3">المستوى</dt><dd class="col-sm-9">' + esc(data.level) + '</dd>' +
+      '<dt class="col-sm-3">المصدر</dt><dd class="col-sm-9">' + esc(data.source) + '</dd>' +
+      '<dt class="col-sm-3">Fingerprint</dt><dd class="col-sm-9"><code>' + esc((data.fingerprint || '').slice(0,16)) + '...</code></dd>' +
+      '<dt class="col-sm-3">التكرار</dt><dd class="col-sm-9">' + (data.occurrence_count || 1) + '</dd>' +
+      '<dt class="col-sm-3">أول ظهور</dt><dd class="col-sm-9">' + esc(data.first_seen_at || '-') + '</dd>' +
+      '<dt class="col-sm-3">آخر ظهور</dt><dd class="col-sm-9">' + esc(data.last_seen_at || '-') + '</dd>' +
+      '<dt class="col-sm-3">Request ID</dt><dd class="col-sm-9"><code>' + esc(data.request_id || '-') + '</code></dd>' +
+      '<dt class="col-sm-3">البيئة</dt><dd class="col-sm-9">' + esc((data.environment || '-') + ' ' + (data.app_version || '')) + '</dd>' +
+      '<dt class="col-sm-3">الرابط</dt><dd class="col-sm-9">' + esc(data.url || '-') + '</dd>' +
+      '<dt class="col-sm-3">الطريقة</dt><dd class="col-sm-9">' + esc(data.method || '-') + '</dd>' +
+      '<dt class="col-sm-3">IP</dt><dd class="col-sm-9">' + esc(data.ip_address || '-') + '</dd>' +
+      '<dt class="col-sm-3">المستخدم</dt><dd class="col-sm-9">' + (data.user_id || '-') + '</dd>' +
+      '<dt class="col-sm-3">التينانت</dt><dd class="col-sm-9">' + (data.tenant_id || '-') + '</dd>' +
+      '</dl><hr><h6>الرسالة</h6>' +
+      '<pre class="bg-light p-2 small" style="white-space: pre-wrap;">' + esc(data.message) + '</pre>';
+
+    if (data.exception_type) {
+      html += '<h6>نوع الاستثناء</h6><pre class="bg-light p-2 small">' + esc(data.exception_type) + '</pre>';
+    }
+    if (data.stack_trace) {
+      html += '<h6>Stack Trace</h6><pre class="bg-light p-2 small" style="max-height: 300px; overflow: auto;">' + esc(data.stack_trace) + '</pre>';
+    }
+    if (data.request_data) {
+      html += '<h6>Request Data (sanitized)</h6><pre class="bg-light p-2 small">' + esc(JSON.stringify(data.request_data, null, 2)) + '</pre>';
+    }
+    return html;
+  }
+
+  // Bind to eye buttons instead of per-row modal markup
+  document.addEventListener('click', function(ev) {
+    var btn = ev.target.closest('button[data-error-id]');
+    if (!btn) return;
+    var id = btn.getAttribute('data-error-id');
+    var data = window.ERROR_LOG_DATA[id];
+    if (!data) return;
+    document.getElementById('errorDetailTitle').textContent = 'تفاصيل الخطأ #' + data.id;
+    document.getElementById('errorDetailBody').innerHTML = buildDetailHtml(data);
+    $('#errorDetailModal').modal('show');
+  });
+})();
+</script>
 
 {% endblock %}
