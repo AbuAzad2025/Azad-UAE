@@ -94,8 +94,14 @@
           <button type="submit" class="btn btn-primary btn-sm mb-2 mr-2">
             <i class="fas fa-filter"></i> تصفية
           </button>
-          <a href="{{ url_for('owner.error_audit_logs') }}" class="btn btn-outline-secondary btn-sm mb-2">
+          <a href="{{ url_for('owner.error_audit_logs') }}" class="btn btn-outline-secondary btn-sm mb-2 mr-2">
             <i class="fas fa-times"></i> إلغاء
+          </a>
+          <a href="{{ url_for('owner.export_error_audit_logs', format='json', category=selected_category, level=selected_level, resolved=selected_resolved) }}" class="btn btn-success btn-sm mb-2 mr-2">
+            <i class="fas fa-file-code"></i> تصدير JSON
+          </a>
+          <a href="{{ url_for('owner.export_error_audit_logs', format='txt', category=selected_category, level=selected_level, resolved=selected_resolved) }}" class="btn btn-outline-success btn-sm mb-2">
+            <i class="fas fa-file-alt"></i> تصدير TXT
           </a>
         </form>
       </div>

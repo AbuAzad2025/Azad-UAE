@@ -4052,3 +4052,81 @@ def resolve_error_log(log_id):
     return redirect(
         safe_redirect_target(request.referrer, 'owner.error_audit_logs')
     )
+
+
+@owner_bp.route('/error-audit-logs/export')
+@login_required
+@owner_required
+def export_error_audit_logs():
+    """Export error logs as JSON or plain text."""
+    from models.error_audit_log import ErrorAuditLog
+    from io import StringIO, BytesIO
+    import json
+
+    fmt = request.args.get('format', 'json').lower().strip()
+    category = request.args.get('category', '').strip()
+    level = request.args.get('level', '').strip()
+    is_resolved = request.args.get('resolved', '')
+
+    query = ErrorAuditLog.query
+    if category:
+        query = query.filter_by(category=category)
+    if level:
+        query = query.filter_by(level=level)
+    if is_resolved == '1':
+        query = query.filter_by(is_resolved=True)
+    elif is_resolved == '0':
+        query = query.filter_by(is_resolved=False)
+
+    logs = query.order_by(ErrorAuditLog.created_at.desc()).all()
+
+    if fmt == 'json':
+        data = [log.to_dict() for log in logs]
+        payload = json.dumps(data, ensure_ascii=False, indent=2, default=str)
+        buf = BytesIO(payload.encode('utf-8'))
+        return (
+            buf.getvalue(),
+            200,
+            {
+                'Content-Type': 'application/json; charset=utf-8',
+                'Content-Disposition': 'attachment; filename="error_audit_logs.json"',
+            },
+        )
+
+    elif fmt in ('txt', 'text', 'csv'):
+        buf = StringIO()
+        buf.write("=" * 80 + "\n")
+        buf.write("Error Audit Logs Export\n")
+        buf.write("Generated: " + datetime.now(timezone.utc).isoformat() + "\n")
+        buf.write("Count: " + str(len(logs)) + "\n")
+        buf.write("=" * 80 + "\n\n")
+
+        for log in logs:
+            buf.write(f"ID:         {log.id}\n")
+            buf.write(f"Level:      {log.level}\n")
+            buf.write(f"Category:   {log.category}\n")
+            buf.write(f"Source:     {log.source}\n")
+            buf.write(f"Time:       {log.created_at.isoformat() if log.created_at else '-'}\n")
+            buf.write(f"URL:        {log.url or '-'}\n")
+            buf.write(f"User:       {log.user_id or '-'} | Tenant: {log.tenant_id or '-'}\n")
+            buf.write(f"Resolved:   {'YES' if log.is_resolved else 'NO'}\n")
+            buf.write(f"Message:\n  {log.message}\n")
+            if log.stack_trace:
+                buf.write(f"Stack Trace:\n  {log.stack_trace[:500]}\n")
+            if log.request_data:
+                buf.write(f"Request Data:\n  {log.request_data}\n")
+            buf.write("-" * 80 + "\n\n")
+
+        payload = buf.getvalue()
+        return (
+            payload.encode('utf-8'),
+            200,
+            {
+                'Content-Type': 'text/plain; charset=utf-8',
+                'Content-Disposition': 'attachment; filename="error_audit_logs.txt"',
+            },
+        )
+
+    else:
+        flash('صيغة التصدير غير مدعومة.', 'danger')
+        return redirect(url_for('owner.error_audit_logs'))
