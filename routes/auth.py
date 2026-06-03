@@ -16,6 +16,7 @@ from utils.branching import (
 from utils.tenanting import set_active_tenant, clear_active_tenant
 from utils.auth_helpers import is_global_owner_user
 
+
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
 _PAYMENT_STATUS_TOKEN_SALT = 'payment-status-v1'
@@ -329,8 +330,8 @@ def payment_status(payment_id):
         else:
             return jsonify(result), 400
             
-    except Exception as e:
-        current_app.logger.warning(
+    except Exception:
+        current_app.logger.exception(
             'payment_status error payment_id=%s ip=%s',
             payment_id,
             request.remote_addr,
@@ -380,7 +381,7 @@ def payment_callback():
         nowpayments = NOWPaymentsService()
         if not nowpayments.ipn_secret:
             current_app.logger.warning('NOWPayments callback rejected: IPN secret not configured')
-            return jsonify({'error': 'IPN secret not configured'}), 503
+            return jsonify({'error': 'Webhook not configured'}), 503
 
         if not nowpayments.verify_ipn(payment_data, signature):
             current_app.logger.warning(
@@ -397,10 +398,9 @@ def payment_callback():
         else:
             return jsonify({'error': 'فشل في معالجة الدفعة'}), 500
             
-    except Exception as e:
-        return jsonify({
-            'error': f'خطأ في معالجة callback: {str(e)}'
-        }), 500
+    except Exception:
+        current_app.logger.exception('Legacy NOWPayments callback failed')
+        return jsonify({'error': 'خطأ في معالجة callback'}), 500
 
 
 @auth_bp.route('/payment/currencies')
@@ -416,10 +416,11 @@ def available_currencies():
         else:
             return jsonify(result), 400
             
-    except Exception as e:
+    except Exception:
+        current_app.logger.exception('available_currencies failed')
         return jsonify({
             'success': False,
-            'error': f'خطأ في الحصول على العملات: {str(e)}'
+            'error': 'خطأ في الحصول على العملات'
         }), 500
 
 
@@ -446,10 +447,11 @@ def estimate_amount():
         else:
             return jsonify(result), 400
             
-    except Exception as e:
+    except Exception:
+        current_app.logger.exception('estimate_amount failed')
         return jsonify({
             'success': False,
-            'error': f'خطأ في التقدير: {str(e)}'
+            'error': 'خطأ في التقدير'
         }), 500
 
 
@@ -484,4 +486,3 @@ def thank_you():
         status_token=status_token,
         status_polling=status_polling,
     )
-
