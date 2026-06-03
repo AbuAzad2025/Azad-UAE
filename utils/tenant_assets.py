@@ -13,6 +13,10 @@ FOLDER_TO_SLUG: dict[str, str] = {
     "alhazem": "alhazem",
     "nasrallah": "nasrallah",
     "ramallah": "ramallah",
+    "default": "default",
+    "dubai_electronics": "dubai_electronics",
+    "abudhabi_construction": "abudhabi_construction",
+    "sharjah_trading": "sharjah_trading",
 }
 
 SLUG_TO_FOLDER: dict[str, str] = {
@@ -20,6 +24,14 @@ SLUG_TO_FOLDER: dict[str, str] = {
     "alhazem-batteries": "alhazem",
     "nasrallah": "nasrallah",
     "ramallah": "ramallah",
+    "default": "default",
+    "dubai_electronics": "dubai_electronics",
+    "dubai-electronics": "dubai_electronics",
+    "abudhabi_construction": "abudhabi_construction",
+    "abudhabi-construction": "abudhabi_construction",
+    "abu-dhabi-construction": "abudhabi_construction",
+    "sharjah_trading": "sharjah_trading",
+    "sharjah-trading": "sharjah_trading",
 }
 
 
