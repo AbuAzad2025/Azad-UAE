@@ -50,6 +50,10 @@ class Customer(db.Model):
         from decimal import Decimal
         return Decimal(str(self.balance or 0))
 
+    def get_balance_base(self):
+        """Alias for get_balance_aed — returns balance in tenant base currency."""
+        return self.get_balance_aed()
+
     # دوال مساعدة لتحديث الرصيد بشكل تراكمي وسريع
     def apply_sale(self, amount_aed):
         """تحديث رصيد العميل عند إنشاء فاتورة بيع (يزيد الذمم علينا)."""
