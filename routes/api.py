@@ -421,3 +421,37 @@ def echo():
     payload = request.get_json(silent=True) or {}
     return jsonify({'success': True, 'data': payload}), 200
 
+
+@api_bp.route('/log-client-error', methods=['POST'])
+@login_required
+def log_client_error():
+    """Receive JS errors from the browser and store them via ErrorAuditService."""
+    from services.error_audit_service import ErrorAuditService
+
+    data = request.get_json(silent=True) or {}
+    message = data.get('message', 'Unknown JS error')
+    source_file = data.get('source', 'frontend.unknown')
+    lineno = data.get('lineno')
+    colno = data.get('colno')
+    stack = data.get('stack')
+    url = data.get('url', request.referrer or request.url)
+
+    enriched_message = message
+    if lineno:
+        enriched_message += f" (line {lineno}, col {colno})"
+
+    ErrorAuditService.log_frontend(
+        message=enriched_message,
+        url=url,
+        user_agent=request.headers.get('User-Agent', ''),
+        stack=stack,
+        extra={
+            'source_file': source_file,
+            'line': lineno,
+            'column': colno,
+            'user_id': getattr(current_user, 'id', None),
+            'tenant_id': getattr(current_user, 'tenant_id', None),
+        },
+    )
+    return jsonify({'success': True}), 204
+

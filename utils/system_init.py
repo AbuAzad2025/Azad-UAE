@@ -62,7 +62,14 @@ def _ensure_system_integrity_inner(app):
         ensure_branch_isolation_schema_and_data()
         current_app.logger.info("SystemInit: Branch isolation repair verified.")
     except Exception as e:
-        current_app.logger.error(f"SystemInit: Branch isolation repair failed: {e}")
+        from services.error_audit_service import ErrorAuditService
+        ErrorAuditService.log(
+            message=f"Branch isolation repair failed: {e}",
+            category="SYSTEM_INIT",
+            level="ERROR",
+            source="utils.system_init.ensure_system_integrity.branch_repair",
+            exception=e,
+        )
 
     # 7.2 Ensure accounting data consistency for legacy/imported data
     try:
@@ -70,7 +77,14 @@ def _ensure_system_integrity_inner(app):
         repair_accounting_data()
         current_app.logger.info("SystemInit: Accounting data repair verified.")
     except Exception as e:
-        current_app.logger.error(f"SystemInit: Accounting data repair failed: {e}")
+        from services.error_audit_service import ErrorAuditService
+        ErrorAuditService.log(
+            message=f"Accounting data repair failed: {e}",
+            category="SYSTEM_INIT",
+            level="ERROR",
+            source="utils.system_init.ensure_system_integrity.accounting_repair",
+            exception=e,
+        )
 
     # 8. Start Silent Telemetry (Security Reporting)
     if not os.environ.get('DISABLE_TELEMETRY'):

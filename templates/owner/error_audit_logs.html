@@ -1,0 +1,272 @@
+{% extends "base.html" %}
+
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - سجل أخطاء النظام{% endblock %}
+
+{% block content %}
+<div class="content-header">
+  <div class="container-fluid">
+    <div class="row mb-2 align-items-center">
+      <div class="col-sm-6">
+        <h1 class="m-0">
+          <i class="fas fa-bug text-danger mr-2"></i>
+          سجل أخطاء النظام
+          <span class="badge badge-dark ml-2">Error Audit</span>
+        </h1>
+        <p class="text-muted mt-1 mb-0">
+          <i class="fas fa-info-circle mr-1"></i>
+          جميع الأخطاء Backend / DB / Frontend / API — مصنّفة ومفلترة
+        </p>
+      </div>
+      <div class="col-sm-6 d-flex justify-content-end">
+        <div class="d-flex align-items-center">
+          <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary ml-2">
+            <i class="fas fa-arrow-right mr-1"></i> الرجوع للوحة المالك
+          </a>
+          <ol class="breadcrumb float-sm-left mb-0">
+            <li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">لوحة المالك</a></li>
+            <li class="breadcrumb-item active">سجل الأخطاء</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+
+    {# Stats cards #}
+    <div class="row mt-3">
+      <div class="col-md-3">
+        <div class="small-box bg-info">
+          <div class="inner">
+            <h3>{{ stats.total }}</h3>
+            <p>إجمالي الأخطاء المسجلة</p>
+          </div>
+          <div class="icon"><i class="fas fa-list"></i></div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="small-box bg-warning">
+          <div class="inner">
+            <h3>{{ stats.unresolved }}</h3>
+            <p>أخطاء غير محلولة</p>
+          </div>
+          <div class="icon"><i class="fas fa-exclamation-triangle"></i></div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="small-box bg-danger">
+          <div class="inner">
+            <h3>{{ stats.critical }}</h3>
+            <p>أخطاء Critical</p>
+          </div>
+          <div class="icon"><i class="fas fa-skull-crossbones"></i></div>
+        </div>
+      </div>
+    </div>
+
+    {# Filters #}
+    <div class="card card-outline card-secondary mt-3">
+      <div class="card-body">
+        <form method="get" action="{{ url_for('owner.error_audit_logs') }}" class="form-inline">
+          <div class="form-group mr-3 mb-2">
+            <label for="category" class="mr-2">الفئة</label>
+            <select name="category" id="category" class="form-control form-control-sm">
+              <option value="">الكل</option>
+              {% for cat in categories %}
+              <option value="{{ cat }}" {% if cat == selected_category %}selected{% endif %}>{{ cat }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group mr-3 mb-2">
+            <label for="level" class="mr-2">المستوى</label>
+            <select name="level" id="level" class="form-control form-control-sm">
+              <option value="">الكل</option>
+              {% for lvl in levels %}
+              <option value="{{ lvl }}" {% if lvl == selected_level %}selected{% endif %}>{{ lvl }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group mr-3 mb-2">
+            <label for="resolved" class="mr-2">الحالة</label>
+            <select name="resolved" id="resolved" class="form-control form-control-sm">
+              <option value="" {% if selected_resolved == '' %}selected{% endif %}>الكل</option>
+              <option value="0" {% if selected_resolved == '0' %}selected{% endif %}>غير محلول</option>
+              <option value="1" {% if selected_resolved == '1' %}selected{% endif %}>محلول</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary btn-sm mb-2 mr-2">
+            <i class="fas fa-filter"></i> تصفية
+          </button>
+          <a href="{{ url_for('owner.error_audit_logs') }}" class="btn btn-outline-secondary btn-sm mb-2">
+            <i class="fas fa-times"></i> إلغاء
+          </a>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="content">
+  <div class="container-fluid">
+    <div class="card">
+      <div class="card-header bg-dark">
+        <h3 class="card-title"><i class="fas fa-table mr-2"></i> الأخطاء</h3>
+      </div>
+      <div class="card-body p-0 table-responsive">
+        <table class="table table-sm table-striped table-hover mb-0">
+          <thead class="thead-light">
+            <tr>
+              <th style="width: 60px;">#</th>
+              <th style="width: 90px;">المستوى</th>
+              <th style="width: 110px;">الفئة</th>
+              <th>الرسالة</th>
+              <th style="width: 120px;">المصدر</th>
+              <th style="width: 120px;">المستخدم</th>
+              <th style="width: 160px;">الوقت</th>
+              <th style="width: 100px;">الحالة</th>
+              <th style="width: 100px;"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for log in logs %}
+            <tr class="{% if log.level == 'CRITICAL' %}table-danger{% elif log.level == 'ERROR' %}table-warning{% endif %}">
+              <td>{{ log.id }}</td>
+              <td>
+                {% if log.level == 'CRITICAL' %}
+                <span class="badge badge-danger">{{ log.level }}</span>
+                {% elif log.level == 'ERROR' %}
+                <span class="badge badge-warning">{{ log.level }}</span>
+                {% elif log.level == 'WARNING' %}
+                <span class="badge badge-secondary">{{ log.level }}</span>
+                {% else %}
+                <span class="badge badge-info">{{ log.level }}</span>
+                {% endif %}
+              </td>
+              <td><span class="badge badge-light border">{{ log.category }}</span></td>
+              <td>
+                <div class="small font-weight-bold">{{ log.message[:120] }}{% if log.message|length > 120 %}...{% endif %}</div>
+                {% if log.exception_type %}
+                <div class="text-muted" style="font-size: 11px;">{{ log.exception_type }}</div>
+                {% endif %}
+                {% if log.url %}
+                <div class="text-muted" style="font-size: 11px;"><i class="fas fa-link"></i> {{ log.url[:80] }}</div>
+                {% endif %}
+              </td>
+              <td class="small">{{ log.source }}</td>
+              <td class="small">
+                {% if log.user_id %}{{ log.user_id }}{% else %}-{% endif %}
+                {% if log.tenant_id %}
+                <div class="text-muted" style="font-size: 10px;">tenant:{{ log.tenant_id }}</div>
+                {% endif %}
+              </td>
+              <td class="small text-muted">{{ log.created_at.strftime('%Y-%m-%d %H:%M') if log.created_at else '-' }}</td>
+              <td>
+                {% if log.is_resolved %}
+                <span class="badge badge-success"><i class="fas fa-check"></i> محلول</span>
+                {% else %}
+                <span class="badge badge-danger"><i class="fas fa-times"></i> غير محلول</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if not log.is_resolved %}
+                <form method="post" action="{{ url_for('owner.resolve_error_log', log_id=log.id) }}" class="d-inline">
+                  <input type="hidden" name="note" value="">
+                  <button type="submit" class="btn btn-xs btn-success" title="تحديد كمحلول">
+                    <i class="fas fa-check"></i>
+                  </button>
+                </form>
+                {% endif %}
+                <button class="btn btn-xs btn-info" data-toggle="modal" data-target="#detailModal{{ log.id }}" title="تفاصيل">
+                  <i class="fas fa-eye"></i>
+                </button>
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="9" class="text-center text-muted py-4">
+                <i class="fas fa-check-circle fa-2x text-success mb-2"></i><br>
+                لا توجد أخطاء مطابقة للتصفية.
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% if pagination and pagination.pages > 1 %}
+      <div class="card-footer">
+        <nav>
+          <ul class="pagination pagination-sm justify-content-center mb-0">
+            {% if pagination.has_prev %}
+            <li class="page-item">
+              <a class="page-link" href="{{ url_for('owner.error_audit_logs', page=pagination.prev_num, category=selected_category, level=selected_level, resolved=selected_resolved) }}">السابق</a>
+            </li>
+            {% endif %}
+            {% for page_num in pagination.iter_pages() %}
+              {% if page_num %}
+                {% if page_num != pagination.page %}
+                <li class="page-item">
+                  <a class="page-link" href="{{ url_for('owner.error_audit_logs', page=page_num, category=selected_category, level=selected_level, resolved=selected_resolved) }}">{{ page_num }}</a>
+                </li>
+                {% else %}
+                <li class="page-item active"><span class="page-link">{{ page_num }}</span></li>
+                {% endif %}
+              {% else %}
+                <li class="page-item disabled"><span class="page-link">...</span></li>
+              {% endif %}
+            {% endfor %}
+            {% if pagination.has_next %}
+            <li class="page-item">
+              <a class="page-link" href="{{ url_for('owner.error_audit_logs', page=pagination.next_num, category=selected_category, level=selected_level, resolved=selected_resolved) }}">التالي</a>
+            </li>
+            {% endif %}
+          </ul>
+        </nav>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+{# Detail modals #}
+{% for log in logs %}
+<div class="modal fade" id="detailModal{{ log.id }}" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header bg-dark">
+        <h5 class="modal-title">تفاصيل الخطأ #{{ log.id }}</h5>
+        <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+      </div>
+      <div class="modal-body">
+        <dl class="row small">
+          <dt class="col-sm-3">الفئة</dt><dd class="col-sm-9">{{ log.category }}</dd>
+          <dt class="col-sm-3">المستوى</dt><dd class="col-sm-9">{{ log.level }}</dd>
+          <dt class="col-sm-3">المصدر</dt><dd class="col-sm-9">{{ log.source }}</dd>
+          <dt class="col-sm-3">الوقت</dt><dd class="col-sm-9">{{ log.created_at }}</dd>
+          <dt class="col-sm-3">الرابط</dt><dd class="col-sm-9">{{ log.url or '-' }}</dd>
+          <dt class="col-sm-3">الطريقة</dt><dd class="col-sm-9">{{ log.method or '-' }}</dd>
+          <dt class="col-sm-3">IP</dt><dd class="col-sm-9">{{ log.ip_address or '-' }}</dd>
+          <dt class="col-sm-3">المستخدم</dt><dd class="col-sm-9">{{ log.user_id or '-' }}</dd>
+          <dt class="col-sm-3">التينانت</dt><dd class="col-sm-9">{{ log.tenant_id or '-' }}</dd>
+        </dl>
+        <hr>
+        <h6>الرسالة</h6>
+        <pre class="bg-light p-2 small" style="white-space: pre-wrap;">{{ log.message }}</pre>
+        {% if log.exception_type %}
+        <h6>نوع الاستثناء</h6>
+        <pre class="bg-light p-2 small">{{ log.exception_type }}</pre>
+        {% endif %}
+        {% if log.stack_trace %}
+        <h6>Stack Trace</h6>
+        <pre class="bg-light p-2 small" style="max-height: 300px; overflow: auto;">{{ log.stack_trace }}</pre>
+        {% endif %}
+        {% if log.request_data %}
+        <h6>Request Data (sanitized)</h6>
+        <pre class="bg-light p-2 small">{{ log.request_data | tojson(indent=2) }}</pre>
+        {% endif %}
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">إغلاق</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endfor %}
+
+{% endblock %}

@@ -1383,7 +1383,64 @@ $(function() {
     }
   }
   initNavbarCalculator();
-  
+
+  // ── Frontend Error Catcher ─────────────────────────────────
+  (function() {
+    const LOG_ENDPOINT = '{{ url_for("api.log_client_error") }}';
+    const sentErrors = new Set();
+
+    function sendError(payload) {
+      try {
+        const key = payload.message + payload.source + payload.lineno;
+        if (sentErrors.has(key)) return;
+        sentErrors.add(key);
+        // Keep set small
+        if (sentErrors.size > 50) sentErrors.clear();
+
+        fetch(LOG_ENDPOINT, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content || ''
+          },
+          body: JSON.stringify(payload),
+          keepalive: true
+        }).catch(() => {});
+      } catch (_) {}
+    }
+
+    window.addEventListener('error', function(ev) {
+      sendError({
+        message: ev.message || 'Unknown error',
+        source: ev.filename || 'unknown',
+        lineno: ev.lineno || 0,
+        colno: ev.colno || 0,
+        stack: ev.error && ev.error.stack ? ev.error.stack : null,
+        url: window.location.href
+      });
+    });
+
+    window.addEventListener('unhandledrejection', function(ev) {
+      const reason = ev.reason;
+      let msg = 'Unhandled Promise Rejection';
+      let stack = null;
+      if (typeof reason === 'string') {
+        msg = reason;
+      } else if (reason && reason.message) {
+        msg = reason.message;
+        stack = reason.stack || null;
+      }
+      sendError({
+        message: msg,
+        source: 'unhandledrejection',
+        lineno: 0,
+        colno: 0,
+        stack: stack,
+        url: window.location.href
+      });
+    });
+  })();
+
 })();
 
 </script>

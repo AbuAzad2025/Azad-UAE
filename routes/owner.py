@@ -3967,3 +3967,88 @@ def tenant_suspend_page(tenant_id):
         tenant=tenant,
         reason=tenant.suspension_reason or 'Tenant suspended',
     )
+
+
+# ── Error Audit Logs ────────────────────────────────────────────────
+
+@owner_bp.route('/error-audit-logs')
+@login_required
+@owner_required
+def error_audit_logs():
+    """Owner view of all system errors with classification."""
+    from services.error_audit_service import ErrorAuditService
+    from models.error_audit_log import ErrorAuditLog
+
+    category = request.args.get('category', '').strip()
+    level = request.args.get('level', '').strip()
+    is_resolved = request.args.get('resolved', '')
+    page = request.args.get('page', 1, type=int)
+    per_page = 50
+
+    query = ErrorAuditLog.query
+    if category:
+        query = query.filter_by(category=category)
+    if level:
+        query = query.filter_by(level=level)
+    if is_resolved == '1':
+        query = query.filter_by(is_resolved=True)
+    elif is_resolved == '0':
+        query = query.filter_by(is_resolved=False)
+
+    pagination = (
+        query.order_by(ErrorAuditLog.created_at.desc())
+        .paginate(page=page, per_page=per_page, error_out=False)
+    )
+
+    # Distinct categories / levels for filter dropdowns
+    categories = [
+        r[0]
+        for r in db.session.query(ErrorAuditLog.category)
+        .distinct()
+        .order_by(ErrorAuditLog.category)
+        .all()
+    ]
+    levels = [
+        r[0]
+        for r in db.session.query(ErrorAuditLog.level)
+        .distinct()
+        .order_by(ErrorAuditLog.level)
+        .all()
+    ]
+
+    # Summary stats
+    stats = {
+        'total': ErrorAuditLog.query.count(),
+        'unresolved': ErrorAuditLog.query.filter_by(is_resolved=False).count(),
+        'critical': ErrorAuditLog.query.filter_by(level='CRITICAL').count(),
+    }
+
+    return render_template(
+        'owner/error_audit_logs.html',
+        logs=pagination.items,
+        pagination=pagination,
+        categories=categories,
+        levels=levels,
+        selected_category=category,
+        selected_level=level,
+        selected_resolved=is_resolved,
+        stats=stats,
+    )
+
+
+@owner_bp.route('/error-audit-logs/<int:log_id>/resolve', methods=['POST'])
+@login_required
+@owner_required
+def resolve_error_log(log_id):
+    """Mark an error as resolved."""
+    from services.error_audit_service import ErrorAuditService
+
+    note = request.form.get('note', '')
+    ok = ErrorAuditService.mark_resolved(log_id, current_user.id, note)
+    if ok:
+        flash('تم تحديث حالة الخطأ.', 'success')
+    else:
+        flash('فشل تحديث حالة الخطأ.', 'danger')
+    return redirect(
+        safe_redirect_target(request.referrer, 'owner.error_audit_logs')
+    )

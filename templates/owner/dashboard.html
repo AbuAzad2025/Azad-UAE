@@ -323,8 +323,14 @@
         <a href="{{ url_for('owner.roles_permissions') }}" class="btn btn-outline-info btn-sm btn-block mb-2">
           <i class="fas fa-user-shield mr-1"></i> الأدوار والصلاحيات
         </a>
-        <a href="{{ url_for('owner.audit_logs') }}" class="btn btn-outline-secondary btn-sm btn-block">
+        <a href="{{ url_for('owner.audit_logs') }}" class="btn btn-outline-secondary btn-sm btn-block mb-2">
           <i class="fas fa-clipboard-list mr-1"></i> سجل التدقيق
+        </a>
+        <a href="{{ url_for('owner.error_audit_logs') }}" class="btn btn-outline-danger btn-sm btn-block">
+          <i class="fas fa-bug mr-1"></i> سجل أخطاء النظام
+          {% if stats and stats.critical_errors_count %}
+          <span class="badge badge-danger ml-1">{{ stats.critical_errors_count }}</span>
+          {% endif %}
         </a>
       </div>
     </div>

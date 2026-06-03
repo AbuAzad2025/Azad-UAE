@@ -13,6 +13,7 @@ from .purchase import Purchase, PurchaseLine
 from .payment import Payment, Receipt
 from .currency import Currency, ExchangeRate
 from .audit import AuditLog
+from .error_audit_log import ErrorAuditLog
 from .archive import ArchivedRecord
 from .product_return import ProductReturn, ProductReturnLine
 from .card_vault import CardVault
@@ -55,6 +56,7 @@ __all__ = [
     'Payment', 'Receipt',
     'Currency', 'ExchangeRate',
     'AuditLog',
+    'ErrorAuditLog',
     'ArchivedRecord',
     'ProductReturn', 'ProductReturnLine',
     'CardVault',

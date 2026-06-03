@@ -231,9 +231,57 @@ def create_app(config_class=Config):
             return redirect(url_for('shop.catalog', slug=store.store_slug))
         return None
 
-    # Error Handlers
-    # from utils.error_handlers import register_error_handlers
-    # register_error_handlers(app)
+    # Error Handlers — use ErrorAuditService (independent of db.session)
+    from services.error_audit_service import ErrorAuditService
+
+    @app.errorhandler(500)
+    def handle_500(exc):
+        ErrorAuditService.log(
+            message=str(exc) or "Internal Server Error",
+            category="BACKEND",
+            level="ERROR",
+            source="app.errorhandler.500",
+            exception=exc,
+        )
+        if app.config.get("DEBUG"):
+            raise exc
+        return render_template("errors/500.html"), 500
+
+    @app.errorhandler(404)
+    def handle_404(exc):
+        ErrorAuditService.log(
+            message=f"Page not found: {request.path}",
+            category="API",
+            level="WARNING",
+            source="app.errorhandler.404",
+        )
+        if app.config.get("DEBUG"):
+            raise exc
+        return render_template("errors/404.html"), 404
+
+    @app.errorhandler(403)
+    def handle_403(exc):
+        ErrorAuditService.log(
+            message=f"Forbidden access: {request.path}",
+            category="SECURITY",
+            level="WARNING",
+            source="app.errorhandler.403",
+        )
+        if app.config.get("DEBUG"):
+            raise exc
+        return render_template("errors/403.html"), 403
+
+    @app.errorhandler(Exception)
+    def handle_generic_exception(exc):
+        """Catch-all for unhandled exceptions."""
+        ErrorAuditService.log_exception(
+            exc,
+            category="BACKEND",
+            source="app.errorhandler.generic",
+        )
+        if app.config.get("DEBUG"):
+            raise exc
+        return render_template("errors/500.html"), 500
     
     @app.template_global()
     def tenant_document_logo(settings=None, tenant_id=None):
