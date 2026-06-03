@@ -100,9 +100,10 @@ class StoreOrderService:
             )
             if internal_method == 'cod':
                 internal_method = 'cash'
+            amount_to_pay = sale.balance_due if sale.balance_due and sale.balance_due > 0 else sale.total_amount
             SaleService.create_payment_for_sale(
                 sale=sale,
-                amount=sale.total_amount,
+                amount=amount_to_pay,
                 payment_method=internal_method,
                 currency=sale.currency,
                 exchange_rate=sale.exchange_rate,

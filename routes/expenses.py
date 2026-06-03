@@ -244,6 +244,17 @@ def edit(id):
     expense = tenant_get_or_404(Expense, id)
     if not _expense_in_scope(expense):
         return render_template('errors/403.html'), 403
+
+    # منع تعديل المصروف المؤرشف
+    from models import ArchivedRecord
+    is_archived = ArchivedRecord.query.filter_by(
+        table_name='expenses',
+        record_id=expense.id
+    ).first() is not None
+    if is_archived:
+        flash('⚠️ لا يمكن تعديل مصروف مؤرشف.', 'warning')
+        return redirect(url_for('expenses.view', id=id))
+
     categories = tenant_query(ExpenseCategory).filter_by(is_active=True).all()
     
     if request.method == 'POST':
