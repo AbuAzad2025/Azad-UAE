@@ -249,7 +249,7 @@ def create_app(config_class=Config):
     def storefront_custom_domain_redirect():
         """Route custom domain / subdomain to the tenant storefront catalog."""
         path = request.path or '/'
-        if path.startswith(('/s/', '/static/', '/auth/', '/store/', '/api/', '/owner/', '/admin')):
+        if path.startswith(('/.well-known/', '/favicon.ico', '/s/', '/static/', '/auth/', '/store/', '/api/', '/owner/', '/admin')):
             return None
         from services.store_service import StoreService
         store = StoreService.get_store_by_host(request.host)
@@ -266,6 +266,10 @@ def create_app(config_class=Config):
             'favicon.ico',
             mimetype='image/vnd.microsoft.icon',
         )
+
+    @app.route('/.well-known/appspecific/com.chrome.devtools.json')
+    def chrome_devtools_metadata():
+        return '', 204
 
     from services.error_audit_service import ErrorAuditService
 

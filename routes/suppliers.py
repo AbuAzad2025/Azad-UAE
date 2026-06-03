@@ -210,7 +210,8 @@ def create():
         
         except Exception as e:
             db.session.rollback()
-            flash(f'❌ حدث خطأ: {str(e)}\n💡 تحقق من البيانات المدخلة وحاول مرة أخرى.', 'danger')
+            current_app.logger.error(f"Error in supplier operation: {e}")
+            flash(ErrorMessages.create_failed('supplier'), 'danger')
     
     return render_template('suppliers/create.html')
 
@@ -296,7 +297,8 @@ def edit(id):
         
         except Exception as e:
             db.session.rollback()
-            flash(f'❌ حدث خطأ: {str(e)}\n💡 تحقق من البيانات المدخلة وحاول مرة أخرى.', 'danger')
+            current_app.logger.error(f"Error updating supplier {id}: {e}")
+            flash(ErrorMessages.update_failed('supplier'), 'danger')
     
     return render_template('suppliers/edit.html', supplier=supplier)
 
@@ -333,13 +335,15 @@ def delete(id):
         
     except Exception as e:
         db.session.rollback()
+        current_app.logger.error(f"Error deleting supplier {id}: {e}")
         # Fallback to soft delete if hard delete fails
         try:
             supplier.is_active = False
             db.session.commit()
             flash(f'⚠️ تعذر الحذف النهائي للمورد "{supplier.name}" بسبب ارتباطات في قاعدة البيانات. تم إلغاء تفعيله بدلاً من ذلك.', 'warning')
         except Exception as inner_e:
-            flash(f'❌ حدث خطأ أثناء حذف المورد: {str(e)}', 'danger')
+            current_app.logger.error(f"Error falling back to soft delete for supplier {id}: {inner_e}")
+            flash(ErrorMessages.delete_failed('supplier'), 'danger')
     
     return redirect(url_for('suppliers.index'))
 

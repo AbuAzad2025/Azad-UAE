@@ -2,6 +2,29 @@
 
 {% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - سجل أخطاء النظام{% endblock %}
 
+{% block extra_css %}
+{{ super() }}
+<style>
+  body.error-audit-modal-open .modal-backdrop {
+    z-index: 2040 !important;
+  }
+
+  #errorDetailModal {
+    z-index: 2050 !important;
+  }
+
+  #errorDetailModal .modal-content {
+    direction: rtl;
+  }
+
+  #errorDetailModal pre,
+  #errorDetailModal code {
+    direction: ltr;
+    text-align: left;
+  }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="content-header">
   <div class="container-fluid">
@@ -235,12 +258,12 @@
 </section>
 
 {# Shared detail modal — populated dynamically to avoid DOM bloat #}
-<div class="modal fade" id="errorDetailModal" tabindex="-1" role="dialog">
+<div class="modal fade" id="errorDetailModal" tabindex="-1" role="dialog" aria-labelledby="errorDetailTitle" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
     <div class="modal-content">
       <div class="modal-header bg-dark">
         <h5 class="modal-title" id="errorDetailTitle">تفاصيل الخطأ</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
@@ -254,6 +277,10 @@
   </div>
 </div>
 
+{% endblock %}
+
+{% block extra_js %}
+{{ super() }}
 <script>
 (function() {
   // Inline data for the current page (safe — no secrets, all server-side rendered)
@@ -283,6 +310,20 @@
     }{% if not loop.last %},{% endif %}
     {% endfor %}
   };
+
+  var modalEl = document.getElementById('errorDetailModal');
+  if (!modalEl || !window.jQuery || !window.jQuery.fn || !window.jQuery.fn.modal) {
+    console.error('Error audit modal requires Bootstrap 4 modal plugin.');
+    return;
+  }
+
+  // Bootstrap modals must live under <body>. Keeping this modal inside
+  // AdminLTE's content-wrapper can put the backdrop above it and block clicks.
+  if (modalEl.parentNode !== document.body) {
+    document.body.appendChild(modalEl);
+  }
+
+  var $modal = window.jQuery(modalEl);
 
   function esc(str) {
     var div = document.createElement('div');
@@ -321,17 +362,44 @@
     return html;
   }
 
+  function cleanupModalState() {
+    $('body').removeClass('error-audit-modal-open');
+    if ($('.modal.show').length === 0) {
+      $('.modal-backdrop').remove();
+      $('body').removeClass('modal-open').css('padding-right', '');
+    }
+  }
+
   // Bootstrap 4: populate shared modal when it is about to show.
   // Using show.bs.modal ensures Bootstrap registers all internal
   // close / escape / backdrop handlers correctly.
-  $('#errorDetailModal').on('show.bs.modal', function(e) {
-    var btn = e.relatedTarget;
-    if (!btn) return;
-    var id = btn.getAttribute('data-error-id');
-    var data = window.ERROR_LOG_DATA[id];
-    if (!data) return;
-    document.getElementById('errorDetailTitle').textContent = 'تفاصيل الخطأ #' + data.id;
-    document.getElementById('errorDetailBody').innerHTML = buildDetailHtml(data);
+  $modal.on('show.bs.modal', function(e) {
+    $('body').addClass('error-audit-modal-open');
+    try {
+      var btn = e.relatedTarget;
+      if (!btn) return;
+      var id = btn.getAttribute('data-error-id');
+      var data = window.ERROR_LOG_DATA[id];
+      if (!data) return;
+      document.getElementById('errorDetailTitle').textContent = 'تفاصيل الخطأ #' + data.id;
+      document.getElementById('errorDetailBody').innerHTML = buildDetailHtml(data);
+    } catch (err) {
+      document.getElementById('errorDetailTitle').textContent = 'Error details';
+      document.getElementById('errorDetailBody').innerHTML =
+        '<div class="alert alert-danger mb-0">Could not render error details. Check the browser console.</div>';
+      console.error('Error audit modal render failed:', err);
+    }
+  });
+
+  $modal.on('hide.bs.modal', function() {
+    $('body').removeClass('error-audit-modal-open');
+  });
+
+  $modal.on('hidden.bs.modal', cleanupModalState);
+
+  $(document).on('click', '#errorDetailModal [data-dismiss="modal"]', function(e) {
+    e.preventDefault();
+    $modal.modal('hide');
   });
 })();
 </script>

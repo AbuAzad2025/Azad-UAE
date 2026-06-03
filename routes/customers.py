@@ -314,7 +314,8 @@ def create():
         except Exception as e:
             db.session.rollback()
             from utils.error_messages import ErrorMessages
-            flash(ErrorMessages.database_error(str(e)), 'danger')
+            current_app.logger.error(f"Error in customer operation: {e}")
+            flash(ErrorMessages.database_error(), 'danger')
     
     return render_template('customers/create.html', form=form)
 
@@ -379,7 +380,8 @@ def edit(id):
         except Exception as e:
             db.session.rollback()
             from utils.error_messages import ErrorMessages
-            flash(ErrorMessages.database_error(str(e)), 'danger')
+            current_app.logger.error(f"Error in customer operation: {e}")
+            flash(ErrorMessages.database_error(), 'danger')
     
     return render_template('customers/edit.html', customer=customer)
 
@@ -419,6 +421,7 @@ def delete(id):
         
     except Exception as e:
         db.session.rollback()
+        current_app.logger.error(f"Error deleting customer {id}: {e}")
         # Fallback to soft delete if hard delete fails (e.g. other constraints)
         try:
             # Re-fetch customer to ensure it's attached to the new session transaction
@@ -429,8 +432,9 @@ def delete(id):
                 db.session.commit()
                 flash(f'⚠️ تعذر الحذف النهائي للعميل "{customer.name}" بسبب ارتباطات في قاعدة البيانات. تم إلغاء تفعيله بدلاً من ذلك.', 'warning')
         except Exception as inner_e:
-            flash(f'❌ حدث خطأ أثناء حذف العميل: {str(e)}', 'danger')
-            current_app.logger.error(f"Error deleting customer {id}: {e}")
+            current_app.logger.error(f"Error falling back to soft delete for customer {id}: {inner_e}")
+            from utils.error_messages import ErrorMessages
+            flash(ErrorMessages.delete_failed('العميل'), 'danger')
     
     return redirect(url_for('customers.index'))
 

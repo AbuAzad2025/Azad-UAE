@@ -290,7 +290,9 @@ def create():
         
         except Exception as e:
             db.session.rollback()
-            flash(f'❌ خطأ: {str(e)}\n💡 تحقق من البيانات وحاول مرة أخرى.', 'danger')
+            current_app.logger.error(f"Error in cheque operation: {e}")
+            from utils.error_messages import ErrorMessages
+            flash(ErrorMessages.unexpected_error(), 'danger')
     
     customers = _scoped_customers_query().order_by(Customer.name).all()
     suppliers = _scoped_suppliers_query().order_by(Supplier.name).all()
@@ -375,7 +377,9 @@ def edit(id):
         
         except Exception as e:
             db.session.rollback()
-            flash(f'❌ خطأ: {str(e)}\n💡 تحقق من البيانات وحاول مرة أخرى.', 'danger')
+            current_app.logger.error(f"Error in cheque operation: {e}")
+            from utils.error_messages import ErrorMessages
+            flash(ErrorMessages.unexpected_error(), 'danger')
     
     customers = _scoped_customers_query().order_by(Customer.name).all()
     suppliers = _scoped_suppliers_query().order_by(Supplier.name).all()
@@ -410,6 +414,7 @@ def deposit_cheque(id):
         flash(f'✅ تم إيداع الشيك {cheque.cheque_bank_number} في البنك', 'success')
     
     except ValueError as e:
+        current_app.logger.warning(f"ValueError in cheque operation: {e}")
         flash(f'❌ خطأ: {str(e)}', 'error')
         db.session.rollback()
     except Exception as e:
@@ -454,6 +459,7 @@ def clear_cheque(id):
         flash(f'✅ تم تأكيد صرف الشيك {cheque.cheque_bank_number} - تم تحديث الحسابات المالية{gain_loss_msg}', 'success')
     
     except ValueError as e:
+        current_app.logger.warning(f"ValueError in cheque operation: {e}")
         flash(f'❌ خطأ: {str(e)}', 'error')
         db.session.rollback()
     except Exception as e:
@@ -487,6 +493,7 @@ def bounce_cheque(id):
         flash(f'❌ تم رفض الشيك {cheque.cheque_bank_number} - تم إرجاع الدين للزبون', 'warning')
     
     except ValueError as e:
+        current_app.logger.warning(f"ValueError in cheque operation: {e}")
         flash(f'❌ خطأ: {str(e)}', 'error')
         db.session.rollback()
     except Exception as e:

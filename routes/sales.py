@@ -187,10 +187,12 @@ def create():
         
         except ValueError as e:
             # رسالة الخطأ من SaleService (مثل: insufficient stock)
+            current_app.logger.warning(f"ValueError creating sale: {e}")
             flash(f'⚠️ {str(e)}\n💡 تحقق من الكميات المتوفرة في المخزون.', 'danger')
         except Exception as e:
             from utils.error_messages import ErrorMessages
-            flash(ErrorMessages.database_error(str(e)), 'danger')
+            current_app.logger.error(f"Error creating sale: {e}")
+            flash(ErrorMessages.database_error(), 'danger')
     
     # تحميل المستودعات للقالب
     tid = get_active_tenant_id(current_user)

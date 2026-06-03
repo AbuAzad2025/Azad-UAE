@@ -325,6 +325,7 @@ def create_warehouse():
             
         except ValueError as e:
             db.session.rollback()
+            current_app.logger.warning(f"ValueError creating warehouse: {e}")
             flash(str(e), 'warning')
             return render_template('warehouse/create_warehouse.html',
                                    parent_warehouses=parent_warehouses,
@@ -333,7 +334,8 @@ def create_warehouse():
                                    form_data=request.form)
         except Exception as e:
             db.session.rollback()
-            flash(f'خطأ في إنشاء المستودع: {str(e)}', 'error')
+            current_app.logger.error(f"Error creating warehouse: {e}")
+            flash(ErrorMessages.create_failed('warehouse'), 'error')
             return render_template('warehouse/create_warehouse.html',
                                    parent_warehouses=parent_warehouses,
                                    users=users,
@@ -389,7 +391,8 @@ def delete_warehouse(id):
             
     except Exception as e:
         db.session.rollback()
-        flash(f'فشل الحذف: {str(e)}', 'danger')
+        current_app.logger.error(f"Error deleting warehouse {id}: {e}")
+        flash(ErrorMessages.delete_failed('warehouse'), 'danger')
         
     return redirect(url_for('warehouse.list_warehouses'))
 
@@ -445,5 +448,6 @@ def add_stock(product_id):
         
     except Exception as e:
         db.session.rollback()
-        return jsonify({'success': False, 'message': str(e)}), 500
+        current_app.logger.error(f"Error adding stock: {e}")
+        return jsonify({'success': False, 'message': ErrorMessages.unexpected_error()}), 500
 

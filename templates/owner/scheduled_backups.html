@@ -172,13 +172,15 @@
             </thead>
             <tbody>
               {% for backup in backups[:10] %}
+              {% set backup_ts = backup.get('timestamp') %}
+              {% set backup_dt = backup.get('datetime') %}
               <tr>
                 <td>
                   <small>
                     <i class="far fa-calendar"></i>
-                    {{ backup.timestamp[:8] }}<br>
+                    {% if backup_ts %}{{ backup_ts[:8] }}{% elif backup_dt %}{{ backup_dt[:10] }}{% else %}{{ backup.get('filename', '-') }}{% endif %}<br>
                     <i class="far fa-clock"></i>
-                    {{ backup.timestamp[9:].replace('_', ':') }}
+                    {% if backup_ts %}{{ backup_ts[9:].replace('_', ':') }}{% elif backup_dt and backup_dt|length > 10 %}{{ backup_dt[11:19] }}{% else %}-{% endif %}
                   </small>
                 </td>
                 <td>

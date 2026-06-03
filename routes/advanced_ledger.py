@@ -103,7 +103,9 @@ def add_customs_tax():
             
         except Exception as e:
             db.session.rollback()
-            flash(f'❌ خطأ: {str(e)}', 'danger')
+            current_app.logger.error(f"Error in advanced ledger operation: {e}")
+            from utils.error_messages import ErrorMessages
+            flash(ErrorMessages.unexpected_error(), 'danger')
             return render_template('ledger/advanced/add_customs_tax.html',
                                    accounts=accounts,
                                    form_data=request.form)
@@ -154,7 +156,9 @@ def add_expense_category():
             
         except Exception as e:
             db.session.rollback()
-            flash(f'❌ خطأ: {str(e)}', 'danger')
+            current_app.logger.error(f"Error in advanced ledger operation: {e}")
+            from utils.error_messages import ErrorMessages
+            flash(ErrorMessages.unexpected_error(), 'danger')
             return render_template('ledger/advanced/add_expense_category.html',
                                    parent_categories=parent_categories,
                                    accounts=accounts,
@@ -225,7 +229,9 @@ def add_advanced_expense():
             
         except Exception as e:
             db.session.rollback()
-            flash(f'❌ خطأ: {str(e)}', 'danger')
+            current_app.logger.error(f"Error in advanced ledger operation: {e}")
+            from utils.error_messages import ErrorMessages
+            flash(ErrorMessages.unexpected_error(), 'danger')
     
     # الحصول على البيانات المطلوبة
     categories = ExpenseCategory.query.filter_by(is_active=True).all()
@@ -266,7 +272,9 @@ def reverse_journal_entry(entry_id):
         flash(f'✅ تم عكس القيد بنجاح - القيد العكسي: {reversal_entry.entry_number}', 'success')
         
     except Exception as e:
-        flash(f'❌ خطأ في عكس القيد: {str(e)}', 'danger')
+        current_app.logger.error(f"Error reversing journal entry {entry_id}: {e}")
+        from utils.error_messages import ErrorMessages
+        flash(ErrorMessages.unexpected_error(), 'danger')
     
     return redirect(url_for('advanced_ledger.journal_management'))
 
@@ -287,7 +295,9 @@ def delete_journal_entry(entry_id):
         flash('✅ تم حذف القيد بنجاح', 'success')
         
     except Exception as e:
-        flash(f'❌ خطأ في حذف القيد: {str(e)}', 'danger')
+        current_app.logger.error(f"Error deleting journal entry {entry_id}: {e}")
+        from utils.error_messages import ErrorMessages
+        flash(ErrorMessages.unexpected_error(), 'danger')
     
     return redirect(url_for('advanced_ledger.journal_management'))
 
@@ -308,7 +318,9 @@ def approve_journal_entry(entry_id):
         flash('✅ تم الموافقة على القيد وترحيله بنجاح', 'success')
         
     except Exception as e:
-        flash(f'❌ خطأ في الموافقة على القيد: {str(e)}', 'danger')
+        current_app.logger.error(f"Error approving journal entry {entry_id}: {e}")
+        from utils.error_messages import ErrorMessages
+        flash(ErrorMessages.unexpected_error(), 'danger')
     
     return redirect(url_for('advanced_ledger.journal_management'))
 
@@ -346,7 +358,9 @@ def receive_cheque(cheque_id):
         flash(f'✅ تم تسجيل استلام الشيك بنجاح - القيد: {entry.entry_number}', 'success')
         
     except Exception as e:
-        flash(f'❌ خطأ في تسجيل استلام الشيك: {str(e)}', 'danger')
+        current_app.logger.error(f"Error receiving cheque {cheque_id}: {e}")
+        from utils.error_messages import ErrorMessages
+        flash(ErrorMessages.unexpected_error(), 'danger')
     
     return redirect(url_for('advanced_ledger.cheque_integration'))
 
@@ -369,7 +383,9 @@ def clear_cheque(cheque_id):
         flash(f'✅ تم تسجيل صرف الشيك بنجاح - القيد: {entry.entry_number}', 'success')
         
     except Exception as e:
-        flash(f'❌ خطأ في تسجيل صرف الشيك: {str(e)}', 'danger')
+        current_app.logger.error(f"Error clearing cheque {cheque_id}: {e}")
+        from utils.error_messages import ErrorMessages
+        flash(ErrorMessages.unexpected_error(), 'danger')
     
     return redirect(url_for('advanced_ledger.cheque_integration'))
 

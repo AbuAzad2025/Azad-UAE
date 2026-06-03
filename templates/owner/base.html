@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+{{ super() }}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<style>
+  .btn-close {
+    background: transparent;
+    border: 0;
+    color: inherit;
+    font-size: 1.5rem;
+    line-height: 1;
+    opacity: .7;
+  }
+  .btn-close::before {
+    content: "\00d7";
+  }
+  .btn-close:hover {
+    opacity: 1;
+  }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+{{ super() }}
+<script>
+  $(function() {
+    $('[data-bs-toggle="modal"]').each(function() {
+      var $button = $(this);
+      $button.attr('data-toggle', 'modal');
+      $button.attr('data-target', $button.attr('data-bs-target'));
+    });
+
+    $(document).on('click', '[data-bs-dismiss="modal"]', function() {
+      $(this).closest('.modal').modal('hide');
+    });
+  });
+</script>
+{% endblock %}

@@ -162,7 +162,9 @@ def add_account():
             
         except Exception as e:
             db.session.rollback()
-            flash(f'❌ خطأ: {str(e)}', 'danger')
+            current_app.logger.error(f"Error in admin ledger operation: {e}")
+            from utils.error_messages import ErrorMessages
+            flash(ErrorMessages.unexpected_error(), 'danger')
             form_values = request.form.to_dict()
             form_values['is_header'] = 'on' if 'on' in request.form.getlist('is_header') else 'off'
             form_values['is_active'] = 'on' if 'on' in request.form.getlist('is_active') else 'off'
@@ -208,7 +210,9 @@ def edit_account(id):
             
         except Exception as e:
             db.session.rollback()
-            flash(f'❌ خطأ: {str(e)}', 'danger')
+            current_app.logger.error(f"Error in admin ledger operation: {e}")
+            from utils.error_messages import ErrorMessages
+            flash(ErrorMessages.unexpected_error(), 'danger')
     
     parent_accounts = _accounts().filter_by(is_header=True).order_by(GLAccount.code).all()
     return render_template('admin/ledger/edit_account.html', account=account, parent_accounts=parent_accounts)

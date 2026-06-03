@@ -194,7 +194,7 @@ def create():
             import traceback
             error_details = traceback.format_exc()
             current_app.logger.error(f'User creation error: {error_details}')
-            flash(f'❌ حدث خطأ: {str(e)}\n💡 تحقق من البيانات المدخلة وحاول مرة أخرى.', 'danger')
+            flash(ErrorMessages.create_failed('user'), 'danger')
             form_values = request.form.to_dict()
             form_values['is_active'] = request.form.get('is_active', '1')
             return render_template(
@@ -264,7 +264,8 @@ def edit(id):
             
         except Exception as e:
             db.session.rollback()
-            flash(f'❌ حدث خطأ: {str(e)}', 'danger')
+            current_app.logger.error(f"Error updating user {id}: {e}")
+            flash(ErrorMessages.update_failed('user'), 'danger')
             return render_template('users/edit.html', user=user, roles=roles, branches=branches)
     
     return render_template('users/edit.html', user=user, roles=roles, branches=branches)
@@ -321,6 +322,7 @@ def delete(id):
     
     except Exception as e:
         db.session.rollback()
-        flash(f'❌ خطأ في الحذف: {str(e)}\n💡 راجع البيانات المدخلة.', 'danger')
+        current_app.logger.error(f"Error deleting user {id}: {e}")
+        flash(ErrorMessages.delete_failed('user'), 'danger')
         return redirect(url_for('users.index'))
 

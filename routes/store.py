@@ -141,10 +141,12 @@ def admin_settings():
             return redirect(url_for('store.admin_index'))
         except ValueError as exc:
             db.session.rollback()
+            current_app.logger.warning(f"ValueError in store settings: {exc}")
             flash(str(exc), 'warning')
         except Exception as exc:
             db.session.rollback()
-            flash(f'تعذر الحفظ: {exc}', 'danger')
+            current_app.logger.error(f"Error saving store settings: {exc}")
+            flash(ErrorMessages.action_failed('حفظ الإعدادات'), 'danger')
 
     return render_template(
         'store/admin_settings.html',
@@ -231,10 +233,12 @@ def admin_transfer():
             return redirect(url_for('store.admin_catalog'))
         except ValueError as exc:
             db.session.rollback()
+            current_app.logger.warning(f"ValueError in stock transfer: {exc}")
             flash(str(exc), 'warning')
         except Exception as exc:
             db.session.rollback()
-            flash(f'فشل التحويل: {exc}', 'danger')
+            current_app.logger.error(f"Error transferring stock: {exc}")
+            flash(ErrorMessages.action_failed('تحويل المخزون'), 'danger')
 
     online_stock = StoreService.online_stock_map(tenant_id, [p.id for p in products])
 
@@ -321,10 +325,12 @@ def admin_order_confirm(order_id):
         flash(f'تم تأكيد الطلب {sale.sale_number}.', 'success')
     except ValueError as exc:
         db.session.rollback()
+        current_app.logger.warning(f"ValueError confirming order {order_id}: {exc}")
         flash(str(exc), 'warning')
     except Exception as exc:
         db.session.rollback()
-        flash(f'تعذر تأكيد الطلب: {exc}', 'danger')
+        current_app.logger.error(f"Error confirming order {order_id}: {exc}")
+        flash(ErrorMessages.action_failed('تأكيد الطلب'), 'danger')
     return redirect(url_for('store.admin_order_detail', order_id=order_id))
 
 
@@ -342,10 +348,12 @@ def admin_order_cancel(order_id):
         flash(f'تم إلغاء الطلب {sale.sale_number}.', 'success')
     except ValueError as exc:
         db.session.rollback()
+        current_app.logger.warning(f"ValueError cancelling order {order_id}: {exc}")
         flash(str(exc), 'warning')
     except Exception as exc:
         db.session.rollback()
-        flash(f'تعذر إلغاء الطلب: {exc}', 'danger')
+        current_app.logger.error(f"Error cancelling order {order_id}: {exc}")
+        flash(ErrorMessages.action_failed('إلغاء الطلب'), 'danger')
     return redirect(url_for('store.admin_order_detail', order_id=order_id))
 
 
@@ -411,10 +419,12 @@ def admin_coupons():
                 StoreCouponService.update_coupon(coupon_id, tenant_id, {'is_active': enabled})
                 flash('تم تحديث الكوبون.', 'success')
         except ValueError as exc:
+            current_app.logger.warning(f"ValueError in coupon operation: {exc}")
             flash(str(exc), 'warning')
         except Exception as exc:
             db.session.rollback()
-            flash(f'خطأ: {exc}', 'danger')
+            current_app.logger.error(f"Error in coupon operation: {exc}")
+            flash(ErrorMessages.action_failed('العملية على الكوبون'), 'danger')
         return redirect(url_for('store.admin_coupons'))
 
     coupons = StoreCouponService.list_for_tenant(tenant_id)

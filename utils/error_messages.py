@@ -172,10 +172,67 @@ class ErrorMessages:
     
     
     @staticmethod
-    def database_error(error):
+    def database_error():
         return ('خطأ في قاعدة البيانات.\n'
-                f'السبب: {error}\n'
                 'إذا استمرت المشكلة، اتصل بالدعم الفني.')
+    
+    @staticmethod
+    def unexpected_error():
+        return ('حدث خطأ غير متوقع.\n'
+                'إذا استمرت المشكلة، اتصل بالدعم الفني.')
+    
+    @staticmethod
+    def create_failed(entity_type):
+        entities = {
+            'customer': 'العميل',
+            'product': 'المنتج',
+            'sale': 'الفاتورة',
+            'user': 'المستخدم',
+            'supplier': 'المورد',
+            'warehouse': 'المستودع',
+            'cheque': 'الشيك',
+            'ledger': 'القيد'
+        }
+        entity_ar = entities.get(entity_type, entity_type)
+        return f'فشل إنشاء {entity_ar}.\nتحقق من البيانات وحاول مرة أخرى.'
+    
+    @staticmethod
+    def update_failed(entity_type):
+        entities = {
+            'customer': 'العميل',
+            'product': 'المنتج',
+            'sale': 'الفاتورة',
+            'user': 'المستخدم',
+            'supplier': 'المورد',
+            'warehouse': 'المستودع',
+            'cheque': 'الشيك',
+            'ledger': 'القيد'
+        }
+        entity_ar = entities.get(entity_type, entity_type)
+        return f'فشل تعديل {entity_ar}.\nتحقق من البيانات وحاول مرة أخرى.'
+    
+    @staticmethod
+    def delete_failed(entity_type):
+        entities = {
+            'customer': 'العميل',
+            'product': 'المنتج',
+            'sale': 'الفاتورة',
+            'user': 'المستخدم',
+            'supplier': 'المورد',
+            'warehouse': 'المستودع',
+            'cheque': 'الشيك',
+            'ledger': 'القيد'
+        }
+        entity_ar = entities.get(entity_type, entity_type)
+        return f'فشل حذف {entity_ar}.\nقد يكون لديه ارتباطات في النظام.'
+    
+    @staticmethod
+    def action_failed(action_name):
+        return f'فشل {action_name}.\nتحقق من البيانات وحاول مرة أخرى.'
+    
+    @staticmethod
+    def whatsapp_failed():
+        return 'فشل إرسال الرسالة عبر WhatsApp.\nتحقق من الاتصال وحاول مرة أخرى.'
     
     @staticmethod
     def record_not_found(entity_type):

@@ -3657,13 +3657,20 @@ def sales_insights():
         Product.name,
         func.sum(SaleLine.quantity).label('total_qty'),
         func.sum(SaleLine.line_total).label('total_revenue')
-    ).join(SaleLine).join(Sale).filter(
+    ).select_from(Product).join(
+        SaleLine, SaleLine.product_id == Product.id
+    ).join(
+        Sale, Sale.id == SaleLine.sale_id
+    ).filter(
         Sale.sale_date >= last_30_days,
         Sale.status == 'confirmed'
     )
     if scoped_branch_id is not None:
         top_products = top_products.filter(Sale.branch_id == scoped_branch_id)
-    top_products = top_products.group_by(Product.id).order_by(desc('total_revenue')).limit(10).all()
+    top_products = top_products.group_by(
+        Product.id,
+        Product.name,
+    ).order_by(desc('total_revenue')).limit(10).all()
     
     insights = {
         'daily_sales': [{'date': str(d.date), 'count': d.count, 'total': float(d.total)} for d in daily_sales],
@@ -3734,29 +3741,40 @@ def product_performance():
         Product.id,
         Product.name,
         Product.sku,
+        Product.cost_price,
         func.sum(SaleLine.quantity).label('total_sold'),
         func.sum(SaleLine.line_total).label('total_revenue'),
-        func.count(Sale.id).label('transactions')
-    ).join(SaleLine).join(Sale).filter(
+        func.count(func.distinct(Sale.id)).label('transactions')
+    ).select_from(Product).join(
+        SaleLine, SaleLine.product_id == Product.id
+    ).join(
+        Sale, Sale.id == SaleLine.sale_id
+    ).filter(
         Sale.sale_date >= last_90_days,
         Sale.status == 'confirmed'
     )
     if scoped_branch_id is not None:
         products_perf = products_perf.filter(Sale.branch_id == scoped_branch_id)
-    products_perf = products_perf.group_by(Product.id).all()
+    products_perf = products_perf.group_by(
+        Product.id,
+        Product.name,
+        Product.sku,
+        Product.cost_price,
+    ).all()
     
     performance_data = []
     for p in products_perf:
-        product = Product.query.get(p.id)
-        
-        margin = p.total_revenue - (product.purchase_price * p.total_sold) if product.purchase_price else 0
-        margin_percent = (margin / p.total_revenue * 100) if p.total_revenue > 0 else 0
+        total_sold = p.total_sold or Decimal('0')
+        total_revenue = p.total_revenue or Decimal('0')
+        cost_price = p.cost_price or Decimal('0')
+        margin = total_revenue - (cost_price * total_sold)
+        margin_percent = (margin / total_revenue * 100) if total_revenue > 0 else 0
         
         performance_data.append({
             'name': p.name,
             'code': p.sku,
-            'sold': float(p.total_sold),
-            'revenue': float(p.total_revenue),
+            'sold': float(total_sold),
+            'revenue': float(total_revenue),
             'transactions': p.transactions,
             'margin': float(margin),
             'margin_percent': float(margin_percent),
