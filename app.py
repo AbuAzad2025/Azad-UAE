@@ -6,8 +6,10 @@ import uuid
 from datetime import datetime, timezone
 import time
 from decimal import Decimal
-from flask import Flask, render_template, request, g, redirect, url_for, flash, abort
+from flask import Flask, render_template, request, g, redirect, url_for, flash, abort, jsonify, send_from_directory
 from flask_login import current_user, login_required
+from flask_wtf.csrf import CSRFError
+from werkzeug.exceptions import HTTPException
 from werkzeug.routing import BuildError
 
 from config import Config, ensure_runtime_dirs, assert_production_sanity
@@ -257,7 +259,39 @@ def create_app(config_class=Config):
         return None
 
     # Error Handlers — use ErrorAuditService (independent of db.session)
+    @app.route('/favicon.ico')
+    def favicon():
+        return send_from_directory(
+            app.static_folder,
+            'favicon.ico',
+            mimetype='image/vnd.microsoft.icon',
+        )
+
     from services.error_audit_service import ErrorAuditService
+
+    def _wants_json_error_response():
+        return (
+            request.is_json
+            or request.path.startswith('/api/')
+            or request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+            or request.accept_mimetypes.best == 'application/json'
+        )
+
+    @app.errorhandler(CSRFError)
+    def handle_csrf_error(exc):
+        ErrorAuditService.log(
+            message=str(exc) or "CSRF validation failed",
+            category="SECURITY",
+            level="WARNING",
+            source="app.errorhandler.csrf",
+            exception=exc,
+        )
+        if _wants_json_error_response():
+            return jsonify({"success": False, "error": "CSRF token missing or invalid"}), 400
+        if not current_user.is_authenticated:
+            flash("Security token expired. Please sign in again.", "warning")
+            return redirect(url_for("auth.login"))
+        return render_template("errors/403.html"), 400
 
     @app.errorhandler(500)
     def handle_500(exc):
@@ -299,6 +333,8 @@ def create_app(config_class=Config):
     @app.errorhandler(Exception)
     def handle_generic_exception(exc):
         """Catch-all for unhandled exceptions."""
+        if isinstance(exc, HTTPException):
+            return exc
         ErrorAuditService.log_exception(
             exc,
             category="BACKEND",

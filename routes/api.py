@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from flask import Blueprint, jsonify, request, make_response
 from flask_login import login_required, current_user
 from sqlalchemy import select
-from extensions import db, limiter
+from extensions import db, limiter, csrf
 from models import Customer, Supplier, Product, User
 from services.stock_service import StockService
 from utils.branching import get_accessible_warehouse_ids, get_branch_stock_map
@@ -423,6 +423,7 @@ def echo():
 
 
 @api_bp.route('/log-client-error', methods=['POST'])
+@csrf.exempt
 @login_required
 @limiter.limit("30 per minute")
 def log_client_error():

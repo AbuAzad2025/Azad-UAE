@@ -1198,7 +1198,7 @@ This archive does NOT include secrets, .env, or AI runtime memory.
         )
 
     @classmethod
-    def list_backups(cls) -> List[Dict]:
+    def list_backups(cls, auto_only: bool = False) -> List[Dict]:
         cls.initialize()
         backups: List[Dict] = []
         backup_dir = Path(cls.BACKUP_DIR)
@@ -1234,6 +1234,8 @@ This archive does NOT include secrets, .env, or AI runtime memory.
                 }
             if backup_file.name.endswith(".tar.gz") and metadata.get("format") != "legacy":
                 metadata.setdefault("format", "azad_tar_v1")
+            if auto_only and metadata.get("manual", False):
+                continue
             backups.append(metadata)
         return backups
 

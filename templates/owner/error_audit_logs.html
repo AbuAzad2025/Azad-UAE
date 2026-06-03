@@ -183,7 +183,7 @@
                   </button>
                 </form>
                 {% endif %}
-                <button class="btn btn-xs btn-info" data-error-id="{{ log.id }}" title="تفاصيل">
+                <button class="btn btn-xs btn-info" data-toggle="modal" data-target="#errorDetailModal" data-error-id="{{ log.id }}" title="تفاصيل">
                   <i class="fas fa-eye"></i>
                 </button>
               </td>
@@ -235,7 +235,7 @@
 </section>
 
 {# Shared detail modal — populated dynamically to avoid DOM bloat #}
-<div class="modal fade" id="errorDetailModal" tabindex="-1" role="dialog" aria-hidden="true">
+<div class="modal fade" id="errorDetailModal" tabindex="-1" role="dialog">
   <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
     <div class="modal-content">
       <div class="modal-header bg-dark">
@@ -321,16 +321,17 @@
     return html;
   }
 
-  // Bind to eye buttons instead of per-row modal markup
-  document.addEventListener('click', function(ev) {
-    var btn = ev.target.closest('button[data-error-id]');
+  // Bootstrap 4: populate shared modal when it is about to show.
+  // Using show.bs.modal ensures Bootstrap registers all internal
+  // close / escape / backdrop handlers correctly.
+  $('#errorDetailModal').on('show.bs.modal', function(e) {
+    var btn = e.relatedTarget;
     if (!btn) return;
     var id = btn.getAttribute('data-error-id');
     var data = window.ERROR_LOG_DATA[id];
     if (!data) return;
     document.getElementById('errorDetailTitle').textContent = 'تفاصيل الخطأ #' + data.id;
     document.getElementById('errorDetailBody').innerHTML = buildDetailHtml(data);
-    $('#errorDetailModal').modal('show');
   });
 })();
 </script>
