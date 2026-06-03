@@ -33,7 +33,7 @@
               {% endif %}
             </td>
             <td>{{ expense.category.name_ar if expense.category else '-' }}</td>
-            <td>{{ expense.amount }} AED</td>
+            <td>{{ expense.amount }} {{ tenant_default_currency or 'AED' }}</td>
             <td>{{ expense.description }}</td>
             <td>
                 {% if expense.is_reversed %}

@@ -1212,7 +1212,7 @@ $(function() {
     if (tbody) tbody.innerHTML = '<tr><td colspan="3"><span class="spinner-border spinner-border-sm text-muted"></span> جارٍ التحميل...</td></tr>';
 
     try {
-      const res = await fetch('{{ url_for("api.exchange_rates_display") }}?base=USD', { cache: 'no-store' });
+      const res = await fetch('{{ url_for("api.exchange_rates_display") }}?base={{ tenant_default_currency or 'USD' }}', { cache: 'no-store' });
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
       if (!data.ok) throw new Error(data.error || 'data not ok');
@@ -1223,7 +1223,7 @@ $(function() {
       // fallback عرضي محلي — لا يؤثر على الحسابات
       populateFxDisplay({
         ok: false,
-        base: 'USD',
+        base: '{{ tenant_default_currency or 'USD' }}',
         rates: { USD: 1.0, ILS: 3.65, JOD: 0.709, AED: 3.67, EUR: 0.92, SAR: 3.75, EGP: 50.5, GBP: 0.79 },
         source: 'fallback_static',
         stale: true,
@@ -1243,7 +1243,7 @@ $(function() {
       ILS: { ar: 'شيقل إسرائيلي', sym: '₪' },
       JOD: { ar: 'دينار أردني', sym: 'JD' },
       EUR: { ar: 'يورو', sym: '€' },
-      AED: { ar: 'درهم إماراتي', sym: 'د.إ' },
+      AED: { ar: '{{ tenant_currency_name_ar or 'درهم إماراتي' }}', sym: '{{ tenant_currency_symbol or 'د.إ' }}' },
       SAR: { ar: 'ريال سعودي', sym: 'ر.س' },
       EGP: { ar: 'جنيه مصري', sym: 'ج.م' },
       GBP: { ar: 'جنيه إسترليني', sym: '£' },

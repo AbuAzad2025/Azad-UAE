@@ -633,9 +633,10 @@ def delete_package(package_id):
         )
         
         return jsonify({'success': True, 'message': 'تم حذف الباقة بنجاح!'})
-    except Exception as e:
+    except Exception:
         db.session.rollback()
-        return jsonify({'success': False, 'error': str(e)}), 400
+        logger.exception('Payment vault package delete failed')
+        return jsonify({'success': False, 'error': 'Could not delete package at this time'}), 400
 
 
 @payment_vault_bp.route('/reports')
@@ -865,9 +866,9 @@ def process_payment():
         else:
             return jsonify({'success': False, 'error': 'طريقة دفع غير مدعومة'}), 400
             
-    except Exception as e:
-        current_app.logger.error(f'خطأ في معالجة الدفع: {str(e)}')
-        return jsonify({'success': False, 'error': f'خطأ: {str(e)}'}), 500
+    except Exception:
+        logger.exception('Payment vault process-payment failed')
+        return jsonify({'success': False, 'error': 'Could not process payment at this time'}), 500
 
 
 @payment_vault_bp.route('/change-password', methods=['GET', 'POST'])
@@ -1089,9 +1090,10 @@ def api_create_purchase():
         
         return jsonify(response_data), 201
         
-    except Exception as e:
+    except Exception:
         db.session.rollback()
-        return jsonify({'success': False, 'error': str(e)}), 500
+        logger.exception('Payment vault purchase API failed')
+        return jsonify({'success': False, 'error': 'Could not create purchase at this time'}), 500
 
 
 @payment_vault_bp.route('/api/donation', methods=['POST'])
@@ -1205,9 +1207,10 @@ def api_create_donation():
         
         return jsonify(response_data), 201
         
-    except Exception as e:
+    except Exception:
         db.session.rollback()
-        return jsonify({'success': False, 'error': str(e)}), 500
+        logger.exception('Payment vault donation API failed')
+        return jsonify({'success': False, 'error': 'Could not create donation at this time'}), 500
 
 
 # ==================== Routes لإدارة المشتريات (محمية) ====================
@@ -1341,9 +1344,10 @@ def toggle_package_status(package_id):
         db.session.commit()
         status_text = 'تم تنشيط' if package.is_active else 'تم تعطيل'
         return jsonify({'success': True, 'message': f'{status_text} الباقة {package.name_ar}'})
-    except Exception as e:
+    except Exception:
         db.session.rollback()
-        return jsonify({'success': False, 'error': str(e)}), 500
+        logger.exception('Payment vault package toggle failed')
+        return jsonify({'success': False, 'error': 'Could not update package at this time'}), 500
 
 
 @payment_vault_bp.route('/donation/<int:donation_id>')
@@ -1650,9 +1654,9 @@ def nowpayments_webhook():
         
         return jsonify(result), 200 if result.get('success') else 400
         
-    except Exception as e:
-        logger.error(f'❌ NOWPayments webhook error: {str(e)}')
-        return jsonify({'error': str(e)}), 500
+    except Exception:
+        logger.exception('NOWPayments webhook failed')
+        return jsonify({'error': 'Webhook processing failed'}), 500
 
 
 @payment_vault_bp.route('/webhook/stripe', methods=['POST'])
@@ -1699,9 +1703,9 @@ def stripe_webhook():
         
         return jsonify(result), 200 if result.get('success') else 400
         
-    except Exception as e:
-        logger.error(f'❌ Stripe webhook error: {str(e)}')
-        return jsonify({'error': str(e)}), 500
+    except Exception:
+        logger.exception('Stripe webhook failed')
+        return jsonify({'error': 'Webhook processing failed'}), 500
 
 
 # ==================== Health & Monitoring Routes - المراقبة ====================

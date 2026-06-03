@@ -192,7 +192,7 @@
             </td>
             <td>
               <strong style="color: #007A3D;">{{ "{:,.2f}".format(product.regular_price) }}</strong>
-              <small class="text-muted">AED</small>
+              <small class="text-muted">{{ tenant_default_currency or 'AED' }}</small>
             </td>
             <td>
               <span class="badge badge-light border">{{ tenant_name_ar or company_name_ar or '-' }}</span>

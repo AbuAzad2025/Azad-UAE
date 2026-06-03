@@ -36,7 +36,7 @@
           {% for cheque in recent_cheques %}
           <tr>
             <td>{{ cheque.cheque_number }}</td>
-            <td>{{ cheque.amount_aed }} AED</td>
+            <td>{{ cheque.amount_aed }} {{ tenant_default_currency or 'AED' }}</td>
             <td>{{ cheque.due_date.strftime('%Y-%m-%d') }}</td>
             <td><span class="badge badge-{{ 'success' if cheque.status == 'cleared' else 'warning' }}">{{ cheque.status }}</span></td>
             <td>{{ cheque.gl_entry_number or '-' }}</td>

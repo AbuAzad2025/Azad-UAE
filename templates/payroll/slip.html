@@ -47,7 +47,7 @@
                 <tfoot>
                     <tr class="h4">
                         <th>صافي الراتب / Net Salary</th>
-                        <th class="text-center">{{ t.net_salary }} AED</th>
+                        <th class="text-center">{{ t.net_salary }} {{ tenant_default_currency or 'AED' }}</th>
                     </tr>
                 </tfoot>
             </table>

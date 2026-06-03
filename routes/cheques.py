@@ -483,6 +483,12 @@ def clear_cheque(id):
         # سعر الصرف وقت الصرف (اختياري)
         clearance_exchange_rate = request.form.get('clearance_exchange_rate', type=float)
         
+        try:
+            from models import Tenant
+            default_currency = (Tenant.get_current().default_currency or '').strip() or 'AED'
+        except Exception:
+            default_currency = 'AED'
+        
         # تأكيد الصرف - هنا تحدث المحاسبة!
         cheque.clear_cheque(clearance_date, clearance_exchange_rate)
         db.session.commit()
@@ -490,9 +496,9 @@ def clear_cheque(id):
         # رسالة مفصلة عند وجود فرق عملة
         if cheque.currency_gain_loss and abs(cheque.currency_gain_loss) > Decimal('0.01'):
             if cheque.currency_gain_loss > 0:
-                gain_loss_msg = f' - تم تحقيق ربح من فرق العملة: +{cheque.currency_gain_loss:.2f} AED'
+                gain_loss_msg = f' - تم تحقيق ربح من فرق العملة: +{cheque.currency_gain_loss:.2f} {default_currency}'
             else:
-                gain_loss_msg = f' - خسارة من فرق العملة: {cheque.currency_gain_loss:.2f} AED'
+                gain_loss_msg = f' - خسارة من فرق العملة: {cheque.currency_gain_loss:.2f} {default_currency}'
         else:
             gain_loss_msg = ''
         

@@ -55,7 +55,7 @@
       "operatingSystem": "Web, Cloud",
       "offers": {
         "@type": "AggregateOffer",
-        "priceCurrency": "AED",
+        "priceCurrency": "{{ tenant_default_currency or 'AED' }}",
         "availability": "https://schema.org/InStock"
       },
       "aggregateRating": {

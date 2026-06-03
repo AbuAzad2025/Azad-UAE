@@ -103,7 +103,7 @@
             <div class="input-group">
               <input type="number" step="0.01" class="form-control font-weight-bold text-center" name="amount" required placeholder="0.00">
               <div class="input-group-append">
-                <span class="input-group-text">AED</span>
+                <span class="input-group-text">{{ tenant_default_currency or 'AED' }}</span>
               </div>
             </div>
           </div>

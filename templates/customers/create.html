@@ -133,7 +133,7 @@ a.btn.btn-outline-secondary span {
           <div class="form-group">
             <label>
               <i class="fas fa-dollar-sign text-success"></i> العملة الافتراضية
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="العملة المفضلة (افتراضي: AED)"></i>
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="العملة المفضلة (افتراضي: {{ tenant_default_currency or 'AED' }})"></i>
             </label>
             {{ form.preferred_currency(class="form-control") }}
           </div>

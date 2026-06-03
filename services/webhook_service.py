@@ -75,7 +75,7 @@ class WebhookService:
         
         except Exception as e:
             logger.error(f'❌ Webhook processing error: {str(e)}')
-            return {'success': False, 'error': str(e)}
+            return {'success': False, 'error': 'Webhook processing failed'}
     
     @staticmethod
     def _process_purchase_webhook(data):
@@ -262,7 +262,7 @@ class WebhookService:
         
         except Exception as e:
             logger.error(f'❌ Stripe webhook processing error: {str(e)}')
-            return {'success': False, 'error': str(e)}
+            return {'success': False, 'error': 'Webhook processing failed'}
     
     @staticmethod
     def _process_stripe_payment_success(payment_intent):

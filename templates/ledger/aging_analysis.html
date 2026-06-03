@@ -205,6 +205,7 @@
 {% endif %}
 
 <script>
+const baseCurrency = '{{ tenant_default_currency or 'AED' }}';
 const pieCtx = document.getElementById('agingPieChart').getContext('2d');
 new Chart(pieCtx, {
     type: 'doughnut',
@@ -241,7 +242,7 @@ new Chart(pieCtx, {
                         const total = {{ report.totals['total'] }};
                         const value = context.parsed;
                         const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
-                        return context.label + ': ' + value.toLocaleString('ar-AE') + ' AED (' + percentage + '%)';
+                        return context.label + ': ' + value.toLocaleString('ar-AE') + ' ' + baseCurrency + ' (' + percentage + '%)';
                     }
                 }
             }
