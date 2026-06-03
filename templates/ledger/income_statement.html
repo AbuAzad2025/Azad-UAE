@@ -58,12 +58,12 @@
           {% for name, amount in revenues.items() %}
           <tr>
             <td>{{ name }}</td>
-            <td class="text-left">{{ "{:,.2f}".format(amount) }} AED</td>
+            <td class="text-left">{{ "{:,.2f}".format(amount) }} {{ tenant_currency_symbol or 'AED' }}</td>
           </tr>
           {% endfor %}
           <tr class="font-weight-bold bg-light">
             <td>إجمالي الإيرادات</td>
-            <td class="text-left text-success">{{ "{:,.2f}".format(total_revenue) }} AED</td>
+            <td class="text-left text-success">{{ "{:,.2f}".format(total_revenue) }} {{ tenant_currency_symbol or 'AED' }}</td>
           </tr>
         </table>
       </div>
@@ -74,12 +74,12 @@
           {% for name, amount in expenses.items() %}
           <tr>
             <td>{{ name }}</td>
-            <td class="text-left">{{ "{:,.2f}".format(amount) }} AED</td>
+            <td class="text-left">{{ "{:,.2f}".format(amount) }} {{ tenant_currency_symbol or 'AED' }}</td>
           </tr>
           {% endfor %}
           <tr class="font-weight-bold bg-light">
             <td>إجمالي المصروفات</td>
-            <td class="text-left text-danger">{{ "{:,.2f}".format(total_expense) }} AED</td>
+            <td class="text-left text-danger">{{ "{:,.2f}".format(total_expense) }} {{ tenant_currency_symbol or 'AED' }}</td>
           </tr>
         </table>
       </div>
@@ -97,7 +97,7 @@
             <i class="fas fa-exclamation-triangle"></i> صافي الخسارة
             {% endif %}
           </h3>
-          <h2 class="mb-0">{{ "{:,.2f}".format(net_profit|abs) }} AED</h2>
+          <h2 class="mb-0">{{ "{:,.2f}".format(net_profit|abs) }} {{ tenant_currency_symbol or 'AED' }}</h2>
         </div>
       </div>
     </div>

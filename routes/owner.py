@@ -2630,6 +2630,11 @@ def preview_invoice(template):
     print_branding = get_print_header_context(tid)
     from utils.number_to_arabic import number_to_arabic_words
     from utils.qr_generator import generate_qr_data_url
+    try:
+        from models import Tenant
+        default_currency = (Tenant.get_current().default_currency or '').strip() or 'AED'
+    except Exception:
+        default_currency = 'AED'
     
     # Sample data for preview
     class SampleCustomer:
@@ -2687,7 +2692,7 @@ def preview_invoice(template):
         tax_rate = Decimal('5.00')
         tax_amount = Decimal('47.50')
         total_amount = Decimal('997.50')
-        currency = 'AED'
+        currency = default_currency
         notes = 'فاتورة تجريبية للمعاينة'
         payments = [SamplePayment()]
     
@@ -2777,7 +2782,7 @@ def preview_receipt(template):
         user = SampleUser()
         amount = Decimal('1500.00')
         amount_aed = Decimal('1500.00')
-        currency = 'AED'
+        currency = default_currency
         payment_method = 'cheque'
         cheque_number = '789456'
         cheque_date = datetime.now().date()
@@ -3344,7 +3349,12 @@ def currency_settings():
         return redirect(url_for('owner.currency_settings'))
     
     settings = SystemSettings.get_current()
-    rates = CurrencyService.get_all_rates('AED')
+    try:
+        from models import Tenant
+        default_currency = (Tenant.get_current().default_currency or '').strip() or 'AED'
+    except Exception:
+        default_currency = 'AED'
+    rates = CurrencyService.get_all_rates(default_currency)
     
     return render_template('owner/currency_settings.html',
                          settings=settings,

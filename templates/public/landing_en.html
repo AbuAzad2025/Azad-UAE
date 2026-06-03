@@ -13,7 +13,7 @@
   <meta property="og:url" content="{{ request.url }}">
   <meta property="og:title" content="Azad Smart Systems - Warehouse & Sales Management in UAE">
   <meta property="og:description" content="Warehouse, sales, purchases, and accounting with AI-powered insights.">
-  {% set _logo_path = (config.COMPANY_LOGO or 'assets/brand/azad/logos/logo.png') %}
+  {% set _logo_path = (config.COMPANY_LOGO or 'assets/brand/azad/logos/logo-gold.png') %}
   {% if _logo_path.startswith('/static/') %}
     {% set _logo_path = _logo_path[8:] %}
   {% elif _logo_path.startswith('static/') %}
@@ -25,7 +25,7 @@
   <meta property="og:locale" content="en_US">
   <link rel="canonical" href="{{ request.url }}">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha512-GWq/fzjWoTsbo2VIolB0A+LUdJ6CPd4HOQutCkterxL0p1iUwqBvfhcTQEL8Zg7BiN3t31ViirxyxgO67qTsRg==" crossorigin="anonymous">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/accessibility.css') }}">
 
   <style>

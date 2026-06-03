@@ -195,7 +195,7 @@
               <tr>
                 <td><strong>{{ payment.payment_number }}</strong></td>
                 <td>{{ payment.payment_date.strftime('%Y-%m-%d') }}</td>
-                <td><strong class="text-success">{{ "{:,.2f}".format(payment.amount_aed) }} AED</strong></td>
+                <td><strong class="text-success">{{ "{:,.2f}".format(payment.base_amount) }} {{ tenant_currency_symbol or 'AED' }}</strong></td>
                 <td>
                   {% if payment.payment_method == 'cash' %}
                     <span class="badge badge-success"><i class="fas fa-money-bill-wave"></i> نقدي</span>
@@ -301,22 +301,22 @@
           </strong>
         </div>
         
-        {% if sale.currency != 'AED' and sale.amount_aed %}
+        {% if sale.currency != tenant_default_currency and sale.base_amount %}
         <div class="d-flex justify-content-between mb-3 text-muted">
-          <span>بالدرهم:</span>
-          <strong>{{ "{:,.2f}".format(sale.amount_aed) }} AED</strong>
+          <span>بال{{ tenant_currency_name_ar or 'درهم' }}:</span>
+          <strong>{{ "{:,.2f}".format(sale.base_amount) }} {{ tenant_currency_symbol or 'AED' }}</strong>
         </div>
         {% endif %}
         
         <div class="d-flex justify-content-between mb-2">
           <span><i class="fas fa-check-circle text-success mr-1"></i>المدفوع المؤكد:</span>
-          <strong class="text-success">{{ "{:,.2f}".format(sale.paid_amount) }} AED</strong>
+          <strong class="text-success">{{ "{:,.2f}".format(sale.paid_amount) }} {{ sale.currency or tenant_currency_symbol or 'AED' }}</strong>
         </div>
         
         {% if sale.pending_cheques_amount > 0 %}
         <div class="d-flex justify-content-between mb-2">
           <span><i class="fas fa-hourglass-half text-warning mr-1"></i>شيكات معلقة:</span>
-          <strong class="text-warning">{{ "{:,.2f}".format(sale.pending_cheques_amount) }} AED</strong>
+          <strong class="text-warning">{{ "{:,.2f}".format(sale.pending_cheques_amount) }} {{ tenant_currency_symbol or 'AED' }}</strong>
         </div>
         <small class="text-muted d-block mb-2">
           <i class="fas fa-info-circle"></i> هذه الشيكات لم تُصرف بعد من البنك
@@ -326,7 +326,7 @@
         <div class="d-flex justify-content-between mb-3">
           <span><i class="fas fa-exclamation-circle text-danger mr-1"></i>الباقي:</span>
           <strong class="text-danger" style="font-size: 1.2rem;">
-            {{ "{:,.2f}".format(sale.balance_due) }} AED
+            {{ "{:,.2f}".format(sale.balance_due) }} {{ tenant_currency_symbol or 'AED' }}
           </strong>
         </div>
 

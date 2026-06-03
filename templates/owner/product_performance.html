@@ -36,8 +36,8 @@
               <td>{{ p.name }}</td>
               <td><code>{{ p.code }}</code></td>
               <td>{{ "%.0f"|format(p.sold) }}</td>
-              <td>{{ "%.2f"|format(p.revenue) }} AED</td>
-              <td>{{ "%.2f"|format(p.margin) }} AED</td>
+              <td>{{ "%.2f"|format(p.revenue) }} {{ tenant_currency_symbol or 'AED' }}</td>
+              <td>{{ "%.2f"|format(p.margin) }} {{ tenant_currency_symbol or 'AED' }}</td>
               <td>{{ "%.1f"|format(p.margin_percent) }}%</td>
               <td>
                 <span class="badge badge-{{ 'success' if p.status == 'ممتاز' else 'info' if p.status == 'جيد' else 'warning' }}">

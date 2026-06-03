@@ -424,7 +424,6 @@ def echo():
 
 @api_bp.route('/log-client-error', methods=['POST'])
 @csrf.exempt
-@login_required
 @limiter.limit("30 per minute")
 def log_client_error():
     """Receive JS errors from the browser and store them via ErrorAuditService.
@@ -437,33 +436,75 @@ def log_client_error():
     """
     from services.error_audit_service import ErrorAuditService
 
+    if request.content_length and request.content_length > 50 * 1024:
+        return '', 413
+
     data = request.get_json(silent=True) or {}
     message = str(data.get('message', 'Unknown JS error'))[:2000]
     source_file = str(data.get('source', 'frontend.unknown'))[:500]
+    event_type = str(data.get('type', 'runtime')).lower()[:40]
+    allowed_types = {
+        'runtime', 'promise', 'resource', 'fetch', 'fetch_slow',
+        'ajax', 'api', 'api_slow', 'concurrency', 'longtask',
+        'layout', 'theme',
+    }
+    if event_type not in allowed_types:
+        event_type = 'runtime'
     lineno = data.get('lineno')
     colno = data.get('colno')
     stack = str(data.get('stack', '')) if data.get('stack') else None
     url = str(data.get('url', request.referrer or request.url))[:500]
+    request_url = str(data.get('request_url', ''))[:500]
+    status = data.get('status')
+    method = str(data.get('method', ''))[:10]
+
+    source = f"frontend.{event_type or 'runtime'}"
+    level = "WARNING" if event_type in {
+        "resource", "fetch", "fetch_slow", "ajax", "api_slow",
+        "concurrency", "longtask", "layout", "theme",
+    } else "ERROR"
 
     enriched_message = message
     if lineno:
         enriched_message += f" (line {lineno}, col {colno})"
+    if status:
+        enriched_message += f" [HTTP {status}]"
 
     # Build extra WITHOUT cookies, tokens, or auth headers
     extra = {
+        'type': event_type,
         'source_file': source_file,
         'line': lineno,
         'column': colno,
-        'user_id': getattr(current_user, 'id', None),
-        'tenant_id': getattr(current_user, 'tenant_id', None),
+        'request_url': request_url,
+        'status': status,
+        'method': method,
+        'route': str(data.get('route', ''))[:300],
+        'browser_time': str(data.get('browser_time', ''))[:80],
+        'duration_ms': data.get('duration_ms'),
+        'active_requests': data.get('active_requests'),
+        'repeat_count': data.get('repeat_count'),
+        'request_id': str(data.get('request_id', ''))[:80],
+        'response_size': data.get('response_size'),
+        'cls': data.get('cls'),
+        'ui_mode': str(data.get('ui_mode', ''))[:40],
+        'ui_variant': str(data.get('ui_variant', ''))[:40],
+        'reason': str(data.get('reason', ''))[:120],
+        'fingerprint_key': str(data.get('fingerprint_key', ''))[:300],
+        'client': data.get('client') if isinstance(data.get('client'), dict) else {},
     }
+    if getattr(current_user, 'is_authenticated', False):
+        extra['user_id'] = getattr(current_user, 'id', None)
+        extra['tenant_id'] = getattr(current_user, 'tenant_id', None)
 
     ErrorAuditService.log_frontend(
         message=enriched_message,
+        level=level,
+        source=source,
         url=url,
         user_agent=request.headers.get('User-Agent', '')[:255],
         stack=stack,
         extra=extra,
     )
-    return jsonify({'success': True}), 204
+    return '', 204
 

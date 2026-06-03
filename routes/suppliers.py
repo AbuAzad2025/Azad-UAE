@@ -171,6 +171,11 @@ def create():
                     return render_template('suppliers/create.html')
             
             from utils.field_validators import normalize_phone_optional, validate_currency_code
+            try:
+                from models import Tenant
+                default_currency = (Tenant.get_current().default_currency or '').strip() or 'AED'
+            except Exception:
+                default_currency = 'AED'
 
             initial_balance = request.form.get('initial_balance', type=float, default=0)
             
@@ -191,7 +196,7 @@ def create():
                 rating=rating if rating is not None else None,
                 credit_limit=request.form.get('credit_limit', type=float, default=0),
                 payment_terms_days=request.form.get('payment_terms_days', type=int, default=30),
-                preferred_currency=validate_currency_code(request.form.get('preferred_currency', 'AED')),
+                preferred_currency=validate_currency_code(request.form.get('preferred_currency', default_currency)),
                 total_purchases_aed=initial_balance,
                 total_paid_aed=0,
                 notes=request.form.get('notes'),
@@ -279,10 +284,15 @@ def edit(id):
             
             rating_value = (request.form.get('rating') or '').strip()
             supplier.rating = int(rating_value) if rating_value else None
+            try:
+                from models import Tenant
+                default_currency = (Tenant.get_current().default_currency or '').strip() or 'AED'
+            except Exception:
+                default_currency = 'AED'
             supplier.credit_limit = request.form.get('credit_limit', type=float)
             supplier.payment_terms_days = request.form.get('payment_terms_days', type=int)
             supplier.preferred_currency = validate_currency_code(
-                request.form.get('preferred_currency') or supplier.preferred_currency or 'AED'
+                request.form.get('preferred_currency') or supplier.preferred_currency or default_currency
             )
             supplier.notes = request.form.get('notes')
             supplier.tags = request.form.get('tags')

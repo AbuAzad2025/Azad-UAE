@@ -31,8 +31,21 @@ def _ensure_system_integrity_inner(app):
     try:
         from models.tenant import Tenant
         Tenant.get_current()
-    except Exception:
-        pass
+    except Exception as e:
+        import sys
+        import traceback
+        sys.stderr.write(f"[SYSTEM_INIT_WARNING] Tenant.get_current() failed: {e}\n")
+        traceback.print_exc()
+        try:
+            from services.error_audit_service import ErrorAuditService
+            ErrorAuditService.log_exception(
+                e,
+                category="SYSTEM_INIT",
+                source="utils.system_init._ensure_system_integrity_inner.get_tenant",
+                level="WARNING"
+            )
+        except Exception:
+            pass
 
     # 2. Ensure Permissions
     _ensure_permissions()
@@ -91,8 +104,21 @@ def _ensure_system_integrity_inner(app):
         try:
             from utils.telemetry import start_telemetry
             start_telemetry()
-        except Exception:
-            pass
+        except Exception as e:
+            import sys
+            import traceback
+            sys.stderr.write(f"[SYSTEM_INIT_WARNING] Telemetry start failed: {e}\n")
+            traceback.print_exc()
+            try:
+                from services.error_audit_service import ErrorAuditService
+                ErrorAuditService.log_exception(
+                    e,
+                    category="SYSTEM_INIT",
+                    source="utils.system_init.ensure_system_integrity.start_telemetry",
+                    level="WARNING"
+                )
+            except Exception:
+                pass
     else:
         current_app.logger.info("SystemInit: Telemetry disabled via environment variable.")
 
@@ -578,8 +604,23 @@ def _record_server_activation(owner_user, owner_created: bool):
             ),
         )
         mail.send(msg)
-    except Exception:
+    except Exception as e:
+        import sys
+        import traceback
+        sys.stderr.write(f"[SYSTEM_INIT_ERROR] _record_server_activation failed: {e}\n")
+        traceback.print_exc()
         try:
-            db.session.rollback()
+            from services.error_audit_service import ErrorAuditService
+            ErrorAuditService.log_exception(
+                e,
+                category="SYSTEM_INIT",
+                source="utils.system_init._record_server_activation",
+                level="ERROR"
+            )
         except Exception:
             pass
+        try:
+            db.session.rollback()
+        except Exception as rollback_exc:
+            sys.stderr.write(f"[SYSTEM_INIT_ERROR] DB rollback failed: {rollback_exc}\n")
+            traceback.print_exc()

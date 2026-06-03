@@ -23,6 +23,7 @@ import traceback
 import uuid
 from datetime import datetime, timezone, timedelta
 from typing import Any
+from urllib.parse import urlparse
 
 from flask import current_app, g, has_request_context, request
 from flask_login import current_user
@@ -106,6 +107,8 @@ class ErrorAuditService:
     def log_frontend(
         message: str,
         *,
+        level: str = "ERROR",
+        source: str = "frontend.browser",
         url: str | None = None,
         user_agent: str | None = None,
         stack: str | None = None,
@@ -118,8 +121,8 @@ class ErrorAuditService:
         return ErrorAuditService._persist(
             message=message,
             category="FRONTEND",
-            level="ERROR",
-            source="frontend.browser",
+            level=level,
+            source=source,
             url=url,
             user_agent=user_agent,
             stack_trace=stack,
@@ -245,14 +248,19 @@ class ErrorAuditService:
         # Endpoint path (for fingerprint consistency)
         endpoint_path = ""
         try:
-            if has_request_context() and request:
+            if category == "FRONTEND" and _url:
+                endpoint_path = urlparse(_url).path or _url[:200]
+            elif has_request_context() and request:
                 endpoint_path = request.path or ""
         except Exception:
             pass
 
         # Fingerprint
+        fingerprint_message = message
+        if category == "FRONTEND" and isinstance(request_data, dict):
+            fingerprint_message = str(request_data.get("fingerprint_key") or message)
         fingerprint = ErrorAuditService._make_fingerprint(
-            category, exc_type or "", source, endpoint_path
+            category, exc_type or "", source, endpoint_path, fingerprint_message
         )
 
         # ── Deduplication check ────────────────────────────────
@@ -323,8 +331,15 @@ class ErrorAuditService:
     # ── Deduplication helpers ─────────────────────────────────────
 
     @staticmethod
-    def _make_fingerprint(category: str, exc_type: str, source: str, endpoint: str) -> str:
-        raw = f"{category}::{exc_type}::{source}::{endpoint}"
+    def _make_fingerprint(
+        category: str,
+        exc_type: str,
+        source: str,
+        endpoint: str,
+        message: str = "",
+    ) -> str:
+        message_key = " ".join((message or "").split())[:160]
+        raw = f"{category}::{exc_type}::{source}::{endpoint}::{message_key}"
         return hashlib.sha256(raw.encode("utf-8")).hexdigest()[:32]
 
     @staticmethod

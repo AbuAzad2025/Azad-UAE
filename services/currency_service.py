@@ -32,6 +32,8 @@ class CurrencyService:
     CACHE_TTL_SECONDS = 300  # 5 دقائق
     _rates_cache = {}
     
+    # Fallback rates: value of 1 AED in target currency
+    # Updated ILS: 1 AED ≈ 1.05 ILS (was 0.98, which implied 1 ILS = 1.02 AED — incorrect)
     FALLBACK_RATES = {
         'AED': Decimal('1.00'),
         'USD': Decimal('0.27'),
@@ -42,7 +44,7 @@ class CurrencyService:
         'BHD': Decimal('0.10'),
         'OMR': Decimal('0.10'),
         'QAR': Decimal('0.99'),
-        'ILS': Decimal('0.98')  # 1 AED = 0.98 ILS (approx 1 ILS = 1.02 AED)
+        'ILS': Decimal('1.05'),  # 1 AED ≈ 1.05 ILS (approx 1 ILS = 0.952 AED)
     }
     COMMON_CURRENCIES = (
         'AED', 'USD', 'EUR', 'GBP', 'SAR', 'QAR', 'KWD', 'BHD', 'OMR', 'ILS',

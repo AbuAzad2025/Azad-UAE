@@ -17,7 +17,13 @@ ledger_bp = Blueprint('ledger', __name__, url_prefix='/ledger')
 
 def _effective_branch_id():
     scoped_branch_id = branch_scope_id()
-    requested_branch_id = request.args.get('branch_id', type=int)
+    requested_branch_id_str = request.args.get('branch_id')
+    requested_branch_id = None
+    try:
+        if requested_branch_id_str:
+            requested_branch_id = int(requested_branch_id_str)
+    except ValueError:
+        requested_branch_id = None
     if scoped_branch_id is not None:
         return scoped_branch_id
     if requested_branch_id and user_can_access_branch(requested_branch_id, current_user):
@@ -745,12 +751,17 @@ def admin_add_account():
     from utils.gl_tenant import gl_account_query, active_tenant_id
     if request.method == 'POST':
         try:
+            try:
+                from models import Tenant
+                default_currency = (Tenant.get_current().default_currency or '').strip() or 'AED'
+            except Exception:
+                default_currency = 'AED'
             code = request.form.get('code')
             name = request.form.get('name')
             name_ar = request.form.get('name_ar')
             account_type = request.form.get('type')
             parent_id = request.form.get('parent_id') or None
-            currency = request.form.get('currency', 'AED')
+            currency = request.form.get('currency') or default_currency
             is_header = bool(request.form.get('is_header'))
             description = request.form.get('description')
             

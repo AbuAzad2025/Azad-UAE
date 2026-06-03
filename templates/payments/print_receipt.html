@@ -140,8 +140,8 @@
       </thead>
       <tbody>
         <tr>
-          <td>المبلغ ({{ receipt.currency or 'AED' }})</td>
-          <td>{{ "%.2f"|format(receipt.amount_aed) }} {{ receipt.currency or 'AED' }}</td>
+          <td>المبلغ ({{ receipt.currency or tenant_currency_symbol or 'AED' }})</td>
+          <td>{{ "%.2f"|format(receipt.base_amount) }} {{ receipt.currency or tenant_currency_symbol or 'AED' }}</td>
         </tr>
         {% if receipt.payment_method %}
         <tr>
@@ -166,14 +166,14 @@
       <tfoot>
         <tr class="total">
           <td>الإجمالي</td>
-          <td>{{ "%.2f"|format(receipt.amount_aed) }} {{ receipt.currency or 'AED' }}</td>
+          <td>{{ "%.2f"|format(receipt.base_amount) }} {{ receipt.currency or tenant_currency_symbol or 'AED' }}</td>
         </tr>
       </tfoot>
     </table>
 
-    {% set _payment_words = amount_in_words or (number_to_arabic_words(receipt.amount_aed or receipt.amount or 0, receipt.currency or 'AED') if number_to_arabic_words is defined else '') %}
+    {% set _payment_words = amount_in_words or (number_to_arabic_words(receipt.base_amount or receipt.amount or 0, receipt.currency or tenant_default_currency or 'AED') if number_to_arabic_words is defined else '') %}
     <div style="margin: 10px 0; padding: 8px 10px; background: #f8fafc; border-right: 4px solid #64748b; border-radius: 6px; font-size: 9px; color: #1f2937;">
-      <strong>المبلغ بالحروف:</strong> {{ _payment_words or ("{:.2f}".format(receipt.amount_aed) + " " + (receipt.currency or 'AED')) }}
+      <strong>المبلغ بالحروف:</strong> {{ _payment_words or ("{:.2f}".format(receipt.base_amount) + " " + (receipt.currency or tenant_currency_symbol or 'AED')) }}
     </div>
     {% if qr_data_url %}
     <div style="margin: 10px 0 6px 0; text-align: center;">

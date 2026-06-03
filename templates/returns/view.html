@@ -105,8 +105,8 @@
           <dt class="col-6">سعر الصرف:</dt>
           <dd class="col-6 text-left">{{ "{:,.6f}".format(product_return.exchange_rate or 1) }}</dd>
 
-          <dt class="col-6">بالدرهم (AED):</dt>
-          <dd class="col-6 text-left">{{ "{:,.2f}".format(product_return.amount_aed or 0) }}</dd>
+          <dt class="col-6">({{ tenant_currency_symbol or 'AED' }}):</dt>
+          <dd class="col-6 text-left">{{ "{:,.2f}".format(product_return.base_amount or 0) }}</dd>
         </dl>
       </div>
     </div>

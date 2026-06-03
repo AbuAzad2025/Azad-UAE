@@ -200,7 +200,12 @@ def create():
                 flash('⚠️ يرجى اختيار نوع الشيك.', 'warning')
                 customers = _scoped_customers_query().order_by(Customer.name).all()
                 suppliers = _scoped_suppliers_query().order_by(Supplier.name).all()
-                exchange_rates = CurrencyService.get_all_rates('AED')
+                try:
+                    from models import Tenant
+                    _dc = (Tenant.get_current().default_currency or '').strip() or 'AED'
+                except Exception:
+                    _dc = 'AED'
+                exchange_rates = CurrencyService.get_all_rates(_dc)
                 return render_template('cheques/create.html',
                                      customers=customers,
                                      suppliers=suppliers,
@@ -209,14 +214,28 @@ def create():
             try:
                 from models import Tenant
                 default_currency = (Tenant.get_current().default_currency or '').strip() or 'AED'
-            except Exception:
+            except Exception as e:
+                import sys
+                import traceback
+                sys.stderr.write(f"[CHEQUES_WARNING] Failed to get tenant default currency (create cheque): {e}\n")
+                traceback.print_exc()
+                try:
+                    from services.error_audit_service import ErrorAuditService
+                    ErrorAuditService.log_exception(
+                        e,
+                        category="CHEQUES",
+                        source="routes.cheques.create_cheque.get_default_currency",
+                        level="WARNING"
+                    )
+                except Exception:
+                    pass
                 default_currency = 'AED'
             currency = request.form.get('currency') or default_currency
             
             # حساب سعر الصرف
             exchange_rate = CurrencyService.get_exchange_rate(
                 currency,
-                'AED',
+                default_currency,
                 user_rate=request.form.get('exchange_rate', type=float)
             )
             
@@ -229,7 +248,7 @@ def create():
                 flash('⚠️ العميل المحدد خارج نطاق الفرع الحالي.', 'warning')
                 customers = _scoped_customers_query().order_by(Customer.name).all()
                 suppliers = _scoped_suppliers_query().order_by(Supplier.name).all()
-                exchange_rates = CurrencyService.get_all_rates('AED')
+                exchange_rates = CurrencyService.get_all_rates(default_currency)
                 return render_template('cheques/create.html',
                                      customers=customers,
                                      suppliers=suppliers,
@@ -238,7 +257,7 @@ def create():
                 flash('⚠️ المورد المحدد خارج نطاق الفرع الحالي.', 'warning')
                 customers = _scoped_customers_query().order_by(Customer.name).all()
                 suppliers = _scoped_suppliers_query().order_by(Supplier.name).all()
-                exchange_rates = CurrencyService.get_all_rates('AED')
+                exchange_rates = CurrencyService.get_all_rates(default_currency)
                 return render_template('cheques/create.html',
                                      customers=customers,
                                      suppliers=suppliers,
@@ -294,9 +313,14 @@ def create():
             from utils.error_messages import ErrorMessages
             flash(ErrorMessages.unexpected_error(), 'danger')
     
+    try:
+        from models import Tenant
+        default_currency = (Tenant.get_current().default_currency or '').strip() or 'AED'
+    except Exception:
+        default_currency = 'AED'
     customers = _scoped_customers_query().order_by(Customer.name).all()
     suppliers = _scoped_suppliers_query().order_by(Supplier.name).all()
-    exchange_rates = CurrencyService.get_all_rates('AED')
+    exchange_rates = CurrencyService.get_all_rates(default_currency)
     
     return render_template('cheques/create.html',
                          customers=customers,
@@ -346,13 +370,27 @@ def edit(id):
             try:
                 from models import Tenant
                 default_currency = (Tenant.get_current().default_currency or '').strip() or 'AED'
-            except Exception:
+            except Exception as e:
+                import sys
+                import traceback
+                sys.stderr.write(f"[CHEQUES_WARNING] Failed to get tenant default currency (create cheque): {e}\n")
+                traceback.print_exc()
+                try:
+                    from services.error_audit_service import ErrorAuditService
+                    ErrorAuditService.log_exception(
+                        e,
+                        category="CHEQUES",
+                        source="routes.cheques.create_cheque.get_default_currency",
+                        level="WARNING"
+                    )
+                except Exception:
+                    pass
                 default_currency = 'AED'
             cheque.currency = request.form.get('currency') or default_currency
             
             exchange_rate = CurrencyService.get_exchange_rate(
                 cheque.currency,
-                'AED',
+                default_currency,
                 user_rate=request.form.get('exchange_rate', type=float)
             )
             cheque.exchange_rate = exchange_rate
@@ -381,9 +419,14 @@ def edit(id):
             from utils.error_messages import ErrorMessages
             flash(ErrorMessages.unexpected_error(), 'danger')
     
+    try:
+        from models import Tenant
+        default_currency = (Tenant.get_current().default_currency or '').strip() or 'AED'
+    except Exception:
+        default_currency = 'AED'
     customers = _scoped_customers_query().order_by(Customer.name).all()
     suppliers = _scoped_suppliers_query().order_by(Supplier.name).all()
-    exchange_rates = CurrencyService.get_all_rates('AED')
+    exchange_rates = CurrencyService.get_all_rates(default_currency)
     
     return render_template('cheques/edit.html',
                          cheque=cheque,

@@ -1,9 +1,10 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app
 from flask_login import login_required, current_user
 from extensions import db
 from models import Product, StockMovement, Warehouse, Branch
 from services.stock_service import StockService
 from utils.decorators import permission_required, admin_required, branch_scope_id
+from utils.error_messages import ErrorMessages
 from flask import abort
 from decimal import Decimal
 from utils.branching import (

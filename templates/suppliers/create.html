@@ -183,7 +183,7 @@
           <div class="form-group">
             <label>
               <i class="fas fa-dollar-sign text-success"></i> العملة المفضلة
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="العملة المفضلة للتعامل (افتراضي: AED)"></i>
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="العملة المفضلة للتعامل (افتراضي: {{ tenant_default_currency or 'AED' }})"></i>
             </label>
             <select name="preferred_currency" class="form-control">
               <option value="AED">AED - درهم</option>
@@ -323,7 +323,7 @@
         <div class="col-md-3">
           <div class="form-group">
             <label>
-              <i class="fas fa-wallet text-success"></i> الرصيد الابتدائي (AED)
+              <i class="fas fa-wallet text-success"></i> الرصيد الابتدائي ({{ tenant_currency_symbol or 'AED' }})
               <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="المبلغ المستحق للمورد عند بداية التسجيل"></i>
             </label>
             <input type="number" name="initial_balance" class="form-control"
@@ -337,7 +337,7 @@
         <div class="col-md-3">
           <div class="form-group">
             <label>
-              <i class="fas fa-coins text-info"></i> الحد الائتماني (AED)
+              <i class="fas fa-coins text-info"></i> الحد الائتماني ({{ tenant_currency_symbol or 'AED' }})
               <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="الحد الأقصى للديون المسموح به"></i>
             </label>
             <input type="number" name="credit_limit" class="form-control"

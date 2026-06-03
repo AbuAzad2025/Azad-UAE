@@ -267,6 +267,8 @@
 
 {% block extra_js %}
 <script>
+const TENANT_BASE_CURRENCY = {{ tenant_default_currency|tojson }} || 'AED';
+
 $(function() {
   // تغيير الحقول حسب نوع الشيك
   $('#cheque_type').on('change', function() {
@@ -300,13 +302,13 @@ $(function() {
   $('#currency').on('change', function() {
     const currency = $(this).val();
     
-    if (!currency || currency === 'AED') {
+    if (!currency || currency === TENANT_BASE_CURRENCY) {
       $('input[name="exchange_rate"]').val('1.000000');
       return;
     }
     
     $.ajax({
-      url: `/api/currency-rate/${currency}/AED`,
+      url: `/api/currency-rate/${currency}/${TENANT_BASE_CURRENCY}`,
       method: 'GET',
       success: function(data) {
         if (data && data.rate) {

@@ -39,9 +39,26 @@ class Cheque(db.Model):
     currency = db.Column(db.String(10), default='AED')
     exchange_rate = db.Column(db.Numeric(15, 6), default=Decimal('1.0'))  # سعر الصرف عند الإنشاء
     clearance_exchange_rate = db.Column(db.Numeric(15, 6))  # سعر الصرف عند الصرف الفعلي
-    amount_aed = db.Column(db.Numeric(15, 2))  # المبلغ بالدرهم عند الإنشاء
-    actual_amount_aed = db.Column(db.Numeric(15, 2))  # المبلغ الفعلي بالدرهم عند الصرف
+    amount_aed = db.Column(db.Numeric(15, 2))  # المبلغ بالعملة الأساسية عند الإنشاء
+    actual_amount_aed = db.Column(db.Numeric(15, 2))  # المبلغ الفعلي بالعملة الأساسية عند الصرف
     currency_gain_loss = db.Column(db.Numeric(15, 2), default=Decimal('0'))  # ربح/خسارة فرق العملة
+    
+    # Aliases for unified currency handling
+    @property
+    def base_amount(self):
+        return self.amount_aed
+    
+    @base_amount.setter
+    def base_amount(self, value):
+        self.amount_aed = value
+    
+    @property
+    def actual_base_amount(self):
+        return self.actual_amount_aed
+    
+    @actual_base_amount.setter
+    def actual_base_amount(self, value):
+        self.actual_amount_aed = value
     
     # التواريخ
     issue_date = db.Column(db.Date, nullable=False)  # تاريخ الإصدار

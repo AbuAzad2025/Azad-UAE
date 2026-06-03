@@ -439,19 +439,23 @@ def print_payment(id):
     tenant, settings, company = InvoiceSettings.company_print_context(tid)
     print_branding = get_print_header_context(tid)
     print_branch = Branch.query.get(payment_branch_id) if payment_branch_id else None
+    try:
+        default_currency = (tenant.default_currency if tenant else '').strip() or 'AED'
+    except Exception:
+        default_currency = 'AED'
     print_user_name = (
         payment.user.get_display_name('ar')
         if payment.user and hasattr(payment.user, 'get_display_name')
         else (payment.user.full_name if payment.user and payment.user.full_name else (payment.user.username if payment.user else ''))
     )
-    amount_in_words = number_to_arabic_words(float(payment.amount_aed or 0), payment.currency or 'AED')
+    amount_in_words = number_to_arabic_words(float(payment.amount_aed or 0), payment.currency or default_currency)
     qr_data_url = ''
     if settings and settings.enable_qr_code:
         qr_data_url = generate_qr_data_url({
             't': 'payment',
             'n': payment.payment_number,
             'a': float(payment.amount_aed or 0),
-            'c': payment.currency or 'AED',
+            'c': payment.currency or default_currency,
             'd': payment.payment_date.strftime('%Y-%m-%d') if payment.payment_date else '',
             'co': company.get('name_ar') or 'نظام المحاسبة',
             'u': print_user_name,
@@ -556,14 +560,28 @@ def create_from_sale(sale_id):
             try:
                 from models import Tenant
                 default_currency = (sale.currency or '').strip() or (Tenant.get_current().default_currency or '').strip() or 'AED'
-            except Exception:
+            except Exception as e:
+                import sys
+                import traceback
+                sys.stderr.write(f"[PAYMENTS_WARNING] Failed to get tenant default currency: {e}\n")
+                traceback.print_exc()
+                try:
+                    from services.error_audit_service import ErrorAuditService
+                    ErrorAuditService.log_exception(
+                        e,
+                        category="PAYMENTS",
+                        source="routes.payments.create_from_sale.get_default_currency",
+                        level="WARNING"
+                    )
+                except Exception:
+                    pass
                 default_currency = (sale.currency or '').strip() or 'AED'
             currency = request.form.get('currency') or default_currency
             user_exchange_rate = request.form.get('exchange_rate', type=float)
             payment_method_value = (request.form.get('payment_method') or '').strip()
             if not payment_method_value:
                 flash('يرجى اختيار طريقة الدفع.', 'warning')
-                exchange_rates = CurrencyService.get_all_rates('AED')
+                exchange_rates = CurrencyService.get_all_rates(default_currency)
                 suggested_amount = sale.balance_due
                 return render_template('payments/create_receipt.html',
                                      customers=[sale.customer],
@@ -675,7 +693,21 @@ def create_voucher_submit():
         try:
             from models import Tenant
             default_currency = (Tenant.get_current().default_currency or '').strip() or 'AED'
-        except Exception:
+        except Exception as e:
+            import sys
+            import traceback
+            sys.stderr.write(f"[PAYMENTS_WARNING] Failed to get tenant default currency (voucher submit): {e}\n")
+            traceback.print_exc()
+            try:
+                from services.error_audit_service import ErrorAuditService
+                ErrorAuditService.log_exception(
+                    e,
+                    category="PAYMENTS",
+                    source="routes.payments.create_voucher_submit.get_default_currency",
+                    level="WARNING"
+                )
+            except Exception:
+                pass
             default_currency = 'AED'
         currency = request.form.get('currency') or default_currency
         user_exchange_rate = request.form.get('exchange_rate', type=float, default=1.0)
@@ -722,7 +754,7 @@ def create_voucher_submit():
                 from utils.helpers import generate_number
                 from decimal import Decimal
                 
-                exchange_rate = CurrencyService.get_exchange_rate(currency, 'AED', user_rate=user_exchange_rate)
+                exchange_rate = CurrencyService.get_exchange_rate(currency, default_currency, user_rate=user_exchange_rate)
                 amount_decimal = Decimal(str(amount))
                 amount_aed = amount_decimal * exchange_rate
                 
@@ -777,7 +809,7 @@ def create_voucher_submit():
             from utils.helpers import generate_number
             from decimal import Decimal
             
-            exchange_rate = CurrencyService.get_exchange_rate(currency, 'AED', user_rate=user_exchange_rate)
+            exchange_rate = CurrencyService.get_exchange_rate(currency, default_currency, user_rate=user_exchange_rate)
             amount_decimal = Decimal(str(amount))
             amount_aed = amount_decimal * exchange_rate
             
@@ -1028,19 +1060,23 @@ def print_receipt(id):
     from models import Branch
     tenant, settings, company = InvoiceSettings.company_print_context(tid)
     print_branch = Branch.query.get(receipt_branch_id) if receipt_branch_id else None
+    try:
+        default_currency = (tenant.default_currency if tenant else '').strip() or 'AED'
+    except Exception:
+        default_currency = 'AED'
     print_user_name = (
         receipt.user.get_display_name('ar')
         if receipt.user and hasattr(receipt.user, 'get_display_name')
         else (receipt.user.full_name if receipt.user and receipt.user.full_name else (receipt.user.username if receipt.user else ''))
     )
-    amount_in_words = number_to_arabic_words(float(receipt.amount_aed or 0), receipt.currency or 'AED')
+    amount_in_words = number_to_arabic_words(float(receipt.amount_aed or 0), receipt.currency or default_currency)
     qr_data_url = ''
     if settings and settings.enable_qr_code:
         qr_data_url = generate_qr_data_url({
             't': 'receipt',
             'n': receipt.receipt_number,
             'a': float(receipt.amount_aed or 0),
-            'c': receipt.currency or 'AED',
+            'c': receipt.currency or default_currency,
             'd': receipt.receipt_date.strftime('%Y-%m-%d') if receipt.receipt_date else '',
             'co': company.get('name_ar') or 'نظام المحاسبة',
             'u': print_user_name,
@@ -1061,7 +1097,21 @@ def print_receipt(id):
             print_branding=print_branding,
             print_tenant_id=tid,
         )
-    except Exception:
+    except Exception as e:
+        import sys
+        import traceback
+        sys.stderr.write(f"[PAYMENTS_WARNING] Failed to render custom receipt template, falling back to modern: {e}\n")
+        traceback.print_exc()
+        try:
+            from services.error_audit_service import ErrorAuditService
+            ErrorAuditService.log_exception(
+                e,
+                category="PAYMENTS",
+                source="routes.payments.print_receipt.render_template",
+                level="WARNING"
+            )
+        except Exception:
+            pass
         return render_template(
             'receipts/modern.html',
             receipt=receipt,
@@ -1201,8 +1251,6 @@ def delete_receipt(id):
         has_links = True
     if receipt.cheque_id:
         has_links = True
-    if receipt.cheques:  # التحقق من الشيكات المرتبطة
-        has_links = True
     
     try:
         # 1. عكس التخصيصات (إعادة الرصيد للفاتورة)
@@ -1244,8 +1292,8 @@ def delete_receipt(id):
             archive_service.archive_record('receipts', receipt, reason='تم أرشفة السند لوجود ارتباطات', commit=False)
             
             # أرشفة الشيكات المرتبطة
-            for cheque in receipt.cheques:
-                archive_service.archive_record('cheques', cheque, reason='تم أرشفة الشيك لارتباطه بسند مؤرشف', commit=False)
+            if receipt.cheque:
+                archive_service.archive_record('cheques', receipt.cheque, reason='تم أرشفة الشيك لارتباطه بسند مؤرشف', commit=False)
             
             create_audit_log('archive', 'receipts', id)
             db.session.commit()
@@ -1257,8 +1305,8 @@ def delete_receipt(id):
 
             # حذف نهائي (Hard Delete)
             # حذف الشيكات المرتبطة أولاً لتجنب خطأ المفتاح الأجنبي
-            for cheque in receipt.cheques:
-                db.session.delete(cheque)
+            if receipt.cheque:
+                db.session.delete(receipt.cheque)
                 
             db.session.delete(receipt)
             create_audit_log('delete', 'receipts', id)
@@ -1289,8 +1337,6 @@ def delete_payment(id):
     has_links = False
     if payment.cheque_id:
         has_links = True
-    if payment.cheques:  # التحقق من الشيكات المرتبطة
-        has_links = True
     # يمكن إضافة شروط أخرى للارتباط هنا
     
     try:
@@ -1309,8 +1355,8 @@ def delete_payment(id):
             archive_service.archive_record('payments', payment, reason='تم أرشفة السند لوجود ارتباطات', commit=False)
             
             # أرشفة الشيكات المرتبطة
-            for cheque in payment.cheques:
-                archive_service.archive_record('cheques', cheque, reason='تم أرشفة الشيك لارتباطه بسند مؤرشف', commit=False)
+            if payment.cheque:
+                archive_service.archive_record('cheques', payment.cheque, reason='تم أرشفة الشيك لارتباطه بسند مؤرشف', commit=False)
 
             create_audit_log('archive', 'payments', id)
             db.session.commit()
@@ -1322,8 +1368,8 @@ def delete_payment(id):
 
             # حذف نهائي
             # حذف الشيكات المرتبطة أولاً
-            for cheque in payment.cheques:
-                db.session.delete(cheque)
+            if payment.cheque:
+                db.session.delete(payment.cheque)
 
             db.session.delete(payment)
             create_audit_log('delete', 'payments', id)
@@ -1392,7 +1438,21 @@ def create_payment(purchase_id):
             try:
                 from models import Tenant
                 default_currency = (purchase.currency or '').strip() or (Tenant.get_current().default_currency or '').strip() or 'AED'
-            except Exception:
+            except Exception as e:
+                import sys
+                import traceback
+                sys.stderr.write(f"[PAYMENTS_WARNING] Failed to get tenant default currency (create from purchase): {e}\n")
+                traceback.print_exc()
+                try:
+                    from services.error_audit_service import ErrorAuditService
+                    ErrorAuditService.log_exception(
+                        e,
+                        category="PAYMENTS",
+                        source="routes.payments.create_payment.get_default_currency",
+                        level="WARNING"
+                    )
+                except Exception:
+                    pass
                 default_currency = (purchase.currency or '').strip() or 'AED'
             currency = request.form.get('currency') or default_currency
             
@@ -1523,17 +1583,23 @@ def api_customer_balance(customer_id):
     if not customer:
         return render_template('errors/403.html'), 403
 
+    try:
+        from models import Tenant
+        default_currency = (Tenant.get_current().default_currency or '').strip() or 'AED'
+    except Exception:
+        default_currency = 'AED'
     unpaid_sales = _scoped_customer_unpaid_sales(customer.id)
     return jsonify({
         'balance_aed': _scoped_customer_balance(customer.id),
         'balance': _scoped_customer_balance(customer.id),
+        'currency': default_currency,
         'unpaid_sales': [{
             'id': sale.id,
             'sale_number': sale.sale_number,
             'sale_date': sale.sale_date.strftime('%Y-%m-%d') if getattr(sale.sale_date, 'strftime', None) else str(sale.sale_date),
             'total_amount': float(sale.total_amount),
             'balance_due': float(sale.balance_due),
-            'currency': sale.currency or 'AED',
+            'currency': sale.currency or default_currency,
         } for sale in unpaid_sales]
     })
 

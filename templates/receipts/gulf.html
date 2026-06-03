@@ -355,9 +355,9 @@
 
       <div class="amount-showcase">
         <div class="amount-label-top">⭐ المبلغ المستلم ⭐</div>
-        <div class="amount-huge">{{ "{:,.2f}".format(receipt.amount_aed) }}</div>
-        <div class="amount-label-bottom">درهم إماراتي</div>
-        {% if receipt.currency != 'AED' %}
+        <div class="amount-huge">{{ "{:,.2f}".format(receipt.base_amount) }}</div>
+        <div class="amount-label-bottom">{{ tenant_currency_name_ar or 'درهم إماراتي' }}</div>
+        {% if receipt.currency != tenant_default_currency %}
         <div style="font-size: 9px; margin-top: 8px; opacity: 0.9;">
           ({{ "{:,.2f}".format(receipt.amount) }} {{ receipt.currency }})
         </div>

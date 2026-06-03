@@ -49,8 +49,8 @@
           <td>{{ item.date.strftime('%Y-%m-%d') }}</td>
           <td>
             <strong>{{ "{:,.2f}".format(item.amount) }} {{ item.currency }}</strong>
-            {% if item.currency != 'AED' %}
-              <br><small class="text-muted">{{ "{:,.2f}".format(item.amount_aed) }} AED</small>
+            {% if item.currency != tenant_default_currency %}
+              <br><small class="text-muted">{{ "{:,.2f}".format(item.base_amount) }} {{ tenant_currency_symbol or 'AED' }}</small>
             {% endif %}
           </td>
           <td>

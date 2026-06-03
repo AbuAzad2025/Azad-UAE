@@ -46,7 +46,7 @@
                 </strong>
                 {% if not level1.is_header %}
                 <span class="badge badge-info float-left">
-                  {{ "{:,.2f}".format(level1.balance) }} AED
+                  {{ "{:,.2f}".format(level1.balance) }} {{ tenant_currency_symbol or 'AED' }}
                 </span>
                 <a href="{{ url_for('ledger.account_statement', id=level1.id) }}" class="btn btn-sm btn-outline-primary float-left mr-2">
                   <i class="fas fa-eye"></i> كشف
@@ -61,7 +61,7 @@
                     {{ level2.code }} - {{ level2.name_ar }}
                     {% if not level2.is_header %}
                     <span class="badge badge-secondary float-left">
-                      {{ "{:,.2f}".format(level2.balance) }} AED
+                      {{ "{:,.2f}".format(level2.balance) }} {{ tenant_currency_symbol or 'AED' }}
                     </span>
                     <a href="{{ url_for('ledger.account_statement', id=level2.id) }}" class="btn btn-sm btn-outline-info float-left mr-2">
                       <i class="fas fa-eye"></i>

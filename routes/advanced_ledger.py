@@ -189,6 +189,11 @@ def add_advanced_expense():
     """إضافة مصروف متقدم جديد"""
     if request.method == 'POST':
         try:
+            try:
+                from models import Tenant
+                default_currency = (Tenant.get_current().default_currency or '').strip() or 'AED'
+            except Exception:
+                default_currency = 'AED'
             expense = AdvancedExpense(
                 expense_number=f"EXP-{datetime.now().strftime('%Y%m%d%H%M%S')}",
                 expense_date=datetime.strptime(request.form.get('expense_date'), '%Y-%m-%d').date(),
@@ -197,7 +202,7 @@ def add_advanced_expense():
                 category_id=int(request.form.get('category_id')),
                 supplier_id=int(request.form.get('supplier_id')) if request.form.get('supplier_id') else None,
                 amount=Decimal(request.form.get('amount', 0)),
-                currency=request.form.get('currency', 'AED'),
+                currency=request.form.get('currency') or default_currency,
                 exchange_rate=Decimal(request.form.get('exchange_rate', 1)),
                 amount_aed=Decimal(request.form.get('amount_aed', 0)),
                 taxable_amount=Decimal(request.form.get('taxable_amount', 0)),

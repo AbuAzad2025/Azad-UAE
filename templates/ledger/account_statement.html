@@ -59,7 +59,7 @@
           <div class="info-box-content">
             <span class="info-box-text">الرصيد الافتتاحي</span>
             <span class="info-box-number">
-              {{ "{:,.2f}".format(statement.opening_balance) }} AED
+              {{ "{:,.2f}".format(statement.opening_balance) }} {{ tenant_currency_symbol or 'AED' }}
             </span>
           </div>
         </div>
@@ -70,7 +70,7 @@
           <div class="info-box-content">
             <span class="info-box-text">إجمالي المدين</span>
             <span class="info-box-number text-success">
-              {{ "{:,.2f}".format(statement.total_debit) }} AED
+              {{ "{:,.2f}".format(statement.total_debit) }} {{ tenant_currency_symbol or 'AED' }}
             </span>
           </div>
         </div>
@@ -81,7 +81,7 @@
           <div class="info-box-content">
             <span class="info-box-text">إجمالي الدائن</span>
             <span class="info-box-number text-danger">
-              {{ "{:,.2f}".format(statement.total_credit) }} AED
+              {{ "{:,.2f}".format(statement.total_credit) }} {{ tenant_currency_symbol or 'AED' }}
             </span>
           </div>
         </div>

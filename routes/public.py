@@ -11,9 +11,6 @@ public_bp = Blueprint('public', __name__)
 @public_bp.route('/')
 def landing():
     """Landing Page الفخمة"""
-    lang = session.get('language', 'ar')
-    if lang == 'en':
-        return render_template('public/landing_en.html')
     return render_template('public/landing.html')
 
 

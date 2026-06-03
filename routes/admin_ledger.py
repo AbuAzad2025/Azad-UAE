@@ -102,13 +102,18 @@ def add_account():
     
     if request.method == 'POST':
         try:
+            try:
+                from models import Tenant
+                default_currency = (Tenant.get_current().default_currency or '').strip() or 'AED'
+            except Exception:
+                default_currency = 'AED'
             code = (request.form.get('code') or '').strip()
             name = (request.form.get('name') or '').strip()
             name_ar = (request.form.get('name_ar') or '').strip()
             account_type = (request.form.get('type') or '').strip()
             parent_id_raw = (request.form.get('parent_id') or '').strip()
             parent_id = int(parent_id_raw) if parent_id_raw else None
-            currency = request.form.get('currency', 'AED')
+            currency = request.form.get('currency') or default_currency
             is_header = 'on' in request.form.getlist('is_header')
             is_active = 'on' in request.form.getlist('is_active')
             description = request.form.get('description')
@@ -190,7 +195,12 @@ def edit_account(id):
             account.name_ar = request.form.get('name_ar')
             account.type = request.form.get('type')
             account.parent_id = request.form.get('parent_id') or None
-            account.currency = request.form.get('currency', 'AED')
+            try:
+                from models import Tenant
+                default_currency = (Tenant.get_current().default_currency or '').strip() or 'AED'
+            except Exception:
+                default_currency = 'AED'
+            account.currency = request.form.get('currency') or default_currency
             account.is_header = bool(request.form.get('is_header'))
             account.description = request.form.get('description')
             account.is_active = bool(request.form.get('is_active'))

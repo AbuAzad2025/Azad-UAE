@@ -73,9 +73,9 @@
           <dt class="col-sm-5">المبلغ:</dt>
           <dd class="col-sm-7"><h4 class="text-success">{{ "{:,.2f}".format(receipt.amount) }} {{ receipt.currency }}</h4></dd>
           
-          {% if receipt.currency != 'AED' %}
-          <dt class="col-sm-5">المبلغ بالدرهم:</dt>
-          <dd class="col-sm-7">{{ "{:,.2f}".format(receipt.amount_aed) }} AED</dd>
+          {% if receipt.currency != tenant_default_currency %}
+          <dt class="col-sm-5">المبلغ ({{ tenant_currency_name_ar or 'درهم' }}):</dt>
+          <dd class="col-sm-7">{{ "{:,.2f}".format(receipt.base_amount) }} {{ tenant_currency_symbol or 'AED' }}</dd>
           {% endif %}
           
           <dt class="col-sm-5">طريقة الدفع:</dt>

@@ -189,7 +189,7 @@ a.btn.btn-outline-secondary span {
               <div class="form-group">
                 <label class="font-weight-bold">
                   <i class="fas fa-money-bill-wave text-success mr-1"></i>عملة الدفع
-                  <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="العملة التي سيدفع بها العميل - الفاتورة بالدرهم دائماً (اختياري)"></i>
+                  <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="العملة التي سيدفع بها العميل - الفاتورة بال{{ tenant_currency_name_ar or 'درهم إماراتي' }} دائماً (اختياري)"></i>
                 </label>
                 {% set dc = company_default_currency or system_default_currency or 'AED' %}
                 <select name="currency" id="currency" class="form-control">
@@ -205,7 +205,7 @@ a.btn.btn-outline-secondary span {
                   <option value="BHD" {% if dc == 'BHD' %}selected{% endif %}>دينار بحريني (BHD)</option>
                 </select>
                 <small class="form-text text-info">
-                  <i class="fas fa-lightbulb"></i> الأسعار بالدرهم - العملة فقط لتحويل المدفوع
+                  <i class="fas fa-lightbulb"></i> الأسعار بال{{ tenant_currency_name_ar or 'درهم إماراتي' }} - العملة فقط لتحويل المدفوع
                 </small>
               </div>
             </div>
@@ -213,7 +213,7 @@ a.btn.btn-outline-secondary span {
               <div class="form-group">
                 <label class="font-weight-bold">
                   <i class="fas fa-exchange-alt text-info mr-1"></i>سعر الصرف
-                  <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="سعر صرف العملة مقابل الدرهم - يمكن تعديله يدوياً (اختياري)"></i>
+                  <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="سعر صرف العملة مقابل {{ tenant_currency_name_ar or 'الدرهم الإماراتي' }} - يمكن تعديله يدوياً (اختياري)"></i>
                 </label>
                 <input type="number" name="exchange_rate" id="exchange_rate" class="form-control" 
                        value="1.000000" step="0.000001" min="0.000001" 

@@ -129,7 +129,7 @@
           <div class="form-group">
             <label>
               <i class="fas fa-dollar-sign text-warning"></i> العملة
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="عملة الدفع (افتراضي: AED)"></i>
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="عملة الدفع (افتراضي: {{ tenant_default_currency or 'AED' }})"></i>
             </label>
             {% set dc = company_default_currency or system_default_currency or 'AED' %}
             <select name="currency" id="currency" class="form-control">
@@ -247,6 +247,8 @@
 
 {% block extra_js %}
 <script>
+const TENANT_BASE_CURRENCY = {{ tenant_default_currency|tojson }} || 'AED';
+
 $(function () {
   $('[data-toggle="tooltip"]').tooltip({
     placement: 'top',
@@ -257,13 +259,13 @@ $(function () {
   $('#currency').on('change', function() {
     const currency = $(this).val();
     
-    if (!currency || currency === 'AED') {
+    if (!currency || currency === TENANT_BASE_CURRENCY) {
       $('#exchange_rate').val('1.000000');
       return;
     }
     
     $.ajax({
-      url: `/api/currency-rate/${currency}/AED`,
+      url: `/api/currency-rate/${currency}/{{ tenant_default_currency or 'AED' }}`,
       method: 'GET',
       success: function(data) {
         if (data && data.rate) {

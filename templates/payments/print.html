@@ -150,8 +150,8 @@
       <div class="amount-box">
         <p style="margin: 0; font-size: 16px;">المبلغ المستلم</p>
         <h3>{{ "{:,.2f}".format(receipt.amount) }} {{ receipt.currency }}</h3>
-        {% if receipt.currency != 'AED' %}
-        <p style="margin: 5px 0; font-size: 14px;">= {{ "{:,.2f}".format(receipt.amount_aed) }} AED</p>
+        {% if receipt.currency != tenant_default_currency %}
+        <p style="margin: 5px 0; font-size: 14px;">= {{ "{:,.2f}".format(receipt.base_amount) }} {{ tenant_currency_symbol or 'AED' }}</p>
         {% endif %}
       </div>
 

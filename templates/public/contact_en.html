@@ -36,7 +36,7 @@
 </head>
 <body class="keep-theme contact-page">
   {% set platform_name_en = config.COMPANY_NAME if config.COMPANY_NAME != config.COMPANY_NAME_AR else 'Azad Smart Systems' %}
-  {% set platform_logo = config.COMPANY_LOGO or 'assets/brand/azad/logos/logo.png' %}
+  {% set platform_logo = config.COMPANY_LOGO or 'assets/brand/azad/logos/logo-gold.png' %}
   {% set company_address_en = config.COMPANY_ADDRESS_EN or company_address or tenant_address %}
   <div style="position: fixed; top: 20px; left: 20px; z-index: 9999;">
     <a href="{{ url_for('language.set_language', lang='ar') }}" class="btn btn-sm" style="background: rgba(255,255,255,0.9); border-radius: 20px; padding: 8px 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); text-decoration:none; color:#111827; font-weight:900;">

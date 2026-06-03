@@ -466,7 +466,7 @@ class AIService:
             if not customer:
                 return None
             
-            return _perform_analysis(customer)
+            return AIService._perform_analysis(customer)
         
         return _cached_analysis(customer_id)
     
@@ -1224,6 +1224,20 @@ class AIService:
             return response
         
         except Exception as e:
+            import sys
+            import traceback
+            sys.stderr.write(f"[AI_ERROR] Failed to process chat message: {e}\n")
+            traceback.print_exc()
+            try:
+                from services.error_audit_service import ErrorAuditService
+                ErrorAuditService.log_exception(
+                    e,
+                    category="AI",
+                    source="services.ai_service.process_chat_message",
+                    level="ERROR"
+                )
+            except Exception:
+                pass
             try:
                 from ai_knowledge.personality.azad_responses import AzadResponses
                 return AzadResponses.get_error_response()

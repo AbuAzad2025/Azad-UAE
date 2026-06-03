@@ -693,13 +693,13 @@
                     <tr>
                       <td>منتج تجريبي</td>
                       <td>2</td>
-                      <td>200 AED</td>
+                      <td>200 {{ tenant_currency_symbol or 'AED' }}</td>
                     </tr>
                   </tbody>
                   <tfoot>
                     <tr>
                       <th colspan="2">{{ t('Total') }}</th>
-                      <th>200 AED</th>
+                      <th>200 {{ tenant_currency_symbol or 'AED' }}</th>
                     </tr>
                   </tfoot>
                 </table>

@@ -29,7 +29,7 @@
       <a href="{{ url_for('shop.set_lang', slug=store.store_slug, lang_code=('en' if lang == 'ar' else 'ar')) }}" class="ps-topbar-link">
         <i class="fas fa-globe"></i> {{ t('lang_en') if lang == 'ar' else t('lang_ar') }}
       </a>
-      <span class="ps-topbar-cur"><i class="fas fa-tag"></i> {{ tenant.default_currency or 'AED' }}</span>
+      <span class="ps-topbar-cur"><i class="fas fa-tag"></i> {{ tenant.default_currency or tenant_currency_symbol or 'AED' }}</span>
     </div>
   </div>
 
@@ -134,7 +134,7 @@
         <ul class="ps-footer-links">
           {% if store.delivery_note %}<li><i class="fas fa-truck"></i> {{ store.delivery_note }}</li>{% endif %}
           {% if store.return_policy(lang) %}<li><a href="{{ url_for('shop.return_policy', slug=store.store_slug) }}"><i class="fas fa-rotate-left"></i> {{ t('return_policy') }}</a></li>{% endif %}
-          {% if store.min_order_amount %}<li><i class="fas fa-coins"></i> {{ t('free_from') }}: {{ '%.2f'|format(store.min_order_amount) }} {{ tenant.default_currency or 'AED' }}</li>{% endif %}
+          {% if store.min_order_amount %}<li><i class="fas fa-coins"></i> {{ t('free_from') }}: {{ '%.2f'|format(store.min_order_amount) }} {{ tenant.default_currency or tenant_currency_symbol or 'AED' }}</li>{% endif %}
           {% if store.whatsapp %}<li><a href="https://wa.me/{{ store.whatsapp|replace('+','')|replace(' ','') }}" target="_blank" rel="noopener"><i class="fab fa-whatsapp"></i> {{ t('contact_us') }}</a></li>{% endif %}
         </ul>
       </div>

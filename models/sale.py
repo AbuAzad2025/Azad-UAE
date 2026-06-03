@@ -39,6 +39,23 @@ class Sale(db.Model):
     amount_aed = db.Column(db.Numeric(15, 3), nullable=False)
     paid_amount_aed = db.Column(db.Numeric(15, 3), default=0)
     
+    # Aliases for unified currency handling — amount_aed stores the tenant's base currency
+    @property
+    def base_amount(self):
+        return self.amount_aed
+    
+    @base_amount.setter
+    def base_amount(self, value):
+        self.amount_aed = value
+    
+    @property
+    def base_paid_amount(self):
+        return self.paid_amount_aed
+    
+    @base_paid_amount.setter
+    def base_paid_amount(self, value):
+        self.paid_amount_aed = value
+    
     payment_status = db.Column(db.String(20), default='unpaid', index=True)
     status = db.Column(db.String(20), default='confirmed', index=True)
     source = db.Column(db.String(30), default='internal', nullable=False, index=True)

@@ -1387,10 +1387,57 @@ $(function() {
   // ── Frontend Error Catcher ─────────────────────────────────
   (function() {
     const LOG_ENDPOINT = '{{ url_for("api.log_client_error") }}';
-    const sentErrors = new Set();
+    const sentErrors = new Map();
+    let sentWindow = [];
+    let activeRequests = 0;
+    let concurrencyNoticeAt = 0;
+    const DUPLICATE_WINDOW_MS = 30000;
+    const MAX_REPORTS_PER_MINUTE = 20;
+    const CONCURRENCY_WARN_AT = 8;
+    const SLOW_REQUEST_MS = 5000;
+    const LONG_TASK_MS = 250;
+    const LAYOUT_SHIFT_WARN_AT = 0.25;
+    const VALID_THEME_MODES = ['light', 'dark'];
+    const VALID_THEME_VARIANTS = ['palestinian', 'gulf'];
+
+    function toAbsoluteUrl(value) {
+      try {
+        return new URL(value, window.location.href).toString();
+      } catch (_) {
+        return String(value || '');
+      }
+    }
+
+    function shouldSkipRequest(url) {
+      const absolute = toAbsoluteUrl(url);
+      return !absolute || absolute.indexOf(LOG_ENDPOINT) !== -1;
+    }
+
+    function isApiRequest(url) {
+      try {
+        const parsed = new URL(url, window.location.href);
+        return parsed.pathname.indexOf('/api/') === 0 || parsed.pathname.indexOf('/api_enhanced/') === 0;
+      } catch (_) {
+        return false;
+      }
+    }
+
+    function getClientContext() {
+      const root = document.documentElement;
+      return {
+        viewport: window.innerWidth + 'x' + window.innerHeight,
+        pixel_ratio: window.devicePixelRatio || 1,
+        online: navigator.onLine !== false,
+        active_requests: activeRequests,
+        ui_mode: root.dataset.uiMode || '',
+        ui_variant: root.dataset.uiVariant || '',
+        dir: root.getAttribute('dir') || ''
+      };
+    }
 
     function sendError(payload) {
       try {
+        payload = payload || {};
         const isOpaqueScriptError =
           payload.message === 'Script error.' &&
           (!payload.source || payload.source === 'unknown') &&
@@ -1398,11 +1445,38 @@ $(function() {
           !payload.stack;
         if (isOpaqueScriptError) return;
 
-        const key = payload.message + payload.source + payload.lineno;
-        if (sentErrors.has(key)) return;
-        sentErrors.add(key);
-        // Keep set small
-        if (sentErrors.size > 50) sentErrors.clear();
+        payload.url = payload.url || window.location.href;
+        payload.route = window.location.pathname;
+        payload.browser_time = new Date().toISOString();
+        payload.client = getClientContext();
+
+        const typeForKey = payload.type || 'runtime';
+        const variableMetricTypes = ['resource', 'fetch', 'fetch_slow', 'ajax', 'api', 'api_slow', 'concurrency', 'longtask', 'layout', 'theme'];
+        const key = [
+          typeForKey,
+          variableMetricTypes.indexOf(typeForKey) === -1 ? (payload.message || '') : '',
+          payload.source || '',
+          payload.request_url || '',
+          payload.status || '',
+          payload.lineno || 0
+        ].join('|');
+        payload.fingerprint_key = key;
+        const now = Date.now();
+        const seen = sentErrors.get(key);
+        if (seen && (now - seen.lastSeen) < DUPLICATE_WINDOW_MS) {
+          seen.count += 1;
+          seen.lastSeen = now;
+          payload.repeat_count = seen.count;
+          if ([2, 5, 10, 25, 50].indexOf(seen.count) === -1) return;
+        } else {
+          sentErrors.set(key, { count: 1, lastSeen: now });
+          payload.repeat_count = 1;
+        }
+        if (sentErrors.size > 100) sentErrors.clear();
+
+        sentWindow = sentWindow.filter(ts => now - ts < 60000);
+        if (sentWindow.length >= MAX_REPORTS_PER_MINUTE) return;
+        sentWindow.push(now);
 
         fetch(LOG_ENDPOINT, {
           method: 'POST',
@@ -1411,13 +1485,30 @@ $(function() {
             'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content || ''
           },
           body: JSON.stringify(payload),
+          credentials: 'same-origin',
           keepalive: true
         }).catch(() => {});
       } catch (_) {}
     }
 
     window.addEventListener('error', function(ev) {
+      const target = ev.target;
+      if (target && target !== window && target.tagName) {
+        const resourceUrl = target.src || target.href || target.currentSrc || '';
+        sendError({
+          type: 'resource',
+          message: 'Resource load failed: ' + target.tagName,
+          source: resourceUrl || target.tagName,
+          request_url: resourceUrl,
+          lineno: 0,
+          colno: 0,
+          stack: null,
+          url: window.location.href
+        });
+        return;
+      }
       sendError({
+        type: 'runtime',
         message: ev.message || 'Unknown error',
         source: ev.filename || 'unknown',
         lineno: ev.lineno || 0,
@@ -1425,7 +1516,7 @@ $(function() {
         stack: ev.error && ev.error.stack ? ev.error.stack : null,
         url: window.location.href
       });
-    });
+    }, true);
 
     window.addEventListener('unhandledrejection', function(ev) {
       const reason = ev.reason;
@@ -1438,6 +1529,7 @@ $(function() {
         stack = reason.stack || null;
       }
       sendError({
+        type: 'promise',
         message: msg,
         source: 'unhandledrejection',
         lineno: 0,
@@ -1446,6 +1538,180 @@ $(function() {
         url: window.location.href
       });
     });
+
+    if (window.fetch) {
+      const originalFetch = window.fetch;
+      window.fetch = function(input, init) {
+        const requestUrl = typeof input === 'string' ? input : (input && input.url);
+        const method = (init && init.method) || (input && input.method) || 'GET';
+        const absoluteUrl = toAbsoluteUrl(requestUrl);
+        const requestIsApi = isApiRequest(absoluteUrl);
+        const startedAt = (window.performance && performance.now) ? performance.now() : Date.now();
+        activeRequests += 1;
+
+        if (activeRequests >= CONCURRENCY_WARN_AT && !shouldSkipRequest(absoluteUrl)) {
+          const now = Date.now();
+          if (now - concurrencyNoticeAt > DUPLICATE_WINDOW_MS) {
+            concurrencyNoticeAt = now;
+            sendError({
+              type: 'concurrency',
+              message: 'High concurrent browser requests: ' + activeRequests,
+              source: 'fetch.concurrency',
+              request_url: absoluteUrl,
+              method: method,
+              url: window.location.href
+            });
+          }
+        }
+
+        return originalFetch.apply(this, arguments).then(function(response) {
+          const duration = Math.round(((window.performance && performance.now) ? performance.now() : Date.now()) - startedAt);
+          if (response && !response.ok && !shouldSkipRequest(requestUrl)) {
+            sendError({
+              type: requestIsApi ? 'api' : 'fetch',
+              message: (requestIsApi ? 'API failed: HTTP ' : 'Fetch failed: HTTP ') + response.status,
+              source: requestIsApi ? 'fetch.api' : 'fetch',
+              request_url: absoluteUrl,
+              method: method,
+              status: response.status,
+              duration_ms: duration,
+              active_requests: activeRequests,
+              request_id: response.headers && response.headers.get ? response.headers.get('X-Request-Id') : '',
+              url: window.location.href
+            });
+          } else if (response && duration >= SLOW_REQUEST_MS && !shouldSkipRequest(requestUrl)) {
+            sendError({
+              type: requestIsApi ? 'api_slow' : 'fetch_slow',
+              message: (requestIsApi ? 'Slow API request' : 'Slow fetch request') + ': ' + duration + 'ms',
+              source: requestIsApi ? 'fetch.api.slow' : 'fetch.slow',
+              request_url: absoluteUrl,
+              method: method,
+              status: response.status,
+              duration_ms: duration,
+              active_requests: activeRequests,
+              request_id: response.headers && response.headers.get ? response.headers.get('X-Request-Id') : '',
+              url: window.location.href
+            });
+          }
+          activeRequests = Math.max(0, activeRequests - 1);
+          return response;
+        }).catch(function(err) {
+          if (!shouldSkipRequest(requestUrl)) {
+            const duration = Math.round(((window.performance && performance.now) ? performance.now() : Date.now()) - startedAt);
+            sendError({
+              type: requestIsApi ? 'api' : 'fetch',
+              message: (err && err.message) || (requestIsApi ? 'API network error' : 'Fetch network error'),
+              source: requestIsApi ? 'fetch.api' : 'fetch',
+              request_url: absoluteUrl,
+              method: method,
+              duration_ms: duration,
+              active_requests: activeRequests,
+              stack: err && err.stack ? err.stack : null,
+              url: window.location.href
+            });
+          }
+          activeRequests = Math.max(0, activeRequests - 1);
+          throw err;
+        });
+      };
+    }
+
+    if (window.jQuery) {
+      window.jQuery(document).ajaxError(function(_event, xhr, settings, thrownError) {
+        const requestUrl = settings && settings.url;
+        if (shouldSkipRequest(requestUrl)) return;
+        const absoluteUrl = toAbsoluteUrl(requestUrl);
+        const requestIsApi = isApiRequest(absoluteUrl);
+        sendError({
+          type: requestIsApi ? 'api' : 'ajax',
+          message: thrownError || ((requestIsApi ? 'API AJAX failed: HTTP ' : 'AJAX failed: HTTP ') + (xhr && xhr.status)),
+          source: requestIsApi ? 'jquery.ajax.api' : 'jquery.ajax',
+          request_url: absoluteUrl,
+          method: settings && settings.type,
+          status: xhr && xhr.status,
+          response_size: xhr && xhr.responseText ? xhr.responseText.length : 0,
+          url: window.location.href
+        });
+      });
+    }
+
+    try {
+      if ('PerformanceObserver' in window) {
+        const longTaskObserver = new PerformanceObserver(function(list) {
+          list.getEntries().forEach(function(entry) {
+            if (entry.duration >= LONG_TASK_MS) {
+              sendError({
+                type: 'longtask',
+                message: 'Main thread long task: ' + Math.round(entry.duration) + 'ms',
+                source: 'performance.longtask',
+                duration_ms: Math.round(entry.duration),
+                url: window.location.href
+              });
+            }
+          });
+        });
+        longTaskObserver.observe({ entryTypes: ['longtask'] });
+      }
+    } catch (_) {}
+
+    try {
+      if ('PerformanceObserver' in window) {
+        let cumulativeLayoutShift = 0;
+        let layoutNoticeSent = false;
+        const layoutShiftObserver = new PerformanceObserver(function(list) {
+          list.getEntries().forEach(function(entry) {
+            if (entry.hadRecentInput) return;
+            cumulativeLayoutShift += entry.value || 0;
+            if (!layoutNoticeSent && cumulativeLayoutShift >= LAYOUT_SHIFT_WARN_AT) {
+              layoutNoticeSent = true;
+              sendError({
+                type: 'layout',
+                message: 'High cumulative layout shift: ' + cumulativeLayoutShift.toFixed(3),
+                source: 'performance.layout_shift',
+                cls: Number(cumulativeLayoutShift.toFixed(3)),
+                url: window.location.href
+              });
+            }
+          });
+        });
+        layoutShiftObserver.observe({ type: 'layout-shift', buffered: true });
+      }
+    } catch (_) {}
+
+    function auditThemeState(reason) {
+      try {
+        const root = document.documentElement;
+        const mode = root.dataset.uiMode || '';
+        const variant = root.dataset.uiVariant || '';
+        if (VALID_THEME_MODES.indexOf(mode) === -1 || VALID_THEME_VARIANTS.indexOf(variant) === -1) {
+          sendError({
+            type: 'theme',
+            message: 'Invalid UI theme state',
+            source: 'ui.theme',
+            reason: reason || 'audit',
+            ui_mode: mode,
+            ui_variant: variant,
+            url: window.location.href
+          });
+        }
+      } catch (_) {}
+    }
+
+    auditThemeState('boot');
+    try {
+      const themeObserver = new MutationObserver(function(mutations) {
+        for (let i = 0; i < mutations.length; i += 1) {
+          if (mutations[i].attributeName === 'data-ui-mode' || mutations[i].attributeName === 'data-ui-variant') {
+            auditThemeState('mutation');
+            break;
+          }
+        }
+      });
+      themeObserver.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['data-ui-mode', 'data-ui-variant']
+      });
+    } catch (_) {}
   })();
 
 })();

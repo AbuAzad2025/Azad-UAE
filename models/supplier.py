@@ -48,6 +48,23 @@ class Supplier(db.Model):
     total_paid_aed = db.Column(db.Numeric(15, 3), default=0)
     last_purchase_date = db.Column(db.DateTime)
     
+    # Aliases for unified currency handling
+    @property
+    def total_purchases_base(self):
+        return self.total_purchases_aed
+    
+    @total_purchases_base.setter
+    def total_purchases_base(self, value):
+        self.total_purchases_aed = value
+    
+    @property
+    def total_paid_base(self):
+        return self.total_paid_aed
+    
+    @total_paid_base.setter
+    def total_paid_base(self, value):
+        self.total_paid_aed = value
+    
     # معلومات إضافية
     notes = db.Column(db.Text)
     tags = db.Column(db.String(500))  # Comma-separated tags
@@ -70,7 +87,11 @@ class Supplier(db.Model):
         return f'<Supplier {self.name}>'
     
     def get_balance_aed(self):
-        """حساب الرصيد المستحق للمورد"""
+        """حساب الرصيد المستحق للمورد (Legacy alias — use get_balance_base)"""
+        return self.get_balance_base()
+    
+    def get_balance_base(self):
+        """حساب الرصيد المستحق للمورد بالعملة الأساسية للتينانت"""
         total = self.total_purchases_aed or Decimal('0')
         paid = self.total_paid_aed or Decimal('0')
         return total - paid
@@ -83,6 +104,14 @@ class Supplier(db.Model):
     def apply_payment(self, amount_aed: Decimal):
         """تحديث إجمالي المدفوع للمورد عند سند صرف."""
         self.total_paid_aed = (self.total_paid_aed or Decimal('0')) + Decimal(str(amount_aed or 0))
+    
+    def apply_purchase_base(self, amount: Decimal):
+        """تحديث إجمالي المشتريات بالعملة الأساسية."""
+        self.apply_purchase(amount)
+    
+    def apply_payment_base(self, amount: Decimal):
+        """تحديث إجمالي المدفوع بالعملة الأساسية."""
+        self.apply_payment(amount)
     
     def get_display_name(self, lang='ar'):
         """الحصول على الاسم حسب اللغة"""

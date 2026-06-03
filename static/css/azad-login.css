@@ -168,7 +168,7 @@ html, body.azad-login-page {
 
 .azad-login-brand__logo-banner {
   width: 100%;
-  max-width: 440px;
+  max-width: 520px;
   margin: 0 auto;
   padding: 10px 12px;
   border-radius: 16px;
@@ -183,7 +183,7 @@ html, body.azad-login-page {
   display: block;
   width: 100%;
   height: auto;
-  max-height: 140px;
+  max-height: 180px;
   object-fit: contain;
   object-position: center;
 }

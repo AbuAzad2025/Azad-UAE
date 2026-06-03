@@ -38,13 +38,13 @@
           </li>
           <li class="list-group-item">
             <b>{{ t('Balance') }}</b>
-            <span class="float-left {% if customer.get_balance_aed() < 0 %}text-danger{% elif customer.get_balance_aed() > 0 %}text-success{% else %}text-muted{% endif %}">
-              {{ "{:,.2f}".format(customer.get_balance_aed()) }} AED
+            <span class="float-left {% if customer.get_balance_base() < 0 %}text-danger{% elif customer.get_balance_base() > 0 %}text-success{% else %}text-muted{% endif %}">
+              {{ "{:,.2f}".format(customer.get_balance_base()) }} {{ tenant_currency_symbol or 'AED' }}
             </span>
           </li>
           <li class="list-group-item">
             <b>إجمالي المشتريات</b>
-            <span class="float-left">{{ "{:,.2f}".format(customer.total_purchases) }} AED</span>
+            <span class="float-left">{{ "{:,.2f}".format(customer.total_purchases) }} {{ tenant_currency_symbol or 'AED' }}</span>
           </li>
         </ul>
         {% if customer.balance < 0 %}

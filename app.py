@@ -10,6 +10,7 @@ from flask import Flask, render_template, request, g, redirect, url_for, flash, 
 from flask_login import current_user, login_required
 from flask_wtf.csrf import CSRFError
 from werkzeug.exceptions import HTTPException
+from sqlalchemy.exc import SQLAlchemyError
 from werkzeug.routing import BuildError
 
 from config import Config, ensure_runtime_dirs, assert_production_sanity
@@ -86,6 +87,10 @@ def create_app(config_class=Config):
             mod = __import__(module_path, fromlist=[var_name])
             return getattr(mod, var_name)
         except Exception as exc:
+            import traceback
+            import sys
+            sys.stderr.write(f"[SYSTEM_INIT_ERROR] Failed to import blueprint {module_path}.{var_name}: {exc}\n")
+            traceback.print_exc()
             # Log via ErrorAuditService if db is available.
             # Must wrap in app.app_context() because db.engine requires it.
             try:
@@ -96,8 +101,8 @@ def create_app(config_class=Config):
                         category="SYSTEM_INIT",
                         source=f"app.create_app.import_bp({module_path})",
                     )
-            except Exception:
-                pass
+            except Exception as log_exc:
+                sys.stderr.write(f"[SYSTEM_INIT_ERROR] Failed to log to DB: {log_exc}\n")
             _import_errors.append(f"{module_path}.{var_name}: {exc}")
             raise
 
@@ -168,8 +173,20 @@ def create_app(config_class=Config):
                 if not session.get('ai_unavailable_notified'):
                     flash("المساعد الذكي غير متاح حالياً بسبب إعدادات غير مكتملة.", "warning")
                     session['ai_unavailable_notified'] = True
-            except Exception:
-                pass
+            except Exception as e:
+                import sys
+                import traceback
+                sys.stderr.write(f"[AI_FALLBACK_WARNING] Failed to set session notification: {e}\n")
+                traceback.print_exc()
+                try:
+                    from services.error_audit_service import ErrorAuditService
+                    ErrorAuditService.log_exception(
+                        e,
+                        category="SYSTEM_INIT",
+                        source="app.create_app.ai_fallback.catch_all"
+                    )
+                except Exception:
+                    pass
             return redirect(url_for('main.dashboard'))
 
         return ai_bp
@@ -312,12 +329,21 @@ def create_app(config_class=Config):
 
     @app.errorhandler(404)
     def handle_404(exc):
-        ErrorAuditService.log(
-            message=f"Page not found: {request.path}",
-            category="API",
-            level="WARNING",
-            source="app.errorhandler.404",
-        )
+        # تجاهل طلبات Vite Dev Server (لا تُؤثر على النظام)
+        skip_paths = ["/@vite/", "/node_modules/", "/@react-refresh"]
+        skip_log = False
+        for path in skip_paths:
+            if path in request.path:
+                skip_log = True
+                break
+        
+        if not skip_log:
+            ErrorAuditService.log(
+                message=f"Page not found: {request.path}",
+                category="API",
+                level="WARNING",
+                source="app.errorhandler.404",
+            )
         if app.config.get("DEBUG"):
             raise exc
         return render_template("errors/404.html"), 404
@@ -334,15 +360,36 @@ def create_app(config_class=Config):
             raise exc
         return render_template("errors/403.html"), 403
 
+    @app.errorhandler(HTTPException)
+    def handle_http_exception(exc):
+        """Log HTTP exceptions not handled by a more specific handler."""
+        category = "SECURITY" if exc.code in (401, 429) else "API"
+        ErrorAuditService.log(
+            message=f"{exc.name}: {request.path}",
+            category=category,
+            level="WARNING",
+            source=f"app.errorhandler.http.{exc.code}",
+            exception=exc,
+        )
+        if _wants_json_error_response():
+            return jsonify({
+                "success": False,
+                "error": exc.name,
+                "status": exc.code,
+            }), exc.code
+        return exc
+
     @app.errorhandler(Exception)
     def handle_generic_exception(exc):
         """Catch-all for unhandled exceptions."""
         if isinstance(exc, HTTPException):
             return exc
+        category = "DATABASE" if isinstance(exc, SQLAlchemyError) else "BACKEND"
+        source = "app.errorhandler.database" if category == "DATABASE" else "app.errorhandler.generic"
         ErrorAuditService.log_exception(
             exc,
-            category="BACKEND",
-            source="app.errorhandler.generic",
+            category=category,
+            source=source,
         )
         if app.config.get("DEBUG"):
             raise exc
@@ -365,6 +412,12 @@ def create_app(config_class=Config):
             for c_code, data in CURRENCIES:
                 if c_code == code:
                     return data.get('symbol', code)
+            return code
+
+        def get_currency_name_ar(code):
+            for c_code, data in CURRENCIES:
+                if c_code == code:
+                    return data.get('ar', code)
             return code
 
         tenant_name_ar = ''
@@ -413,8 +466,21 @@ def create_app(config_class=Config):
                     tenant_name_ar = branding.get('company_name_ar') or tenant_name_ar
                 if not tenant_name:
                     tenant_name = branding.get('company_name_en') or tenant_name
-        except Exception:
-            pass
+        except Exception as e:
+            import sys
+            import traceback
+            sys.stderr.write(f"[CONTEXT_PROCESSOR_WARNING] Failed to load tenant/invoice settings: {e}\n")
+            traceback.print_exc()
+            try:
+                from services.error_audit_service import ErrorAuditService
+                ErrorAuditService.log_exception(
+                    e,
+                    category="FRONTEND",
+                    source="app.context_processor.tenant_settings",
+                    level="WARNING"
+                )
+            except Exception:
+                pass
 
         try:
             from models.system_settings import SystemSettings
@@ -440,7 +506,21 @@ def create_app(config_class=Config):
             system_decimal_places = sys_settings.decimal_places if isinstance(sys_settings.decimal_places, int) else 2
             system_enable_tax = bool(getattr(sys_settings, "enable_tax", True))
             system_default_tax_rate = getattr(sys_settings, "default_tax_rate", None)
-        except Exception:
+        except Exception as e:
+            import sys
+            import traceback
+            sys.stderr.write(f"[CONTEXT_PROCESSOR_WARNING] Failed to load system settings: {e}\n")
+            traceback.print_exc()
+            try:
+                from services.error_audit_service import ErrorAuditService
+                ErrorAuditService.log_exception(
+                    e,
+                    category="FRONTEND",
+                    source="app.context_processor.system_settings",
+                    level="WARNING"
+                )
+            except Exception:
+                pass
             developer_name_ar = app.config.get('DEVELOPER_NAME_AR', '')
             developer_name = app.config.get('DEVELOPER_NAME', '')
             developer_credit = app.config.get('DEVELOPER_CREDIT', '')
@@ -481,8 +561,21 @@ def create_app(config_class=Config):
                 active_tenant_id = get_active_tenant_id(current_user)
                 from models.tenant import Tenant as TenantModel
                 available_tenants = TenantModel.query.filter_by(is_active=True).order_by(TenantModel.id.asc()).all()
-        except Exception:
-            pass
+        except Exception as e:
+            import sys
+            import traceback
+            sys.stderr.write(f"[CONTEXT_PROCESSOR_WARNING] Failed to load available tenants: {e}\n")
+            traceback.print_exc()
+            try:
+                from services.error_audit_service import ErrorAuditService
+                ErrorAuditService.log_exception(
+                    e,
+                    category="FRONTEND",
+                    source="app.context_processor.available_tenants",
+                    level="WARNING"
+                )
+            except Exception:
+                pass
         app_enums = {
             'permissions': PERMISSIONS,
             'permission_codes': PERMISSION_CODES,
@@ -517,6 +610,8 @@ def create_app(config_class=Config):
             'tenant_logo_dark_url': tenant_logo_dark_url,
             'tenant_favicon_url': tenant_favicon_url,
             'tenant_default_currency': tenant_default_currency or system_default_currency,
+            'tenant_currency_symbol': get_currency_symbol(tenant_default_currency or system_default_currency),
+            'tenant_currency_name_ar': get_currency_name_ar(tenant_default_currency or system_default_currency),
             'tenant_enable_tax': tenant_enable_tax if tenant_enable_tax is not None else system_enable_tax,
             'tenant_default_tax_rate': tenant_default_tax_rate if tenant_default_tax_rate is not None else system_default_tax_rate,
             'company_name': tenant_name or 'ERP System',
@@ -603,6 +698,20 @@ def create_app(config_class=Config):
         response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
         if not app.debug and app.config.get('APP_ENV', '').lower() == 'production':
             response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+        # Content-Security-Policy (CSP) to prevent XSS
+        csp = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; "
+            "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; "
+            "font-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com; "
+            "img-src 'self' data: blob:; "
+            "connect-src 'self' wss:; "
+            "frame-ancestors 'self'; "
+            "object-src 'none'; "
+            "base-uri 'self'; "
+            "form-action 'self'; "
+        )
+        response.headers['Content-Security-Policy'] = csp
         return response
 
     # Models Import (to ensure they are known to SQLAlchemy)
@@ -631,6 +740,32 @@ def create_app(config_class=Config):
         app.logger.warning(f'Enhanced CLI commands not registered: {e}')
     
     app.logger.info('[OK] Application initialized successfully')
+    
+    # Register Jinja filters for unified currency display
+    @app.template_filter('currency')
+    def currency_filter(value, currency_code=None, decimals=2):
+        """Format a number with the tenant's currency symbol."""
+        from flask import g
+        try:
+            amount = float(value) if value is not None else 0.0
+        except (TypeError, ValueError):
+            amount = 0.0
+        # Try to get tenant currency from g or context
+        if currency_code is None:
+            try:
+                from models import Tenant
+                tenant = Tenant.get_current()
+                currency_code = tenant.default_currency if tenant else 'AED'
+            except Exception:
+                currency_code = 'AED'
+        from utils.constants import CURRENCIES
+        symbol = currency_code
+        for c_code, data in CURRENCIES:
+            if c_code == currency_code:
+                symbol = data.get('symbol', currency_code)
+                break
+        formatted = f'{amount:,.{decimals}f}'
+        return f'{formatted} {symbol}'
     
     return app
 
@@ -732,7 +867,21 @@ if __name__ == '__main__':
                 return uri
             user = creds.split(':', 1)[0]
             return f"{scheme}://{user}:***@{tail}"
-        except Exception:
+        except Exception as e:
+            import sys
+            import traceback
+            sys.stderr.write(f"[LOG_WARNING] Failed to mask DB URI: {e}\n")
+            traceback.print_exc()
+            try:
+                from services.error_audit_service import ErrorAuditService
+                ErrorAuditService.log_exception(
+                    e,
+                    category="SYSTEM",
+                    source="app._mask_db_uri",
+                    level="WARNING"
+                )
+            except Exception:
+                pass
             return uri
     
     app.logger.info("Starting UAE-Sale System")

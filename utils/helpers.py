@@ -300,8 +300,16 @@ def save_uploaded_file(file, upload_folder='uploads', allowed_extensions=None):
     return os.path.join(upload_folder, unique_filename).replace('\\', '/')
 
 
-def convert_currency(amount, from_currency, to_currency='AED'):
+def convert_currency(amount, from_currency, to_currency=None):
     from services.currency_service import CurrencyService
+    
+    if to_currency is None:
+        try:
+            from models import Tenant
+            tenant = Tenant.get_current()
+            to_currency = tenant.default_currency if tenant else 'AED'
+        except Exception:
+            to_currency = 'AED'
     
     if from_currency == to_currency:
         return amount

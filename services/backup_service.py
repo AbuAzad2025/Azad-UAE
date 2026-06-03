@@ -74,7 +74,21 @@ class BackupService:
                 return None
             with open(file_path, "r", encoding="utf-8") as f:
                 return json.load(f)
-        except Exception:
+        except Exception as e:
+            import sys
+            import traceback
+            sys.stderr.write(f"[BACKUP_WARNING] Failed to load JSON file {file_path}: {e}\n")
+            traceback.print_exc()
+            try:
+                from services.error_audit_service import ErrorAuditService
+                ErrorAuditService.log_exception(
+                    e,
+                    category="BACKUP",
+                    source=f"services.backup_service.BackupService._load_json_file[{file_path}]",
+                    level="WARNING"
+                )
+            except Exception:
+                pass
             return None
 
     @classmethod
@@ -84,7 +98,21 @@ class BackupService:
             with open(file_path, "w", encoding="utf-8") as f:
                 json.dump(data, f, indent=2, ensure_ascii=False)
             return True
-        except Exception:
+        except Exception as e:
+            import sys
+            import traceback
+            sys.stderr.write(f"[BACKUP_WARNING] Failed to write JSON file {file_path}: {e}\n")
+            traceback.print_exc()
+            try:
+                from services.error_audit_service import ErrorAuditService
+                ErrorAuditService.log_exception(
+                    e,
+                    category="BACKUP",
+                    source=f"services.backup_service.BackupService._write_json_file[{file_path}]",
+                    level="WARNING"
+                )
+            except Exception:
+                pass
             return False
 
     @classmethod

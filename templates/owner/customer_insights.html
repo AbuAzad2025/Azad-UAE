@@ -36,9 +36,9 @@
             <tr>
               <td>{{ loop.index }}</td>
               <td><strong>{{ c.name }}</strong></td>
-              <td>{{ "%.2f"|format(c.lifetime_value) }} AED</td>
+              <td>{{ "%.2f"|format(c.lifetime_value) }} {{ tenant_currency_symbol or 'AED' }}</td>
               <td>{{ c.sales_count }}</td>
-              <td>{{ "%.2f"|format(c.avg_sale) }} AED</td>
+              <td>{{ "%.2f"|format(c.avg_sale) }} {{ tenant_currency_symbol or 'AED' }}</td>
               <td>{{ c.days_since_last }} يوم</td>
               <td>
                 <span class="badge badge-{{ 'success' if c.status == 'نشط' else 'warning' if c.status == 'خامل' else 'danger' }}">

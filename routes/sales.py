@@ -125,7 +125,21 @@ def create():
             try:
                 from models import Tenant
                 default_currency = (Tenant.get_current().default_currency or '').strip() or 'AED'
-            except Exception:
+            except Exception as e:
+                import sys
+                import traceback
+                sys.stderr.write(f"[SALES_WARNING] Failed to get tenant default currency (create sale): {e}\n")
+                traceback.print_exc()
+                try:
+                    from services.error_audit_service import ErrorAuditService
+                    ErrorAuditService.log_exception(
+                        e,
+                        category="SALES",
+                        source="routes.sales.create_sale.get_default_currency",
+                        level="WARNING"
+                    )
+                except Exception:
+                    pass
                 default_currency = 'AED'
             currency_value = request.form.get('currency')
             currency = currency_value if currency_value else default_currency
@@ -257,14 +271,14 @@ def print_invoice(id):
         if sale.seller and hasattr(sale.seller, 'get_display_name')
         else (sale.seller.full_name if sale.seller and sale.seller.full_name else (sale.seller.username if sale.seller else ''))
     )
-    amount_in_words = number_to_arabic_words(float(sale.total_amount or 0), sale.currency or 'AED')
+    amount_in_words = number_to_arabic_words(float(sale.total_amount or 0), sale.currency or default_currency or 'AED')
     qr_data_url = ''
     if settings and settings.enable_qr_code:
         qr_data_url = generate_qr_data_url({
             't': 'invoice',
             'n': sale.sale_number,
             'a': float(sale.total_amount or 0),
-            'c': sale.currency or 'AED',
+            'c': sale.currency or default_currency or 'AED',
             'd': sale.sale_date.strftime('%Y-%m-%d') if sale.sale_date else '',
             'co': (
                 settings.company_name_ar

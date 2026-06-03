@@ -289,6 +289,11 @@ def create():
     if form.validate_on_submit():
         try:
             from utils.field_validators import normalize_phone_optional, validate_currency_code
+            try:
+                from models import Tenant
+                default_currency = (Tenant.get_current().default_currency or '').strip() or 'AED'
+            except Exception:
+                default_currency = 'AED'
 
             customer = Customer(
                 name=form.name.data,
@@ -298,7 +303,7 @@ def create():
                 email=form.email.data,
                 address=form.address.data,
                 tax_number=form.tax_number.data,
-                preferred_currency=validate_currency_code(form.preferred_currency.data or 'AED'),
+                preferred_currency=validate_currency_code(form.preferred_currency.data or default_currency),
                 is_active=bool(form.is_active.data),
                 notes=form.notes.data
             )
@@ -358,13 +363,18 @@ def edit(id):
             customer.name_ar = request.form.get('name_ar')
             customer.customer_type = request.form.get('customer_type')
             from utils.field_validators import normalize_phone_optional, validate_currency_code
+            try:
+                from models import Tenant
+                default_currency = (Tenant.get_current().default_currency or '').strip() or 'AED'
+            except Exception:
+                default_currency = 'AED'
 
             customer.phone = normalize_phone_optional(request.form.get('phone'))
             customer.email = request.form.get('email')
             customer.address = request.form.get('address')
             customer.tax_number = request.form.get('tax_number')
             customer.preferred_currency = validate_currency_code(
-                request.form.get('preferred_currency') or request.form.get('default_currency') or 'AED'
+                request.form.get('preferred_currency') or request.form.get('default_currency') or default_currency
             )
             is_active_raw = request.form.get('is_active', '1')
             customer.is_active = str(is_active_raw) in ('1', 'true', 'on', 'True')
@@ -447,6 +457,12 @@ def statement(id):
     if not _customer_in_scope(id):
         return render_template('errors/403.html'), 403
     
+    try:
+        from models import Tenant
+        default_currency = (Tenant.get_current().default_currency or '').strip() or 'AED'
+    except Exception:
+        default_currency = 'AED'
+    
     date_from = request.args.get('date_from', type=str)
     date_to = request.args.get('date_to', type=str)
     transaction_type = request.args.get('transaction_type', 'all')
@@ -510,7 +526,7 @@ def statement(id):
                 'payment_date': payment.payment_date,
                 'amount_aed': float(payment.amount_aed or 0),
                 'amount_original': float(payment.amount or 0),
-                'currency': payment.currency or 'AED',
+                'currency': payment.currency or default_currency,
                 'exchange_rate': float(payment.exchange_rate or 1),
                 'reference_number': payment.reference_number or '-',
                 'payment_method': payment.payment_method,
@@ -539,7 +555,7 @@ def statement(id):
             'amount_aed': float(sale.amount_aed or 0),
             'paid_amount': float(sale.paid_amount_aed or 0),
             'balance_due': float(sale.balance_due or 0),
-            'currency': sale.currency or 'AED',
+            'currency': sale.currency or default_currency,
             'exchange_rate': float(sale.exchange_rate or 1),
             'seller': sale.seller.get_display_name('ar') if sale.seller and hasattr(sale.seller, 'get_display_name') else (sale.seller.full_name if sale.seller else None),
             'notes': sale.notes or '',
@@ -556,7 +572,7 @@ def statement(id):
             'credit': 0,
             'balance': 0,
             'description': 'فاتورة بيع',
-            'currency': sale.currency or 'AED',
+            'currency': sale.currency or default_currency,
             'exchange_rate': float(sale.exchange_rate or 1),
             'paid_amount': float(sale.paid_amount_aed or 0),
             'balance_due': float(sale.balance_due or 0),
@@ -578,7 +594,7 @@ def statement(id):
             'credit': credit_amount,
             'balance': 0,
             'description': f'دفعة - {payment.get_method_display("ar") if hasattr(payment, "get_method_display") else payment.payment_method}',
-            'currency': payment.currency or 'AED',
+            'currency': payment.currency or default_currency,
             'exchange_rate': float(payment.exchange_rate or 1),
             'paid_amount': credit_amount,
             'balance_due': 0,
@@ -589,7 +605,7 @@ def statement(id):
                 'payment_date': payment.payment_date,
                 'amount_aed': float(payment.amount_aed or 0),
                 'amount_original': float(payment.amount or 0),
-                'currency': payment.currency or 'AED',
+                'currency': payment.currency or default_currency,
                 'exchange_rate': float(payment.exchange_rate or 1),
                 'payment_method': payment.payment_method,
                 'payment_method_display': payment.get_method_display('ar') if hasattr(payment, 'get_method_display') else payment.payment_method,
@@ -672,16 +688,22 @@ def customer_balance(id):
     customer = tenant_get_or_404(Customer, id)
     if not _customer_in_scope(id):
         return jsonify({'error': 'forbidden'}), 403
+    try:
+        from models import Tenant
+        default_currency = (Tenant.get_current().default_currency or '').strip() or 'AED'
+    except Exception:
+        default_currency = 'AED'
     return jsonify({
         'balance_aed': float(_get_customer_balance(id)),
         'balance': float(_get_customer_balance(id)),
+        'currency': default_currency,
         'unpaid_sales': [{
             'id': s.id,
             'sale_number': s.sale_number,
             'sale_date': s.sale_date.strftime('%Y-%m-%d') if getattr(s.sale_date, 'strftime', None) else str(s.sale_date),
             'total_amount': float(s.total_amount),
             'balance_due': float(s.balance_due),
-            'currency': s.currency or 'AED',
+            'currency': s.currency or default_currency,
         } for s in _get_unpaid_sales(id)]
     })
 

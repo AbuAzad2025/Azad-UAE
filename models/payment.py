@@ -30,6 +30,15 @@ class Payment(db.Model):
     exchange_rate = db.Column(db.Numeric(15, 6), default=1)
     amount_aed = db.Column(db.Numeric(15, 3), nullable=False)
     
+    # Alias for unified currency handling
+    @property
+    def base_amount(self):
+        return self.amount_aed
+    
+    @base_amount.setter
+    def base_amount(self, value):
+        self.amount_aed = value
+    
     payment_method = db.Column(db.String(20), nullable=False)
     
     reference_number = db.Column(db.String(100))
@@ -155,6 +164,15 @@ class Receipt(db.Model):
     currency = db.Column(db.String(3), default='AED', nullable=False)
     exchange_rate = db.Column(db.Numeric(15, 6), default=1)
     amount_aed = db.Column(db.Numeric(15, 3), nullable=False)
+    
+    # Alias for unified currency handling
+    @property
+    def base_amount(self):
+        return self.amount_aed
+    
+    @base_amount.setter
+    def base_amount(self, value):
+        self.amount_aed = value
     
     payment_method = db.Column(db.String(20), nullable=False)
     

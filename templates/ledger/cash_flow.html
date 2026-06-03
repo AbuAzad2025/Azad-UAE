@@ -66,7 +66,7 @@
           <tr>
             <th class="text-left">صافي النقدية من الأنشطة التشغيلية:</th>
             <th class="text-center {{ 'text-success' if report.operating_activities.net_cash_from_operating > 0 else 'text-danger' }}">
-              {{ "{:,.2f}".format(report.operating_activities.net_cash_from_operating) }} AED
+              {{ "{:,.2f}".format(report.operating_activities.net_cash_from_operating) }} {{ tenant_currency_symbol or 'AED' }}
             </th>
           </tr>
         </tfoot>
@@ -95,7 +95,7 @@
           <tr>
             <th class="text-left">صافي النقدية من الأنشطة الاستثمارية:</th>
             <th class="text-center {{ 'text-success' if report.investing_activities.net_cash_from_investing > 0 else 'text-danger' }}">
-              {{ "{:,.2f}".format(report.investing_activities.net_cash_from_investing) }} AED
+              {{ "{:,.2f}".format(report.investing_activities.net_cash_from_investing) }} {{ tenant_currency_symbol or 'AED' }}
             </th>
           </tr>
         </tfoot>
@@ -124,7 +124,7 @@
           <tr>
             <th class="text-left">صافي النقدية من الأنشطة التمويلية:</th>
             <th class="text-center {{ 'text-success' if report.financing_activities.net_cash_from_financing > 0 else 'text-danger' }}">
-              {{ "{:,.2f}".format(report.financing_activities.net_cash_from_financing) }} AED
+              {{ "{:,.2f}".format(report.financing_activities.net_cash_from_financing) }} {{ tenant_currency_symbol or 'AED' }}
             </th>
           </tr>
         </tfoot>
@@ -139,20 +139,20 @@
             <td width="70%"><strong>صافي التغير في النقدية:</strong></td>
             <td width="30%" class="text-center">
               <strong class="{{ 'text-success' if report.net_change_in_cash > 0 else 'text-danger' }}">
-                {{ "{:,.2f}".format(report.net_change_in_cash) }} AED
+                {{ "{:,.2f}".format(report.net_change_in_cash) }} {{ tenant_currency_symbol or 'AED' }}
               </strong>
             </td>
           </tr>
           <tr>
             <td><strong>النقدية في بداية الفترة:</strong></td>
             <td class="text-center">
-              <strong>{{ "{:,.2f}".format(report.cash_beginning) }} AED</strong>
+              <strong>{{ "{:,.2f}".format(report.cash_beginning) }} {{ tenant_currency_symbol or 'AED' }}</strong>
             </td>
           </tr>
           <tr class="border-top">
             <td><strong>النقدية في نهاية الفترة:</strong></td>
             <td class="text-center">
-              <strong class="text-warning">{{ "{:,.2f}".format(report.cash_ending) }} AED</strong>
+              <strong class="text-warning">{{ "{:,.2f}".format(report.cash_ending) }} {{ tenant_currency_symbol or 'AED' }}</strong>
             </td>
           </tr>
         </table>
@@ -181,7 +181,7 @@ new Chart(ctx, {
     data: {
         labels: ['الأنشطة التشغيلية', 'الأنشطة الاستثمارية', 'الأنشطة التمويلية', 'صافي التغير'],
         datasets: [{
-            label: 'التدفق النقدي (AED)',
+            label: 'التدفق النقدي ({{ tenant_currency_symbol or 'AED' }})',
             data: [
                 {{ report.operating_activities.net_cash_from_operating }},
                 {{ report.investing_activities.net_cash_from_investing }},
@@ -213,7 +213,7 @@ new Chart(ctx, {
             tooltip: {
                 callbacks: {
                     label: function(context) {
-                        return context.parsed.y.toLocaleString('ar-AE') + ' AED';
+                        return context.parsed.y.toLocaleString('ar-AE') + ' {{ tenant_currency_symbol or 'AED' }}';
                     }
                 }
             }
@@ -223,7 +223,7 @@ new Chart(ctx, {
                 beginAtZero: true,
                 ticks: {
                     callback: function(value) {
-                        return value.toLocaleString('ar-AE') + ' AED';
+                        return value.toLocaleString('ar-AE') + ' {{ tenant_currency_symbol or 'AED' }}';
                     }
                 }
             }

@@ -151,7 +151,7 @@
               </a>
             </td>
             <td>
-              {% set balance = customer.get_balance_aed() %}
+              {% set balance = customer.get_balance_base() %}
               {% if balance < 0 %}
                 {# رصيد سالب: لنا على العميل (ذمم) => أحمر #}
                 <strong class="text-danger">{{ "{:,.2f}".format(balance) }}</strong>
@@ -161,7 +161,7 @@
               {% else %}
                 <span class="text-muted">0.00</span>
               {% endif %}
-              <small class="text-muted">AED</small>
+              <small class="text-muted">{{ tenant_currency_symbol or 'AED' }}</small>
             </td>
             <td>
               {% if customer.branch_labels %}

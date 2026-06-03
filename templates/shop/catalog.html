@@ -70,7 +70,7 @@
         </h3>
         {% if product.sku %}<div class="ps-card-meta">{{ product.sku }}</div>{% endif %}
         <div class="ps-card-footer">
-          <span class="ps-price">{{ '%.2f'|format(product.regular_price) }} {{ tenant.default_currency or 'AED' }}</span>
+          <span class="ps-price">{{ '%.2f'|format(product.regular_price) }} {{ tenant.default_currency or tenant_currency_symbol or 'AED' }}</span>
           {% if is_shop_logged_in %}
           <form method="post" action="{{ url_for('shop.cart_add', slug=store.store_slug) }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -79,7 +79,7 @@
             <button type="submit" class="ps-btn ps-btn-primary"><i class="fas fa-plus"></i> {{ t('add_to_cart') }}</button>
           </form>
           {% elif wa_digits %}
-          {% set wa_text = ('مرحباً، أريد: ' ~ product.get_display_name(lang) ~ ' — ' ~ product.regular_price ~ ' ' ~ (tenant.default_currency or 'AED')) if lang == 'ar' else ('Hello, I want: ' ~ product.get_display_name(lang) ~ ' — ' ~ product.regular_price ~ ' ' ~ (tenant.default_currency or 'AED')) %}
+          {% set wa_text = ('مرحباً، أريد: ' ~ product.get_display_name(lang) ~ ' — ' ~ product.regular_price ~ ' ' ~ (tenant.default_currency or tenant_currency_symbol or 'AED')) if lang == 'ar' else ('Hello, I want: ' ~ product.get_display_name(lang) ~ ' — ' ~ product.regular_price ~ ' ' ~ (tenant.default_currency or tenant_currency_symbol or 'AED')) %}
           <a href="https://wa.me/{{ wa_digits }}?text={{ wa_text|urlencode }}" target="_blank" rel="noopener" class="ps-btn ps-btn-wa"><i class="fab fa-whatsapp"></i> {{ t('order_whatsapp') }}</a>
           {% else %}
           <a href="{{ url_for('shop.account_register', slug=store.store_slug) }}" class="ps-btn ps-btn-outline">{{ t('register') }}</a>

@@ -32,8 +32,21 @@ def resolve_tenant_id(branch_id=None, user_id=None):
         try:
             from utils.tenanting import get_active_tenant_id
             tenant_id = get_active_tenant_id()
-        except Exception:
-            pass
+        except Exception as e:
+            import sys
+            import traceback
+            sys.stderr.write(f"[GL_HELPERS_WARNING] get_active_tenant_id() failed: {e}\n")
+            traceback.print_exc()
+            try:
+                from services.error_audit_service import ErrorAuditService
+                ErrorAuditService.log_exception(
+                    e,
+                    category="GL",
+                    source="services.gl_helpers.resolve_tenant_id.get_active_tenant_id",
+                    level="WARNING"
+                )
+            except Exception:
+                pass
 
     # ── LAST RESORT: only safe when exactly 1 active tenant exists ──
     if tenant_id is None:
@@ -89,8 +102,21 @@ def next_entry_number(tenant_id, entry_date=None):
     if latest:
         try:
             last_num = int(latest.entry_number.split('-')[-1])
-        except Exception:
-            pass
+        except Exception as e:
+            import sys
+            import traceback
+            sys.stderr.write(f"[GL_HELPERS_WARNING] Failed to parse entry_number '{latest.entry_number}': {e}\n")
+            traceback.print_exc()
+            try:
+                from services.error_audit_service import ErrorAuditService
+                ErrorAuditService.log_exception(
+                    e,
+                    category="GL",
+                    source="services.gl_helpers.next_entry_number.parse_entry_number",
+                    level="WARNING"
+                )
+            except Exception:
+                pass
     return f'JE-{y}-{last_num + 1:04d}'
 
 

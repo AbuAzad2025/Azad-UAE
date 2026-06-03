@@ -41,8 +41,8 @@
         <tr>
           <th>كود الحساب</th>
           <th>الوصف</th>
-          <th class="text-left">رصيد GL (AED)</th>
-          <th class="text-left">ذمم تشغيلية — فواتير غير مدفوعة (AED)</th>
+          <th class="text-left">رصيد GL ({{ tenant_currency_symbol or 'AED' }})</th>
+          <th class="text-left">ذمم تشغيلية — فواتير غير مدفوعة ({{ tenant_currency_symbol or 'AED' }})</th>
           <th class="text-left">الفرق (GL − تشغيلي)</th>
           <th class="text-center">الحالة</th>
         </tr>

@@ -50,11 +50,11 @@
               <table class="table table-bordered">
                 <tr>
                   <th width="40%">إجمالي المدين</th>
-                  <td class="text-success">{{ entry.total_debit }} AED</td>
+                  <td class="text-success">{{ entry.total_debit }} {{ tenant_currency_symbol or 'AED' }}</td>
                 </tr>
                 <tr>
                   <th>إجمالي الدائن</th>
-                  <td class="text-danger">{{ entry.total_credit }} AED</td>
+                  <td class="text-danger">{{ entry.total_credit }} {{ tenant_currency_symbol or 'AED' }}</td>
                 </tr>
                 <tr>
                   <th>الحالة</th>

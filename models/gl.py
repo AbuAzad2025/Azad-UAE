@@ -200,6 +200,15 @@ class GLJournalLine(db.Model):
     credit = db.Column(db.Numeric(18, 3), default=0)
     amount_aed = db.Column(db.Numeric(18, 3), default=0)
     
+    # Alias for unified currency handling
+    @property
+    def base_amount(self):
+        return self.amount_aed
+    
+    @base_amount.setter
+    def base_amount(self, value):
+        self.amount_aed = value
+    
     # مركز التكلفة (اختياري)
     cost_center_id = db.Column(db.Integer, db.ForeignKey('cost_centers.id'))
 

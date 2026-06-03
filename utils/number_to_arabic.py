@@ -124,11 +124,22 @@ def _to_words(number: int) -> str:
 
 
 def _currency_labels(currency: str) -> tuple[str, str]:
-    if (currency or "").upper() == "AED":
-        return "درهم إماراتي", "فلس"
-    if (currency or "").upper() == "USD":
-        return "دولار", "سنت"
-    return "وحدة نقدية", "جزء"
+    code = (currency or "").upper()
+    labels = {
+        "AED": ("درهم إماراتي", "فلس"),
+        "USD": ("دولار", "سنت"),
+        "ILS": ("شيقل", "أغورة"),
+        "SAR": ("ريال", "هللة"),
+        "KWD": ("دينار", "فلس"),
+        "QAR": ("ريال", "درهم"),
+        "BHD": ("دينار", "فلس"),
+        "OMR": ("ريال", "بيسة"),
+        "JOD": ("دينار", "فلس"),
+        "EGP": ("جنيه", "قرش"),
+        "GBP": ("جنيه", "بنس"),
+        "EUR": ("يورو", "سنت"),
+    }
+    return labels.get(code, ("وحدة نقدية", "جزء"))
 
 
 def number_to_arabic_words(amount: float | Decimal | int, currency: str = "AED") -> str:

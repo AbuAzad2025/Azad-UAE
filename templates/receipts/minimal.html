@@ -266,8 +266,8 @@
 
       <div class="amount-display">
         <div class="amount-text">المبلغ المستلم</div>
-        <div class="amount-big">{{ "{:,.2f}".format(receipt.amount_aed) }}</div>
-        <div class="amount-text">درهم إماراتي</div>
+        <div class="amount-big">{{ "{:,.2f}".format(receipt.base_amount) }}</div>
+        <div class="amount-text">{{ tenant_currency_name_ar or 'درهم إماراتي' }}</div>
       </div>
 
       <div class="payment-box">
@@ -318,7 +318,7 @@
             <span style="color: #666;">{{ source_info.date }}</span>
           </div>
           <div style="font-weight: 700; color: #28a745;">
-            {{ "{:,.2f}".format(receipt.amount) }} AED
+            {{ "{:,.2f}".format(receipt.amount) }} {{ tenant_currency_symbol or 'AED' }}
           </div>
         </div>
       </div>

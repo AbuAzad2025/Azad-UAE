@@ -1,11 +1,11 @@
 {% set _amount_value = 0 %}
-{% set _amount_currency = 'AED' %}
+{% set _amount_currency = tenant_default_currency or 'AED' %}
 {% if receipt is defined and receipt %}
-  {% set _amount_value = receipt.amount_aed if receipt.amount_aed is not none else (receipt.amount if receipt.amount is not none else 0) %}
-  {% set _amount_currency = receipt.currency or 'AED' %}
+  {% set _amount_value = receipt.base_amount if receipt.base_amount is not none else (receipt.amount if receipt.amount is not none else 0) %}
+  {% set _amount_currency = receipt.currency or tenant_default_currency or 'AED' %}
 {% elif sale is defined and sale %}
   {% set _amount_value = sale.total_amount if sale.total_amount is not none else 0 %}
-  {% set _amount_currency = sale.currency or 'AED' %}
+  {% set _amount_currency = sale.currency or tenant_default_currency or 'AED' %}
 {% endif %}
 
 {% set _words_fallback = number_to_arabic_words(_amount_value, _amount_currency) if number_to_arabic_words is defined else '' %}

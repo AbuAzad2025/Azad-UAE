@@ -26,6 +26,15 @@ class ProductReturn(db.Model):
     exchange_rate = db.Column(db.Numeric(15, 6), default=1)
     amount_aed = db.Column(db.Numeric(15, 3), nullable=False)
     
+    # Alias for unified currency handling
+    @property
+    def base_amount(self):
+        return self.amount_aed
+    
+    @base_amount.setter
+    def base_amount(self, value):
+        self.amount_aed = value
+    
     return_reason = db.Column(db.String(255))
     status = db.Column(db.String(20), default='pending', index=True)
     

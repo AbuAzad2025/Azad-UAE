@@ -373,7 +373,7 @@
           <tr>
             <td style="padding: 4px 6px; border: 1px solid #dee2e6; font-size: 9px;"><strong>{{ payment.payment_number }}</strong></td>
             <td style="padding: 4px 6px; text-align: center; border: 1px solid #dee2e6; font-size: 9px;">{{ payment.payment_date.strftime('%Y-%m-%d') }}</td>
-            <td style="padding: 4px 6px; text-align: center; border: 1px solid #dee2e6; color: #28a745; font-weight: bold; font-size: 10px;">{{ "{:,.2f}".format(payment.amount_aed) }} AED</td>
+            <td style="padding: 4px 6px; text-align: center; border: 1px solid #dee2e6; color: #28a745; font-weight: bold; font-size: 10px;">{{ "{:,.2f}".format(payment.base_amount) }} {{ tenant_currency_symbol or 'AED' }}</td>
             <td style="padding: 4px 6px; text-align: center; border: 1px solid #dee2e6; font-size: 9px;">
               {% if payment.payment_method == 'cash' %}نقدي
               {% elif payment.payment_method == 'card' %}بطاقة

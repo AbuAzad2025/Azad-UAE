@@ -41,9 +41,9 @@
             <div class="col-md-6 text-right">
               <h4>معلومات الفاتورة</h4>
               <p><strong>التاريخ:</strong> {{ purchase.purchase_date.strftime('%Y-%m-%d') }}</p>
-              <p><strong>المبلغ الإجمالي:</strong> {{ purchase.total_amount }} AED</p>
-              <p><strong>المدفوع:</strong> {{ purchase.get_paid_amount() }} AED</p>
-              <p><strong>المتبقي:</strong> {{ purchase.total_amount - purchase.get_paid_amount() }} AED</p>
+              <p><strong>المبلغ الإجمالي:</strong> {{ purchase.total_amount }} {{ tenant_currency_symbol or 'AED' }}</p>
+              <p><strong>المدفوع:</strong> {{ purchase.get_paid_amount() }} {{ tenant_currency_symbol or 'AED' }}</p>
+              <p><strong>المتبقي:</strong> {{ purchase.total_amount - purchase.get_paid_amount() }} {{ tenant_currency_symbol or 'AED' }}</p>
             </div>
           </div>
 

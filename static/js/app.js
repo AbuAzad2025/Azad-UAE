@@ -25,6 +25,8 @@
   });
 
   function initAll(root) {
+    initModalStacking(root);
+    installBootstrapCompat(root);
     initDataTables(root);
     initDatepickers(root);
     initSelect2Basic(root);
@@ -33,6 +35,213 @@
     initAjaxSelects(root);
     initConfirmForms(root);
     initBtnLoading(root);
+  }
+
+  function initModalStacking(root) {
+    if (!$ || !$.fn || !$.fn.modal) return;
+
+    ensureModalCompatStyles();
+
+    var $root = root && root.nodeType ? $(root) : $(document);
+    $root.find(".modal").each(function () {
+      normalizeModalParent($(this));
+    });
+
+    if (window.__azadModalStackingBound) return;
+    window.__azadModalStackingBound = true;
+
+    $(document)
+      .on("show.bs.modal", ".modal", function () {
+        var $modal = $(this);
+        normalizeModalParent($modal);
+        $("body").addClass("azad-modal-open");
+      })
+      .on("shown.bs.modal", ".modal", function () {
+        fixModalLayering();
+      })
+      .on("hidden.bs.modal", ".modal", function () {
+        window.setTimeout(cleanupModalArtifacts, 0);
+      });
+  }
+
+  function ensureModalCompatStyles() {
+    if (document.getElementById("azad-modal-compat-style")) return;
+
+    var style = document.createElement("style");
+    style.id = "azad-modal-compat-style";
+    style.textContent = [
+      ".modal-backdrop { z-index: 2040 !important; }",
+      ".modal { z-index: 2050 !important; }",
+      ".modal-dialog, .modal-content { pointer-events: auto; }"
+    ].join("\n");
+    document.head.appendChild(style);
+  }
+
+  function normalizeModalParent($modal) {
+    if (!$modal || !$modal.length) return;
+    if ($modal.parent()[0] !== document.body) {
+      $modal.appendTo(document.body);
+    }
+  }
+
+  function fixModalLayering() {
+    var modalBase = 2050;
+    $(".modal.show").each(function (index) {
+      $(this).css("z-index", modalBase + (index * 20));
+    });
+    $(".modal-backdrop").each(function (index) {
+      $(this).css("z-index", (modalBase - 10) + (index * 20));
+    });
+  }
+
+  function cleanupModalArtifacts() {
+    if ($(".modal.show").length === 0) {
+      $(".modal-backdrop").remove();
+      $("body").removeClass("modal-open azad-modal-open").css("padding-right", "");
+      return;
+    }
+    fixModalLayering();
+  }
+
+  function installBootstrapCompat(root) {
+    if (!$ || !$.fn) return;
+
+    var $root = root && root.nodeType ? $(root) : $(document);
+
+    $root.find("[data-bs-toggle]").each(function () {
+      var $el = $(this);
+      if (!$el.attr("data-toggle")) {
+        $el.attr("data-toggle", $el.attr("data-bs-toggle"));
+      }
+    });
+
+    $root.find("[data-bs-target]").each(function () {
+      var $el = $(this);
+      if (!$el.attr("data-target")) {
+        $el.attr("data-target", $el.attr("data-bs-target"));
+      }
+    });
+
+    $root.find("[data-bs-dismiss]").each(function () {
+      var $el = $(this);
+      if (!$el.attr("data-dismiss")) {
+        $el.attr("data-dismiss", $el.attr("data-bs-dismiss"));
+      }
+    });
+
+    $root.find(".btn-close").each(function () {
+      var $btn = $(this);
+      if (!$btn.hasClass("close")) {
+        $btn.addClass("close");
+      }
+      if (!$btn.attr("type")) {
+        $btn.attr("type", "button");
+      }
+      if (!$btn.attr("aria-label")) {
+        $btn.attr("aria-label", "Close");
+      }
+      if (!$btn.attr("data-dismiss") && $btn.attr("data-bs-dismiss")) {
+        $btn.attr("data-dismiss", $btn.attr("data-bs-dismiss"));
+      }
+      if (!$btn.children().length && !$btn.text().trim()) {
+        $btn.html('<span aria-hidden="true">&times;</span>');
+      }
+    });
+
+    installBootstrapFacade();
+  }
+
+  function installBootstrapFacade() {
+    if (!$ || !$.fn) return;
+
+    if (!window.__bootstrapCompatDelegatesBound) {
+      window.__bootstrapCompatDelegatesBound = true;
+
+      $(document)
+        .on("click", "[data-bs-toggle=\"modal\"]", function (e) {
+          var target = $(this).attr("data-bs-target") || $(this).attr("href");
+          if (!target || target === "#") return;
+          e.preventDefault();
+          $(target).modal("show");
+        })
+        .on("click", "[data-bs-dismiss=\"modal\"]", function (e) {
+          e.preventDefault();
+          $(this).closest(".modal").modal("hide");
+        })
+        .on("click", "[data-bs-dismiss=\"alert\"]", function (e) {
+          e.preventDefault();
+          $(this).closest(".alert").alert("close");
+        })
+        .on("click", "[data-bs-toggle=\"tab\"], [data-bs-toggle=\"pill\"]", function (e) {
+          e.preventDefault();
+          $(this).tab("show");
+        });
+    }
+
+    window.bootstrap = window.bootstrap || {};
+
+    if (!window.bootstrap.Modal && $.fn.modal) {
+      function Modal(element) {
+        this._element = element;
+      }
+      Modal.prototype.show = function () { $(this._element).modal("show"); };
+      Modal.prototype.hide = function () { $(this._element).modal("hide"); };
+      Modal.prototype.toggle = function () { $(this._element).modal("toggle"); };
+      Modal.prototype.dispose = function () { $(this._element).modal("hide"); };
+      Modal.getInstance = function (element) {
+        return $(element).data("bs.modal") ? new Modal(element) : null;
+      };
+      Modal.getOrCreateInstance = function (element) {
+        return new Modal(element);
+      };
+      window.bootstrap.Modal = Modal;
+    }
+
+    if (!window.bootstrap.Tooltip && $.fn.tooltip) {
+      function Tooltip(element, options) {
+        this._element = element;
+        $(element).tooltip(options || {});
+      }
+      Tooltip.prototype.show = function () { $(this._element).tooltip("show"); };
+      Tooltip.prototype.hide = function () { $(this._element).tooltip("hide"); };
+      Tooltip.prototype.toggle = function () { $(this._element).tooltip("toggle"); };
+      Tooltip.prototype.dispose = function () { $(this._element).tooltip("dispose"); };
+      Tooltip.getInstance = function (element) {
+        return $(element).data("bs.tooltip") ? new Tooltip(element) : null;
+      };
+      Tooltip.getOrCreateInstance = function (element, options) {
+        return new Tooltip(element, options);
+      };
+      window.bootstrap.Tooltip = Tooltip;
+    }
+
+    if (!window.bootstrap.Tab && $.fn.tab) {
+      function Tab(element) {
+        this._element = element;
+      }
+      Tab.prototype.show = function () { $(this._element).tab("show"); };
+      Tab.getInstance = function (element) {
+        return $(element).data("bs.tab") ? new Tab(element) : null;
+      };
+      Tab.getOrCreateInstance = function (element) {
+        return new Tab(element);
+      };
+      window.bootstrap.Tab = Tab;
+    }
+
+    if (!window.bootstrap.Alert && $.fn.alert) {
+      function Alert(element) {
+        this._element = element;
+      }
+      Alert.prototype.close = function () { $(this._element).alert("close"); };
+      Alert.getInstance = function (element) {
+        return $(element).data("bs.alert") ? new Alert(element) : null;
+      };
+      Alert.getOrCreateInstance = function (element) {
+        return new Alert(element);
+      };
+      window.bootstrap.Alert = Alert;
+    }
   }
 
   function initTooltips(root) {

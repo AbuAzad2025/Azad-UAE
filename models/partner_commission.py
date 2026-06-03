@@ -18,6 +18,23 @@ class PartnerCommissionEntry(db.Model):
     percentage = db.Column(db.Numeric(5, 2), nullable=False)
     base_amount_aed = db.Column(db.Numeric(15, 3), nullable=False)
     commission_amount_aed = db.Column(db.Numeric(15, 3), nullable=False)
+    
+    # Aliases for unified currency handling
+    @property
+    def base_amount(self):
+        return self.base_amount_aed
+    
+    @base_amount.setter
+    def base_amount(self, value):
+        self.base_amount_aed = value
+    
+    @property
+    def commission_amount_base(self):
+        return self.commission_amount_aed
+    
+    @commission_amount_base.setter
+    def commission_amount_base(self, value):
+        self.commission_amount_aed = value
 
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 

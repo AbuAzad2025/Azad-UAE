@@ -35,7 +35,7 @@
               <option value="" {% if not form_data.get('customer_id') %}selected{% endif %}>بلا</option>
               {% for customer in customers %}
               <option value="{{ customer.id }}" {% if form_data.get('customer_id') and form_data.get('customer_id')|int == customer.id %}selected{% endif %}>
-                {{ customer.name }} - {{ "{:,.2f}".format(customer.get_balance_aed()) }} AED
+                {{ customer.name }} - {{ "{:,.2f}".format(customer.get_balance_base()) }} {{ tenant_currency_symbol or 'AED' }}
               </option>
               {% endfor %}
             </select>
@@ -57,11 +57,11 @@
           <div class="form-group">
             <label>
               <i class="fas fa-dollar-sign text-warning"></i> العملة
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="عملة الدفع (افتراضي: AED)"></i>
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="عملة الدفع (افتراضي: {{ tenant_default_currency or 'AED' }})"></i>
             </label>
             {% set dc = company_default_currency or system_default_currency or 'AED' %}
             <select name="currency" id="currency" class="form-control">
-              <option value="AED" {% if dc == 'AED' %}selected{% endif %}>درهم</option>
+              <option value="AED" {% if dc == 'AED' %}selected{% endif %}>درهم إماراتي</option>
               <option value="USD" {% if dc == 'USD' %}selected{% endif %}>دولار</option>
               <option value="EUR" {% if dc == 'EUR' %}selected{% endif %}>يورو</option>
             </select>
@@ -154,7 +154,7 @@ function loadCustomerSales() {
       data.unpaid_sales.forEach(sale => {
         html += `<tr>
           <td>${sale.sale_number}</td>
-          <td class="text-danger">${sale.balance_due} AED</td>
+          <td class="text-danger">${sale.balance_due} {{ tenant_currency_symbol or 'AED' }}</td>
         </tr>`;
       });
       html += '</tbody></table>';

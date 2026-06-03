@@ -270,7 +270,7 @@
           <div class="form-group">
             <label for="currency">
               <i class="fas fa-dollar-sign text-success"></i> العملة
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="عملة الفاتورة (افتراضي: AED)"></i>
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="عملة الفاتورة (افتراضي: {{ tenant_default_currency or 'AED' }})"></i>
             </label>
             {% set dc = company_default_currency or system_default_currency or 'AED' %}
             <select name="currency" id="currency" class="form-control">
@@ -288,7 +288,7 @@
             <label for="exchange_rate">سعر الصرف</label>
             <input type="number" name="exchange_rate" id="exchange_rate" 
                    class="form-control" value="1.000000" step="0.000001" min="0">
-            <small class="form-text text-muted">سعر الصرف مقابل الدرهم</small>
+            <small class="form-text text-muted">سعر الصرف مقابل {{ tenant_currency_name_ar or 'الدرهم الإماراتي' }}</small>
           </div>
         </div>
         
@@ -338,15 +338,15 @@
               <table class="table table-sm">
                 <tr>
                   <td>المجموع الفرعي:</td>
-                  <td class="text-left" id="summary_subtotal">0.00 AED</td>
+                  <td class="text-left" id="summary_subtotal">0.00 {{ tenant_currency_symbol or 'AED' }}</td>
                 </tr>
                 <tr>
                   <td>الضريبة:</td>
-                  <td class="text-left" id="summary_tax">0.00 AED</td>
+                  <td class="text-left" id="summary_tax">0.00 {{ tenant_currency_symbol or 'AED' }}</td>
                 </tr>
                 <tr class="font-weight-bold border-top">
                   <td>الإجمالي:</td>
-                  <td class="text-left text-primary" id="summary_total">0.00 AED</td>
+                  <td class="text-left text-primary" id="summary_total">0.00 {{ tenant_currency_symbol or 'AED' }}</td>
                 </tr>
               </table>
             </div>
@@ -379,6 +379,10 @@
 
 {% block extra_js %}
 <script>
+// Tenant currency config for unified display
+const TENANT_BASE_CURRENCY = {{ tenant_default_currency|tojson }} || 'AED';
+const TENANT_CURRENCY_SYMBOL = {{ tenant_currency_symbol|tojson }} || 'AED';
+
 let lineIndex = 0;
 
 // =====================================
@@ -505,7 +509,7 @@ function addLine() {
                 <br><small class="text-muted">SKU: ${p.sku || '-'}</small>
               </div>
               <div class="text-left">
-                <small><strong>${(p.cost_price || 0).toFixed(2)} AED</strong></small>
+                <small><strong>${(p.cost_price || 0).toFixed(2)} ${TENANT_CURRENCY_SYMBOL}</strong></small>
                 <br><small class="${stockClass}">${stockIcon} ${p.current_stock || 0}</small>
               </div>
             </div>
@@ -606,9 +610,9 @@ async function calculateTotals() {
     
     if (result.success) {
       // تحديث الواجهة
-      $('#summary_subtotal').text(result.subtotal.toFixed(2) + ' AED');
-      $('#summary_tax').text(result.tax_amount.toFixed(2) + ' AED');
-      $('#summary_total').text(result.total.toFixed(2) + ' AED');    } else {      // Fallback to client-side
+      $('#summary_subtotal').text(result.subtotal.toFixed(2) + ' ' + TENANT_CURRENCY_SYMBOL);
+      $('#summary_tax').text(result.tax_amount.toFixed(2) + ' ' + TENANT_CURRENCY_SYMBOL);
+      $('#summary_total').text(result.total.toFixed(2) + ' ' + TENANT_CURRENCY_SYMBOL);    } else {      // Fallback to client-side
       calculateTotalsClientSide();
     }
   } catch (error) {    // Fallback to client-side
@@ -640,9 +644,9 @@ function calculateTotalsClientSide() {
   const taxAmount = subtotal * (taxRate / 100);
   const total = subtotal + taxAmount;
   
-  $('#summary_subtotal').text(subtotal.toFixed(2) + ' AED');
-  $('#summary_tax').text(taxAmount.toFixed(2) + ' AED');
-  $('#summary_total').text(total.toFixed(2) + ' AED');}
+  $('#summary_subtotal').text(subtotal.toFixed(2) + ' ' + TENANT_CURRENCY_SYMBOL);
+  $('#summary_tax').text(taxAmount.toFixed(2) + ' ' + TENANT_CURRENCY_SYMBOL);
+  $('#summary_total').text(total.toFixed(2) + ' ' + TENANT_CURRENCY_SYMBOL);}
 
 // =====================================
 // Debug function
@@ -710,7 +714,7 @@ function updateLineCosts() {
         const baseCost = parseFloat($(this).data('base-cost'));
         if (!isNaN(baseCost)) {
             let finalCost = baseCost;
-            if (currency !== 'AED' && rate > 0) {
+            if (currency !== TENANT_BASE_CURRENCY && rate > 0) {
                 finalCost = baseCost / rate;
             }
             $(this).val(finalCost.toFixed(2));
@@ -729,9 +733,9 @@ function updateLineCosts() {
 $('#currency').on('change', function() {
   const currency = $(this).val();
   
-  if (currency !== 'AED') {
+  if (currency !== TENANT_BASE_CURRENCY) {
     $.ajax({
-      url: `/api/currency-rate/${currency}/AED`,
+      url: `/api/currency-rate/${currency}/${TENANT_BASE_CURRENCY}`,
       success: function(data) {
         if (data.rate) {
           $('#exchange_rate').val(data.rate.toFixed(6));

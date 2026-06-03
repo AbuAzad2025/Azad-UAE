@@ -123,7 +123,13 @@ def create():
             db.session.rollback()
             flash(f'❌ حدث خطأ: {str(e)}\n💡 تحقق من البيانات المدخلة وحاول مرة أخرى.', 'danger')
     
-    exchange_rates = CurrencyService.get_all_rates('AED')
+    try:
+        from models import Tenant
+        tenant = Tenant.get_current()
+        base_currency = tenant.default_currency if tenant else 'AED'
+    except Exception:
+        base_currency = 'AED'
+    exchange_rates = CurrencyService.get_all_rates(base_currency)
     warehouses = get_accessible_warehouses(current_user)
     
     return render_template('purchases/create.html', exchange_rates=exchange_rates, warehouses=warehouses)

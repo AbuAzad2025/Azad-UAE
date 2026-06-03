@@ -80,7 +80,7 @@ def create():
             
             exchange_rate = CurrencyService.get_exchange_rate(
                 currency,
-                'AED',
+                default_currency,
                 user_rate=user_exchange_rate
             )
             
@@ -187,9 +187,14 @@ def create():
             except Exception as e:
                 db.session.rollback()
                 flash(f'❌ فشل الترحيل المحاسبي: {str(e)}', 'danger')
+                try:
+                    from models import Tenant
+                    _dc = (Tenant.get_current().default_currency or '').strip() or 'AED'
+                except Exception:
+                    _dc = 'AED'
                 return render_template('expenses/create.html',
                                      categories=tenant_query(ExpenseCategory).filter_by(is_active=True).all(),
-                                     exchange_rates=CurrencyService.get_all_rates('AED'))
+                                     exchange_rates=CurrencyService.get_all_rates(_dc))
             
             db.session.commit()
             
@@ -202,8 +207,13 @@ def create():
             db.session.rollback()
             flash(f'❌ حدث خطأ: {str(e)}\n💡 تحقق من البيانات المدخلة وحاول مرة أخرى.', 'danger')
     
+    try:
+        from models import Tenant
+        _dc = (Tenant.get_current().default_currency or '').strip() or 'AED'
+    except Exception:
+        _dc = 'AED'
     categories = tenant_query(ExpenseCategory).filter_by(is_active=True).all()
-    exchange_rates = CurrencyService.get_all_rates('AED')
+    exchange_rates = CurrencyService.get_all_rates(_dc)
     
     return render_template('expenses/create.html',
                          categories=categories,
@@ -260,11 +270,16 @@ def edit(id):
     if request.method == 'POST':
         try:
             # تحديث البيانات
+            try:
+                from models import Tenant
+                default_currency = (Tenant.get_current().default_currency or '').strip() or 'AED'
+            except Exception:
+                default_currency = 'AED'
             expense.category_id = request.form.get('category_id')
             expense.description = request.form.get('description')
             expense.description_ar = request.form.get('description_ar')
             expense.amount = request.form.get('amount')
-            expense.currency = request.form.get('currency', 'AED')
+            expense.currency = request.form.get('currency') or default_currency
             expense.supplier_name = request.form.get('supplier_name')
             expense.notes = request.form.get('notes')
             

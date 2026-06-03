@@ -204,8 +204,8 @@
             <td>{{ loop.index }}</td>
             <td>{{ line.product.name if line.product else '-' }}</td>
             <td>{{ "{:,.3f}".format(line.quantity) }}</td>
-            <td>{{ "{:,.2f}".format(line.unit_price) }} AED</td>
-            <td>{{ "{:,.2f}".format(line.line_total) }} AED</td>
+            <td>{{ "{:,.2f}".format(line.unit_price) }} {{ tenant_currency_symbol or 'AED' }}</td>
+            <td>{{ "{:,.2f}".format(line.line_total) }} {{ tenant_currency_symbol or 'AED' }}</td>
           </tr>
           {% endfor %}
         </tbody>
@@ -214,17 +214,17 @@
       <div class="total-section">
         <div class="total-row">
           <span>الإجمالي الفرعي:</span>
-          <strong>{{ "{:,.2f}".format(sale.subtotal) }} AED</strong>
+          <strong>{{ "{:,.2f}".format(sale.subtotal) }} {{ tenant_currency_symbol or 'AED' }}</strong>
         </div>
         {% if sale.tax_amount > 0 %}
         <div class="total-row">
           <span>الضريبة ({{ sale.tax_rate }}%):</span>
-          <strong>{{ "{:,.2f}".format(sale.tax_amount) }} AED</strong>
+          <strong>{{ "{:,.2f}".format(sale.tax_amount) }} {{ tenant_currency_symbol or 'AED' }}</strong>
         </div>
         {% endif %}
         <div class="total-row final">
           <span>الإجمالي النهائي:</span>
-          <strong>{{ "{:,.2f}".format(sale.total_amount) }} AED</strong>
+          <strong>{{ "{:,.2f}".format(sale.total_amount) }} {{ tenant_currency_symbol or 'AED' }}</strong>
         </div>
       </div>
 
@@ -247,7 +247,7 @@
             <tr>
               <td style="padding: 4px;">{{ payment.payment_number }}</td>
               <td style="padding: 4px;">{{ payment.payment_date.strftime('%Y-%m-%d') }}</td>
-              <td style="padding: 4px; font-weight: bold; color: #28a745;">{{ "{:,.2f}".format(payment.amount_aed) }} AED</td>
+              <td style="padding: 4px; font-weight: bold; color: #28a745;">{{ "{:,.2f}".format(payment.base_amount) }} {{ tenant_currency_symbol or 'AED' }}</td>
               <td style="padding: 4px;">
                 {% if payment.payment_method == 'cash' %}نقدي
                 {% elif payment.payment_method == 'card' %}بطاقة

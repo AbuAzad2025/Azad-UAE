@@ -100,7 +100,7 @@
           <div class="d-flex justify-content-between align-items-center">
             <div>
               <div>الإجمالي</div>
-              <div class="value"><span id="kpiTotal">0.00</span> <span id="kpiCurrency">AED</span></div>
+              <div class="value"><span id="kpiTotal">0.00</span> <span id="kpiCurrency">{{ tenant_currency_symbol or 'AED' }}</span></div>
             </div>
             <div class="text-right">
               <div class="small">المجموع</div>
@@ -132,7 +132,7 @@
               <div class="form-group">
                 <label>العملة</label>
                 <select id="currency" class="form-control">
-                  <option value="AED" selected>AED</option>
+                  <option value="{{ tenant_default_currency or 'AED' }}" selected>{{ tenant_default_currency or 'AED' }}</option>
                   <option value="USD">USD</option>
                   <option value="EUR">EUR</option>
                 </select>
