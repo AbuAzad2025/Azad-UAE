@@ -146,10 +146,13 @@ class Payment(db.Model):
 
 class Receipt(db.Model):
     __tablename__ = 'receipts'
+    __table_args__ = (
+        db.UniqueConstraint('tenant_id', 'receipt_number', name='uq_receipts_tenant_receipt_number'),
+    )
     
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True)
-    receipt_number = db.Column(db.String(50), unique=True, nullable=False, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
+    receipt_number = db.Column(db.String(50), nullable=False, index=True)
     
     # تصنيف مصدر السند
     source_type = db.Column(db.String(20), default='sale', index=True)  # sale, manual, refund, etc.

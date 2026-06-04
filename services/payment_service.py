@@ -181,6 +181,14 @@ class PaymentService:
                 raise ValueError('تاريخ الشيك غير صالح')
         
         customer = db.session.get(Customer, customer_id)
+        if not customer:
+            raise ValueError('Customer not found.')
+
+        tenant_id = getattr(customer, 'tenant_id', None) or (
+            getattr(current_user, 'tenant_id', None)
+            if current_user and getattr(current_user, 'is_authenticated', False)
+            else None
+        )
         try:
             # تحديد نوع المصدر والاتجاه
             source_type = 'manual'  # افتراضي
@@ -199,7 +207,13 @@ class PaymentService:
                 sale=source_sale,
             )
 
-            receipt_number = generate_number('RCV', Receipt, 'receipt_number', branch_id=branch_id)
+            receipt_number = generate_number(
+                'RCV',
+                Receipt,
+                'receipt_number',
+                branch_id=branch_id,
+                tenant_id=tenant_id,
+            )
             
             exchange_rate = CurrencyService.get_exchange_rate(
                 currency,
@@ -208,7 +222,7 @@ class PaymentService:
             )
             
             receipt = Receipt(
-                tenant_id=getattr(customer, 'tenant_id', None) or (getattr(current_user, 'tenant_id', None) if current_user and getattr(current_user, 'is_authenticated', False) else None),
+                tenant_id=tenant_id,
                 receipt_number=receipt_number,
                 source_type=source_type,
                 source_id=source_id,

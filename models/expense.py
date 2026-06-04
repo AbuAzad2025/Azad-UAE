@@ -4,10 +4,13 @@ from extensions import db
 
 class ExpenseCategory(db.Model):
     __tablename__ = 'expense_categories'
+    __table_args__ = (
+        db.UniqueConstraint('tenant_id', 'name', name='uq_expense_categories_tenant_name'),
+    )
     
     id = db.Column(db.Integer, primary_key=True)
     tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
-    name = db.Column(db.String(100), nullable=False, unique=True)
+    name = db.Column(db.String(100), nullable=False, index=True)
     name_ar = db.Column(db.String(100))
     gl_account_code = db.Column(db.String(20))
     is_active = db.Column(db.Boolean, default=True)
@@ -22,10 +25,13 @@ class ExpenseCategory(db.Model):
 
 class Expense(db.Model):
     __tablename__ = 'expenses'
+    __table_args__ = (
+        db.UniqueConstraint('tenant_id', 'expense_number', name='uq_expenses_tenant_expense_number'),
+    )
     
     id = db.Column(db.Integer, primary_key=True)
     tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
-    expense_number = db.Column(db.String(50), unique=True, nullable=False, index=True)
+    expense_number = db.Column(db.String(50), nullable=False, index=True)
     
     category_id = db.Column(db.Integer, db.ForeignKey('expense_categories.id'), nullable=False, index=True)
     

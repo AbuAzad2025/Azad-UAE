@@ -19,6 +19,9 @@ from extensions import db
 
 class Partner(db.Model):
     __tablename__ = 'partners'
+    __table_args__ = (
+        db.UniqueConstraint('tenant_id', 'code', name='uq_partners_tenant_code'),
+    )
 
     id = db.Column(db.Integer, primary_key=True)
     tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
@@ -26,7 +29,7 @@ class Partner(db.Model):
     # Identity
     name = db.Column(db.String(200), nullable=False)
     name_en = db.Column(db.String(200))
-    code = db.Column(db.String(50), unique=True, nullable=True, index=True)
+    code = db.Column(db.String(50), nullable=True, index=True)
 
     # Partnership scope
     scope_type = db.Column(db.String(20), default='company', nullable=False)

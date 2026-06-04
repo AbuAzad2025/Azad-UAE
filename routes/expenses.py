@@ -8,7 +8,7 @@ from services.gl_posting import post_or_fail
 from utils.decorators import permission_required, branch_scope_id
 from utils.branching import should_show_all_branch_columns
 from utils.helpers import create_audit_log, generate_number
-from utils.tenanting import tenant_query, tenant_get_or_404
+from utils.tenanting import tenant_query, tenant_get_or_404, require_active_tenant_id
 from utils.gl_reference_types import GLRef
 from decimal import Decimal
 from datetime import datetime
@@ -68,7 +68,14 @@ def create():
     if request.method == 'POST':
         try:
             expense_branch_id = branch_scope_id() or getattr(current_user, 'branch_id', None)
-            expense_number = generate_number('EXP', Expense, 'expense_number', branch_id=expense_branch_id)
+            tenant_id = require_active_tenant_id(current_user)
+            expense_number = generate_number(
+                'EXP',
+                Expense,
+                'expense_number',
+                branch_id=expense_branch_id,
+                tenant_id=tenant_id,
+            )
             
             try:
                 from models import Tenant
@@ -95,7 +102,7 @@ def create():
                     pass
 
             expense = Expense(
-                tenant_id=getattr(current_user, 'tenant_id', None),
+                tenant_id=tenant_id,
                 expense_number=expense_number,
                 category_id=request.form.get('category_id', type=int),
                 description=request.form.get('description'),
@@ -400,7 +407,9 @@ def create_category():
         else:
             data = request.form
         
+        tenant_id = require_active_tenant_id(current_user)
         category = ExpenseCategory(
+            tenant_id=tenant_id,
             name=data.get('name'),
             name_ar=data.get('name_ar'),
             gl_account_code=data.get('gl_account_code')

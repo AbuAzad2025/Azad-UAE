@@ -1,7 +1,6 @@
 from decimal import Decimal, ROUND_HALF_UP
 
 from flask import current_app
-from sqlalchemy import or_
 
 from extensions import db
 from models import Sale, SaleLine, ProductReturn, ProductReturnLine, Product, ProductSerial
@@ -155,7 +154,7 @@ class ReturnService:
                     .join(ProductReturn)\
                     .filter(ProductReturnLine.sale_line_id == sale_line.id)\
                     .filter(ProductReturn.status != 'rejected')\
-                    .filter(or_(ProductReturn.tenant_id == tenant_id, ProductReturn.tenant_id.is_(None)))\
+                    .filter(ProductReturn.tenant_id == tenant_id)\
                     .scalar() or Decimal('0')
 
                 if (previous_returned + quantity) > sale_line.quantity:
