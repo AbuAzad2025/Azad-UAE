@@ -613,6 +613,7 @@ def statement(id):
                 'payment_date': payment.payment_date,
                 'amount_aed': float(payment.amount_aed or 0),
                 'amount_original': float(payment.amount or 0),
+                'base_amount': float(payment.amount_aed or 0),
                 'currency': payment.currency or default_currency,
                 'exchange_rate': float(payment.exchange_rate or 1),
                 'payment_method': payment.payment_method,
