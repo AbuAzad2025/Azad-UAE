@@ -173,6 +173,20 @@ function hideLoading() {
 }
 
 /**
+ * Show Info Message
+ */
+function showInfo(message) {
+    showAlert(message, 'info');
+}
+
+/**
+ * Show Warning Message
+ */
+function showWarning(message) {
+    showAlert(message, 'warning');
+}
+
+/**
  * Show Success Message
  */
 function showSuccess(message) {
@@ -505,6 +519,8 @@ window.onerror = function(msg, url, lineNo, columnNo, error) {    showError('Ø­Ø
 window.azad = {
     showLoading: showLoading,
     hideLoading: hideLoading,
+    showInfo: showInfo,
+    showWarning: showWarning,
     showSuccess: showSuccess,
     showError: showError,
     showAlert: showAlert,

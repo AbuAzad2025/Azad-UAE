@@ -2,15 +2,20 @@
 // Auto-pricing, stock alerts, and smart recommendations
 
 $(document).ready(function() {
-    
+
+    function getCsrfToken() {
+        return document.querySelector('meta[name="csrf-token"]')?.content || '';
+    }
+
     // توصية السعر عند اختيار منتج وعميل
     function checkPriceRecommendation(productId, customerId, lineIndex) {
         if (!productId || !customerId) return;
-        
+
         $.ajax({
             url: '/ai/recommend-price',
             method: 'POST',
             contentType: 'application/json',
+            headers: {'X-CSRFToken': getCsrfToken()},
             data: JSON.stringify({
                 product_id: productId,
                 customer_id: customerId
@@ -41,11 +46,12 @@ $(document).ready(function() {
     // فحص المخزون
     function checkStockAlert(productId, quantity, lineIndex) {
         if (!productId || !quantity) return;
-        
+
         $.ajax({
             url: '/ai/check-stock',
             method: 'POST',
             contentType: 'application/json',
+            headers: {'X-CSRFToken': getCsrfToken()},
             data: JSON.stringify({
                 product_id: productId,
                 quantity: quantity
