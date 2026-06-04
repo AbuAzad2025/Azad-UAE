@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+import sqlalchemy as sa
 from extensions import db
 
 
@@ -232,3 +233,170 @@ class GLJournalLine(db.Model):
         return f'<GLLine acc={self.account_id} d={self.debit} c={self.credit}>'
 
 
+# ---------------------------------------------------------------------------
+# Phase 1E – GL Concept Registry & Dynamic Mapping Foundation
+# ---------------------------------------------------------------------------
+
+# Approved standard concepts from the master blueprint.
+GL_CONCEPT_AR = 'AR'
+GL_CONCEPT_AP = 'AP'
+GL_CONCEPT_CASH = 'CASH'
+GL_CONCEPT_BANK = 'BANK'
+GL_CONCEPT_INVENTORY_ASSET = 'INVENTORY_ASSET'
+GL_CONCEPT_COGS = 'COGS'
+GL_CONCEPT_COGS_REVERSAL = 'COGS_REVERSAL'
+GL_CONCEPT_SALES_REVENUE = 'SALES_REVENUE'
+GL_CONCEPT_SALES_RETURNS = 'SALES_RETURNS'
+GL_CONCEPT_SALES_DISCOUNT = 'SALES_DISCOUNT'
+GL_CONCEPT_VAT_INPUT = 'VAT_INPUT'
+GL_CONCEPT_VAT_OUTPUT = 'VAT_OUTPUT'
+GL_CONCEPT_FX_GAIN = 'FX_GAIN'
+GL_CONCEPT_FX_LOSS = 'FX_LOSS'
+GL_CONCEPT_CHEQUES_UNDER_COLLECTION = 'CHEQUES_UNDER_COLLECTION'
+GL_CONCEPT_INVENTORY_ADJUSTMENT_GAIN = 'INVENTORY_ADJUSTMENT_GAIN'
+GL_CONCEPT_INVENTORY_ADJUSTMENT_LOSS = 'INVENTORY_ADJUSTMENT_LOSS'
+GL_CONCEPT_FREIGHT_IN = 'FREIGHT_IN'
+GL_CONCEPT_CUSTOMS_DUTY = 'CUSTOMS_DUTY'
+
+GL_CONCEPT_CODES = (
+    GL_CONCEPT_AR,
+    GL_CONCEPT_AP,
+    GL_CONCEPT_CASH,
+    GL_CONCEPT_BANK,
+    GL_CONCEPT_INVENTORY_ASSET,
+    GL_CONCEPT_COGS,
+    GL_CONCEPT_COGS_REVERSAL,
+    GL_CONCEPT_SALES_REVENUE,
+    GL_CONCEPT_SALES_RETURNS,
+    GL_CONCEPT_SALES_DISCOUNT,
+    GL_CONCEPT_VAT_INPUT,
+    GL_CONCEPT_VAT_OUTPUT,
+    GL_CONCEPT_FX_GAIN,
+    GL_CONCEPT_FX_LOSS,
+    GL_CONCEPT_CHEQUES_UNDER_COLLECTION,
+    GL_CONCEPT_INVENTORY_ADJUSTMENT_GAIN,
+    GL_CONCEPT_INVENTORY_ADJUSTMENT_LOSS,
+    GL_CONCEPT_FREIGHT_IN,
+    GL_CONCEPT_CUSTOMS_DUTY,
+)
+
+# legacy_code is informational in Phase 1E. No mappings are seeded here.
+GL_CONCEPT_REGISTRY = {
+    GL_CONCEPT_AR: {'meaning': 'Accounts Receivable', 'legacy_code': '1130', 'required': True},
+    GL_CONCEPT_AP: {'meaning': 'Accounts Payable', 'legacy_code': '2110', 'required': True},
+    GL_CONCEPT_CASH: {'meaning': 'Cash', 'legacy_code': None, 'required': True},
+    GL_CONCEPT_BANK: {'meaning': 'Bank', 'legacy_code': '1120', 'required': True},
+    GL_CONCEPT_INVENTORY_ASSET: {'meaning': 'Inventory Asset', 'legacy_code': '1140', 'required': True},
+    GL_CONCEPT_COGS: {'meaning': 'Cost of Goods Sold', 'legacy_code': '5100', 'required': True},
+    GL_CONCEPT_COGS_REVERSAL: {'meaning': 'Cost of Goods Sold Reversal', 'legacy_code': None, 'required': False},
+    GL_CONCEPT_SALES_REVENUE: {'meaning': 'Sales Revenue', 'legacy_code': '4100', 'required': True},
+    GL_CONCEPT_SALES_RETURNS: {'meaning': 'Sales Returns', 'legacy_code': None, 'required': False},
+    GL_CONCEPT_SALES_DISCOUNT: {'meaning': 'Sales Discount', 'legacy_code': None, 'required': False},
+    GL_CONCEPT_VAT_INPUT: {'meaning': 'VAT Input', 'legacy_code': None, 'required': True},
+    GL_CONCEPT_VAT_OUTPUT: {'meaning': 'VAT Output', 'legacy_code': '2130', 'required': True},
+    GL_CONCEPT_FX_GAIN: {'meaning': 'Foreign Exchange Gain', 'legacy_code': None, 'required': False},
+    GL_CONCEPT_FX_LOSS: {'meaning': 'Foreign Exchange Loss', 'legacy_code': None, 'required': False},
+    GL_CONCEPT_CHEQUES_UNDER_COLLECTION: {'meaning': 'Cheques Under Collection', 'legacy_code': '1150', 'required': False},
+    GL_CONCEPT_INVENTORY_ADJUSTMENT_GAIN: {'meaning': 'Inventory Adjustment Gain', 'legacy_code': None, 'required': False},
+    GL_CONCEPT_INVENTORY_ADJUSTMENT_LOSS: {'meaning': 'Inventory Adjustment Loss', 'legacy_code': None, 'required': False},
+    GL_CONCEPT_FREIGHT_IN: {'meaning': 'Freight In', 'legacy_code': None, 'required': False},
+    GL_CONCEPT_CUSTOMS_DUTY: {'meaning': 'Customs Duty', 'legacy_code': None, 'required': False},
+}
+
+VALID_GL_CONCEPT_CODES = frozenset(GL_CONCEPT_CODES)
+REQUIRED_GL_CONCEPTS = frozenset(
+    code for code, meta in GL_CONCEPT_REGISTRY.items() if meta['required']
+)
+
+_GL_CONCEPT_CODE_CHECK = "concept_code IN ({})".format(
+    ", ".join(f"'{code}'" for code in GL_CONCEPT_CODES)
+)
+
+
+class GLAccountMapping(db.Model):
+    """
+    Maps a standard GL concept to a tenant's chart-of-accounts entry.
+
+    Phase 1E foundation — the table is additive and inert until the feature
+    flag ``ENABLE_DYNAMIC_GL_MAPPING`` is enabled.  Legacy hardcoded lookups
+    remain the active code path while the flag is off.
+
+    Unique constraint logic:
+      • (tenant_id, concept_code) with branch_id IS NULL → tenant-level default.
+      • (tenant_id, concept_code, branch_id) when branch_id IS NOT NULL → branch override.
+    """
+    __tablename__ = 'gl_account_mappings'
+    __table_args__ = (
+        db.CheckConstraint(
+            _GL_CONCEPT_CODE_CHECK,
+            name='ck_gl_account_mappings_concept_code',
+        ),
+        db.Index(
+            'ix_gl_account_mappings_tenant_concept_active',
+            'tenant_id', 'concept_code', 'is_active',
+        ),
+        db.Index(
+            'uq_gl_account_mappings_tenant_concept_default',
+            'tenant_id', 'concept_code',
+            unique=True,
+            postgresql_where=sa.text('branch_id IS NULL'),
+            sqlite_where=sa.text('branch_id IS NULL'),
+        ),
+        db.Index(
+            'uq_gl_account_mappings_tenant_concept_branch',
+            'tenant_id', 'concept_code', 'branch_id',
+            unique=True,
+            postgresql_where=sa.text('branch_id IS NOT NULL'),
+            sqlite_where=sa.text('branch_id IS NOT NULL'),
+        ),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(
+        db.Integer,
+        db.ForeignKey('tenants.id', ondelete='CASCADE'),
+        nullable=False,
+        index=True,
+    )
+    concept_code = db.Column(db.String(50), nullable=False, index=True)
+    gl_account_id = db.Column(
+        db.Integer,
+        db.ForeignKey('gl_accounts.id', ondelete='RESTRICT'),
+        nullable=False,
+        index=True,
+    )
+    branch_id = db.Column(
+        db.Integer,
+        db.ForeignKey('branches.id', ondelete='CASCADE'),
+        nullable=True,
+        index=True,
+    )
+    is_active = db.Column(db.Boolean, default=True, nullable=False)
+    created_at = db.Column(
+        db.DateTime,
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False,
+    )
+    updated_at = db.Column(
+        db.DateTime,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+
+    # Relationships
+    tenant = db.relationship('Tenant', backref='gl_account_mappings', foreign_keys=[tenant_id])
+    gl_account = db.relationship('GLAccount', backref='concept_mappings', foreign_keys=[gl_account_id])
+    branch = db.relationship('Branch', backref='gl_account_mappings', foreign_keys=[branch_id])
+
+    def __repr__(self):
+        branch_tag = f' branch={self.branch_id}' if self.branch_id else ''
+        return f'<GLAccountMapping tenant={self.tenant_id} {self.concept_code}→acc={self.gl_account_id}{branch_tag}>'
+
+    @classmethod
+    def validate_concept_code(cls, concept_code):
+        """Raise ValueError if the concept_code is not in the approved registry."""
+        if concept_code not in VALID_GL_CONCEPT_CODES:
+            raise ValueError(
+                f"Unknown GL concept code '{concept_code}'. "
+                f"Valid codes: {sorted(VALID_GL_CONCEPT_CODES)}"
+            )

@@ -178,6 +178,11 @@ class Config:
     CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND", REDIS_URL)
     
     DEFAULT_CURRENCY = os.environ.get("DEFAULT_CURRENCY", "AED")
+
+    # --- Feature Flags (Phase 1E – Dynamic GL Mapping) ---
+    # When False (default): legacy hardcoded GL code lookups remain active.
+    # Enable only after GLAccountMapping backfill is validated for all tenants.
+    ENABLE_DYNAMIC_GL_MAPPING = _bool(os.environ.get("ENABLE_DYNAMIC_GL_MAPPING"), False)
     
     CURRENCY_API_PROVIDER = os.environ.get("CURRENCY_API_PROVIDER", "exchangerate-api")
     CURRENCY_API_KEY = os.environ.get("CURRENCY_API_KEY", "")

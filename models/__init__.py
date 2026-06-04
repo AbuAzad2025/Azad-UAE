@@ -17,7 +17,8 @@ from .error_audit_log import ErrorAuditLog
 from .archive import ArchivedRecord
 from .product_return import ProductReturn, ProductReturnLine
 from .card_vault import CardVault
-from .gl import GLAccount, GLJournalEntry, GLJournalLine, GLPeriod
+from .gl import GLAccount, GLJournalEntry, GLJournalLine, GLPeriod, GLAccountMapping
+from .gl import GL_CONCEPT_REGISTRY, VALID_GL_CONCEPT_CODES, REQUIRED_GL_CONCEPTS
 from .expense import Expense, ExpenseCategory
 from .invoice_settings import InvoiceSettings
 from .tenant import Tenant
@@ -63,7 +64,8 @@ __all__ = [
     'ArchivedRecord',
     'ProductReturn', 'ProductReturnLine',
     'CardVault',
-    'GLAccount', 'GLJournalEntry', 'GLJournalLine', 'GLPeriod',
+    'GLAccount', 'GLJournalEntry', 'GLJournalLine', 'GLPeriod', 'GLAccountMapping',
+    'GL_CONCEPT_REGISTRY', 'VALID_GL_CONCEPT_CODES', 'REQUIRED_GL_CONCEPTS',
     'Expense', 'ExpenseCategory',
     'InvoiceSettings',
     'Tenant',
