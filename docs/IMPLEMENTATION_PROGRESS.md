@@ -4,8 +4,8 @@ This document tracks the execution of the Strategic Remediation Plan approved in
 
 ## Overall Status
 - **Phase:** Implementation
-- **Active Batch:** Batch 3 (Financial Relationship Safety)
-- **Completion Percentage:** 40%
+- **Active Batch:** None (All batches 1-5 completed)
+- **Completion Percentage:** 100%
 
 ---
 
@@ -53,6 +53,9 @@ This document tracks the execution of the Strategic Remediation Plan approved in
 - **Batch 4:** Indexing & Schema Hardening.
   - Files changed: `models/sale.py`, `models/purchase.py`, `models/payment.py`, `models/expense.py`, `models/cheque.py`, `models/warehouse.py`, `models/gl.py`, `models/product_return.py`, `migrations/versions/batch_4_001_add_missing_fk_indexes.py`.
   - Outcome: Added 10 missing secondary indexes on high-traffic FK columns (seller_id, user_id, cost_center_id, customer_id, processed_by). Improves JOIN performance on financial reports and operational queries.
+- **Batch 5:** Model/Migration Sync.
+  - Files changed: `migrations/versions/batch_5_001_fix_nullability_mismatches.py`.
+  - Outcome: Aligned database nullability with model definitions for `cheques.tenant_id` and `partners.is_active` (both now `NOT NULL`). Zero NULL rows required no backfill.
 
 ---
 
@@ -109,5 +112,29 @@ Database inspection (`information_schema` vs `pg_index`) revealed 10 FK columns 
 
 ---
 
+## Batch 5: Model/Migration Sync
+**Goal:** Identify and fix nullability mismatches between SQLAlchemy model definitions and the physical PostgreSQL schema.
+
+### 5.1 Discovery Method
+Automated scan compared `column.nullable` on every mapped model against `information_schema.columns.is_nullable` in the database.
+
+### 5.2 Confirmed Mismatches
+
+| Table | Column | Model | Database | NULL Rows |
+|-------|--------|-------|----------|-----------|
+| `cheques` | `tenant_id` | `nullable=False` | `YES` | 0 |
+| `partners` | `is_active` | `nullable=False` | `YES` | 0 |
+
+Both columns had zero NULL rows, so no backfill was required.
+
+### 5.3 Changes
+- [x] Created migration `batch_5_001_fix_nullability_mismatches.py`
+- [x] Migration applied successfully (`batch_4_001` → `batch_5_001`)
+- [x] PostgreSQL verification confirms both columns are now `NO` (NOT NULL)
+
+**Status:** COMPLETED. All planned batches (1-5) are now finished.
+
+---
+
 ## Pending Batches
-- **Batch 5:** Model/Migration Sync (Fixing Nullability Mismatches).
+None.
