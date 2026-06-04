@@ -130,6 +130,12 @@ This section is the authoritative approved GL Concept Registry for active implem
 *   `CHEQUES_UNDER_COLLECTION`
 *   `INVENTORY_ADJUSTMENT_GAIN`, `INVENTORY_ADJUSTMENT_LOSS`
 *   `FREIGHT_IN`, `CUSTOMS_DUTY`
+*   `DEFERRED_CHEQUES_PAYABLE`, `PARTNER_CURRENT_ACCOUNT`, `MERCHANT_CURRENT_ACCOUNT`
+*   `SHIPPING_REVENUE`, `DONATION_REVENUE`, `BANK_INTEREST_INCOME`
+*   `MISC_EXPENSE`, `COMMISSION_EXPENSE`, `BANK_FEES`
+*   `EMPLOYEE_ADVANCES`, `PAYROLL_EXPENSE`, `PAYROLL_PAYABLE`
+*   `FIXED_ASSET_ASSET`, `DEPRECIATION_EXPENSE`, `ACCUMULATED_DEPRECIATION`
+*   `FIXED_ASSET_GAIN`, `FIXED_ASSET_LOSS`
 
 Numeric values such as `1130`, `1140`, `2110`, `4100`, and `5100` are legacy GL account codes, not concept codes. Header/group accounts such as `2000`, `2100`, `4000`, and `5000` are not required posting concepts and must not be used for transaction posting mappings unless explicitly approved by Finance Architecture. The active Phase 1E implementation must follow this final concept registry rather than older discovery rows.
 
@@ -421,7 +427,7 @@ All new logic paths are shielded behind:
    - Fallback to tenant‑level mapping when branch mapping is absent.
 
 6. **Validation rules**
-   - `concept_code` must belong to the approved GL Concept Registry (Phase 1A).
+   - `concept_code` must belong to the approved GL Concept Registry in section 7.3.
    - `gl_code` must match an existing GL account in the tenant’s chart of accounts.
    - `branch_id` must reference an existing branch belonging to the same tenant.
 
@@ -620,3 +626,12 @@ Future phases require admin UI support for the following areas:
 - Deferred outgoing cheques, partner/merchant current-account handling, shipping/service/other revenue, commission/payroll/expense-specific accounts, and other non-registry accounts remain legacy fallback areas until Finance Architecture approves concepts and tests for those flows.
 - Added read-only QA coverage for disabled legacy resolution, simulated enabled dynamic resolution, missing mapping failure, and blocked unmapped legacy fallback.
 - `ENABLE_DYNAMIC_GL_MAPPING` remains disabled by default. No mappings, GL accounts, branch overrides, historical entries, or posting data were modified.
+
+## Phase 1K.1 - Dynamic GL Posting Coverage Completion Note
+
+- Extended the approved section 7.3 GL Concept Registry for the remaining active backend posting concepts found in cheques, partner/merchant current accounts, shipping revenue, commissions, payroll, bank reconciliation, donations, fixed assets, and miscellaneous expenses.
+- Added a metadata-only Alembic migration to expand the `gl_account_mappings.concept_code` check constraint for those concepts. The migration does not seed data or modify historical postings.
+- Reused `GLAccountingSetupService` to create tenant-level mappings for the newly approved concepts against existing postable tenant GL accounts. No branch overrides were created.
+- Refactored active backend posting lines so numeric legacy account codes remain disabled-flag fallbacks only; when `ENABLE_DYNAMIC_GL_MAPPING` is enabled, `concept_code` resolution is authoritative and missing/invalid mappings raise `GLMappingError`.
+- User-configured expense category accounts remain explicit configured-account postings rather than hardcoded legacy postings; in dynamic mode they are validated as same-tenant, active, postable GL accounts.
+- `ENABLE_DYNAMIC_GL_MAPPING` remains disabled by default. No historical transactions or journal entries were changed.

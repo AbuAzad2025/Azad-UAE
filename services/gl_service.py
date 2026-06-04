@@ -1,7 +1,7 @@
 from decimal import Decimal
 from datetime import datetime, timezone
 from extensions import db
-from models import GLAccount, GLJournalEntry, GLJournalLine, Currency, GL_CONCEPT_REGISTRY
+from models import GLAccount, GLJournalEntry, GLJournalLine, Currency
 from services import gl_helpers
 from services.gl_account_resolver import (
     GLMappingError,
@@ -62,20 +62,27 @@ GL_ACCOUNT_CONCEPTS = {
     'receivable': 'AR',
     'inventory': 'INVENTORY_ASSET',
     'cheques_under_collection': 'CHEQUES_UNDER_COLLECTION',
+    'employee_advances': 'EMPLOYEE_ADVANCES',
     'vat_input': 'VAT_INPUT',
     'payable': 'AP',
+    'merchants_payable': 'MERCHANT_CURRENT_ACCOUNT',
+    'deferred_cheques': 'DEFERRED_CHEQUES_PAYABLE',
+    'salaries_payable': 'PAYROLL_PAYABLE',
     'tax_payable': 'VAT_OUTPUT',
     'sales_revenue': 'SALES_REVENUE',
+    'shipping_revenue': 'SHIPPING_REVENUE',
+    'service_revenue': 'DONATION_REVENUE',
     'cogs': 'COGS',
+    'inventory_adjustments': 'INVENTORY_ADJUSTMENT_LOSS',
     'discounts_given': 'SALES_DISCOUNT',
+    'salaries_expense': 'PAYROLL_EXPENSE',
+    'commission_expense': 'COMMISSION_EXPENSE',
+    'depreciation_expense': 'DEPRECIATION_EXPENSE',
+    'accumulated_depreciation': 'ACCUMULATED_DEPRECIATION',
     'fx_gain': 'FX_GAIN',
     'fx_loss': 'FX_LOSS',
-}
-
-LEGACY_CODE_TO_GL_CONCEPT = {
-    str(meta['legacy_code']): concept_code
-    for concept_code, meta in GL_CONCEPT_REGISTRY.items()
-    if meta.get('legacy_code')
+    'bank_charges': 'BANK_FEES',
+    'misc_expense': 'MISC_EXPENSE',
 }
 
 class GLService:
@@ -112,12 +119,16 @@ class GLService:
             return 'CASH'
         if m in ('bank_transfer', 'card', 'bank'):
             return 'BANK'
+        if m == 'cheque':
+            return 'DEFERRED_CHEQUES_PAYABLE'
         return None
 
     @staticmethod
     def get_customer_credit_concept(customer):
-        if customer and getattr(customer, 'customer_type', None) in ('partner', 'merchant'):
-            return None
+        if customer and getattr(customer, 'customer_type', None) == 'partner':
+            return 'PARTNER_CURRENT_ACCOUNT'
+        if customer and getattr(customer, 'customer_type', None) == 'merchant':
+            return 'MERCHANT_CURRENT_ACCOUNT'
         return 'AR'
 
     @staticmethod
@@ -135,13 +146,30 @@ class GLService:
                 return account
 
         if is_dynamic_gl_mapping_enabled():
-            inferred_concept = LEGACY_CODE_TO_GL_CONCEPT.get(str(account_code).strip()) if account_code else None
-            if inferred_concept:
-                return resolve_gl_account(
-                    tenant_id=tenant_id,
-                    concept_code=inferred_concept,
-                    branch_id=branch_id,
-                )
+            if line.get('explicit_account_allowed') and account_code:
+                account = gl_helpers.get_account(account_code, tenant_id)
+                if account is None:
+                    raise GLMappingError(
+                        tenant_id=tenant_id,
+                        concept_code='EXPLICIT_ACCOUNT',
+                        branch_id=branch_id,
+                        issue=f"Explicit configured GL account {account_code} does not exist for this tenant.",
+                    )
+                if not account.is_active:
+                    raise GLMappingError(
+                        tenant_id=tenant_id,
+                        concept_code='EXPLICIT_ACCOUNT',
+                        branch_id=branch_id,
+                        issue=f"Explicit configured GL account {account_code} is inactive.",
+                    )
+                if account.is_header:
+                    raise GLMappingError(
+                        tenant_id=tenant_id,
+                        concept_code='EXPLICIT_ACCOUNT',
+                        branch_id=branch_id,
+                        issue=f"Explicit configured GL account {account_code} is a header/group account.",
+                    )
+                return account
             if account_code:
                 raise GLMappingError(
                     tenant_id=tenant_id,
@@ -280,8 +308,9 @@ class GLService:
             debit = Decimal(str(line.get('debit', 0) or 0)) * rate
             credit = Decimal(str(line.get('credit', 0) or 0)) * rate
             adapted_lines.append({
-                'account_code': line.get('account'),
+                'account_code': line.get('account_code') or line.get('account'),
                 'concept_code': line.get('concept_code'),
+                'explicit_account_allowed': line.get('explicit_account_allowed', False),
                 'debit': debit,
                 'credit': credit,
                 'description': line.get('description', description)

@@ -425,6 +425,7 @@ class SaleService:
         if sale.shipping_cost > Decimal('0'):
             gl_lines.append({
                 'account': '4300',
+                'concept_code': 'SHIPPING_REVENUE',
                 'credit': sale.shipping_cost,
                 'description': 'إيرادات الشحن',
             })

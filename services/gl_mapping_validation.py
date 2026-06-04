@@ -209,6 +209,114 @@ DISCOVERY_RULES: dict[str, dict[str, object]] = {
 }
 
 
+DISCOVERY_RULES.update({
+    "DEFERRED_CHEQUES_PAYABLE": {
+        "name_exact": ["deferred cheques payable", "pdc payable"],
+        "name_partial": ["deferred cheque", "pdc payable", "cheques payable"],
+        "expected_types": ["liability"],
+        "description": "Issued post-dated / deferred cheques payable.",
+    },
+    "PARTNER_CURRENT_ACCOUNT": {
+        "name_exact": ["partner current account", "partners current account"],
+        "name_partial": ["partner current", "partners current"],
+        "expected_types": ["equity", "liability", "asset"],
+        "description": "Partner current account.",
+    },
+    "MERCHANT_CURRENT_ACCOUNT": {
+        "name_exact": ["merchant current account", "merchants payable"],
+        "name_partial": ["merchant current", "merchant payable", "merchants payable"],
+        "expected_types": ["liability", "asset"],
+        "description": "Merchant current account / merchant payable bridge.",
+    },
+    "SHIPPING_REVENUE": {
+        "name_exact": ["shipping revenue", "delivery revenue"],
+        "name_partial": ["shipping revenue", "delivery revenue", "shipping"],
+        "expected_types": ["revenue"],
+        "description": "Shipping / delivery revenue.",
+    },
+    "MISC_EXPENSE": {
+        "name_exact": ["miscellaneous expense", "misc expense"],
+        "name_partial": ["miscellaneous", "misc expense"],
+        "expected_types": ["expense"],
+        "description": "Miscellaneous expense fallback.",
+    },
+    "COMMISSION_EXPENSE": {
+        "name_exact": ["commission expense", "partner commission expense"],
+        "name_partial": ["commission", "partner commission"],
+        "expected_types": ["expense"],
+        "description": "Commission expense.",
+    },
+    "EMPLOYEE_ADVANCES": {
+        "name_exact": ["employee advances", "salary advances"],
+        "name_partial": ["employee advance", "salary advance"],
+        "expected_types": ["asset"],
+        "description": "Employee advances asset account.",
+    },
+    "PAYROLL_EXPENSE": {
+        "name_exact": ["payroll expense", "salaries and wages", "salary expense"],
+        "name_partial": ["payroll", "salary", "wages"],
+        "expected_types": ["expense"],
+        "description": "Payroll / salaries expense.",
+    },
+    "PAYROLL_PAYABLE": {
+        "name_exact": ["payroll payable", "salary payable", "salaries payable"],
+        "name_partial": ["payroll payable", "salary payable"],
+        "expected_types": ["liability"],
+        "description": "Payroll payable / salary deductions payable.",
+    },
+    "BANK_FEES": {
+        "name_exact": ["bank fees", "bank charges"],
+        "name_partial": ["bank fee", "bank charge"],
+        "expected_types": ["expense"],
+        "description": "Bank fees and reconciliation charges.",
+    },
+    "BANK_INTEREST_INCOME": {
+        "name_exact": ["bank interest income", "interest income"],
+        "name_partial": ["bank interest", "interest income", "other revenue"],
+        "expected_types": ["revenue"],
+        "description": "Bank interest income.",
+    },
+    "DONATION_REVENUE": {
+        "name_exact": ["donation revenue", "donation income"],
+        "name_partial": ["donation", "service revenue"],
+        "expected_types": ["revenue"],
+        "description": "Donation revenue.",
+    },
+    "FIXED_ASSET_ASSET": {
+        "name_exact": ["fixed asset", "equipment"],
+        "name_partial": ["fixed asset", "equipment", "furniture", "vehicle"],
+        "expected_types": ["asset"],
+        "parent_code_hint": "1200",
+        "description": "Fixed asset cost account.",
+    },
+    "DEPRECIATION_EXPENSE": {
+        "name_exact": ["depreciation expense"],
+        "name_partial": ["depreciation expense", "depreciation"],
+        "expected_types": ["expense"],
+        "description": "Depreciation expense.",
+    },
+    "ACCUMULATED_DEPRECIATION": {
+        "name_exact": ["accumulated depreciation"],
+        "name_partial": ["accumulated depreciation"],
+        "expected_types": ["asset"],
+        "parent_code_hint": "1200",
+        "description": "Accumulated depreciation contra-asset account.",
+    },
+    "FIXED_ASSET_GAIN": {
+        "name_exact": ["fixed asset disposal gain", "asset disposal gain"],
+        "name_partial": ["asset disposal gain", "other revenue"],
+        "expected_types": ["revenue"],
+        "description": "Gain on fixed asset disposal.",
+    },
+    "FIXED_ASSET_LOSS": {
+        "name_exact": ["fixed asset disposal loss", "asset disposal loss"],
+        "name_partial": ["asset disposal loss", "miscellaneous"],
+        "expected_types": ["expense"],
+        "description": "Loss on fixed asset disposal.",
+    },
+})
+
+
 @dataclass(frozen=True)
 class GLMappingCandidateDiscoveryRow:
     """Read-only candidate discovery report row for Phase 1G.1.

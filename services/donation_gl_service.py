@@ -50,8 +50,8 @@ class DonationGLService:
         desc = f'تبرع Azad #{donation.id} — {donor} ({method_label})'
 
         lines = [
-            {'account': debit_acct, 'debit': amount_aed, 'description': desc},
-            {'account': credit_acct, 'credit': amount_aed, 'description': desc},
+            {'account': debit_acct, 'concept_code': 'BANK', 'debit': amount_aed, 'description': desc},
+            {'account': credit_acct, 'concept_code': 'DONATION_REVENUE', 'credit': amount_aed, 'description': desc},
         ]
 
         try:

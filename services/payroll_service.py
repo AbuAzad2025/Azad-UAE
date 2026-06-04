@@ -119,9 +119,9 @@ class PayrollService:
 
             [
 
-                {'account': '1160', 'debit': Decimal(str(amount)), 'credit': 0, 'description': f'Advance - {employee.name}'},
+                {'account': '1160', 'concept_code': 'EMPLOYEE_ADVANCES', 'debit': Decimal(str(amount)), 'credit': 0, 'description': f'Advance - {employee.name}'},
 
-                {'account': cash_account, 'debit': 0, 'credit': Decimal(str(amount)), 'description': 'Cash Payment'},
+                {'account': cash_account, 'concept_code': 'CASH', 'debit': 0, 'credit': Decimal(str(amount)), 'description': 'Cash Payment'},
 
             ],
 
@@ -238,19 +238,19 @@ class PayrollService:
 
         lines = [
 
-            {'account': '6100', 'debit': Decimal(str(total_expense)), 'credit': 0, 'description': f'Salary {month}/{year} - {employee.name}'},
+            {'account': '6100', 'concept_code': 'PAYROLL_EXPENSE', 'debit': Decimal(str(total_expense)), 'credit': 0, 'description': f'Salary {month}/{year} - {employee.name}'},
 
-            {'account': cash_account, 'debit': 0, 'credit': Decimal(str(net_salary)), 'description': 'Net Salary Payment'},
+            {'account': cash_account, 'concept_code': 'CASH', 'debit': 0, 'credit': Decimal(str(net_salary)), 'description': 'Net Salary Payment'},
 
         ]
 
         if deductions > 0:
 
-            lines.append({'account': '2140', 'debit': 0, 'credit': Decimal(str(deductions)), 'description': 'Salary Deductions'})
+            lines.append({'account': '2140', 'concept_code': 'PAYROLL_PAYABLE', 'debit': 0, 'credit': Decimal(str(deductions)), 'description': 'Salary Deductions'})
 
         if advances_total > 0:
 
-            lines.append({'account': '1160', 'debit': 0, 'credit': Decimal(str(advances_total)), 'description': 'Advance Deduction'})
+            lines.append({'account': '1160', 'concept_code': 'EMPLOYEE_ADVANCES', 'debit': 0, 'credit': Decimal(str(advances_total)), 'description': 'Advance Deduction'})
 
 
 

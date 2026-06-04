@@ -257,6 +257,23 @@ GL_CONCEPT_INVENTORY_ADJUSTMENT_GAIN = 'INVENTORY_ADJUSTMENT_GAIN'
 GL_CONCEPT_INVENTORY_ADJUSTMENT_LOSS = 'INVENTORY_ADJUSTMENT_LOSS'
 GL_CONCEPT_FREIGHT_IN = 'FREIGHT_IN'
 GL_CONCEPT_CUSTOMS_DUTY = 'CUSTOMS_DUTY'
+GL_CONCEPT_DEFERRED_CHEQUES_PAYABLE = 'DEFERRED_CHEQUES_PAYABLE'
+GL_CONCEPT_PARTNER_CURRENT_ACCOUNT = 'PARTNER_CURRENT_ACCOUNT'
+GL_CONCEPT_MERCHANT_CURRENT_ACCOUNT = 'MERCHANT_CURRENT_ACCOUNT'
+GL_CONCEPT_SHIPPING_REVENUE = 'SHIPPING_REVENUE'
+GL_CONCEPT_MISC_EXPENSE = 'MISC_EXPENSE'
+GL_CONCEPT_COMMISSION_EXPENSE = 'COMMISSION_EXPENSE'
+GL_CONCEPT_EMPLOYEE_ADVANCES = 'EMPLOYEE_ADVANCES'
+GL_CONCEPT_PAYROLL_EXPENSE = 'PAYROLL_EXPENSE'
+GL_CONCEPT_PAYROLL_PAYABLE = 'PAYROLL_PAYABLE'
+GL_CONCEPT_BANK_FEES = 'BANK_FEES'
+GL_CONCEPT_BANK_INTEREST_INCOME = 'BANK_INTEREST_INCOME'
+GL_CONCEPT_DONATION_REVENUE = 'DONATION_REVENUE'
+GL_CONCEPT_FIXED_ASSET_ASSET = 'FIXED_ASSET_ASSET'
+GL_CONCEPT_DEPRECIATION_EXPENSE = 'DEPRECIATION_EXPENSE'
+GL_CONCEPT_ACCUMULATED_DEPRECIATION = 'ACCUMULATED_DEPRECIATION'
+GL_CONCEPT_FIXED_ASSET_GAIN = 'FIXED_ASSET_GAIN'
+GL_CONCEPT_FIXED_ASSET_LOSS = 'FIXED_ASSET_LOSS'
 
 GL_CONCEPT_CODES = (
     GL_CONCEPT_AR,
@@ -278,6 +295,23 @@ GL_CONCEPT_CODES = (
     GL_CONCEPT_INVENTORY_ADJUSTMENT_LOSS,
     GL_CONCEPT_FREIGHT_IN,
     GL_CONCEPT_CUSTOMS_DUTY,
+    GL_CONCEPT_DEFERRED_CHEQUES_PAYABLE,
+    GL_CONCEPT_PARTNER_CURRENT_ACCOUNT,
+    GL_CONCEPT_MERCHANT_CURRENT_ACCOUNT,
+    GL_CONCEPT_SHIPPING_REVENUE,
+    GL_CONCEPT_MISC_EXPENSE,
+    GL_CONCEPT_COMMISSION_EXPENSE,
+    GL_CONCEPT_EMPLOYEE_ADVANCES,
+    GL_CONCEPT_PAYROLL_EXPENSE,
+    GL_CONCEPT_PAYROLL_PAYABLE,
+    GL_CONCEPT_BANK_FEES,
+    GL_CONCEPT_BANK_INTEREST_INCOME,
+    GL_CONCEPT_DONATION_REVENUE,
+    GL_CONCEPT_FIXED_ASSET_ASSET,
+    GL_CONCEPT_DEPRECIATION_EXPENSE,
+    GL_CONCEPT_ACCUMULATED_DEPRECIATION,
+    GL_CONCEPT_FIXED_ASSET_GAIN,
+    GL_CONCEPT_FIXED_ASSET_LOSS,
 )
 
 # legacy_code is informational in Phase 1E. No mappings are seeded here.
@@ -301,6 +335,23 @@ GL_CONCEPT_REGISTRY = {
     GL_CONCEPT_INVENTORY_ADJUSTMENT_LOSS: {'meaning': 'Inventory Adjustment Loss', 'legacy_code': None, 'required': False},
     GL_CONCEPT_FREIGHT_IN: {'meaning': 'Freight In', 'legacy_code': None, 'required': False},
     GL_CONCEPT_CUSTOMS_DUTY: {'meaning': 'Customs Duty', 'legacy_code': None, 'required': False},
+    GL_CONCEPT_DEFERRED_CHEQUES_PAYABLE: {'meaning': 'Deferred Cheques Payable', 'legacy_code': '2120', 'required': False, 'normal_balance': 'credit'},
+    GL_CONCEPT_PARTNER_CURRENT_ACCOUNT: {'meaning': 'Partner Current Account', 'legacy_code': '3350', 'required': False},
+    GL_CONCEPT_MERCHANT_CURRENT_ACCOUNT: {'meaning': 'Merchant Current Account', 'legacy_code': '2115', 'required': False},
+    GL_CONCEPT_SHIPPING_REVENUE: {'meaning': 'Shipping Revenue', 'legacy_code': '4300', 'required': False, 'normal_balance': 'credit'},
+    GL_CONCEPT_MISC_EXPENSE: {'meaning': 'Miscellaneous Expense', 'legacy_code': '6990', 'required': False, 'normal_balance': 'debit'},
+    GL_CONCEPT_COMMISSION_EXPENSE: {'meaning': 'Commission Expense', 'legacy_code': '6150', 'required': False, 'normal_balance': 'debit'},
+    GL_CONCEPT_EMPLOYEE_ADVANCES: {'meaning': 'Employee Advances', 'legacy_code': '1160', 'required': False},
+    GL_CONCEPT_PAYROLL_EXPENSE: {'meaning': 'Payroll Expense', 'legacy_code': '6100', 'required': False, 'normal_balance': 'debit'},
+    GL_CONCEPT_PAYROLL_PAYABLE: {'meaning': 'Payroll Payable', 'legacy_code': '2140', 'required': False, 'normal_balance': 'credit'},
+    GL_CONCEPT_BANK_FEES: {'meaning': 'Bank Fees', 'legacy_code': '6950', 'required': False, 'normal_balance': 'debit'},
+    GL_CONCEPT_BANK_INTEREST_INCOME: {'meaning': 'Bank Interest Income', 'legacy_code': '4500', 'required': False, 'normal_balance': 'credit'},
+    GL_CONCEPT_DONATION_REVENUE: {'meaning': 'Donation Revenue', 'legacy_code': '4200', 'required': False, 'normal_balance': 'credit'},
+    GL_CONCEPT_FIXED_ASSET_ASSET: {'meaning': 'Fixed Asset Asset', 'legacy_code': '1240', 'required': False},
+    GL_CONCEPT_DEPRECIATION_EXPENSE: {'meaning': 'Depreciation Expense', 'legacy_code': '6180', 'required': False, 'normal_balance': 'debit'},
+    GL_CONCEPT_ACCUMULATED_DEPRECIATION: {'meaning': 'Accumulated Depreciation', 'legacy_code': '1290', 'required': False, 'normal_balance': 'credit'},
+    GL_CONCEPT_FIXED_ASSET_GAIN: {'meaning': 'Fixed Asset Disposal Gain', 'legacy_code': '4500', 'required': False, 'normal_balance': 'credit'},
+    GL_CONCEPT_FIXED_ASSET_LOSS: {'meaning': 'Fixed Asset Disposal Loss', 'legacy_code': '6990', 'required': False, 'normal_balance': 'debit'},
 }
 
 VALID_GL_CONCEPT_CODES = frozenset(GL_CONCEPT_CODES)

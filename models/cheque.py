@@ -168,6 +168,7 @@ class Cheque(db.Model):
             currency='AED',
             exchange_rate=1.0,
             branch_id=self.branch_id,
+            tenant_id=getattr(self, 'tenant_id', None),
         )
     
     def receive_cheque(self):
@@ -223,6 +224,7 @@ class Cheque(db.Model):
             },
             {
                 'account': '2120',
+                'concept_code': 'DEFERRED_CHEQUES_PAYABLE',
                 'debit': 0,
                 'credit': self.amount_aed,
                 'description': f'إصدار شيك - رقم {self.cheque_bank_number}'
@@ -335,6 +337,7 @@ class Cheque(db.Model):
         elif self.cheque_type == 'outgoing':
             lines.append({
                 'account': '2120',
+                'concept_code': 'DEFERRED_CHEQUES_PAYABLE',
                 'debit': self.amount_aed,
                 'credit': 0,
                 'description': f'صرف شيك صادر رقم {self.cheque_bank_number}'
@@ -425,6 +428,7 @@ class Cheque(db.Model):
         elif self.cheque_type == 'outgoing':
             lines.append({
                 'account': '2120',
+                'concept_code': 'DEFERRED_CHEQUES_PAYABLE',
                 'debit': self.amount_aed,
                 'credit': 0,
                 'description': f'ارتداد شيك صادر رقم {self.cheque_bank_number}'
@@ -488,7 +492,7 @@ class Cheque(db.Model):
                 credit_account = '2110'
                 credit_concept = 'AP'
             lines = [
-                {'account': '2120', 'debit': self.amount_aed, 'credit': 0,
+                {'account': '2120', 'concept_code': 'DEFERRED_CHEQUES_PAYABLE', 'debit': self.amount_aed, 'credit': 0,
                  'description': f'إلغاء شيك صادر رقم {self.cheque_bank_number}'},
                 {'account': credit_account, 'concept_code': credit_concept, 'debit': 0, 'credit': self.amount_aed,
                  'description': f'إلغاء شيك رقم {self.cheque_bank_number}'},

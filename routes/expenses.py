@@ -159,25 +159,40 @@ def create():
                 
                 category = expense.category
                 expense_account = category.gl_account_code if category and category.gl_account_code else '6990'
+                expense_concept = None if category and category.gl_account_code else 'MISC_EXPENSE'
                 from models import GLAccount
                 tid = getattr(expense, 'tenant_id', None) or get_active_tenant_id()
                 acc_check = GLAccount.query.filter_by(code=str(expense_account), tenant_id=int(tid) if tid else None).first()
                 if acc_check and acc_check.is_header:
                     expense_account = '6990'
+                    expense_concept = 'MISC_EXPENSE'
                 
                 # Determine Payment Account
                 if expense.payment_method == 'cheque':
                     payment_account = '2110'  # Accounts Payable (cleared by Cheque Issue)
+                    payment_concept = 'AP'
                 else:
                     payment_account = GLService.get_payment_credit_account(
                         expense.payment_method,
                         branch_id=expense.branch_id,
                         tenant_id=tid,
                     )
+                    payment_concept = GLService.get_payment_credit_concept(expense.payment_method)
                 
                 lines = [
-                    {'account': expense_account, 'debit': expense.amount, 'description': expense.description},
-                    {'account': payment_account, 'credit': expense.amount, 'description': f'دفع {expense.payment_method}'}
+                    {
+                        'account': expense_account,
+                        'concept_code': expense_concept,
+                        'explicit_account_allowed': expense_concept is None,
+                        'debit': expense.amount,
+                        'description': expense.description,
+                    },
+                    {
+                        'account': payment_account,
+                        'concept_code': payment_concept,
+                        'credit': expense.amount,
+                        'description': f'دفع {expense.payment_method}',
+                    }
                 ]
                 
                 post_or_fail(

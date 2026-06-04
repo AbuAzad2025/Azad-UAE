@@ -21,6 +21,7 @@ def post_or_fail(
     exchange_rate=1.0,
     branch_id=None,
     user_id=None,
+    tenant_id=None,
 ):
     from services.gl_service import GLService
 
@@ -38,6 +39,7 @@ def post_or_fail(
             exchange_rate=exchange_rate,
             branch_id=branch_id,
             user_id=user_id,
+            tenant_id=tenant_id,
         )
     except Exception as exc:
         raise GlPostingError(str(exc)) from exc

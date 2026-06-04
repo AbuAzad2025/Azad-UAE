@@ -284,6 +284,198 @@ DEFAULT_CONCEPT_RULES: dict[str, ConceptSetupRule] = {
 }
 
 
+DEFAULT_CONCEPT_RULES.update({
+    "DEFERRED_CHEQUES_PAYABLE": ConceptSetupRule(
+        legacy_code="2120",
+        expected_types=("liability",),
+        creation_template={
+            "code_near": "2120",
+            "name": "Deferred Cheques Payable",
+            "name_ar": "شيكات مؤجلة الدفع",
+            "type": "liability",
+        },
+    ),
+    "PARTNER_CURRENT_ACCOUNT": ConceptSetupRule(
+        legacy_code="3350",
+        search_names=("partner current", "partners current", "جاري الشركاء"),
+        expected_types=("equity", "liability", "asset"),
+        creation_template={
+            "code_near": "3350",
+            "name": "Partner Current Account",
+            "name_ar": "جاري الشركاء",
+            "type": "equity",
+        },
+    ),
+    "MERCHANT_CURRENT_ACCOUNT": ConceptSetupRule(
+        legacy_code="2115",
+        search_names=("merchant current", "merchant payable", "ذمم التجار"),
+        expected_types=("liability", "asset"),
+        creation_template={
+            "code_near": "2115",
+            "name": "Merchant Current Account",
+            "name_ar": "ذمم التجار",
+            "type": "liability",
+        },
+    ),
+    "SHIPPING_REVENUE": ConceptSetupRule(
+        legacy_code="4300",
+        search_names=("shipping revenue", "delivery revenue", "إيرادات الشحن"),
+        expected_types=("revenue",),
+        creation_template={
+            "code_near": "4300",
+            "name": "Shipping Revenue",
+            "name_ar": "إيرادات شحن",
+            "type": "revenue",
+        },
+    ),
+    "MISC_EXPENSE": ConceptSetupRule(
+        legacy_code="6990",
+        search_names=("miscellaneous expense", "misc expense", "مصاريف متنوعة"),
+        expected_types=("expense",),
+        creation_template={
+            "code_near": "6990",
+            "name": "Miscellaneous Expense",
+            "name_ar": "مصاريف متنوعة",
+            "type": "expense",
+        },
+    ),
+    "COMMISSION_EXPENSE": ConceptSetupRule(
+        legacy_code="6150",
+        search_names=("commission expense", "partner commission", "مصروف عمولات"),
+        expected_types=("expense",),
+        creation_template={
+            "code_near": "6150",
+            "name": "Commission Expense",
+            "name_ar": "مصروف عمولات",
+            "type": "expense",
+        },
+    ),
+    "EMPLOYEE_ADVANCES": ConceptSetupRule(
+        legacy_code="1160",
+        search_names=("employee advances", "salary advances", "سلف الموظفين"),
+        expected_types=("asset",),
+        creation_template={
+            "code_near": "1160",
+            "name": "Employee Advances",
+            "name_ar": "سلف الموظفين",
+            "type": "asset",
+        },
+    ),
+    "PAYROLL_EXPENSE": ConceptSetupRule(
+        legacy_code="6100",
+        search_names=("salary", "payroll", "wages", "رواتب"),
+        expected_types=("expense",),
+        creation_template={
+            "code_near": "6100",
+            "name": "Payroll Expense",
+            "name_ar": "رواتب وأجور",
+            "type": "expense",
+        },
+    ),
+    "PAYROLL_PAYABLE": ConceptSetupRule(
+        legacy_code="2140",
+        search_names=("salary payable", "payroll payable", "رواتب مستحقة"),
+        expected_types=("liability",),
+        creation_template={
+            "code_near": "2140",
+            "name": "Payroll Payable",
+            "name_ar": "رواتب مستحقة",
+            "type": "liability",
+        },
+    ),
+    "BANK_FEES": ConceptSetupRule(
+        legacy_code="6950",
+        search_names=("bank charges", "bank fees", "مصاريف بنكية"),
+        expected_types=("expense",),
+        creation_template={
+            "code_near": "6950",
+            "name": "Bank Fees",
+            "name_ar": "مصاريف بنكية",
+            "type": "expense",
+        },
+    ),
+    "BANK_INTEREST_INCOME": ConceptSetupRule(
+        legacy_code="4500",
+        search_names=("bank interest", "interest income", "other revenue", "فوائد بنكية"),
+        expected_types=("revenue",),
+        creation_template={
+            "code_near": "4500",
+            "name": "Bank Interest Income",
+            "name_ar": "إيرادات فوائد بنكية",
+            "type": "revenue",
+        },
+    ),
+    "DONATION_REVENUE": ConceptSetupRule(
+        legacy_code="4200",
+        search_names=("donation revenue", "service revenue", "إيرادات الخدمات"),
+        expected_types=("revenue",),
+        creation_template={
+            "code_near": "4200",
+            "name": "Donation Revenue",
+            "name_ar": "إيرادات تبرعات",
+            "type": "revenue",
+        },
+    ),
+    "FIXED_ASSET_ASSET": ConceptSetupRule(
+        legacy_code="1240",
+        search_names=("fixed asset", "equipment", "أصول ثابتة", "معدات"),
+        expected_types=("asset",),
+        parent_code_hint="1200",
+        creation_template={
+            "code_near": "1240",
+            "name": "Fixed Asset",
+            "name_ar": "أصول ثابتة",
+            "type": "asset",
+        },
+    ),
+    "DEPRECIATION_EXPENSE": ConceptSetupRule(
+        legacy_code="6180",
+        search_names=("depreciation expense", "استهلاك"),
+        expected_types=("expense",),
+        creation_template={
+            "code_near": "6180",
+            "name": "Depreciation Expense",
+            "name_ar": "مصروف استهلاك",
+            "type": "expense",
+        },
+    ),
+    "ACCUMULATED_DEPRECIATION": ConceptSetupRule(
+        legacy_code="1290",
+        search_names=("accumulated depreciation", "مجمع الاستهلاك"),
+        expected_types=("asset",),
+        parent_code_hint="1200",
+        creation_template={
+            "code_near": "1290",
+            "name": "Accumulated Depreciation",
+            "name_ar": "مجمع الاستهلاك",
+            "type": "asset",
+        },
+    ),
+    "FIXED_ASSET_GAIN": ConceptSetupRule(
+        legacy_code="4500",
+        search_names=("asset disposal gain", "fixed asset gain", "other revenue"),
+        expected_types=("revenue",),
+        creation_template={
+            "code_near": "4500",
+            "name": "Fixed Asset Disposal Gain",
+            "name_ar": "أرباح بيع أصول ثابتة",
+            "type": "revenue",
+        },
+    ),
+    "FIXED_ASSET_LOSS": ConceptSetupRule(
+        legacy_code="6990",
+        search_names=("asset disposal loss", "fixed asset loss", "miscellaneous expense"),
+        expected_types=("expense",),
+        creation_template={
+            "code_near": "6990",
+            "name": "Fixed Asset Disposal Loss",
+            "name_ar": "خسائر بيع أصول ثابتة",
+            "type": "expense",
+        },
+    ),
+})
+
+
 # ---------------------------------------------------------------------------
 # Result dataclasses
 # ---------------------------------------------------------------------------

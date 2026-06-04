@@ -182,12 +182,14 @@ class FixedAsset(db.Model):
         lines = [
             {
                 'account': str(self.expense_account.code),
+                'concept_code': 'DEPRECIATION_EXPENSE',
                 'debit': depreciation_amount,
                 'credit': 0,
                 'description': f'استهلاك شهري - {self.name_ar}'
             },
             {
                 'account': str(self.depreciation_account.code),
+                'concept_code': 'ACCUMULATED_DEPRECIATION',
                 'debit': 0,
                 'credit': depreciation_amount,
                 'description': f'مجمع استهلاك - {self.name_ar}'
@@ -200,6 +202,7 @@ class FixedAsset(db.Model):
             reference_type=GLRef.DEPRECIATION,
             reference_id=self.id,
             branch_id=self.branch_id,
+            tenant_id=getattr(self, 'tenant_id', None),
         )
         
         # تحديث الأصل
@@ -250,6 +253,7 @@ class FixedAsset(db.Model):
         # إزالة الأصل من الدفاتر
         lines.append({
             'account': str(self.depreciation_account.code),
+            'concept_code': 'ACCUMULATED_DEPRECIATION',
             'debit': self.accumulated_depreciation,
             'credit': 0,
             'description': f'إقفال مجمع استهلاك - {self.name_ar}'
@@ -265,6 +269,7 @@ class FixedAsset(db.Model):
             )
             lines.append({
                 'account': bank_account,  # البنك (أو الصندوق)
+                'concept_code': 'BANK',
                 'debit': self.disposal_price,
                 'credit': 0,
                 'description': f'ثمن بيع الأصل - {self.name_ar}'
@@ -275,6 +280,7 @@ class FixedAsset(db.Model):
             # ربح بيع
             lines.append({
                 'account': '4500',  # إيرادات أخرى
+                'concept_code': 'FIXED_ASSET_GAIN',
                 'debit': 0,
                 'credit': self.disposal_gain_loss,
                 'description': f'ربح بيع أصل - {self.name_ar}'
@@ -283,6 +289,7 @@ class FixedAsset(db.Model):
             # خسارة بيع
             lines.append({
                 'account': '6990',  # مصروفات متنوعة
+                'concept_code': 'FIXED_ASSET_LOSS',
                 'debit': abs(self.disposal_gain_loss),
                 'credit': 0,
                 'description': f'خسارة بيع/إتلاف أصل - {self.name_ar}'
@@ -290,6 +297,7 @@ class FixedAsset(db.Model):
         
         lines.append({
             'account': str(self.asset_account.code),
+            'concept_code': 'FIXED_ASSET_ASSET',
             'debit': 0,
             'credit': self.purchase_price,
             'description': f'إقفال حساب الأصل - {self.name_ar}'
@@ -301,7 +309,8 @@ class FixedAsset(db.Model):
             description=f'قيد {disposal_type} أصل - {self.asset_number}',
             reference_type=GLRef.ASSET_DISPOSAL,
             reference_id=self.id,
-            branch_id=self.branch_id
+            branch_id=self.branch_id,
+            tenant_id=getattr(self, 'tenant_id', None),
         )
         
         db.session.commit()

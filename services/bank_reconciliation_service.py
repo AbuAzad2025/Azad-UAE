@@ -184,12 +184,14 @@ class BankReconciliationService:
         if reconciliation.bank_charges > 0:
             lines.append({
                 'account': '6950',  # مصاريف بنكية
+                'concept_code': 'BANK_FEES',
                 'debit': reconciliation.bank_charges,
                 'credit': 0,
                 'description': 'مصاريف بنكية'
             })
             lines.append({
                 'account': str(reconciliation.bank_account.code),  # البنك
+                'concept_code': 'BANK',
                 'debit': 0,
                 'credit': reconciliation.bank_charges,
                 'description': 'مصاريف بنكية'
@@ -199,12 +201,14 @@ class BankReconciliationService:
         if reconciliation.bank_interest > 0:
             lines.append({
                 'account': str(reconciliation.bank_account.code),  # البنك
+                'concept_code': 'BANK',
                 'debit': reconciliation.bank_interest,
                 'credit': 0,
                 'description': 'فوائد بنكية'
             })
             lines.append({
                 'account': '4500',  # إيرادات أخرى
+                'concept_code': 'BANK_INTEREST_INCOME',
                 'debit': 0,
                 'credit': reconciliation.bank_interest,
                 'description': 'فوائد بنكية'
@@ -218,6 +222,7 @@ class BankReconciliationService:
                 reference_type=GLRef.BANK_RECONCILIATION,
                 reference_id=reconciliation.id,
                 branch_id=getattr(reconciliation, 'branch_id', None),
+                tenant_id=getattr(reconciliation.bank_account, 'tenant_id', None),
             )
         
         # تحديث الحالة

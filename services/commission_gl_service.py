@@ -24,11 +24,13 @@ def post_sale_commissions(sale):
         [
             {
                 'account': GL_ACCOUNTS['commission_expense'],
+                'concept_code': 'COMMISSION_EXPENSE',
                 'debit': total,
                 'description': f'عمولات شركاء — {sale.sale_number}',
             },
             {
                 'account': '3350',
+                'concept_code': 'PARTNER_CURRENT_ACCOUNT',
                 'credit': total,
                 'description': f'جاري شركاء — {sale.sale_number}',
             },
