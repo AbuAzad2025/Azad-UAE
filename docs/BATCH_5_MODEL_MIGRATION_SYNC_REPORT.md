@@ -49,7 +49,8 @@ ALTER TABLE cheques    ALTER COLUMN tenant_id DROP NOT NULL;
 
 **Migration chain:**
 ```
-batch_4_001 → batch_5_001 (head)
+batch_4_001 -> batch_5_001
+audit_trail_001 + batch_5_001 -> merge_batch5_audit_heads_001 (head)
 ```
 
 ### 3.2 Safety Check

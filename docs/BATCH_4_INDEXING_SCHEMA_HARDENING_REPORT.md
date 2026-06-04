@@ -132,7 +132,7 @@ WHERE schemaname = 'public'
 
 ## 6. Recommendations
 
-1. **Batch 5 (Pending):** Model/Migration Sync — Fix nullability mismatches between models and migrations (e.g., `receipts.tenant_id` is nullable in model but should be `NOT NULL`).
+1. **Batch 5:** Completed. Confirmed model/database nullability mismatches were fixed in `batch_5_001`.
 2. **Post-Deployment:** Run `ANALYZE` on affected tables to update PostgreSQL statistics:
    ```sql
    ANALYZE sales, purchases, payments, receipts, expenses, cheques, stock_movements, gl_journal_lines, product_returns;

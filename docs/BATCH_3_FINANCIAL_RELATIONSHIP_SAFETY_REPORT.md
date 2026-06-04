@@ -151,8 +151,8 @@ These may be addressed in future batches if they are confirmed to hold financial
 
 ## 5. Recommendations
 
-1. **Batch 4 (Pending):** Add missing secondary indexes on high-traffic FK join columns (e.g., `payments.sale_id`, `gl_journal_lines.account_id`).
-2. **Batch 5 (Pending):** Sync model nullability with migration schema (e.g., `receipts.tenant_id` is nullable in model but should be `NOT NULL`).
+1. **Batch 4:** Completed. Missing secondary indexes on high-traffic FK join columns were added in `batch_4_001`.
+2. **Batch 5:** Completed. Confirmed model/database nullability mismatches were fixed in `batch_5_001`.
 3. **Future Hardening:** Consider applying `ON DELETE RESTRICT` to `Payment.sale_id` and `Receipt.customer_id` if the business logic requires preventing deletion of paid sales or customers with receipts.
 
 ---

@@ -56,6 +56,7 @@ This document tracks the execution of the Strategic Remediation Plan approved in
 - **Batch 5:** Model/Migration Sync.
   - Files changed: `migrations/versions/batch_5_001_fix_nullability_mismatches.py`.
   - Outcome: Aligned database nullability with model definitions for `cheques.tenant_id` and `partners.is_active` (both now `NOT NULL`). Zero NULL rows required no backfill.
+- **Migration graph merge:** Merged `audit_trail_001` and `batch_5_001` into one final Alembic head: `merge_batch5_audit_heads_001`.
 
 ---
 
