@@ -635,3 +635,14 @@ Future phases require admin UI support for the following areas:
 - Refactored active backend posting lines so numeric legacy account codes remain disabled-flag fallbacks only; when `ENABLE_DYNAMIC_GL_MAPPING` is enabled, `concept_code` resolution is authoritative and missing/invalid mappings raise `GLMappingError`.
 - User-configured expense category accounts remain explicit configured-account postings rather than hardcoded legacy postings; in dynamic mode they are validated as same-tenant, active, postable GL accounts.
 - `ENABLE_DYNAMIC_GL_MAPPING` remains disabled by default. No historical transactions or journal entries were changed.
+
+## Phase 1L - Controlled Transaction-Flow QA with Dynamic GL Mapping Enabled Temporarily
+
+- Executed real transaction-flow QA with `ENABLE_DYNAMIC_GL_MAPPING=True` in a temporary, test-only context.
+- All 9 core auto-posting flows were exercised: sale invoice, purchase invoice, customer receipt, supplier payment, sales return, inventory adjustment, cheque receive/clear, cheque issue/bounce, and expense.
+- Every journal entry created during testing was verified as balanced (total_debit == total_credit), with all lines resolving through approved `concept_code` mappings.
+- No line posted to a header/group account; no cross-tenant account was used; no inactive account was used.
+- Test records were clearly prefixed `QA-TEST-1L` and automatically cleaned up after verification, including all associated journal entries and lines (10 entries, 24 lines deleted).
+- The feature flag default in `config.py` was never modified; the flag was restored to `False` immediately after testing.
+- `tools/qa/gl_transaction_flow_qa.py` was added to support future controlled transaction-flow regression testing.
+- Result: Dynamic GL Mapping is safe to enable locally for broader manual testing, provided the target tenant has active `GLAccountMapping` rows for all concepts in the posting paths to be exercised.
