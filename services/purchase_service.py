@@ -167,13 +167,14 @@ class PurchaseService:
             inventory_debit = Decimal('0')
 
         lines = [
-            {'account': GL_ACCOUNTS['inventory'], 'debit': inventory_debit, 'description': f'شراء بضاعة {purchase.purchase_number}'},
-            {'account': GL_ACCOUNTS['payable'], 'credit': purchase.total_amount, 'description': f'ذمم دائنة - مورد: {purchase.supplier_name}'}
+            {'account': GL_ACCOUNTS['inventory'], 'concept_code': 'INVENTORY_ASSET', 'debit': inventory_debit, 'description': f'شراء بضاعة {purchase.purchase_number}'},
+            {'account': GL_ACCOUNTS['payable'], 'concept_code': 'AP', 'credit': purchase.total_amount, 'description': f'ذمم دائنة - مورد: {purchase.supplier_name}'}
         ]
         
         if purchase.tax_amount > 0 and should_post_vat_gl(tenant_id):
             lines.append({
                 'account': GL_ACCOUNTS['vat_input'],
+                'concept_code': 'VAT_INPUT',
                 'debit': purchase.tax_amount, 
                 'description': f'ضريبة مدخلات (شراء) {purchase.purchase_number}'
             })

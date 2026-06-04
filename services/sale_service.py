@@ -410,11 +410,13 @@ class SaleService:
         gl_lines = [
             {
                 'account': ar_account,
+                'concept_code': GLService.get_customer_credit_concept(customer),
                 'debit': sale.total_amount,
                 'description': f'فاتورة {sale.sale_number}',
             },
             {
                 'account': '4100',
+                'concept_code': 'SALES_REVENUE',
                 'credit': sale.subtotal,
                 'description': 'إيرادات المبيعات',
             },
@@ -430,6 +432,7 @@ class SaleService:
         if sale.discount_amount > Decimal('0'):
             gl_lines.append({
                 'account': '5200',
+                'concept_code': 'SALES_DISCOUNT',
                 'debit': sale.discount_amount,
                 'description': 'خصومات ممنوحة',
             })
@@ -437,6 +440,7 @@ class SaleService:
         if sale.tax_amount > Decimal('0') and should_post_vat_gl(tenant_id):
             gl_lines.append({
                 'account': '2130',
+                'concept_code': 'VAT_OUTPUT',
                 'credit': sale.tax_amount,
                 'description': 'ضرائب مستحقة',
             })
@@ -455,11 +459,13 @@ class SaleService:
             cogs_lines = [
                 {
                     'account': '5100',
+                    'concept_code': 'COGS',
                     'debit': cogs_total_aed,
                     'description': 'تكلفة البضاعة المباعة',
                 },
                 {
                     'account': '1140',
+                    'concept_code': 'INVENTORY_ASSET',
                     'credit': cogs_total_aed,
                     'description': 'خصم من المخزون',
                 },
@@ -602,11 +608,13 @@ class SaleService:
                 [
                     {
                         'account': debit_account, 
+                        'concept_code': GLService.get_payment_debit_concept(payment_method),
                         'debit': amount_decimal, 
                         'description': f'Payment for Sale {sale.sale_number} ({payment_method})'
                     },
                     {
                         'account': credit_account,
+                        'concept_code': GLService.get_customer_credit_concept(sale.customer),
                         'credit': amount_decimal, 
                         'description': f'Payment Received {payment.payment_number}'
                     }

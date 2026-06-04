@@ -259,12 +259,14 @@ class ReturnService:
                     if cost_value > 0:
                         gl_lines.append({
                             'account': '1140',
+                            'concept_code': 'INVENTORY_ASSET',
                             'debit': cost_value,
                             'credit': 0,
                             'description': f'Inventory Restock - {product.name}'
                         })
                         gl_lines.append({
                             'account': '5100',
+                            'concept_code': 'COGS_REVERSAL',
                             'debit': 0,
                             'credit': cost_value,
                             'description': f'COGS Reversal - {product.name}'
@@ -314,6 +316,7 @@ class ReturnService:
             if net_return_amount > 0:
                 gl_lines.append({
                     'account': '4100',
+                    'concept_code': 'SALES_RETURNS',
                     'debit': net_return_amount,
                     'credit': 0,
                     'description': f'Sales Return Revenue Reversal {sale.sale_number}'
@@ -322,6 +325,7 @@ class ReturnService:
             if tax_amount > 0 and should_post_vat_gl(tenant_id):
                 gl_lines.append({
                     'account': '2130',
+                    'concept_code': 'VAT_OUTPUT',
                     'debit': tax_amount,
                     'credit': 0,
                     'description': f'Sales Return Tax Reversal {sale.sale_number}'
@@ -330,6 +334,7 @@ class ReturnService:
             if final_refund_amount > 0:
                 gl_lines.append({
                     'account': GLService.get_customer_credit_account(sale.customer),
+                    'concept_code': GLService.get_customer_credit_concept(sale.customer),
                     'debit': 0,
                     'credit': final_refund_amount,
                     'description': f'Credit Customer for Return {sale.sale_number}'

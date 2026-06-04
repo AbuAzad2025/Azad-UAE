@@ -46,13 +46,13 @@ class StockService:
             return
         if Decimal(str(movement.quantity)) < 0:
             lines = [
-                {'account': '5150', 'debit': cost_value, 'credit': 0, 'description': f'Inventory Adjustment (Loss) - {product.name}'},
-                {'account': '1140', 'debit': 0, 'credit': cost_value, 'description': f'Stock Decrease - {product.name}'},
+                {'account': '5150', 'concept_code': 'INVENTORY_ADJUSTMENT_LOSS', 'debit': cost_value, 'credit': 0, 'description': f'Inventory Adjustment (Loss) - {product.name}'},
+                {'account': '1140', 'concept_code': 'INVENTORY_ASSET', 'debit': 0, 'credit': cost_value, 'description': f'Stock Decrease - {product.name}'},
             ]
         else:
             lines = [
-                {'account': '1140', 'debit': cost_value, 'credit': 0, 'description': f'Stock Increase - {product.name}'},
-                {'account': '5150', 'debit': 0, 'credit': cost_value, 'description': f'Inventory Adjustment (Gain) - {product.name}'},
+                {'account': '1140', 'concept_code': 'INVENTORY_ASSET', 'debit': cost_value, 'credit': 0, 'description': f'Stock Increase - {product.name}'},
+                {'account': '5150', 'concept_code': 'INVENTORY_ADJUSTMENT_GAIN', 'debit': 0, 'credit': cost_value, 'description': f'Inventory Adjustment (Gain) - {product.name}'},
             ]
         warehouse = Warehouse.query.get(movement.warehouse_id) if getattr(movement, 'warehouse_id', None) else None
         branch_id = warehouse.branch_id if warehouse else None

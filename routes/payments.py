@@ -793,8 +793,8 @@ def create_voucher_submit():
                 )
                 post_or_fail(
                     [
-                        {'account': credit_account, 'debit': payment.amount, 'description': f'استرداد من مورد {supplier.name}'},
-                        {'account': '2110', 'credit': payment.amount, 'description': f'سند قبض {payment.payment_number}'},
+                        {'account': credit_account, 'concept_code': GLService.get_payment_debit_concept(payment_method), 'debit': payment.amount, 'description': f'استرداد من مورد {supplier.name}'},
+                        {'account': '2110', 'concept_code': 'AP', 'credit': payment.amount, 'description': f'سند قبض {payment.payment_number}'},
                     ],
                     description=f'Supplier refund {payment.payment_number}',
                     reference_type=GLRef.PAYMENT,
@@ -886,8 +886,8 @@ def create_voucher_submit():
                         tenant_id=tenant_id,
                     )
                     lines = [
-                        {'account': '2110', 'debit': payment.amount, 'description': f'سداد للمورد {payment.supplier_name}'},
-                        {'account': credit_account, 'credit': payment.amount, 'description': f'سند صرف {payment.payment_number}'}
+                        {'account': '2110', 'concept_code': 'AP', 'debit': payment.amount, 'description': f'سداد للمورد {payment.supplier_name}'},
+                        {'account': credit_account, 'concept_code': GLService.get_payment_credit_concept(payment_method), 'credit': payment.amount, 'description': f'سند صرف {payment.payment_number}'}
                     ]
                     post_or_fail(
                         lines,
@@ -976,8 +976,8 @@ def create_voucher_submit():
                     )
                     debit_account = GLService.get_customer_credit_account(customer)
                     lines = [
-                        {'account': debit_account, 'debit': payment.amount, 'description': f'سداد/سحب {customer.name}'},
-                        {'account': credit_account, 'credit': payment.amount, 'description': f'سند صرف {payment.payment_number}'}
+                        {'account': debit_account, 'concept_code': GLService.get_customer_credit_concept(customer), 'debit': payment.amount, 'description': f'سداد/سحب {customer.name}'},
+                        {'account': credit_account, 'concept_code': GLService.get_payment_credit_concept(payment_method), 'credit': payment.amount, 'description': f'سند صرف {payment.payment_number}'}
                     ]
                     post_or_fail(
                         lines,
@@ -1558,8 +1558,8 @@ def create_payment(purchase_id):
                 tenant_id=tenant_id,
             )
             lines = [
-                {'account': '2110', 'debit': payment.amount, 'description': f'سداد للمورد {payment.supplier_name}'},
-                {'account': cash_or_bank, 'credit': payment.amount, 'description': f'سند صرف {payment.payment_number}'}
+                {'account': '2110', 'concept_code': 'AP', 'debit': payment.amount, 'description': f'سداد للمورد {payment.supplier_name}'},
+                {'account': cash_or_bank, 'concept_code': GLService.get_payment_credit_concept(payment_method_value), 'credit': payment.amount, 'description': f'سند صرف {payment.payment_number}'}
             ]
             post_or_fail(
                 lines,

@@ -603,3 +603,20 @@ Future phases require admin UI support for the following areas:
    - Cheques under collection.
    - Payment gateways.
    - Cash position report.
+
+## Phase 1J - Dynamic GL Resolver Completion Note
+
+- Added an isolated dynamic GL account resolver behind `ENABLE_DYNAMIC_GL_MAPPING`.
+- While the feature flag remains disabled, the resolver returns no dynamic account and leaves legacy posting paths untouched.
+- When enabled in a future approved phase, the resolver checks tenant-level mappings with optional branch override fallback and raises `GLMappingError` for missing, inactive, cross-tenant, or non-postable/header account mappings.
+- No posting flows were refactored in Phase 1J.
+
+## Phase 1K - Dynamic GL Posting Resolution Completion Note
+
+- Started migrating backend auto-posting lines from hardcoded legacy GL codes to approved GL concept metadata.
+- Refactored central auto journal-line account resolution so `concept_code` uses `GLAccountResolver` when `ENABLE_DYNAMIC_GL_MAPPING` is enabled, with legacy account-code fallback only while the flag remains disabled.
+- Covered sales, purchases, payments, receipts, cheques, returns, VAT report account resolution, and inventory adjustments where an approved GL concept exists.
+- When the flag is enabled, mapped concepts are authoritative and unresolved/missing mappings raise `GLMappingError`; auto-posting lines without an approved concept do not silently fall back to raw account codes.
+- Deferred outgoing cheques, partner/merchant current-account handling, shipping/service/other revenue, commission/payroll/expense-specific accounts, and other non-registry accounts remain legacy fallback areas until Finance Architecture approves concepts and tests for those flows.
+- Added read-only QA coverage for disabled legacy resolution, simulated enabled dynamic resolution, missing mapping failure, and blocked unmapped legacy fallback.
+- `ENABLE_DYNAMIC_GL_MAPPING` remains disabled by default. No mappings, GL accounts, branch overrides, historical entries, or posting data were modified.

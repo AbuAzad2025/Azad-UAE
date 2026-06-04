@@ -119,8 +119,8 @@ class PaymentService:
                     tenant_id=tenant_id,
                 )
                 lines = [
-                    {'account': '2110', 'debit': payment.amount, 'description': f'دفعة للمورد {supplier.name}'},
-                    {'account': credit_account, 'credit': payment.amount, 'description': f'سند صرف {payment.payment_number}'}
+                    {'account': '2110', 'concept_code': 'AP', 'debit': payment.amount, 'description': f'دفعة للمورد {supplier.name}'},
+                    {'account': credit_account, 'concept_code': GLService.get_payment_credit_concept(payment_method), 'credit': payment.amount, 'description': f'سند صرف {payment.payment_number}'}
                 ]
                 post_or_fail(
                     lines,
@@ -292,8 +292,8 @@ class PaymentService:
 
                     # Create GL entries
                     lines = [
-                        {'account': payment_account, 'debit': receipt.amount, 'description': f'قبض من {customer.name}'},
-                        {'account': credit_account, 'credit': receipt.amount, 'description': f'سند قبض {receipt.receipt_number}'}
+                        {'account': payment_account, 'concept_code': GLService.get_payment_debit_concept(receipt.payment_method), 'debit': receipt.amount, 'description': f'قبض من {customer.name}'},
+                        {'account': credit_account, 'concept_code': GLService.get_customer_credit_concept(customer), 'credit': receipt.amount, 'description': f'سند قبض {receipt.receipt_number}'}
                     ]
                     post_or_fail(
                         lines,

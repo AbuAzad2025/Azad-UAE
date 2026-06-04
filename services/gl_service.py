@@ -1,8 +1,13 @@
 from decimal import Decimal
 from datetime import datetime, timezone
 from extensions import db
-from models import GLAccount, GLJournalEntry, GLJournalLine, Currency
+from models import GLAccount, GLJournalEntry, GLJournalLine, Currency, GL_CONCEPT_REGISTRY
 from services import gl_helpers
+from services.gl_account_resolver import (
+    GLMappingError,
+    is_dynamic_gl_mapping_enabled,
+    resolve_gl_account,
+)
 from services.gl_tree_builder import GLTreeBuilder
 from utils.helpers import generate_number
 
@@ -51,7 +56,115 @@ GL_ACCOUNTS = {
     'misc_expense': '6990',
 }
 
+GL_ACCOUNT_CONCEPTS = {
+    'cash': 'CASH',
+    'bank': 'BANK',
+    'receivable': 'AR',
+    'inventory': 'INVENTORY_ASSET',
+    'cheques_under_collection': 'CHEQUES_UNDER_COLLECTION',
+    'vat_input': 'VAT_INPUT',
+    'payable': 'AP',
+    'tax_payable': 'VAT_OUTPUT',
+    'sales_revenue': 'SALES_REVENUE',
+    'cogs': 'COGS',
+    'discounts_given': 'SALES_DISCOUNT',
+    'fx_gain': 'FX_GAIN',
+    'fx_loss': 'FX_LOSS',
+}
+
+LEGACY_CODE_TO_GL_CONCEPT = {
+    str(meta['legacy_code']): concept_code
+    for concept_code, meta in GL_CONCEPT_REGISTRY.items()
+    if meta.get('legacy_code')
+}
+
 class GLService:
+
+    @staticmethod
+    def posting_line(account_key, *, debit=0, credit=0, description='', concept_code=None, account=None):
+        legacy_code = account if account is not None else GL_ACCOUNTS[account_key]
+        concept = concept_code if concept_code is not None else GL_ACCOUNT_CONCEPTS.get(account_key)
+        line = {
+            'account': legacy_code,
+            'debit': debit,
+            'credit': credit,
+            'description': description,
+        }
+        if concept:
+            line['concept_code'] = concept
+        return line
+
+    @staticmethod
+    def get_payment_debit_concept(method):
+        m = (method or '').strip().lower()
+        if m == 'cash':
+            return 'CASH'
+        if m in ('bank_transfer', 'card', 'bank'):
+            return 'BANK'
+        if m == 'cheque':
+            return 'CHEQUES_UNDER_COLLECTION'
+        return 'CASH'
+
+    @staticmethod
+    def get_payment_credit_concept(payment_method):
+        m = (payment_method or '').strip().lower()
+        if m == 'cash':
+            return 'CASH'
+        if m in ('bank_transfer', 'card', 'bank'):
+            return 'BANK'
+        return None
+
+    @staticmethod
+    def get_customer_credit_concept(customer):
+        if customer and getattr(customer, 'customer_type', None) in ('partner', 'merchant'):
+            return None
+        return 'AR'
+
+    @staticmethod
+    def _resolve_journal_line_account(line, tenant_id, branch_id=None, ensure_core=True, missing_ok=False):
+        account_code = line.get('account_code') or line.get('account')
+        concept_code = line.get('concept_code')
+
+        if concept_code:
+            account = resolve_gl_account(
+                tenant_id=tenant_id,
+                concept_code=concept_code,
+                branch_id=branch_id,
+            )
+            if account is not None:
+                return account
+
+        if is_dynamic_gl_mapping_enabled():
+            inferred_concept = LEGACY_CODE_TO_GL_CONCEPT.get(str(account_code).strip()) if account_code else None
+            if inferred_concept:
+                return resolve_gl_account(
+                    tenant_id=tenant_id,
+                    concept_code=inferred_concept,
+                    branch_id=branch_id,
+                )
+            if account_code:
+                raise GLMappingError(
+                    tenant_id=tenant_id,
+                    concept_code=concept_code or 'UNMAPPED_ACCOUNT_CODE',
+                    branch_id=branch_id,
+                    issue=(
+                        f"No approved GL concept was provided for legacy hardcoded "
+                        f"account code {account_code}."
+                    ),
+                )
+
+        if not account_code:
+            raise ValueError('GL account code is required when dynamic mapping is disabled.')
+
+        account = gl_helpers.get_account(account_code, tenant_id)
+        if not account and ensure_core and tenant_id is not None:
+            GLService.ensure_core_accounts(tenant_id=tenant_id)
+            account = gl_helpers.get_account(account_code, tenant_id)
+        if not account:
+            if missing_ok:
+                return None
+            raise ValueError(f"GL Account not found: {account_code}")
+        return account
 
 
 
@@ -93,14 +206,7 @@ class GLService:
         total_credit = Decimal('0')
         
         for line in lines:
-            account_code = line['account_code']
-            account = gl_helpers.get_account(account_code, tenant_id)
-            if not account:
-                if tenant_id is not None:
-                    GLService.ensure_core_accounts(tenant_id=tenant_id)
-                    account = gl_helpers.get_account(account_code, tenant_id)
-                if not account:
-                    raise ValueError(f"GL Account not found: {account_code}")
+            account = GLService._resolve_journal_line_account(line, tenant_id, branch_id=branch_id)
             if getattr(account, 'is_header', False):
                 raise ValueError(f"لا يمكن القيد على الحساب الرئيسي: {getattr(account, 'full_name', account.code)}")
             debit = Decimal(str(line.get('debit', 0)))
@@ -175,6 +281,7 @@ class GLService:
             credit = Decimal(str(line.get('credit', 0) or 0)) * rate
             adapted_lines.append({
                 'account_code': line.get('account'),
+                'concept_code': line.get('concept_code'),
                 'debit': debit,
                 'credit': credit,
                 'description': line.get('description', description)
@@ -210,8 +317,20 @@ class GLService:
                 'branch_id': branch_id,
                 'tax_disabled': True,
             }
-        output_acc = gl_helpers.get_account(GL_ACCOUNTS['tax_payable'], tenant_id)
-        input_acc = gl_helpers.get_account(GL_ACCOUNTS['vat_input'], tenant_id)
+        output_acc = GLService._resolve_journal_line_account(
+            GLService.posting_line('tax_payable'),
+            tenant_id,
+            branch_id=branch_id,
+            ensure_core=False,
+            missing_ok=True,
+        )
+        input_acc = GLService._resolve_journal_line_account(
+            GLService.posting_line('vat_input'),
+            tenant_id,
+            branch_id=branch_id,
+            ensure_core=False,
+            missing_ok=True,
+        )
         result = {
             'vat_output': 0.0,
             'vat_input': 0.0,

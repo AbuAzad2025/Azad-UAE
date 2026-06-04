@@ -176,15 +176,18 @@ class Cheque(db.Model):
             return None
         from services.gl_service import GLService
         credit_account = GLService.get_customer_credit_account(self.customer) if self.customer_id else '1130'
+        credit_concept = GLService.get_customer_credit_concept(self.customer) if self.customer_id else 'AR'
         lines = [
             {
                 'account': '1150',
+                'concept_code': 'CHEQUES_UNDER_COLLECTION',
                 'debit': self.amount_aed,
                 'credit': 0,
                 'description': f'استلام شيك رقم {self.cheque_bank_number}'
             },
             {
                 'account': credit_account,
+                'concept_code': credit_concept,
                 'debit': 0,
                 'credit': self.amount_aed,
                 'description': f'استلام شيك من عميل - رقم {self.cheque_bank_number}'
@@ -203,13 +206,17 @@ class Cheque(db.Model):
         from services.gl_service import GLService
         if self.supplier_id:
             debit_account = '2110'
+            debit_concept = 'AP'
         elif self.customer_id:
             debit_account = GLService.get_customer_credit_account(self.customer)
+            debit_concept = GLService.get_customer_credit_concept(self.customer)
         else:
             debit_account = '2110'
+            debit_concept = 'AP'
         lines = [
             {
                 'account': debit_account,
+                'concept_code': debit_concept,
                 'debit': self.amount_aed,
                 'credit': 0,
                 'description': f'إصدار شيك رقم {self.cheque_bank_number}'
@@ -295,12 +302,14 @@ class Cheque(db.Model):
         if self.cheque_type == 'incoming':
             lines.append({
                 'account': bank_account,
+                'concept_code': 'BANK',
                 'debit': self.actual_amount_aed,
                 'credit': 0,
                 'description': f'صرف شيك وارد رقم {self.cheque_bank_number}'
             })
             lines.append({
                 'account': '1150',
+                'concept_code': 'CHEQUES_UNDER_COLLECTION',
                 'debit': 0,
                 'credit': self.amount_aed,
                 'description': f'صرف شيك رقم {self.cheque_bank_number}'
@@ -309,6 +318,7 @@ class Cheque(db.Model):
                 if self.currency_gain_loss > 0:
                     lines.append({
                         'account': '4400',
+                        'concept_code': 'FX_GAIN',
                         'debit': 0,
                         'credit': abs(self.currency_gain_loss),
                         'description': f'ربح فرق عملة - شيك {self.cheque_bank_number}'
@@ -316,6 +326,7 @@ class Cheque(db.Model):
                 else:
                     lines.append({
                         'account': '6900',
+                        'concept_code': 'FX_LOSS',
                         'debit': abs(self.currency_gain_loss),
                         'credit': 0,
                         'description': f'خسارة فرق عملة - شيك {self.cheque_bank_number}'
@@ -330,6 +341,7 @@ class Cheque(db.Model):
             })
             lines.append({
                 'account': bank_account,
+                'concept_code': 'BANK',
                 'debit': 0,
                 'credit': self.actual_amount_aed,
                 'description': f'صرف شيك رقم {self.cheque_bank_number}'
@@ -338,6 +350,7 @@ class Cheque(db.Model):
                 if self.currency_gain_loss > 0:
                     lines.append({
                         'account': '6900',
+                        'concept_code': 'FX_LOSS',
                         'debit': abs(self.currency_gain_loss),
                         'credit': 0,
                         'description': f'خسارة فرق عملة - شيك {self.cheque_bank_number}'
@@ -345,6 +358,7 @@ class Cheque(db.Model):
                 else:
                     lines.append({
                         'account': '4400',
+                        'concept_code': 'FX_GAIN',
                         'debit': 0,
                         'credit': abs(self.currency_gain_loss),
                         'description': f'ربح فرق عملة - شيك {self.cheque_bank_number}'
@@ -393,14 +407,17 @@ class Cheque(db.Model):
         lines = []
         if self.cheque_type == 'incoming':
             ar_account = GLService.get_customer_credit_account(self.customer) if self.customer_id else '1130'
+            ar_concept = GLService.get_customer_credit_concept(self.customer) if self.customer_id else 'AR'
             lines.append({
                 'account': ar_account,
+                'concept_code': ar_concept,
                 'debit': self.amount_aed,
                 'credit': 0,
                 'description': f'ارتداد شيك رقم {self.cheque_bank_number} - إرجاع الدين'
             })
             lines.append({
                 'account': '1150',
+                'concept_code': 'CHEQUES_UNDER_COLLECTION',
                 'debit': 0,
                 'credit': self.amount_aed,
                 'description': f'ارتداد شيك رقم {self.cheque_bank_number}'
@@ -414,12 +431,16 @@ class Cheque(db.Model):
             })
             if self.supplier_id:
                 credit_account = '2110'
+                credit_concept = 'AP'
             elif self.customer_id:
                 credit_account = GLService.get_customer_credit_account(self.customer)
+                credit_concept = GLService.get_customer_credit_concept(self.customer)
             else:
                 credit_account = '2110'
+                credit_concept = 'AP'
             lines.append({
                 'account': credit_account,
+                'concept_code': credit_concept,
                 'debit': 0,
                 'credit': self.amount_aed,
                 'description': f'ارتداد شيك رقم {self.cheque_bank_number} - إرجاع الالتزام'
@@ -449,23 +470,27 @@ class Cheque(db.Model):
         lines = []
         if self.cheque_type == 'incoming':
             ar_account = GLService.get_customer_credit_account(self.customer) if self.customer_id else '1130'
+            ar_concept = GLService.get_customer_credit_concept(self.customer) if self.customer_id else 'AR'
             lines = [
-                {'account': ar_account, 'debit': self.amount_aed, 'credit': 0,
+                {'account': ar_account, 'concept_code': ar_concept, 'debit': self.amount_aed, 'credit': 0,
                  'description': f'إلغاء شيك وارد رقم {self.cheque_bank_number}'},
-                {'account': '1150', 'debit': 0, 'credit': self.amount_aed,
+                {'account': '1150', 'concept_code': 'CHEQUES_UNDER_COLLECTION', 'debit': 0, 'credit': self.amount_aed,
                  'description': f'إلغاء شيك رقم {self.cheque_bank_number}'},
             ]
         elif self.cheque_type == 'outgoing':
             if self.supplier_id:
                 credit_account = '2110'
+                credit_concept = 'AP'
             elif self.customer_id:
                 credit_account = GLService.get_customer_credit_account(self.customer)
+                credit_concept = GLService.get_customer_credit_concept(self.customer)
             else:
                 credit_account = '2110'
+                credit_concept = 'AP'
             lines = [
                 {'account': '2120', 'debit': self.amount_aed, 'credit': 0,
                  'description': f'إلغاء شيك صادر رقم {self.cheque_bank_number}'},
-                {'account': credit_account, 'debit': 0, 'credit': self.amount_aed,
+                {'account': credit_account, 'concept_code': credit_concept, 'debit': 0, 'credit': self.amount_aed,
                  'description': f'إلغاء شيك رقم {self.cheque_bank_number}'},
             ]
         if lines:
