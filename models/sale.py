@@ -18,7 +18,7 @@ class Sale(db.Model):
     sale_number = db.Column(db.String(50), nullable=False, index=True)
     
     customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'), nullable=False, index=True)
-    seller_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    seller_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
     warehouse_id = db.Column(db.Integer, db.ForeignKey('warehouses.id'), nullable=True, index=True)
     branch_id = db.Column(db.Integer, db.ForeignKey('branches.id'), nullable=True, index=True) # New Branch ID
     

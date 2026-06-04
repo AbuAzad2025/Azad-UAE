@@ -62,7 +62,7 @@ class StockMovement(db.Model):
     reference_type = db.Column(db.String(50))
     reference_id = db.Column(db.Integer)
     
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), index=True)
     notes = db.Column(db.Text)
     
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)

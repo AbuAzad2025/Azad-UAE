@@ -50,6 +50,9 @@ This document tracks the execution of the Strategic Remediation Plan approved in
 - **Batch 3:** Financial Relationship Safety.
   - Files changed: `models/sale.py`, `models/purchase.py`, `models/gl.py`, `migrations/versions/batch_3_001_financial_relationship_safety.py`.
   - Outcome: Removed ORM cascade on Sale→SaleLine, Purchase→PurchaseLine, GLJournalEntry→GLJournalLine. Database now enforces `ON DELETE RESTRICT`, preventing accidental deletion of financial line items and preserving audit history.
+- **Batch 4:** Indexing & Schema Hardening.
+  - Files changed: `models/sale.py`, `models/purchase.py`, `models/payment.py`, `models/expense.py`, `models/cheque.py`, `models/warehouse.py`, `models/gl.py`, `models/product_return.py`, `migrations/versions/batch_4_001_add_missing_fk_indexes.py`.
+  - Outcome: Added 10 missing secondary indexes on high-traffic FK columns (seller_id, user_id, cost_center_id, customer_id, processed_by). Improves JOIN performance on financial reports and operational queries.
 
 ---
 
@@ -77,6 +80,34 @@ This document tracks the execution of the Strategic Remediation Plan approved in
 
 ---
 
+## Batch 4: Indexing & Schema Hardening
+**Goal:** Add missing secondary indexes on high-traffic Foreign Key join columns to improve query performance.
+
+### 4.1 Missing Indexes Identified
+Database inspection (`information_schema` vs `pg_index`) revealed 10 FK columns without supporting indexes:
+
+| Table | Column | References |
+|-------|--------|------------|
+| `sales` | `seller_id` | `users.id` |
+| `purchases` | `user_id` | `users.id` |
+| `payments` | `user_id` | `users.id` |
+| `receipts` | `user_id` | `users.id` |
+| `expenses` | `user_id` | `users.id` |
+| `cheques` | `user_id` | `users.id` |
+| `stock_movements` | `user_id` | `users.id` |
+| `gl_journal_lines` | `cost_center_id` | `cost_centers.id` |
+| `product_returns` | `customer_id` | `customers.id` |
+| `product_returns` | `processed_by` | `users.id` |
+
+### 4.2 Changes
+- [x] Added `index=True` to all 10 columns in their respective models
+- [x] Created migration `batch_4_001_add_missing_fk_indexes.py`
+- [x] Migration applied successfully (`batch_3_001` → `batch_4_001`)
+- [x] PostgreSQL verification confirms all 10 indexes exist
+
+**Status:** COMPLETED.
+
+---
+
 ## Pending Batches
-- **Batch 4:** Indexing & Schema Hardening (Missing FK Indexes).
 - **Batch 5:** Model/Migration Sync (Fixing Nullability Mismatches).

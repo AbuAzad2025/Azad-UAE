@@ -14,7 +14,7 @@ class ProductReturn(db.Model):
     return_number = db.Column(db.String(50), nullable=False, index=True)
     
     sale_id = db.Column(db.Integer, db.ForeignKey('sales.id'), nullable=False, index=True)
-    customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'), nullable=False)
+    customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'), nullable=False, index=True)
     branch_id = db.Column(db.Integer, db.ForeignKey('branches.id'), nullable=True, index=True)
     
     return_date = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
@@ -40,7 +40,7 @@ class ProductReturn(db.Model):
     
     notes = db.Column(db.Text)
     
-    processed_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    processed_by = db.Column(db.Integer, db.ForeignKey('users.id'), index=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     
     sale = db.relationship('Sale', backref='returns')

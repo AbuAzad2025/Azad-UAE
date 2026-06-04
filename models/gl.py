@@ -221,7 +221,7 @@ class GLJournalLine(db.Model):
         self.amount_aed = value
     
     # مركز التكلفة (اختياري)
-    cost_center_id = db.Column(db.Integer, db.ForeignKey('cost_centers.id'))
+    cost_center_id = db.Column(db.Integer, db.ForeignKey('cost_centers.id'), index=True)
 
     entry = db.relationship('GLJournalEntry', back_populates='lines')
     account = db.relationship('GLAccount')

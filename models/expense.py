@@ -53,7 +53,7 @@ class Expense(db.Model):
     status = db.Column(db.String(20), default='confirmed', index=True)
     is_active = db.Column(db.Boolean, default=True, index=True)
     
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     
     # Branch Support
