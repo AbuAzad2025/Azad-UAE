@@ -209,6 +209,19 @@ Safe seed preview deployed. A read-only preview tool (`--preview-seed`) proposes
 
 **Strict guarantees:** No inserts, updates, deletes, seeds, or backfills. Feature flag remains `False`. Posting behavior unchanged.
 
+#### Phase 1G.1 (Completed)
+Candidate discovery deployed. A read-only discovery tool (`--discover-candidates`) resolves Phase 1G gaps by searching each tenant's existing chart for postable accounts using name patterns, account types, and parent-child relationships.
+
+**Discovery results across all tenants:**
+*   **72** total concept-tenant combinations checked (12 concepts × 6 tenants).
+*   **41** safe single-candidate mappings discovered.
+*   **13** rows require owner selection (multiple valid candidates per concept).
+*   **25** rows require manual GL account creation (no existing candidate found).
+*   **Concepts unresolvable from existing accounts:** `CUSTOMS_DUTY`, `FREIGHT_IN`, `INVENTORY_ADJUSTMENT_GAIN`, `SALES_RETURNS` (all tenants); `CASH` (1 tenant).
+*   **Concepts with owner-selection ambiguity:** `BANK` (multiple bank accounts per tenant), `CASH` (multiple cashboxes in some tenants).
+
+**Strict guarantees:** No inserts, updates, deletes, seeds, or backfills. Feature flag remains `False`. Posting behavior unchanged.
+
 ### Phase 2: Financial Dimensions Enforcement
 *   **Goal:** Enforce and validate dimension columns on journal entries and lines.
 *   **Files Affected:** `models/gl.py`, `utils/gl_helpers.py`.
