@@ -485,3 +485,33 @@ All new logic paths are shielded behind:
 - Added the inert GL concept registry, `GLAccountMapping` model, additive mapping-table migration, and disabled-by-default `ENABLE_DYNAMIC_GL_MAPPING` flag.
 - No mappings were seeded or backfilled, and no posting/account-resolution behavior was changed.
 - Phase 1F must not begin until the mapping table migration is reviewed and the next approval gate is granted.
+
+## Phase 1F - GL Mapping Validation and Dry-Run Design
+
+**Important tenant onboarding rule:** New tenants must not require manual database migrations. After the `gl_account_mappings` table exists, every newly created tenant must receive default GL mappings automatically through tenant onboarding/setup logic, not through Alembic migrations.
+
+### 1. Existing Tenants
+
+- Validate existing GL mappings for every tenant.
+- Report missing required and optional GL concepts.
+- Do not guess or auto-fill unsafe mappings.
+- Do not assume `tenant_id = 1`; enumerate tenants from the tenant table.
+- Validate that each mapped GL account belongs to the same tenant, is active, and is postable rather than a header/group account.
+- Produce a dry-run report only; Phase 1F must not seed, backfill, or alter tenant accounting data.
+
+### 2. New Tenants
+
+- Define default GL mappings as part of tenant onboarding/setup logic.
+- Use a default chart/template as the source for tenant-level concept mappings.
+- After tenant creation, run GL mapping validation automatically.
+- If required mappings are missing, mark tenant setup incomplete or block accounting transactions until the setup is fixed.
+- No Alembic migration should be needed per new tenant.
+- Phase 1F may design this onboarding validation flow, but must not implement tenant creation changes yet.
+
+### Phase 1F Dry-Run Outputs
+
+- Tenant mapping completeness report by concept.
+- Missing concept report with severity, tenant, concept code, and recommended manual fix.
+- Invalid mapping report for cross-tenant accounts, inactive accounts, header accounts, duplicate defaults, and duplicate branch overrides.
+- Onboarding validation checklist for future tenant setup implementation.
+- Go/No-Go recommendation for enabling `ENABLE_DYNAMIC_GL_MAPPING`; the feature flag remains `False` until approved.
