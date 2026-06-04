@@ -531,3 +531,48 @@ All new logic paths are shielded behind:
 - Added a read-only GL mapping validation service and safe QA dry-run entry point.
 - The validator reports readiness only; it does not seed, backfill, auto-fill, enable dynamic mapping, or change posting behavior.
 - New tenant onboarding remains a future implementation step and must create default mappings from an approved chart/template before accounting transactions are allowed.
+
+## Frontend / Admin UI Requirements
+
+No frontend or admin UI changes are required for Phase 1E or Phase 1F. Phase 1E is schema/model foundation only, and Phase 1F is read-only validation/dry-run readiness reporting only.
+
+Future phases require admin UI support for the following areas:
+
+1. **Dynamic GL Mapping Admin UI**
+   - Manage concept-to-account mappings.
+   - Validate mappings.
+   - Show missing and invalid mappings.
+   - Apply a default mapping template.
+   - Support tenant-level mappings first.
+   - Add future branch override support.
+
+2. **Tenant Onboarding Accounting Setup UI**
+   - Create or select a chart of accounts.
+   - Generate default GL mappings.
+   - Run GL mapping validation.
+   - Block accounting activation if required mappings are missing.
+
+3. **Exchange Rate Management UI**
+   - Allow manager manual exchange rate entry.
+   - Show online fallback availability/indicator.
+   - Store the selected rate on each document.
+   - Show rate source: manual or online.
+   - Prevent recalculation of historical documents.
+
+4. **WAC / Inventory Valuation UI**
+   - Product warehouse cost view.
+   - MWAC audit history.
+   - Inventory valuation by warehouse.
+   - Stock-to-GL reconciliation report.
+
+5. **Landed Cost Allocation UI**
+   - Allocate freight, customs, insurance, and clearance costs.
+   - Default allocation by value.
+   - Future allocation methods: quantity, weight, volume, and manual allocation.
+
+6. **Treasury and Cash Position UI**
+   - Cash boxes.
+   - Bank accounts.
+   - Cheques under collection.
+   - Payment gateways.
+   - Cash position report.
