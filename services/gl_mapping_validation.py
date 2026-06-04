@@ -13,7 +13,12 @@ import sqlalchemy as sa
 
 from extensions import db
 from models import Branch, GLAccountMapping, Tenant
-from models.gl import GL_CONCEPT_REGISTRY, REQUIRED_GL_CONCEPTS, VALID_GL_CONCEPT_CODES
+from models.gl import (
+    GL_CONCEPT_REGISTRY,
+    GLAccount,
+    REQUIRED_GL_CONCEPTS,
+    VALID_GL_CONCEPT_CODES,
+)
 
 
 REPORT_FIELDS = (
@@ -93,6 +98,29 @@ def _row(
         severity=severity or _severity_for(concept_code),
         recommended_fix=recommended_fix or _recommended_fix(status, issue),
     )
+
+
+@dataclass(frozen=True)
+class GLMappingSeedPreviewRow:
+    """Read-only preview of what GL mapping seed *would* propose for a tenant.
+
+    This dataclass never triggers inserts, updates, or deletes.
+    """
+
+    tenant_id: int
+    tenant_name: str
+    concept_code: str
+    expected_legacy_code: str | None
+    proposed_gl_account_id: int | None
+    proposed_gl_account_code: str | None
+    proposed_gl_account_name: str | None
+    status: str
+    issue: str
+    severity: str
+    recommended_fix: str
+
+    def to_dict(self) -> dict[str, object]:
+        return asdict(self)
 
 
 class GLMappingValidationService:
@@ -192,6 +220,178 @@ class GLMappingValidationService:
             "report_fields": list(REPORT_FIELDS),
             "rows": rows,
         }
+
+    # ------------------------------------------------------------------
+    # Phase 1G – Safe Seed Preview (read-only, never writes to DB)
+    # ------------------------------------------------------------------
+
+    PREVIEW_FIELDS = (
+        "tenant_id",
+        "tenant_name",
+        "concept_code",
+        "expected_legacy_code",
+        "proposed_gl_account_id",
+        "proposed_gl_account_code",
+        "proposed_gl_account_name",
+        "status",
+        "issue",
+        "severity",
+        "recommended_fix",
+    )
+
+    @staticmethod
+    def preview_seed(
+        tenant_id: int | None = None,
+    ) -> dict[str, object]:
+        """Return a read-only preview of proposed GL mappings per tenant.
+
+        This method NEVER inserts, updates, deletes, seeds, or backfills data.
+        It only reports what *would* be proposed by matching legacy codes to
+        existing tenant GL accounts.
+        """
+        if tenant_id is None:
+            tenants = Tenant.query.order_by(Tenant.id.asc()).all()
+        else:
+            tenant = Tenant.query.filter_by(id=tenant_id).first()
+            tenants = [tenant] if tenant else []
+
+        rows: list[dict[str, object]] = []
+        for tenant in tenants:
+            rows.extend(
+                GLMappingValidationService._preview_seed_for_tenant(tenant)
+            )
+
+        proposed_count = sum(1 for r in rows if r["status"] == "proposed")
+        manual_count = sum(1 for r in rows if r["status"] == "manual_required")
+        invalid_count = sum(1 for r in rows if r["status"] == "invalid_candidate")
+
+        return {
+            "preview_type": "safe_seed_preview",
+            "proposed_count": proposed_count,
+            "manual_required_count": manual_count,
+            "invalid_candidate_count": invalid_count,
+            "report_fields": list(GLMappingValidationService.PREVIEW_FIELDS),
+            "rows": rows,
+        }
+
+    @staticmethod
+    def _preview_seed_for_tenant(
+        tenant: Tenant,
+    ) -> list[dict[str, object]]:
+        """Build preview rows for a single tenant by matching legacy codes."""
+        rows: list[GLMappingSeedPreviewRow] = []
+
+        for concept_code in sorted(GL_CONCEPT_REGISTRY):
+            meta = GL_CONCEPT_REGISTRY[concept_code]
+            legacy_code = meta.get("legacy_code")
+            is_required = meta.get("required", False)
+
+            # No legacy code hint → manual mapping required
+            if not legacy_code:
+                rows.append(
+                    GLMappingSeedPreviewRow(
+                        tenant_id=tenant.id,
+                        tenant_name=_tenant_name(tenant),
+                        concept_code=concept_code,
+                        expected_legacy_code=None,
+                        proposed_gl_account_id=None,
+                        proposed_gl_account_code=None,
+                        proposed_gl_account_name=None,
+                        status="manual_required",
+                        issue="No legacy code hint defined for this concept.",
+                        severity="critical" if is_required else "warning",
+                        recommended_fix="Manually create a GL mapping for this concept after reviewing the tenant's chart of accounts.",
+                    )
+                )
+                continue
+
+            # Find candidate GL accounts in this tenant with the legacy code
+            candidates = (
+                GLAccount.query
+                .filter_by(tenant_id=tenant.id, code=legacy_code)
+                .order_by(GLAccount.id.asc())
+                .all()
+            )
+
+            if not candidates:
+                rows.append(
+                    GLMappingSeedPreviewRow(
+                        tenant_id=tenant.id,
+                        tenant_name=_tenant_name(tenant),
+                        concept_code=concept_code,
+                        expected_legacy_code=legacy_code,
+                        proposed_gl_account_id=None,
+                        proposed_gl_account_code=None,
+                        proposed_gl_account_name=None,
+                        status="manual_required",
+                        issue=f"No GL account with code '{legacy_code}' found in tenant's chart.",
+                        severity="critical" if is_required else "warning",
+                        recommended_fix="Create the GL account or map this concept to an existing account manually.",
+                    )
+                )
+                continue
+
+            # Validate each candidate; pick the first valid one
+            chosen_candidate = None
+            candidate_issues: list[str] = []
+            for candidate in candidates:
+                issues = GLMappingValidationService._account_issues(
+                    tenant, candidate
+                )
+                if not issues:
+                    chosen_candidate = candidate
+                    break
+                candidate_issues.extend(issues)
+
+            if chosen_candidate:
+                rows.append(
+                    GLMappingSeedPreviewRow(
+                        tenant_id=tenant.id,
+                        tenant_name=_tenant_name(tenant),
+                        concept_code=concept_code,
+                        expected_legacy_code=legacy_code,
+                        proposed_gl_account_id=chosen_candidate.id,
+                        proposed_gl_account_code=chosen_candidate.code,
+                        proposed_gl_account_name=chosen_candidate.name,
+                        status="proposed",
+                        issue="Safe candidate found by legacy code match.",
+                        severity="info",
+                        recommended_fix="Approve and run the seed command to persist this mapping.",
+                    )
+                )
+            else:
+                # Report the first invalid candidate with its issues
+                first_invalid = candidates[0]
+                first_issue = candidate_issues[0] if candidate_issues else "Candidate account is invalid."
+                rows.append(
+                    GLMappingSeedPreviewRow(
+                        tenant_id=tenant.id,
+                        tenant_name=_tenant_name(tenant),
+                        concept_code=concept_code,
+                        expected_legacy_code=legacy_code,
+                        proposed_gl_account_id=first_invalid.id,
+                        proposed_gl_account_code=first_invalid.code,
+                        proposed_gl_account_name=first_invalid.name,
+                        status="invalid_candidate",
+                        issue=first_issue,
+                        severity="critical" if is_required else "warning",
+                        recommended_fix="Correct the GL account (activate, de-header, or fix tenant ownership) then re-run preview.",
+                    )
+                )
+
+        return [row.to_dict() for row in rows]
+
+    @staticmethod
+    def _account_issues(tenant: Tenant, account: GLAccount) -> list[str]:
+        """Return a list of validation issues for a candidate GL account."""
+        issues: list[str] = []
+        if account.tenant_id != tenant.id:
+            issues.append("Account belongs to a different tenant.")
+        if not account.is_active:
+            issues.append("Account is inactive.")
+        if account.is_header:
+            issues.append("Account is a header/group account and is not postable.")
+        return issues
 
     @staticmethod
     def _validate_required_defaults(
@@ -331,3 +531,13 @@ def dry_run_gl_mapping_validation(
         tenant_id=tenant_id,
         include_ready=include_ready,
     )
+
+
+def preview_seed_gl_mapping(
+    tenant_id: int | None = None,
+) -> dict[str, object]:
+    """Read-only preview of what GL concept mappings would be proposed.
+
+    This function NEVER writes to the database.
+    """
+    return GLMappingValidationService.preview_seed(tenant_id=tenant_id)

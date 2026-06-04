@@ -195,6 +195,20 @@ Reconciliation compares physical stock levels (stock movements), system inventor
 *   **Estimated Complexity:** Medium (1 Sprint).
 *   **Dependencies:** Phase 0.
 
+#### Phase 1E (Completed)
+GLAccountMapping foundation deployed — additive migration, feature flag `ENABLE_DYNAMIC_GL_MAPPING` disabled by default, legacy hardcoded lookups remain active.
+
+#### Phase 1F (Completed)
+Read-only GL mapping validation / dry-run tool deployed. Reports readiness status per tenant without modifying data.
+
+#### Phase 1G (Completed)
+Safe seed preview deployed. A read-only preview tool (`--preview-seed`) proposes candidate GL concept-to-account mappings by matching approved legacy codes to each tenant's existing chart of accounts. It reports:
+*   **proposed** — safe candidate found (same tenant, active, not header).
+*   **manual_required** — no legacy code hint or no matching GL account exists.
+*   **invalid_candidate** — matched account belongs to another tenant, is inactive, or is a header/group account.
+
+**Strict guarantees:** No inserts, updates, deletes, seeds, or backfills. Feature flag remains `False`. Posting behavior unchanged.
+
 ### Phase 2: Financial Dimensions Enforcement
 *   **Goal:** Enforce and validate dimension columns on journal entries and lines.
 *   **Files Affected:** `models/gl.py`, `utils/gl_helpers.py`.
