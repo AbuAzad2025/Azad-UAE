@@ -515,3 +515,9 @@ All new logic paths are shielded behind:
 - Invalid mapping report for cross-tenant accounts, inactive accounts, header accounts, duplicate defaults, and duplicate branch overrides.
 - Onboarding validation checklist for future tenant setup implementation.
 - Go/No-Go recommendation for enabling `ENABLE_DYNAMIC_GL_MAPPING`; the feature flag remains `False` until approved.
+
+## Phase 1F - Completion Note
+
+- Added a read-only GL mapping validation service and safe QA dry-run entry point.
+- The validator reports readiness only; it does not seed, backfill, auto-fill, enable dynamic mapping, or change posting behavior.
+- New tenant onboarding remains a future implementation step and must create default mappings from an approved chart/template before accounting transactions are allowed.
