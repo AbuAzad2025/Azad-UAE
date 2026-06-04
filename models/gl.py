@@ -354,7 +354,7 @@ class GLAccountMapping(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     tenant_id = db.Column(
         db.Integer,
-        db.ForeignKey('tenants.id', ondelete='CASCADE'),
+        db.ForeignKey('tenants.id', ondelete='RESTRICT'),
         nullable=False,
         index=True,
     )
@@ -367,7 +367,7 @@ class GLAccountMapping(db.Model):
     )
     branch_id = db.Column(
         db.Integer,
-        db.ForeignKey('branches.id', ondelete='CASCADE'),
+        db.ForeignKey('branches.id', ondelete='RESTRICT'),
         nullable=True,
         index=True,
     )
