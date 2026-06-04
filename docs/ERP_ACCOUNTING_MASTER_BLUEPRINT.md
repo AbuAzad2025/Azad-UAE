@@ -121,7 +121,7 @@ Represents the authoritative stock quantity and MWAC state:
 Audit-only historical cost recalculation trace. Never used to consume cost layers.
 
 ### 7.3 General Ledger Concept Registry
-Transactions resolve ledger codes dynamically using the following standard concepts:
+This section is the authoritative approved GL Concept Registry for active implementation. Transactions resolve ledger codes dynamically using the following standard concepts:
 *   `AR`, `AP`, `CASH`, `BANK`
 *   `INVENTORY_ASSET`, `COGS`, `COGS_REVERSAL`
 *   `SALES_REVENUE`, `SALES_RETURNS`, `SALES_DISCOUNT`
@@ -130,6 +130,8 @@ Transactions resolve ledger codes dynamically using the following standard conce
 *   `CHEQUES_UNDER_COLLECTION`
 *   `INVENTORY_ADJUSTMENT_GAIN`, `INVENTORY_ADJUSTMENT_LOSS`
 *   `FREIGHT_IN`, `CUSTOMS_DUTY`
+
+Numeric values such as `1130`, `1140`, `2110`, `4100`, and `5100` are legacy GL account codes, not concept codes. Header/group accounts such as `2000`, `2100`, `4000`, and `5000` are not required posting concepts and must not be used for transaction posting mappings unless explicitly approved by Finance Architecture. The active Phase 1E implementation must follow this final concept registry rather than older discovery rows.
 
 ---
 
@@ -328,6 +330,8 @@ All new logic paths are shielded behind:
 4.  **Treasury Cash Box Limits:** Daily cash drawer caps before triggering cash deposits to central bank registers.
 ## Phase 1 Dynamic GL Mapping - Discovery Checkpoint
 
+> **Historical discovery note only:** Phase 1A, Phase 1B, and Phase 1C below preserve earlier investigation and design thinking. They are not the final approved GL Concept Registry. For implementation, validation, and posting-map readiness, section 7.3 is authoritative. Numeric legacy GL account codes are account identifiers, not concept codes.
+
 - **Hardcoded GL codes discovered**: '1130', '1140', '1150', '2000', '2100', '2110', '2120', '2130', '4000', '4100', '4200', '5000', '5100', '1120' (debit), '4200' (credit).
 
 - **Files/functions inspected**: `system_init.py`, `services/gl_service.py`, `services/gl_posting.py`, `models/gl.py`, `gl_helpers.py`.
@@ -339,6 +343,8 @@ All new logic paths are shielded behind:
 - **Next exact step**: Create `GLAccountMapping` model and migration, then refactor `gl_service` to resolve accounts via this mapping with fallback to legacy codes.
 
 ## Phase 1A – GL Concept Registry and Legacy Mapping
+
+> **Discovery/design note only:** The rows in this table mix legacy account codes with conceptual meanings. They must not override the approved concept registry in section 7.3. Header/group accounts listed here, including `2000`, `2100`, `4000`, and `5000`, are legacy chart structure accounts and are not required transaction posting concepts.
 
 | Concept Code | Meaning | Legacy Default GL Code | Required / Optional | Used by Transaction Type | Risk if Missing |
 |--------------|---------|------------------------|----------------------|--------------------------|-----------------|
@@ -358,6 +364,8 @@ All new logic paths are shielded behind:
 | 1120 | Bank – Savings Account | 1120 | Required | Cash deposits, bank payments | Untracked cash movements, reconciliation failures |
 
 ## Phase 1B – GLAccountMapping Model Design
+
+> **Discovery/design note only:** This section predates the final Phase 1E implementation. Active model and validation work must use section 7.3 concept codes and must treat numeric values as legacy GL account codes only.
 
 1. **Proposed fields**
    - `id` (PK, UUID)
@@ -404,6 +412,8 @@ All new logic paths are shielded behind:
    - Provide a reversible script to revert to legacy codes if the migration fails.
 
 ## Phase 1C – GL Mapping Migration & Backfill Design
+
+> **Discovery/design note only:** This section describes earlier migration/backfill planning. Current approved behavior is validation-first and read-only until an explicit seeding/backfill approval is granted. Do not infer required concepts from header/group legacy accounts in this section.
 
 1. **Migration sequence**
    - **Create mapping table** – Define `GLAccountMapping` table with tenant isolation.
