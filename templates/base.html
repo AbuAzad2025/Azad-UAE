@@ -688,6 +688,15 @@
           {% endif %}
           
           {% if current_user.is_authenticated and current_user.has_permission('view_reports') %}
+          <li class="nav-item">
+            <a href="{{ url_for('partners.index') }}" class="nav-link {% if request.endpoint and 'partners' in request.endpoint %}active{% endif %}">
+              <i class="nav-icon fas fa-handshake"></i>
+              <p>الشركاء</p>
+            </a>
+          </li>
+          {% endif %}
+
+          {% if current_user.is_authenticated and current_user.has_permission('view_reports') %}
           <li class="nav-item has-treeview {% if request.endpoint and 'reports' in request.endpoint %}menu-open{% endif %}">
             <a href="#" class="nav-link {% if request.endpoint and 'reports' in request.endpoint %}active{% endif %}">
               <i class="nav-icon fas fa-chart-bar"></i>

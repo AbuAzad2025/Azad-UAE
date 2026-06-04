@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block title %}كشف حساب {{ partner.name }}{% endblock %}
+
+{% block page_title %}
+<h1 class="text-gradient mb-0"><i class="fas fa-file-invoice me-2"></i>كشف حساب: {{ partner.name }}</h1>
+{% endblock %}
+
+{% block content %}
+<div class="card mb-4">
+  <div class="card-body">
+    <form method="GET" class="row g-3 align-items-end">
+      <div class="col-md-4">
+        <label class="form-label">من تاريخ</label>
+        <input type="date" name="start_date" class="form-control" value="{{ start_date }}">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">إلى تاريخ</label>
+        <input type="date" name="end_date" class="form-control" value="{{ end_date }}">
+      </div>
+      <div class="col-md-4">
+        <button type="submit" class="btn btn-primary"><i class="fas fa-filter me-1"></i> عرض</button>
+        <button type="button" class="btn btn-outline-secondary" onclick="window.print()"><i class="fas fa-print me-1"></i> طباعة</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="row mb-4">
+  <div class="col-md-3">
+    <div class="card text-center">
+      <div class="card-body">
+        <h6 class="text-muted">الرصيد الافتتاحي</h6>
+        <h4>{{ "{:,.2f}".format(statement.opening_balance) }}</h4>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-center">
+      <div class="card-body">
+        <h6 class="text-muted">إجمالي الدائن</h6>
+        <h4 class="text-success">{{ "{:,.2f}".format(statement.total_credit) }}</h4>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-center">
+      <div class="card-body">
+        <h6 class="text-muted">إجمالي المدين</h6>
+        <h4 class="text-danger">{{ "{:,.2f}".format(statement.total_debit) }}</h4>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-center">
+      <div class="card-body">
+        <h6 class="text-muted">الرصيد الختامي</h6>
+        <h4 class="{% if statement.closing_balance >= 0 %}text-success{% else %}text-danger{% endif %}">
+          {{ "{:,.2f}".format(statement.closing_balance) }}
+        </h4>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header"><i class="fas fa-list me-2"></i>تفاصيل الحركات</div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>التاريخ</th>
+            <th>النوع</th>
+            <th>البيان</th>
+            <th class="text-center">مدين</th>
+            <th class="text-center">دائن</th>
+            <th class="text-center">الرصيد</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for t in statement.transactions %}
+          <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ t.transaction_date }}</td>
+            <td>{{ t.transaction_type_label }}</td>
+            <td>{{ t.notes or '—' }}</td>
+            <td class="text-center {% if t.is_debit %}text-danger fw-bold{% endif %}">
+              {% if t.is_debit %}{{ "{:,.2f}".format(abs(t.amount_base or 0)) }}{% else %}—{% endif %}
+            </td>
+            <td class="text-center {% if t.is_credit %}text-success fw-bold{% endif %}">
+              {% if t.is_credit %}{{ "{:,.2f}".format(t.amount_base or 0) }}{% else %}—{% endif %}
+            </td>
+            <td class="text-center">{{ "{:,.2f}".format(t.balance_after or 0) }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="7" class="text-center text-muted py-4">لا توجد حركات في الفترة المحددة.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

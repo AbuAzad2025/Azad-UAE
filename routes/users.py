@@ -148,6 +148,22 @@ def create():
                     username_example=_username_example(),
                 )
 
+            # Check tenant user limit
+            try:
+                from utils.tenant_limits import check_users_limit, TenantLimitError
+                check_users_limit()
+            except TenantLimitError as e:
+                flash(str(e), 'danger')
+                form_values = request.form.to_dict()
+                form_values['is_active'] = request.form.get('is_active', '1')
+                return render_template(
+                    'users/create.html',
+                    roles=roles,
+                    branches=branches,
+                    form_data=form_values,
+                    username_example=_username_example(),
+                )
+
             conflict = User.query.filter(User.username.ilike(username)).first()
             if conflict:
                 flash('⚠️ اسم المستخدم مستخدم مسبقاً على مستوى النظام.', 'danger')

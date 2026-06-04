@@ -601,6 +601,14 @@ def create():
                 except (ValueError, TypeError):
                     warranty_days = 0
                 
+                # Check tenant product limit
+                try:
+                    from utils.tenant_limits import check_products_limit, TenantLimitError
+                    check_products_limit()
+                except TenantLimitError as e:
+                    flash(str(e), 'danger')
+                    return redirect(url_for('products.create'))
+                
                 product = Product(
                     name=request.form.get('name'),
                     name_ar=request.form.get('name_ar'),

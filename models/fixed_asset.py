@@ -257,8 +257,14 @@ class FixedAsset(db.Model):
         
         if self.disposal_price > 0:
             # بيع
+            from services.gl_service import GLService
+            bank_account = GLService.get_default_liquidity_account(
+                'bank',
+                branch_id=self.branch_id,
+                tenant_id=getattr(self, 'tenant_id', None),
+            )
             lines.append({
-                'account': '1120',  # البنك (أو الصندوق)
+                'account': bank_account,  # البنك (أو الصندوق)
                 'debit': self.disposal_price,
                 'credit': 0,
                 'description': f'ثمن بيع الأصل - {self.name_ar}'

@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+
+{% block title %}تعديل {{ partner.name }}{% endblock %}
+
+{% block page_title %}
+<h1 class="text-gradient mb-0"><i class="fas fa-user-edit me-2"></i>تعديل: {{ partner.name }}</h1>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-lg-8">
+    <form method="POST" class="card">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="card-header bg-warning text-dark">
+        <i class="fas fa-edit me-2"></i>بيانات الشريك
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">الاسم <span class="text-danger">*</span></label>
+            <input type="text" name="name" class="form-control" value="{{ partner.name }}" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">الاسم الإنجليزي</label>
+            <input type="text" name="name_en" class="form-control" value="{{ partner.name_en or '' }}">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">الكود</label>
+            <input type="text" name="code" class="form-control" value="{{ partner.code or '' }}">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">رقم الهوية</label>
+            <input type="text" name="id_number" class="form-control" value="{{ partner.id_number or '' }}">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">النوع</label>
+            <select name="partner_type" class="form-select">
+              <option value="investor" {% if partner.partner_type == 'investor' %}selected{% endif %}>شريك استثماري</option>
+              <option value="working_partner" {% if partner.partner_type == 'working_partner' %}selected{% endif %}>شريك عامل</option>
+              <option value="silent_partner" {% if partner.partner_type == 'silent_partner' %}selected{% endif %}>شريك صامت</option>
+              <option value="branch_partner" {% if partner.partner_type == 'branch_partner' %}selected{% endif %}>شريك فرع</option>
+              <option value="warehouse_partner" {% if partner.partner_type == 'warehouse_partner' %}selected{% endif %}>شريك مستودع</option>
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">مستوى الشراكة</label>
+            <select name="scope_type" id="scope_type" class="form-select" onchange="updateScopeOptions()">
+              <option value="company" {% if partner.scope_type == 'company' %}selected{% endif %}>مستوى الشركة</option>
+              <option value="branch" {% if partner.scope_type == 'branch' %}selected{% endif %}>فرع محدد</option>
+              <option value="warehouse" {% if partner.scope_type == 'warehouse' %}selected{% endif %}>مستودع محدد</option>
+            </select>
+          </div>
+          <div class="col-md-6" id="scope_id_container" {% if partner.scope_type == 'company' %}style="display:none;"{% endif %}>
+            <label class="form-label fw-semibold" id="scope_id_label">
+              {% if partner.scope_type == 'branch' %}الفرع{% elif partner.scope_type == 'warehouse' %}المستودع{% else %}—{% endif %}
+            </label>
+            <select name="scope_id" id="scope_id" class="form-select">
+              <option value="">— اختر —</option>
+              {% if partner.scope_type == 'branch' %}
+                {% for b in branches %}
+                <option value="{{ b.id }}" {% if partner.scope_id == b.id %}selected{% endif %}>{{ b.name }}</option>
+                {% endfor %}
+              {% elif partner.scope_type == 'warehouse' %}
+                {% for w in warehouses %}
+                <option value="{{ w.id }}" {% if partner.scope_id == w.id %}selected{% endif %}>{{ w.name }}</option>
+                {% endfor %}
+              {% endif %}
+            </select>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">رأس المال</label>
+            <input type="number" name="investment_amount" class="form-control" value="{{ partner.investment_amount or 0 }}" step="0.01">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">نسبة الربح %</label>
+            <input type="number" name="share_percentage" class="form-control" value="{{ partner.share_percentage or 0 }}" step="0.01" max="100">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">مبلغ شهري ثابت</label>
+            <input type="number" name="fixed_monthly_amount" class="form-control" value="{{ partner.fixed_monthly_amount or 0 }}" step="0.01">
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">نسبة المصاريف %</label>
+            <input type="number" name="expense_share_percentage" class="form-control" value="{{ partner.expense_share_percentage or 0 }}" step="0.01" max="100">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">نسبة الخسارة %</label>
+            <input type="number" name="loss_share_percentage" class="form-control" value="{{ partner.loss_share_percentage or 0 }}" step="0.01" max="100">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">حد أدنى للربح</label>
+            <input type="number" name="min_profit_threshold" class="form-control" value="{{ partner.min_profit_threshold or 0 }}" step="0.01">
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">الهاتف</label>
+            <input type="text" name="phone" class="form-control" value="{{ partner.phone or '' }}">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">البريد</label>
+            <input type="email" name="email" class="form-control" value="{{ partner.email or '' }}">
+          </div>
+          <div class="col-12">
+            <label class="form-label fw-semibold">العنوان</label>
+            <textarea name="address" class="form-control" rows="2">{{ partner.address or '' }}</textarea>
+          </div>
+          <div class="col-12">
+            <label class="form-label fw-semibold">ملاحظات</label>
+            <textarea name="notes" class="form-control" rows="2">{{ partner.notes or '' }}</textarea>
+          </div>
+          <div class="col-12">
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" name="is_active" id="is_active" {% if partner.is_active %}checked{% endif %}>
+              <label class="form-check-label" for="is_active">نشط</label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card-footer d-flex justify-content-between">
+        <a href="{{ url_for('partners.view', id=partner.id) }}" class="btn btn-secondary">إلغاء</a>
+        <button type="submit" class="btn btn-warning"><i class="fas fa-save me-1"></i> حفظ التعديلات</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+const branches = {{ branches|map(attribute='id')|list|tojson }};
+const warehouses = {{ warehouses|map(attribute='id')|list|tojson }};
+const branchNames = {{ branches|map(attribute='name')|list|tojson }};
+const warehouseNames = {{ warehouses|map(attribute='name')|list|tojson }};
+
+function updateScopeOptions() {
+  const scope = document.getElementById('scope_type').value;
+  const container = document.getElementById('scope_id_container');
+  const label = document.getElementById('scope_id_label');
+  const select = document.getElementById('scope_id');
+
+  select.innerHTML = '<option value="">— اختر —</option>';
+
+  if (scope === 'company') {
+    container.style.display = 'none';
+    select.value = '';
+  } else {
+    container.style.display = 'block';
+    if (scope === 'branch') {
+      label.textContent = 'الفرع';
+      branchNames.forEach((name, i) => {
+        select.innerHTML += `<option value="${branches[i]}">${name}</option>`;
+      });
+    } else if (scope === 'warehouse') {
+      label.textContent = 'المستودع';
+      warehouseNames.forEach((name, i) => {
+        select.innerHTML += `<option value="${warehouses[i]}">${name}</option>`;
+      });
+    }
+  }
+}
+</script>
+{% endblock %}

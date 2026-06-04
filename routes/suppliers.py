@@ -179,6 +179,14 @@ def create():
 
             initial_balance = request.form.get('initial_balance', type=float, default=0)
             
+            # Check tenant supplier limit
+            try:
+                from utils.tenant_limits import check_suppliers_limit, TenantLimitError
+                check_suppliers_limit()
+            except TenantLimitError as e:
+                flash(str(e), 'danger')
+                return redirect(url_for('suppliers.create'))
+
             supplier = Supplier(
                 name=request.form.get('name'),
                 name_en=request.form.get('name_en'),

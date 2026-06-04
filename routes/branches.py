@@ -7,6 +7,13 @@ from utils.tenanting import get_active_tenant_id, tenant_query
 
 branches_bp = Blueprint('branches', __name__, url_prefix='/branches')
 
+
+def _sync_branch_financial_accounts(tenant_id):
+    from services.gl_service import GLService
+
+    GLService.ensure_core_accounts(tenant_id=tenant_id)
+
+
 @branches_bp.route('/')
 @login_required
 @admin_required
@@ -29,16 +36,24 @@ def create():
 
         phone = normalize_phone_optional(request.form.get('phone'))
         is_main = request.form.get('is_main') == 'on'
-        
+
         if not name or not code:
             flash('الاسم والكود مطلوبان', 'danger')
             return redirect(url_for('branches.create'))
-            
+
+        # Check tenant branch limit
+        try:
+            from utils.tenant_limits import check_branches_limit, TenantLimitError
+            check_branches_limit()
+        except TenantLimitError as e:
+            flash(str(e), 'danger')
+            return redirect(url_for('branches.create'))
+
         # Check if code exists
         if tenant_query(Branch).filter_by(code=code).first():
             flash('الكود مستخدم مسبقاً', 'danger')
             return redirect(url_for('branches.create'))
-            
+
         branch = Branch(
             tenant_id=get_active_tenant_id(current_user),
             name=name,
@@ -48,13 +63,15 @@ def create():
             phone=phone,
             is_main=is_main
         )
-        
+
         db.session.add(branch)
+        db.session.flush()
+        _sync_branch_financial_accounts(branch.tenant_id)
         db.session.commit()
-        
+
         flash('تم إضافة الفرع بنجاح', 'success')
         return redirect(url_for('branches.index'))
-        
+
     return render_template('branches/create.html')
 
 @branches_bp.route('/edit/<int:id>', methods=['GET', 'POST'])
@@ -65,7 +82,7 @@ def edit(id):
     tenant_id = get_active_tenant_id(current_user)
     if tenant_id is not None and branch.tenant_id != tenant_id:
         abort(404)
-    
+
     if request.method == 'POST':
         branch.name = request.form.get('name')
         branch.city = request.form.get('city')
@@ -74,12 +91,14 @@ def edit(id):
 
         branch.phone = normalize_phone_optional(request.form.get('phone'))
         branch.is_main = request.form.get('is_main') == 'on'
-        
+
+        db.session.flush()
+        _sync_branch_financial_accounts(branch.tenant_id)
         db.session.commit()
-        
+
         flash('تم تحديث الفرع بنجاح', 'success')
         return redirect(url_for('branches.index'))
-        
+
     return render_template('branches/edit.html', branch=branch)
 
 @branches_bp.route('/delete/<int:id>', methods=['POST'])
@@ -90,13 +109,13 @@ def delete(id):
     tenant_id = get_active_tenant_id(current_user)
     if tenant_id is not None and branch.tenant_id != tenant_id:
         abort(404)
-    
+
     # Check for related data before deletion
     # This is a basic check. In a real system, you might want to soft-delete or strict check.
     if branch.users or branch.warehouses or branch.sales:
         flash('لا يمكن حذف الفرع لوجود بيانات مرتبطة به (مستخدمين، مستودعات، أو مبيعات)', 'danger')
         return redirect(url_for('branches.index'))
-        
+
     db.session.delete(branch)
     db.session.commit()
     flash('تم حذف الفرع بنجاح', 'success')

@@ -118,29 +118,30 @@ def dashboard():
         
         if current_user.can_see_costs():
             try:
-                from utils.gl_tenant import get_gl_account_by_code, active_tenant_id
+                from utils.gl_tenant import active_tenant_id
                 tid = active_tenant_id()
-                cash_acc = get_gl_account_by_code('1110', tenant_id=tid)
-                if cash_acc:
-                    cash_debit_query = db.session.query(func.sum(GLJournalLine.debit)).filter_by(account_id=cash_acc.id)
-                    cash_credit_query = db.session.query(func.sum(GLJournalLine.credit)).filter_by(account_id=cash_acc.id)
+
+                def liquidity_balance(kind):
+                    account_query = GLAccount.query.filter(
+                        GLAccount.tenant_id == int(tid),
+                        GLAccount.is_active == True,
+                        GLAccount.is_header == False,
+                        GLAccount.liquidity_kind == kind,
+                    )
                     if scoped_branch_id is not None:
-                        cash_debit_query = cash_debit_query.join(GLJournalLine.entry).filter_by(branch_id=scoped_branch_id)
-                        cash_credit_query = cash_credit_query.join(GLJournalLine.entry).filter_by(branch_id=scoped_branch_id)
-                    cash_debit = cash_debit_query.scalar() or Decimal('0')
-                    cash_credit = cash_credit_query.scalar() or Decimal('0')
-                    stats['cash_balance'] = float(cash_debit - cash_credit)
-                
-                bank_acc = get_gl_account_by_code('1120', tenant_id=tid)
-                if bank_acc:
-                    bank_debit_query = db.session.query(func.sum(GLJournalLine.debit)).filter_by(account_id=bank_acc.id)
-                    bank_credit_query = db.session.query(func.sum(GLJournalLine.credit)).filter_by(account_id=bank_acc.id)
+                        account_query = account_query.filter(GLAccount.branch_id == scoped_branch_id)
+                    account_ids = [acc.id for acc in account_query.all()]
+                    if not account_ids:
+                        return Decimal('0')
+                    debit_query = db.session.query(func.sum(GLJournalLine.debit)).filter(GLJournalLine.account_id.in_(account_ids))
+                    credit_query = db.session.query(func.sum(GLJournalLine.credit)).filter(GLJournalLine.account_id.in_(account_ids))
                     if scoped_branch_id is not None:
-                        bank_debit_query = bank_debit_query.join(GLJournalLine.entry).filter_by(branch_id=scoped_branch_id)
-                        bank_credit_query = bank_credit_query.join(GLJournalLine.entry).filter_by(branch_id=scoped_branch_id)
-                    bank_debit = bank_debit_query.scalar() or Decimal('0')
-                    bank_credit = bank_credit_query.scalar() or Decimal('0')
-                    stats['bank_balance'] = float(bank_debit - bank_credit)
+                        debit_query = debit_query.join(GLJournalLine.entry).filter_by(branch_id=scoped_branch_id)
+                        credit_query = credit_query.join(GLJournalLine.entry).filter_by(branch_id=scoped_branch_id)
+                    return (debit_query.scalar() or Decimal('0')) - (credit_query.scalar() or Decimal('0'))
+
+                stats['cash_balance'] = float(liquidity_balance('cash'))
+                stats['bank_balance'] = float(liquidity_balance('bank'))
                 
                 inventory_acc = get_gl_account_by_code('1140', tenant_id=tid)
                 if inventory_acc:

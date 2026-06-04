@@ -284,11 +284,17 @@ class Cheque(db.Model):
     
     def _create_clearing_journal_entry(self):
         """إنشاء القيد المحاسبي عند صرف الشيك"""
+        from services.gl_service import GLService
+        bank_account = GLService.get_default_liquidity_account(
+            'bank',
+            branch_id=self.branch_id,
+            tenant_id=getattr(self, 'tenant_id', None),
+        )
         lines = []
         
         if self.cheque_type == 'incoming':
             lines.append({
-                'account': '1120',
+                'account': bank_account,
                 'debit': self.actual_amount_aed,
                 'credit': 0,
                 'description': f'صرف شيك وارد رقم {self.cheque_bank_number}'
@@ -323,7 +329,7 @@ class Cheque(db.Model):
                 'description': f'صرف شيك صادر رقم {self.cheque_bank_number}'
             })
             lines.append({
-                'account': '1120',
+                'account': bank_account,
                 'debit': 0,
                 'credit': self.actual_amount_aed,
                 'description': f'صرف شيك رقم {self.cheque_bank_number}'

@@ -107,6 +107,11 @@ class PayrollService:
         db.session.flush()
 
         GLService.ensure_core_accounts(tenant_id=tenant_id)
+        cash_account = GLService.get_default_liquidity_account(
+            'cash',
+            branch_id=employee.branch_id,
+            tenant_id=tenant_id,
+        )
 
 
 
@@ -116,7 +121,7 @@ class PayrollService:
 
                 {'account': '1160', 'debit': Decimal(str(amount)), 'credit': 0, 'description': f'Advance - {employee.name}'},
 
-                {'account': '1110', 'debit': 0, 'credit': Decimal(str(amount)), 'description': 'Cash Payment'},
+                {'account': cash_account, 'debit': 0, 'credit': Decimal(str(amount)), 'description': 'Cash Payment'},
 
             ],
 
@@ -224,11 +229,18 @@ class PayrollService:
 
         total_expense = basic_amount + Decimal(allowances)
 
+        GLService.ensure_core_accounts(tenant_id=tenant_id)
+        cash_account = GLService.get_default_liquidity_account(
+            'cash',
+            branch_id=employee.branch_id,
+            tenant_id=tenant_id,
+        )
+
         lines = [
 
             {'account': '6100', 'debit': Decimal(str(total_expense)), 'credit': 0, 'description': f'Salary {month}/{year} - {employee.name}'},
 
-            {'account': '1110', 'debit': 0, 'credit': Decimal(str(net_salary)), 'description': 'Net Salary Payment'},
+            {'account': cash_account, 'debit': 0, 'credit': Decimal(str(net_salary)), 'description': 'Net Salary Payment'},
 
         ]
 
@@ -241,8 +253,6 @@ class PayrollService:
             lines.append({'account': '1160', 'debit': 0, 'credit': Decimal(str(advances_total)), 'description': 'Advance Deduction'})
 
 
-
-        GLService.ensure_core_accounts(tenant_id=tenant_id)
 
         gl_entry = post_or_fail(
 

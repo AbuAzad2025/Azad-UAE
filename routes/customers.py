@@ -295,6 +295,14 @@ def create():
             except Exception:
                 default_currency = 'AED'
 
+            # Check tenant customer limit
+            try:
+                from utils.tenant_limits import check_customers_limit, TenantLimitError
+                check_customers_limit()
+            except TenantLimitError as e:
+                flash(str(e), 'danger')
+                return redirect(url_for('customers.create'))
+
             customer = Customer(
                 name=form.name.data,
                 name_ar=form.name_ar.data,

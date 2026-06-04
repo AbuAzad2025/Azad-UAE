@@ -144,7 +144,7 @@
           <div class="form-group">
             <label>
               <i class="fas fa-exchange-alt text-secondary"></i> سعر الصرف
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="سعر الصرف مقابل الدرهم (تلقائي)"></i>
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="سعر الصرف مقابل {{ tenant_currency_name_ar or "درهم إماراتي" }} (تلقائي)"></i>
             </label>
             <input type="number" name="exchange_rate" id="exchange_rate" class="form-control" value="1.00" step="0.000001" readonly>
           </div>

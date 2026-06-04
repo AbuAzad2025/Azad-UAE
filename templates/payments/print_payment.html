@@ -46,8 +46,8 @@
                   <td><strong>{{ "{:,.2f}".format(payment.amount) }} {{ payment.currency }}</strong></td>
                 </tr>
                 <tr>
-                  <td><strong>المبلغ بالدرهم:</strong></td>
-                  <td><strong>{{ "{:,.2f}".format(payment.amount_aed) }} AED</strong></td>
+                  <td><strong>المبلغ بـ{{ tenant_currency_name_ar or 'درهم إماراتي' }}:</strong></td>
+                  <td><strong>{{ "{:,.2f}".format(payment.base_amount or payment.amount_aed) }} {{ tenant_currency_symbol or 'AED' }}</strong></td>
                 </tr>
                 <tr>
                   <td><strong>طريقة الدفع:</strong></td>

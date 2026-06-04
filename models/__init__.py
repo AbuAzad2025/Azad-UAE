@@ -42,6 +42,9 @@ from .api_key import APIKey
 from .product_serial import ProductSerial
 from .payroll import Employee, SalaryAdvance, PayrollTransaction
 from .partner_commission import PartnerCommissionEntry
+from .partner import Partner
+from .partner_profit_distribution import PartnerProfitDistribution
+from .partner_transaction import PartnerTransaction
 
 __all__ = [
     'User', 'Role', 'Permission',
@@ -81,6 +84,9 @@ __all__ = [
     'CustomsTax', 'AdvancedExpense', 'TaxCalculationRule',
     'LoginHistory', 'SecurityAlert', 'APIKey',
     'Employee', 'SalaryAdvance', 'PayrollTransaction',
-    'PartnerCommissionEntry'
+    'PartnerCommissionEntry',
+    'Partner',
+    'PartnerProfitDistribution',
+    'PartnerTransaction',
 ]
 

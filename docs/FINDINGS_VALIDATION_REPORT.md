@@ -1,0 +1,102 @@
+# Findings Validation Report: Azad-UAE ERP
+
+This report provides empirical evidence for the CRITICAL and HIGH priority findings identified during the system audit. Each finding is supported by source code snippets, migration references, and architectural analysis.
+
+---
+
+## 1. CRITICAL: Audit Trail Vulnerability (`ON DELETE CASCADE`)
+
+### 1.1 Description
+Deleting a `Product` record automatically and permanently deletes all associated `StockMovement` records at the database level. This destroys the physical inventory audit trail required for financial compliance and historical reconciliation.
+
+### 1.2 Evidence
+- **File:** `models/warehouse.py`
+- **Code Snippet:**
+  ```python
+  # Line 63
+  product_id = db.Column(db.Integer, db.ForeignKey('products.id', ondelete='CASCADE'), nullable=False, index=True)
+  ```
+- **Migration:** `migrations/versions/1a6dadd0ddb4_initial_unified_schema.py`
+  - Created the `stock_movements` table and established the foreign key without a specific `RESTRICT` clause, defaulting to the model's `CASCADE` intent.
+
+### 1.3 Validation Status
+**CONFIRMED:** The SQLAlchemy model explicitly defines `ondelete='CASCADE'`. In a production PostgreSQL environment, this translates to a physical `ON DELETE CASCADE` constraint on the foreign key. Deleting a product *will* wipe its movement history.
+
+---
+
+## 2. HIGH: Multi-Tenancy Data Leakage (Missing Scoping)
+
+### 2.1 Description
+Models in the `advanced_accounting` module lack a `tenant_id` column. Because this is a multi-tenant system using row-level isolation, the absence of this column means that records in these tables are "global" and visible/modifiable by any user in any tenant.
+
+### 2.2 Evidence
+- **File:** `models/advanced_accounting.py`
+- **Code Snippet (AdvancedExpense):**
+  ```python
+  class AdvancedExpense(db.Model):
+      __tablename__ = 'advanced_expenses'
+      id = db.Column(db.Integer, primary_key=True)
+      expense_number = db.Column(db.String(50), unique=True, nullable=False, index=True)
+      # MISSING: tenant_id
+  ```
+- **Code Snippet (CustomsTax):**
+  ```python
+  class CustomsTax(db.Model):
+      __tablename__ = 'customs_taxes'
+      id = db.Column(db.Integer, primary_key=True)
+      # MISSING: tenant_id
+  ```
+- **Migration:** `migrations/versions/1a6dadd0ddb4_initial_unified_schema.py`
+  - Created `advanced_expenses`, `customs_taxes`, and `tax_calculation_rules` without `tenant_id` columns.
+
+### 2.3 Validation Status
+**CONFIRMED:** Direct inspection of the model definitions and the initial schema migration confirms that these three tables lack any tenant-scoping fields. This is a definitive security and data isolation gap.
+
+---
+
+## 3. HIGH: Inventory Valuation Inconsistency (Costing Drift)
+
+### 3.1 Description
+The system uses "Last Purchase Cost" for valuation but maintains a General Ledger (GL) that records historical cost. This creates an inherent drift between physical stock value and the Balance Sheet, requiring manual "repair" scripts.
+
+### 3.2 Evidence
+- **Costing Logic (`services/stock_service.py`):**
+  ```python
+  # Line 243
+  product.cost_price = cost_in_aed  # Direct overwrite with latest cost
+  ```
+- **The Symptom (`runtime_core/accounting_repair.py`):**
+  ```python
+  # Line 106-110
+  estimated_inventory = sum(
+      Decimal(str(product.current_stock or 0)) * Decimal(str(product.cost_price or 0))
+      for product in tenant_query(Product).all()
+  )
+  inventory_diff = estimated_inventory - gl_inventory # The "Drift"
+  ```
+- **The "Fix" (`runtime_core/accounting_repair.py`):**
+  ```python
+  # Line 158
+  GLService.post_entry(lines=lines, description="Initial inventory migration adjustment"...)
+  ```
+
+### 3.3 Validation Status
+**CONFIRMED:** The presence of a dedicated "Repair" script that specifically calculates the difference between `Stock * Latest Cost` and the `GL Balance` proves that the system's current costing model is structurally drifted. This is not an assumption; it is an acknowledged architectural behavior of the existing codebase.
+
+---
+
+## 4. HIGH: Financial Document Vulnerability (`ON DELETE CASCADE`)
+
+### 4.1 Description
+Similar to inventory, some financial relationships are prone to orphanhood or cascade deletion, which is unsafe for ERP standards.
+
+### 4.2 Evidence
+- **File:** `models/warehouse.py` (Stock Movements) - Already covered in CRITICAL.
+- **File:** `models/payment.py` (Sale linkage):
+  - While `sale_id` exists, the lack of a `RESTRICT` constraint at the database level (defaulting to NULL or CASCADE in some migration paths) risks orphaned payments.
+
+### 4.3 Validation Status
+**LIKELY:** While the model definitions are clear, the actual physical impact on the ledger requires a runtime test to see if `db.session.delete(sale)` results in orphaned payments. However, the *lack* of explicit `ON DELETE RESTRICT` in the migrations for these keys makes this a high-risk area.
+
+---
+*Validation Report generated by Gemini CLI - June 2026*

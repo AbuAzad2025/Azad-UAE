@@ -7,8 +7,10 @@ from flask import current_app
 
 from extensions import db
 from models.donation import Donation
+from models import GLAccount
 from models.payment_vault import PaymentVault
 from services.currency_service import CurrencyService
+from services.gl_service import GLService
 from services.gl_posting import post_or_fail
 from utils.gl_reference_types import GLRef
 
@@ -18,6 +20,9 @@ class DonationGLService:
     def _vault_accounts(vault: PaymentVault | None) -> tuple[str, str]:
         debit = (getattr(vault, 'donation_debit_account', None) or '1120').strip()
         credit = (getattr(vault, 'donation_credit_account', None) or '4200').strip()
+        debit_account = GLAccount.query.filter_by(code=debit).order_by(GLAccount.id.asc()).first()
+        if debit in ('1110', '1120') or getattr(debit_account, 'is_header', False):
+            debit = GLService.get_default_liquidity_account('bank')
         return debit, credit
 
     @staticmethod

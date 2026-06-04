@@ -159,12 +159,14 @@ def create():
                     expense_account = '6990'
                 
                 # Determine Payment Account
-                if expense.payment_method == 'cash':
-                    payment_account = '1110'
-                elif expense.payment_method == 'cheque':
+                if expense.payment_method == 'cheque':
                     payment_account = '2110'  # Accounts Payable (cleared by Cheque Issue)
                 else:
-                    payment_account = '1120'
+                    payment_account = GLService.get_payment_credit_account(
+                        expense.payment_method,
+                        branch_id=expense.branch_id,
+                        tenant_id=tid,
+                    )
                 
                 lines = [
                     {'account': expense_account, 'debit': expense.amount, 'description': expense.description},

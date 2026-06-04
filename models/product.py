@@ -148,7 +148,7 @@ class Product(db.Model):
     
     sale_lines = db.relationship('SaleLine', back_populates='product', lazy='dynamic')
     purchase_lines = db.relationship('PurchaseLine', back_populates='product', lazy='dynamic')
-    stock_movements = db.relationship('StockMovement', back_populates='product', lazy='dynamic', cascade='all, delete-orphan')
+    stock_movements = db.relationship('StockMovement', back_populates='product', lazy='dynamic')
     partner_shares = db.relationship('ProductPartner', back_populates='product', cascade='all, delete-orphan')
     
     def __repr__(self):

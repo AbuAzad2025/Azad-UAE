@@ -7,6 +7,7 @@ class CustomsTax(db.Model):
     __tablename__ = 'customs_taxes'
     
     id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
     name = db.Column(db.String(200), nullable=False)
     name_ar = db.Column(db.String(200), nullable=False)
     tax_type = db.Column(db.String(50), nullable=False)  # customs, vat, excise, income, corporate
@@ -22,6 +23,7 @@ class CustomsTax(db.Model):
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     
     gl_account = db.relationship('GLAccount')
+    tenant = db.relationship('Tenant')
     
     def __repr__(self):
         return f'<CustomsTax {self.name_ar} - {self.rate}%>'
@@ -40,9 +42,13 @@ class CustomsTax(db.Model):
 class AdvancedExpense(db.Model):
     """نموذج المصروفات المتقدمة"""
     __tablename__ = 'advanced_expenses'
+    __table_args__ = (
+        db.UniqueConstraint('tenant_id', 'expense_number', name='uq_advanced_expenses_tenant_number'),
+    )
     
     id = db.Column(db.Integer, primary_key=True)
-    expense_number = db.Column(db.String(50), unique=True, nullable=False, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
+    expense_number = db.Column(db.String(50), nullable=False, index=True)
     expense_date = db.Column(db.Date, nullable=False, index=True)
     description = db.Column(db.String(255), nullable=False)
     description_ar = db.Column(db.String(255), nullable=False)
@@ -102,6 +108,7 @@ class AdvancedExpense(db.Model):
     approved_user = db.relationship('User', foreign_keys=[approved_by])
     reversed_user = db.relationship('User', foreign_keys=[reversed_by])
     gl_journal_entry = db.relationship('GLJournalEntry')
+    tenant = db.relationship('Tenant')
     
     def __repr__(self):
         return f'<AdvancedExpense {self.expense_number} - {self.description_ar}>'
@@ -163,6 +170,11 @@ class AdvancedExpense(db.Model):
         
         # إنشاء قيد عكسي
         from services.gl_service import GLService
+        cash_account = GLService.get_default_liquidity_account(
+            'cash',
+            branch_id=self.branch_id,
+            tenant_id=self.tenant_id,
+        )
         
         lines = [{
             'account_code': self.category.gl_account.code,
@@ -170,7 +182,7 @@ class AdvancedExpense(db.Model):
             'credit': self.amount_aed,
             'description': f'عكس مصروف {self.description_ar}'
         }, {
-            'account_code': '1110',  # صندوق
+            'account_code': cash_account,  # صندوق
             'debit': self.amount_aed,
             'credit': 0,
             'description': f'استرداد مصروف {self.expense_number}'
@@ -190,6 +202,7 @@ class TaxCalculationRule(db.Model):
     __tablename__ = 'tax_calculation_rules'
     
     id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
     name = db.Column(db.String(200), nullable=False)
     name_ar = db.Column(db.String(200), nullable=False)
     rule_type = db.Column(db.String(50), nullable=False)  # expense, income, purchase, sale
@@ -202,6 +215,7 @@ class TaxCalculationRule(db.Model):
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     
     tax = db.relationship('CustomsTax')
+    tenant = db.relationship('Tenant')
     
     def __repr__(self):
         return f'<TaxCalculationRule {self.name_ar}>'

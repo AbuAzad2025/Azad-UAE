@@ -42,14 +42,18 @@ class CashFlowService:
         financing = CashFlowService._get_financing_activities(period_start, period_end, branch_id=branch_id, tenant_id=tenant_id)
         
         # 4. حساب النقدية
-        from utils.gl_tenant import get_gl_account_by_code, active_tenant_id
+        from utils.gl_tenant import active_tenant_id
         tenant_id = tenant_id if tenant_id is not None else active_tenant_id()
         
-        cash_accounts = []
-        for code in ('1110', '1120'):
-            acc = get_gl_account_by_code(code, tenant_id=tenant_id)
-            if acc:
-                cash_accounts.append(acc)
+        cash_accounts_query = GLAccount.query.filter(
+            GLAccount.tenant_id == int(tenant_id),
+            GLAccount.is_active == True,
+            GLAccount.is_header == False,
+            GLAccount.liquidity_kind.in_(['cash', 'bank']),
+        )
+        if branch_id:
+            cash_accounts_query = cash_accounts_query.filter(GLAccount.branch_id == branch_id)
+        cash_accounts = cash_accounts_query.all()
         
         cash_beginning = CashFlowService._get_cash_balance(cash_accounts, period_start, is_beginning=True, branch_id=branch_id)
         

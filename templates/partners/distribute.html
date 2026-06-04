@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}توزيع أرباح{% endblock %}
+
+{% block page_title %}
+<h1 class="text-gradient mb-0"><i class="fas fa-chart-pie me-2"></i>توزيع أرباح فترة</h1>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-6">
+    <form method="POST" class="card">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="card-header bg-success text-white">
+        <i class="fas fa-calculator me-2"></i>حساب وتوزيع الأرباح
+      </div>
+      <div class="card-body">
+        <div class="alert alert-info">
+          <i class="fas fa-info-circle me-2"></i>سيتم إنشاء توزيعات "مسودة" لجميع الشركاء النشطين للفترة المختارة.
+        </div>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">من تاريخ</label>
+            <input type="date" name="period_start" class="form-control" value="{{ default_start }}">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">إلى تاريخ</label>
+            <input type="date" name="period_end" class="form-control" value="{{ default_end }}">
+          </div>
+        </div>
+      </div>
+      <div class="card-footer d-flex justify-content-between">
+        <a href="{{ url_for('partners.index') }}" class="btn btn-secondary">إلغاء</a>
+        <button type="submit" class="btn btn-success"><i class="fas fa-calculator me-1"></i> إنشاء التوزيعات</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -18,7 +18,7 @@ SQLAlchemy Event Listeners for Automatic Updates
 - models.* (جميع النماذج)
 """
 
-from sqlalchemy import event
+from sqlalchemy import event, text
 from decimal import Decimal
 from datetime import datetime, timezone, timedelta
 import logging
@@ -39,6 +39,7 @@ def register_all_listeners():
     register_receipt_listeners()
     register_purchase_listeners()
     register_payment_listeners()
+    register_branch_listeners()
     
     # المستمعات الإضافية الشاملة
     register_stock_movement_listeners()
@@ -154,6 +155,134 @@ def register_payment_listeners():
                 logger.info(f"Payment {getattr(target, 'payment_number', target.id)} created - amount: {target.amount_aed} AED to supplier {target.supplier_id}")
         except Exception as e:
             logger.warning(f"Failed to log payment: {e}")
+
+
+# ============================================================================
+# Branch Listeners - permanent branch financial structure
+# ============================================================================
+
+def _branch_liquidity_account_code(parent_code, branch_id):
+    return f"{parent_code}-B{int(branch_id)}"
+
+
+def _ensure_branch_liquidity_account(connection, branch, parent_code, liquidity_kind, name_prefix, name_prefix_ar):
+    parent = connection.execute(
+        text(
+            """
+            SELECT id
+              FROM gl_accounts
+             WHERE tenant_id = :tenant_id AND code = :code
+             LIMIT 1
+            """
+        ),
+        {"tenant_id": branch.tenant_id, "code": parent_code},
+    ).fetchone()
+    if not parent:
+        logger.debug(
+            "Skipped %s liquidity account for branch %s: parent %s is missing",
+            liquidity_kind,
+            branch.id,
+            parent_code,
+        )
+        return
+
+    code = _branch_liquidity_account_code(parent_code, branch.id)
+    existing = connection.execute(
+        text(
+            """
+            SELECT id
+              FROM gl_accounts
+             WHERE tenant_id = :tenant_id AND code = :code
+             LIMIT 1
+            """
+        ),
+        {"tenant_id": branch.tenant_id, "code": code},
+    ).fetchone()
+
+    params = {
+        "tenant_id": branch.tenant_id,
+        "code": code,
+        "name": f"{name_prefix} - {branch.name}",
+        "name_ar": f"{name_prefix_ar} {branch.name}",
+        "parent_id": parent[0],
+        "branch_id": branch.id,
+        "liquidity_kind": liquidity_kind,
+    }
+
+    if existing:
+        connection.execute(
+            text(
+                """
+                UPDATE gl_accounts
+                   SET name = :name,
+                       name_ar = :name_ar,
+                       parent_id = :parent_id,
+                       branch_id = :branch_id,
+                       type = 'asset',
+                       currency = 'AED',
+                       is_active = TRUE,
+                       is_header = FALSE,
+                       level = 3,
+                       liquidity_kind = :liquidity_kind,
+                       is_default_liquidity = TRUE,
+                       updated_at = CURRENT_TIMESTAMP
+                 WHERE id = :id
+                """
+            ),
+            {**params, "id": existing[0]},
+        )
+        return
+
+    connection.execute(
+        text(
+            """
+            INSERT INTO gl_accounts (
+                tenant_id, code, name, name_ar, parent_id, branch_id,
+                type, currency, is_active, is_header, level,
+                liquidity_kind, is_default_liquidity,
+                created_at, updated_at
+            ) VALUES (
+                :tenant_id, :code, :name, :name_ar, :parent_id, :branch_id,
+                'asset', 'AED', TRUE, FALSE, 3,
+                :liquidity_kind, TRUE,
+                CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+            )
+            """
+        ),
+        params,
+    )
+
+
+def register_branch_listeners():
+    """Ensure every active branch has its own default cash and bank GL accounts."""
+    from models import Branch
+
+    @event.listens_for(Branch, 'after_insert')
+    @event.listens_for(Branch, 'after_update')
+    def ensure_branch_financial_accounts(mapper, connection, target):
+        if not target.id or not target.tenant_id or not target.is_active:
+            return
+
+        try:
+            _ensure_branch_liquidity_account(
+                connection,
+                target,
+                "1110",
+                "cash",
+                "Cashbox",
+                "\u0635\u0646\u062f\u0648\u0642",
+            )
+            _ensure_branch_liquidity_account(
+                connection,
+                target,
+                "1120",
+                "bank",
+                "Bank",
+                "\u0628\u0646\u0643",
+            )
+        except Exception as e:
+            logger.error("Failed to ensure financial accounts for branch %s: %s", target.id, e)
+            raise
 
 
 # ============================================================================

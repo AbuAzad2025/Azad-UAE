@@ -72,6 +72,77 @@
               <label class="form-label fw-semibold">حد العملاء</label>
               <input type="number" name="max_customers" class="form-control" value="{{ tenant.max_customers or 500 }}" min="1">
             </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">حد الموردين</label>
+              <input type="number" name="max_suppliers" class="form-control" value="{{ tenant.max_suppliers or 200 }}" min="1">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">حد الفروع</label>
+              <input type="number" name="max_branches" class="form-control" value="{{ tenant.max_branches or 3 }}" min="1">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">حد المستودعات</label>
+              <input type="number" name="max_warehouses" class="form-control" value="{{ tenant.max_warehouses or 2 }}" min="1">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">حد الفواتير/شهر</label>
+              <input type="number" name="max_invoices_per_month" class="form-control" value="{{ tenant.max_invoices_per_month or 1000 }}" min="1">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">حد المبيعات/شهر</label>
+              <input type="number" name="max_sales_per_month" class="form-control" value="{{ tenant.max_sales_per_month or 5000 }}" min="1">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">حفظ البيانات (يوم)</label>
+              <input type="number" name="data_retention_days" class="form-control" value="{{ tenant.data_retention_days or 365 }}" min="1">
+            </div>
+          </div>
+
+          <hr class="my-4">
+          <h5 class="fw-semibold text-primary mb-3"><i class="bi bi-sliders me-2"></i>المميزات والصلاحيات</h5>
+          <div class="row g-3">
+            <div class="col-md-3">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" name="enable_pos" id="enable_pos" {% if tenant.enable_pos %}checked{% endif %}>
+                <label class="form-check-label" for="enable_pos">POS كاشير</label>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" name="enable_payroll" id="enable_payroll" {% if tenant.enable_payroll %}checked{% endif %}>
+                <label class="form-check-label" for="enable_payroll">الرواتب</label>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" name="enable_cheques" id="enable_cheques" {% if tenant.enable_cheques %}checked{% endif %}>
+                <label class="form-check-label" for="enable_cheques">الشيكات</label>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" name="enable_expenses" id="enable_expenses" {% if tenant.enable_expenses %}checked{% endif %}>
+                <label class="form-check-label" for="enable_expenses">المصاريف</label>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" name="enable_store" id="enable_store" {% if tenant.enable_store %}checked{% endif %}>
+                <label class="form-check-label" for="enable_store">المتجر الإلكتروني</label>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" name="allow_data_export" id="allow_data_export" {% if tenant.allow_data_export %}checked{% endif %}>
+                <label class="form-check-label" for="allow_data_export">تصدير البيانات</label>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" name="allow_custom_integrations" id="allow_custom_integrations" {% if tenant.allow_custom_integrations %}checked{% endif %}>
+                <label class="form-check-label" for="allow_custom_integrations">تكاملات مخصصة</label>
+              </div>
+            </div>
           </div>
         </div>
         <div class="card-footer d-flex justify-content-between">

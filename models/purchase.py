@@ -53,7 +53,7 @@ class Purchase(db.Model):
     user = db.relationship('User', foreign_keys=[user_id])
     supplier = db.relationship('Supplier', back_populates='purchases')
     branch = db.relationship('Branch', backref='purchases', foreign_keys=[branch_id])
-    lines = db.relationship('PurchaseLine', back_populates='purchase', lazy='joined', cascade='all, delete-orphan')
+    lines = db.relationship('PurchaseLine', back_populates='purchase', lazy='joined')
     tenant = db.relationship('Tenant', backref='purchases', foreign_keys=[tenant_id])
     
     @property
@@ -140,7 +140,7 @@ class PurchaseLine(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
-    purchase_id = db.Column(db.Integer, db.ForeignKey('purchases.id'), nullable=False, index=True)
+    purchase_id = db.Column(db.Integer, db.ForeignKey('purchases.id', ondelete='RESTRICT'), nullable=False, index=True)
     product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
     
     quantity = db.Column(db.Numeric(15, 3), nullable=False)

@@ -38,15 +38,14 @@ File: `migrations/manual/fix_cost_centers_index.py`
 # Deletes cost centers with NULL tenant_id
 ```
 
-### Seed Update
-File: `seeds/seed_cost_centers.py`
-- Updated to link each cost center to its tenant
-- 6 cost centers for Alhazem tenant
-- 6 cost centers for Nasrallah tenant
+### No Seed Required
+Seed scripts were removed from the permanent application path. Tenant-linked
+cost center corrections should be handled through migrations or the manual
+repair script under `migrations/manual/`, not through demo seed data.
 
 ### Verification
 ```bash
-python seeds/seed_cost_centers.py
+python migrations/manual/migrate_cost_centers.py
 ```
 
 ### Rollback Instructions (if needed)

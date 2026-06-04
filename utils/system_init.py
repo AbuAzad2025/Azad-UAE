@@ -84,7 +84,21 @@ def _ensure_system_integrity_inner(app):
             exception=e,
         )
 
-    # 7.2 Ensure accounting data consistency for legacy/imported data
+    # 7.2 Ensure tenant GL trees and branch liquidity accounts
+    try:
+        _ensure_tenant_gl_trees()
+        current_app.logger.info("SystemInit: Tenant GL trees verified.")
+    except Exception as e:
+        from services.error_audit_service import ErrorAuditService
+        ErrorAuditService.log(
+            message=f"Tenant GL tree verification failed: {e}",
+            category="SYSTEM_INIT",
+            level="ERROR",
+            source="utils.system_init.ensure_system_integrity.gl_tree",
+            exception=e,
+        )
+
+    # 7.3 Ensure accounting data consistency for legacy/imported data
     try:
         from runtime_core.accounting_repair import repair_accounting_data
         repair_accounting_data()
@@ -121,6 +135,15 @@ def _ensure_system_integrity_inner(app):
                 pass
     else:
         current_app.logger.info("SystemInit: Telemetry disabled via environment variable.")
+
+
+def _ensure_tenant_gl_trees():
+    from models.tenant import Tenant
+    from services.gl_service import GLService
+
+    tenants = Tenant.query.filter_by(is_active=True).order_by(Tenant.id.asc()).all()
+    for tenant in tenants:
+        GLService.ensure_core_accounts(tenant_id=tenant.id, cleanup_extra=False)
 
 def _ensure_functional_roles():
     """Ensure functional roles exist: Manager, Seller, Branch Manager, Accountant with correct permissions."""
@@ -261,7 +284,7 @@ def _ensure_core_data():
         main_wh.branch_id = main_branch.id
 
     # 5. Chart of Accounts (Basic Structure)
-    # Assets (1000) -> Current (1100) -> Cash (1110), Bank (1120), AR (1130), Inventory (1140)
+    # Assets (1000) -> Current (1100) -> Cashboxes (1110), Bank Accounts (1120), AR (1130), Inventory (1140)
     # Liabilities (2000) -> Current (2100) -> AP (2110)
     # Equity (3000) -> Capital (3100)
     # Revenue (4000) -> Sales (4100)
@@ -272,8 +295,9 @@ def _ensure_core_data():
         # Assets
         {'code': '1000', 'name': 'Assets', 'name_ar': 'الأصول', 'type': 'asset', 'level': 0, 'is_header': True},
         {'code': '1100', 'name': 'Current Assets', 'name_ar': 'أصول متداولة', 'type': 'asset', 'parent_code': '1000', 'level': 1, 'is_header': True},
-        {'code': '1110', 'name': 'Cash on Hand', 'name_ar': 'الصندوق', 'type': 'asset', 'parent_code': '1100', 'level': 2},
-        {'code': '1120', 'name': 'Bank', 'name_ar': 'البنك', 'type': 'asset', 'parent_code': '1100', 'level': 2},
+        {'code': '1110', 'name': 'Cash and Cashboxes', 'name_ar': 'الصناديق والنقدية', 'type': 'asset', 'parent_code': '1100', 'level': 2, 'is_header': True},
+        {'code': '1120', 'name': 'Bank Accounts', 'name_ar': 'الحسابات البنكية', 'type': 'asset', 'parent_code': '1100', 'level': 2, 'is_header': True},
+        {'code': '1121', 'name': 'Bank - Savings Account', 'name_ar': 'البنك - حساب توفير', 'type': 'asset', 'parent_code': '1120', 'level': 3},
         {'code': '1130', 'name': 'Accounts Receivable', 'name_ar': 'العملاء (ذمم مدينة)', 'type': 'asset', 'parent_code': '1100', 'level': 2},
         {'code': '1140', 'name': 'Inventory', 'name_ar': 'المخزون', 'type': 'asset', 'parent_code': '1100', 'level': 2},
         {'code': '1150', 'name': 'Cheques Under Collection', 'name_ar': 'شيكات برسم التحصيل', 'type': 'asset', 'parent_code': '1100', 'level': 2},

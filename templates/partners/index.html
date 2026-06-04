@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+
+{% block title %}الشركاء والمساهمين{% endblock %}
+
+{% block page_title %}
+<div class="d-flex justify-content-between align-items-center">
+  <h1 class="text-gradient mb-0"><i class="fas fa-users-cog me-2"></i>الشركاء والمساهمين</h1>
+  <a href="{{ url_for('partners.create') }}" class="btn btn-primary">
+    <i class="fas fa-plus me-1"></i> شريك جديد
+  </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <div class="d-flex justify-content-between align-items-center">
+      <h3 class="card-title mb-0"><i class="fas fa-list me-2"></i>قائمة الشركاء</h3>
+      <div class="btn-group">
+        <a href="{{ url_for('partners.index') }}" class="btn btn-sm btn-outline-secondary {% if not request.args.get('scope') %}active{% endif %}">الكل</a>
+        <a href="{{ url_for('partners.index', scope='company') }}" class="btn btn-sm btn-outline-secondary {% if request.args.get('scope') == 'company' %}active{% endif %}">شركة</a>
+        <a href="{{ url_for('partners.index', scope='branch') }}" class="btn btn-sm btn-outline-secondary {% if request.args.get('scope') == 'branch' %}active{% endif %}">فرع</a>
+        <a href="{{ url_for('partners.index', scope='warehouse') }}" class="btn btn-sm btn-outline-secondary {% if request.args.get('scope') == 'warehouse' %}active{% endif %}">مستودع</a>
+      </div>
+    </div>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead>
+          <tr>
+            <th>الشريك</th>
+            <th>المستوى</th>
+            <th>النوع</th>
+            <th class="text-center">النسبة</th>
+            <th class="text-center">رأس المال</th>
+            <th class="text-center">الرصيد</th>
+            <th>الحالة</th>
+            <th class="text-center">إجراءات</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in partners %}
+          <tr>
+            <td>
+              <strong>{{ p.name }}</strong>
+              {% if p.name_en %}<br><small class="text-muted">{{ p.name_en }}</small>{% endif %}
+            </td>
+            <td>{{ p.scope_label }}</td>
+            <td>{{ p.partner_type_label }}</td>
+            <td class="text-center">
+              <span class="badge bg-info">{{ "%.2f"|format(p.share_percentage or 0) }}%</span>
+            </td>
+            <td class="text-center">{{ "{:,.2f}".format(p.investment_amount or 0) }}</td>
+            <td class="text-center">
+              <strong class="{% if (p.current_balance or 0) >= 0 %}text-success{% else %}text-danger{% endif %}">
+                {{ "{:,.2f}".format(p.current_balance or 0) }}
+              </strong>
+            </td>
+            <td>
+              {% if p.is_active %}
+                <span class="badge bg-success">نشط</span>
+              {% else %}
+                <span class="badge bg-secondary">غير نشط</span>
+              {% endif %}
+            </td>
+            <td class="text-center">
+              <a href="{{ url_for('partners.view', id=p.id) }}" class="btn btn-sm btn-info" title="عرض">
+                <i class="fas fa-eye"></i>
+              </a>
+              <a href="{{ url_for('partners.edit', id=p.id) }}" class="btn btn-sm btn-warning" title="تعديل">
+                <i class="fas fa-edit"></i>
+              </a>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="8" class="text-center text-muted py-4">لا يوجد شركاء مسجلين.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

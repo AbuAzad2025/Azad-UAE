@@ -219,7 +219,7 @@
         <div class="col-md-12">
           <div class="form-group">
             <label>
-              <i class="fas fa-exchange-alt text-primary"></i> سعر الصرف مقابل الدرهم
+              <i class="fas fa-exchange-alt text-primary"></i> سعر الصرف مقابل {{ tenant_currency_name_ar or 'درهم إماراتي' }}
             </label>
             <input type="number" name="exchange_rate" id="exchange_rate" 
                    class="form-control" step="0.000001" min="0.000001"

@@ -39,7 +39,7 @@
                                             <td>{{ loop.index }}</td>
                                             <td>{{ product.name }}</td>
                                             <td>{{ product.total_quantity }}</td>
-                                            <td>{{ "%.2f"|format(product.total_sales) }} درهم</td>
+                                            <td>{{ "%.2f"|format(product.total_sales) }} {{ tenant_currency_symbol or 'د.إ' }}</td>
                                         </tr>
                                         {% endfor %}
                                     </tbody>

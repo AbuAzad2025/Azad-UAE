@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block title %}توزيعات الأرباح{% endblock %}
+
+{% block page_title %}
+<div class="d-flex justify-content-between align-items-center">
+  <h1 class="text-gradient mb-0"><i class="fas fa-chart-bar me-2"></i>توزيعات الأرباح</h1>
+  <a href="{{ url_for('partners.distribute') }}" class="btn btn-success"><i class="fas fa-plus me-1"></i> توزيع جديد</a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <div class="d-flex justify-content-between align-items-center">
+      <h3 class="card-title mb-0">قائمة التوزيعات</h3>
+      <div class="btn-group btn-group-sm">
+        <a href="{{ url_for('partners.distributions') }}" class="btn btn-outline-secondary {% if not request.args.get('status') %}active{% endif %}">الكل</a>
+        <a href="{{ url_for('partners.distributions', status='draft') }}" class="btn btn-outline-secondary {% if request.args.get('status') == 'draft' %}active{% endif %}">مسودة</a>
+        <a href="{{ url_for('partners.distributions', status='approved') }}" class="btn btn-outline-secondary {% if request.args.get('status') == 'approved' %}active{% endif %}">معتمد</a>
+        <a href="{{ url_for('partners.distributions', status='paid') }}" class="btn btn-outline-secondary {% if request.args.get('status') == 'paid' %}active{% endif %}">مدفوع</a>
+      </div>
+    </div>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead>
+          <tr>
+            <th>الفترة</th>
+            <th>الشريك</th>
+            <th class="text-center">الربح الصافي</th>
+            <th class="text-center">النصيب</th>
+            <th class="text-center">الحالة</th>
+            <th class="text-center">إجراءات</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for d in distributions %}
+          <tr>
+            <td>{{ d.period_start }} – {{ d.period_end }}</td>
+            <td>{{ d.partner.name }}</td>
+            <td class="text-center">{{ "{:,.2f}".format(d.net_profit or 0) }}</td>
+            <td class="text-center"><strong>{{ "{:,.2f}".format(d.net_due or 0) }}</strong></td>
+            <td class="text-center">
+              <span class="badge bg-{{ {'draft':'secondary','approved':'info','paid':'success','cancelled':'danger'}[d.status] }}">{{ d.status_label }}</span>
+            </td>
+            <td class="text-center">
+              {% if d.status == 'draft' %}
+              <form method="POST" action="{{ url_for('partners.approve_distribution', dist_id=d.id) }}" style="display:inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-sm btn-info" title="اعتماد"><i class="fas fa-check"></i></button>
+              </form>
+              {% elif d.status == 'approved' %}
+              <form method="POST" action="{{ url_for('partners.pay_distribution', dist_id=d.id) }}" style="display:inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-sm btn-success" title="تسجيل دفع"><i class="fas fa-money-bill-wave"></i></button>
+              </form>
+              {% endif %}
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="6" class="text-center text-muted py-4">لا توجد توزيعات.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

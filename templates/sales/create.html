@@ -246,7 +246,7 @@ a.btn.btn-outline-secondary span {
           <div class="form-group">
             <label class="font-weight-bold">
               <i class="fas fa-percent text-danger mr-1"></i>الخصم الإجمالي
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="خصم إضافي على إجمالي الفاتورة بالدرهم (اختياري - افتراضي: 0)"></i>
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="خصم إضافي على إجمالي الفاتورة بـ{{ tenant_currency_name_ar or 'درهم إماراتي' }} (اختياري - افتراضي: 0)"></i>
             </label>
             <div class="input-group">
               <input type="number" name="discount_amount" class="form-control" value="0" step="0.01" min="0" 
@@ -334,7 +334,7 @@ a.btn.btn-outline-secondary span {
           <div class="form-group" id="payment_amount_group" style="display:none;">
             <label class="font-weight-bold">
               <i class="fas fa-hand-holding-usd mr-1"></i>المبلغ المدفوع
-              <i class="fas fa-info-circle text-info" title="أدخل المبلغ بالعملة المختارة - سيتم تحويله للدرهم تلقائياً"></i>
+              <i class="fas fa-info-circle text-info" title="أدخل المبلغ بالعملة المختارة - سيتم تحويله لـ{{ tenant_currency_name_ar or 'درهم إماراتي' }} تلقائياً"></i>
             </label>
             <div class="input-group">
               <input type="number" name="payment_amount" id="payment_amount" class="form-control" 
@@ -345,7 +345,7 @@ a.btn.btn-outline-secondary span {
               </div>
             </div>
             <small class="form-text text-success">
-              <i class="fas fa-calculator"></i> سيتم تحويل المبلغ للدرهم تلقائياً حسب سعر الصرف
+              <i class="fas fa-calculator"></i> سيتم تحويل المبلغ لـ{{ tenant_currency_name_ar or 'درهم إماراتي' }} تلقائياً حسب سعر الصرف
             </small>
             <small class="text-muted d-block mt-1">اترك صفر للدفع الآجل</small>
           </div>

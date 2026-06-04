@@ -107,7 +107,7 @@ class ErrorMessages:
     
     @staticmethod
     def sale_invalid_price():
-        return 'السعر يجب أن يكون أكبر من صفر.\nأدخل سعراً صحيحاً بالدرهم.'
+        return 'السعر يجب أن يكون أكبر من صفر.\nأدخل سعراً صحيحاً بالعملة الأساسية.'
     
     
     @staticmethod
@@ -117,7 +117,7 @@ class ErrorMessages:
     @staticmethod
     def payment_exceeds_due(amount, due):
         return (f'المبلغ المدفوع ({amount:.2f}) أكبر من المستحق ({due:.2f}).\n'
-                f'المبلغ المستحق هو {due:.2f} درهم فقط.')
+                f'المبلغ المستحق هو {due:.2f} فقط.')
     
     @staticmethod
     def payment_method_required():

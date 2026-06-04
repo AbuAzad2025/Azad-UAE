@@ -62,7 +62,13 @@ class Tenant(db.Model):
     max_users = db.Column(db.Integer, default=5)
     max_products = db.Column(db.Integer, default=1000)
     max_customers = db.Column(db.Integer, default=500)
+    max_suppliers = db.Column(db.Integer, default=200)
+    max_branches = db.Column(db.Integer, default=3)
+    max_warehouses = db.Column(db.Integer, default=2)
     max_storage_mb = db.Column(db.Integer, default=1024)  # 1GB
+    max_invoices_per_month = db.Column(db.Integer, default=1000)
+    max_sales_per_month = db.Column(db.Integer, default=5000)
+    data_retention_days = db.Column(db.Integer, default=365)
     
     # Features - المميزات المفعلة
     enable_multi_warehouse = db.Column(db.Boolean, default=True)
@@ -71,6 +77,13 @@ class Tenant(db.Model):
     enable_ai = db.Column(db.Boolean, default=True)
     enable_reports = db.Column(db.Boolean, default=True)
     enable_api = db.Column(db.Boolean, default=False)
+    enable_pos = db.Column(db.Boolean, default=True)
+    enable_payroll = db.Column(db.Boolean, default=True)
+    enable_cheques = db.Column(db.Boolean, default=True)
+    enable_expenses = db.Column(db.Boolean, default=True)
+    enable_store = db.Column(db.Boolean, default=False)
+    allow_data_export = db.Column(db.Boolean, default=True)
+    allow_custom_integrations = db.Column(db.Boolean, default=False)
     
     # Preferences - التفضيلات
     default_currency = db.Column(db.String(3), default='AED')

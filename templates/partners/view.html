@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ partner.name }} — تفاصيل الشريك{% endblock %}
+
+{% block page_title %}
+<div class="d-flex justify-content-between align-items-center">
+  <div>
+    <h1 class="text-gradient mb-0"><i class="fas fa-user-tie me-2"></i>{{ partner.name }}</h1>
+    <p class="text-muted">{{ partner.partner_type_label }} | {{ partner.scope_label }}</p>
+  </div>
+  <div>
+    <a href="{{ url_for('partners.edit', id=partner.id) }}" class="btn btn-warning"><i class="fas fa-edit me-1"></i> تعديل</a>
+    <a href="{{ url_for('partners.statement', id=partner.id) }}" class="btn btn-info"><i class="fas fa-file-invoice me-1"></i> كشف حساب</a>
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+  <div class="col-md-3">
+    <div class="card text-center">
+      <div class="card-body">
+        <h5 class="text-muted">رأس المال</h5>
+        <h3 class="text-primary">{{ "{:,.2f}".format(balance_summary.investment) }}</h3>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-center">
+      <div class="card-body">
+        <h5 class="text-muted">الرصيد الجاري</h5>
+        <h3 class="{% if balance_summary.current_balance >= 0 %}text-success{% else %}text-danger{% endif %}">
+          {{ "{:,.2f}".format(balance_summary.current_balance) }}
+        </h3>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-center">
+      <div class="card-body">
+        <h5 class="text-muted">إجمالي الأرباح</h5>
+        <h3 class="text-success">{{ "{:,.2f}".format(balance_summary.total_profit) }}</h3>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-center">
+      <div class="card-body">
+        <h5 class="text-muted">إجمالي المسحوبات</h5>
+        <h3 class="text-danger">{{ "{:,.2f}".format(balance_summary.total_withdrawals) }}</h3>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header"><i class="fas fa-percentage me-2"></i>نسب الشراكة</div>
+      <div class="card-body">
+        <ul class="list-group list-group-flush">
+          <li class="list-group-item d-flex justify-content-between">
+            <span>نسبة الربح</span><strong>{{ "%.2f"|format(partner.share_percentage or 0) }}%</strong>
+          </li>
+          <li class="list-group-item d-flex justify-content-between">
+            <span>نسبة المصاريف</span><strong>{{ "%.2f"|format(partner.expense_share_percentage or 0) }}%</strong>
+          </li>
+          <li class="list-group-item d-flex justify-content-between">
+            <span>نسبة الخسارة</span><strong>{{ "%.2f"|format(partner.loss_share_percentage or 0) }}%</strong>
+          </li>
+          <li class="list-group-item d-flex justify-content-between">
+            <span>مبلغ شهري ثابت</span><strong>{{ "{:,.2f}".format(partner.fixed_monthly_amount or 0) }}</strong>
+          </li>
+          <li class="list-group-item d-flex justify-content-between">
+            <span>حد أدنى للربح</span><strong>{{ "{:,.2f}".format(partner.min_profit_threshold or 0) }}</strong>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header"><i class="fas fa-address-card me-2"></i>معلومات التواصل</div>
+      <div class="card-body">
+        <ul class="list-group list-group-flush">
+          <li class="list-group-item"><i class="fas fa-phone me-2 text-muted"></i>{{ partner.phone or '—' }}</li>
+          <li class="list-group-item"><i class="fas fa-envelope me-2 text-muted"></i>{{ partner.email or '—' }}</li>
+          <li class="list-group-item"><i class="fas fa-map-marker-alt me-2 text-muted"></i>{{ partner.address or '—' }}</li>
+          <li class="list-group-item"><i class="fas fa-id-card me-2 text-muted"></i>{{ partner.id_number or '—' }}</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row mt-4">
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between">
+        <span><i class="fas fa-chart-pie me-2"></i>آخر التوزيعات</span>
+      </div>
+      <div class="card-body p-0">
+        <table class="table table-sm table-hover mb-0">
+          <thead><tr><th>الفترة</th><th>الربح</th><th>النصيب</th><th>الحالة</th></tr></thead>
+          <tbody>
+            {% for d in latest_distributions %}
+            <tr>
+              <td>{{ d.period_start }} – {{ d.period_end }}</td>
+              <td>{{ "{:,.2f}".format(d.net_profit or 0) }}</td>
+              <td>{{ "{:,.2f}".format(d.net_due or 0) }}</td>
+              <td><span class="badge bg-{{ {'draft':'secondary','approved':'info','paid':'success','cancelled':'danger'}[d.status] }}">{{ d.status_label }}</span></td>
+            </tr>
+            {% else %}
+            <tr><td colspan="4" class="text-center text-muted">لا توجد توزيعات.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header"><i class="fas fa-exchange-alt me-2"></i>حركات مالية</div>
+      <div class="card-body p-0">
+        <table class="table table-sm table-hover mb-0">
+          <thead><tr><th>التاريخ</th><th>النوع</th><th>المبلغ</th><th>الرصيد</th></tr></thead>
+          <tbody>
+            {% for t in latest_transactions %}
+            <tr>
+              <td>{{ t.transaction_date }}</td>
+              <td>{{ t.transaction_type_label }}</td>
+              <td class="{% if t.is_credit %}text-success{% else %}text-danger{% endif %}">{{ "{:,.2f}".format(t.amount_base or 0) }}</td>
+              <td>{{ "{:,.2f}".format(t.balance_after or 0) }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="4" class="text-center text-muted">لا توجد حركات.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

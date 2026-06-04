@@ -206,62 +206,98 @@ def create_app(config_class=Config):
             _ai_enabled = False
             ai_bp = _make_ai_fallback(ai_import_error)
             return redirect(url_for('main.dashboard'))
+    # ── Core Operations ──────────────────────────────────────
     users_bp           = _import_bp("routes.users", "users_bp")
-    cheques_bp         = _import_bp("routes.cheques", "cheques_bp")
+    branches_bp        = _import_bp("routes.branches", "branches_bp")
+    partners_bp        = _import_bp("routes.partners", "partners_bp")
+
+    # ── Sales & Inventory ────────────────────────────────────
+    pos_bp             = _import_bp("routes.pos", "pos_bp")
     returns_bp         = _import_bp("routes.returns", "returns_bp")
+    cheques_bp         = _import_bp("routes.cheques", "cheques_bp")
+
+    # ── Finance & Accounting ────────────────────────────────
     advanced_ledger_bp = _import_bp("routes.advanced_ledger", "advanced_ledger_bp")
     admin_ledger_bp    = _import_bp("routes.admin_ledger", "admin_ledger_bp")
-    gamification_bp    = _import_bp("routes.gamification", "gamification_bp")
-    pos_bp             = _import_bp("routes.pos", "pos_bp")
+    payroll_bp         = _import_bp("routes.payroll", "payroll_bp")
+
+    # ── eCommerce & Storefront ───────────────────────────────
     store_bp           = _import_bp("routes.store", "store_bp")
     shop_bp            = _import_bp("routes.shop", "shop_bp")
+    payment_vault_bp   = _import_bp("routes.payment_vault", "payment_vault_bp")
+
+    # ── Communication & Integrations ───────────────────────
     whatsapp_bp        = _import_bp("routes.whatsapp", "whatsapp_bp")
+
+    # ── Platform / Admin ─────────────────────────────────────
     monitoring_bp      = _import_bp("routes.monitoring", "monitoring_bp")
     public_bp          = _import_bp("routes.public", "public_bp")
-    payment_vault_bp   = _import_bp("routes.payment_vault", "payment_vault_bp")
+
+    # ── Developer / API ──────────────────────────────────────
     api_analytics_bp   = _import_bp("routes.api_analytics", "api_analytics_bp")
     api_docs_bp        = _import_bp("routes.api_docs", "api_docs_bp")
     graphql_bp         = _import_bp("routes.graphql", "graphql_bp")
-    branches_bp        = _import_bp("routes.branches", "branches_bp")
+    gamification_bp    = _import_bp("routes.gamification", "gamification_bp")
 
+    # ── Core / Auth / Dashboard ─────────────────────────────
     app.register_blueprint(auth_bp)
     app.register_blueprint(main_bp)
+    app.register_blueprint(public_bp)
+
+    # ── Sales & CRM ──────────────────────────────────────────
     app.register_blueprint(sales_bp)
-    app.register_blueprint(products_bp)
+    app.register_blueprint(pos_bp)
+    app.register_blueprint(returns_bp)
     app.register_blueprint(customers_bp)
-    app.register_blueprint(reports_bp)
-    app.register_blueprint(api_bp)
-    app.register_blueprint(api_enhanced_bp)
+    app.register_blueprint(partners_bp)
+
+    # ── Procurement & Suppliers ────────────────────────────────
     app.register_blueprint(suppliers_bp)
     app.register_blueprint(purchases_bp)
-    app.register_blueprint(expenses_bp)
-    app.register_blueprint(ledger_bp)
-    app.register_blueprint(payments_bp)
+
+    # ── Inventory & Warehousing ──────────────────────────────
+    app.register_blueprint(products_bp)
     app.register_blueprint(warehouse_bp)
-    app.register_blueprint(language_bp)
-    app.register_blueprint(tenants_bp)
-    # app.register_blueprint(branches_bp) # Duplicate removed
-    app.register_blueprint(payroll_bp)
-    app.register_blueprint(public_bp)
-    app.register_blueprint(users_bp)
+    app.register_blueprint(branches_bp)
+
+    # ── Finance & Payments ─────────────────────────────────
+    app.register_blueprint(payments_bp)
     app.register_blueprint(cheques_bp)
-    app.register_blueprint(returns_bp)
+    app.register_blueprint(expenses_bp)
+    app.register_blueprint(payment_vault_bp)
+
+    # ── Accounting & Ledger ─────────────────────────────────
+    app.register_blueprint(ledger_bp)
     app.register_blueprint(advanced_ledger_bp)
     app.register_blueprint(admin_ledger_bp)
+    app.register_blueprint(payroll_bp)
+
+    # ── Reports & Analytics ──────────────────────────────────
+    app.register_blueprint(reports_bp)
+    app.register_blueprint(api_analytics_bp)
     app.register_blueprint(gamification_bp)
-    app.register_blueprint(pos_bp)
+    app.register_blueprint(monitoring_bp)
+
+    # ── Storefront & eCommerce ──────────────────────────────
     app.register_blueprint(store_bp)
     app.register_blueprint(shop_bp)
-    app.register_blueprint(ai_bp)
-    app.register_blueprint(owner_bp)
+    app.register_blueprint(tenants_bp)
+    app.register_blueprint(language_bp)
+
+    # ── Communication & Integrations ──────────────────────────
     app.register_blueprint(whatsapp_bp)
-    app.register_blueprint(monitoring_bp)
-    app.register_blueprint(payment_vault_bp)
-    app.register_blueprint(api_analytics_bp)
     app.register_blueprint(api_docs_bp)
+
+    # ── AI & Advanced Features ────────────────────────────────
+    app.register_blueprint(ai_bp)
+    app.register_blueprint(api_bp)
+    app.register_blueprint(api_enhanced_bp)
     app.register_blueprint(graphql_bp)
-    app.register_blueprint(branches_bp)
-    
+
+    # ── Admin & User Management ──────────────────────────────
+    app.register_blueprint(users_bp)
+    app.register_blueprint(owner_bp)
+
     @app.before_request
     def storefront_custom_domain_redirect():
         """Route custom domain / subdomain to the tenant storefront catalog."""

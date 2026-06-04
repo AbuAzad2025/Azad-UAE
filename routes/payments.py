@@ -786,7 +786,11 @@ def create_voucher_submit():
                 from services.gl_service import GLService
                 tenant_id = getattr(payment, 'tenant_id', None)
                 GLService.ensure_core_accounts(tenant_id=tenant_id)
-                credit_account = GLService.get_payment_debit_account(payment_method)
+                credit_account = GLService.get_payment_debit_account(
+                    payment_method,
+                    branch_id=payment.branch_id,
+                    tenant_id=tenant_id,
+                )
                 post_or_fail(
                     [
                         {'account': credit_account, 'debit': payment.amount, 'description': f'استرداد من مورد {supplier.name}'},
@@ -876,9 +880,11 @@ def create_voucher_submit():
                     from services.gl_service import GLService
                     tenant_id = getattr(payment, 'tenant_id', None)
                     GLService.ensure_core_accounts(tenant_id=tenant_id)
-                    credit_account = '1110'
-                    if payment_method == 'bank_transfer' or payment_method == 'card':
-                        credit_account = '1120'
+                    credit_account = GLService.get_payment_credit_account(
+                        payment_method,
+                        branch_id=payment.branch_id,
+                        tenant_id=tenant_id,
+                    )
                     lines = [
                         {'account': '2110', 'debit': payment.amount, 'description': f'سداد للمورد {payment.supplier_name}'},
                         {'account': credit_account, 'credit': payment.amount, 'description': f'سند صرف {payment.payment_number}'}
@@ -963,7 +969,11 @@ def create_voucher_submit():
                     from services.gl_service import GLService
                     tenant_id = getattr(payment, 'tenant_id', None)
                     GLService.ensure_core_accounts(tenant_id=tenant_id)
-                    credit_account = GLService.get_payment_credit_account(payment_method)
+                    credit_account = GLService.get_payment_credit_account(
+                        payment_method,
+                        branch_id=payment.branch_id,
+                        tenant_id=tenant_id,
+                    )
                     debit_account = GLService.get_customer_credit_account(customer)
                     lines = [
                         {'account': debit_account, 'debit': payment.amount, 'description': f'سداد/سحب {customer.name}'},
@@ -1542,7 +1552,11 @@ def create_payment(purchase_id):
             from services.gl_service import GLService
             tenant_id = getattr(payment, 'tenant_id', None)
             GLService.ensure_core_accounts(tenant_id=tenant_id)
-            cash_or_bank = '1110' if payment_method_value == 'cash' else '1120'
+            cash_or_bank = GLService.get_payment_credit_account(
+                payment_method_value,
+                branch_id=payment.branch_id,
+                tenant_id=tenant_id,
+            )
             lines = [
                 {'account': '2110', 'debit': payment.amount, 'description': f'سداد للمورد {payment.supplier_name}'},
                 {'account': cash_or_bank, 'credit': payment.amount, 'description': f'سند صرف {payment.payment_number}'}

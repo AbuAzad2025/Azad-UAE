@@ -113,12 +113,11 @@ class PaymentService:
                 # Debit: Accounts Payable (2110)
                 # Credit: Cash/Bank (1110/1120)
                 
-                credit_account = GLService.get_payment_credit_account(payment_method) # Need to verify this method exists or implement logic
-                # Fallback if method doesn't exist
-                if not credit_account:
-                     if payment_method == 'cash': credit_account = '1110'
-                     else: credit_account = '1120'
-
+                credit_account = GLService.get_payment_credit_account(
+                    payment_method,
+                    branch_id=payment.branch_id,
+                    tenant_id=tenant_id,
+                )
                 lines = [
                     {'account': '2110', 'debit': payment.amount, 'description': f'دفعة للمورد {supplier.name}'},
                     {'account': credit_account, 'credit': payment.amount, 'description': f'سند صرف {payment.payment_number}'}
@@ -270,7 +269,11 @@ class PaymentService:
                 # GL Entry for Standard Receipt (Cash/Bank)
                 try:
                     GLService.ensure_core_accounts(tenant_id=getattr(receipt, 'tenant_id', None))
-                    payment_account = GLService.get_payment_debit_account(receipt.payment_method)
+                    payment_account = GLService.get_payment_debit_account(
+                        receipt.payment_method,
+                        branch_id=receipt.branch_id,
+                        tenant_id=getattr(receipt, 'tenant_id', None),
+                    )
                     credit_account = GLService.get_customer_credit_account(customer)
 
                     # Create GL entries

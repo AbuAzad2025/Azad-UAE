@@ -24,7 +24,7 @@
         <strong style="color: #007A3D; font-size: 1.2rem;">
           {{ "{:,.0f}".format(stats.today_sales_amount|default(0)) }}
         </strong>
-        <small class="text-muted"> درهم</small>
+        <small class="text-muted"> {{ tenant_currency_symbol or 'د.إ' }}</small>
       </div>
       <a href="{{ url_for('sales.index') }}" class="btn btn-sm btn-primary mt-2 w-100">
         <i class="fas fa-arrow-left ml-2"></i> عرض الكل
@@ -56,7 +56,7 @@
       <div class="stat-value">{{ "{:,.0f}".format(stats.total_receivables|default(0)) }}</div>
       <div class="stat-label">الذمم المدينة</div>
       <div class="mt-2">
-        <small class="text-muted">درهم إماراتي</small>
+        <small class="text-muted">{{ tenant_currency_name_ar or 'درهم إماراتي' }}</small>
       </div>
       <a href="{{ url_for('reports.receivables') }}" class="btn btn-sm btn-warning mt-2 w-100 stretched-link">
         <i class="fas fa-arrow-left ml-2"></i> عرض التفاصيل
@@ -94,7 +94,7 @@
         <h2 class="mb-0" style="color: #28a745; font-weight: 700;">
           {{ "{:,.2f}".format(stats.cash_balance|default(0)) }}
         </h2>
-        <small class="text-muted">درهم إماراتي</small>
+        <small class="text-muted">{{ tenant_currency_name_ar or 'درهم إماراتي' }}</small>
       </div>
     </div>
   </div>
@@ -109,7 +109,7 @@
         <h2 class="mb-0" style="color: #1B4D89; font-weight: 700;">
           {{ "{:,.2f}".format(stats.bank_balance|default(0)) }}
         </h2>
-        <small class="text-muted">درهم إماراتي</small>
+        <small class="text-muted">{{ tenant_currency_name_ar or 'درهم إماراتي' }}</small>
       </div>
     </div>
   </div>
@@ -124,7 +124,7 @@
         <h2 class="mb-0" style="color: #17a2b8; font-weight: 700;">
           {{ "{:,.2f}".format(stats.inventory_value_gl|default(0)) }}
         </h2>
-        <small class="text-muted">درهم إماراتي</small>
+        <small class="text-muted">{{ tenant_currency_name_ar or 'درهم إماراتي' }}</small>
       </div>
     </div>
   </div>

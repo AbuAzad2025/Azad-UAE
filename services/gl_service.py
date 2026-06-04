@@ -13,6 +13,9 @@ _JE_SEQ = {}
 # خصوم: 2110 ذمم دائنة، 2115 ذمم تجار، 2120 شيكات مؤجلة، 2130 ضرائب، 2140 رواتب مستحقة
 # إيرادات: 4100 مبيعات، 4200 خدمات، 4300 شحن، 4400 أرباح فرق عملة، 4500 أخرى
 # مصروفات: 5100 تكلفة بضاعة، 5150 تعديلات مخزون، 5200 خصومات ممنوحة، 6100 رواتب، 6900 خسائر فرق عملة، 6990 متنوعة
+# 'cash' and 'bank' are retained as header account references for legacy callers.
+# Operational postings must resolve branch-specific accounts through
+# get_default_liquidity_account().
 GL_ACCOUNTS = {
     'cash': '1110',
     'bank': '1120',
@@ -267,15 +270,50 @@ class GLService:
         return entries
 
     @staticmethod
-    def get_payment_debit_account(method):
+    def get_default_liquidity_account(liquidity_kind, branch_id=None, tenant_id=None):
+        kind = (liquidity_kind or '').strip().lower()
+        if kind not in ('cash', 'bank'):
+            raise ValueError(f'Unsupported liquidity account kind: {liquidity_kind}')
+
+        tenant_id = tenant_id or gl_helpers.resolve_tenant_id(branch_id=branch_id)
+        GLService.ensure_core_accounts(tenant_id=tenant_id)
+
+        query = GLAccount.query.filter_by(
+            tenant_id=int(tenant_id),
+            liquidity_kind=kind,
+            is_active=True,
+            is_header=False,
+        )
+        if branch_id:
+            account = (
+                query
+                .filter_by(branch_id=int(branch_id))
+                .order_by(GLAccount.is_default_liquidity.desc(), GLAccount.id.asc())
+                .first()
+            )
+            if account:
+                return account.code
+            raise ValueError(f'No default {kind} account configured for branch_id={branch_id}')
+
+        accounts = query.order_by(GLAccount.is_default_liquidity.desc(), GLAccount.id.asc()).all()
+        if len(accounts) == 1:
+            return accounts[0].code
+        if not accounts:
+            raise ValueError(f'No default {kind} account configured for tenant_id={tenant_id}')
+        raise ValueError(
+            f'Multiple {kind} accounts exist for tenant_id={tenant_id}; branch_id is required to avoid ambiguous posting'
+        )
+
+    @staticmethod
+    def get_payment_debit_account(method, branch_id=None, tenant_id=None):
         m = (method or '').strip()
         if m == 'cash':
-            return '1110'
+            return GLService.get_default_liquidity_account('cash', branch_id=branch_id, tenant_id=tenant_id)
         if m in ('bank_transfer', 'card'):
-            return '1120'
+            return GLService.get_default_liquidity_account('bank', branch_id=branch_id, tenant_id=tenant_id)
         if m == 'cheque':
             return '1150'
-        return '1110'
+        return GLService.get_default_liquidity_account('cash', branch_id=branch_id, tenant_id=tenant_id)
 
     @staticmethod
     def get_customer_credit_account(customer):
@@ -554,15 +592,15 @@ class GLService:
         }
 
     @staticmethod
-    def get_payment_credit_account(payment_method):
+    def get_payment_credit_account(payment_method, branch_id=None, tenant_id=None):
         """حساب الدائن عند الصرف (خروج نقدية)."""
         m = (payment_method or '').strip().lower()
         if m == 'cash':
-            return '1110'
+            return GLService.get_default_liquidity_account('cash', branch_id=branch_id, tenant_id=tenant_id)
         if m in ('bank_transfer', 'card', 'bank'):
-            return '1120'
+            return GLService.get_default_liquidity_account('bank', branch_id=branch_id, tenant_id=tenant_id)
         if m == 'cheque':
             return '2120'
-        return '1110'
+        return GLService.get_default_liquidity_account('cash', branch_id=branch_id, tenant_id=tenant_id)
 
 

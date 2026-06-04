@@ -8,9 +8,9 @@ CORE_ACCOUNT_TREE = [
     # === الأصول Assets ===
     ('1000', 'الأصول', 'Assets', 'asset', None, True, 0),
     ('1100', 'الأصول المتداولة', 'Current Assets', 'asset', '1000', True, 1),
-    ('1110', 'الصندوق', 'Cash', 'asset', '1100', False, 2),
-    ('1120', 'البنك - حساب جاري', 'Bank - Current Account', 'asset', '1100', False, 2),
-    ('1121', 'البنك - حساب توفير', 'Bank - Savings Account', 'asset', '1100', False, 2),
+    ('1110', 'الصناديق والنقدية', 'Cash and Cashboxes', 'asset', '1100', True, 2),
+    ('1120', 'الحسابات البنكية', 'Bank Accounts', 'asset', '1100', True, 2),
+    ('1121', 'البنك - حساب توفير', 'Bank - Savings Account', 'asset', '1120', False, 3),
     ('1130', 'الذمم المدينة', 'Accounts Receivable', 'asset', '1100', False, 2),
     ('1140', 'المخزون', 'Inventory', 'asset', '1100', False, 2),
     ('1150', 'شيكات تحت التحصيل', 'Cheques Under Collection', 'asset', '1100', False, 2),
@@ -142,9 +142,16 @@ class GLTreeBuilder:
                 })
         
         # تنظيف الحسابات الزائدة (إذا طلبنا ذلك)
+        GLTreeBuilder._ensure_branch_liquidity_accounts(
+            tenant_id=tenant_id,
+            existing_accounts=existing_accounts,
+            processed=processed,
+            audit_report=audit_report,
+        )
+
         if cleanup_extra:
             for code, acc in existing_accounts.items():
-                if code not in CORE_ACCOUNT_CODES and acc.is_active:
+                if code not in CORE_ACCOUNT_CODES and acc.is_active and not getattr(acc, 'liquidity_kind', None):
                     acc.is_active = False
                     audit_report['deactivated'].append({
                         'code': code,
@@ -261,6 +268,130 @@ class GLTreeBuilder:
             processed[code] = new_acc
             result['action'] = 'created'
             return result
+
+    @staticmethod
+    def _branch_account_code(prefix, branch_id):
+        return f'{prefix}-B{int(branch_id)}'
+
+    @staticmethod
+    def _ensure_branch_liquidity_accounts(tenant_id, existing_accounts, processed, audit_report):
+        from models import Branch
+
+        branches = (
+            Branch.query
+            .filter_by(tenant_id=tenant_id, is_active=True)
+            .order_by(Branch.is_main.desc(), Branch.id.asc())
+            .all()
+        )
+
+        for branch in branches:
+            GLTreeBuilder._ensure_liquidity_account(
+                tenant_id=tenant_id,
+                code=GLTreeBuilder._branch_account_code('1110', branch.id),
+                name_ar=f'صندوق {branch.name}',
+                name_en=f'Cashbox - {branch.name}',
+                parent_code='1110',
+                branch_id=branch.id,
+                liquidity_kind='cash',
+                existing_accounts=existing_accounts,
+                processed=processed,
+                audit_report=audit_report,
+            )
+            GLTreeBuilder._ensure_liquidity_account(
+                tenant_id=tenant_id,
+                code=GLTreeBuilder._branch_account_code('1120', branch.id),
+                name_ar=f'بنك {branch.name}',
+                name_en=f'Bank - {branch.name}',
+                parent_code='1120',
+                branch_id=branch.id,
+                liquidity_kind='bank',
+                existing_accounts=existing_accounts,
+                processed=processed,
+                audit_report=audit_report,
+            )
+
+    @staticmethod
+    def _ensure_liquidity_account(
+        tenant_id,
+        code,
+        name_ar,
+        name_en,
+        parent_code,
+        branch_id,
+        liquidity_kind,
+        existing_accounts,
+        processed,
+        audit_report,
+    ):
+        result = {'code': code, 'name_ar': name_ar, 'action': 'none'}
+        parent = processed.get(parent_code) or existing_accounts.get(parent_code)
+        parent_id = parent.id if parent else None
+        acc = existing_accounts.get(code)
+
+        if acc:
+            needs_update = False
+            if not acc.is_active:
+                acc.is_active = True
+                needs_update = True
+            if acc.name != name_en:
+                acc.name = name_en
+                needs_update = True
+            if acc.name_ar != name_ar:
+                acc.name_ar = name_ar
+                needs_update = True
+            if acc.type != 'asset':
+                acc.type = 'asset'
+                needs_update = True
+            if acc.parent_id != parent_id:
+                acc.parent_id = parent_id
+                needs_update = True
+            if acc.is_header:
+                acc.is_header = False
+                needs_update = True
+            if acc.level != 3:
+                acc.level = 3
+                needs_update = True
+            if acc.currency != 'AED':
+                acc.currency = 'AED'
+                needs_update = True
+            if getattr(acc, 'branch_id', None) != branch_id:
+                acc.branch_id = branch_id
+                needs_update = True
+            if getattr(acc, 'liquidity_kind', None) != liquidity_kind:
+                acc.liquidity_kind = liquidity_kind
+                needs_update = True
+            if not getattr(acc, 'is_default_liquidity', False):
+                acc.is_default_liquidity = True
+                needs_update = True
+
+            processed[code] = acc
+            if needs_update:
+                result['action'] = 'updated'
+                audit_report['updated'].append(result)
+            return acc
+
+        acc = GLAccount(
+            tenant_id=tenant_id,
+            code=code,
+            name=name_en,
+            name_ar=name_ar,
+            type='asset',
+            parent_id=parent_id,
+            branch_id=branch_id,
+            liquidity_kind=liquidity_kind,
+            is_default_liquidity=True,
+            is_header=False,
+            level=3,
+            is_active=True,
+            currency='AED',
+        )
+        db.session.add(acc)
+        db.session.flush()
+        existing_accounts[code] = acc
+        processed[code] = acc
+        result['action'] = 'created'
+        audit_report['created'].append(result)
+        return acc
     
     @staticmethod
     def validate_tree(tenant_id):
@@ -333,4 +464,3 @@ class GLTreeBuilder:
                     validation['valid'] = False
         
         return validation
-

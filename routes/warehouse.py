@@ -295,6 +295,14 @@ def create_warehouse():
                                            branches=branches,
                                            form_data=request.form)
             
+            # Check tenant warehouse limit
+            try:
+                from utils.tenant_limits import check_warehouses_limit, TenantLimitError
+                check_warehouses_limit()
+            except TenantLimitError as e:
+                flash(str(e), 'danger')
+                return redirect(url_for('warehouse.create'))
+
             warehouse = Warehouse(
                 tenant_id=tenant_id,
                 name=name,

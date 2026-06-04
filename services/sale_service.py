@@ -591,7 +591,11 @@ class SaleService:
         try:
             GLService.ensure_core_accounts(tenant_id=getattr(sale, 'tenant_id', None))
             
-            debit_account = GLService.get_payment_debit_account(payment_method)
+            debit_account = GLService.get_payment_debit_account(
+                payment_method,
+                branch_id=sale.branch_id,
+                tenant_id=getattr(sale, 'tenant_id', None),
+            )
             credit_account = GLService.get_customer_credit_account(sale.customer)
 
             post_or_fail(
