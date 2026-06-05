@@ -470,19 +470,16 @@ This section records all hardening batches and modernization phases that have be
 
 All schema foundations (Phase 2, 3, 6, 8) are deployed. The database is clean (`flask db check` = zero drift). Two high-value paths are now ready for execution:
 
-### Option A: Activate Dynamic GL Mapping (Phase 1 Activation)
-**Why now:** The resolver, models, and service wiring are complete. The only blocker is the absence of seeded `GLAccountMapping` rows.
-*   **Actions:**
-    1. Run `tools/qa/gl_mapping_validation_dry_run.py` to confirm readiness per tenant.
-    2. Run `--discover-candidates` then `--preview-seed` to propose safe mappings.
-    3. Create missing GL accounts for unresolvable concepts (`CUSTOMS_DUTY`, `FREIGHT_IN`, `INVENTORY_ADJUSTMENT_GAIN`, `SALES_RETURNS`, `CASH` for 1 tenant).
-    4. Execute seeding.
-    5. Set `ENABLE_DYNAMIC_GL_MAPPING=True` (tenant-by-tenant or global).
-    6. Run end-to-end posting test (Sale → GL, Payment → GL, Purchase → GL).
-*   **Risk:** Low. The feature flag isolates the change; legacy fallback remains active if a mapping is missing.
-*   **Estimated Effort:** 2-3 days.
+### Option A: Activate Dynamic GL Mapping (Phase 1 Activation) — ✅ COMPLETED (June 5, 2026)
+**Status:** `ENABLE_DYNAMIC_GL_MAPPING` is now `True` by default in `config.py`. All critical concepts resolve dynamically per tenant. Legacy lookup path remains as an emergency fallback with `is_header`/`is_active` guards.
+*   **Evidence:**
+    - `tools/qa/test_dynamic_gl_resolution_path.py` — all 13 critical concepts PASS.
+    - `flask db check` — zero drift.
+    - `get_payment_debit_account` and `get_customer_credit_account` now raise `GLMappingError` on missing mappings instead of returning hardcoded codes.
+    - `_resolve_journal_line_account` enforces concept-code resolution; legacy codes allowed only via `explicit_account_allowed` flag.
+*   **Commits:** `eb32406` (activate + remove fallbacks), `2cbf69a` (restore legacy with validation + branch_id propagation fix).
 
-### Option B: MWAC Transaction Flows (Phase 4)
+### Option B: MWAC Transaction Flows (Phase 4) — 🔄 NEXT
 **Why now:** `ProductWarehouseCost` and `ProductCostHistory` tables exist. `StockService`, `SaleService`, and `PurchaseService` can now be wired to recalculate average cost on every receipt.
 *   **Actions:**
     1. Modify `StockService.receive_stock()` to update `ProductWarehouseCost` (increase qty, recalculate WAC, append `ProductCostHistory`).
@@ -494,7 +491,7 @@ All schema foundations (Phase 2, 3, 6, 8) are deployed. The database is clean (`
 *   **Estimated Effort:** 1-2 Sprints.
 
 ### Recommendation
-**Start with Option A (Activate Dynamic GL Mapping).** It validates the entire posting pipeline with zero inventory impact. Once GL posting is fully dynamic and tested, proceed to Option B (MWAC) with confidence that any valuation discrepancy is isolated to the costing layer, not the posting layer.
+**Proceed to Option B (MWAC Transaction Flows).** The posting pipeline is now fully dynamic and tested. Any future valuation discrepancy will be isolated to the costing layer, not the posting layer. Before starting, resolve **Open Owner Decision #1** (Opening Balances Baseline) to seed initial WAC values for existing stock.
 
 ---
 
