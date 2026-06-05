@@ -2,7 +2,7 @@
 
 **Document Status:** Single Source of Truth — Supersedes All Accounting Documentation  
 **Date:** June 4, 2026  
-**Last Updated:** June 5, 2026 (Session 2)
+**Last Updated:** June 5, 2026 (Session 3 — Landed Cost + Data Cleanup Complete)
 
 > **NOTICE:** This document is the sole authoritative accounting plan. All previous accounting documents (listed in Section 1.1) are superseded and should be removed from active reference.  
 **Reference Standards:** SAP Business One, Oracle NetSuite, Odoo, Bisan, Al-Shamel  
@@ -444,7 +444,7 @@ This section records all hardening batches and modernization phases that have be
     - `py_compile`, `node --check`, Jinja parse: all pass.
 *   **Estimated Complexity:** Medium (1 Sprint) — **DONE**.
 
-### Phase 7: Reconciliation Reports
+### Phase 7: Reconciliation Reports — 🔄 NEXT
 *   **Goal:** Deploy read-only reconciliation tools comparing physical stock to ledger assets.
 *   **Files Affected:** `services/reconciliation_service.py`.
 *   **Services Affected:** `ReconciliationService`.
@@ -453,15 +453,15 @@ This section records all hardening batches and modernization phases that have be
 *   **Risks:** Performance lag on large tables.
 *   **Rollback Strategy:** Remove menu links from user dashboard.
 *   **Estimated Complexity:** Low (1 Sprint).
-*   **Dependencies:** Phase 6.
+*   **Dependencies:** Phase 6. Data cleanup (Option D) should be signed off before Phase 7 starts.
 
-### Phase 8: Treasury & Cash Position Reporting — **SCHEMA COMPLETED**
+### Phase 8: Treasury & Cash Position Reporting — **SCHEMA COMPLETED, Service 🔄 PENDING**
 *   **Goal:** Multi-branch bank, cashier, and post-dated cheque position tracking.
 *   **Files Affected:** `models/cash_box.py`, `services/treasury_service.py` (future).
 *   **Models Added:** `CashBox` (cash/bank/gateway unified container with GL linkage).
 *   **Migrations:** `phase3_001`.
-*   **Status:** Schema deployed. Treasury reporting service logic is deferred to Phase 8 execution.
-*   **Estimated Complexity:** Medium (1 Sprint) — **Schema: DONE**.
+*   **Status:** Schema deployed. Treasury reporting service logic deferred until after Phase 7.
+*   **Estimated Complexity:** Medium (1 Sprint) — **Schema: DONE, Service: NEXT after Phase 7**.
 
 ### Phase 9: Global Localization Engine — **PENDING**
 *   **Goal:** Country-specific compliance engines for Palestine, UAE, and Saudi Arabia.
@@ -479,65 +479,83 @@ This section records all hardening batches and modernization phases that have be
 
 ---
 
-## 14. Next Step — Recommended Priority
+## 14. Current Status & Forward Roadmap
 
-All schema foundations (Phase 2, 3, 6, 8) are deployed. The database is clean (`flask db check` = zero drift). Two high-value paths are now ready for execution:
+### Executive Dashboard
 
-### Option A: Activate Dynamic GL Mapping (Phase 1 Activation) — ✅ COMPLETED (June 5, 2026)
-**Status:** `ENABLE_DYNAMIC_GL_MAPPING` is now `True` by default in `config.py`. All critical concepts resolve dynamically per tenant. Legacy lookup path remains as an emergency fallback with `is_header`/`is_active` guards.
-*   **Evidence:**
-    - `tools/qa/test_dynamic_gl_resolution_path.py` — all 13 critical concepts PASS.
-    - `flask db check` — zero drift.
-    - `get_payment_debit_account` and `get_customer_credit_account` now raise `GLMappingError` on missing mappings instead of returning hardcoded codes.
-    - `_resolve_journal_line_account` enforces concept-code resolution; legacy codes allowed only via `explicit_account_allowed` flag.
-*   **Commits:** `eb32406` (activate + remove fallbacks), `2cbf69a` (restore legacy with validation + branch_id propagation fix).
+| Phase | Name | Status | Evidence |
+|-------|------|--------|----------|
+| Phase 0 | Baseline Correction | ✅ COMPLETED | Precision rules in `config.py` |
+| Phase 1 | Dynamic GL Mapping | ✅ COMPLETED | `ENABLE_DYNAMIC_GL_MAPPING=True`; all 13 critical concepts resolve |
+| Phase 2 | Financial Dimensions | ✅ SCHEMA COMPLETED | `branch_id`, `warehouse_id`, `profit_center_id` on `GLJournalLine` |
+| Phase 3 | MWAC Data Model | ✅ SCHEMA COMPLETED | `ProductWarehouseCost`, `ProductCostHistory` deployed |
+| Phase 4 | MWAC Transaction Flows | ✅ COMPLETED | `test_mwac_end_to_end.py` PASS; WAC recalculates on receipt |
+| Phase 5 | Landed Cost Capitalization | ✅ COMPLETED | `test_landed_cost_end_to_end.py` PASS; freight/insurance/customs in inventory |
+| Phase 6 | Exchange Rate Framework | ✅ COMPLETED | `ExchangeRateRecord` per document; all services use `ExchangeRateService` |
+| Phase 7 | Reconciliation Reports | 🔄 **NEXT** | Service logic pending; schema ready |
+| Phase 8 | Treasury & Cash | ✅ SCHEMA COMPLETED | `CashBox` model deployed; service logic pending |
+| Phase 9 | Global Localization | ⏳ PENDING | `utils/localization/` framework design needed |
+| Phase 10 | Testing & Rollout | ⏳ PENDING | Full regression suite after all phases complete |
 
-### Option B: MWAC Transaction Flows (Phase 4) — ✅ COMPLETED (June 5, 2026)
-**Status:** `ENABLE_MWAC=True` by default. All purchase receipts trigger WAC recalculation. Sale COGS reads from `ProductWarehouseCost.average_cost`. Opening balances seeded from historical purchases (38 products).
-*   **Evidence:**
-    - `tools/qa/test_mwac_end_to_end.py`: purchase → WAC update → sale → COGS from WAC PASS.
-    - `ProductCostHistory` audit trail: records for every purchase receipt and sale.
-    - `StockService._update_wac_on_receipt()`: WAC formula verified.
+---
 
-### Option C: Landed Cost Capitalization (Phase 5) — ✅ COMPLETED (June 5, 2026)
-**Status:** Landed cost fields (`freight`, `insurance`, `customs_duty`, `other_landed_cost`) added to `Purchase`. `PurchaseLine.landed_cost` stores allocated landed cost per line. `PurchaseService.create_purchase()` allocates landed costs proportionally by line value. `StockService.process_purchase_lines()` uses `landed_unit_cost` for WAC and product cost price. GL postings include landed costs in inventory and AP.
-*   **Evidence:**
-    - `test_landed_cost_end_to_end.py`: allocation, WAC, COGS, GL math all PASS.
-    - `test_mwac_end_to_end.py`: still PASS (backward compatible).
-    - Purchase template updated with landed cost inputs.
-*   **Commits:** Phase 5 implementation completed.
+### Data Cleanup — ✅ COMPLETED (June 5, 2026)
 
-### Option D: Historical Data Cleanup — 🔄 IN PROGRESS
-**Why now:** `check_inventory.py` and KODEX audit identified orphaned movements, cheque FX inconsistencies, and PWC mismatches.
-*   **Completed:**
-    1. `tools/cleanup_orphaned_data.py` created and executed.
-    2. Deleted **56 orphaned stock movements** across tenants 2 and 8 (no parent sale/purchase/return documents).
-    3. Deleted **9 orphaned GL journal entries** referencing missing parent documents.
-    4. Normalized **20 ILS cheque exchange rates** in tenant 2 (`exchange_rate = amount_aed / amount`).
-    5. Fixed negative `ProductWarehouseCost` quantities to zero after cleanup.
-    6. Rewrote `check_inventory.py` with per-reference-type GL coverage checks, orphaned movement detection, and corrected PWC reconciliation.
-*   **Remaining:**
-    1. **37 PWC records with quantity mismatch** vs movement net quantities. These reflect historical opening balances seeded before movement tracking. Requires accountant sign-off or backfill script.
-    2. Some `Sale` and `Purchase` movements use uppercase `reference_type` while newer code uses lowercase — consistent but should be normalized in future migration.
-*   **Risk:** Low. Cleanup is non-destructive (orphaned records only). PWC mismatches are warnings, not blockers.
-*   **Estimated Effort:** 1 day for remaining PWC reconciliation + sign-off.
+| Issue | Action | Count | Status |
+|-------|--------|-------|--------|
+| Orphaned stock movements | Deleted (no parent doc) | 56 (tenants 2 + 8) | ✅ Done |
+| Orphaned GL entries | Deleted (missing parent) | 9 | ✅ Done |
+| ILS cheque FX mismatch | Normalized `exchange_rate` | 20 (tenant 2) | ✅ Done |
+| Negative PWC quantities | Zeroed out | 3 records | ✅ Done |
+| GL coverage per ref type | Verified all covered | 5 types | ✅ OK |
+| PWC vs movement mismatch | Historical opening balances | 37 records | ⚠️ Needs accountant sign-off |
 
-### Recommendation
-**Phases 1–6 and Phase 8 schema are now COMPLETED.** The costing pipeline is fully dynamic with MWAC + Landed Cost support.
+**37 PWC Quantity Mismatches** — These reflect historical opening balances seeded before full movement tracking. They are **warnings, not blockers**. Resolution options:
+1. **Accountant sign-off** (recommended): Mark as "historical seeding, no movement trail required."
+2. **Backfill script**: Generate synthetic `stock_movements` to match opening balances.
 
-**Data Cleanup Status**
-- Orphaned movements: **56 deleted** across tenants 2 and 8.
-- Orphaned GL entries: **9 deleted**.
-- Cheque FX: **20 ILS cheques normalized**.
-- GL coverage: All reference types (`purchase`, `sale`, `StockAdjustment`, `StockTransfer`, `ProductReturn`) now show **OK**.
+---
 
-**Remaining — 37 PWC Quantity Mismatches**
-These reflect historical opening balances seeded before full movement tracking. Options:
-1. **Accountant sign-off** (recommended): Mark PWC opening balances as "historical seeding, no movement trail required."
-2. **Backfill script**: Generate synthetic `stock_movements` records to match PWC opening balances.
+### Immediate Next Steps (Priority Order)
 
-**After Sign-off — Phase 7 (Reconciliation Reports)**
-Deploy read-only reconciliation tools comparing physical stock to ledger assets.
+#### 1. Accountant Sign-off on PWC Mismatches (1 day)
+- Present the 37 mismatch report to the accountant.
+- Get written approval that historical seeding is acceptable.
+- Document sign-off in audit trail.
+
+#### 2. Phase 7: Reconciliation Reports (1 Sprint)
+- Build `ReconciliationService` with read-only discrepancy reports.
+- Compare `ProductWarehouseCost` vs physical stock vs GL inventory account.
+- Generate branch-level and warehouse-level reconciliation sheets.
+- Add dashboard widget showing reconciliation status.
+
+#### 3. Phase 8: Treasury Service Execution (1 Sprint)
+- Build `TreasuryService` on top of existing `CashBox` schema.
+- Multi-branch cash position dashboard.
+- Post-dated cheque tracking and maturity alerts.
+- Bank reconciliation import (statement upload).
+
+#### 4. Phase 9: Global Localization Engine (1 Sprint)
+- Palestine: PMA compliance, multi-currency (ILS/JOD/USD), 16% VAT.
+- GCC: KSA/UAE VAT (5%-15%), WPS export.
+- Hot-swappable regulatory engines in `utils/localization/`.
+
+#### 5. Phase 10: Final Testing & Rollout (1-2 Sprints)
+- Full end-to-end regression: purchase → WAC → sale → COGS → GL → reconciliation.
+- Load testing on large tenant datasets.
+- Phased tenant rollout with `ENABLE_*` feature flags.
+
+---
+
+### Completed Option Details (For Reference)
+
+**Option A — Dynamic GL Mapping (Phase 1):** `ENABLE_DYNAMIC_GL_MAPPING=True`. All critical concepts resolve dynamically. Legacy fallback with validation guards.
+
+**Option B — MWAC Transaction Flows (Phase 4):** `ENABLE_MWAC=True`. Purchase receipts trigger WAC recalc. Sale COGS reads from `ProductWarehouseCost.average_cost`. 38 products seeded.
+
+**Option C — Landed Cost Capitalization (Phase 5):** `Purchase` fields `freight/insurance/customs_duty/other_landed_cost`. Proportional allocation to `PurchaseLine.landed_cost`. WAC and GL include landed costs.
+
+**Option D — Historical Data Cleanup:** Orphaned movements deleted, cheque FX normalized, GL coverage verified, `check_inventory.py` rewritten.
 
 ---
 
