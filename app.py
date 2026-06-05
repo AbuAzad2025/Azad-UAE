@@ -205,7 +205,6 @@ def create_app(config_class=Config):
             traceback.print_exc()
             _ai_enabled = False
             ai_bp = _make_ai_fallback(ai_import_error)
-            return redirect(url_for('main.dashboard'))
     # ── Core Operations ──────────────────────────────────────
     users_bp           = _import_bp("routes.users", "users_bp")
     branches_bp        = _import_bp("routes.branches", "branches_bp")
