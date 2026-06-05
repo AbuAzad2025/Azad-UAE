@@ -15,6 +15,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
 import time
 from concurrent.futures import ThreadPoolExecutor
+from math import ceil
 
 
 LATENCY_TARGETS = {
@@ -31,6 +32,9 @@ def _time_query(label, fn):
     try:
         fn()
         elapsed = time.perf_counter() - start
+        target = LATENCY_TARGETS[label]
+        if elapsed > target:
+            return label, elapsed, False, f"exceeded target {target:.3f}s"
         return label, elapsed, True, None
     except Exception as e:
         elapsed = time.perf_counter() - start
@@ -102,9 +106,13 @@ def main():
         # Summary
         print("\n" + "=" * 70)
         failures = [r for r in results if not r[2]]
-        p95 = sorted([r[1] for r in results])[int(len(results) * 0.95)]
+        sorted_elapsed = sorted(r[1] for r in results)
+        p95_index = max(0, min(len(sorted_elapsed) - 1, ceil(len(sorted_elapsed) * 0.95) - 1))
+        p95 = sorted_elapsed[p95_index]
         print(f"Total queries: {len(results)} | Failures: {len(failures)} | P95: {p95:.3f}s")
         if failures:
+            for label, elapsed, _ in failures:
+                print(f"  [FAIL] {label}: {elapsed:.3f}s > target {LATENCY_TARGETS[label]:.3f}s")
             print("LOAD TEST: FAILED")
             return 1
         print("LOAD TEST: PASSED (all queries within target)")

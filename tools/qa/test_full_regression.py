@@ -16,6 +16,7 @@ from decimal import Decimal
 
 def _assert_chain_variance(app, tenant_id):
     with app.app_context():
+        from extensions import db
         from models import Purchase, Sale, Product, GLAccount, GLJournalLine
         from services.treasury_service import TreasuryService
         from services.inventory_reconciliation_service import InventoryReconciliationService

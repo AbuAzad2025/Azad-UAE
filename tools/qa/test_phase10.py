@@ -105,42 +105,42 @@ def main():
     print("\n=== Check: Feature Flags Documented ===")
     try:
         _assert_feature_flags_documented()
-    except AssertionError as e:
+    except Exception as e:
         errors.append(str(e))
         print(f"  [FAIL] {e}")
 
     print("\n=== Check: Feature Flag Service ===")
     try:
         _assert_feature_flag_service()
-    except AssertionError as e:
+    except Exception as e:
         errors.append(str(e))
         print(f"  [FAIL] {e}")
 
     print("\n=== Check: Regression Test Exists ===")
     try:
         _assert_regression_test_exists()
-    except AssertionError as e:
+    except Exception as e:
         errors.append(str(e))
         print(f"  [FAIL] {e}")
 
     print("\n=== Check: Load Test Exists ===")
     try:
         _assert_load_test_exists()
-    except AssertionError as e:
+    except Exception as e:
         errors.append(str(e))
         print(f"  [FAIL] {e}")
 
     print("\n=== Check: Deployment Checklist Exists ===")
     try:
         _assert_deployment_checklist_exists()
-    except AssertionError as e:
+    except Exception as e:
         errors.append(str(e))
         print(f"  [FAIL] {e}")
 
     print("\n=== Check: Previous QA Tests Not Deleted ===")
     try:
         _assert_all_previous_qa_still_pass()
-    except AssertionError as e:
+    except Exception as e:
         errors.append(str(e))
         print(f"  [FAIL] {e}")
 

@@ -1,5 +1,20 @@
 # Handoff for Kimi
 
+## ACTION NOW
+
+User asked to keep going. Do not treat Phase 10 commit as the stopping point.
+
+Continue from the current tree and start the final audit/cleanup pass now:
+
+1. Close the remaining Phase 7.5 security findings instead of leaving them as future maintenance.
+2. Fix or allowlist the public-route findings in `tools/qa/test_security_boundaries.py` so the audit reflects real exposure.
+3. Finish tenant scoping in `routes/payment_vault.py` and the remaining `routes/ai.py` chat handlers.
+4. Re-run the QA stack in the dependency-ready project environment.
+5. Keep my QA fixes in `tools/qa/test_full_regression.py`, `tools/qa/load_test.py`, and `tools/qa/test_phase10.py`.
+6. After tests pass, commit the final audit/cleanup changes as a new logical commit.
+
+Do not wait for user approval. The user is remote and explicitly wants the work to continue.
+
 User is remote and asked to leave this note inside the project.
 
 Current repository state observed from `D:\Data\karaj\UAE\Azad-UAE`:
@@ -35,3 +50,12 @@ After reaching the end, come back for a dedicated cleanup, hardening, and QA exp
 6. Broaden regression coverage across the affected accounting, treasury, localization, tax, e-invoice, WPS, and rollout flows.
 7. Update the blueprint so phase statuses match the actual verified state.
 8. Document any data-changing operation clearly in the commit/message/output.
+
+Codex review note after Phase 10 commit:
+
+- Keep going; do not stop the roadmap. These are audit notes for the final cleanup pass.
+- I fixed two QA issues after `db31460`: `test_full_regression.py` now imports `db` inside the regression check, and `load_test.py` now fails when latency targets are exceeded instead of passing on successful execution only.
+- I also made `test_phase10.py` collect unexpected exceptions as failures instead of crashing on the first missing dependency/import error.
+- `tools/qa/test_security_boundaries.py` still fails with 22 findings in the current tree. The real remaining areas include `routes/ai.py`, `routes/owner.py`, and `routes/payment_vault.py`; some auth-route findings may need an explicit public-route allowlist.
+- `tools/qa/test_phase10.py` could not run in the current shell because `dotenv` was unavailable. Re-run it in the project's dependency-ready environment during the final audit.
+- `FeatureFlagService` currently claims per-tenant override support through `Tenant.settings`, but this model does not appear to expose a `settings` column in the current code. Either add a real tenant flag storage mechanism or document that Phase 10 flags are global-only for now.
