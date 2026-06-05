@@ -729,6 +729,39 @@ def ar_reconciliation():
     )
 
 
+@reports_bp.route('/inventory-reconciliation')
+@login_required
+@permission_required('view_reports')
+def inventory_reconciliation():
+    from services.inventory_reconciliation_service import InventoryReconciliationService
+    from utils.branching import get_accessible_branches, user_can_access_branch
+
+    branch_id = request.args.get('branch_id', type=int)
+    warehouse_id = request.args.get('warehouse_id', type=int)
+    scoped_branch_id = report_branch_scope_id()
+
+    if branch_id is None:
+        branch_id = scoped_branch_id
+    elif scoped_branch_id is not None and branch_id != scoped_branch_id:
+        return render_template('errors/403.html'), 403
+    elif scoped_branch_id is None and branch_id is not None and not user_can_access_branch(branch_id, current_user):
+        return render_template('errors/403.html'), 403
+
+    tenant_id = get_active_tenant_id(current_user)
+    report = InventoryReconciliationService.build_warehouse_summary(
+        tenant_id=tenant_id,
+        branch_id=branch_id,
+    )
+    branches = get_accessible_branches(current_user)
+    return render_template(
+        'reports/inventory_reconciliation.html',
+        report=report,
+        branches=branches,
+        selected_branch=branch_id,
+        selected_warehouse=warehouse_id,
+    )
+
+
 @reports_bp.route('/receivables')
 @login_required
 @permission_required('view_reports')

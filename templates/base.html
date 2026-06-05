@@ -724,6 +724,18 @@
                   <p>تقرير الشركاء والتجار</p>
                 </a>
               </li>
+              <li class="nav-item">
+                <a href="{{ url_for('reports.inventory_reconciliation') }}" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>تسوية المخزون</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{{ url_for('reports.ar_reconciliation') }}" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>مطابقة الذمم</p>
+                </a>
+              </li>
             </ul>
           </li>
           {% endif %}
