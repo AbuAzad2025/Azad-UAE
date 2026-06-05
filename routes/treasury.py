@@ -96,3 +96,43 @@ def treasury_export():
         as_attachment=True,
         download_name=f'{base_name}.csv',
     )
+
+
+@treasury_bp.route('/vat-return')
+@login_required
+@permission_required('view_reports')
+def vat_return():
+    from services.tax_service import TaxService
+    date_from = request.args.get('date_from', '')
+    date_to = request.args.get('date_to', '')
+    tenant_id = get_active_tenant_id(current_user)
+    report = TaxService.get_vat_return(date_from, date_to, tenant_id)
+    return render_template('reports/vat_return.html', report=report)
+
+
+@treasury_bp.route('/wps-export')
+@login_required
+@permission_required('view_reports')
+def wps_export():
+    from utils.localization import get_strategy
+    from services.export_service import ExportService
+    from flask import send_file, Response
+
+    tenant_id = get_active_tenant_id(current_user)
+    from models import Tenant
+    tenant = Tenant.query.get(tenant_id) if tenant_id else None
+    country = (getattr(tenant, 'vat_country', None) or 'AE').strip().upper()
+    strategy = get_strategy(country)
+
+    if not strategy.supports_wps:
+        return render_template('errors/403.html', message='WPS غير متاح لهذه الدولة'), 403
+
+    # Mock employees list (replace with real payroll query)
+    employees = []
+    result = strategy.get_wps_format(employees)
+    lines = '\n'.join(result['lines'])
+    return Response(
+        lines,
+        mimetype='text/plain; charset=utf-8',
+        headers={'Content-Disposition': 'attachment; filename=wps_export.sif'},
+    )

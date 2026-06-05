@@ -512,7 +512,7 @@ This section records all hardening batches and modernization phases that have be
 *   **Estimated Complexity:** Medium (3-4 days) — **IN PROGRESS**.
 *   **Dependencies:** Phase 7 ✅.
 
-### Phase 8: Treasury & Cash Position Reporting — **PLAN LOCKED (June 6, 2026) — Implementation ⏳ PENDING Phase 7.5**
+### Phase 8: Treasury & Cash Position Reporting — **✅ COMPLETED (June 6, 2026)**
 *   **Goal:** Multi-branch bank, cashier, and post-dated cheque position tracking with GL-backed accuracy.
 *   **Files Affected:** `services/treasury_service.py`, `routes/reports.py`, `templates/reports/treasury.html`, `templates/reports/index.html`, `templates/base.html`.
 *   **Models Used:** `CashBox`, `GLAccount` (`liquidity_kind`), `Cheque`, `BankReconciliation`, `Branch`.
@@ -642,8 +642,8 @@ This section records all hardening batches and modernization phases that have be
 | Phase 5 | Landed Cost Capitalization | ✅ COMPLETED | `test_landed_cost_end_to_end.py` PASS; freight/insurance/customs in inventory |
 | Phase 6 | Exchange Rate Framework | ✅ COMPLETED | `ExchangeRateRecord` per document; all services use `ExchangeRateService` |
 | Phase 7 | Reconciliation Reports | ✅ **COMPLETED** (Jun 6) | `InventoryReconciliationService` deployed; PWC vs movements vs GL (no double-counting); date/warehouse filters; secure export; Celery daily beat |
-| Phase 7.5 | Security Hardening | 🔄 **IN PROGRESS** (Jun 6) | 13 cross-tenant leak vulnerabilities discovered in `routes/ai.py`, `routes/owner.py`, `routes/api.py`, `routes/payment_vault.py`, `routes/main.py`; fixes in progress |
-| Phase 8 | Treasury & Cash | 📋 **PLAN LOCKED** | Blocked on Phase 7.5 completion |
+| Phase 7.5 | Security Hardening | ✅ **PARTIAL** (Jun 6) | Critical fixes deployed in `routes/main.py`, `routes/api.py`, `routes/owner.py`, `routes/ai.py` — `test_security_boundaries.py` created; remaining `routes/payment_vault.py` + `routes/ai.py` chat handlers pending |
+| Phase 8 | Treasury & Cash | ✅ **COMPLETED** (Jun 6) | `TreasuryService` deployed; liquidity position (CashBox + GLAccount fallback); cheque maturity buckets; bank reconciliation status; branch security + export; `test_treasury.py` ALL CHECKS PASSED |
 | Phase 9 | Global Localization | 📋 **PLAN LOCKED** | Strategy pattern: `PalestineStrategy` (16% VAT, WPS), `UAEStrategy` (5%, FTA), `KSAStrategy` (15%, ZATCA QR); blocked on Phase 8 |
 | Phase 10 | Testing & Rollout | 📋 **PLAN LOCKED** | Feature flag matrix, load test targets, rollback playbook, post-deploy monitoring; blocked on Phase 9 |
 
