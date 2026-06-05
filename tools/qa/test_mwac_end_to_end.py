@@ -215,6 +215,8 @@ def main():
             # Cleanup: delete test data
             print("\n--- Cleanup ---")
             for table, cond in [
+                ('stock_movements', "reference_id IN (SELECT id FROM sales WHERE sale_number LIKE 'TEST-MWAC%')"),
+                ('stock_movements', "reference_id IN (SELECT id FROM purchases WHERE purchase_number LIKE 'TEST-MWAC%')"),
                 ('sale_lines', "sale_id IN (SELECT id FROM sales WHERE sale_number LIKE 'TEST-MWAC%')"),
                 ('sales', "sale_number LIKE 'TEST-MWAC%'"),
                 ('purchase_lines', "purchase_id IN (SELECT id FROM purchases WHERE purchase_number LIKE 'TEST-MWAC%')"),

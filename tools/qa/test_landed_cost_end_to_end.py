@@ -19,7 +19,7 @@ def main():
     from models import (
         Tenant, Product, Warehouse, ProductWarehouseCost,
         ProductCostHistory, Purchase, PurchaseLine, Sale, SaleLine,
-        GLJournalEntry, Supplier, Customer
+        GLJournalEntry, Supplier, Customer, StockMovement
     )
     from services.stock_service import StockService
     from services.sale_service import SaleService
@@ -243,6 +243,17 @@ def main():
         finally:
             print("\n--- Cleanup ---")
             # Remove test records
+            # Delete stock movements first (they reference Purchase/Sale)
+            for ref_obj in [purchase, sale]:
+                ref_id = getattr(ref_obj, 'id', None)
+                if ref_id:
+                    try:
+                        StockMovement.query.filter_by(
+                            reference_id=ref_id
+                        ).delete(synchronize_session=False)
+                    except Exception:
+                        pass
+
             records = [
                 (SaleLine, {'sale_id': getattr(sale, 'id', None)}),
                 (Sale, {'id': getattr(sale, 'id', None)}),
