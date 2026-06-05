@@ -170,7 +170,13 @@ class GLJournalEntry(db.Model):
                 debit=line.credit,  # عكس
                 credit=line.debit,  # عكس
                 amount=-(line.amount or 0),  # عكس المبلغ الأصلي
-                amount_aed=-line.amount_aed  # عكس
+                amount_aed=-line.amount_aed,  # عكس
+                # الأبعاد المالية (متوارثة من السطر الأصلي)
+                branch_id=line.branch_id,
+                warehouse_id=line.warehouse_id,
+                cost_center_id=line.cost_center_id,
+                profit_center_id=line.profit_center_id,
+                partner_id=line.partner_id,
             )
             db.session.add(reversed_line)
         
@@ -223,12 +229,20 @@ class GLJournalLine(db.Model):
     def base_amount(self, value):
         self.amount_aed = value
     
-    # مركز التكلفة (اختياري)
-    cost_center_id = db.Column(db.Integer, db.ForeignKey('cost_centers.id'), index=True)
+    # الأبعاد المالية (Financial Dimensions)
+    branch_id = db.Column(db.Integer, db.ForeignKey('branches.id'), nullable=True, index=True)
+    warehouse_id = db.Column(db.Integer, db.ForeignKey('warehouses.id'), nullable=True, index=True)
+    cost_center_id = db.Column(db.Integer, db.ForeignKey('cost_centers.id'), nullable=True, index=True)
+    profit_center_id = db.Column(db.Integer, db.ForeignKey('profit_centers.id'), nullable=True, index=True)
+    partner_id = db.Column(db.Integer, db.ForeignKey('partners.id'), nullable=True, index=True)
 
     entry = db.relationship('GLJournalEntry', back_populates='lines')
     account = db.relationship('GLAccount')
     cost_center = db.relationship('CostCenter')
+    branch = db.relationship('Branch', foreign_keys=[branch_id])
+    warehouse = db.relationship('Warehouse', foreign_keys=[warehouse_id])
+    profit_center = db.relationship('ProfitCenter', foreign_keys=[profit_center_id])
+    partner = db.relationship('Partner', foreign_keys=[partner_id])
     tenant = db.relationship('Tenant', backref='journal_lines', foreign_keys=[tenant_id])
 
     def __repr__(self):

@@ -35,6 +35,11 @@ from .package import Package, PackagePurchase
 from .bank_reconciliation import BankReconciliation, BankReconciliationItem
 from .budget import Budget, BudgetLine
 from .cost_center import CostCenter
+from .profit_center import ProfitCenter
+from .product_warehouse_cost import ProductWarehouseCost
+from .product_cost_history import ProductCostHistory
+from .exchange_rate_record import ExchangeRateRecord
+from .cash_box import CashBox
 from .fixed_asset import FixedAsset, DepreciationSchedule
 from .advanced_accounting import CustomsTax, AdvancedExpense, TaxCalculationRule
 from .login_history import LoginHistory
@@ -82,6 +87,11 @@ __all__ = [
     'BankReconciliation', 'BankReconciliationItem',
     'Budget', 'BudgetLine',
     'CostCenter',
+    'ProfitCenter',
+    'ProductWarehouseCost',
+    'ProductCostHistory',
+    'ExchangeRateRecord',
+    'CashBox',
     'FixedAsset', 'DepreciationSchedule',
     'CustomsTax', 'AdvancedExpense', 'TaxCalculationRule',
     'LoginHistory', 'SecurityAlert', 'APIKey',

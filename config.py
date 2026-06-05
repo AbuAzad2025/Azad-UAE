@@ -179,11 +179,31 @@ class Config:
     
     DEFAULT_CURRENCY = os.environ.get("DEFAULT_CURRENCY", "AED")
 
-    # --- Feature Flags (Phase 1E – Dynamic GL Mapping) ---
+    # --- Feature Flags (Accounting Modernization) ---
+    # Phase 1: Dynamic GL Mapping
     # When False (default): legacy hardcoded GL code lookups remain active.
-    # Enable only after GLAccountMapping backfill is validated for all tenants.
     ENABLE_DYNAMIC_GL_MAPPING = _bool(os.environ.get("ENABLE_DYNAMIC_GL_MAPPING"), False)
-    
+
+    # Phase 3-4: Moving Weighted Average Cost (MWAC)
+    # When False: stock valuation uses Last Purchase Cost.
+    ENABLE_MWAC = _bool(os.environ.get("ENABLE_MWAC"), False)
+
+    # Phase 5: Landed Cost Capitalization
+    # When False: freight/customs/insurance are expensed directly to P&L.
+    ENABLE_LANDED_COST_CAPITALIZATION = _bool(os.environ.get("ENABLE_LANDED_COST_CAPITALIZATION"), False)
+
+    # Phase 6: Exchange Rate Framework
+    # When False: exchange rates are not locked on posted documents.
+    ENABLE_ONLINE_EXCHANGE_RATE_FALLBACK = _bool(os.environ.get("ENABLE_ONLINE_EXCHANGE_RATE_FALLBACK"), False)
+
+    # Phase 7: Advanced Reconciliation
+    # When False: stock-to-GL reconciliation dashboards are hidden.
+    ENABLE_ADVANCED_RECONCILIATION = _bool(os.environ.get("ENABLE_ADVANCED_RECONCILIATION"), False)
+
+    # Phase 9: Localization Framework
+    # When False: regional tax/invoice engines are disabled.
+    ENABLE_LOCALIZATION_FRAMEWORK = _bool(os.environ.get("ENABLE_LOCALIZATION_FRAMEWORK"), False)
+
     CURRENCY_API_PROVIDER = os.environ.get("CURRENCY_API_PROVIDER", "exchangerate-api")
     CURRENCY_API_KEY = os.environ.get("CURRENCY_API_KEY", "")
     CURRENCY_API_URL = os.environ.get("CURRENCY_API_URL", "https://v6.exchangerate-api.com/v6/{api_key}/latest/{base}")

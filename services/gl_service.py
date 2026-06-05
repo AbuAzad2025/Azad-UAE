@@ -264,7 +264,13 @@ class GLService:
                 credit=credit,
                 description=line.get('description', description),
                 amount=original_debit - original_credit,
-                amount_aed=debit - credit
+                amount_aed=debit - credit,
+                # الأبعاد المالية
+                branch_id=line.get('branch_id'),
+                warehouse_id=line.get('warehouse_id'),
+                cost_center_id=line.get('cost_center_id'),
+                profit_center_id=line.get('profit_center_id'),
+                partner_id=line.get('partner_id'),
             )
             db.session.add(gl_line)
             total_debit += debit
@@ -329,7 +335,13 @@ class GLService:
                 'explicit_account_allowed': line.get('explicit_account_allowed', False),
                 'debit': debit,
                 'credit': credit,
-                'description': line.get('description', description)
+                'description': line.get('description', description),
+                # الأبعاد المالية
+                'branch_id': line.get('branch_id'),
+                'warehouse_id': line.get('warehouse_id'),
+                'cost_center_id': line.get('cost_center_id'),
+                'profit_center_id': line.get('profit_center_id'),
+                'partner_id': line.get('partner_id'),
             })
         entry_date = date or datetime.now(timezone.utc)
         entry = GLService.create_journal_entry(
@@ -566,7 +578,13 @@ class GLService:
                 debit=debit,
                 credit=credit,
                 amount=debit - credit,
-                amount_aed=debit - credit
+                amount_aed=debit - credit,
+                # الأبعاد المالية
+                branch_id=line_data.get('branch_id'),
+                warehouse_id=line_data.get('warehouse_id'),
+                cost_center_id=line_data.get('cost_center_id'),
+                profit_center_id=line_data.get('profit_center_id'),
+                partner_id=line_data.get('partner_id'),
             )
             db.session.add(line)
 
