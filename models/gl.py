@@ -169,6 +169,7 @@ class GLJournalEntry(db.Model):
                 description=line.description,
                 debit=line.credit,  # عكس
                 credit=line.debit,  # عكس
+                amount=-(line.amount or 0),  # عكس المبلغ الأصلي
                 amount_aed=-line.amount_aed  # عكس
             )
             db.session.add(reversed_line)
@@ -210,6 +211,7 @@ class GLJournalLine(db.Model):
     description = db.Column(db.String(255))
     debit = db.Column(db.Numeric(18, 3), default=0)
     credit = db.Column(db.Numeric(18, 3), default=0)
+    amount = db.Column(db.Numeric(18, 3), nullable=True)  # original currency net amount
     amount_aed = db.Column(db.Numeric(18, 3), default=0)
     
     # Alias for unified currency handling

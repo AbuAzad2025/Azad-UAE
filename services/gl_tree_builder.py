@@ -216,9 +216,7 @@ class GLTreeBuilder:
                 acc.level = level
                 needs_update = True
             
-            if acc.currency != 'AED':
-                acc.currency = 'AED'
-                needs_update = True
+            # Preserve existing account currency; do not force AED
             
             # الحصول على معرف الأب الصحيح
             parent_id = None
@@ -259,7 +257,7 @@ class GLTreeBuilder:
                 is_header=is_header,
                 level=level,
                 is_active=True,
-                currency='AED'
+                currency=GLTreeBuilder._resolve_tenant_currency(tenant_id)
             )
             
             db.session.add(new_acc)
@@ -351,9 +349,7 @@ class GLTreeBuilder:
             if acc.level != 3:
                 acc.level = 3
                 needs_update = True
-            if acc.currency != 'AED':
-                acc.currency = 'AED'
-                needs_update = True
+            # Preserve existing account currency; do not force AED
             if getattr(acc, 'branch_id', None) != branch_id:
                 acc.branch_id = branch_id
                 needs_update = True
@@ -383,7 +379,7 @@ class GLTreeBuilder:
             is_header=False,
             level=3,
             is_active=True,
-            currency='AED',
+            currency=GLTreeBuilder._resolve_tenant_currency(tenant_id),
         )
         db.session.add(acc)
         db.session.flush()

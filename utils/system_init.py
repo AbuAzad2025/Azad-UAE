@@ -340,6 +340,15 @@ def _ensure_core_data():
                 if parent:
                     parent_id = parent.id
             
+            # Determine currency from first active tenant or default to AED
+            account_currency = 'AED'
+            try:
+                from models.tenant import Tenant
+                first_tenant = Tenant.query.filter_by(is_active=True).first()
+                if first_tenant and first_tenant.default_currency:
+                    account_currency = first_tenant.default_currency
+            except Exception:
+                pass
             acc = GLAccount(
                 code=acc_data['code'],
                 name=acc_data['name'],
@@ -348,7 +357,7 @@ def _ensure_core_data():
                 level=acc_data['level'],
                 is_header=acc_data.get('is_header', False),
                 parent_id=parent_id,
-                currency='AED',
+                currency=account_currency,
                 is_active=True
             )
             db.session.add(acc)

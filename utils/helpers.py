@@ -137,6 +137,14 @@ def format_currency_display(amount, currency=None, lang='ar'):
             settings_decimals = getattr(settings, "decimal_places", None)
         except Exception:
             pass
+        # Tenant-aware fallback
+        try:
+            from models.tenant import Tenant
+            tenant = Tenant.get_current()
+            if tenant and tenant.default_currency:
+                settings_currency = settings_currency or tenant.default_currency
+        except Exception:
+            pass
 
         currency = (currency or settings_currency or 'AED').upper()
         decimals = settings_decimals if isinstance(settings_decimals, int) and settings_decimals >= 0 else 2

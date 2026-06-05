@@ -206,7 +206,7 @@ class GLService:
 
 
     @staticmethod
-    def create_journal_entry(date, description, lines, user_id=None, branch_id=None, reference_type=None, reference_id=None, tenant_id=None):
+    def create_journal_entry(date, description, lines, user_id=None, branch_id=None, reference_type=None, reference_id=None, tenant_id=None, currency=None, exchange_rate=None):
         """Standardized GL Entry Creation"""
         
         tenant_id = tenant_id or gl_helpers.resolve_tenant_id(branch_id=branch_id, user_id=user_id)
@@ -214,6 +214,17 @@ class GLService:
         entry_number = gl_helpers.next_entry_number(tenant_id, date)
         
         from utils.field_validators import validate_gl_line_sides, validate_reference_type_write
+
+        # Resolve currency from tenant if not provided
+        if currency is None:
+            try:
+                from models.tenant import Tenant
+                tenant = Tenant.query.get(tenant_id)
+                currency = tenant.default_currency if tenant else 'AED'
+            except Exception:
+                currency = 'AED'
+        if exchange_rate is None:
+            exchange_rate = Decimal('1')
 
         entry = GLJournalEntry(
             tenant_id=tenant_id,
@@ -224,6 +235,8 @@ class GLService:
             branch_id=branch_id,
             entry_type='auto',
             is_posted=True,
+            currency=currency,
+            exchange_rate=exchange_rate,
             reference_type=validate_reference_type_write(reference_type),
             reference_id=reference_id
         )
@@ -241,6 +254,8 @@ class GLService:
             credit = Decimal(str(line.get('credit', 0)))
             validate_gl_line_sides(debit, credit)
 
+            original_debit = Decimal(str(line.get('original_debit', line.get('debit', 0))))
+            original_credit = Decimal(str(line.get('original_credit', line.get('credit', 0))))
             gl_line = GLJournalLine(
                 tenant_id=tenant_id,
                 entry_id=entry.id,
@@ -248,7 +263,8 @@ class GLService:
                 debit=debit,
                 credit=credit,
                 description=line.get('description', description),
-                amount_aed=debit - credit # Simplified
+                amount=original_debit - original_credit,
+                amount_aed=debit - credit
             )
             db.session.add(gl_line)
             total_debit += debit
@@ -324,7 +340,9 @@ class GLService:
             branch_id=branch_id,
             reference_type=reference_type,
             reference_id=reference_id,
-            tenant_id=tenant_id
+            tenant_id=tenant_id,
+            currency=currency,
+            exchange_rate=rate
         )
         return entry
     
@@ -547,6 +565,7 @@ class GLService:
                 description=line_data.get('description', ''),
                 debit=debit,
                 credit=credit,
+                amount=debit - credit,
                 amount_aed=debit - credit
             )
             db.session.add(line)

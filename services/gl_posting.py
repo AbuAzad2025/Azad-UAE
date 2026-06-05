@@ -17,12 +17,20 @@ def post_or_fail(
     reference_type=None,
     reference_id=None,
     date=None,
-    currency='AED',
+    currency=None,
     exchange_rate=1.0,
     branch_id=None,
     user_id=None,
     tenant_id=None,
 ):
+    # Resolve currency from tenant if not explicitly provided
+    if currency is None:
+        try:
+            from models.tenant import Tenant
+            t = Tenant.query.get(tenant_id) if tenant_id else Tenant.get_current()
+            currency = t.default_currency if t and t.default_currency else 'AED'
+        except Exception:
+            currency = 'AED'
     from services.gl_service import GLService
 
     if not lines:
