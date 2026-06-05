@@ -24,15 +24,15 @@ def find_orphaned_movements(db):
                sm.quantity, sm.product_id, sm.warehouse_id, sm.tenant_id
         FROM stock_movements sm
         WHERE sm.reference_id IS NOT NULL
-          AND sm.reference_type IN ('sale', 'purchase', 'return')
+          AND LOWER(sm.reference_type) IN ('sale', 'purchase', 'return', 'productreturn')
           AND NOT EXISTS (
-              SELECT 1 FROM sales s WHERE s.id = sm.reference_id AND sm.reference_type = 'sale'
+              SELECT 1 FROM sales s WHERE s.id = sm.reference_id AND LOWER(sm.reference_type) IN ('sale')
           )
           AND NOT EXISTS (
-              SELECT 1 FROM purchases p WHERE p.id = sm.reference_id AND sm.reference_type = 'purchase'
+              SELECT 1 FROM purchases p WHERE p.id = sm.reference_id AND LOWER(sm.reference_type) IN ('purchase')
           )
           AND NOT EXISTS (
-              SELECT 1 FROM product_returns r WHERE r.id = sm.reference_id AND sm.reference_type = 'return'
+              SELECT 1 FROM product_returns r WHERE r.id = sm.reference_id AND LOWER(sm.reference_type) IN ('return', 'productreturn')
           )
         ORDER BY sm.reference_type, sm.id
     '''))

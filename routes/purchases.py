@@ -316,15 +316,23 @@ def api_calculate_purchase_totals():
             except (ValueError, TypeError, KeyError):
                 continue
         
+        # حساب تكاليف الوصول
+        freight = Decimal(str(data.get('freight', 0) or 0))
+        insurance = Decimal(str(data.get('insurance', 0) or 0))
+        customs_duty = Decimal(str(data.get('customs_duty', 0) or 0))
+        other_landed_cost = Decimal(str(data.get('other_landed_cost', 0) or 0))
+        landed_total = freight + insurance + customs_duty + other_landed_cost
+
         # حساب الضريبة والإجمالي
         tax_amount = subtotal * (tax_rate / Decimal('100'))
-        total = subtotal + tax_amount
-        
+        total = subtotal + tax_amount + landed_total
+
         return jsonify({
             'success': True,
             'subtotal': float(subtotal),
             'tax_rate': float(tax_rate),
             'tax_amount': float(tax_amount),
+            'landed_cost': float(landed_total),
             'total': float(total),
             'line_count': len([l for l in lines if Decimal(str(l.get('quantity', 0))) > 0])
         }), 200

@@ -379,6 +379,10 @@
                   <td>الضريبة:</td>
                   <td class="text-left" id="summary_tax">0.00 {{ tenant_currency_symbol or 'AED' }}</td>
                 </tr>
+                <tr>
+                  <td>تكاليف الوصول (Landed Cost):</td>
+                  <td class="text-left" id="summary_landed_cost">0.00 {{ tenant_currency_symbol or 'AED' }}</td>
+                </tr>
                 <tr class="font-weight-bold border-top">
                   <td>الإجمالي:</td>
                   <td class="text-left text-primary" id="summary_total">0.00 {{ tenant_currency_symbol or 'AED' }}</td>
@@ -643,7 +647,11 @@ async function calculateTotals() {
       },
       body: JSON.stringify({
         lines: lines,
-        tax_rate: tax_rate
+        tax_rate: tax_rate,
+        freight: parseFloat($('#freight').val()) || 0,
+        insurance: parseFloat($('#insurance').val()) || 0,
+        customs_duty: parseFloat($('#customs_duty').val()) || 0,
+        other_landed_cost: parseFloat($('#other_landed_cost').val()) || 0
       })
     });
     
@@ -653,6 +661,9 @@ async function calculateTotals() {
       // تحديث الواجهة
       $('#summary_subtotal').text(result.subtotal.toFixed(2) + ' ' + TENANT_CURRENCY_SYMBOL);
       $('#summary_tax').text(result.tax_amount.toFixed(2) + ' ' + TENANT_CURRENCY_SYMBOL);
+      if (result.landed_cost !== undefined) {
+        $('#summary_landed_cost').text(result.landed_cost.toFixed(2) + ' ' + TENANT_CURRENCY_SYMBOL);
+      }
       $('#summary_total').text(result.total.toFixed(2) + ' ' + TENANT_CURRENCY_SYMBOL);    } else {      // Fallback to client-side
       calculateTotalsClientSide();
     }
@@ -683,11 +694,19 @@ function calculateTotalsClientSide() {
   
   const taxRate = parseFloat($('#tax_rate').val()) || 0;
   const taxAmount = subtotal * (taxRate / 100);
-  const total = subtotal + taxAmount;
-  
+
+  const freight = parseFloat($('#freight').val()) || 0;
+  const insurance = parseFloat($('#insurance').val()) || 0;
+  const customsDuty = parseFloat($('#customs_duty').val()) || 0;
+  const otherLanded = parseFloat($('#other_landed_cost').val()) || 0;
+  const landedTotal = freight + insurance + customsDuty + otherLanded;
+
+  const total = subtotal + taxAmount + landedTotal;
+
   $('#summary_subtotal').text(subtotal.toFixed(2) + ' ' + TENANT_CURRENCY_SYMBOL);
   $('#summary_tax').text(taxAmount.toFixed(2) + ' ' + TENANT_CURRENCY_SYMBOL);
-  $('#summary_total').text(total.toFixed(2) + ' ' + TENANT_CURRENCY_SYMBOL);}
+  $('#summary_landed_cost').text(landedTotal.toFixed(2) + ' ' + TENANT_CURRENCY_SYMBOL);
+  $('#summary_total').text(total.toFixed(2) + ' ' + TENANT_CURRENCY_SYMBOL);
 
 // =====================================
 // Debug function
@@ -730,11 +749,19 @@ function forceCalculate() {
   
   const taxRate = parseFloat($('#tax_rate').val()) || 0;
   const taxAmount = subtotal * (taxRate / 100);
-  const total = subtotal + taxAmount;
-  
+
+  const freight = parseFloat($('#freight').val()) || 0;
+  const insurance = parseFloat($('#insurance').val()) || 0;
+  const customsDuty = parseFloat($('#customs_duty').val()) || 0;
+  const otherLanded = parseFloat($('#other_landed_cost').val()) || 0;
+  const landedTotal = freight + insurance + customsDuty + otherLanded;
+
+  const total = subtotal + taxAmount + landedTotal;
+
   const currency = $('#currency').val();
   $('#summary_subtotal').text(subtotal.toFixed(2) + ' ' + currency);
   $('#summary_tax').text(taxAmount.toFixed(2) + ' ' + currency);
+  $('#summary_landed_cost').text(landedTotal.toFixed(2) + ' ' + currency);
   $('#summary_total').text(total.toFixed(2) + ' ' + currency);  
   // إظهار رسالة للمستخدم
   if (subtotal > 0) {

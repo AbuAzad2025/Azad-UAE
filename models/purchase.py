@@ -122,12 +122,12 @@ class Purchase(db.Model):
             Decimal('0.01'), rounding=ROUND_HALF_UP
         )
         
-        # Calculate total amount with proper rounding
-        self.total_amount = (taxable_amount + self.tax_amount).quantize(
+        # Calculate total amount with proper rounding (includes landed cost)
+        self.total_amount = (taxable_amount + self.tax_amount + self.total_landed_cost).quantize(
             Decimal('0.001'), rounding=ROUND_HALF_UP
         )
-        
-        # Calculate AED amount with proper rounding
+
+        # Calculate AED amount with proper rounding (includes landed cost)
         self.amount_aed = (self.total_amount * exchange_rate_decimal).quantize(
             Decimal('0.001'), rounding=ROUND_HALF_UP
         )

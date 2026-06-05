@@ -60,7 +60,7 @@ def check_inventory():
             try:
                 result = conn.execute(text("""
                     SELECT COUNT(*) FROM stock_movements sm
-                    WHERE sm.reference_type = :ref_type
+                    WHERE LOWER(sm.reference_type) = LOWER(:ref_type)
                       AND NOT EXISTS (
                           SELECT 1 FROM gl_journal_entries e
                           WHERE e.reference_id = sm.reference_id
@@ -79,22 +79,22 @@ def check_inventory():
             except Exception as e:
                 print(f"  {ref_type}: error - {e}")
 
-        # Orphaned movements (no parent document)
+        # Orphaned movements (no parent document) — case-insensitive
         print("\n--- Orphaned Movements (no parent document) ---")
         try:
             result = conn.execute(text("""
                 SELECT sm.reference_type, COUNT(*) AS cnt
                 FROM stock_movements sm
                 WHERE sm.reference_id IS NOT NULL
-                  AND sm.reference_type IN ('sale', 'purchase', 'return')
+                  AND LOWER(sm.reference_type) IN ('sale', 'purchase', 'return', 'productreturn')
                   AND NOT EXISTS (
-                      SELECT 1 FROM sales s WHERE s.id = sm.reference_id AND sm.reference_type = 'sale'
+                      SELECT 1 FROM sales s WHERE s.id = sm.reference_id AND LOWER(sm.reference_type) IN ('sale')
                   )
                   AND NOT EXISTS (
-                      SELECT 1 FROM purchases p WHERE p.id = sm.reference_id AND sm.reference_type = 'purchase'
+                      SELECT 1 FROM purchases p WHERE p.id = sm.reference_id AND LOWER(sm.reference_type) IN ('purchase')
                   )
                   AND NOT EXISTS (
-                      SELECT 1 FROM product_returns r WHERE r.id = sm.reference_id AND sm.reference_type = 'return'
+                      SELECT 1 FROM product_returns r WHERE r.id = sm.reference_id AND LOWER(sm.reference_type) IN ('return', 'productreturn')
                   )
                 GROUP BY sm.reference_type
                 ORDER BY sm.reference_type
