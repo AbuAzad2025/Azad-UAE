@@ -200,9 +200,18 @@ class Config:
     # When False: stock-to-GL reconciliation dashboards are hidden.
     ENABLE_ADVANCED_RECONCILIATION = _bool(os.environ.get("ENABLE_ADVANCED_RECONCILIATION"), False)
 
+    # Phase 8: Treasury & Cash Position Reporting
+    # When False: treasury dashboard and liquidity reports are hidden.
+    ENABLE_TREASURY = _bool(os.environ.get("ENABLE_TREASURY"), True)
+
     # Phase 9: Localization Framework
     # When False: regional tax/invoice engines are disabled.
     ENABLE_LOCALIZATION_FRAMEWORK = _bool(os.environ.get("ENABLE_LOCALIZATION_FRAMEWORK"), False)
+
+    # Phase 10: Testing & Rollout Flags
+    # When False: load tests and regression suites are skipped in CI.
+    ENABLE_LOAD_TESTING = _bool(os.environ.get("ENABLE_LOAD_TESTING"), False)
+    ENABLE_FULL_REGRESSION = _bool(os.environ.get("ENABLE_FULL_REGRESSION"), False)
 
     CURRENCY_API_PROVIDER = os.environ.get("CURRENCY_API_PROVIDER", "exchangerate-api")
     CURRENCY_API_KEY = os.environ.get("CURRENCY_API_KEY", "")
