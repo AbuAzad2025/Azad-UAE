@@ -738,6 +738,8 @@ def inventory_reconciliation():
 
     branch_id = request.args.get('branch_id', type=int)
     warehouse_id = request.args.get('warehouse_id', type=int)
+    date_from = request.args.get('date_from', type=str)
+    date_to = request.args.get('date_to', type=str)
     scoped_branch_id = report_branch_scope_id()
 
     if branch_id is None:
@@ -759,6 +761,66 @@ def inventory_reconciliation():
         branches=branches,
         selected_branch=branch_id,
         selected_warehouse=warehouse_id,
+        date_from=date_from,
+        date_to=date_to,
+    )
+
+
+@reports_bp.route('/inventory-reconciliation/export')
+@login_required
+@permission_required('view_reports')
+def inventory_reconciliation_export():
+    from services.inventory_reconciliation_service import InventoryReconciliationService
+    from services.export_service import ExportService
+    from flask import send_file
+
+    fmt = (request.args.get('format') or 'xlsx').strip().lower()
+    branch_id = request.args.get('branch_id', type=int)
+    tenant_id = get_active_tenant_id(current_user)
+
+    report = InventoryReconciliationService.build_warehouse_summary(
+        tenant_id=tenant_id,
+        branch_id=branch_id,
+    )
+
+    headers = [
+        'tenant_id', 'product_id', 'product_name', 'warehouse_id', 'warehouse_name',
+        'pwc_qty', 'movement_qty', 'qty_diff', 'pwc_avg_cost', 'pwc_value',
+        'gl_value', 'matched_qty',
+    ]
+    data = []
+    for r in report['rows']:
+        data.append([
+            r['tenant_id'],
+            r['product_id'],
+            r['product_name'],
+            r['warehouse_id'],
+            r['warehouse_name'],
+            r['pwc_qty'],
+            r['movement_qty'],
+            r['qty_diff'],
+            r['pwc_avg_cost'],
+            r['pwc_value'],
+            r['gl_value'],
+            'OK' if r['matched_qty'] else 'REVIEW',
+        ])
+
+    base_name = f"inventory_reconciliation_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    if fmt == 'xlsx':
+        output = ExportService.export_to_xlsx(data, headers, filename=f'{base_name}.xlsx', sheet_name='Inventory')
+        return send_file(
+            output,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            as_attachment=True,
+            download_name=f'{base_name}.xlsx',
+        )
+
+    output = ExportService.export_to_csv(data, headers, filename=f'{base_name}.csv')
+    return send_file(
+        output,
+        mimetype='text/csv; charset=utf-8',
+        as_attachment=True,
+        download_name=f'{base_name}.csv',
     )
 
 

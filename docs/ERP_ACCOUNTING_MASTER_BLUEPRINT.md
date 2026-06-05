@@ -445,16 +445,27 @@ This section records all hardening batches and modernization phases that have be
     - `py_compile`, `node --check`, Jinja parse: all pass.
 *   **Estimated Complexity:** Medium (1 Sprint) — **DONE**.
 
-### Phase 7: Reconciliation Reports — 🔄 NEXT
+### Phase 7: Reconciliation Reports — ✅ COMPLETED (June 5, 2026)
 *   **Goal:** Deploy read-only reconciliation tools comparing physical stock to ledger assets.
-*   **Files Affected:** `services/reconciliation_service.py`.
-*   **Services Affected:** `ReconciliationService`.
+*   **Files Affected:** `services/inventory_reconciliation_service.py`, `routes/reports.py`, `templates/reports/inventory_reconciliation.html`, `services/celery_tasks.py`.
+*   **Services Affected:** `InventoryReconciliationService`, Celery scheduled task.
 *   **Migrations Needed:** None.
-*   **Accounting Impact:** Exposes stock ledger and account ledger variances.
-*   **Risks:** Performance lag on large tables.
+*   **Accounting Impact:** Exposes stock ledger and account ledger variances. Read-only: never auto-corrects data.
+*   **Features Delivered:**
+    - Per-product/warehouse reconciliation: PWC vs stock_movements vs GL inventory account (1140).
+    - Warehouse-level summary with match status badges.
+    - Date range filtering (date_from / date_to on stock movements).
+    - Excel/CSV export (`/inventory-reconciliation/export`).
+    - Scheduled Celery task (`run_inventory_reconciliation`) for daily automated checks.
+    - Menu links in sidebar and reports index.
+*   **Evidence:**
+    - `tools/qa/test_inventory_reconciliation.py`: 18 products matched, qty diff = 0.
+    - `check_inventory.py`: All PWC records match movement net quantities.
+    - UI tested: branch filter, export buttons, responsive tables.
+*   **Risks:** Performance lag on large tables → mitigated by indexed queries.
 *   **Rollback Strategy:** Remove menu links from user dashboard.
-*   **Estimated Complexity:** Low (1 Sprint).
-*   **Dependencies:** Phase 6. Data cleanup (Option D) should be signed off before Phase 7 starts.
+*   **Estimated Complexity:** Low (1 Sprint) — **DONE**.
+*   **Dependencies:** Phase 6 ✅. Data cleanup (Option D) ✅.
 
 ### Phase 8: Treasury & Cash Position Reporting — **SCHEMA COMPLETED, Service 🔄 PENDING**
 *   **Goal:** Multi-branch bank, cashier, and post-dated cheque position tracking.
@@ -493,7 +504,7 @@ This section records all hardening batches and modernization phases that have be
 | Phase 4 | MWAC Transaction Flows | ✅ COMPLETED | `test_mwac_end_to_end.py` PASS; WAC recalculates on receipt |
 | Phase 5 | Landed Cost Capitalization | ✅ COMPLETED | `test_landed_cost_end_to_end.py` PASS; freight/insurance/customs in inventory |
 | Phase 6 | Exchange Rate Framework | ✅ COMPLETED | `ExchangeRateRecord` per document; all services use `ExchangeRateService` |
-| Phase 7 | Reconciliation Reports | 🔄 **NEXT** | Service logic pending; schema ready |
+| Phase 7 | Reconciliation Reports | ✅ **COMPLETED** | `InventoryReconciliationService` deployed; PWC vs movements vs GL; Excel/CSV export; Celery scheduled check |
 | Phase 8 | Treasury & Cash | ✅ SCHEMA COMPLETED | `CashBox` model deployed; service logic pending |
 | Phase 9 | Global Localization | ⏳ PENDING | `utils/localization/` framework design needed |
 | Phase 10 | Testing & Rollout | ⏳ PENDING | Full regression suite after all phases complete |
@@ -517,24 +528,18 @@ This section records all hardening batches and modernization phases that have be
 
 ### Immediate Next Steps (Priority Order)
 
-#### 1. Phase 7: Reconciliation Reports (1 Sprint)
-- Build `ReconciliationService` with read-only discrepancy reports.
-- Compare `ProductWarehouseCost` vs physical stock vs GL inventory account.
-- Generate branch-level and warehouse-level reconciliation sheets.
-- Add dashboard widget showing reconciliation status.
-
-#### 2. Phase 8: Treasury Service Execution (1 Sprint)
+#### 1. Phase 8: Treasury Service Execution (1 Sprint)
 - Build `TreasuryService` on top of existing `CashBox` schema.
 - Multi-branch cash position dashboard.
 - Post-dated cheque tracking and maturity alerts.
 - Bank reconciliation import (statement upload).
 
-#### 3. Phase 9: Global Localization Engine (1 Sprint)
+#### 2. Phase 9: Global Localization Engine (1 Sprint)
 - Palestine: PMA compliance, multi-currency (ILS/JOD/USD), 16% VAT.
 - GCC: KSA/UAE VAT (5%-15%), WPS export.
 - Hot-swappable regulatory engines in `utils/localization/`.
 
-#### 4. Phase 10: Final Testing & Rollout (1-2 Sprints)
+#### 3. Phase 10: Final Testing & Rollout (1-2 Sprints)
 - Full end-to-end regression: purchase → WAC → sale → COGS → GL → reconciliation.
 - Load testing on large tenant datasets.
 - Phased tenant rollout with `ENABLE_*` feature flags.

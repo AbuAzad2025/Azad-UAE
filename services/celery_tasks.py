@@ -19,6 +19,44 @@ celery.conf.update(
 
 
 @celery.task
+def run_inventory_reconciliation(tenant_id: int | None = None):
+    """Scheduled inventory reconciliation — logs mismatches for admin review."""
+    from app import create_app
+    from services.inventory_reconciliation_service import InventoryReconciliationService
+    from extensions import db
+    import logging
+
+    logger = logging.getLogger(__name__)
+    app = create_app()
+    with app.app_context():
+        report = InventoryReconciliationService.build_warehouse_summary(tenant_id=tenant_id)
+        summary = report['summary']
+        if summary['all_matched']:
+            logger.info(
+                f"[Reconciliation] tenant={tenant_id} ALL MATCHED: "
+                f"{summary['record_count']} products, qty={summary['total_pwc_qty']}"
+            )
+        else:
+            mismatched = [r for r in report['rows'] if not r['matched_qty']]
+            logger.warning(
+                f"[Reconciliation] tenant={tenant_id} MISMATCHES: "
+                f"{len(mismatched)}/{summary['record_count']} products have quantity differences"
+            )
+            for r in mismatched:
+                logger.warning(
+                    f"  product={r['product_id']} warehouse={r['warehouse_id']} "
+                    f"pwc={r['pwc_qty']:.3f} movement={r['movement_qty']:.3f} diff={r['qty_diff']:+.3f}"
+                )
+        return {
+            'tenant_id': tenant_id,
+            'all_matched': summary['all_matched'],
+            'record_count': summary['record_count'],
+            'total_pwc_qty': summary['total_pwc_qty'],
+            'total_movement_qty': summary['total_movement_qty'],
+        }
+
+
+@celery.task
 def generate_monthly_report(month: int, year: int):
     from app import create_app
     from services.report_service import ReportService

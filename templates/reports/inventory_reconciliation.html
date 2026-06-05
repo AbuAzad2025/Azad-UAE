@@ -15,9 +15,21 @@
             <option value="{{ branch.id }}" {% if selected_branch == branch.id %}selected{% endif %}>{{ branch.name }}</option>
             {% endfor %}
           </select>
-          <a href="{{ url_for('reports.ar_reconciliation') }}" class="btn btn-outline-secondary ml-auto">
-            <i class="fas fa-balance-scale mr-1"></i>تسوية الذمم
-          </a>
+          <label class="mr-2">من:</label>
+          <input type="date" name="date_from" class="form-control mr-2" value="{{ date_from or '' }}" onchange="this.form.submit()">
+          <label class="mr-2">إلى:</label>
+          <input type="date" name="date_to" class="form-control mr-2" value="{{ date_to or '' }}" onchange="this.form.submit()">
+          <div class="ml-auto">
+            <a href="{{ url_for('reports.inventory_reconciliation_export', format='xlsx', branch_id=selected_branch) }}" class="btn btn-success btn-sm">
+              <i class="fas fa-file-excel mr-1"></i>Excel
+            </a>
+            <a href="{{ url_for('reports.inventory_reconciliation_export', format='csv', branch_id=selected_branch) }}" class="btn btn-secondary btn-sm">
+              <i class="fas fa-file-csv mr-1"></i>CSV
+            </a>
+            <a href="{{ url_for('reports.ar_reconciliation') }}" class="btn btn-outline-secondary btn-sm">
+              <i class="fas fa-balance-scale mr-1"></i>تسوية الذمم
+            </a>
+          </div>
         </form>
       </div>
     </div>
@@ -135,7 +147,7 @@
     </table>
   </div>
   <div class="card-footer text-muted small">
-    <strong>GL account:</strong> {{ report.summary.inventory_account_code }} — Inventory Asset &nbsp;|&nbsp;
+    <strong>GL account:</strong> {{ report.summary.inventory_account_code }} - Inventory Asset &nbsp;|&nbsp;
     <strong>الكمية:</strong> مقارنة بين PWC.total_quantity و SUM(stock_movements.quantity) &nbsp;|&nbsp;
     <strong>القيمة:</strong> مقارنة إعلامية بين PWC.total_value و رصيد حساب GL 1140 (قد تحتوي على قيود قديمة بدون warehouse_id).
   </div>
