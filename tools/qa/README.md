@@ -81,6 +81,27 @@ Individual scripts below remain available for debugging; you do not need to run 
 - Status CHECK constraints in DB
 - Test tenants: operational decision at production cutover (see `DEPLOYMENT_PYTHONANYWHERE.md`)
 
+## Script Organization Conventions
+
+All development, QA, audit, and temporary patch scripts **must** live under `tools/qa/` (or a subfolder). Do not scatter scripts at the repo root or in random directories.
+
+| Subfolder / Pattern | Purpose | Commit? |
+|---------------------|---------|---------|
+| `tools/qa/*.py` | Permanent QA/UAT/audit scripts | Yes |
+| `tools/qa/patches/` | One-off data fixes or migration helpers | Yes (with issue reference) |
+| `tools/qa/temp/` | Personal/local scratch scripts | **No** (gitignored) |
+| `tools/qa/*.json` / `*.csv` / `*.md` | Audit outputs and reports | **No** (gitignored) |
+
+**Naming:**
+- Use `snake_case` with descriptive prefixes: `gl_`, `currency_`, `security_`, `cleanup_`
+- Include a date suffix if it's a snapshot: `null_column_audit_YYYYMMDDTHHMMSSZ.json`
+- Temporary patch scripts: `fix_<issue>_YYYYMMDD.py` or `patch_<area>_execute.py`
+
+**Before commit:**
+- Remove any `tools/qa/temp/` files
+- Ensure scripts are idempotent where possible
+- Add `--dry-run` flag for destructive operations
+
 ## Scripts
 
 | File | Purpose |
