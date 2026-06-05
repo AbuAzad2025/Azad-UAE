@@ -8,6 +8,7 @@ from extensions import db
 from models import Receipt, Customer, InvoiceSettings, Supplier, Payment
 from services.payment_service import PaymentService
 from services.currency_service import CurrencyService
+from services.exchange_rate_service import ExchangeRateService
 from services.gl_posting import post_or_fail, GlPostingError
 from utils.gl_reference_types import GLRef, delete_entries_by_ref
 from utils.decorators import permission_required
@@ -37,6 +38,17 @@ def _in_scope_branch(entity_branch_id):
 def _current_branch_id(default=None):
     from utils.decorators import branch_scope_id
     return branch_scope_id() or default
+
+
+def _resolve_transaction_rate(currency, user_rate=None):
+    from decimal import Decimal
+
+    rate_info = ExchangeRateService.resolve_exchange_rate_for_transaction(
+        currency,
+        'AED',
+        user_rate=user_rate,
+    )
+    return Decimal(str(rate_info['rate']))
 
 
 def _ensure_customer_scope(customer_id):
@@ -553,6 +565,12 @@ def create_from_sale(sale_id):
     sale = tenant_get_or_404(Sale, sale_id)
     if not _in_scope_branch(sale.branch_id):
         return render_template('errors/403.html'), 403
+    sale_balance_aed = float(sale.balance_due or 0)
+    sale_rate = float(sale.exchange_rate or 1)
+    if (sale.currency or 'AED') != 'AED' and sale_rate > 0:
+        suggested_sale_amount = sale_balance_aed / sale_rate
+    else:
+        suggested_sale_amount = sale_balance_aed
     
     if request.method == 'POST':
         try:
@@ -582,7 +600,7 @@ def create_from_sale(sale_id):
             if not payment_method_value:
                 flash('يرجى اختيار طريقة الدفع.', 'warning')
                 exchange_rates = CurrencyService.get_all_rates(default_currency)
-                suggested_amount = sale.balance_due
+                suggested_amount = suggested_sale_amount
                 return render_template('payments/create_receipt.html',
                                      customers=[sale.customer],
                                      preselected_customer=sale.customer,
@@ -630,7 +648,9 @@ def create_from_sale(sale_id):
         direction='incoming',
         party_type='customer',
         party_id=sale.customer_id,
-        amount=float(sale.balance_due or 0),
+        amount=suggested_sale_amount,
+        currency=sale.currency,
+        exchange_rate=float(sale.exchange_rate or 1),
     ))
 
 
@@ -663,6 +683,8 @@ def create_voucher():
         or request.args.get('customer_id', type=int)
     )
     preselected_amount = request.args.get('amount', type=float)
+    preselected_currency = request.args.get('currency')
+    preselected_exchange_rate = request.args.get('exchange_rate', type=float)
 
     return render_template('payments/voucher.html',
                          customers_json=json.dumps(customers_data),
@@ -671,7 +693,9 @@ def create_voucher():
                          preselected_direction=preselected_direction,
                          preselected_party_type=preselected_party_type,
                          preselected_party_id=preselected_party_id,
-                         preselected_amount=preselected_amount)
+                         preselected_amount=preselected_amount,
+                         preselected_currency=preselected_currency,
+                         preselected_exchange_rate=preselected_exchange_rate)
 
 
 @payments_bp.route('/voucher/submit', methods=['POST'])
@@ -754,7 +778,7 @@ def create_voucher_submit():
                 from utils.helpers import generate_number
                 from decimal import Decimal
                 
-                exchange_rate = CurrencyService.get_exchange_rate(currency, default_currency, user_rate=user_exchange_rate)
+                exchange_rate = _resolve_transaction_rate(currency, user_exchange_rate)
                 amount_decimal = Decimal(str(amount))
                 amount_aed = amount_decimal * exchange_rate
                 
@@ -813,7 +837,7 @@ def create_voucher_submit():
             from utils.helpers import generate_number
             from decimal import Decimal
             
-            exchange_rate = CurrencyService.get_exchange_rate(currency, default_currency, user_rate=user_exchange_rate)
+            exchange_rate = _resolve_transaction_rate(currency, user_exchange_rate)
             amount_decimal = Decimal(str(amount))
             amount_aed = amount_decimal * exchange_rate
             
@@ -960,10 +984,7 @@ def create_voucher_submit():
                     payment.payment_confirmed = False
                     
                     # استخدام منطق الشيك المحاسبي المركزي
-                    try:
-                        cheque.issue_cheque()
-                    except Exception as e:
-                        current_app.logger.error(f"Cheque issue accounting failed: {e}")
+                    cheque.issue_cheque()
 
                 else:
                     from services.gl_service import GLService
@@ -974,7 +995,11 @@ def create_voucher_submit():
                         branch_id=payment.branch_id,
                         tenant_id=tenant_id,
                     )
-                    debit_account = GLService.get_customer_credit_account(customer)
+                    debit_account = GLService.get_customer_credit_account(
+                        customer,
+                        branch_id=payment.branch_id,
+                        tenant_id=tenant_id,
+                    )
                     lines = [
                         {'account': debit_account, 'concept_code': GLService.get_customer_credit_concept(customer), 'debit': payment.amount, 'description': f'سداد/سحب {customer.name}'},
                         {'account': credit_account, 'concept_code': GLService.get_payment_credit_concept(payment_method), 'credit': payment.amount, 'description': f'سند صرف {payment.payment_number}'}
@@ -1417,8 +1442,12 @@ def create_payment(purchase_id):
     ).scalar() or 0
     
     # حساب المبلغ المتبقي
-    balance = float(purchase.total_amount) - float(paid_amount)
-    suggested_amount = balance if balance > 0 else 0
+    balance_aed = float(purchase.amount_aed or 0) - float(paid_amount)
+    purchase_rate = float(purchase.exchange_rate or 1)
+    if (purchase.currency or 'AED') != 'AED' and purchase_rate > 0:
+        suggested_amount = (balance_aed / purchase_rate) if balance_aed > 0 else 0
+    else:
+        suggested_amount = balance_aed if balance_aed > 0 else 0
 
     if request.method == 'GET':
         return redirect(url_for(
@@ -1427,6 +1456,8 @@ def create_payment(purchase_id):
             party_type='supplier',
             party_id=purchase.supplier_id,
             amount=suggested_amount,
+            currency=purchase.currency,
+            exchange_rate=float(purchase.exchange_rate or 1),
         ))
     
     if request.method == 'POST':
@@ -1444,7 +1475,7 @@ def create_payment(purchase_id):
                                      is_payment=True,
                                      form_data=request.form)
             notes = request.form.get('notes', '')
-            exchange_rate = request.form.get('exchange_rate', type=float, default=1.0)
+            user_exchange_rate = request.form.get('exchange_rate', type=float, default=1.0)
             try:
                 from models import Tenant
                 default_currency = (purchase.currency or '').strip() or (Tenant.get_current().default_currency or '').strip() or 'AED'
@@ -1476,14 +1507,17 @@ def create_payment(purchase_id):
             card_last4 = request.form.get('card_last4')
             reference_number_card = request.form.get('reference_number_card')
             
-            if amount <= 0 or amount > balance:
+            if amount <= 0:
                 flash('المبلغ غير صحيح.\nتحقق من الصيغة الصحيحة وحاول مرة أخرى.', 'danger')
                 return redirect(url_for('payments.create_payment', purchase_id=purchase_id))
             
             # تحويل إلى Decimal للحسابات الدقيقة
             amount_decimal = Decimal(str(amount))
-            exchange_rate_decimal = Decimal(str(exchange_rate))
+            exchange_rate_decimal = _resolve_transaction_rate(currency, user_exchange_rate)
             amount_aed = amount_decimal * exchange_rate_decimal
+            if amount_aed > Decimal(str(balance_aed)):
+                flash('المبلغ غير صحيح.\nتحقق من الصيغة الصحيحة وحاول مرة أخرى.', 'danger')
+                return redirect(url_for('payments.create_payment', purchase_id=purchase_id))
             
             # إنشاء سند الصرف
             payment_number = generate_number('PAY', Payment, 'payment_number', branch_id=purchase.branch_id)
@@ -1603,17 +1637,27 @@ def api_customer_balance(customer_id):
     except Exception:
         default_currency = 'AED'
     unpaid_sales = _scoped_customer_unpaid_sales(customer.id)
-    return jsonify({
-        'balance_aed': _scoped_customer_balance(customer.id),
-        'balance': _scoped_customer_balance(customer.id),
-        'currency': default_currency,
-        'unpaid_sales': [{
+    unpaid_sale_rows = []
+    for sale in unpaid_sales:
+        sale_rate = float(sale.exchange_rate or 1)
+        balance_due_aed = float(sale.balance_due or 0)
+        if (sale.currency or default_currency) != 'AED' and sale_rate > 0:
+            balance_due_display = balance_due_aed / sale_rate
+        else:
+            balance_due_display = balance_due_aed
+        unpaid_sale_rows.append({
             'id': sale.id,
             'sale_number': sale.sale_number,
             'sale_date': sale.sale_date.strftime('%Y-%m-%d') if getattr(sale.sale_date, 'strftime', None) else str(sale.sale_date),
             'total_amount': float(sale.total_amount),
-            'balance_due': float(sale.balance_due),
+            'balance_due': balance_due_display,
+            'balance_due_aed': balance_due_aed,
             'currency': sale.currency or default_currency,
-        } for sale in unpaid_sales]
+        })
+    return jsonify({
+        'balance_aed': _scoped_customer_balance(customer.id),
+        'balance': _scoped_customer_balance(customer.id),
+        'currency': default_currency,
+        'unpaid_sales': unpaid_sale_rows,
     })
 

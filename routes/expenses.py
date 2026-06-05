@@ -3,6 +3,7 @@ from flask_login import login_required, current_user
 from extensions import db, limiter
 from models import Expense, ExpenseCategory, Cheque
 from services.currency_service import CurrencyService
+from services.exchange_rate_service import ExchangeRateService
 from services.gl_service import GLService
 from services.gl_posting import post_or_fail
 from utils.decorators import permission_required, branch_scope_id
@@ -19,6 +20,15 @@ expenses_bp = Blueprint('expenses', __name__, url_prefix='/expenses')
 def _expense_in_scope(expense):
     scoped_branch_id = branch_scope_id()
     return scoped_branch_id is None or expense.branch_id == scoped_branch_id
+
+
+def _resolve_transaction_rate(currency, user_rate=None):
+    rate_info = ExchangeRateService.resolve_exchange_rate_for_transaction(
+        currency,
+        'AED',
+        user_rate=user_rate,
+    )
+    return Decimal(str(rate_info['rate']))
 
 
 @expenses_bp.route('/')
@@ -85,11 +95,7 @@ def create():
             currency = request.form.get('currency') or default_currency
             user_exchange_rate = request.form.get('exchange_rate', type=float)
             
-            exchange_rate = CurrencyService.get_exchange_rate(
-                currency,
-                default_currency,
-                user_rate=user_exchange_rate
-            )
+            exchange_rate = _resolve_transaction_rate(currency, user_exchange_rate)
             
             amount = Decimal(str(request.form.get('amount')))
             

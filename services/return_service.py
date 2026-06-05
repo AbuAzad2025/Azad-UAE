@@ -120,7 +120,8 @@ class ReturnService:
 
             total_gross_return = Decimal('0')
             total_net_return = Decimal('0')
-            gl_lines = []
+            revenue_lines = []
+            cost_lines = []
             lines_added = 0
 
             for line_data in return_lines_data:
@@ -257,14 +258,14 @@ class ReturnService:
                     )
 
                     if cost_value > 0:
-                        gl_lines.append({
+                        cost_lines.append({
                             'account': '1140',
                             'concept_code': 'INVENTORY_ASSET',
                             'debit': cost_value,
                             'credit': 0,
                             'description': f'Inventory Restock - {product.name}'
                         })
-                        gl_lines.append({
+                        cost_lines.append({
                             'account': '5100',
                             'concept_code': 'COGS_REVERSAL',
                             'debit': 0,
@@ -314,7 +315,7 @@ class ReturnService:
                 product_return.notes = f'{product_return.notes or ""}{marker}'
 
             if net_return_amount > 0:
-                gl_lines.append({
+                revenue_lines.append({
                     'account': '4100',
                     'concept_code': 'SALES_RETURNS',
                     'debit': net_return_amount,
@@ -323,7 +324,7 @@ class ReturnService:
                 })
 
             if tax_amount > 0 and should_post_vat_gl(tenant_id):
-                gl_lines.append({
+                revenue_lines.append({
                     'account': '2130',
                     'concept_code': 'VAT_OUTPUT',
                     'debit': tax_amount,
@@ -332,18 +333,22 @@ class ReturnService:
                 })
 
             if final_refund_amount > 0:
-                gl_lines.append({
-                    'account': GLService.get_customer_credit_account(sale.customer),
+                revenue_lines.append({
+                    'account': GLService.get_customer_credit_account(
+                        sale.customer,
+                        branch_id=product_return.branch_id,
+                        tenant_id=tenant_id,
+                    ),
                     'concept_code': GLService.get_customer_credit_concept(sale.customer),
                     'debit': 0,
                     'credit': final_refund_amount,
                     'description': f'Credit Customer for Return {sale.sale_number}'
                 })
 
-            if gl_lines:
+            if revenue_lines:
                 GLService.ensure_core_accounts(tenant_id=tenant_id)
                 post_or_fail(
-                    lines=gl_lines,
+                    lines=revenue_lines,
                     description=f'Sales Return {product_return.return_number} for Sale {sale.sale_number}',
                     reference_type=GLRef.PRODUCT_RETURN,
                     reference_id=product_return.id,
@@ -351,6 +356,20 @@ class ReturnService:
                     exchange_rate=product_return.exchange_rate,
                     branch_id=product_return.branch_id,
                     user_id=processed_by,
+                    tenant_id=tenant_id,
+                )
+            if cost_lines:
+                GLService.ensure_core_accounts(tenant_id=tenant_id)
+                post_or_fail(
+                    lines=cost_lines,
+                    description=f'Sales Return COGS {product_return.return_number} for Sale {sale.sale_number}',
+                    reference_type=GLRef.PRODUCT_RETURN,
+                    reference_id=product_return.id,
+                    currency='AED',
+                    exchange_rate=1.0,
+                    branch_id=product_return.branch_id,
+                    user_id=processed_by,
+                    tenant_id=tenant_id,
                 )
 
             if sale.customer:

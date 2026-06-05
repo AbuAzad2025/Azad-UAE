@@ -3,7 +3,7 @@ from flask import current_app
 from extensions import db
 from models import Purchase, PurchaseLine, Product, Supplier, Warehouse
 from services.stock_service import StockService
-from services.currency_service import CurrencyService
+from services.exchange_rate_service import ExchangeRateService
 from services.gl_service import GLService, GL_ACCOUNTS
 from services.gl_posting import post_or_fail
 from utils.gl_reference_types import GLRef
@@ -82,11 +82,12 @@ class PurchaseService:
         )
         
         # Currency Handling
-        exchange_rate = CurrencyService.get_exchange_rate(
+        rate_info = ExchangeRateService.resolve_exchange_rate_for_transaction(
             currency,
             'AED',
-            user_rate=user_exchange_rate
+            user_rate=user_exchange_rate,
         )
+        exchange_rate = Decimal(str(rate_info['rate']))
         
         # Create Purchase Header
         effective_tax_rate = normalize_tax_rate(tax_rate, tenant_id)

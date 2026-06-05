@@ -176,7 +176,11 @@ class Cheque(db.Model):
         if self.cheque_type != 'incoming':
             return None
         from services.gl_service import GLService
-        credit_account = GLService.get_customer_credit_account(self.customer) if self.customer_id else '1130'
+        credit_account = GLService.get_customer_credit_account(
+            self.customer,
+            branch_id=self.branch_id,
+            tenant_id=getattr(self, 'tenant_id', None),
+        ) if self.customer_id else '1130'
         credit_concept = GLService.get_customer_credit_concept(self.customer) if self.customer_id else 'AR'
         lines = [
             {
@@ -209,7 +213,11 @@ class Cheque(db.Model):
             debit_account = '2110'
             debit_concept = 'AP'
         elif self.customer_id:
-            debit_account = GLService.get_customer_credit_account(self.customer)
+            debit_account = GLService.get_customer_credit_account(
+                self.customer,
+                branch_id=self.branch_id,
+                tenant_id=getattr(self, 'tenant_id', None),
+            )
             debit_concept = GLService.get_customer_credit_concept(self.customer)
         else:
             debit_account = '2110'
@@ -256,14 +264,16 @@ class Cheque(db.Model):
         
         # حفظ سعر الصرف وقت الصرف إذا العملة مختلفة عن الدرهم
         if self.currency != 'AED' and clearance_exchange_rate:
-            from services.currency_service import CurrencyService
             self.clearance_exchange_rate = Decimal(str(clearance_exchange_rate))
         elif self.currency != 'AED':
             # جلب السعر الحالي تلقائياً
-            from services.currency_service import CurrencyService
+            from services.exchange_rate_service import ExchangeRateService
             try:
-                current_rate = CurrencyService.get_exchange_rate(self.currency, 'AED')
-                self.clearance_exchange_rate = current_rate
+                rate_info = ExchangeRateService.resolve_exchange_rate_for_transaction(
+                    self.currency,
+                    'AED',
+                )
+                self.clearance_exchange_rate = Decimal(str(rate_info['rate']))
             except:
                 # إذا فشل جلب السعر، استخدم السعر الأصلي
                 self.clearance_exchange_rate = self.exchange_rate
@@ -409,7 +419,11 @@ class Cheque(db.Model):
         from services.gl_service import GLService
         lines = []
         if self.cheque_type == 'incoming':
-            ar_account = GLService.get_customer_credit_account(self.customer) if self.customer_id else '1130'
+            ar_account = GLService.get_customer_credit_account(
+                self.customer,
+                branch_id=self.branch_id,
+                tenant_id=getattr(self, 'tenant_id', None),
+            ) if self.customer_id else '1130'
             ar_concept = GLService.get_customer_credit_concept(self.customer) if self.customer_id else 'AR'
             lines.append({
                 'account': ar_account,
@@ -437,7 +451,11 @@ class Cheque(db.Model):
                 credit_account = '2110'
                 credit_concept = 'AP'
             elif self.customer_id:
-                credit_account = GLService.get_customer_credit_account(self.customer)
+                credit_account = GLService.get_customer_credit_account(
+                    self.customer,
+                    branch_id=self.branch_id,
+                    tenant_id=getattr(self, 'tenant_id', None),
+                )
                 credit_concept = GLService.get_customer_credit_concept(self.customer)
             else:
                 credit_account = '2110'
@@ -473,7 +491,11 @@ class Cheque(db.Model):
         from services.gl_service import GLService
         lines = []
         if self.cheque_type == 'incoming':
-            ar_account = GLService.get_customer_credit_account(self.customer) if self.customer_id else '1130'
+            ar_account = GLService.get_customer_credit_account(
+                self.customer,
+                branch_id=self.branch_id,
+                tenant_id=getattr(self, 'tenant_id', None),
+            ) if self.customer_id else '1130'
             ar_concept = GLService.get_customer_credit_concept(self.customer) if self.customer_id else 'AR'
             lines = [
                 {'account': ar_account, 'concept_code': ar_concept, 'debit': self.amount_aed, 'credit': 0,
@@ -486,7 +508,11 @@ class Cheque(db.Model):
                 credit_account = '2110'
                 credit_concept = 'AP'
             elif self.customer_id:
-                credit_account = GLService.get_customer_credit_account(self.customer)
+                credit_account = GLService.get_customer_credit_account(
+                    self.customer,
+                    branch_id=self.branch_id,
+                    tenant_id=getattr(self, 'tenant_id', None),
+                )
                 credit_concept = GLService.get_customer_credit_concept(self.customer)
             else:
                 credit_account = '2110'

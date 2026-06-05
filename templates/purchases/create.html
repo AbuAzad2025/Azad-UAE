@@ -526,7 +526,14 @@ function addLine() {
   // حساب الإجمالي عند التغيير - استخدام setTimeout للتأكد من التحميل
   setTimeout(function() {
     $(`.line-quantity[data-line="${lineIndex}"], .line-cost[data-line="${lineIndex}"], .line-discount[data-line="${lineIndex}"]`)
-      .on('input change keyup', function() {        calculateLineTotal(lineIndex);
+      .on('input change keyup', function() {
+        if ($(this).hasClass('line-cost')) {
+          const enteredCost = parseFloat($(this).val()) || 0;
+          const rate = parseFloat($('#exchange_rate').val()) || 1;
+          const currency = $('#currency').val();
+          $(this).data('base-cost', currency !== TENANT_BASE_CURRENCY && rate > 0 ? enteredCost * rate : enteredCost);
+        }
+        calculateLineTotal(lineIndex);
         calculateTotals();
       });
   }, 100);
@@ -535,9 +542,8 @@ function addLine() {
   $productSelect.on('select2:select', function(e) {
     const data = e.params.data;
     if (data && data.cost_price) {
-      $(`.line-cost[data-line="${lineIndex}"]`).val(data.cost_price);
-      calculateLineTotal(lineIndex);
-      calculateTotals();
+      $(`.line-cost[data-line="${lineIndex}"]`).data('base-cost', parseFloat(data.cost_price) || 0);
+      updateLineCosts();
     }
   });
   

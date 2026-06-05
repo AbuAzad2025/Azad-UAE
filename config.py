@@ -186,7 +186,7 @@ class Config:
 
     # Phase 3-4: Moving Weighted Average Cost (MWAC)
     # When False: stock valuation uses Last Purchase Cost.
-    ENABLE_MWAC = _bool(os.environ.get("ENABLE_MWAC"), False)
+    ENABLE_MWAC = _bool(os.environ.get("ENABLE_MWAC"), True)
 
     # Phase 5: Landed Cost Capitalization
     # When False: freight/customs/insurance are expensed directly to P&L.

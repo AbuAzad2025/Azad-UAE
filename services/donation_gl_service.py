@@ -9,7 +9,7 @@ from extensions import db
 from models.donation import Donation
 from models import GLAccount
 from models.payment_vault import PaymentVault
-from services.currency_service import CurrencyService
+from services.exchange_rate_service import ExchangeRateService
 from services.gl_service import GLService
 from services.gl_posting import post_or_fail
 from utils.gl_reference_types import GLRef
@@ -40,7 +40,8 @@ class DonationGLService:
         debit_acct, credit_acct = DonationGLService._vault_accounts(vault)
 
         try:
-            rate = CurrencyService.get_exchange_rate('USD', 'AED')
+            rate_info = ExchangeRateService.resolve_exchange_rate_for_transaction('USD', 'AED')
+            rate = Decimal(str(rate_info['rate']))
         except Exception:
             rate = Decimal('3.67')
         amount_aed = (amount_usd * rate).quantize(Decimal('0.001'))

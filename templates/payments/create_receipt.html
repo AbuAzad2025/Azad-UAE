@@ -87,7 +87,11 @@
           </div>
           <div class="col-md-3">
             <strong>المتبقي:</strong><br>
-            <span class="text-danger">{{ "{:,.2f}".format(sale.balance_due) }} {{ sale.currency }}</span>
+            {% set sale_balance_display = sale.balance_due %}
+            {% if sale.currency != 'AED' and sale.exchange_rate %}
+              {% set sale_balance_display = sale.balance_due / sale.exchange_rate %}
+            {% endif %}
+            <span class="text-danger">{{ "{:,.2f}".format(sale_balance_display) }} {{ sale.currency }}</span>
           </div>
         </div>
       </div>
@@ -120,9 +124,9 @@
             <strong>المتبقي:</strong><br>
             <span class="text-danger">
               {% if suggested_amount is not none %}
-                {{ "{:,.2f}".format(suggested_amount) }} {{ tenant_currency_symbol or 'AED' }}
+                {{ "{:,.2f}".format(suggested_amount) }} {{ selected_currency }}
               {% else %}
-                {{ "{:,.2f}".format(purchase.total_amount) }} {{ tenant_currency_symbol or 'AED' }}
+                {{ "{:,.2f}".format(purchase.total_amount) }} {{ purchase.currency }}
               {% endif %}
             </span>
           </div>
@@ -484,7 +488,7 @@ function loadCustomerBalance() {
     // ملء المبلغ تلقائياً من الفواتير غير المدفوعة
     if (data.unpaid_sales && data.unpaid_sales.length > 0) {
       var totalUnpaid = data.unpaid_sales.reduce(function(sum, sale) {
-        return sum + parseFloat(sale.balance_due || 0);
+        return sum + parseFloat(sale.balance_due_aed || sale.balance_due || 0);
       }, 0);
       var currentAmount = parseFloat($('#amount').val()) || 0;
       
@@ -496,7 +500,7 @@ function loadCustomerBalance() {
       var html = '<strong>فواتير غير مدفوعة:</strong><ul class="mb-0">';
       data.unpaid_sales.forEach(function(sale) {
         var saleUrl = "{{ url_for('sales.view', id=0) }}".replace('0', sale.id);
-        html += '<li><a href="' + saleUrl + '" target="_blank">' + sale.sale_number + '</a>: ' + parseFloat(sale.balance_due).toFixed(2) + ' {{ tenant_currency_symbol or 'AED' }}</li>';
+        html += '<li><a href="' + saleUrl + '" target="_blank">' + sale.sale_number + '</a>: ' + parseFloat(sale.balance_due_aed || sale.balance_due).toFixed(2) + ' {{ tenant_currency_symbol or 'AED' }}</li>';
       });
       html += '</ul>';
       $('#unpaidSales').html(html);

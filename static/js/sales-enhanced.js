@@ -649,31 +649,28 @@ $(document).ready(function() {
         calculateTotals();
     });
     
-    $('#saleForm').on('submit', function(e) {
-        const totals = calculateTotals();
+    $('#saleForm').on('submit', async function(e) {
+        e.preventDefault();
+        const totals = await calculateTotals();
         
         if (totals.lineCount === 0) {
-            e.preventDefault();
             azad.showError('⚠️ يجب إضافة منتج واحد على الأقل');
             return false;
         }
         
         // Don't block if total is 0 - could be all free items
         if (totals.total < 0) {
-            e.preventDefault();
             azad.showError('⚠️ الإجمالي لا يمكن أن يكون سالب');
             return false;
         }
         
         if (!$('#customer_id').val()) {
-            e.preventDefault();
             azad.showError('⚠️ يجب اختيار زبون');
             return false;
         }
         
         azad.showLoading();
-        // Allow form to submit naturally
-        return true;
+        this.submit();
     });
 });
 

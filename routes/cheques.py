@@ -3,11 +3,12 @@
 إدارة الشيكات الواردة والصادرة
 """
 
-from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, current_app
 from flask_login import login_required, current_user
 from extensions import db, limiter
 from models import Cheque, Customer, Supplier, Sale, Receipt, Expense
 from services.currency_service import CurrencyService
+from services.exchange_rate_service import ExchangeRateService
 from utils.decorators import admin_required, permission_required, branch_scope_id
 from utils.branching import should_show_all_branch_columns
 from utils.helpers import create_audit_log, generate_number
@@ -28,6 +29,15 @@ def _scoped_cheques_query():
 def _ensure_cheque_scope(cheque):
     scoped_branch_id = branch_scope_id()
     return scoped_branch_id is None or cheque.branch_id == scoped_branch_id
+
+
+def _resolve_transaction_rate(currency, user_rate=None):
+    rate_info = ExchangeRateService.resolve_exchange_rate_for_transaction(
+        currency,
+        'AED',
+        user_rate=user_rate,
+    )
+    return Decimal(str(rate_info['rate']))
 
 
 def _scoped_customers_query():
@@ -233,10 +243,9 @@ def create():
             currency = request.form.get('currency') or default_currency
             
             # حساب سعر الصرف
-            exchange_rate = CurrencyService.get_exchange_rate(
+            exchange_rate = _resolve_transaction_rate(
                 currency,
-                default_currency,
-                user_rate=request.form.get('exchange_rate', type=float)
+                request.form.get('exchange_rate', type=float),
             )
             
             # تحويل التواريخ
@@ -290,17 +299,14 @@ def create():
             cheque.update_status_based_on_date()
             
             db.session.add(cheque)
-            db.session.commit()
+            db.session.flush()
             
             # إنشاء القيد المحاسبي الأولي
-            try:
-                if cheque.cheque_type == 'incoming':
-                    cheque.receive_cheque()
-                elif cheque.cheque_type == 'outgoing':
-                    cheque.issue_cheque()
-                db.session.commit()
-            except Exception as e:
-                current_app.logger.error(f"Failed to create initial GL entry for cheque {cheque.id}: {e}")
+            if cheque.cheque_type == 'incoming':
+                cheque.receive_cheque()
+            elif cheque.cheque_type == 'outgoing':
+                cheque.issue_cheque()
+            db.session.commit()
             
             create_audit_log('create', 'cheques', cheque.id)
             
@@ -388,10 +394,9 @@ def edit(id):
                 default_currency = 'AED'
             cheque.currency = request.form.get('currency') or default_currency
             
-            exchange_rate = CurrencyService.get_exchange_rate(
+            exchange_rate = _resolve_transaction_rate(
                 cheque.currency,
-                default_currency,
-                user_rate=request.form.get('exchange_rate', type=float)
+                request.form.get('exchange_rate', type=float),
             )
             cheque.exchange_rate = exchange_rate
             

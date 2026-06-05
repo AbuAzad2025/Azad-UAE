@@ -254,6 +254,43 @@
       const n = Number(v);
       return Number.isFinite(n) ? n : 0;
     };
+    const baseCurrency = '{{ tenant_default_currency or "AED" }}';
+    const selectedCurrency = () => qs('#currency').value || baseCurrency;
+    const currentRate = () => toNum(qs('#exchangeRate').value) || 1;
+    const priceForCurrency = (basePrice) => {
+      const rate = currentRate();
+      if (selectedCurrency() !== baseCurrency && rate > 0) {
+        return toNum(basePrice) / rate;
+      }
+      return toNum(basePrice);
+    };
+    const updateCartPrices = () => {
+      state.cart.forEach(it => {
+        if (!Number.isFinite(Number(it.basePrice))) {
+          it.basePrice = it.price;
+        }
+        it.price = priceForCurrency(it.basePrice);
+      });
+      renderCart();
+    };
+    const loadRateForCurrency = async () => {
+      const currency = selectedCurrency();
+      if (currency === baseCurrency) {
+        qs('#exchangeRate').value = '1';
+        updateCartPrices();
+        return;
+      }
+      try {
+        const r = await fetch(`/api/currency-rate/${encodeURIComponent(currency)}/${encodeURIComponent(baseCurrency)}`);
+        const data = await r.json();
+        if (data.success && data.rate) {
+          qs('#exchangeRate').value = Number(data.rate).toFixed(6);
+        }
+      } catch (_) {
+        // Keep the user-entered rate if the live lookup fails.
+      }
+      updateCartPrices();
+    };
     const showAlert = (msg, level='danger') => {
       const el = qs('#posAlert');
       el.className = 'alert alert-' + level;
@@ -336,7 +373,8 @@
           sku: p.sku || '',
           barcode: p.barcode || '',
           qty: 1,
-          price: toNum(p.price),
+          basePrice: toNum(p.price),
+          price: priceForCurrency(toNum(p.price)),
           discountPercent: 0
         });
       }
@@ -515,7 +553,12 @@
       const k = t.getAttribute('data-k');
       if (!Number.isFinite(idx) || !state.cart[idx]) return;
       if (k === 'qty') state.cart[idx].qty = Math.max(0.001, toNum(t.value));
-      if (k === 'price') state.cart[idx].price = Math.max(0, toNum(t.value));
+      if (k === 'price') {
+        state.cart[idx].price = Math.max(0, toNum(t.value));
+        state.cart[idx].basePrice = selectedCurrency() !== baseCurrency && currentRate() > 0
+          ? state.cart[idx].price * currentRate()
+          : state.cart[idx].price;
+      }
       if (k === 'disc') state.cart[idx].discountPercent = Math.max(0, Math.min(100, toNum(t.value)));
       renderCart();
     });
@@ -528,10 +571,13 @@
       renderCart();
     });
 
-    qsa('#taxRate,#shippingCost,#discountAmount,#currency').forEach(el => {
+    qsa('#taxRate,#shippingCost,#discountAmount').forEach(el => {
       el.addEventListener('input', recalc);
       el.addEventListener('change', recalc);
     });
+    qs('#currency').addEventListener('change', loadRateForCurrency);
+    qs('#exchangeRate').addEventListener('input', updateCartPrices);
+    qs('#exchangeRate').addEventListener('change', updateCartPrices);
 
     let checkoutBusy = false;
 

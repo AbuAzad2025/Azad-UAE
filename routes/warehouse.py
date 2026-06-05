@@ -419,9 +419,6 @@ def add_stock(product_id):
         if quantity <= 0:
             return jsonify({'success': False, 'message': 'الكمية يجب أن تكون أكبر من صفر'}), 400
         
-        # Update product stock
-        product.current_stock = (product.current_stock or Decimal('0')) + quantity
-        
         if not warehouse_id:
             accessible_query = Warehouse.query.filter_by(is_active=True)
             scoped_branch_id = branch_scope_id()
@@ -437,17 +434,15 @@ def add_stock(product_id):
         else:
             ensure_warehouse_access(warehouse_id, current_user)
         
-        movement = StockMovement(
+        movement = StockService.adjust_stock(
             product_id=product_id,
             warehouse_id=warehouse_id,
-            movement_type='adjustment',
             quantity=quantity,
-            user_id=current_user.id,
             notes=notes or 'إضافة كمية يدوية'
         )
         
-        db.session.add(movement)
         db.session.commit()
+        product = movement.product
         
         return jsonify({
             'success': True,

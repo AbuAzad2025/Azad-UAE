@@ -3,7 +3,7 @@ from flask import current_app
 from flask_login import current_user
 from extensions import db
 from models import Receipt, Sale
-from services.currency_service import CurrencyService
+from services.exchange_rate_service import ExchangeRateService
 from services.gl_service import GLService
 from services.gl_posting import post_or_fail, GlPostingError
 from utils.gl_reference_types import GLRef
@@ -18,6 +18,15 @@ from utils.field_validators import (
 
 
 class PaymentService:
+
+    @staticmethod
+    def _resolve_transaction_rate(currency, user_exchange_rate=None):
+        rate_info = ExchangeRateService.resolve_exchange_rate_for_transaction(
+            currency,
+            'AED',
+            user_rate=user_exchange_rate,
+        )
+        return Decimal(str(rate_info['rate']))
 
     @staticmethod
     def _resolve_branch_id(explicit_branch_id=None, *, user=None, sale=None):
@@ -74,11 +83,7 @@ class PaymentService:
                 tenant_id=getattr(supplier, 'tenant_id', None),
             )
             
-            exchange_rate = CurrencyService.get_exchange_rate(
-                currency,
-                'AED',
-                user_rate=user_exchange_rate
-            )
+            exchange_rate = PaymentService._resolve_transaction_rate(currency, user_exchange_rate)
             
             payment = Payment(
                 tenant_id=getattr(supplier, 'tenant_id', None) or (getattr(current_user, 'tenant_id', None) if current_user and getattr(current_user, 'is_authenticated', False) else None),
@@ -215,11 +220,7 @@ class PaymentService:
                 tenant_id=tenant_id,
             )
             
-            exchange_rate = CurrencyService.get_exchange_rate(
-                currency,
-                'AED',
-                user_rate=user_exchange_rate
-            )
+            exchange_rate = PaymentService._resolve_transaction_rate(currency, user_exchange_rate)
             
             receipt = Receipt(
                 tenant_id=tenant_id,
@@ -288,7 +289,11 @@ class PaymentService:
                         branch_id=receipt.branch_id,
                         tenant_id=getattr(receipt, 'tenant_id', None),
                     )
-                    credit_account = GLService.get_customer_credit_account(customer)
+                    credit_account = GLService.get_customer_credit_account(
+                        customer,
+                        branch_id=receipt.branch_id,
+                        tenant_id=getattr(receipt, 'tenant_id', None),
+                    )
 
                     # Create GL entries
                     lines = [
@@ -314,10 +319,10 @@ class PaymentService:
             
             # Allocation Logic (Restored & Improved)
             if allocate_to_sales:
-                remaining_amount = Decimal(str(amount))
+                remaining_amount_aed = Decimal(str(receipt.amount_aed or 0))
                 
                 for sale_id, allocated in allocate_to_sales.items():
-                    if remaining_amount <= 0:
+                    if remaining_amount_aed <= 0:
                         break
                     
                     sale = Sale.query.get(sale_id)
@@ -325,7 +330,17 @@ class PaymentService:
                     if not sale or sale.customer_id != customer.id:
                         continue
                     
-                    allocated_amount = min(Decimal(str(allocated)), remaining_amount, sale.balance_due)
+                    sale_balance_aed = Decimal(str(sale.balance_due or 0))
+                    requested_amount = Decimal(str(allocated or 0))
+                    requested_amount_aed = (requested_amount * exchange_rate).quantize(
+                        Decimal('0.001')
+                    )
+                    allocated_amount_aed = min(requested_amount_aed, remaining_amount_aed, sale_balance_aed)
+                    if allocated_amount_aed <= 0:
+                        continue
+                    allocated_amount = (allocated_amount_aed / exchange_rate).quantize(
+                        Decimal('0.001')
+                    )
                     
                     # Create Payment record linked to Sale (Crucial for recalculation)
                     from models import Payment
@@ -343,7 +358,7 @@ class PaymentService:
                         sale_id=sale.id,
                         customer_id=customer.id,
                         amount=allocated_amount,
-                        amount_aed=allocated_amount * exchange_rate,
+                        amount_aed=allocated_amount_aed,
                         currency=currency,
                         exchange_rate=exchange_rate,
                         payment_method=payment_method,
@@ -357,14 +372,18 @@ class PaymentService:
                     db.session.add(sale_payment)
                     
                     # Direct update (will be overwritten by recalculate, but good for immediate state)
-                    sale.paid_amount += allocated_amount
-                    sale.paid_amount_aed += allocated_amount * exchange_rate
+                    sale.paid_amount_aed += allocated_amount_aed
+                    sale_rate = Decimal(str(sale.exchange_rate or 1))
+                    if sale_rate > 0:
+                        sale.paid_amount += (allocated_amount_aed / sale_rate).quantize(
+                            Decimal('0.001')
+                        )
                     # sale.balance_due -= allocated_amount # Let recalculate handle this
                     
                     # Trigger recalculation
                     sale.recalculate_payment_status()
                     
-                    remaining_amount -= allocated_amount
+                    remaining_amount_aed -= allocated_amount_aed
             
             db.session.commit()
             
@@ -408,27 +427,32 @@ class PaymentService:
     @staticmethod
     def allocate_receipt_to_oldest_sales(receipt, customer):
         try:
-            remaining_amount = receipt.amount
-            customer.apply_receipt(remaining_amount * receipt.exchange_rate)
+            remaining_amount_aed = Decimal(str(receipt.amount_aed or 0))
+            customer.apply_receipt(remaining_amount_aed)
             
             unpaid_sales = PaymentService.get_unpaid_sales(customer)
             
             for sale in unpaid_sales:
-                if remaining_amount <= 0:
+                if remaining_amount_aed <= 0:
                     break
                 
-                allocated = min(remaining_amount, sale.balance_due)
+                sale_balance_aed = Decimal(str(sale.balance_due or 0))
+                allocated_aed = min(remaining_amount_aed, sale_balance_aed)
+                if allocated_aed <= 0:
+                    continue
+                sale_rate = Decimal(str(sale.exchange_rate or 1))
+                allocated = (allocated_aed / sale_rate).quantize(Decimal('0.001'))
                 
                 sale.paid_amount += allocated
-                sale.paid_amount_aed += allocated * receipt.exchange_rate
-                sale.balance_due -= allocated
+                sale.paid_amount_aed += allocated_aed
+                sale.balance_due -= allocated_aed
                 
                 if sale.paid_amount >= sale.total_amount:
                     sale.payment_status = 'paid'
                 elif sale.paid_amount > 0:
                     sale.payment_status = 'partial'
                 
-                remaining_amount -= allocated
+                remaining_amount_aed -= allocated_aed
             
             db.session.commit()
             
