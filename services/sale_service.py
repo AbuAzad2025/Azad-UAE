@@ -401,11 +401,9 @@ class SaleService:
             Decimal('0.001'), rounding=ROUND_HALF_UP
         )
 
-        ar_account = '1130'
-        if customer.customer_type == 'partner':
-            ar_account = '3350'
-        elif customer.customer_type == 'merchant':
-            ar_account = '2115'
+        ar_account = GLService.get_customer_credit_account(
+            customer, branch_id=sale.branch_id, tenant_id=tenant_id
+        )
 
         gl_lines = [
             {
@@ -603,7 +601,9 @@ class SaleService:
                 branch_id=sale.branch_id,
                 tenant_id=getattr(sale, 'tenant_id', None),
             )
-            credit_account = GLService.get_customer_credit_account(sale.customer)
+            credit_account = GLService.get_customer_credit_account(
+                sale.customer, branch_id=sale.branch_id, tenant_id=getattr(sale, 'tenant_id', None)
+            )
 
             post_or_fail(
                 [

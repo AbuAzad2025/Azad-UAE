@@ -490,11 +490,29 @@ class GLService:
         if m in ('bank_transfer', 'card'):
             return GLService.get_default_liquidity_account('bank', branch_id=branch_id, tenant_id=tenant_id)
         if m == 'cheque':
+            if is_dynamic_gl_mapping_enabled() and tenant_id:
+                account = resolve_gl_account(
+                    tenant_id=tenant_id,
+                    concept_code='CHEQUES_UNDER_COLLECTION',
+                    branch_id=branch_id,
+                )
+                if account:
+                    return account.code
             return '1150'
         return GLService.get_default_liquidity_account('cash', branch_id=branch_id, tenant_id=tenant_id)
 
     @staticmethod
-    def get_customer_credit_account(customer):
+    def get_customer_credit_account(customer, branch_id=None, tenant_id=None):
+        if is_dynamic_gl_mapping_enabled() and tenant_id:
+            concept = GLService.get_customer_credit_concept(customer)
+            if concept:
+                account = resolve_gl_account(
+                    tenant_id=tenant_id,
+                    concept_code=concept,
+                    branch_id=branch_id,
+                )
+                if account:
+                    return account.code
         code = '1130'
         if customer and getattr(customer, 'customer_type', None) == 'partner':
             code = '3350'
