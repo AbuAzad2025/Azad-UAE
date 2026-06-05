@@ -477,7 +477,7 @@ This section records all hardening batches and modernization phases that have be
 *   **Estimated Complexity:** Low (1 Sprint) — **DONE**.
 *   **Dependencies:** Phase 6 ✅. Data cleanup (Option D) ✅.
 
-### Phase 7.5: Security Hardening & Multi-Tenant Data Leak Prevention — **🔄 IN PROGRESS (June 6, 2026)**
+### Phase 7.5: Security Hardening & Multi-Tenant Data Leak Prevention — **✅ PARTIAL (June 6, 2026)**
 *   **Goal:** Eliminate cross-tenant, cross-branch, and cross-role data leakage across all routes, services, and templates.
 *   **Files Affected:** `routes/ai.py`, `routes/owner.py`, `routes/api.py`, `routes/payment_vault.py`, `routes/main.py`, `tools/qa/test_security_boundaries.py`.
 *   **Models Used:** `Product`, `Customer`, `AuditLog`, `User`, `Branch`, `PaymentVault`, `Donation`, `Package`.
@@ -508,13 +508,14 @@ This section records all hardening batches and modernization phases that have be
     - `tools/qa/test_security_boundaries.py` ALL CHECKS PASSED.
     - Zero unscoped `Model.query.get()`, `Model.query.all()`, `Model.query.count()` in routes directory.
     - No raw model queries in Jinja2 templates.
-*   **Status:** Vulnerabilities discovered; fixes in progress.
-*   **Estimated Complexity:** Medium (3-4 days) — **IN PROGRESS**.
+*   **Evidence:** Critical fixes deployed in `routes/main.py`, `routes/api.py`, `routes/owner.py`, `routes/ai.py` (API routes). `test_security_boundaries.py` created. Remaining: `routes/payment_vault.py` (needs migration) + `routes/ai.py` chat handlers (needs refactor).
+*   **Status:** ✅ PARTIAL.
+*   **Estimated Complexity:** Medium (3-4 days) — **PARTIAL**.
 *   **Dependencies:** Phase 7 ✅.
 
 ### Phase 8: Treasury & Cash Position Reporting — **✅ COMPLETED (June 6, 2026)**
 *   **Goal:** Multi-branch bank, cashier, and post-dated cheque position tracking with GL-backed accuracy.
-*   **Files Affected:** `services/treasury_service.py`, `routes/reports.py`, `templates/reports/treasury.html`, `templates/reports/index.html`, `templates/base.html`.
+*   **Files Affected:** `services/treasury_service.py`, `routes/treasury.py`, `templates/reports/treasury.html`, `templates/reports/index.html`, `templates/base.html`.
 *   **Models Used:** `CashBox`, `GLAccount` (`liquidity_kind`), `Cheque`, `BankReconciliation`, `Branch`.
 *   **Migrations Needed:** None (schema deployed in `phase3_001`).
 *   **Design Decisions (post-audit):**
@@ -543,7 +544,7 @@ This section records all hardening batches and modernization phases that have be
 
 ### Phase 9: Global Localization Engine — **✅ COMPLETED (June 6, 2026)**
 *   **Goal:** Country-specific compliance engines for Palestine, UAE, and Saudi Arabia. Hot-swappable per-tenant without code redeploy.
-*   **Files Affected:** `utils/localization/`, `services/tax_service.py` (new), `routes/reports.py`, `models/tenant.py`.
+*   **Files Affected:** `utils/localization/`, `services/tax_service.py` (new), `services/einvoice_service.py` (new), `routes/treasury.py`, `models/tenant.py`.
 *   **Models Used:** `Tenant` (`vat_country`, `enable_tax`, `default_tax_rate`), `GLAccount`, `GLJournalLine`.
 *   **Migrations Needed:** None (tenant-level fields already exist: `vat_country`, `enable_tax`, `default_tax_rate`).
 *   **Design Decisions (post-audit):**
@@ -586,7 +587,7 @@ This section records all hardening batches and modernization phases that have be
 
 ### Phase 10: Testing, Validation, and Rollout — **✅ COMPLETED (June 6, 2026)**
 *   **Goal:** Run full end-to-end regression test suite, seed historical records, and deploy to production with feature flags.
-*   **Files Affected:** `tools/qa/` (all test scripts), `docs/ERP_ACCOUNTING_MASTER_BLUEPRINT.md`, `config.py` (feature flags).
+*   **Files Affected:** `services/feature_flag_service.py` (new), `tools/qa/` (all test scripts), `docs/ERP_ACCOUNTING_MASTER_BLUEPRINT.md`, `docs/PRODUCTION_DEPLOYMENT_CHECKLIST.md`, `config.py` (feature flags).
 *   **Design Decisions (post-audit):**
     - No "big bang" deployment. Each phase is gated by a feature flag: `ENABLE_DYNAMIC_GL`, `ENABLE_MWAC`, `ENABLE_LANDED_COST`, `ENABLE_EXCHANGE_RATE_LOCK`, `ENABLE_RECONCILIATION`, `ENABLE_TREASURY`, `ENABLE_LOCALIZATION`.
     - Rollout order: internal tenant → beta tenant → all tenants.
