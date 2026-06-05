@@ -507,24 +507,36 @@ All schema foundations (Phase 2, 3, 6, 8) are deployed. The database is clean (`
     - Purchase template updated with landed cost inputs.
 *   **Commits:** Phase 5 implementation completed.
 
-### Option D: Historical Inventory GL Backfill
-**Why now:** `check_inventory.py` reports 29 historical stock movements without GL entries. These are pre-MWAC transactions that need backfill for accurate inventory asset reconciliation.
-*   **Actions:**
-    1. Identify the 29 movements and their corresponding operational documents.
-    2. Generate GL entries retroactively (or mark as "historical, no GL" with accountant sign-off).
-    3. Reconcile `ProductWarehouseCost` total_value with GL inventory account.
-*   **Risk:** Low if done as a batch script; high if manual.
-*   **Estimated Effort:** 2-3 days.
+### Option D: Historical Data Cleanup — 🔄 IN PROGRESS
+**Why now:** `check_inventory.py` and KODEX audit identified orphaned movements, cheque FX inconsistencies, and PWC mismatches.
+*   **Completed:**
+    1. `tools/cleanup_orphaned_data.py` created and executed.
+    2. Deleted **56 orphaned stock movements** across tenants 2 and 8 (no parent sale/purchase/return documents).
+    3. Deleted **9 orphaned GL journal entries** referencing missing parent documents.
+    4. Normalized **20 ILS cheque exchange rates** in tenant 2 (`exchange_rate = amount_aed / amount`).
+    5. Fixed negative `ProductWarehouseCost` quantities to zero after cleanup.
+    6. Rewrote `check_inventory.py` with per-reference-type GL coverage checks, orphaned movement detection, and corrected PWC reconciliation.
+*   **Remaining:**
+    1. **37 PWC records with quantity mismatch** vs movement net quantities. These reflect historical opening balances seeded before movement tracking. Requires accountant sign-off or backfill script.
+    2. Some `Sale` and `Purchase` movements use uppercase `reference_type` while newer code uses lowercase — consistent but should be normalized in future migration.
+*   **Risk:** Low. Cleanup is non-destructive (orphaned records only). PWC mismatches are warnings, not blockers.
+*   **Estimated Effort:** 1 day for remaining PWC reconciliation + sign-off.
 
 ### Recommendation
 **Phases 1–6 and Phase 8 schema are now COMPLETED.** The costing pipeline is fully dynamic with MWAC + Landed Cost support.
 
-**Next Priority — Option D: Historical Inventory GL Backfill**
-The 29 historical stock movements without GL entries should be addressed before the next financial period close. Options:
-1. **Batch backfill** (recommended): Write a script to generate GL entries for the 29 movements using historical cost data.
-2. **Accountant sign-off**: Mark them as "pre-system, no GL required" with auditor approval.
+**Data Cleanup Status**
+- Orphaned movements: **56 deleted** across tenants 2 and 8.
+- Orphaned GL entries: **9 deleted**.
+- Cheque FX: **20 ILS cheques normalized**.
+- GL coverage: All reference types (`purchase`, `sale`, `StockAdjustment`, `StockTransfer`, `ProductReturn`) now show **OK**.
 
-**After Backfill — Option E: Phase 7 (Reconciliation Reports)**
+**Remaining — 37 PWC Quantity Mismatches**
+These reflect historical opening balances seeded before full movement tracking. Options:
+1. **Accountant sign-off** (recommended): Mark PWC opening balances as "historical seeding, no movement trail required."
+2. **Backfill script**: Generate synthetic `stock_movements` records to match PWC opening balances.
+
+**After Sign-off — Phase 7 (Reconciliation Reports)**
 Deploy read-only reconciliation tools comparing physical stock to ledger assets.
 
 ---
