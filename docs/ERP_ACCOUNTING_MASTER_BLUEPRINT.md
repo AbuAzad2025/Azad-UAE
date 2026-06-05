@@ -445,23 +445,33 @@ This section records all hardening batches and modernization phases that have be
     - `py_compile`, `node --check`, Jinja parse: all pass.
 *   **Estimated Complexity:** Medium (1 Sprint) — **DONE**.
 
-### Phase 7: Reconciliation Reports — ✅ COMPLETED (June 5, 2026)
+### Phase 7: Reconciliation Reports — ✅ COMPLETED (June 6, 2026) — Post-Audit Fixes Applied
 *   **Goal:** Deploy read-only reconciliation tools comparing physical stock to ledger assets.
 *   **Files Affected:** `services/inventory_reconciliation_service.py`, `routes/reports.py`, `templates/reports/inventory_reconciliation.html`, `services/celery_tasks.py`.
 *   **Services Affected:** `InventoryReconciliationService`, Celery scheduled task.
 *   **Migrations Needed:** None.
 *   **Accounting Impact:** Exposes stock ledger and account ledger variances. Read-only: never auto-corrects data.
 *   **Features Delivered:**
-    - Per-product/warehouse reconciliation: PWC vs stock_movements vs GL inventory account (1140).
-    - Warehouse-level summary with match status badges.
-    - Date range filtering (date_from / date_to on stock movements).
-    - Excel/CSV export (`/inventory-reconciliation/export`).
-    - Scheduled Celery task (`run_inventory_reconciliation`) for daily automated checks.
+    - Per-product/warehouse reconciliation: PWC vs stock_movements.
+    - Warehouse-level summary: PWC vs GL inventory account (1140) fetched **once per warehouse** (no double-counting).
+    - Dual-match status badges: qty match + value match.
+    - Date range filtering wired end-to-end (`date_from` / `date_to` on stock movements and GL `entry_date`).
+    - Warehouse filter wired end-to-end (selector in UI + service + export).
+    - Excel/CSV export (`/inventory-reconciliation/export`) with branch security (`report_branch_scope_id` / `user_can_access_branch`).
+    - Export carries all active screen filters (branch, warehouse, date range).
+    - Scheduled Celery beat task (`daily-inventory-reconciliation`) for automated daily checks.
     - Menu links in sidebar and reports index.
+*   **Audit Fixes (June 6, 2026):**
+    - **FIX:** `_gl_inventory_balance` loop reassignment bug — filters were silently ignored because `for q in (debit_q, credit_q): q = q.filter(...)` mutated the loop variable only.
+    - **FIX:** Removed per-product GL value to eliminate double-counting; GL comparison moved to warehouse-summary level only.
+    - **FIX:** Export endpoint now enforces same branch-scope checks as display route.
+    - **FIX:** Export URLs now propagate `warehouse_id`, `date_from`, `date_to`.
+    - **FIX:** `build_warehouse_summary` computes `total_gl_value` from warehouse rows (no inflation).
+    - **FIX:** Added `gl_untagged` flag when warehouse-filtered GL is 0 but aggregate GL is non-zero (legacy entries without warehouse_id).
 *   **Evidence:**
-    - `tools/qa/test_inventory_reconciliation.py`: 18 products matched, qty diff = 0.
+    - `tools/qa/test_inventory_reconciliation.py`: ALL CHECKS PASSED (GL accuracy, per-product row structure, warehouse summary GL fields, date filter wiring, warehouse filter wiring, Celery beat_schedule, export route security, direct GL <= report GL).
     - `check_inventory.py`: All PWC records match movement net quantities.
-    - UI tested: branch filter, export buttons, responsive tables.
+    - `py_compile`, Jinja2 parse: all pass.
 *   **Risks:** Performance lag on large tables → mitigated by indexed queries.
 *   **Rollback Strategy:** Remove menu links from user dashboard.
 *   **Estimated Complexity:** Low (1 Sprint) — **DONE**.
@@ -504,7 +514,7 @@ This section records all hardening batches and modernization phases that have be
 | Phase 4 | MWAC Transaction Flows | ✅ COMPLETED | `test_mwac_end_to_end.py` PASS; WAC recalculates on receipt |
 | Phase 5 | Landed Cost Capitalization | ✅ COMPLETED | `test_landed_cost_end_to_end.py` PASS; freight/insurance/customs in inventory |
 | Phase 6 | Exchange Rate Framework | ✅ COMPLETED | `ExchangeRateRecord` per document; all services use `ExchangeRateService` |
-| Phase 7 | Reconciliation Reports | ✅ **COMPLETED** | `InventoryReconciliationService` deployed; PWC vs movements vs GL; Excel/CSV export; Celery scheduled check |
+| Phase 7 | Reconciliation Reports | ✅ **COMPLETED** (Jun 6) | `InventoryReconciliationService` deployed; PWC vs movements vs GL (no double-counting); date/warehouse filters; secure export; Celery daily beat |
 | Phase 8 | Treasury & Cash | ✅ SCHEMA COMPLETED | `CashBox` model deployed; service logic pending |
 | Phase 9 | Global Localization | ⏳ PENDING | `utils/localization/` framework design needed |
 | Phase 10 | Testing & Rollout | ⏳ PENDING | Full regression suite after all phases complete |

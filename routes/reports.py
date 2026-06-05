@@ -753,12 +753,23 @@ def inventory_reconciliation():
     report = InventoryReconciliationService.build_warehouse_summary(
         tenant_id=tenant_id,
         branch_id=branch_id,
+        warehouse_id=warehouse_id,
+        date_from=date_from,
+        date_to=date_to,
     )
     branches = get_accessible_branches(current_user)
+    from models import Warehouse as WarehouseModel
+    warehouses = WarehouseModel.query.filter_by(is_active=True)
+    if tenant_id is not None:
+        warehouses = warehouses.filter(WarehouseModel.tenant_id == tenant_id)
+    if branch_id is not None:
+        warehouses = warehouses.filter(WarehouseModel.branch_id == branch_id)
+    warehouses = warehouses.order_by(WarehouseModel.name).all()
     return render_template(
         'reports/inventory_reconciliation.html',
         report=report,
         branches=branches,
+        warehouses=warehouses,
         selected_branch=branch_id,
         selected_warehouse=warehouse_id,
         date_from=date_from,
@@ -773,20 +784,35 @@ def inventory_reconciliation_export():
     from services.inventory_reconciliation_service import InventoryReconciliationService
     from services.export_service import ExportService
     from flask import send_file
+    from utils.branching import user_can_access_branch
 
     fmt = (request.args.get('format') or 'xlsx').strip().lower()
     branch_id = request.args.get('branch_id', type=int)
-    tenant_id = get_active_tenant_id(current_user)
+    warehouse_id = request.args.get('warehouse_id', type=int)
+    date_from = request.args.get('date_from', type=str)
+    date_to = request.args.get('date_to', type=str)
+    scoped_branch_id = report_branch_scope_id()
 
+    if branch_id is None:
+        branch_id = scoped_branch_id
+    elif scoped_branch_id is not None and branch_id != scoped_branch_id:
+        return render_template('errors/403.html'), 403
+    elif scoped_branch_id is None and branch_id is not None and not user_can_access_branch(branch_id, current_user):
+        return render_template('errors/403.html'), 403
+
+    tenant_id = get_active_tenant_id(current_user)
     report = InventoryReconciliationService.build_warehouse_summary(
         tenant_id=tenant_id,
         branch_id=branch_id,
+        warehouse_id=warehouse_id,
+        date_from=date_from,
+        date_to=date_to,
     )
 
     headers = [
         'tenant_id', 'product_id', 'product_name', 'warehouse_id', 'warehouse_name',
         'pwc_qty', 'movement_qty', 'qty_diff', 'pwc_avg_cost', 'pwc_value',
-        'gl_value', 'matched_qty',
+        'matched_qty',
     ]
     data = []
     for r in report['rows']:
@@ -801,7 +827,6 @@ def inventory_reconciliation_export():
             r['qty_diff'],
             r['pwc_avg_cost'],
             r['pwc_value'],
-            r['gl_value'],
             'OK' if r['matched_qty'] else 'REVIEW',
         ])
 

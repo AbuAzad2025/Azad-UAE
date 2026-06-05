@@ -15,15 +15,22 @@
             <option value="{{ branch.id }}" {% if selected_branch == branch.id %}selected{% endif %}>{{ branch.name }}</option>
             {% endfor %}
           </select>
+          <label class="mr-2">المستودع:</label>
+          <select name="warehouse_id" class="form-control mr-2" onchange="this.form.submit()">
+            <option value="">-- الكل --</option>
+            {% for wh in warehouses %}
+            <option value="{{ wh.id }}" {% if selected_warehouse == wh.id %}selected{% endif %}>{{ wh.name_ar or wh.name }}</option>
+            {% endfor %}
+          </select>
           <label class="mr-2">من:</label>
           <input type="date" name="date_from" class="form-control mr-2" value="{{ date_from or '' }}" onchange="this.form.submit()">
           <label class="mr-2">إلى:</label>
           <input type="date" name="date_to" class="form-control mr-2" value="{{ date_to or '' }}" onchange="this.form.submit()">
           <div class="ml-auto">
-            <a href="{{ url_for('reports.inventory_reconciliation_export', format='xlsx', branch_id=selected_branch) }}" class="btn btn-success btn-sm">
+            <a href="{{ url_for('reports.inventory_reconciliation_export', format='xlsx', branch_id=selected_branch, warehouse_id=selected_warehouse, date_from=date_from, date_to=date_to) }}" class="btn btn-success btn-sm">
               <i class="fas fa-file-excel mr-1"></i>Excel
             </a>
-            <a href="{{ url_for('reports.inventory_reconciliation_export', format='csv', branch_id=selected_branch) }}" class="btn btn-secondary btn-sm">
+            <a href="{{ url_for('reports.inventory_reconciliation_export', format='csv', branch_id=selected_branch, warehouse_id=selected_warehouse, date_from=date_from, date_to=date_to) }}" class="btn btn-secondary btn-sm">
               <i class="fas fa-file-csv mr-1"></i>CSV
             </a>
             <a href="{{ url_for('reports.ar_reconciliation') }}" class="btn btn-outline-secondary btn-sm">
@@ -84,10 +91,15 @@
     <h3 class="card-title text-white mb-0">
       <i class="fas fa-warehouse mr-2"></i>تسوية حسب المستودع
     </h3>
-    {% if report.summary.all_matched %}
-    <span class="badge badge-success"><i class="fas fa-check"></i> الكل متطابق</span>
+    {% if report.summary.all_matched_qty %}
+    <span class="badge badge-success"><i class="fas fa-check"></i> الكميات متطابقة</span>
     {% else %}
-    <span class="badge badge-warning"><i class="fas fa-exclamation-triangle"></i> يوجد فروقات</span>
+    <span class="badge badge-warning"><i class="fas fa-exclamation-triangle"></i> يوجد فروقات كمية</span>
+    {% endif %}
+    {% if report.summary.all_matched_value %}
+    <span class="badge badge-success ml-2"><i class="fas fa-check"></i> القيم متطابقة</span>
+    {% else %}
+    <span class="badge badge-info ml-2"><i class="fas fa-info-circle"></i> مراجعة GL</span>
     {% endif %}
   </div>
   <div class="card-body p-0">
@@ -116,7 +128,12 @@
             {{ '{:+.3f}'.format(row.qty_diff) }}
           </td>
           <td class="text-left">{{ '{:,.2f}'.format(row.pwc_value) }}</td>
-          <td class="text-left">{{ '{:,.2f}'.format(row.gl_value) }}</td>
+          <td class="text-left">
+            {{ '{:,.2f}'.format(row.gl_value) }}
+            {% if row.gl_untagged %}
+            <span class="badge badge-info" title="قيود GL قديمة بدون warehouse_id">legacy</span>
+            {% endif %}
+          </td>
           <td class="text-left {% if not row.matched_value %}text-warning{% endif %}">
             {{ '{:,.2f}'.format(row.value_diff) }}
           </td>

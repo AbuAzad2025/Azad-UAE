@@ -15,6 +15,13 @@ celery.conf.update(
     result_serializer='json',
     timezone='Asia/Dubai',
     enable_utc=True,
+    beat_schedule={
+        'daily-inventory-reconciliation': {
+            'task': 'services.celery_tasks.run_inventory_reconciliation',
+            'schedule': 86400.0,  # 24 hours in seconds
+            'args': (None,),      # tenant_id=None → reconcile all tenants
+        },
+    },
 )
 
 
