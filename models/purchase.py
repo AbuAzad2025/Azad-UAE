@@ -32,7 +32,22 @@ class Purchase(db.Model):
     currency = db.Column(db.String(3), default='AED', nullable=False)
     exchange_rate = db.Column(db.Numeric(15, 6), default=1)
     amount_aed = db.Column(db.Numeric(15, 3), nullable=False)
-    
+
+    # Landed cost components (Phase 5)
+    freight = db.Column(db.Numeric(15, 3), default=0, nullable=False)
+    insurance = db.Column(db.Numeric(15, 3), default=0, nullable=False)
+    customs_duty = db.Column(db.Numeric(15, 3), default=0, nullable=False)
+    other_landed_cost = db.Column(db.Numeric(15, 3), default=0, nullable=False)
+
+    @property
+    def total_landed_cost(self):
+        return (
+            Decimal(str(self.freight or 0)) +
+            Decimal(str(self.insurance or 0)) +
+            Decimal(str(self.customs_duty or 0)) +
+            Decimal(str(self.other_landed_cost or 0))
+        )
+
     # Alias for unified currency handling — amount_aed stores the tenant's base currency
     @property
     def base_amount(self):
@@ -147,6 +162,7 @@ class PurchaseLine(db.Model):
     unit_cost = db.Column(db.Numeric(15, 3), nullable=False)
     discount_percent = db.Column(db.Numeric(5, 2), default=0)
     line_total = db.Column(db.Numeric(15, 3), nullable=False)
+    landed_cost = db.Column(db.Numeric(15, 3), default=0, nullable=False)
     
     notes = db.Column(db.String(255))
     
@@ -168,6 +184,16 @@ class PurchaseLine(db.Model):
             Decimal('0.001'), rounding=ROUND_HALF_UP
         )
     
+    @property
+    def landed_unit_cost(self):
+        """Unit cost after distributing landed costs (freight, insurance, customs, etc.)"""
+        qty = Decimal(str(self.quantity)) if self.quantity else Decimal('0')
+        if qty == 0:
+            return Decimal('0')
+        base = Decimal(str(self.unit_cost)) if self.unit_cost else Decimal('0')
+        landed = Decimal(str(self.landed_cost)) if self.landed_cost else Decimal('0')
+        return (base + (landed / qty)).quantize(Decimal('0.001'), rounding=ROUND_HALF_UP)
+
     def to_dict(self):
         return {
             'id': self.id,
@@ -176,5 +202,7 @@ class PurchaseLine(db.Model):
             'unit_cost': float(self.unit_cost),
             'discount_percent': float(self.discount_percent),
             'line_total': float(self.line_total),
+            'landed_cost': float(self.landed_cost) if self.landed_cost else 0,
+            'landed_unit_cost': float(self.landed_unit_cost) if self.landed_unit_cost else 0,
         }
 

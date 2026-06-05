@@ -317,10 +317,10 @@ class StockService:
             if not product:
                 continue
                 
-            # Update cost price in base currency (AED)
-            unit_cost_decimal = Decimal(str(line.unit_cost))
+            # Phase 5: Use landed_unit_cost (FOB + allocated landed cost) for valuation
+            landed_unit_cost = line.landed_unit_cost
             exchange_rate_decimal = Decimal(str(purchase.exchange_rate))
-            cost_in_aed = unit_cost_decimal * exchange_rate_decimal
+            cost_in_aed = landed_unit_cost * exchange_rate_decimal
             product.cost_price = cost_in_aed
             
             # MWAC recalculation (Phase 4)

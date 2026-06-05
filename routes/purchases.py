@@ -106,7 +106,11 @@ def create():
                 user_exchange_rate=request.form.get('exchange_rate', type=float),
                 discount_amount=request.form.get('discount_amount', type=float, default=0),
                 tax_rate=request.form.get('tax_rate', type=float, default=0),
-                notes=request.form.get('notes')
+                notes=request.form.get('notes'),
+                freight=request.form.get('freight', type=float, default=0),
+                insurance=request.form.get('insurance', type=float, default=0),
+                customs_duty=request.form.get('customs_duty', type=float, default=0),
+                other_landed_cost=request.form.get('other_landed_cost', type=float, default=0)
             )
             
             flash('✅ تم إنشاء فاتورة الشراء بنجاح!', 'success')

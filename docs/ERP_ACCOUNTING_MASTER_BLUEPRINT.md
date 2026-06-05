@@ -416,16 +416,21 @@ This section records all hardening batches and modernization phases that have be
     - `config.py`: `ENABLE_MWAC=True` by default.
 *   **Commits:** `929348f` (MWAC + exchange rate fixes).
 
-### Phase 5: Landed Cost Capitalization
+### Phase 5: Landed Cost Capitalization — ✅ COMPLETED (June 5, 2026)
 *   **Goal:** Capitalize transport, insurance, and duties directly into inventory value.
-*   **Files Affected:** `models/purchase.py`, `services/purchase_service.py`.
-*   **Services Affected:** `PurchaseService`.
-*   **Migrations Needed:** `add_landed_cost_to_purchase_lines`.
-*   **Accounting Impact:** Proportional allocation by value is capitalized on purchase receiving.
-*   **Risks:** Inaccurate cost allocations over-value assets.
-*   **Rollback Strategy:** Exclude landed costs from cost calculation, defaulting them to period expenses.
-*   **Estimated Complexity:** Medium (1 Sprint).
-*   **Dependencies:** Phase 4.
+*   **Files Affected:** `models/purchase.py`, `services/purchase_service.py`, `services/stock_service.py`, `routes/purchases.py`, `templates/purchases/create.html`.
+*   **Services Affected:** `PurchaseService`, `StockService`.
+*   **Models Added:** `Purchase.freight`, `Purchase.insurance`, `Purchase.customs_duty`, `Purchase.other_landed_cost`, `PurchaseLine.landed_cost`.
+*   **Migrations:** `phase5_001`.
+*   **Status:** Schema deployed. Landed costs are proportionally allocated by line value to `PurchaseLine.landed_cost`, then included in `PurchaseLine.landed_unit_cost` which feeds MWAC via `StockService.process_purchase_lines()`. GL inventory debit and AP credit both include total landed cost. Purchase creation template updated with landed cost fields.
+*   **Evidence:**
+    - `test_landed_cost_end_to_end.py`: ALL LANDED COST TESTS PASSED (allocation, WAC inclusion, COGS, GL math).
+    - `test_mwac_end_to_end.py`: ALL MWAC TESTS PASSED.
+    - `gl_mapping_validation_dry_run.py`: 0 critical / 0 warning.
+    - `gl_dynamic_posting_resolution_check.py`: ready true.
+    - `py_compile`, Jinja parse: all pass.
+    - `git diff --check`: clean.
+*   **Estimated Complexity:** Medium (1 Sprint) — **DONE**.
 
 ### Phase 6: Exchange Rate Framework — ✅ COMPLETED (June 5, 2026)
 *   **Goal:** Secure multi-currency documents using manual manager rates and online fallback tables.
@@ -494,15 +499,13 @@ All schema foundations (Phase 2, 3, 6, 8) are deployed. The database is clean (`
     - `ProductCostHistory` audit trail: records for every purchase receipt and sale.
     - `StockService._update_wac_on_receipt()`: WAC formula verified.
 
-### Option C: Landed Cost Capitalization (Phase 5) — 🔄 NEXT
-**Why now:** MWAC is active. Adding freight, insurance, and customs duties to inventory value is the natural next costing enhancement.
-*   **Actions:**
-    1. Extend `PurchaseLine` with `freight`, `insurance`, `customs_duty` fields.
-    2. Modify `PurchaseService` to allocate landed costs proportionally by value across received lines.
-    3. Update WAC recalculation to include landed cost in `unit_cost_aed`.
-    4. Add landed cost concept codes to `GLAccountMapping`.
-*   **Risk:** Medium. Changes purchase valuation and COGS baseline.
-*   **Estimated Effort:** 1 Sprint.
+### Option C: Landed Cost Capitalization (Phase 5) — ✅ COMPLETED (June 5, 2026)
+**Status:** Landed cost fields (`freight`, `insurance`, `customs_duty`, `other_landed_cost`) added to `Purchase`. `PurchaseLine.landed_cost` stores allocated landed cost per line. `PurchaseService.create_purchase()` allocates landed costs proportionally by line value. `StockService.process_purchase_lines()` uses `landed_unit_cost` for WAC and product cost price. GL postings include landed costs in inventory and AP.
+*   **Evidence:**
+    - `test_landed_cost_end_to_end.py`: allocation, WAC, COGS, GL math all PASS.
+    - `test_mwac_end_to_end.py`: still PASS (backward compatible).
+    - Purchase template updated with landed cost inputs.
+*   **Commits:** Phase 5 implementation completed.
 
 ### Option D: Historical Inventory GL Backfill
 **Why now:** `check_inventory.py` reports 29 historical stock movements without GL entries. These are pre-MWAC transactions that need backfill for accurate inventory asset reconciliation.
@@ -514,7 +517,15 @@ All schema foundations (Phase 2, 3, 6, 8) are deployed. The database is clean (`
 *   **Estimated Effort:** 2-3 days.
 
 ### Recommendation
-**Proceed to Option C (Landed Cost Capitalization).** The costing pipeline is now fully dynamic. Landed cost is the next highest-value addition for import-heavy businesses. Before starting, run Option D (backfill) if the 29 historical movements belong to active financial periods requiring audit compliance.
+**Phases 1–6 and Phase 8 schema are now COMPLETED.** The costing pipeline is fully dynamic with MWAC + Landed Cost support.
+
+**Next Priority — Option D: Historical Inventory GL Backfill**
+The 29 historical stock movements without GL entries should be addressed before the next financial period close. Options:
+1. **Batch backfill** (recommended): Write a script to generate GL entries for the 29 movements using historical cost data.
+2. **Accountant sign-off**: Mark them as "pre-system, no GL required" with auditor approval.
+
+**After Backfill — Option E: Phase 7 (Reconciliation Reports)**
+Deploy read-only reconciliation tools comparing physical stock to ledger assets.
 
 ---
 

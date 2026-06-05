@@ -310,6 +310,41 @@
       <div class="row mt-4">
         <div class="col-md-12">
           <h5 class="text-primary mb-3">
+            <i class="fas fa-ship"></i> تكاليف الشحن والاستيراد
+            <small class="text-muted">(تُضمّن في تكلفة المخزون)</small>
+          </h5>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-3">
+          <div class="form-group">
+            <label for="freight"><i class="fas fa-truck"></i> الشحن</label>
+            <input type="number" name="freight" id="freight" class="form-control" value="0" step="0.01" min="0">
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="form-group">
+            <label for="insurance"><i class="fas fa-shield-alt"></i> التأمين</label>
+            <input type="number" name="insurance" id="insurance" class="form-control" value="0" step="0.01" min="0">
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="form-group">
+            <label for="customs_duty"><i class="fas fa-landmark"></i> الجمارك</label>
+            <input type="number" name="customs_duty" id="customs_duty" class="form-control" value="0" step="0.01" min="0">
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="form-group">
+            <label for="other_landed_cost"><i class="fas fa-ellipsis-h"></i> أخرى</label>
+            <input type="number" name="other_landed_cost" id="other_landed_cost" class="form-control" value="0" step="0.01" min="0">
+          </div>
+        </div>
+      </div>
+
+      <div class="row mt-4">
+        <div class="col-md-12">
+          <h5 class="text-primary mb-3">
             <i class="fas fa-boxes"></i> المنتجات المشتراة
           </h5>
         </div>

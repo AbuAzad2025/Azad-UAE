@@ -17,7 +17,8 @@ class PurchaseService:
     @staticmethod
     def create_purchase(user, supplier_data, lines_data, warehouse_id=None, 
                        currency=None, user_exchange_rate=None, 
-                       discount_amount=0, tax_rate=0, notes=None):
+                       discount_amount=0, tax_rate=0, notes=None,
+                       freight=0, insurance=0, customs_duty=0, other_landed_cost=0):
         """
         Create a new purchase invoice with stock update and GL entries.
         
@@ -31,7 +32,11 @@ class PurchaseService:
             discount_amount: Total discount amount
             tax_rate: Tax percentage
             notes: Optional notes
-            
+            freight: Freight/shipping cost (in purchase currency)
+            insurance: Insurance cost (in purchase currency)
+            customs_duty: Customs/duty cost (in purchase currency)
+            other_landed_cost: Other landed costs (in purchase currency)
+
         Returns:
             Purchase object
         """
@@ -109,7 +114,11 @@ class PurchaseService:
             subtotal=Decimal('0'),
             tax_amount=Decimal('0'),
             total_amount=Decimal('0'),
-            amount_aed=Decimal('0')
+            amount_aed=Decimal('0'),
+            freight=Decimal(str(freight or 0)),
+            insurance=Decimal(str(insurance or 0)),
+            customs_duty=Decimal(str(customs_duty or 0)),
+            other_landed_cost=Decimal(str(other_landed_cost or 0)),
         )
         
         db.session.add(purchase)
@@ -154,22 +163,32 @@ class PurchaseService:
             
         purchase.subtotal = subtotal
         purchase.calculate_totals()
-        
+
+        # Phase 5: Allocate landed costs proportionally by line value
+        total_landed = purchase.total_landed_cost
+        if total_landed > 0 and purchase.subtotal > 0:
+            for line in purchase.lines:
+                if line.line_total and line.line_total > 0:
+                    ratio = line.line_total / purchase.subtotal
+                    line.landed_cost = (total_landed * ratio).quantize(Decimal('0.001'), rounding=ROUND_HALF_UP)
+
         db.session.flush()
-        
-        # Stock Update
+
+        # Stock Update (uses landed_unit_cost for WAC when MWAC is enabled)
         StockService.process_purchase_lines(purchase, warehouse_id)
-        
+
         # GL Entries
         GLService.ensure_core_accounts(tenant_id=tenant_id)
-        
-        inventory_debit = (purchase.subtotal or Decimal('0')) - (purchase.discount_amount or Decimal('0'))
+
+        inventory_debit = (purchase.subtotal or Decimal('0')) - (purchase.discount_amount or Decimal('0')) + total_landed
         if inventory_debit < Decimal('0'):
             inventory_debit = Decimal('0')
 
+        total_payable = purchase.total_amount + total_landed
+
         lines = [
             {'account': GL_ACCOUNTS['inventory'], 'concept_code': 'INVENTORY_ASSET', 'debit': inventory_debit, 'description': f'شراء بضاعة {purchase.purchase_number}'},
-            {'account': GL_ACCOUNTS['payable'], 'concept_code': 'AP', 'credit': purchase.total_amount, 'description': f'ذمم دائنة - مورد: {purchase.supplier_name}'}
+            {'account': GL_ACCOUNTS['payable'], 'concept_code': 'AP', 'credit': total_payable, 'description': f'ذمم دائنة - مورد: {purchase.supplier_name}'}
         ]
         
         if purchase.tax_amount > 0 and should_post_vat_gl(tenant_id):
