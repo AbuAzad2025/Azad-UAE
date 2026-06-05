@@ -182,7 +182,7 @@ class Config:
     # --- Feature Flags (Accounting Modernization) ---
     # Phase 1: Dynamic GL Mapping
     # When False (default): legacy hardcoded GL code lookups remain active.
-    ENABLE_DYNAMIC_GL_MAPPING = _bool(os.environ.get("ENABLE_DYNAMIC_GL_MAPPING"), False)
+    ENABLE_DYNAMIC_GL_MAPPING = _bool(os.environ.get("ENABLE_DYNAMIC_GL_MAPPING"), True)
 
     # Phase 3-4: Moving Weighted Average Cost (MWAC)
     # When False: stock valuation uses Last Purchase Cost.

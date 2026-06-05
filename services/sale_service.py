@@ -3,7 +3,7 @@ from flask import current_app
 from extensions import db
 from models import PartnerCommissionEntry, Sale, SaleLine, Payment
 from services.stock_service import StockService
-from services.currency_service import CurrencyService
+from services.exchange_rate_service import ExchangeRateService
 from services.gl_posting import post_or_fail, GlPostingError
 from utils.gl_reference_types import GLRef
 from services.commission_gl_service import post_sale_commissions
@@ -89,11 +89,12 @@ class SaleService:
             )
             paid_amount_aed = Decimal('0')
             
-            exchange_rate = CurrencyService.get_exchange_rate(
-                currency, 
-                'AED', 
-                user_rate=user_exchange_rate
+            rate_info = ExchangeRateService.resolve_exchange_rate_for_transaction(
+                currency,
+                'AED',
+                user_rate=user_exchange_rate,
             )
+            exchange_rate = Decimal(str(rate_info['rate']))
             
             # Validate exchange rate
             if exchange_rate <= Decimal('0'):
@@ -397,7 +398,7 @@ class SaleService:
             (Decimal(str(line.cost_price)) * Decimal(str(line.quantity)) for line in sale.lines),
             Decimal('0'),
         )
-        cogs_total_aed = (cogs_total * exchange_rate).quantize(
+        cogs_total_aed = cogs_total.quantize(
             Decimal('0.001'), rounding=ROUND_HALF_UP
         )
 
