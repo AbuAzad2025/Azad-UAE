@@ -2,7 +2,7 @@
 
 **Document Status:** Single Source of Truth — Supersedes All Accounting Documentation  
 **Date:** June 4, 2026  
-**Last Updated:** June 5, 2026
+**Last Updated:** June 5, 2026 (Session 2)
 
 > **NOTICE:** This document is the sole authoritative accounting plan. All previous accounting documents (listed in Section 1.1) are superseded and should be removed from active reference.  
 **Reference Standards:** SAP Business One, Oracle NetSuite, Odoo, Bisan, Al-Shamel  
@@ -348,6 +348,24 @@ This section records all hardening batches and modernization phases that have be
 
 ---
 
+### 12.8 Phase 2-8 Schema Foundation & Feature Flags (June 5, 2026)
+**Goal:** Complete all partially implemented schema foundations identified in the Code and System Verification Report. Bring every "partially completed" item to "fully completed" at the schema/model level.
+
+| Area | Action | Status | Evidence |
+|------|--------|--------|----------|
+| **Phase 2: Financial Dimensions** | Added `branch_id`, `warehouse_id`, `profit_center_id`, `partner_id` to `GLJournalLine`; created `ProfitCenter` model; wired dimensions through `reverse_entry`, `GLService.create_journal_entry`, `post_entry`, `create_manual_entry`, `post_or_fail` | ✅ SCHEMA COMPLETED | Migration `phase2_001_add_gl_dimensions_and_profit_centers` |
+| **Phase 3: MWAC Data Model** | Created `ProductWarehouseCost` (active WAC per product/warehouse) and `ProductCostHistory` (immutable audit trail) models | ✅ SCHEMA COMPLETED | Migration `phase3_001_add_mwac_exchange_rate_treasury_models` |
+| **Phase 6: Exchange Rate Framework** | Created `ExchangeRateRecord` model (locked rates per document, manual/API source tracking) | ✅ SCHEMA COMPLETED | Migration `phase3_001` |
+| **Phase 8: Treasury** | Created `CashBox` model (cash/bank/gateway unified liquidity container with GL linkage) | ✅ SCHEMA COMPLETED | Migration `phase3_001` |
+| **Feature Flags** | Added `ENABLE_MWAC`, `ENABLE_LANDED_COST_CAPITALIZATION`, `ENABLE_ONLINE_EXCHANGE_RATE_FALLBACK`, `ENABLE_ADVANCED_RECONCILIATION`, `ENABLE_LOCALIZATION_FRAMEWORK` to `config.py` | ✅ COMPLETED | `config.py` lines 187-205 |
+| **Schema Drift Cleanup** | 5 idempotent migrations fixing constraints, indexes, nullable columns, and orphaned AI tables | ✅ COMPLETED | `phase3_002` through `phase3_006`; `flask db check` reports **No new upgrade operations detected** |
+| **Dynamic GL Wiring** | `get_payment_debit_account` and `get_customer_credit_account` now attempt `resolve_gl_account` when `ENABLE_DYNAMIC_GL_MAPPING=True` before falling back to legacy hardcoded codes; `sale_service.py` refactored to use `get_customer_credit_account(branch_id, tenant_id)` | ✅ COMPLETED | `services/gl_service.py`, `services/sale_service.py` |
+| **Database Sync** | All 6 new tables created; all dimension columns present; orphaned `ai_*` tables backed up and removed | ✅ COMPLETED | Verified via `flask db current` = `phase3_006` |
+
+**Commit:** `dfdfac1` (Phase 1-8 schema), `935737a` (drift fixes), `a8d055e` (GL resolver wiring), `a48665b` (final drift + AI cleanup) — all pushed to `origin/main`.
+
+---
+
 ## 13. Phased Implementation Roadmap
 
 ### Phase 0: Baseline Correction & Documentation Prep
@@ -367,27 +385,21 @@ This section records all hardening batches and modernization phases that have be
 *   **Estimated Complexity:** Medium (1 Sprint) — **Actual: 2 Sprints**.
 *   **Dependencies:** Phase 0.
 
-### Phase 2: Financial Dimensions Enforcement
+### Phase 2: Financial Dimensions Enforcement — **SCHEMA COMPLETED**
 *   **Goal:** Enforce and validate dimension columns on journal entries and lines.
-*   **Files Affected:** `models/gl.py`, `utils/gl_helpers.py`.
-*   **Models Needed:** `gl_journal_lines` extended with dimension foreign keys (`branch_id`, `warehouse_id`, etc.).
-*   **Migrations Needed:** `add_dimensions_to_gl_lines`.
-*   **Accounting Impact:** Prevents ledger code explosion.
-*   **Risks:** Active transactions fail if a operational parameter (like `warehouse_id`) is missing.
-*   **Rollback Strategy:** Allow nullable entries for historical compatibility; log warnings instead of raising errors.
-*   **Estimated Complexity:** Medium (1 Sprint).
-*   **Dependencies:** Phase 1.
+*   **Files Affected:** `models/gl.py`, `services/gl_service.py`, `services/gl_posting.py`.
+*   **Models Added:** `ProfitCenter`; `GLJournalLine` extended with `branch_id`, `warehouse_id`, `profit_center_id`, `partner_id`.
+*   **Migrations:** `phase2_001_add_gl_dimensions_and_profit_centers`.
+*   **Status:** Schema and model wiring complete. Dimensions are propagated in `reverse_entry`, `create_journal_entry`, `post_entry`, `create_manual_entry`, and `post_or_fail`. Service-layer enforcement (mandatory dimension validation) is deferred until operational UI passes dimensions explicitly.
+*   **Estimated Complexity:** Medium (1 Sprint) — **Schema: DONE**.
 
-### Phase 3: MWAC Data Model Design
+### Phase 3: MWAC Data Model Design — **SCHEMA COMPLETED**
 *   **Goal:** Deploy database schemas to store per-warehouse stock values.
-*   **Files Affected:** `models/product.py`, `models/warehouse.py`.
-*   **Models Needed:** `ProductWarehouseCost` (active inventory valuation), `ProductCostHistory` (audit trail).
-*   **Migrations Needed:** `create_mwac_tables`.
-*   **Accounting Impact:** Definitive asset state tracking.
-*   **Risks:** Synchronization mismatches between physical movements and average records.
-*   **Rollback Strategy:** Revert average queries back to standard global `Product.cost_price`.
-*   **Estimated Complexity:** Low (3-4 days).
-*   **Dependencies:** Phase 2.
+*   **Files Affected:** `models/product_warehouse_cost.py`, `models/product_cost_history.py`.
+*   **Models Added:** `ProductWarehouseCost` (active inventory valuation), `ProductCostHistory` (immutable audit trail).
+*   **Migrations:** `phase3_001_add_mwac_exchange_rate_treasury_models`.
+*   **Status:** Schema deployed. Transaction-flow recalculation logic (Phase 4) is the next dependency.
+*   **Estimated Complexity:** Low (3-4 days) — **Schema: DONE**.
 
 ### Phase 4: MWAC Transaction Flows
 *   **Goal:** Hook operational purchases, sales, and warehouse receipts to average cost recalculations.
@@ -411,15 +423,13 @@ This section records all hardening batches and modernization phases that have be
 *   **Estimated Complexity:** Medium (1 Sprint).
 *   **Dependencies:** Phase 4.
 
-### Phase 6: Exchange Rate Framework
+### Phase 6: Exchange Rate Framework — **SCHEMA COMPLETED**
 *   **Goal:** Secure multi-currency documents using manual manager rates and online fallback tables.
-*   **Files Affected:** `models/purchase.py`, `services/exchange_service.py`.
-*   **Migrations Needed:** `create_exchange_rate_tables`.
-*   **Accounting Impact:** Rates are permanent once documents post. Conversions lock AED/SAR/ILS values.
-*   **Risks:** API disconnect on document creation.
-*   **Rollback Strategy:** Standalone manual inputs required if API lookup fails.
-*   **Estimated Complexity:** Medium (1 Sprint).
-*   **Dependencies:** Phase 5.
+*   **Files Affected:** `models/exchange_rate_record.py`, `services/exchange_service.py` (future).
+*   **Models Added:** `ExchangeRateRecord` (rate locking per document, manual/API source tracking).
+*   **Migrations:** `phase3_001`.
+*   **Status:** Schema deployed. Service logic for rate locking on document post is deferred to Phase 6 execution.
+*   **Estimated Complexity:** Medium (1 Sprint) — **Schema: DONE**.
 
 ### Phase 7: Reconciliation Reports
 *   **Goal:** Deploy read-only reconciliation tools comparing physical stock to ledger assets.
@@ -432,13 +442,13 @@ This section records all hardening batches and modernization phases that have be
 *   **Estimated Complexity:** Low (1 Sprint).
 *   **Dependencies:** Phase 6.
 
-### Phase 8: Treasury & Cash Position Reporting
+### Phase 8: Treasury & Cash Position Reporting — **SCHEMA COMPLETED**
 *   **Goal:** Multi-branch bank, cashier, and post-dated cheque position tracking.
-*   **Files Affected:** `models/payment.py`, `services/treasury_service.py`.
-*   **Migrations Needed:** `create_treasury_tables`.
-*   **Accounting Impact:** Cash positioning dimensions active.
-*   **Estimated Complexity:** Medium (1 Sprint).
-*   **Dependencies:** Phase 7.
+*   **Files Affected:** `models/cash_box.py`, `services/treasury_service.py` (future).
+*   **Models Added:** `CashBox` (cash/bank/gateway unified container with GL linkage).
+*   **Migrations:** `phase3_001`.
+*   **Status:** Schema deployed. Treasury reporting service logic is deferred to Phase 8 execution.
+*   **Estimated Complexity:** Medium (1 Sprint) — **Schema: DONE**.
 
 ### Phase 9: Global Localization Engine — **PENDING**
 *   **Goal:** Country-specific compliance engines for Palestine, UAE, and Saudi Arabia.
@@ -453,6 +463,38 @@ This section records all hardening batches and modernization phases that have be
 *   **Goal:** Run full end-to-end regression test suite, seed historical records, and deploy.
 *   **Estimated Complexity:** Low (1-2 Sprints).
 *   **Dependencies:** All previous phases.
+
+---
+
+## 14. Next Step — Recommended Priority
+
+All schema foundations (Phase 2, 3, 6, 8) are deployed. The database is clean (`flask db check` = zero drift). Two high-value paths are now ready for execution:
+
+### Option A: Activate Dynamic GL Mapping (Phase 1 Activation)
+**Why now:** The resolver, models, and service wiring are complete. The only blocker is the absence of seeded `GLAccountMapping` rows.
+*   **Actions:**
+    1. Run `tools/qa/gl_mapping_validation_dry_run.py` to confirm readiness per tenant.
+    2. Run `--discover-candidates` then `--preview-seed` to propose safe mappings.
+    3. Create missing GL accounts for unresolvable concepts (`CUSTOMS_DUTY`, `FREIGHT_IN`, `INVENTORY_ADJUSTMENT_GAIN`, `SALES_RETURNS`, `CASH` for 1 tenant).
+    4. Execute seeding.
+    5. Set `ENABLE_DYNAMIC_GL_MAPPING=True` (tenant-by-tenant or global).
+    6. Run end-to-end posting test (Sale → GL, Payment → GL, Purchase → GL).
+*   **Risk:** Low. The feature flag isolates the change; legacy fallback remains active if a mapping is missing.
+*   **Estimated Effort:** 2-3 days.
+
+### Option B: MWAC Transaction Flows (Phase 4)
+**Why now:** `ProductWarehouseCost` and `ProductCostHistory` tables exist. `StockService`, `SaleService`, and `PurchaseService` can now be wired to recalculate average cost on every receipt.
+*   **Actions:**
+    1. Modify `StockService.receive_stock()` to update `ProductWarehouseCost` (increase qty, recalculate WAC, append `ProductCostHistory`).
+    2. Modify `SaleService` COGS posting to read from `ProductWarehouseCost.average_cost` instead of `SaleLine.cost_price`.
+    3. Modify `PurchaseService` to trigger WAC recalculation on purchase receipt.
+    4. Set `ENABLE_MWAC=True`.
+    5. Run reconciliation between `ProductWarehouseCost` and GL inventory account.
+*   **Risk:** Medium. Directly affects inventory valuation and COGS. Requires opening-balance baseline (Open Owner Decision #1).
+*   **Estimated Effort:** 1-2 Sprints.
+
+### Recommendation
+**Start with Option A (Activate Dynamic GL Mapping).** It validates the entire posting pipeline with zero inventory impact. Once GL posting is fully dynamic and tested, proceed to Option B (MWAC) with confidence that any valuation discrepancy is isolated to the costing layer, not the posting layer.
 
 ---
 
@@ -639,4 +681,4 @@ Future phases require admin UI support for the following areas:
 ---
 
 *End of Master Blueprint — Single Source of Truth*
-*Last updated: June 5, 2026*
+*Last updated: June 5, 2026 (Session 2)*
