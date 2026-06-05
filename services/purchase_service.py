@@ -184,7 +184,7 @@ class PurchaseService:
         if inventory_debit < Decimal('0'):
             inventory_debit = Decimal('0')
 
-        total_payable = purchase.total_amount + total_landed
+        total_payable = purchase.total_amount
 
         lines = [
             {'account': GL_ACCOUNTS['inventory'], 'concept_code': 'INVENTORY_ASSET', 'debit': inventory_debit, 'description': f'شراء بضاعة {purchase.purchase_number}'},

@@ -229,6 +229,24 @@ def main():
                     print(f"  Cleanup warning for {table}: {e}")
             db.session.commit()
 
+            # Restore PWC to original state (test stock movements were deleted,
+            # but PWC was modified by StockService and needs manual rollback)
+            if pwc and old_pwc_qty is not None:
+                db.session.execute(sa.text('''
+                    UPDATE product_warehouse_costs
+                    SET total_quantity = :qty,
+                        average_cost = :avg,
+                        total_value = :val
+                    WHERE id = :id
+                '''), {
+                    'qty': float(old_pwc_qty),
+                    'avg': float(old_pwc_avg),
+                    'val': float(old_pwc_val),
+                    'id': pwc.id
+                })
+                db.session.commit()
+                print(f"PWC restored to qty={old_pwc_qty} avg={old_pwc_avg} val={old_pwc_val}")
+
             # Restore original MWAC flag
             current_app.config['ENABLE_MWAC'] = mwac_original
             print("Flag restored.")
