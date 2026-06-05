@@ -394,12 +394,8 @@ class SaleService:
 
         GLService.ensure_core_accounts(tenant_id=tenant_id)
 
-        cogs_total = sum(
-            (Decimal(str(line.cost_price)) * Decimal(str(line.quantity)) for line in sale.lines),
-            Decimal('0'),
-        )
-        cogs_total_aed = cogs_total.quantize(
-            Decimal('0.001'), rounding=ROUND_HALF_UP
+        cogs_total_aed = StockService.calculate_sale_cogs_and_deduct(
+            sale, warehouse_id=getattr(sale, 'warehouse_id', None)
         )
 
         ar_account = GLService.get_customer_credit_account(

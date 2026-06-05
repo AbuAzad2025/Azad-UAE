@@ -2,7 +2,7 @@ from decimal import Decimal
 from flask import current_app
 from flask_login import current_user
 from extensions import db
-from models import Product, StockMovement, Warehouse
+from models import Product, StockMovement, Warehouse, ProductWarehouseCost, ProductCostHistory
 from utils.branching import get_accessible_warehouse_ids, get_branch_stock_map
 from utils.gl_reference_types import GLRef
 
@@ -64,6 +64,7 @@ class StockService:
             reference_type=movement.reference_type or GLRef.STOCK_ADJUSTMENT,
             reference_id=movement.id,
             branch_id=branch_id,
+            tenant_id=tenant_id,
         )
 
     @staticmethod
@@ -219,9 +220,88 @@ class StockService:
             )
     
     @staticmethod
+    def calculate_sale_cogs_and_deduct(sale, warehouse_id=None):
+        """
+        Compute COGS using MWAC, deduct stock, update PWC, create audit trail.
+        Returns total COGS in AED (Decimal).
+        Falls back to SaleLine.cost_price when ENABLE_MWAC is False.
+        """
+        from datetime import datetime, timezone
+        from config import Config
+        
+        if not warehouse_id and hasattr(sale, 'warehouse_id'):
+            warehouse_id = sale.warehouse_id
+        
+        tenant_id = getattr(sale, 'tenant_id', None)
+        mwac_enabled = current_app.config.get('ENABLE_MWAC', False)
+        total_cogs = Decimal('0')
+        
+        for line in sale.lines:
+            qty = Decimal(str(line.quantity))
+            
+            if mwac_enabled and tenant_id and warehouse_id:
+                pwc = ProductWarehouseCost.query.filter_by(
+                    tenant_id=tenant_id,
+                    product_id=line.product_id,
+                    warehouse_id=warehouse_id,
+                ).first()
+                
+                if pwc and pwc.total_quantity > 0:
+                    avg_cost = pwc.average_cost
+                    cogs = (avg_cost * qty).quantize(Decimal('0.001'), rounding=ROUND_HALF_UP)
+                    
+                    # Deduct from PWC
+                    old_qty = pwc.total_quantity
+                    old_value = pwc.total_value
+                    old_avg = pwc.average_cost
+                    
+                    new_qty = old_qty - qty
+                    new_value = old_value - cogs
+                    new_avg = (new_value / new_qty) if new_qty > 0 else Decimal('0')
+                    
+                    pwc.total_quantity = new_qty
+                    pwc.total_value = new_value
+                    pwc.average_cost = new_avg.quantize(Decimal('0.0001'))
+                    pwc.last_updated = datetime.now(timezone.utc)
+                    
+                    # Audit trail
+                    pch = ProductCostHistory(
+                        tenant_id=tenant_id,
+                        product_id=line.product_id,
+                        warehouse_id=warehouse_id,
+                        movement_type='sale',
+                        reference_type=GLRef.SALE,
+                        reference_id=sale.id,
+                        old_average_cost=old_avg.quantize(Decimal('0.0001')),
+                        new_average_cost=pwc.average_cost,
+                        quantity_change=-qty,
+                        old_total_quantity=old_qty,
+                        new_total_quantity=new_qty,
+                        old_total_value=old_value,
+                        new_total_value=new_value,
+                        movement_unit_cost=avg_cost.quantize(Decimal('0.0001')),
+                    )
+                    db.session.add(pch)
+                else:
+                    # No PWC record or zero stock — fallback to line cost_price
+                    avg_cost = Decimal(str(line.cost_price)) if line.cost_price else Decimal('0')
+                    cogs = (avg_cost * qty).quantize(Decimal('0.001'), rounding=ROUND_HALF_UP)
+            else:
+                # Legacy path
+                avg_cost = Decimal(str(line.cost_price)) if line.cost_price else Decimal('0')
+                cogs = (avg_cost * qty).quantize(Decimal('0.001'), rounding=ROUND_HALF_UP)
+            
+            total_cogs += cogs
+        
+        return total_cogs.quantize(Decimal('0.001'), rounding=ROUND_HALF_UP)
+    
+    @staticmethod
     def process_purchase_lines(purchase, warehouse_id=None):
         if not warehouse_id and hasattr(purchase, 'warehouse_id'):
             warehouse_id = purchase.warehouse_id
+        
+        tenant_id = getattr(purchase, 'tenant_id', None)
+        mwac_enabled = current_app.config.get('ENABLE_MWAC', False)
         
         for line in purchase.lines:
             StockService.add_stock(
@@ -234,13 +314,88 @@ class StockService:
             )
             
             product = Product.query.get(line.product_id)
-            if product:
-                # Update cost price in base currency (AED)
-                # Ensure we use Decimal for precision
-                unit_cost_decimal = Decimal(str(line.unit_cost))
-                exchange_rate_decimal = Decimal(str(purchase.exchange_rate))
-                cost_in_aed = unit_cost_decimal * exchange_rate_decimal
-                product.cost_price = cost_in_aed
+            if not product:
+                continue
+                
+            # Update cost price in base currency (AED)
+            unit_cost_decimal = Decimal(str(line.unit_cost))
+            exchange_rate_decimal = Decimal(str(purchase.exchange_rate))
+            cost_in_aed = unit_cost_decimal * exchange_rate_decimal
+            product.cost_price = cost_in_aed
+            
+            # MWAC recalculation (Phase 4)
+            if mwac_enabled and tenant_id and warehouse_id:
+                StockService._update_wac_on_receipt(
+                    tenant_id=tenant_id,
+                    product_id=line.product_id,
+                    warehouse_id=warehouse_id,
+                    received_qty=Decimal(str(line.quantity)),
+                    unit_cost_aed=cost_in_aed,
+                    reference_type=GLRef.PURCHASE,
+                    reference_id=purchase.id,
+                )
+    
+    @staticmethod
+    def _update_wac_on_receipt(tenant_id, product_id, warehouse_id, received_qty, unit_cost_aed, reference_type, reference_id):
+        """Recalculate MWAC when stock is received. Must run inside an existing transaction."""
+        from datetime import datetime, timezone
+        
+        pwc = ProductWarehouseCost.query.filter_by(
+            tenant_id=tenant_id,
+            product_id=product_id,
+            warehouse_id=warehouse_id,
+        ).first()
+        
+        if pwc:
+            old_qty = pwc.total_quantity
+            old_value = pwc.total_value
+            old_avg = pwc.average_cost
+            
+            new_qty = old_qty + received_qty
+            new_value = old_value + (received_qty * unit_cost_aed)
+            new_avg = (new_value / new_qty) if new_qty > 0 else Decimal('0')
+            
+            pwc.total_quantity = new_qty
+            pwc.total_value = new_value
+            pwc.average_cost = new_avg.quantize(Decimal('0.0001'))
+            pwc.last_updated = datetime.now(timezone.utc)
+        else:
+            # First receipt for this product+warehouse
+            old_qty = Decimal('0')
+            old_value = Decimal('0')
+            old_avg = None
+            new_qty = received_qty
+            new_value = received_qty * unit_cost_aed
+            new_avg = unit_cost_aed
+            
+            pwc = ProductWarehouseCost(
+                tenant_id=tenant_id,
+                product_id=product_id,
+                warehouse_id=warehouse_id,
+                total_quantity=new_qty,
+                total_value=new_value,
+                average_cost=new_avg.quantize(Decimal('0.0001')),
+            )
+            db.session.add(pwc)
+        
+        # Immutable audit trail
+        pch = ProductCostHistory(
+            tenant_id=tenant_id,
+            product_id=product_id,
+            warehouse_id=warehouse_id,
+            movement_type='purchase',
+            reference_type=reference_type,
+            reference_id=reference_id,
+            old_average_cost=old_avg.quantize(Decimal('0.0001')) if old_avg is not None else None,
+            new_average_cost=pwc.average_cost,
+            quantity_change=received_qty,
+            old_total_quantity=old_qty,
+            new_total_quantity=new_qty,
+            old_total_value=old_value,
+            new_total_value=new_value,
+            movement_unit_cost=unit_cost_aed.quantize(Decimal('0.0001')),
+        )
+        db.session.add(pch)
     
     @staticmethod
     def reverse_sale(sale):
