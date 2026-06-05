@@ -401,16 +401,20 @@ This section records all hardening batches and modernization phases that have be
 *   **Status:** Schema deployed. Transaction-flow recalculation logic (Phase 4) is the next dependency.
 *   **Estimated Complexity:** Low (3-4 days) — **Schema: DONE**.
 
-### Phase 4: MWAC Transaction Flows
+### Phase 4: MWAC Transaction Flows — ✅ COMPLETED (June 5, 2026)
 *   **Goal:** Hook operational purchases, sales, and warehouse receipts to average cost recalculations.
 *   **Files Affected:** `services/stock_service.py`, `services/sale_service.py`, `services/purchase_service.py`.
 *   **Services Affected:** `StockService`, `SaleService`, `PurchaseService`.
 *   **Migrations Needed:** None.
-*   **Accounting Impact:** Perpetual stock values update at true average costs on each receipt.
-*   **Risks:** Lock contention on high-volume product rows.
-*   **Rollback Strategy:** Hide calculation behind feature flag `ENABLE_MWAC`.
-*   **Estimated Complexity:** High (2 Sprints).
-*   **Dependencies:** Phase 3.
+*   **Accounting Impact:** Perpetual stock values update at true average costs on each receipt. COGS postings now use WAC instead of `SaleLine.cost_price`.
+*   **Rollback Strategy:** `ENABLE_MWAC` flag (default: `True`).
+*   **Evidence:**
+    - `tools/seed_opening_wac.py`: seeded 38 products across active tenants from historical purchases.
+    - `tools/qa/test_mwac_end_to_end.py`: E2E test PASS — purchase receipt updates WAC, sale COGS reads from WAC, audit trail created.
+    - `StockService._update_wac_on_receipt()`: recalculates MWAC and appends `ProductCostHistory`.
+    - `StockService.calculate_sale_cogs_and_deduct()`: computes COGS from `ProductWarehouseCost.average_cost`.
+    - `config.py`: `ENABLE_MWAC=True` by default.
+*   **Commits:** `929348f` (MWAC + exchange rate fixes).
 
 ### Phase 5: Landed Cost Capitalization
 *   **Goal:** Capitalize transport, insurance, and duties directly into inventory value.
@@ -423,13 +427,17 @@ This section records all hardening batches and modernization phases that have be
 *   **Estimated Complexity:** Medium (1 Sprint).
 *   **Dependencies:** Phase 4.
 
-### Phase 6: Exchange Rate Framework — **SCHEMA COMPLETED**
+### Phase 6: Exchange Rate Framework — ✅ COMPLETED (June 5, 2026)
 *   **Goal:** Secure multi-currency documents using manual manager rates and online fallback tables.
-*   **Files Affected:** `models/exchange_rate_record.py`, `services/exchange_service.py` (future).
+*   **Files Affected:** `models/exchange_rate_record.py`, `services/exchange_rate_service.py`, `services/donation_gl_service.py`, `services/payment_service.py`, `services/purchase_service.py`, `services/return_service.py`, `services/sale_service.py`.
 *   **Models Added:** `ExchangeRateRecord` (rate locking per document, manual/API source tracking).
 *   **Migrations:** `phase3_001`.
-*   **Status:** Schema deployed. Service logic for rate locking on document post is deferred to Phase 6 execution.
-*   **Estimated Complexity:** Medium (1 Sprint) — **Schema: DONE**.
+*   **Status:** Schema deployed. All transaction types (Sale, Purchase, Payment, Receipt, Expense, Cheque, Donation) now call `ExchangeRateService.resolve_exchange_rate_for_transaction()` instead of legacy direct `exchange_rate` usage. POS fixed to store base price and convert per currency.
+*   **Evidence:**
+    - `gl_mapping_validation_dry_run.py`: 0 critical / 0 warning.
+    - `accounting_audit.py`: all GL entries balanced.
+    - `py_compile`, `node --check`, Jinja parse: all pass.
+*   **Estimated Complexity:** Medium (1 Sprint) — **DONE**.
 
 ### Phase 7: Reconciliation Reports
 *   **Goal:** Deploy read-only reconciliation tools comparing physical stock to ledger assets.
@@ -479,19 +487,34 @@ All schema foundations (Phase 2, 3, 6, 8) are deployed. The database is clean (`
     - `_resolve_journal_line_account` enforces concept-code resolution; legacy codes allowed only via `explicit_account_allowed` flag.
 *   **Commits:** `eb32406` (activate + remove fallbacks), `2cbf69a` (restore legacy with validation + branch_id propagation fix).
 
-### Option B: MWAC Transaction Flows (Phase 4) — 🔄 NEXT
-**Why now:** `ProductWarehouseCost` and `ProductCostHistory` tables exist. `StockService`, `SaleService`, and `PurchaseService` can now be wired to recalculate average cost on every receipt.
+### Option B: MWAC Transaction Flows (Phase 4) — ✅ COMPLETED (June 5, 2026)
+**Status:** `ENABLE_MWAC=True` by default. All purchase receipts trigger WAC recalculation. Sale COGS reads from `ProductWarehouseCost.average_cost`. Opening balances seeded from historical purchases (38 products).
+*   **Evidence:**
+    - `tools/qa/test_mwac_end_to_end.py`: purchase → WAC update → sale → COGS from WAC PASS.
+    - `ProductCostHistory` audit trail: records for every purchase receipt and sale.
+    - `StockService._update_wac_on_receipt()`: WAC formula verified.
+
+### Option C: Landed Cost Capitalization (Phase 5) — 🔄 NEXT
+**Why now:** MWAC is active. Adding freight, insurance, and customs duties to inventory value is the natural next costing enhancement.
 *   **Actions:**
-    1. Modify `StockService.receive_stock()` to update `ProductWarehouseCost` (increase qty, recalculate WAC, append `ProductCostHistory`).
-    2. Modify `SaleService` COGS posting to read from `ProductWarehouseCost.average_cost` instead of `SaleLine.cost_price`.
-    3. Modify `PurchaseService` to trigger WAC recalculation on purchase receipt.
-    4. Set `ENABLE_MWAC=True`.
-    5. Run reconciliation between `ProductWarehouseCost` and GL inventory account.
-*   **Risk:** Medium. Directly affects inventory valuation and COGS. Requires opening-balance baseline (Open Owner Decision #1).
-*   **Estimated Effort:** 1-2 Sprints.
+    1. Extend `PurchaseLine` with `freight`, `insurance`, `customs_duty` fields.
+    2. Modify `PurchaseService` to allocate landed costs proportionally by value across received lines.
+    3. Update WAC recalculation to include landed cost in `unit_cost_aed`.
+    4. Add landed cost concept codes to `GLAccountMapping`.
+*   **Risk:** Medium. Changes purchase valuation and COGS baseline.
+*   **Estimated Effort:** 1 Sprint.
+
+### Option D: Historical Inventory GL Backfill
+**Why now:** `check_inventory.py` reports 29 historical stock movements without GL entries. These are pre-MWAC transactions that need backfill for accurate inventory asset reconciliation.
+*   **Actions:**
+    1. Identify the 29 movements and their corresponding operational documents.
+    2. Generate GL entries retroactively (or mark as "historical, no GL" with accountant sign-off).
+    3. Reconcile `ProductWarehouseCost` total_value with GL inventory account.
+*   **Risk:** Low if done as a batch script; high if manual.
+*   **Estimated Effort:** 2-3 days.
 
 ### Recommendation
-**Proceed to Option B (MWAC Transaction Flows).** The posting pipeline is now fully dynamic and tested. Any future valuation discrepancy will be isolated to the costing layer, not the posting layer. Before starting, resolve **Open Owner Decision #1** (Opening Balances Baseline) to seed initial WAC values for existing stock.
+**Proceed to Option C (Landed Cost Capitalization).** The costing pipeline is now fully dynamic. Landed cost is the next highest-value addition for import-heavy businesses. Before starting, run Option D (backfill) if the 29 historical movements belong to active financial periods requiring audit compliance.
 
 ---
 
