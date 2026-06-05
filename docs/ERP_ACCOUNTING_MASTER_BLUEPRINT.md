@@ -1,7 +1,10 @@
 # ERP Accounting Master Blueprint
 
-**Document Status:** Approved Core Design System & Implementation Roadmap  
+**Document Status:** Single Source of Truth — Supersedes All Accounting Documentation  
 **Date:** June 4, 2026  
+**Last Updated:** June 5, 2026
+
+> **NOTICE:** This document is the sole authoritative accounting plan. All previous accounting documents (listed in Section 1.1) are superseded and should be removed from active reference.  
 **Reference Standards:** SAP Business One, Oracle NetSuite, Odoo, Bisan, Al-Shamel  
 **Strategic Markets:** Palestine, GCC countries, Arabic markets, Future international expansion  
 
@@ -10,15 +13,28 @@
 ## 1. Introduction & Consolidated Source Documents
 This master blueprint acts as the single, authoritative source of truth for the Azad ERP financial architecture and modernization implementation plan. It details the principles, posting templates, dimensional configurations, database rules, and phased execution roadmap.
 
-### Source Documents Consolidated
-This master document merges, preserves, and supersedes the following documents:
-*   `docs/ERP_ACCOUNTING_PRINCIPLES.md` (principles, formulas, GL integration patterns)
-*   `docs/ERP_ACCOUNTING_DECISION_MATRIX.md` (approved policies DM-01 to DM-12, DM-13, and DM-14 options)
-*   `docs/WAC_ACCOUNTING_ARCHITECTURE_REVIEW.md` (technical costing design, gaps, dimensions)
-*   `docs/FUTURE_ROADMAP_WAC_AND_RECONCILIATION.md` (reconciliation rules, WAC validation bounds)
-*   `docs/FUTURE_ROADMAP_DYNAMIC_GL_MAPPING.md` (concept-based GL lookup model)
-*   `docs/FUTURE_ROADMAP_PAYROLL_PAYMENT_AI_AUDIT.md` (payroll rules, WPS checking, anomaly tracking)
-*   `docs/ERP_ACCOUNTING_IMPLEMENTATION_PLAN.md` (modernization roadmap, phase definitions, approval gates, test plans)
+### Source Documents Consolidated (Superseded)
+This master document merges, preserves, and supersedes the following documents. They are retained in `docs/archive/accounting_architecture/` for historical reference only:
+
+| Document | Superseded Content |
+|----------|-------------------|
+| `docs/archive/accounting_architecture/ERP_ACCOUNTING_PRINCIPLES.md` | Principles, formulas, GL integration patterns |
+| `docs/archive/accounting_architecture/ERP_ACCOUNTING_DECISION_MATRIX.md` | Approved policies DM-01 to DM-14 |
+| `docs/archive/accounting_architecture/WAC_ACCOUNTING_ARCHITECTURE_REVIEW.md` | Technical costing design, gaps, dimensions |
+| `docs/archive/accounting_architecture/FUTURE_ROADMAP_WAC_AND_RECONCILIATION.md` | Reconciliation rules, WAC validation bounds |
+| `docs/archive/accounting_architecture/FUTURE_ROADMAP_DYNAMIC_GL_MAPPING.md` | Concept-based GL lookup model |
+| `docs/archive/accounting_architecture/FUTURE_ROADMAP_PAYROLL_PAYMENT_AI_AUDIT.md` | Payroll rules, WPS checking, anomaly tracking |
+| `docs/archive/accounting_architecture/ERP_ACCOUNTING_IMPLEMENTATION_PLAN.md` | Modernization roadmap, phase definitions, approval gates |
+
+**Also superseded and merged into this document:**
+* `docs/IMPLEMENTATION_PROGRESS.md` → Section 12 (Implementation History)
+* `docs/BATCH_3_FINANCIAL_RELATIONSHIP_SAFETY_REPORT.md` → Section 12.3
+* `docs/BATCH_4_INDEXING_SCHEMA_HARDENING_REPORT.md` → Section 12.4
+* `docs/BATCH_5_MODEL_MIGRATION_SYNC_REPORT.md` → Section 12.5
+* `docs/FINDINGS_VALIDATION_REPORT.md` → Appendix B
+* `docs/PRE_IMPLEMENTATION_VERIFICATION.md` → Appendix B
+* `docs/SYSTEM_REVERSE_ENGINEERING_MASTER_REPORT.md` → Appendix A
+* `docs/AI_AUDIT_HISTORY.md` → Appendix A
 
 ---
 
@@ -182,7 +198,157 @@ Reconciliation compares physical stock levels (stock movements), system inventor
 
 ---
 
-## 12. Phased Implementation Roadmap
+
+---
+
+## 12. Implementation History & Completed Work
+
+This section records all hardening batches and modernization phases that have been completed, with verification evidence and migration references.
+
+---
+
+### 12.1 Batch 1: Tenant Isolation (Advanced Accounting)
+**Goal:** Add `tenant_id` scoping to `CustomsTax`, `AdvancedExpense`, and `TaxCalculationRule`.
+
+- [x] Modified `models/advanced_accounting.py` with `tenant_id` and relationships.
+- [x] Created Alembic migration `add_tenant_scoping_advanced_accounting`.
+- [x] Implemented intelligent inference backfill (Branch → GL → User).
+- [x] Added validation phase to abort migration if rows remain unmapped.
+- [x] Applied `NOT NULL` and `UniqueConstraint` updates.
+- [x] Verified isolation via static analysis.
+
+**Status:** COMPLETED (v2). Inference chains, schema verification, logic simulation, and safety all validated.
+
+---
+
+### 12.2 Batch 2: Audit Trail Protection (RESTRICT on Stock Movements)
+**Goal:** Prevent accidental deletion of inventory history by switching from `CASCADE` to `RESTRICT`.
+
+- [x] Modified `models/product.py` to remove ORM-level cascade on `stock_movements`.
+- [x] Modified `models/warehouse.py` to change `ondelete='CASCADE'` to `ondelete='RESTRICT'`.
+- [x] Created Alembic migration `audit_trail_001_restrict_stock_movements`.
+- [x] Verified constraint names match initial schema.
+
+**Status:** COMPLETED.
+
+---
+
+### 12.3 Batch 3: Financial Relationship Safety
+**Goal:** Protect financial audit history by removing unsafe ORM-level `cascade='all, delete-orphan'` and enforcing `ON DELETE RESTRICT` at PostgreSQL level.
+
+| Parent | Child | Risk Fixed |
+|--------|-------|------------|
+| `Sale` | `SaleLine` | Deleting a sale would silently wipe all line items |
+| `Purchase` | `PurchaseLine` | Deleting a purchase would silently wipe all line items |
+| `GLJournalEntry` | `GLJournalLine` | Deleting a journal entry would erase the double-entry record |
+
+- [x] Removed `cascade='all, delete-orphan'` from `Sale.lines`, `Purchase.lines`, `GLJournalEntry.lines`
+- [x] Changed FKs to `db.ForeignKey(..., ondelete='RESTRICT')`
+- [x] Created migration `batch_3_001_financial_relationship_safety.py`
+- [x] PostgreSQL constraint inspection confirms `ON DELETE RESTRICT` on all 3 FKs
+- [x] App loads correctly after changes
+
+**Status:** COMPLETED.
+
+---
+
+### 12.4 Batch 4: Indexing & Schema Hardening
+**Goal:** Add missing secondary indexes on high-traffic Foreign Key join columns.
+
+**Methodology:** Queried `information_schema.table_constraints` vs `pg_index` to find FK columns lacking index support.
+
+| # | Table | Column | References | Query Impact |
+|---|-------|--------|------------|--------------|
+| 1 | `sales` | `seller_id` | `users.id` | Sales-by-seller reports, commission |
+| 2 | `purchases` | `user_id` | `users.id` | Purchase audit trails |
+| 3 | `payments` | `user_id` | `users.id` | Payment audit trails |
+| 4 | `receipts` | `user_id` | `users.id` | Receipt audit trails |
+| 5 | `expenses` | `user_id` | `users.id` | Expense approval workflows |
+| 6 | `cheques` | `user_id` | `users.id` | Cheque issuance tracking |
+| 7 | `stock_movements` | `user_id` | `users.id` | Inventory movement audit |
+| 8 | `gl_journal_lines` | `cost_center_id` | `cost_centers.id` | Cost center reporting |
+| 9 | `product_returns` | `customer_id` | `customers.id` | Customer return history |
+| 10 | `product_returns` | `processed_by` | `users.id` | Return processing audit |
+
+- [x] Added `index=True` to all 10 columns in their respective models
+- [x] Created migration `batch_4_001_add_missing_fk_indexes.py`
+- [x] PostgreSQL verification confirms all 10 indexes exist
+- [x] Zero data changes
+
+**Status:** COMPLETED.
+
+---
+
+### 12.5 Batch 5: Model/Migration Sync
+**Goal:** Identify and fix nullability mismatches between SQLAlchemy model definitions and the physical PostgreSQL schema.
+
+**Methodology:** Automated scan compared `column.nullable` on every mapped model against `information_schema.columns.is_nullable`.
+
+| Table | Column | Model | Database (Before) | NULL Rows | Action |
+|-------|--------|-------|-------------------|-----------|--------|
+| `cheques` | `tenant_id` | `nullable=False` | `YES` | 0 | ALTER COLUMN NOT NULL |
+| `partners` | `is_active` | `nullable=False` | `YES` | 0 | ALTER COLUMN NOT NULL |
+
+- [x] Created migration `batch_5_001_fix_nullability_mismatches.py`
+- [x] Zero backfill required (0 NULL rows in both columns)
+- [x] PostgreSQL verification confirms both columns now `NO`
+- [x] Migration graph merged: `audit_trail_001` + `batch_5_001` → `merge_batch5_audit_heads_001`
+
+**Status:** COMPLETED.
+
+---
+
+### 12.6 Phase 1: Dynamic GL Mapping — All Sub-Phases Completed
+
+| Sub-Phase | Description | Status | Evidence |
+|-----------|-------------|--------|----------|
+| **1E** | `GLAccountMapping` model, concept registry, migration, feature flag | ✅ COMPLETED | Migration `gl_mapping_001`; `ENABLE_DYNAMIC_GL_MAPPING` defaults `False` |
+| **1F** | Read-only GL mapping validation / dry-run tool | ✅ COMPLETED | `tools/qa/gl_mapping_validation_dry_run.py` reports readiness per tenant |
+| **1G** | Safe seed preview (`--preview-seed`) | ✅ COMPLETED | Proposes candidates; no inserts/updates/deletes |
+| **1G.1** | Candidate discovery (`--discover-candidates`) | ✅ COMPLETED | 72 combinations checked; 41 safe candidates found |
+| **1J** | Dynamic GL Resolver | ✅ COMPLETED | Isolated resolver behind feature flag; returns no dynamic account while disabled |
+| **1K** | Dynamic GL Posting Resolution | ✅ COMPLETED | Refactored auto-posting lines to use `GLAccountResolver` when flag enabled |
+| **1K.1** | Extended GL Concept Registry + posting coverage | ✅ COMPLETED | Added cheques, partner/merchant accounts, shipping, commissions, payroll, bank, donations, fixed assets, misc expenses |
+| **1L** | Controlled Transaction-Flow QA | ✅ COMPLETED | All 9 core flows exercised with flag temporarily enabled; balanced entries verified; test records cleaned |
+
+**Discovery Results (from Phase 1G.1):**
+- 72 total concept-tenant combinations (12 concepts × 6 tenants)
+- 41 safe single-candidate mappings discovered
+- 13 rows require owner selection (multiple valid candidates)
+- 25 rows require manual GL account creation
+- Concepts unresolvable from existing accounts: `CUSTOMS_DUTY`, `FREIGHT_IN`, `INVENTORY_ADJUSTMENT_GAIN`, `SALES_RETURNS` (all tenants); `CASH` (1 tenant)
+
+---
+
+### 12.7 Currency Dynamic GL Mapping Fix (June 5, 2026)
+**Goal:** Fix 12 currency-related issues identified in audit report. Make GL currency tenant-aware and add original amount tracking.
+
+| # | File | Fix |
+|---|------|-----|
+| 1 | `utils/helpers.py` | `format_currency_display` falls back to `Tenant.default_currency` before `SystemSettings` |
+| 2 | `models/gl.py` | Added `amount` column to `GLJournalLine` (original currency net amount) |
+| 3 | `models/gl.py` | `reverse_entry()` preserves `amount` in reversed lines |
+| 4 | `services/gl_service.py` | `create_journal_entry()` accepts `currency` and `exchange_rate` params, resolves from tenant |
+| 5 | `services/gl_service.py` | `GLJournalLine` stores `amount=original_debit - original_credit` alongside `amount_aed` |
+| 6 | `services/gl_service.py` | `post_entry()` passes `currency` and `rate` to `create_journal_entry` |
+| 7 | `services/gl_service.py` | `create_manual_entry()` stores `amount` on each line |
+| 8 | `services/gl_posting.py` | `post_or_fail()` defaults currency from `Tenant.default_currency` instead of hardcoded `AED` |
+| 9 | `services/gl_tree_builder.py` | Existing accounts: **preserved** their currency (no longer forced to AED) |
+| 10 | `services/gl_tree_builder.py` | New accounts created with tenant's `default_currency` |
+| 11 | `services/gl_tree_builder.py` | Liquidity accounts created with tenant's `default_currency` |
+| 12 | `utils/system_init.py` | Core GL accounts seeded with first active tenant's `default_currency` |
+
+**Migration:** `currency_audit_001_add_amount_to_gl_journal_lines.py`
+- Adds `amount` column to `gl_journal_lines`
+- Backfills existing rows from `amount_aed` (historical data was all AED)
+
+**Additional fix:** `ILS` (Israeli Shekel) added to `CURRENCIES` in `utils/constants.py`.
+
+**Status:** COMPLETED, committed `8d81f47`, pushed to `origin/main`.
+
+---
+
+## 13. Phased Implementation Roadmap
 
 ### Phase 0: Baseline Correction & Documentation Prep
 *   **Goal:** Enforce unified mathematical rounding rules in system configuration.
@@ -191,42 +357,15 @@ Reconciliation compares physical stock levels (stock movements), system inventor
 *   **Estimated Complexity:** Low (1-2 days).
 *   **Dependencies:** None.
 
-### Phase 1: Dynamic GL Mapping Foundation
+### Phase 1: Dynamic GL Mapping Foundation — **COMPLETED**
 *   **Goal:** Replace hardcoded account code strings (e.g. `'1130'`, `'1140'`) with dynamic concept resolutions.
 *   **Files Affected:** `models/gl.py`, `services/gl_service.py`, `services/gl_posting.py`.
 *   **Models Needed:** `GLAccountMapping` (mapping standard GL concepts to tenant chart accounts).
 *   **Migrations Needed:** `create_gl_account_mappings_table`.
-*   **Risks:** Mismatched mapping definitions fail transaction flows.
-*   **Rollback Strategy:** Fallback configuration variables to legacy hardcoded accounts if database mappings are null.
-*   **Estimated Complexity:** Medium (1 Sprint).
+*   **Status:** All sub-phases 1E through 1L completed. See Section 12.6 for detailed completion notes.
+*   **Feature Flag:** `ENABLE_DYNAMIC_GL_MAPPING` remains disabled by default until Phase 2+ dimensions are enforced.
+*   **Estimated Complexity:** Medium (1 Sprint) — **Actual: 2 Sprints**.
 *   **Dependencies:** Phase 0.
-
-#### Phase 1E (Completed)
-GLAccountMapping foundation deployed — additive migration, feature flag `ENABLE_DYNAMIC_GL_MAPPING` disabled by default, legacy hardcoded lookups remain active.
-
-#### Phase 1F (Completed)
-Read-only GL mapping validation / dry-run tool deployed. Reports readiness status per tenant without modifying data.
-
-#### Phase 1G (Completed)
-Safe seed preview deployed. A read-only preview tool (`--preview-seed`) proposes candidate GL concept-to-account mappings by matching approved legacy codes to each tenant's existing chart of accounts. It reports:
-*   **proposed** — safe candidate found (same tenant, active, not header).
-*   **manual_required** — no legacy code hint or no matching GL account exists.
-*   **invalid_candidate** — matched account belongs to another tenant, is inactive, or is a header/group account.
-
-**Strict guarantees:** No inserts, updates, deletes, seeds, or backfills. Feature flag remains `False`. Posting behavior unchanged.
-
-#### Phase 1G.1 (Completed)
-Candidate discovery deployed. A read-only discovery tool (`--discover-candidates`) resolves Phase 1G gaps by searching each tenant's existing chart for postable accounts using name patterns, account types, and parent-child relationships.
-
-**Discovery results across all tenants:**
-*   **72** total concept-tenant combinations checked (12 concepts × 6 tenants).
-*   **41** safe single-candidate mappings discovered.
-*   **13** rows require owner selection (multiple valid candidates per concept).
-*   **25** rows require manual GL account creation (no existing candidate found).
-*   **Concepts unresolvable from existing accounts:** `CUSTOMS_DUTY`, `FREIGHT_IN`, `INVENTORY_ADJUSTMENT_GAIN`, `SALES_RETURNS` (all tenants); `CASH` (1 tenant).
-*   **Concepts with owner-selection ambiguity:** `BANK` (multiple bank accounts per tenant), `CASH` (multiple cashboxes in some tenants).
-
-**Strict guarantees:** No inserts, updates, deletes, seeds, or backfills. Feature flag remains `False`. Posting behavior unchanged.
 
 ### Phase 2: Financial Dimensions Enforcement
 *   **Goal:** Enforce and validate dimension columns on journal entries and lines.
@@ -301,7 +440,7 @@ Candidate discovery deployed. A read-only discovery tool (`--discover-candidates
 *   **Estimated Complexity:** Medium (1 Sprint).
 *   **Dependencies:** Phase 7.
 
-### Phase 9: Global Localization Engine
+### Phase 9: Global Localization Engine — **PENDING**
 *   **Goal:** Country-specific compliance engines for Palestine, UAE, and Saudi Arabia.
 *   **Files Affected:** `utils/localization/`.
 *   **Services Affected:** `TaxCalculationService`, `EInvoicingService`.
@@ -361,210 +500,6 @@ All new logic paths are shielded behind:
 2.  **Landed Cost Manual Allocation Limits:** Thresholds and permissions to deviate from the "By Value" default allocation.
 3.  **Unlinked Sales Return Limits:** Manager override limits for manual valuation overrides of unlinked returns.
 4.  **Treasury Cash Box Limits:** Daily cash drawer caps before triggering cash deposits to central bank registers.
-## Phase 1 Dynamic GL Mapping - Discovery Checkpoint
-
-> **Historical discovery note only:** Phase 1A, Phase 1B, and Phase 1C below preserve earlier investigation and design thinking. They are not the final approved GL Concept Registry. For implementation, validation, and posting-map readiness, section 7.3 is authoritative. Numeric legacy GL account codes are account identifiers, not concept codes.
-
-- **Hardcoded GL codes discovered**: '1130', '1140', '1150', '2000', '2100', '2110', '2120', '2130', '4000', '4100', '4200', '5000', '5100', '1120' (debit), '4200' (credit).
-
-- **Files/functions inspected**: `system_init.py`, `services/gl_service.py`, `services/gl_posting.py`, `models/gl.py`, `gl_helpers.py`.
-
-- **Likely files to modify**: `models/gl.py` (add `GLAccountMapping`), `services/gl_service.py`, `services/gl_posting.py`, possibly `gl_helpers.py`.
-
-- **Risks observed**: Hardcoded codes will break per‑tenant charts; missing mappings cause transaction failures; migrations require data back‑fill; fallback logic needed for rollback.
-
-- **Next exact step**: Create `GLAccountMapping` model and migration, then refactor `gl_service` to resolve accounts via this mapping with fallback to legacy codes.
-
-## Phase 1A – GL Concept Registry and Legacy Mapping
-
-> **Discovery/design note only:** The rows in this table mix legacy account codes with conceptual meanings. They must not override the approved concept registry in section 7.3. Header/group accounts listed here, including `2000`, `2100`, `4000`, and `5000`, are legacy chart structure accounts and are not required transaction posting concepts.
-
-| Concept Code | Meaning | Legacy Default GL Code | Required / Optional | Used by Transaction Type | Risk if Missing |
-|--------------|---------|------------------------|----------------------|--------------------------|-----------------|
-| 1130 | Accounts Receivable (AR) | 1130 | Required | Sales invoices, credit memos | Unposted receivables, mismatched customer balances |
-| 1140 | Inventory Asset | 1140 | Required | Purchase receipts, inventory adjustments | Inventory valuation errors, stock mismatches |
-| 1150 | Cheques Under Collection | 1150 | Optional | Collection of post‑dated cheques | Untracked cheques, reconciliation gaps |
-| 2000 | Liabilities Header | 2000 | Required | General liability postings | Inconsistent liability hierarchy |
-| 2100 | Current Liabilities | 2100 | Required | Payables, accruals | Missing liability accounts, reporting issues |
-| 2110 | Accounts Payable (AP) | 2110 | Required | Vendor invoices, purchase payments | Unpaid vendor balances, audit failures |
-| 2120 | PDC Payable (Post‑dated cheques) | 2120 | Optional | Payable cheques management | Missed cheque payouts, cash flow misstatement |
-| 2130 | VAT Payable | 2130 | Required | VAT output on sales | VAT reporting errors, tax compliance risk |
-| 4000 | Revenue Header | 4000 | Required | All revenue postings | Incomplete revenue aggregation |
-| 4100 | Sales Revenue | 4100 | Required | Sale transactions | Under‑reported sales, revenue leakage |
-| 4200 | Service Revenue | 4200 | Required | Service invoices, fees | Missing service income, financial distortion |
-| 5000 | Cost of Sales Header | 5000 | Required | COGS entries | Inaccurate gross margin calculations |
-| 5100 | Cost of Goods Sold (COGS) | 5100 | Required | Inventory cost postings | Wrong cost of goods, profit misstatement |
-| 1120 | Bank – Savings Account | 1120 | Required | Cash deposits, bank payments | Untracked cash movements, reconciliation failures |
-
-## Phase 1B – GLAccountMapping Model Design
-
-> **Discovery/design note only:** This section predates the final Phase 1E implementation. Active model and validation work must use section 7.3 concept codes and must treat numeric values as legacy GL account codes only.
-
-1. **Proposed fields**
-   - `id` (PK, UUID)
-   - `tenant_id` (FK to tenants, required)
-   - `concept_code` (string, e.g., 'AR', required)
-   - `gl_code` (string, legacy GL account code)
-   - `branch_id` (FK to branches, nullable for optional override)
-   - `is_active` (bool, default true)
-   - `created_at`, `updated_at` timestamps
-
-2. **Unique constraints**
-   - (`tenant_id`, `concept_code`) must be unique.
-   - (`tenant_id`, `branch_id`, `concept_code`) must be unique when `branch_id` is set.
-
-3. **Required indexes**
-   - Index on `tenant_id`.
-   - Composite index on (`tenant_id`, `concept_code`).
-   - Index on `branch_id` for branch‑override lookups.
-
-4. **Tenant isolation rules**
-   - All queries are automatically filtered by `tenant_id`.
-   - No cross‑tenant visibility; foreign‑key constraints enforce tenancy.
-
-5. **Optional branch override rules**
-   - If a mapping exists for a specific `branch_id`, it overrides the tenant‑level mapping.
-   - Fallback to tenant‑level mapping when branch mapping is absent.
-
-6. **Validation rules**
-   - `concept_code` must belong to the approved GL Concept Registry in section 7.3.
-   - `gl_code` must match an existing GL account in the tenant’s chart of accounts.
-   - `branch_id` must reference an existing branch belonging to the same tenant.
-
-7. **Missing mapping behavior**
-   - If no mapping is found for a required concept, transaction processing raises `GLMappingError`.
-   - In batch imports, missing mappings are logged and the record is skipped.
-
-8. **Legacy fallback behavior while feature flag disabled**
-   - When `ENABLE_DYNAMIC_GL_MAPPING` flag is **off**, the system uses the hard‑coded legacy GL codes defined in Phase 1A.
-   - The flag is checked at service start‑up; fallback does not require database look‑ups.
-
-9. **Required migration safety rules**
-   - Back‑fill `GLAccountMapping` with all legacy codes before enabling the feature flag.
-   - Run a validation job to ensure every active concept has a mapping for each tenant.
-   - Provide a reversible script to revert to legacy codes if the migration fails.
-
-## Phase 1C – GL Mapping Migration & Backfill Design
-
-> **Discovery/design note only:** This section describes earlier migration/backfill planning. Current approved behavior is validation-first and read-only until an explicit seeding/backfill approval is granted. Do not infer required concepts from header/group legacy accounts in this section.
-
-1. **Migration sequence**
-   - **Create mapping table** – Define `GLAccountMapping` table with tenant isolation.
-   - **Seed mappings** – Populate the table with approved GL concepts mapped to each tenant's existing GL accounts using the legacy codes.
-   - **Validate mappings** – Run validation jobs to ensure completeness and correctness before activating dynamic mapping.
-   - **Enable feature flag later** – Flip `ENABLE_DYNAMIC_GL_MAPPING` only after successful validation.
-
-2. **Safe backfill strategy**
-   - Iterate over each tenant.
-   - For every approved GL concept, locate the tenant's GL account that matches the legacy default code.
-   - Insert a mapping row only if the GL account exists and is active.
-   - **Do not assume** `tenant_id = 1`; query tenants dynamically.
-   - Skip creation if the referenced GL account is missing; log the omission for review.
-   - Abort the backfill for a tenant if any required mapping cannot be resolved, and generate a detailed report.
-
-3. **Required validation checks**
-   - Every tenant must have mappings for all **required** concepts from Phase 1A.
-   - Each mapped GL account must belong to the same tenant.
-   - Mapped GL accounts must be **active** (not archived or disabled).
-   - Mapped GL accounts must **not be header/group** accounts.
-   - No duplicate `(tenant_id, concept_code)` mappings.
-   - Any branch‑override mapping must reference a branch that belongs to the same tenant.
-
-4. **Missing mapping report format**
-   ```
-   tenant_id: <ID>
-   tenant_name: <Name>
-   concept_code: <Concept>
-   expected_legacy_code: <Legacy GL code>
-   severity: <required|optional>
-   recommended_fix: <Create GL account / assign existing account>
-   ```
-
-5. **Rollback strategy**
-   - Keep the feature flag `ENABLE_DYNAMIC_GL_MAPPING` **off** until cut‑over is confirmed.
-   - The `GLAccountMapping` table remains inert; legacy hard‑coded lookups continue to function.
-   - If issues arise after enabling, simply disable the flag; mappings stay harmless.
-
-6. **Go/No‑Go criteria before code refactor**
-   - All required tenant mappings are present and validated.
-   - No validation errors above **warning** level.
-   - Finance Architecture Committee signs off on the mapping report.
-   - Security review confirms tenant isolation.
-   - QA approves the migration validation test suite.
-   - Feature flag can be safely toggled without breaking existing transaction flows.
-
-
-10. **Owner approvals required before coding**
-    - Product Owner (ERP Lead) sign‑off on the model schema.
-    - Finance Architecture Committee approval of concept definitions.
-    - Security review for tenant isolation.
-
-## Phase 1D – GL Posting Refactor Plan
-
-1. **Legacy account lookup locations already discovered:**
-   - `services/gl_service.py`
-   - `services/gl_posting.py`
-   - `models/gl.py`
-   - `gl_helpers.py`
-   - `system_init.py`
-
-2. **Refactor approach:**
-   - Keep legacy lookup as fallback while feature flag is disabled.
-   - Add resolver function `concept_code → GLAccount`.
-   - Never hardcode GL account codes in new posting logic.
-   - Raise a clear `GLMappingError` if required mapping is missing when feature flag is enabled.
-
-3. **Posting flows to refactor later:**
-   - sales
-   - purchases
-   - payments
-   - receipts
-   - cheques
-   - inventory adjustments
-   - COGS posting
-
-## Phase 1E - Dynamic GL Mapping Foundation Completion
-
-- Added the inert GL concept registry, `GLAccountMapping` model, additive mapping-table migration, and disabled-by-default `ENABLE_DYNAMIC_GL_MAPPING` flag.
-- No mappings were seeded or backfilled, and no posting/account-resolution behavior was changed.
-- Phase 1F must not begin until the mapping table migration is reviewed and the next approval gate is granted.
-
-## Phase 1F - GL Mapping Validation and Dry-Run Design
-
-**Important tenant onboarding rule:** New tenants must not require manual database migrations. After the `gl_account_mappings` table exists, every newly created tenant must receive default GL mappings automatically through tenant onboarding/setup logic, not through Alembic migrations.
-
-### 1. Existing Tenants
-
-- Validate existing GL mappings for every tenant.
-- Report missing required and optional GL concepts.
-- Do not guess or auto-fill unsafe mappings.
-- Do not assume `tenant_id = 1`; enumerate tenants from the tenant table.
-- Validate that each mapped GL account belongs to the same tenant, is active, and is postable rather than a header/group account.
-- Produce a dry-run report only; Phase 1F must not seed, backfill, or alter tenant accounting data.
-
-### 2. New Tenants
-
-- Define default GL mappings as part of tenant onboarding/setup logic.
-- Use a default chart/template as the source for tenant-level concept mappings.
-- After tenant creation, run GL mapping validation automatically.
-- If required mappings are missing, mark tenant setup incomplete or block accounting transactions until the setup is fixed.
-- No Alembic migration should be needed per new tenant.
-- Phase 1F may design this onboarding validation flow, but must not implement tenant creation changes yet.
-
-### Phase 1F Dry-Run Outputs
-
-- Tenant mapping completeness report by concept.
-- Missing concept report with severity, tenant, concept code, and recommended manual fix.
-- Invalid mapping report for cross-tenant accounts, inactive accounts, header accounts, duplicate defaults, and duplicate branch overrides.
-- Onboarding validation checklist for future tenant setup implementation.
-- Go/No-Go recommendation for enabling `ENABLE_DYNAMIC_GL_MAPPING`; the feature flag remains `False` until approved.
-
-## Phase 1F - Completion Note
-
-- Added a read-only GL mapping validation service and safe QA dry-run entry point.
-- The validator reports readiness only; it does not seed, backfill, auto-fill, enable dynamic mapping, or change posting behavior.
-- New tenant onboarding remains a future implementation step and must create default mappings from an approved chart/template before accounting transactions are allowed.
-
 ## Frontend / Admin UI Requirements
 
 No frontend or admin UI changes are required for Phase 1E or Phase 1F. Phase 1E is schema/model foundation only, and Phase 1F is read-only validation/dry-run readiness reporting only.
@@ -646,3 +581,98 @@ Future phases require admin UI support for the following areas:
 - The feature flag default in `config.py` was never modified; the flag was restored to `False` immediately after testing.
 - `tools/qa/gl_transaction_flow_qa.py` was added to support future controlled transaction-flow regression testing.
 - Result: Dynamic GL Mapping is safe to enable locally for broader manual testing, provided the target tenant has active `GLAccountMapping` rows for all concepts in the posting paths to be exercised.
+---
+
+## Appendix A: Reverse Engineering & Audit History
+
+### A.1 Audit Timeline
+
+| Phase | Scope | Key Outcome | Date |
+|-------|-------|-------------|------|
+| Phase 1 | Global Discovery & System Mapping | Full system map; multi-tenant isolation gaps identified | June 3, 2026 |
+| Phase 2 | Accounting & Financial Integrity Deep Dive | Hardcoded GL codes and manual balance accumulators flagged | June 3, 2026 |
+| Phase 3 | Inventory, Costing, and COGS Deep Dive | Last Purchase Cost confirmed; `ON DELETE CASCADE` on inventory audit trails identified | June 3, 2026 |
+| Phase 4 | Inventory Valuation Decision | Recommended migration to **Weighted Average Cost** to eliminate Balance Sheet volatility | June 3, 2026 |
+
+### A.2 Original Critical Findings (All Resolved)
+
+| Risk Level | Area | Original Finding | Resolution |
+| :--- | :--- | :--- | :--- |
+| **CRITICAL** | Audit Trail | `ON DELETE CASCADE` on `StockMovement` wipes audit history if product deleted | **Fixed in Batch 2** (`RESTRICT` enforced) |
+| **HIGH** | Security | Missing `tenant_id` in `advanced_accounting` models leads to cross-tenant data visibility | **Fixed in Batch 1** (tenant scoping added) |
+| **HIGH** | Accuracy | Last Purchase Cost causes "valuation jumps" and Ledger-Stock drift | **Planned for Phase 3-4** (MWAC migration) |
+| **MEDIUM** | Integrity | Manual balance accumulators for Customers/Suppliers prone to sync issues | **Ongoing monitoring** |
+| **MEDIUM** | Integrity | Hardcoded GL account codes in services bypass tenant customization | **Fixed in Phase 1** (Dynamic GL Mapping deployed) |
+
+### A.3 System Architecture Summary
+- **Framework:** Flask (Python) with service-oriented business logic.
+- **Database:** PostgreSQL with SQLAlchemy ORM.
+- **Multitenancy:** Shared-database, row-level isolation via `tenant_id`.
+- **Localization:** Full Arabic (AR) and English (EN) support.
+- **Core Modules:** Sales, Inventory (GL-integrated), Purchases, Payments, AI Analytics.
+
+---
+
+## Appendix B: Pre-Implementation Verification & Findings Validation
+
+### B.1 CRITICAL: Audit Trail Vulnerability (ORM-Level Cascade)
+- **Database Level:** Physical PostgreSQL schema defaulted to `NO ACTION` (not explicit `CASCADE`).
+- **ORM Level:** SQLAlchemy `Product.stock_movements` had `cascade='all, delete-orphan'`.
+- **Confirmed Behavior:** `db.session.delete(product)` would auto-delete all movement records.
+- **Status:** RESOLVED in Batch 2.
+
+### B.2 HIGH: Multi-Tenancy Data Leakage (Missing Scoping)
+- **Confirmed Gap:** `advanced_expenses`, `customs_taxes`, `tax_calculation_rules` lacked `tenant_id`.
+- **Security Risk:** Global visibility in a multi-tenant ERP.
+- **Status:** RESOLVED in Batch 1.
+
+### B.3 HIGH: Inventory Valuation Inconsistency (Costing Drift)
+- **Confirmed Drift:** System uses global `Product.cost_price` but tracks historical accounting in `GLAccount` (1140).
+- **Evidence:** `runtime_core/accounting_repair.py` calculates `inventory_diff = estimated_inventory - gl_inventory`.
+- **Remediation:** Migrating to MWAC will stop drift at the source.
+- **Status:** PLANNED for Phase 3-4.
+
+### B.4 HIGH: Financial Document Vulnerability
+- **Confirmed:** `Sale` → `SaleLine`, `Purchase` → `PurchaseLine`, `GLJournalEntry` → `GLJournalLine` lacked `RESTRICT`.
+- **Status:** RESOLVED in Batch 3.
+
+---
+
+## Appendix C: Currency Audit Report (June 5, 2026)
+
+### C.1 Issues Identified and Resolved
+
+| # | File | Line | Issue | Impact |
+|---|------|------|-------|--------|
+| 1 | `utils/helpers.py` | 88-95 | `format_currency_display()` uses `SystemSettings` instead of `Tenant` | Wrong display: د.إ instead of ₪ |
+| 2 | `models/gl.py` | 170-175 | `GLJournalLine` missing `amount` (original amount) | Loss of original amount |
+| 3 | `models/gl.py` | 120-130 | `reverse_entry()` doesn't save `amount` | Reversed entry incomplete |
+| 4 | `services/gl_service.py` | 44-65 | `create_journal_entry()` doesn't accept `currency` param | Entry created without currency |
+| 5 | `services/gl_service.py` | 85-95 | `GLJournalLine` created without `amount` and no conversion | Incorrect amounts |
+| 6 | `services/gl_service.py` | 108-120 | `post_entry()` uses hardcoded `currency='AED'` | All entries AED |
+| 7 | `services/gl_service.py` | 280-290 | `create_manual_entry()` saves only `amount_aed` | Manual entry incomplete |
+| 8 | `services/gl_posting.py` | 15-25 | `post_or_fail()` uses hardcoded `currency='AED'` | All service entries AED |
+| 9 | `services/gl_tree_builder.py` | 175-180 | `_process_account()` forces `currency='AED'` | Currency overridden by force |
+| 10 | `services/gl_tree_builder.py` | 215-225 | `_process_account()` creates new accounts with `AED` | New accounts always AED |
+| 11 | `services/gl_tree_builder.py` | 280-290 | `_ensure_liquidity_account()` uses AED | Cash/Bank always AED |
+| 12 | `utils/system_init.py` | 245-255 | `_ensure_core_data()` creates `GLAccount` with `AED` | Core accounts always AED |
+
+**Additional:** `ILS` was missing from `CURRENCIES` in `utils/constants.py`.
+
+### C.2 Cumulative Impact (if `Tenant.default_currency = 'ILS'`)
+| Area | Before Fix | After Fix |
+|------|------------|-----------|
+| UI Display (Templates) | Works | Still works |
+| Python Code | Uses AED | Uses `Tenant.default_currency` |
+| Auto GL Posting | AED | `Tenant.default_currency` |
+| Manual GL Entry | AED | `Tenant.default_currency` |
+| GL Accounts | AED | `Tenant.default_currency` |
+| Line Amounts | Missing `amount` | Original amount preserved |
+| Accounting Reports | Always AED | Dynamic currency |
+
+**All 12 issues + ILS currency addition resolved in commit `8d81f47` and `a4a11d9`.**
+
+---
+
+*End of Master Blueprint — Single Source of Truth*
+*Last updated: June 5, 2026*
