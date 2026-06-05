@@ -63,6 +63,7 @@ CURRENCIES = [
     ('QAR', {'ar': 'ريال قطري', 'en': 'Qatari Riyal', 'symbol': 'ر.ق'}),
     ('OMR', {'ar': 'ريال عماني', 'en': 'Omani Rial', 'symbol': 'ر.ع'}),
     ('BHD', {'ar': 'دينار بحريني', 'en': 'Bahraini Dinar', 'symbol': 'د.ب'}),
+    ('ILS', {'ar': 'شيكل إسرائيلي', 'en': 'Israeli Shekel', 'symbol': '₪'}),
 ]
 
 PRODUCT_UNITS = [
