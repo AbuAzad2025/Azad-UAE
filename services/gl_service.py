@@ -184,17 +184,19 @@ class GLService:
         if not account_code:
             raise ValueError('GL account code is required when dynamic mapping is disabled.')
 
-        # Legacy hardcoded lookup is no longer supported.
-        # All postings must use concept_code-based dynamic resolution.
-        raise GLMappingError(
-            tenant_id=tenant_id,
-            concept_code=concept_code or 'UNMAPPED_ACCOUNT_CODE',
-            branch_id=branch_id,
-            issue=(
-                f"Legacy hardcoded account code {account_code} is no longer supported. "
-                f"Please provide an approved GL concept_code or enable dynamic mapping."
-            ),
-        )
+        account = gl_helpers.get_account(account_code, tenant_id)
+        if account is None and ensure_core:
+            GLService.ensure_core_accounts(tenant_id=tenant_id)
+            account = gl_helpers.get_account(account_code, tenant_id)
+        if account is None:
+            if missing_ok:
+                return None
+            raise ValueError(f'GL account {account_code} not found')
+        if getattr(account, 'is_header', False):
+            raise ValueError(f'Cannot post to header GL account {account_code}')
+        if not getattr(account, 'is_active', True):
+            raise ValueError(f'GL account {account_code} is inactive')
+        return account
 
 
 
@@ -268,7 +270,7 @@ class GLService:
                 amount=original_debit - original_credit,
                 amount_aed=debit - credit,
                 # الأبعاد المالية
-                branch_id=line.get('branch_id'),
+                branch_id=line.get('branch_id') or branch_id,
                 warehouse_id=line.get('warehouse_id'),
                 cost_center_id=line.get('cost_center_id'),
                 profit_center_id=line.get('profit_center_id'),
@@ -339,7 +341,7 @@ class GLService:
                 'credit': credit,
                 'description': line.get('description', description),
                 # الأبعاد المالية
-                'branch_id': line.get('branch_id'),
+                'branch_id': line.get('branch_id') or branch_id,
                 'warehouse_id': line.get('warehouse_id'),
                 'cost_center_id': line.get('cost_center_id'),
                 'profit_center_id': line.get('profit_center_id'),
