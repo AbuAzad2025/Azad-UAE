@@ -22,6 +22,7 @@ from utils.safe_redirect import safe_redirect_target
 from utils.branching import role_requires_branch, get_visible_products_query
 from utils.auth_helpers import role_level_for, role_level_for_user
 from utils.ai_access import get_tenant_ai_level, set_tenant_ai_level
+from utils.tenanting import get_active_tenant_id
 from sqlalchemy import text, inspect
 import json
 import logging
@@ -81,24 +82,27 @@ def dashboard():
     year_start = today.replace(month=1, day=1)
     cutoff_date = datetime.now() - timedelta(days=30)
     
-    stats['total_users'] = User.query.filter_by(is_active=True, is_owner=False).count()
-    customers_query = Customer.query.filter_by(is_active=True)
+    tid = get_active_tenant_id(current_user)
+    stats['total_users'] = User.query.filter_by(is_active=True, is_owner=False, tenant_id=tid).count()
+    customers_query = Customer.query.filter_by(is_active=True, tenant_id=tid)
     if scoped_branch_id is not None:
         customers_query = customers_query.join(Sale, Customer.id == Sale.customer_id).filter(Sale.branch_id == scoped_branch_id).distinct()
     stats['total_customers'] = customers_query.count()
-    stats['total_products'] = get_visible_products_query(current_user).count() if scoped_branch_id is not None else Product.query.filter_by(is_active=True).count()
-    
+    stats['total_products'] = get_visible_products_query(current_user).count() if scoped_branch_id is not None else Product.query.filter_by(is_active=True, tenant_id=tid).count()
+
     vip_query = Customer.query.filter_by(
         customer_classification='vip',
-        is_active=True
+        is_active=True,
+        tenant_id=tid
     )
     if scoped_branch_id is not None:
         vip_query = vip_query.join(Sale, Customer.id == Sale.customer_id).filter(Sale.branch_id == scoped_branch_id).distinct()
     stats['vip_customers'] = vip_query.count()
-    
+
     premium_query = Customer.query.filter_by(
         customer_classification='premium',
-        is_active=True
+        is_active=True,
+        tenant_id=tid
     )
     if scoped_branch_id is not None:
         premium_query = premium_query.join(Sale, Customer.id == Sale.customer_id).filter(Sale.branch_id == scoped_branch_id).distinct()
@@ -253,24 +257,28 @@ def dashboard():
         current_app.logger.error(f"Error getting top products: {e}")
         stats['top_products'] = []
     
-    recent_actions = AuditLog.query.order_by(
+    recent_actions = AuditLog.query.filter_by(tenant_id=tid).order_by(
         AuditLog.created_at.desc()
     ).limit(20).all()
-    
+
     stats['recent_actions'] = recent_actions
-    
-    low_stock = get_visible_products_query(current_user).all() if scoped_branch_id is not None else Product.query.filter(
-        Product.is_active == True,
-        Product.current_stock <= Product.min_stock_alert
-    ).order_by(Product.current_stock).limit(10).all()
+
+    if scoped_branch_id is not None:
+        low_stock = get_visible_products_query(current_user).all()
+    else:
+        low_stock = Product.query.filter(
+            Product.is_active == True,
+            Product.tenant_id == tid,
+            Product.current_stock <= Product.min_stock_alert
+        ).order_by(Product.current_stock).limit(10).all()
     if scoped_branch_id is not None:
         low_stock = [p for p in low_stock if getattr(p, 'visible_stock', p.current_stock or 0) <= (p.min_stock_alert or 0)][:10]
-    
+
     stats['low_stock'] = low_stock
-    
+
     # --- Branch Performance Stats ---
     from models import Branch, Warehouse, StockMovement
-    branches = Branch.query.all()
+    branches = Branch.query.filter_by(tenant_id=tid).all()
     if scoped_branch_id is not None:
         branches = [branch for branch in branches if branch.id == scoped_branch_id]
     branch_stats = []
@@ -450,26 +458,29 @@ def audit_logs():
     if user_id:
         query = query.filter_by(user_id=user_id)
     
+    tid = get_active_tenant_id(current_user)
+
     # الترتيب والتقسيم
     pagination = query.order_by(AuditLog.created_at.desc()).paginate(
         page=page,
         per_page=per_page,
         error_out=False
     )
-    
+
     # إحصائيات سريعة
     stats = {
-        'total': AuditLog.query.count(),
+        'total': AuditLog.query.filter_by(tenant_id=tid).count(),
         'today': AuditLog.query.filter(
-            db.func.date(AuditLog.created_at) == db.func.current_date()
+            db.func.date(AuditLog.created_at) == db.func.current_date(),
+            AuditLog.tenant_id == tid
         ).count(),
-        'creates': AuditLog.query.filter_by(action='create').count(),
-        'updates': AuditLog.query.filter_by(action='update').count(),
-        'deletes': AuditLog.query.filter_by(action='delete').count(),
+        'creates': AuditLog.query.filter_by(action='create', tenant_id=tid).count(),
+        'updates': AuditLog.query.filter_by(action='update', tenant_id=tid).count(),
+        'deletes': AuditLog.query.filter_by(action='delete', tenant_id=tid).count(),
     }
-    
+
     # قائمة المستخدمين للفلتر
-    users = User.query.filter_by(is_active=True).all()
+    users = User.query.filter_by(is_active=True, tenant_id=tid).all()
     
     return render_template('owner/audit_logs.html',
                          logs=pagination.items,

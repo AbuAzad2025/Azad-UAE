@@ -54,10 +54,10 @@
     </div>
   </div>
   <div class="col-md-3">
-    <div class="card {% if report.summary.all_matched %}bg-gradient-success{% else %}bg-gradient-warning{% endif %} text-white">
+    <div class="card {% if report.summary.all_matched_qty %}bg-gradient-success{% else %}bg-gradient-warning{% endif %} text-white">
       <div class="card-body text-center">
         <h4 class="mb-0">
-          {% if report.summary.all_matched %}
+          {% if report.summary.all_matched_qty %}
             <i class="fas fa-check"></i> متطابق
           {% else %}
             <i class="fas fa-exclamation-triangle"></i> فروقات
@@ -101,6 +101,9 @@
     {% else %}
     <span class="badge badge-info ml-2"><i class="fas fa-info-circle"></i> مراجعة GL</span>
     {% endif %}
+    {% if report.summary.has_unallocated_gl %}
+    <span class="badge badge-warning ml-2"><i class="fas fa-tags"></i> GL غير موزع</span>
+    {% endif %}
   </div>
   <div class="card-body p-0">
     <table class="table table-bordered table-striped mb-0">
@@ -138,10 +141,14 @@
             {{ '{:,.2f}'.format(row.value_diff) }}
           </td>
           <td class="text-center">
-            {% if row.matched_qty %}
+            {% if row.matched_qty and row.matched_value %}
             <span class="badge badge-success">OK</span>
+            {% elif row.gl_untagged %}
+            <span class="badge badge-warning">GL غير موسوم</span>
+            {% elif row.matched_qty %}
+            <span class="badge badge-warning">مراجعة GL</span>
             {% else %}
-            <span class="badge badge-danger">مراجعة</span>
+            <span class="badge badge-danger">مراجعة كمية</span>
             {% endif %}
           </td>
         </tr>
@@ -166,7 +173,10 @@
   <div class="card-footer text-muted small">
     <strong>GL account:</strong> {{ report.summary.inventory_account_code }} - Inventory Asset &nbsp;|&nbsp;
     <strong>الكمية:</strong> مقارنة بين PWC.total_quantity و SUM(stock_movements.quantity) &nbsp;|&nbsp;
-    <strong>القيمة:</strong> مقارنة إعلامية بين PWC.total_value و رصيد حساب GL 1140 (قد تحتوي على قيود قديمة بدون warehouse_id).
+    <strong>القيمة:</strong> مقارنة بين PWC.total_value ورصيد حساب GL 1140.
+    {% if report.summary.has_unallocated_gl %}
+    &nbsp;|&nbsp; <strong>GL غير موزع على مستودع:</strong> {{ '{:,.2f}'.format(report.summary.unallocated_gl_value) }}
+    {% endif %}
   </div>
 </div>
 

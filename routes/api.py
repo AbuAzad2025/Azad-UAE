@@ -10,6 +10,7 @@ from models import Customer, Supplier, Product, User
 from services.stock_service import StockService
 from utils.branching import get_accessible_warehouse_ids, get_branch_stock_map
 from utils.decorators import branch_scope_id, permission_required
+from utils.tenanting import get_active_tenant_id
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 
@@ -93,6 +94,9 @@ def _scoped_customer_query():
     from models import Payment, Receipt, Sale
 
     query = Customer.query
+    tid = get_active_tenant_id(current_user)
+    if tid is not None:
+        query = query.filter(Customer.tenant_id == tid)
     scoped_branch_id = branch_scope_id()
     if scoped_branch_id is None:
         return query
@@ -107,6 +111,9 @@ def _scoped_supplier_query():
     from models import Payment, Purchase
 
     query = Supplier.query
+    tid = get_active_tenant_id(current_user)
+    if tid is not None:
+        query = query.filter(Supplier.tenant_id == tid)
     scoped_branch_id = branch_scope_id()
     if scoped_branch_id is None:
         return query
@@ -425,7 +432,11 @@ def check_username():
     if not re.match(r'^[a-zA-Z0-9_]{3,20}$', username):
         return jsonify({'available': False, 'error': 'استخدم حروف إنجليزية وأرقام و_ فقط'})
 
-    existing = User.query.filter_by(username=username).first()
+    tid = get_active_tenant_id(current_user)
+    existing = User.query.filter_by(username=username)
+    if tid is not None:
+        existing = existing.filter(User.tenant_id == tid)
+    existing = existing.first()
 
     if existing:
         year = datetime.now().year

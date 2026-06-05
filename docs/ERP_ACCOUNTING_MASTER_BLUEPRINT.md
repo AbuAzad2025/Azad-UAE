@@ -2,7 +2,7 @@
 
 **Document Status:** Single Source of Truth — Supersedes All Accounting Documentation  
 **Date:** June 4, 2026  
-**Last Updated:** June 5, 2026 (Session 4 — All PWC Reconciled, AP Bug Fixed, Data Cleanup Closed)
+**Last Updated:** June 6, 2026 (Session 5 — Phase 7 Audit Fixes Complete, Phase 8 Plan Locked)
 
 > **NOTICE:** This document is the sole authoritative accounting plan. All previous accounting documents (listed in Section 1.1) are superseded and should be removed from active reference.  
 **Reference Standards:** SAP Business One, Oracle NetSuite, Odoo, Bisan, Al-Shamel  
@@ -477,27 +477,154 @@ This section records all hardening batches and modernization phases that have be
 *   **Estimated Complexity:** Low (1 Sprint) — **DONE**.
 *   **Dependencies:** Phase 6 ✅. Data cleanup (Option D) ✅.
 
-### Phase 8: Treasury & Cash Position Reporting — **SCHEMA COMPLETED, Service 🔄 PENDING**
-*   **Goal:** Multi-branch bank, cashier, and post-dated cheque position tracking.
-*   **Files Affected:** `models/cash_box.py`, `services/treasury_service.py` (future).
-*   **Models Added:** `CashBox` (cash/bank/gateway unified container with GL linkage).
-*   **Migrations:** `phase3_001`.
-*   **Status:** Schema deployed. Treasury reporting service logic deferred until after Phase 7.
-*   **Estimated Complexity:** Medium (1 Sprint) — **Schema: DONE, Service: NEXT after Phase 7**.
-
-### Phase 9: Global Localization Engine — **PENDING**
-*   **Goal:** Country-specific compliance engines for Palestine, UAE, and Saudi Arabia.
-*   **Files Affected:** `utils/localization/`.
-*   **Services Affected:** `TaxCalculationService`, `EInvoicingService`.
+### Phase 7.5: Security Hardening & Multi-Tenant Data Leak Prevention — **🔄 IN PROGRESS (June 6, 2026)**
+*   **Goal:** Eliminate cross-tenant, cross-branch, and cross-role data leakage across all routes, services, and templates.
+*   **Files Affected:** `routes/ai.py`, `routes/owner.py`, `routes/api.py`, `routes/payment_vault.py`, `routes/main.py`, `tools/qa/test_security_boundaries.py`.
+*   **Models Used:** `Product`, `Customer`, `AuditLog`, `User`, `Branch`, `PaymentVault`, `Donation`, `Package`.
 *   **Migrations Needed:** None.
-*   **Accounting Impact:** Tax Return and compliance reporting automation.
-*   **Estimated Complexity:** Medium (1 Sprint).
-*   **Dependencies:** Phase 8.
+*   **Vulnerabilities Discovered (Security Audit, June 6, 2026):**
+    1. `routes/ai.py`: `Product.query.get_or_404(id)` and `Customer.query.get(id)` — any logged-in user can read/modify any product/customer from any tenant by ID.
+    2. `routes/ai.py`: `Customer.query.filter_by(is_active=True).all()` — AI chat leaks ALL customers across ALL tenants.
+    3. `routes/ai.py`: `Product.query.filter_by(is_active=True).limit(10).all()` — AI chat leaks products from all tenants.
+    4. `routes/owner.py`: `AuditLog.query.count()` / `AuditLog.query.order_by(...).all()` — owner dashboard shows audit logs from ALL tenants.
+    5. `routes/owner.py`: `User.query.filter_by(is_active=True, is_owner=False).count()` — user count crosses tenants.
+    6. `routes/owner.py`: `Product.query.filter_by(is_active=True).count()` — product count crosses tenants when branch=None.
+    7. `routes/owner.py`: `Branch.query.all()` — branch list crosses tenants.
+    8. `routes/api.py`: `User.query.filter_by(username=username).first()` — username uniqueness check crosses tenants.
+    9. `routes/api.py`: `_scoped_customer_query()` and `_scoped_supplier_query()` — no tenant_id filter.
+    10. `routes/payment_vault.py`: `PaymentVault.query.first()` — global singleton, no tenant scope.
+    11. `routes/payment_vault.py`: `Donation.query.filter_by(transaction_type=...)` — donations leak across tenants.
+    12. `routes/payment_vault.py`: `Package.query.order_by(...).all()` — packages leak across tenants.
+    13. `routes/main.py`: `Product.query.filter_by(is_active=True).count()` — dashboard product count crosses tenants when branch=None.
+*   **Fixes Required:**
+    1. **AI Routes:** Replace all bare `.get(id)` with `tenant_query(Model).filter_by(id=id).first_or_404()`.
+    2. **AI Routes:** Add `tenant_id` filter to all `Customer.query` and `Product.query` operations.
+    3. **Owner Dashboard:** Scope `AuditLog`, `User`, `Product`, `Branch` queries by `tenant_id`.
+    4. **API Routes:** Add `tenant_id` filter to `_scoped_customer_query()` and `_scoped_supplier_query()`.
+    5. **API Routes:** Scope `User.query` by `tenant_id` in username check.
+    6. **Payment Vault:** Scope `PaymentVault`, `Donation`, `Package` by `tenant_id`.
+    7. **Main Dashboard:** Scope `Product` count by `tenant_id` when `branch_id` is None.
+*   **QA Acceptance Criteria:**
+    - `tools/qa/test_security_boundaries.py` ALL CHECKS PASSED.
+    - Zero unscoped `Model.query.get()`, `Model.query.all()`, `Model.query.count()` in routes directory.
+    - No raw model queries in Jinja2 templates.
+*   **Status:** Vulnerabilities discovered; fixes in progress.
+*   **Estimated Complexity:** Medium (3-4 days) — **IN PROGRESS**.
+*   **Dependencies:** Phase 7 ✅.
 
-### Phase 10: Testing, Validation, and Rollout
-*   **Goal:** Run full end-to-end regression test suite, seed historical records, and deploy.
-*   **Estimated Complexity:** Low (1-2 Sprints).
-*   **Dependencies:** All previous phases.
+### Phase 8: Treasury & Cash Position Reporting — **PLAN LOCKED (June 6, 2026) — Implementation ⏳ PENDING Phase 7.5**
+*   **Goal:** Multi-branch bank, cashier, and post-dated cheque position tracking with GL-backed accuracy.
+*   **Files Affected:** `services/treasury_service.py`, `routes/reports.py`, `templates/reports/treasury.html`, `templates/reports/index.html`, `templates/base.html`.
+*   **Models Used:** `CashBox`, `GLAccount` (`liquidity_kind`), `Cheque`, `BankReconciliation`, `Branch`.
+*   **Migrations Needed:** None (schema deployed in `phase3_001`).
+*   **Design Decisions (post-audit):**
+    - `CashBox` table may be empty because `system_init.py` seeds GL accounts but does **not** auto-create `CashBox` rows. The service will use `CashBox` as primary source when populated; when empty, it will derive liquidity accounts from `GLAccount` where `liquidity_kind IN ('cash','bank','gateway','card','in_transit')` and compute balances via `GLAccount.get_balance()`.
+    - This avoids a data-seeding dependency and makes the dashboard useful immediately on existing GL data.
+    - `GLAccount.get_balance()` is used for GL-side balances; `CashBox.current_balance` is used only when explicit cash-box records exist.
+    - No double-counting: each GL account appears exactly once; `CashBox` + `GLAccount` fallback are mutually exclusive per tenant.
+*   **Features to Deliver:**
+    1. **Cash Position Summary Cards:** total cash, total bank, total under-collection, total gateways, grand total AED.
+    2. **Liquidity Accounts Table:** per-account breakdown (code, name, type, GL balance, currency, branch).
+    3. **Cheque Maturity Dashboard:**
+       - Incoming cheques: pending/deposited/under_collection, grouped by maturity bucket (overdue, 0-7 days, 8-30 days, 31+ days).
+       - Outgoing cheques: same grouping.
+       - Per-cheque row: number, bank, amount AED, due date, days remaining, status badge.
+    4. **Bank Reconciliation Status:** latest 5 reconciliations per bank account with balance-diff indicator.
+    5. **Branch Filter:** wired end-to-end via `report_branch_scope_id()`; export carries same filters.
+    6. **Export:** Excel/CSV export of liquidity accounts + cheque maturity list.
+*   **Security Requirements:**
+    - Route applies `report_branch_scope_id()` + `user_can_access_branch()` (same pattern as Phase 7 export fix).
+    - Export endpoint applies identical branch-scope validation.
+*   **QA Acceptance Criteria:**
+    - `test_treasury.py` validates: (a) no double-counting across liquidity accounts, (b) branch filter actually restricts rows, (c) cheque date buckets are mathematically correct, (d) export route includes security checks, (e) GL balances are non-negative for asset accounts or correctly signed.
+*   **Status:** Plan locked. Implementation in progress.
+*   **Estimated Complexity:** Medium (1 Sprint) — **Schema: DONE, Service: IN PROGRESS**.
+
+### Phase 9: Global Localization Engine — **PLAN LOCKED (June 6, 2026) — Pending Phase 8**
+*   **Goal:** Country-specific compliance engines for Palestine, UAE, and Saudi Arabia. Hot-swappable per-tenant without code redeploy.
+*   **Files Affected:** `utils/localization/`, `services/tax_service.py` (new), `routes/reports.py`, `models/tenant.py`.
+*   **Models Used:** `Tenant` (`vat_country`, `enable_tax`, `default_tax_rate`), `GLAccount`, `GLJournalLine`.
+*   **Migrations Needed:** None (tenant-level fields already exist: `vat_country`, `enable_tax`, `default_tax_rate`).
+*   **Design Decisions (post-audit):**
+    - `utils/tax_settings.py` already has `VAT_RATES_BY_COUNTRY` (AE=5%, IL=17%, PS=16%). This is the foundation.
+    - Localization will NOT be hardcoded in `sale_service.py` / `purchase_service.py`. Instead, a `LocalizationEngine` class dispatches to country-specific strategy objects.
+    - Palestine strategy: 16% VAT, multi-currency (ILS/JOD/USD), PMA reporting format, WPS (Wage Protection System) export.
+    - UAE strategy: 5% VAT, AED-only for tax reporting, FTA (Federal Tax Authority) export format.
+    - KSA strategy: 15% VAT (configurable), Simplified Invoice (Fatoorah) QR code generation.
+    - Each strategy implements: `calculate_tax()`, `format_tax_return()`, `generate_einvoice()`, `get_wps_format()`.
+    - Strategy selection: `Tenant.vat_country` → strategy registry lookup. Unknown country → `NullStrategy` (tax=0, no compliance reports).
+*   **Features to Deliver:**
+    1. **Localization Engine Framework:** `utils/localization/engine.py` with base `LocalizationStrategy` and country-specific subclasses.
+    2. **Tax Calculation Service (`services/tax_service.py`):**
+       - `TaxService.calculate_sale_tax(sale, country)` → returns tax lines per strategy.
+       - `TaxService.calculate_purchase_tax(purchase, country)` → input VAT recovery.
+    3. **VAT Return Report (`routes/reports.py` new route):**
+       - `/vat-return` per country format: output VAT, input VAT, net payable.
+       - Country-specific date periods (monthly/quarterly) driven by strategy.
+    4. **E-Invoicing Format (`services/einvoice_service.py`):**
+       - Palestine: XML export compatible with Ministry of Finance.
+       - UAE: FTA-compliant XML + QR code generation.
+       - KSA: ZATCA Phase 2 (simplified invoice XML + QR base64).
+    5. **WPS Export (Palestine only):**
+       - `/wps-export` route → SIF (Salary Information File) format.
+       - Includes employee ID, IBAN, net salary, bank code.
+    6. **Tenant Settings UI:**
+       - Dropdown `vat_country` in tenant settings.
+       - Auto-populate `default_tax_rate` from `VAT_RATES_BY_COUNTRY`.
+       - Toggle `enable_tax` with audit log.
+*   **Security Requirements:**
+    - Tax return data is scoped by `tenant_id` (no cross-tenant leak).
+    - WPS export contains PII — route requires `manage_payroll` permission.
+    - E-invoice generation is read-only but must be signed by authorized user.
+*   **QA Acceptance Criteria:**
+    - `test_localization.py` validates: (a) each country strategy returns correct tax rate, (b) `NullStrategy` returns zero tax for unsupported country, (c) VAT return total equals sum of sale tax lines minus purchase tax lines, (d) WPS file format has correct SIF headers, (e) e-invoice QR code is decodable and contains correct VAT amount.
+    - `py_compile`, Jinja2 parse pass.
+*   **Status:** Plan locked. Blocked on Phase 8 completion.
+*   **Estimated Complexity:** Medium (1 Sprint) — **Blocked until Phase 8 ✅**.
+
+### Phase 10: Testing, Validation, and Rollout — **PLAN LOCKED (June 6, 2026) — Pending Phase 9**
+*   **Goal:** Run full end-to-end regression test suite, seed historical records, and deploy to production with feature flags.
+*   **Files Affected:** `tools/qa/` (all test scripts), `docs/ERP_ACCOUNTING_MASTER_BLUEPRINT.md`, `config.py` (feature flags).
+*   **Design Decisions (post-audit):**
+    - No "big bang" deployment. Each phase is gated by a feature flag: `ENABLE_DYNAMIC_GL`, `ENABLE_MWAC`, `ENABLE_LANDED_COST`, `ENABLE_EXCHANGE_RATE_LOCK`, `ENABLE_RECONCILIATION`, `ENABLE_TREASURY`, `ENABLE_LOCALIZATION`.
+    - Rollout order: internal tenant → beta tenant → all tenants.
+    - Historical seeding is manual (accountant supervised), not automated.
+    - Load testing uses `tools/qa/load_test.py` with parameterized tenant size (small=1K records, medium=50K, large=500K).
+*   **Features to Deliver:**
+    1. **End-to-End Regression Suite (`tools/qa/test_full_regression.py`):**
+       - Purchase receipt → WAC recalculation → Sale → COGS posting → GL balance → Inventory reconciliation → Treasury cash position.
+       - Asserts zero variance at every handoff.
+    2. **Load Testing (`tools/qa/load_test.py`):**
+       - 100 concurrent sale invoices.
+       - 1,000 concurrent purchase receipts.
+       - GL balance query latency < 500ms for 500K journal lines.
+    3. **Historical Data Seeding Playbook (`docs/HISTORICAL_SEEDING_PLAYBOOK.md`):**
+       - Step-by-step guide for accountant to seed opening balances.
+       - PWC opening balance via `tools/qa/backfill_pwc_opening_balances.py`.
+       - GL opening balance via manual journal entry (accountant supervised).
+       - Cheque opening balance via bulk import CSV.
+    4. **Feature Flag Matrix (`config.py` or tenant settings):**
+       - Each phase has an `ENABLE_*` flag.
+       - Flags are per-tenant, not global.
+       - Rollout dashboard showing which tenant has which flag enabled.
+    5. **Production Deployment Checklist (`docs/PRODUCTION_DEPLOYMENT_CHECKLIST.md`):**
+       - Database backup verification.
+       - Migration dry-run.
+       - Celery worker health check.
+       - Redis cache flush plan.
+       - Rollback procedure (revert flags + DB restore point).
+    6. **Post-Deployment Monitoring:**
+       - Celery task success rate > 99%.
+       - GL out-of-balance alert (automatic email to admin if any entry is unbalanced).
+       - Inventory reconciliation mismatch alert (daily email if qty_diff != 0).
+*   **QA Acceptance Criteria:**
+    - `test_full_regression.py` passes with zero variance across all handoffs.
+    - Load test: 95th percentile response time < 2s for all report queries.
+    - Feature flag matrix is documented and auditable.
+    - Rollback procedure is tested on a staging environment (not production).
+    - All previous phase QA tests (`test_inventory_reconciliation.py`, `test_treasury.py`, `test_localization.py`) still pass.
+*   **Status:** Plan locked. Blocked on Phase 9 completion.
+*   **Estimated Complexity:** Low (1-2 Sprints) — **Blocked until Phase 9 ✅**.
 
 ---
 
@@ -515,9 +642,10 @@ This section records all hardening batches and modernization phases that have be
 | Phase 5 | Landed Cost Capitalization | ✅ COMPLETED | `test_landed_cost_end_to_end.py` PASS; freight/insurance/customs in inventory |
 | Phase 6 | Exchange Rate Framework | ✅ COMPLETED | `ExchangeRateRecord` per document; all services use `ExchangeRateService` |
 | Phase 7 | Reconciliation Reports | ✅ **COMPLETED** (Jun 6) | `InventoryReconciliationService` deployed; PWC vs movements vs GL (no double-counting); date/warehouse filters; secure export; Celery daily beat |
-| Phase 8 | Treasury & Cash | ✅ SCHEMA COMPLETED | `CashBox` model deployed; service logic pending |
-| Phase 9 | Global Localization | ⏳ PENDING | `utils/localization/` framework design needed |
-| Phase 10 | Testing & Rollout | ⏳ PENDING | Full regression suite after all phases complete |
+| Phase 7.5 | Security Hardening | 🔄 **IN PROGRESS** (Jun 6) | 13 cross-tenant leak vulnerabilities discovered in `routes/ai.py`, `routes/owner.py`, `routes/api.py`, `routes/payment_vault.py`, `routes/main.py`; fixes in progress |
+| Phase 8 | Treasury & Cash | 📋 **PLAN LOCKED** | Blocked on Phase 7.5 completion |
+| Phase 9 | Global Localization | 📋 **PLAN LOCKED** | Strategy pattern: `PalestineStrategy` (16% VAT, WPS), `UAEStrategy` (5%, FTA), `KSAStrategy` (15%, ZATCA QR); blocked on Phase 8 |
+| Phase 10 | Testing & Rollout | 📋 **PLAN LOCKED** | Feature flag matrix, load test targets, rollback playbook, post-deploy monitoring; blocked on Phase 9 |
 
 ---
 
@@ -538,21 +666,156 @@ This section records all hardening batches and modernization phases that have be
 
 ### Immediate Next Steps (Priority Order)
 
-#### 1. Phase 8: Treasury Service Execution (1 Sprint)
-- Build `TreasuryService` on top of existing `CashBox` schema.
-- Multi-branch cash position dashboard.
-- Post-dated cheque tracking and maturity alerts.
-- Bank reconciliation import (statement upload).
+#### 1. Phase 7.5: Security Hardening & Data Leak Prevention (3-4 days) — ACTIVE
+**Step 7.5.1 — Fix AI Routes (`routes/ai.py`)**
+- Replace `Product.query.get_or_404(id)` with `tenant_query(Product).filter_by(id=id).first_or_404()`.
+- Replace `Customer.query.get(id)` with `tenant_query(Customer).filter_by(id=id).first_or_404()`.
+- Add `tenant_id` filter to ALL `Customer.query` and `Product.query` operations in AI chat handlers.
 
-#### 2. Phase 9: Global Localization Engine (1 Sprint)
-- Palestine: PMA compliance, multi-currency (ILS/JOD/USD), 16% VAT.
-- GCC: KSA/UAE VAT (5%-15%), WPS export.
-- Hot-swappable regulatory engines in `utils/localization/`.
+**Step 7.5.2 — Fix Owner Dashboard (`routes/owner.py`)**
+- Scope `AuditLog.query` by `tenant_id` in count/all/order_by operations.
+- Scope `User.query` by `tenant_id` in user count and list operations.
+- Scope `Product.query` by `tenant_id` in product count.
+- Scope `Branch.query` by `tenant_id` in branch list.
 
-#### 3. Phase 10: Final Testing & Rollout (1-2 Sprints)
-- Full end-to-end regression: purchase → WAC → sale → COGS → GL → reconciliation.
-- Load testing on large tenant datasets.
-- Phased tenant rollout with `ENABLE_*` feature flags.
+**Step 7.5.3 — Fix API Routes (`routes/api.py`)**
+- Add `tenant_id` filter to `_scoped_customer_query()` and `_scoped_supplier_query()`.
+- Scope `User.query` by `tenant_id` in username uniqueness check.
+
+**Step 7.5.4 — Fix Payment Vault (`routes/payment_vault.py`)**
+- Scope `PaymentVault.query` by `tenant_id` (or document if it's intentionally global).
+- Scope `Donation.query` by `tenant_id`.
+- Scope `Package.query` by `tenant_id`.
+
+**Step 7.5.5 — Fix Main Dashboard (`routes/main.py`)**
+- Scope `Product.query.filter_by(is_active=True).count()` by `tenant_id` when `branch_id` is None.
+
+**Step 7.5.6 — QA Gate**
+- Run `tools/qa/test_security_boundaries.py` until ALL CHECKS PASSED.
+- **Blueprint Phase 7.5 marked COMPLETED only after test passes.**
+
+#### 2. Phase 8: Treasury Service Execution (1 Sprint) — Detailed Plan
+**Step 8.1 — Service Layer (`services/treasury_service.py`)**
+- `TreasuryService.get_liquidity_position(tenant_id, branch_id)`:
+  - Primary source: `CashBox` rows for tenant/branch.
+  - Fallback (if CashBox empty): `GLAccount` with `liquidity_kind IN ('cash','bank','gateway','card','in_transit')`.
+  - Balance: `CashBox.current_balance` when available; otherwise `GLAccount.get_balance()`.
+  - Group by `box_type`/`liquidity_kind` into cash, bank, under_collection, gateway, digital_wallet.
+- `TreasuryService.get_cheque_maturity(tenant_id, branch_id, buckets=(0,7,30))`:
+  - Query `Cheque` for `cheque_type='incoming'/'outgoing'`, `status IN ('pending','deposited','under_collection')`.
+  - Bucket by `days_until_due`: overdue, 0-7 days, 8-30 days, 31+ days.
+  - Sum `amount_aed` per bucket.
+- `TreasuryService.get_bank_reconciliation_status(tenant_id, branch_id, limit=5)`:
+  - Query `BankReconciliation` ordered by `created_at DESC`.
+  - Include `closing_balance_per_books`, `closing_balance_per_bank`, `difference`, `status`.
+- `TreasuryService.build_dashboard(tenant_id, branch_id)`:
+  - Aggregates all data into a single report dict.
+
+**Step 8.2 — Route Layer (`routes/reports.py`)**
+- `GET /treasury`: branch security (`report_branch_scope_id` + `user_can_access_branch`), tenant scope, render `treasury.html`.
+- `GET /treasury/export`: same security, Excel/CSV export with `format` param.
+
+**Step 8.3 — UI Layer (`templates/reports/treasury.html`)**
+- Summary cards: total cash, total bank, total under-collection, total gateways, grand total.
+- Branch filter dropdown (same pattern as inventory reconciliation).
+- Liquidity accounts table: code, name, type, balance AED, currency.
+- Cheque maturity tables: incoming + outgoing, 4 buckets each, with per-cheque detail rows.
+- Bank reconciliation mini-table: last 5 recs with status badge.
+- Export buttons (Excel/CSV) carrying current branch filter.
+
+**Step 8.4 — Navigation**
+- Add link in `templates/reports/index.html` under Financial Reports.
+- Add link in `templates/base.html` sidebar under Reports menu.
+
+**Step 8.5 — QA Gate**
+- `tools/qa/test_treasury.py` with assertions:
+  - (a) `get_liquidity_position` total equals sum of rows (no double-count).
+  - (b) Fake branch_id returns zero rows (branch filter enforced).
+  - (c) Cheque bucket boundaries are inclusive and non-overlapping.
+  - (d) Export route source contains `report_branch_scope_id` and `user_can_access_branch`.
+  - (e) `py_compile` + Jinja2 parse pass.
+- **Blueprint marked COMPLETED only after ALL CHECKS PASSED.**
+
+#### 2. Phase 9: Global Localization Engine (1 Sprint) — Detailed Plan
+**Step 9.1 — Engine Framework (`utils/localization/`)**
+- `utils/localization/engine.py`: `LocalizationStrategy` base class with abstract methods `calculate_tax()`, `format_tax_return()`, `generate_einvoice()`, `get_wps_format()`.
+- `utils/localization/palestine.py`: `PalestineStrategy` — 16% VAT, multi-currency (ILS/JOD/USD), PMA XML, WPS SIF.
+- `utils/localization/uae.py`: `UAEStrategy` — 5% VAT, AED-only, FTA XML.
+- `utils/localization/ksa.py`: `KSAStrategy` — 15% VAT, ZATCA Phase 2 QR.
+- `utils/localization/null.py`: `NullStrategy` — zero tax, empty reports for unsupported countries.
+- `utils/localization/registry.py`: `get_strategy(country_code)` mapping.
+
+**Step 9.2 — Tax Service (`services/tax_service.py`)**
+- `TaxService.calculate_sale_tax(sale)` → dispatches to strategy based on `Tenant.vat_country`.
+- `TaxService.calculate_purchase_tax(purchase)` → input VAT recovery per strategy.
+- `TaxService.get_vat_return(date_from, date_to)` → output VAT minus input VAT per strategy format.
+
+**Step 9.3 — VAT Return Route (`routes/reports.py`)**
+- `GET /vat-return`: country-specific format, branch security, tenant scope.
+- `GET /vat-return/export`: Excel/CSV per strategy column layout.
+
+**Step 9.4 — E-Invoice Service (`services/einvoice_service.py`)**
+- `EInvoiceService.generate(sale, country)` → XML + QR per strategy.
+- Palestine: Ministry of Finance XML schema.
+- UAE: FTA XML + TLV-encoded QR.
+- KSA: ZATCA simplified invoice XML + base64 QR.
+
+**Step 9.5 — WPS Export (Palestine only, `routes/reports.py`)**
+- `GET /wps-export`: requires `manage_payroll` permission.
+- SIF format: employee ID, IBAN, net salary, bank code.
+
+**Step 9.6 — Tenant Settings UI**
+- Add `vat_country` dropdown in tenant admin settings.
+- Auto-populate `default_tax_rate` from `VAT_RATES_BY_COUNTRY`.
+- Audit log on `enable_tax` toggle.
+
+**Step 9.7 — QA Gate**
+- `tools/qa/test_localization.py`: (a) each strategy returns correct rate, (b) `NullStrategy` returns zero, (c) VAT return total equals sale tax minus purchase tax, (d) WPS SIF headers correct, (e) QR decodable with correct VAT amount.
+- **Blueprint marked COMPLETED only after ALL CHECKS PASSED.**
+
+#### 3. Phase 10: Final Testing & Rollout (1-2 Sprints) — Detailed Plan
+**Step 10.1 — End-to-End Regression Suite (`tools/qa/test_full_regression.py`)**
+- Chain: Purchase receipt → WAC recalc → Sale → COGS posting → GL balance → Inventory reconciliation → Treasury cash position.
+- Assert zero variance at every handoff.
+- Run against staging database with real tenant data (anonymized).
+
+**Step 10.2 — Load Testing (`tools/qa/load_test.py`)**
+- 100 concurrent sale invoices (< 3s p95).
+- 1,000 concurrent purchase receipts (< 5s p95).
+- GL balance query < 500ms for 500K journal lines.
+- Report query < 2s p95 for all reconciliation and treasury reports.
+
+**Step 10.3 — Historical Seeding Playbook (`docs/HISTORICAL_SEEDING_PLAYBOOK.md`)**
+- Step-by-step guide for accountant.
+- PWC opening balance: `tools/qa/backfill_pwc_opening_balances.py`.
+- GL opening balance: manual journal entry (accountant supervised, signed off).
+- Cheque opening balance: bulk CSV import with validation.
+- Exchange rate history: `tools/qa/seed_exchange_rates.py`.
+
+**Step 10.4 — Feature Flag Matrix**
+- Per-tenant flags in `config.py` or `Tenant.settings`: `ENABLE_DYNAMIC_GL`, `ENABLE_MWAC`, `ENABLE_LANDED_COST`, `ENABLE_EXCHANGE_RATE_LOCK`, `ENABLE_RECONCILIATION`, `ENABLE_TREASURY`, `ENABLE_LOCALIZATION`.
+- Rollout dashboard: which tenant has which flag.
+- Rollout order: internal tenant → beta tenant → all tenants.
+
+**Step 10.5 — Production Deployment Checklist (`docs/PRODUCTION_DEPLOYMENT_CHECKLIST.md`)**
+- Database backup verification (test restore on separate server).
+- Migration dry-run (`flask db upgrade --sql` reviewed).
+- Celery worker health check (queue depth, worker count).
+- Redis cache flush plan (safe eviction, no data loss).
+- Rollback procedure: revert flags + DB restore point (tested on staging).
+
+**Step 10.6 — Post-Deployment Monitoring**
+- Celery task success rate > 99% (alert if < 95%).
+- GL out-of-balance alert (daily check, email admin if unbalanced entries exist).
+- Inventory reconciliation mismatch alert (daily email if `qty_diff != 0` or `value_diff != 0`).
+- Treasury liquidity alert (weekly email if any account balance goes negative unexpectedly).
+
+**Step 10.7 — QA Gate**
+- `test_full_regression.py` passes with zero variance.
+- Load test meets all latency targets.
+- Rollback procedure tested on staging (simulate failure, verify restore).
+- All previous phase QA tests still pass (no regression).
+- **Blueprint marked COMPLETED only after ALL CHECKS PASSED.**
 
 ---
 

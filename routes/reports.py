@@ -734,7 +734,12 @@ def ar_reconciliation():
 @permission_required('view_reports')
 def inventory_reconciliation():
     from services.inventory_reconciliation_service import InventoryReconciliationService
-    from utils.branching import get_accessible_branches, user_can_access_branch
+    from utils.branching import (
+        get_accessible_branches,
+        get_accessible_warehouse_ids,
+        user_can_access_branch,
+    )
+    from models import Warehouse as WarehouseModel
 
     branch_id = request.args.get('branch_id', type=int)
     warehouse_id = request.args.get('warehouse_id', type=int)
@@ -750,6 +755,22 @@ def inventory_reconciliation():
         return render_template('errors/403.html'), 403
 
     tenant_id = get_active_tenant_id(current_user)
+    warehouses_query = WarehouseModel.query.filter_by(is_active=True)
+    if tenant_id is not None:
+        warehouses_query = warehouses_query.filter(WarehouseModel.tenant_id == tenant_id)
+    if branch_id is not None:
+        warehouses_query = warehouses_query.filter(WarehouseModel.branch_id == branch_id)
+    else:
+        accessible_ids = get_accessible_warehouse_ids(current_user)
+        if accessible_ids:
+            warehouses_query = warehouses_query.filter(WarehouseModel.id.in_(accessible_ids))
+        elif not current_user.is_admin():
+            warehouses_query = warehouses_query.filter(WarehouseModel.id < 0)
+    warehouses = warehouses_query.order_by(WarehouseModel.name).all()
+
+    if warehouse_id is not None and warehouse_id not in {w.id for w in warehouses}:
+        return render_template('errors/403.html'), 403
+
     report = InventoryReconciliationService.build_warehouse_summary(
         tenant_id=tenant_id,
         branch_id=branch_id,
@@ -758,13 +779,6 @@ def inventory_reconciliation():
         date_to=date_to,
     )
     branches = get_accessible_branches(current_user)
-    from models import Warehouse as WarehouseModel
-    warehouses = WarehouseModel.query.filter_by(is_active=True)
-    if tenant_id is not None:
-        warehouses = warehouses.filter(WarehouseModel.tenant_id == tenant_id)
-    if branch_id is not None:
-        warehouses = warehouses.filter(WarehouseModel.branch_id == branch_id)
-    warehouses = warehouses.order_by(WarehouseModel.name).all()
     return render_template(
         'reports/inventory_reconciliation.html',
         report=report,
@@ -784,7 +798,8 @@ def inventory_reconciliation_export():
     from services.inventory_reconciliation_service import InventoryReconciliationService
     from services.export_service import ExportService
     from flask import send_file
-    from utils.branching import user_can_access_branch
+    from utils.branching import get_accessible_warehouse_ids, user_can_access_branch
+    from models import Warehouse as WarehouseModel
 
     fmt = (request.args.get('format') or 'xlsx').strip().lower()
     branch_id = request.args.get('branch_id', type=int)
@@ -801,6 +816,19 @@ def inventory_reconciliation_export():
         return render_template('errors/403.html'), 403
 
     tenant_id = get_active_tenant_id(current_user)
+    if warehouse_id is not None:
+        warehouse = WarehouseModel.query.filter_by(id=warehouse_id, is_active=True).first()
+        if (
+            not warehouse
+            or (tenant_id is not None and warehouse.tenant_id != tenant_id)
+            or (branch_id is not None and warehouse.branch_id != branch_id)
+        ):
+            return render_template('errors/403.html'), 403
+
+        accessible_ids = get_accessible_warehouse_ids(current_user)
+        if warehouse_id not in accessible_ids and not current_user.is_admin():
+            return render_template('errors/403.html'), 403
+
     report = InventoryReconciliationService.build_warehouse_summary(
         tenant_id=tenant_id,
         branch_id=branch_id,

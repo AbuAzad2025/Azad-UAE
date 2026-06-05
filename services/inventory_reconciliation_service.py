@@ -8,6 +8,7 @@ Compares three sources:
 from __future__ import annotations
 
 from collections import defaultdict
+from datetime import date, datetime, time
 from decimal import Decimal
 
 from sqlalchemy import func, text
@@ -31,6 +32,35 @@ RECON_TOLERANCE = Decimal("0.01")
 
 class InventoryReconciliationService:
     @staticmethod
+    def _date_bound(value, *, end_of_day: bool):
+        """Normalize date input from UI filters before comparing DateTime columns."""
+        if value is None or value == "":
+            return None
+        if isinstance(value, datetime):
+            return value
+        if isinstance(value, date):
+            return datetime.combine(value, time.max if end_of_day else time.min)
+
+        text_value = str(value).strip()
+        if not text_value:
+            return None
+
+        try:
+            if len(text_value) == 10:
+                parsed_date = date.fromisoformat(text_value)
+                return datetime.combine(parsed_date, time.max if end_of_day else time.min)
+            return datetime.fromisoformat(text_value)
+        except ValueError:
+            return None
+
+    @classmethod
+    def _date_bounds(cls, date_from: str | None, date_to: str | None):
+        return (
+            cls._date_bound(date_from, end_of_day=False),
+            cls._date_bound(date_to, end_of_day=True),
+        )
+
+    @staticmethod
     def _gl_inventory_balance(
         account_id: int,
         tenant_id: int | None,
@@ -45,6 +75,10 @@ class InventoryReconciliationService:
         which reassigned the *loop variable* without mutating debit_q/credit_q.
         Filters were silently ignored.  Now we apply filters directly to both queries.
         """
+        date_start, date_end = InventoryReconciliationService._date_bounds(
+            date_from, date_to
+        )
+
         debit_q = (
             db.session.query(func.coalesce(func.sum(GLJournalLine.debit), 0))
             .filter(GLJournalLine.account_id == account_id)
@@ -66,39 +100,52 @@ class InventoryReconciliationService:
         if warehouse_id is not None:
             debit_q = debit_q.filter(GLJournalLine.warehouse_id == warehouse_id)
             credit_q = credit_q.filter(GLJournalLine.warehouse_id == warehouse_id)
-        if date_from:
-            debit_q = debit_q.filter(GLJournalEntry.entry_date >= date_from)
-            credit_q = credit_q.filter(GLJournalEntry.entry_date >= date_from)
-        if date_to:
-            debit_q = debit_q.filter(GLJournalEntry.entry_date <= date_to)
-            credit_q = credit_q.filter(GLJournalEntry.entry_date <= date_to)
+        if date_start:
+            debit_q = debit_q.filter(GLJournalEntry.entry_date >= date_start)
+            credit_q = credit_q.filter(GLJournalEntry.entry_date >= date_start)
+        if date_end:
+            debit_q = debit_q.filter(GLJournalEntry.entry_date <= date_end)
+            credit_q = credit_q.filter(GLJournalEntry.entry_date <= date_end)
 
         return Decimal(str(debit_q.scalar() or 0)) - Decimal(
             str(credit_q.scalar() or 0)
         )
 
-    @staticmethod
+    @classmethod
     def _movement_net_qty(
+        cls,
         tenant_id: int,
         product_id: int,
         warehouse_id: int,
+        branch_id: int | None = None,
         date_from: str | None = None,
         date_to: str | None = None,
     ) -> Decimal:
+        date_start, date_end = cls._date_bounds(date_from, date_to)
         sql = """
             SELECT COALESCE(SUM(quantity), 0)
-            FROM stock_movements
-            WHERE tenant_id = :tid
-              AND product_id = :pid
-              AND warehouse_id = :wid
+            FROM stock_movements sm
+            WHERE sm.tenant_id = :tid
+              AND sm.product_id = :pid
+              AND sm.warehouse_id = :wid
         """
         params = {"tid": tenant_id, "pid": product_id, "wid": warehouse_id}
-        if date_from:
-            sql += " AND created_at >= :df"
-            params["df"] = date_from
-        if date_to:
-            sql += " AND created_at <= :dt"
-            params["dt"] = date_to
+        if branch_id is not None:
+            sql += """
+              AND EXISTS (
+                  SELECT 1
+                  FROM warehouses w
+                  WHERE w.id = sm.warehouse_id
+                    AND w.branch_id = :bid
+              )
+            """
+            params["bid"] = branch_id
+        if date_start:
+            sql += " AND sm.created_at >= :df"
+            params["df"] = date_start
+        if date_end:
+            sql += " AND sm.created_at <= :dt"
+            params["dt"] = date_end
         result = db.session.execute(text(sql), params).scalar()
         return Decimal(str(result or 0))
 
@@ -124,6 +171,12 @@ class InventoryReconciliationService:
             pwc_query = pwc_query.filter_by(tenant_id=tenant_id)
         if warehouse_id is not None:
             pwc_query = pwc_query.filter_by(warehouse_id=warehouse_id)
+        if branch_id is not None:
+            pwc_query = pwc_query.join(
+                Warehouse, ProductWarehouseCost.warehouse_id == Warehouse.id
+            ).filter(Warehouse.branch_id == branch_id)
+            if tenant_id is not None:
+                pwc_query = pwc_query.filter(Warehouse.tenant_id == tenant_id)
 
         pwc_records = pwc_query.all()
 
@@ -140,6 +193,7 @@ class InventoryReconciliationService:
                 pwc.tenant_id,
                 pwc.product_id,
                 pwc.warehouse_id,
+                branch_id=branch_id,
                 date_from=date_from,
                 date_to=date_to,
             )
@@ -235,7 +289,6 @@ class InventoryReconciliationService:
         wh_rows = []
         for wid, w in warehouse_map.items():
             gl_value = Decimal("0")
-            gl_untagged = False
             if inventory_account:
                 gl_value = cls._gl_inventory_balance(
                     inventory_account.id,
@@ -245,19 +298,6 @@ class InventoryReconciliationService:
                     date_from=date_from,
                     date_to=date_to,
                 )
-                # If warehouse-filtered GL is 0 but PWC has value, legacy entries
-                # may lack warehouse_id dimension.  Flag this for the UI.
-                if gl_value == 0 and w["pwc_value"] > 0:
-                    total_gl = cls._gl_inventory_balance(
-                        inventory_account.id,
-                        tenant_id=tenant_id,
-                        branch_id=branch_id,
-                        warehouse_id=None,
-                        date_from=date_from,
-                        date_to=date_to,
-                    )
-                    if total_gl != 0:
-                        gl_untagged = True
 
             qty_diff = w["pwc_qty"] - w["movement_qty"]
             value_diff = w["pwc_value"] - gl_value
@@ -271,22 +311,67 @@ class InventoryReconciliationService:
                     "qty_diff": float(qty_diff),
                     "pwc_value": float(w["pwc_value"]),
                     "gl_value": float(gl_value),
+                    "tagged_gl_value": float(gl_value),
+                    "unallocated_gl_value": 0.0,
                     "value_diff": float(value_diff),
                     "matched_qty": abs(qty_diff) <= RECON_TOLERANCE,
                     "matched_value": abs(value_diff) <= RECON_TOLERANCE,
-                    "gl_untagged": gl_untagged,
+                    "gl_untagged": False,
                 }
             )
 
-        # Overall totals from warehouse summary (no double-counting)
-        total_gl_value = sum(Decimal(str(r["gl_value"])) for r in wh_rows)
+        tagged_gl_value = sum(Decimal(str(r["gl_value"])) for r in wh_rows)
+        scope_gl_value = Decimal("0")
+        if inventory_account:
+            scope_gl_value = cls._gl_inventory_balance(
+                inventory_account.id,
+                tenant_id=tenant_id,
+                branch_id=branch_id,
+                warehouse_id=None,
+                date_from=date_from,
+                date_to=date_to,
+            )
+        unallocated_gl_value = scope_gl_value - tagged_gl_value
+
+        # If the current report scope has a single warehouse, legacy untagged
+        # GL can be displayed on that row while still marked as unallocated.
+        if (
+            len(wh_rows) == 1
+            and warehouse_id is None
+            and abs(unallocated_gl_value) > RECON_TOLERANCE
+        ):
+            row = wh_rows[0]
+            effective_gl = Decimal(str(row["gl_value"])) + unallocated_gl_value
+            value_diff = Decimal(str(row["pwc_value"])) - effective_gl
+            row["gl_value"] = float(effective_gl)
+            row["unallocated_gl_value"] = float(unallocated_gl_value)
+            row["value_diff"] = float(value_diff)
+            row["gl_untagged"] = True
+            row["matched_value"] = False
+
+        # Overall totals from scoped ledger balance (no double-counting)
+        total_gl_value = scope_gl_value
         total_pwc_value = sum(Decimal(str(r["pwc_value"])) for r in wh_rows)
         total_pwc_qty = sum(Decimal(str(r["pwc_qty"])) for r in wh_rows)
         total_movement_qty = sum(Decimal(str(r["movement_qty"])) for r in wh_rows)
+        overall_value_diff = total_pwc_value - total_gl_value
+        has_unallocated_gl = abs(unallocated_gl_value) > RECON_TOLERANCE
 
         report["warehouse_summary"] = wh_rows
+        report["summary"]["tagged_gl_value"] = float(tagged_gl_value)
+        report["summary"]["unallocated_gl_value"] = float(unallocated_gl_value)
         report["summary"]["total_gl_value"] = float(total_gl_value)
-        report["summary"]["overall_value_diff"] = float(total_pwc_value - total_gl_value)
+        report["summary"]["overall_value_diff"] = float(overall_value_diff)
         report["summary"]["all_matched_qty"] = all(r["matched_qty"] for r in wh_rows)
-        report["summary"]["all_matched_value"] = all(r["matched_value"] for r in wh_rows)
+        report["summary"]["all_matched_value"] = (
+            abs(overall_value_diff) <= RECON_TOLERANCE and not has_unallocated_gl
+        )
+        report["summary"]["has_unallocated_gl"] = has_unallocated_gl
+        report["summary"]["all_warehouse_values_matched"] = all(
+            r["matched_value"] for r in wh_rows
+        )
+        report["summary"]["all_matched"] = (
+            report["summary"]["all_matched_qty"]
+            and report["summary"]["all_matched_value"]
+        )
         return report

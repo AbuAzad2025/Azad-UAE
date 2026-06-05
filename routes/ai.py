@@ -20,7 +20,7 @@ from ai_knowledge.specialized.advanced_laws import advanced_laws
 from ai_knowledge.knowledge.automotive_ecu_knowledge import get_automotive_ecu_knowledge
 from ai_knowledge.learning.external_learning import get_external_learning, LEARNING_SOURCES_CATALOG
 from utils.decorators import permission_required, owner_required, admin_required
-from utils.tenanting import assign_tenant_id
+from utils.tenanting import assign_tenant_id, get_active_tenant_id
 from utils.ai_access import get_ai_access_state, ai_level_allows
 from utils.helpers import create_audit_log
 from datetime import datetime, timezone
@@ -318,9 +318,10 @@ def exchange_rate(currency):
 def search_market_price(product_id):
     """API: البحث عن سعر القطعة في الأسواق العالمية"""
     from models import Product
-    
-    product = Product.query.get_or_404(product_id)
-    
+
+    tid = get_active_tenant_id(current_user)
+    product = Product.query.filter_by(id=product_id, tenant_id=tid).first_or_404()
+
     return jsonify({
         'success': True,
         'product': product.name,
@@ -335,9 +336,10 @@ def search_market_price(product_id):
 def find_compatible(product_id):
     """API: البحث عن السيارات المتوافقة"""
     from models import Product
-    
-    product = Product.query.get_or_404(product_id)
-    
+
+    tid = get_active_tenant_id(current_user)
+    product = Product.query.filter_by(id=product_id, tenant_id=tid).first_or_404()
+
     return jsonify({
         'success': True,
         'product': product.name,

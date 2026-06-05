@@ -10,6 +10,7 @@ from extensions import db, limiter, csrf
 from models import PaymentVault, PaymentTransaction, PaymentLog, Donation, CardPayment, Package, PackagePurchase
 from services.nowpayments_service import NOWPaymentsService
 from utils.helpers import create_audit_log
+from utils.tenanting import get_active_tenant_id
 import secrets
 import string
 import logging

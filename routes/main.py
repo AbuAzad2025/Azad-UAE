@@ -9,6 +9,7 @@ from models import Sale, Customer, Product, Payment, Receipt, GLAccount, GLJourn
 from services.stock_service import StockService
 from utils.decorators import branch_scope_id
 from utils.branching import get_visible_products_query
+from utils.tenanting import get_active_tenant_id
 
 main_bp = Blueprint('main', __name__)
 
@@ -43,7 +44,8 @@ def dashboard():
         if scoped_branch_id is not None:
             total_products = get_visible_products_query(current_user).count()
         else:
-            total_products = Product.query.filter_by(is_active=True).count()
+            tid = get_active_tenant_id(current_user)
+            total_products = Product.query.filter_by(is_active=True, tenant_id=tid).count()
         stats['products_count'] = total_products
         
         low_stock = []

@@ -71,6 +71,42 @@ def _assert_date_filter_wired(report, report_filtered):
     print("  [PASS] Date filter params accepted by service")
 
 
+def _assert_date_to_inclusive(service, tenant_id):
+    """A date-only date_to must include that full calendar day."""
+    from extensions import db
+    from models import StockMovement
+
+    max_created_at = (
+        db.session.query(StockMovement.created_at)
+        .filter(StockMovement.tenant_id == tenant_id)
+        .order_by(StockMovement.created_at.desc())
+        .limit(1)
+        .scalar()
+    )
+    if not max_created_at:
+        print("  [SKIP] No stock movements for inclusive date_to check")
+        return
+
+    date_only = max_created_at.date().isoformat()
+    end_of_day = f"{date_only} 23:59:59"
+    report_date_only = service.build_warehouse_summary(
+        tenant_id=tenant_id,
+        date_to=date_only,
+    )
+    report_end_of_day = service.build_warehouse_summary(
+        tenant_id=tenant_id,
+        date_to=end_of_day,
+    )
+    qty_date_only = Decimal(str(report_date_only["summary"]["total_movement_qty"]))
+    qty_end_of_day = Decimal(str(report_end_of_day["summary"]["total_movement_qty"]))
+    if abs(qty_date_only - qty_end_of_day) > Decimal("0.001"):
+        raise AssertionError(
+            f"date_to is not inclusive: {date_only} qty={qty_date_only} "
+            f"but {end_of_day} qty={qty_end_of_day}"
+        )
+    print("  [PASS] date_to includes the full selected day")
+
+
 def _assert_warehouse_filter_wired(report_all, report_wh):
     """Warehouse filtering should return equal or fewer rows."""
     if report_wh["summary"]["record_count"] > report_all["summary"]["record_count"]:
@@ -79,6 +115,17 @@ def _assert_warehouse_filter_wired(report_all, report_wh):
             f"{report_all['summary']['record_count']}"
         )
     print("  [PASS] Warehouse filter reduces or maintains row count")
+
+
+def _assert_branch_filter_wired(report_fake_branch):
+    """A nonexistent branch must not return tenant-wide PWC rows."""
+    summary = report_fake_branch["summary"]
+    if summary["record_count"] != 0 or Decimal(str(summary["total_pwc_qty"])) != 0:
+        raise AssertionError(
+            "Branch filter is not applied to PWC/movement rows: "
+            f"records={summary['record_count']} qty={summary['total_pwc_qty']}"
+        )
+    print("  [PASS] Branch filter is applied to PWC/movement rows")
 
 
 def _assert_celery_beat_schedule():
@@ -98,13 +145,34 @@ def _assert_export_route_has_security(app):
     from routes.reports import inventory_reconciliation_export
     import inspect
     source = inspect.getsource(inventory_reconciliation_export)
-    required = ["report_branch_scope_id", "user_can_access_branch"]
+    required = ["report_branch_scope_id", "user_can_access_branch", "get_accessible_warehouse_ids"]
     for r in required:
         if r not in source:
             raise AssertionError(
                 f"Export route missing security check: {r}"
             )
     print("  [PASS] Export route applies branch security checks")
+
+
+def _assert_celery_value_status(service, tenant_id):
+    from services.celery_tasks import run_inventory_reconciliation
+
+    report = service.build_warehouse_summary(tenant_id=tenant_id)
+    summary = report["summary"]
+    task_result = run_inventory_reconciliation(tenant_id)
+    expected_all = summary["all_matched_qty"] and summary["all_matched_value"]
+    if task_result["all_matched"] != expected_all:
+        raise AssertionError(
+            "Celery reconciliation status ignores value mismatches: "
+            f"task={task_result['all_matched']} expected={expected_all}"
+        )
+    if task_result.get("all_matched_value") != summary["all_matched_value"]:
+        raise AssertionError(
+            "Celery result does not expose value reconciliation status: "
+            f"task={task_result.get('all_matched_value')} "
+            f"expected={summary['all_matched_value']}"
+        )
+    print("  [PASS] Celery task includes value reconciliation status")
 
 
 def main():
@@ -163,6 +231,7 @@ def main():
         )
         try:
             _assert_date_filter_wired(report, report_filtered)
+            _assert_date_to_inclusive(InventoryReconciliationService, tenant_id=2)
         except AssertionError as e:
             errors.append(str(e))
             print(f"  [FAIL] {e}")
@@ -173,8 +242,13 @@ def main():
             tenant_id=2,
             warehouse_id=1,  # Ramallah Main Warehouse
         )
+        report_fake_branch = InventoryReconciliationService.build_warehouse_summary(
+            tenant_id=2,
+            branch_id=999999,
+        )
         try:
             _assert_warehouse_filter_wired(report, report_wh)
+            _assert_branch_filter_wired(report_fake_branch)
         except AssertionError as e:
             errors.append(str(e))
             print(f"  [FAIL] {e}")
@@ -183,6 +257,7 @@ def main():
         print("\n=== Check: Celery beat_schedule ===")
         try:
             _assert_celery_beat_schedule()
+            _assert_celery_value_status(InventoryReconciliationService, tenant_id=2)
         except AssertionError as e:
             errors.append(str(e))
             print(f"  [FAIL] {e}")
@@ -208,18 +283,15 @@ def main():
                 inv_acc.id, tenant_id=2, branch_id=None, warehouse_id=None
             )
             report_gl = Decimal(str(s.get("total_gl_value", 0)))
-            # The report GL is warehouse-filtered; direct GL is total.
-            # They should be close IF all GL lines have warehouse_id.
-            # We just verify the report GL is <= direct GL (can't exceed total).
-            if report_gl > direct_gl:
+            if abs(report_gl - direct_gl) > RECON_TOLERANCE:
                 err = (
-                    f"Report GL ({report_gl}) exceeds direct GL balance ({direct_gl}). "
-                    f"Double-counting bug confirmed."
+                    f"Report GL ({report_gl}) does not equal direct GL balance "
+                    f"({direct_gl}). Reconciliation report is not ledger-accurate."
                 )
                 errors.append(err)
                 print(f"  [FAIL] {err}")
             else:
-                print(f"  [PASS] Report GL {report_gl} <= Direct GL {direct_gl}")
+                print(f"  [PASS] Report GL {report_gl} equals Direct GL {direct_gl}")
         else:
             print("  [SKIP] No inventory GL account found for tenant=2")
 

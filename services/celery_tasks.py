@@ -31,35 +31,84 @@ def run_inventory_reconciliation(tenant_id: int | None = None):
     from app import create_app
     from services.inventory_reconciliation_service import InventoryReconciliationService
     from extensions import db
+    from models import ProductWarehouseCost
     import logging
 
     logger = logging.getLogger(__name__)
     app = create_app()
     with app.app_context():
-        report = InventoryReconciliationService.build_warehouse_summary(tenant_id=tenant_id)
-        summary = report['summary']
-        if summary['all_matched']:
-            logger.info(
-                f"[Reconciliation] tenant={tenant_id} ALL MATCHED: "
-                f"{summary['record_count']} products, qty={summary['total_pwc_qty']}"
-            )
+        if tenant_id is None:
+            tenant_ids = [
+                row[0]
+                for row in db.session.query(ProductWarehouseCost.tenant_id)
+                .distinct()
+                .order_by(ProductWarehouseCost.tenant_id)
+                .all()
+            ]
         else:
-            mismatched = [r for r in report['rows'] if not r['matched_qty']]
-            logger.warning(
-                f"[Reconciliation] tenant={tenant_id} MISMATCHES: "
-                f"{len(mismatched)}/{summary['record_count']} products have quantity differences"
-            )
-            for r in mismatched:
-                logger.warning(
-                    f"  product={r['product_id']} warehouse={r['warehouse_id']} "
-                    f"pwc={r['pwc_qty']:.3f} movement={r['movement_qty']:.3f} diff={r['qty_diff']:+.3f}"
+            tenant_ids = [tenant_id]
+
+        results = []
+        for tid in tenant_ids:
+            report = InventoryReconciliationService.build_warehouse_summary(tenant_id=tid)
+            summary = report['summary']
+            qty_ok = summary.get('all_matched_qty', summary.get('all_matched', False))
+            value_ok = summary.get('all_matched_value', True)
+            all_ok = qty_ok and value_ok
+
+            qty_mismatches = [r for r in report['rows'] if not r['matched_qty']]
+            value_mismatches = [
+                r for r in report.get('warehouse_summary', []) if not r['matched_value']
+            ]
+
+            if all_ok:
+                logger.info(
+                    f"[Reconciliation] tenant={tid} ALL MATCHED: "
+                    f"{summary['record_count']} products, qty={summary['total_pwc_qty']}"
                 )
+            else:
+                logger.warning(
+                    f"[Reconciliation] tenant={tid} REVIEW: "
+                    f"qty_mismatches={len(qty_mismatches)} "
+                    f"value_mismatches={len(value_mismatches)} "
+                    f"products={summary['record_count']}"
+                )
+                for r in qty_mismatches:
+                    logger.warning(
+                        f"  product={r['product_id']} warehouse={r['warehouse_id']} "
+                        f"pwc={r['pwc_qty']:.3f} movement={r['movement_qty']:.3f} diff={r['qty_diff']:+.3f}"
+                    )
+                for r in value_mismatches:
+                    logger.warning(
+                        f"  warehouse={r['warehouse_id']} "
+                        f"pwc_value={r['pwc_value']:.2f} gl_value={r['gl_value']:.2f} "
+                        f"diff={r['value_diff']:+.2f}"
+                    )
+
+            results.append({
+                'tenant_id': tid,
+                'all_matched': all_ok,
+                'all_matched_qty': qty_ok,
+                'all_matched_value': value_ok,
+                'record_count': summary['record_count'],
+                'total_pwc_qty': summary['total_pwc_qty'],
+                'total_movement_qty': summary['total_movement_qty'],
+                'total_gl_value': summary.get('total_gl_value', 0),
+                'overall_value_diff': summary.get('overall_value_diff', 0),
+            })
+
+        if tenant_id is not None:
+            return results[0] if results else {
+                'tenant_id': tenant_id,
+                'all_matched': True,
+                'record_count': 0,
+            }
+
         return {
-            'tenant_id': tenant_id,
-            'all_matched': summary['all_matched'],
-            'record_count': summary['record_count'],
-            'total_pwc_qty': summary['total_pwc_qty'],
-            'total_movement_qty': summary['total_movement_qty'],
+            'tenant_id': None,
+            'all_matched': all(r['all_matched'] for r in results),
+            'tenant_count': len(results),
+            'results': results,
         }
 
 
