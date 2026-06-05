@@ -113,6 +113,7 @@ def create_app(config_class=Config):
     products_bp      = _import_bp("routes.products", "products_bp")
     customers_bp     = _import_bp("routes.customers", "customers_bp")
     reports_bp       = _import_bp("routes.reports", "reports_bp")
+    treasury_bp      = _import_bp("routes.treasury", "treasury_bp")
     api_bp           = _import_bp("routes.api", "api_bp")
     api_enhanced_bp  = _import_bp("routes.api_enhanced", "api_enhanced_bp")
     suppliers_bp     = _import_bp("routes.suppliers", "suppliers_bp")
@@ -273,6 +274,7 @@ def create_app(config_class=Config):
 
     # ── Reports & Analytics ──────────────────────────────────
     app.register_blueprint(reports_bp)
+    app.register_blueprint(treasury_bp)
     app.register_blueprint(api_analytics_bp)
     app.register_blueprint(gamification_bp)
     app.register_blueprint(monitoring_bp)

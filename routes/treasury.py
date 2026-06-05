@@ -1,0 +1,98 @@
+"""
+Treasury Routes - مسارات المركز المالي والخزينة
+Phase 8: Treasury & Cash Position Reporting
+"""
+
+from datetime import datetime, timezone
+from flask import Blueprint, render_template, request, send_file
+from flask_login import login_required, current_user
+from utils.decorators import permission_required, report_branch_scope_id
+from utils.tenanting import get_active_tenant_id
+from utils.branching import get_accessible_branches, user_can_access_branch
+
+treasury_bp = Blueprint('treasury', __name__, url_prefix='/reports')
+
+
+@treasury_bp.route('/treasury')
+@login_required
+@permission_required('view_reports')
+def treasury():
+    from services.treasury_service import TreasuryService
+
+    branch_id = request.args.get('branch_id', type=int)
+    scoped_branch_id = report_branch_scope_id()
+
+    if branch_id is None:
+        branch_id = scoped_branch_id
+    elif scoped_branch_id is not None and branch_id != scoped_branch_id:
+        return render_template('errors/403.html'), 403
+    elif scoped_branch_id is None and branch_id is not None and not user_can_access_branch(branch_id, current_user):
+        return render_template('errors/403.html'), 403
+
+    tenant_id = get_active_tenant_id(current_user)
+    report = TreasuryService.build_dashboard(
+        tenant_id=tenant_id,
+        branch_id=branch_id,
+    )
+    branches = get_accessible_branches(current_user)
+    return render_template(
+        'reports/treasury.html',
+        report=report,
+        branches=branches,
+        selected_branch=branch_id,
+    )
+
+
+@treasury_bp.route('/treasury/export')
+@login_required
+@permission_required('view_reports')
+def treasury_export():
+    from services.treasury_service import TreasuryService
+    from services.export_service import ExportService
+
+    fmt = (request.args.get('format') or 'xlsx').strip().lower()
+    branch_id = request.args.get('branch_id', type=int)
+    scoped_branch_id = report_branch_scope_id()
+
+    if branch_id is None:
+        branch_id = scoped_branch_id
+    elif scoped_branch_id is not None and branch_id != scoped_branch_id:
+        return render_template('errors/403.html'), 403
+    elif scoped_branch_id is None and branch_id is not None and not user_can_access_branch(branch_id, current_user):
+        return render_template('errors/403.html'), 403
+
+    tenant_id = get_active_tenant_id(current_user)
+    report = TreasuryService.build_dashboard(
+        tenant_id=tenant_id,
+        branch_id=branch_id,
+    )
+
+    headers = ['kind', 'code', 'name', 'currency', 'balance_aed', 'source']
+    data = []
+    for a in report['liquidity']['accounts']:
+        data.append([
+            a['kind_label'],
+            a['code'],
+            a['name'],
+            a['currency'],
+            a['balance_aed'],
+            a['source'],
+        ])
+
+    base_name = f"treasury_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    if fmt == 'xlsx':
+        output = ExportService.export_to_xlsx(data, headers, filename=f'{base_name}.xlsx', sheet_name='Treasury')
+        return send_file(
+            output,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            as_attachment=True,
+            download_name=f'{base_name}.xlsx',
+        )
+
+    output = ExportService.export_to_csv(data, headers, filename=f'{base_name}.csv')
+    return send_file(
+        output,
+        mimetype='text/csv; charset=utf-8',
+        as_attachment=True,
+        download_name=f'{base_name}.csv',
+    )
