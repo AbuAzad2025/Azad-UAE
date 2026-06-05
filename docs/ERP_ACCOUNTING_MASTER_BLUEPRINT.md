@@ -2,7 +2,7 @@
 
 **Document Status:** Single Source of Truth — Supersedes All Accounting Documentation  
 **Date:** June 4, 2026  
-**Last Updated:** June 5, 2026 (Session 3 — Landed Cost + Data Cleanup Complete)
+**Last Updated:** June 5, 2026 (Session 4 — All PWC Reconciled, AP Bug Fixed, Data Cleanup Closed)
 
 > **NOTICE:** This document is the sole authoritative accounting plan. All previous accounting documents (listed in Section 1.1) are superseded and should be removed from active reference.  
 **Reference Standards:** SAP Business One, Oracle NetSuite, Odoo, Bisan, Al-Shamel  
@@ -430,6 +430,7 @@ This section records all hardening batches and modernization phases that have be
     - `gl_dynamic_posting_resolution_check.py`: ready true.
     - `py_compile`, Jinja parse: all pass.
     - `git diff --check`: clean.
+    - **Bug fix:** `services/purchase_service.py:187` removed duplicate `+ total_landed` in AP calculation. `purchase.total_amount` already includes landed cost since `models/purchase.py` fix.
 *   **Estimated Complexity:** Medium (1 Sprint) — **DONE**.
 
 ### Phase 6: Exchange Rate Framework — ✅ COMPLETED (June 5, 2026)
@@ -508,39 +509,32 @@ This section records all hardening batches and modernization phases that have be
 | ILS cheque FX mismatch | Normalized `exchange_rate` | 20 (tenant 2) | ✅ Done |
 | Negative PWC quantities | Zeroed out | 3 records | ✅ Done |
 | GL coverage per ref type | Verified all covered | 5 types | ✅ OK |
-| PWC vs movement mismatch | Historical opening balances | 37 records | ⚠️ Needs accountant sign-off |
+| PWC vs movement mismatch | Opening balance backfill | 37 records | ✅ Done (36 opening_balance movements + 1 manual fix) |
 
-**37 PWC Quantity Mismatches** — These reflect historical opening balances seeded before full movement tracking. They are **warnings, not blockers**. Resolution options:
-1. **Accountant sign-off** (recommended): Mark as "historical seeding, no movement trail required."
-2. **Backfill script**: Generate synthetic `stock_movements` to match opening balances.
+**PWC Reconciliation** — All 37 mismatches resolved via `tools/qa/backfill_pwc_opening_balances.py`. 36 records received `opening_balance` stock_movement records documenting the historical seeding gap. 1 record (product=139) had movements exceeding PWC and was corrected manually. All PWC quantities now match `SUM(stock_movements.quantity)` exactly.
 
 ---
 
 ### Immediate Next Steps (Priority Order)
 
-#### 1. Accountant Sign-off on PWC Mismatches (1 day)
-- Present the 37 mismatch report to the accountant.
-- Get written approval that historical seeding is acceptable.
-- Document sign-off in audit trail.
-
-#### 2. Phase 7: Reconciliation Reports (1 Sprint)
+#### 1. Phase 7: Reconciliation Reports (1 Sprint)
 - Build `ReconciliationService` with read-only discrepancy reports.
 - Compare `ProductWarehouseCost` vs physical stock vs GL inventory account.
 - Generate branch-level and warehouse-level reconciliation sheets.
 - Add dashboard widget showing reconciliation status.
 
-#### 3. Phase 8: Treasury Service Execution (1 Sprint)
+#### 2. Phase 8: Treasury Service Execution (1 Sprint)
 - Build `TreasuryService` on top of existing `CashBox` schema.
 - Multi-branch cash position dashboard.
 - Post-dated cheque tracking and maturity alerts.
 - Bank reconciliation import (statement upload).
 
-#### 4. Phase 9: Global Localization Engine (1 Sprint)
+#### 3. Phase 9: Global Localization Engine (1 Sprint)
 - Palestine: PMA compliance, multi-currency (ILS/JOD/USD), 16% VAT.
 - GCC: KSA/UAE VAT (5%-15%), WPS export.
 - Hot-swappable regulatory engines in `utils/localization/`.
 
-#### 5. Phase 10: Final Testing & Rollout (1-2 Sprints)
+#### 4. Phase 10: Final Testing & Rollout (1-2 Sprints)
 - Full end-to-end regression: purchase → WAC → sale → COGS → GL → reconciliation.
 - Load testing on large tenant datasets.
 - Phased tenant rollout with `ENABLE_*` feature flags.
@@ -555,7 +549,7 @@ This section records all hardening batches and modernization phases that have be
 
 **Option C — Landed Cost Capitalization (Phase 5):** `Purchase` fields `freight/insurance/customs_duty/other_landed_cost`. Proportional allocation to `PurchaseLine.landed_cost`. WAC and GL include landed costs.
 
-**Option D — Historical Data Cleanup:** Orphaned movements deleted, cheque FX normalized, GL coverage verified, `check_inventory.py` rewritten.
+**Option D — Historical Data Cleanup:** Orphaned movements deleted (101 total), orphaned GL entries deleted (84 total), cheque FX normalized, GL coverage verified, `check_inventory.py` rewritten, 37 PWC mismatches backfilled with `opening_balance` stock movements, AP double-counting bug fixed in `purchase_service.py`.
 
 ---
 
