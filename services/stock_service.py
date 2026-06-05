@@ -1,4 +1,4 @@
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 from flask import current_app
 from flask_login import current_user
 from extensions import db
