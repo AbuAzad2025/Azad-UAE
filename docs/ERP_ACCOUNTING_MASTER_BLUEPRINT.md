@@ -2,7 +2,7 @@
 
 **Document Status:** Single Source of Truth — Supersedes All Accounting Documentation  
 **Date:** June 4, 2026  
-**Last Updated:** June 6, 2026 (Session 9 — Phase 12 Owner Panel Deep Hardening COMPLETED; all 91 routes audited; tenant scoping enforced; roles/permissions template live; forecasting & product performance enhanced)
+**Last Updated:** June 6, 2026 (Session 9 — Phase 12+ Owner Panel & AI Routes Deep Hardening COMPLETED; all 91 owner routes + AI chatbot routes audited; tenant scoping enforced across all Sale, Purchase, Customer, Product, Supplier, Warehouse, GL queries; roles/permissions template live; forecasting & product performance enhanced; non-existent GL model replaced with GLJournalEntry)
 
 > **NOTICE:** This document is the sole authoritative accounting plan. All previous accounting documents (listed in Section 1.1) are superseded and should be removed from active reference.  
 **Reference Standards:** SAP Business One, Oracle NetSuite, Odoo, Bisan, Al-Shamel  
@@ -928,6 +928,8 @@ Assistant guardrails before closing this work:
 | `routes/owner.py` | `forecasting` | `revenue` per month |
 | `routes/owner.py` | `login_history` | Users list dropdown scoped by tenant; stats scoped via User join |
 | `routes/owner.py` | `create_user` / `edit_user` | `branches` query scoped; `username` duplicate check scoped by target tenant |
+| `routes/ai.py` | Chatbot (purchases/suppliers/warehouse/ledger) | `Supplier.query` scoped; `Warehouse.query` scoped; `GLJournalEntry.query` scoped; non-existent `GL` model replaced |
+| `routes/customers.py` | `delete` / `statement` | `Sale.query`, `Payment.query`, `Receipt.query` all scoped by `tenant_id` |
 
 #### 12.0.2 Functional Enhancements
 
@@ -942,8 +944,9 @@ Assistant guardrails before closing this work:
 
 #### 12.0.3 Verification
 
-- `py_compile routes/owner.py`: **Exit 0** (no syntax errors)
+- `py_compile routes/owner.py` & `routes/ai.py`: **Exit 0** (no syntax errors)
 - All `Sale.query` / `Purchase.query` / `Customer.query` / `Product.query` / `User.query` in `owner.py`: **100% scoped by `tenant_id`**
+- `routes/ai.py` chatbot: `Supplier`, `Warehouse`, `GLJournalEntry` queries now scoped by `tenant_id`; non-existent `GL` model replaced with `GLJournalEntry`
 - No unscoped `.all()` or `.count()` calls remain in financial/statistical routes
 - Templates render real DB data, not static placeholder content
 
@@ -1136,4 +1139,4 @@ Future phases require admin UI support for the following areas:
 ---
 
 *End of Master Blueprint — Single Source of Truth*
-*Last updated: June 6, 2026 (Session 9 — Phase 12 Owner Panel Deep Hardening COMPLETED; 91 routes audited; all tenant scoping enforced; roles/permissions live; forecasting & product performance enhanced; py_compile clean)*
+*Last updated: June 6, 2026 (Session 9 — Phase 12+ Owner Panel & AI Routes Deep Hardening COMPLETED; 91 owner routes + AI chatbot routes audited; all tenant scoping enforced; roles/permissions live; forecasting & product performance enhanced; non-existent GL model replaced with GLJournalEntry; py_compile clean)*

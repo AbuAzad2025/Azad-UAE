@@ -1809,7 +1809,7 @@ def _process_user_action(message, user):
             
             if step == 1:
                 from models.supplier import Supplier
-                supplier = Supplier.query.filter_by(name=message.strip(), is_active=True).first()
+                supplier = Supplier.query.filter_by(name=message.strip(), is_active=True, tenant_id=tid).first()
                 if not supplier:
                     return """❌ **المورد غير موجود!**
 
@@ -2066,8 +2066,8 @@ def _process_user_action(message, user):
         
         # ========== نظام الحوار التفاعلي للرقم 1 (عرض دفتر الأستاذ) ==========
         if msg_lower.strip() == '1' and user_id in conversation_context and conversation_context[user_id].get('last_action') == 'دفتر':
-            from models.gl import GL
-            gl_entries = GL.query.filter_by(is_active=True).order_by(GL.entry_date.desc()).limit(20).all()
+            from models.gl import GLJournalEntry
+            gl_entries = GLJournalEntry.query.filter_by(is_active=True, tenant_id=tid).order_by(GLJournalEntry.entry_date.desc()).limit(20).all()
             
             del conversation_context[user_id]
             
@@ -2094,7 +2094,7 @@ def _process_user_action(message, user):
         # ========== نظام الحوار التفاعلي للرقم 1 (عرض المستودعات) ==========
         if msg_lower.strip() == '1' and user_id in conversation_context and conversation_context[user_id].get('last_action') == 'مستودع':
             from models.warehouse import Warehouse
-            warehouses = Warehouse.query.filter_by(is_active=True).all()
+            warehouses = Warehouse.query.filter_by(is_active=True, tenant_id=tid).all()
             
             del conversation_context[user_id]
             
@@ -2324,7 +2324,7 @@ def _process_user_action(message, user):
         
         if msg_lower.strip() == '2' and user_id in conversation_context and conversation_context[user_id].get('last_action') == 'مورد':
             from models.supplier import Supplier
-            suppliers = Supplier.query.filter_by(is_active=True).all()
+            suppliers = Supplier.query.filter_by(is_active=True, tenant_id=tid).all()
             del conversation_context[user_id]
             if suppliers:
                 suppliers_list = "\n".join([f"• {s.name} - {s.phone or 'لا يوجد هاتف'}" for s in suppliers[:10]])
@@ -2392,8 +2392,8 @@ def _process_user_action(message, user):
 🤖 المصدر: GROQ API + التحليل المحلي"""
         
         if msg_lower.strip() == '2' and user_id in conversation_context and conversation_context[user_id].get('last_action') == 'دفتر':
-            from models.gl import GL
-            gl_entries = GL.query.filter_by(is_active=True).order_by(GL.entry_date.desc()).limit(20).all()
+            from models.gl import GLJournalEntry
+            gl_entries = GLJournalEntry.query.filter_by(is_active=True, tenant_id=tid).order_by(GLJournalEntry.entry_date.desc()).limit(20).all()
             del conversation_context[user_id]
             if gl_entries:
                 gl_list = "\n".join([f"• #{g.id} - {g.description} - {g.debit_amount} درهم - {g.entry_date.strftime('%Y-%m-%d')}" for g in gl_entries])
