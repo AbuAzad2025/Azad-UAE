@@ -415,7 +415,7 @@ def delete(id):
     
     try:
         # Check for related records preventing deletion
-        sales_query = Sale.query.filter_by(customer_id=id)
+        sales_query = Sale.query.filter_by(customer_id=id, tenant_id=tid)
         from models import Payment, Receipt
         payments_query = Payment.query.filter_by(customer_id=id, tenant_id=tid)
         receipts_query = Receipt.query.filter_by(customer_id=id, tenant_id=tid)
