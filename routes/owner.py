@@ -114,7 +114,8 @@ def dashboard():
         func.sum(Sale.amount_aed - Sale.paid_amount_aed)
     ).filter(
         func.date(Sale.sale_date) == today,
-        Sale.status == 'confirmed'
+        Sale.status == 'confirmed',
+        Sale.tenant_id == tid,
     )
     if scoped_branch_id is not None:
         today_sales = today_sales.filter(Sale.branch_id == scoped_branch_id)
@@ -129,7 +130,8 @@ def dashboard():
         func.sum(Sale.amount_aed)
     ).filter(
         func.date(Sale.sale_date) >= month_start,
-        Sale.status == 'confirmed'
+        Sale.status == 'confirmed',
+        Sale.tenant_id == tid,
     )
     if scoped_branch_id is not None:
         month_sales = month_sales.filter(Sale.branch_id == scoped_branch_id)
@@ -142,7 +144,8 @@ def dashboard():
         func.sum(Sale.amount_aed)
     ).filter(
         func.date(Sale.sale_date) >= year_start,
-        Sale.status == 'confirmed'
+        Sale.status == 'confirmed',
+        Sale.tenant_id == tid,
     )
     if scoped_branch_id is not None:
         year_sales = year_sales.filter(Sale.branch_id == scoped_branch_id)
@@ -154,7 +157,8 @@ def dashboard():
         func.sum(Purchase.amount_aed)
     ).filter(
         func.date(Purchase.purchase_date) >= month_start,
-        Purchase.status == 'confirmed'
+        Purchase.status == 'confirmed',
+        Purchase.tenant_id == tid,
     )
     if scoped_branch_id is not None:
         month_purchases = month_purchases.filter(Purchase.branch_id == scoped_branch_id)
@@ -180,7 +184,10 @@ def dashboard():
     inv_row = db.session.query(
         func.sum(func.coalesce(Product.current_stock, 0) * func.coalesce(Product.regular_price, 0)),
         func.sum(func.coalesce(Product.current_stock, 0) * func.coalesce(Product.cost_price, 0))
-    ).filter(Product.is_active == True).first()
+    ).filter(
+        Product.is_active == True,
+        Product.tenant_id == tid,
+    ).first()
     stats['inventory_value'] = float(inv_row[0] or Decimal('0'))
     stats['inventory_cost'] = float(inv_row[1] or Decimal('0'))
     
@@ -190,7 +197,8 @@ def dashboard():
         func.count(Sale.id)
     ).filter(
         Sale.status == 'confirmed',
-        Sale.amount_aed - Sale.paid_amount_aed > 0
+        Sale.amount_aed - Sale.paid_amount_aed > 0,
+        Sale.tenant_id == tid,
     )
     if scoped_branch_id is not None:
         receivables_row = receivables_row.filter(Sale.branch_id == scoped_branch_id)
@@ -200,7 +208,8 @@ def dashboard():
     overdue_count = Sale.query.filter(
         Sale.status == 'confirmed',
         Sale.amount_aed - Sale.paid_amount_aed > 0,
-        Sale.sale_date < cutoff_date
+        Sale.sale_date < cutoff_date,
+        Sale.tenant_id == tid,
     )
     if scoped_branch_id is not None:
         overdue_count = overdue_count.filter(Sale.branch_id == scoped_branch_id)
@@ -217,7 +226,8 @@ def dashboard():
         Sale, Customer.id == Sale.customer_id
     ).filter(
         Sale.status == 'confirmed',
-        func.date(Sale.sale_date) >= month_start
+        func.date(Sale.sale_date) >= month_start,
+        Sale.tenant_id == tid,
     )
     if scoped_branch_id is not None:
         top_customers = top_customers.filter(Sale.branch_id == scoped_branch_id)
@@ -242,7 +252,8 @@ def dashboard():
             Sale, SaleLine.sale_id == Sale.id
         ).filter(
             Sale.status == 'confirmed',
-            func.date(Sale.sale_date) >= month_start
+            func.date(Sale.sale_date) >= month_start,
+            Sale.tenant_id == tid,
         )
         if scoped_branch_id is not None:
             top_products = top_products.filter(Sale.branch_id == scoped_branch_id)
@@ -290,7 +301,8 @@ def dashboard():
             func.sum(Sale.amount_aed)
         ).filter(
             Sale.branch_id == branch.id,
-            Sale.status == 'confirmed'
+            Sale.status == 'confirmed',
+            Sale.tenant_id == tid,
         ).first()
         
         # Monthly Sales
@@ -299,7 +311,8 @@ def dashboard():
         ).filter(
             Sale.branch_id == branch.id,
             Sale.status == 'confirmed',
-            func.date(Sale.sale_date) >= month_start
+            func.date(Sale.sale_date) >= month_start,
+            Sale.tenant_id == tid,
         ).scalar() or 0
         
         # Expenses (All time)
@@ -307,7 +320,8 @@ def dashboard():
             func.sum(Expense.amount_aed)
         ).filter(
             Expense.branch_id == branch.id,
-            Expense.is_reversed == False
+            Expense.is_reversed == False,
+            Expense.tenant_id == tid,
         ).scalar() or 0
         
         # Inventory value for this branch (from stock in branch warehouses)
@@ -321,7 +335,7 @@ def dashboard():
             for pid, qty in product_qtys:
                 if not qty:
                     continue
-                p = Product.query.get(pid)
+                p = Product.query.filter_by(id=pid, tenant_id=branch.tenant_id).first()
                 if p and getattr(p, 'cost_price', None):
                     branch_inventory_value += float(qty) * float(p.cost_price)
         
@@ -569,7 +583,11 @@ def create_user():
     roles = Role.query.filter_by(is_active=True).all()
     roles = [r for r in roles if role_level_for(getattr(r, 'slug', None)) <= current_level]
     roles = [r for r in roles if getattr(r, 'slug', None) not in ('owner', 'developer')]
-    branches = Branch.query.filter_by(is_active=True).order_by(Branch.code, Branch.name).all()
+    tid = get_active_tenant_id(current_user)
+    branches = Branch.query.filter_by(is_active=True)
+    if tid:
+        branches = branches.filter_by(tenant_id=tid)
+    branches = branches.order_by(Branch.code, Branch.name).all()
     tenants = Tenant.query.filter_by(is_active=True).order_by(Tenant.name_ar).all()
     default_form = {'is_active': 'on'}
     preselect_tenant_id = request.args.get('tenant_id', type=int)
@@ -612,8 +630,9 @@ def create_user():
                 flash(ErrorMessages.weak_password(errors), 'danger')
                 return render_template('owner/create_user.html', roles=roles, branches=branches, tenants=tenants, show_tenant_picker=True, form_data=_form_values())
             
-            # التحقق من عدم وجود المستخدم
-            existing = User.query.filter_by(username=username).first()
+            # التحقق من عدم وجود المستخدم في نفس التينانت
+            target_tenant_id = request.form.get('tenant_id', type=int) or tid
+            existing = User.query.filter_by(username=username, tenant_id=target_tenant_id).first()
             if existing:
                 from utils.error_messages import ErrorMessages
                 flash(ErrorMessages.user_exists(username), 'error')
@@ -692,7 +711,11 @@ def edit_user(user_id):
     current_level = role_level_for_user(current_user)
     roles = Role.query.filter_by(is_active=True).all()
     roles = [r for r in roles if role_level_for(getattr(r, 'slug', None)) <= current_level]
-    branches = Branch.query.filter_by(is_active=True).order_by(Branch.code, Branch.name).all()
+    tid = get_active_tenant_id(current_user)
+    branches = Branch.query.filter_by(is_active=True)
+    if tid:
+        branches = branches.filter_by(tenant_id=tid)
+    branches = branches.order_by(Branch.code, Branch.name).all()
     
     if request.method == 'POST':
         try:
@@ -739,23 +762,30 @@ def edit_user(user_id):
 @login_required
 @owner_required
 def user_profile(user_id):
-    """الملف الشخصي للمستخدم"""
+    """الملف الشخصي للمستخدم — مع نشاطات AuditLog حقيقية."""
     user = User.query.get_or_404(user_id)
+    tid = get_active_tenant_id(current_user)
     
-    # إحصائيات المستخدم
     from models import Sale, Payment
     
+    # Sale/Payment stats scoped by tenant for security
+    sale_q = Sale.query.filter_by(seller_id=user_id, tenant_id=tid) if tid else Sale.query.filter_by(seller_id=user_id)
+    payment_q = Payment.query.filter_by(user_id=user_id, tenant_id=tid) if tid else Payment.query.filter_by(user_id=user_id)
+    
     stats = {
-        'sales_count': Sale.query.filter_by(seller_id=user_id).count(),
-        'sales_total': db.session.query(func.sum(Sale.amount_aed)).filter_by(status='confirmed', seller_id=user_id).scalar() or 0,
-        'payments_count': Payment.query.filter_by(user_id=user_id).count(),
-        'payments_total': db.session.query(func.sum(Payment.amount_aed)).filter_by(user_id=user_id).scalar() or 0,
-        'audits_count': 0,  # Audit.query.filter_by(user_id=user_id).count(),
+        'sales_count': sale_q.count(),
+        'sales_total': db.session.query(func.sum(Sale.amount_aed)).filter(Sale.status == 'confirmed', Sale.seller_id == user_id, Sale.tenant_id == tid).scalar() or 0 if tid else db.session.query(func.sum(Sale.amount_aed)).filter_by(status='confirmed', seller_id=user_id).scalar() or 0,
+        'payments_count': payment_q.count(),
+        'payments_total': db.session.query(func.sum(Payment.amount_aed)).filter_by(user_id=user_id, tenant_id=tid).scalar() or 0 if tid else db.session.query(func.sum(Payment.amount_aed)).filter_by(user_id=user_id).scalar() or 0,
+        'audits_count': AuditLog.query.filter_by(user_id=user_id, tenant_id=tid).count() if tid else AuditLog.query.filter_by(user_id=user_id).count(),
     }
     
     # آخر النشاطات
-    recent_sales = Sale.query.filter_by(seller_id=user_id).order_by(Sale.sale_date.desc()).limit(5).all()
-    recent_audits = []  # Audit.query.filter_by(user_id=user_id).order_by(Audit.timestamp.desc()).limit(10).all()
+    recent_sales = sale_q.order_by(Sale.sale_date.desc()).limit(5).all()
+    recent_audits = AuditLog.query.filter_by(user_id=user_id)
+    if tid:
+        recent_audits = recent_audits.filter_by(tenant_id=tid)
+    recent_audits = recent_audits.order_by(AuditLog.created_at.desc()).limit(10).all()
     
     return render_template('owner/user_profile.html', 
                          user=user, 
@@ -801,8 +831,35 @@ def delete_user(user_id):
 @login_required
 @owner_required
 def roles_permissions():
-    """صفحة الأدوار والصلاحيات"""
-    return render_template('owner/roles_permissions.html')
+    """صفحة الأدوار والصلاحيات — بيانات حقيقية من قاعدة البيانات."""
+    from models import Role, Permission
+    from sqlalchemy.orm import joinedload
+    
+    tid = get_active_tenant_id(current_user)
+    
+    roles = Role.query.filter_by(is_active=True).options(joinedload(Role.permissions)).order_by(Role.name).all()
+    permissions = Permission.query.order_by(Permission.category, Permission.name).all()
+    
+    # Group permissions by category
+    perm_categories = {}
+    for p in permissions:
+        perm_categories.setdefault(p.category or 'عام', []).append(p)
+    
+    # User counts per role (scoped by tenant if available)
+    role_user_counts = {}
+    for r in roles:
+        q = User.query.filter_by(role_id=r.id, is_active=True)
+        if tid:
+            q = q.filter_by(tenant_id=tid)
+        role_user_counts[r.id] = q.count()
+    
+    return render_template(
+        'owner/roles_permissions.html',
+        roles=roles,
+        permissions=permissions,
+        perm_categories=perm_categories,
+        role_user_counts=role_user_counts,
+    )
 
 
 @owner_bp.route('/financial-overview')
@@ -811,6 +868,7 @@ def roles_permissions():
 def financial_overview():
     period = request.args.get('period', 'month', type=str)
     scoped_branch_id = _owner_branch_scope()
+    tid = get_active_tenant_id(current_user)
     
     now = datetime.now(timezone.utc)
     
@@ -831,7 +889,8 @@ def financial_overview():
         func.count(Sale.id).label('count')
     ).filter(
         func.date(Sale.sale_date) >= start_date,
-        Sale.status == 'confirmed'
+        Sale.status == 'confirmed',
+        Sale.tenant_id == tid,
     )
     if scoped_branch_id is not None:
         sales_data = sales_data.filter(Sale.branch_id == scoped_branch_id)
@@ -842,7 +901,8 @@ def financial_overview():
         func.count(Purchase.id).label('count')
     ).filter(
         func.date(Purchase.purchase_date) >= start_date,
-        Purchase.status == 'confirmed'
+        Purchase.status == 'confirmed',
+        Purchase.tenant_id == tid,
     )
     if scoped_branch_id is not None:
         purchases_data = purchases_data.filter(Purchase.branch_id == scoped_branch_id)
@@ -851,7 +911,8 @@ def financial_overview():
     receipts_total = db.session.query(
         func.sum(Receipt.amount_aed)
     ).filter(
-        func.date(Receipt.receipt_date) >= start_date
+        func.date(Receipt.receipt_date) >= start_date,
+        Receipt.tenant_id == tid,
     )
     if scoped_branch_id is not None:
         receipts_total = receipts_total.filter(Receipt.branch_id == scoped_branch_id)
@@ -2077,22 +2138,46 @@ def reports():
     # إحصائيات عامة
     from models import User, Customer, Product, Sale, Receipt, PaymentVault, Donation, Payment
     
+    tid = get_active_tenant_id(current_user)
     vault = PaymentVault.get_platform_vault()
     scoped_branch_id = _owner_branch_scope()
-    customers_stats_query = Customer.query
+    
+    # Base customer query scoped by tenant
+    customers_stats_query = Customer.query.filter_by(tenant_id=tid, is_active=True)
     if scoped_branch_id is not None:
         customers_stats_query = customers_stats_query.join(Sale, Customer.id == Sale.customer_id).filter(Sale.branch_id == scoped_branch_id).distinct()
-    stats = {
-        'total_users': User.query.count(),
-        'total_customers': customers_stats_query.count(),
-        'total_products': get_visible_products_query(current_user).count() if scoped_branch_id is not None else Product.query.count(),
-        'total_sales': Sale.query.filter(Sale.branch_id == scoped_branch_id).count() if scoped_branch_id is not None else Sale.query.count(),
-        'total_invoices': Sale.query.filter(Sale.payment_status == 'paid', Sale.branch_id == scoped_branch_id).count() if scoped_branch_id is not None else Sale.query.filter(Sale.payment_status == 'paid').count(),
-        'total_receipts': Receipt.query.filter(Receipt.branch_id == scoped_branch_id).count() if scoped_branch_id is not None else Receipt.query.count(),
-        'total_donations': Donation.query.filter_by(transaction_type='donation').count(),
-        'total_payments': Payment.query.filter(Payment.branch_id == scoped_branch_id).count() if scoped_branch_id is not None else Payment.query.count(),
-        'vault_status': vault.is_locked if vault else True
-    }
+    
+    # Base queries scoped by tenant
+    base_sale_q = Sale.query.filter_by(tenant_id=tid)
+    base_receipt_q = Receipt.query.filter_by(tenant_id=tid)
+    base_payment_q = Payment.query.filter_by(tenant_id=tid)
+    base_product_q = Product.query.filter_by(tenant_id=tid, is_active=True)
+    base_donation_q = Donation.query.filter_by(tenant_id=tid, transaction_type='donation')
+    
+    if scoped_branch_id is not None:
+        stats = {
+            'total_users': User.query.filter_by(tenant_id=tid, is_active=True, is_owner=False).count(),
+            'total_customers': customers_stats_query.count(),
+            'total_products': get_visible_products_query(current_user).count(),
+            'total_sales': base_sale_q.filter(Sale.branch_id == scoped_branch_id).count(),
+            'total_invoices': base_sale_q.filter(Sale.payment_status == 'paid', Sale.branch_id == scoped_branch_id).count(),
+            'total_receipts': base_receipt_q.filter(Receipt.branch_id == scoped_branch_id).count(),
+            'total_donations': base_donation_q.count(),
+            'total_payments': base_payment_q.filter(Payment.branch_id == scoped_branch_id).count(),
+            'vault_status': vault.is_locked if vault else True
+        }
+    else:
+        stats = {
+            'total_users': User.query.filter_by(tenant_id=tid, is_active=True, is_owner=False).count(),
+            'total_customers': customers_stats_query.count(),
+            'total_products': base_product_q.count(),
+            'total_sales': base_sale_q.count(),
+            'total_invoices': base_sale_q.filter_by(payment_status='paid').count(),
+            'total_receipts': base_receipt_q.count(),
+            'total_donations': base_donation_q.count(),
+            'total_payments': base_payment_q.count(),
+            'vault_status': vault.is_locked if vault else True
+        }
     
     return render_template('owner/reports.html', stats=stats)
 
@@ -3082,25 +3167,37 @@ def login_history():
     page = request.args.get('page', 1, type=int)
     user_filter = request.args.get('user_id', type=int)
     success_filter = request.args.get('success')
+    tid = get_active_tenant_id(current_user)
     
+    # LoginHistory has no tenant_id, so we join with User to scope where possible
     query = LoginHistory.query
+    if tid:
+        query = query.join(User, LoginHistory.user_id == User.id).filter(User.tenant_id == tid)
     
     if user_filter:
-        query = query.filter_by(user_id=user_filter)
+        query = query.filter(LoginHistory.user_id == user_filter)
     
     if success_filter is not None:
-        query = query.filter_by(success=success_filter == 'true')
+        query = query.filter(LoginHistory.success == (success_filter == 'true'))
     
     pagination = query.order_by(LoginHistory.login_time.desc()).paginate(
         page=page, per_page=50, error_out=False
     )
     
-    users = User.query.all()
+    # Users list for filter dropdown, scoped by tenant
+    users = User.query.filter_by(is_active=True)
+    if tid:
+        users = users.filter_by(tenant_id=tid)
+    users = users.order_by(User.username).all()
     
+    # Stats: base queries scoped by tenant via User join
+    base_stats = LoginHistory.query
+    if tid:
+        base_stats = base_stats.join(User, LoginHistory.user_id == User.id).filter(User.tenant_id == tid)
     stats = {
-        'total_logins': LoginHistory.query.filter_by(success=True).count(),
-        'failed_logins': LoginHistory.query.filter_by(success=False).count(),
-        'today_logins': LoginHistory.query.filter(
+        'total_logins': base_stats.filter_by(success=True).count(),
+        'failed_logins': base_stats.filter_by(success=False).count(),
+        'today_logins': base_stats.filter(
             LoginHistory.login_time >= datetime.now(timezone.utc).replace(hour=0, minute=0)
         ).count()
     }
@@ -3261,6 +3358,7 @@ def toggle_api_key(id):
 def financial_dashboard_advanced():
     today = datetime.now().date()
     month_start = today.replace(day=1)
+    tid = get_active_tenant_id(current_user)
     
     months_data = []
     for i in range(12):
@@ -3275,12 +3373,14 @@ def financial_dashboard_advanced():
         revenue = db.session.query(func.sum(Sale.total_amount)).filter(
             Sale.sale_date >= month_start_date,
             Sale.sale_date <= month_end_date,
-            Sale.status == 'confirmed'
+            Sale.status == 'confirmed',
+            Sale.tenant_id == tid,
         ).scalar() or 0
         
         expenses = db.session.query(func.sum(Expense.amount)).filter(
             Expense.expense_date >= month_start_date,
-            Expense.expense_date <= month_end_date
+            Expense.expense_date <= month_end_date,
+            Expense.tenant_id == tid,
         ).scalar() or 0
         
         profit = revenue - expenses
@@ -3667,6 +3767,7 @@ def sales_insights():
     today = datetime.now().date()
     last_30_days = today - timedelta(days=30)
     scoped_branch_id = _owner_branch_scope()
+    tid = get_active_tenant_id(current_user)
     
     daily_sales = db.session.query(
         func.date(Sale.sale_date).label('date'),
@@ -3674,7 +3775,8 @@ def sales_insights():
         func.sum(Sale.total_amount).label('total')
     ).filter(
         Sale.sale_date >= last_30_days,
-        Sale.status == 'confirmed'
+        Sale.status == 'confirmed',
+        Sale.tenant_id == tid,
     )
     if scoped_branch_id is not None:
         daily_sales = daily_sales.filter(Sale.branch_id == scoped_branch_id)
@@ -3690,7 +3792,8 @@ def sales_insights():
         Sale, Sale.id == SaleLine.sale_id
     ).filter(
         Sale.sale_date >= last_30_days,
-        Sale.status == 'confirmed'
+        Sale.status == 'confirmed',
+        Sale.tenant_id == tid,
     )
     if scoped_branch_id is not None:
         top_products = top_products.filter(Sale.branch_id == scoped_branch_id)
@@ -3713,26 +3816,28 @@ def sales_insights():
 def customer_insights():
     customers_data = []
     scoped_branch_id = _owner_branch_scope()
+    tid = get_active_tenant_id(current_user)
     
-    customers_query = Customer.query.filter_by(is_active=True)
+    customers_query = Customer.query.filter_by(is_active=True, tenant_id=tid)
     if scoped_branch_id is not None:
         customers_query = customers_query.join(Sale, Customer.id == Sale.customer_id).filter(Sale.branch_id == scoped_branch_id).distinct()
 
     for customer in customers_query.all():
         total_sales = db.session.query(func.sum(Sale.total_amount)).filter(
             Sale.customer_id == customer.id,
-            Sale.status == 'confirmed'
+            Sale.status == 'confirmed',
+            Sale.tenant_id == tid,
         )
         if scoped_branch_id is not None:
             total_sales = total_sales.filter(Sale.branch_id == scoped_branch_id)
         total_sales = total_sales.scalar() or 0
         
-        sales_count = Sale.query.filter_by(customer_id=customer.id, status='confirmed')
+        sales_count = Sale.query.filter_by(customer_id=customer.id, status='confirmed', tenant_id=tid)
         if scoped_branch_id is not None:
             sales_count = sales_count.filter(Sale.branch_id == scoped_branch_id)
         sales_count = sales_count.count()
         
-        last_sale = Sale.query.filter_by(customer_id=customer.id)
+        last_sale = Sale.query.filter_by(customer_id=customer.id, tenant_id=tid)
         if scoped_branch_id is not None:
             last_sale = last_sale.filter(Sale.branch_id == scoped_branch_id)
         last_sale = last_sale.order_by(Sale.sale_date.desc()).first()
@@ -3778,7 +3883,8 @@ def product_performance():
         Sale, Sale.id == SaleLine.sale_id
     ).filter(
         Sale.sale_date >= last_90_days,
-        Sale.status == 'confirmed'
+        Sale.status == 'confirmed',
+        Sale.tenant_id == tid,
     )
     if scoped_branch_id is not None:
         products_perf = products_perf.filter(Sale.branch_id == scoped_branch_id)
@@ -3789,6 +3895,12 @@ def product_performance():
         Product.cost_price,
     ).all()
     
+    # Calculate relative thresholds based on actual data distribution
+    sold_values = [float(p.total_sold or 0) for p in products_perf if p.total_sold]
+    avg_sold = (sum(sold_values) / len(sold_values)) if sold_values else 0
+    high_threshold = avg_sold * 1.5
+    low_threshold = avg_sold * 0.3
+    
     performance_data = []
     for p in products_perf:
         total_sold = p.total_sold or Decimal('0')
@@ -3796,6 +3908,9 @@ def product_performance():
         cost_price = p.cost_price or Decimal('0')
         margin = total_revenue - (cost_price * total_sold)
         margin_percent = (margin / total_revenue * 100) if total_revenue > 0 else 0
+        
+        # Relative status based on data distribution, not hardcoded numbers
+        status = 'ممتاز' if total_sold > high_threshold else 'جيد' if total_sold > low_threshold else 'ضعيف'
         
         performance_data.append({
             'name': p.name,
@@ -3805,7 +3920,7 @@ def product_performance():
             'transactions': p.transactions,
             'margin': float(margin),
             'margin_percent': float(margin_percent),
-            'status': 'ممتاز' if p.total_sold > 50 else 'جيد' if p.total_sold > 10 else 'ضعيف'
+            'status': status
         })
     
     performance_data.sort(key=lambda x: x['revenue'], reverse=True)
@@ -3820,6 +3935,7 @@ def forecasting():
     months_back = 12
     today = datetime.now().date()
     scoped_branch_id = _owner_branch_scope()
+    tid = get_active_tenant_id(current_user)
     
     historical_data = []
     for i in range(months_back):
@@ -3833,7 +3949,8 @@ def forecasting():
         revenue = db.session.query(func.sum(Sale.total_amount)).filter(
             Sale.sale_date >= month_start,
             Sale.sale_date <= month_end,
-            Sale.status == 'confirmed'
+            Sale.status == 'confirmed',
+            Sale.tenant_id == tid,
         )
         if scoped_branch_id is not None:
             revenue = revenue.filter(Sale.branch_id == scoped_branch_id)
@@ -3850,10 +3967,20 @@ def forecasting():
         avg_revenue = sum(m['revenue'] for m in historical_data[-3:]) / 3
         trend = (historical_data[-1]['revenue'] - historical_data[-3]['revenue']) / 3
         
+        # Linear trend forecast with confidence based on data volatility
+        revenues = [m['revenue'] for m in historical_data if m['revenue'] > 0]
+        volatility = (max(revenues) - min(revenues)) / max(avg_revenue, 1) if revenues else 0
+        if volatility < 0.2:
+            confidence = 'عالية'
+        elif volatility < 0.5:
+            confidence = 'متوسطة'
+        else:
+            confidence = 'منخفضة'
+        
         forecast = {
             'next_month': avg_revenue + trend,
             'next_3_months': (avg_revenue + trend) * 3,
-            'confidence': 'متوسطة' if len(historical_data) >= 6 else 'منخفضة'
+            'confidence': confidence
         }
     else:
         forecast = {

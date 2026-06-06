@@ -1,165 +1,165 @@
-{% extends 'base.html' %}
-{% block title %}شركة أزاد للأنظمة الذكية - الأرشيف{% endblock %}
-{% block page_title %}أرشيف المدفوعات{% endblock %}
-
-{% block content %}
-<div class="row mb-3">
-  <div class="col-12">
-    <a href="{{ url_for('payments.receipts') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right mr-2"></i>رجوع
-    </a>
-  </div>
-</div>
-
-<div class="card">
-  <div class="card-body">
-    <table id="archivedTable" class="table table-bordered table-striped table-hover">
-      <thead>
-        <tr>
-          <th>رقم السند</th>
-          <th>الاسم</th>
-          <th>التاريخ</th>
-          <th>المبلغ</th>
-          <th>النوع</th>
-          <th>المصدر</th>
-          <th>تاريخ الأرشفة</th>
-          <th>الإجراءات</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for item in archived_items %}
-        <tr>
-          <td>
-            <strong>{{ item.number }}</strong>
-            {% if item.type == 'receipt' %}
-              <br><small class="text-muted">سند قبض</small>
-            {% else %}
-              <br><small class="text-muted">سند صرف</small>
-            {% endif %}
-          </td>
-          <td>
-            {% if item.customer_name %}
-              <i class="fas fa-user text-primary mr-1"></i>{{ item.customer_name }}
-            {% elif item.supplier_name %}
-              <i class="fas fa-truck text-danger mr-1"></i>{{ item.supplier_name }}
-            {% else %}
-              -
-            {% endif %}
-          </td>
-          <td>{{ item.date.strftime('%Y-%m-%d') }}</td>
-          <td>
-            <strong>{{ "{:,.2f}".format(item.amount) }} {{ item.currency }}</strong>
-            {% if item.currency != tenant_default_currency %}
-              <br><small class="text-muted">{{ "{:,.2f}".format(item.base_amount) }} {{ tenant_currency_symbol or 'AED' }}</small>
-            {% endif %}
-          </td>
-          <td>
-            {% if item.type == 'receipt' %}
-              <span class="badge badge-success">
-                <i class="fas fa-arrow-down mr-1"></i>قبض
-              </span>
-            {% else %}
-              <span class="badge badge-danger">
-                <i class="fas fa-arrow-up mr-1"></i>صرف
-              </span>
-            {% endif %}
-          </td>
-          <td>
-            {% if item.source_type == 'sale' %}
-              <span class="badge badge-primary">
-                <i class="fas fa-file-invoice mr-1"></i>مبيعات
-              </span>
-            {% elif item.source_type == 'supplier_payment' %}
-              <span class="badge badge-warning">
-                <i class="fas fa-truck mr-1"></i>مورد
-              </span>
-            {% elif item.source_type == 'customer_payment' %}
-              <span class="badge badge-info">
-                <i class="fas fa-user mr-1"></i>عميل
-              </span>
-            {% elif item.source_type == 'refund' %}
-              <span class="badge badge-secondary">
-                <i class="fas fa-undo mr-1"></i>استرداد
-              </span>
-            {% else %}
-              <span class="badge badge-secondary">{{ item.source_type }}</span>
-            {% endif %}
-          </td>
-          <td>
-            <small>{{ item.archived_at.strftime('%Y-%m-%d %H:%M') }}</small>
-          </td>
-          <td>
-            <div class="btn-group btn-group-sm">
-              {% if item.type == 'receipt' %}
-                <a href="{{ url_for('payments.view_receipt', id=item.id) }}" 
-                   class="btn btn-info" title="عرض">
-                  <i class="fas fa-eye"></i>
-                </a>
-                <a href="{{ url_for('payments.print_receipt', id=item.id) }}" 
-                   class="btn btn-secondary" target="_blank" title="طباعة">
-                  <i class="fas fa-print"></i>
-                </a>
-              {% else %}
-                <a href="{{ url_for('payments.view_payment', id=item.id) }}" 
-                   class="btn btn-info" title="عرض">
-                  <i class="fas fa-eye"></i>
-                </a>
-                <a href="{{ url_for('payments.print_payment', id=item.id) }}" 
-                   class="btn btn-secondary" target="_blank" title="طباعة">
-                  <i class="fas fa-print"></i>
-                </a>
-              {% endif %}
-              <button type="button" class="btn btn-success restore-btn" 
-                      data-type="{{ item.type }}"
-                      data-id="{{ item.id }}"
-                      title="استعادة">
-                <i class="fas fa-undo"></i>
-              </button>
-            </div>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-</div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-$(document).ready(function() {
-  $('#archivedTable').DataTable({
-    language: { url: "{{ url_for('static', filename='datatables/Arabic.json') }}" },
-    order: [[6, 'desc']],
-    pageLength: 25
-  });
-  
-  // استعادة السندات
-  $(document).on('click', '.restore-btn', function(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    var type = $(this).data('type');
-    var id = $(this).data('id');
-    var endpoint = type === 'receipt' ? '/payments/receipts/' : '/payments/payments/';
-    var url = endpoint + id + '/restore';
-    var csrfToken = $('meta[name="csrf-token"]').attr('content');
-    
-    $.ajax({
-      url: url,
-      type: 'POST',
-      headers: {
-        'X-CSRFToken': csrfToken
-      },
-      success: function(response) {
-        location.reload();
-      },
-      error: function(xhr) {
-        location.reload();
-      }
-    });
-  });
-});
-</script>
-{% endblock %}
-
+{% extends 'base.html' %}
+{% block title %}شركة أزاد للأنظمة الذكية - الأرشيف{% endblock %}
+{% block page_title %}أرشيف المدفوعات{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+  <div class="col-12">
+    <a href="{{ url_for('payments.receipts') }}" class="btn btn-secondary">
+      <i class="fas fa-arrow-right mr-2"></i>رجوع
+    </a>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <table id="archivedTable" class="table table-bordered table-striped table-hover">
+      <thead>
+        <tr>
+          <th>رقم السند</th>
+          <th>الاسم</th>
+          <th>التاريخ</th>
+          <th>المبلغ</th>
+          <th>النوع</th>
+          <th>المصدر</th>
+          <th>تاريخ الأرشفة</th>
+          <th>الإجراءات</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in archived_items %}
+        <tr>
+          <td>
+            <strong>{{ item.number }}</strong>
+            {% if item.type == 'receipt' %}
+              <br><small class="text-muted">سند قبض</small>
+            {% else %}
+              <br><small class="text-muted">سند صرف</small>
+            {% endif %}
+          </td>
+          <td>
+            {% if item.customer_name %}
+              <i class="fas fa-user text-primary mr-1"></i>{{ item.customer_name }}
+            {% elif item.supplier_name %}
+              <i class="fas fa-truck text-danger mr-1"></i>{{ item.supplier_name }}
+            {% else %}
+              -
+            {% endif %}
+          </td>
+          <td>{{ item.date.strftime('%Y-%m-%d') }}</td>
+          <td>
+            <strong>{{ "{:,.2f}".format(item.amount) }} {{ item.currency }}</strong>
+            {% if item.currency != tenant_default_currency %}
+              <br><small class="text-muted">{{ "{:,.2f}".format(item.base_amount) }} {{ tenant_currency_symbol or 'AED' }}</small>
+            {% endif %}
+          </td>
+          <td>
+            {% if item.type == 'receipt' %}
+              <span class="badge badge-success">
+                <i class="fas fa-arrow-down mr-1"></i>قبض
+              </span>
+            {% else %}
+              <span class="badge badge-danger">
+                <i class="fas fa-arrow-up mr-1"></i>صرف
+              </span>
+            {% endif %}
+          </td>
+          <td>
+            {% if item.source_type == 'sale' %}
+              <span class="badge badge-primary">
+                <i class="fas fa-file-invoice mr-1"></i>مبيعات
+              </span>
+            {% elif item.source_type == 'supplier_payment' %}
+              <span class="badge badge-warning">
+                <i class="fas fa-truck mr-1"></i>مورد
+              </span>
+            {% elif item.source_type == 'customer_payment' %}
+              <span class="badge badge-info">
+                <i class="fas fa-user mr-1"></i>عميل
+              </span>
+            {% elif item.source_type == 'refund' %}
+              <span class="badge badge-secondary">
+                <i class="fas fa-undo mr-1"></i>استرداد
+              </span>
+            {% else %}
+              <span class="badge badge-secondary">{{ item.source_type }}</span>
+            {% endif %}
+          </td>
+          <td>
+            <small>{{ item.archived_at.strftime('%Y-%m-%d %H:%M') }}</small>
+          </td>
+          <td>
+            <div class="btn-group btn-group-sm">
+              {% if item.type == 'receipt' %}
+                <a href="{{ url_for('payments.view_receipt', id=item.id) }}" 
+                   class="btn btn-info" title="عرض">
+                  <i class="fas fa-eye"></i>
+                </a>
+                <a href="{{ url_for('payments.print_receipt', id=item.id) }}" 
+                   class="btn btn-secondary" target="_blank" rel="noopener noreferrer" title="طباعة">
+                  <i class="fas fa-print"></i>
+                </a>
+              {% else %}
+                <a href="{{ url_for('payments.view_payment', id=item.id) }}" 
+                   class="btn btn-info" title="عرض">
+                  <i class="fas fa-eye"></i>
+                </a>
+                <a href="{{ url_for('payments.print_payment', id=item.id) }}" 
+                   class="btn btn-secondary" target="_blank" rel="noopener noreferrer" title="طباعة">
+                  <i class="fas fa-print"></i>
+                </a>
+              {% endif %}
+              <button type="button" class="btn btn-success restore-btn" 
+                      data-type="{{ item.type }}"
+                      data-id="{{ item.id }}"
+                      title="استعادة">
+                <i class="fas fa-undo"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+  $('#archivedTable').DataTable({
+    language: { url: "{{ url_for('static', filename='datatables/Arabic.json') }}" },
+    order: [[6, 'desc']],
+    pageLength: 25
+  });
+  
+  // استعادة السندات
+  $(document).on('click', '.restore-btn', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    var type = $(this).data('type');
+    var id = $(this).data('id');
+    var endpoint = type === 'receipt' ? '/payments/receipts/' : '/payments/payments/';
+    var url = endpoint + id + '/restore';
+    var csrfToken = $('meta[name="csrf-token"]').attr('content');
+    
+    $.ajax({
+      url: url,
+      type: 'POST',
+      headers: {
+        'X-CSRFToken': csrfToken
+      },
+      success: function(response) {
+        location.reload();
+      },
+      error: function(xhr) {
+        location.reload();
+      }
+    });
+  });
+});
+</script>
+{% endblock %}
+

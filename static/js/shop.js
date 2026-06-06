@@ -51,7 +51,10 @@
     return Number.isFinite(n) ? n : 0;
   };
 
-  const money = n => (Number(n) || 0).toFixed(2) + ' شيكل';
+  const money = n => {
+    const symbol = document.body.dataset.currencySymbol || '₪';
+    return (Number(n) || 0).toFixed(2) + ' ' + symbol;
+  };
 
   const prepaidRate = () => {
     const m = document.querySelector('meta[name="prepaid-rate"]');

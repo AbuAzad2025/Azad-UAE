@@ -450,7 +450,7 @@ def print_payment(id):
     tid = getattr(payment, 'tenant_id', None)
     tenant, settings, company = InvoiceSettings.company_print_context(tid)
     print_branding = get_print_header_context(tid)
-    print_branch = Branch.query.get(payment_branch_id) if payment_branch_id else None
+    print_branch = Branch.query.filter_by(id=payment_branch_id, tenant_id=tid).first() if payment_branch_id else None
     try:
         default_currency = (tenant.default_currency if tenant else '').strip() or 'AED'
     except Exception:
@@ -1094,7 +1094,7 @@ def print_receipt(id):
     
     from models import Branch
     tenant, settings, company = InvoiceSettings.company_print_context(tid)
-    print_branch = Branch.query.get(receipt_branch_id) if receipt_branch_id else None
+    print_branch = Branch.query.filter_by(id=receipt_branch_id, tenant_id=tid).first() if receipt_branch_id else None
     try:
         default_currency = (tenant.default_currency if tenant else '').strip() or 'AED'
     except Exception:
@@ -1291,7 +1291,7 @@ def delete_receipt(id):
         # 1. عكس التخصيصات (إعادة الرصيد للفاتورة)
         if receipt.source_type == 'sale' and receipt.source_id:
             from models import Sale
-            sale = Sale.query.get(receipt.source_id)
+            sale = Sale.query.filter_by(id=receipt.source_id, tenant_id=receipt.tenant_id).first()
             if sale:
                 sale.paid_amount -= receipt.amount
                 sale.paid_amount_aed -= receipt.amount_aed
@@ -1520,8 +1520,9 @@ def create_payment(purchase_id):
                 return redirect(url_for('payments.create_payment', purchase_id=purchase_id))
             
             # إنشاء سند الصرف
-            payment_number = generate_number('PAY', Payment, 'payment_number', branch_id=purchase.branch_id)
-            payment = Payment(
+            with atomic_transaction('payment_creation'):
+                payment_number = generate_number('PAY', Payment, 'payment_number', branch_id=purchase.branch_id)
+                payment = Payment(
                 tenant_id=getattr(current_user, 'tenant_id', None),
                 payment_number=payment_number,
                 supplier_id=purchase.supplier_id,

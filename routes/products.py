@@ -17,7 +17,7 @@ from utils.helpers import create_audit_log, generate_sku, generate_barcode, save
 from utils.static_asset_paths import tenant_upload_dir
 from services.stock_service import StockService
 from utils.gl_reference_types import GLRef
-from utils.tenanting import tenant_query, tenant_get_or_404, assign_tenant_id
+from utils.tenanting import tenant_query, tenant_get_or_404, assign_tenant_id, get_active_tenant_id
 
 products_bp = Blueprint('products', __name__, url_prefix='/products')
 
@@ -57,8 +57,8 @@ def _ensure_product_scope(product):
     return product
 
 def _parse_product_partners(form):
-    raw_partner_ids = form.getlist('partner_customer_id')
-    raw_percentages = form.getlist('partner_percentage')
+    raw_partner_ids = form.getlist('partner_customer_id[]')
+    raw_percentages = form.getlist('partner_percentage[]')
     count = max(len(raw_partner_ids), len(raw_percentages))
     
     seen_partner_ids = set()
@@ -268,9 +268,10 @@ def import_products():
                 
                 # Default Warehouse
                 from models import Warehouse, ProductCategory
-                warehouse = Warehouse.query.filter_by(is_active=True, is_main=True).first()
+                tid = get_active_tenant_id(current_user)
+                warehouse = Warehouse.query.filter_by(is_active=True, is_main=True, tenant_id=tid).first()
                 if not warehouse:
-                    warehouse = Warehouse.query.first()
+                    warehouse = Warehouse.query.filter_by(tenant_id=tid).first()
                 
                 for index, row in df.iterrows():
                     try:
@@ -334,7 +335,7 @@ def import_products():
                         category_name = str(row.get('category', '')).strip()
                         category_id = None
                         if category_name and not pd.isna(category_name) and category_name.lower() != 'nan':
-                            cat = ProductCategory.query.filter(ProductCategory.name.ilike(category_name)).first()
+                            cat = ProductCategory.query.filter_by(tenant_id=tid).filter(ProductCategory.name.ilike(category_name)).first()
                             if cat:
                                 category_id = cat.id
                             else:
@@ -402,9 +403,10 @@ def import_grid():
     errors = 0
     
     from models import Warehouse
-    warehouse = Warehouse.query.filter_by(is_active=True, is_main=True).first()
+    tid = get_active_tenant_id(current_user)
+    warehouse = Warehouse.query.filter_by(is_active=True, is_main=True, tenant_id=tid).first()
     if not warehouse:
-        warehouse = Warehouse.query.first()
+        warehouse = Warehouse.query.filter_by(tenant_id=tid).first()
     
     for i in range(len(names)):
         name = names[i].strip()
@@ -516,7 +518,7 @@ def index():
         items = pagination.items
         _annotate_visible_stock(items)
     
-    categories = ProductCategory.query.filter_by(is_active=True).all()
+    categories = ProductCategory.query.filter_by(is_active=True, tenant_id=get_active_tenant_id(current_user)).all()
     show_branch_columns = should_show_all_branch_columns(current_user)
     warehouse_ids = get_accessible_warehouse_ids(current_user)
     if show_branch_columns:
@@ -540,7 +542,7 @@ def create():
     form = ProductForm()
     
     # تعيين choices للتصنيفات
-    categories = ProductCategory.query.filter_by(is_active=True).all()
+    categories = ProductCategory.query.filter_by(is_active=True, tenant_id=get_active_tenant_id(current_user)).all()
     form.category_id.choices = [(0, 'بلا')] + [(c.id, c.name) for c in categories]
     preselected_warehouse_id = request.args.get('warehouse_id', type=int)
     merchants = _scoped_customers_query('merchant').order_by(Customer.name).all()
@@ -685,7 +687,7 @@ def create():
                     flash(f'⚠️ خطأ في حقل {field}: {error}', 'danger')
     
     # GET request - إرسال البيانات للقالب
-    categories = ProductCategory.query.filter_by(is_active=True).all()
+    categories = ProductCategory.query.filter_by(is_active=True, tenant_id=get_active_tenant_id(current_user)).all()
     warehouses = get_accessible_warehouses(current_user)
     
     return render_template('products/create.html',
@@ -730,7 +732,7 @@ def edit(id):
     form = ProductForm(obj=product)
     
     # تعيين choices للتصنيفات
-    categories = ProductCategory.query.filter_by(is_active=True).all()
+    categories = ProductCategory.query.filter_by(is_active=True, tenant_id=get_active_tenant_id(current_user)).all()
     form.category_id.choices = [(0, 'بلا')] + [(c.id, c.name) for c in categories]
     warehouses = get_accessible_warehouses(current_user)
     merchants = _scoped_customers_query('merchant').order_by(Customer.name).all()
@@ -804,7 +806,7 @@ def edit(id):
             if partner_rows:
                 product_tid = int(product.tenant_id)
                 for row in partner_rows:
-                    partner_customer = Customer.query.get(row['partner_customer_id'])
+                    partner_customer = Customer.query.filter_by(id=row['partner_customer_id'], tenant_id=product_tid).first()
                     if not partner_customer:
                         flash('⚠️ الشريك المحدد غير موجود.', 'warning')
                         return render_template('products/edit.html', form=form, product=product, categories=categories, warehouses=warehouses, merchants=merchants, partners=partners)
@@ -852,7 +854,7 @@ def edit(id):
             db.session.rollback()
             flash(f'❌ فشل تحديث المنتج: {str(e)}', 'danger')
     
-    categories = ProductCategory.query.filter_by(is_active=True).all()
+    categories = ProductCategory.query.filter_by(is_active=True, tenant_id=get_active_tenant_id(current_user)).all()
     product.visible_stock = StockService.get_product_stock(product.id, user=current_user)
     return render_template('products/edit.html', form=form, product=product, categories=categories, warehouses=warehouses, merchants=merchants, partners=partners)
 
@@ -939,7 +941,7 @@ def api_search():
 @login_required
 @permission_required('manage_products')
 def categories():
-    categories = ProductCategory.query.filter_by(is_active=True).order_by(ProductCategory.name).all()
+    categories = ProductCategory.query.filter_by(is_active=True, tenant_id=get_active_tenant_id(current_user)).order_by(ProductCategory.name).all()
     return render_template('products/categories.html', categories=categories)
 
 
@@ -963,7 +965,9 @@ def create_category():
             return redirect(url_for('products.categories'))
 
         # منع التكرار (نفس الاسم بغض النظر عن حالة الأحرف)
+        tid = get_active_tenant_id(current_user)
         existing = ProductCategory.query.filter(
+            ProductCategory.tenant_id == tid,
             db.func.lower(ProductCategory.name) == name.lower()
         ).first()
         if existing:

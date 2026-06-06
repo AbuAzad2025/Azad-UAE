@@ -31,7 +31,6 @@
             <label>
               <i class="fas fa-box text-primary"></i> الاسم 
               <span class="text-danger">*</span>
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="اسم المنتج (إجباري)"></i>
             </label>
             <input type="text" name="name" class="form-control" value="{{ product.name }}" required>
           </div>
@@ -40,7 +39,6 @@
           <div class="form-group">
             <label>
               <i class="fas fa-font text-info"></i> الاسم بالعربي
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="الاسم بالعربية (اختياري)"></i>
             </label>
             <input type="text" name="name_ar" class="form-control" value="{{ product.name_ar or '' }}">
           </div>
@@ -53,7 +51,6 @@
             <label>
               <i class="fas fa-hashtag text-primary"></i> رقم القطعة (SKU)
               <span class="text-danger">*</span>
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="الرمز الفريد للمنتج (إجباري)"></i>
             </label>
             <input type="text" name="sku" class="form-control" value="{{ product.sku or '' }}" required>
           </div>
@@ -116,7 +113,6 @@
             <label>
               <i class="fas fa-dollar-sign text-danger"></i> سعر التكلفة
               <span class="text-danger">*</span>
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="سعر الشراء (إجباري)"></i>
             </label>
             <input type="number" name="cost_price" class="form-control" value="{{ product.cost_price }}" step="0.01" required>
           </div>

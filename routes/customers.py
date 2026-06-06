@@ -443,7 +443,7 @@ def delete(id):
         # Fallback to soft delete if hard delete fails (e.g. other constraints)
         try:
             # Re-fetch customer to ensure it's attached to the new session transaction
-            customer = Customer.query.get(id)
+            customer = tenant_get(Customer, id)
             if customer:
                 customer.is_active = False
                 db.session.add(customer)

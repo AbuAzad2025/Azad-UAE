@@ -184,8 +184,8 @@
 </div>
 
 <!-- Data Store for JS -->
-<div id="customers-data" style="display:none;">{{ customers_json|safe }}</div>
-<div id="suppliers-data" style="display:none;">{{ suppliers_json|safe }}</div>
+<div id="customers-data" style="display:none;">{{ customers_json|tojson|safe }}</div>
+<div id="suppliers-data" style="display:none;">{{ suppliers_json|tojson|safe }}</div>
 
 {% endblock %}
 

@@ -229,12 +229,6 @@
         <!-- المعالجة المحاسبية الصحيحة للشيكات -->
         
         {% if cheque.status == 'pending' %}
-        <!-- Step 1: إيداع في البنك -->
-        <div class="alert alert-info mb-3">
-          <i class="fas fa-info-circle"></i>
-          <small><strong>الخطوة التالية:</strong> إيداع الشيك في البنك</small>
-        </div>
-        
         <button type="button" class="btn btn-primary btn-block mb-2" onclick="depositCheque()">
           <i class="fas fa-university mr-2"></i>إيداع في البنك
         </button>
@@ -245,12 +239,6 @@
         </a>
         
         {% elif cheque.status == 'deposited' %}
-        <!-- Step 2: تأكيد الصرف أو رفض -->
-        <div class="alert alert-warning mb-3">
-          <i class="fas fa-hourglass-half"></i>
-          <small><strong>الخطوة التالية:</strong> انتظار تأكيد البنك</small>
-        </div>
-        
         <button type="button" class="btn btn-success btn-block mb-2" onclick="clearCheque()">
           <i class="fas fa-check-circle mr-2"></i>✅ تأكيد الصرف (البنك وافق)
         </button>

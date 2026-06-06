@@ -1,267 +1,267 @@
-{% extends 'base.html' %}
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - إدارة المدفوعات{% endblock %}
-{% block page_title %}جميع المدفوعات{% endblock %}
-
-{% block extra_css %}
-<style>
-@media print {
-  @page {
-    size: A4 landscape;
-    margin: 10mm;
-  }
-
-  body {
-    -webkit-print-color-adjust: exact !important;
-    font-size: 11pt;
-    direction: rtl;
-  }
-
-  .main-sidebar,
-  .main-header,
-  .main-footer,
-  .content-header,
-  .btn,
-  .card-header,
-  .card-footer,
-  .dataTables_filter,
-  .dataTables_length,
-  .dataTables_paginate,
-  .dataTables_info,
-  .dt-buttons,
-  .dropdown-menu {
-    display: none !important;
-  }
-
-  .content-wrapper {
-    margin: 0 !important;
-    padding: 0 !important;
-  }
-
-  .card {
-    border: none !important;
-    box-shadow: none !important;
-  }
-
-  .table-responsive {
-    overflow: visible !important;
-  }
-
-  table {
-    width: 100% !important;
-    border-collapse: collapse !important;
-  }
-
-  table th,
-  table td {
-    border: 1px solid #dee2e6 !important;
-    padding: 6px 8px !important;
-    text-align: center !important;
-  }
-
-  table thead th {
-    background: #198754 !important;
-    color: #fff !important;
-  }
-
-  table tbody tr:nth-child(even) {
-    background: #f8f9fa !important;
-  }
-}
-</style>
-{% endblock %}
-
-{% block content %}
-<div class="card">
-  <div class="card-header d-flex justify-content-between align-items-center">
-    <h3 class="card-title mb-0">
-      <i class="fas fa-wallet mr-2"></i>إدارة المدفوعات
-    </h3>
-    <div class="btn-group">
-      <button type="button" class="btn btn-sm btn-outline-info" id="printReceiptsBtn">
-        <i class="fas fa-print mr-1"></i>طباعة
-      </button>
-      <a href="{{ url_for('payments.create_voucher') }}" class="btn btn-success">
-        <i class="fas fa-plus mr-2"></i>سند قبض جديد
-      </a>
-      <a href="{{ url_for('payments.archived_receipts') }}" class="btn btn-warning">
-        <i class="fas fa-archive mr-2"></i>الأرشيف
-      </a>
-      <div class="btn-group">
-        <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-toggle="dropdown">
-          <i class="fas fa-filter mr-1"></i>فلترة
-        </button>
-        <div class="dropdown-menu dropdown-menu-right">
-          <a class="dropdown-item" href="{{ url_for('payments.receipts', direction='') }}">
-            <i class="fas fa-list mr-1"></i>الكل
-          </a>
-          <a class="dropdown-item" href="{{ url_for('payments.receipts', direction='incoming') }}">
-            <i class="fas fa-arrow-down mr-1 text-success"></i>سندات القبض (وارد)
-          </a>
-          <a class="dropdown-item" href="{{ url_for('payments.receipts', direction='outgoing') }}">
-            <i class="fas fa-arrow-up mr-1 text-danger"></i>سندات الصرف (صادر)
-          </a>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="card-body">
-    <div class="table-responsive">
-      <table id="receiptsTable" class="table table-bordered table-striped" data-lang-url="{{ url_for('static', filename='datatables/Arabic.json') }}">
-      <thead>
-        <tr>
-          <th>رقم السند</th>
-          <th>العميل/المورد</th>
-          <th>{{ t('Date') }}</th>
-          <th>{{ t('Amount') }}</th>
-          <th>النوع</th>
-          <th>الاتجاه</th>
-          <th>المصدر</th>
-          <th>الطريقة</th>
-          {% if show_branch_columns %}
-          <th>الفرع</th>
-          {% endif %}
-          <th>الحالة</th>
-          <th>الإجراءات</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for item in receipts %}
-        <tr>
-          <td>
-            <strong>{{ item.number }}</strong>
-            {% if item.type == 'receipt' %}
-              <br><small class="text-muted">سند قبض</small>
-            {% else %}
-              <br><small class="text-muted">سند صرف</small>
-            {% endif %}
-          </td>
-          <td>
-            {% if item.customer_name %}
-              <i class="fas fa-user text-primary mr-1"></i>{{ item.customer_name }}
-            {% elif item.supplier_name %}
-              <i class="fas fa-truck text-danger mr-1"></i>{{ item.supplier_name }}
-            {% else %}
-              -
-            {% endif %}
-          </td>
-          <td>{{ item.date.strftime('%Y-%m-%d') }}</td>
-          <td>
-            <strong>{{ "{:,.2f}".format(item.amount) }} {{ item.currency }}</strong>
-            {% if item.currency != tenant_default_currency %}
-              <br><small class="text-muted">{{ "{:,.2f}".format(item.base_amount) }} {{ tenant_currency_symbol or 'AED' }}</small>
-            {% endif %}
-          </td>
-          <td>
-            {% if item.type == 'receipt' %}
-              <span class="badge badge-success">
-                <i class="fas fa-arrow-down mr-1"></i>قبض
-              </span>
-            {% else %}
-              <span class="badge badge-danger">
-                <i class="fas fa-arrow-up mr-1"></i>صرف
-              </span>
-            {% endif %}
-          </td>
-          <td>
-            {% if item.direction == 'incoming' %}
-              <span class="badge badge-success">
-                <i class="fas fa-arrow-down mr-1"></i>وارد
-              </span>
-            {% else %}
-              <span class="badge badge-danger">
-                <i class="fas fa-arrow-up mr-1"></i>صادر
-              </span>
-            {% endif %}
-          </td>
-          <td>
-            {% if item.source_type == 'sale' %}
-              <span class="badge badge-primary">
-                <i class="fas fa-file-invoice mr-1"></i>مبيعات
-              </span>
-            {% elif item.source_type == 'supplier_payment' %}
-              <span class="badge badge-warning">
-                <i class="fas fa-truck mr-1"></i>مورد
-              </span>
-            {% elif item.source_type == 'customer_payment' %}
-              <span class="badge badge-info">
-                <i class="fas fa-user mr-1"></i>عميل
-              </span>
-            {% elif item.source_type == 'refund' %}
-              <span class="badge badge-secondary">
-                <i class="fas fa-undo mr-1"></i>استرداد
-              </span>
-            {% else %}
-              <span class="badge badge-secondary">{{ item.source_type }}</span>
-            {% endif %}
-          </td>
-          <td><span class="badge badge-info">{{ item.payment_method }}</span></td>
-          {% if show_branch_columns %}
-          <td>
-            {% if item.branch_label and item.branch_label != '-' %}
-              <span class="badge badge-light border">{{ item.branch_label }}</span>
-            {% else %}
-              <span class="text-muted">-</span>
-            {% endif %}
-          </td>
-          {% endif %}
-          <td>
-            {% if item.payment_confirmed %}
-              <span class="badge badge-success">
-                <i class="fas fa-check mr-1"></i>مؤكد
-              </span>
-            {% else %}
-              <span class="badge badge-warning">
-                <i class="fas fa-clock mr-1"></i>معلق
-              </span>
-            {% endif %}
-          </td>
-          <td>
-            <div class="btn-group btn-group-sm">
-              {% if item.type == 'receipt' %}
-                <a href="{{ url_for('payments.view_receipt', id=item.id) }}" 
-                   class="btn btn-info" title="عرض">
-                  <i class="fas fa-eye"></i>
-                </a>
-                <a href="{{ url_for('payments.print_receipt', id=item.id) }}" 
-                   class="btn btn-secondary" target="_blank" title="طباعة">
-                  <i class="fas fa-print"></i>
-                </a>
-              {% else %}
-                <a href="{{ url_for('payments.view_payment', id=item.id) }}" 
-                   class="btn btn-info" title="عرض">
-                  <i class="fas fa-eye"></i>
-                </a>
-                <a href="{{ url_for('payments.print_payment', id=item.id) }}" 
-                   class="btn btn-secondary" target="_blank" title="طباعة">
-                  <i class="fas fa-print"></i>
-                </a>
-              {% endif %}
-              <button type="button" class="btn btn-warning js-archive-payment"
-                      data-item-type="{{ item.type }}"
-                      data-item-id="{{ item.id }}"
-                      data-item-number="{{ item.number }}"
-                      title="أرشفة">
-                <i class="fas fa-archive"></i>
-              </button>
-              <button type="button" class="btn btn-danger" 
-                      onclick="deleteItem('{{ item.type }}s', {{ item.id }}, '{{ item.number }}')" 
-                      title="حذف">
-                <i class="fas fa-trash"></i>
-              </button>
-            </div>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-      </table>
-    </div>
-  </div>
-  {% set endpoint = 'payments.receipts' %}
-  {% include 'partials/flask_pagination.html' %}
-</div>
-{% endblock %}
-
-{% block extra_js %}
-<script defer src="{{ url_for('static', filename='js/payments-receipts-page.js') }}"></script>
-{% endblock %}
-
+{% extends 'base.html' %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - إدارة المدفوعات{% endblock %}
+{% block page_title %}جميع المدفوعات{% endblock %}
+
+{% block extra_css %}
+<style>
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 10mm;
+  }
+
+  body {
+    -webkit-print-color-adjust: exact !important;
+    font-size: 11pt;
+    direction: rtl;
+  }
+
+  .main-sidebar,
+  .main-header,
+  .main-footer,
+  .content-header,
+  .btn,
+  .card-header,
+  .card-footer,
+  .dataTables_filter,
+  .dataTables_length,
+  .dataTables_paginate,
+  .dataTables_info,
+  .dt-buttons,
+  .dropdown-menu {
+    display: none !important;
+  }
+
+  .content-wrapper {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .card {
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  .table-responsive {
+    overflow: visible !important;
+  }
+
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+  }
+
+  table th,
+  table td {
+    border: 1px solid #dee2e6 !important;
+    padding: 6px 8px !important;
+    text-align: center !important;
+  }
+
+  table thead th {
+    background: #198754 !important;
+    color: #fff !important;
+  }
+
+  table tbody tr:nth-child(even) {
+    background: #f8f9fa !important;
+  }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h3 class="card-title mb-0">
+      <i class="fas fa-wallet mr-2"></i>إدارة المدفوعات
+    </h3>
+    <div class="btn-group">
+      <button type="button" class="btn btn-sm btn-outline-info" id="printReceiptsBtn">
+        <i class="fas fa-print mr-1"></i>طباعة
+      </button>
+      <a href="{{ url_for('payments.create_voucher') }}" class="btn btn-success">
+        <i class="fas fa-plus mr-2"></i>سند قبض جديد
+      </a>
+      <a href="{{ url_for('payments.archived_receipts') }}" class="btn btn-warning">
+        <i class="fas fa-archive mr-2"></i>الأرشيف
+      </a>
+      <div class="btn-group">
+        <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-toggle="dropdown">
+          <i class="fas fa-filter mr-1"></i>فلترة
+        </button>
+        <div class="dropdown-menu dropdown-menu-right">
+          <a class="dropdown-item" href="{{ url_for('payments.receipts', direction='') }}">
+            <i class="fas fa-list mr-1"></i>الكل
+          </a>
+          <a class="dropdown-item" href="{{ url_for('payments.receipts', direction='incoming') }}">
+            <i class="fas fa-arrow-down mr-1 text-success"></i>سندات القبض (وارد)
+          </a>
+          <a class="dropdown-item" href="{{ url_for('payments.receipts', direction='outgoing') }}">
+            <i class="fas fa-arrow-up mr-1 text-danger"></i>سندات الصرف (صادر)
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="card-body">
+    <div class="table-responsive">
+      <table id="receiptsTable" class="table table-bordered table-striped" data-lang-url="{{ url_for('static', filename='datatables/Arabic.json') }}">
+      <thead>
+        <tr>
+          <th>رقم السند</th>
+          <th>العميل/المورد</th>
+          <th>{{ t('Date') }}</th>
+          <th>{{ t('Amount') }}</th>
+          <th>النوع</th>
+          <th>الاتجاه</th>
+          <th>المصدر</th>
+          <th>الطريقة</th>
+          {% if show_branch_columns %}
+          <th>الفرع</th>
+          {% endif %}
+          <th>الحالة</th>
+          <th>الإجراءات</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in receipts %}
+        <tr>
+          <td>
+            <strong>{{ item.number }}</strong>
+            {% if item.type == 'receipt' %}
+              <br><small class="text-muted">سند قبض</small>
+            {% else %}
+              <br><small class="text-muted">سند صرف</small>
+            {% endif %}
+          </td>
+          <td>
+            {% if item.customer_name %}
+              <i class="fas fa-user text-primary mr-1"></i>{{ item.customer_name }}
+            {% elif item.supplier_name %}
+              <i class="fas fa-truck text-danger mr-1"></i>{{ item.supplier_name }}
+            {% else %}
+              -
+            {% endif %}
+          </td>
+          <td>{{ item.date.strftime('%Y-%m-%d') }}</td>
+          <td>
+            <strong>{{ "{:,.2f}".format(item.amount) }} {{ item.currency }}</strong>
+            {% if item.currency != tenant_default_currency %}
+              <br><small class="text-muted">{{ "{:,.2f}".format(item.base_amount) }} {{ tenant_currency_symbol or 'AED' }}</small>
+            {% endif %}
+          </td>
+          <td>
+            {% if item.type == 'receipt' %}
+              <span class="badge badge-success">
+                <i class="fas fa-arrow-down mr-1"></i>قبض
+              </span>
+            {% else %}
+              <span class="badge badge-danger">
+                <i class="fas fa-arrow-up mr-1"></i>صرف
+              </span>
+            {% endif %}
+          </td>
+          <td>
+            {% if item.direction == 'incoming' %}
+              <span class="badge badge-success">
+                <i class="fas fa-arrow-down mr-1"></i>وارد
+              </span>
+            {% else %}
+              <span class="badge badge-danger">
+                <i class="fas fa-arrow-up mr-1"></i>صادر
+              </span>
+            {% endif %}
+          </td>
+          <td>
+            {% if item.source_type == 'sale' %}
+              <span class="badge badge-primary">
+                <i class="fas fa-file-invoice mr-1"></i>مبيعات
+              </span>
+            {% elif item.source_type == 'supplier_payment' %}
+              <span class="badge badge-warning">
+                <i class="fas fa-truck mr-1"></i>مورد
+              </span>
+            {% elif item.source_type == 'customer_payment' %}
+              <span class="badge badge-info">
+                <i class="fas fa-user mr-1"></i>عميل
+              </span>
+            {% elif item.source_type == 'refund' %}
+              <span class="badge badge-secondary">
+                <i class="fas fa-undo mr-1"></i>استرداد
+              </span>
+            {% else %}
+              <span class="badge badge-secondary">{{ item.source_type }}</span>
+            {% endif %}
+          </td>
+          <td><span class="badge badge-info">{{ item.payment_method }}</span></td>
+          {% if show_branch_columns %}
+          <td>
+            {% if item.branch_label and item.branch_label != '-' %}
+              <span class="badge badge-light border">{{ item.branch_label }}</span>
+            {% else %}
+              <span class="text-muted">-</span>
+            {% endif %}
+          </td>
+          {% endif %}
+          <td>
+            {% if item.payment_confirmed %}
+              <span class="badge badge-success">
+                <i class="fas fa-check mr-1"></i>مؤكد
+              </span>
+            {% else %}
+              <span class="badge badge-warning">
+                <i class="fas fa-clock mr-1"></i>معلق
+              </span>
+            {% endif %}
+          </td>
+          <td>
+            <div class="btn-group btn-group-sm">
+              {% if item.type == 'receipt' %}
+                <a href="{{ url_for('payments.view_receipt', id=item.id) }}" 
+                   class="btn btn-info" title="عرض">
+                  <i class="fas fa-eye"></i>
+                </a>
+                <a href="{{ url_for('payments.print_receipt', id=item.id) }}" 
+                   class="btn btn-secondary" target="_blank" rel="noopener noreferrer" title="طباعة">
+                  <i class="fas fa-print"></i>
+                </a>
+              {% else %}
+                <a href="{{ url_for('payments.view_payment', id=item.id) }}" 
+                   class="btn btn-info" title="عرض">
+                  <i class="fas fa-eye"></i>
+                </a>
+                <a href="{{ url_for('payments.print_payment', id=item.id) }}" 
+                   class="btn btn-secondary" target="_blank" rel="noopener noreferrer" title="طباعة">
+                  <i class="fas fa-print"></i>
+                </a>
+              {% endif %}
+              <button type="button" class="btn btn-warning js-archive-payment"
+                      data-item-type="{{ item.type }}"
+                      data-item-id="{{ item.id }}"
+                      data-item-number="{{ item.number }}"
+                      title="أرشفة">
+                <i class="fas fa-archive"></i>
+              </button>
+              <button type="button" class="btn btn-danger" 
+                      onclick="deleteItem('{{ item.type }}s', {{ item.id }}, '{{ item.number }}')" 
+                      title="حذف">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      </table>
+    </div>
+  </div>
+  {% set endpoint = 'payments.receipts' %}
+  {% include 'partials/flask_pagination.html' %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script defer src="{{ url_for('static', filename='js/payments-receipts-page.js') }}"></script>
+{% endblock %}
+

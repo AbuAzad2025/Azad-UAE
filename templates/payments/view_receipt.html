@@ -1,144 +1,144 @@
-{% extends 'base.html' %}
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - سند قبض #{{ receipt.receipt_number }}{% endblock %}
-{% block page_title %}سند قبض رقم: {{ receipt.receipt_number }}{% endblock %}
-
-{% block content %}
-<div class="row mb-3">
-  <div class="col-12">
-    <a href="{{ url_for('payments.print_receipt', id=receipt.id) }}" class="btn btn-secondary" target="_blank">
-      <i class="fas fa-print mr-2"></i>طباعة
-    </a>
-    
-    {% if is_payment %}
-    <form action="{{ url_for('payments.delete_payment', id=receipt.id) }}" method="POST" class="d-inline" onsubmit="return confirm('هل أنت متأكد من حذف سند الصرف هذا؟\n\nتنبيه: سيتم أرشفة السند إذا كان مرتبطاً بشيكات، أو حذفه نهائياً إذا كان غير مرتبط.');">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <button type="submit" class="btn btn-danger">
-        <i class="fas fa-trash mr-2"></i>حذف
-      </button>
-    </form>
-    {% else %}
-    <form action="{{ url_for('payments.delete_receipt', id=receipt.id) }}" method="POST" class="d-inline" onsubmit="return confirm('هل أنت متأكد من حذف سند القبض هذا؟\n\nتنبيه: سيتم أرشفة السند إذا كان له تخصيصات أو مرتبط بشيكات، أو حذفه نهائياً إذا كان غير مرتبط.');">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <button type="submit" class="btn btn-danger">
-        <i class="fas fa-trash mr-2"></i>حذف
-      </button>
-    </form>
-    {% endif %}
-
-    <a href="{{ url_for('payments.receipts') }}" class="btn btn-info">
-      <i class="fas fa-arrow-right mr-2"></i>العودة
-    </a>
-  </div>
-</div>
-
-<div class="row">
-  <div class="col-md-6">
-    <div class="card">
-      <div class="card-header bg-gradient-success">
-        <h3 class="card-title text-white">تفاصيل السند</h3>
-      </div>
-      <div class="card-body">
-        <dl class="row">
-          <dt class="col-sm-5">رقم السند:</dt>
-          <dd class="col-sm-7"><strong>
-            {% if is_payment %}
-              {{ receipt.payment_number }}
-            {% else %}
-              {{ receipt.receipt_number }}
-            {% endif %}
-          </strong></dd>
-          
-          <dt class="col-sm-5">الزبون:</dt>
-          <dd class="col-sm-7">
-            {% if is_payment %}
-              {% if receipt.customer %}
-                <a href="{{ url_for('customers.view', id=receipt.customer.id) }}">{{ receipt.customer.name }}</a>
-              {% else %}
-                {{ receipt.supplier_name or '-' }}
-              {% endif %}
-            {% else %}
-              <a href="{{ url_for('customers.view', id=receipt.customer.id) }}">{{ receipt.customer.name }}</a>
-            {% endif %}
-          </dd>
-          
-          <dt class="col-sm-5">التاريخ:</dt>
-                <dd class="col-sm-7">
-                  {% if is_payment %}
-                    {{ receipt.payment_date.strftime('%Y-%m-%d %H:%M') }}
-                  {% else %}
-                    {{ receipt.receipt_date.strftime('%Y-%m-%d %H:%M') }}
-                  {% endif %}
-                </dd>
-          
-          <dt class="col-sm-5">المبلغ:</dt>
-          <dd class="col-sm-7"><h4 class="text-success">{{ "{:,.2f}".format(receipt.amount) }} {{ receipt.currency }}</h4></dd>
-          
-          {% if receipt.currency != tenant_default_currency %}
-          <dt class="col-sm-5">المبلغ ({{ tenant_currency_name_ar or 'درهم' }}):</dt>
-          <dd class="col-sm-7">{{ "{:,.2f}".format(receipt.base_amount) }} {{ tenant_currency_symbol or 'AED' }}</dd>
-          {% endif %}
-          
-          <dt class="col-sm-5">طريقة الدفع:</dt>
-          <dd class="col-sm-7"><span class="badge badge-success">{{ receipt.payment_method }}</span></dd>
-          
-          {% if receipt.reference_number %}
-          <dt class="col-sm-5">رقم المرجع:</dt>
-          <dd class="col-sm-7">{{ receipt.reference_number }}</dd>
-          {% endif %}
-          
-          {% if receipt.cheque_number %}
-          <dt class="col-sm-5">رقم الشيك:</dt>
-          <dd class="col-sm-7">{{ receipt.cheque_number }}</dd>
-          
-          <dt class="col-sm-5">البنك:</dt>
-          <dd class="col-sm-7">{{ receipt.bank_name }}</dd>
-          
-          {% if receipt.cheque_date %}
-          <dt class="col-sm-5">تاريخ استحقاق الشيك:</dt>
-          <dd class="col-sm-7"><span class="badge badge-info">{{ receipt.cheque_date.strftime('%Y-%m-%d') }}</span></dd>
-          {% endif %}
-          {% endif %}
-        </dl>
-
-        {% if receipt.notes %}
-        <div class="alert alert-warning">
-          <strong>📝 ملاحظات:</strong> {{ receipt.notes }}
-        </div>
-        {% endif %}
-      </div>
-    </div>
-  </div>
-
-  <div class="col-md-6">
-    <div class="card">
-      <div class="card-header">
-        <h3 class="card-title">التخصيصات</h3>
-      </div>
-      <div class="card-body p-0">
-        <table class="table table-sm">
-          <thead>
-            <tr>
-              <th>الفاتورة</th>
-              <th>المبلغ المخصص</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% set source_info = receipt.get_source_info() if not is_payment else None %}
-            {% if source_info %}
-              <tr>
-                <td>{{ source_info.type }} #{{ source_info.number }} ({{ source_info.date }})</td>
-                <td>{{ "{:,.2f}".format(receipt.amount) }} {{ receipt.currency }}</td>
-              </tr>
-            {% else %}
-              <tr>
-                <td colspan="2" class="text-center text-muted">لا توجد تخصيصات (دفعة عامة)</td>
-              </tr>
-            {% endif %}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-</div>
-{% endblock %}
-
+{% extends 'base.html' %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - سند قبض #{{ receipt.receipt_number }}{% endblock %}
+{% block page_title %}سند قبض رقم: {{ receipt.receipt_number }}{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+  <div class="col-12">
+    <a href="{{ url_for('payments.print_receipt', id=receipt.id) }}" class="btn btn-secondary" target="_blank" rel="noopener noreferrer">
+      <i class="fas fa-print mr-2"></i>طباعة
+    </a>
+    
+    {% if is_payment %}
+    <form action="{{ url_for('payments.delete_payment', id=receipt.id) }}" method="POST" class="d-inline" onsubmit="return confirm('هل أنت متأكد من حذف سند الصرف هذا؟\n\nتنبيه: سيتم أرشفة السند إذا كان مرتبطاً بشيكات، أو حذفه نهائياً إذا كان غير مرتبط.');">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="btn btn-danger">
+        <i class="fas fa-trash mr-2"></i>حذف
+      </button>
+    </form>
+    {% else %}
+    <form action="{{ url_for('payments.delete_receipt', id=receipt.id) }}" method="POST" class="d-inline" onsubmit="return confirm('هل أنت متأكد من حذف سند القبض هذا؟\n\nتنبيه: سيتم أرشفة السند إذا كان له تخصيصات أو مرتبط بشيكات، أو حذفه نهائياً إذا كان غير مرتبط.');">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="btn btn-danger">
+        <i class="fas fa-trash mr-2"></i>حذف
+      </button>
+    </form>
+    {% endif %}
+
+    <a href="{{ url_for('payments.receipts') }}" class="btn btn-info">
+      <i class="fas fa-arrow-right mr-2"></i>العودة
+    </a>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header bg-gradient-success">
+        <h3 class="card-title text-white">تفاصيل السند</h3>
+      </div>
+      <div class="card-body">
+        <dl class="row">
+          <dt class="col-sm-5">رقم السند:</dt>
+          <dd class="col-sm-7"><strong>
+            {% if is_payment %}
+              {{ receipt.payment_number }}
+            {% else %}
+              {{ receipt.receipt_number }}
+            {% endif %}
+          </strong></dd>
+          
+          <dt class="col-sm-5">الزبون:</dt>
+          <dd class="col-sm-7">
+            {% if is_payment %}
+              {% if receipt.customer %}
+                <a href="{{ url_for('customers.view', id=receipt.customer.id) }}">{{ receipt.customer.name }}</a>
+              {% else %}
+                {{ receipt.supplier_name or '-' }}
+              {% endif %}
+            {% else %}
+              <a href="{{ url_for('customers.view', id=receipt.customer.id) }}">{{ receipt.customer.name }}</a>
+            {% endif %}
+          </dd>
+          
+          <dt class="col-sm-5">التاريخ:</dt>
+                <dd class="col-sm-7">
+                  {% if is_payment %}
+                    {{ receipt.payment_date.strftime('%Y-%m-%d %H:%M') }}
+                  {% else %}
+                    {{ receipt.receipt_date.strftime('%Y-%m-%d %H:%M') }}
+                  {% endif %}
+                </dd>
+          
+          <dt class="col-sm-5">المبلغ:</dt>
+          <dd class="col-sm-7"><h4 class="text-success">{{ "{:,.2f}".format(receipt.amount) }} {{ receipt.currency }}</h4></dd>
+          
+          {% if receipt.currency != tenant_default_currency %}
+          <dt class="col-sm-5">المبلغ ({{ tenant_currency_name_ar or 'درهم' }}):</dt>
+          <dd class="col-sm-7">{{ "{:,.2f}".format(receipt.base_amount) }} {{ tenant_currency_symbol or 'AED' }}</dd>
+          {% endif %}
+          
+          <dt class="col-sm-5">طريقة الدفع:</dt>
+          <dd class="col-sm-7"><span class="badge badge-success">{{ receipt.payment_method }}</span></dd>
+          
+          {% if receipt.reference_number %}
+          <dt class="col-sm-5">رقم المرجع:</dt>
+          <dd class="col-sm-7">{{ receipt.reference_number }}</dd>
+          {% endif %}
+          
+          {% if receipt.cheque_number %}
+          <dt class="col-sm-5">رقم الشيك:</dt>
+          <dd class="col-sm-7">{{ receipt.cheque_number }}</dd>
+          
+          <dt class="col-sm-5">البنك:</dt>
+          <dd class="col-sm-7">{{ receipt.bank_name }}</dd>
+          
+          {% if receipt.cheque_date %}
+          <dt class="col-sm-5">تاريخ استحقاق الشيك:</dt>
+          <dd class="col-sm-7"><span class="badge badge-info">{{ receipt.cheque_date.strftime('%Y-%m-%d') }}</span></dd>
+          {% endif %}
+          {% endif %}
+        </dl>
+
+        {% if receipt.notes %}
+        <div class="alert alert-warning">
+          <strong>📝 ملاحظات:</strong> {{ receipt.notes }}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">التخصيصات</h3>
+      </div>
+      <div class="card-body p-0">
+        <table class="table table-sm">
+          <thead>
+            <tr>
+              <th>الفاتورة</th>
+              <th>المبلغ المخصص</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% set source_info = receipt.get_source_info() if not is_payment else None %}
+            {% if source_info %}
+              <tr>
+                <td>{{ source_info.type }} #{{ source_info.number }} ({{ source_info.date }})</td>
+                <td>{{ "{:,.2f}".format(receipt.amount) }} {{ receipt.currency }}</td>
+              </tr>
+            {% else %}
+              <tr>
+                <td colspan="2" class="text-center text-muted">لا توجد تخصيصات (دفعة عامة)</td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

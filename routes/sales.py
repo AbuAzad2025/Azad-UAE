@@ -9,6 +9,8 @@ from utils.decorators import permission_required
 from utils.branching import ensure_warehouse_access, get_accessible_warehouses, should_show_all_branch_columns
 from utils.helpers import create_audit_log
 from utils.tenanting import tenant_query, tenant_get_or_404, tenant_get, get_active_tenant_id
+from utils.db_safety import atomic_transaction
+from utils.structured_logging import log_mutation
 from services.store_service import StoreService
 from utils.gl_tenant import reverse_document_gl
 from utils.gl_reference_types import GLRef, delete_entries_by_ref
@@ -180,7 +182,8 @@ def create():
             warehouse_id = request.form.get('warehouse_id', type=int)
             ensure_warehouse_access(warehouse_id, user=current_user)
             
-            sale = SaleService.create_sale(
+            with atomic_transaction('sale_creation'):
+                sale = SaleService.create_sale(
                 customer=customer,
                 seller=current_user,
                 lines_data=lines_data,

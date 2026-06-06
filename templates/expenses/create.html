@@ -83,7 +83,6 @@
             <label>
               <i class="fas fa-folder text-primary"></i> الفئة 
               <span class="text-danger">*</span>
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="تصنيف المصروف (إجباري)"></i>
             </label>
             <div class="input-group">
               <select name="category_id" id="expense_category" class="form-control" required style="flex: 1;">
@@ -106,7 +105,6 @@
             <label>
               <i class="fas fa-align-left text-info"></i> الوصف 
               <span class="text-danger">*</span>
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="وصف المصروف (إجباري)"></i>
             </label>
             <input type="text" name="description" class="form-control" placeholder="وصف المصروف..." required>
           </div>
@@ -119,7 +117,6 @@
             <label>
               <i class="fas fa-money-bill-wave text-success"></i> المبلغ 
               <span class="text-danger">*</span>
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="قيمة المصروف (إجباري)"></i>
             </label>
             <input type="number" name="amount" class="form-control" step="0.01" min="0.01" placeholder="0.00" required>
           </div>
@@ -129,7 +126,6 @@
           <div class="form-group">
             <label>
               <i class="fas fa-dollar-sign text-warning"></i> العملة
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="عملة الدفع (افتراضي: {{ tenant_default_currency or 'AED' }})"></i>
             </label>
             {% set dc = company_default_currency or system_default_currency or 'AED' %}
             <select name="currency" id="currency" class="form-control">
@@ -144,7 +140,6 @@
           <div class="form-group">
             <label>
               <i class="fas fa-exchange-alt text-secondary"></i> سعر الصرف
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="سعر الصرف مقابل {{ tenant_currency_name_ar or "درهم إماراتي" }} (تلقائي)"></i>
             </label>
             <input type="number" name="exchange_rate" id="exchange_rate" class="form-control" value="1.00" step="0.000001" readonly>
           </div>
@@ -157,7 +152,6 @@
             <label>
               <i class="fas fa-credit-card text-primary"></i> طريقة الدفع 
               <span class="text-danger">*</span>
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="كيف تم الدفع؟ (إجباري)"></i>
             </label>
             <select name="payment_method" id="payment_method" class="form-control" required>
               <option value="cash">نقدي</option>
@@ -172,7 +166,6 @@
           <div class="form-group">
             <label>
               <i class="fas fa-user-tie text-info"></i> اسم المورد/الجهة
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="اسم المستفيد من المصروف (اختياري)"></i>
             </label>
             <input type="text" name="supplier_name" class="form-control" placeholder="اسم المستفيد...">
           </div>
@@ -185,7 +178,6 @@
       <div class="form-group">
         <label>
           <i class="fas fa-sticky-note text-secondary"></i> {{ t('Notes') }}
-          <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="ملاحظات إضافية (اختياري)"></i>
         </label>
         <textarea name="notes" class="form-control" rows="3" placeholder="أي ملاحظات..."></textarea>
       </div>

@@ -78,8 +78,7 @@ class TreasuryService:
                 GLAccount.liquidity_kind.in_(list(TreasuryService.LIQUIDITY_KINDS.keys()))
             )
             if branch_id is not None:
-                # GLAccount doesn't have branch_id; skip branch filter for fallback
-                pass
+                gl_q = gl_q.filter(GLAccount.branch_id == branch_id)
             gl_accounts = gl_q.order_by(GLAccount.code).all()
 
             for acc in gl_accounts:
@@ -143,11 +142,14 @@ class TreasuryService:
 
         cheques = query.order_by(Cheque.due_date.asc()).all()
 
-        # Update days_until_due for accurate bucketing
+        # Compute days_until_due locally without mutating ORM objects (read-only report)
         today = datetime.now(timezone.utc).date()
+        cheque_meta = {}
         for c in cheques:
             if c.due_date:
-                c.days_until_due = (c.due_date - today).days
+                cheque_meta[c.id] = (c.due_date - today).days
+            else:
+                cheque_meta[c.id] = 0
 
         incoming = [c for c in cheques if c.cheque_type == 'incoming']
         outgoing = [c for c in cheques if c.cheque_type == 'outgoing']
@@ -155,7 +157,7 @@ class TreasuryService:
         def _bucket_cheques(cheque_list):
             buckets = {}
             for key, label, pred in TreasuryService.CHEQUE_BUCKETS:
-                items = [c for c in cheque_list if pred(c.days_until_due or 0)]
+                items = [c for c in cheque_list if pred(cheque_meta.get(c.id, 0))]
                 total = sum(Decimal(str(c.amount_aed or 0)) for c in items)
                 buckets[key] = {
                     'label': label,
@@ -171,7 +173,7 @@ class TreasuryService:
                             'payee_name': c.payee_name,
                             'amount_aed': float(c.amount_aed or 0),
                             'due_date': c.due_date.isoformat() if c.due_date else None,
-                            'days_until_due': c.days_until_due,
+                            'days_until_due': cheque_meta.get(c.id, 0),
                             'status': c.status,
                             'status_ar': c.cheque_type_ar,
                         }

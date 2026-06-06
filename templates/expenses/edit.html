@@ -31,7 +31,6 @@
             <label>
               <i class="fas fa-folder text-primary"></i> الفئة 
               <span class="text-danger">*</span>
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="تصنيف المصروف (إجباري)"></i>
             </label>
             <div class="input-group">
               <select name="category_id" id="expense_category" class="form-control" required style="flex: 1;">
@@ -56,7 +55,6 @@
             <label>
               <i class="fas fa-align-left text-info"></i> الوصف 
               <span class="text-danger">*</span>
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="وصف المصروف (إجباري)"></i>
             </label>
             <input type="text" name="description" class="form-control" value="{{ expense.description }}" placeholder="وصف المصروف..." required>
           </div>
@@ -69,7 +67,6 @@
             <label>
               <i class="fas fa-money-bill-wave text-success"></i> المبلغ 
               <span class="text-danger">*</span>
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="قيمة المصروف (إجباري)"></i>
             </label>
             <input type="number" name="amount" class="form-control" value="{{ expense.amount }}" step="0.01" min="0.01" placeholder="0.00" required>
           </div>

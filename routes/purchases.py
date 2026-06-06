@@ -11,6 +11,8 @@ from utils.branching import ensure_warehouse_access, get_accessible_warehouses, 
 from utils.helpers import create_audit_log, generate_number
 from decimal import Decimal
 from utils.tenanting import tenant_query, tenant_get_or_404
+from utils.db_safety import atomic_transaction
+from utils.structured_logging import log_mutation
 from utils.gl_reference_types import GLRef, delete_entries_by_ref
 
 purchases_bp = Blueprint('purchases', __name__, url_prefix='/purchases')
@@ -92,8 +94,9 @@ def create():
             except Exception:
                 default_currency = 'AED'
 
-            purchase = PurchaseService.create_purchase(
-                user=current_user,
+            with atomic_transaction('purchase_creation'):
+                purchase = PurchaseService.create_purchase(
+                    user=current_user,
                 supplier_data={
                     'supplier_id': request.form.get('supplier_id', type=int),
                     'supplier_name': request.form.get('supplier_name', ''),

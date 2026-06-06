@@ -6,7 +6,9 @@ from utils.decorators import admin_required, permission_required
 from utils.branching import branch_scope_id_for, role_requires_branch
 from utils.helpers import create_audit_log
 from utils.auth_helpers import role_level_for, role_level_for_user, enforce_company_user_tenant
-from utils.tenanting import get_active_tenant_id, assign_tenant_id, scoped_user_query
+from utils.tenanting import get_active_tenant_id
+from utils.db_safety import atomic_transaction
+from utils.structured_logging import log_mutation, assign_tenant_id, scoped_user_query
 from utils.username_policy import validate_username_for_user, tenant_username_prefix, is_platform_reserved
 from models.tenant import Tenant
 
@@ -63,12 +65,12 @@ def index():
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 20, type=int)
     search = request.args.get('search', '', type=str)
-    
+
     query = scoped_user_query(exclude_owners=True, active_only=True)
     scoped_branch_id = branch_scope_id_for(current_user)
     if scoped_branch_id is not None:
         query = query.filter(User.branch_id == scoped_branch_id)
-    
+
     if search:
         search_filter = f'%{search}%'
         query = query.filter(
@@ -78,13 +80,13 @@ def index():
                 User.full_name.ilike(search_filter)
             )
         )
-    
+
     pagination = query.order_by(User.username).paginate(
         page=page,
         per_page=per_page,
         error_out=False
     )
-    
+
     return render_template('users/index.html',
                          users=pagination.items,
                          pagination=pagination)
@@ -99,7 +101,7 @@ def create():
     roles = [r for r in roles if role_level_for(getattr(r, 'slug', None)) <= current_level]
     branches = _available_branches()
     default_form = {'is_active': '1'}
-    
+
     if request.method == 'POST':
         try:
             role_id = request.form.get('role_id', type=int)
@@ -114,7 +116,7 @@ def create():
                     form_data=form_values,
                     username_example=_username_example(),
                 )
-            
+
             is_active = request.form.get('is_active', '1') == '1'
             branch_id = _clean_branch_id(request.form.get('branch_id'))
             _validate_user_branch(role_id, branch_id)
@@ -176,7 +178,7 @@ def create():
                     form_data=form_values,
                     username_example=_username_example(),
                 )
-            
+
             from utils.field_validators import normalize_phone_optional
 
             user = User(
@@ -190,21 +192,21 @@ def create():
                 is_owner=False,
                 is_active=is_active
             )
-            
+
             password = request.form.get('password')
             user.set_password(password)
             assign_tenant_id(user)
 
-            db.session.add(user)
-            db.session.flush()
-            
-            create_audit_log('create', 'users', user.id)
-            
-            db.session.commit()
-            
+            with atomic_transaction('user_creation'):
+                db.session.add(user)
+                db.session.flush()
+
+                create_audit_log('create', 'users', user.id)
+
+            log_mutation('create', 'User', user.id, {'username': user.username})
             flash('✅ تم إضافة المستخدم بنجاح!', 'success')
             return redirect(url_for('users.index'))
-        
+
         except Exception as e:
             db.session.rollback()
             import traceback
@@ -220,7 +222,7 @@ def create():
                     form_data=form_values,
                     username_example=_username_example(),
                 )
-    
+
     return render_template(
         'users/create.html',
         roles=roles,
@@ -245,12 +247,12 @@ def view(id):
 def edit(id):
     user = User.query.filter_by(id=id, is_owner=False).first_or_404()
     _ensure_user_in_scope(user)
-    
+
     current_level = role_level_for_user(current_user)
     roles = Role.query.filter_by(is_active=True).all()
     roles = [r for r in roles if role_level_for(getattr(r, 'slug', None)) <= current_level]
     branches = _available_branches()
-    
+
     if request.method == 'POST':
         try:
             user.email = request.form.get('email')
@@ -265,25 +267,25 @@ def edit(id):
             user.role_id = role_id
             user.branch_id = branch_id
             enforce_company_user_tenant(user, role=role, is_owner=False)
-            
+
             new_password = request.form.get('new_password')
             if new_password:
                 user.set_password(new_password)
-            
+
             user.is_active = request.form.get('is_active') == '1'
-            
+
             create_audit_log('update', 'users', user.id)
-            
+
             db.session.commit()
             flash('✅ تم تحديث بيانات المستخدم بنجاح!', 'success')
             return redirect(url_for('users.index'))
-            
+
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(f"Error updating user {id}: {e}")
             flash(ErrorMessages.update_failed('user'), 'danger')
             return render_template('users/edit.html', user=user, roles=roles, branches=branches)
-    
+
     return render_template('users/edit.html', user=user, roles=roles, branches=branches)
 
 
@@ -293,16 +295,16 @@ def edit(id):
 def toggle_active(id):
     user = User.query.filter_by(id=id, is_owner=False).first_or_404()
     _ensure_user_in_scope(user)
-    
+
     user.is_active = not user.is_active
     db.session.commit()
-    
+
     status = 'تفعيل' if user.is_active else 'تعطيل'
     status_msg = 'تفعيل' if user.is_active else 'إلغاء تفعيل'
     flash(f'✅ تم {status_msg} المستخدم "{user.username}" بنجاح!', 'success')
-    
+
     create_audit_log('toggle_active', 'users', user.id)
-    
+
     return redirect(url_for('users.index'))
 
 
@@ -313,15 +315,15 @@ def delete(id):
     # Ensure target is NOT owner (double check, though filter handles it)
     user = User.query.filter_by(id=id, is_owner=False).first_or_404()
     _ensure_user_in_scope(user)
-    
+
     if user.id == current_user.id:
         flash('⚠️ لا يمكنك حذف حسابك الخاص.\n💡 اطلب من مدير آخر حذف حسابك إذا لزم الأمر.', 'danger')
         return redirect(url_for('users.index'))
-    
+
     try:
         from models import Sale, AuditLog
         sales_count = Sale.query.filter_by(seller_id=id).count()
-        
+
         if sales_count > 0:
             user.is_active = False
             db.session.commit()
@@ -333,12 +335,11 @@ def delete(id):
             db.session.commit()
             flash(f'✅ تم حذف المستخدم "{username}" نهائياً!', 'success')
             create_audit_log('delete', 'users', id)
-        
+
         return redirect(url_for('users.index'))
-    
+
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Error deleting user {id}: {e}")
         flash(ErrorMessages.delete_failed('user'), 'danger')
         return redirect(url_for('users.index'))
-

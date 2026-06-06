@@ -15,6 +15,7 @@ from utils.pos_helpers import (
     search_pos_products,
     serialize_pos_product,
 )
+from utils.structured_logging import log_mutation
 from utils.tenanting import tenant_get, tenant_query
 
 
@@ -248,6 +249,8 @@ def api_checkout():
         return jsonify(
             {"success": False, "error": "فشل إنشاء الفاتورة. تحقق من البيانات وحاول مرة أخرى."}
         ), 500
+
+    log_mutation('create', 'Sale', sale.id, {'sale_number': sale.sale_number, 'source': 'pos', 'amount': float(sale.grand_total or 0)})
 
     return jsonify(
         {

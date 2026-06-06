@@ -19,7 +19,13 @@
             <div class="col-lg-3 col-6">
                 <div class="small-box bg-info">
                     <div class="inner">
-                        <h3>{{ health.database.healthy and '✅' or '❌' }}</h3>
+                        <h3>
+                            {% if health.database.healthy %}
+                                <span class="badge badge-light text-success">Healthy</span>
+                            {% else %}
+                                <span class="badge badge-light text-danger">Down</span>
+                            {% endif %}
+                        </h3>
                         <p>قاعدة البيانات</p>
                     </div>
                     <div class="icon">

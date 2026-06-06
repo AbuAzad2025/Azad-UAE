@@ -17,6 +17,8 @@ from utils.branching import (
 )
 from utils.tenanting import tenant_get_or_404
 from utils.tenanting import scoped_user_query, get_active_tenant_id
+from utils.db_safety import atomic_transaction
+from utils.structured_logging import log_mutation
 
 warehouse_bp = Blueprint('warehouse', __name__, url_prefix='/warehouse')
 
@@ -146,7 +148,7 @@ def movements():
 
     if warehouse_id:
         query = query.filter_by(warehouse_id=warehouse_id)
-        current_warehouse = Warehouse.query.get(warehouse_id)
+        current_warehouse = Warehouse.query.filter_by(id=warehouse_id, tenant_id=get_active_tenant_id(current_user)).first()
         if branch_id is not None and (not current_warehouse or current_warehouse.branch_id != branch_id):
             abort(403)
     else:
@@ -205,7 +207,7 @@ def view_warehouse(id):
         # Convert quantity to float for comparison and display, handling None
         qty = float(quantity) if quantity is not None else 0.0
         if qty != 0:
-            product = Product.query.get(product_id)
+            product = Product.query.filter_by(id=product_id, tenant_id=warehouse.tenant_id).first()
             if product:
                 warehouse_stock.append({
                     'product': product,
@@ -269,7 +271,7 @@ def create_warehouse():
                                        form_data=request.form)
             
             if code:
-                existing = Warehouse.query.filter_by(code=code).first()
+                existing = Warehouse.query.filter_by(code=code, tenant_id=tenant_id).first()
                 if existing:
                     flash('رمز المستودع موجود مسبقاً', 'warning')
                     return render_template('warehouse/create_warehouse.html',
@@ -279,7 +281,7 @@ def create_warehouse():
                                            form_data=request.form)
             
             if parent_id:
-                parent_warehouse = Warehouse.query.get(parent_id)
+                parent_warehouse = Warehouse.query.filter_by(id=parent_id, tenant_id=tenant_id).first()
                 if not parent_warehouse:
                     flash('المستودع الأب غير موجود', 'warning')
                     return render_template('warehouse/create_warehouse.html',
@@ -303,8 +305,9 @@ def create_warehouse():
                 flash(str(e), 'danger')
                 return redirect(url_for('warehouse.create'))
 
-            warehouse = Warehouse(
-                tenant_id=tenant_id,
+            with atomic_transaction('warehouse_creation'):
+                warehouse = Warehouse(
+                    tenant_id=tenant_id,
                 name=name,
                 name_ar=name_ar,
                 code=code,
@@ -326,7 +329,7 @@ def create_warehouse():
                 if store and store.warehouse_id != warehouse.id:
                     store.warehouse_id = warehouse.id
 
-            db.session.commit()
+                db.session.commit()
             
             type_label = 'أونلاين' if warehouse_type == Warehouse.TYPE_ONLINE else ('فرعي' if parent_id else 'مستقل')
             flash(f'✓ تم إنشاء المستودع ({type_label}) "{name}" بنجاح', 'success')

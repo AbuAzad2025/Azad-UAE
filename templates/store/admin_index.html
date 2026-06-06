@@ -1,107 +1,107 @@
-{% extends 'base.html' %}
-{% block title %}إدارة المتجر الإلكتروني{% endblock %}
-
-{% block page_title %}
-<div class="d-flex justify-content-between align-items-center flex-wrap">
-  <div>
-    <h1 class="mb-0"><i class="fas fa-store mr-2"></i>المتجر الإلكتروني</h1>
-    <p class="text-muted mb-0 small">الكتalog مرتبط فقط بمستودع الأونلاين — منفصل عن POS والمبيعات الداخلية</p>
-  </div>
-  <div class="mt-2 mt-md-0">
-    <a href="{{ url_for('store.admin_settings') }}" class="btn btn-primary"><i class="fas fa-cog mr-1"></i>الإعدادات</a>
-    <a href="{{ url_for('store.admin_catalog') }}" class="btn btn-info text-white"><i class="fas fa-boxes mr-1"></i>كتalog المتجر</a>
-    <a href="{{ url_for('store.admin_transfer') }}" class="btn btn-success"><i class="fas fa-exchange-alt mr-1"></i>تحويل مخزون</a>
-    <a href="{{ url_for('store.admin_orders') }}" class="btn btn-warning"><i class="fas fa-receipt mr-1"></i>طلبات المتجر</a>
-    <a href="{{ url_for('store.admin_stats') }}" class="btn btn-info text-white"><i class="fas fa-chart-line mr-1"></i>إحصائيات</a>
-    <a href="{{ url_for('store.admin_coupons') }}" class="btn btn-dark"><i class="fas fa-tags mr-1"></i>كوبونات</a>
-    <a href="{{ url_for('store.admin_customers') }}" class="btn btn-secondary"><i class="fas fa-user-friends mr-1"></i>عملاء مسجّلون</a>
-  </div>
-</div>
-{% endblock %}
-
-{% block content %}
-<div class="row">
-  <div class="col-md-3 col-sm-6">
-    <div class="info-box">
-      <span class="info-box-icon bg-{% if store.platform_disabled %}danger{% elif store.is_enabled %}success{% else %}secondary{% endif %}"><i class="fas fa-power-off"></i></span>
-      <div class="info-box-content">
-        <span class="info-box-text">حالة المتجر</span>
-        <span class="info-box-number">{% if store.platform_disabled %}مقفول من المنصة{% elif store.is_enabled %}مفعّل{% else %}متوقف{% endif %}</span>
-      </div>
-    </div>
-  </div>
-  <div class="col-md-3 col-sm-6">
-    <div class="info-box">
-      <span class="info-box-icon bg-info"><i class="fas fa-eye"></i></span>
-      <div class="info-box-content">
-        <span class="info-box-text">منتجات ظاهرة</span>
-        <span class="info-box-number">{{ visible_count }}</span>
-      </div>
-    </div>
-  </div>
-  <div class="col-md-3 col-sm-6">
-    <div class="info-box">
-      <span class="info-box-icon bg-warning"><i class="fas fa-cubes"></i></span>
-      <div class="info-box-content">
-        <span class="info-box-text">وحدات في مستودع الأونلاين</span>
-        <span class="info-box-number">{{ '{:,.0f}'.format(total_units) }}</span>
-      </div>
-    </div>
-  </div>
-  <div class="col-md-3 col-sm-6">
-    <div class="info-box">
-      <span class="info-box-icon bg-primary"><i class="fas fa-warehouse"></i></span>
-      <div class="info-box-content">
-        <span class="info-box-text">مستودع الأونلاين</span>
-        <span class="info-box-number small">
-          {% if online_warehouse %}
-          <a href="{{ url_for('warehouse.view_warehouse', id=online_warehouse.id) }}">{{ online_warehouse.code or online_warehouse.id }}</a>
-          {% else %}—{% endif %}
-        </span>
-      </div>
-    </div>
-  </div>
-</div>
-
-{% if store.platform_disabled %}
-<div class="alert alert-danger"><i class="fas fa-lock mr-1"></i>تم تعطيل متجرك من قبل مالك المنصة. لا يمكن تفعيله حتى يفك مالك المنصة القفل.</div>
-{% endif %}
-{% if not platform_stores_on %}
-<div class="alert alert-danger"><i class="fas fa-globe mr-1"></i>المتاجر متوقفة على مستوى المنصة — تواصل مع مالك النظام لتفعيل «المتاجر الإلكترونية» من إعدادات المنصة.</div>
-{% else %}
-<div class="alert alert-light border"><i class="fas fa-credit-card mr-1"></i>طرق الدفع تُدار مركزياً من لوحة مالك المنصة وتنعكس على كل المتاجر.</div>
-{% endif %}
-
-{% if pending_orders > 0 %}
-<div class="alert alert-warning">
-  <i class="fas fa-bell mr-1"></i>
-  <strong>{{ pending_orders }}</strong> طلب/طلبات بانتظار التأكيد —
-  <a href="{{ url_for('store.admin_orders', status='pending') }}">عرض الطلبات</a>
-</div>
-{% endif %}
-
-{% if low_stock %}
-<div class="alert alert-danger">
-  <i class="fas fa-exclamation-triangle mr-1"></i>
-  <strong>{{ low_stock|length }}</strong> منتج/منتجات بمخزون منخفض في مستودع الأونلاين —
-  <a href="{{ url_for('store.admin_stats') }}">التفاصيل</a>
-</div>
-{% endif %}
-
-<div class="card">
-  <div class="card-body">
-    <h5><i class="fas fa-link mr-2"></i>رابط المتجر</h5>
-    <p class="mb-2">المعرّف: <code>/s/{{ store.store_slug }}</code></p>
-    {% if store.is_enabled and visible_count > 0 %}
-    <a href="{{ url_for('shop.catalog', slug=store.store_slug) }}" target="_blank" rel="noopener" class="btn btn-success btn-sm mb-2"><i class="fas fa-external-link-alt mr-1"></i>معاينة المتجر</a>
-    {% endif %}
-    {% if not store.is_enabled %}
-    <div class="alert alert-warning mb-0"><i class="fas fa-info-circle mr-1"></i>فعّل المتجر من الإعدادات ثم انقل المخزون إلى مستودع الأونلاين ليظهر في الكتalog.</div>
-    {% elif visible_count == 0 %}
-    <div class="alert alert-info mb-0"><i class="fas fa-info-circle mr-1"></i>لا منتجات بمخزون في مستودع الأونلاين. استخدم <a href="{{ url_for('store.admin_transfer') }}">تحويل المخزون</a>.</div>
-    {% else %}
-    <div class="alert alert-success mb-0"><i class="fas fa-check mr-1"></i>{{ visible_count }} منتج جاهز — <a href="{{ url_for('shop.catalog', slug=store.store_slug) }}" target="_blank">افتح المتجر</a></div>
-    {% endif %}
-  </div>
-</div>
-{% endblock %}
+{% extends 'base.html' %}
+{% block title %}إدارة المتجر الإلكتروني{% endblock %}
+
+{% block page_title %}
+<div class="d-flex justify-content-between align-items-center flex-wrap">
+  <div>
+    <h1 class="mb-0"><i class="fas fa-store mr-2"></i>المتجر الإلكتروني</h1>
+    <p class="text-muted mb-0 small">الكتalog مرتبط فقط بمستودع الأونلاين — منفصل عن POS والمبيعات الداخلية</p>
+  </div>
+  <div class="mt-2 mt-md-0">
+    <a href="{{ url_for('store.admin_settings') }}" class="btn btn-primary"><i class="fas fa-cog mr-1"></i>الإعدادات</a>
+    <a href="{{ url_for('store.admin_catalog') }}" class="btn btn-info text-white"><i class="fas fa-boxes mr-1"></i>كتalog المتجر</a>
+    <a href="{{ url_for('store.admin_transfer') }}" class="btn btn-success"><i class="fas fa-exchange-alt mr-1"></i>تحويل مخزون</a>
+    <a href="{{ url_for('store.admin_orders') }}" class="btn btn-warning"><i class="fas fa-receipt mr-1"></i>طلبات المتجر</a>
+    <a href="{{ url_for('store.admin_stats') }}" class="btn btn-info text-white"><i class="fas fa-chart-line mr-1"></i>إحصائيات</a>
+    <a href="{{ url_for('store.admin_coupons') }}" class="btn btn-dark"><i class="fas fa-tags mr-1"></i>كوبونات</a>
+    <a href="{{ url_for('store.admin_customers') }}" class="btn btn-secondary"><i class="fas fa-user-friends mr-1"></i>عملاء مسجّلون</a>
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-3 col-sm-6">
+    <div class="info-box">
+      <span class="info-box-icon bg-{% if store.platform_disabled %}danger{% elif store.is_enabled %}success{% else %}secondary{% endif %}"><i class="fas fa-power-off"></i></span>
+      <div class="info-box-content">
+        <span class="info-box-text">حالة المتجر</span>
+        <span class="info-box-number">{% if store.platform_disabled %}مقفول من المنصة{% elif store.is_enabled %}مفعّل{% else %}متوقف{% endif %}</span>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 col-sm-6">
+    <div class="info-box">
+      <span class="info-box-icon bg-info"><i class="fas fa-eye"></i></span>
+      <div class="info-box-content">
+        <span class="info-box-text">منتجات ظاهرة</span>
+        <span class="info-box-number">{{ visible_count }}</span>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 col-sm-6">
+    <div class="info-box">
+      <span class="info-box-icon bg-warning"><i class="fas fa-cubes"></i></span>
+      <div class="info-box-content">
+        <span class="info-box-text">وحدات في مستودع الأونلاين</span>
+        <span class="info-box-number">{{ '{:,.0f}'.format(total_units) }}</span>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 col-sm-6">
+    <div class="info-box">
+      <span class="info-box-icon bg-primary"><i class="fas fa-warehouse"></i></span>
+      <div class="info-box-content">
+        <span class="info-box-text">مستودع الأونلاين</span>
+        <span class="info-box-number small">
+          {% if online_warehouse %}
+          <a href="{{ url_for('warehouse.view_warehouse', id=online_warehouse.id) }}">{{ online_warehouse.code or online_warehouse.id }}</a>
+          {% else %}—{% endif %}
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if store.platform_disabled %}
+<div class="alert alert-danger"><i class="fas fa-lock mr-1"></i>تم تعطيل متجرك من قبل مالك المنصة. لا يمكن تفعيله حتى يفك مالك المنصة القفل.</div>
+{% endif %}
+{% if not platform_stores_on %}
+<div class="alert alert-danger"><i class="fas fa-globe mr-1"></i>المتاجر متوقفة على مستوى المنصة — تواصل مع مالك النظام لتفعيل «المتاجر الإلكترونية» من إعدادات المنصة.</div>
+{% else %}
+<div class="alert alert-light border"><i class="fas fa-credit-card mr-1"></i>طرق الدفع تُدار مركزياً من لوحة مالك المنصة وتنعكس على كل المتاجر.</div>
+{% endif %}
+
+{% if pending_orders > 0 %}
+<div class="alert alert-warning">
+  <i class="fas fa-bell mr-1"></i>
+  <strong>{{ pending_orders }}</strong> طلب/طلبات بانتظار التأكيد —
+  <a href="{{ url_for('store.admin_orders', status='pending') }}">عرض الطلبات</a>
+</div>
+{% endif %}
+
+{% if low_stock %}
+<div class="alert alert-danger">
+  <i class="fas fa-exclamation-triangle mr-1"></i>
+  <strong>{{ low_stock|length }}</strong> منتج/منتجات بمخزون منخفض في مستودع الأونلاين —
+  <a href="{{ url_for('store.admin_stats') }}">التفاصيل</a>
+</div>
+{% endif %}
+
+<div class="card">
+  <div class="card-body">
+    <h5><i class="fas fa-link mr-2"></i>رابط المتجر</h5>
+    <p class="mb-2">المعرّف: <code>/s/{{ store.store_slug }}</code></p>
+    {% if store.is_enabled and visible_count > 0 %}
+    <a href="{{ url_for('shop.catalog', slug=store.store_slug) }}" target="_blank" rel="noopener" class="btn btn-success btn-sm mb-2"><i class="fas fa-external-link-alt mr-1"></i>معاينة المتجر</a>
+    {% endif %}
+    {% if not store.is_enabled %}
+    <div class="alert alert-warning mb-0"><i class="fas fa-info-circle mr-1"></i>فعّل المتجر من الإعدادات ثم انقل المخزون إلى مستودع الأونلاين ليظهر في الكتalog.</div>
+    {% elif visible_count == 0 %}
+    <div class="alert alert-info mb-0"><i class="fas fa-info-circle mr-1"></i>لا منتجات بمخزون في مستودع الأونلاين. استخدم <a href="{{ url_for('store.admin_transfer') }}">تحويل المخزون</a>.</div>
+    {% else %}
+    <div class="alert alert-success mb-0"><i class="fas fa-check mr-1"></i>{{ visible_count }} منتج جاهز — <a href="{{ url_for('shop.catalog', slug=store.store_slug) }}" target="_blank" rel="noopener noreferrer">افتح المتجر</a></div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -80,7 +80,6 @@ a.btn.btn-outline-secondary span {
             <label>
               <i class="fas fa-user text-primary"></i> الاسم 
               <span class="text-danger">*</span>
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="اسم العميل الكامل (إجباري)"></i>
             </label>
             {{ form.name(class="form-control", placeholder="اسم الزبون", required=true) }}
           </div>
@@ -90,7 +89,6 @@ a.btn.btn-outline-secondary span {
             <label>
               <i class="fas fa-tag text-primary"></i> نوع الزبون 
               <span class="text-danger">*</span>
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="عادي: سعر التجزئة | تاجر: خصم 10% | شريك: خصم 15%"></i>
             </label>
             {{ form.customer_type(class="form-control", required=true) }}
           </div>
@@ -99,7 +97,6 @@ a.btn.btn-outline-secondary span {
           <div class="form-group">
             <label>
               <i class="fas fa-toggle-on text-success"></i> {{ t('Status') }}
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="حالة تفعيل العميل (افتراضي: مفعّل)"></i>
             </label>
             <div class="custom-control custom-switch">
               {{ form.is_active(class="custom-control-input") }}
@@ -115,7 +112,6 @@ a.btn.btn-outline-secondary span {
             <label>
               <i class="fas fa-phone text-primary"></i> {{ t('Phone') }} 
               <span class="text-danger">*</span>
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="رقم الهاتف (يجب أن يكون فريداً)"></i>
             </label>
             {{ form.phone(class="form-control", placeholder="+971-5x-xxx-xxxx", required=true) }}
           </div>
@@ -124,7 +120,6 @@ a.btn.btn-outline-secondary span {
           <div class="form-group">
             <label>
               <i class="fas fa-envelope text-info"></i> {{ t('Email') }}
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="البريد الإلكتروني (اختياري - للإشعارات)"></i>
             </label>
             {{ form.email(class="form-control", placeholder="email@example.com") }}
           </div>
@@ -133,7 +128,6 @@ a.btn.btn-outline-secondary span {
           <div class="form-group">
             <label>
               <i class="fas fa-dollar-sign text-success"></i> العملة الافتراضية
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="العملة المفضلة (افتراضي: {{ tenant_default_currency or 'AED' }})"></i>
             </label>
             {{ form.preferred_currency(class="form-control") }}
           </div>
@@ -143,7 +137,6 @@ a.btn.btn-outline-secondary span {
       <div class="form-group">
         <label>
           <i class="fas fa-map-marker-alt text-warning"></i> {{ t('Address') }}
-          <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="عنوان العميل (اختياري - للتوصيل)"></i>
         </label>
         {{ form.address(class="form-control", rows=2, placeholder="العنوان الكامل...") }}
       </div>
@@ -151,7 +144,6 @@ a.btn.btn-outline-secondary span {
       <div class="form-group">
         <label>
           <i class="fas fa-sticky-note text-secondary"></i> {{ t('Notes') }}
-          <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="ملاحظات إضافية (اختياري)"></i>
         </label>
         {{ form.notes(class="form-control", rows=3, placeholder="أي ملاحظات عن العميل...") }}
       </div>

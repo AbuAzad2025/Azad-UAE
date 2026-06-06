@@ -4,24 +4,14 @@
 
 {% block content %}
 
-<!-- ملخص سريع - FIXED -->
-<div class="card border-info mb-3" id="quickSummaryCard" style="position: relative;">
-  <div class="card-header bg-info text-white">
-    <h5 class="mb-0">
-      <i class="fas fa-info-circle mr-2"></i>ملخص سريع - كيف تُنشئ قيد يدوي
-      <button type="button" class="btn btn-sm btn-light float-left" onclick="toggleCard('quickSummary')" style="padding: 2px 8px;">
-        <i class="fas fa-minus" id="quickSummaryIcon"></i>
-      </button>
-    </h5>
-  </div>
-  <div class="card-body" id="quickSummaryBody">
-    <ol class="mb-0 text-right">
-      <li class="mb-2"><strong>أدخل وصف القيد</strong> (مثال: شراء معدات، قيد تسوية)</li>
-      <li class="mb-2"><strong>اختر الحسابات</strong> من القائمة المنسدلة</li>
-      <li class="mb-2"><strong>أدخل المبالغ</strong> في المدين أو الدائن (ليس الاثنين معاً)</li>
-      <li class="mb-2"><strong>تأكد من التوازن</strong>: إجمالي المدين = إجمالي الدائن</li>
-      <li class="mb-2"><strong>اضغط حفظ القيد</strong> عندما يتحول الزر للأخضر ✅</li>
-    </ol>
+<div class="row mb-3">
+  <div class="col-12">
+    <a href="{{ url_for('ledger.index') }}" class="btn btn-secondary">
+      <i class="fas fa-arrow-right mr-2"></i>العودة
+    </a>
+    <a href="{{ url_for('ledger.journal_entries') }}" class="btn btn-info">
+      <i class="fas fa-book mr-2"></i>عرض القيود
+    </a>
   </div>
 </div>
 
@@ -58,17 +48,6 @@
         </button>
       </div>
     </div>
-  </div>
-</div>
-
-<div class="row mb-3">
-  <div class="col-12">
-    <a href="{{ url_for('ledger.index') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right mr-2"></i>العودة
-    </a>
-    <a href="{{ url_for('ledger.journal_entries') }}" class="btn btn-info">
-      <i class="fas fa-book mr-2"></i>عرض القيود
-    </a>
   </div>
 </div>
 
@@ -127,36 +106,6 @@
           <h5 class="mb-0">
             <i class="fas fa-list mr-2"></i>سطور القيد
           </h5>
-        </div>
-        
-        <!-- توضيح المدين والدائن - بسيط وواضح -->
-        <div class="alert alert-light border-info m-3 mb-0" style="background: linear-gradient(135deg, #e8f5e9 0%, #fff3e0 100%); border-width: 2px;">
-          <div class="row text-center">
-            <div class="col-md-6 border-left">
-              <h6 class="text-success mb-2">
-                <i class="fas fa-plus-circle mr-2"></i><strong>مدين (Debit)</strong>
-              </h6>
-              <div class="badge badge-success mb-2" style="font-size: 14px;">لنا ↓ ما يدخل للشركة</div>
-              <p class="mb-1 small"><strong>أمثلة:</strong></p>
-              <ul class="text-right small mb-0" style="list-style: none; padding-right: 0;">
-                <li>💰 استلام فلوس → صندوق <strong>مدين</strong></li>
-                <li>📦 شراء بضاعة → مخزون <strong>مدين</strong></li>
-                <li>📋 مصروف → حساب المصروف <strong>مدين</strong></li>
-              </ul>
-            </div>
-            <div class="col-md-6">
-              <h6 class="text-danger mb-2">
-                <i class="fas fa-minus-circle mr-2"></i><strong>دائن (Credit)</strong>
-              </h6>
-              <div class="badge badge-danger mb-2" style="font-size: 14px;">علينا ↑ ما يطلع من الشركة</div>
-              <p class="mb-1 small"><strong>أمثلة:</strong></p>
-              <ul class="text-right small mb-0" style="list-style: none; padding-right: 0;">
-                <li>💸 دفع فلوس → صندوق <strong>دائن</strong></li>
-                <li>📈 مبيعات → إيرادات <strong>دائن</strong></li>
-                <li>👥 قرض → خصوم <strong>دائن</strong></li>
-              </ul>
-            </div>
-          </div>
         </div>
         
         <div class="card-body p-0">

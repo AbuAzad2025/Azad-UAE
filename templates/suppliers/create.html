@@ -113,7 +113,6 @@
             <label>
               <i class="fas fa-truck text-success"></i> الاسم 
               <span class="text-danger">*</span>
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="اسم المورد بالعربية (إجباري)"></i>
             </label>
             <input type="text" name="name" class="form-control" required
                    placeholder="اسم المورد بالعربي">
@@ -124,7 +123,6 @@
           <div class="form-group">
             <label>
               <i class="fas fa-font text-info"></i> الاسم بالإنجليزية
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="الاسم بالإنجليزية (اختياري)"></i>
             </label>
             <input type="text" name="name_en" class="form-control"
                    placeholder="Supplier Name">
@@ -135,7 +133,6 @@
           <div class="form-group">
             <label>
               <i class="fas fa-building text-primary"></i> اسم الشركة
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="الاسم التجاري الرسمي (اختياري)"></i>
             </label>
             <input type="text" name="company_name" class="form-control"
                    placeholder="Company Name LLC">
@@ -149,7 +146,6 @@
             <label>
               <i class="fas fa-tag text-success"></i> نوع المورد 
               <span class="text-danger">*</span>
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="تصنيف نوع التوريد (إجباري)"></i>
             </label>
             <select name="supplier_type" class="form-control" required>
               <option value="" {% if supplier_type_value == '' %}selected{% endif %}>بلا</option>
@@ -166,7 +162,6 @@
           <div class="form-group">
             <label>
               <i class="fas fa-star text-warning"></i> التقييم
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="تقييم جودة المورد (افتراضي: 3 نجوم)"></i>
             </label>
             <select name="rating" class="form-control">
               <option value="" {% if rating_value == '' %}selected{% endif %}>بلا</option>
@@ -183,7 +178,6 @@
           <div class="form-group">
             <label>
               <i class="fas fa-dollar-sign text-success"></i> العملة المفضلة
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="العملة المفضلة للتعامل (افتراضي: {{ tenant_default_currency or 'AED' }})"></i>
             </label>
             <select name="preferred_currency" class="form-control">
               <option value="AED">AED - درهم</option>
@@ -223,7 +217,6 @@
             <label>
               <i class="fas fa-phone text-primary"></i> الهاتف 1
               <span class="text-danger">*</span>
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="رقم الهاتف الرئيسي (إجباري - فريد)"></i>
             </label>
             <input type="text" name="phone" class="form-control" required
                    placeholder="+971-5x-xxx-xxxx">
@@ -234,7 +227,6 @@
           <div class="form-group">
             <label>
               <i class="fas fa-mobile-alt text-info"></i> الهاتف 2
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="رقم بديل للتواصل (اختياري)"></i>
             </label>
             <input type="text" name="phone2" class="form-control"
                    placeholder="+971-xx-xxx-xxxx">
@@ -245,7 +237,6 @@
           <div class="form-group">
             <label>
               <i class="fas fa-envelope text-danger"></i> {{ t('Email') }}
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="البريد الإلكتروني (اختياري - للمراسلات)"></i>
             </label>
             <input type="email" name="email" class="form-control"
                    placeholder="supplier@example.com">
@@ -256,7 +247,6 @@
           <div class="form-group">
             <label>
               <i class="fas fa-globe text-success"></i> الموقع الإلكتروني
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="موقع المورد على الإنترنت (اختياري)"></i>
             </label>
             <input type="url" name="website" class="form-control"
                    placeholder="https://example.com">

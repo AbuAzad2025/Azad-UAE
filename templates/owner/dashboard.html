@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% block title %}لوحة المالك | {{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }}{% endblock %}
-{% block page_title %}👑 لوحة المالك - God Mode{% endblock %}
+{% block page_title %}👑 لوحة التحكم الشاملة (المالك){% endblock %}
 
 {% block extra_css %}
 <style>
@@ -21,15 +21,11 @@
 
 {% include 'owner/_platform_dashboard_sections.html' %}
 
-<!-- بطاقة تحذير ثابتة دائمة - لا يمكن إخفاؤها أبداً -->
-<div class="owner-warning-permanent d-flex align-items-center mb-4" style="padding: 15px 25px; border-radius: 10px; border: 3px solid #ff6b6b; background: linear-gradient(135deg, #c0392b 0%, #e74c3c 100%); box-shadow: 0 4px 15px rgba(0,0,0,0.3); opacity: 1 !important; display: flex !important; visibility: visible !important; transition: none !important;">
-  <i class="fas fa-exclamation-triangle mr-3" style="font-size: 2rem; color: #ffc107; animation: pulse 2s infinite;"></i>
-  <span style="color: #ffffff; font-weight: 700; font-size: 1.1rem; text-shadow: 0 2px 3px rgba(0,0,0,0.5); flex: 1;">
-    <i class="fas fa-shield-alt mr-2"></i> منطقة المالك - صلاحيات كاملة
-    <span style="margin: 0 15px;">|</span>
-    <i class="fas fa-lock mr-2"></i> جميع العمليات مسجلة
-    <span style="margin: 0 15px;">|</span>
-    <i class="fas fa-skull-crossbones mr-2"></i> الوصول الكامل مفعّل
+<!-- منطقة إدارة النظام -->
+<div class="owner-warning-permanent d-flex align-items-center mb-4" style="padding: 12px 20px; border-radius: 8px; border: 1px solid #dc3545; background: #fff5f5; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+  <i class="fas fa-shield-alt mr-3 text-danger" style="font-size: 1.5rem;"></i>
+  <span style="color: #c0392b; font-weight: 600; font-size: 1rem; flex: 1;">
+    منطقة الإدارة العليا - جميع العمليات في هذه اللوحة مسجلة لأغراض التدقيق والأمان.
   </span>
 </div>
 

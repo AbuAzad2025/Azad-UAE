@@ -466,7 +466,7 @@ $('#currency').on('change', function() {
                 $rateInput.css('background-color', '#d4edda');
                 const examplePayment = 100;
                 const exampleAED = (examplePayment * data.rate).toFixed(2);
-                azad.showSuccess(`✅ سعر الصرف: 1 ${currency} = ${data.rate.toFixed(3)} AED\n\n💡 التوضيح:\n• الفاتورة: بالدرهم (AED)\n• المدفوع: بالـ ${currency}\n• مثال: ${examplePayment} ${currency} = ${exampleAED} AED`);
+                azad.showSuccess(`✅ تم جلب سعر الصرف: 1 ${currency} = ${data.rate.toFixed(3)} AED`);
                 updateLinePrices();
             } else if (data.manual_input_required) {
                 serverExchangeRate = null;

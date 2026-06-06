@@ -1,514 +1,514 @@
-{% extends 'base.html' %}
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - فاتورة مبيعات #{{ sale.sale_number }}{% endblock %}
-{% block page_title %}
-<div class="d-flex justify-content-between align-items-center">
-  <div>
-    <h1 class="text-gradient mb-0">{{ sale.sale_number }}</h1>
-    <p class="text-muted mb-0">
-      <i class="far fa-calendar"></i> {{ sale.sale_date.strftime('%Y-%m-%d %H:%M') }}
-    </p>
-  </div>
-  <div>
-    <a href="{{ url_for('sales.print_invoice', id=sale.id) }}" class="btn btn-secondary btn-lg" target="_blank">
-      <i class="fas fa-print mr-2"></i>طباعة
-    </a>
-    <button type="button" class="btn btn-warning btn-lg" data-toggle="modal" data-target="#returnModal">
-      <i class="fas fa-undo mr-2"></i>مرتجع
-    </button>
-    <a href="{{ url_for('sales.index') }}" class="btn btn-info btn-lg">
-      <i class="fas fa-arrow-right mr-2"></i>العودة للقائمة
-    </a>
-    <button type="button" class="btn btn-danger btn-lg" 
-            onclick="deleteItem('sales', {{ sale.id }}, '{{ sale.sale_number }}')">
-      <i class="fas fa-trash mr-2"></i>حذف
-    </button>
-    <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary btn-lg">
-      <i class="fas fa-home mr-2"></i>الرئيسية
-    </a>
-  </div>
-</div>
-{% endblock %}
-
-{% block extra_css %}
-<style>
-.invoice-header {
-  background: linear-gradient(135deg, #007A3D 0%, #1B4D89 100%);
-  color: white;
-  padding: 2rem;
-  border-radius: 16px 16px 0 0;
-  margin: -1rem -1rem 0 -1rem;
-}
-
-.invoice-summary {
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  padding: 1.5rem;
-  border-radius: 12px;
-  border-right: 4px solid #007A3D;
-}
-
-.product-row {
-  transition: all 0.2s ease;
-}
-
-.product-row:hover {
-  background: rgba(0, 122, 61, 0.05);
-  transform: scale(1.01);
-}
-
-.status-badge {
-  padding: 12px 24px;
-  border-radius: 24px;
-  font-size: 1.1rem;
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-}
-</style>
-{% endblock %}
-
-{% block content %}
-
-<div class="row">
-  <div class="col-md-8">
-    <div class="card">
-      <div class="invoice-header">
-        <div class="row">
-          <div class="col-6">
-            <h2 class="mb-3"><i class="fas fa-file-invoice mr-2"></i>فاتورة بيع</h2>
-            <p class="mb-1"><strong>رقم الفاتورة:</strong> {{ sale.sale_number }}</p>
-            <p class="mb-0"><strong>التاريخ:</strong> {{ sale.sale_date.strftime('%Y-%m-%d %H:%M') }}</p>
-          </div>
-          <div class="col-6 text-left">
-            <h4>{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }}</h4>
-            <p class="mb-0">{{ tenant_address or company_address }}</p>
-            <p class="mb-0">
-              <i class="fas fa-phone mr-1"></i> {{ tenant_phone or company_phone }}
-            </p>
-          </div>
-        </div>
-      </div>
-      
-      <div class="card-body">
-        <div class="row mb-4">
-          <div class="col-md-6">
-            <h5 class="text-primary"><i class="fas fa-user-circle mr-2"></i>معلومات الزبون</h5>
-            <div class="p-3 bg-light rounded">
-              <p class="mb-2">
-                <strong>الاسم:</strong> 
-                <a href="{{ url_for('customers.view', id=sale.customer.id) }}" class="text-primary">
-                  {{ sale.customer.name }}
-                </a>
-              </p>
-              {% if sale.customer.phone %}
-              <p class="mb-2"><strong>الهاتف:</strong> {{ sale.customer.phone }}</p>
-              {% endif %}
-              {% if sale.customer.email %}
-              <p class="mb-0"><strong>البريد:</strong> {{ sale.customer.email }}</p>
-              {% endif %}
-            </div>
-          </div>
-          <div class="col-md-6">
-            <h5 class="text-success"><i class="fas fa-user-tie mr-2"></i>معلومات البائع</h5>
-            <div class="p-3 bg-light rounded">
-              <p class="mb-2"><strong>الاسم:</strong> {{ sale.seller.full_name or sale.seller.username }}</p>
-              <p class="mb-0"><strong>العملة:</strong> {{ sale.currency }}</p>
-              {% if sale.exchange_rate != 1 %}
-              <p class="mb-0"><strong>سعر الصرف:</strong> {{ "{:,.6f}".format(sale.exchange_rate) }}</p>
-              {% endif %}
-            </div>
-          </div>
-        </div>
-
-        <h5 class="text-primary mb-3"><i class="fas fa-list mr-2"></i>الأصناف</h5>
-        <div class="table-responsive">
-          <table class="table table-hover">
-            <thead style="background: linear-gradient(135deg, #007A3D 0%, #1B4D89 100%); color: white;">
-              <tr>
-                <th>#</th>
-                <th>المنتج</th>
-                <th class="text-center">{{ t('Quantity') }}</th>
-                <th class="text-center">{{ t('Price') }}</th>
-                <th class="text-center">الخصم%</th>
-                <th class="text-center">{{ t('Total') }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for line in sale.lines %}
-              <tr class="product-row">
-                <td class="font-weight-bold">{{ loop.index }}</td>
-                <td>
-                  <div class="d-flex align-items-center">
-                    <i class="fas fa-box text-primary fa-2x mr-2"></i>
-                    <div>
-                      <strong>{{ line.product.name if line.product else '-' }}</strong>
-                      {% if line.product and line.product.sku %}
-                      <br><small class="text-muted">SKU: {{ line.product.sku }}</small>
-                      {% endif %}
-                    </div>
-                  </div>
-                </td>
-                <td class="text-center">
-                  <span class="badge badge-primary">{{ line.quantity }}</span>
-                </td>
-                <td class="text-center">{{ "{:,.2f}".format(line.unit_price) }}</td>
-                <td class="text-center">
-                  {% if line.discount_percent > 0 %}
-                    <span class="badge badge-warning">{{ line.discount_percent }}%</span>
-                  {% else %}
-                    <span class="text-muted">-</span>
-                  {% endif %}
-                </td>
-                <td class="text-center">
-                  <strong style="color: #007A3D;">{{ "{:,.2f}".format(line.line_total) }}</strong>
-                </td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-        
-        {% if sale.notes %}
-        <div class="alert alert-info mt-3">
-          <h6><i class="fas fa-sticky-note mr-2"></i>ملاحظات:</h6>
-          <p class="mb-0">{{ sale.notes }}</p>
-        </div>
-        {% endif %}
-        
-        <!-- قسم الدفعات -->
-        {% if sale.payments %}
-        <h5 class="text-primary mb-3 mt-4"><i class="fas fa-money-bill-wave mr-2"></i>الدفعات</h5>
-        <div class="table-responsive">
-          <table class="table table-bordered">
-            <thead class="bg-light">
-              <tr>
-                <th>رقم الدفعة</th>
-                <th>التاريخ</th>
-                <th>المبلغ</th>
-                <th>طريقة الدفع</th>
-                <th>التفاصيل</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for payment in sale.payments %}
-              <tr>
-                <td><strong>{{ payment.payment_number }}</strong></td>
-                <td>{{ payment.payment_date.strftime('%Y-%m-%d') }}</td>
-                <td><strong class="text-success">{{ "{:,.2f}".format(payment.base_amount) }} {{ tenant_currency_symbol or 'AED' }}</strong></td>
-                <td>
-                  {% if payment.payment_method == 'cash' %}
-                    <span class="badge badge-success"><i class="fas fa-money-bill-wave"></i> نقدي</span>
-                  {% elif payment.payment_method == 'card' %}
-                    <span class="badge badge-info"><i class="fas fa-credit-card"></i> بطاقة</span>
-                  {% elif payment.payment_method == 'bank_transfer' %}
-                    <span class="badge badge-primary"><i class="fas fa-university"></i> تحويل بنكي</span>
-                  {% elif payment.payment_method == 'cheque' %}
-                    <span class="badge badge-warning"><i class="fas fa-file-invoice"></i> شيك</span>
-                  {% else %}
-                    <span class="badge badge-secondary"><i class="fas fa-wallet"></i> محفظة إلكترونية</span>
-                  {% endif %}
-                </td>
-                <td>
-                  {% if payment.payment_method == 'cheque' and payment.cheque_number %}
-                    <div class="cheque-details">
-                      <small>
-                        <i class="fas fa-hashtag"></i> <strong>رقم الشيك:</strong> {{ payment.cheque_number }}<br>
-                        <i class="fas fa-calendar"></i> <strong>تاريخ الاستحقاق:</strong> 
-                        <span class="badge badge-info">{{ payment.cheque_date.strftime('%Y-%m-%d') if payment.cheque_date else '-' }}</span><br>
-                        <i class="fas fa-university"></i> <strong>البنك:</strong> {{ payment.bank_name or '-' }}
-                      </small>
-                    </div>
-                  {% elif payment.reference_number %}
-                    <small><i class="fas fa-hashtag"></i> {{ payment.reference_number }}</small>
-                  {% else %}
-                    <small class="text-muted">-</small>
-                  {% endif %}
-                </td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-        {% endif %}
-      </div>
-    </div>
-  </div>
-
-  <div class="col-md-4">
-    <!-- Payment Status Card -->
-    <div class="card mb-3">
-      <div class="card-body text-center">
-        <h5 class="mb-3">حالة الدفع</h5>
-        {% if sale.payment_status == 'paid' %}
-        <div class="status-badge badge-success">
-          <i class="fas fa-check-circle"></i> مدفوعة بالكامل
-        </div>
-        {% elif sale.payment_status == 'partial' %}
-        <div class="status-badge badge-warning">
-          <i class="fas fa-clock"></i> مدفوعة جزئياً
-        </div>
-        {% else %}
-        <div class="status-badge badge-danger">
-          <i class="fas fa-hourglass-half"></i> آجلة
-        </div>
-        {% endif %}
-      </div>
-    </div>
-
-    <!-- Totals Card -->
-    <div class="card mb-3">
-      <div class="card-header" style="background: linear-gradient(135deg, #007A3D 0%, #1B4D89 100%); color: white;">
-        <h3 class="card-title text-white mb-0">
-          <i class="fas fa-calculator mr-2"></i>الإجماليات
-        </h3>
-      </div>
-      <div class="card-body">
-        <div class="invoice-summary">
-          <div class="d-flex justify-content-between mb-2">
-            <span>المجموع الفرعي:</span>
-            <strong>{{ "{:,.2f}".format(sale.subtotal) }}</strong>
-          </div>
-          
-          {% if sale.discount_amount > 0 %}
-          <div class="d-flex justify-content-between mb-2">
-            <span><i class="fas fa-tag text-danger mr-1"></i>الخصم:</span>
-            <strong class="text-danger">-{{ "{:,.2f}".format(sale.discount_amount) }}</strong>
-          </div>
-          {% endif %}
-          
-          {% if sale.shipping_cost > 0 %}
-          <div class="d-flex justify-content-between mb-2">
-            <span><i class="fas fa-truck text-info mr-1"></i>الشحن:</span>
-            <strong class="text-info">+{{ "{:,.2f}".format(sale.shipping_cost) }}</strong>
-          </div>
-          {% endif %}
-          
-          {% if sale.tax_amount > 0 %}
-          <div class="d-flex justify-content-between mb-2">
-            <span><i class="fas fa-percent text-warning mr-1"></i>الضريبة:</span>
-            <strong class="text-warning">+{{ "{:,.2f}".format(sale.tax_amount) }}</strong>
-          </div>
-          {% endif %}
-        </div>
-        
-        <hr class="my-3">
-        
-        <div class="d-flex justify-content-between align-items-center mb-3" style="font-size: 1.3rem;">
-          <strong>الإجمالي:</strong>
-          <strong style="color: #007A3D;">
-            {{ "{:,.2f}".format(sale.total_amount) }} {{ sale.currency }}
-          </strong>
-        </div>
-        
-        {% if sale.currency != tenant_default_currency and sale.base_amount %}
-        <div class="d-flex justify-content-between mb-3 text-muted">
-          <span>بال{{ tenant_currency_name_ar or 'درهم' }}:</span>
-          <strong>{{ "{:,.2f}".format(sale.base_amount) }} {{ tenant_currency_symbol or 'AED' }}</strong>
-        </div>
-        {% endif %}
-        
-        <div class="d-flex justify-content-between mb-2">
-          <span><i class="fas fa-check-circle text-success mr-1"></i>المدفوع المؤكد:</span>
-          <strong class="text-success">{{ "{:,.2f}".format(sale.paid_amount) }} {{ sale.currency or tenant_currency_symbol or 'AED' }}</strong>
-        </div>
-        
-        {% if sale.pending_cheques_amount > 0 %}
-        <div class="d-flex justify-content-between mb-2">
-          <span><i class="fas fa-hourglass-half text-warning mr-1"></i>شيكات معلقة:</span>
-          <strong class="text-warning">{{ "{:,.2f}".format(sale.pending_cheques_amount) }} {{ tenant_currency_symbol or 'AED' }}</strong>
-        </div>
-        <small class="text-muted d-block mb-2">
-          <i class="fas fa-info-circle"></i> هذه الشيكات لم تُصرف بعد من البنك
-        </small>
-        {% endif %}
-        
-        <div class="d-flex justify-content-between mb-3">
-          <span><i class="fas fa-exclamation-circle text-danger mr-1"></i>الباقي:</span>
-          <strong class="text-danger" style="font-size: 1.2rem;">
-            {{ "{:,.2f}".format(sale.balance_due) }} {{ tenant_currency_symbol or 'AED' }}
-          </strong>
-        </div>
-
-        {% if sale.balance_due > 0 %}
-        <a href="{{ url_for('payments.create_voucher', direction='incoming', party_type='customer', party_id=sale.customer_id, amount=sale.balance_due) }}" 
-           class="btn btn-success btn-block btn-lg">
-          <i class="fas fa-money-bill-wave mr-2"></i>إضافة دفعة
-        </a>
-        {% else %}
-        <div class="alert alert-success text-center mb-0">
-          <i class="fas fa-check-circle fa-2x mb-2"></i>
-          <p class="mb-0"><strong>الفاتورة مدفوعة بالكامل</strong></p>
-        </div>
-        {% endif %}
-      </div>
-    </div>
-
-    <!-- Actions Card -->
-    <div class="card">
-      <div class="card-header">
-        <h3 class="card-title"><i class="fas fa-cog mr-2"></i>الإجراءات</h3>
-      </div>
-      <div class="card-body">
-        <div class="btn-group-vertical w-100">
-          <a href="{{ url_for('sales.print_invoice', id=sale.id) }}" 
-             class="btn btn-secondary mb-2" target="_blank">
-            <i class="fas fa-print mr-2"></i>طباعة الفاتورة
-          </a>
-          <a href="{{ url_for('sales.index') }}" class="btn btn-info mb-2">
-            <i class="fas fa-list mr-2"></i>كل الفواتير
-          </a>
-          {% if not current_user.is_seller() and sale.status != 'cancelled' %}
-          <button type="button" class="btn btn-danger" onclick="confirmCancel()">
-            <i class="fas fa-ban mr-2"></i>إلغاء الفاتورة
-          </button>
-          <form id="cancelForm" action="{{ url_for('sales.cancel', id=sale.id) }}" method="POST" style="display:none;">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          </form>
-          {% if current_user.is_owner %}
-          <hr>
-          <!-- Delete Button -->
-          <button type="button" class="btn btn-outline-danger w-100" onclick="confirmDelete()">
-            <i class="fas fa-trash-alt mr-2"></i>حذف الفاتورة
-          </button>
-          <form id="deleteForm" action="{{ url_for('sales.delete', id=sale.id) }}" method="POST" style="display:none;">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          </form>
-          {% endif %}
-          {% endif %}
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Return Modal -->
-<div class="modal fade" id="returnModal" tabindex="-1" role="dialog" aria-labelledby="returnModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg" role="document">
-    <div class="modal-content">
-      <div class="modal-header bg-warning text-white">
-        <h5 class="modal-title" id="returnModalLabel"><i class="fas fa-undo mr-2"></i>إنشاء مرتجع مبيعات</h5>
-        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-        <form id="returnForm" method="POST" action="">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <input type="hidden" id="return_sale_id" name="return_sale_id" value="{{ sale.id }}">
-          <div class="table-responsive">
-            <table class="table table-bordered">
-              <thead>
-                <tr>
-                  <th>المنتج</th>
-                  <th>الكمية المباعة</th>
-                  <th>الكمية المرتجعة</th>
-                  <th>حالة المنتج</th>
-                  <th>ملاحظات</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for line in sale.lines %}
-                <tr class="return-line-row" data-line-id="{{ line.id }}">
-                  <td>{{ line.product.name }}</td>
-                  <td>{{ line.quantity }}</td>
-                  <td>
-                    <input type="number" class="form-control return-qty" id="return_qty_{{ line.id }}" name="return_qty_{{ line.id }}"
-                           min="0" max="{{ line.quantity }}" value="0" step="any">
-                  </td>
-                  <td>
-                    <select class="form-control return-condition" id="return_condition_{{ line.id }}" name="return_condition_{{ line.id }}">
-                      <option value="good">سليم (لإعادة البيع)</option>
-                      <option value="damaged">تالف (للإتلاف)</option>
-                    </select>
-                  </td>
-                  <td>
-                    <input type="text" class="form-control return-notes" id="return_notes_{{ line.id }}" name="return_notes_{{ line.id }}" placeholder="سبب الإرجاع">
-                  </td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
-          <div class="form-group">
-            <label>ملاحظات عامة على المرتجع</label>
-            <textarea class="form-control" id="return_general_notes" name="return_general_notes" rows="3"></textarea>
-          </div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">إلغاء</button>
-        <button type="button" class="btn btn-primary" onclick="submitReturn()">إنشاء المرتجع</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<script>
-function submitReturn() {
-    const saleId = document.getElementById('return_sale_id').value;
-    const notes = document.getElementById('return_general_notes').value;
-    const lines = [];
-    
-    document.querySelectorAll('.return-line-row').forEach(row => {
-        const qty = parseFloat(row.querySelector('.return-qty').value) || 0;
-        if (qty > 0) {
-            lines.push({
-                sale_line_id: row.getAttribute('data-line-id'),
-                quantity: qty,
-                condition: row.querySelector('.return-condition').value,
-                notes: row.querySelector('.return-notes').value
-            });
-        }
-    });
-    
-    if (lines.length === 0) {
-        alert('يرجى تحديد كمية لمنتج واحد على الأقل للإرجاع');
-        return;
-    }
-    
-    if (!confirm('هل أنت متأكد من إنشاء المرتجع؟ سيتم تحديث المخزون والحسابات تلقائياً.')) {
-        return;
-    }
-    
-    fetch('/returns/api/create', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': '{{ csrf_token() }}'
-        },
-        body: JSON.stringify({
-            sale_id: saleId,
-            notes: notes,
-            lines: lines
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert('تم إنشاء المرتجع بنجاح: ' + data.return_number);
-            window.location.reload();
-        } else {
-            alert('خطأ: ' + data.message);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('حدث خطأ أثناء الاتصال بالخادم');
-    });
-}
-
-function confirmCancel() {
-  if (confirm('هل أنت متأكد من إلغاء هذه الفاتورة؟\nلا يمكن التراجع عن هذا الإجراء.')) {
-    document.getElementById('cancelForm').submit();
-  }
-}
-
-function confirmDelete() {
-  if (confirm('هل أنت متأكد من حذف هذه الفاتورة؟\n\nتنبيه: سيتم أرشفة الفاتورة إذا كان لها ارتباطات مالية (دفعات/شيكات)، أو حذفها نهائياً إذا كانت غير مرتبطة.')) {
-    document.getElementById('deleteForm').submit();
-  }
-}
-</script>
-{% endblock %}
-
+{% extends 'base.html' %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - فاتورة مبيعات #{{ sale.sale_number }}{% endblock %}
+{% block page_title %}
+<div class="d-flex justify-content-between align-items-center">
+  <div>
+    <h1 class="text-gradient mb-0">{{ sale.sale_number }}</h1>
+    <p class="text-muted mb-0">
+      <i class="far fa-calendar"></i> {{ sale.sale_date.strftime('%Y-%m-%d %H:%M') }}
+    </p>
+  </div>
+  <div>
+    <a href="{{ url_for('sales.print_invoice', id=sale.id) }}" class="btn btn-secondary btn-lg" target="_blank" rel="noopener noreferrer">
+      <i class="fas fa-print mr-2"></i>طباعة
+    </a>
+    <button type="button" class="btn btn-warning btn-lg" data-toggle="modal" data-target="#returnModal">
+      <i class="fas fa-undo mr-2"></i>مرتجع
+    </button>
+    <a href="{{ url_for('sales.index') }}" class="btn btn-info btn-lg">
+      <i class="fas fa-arrow-right mr-2"></i>العودة للقائمة
+    </a>
+    <button type="button" class="btn btn-danger btn-lg" 
+            onclick="deleteItem('sales', {{ sale.id }}, '{{ sale.sale_number }}')">
+      <i class="fas fa-trash mr-2"></i>حذف
+    </button>
+    <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary btn-lg">
+      <i class="fas fa-home mr-2"></i>الرئيسية
+    </a>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.invoice-header {
+  background: linear-gradient(135deg, #007A3D 0%, #1B4D89 100%);
+  color: white;
+  padding: 2rem;
+  border-radius: 16px 16px 0 0;
+  margin: -1rem -1rem 0 -1rem;
+}
+
+.invoice-summary {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  padding: 1.5rem;
+  border-radius: 12px;
+  border-right: 4px solid #007A3D;
+}
+
+.product-row {
+  transition: all 0.2s ease;
+}
+
+.product-row:hover {
+  background: rgba(0, 122, 61, 0.05);
+  transform: scale(1.01);
+}
+
+.status-badge {
+  padding: 12px 24px;
+  border-radius: 24px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="row">
+  <div class="col-md-8">
+    <div class="card">
+      <div class="invoice-header">
+        <div class="row">
+          <div class="col-6">
+            <h2 class="mb-3"><i class="fas fa-file-invoice mr-2"></i>فاتورة بيع</h2>
+            <p class="mb-1"><strong>رقم الفاتورة:</strong> {{ sale.sale_number }}</p>
+            <p class="mb-0"><strong>التاريخ:</strong> {{ sale.sale_date.strftime('%Y-%m-%d %H:%M') }}</p>
+          </div>
+          <div class="col-6 text-left">
+            <h4>{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }}</h4>
+            <p class="mb-0">{{ tenant_address or company_address }}</p>
+            <p class="mb-0">
+              <i class="fas fa-phone mr-1"></i> {{ tenant_phone or company_phone }}
+            </p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="card-body">
+        <div class="row mb-4">
+          <div class="col-md-6">
+            <h5 class="text-primary"><i class="fas fa-user-circle mr-2"></i>معلومات الزبون</h5>
+            <div class="p-3 bg-light rounded">
+              <p class="mb-2">
+                <strong>الاسم:</strong> 
+                <a href="{{ url_for('customers.view', id=sale.customer.id) }}" class="text-primary">
+                  {{ sale.customer.name }}
+                </a>
+              </p>
+              {% if sale.customer.phone %}
+              <p class="mb-2"><strong>الهاتف:</strong> {{ sale.customer.phone }}</p>
+              {% endif %}
+              {% if sale.customer.email %}
+              <p class="mb-0"><strong>البريد:</strong> {{ sale.customer.email }}</p>
+              {% endif %}
+            </div>
+          </div>
+          <div class="col-md-6">
+            <h5 class="text-success"><i class="fas fa-user-tie mr-2"></i>معلومات البائع</h5>
+            <div class="p-3 bg-light rounded">
+              <p class="mb-2"><strong>الاسم:</strong> {{ sale.seller.full_name or sale.seller.username }}</p>
+              <p class="mb-0"><strong>العملة:</strong> {{ sale.currency }}</p>
+              {% if sale.exchange_rate != 1 %}
+              <p class="mb-0"><strong>سعر الصرف:</strong> {{ "{:,.6f}".format(sale.exchange_rate) }}</p>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <h5 class="text-primary mb-3"><i class="fas fa-list mr-2"></i>الأصناف</h5>
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead style="background: linear-gradient(135deg, #007A3D 0%, #1B4D89 100%); color: white;">
+              <tr>
+                <th>#</th>
+                <th>المنتج</th>
+                <th class="text-center">{{ t('Quantity') }}</th>
+                <th class="text-center">{{ t('Price') }}</th>
+                <th class="text-center">الخصم%</th>
+                <th class="text-center">{{ t('Total') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for line in sale.lines %}
+              <tr class="product-row">
+                <td class="font-weight-bold">{{ loop.index }}</td>
+                <td>
+                  <div class="d-flex align-items-center">
+                    <i class="fas fa-box text-primary fa-2x mr-2"></i>
+                    <div>
+                      <strong>{{ line.product.name if line.product else '-' }}</strong>
+                      {% if line.product and line.product.sku %}
+                      <br><small class="text-muted">SKU: {{ line.product.sku }}</small>
+                      {% endif %}
+                    </div>
+                  </div>
+                </td>
+                <td class="text-center">
+                  <span class="badge badge-primary">{{ line.quantity }}</span>
+                </td>
+                <td class="text-center">{{ "{:,.2f}".format(line.unit_price) }}</td>
+                <td class="text-center">
+                  {% if line.discount_percent > 0 %}
+                    <span class="badge badge-warning">{{ line.discount_percent }}%</span>
+                  {% else %}
+                    <span class="text-muted">-</span>
+                  {% endif %}
+                </td>
+                <td class="text-center">
+                  <strong style="color: #007A3D;">{{ "{:,.2f}".format(line.line_total) }}</strong>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        
+        {% if sale.notes %}
+        <div class="alert alert-info mt-3">
+          <h6><i class="fas fa-sticky-note mr-2"></i>ملاحظات:</h6>
+          <p class="mb-0">{{ sale.notes }}</p>
+        </div>
+        {% endif %}
+        
+        <!-- قسم الدفعات -->
+        {% if sale.payments %}
+        <h5 class="text-primary mb-3 mt-4"><i class="fas fa-money-bill-wave mr-2"></i>الدفعات</h5>
+        <div class="table-responsive">
+          <table class="table table-bordered">
+            <thead class="bg-light">
+              <tr>
+                <th>رقم الدفعة</th>
+                <th>التاريخ</th>
+                <th>المبلغ</th>
+                <th>طريقة الدفع</th>
+                <th>التفاصيل</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for payment in sale.payments %}
+              <tr>
+                <td><strong>{{ payment.payment_number }}</strong></td>
+                <td>{{ payment.payment_date.strftime('%Y-%m-%d') }}</td>
+                <td><strong class="text-success">{{ "{:,.2f}".format(payment.base_amount) }} {{ tenant_currency_symbol or 'AED' }}</strong></td>
+                <td>
+                  {% if payment.payment_method == 'cash' %}
+                    <span class="badge badge-success"><i class="fas fa-money-bill-wave"></i> نقدي</span>
+                  {% elif payment.payment_method == 'card' %}
+                    <span class="badge badge-info"><i class="fas fa-credit-card"></i> بطاقة</span>
+                  {% elif payment.payment_method == 'bank_transfer' %}
+                    <span class="badge badge-primary"><i class="fas fa-university"></i> تحويل بنكي</span>
+                  {% elif payment.payment_method == 'cheque' %}
+                    <span class="badge badge-warning"><i class="fas fa-file-invoice"></i> شيك</span>
+                  {% else %}
+                    <span class="badge badge-secondary"><i class="fas fa-wallet"></i> محفظة إلكترونية</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if payment.payment_method == 'cheque' and payment.cheque_number %}
+                    <div class="cheque-details">
+                      <small>
+                        <i class="fas fa-hashtag"></i> <strong>رقم الشيك:</strong> {{ payment.cheque_number }}<br>
+                        <i class="fas fa-calendar"></i> <strong>تاريخ الاستحقاق:</strong> 
+                        <span class="badge badge-info">{{ payment.cheque_date.strftime('%Y-%m-%d') if payment.cheque_date else '-' }}</span><br>
+                        <i class="fas fa-university"></i> <strong>البنك:</strong> {{ payment.bank_name or '-' }}
+                      </small>
+                    </div>
+                  {% elif payment.reference_number %}
+                    <small><i class="fas fa-hashtag"></i> {{ payment.reference_number }}</small>
+                  {% else %}
+                    <small class="text-muted">-</small>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <!-- Payment Status Card -->
+    <div class="card mb-3">
+      <div class="card-body text-center">
+        <h5 class="mb-3">حالة الدفع</h5>
+        {% if sale.payment_status == 'paid' %}
+        <div class="status-badge badge-success">
+          <i class="fas fa-check-circle"></i> مدفوعة بالكامل
+        </div>
+        {% elif sale.payment_status == 'partial' %}
+        <div class="status-badge badge-warning">
+          <i class="fas fa-clock"></i> مدفوعة جزئياً
+        </div>
+        {% else %}
+        <div class="status-badge badge-danger">
+          <i class="fas fa-hourglass-half"></i> آجلة
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Totals Card -->
+    <div class="card mb-3">
+      <div class="card-header" style="background: linear-gradient(135deg, #007A3D 0%, #1B4D89 100%); color: white;">
+        <h3 class="card-title text-white mb-0">
+          <i class="fas fa-calculator mr-2"></i>الإجماليات
+        </h3>
+      </div>
+      <div class="card-body">
+        <div class="invoice-summary">
+          <div class="d-flex justify-content-between mb-2">
+            <span>المجموع الفرعي:</span>
+            <strong>{{ "{:,.2f}".format(sale.subtotal) }}</strong>
+          </div>
+          
+          {% if sale.discount_amount > 0 %}
+          <div class="d-flex justify-content-between mb-2">
+            <span><i class="fas fa-tag text-danger mr-1"></i>الخصم:</span>
+            <strong class="text-danger">-{{ "{:,.2f}".format(sale.discount_amount) }}</strong>
+          </div>
+          {% endif %}
+          
+          {% if sale.shipping_cost > 0 %}
+          <div class="d-flex justify-content-between mb-2">
+            <span><i class="fas fa-truck text-info mr-1"></i>الشحن:</span>
+            <strong class="text-info">+{{ "{:,.2f}".format(sale.shipping_cost) }}</strong>
+          </div>
+          {% endif %}
+          
+          {% if sale.tax_amount > 0 %}
+          <div class="d-flex justify-content-between mb-2">
+            <span><i class="fas fa-percent text-warning mr-1"></i>الضريبة:</span>
+            <strong class="text-warning">+{{ "{:,.2f}".format(sale.tax_amount) }}</strong>
+          </div>
+          {% endif %}
+        </div>
+        
+        <hr class="my-3">
+        
+        <div class="d-flex justify-content-between align-items-center mb-3" style="font-size: 1.3rem;">
+          <strong>الإجمالي:</strong>
+          <strong style="color: #007A3D;">
+            {{ "{:,.2f}".format(sale.total_amount) }} {{ sale.currency }}
+          </strong>
+        </div>
+        
+        {% if sale.currency != tenant_default_currency and sale.base_amount %}
+        <div class="d-flex justify-content-between mb-3 text-muted">
+          <span>بال{{ tenant_currency_name_ar or 'درهم' }}:</span>
+          <strong>{{ "{:,.2f}".format(sale.base_amount) }} {{ tenant_currency_symbol or 'AED' }}</strong>
+        </div>
+        {% endif %}
+        
+        <div class="d-flex justify-content-between mb-2">
+          <span><i class="fas fa-check-circle text-success mr-1"></i>المدفوع المؤكد:</span>
+          <strong class="text-success">{{ "{:,.2f}".format(sale.paid_amount) }} {{ sale.currency or tenant_currency_symbol or 'AED' }}</strong>
+        </div>
+        
+        {% if sale.pending_cheques_amount > 0 %}
+        <div class="d-flex justify-content-between mb-2">
+          <span><i class="fas fa-hourglass-half text-warning mr-1"></i>شيكات معلقة:</span>
+          <strong class="text-warning">{{ "{:,.2f}".format(sale.pending_cheques_amount) }} {{ tenant_currency_symbol or 'AED' }}</strong>
+        </div>
+        <small class="text-muted d-block mb-2">
+          <i class="fas fa-info-circle"></i> هذه الشيكات لم تُصرف بعد من البنك
+        </small>
+        {% endif %}
+        
+        <div class="d-flex justify-content-between mb-3">
+          <span><i class="fas fa-exclamation-circle text-danger mr-1"></i>الباقي:</span>
+          <strong class="text-danger" style="font-size: 1.2rem;">
+            {{ "{:,.2f}".format(sale.balance_due) }} {{ tenant_currency_symbol or 'AED' }}
+          </strong>
+        </div>
+
+        {% if sale.balance_due > 0 %}
+        <a href="{{ url_for('payments.create_voucher', direction='incoming', party_type='customer', party_id=sale.customer_id, amount=sale.balance_due) }}" 
+           class="btn btn-success btn-block btn-lg">
+          <i class="fas fa-money-bill-wave mr-2"></i>إضافة دفعة
+        </a>
+        {% else %}
+        <div class="alert alert-success text-center mb-0">
+          <i class="fas fa-check-circle fa-2x mb-2"></i>
+          <p class="mb-0"><strong>الفاتورة مدفوعة بالكامل</strong></p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Actions Card -->
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-cog mr-2"></i>الإجراءات</h3>
+      </div>
+      <div class="card-body">
+        <div class="btn-group-vertical w-100">
+          <a href="{{ url_for('sales.print_invoice', id=sale.id) }}" 
+             class="btn btn-secondary mb-2" target="_blank" rel="noopener noreferrer">
+            <i class="fas fa-print mr-2"></i>طباعة الفاتورة
+          </a>
+          <a href="{{ url_for('sales.index') }}" class="btn btn-info mb-2">
+            <i class="fas fa-list mr-2"></i>كل الفواتير
+          </a>
+          {% if not current_user.is_seller() and sale.status != 'cancelled' %}
+          <button type="button" class="btn btn-danger" onclick="confirmCancel()">
+            <i class="fas fa-ban mr-2"></i>إلغاء الفاتورة
+          </button>
+          <form id="cancelForm" action="{{ url_for('sales.cancel', id=sale.id) }}" method="POST" style="display:none;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          </form>
+          {% if current_user.is_owner %}
+          <hr>
+          <!-- Delete Button -->
+          <button type="button" class="btn btn-outline-danger w-100" onclick="confirmDelete()">
+            <i class="fas fa-trash-alt mr-2"></i>حذف الفاتورة
+          </button>
+          <form id="deleteForm" action="{{ url_for('sales.delete', id=sale.id) }}" method="POST" style="display:none;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          </form>
+          {% endif %}
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Return Modal -->
+<div class="modal fade" id="returnModal" tabindex="-1" role="dialog" aria-labelledby="returnModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header bg-warning text-white">
+        <h5 class="modal-title" id="returnModalLabel"><i class="fas fa-undo mr-2"></i>إنشاء مرتجع مبيعات</h5>
+        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="returnForm" method="POST" action="">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" id="return_sale_id" name="return_sale_id" value="{{ sale.id }}">
+          <div class="table-responsive">
+            <table class="table table-bordered">
+              <thead>
+                <tr>
+                  <th>المنتج</th>
+                  <th>الكمية المباعة</th>
+                  <th>الكمية المرتجعة</th>
+                  <th>حالة المنتج</th>
+                  <th>ملاحظات</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for line in sale.lines %}
+                <tr class="return-line-row" data-line-id="{{ line.id }}">
+                  <td>{{ line.product.name }}</td>
+                  <td>{{ line.quantity }}</td>
+                  <td>
+                    <input type="number" class="form-control return-qty" id="return_qty_{{ line.id }}" name="return_qty_{{ line.id }}"
+                           min="0" max="{{ line.quantity }}" value="0" step="any">
+                  </td>
+                  <td>
+                    <select class="form-control return-condition" id="return_condition_{{ line.id }}" name="return_condition_{{ line.id }}">
+                      <option value="good">سليم (لإعادة البيع)</option>
+                      <option value="damaged">تالف (للإتلاف)</option>
+                    </select>
+                  </td>
+                  <td>
+                    <input type="text" class="form-control return-notes" id="return_notes_{{ line.id }}" name="return_notes_{{ line.id }}" placeholder="سبب الإرجاع">
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <div class="form-group">
+            <label>ملاحظات عامة على المرتجع</label>
+            <textarea class="form-control" id="return_general_notes" name="return_general_notes" rows="3"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">إلغاء</button>
+        <button type="button" class="btn btn-primary" onclick="submitReturn()">إنشاء المرتجع</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function submitReturn() {
+    const saleId = document.getElementById('return_sale_id').value;
+    const notes = document.getElementById('return_general_notes').value;
+    const lines = [];
+    
+    document.querySelectorAll('.return-line-row').forEach(row => {
+        const qty = parseFloat(row.querySelector('.return-qty').value) || 0;
+        if (qty > 0) {
+            lines.push({
+                sale_line_id: row.getAttribute('data-line-id'),
+                quantity: qty,
+                condition: row.querySelector('.return-condition').value,
+                notes: row.querySelector('.return-notes').value
+            });
+        }
+    });
+    
+    if (lines.length === 0) {
+        alert('يرجى تحديد كمية لمنتج واحد على الأقل للإرجاع');
+        return;
+    }
+    
+    if (!confirm('هل أنت متأكد من إنشاء المرتجع؟ سيتم تحديث المخزون والحسابات تلقائياً.')) {
+        return;
+    }
+    
+    fetch('/returns/api/create', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token() }}'
+        },
+        body: JSON.stringify({
+            sale_id: saleId,
+            notes: notes,
+            lines: lines
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('تم إنشاء المرتجع بنجاح: ' + data.return_number);
+            window.location.reload();
+        } else {
+            alert('خطأ: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('حدث خطأ أثناء الاتصال بالخادم');
+    });
+}
+
+function confirmCancel() {
+  if (confirm('هل أنت متأكد من إلغاء هذه الفاتورة؟\nلا يمكن التراجع عن هذا الإجراء.')) {
+    document.getElementById('cancelForm').submit();
+  }
+}
+
+function confirmDelete() {
+  if (confirm('هل أنت متأكد من حذف هذه الفاتورة؟\n\nتنبيه: سيتم أرشفة الفاتورة إذا كان لها ارتباطات مالية (دفعات/شيكات)، أو حذفها نهائياً إذا كانت غير مرتبطة.')) {
+    document.getElementById('deleteForm').submit();
+  }
+}
+</script>
+{% endblock %}
+

@@ -3125,9 +3125,10 @@ def upload_excel():
         warehouse_id = request.form.get('warehouse_id', type=int)
         if not warehouse_id:
             from models import Warehouse
-            warehouse = Warehouse.query.filter_by(is_active=True, is_main=True).first()
+            tid = get_active_tenant_id(current_user)
+            warehouse = Warehouse.query.filter_by(is_active=True, is_main=True, tenant_id=tid).first()
             if not warehouse:
-                warehouse = Warehouse.query.filter_by(is_active=True).first()
+                warehouse = Warehouse.query.filter_by(is_active=True, tenant_id=tid).first()
             if warehouse:
                 warehouse_id = warehouse.id
         
@@ -3160,6 +3161,7 @@ def _process_excel_intelligently(file, warehouse_id, user):
     try:
         from models import Product, Warehouse
         
+        tid = get_active_tenant_id(user)
         df = pd.read_excel(file, engine='openpyxl')
         
         column_mapping = _intelligent_column_detector(df)
@@ -3170,7 +3172,7 @@ def _process_excel_intelligently(file, warehouse_id, user):
                 'error': 'لم أستطع فهم هيكل الملف. تأكد من وجود أعمدة: الاسم، رقم القطعة، السعر'
             }
         
-        warehouse = Warehouse.query.get(warehouse_id)
+        warehouse = Warehouse.query.filter_by(id=warehouse_id, tenant_id=tid).first()
         if not warehouse:
             return {'success': False, 'error': f'المستودع #{warehouse_id} غير موجود'}
         
@@ -3196,7 +3198,7 @@ def _process_excel_intelligently(file, warehouse_id, user):
                 if not name or name == 'nan' or part_number == 'nan':
                     continue
                 
-                existing_product = Product.query.filter_by(part_number=part_number).first()
+                existing_product = Product.query.filter_by(part_number=part_number, tenant_id=tid).first()
                 
                 if existing_product:
                     existing_product.regular_price = price

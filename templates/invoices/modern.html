@@ -183,7 +183,7 @@
         <div class="info-box">
           <h3>📅 بيانات الفاتورة</h3>
           <p><strong>التاريخ:</strong> {{ sale.sale_date.strftime('%Y-%m-%d') }}</p>
-          <p><strong>الحالة:</strong> <span style="color: #28a745">✓ مكتملة</span></p>
+          <p><strong>الحالة:</strong> <span style="color: #28a745">مكتملة</span></p>
           <p><strong>المستخدم:</strong> {{ print_user_name or (sale.seller.full_name if sale.seller else '-') }}</p>
         </div>
       </div>
@@ -318,7 +318,7 @@
       </div>
       {% endif %}
       
-      <p style="margin-top: 10px; font-size: 9px;">شكراً لتعاملكم معنا 🌟</p>
+      <p style="margin-top: 10px; font-size: 9px;">شكراً لتعاملكم معنا</p>
       
       <!-- Social Media Links -->
       {% if settings and (settings.facebook_url or settings.instagram_url or settings.whatsapp_number) %}

@@ -67,9 +67,6 @@
                                         <i class="fas fa-key text-warning mr-1"></i>API Token / Access Key
                                     </label>
                                     <input type="text" class="form-control" name="api_token" placeholder="أدخل API Token هنا" value="{{ integrations.whatsapp.config.api_token or '' }}">
-                                    <small class="form-text text-muted">
-                                        🔐 <strong>مثال:</strong> EAA... (من Twilio أو Meta Business)
-                                    </small>
                                 </div>
                                 
                                 <div class="form-group">
@@ -197,7 +194,7 @@
                                             <input type="password" class="form-control" name="smtp_password" placeholder="••••••••••" value="{{ integrations.email.config.smtp_password or '' }}">
                                             <small class="form-text text-muted">
                                                 🔐 <strong>Gmail:</strong> استخدم App Password (ليس كلمة المرور العادية)<br>
-                                                <a href="https://myaccount.google.com/apppasswords" target="_blank">إنشاء App Password</a>
+                                                <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noopener noreferrer">إنشاء App Password</a>
                                             </small>
                                         </div>
                                     </div>
@@ -376,8 +373,8 @@
                                     <input type="text" class="form-control" name="api_key" placeholder="YOUR_API_KEY_HERE" value="{{ integrations.currency_api.config.api_key or '' }}">
                                     <small class="form-text text-muted">
                                         🔑 <strong>احصل على API Key مجاناً:</strong><br>
-                                        • <a href="https://www.exchangerate-api.com" target="_blank">ExchangeRate-API</a> (1500 request/شهر مجاناً)<br>
-                                        • <a href="https://fixer.io" target="_blank">Fixer.io</a> (100 request/شهر مجاناً)
+                                        • <a href="https://www.exchangerate-api.com" target="_blank" rel="noopener noreferrer">ExchangeRate-API</a> (1500 request/شهر مجاناً)<br>
+                                        • <a href="https://fixer.io" target="_blank" rel="noopener noreferrer">Fixer.io</a> (100 request/شهر مجاناً)
                                     </small>
                                 </div>
                                 

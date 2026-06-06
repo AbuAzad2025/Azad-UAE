@@ -563,5 +563,5 @@
         }, 60000);
     });
     
-    console.log('%c✅ جميع الدوال محملة ومتاحة!', 'color: green; font-weight: bold;');
+
 })();

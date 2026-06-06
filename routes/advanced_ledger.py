@@ -62,7 +62,8 @@ def professional_printing():
 @admin_required
 def customs_taxes():
     """إدارة الجمارك والضرائب"""
-    taxes = CustomsTax.query.filter_by(is_active=True).order_by(CustomsTax.name_ar).all()
+    tid = active_tenant_id(current_user)
+    taxes = CustomsTax.query.filter_by(is_active=True, tenant_id=tid).order_by(CustomsTax.name_ar).all()
     return render_template('ledger/advanced/customs_taxes.html', taxes=taxes)
 
 @advanced_ledger_bp.route('/customs-taxes/add', methods=['GET', 'POST'])
@@ -117,7 +118,8 @@ def add_customs_tax():
 @admin_required
 def expense_categories():
     """إدارة فئات المصروفات المتقدمة"""
-    categories = ExpenseCategory.query.filter_by(is_active=True).order_by(ExpenseCategory.name).all()
+    tid = active_tenant_id(current_user)
+    categories = ExpenseCategory.query.filter_by(is_active=True, tenant_id=tid).order_by(ExpenseCategory.name).all()
     return render_template('ledger/advanced/expense_categories.html', categories=categories)
 
 @advanced_ledger_bp.route('/expense-categories/add', methods=['GET', 'POST'])
@@ -125,7 +127,8 @@ def expense_categories():
 @admin_required
 def add_expense_category():
     """إضافة فئة مصروفات جديدة"""
-    parent_categories = ExpenseCategory.query.filter_by(is_active=True).all()
+    tid = active_tenant_id(current_user)
+    parent_categories = ExpenseCategory.query.filter_by(is_active=True, tenant_id=tid).all()
     accounts = _accounts().filter_by(is_active=True, is_header=False).order_by(GLAccount.code).all()
     
     if request.method == 'POST':
@@ -176,7 +179,8 @@ def advanced_expenses():
     page = request.args.get('page', 1, type=int)
     per_page = 20
     
-    expenses = AdvancedExpense.query.order_by(AdvancedExpense.created_at.desc()).paginate(
+    tid = active_tenant_id(current_user)
+    expenses = AdvancedExpense.query.filter_by(tenant_id=tid).order_by(AdvancedExpense.created_at.desc()).paginate(
         page=page, per_page=per_page, error_out=False
     )
     
@@ -239,7 +243,8 @@ def add_advanced_expense():
             flash(ErrorMessages.unexpected_error(), 'danger')
     
     # الحصول على البيانات المطلوبة
-    categories = ExpenseCategory.query.filter_by(is_active=True).all()
+    tid = active_tenant_id(current_user)
+    categories = ExpenseCategory.query.filter_by(is_active=True, tenant_id=tid).all()
     suppliers = db.session.query(db.text("SELECT id, name FROM suppliers")).all() if hasattr(db, 'text') else []
     
     return render_template('ledger/advanced/add_advanced_expense.html', 
@@ -334,16 +339,17 @@ def approve_journal_entry(entry_id):
 @permission_required('view_ledger')
 def cheque_integration():
     """تكامل الشيكات مع النظام المحاسبي"""
+    tid = active_tenant_id(current_user)
     # الحصول على الشيكات الأخيرة
-    recent_cheques = Cheque.query.order_by(Cheque.updated_at.desc()).limit(20).all()
+    recent_cheques = Cheque.query.filter_by(tenant_id=tid).order_by(Cheque.updated_at.desc()).limit(20).all()
     
     # إحصائيات الشيكات
     stats = {
-        'total_cheques': Cheque.query.count(),
-        'pending_cheques': Cheque.query.filter_by(status='pending').count(),
-        'cleared_cheques': Cheque.query.filter_by(status='cleared').count(),
-        'bounced_cheques': Cheque.query.filter_by(status='bounced').count(),
-        'total_amount': db.session.query(db.func.sum(Cheque.amount_aed)).scalar() or 0
+        'total_cheques': Cheque.query.filter_by(tenant_id=tid).count(),
+        'pending_cheques': Cheque.query.filter_by(tenant_id=tid, status='pending').count(),
+        'cleared_cheques': Cheque.query.filter_by(tenant_id=tid, status='cleared').count(),
+        'bounced_cheques': Cheque.query.filter_by(tenant_id=tid, status='bounced').count(),
+        'total_amount': db.session.query(db.func.sum(Cheque.amount_aed)).filter_by(tenant_id=tid).scalar() or 0
     }
     
     return render_template('ledger/advanced/cheque_integration.html', 

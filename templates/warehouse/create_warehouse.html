@@ -38,7 +38,6 @@
                     <label>
                       <i class="fas fa-warehouse text-primary"></i> الاسم بالإنجليزية 
                       <span class="text-danger">*</span>
-                      <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="اسم المستودع بالإنجليزية (إجباري)"></i>
                     </label>
                     <input type="text" class="form-control" id="name" name="name" placeholder="Main Warehouse" required value="{{ form_data.get('name', '') }}">
                   </div>
@@ -47,7 +46,6 @@
                   <div class="form-group">
                     <label>
                       <i class="fas fa-font text-info"></i> الاسم بالعربية
-                      <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="اسم المستودع بالعربية (اختياري)"></i>
                     </label>
                     <input type="text" class="form-control" id="name_ar" name="name_ar" placeholder="المستودع الرئيسي" value="{{ form_data.get('name_ar', '') }}">
                   </div>
@@ -59,7 +57,6 @@
                   <div class="form-group">
                     <label>
                       <i class="fas fa-barcode text-secondary"></i> رمز المستودع
-                      <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="رمز مختصر للمستودع (اختياري)"></i>
                     </label>
                     <input type="text" class="form-control" id="code" name="code" placeholder="WH001" value="{{ form_data.get('code', '') }}">
                   </div>
@@ -69,7 +66,6 @@
                     <label>
                       <i class="fas fa-map-marker-alt text-danger"></i> الموقع
                       <span class="text-danger">*</span>
-                      <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="موقع المستودع الجغرافي (إجباري)"></i>
                     </label>
                     <input type="text" class="form-control" id="location" name="location" placeholder="دبي - الإمارات" required value="{{ form_data.get('location', '') }}">
                   </div>
@@ -81,7 +77,6 @@
                   <div class="form-group">
                     <label>
                       <i class="fas fa-sitemap text-success"></i> المستودع الأب (للفروع)
-                      <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="إذا كان هذا مستودع فرعي، اختر المستودع الرئيسي (اختياري)"></i>
                     </label>
                     <select class="form-control" id="parent_id" name="parent_id">
                       <option value="" {% if not form_data.get('parent_id') %}selected{% endif %}>بلا</option>
@@ -99,7 +94,6 @@
                   <div class="form-group">
                     <label>
                       <i class="fas fa-user-tie text-primary"></i> المدير المسؤول
-                      <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="اختر المدير المسؤول عن هذا المستودع (اختياري)"></i>
                     </label>
                     <select class="form-control" id="manager_id" name="manager_id">
                       <option value="" {% if not form_data.get('manager_id') %}selected{% endif %}>بلا</option>
@@ -136,7 +130,6 @@
                   <div class="form-group">
                     <label>
                       <i class="fas fa-building text-info"></i> الفرع
-                      <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="الفرع الذي يتبع له هذا المستودع (اختياري)"></i>
                     </label>
                     <select class="form-control" id="branch_id" name="branch_id">
                       <option value="" {% if not form_data.get('branch_id') %}selected{% endif %}>-- عام (بدون فرع محدد) --</option>
@@ -157,7 +150,6 @@
                   <input type="checkbox" class="custom-control-input" id="is_main" name="is_main" {% if form_data.get('is_main') %}checked{% endif %}>
                   <label class="custom-control-label" for="is_main">
                     <i class="fas fa-star text-warning"></i> مستودع رئيسي
-                    <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="هل هذا المستودع الرئيسي؟ (اختياري)"></i>
                   </label>
                 </div>
               </div>

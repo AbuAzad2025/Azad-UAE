@@ -49,7 +49,7 @@
       position: relative;
     }
     .header::before {
-      content: '☪';
+      content: '';
       position: absolute;
       top: 5px;
       right: 15px;
@@ -324,7 +324,7 @@
         </div>
         {% endif %}
         <div class="total-row final">
-          <span>⭐ الإجمالي النهائي ⭐</span>
+          <span>الإجمالي النهائي</span>
           <strong>{{ "{:,.2f}".format(sale.total_amount) }} {{ sale.currency }}</strong>
         </div>
         {% include 'partials/print_unified_amount_qr.html' %}
@@ -430,7 +430,7 @@
       </div>
       {% endif %}
       
-      <div>☪ شكراً لتعاملكم الكريم معنا ☪</div>
+      <div>شكراً لتعاملكم الكريم معنا</div>
       {% if settings and settings.website and settings.website != 'None' %}
       <div style="margin-top: 5px; font-size: 8px;">🌐 {{ settings.website }}</div>
       {% endif %}
@@ -453,7 +453,7 @@
         </div>
       {% elif settings.watermark_text %}
         <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg); font-size: 90px; color: rgba(201,169,97,0.05); font-weight: 700; z-index: 0; pointer-events: none; font-family: 'Noto Kufi Arabic';">
-          ☪ {{ settings.watermark_text }} ☪
+          {{ settings.watermark_text }}
         </div>
       {% endif %}
     {% endif %}

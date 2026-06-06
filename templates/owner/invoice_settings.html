@@ -394,10 +394,7 @@
                 </label>
                 <input type="file" class="form-control-file" name="company_logo" accept="image/png,image/jpeg,image/jpg,image/webp">
                 <small class="form-text text-muted">
-                  📐 <strong>الأبعاد المناسبة:</strong> 200×80 بكسل أو 400×160 بكسل (نسبة 2.5:1)<br>
-                  📦 <strong>الحجم:</strong> أقل من 500 كيلوبايت<br>
-                  📄 <strong>الصيغ:</strong> PNG (شفاف مفضل), JPG, WEBP<br>
-                  💡 <strong>نصيحة:</strong> استخدم خلفية شفافة للحصول على أفضل نتيجة
+                  المقاس الموصى به: 400×160 بكسل. الصيغ: PNG, JPG, WEBP.
                 </small>
                 {% if settings and settings.logo_path %}
                 <div class="mt-2">
@@ -540,11 +537,11 @@
                     </div>
                     <div>
                       <a href="{{ url_for('owner.preview_invoice', template='modern') }}" 
-                         target="_blank" class="btn btn-sm btn-outline-primary">
+                         target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-primary">
                         <i class="fas fa-file-invoice"></i> فاتورة
                       </a>
                       <a href="{{ url_for('owner.preview_receipt', template='modern') }}" 
-                         target="_blank" class="btn btn-sm btn-outline-success">
+                         target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-success">
                         <i class="fas fa-receipt"></i> سند
                       </a>
                       <button type="button" class="btn btn-sm btn-primary" onclick="applyTemplate('modern')">
@@ -562,11 +559,11 @@
                     </div>
                     <div>
                       <a href="{{ url_for('owner.preview_invoice', template='classic') }}" 
-                         target="_blank" class="btn btn-sm btn-outline-secondary">
+                         target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-secondary">
                         <i class="fas fa-file-invoice"></i> فاتورة
                       </a>
                       <a href="{{ url_for('owner.preview_receipt', template='classic') }}" 
-                         target="_blank" class="btn btn-sm btn-outline-success">
+                         target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-success">
                         <i class="fas fa-receipt"></i> سند
                       </a>
                       <button type="button" class="btn btn-sm btn-secondary" onclick="applyTemplate('classic')">
@@ -584,11 +581,11 @@
                     </div>
                     <div>
                       <a href="{{ url_for('owner.preview_invoice', template='minimal') }}" 
-                         target="_blank" class="btn btn-sm btn-outline-info">
+                         target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-info">
                         <i class="fas fa-file-invoice"></i> فاتورة
                       </a>
                       <a href="{{ url_for('owner.preview_receipt', template='minimal') }}" 
-                         target="_blank" class="btn btn-sm btn-outline-success">
+                         target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-success">
                         <i class="fas fa-receipt"></i> سند
                       </a>
                       <button type="button" class="btn btn-sm btn-info" onclick="applyTemplate('minimal')">
@@ -606,11 +603,11 @@
                     </div>
                     <div>
                       <a href="{{ url_for('owner.preview_invoice', template='gulf') }}" 
-                         target="_blank" class="btn btn-sm btn-outline-warning">
+                         target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-warning">
                         <i class="fas fa-file-invoice"></i> فاتورة
                       </a>
                       <a href="{{ url_for('owner.preview_receipt', template='gulf') }}" 
-                         target="_blank" class="btn btn-sm btn-outline-success">
+                         target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-success">
                         <i class="fas fa-receipt"></i> سند
                       </a>
                       <button type="button" class="btn btn-sm btn-warning" onclick="applyTemplate('gulf')">
@@ -628,11 +625,11 @@
                     </div>
                     <div>
                       <a href="{{ url_for('owner.preview_invoice', template='simple') }}" 
-                         target="_blank" class="btn btn-sm btn-outline-success">
+                         target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-success">
                         <i class="fas fa-file-invoice"></i> فاتورة
                       </a>
                       <a href="{{ url_for('owner.preview_receipt', template='simple') }}" 
-                         target="_blank" class="btn btn-sm btn-outline-success">
+                         target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-success">
                         <i class="fas fa-receipt"></i> سند
                       </a>
                       <button type="button" class="btn btn-sm btn-success" onclick="applyTemplate('simple')">

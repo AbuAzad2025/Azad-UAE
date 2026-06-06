@@ -1956,7 +1956,7 @@
                     const recordId = data.purchase_id || data.donation_id;
                     const recordType = data.purchase_id ? 'شراء' : 'تبرع';
                     const paymentUrlButton = data.payment_url
-                        ? `<a href="${data.payment_url}" target="_blank" class="btn btn-sm btn-primary mt-2">
+                        ? `<a href="${data.payment_url}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-primary mt-2">
                                 <i class="fas fa-external-link-alt"></i> فتح صفحة الدفع
                            </a>`
                         : '';
@@ -2444,7 +2444,7 @@
                     <a href="mailto:{{ developer_email or config.DEVELOPER_EMAIL }}" style="margin: 5px; display: inline-block; width: 45px; height: 45px; background: #667eea; color: white; border-radius: 50%; line-height: 45px; text-decoration: none; transition: all 0.3s;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 5px 15px rgba(0,0,0,0.2)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
                         <i class="fas fa-envelope" style="font-size: 1.2rem;"></i>
                     </a>
-                    <a href="{{ developer_website or config.DEVELOPER_WEBSITE or 'https://azadsystems.com' }}" target="_blank" style="margin: 5px; display: inline-block; width: 45px; height: 45px; background: #333; color: white; border-radius: 50%; line-height: 45px; text-decoration: none; transition: all 0.3s;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 5px 15px rgba(0,0,0,0.2)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                    <a href="{{ developer_website or config.DEVELOPER_WEBSITE or 'https://azadsystems.com' }}" target="_blank" rel="noopener noreferrer" style="margin: 5px; display: inline-block; width: 45px; height: 45px; background: #333; color: white; border-radius: 50%; line-height: 45px; text-decoration: none; transition: all 0.3s;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 5px 15px rgba(0,0,0,0.2)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
                         <i class="fas fa-globe" style="font-size: 1.2rem;"></i>
                     </a>
                 </div>

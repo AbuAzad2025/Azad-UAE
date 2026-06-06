@@ -1,124 +1,124 @@
-<!DOCTYPE html>
-<html lang="{{ current_language }}" dir="{{ 'rtl' if is_rtl else 'ltr' }}">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Azad Smart Systems - Contact</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/accessibility.css') }}">
-  <style>
-    :root { --gulf-gold:#D4AF37; --gulf-blue:#1B4D89; }
-    * { margin:0; padding:0; box-sizing:border-box; }
-    body { font-family:'Inter',sans-serif; background:#040914; color:#f8fafc; }
-    .navbar { background: rgba(10,14,39,0.95); backdrop-filter: blur(10px); padding: 18px 26px; display:flex; justify-content:space-between; align-items:center; border-bottom: 2px solid var(--gulf-gold); }
-    .navbar a { color: white; text-decoration:none; margin: 0 12px; transition: color .2s ease; font-weight: 800; }
-    .navbar a:hover { color: var(--gulf-gold); }
-    .logo { display:flex; align-items:center; gap:10px; color: var(--gulf-gold); text-decoration:none; }
-    .logo img { width:40px; height:40px; object-fit:contain; border-radius:8px; background:rgba(255,255,255,.92); padding:4px; }
-    .logo span { font-size: 1.2rem; font-weight: 900; color: var(--gulf-gold); }
-    .contact-container { max-width: 1200px; margin: 80px auto; padding: 0 20px; }
-    .contact-header { text-align:center; margin-bottom: 60px; }
-    .contact-header h1 { font-size: 3rem; color: var(--gulf-gold); margin-bottom: 15px; text-shadow: 0 0 30px rgba(212,175,55,0.5); }
-    .contact-header p { font-size: 1.15rem; color: rgba(255,255,255,0.85); }
-    .contact-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-bottom: 60px; }
-    .contact-card { background: rgba(15,23,42,0.85); backdrop-filter: blur(10px); padding: 34px; border-radius: 20px; text-align:center; border: 2px solid rgba(212,175,55,0.35); transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease; }
-    .contact-card:hover { transform: translateY(-8px); border-color: var(--gulf-gold); box-shadow: 0 20px 60px rgba(212,175,55,0.22); }
-    .contact-card i { font-size: 3.2rem; color: var(--gulf-gold); margin-bottom: 18px; }
-    .contact-card h3 { font-size: 1.25rem; margin-bottom: 12px; }
-    .contact-card a { color: #f8fafc; text-decoration:none; font-size: 1.05rem; font-weight: 800; }
-    .contact-card a:hover { color: var(--gulf-gold); }
-    .hint { margin-top: 10px; color: rgba(255,255,255,0.65); font-size: 0.95rem; }
-    .cta { text-align:center; margin-top: 60px; }
-    .cta a { padding: 18px 45px; background: var(--gulf-gold); color: var(--gulf-blue); border-radius: 50px; text-decoration:none; font-weight: 900; font-size: 1.15rem; display:inline-flex; align-items:center; gap: 10px; transition: filter .2s ease, transform .2s ease; }
-    .cta a:hover { transform: translateY(-2px); filter: brightness(1.02); }
-  </style>
-</head>
-<body class="keep-theme contact-page">
-  {% set platform_name_en = config.COMPANY_NAME if config.COMPANY_NAME != config.COMPANY_NAME_AR else 'Azad Smart Systems' %}
-  {% set platform_logo = config.COMPANY_LOGO or 'assets/brand/azad/logos/logo-gold.png' %}
-  {% set company_address_en = config.COMPANY_ADDRESS_EN or company_address or tenant_address %}
-  <div style="position: fixed; top: 20px; left: 20px; z-index: 9999;">
-    <a href="{{ url_for('language.set_language', lang='ar') }}" class="btn btn-sm" style="background: rgba(255,255,255,0.9); border-radius: 20px; padding: 8px 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); text-decoration:none; color:#111827; font-weight:900;">
-      <i class="fas fa-globe" style="margin-right: 8px;"></i>AR
-    </a>
-  </div>
-
-  <nav class="navbar">
-    <a class="logo" href="{{ url_for('public.landing') }}">
-      <img src="{{ url_for('static', filename=platform_logo) }}" alt="{{ platform_name_en }}">
-      <span>{{ platform_name_en }}</span>
-    </a>
-    <div>
-      <a href="{{ url_for('public.landing') }}">Home</a>
-      <a href="{{ url_for('public.features') }}">Features</a>
-      <a href="{{ url_for('public.pricing') }}">Pricing</a>
-      <a href="{{ url_for('public.user_guide') }}">User guide</a>
-      <a href="{{ url_for('auth.login') }}"><i class="fas fa-sign-in-alt"></i> Login</a>
-    </div>
-  </nav>
-
-  <div class="contact-container">
-    <div class="contact-header">
-      <h1>Contact us</h1>
-      <p>We are here to help. Reach out anytime.</p>
-    </div>
-
-    <div class="contact-grid">
-      <div class="contact-card">
-        <i class="fab fa-whatsapp"></i>
-        <h3>WhatsApp</h3>
-        <a href="https://wa.me/{{ developer_whatsapp_link }}" target="_blank">{{ developer_whatsapp or config.DEVELOPER_WHATSAPP or '—' }}</a>
-        <div class="hint">Fastest way to reach us</div>
-      </div>
-
-      <div class="contact-card">
-        <i class="fas fa-phone"></i>
-        <h3>Phone</h3>
-        <a href="tel:{{ developer_phone or config.DEVELOPER_PHONE }}">{{ developer_phone or config.DEVELOPER_PHONE or '—' }}</a>
-        <div class="hint">Available 24/7</div>
-      </div>
-
-      <div class="contact-card">
-        <i class="fas fa-mobile-alt"></i>
-        <h3>Alt phone</h3>
-        <a href="tel:{{ developer_phone or config.DEVELOPER_PHONE }}">{{ developer_phone or config.DEVELOPER_PHONE or '—' }}</a>
-        <div class="hint">Local calls</div>
-      </div>
-
-      <div class="contact-card">
-        <i class="fas fa-envelope"></i>
-        <h3>Email</h3>
-        <a href="mailto:{{ developer_email or config.DEVELOPER_EMAIL }}">{{ developer_email or config.DEVELOPER_EMAIL or '—' }}</a>
-        <div class="hint">For formal inquiries</div>
-      </div>
-
-      <div class="contact-card">
-        <i class="fas fa-map-marker-alt"></i>
-        <h3>Address</h3>
-        <div style="font-size: 1.1rem; font-weight: 900;">{{ company_address_en }}</div>
-        <div class="hint">Office / region</div>
-      </div>
-
-      <div class="contact-card">
-        <i class="fas fa-globe"></i>
-        <h3>Website</h3>
-        <a href="{{ developer_website or config.DEVELOPER_WEBSITE }}" target="_blank">{{ developer_website or config.DEVELOPER_WEBSITE or '—' }}</a>
-        <div class="hint">Visit our website</div>
-      </div>
-    </div>
-
-    <div class="cta">
-      <a href="{{ url_for('public.pricing') }}"><i class="fas fa-tags"></i> View plans & pricing</a>
-      <div style="margin-top: 16px; display:flex; justify-content:center; gap:12px; flex-wrap:wrap;">
-        <a href="https://wa.me/{{ developer_whatsapp_link }}?text={{ 'Hello, I want to buy the system or get a quote' | urlencode }}" style="padding: 14px 28px; background:#25D366; color:white; border-radius:50px; text-decoration:none; font-weight:900; display:inline-flex; align-items:center; gap:8px;">
-          <i class="fab fa-whatsapp"></i> Buy via WhatsApp
-        </a>
-        <a href="mailto:{{ developer_email or config.DEVELOPER_EMAIL }}?subject={{ 'Source code or customization request' | urlencode }}" style="padding: 14px 28px; background:#667eea; color:white; border-radius:50px; text-decoration:none; font-weight:900; display:inline-flex; align-items:center; gap:8px;">
-          <i class="fas fa-envelope"></i> Buy code / customize
-        </a>
-      </div>
-    </div>
-  </div>
-</body>
-</html>
+<!DOCTYPE html>
+<html lang="{{ current_language }}" dir="{{ 'rtl' if is_rtl else 'ltr' }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Azad Smart Systems - Contact</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/accessibility.css') }}">
+  <style>
+    :root { --gulf-gold:#D4AF37; --gulf-blue:#1B4D89; }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Inter',sans-serif; background:#040914; color:#f8fafc; }
+    .navbar { background: rgba(10,14,39,0.95); backdrop-filter: blur(10px); padding: 18px 26px; display:flex; justify-content:space-between; align-items:center; border-bottom: 2px solid var(--gulf-gold); }
+    .navbar a { color: white; text-decoration:none; margin: 0 12px; transition: color .2s ease; font-weight: 800; }
+    .navbar a:hover { color: var(--gulf-gold); }
+    .logo { display:flex; align-items:center; gap:10px; color: var(--gulf-gold); text-decoration:none; }
+    .logo img { width:40px; height:40px; object-fit:contain; border-radius:8px; background:rgba(255,255,255,.92); padding:4px; }
+    .logo span { font-size: 1.2rem; font-weight: 900; color: var(--gulf-gold); }
+    .contact-container { max-width: 1200px; margin: 80px auto; padding: 0 20px; }
+    .contact-header { text-align:center; margin-bottom: 60px; }
+    .contact-header h1 { font-size: 3rem; color: var(--gulf-gold); margin-bottom: 15px; text-shadow: 0 0 30px rgba(212,175,55,0.5); }
+    .contact-header p { font-size: 1.15rem; color: rgba(255,255,255,0.85); }
+    .contact-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-bottom: 60px; }
+    .contact-card { background: rgba(15,23,42,0.85); backdrop-filter: blur(10px); padding: 34px; border-radius: 20px; text-align:center; border: 2px solid rgba(212,175,55,0.35); transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease; }
+    .contact-card:hover { transform: translateY(-8px); border-color: var(--gulf-gold); box-shadow: 0 20px 60px rgba(212,175,55,0.22); }
+    .contact-card i { font-size: 3.2rem; color: var(--gulf-gold); margin-bottom: 18px; }
+    .contact-card h3 { font-size: 1.25rem; margin-bottom: 12px; }
+    .contact-card a { color: #f8fafc; text-decoration:none; font-size: 1.05rem; font-weight: 800; }
+    .contact-card a:hover { color: var(--gulf-gold); }
+    .hint { margin-top: 10px; color: rgba(255,255,255,0.65); font-size: 0.95rem; }
+    .cta { text-align:center; margin-top: 60px; }
+    .cta a { padding: 18px 45px; background: var(--gulf-gold); color: var(--gulf-blue); border-radius: 50px; text-decoration:none; font-weight: 900; font-size: 1.15rem; display:inline-flex; align-items:center; gap: 10px; transition: filter .2s ease, transform .2s ease; }
+    .cta a:hover { transform: translateY(-2px); filter: brightness(1.02); }
+  </style>
+</head>
+<body class="keep-theme contact-page">
+  {% set platform_name_en = config.COMPANY_NAME if config.COMPANY_NAME != config.COMPANY_NAME_AR else 'Azad Smart Systems' %}
+  {% set platform_logo = config.COMPANY_LOGO or 'assets/brand/azad/logos/logo-gold.png' %}
+  {% set company_address_en = config.COMPANY_ADDRESS_EN or company_address or tenant_address %}
+  <div style="position: fixed; top: 20px; left: 20px; z-index: 9999;">
+    <a href="{{ url_for('language.set_language', lang='ar') }}" class="btn btn-sm" style="background: rgba(255,255,255,0.9); border-radius: 20px; padding: 8px 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); text-decoration:none; color:#111827; font-weight:900;">
+      <i class="fas fa-globe" style="margin-right: 8px;"></i>AR
+    </a>
+  </div>
+
+  <nav class="navbar">
+    <a class="logo" href="{{ url_for('public.landing') }}">
+      <img src="{{ url_for('static', filename=platform_logo) }}" alt="{{ platform_name_en }}">
+      <span>{{ platform_name_en }}</span>
+    </a>
+    <div>
+      <a href="{{ url_for('public.landing') }}">Home</a>
+      <a href="{{ url_for('public.features') }}">Features</a>
+      <a href="{{ url_for('public.pricing') }}">Pricing</a>
+      <a href="{{ url_for('public.user_guide') }}">User guide</a>
+      <a href="{{ url_for('auth.login') }}"><i class="fas fa-sign-in-alt"></i> Login</a>
+    </div>
+  </nav>
+
+  <div class="contact-container">
+    <div class="contact-header">
+      <h1>Contact us</h1>
+      <p>We are here to help. Reach out anytime.</p>
+    </div>
+
+    <div class="contact-grid">
+      <div class="contact-card">
+        <i class="fab fa-whatsapp"></i>
+        <h3>WhatsApp</h3>
+        <a href="https://wa.me/{{ developer_whatsapp_link }}" target="_blank" rel="noopener noreferrer">{{ developer_whatsapp or config.DEVELOPER_WHATSAPP or '—' }}</a>
+        <div class="hint">Fastest way to reach us</div>
+      </div>
+
+      <div class="contact-card">
+        <i class="fas fa-phone"></i>
+        <h3>Phone</h3>
+        <a href="tel:{{ developer_phone or config.DEVELOPER_PHONE }}">{{ developer_phone or config.DEVELOPER_PHONE or '—' }}</a>
+        <div class="hint">Available 24/7</div>
+      </div>
+
+      <div class="contact-card">
+        <i class="fas fa-mobile-alt"></i>
+        <h3>Alt phone</h3>
+        <a href="tel:{{ developer_phone or config.DEVELOPER_PHONE }}">{{ developer_phone or config.DEVELOPER_PHONE or '—' }}</a>
+        <div class="hint">Local calls</div>
+      </div>
+
+      <div class="contact-card">
+        <i class="fas fa-envelope"></i>
+        <h3>Email</h3>
+        <a href="mailto:{{ developer_email or config.DEVELOPER_EMAIL }}">{{ developer_email or config.DEVELOPER_EMAIL or '—' }}</a>
+        <div class="hint">For formal inquiries</div>
+      </div>
+
+      <div class="contact-card">
+        <i class="fas fa-map-marker-alt"></i>
+        <h3>Address</h3>
+        <div style="font-size: 1.1rem; font-weight: 900;">{{ company_address_en }}</div>
+        <div class="hint">Office / region</div>
+      </div>
+
+      <div class="contact-card">
+        <i class="fas fa-globe"></i>
+        <h3>Website</h3>
+        <a href="{{ developer_website or config.DEVELOPER_WEBSITE }}" target="_blank" rel="noopener noreferrer">{{ developer_website or config.DEVELOPER_WEBSITE or '—' }}</a>
+        <div class="hint">Visit our website</div>
+      </div>
+    </div>
+
+    <div class="cta">
+      <a href="{{ url_for('public.pricing') }}"><i class="fas fa-tags"></i> View plans & pricing</a>
+      <div style="margin-top: 16px; display:flex; justify-content:center; gap:12px; flex-wrap:wrap;">
+        <a href="https://wa.me/{{ developer_whatsapp_link }}?text={{ 'Hello, I want to buy the system or get a quote' | urlencode }}" style="padding: 14px 28px; background:#25D366; color:white; border-radius:50px; text-decoration:none; font-weight:900; display:inline-flex; align-items:center; gap:8px;">
+          <i class="fab fa-whatsapp"></i> Buy via WhatsApp
+        </a>
+        <a href="mailto:{{ developer_email or config.DEVELOPER_EMAIL }}?subject={{ 'Source code or customization request' | urlencode }}" style="padding: 14px 28px; background:#667eea; color:white; border-radius:50px; text-decoration:none; font-weight:900; display:inline-flex; align-items:center; gap:8px;">
+          <i class="fas fa-envelope"></i> Buy code / customize
+        </a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

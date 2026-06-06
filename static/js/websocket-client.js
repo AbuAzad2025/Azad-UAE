@@ -39,7 +39,6 @@ class WebSocketClient {
         });
         
         this.socket.on('disconnect', () => {
-            console.log('WebSocket disconnected');
             this.connected = false;
             this.scheduleReconnect();
         });

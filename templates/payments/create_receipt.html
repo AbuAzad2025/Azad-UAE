@@ -1,513 +1,513 @@
-{% extends 'base.html' %}
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {% if is_payment %}إنشاء سند صرف{% else %}إنشاء سند قبض{% endif %}{% endblock %}
-{% block page_title %}{% if is_payment %}سند صرف جديد{% else %}سند قبض جديد{% endif %}{% endblock %}
-
-{% block extra_css %}
-<style>
-.receipt-create-form .form-control,
-.receipt-create-form .form-select {
-  min-height: 48px;
-  height: auto;
-  padding: 0.65rem 0.85rem;
-  font-size: 1rem;
-  line-height: 1.5;
-  text-align: center;
-}
-
-.receipt-create-form .form-control::placeholder {
-  text-align: center;
-  color: #6c757d;
-  opacity: 0.85;
-}
-
-.receipt-create-form .select2-container--default .select2-selection--single {
-  height: 48px;
-  min-height: 48px;
-  border-radius: 12px;
-  border: 2px solid #e0e0e0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 0.75rem;
-}
-
-.receipt-create-form .select2-container--default .select2-selection--single .select2-selection__rendered {
-  width: 100%;
-  padding-left: 0 !important;
-  padding-right: 0 !important;
-  line-height: 1.5 !important;
-  text-align: center;
-  font-size: 1rem;
-}
-
-.receipt-create-form .select2-container--default .select2-selection--single .select2-selection__arrow {
-  height: 100%;
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-.receipt-create-form textarea.form-control {
-  text-align: right;
-  line-height: 1.6;
-}
-
-.receipt-create-form textarea.form-control::placeholder {
-  text-align: right;
-}
-</style>
-{% endblock %}
-
-{% block content %}
-{% set submitted = form_data if form_data is defined else None %}
-{% set selected_customer_id = submitted.get('customer_id') if submitted and submitted.get('customer_id') else (preselected_customer.id if preselected_customer else '') %}
-{% set selected_currency = submitted.get('currency') if submitted and submitted.get('currency') else (purchase.currency if purchase else sale.currency if sale else tenant_default_currency or 'AED') %}
-{% set selected_payment_method = submitted.get('payment_method') if submitted and submitted.get('payment_method') else 'cash' %}
-{% set selected_ewallet = submitted.get('ewallet_name') if submitted and submitted.get('ewallet_name') else '' %}
-{% if sale %}
-<!-- معلومات فاتورة المبيعات -->
-<div class="row mb-4">
-  <div class="col-md-12">
-    <div class="card card-info">
-      <div class="card-header">
-        <h3 class="card-title"><i class="fas fa-file-invoice"></i> معلومات الفاتورة</h3>
-      </div>
-      <div class="card-body">
-        <div class="row">
-          <div class="col-md-3">
-            <strong>رقم الفاتورة:</strong><br>
-            <span class="text-primary">{{ sale.sale_number }}</span>
-          </div>
-          <div class="col-md-3">
-            <strong>العميل:</strong><br>
-            <span>{{ sale.customer_name }}</span>
-          </div>
-          <div class="col-md-3">
-            <strong>المبلغ الإجمالي:</strong><br>
-            <span class="text-success">{{ "{:,.2f}".format(sale.total_amount) }} {{ sale.currency }}</span>
-          </div>
-          <div class="col-md-3">
-            <strong>المتبقي:</strong><br>
+{% extends 'base.html' %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {% if is_payment %}إنشاء سند صرف{% else %}إنشاء سند قبض{% endif %}{% endblock %}
+{% block page_title %}{% if is_payment %}سند صرف جديد{% else %}سند قبض جديد{% endif %}{% endblock %}
+
+{% block extra_css %}
+<style>
+.receipt-create-form .form-control,
+.receipt-create-form .form-select {
+  min-height: 48px;
+  height: auto;
+  padding: 0.65rem 0.85rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.receipt-create-form .form-control::placeholder {
+  text-align: center;
+  color: #6c757d;
+  opacity: 0.85;
+}
+
+.receipt-create-form .select2-container--default .select2-selection--single {
+  height: 48px;
+  min-height: 48px;
+  border-radius: 12px;
+  border: 2px solid #e0e0e0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.75rem;
+}
+
+.receipt-create-form .select2-container--default .select2-selection--single .select2-selection__rendered {
+  width: 100%;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  line-height: 1.5 !important;
+  text-align: center;
+  font-size: 1rem;
+}
+
+.receipt-create-form .select2-container--default .select2-selection--single .select2-selection__arrow {
+  height: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.receipt-create-form textarea.form-control {
+  text-align: right;
+  line-height: 1.6;
+}
+
+.receipt-create-form textarea.form-control::placeholder {
+  text-align: right;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+{% set submitted = form_data if form_data is defined else None %}
+{% set selected_customer_id = submitted.get('customer_id') if submitted and submitted.get('customer_id') else (preselected_customer.id if preselected_customer else '') %}
+{% set selected_currency = submitted.get('currency') if submitted and submitted.get('currency') else (purchase.currency if purchase else sale.currency if sale else tenant_default_currency or 'AED') %}
+{% set selected_payment_method = submitted.get('payment_method') if submitted and submitted.get('payment_method') else 'cash' %}
+{% set selected_ewallet = submitted.get('ewallet_name') if submitted and submitted.get('ewallet_name') else '' %}
+{% if sale %}
+<!-- معلومات فاتورة المبيعات -->
+<div class="row mb-4">
+  <div class="col-md-12">
+    <div class="card card-info">
+      <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-file-invoice"></i> معلومات الفاتورة</h3>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-3">
+            <strong>رقم الفاتورة:</strong><br>
+            <span class="text-primary">{{ sale.sale_number }}</span>
+          </div>
+          <div class="col-md-3">
+            <strong>العميل:</strong><br>
+            <span>{{ sale.customer_name }}</span>
+          </div>
+          <div class="col-md-3">
+            <strong>المبلغ الإجمالي:</strong><br>
+            <span class="text-success">{{ "{:,.2f}".format(sale.total_amount) }} {{ sale.currency }}</span>
+          </div>
+          <div class="col-md-3">
+            <strong>المتبقي:</strong><br>
             {% set sale_balance_display = sale.balance_due %}
             {% if sale.currency != 'AED' and sale.exchange_rate %}
               {% set sale_balance_display = sale.balance_due / sale.exchange_rate %}
             {% endif %}
             <span class="text-danger">{{ "{:,.2f}".format(sale_balance_display) }} {{ sale.currency }}</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-{% elif purchase %}
-<!-- معلومات فاتورة المشتريات -->
-<div class="row mb-4">
-  <div class="col-md-12">
-    <div class="card card-danger">
-      <div class="card-header">
-        <h3 class="card-title"><i class="fas fa-file-invoice"></i> معلومات فاتورة الشراء</h3>
-      </div>
-      <div class="card-body">
-        <div class="row">
-          <div class="col-md-3">
-            <strong>رقم الفاتورة:</strong><br>
-            <span class="text-primary">{{ purchase.purchase_number }}</span>
-          </div>
-          <div class="col-md-3">
-            <strong>المورد:</strong><br>
-            <span>{{ purchase.supplier_name }}</span>
-          </div>
-          <div class="col-md-3">
-            <strong>المبلغ الإجمالي:</strong><br>
-            <span class="text-success">{{ "{:,.2f}".format(purchase.total_amount) }} {{ purchase.currency }}</span>
-          </div>
-          <div class="col-md-3">
-            <strong>المتبقي:</strong><br>
-            <span class="text-danger">
-              {% if suggested_amount is not none %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% elif purchase %}
+<!-- معلومات فاتورة المشتريات -->
+<div class="row mb-4">
+  <div class="col-md-12">
+    <div class="card card-danger">
+      <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-file-invoice"></i> معلومات فاتورة الشراء</h3>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-3">
+            <strong>رقم الفاتورة:</strong><br>
+            <span class="text-primary">{{ purchase.purchase_number }}</span>
+          </div>
+          <div class="col-md-3">
+            <strong>المورد:</strong><br>
+            <span>{{ purchase.supplier_name }}</span>
+          </div>
+          <div class="col-md-3">
+            <strong>المبلغ الإجمالي:</strong><br>
+            <span class="text-success">{{ "{:,.2f}".format(purchase.total_amount) }} {{ purchase.currency }}</span>
+          </div>
+          <div class="col-md-3">
+            <strong>المتبقي:</strong><br>
+            <span class="text-danger">
+              {% if suggested_amount is not none %}
                 {{ "{:,.2f}".format(suggested_amount) }} {{ selected_currency }}
-              {% else %}
+              {% else %}
                 {{ "{:,.2f}".format(purchase.total_amount) }} {{ purchase.currency }}
-              {% endif %}
-            </span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-{% endif %}
-
-<div class="card">
-  <form method="POST" action="{% if sale %}{{ url_for('payments.create_from_sale', sale_id=sale.id) }}{% elif purchase %}{{ url_for('payments.create_payment', purchase_id=purchase.id) }}{% else %}{{ url_for('payments.create_receipt') }}{% endif %}" class="receipt-create-form">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    
-    <div class="card-body">
-      <div class="row">
-        {% if not is_payment %}
-        <!-- العميل (سند قبض فقط) -->
-        <div class="col-md-6">
-          <div class="form-group">
-            <label>
-              <i class="fas fa-user text-primary"></i> الزبون 
-              <span class="text-danger">*</span>
-            </label>
-            <select name="customer_id" id="customer_id" class="form-control customer-select" required>
-              <option value="" {% if not selected_customer_id %}selected{% endif %}>بلا</option>
-              {% if preselected_customer %}
-              <option value="{{ preselected_customer.id }}" {% if selected_customer_id and selected_customer_id|string == preselected_customer.id|string %}selected{% endif %}>
-                {{ preselected_customer.name }}{% if preselected_customer.phone %} - {{ preselected_customer.phone }}{% endif %}
-              </option>
-              {% endif %}
-            </select>
-          </div>
-        </div>
-        {% else %}
-        <!-- المورد (سند صرف فقط) -->
-        <div class="col-md-6">
-          <div class="form-group">
-            <label>
-              <i class="fas fa-truck text-danger"></i> المورد 
-            </label>
-            <input type="text" class="form-control" id="supplier_display" name="supplier_display" value="{{ supplier.name if supplier else purchase.supplier_name }}" readonly>
-          </div>
-        </div>
-        {% endif %}
-
-        <!-- المبلغ -->
-        <div class="col-md-3">
-          <div class="form-group">
-            <label>
-              <i class="fas fa-money-bill-wave text-success"></i> المبلغ 
-              <span class="text-danger">*</span>
-            </label>
-            <input type="number" name="amount" id="amount" class="form-control" step="0.01" min="0.01" 
-                   value="{{ submitted.get('amount') if submitted and submitted.get('amount') else (suggested_amount if suggested_amount else '') }}" 
-                   data-suggested-amount="{{ suggested_amount if suggested_amount else '' }}"
-                   placeholder="0.00" required>
-            {% if suggested_amount %}
-            <small class="form-text text-info">
-              <i class="fas fa-info-circle"></i> المبلغ المقترح حسب ديون الزبون
-            </small>
-            {% endif %}
-          </div>
-        </div>
-
-        <!-- العملة -->
-        <div class="col-md-3">
-          <div class="form-group">
-            <label>
-              <i class="fas fa-dollar-sign text-warning"></i> العملة
-            </label>
-            <select name="currency" id="currency" class="form-control">
-              {% set currency_options = [
-                ('AED', 'AED - درهم إماراتي'),
-                ('USD', 'USD - دولار أمريكي'),
-                ('EUR', 'EUR - يورو'),
-                ('GBP', 'GBP - جنيه إسترليني'),
-                ('SAR', 'SAR - ريال سعودي'),
-                ('KWD', 'KWD - دينار كويتي'),
-                ('QAR', 'QAR - ريال قطري'),
-                ('OMR', 'OMR - ريال عماني'),
-                ('BHD', 'BHD - دينار بحريني')
-              ] %}
-              {% for value, label in currency_options %}
-              <option value="{{ value }}" {% if selected_currency == value %}selected{% endif %}>{{ label }}</option>
-              {% endfor %}
-            </select>
-          </div>
-        </div>
-      </div>
-
-      <div class="row">
-        <!-- سعر الصرف -->
-        <div class="col-md-12">
-          <div class="form-group">
-            <label>
-              <i class="fas fa-exchange-alt text-primary"></i> سعر الصرف مقابل {{ tenant_currency_name_ar or 'درهم إماراتي' }}
-            </label>
-            <input type="number" name="exchange_rate" id="exchange_rate" 
-                   class="form-control" step="0.000001" min="0.000001"
-                   value="{% if purchase %}{{ purchase.exchange_rate }}{% elif sale %}{{ sale.exchange_rate }}{% else %}1{% endif %}" 
-                   readonly style="background-color: #f8f9fa;">
-            <small class="form-text text-muted">
-              <i class="fas fa-info-circle"></i> سعر الصرف من الفاتورة (ثابت)
-            </small>
-          </div>
-        </div>
-      </div>
-
-      <div class="row">
-        <!-- طريقة الدفع -->
-        <div class="col-md-6">
-          <div class="form-group">
-            <label>
-              <i class="fas fa-credit-card text-info"></i> طريقة الدفع
-            </label>
-            <select name="payment_method" id="payment_method" class="form-control" required>
-              <option value="cash" {% if selected_payment_method == 'cash' %}selected{% endif %}>نقداً</option>
-              <option value="bank_transfer" {% if selected_payment_method == 'bank_transfer' %}selected{% endif %}>تحويل بنكي</option>
-              <option value="cheque" {% if selected_payment_method == 'cheque' %}selected{% endif %}>شيك</option>
-              <option value="card" {% if selected_payment_method == 'card' %}selected{% endif %}>بطاقة ائتمان</option>
-              <option value="e_wallet" {% if selected_payment_method == 'e_wallet' %}selected{% endif %}>محفظة إلكترونية</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- رقم المرجع -->
-        <div class="col-md-6">
-          <div class="form-group">
-            <label>
-              <i class="fas fa-hashtag text-secondary"></i> رقم المرجع
-            </label>
-            <input type="text" name="reference_number" id="reference_number" class="form-control" 
-                   value="" placeholder="رقم المرجع">
-          </div>
-        </div>
-      </div>
-
-      <!-- حقول الشيك (تظهر عند اختيار شيك) -->
-      <div id="cheque_fields" class="row" style="display: none;">
-        <div class="col-md-4">
-          <div class="form-group">
-            <label><i class="fas fa-hashtag"></i> رقم الشيك <span class="text-danger">*</span></label>
-            <input type="text" name="cheque_number" class="form-control" placeholder="رقم الشيك">
-          </div>
-        </div>
-        <div class="col-md-4">
-          <div class="form-group">
-            <label><i class="fas fa-calendar"></i> تاريخ استحقاق الشيك <span class="text-danger">*</span></label>
-            <input type="date" name="cheque_date" class="form-control">
-          </div>
-        </div>
-        <div class="col-md-4">
-          <div class="form-group">
-            <label><i class="fas fa-university"></i> اسم البنك <span class="text-danger">*</span></label>
-            <input type="text" name="bank_name" class="form-control" placeholder="اسم البنك">
-          </div>
-        </div>
-      </div>
-
-      <!-- حقول البطاقة (فيزا/ماستركارد) -->
-      <div id="card_fields" class="row" style="display: none;">
-        <div class="col-md-6">
-          <div class="form-group">
-            <label><i class="fas fa-credit-card"></i> آخر 4 أرقام من البطاقة</label>
-            <input type="text" name="card_last4" class="form-control" placeholder="1234" maxlength="4">
-          </div>
-        </div>
-        <div class="col-md-6">
-          <div class="form-group">
-            <label><i class="fas fa-hashtag"></i> رقم التفويض</label>
-            <input type="text" name="reference_number_card" class="form-control" placeholder="رقم التفويض">
-          </div>
-        </div>
-      </div>
-
-      <!-- حقول التحويل البنكي -->
-      <div id="bank_transfer_fields" class="row" style="display: none;">
-        <div class="col-md-6">
-          <div class="form-group">
-            <label><i class="fas fa-university"></i> اسم البنك</label>
-            <input type="text" name="bank_name_transfer" class="form-control" placeholder="اسم البنك">
-          </div>
-        </div>
-        <div class="col-md-6">
-          <div class="form-group">
-            <label><i class="fas fa-hashtag"></i> رقم الحوالة</label>
-            <input type="text" name="reference_number_transfer" class="form-control" placeholder="رقم الحوالة">
-          </div>
-        </div>
-      </div>
-
-      <!-- حقول المحفظة الإلكترونية -->
-      <div id="ewallet_fields" class="row" style="display: none;">
-        <div class="col-md-6">
-          <div class="form-group">
-            <label><i class="fas fa-wallet"></i> اسم المحفظة</label>
-            <select name="ewallet_name" class="form-control">
-              <option value="" {% if not selected_ewallet %}selected{% endif %}>بلا</option>
-              <option value="paypal" {% if selected_ewallet == 'paypal' %}selected{% endif %}>PayPal</option>
-              <option value="apple_pay" {% if selected_ewallet == 'apple_pay' %}selected{% endif %}>Apple Pay</option>
-              <option value="google_pay" {% if selected_ewallet == 'google_pay' %}selected{% endif %}>Google Pay</option>
-              <option value="samsung_pay" {% if selected_ewallet == 'samsung_pay' %}selected{% endif %}>Samsung Pay</option>
-              <option value="other">أخرى</option>
-            </select>
-          </div>
-        </div>
-        <div class="col-md-6">
-          <div class="form-group">
-            <label><i class="fas fa-hashtag"></i> رقم العملية</label>
-            <input type="text" name="reference_number_ewallet" class="form-control" placeholder="رقم العملية">
-          </div>
-        </div>
-      </div>
-
-      <!-- الملاحظات -->
-      <div class="row">
-        <div class="col-12">
-          <div class="form-group">
-            <label>
-              <i class="fas fa-sticky-note text-muted"></i> ملاحظات
-            </label>
-            <textarea name="notes" class="form-control" rows="3" 
-                      placeholder="أي ملاحظات إضافية..."></textarea>
-          </div>
-        </div>
-      </div>
-
-      <!-- معلومات العميل (تظهر عند اختيار عميل) -->
-      <div id="customerInfo" class="row" style="display: none;">
-        <div class="col-12">
-          <div class="alert alert-info">
-            <h6><i class="fas fa-info-circle"></i> معلومات العميل</h6>
-            <div class="row">
-              <div class="col-md-6">
-                <strong>الرصيد الحالي:</strong> 
-                <span id="customerBalance" class="badge badge-secondary">0.00 {{ tenant_currency_symbol or 'AED' }}</span>
-              </div>
-              <div class="col-md-6">
-                <div id="unpaidSales"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="card-footer">
-      <div class="row">
-        <div class="col-6">
-          <a href="{{ url_for('payments.receipts') }}" class="btn btn-secondary">
-            <i class="fas fa-times"></i> إلغاء
-          </a>
-        </div>
-        <div class="col-6 text-right">
-          <button type="submit" class="btn btn-success">
-            <i class="fas fa-save"></i> {% if is_payment %}حفظ سند الصرف{% else %}حفظ سند القبض{% endif %}
-          </button>
-        </div>
-      </div>
-    </div>
-  </form>
-</div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-$(document).ready(function() {
-  // تفعيل Tooltips
-  $('[data-toggle="tooltip"]').tooltip({
-    placement: 'top',
-    trigger: 'hover'
-  });
-  
-  // تهيئة حقول الدفع الديناميكية
-  if (window.PaymentFieldsManager) {
-    PaymentFieldsManager.initSelector('#payment_method', '#paymentFieldsContainer');
-  }
-  
-  // ملء المبلغ المقترح من السيرفر
-  var suggestedAmount = $('#amount').data('suggested-amount');
-  if (suggestedAmount) {
-    $('#amount').val(suggestedAmount);
-  }
-  
-  // إدارة الحقول الديناميكية حسب طريقة الدفع
-  $('#payment_method').on('change', function() {
-    var method = $(this).val();
-    
-    // إخفاء جميع الحقول الديناميكية أولاً
-    $('#cheque_fields, #card_fields, #bank_transfer_fields, #ewallet_fields').slideUp();
-    
-    // إظهار الحقول المناسبة
-    switch(method) {
-      case 'cheque':
-        $('#cheque_fields').slideDown();
-        break;
-      case 'card':
-        $('#card_fields').slideDown();
-        break;
-      case 'bank_transfer':
-        $('#bank_transfer_fields').slideDown();
-        break;
-      case 'e_wallet':
-        $('#ewallet_fields').slideDown();
-        break;
-      default:
-        // نقد - لا حقول إضافية
-        break;
-    }
-  });
-  
-  // تفعيل الحقول عند التحميل إذا كانت طريقة الدفع محددة
-  if ($('#payment_method').val()) {
-    $('#payment_method').trigger('change');
-  }
-  
-  // تحميل بيانات العميل عند الاختيار
-  $('#customer_id').on('select2:select change', function() {
-    var customerId = $(this).val();
-    if (customerId) {
-      loadCustomerBalance();
-    } else {
-      $('#customerInfo').hide();
-    }
-  });
-  
-  // تحميل بيانات العميل المحدد مسبقاً
-  var hasPreselectedCustomer = $('#customer_id option:selected').val() !== '';
-  if (hasPreselectedCustomer) {
-    setTimeout(function() {
-      loadCustomerBalance();
-    }, 1000);
-  }
-  
-  // توليد رقم المرجع تلقائياً
-  var now = new Date();
-  var refNumber = 'REF-' + now.getFullYear() + 
-                  String(now.getMonth() + 1).padStart(2, '0') + 
-                  String(now.getDate()).padStart(2, '0') + '-' +
-                  String(now.getHours()).padStart(2, '0') + 
-                  String(now.getMinutes()).padStart(2, '0') + 
-                  String(now.getSeconds()).padStart(2, '0');
-  $('#reference_number').val(refNumber);
-});
-
-// دالة تحميل بيانات العميل
-function loadCustomerBalance() {
-  var customerId = $('#customer_id').val();
-  if (!customerId) {
-    $('#customerInfo').hide();
-    return;
-  }  $.get('/customers/' + customerId + '/balance', function(data) {    // عرض الرصيد مع اللون المناسب
-    var balanceClass = data.balance < 0 ? 'text-danger' : 'text-success';
-    $('#customerBalance').text(data.balance.toFixed(2) + ' {{ tenant_currency_symbol or 'AED' }}')
-      .removeClass('text-danger text-success').addClass(balanceClass);
-    $('#customerInfo').slideDown();
-    
-    // ملء المبلغ تلقائياً من الفواتير غير المدفوعة
-    if (data.unpaid_sales && data.unpaid_sales.length > 0) {
-      var totalUnpaid = data.unpaid_sales.reduce(function(sum, sale) {
+              {% endif %}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<div class="card">
+  <form method="POST" action="{% if sale %}{{ url_for('payments.create_from_sale', sale_id=sale.id) }}{% elif purchase %}{{ url_for('payments.create_payment', purchase_id=purchase.id) }}{% else %}{{ url_for('payments.create_receipt') }}{% endif %}" class="receipt-create-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    
+    <div class="card-body">
+      <div class="row">
+        {% if not is_payment %}
+        <!-- العميل (سند قبض فقط) -->
+        <div class="col-md-6">
+          <div class="form-group">
+            <label>
+              <i class="fas fa-user text-primary"></i> الزبون 
+              <span class="text-danger">*</span>
+            </label>
+            <select name="customer_id" id="customer_id" class="form-control customer-select" required>
+              <option value="" {% if not selected_customer_id %}selected{% endif %}>بلا</option>
+              {% if preselected_customer %}
+              <option value="{{ preselected_customer.id }}" {% if selected_customer_id and selected_customer_id|string == preselected_customer.id|string %}selected{% endif %}>
+                {{ preselected_customer.name }}{% if preselected_customer.phone %} - {{ preselected_customer.phone }}{% endif %}
+              </option>
+              {% endif %}
+            </select>
+          </div>
+        </div>
+        {% else %}
+        <!-- المورد (سند صرف فقط) -->
+        <div class="col-md-6">
+          <div class="form-group">
+            <label>
+              <i class="fas fa-truck text-danger"></i> المورد 
+            </label>
+            <input type="text" class="form-control" id="supplier_display" name="supplier_display" value="{{ supplier.name if supplier else purchase.supplier_name }}" readonly>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- المبلغ -->
+        <div class="col-md-3">
+          <div class="form-group">
+            <label>
+              <i class="fas fa-money-bill-wave text-success"></i> المبلغ 
+              <span class="text-danger">*</span>
+            </label>
+            <input type="number" name="amount" id="amount" class="form-control" step="0.01" min="0.01" 
+                   value="{{ submitted.get('amount') if submitted and submitted.get('amount') else (suggested_amount if suggested_amount else '') }}" 
+                   data-suggested-amount="{{ suggested_amount if suggested_amount else '' }}"
+                   placeholder="0.00" required>
+            {% if suggested_amount %}
+            <small class="form-text text-info">
+              <i class="fas fa-info-circle"></i> المبلغ المقترح حسب ديون الزبون
+            </small>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- العملة -->
+        <div class="col-md-3">
+          <div class="form-group">
+            <label>
+              <i class="fas fa-dollar-sign text-warning"></i> العملة
+            </label>
+            <select name="currency" id="currency" class="form-control">
+              {% set currency_options = [
+                ('AED', 'AED - درهم إماراتي'),
+                ('USD', 'USD - دولار أمريكي'),
+                ('EUR', 'EUR - يورو'),
+                ('GBP', 'GBP - جنيه إسترليني'),
+                ('SAR', 'SAR - ريال سعودي'),
+                ('KWD', 'KWD - دينار كويتي'),
+                ('QAR', 'QAR - ريال قطري'),
+                ('OMR', 'OMR - ريال عماني'),
+                ('BHD', 'BHD - دينار بحريني')
+              ] %}
+              {% for value, label in currency_options %}
+              <option value="{{ value }}" {% if selected_currency == value %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <!-- سعر الصرف -->
+        <div class="col-md-12">
+          <div class="form-group">
+            <label>
+              <i class="fas fa-exchange-alt text-primary"></i> سعر الصرف مقابل {{ tenant_currency_name_ar or 'درهم إماراتي' }}
+            </label>
+            <input type="number" name="exchange_rate" id="exchange_rate" 
+                   class="form-control" step="0.000001" min="0.000001"
+                   value="{% if purchase %}{{ purchase.exchange_rate }}{% elif sale %}{{ sale.exchange_rate }}{% else %}1{% endif %}" 
+                   readonly style="background-color: #f8f9fa;">
+            <small class="form-text text-muted">
+              <i class="fas fa-info-circle"></i> سعر الصرف من الفاتورة (ثابت)
+            </small>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <!-- طريقة الدفع -->
+        <div class="col-md-6">
+          <div class="form-group">
+            <label>
+              <i class="fas fa-credit-card text-info"></i> طريقة الدفع
+            </label>
+            <select name="payment_method" id="payment_method" class="form-control" required>
+              <option value="cash" {% if selected_payment_method == 'cash' %}selected{% endif %}>نقداً</option>
+              <option value="bank_transfer" {% if selected_payment_method == 'bank_transfer' %}selected{% endif %}>تحويل بنكي</option>
+              <option value="cheque" {% if selected_payment_method == 'cheque' %}selected{% endif %}>شيك</option>
+              <option value="card" {% if selected_payment_method == 'card' %}selected{% endif %}>بطاقة ائتمان</option>
+              <option value="e_wallet" {% if selected_payment_method == 'e_wallet' %}selected{% endif %}>محفظة إلكترونية</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- رقم المرجع -->
+        <div class="col-md-6">
+          <div class="form-group">
+            <label>
+              <i class="fas fa-hashtag text-secondary"></i> رقم المرجع
+            </label>
+            <input type="text" name="reference_number" id="reference_number" class="form-control" 
+                   value="" placeholder="رقم المرجع">
+          </div>
+        </div>
+      </div>
+
+      <!-- حقول الشيك (تظهر عند اختيار شيك) -->
+      <div id="cheque_fields" class="row" style="display: none;">
+        <div class="col-md-4">
+          <div class="form-group">
+            <label><i class="fas fa-hashtag"></i> رقم الشيك <span class="text-danger">*</span></label>
+            <input type="text" name="cheque_number" class="form-control" placeholder="رقم الشيك">
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="form-group">
+            <label><i class="fas fa-calendar"></i> تاريخ استحقاق الشيك <span class="text-danger">*</span></label>
+            <input type="date" name="cheque_date" class="form-control">
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="form-group">
+            <label><i class="fas fa-university"></i> اسم البنك <span class="text-danger">*</span></label>
+            <input type="text" name="bank_name" class="form-control" placeholder="اسم البنك">
+          </div>
+        </div>
+      </div>
+
+      <!-- حقول البطاقة (فيزا/ماستركارد) -->
+      <div id="card_fields" class="row" style="display: none;">
+        <div class="col-md-6">
+          <div class="form-group">
+            <label><i class="fas fa-credit-card"></i> آخر 4 أرقام من البطاقة</label>
+            <input type="text" name="card_last4" class="form-control" placeholder="1234" maxlength="4">
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-group">
+            <label><i class="fas fa-hashtag"></i> رقم التفويض</label>
+            <input type="text" name="reference_number_card" class="form-control" placeholder="رقم التفويض">
+          </div>
+        </div>
+      </div>
+
+      <!-- حقول التحويل البنكي -->
+      <div id="bank_transfer_fields" class="row" style="display: none;">
+        <div class="col-md-6">
+          <div class="form-group">
+            <label><i class="fas fa-university"></i> اسم البنك</label>
+            <input type="text" name="bank_name_transfer" class="form-control" placeholder="اسم البنك">
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-group">
+            <label><i class="fas fa-hashtag"></i> رقم الحوالة</label>
+            <input type="text" name="reference_number_transfer" class="form-control" placeholder="رقم الحوالة">
+          </div>
+        </div>
+      </div>
+
+      <!-- حقول المحفظة الإلكترونية -->
+      <div id="ewallet_fields" class="row" style="display: none;">
+        <div class="col-md-6">
+          <div class="form-group">
+            <label><i class="fas fa-wallet"></i> اسم المحفظة</label>
+            <select name="ewallet_name" class="form-control">
+              <option value="" {% if not selected_ewallet %}selected{% endif %}>بلا</option>
+              <option value="paypal" {% if selected_ewallet == 'paypal' %}selected{% endif %}>PayPal</option>
+              <option value="apple_pay" {% if selected_ewallet == 'apple_pay' %}selected{% endif %}>Apple Pay</option>
+              <option value="google_pay" {% if selected_ewallet == 'google_pay' %}selected{% endif %}>Google Pay</option>
+              <option value="samsung_pay" {% if selected_ewallet == 'samsung_pay' %}selected{% endif %}>Samsung Pay</option>
+              <option value="other">أخرى</option>
+            </select>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-group">
+            <label><i class="fas fa-hashtag"></i> رقم العملية</label>
+            <input type="text" name="reference_number_ewallet" class="form-control" placeholder="رقم العملية">
+          </div>
+        </div>
+      </div>
+
+      <!-- الملاحظات -->
+      <div class="row">
+        <div class="col-12">
+          <div class="form-group">
+            <label>
+              <i class="fas fa-sticky-note text-muted"></i> ملاحظات
+            </label>
+            <textarea name="notes" class="form-control" rows="3" 
+                      placeholder="أي ملاحظات إضافية..."></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- معلومات العميل (تظهر عند اختيار عميل) -->
+      <div id="customerInfo" class="row" style="display: none;">
+        <div class="col-12">
+          <div class="alert alert-info">
+            <h6><i class="fas fa-info-circle"></i> معلومات العميل</h6>
+            <div class="row">
+              <div class="col-md-6">
+                <strong>الرصيد الحالي:</strong> 
+                <span id="customerBalance" class="badge badge-secondary">0.00 {{ tenant_currency_symbol or 'AED' }}</span>
+              </div>
+              <div class="col-md-6">
+                <div id="unpaidSales"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-footer">
+      <div class="row">
+        <div class="col-6">
+          <a href="{{ url_for('payments.receipts') }}" class="btn btn-secondary">
+            <i class="fas fa-times"></i> إلغاء
+          </a>
+        </div>
+        <div class="col-6 text-right">
+          <button type="submit" class="btn btn-success">
+            <i class="fas fa-save"></i> {% if is_payment %}حفظ سند الصرف{% else %}حفظ سند القبض{% endif %}
+          </button>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+  // تفعيل Tooltips
+  $('[data-toggle="tooltip"]').tooltip({
+    placement: 'top',
+    trigger: 'hover'
+  });
+  
+  // تهيئة حقول الدفع الديناميكية
+  if (window.PaymentFieldsManager) {
+    PaymentFieldsManager.initSelector('#payment_method', '#paymentFieldsContainer');
+  }
+  
+  // ملء المبلغ المقترح من السيرفر
+  var suggestedAmount = $('#amount').data('suggested-amount');
+  if (suggestedAmount) {
+    $('#amount').val(suggestedAmount);
+  }
+  
+  // إدارة الحقول الديناميكية حسب طريقة الدفع
+  $('#payment_method').on('change', function() {
+    var method = $(this).val();
+    
+    // إخفاء جميع الحقول الديناميكية أولاً
+    $('#cheque_fields, #card_fields, #bank_transfer_fields, #ewallet_fields').slideUp();
+    
+    // إظهار الحقول المناسبة
+    switch(method) {
+      case 'cheque':
+        $('#cheque_fields').slideDown();
+        break;
+      case 'card':
+        $('#card_fields').slideDown();
+        break;
+      case 'bank_transfer':
+        $('#bank_transfer_fields').slideDown();
+        break;
+      case 'e_wallet':
+        $('#ewallet_fields').slideDown();
+        break;
+      default:
+        // نقد - لا حقول إضافية
+        break;
+    }
+  });
+  
+  // تفعيل الحقول عند التحميل إذا كانت طريقة الدفع محددة
+  if ($('#payment_method').val()) {
+    $('#payment_method').trigger('change');
+  }
+  
+  // تحميل بيانات العميل عند الاختيار
+  $('#customer_id').on('select2:select change', function() {
+    var customerId = $(this).val();
+    if (customerId) {
+      loadCustomerBalance();
+    } else {
+      $('#customerInfo').hide();
+    }
+  });
+  
+  // تحميل بيانات العميل المحدد مسبقاً
+  var hasPreselectedCustomer = $('#customer_id option:selected').val() !== '';
+  if (hasPreselectedCustomer) {
+    setTimeout(function() {
+      loadCustomerBalance();
+    }, 1000);
+  }
+  
+  // توليد رقم المرجع تلقائياً
+  var now = new Date();
+  var refNumber = 'REF-' + now.getFullYear() + 
+                  String(now.getMonth() + 1).padStart(2, '0') + 
+                  String(now.getDate()).padStart(2, '0') + '-' +
+                  String(now.getHours()).padStart(2, '0') + 
+                  String(now.getMinutes()).padStart(2, '0') + 
+                  String(now.getSeconds()).padStart(2, '0');
+  $('#reference_number').val(refNumber);
+});
+
+// دالة تحميل بيانات العميل
+function loadCustomerBalance() {
+  var customerId = $('#customer_id').val();
+  if (!customerId) {
+    $('#customerInfo').hide();
+    return;
+  }  $.get('/customers/' + customerId + '/balance', function(data) {    // عرض الرصيد مع اللون المناسب
+    var balanceClass = data.balance < 0 ? 'text-danger' : 'text-success';
+    $('#customerBalance').text(data.balance.toFixed(2) + ' {{ tenant_currency_symbol or 'AED' }}')
+      .removeClass('text-danger text-success').addClass(balanceClass);
+    $('#customerInfo').slideDown();
+    
+    // ملء المبلغ تلقائياً من الفواتير غير المدفوعة
+    if (data.unpaid_sales && data.unpaid_sales.length > 0) {
+      var totalUnpaid = data.unpaid_sales.reduce(function(sum, sale) {
         return sum + parseFloat(sale.balance_due_aed || sale.balance_due || 0);
-      }, 0);
-      var currentAmount = parseFloat($('#amount').val()) || 0;
-      
-      if (currentAmount == 0 || !$('#amount').val()) {
-        $('#amount').val(totalUnpaid.toFixed(2));
-      }
-      
-      // عرض الفواتير غير المدفوعة
-      var html = '<strong>فواتير غير مدفوعة:</strong><ul class="mb-0">';
-      data.unpaid_sales.forEach(function(sale) {
-        var saleUrl = "{{ url_for('sales.view', id=0) }}".replace('0', sale.id);
-        html += '<li><a href="' + saleUrl + '" target="_blank">' + sale.sale_number + '</a>: ' + parseFloat(sale.balance_due_aed || sale.balance_due).toFixed(2) + ' {{ tenant_currency_symbol or 'AED' }}</li>';
-      });
-      html += '</ul>';
-      $('#unpaidSales').html(html);
-    } else {
-      $('#unpaidSales').html('<small class="text-success"><i class="fas fa-check"></i> لا توجد فواتير معلقة</small>');
-    }
-  }).fail(function() {  });
-}
-</script>
-{% endblock %}
+      }, 0);
+      var currentAmount = parseFloat($('#amount').val()) || 0;
+      
+      if (currentAmount == 0 || !$('#amount').val()) {
+        $('#amount').val(totalUnpaid.toFixed(2));
+      }
+      
+      // عرض الفواتير غير المدفوعة
+      var html = '<strong>فواتير غير مدفوعة:</strong><ul class="mb-0">';
+      data.unpaid_sales.forEach(function(sale) {
+        var saleUrl = "{{ url_for('sales.view', id=0) }}".replace('0', sale.id);
+        html += '<li><a href="' + saleUrl + '" target="_blank" rel="noopener noreferrer">' + sale.sale_number + '</a>: ' + parseFloat(sale.balance_due_aed || sale.balance_due).toFixed(2) + ' {{ tenant_currency_symbol or 'AED' }}</li>';
+      });
+      html += '</ul>';
+      $('#unpaidSales').html(html);
+    } else {
+      $('#unpaidSales').html('<small class="text-success"><i class="fas fa-check"></i> لا توجد فواتير معلقة</small>');
+    }
+  }).fail(function() {  });
+}
+</script>
+{% endblock %}
