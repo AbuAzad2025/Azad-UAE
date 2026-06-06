@@ -30,7 +30,8 @@ def dashboard():
         stats = {}
         scoped_branch_id = branch_scope_id()
         
-        total_customers_query = Customer.query.filter_by(is_active=True)
+        from utils.tenanting import tenant_query
+        total_customers_query = tenant_query(Customer).filter_by(is_active=True)
         if scoped_branch_id is not None:
             total_customers_query = total_customers_query.join(
                 Sale, Sale.customer_id == Customer.id
@@ -65,12 +66,14 @@ def dashboard():
             
         stats['out_of_stock_count'] = len(out_of_stock)
         
+        tid = get_active_tenant_id(current_user)
         today_sales_query = db.session.query(
             func.count(Sale.id),
             func.sum(Sale.amount_aed)
         ).filter(
             func.date(Sale.sale_date) == today,
-            Sale.status == 'confirmed'
+            Sale.status == 'confirmed',
+            Sale.tenant_id == tid
         )
         if scoped_branch_id is not None:
             today_sales_query = today_sales_query.filter(Sale.branch_id == scoped_branch_id)
@@ -84,7 +87,8 @@ def dashboard():
             func.sum(Sale.amount_aed)
         ).filter(
             func.date(Sale.sale_date) >= month_start,
-            Sale.status == 'confirmed'
+            Sale.status == 'confirmed',
+            Sale.tenant_id == tid
         )
         if scoped_branch_id is not None:
             month_sales_query = month_sales_query.filter(Sale.branch_id == scoped_branch_id)

@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify
+from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify, current_app
 from flask_login import login_required, current_user
 from datetime import datetime, date, timedelta
 from decimal import Decimal
@@ -236,7 +236,7 @@ def delete_account(id):
     
     try:
         # التحقق من وجود قيود مرتبطة
-        has_entries = GLJournalLine.query.filter_by(account_id=id).first()
+        has_entries = scoped_model_query(GLJournalLine).filter_by(account_id=id).first()
         if has_entries:
             flash('❌ لا يمكن حذف الحساب لوجود قيود مرتبطة به', 'danger')
             return redirect(url_for('admin_ledger.accounts_management'))

@@ -1150,14 +1150,14 @@ Future phases require admin UI support for the following areas:
 
 | # | File | Decorators | Tenant Scoping | Error Handling | Try/Except | py_compile | Status |
 |---|------|-----------|---------------|---------------|------------|-----------|--------|
-| 1 | `routes/admin_ledger.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
-| 2 | `routes/advanced_ledger.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
-| 3 | `routes/ai.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
-| 4 | `routes/api.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
-| 5 | `routes/api_analytics.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
-| 6 | `routes/api_docs.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
-| 7 | `routes/api_enhanced.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
-| 8 | `routes/auth.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 1 | `routes/admin_ledger.py` | ✅ | ✅ | ✅ | ✅ | ✅ | **DONE** — Fixed: `current_app` import missing; `GLJournalLine.query` unscoped → `scoped_model_query(GLJournalLine)` |
+| 2 | `routes/advanced_ledger.py` | ✅ | ✅ | ✅ | ✅ | ✅ | **DONE** — Fixed: `current_app` import missing; `CustomsTax`/`ExpenseCategory`/`AdvancedExpense` creation missing `tenant_id`; raw SQL suppliers query unscoped → `Supplier.query.filter_by(tenant_id)`; 3 mutation routes missing `db.session.rollback()` |
+| 3 | `routes/ai.py` | ✅ | ✅ | ✅ | ✅ | ✅ | **DONE** — Fixed in Session 9: `Supplier.query`/`Warehouse.query`/`GLJournalEntry.query` tenant scoping; non-existent `GL` model replaced with `GLJournalEntry` |
+| 4 | `routes/api.py` | ✅ | ✅ | ✅ | ✅ | ✅ | **DONE** — Fixed: `Product.query` in `api_search` missing `tenant_id` scoping for `purpose=='purchase'` |
+| 5 | `routes/api_analytics.py` | ✅ | ✅ | ✅ | ✅ | ✅ | **DONE** — Fixed: 5 queries missing tenant scoping (`Customer`×2, `Sale`×2, `Payment`, `Product`) |
+| 6 | `routes/api_docs.py` | ✅ | N/A | N/A | N/A | ✅ | **DONE** — Static OpenAPI spec + Swagger UI; no DB queries; production-gated |
+| 7 | `routes/api_enhanced.py` | ✅ | ✅ | ✅ | ✅ | ✅ | **DONE** — Fixed: `Customer.query` and `Product.query` missing `tenant_id` scoping |
+| 8 | `routes/auth.py` | ✅ | ✅ | ✅ | ✅ | ✅ | **DONE** — Login/auth routes intentionally global; public webhooks secured by tokens/signatures; no issues |
 | 9 | `routes/branches.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
 | 10 | `routes/cheques.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
 | 11 | `routes/customers.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |

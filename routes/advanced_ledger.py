@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for
+from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for, current_app
 from flask_login import login_required, current_user
 from datetime import datetime, date, timedelta
 from decimal import Decimal
@@ -82,7 +82,9 @@ def add_customs_tax():
                                        accounts=accounts,
                                        form_data=request.form)
             
+            tid = active_tenant_id(current_user)
             tax = CustomsTax(
+                tenant_id=tid,
                 name=request.form.get('name'),
                 name_ar=request.form.get('name_ar'),
                 tax_type=request.form.get('tax_type'),
@@ -143,8 +145,10 @@ def add_expense_category():
             
             parent_id = request.form.get('parent_id', type=int) if request.form.get('parent_id') else None
             
+            tid = active_tenant_id(current_user)
             account = _accounts().filter_by(id=gl_account_id).first()
             category = ExpenseCategory(
+                tenant_id=tid,
                 name=request.form.get('name'),
                 name_ar=request.form.get('name_ar'),
                 gl_account_code=account.code if account else None
@@ -198,7 +202,9 @@ def add_advanced_expense():
                 default_currency = (Tenant.get_current().default_currency or '').strip() or 'AED'
             except Exception:
                 default_currency = 'AED'
+            tid = active_tenant_id(current_user)
             expense = AdvancedExpense(
+                tenant_id=tid,
                 expense_number=f"EXP-{datetime.now().strftime('%Y%m%d%H%M%S')}",
                 expense_date=datetime.strptime(request.form.get('expense_date'), '%Y-%m-%d').date(),
                 description=request.form.get('description'),
@@ -245,7 +251,8 @@ def add_advanced_expense():
     # الحصول على البيانات المطلوبة
     tid = active_tenant_id(current_user)
     categories = ExpenseCategory.query.filter_by(is_active=True, tenant_id=tid).all()
-    suppliers = db.session.query(db.text("SELECT id, name FROM suppliers")).all() if hasattr(db, 'text') else []
+    from models import Supplier
+    suppliers = Supplier.query.filter_by(tenant_id=tid).with_entities(Supplier.id, Supplier.name).all()
     
     return render_template('ledger/advanced/add_advanced_expense.html', 
                          categories=categories, suppliers=suppliers)
@@ -282,6 +289,7 @@ def reverse_journal_entry(entry_id):
         flash(f'✅ تم عكس القيد بنجاح - القيد العكسي: {reversal_entry.entry_number}', 'success')
         
     except Exception as e:
+        db.session.rollback()
         current_app.logger.error(f"Error reversing journal entry {entry_id}: {e}")
         from utils.error_messages import ErrorMessages
         flash(ErrorMessages.unexpected_error(), 'danger')
@@ -305,6 +313,7 @@ def delete_journal_entry(entry_id):
         flash('✅ تم حذف القيد بنجاح', 'success')
         
     except Exception as e:
+        db.session.rollback()
         current_app.logger.error(f"Error deleting journal entry {entry_id}: {e}")
         from utils.error_messages import ErrorMessages
         flash(ErrorMessages.unexpected_error(), 'danger')
@@ -328,6 +337,7 @@ def approve_journal_entry(entry_id):
         flash('✅ تم الموافقة على القيد وترحيله بنجاح', 'success')
         
     except Exception as e:
+        db.session.rollback()
         current_app.logger.error(f"Error approving journal entry {entry_id}: {e}")
         from utils.error_messages import ErrorMessages
         flash(ErrorMessages.unexpected_error(), 'danger')

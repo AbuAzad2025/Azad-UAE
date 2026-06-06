@@ -3,6 +3,7 @@ from flask_login import login_required
 from extensions import limiter
 from utils.decorators import permission_required
 from utils.cache_decorators import cached_query
+from utils.tenanting import get_active_tenant_id
 from datetime import datetime, timedelta
 from decimal import Decimal
 
@@ -17,7 +18,11 @@ api_analytics_bp = Blueprint('api_analytics', __name__, url_prefix='/api/analyti
 def overdue_payments():
     from models import Customer
     
-    customers = Customer.query.filter_by(is_active=True).all()
+    tid = get_active_tenant_id(None)
+    customers = Customer.query.filter_by(is_active=True)
+    if tid:
+        customers = customers.filter(Customer.tenant_id == tid)
+    customers = customers.all()
     overdue = [c for c in customers if c.get_balance_aed() > Decimal('1000')]
     
     return jsonify({
@@ -38,14 +43,21 @@ def daily_stats():
     
     today = datetime.now().date()
     
+    tid = get_active_tenant_id(None)
     today_sales = Sale.query.filter(
         db.func.date(Sale.sale_date) == today,
         Sale.status == 'confirmed'
-    ).all()
+    )
+    if tid:
+        today_sales = today_sales.filter(Sale.tenant_id == tid)
+    today_sales = today_sales.all()
     
     today_payments = Payment.query.filter(
         db.func.date(Payment.payment_date) == today
-    ).all()
+    )
+    if tid:
+        today_payments = today_payments.filter(Payment.tenant_id == tid)
+    today_payments = today_payments.all()
     
     return jsonify({
         'success': True,
@@ -69,7 +81,11 @@ def top_customers():
     
     limit = request.args.get('limit', 10, type=int)
     
-    customers = Customer.query.filter_by(is_active=True).order_by(
+    tid = get_active_tenant_id(None)
+    customers = Customer.query.filter_by(is_active=True)
+    if tid:
+        customers = customers.filter(Customer.tenant_id == tid)
+    customers = customers.order_by(
         Customer.total_purchases.desc()
     ).limit(limit).all()
     
@@ -92,10 +108,14 @@ def top_customers():
 def low_stock_products():
     from models import Product
     
+    tid = get_active_tenant_id(None)
     products = Product.query.filter(
         Product.is_active == True,
         Product.current_stock <= Product.min_stock_alert
-    ).all()
+    )
+    if tid:
+        products = products.filter(Product.tenant_id == tid)
+    products = products.all()
     
     return jsonify({
         'success': True,
@@ -122,13 +142,17 @@ def revenue_trend():
     days = request.args.get('days', 30, type=int)
     since = datetime.now() - timedelta(days=days)
     
+    tid = get_active_tenant_id(None)
     daily_revenue = db.session.query(
         func.date(Sale.sale_date).label('date'),
         func.sum(Sale.amount_aed).label('total')
     ).filter(
         Sale.sale_date >= since,
         Sale.status == 'confirmed'
-    ).group_by(func.date(Sale.sale_date)).all()
+    )
+    if tid:
+        daily_revenue = daily_revenue.filter(Sale.tenant_id == tid)
+    daily_revenue = daily_revenue.group_by(func.date(Sale.sale_date)).all()
     
     return jsonify({
         'success': True,

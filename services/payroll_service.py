@@ -168,13 +168,10 @@ class PayrollService:
             
 
         pending_advances = SalaryAdvance.query.filter_by(
-
             employee_id=employee_id, 
-
             is_deducted=False, 
-
-            status='approved'
-
+            status='approved',
+            tenant_id=tenant_id
         ).all()
 
         
@@ -283,8 +280,8 @@ class PayrollService:
     @staticmethod
 
     def generate_branch_payroll(branch_id, month, year, user_id):
-
-        employees = Employee.query.filter_by(branch_id=branch_id, is_active=True).all()
+        tenant_id = PayrollService._branch_tenant_id(branch_id)
+        employees = Employee.query.filter_by(branch_id=branch_id, tenant_id=tenant_id, is_active=True).all()
 
         generated_count = 0
 
@@ -296,7 +293,7 @@ class PayrollService:
 
             exists = PayrollTransaction.query.filter_by(
 
-                employee_id=emp.id, month=month, year=year
+                employee_id=emp.id, tenant_id=tenant_id, month=month, year=year
 
             ).first()
 

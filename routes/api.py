@@ -313,8 +313,9 @@ def api_search():
         warehouse_id = request.args.get('warehouse_id', type=int)
         purpose = request.args.get('purpose', '').strip()
         warehouse_ids = [warehouse_id] if warehouse_id else get_accessible_warehouse_ids(current_user)
+        tid = get_active_tenant_id(current_user)
         if purpose == 'purchase':
-            products_query = Product.query.filter(Product.is_active == True)
+            products_query = Product.query.filter(Product.is_active == True, Product.tenant_id == tid)
         else:
             products_query = StockService.get_visible_products_query(current_user)
         if query:

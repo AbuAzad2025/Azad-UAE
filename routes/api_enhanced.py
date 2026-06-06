@@ -4,6 +4,7 @@ from extensions import limiter
 from utils.cache_decorators import cached_query
 from utils.decorators import permission_required
 from utils.query_optimizer import optimize_query, paginate_optimized
+from utils.tenanting import get_active_tenant_id
 
 api_enhanced_bp = Blueprint('api_enhanced', __name__, url_prefix='/api/v2')
 
@@ -60,7 +61,11 @@ def get_customers():
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 20, type=int)
     
-    query = Customer.query.filter_by(is_active=True).order_by(Customer.name)
+    tid = get_active_tenant_id(current_user)
+    query = Customer.query.filter_by(is_active=True)
+    if tid:
+        query = query.filter(Customer.tenant_id == tid)
+    query = query.order_by(Customer.name)
     pagination = paginate_optimized(query, page=page, per_page=per_page)
     
     return jsonify({
@@ -86,6 +91,7 @@ def search_products():
     if not query_text:
         return jsonify({'success': False, 'error': 'Query required'})
     
+    tid = get_active_tenant_id(current_user)
     products = Product.query.filter(
         Product.is_active == True,
         or_(
@@ -94,7 +100,10 @@ def search_products():
             Product.sku.ilike(f'%{query_text}%'),
             Product.barcode.ilike(f'%{query_text}%')
         )
-    ).limit(limit).all()
+    )
+    if tid:
+        products = products.filter(Product.tenant_id == tid)
+    products = products.limit(limit).all()
     
     return jsonify({
         'success': True,

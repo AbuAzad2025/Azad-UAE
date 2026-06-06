@@ -13,7 +13,7 @@ from utils.constants import SALE_PAYMENT_STATUSES
 class AgingAnalysisService:
     
     @staticmethod
-    def get_receivables_aging(as_of_date=None, branch_id=None):
+    def get_receivables_aging(as_of_date=None, branch_id=None, tenant_id=None):
         """
         تحليل عمر الذمم المدينة (Accounts Receivable)
         
@@ -27,6 +27,8 @@ class AgingAnalysisService:
                 'as_of_date': date
             }
         """
+        from utils.tenanting import active_tenant_id, tenant_query
+        tid = tenant_id or active_tenant_id()
         if not as_of_date:
             as_of_date = date.today()
         elif isinstance(as_of_date, str):
@@ -43,7 +45,7 @@ class AgingAnalysisService:
         }
         
         # جميع العملاء النشطين
-        customers = Customer.query.filter_by(is_active=True).order_by(Customer.name).all()
+        customers = tenant_query(Customer, tenant_id=tid).filter_by(is_active=True).order_by(Customer.name).all()
         
         for customer in customers:
             aging = {
@@ -60,6 +62,7 @@ class AgingAnalysisService:
             # المبيعات غير المدفوعة بالكامل (partial أو unpaid فقط - لا paid)
             unpaid_sales = Sale.query.filter(
                 Sale.customer_id == customer.id,
+                Sale.tenant_id == tid,
                 Sale.payment_status.in_(tuple(s for s in SALE_PAYMENT_STATUSES if s != 'paid')),
                 Sale.status == 'confirmed',
                 func.date(Sale.sale_date) <= as_of_date
@@ -139,10 +142,12 @@ class AgingAnalysisService:
         }
     
     @staticmethod
-    def get_payables_aging(as_of_date=None, branch_id=None):
+    def get_payables_aging(as_of_date=None, branch_id=None, tenant_id=None):
         """
         تحليل عمر الذمم الدائنة (Accounts Payable)
         """
+        from utils.tenanting import active_tenant_id, tenant_query
+        tid = tenant_id or active_tenant_id()
         if not as_of_date:
             as_of_date = date.today()
         elif isinstance(as_of_date, str):
@@ -159,7 +164,7 @@ class AgingAnalysisService:
         }
         
         # جميع الموردين النشطين
-        suppliers = Supplier.query.filter_by(is_active=True).order_by(Supplier.name).all()
+        suppliers = tenant_query(Supplier, tenant_id=tid).filter_by(is_active=True).order_by(Supplier.name).all()
         
         for supplier in suppliers:
             aging = {
@@ -177,6 +182,7 @@ class AgingAnalysisService:
             # ملاحظة: Payment لا يحتوي purchase_id، لذلك نوزّع مدفوعات المورد على أقدم الفواتير أولاً.
             purchases_query = Purchase.query.filter(
                 Purchase.supplier_id == supplier.id,
+                Purchase.tenant_id == tid,
                 Purchase.status == 'confirmed',
                 func.date(Purchase.purchase_date) <= as_of_date
             ).order_by(Purchase.purchase_date)
@@ -186,6 +192,7 @@ class AgingAnalysisService:
 
             payments_query = db.session.query(func.sum(Payment.amount_aed)).filter(
                 Payment.supplier_id == supplier.id,
+                Payment.tenant_id == tid,
                 Payment.direction == 'outgoing',
                 Payment.payment_confirmed == True,
                 func.date(Payment.payment_date) <= as_of_date
