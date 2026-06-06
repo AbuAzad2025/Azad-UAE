@@ -97,13 +97,13 @@
       <div class="footer-note text-center">
         {% if tenant.phone_1 or tenant.phone_2 %}
           <div class="mb-2">
-            <i class="bi bi-telephone me-1"></i>
+            <i class="bi bi-telephone mr-1"></i>
             للاستفسار: <strong dir="ltr">{{ tenant.phone_1 or tenant.phone_2 }}</strong>
           </div>
         {% endif %}
         {% if tenant.email %}
           <div class="mb-2">
-            <i class="bi bi-envelope me-1"></i>
+            <i class="bi bi-envelope mr-1"></i>
             البريد: <a href="mailto:{{ tenant.email }}" class="support-link">{{ tenant.email }}</a>
           </div>
         {% endif %}

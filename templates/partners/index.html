@@ -4,7 +4,7 @@
 
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
-  <h1 class="text-gradient mb-0"><i class="fas fa-users-cog me-2"></i>الشركاء والمساهمين</h1>
+  <h1 class="text-gradient mb-0"><i class="fas fa-users-cog mr-2"></i>الشركاء والمساهمين</h1>
   <a href="{{ url_for('partners.create') }}" class="btn btn-primary">
     <i class="fas fa-plus me-1"></i> شريك جديد
   </a>
@@ -15,7 +15,7 @@
 <div class="card">
   <div class="card-header">
     <div class="d-flex justify-content-between align-items-center">
-      <h3 class="card-title mb-0"><i class="fas fa-list me-2"></i>قائمة الشركاء</h3>
+      <h3 class="card-title mb-0"><i class="fas fa-list mr-2"></i>قائمة الشركاء</h3>
       <div class="btn-group">
         <a href="{{ url_for('partners.index') }}" class="btn btn-sm btn-outline-secondary {% if not request.args.get('scope') %}active{% endif %}">الكل</a>
         <a href="{{ url_for('partners.index', scope='company') }}" class="btn btn-sm btn-outline-secondary {% if request.args.get('scope') == 'company' %}active{% endif %}">شركة</a>
