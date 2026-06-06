@@ -15,7 +15,7 @@ from utils.branching import (
     ensure_warehouse_access,
     should_show_all_branch_columns,
 )
-from utils.tenanting import tenant_get_or_404
+from utils.tenanting import tenant_get_or_404, tenant_query
 from utils.tenanting import scoped_user_query, get_active_tenant_id
 from utils.db_safety import atomic_transaction
 from utils.structured_logging import log_mutation
@@ -129,14 +129,20 @@ def movements():
     warehouse_id = request.args.get('warehouse', type=int)
     
     branch_id = branch_scope_id()
+    tid = get_active_tenant_id(current_user)
     if branch_id is not None:
-        warehouse_ids = [w.id for w in Warehouse.query.filter_by(is_active=True, branch_id=branch_id).all()]
+        wh_query = Warehouse.query.filter_by(is_active=True, branch_id=branch_id)
+        if tid is not None:
+            wh_query = wh_query.filter(Warehouse.tenant_id == tid)
+        warehouse_ids = [w.id for w in wh_query.all()]
         if not warehouse_ids:
             warehouse_ids = [-1]
     else:
         warehouse_ids = None
     
     query = StockMovement.query
+    if tid is not None:
+        query = query.filter(StockMovement.tenant_id == tid)
     if warehouse_ids is not None:
         query = query.filter(StockMovement.warehouse_id.in_(warehouse_ids))
     
@@ -226,7 +232,11 @@ def view_warehouse(id):
 def create_warehouse():
     from models import User
     
-    parent_warehouses = Warehouse.query.filter_by(is_active=True, parent_id=None).all()
+    tid = get_active_tenant_id(current_user)
+    parent_warehouses = Warehouse.query.filter_by(is_active=True, parent_id=None)
+    if tid is not None:
+        parent_warehouses = parent_warehouses.filter(Warehouse.tenant_id == tid)
+    parent_warehouses = parent_warehouses.all()
     users = scoped_user_query(active_only=True, exclude_owners=True).all()
     branches = get_accessible_branches_query(current_user).order_by(Branch.is_main.desc(), Branch.code, Branch.name).all()
     

@@ -1171,24 +1171,24 @@ Future phases require admin UI support for the following areas:
 | 19 | `routes/owner.py` | ✅ | ✅ | ✅ | ✅ | ✅ | **DONE** — Fixed in Session 9: `users` query in `login_history` missing tenant; `branches` query in `create_user`/`edit_user` unscoped; duplicate username check unscoped |
 | 20 | `routes/partners.py` | ✅ | ✅ | ✅ | ✅ | ✅ | **DONE** — Fixed: `PartnerProfitDistribution.query` and `PartnerTransaction.query` in `view()` missing `tenant_id` scoping |
 | 21 | `routes/payment_vault.py` | ✅ | ✅ | ✅ | ✅ | ✅ | **DONE** — Clean: owner-only module; `tid=None` intentional for global reporting; `before_request` enforces owner auth + IP check |
-| 22 | `routes/payments.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
-| 23 | `routes/payroll.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
-| 24 | `routes/pos.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
-| 25 | `routes/products.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
-| 26 | `routes/public.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
-| 27 | `routes/purchases.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
-| 28 | `routes/reports.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
-| 29 | `routes/returns.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
-| 30 | `routes/sales.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
-| 31 | `routes/shop.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
-| 32 | `routes/store.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
-| 33 | `routes/suppliers.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
-| 34 | `routes/tenants.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
-| 35 | `routes/treasury.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
-| 36 | `routes/users.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
-| 37 | `routes/warehouse.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
-| 38 | `routes/websocket.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
-| 39 | `routes/whatsapp.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 22 | `routes/payments.py` | ✅ | ✅ | ✅ | ✅ | ✅ | **DONE** — Fixed: `ArchivedRecord` queries in `receipts()` and `restore_payment()` missing `tenant_id` scoping |
+| 23 | `routes/payroll.py` | ✅ | ✅ | ✅ | ✅ | ✅ | **DONE** — Fixed: all queries (`Employee`, `SalaryAdvance`, `PayrollTransaction`, `Branch`) missing `tenant_id` scoping; added `get_active_tenant_id` import |
+| 24 | `routes/pos.py` | ✅ | ✅ | ✅ | ✅ | ✅ | **DONE** — Clean: all queries via `tenant_query`/`tenant_get`; delegates to service layer for product lookups |
+| 25 | `routes/products.py` | ✅ | ✅ | ✅ | ✅ | ✅ | **DONE** — Fixed: `SaleLine`/`PurchaseLine` queries in `delete()` missing `tenant_id`; `ProductCategory` creation in `create_category()` missing `tenant_id` assignment |
+| 26 | `routes/public.py` | ✅ | N/A | N/A | N/A | ✅ | **DONE** — Clean: public landing/pricing pages; donation route has try/except with rollback |
+| 27 | `routes/purchases.py` | ✅ | ✅ | ✅ | ✅ | ✅ | **DONE** — Clean: all queries via `tenant_query`/`tenant_get_or_404`; proper error handling on mutations |
+| 28 | `routes/reports.py` | ✅ | ✅ | ✅ | ✅ | ✅ | **DONE** — Fixed: `Product.query` in `partners()` missing `tenant_id`; `entity_report_fragment` queries (`Purchase`, `Payment`, `Sale`, `Receipt`) missing `tenant_id`; `top_selling()` missing `tenant_id` on join query |
+| 29 | `routes/returns.py` | ✅ | ✅ | ✅ | ✅ | ✅ | **DONE** — Clean: `_scoped_returns_query()` enforces tenant scoping; all routes use scoped query |
+| 30 | `routes/sales.py` | ✅ | ✅ | ✅ | ✅ | ✅ | **DONE** — Fixed: `ArchivedRecord.query` in `restore()` missing `tenant_id` scoping |
+| 31 | `routes/shop.py` | ✅ | ✅ | ✅ | ✅ | ✅ | **DONE** — Clean: all queries scoped by `store.tenant_id`; public storefront routes |
+| 32 | `routes/store.py` | ✅ | ✅ | ✅ | ✅ | ✅ | **DONE** — Clean: `_tenant_id()` helper enforces tenant context; all queries use `tenant_id` |
+| 33 | `routes/suppliers.py` | ✅ | ✅ | ✅ | ✅ | ✅ | **DONE** — Fixed: `Supplier` creation missing `tenant_id` assignment; added missing imports (`atomic_transaction`, `log_mutation`, `ErrorMessages`, `current_app`) |
+| 34 | `routes/tenants.py` | ✅ | ✅ | ✅ | ✅ | ✅ | **DONE** — Clean: tenant switch route with `is_global_tenant_user` check |
+| 35 | `routes/treasury.py` | ✅ | ✅ | ✅ | ✅ | ✅ | **DONE** — Clean: all routes delegate to `TreasuryService`/`TaxService` with `tenant_id` |
+| 36 | `routes/users.py` | ✅ | ✅ | ✅ | ✅ | ✅ | **DONE** — Fixed: `_available_branches()` missing `tenant_id`; `User.query` in `view`/`edit`/`toggle_active`/`delete` missing `tenant_id`; `Sale.query` in `delete` missing `tenant_id` |
+| 37 | `routes/warehouse.py` | ✅ | ✅ | ✅ | ✅ | ✅ | **DONE** — Fixed: `StockMovement.query` in `movements()` missing `tenant_id`; `Warehouse.query` in `movements()`/`create_warehouse()` missing `tenant_id`; added missing `tenant_query` import |
+| 38 | `routes/websocket.py` | ✅ | N/A | N/A | N/A | ✅ | **DONE** — Clean: socket event registration only; no DB queries |
+| 39 | `routes/whatsapp.py` | ✅ | ✅ | ✅ | ✅ | ✅ | **DONE** — Fixed: `Sale.query` in `send_invoice()` and `Customer.query` in `send_reminder()` missing `tenant_id` scoping |
 
 **Per-Function Criteria (every `def` in every file):**
 1. `@login_required` on all non-public routes

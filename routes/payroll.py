@@ -6,6 +6,7 @@ from services.payroll_service import PayrollService
 from datetime import datetime
 from utils.decorators import branch_scope_id, permission_required
 from utils.branching import should_show_all_branch_columns
+from utils.tenanting import get_active_tenant_id
 
 payroll_bp = Blueprint('payroll', __name__, url_prefix='/payroll')
 
@@ -13,7 +14,10 @@ payroll_bp = Blueprint('payroll', __name__, url_prefix='/payroll')
 @login_required
 @permission_required('manage_payroll')
 def employees_list():
+    tid = get_active_tenant_id(current_user)
     query = Employee.query
+    if tid is not None:
+        query = query.filter(Employee.tenant_id == tid)
     scoped_branch_id = branch_scope_id()
     if scoped_branch_id is not None:
         query = query.filter(Employee.branch_id == scoped_branch_id)
@@ -35,7 +39,11 @@ def add_employee():
                 form_branch_id = request.form.get('branch_id', type=int)
                 if form_branch_id != scoped_branch_id:
                     flash('لا يمكنك ربط الموظف إلا بفرعك الحالي.', 'danger')
-                    branches = Branch.query.filter_by(id=scoped_branch_id, is_active=True).all()
+                    tid = get_active_tenant_id(current_user)
+                    branches = Branch.query.filter_by(id=scoped_branch_id, is_active=True)
+                    if tid is not None:
+                        branches = branches.filter(Branch.tenant_id == tid)
+                    branches = branches.all()
                     return render_template('payroll/add_employee.html', branches=branches)
             PayrollService.create_employee(request.form)
             flash('تم إضافة الموظف بنجاح', 'success')
@@ -43,7 +51,10 @@ def add_employee():
         except Exception as e:
             flash(f'حدث خطأ: {e}', 'danger')
             
+    tid = get_active_tenant_id(current_user)
     branches_query = Branch.query.filter_by(is_active=True)
+    if tid is not None:
+        branches_query = branches_query.filter(Branch.tenant_id == tid)
     if scoped_branch_id is not None:
         branches_query = branches_query.filter(Branch.id == scoped_branch_id)
     branches = branches_query.order_by(Branch.code, Branch.name).all()
@@ -66,8 +77,12 @@ def advances():
             flash(f'حدث خطأ: {e}', 'danger')
             
     scoped_branch_id = branch_scope_id()
+    tid = get_active_tenant_id(current_user)
     employees_query = Employee.query.filter_by(is_active=True)
     advances_query = SalaryAdvance.query.join(Employee, SalaryAdvance.employee_id == Employee.id)
+    if tid is not None:
+        employees_query = employees_query.filter(Employee.tenant_id == tid)
+        advances_query = advances_query.filter(Employee.tenant_id == tid)
     if scoped_branch_id is not None:
         employees_query = employees_query.filter(Employee.branch_id == scoped_branch_id)
         advances_query = advances_query.filter(Employee.branch_id == scoped_branch_id)
@@ -108,9 +123,14 @@ def process_payroll():
             except Exception as e:
                 flash(f'حدث خطأ: {e}', 'danger')
             
+    tid = get_active_tenant_id(current_user)
     employees_query = Employee.query.filter_by(is_active=True)
     branches_query = Branch.query.filter_by(is_active=True)
     transactions_query = PayrollTransaction.query
+    if tid is not None:
+        employees_query = employees_query.filter(Employee.tenant_id == tid)
+        branches_query = branches_query.filter(Branch.tenant_id == tid)
+        transactions_query = transactions_query.filter(PayrollTransaction.tenant_id == tid)
     if scoped_branch_id is not None:
         employees_query = employees_query.filter(Employee.branch_id == scoped_branch_id)
         branches_query = branches_query.filter(Branch.id == scoped_branch_id)
@@ -125,7 +145,11 @@ def process_payroll():
 @login_required
 @permission_required('manage_payroll')
 def salary_slip(id):
-    transaction = PayrollTransaction.query.get_or_404(id)
+    tid = get_active_tenant_id(current_user)
+    transaction_query = PayrollTransaction.query.filter_by(id=id)
+    if tid is not None:
+        transaction_query = transaction_query.filter(PayrollTransaction.tenant_id == tid)
+    transaction = transaction_query.first_or_404()
     scoped_branch_id = branch_scope_id()
     if scoped_branch_id is not None and transaction.branch_id != scoped_branch_id:
         return render_template('errors/403.html'), 403
@@ -135,12 +159,21 @@ def salary_slip(id):
 @login_required
 @permission_required('manage_payroll')
 def statement(id):
-    employee = Employee.query.get_or_404(id)
+    tid = get_active_tenant_id(current_user)
+    employee_query = Employee.query.filter_by(id=id)
+    if tid is not None:
+        employee_query = employee_query.filter(Employee.tenant_id == tid)
+    employee = employee_query.first_or_404()
     scoped_branch_id = branch_scope_id()
     if scoped_branch_id is not None and employee.branch_id != scoped_branch_id:
         return render_template('errors/403.html'), 403
-    advances = SalaryAdvance.query.filter_by(employee_id=id).all()
-    payments = PayrollTransaction.query.filter_by(employee_id=id).all()
+    advances = SalaryAdvance.query.filter_by(employee_id=id)
+    payments = PayrollTransaction.query.filter_by(employee_id=id)
+    if tid is not None:
+        advances = advances.filter(SalaryAdvance.tenant_id == tid)
+        payments = payments.filter(PayrollTransaction.tenant_id == tid)
+    advances = advances.all()
+    payments = payments.all()
     
     # Combine history (Simplified)
     history = []

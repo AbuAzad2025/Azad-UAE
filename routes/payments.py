@@ -16,7 +16,7 @@ from utils.branching import should_show_all_branch_columns
 from utils.helpers import create_audit_log
 from utils.number_to_arabic import number_to_arabic_words
 from utils.qr_generator import generate_qr_data_url
-from utils.tenanting import tenant_query, tenant_get_or_404, tenant_get
+from utils.tenanting import tenant_query, tenant_get_or_404, tenant_get, get_active_tenant_id
 
 payments_bp = Blueprint('payments', __name__, url_prefix='/payments')
 
@@ -197,12 +197,16 @@ def receipts():
     
     # إخفاء السندات المؤرشفة
     from models import ArchivedRecord
+    tid = get_active_tenant_id(current_user)
     archived_receipts_select = select(ArchivedRecord.record_id).where(
         ArchivedRecord.table_name == 'receipts'
     )
     archived_payments_select = select(ArchivedRecord.record_id).where(
         ArchivedRecord.table_name == 'payments'
     )
+    if tid is not None:
+        archived_receipts_select = archived_receipts_select.where(ArchivedRecord.tenant_id == tid)
+        archived_payments_select = archived_payments_select.where(ArchivedRecord.tenant_id == tid)
     
     receipts_query = receipts_query.filter(Receipt.id.notin_(archived_receipts_select))
     payments_query = payments_query.filter(Payment.id.notin_(archived_payments_select))
@@ -536,10 +540,14 @@ def restore_payment(id):
     """استعادة سند صرف من الأرشيف"""
     from models import ArchivedRecord, Payment
     
-    archived = ArchivedRecord.query.filter_by(
+    tid = get_active_tenant_id(current_user)
+    archived_query = ArchivedRecord.query.filter_by(
         table_name='payments',
         record_id=id
-    ).first_or_404()
+    )
+    if tid is not None:
+        archived_query = archived_query.filter(ArchivedRecord.tenant_id == tid)
+    archived = archived_query.first_or_404()
     if not _in_scope_branch(_archived_item_branch_id(archived)):
         return render_template('errors/403.html'), 403
     

@@ -138,7 +138,10 @@ def partners():
             })
             partner_share_totals[r.partner_id] = partner_share_totals.get(r.partner_id, Decimal('0')) + partner_amount
     else:
-        partner_products = Product.query.join(ProductPartner).filter(Product.is_active == True).distinct().all()
+        partner_products = Product.query.join(ProductPartner).filter(Product.is_active == True)
+        if tenant_id is not None:
+            partner_products = partner_products.filter(Product.tenant_id == tenant_id)
+        partner_products = partner_products.distinct().all()
 
         for product in partner_products:
             sales_query = SaleLine.query.join(Sale).filter(
@@ -181,7 +184,10 @@ def partners():
     merchant_products = Product.query.filter(
         Product.merchant_customer_id.isnot(None),
         Product.is_active == True
-    ).all()
+    )
+    if tenant_id is not None:
+        merchant_products = merchant_products.filter(Product.tenant_id == tenant_id)
+    merchant_products = merchant_products.all()
     
     merchants_data = []
     # Dictionary to aggregate shares per merchant: {merchant_id: total_share_amount}
@@ -1533,6 +1539,8 @@ def entity_report_fragment(type, id):
                 Purchase.supplier_id == id,
                 Purchase.status == 'confirmed'
             )
+            if tenant_id is not None:
+                p_lines = p_lines.filter(Purchase.tenant_id == tenant_id)
             if scoped_branch_id is not None:
                 p_lines = p_lines.filter(Purchase.branch_id == scoped_branch_id)
             p_lines = p_lines.group_by(Product.name).all()
@@ -1546,6 +1554,8 @@ def entity_report_fragment(type, id):
             
             # Invoices (Purchases)
             purchases = Purchase.query.filter_by(supplier_id=id)
+            if tenant_id is not None:
+                purchases = purchases.filter(Purchase.tenant_id == tenant_id)
             if scoped_branch_id is not None:
                 purchases = purchases.filter(Purchase.branch_id == scoped_branch_id)
             purchases = purchases.order_by(Purchase.purchase_date.desc()).all()
@@ -1559,6 +1569,8 @@ def entity_report_fragment(type, id):
                 Payment.direction == 'outgoing',
                 Payment.payment_confirmed == True
             )
+            if tenant_id is not None:
+                supplier_payments_q = supplier_payments_q.filter(Payment.tenant_id == tenant_id)
             if scoped_branch_id is not None:
                 supplier_payments_q = supplier_payments_q.filter(Payment.branch_id == scoped_branch_id)
             total_paid_fifo = Decimal(str(
@@ -1583,6 +1595,8 @@ def entity_report_fragment(type, id):
             
             # Transactions (Payments TO Supplier)
             payments = Payment.query.filter_by(supplier_id=id)
+            if tenant_id is not None:
+                payments = payments.filter(Payment.tenant_id == tenant_id)
             if scoped_branch_id is not None:
                 payments = payments.filter(Payment.branch_id == scoped_branch_id)
             payments = payments.order_by(Payment.payment_date.desc()).all()
@@ -1626,6 +1640,10 @@ def entity_report_fragment(type, id):
             )
             # Payments made TO customer (e.g. returns/share/drawings)
             total_payments_query = db.session.query(func.sum(Payment.amount_aed)).filter(Payment.customer_id==id, Payment.direction=='outgoing')
+            if tenant_id is not None:
+                total_sales_query = total_sales_query.filter(Sale.tenant_id == tenant_id)
+                total_receipts_query = total_receipts_query.filter(Receipt.tenant_id == tenant_id)
+                total_payments_query = total_payments_query.filter(Payment.tenant_id == tenant_id)
             if scoped_branch_id is not None:
                 total_sales_query = total_sales_query.filter(Sale.branch_id == scoped_branch_id)
                 total_receipts_query = total_receipts_query.filter(Receipt.branch_id == scoped_branch_id)
@@ -1650,6 +1668,8 @@ def entity_report_fragment(type, id):
                 Sale.customer_id == id,
                 Sale.status == 'confirmed'
             )
+            if tenant_id is not None:
+                s_lines = s_lines.filter(Sale.tenant_id == tenant_id)
             if scoped_branch_id is not None:
                 s_lines = s_lines.filter(Sale.branch_id == scoped_branch_id)
             s_lines = s_lines.group_by(Product.name).all()
@@ -1676,6 +1696,8 @@ def entity_report_fragment(type, id):
                      ProductPartner.partner_customer_id == id,
                      Sale.status == 'confirmed'
                  )
+                if tenant_id is not None:
+                    shared_products_query = shared_products_query.filter(Sale.tenant_id == tenant_id)
                 if scoped_branch_id is not None:
                     shared_products_query = shared_products_query.filter(Sale.branch_id == scoped_branch_id)
                 shared_products_query = shared_products_query.group_by(Product.name, ProductPartner.percentage).all()
@@ -1703,6 +1725,8 @@ def entity_report_fragment(type, id):
                      Product.merchant_customer_id == id,
                      Sale.status == 'confirmed'
                  )
+                if tenant_id is not None:
+                    merchant_products_query = merchant_products_query.filter(Sale.tenant_id == tenant_id)
                 if scoped_branch_id is not None:
                     merchant_products_query = merchant_products_query.filter(Sale.branch_id == scoped_branch_id)
                 merchant_products_query = merchant_products_query.group_by(Product.name, Product.merchant_share).all()
@@ -1719,6 +1743,8 @@ def entity_report_fragment(type, id):
             
             # Invoices (Sales)
             sales = Sale.query.filter_by(customer_id=id)
+            if tenant_id is not None:
+                sales = sales.filter(Sale.tenant_id == tenant_id)
             if scoped_branch_id is not None:
                 sales = sales.filter(Sale.branch_id == scoped_branch_id)
             sales = sales.order_by(Sale.sale_date.desc()).all()
@@ -1734,6 +1760,9 @@ def entity_report_fragment(type, id):
             # Transactions (Receipts + Payments)
             receipts = Receipt.query.filter_by(customer_id=id)
             payments_out = Payment.query.filter_by(customer_id=id, direction='outgoing')
+            if tenant_id is not None:
+                receipts = receipts.filter(Receipt.tenant_id == tenant_id)
+                payments_out = payments_out.filter(Payment.tenant_id == tenant_id)
             if scoped_branch_id is not None:
                 receipts = receipts.filter(Receipt.branch_id == scoped_branch_id)
                 payments_out = payments_out.filter(Payment.branch_id == scoped_branch_id)
@@ -1780,6 +1809,7 @@ def top_selling():
     date_from = request.args.get('date_from', '', type=str)
     date_to = request.args.get('date_to', '', type=str)
     limit = request.args.get('limit', 20, type=int)
+    tenant_id = get_active_tenant_id(current_user)
     
     query = db.session.query(
         Product.id,
@@ -1793,6 +1823,8 @@ def top_selling():
     ).filter(
         Sale.status == 'confirmed'
     )
+    if tenant_id is not None:
+        query = query.filter(Sale.tenant_id == tenant_id)
     scoped_branch_id = report_branch_scope_id()
     if scoped_branch_id is not None:
         query = query.filter(Sale.branch_id == scoped_branch_id)

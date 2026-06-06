@@ -2,7 +2,7 @@
 🏪 Suppliers Routes - مسارات الموردين
 إدارة الموردين: عرض، إضافة، تعديل، تقارير
 """
-from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, current_app
 from flask_login import login_required, current_user
 from sqlalchemy import select
 from extensions import db, limiter
@@ -12,6 +12,9 @@ from utils.branching import should_show_all_branch_columns
 from utils.helpers import create_audit_log
 from utils.tenanting import tenant_query, tenant_get_or_404, get_active_tenant_id
 from sqlalchemy import func, desc
+from utils.db_safety import atomic_transaction
+from utils.structured_logging import log_mutation
+from utils.error_messages import ErrorMessages
 
 suppliers_bp = Blueprint('suppliers', __name__, url_prefix='/suppliers')
 
@@ -188,7 +191,9 @@ def create():
                 flash(str(e), 'danger')
                 return redirect(url_for('suppliers.create'))
 
+            tid = get_active_tenant_id(current_user)
             supplier = Supplier(
+                tenant_id=tid,
                 name=request.form.get('name'),
                 name_en=request.form.get('name_en'),
                 company_name=request.form.get('company_name'),

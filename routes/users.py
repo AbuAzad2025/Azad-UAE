@@ -16,7 +16,10 @@ users_bp = Blueprint('users', __name__, url_prefix='/users')
 
 
 def _available_branches():
+    tid = get_active_tenant_id(current_user)
     query = Branch.query.filter_by(is_active=True)
+    if tid is not None:
+        query = query.filter(Branch.tenant_id == tid)
     scoped_branch_id = branch_scope_id_for(current_user)
     if scoped_branch_id is not None:
         query = query.filter(Branch.id == scoped_branch_id)
@@ -236,7 +239,11 @@ def create():
 @login_required
 @permission_required('manage_users')
 def view(id):
-    user = User.query.filter_by(id=id, is_owner=False).first_or_404()
+    tid = get_active_tenant_id(current_user)
+    user_query = User.query.filter_by(id=id, is_owner=False)
+    if tid is not None:
+        user_query = user_query.filter(User.tenant_id == tid)
+    user = user_query.first_or_404()
     _ensure_user_in_scope(user)
     return render_template('users/view.html', user=user)
 
@@ -245,7 +252,11 @@ def view(id):
 @login_required
 @admin_required
 def edit(id):
-    user = User.query.filter_by(id=id, is_owner=False).first_or_404()
+    tid = get_active_tenant_id(current_user)
+    user_query = User.query.filter_by(id=id, is_owner=False)
+    if tid is not None:
+        user_query = user_query.filter(User.tenant_id == tid)
+    user = user_query.first_or_404()
     _ensure_user_in_scope(user)
 
     current_level = role_level_for_user(current_user)
@@ -293,7 +304,11 @@ def edit(id):
 @login_required
 @admin_required
 def toggle_active(id):
-    user = User.query.filter_by(id=id, is_owner=False).first_or_404()
+    tid = get_active_tenant_id(current_user)
+    user_query = User.query.filter_by(id=id, is_owner=False)
+    if tid is not None:
+        user_query = user_query.filter(User.tenant_id == tid)
+    user = user_query.first_or_404()
     _ensure_user_in_scope(user)
 
     user.is_active = not user.is_active
@@ -313,7 +328,11 @@ def toggle_active(id):
 @permission_required('manage_users')
 def delete(id):
     # Ensure target is NOT owner (double check, though filter handles it)
-    user = User.query.filter_by(id=id, is_owner=False).first_or_404()
+    tid = get_active_tenant_id(current_user)
+    user_query = User.query.filter_by(id=id, is_owner=False)
+    if tid is not None:
+        user_query = user_query.filter(User.tenant_id == tid)
+    user = user_query.first_or_404()
     _ensure_user_in_scope(user)
 
     if user.id == current_user.id:
@@ -322,7 +341,10 @@ def delete(id):
 
     try:
         from models import Sale, AuditLog
-        sales_count = Sale.query.filter_by(seller_id=id).count()
+        sales_query = Sale.query.filter_by(seller_id=id)
+        if tid is not None:
+            sales_query = sales_query.filter(Sale.tenant_id == tid)
+        sales_count = sales_query.count()
 
         if sales_count > 0:
             user.is_active = False

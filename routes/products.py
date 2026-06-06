@@ -871,8 +871,14 @@ def delete(id):
     try:
         # التحقق من وجود عمليات مرتبطة
         from models import SaleLine, PurchaseLine
-        sales_count = SaleLine.query.filter_by(product_id=id).count()
-        purchases_count = PurchaseLine.query.filter_by(product_id=id).count()
+        tid = get_active_tenant_id(current_user)
+        sales_query = SaleLine.query.filter_by(product_id=id)
+        purchases_query = PurchaseLine.query.filter_by(product_id=id)
+        if tid is not None:
+            sales_query = sales_query.filter(SaleLine.tenant_id == tid)
+            purchases_query = purchases_query.filter(PurchaseLine.tenant_id == tid)
+        sales_count = sales_query.count()
+        purchases_count = purchases_query.count()
         
         if sales_count > 0 or purchases_count > 0:
             # soft delete
@@ -978,6 +984,7 @@ def create_category():
             return redirect(url_for('products.categories'))
 
         category = ProductCategory(
+            tenant_id=tid,
             name=name,
             name_ar=name_ar,
             description=description,
