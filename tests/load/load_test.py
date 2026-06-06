@@ -6,7 +6,7 @@ Targets:
 - GL balance query < 500ms for 500K journal lines
 - Report query < 2s p95 for all reconciliation and treasury reports
 
-Run: python tools/qa/load_test.py
+Run: python tests/load/load_test.py
 """
 
 import os

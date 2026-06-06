@@ -1,6 +1,6 @@
 """
 One-shot GL remediation (Phase 1B).
-Run: SKIP_SYSTEM_INTEGRITY=1 python tools/qa/gl_remediation_execute.py
+Run: SKIP_SYSTEM_INTEGRITY=1 python scripts/maintenance/gl_remediation_execute.py
 """
 from __future__ import annotations
 

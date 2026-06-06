@@ -10,7 +10,7 @@ Performs targeted data remediation only (tenant backfill, invoice_settings deact
 Creates backup tables (*_backup_YYYYMMDD) before UPDATEs for rollback.
 Does not DROP/TRUNCATE. Does not print secrets (uses .env DATABASE_URL locally).
 
-Run: SKIP_SYSTEM_INTEGRITY=1 python tools/qa/phase2_remediation_execute.py
+Run: SKIP_SYSTEM_INTEGRITY=1 python scripts/maintenance/phase2_remediation_execute.py
 """
 from __future__ import annotations
 

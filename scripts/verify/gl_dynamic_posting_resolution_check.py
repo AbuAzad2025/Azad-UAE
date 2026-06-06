@@ -5,8 +5,8 @@ exercises account resolution for posting-line metadata with the feature flag
 disabled and then temporarily enabled in memory.
 
 Run:
-    python tools/qa/gl_dynamic_posting_resolution_check.py
-    python tools/qa/gl_dynamic_posting_resolution_check.py --tenant-id 1
+    python scripts/verify/gl_dynamic_posting_resolution_check.py
+    python scripts/verify/gl_dynamic_posting_resolution_check.py --tenant-id 1
 """
 from __future__ import annotations
 

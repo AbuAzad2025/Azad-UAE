@@ -6,8 +6,8 @@ Addresses findings from KODEX audit:
 2. ILS cheque FX rate inconsistencies (exchange_rate=1.0 but amount_aed != amount).
 3. Reconciles ProductWarehouseCost after cleanup.
 
-Run with: python tools/cleanup_orphaned_data.py --dry-run
-           python tools/cleanup_orphaned_data.py --apply
+Run with: python scripts/maintenance/cleanup_orphaned_data.py --dry-run
+           python scripts/maintenance/cleanup_orphaned_data.py --apply
 """
 import os
 import sys

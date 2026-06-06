@@ -8,8 +8,8 @@ config flag to exercise resolver lookups. It does not write data or modify the
 real feature flag setting.
 
 Run:
-    python tools/qa/gl_account_resolver_check.py
-    python tools/qa/gl_account_resolver_check.py --simulate-enabled --tenant-id 1 --concept-code AR
+    python scripts/verify/gl_account_resolver_check.py
+    python scripts/verify/gl_account_resolver_check.py --simulate-enabled --tenant-id 1 --concept-code AR
 """
 import argparse
 import json

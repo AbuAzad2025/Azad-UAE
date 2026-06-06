@@ -7,7 +7,7 @@ does not embed or print credentials.
 Exit 0 = all critical checks pass (warnings may remain).
 Exit 1 = one or more critical checks failed.
 
-Run: python tools/qa/gl_remediation_verify.py [--profile local|production-readiness]
+Run: python scripts/verify/gl_remediation_verify.py [--profile local|production-readiness]
 
 In production-readiness mode, test leftovers are treated as CRITICAL.
 """

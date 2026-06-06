@@ -447,8 +447,9 @@ def audit_logs():
     action = request.args.get('action', '', type=str)
     user_id = request.args.get('user', type=int)
     per_page = request.args.get('per_page', 50, type=int)
+    tid = get_active_tenant_id(current_user)
     
-    query = AuditLog.query
+    query = AuditLog.query.filter_by(tenant_id=tid)
     
     # فلترة حسب العملية
     if action:
@@ -458,8 +459,6 @@ def audit_logs():
     if user_id:
         query = query.filter_by(user_id=user_id)
     
-    tid = get_active_tenant_id(current_user)
-
     # الترتيب والتقسيم
     pagination = query.order_by(AuditLog.created_at.desc()).paginate(
         page=page,
@@ -2926,16 +2925,21 @@ def system_health():
 @login_required
 @owner_required
 def activity_monitor():
-    recent_audits = AuditLog.query.order_by(AuditLog.created_at.desc()).limit(100).all()
+    tid = get_active_tenant_id(current_user)
+    recent_audits = AuditLog.query.filter_by(tenant_id=tid).order_by(
+        AuditLog.created_at.desc()
+    ).limit(100).all()
     scoped_branch_id = _owner_branch_scope()
     
     active_users = User.query.filter(
         User.last_seen >= datetime.now(timezone.utc) - timedelta(minutes=30),
-        User.is_active == True
+        User.is_active == True,
+        User.tenant_id == tid,
     ).all()
     
     recent_sales = Sale.query.filter(
-        Sale.created_at >= datetime.now(timezone.utc) - timedelta(hours=24)
+        Sale.created_at >= datetime.now(timezone.utc) - timedelta(hours=24),
+        Sale.tenant_id == tid,
     )
     if scoped_branch_id is not None:
         recent_sales = recent_sales.filter(Sale.branch_id == scoped_branch_id)

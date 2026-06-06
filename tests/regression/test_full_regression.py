@@ -4,7 +4,7 @@ Validates: Purchase → WAC recalc → Sale → COGS posting → GL balance →
 Inventory reconciliation → Treasury cash position.
 Asserts zero variance at every handoff.
 
-Run: python tools/qa/test_full_regression.py
+Run: python tests/regression/test_full_regression.py
 """
 
 import os

@@ -578,6 +578,7 @@ def api_search_accounts():
 
 
 @ledger_bp.route('/api/calculate-journal-balance', methods=['POST'])
+@login_required
 def api_calculate_journal_balance():
     """API لحساب توازن القيد اليدوي - Backend Calculation"""
     try:

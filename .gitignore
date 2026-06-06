@@ -89,17 +89,17 @@ celerybeat.pid
 .pytest_cache/
 .coverage
 htmlcov/
-tests/
-test_*.py
-*_test.py
-check_db.py
-verify_*.py
-scripts/
-!tools/qa/
-!tools/qa/*.py
-!tools/qa/README.md
-tools/qa/null_column_audit_*.json
-tools/qa/null_column_audit_*.csv
+
+# Generated artifacts / reports
+tools/reports/
+
+# Ignore root-level legacy test/verify scripts (organized ones are in tests/ and scripts/)
+/test_*.py
+/verify_*.py
+/check_*.py
+/*.txt
+
+# Organized test/script directories are tracked (see tests/README.md and scripts/README.md)
 
 # Neural models (can be large)
 ai_knowledge/models/*.pkl

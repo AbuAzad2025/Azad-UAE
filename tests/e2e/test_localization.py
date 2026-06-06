@@ -3,7 +3,7 @@ Localization Engine QA Test — Phase 9
 Validates: strategy rates, NullStrategy zero tax, VAT return math,
 WPS SIF headers, QR decodability.
 
-Run: python tools/qa/test_localization.py
+Run: python tests/e2e/test_localization.py
 """
 
 import os

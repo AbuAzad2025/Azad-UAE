@@ -51,7 +51,7 @@ PY_COMPILE_FILES = [
     "utils/pos_helpers.py",
     "tools/qa/static_asset_audit.py",
     "tools/qa/backup_restore_check.py",
-    "tools/qa/gl_remediation_verify.py",
+    "scripts/verify/gl_remediation_verify.py",
     "tools/qa/null_column_audit.py",
 ]
 
@@ -257,7 +257,7 @@ def check_pip_audit(report: Report) -> None:
 
 
 def check_gl_remediation(report: Report, profile: str) -> None:
-    script = os.path.join(ROOT, "tools", "qa", "gl_remediation_verify.py")
+    script = os.path.join(ROOT, "scripts", "verify", "gl_remediation_verify.py")
     r = _run([sys.executable, script, "--profile", profile])
     out = (r.stdout or "") + (r.stderr or "")
     if r.returncode != 0:

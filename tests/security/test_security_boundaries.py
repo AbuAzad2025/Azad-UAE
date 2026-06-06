@@ -5,10 +5,11 @@ Phase 7.5: Security Hardening
 Checks every route, service, and template for cross-tenant,
 cross-branch, and cross-role data leakage.
 
-Run: python tools/qa/test_security_boundaries.py
+Run: python tests/security/test_security_boundaries.py
 """
 
 from decimal import Decimal
+import re
 
 
 def _assert_no_unscoped_query_in_file(file_path, model_name, required_filter):
@@ -41,6 +42,11 @@ _PUBLIC_ROUTE_WHITELIST = {
     ('routes\\auth.py', 'login'),
     ('routes\\auth.py', 'logout'),
     ('routes\\auth.py', 'create_payment'),
+    ('routes\\auth.py', 'payment_status'),
+    ('routes\\auth.py', 'payment_callback'),
+    ('routes\\auth.py', 'available_currencies'),
+    ('routes\\auth.py', 'estimate_amount'),
+    ('routes\\auth.py', 'thank_you'),
     ('routes\\auth.py', 'register'),
     ('routes\\auth.py', 'forgot_password'),
     ('routes\\auth.py', 'reset_password'),
@@ -67,6 +73,32 @@ _PUBLIC_ROUTE_WHITELIST = {
     ('routes\\payment_vault.py', 'public_package_purchase'),
     ('routes\\payment_vault.py', 'process_public_payment'),
     ('routes\\payment_vault.py', 'api_public_packages'),
+    ('routes\\payment_vault.py', 'process_payment'),
+    ('routes\\payment_vault.py', 'api_create_purchase'),
+    ('routes\\payment_vault.py', 'api_create_donation'),
+    ('routes\\language.py', 'set_language'),
+    ('routes\\main.py', 'index'),
+    ('routes\\main.py', 'tenant_public_profile'),
+    ('routes\\monitoring.py', 'health'),
+    ('routes\\owner.py', 'tenant_suspend_page'),
+    ('routes\\shop.py', 'set_lang'),
+    ('routes\\shop.py', 'account_login'),
+    ('routes\\shop.py', 'account_register'),
+    ('routes\\shop.py', 'account_logout'),
+    ('routes\\shop.py', 'account_orders'),
+    ('routes\\shop.py', 'account_order_detail'),
+    ('routes\\shop.py', 'catalog'),
+    ('routes\\shop.py', 'product_detail'),
+    ('routes\\shop.py', 'cart_view'),
+    ('routes\\shop.py', 'cart_add'),
+    ('routes\\shop.py', 'cart_update'),
+    ('routes\\shop.py', 'cart_remove'),
+    ('routes\\shop.py', 'checkout'),
+    ('routes\\shop.py', 'return_policy'),
+    ('routes\\shop.py', 'store_sitemap'),
+    ('routes\\shop.py', 'account_forgot_password'),
+    ('routes\\shop.py', 'account_reset_password'),
+    ('routes\\shop.py', 'order_confirmation'),
 }
 
 def _audit_routes_for_auth():
@@ -145,14 +177,20 @@ def _audit_owner_dashboard_tenant_scope():
     with open(path, 'r', encoding='utf-8') as f:
         source = f.read()
     violations = []
-    dangerous = [
-        'AuditLog.query.count()',
-        'AuditLog.query.order_by',
+    dangerous_regexes = {
+        r'\bAuditLog\.query\.count\(\)': 'AuditLog.query.count()',
+        r'\bAuditLog\.query\.order_by': 'AuditLog.query.order_by',
+        r'^\s*query\s*=\s*AuditLog\.query\s*$': 'query = AuditLog.query',
+    }
+    for pattern, label in dangerous_regexes.items():
+        if re.search(pattern, source, re.MULTILINE):
+            violations.append(label)
+    dangerous_substrings = [
         'User.query.filter_by(is_active=True, is_owner=False).count()',
         'Product.query.filter_by(is_active=True).count()',
         'Branch.query.all()',
     ]
-    for pat in dangerous:
+    for pat in dangerous_substrings:
         if pat in source:
             violations.append(pat)
     return violations

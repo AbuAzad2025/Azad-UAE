@@ -83,14 +83,21 @@ Individual scripts below remain available for debugging; you do not need to run 
 
 ## Script Organization Conventions
 
-All development, QA, audit, and temporary patch scripts **must** live under `tools/qa/` (or a subfolder). Do not scatter scripts at the repo root or in random directories.
+The repo now separates test suites from operational scripts:
 
-| Subfolder / Pattern | Purpose | Commit? |
-|---------------------|---------|---------|
-| `tools/qa/*.py` | Permanent QA/UAT/audit scripts | Yes |
-| `tools/qa/patches/` | One-off data fixes or migration helpers | Yes (with issue reference) |
-| `tools/qa/temp/` | Personal/local scratch scripts | **No** (gitignored) |
-| `tools/qa/*.json` / `*.csv` / `*.md` | Audit outputs and reports | **No** (gitignored) |
+| Location | Purpose | Commit? |
+|----------|---------|---------|
+| `tests/security/` | Security boundary audits | Yes |
+| `tests/e2e/` | End-to-end accounting and feature tests | Yes |
+| `tests/regression/` | Regression and phase gate tests | Yes |
+| `tests/load/` | Load/performance checks | Yes |
+| `scripts/verify/` | Read-only verification scripts | Yes |
+| `scripts/backfill/` | Data backfills; backup required before production use | Yes |
+| `scripts/maintenance/` | Cleanup/repair scripts; approval required before production use | Yes |
+| `scripts/seed/` | Seed/setup scripts | Yes |
+| `tools/qa/` | Predeploy gate and remaining QA utilities | Yes |
+| `tools/reports/` | Generated audit outputs and reports | No |
+| `tools/qa/temp/` | Personal/local scratch scripts | No |
 
 **Naming:**
 - Use `snake_case` with descriptive prefixes: `gl_`, `currency_`, `security_`, `cleanup_`
@@ -98,7 +105,7 @@ All development, QA, audit, and temporary patch scripts **must** live under `too
 - Temporary patch scripts: `fix_<issue>_YYYYMMDD.py` or `patch_<area>_execute.py`
 
 **Before commit:**
-- Remove any `tools/qa/temp/` files
+- Remove generated outputs from `tools/reports/` and any `tools/qa/temp/` files
 - Ensure scripts are idempotent where possible
 - Add `--dry-run` flag for destructive operations
 
@@ -126,7 +133,7 @@ Or run components individually:
 Optional one-time remediation (only with backup + approval):
 
 ```bash
-python tools/qa/invoice_settings_inactive_null_cleanup.py
+python scripts/maintenance/invoice_settings_inactive_null_cleanup.py
 ```
 
 **Do not run remediation or audits on production** without a full `pg_dump` backup and explicit sign-off.

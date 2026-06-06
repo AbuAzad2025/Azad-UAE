@@ -9,7 +9,7 @@ Strategy:
 4. Append to ProductCostHistory as 'opening_balance' type.
 
 Usage:
-    python tools/seed_opening_wac.py [--dry-run]
+    python scripts/seed/seed_opening_wac.py [--dry-run]
 """
 import os
 import sys

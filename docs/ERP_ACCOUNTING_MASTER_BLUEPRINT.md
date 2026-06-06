@@ -2,7 +2,7 @@
 
 **Document Status:** Single Source of Truth — Supersedes All Accounting Documentation  
 **Date:** June 4, 2026  
-**Last Updated:** June 6, 2026 (Session 6 — ALL PHASES COMPLETED + Report Updated: Section 12.9 Implementation History added)
+**Last Updated:** June 6, 2026 (Session 7 — Local/GitHub docs reconciled; Phase 7.5 vault handoff active; Phases 8-10 complete)
 
 > **NOTICE:** This document is the sole authoritative accounting plan. All previous accounting documents (listed in Section 1.1) are superseded and should be removed from active reference.  
 **Reference Standards:** SAP Business One, Oracle NetSuite, Odoo, Bisan, Al-Shamel  
@@ -303,7 +303,7 @@ This section records all hardening batches and modernization phases that have be
 | Sub-Phase | Description | Status | Evidence |
 |-----------|-------------|--------|----------|
 | **1E** | `GLAccountMapping` model, concept registry, migration, feature flag | ✅ COMPLETED | Migration `gl_mapping_001`; `ENABLE_DYNAMIC_GL_MAPPING` defaults `False` |
-| **1F** | Read-only GL mapping validation / dry-run tool | ✅ COMPLETED | `tools/qa/gl_mapping_validation_dry_run.py` reports readiness per tenant |
+| **1F** | Read-only GL mapping validation / dry-run tool | ✅ COMPLETED | `scripts/verify/gl_mapping_validation_dry_run.py` reports readiness per tenant |
 | **1G** | Safe seed preview (`--preview-seed`) | ✅ COMPLETED | Proposes candidates; no inserts/updates/deletes |
 | **1G.1** | Candidate discovery (`--discover-candidates`) | ✅ COMPLETED | 72 combinations checked; 41 safe candidates found |
 | **1J** | Dynamic GL Resolver | ✅ COMPLETED | Isolated resolver behind feature flag; returns no dynamic account while disabled |
@@ -384,7 +384,7 @@ This section records all hardening batches and modernization phases that have be
 | `User.query` username check — no tenant scope | `routes/api.py` | Added `tenant_id` filter |
 | `Product.query.filter_by(is_active=True).count()` — missing tenant | `routes/main.py` | Added `tenant_id` when `branch_id` is None |
 
-**QA:** `tools/qa/test_security_boundaries.py` created — detects 24 unscoped query patterns.
+**QA:** `tests/security/test_security_boundaries.py` created — detects 24 unscoped query patterns.
 **Status:** ✅ PARTIAL — Critical routes fixed; `routes/payment_vault.py` + `routes/ai.py` chat handlers remain pending (require migration + refactor).
 
 #### Payment Vault Handoff Update (2026-06-06)
@@ -394,6 +394,8 @@ The payment-vault design has been clarified and is currently **in progress**, no
 Online-store gateway payments require a separate Azad 1% platform-fee accrual for any successful online transaction, including crypto, card, or future online gateway methods. This fee is not a donation and must not be mixed into tenant sale revenue.
 
 Active handoff and verification checklist: `docs/PAYMENT_VAULT_HANDOFF_REPORT_2026-06-06.md`.
+
+GitHub correction overlay reconciliation: `docs/ERP_ACCOUNTING_MASTER_BLUEPRINT_CORRECTIONS_2026-06-06.md`. The prior remote overlay commit `f29aa07` was authored against an older local state and marked Phase 8-10 as pending; the reconciled overlay keeps the valid metadata corrections without downgrading completed local work.
 
 Assistant guardrails before closing this work:
 - Do not force `Donation.tenant_id` to `NOT NULL`.
@@ -415,7 +417,7 @@ Assistant guardrails before closing this work:
 | Navigation | `templates/reports/index.html`, `templates/base.html` | Sidebar + reports index links |
 | Blueprint Registration | `app.py` | `treasury_bp` imported and registered |
 
-**QA:** `tools/qa/test_treasury.py` ALL CHECKS PASSED — no double-counting, branch filter enforced, cheque buckets non-overlapping, export route secure, GL balances sane.
+**QA:** `tests/e2e/test_treasury.py` ALL CHECKS PASSED — no double-counting, branch filter enforced, cheque buckets non-overlapping, export route secure, GL balances sane.
 **Status:** ✅ COMPLETED.
 
 #### Phase 9: Global Localization Engine
@@ -434,7 +436,7 @@ Assistant guardrails before closing this work:
 | VAT Return Route | `routes/treasury.py` | `/vat-return` with tenant-scoped output/input VAT calculation |
 | WPS Export Route | `routes/treasury.py` | `/wps-export` — Palestine-only, returns SIF format |
 
-**QA:** `tools/qa/test_localization.py` ALL CHECKS PASSED — correct rates per country, NullStrategy zero tax, VAT return math correct, WPS SIF headers valid, QR decodable.
+**QA:** `tests/e2e/test_localization.py` ALL CHECKS PASSED — correct rates per country, NullStrategy zero tax, VAT return math correct, WPS SIF headers valid, QR decodable.
 **Status:** ✅ COMPLETED.
 
 #### Phase 10: Testing, Validation, and Rollout
@@ -444,12 +446,12 @@ Assistant guardrails before closing this work:
 |-----------|------|----------|
 | Feature Flag Service | `services/feature_flag_service.py` | `is_enabled()`, `get_all_flags()`, `require_enabled()` — tenant override → config default → False |
 | Feature Flags | `config.py` | `ENABLE_TREASURY`, `ENABLE_LOAD_TESTING`, `ENABLE_FULL_REGRESSION` added |
-| Regression Suite | `tools/qa/test_full_regression.py` | Zero-variance chain: Purchase → WAC → Sale → COGS → GL → Reconciliation → Treasury |
-| Load Test | `tools/qa/load_test.py` | GL balance < 500ms, reconciliation < 2s, treasury < 2s |
+| Regression Suite | `tests/regression/test_full_regression.py` | Zero-variance chain: Purchase → WAC → Sale → COGS → GL → Reconciliation → Treasury |
+| Load Test | `tests/load/load_test.py` | GL balance < 500ms, reconciliation < 2s, treasury < 2s |
 | Deployment Checklist | `docs/PRODUCTION_DEPLOYMENT_CHECKLIST.md` | Pre-deployment, deployment steps, post-deployment monitoring, rollback procedure |
-| Phase 10 QA | `tools/qa/test_phase10.py` | Validates all flags documented, FeatureFlagService resolves, regression/load tests exist, checklist has rollback |
+| Phase 10 QA | `tests/regression/test_phase10.py` | Validates all flags documented, FeatureFlagService resolves, regression/load tests exist, checklist has rollback |
 
-**QA:** `tools/qa/test_phase10.py` ALL CHECKS PASSED.
+**QA:** `tests/regression/test_phase10.py` ALL CHECKS PASSED.
 **Status:** ✅ COMPLETED.
 
 **Commits:** `992b515` (Phase 8), `cb3ac4b` (Phase 9), `db31460` (Phase 10), `94d7eda` (Blueprint final), `1fdff00` (Blueprint verification) — all pushed to `origin/main`.
@@ -471,7 +473,7 @@ Assistant guardrails before closing this work:
 *   **Models Needed:** `GLAccountMapping` (mapping standard GL concepts to tenant chart accounts).
 *   **Migrations Needed:** `create_gl_account_mappings_table`.
 *   **Status:** All sub-phases 1E through 1L completed. See Section 12.6 for detailed completion notes.
-*   **Feature Flag:** `ENABLE_DYNAMIC_GL_MAPPING` remains disabled by default until Phase 2+ dimensions are enforced.
+*   **Feature Flag:** `ENABLE_DYNAMIC_GL_MAPPING` is active for resolved critical concepts. Legacy fallback and validation guards remain in place; mandatory service-layer dimension enforcement stays deferred until operational UI flows pass dimensions explicitly.
 *   **Estimated Complexity:** Medium (1 Sprint) — **Actual: 2 Sprints**.
 *   **Dependencies:** Phase 0.
 
@@ -499,8 +501,8 @@ Assistant guardrails before closing this work:
 *   **Accounting Impact:** Perpetual stock values update at true average costs on each receipt. COGS postings now use WAC instead of `SaleLine.cost_price`.
 *   **Rollback Strategy:** `ENABLE_MWAC` flag (default: `True`).
 *   **Evidence:**
-    - `tools/seed_opening_wac.py`: seeded 38 products across active tenants from historical purchases.
-    - `tools/qa/test_mwac_end_to_end.py`: E2E test PASS — purchase receipt updates WAC, sale COGS reads from WAC, audit trail created.
+    - `scripts/seed/seed_opening_wac.py`: seeded 38 products across active tenants from historical purchases.
+    - `tests/e2e/test_mwac_end_to_end.py`: E2E test PASS — purchase receipt updates WAC, sale COGS reads from WAC, audit trail created.
     - `StockService._update_wac_on_receipt()`: recalculates MWAC and appends `ProductCostHistory`.
     - `StockService.calculate_sale_cogs_and_deduct()`: computes COGS from `ProductWarehouseCost.average_cost`.
     - `config.py`: `ENABLE_MWAC=True` by default.
@@ -559,7 +561,7 @@ Assistant guardrails before closing this work:
     - **FIX:** `build_warehouse_summary` computes `total_gl_value` from warehouse rows (no inflation).
     - **FIX:** Added `gl_untagged` flag when warehouse-filtered GL is 0 but aggregate GL is non-zero (legacy entries without warehouse_id).
 *   **Evidence:**
-    - `tools/qa/test_inventory_reconciliation.py`: ALL CHECKS PASSED (GL accuracy, per-product row structure, warehouse summary GL fields, date filter wiring, warehouse filter wiring, Celery beat_schedule, export route security, direct GL <= report GL).
+    - `tests/e2e/test_inventory_reconciliation.py`: ALL CHECKS PASSED (GL accuracy, per-product row structure, warehouse summary GL fields, date filter wiring, warehouse filter wiring, Celery beat_schedule, export route security, direct GL <= report GL).
     - `check_inventory.py`: All PWC records match movement net quantities.
     - `py_compile`, Jinja2 parse: all pass.
 *   **Risks:** Performance lag on large tables → mitigated by indexed queries.
@@ -569,7 +571,7 @@ Assistant guardrails before closing this work:
 
 ### Phase 7.5: Security Hardening & Multi-Tenant Data Leak Prevention — **✅ PARTIAL (June 6, 2026)**
 *   **Goal:** Eliminate cross-tenant, cross-branch, and cross-role data leakage across all routes, services, and templates.
-*   **Files Affected:** `routes/ai.py`, `routes/owner.py`, `routes/api.py`, `routes/payment_vault.py`, `routes/main.py`, `tools/qa/test_security_boundaries.py`.
+*   **Files Affected:** `routes/ai.py`, `routes/owner.py`, `routes/api.py`, `routes/payment_vault.py`, `routes/main.py`, `tests/security/test_security_boundaries.py`.
 *   **Models Used:** `Product`, `Customer`, `AuditLog`, `User`, `Branch`, `PaymentVault`, `Donation`, `Package`.
 *   **Migrations Needed:** None.
 *   **Vulnerabilities Discovered (Security Audit, June 6, 2026):**
@@ -595,7 +597,7 @@ Assistant guardrails before closing this work:
     6. **Payment Vault:** Scope `PaymentVault`, `Donation`, `Package` by `tenant_id`.
     7. **Main Dashboard:** Scope `Product` count by `tenant_id` when `branch_id` is None.
 *   **QA Acceptance Criteria:**
-    - `tools/qa/test_security_boundaries.py` ALL CHECKS PASSED.
+    - `tests/security/test_security_boundaries.py` ALL CHECKS PASSED.
     - Zero unscoped `Model.query.get()`, `Model.query.all()`, `Model.query.count()` in routes directory.
     - No raw model queries in Jinja2 templates.
 *   **Evidence:** Critical fixes deployed in `routes/main.py`, `routes/api.py`, `routes/owner.py`, `routes/ai.py` (API routes). `test_security_boundaries.py` created. Remaining: `routes/payment_vault.py` (needs migration) + `routes/ai.py` chat handlers (needs refactor).
@@ -677,23 +679,23 @@ Assistant guardrails before closing this work:
 
 ### Phase 10: Testing, Validation, and Rollout — **✅ COMPLETED (June 6, 2026)**
 *   **Goal:** Run full end-to-end regression test suite, seed historical records, and deploy to production with feature flags.
-*   **Files Affected:** `services/feature_flag_service.py` (new), `tools/qa/` (all test scripts), `docs/ERP_ACCOUNTING_MASTER_BLUEPRINT.md`, `docs/PRODUCTION_DEPLOYMENT_CHECKLIST.md`, `config.py` (feature flags).
+*   **Files Affected:** `services/feature_flag_service.py` (new), `tests/` (regression + security + e2e + load), `scripts/` (seed + backfill + verify + maintenance), `docs/ERP_ACCOUNTING_MASTER_BLUEPRINT.md`, `docs/PRODUCTION_DEPLOYMENT_CHECKLIST.md`, `config.py` (feature flags).
 *   **Design Decisions (post-audit):**
     - No "big bang" deployment. Each phase is gated by a feature flag: `ENABLE_DYNAMIC_GL`, `ENABLE_MWAC`, `ENABLE_LANDED_COST`, `ENABLE_EXCHANGE_RATE_LOCK`, `ENABLE_RECONCILIATION`, `ENABLE_TREASURY`, `ENABLE_LOCALIZATION`.
     - Rollout order: internal tenant → beta tenant → all tenants.
     - Historical seeding is manual (accountant supervised), not automated.
-    - Load testing uses `tools/qa/load_test.py` with parameterized tenant size (small=1K records, medium=50K, large=500K).
+    - Load testing uses `tests/load/load_test.py` with parameterized tenant size (small=1K records, medium=50K, large=500K).
 *   **Features to Deliver:**
-    1. **End-to-End Regression Suite (`tools/qa/test_full_regression.py`):**
+    1. **End-to-End Regression Suite (`tests/regression/test_full_regression.py`):**
        - Purchase receipt → WAC recalculation → Sale → COGS posting → GL balance → Inventory reconciliation → Treasury cash position.
        - Asserts zero variance at every handoff.
-    2. **Load Testing (`tools/qa/load_test.py`):**
+    2. **Load Testing (`tests/load/load_test.py`):**
        - 100 concurrent sale invoices.
        - 1,000 concurrent purchase receipts.
        - GL balance query latency < 500ms for 500K journal lines.
     3. **Historical Data Seeding Playbook (`docs/HISTORICAL_SEEDING_PLAYBOOK.md`):**
        - Step-by-step guide for accountant to seed opening balances.
-       - PWC opening balance via `tools/qa/backfill_pwc_opening_balances.py`.
+       - PWC opening balance via `scripts/backfill/backfill_pwc_opening_balances.py`.
        - GL opening balance via manual journal entry (accountant supervised).
        - Cheque opening balance via bulk import CSV.
     4. **Feature Flag Matrix (`config.py` or tenant settings):**
@@ -754,11 +756,11 @@ Assistant guardrails before closing this work:
 | GL coverage per ref type | Verified all covered | 5 types | ✅ OK |
 | PWC vs movement mismatch | Opening balance backfill | 37 records | ✅ Done (36 opening_balance movements + 1 manual fix) |
 
-**PWC Reconciliation** — All 37 mismatches resolved via `tools/qa/backfill_pwc_opening_balances.py`. 36 records received `opening_balance` stock_movement records documenting the historical seeding gap. 1 record (product=139) had movements exceeding PWC and was corrected manually. All PWC quantities now match `SUM(stock_movements.quantity)` exactly.
+**PWC Reconciliation** — All 37 mismatches resolved via `scripts/backfill/backfill_pwc_opening_balances.py`. 36 records received `opening_balance` stock_movement records documenting the historical seeding gap. 1 record (product=139) had movements exceeding PWC and was corrected manually. All PWC quantities now match `SUM(stock_movements.quantity)` exactly.
 
 ---
 
-### Immediate Next Steps (Priority Order) — ALL PHASES COMPLETED ✅
+### Immediate Next Steps (Priority Order) — PHASES 8-10 COMPLETED; VAULT HANDOFF ACTIVE
 
 #### 1. Phase 7.5: Security Hardening — ✅ COMPLETED (Partial)
 - **Completed:** `routes/main.py`, `routes/api.py`, `routes/owner.py`, `routes/ai.py` (API routes) fixed and committed.
@@ -980,4 +982,4 @@ Future phases require admin UI support for the following areas:
 ---
 
 *End of Master Blueprint — Single Source of Truth*
-*Last updated: June 5, 2026 (Session 2)*
+*Last updated: June 6, 2026 (Session 7 — Local/GitHub docs reconciled; Phase 7.5 vault handoff active; Phases 8-10 complete)*

@@ -1,13 +1,13 @@
 """Read-only Phase 1F / 1G / 1G.1 GL mapping validation, seed preview, and candidate discovery.
 
 Run:
-    python tools/qa/gl_mapping_validation_dry_run.py
-    python tools/qa/gl_mapping_validation_dry_run.py --tenant-id 3
-    python tools/qa/gl_mapping_validation_dry_run.py --issues-only
-    python tools/qa/gl_mapping_validation_dry_run.py --preview-seed
-    python tools/qa/gl_mapping_validation_dry_run.py --preview-seed --tenant-id 3
-    python tools/qa/gl_mapping_validation_dry_run.py --discover-candidates
-    python tools/qa/gl_mapping_validation_dry_run.py --discover-candidates --tenant-id 3
+    python scripts/verify/gl_mapping_validation_dry_run.py
+    python scripts/verify/gl_mapping_validation_dry_run.py --tenant-id 3
+    python scripts/verify/gl_mapping_validation_dry_run.py --issues-only
+    python scripts/verify/gl_mapping_validation_dry_run.py --preview-seed
+    python scripts/verify/gl_mapping_validation_dry_run.py --preview-seed --tenant-id 3
+    python scripts/verify/gl_mapping_validation_dry_run.py --discover-candidates
+    python scripts/verify/gl_mapping_validation_dry_run.py --discover-candidates --tenant-id 3
 """
 import argparse
 import json

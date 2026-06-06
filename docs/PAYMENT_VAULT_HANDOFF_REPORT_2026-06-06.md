@@ -82,7 +82,7 @@ python tools\qa\nowpayments_ipn_payload_check.py
 2. تشغيل:
 
 ```powershell
-python tools\qa\test_security_boundaries.py
+python tests\security\test_security_boundaries.py
 ```
 
 إذا فشل، لا تعتبره فشل خزينة مباشرة قبل قراءة الرسالة؛ الملف نفسه معدّل من مسار أمني آخر وقد يحتوي توقعات قديمة مثل اعتبار `PaymentVault.query.first()` فقط مشكلة، بينما التصميم الجديد يميز بين خزينة آزاد وخزينة التينانت.
@@ -119,6 +119,7 @@ python -m flask --app app db heads
 
 - اعمل فقط من `D:\Data\karaj\UAE\Azad-UAE`.
 - لا تعمل من `C:\` ولا من sandbox path.
+- تقرير GitHub القديم `f29aa07` تمت مراجعته ودمجه كملف مصالحة في `docs/ERP_ACCOUNTING_MASTER_BLUEPRINT_CORRECTIONS_2026-06-06.md`. لا تسترجع نصه الأصلي كما هو لأنه كان يعتبر Phase 8/9/10 غير مكتملة، وهذا يخالف حالة المحلي الحالية.
 - لا تستخدم `PaymentVault.query.first()` في كود runtime جديد.
 - استخدم `PaymentVault.get_platform_vault()` لسياقات آزاد والمنصة.
 - استخدم `PaymentVault.get_tenant_vault(tenant_id)` لسياقات المشروع/المتجر.
@@ -127,7 +128,7 @@ python -m flask --app app db heads
 - لا تصفي `Package` و `PackagePurchase` حسب tenant_id؛ هذه باقات منصة آزاد وليست باقات مشاريع.
 - لا تسجل حصة 1% عند إنشاء رابط الدفع فقط؛ سجلها بعد تأكيد الدفع الناجح من webhook أو تأكيد الطلب المدفوع أونلاين.
 - لا تكرر الحصة عند webhook مكرر؛ استخدم idempotency key.
-- لا ترجع تعديلات `routes/ai.py`, `tools/qa/test_security_boundaries.py`, `models/audit.py`, أو الهجرة `ecad0902bdb5` بدون قرار صريح، لأنها تبدو من مسار مساعد آخر.
+- لا ترجع تعديلات `routes/ai.py`, `tests/security/test_security_boundaries.py`, `models/audit.py`, أو الهجرة `ecad0902bdb5` بدون قرار صريح، لأنها تبدو من مسار مساعد آخر.
 - قبل final answer: اذكر بالضبط أي اختبارات نجحت وأيها لم يعمل، ولا تقل "انتهى" إذا بقيت فحوصات غير منفذة.
 
 ## الخلاصة الحالية

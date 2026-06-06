@@ -3,11 +3,11 @@
 Thin wrapper – all business logic lives in ``services/gl_accounting_setup.py``.
 
 Usage:
-    python tools/qa/run_gl_accounting_setup.py --plan
-    python tools/qa/run_gl_accounting_setup.py --plan --tenant-id 2
-    python tools/qa/run_gl_accounting_setup.py --execute --tenant-id 2
-    python tools/qa/run_gl_accounting_setup.py --execute
-    python tools/qa/run_gl_accounting_setup.py --validate
+    python scripts/seed/run_gl_accounting_setup.py --plan
+    python scripts/seed/run_gl_accounting_setup.py --plan --tenant-id 2
+    python scripts/seed/run_gl_accounting_setup.py --execute --tenant-id 2
+    python scripts/seed/run_gl_accounting_setup.py --execute
+    python scripts/seed/run_gl_accounting_setup.py --validate
 """
 import argparse
 import json

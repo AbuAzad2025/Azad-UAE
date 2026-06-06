@@ -4,7 +4,7 @@ Remove inactive legacy invoice_settings rows with tenant_id=NULL (id >= 6).
 Dev/staging remediation only. Requires invoice_settings_backup_20260601 (created
 if missing). Does not delete active rows or tenant-specific ids 1–5.
 
-Run: SKIP_SYSTEM_INTEGRITY=1 python tools/qa/invoice_settings_inactive_null_cleanup.py
+Run: SKIP_SYSTEM_INTEGRITY=1 python scripts/maintenance/invoice_settings_inactive_null_cleanup.py
 """
 from __future__ import annotations
 

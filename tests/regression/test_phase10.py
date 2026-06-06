@@ -3,7 +3,7 @@ Phase 10 QA Test — Feature Flags, Regression, Load Targets, Rollback Playbook
 Validates: feature flag matrix, end-to-end regression, load test latency targets,
 rollback procedure documentation.
 
-Run: python tools/qa/test_phase10.py
+Run: python tests/regression/test_phase10.py
 """
 
 import os
@@ -58,7 +58,8 @@ def _assert_regression_test_exists():
 
 def _assert_load_test_exists():
     """load_test.py must exist and import cleanly."""
-    path = os.path.join(os.path.dirname(__file__), 'load_test.py')
+    root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+    path = os.path.join(root, 'tests', 'load', 'load_test.py')
     assert os.path.exists(path), "load_test.py not found"
     import importlib.util
     spec = importlib.util.spec_from_file_location("load_test", path)
@@ -85,14 +86,14 @@ def _assert_deployment_checklist_exists():
 def _assert_all_previous_qa_still_pass():
     """All previous phase QA tests must still import cleanly."""
     tests = [
-        'test_inventory_reconciliation.py',
-        'test_treasury.py',
-        'test_localization.py',
+        ('e2e', 'test_inventory_reconciliation.py'),
+        ('e2e', 'test_treasury.py'),
+        ('e2e', 'test_localization.py'),
     ]
-    base = os.path.dirname(__file__)
-    for t in tests:
-        path = os.path.join(base, t)
-        assert os.path.exists(path), f"{t} not found"
+    root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+    for folder, filename in tests:
+        path = os.path.join(root, 'tests', folder, filename)
+        assert os.path.exists(path), f"{filename} not found"
     print("  [PASS] All previous QA tests exist")
 
 

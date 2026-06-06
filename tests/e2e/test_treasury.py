@@ -3,7 +3,7 @@ Treasury Service QA Test — Phase 8
 Validates: liquidity position, cheque maturity buckets, bank reconciliation status,
 branch filter enforcement, export route security, no double-counting.
 
-Run: python tools/qa/test_treasury.py
+Run: python tests/e2e/test_treasury.py
 """
 
 import os

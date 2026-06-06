@@ -98,7 +98,7 @@ new_phase1 = """### Phase 1: Dynamic GL Mapping Foundation — **COMPLETED**
 *   **Models Needed:** `GLAccountMapping` (mapping standard GL concepts to tenant chart accounts).
 *   **Migrations Needed:** `create_gl_account_mappings_table`.
 *   **Status:** All sub-phases 1E through 1L completed. See Section 12.6 for detailed completion notes.
-*   **Feature Flag:** `ENABLE_DYNAMIC_GL_MAPPING` remains disabled by default until Phase 2+ dimensions are enforced.
+*   **Feature Flag:** `ENABLE_DYNAMIC_GL_MAPPING` is active for resolved critical concepts. Legacy fallback and validation guards remain in place; mandatory service-layer dimension enforcement stays deferred until operational UI flows pass dimensions explicitly.
 *   **Estimated Complexity:** Medium (1 Sprint) — **Actual: 2 Sprints**.
 *   **Dependencies:** Phase 0.
 
@@ -262,7 +262,7 @@ This section records all hardening batches and modernization phases that have be
 | Sub-Phase | Description | Status | Evidence |
 |-----------|-------------|--------|----------|
 | **1E** | `GLAccountMapping` model, concept registry, migration, feature flag | ✅ COMPLETED | Migration `gl_mapping_001`; `ENABLE_DYNAMIC_GL_MAPPING` defaults `False` |
-| **1F** | Read-only GL mapping validation / dry-run tool | ✅ COMPLETED | `tools/qa/gl_mapping_validation_dry_run.py` reports readiness per tenant |
+| **1F** | Read-only GL mapping validation / dry-run tool | ✅ COMPLETED | `scripts/verify/gl_mapping_validation_dry_run.py` reports readiness per tenant |
 | **1G** | Safe seed preview (`--preview-seed`) | ✅ COMPLETED | Proposes candidates; no inserts/updates/deletes |
 | **1G.1** | Candidate discovery (`--discover-candidates`) | ✅ COMPLETED | 72 combinations checked; 41 safe candidates found |
 | **1J** | Dynamic GL Resolver | ✅ COMPLETED | Isolated resolver behind feature flag; returns no dynamic account while disabled |
