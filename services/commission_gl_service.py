@@ -11,7 +11,7 @@ from utils.gl_reference_types import GLRef
 
 
 def post_sale_commissions(sale):
-    entries = PartnerCommissionEntry.query.filter_by(sale_id=sale.id).all()
+    entries = PartnerCommissionEntry.query.filter_by(sale_id=sale.id, tenant_id=sale.tenant_id).all()
     if not entries:
         return None
 
