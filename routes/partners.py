@@ -117,16 +117,23 @@ def create():
 @permission_required('view_reports')
 def view(id):
     partner = tenant_query(Partner).filter_by(id=id).first_or_404()
+    tid = _tenant_id()
 
     # Latest distributions
     latest_dists = PartnerProfitDistribution.query.filter_by(
         partner_id=id
-    ).order_by(PartnerProfitDistribution.period_end.desc()).limit(12).all()
+    )
+    if tid is not None:
+        latest_dists = latest_dists.filter(PartnerProfitDistribution.tenant_id == tid)
+    latest_dists = latest_dists.order_by(PartnerProfitDistribution.period_end.desc()).limit(12).all()
 
     # Latest transactions
     latest_txs = PartnerTransaction.query.filter_by(
         partner_id=id
-    ).order_by(PartnerTransaction.transaction_date.desc()).limit(20).all()
+    )
+    if tid is not None:
+        latest_txs = latest_txs.filter(PartnerTransaction.tenant_id == tid)
+    latest_txs = latest_txs.order_by(PartnerTransaction.transaction_date.desc()).limit(20).all()
 
     return render_template('partners/view.html',
                            partner=partner,

@@ -163,12 +163,15 @@ def dashboard():
                 pass
         
         # Optimized query with eager loading (N+1 problem fix)
+        tid = get_active_tenant_id(current_user)
         recent_sales = Sale.query.options(
             joinedload(Sale.customer),
             joinedload(Sale.seller)
         ).filter_by(
             status='confirmed'
         )
+        if tid is not None:
+            recent_sales = recent_sales.filter(Sale.tenant_id == tid)
         if scoped_branch_id is not None:
             recent_sales = recent_sales.filter(Sale.branch_id == scoped_branch_id)
         recent_sales = recent_sales.order_by(Sale.sale_date.desc()).limit(10).all()
@@ -307,7 +310,8 @@ def my_profile_update():
                 # Check email uniqueness (excluding self)
                 existing = User.query.filter(
                     User.email == email,
-                    User.id != user.id
+                    User.id != user.id,
+                    User.tenant_id == user.tenant_id,
                 ).first()
                 if existing:
                     flash('⚠️ هذا البريد الإلكتروني مستخدم من قبل.', 'warning')

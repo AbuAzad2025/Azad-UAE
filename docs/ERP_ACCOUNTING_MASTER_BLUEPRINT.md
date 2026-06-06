@@ -1162,15 +1162,15 @@ Future phases require admin UI support for the following areas:
 | 10 | `routes/cheques.py` | ✅ | ✅ | ✅ | ✅ | ✅ | **DONE** — Fixed: `_scoped_cheques_query`/`_scoped_customers_query`/`_scoped_suppliers_query` missing `tenant_id`; `GLJournalEntry.query` in delete missing tenant scoping |
 | 11 | `routes/customers.py` | ✅ | ✅ | ✅ | ✅ | ✅ | **DONE** — Fixed in Session 9: `Payment`/`Receipt`/`Sale` queries missing `tenant_id` in delete route |
 | 12 | `routes/expenses.py` | ✅ | ✅ | ✅ | ✅ | ✅ | **DONE** — Fixed: `GLJournalEntry.query` in delete missing tenant scoping; `ArchivedRecord.query` in archived/restore missing tenant scoping |
-| 13 | `routes/gamification.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
-| 14 | `routes/graphql.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
-| 15 | `routes/language.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
-| 16 | `routes/ledger.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
-| 17 | `routes/main.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
-| 18 | `routes/monitoring.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
-| 19 | `routes/owner.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
-| 20 | `routes/partners.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
-| 21 | `routes/payment_vault.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 13 | `routes/gamification.py` | ✅ | ✅ | ✅ | ✅ | ✅ | **DONE** — Clean: all routes delegated to service layer; no direct DB queries |
+| 14 | `routes/graphql.py` | ✅ | ✅ | ✅ | ✅ | ✅ | **DONE** — Clean: query length/depth/introspection guards; mutations gated by environment; owner-only playground |
+| 15 | `routes/language.py` | ✅ | N/A | N/A | N/A | ✅ | **DONE** — Clean: session language switcher; no DB queries |
+| 16 | `routes/ledger.py` | ✅ | ✅ | ✅ | ✅ | ✅ | **DONE** — Clean: all GL queries via `scope_gl_accounts`/`gl_account_query`/`gl_entry_query`; GLPeriod scoped by tenant_id; admin routes use scoped helpers |
+| 17 | `routes/main.py` | ✅ | ✅ | ✅ | ✅ | ✅ | **DONE** — Fixed: `recent_sales` in `dashboard` missing `tenant_id`; `User.query` email uniqueness check missing tenant scoping |
+| 18 | `routes/monitoring.py` | ✅ | ✅ | ✅ | ✅ | ✅ | **DONE** — Clean: all routes delegated to MonitoringService; no direct DB queries |
+| 19 | `routes/owner.py` | ✅ | ✅ | ✅ | ✅ | ✅ | **DONE** — Fixed in Session 9: `users` query in `login_history` missing tenant; `branches` query in `create_user`/`edit_user` unscoped; duplicate username check unscoped |
+| 20 | `routes/partners.py` | ✅ | ✅ | ✅ | ✅ | ✅ | **DONE** — Fixed: `PartnerProfitDistribution.query` and `PartnerTransaction.query` in `view()` missing `tenant_id` scoping |
+| 21 | `routes/payment_vault.py` | ✅ | ✅ | ✅ | ✅ | ✅ | **DONE** — Clean: owner-only module; `tid=None` intentional for global reporting; `before_request` enforces owner auth + IP check |
 | 22 | `routes/payments.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
 | 23 | `routes/payroll.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
 | 24 | `routes/pos.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |

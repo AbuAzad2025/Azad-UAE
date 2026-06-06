@@ -34,11 +34,6 @@ class AnalyticsService:
         donations = query.all()
 
         # تجميع البيانات حسب الفترة
-        # ... (rest of the logic) ...
-        # (Need to update the loops for tenant_id filtering if necessary, but donations are already filtered)
-        # Re-applying to PackagePurchase as well.
-        # ... (continue with similar fixes for get_package_performance, etc.)
-
         labels = []
         purchases_data = []
         donations_data = []
@@ -80,15 +75,24 @@ class AnalyticsService:
             'donations': donations_data,
             'total_revenue': sum(purchases_data) + sum(donations_data)
         }
-    
+
     @staticmethod
-    def get_package_performance():
+    def get_package_performance(tenant_id=None):
         """تحليل أداء الباقات"""
-        packages = Package.query.filter_by(is_active=True).all()
+        from utils.tenanting import active_tenant_id
+        tid = tenant_id or active_tenant_id()
+        
+        query = Package.query.filter_by(is_active=True)
+        if tid:
+            query = query.filter_by(tenant_id=tid)
+        packages = query.all()
         
         performance = []
         for package in packages:
-            purchases = PackagePurchase.query.filter_by(package_id=package.id).all()
+            purchases = PackagePurchase.query.filter_by(package_id=package.id)
+            if tid:
+                purchases = purchases.filter_by(tenant_id=tid)
+            purchases = purchases.all()
             
             completed = [p for p in purchases if p.payment_status == 'completed']
             pending = [p for p in purchases if p.payment_status == 'pending']
@@ -107,9 +111,15 @@ class AnalyticsService:
         return performance
     
     @staticmethod
-    def get_payment_method_stats():
+    def get_payment_method_stats(tenant_id=None):
         """إحصائيات طرق الدفع"""
-        donations = Donation.query.filter_by(status='completed').all()
+        from utils.tenanting import active_tenant_id
+        tid = tenant_id or active_tenant_id()
+        
+        query = Donation.query.filter_by(status='completed')
+        if tid:
+            query = query.filter_by(tenant_id=tid)
+        donations = query.all()
         
         methods = {}
         for donation in donations:
@@ -127,10 +137,16 @@ class AnalyticsService:
         }
     
     @staticmethod
-    def get_customer_behavior():
+    def get_customer_behavior(tenant_id=None):
         """تحليل سلوك العملاء"""
+        from utils.tenanting import active_tenant_id
+        tid = tenant_id or active_tenant_id()
+        
         # جلب جميع المشتريات
-        purchases = PackagePurchase.query.all()
+        query = PackagePurchase.query
+        if tid:
+            query = query.filter_by(tenant_id=tid)
+        purchases = query.all()
         
         # تحليل توزيع العملاء
         customers = {}
@@ -167,13 +183,12 @@ class AnalyticsService:
         }
     
     @staticmethod
-    def predict_revenue(months=3):
+    def predict_revenue(months=3, tenant_id=None):
         """
         توقع الإيرادات المستقبلية
-        (تحليل بسيط بناءً على المتوسط)
         """
         # جلب بيانات آخر 6 أشهر
-        revenue_data = AnalyticsService.get_revenue_by_period(months=6)
+        revenue_data = AnalyticsService.get_revenue_by_period(months=6, tenant_id=tenant_id)
         
         # حساب المتوسط الشهري
         total_revenue = revenue_data['total_revenue']
@@ -197,13 +212,16 @@ class AnalyticsService:
         }
     
     @staticmethod
-    def get_daily_stats():
+    def get_daily_stats(tenant_id=None):
         """إحصائيات اليوم"""
+        from utils.tenanting import active_tenant_id
+        tid = tenant_id or active_tenant_id()
         today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
         
-        today_donations = Donation.query.filter(
-            Donation.created_at >= today_start
-        ).all()
+        query = Donation.query.filter(Donation.created_at >= today_start)
+        if tid:
+            query = query.filter_by(tenant_id=tid)
+        today_donations = query.all()
         
         today_revenue = sum(float(d.amount_usd or 0) for d in today_donations if d.status == 'completed')
         pending_today = sum(1 for d in today_donations if d.status == 'pending')
