@@ -1158,10 +1158,10 @@ Future phases require admin UI support for the following areas:
 | 6 | `routes/api_docs.py` | ✅ | N/A | N/A | N/A | ✅ | **DONE** — Static OpenAPI spec + Swagger UI; no DB queries; production-gated |
 | 7 | `routes/api_enhanced.py` | ✅ | ✅ | ✅ | ✅ | ✅ | **DONE** — Fixed: `Customer.query` and `Product.query` missing `tenant_id` scoping |
 | 8 | `routes/auth.py` | ✅ | ✅ | ✅ | ✅ | ✅ | **DONE** — Login/auth routes intentionally global; public webhooks secured by tokens/signatures; no issues |
-| 9 | `routes/branches.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
-| 10 | `routes/cheques.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
-| 11 | `routes/customers.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
-| 12 | `routes/expenses.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 9 | `routes/branches.py` | ✅ | ✅ | ✅ | ✅ | ✅ | **DONE** — Clean: all queries via `tenant_query(Branch)`, tenant_id checks on edit/delete, proper error handling |
+| 10 | `routes/cheques.py` | ✅ | ✅ | ✅ | ✅ | ✅ | **DONE** — Fixed: `_scoped_cheques_query`/`_scoped_customers_query`/`_scoped_suppliers_query` missing `tenant_id`; `GLJournalEntry.query` in delete missing tenant scoping |
+| 11 | `routes/customers.py` | ✅ | ✅ | ✅ | ✅ | ✅ | **DONE** — Fixed in Session 9: `Payment`/`Receipt`/`Sale` queries missing `tenant_id` in delete route |
+| 12 | `routes/expenses.py` | ✅ | ✅ | ✅ | ✅ | ✅ | **DONE** — Fixed: `GLJournalEntry.query` in delete missing tenant scoping; `ArchivedRecord.query` in archived/restore missing tenant scoping |
 | 13 | `routes/gamification.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
 | 14 | `routes/graphql.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
 | 15 | `routes/language.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |

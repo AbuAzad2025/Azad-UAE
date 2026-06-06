@@ -990,35 +990,42 @@ class AIService:
                 ctx_user = flask_current_user
 
             # 📊 إحصائيات الشركة النشطة (User معفى من ORM — scoped يدوياً)
+            tid = ctx_user.tenant_id
             users_count = scoped_user_query(ctx_user, exclude_owners=True).count()
-            customers_count = Customer.query.filter_by(is_active=True).count()
-            suppliers_count = Supplier.query.filter_by(is_active=True).count()
-            products_count = Product.query.filter_by(is_active=True).count()
+            customers_count = Customer.query.filter_by(is_active=True, tenant_id=tid).count()
+            suppliers_count = Supplier.query.filter_by(is_active=True, tenant_id=tid).count()
+            products_count = Product.query.filter_by(is_active=True, tenant_id=tid).count()
             
             sales_30d = Sale.query.filter(
-                Sale.sale_date >= datetime.now() - timedelta(days=30)
+                Sale.sale_date >= datetime.now() - timedelta(days=30),
+                Sale.tenant_id == tid
             ).count()
             
             purchases_30d = Purchase.query.filter(
-                Purchase.purchase_date >= datetime.now() - timedelta(days=30)
+                Purchase.purchase_date >= datetime.now() - timedelta(days=30),
+                Purchase.tenant_id == tid
             ).count()
             
             expenses_30d = Expense.query.filter(
-                Expense.expense_date >= datetime.now() - timedelta(days=30)
+                Expense.expense_date >= datetime.now() - timedelta(days=30),
+                Expense.tenant_id == tid
             ).count()
             
             payments_30d = Payment.query.filter(
-                Payment.payment_date >= datetime.now() - timedelta(days=30)
+                Payment.payment_date >= datetime.now() - timedelta(days=30),
+                Payment.tenant_id == tid
             ).count()
             
-            cheques_count = Cheque.query.count()
+            cheques_count = Cheque.query.filter_by(tenant_id=tid).count()
             
             total_sales_amount = db.session.query(func.sum(Sale.total_amount)).filter(
-                Sale.sale_date >= datetime.now() - timedelta(days=30)
+                Sale.sale_date >= datetime.now() - timedelta(days=30),
+                Sale.tenant_id == tid
             ).scalar() or 0
             
             total_expenses_amount = db.session.query(func.sum(Expense.amount_aed)).filter(
-                Expense.expense_date >= datetime.now() - timedelta(days=30)
+                Expense.expense_date >= datetime.now() - timedelta(days=30),
+                Expense.tenant_id == tid
             ).scalar() or 0
             
             data_parts.append(f"""📊 **بيانات النظام الكاملة:**

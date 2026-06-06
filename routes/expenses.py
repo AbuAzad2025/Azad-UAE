@@ -9,7 +9,7 @@ from services.gl_posting import post_or_fail
 from utils.decorators import permission_required, branch_scope_id
 from utils.branching import should_show_all_branch_columns
 from utils.helpers import create_audit_log, generate_number
-from utils.tenanting import tenant_query, tenant_get_or_404, require_active_tenant_id
+from utils.tenanting import tenant_query, tenant_get_or_404, require_active_tenant_id, get_active_tenant_id
 from utils.gl_reference_types import GLRef
 from decimal import Decimal
 from datetime import datetime
@@ -388,10 +388,14 @@ def delete(id):
                     GLRef.CHEQUE_CLEAR, GLRef.CHEQUE_BOUNCE,
                 ):
                     ref_types.extend(ref_variants(rt))
-                GLJournalEntry.query.filter(
+                tid = get_active_tenant_id(current_user)
+                gl_query = GLJournalEntry.query.filter(
                     GLJournalEntry.reference_type.in_(ref_types),
                     GLJournalEntry.reference_id == cheque.id
-                ).delete(synchronize_session=False)
+                )
+                if tid is not None:
+                    gl_query = gl_query.filter(GLJournalEntry.tenant_id == tid)
+                gl_query.delete(synchronize_session=False)
                 
                 db.session.delete(cheque)
                 
@@ -475,9 +479,12 @@ def archived():
     from models import ArchivedRecord
     from datetime import datetime
     
+    tid = get_active_tenant_id(current_user)
     archived_expenses_query = db.session.query(ArchivedRecord).filter(
         ArchivedRecord.table_name == 'expenses'
     )
+    if tid is not None:
+        archived_expenses_query = archived_expenses_query.filter(ArchivedRecord.tenant_id == tid)
     
     archived_items = []
     
@@ -528,10 +535,14 @@ def restore(id):
     """استعادة مصروف من الأرشيف"""
     from models import ArchivedRecord
     
-    archived = ArchivedRecord.query.filter_by(
+    tid = get_active_tenant_id(current_user)
+    archived_query = ArchivedRecord.query.filter_by(
         table_name='expenses',
         record_id=id
-    ).first_or_404()
+    )
+    if tid is not None:
+        archived_query = archived_query.filter(ArchivedRecord.tenant_id == tid)
+    archived = archived_query.first_or_404()
     
     try:
         db.session.delete(archived)

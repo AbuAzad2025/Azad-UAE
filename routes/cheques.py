@@ -10,6 +10,7 @@ from models import Cheque, Customer, Supplier, Sale, Receipt, Expense
 from services.currency_service import CurrencyService
 from services.exchange_rate_service import ExchangeRateService
 from utils.decorators import admin_required, permission_required, branch_scope_id
+from utils.tenanting import get_active_tenant_id
 from utils.branching import should_show_all_branch_columns
 from utils.helpers import create_audit_log, generate_number
 from datetime import datetime, timedelta
@@ -19,7 +20,10 @@ cheques_bp = Blueprint('cheques', __name__, url_prefix='/cheques')
 
 
 def _scoped_cheques_query():
+    tid = get_active_tenant_id(current_user)
     query = Cheque.query.filter_by(is_active=True)
+    if tid is not None:
+        query = query.filter(Cheque.tenant_id == tid)
     scoped_branch_id = branch_scope_id()
     if scoped_branch_id is not None:
         query = query.filter(Cheque.branch_id == scoped_branch_id)
@@ -44,8 +48,11 @@ def _scoped_customers_query():
     from models import Payment
     from sqlalchemy import select
 
+    tid = get_active_tenant_id(current_user)
     scoped_branch_id = branch_scope_id()
     query = Customer.query.filter(Customer.is_active == True)
+    if tid is not None:
+        query = query.filter(Customer.tenant_id == tid)
     if scoped_branch_id is None:
         return query
 
@@ -68,8 +75,11 @@ def _scoped_suppliers_query():
     from models import Payment, Purchase
     from sqlalchemy import select
 
+    tid = get_active_tenant_id(current_user)
     scoped_branch_id = branch_scope_id()
     query = Supplier.query.filter(Supplier.is_active == True)
+    if tid is not None:
+        query = query.filter(Supplier.tenant_id == tid)
     if scoped_branch_id is None:
         return query
 
@@ -625,10 +635,14 @@ def delete(id):
             from models import GLJournalEntry
             
             ref_types = ['cheque_receive', 'cheque_issue', 'cheque_cancel', 'cheque_clear', 'cheque_bounce', 'Cheque']
-            GLJournalEntry.query.filter(
+            tid = get_active_tenant_id(current_user)
+            gl_query = GLJournalEntry.query.filter(
                 GLJournalEntry.reference_type.in_(ref_types),
                 GLJournalEntry.reference_id == cheque.id
-            ).delete(synchronize_session=False)
+            )
+            if tid is not None:
+                gl_query = gl_query.filter(GLJournalEntry.tenant_id == tid)
+            gl_query.delete(synchronize_session=False)
             
             # حذف الشيك
             db.session.delete(cheque)
