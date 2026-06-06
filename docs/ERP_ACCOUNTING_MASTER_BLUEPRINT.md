@@ -1138,5 +1138,656 @@ Future phases require admin UI support for the following areas:
 
 ---
 
+---
+
+## 19. Phase 13: Full Stack Deep Audit — CHECKLIST (Session 9 — IN PROGRESS)
+
+**Goal:** Per-file, per-function, per-template, per-model audit. No file bypassed. No cosmetic check. Every item must be marked `✅ DONE` or `❌ SKIPPED (with reason)`.
+
+---
+
+### 19.1 Backend Routes Audit — `routes/` (39 files, ~589 functions)
+
+| # | File | Decorators | Tenant Scoping | Error Handling | Try/Except | py_compile | Status |
+|---|------|-----------|---------------|---------------|------------|-----------|--------|
+| 1 | `routes/admin_ledger.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 2 | `routes/advanced_ledger.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 3 | `routes/ai.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 4 | `routes/api.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 5 | `routes/api_analytics.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 6 | `routes/api_docs.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 7 | `routes/api_enhanced.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 8 | `routes/auth.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 9 | `routes/branches.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 10 | `routes/cheques.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 11 | `routes/customers.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 12 | `routes/expenses.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 13 | `routes/gamification.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 14 | `routes/graphql.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 15 | `routes/language.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 16 | `routes/ledger.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 17 | `routes/main.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 18 | `routes/monitoring.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 19 | `routes/owner.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 20 | `routes/partners.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 21 | `routes/payment_vault.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 22 | `routes/payments.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 23 | `routes/payroll.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 24 | `routes/pos.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 25 | `routes/products.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 26 | `routes/public.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 27 | `routes/purchases.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 28 | `routes/reports.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 29 | `routes/returns.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 30 | `routes/sales.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 31 | `routes/shop.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 32 | `routes/store.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 33 | `routes/suppliers.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 34 | `routes/tenants.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 35 | `routes/treasury.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 36 | `routes/users.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 37 | `routes/warehouse.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 38 | `routes/websocket.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 39 | `routes/whatsapp.py` | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+
+**Per-Function Criteria (every `def` in every file):**
+1. `@login_required` on all non-public routes
+2. `@permission_required` / `@owner_required` / `@admin_required` on sensitive routes
+3. `tenant_id` scoping on ALL `Model.query` calls
+4. `try/except` + `db.session.rollback()` on ALL mutation routes
+5. Input validation before DB
+6. No bare `.get(id)` without tenant scoping
+7. No `.all()` / `.count()` without tenant scoping
+8. `py_compile` clean for every modified file
+
+---
+
+### 19.2 Models Audit — `models/` (51 files)
+
+| # | File | Models | tenant_id | Indexes | FK Constraints | Status |
+|---|------|--------|-----------|---------|---------------|--------|
+| 1 | `models/advanced_accounting.py` | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 2 | `models/api_key.py` | ⬜ | N/A | ⬜ | ⬜ | **PENDING** |
+| 3 | `models/archive.py` | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 4 | `models/audit.py` | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 5 | `models/azad_platform_fee.py` | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 6 | `models/bank_reconciliation.py` | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 7 | `models/branch.py` | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 8 | `models/budget.py` | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 9 | `models/card_payment.py` | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 10 | `models/card_vault.py` | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 11 | `models/cash_box.py` | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 12 | `models/cheque.py` | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 13 | `models/cost_center.py` | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 14 | `models/currency.py` | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 15 | `models/customer.py` | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 16 | `models/donation.py` | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 17 | `models/error_audit_log.py` | ⬜ | N/A | ⬜ | ⬜ | **PENDING** |
+| 18 | `models/events.py` | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 19 | `models/exchange_rate_record.py` | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 20 | `models/expense.py` | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 21 | `models/fixed_asset.py` | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 22 | `models/gl.py` | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 23 | `models/integration_settings.py` | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 24 | `models/invoice_settings.py` | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 25 | `models/login_history.py` | ⬜ | N/A | ⬜ | ⬜ | **PENDING** |
+| 26 | `models/package.py` | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 27 | `models/partner.py` | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 28 | `models/partner_commission.py` | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 29 | `models/partner_profit_distribution.py` | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 30 | `models/partner_transaction.py` | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 31 | `models/payment.py` | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 32 | `models/payment_vault.py` | ⬜ | N/A | ⬜ | ⬜ | **PENDING** |
+| 33 | `models/payroll.py` | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 34 | `models/product.py` | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 35 | `models/product_cost_history.py` | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 36 | `models/product_return.py` | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 37 | `models/product_serial.py` | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 38 | `models/product_warehouse_cost.py` | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 39 | `models/profit_center.py` | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 40 | `models/purchase.py` | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 41 | `models/sale.py` | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 42 | `models/security_alert.py` | ⬜ | N/A | ⬜ | ⬜ | **PENDING** |
+| 43 | `models/shop_customer_account.py` | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 44 | `models/store_coupon.py` | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 45 | `models/store_payment_method.py` | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 46 | `models/supplier.py` | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 47 | `models/system_settings.py` | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 48 | `models/tenant.py` | ⬜ | N/A | ⬜ | ⬜ | **PENDING** |
+| 49 | `models/tenant_store.py` | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 50 | `models/user.py` | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+| 51 | `models/warehouse.py` | ⬜ | ⬜ | ⬜ | ⬜ | **PENDING** |
+
+**Per-Model Criteria (every class in every file):**
+1. `tenant_id` column present (if multi-tenant) with `index=True`
+2. `tenant_id` has correct `nullable` (False unless documented)
+3. All FK columns have `ondelete='RESTRICT'` where appropriate
+4. `created_at` and `updated_at` timestamps present
+5. Unique constraints include `tenant_id` where needed
+6. No circular imports
+7. `__tablename__` defined and matches plural convention
+
+---
+
+### 19.3 Templates Audit — `templates/` (178 HTML files)
+
+**Format:** `filename.html` — XSS ⬜ CSRF ⬜ `|safe` ⬜ SRI ⬜ `noopener` ⬜ — **PENDING**
+
+#### `templates/admin/ledger/` (12)
+- `accounts.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `add_account.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `balance_sheet.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `dashboard.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `edit_account.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `income_statement.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `journals.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `reports.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `settings.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `trial_balance.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `vaults.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `view_journal.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+
+#### `templates/ai/` (2)
+- `assistant.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `config.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+
+#### `templates/auth/` (1)
+- `login.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+
+#### `templates/branches/` (3)
+- `create.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `edit.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `index.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+
+#### `templates/cheques/` (8)
+- `alerts.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `archived.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `create.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `edit.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `incoming.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `index.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `outgoing.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `view.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+
+#### `templates/customers/` (5)
+- `create.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `edit.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `index.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `statement.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `view.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+
+#### `templates/errors/` (3)
+- `403.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `404.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `500.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+
+#### `templates/expenses/` (7)
+- `archived.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `categories.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `create.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `edit.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `index.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `print.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `view.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+
+#### `templates/gamification/` (1)
+- `leaderboard.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+
+#### `templates/invoices/` (5)
+- `classic.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `gulf.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `minimal.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `modern.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `simple.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+
+#### `templates/ledger/` (25)
+- `account_ledger.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `account_statement.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `accounts_tree.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `advanced/add_advanced_expense.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `advanced/add_customs_tax.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `advanced/add_expense_category.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `advanced/advanced_analytics.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `advanced/advanced_expenses.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `advanced/cheque_integration.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `advanced/customs_taxes.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `advanced/expense_categories.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `advanced/journal_management.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `advanced/professional_reports.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `advanced/real_time_events.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `aging_analysis.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `balance_sheet.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `cash_flow.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `income_statement.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `index.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `journal_entries.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `manual_entry.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `periods.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `professional_printing.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `trial_balance.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `vat_report.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `view_entry.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+
+#### `templates/owner/` (61)
+- `_platform_dashboard_sections.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `activity_monitor.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `api_keys.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `archived.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `audit_logs.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `backup_restore_instructions.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `backups_list.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `base.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `browse_table.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `cards_vault.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `company_info.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `config.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `convert_database.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `create_user.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `currency_settings.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `customer_insights.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `dashboard.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `dashboard_company.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `data_cleanup.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `database_tools.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `developer_settings.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `edit_table.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `edit_user.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `email_settings.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `error_audit_logs.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `error_logs.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `financial_dashboard_advanced.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `financial_overview.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `forecasting.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `import_export_tools.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `integrations.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `invoice_settings.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `ip_whitelist.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `login_history.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `master_login_info.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `notification_templates.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `payment_gateways.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `performance_metrics.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `product_performance.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `reports.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `roles_permissions.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `sales_insights.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `scheduled_backups.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `security_alerts.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `sms_settings.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `sql_console.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `store_payment_method_form.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `store_payment_methods.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `system_config.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `system_health.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `tenant_settings.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `user_profile.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `users_list.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+
+#### `templates/payments/` (11)
+- `archived.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `create.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `create_payment.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `create_receipt.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `index.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `print.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `print_payment.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `print_receipt.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `receipts.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `view_receipt.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `voucher.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+
+#### `templates/pos/` (1)
+- `index.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+
+#### `templates/products/` (6)
+- `categories.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `create.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `edit.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `import.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `index.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `view.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+
+#### `templates/public/` (7)
+- `contact.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `contact_en.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `demo.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `landing.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `landing_en.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `pricing.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `tenant_profile.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+
+#### `templates/purchases/` (5)
+- `create.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `edit.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `index.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `print.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `view.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+
+#### `templates/reports/` (11)
+- `ar_reconciliation.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `index.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `inventory.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `inventory_reconciliation.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `partials/entity_report.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `partners.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `purchases.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `receivables.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `sales.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `top_selling.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `treasury.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `vat_return.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+
+#### `templates/sales/` (6)
+- `archived.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `create.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `edit.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `index.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `print.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `view.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+
+#### `templates/` (root)
+- `base.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `dashboard.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+- `support.html` — ⬜ ⬜ ⬜ ⬜ ⬜ — **PENDING**
+
+**Per-Template Criteria:**
+1. All user-generated content escaped (`{{ var }}` not `|safe` unless justified)
+2. All forms have `{{ csrf_token() }}`
+3. All external links have `rel="noopener noreferrer"`
+4. All CDN resources have `integrity` SRI attribute
+5. No `innerHTML` with unsanitized data
+6. No `|tojson|safe` without proper escaping
+7. `X-Frame-Options` and CSP headers active (in `app.py`)
+
+---
+
+### 19.4 Database Migrations Audit — `migrations/versions/` (45 files)
+
+**Format:** `filename.py` — upgrade ⬜ downgrade ⬜ drift ⬜ — **PENDING**
+
+- `11c273f17b28_add_product_serial_columns.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `1a6dadd0ddb4_initial_unified_schema.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `24ceeacb537a_add_branch_to_accounting_models.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `31def1234567_add_branch_to_simple_expense.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `5b37cc7276da_baseline_marker.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `9f3c1a2b7d4e_add_branch_to_payments_receipts_cheques.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `a069786bc9a5_add_branch_to_returns.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `accounting_scope_001_gl_tenant_periods.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `ai_init_001_add_ai_memory_tables.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `audit_trail_001_restrict_stock_movements.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `batch_3_001_financial_relationship_safety.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `batch_4_001_add_missing_fk_indexes.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `batch_5_001_fix_nullability_mismatches.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `bb4133039fbd_link_models_to_branch.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `branch_init_001_create_branches.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `canonical_static_asset_paths_001_canonical_static_asset_paths.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `create_nasrallah_tenant_branding_001_create_nasrallah_tenant_branding.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `currency_audit_001_add_amount_to_gl_journal_lines.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `ebc4f18e3b12_create_error_audit_logs_table.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `ecad0902bdb5_add_tenant_id_to_audit_logs.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `f8a2c1d5e9ab_add_dedup_fields_to_error_audit_logs.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `field_quality_round1_001_field_quality_round1.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `gl_mapping_001_create_gl_account_mappings.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `gl_mapping_002_extend_concept_registry.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `merge_batch5_audit_heads_001_merge_audit_and_batch_heads.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `merge_phase5_security_7_5_001.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `nasrallah_ps_local_001_nasrallah_palestine_localization.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `normalize_legacy_round1_001_normalize_legacy_field_values_round1.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `partner_system_001_add_tenant_limits_and_partners.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `payroll_init_001_add_payroll_module.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `perf_idx_round1_001_add_performance_indexes_round1.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `phase2_001_add_gl_dimensions_and_profit_centers.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `phase3_001_add_mwac_exchange_rate_treasury_models.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `phase3_002_schema_drift_safe_fixes.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `phase3_003_schema_drift_remaining.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `phase3_004_backfill_nullable_tenant_id.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `phase3_005_fix_remaining_indexes_and_constraints.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `phase3_006_drop_orphaned_ai_tables.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `phase5_001_add_landed_cost_fields.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `prod_schema_hardening_001_production_schema_hardening_round1.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `security_7_5_001_add_tenant_id_to_donation_vault.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `security_7_5_002_add_azad_platform_fees.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `store_init_001_online_store.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `store_init_002_storefront.py` — ⬜ ⬜ ⬜ — **PENDING**
+
+**Global Migration Checks:**
+| # | Check | Status |
+|---|-------|--------|
+| 1 | `flask db check` reports "No new upgrade operations detected" | ⬜ **PENDING** |
+| 2 | All Alembic branches merged (no orphaned `merge_` files pending) | ⬜ **PENDING** |
+| 3 | Migration history is linear (no orphaned revisions) | ⬜ **PENDING** |
+| 4 | No raw SQL without parameterized queries | ⬜ **PENDING** |
+| 5 | All `tenant_id` columns added with `index=True` | ⬜ **PENDING** |
+
+---
+
+### 19.5 Services & Utils Audit — `services/` (66 files) & `utils/` (60 files)
+
+**Format:** `filename.py` — Tenant ⬜ Errors ⬜ py_compile ⬜ — **PENDING**
+
+#### `services/` (66)
+- `advanced_analytics.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `advanced_journal_manager.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `aging_analysis_service.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `ai_service.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `analytics_service.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `ar_reconciliation_service.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `archive_service.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `auto_approval_service.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `azad_platform_fee_service.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `backup_exec.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `backup_scope_config.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `backup_scoped_engine.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `backup_scoped_restore.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `backup_service.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `bank_reconciliation_service.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `cash_flow_service.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `celery_tasks.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `cheque_accounting_integration.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `commission_gl_service.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `currency_service.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `depreciation_service.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `donation_gl_service.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `einvoice_service.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `elasticsearch_service.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `error_audit_service.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `exchange_rate_service.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `export_service.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `feature_flag_service.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `gamification_service.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `gl_account_resolver.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `gl_accounting_setup.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `gl_helpers.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `gl_mapping_validation.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `gl_posting.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `gl_service.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `gl_tree_builder.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `graphql_service.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `health_service.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `inventory_reconciliation_service.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `monitoring_service.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `notification_service.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `nowpayments_service.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `partner_service.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `payment_service.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `payroll_service.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `predictive_maintenance.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `purchase_service.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `real_time_listeners.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `return_service.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `sale_service.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `scoped_backup_service.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `security_service.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `statement_service.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `tenant_asset_packager.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `tenant_init_service.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `vat_service.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `whatsappservice.py` — ⬜ ⬜ ⬜ — **PENDING**
+
+#### `utils/` (60)
+- `advanced_audit.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `ai_access.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `api_response.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `asset_compression.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `auth_helpers.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `backup_optimizer.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `branching.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `cache_decorators.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `constants.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `database_optimizer.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `db_safety.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `decorators.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `enhanced_logging.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `error_messages.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `field_validators.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `gl_reference_types.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `gl_tenant.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `helpers.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `i18n.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `licensing.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `localization/engine.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `localization/ksa.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `localization/null.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `localization/palestine.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `localization/registry.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `localization/uae.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `master_login.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `monitoring.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `nowpayments_ipn.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `number_to_arabic.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `owner_panel.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `password_validator.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `performance.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `performance_tracker.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `pos_helpers.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `qr_generator.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `query_optimizer.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `rate_limiter_enhanced.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `redis_cache.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `safe_redirect.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `sanitizer.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `security_helpers.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `shop_i18n.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `static_asset_paths.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `structured_logging.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `system_init.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `tax_settings.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `telemetry.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `tenant_assets.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `tenant_branding.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `tenanting.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `validators.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `whatsapp_utils.py` — ⬜ ⬜ ⬜ — **PENDING**
+
+**Per-File Criteria:**
+1. Services scope ALL DB queries by `tenant_id`
+2. Utils don't leak cross-tenant data
+3. Decorators enforce correct permissions (`utils/decorators.py`)
+4. `tenanting.py` handles edge cases (no tenant, global owner)
+5. `db_safety.py` wraps all critical operations
+6. `py_compile` clean for every modified file
+
+---
+
+### 19.6 Configuration & Environment Audit
+
+| # | File | Check | Status |
+|---|------|-------|--------|
+| 1 | `app.py` | Security headers active | ⬜ **PENDING** |
+| 2 | `app.py` | `before_request` tenant scoping | ⬜ **PENDING** |
+| 3 | `app.py` | Blueprints registered correctly | ⬜ **PENDING** |
+| 4 | `config.py` | All feature flags documented | ⬜ **PENDING** |
+| 5 | `config.py` | No hardcoded secrets | ⬜ **PENDING** |
+| 6 | `.env` / `.env.example` | No secrets committed | ⬜ **PENDING** |
+| 7 | `requirements.txt` | No unused dependencies | ⬜ **PENDING** |
+| 8 | `run.py` | Production-ready | ⬜ **PENDING** |
+| 9 | `wsgi.py` | Production-ready | ⬜ **PENDING** |
+| 10 | `extensions.py` | Extensions initialized correctly | ⬜ **PENDING** |
+| 11 | `tasks.py` | Celery tasks configured | ⬜ **PENDING** |
+
+---
+
+### 19.7 Tests Audit — `tests/` (16 files)
+
+**Format:** `filename.py` — py_compile ⬜ imports ⬜ pass ⬜ — **PENDING**
+
+#### `tests/e2e/` (8)
+- `storefront_isolation_test.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `storefront_verify_cleanup_test.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `test_inventory_reconciliation.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `test_landed_cost_end_to_end.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `test_localization.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `test_mwac_end_to_end.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `test_treasury.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `uat_operational_test.py` — ⬜ ⬜ ⬜ — **PENDING**
+
+#### `tests/load/` (1)
+- `load_test.py` — ⬜ ⬜ ⬜ — **PENDING**
+
+#### `tests/regression/` (6)
+- `test_dynamic_gl_no_hardcoded.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `test_dynamic_gl_resolution_path.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `test_full_regression.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `test_gl_dimensions.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `test_phase10.py` — ⬜ ⬜ ⬜ — **PENDING**
+
+#### `tests/security/` (2)
+- `test_deep_validation.py` — ⬜ ⬜ ⬜ — **PENDING**
+- `test_security_boundaries.py` — ⬜ ⬜ ⬜ — **PENDING**
+
+**Per-Test Criteria:**
+1. `py_compile` clean
+2. No broken imports
+3. Tests execute without errors
+
+---
+
+### 19.8 Verification Commands (to be run after audit)
+
+```bash
+# 1. Compile all Python files
+find . -name "*.py" -not -path "./migrations/*" -not -path "./venv/*" -exec python -m py_compile {} \;
+
+# 2. Check DB migrations
+flask db check
+
+# 3. Run security tests
+python -m pytest tests/security/ -v
+
+# 4. Run deep validation
+python -m pytest tests/security/test_deep_validation.py -v
+
+# 5. Check for uncommitted changes
+git status --short
+```
+
+---
+
+**Execution Order:**
+1. Backend Routes — all 39 files, every `def` audited for decorators, tenant scoping, error handling
+2. Models — all 51 files, every class audited for tenant_id, indexes, FK constraints
+3. Templates — all 178 HTML files, every file audited for XSS, CSRF, SRI, noopener
+4. Services & Utils — all 126 files audited for tenant scoping and error handling
+5. Migrations — all 45 files audited for upgrade/downgrade/drift
+6. Config — `app.py`, `config.py`, `extensions.py`, `run.py`, `wsgi.py`, `tasks.py`
+7. Tests — all 16 test files
+8. Final verification commands
+9. Commit & Push
+
+**Audit Totals:**
+- Routes: 39 files (~589 functions)
+- Models: 51 files (~75 classes)
+- Templates: 178 HTML files
+- Services: 66 files
+- Utils: 60 files
+- Migrations: 45 files
+- Config: 6 files
+- Tests: 16 files
+- **Grand Total: ~461 files to audit**
+
+**User Approval Required Before Execution.**
+
+---
+
 *End of Master Blueprint — Single Source of Truth*
-*Last updated: June 6, 2026 (Session 9 — Phase 12+ Owner Panel & AI Routes Deep Hardening COMPLETED; 91 owner routes + AI chatbot routes audited; all tenant scoping enforced; roles/permissions live; forecasting & product performance enhanced; non-existent GL model replaced with GLJournalEntry; py_compile clean)*
+*Last updated: June 6, 2026 (Session 9 — Phase 13 Full Stack Deep Audit CHECKLIST COMPLETE; 461 individual files listed; awaiting user approval to begin execution)*
