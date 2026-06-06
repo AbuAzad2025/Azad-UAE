@@ -341,7 +341,8 @@ def view(id):
     if not _customer_in_scope(id):
         return render_template('errors/403.html'), 403
     
-    sales = Sale.query.filter_by(customer_id=id)
+    tid = get_active_tenant_id(current_user)
+    sales = Sale.query.filter_by(customer_id=id, tenant_id=tid)
     if branch_scope_id() is not None:
         sales = sales.filter(Sale.branch_id == branch_scope_id())
     sales = sales.order_by(Sale.sale_date.desc()).limit(20).all()
@@ -416,8 +417,8 @@ def delete(id):
         # Check for related records preventing deletion
         sales_query = Sale.query.filter_by(customer_id=id)
         from models import Payment, Receipt
-        payments_query = Payment.query.filter_by(customer_id=id)
-        receipts_query = Receipt.query.filter_by(customer_id=id)
+        payments_query = Payment.query.filter_by(customer_id=id, tenant_id=tid)
+        receipts_query = Receipt.query.filter_by(customer_id=id, tenant_id=tid)
         if branch_scope_id() is not None:
             sales_query = sales_query.filter(Sale.branch_id == branch_scope_id())
             payments_query = payments_query.filter(Payment.branch_id == branch_scope_id())
@@ -478,8 +479,9 @@ def statement(id):
     from sqlalchemy import func
     from models import Payment
     
-    sales_query = Sale.query.filter_by(customer_id=id, status='confirmed')
-    payments_query = Payment.query.filter_by(customer_id=id)
+    tid = get_active_tenant_id(current_user)
+    sales_query = Sale.query.filter_by(customer_id=id, status='confirmed', tenant_id=tid)
+    payments_query = Payment.query.filter_by(customer_id=id, tenant_id=tid)
     if branch_scope_id() is not None:
         sales_query = sales_query.filter(Sale.branch_id == branch_scope_id())
         payments_query = payments_query.filter(Payment.branch_id == branch_scope_id())
