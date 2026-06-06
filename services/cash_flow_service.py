@@ -55,7 +55,7 @@ class CashFlowService:
             cash_accounts_query = cash_accounts_query.filter(GLAccount.branch_id == branch_id)
         cash_accounts = cash_accounts_query.all()
         
-        cash_beginning = CashFlowService._get_cash_balance(cash_accounts, period_start, is_beginning=True, branch_id=branch_id)
+        cash_beginning = CashFlowService._get_cash_balance(cash_accounts, period_start, is_beginning=True, branch_id=branch_id, tenant_id=tenant_id)
         
         net_cash_flow = (
             operating['net_cash_from_operating'] +
@@ -90,9 +90,11 @@ class CashFlowService:
                 Receipt.receipt_date >= period_start,
                 Receipt.receipt_date <= period_end,
                 Receipt.payment_confirmed == True,
-                Receipt.payment_method.in_(['cash', 'bank', 'bank_transfer'])  # نقدي وبنكي (توافق مع bank و bank_transfer)
+                Receipt.payment_method.in_(['cash', 'bank', 'bank_transfer'])
             )
         )
+        if tenant_id:
+            receipts_query = receipts_query.filter(Receipt.tenant_id == tenant_id)
         if branch_id:
             receipts_query = receipts_query.filter(Receipt.branch_id == branch_id)
         receipts = receipts_query.scalar() or Decimal('0')
@@ -109,6 +111,8 @@ class CashFlowService:
                 Payment.supplier_id.isnot(None)
             )
         )
+        if tenant_id:
+            supplier_payments_query = supplier_payments_query.filter(Payment.tenant_id == tenant_id)
         if branch_id:
             supplier_payments_query = supplier_payments_query.filter(Payment.branch_id == branch_id)
         supplier_payments = supplier_payments_query.scalar() or Decimal('0')
@@ -123,6 +127,8 @@ class CashFlowService:
                 Expense.payment_method.in_(['cash', 'bank', 'bank_transfer'])
             )
         )
+        if tenant_id:
+            expense_payments_query = expense_payments_query.filter(Expense.tenant_id == tenant_id)
         if branch_id:
             expense_payments_query = expense_payments_query.filter(Expense.branch_id == branch_id)
         expense_payments = expense_payments_query.scalar() or Decimal('0')
@@ -140,6 +146,8 @@ class CashFlowService:
                     func.date(GLJournalEntry.entry_date) <= period_end
                 )
             )
+            if tenant_id:
+                salaries_query = salaries_query.filter(GLJournalEntry.tenant_id == tenant_id)
             if branch_id:
                 salaries_query = salaries_query.filter(GLJournalEntry.branch_id == branch_id)
             salaries = salaries_query.scalar() or Decimal('0')
@@ -177,13 +185,16 @@ class CashFlowService:
         }
     
     @staticmethod
-    def _get_investing_activities(period_start, period_end, branch_id=None):
+    def _get_investing_activities(period_start, period_end, branch_id=None, tenant_id=None):
         """حساب التدفقات النقدية من الأنشطة الاستثمارية"""
         
         # شراء أصول ثابتة (حساب 1200)
-        fixed_assets_account = GLAccount.query.filter(
+        fixed_assets_query = GLAccount.query.filter(
             GLAccount.code.like('12%')
-        ).all()
+        )
+        if tenant_id:
+            fixed_assets_query = fixed_assets_query.filter(GLAccount.tenant_id == tenant_id)
+        fixed_assets_account = fixed_assets_query.all()
         
         purchase_of_assets = Decimal('0')
         for account in fixed_assets_account:
@@ -196,6 +207,8 @@ class CashFlowService:
                     func.date(GLJournalEntry.entry_date) <= period_end
                 )
             )
+            if tenant_id:
+                purchases_query = purchases_query.filter(GLJournalEntry.tenant_id == tenant_id)
             if branch_id:
                 purchases_query = purchases_query.filter(GLJournalEntry.branch_id == branch_id)
             purchases = purchases_query.scalar() or Decimal('0')
@@ -213,6 +226,8 @@ class CashFlowService:
                     func.date(GLJournalEntry.entry_date) <= period_end
                 )
             )
+            if tenant_id:
+                sales_query = sales_query.filter(GLJournalEntry.tenant_id == tenant_id)
             if branch_id:
                 sales_query = sales_query.filter(GLJournalEntry.branch_id == branch_id)
             sales = sales_query.scalar() or Decimal('0')
@@ -239,11 +254,15 @@ class CashFlowService:
         }
     
     @staticmethod
-    def _get_financing_activities(period_start, period_end, branch_id=None):
+    def _get_financing_activities(period_start, period_end, branch_id=None, tenant_id=None):
         """حساب التدفقات النقدية من الأنشطة التمويلية"""
         
         # رأس المال (حساب 3100)
-        capital_account = GLAccount.query.filter_by(code='3100').first()
+        capital_account_query = GLAccount.query.filter_by(code='3100')
+        if tenant_id:
+            capital_account_query = capital_account_query.filter_by(tenant_id=tenant_id)
+        capital_account = capital_account_query.first()
+        
         capital_contributions = Decimal('0')
         if capital_account:
             capital_query = db.session.query(
@@ -255,12 +274,18 @@ class CashFlowService:
                     func.date(GLJournalEntry.entry_date) <= period_end
                 )
             )
+            if tenant_id:
+                capital_query = capital_query.filter(GLJournalEntry.tenant_id == tenant_id)
             if branch_id:
                 capital_query = capital_query.filter(GLJournalEntry.branch_id == branch_id)
             capital_contributions = capital_query.scalar() or Decimal('0')
         
         # سحوبات المالك (حساب 3300)
-        owner_draw_account = GLAccount.query.filter_by(code='3300').first()
+        owner_draw_account_query = GLAccount.query.filter_by(code='3300')
+        if tenant_id:
+            owner_draw_account_query = owner_draw_account_query.filter_by(tenant_id=tenant_id)
+        owner_draw_account = owner_draw_account_query.first()
+        
         owner_withdrawals = Decimal('0')
         if owner_draw_account:
             owner_withdrawals_query = db.session.query(
@@ -272,12 +297,18 @@ class CashFlowService:
                     func.date(GLJournalEntry.entry_date) <= period_end
                 )
             )
+            if tenant_id:
+                owner_withdrawals_query = owner_withdrawals_query.filter(GLJournalEntry.tenant_id == tenant_id)
             if branch_id:
                 owner_withdrawals_query = owner_withdrawals_query.filter(GLJournalEntry.branch_id == branch_id)
             owner_withdrawals = owner_withdrawals_query.scalar() or Decimal('0')
         
         # القروض (حساب 2210)
-        loans_account = GLAccount.query.filter_by(code='2210').first()
+        loans_account_query = GLAccount.query.filter_by(code='2210')
+        if tenant_id:
+            loans_account_query = loans_account_query.filter_by(tenant_id=tenant_id)
+        loans_account = loans_account_query.first()
+        
         loans_received = Decimal('0')
         loan_repayments = Decimal('0')
         if loans_account:
@@ -290,6 +321,8 @@ class CashFlowService:
                     func.date(GLJournalEntry.entry_date) <= period_end
                 )
             )
+            if tenant_id:
+                loans_received_query = loans_received_query.filter(GLJournalEntry.tenant_id == tenant_id)
             if branch_id:
                 loans_received_query = loans_received_query.filter(GLJournalEntry.branch_id == branch_id)
             loans_received = loans_received_query.scalar() or Decimal('0')
@@ -303,6 +336,8 @@ class CashFlowService:
                     func.date(GLJournalEntry.entry_date) <= period_end
                 )
             )
+            if tenant_id:
+                loan_repayments_query = loan_repayments_query.filter(GLJournalEntry.tenant_id == tenant_id)
             if branch_id:
                 loan_repayments_query = loan_repayments_query.filter(GLJournalEntry.branch_id == branch_id)
             loan_repayments = loan_repayments_query.scalar() or Decimal('0')
@@ -342,7 +377,7 @@ class CashFlowService:
         }
     
     @staticmethod
-    def _get_cash_balance(cash_accounts, target_date, is_beginning=False, branch_id=None):
+    def _get_cash_balance(cash_accounts, target_date, is_beginning=False, branch_id=None, tenant_id=None):
         """حساب رصيد النقدية في تاريخ محدد"""
         total_balance = Decimal('0')
         
@@ -357,6 +392,8 @@ class CashFlowService:
                     else func.date(GLJournalEntry.entry_date) <= target_date
                 )
             )
+            if tenant_id:
+                debit_query = debit_query.filter(GLJournalEntry.tenant_id == tenant_id)
             if branch_id:
                 debit_query = debit_query.filter(GLJournalEntry.branch_id == branch_id)
             debit_sum = debit_query.scalar() or Decimal('0')
@@ -370,6 +407,8 @@ class CashFlowService:
                     else func.date(GLJournalEntry.entry_date) <= target_date
                 )
             )
+            if tenant_id:
+                credit_query = credit_query.filter(GLJournalEntry.tenant_id == tenant_id)
             if branch_id:
                 credit_query = credit_query.filter(GLJournalEntry.branch_id == branch_id)
             credit_sum = credit_query.scalar() or Decimal('0')
@@ -377,4 +416,5 @@ class CashFlowService:
             total_balance += (debit_sum - credit_sum)
         
         return total_balance
+
 
