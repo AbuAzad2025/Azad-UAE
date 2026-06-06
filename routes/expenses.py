@@ -347,7 +347,7 @@ def delete(id):
     has_links = False
     
     # 1. التحقق من الشيكات
-    cheque = Cheque.query.filter_by(expense_id=expense.id).first()
+    cheque = Cheque.query.filter_by(expense_id=expense.id, tenant_id=expense.tenant_id).first()
     if cheque and cheque.status in ['cleared', 'deposited', 'bounced', 'cancelled']:
         has_links = True
         

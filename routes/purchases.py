@@ -238,7 +238,7 @@ def delete(id):
         has_links = True
         
     # 2. التحقق من الشيكات (Cheques)
-    linked_cheques = Cheque.query.filter_by(purchase_id=purchase.id).count()
+    linked_cheques = Cheque.query.filter_by(purchase_id=purchase.id, tenant_id=purchase.tenant_id).count()
     if linked_cheques > 0:
         has_links = True
 

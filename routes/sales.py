@@ -485,12 +485,12 @@ def delete(id):
     has_links = False
     
     # 1. التحقق من المدفوعات (Payments)
-    linked_payments = Payment.query.filter_by(sale_id=sale.id).count()
+    linked_payments = Payment.query.filter_by(sale_id=sale.id, tenant_id=sale.tenant_id).count()
     if linked_payments > 0:
         has_links = True
         
     # 2. التحقق من الشيكات (Cheques)
-    linked_cheques = Cheque.query.filter_by(sale_id=sale.id).count()
+    linked_cheques = Cheque.query.filter_by(sale_id=sale.id, tenant_id=sale.tenant_id).count()
     if linked_cheques > 0:
         has_links = True
 

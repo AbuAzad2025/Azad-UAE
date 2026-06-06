@@ -10,7 +10,7 @@ from models import Supplier, Purchase, Payment
 from utils.decorators import permission_required, admin_required, branch_scope_id
 from utils.branching import should_show_all_branch_columns
 from utils.helpers import create_audit_log
-from utils.tenanting import tenant_query, tenant_get_or_404
+from utils.tenanting import tenant_query, tenant_get_or_404, get_active_tenant_id
 from sqlalchemy import func, desc
 
 suppliers_bp = Blueprint('suppliers', __name__, url_prefix='/suppliers')
@@ -43,9 +43,10 @@ def _supplier_in_scope(supplier_id):
 
 
 def _supplier_scoped_totals(supplier_id):
+    tid = get_active_tenant_id(current_user)
     scoped_branch_id = branch_scope_id()
-    purchases_query = Purchase.query.filter_by(supplier_id=supplier_id, status='confirmed')
-    payments_query = Payment.query.filter_by(supplier_id=supplier_id)
+    purchases_query = Purchase.query.filter_by(supplier_id=supplier_id, status='confirmed', tenant_id=tid)
+    payments_query = Payment.query.filter_by(supplier_id=supplier_id, tenant_id=tid)
     if scoped_branch_id is not None:
         purchases_query = purchases_query.filter(Purchase.branch_id == scoped_branch_id)
         payments_query = payments_query.filter(Payment.branch_id == scoped_branch_id)
@@ -334,8 +335,9 @@ def delete(id):
 
     try:
         # Check for related records preventing deletion
-        purchases_query = Purchase.query.filter_by(supplier_id=id)
-        payments_query = Payment.query.filter_by(supplier_id=id)
+        tid = get_active_tenant_id(current_user)
+        purchases_query = Purchase.query.filter_by(supplier_id=id, tenant_id=tid)
+        payments_query = Payment.query.filter_by(supplier_id=id, tenant_id=tid)
         if branch_scope_id() is not None:
             purchases_query = purchases_query.filter(Purchase.branch_id == branch_scope_id())
             payments_query = payments_query.filter(Payment.branch_id == branch_scope_id())
@@ -377,12 +379,13 @@ def statement(id):
     if not _supplier_in_scope(id):
         return render_template('errors/403.html'), 403
 
-    purchases = supplier.purchases.filter_by(status='confirmed')
+    tid = get_active_tenant_id(current_user)
+    purchases = supplier.purchases.filter_by(status='confirmed', tenant_id=tid)
     if branch_scope_id() is not None:
         purchases = purchases.filter(Purchase.branch_id == branch_scope_id())
     purchases = purchases.order_by(Purchase.purchase_date.desc()).all()
 
-    payments = Payment.query.filter_by(supplier_id=id)
+    payments = Payment.query.filter_by(supplier_id=id, tenant_id=tid)
     if branch_scope_id() is not None:
         payments = payments.filter(Payment.branch_id == branch_scope_id())
     payments = payments.order_by(Payment.payment_date.desc()).all()

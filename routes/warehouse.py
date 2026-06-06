@@ -160,7 +160,7 @@ def movements():
         error_out=False
     )
     
-    warehouses = Warehouse.query.filter_by(is_active=True).order_by(Warehouse.name).all()
+    warehouses = tenant_query(Warehouse).filter_by(is_active=True).order_by(Warehouse.name).all()
     if branch_id is not None:
         warehouses = [w for w in warehouses if w.branch_id == branch_id]
     
@@ -364,7 +364,7 @@ def create_warehouse():
 @login_required
 @permission_required('manage_warehouse')
 def list_warehouses():
-    query = Warehouse.query.filter_by(is_active=True)
+    query = tenant_query(Warehouse).filter_by(is_active=True)
     branch_id = branch_scope_id()
     if branch_id is not None:
         query = query.filter_by(branch_id=branch_id)
@@ -423,7 +423,7 @@ def add_stock(product_id):
             return jsonify({'success': False, 'message': 'الكمية يجب أن تكون أكبر من صفر'}), 400
         
         if not warehouse_id:
-            accessible_query = Warehouse.query.filter_by(is_active=True)
+            accessible_query = tenant_query(Warehouse).filter_by(is_active=True)
             scoped_branch_id = branch_scope_id()
             if scoped_branch_id is not None:
                 accessible_query = accessible_query.filter_by(branch_id=scoped_branch_id)
