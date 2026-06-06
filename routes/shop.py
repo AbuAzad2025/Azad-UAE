@@ -806,7 +806,7 @@ def checkout(slug):
 
 
 
-    payment_methods = StorePaymentMethodService.list_for_checkout()
+    payment_methods = StorePaymentMethodService.list_for_checkout(store.tenant_id)
 
     if not payment_methods:
 

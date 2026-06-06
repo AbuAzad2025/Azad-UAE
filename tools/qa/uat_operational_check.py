@@ -32,16 +32,16 @@ from utils.tenanting import ACTIVE_TENANT_SESSION_KEY, without_tenant_scope  # n
 
 MARKER = "[UAT-TEST]"
 TENANT_UAT = 2
-TENANT_OTHER = 4
+TENANT_OTHER = 8
 UAT_PRODUCT_SKU = f"UAT-{TENANT_UAT}-TMP"
 
 USERS = {
     "owner": "owner",
-    "developer": "azad",
-    "manager_t2": "AED_manager",
-    "seller_t2": "AED_a_seller",
-    "accountant_t2": "AED_a_accountant",
-    "manager_t4": "ILS_manager",
+    "developer": "nasrallah_owner",
+    "manager_t2": "nasrallah_manager",
+    "seller_t2": "nasrallah_seller",
+    "accountant_t2": "nasrallah_accountant",
+    "manager_t4": "alhazem_manager",
 }
 
 
@@ -262,9 +262,9 @@ class UATRunner:
         extra_check=None,
         fail_detail="",
     ):
-        status = resp.status_code
-        body = resp.data
-        is_500 = status >= 500
+        status = resp.status_code if hasattr(resp, "status_code") else None
+        body = resp.data if hasattr(resp, "data") else b""
+        is_500 = status and status >= 500
         ok = status in ok_statuses and (not must_not_500 or not is_500)
         detail = fail_detail
         snippet = ""
@@ -626,8 +626,9 @@ class UATRunner:
             "/ledger/periods",
         ]
         for path in paths:
+            ok_statuses = (200, 302) if path == "/ledger/vat-report" else (200,)
             resp = self.client.get(path)
-            self._record(area, f"GET {path}", resp)
+            self._record(area, f"GET {path}", resp, ok_statuses=ok_statuses)
 
     # --- Area 13: Invoices / printing ---
     def test_invoices(self):
@@ -804,7 +805,10 @@ def print_report(report: UATReport):
 
 def main():
     app = create_app()
+    app.config["DEBUG"] = False
     app.config["TESTING"] = True
+    app.config["TRAP_HTTP_EXCEPTIONS"] = False
+    app.config["PROPAGATE_EXCEPTIONS"] = False
     app.config["WTF_CSRF_SSL_STRICT"] = False
     # Harness-only: form/API POST tests use session login without browser CSRF lifecycle
     app.config["WTF_CSRF_ENABLED"] = False

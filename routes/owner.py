@@ -2078,7 +2078,7 @@ def reports():
     # إحصائيات عامة
     from models import User, Customer, Product, Sale, Receipt, PaymentVault, Donation, Payment
     
-    vault = PaymentVault.query.first()
+    vault = PaymentVault.get_platform_vault()
     scoped_branch_id = _owner_branch_scope()
     customers_stats_query = Customer.query
     if scoped_branch_id is not None:
@@ -3380,9 +3380,9 @@ def currency_settings():
 def payment_gateways():
     from models import PaymentVault
     
-    vault = PaymentVault.query.first()
+    vault = PaymentVault.get_platform_vault()
     if not vault:
-        vault = PaymentVault()
+        vault = PaymentVault(tenant_id=None)
         db.session.add(vault)
         db.session.commit()
         _invalidate_owner_changes()

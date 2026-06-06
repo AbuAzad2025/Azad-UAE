@@ -17,12 +17,12 @@ from utils.gl_reference_types import GLRef
 
 class DonationGLService:
     @staticmethod
-    def _vault_accounts(vault: PaymentVault | None) -> tuple[str, str]:
+    def _vault_accounts(vault: PaymentVault | None, tenant_id: int) -> tuple[str, str]:
         debit = (getattr(vault, 'donation_debit_account', None) or '1120').strip()
         credit = (getattr(vault, 'donation_credit_account', None) or '4200').strip()
-        debit_account = GLAccount.query.filter_by(code=debit).order_by(GLAccount.id.asc()).first()
+        debit_account = GLAccount.query.filter_by(code=debit, tenant_id=tenant_id).order_by(GLAccount.id.asc()).first()
         if debit in ('1110', '1120') or getattr(debit_account, 'is_header', False):
-            debit = GLService.get_default_liquidity_account('bank')
+            debit = GLService.get_default_liquidity_account('bank', tenant_id=tenant_id)
         return debit, credit
 
     @staticmethod
@@ -36,8 +36,16 @@ class DonationGLService:
         if amount_usd <= 0:
             return False
 
-        vault = PaymentVault.query.first()
-        debit_acct, credit_acct = DonationGLService._vault_accounts(vault)
+        tenant_id = getattr(donation, 'tenant_id', None)
+        if tenant_id is None:
+            current_app.logger.info(
+                'Skipping tenant GL posting for Azad/platform donation #%s; platform ledger is not tenant-scoped.',
+                donation.id,
+            )
+            return False
+
+        vault = PaymentVault.get_tenant_vault(tenant_id) or PaymentVault.get_platform_vault()
+        debit_acct, credit_acct = DonationGLService._vault_accounts(vault, tenant_id)
 
         try:
             rate_info = ExchangeRateService.resolve_exchange_rate_for_transaction('USD', 'AED')
@@ -63,6 +71,7 @@ class DonationGLService:
                 reference_id=donation.id,
                 currency='AED',
                 exchange_rate=1,
+                tenant_id=tenant_id,
             )
             donation.gl_posted = True
             db.session.flush()

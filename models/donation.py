@@ -15,7 +15,10 @@ class Donation(db.Model):
     __tablename__ = 'donations'
     
     id = db.Column(db.Integer, primary_key=True)
-    
+
+    # NULL means Azad/platform donation; tenant_id means a project/tenant donation.
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True)
+
     # Amount Info - معلومات المبلغ
     amount_usd = db.Column(db.Numeric(15, 2), nullable=False)  # المبلغ بالدولار
     amount_crypto = db.Column(db.Numeric(20, 8))  # المبلغ بالعملة الرقمية
@@ -103,45 +106,50 @@ class Donation(db.Model):
         }
     
     @staticmethod
-    def get_total_donations():
-        """إجمالي التبرعات المكتملة"""
-        result = db.session.query(
-            db.func.sum(Donation.amount_usd)
-        ).filter_by(status='completed').scalar()
+    def get_total_donations(tenant_id=None):
+        """إجمالي التبرعات المكتملة (مُفلتر بـ tenant_id)"""
+        q = db.session.query(db.func.sum(Donation.amount_usd)).filter_by(status='completed')
+        if tenant_id is not None:
+            q = q.filter_by(tenant_id=tenant_id)
+        result = q.scalar()
         return float(result) if result else 0
-    
+
     @staticmethod
-    def get_donations_count():
-        """عدد التبرعات المكتملة"""
-        return Donation.query.filter_by(status='completed').count()
-    
+    def get_donations_count(tenant_id=None):
+        """عدد التبرعات المكتملة (مُفلتر بـ tenant_id)"""
+        q = Donation.query.filter_by(status='completed')
+        if tenant_id is not None:
+            q = q.filter_by(tenant_id=tenant_id)
+        return q.count()
+
     @staticmethod
-    def get_pending_count():
-        """عدد التبرعات المعلقة"""
-        return Donation.query.filter_by(status='pending').count()
-    
+    def get_pending_count(tenant_id=None):
+        """عدد التبرعات المعلقة (مُفلتر بـ tenant_id)"""
+        q = Donation.query.filter_by(status='pending')
+        if tenant_id is not None:
+            q = q.filter_by(tenant_id=tenant_id)
+        return q.count()
+
     @staticmethod
-    def get_recent_donations(limit=10):
-        """أحدث التبرعات"""
-        return Donation.query.filter_by(
-            status='completed'
-        ).order_by(
-            Donation.completed_at.desc()
-        ).limit(limit).all()
-    
+    def get_recent_donations(limit=10, tenant_id=None):
+        """أحدث التبرعات (مُفلترة بـ tenant_id)"""
+        q = Donation.query.filter_by(status='completed')
+        if tenant_id is not None:
+            q = q.filter_by(tenant_id=tenant_id)
+        return q.order_by(Donation.completed_at.desc()).limit(limit).all()
+
     @staticmethod
-    def get_donations_by_method():
-        """التبرعات حسب طريقة الدفع"""
-        result = db.session.query(
+    def get_donations_by_method(tenant_id=None):
+        """التبرعات حسب طريقة الدفع (مُفلترة بـ tenant_id)"""
+        q = db.session.query(
             Donation.payment_method,
             db.func.count(Donation.id).label('count'),
             db.func.sum(Donation.amount_usd).label('total')
-        ).filter_by(
-            status='completed'
-        ).group_by(
-            Donation.payment_method
-        ).all()
-        
+        ).filter_by(status='completed')
+        if tenant_id is not None:
+            q = q.filter_by(tenant_id=tenant_id)
+        result = q.group_by(Donation.payment_method).all()
+
         return [
             {
                 'method': row.payment_method,

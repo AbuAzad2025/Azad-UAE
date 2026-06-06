@@ -190,6 +190,12 @@ class WebhookService:
             logger.warning('Gateway ref mismatch for sale %s', sale.sale_number)
 
         if payment_status == 'finished' and sale.status == 'confirmed':
+            from services.azad_platform_fee_service import AzadPlatformFeeService
+            AzadPlatformFeeService.record_store_online_fee(
+                sale,
+                gateway_reference=payment_id or getattr(sale, 'checkout_gateway_ref', None),
+            )
+            db.session.commit()
             return {'success': True, 'message': 'Store order already confirmed (idempotent)'}
 
         if payment_status == 'finished':

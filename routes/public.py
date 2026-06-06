@@ -58,7 +58,7 @@ def contact():
 def donate_azad():
     """صفحة تبرع لشركة أزاد — تُتحكم من الخزينة السرية"""
     from models.payment_vault import PaymentVault
-    vault = PaymentVault.query.first()
+    vault = PaymentVault.get_platform_vault()
     lang = session.get('language', 'ar')
     if not vault or not vault.donations_enabled or not vault.donation_page_enabled:
         from flask import abort
@@ -79,7 +79,7 @@ def donate_azad_submit():
     from models.donation import Donation
     from models.payment_vault import PaymentVault
 
-    vault = PaymentVault.query.first()
+    vault = PaymentVault.get_platform_vault()
     lang = session.get('language', 'ar')
     is_en = lang == 'en'
     if not vault or not vault.donations_enabled or not vault.donation_page_enabled:

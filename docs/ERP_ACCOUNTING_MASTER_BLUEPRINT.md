@@ -387,6 +387,22 @@ This section records all hardening batches and modernization phases that have be
 **QA:** `tools/qa/test_security_boundaries.py` created — detects 24 unscoped query patterns.
 **Status:** ✅ PARTIAL — Critical routes fixed; `routes/payment_vault.py` + `routes/ai.py` chat handlers remain pending (require migration + refactor).
 
+#### Payment Vault Handoff Update (2026-06-06)
+
+The payment-vault design has been clarified and is currently **in progress**, not closed. `PaymentVault.tenant_id IS NULL` is the Azad/platform vault; `PaymentVault.tenant_id=<tenant_id>` is a tenant/project vault. `Donation.tenant_id` must remain nullable because Azad public donations and platform package shadow rows are platform records.
+
+Online-store gateway payments require a separate Azad 1% platform-fee accrual for any successful online transaction, including crypto, card, or future online gateway methods. This fee is not a donation and must not be mixed into tenant sale revenue.
+
+Active handoff and verification checklist: `docs/PAYMENT_VAULT_HANDOFF_REPORT_2026-06-06.md`.
+
+Assistant guardrails before closing this work:
+- Do not force `Donation.tenant_id` to `NOT NULL`.
+- Do not backfill platform donations or platform vault rows to the first tenant.
+- Do not filter `Package` / `PackagePurchase` by tenant unless a later design introduces tenant-specific packages.
+- Use `PaymentVault.get_platform_vault()` for Azad/platform contexts.
+- Use `PaymentVault.get_tenant_vault(tenant_id)` for tenant/store contexts.
+- Run the verification commands listed in the handoff report and record pass/fail before finalizing.
+
 #### Phase 8: Treasury & Cash Position Reporting
 **Goal:** Multi-branch bank, cashier, and post-dated cheque position tracking with GL-backed accuracy.
 
@@ -720,7 +736,7 @@ This section records all hardening batches and modernization phases that have be
 | Phase 5 | Landed Cost Capitalization | ✅ COMPLETED | `test_landed_cost_end_to_end.py` PASS; freight/insurance/customs in inventory |
 | Phase 6 | Exchange Rate Framework | ✅ COMPLETED | `ExchangeRateRecord` per document; all services use `ExchangeRateService` |
 | Phase 7 | Reconciliation Reports | ✅ **COMPLETED** (Jun 6) | `InventoryReconciliationService` deployed; PWC vs movements vs GL (no double-counting); date/warehouse filters; secure export; Celery daily beat |
-| Phase 7.5 | Security Hardening | ✅ **PARTIAL** (Jun 6) | Critical fixes deployed in `routes/main.py`, `routes/api.py`, `routes/owner.py`, `routes/ai.py` — `test_security_boundaries.py` created; remaining `routes/payment_vault.py` + `routes/ai.py` chat handlers pending |
+| Phase 7.5 | Security Hardening | ✅ **PARTIAL / VAULT IN PROGRESS** (Jun 6) | Critical fixes deployed in `routes/main.py`, `routes/api.py`, `routes/owner.py`, `routes/ai.py`; payment vault now has an active handoff for Azad-vs-tenant vault separation and online-store 1% Azad fee; see `docs/PAYMENT_VAULT_HANDOFF_REPORT_2026-06-06.md`; remaining final vault QA + `routes/ai.py` chat handlers |
 | Phase 8 | Treasury & Cash | ✅ **COMPLETED** (Jun 6) | `TreasuryService` deployed; liquidity position (CashBox + GLAccount fallback); cheque maturity buckets; bank reconciliation status; branch security + export; `test_treasury.py` ALL CHECKS PASSED |
 | Phase 9 | Global Localization | ✅ **COMPLETED** (Jun 6) | `LocalizationStrategy` framework deployed; Palestine/UAE/KSA/Null strategies; `TaxService` + `EInvoiceService`; VAT return + WPS export routes; `test_localization.py` ALL CHECKS PASSED |
 | Phase 10 | Testing & Rollout | ✅ **COMPLETED** (Jun 6) | `FeatureFlagService` with per-tenant resolution; `test_full_regression.py` zero-variance chain; `load_test.py` latency targets; `PRODUCTION_DEPLOYMENT_CHECKLIST.md` with rollback; `test_phase10.py` ALL CHECKS PASSED |
@@ -746,7 +762,7 @@ This section records all hardening batches and modernization phases that have be
 
 #### 1. Phase 7.5: Security Hardening — ✅ COMPLETED (Partial)
 - **Completed:** `routes/main.py`, `routes/api.py`, `routes/owner.py`, `routes/ai.py` (API routes) fixed and committed.
-- **Remaining (Future Maintenance):** `routes/payment_vault.py` Donation/Package tenant scoping requires migration to add `tenant_id`; `routes/ai.py` chat handler queries require full refactor.
+- **Remaining (Active Vault Handoff):** Continue from `docs/PAYMENT_VAULT_HANDOFF_REPORT_2026-06-06.md`. Do not force `Donation.tenant_id` to `NOT NULL`, do not backfill platform rows to the first tenant, and do not tenant-scope `Package` / `PackagePurchase` unless a later design introduces tenant packages. `routes/ai.py` chat handler queries still require full refactor.
 
 #### 2. Phase 8: Treasury & Cash — ✅ COMPLETED
 - `TreasuryService` deployed with CashBox + GLAccount fallback liquidity.

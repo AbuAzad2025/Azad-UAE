@@ -10,7 +10,6 @@ from extensions import db, limiter, csrf
 from models import PaymentVault, PaymentTransaction, PaymentLog, Donation, CardPayment, Package, PackagePurchase
 from services.nowpayments_service import NOWPaymentsService
 from utils.helpers import create_audit_log
-from utils.tenanting import get_active_tenant_id
 import secrets
 import string
 import logging
@@ -27,6 +26,16 @@ _DEV_VAULT_ORIGINS = frozenset({
     'http://localhost:8000',
     'http://127.0.0.1:8000',
 })
+
+
+def _get_azad_platform_vault():
+    """Return the Azad/platform vault controlled by the global owner."""
+    return PaymentVault.get_platform_vault()
+
+
+def _get_vault_for_current_tenant():
+    """Backward-compatible helper name for owner vault routes."""
+    return _get_azad_platform_vault()
 
 
 def _is_production_env() -> bool:
@@ -135,10 +144,11 @@ def unlock_vault():
             return render_template('payment_vault/unlock.html')
         
         # البحث عن الخزينة أو إنشاؤها
-        vault = PaymentVault.query.first()
+        vault = _get_vault_for_current_tenant()
         if not vault:
             # إنشاء خزينة جديدة
             vault = PaymentVault()
+            vault.tenant_id = None
             vault.set_vault_password(password)  # كلمة المرور الأولى
             vault.nowpayments_api_key = ""
             vault.nowpayments_ipn_secret = ""
@@ -204,7 +214,7 @@ def dashboard():
         return redirect(url_for('main.dashboard'))
     
     # التحقق من وجود الخزينة
-    vault = PaymentVault.query.first()
+    vault = _get_vault_for_current_tenant()
     if not vault or vault.is_locked:
         flash('❌ يجب فتح الخزينة أولاً', 'warning')
         return redirect(url_for('payment_vault.unlock_vault'))
@@ -212,10 +222,12 @@ def dashboard():
     # جلب التحليلات المتقدمة
     from services.analytics_service import AnalyticsService
     from services.notification_service import SecurityService
-    
-    # الإحصائيات الأساسية
-    purchases = Donation.query.filter_by(transaction_type='purchase').all()
-    donations = Donation.query.filter_by(transaction_type='donation').all()
+
+    tid = None
+
+    # الإحصائيات الأساسية (مُفلترة بـ tenant_id)
+    purchases = Donation.query.filter_by(tenant_id=tid, transaction_type='purchase').all()
+    donations = Donation.query.filter_by(tenant_id=tid, transaction_type='donation').all()
     
     stats = {
         'total_purchases': len(purchases),
@@ -231,9 +243,9 @@ def dashboard():
     # حالة الأمان
     security_status = SecurityService.get_security_status()
     
-    # آخر العمليات
-    recent_purchases = Donation.query.filter_by(transaction_type='purchase').order_by(Donation.created_at.desc()).limit(5).all()
-    recent_donations = Donation.query.filter_by(transaction_type='donation').order_by(Donation.created_at.desc()).limit(5).all()
+    # آخر العمليات (مُفلترة بـ tenant_id)
+    recent_purchases = Donation.query.filter_by(tenant_id=tid, transaction_type='purchase').order_by(Donation.created_at.desc()).limit(5).all()
+    recent_donations = Donation.query.filter_by(tenant_id=tid, transaction_type='donation').order_by(Donation.created_at.desc()).limit(5).all()
     
     # بيانات الرسم البياني (شهرياً)
     revenue_data = AnalyticsService.get_revenue_by_period(months=6)
@@ -275,7 +287,7 @@ def settings():
         flash('❌ غير مصرح - الخزينة السرية للمالك فقط!', 'danger')
         return redirect(url_for('main.dashboard'))
     
-    vault = PaymentVault.query.first()
+    vault = _get_vault_for_current_tenant()
     if not vault or not vault.is_vault_accessible():
         flash('❌ الخزينة مقفلة، يرجى إدخال كلمة المرور', 'warning')
         return redirect(url_for('payment_vault.unlock_vault'))
@@ -379,7 +391,7 @@ def donations():
         flash('❌ غير مصرح - الخزينة السرية للمالك فقط!', 'danger')
         return redirect(url_for('main.dashboard'))
     
-    vault = PaymentVault.query.first()
+    vault = _get_vault_for_current_tenant()
     if not vault or vault.is_locked:
         flash('❌ يجب فتح الخزينة أولاً', 'warning')
         return redirect(url_for('payment_vault.unlock_vault'))
@@ -391,9 +403,10 @@ def donations():
     per_page = request.args.get('per_page', 20, type=int)
     search_query = request.args.get('search', '')
     
-    # Query
-    query = Donation.query.filter_by(transaction_type='donation')
-    
+    # Query (مُفلترة بـ tenant_id)
+    tid = None
+    query = Donation.query.filter_by(tenant_id=tid, transaction_type='donation')
+
     if status_filter:
         query = query.filter_by(status=status_filter)
     if crypto_filter:
@@ -435,7 +448,7 @@ def packages_management():
         flash('❌ غير مصرح - الخزينة السرية للمالك فقط!', 'danger')
         return redirect(url_for('main.dashboard'))
     
-    vault = PaymentVault.query.first()
+    vault = _get_vault_for_current_tenant()
     if not vault or vault.is_locked:
         flash('❌ يجب فتح الخزينة أولاً', 'warning')
         return redirect(url_for('payment_vault.unlock_vault'))
@@ -463,7 +476,7 @@ def create_package():
         flash('❌ غير مصرح', 'danger')
         return redirect(url_for('main.dashboard'))
 
-    vault = PaymentVault.query.first()
+    vault = _get_vault_for_current_tenant()
     if not vault or vault.is_locked:
         flash('❌ يجب فتح الخزينة أولاً', 'warning')
         return redirect(url_for('payment_vault.unlock_vault'))
@@ -544,7 +557,7 @@ def edit_package(package_id):
         flash('❌ غير مصرح', 'danger')
         return redirect(url_for('main.dashboard'))
     
-    vault = PaymentVault.query.first()
+    vault = _get_vault_for_current_tenant()
     if not vault or vault.is_locked:
         flash('❌ يجب فتح الخزينة أولاً', 'warning')
         return redirect(url_for('payment_vault.unlock_vault'))
@@ -616,7 +629,7 @@ def delete_package(package_id):
     if not current_user.is_owner:
         return jsonify({'success': False, 'error': 'غير مصرح'}), 403
     
-    vault = PaymentVault.query.first()
+    vault = _get_vault_for_current_tenant()
     if not vault or vault.is_locked:
         return jsonify({'success': False, 'error': 'الخزينة مقفلة'}), 403
     
@@ -648,16 +661,17 @@ def reports():
         flash('❌ غير مصرح - الخزينة السرية للمالك فقط!', 'danger')
         return redirect(url_for('main.dashboard'))
     
-    vault = PaymentVault.query.first()
+    vault = _get_vault_for_current_tenant()
     if not vault or vault.is_locked:
         flash('❌ يجب فتح الخزينة أولاً', 'warning')
         return redirect(url_for('payment_vault.unlock_vault'))
     
-    # جلب البيانات
-    all_transactions = Donation.query.order_by(Donation.created_at.desc()).all()
+    # جلب البيانات (مُفلترة بـ tenant_id)
+    tid = None
+    all_transactions = Donation.query.filter_by(tenant_id=tid).order_by(Donation.created_at.desc()).all()
     purchases = [t for t in all_transactions if t.transaction_type == 'purchase']
     donations = [t for t in all_transactions if t.transaction_type == 'donation']
-    
+
     # الملخص
     summary = {
         'total_revenue': sum(float(t.amount_usd or 0) for t in all_transactions),
@@ -665,24 +679,24 @@ def reports():
         'total_donations_amount': sum(float(d.amount_usd or 0) for d in donations),
         'total_transactions': len(all_transactions)
     }
-    
+
     # بيانات الرسوم البيانية
     from datetime import datetime, timedelta
     monthly_labels = []
     monthly_purchases_data = []
     monthly_donations_data = []
-    
+
     for i in range(6):
         month = datetime.now() - timedelta(days=30*i)
         monthly_labels.insert(0, month.strftime('%b'))
         monthly_purchases_data.insert(0, 0)
         monthly_donations_data.insert(0, 0)
-    
-    # إحصائيات الباقات
+
+    # إحصائيات الباقات (مُفلترة بـ tenant_id)
     package_stats = [
-        Donation.query.filter_by(transaction_type='purchase', package='basic').count(),
-        Donation.query.filter_by(transaction_type='purchase', package='professional').count(),
-        Donation.query.filter_by(transaction_type='purchase', package='enterprise').count()
+        Donation.query.filter_by(tenant_id=tid, transaction_type='purchase', package='basic').count(),
+        Donation.query.filter_by(tenant_id=tid, transaction_type='purchase', package='professional').count(),
+        Donation.query.filter_by(tenant_id=tid, transaction_type='purchase', package='enterprise').count()
     ]
     
     return render_template('payment_vault/reports.html',
@@ -702,7 +716,7 @@ def lock_vault():
         flash('❌ غير مصرح - الخزينة السرية للمالك فقط!', 'danger')
         return redirect(url_for('main.dashboard'))
     
-    vault = PaymentVault.query.first()
+    vault = _get_vault_for_current_tenant()
     if vault:
         vault.lock_vault()
         
@@ -729,7 +743,7 @@ def cards():
         flash('❌ غير مصرح - الخزينة السرية للمالك فقط!', 'danger')
         return redirect(url_for('main.dashboard'))
     
-    vault = PaymentVault.query.first()
+    vault = _get_vault_for_current_tenant()
     if not vault or vault.is_locked:
         flash('❌ يجب فتح الخزينة أولاً', 'warning')
         return redirect(url_for('payment_vault.unlock_vault'))
@@ -758,7 +772,7 @@ def decrypt_card(card_id):
     if not current_user.is_owner:
         return jsonify({'success': False, 'error': 'غير مصرح'}), 403
     
-    vault = PaymentVault.query.first()
+    vault = _get_vault_for_current_tenant()
     if not vault or vault.is_locked:
         return jsonify({'success': False, 'error': 'الخزينة مقفلة'}), 403
     
@@ -846,7 +860,7 @@ def process_payment():
                 
                 # تسجيل
                 PaymentLog.log_action(
-                    vault_id=PaymentVault.query.first().id if PaymentVault.query.first() else None,
+                    vault_id=_get_vault_for_current_tenant().id if _get_vault_for_current_tenant() else None,
                     action='card_payment_received',
                     description=f'دفع بالبطاقة: {card_payment.get_card_display()} - ${amount}',
                     level='info',
@@ -880,7 +894,7 @@ def change_password():
         flash('❌ غير مصرح - الخزينة السرية للمالك فقط!', 'danger')
         return redirect(url_for('main.dashboard'))
     
-    vault = PaymentVault.query.first()
+    vault = _get_vault_for_current_tenant()
     if not vault or not vault.is_vault_accessible():
         flash('❌ الخزينة مقفلة، يرجى إدخال كلمة المرور', 'warning')
         return redirect(url_for('payment_vault.unlock_vault'))
@@ -1224,7 +1238,7 @@ def view_purchases():
         flash('❌ غير مصرح', 'danger')
         return redirect(url_for('main.dashboard'))
     
-    vault = PaymentVault.query.first()
+    vault = _get_vault_for_current_tenant()
     if not vault or vault.is_locked:
         flash('❌ يجب فتح الخزينة أولاً', 'warning')
         return redirect(url_for('payment_vault.unlock_vault'))
@@ -1270,7 +1284,7 @@ def purchase_detail(id):
     if not current_user.is_owner:
         return redirect(url_for('main.dashboard'))
     
-    vault = PaymentVault.query.first()
+    vault = _get_vault_for_current_tenant()
     if not vault or vault.is_locked:
         return redirect(url_for('payment_vault.unlock_vault'))
     
@@ -1292,8 +1306,10 @@ def activate_purchase(id):
         purchase.activation_date = datetime.now(timezone.utc)
         purchase.payment_status = 'completed'
         
-        # تحديث التبرع المرتبط
+        # تحديث التبرع المرتبط (مُفلتر بـ tenant_id)
+        tid = None
         donation = Donation.query.filter_by(
+            tenant_id=tid,
             customer_email=purchase.customer_email,
             transaction_type='purchase'
         ).first()
@@ -1358,13 +1374,14 @@ def donation_detail(donation_id):
     if not current_user.is_owner:
         flash('❌ غير مصرح', 'danger')
         return redirect(url_for('main.dashboard'))
-    
-    vault = PaymentVault.query.first()
+
+    vault = _get_vault_for_current_tenant()
     if not vault or vault.is_locked:
         flash('❌ يجب فتح الخزينة أولاً', 'warning')
         return redirect(url_for('payment_vault.unlock_vault'))
-    
-    donation = Donation.query.get_or_404(donation_id)
+
+    tid = None
+    donation = Donation.query.filter_by(id=donation_id, tenant_id=tid).first_or_404()
     return render_template('payment_vault/donation_detail.html', donation=donation)
 
 
@@ -1375,8 +1392,9 @@ def approve_donation(donation_id):
     if not current_user.is_owner:
         flash('❌ غير مصرح', 'danger')
         return redirect(url_for('main.dashboard'))
-    
-    donation = Donation.query.get_or_404(donation_id)
+
+    tid = None
+    donation = Donation.query.filter_by(id=donation_id, tenant_id=tid).first_or_404()
     
     try:
         donation.status = 'completed'
@@ -1407,8 +1425,9 @@ def reject_donation(donation_id):
         flash('❌ غير مصرح', 'danger')
         return redirect(url_for('main.dashboard'))
     
-    donation = Donation.query.get_or_404(donation_id)
-    
+    tid = None
+    donation = Donation.query.filter_by(id=donation_id, tenant_id=tid).first_or_404()
+
     try:
         donation.status = 'failed'
         db.session.commit()
@@ -1487,8 +1506,9 @@ def api_live_stats():
     daily_stats = AnalyticsService.get_daily_stats()
     security_status = SecurityService.get_security_status()
     
-    # عدد المعاملات المعلقة
-    pending_count = Donation.query.filter_by(status='pending').count()
+    # عدد المعاملات المعلقة (مُفلترة بـ tenant_id)
+    tid = None
+    pending_count = Donation.query.filter_by(tenant_id=tid, status='pending').count()
     
     return jsonify({
         'success': True,
@@ -1533,7 +1553,8 @@ def export_donations():
     from services.export_service import ExportService
     from flask import send_file
     
-    donations = Donation.query.filter_by(transaction_type='donation').order_by(Donation.created_at.desc()).all()
+    tid = None
+    donations = Donation.query.filter_by(tenant_id=tid, transaction_type='donation').order_by(Donation.created_at.desc()).all()
     csv_file = ExportService.export_donations_to_csv(donations)
     
     return send_file(
@@ -1576,8 +1597,9 @@ def export_report_pdf():
     from services.analytics_service import AnalyticsService
     
     # جمع البيانات
+    tid = None
     purchases = PackagePurchase.query.all()
-    donations = Donation.query.filter_by(transaction_type='donation').all()
+    donations = Donation.query.filter_by(tenant_id=tid, transaction_type='donation').all()
     
     stats = {
         'إجمالي المشتريات': len(purchases),
@@ -1620,7 +1642,7 @@ def nowpayments_webhook():
         signature = request.headers.get('x-nowpayments-sig', '')
         
         # التحقق من التوقيع
-        vault = PaymentVault.query.first()
+        vault = _get_vault_for_current_tenant()
         from utils.nowpayments_ipn import resolve_nowpayments_ipn_secret
 
         ipn_secret = resolve_nowpayments_ipn_secret(vault)
@@ -1673,7 +1695,7 @@ def stripe_webhook():
         signature = request.headers.get('Stripe-Signature', '')
         
         # التحقق من التوقيع
-        vault = PaymentVault.query.first()
+        vault = _get_vault_for_current_tenant()
         if not vault or not vault.stripe_webhook_secret:
             logger.warning('Stripe webhook rejected: webhook secret not configured')
             return jsonify({'error': 'Webhook not configured'}), 503
@@ -1818,9 +1840,10 @@ def api_v2_donations():
     status = request.args.get('status', '')
     search = request.args.get('search', '')
     
-    # Query
-    query = Donation.query.filter_by(transaction_type='donation')
-    
+    # Query (مُفلترة بـ tenant_id)
+    tid = None
+    query = Donation.query.filter_by(tenant_id=tid, transaction_type='donation')
+
     # Filters
     if status:
         query = query.filter_by(status=status)

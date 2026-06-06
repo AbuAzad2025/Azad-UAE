@@ -48,6 +48,7 @@ from .api_key import APIKey
 from .product_serial import ProductSerial
 from .payroll import Employee, SalaryAdvance, PayrollTransaction
 from .partner_commission import PartnerCommissionEntry
+from .azad_platform_fee import AzadPlatformFee
 from .partner import Partner
 from .partner_profit_distribution import PartnerProfitDistribution
 from .partner_transaction import PartnerTransaction
@@ -97,6 +98,7 @@ __all__ = [
     'LoginHistory', 'SecurityAlert', 'APIKey',
     'Employee', 'SalaryAdvance', 'PayrollTransaction',
     'PartnerCommissionEntry',
+    'AzadPlatformFee',
     'Partner',
     'PartnerProfitDistribution',
     'PartnerTransaction',

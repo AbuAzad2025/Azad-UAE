@@ -420,6 +420,7 @@ def _process_user_action(message, user):
         
         # ========== نظام الحوار الذكي التفاعلي ==========
         user_id = user.id
+        tid = get_active_tenant_id(user)
         
         # إذا كان المستخدم يطلب مساعدة أو خيارات
         if any(word in msg_lower for word in ['رصيد', 'رصيد العميل', 'رصيد عميل', 'تعديل رصيد']):
@@ -459,7 +460,7 @@ def _process_user_action(message, user):
         if msg_lower.strip() == '4' and user_id in conversation_context and conversation_context[user_id].get('last_action') == 'رصيد':
             # عرض رصيد العميل
             from models.customer import Customer
-            customers = Customer.query.filter_by(is_active=True).all()
+            customers = Customer.query.filter_by(tenant_id=tid, is_active=True).all()
             if customers:
                 customers_list = "\n".join([f"• {c.name}: {c.balance} درهم" for c in customers[:10]])
                 del conversation_context[user_id]
@@ -499,7 +500,7 @@ def _process_user_action(message, user):
             if step == 1:
                 # البحث عن العميل
                 from models.customer import Customer
-                customer = Customer.query.filter_by(name=message.strip(), is_active=True).first()
+                customer = Customer.query.filter_by(tenant_id=tid, name=message.strip(), is_active=True).first()
                 if not customer:
                     return """❌ **العميل غير موجود!**
 
@@ -527,7 +528,7 @@ def _process_user_action(message, user):
                     new_balance = float(message.strip().replace('درهم', '').strip())
                     
                     from models.customer import Customer
-                    customer = Customer.query.get(data['customer_id'])
+                    customer = Customer.query.filter_by(id=data['customer_id'], tenant_id=tid).first()
                     customer.set_balance(new_balance)
                     db.session.commit()
                     
@@ -1071,7 +1072,7 @@ def _process_user_action(message, user):
                 # التحقق من طلبات خاصة
                 if any(word in message.lower() for word in ['عرض', 'اعرض', 'show', 'list', 'العملاء']):
                     from models.customer import Customer
-                    customers = Customer.query.filter_by(is_active=True).limit(10).all()
+                    customers = Customer.query.filter_by(tenant_id=tid, is_active=True).limit(10).all()
                     if customers:
                         customers_list = "\n".join([f"• {c.name} ({c.phone or 'لا يوجد هاتف'})" for c in customers])
                         return f"""📋 **قائمة العملاء المتاحين:**
@@ -1092,7 +1093,7 @@ def _process_user_action(message, user):
                 
                 # البحث عن العميل
                 from models.customer import Customer
-                customer = Customer.query.filter_by(name=message.strip(), is_active=True).first()
+                customer = Customer.query.filter_by(tenant_id=tid, name=message.strip(), is_active=True).first()
                 if not customer:
                     return """❌ **العميل غير موجود!**
 
@@ -1121,7 +1122,7 @@ def _process_user_action(message, user):
                 # التحقق من طلبات خاصة
                 if any(word in message.lower() for word in ['عرض', 'اعرض', 'show', 'list', 'المنتجات']):
                     from models.product import Product
-                    products = Product.query.filter_by(is_active=True).limit(10).all()
+                    products = Product.query.filter_by(tenant_id=tid, is_active=True).limit(10).all()
                     if products:
                         products_list = "\n".join([f"• {p.name} - {p.regular_price} درهم (متوفر: {p.current_stock})" for p in products])
                         return f"""📋 **قائمة المنتجات المتاحة:**
@@ -1142,7 +1143,7 @@ def _process_user_action(message, user):
                 
                 # البحث عن المنتج
                 from models.product import Product
-                product = Product.query.filter_by(name=message.strip(), is_active=True).first()
+                product = Product.query.filter_by(tenant_id=tid, name=message.strip(), is_active=True).first()
                 if not product:
                     return """❌ **المنتج غير موجود!**
 
@@ -1198,7 +1199,7 @@ def _process_user_action(message, user):
                     db.session.add(sale_item)
                     
                     # تحديث المخزون
-                    product = Product.query.get(data['product_id'])
+                    product = Product.query.filter_by(id=data['product_id'], tenant_id=tid).first()
                     product.current_stock -= data['quantity']
                     
                     db.session.commit()
@@ -1269,7 +1270,7 @@ def _process_user_action(message, user):
             if step == 1:
                 # البحث عن العميل
                 from models.customer import Customer
-                customer = Customer.query.filter_by(name=message.strip(), is_active=True).first()
+                customer = Customer.query.filter_by(tenant_id=tid, name=message.strip(), is_active=True).first()
                 if not customer:
                     return """❌ **العميل غير موجود!**
 
@@ -1337,7 +1338,7 @@ def _process_user_action(message, user):
                     db.session.add(payment)
                     
                     # تحديث رصيد العميل
-                    customer = Customer.query.get(data['customer_id'])
+                    customer = Customer.query.filter_by(id=data['customer_id'], tenant_id=tid).first()
                     customer.apply_receipt(data['amount'])
                     
                     db.session.commit()
@@ -1407,7 +1408,7 @@ def _process_user_action(message, user):
             if step == 1:
                 # البحث عن العميل
                 from models.customer import Customer
-                customer = Customer.query.filter_by(name=message.strip(), is_active=True).first()
+                customer = Customer.query.filter_by(tenant_id=tid, name=message.strip(), is_active=True).first()
                 if not customer:
                     return """❌ **العميل غير موجود!**
 
@@ -1475,7 +1476,7 @@ def _process_user_action(message, user):
                     db.session.add(payment)
                     
                     # تحديث رصيد العميل (زيادة)
-                    customer = Customer.query.get(data['customer_id'])
+                    customer = Customer.query.filter_by(id=data['customer_id'], tenant_id=tid).first()
                     customer.adjust_balance(data['amount'])
                     
                     db.session.commit()
@@ -1831,7 +1832,7 @@ def _process_user_action(message, user):
             
             elif step == 2:
                 from models.product import Product
-                product = Product.query.filter_by(name=message.strip(), is_active=True).first()
+                product = Product.query.filter_by(tenant_id=tid, name=message.strip(), is_active=True).first()
                 if not product:
                     return """❌ **المنتج غير موجود!**
 
@@ -1898,7 +1899,7 @@ def _process_user_action(message, user):
                     )
                     db.session.add(purchase_item)
                     
-                    product = Product.query.get(data['product_id'])
+                    product = Product.query.filter_by(id=data['product_id'], tenant_id=tid).first()
                     product.current_stock += data['quantity']
                     
                     db.session.commit()
@@ -2243,7 +2244,7 @@ def _process_user_action(message, user):
         # ========== نظام الحوار التفاعلي للرقم 2 (عرض جميع العناصر) ==========
         if msg_lower.strip() == '2' and user_id in conversation_context and conversation_context[user_id].get('last_action') == 'عميل':
             from models.customer import Customer
-            customers = Customer.query.filter_by(is_active=True).all()
+            customers = Customer.query.filter_by(tenant_id=tid, is_active=True).all()
             if customers:
                 customers_list = "\n".join([f"• {c.name} - {c.phone or 'لا يوجد هاتف'}" for c in customers[:10]])
                 more_text = f"\n\n... و {len(customers) - 10} عميل آخر" if len(customers) > 10 else ""
@@ -2263,7 +2264,7 @@ def _process_user_action(message, user):
         
         if msg_lower.strip() == '2' and user_id in conversation_context and conversation_context[user_id].get('last_action') == 'منتج':
             from models.product import Product
-            products = Product.query.filter_by(is_active=True).all()
+            products = Product.query.filter_by(tenant_id=tid, is_active=True).all()
             if products:
                 products_list = "\n".join([f"• {p.name} - {p.part_number} - {p.current_stock} {p.unit}" for p in products[:10]])
                 more_text = f"\n\n... و {len(products) - 10} منتج آخر" if len(products) > 10 else ""
@@ -2408,7 +2409,7 @@ def _process_user_action(message, user):
         
         if msg_lower.strip() == '2' and user_id in conversation_context and conversation_context[user_id].get('last_action') == 'مستودع':
             from models.product import Product
-            products = Product.query.filter_by(is_active=True).all()
+            products = Product.query.filter_by(tenant_id=tid, is_active=True).all()
             del conversation_context[user_id]
             if products:
                 stock_list = "\n".join([f"• {p.name} - {p.current_stock} {p.unit}" for p in products[:15]])
@@ -2722,11 +2723,11 @@ http://localhost:5000/ai/assistant
                     quantity = int(parts[2]) if parts[2].isdigit() else 1
                     payment_method = parts[3] if len(parts) > 3 else 'cash'
                     
-                    customer = Customer.query.filter_by(name=customer_name, is_active=True).first()
+                    customer = Customer.query.filter_by(tenant_id=tid, name=customer_name, is_active=True).first()
                     if not customer:
                         return f"❌ العميل '{customer_name}' غير موجود. أنشئه أولاً!"
                     
-                    product = Product.query.filter_by(name=product_name, is_active=True).first()
+                    product = Product.query.filter_by(tenant_id=tid, name=product_name, is_active=True).first()
                     if not product:
                         return f"❌ المنتج '{product_name}' غير موجود. أنشئه أولاً!"
                     
@@ -2816,7 +2817,7 @@ http://localhost:5000/ai/assistant
                     amount = float(parts[1].replace('درهم', '').replace('د.إ', '').strip())
                     payment_method = parts[2]
                     
-                    customer = Customer.query.filter_by(name=customer_name, is_active=True).first()
+                    customer = Customer.query.filter_by(tenant_id=tid, name=customer_name, is_active=True).first()
                     if not customer:
                         return f"❌ العميل '{customer_name}' غير موجود!"
                     
@@ -2861,7 +2862,7 @@ http://localhost:5000/ai/assistant
                     customer_name = parts[0]
                     new_balance = float(parts[1].replace('درهم', '').replace('د.إ', '').strip())
                     
-                    customer = Customer.query.filter_by(name=customer_name, is_active=True).first()
+                    customer = Customer.query.filter_by(tenant_id=tid, name=customer_name, is_active=True).first()
                     if not customer:
                         return f"❌ العميل '{customer_name}' غير موجود!"
                     
@@ -2893,7 +2894,7 @@ http://localhost:5000/ai/assistant
                     amount = float(parts[1].replace('درهم', '').replace('د.إ', '').strip())
                     payment_method = parts[2]
                     
-                    customer = Customer.query.filter_by(name=customer_name, is_active=True).first()
+                    customer = Customer.query.filter_by(tenant_id=tid, name=customer_name, is_active=True).first()
                     if not customer:
                         return f"❌ العميل '{customer_name}' غير موجود!"
                     
@@ -2934,7 +2935,7 @@ http://localhost:5000/ai/assistant
             if match:
                 customer_name = match.group(1).strip()
                 
-                customer = Customer.query.filter_by(name=customer_name, is_active=True).first()
+                customer = Customer.query.filter_by(tenant_id=tid, name=customer_name, is_active=True).first()
                 if not customer:
                     return f"❌ العميل '{customer_name}' غير موجود!"
                 
@@ -2971,7 +2972,7 @@ http://localhost:5000/ai/assistant
                     amount = float(parts[1].replace('درهم', '').replace('د.إ', '').strip())
                     reason = parts[2]
                     
-                    customer = Customer.query.filter_by(name=customer_name, is_active=True).first()
+                    customer = Customer.query.filter_by(tenant_id=tid, name=customer_name, is_active=True).first()
                     if not customer:
                         return f"❌ العميل '{customer_name}' غير موجود!"
                     

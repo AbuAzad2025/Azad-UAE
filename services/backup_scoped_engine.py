@@ -108,6 +108,11 @@ TABLE_FK_REMAP: Dict[str, Dict[str, str]] = {
         "branch_id": "branches",
         "product_id": "products",
     },
+    "azad_platform_fees": {
+        "tenant_id": "tenants",
+        "sale_id": "sales",
+        "payment_id": "payments",
+    },
     "fixed_assets": {"tenant_id": "tenants", "branch_id": "branches"},
 }
 

@@ -15,16 +15,21 @@ class StoreOnlinePaymentService:
     ORDER_PREFIX = 'STORE_'
 
     @staticmethod
-    def is_configured() -> bool:
-        vault = PaymentVault.query.first()
+    def _vault_for_tenant(tenant_id=None) -> PaymentVault | None:
+        vault = PaymentVault.get_tenant_vault(tenant_id) if tenant_id is not None else None
+        return vault or PaymentVault.get_platform_vault()
+
+    @staticmethod
+    def is_configured(tenant_id=None) -> bool:
+        vault = StoreOnlinePaymentService._vault_for_tenant(tenant_id)
         if not vault:
             return False
         key = (getattr(vault, 'nowpayments_api_key', None) or '').strip()
-        return bool(key)
+        return bool(key or (current_app.config.get('NOWPAYMENTS_API_KEY') or '').strip())
 
     @staticmethod
-    def _api_key() -> str:
-        vault = PaymentVault.query.first()
+    def _api_key(tenant_id=None) -> str:
+        vault = StoreOnlinePaymentService._vault_for_tenant(tenant_id)
         key = (getattr(vault, 'nowpayments_api_key', None) or '').strip() if vault else ''
         if not key:
             key = (current_app.config.get('NOWPAYMENTS_API_KEY') or '').strip()
@@ -54,7 +59,7 @@ class StoreOnlinePaymentService:
             payload['customer_email'] = customer_email
 
         headers = {
-            'x-api-key': StoreOnlinePaymentService._api_key(),
+            'x-api-key': StoreOnlinePaymentService._api_key(getattr(store, 'tenant_id', None)),
             'Content-Type': 'application/json',
         }
         response = requests.post(

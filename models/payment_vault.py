@@ -14,9 +14,12 @@ class PaymentVault(db.Model):
     خزينة الدفع السرية - محمية بكلمة مرور منفصلة
     """
     __tablename__ = 'payment_vault'
-    
+
     id = db.Column(db.Integer, primary_key=True)
-    
+
+    # NULL is the Azad/platform vault; non-NULL is a project/tenant vault.
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True, unique=True)
+
     # Vault Security - أمان الخزينة
     vault_password_hash = db.Column(db.String(255), nullable=False)  # كلمة مرور الخزينة
     vault_name = db.Column(db.String(100), default="Payment Vault")  # اسم الخزينة
@@ -81,6 +84,18 @@ class PaymentVault(db.Model):
     # Timestamps - الطوابع الزمنية
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    @classmethod
+    def get_platform_vault(cls):
+        """Return the Azad/platform vault."""
+        return cls.query.filter(cls.tenant_id.is_(None)).order_by(cls.id.asc()).first()
+
+    @classmethod
+    def get_tenant_vault(cls, tenant_id):
+        """Return the vault for a concrete project/tenant."""
+        if tenant_id is None:
+            return None
+        return cls.query.filter_by(tenant_id=int(tenant_id)).order_by(cls.id.asc()).first()
     
     def set_vault_password(self, password):
         """تعيين كلمة مرور الخزينة"""

@@ -67,6 +67,7 @@ TABLE_EXPORT_ORDER: Tuple[str, ...] = (
     "salary_advances",
     "payroll_transactions",
     "partner_commission_entries",
+    "azad_platform_fees",
     "fixed_assets",
 )
 
@@ -92,6 +93,7 @@ TENANT_TABLE_FILTERS = tuple(
 # Child rows filtered via parent IDs (table, parent_table, parent_pk_col, child_fk_col)
 CHILD_VIA_PARENT: Tuple[Tuple[str, str, str, str], ...] = (
     ("sale_lines", "sales", "id", "sale_id"),
+    ("azad_platform_fees", "sales", "id", "sale_id"),
     ("purchase_lines", "purchases", "id", "purchase_id"),
     ("gl_journal_lines", "gl_journal_entries", "id", "entry_id"),
 )

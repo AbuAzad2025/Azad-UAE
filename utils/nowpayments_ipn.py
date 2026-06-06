@@ -24,7 +24,7 @@ def resolve_nowpayments_ipn_secret(vault=None) -> str:
     try:
         from models.payment_vault import PaymentVault
 
-        row = PaymentVault.query.first()
+        row = PaymentVault.get_platform_vault()
         if row:
             secret = (getattr(row, "nowpayments_ipn_secret", None) or "").strip()
             if secret:

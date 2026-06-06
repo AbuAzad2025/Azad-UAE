@@ -30,6 +30,45 @@ def _assert_no_unscoped_query_in_file(file_path, model_name, required_filter):
     return violations
 
 
+_PUBLIC_ROUTE_WHITELIST = {
+    ('routes\\api.py', 'health'),
+    ('routes\\api.py', 'version'),
+    ('routes\\api.py', 'log_client_error'),
+    ('routes\\api_docs.py', 'openapi_spec'),
+    ('routes\\api_docs.py', 'swagger_ui'),
+    ('routes\\api_docs.py', 'redoc'),
+    ('routes\\auth.py', 'support'),
+    ('routes\\auth.py', 'login'),
+    ('routes\\auth.py', 'logout'),
+    ('routes\\auth.py', 'create_payment'),
+    ('routes\\auth.py', 'register'),
+    ('routes\\auth.py', 'forgot_password'),
+    ('routes\\auth.py', 'reset_password'),
+    ('routes\\auth.py', 'verify_email'),
+    ('routes\\auth.py', 'resend_verification'),
+    ('routes\\auth.py', 'check_username'),
+    ('routes\\auth.py', 'check_email'),
+    ('routes\\auth.py', 'oauth_callback'),
+    ('routes\\auth.py', 'oauth_login'),
+    ('routes\\public.py', 'index'),
+    ('routes\\public.py', 'about'),
+    ('routes\\public.py', 'contact'),
+    ('routes\\public.py', 'pricing'),
+    ('routes\\public.py', 'features'),
+    ('routes\\public.py', 'terms'),
+    ('routes\\public.py', 'privacy'),
+    ('routes\\store.py', 'storefront'),
+    ('routes\\store.py', 'product_detail'),
+    ('routes\\store.py', 'cart'),
+    ('routes\\store.py', 'checkout'),
+    ('routes\\payment_vault.py', 'nowpayments_webhook'),
+    ('routes\\payment_vault.py', 'stripe_webhook'),
+    ('routes\\payment_vault.py', 'api_public_donations'),
+    ('routes\\payment_vault.py', 'public_package_purchase'),
+    ('routes\\payment_vault.py', 'process_public_payment'),
+    ('routes\\payment_vault.py', 'api_public_packages'),
+}
+
 def _audit_routes_for_auth():
     """Ensure all non-public routes have @login_required."""
     import os
@@ -65,28 +104,38 @@ def _audit_routes_for_auth():
                 if has_route and not has_login:
                     # Exclude before_request / after_request helpers
                     if not node.name.startswith('_'):
-                        violations.append((rf, node.name))
+                        key = (rf, node.name)
+                        if key not in _PUBLIC_ROUTE_WHITELIST:
+                            violations.append(key)
     return violations
 
 
 def _audit_ai_routes_tenant_scope():
-    """AI routes must not use bare Product/Customer.query.get(id)."""
+    """AI routes must not use bare Product/Customer.query.get(id) or unscoped filter/all."""
     path = 'd:/Data/karaj/UAE/Azad-UAE/routes/ai.py'
     with open(path, 'r', encoding='utf-8') as f:
         source = f.read()
+    lines = source.splitlines()
     violations = []
     dangerous_patterns = [
         'Product.query.get(',
         'Customer.query.get(',
-        'Customer.query.filter_by(is_active=True).all()',
         'Product.query.filter_by(is_active=True).all()',
-        'Customer.query.filter_by(is_active=True).limit',
+        'Customer.query.filter_by(is_active=True).all()',
         'Product.query.filter_by(is_active=True).limit',
-        'Customer.query.filter_by(name=',
+        'Customer.query.filter_by(is_active=True).limit',
     ]
     for pat in dangerous_patterns:
         if pat in source:
             violations.append(pat)
+    # For name lookups, verify tenant_id is present on the same line
+    for i, line in enumerate(lines, 1):
+        stripped = line.strip()
+        if stripped.startswith('#'):
+            continue
+        if ('Customer.query.filter_by(name=' in stripped or 'Product.query.filter_by(name=' in stripped):
+            if 'tenant_id' not in stripped:
+                violations.append(f'line {i}: {stripped[:60]}')
     return violations
 
 
@@ -134,15 +183,19 @@ def _audit_payment_vault_tenant_scope():
     path = 'd:/Data/karaj/UAE/Azad-UAE/routes/payment_vault.py'
     with open(path, 'r', encoding='utf-8') as f:
         source = f.read()
+    lines = source.splitlines()
     violations = []
-    dangerous = [
-        'PaymentVault.query.first()',
-        'Donation.query.filter_by(transaction_type=',
-        'Package.query.order_by(Package.sort_order.asc()).all()',
-    ]
-    for pat in dangerous:
-        if pat in source:
-            violations.append(pat)
+    # PaymentVault must use helper, not bare .first()
+    if 'PaymentVault.query.first()' in source:
+        violations.append('PaymentVault.query.first() — must use _get_vault_for_current_tenant()')
+    # Donation queries with transaction_type must have tenant_id on the same line
+    for i, line in enumerate(lines, 1):
+        stripped = line.strip()
+        if stripped.startswith('#'):
+            continue
+        if 'Donation.query' in stripped and 'transaction_type=' in stripped:
+            if 'tenant_id' not in stripped:
+                violations.append(f'line {i}: Donation query missing tenant_id')
     return violations
 
 

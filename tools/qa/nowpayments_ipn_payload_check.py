@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 import sys
 import unittest
+from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -168,8 +169,12 @@ class TestNOWPaymentsIPNAlignment(unittest.TestCase):
         from services.webhook_service import WebhookService
 
         sale = MagicMock()
+        sale.id = 1
+        sale.tenant_id = 2
         sale.status = "confirmed"
         sale.sale_number = "SO-1"
+        sale.source = "online_store"
+        sale.checkout_payment_method = "online_pay"
         sale.checkout_gateway_ref = "np-3"
 
         with patch(
@@ -177,16 +182,47 @@ class TestNOWPaymentsIPNAlignment(unittest.TestCase):
             return_value=(1, 2),
         ):
             with patch("models.Sale") as Sale:
-                Sale.query.filter_by.return_value.first.return_value = sale
-                out = WebhookService._process_store_order_webhook(
-                    {
-                        "payment_id": "np-3",
-                        "payment_status": "finished",
-                        "order_id": "STORE_1_2",
-                    }
-                )
+                with patch(
+                    "services.azad_platform_fee_service.AzadPlatformFeeService.record_store_online_fee"
+                ) as record_fee:
+                    with patch("services.webhook_service.db.session.commit"):
+                        Sale.query.filter_by.return_value.first.return_value = sale
+                        out = WebhookService._process_store_order_webhook(
+                            {
+                                "payment_id": "np-3",
+                                "payment_status": "finished",
+                                "order_id": "STORE_1_2",
+                            }
+                        )
         self.assertTrue(out["success"])
         self.assertIn("idempotent", out["message"])
+        record_fee.assert_called_once()
+
+    def test_store_platform_fee_idempotency_and_amount(self):
+        from services.azad_platform_fee_service import AzadPlatformFeeService
+
+        sale = MagicMock()
+        sale.id = 200
+        sale.tenant_id = 2
+        sale.source = "online_store"
+        sale.checkout_payment_method = "online_pay"
+        sale.checkout_gateway_ref = "np-store-1"
+        sale.amount_aed = Decimal("150.000")
+
+        payment = MagicMock()
+        payment.id = 77
+        payment.amount_aed = Decimal("150.000")
+
+        base = AzadPlatformFeeService._base_amount_aed(sale, payment)
+        fee = (base * AzadPlatformFeeService.RATE).quantize(Decimal("0.001"))
+
+        self.assertTrue(AzadPlatformFeeService.is_online_store_transaction(sale))
+        self.assertEqual(base, Decimal("150.000"))
+        self.assertEqual(fee, Decimal("1.500"))
+        self.assertEqual(
+            AzadPlatformFeeService._idempotency_key(sale, payment),
+            "store-online:2:200:np-store-1",
+        )
 
 
 if __name__ == "__main__":

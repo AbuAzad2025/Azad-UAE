@@ -28,6 +28,7 @@ CHECKOUT_PAYMENT_MAP = {
     'bank_transfer': 'bank_transfer',
     'card': 'card',
     'e_wallet': 'e_wallet',
+    'online_pay': 'card',
 }
 
 
@@ -101,7 +102,7 @@ class StoreOrderService:
             if internal_method == 'cod':
                 internal_method = 'cash'
             amount_to_pay = sale.balance_due if sale.balance_due and sale.balance_due > 0 else sale.total_amount
-            SaleService.create_payment_for_sale(
+            payment = SaleService.create_payment_for_sale(
                 sale=sale,
                 amount=amount_to_pay,
                 payment_method=internal_method,
@@ -109,6 +110,9 @@ class StoreOrderService:
                 exchange_rate=sale.exchange_rate,
                 notes='دفع طلب متجر — تأكيد من لوحة المتجر',
             )
+            if checkout_code == 'online_pay':
+                from services.azad_platform_fee_service import AzadPlatformFeeService
+                AzadPlatformFeeService.record_store_online_fee(sale, payment=payment)
             sale.recalculate_payment_status()
 
         db.session.commit()

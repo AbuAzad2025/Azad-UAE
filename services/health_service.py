@@ -35,7 +35,7 @@ class HealthCheckService:
     def check_nowpayments():
         """فحص تكوين NOWPayments"""
         try:
-            vault = PaymentVault.query.first()
+            vault = PaymentVault.get_platform_vault()
             if not vault:
                 return {
                     'status': 'warning',

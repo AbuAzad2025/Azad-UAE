@@ -97,11 +97,11 @@ class StorePaymentMethodService:
         return q.order_by(StorePaymentMethod.sort_order.asc(), StorePaymentMethod.id.asc()).all()
 
     @staticmethod
-    def list_for_checkout():
+    def list_for_checkout(tenant_id=None):
         methods = StorePaymentMethodService.list_all(enabled_only=True)
         try:
             from services.store_online_payment_service import StoreOnlinePaymentService
-            if not StoreOnlinePaymentService.is_configured():
+            if not StoreOnlinePaymentService.is_configured(tenant_id):
                 methods = [m for m in methods if m.code != 'online_pay']
         except Exception:
             methods = [m for m in methods if getattr(m, 'code', '') != 'online_pay']
