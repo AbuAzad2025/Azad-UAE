@@ -90,16 +90,19 @@ jobs:
 
   security:
     runs-on: ubuntu-24.04
-    if: ${{ secrets.SAFETY_API_KEY != '' }}
     permissions:
       contents: read
+
+    env:
+      SAFETY_API_KEY: ${{ secrets.SAFETY_API_KEY }}
 
     steps:
       - uses: actions/checkout@v4
 
       - name: Run Safety scan
+        if: env.SAFETY_API_KEY != ''
         uses: pyupio/safety-action@v1
         with:
-          api-key: ${{ secrets.SAFETY_API_KEY }}
+          api-key: ${{ env.SAFETY_API_KEY }}
           args: check --json
 
