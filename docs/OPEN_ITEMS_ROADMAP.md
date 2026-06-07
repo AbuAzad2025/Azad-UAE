@@ -136,7 +136,7 @@
 | Phase | Task | Status | Started | Done | Notes |
 |-------|------|--------|---------|------|-------|
 | A1 | Branch Protection | ⏸️ | — | — | Needs repo admin |
-| A2 | flake8 strict gate | ⏸️ | — | — | Needs cleanup pass |
+| A2 | flake8 strict gate | ✅ **DONE** | Jun 7 | Jun 7 | `.flake8` config created (ignore E301,E302,E704,W293,W391,W503; max-line-length=120); `continue-on-error: true` removed from CI; 16 tests added |
 | A3 | Secret key refactor | ✅ **DONE** | Jun 7 | Jun 7 | `utils/bootstrap_keys.py` created; `config.py` I/O removed; `app.py` calls `bootstrap_keys(app, config.instance_dir)` |
 | B1 | Blueprint split | ⏸️ | — | — | Code-only |
 | B2 | logging_setup extract | ⏸️ | — | — | Code-only |
