@@ -18,7 +18,7 @@ class SystemSettings(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     
     # System Identity - هوية النظام
-    system_name = db.Column(db.String(200), default='Azad Garage System')
+    system_name = db.Column(db.String(200), default='Azad ERP System')
     system_version = db.Column(db.String(20), default='2.0.0')
     system_mode = db.Column(db.String(20), default='production')  # development, production
     

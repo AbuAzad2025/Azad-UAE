@@ -29,8 +29,8 @@ def _protect_api_docs_in_production():
 OPENAPI_SPEC = {
     "openapi": "3.0.3",
     "info": {
-        "title": "Garage Management System API",
-        "description": "RESTful API for managing garage operations, sales, inventory, and accounting",
+        "title": "Azad ERP System API",
+        "description": "RESTful API for managing retail, POS, inventory, sales, and accounting operations",
         "version": "2.0.0",
         "contact": {
             "name": "Azad Smart Systems",
@@ -251,7 +251,7 @@ def swagger_ui():
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>API Documentation - Garage Management System</title>
+        <title>API Documentation - Azad ERP System</title>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui.css">
         <style>
             body { margin: 0; padding: 0; }
@@ -298,7 +298,7 @@ def redoc():
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>API Documentation - Garage Management System</title>
+        <title>API Documentation - Azad ERP System</title>
         <style>
             body { margin: 0; padding: 0; }
         </style>

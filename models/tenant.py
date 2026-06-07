@@ -23,7 +23,7 @@ class Tenant(db.Model):
     slug = db.Column(db.String(100), unique=True, nullable=False, index=True)
     
     # Business Type - نوع النشاط
-    business_type = db.Column(db.String(50), default='garage')  # garage, workshop, spare_parts, etc.
+    business_type = db.Column(db.String(50), default='general')  # retail, wholesale, services, etc.
     industry = db.Column(db.String(100))  # automotive, heavy_equipment, etc.
     
     # Contact Info - معلومات التواصل

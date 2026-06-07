@@ -2170,7 +2170,7 @@ def company_info():
             tenant.name_en = request.form.get('name_en', '').strip()
             tenant.name = tenant.name_en or tenant.name_ar
             tenant.slug = request.form.get('slug', '').strip()
-            tenant.business_type = request.form.get('business_type', 'garage')
+            tenant.business_type = request.form.get('business_type', 'general')
             tenant.industry = request.form.get('industry', 'automotive')
 
             # Contact Info

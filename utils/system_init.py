@@ -212,8 +212,8 @@ def _ensure_core_data():
     
     # 1. System Settings
     settings = SystemSettings.get_current()
-    if settings.system_name == 'Azad Garage System': # Only if default
-         settings.system_name = 'Garage Management System'
+    if settings.system_name in ('Azad Garage System', 'Garage Management System'): # Migrate old default
+         settings.system_name = 'Azad ERP System'
          settings.currency_symbol = 'AED'
          settings.default_currency = 'AED'
          db.session.commit()
