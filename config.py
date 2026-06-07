@@ -8,9 +8,12 @@ from dotenv import load_dotenv
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 instance_dir = os.path.join(basedir, "instance")
-os.makedirs(instance_dir, exist_ok=True)
 
-load_dotenv(os.path.join(basedir, ".env"))
+
+def _init_env():
+    """Load .env and ensure instance directory exists. Called once from create_app()."""
+    load_dotenv(os.path.join(basedir, ".env"))
+    os.makedirs(instance_dir, exist_ok=True)
 
 
 def _redis_available(host: str = "localhost", port: int = 6379, timeout: float = 0.5) -> bool:
@@ -134,7 +137,7 @@ class Config:
     COMPRESS_MIN_SIZE = 500
     COMPRESS_ALGORITHM = 'gzip'
     
-    SESSION_COOKIE_NAME = "garage_session"
+    SESSION_COOKIE_NAME = "azad_session"
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = "Lax"
     SESSION_COOKIE_SECURE = not DEBUG
@@ -174,7 +177,7 @@ class Config:
         CACHE_TYPE = "null"
     CACHE_REDIS_URL = os.environ.get("CACHE_REDIS_URL", REDIS_URL)
     CACHE_DEFAULT_TIMEOUT = _int("CACHE_DEFAULT_TIMEOUT", 300)
-    CACHE_KEY_PREFIX = "garage_simple"
+    CACHE_KEY_PREFIX = "azad"
     
     CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", REDIS_URL)
     CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND", REDIS_URL)

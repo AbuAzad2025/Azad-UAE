@@ -13,6 +13,7 @@ from werkzeug.exceptions import HTTPException
 from sqlalchemy.exc import SQLAlchemyError
 from werkzeug.routing import BuildError
 
+import config
 from config import Config, ensure_runtime_dirs, assert_production_sanity
 from extensions import (
     db, migrate, login_manager, csrf, limiter, mail,
@@ -32,9 +33,10 @@ except ImportError:
 
 
 def create_app(config_class=Config):
+    config._init_env()
     app = Flask(__name__)
     app.config.from_object(config_class)
-    
+
     # Ensure runtime directories exist
     ensure_runtime_dirs(config_class)
     
