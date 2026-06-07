@@ -62,17 +62,13 @@ jobs:
           pip install -r requirements.txt
           pip install pytest pytest-cov pytest-flask flake8
 
+      - name: Collect tests (diagnostic)
+        run: |
+          python -m pytest tests/unit --collect-only -q || true
+
       - name: Run pytest unit tests with coverage
         run: |
-          pytest \
-            tests/unit \
-            -v \
-            --tb=short \
-            --maxfail=1 \
-            --cov=. \
-            --cov-report=term-missing \
-            --cov-report=xml \
-            --junitxml=pytest-report.xml
+          python -m pytest tests/unit -v --tb=short --maxfail=1 --cov=. --cov-report=term-missing --cov-report=xml --junitxml=pytest-report.xml
 
       - name: Run security audit scripts
         run: |
