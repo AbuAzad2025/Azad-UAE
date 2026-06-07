@@ -3524,52 +3524,10 @@ def sales_insights():
 @login_required
 @owner_required
 def customer_insights():
-    customers_data = []
     scoped_branch_id = _owner_branch_scope()
     tid = get_active_tenant_id(current_user)
-
-    customers_query = Customer.query.filter_by(is_active=True, tenant_id=tid)
-    if scoped_branch_id is not None:
-        customers_query = customers_query.join(Sale, Customer.id == Sale.customer_id).filter(Sale.branch_id == scoped_branch_id).distinct()
-
-    for customer in customers_query.all():
-        total_sales = db.session.query(func.sum(Sale.total_amount)).filter(
-            Sale.customer_id == customer.id,
-            Sale.status == 'confirmed',
-            Sale.tenant_id == tid,
-        )
-        if scoped_branch_id is not None:
-            total_sales = total_sales.filter(Sale.branch_id == scoped_branch_id)
-        total_sales = total_sales.scalar() or 0
-
-        sales_count = Sale.query.filter_by(customer_id=customer.id, status='confirmed', tenant_id=tid)
-        if scoped_branch_id is not None:
-            sales_count = sales_count.filter(Sale.branch_id == scoped_branch_id)
-        sales_count = sales_count.count()
-
-        last_sale = Sale.query.filter_by(customer_id=customer.id, tenant_id=tid)
-        if scoped_branch_id is not None:
-            last_sale = last_sale.filter(Sale.branch_id == scoped_branch_id)
-        last_sale = last_sale.order_by(Sale.sale_date.desc()).first()
-
-        if last_sale:
-            sale_date = last_sale.sale_date.date() if hasattr(last_sale.sale_date, 'date') else last_sale.sale_date
-            days_since_last = (datetime.now().date() - sale_date).days
-        else:
-            days_since_last = 999
-
-        customers_data.append({
-            'name': customer.name,
-            'lifetime_value': float(total_sales),
-            'sales_count': sales_count,
-            'avg_sale': float(total_sales / sales_count) if sales_count > 0 else 0,
-            'days_since_last': days_since_last,
-            'status': 'نشط' if days_since_last < 30 else 'خامل' if days_since_last < 90 else 'متوقف'
-        })
-
-    customers_data.sort(key=lambda x: x['lifetime_value'], reverse=True)
-
-    return render_template('owner/customer_insights.html', customers=customers_data[:50])
+    customers = AnalyticsService.get_customer_insights(tenant_id=tid, branch_id=scoped_branch_id)
+    return render_template('owner/customer_insights.html', customers=customers)
 
 
 @owner_bp.route('/product-performance')

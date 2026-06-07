@@ -4,7 +4,7 @@ Analytics Service - خدمة التحليلات
 """
 from datetime import datetime, timezone, timedelta
 from extensions import db
-from models import Donation, PackagePurchase, Package, Sale, Product, SaleLine
+from models import Donation, PackagePurchase, Package, Sale, Product, SaleLine, Customer
 from sqlalchemy import func, desc
 import logging
 
@@ -13,6 +13,51 @@ logger = logging.getLogger(__name__)
 
 class AnalyticsService:
     """خدمة التحليلات المتقدمة"""
+
+    @staticmethod
+    def get_customer_insights(tenant_id, branch_id=None):
+        # TODO: optimize N+1 queries in a separate behavior-preserving patch
+        customers_data = []
+        customers_query = Customer.query.filter_by(is_active=True, tenant_id=tenant_id)
+        if branch_id is not None:
+            customers_query = customers_query.join(Sale, Customer.id == Sale.customer_id).filter(Sale.branch_id == branch_id).distinct()
+
+        for customer in customers_query.all():
+            total_sales = db.session.query(func.sum(Sale.total_amount)).filter(
+                Sale.customer_id == customer.id,
+                Sale.status == 'confirmed',
+                Sale.tenant_id == tenant_id,
+            )
+            if branch_id is not None:
+                total_sales = total_sales.filter(Sale.branch_id == branch_id)
+            total_sales = total_sales.scalar() or 0
+
+            sales_count = Sale.query.filter_by(customer_id=customer.id, status='confirmed', tenant_id=tenant_id)
+            if branch_id is not None:
+                sales_count = sales_count.filter(Sale.branch_id == branch_id)
+            sales_count = sales_count.count()
+
+            last_sale = Sale.query.filter_by(customer_id=customer.id, tenant_id=tenant_id)
+            if branch_id is not None:
+                last_sale = last_sale.filter(Sale.branch_id == branch_id)
+            last_sale = last_sale.order_by(Sale.sale_date.desc()).first()
+
+            if last_sale:
+                sale_date = last_sale.sale_date.date() if hasattr(last_sale.sale_date, 'date') else last_sale.sale_date
+                days_since_last = (datetime.now().date() - sale_date).days
+            else:
+                days_since_last = 999
+
+            customers_data.append({
+                'name': customer.name,
+                'lifetime_value': float(total_sales),
+                'sales_count': sales_count,
+                'avg_sale': float(total_sales / sales_count) if sales_count > 0 else 0,
+                'days_since_last': days_since_last,
+                'status': 'نشط' if days_since_last < 30 else 'خامل' if days_since_last < 90 else 'متوقف'
+            })
+        customers_data.sort(key=lambda x: x['lifetime_value'], reverse=True)
+        return customers_data[:50]
 
     @staticmethod
     def get_sales_insights(tenant_id, branch_id=None):

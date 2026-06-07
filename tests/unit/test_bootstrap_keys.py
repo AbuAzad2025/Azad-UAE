@@ -1,5 +1,3 @@
-import os
-import pytest
 from unittest.mock import patch, MagicMock
 from utils.bootstrap_keys import ensure_secret_key, ensure_card_encryption_key, bootstrap_keys
 
