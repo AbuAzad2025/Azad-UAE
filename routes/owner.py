@@ -2897,114 +2897,23 @@ def activity_monitor():
 @login_required
 @owner_required
 def error_logs():
-    import re
+    from services.error_log_service import ErrorLogService
+
     page = request.args.get('page', 1, type=int)
-    per_page = 50
-    search = request.args.get('search', '', type=str).strip().lower()
-    level_filter = request.args.get('level', '', type=str).upper()
+    search = request.args.get('search', '', type=str)
+    level_filter = request.args.get('level', '', type=str)
 
-    error_file = 'logs/errors.log'
-    parsed_errors = []
-
-    # --- Parse multi-line log entries into structured dicts ---
-    if os.path.exists(error_file):
-        with open(error_file, 'r', encoding='utf-8') as f:
-            raw = f.read()
-
-        # Split by blank-line boundaries (handle \n\n or \n\r\n)
-        entries = re.split(r'\n(?:\s*\n)+', raw)
-        for entry in reversed(entries):
-            entry = entry.strip()
-            if not entry:
-                continue
-            lines = entry.splitlines()
-            if not lines:
-                continue
-
-            # Header: [timestamp] LEVEL in module:lineno
-            header_match = re.match(
-                r'^\[(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})\]\s+(\w+)\s+in\s+([^:]+):(\d+)$',
-                lines[0].strip()
-            )
-            if not header_match:
-                # Unparseable entry — keep as raw
-                parsed_errors.append({
-                    'timestamp': '',
-                    'level': 'UNKNOWN',
-                    'module': '',
-                    'lineno': '',
-                    'message': lines[0] if lines else '',
-                    'path': '',
-                    'traceback': '\n'.join(lines[1:]),
-                    'raw': entry,
-                })
-                continue
-
-            ts, level, mod, ln = header_match.groups()
-            message = ''
-            path = ''
-            traceback = []
-
-            i = 1
-            # Message line
-            if i < len(lines) and lines[i].strip().startswith('Message:'):
-                message = lines[i].strip()[len('Message:'):].strip()
-                i += 1
-            # Path line
-            if i < len(lines) and lines[i].strip().startswith('Path:'):
-                path = lines[i].strip()[len('Path:'):].strip()
-                i += 1
-            # Rest = traceback / exc_info
-            if i < len(lines):
-                tb_text = '\n'.join(lines[i:]).strip()
-                # Remove trailing "None" if no traceback
-                if tb_text == 'None':
-                    tb_text = ''
-                traceback = tb_text
-
-            parsed_errors.append({
-                'timestamp': ts,
-                'level': level,
-                'module': mod,
-                'lineno': ln,
-                'message': message,
-                'path': path,
-                'traceback': traceback,
-                'raw': entry,
-                'hash': hash(entry) & 0xFFFFFFFF,
-            })
-
-    # --- Filtering ---
-    if search:
-        parsed_errors = [
-            e for e in parsed_errors
-            if search in e['message'].lower()
-            or search in e['module'].lower()
-            or search in e['traceback'].lower()
-            or search in e['path'].lower()
-        ]
-    if level_filter:
-        parsed_errors = [e for e in parsed_errors if e['level'] == level_filter]
-
-    total = len(parsed_errors)
-    start = (page - 1) * per_page
-    end = start + per_page
-    paginated = parsed_errors[start:end]
-    total_pages = max(1, (total + per_page - 1) // per_page)
-
-    # Stats
-    stats = {}
-    if parsed_errors:
-        from collections import Counter
-        stats['by_level'] = dict(Counter(e['level'] for e in parsed_errors))
-        stats['by_module'] = dict(Counter(e['module'] for e in parsed_errors if e['module']).most_common(10))
-        stats['total'] = total
+    errors, total_pages, total_errors, stats = ErrorLogService.get_parsed_errors(
+        page=page,
+        search=search,
+        level_filter=level_filter
+    )
 
     return render_template('owner/error_logs.html',
-                         errors=paginated,
+                         errors=errors,
                          page=page,
                          total_pages=total_pages,
-                         total_errors=total,
+                         total_errors=total_errors,
                          search=search,
                          level_filter=level_filter,
                          stats=stats)
