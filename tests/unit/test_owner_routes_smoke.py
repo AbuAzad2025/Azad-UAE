@@ -1,21 +1,24 @@
 import pytest
 from app import create_app
+from config import Config
 
 @pytest.fixture(scope="module")
-def app():
-    from config import TestConfig
-    # Use a dummy in-memory database to avoid circular dependency issues during teardown
-    # and bypass the global fixture's DB initialization
-    class SmokeConfig(TestConfig):
+def smoke_app():
+    class SmokeConfig(Config):
+        TESTING = True
         SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
         WTF_CSRF_ENABLED = False
     
     app = create_app(SmokeConfig)
     return app
 
-def test_routes_exist(app):
-    with app.app_context():
-        rules = sorted(str(r) for r in app.url_map.iter_rules())
+@pytest.fixture(scope="module")
+def smoke_client(smoke_app):
+    return smoke_app.test_client()
+
+def test_routes_exist(smoke_app):
+    with smoke_app.app_context():
+        rules = sorted(str(r) for r in smoke_app.url_map.iter_rules())
         targets = [
             "/owner/error-audit-logs",
             "/owner/error-audit-logs/export",
@@ -28,7 +31,7 @@ def test_routes_exist(app):
         for target in targets:
             assert any(target in r for r in rules), f"Route {target} not found"
 
-def test_routes_no_500(client):
+def test_routes_no_500(smoke_client):
     targets = [
         "/owner/error-audit-logs",
         "/owner/error-audit-logs/export?format=json",
@@ -39,7 +42,7 @@ def test_routes_no_500(client):
         "/owner/archived",
     ]
     for target in targets:
-        response = client.get(target)
+        response = smoke_client.get(target)
         # 302 (redirect to login) or 403 (owner required) are acceptable
         assert response.status_code != 500, f"Route {target} returned 500"
 
