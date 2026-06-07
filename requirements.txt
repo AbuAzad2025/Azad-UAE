@@ -83,3 +83,9 @@ packaging>=24.0,<26
 certifi==2025.8.3
 urllib3==2.7.0
 six==1.16.0
+
+# Testing
+pytest>=9.0
+pytest-cov>=7.0
+pytest-flask>=1.3
+
