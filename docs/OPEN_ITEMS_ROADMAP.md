@@ -143,7 +143,7 @@
 | B3 | _exempt_super cleanup | ✅ **DONE** | Jun 7 | Jun 7 | Removed dead `@limiter.request_filter` returning `False` always; +14 tests in `test_extensions.py` |
 | B4 | NowPayments provider | ⏸️ | — | — | Code-only |
 | C1 | CDN SRI | ⏸️ | — | — | HTML/CDN |
-| C2 | Session security | ⏸️ | — | — | Config-only |
+| C2 | Session security | ✅ **DONE** | Jun 7 | Jun 7 | `SESSION_COOKIE_SAMESITE` already in Config; `utils/session_security.py` with `rotate_session()` created; called after login (`auth.py`) and after password change (`main.py`); 7 tests; 347 total pass |
 | D1 | POS gap analysis | ⏸️ | — | — | Research |
 
 ---
