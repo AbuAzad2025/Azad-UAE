@@ -14,10 +14,12 @@ from werkzeug.routing import BuildError
 
 import config
 from config import Config, ensure_runtime_dirs, assert_production_sanity
+from utils import compat_patches
 from extensions import (
     db, migrate, login_manager, csrf, limiter, mail,
-    init_extensions, setup_logging
+    init_extensions
 )
+from utils.logging_setup import setup_logging
 from utils.monitoring import setup_advanced_logging
 from utils.enhanced_logging import setup_enhanced_logging
 from utils.asset_compression import register_compression_cli
