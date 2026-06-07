@@ -205,6 +205,8 @@ def login():
                 remember_checked=remember,
             )
 
+        from utils.session_security import rotate_session
+        rotate_session()
         login_user(user, remember=remember)
 
         effective_branch_id = getattr(user, "branch_id", None)

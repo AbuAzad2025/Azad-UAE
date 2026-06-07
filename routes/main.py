@@ -351,6 +351,9 @@ def my_profile_update():
             flash('✅ تم تغيير كلمة المرور بنجاح.', 'success')
 
         db.session.commit()
+        if new_password:
+            from utils.session_security import rotate_session
+            rotate_session()
         flash('✅ تم تحديث البيانات بنجاح.', 'success')
 
     except Exception as e:
