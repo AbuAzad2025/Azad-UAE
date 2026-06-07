@@ -1,5 +1,4 @@
 import os
-print("DEBUG: App file starting load...", flush=True)
 import re
 import sys
 import uuid
@@ -61,7 +60,6 @@ def create_app(config_class=Config):
     # This ensures that even after a full DB wipe, the system regenerates
     # essential data (Currencies, Accounts, Warehouses, Roles, Admin User)
     # automatically on restart.
-    print("DEBUG: System Integrity Check...", flush=True)
     if not os.environ.get("SKIP_SYSTEM_INTEGRITY"):
         from utils.system_init import ensure_system_integrity
         try:
@@ -809,13 +807,12 @@ def create_app(config_class=Config):
 
 
 if __name__ == '__main__':
-    print("DEBUG: Entering main block...", flush=True)
     try:
         app = create_app()
-        print("DEBUG: App created successfully", flush=True)
     except Exception as e:
-        print(f"DEBUG: Failed to create app: {e}", flush=True)
-        raise e
+        import logging
+        logging.getLogger(__name__).exception("Failed to create app: %s", e)
+        raise
     
     from services.backup_service import BackupService
     BackupService.initialize()
