@@ -1,6 +1,5 @@
 import os
 import re
-import secrets
 import logging
 import socket
 from datetime import timedelta
@@ -76,23 +75,7 @@ class Config:
     # SQLAlchemy AI/neural listeners (models/events.py) — off in production by default
     AI_ORM_LISTENERS_ENABLED = ai_orm_listeners_enabled()
     
-    SECRET_KEY = os.environ.get("SECRET_KEY")
-    if not SECRET_KEY:
-        secret_file = os.path.join(instance_dir, "secret_key")
-        if os.path.exists(secret_file):
-            try:
-                with open(secret_file, "r", encoding="utf-8") as f:
-                    SECRET_KEY = f.read().strip()
-            except Exception:
-                SECRET_KEY = secrets.token_hex(32)
-        else:
-            SECRET_KEY = secrets.token_hex(32)
-            try:
-                with open(secret_file, "w", encoding="utf-8") as f:
-                    f.write(SECRET_KEY)
-            except Exception:
-                pass
-        logging.info("[Dev] SECRET_KEY loaded/generated for development (set SECRET_KEY env in production)")
+    SECRET_KEY = os.environ.get("SECRET_KEY", "")
     
     HOST = os.environ.get("HOST", "0.0.0.0")
     PORT = _int("PORT", 5000)
@@ -283,23 +266,6 @@ class Config:
     OWNER_EMAIL = os.environ.get("OWNER_EMAIL", "owner@example.com")
     
     CARD_ENCRYPTION_KEY = os.environ.get("CARD_ENCRYPTION_KEY", "")
-    if not CARD_ENCRYPTION_KEY:
-        key_path = os.path.join(instance_dir, ".card_encryption_key")
-        try:
-            if os.path.exists(key_path):
-                with open(key_path, "r", encoding="utf-8") as f:
-                    CARD_ENCRYPTION_KEY = (f.read() or "").strip()
-        except Exception:
-            CARD_ENCRYPTION_KEY = ""
-
-        if not CARD_ENCRYPTION_KEY:
-            CARD_ENCRYPTION_KEY = secrets.token_hex(32)
-            try:
-                os.makedirs(instance_dir, exist_ok=True)
-                with open(key_path, "w", encoding="utf-8") as f:
-                    f.write(CARD_ENCRYPTION_KEY)
-            except Exception:
-                pass
     
     ALLOW_CARD_DECRYPTION = _bool(os.environ.get("ALLOW_CARD_DECRYPTION"), False)
     

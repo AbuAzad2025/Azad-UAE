@@ -35,6 +35,10 @@ def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
 
+    # Bootstrap SECRET_KEY and CARD_ENCRYPTION_KEY outside Config class
+    from utils.bootstrap_keys import bootstrap_keys
+    bootstrap_keys(app, config.instance_dir)
+
     # Ensure runtime directories exist
     ensure_runtime_dirs(config_class)
     
