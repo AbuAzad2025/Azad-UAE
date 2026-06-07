@@ -25,10 +25,12 @@ from datetime import datetime, timezone, timedelta
 from typing import Any
 from urllib.parse import urlparse
 
-from flask import current_app, g, has_request_context, request
+from flask import current_app, g, has_request_context, request, render_template
 from flask_login import current_user
-from sqlalchemy import text
-
+from sqlalchemy import text, func
+from models.error_audit_log import ErrorAuditLog
+from io import StringIO, BytesIO
+import json
 from extensions import db
 
 logger = logging.getLogger(__name__)
@@ -55,6 +57,66 @@ _SECRET_KEYS = frozenset(
 class ErrorAuditService:
     """Unified error logger with deduplication and fingerprinting."""
 
+    @staticmethod
+    def get_logs_query(category: str, level: str, is_resolved: str):
+        query = ErrorAuditLog.query
+        if category:
+            query = query.filter_by(category=category)
+        if level:
+            query = query.filter_by(level=level)
+        if is_resolved == '1':
+            query = query.filter_by(is_resolved=True)
+        elif is_resolved == '0':
+            query = query.filter_by(is_resolved=False)
+        return query.order_by(ErrorAuditLog.created_at.desc())
+
+    @staticmethod
+    def get_dropdowns():
+        categories = [r[0] for r in db.session.query(ErrorAuditLog.category).distinct().order_by(ErrorAuditLog.category).all()]
+        levels = [r[0] for r in db.session.query(ErrorAuditLog.level).distinct().order_by(ErrorAuditLog.level).all()]
+        return categories, levels
+
+    @staticmethod
+    def get_stats():
+        return {
+            'total': ErrorAuditLog.query.count(),
+            'unresolved': ErrorAuditLog.query.filter_by(is_resolved=False).count(),
+            'critical': ErrorAuditLog.query.filter_by(level='CRITICAL').count(),
+        }
+
+    @staticmethod
+    def get_export_payload(category, level, is_resolved, fmt):
+        query = ErrorAuditService.get_logs_query(category, level, is_resolved)
+        logs = query.all()
+
+        if fmt == 'json':
+            data = [log.to_dict() for log in logs]
+            return json.dumps(data, ensure_ascii=False, indent=2, default=str), 'application/json', "error_audit_logs.json"
+
+        buf = StringIO()
+        buf.write("=" * 80 + "\n")
+        buf.write("Error Audit Logs Export\n")
+        buf.write("Generated: " + datetime.now(timezone.utc).isoformat() + "\n")
+        buf.write("Count: " + str(len(logs)) + "\n")
+        buf.write("=" * 80 + "\n\n")
+
+        for log in logs:
+            buf.write(f"ID:         {log.id}\n")
+            buf.write(f"Level:      {log.level}\n")
+            buf.write(f"Category:   {log.category}\n")
+            buf.write(f"Source:     {log.source}\n")
+            buf.write(f"Time:       {log.created_at.isoformat() if log.created_at else '-'}\n")
+            buf.write(f"URL:        {log.url or '-'}\n")
+            buf.write(f"User:       {log.user_id or '-'} | Tenant: {log.tenant_id or '-'}\n")
+            buf.write(f"Resolved:   {'YES' if log.is_resolved else 'NO'}\n")
+            buf.write(f"Message:\n  {log.message}\n")
+            if log.stack_trace:
+                buf.write(f"Stack Trace:\n  {log.stack_trace[:500]}\n")
+            if log.request_data:
+                buf.write(f"Request Data:\n  {log.request_data}\n")
+            buf.write("-" * 80 + "\n\n")
+
+        return buf.getvalue().encode('utf-8'), 'text/plain; charset=utf-8', "error_audit_logs.txt"
     # ── Public API ──────────────────────────────────────────────
 
     @staticmethod

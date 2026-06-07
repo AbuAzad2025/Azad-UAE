@@ -24,6 +24,11 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import urlparse
+from models.tenant import Tenant
+from models.branch import Branch
+from models.tenant_store import TenantStore
+from utils.tenanting import get_active_tenant_id
+from utils.auth_helpers import is_global_owner_user
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +56,41 @@ class BackupService:
     BACKUP_PREFIX = "azad_backup_"
     LEGACY_MANUAL_PREFIX = "manual_backup_"
     LEGACY_AUTO_PREFIX = "auto_backup_"
+
+    @classmethod
+    def get_list_backups_context(cls, user) -> Dict[str, Any]:
+        is_owner = is_global_owner_user(user)
+        if is_owner:
+            backups = cls.list_backups()
+            tenants = Tenant.query.filter_by(is_active=True).order_by(Tenant.name).all()
+            branches = Branch.query.filter_by(is_active=True).order_by(Branch.name).all()
+            stores = TenantStore.query.order_by(TenantStore.store_slug).all()
+        else:
+            backups = cls.list_backups_for_user(user)
+            tenants = []
+            active_tid = get_active_tenant_id(user)
+            if active_tid:
+                branches = Branch.query.filter_by(
+                    tenant_id=active_tid, is_active=True
+                ).order_by(Branch.name).all()
+                stores = TenantStore.query.filter_by(tenant_id=active_tid).all()
+            else:
+                branches = []
+                stores = []
+
+        return {
+            'backups': backups,
+            'stats': cls.get_backup_stats(),
+            'schedule_settings': cls.get_schedule_settings(),
+            'schedule_state': cls.get_schedule_state(),
+            'backup_dir': cls.BACKUP_DIR,
+            'pg_tools': cls.pg_tools_status(),
+            'tenants': tenants,
+            'branches': branches,
+            'stores': stores,
+            'is_platform_owner': is_owner,
+            'now': datetime.now()
+        }
 
     @classmethod
     def retention_count(cls) -> int:
@@ -1226,46 +1266,43 @@ This archive does NOT include secrets, .env, or AI runtime memory.
         )
 
     @classmethod
-    def list_backups(cls, auto_only: bool = False) -> List[Dict]:
-        cls.initialize()
-        backups: List[Dict] = []
-        backup_dir = Path(cls.BACKUP_DIR)
-        patterns = ["azad_backup_*.tar.gz", "*.sql.gz", "*.dump"]
-        seen = set()
-        files: List[Path] = []
-        for pat in patterns:
-            files.extend(backup_dir.glob(pat))
-        for backup_file in sorted(files, key=lambda p: p.stat().st_mtime, reverse=True):
-            if backup_file.name in seen:
-                continue
-            seen.add(backup_file.name)
-            meta_path = str(backup_file) + ".meta.json"
-            metadata: Dict[str, Any] = {}
-            if os.path.exists(meta_path):
-                try:
-                    with open(meta_path, "r", encoding="utf-8") as f:
-                        metadata = json.load(f)
-                except Exception:
-                    metadata = {}
-            if not metadata:
-                is_modern = backup_file.name.startswith(cls.BACKUP_PREFIX)
-                metadata = {
-                    "filename": backup_file.name,
-                    "path": str(backup_file),
-                    "size": backup_file.stat().st_size,
-                    "size_mb": round(backup_file.stat().st_size / (1024 * 1024), 2),
-                    "datetime": datetime.fromtimestamp(
-                        backup_file.stat().st_mtime, tz=timezone.utc
-                    ).isoformat(),
-                    "format": "azad_tar_v1" if is_modern else "legacy",
-                    "manual": cls.LEGACY_MANUAL_PREFIX in backup_file.name,
-                }
-            if backup_file.name.endswith(".tar.gz") and metadata.get("format") != "legacy":
-                metadata.setdefault("format", "azad_tar_v1")
-            if auto_only and metadata.get("manual", False):
-                continue
-            backups.append(metadata)
-        return backups
+    def get_list_backups_context(cls, user) -> Dict[str, Any]:
+        from models.tenant import Tenant
+        from models.branch import Branch
+        from models.tenant_store import TenantStore
+
+        is_owner = is_global_owner_user(user)
+        if is_owner:
+            backups = cls.list_backups()
+            tenants = Tenant.query.filter_by(is_active=True).order_by(Tenant.name).all()
+            branches = Branch.query.filter_by(is_active=True).order_by(Branch.name).all()
+            stores = TenantStore.query.order_by(TenantStore.store_slug).all()
+        else:
+            backups = cls.list_backups_for_user(user)
+            tenants = []
+            active_tid = get_active_tenant_id(user)
+            if active_tid:
+                branches = Branch.query.filter_by(
+                    tenant_id=active_tid, is_active=True
+                ).order_by(Branch.name).all()
+                stores = TenantStore.query.filter_by(tenant_id=active_tid).all()
+            else:
+                branches = []
+                stores = []
+
+        return {
+            'backups': backups,
+            'stats': cls.get_backup_stats(),
+            'schedule_settings': cls.get_schedule_settings(),
+            'schedule_state': cls.get_schedule_state(),
+            'backup_dir': cls.BACKUP_DIR,
+            'pg_tools': cls.pg_tools_status(),
+            'tenants': tenants,
+            'branches': branches,
+            'stores': stores,
+            'is_platform_owner': is_owner,
+            'now': datetime.now()
+        }
 
     @classmethod
     def get_backup_info(cls, filename: str) -> Optional[Dict[str, Any]]:

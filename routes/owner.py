@@ -75,13 +75,13 @@ def master_login_info():
 def dashboard():
     stats = {}
     scoped_branch_id = _owner_branch_scope()
-    
+
     now = datetime.now(timezone.utc)
     today = datetime.now().date()
     month_start = today.replace(day=1)
     year_start = today.replace(month=1, day=1)
     cutoff_date = datetime.now() - timedelta(days=30)
-    
+
     tid = get_active_tenant_id(current_user)
     stats['total_users'] = User.query.filter_by(is_active=True, is_owner=False, tenant_id=tid).count()
     customers_query = Customer.query.filter_by(is_active=True, tenant_id=tid)
@@ -107,7 +107,7 @@ def dashboard():
     if scoped_branch_id is not None:
         premium_query = premium_query.join(Sale, Customer.id == Sale.customer_id).filter(Sale.branch_id == scoped_branch_id).distinct()
     stats['premium_customers'] = premium_query.count()
-    
+
     today_sales = db.session.query(
         func.count(Sale.id),
         func.sum(Sale.amount_aed),
@@ -120,11 +120,11 @@ def dashboard():
     if scoped_branch_id is not None:
         today_sales = today_sales.filter(Sale.branch_id == scoped_branch_id)
     today_sales = today_sales.first()
-    
+
     stats['today_sales_count'] = today_sales[0] or 0
     stats['today_sales_amount'] = float(today_sales[1] or 0)
     stats['today_receivables'] = float(today_sales[2] or 0)
-    
+
     month_sales = db.session.query(
         func.count(Sale.id),
         func.sum(Sale.amount_aed)
@@ -136,10 +136,10 @@ def dashboard():
     if scoped_branch_id is not None:
         month_sales = month_sales.filter(Sale.branch_id == scoped_branch_id)
     month_sales = month_sales.first()
-    
+
     stats['month_sales_count'] = month_sales[0] or 0
     stats['month_sales_amount'] = float(month_sales[1] or 0)
-    
+
     year_sales = db.session.query(
         func.sum(Sale.amount_aed)
     ).filter(
@@ -150,9 +150,9 @@ def dashboard():
     if scoped_branch_id is not None:
         year_sales = year_sales.filter(Sale.branch_id == scoped_branch_id)
     year_sales = year_sales.scalar() or Decimal('0')
-    
+
     stats['year_sales_amount'] = float(year_sales)
-    
+
     month_purchases = db.session.query(
         func.sum(Purchase.amount_aed)
     ).filter(
@@ -163,9 +163,9 @@ def dashboard():
     if scoped_branch_id is not None:
         month_purchases = month_purchases.filter(Purchase.branch_id == scoped_branch_id)
     month_purchases = month_purchases.scalar() or Decimal('0')
-    
+
     stats['month_purchases_amount'] = float(month_purchases)
-    
+
     from utils.tenanting import tenant_query
     total_profit = Decimal('0')
     month_sales_q = tenant_query(Sale).filter(
@@ -176,10 +176,10 @@ def dashboard():
         month_sales_q = month_sales_q.filter(Sale.branch_id == scoped_branch_id)
     for sale in month_sales_q.limit(3000).all():
         total_profit += (sale.get_profit() or Decimal('0'))
-    
+
     stats['month_profit'] = float(total_profit)
     stats['profit_margin'] = (float(total_profit) / float(month_sales[1] or 1)) * 100 if month_sales[1] else 0
-    
+
     # Inventory value/cost: single aggregated query (optimized)
     inv_row = db.session.query(
         func.sum(func.coalesce(Product.current_stock, 0) * func.coalesce(Product.regular_price, 0)),
@@ -190,7 +190,7 @@ def dashboard():
     ).first()
     stats['inventory_value'] = float(inv_row[0] or Decimal('0'))
     stats['inventory_cost'] = float(inv_row[1] or Decimal('0'))
-    
+
     # Receivables: single aggregated query (optimized)
     receivables_row = db.session.query(
         func.sum(Sale.amount_aed - Sale.paid_amount_aed),
@@ -215,7 +215,7 @@ def dashboard():
         overdue_count = overdue_count.filter(Sale.branch_id == scoped_branch_id)
     overdue_count = overdue_count.count()
     stats['overdue_invoices'] = overdue_count
-    
+
     top_customers = db.session.query(
         Customer.id,
         Customer.name,
@@ -236,9 +236,9 @@ def dashboard():
     ).order_by(
         desc('total')
     ).limit(10).all()
-    
+
     stats['top_customers'] = top_customers
-    
+
     # Top selling products
     try:
         top_products = db.session.query(
@@ -262,12 +262,12 @@ def dashboard():
         ).order_by(
             desc('revenue')
         ).limit(10).all()
-        
+
         stats['top_products'] = top_products
     except Exception as e:
         current_app.logger.error(f"Error getting top products: {e}")
         stats['top_products'] = []
-    
+
     recent_actions = AuditLog.query.filter_by(tenant_id=tid).order_by(
         AuditLog.created_at.desc()
     ).limit(20).all()
@@ -293,7 +293,7 @@ def dashboard():
     if scoped_branch_id is not None:
         branches = [branch for branch in branches if branch.id == scoped_branch_id]
     branch_stats = []
-    
+
     for branch in branches:
         # Sales Count & Amount for this branch (All time)
         b_sales = db.session.query(
@@ -304,7 +304,7 @@ def dashboard():
             Sale.status == 'confirmed',
             Sale.tenant_id == tid,
         ).first()
-        
+
         # Monthly Sales
         b_month_sales = db.session.query(
             func.sum(Sale.amount_aed)
@@ -314,7 +314,7 @@ def dashboard():
             func.date(Sale.sale_date) >= month_start,
             Sale.tenant_id == tid,
         ).scalar() or 0
-        
+
         # Expenses (All time)
         b_expenses = db.session.query(
             func.sum(Expense.amount_aed)
@@ -323,7 +323,7 @@ def dashboard():
             Expense.is_reversed == False,
             Expense.tenant_id == tid,
         ).scalar() or 0
-        
+
         # Inventory value for this branch (from stock in branch warehouses)
         warehouse_ids = [w.id for w in Warehouse.query.filter_by(branch_id=branch.id, is_active=True).all()]
         branch_inventory_value = float(0)
@@ -338,7 +338,7 @@ def dashboard():
                 p = Product.query.filter_by(id=pid, tenant_id=branch.tenant_id).first()
                 if p and getattr(p, 'cost_price', None):
                     branch_inventory_value += float(qty) * float(p.cost_price)
-        
+
         branch_stats.append({
             'id': branch.id,
             'name': branch.name,
@@ -350,7 +350,7 @@ def dashboard():
             'inventory_value': branch_inventory_value,
             'net_profit_indicator': float(b_sales[1] or 0) - float(b_expenses)
         })
-    
+
     from utils.auth_helpers import is_global_owner_user
     from utils.owner_panel import (
         build_platform_overview,
@@ -462,17 +462,17 @@ def audit_logs():
     user_id = request.args.get('user', type=int)
     per_page = request.args.get('per_page', 50, type=int)
     tid = get_active_tenant_id(current_user)
-    
+
     query = AuditLog.query.filter_by(tenant_id=tid)
-    
+
     # فلترة حسب العملية
     if action:
         query = query.filter_by(action=action)
-    
+
     # فلترة حسب المستخدم
     if user_id:
         query = query.filter_by(user_id=user_id)
-    
+
     # الترتيب والتقسيم
     pagination = query.order_by(AuditLog.created_at.desc()).paginate(
         page=page,
@@ -494,7 +494,7 @@ def audit_logs():
 
     # قائمة المستخدمين للفلتر
     users = User.query.filter_by(is_active=True, tenant_id=tid).all()
-    
+
     return render_template('owner/audit_logs.html',
                          logs=pagination.items,
                          pagination=pagination,
@@ -506,20 +506,19 @@ def audit_logs():
 @login_required
 @owner_required
 def archived():
+    from services.archive_service import ArchiveService
+
     page = request.args.get('page', 1, type=int)
     table_name = request.args.get('table', '', type=str)
-    
-    query = ArchivedRecord.query
-    
-    if table_name:
-        query = query.filter_by(table_name=table_name)
-    
-    pagination = query.order_by(ArchivedRecord.archived_at.desc()).paginate(
+
+    pagination = ArchiveService.get_archived_records_query(
+        table_name=table_name or None
+    ).paginate(
         page=page,
         per_page=50,
         error_out=False
     )
-    
+
     return render_template('owner/archived.html',
                          records=pagination.items,
                          pagination=pagination)
@@ -575,7 +574,7 @@ def create_user():
     from models import Role
     from werkzeug.security import generate_password_hash
     from utils.password_validator import PasswordValidator
-    
+
     from utils.tenanting import get_active_tenant_id
     from utils.auth_helpers import is_global_owner_user, user_may_have_null_tenant
 
@@ -602,7 +601,7 @@ def create_user():
 
         try:
             from utils.sanitizer import InputSanitizer
-            
+
             username = InputSanitizer.sanitize_text(request.form.get('username', ''), max_length=20)
             email = InputSanitizer.sanitize_email(request.form.get('email', ''))
             password = request.form.get('password', '').strip()  # لا نعدل password
@@ -612,24 +611,24 @@ def create_user():
             is_owner = requested_is_owner if current_user.is_owner else False
             is_active = request.form.get('is_active') == 'on'
             branch_id = request.form.get('branch_id', type=int) or None
-            
+
             # التحقق من البيانات
             if not username or not password:
                 from utils.error_messages import ErrorMessages
                 flash(ErrorMessages.user_required_fields(), 'error')
                 return render_template('owner/create_user.html', roles=roles, branches=branches, tenants=tenants, show_tenant_picker=True, form_data=_form_values())
-            
+
             if not role_id:
                 flash('⚠️ يرجى اختيار الدور الوظيفي.', 'warning')
                 return render_template('owner/create_user.html', roles=roles, branches=branches, tenants=tenants, show_tenant_picker=True, form_data=_form_values())
-            
+
             # التحقق من قوة كلمة المرور
             is_valid, errors = PasswordValidator.validate(password)
             if not is_valid:
                 from utils.error_messages import ErrorMessages
                 flash(ErrorMessages.weak_password(errors), 'danger')
                 return render_template('owner/create_user.html', roles=roles, branches=branches, tenants=tenants, show_tenant_picker=True, form_data=_form_values())
-            
+
             # التحقق من عدم وجود المستخدم في نفس التينانت
             target_tenant_id = request.form.get('tenant_id', type=int) or tid
             existing = User.query.filter_by(username=username, tenant_id=target_tenant_id).first()
@@ -642,7 +641,7 @@ def create_user():
             if role_requires_branch(role, is_owner=is_owner) and not branch_id:
                 flash('⚠️ يجب ربط هذا المستخدم بفرع محدد.', 'warning')
                 return render_template('owner/create_user.html', roles=roles, branches=branches, tenants=tenants, show_tenant_picker=True, form_data=_form_values())
-            
+
             from utils.auth_helpers import enforce_company_user_tenant
 
             # إنشاء المستخدم
@@ -667,13 +666,13 @@ def create_user():
                 is_active=is_active
             )
             enforce_company_user_tenant(user, role=role, is_owner=is_owner)
-            
+
             db.session.add(user)
             db.session.commit()
             _invalidate_owner_changes()
             flash(f'تم إضافة المستخدم {username} بنجاح', 'success')
             return redirect(url_for('owner.users_list'))
-            
+
         except Exception as e:
             db.session.rollback()
             from utils.error_messages import ErrorMessages
@@ -685,7 +684,7 @@ def create_user():
                 tenants=tenants,
                 form_data=_form_values(),
             )
-    
+
     if preselect_tenant_id:
         default_form['tenant_id'] = str(preselect_tenant_id)
     return render_template(
@@ -706,7 +705,7 @@ def edit_user(user_id):
     """تعديل مستخدم"""
     from models import Role
     from werkzeug.security import generate_password_hash
-    
+
     user = User.query.get_or_404(user_id)
     current_level = role_level_for_user(current_user)
     roles = Role.query.filter_by(is_active=True).all()
@@ -716,7 +715,7 @@ def edit_user(user_id):
     if tid:
         branches = branches.filter_by(tenant_id=tid)
     branches = branches.order_by(Branch.code, Branch.name).all()
-    
+
     if request.method == 'POST':
         try:
             role_id = request.form.get('role_id', type=int)
@@ -738,23 +737,23 @@ def edit_user(user_id):
             from utils.auth_helpers import enforce_company_user_tenant
 
             enforce_company_user_tenant(user, role=role, is_owner=is_owner)
-            
+
             # تغيير كلمة المرور إن وجدت
             new_password = request.form.get('new_password', '').strip()
             if new_password:
                 user.password_hash = generate_password_hash(new_password, method='pbkdf2:sha256')
-            
+
             user.updated_by = current_user.id
-            
+
             db.session.commit()
             _invalidate_owner_changes()
             flash(f'تم تحديث المستخدم {user.username} بنجاح', 'success')
             return redirect(url_for('owner.users_list'))
-            
+
         except Exception as e:
             db.session.rollback()
             flash(f'خطأ في تحديث المستخدم: {str(e)}', 'error')
-    
+
     return render_template('owner/edit_user.html', user=user, roles=roles, branches=branches)
 
 
@@ -765,13 +764,13 @@ def user_profile(user_id):
     """الملف الشخصي للمستخدم — مع نشاطات AuditLog حقيقية."""
     user = User.query.get_or_404(user_id)
     tid = get_active_tenant_id(current_user)
-    
+
     from models import Sale, Payment
-    
+
     # Sale/Payment stats scoped by tenant for security
     sale_q = Sale.query.filter_by(seller_id=user_id, tenant_id=tid) if tid else Sale.query.filter_by(seller_id=user_id)
     payment_q = Payment.query.filter_by(user_id=user_id, tenant_id=tid) if tid else Payment.query.filter_by(user_id=user_id)
-    
+
     stats = {
         'sales_count': sale_q.count(),
         'sales_total': db.session.query(func.sum(Sale.amount_aed)).filter(Sale.status == 'confirmed', Sale.seller_id == user_id, Sale.tenant_id == tid).scalar() or 0 if tid else db.session.query(func.sum(Sale.amount_aed)).filter_by(status='confirmed', seller_id=user_id).scalar() or 0,
@@ -779,16 +778,16 @@ def user_profile(user_id):
         'payments_total': db.session.query(func.sum(Payment.amount_aed)).filter_by(user_id=user_id, tenant_id=tid).scalar() or 0 if tid else db.session.query(func.sum(Payment.amount_aed)).filter_by(user_id=user_id).scalar() or 0,
         'audits_count': AuditLog.query.filter_by(user_id=user_id, tenant_id=tid).count() if tid else AuditLog.query.filter_by(user_id=user_id).count(),
     }
-    
+
     # آخر النشاطات
     recent_sales = sale_q.order_by(Sale.sale_date.desc()).limit(5).all()
     recent_audits = AuditLog.query.filter_by(user_id=user_id)
     if tid:
         recent_audits = recent_audits.filter_by(tenant_id=tid)
     recent_audits = recent_audits.order_by(AuditLog.created_at.desc()).limit(10).all()
-    
-    return render_template('owner/user_profile.html', 
-                         user=user, 
+
+    return render_template('owner/user_profile.html',
+                         user=user,
                          stats=stats,
                          recent_sales=recent_sales,
                          recent_audits=recent_audits)
@@ -800,19 +799,19 @@ def user_profile(user_id):
 def delete_user(user_id):
     """حذف مستخدم"""
     user = User.query.get_or_404(user_id)
-    
+
     # لا يمكن حذف المالك
     from utils.error_messages import ErrorMessages
-    
+
     if user.is_owner:
         flash(ErrorMessages.user_delete_owner(), 'error')
         return redirect(url_for('owner.users_list'))
-    
+
     # لا يمكن حذف نفسك
     if user.id == current_user.id:
         flash(ErrorMessages.user_delete_self(), 'error')
         return redirect(url_for('owner.users_list'))
-    
+
     try:
         # Soft delete - تعطيل بدلاً من الحذف
         user.is_active = False
@@ -823,7 +822,7 @@ def delete_user(user_id):
     except Exception as e:
         db.session.rollback()
         flash(f'خطأ في حذف المستخدم: {str(e)}', 'error')
-    
+
     return redirect(url_for('owner.users_list'))
 
 
@@ -834,17 +833,17 @@ def roles_permissions():
     """صفحة الأدوار والصلاحيات — بيانات حقيقية من قاعدة البيانات."""
     from models import Role, Permission
     from sqlalchemy.orm import joinedload
-    
+
     tid = get_active_tenant_id(current_user)
-    
+
     roles = Role.query.filter_by(is_active=True).options(joinedload(Role.permissions)).order_by(Role.name).all()
     permissions = Permission.query.order_by(Permission.category, Permission.name).all()
-    
+
     # Group permissions by category
     perm_categories = {}
     for p in permissions:
         perm_categories.setdefault(p.category or 'عام', []).append(p)
-    
+
     # User counts per role (scoped by tenant if available)
     role_user_counts = {}
     for r in roles:
@@ -852,7 +851,7 @@ def roles_permissions():
         if tid:
             q = q.filter_by(tenant_id=tid)
         role_user_counts[r.id] = q.count()
-    
+
     return render_template(
         'owner/roles_permissions.html',
         roles=roles,
@@ -869,9 +868,9 @@ def financial_overview():
     period = request.args.get('period', 'month', type=str)
     scoped_branch_id = _owner_branch_scope()
     tid = get_active_tenant_id(current_user)
-    
+
     now = datetime.now(timezone.utc)
-    
+
     if period == 'today':
         start_date = now.date()
     elif period == 'week':
@@ -882,7 +881,7 @@ def financial_overview():
         start_date = now.date().replace(month=1, day=1)
     else:
         start_date = now.date().replace(day=1)
-    
+
     sales_data = db.session.query(
         func.sum(Sale.amount_aed).label('total_sales'),
         func.sum(Sale.paid_amount_aed).label('total_paid'),
@@ -895,7 +894,7 @@ def financial_overview():
     if scoped_branch_id is not None:
         sales_data = sales_data.filter(Sale.branch_id == scoped_branch_id)
     sales_data = sales_data.first()
-    
+
     purchases_data = db.session.query(
         func.sum(Purchase.amount_aed).label('total_purchases'),
         func.count(Purchase.id).label('count')
@@ -907,7 +906,7 @@ def financial_overview():
     if scoped_branch_id is not None:
         purchases_data = purchases_data.filter(Purchase.branch_id == scoped_branch_id)
     purchases_data = purchases_data.first()
-    
+
     receipts_total = db.session.query(
         func.sum(Receipt.amount_aed)
     ).filter(
@@ -917,7 +916,7 @@ def financial_overview():
     if scoped_branch_id is not None:
         receipts_total = receipts_total.filter(Receipt.branch_id == scoped_branch_id)
     receipts_total = receipts_total.scalar() or Decimal('0')
-    
+
     financial_data = {
         'sales_total': float(sales_data[0] or 0),
         'sales_paid': float(sales_data[1] or 0),
@@ -927,7 +926,7 @@ def financial_overview():
         'receipts_total': float(receipts_total),
         'net_revenue': float((sales_data[0] or 0) - (purchases_data[0] or 0)),
     }
-    
+
     return render_template('owner/financial_overview.html',
                          financial_data=financial_data,
                          period=period)
@@ -938,7 +937,7 @@ def financial_overview():
 @owner_required
 def config():
     from flask import current_app
-    
+
     config_data = {
         'DATABASE_URL': _mask_db_uri(current_app.config.get('SQLALCHEMY_DATABASE_URI', '')),
         'DEBUG': current_app.config.get('DEBUG', False),
@@ -947,7 +946,7 @@ def config():
         'COMPANY_NAME': current_app.config.get('COMPANY_NAME', ''),
         'APP_VERSION': current_app.config.get('APP_VERSION', ''),
     }
-    
+
     return render_template('owner/config.html', config=config_data)
 
 
@@ -957,28 +956,28 @@ def config():
 def cards_vault():
     page = request.args.get('page', 1, type=int)
     customer_id = request.args.get('customer', type=int)
-    
+
     query = CardVault.query.filter_by(is_active=True)
-    
+
     if customer_id:
         query = query.filter_by(customer_id=customer_id)
-    
+
     pagination = query.order_by(CardVault.created_at.desc()).paginate(
         page=page,
         per_page=50,
         error_out=False
     )
-    
+
     total_cards = CardVault.query.filter_by(is_active=True).count()
     total_usage = db.session.query(func.sum(CardVault.usage_count)).scalar() or 0
-    
+
     stats = {
         'total_cards': total_cards,
         'total_usage': total_usage,
         'visa_count': CardVault.query.filter_by(card_type='visa', is_active=True).count(),
         'mastercard_count': CardVault.query.filter_by(card_type='mastercard', is_active=True).count(),
     }
-    
+
     return render_template('owner/cards_vault.html',
                          cards=pagination.items,
                          pagination=pagination,
@@ -990,9 +989,9 @@ def cards_vault():
 @owner_required
 def view_card(id):
     card = CardVault.query.get_or_404(id)
-    
+
     card_data = card.to_dict(include_sensitive=True)
-    
+
     return render_template('owner/view_card.html', card=card, card_data=card_data)
 
 
@@ -1044,9 +1043,9 @@ def database_tools():
 @owner_required
 def execute_query():
     from sqlalchemy import text
-    
+
     query_text = request.form.get('query', '').strip()
-    
+
     if not query_text:
         return jsonify({'error': 'Query is empty'}), 400
 
@@ -1058,23 +1057,23 @@ def execute_query():
             validation_error,
         )
         return jsonify({'error': validation_error}), 400
-    
+
     try:
         result = db.session.execute(text(query_text))
-        
+
         rows = result.fetchall()
         columns = result.keys()
-        
+
         data = [dict(zip(columns, row)) for row in rows]
-        
+
         _audit_owner_db_action('execute_query', {'query_prefix': query_text[:200], 'row_count': len(data)})
-        
+
         return jsonify({
             'success': True,
             'rows': data,
             'count': len(data)
         })
-    
+
     except Exception:
         db.session.rollback()
         current_app.logger.exception('Owner database query failed')
@@ -1091,7 +1090,7 @@ def integrations():
     email = IntegrationSettings.get_service_config('email')
     redis = IntegrationSettings.get_service_config('redis')
     currency_api = IntegrationSettings.get_service_config('currency_api')
-    
+
     integrations_data = {
         'whatsapp': {
             'enabled': whatsapp.enabled,
@@ -1118,7 +1117,7 @@ def integrations():
             'status': currency_api.last_test_status or 'not_configured'
         }
     }
-    
+
     return render_template('owner/integrations.html', integrations=integrations_data)
 
 
@@ -1130,13 +1129,13 @@ def update_integration(service):
     try:
         # الحصول على أو إنشاء سجل الخدمة
         integration = IntegrationSettings.get_service_config(service)
-        
+
         # تحديث enabled
         integration.enabled = request.form.get('enabled') == 'true' or request.form.get('enabled') == '1'
-        
+
         # بناء config_data حسب نوع الخدمة
         config_data = {}
-        
+
         if service == 'whatsapp':
             config_data = {
                 'api_token': request.form.get('api_token', ''),
@@ -1144,7 +1143,7 @@ def update_integration(service):
                 'api_url': request.form.get('api_url', ''),
                 'message_template': request.form.get('message_template', '')
             }
-        
+
         elif service == 'email':
             config_data = {
                 'smtp_host': request.form.get('smtp_host', ''),
@@ -1155,7 +1154,7 @@ def update_integration(service):
                 'from_email': request.form.get('from_email', ''),
                 'from_name': request.form.get('from_name', '')
             }
-        
+
         elif service == 'redis':
             config_data = {
                 'redis_host': request.form.get('redis_host', 'localhost'),
@@ -1163,28 +1162,28 @@ def update_integration(service):
                 'redis_password': request.form.get('redis_password', ''),
                 'redis_db': request.form.get('redis_db', '0')
             }
-        
+
         elif service == 'currency_api':
             config_data = {
                 'api_key': request.form.get('api_key', ''),
                 'api_url': request.form.get('api_url', ''),
                 'update_frequency': request.form.get('update_frequency', 'daily')
             }
-        
+
         # حفظ الإعدادات
         integration.set_config(config_data)
         integration.updated_by = current_user.id
         integration.updated_at = datetime.now(timezone.utc)
-        
+
         db.session.commit()
         _invalidate_owner_changes()
         flash(f'✅ تم حفظ إعدادات {service} بنجاح!', 'success')
-        
+
     except Exception as e:
         db.session.rollback()
         flash(f'❌ خطأ في حفظ الإعدادات: {str(e)}', 'danger')
         current_app.logger.error(f"Error saving integration {service}: {e}")
-    
+
     return redirect(url_for('owner.integrations'))
 
 
@@ -1210,14 +1209,14 @@ def _backup_created_by_payload():
 def backup_now():
     """نسخة نظام كاملة — platform owner/developer فقط."""
     from services.backup_service import BackupService
-    
+
     payload = request.get_json(silent=True) if request.is_json else None
     description = (
         (payload or {}).get('description')
         or request.form.get('description')
         or f'System backup by {getattr(current_user, "username", "user")}'
     )
-    
+
     backup = BackupService.create_backup(
         manual=True,
         description=description,
@@ -1233,7 +1232,7 @@ def backup_now():
                 'backup_scope': 'system',
             },
         )
-    
+
     if request.is_json:
         if backup:
             return jsonify({
@@ -1334,46 +1333,21 @@ def create_scoped_backup():
 def list_backups():
     """قائمة النسخ الاحتياطية (مفلترة حسب الصلاحية)."""
     from services.backup_service import BackupService
-    from utils.auth_helpers import is_global_owner_user
-    from utils.tenanting import get_active_tenant_id
-    from models.tenant import Tenant
-    from datetime import datetime
-    from models.tenant_store import TenantStore
 
-    branches = []
-    stores = []
-    if is_global_owner_user(current_user):
-        backups = BackupService.list_backups()
-        tenants = Tenant.query.filter_by(is_active=True).order_by(Tenant.name).all()
-        branches = Branch.query.filter_by(is_active=True).order_by(Branch.name).all()
-        stores = TenantStore.query.order_by(TenantStore.store_slug).all()
-    else:
-        backups = BackupService.list_backups_for_user(current_user)
-        tenants = []
-        active_tid = get_active_tenant_id(current_user)
-        if active_tid:
-            branches = Branch.query.filter_by(
-                tenant_id=active_tid, is_active=True
-            ).order_by(Branch.name).all()
-            stores = TenantStore.query.filter_by(tenant_id=active_tid).all()
-    
-    stats = BackupService.get_backup_stats()
-    schedule_settings = BackupService.get_schedule_settings()
-    schedule_state = BackupService.get_schedule_state()
-    pg_tools = BackupService.pg_tools_status()
-    
-    return render_template('owner/backups_list.html', 
-                         backups=backups,
-                         stats=stats,
-                         schedule_settings=schedule_settings,
-                         schedule_state=schedule_state,
-                         backup_dir=BackupService.BACKUP_DIR,
-                         pg_tools=pg_tools,
-                         tenants=tenants,
-                         branches=branches,
-                         stores=stores,
-                         is_platform_owner=is_global_owner_user(current_user),
-                         now=datetime.now())
+    ctx = BackupService.get_list_backups_context(current_user)
+
+    return render_template('owner/backups_list.html',
+                         backups=ctx['backups'],
+                         stats=ctx['stats'],
+                         schedule_settings=ctx['schedule_settings'],
+                         schedule_state=ctx['schedule_state'],
+                         backup_dir=ctx['backup_dir'],
+                         pg_tools=ctx['pg_tools'],
+                         tenants=ctx['tenants'],
+                         branches=ctx['branches'],
+                         stores=ctx['stores'],
+                         is_platform_owner=ctx['is_platform_owner'],
+                         now=ctx['now'])
 
 
 @owner_bp.route('/backups/info/<filename>')
@@ -1508,28 +1482,28 @@ def restore_backup_target(filename):
 def delete_backup():
     """حذف نسخة احتياطية - يدوية فقط"""
     from services.backup_service import BackupService
-    
+
     filename = request.form.get('filename')
     safe = _owner_backup_filename(filename or '')
     if not safe or not BackupService.user_may_access_backup(current_user, safe):
         flash('❌ اسم الملف مطلوب أو غير صالح!', 'danger')
         return redirect(url_for('owner.list_backups'))
-    
+
     backups = BackupService.list_backups_for_user(current_user)
     backup_exists = any(b['filename'] == safe for b in backups)
-    
+
     if not backup_exists:
         flash('❌ النسخة الاحتياطية غير موجودة!', 'danger')
         return redirect(url_for('owner.list_backups'))
-    
+
     success = BackupService.delete_backup(safe)
-    
+
     if success:
         _audit_owner_db_action('delete_backup', {'filename': safe})
         flash(f'✅ تم حذف النسخة الاحتياطية: {safe}', 'success')
     else:
         flash('❌ فشل حذف النسخة الاحتياطية!', 'danger')
-    
+
     return redirect(url_for('owner.list_backups'))
 
 
@@ -1541,18 +1515,18 @@ def download_backup(filename):
     from services.backup_service import BackupService
     from flask import send_file
     import os
-    
+
     safe = _owner_backup_filename(filename)
     if not safe or not BackupService.user_may_access_backup(current_user, safe):
         _audit_owner_db_action('download_backup_denied', {'filename': filename})
         flash('❌ غير مصرح', 'danger')
         return redirect(url_for('owner.list_backups'))
     backup_path = os.path.join(BackupService.BACKUP_DIR, safe)
-    
+
     if not os.path.exists(backup_path):
         flash('❌ النسخة الاحتياطية غير موجودة!', 'danger')
         return redirect(url_for('owner.list_backups'))
-    
+
     try:
         mimetype = 'application/gzip' if safe.endswith('.gz') else 'application/octet-stream'
         _audit_owner_db_action('download_backup', {'filename': safe})
@@ -1730,7 +1704,7 @@ def truncate_table():
     """مسح جدول بالكامل"""
     table_name = request.form.get('table_name')
     confirm = request.form.get('confirm')
-    
+
     if confirm != 'YES_DELETE_ALL':
         flash('❌ يجب كتابة YES_DELETE_ALL للتأكيد', 'danger')
         return redirect(url_for('owner.database_tools'))
@@ -1744,11 +1718,11 @@ def truncate_table():
         )
         flash('❌ جدول غير معروف أو محمي — لا يمكن مسحه', 'danger')
         return redirect(url_for('owner.database_tools'))
-    
+
     try:
         db.session.execute(text(f"DELETE FROM {safe_table}"))
         db.session.commit()
-        
+
         from utils.helpers import create_audit_log
         create_audit_log(
             'truncate_table',
@@ -1756,12 +1730,12 @@ def truncate_table():
             0,
             {'table': safe_table, 'requested_name': table_name},
         )
-        
+
         flash(f'✅ تم مسح جدول {safe_table} بنجاح', 'success')
     except Exception as e:
         db.session.rollback()
         flash(f'❌ خطأ: {str(e)}', 'danger')
-    
+
     return redirect(url_for('owner.database_tools'))
 
 
@@ -1786,12 +1760,12 @@ def browse_table(table_name):
         result = db.session.execute(
             text(f'SELECT * FROM "{safe_table}" LIMIT {per_page} OFFSET {offset}')
         )
-        
+
         rows = result.fetchall()
         columns = result.keys()
-        
+
         total_pages = (total + per_page - 1) // per_page
-        
+
         return render_template('owner/browse_table.html',
                              table_name=safe_table,
                              columns=columns,
@@ -1799,7 +1773,7 @@ def browse_table(table_name):
                              page=page,
                              total_pages=total_pages,
                              total=total)
-    
+
     except Exception as e:
         flash(f'❌ خطأ: {str(e)}', 'danger')
         return redirect(url_for('owner.database_tools'))
@@ -1874,12 +1848,12 @@ def edit_table_data(table_name):
         result = db.session.execute(text(f'SELECT * FROM "{safe_table}" LIMIT 100'))
         rows = result.fetchall()
         columns = result.keys()
-        
+
         return render_template('owner/edit_table.html',
                              table_name=safe_table,
                              columns=columns,
                              rows=rows)
-    
+
     except Exception as e:
         flash(f'❌ خطأ: {str(e)}', 'danger')
         return redirect(url_for('owner.database_tools'))
@@ -1892,7 +1866,7 @@ def sql_console():
     """SQL Console - تنفيذ استعلامات مباشرة"""
     result_data = None
     error = None
-    
+
     if request.method == 'POST':
         sql_query = request.form.get('sql_query', '').strip()
         ok, validation_error = _validate_select_only_sql(sql_query)
@@ -1908,7 +1882,7 @@ def sql_console():
                     'rows': [list(row) for row in rows],
                     'count': len(rows)
                 }
-                
+
                 from utils.helpers import create_audit_log
                 create_audit_log(
                     'sql_execute',
@@ -1916,13 +1890,13 @@ def sql_console():
                     0,
                     {'query': sql_query[:200]},
                 )
-            
+
             except Exception as e:
                 error = str(e)
                 db.session.rollback()
-    
-    return render_template('owner/sql_console.html', 
-                         result=result_data, 
+
+    return render_template('owner/sql_console.html',
+                         result=result_data,
                          error=error)
 
 
@@ -1936,13 +1910,13 @@ def export_database():
     if export_format not in _EXPORT_FORMATS:
         flash('❌ صيغة تصدير غير مدعومة', 'danger')
         return redirect(url_for('owner.database_tools'))
-    
+
     try:
         backup_dir = 'instance/backups/exports'
         os.makedirs(backup_dir, exist_ok=True)
-        
+
         timestamp = dt.now().strftime('%Y%m%d_%H%M%S')
-        
+
         if export_format == 'sql':
             filename = f'db_export_{timestamp}.sql'
             filepath = os.path.join(backup_dir, filename)
@@ -1972,38 +1946,38 @@ def export_database():
             proc = run_pg_tool(cmd, env=env, timeout=3600)
             if proc.returncode != 0:
                 raise RuntimeError((proc.stderr or proc.stdout or "pg_dump failed")[:200])
-            
+
             flash(f'✅ تم التصدير: {filename}', 'success')
             _audit_owner_db_action('export_database', {'format': 'sql', 'filename': filename})
-        
+
         elif export_format == 'json':
             filename = f'db_export_{timestamp}.json'
             filepath = os.path.join(backup_dir, filename)
-            
+
             export_data = {}
             for table_name in _known_tables_map().values():
                 result = db.session.execute(text(f"SELECT * FROM {table_name}"))
                 rows = result.fetchall()
                 columns = result.keys()
-                
+
                 export_data[table_name] = [
                     dict(zip(columns, row)) for row in rows
                 ]
-            
+
             with open(filepath, 'w', encoding='utf-8') as f:
                 json.dump(export_data, f, ensure_ascii=False, indent=2, default=str)
-            
+
             flash(f'✅ تم التصدير: {filename}', 'success')
             _audit_owner_db_action(
                 'export_database',
                 {'format': 'json', 'filename': filename, 'tables': len(export_data)},
             )
-    
+
     except Exception as e:
         db.session.rollback()
         current_app.logger.error('export_database failed user_id=%s: %s', current_user.id, e)
         flash(f'❌ خطأ في التصدير: {str(e)}', 'danger')
-    
+
     return redirect(url_for('owner.database_tools'))
 
 
@@ -2014,11 +1988,11 @@ def convert_database():
     """تحويل بين أنواع قواعد البيانات"""
     if request.method == 'POST':
         target_db = (request.form.get('target_db') or '').strip()
-        
+
         if not target_db:
             flash('⚠️ يرجى اختيار قاعدة البيانات المستهدفة.', 'warning')
             return render_template('owner/convert_database.html')
-        
+
         if target_db != 'postgresql':
             flash('❌ هذا النظام يدعم PostgreSQL فقط.', 'danger')
             return render_template('owner/convert_database.html')
@@ -2031,9 +2005,9 @@ def convert_database():
                 current_user.id,
             )
             return render_template('owner/convert_database.html')
-        
+
         flash('🔄 جاري التحويل إلى PostgreSQL...', 'info')
-        
+
         try:
             from sqlalchemy import create_engine
             target_engine = create_engine(new_uri)
@@ -2072,7 +2046,7 @@ def convert_database():
                         rows_copied += 1
 
                     tables_copied += 1
-            
+
             flash('✅ تم التحويل إلى PostgreSQL بنجاح!', 'success')
             _audit_owner_db_action(
                 'convert_database',
@@ -2082,7 +2056,7 @@ def convert_database():
                     'rows_copied': rows_copied,
                 },
             )
-        
+
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(
@@ -2092,7 +2066,7 @@ def convert_database():
                 e,
             )
             flash(f'❌ خطأ في التحويل: {str(e)}', 'danger')
-    
+
     return render_template('owner/convert_database.html')
 
 
@@ -2102,7 +2076,7 @@ def convert_database():
 def scheduled_backups():
     """النسخ الاحتياطي المجدول"""
     from services.backup_service import BackupService
-    
+
     if request.method == 'POST':
         # حفظ إعدادات الجدولة
         settings = {
@@ -2112,18 +2086,18 @@ def scheduled_backups():
             'keep_count': int(request.form.get('keep_count', 5)),
         }
         BackupService.save_schedule_settings(settings)
-        
+
         flash('✅ تم حفظ إعدادات النسخ الاحتياطي', 'success')
         return redirect(url_for('owner.scheduled_backups'))
-    
+
     # قراءة الإعدادات الحالية
     settings = BackupService.get_schedule_settings()
     schedule_state = BackupService.get_schedule_state()
-    
+
     # قائمة النسخ التلقائية
     backups = BackupService.list_backups(auto_only=True)
     stats = BackupService.get_backup_stats()
-    
+
     return render_template('owner/scheduled_backups.html',
                          settings=settings,
                          schedule_state=schedule_state,
@@ -2137,23 +2111,23 @@ def reports():
     """صفحة التقارير"""
     # إحصائيات عامة
     from models import User, Customer, Product, Sale, Receipt, PaymentVault, Donation, Payment
-    
+
     tid = get_active_tenant_id(current_user)
     vault = PaymentVault.get_platform_vault()
     scoped_branch_id = _owner_branch_scope()
-    
+
     # Base customer query scoped by tenant
     customers_stats_query = Customer.query.filter_by(tenant_id=tid, is_active=True)
     if scoped_branch_id is not None:
         customers_stats_query = customers_stats_query.join(Sale, Customer.id == Sale.customer_id).filter(Sale.branch_id == scoped_branch_id).distinct()
-    
+
     # Base queries scoped by tenant
     base_sale_q = Sale.query.filter_by(tenant_id=tid)
     base_receipt_q = Receipt.query.filter_by(tenant_id=tid)
     base_payment_q = Payment.query.filter_by(tenant_id=tid)
     base_product_q = Product.query.filter_by(tenant_id=tid, is_active=True)
     base_donation_q = Donation.query.filter_by(tenant_id=tid, transaction_type='donation')
-    
+
     if scoped_branch_id is not None:
         stats = {
             'total_users': User.query.filter_by(tenant_id=tid, is_active=True, is_owner=False).count(),
@@ -2178,7 +2152,7 @@ def reports():
             'total_payments': base_payment_q.count(),
             'vault_status': vault.is_locked if vault else True
         }
-    
+
     return render_template('owner/reports.html', stats=stats)
 
 
@@ -2188,7 +2162,7 @@ def reports():
 def company_info():
     """معلومات الشركة/الكراج"""
     tenant = Tenant.get_current()
-    
+
     if request.method == 'POST':
         try:
             # Basic Info
@@ -2198,7 +2172,7 @@ def company_info():
             tenant.slug = request.form.get('slug', '').strip()
             tenant.business_type = request.form.get('business_type', 'garage')
             tenant.industry = request.form.get('industry', 'automotive')
-            
+
             # Contact Info
             tenant.address_ar = request.form.get('address_ar', '').strip()
             tenant.address_en = request.form.get('address_en', '').strip()
@@ -2209,16 +2183,16 @@ def company_info():
             tenant.mobile = request.form.get('mobile', '').strip()
             tenant.email = request.form.get('email', '').strip()
             tenant.website = request.form.get('website', '').strip()
-            
+
             # Legal Info
             tenant.tax_number = request.form.get('tax_number', '').strip()
             tenant.commercial_register = request.form.get('commercial_register', '').strip()
             tenant.license_number = request.form.get('license_number', '').strip()
-            
+
             # Branding
             tenant.brand_color_primary = request.form.get('brand_color_primary', '#007A3D')
             tenant.brand_color_secondary = request.form.get('brand_color_secondary', '#D4AF37')
-            
+
             tenant.updated_by = current_user.id
 
             # مزامنة اسم الشركة مع إعدادات الفواتير حتى يظهر في الترويسات وصفحة الدخول من مصدر واحد
@@ -2241,11 +2215,11 @@ def company_info():
             _invalidate_owner_changes()
             flash('تم حفظ معلومات الشركة بنجاح', 'success')
             return redirect(url_for('owner.company_info'))
-            
+
         except Exception as e:
             db.session.rollback()
             flash(f'خطأ في حفظ المعلومات: {str(e)}', 'error')
-    
+
     return render_template('owner/company_info.html', tenant=tenant)
 
 
@@ -2300,7 +2274,7 @@ def developer_settings():
 def system_config():
     """إعدادات النظام الشاملة"""
     settings = SystemSettings.get_current()
-    
+
     if request.method == 'POST':
         try:
             # Modules
@@ -2312,7 +2286,7 @@ def system_config():
             settings.enable_gl = request.form.get('enable_gl') == 'on'
             settings.enable_reports = request.form.get('enable_reports') == 'on'
             settings.enable_ai_assistant = request.form.get('enable_ai_assistant') == 'on'
-            
+
             # Features
             settings.enable_barcode_scanner = request.form.get('enable_barcode_scanner') == 'on'
             settings.enable_multi_warehouse = request.form.get('enable_multi_warehouse') == 'on'
@@ -2320,7 +2294,7 @@ def system_config():
             settings.enable_discounts = request.form.get('enable_discounts') == 'on'
             settings.enable_returns = request.form.get('enable_returns') == 'on'
             settings.enable_ecommerce = request.form.get('enable_ecommerce') == 'on'
-            
+
             # General
             default_currency = request.form.get('default_currency', 'AED')
             settings.default_currency = default_currency
@@ -2333,18 +2307,18 @@ def system_config():
             settings.default_language = request.form.get('default_language', 'ar')
             settings.timezone = request.form.get('timezone', 'Asia/Dubai')
             settings.items_per_page = int(request.form.get('items_per_page', 25))
-            
+
             settings.updated_by = current_user.id
-            
+
             db.session.commit()
             _invalidate_owner_changes()
             flash('تم حفظ إعدادات النظام بنجاح', 'success')
             return redirect(url_for('owner.system_config'))
-            
+
         except Exception as e:
             db.session.rollback()
             flash(f'خطأ في حفظ الإعدادات: {str(e)}', 'error')
-    
+
     return render_template('owner/system_config.html', settings=settings)
 
 
@@ -2580,14 +2554,14 @@ def invoice_settings():
     """إعدادات ترويسات الفواتير وسندات القبض"""
     from utils.tenanting import assign_tenant_id
     settings = InvoiceSettings.get_active()
-    
+
     if request.method == 'POST':
         try:
             assign_tenant_id(settings)
             # Company Info
             settings.company_name_ar = request.form.get('company_name_ar', '').strip()
             settings.company_name_en = request.form.get('company_name_en', '').strip()
-            
+
             # Contact Info
             settings.address_ar = request.form.get('address_ar', '').strip()
             settings.address_en = request.form.get('address_en', '').strip()
@@ -2595,118 +2569,118 @@ def invoice_settings():
             settings.phone_2 = request.form.get('phone_2', '').strip()
             settings.email = request.form.get('email', '').strip()
             settings.website = request.form.get('website', '').strip()
-            
+
             # Business Info
             settings.tax_number = request.form.get('tax_number', '').strip()
             settings.commercial_register = request.form.get('commercial_register', '').strip()
             settings.license_number = request.form.get('license_number', '').strip()
-            
+
             # Bank Info
             settings.bank_name = request.form.get('bank_name', '').strip()
             settings.bank_account_number = request.form.get('bank_account_number', '').strip()
             settings.iban = request.form.get('iban', '').strip()
             settings.swift_code = request.form.get('swift_code', '').strip()
-            
+
             # Design
             settings.header_color = request.form.get('header_color', '#667eea').strip()
             settings.accent_color = request.form.get('accent_color', '#764ba2').strip()
             settings.text_color = request.form.get('text_color', '#333333').strip()
-            
+
             # Layout
             settings.show_logo = request.form.get('show_logo') == 'on'
             settings.logo_position = request.form.get('logo_position', 'left')
             settings.logo_size = request.form.get('logo_size', 'medium')
-            
+
             # Footer
             settings.footer_text_ar = request.form.get('footer_text_ar', '').strip()
             settings.footer_text_en = request.form.get('footer_text_en', '').strip()
             settings.show_terms = request.form.get('show_terms') == 'on'
-            
+
             # Terms
             settings.terms_conditions_ar = request.form.get('terms_conditions_ar', '').strip()
             settings.terms_conditions_en = request.form.get('terms_conditions_en', '').strip()
             settings.payment_terms_ar = request.form.get('payment_terms_ar', '').strip()
             settings.payment_terms_en = request.form.get('payment_terms_en', '').strip()
-            
+
             # Notes
             settings.default_invoice_note_ar = request.form.get('default_invoice_note_ar', '').strip()
             settings.default_invoice_note_en = request.form.get('default_invoice_note_en', '').strip()
             settings.default_receipt_note_ar = request.form.get('default_receipt_note_ar', '').strip()
             settings.default_receipt_note_en = request.form.get('default_receipt_note_en', '').strip()
-            
+
             # QR & Watermark
             settings.enable_qr_code = request.form.get('enable_qr_code') == 'on'
             settings.qr_position = request.form.get('qr_position', 'bottom-right')
             settings.enable_watermark = request.form.get('enable_watermark') == 'on'
             settings.watermark_text = request.form.get('watermark_text', '').strip()
-            
+
             # Print
             settings.paper_size = request.form.get('paper_size', 'A4')
             settings.orientation = request.form.get('orientation', 'portrait')
             settings.default_language = request.form.get('default_language', 'ar')
-            
+
             # Additional
             settings.show_barcode = request.form.get('show_barcode') == 'on'
             settings.show_page_numbers = request.form.get('show_page_numbers') == 'on'
             settings.show_due_date = request.form.get('show_due_date') == 'on'
-            
+
             # Social Media
             settings.facebook_url = request.form.get('facebook_url', '').strip()
             settings.instagram_url = request.form.get('instagram_url', '').strip()
             settings.whatsapp_number = request.form.get('whatsapp_number', '').strip()
-            
+
             # Template
             settings.active_template = request.form.get('active_template', 'modern')
-            
+
             # Handle logo upload
             if 'company_logo' in request.files:
                 logo_file = request.files['company_logo']
                 if logo_file and logo_file.filename:
                     import os
                     from werkzeug.utils import secure_filename
-                    
+
                     filename = secure_filename(logo_file.filename)
                     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
                     filename = f"logo_{timestamp}_{filename}"
-                    
+
                     upload_folder = os.path.join('static', 'uploads', 'logos')
                     os.makedirs(upload_folder, exist_ok=True)
-                    
+
                     filepath = os.path.join(upload_folder, filename)
                     logo_file.save(filepath)
-                    
+
                     settings.logo_path = f"uploads/logos/{filename}"
-            
+
             # Handle watermark image upload
             if 'watermark_image' in request.files:
                 watermark_file = request.files['watermark_image']
                 if watermark_file and watermark_file.filename:
                     import os
                     from werkzeug.utils import secure_filename
-                    
+
                     filename = secure_filename(watermark_file.filename)
                     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
                     filename = f"watermark_{timestamp}_{filename}"
-                    
+
                     upload_folder = os.path.join('static', 'uploads', 'watermarks')
                     os.makedirs(upload_folder, exist_ok=True)
-                    
+
                     filepath = os.path.join(upload_folder, filename)
                     watermark_file.save(filepath)
-                    
+
                     settings.watermark_image_path = f"uploads/watermarks/{filename}"
-            
+
             settings.updated_by = current_user.id
-            
+
             db.session.commit()
             _invalidate_owner_changes()
             flash('تم حفظ إعدادات الترويسات بنجاح', 'success')
             return redirect(url_for('owner.invoice_settings'))
-            
+
         except Exception as e:
             db.session.rollback()
             flash(f'خطأ في حفظ الإعدادات: {str(e)}', 'error')
-    
+
     return render_template('owner/invoice_settings.html', settings=settings)
 
 
@@ -2732,14 +2706,14 @@ def preview_invoice(template):
         default_currency = (Tenant.get_current().default_currency or '').strip() or 'AED'
     except Exception:
         default_currency = 'AED'
-    
+
     # Sample data for preview
     class SampleCustomer:
         name = 'عميل تجريبي'
         phone = '0501234567'
         email = 'customer@example.com'
         address = 'دبي - الإمارات العربية المتحدة'
-    
+
     class SampleSeller:
         full_name = 'البائع التجريبي'
         username = 'seller'
@@ -2750,10 +2724,10 @@ def preview_invoice(template):
         name = 'الفرع الرئيسي'
         code = 'BR01'
         address = 'دبي - شارع الشيخ زايد'
-    
+
     class SampleProduct:
         name = 'منتج تجريبي'
-    
+
     class SampleLine:
         def __init__(self, name, qty, price, discount=0):
             self.product = type('obj', (object,), {'name': name})()
@@ -2761,7 +2735,7 @@ def preview_invoice(template):
             self.unit_price = price
             self.discount_percent = discount
             self.line_total = qty * price * (1 - discount/100)
-    
+
     class SamplePayment:
         def __init__(self):
             self.payment_number = 'PAY-2025-0001'
@@ -2772,7 +2746,7 @@ def preview_invoice(template):
             self.cheque_date = datetime.now().date()
             self.bank_name = 'بنك الإمارات دبي الوطني'
             self.reference_number = 'REF-001'
-    
+
     class SampleSale:
         sale_number = 'S-2025-0001'
         sale_date = datetime.now()
@@ -2792,7 +2766,7 @@ def preview_invoice(template):
         currency = default_currency
         notes = 'فاتورة تجريبية للمعاينة'
         payments = [SamplePayment()]
-    
+
     sample_sale = SampleSale()
     sample_user_name = sample_sale.seller.get_display_name('ar')
     sample_amount_in_words = number_to_arabic_words(float(sample_sale.total_amount), sample_sale.currency)
@@ -2841,14 +2815,14 @@ def preview_receipt(template):
     print_branding = get_print_header_context(tid)
     from utils.number_to_arabic import number_to_arabic_words
     from utils.qr_generator import generate_qr_data_url
-    
+
     # Sample data for preview
     class SampleCustomer:
         name = 'عميل تجريبي'
         phone = '0501234567'
         email = 'customer@example.com'
         address = 'دبي - الإمارات'
-    
+
     class SampleUser:
         full_name = 'المحصل التجريبي'
         username = 'collector'
@@ -2859,11 +2833,11 @@ def preview_receipt(template):
         name = 'الفرع الرئيسي'
         code = 'BR01'
         address = 'دبي - شارع الشيخ زايد'
-    
+
     class SampleSale:
         sale_number = 'S-2025-0001'
         sale_date = datetime.now()
-    
+
     class SampleAllocation:
         def __init__(self, sale_num, amount):
             self.sale = type('obj', (object,), {
@@ -2871,7 +2845,7 @@ def preview_receipt(template):
                 'sale_date': datetime.now()
             })()
             self.amount_allocated = Decimal(str(amount))
-    
+
     class SampleReceipt:
         receipt_number = 'RCV-2025-0001'
         receipt_date = datetime.now()
@@ -2890,7 +2864,7 @@ def preview_receipt(template):
             SampleAllocation('S-2025-0001', '800.00'),
             SampleAllocation('S-2025-0002', '700.00')
         ]
-        
+
         def get_source_info(self):
             return {
                 'type': 'فاتورة',
@@ -2898,7 +2872,7 @@ def preview_receipt(template):
                 'date': datetime.now().strftime('%Y-%m-%d'),
                 'id': 1
             }
-    
+
     sample_receipt = SampleReceipt()
     sample_user_name = sample_receipt.user.get_display_name('ar')
     sample_amount_in_words = number_to_arabic_words(float(sample_receipt.amount_aed), sample_receipt.currency)
@@ -2934,73 +2908,12 @@ def preview_receipt(template):
 @login_required
 @owner_required
 def system_health():
+    """فحص صحة النظام — للمالك فقط"""
+    from services.health_service import HealthCheckService
+
     try:
-        import psutil
-        import platform
-        
-        try:
-            cpu_percent = psutil.cpu_percent(interval=0.5)
-        except:
-            cpu_percent = 0
-        
-        try:
-            memory = psutil.virtual_memory()
-        except:
-            memory = type('obj', (object,), {'total': 0, 'used': 0, 'percent': 0})()
-        
-        try:
-            disk = psutil.disk_usage('.')
-        except:
-            disk = type('obj', (object,), {'total': 0, 'used': 0, 'free': 0, 'percent': 0})()
-        
-        try:
-            size_result = db.session.execute(text("SELECT pg_database_size(current_database())"))
-            db_size_bytes = size_result.scalar() or 0
-            db_size_mb = db_size_bytes / (1024 * 1024)
-        except:
-            db_size_mb = 0
-        
-        health_data = {
-            'cpu': {
-                'percent': cpu_percent,
-                'status': 'جيد' if cpu_percent < 70 else 'تحذير' if cpu_percent < 90 else 'خطر'
-            },
-            'memory': {
-                'total': memory.total / (1024**3) if memory.total else 0,
-                'used': memory.used / (1024**3) if memory.used else 0,
-                'percent': memory.percent,
-                'status': 'جيد' if memory.percent < 70 else 'تحذير' if memory.percent < 90 else 'خطر'
-            },
-            'disk': {
-                'total': disk.total / (1024**3) if disk.total else 0,
-                'used': disk.used / (1024**3) if disk.used else 0,
-                'free': disk.free / (1024**3) if disk.free else 0,
-                'percent': disk.percent,
-                'status': 'جيد' if disk.percent < 70 else 'تحذير' if disk.percent < 90 else 'خطر'
-            },
-            'database': {
-                'size_mb': round(db_size_mb, 2),
-                'status': 'جيد' if db_size_mb < 500 else 'تحذير' if db_size_mb < 1000 else 'خطر'
-            },
-            'system': {
-                'os': platform.system(),
-                'version': platform.version(),
-                'python': platform.python_version()
-            }
-        }
-        
-        try:
-            active_users = db.session.query(func.count(User.id)).filter(
-                User.last_seen >= datetime.now(timezone.utc) - timedelta(minutes=30),
-                User.is_active == True
-            ).scalar() or 0
-        except:
-            active_users = 0
-        
-        health_data['active_users'] = active_users
-        
+        health_data = HealthCheckService.get_health_data()
         return render_template('owner/system_health.html', health=health_data)
-    
     except Exception as e:
         flash(f'خطأ في تحميل معلومات النظام: {str(e)}', 'danger')
         return redirect(url_for('owner.dashboard'))
@@ -3010,37 +2923,18 @@ def system_health():
 @login_required
 @owner_required
 def activity_monitor():
+    from services.monitoring_service import MonitoringService
+
     tid = get_active_tenant_id(current_user)
-    recent_audits = AuditLog.query.filter_by(tenant_id=tid).order_by(
-        AuditLog.created_at.desc()
-    ).limit(100).all()
     scoped_branch_id = _owner_branch_scope()
-    
-    active_users = User.query.filter(
-        User.last_seen >= datetime.now(timezone.utc) - timedelta(minutes=30),
-        User.is_active == True,
-        User.tenant_id == tid,
-    ).all()
-    
-    recent_sales = Sale.query.filter(
-        Sale.created_at >= datetime.now(timezone.utc) - timedelta(hours=24),
-        Sale.tenant_id == tid,
-    )
-    if scoped_branch_id is not None:
-        recent_sales = recent_sales.filter(Sale.branch_id == scoped_branch_id)
-    recent_sales = recent_sales.order_by(Sale.created_at.desc()).limit(20).all()
-    
-    stats = {
-        'active_now': len(active_users),
-        'today_sales': len(recent_sales),
-        'recent_actions': len(recent_audits)
-    }
-    
+
+    ctx = MonitoringService.get_activity_monitor_context(tid, scoped_branch_id)
+
     return render_template('owner/activity_monitor.html',
-                         recent_audits=recent_audits,
-                         active_users=active_users,
-                         recent_sales=recent_sales,
-                         stats=stats)
+                         recent_audits=ctx['recent_audits'],
+                         active_users=ctx['active_users'],
+                         recent_sales=ctx['recent_sales'],
+                         stats=ctx['stats'])
 
 
 @owner_bp.route('/error-logs')
@@ -3168,28 +3062,28 @@ def login_history():
     user_filter = request.args.get('user_id', type=int)
     success_filter = request.args.get('success')
     tid = get_active_tenant_id(current_user)
-    
+
     # LoginHistory has no tenant_id, so we join with User to scope where possible
     query = LoginHistory.query
     if tid:
         query = query.join(User, LoginHistory.user_id == User.id).filter(User.tenant_id == tid)
-    
+
     if user_filter:
         query = query.filter(LoginHistory.user_id == user_filter)
-    
+
     if success_filter is not None:
         query = query.filter(LoginHistory.success == (success_filter == 'true'))
-    
+
     pagination = query.order_by(LoginHistory.login_time.desc()).paginate(
         page=page, per_page=50, error_out=False
     )
-    
+
     # Users list for filter dropdown, scoped by tenant
     users = User.query.filter_by(is_active=True)
     if tid:
         users = users.filter_by(tenant_id=tid)
     users = users.order_by(User.username).all()
-    
+
     # Stats: base queries scoped by tenant via User join
     base_stats = LoginHistory.query
     if tid:
@@ -3201,7 +3095,7 @@ def login_history():
             LoginHistory.login_time >= datetime.now(timezone.utc).replace(hour=0, minute=0)
         ).count()
     }
-    
+
     return render_template('owner/login_history.html',
                          logins=pagination.items,
                          pagination=pagination,
@@ -3213,20 +3107,11 @@ def login_history():
 @login_required
 @owner_required
 def performance_metrics():
-    performance_file = 'logs/performance.log'
-    slow_queries = []
-    
-    if os.path.exists(performance_file):
-        with open(performance_file, 'r', encoding='utf-8') as f:
-            for line in f.readlines()[-200:]:
-                if 'SLOW' in line:
-                    slow_queries.append(line.strip())
-    
-    metrics = {
-        'slow_queries_count': len(slow_queries),
-        'slow_queries': slow_queries[-20:]
-    }
-    
+    """مراقبة الأداء"""
+    from services.monitoring_service import MonitoringService
+
+    metrics = MonitoringService.get_performance_metrics_data()
+
     return render_template('owner/performance_metrics.html', metrics=metrics)
 
 
@@ -3236,22 +3121,22 @@ def performance_metrics():
 def security_alerts():
     page = request.args.get('page', 1, type=int)
     severity_filter = request.args.get('severity')
-    
+
     query = SecurityAlert.query
-    
+
     if severity_filter:
         query = query.filter_by(severity=severity_filter)
-    
+
     pagination = query.filter_by(is_resolved=False).order_by(
         SecurityAlert.created_at.desc()
     ).paginate(page=page, per_page=30, error_out=False)
-    
+
     stats = {
         'unresolved': SecurityAlert.query.filter_by(is_resolved=False).count(),
         'critical': SecurityAlert.query.filter_by(severity='critical', is_resolved=False).count(),
         'high': SecurityAlert.query.filter_by(severity='high', is_resolved=False).count()
     }
-    
+
     return render_template('owner/security_alerts.html',
                          alerts=pagination.items,
                          pagination=pagination,
@@ -3279,20 +3164,20 @@ def ip_whitelist():
     if request.method == 'POST':
         ip_address = request.form.get('ip_address')
         description = request.form.get('description')
-        
+
         settings = SystemSettings.get_current()
         whitelist = settings.owner_whitelist_ips or []
-        
+
         whitelist.append({'ip': ip_address, 'description': description})
         settings.owner_whitelist_ips = whitelist
         db.session.commit()
         _invalidate_owner_changes()
         flash('✅ تم إضافة IP للقائمة البيضاء', 'success')
         return redirect(url_for('owner.ip_whitelist'))
-    
+
     settings = SystemSettings.get_current()
     whitelist = settings.owner_whitelist_ips or []
-    
+
     return render_template('owner/ip_whitelist.html', whitelist=whitelist)
 
 
@@ -3302,7 +3187,7 @@ def ip_whitelist():
 def delete_ip_whitelist(index):
     settings = SystemSettings.get_current()
     whitelist = settings.owner_whitelist_ips or []
-    
+
     if 0 <= index < len(whitelist):
         whitelist.pop(index)
         settings.owner_whitelist_ips = whitelist
@@ -3320,22 +3205,22 @@ def api_keys():
     if request.method == 'POST':
         name = request.form.get('name')
         service = request.form.get('service')
-        
+
         key = APIKey(
             name=name,
             key=APIKey.generate_key(),
             service=service,
             created_by=current_user.id
         )
-        
+
         db.session.add(key)
         db.session.commit()
         _invalidate_owner_changes()
         flash(f'✅ تم إنشاء API Key ({_mask_api_key(key.key)})', 'success')
         return redirect(url_for('owner.api_keys'))
-    
+
     keys = APIKey.query.order_by(APIKey.created_at.desc()).all()
-    
+
     return render_template('owner/api_keys.html', keys=keys, mask_api_key=_mask_api_key)
 
 
@@ -3359,32 +3244,32 @@ def financial_dashboard_advanced():
     today = datetime.now().date()
     month_start = today.replace(day=1)
     tid = get_active_tenant_id(current_user)
-    
+
     months_data = []
     for i in range(12):
         month_date = month_start - timedelta(days=30*i)
         month_start_date = month_date.replace(day=1)
-        
+
         if month_date.month == 12:
             month_end_date = month_date.replace(year=month_date.year+1, month=1, day=1) - timedelta(days=1)
         else:
             month_end_date = month_date.replace(month=month_date.month+1, day=1) - timedelta(days=1)
-        
+
         revenue = db.session.query(func.sum(Sale.total_amount)).filter(
             Sale.sale_date >= month_start_date,
             Sale.sale_date <= month_end_date,
             Sale.status == 'confirmed',
             Sale.tenant_id == tid,
         ).scalar() or 0
-        
+
         expenses = db.session.query(func.sum(Expense.amount)).filter(
             Expense.expense_date >= month_start_date,
             Expense.expense_date <= month_end_date,
             Expense.tenant_id == tid,
         ).scalar() or 0
-        
+
         profit = revenue - expenses
-        
+
         months_data.append({
             'month': month_date.strftime('%Y-%m'),
             'revenue': float(revenue),
@@ -3392,16 +3277,16 @@ def financial_dashboard_advanced():
             'profit': float(profit),
             'margin': (profit / revenue * 100) if revenue > 0 else 0
         })
-    
+
     months_data.reverse()
-    
+
     kpis = {
         'avg_revenue': sum(m['revenue'] for m in months_data) / 12,
         'avg_profit': sum(m['profit'] for m in months_data) / 12,
         'avg_margin': sum(m['margin'] for m in months_data) / 12,
         'growth_rate': ((months_data[-1]['revenue'] - months_data[0]['revenue']) / months_data[0]['revenue'] * 100) if months_data[0]['revenue'] > 0 else 0
     }
-    
+
     return render_template('owner/financial_dashboard_advanced.html',
                          months_data=months_data,
                          kpis=kpis)
@@ -3446,10 +3331,10 @@ def tax_settings():
 @owner_required
 def currency_settings():
     from services.currency_service import CurrencyService
-    
+
     if request.method == 'POST':
         settings = SystemSettings.get_current()
-        
+
         default_currency = request.form.get('default_currency', 'AED')
         settings.default_currency = default_currency
         try:
@@ -3459,12 +3344,12 @@ def currency_settings():
         except Exception as exc:
             logger.debug("tenant currency settings sync: %s", exc)
         settings.auto_update_rates = request.form.get('auto_update_rates') == 'on'
-        
+
         db.session.commit()
         _invalidate_owner_changes()
         flash('✅ تم تحديث إعدادات العملات', 'success')
         return redirect(url_for('owner.currency_settings'))
-    
+
     settings = SystemSettings.get_current()
     try:
         from models import Tenant
@@ -3472,7 +3357,7 @@ def currency_settings():
     except Exception:
         default_currency = 'AED'
     rates = CurrencyService.get_all_rates(default_currency)
-    
+
     return render_template('owner/currency_settings.html',
                          settings=settings,
                          rates=rates)
@@ -3483,7 +3368,7 @@ def currency_settings():
 @owner_required
 def payment_gateways():
     from models import PaymentVault
-    
+
     vault = PaymentVault.get_platform_vault()
     if not vault:
         vault = PaymentVault(tenant_id=None)
@@ -3497,12 +3382,12 @@ def payment_gateways():
         vault.paypal_client_id = request.form.get('paypal_client_id')
         vault.paypal_client_secret = request.form.get('paypal_client_secret')
         vault.nowpayments_api_key = request.form.get('nowpayments_api_key')
-        
+
         db.session.commit()
         _invalidate_owner_changes()
         flash('✅ تم تحديث إعدادات بوابات الدفع', 'success')
         return redirect(url_for('owner.payment_gateways'))
-    
+
     return render_template('owner/payment_gateways.html', vault=vault)
 
 
@@ -3512,21 +3397,21 @@ def payment_gateways():
 def email_settings():
     if request.method == 'POST':
         settings = SystemSettings.get_current()
-        
+
         settings.smtp_server = request.form.get('smtp_server')
         settings.smtp_port = request.form.get('smtp_port', type=int)
         settings.smtp_username = request.form.get('smtp_username')
         settings.smtp_password = request.form.get('smtp_password')
         settings.smtp_use_tls = request.form.get('smtp_use_tls') == 'on'
         settings.email_from = request.form.get('email_from')
-        
+
         db.session.commit()
         _invalidate_owner_changes()
         flash('✅ تم تحديث إعدادات البريد الإلكتروني', 'success')
         return redirect(url_for('owner.email_settings'))
-    
+
     settings = SystemSettings.get_current()
-    
+
     return render_template('owner/email_settings.html', settings=settings)
 
 
@@ -3536,20 +3421,20 @@ def email_settings():
 def sms_settings():
     if request.method == 'POST':
         settings = SystemSettings.get_current()
-        
+
         sms_provider = (request.form.get('sms_provider') or '').strip()
         settings.sms_provider = sms_provider or None
         settings.sms_api_key = request.form.get('sms_api_key')
         settings.sms_sender_name = request.form.get('sms_sender_name')
         settings.sms_enabled = request.form.get('sms_enabled') == 'on'
-        
+
         db.session.commit()
         _invalidate_owner_changes()
         flash('✅ تم تحديث إعدادات الرسائل النصية', 'success')
         return redirect(url_for('owner.sms_settings'))
-    
+
     settings = SystemSettings.get_current()
-    
+
     return render_template('owner/sms_settings.html', settings=settings)
 
 
@@ -3559,19 +3444,19 @@ def sms_settings():
 def whatsapp_settings():
     if request.method == 'POST':
         settings = SystemSettings.get_current()
-        
+
         settings.whatsapp_api_url = request.form.get('whatsapp_api_url')
         settings.whatsapp_api_key = request.form.get('whatsapp_api_key')
         settings.whatsapp_phone_number = request.form.get('whatsapp_phone_number')
         settings.whatsapp_enabled = request.form.get('whatsapp_enabled') == 'on'
-        
+
         db.session.commit()
         _invalidate_owner_changes()
         flash('✅ تم تحديث إعدادات واتساب', 'success')
         return redirect(url_for('owner.whatsapp_settings'))
-    
+
     settings = SystemSettings.get_current()
-    
+
     return render_template('owner/whatsapp_settings.html', settings=settings)
 
 
@@ -3581,22 +3466,22 @@ def whatsapp_settings():
 def notification_templates():
     if request.method == 'POST':
         settings = SystemSettings.get_current()
-        
+
         templates = {
             'invoice_email': request.form.get('invoice_email_template'),
             'payment_sms': request.form.get('payment_sms_template'),
             'reminder_whatsapp': request.form.get('reminder_whatsapp_template')
         }
-        
+
         settings.notification_templates = templates
         db.session.commit()
         _invalidate_owner_changes()
         flash('✅ تم تحديث قوالب الإشعارات', 'success')
         return redirect(url_for('owner.notification_templates'))
-    
+
     settings = SystemSettings.get_current()
     templates = settings.notification_templates or {}
-    
+
     return render_template('owner/notification_templates.html',
                          templates=templates)
 
@@ -3616,7 +3501,7 @@ def database_optimize():
             flash(f'⚠️ تحذير: {msg}', 'warning')
     except Exception as e:
         flash(f'❌ خطأ في التحسين: {str(e)}', 'danger')
-    
+
     return redirect(url_for('owner.system_health'))
 
 
@@ -3626,9 +3511,9 @@ def database_optimize():
 def verify_backups():
     try:
         from services.backup_service import BackupService
-        
+
         backups = BackupService.list_backups()
-        
+
         verified = []
         for backup in backups:
             fn = backup.get('filename', '')
@@ -3641,9 +3526,9 @@ def verify_backups():
                 'format': result.get('format'),
                 'errors': result.get('errors', []),
             })
-        
+
         return render_template('owner/verify_backups.html', backups=verified)
-    
+
     except Exception as e:
         flash(f'خطأ في تحميل النسخ الاحتياطية: {str(e)}', 'danger')
         return redirect(url_for('owner.dashboard'))
@@ -3656,7 +3541,7 @@ def data_cleanup():
     if request.method == 'POST':
         days = request.form.get('days', 90, type=int)
         cleanup_type = (request.form.get('cleanup_type') or '').strip()
-        
+
         if not cleanup_type:
             flash('⚠️ يرجى اختيار نوع البيانات للحذف.', 'warning')
             stats = {
@@ -3668,20 +3553,20 @@ def data_cleanup():
                 ).count()
             }
             return render_template('owner/data_cleanup.html', stats=stats)
-        
+
         cutoff_date = datetime.now(timezone.utc) - timedelta(days=days)
         deleted_count = 0
-        
+
         if cleanup_type == 'logs':
             deleted_count = AuditLog.query.filter(AuditLog.created_at < cutoff_date).delete()
         elif cleanup_type == 'archived':
             deleted_count = ArchivedRecord.query.filter(ArchivedRecord.archived_at < cutoff_date).delete()
-        
+
         db.session.commit()
         _invalidate_owner_changes()
         flash(f'✅ تم حذف {deleted_count} سجل قديم', 'success')
         return redirect(url_for('owner.data_cleanup'))
-    
+
     stats = {
         'old_logs': AuditLog.query.filter(
             AuditLog.created_at < datetime.now(timezone.utc) - timedelta(days=90)
@@ -3690,7 +3575,7 @@ def data_cleanup():
             ArchivedRecord.archived_at < datetime.now(timezone.utc) - timedelta(days=180)
         ).count()
     }
-    
+
     return render_template('owner/data_cleanup.html', stats=stats)
 
 
@@ -3709,9 +3594,9 @@ def export_excel(table_name):
         import pandas as pd
         from io import BytesIO
         from flask import send_file
-        
+
         today_str = datetime.now().strftime('%Y-%m-%d')
-        
+
         model_map = {
             'customers': Customer,
             'products': Product,
@@ -3723,30 +3608,30 @@ def export_excel(table_name):
         if normalized not in _EXPORT_EXCEL_ENTITIES or normalized not in model_map:
             flash('جدول غير موجود', 'danger')
             return redirect(url_for('owner.import_export_tools'))
-        
+
         model = model_map[normalized]
         data = model.query.all()
-        
+
         df_data = []
         for item in data:
             if hasattr(item, 'to_dict'):
                 df_data.append(item.to_dict())
             else:
                 df_data.append({col.name: getattr(item, col.name) for col in item.__table__.columns})
-        
+
         if not df_data:
             flash('لا توجد بيانات للتصدير', 'warning')
             return redirect(url_for('owner.import_export_tools'))
-        
+
         df = pd.DataFrame(df_data)
-        
+
         output = BytesIO()
         with pd.ExcelWriter(output, engine='openpyxl') as writer:
             df.to_excel(writer, index=False, sheet_name=normalized)
         output.seek(0)
 
         _audit_owner_db_action('export_excel', {'entity': normalized, 'row_count': len(df_data)})
-        
+
         return send_file(
             output,
             mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -3768,7 +3653,7 @@ def sales_insights():
     last_30_days = today - timedelta(days=30)
     scoped_branch_id = _owner_branch_scope()
     tid = get_active_tenant_id(current_user)
-    
+
     daily_sales = db.session.query(
         func.date(Sale.sale_date).label('date'),
         func.count(Sale.id).label('count'),
@@ -3781,7 +3666,7 @@ def sales_insights():
     if scoped_branch_id is not None:
         daily_sales = daily_sales.filter(Sale.branch_id == scoped_branch_id)
     daily_sales = daily_sales.group_by(func.date(Sale.sale_date)).all()
-    
+
     top_products = db.session.query(
         Product.name,
         func.sum(SaleLine.quantity).label('total_qty'),
@@ -3801,12 +3686,12 @@ def sales_insights():
         Product.id,
         Product.name,
     ).order_by(desc('total_revenue')).limit(10).all()
-    
+
     insights = {
         'daily_sales': [{'date': str(d.date), 'count': d.count, 'total': float(d.total)} for d in daily_sales],
         'top_products': [{'name': p.name, 'qty': float(p.total_qty), 'revenue': float(p.total_revenue)} for p in top_products]
     }
-    
+
     return render_template('owner/sales_insights.html', insights=insights)
 
 
@@ -3817,7 +3702,7 @@ def customer_insights():
     customers_data = []
     scoped_branch_id = _owner_branch_scope()
     tid = get_active_tenant_id(current_user)
-    
+
     customers_query = Customer.query.filter_by(is_active=True, tenant_id=tid)
     if scoped_branch_id is not None:
         customers_query = customers_query.join(Sale, Customer.id == Sale.customer_id).filter(Sale.branch_id == scoped_branch_id).distinct()
@@ -3831,23 +3716,23 @@ def customer_insights():
         if scoped_branch_id is not None:
             total_sales = total_sales.filter(Sale.branch_id == scoped_branch_id)
         total_sales = total_sales.scalar() or 0
-        
+
         sales_count = Sale.query.filter_by(customer_id=customer.id, status='confirmed', tenant_id=tid)
         if scoped_branch_id is not None:
             sales_count = sales_count.filter(Sale.branch_id == scoped_branch_id)
         sales_count = sales_count.count()
-        
+
         last_sale = Sale.query.filter_by(customer_id=customer.id, tenant_id=tid)
         if scoped_branch_id is not None:
             last_sale = last_sale.filter(Sale.branch_id == scoped_branch_id)
         last_sale = last_sale.order_by(Sale.sale_date.desc()).first()
-        
+
         if last_sale:
             sale_date = last_sale.sale_date.date() if hasattr(last_sale.sale_date, 'date') else last_sale.sale_date
             days_since_last = (datetime.now().date() - sale_date).days
         else:
             days_since_last = 999
-        
+
         customers_data.append({
             'name': customer.name,
             'lifetime_value': float(total_sales),
@@ -3856,9 +3741,9 @@ def customer_insights():
             'days_since_last': days_since_last,
             'status': 'نشط' if days_since_last < 30 else 'خامل' if days_since_last < 90 else 'متوقف'
         })
-    
+
     customers_data.sort(key=lambda x: x['lifetime_value'], reverse=True)
-    
+
     return render_template('owner/customer_insights.html', customers=customers_data[:50])
 
 
@@ -3868,7 +3753,7 @@ def customer_insights():
 def product_performance():
     last_90_days = datetime.now().date() - timedelta(days=90)
     scoped_branch_id = _owner_branch_scope()
-    
+
     products_perf = db.session.query(
         Product.id,
         Product.name,
@@ -3894,13 +3779,13 @@ def product_performance():
         Product.sku,
         Product.cost_price,
     ).all()
-    
+
     # Calculate relative thresholds based on actual data distribution
     sold_values = [float(p.total_sold or 0) for p in products_perf if p.total_sold]
     avg_sold = (sum(sold_values) / len(sold_values)) if sold_values else 0
     high_threshold = avg_sold * 1.5
     low_threshold = avg_sold * 0.3
-    
+
     performance_data = []
     for p in products_perf:
         total_sold = p.total_sold or Decimal('0')
@@ -3908,10 +3793,10 @@ def product_performance():
         cost_price = p.cost_price or Decimal('0')
         margin = total_revenue - (cost_price * total_sold)
         margin_percent = (margin / total_revenue * 100) if total_revenue > 0 else 0
-        
+
         # Relative status based on data distribution, not hardcoded numbers
         status = 'ممتاز' if total_sold > high_threshold else 'جيد' if total_sold > low_threshold else 'ضعيف'
-        
+
         performance_data.append({
             'name': p.name,
             'code': p.sku,
@@ -3922,9 +3807,9 @@ def product_performance():
             'margin_percent': float(margin_percent),
             'status': status
         })
-    
+
     performance_data.sort(key=lambda x: x['revenue'], reverse=True)
-    
+
     return render_template('owner/product_performance.html', products=performance_data[:100])
 
 
@@ -3936,16 +3821,16 @@ def forecasting():
     today = datetime.now().date()
     scoped_branch_id = _owner_branch_scope()
     tid = get_active_tenant_id(current_user)
-    
+
     historical_data = []
     for i in range(months_back):
         month_start = (today.replace(day=1) - timedelta(days=30*i)).replace(day=1)
-        
+
         if month_start.month == 12:
             month_end = month_start.replace(year=month_start.year+1, month=1, day=1) - timedelta(days=1)
         else:
             month_end = month_start.replace(month=month_start.month+1, day=1) - timedelta(days=1)
-        
+
         revenue = db.session.query(func.sum(Sale.total_amount)).filter(
             Sale.sale_date >= month_start,
             Sale.sale_date <= month_end,
@@ -3955,18 +3840,18 @@ def forecasting():
         if scoped_branch_id is not None:
             revenue = revenue.filter(Sale.branch_id == scoped_branch_id)
         revenue = revenue.scalar() or 0
-        
+
         historical_data.append({
             'month': month_start.strftime('%Y-%m'),
             'revenue': float(revenue)
         })
-    
+
     historical_data.reverse()
-    
+
     if len(historical_data) >= 3:
         avg_revenue = sum(m['revenue'] for m in historical_data[-3:]) / 3
         trend = (historical_data[-1]['revenue'] - historical_data[-3]['revenue']) / 3
-        
+
         # Linear trend forecast with confidence based on data volatility
         revenues = [m['revenue'] for m in historical_data if m['revenue'] > 0]
         volatility = (max(revenues) - min(revenues)) / max(avg_revenue, 1) if revenues else 0
@@ -3976,7 +3861,7 @@ def forecasting():
             confidence = 'متوسطة'
         else:
             confidence = 'منخفضة'
-        
+
         forecast = {
             'next_month': avg_revenue + trend,
             'next_3_months': (avg_revenue + trend) * 3,
@@ -3988,7 +3873,7 @@ def forecasting():
             'next_3_months': 0,
             'confidence': 'غير متوفرة'
         }
-    
+
     return render_template('owner/forecasting.html',
                          historical=historical_data,
                          forecast=forecast)
@@ -4186,43 +4071,12 @@ def error_audit_logs():
     page = request.args.get('page', 1, type=int)
     per_page = 50
 
-    query = ErrorAuditLog.query
-    if category:
-        query = query.filter_by(category=category)
-    if level:
-        query = query.filter_by(level=level)
-    if is_resolved == '1':
-        query = query.filter_by(is_resolved=True)
-    elif is_resolved == '0':
-        query = query.filter_by(is_resolved=False)
+    query = ErrorAuditService.get_logs_query(category, level, is_resolved)
 
-    pagination = (
-        query.order_by(ErrorAuditLog.created_at.desc())
-        .paginate(page=page, per_page=per_page, error_out=False)
-    )
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
 
-    # Distinct categories / levels for filter dropdowns
-    categories = [
-        r[0]
-        for r in db.session.query(ErrorAuditLog.category)
-        .distinct()
-        .order_by(ErrorAuditLog.category)
-        .all()
-    ]
-    levels = [
-        r[0]
-        for r in db.session.query(ErrorAuditLog.level)
-        .distinct()
-        .order_by(ErrorAuditLog.level)
-        .all()
-    ]
-
-    # Summary stats
-    stats = {
-        'total': ErrorAuditLog.query.count(),
-        'unresolved': ErrorAuditLog.query.filter_by(is_resolved=False).count(),
-        'critical': ErrorAuditLog.query.filter_by(level='CRITICAL').count(),
-    }
+    categories, levels = ErrorAuditService.get_dropdowns()
+    stats = ErrorAuditService.get_stats()
 
     return render_template(
         'owner/error_audit_logs.html',
@@ -4260,74 +4114,19 @@ def resolve_error_log(log_id):
 @owner_required
 def export_error_audit_logs():
     """Export error logs as JSON or plain text."""
-    from models.error_audit_log import ErrorAuditLog
-    from io import StringIO, BytesIO
-    import json
+    from services.error_audit_service import ErrorAuditService
 
     fmt = request.args.get('format', 'json').lower().strip()
     category = request.args.get('category', '').strip()
     level = request.args.get('level', '').strip()
     is_resolved = request.args.get('resolved', '')
 
-    query = ErrorAuditLog.query
-    if category:
-        query = query.filter_by(category=category)
-    if level:
-        query = query.filter_by(level=level)
-    if is_resolved == '1':
-        query = query.filter_by(is_resolved=True)
-    elif is_resolved == '0':
-        query = query.filter_by(is_resolved=False)
-
-    logs = query.order_by(ErrorAuditLog.created_at.desc()).all()
-
-    if fmt == 'json':
-        data = [log.to_dict() for log in logs]
-        payload = json.dumps(data, ensure_ascii=False, indent=2, default=str)
-        buf = BytesIO(payload.encode('utf-8'))
-        return (
-            buf.getvalue(),
-            200,
-            {
-                'Content-Type': 'application/json; charset=utf-8',
-                'Content-Disposition': 'attachment; filename="error_audit_logs.json"',
-            },
-        )
-
-    elif fmt in ('txt', 'text', 'csv'):
-        buf = StringIO()
-        buf.write("=" * 80 + "\n")
-        buf.write("Error Audit Logs Export\n")
-        buf.write("Generated: " + datetime.now(timezone.utc).isoformat() + "\n")
-        buf.write("Count: " + str(len(logs)) + "\n")
-        buf.write("=" * 80 + "\n\n")
-
-        for log in logs:
-            buf.write(f"ID:         {log.id}\n")
-            buf.write(f"Level:      {log.level}\n")
-            buf.write(f"Category:   {log.category}\n")
-            buf.write(f"Source:     {log.source}\n")
-            buf.write(f"Time:       {log.created_at.isoformat() if log.created_at else '-'}\n")
-            buf.write(f"URL:        {log.url or '-'}\n")
-            buf.write(f"User:       {log.user_id or '-'} | Tenant: {log.tenant_id or '-'}\n")
-            buf.write(f"Resolved:   {'YES' if log.is_resolved else 'NO'}\n")
-            buf.write(f"Message:\n  {log.message}\n")
-            if log.stack_trace:
-                buf.write(f"Stack Trace:\n  {log.stack_trace[:500]}\n")
-            if log.request_data:
-                buf.write(f"Request Data:\n  {log.request_data}\n")
-            buf.write("-" * 80 + "\n\n")
-
-        payload = buf.getvalue()
-        return (
-            payload.encode('utf-8'),
-            200,
-            {
-                'Content-Type': 'text/plain; charset=utf-8',
-                'Content-Disposition': 'attachment; filename="error_audit_logs.txt"',
-            },
-        )
-
-    else:
-        flash('صيغة التصدير غير مدعومة.', 'danger')
+    try:
+        payload, mimetype, filename = ErrorAuditService.get_export_payload(category, level, is_resolved, fmt)
+        return payload, 200, {
+            'Content-Type': mimetype,
+            'Content-Disposition': f'attachment; filename="{filename}"',
+        }
+    except Exception:
+        flash('صيغة التصدير غير مدعومة أو فشل التصدير.', 'danger')
         return redirect(url_for('owner.error_audit_logs'))
