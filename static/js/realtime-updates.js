@@ -7,20 +7,17 @@ class RealtimeUpdates {
     
     connect() {
         if (typeof io === 'undefined') {
-            console.log('Socket.IO not loaded');
             return;
         }
         
         this.socket = io();
         
         this.socket.on('connect', () => {
-            console.log('Connected to server');
             this.reconnectAttempts = 0;
             this.socket.emit('subscribe_notifications');
         });
         
         this.socket.on('disconnect', () => {
-            console.log('Disconnected from server');
             this.reconnect();
         });
         
@@ -47,7 +44,6 @@ class RealtimeUpdates {
         if (this.reconnectAttempts < this.maxReconnectAttempts) {
             this.reconnectAttempts++;
             setTimeout(() => {
-                console.log(`Reconnecting... (${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
                 this.connect();
             }, 2000 * this.reconnectAttempts);
         }
@@ -66,7 +62,6 @@ class RealtimeUpdates {
                 timerProgressBar: true
             });
         } else {
-            console.log(`${title}: ${message}`);
         }
     }
     

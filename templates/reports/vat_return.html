@@ -36,7 +36,7 @@
     <div class="col-md-4">
       <div class="small-box bg-success">
         <div class="inner">
-          <h3>{{ '{:,.2f}'.format(report.output_vat) }}</h3>
+          <h3>{{ '{:,.2f}'.format(report.output_vat) }} {{ report.currency }}</h3>
           <p>ضريبة المخرجات (مبيعات)</p>
         </div>
         <div class="icon"><i class="fas fa-arrow-up"></i></div>
@@ -45,7 +45,7 @@
     <div class="col-md-4">
       <div class="small-box bg-info">
         <div class="inner">
-          <h3>{{ '{:,.2f}'.format(report.input_vat) }}</h3>
+          <h3>{{ '{:,.2f}'.format(report.input_vat) }} {{ report.currency }}</h3>
           <p>ضريبة المدخلات (مشتريات)</p>
         </div>
         <div class="icon"><i class="fas fa-arrow-down"></i></div>
@@ -54,7 +54,7 @@
     <div class="col-md-4">
       <div class="small-box bg-{{ 'danger' if report.net_payable > 0 else 'success' }}">
         <div class="inner">
-          <h3>{{ '{:,.2f}'.format(report.net_payable) }}</h3>
+          <h3>{{ '{:,.2f}'.format(report.net_payable) }} {{ report.currency }}</h3>
           <p>صافي المستحق ({{ report.currency }})</p>
         </div>
         <div class="icon"><i class="fas fa-balance-scale"></i></div>

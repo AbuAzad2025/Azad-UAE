@@ -12,9 +12,13 @@ class Budget(db.Model):
     الموازنة السنوية/الشهرية
     """
     __tablename__ = 'budgets'
-    
+    __table_args__ = (
+        db.UniqueConstraint('tenant_id', 'budget_number', name='uq_budgets_tenant_budget_number'),
+    )
+
     id = db.Column(db.Integer, primary_key=True)
-    budget_number = db.Column(db.String(50), unique=True, nullable=False, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
+    budget_number = db.Column(db.String(50), nullable=False, index=True)
     name_ar = db.Column(db.String(200), nullable=False)
     name_en = db.Column(db.String(200))
     
@@ -45,6 +49,7 @@ class Budget(db.Model):
     approved_at = db.Column(db.DateTime)
     
     # Relationships
+    tenant = db.relationship('Tenant', backref='budgets', foreign_keys=[tenant_id])
     lines = db.relationship('BudgetLine', back_populates='budget', cascade='all, delete-orphan')
     creator = db.relationship('User', foreign_keys=[created_by])
     approver = db.relationship('User', foreign_keys=[approved_by])
@@ -146,8 +151,9 @@ class BudgetLine(db.Model):
     سطور الموازنة - حساب واحد
     """
     __tablename__ = 'budget_lines'
-    
+
     id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
     budget_id = db.Column(db.Integer, db.ForeignKey('budgets.id'), nullable=False)
     account_id = db.Column(db.Integer, db.ForeignKey('gl_accounts.id'), nullable=False)
     
@@ -164,6 +170,7 @@ class BudgetLine(db.Model):
     notes = db.Column(db.Text)
     
     # Relationships
+    tenant = db.relationship('Tenant', backref='budget_lines', foreign_keys=[tenant_id])
     budget = db.relationship('Budget', back_populates='lines')
     account = db.relationship('GLAccount')
     

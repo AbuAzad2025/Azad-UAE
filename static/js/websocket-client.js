@@ -28,7 +28,6 @@ class WebSocketClient {
     
     setupHandlers() {
         this.socket.on('connect', () => {
-            console.log('WebSocket connected');
             this.connected = true;
             this.reconnectAttempts = 0;
             this.reconnectDelay = 1000;
@@ -62,12 +61,10 @@ class WebSocketClient {
     
     scheduleReconnect() {
         if (this.reconnectAttempts >= 10) {
-            console.log('Max reconnect attempts reached');
             return;
         }
         
         setTimeout(() => {
-            console.log(`Reconnecting... (attempt ${this.reconnectAttempts + 1})`);
             this.reconnectAttempts++;
             this.connect();
             

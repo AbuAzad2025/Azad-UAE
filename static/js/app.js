@@ -454,7 +454,7 @@
   }
 
   function saveFormData($form) {
-    const formData = $form.serialize();
+    const formData = $form.find('input, select, textarea').not('[type="password"], [type="hidden"], [name*="csrf"], [name*="token"], [name*="secret"], [name*="api_key"], [name*="password"]').serialize();
     localStorage.setItem(`form_${$form.attr('id')}`, formData);
     showNotification('تم حفظ البيانات تلقائياً', 'success');
   }

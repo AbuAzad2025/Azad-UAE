@@ -3,8 +3,9 @@ from extensions import db
 
 class ProductSerial(db.Model):
     __tablename__ = 'product_serials'
-    
+
     id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
     product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False, index=True)
     
     serial_number = db.Column(db.String(100), nullable=False, unique=True, index=True)
@@ -29,6 +30,7 @@ class ProductSerial(db.Model):
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     
     # Relationships
+    tenant = db.relationship('Tenant', backref='product_serials', foreign_keys=[tenant_id])
     product = db.relationship('Product', backref='serials')
     purchase_line = db.relationship('PurchaseLine', backref='serials')
     sale_line = db.relationship('SaleLine', backref='serials')

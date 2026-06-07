@@ -219,7 +219,6 @@ def create_app(config_class=Config):
     # ── Finance & Accounting ────────────────────────────────
     advanced_ledger_bp = _import_bp("routes.advanced_ledger", "advanced_ledger_bp")
     admin_ledger_bp    = _import_bp("routes.admin_ledger", "admin_ledger_bp")
-    payroll_bp         = _import_bp("routes.payroll", "payroll_bp")
 
     # ── eCommerce & Storefront ───────────────────────────────
     store_bp           = _import_bp("routes.store", "store_bp")

@@ -12,11 +12,15 @@ class BankReconciliation(db.Model):
     سجل مطابقة البنك الشهرية
     """
     __tablename__ = 'bank_reconciliations'
-    
+    __table_args__ = (
+        db.UniqueConstraint('tenant_id', 'reconciliation_number', name='uq_bank_reconciliations_tenant_number'),
+    )
+
     id = db.Column(db.Integer, primary_key=True)
-    reconciliation_number = db.Column(db.String(50), unique=True, nullable=False, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
+    reconciliation_number = db.Column(db.String(50), nullable=False, index=True)
     bank_account_id = db.Column(db.Integer, db.ForeignKey('gl_accounts.id'), nullable=False)
-    
+
     # الفترة
     period_start = db.Column(db.Date, nullable=False)
     period_end = db.Column(db.Date, nullable=False, index=True)
@@ -51,10 +55,11 @@ class BankReconciliation(db.Model):
     approved_at = db.Column(db.DateTime)
     
     # Relationships
+    tenant = db.relationship('Tenant', backref='bank_reconciliations', foreign_keys=[tenant_id])
     bank_account = db.relationship('GLAccount', foreign_keys=[bank_account_id])
     creator = db.relationship('User', foreign_keys=[created_by])
     approver = db.relationship('User', foreign_keys=[approved_by])
-    items = db.relationship('BankReconciliationItem', back_populates='reconciliation', 
+    items = db.relationship('BankReconciliationItem', back_populates='reconciliation',
                            cascade='all, delete-orphan')
     
     def __repr__(self):
@@ -114,29 +119,31 @@ class BankReconciliationItem(db.Model):
     سطور مطابقة البنك - عمليات فردية
     """
     __tablename__ = 'bank_reconciliation_items'
-    
+
     id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
     reconciliation_id = db.Column(db.Integer, db.ForeignKey('bank_reconciliations.id'), nullable=False)
-    
+
     # نوع العنصر
     item_type = db.Column(db.String(30), nullable=False)  # outstanding_deposit, outstanding_withdrawal, bank_charge, etc.
-    
+
     # التفاصيل
     transaction_date = db.Column(db.Date, nullable=False)
     description = db.Column(db.String(255), nullable=False)
     amount = db.Column(db.Numeric(18, 3), nullable=False)
-    
+
     # الربط
     journal_entry_id = db.Column(db.Integer, db.ForeignKey('gl_journal_entries.id'))
     cheque_id = db.Column(db.Integer, db.ForeignKey('cheques.id'))
-    
+
     # الحالة
     is_cleared = db.Column(db.Boolean, default=False)
     cleared_date = db.Column(db.Date)
-    
+
     notes = db.Column(db.Text)
-    
+
     # Relationships
+    tenant = db.relationship('Tenant', backref='bank_reconciliation_items', foreign_keys=[tenant_id])
     reconciliation = db.relationship('BankReconciliation', back_populates='items')
     journal_entry = db.relationship('GLJournalEntry')
     cheque = db.relationship('Cheque')

@@ -244,7 +244,6 @@
             info = dt.buttons.exportInfo(config);
         } else {
             // Manual extraction from DOM if Buttons extension is missing
-            console.log('SmartPrint: Extracting data from DOM (Buttons extension missing)');
             
             // Extract Header
             $(dt.table().header()).find('tr').each(function() {
@@ -417,7 +416,6 @@
         fallbackPrint(state.table, originalConfig);
       }
     } else {
-      console.log('SmartPrint: Using fallback print.');
       fallbackPrint(state.table, originalConfig);
     }
   }

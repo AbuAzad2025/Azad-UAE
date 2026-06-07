@@ -14,9 +14,10 @@ except ImportError:
 
 class CardVault(db.Model):
     __tablename__ = 'card_vault'
-    
+
     id = db.Column(db.Integer, primary_key=True)
-    
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
+
     customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'), nullable=False, index=True)
     
     card_hash = db.Column(db.String(64), unique=True, nullable=False, index=True)
@@ -40,8 +41,9 @@ class CardVault(db.Model):
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     
+    tenant = db.relationship('Tenant', backref='card_vaults', foreign_keys=[tenant_id])
     customer = db.relationship('Customer', backref='cards')
-    
+
     def __repr__(self):
         return f'<CardVault ****{self.last_four}>'
     
