@@ -1,691 +1,1387 @@
-{% extends 'base.html' %}
-
-{% block title %}نقطة البيع POS{% endblock %}
-
-{% block page_title %}
-<div class="d-flex justify-content-between align-items-center">
-  <div>
-    <h1 class="mb-0"><i class="fas fa-cash-register mr-2"></i>نقطة البيع (POS)</h1>
-    <p class="text-muted mb-0">شاشة كاشير سريعة للباركود والطباعة</p>
-  </div>
-  <div>
-    <a href="{{ url_for('sales.index') }}" class="btn btn-outline-secondary">
-      <i class="fas fa-file-invoice mr-2"></i>المبيعات
-    </a>
-    <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">
-      <i class="fas fa-home mr-2"></i>الرئيسية
-    </a>
-  </div>
-</div>
-{% endblock %}
-
-{% block extra_css %}
-<style>
-  .pos-wrap .form-control { min-height: 44px; }
-  .pos-cart-table td, .pos-cart-table th { vertical-align: middle; }
-  .pos-cart-table input { min-height: 38px; }
-  .pos-results { max-height: 280px; overflow: auto; }
-  .pos-kpi { background: linear-gradient(135deg,#667eea 0%,#764ba2 100%); color: #fff; border-radius: 12px; }
-  .pos-kpi .value { font-size: 1.55rem; font-weight: 800; }
-  @media (max-width: 991px) {
-    .pos-right { margin-top: 12px; }
-  }
-</style>
-{% endblock %}
-
-{% block content %}
-<div class="pos-wrap">
-  <div class="row">
-    <div class="col-lg-8">
-      <div class="card card-outline card-primary">
-        <div class="card-header">
-          <h3 class="card-title"><i class="fas fa-barcode mr-2"></i>إضافة منتجات</h3>
-        </div>
-        <div class="card-body">
-          <div class="row">
-            <div class="col-md-6">
-              <label class="mb-1">العميل</label>
-              <div class="input-group">
-                <input id="customerSearch" class="form-control" placeholder="ابحث بالاسم أو الهاتف (F4)">
-                <div class="input-group-append">
-                  <button id="walkinCustomer" class="btn btn-outline-primary" type="button" title="عميل نقدي سريع">نقدي</button>
-                  <button id="clearCustomer" class="btn btn-outline-secondary" type="button">مسح</button>
-                </div>
-              </div>
-              <div id="customerResults" class="list-group mt-2 pos-results d-none"></div>
-              <div class="text-muted mt-2" id="customerSelectedHint">لم يتم اختيار عميل بعد — أو اضغط «نقدي»</div>
-            </div>
-            <div class="col-md-6">
-              <label class="mb-1">بحث/باركود</label>
-              <div class="input-group">
-                <input id="productSearch" class="form-control" placeholder="امسح الباركود أو اكتب الاسم/الكود">
-                <div class="input-group-append">
-                  <button id="clearProductSearch" class="btn btn-outline-secondary" type="button">مسح</button>
-                </div>
-              </div>
-              <div id="productResults" class="list-group mt-2 pos-results d-none"></div>
-              <div class="text-muted mt-2">Enter / F2 لإضافة · F8 حفظ+طباعة · Esc مسح البحث</div>
-              <div id="productLoading" class="small text-info d-none mt-1"><i class="fas fa-spinner fa-spin"></i> جاري البحث…</div>
-            </div>
-          </div>
-
-          <hr>
-
-          <div class="table-responsive">
-            <table class="table table-hover pos-cart-table mb-0">
-              <thead>
-                <tr>
-                  <th style="width: 38%;">المنتج</th>
-                  <th style="width: 12%;">الكمية</th>
-                  <th style="width: 14%;">السعر</th>
-                  <th style="width: 10%;">خصم%</th>
-                  <th style="width: 16%;">الإجمالي</th>
-                  <th style="width: 10%;"></th>
-                </tr>
-              </thead>
-              <tbody id="cartBody">
-                <tr id="cartEmptyRow">
-                  <td colspan="6" class="text-center text-muted py-4">السلة فارغة</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-lg-4 pos-right">
-      <div class="card pos-kpi">
-        <div class="card-body">
-          <div class="d-flex justify-content-between align-items-center">
-            <div>
-              <div>الإجمالي</div>
-              <div class="value"><span id="kpiTotal">0.00</span> <span id="kpiCurrency">{{ tenant_currency_symbol or 'AED' }}</span></div>
-            </div>
-            <div class="text-right">
-              <div class="small">المجموع</div>
-              <div><strong id="kpiSubtotal">0.00</strong></div>
-              <div class="small mt-2">الخصم</div>
-              <div><strong id="kpiDiscount">0.00</strong></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="card card-outline card-info">
-        <div class="card-header">
-          <h3 class="card-title"><i class="fas fa-sliders-h mr-2"></i>إعدادات الفاتورة</h3>
-        </div>
-        <div class="card-body">
-          <div class="form-group">
-            <label>المستودع</label>
-            <select id="warehouseId" class="form-control">
-              <option value="">تلقائي (الرئيسي)</option>
-              {% for w in warehouses %}
-                <option value="{{ w.id }}">{{ w.name_ar or w.name }}{% if w.is_main %} (رئيسي){% endif %}</option>
-              {% endfor %}
-            </select>
-          </div>
-
-          <div class="row">
-            <div class="col-6">
-              <div class="form-group">
-                <label>العملة</label>
-                <select id="currency" class="form-control">
-                  <option value="{{ tenant_default_currency or 'AED' }}" selected>{{ tenant_default_currency or 'AED' }}</option>
-                  <option value="USD">USD</option>
-                  <option value="EUR">EUR</option>
-                </select>
-              </div>
-            </div>
-            <div class="col-6">
-              <div class="form-group">
-                <label>سعر الصرف</label>
-                <input id="exchangeRate" type="number" step="0.000001" class="form-control" value="1">
-              </div>
-            </div>
-          </div>
-
-          <div class="row" id="pos-tax-row" {% if not tenant_enable_tax %}style="display:none"{% endif %}>
-            <div class="col-6">
-              <div class="form-group">
-                <label>ضريبة %</label>
-                {% set _default_tax_rate = (tenant_default_tax_rate if tenant_enable_tax else 0) %}
-                <input id="taxRate" type="number" step="0.01" class="form-control" value="{{ _default_tax_rate }}">
-              </div>
-            </div>
-            <div class="col-6">
-              <div class="form-group">
-                <label>شحن</label>
-                <input id="shippingCost" type="number" step="0.01" class="form-control" value="0">
-              </div>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label>خصم عام</label>
-            <input id="discountAmount" type="number" step="0.01" class="form-control" value="0">
-          </div>
-        </div>
-      </div>
-
-      <div class="card card-outline card-success">
-        <div class="card-header">
-          <h3 class="card-title"><i class="fas fa-credit-card mr-2"></i>الدفع</h3>
-        </div>
-        <div class="card-body">
-          <div class="form-group">
-            <label>طريقة الدفع</label>
-            <select id="paymentMethod" class="form-control">
-              <option value="">بدون دفع الآن (آجل)</option>
-              <option value="cash">نقدي</option>
-              <option value="card">بطاقة</option>
-              <option value="bank_transfer">تحويل بنكي</option>
-              <option value="cheque">شيك</option>
-              <option value="e_wallet">محفظة إلكترونية</option>
-            </select>
-          </div>
-
-          <div class="row">
-            <div class="col-6">
-              <div class="form-group">
-                <label>المبلغ المدفوع</label>
-                <input id="paidAmount" type="number" step="0.01" class="form-control" value="0">
-              </div>
-            </div>
-            <div class="col-6">
-              <div class="form-group">
-                <label>رقم مرجع</label>
-                <input id="referenceNumber" class="form-control" placeholder="اختياري">
-              </div>
-            </div>
-          </div>
-
-          <button id="checkoutBtn" class="btn btn-success btn-block btn-lg">
-            <i class="fas fa-check mr-2"></i>حفظ الفاتورة
-          </button>
-          <button id="checkoutPrintBtn" class="btn btn-primary btn-block mt-2">
-            <i class="fas fa-print mr-2"></i>حفظ + طباعة
-          </button>
-        </div>
-      </div>
-
-      <div id="posAlert" class="alert d-none"></div>
-    </div>
-  </div>
-</div>
-
-<div class="modal fade" id="posDoneModal" tabindex="-1" role="dialog" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">تم إنشاء الفاتورة</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-        <div>رقم الفاتورة: <strong id="doneSaleNumber"></strong></div>
-      </div>
-      <div class="modal-footer">
-        <a id="doneViewBtn" class="btn btn-outline-secondary" href="#" target="_blank" rel="noopener noreferrer">عرض</a>
-        <a id="donePrintBtn" class="btn btn-primary" href="#" target="_blank" rel="noopener noreferrer">طباعة</a>
-        <button type="button" class="btn btn-success" data-dismiss="modal">إغلاق</button>
-      </div>
-    </div>
-  </div>
-</div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-  (function(){
-    const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-    const state = {
-      customer: null,
-      cart: [],
-      lastProductResults: []
-    };
-
-    const qs = (s, r=document) => r.querySelector(s);
-    const qsa = (s, r=document) => Array.from(r.querySelectorAll(s));
-    const fmt = (n) => (Number(n || 0)).toFixed(2);
-    const toNum = (v) => {
-      const n = Number(v);
-      return Number.isFinite(n) ? n : 0;
-    };
-    const baseCurrency = '{{ tenant_default_currency or "AED" }}';
-    const selectedCurrency = () => qs('#currency').value || baseCurrency;
-    const currentRate = () => toNum(qs('#exchangeRate').value) || 1;
-    const priceForCurrency = (basePrice) => {
-      const rate = currentRate();
-      if (selectedCurrency() !== baseCurrency && rate > 0) {
-        return toNum(basePrice) / rate;
-      }
-      return toNum(basePrice);
-    };
-    const updateCartPrices = () => {
-      state.cart.forEach(it => {
-        if (!Number.isFinite(Number(it.basePrice))) {
-          it.basePrice = it.price;
-        }
-        it.price = priceForCurrency(it.basePrice);
-      });
-      renderCart();
-    };
-    const loadRateForCurrency = async () => {
-      const currency = selectedCurrency();
-      if (currency === baseCurrency) {
-        qs('#exchangeRate').value = '1';
-        updateCartPrices();
-        return;
-      }
-      try {
-        const r = await fetch(`/api/currency-rate/${encodeURIComponent(currency)}/${encodeURIComponent(baseCurrency)}`);
-        const data = await r.json();
-        if (data.success && data.rate) {
-          qs('#exchangeRate').value = Number(data.rate).toFixed(6);
-        }
-      } catch (_) {
-        // Keep the user-entered rate if the live lookup fails.
-      }
-      updateCartPrices();
-    };
-    const esc = (s) => {
-      if (s == null) return '';
-      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    };
-
-    const showAlert = (msg, level='danger') => {
-      const el = qs('#posAlert');
-      el.className = 'alert alert-' + level;
-      el.textContent = msg;
-      el.classList.remove('d-none');
-      setTimeout(()=>{ el.classList.add('d-none'); }, 5000);
-    };
-
-    const customerHint = () => {
-      const el = qs('#customerSelectedHint');
-      if (state.customer) {
-        el.textContent = 'العميل المختار: ' + state.customer.text;
-        el.className = 'text-success mt-2';
-      } else {
-        el.textContent = 'لم يتم اختيار عميل بعد';
-        el.className = 'text-muted mt-2';
-      }
-    };
-
-    const recalc = () => {
-      const taxRate = Math.max(0, Math.min(100, toNum(qs('#taxRate').value)));
-      const shipping = Math.max(0, toNum(qs('#shippingCost').value));
-      const discountAmount = Math.max(0, toNum(qs('#discountAmount').value));
-
-      let subtotal = 0;
-      let discount = 0;
-      state.cart.forEach(it => {
-        const lineBase = it.qty * it.price;
-        const lineDisc = lineBase * (it.discountPercent / 100);
-        subtotal += lineBase - lineDisc;
-        discount += lineDisc;
-      });
-
-      const tax = subtotal * (taxRate / 100);
-      const total = Math.max(0, subtotal + tax + shipping - discountAmount);
-
-      qs('#kpiSubtotal').textContent = fmt(subtotal);
-      qs('#kpiDiscount').textContent = fmt(discount + discountAmount);
-      qs('#kpiTotal').textContent = fmt(total);
-      qs('#kpiCurrency').textContent = qs('#currency').value;
-      return { subtotal, tax, shipping, discountAmount, taxRate, total };
-    };
-
-    const renderCart = () => {
-      const body = qs('#cartBody');
-      body.innerHTML = '';
-      if (!state.cart.length) {
-        body.innerHTML = '<tr id="cartEmptyRow"><td colspan="6" class="text-center text-muted py-4">السلة فارغة</td></tr>';
-        recalc();
-        return;
-      }
-      state.cart.forEach((it, idx) => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>
-            <div><strong>${esc(it.name)}</strong></div>
-            <div class="text-muted small">${it.sku ? ('SKU: '+esc(it.sku)) : ''}${it.barcode ? (' | Barcode: '+esc(it.barcode)) : ''}</div>
-          </td>
-          <td><input class="form-control form-control-sm text-center" data-k="qty" data-i="${idx}" type="number" step="0.001" min="0.001" value="${it.qty}"></td>
-          <td><input class="form-control form-control-sm text-center" data-k="price" data-i="${idx}" type="number" step="0.01" min="0" value="${it.price}"></td>
-          <td><input class="form-control form-control-sm text-center" data-k="disc" data-i="${idx}" type="number" step="0.01" min="0" max="100" value="${it.discountPercent}"></td>
-          <td class="text-center"><strong>${fmt((it.qty * it.price) * (1 - it.discountPercent/100))}</strong></td>
-          <td class="text-center">
-            <button class="btn btn-danger btn-sm" data-k="del" data-i="${idx}"><i class="fas fa-trash"></i></button>
-          </td>
-        `;
-        body.appendChild(tr);
-      });
-      recalc();
-    };
-
-    const addToCart = (p) => {
-      const existing = state.cart.find(x => x.id === p.id);
-      if (existing) {
-        existing.qty = Number(existing.qty) + 1;
-      } else {
-        state.cart.push({
-          id: p.id,
-          name: p.name,
-          sku: p.sku || '',
-          barcode: p.barcode || '',
-          qty: 1,
-          basePrice: toNum(p.price),
-          price: priceForCurrency(toNum(p.price)),
-          discountPercent: 0
-        });
-      }
-      renderCart();
-    };
-
-    const warehouseParam = () => {
-      const w = qs('#warehouseId').value;
-      return w ? ('&warehouse_id=' + encodeURIComponent(w)) : '';
-    };
-
-    const fetchJson = async (url) => {
-      const r = await fetch(url, { credentials: 'same-origin', headers: { 'Accept': 'application/json' } });
-      if (r.status === 404) {
-        const j = await r.json().catch(() => ({}));
-        throw new Error(j.error || 'غير موجود');
-      }
-      if (!r.ok) {
-        const j = await r.json().catch(() => ({}));
-        throw new Error(j.error || ('HTTP ' + r.status));
-      }
-      return r.json();
-    };
-
-    let customerTimer = null;
-    qs('#customerSearch').addEventListener('input', function(){
-      const q = this.value.trim();
-      clearTimeout(customerTimer);
-      customerTimer = setTimeout(async () => {
-        if (!q) {
-          qs('#customerResults').classList.add('d-none');
-          return;
-        }
-        const res = await fetchJson('/pos/api/customers?q=' + encodeURIComponent(q));
-        const box = qs('#customerResults');
-        box.innerHTML = '';
-        res.forEach(c => {
-          const a = document.createElement('button');
-          a.type = 'button';
-          a.className = 'list-group-item list-group-item-action';
-          a.textContent = c.text;
-          a.addEventListener('click', () => {
-            state.customer = c;
-            qs('#customerSearch').value = c.text;
-            box.classList.add('d-none');
-            customerHint();
-          });
-          box.appendChild(a);
-        });
-        box.classList.toggle('d-none', res.length === 0);
-      }, 180);
-    });
-
-    qs('#clearCustomer').addEventListener('click', () => {
-      state.customer = null;
-      qs('#customerSearch').value = '';
-      qs('#customerResults').classList.add('d-none');
-      customerHint();
-    });
-
-    qs('#walkinCustomer').addEventListener('click', async () => {
-      try {
-        const c = await fetchJson('/pos/api/walkin-customer');
-        state.customer = c;
-        qs('#customerSearch').value = c.text || c.name;
-        customerHint();
-        qs('#productSearch').focus();
-      } catch (err) {
-        showAlert(err.message || 'تعذر تحميل عميل نقدي');
-      }
-    });
-
-    let productTimer = null;
-    let productBusy = false;
-
-    const renderProductResults = (res) => {
-      state.lastProductResults = res || [];
-      const box = qs('#productResults');
-      box.innerHTML = '';
-      (res || []).forEach(p => {
-        const a = document.createElement('button');
-        a.type = 'button';
-        const stockBadge = p.is_out_of_stock
-          ? '<span class="badge badge-warning badge-pill ml-1">نفد</span>'
-          : `<span class="badge badge-secondary badge-pill ml-1">${fmt(p.stock)}</span>`;
-        a.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center';
-        a.innerHTML = `<span>${esc(p.text)}${p.is_inactive ? ' <small class="text-danger">(غير نشط)</small>' : ''}</span><span>${stockBadge} <span class="badge badge-primary badge-pill">${fmt(p.price)}</span></span>`;
-        a.addEventListener('click', () => {
-          if (p.is_inactive) { showAlert('المنتج غير نشط.', 'warning'); return; }
-          addToCart(p);
-          qs('#productSearch').value = '';
-          box.classList.add('d-none');
-          qs('#productSearch').focus();
-        });
-        box.appendChild(a);
-      });
-      box.classList.toggle('d-none', !res || res.length === 0);
-    };
-
-    const addFirstOrLookup = async (q) => {
-      if (!q) return;
-      const first = (state.lastProductResults || [])[0];
-      if (first && (first.barcode === q || first.sku === q)) {
-        addToCart(first);
-        qs('#productSearch').value = '';
-        qs('#productResults').classList.add('d-none');
-        return;
-      }
-      try {
-        const p = await fetchJson('/pos/api/product?code=' + encodeURIComponent(q) + warehouseParam());
-        if (p && p.id) {
-          if (p.is_inactive) { showAlert(p.warning || 'المنتج غير نشط.', 'warning'); return; }
-          if (p.warning) showAlert(p.warning, 'warning');
-          addToCart(p);
-          qs('#productSearch').value = '';
-          qs('#productResults').classList.add('d-none');
-        }
-      } catch (err) {
-        if ((state.lastProductResults || []).length) {
-          addToCart(state.lastProductResults[0]);
-          qs('#productSearch').value = '';
-          qs('#productResults').classList.add('d-none');
-        } else {
-          showAlert(err.message || 'لم يُعثر على المنتج');
-        }
-      }
-    };
-
-    const runProductSearch = async (q) => {
-      if (!q) {
-        qs('#productResults').classList.add('d-none');
-        state.lastProductResults = [];
-        qs('#productLoading').classList.add('d-none');
-        return;
-      }
-      if (productBusy) return;
-      productBusy = true;
-      qs('#productLoading').classList.remove('d-none');
-      try {
-        const res = await fetchJson('/pos/api/products?q=' + encodeURIComponent(q) + warehouseParam());
-        renderProductResults(res);
-      } catch (err) {
-        showAlert(err.message || 'فشل البحث');
-      } finally {
-        productBusy = false;
-        qs('#productLoading').classList.add('d-none');
-      }
-    };
-
-    qs('#productSearch').addEventListener('input', function(){
-      const q = this.value.trim();
-      clearTimeout(productTimer);
-      productTimer = setTimeout(() => runProductSearch(q), 220);
-    });
-    qs('#productSearch').addEventListener('keydown', function(e){
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        addFirstOrLookup(this.value.trim());
-      }
-    });
-
-    qs('#warehouseId').addEventListener('change', function(){
-      const q = qs('#productSearch').value.trim();
-      if (q) runProductSearch(q);
-    });
-
-    qs('#clearProductSearch').addEventListener('click', () => {
-      qs('#productSearch').value = '';
-      qs('#productResults').classList.add('d-none');
-      state.lastProductResults = [];
-    });
-
-    qs('#cartBody').addEventListener('input', function(e){
-      const t = e.target;
-      const idx = Number(t.getAttribute('data-i'));
-      const k = t.getAttribute('data-k');
-      if (!Number.isFinite(idx) || !state.cart[idx]) return;
-      if (k === 'qty') state.cart[idx].qty = Math.max(0.001, toNum(t.value));
-      if (k === 'price') {
-        state.cart[idx].price = Math.max(0, toNum(t.value));
-        state.cart[idx].basePrice = selectedCurrency() !== baseCurrency && currentRate() > 0
-          ? state.cart[idx].price * currentRate()
-          : state.cart[idx].price;
-      }
-      if (k === 'disc') state.cart[idx].discountPercent = Math.max(0, Math.min(100, toNum(t.value)));
-      renderCart();
-    });
-    qs('#cartBody').addEventListener('click', function(e){
-      const btn = e.target.closest('button[data-k="del"]');
-      if (!btn) return;
-      const idx = Number(btn.getAttribute('data-i'));
-      if (!Number.isFinite(idx)) return;
-      state.cart.splice(idx, 1);
-      renderCart();
-    });
-
-    qsa('#taxRate,#shippingCost,#discountAmount').forEach(el => {
-      el.addEventListener('input', recalc);
-      el.addEventListener('change', recalc);
-    });
-    qs('#currency').addEventListener('change', loadRateForCurrency);
-    qs('#exchangeRate').addEventListener('input', updateCartPrices);
-    qs('#exchangeRate').addEventListener('change', updateCartPrices);
-
-    let checkoutBusy = false;
-
-    const checkout = async (autoPrint) => {
-      if (checkoutBusy) return;
-      if (!state.customer) {
-        showAlert('يرجى اختيار العميل أو «نقدي».', 'warning');
-        return;
-      }
-      if (!state.cart.length) {
-        showAlert('السلة فارغة.', 'warning');
-        return;
-      }
-
-      const totals = recalc();
-      const payload = {
-        customer_id: state.customer.id,
-        quick_customer: !!state.customer.is_walkin,
-        warehouse_id: qs('#warehouseId').value || null,
-        currency: qs('#currency').value,
-        exchange_rate: toNum(qs('#exchangeRate').value) || 1,
-        tax_rate: toNum(qs('#taxRate').value) || 0,
-        shipping_cost: toNum(qs('#shippingCost').value) || 0,
-        discount_amount: toNum(qs('#discountAmount').value) || 0,
-        payment_method: qs('#paymentMethod').value || '',
-        paid_amount: toNum(qs('#paidAmount').value) || 0,
-        payment_currency: qs('#currency').value,
-        payment_exchange_rate: toNum(qs('#exchangeRate').value) || 1,
-        reference_number: qs('#referenceNumber').value || '',
-        lines: state.cart.map(it => ({
-          product_id: it.id,
-          quantity: it.qty,
-          unit_price: it.price,
-          discount_percent: it.discountPercent
-        }))
-      };
-
-      checkoutBusy = true;
-      qs('#checkoutBtn').disabled = true;
-      qs('#checkoutPrintBtn').disabled = true;
-      try {
-        const r = await fetch('/pos/api/checkout', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'X-CSRFToken': csrf
-          },
-          credentials: 'same-origin',
-          body: JSON.stringify(payload)
-        });
-        const j = await r.json().catch(()=> ({}));
-        if (!r.ok || !j.success) {
-          throw new Error(j.error || ('HTTP ' + r.status));
-        }
-        qs('#doneSaleNumber').textContent = j.sale_number;
-        qs('#doneViewBtn').href = j.view_url;
-        qs('#donePrintBtn').href = j.print_url;
-        $('#posDoneModal').modal('show');
-        if (autoPrint) {
-          window.open(j.print_url, '_blank', 'noopener');
-        }
-        state.cart = [];
-        renderCart();
-        qs('#paidAmount').value = 0;
-        qs('#paymentMethod').value = '';
-        qs('#referenceNumber').value = '';
-      } catch (err) {
-        showAlert(err.message || 'فشل العملية');
-      } finally {
-        checkoutBusy = false;
-        qs('#checkoutBtn').disabled = false;
-        qs('#checkoutPrintBtn').disabled = false;
-      }
-    };
-
-    qs('#checkoutBtn').addEventListener('click', () => checkout(false));
-    qs('#checkoutPrintBtn').addEventListener('click', () => checkout(true));
-
-    document.addEventListener('keydown', (e) => {
-      if (e.target.matches('input, textarea, select') && e.key !== 'Escape' && !e.altKey) {
-        if (e.key === 'F2' || e.key === 'F4' || e.key === 'F8') { /* allow below */ }
-        else return;
-      }
-      if (e.key === 'F2') {
-        e.preventDefault();
-        qs('#productSearch').focus();
-      } else if (e.key === 'F4') {
-        e.preventDefault();
-        qs('#customerSearch').focus();
-      } else if (e.key === 'F8') {
-        e.preventDefault();
-        checkout(true);
-      } else if (e.key === 'Escape') {
-        qs('#productSearch').value = '';
-        qs('#productResults').classList.add('d-none');
-        state.lastProductResults = [];
-      }
-    });
-
-    customerHint();
-    renderCart();
-    qs('#productSearch').focus();
-  })();
-</script>
-{% endblock %}
+{% extends 'base.html' %}
+
+
+
+{% block title %}نقطة البيع POS{% endblock %}
+
+
+
+{% block page_title %}
+
+<div class="d-flex justify-content-between align-items-center">
+
+  <div>
+
+    <h1 class="mb-0"><i class="fas fa-cash-register mr-2"></i>نقطة البيع (POS)</h1>
+
+    <p class="text-muted mb-0">شاشة كاشير سريعة للباركود والطباعة</p>
+
+  </div>
+
+  <div>
+
+    <a href="{{ url_for('sales.index') }}" class="btn btn-outline-secondary">
+
+      <i class="fas fa-file-invoice mr-2"></i>المبيعات
+
+    </a>
+
+    <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">
+
+      <i class="fas fa-home mr-2"></i>الرئيسية
+
+    </a>
+
+  </div>
+
+</div>
+
+{% endblock %}
+
+
+
+{% block extra_css %}
+
+<style>
+
+  .pos-wrap .form-control { min-height: 48px; font-size: 1rem; }
+
+  .pos-cart-table td, .pos-cart-table th { vertical-align: middle; }
+
+  .pos-cart-table input { min-height: 40px; }
+
+  .pos-results { max-height: 280px; overflow: auto; }
+
+  .pos-kpi { background: linear-gradient(135deg,#667eea 0%,#764ba2 100%); color: #fff; border-radius: 12px; }
+
+  .pos-kpi .value { font-size: 1.7rem; font-weight: 800; }
+
+  .pos-scan-focus { box-shadow: 0 0 0 3px rgba(102,126,234,.45); border-color: #667eea; }
+  .pos-btn-cash { background: #28a745; border-color: #28a745; color: #fff; font-size: 1.15rem; }
+  .pos-btn-cash:hover { background: #218838; border-color: #1e7e34; }
+  @media (max-width: 991px) {
+    .pos-right { margin-top: 12px; }
+    .pos-wrap .form-control, .pos-wrap .btn { min-height: 52px; }
+  }
+  @media (max-width: 576px) {
+    .pos-kpi .value { font-size: 1.35rem; }
+  }
+
+</style>
+
+{% endblock %}
+
+
+
+{% block content %}
+
+<div class="pos-wrap">
+
+  <div class="row">
+
+    <div class="col-lg-8">
+
+      <div class="card card-outline card-primary">
+
+        <div class="card-header">
+
+          <h3 class="card-title"><i class="fas fa-barcode mr-2"></i>إضافة منتجات</h3>
+
+        </div>
+
+        <div class="card-body">
+
+          <div class="row">
+
+            <div class="col-md-6">
+
+              <label class="mb-1">العميل</label>
+
+              <div class="input-group">
+
+                <input id="customerSearch" class="form-control" placeholder="ابحث بالاسم أو الهاتف (F4)">
+
+                <div class="input-group-append">
+
+                  <button id="walkinCustomer" class="btn btn-outline-primary" type="button" title="عميل نقدي سريع">نقدي</button>
+
+                  <button id="clearCustomer" class="btn btn-outline-secondary" type="button">مسح</button>
+
+                </div>
+
+              </div>
+
+              <div id="customerResults" class="list-group mt-2 pos-results d-none"></div>
+
+              <div class="text-muted mt-2" id="customerSelectedHint">لم يتم اختيار عميل بعد — أو اضغط «نقدي»</div>
+
+            </div>
+
+            <div class="col-md-6">
+
+              <label class="mb-1">بحث/باركود</label>
+
+              <div class="input-group">
+
+                <input id="productSearch" class="form-control" placeholder="امسح الباركود أو اكتب الاسم/الكود">
+
+                <div class="input-group-append">
+
+                  <button id="clearProductSearch" class="btn btn-outline-secondary" type="button">مسح</button>
+
+                </div>
+
+              </div>
+
+              <div id="productResults" class="list-group mt-2 pos-results d-none"></div>
+
+              <div class="text-muted mt-2">Enter / F2 لإضافة · F8 حفظ+طباعة · Esc مسح البحث</div>
+
+              <div id="productLoading" class="small text-info d-none mt-1"><i class="fas fa-spinner fa-spin"></i> جاري البحث…</div>
+
+            </div>
+
+          </div>
+
+
+
+          <hr>
+
+
+
+          <div class="table-responsive">
+
+            <table class="table table-hover pos-cart-table mb-0">
+
+              <thead>
+
+                <tr>
+
+                  <th style="width: 38%;">المنتج</th>
+
+                  <th style="width: 12%;">الكمية</th>
+
+                  <th style="width: 14%;">السعر</th>
+
+                  <th style="width: 10%;">خصم%</th>
+
+                  <th style="width: 16%;">الإجمالي</th>
+
+                  <th style="width: 10%;"></th>
+
+                </tr>
+
+              </thead>
+
+              <tbody id="cartBody">
+
+                <tr id="cartEmptyRow">
+
+                  <td colspan="6" class="text-center text-muted py-4">السلة فارغة</td>
+
+                </tr>
+
+              </tbody>
+
+            </table>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+
+    <div class="col-lg-4 pos-right">
+
+      <div class="card pos-kpi">
+
+        <div class="card-body">
+
+          <div class="d-flex justify-content-between align-items-center">
+
+            <div>
+
+              <div>الإجمالي</div>
+
+              <div class="value"><span id="kpiTotal">0.00</span> <span id="kpiCurrency">{{ tenant_currency_symbol or 'AED' }}</span></div>
+
+            </div>
+
+            <div class="text-right">
+
+              <div class="small">المجموع</div>
+
+              <div><strong id="kpiSubtotal">0.00</strong></div>
+
+              <div class="small mt-2">الخصم</div>
+
+              <div><strong id="kpiDiscount">0.00</strong></div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+
+      <div class="card card-outline card-info">
+
+        <div class="card-header">
+
+          <h3 class="card-title"><i class="fas fa-sliders-h mr-2"></i>إعدادات الفاتورة</h3>
+
+        </div>
+
+        <div class="card-body">
+
+          <div class="form-group">
+
+            <label>المستودع</label>
+
+            <select id="warehouseId" class="form-control">
+
+              <option value="">تلقائي (الرئيسي)</option>
+
+              {% for w in warehouses %}
+
+                <option value="{{ w.id }}">{{ w.name_ar or w.name }}{% if w.is_main %} (رئيسي){% endif %}</option>
+
+              {% endfor %}
+
+            </select>
+
+          </div>
+
+
+
+          <div class="row">
+
+            <div class="col-6">
+
+              <div class="form-group">
+
+                <label>العملة</label>
+
+                <select id="currency" class="form-control">
+
+                  <option value="{{ tenant_default_currency or 'AED' }}" selected>{{ tenant_default_currency or 'AED' }}</option>
+
+                  <option value="USD">USD</option>
+
+                  <option value="EUR">EUR</option>
+
+                </select>
+
+              </div>
+
+            </div>
+
+            <div class="col-6">
+
+              <div class="form-group">
+
+                <label>سعر الصرف</label>
+
+                <input id="exchangeRate" type="number" step="0.000001" class="form-control" value="1">
+
+              </div>
+
+            </div>
+
+          </div>
+
+
+
+          <div class="row" id="pos-tax-row" {% if not tenant_enable_tax %}style="display:none"{% endif %}>
+
+            <div class="col-6">
+
+              <div class="form-group">
+
+                <label>ضريبة %</label>
+
+                {% set _default_tax_rate = (tenant_default_tax_rate if tenant_enable_tax else 0) %}
+
+                <input id="taxRate" type="number" step="0.01" class="form-control" value="{{ _default_tax_rate }}">
+
+              </div>
+
+            </div>
+
+            <div class="col-6">
+
+              <div class="form-group">
+
+                <label>شحن</label>
+
+                <input id="shippingCost" type="number" step="0.01" class="form-control" value="0">
+
+              </div>
+
+            </div>
+
+          </div>
+
+
+
+          <div class="form-group">
+
+            <label>خصم عام</label>
+
+            <input id="discountAmount" type="number" step="0.01" class="form-control" value="0">
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+
+      <div class="card card-outline card-success">
+
+        <div class="card-header">
+
+          <h3 class="card-title"><i class="fas fa-credit-card mr-2"></i>الدفع</h3>
+
+        </div>
+
+        <div class="card-body">
+
+          <div class="form-group">
+
+            <label>طريقة الدفع</label>
+
+            <select id="paymentMethod" class="form-control">
+
+              <option value="">بدون دفع الآن (آجل)</option>
+
+              <option value="cash">نقدي</option>
+
+              <option value="card">بطاقة</option>
+
+              <option value="bank_transfer">تحويل بنكي</option>
+
+              <option value="cheque">شيك</option>
+
+              <option value="e_wallet">محفظة إلكترونية</option>
+
+            </select>
+
+          </div>
+
+
+
+          <div class="row">
+
+            <div class="col-6">
+
+              <div class="form-group">
+
+                <label>المبلغ المدفوع</label>
+
+                <input id="paidAmount" type="number" step="0.01" class="form-control" value="0">
+
+              </div>
+
+            </div>
+
+            <div class="col-6">
+
+              <div class="form-group">
+
+                <label>رقم مرجع</label>
+
+                <input id="referenceNumber" class="form-control" placeholder="اختياري">
+
+              </div>
+
+            </div>
+
+          </div>
+
+
+
+          <button id="checkoutBtn" class="btn btn-success btn-block btn-lg">
+
+            <i class="fas fa-check mr-2"></i>حفظ الفاتورة
+
+          </button>
+
+          <button id="checkoutPrintBtn" class="btn btn-primary btn-block mt-2">
+
+            <i class="fas fa-print mr-2"></i>حفظ + طباعة
+
+          </button>
+
+        </div>
+
+      </div>
+
+
+
+      <div id="posAlert" class="alert d-none"></div>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+
+<div class="modal fade" id="posDoneModal" tabindex="-1" role="dialog" aria-hidden="true">
+
+  <div class="modal-dialog modal-dialog-centered" role="document">
+
+    <div class="modal-content">
+
+      <div class="modal-header">
+
+        <h5 class="modal-title">تم إنشاء الفاتورة</h5>
+
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+
+          <span aria-hidden="true">&times;</span>
+
+        </button>
+
+      </div>
+
+      <div class="modal-body">
+
+        <div>رقم الفاتورة: <strong id="doneSaleNumber"></strong></div>
+
+      </div>
+
+      <div class="modal-footer">
+
+        <a id="doneViewBtn" class="btn btn-outline-secondary" href="#" target="_blank" rel="noopener noreferrer">عرض</a>
+
+        <a id="donePrintBtn" class="btn btn-primary" href="#" target="_blank" rel="noopener noreferrer">طباعة</a>
+
+        <button type="button" class="btn btn-success" data-dismiss="modal">إغلاق</button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+{% endblock %}
+
+
+
+{% block extra_js %}
+
+<script>
+
+  (function(){
+
+    const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+
+    const state = {
+
+      customer: null,
+
+      cart: [],
+
+      lastProductResults: []
+
+    };
+
+
+
+    const qs = (s, r=document) => r.querySelector(s);
+
+    const qsa = (s, r=document) => Array.from(r.querySelectorAll(s));
+
+    const fmt = (n) => (Number(n || 0)).toFixed(2);
+
+    const toNum = (v) => {
+
+      const n = Number(v);
+
+      return Number.isFinite(n) ? n : 0;
+
+    };
+
+    const baseCurrency = '{{ tenant_default_currency or "AED" }}';
+
+    const selectedCurrency = () => qs('#currency').value || baseCurrency;
+
+    const currentRate = () => toNum(qs('#exchangeRate').value) || 1;
+
+    const priceForCurrency = (basePrice) => {
+
+      const rate = currentRate();
+
+      if (selectedCurrency() !== baseCurrency && rate > 0) {
+
+        return toNum(basePrice) / rate;
+
+      }
+
+      return toNum(basePrice);
+
+    };
+
+    const updateCartPrices = () => {
+
+      state.cart.forEach(it => {
+
+        if (!Number.isFinite(Number(it.basePrice))) {
+
+          it.basePrice = it.price;
+
+        }
+
+        it.price = priceForCurrency(it.basePrice);
+
+      });
+
+      renderCart();
+
+    };
+
+    const loadRateForCurrency = async () => {
+
+      const currency = selectedCurrency();
+
+      if (currency === baseCurrency) {
+
+        qs('#exchangeRate').value = '1';
+
+        updateCartPrices();
+
+        return;
+
+      }
+
+      try {
+
+        const r = await fetch(`/api/currency-rate/${encodeURIComponent(currency)}/${encodeURIComponent(baseCurrency)}`);
+
+        const data = await r.json();
+
+        if (data.success && data.rate) {
+
+          qs('#exchangeRate').value = Number(data.rate).toFixed(6);
+
+        }
+
+      } catch (_) {
+
+        // Keep the user-entered rate if the live lookup fails.
+
+      }
+
+      updateCartPrices();
+
+    };
+
+    const esc = (s) => {
+
+      if (s == null) return '';
+
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+    };
+
+
+
+    const showAlert = (msg, level='danger') => {
+
+      const el = qs('#posAlert');
+
+      el.className = 'alert alert-' + level;
+
+      el.textContent = msg;
+
+      el.classList.remove('d-none');
+
+      setTimeout(()=>{ el.classList.add('d-none'); }, 5000);
+
+    };
+
+
+
+    const customerHint = () => {
+
+      const el = qs('#customerSelectedHint');
+
+      if (state.customer) {
+
+        el.textContent = 'العميل المختار: ' + state.customer.text;
+
+        el.className = 'text-success mt-2';
+
+      } else {
+
+        el.textContent = 'لم يتم اختيار عميل بعد';
+
+        el.className = 'text-muted mt-2';
+
+      }
+
+    };
+
+
+
+    const recalc = () => {
+
+      const taxRate = Math.max(0, Math.min(100, toNum(qs('#taxRate').value)));
+
+      const shipping = Math.max(0, toNum(qs('#shippingCost').value));
+
+      const discountAmount = Math.max(0, toNum(qs('#discountAmount').value));
+
+
+
+      let subtotal = 0;
+
+      let discount = 0;
+
+      state.cart.forEach(it => {
+
+        const lineBase = it.qty * it.price;
+
+        const lineDisc = lineBase * (it.discountPercent / 100);
+
+        subtotal += lineBase - lineDisc;
+
+        discount += lineDisc;
+
+      });
+
+
+
+      const tax = subtotal * (taxRate / 100);
+
+      const total = Math.max(0, subtotal + tax + shipping - discountAmount);
+
+
+
+      qs('#kpiSubtotal').textContent = fmt(subtotal);
+
+      qs('#kpiDiscount').textContent = fmt(discount + discountAmount);
+
+      qs('#kpiTotal').textContent = fmt(total);
+
+      qs('#kpiCurrency').textContent = qs('#currency').value;
+
+      return { subtotal, tax, shipping, discountAmount, taxRate, total };
+
+    };
+
+
+
+    const renderCart = () => {
+
+      const body = qs('#cartBody');
+
+      body.innerHTML = '';
+
+      if (!state.cart.length) {
+
+        body.innerHTML = '<tr id="cartEmptyRow"><td colspan="6" class="text-center text-muted py-4">السلة فارغة</td></tr>';
+
+        recalc();
+
+        return;
+
+      }
+
+      state.cart.forEach((it, idx) => {
+
+        const tr = document.createElement('tr');
+
+        tr.innerHTML = `
+
+          <td>
+
+            <div><strong>${esc(it.name)}</strong></div>
+
+            <div class="text-muted small">${it.sku ? ('SKU: '+esc(it.sku)) : ''}${it.barcode ? (' | Barcode: '+esc(it.barcode)) : ''}</div>
+
+          </td>
+
+          <td><input class="form-control form-control-sm text-center" data-k="qty" data-i="${idx}" type="number" step="0.001" min="0.001" value="${it.qty}"></td>
+
+          <td><input class="form-control form-control-sm text-center" data-k="price" data-i="${idx}" type="number" step="0.01" min="0" value="${it.price}"></td>
+
+          <td><input class="form-control form-control-sm text-center" data-k="disc" data-i="${idx}" type="number" step="0.01" min="0" max="100" value="${it.discountPercent}"></td>
+
+          <td class="text-center"><strong>${fmt((it.qty * it.price) * (1 - it.discountPercent/100))}</strong></td>
+
+          <td class="text-center">
+
+            <button class="btn btn-danger btn-sm" data-k="del" data-i="${idx}"><i class="fas fa-trash"></i></button>
+
+          </td>
+
+        `;
+
+        body.appendChild(tr);
+
+      });
+
+      recalc();
+
+    };
+
+
+
+    const addToCart = (p) => {
+
+      const existing = state.cart.find(x => x.id === p.id);
+
+      if (existing) {
+
+        existing.qty = Number(existing.qty) + 1;
+
+      } else {
+
+        state.cart.push({
+
+          id: p.id,
+
+          name: p.name,
+
+          sku: p.sku || '',
+
+          barcode: p.barcode || '',
+
+          qty: 1,
+
+          basePrice: toNum(p.price),
+
+          price: priceForCurrency(toNum(p.price)),
+
+          discountPercent: 0
+
+        });
+
+      }
+
+      renderCart();
+
+    };
+
+
+
+    const warehouseParam = () => {
+
+      const w = qs('#warehouseId').value;
+
+      return w ? ('&warehouse_id=' + encodeURIComponent(w)) : '';
+
+    };
+
+
+
+    const fetchJson = async (url) => {
+
+      const r = await fetch(url, { credentials: 'same-origin', headers: { 'Accept': 'application/json' } });
+
+      if (r.status === 404) {
+
+        const j = await r.json().catch(() => ({}));
+
+        throw new Error(j.error || 'غير موجود');
+
+      }
+
+      if (!r.ok) {
+
+        const j = await r.json().catch(() => ({}));
+
+        throw new Error(j.error || ('HTTP ' + r.status));
+
+      }
+
+      return r.json();
+
+    };
+
+
+
+    let customerTimer = null;
+
+    qs('#customerSearch').addEventListener('input', function(){
+
+      const q = this.value.trim();
+
+      clearTimeout(customerTimer);
+
+      customerTimer = setTimeout(async () => {
+
+        if (!q) {
+
+          qs('#customerResults').classList.add('d-none');
+
+          return;
+
+        }
+
+        const res = await fetchJson('/pos/api/customers?q=' + encodeURIComponent(q));
+
+        const box = qs('#customerResults');
+
+        box.innerHTML = '';
+
+        res.forEach(c => {
+
+          const a = document.createElement('button');
+
+          a.type = 'button';
+
+          a.className = 'list-group-item list-group-item-action';
+
+          a.textContent = c.text;
+
+          a.addEventListener('click', () => {
+
+            state.customer = c;
+
+            qs('#customerSearch').value = c.text;
+
+            box.classList.add('d-none');
+
+            customerHint();
+
+          });
+
+          box.appendChild(a);
+
+        });
+
+        box.classList.toggle('d-none', res.length === 0);
+
+      }, 180);
+
+    });
+
+
+
+    qs('#clearCustomer').addEventListener('click', () => {
+
+      state.customer = null;
+
+      qs('#customerSearch').value = '';
+
+      qs('#customerResults').classList.add('d-none');
+
+      customerHint();
+
+    });
+
+
+
+    qs('#walkinCustomer').addEventListener('click', async () => {
+
+      try {
+
+        const c = await fetchJson('/pos/api/walkin-customer');
+
+        state.customer = c;
+
+        qs('#customerSearch').value = c.text || c.name;
+
+        customerHint();
+
+        qs('#productSearch').focus();
+
+      } catch (err) {
+
+        showAlert(err.message || 'تعذر تحميل عميل نقدي');
+
+      }
+
+    });
+
+
+
+    let productTimer = null;
+
+    let productBusy = false;
+
+
+
+    const renderProductResults = (res) => {
+
+      state.lastProductResults = res || [];
+
+      const box = qs('#productResults');
+
+      box.innerHTML = '';
+
+      (res || []).forEach(p => {
+
+        const a = document.createElement('button');
+
+        a.type = 'button';
+
+        const stockBadge = p.is_out_of_stock
+
+          ? '<span class="badge badge-warning badge-pill ml-1">نفد</span>'
+
+          : `<span class="badge badge-secondary badge-pill ml-1">${fmt(p.stock)}</span>`;
+
+        a.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center';
+
+        a.innerHTML = `<span>${esc(p.text)}${p.is_inactive ? ' <small class="text-danger">(غير نشط)</small>' : ''}</span><span>${stockBadge} <span class="badge badge-primary badge-pill">${fmt(p.price)}</span></span>`;
+
+        a.addEventListener('click', () => {
+
+          if (p.is_inactive) { showAlert('المنتج غير نشط.', 'warning'); return; }
+
+          addToCart(p);
+
+          qs('#productSearch').value = '';
+
+          box.classList.add('d-none');
+
+          qs('#productSearch').focus();
+
+        });
+
+        box.appendChild(a);
+
+      });
+
+      box.classList.toggle('d-none', !res || res.length === 0);
+
+    };
+
+
+
+    const addFirstOrLookup = async (q) => {
+
+      if (!q) return;
+
+      const first = (state.lastProductResults || [])[0];
+
+      if (first && (first.barcode === q || first.sku === q)) {
+
+        addToCart(first);
+
+        qs('#productSearch').value = '';
+
+        qs('#productResults').classList.add('d-none');
+
+        return;
+
+      }
+
+      try {
+
+        const p = await fetchJson('/pos/api/product?code=' + encodeURIComponent(q) + warehouseParam());
+
+        if (p && p.id) {
+
+          if (p.is_inactive) { showAlert(p.warning || 'المنتج غير نشط.', 'warning'); return; }
+
+          if (p.warning) showAlert(p.warning, 'warning');
+
+          addToCart(p);
+
+          qs('#productSearch').value = '';
+
+          qs('#productResults').classList.add('d-none');
+
+        }
+
+      } catch (err) {
+
+        if ((state.lastProductResults || []).length) {
+
+          addToCart(state.lastProductResults[0]);
+
+          qs('#productSearch').value = '';
+
+          qs('#productResults').classList.add('d-none');
+
+        } else {
+
+          showAlert(err.message || 'لم يُعثر على المنتج');
+
+        }
+
+      }
+
+    };
+
+
+
+    const runProductSearch = async (q) => {
+
+      if (!q) {
+
+        qs('#productResults').classList.add('d-none');
+
+        state.lastProductResults = [];
+
+        qs('#productLoading').classList.add('d-none');
+
+        return;
+
+      }
+
+      if (productBusy) return;
+
+      productBusy = true;
+
+      qs('#productLoading').classList.remove('d-none');
+
+      try {
+
+        const res = await fetchJson('/pos/api/products?q=' + encodeURIComponent(q) + warehouseParam());
+
+        renderProductResults(res);
+
+      } catch (err) {
+
+        showAlert(err.message || 'فشل البحث');
+
+      } finally {
+
+        productBusy = false;
+
+        qs('#productLoading').classList.add('d-none');
+
+      }
+
+    };
+
+
+
+    qs('#productSearch').addEventListener('input', function(){
+
+      const q = this.value.trim();
+
+      clearTimeout(productTimer);
+
+      productTimer = setTimeout(() => runProductSearch(q), 220);
+
+    });
+
+    qs('#productSearch').addEventListener('keydown', function(e){
+
+      if (e.key === 'Enter') {
+
+        e.preventDefault();
+
+        addFirstOrLookup(this.value.trim());
+
+      }
+
+    });
+
+
+
+    qs('#warehouseId').addEventListener('change', function(){
+
+      const q = qs('#productSearch').value.trim();
+
+      if (q) runProductSearch(q);
+
+    });
+
+
+
+    qs('#clearProductSearch').addEventListener('click', () => {
+
+      qs('#productSearch').value = '';
+
+      qs('#productResults').classList.add('d-none');
+
+      state.lastProductResults = [];
+
+    });
+
+
+
+    qs('#cartBody').addEventListener('input', function(e){
+
+      const t = e.target;
+
+      const idx = Number(t.getAttribute('data-i'));
+
+      const k = t.getAttribute('data-k');
+
+      if (!Number.isFinite(idx) || !state.cart[idx]) return;
+
+      if (k === 'qty') state.cart[idx].qty = Math.max(0.001, toNum(t.value));
+
+      if (k === 'price') {
+
+        state.cart[idx].price = Math.max(0, toNum(t.value));
+
+        state.cart[idx].basePrice = selectedCurrency() !== baseCurrency && currentRate() > 0
+
+          ? state.cart[idx].price * currentRate()
+
+          : state.cart[idx].price;
+
+      }
+
+      if (k === 'disc') state.cart[idx].discountPercent = Math.max(0, Math.min(100, toNum(t.value)));
+
+      renderCart();
+
+    });
+
+    qs('#cartBody').addEventListener('click', function(e){
+
+      const btn = e.target.closest('button[data-k="del"]');
+
+      if (!btn) return;
+
+      const idx = Number(btn.getAttribute('data-i'));
+
+      if (!Number.isFinite(idx)) return;
+
+      state.cart.splice(idx, 1);
+
+      renderCart();
+
+    });
+
+
+
+    qsa('#taxRate,#shippingCost,#discountAmount').forEach(el => {
+
+      el.addEventListener('input', recalc);
+
+      el.addEventListener('change', recalc);
+
+    });
+
+    qs('#currency').addEventListener('change', loadRateForCurrency);
+
+    qs('#exchangeRate').addEventListener('input', updateCartPrices);
+
+    qs('#exchangeRate').addEventListener('change', updateCartPrices);
+
+
+
+    let checkoutBusy = false;
+
+
+
+    const checkout = async (autoPrint) => {
+
+      if (checkoutBusy) return;
+
+      if (!state.customer) {
+
+        showAlert('يرجى اختيار العميل أو «نقدي».', 'warning');
+
+        return;
+
+      }
+
+      if (!state.cart.length) {
+
+        showAlert('السلة فارغة.', 'warning');
+
+        return;
+
+      }
+
+
+
+      const totals = recalc();
+
+      const payload = {
+
+        customer_id: state.customer.id,
+
+        quick_customer: !!state.customer.is_walkin,
+
+        warehouse_id: qs('#warehouseId').value || null,
+
+        currency: qs('#currency').value,
+
+        exchange_rate: toNum(qs('#exchangeRate').value) || 1,
+
+        tax_rate: toNum(qs('#taxRate').value) || 0,
+
+        shipping_cost: toNum(qs('#shippingCost').value) || 0,
+
+        discount_amount: toNum(qs('#discountAmount').value) || 0,
+
+        payment_method: qs('#paymentMethod').value || '',
+
+        paid_amount: toNum(qs('#paidAmount').value) || 0,
+
+        payment_currency: qs('#currency').value,
+
+        payment_exchange_rate: toNum(qs('#exchangeRate').value) || 1,
+
+        reference_number: qs('#referenceNumber').value || '',
+
+        lines: state.cart.map(it => ({
+
+          product_id: it.id,
+
+          quantity: it.qty,
+
+          unit_price: it.price,
+
+          discount_percent: it.discountPercent
+
+        }))
+
+      };
+
+
+
+      checkoutBusy = true;
+
+      qs('#checkoutBtn').disabled = true;
+
+      qs('#checkoutPrintBtn').disabled = true;
+
+      try {
+
+        const r = await fetch('/pos/api/checkout', {
+
+          method: 'POST',
+
+          headers: {
+
+            'Content-Type': 'application/json',
+
+            'Accept': 'application/json',
+
+            'X-CSRFToken': csrf
+
+          },
+
+          credentials: 'same-origin',
+
+          body: JSON.stringify(payload)
+
+        });
+
+        const j = await r.json().catch(()=> ({}));
+
+        if (!r.ok || !j.success) {
+
+          throw new Error(j.error || ('HTTP ' + r.status));
+
+        }
+
+        qs('#doneSaleNumber').textContent = j.sale_number;
+
+        qs('#doneViewBtn').href = j.view_url;
+
+        qs('#donePrintBtn').href = j.print_url;
+
+        $('#posDoneModal').modal('show');
+
+        if (autoPrint) {
+
+          window.open(j.print_url, '_blank', 'noopener');
+
+        }
+
+        state.cart = [];
+
+        renderCart();
+
+        qs('#paidAmount').value = 0;
+
+        qs('#paymentMethod').value = '';
+
+        qs('#referenceNumber').value = '';
+
+      } catch (err) {
+
+        showAlert(err.message || 'فشل العملية');
+
+      } finally {
+
+        checkoutBusy = false;
+
+        qs('#checkoutBtn').disabled = false;
+
+        qs('#checkoutPrintBtn').disabled = false;
+
+      }
+
+    };
+
+
+
+    qs('#checkoutBtn').addEventListener('click', () => checkout(false));
+
+    qs('#checkoutPrintBtn').addEventListener('click', () => checkout(true));
+
+
+
+    document.addEventListener('keydown', (e) => {
+
+      if (e.target.matches('input, textarea, select') && e.key !== 'Escape' && !e.altKey) {
+
+        if (e.key === 'F2' || e.key === 'F4' || e.key === 'F8') { /* allow below */ }
+
+        else return;
+
+      }
+
+      if (e.key === 'F2') {
+
+        e.preventDefault();
+
+        qs('#productSearch').focus();
+
+      } else if (e.key === 'F4') {
+
+        e.preventDefault();
+
+        qs('#customerSearch').focus();
+
+      } else if (e.key === 'F8') {
+
+        e.preventDefault();
+
+        checkout(true);
+
+      } else if (e.key === 'Escape') {
+
+        qs('#productSearch').value = '';
+
+        qs('#productResults').classList.add('d-none');
+
+        state.lastProductResults = [];
+
+      }
+
+    });
+
+
+
+    customerHint();
+
+    renderCart();
+
+    qs('#productSearch').focus();
+
+  })();
+
+</script>
+
+{% endblock %}
+

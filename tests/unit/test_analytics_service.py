@@ -30,30 +30,36 @@ def test_get_product_performance_empty():
         assert performance == []
 
 def test_get_customer_insights_structure():
-    with patch('models.Customer.query') as mock_customer_query, \
-         patch('services.analytics_service.db.session.query') as mock_db_query:
-        mock_customer = MagicMock(id=1, name='Test Customer')
-        mock_customer_query.filter_by.return_value.all.return_value = [mock_customer]
-        mock_db_query.return_value.filter.return_value.filter.return_value.scalar.return_value = 100.0
-        with patch('models.Sale.query') as mock_sale_query:
-            mock_sale_query.filter_by.return_value.count.return_value = 2
-            mock_sale_query.filter_by.return_value.order_by.return_value.first.return_value = MagicMock(sale_date=datetime.now())
-            insights = AnalyticsService.get_customer_insights(tenant_id=1)
-            assert isinstance(insights, list)
-            assert len(insights) == 1
-            item = insights[0]
-            assert 'name' in item
-            assert 'lifetime_value' in item
-            assert 'sales_count' in item
-            assert 'avg_sale' in item
-            assert 'days_since_last' in item
-            assert 'status' in item
+    from app import create_app
+    app = create_app()
+    with app.app_context():
+        with patch('models.Customer.query') as mock_customer_query, \
+             patch('services.analytics_service.db.session.query') as mock_db_query:
+            mock_customer = MagicMock(id=1, name='Test Customer')
+            mock_customer_query.filter_by.return_value.all.return_value = [mock_customer]
+            mock_db_query.return_value.filter.return_value.filter.return_value.scalar.return_value = 100.0
+            with patch('models.Sale.query') as mock_sale_query:
+                mock_sale_query.filter_by.return_value.count.return_value = 2
+                mock_sale_query.filter_by.return_value.order_by.return_value.first.return_value = MagicMock(sale_date=datetime.now())
+                insights = AnalyticsService.get_customer_insights(tenant_id=1)
+                assert isinstance(insights, list)
+                assert len(insights) == 1
+                item = insights[0]
+                assert 'name' in item
+                assert 'lifetime_value' in item
+                assert 'sales_count' in item
+                assert 'avg_sale' in item
+                assert 'days_since_last' in item
+                assert 'status' in item
 
 def test_get_customer_insights_empty():
-    with patch('models.Customer.query') as mock_customer_query:
-        mock_customer_query.filter_by.return_value.all.return_value = []
-        insights = AnalyticsService.get_customer_insights(tenant_id=1)
-        assert insights == []
+    from app import create_app
+    app = create_app()
+    with app.app_context():
+        with patch('models.Customer.query') as mock_customer_query:
+            mock_customer_query.filter_by.return_value.all.return_value = []
+            insights = AnalyticsService.get_customer_insights(tenant_id=1)
+            assert insights == []
 
 def test_get_forecasting_data_structure():
     with patch('services.analytics_service.db.session.query') as mock_db_query:
