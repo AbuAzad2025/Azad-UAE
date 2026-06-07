@@ -144,7 +144,7 @@
 | B4 | NowPayments provider | ⏸️ | — | — | Code-only |
 | C1 | CDN SRI | ✅ **DONE** | Jun 7 | Jun 7 | `tools/generate_sri.py` created; SRI hashes added to 39 templates; `integrity` + `crossorigin="anonymous"` on all CDN resources; 9 tests |
 | C2 | Session security | ✅ **DONE** | Jun 7 | Jun 7 | `SESSION_COOKIE_SAMESITE` already in Config; `utils/session_security.py` with `rotate_session()` created; called after login (`auth.py`) and after password change (`main.py`); 7 tests; 347 total pass |
-| D1 | POS gap analysis | ⏸️ | — | — | Research |
+| D1 | POS supermarket enhancements | ✅ **DONE** | Jun 7 | Jun 7 | Touch-friendly CSS (48px inputs, 52px tablet buttons), KPI sizing, scan-focus indicator, cash button styling; `test_pos_helpers.py` (17 tests), `test_pos_routes.py` (10 tests); 381 total pass |
 
 ---
 
