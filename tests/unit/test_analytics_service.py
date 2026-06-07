@@ -75,5 +75,3 @@ def test_get_customer_insights_empty():
             mock_customer_query.filter_by.return_value.all.return_value = []
             insights = AnalyticsService.get_customer_insights(tenant_id=1)
             assert insights == []
-
-
