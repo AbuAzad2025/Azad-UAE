@@ -3394,37 +3394,14 @@ def forecasting():
 @login_required
 @owner_required
 def tenants_list():
-    """List all tenants with full management controls."""
-    from models.tenant_store import TenantStore
-
-    tenants = Tenant.query.order_by(Tenant.created_at.desc()).all()
-    tenant_ids = [t.id for t in tenants]
-
-    user_counts = dict(
-        db.session.query(User.tenant_id, func.count(User.id))
-        .filter(User.tenant_id.in_(tenant_ids))
-        .group_by(User.tenant_id)
-        .all()
-    )
-    branch_counts = dict(
-        db.session.query(Branch.tenant_id, func.count(Branch.id))
-        .filter(Branch.tenant_id.in_(tenant_ids))
-        .group_by(Branch.tenant_id)
-        .all()
-    )
-    store_counts = dict(
-        db.session.query(TenantStore.tenant_id, func.count(TenantStore.id))
-        .filter(TenantStore.tenant_id.in_(tenant_ids))
-        .group_by(TenantStore.tenant_id)
-        .all()
-    )
-
+    from services.tenant_service import TenantService
+    context = TenantService.get_tenants_list_context()
     return render_template(
         'owner/tenants_list.html',
-        tenants=tenants,
-        user_counts=user_counts,
-        branch_counts=branch_counts,
-        store_counts=store_counts,
+        tenants=context['tenants'],
+        user_counts=context['user_counts'],
+        branch_counts=context['branch_counts'],
+        store_counts=context['store_counts'],
     )
 
 @owner_bp.route('/tenants/<int:tenant_id>/suspend', methods=['POST'])
