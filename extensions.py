@@ -227,10 +227,6 @@ def init_extensions(app):
         else:
             limiter.default_limits = [default_limit]
     
-    @limiter.request_filter
-    def _exempt_super():
-        return False
-    
     if app.config.get("MAIL_USERNAME"):
         mail.init_app(app)
     
