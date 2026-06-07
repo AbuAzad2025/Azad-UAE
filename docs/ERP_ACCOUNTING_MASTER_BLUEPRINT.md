@@ -35,6 +35,8 @@ This master document merges, preserves, and supersedes the following documents. 
 * `docs/PRE_IMPLEMENTATION_VERIFICATION.md` → Appendix B
 * `docs/SYSTEM_REVERSE_ENGINEERING_MASTER_REPORT.md` → Appendix A
 * `docs/AI_AUDIT_HISTORY.md` → Appendix A
+* `docs/ERP_ACCOUNTING_MASTER_BLUEPRINT_CORRECTIONS_2026-06-06.md` → Historical reconciliation of GitHub commit `f29aa07`; corrections accepted into header/metadata
+* `docs/PAYMENT_VAULT_HANDOFF_REPORT_2026-06-06.md` → Section 21.3 (Payment Vault Handoff closure)
 
 ---
 
@@ -1718,7 +1720,29 @@ the existing file, covering:
    `LegacyAPIWarning` in SQLAlchemy 2.0 and risking removal in future releases.
    **Fix:** migrated both to `db.session.get(Model, id)`.
 
-### 21.3 Remaining Tech Debt
+### 21.3 Payment Vault Handoff — CLOSED (June 7, 2026)
+The active handoff documented in `docs/PAYMENT_VAULT_HANDOFF_REPORT_2026-06-06.md`
+is now closed; key findings are merged here to keep the blueprint as the single
+source of truth.
+
+**Design decision (approved):**
+- `PaymentVault.tenant_id IS NULL` → خزينة آزاد/المنصة (مالك النظام).
+- `PaymentVault.tenant_id = <tenant_id>` → خزينة مشروع/متجر محدد.
+- `Donation.tenant_id` يبقى nullable (تبرعات آزاد العامة vs تبرعات مشروع).
+- أي معاملة متجر أونلاين عبر بوابة دفع تحمل حصة 1% لصالح آزاد.
+
+**Verification results:**
+- `tools/qa/nowpayments_ipn_payload_check.py`: ✅ 8/8 passed.
+- `tests/security/test_security_boundaries.py`: ✅ 0 violations (after recognizing
+  `@owner_only` as a valid auth decorator alongside `@login_required`).
+- Alembic heads: ✅ single head `ecad0902bdb5` (migration chain fixed:
+  `security_7_5_002.down_revision` → `merge_phase5_security_7_5`).
+
+**Remaining (non-blocker):**
+- شاشة/تقرير في خزينة آزاد تعرض حصص المتاجر وحالة التسوية (قرار مالك لاحق).
+- workflow تسوية الحصة من "accrued" إلى "settled" إذا أُريدت.
+
+### 21.4 Remaining Tech Debt
 - `services/cheque_accounting_integration.py` still uses `Cheque.query.get_or_404`
   (Flask-SQLAlchemy shorthand). It emits `LegacyAPIWarning` from the framework
   layer; replacing it requires route-level exception-handler review and is
