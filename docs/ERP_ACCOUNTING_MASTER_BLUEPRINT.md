@@ -1768,16 +1768,17 @@ Next: routes coverage or deeper model-branch tests per owner priority.
 
 ---
 
-### 23. Upcoming Work — Brand Positioning & Retail Depth (Session 13+ Planning)
+### 23. Brand Positioning & Retail Depth — Session 13+ Completed Items
 
 **Goal:** Clarify that Azad is a general-purpose ERP (retail, POS, e-commerce, accounting) not limited to garages or any single country.
 
-| # | Task | Priority | Notes |
-|---|------|----------|-------|
-| 1 | **README rewrite** | 🔴 High | Replace garage-centric language; emphasize multi-industry ERP: retail stores, POS, inventory, GL, payroll, e-commerce |
-| 2 | **Code-level garage cleanup** | 🟡 Medium | Audit for remaining `garage_` strings in `.env.example`, comments, templates, error messages |
-| 3 | **Retail / POS feature gap analysis** | 🟡 Medium | Assess what is already present (store module, POS routes, online payments) vs what could be deepened (multi-branch POS, barcode scanners, receipt printers, shift closing) |
-| 4 | **Rebrand repo name** | 🟢 Low (owner decision) | Consider `Azad-ERP` or similar when transitioning to private repo |
+| # | Task | Status | Notes |
+|---|------|--------|-------|
+| 1 | **README Quick Start** | ✅ Done | Added quick commands table for dev / test / deploy / migrations / backup |
+| 2 | **SECURITY.md + CONTRIBUTING.md** | ✅ Done | Added security policy and internal contribution guidelines |
+| 3 | **Code-level garage cleanup** | ✅ Done | Fixed: `env.example`, `models/system_settings.py`, `models/tenant.py`, `routes/api_docs.py`, `routes/owner.py`, `utils/system_init.py`, `tests/README.md` |
+| 4 | **Retail / POS feature gap analysis** | ⏸️ Planned | Will assess deeper POS hardware integrations (barcode, receipt printers, shift closing) in future cycle |
+| 5 | **Rebrand repo name** | ⏸️ Owner decision | Consider `Azad-ERP` when transitioning to private repo |
 
 **Context:** The codebase already supports:
 - `TenantStore` (online storefront per tenant)
@@ -1792,4 +1793,4 @@ What is missing is primarily **narrative clarity** in documentation and possibly
 ---
 
 *End of Master Blueprint — Single Source of Truth*
-*Last updated: June 7, 2026 (Session 12 — Accounting-Module Coverage Drive: 291 unit tests passing, 5 production bugs fixed; Payment Vault Handoff closed; CI/CD ready; branch protection deferred to go-live; brand positioning & retail depth planned for Session 13+)*
+*Last updated: June 7, 2026 (Session 12 — Accounting-Module Coverage Drive: 291 unit tests passing, 5 production bugs fixed; Payment Vault Handoff closed; CI/CD ready; branch protection deferred to go-live; Session 13+ — brand cleanup, README Quick Start, SECURITY.md, CONTRIBUTING.md completed)*
