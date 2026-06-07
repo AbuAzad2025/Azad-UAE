@@ -5,6 +5,18 @@
 
 ---
 
+## ⚡ Quick Start
+
+| Env | Command |
+|-----|---------|
+| **Dev (local)** | `cp env.example .env` → `python -m venv .venv` → `.venv\Scripts\activate` → `pip install -r requirements.txt` → `python app.py` |
+| **Run tests** | `pytest tests/unit -v --tb=short` |
+| **Production deploy** | See [DEPLOY.md](DEPLOY.md) |
+| **Migrations** | `flask db migrate -m "msg"` → `flask db upgrade` |
+| **Backup** | `pg_dump $DATABASE_URL > backup.sql` |
+
+---
+
 ## العربية
 
 هذا المشروع نظام تشغيلي فعلي لإدارة:
