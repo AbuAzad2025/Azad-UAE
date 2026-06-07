@@ -3,12 +3,72 @@ from typing import Any, Dict, List, Optional, Tuple
 import logging
 import psutil
 import os
+import re
+from sqlalchemy import func, text
 from extensions import db
 from models import AuditLog, Sale, User
 
 logger = logging.getLogger(__name__)
 
 class MonitoringService:
+    _TABLE_NAME_RE = re.compile(r'^[a-z0-9_]+$')
+    _TRUNCATE_BLOCKED_TABLES = frozenset({
+        'users', 'roles', 'tenants', 'audit_logs', 'system_settings',
+        'payment_vault', 'card_vault', 'api_keys',
+    })
+    _STATS_BLOCKED_TABLES = _TRUNCATE_BLOCKED_TABLES
+
+    @staticmethod
+    def _is_sensitive_stats_table(table_name: str) -> bool:
+        return (table_name or '').strip().lower() in MonitoringService._STATS_BLOCKED_TABLES
+
+    @staticmethod
+    def _resolve_known_table(table_name: str) -> str | None:
+        from sqlalchemy import inspect
+        if not table_name:
+            return None
+        normalized = table_name.strip().lower()
+        if not MonitoringService._TABLE_NAME_RE.match(normalized):
+            return None
+        table_names = {name.lower(): name for name in inspect(db.engine).get_table_names()}
+        return table_names.get(normalized)
+
+    @staticmethod
+    def log_system_stats_action(visible_tables, restricted_tables):
+        new_log = AuditLog(
+            action='view_system_stats',
+            details={'visible_tables': visible_tables, 'restricted_tables': restricted_tables},
+            source='owner_panel'
+        )
+        db.session.add(new_log)
+        db.session.commit()
+
+    @staticmethod
+    def get_system_stats_context(resolve_table_fn, is_sensitive_table_fn) -> Tuple[Dict[str, int], int]:
+        db_stats = {}
+        restricted_count = 0
+
+        try:
+            result = db.session.execute(
+                text("SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname='public'")
+            )
+            for row in result.fetchall():
+                safe_table = resolve_table_fn(row[0])
+                if not safe_table:
+                    continue
+                if is_sensitive_table_fn(safe_table):
+                    restricted_count += 1
+                    continue
+                count = db.session.execute(
+                    text(f'SELECT COUNT(*) FROM "{safe_table}"')
+                ).scalar()
+                db_stats[safe_table] = count
+        except Exception:
+            pass
+
+        MonitoringService.log_system_stats_action(len(db_stats), restricted_count)
+
+        return db_stats, restricted_count
 
     @staticmethod
     def get_activity_monitor_context(tid, scoped_branch_id) -> Dict[str, Any]:
@@ -63,7 +123,6 @@ class MonitoringService:
     @staticmethod
     def check_database() -> Dict:
         try:
-            from sqlalchemy import text
             db.session.execute(text('SELECT 1'))
             return {'status': 'connected', 'healthy': True}
         except Exception as e:

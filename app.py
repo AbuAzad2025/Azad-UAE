@@ -22,7 +22,6 @@ from extensions import (
 from utils.monitoring import setup_advanced_logging
 from utils.enhanced_logging import setup_enhanced_logging
 from utils.asset_compression import register_compression_cli
-from config_redis import init_redis
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 try:

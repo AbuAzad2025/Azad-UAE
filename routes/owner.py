@@ -412,33 +412,17 @@ def company_dashboard():
 @login_required
 @owner_required
 def system_stats():
-    from sqlalchemy import text
-
-    db_stats = {}
-    restricted_count = 0
+    """عرض إحصائيات قاعدة البيانات"""
+    from services.monitoring_service import MonitoringService
 
     try:
-        result = db.session.execute(
-            text("SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname='public'")
+        db_stats, restricted_count = MonitoringService.get_system_stats_context(
+            _resolve_known_table, _is_sensitive_stats_table
         )
-        for row in result.fetchall():
-            safe_table = _resolve_known_table(row[0])
-            if not safe_table:
-                continue
-            if _is_sensitive_stats_table(safe_table):
-                restricted_count += 1
-                continue
-            count = db.session.execute(
-                text(f'SELECT COUNT(*) FROM "{safe_table}"')
-            ).scalar()
-            db_stats[safe_table] = count
     except Exception as e:
-        current_app.logger.error(
-            'system_stats failed user_id=%s: %s',
-            current_user.id,
-            e,
-        )
+        current_app.logger.error('system_stats failed user_id=%s: %s', current_user.id, e)
         flash('❌ خطأ في جلب الإحصائيات. حاول تحديث الصفحة.', 'danger')
+        return redirect(url_for('owner.dashboard'))
 
     _audit_owner_db_action('view_system_stats', {
         'visible_tables': len(db_stats),
@@ -457,46 +441,18 @@ def system_stats():
 @owner_required
 def audit_logs():
     """سجل التدقيق الشامل - مراقبة كل عمليات النظام"""
+    from services.audit_service import AuditService
+
     page = request.args.get('page', 1, type=int)
     action = request.args.get('action', '', type=str)
     user_id = request.args.get('user', type=int)
     per_page = request.args.get('per_page', 50, type=int)
     tid = get_active_tenant_id(current_user)
 
-    query = AuditLog.query.filter_by(tenant_id=tid)
-
-    # فلترة حسب العملية
-    if action:
-        query = query.filter_by(action=action)
-
-    # فلترة حسب المستخدم
-    if user_id:
-        query = query.filter_by(user_id=user_id)
-
-    # الترتيب والتقسيم
-    pagination = query.order_by(AuditLog.created_at.desc()).paginate(
-        page=page,
-        per_page=per_page,
-        error_out=False
-    )
-
-    # إحصائيات سريعة
-    stats = {
-        'total': AuditLog.query.filter_by(tenant_id=tid).count(),
-        'today': AuditLog.query.filter(
-            db.func.date(AuditLog.created_at) == db.func.current_date(),
-            AuditLog.tenant_id == tid
-        ).count(),
-        'creates': AuditLog.query.filter_by(action='create', tenant_id=tid).count(),
-        'updates': AuditLog.query.filter_by(action='update', tenant_id=tid).count(),
-        'deletes': AuditLog.query.filter_by(action='delete', tenant_id=tid).count(),
-    }
-
-    # قائمة المستخدمين للفلتر
-    users = User.query.filter_by(is_active=True, tenant_id=tid).all()
+    logs, pagination, stats, users = AuditService.get_audit_logs_data(tid, page, per_page, action, user_id)
 
     return render_template('owner/audit_logs.html',
-                         logs=pagination.items,
+                         logs=logs,
                          pagination=pagination,
                          stats=stats,
                          users=users)
