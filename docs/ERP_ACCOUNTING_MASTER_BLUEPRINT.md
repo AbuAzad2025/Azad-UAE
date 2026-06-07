@@ -1792,5 +1792,87 @@ What is missing is primarily **narrative clarity** in documentation and possibly
 
 ---
 
+### 24. Root-Level Architecture Improvements — Peer Review Applied
+
+**Review date:** June 7, 2026  
+**Scope:** `app.py`, `config.py`, `extensions.py`, `config_redis.py`, `nowpayments_config.py`
+
+**Verdict:** The system is **operationally functional** but the root layer carries **concentrated startup concerns** across 3 files. Refactoring is recommended before the codebase grows further.
+
+---
+
+#### 24.1 `app.py` (936 lines) — Bootstrap Too Heavy
+
+| Weakness | Impact | Recommended Fix |
+|----------|--------|-----------------|
+| `create_app()` does everything: env init, config load, path creation, production sanity, extensions init, system integrity, ProxyFix, 20+ blueprint imports, AI fallback, redirects, error handlers | Hard to test, hard to extend, single point of failure | Split into internal modules: `bootstrap/env.py`, `bootstrap/extensions.py`, `bootstrap/blueprints.py`, `bootstrap/errors.py` |
+| Manual import of 20+ blueprints inside one file | Adding a new blueprint touches `app.py` | Move blueprint registration to a registry/discovery mechanism or `bootstrap/blueprints.py` |
+| `print("DEBUG: ...")` statements in startup | Not production-grade logging | Replace with `logger.debug()` or remove after diagnostics complete |
+
+**Priority:** 🔴 High — affects every future feature addition.
+
+---
+
+#### 24.2 `config.py` (407 lines) — Half Config / Half Bootstrap
+
+| Weakness | Impact | Recommended Fix |
+|----------|--------|-----------------|
+| `SECRET_KEY` generation + writing to `instance/secret_key` inside `Config` class | Config class performs I/O | Move to explicit bootstrap step in `create_app()` or `utils/bootstrap_keys.py` |
+| `CARD_ENCRYPTION_KEY` generation inside `Config` | Same as above | Move to bootstrap or secret-management layer |
+| `os.makedirs(BACKUP_DIR)` inside `Config` | Config class creates directories | Move to `ensure_runtime_dirs()` called from `create_app()` |
+| `_redis_available()` probing Redis socket inside config | Runtime probing during config evaluation | Move to explicit cache initialization in `extensions.py` or `bootstrap/` |
+
+**Priority:** 🔴 High — mixing configuration with runtime makes the system unpredictable.
+
+---
+
+#### 24.3 `extensions.py` — Overloaded Beyond Its Name
+
+| Weakness | Impact | Recommended Fix |
+|----------|--------|-----------------|
+| Contains: extensions registry + logging subsystem + monkey patches + i18n + rate-limit policy | File does 5 things, not 1 | Split: `extensions_registry.py`, `logging_setup.py`, `compat_patches.py` |
+| Monkey patch of `cachelib.serializers.BaseSerializer.dumps` | Global library mutation without dedicated test or clear justification | Isolate to `compat_patches.py` with a dedicated test and a comment explaining why it must remain |
+| `_exempt_super()` hook returns `False` always | Placeholder with no operational value | Either implement a real policy (e.g., exempt internal health checks) or remove the hook |
+
+**Priority:** 🟡 Medium — functional now, but maintenance cost rises with each change.
+
+---
+
+#### 24.4 `config_redis.py` — Misleading Stub
+
+| Weakness | Impact | Recommended Fix |
+|----------|--------|-----------------|
+| Title says "Redis Configuration" but `init_redis(app)` is just `pass` | Dead code that looks alive | **Delete** if Redis is handled elsewhere; **implement** if needed; or rename to `redis_stub.py` temporarily |
+| `app.py` still imports it | Adds cognitive load for no benefit | Remove import or make it conditional |
+
+**Priority:** 🟡 Medium — dead code misleads new contributors.
+
+---
+
+#### 24.5 `nowpayments_config.py` — Weak & Duplicated
+
+| Weakness | Impact | Recommended Fix |
+|----------|--------|-----------------|
+| Just scattered constants, not a real payment-provider module | Not extensible for additional providers | Convert to a proper provider class/module with: api_base, timeout, sandbox/live mode, webhook URL builder, validation helpers |
+| `BASE_URL = f"http://localhost:{port}"` | Hardcoded dev-only URL in what looks like general config | Derive from `Config.BASE_URL` or make it environment-aware |
+| Keys duplicated in main `Config` (`NOWPAYMENTS_API_KEY`, etc.) | Two sources of truth | Merge fully into `Config` or fully into `nowpayments_config.py`, not both |
+
+**Priority:** 🟡 Medium — payment config should be robust before handling real transactions.
+
+---
+
+#### 24.6 Recommended Implementation Order
+
+| Phase | Tasks | Effort |
+|-------|-------|--------|
+| 1 | Delete `config_redis.py` and remove its import from `app.py` | 5 min |
+| 2 | Move `SECRET_KEY`/`CARD_ENCRYPTION_KEY` generation out of `Config` into explicit bootstrap | 1 hour |
+| 3 | Extract `logging_setup` + `compat_patches` from `extensions.py` into own modules | 2 hours |
+| 4 | Split blueprint registration from `app.py` into `bootstrap/blueprints.py` | 2 hours |
+| 5 | Refactor `nowpayments_config.py` into a real provider module or merge into `Config` | 2 hours |
+| 6 | Remove remaining `print()` debug statements from startup | 10 min |
+
+---
+
 *End of Master Blueprint — Single Source of Truth*
-*Last updated: June 7, 2026 (Session 12 — Accounting-Module Coverage Drive: 291 unit tests passing, 5 production bugs fixed; Payment Vault Handoff closed; CI/CD ready; branch protection deferred to go-live; Session 13+ — brand cleanup, README Quick Start, SECURITY.md, CONTRIBUTING.md completed)*
+*Last updated: June 7, 2026 (Session 12+ — CI/CD, brand cleanup, and root architecture peer review documented)*
