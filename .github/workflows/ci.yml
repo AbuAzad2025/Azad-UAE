@@ -69,12 +69,12 @@ jobs:
       - name: Run pytest unit tests with coverage
         run: |
           python -m pytest tests/unit -v --tb=short --maxfail=1 --cov=. --cov-report=term-missing --cov-report=xml --junitxml=pytest-report.xml 2>&1 | tee pytest-output.log
-        continue-on-error: true
 
       - name: Run security audit scripts
         run: |
           python tests/security/test_security_boundaries.py
           python tests/security/test_deep_validation.py
+        continue-on-error: true
 
       - name: Lint with flake8 (syntax gate)
         run: |
