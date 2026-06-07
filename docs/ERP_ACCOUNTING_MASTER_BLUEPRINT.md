@@ -1683,5 +1683,51 @@ blueprint are pushed.
 
 ---
 
+## 21. Session 12: Accounting-Module Coverage Drive (June 7, 2026)
+
+**Goal:** Continue expanding behavioural coverage on accounting services and
+GL models, merge new tests into existing files only (no new test files), and fix
+any production bugs surfaced by the new tests.
+
+### 21.1 Test Suite Results
+- `tests/unit/test_services.py` grew to **82 new behavioural tests** appended to
+the existing file, covering:
+  - Feature-flag resolution (`FeatureFlagService.is_enabled`, `get_all_flags`, `require_enabled`)
+  - Currency service (`get_exchange_rate_details` parity, invalid manual rate, labels)
+  - GL posting (`assert_balanced_lines` pass/fail, `post_or_fail` empty-lines guard)
+  - GL account resolver (`is_dynamic_gl_mapping_enabled` dict gating, `GLMappingError` message)
+  - GL service concepts (`posting_line`, payment debit/credit concept maps, customer credit concepts)
+  - GL helpers (`next_entry_number` format, `resolve_tenant_id` by user, `assert_period_open` no-crash)
+  - Tax service (`calculate_sale_tax`, `calculate_purchase_tax`, `get_vat_return` structure)
+  - Commission GL (`post_sale_commissions` no-entries guard)
+  - Donation GL (`post_completed_donation` guards: already posted, not completed, zero amount, no tenant)
+  - Depreciation (`run_monthly` empty result)
+  - Cheque accounting integration (receive/issue/clear wrong-type/status guards, summary structure)
+- `tests/unit/test_models.py` previously appended GL model tests
+  (`GLAccount`, `GLJournalEntry`, `GLJournalLine`, `GLConceptRegistry`, `GLAccountMapping`).
+- All tests pass (**82 passed**, 0 failures).
+
+### 21.2 Production Bugs Found & Fixed
+4. **`services/donation_gl_service.py` — `AttributeError` on missing tenant guard.**
+   Inside the early-return path for `tenant_id is None`, the logging call accessed
+   `donation.id` directly; a caller passing a lightweight object (or a model proxy)
+   could trigger `AttributeError` before the safe `False` return.
+   **Fix:** `getattr(donation, 'id', None)`.
+5. **`services/gl_helpers.py` — legacy `Query.get()` deprecation warnings.**
+   `resolve_tenant_id` used `Branch.query.get()` and `User.query.get()`, emitting
+   `LegacyAPIWarning` in SQLAlchemy 2.0 and risking removal in future releases.
+   **Fix:** migrated both to `db.session.get(Model, id)`.
+
+### 21.3 Remaining Tech Debt
+- `services/cheque_accounting_integration.py` still uses `Cheque.query.get_or_404`
+  (Flask-SQLAlchemy shorthand). It emits `LegacyAPIWarning` from the framework
+  layer; replacing it requires route-level exception-handler review and is
+  deferred to a dedicated API-consistency pass.
+
+**Status:** ✅ Accounting service layer behavioural coverage complete.
+Next: routes coverage or deeper model-branch tests per owner priority.
+
+---
+
 *End of Master Blueprint — Single Source of Truth*
-*Last updated: June 7, 2026 (Session 11 — Test-Suite Hardening: 363 unit tests passing, 3 production bugs fixed; accounting-module coverage drive in progress)*
+*Last updated: June 7, 2026 (Session 12 — Accounting-Module Coverage Drive: 82 service tests + GL model tests passing, 5 production bugs fixed total)*

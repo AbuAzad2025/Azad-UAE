@@ -22,11 +22,11 @@ def resolve_tenant_id(branch_id=None, user_id=None):
     tenant_id = None
     if branch_id:
         from models import Branch
-        b = Branch.query.get(branch_id)
+        b = db.session.get(Branch, branch_id)
         tenant_id = getattr(b, 'tenant_id', None) if b else None
     if tenant_id is None and user_id:
         from models import User
-        u = User.query.get(user_id)
+        u = db.session.get(User, user_id)
         tenant_id = getattr(u, 'tenant_id', None) if u else None
     if tenant_id is None:
         try:

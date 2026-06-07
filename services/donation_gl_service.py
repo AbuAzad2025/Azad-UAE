@@ -40,7 +40,7 @@ class DonationGLService:
         if tenant_id is None:
             current_app.logger.info(
                 'Skipping tenant GL posting for Azad/platform donation #%s; platform ledger is not tenant-scoped.',
-                donation.id,
+                getattr(donation, 'id', None),
             )
             return False
 
