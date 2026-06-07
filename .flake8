@@ -1,0 +1,4 @@
+[flake8]
+max-line-length = 120
+ignore = E301,E302,E704,W293,W391,W503
+exclude = .git,__pycache__,migrations,instance,logs,static,node_modules

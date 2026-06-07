@@ -246,7 +246,8 @@ class Config:
     
     DEVELOPER_NAME_AR = os.environ.get("DEVELOPER_NAME_AR", "شركة أزاد للأنظمة الذكية")
     DEVELOPER_NAME = os.environ.get("DEVELOPER_NAME", "Azad Smart Systems")
-    DEVELOPER_CREDIT = os.environ.get("DEVELOPER_CREDIT", "تطوير وبرمجة: م. أحمد غنام | Developed by Eng. Ahmad Ghannam - Azad Systems")
+    _dev_credit = "تطوير وبرمجة: م. أحمد غنام | Developed by Eng. Ahmad Ghannam - Azad Systems"
+    DEVELOPER_CREDIT = os.environ.get("DEVELOPER_CREDIT", _dev_credit)
     DEVELOPER_WEBSITE = os.environ.get("DEVELOPER_WEBSITE", "https://azadsystems.com")
     DEVELOPER_PHONE = os.environ.get("DEVELOPER_PHONE", "+971500000000")
     DEVELOPER_EMAIL = os.environ.get("DEVELOPER_EMAIL", "dev@example.com")
@@ -365,9 +366,8 @@ def assert_production_sanity(cfg=None) -> None:
     
     base_url = getattr(cfg, "BASE_URL", "")
     if base_url and not base_url.startswith("https://"):
-        logging.warning(f"Production Warning: BASE_URL ({base_url}) should start with https://. Please update your .env file.")
-        # We won't raise an error here to prevent deployment crashes, but links might be incorrect.
-    
+        _msg = f"Production Warning: BASE_URL ({base_url}) should start with https://"
+        logging.warning(_msg)
     logging.info("Production configuration check complete")
 
 
