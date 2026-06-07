@@ -163,6 +163,42 @@ class AnalyticsService:
         return performance_data
 
     @staticmethod
+    def get_forecasting_data(tenant_id, branch_id=None):
+        months_back = 12
+        today = datetime.now().date()
+        historical_data = []
+        for i in range(months_back):
+            month_start = (today.replace(day=1) - timedelta(days=30*i)).replace(day=1)
+            if month_start.month == 12:
+                month_end = month_start.replace(year=month_start.year+1, month=1, day=1) - timedelta(days=1)
+            else:
+                month_end = month_start.replace(month=month_start.month+1, day=1) - timedelta(days=1)
+            revenue = db.session.query(func.sum(Sale.total_amount)).filter(
+                Sale.sale_date >= month_start,
+                Sale.sale_date <= month_end,
+                Sale.status == 'confirmed',
+                Sale.tenant_id == tenant_id,
+            )
+            if branch_id is not None:
+                revenue = revenue.filter(Sale.branch_id == branch_id)
+            revenue = revenue.scalar() or 0
+            historical_data.append({'month': month_start.strftime('%Y-%m'), 'revenue': float(revenue)})
+        historical_data.reverse()
+        forecast = {'next_month': 0, 'next_3_months': 0, 'confidence': 'غير متوفرة'}
+        if len(historical_data) >= 3:
+            avg_revenue = sum(m['revenue'] for m in historical_data[-3:]) / 3
+            trend = (historical_data[-1]['revenue'] - historical_data[-3]['revenue']) / 3
+            revenues = [m['revenue'] for m in historical_data if m['revenue'] > 0]
+            volatility = (max(revenues) - min(revenues)) / max(avg_revenue, 1) if revenues else 0
+            confidence = 'عالية' if volatility < 0.2 else 'متوسطة' if volatility < 0.5 else 'منخفضة'
+            forecast = {
+                'next_month': avg_revenue + trend,
+                'next_3_months': (avg_revenue + trend) * 3,
+                'confidence': confidence
+            }
+        return historical_data, forecast
+
+    @staticmethod
     def get_revenue_by_period(period='month', months=6, tenant_id=None):
         """
         الحصول على الإيرادات حسب الفترة

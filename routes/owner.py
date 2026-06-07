@@ -3544,66 +3544,10 @@ def product_performance():
 @login_required
 @owner_required
 def forecasting():
-    months_back = 12
-    today = datetime.now().date()
     scoped_branch_id = _owner_branch_scope()
     tid = get_active_tenant_id(current_user)
-
-    historical_data = []
-    for i in range(months_back):
-        month_start = (today.replace(day=1) - timedelta(days=30*i)).replace(day=1)
-
-        if month_start.month == 12:
-            month_end = month_start.replace(year=month_start.year+1, month=1, day=1) - timedelta(days=1)
-        else:
-            month_end = month_start.replace(month=month_start.month+1, day=1) - timedelta(days=1)
-
-        revenue = db.session.query(func.sum(Sale.total_amount)).filter(
-            Sale.sale_date >= month_start,
-            Sale.sale_date <= month_end,
-            Sale.status == 'confirmed',
-            Sale.tenant_id == tid,
-        )
-        if scoped_branch_id is not None:
-            revenue = revenue.filter(Sale.branch_id == scoped_branch_id)
-        revenue = revenue.scalar() or 0
-
-        historical_data.append({
-            'month': month_start.strftime('%Y-%m'),
-            'revenue': float(revenue)
-        })
-
-    historical_data.reverse()
-
-    if len(historical_data) >= 3:
-        avg_revenue = sum(m['revenue'] for m in historical_data[-3:]) / 3
-        trend = (historical_data[-1]['revenue'] - historical_data[-3]['revenue']) / 3
-
-        # Linear trend forecast with confidence based on data volatility
-        revenues = [m['revenue'] for m in historical_data if m['revenue'] > 0]
-        volatility = (max(revenues) - min(revenues)) / max(avg_revenue, 1) if revenues else 0
-        if volatility < 0.2:
-            confidence = 'عالية'
-        elif volatility < 0.5:
-            confidence = 'متوسطة'
-        else:
-            confidence = 'منخفضة'
-
-        forecast = {
-            'next_month': avg_revenue + trend,
-            'next_3_months': (avg_revenue + trend) * 3,
-            'confidence': confidence
-        }
-    else:
-        forecast = {
-            'next_month': 0,
-            'next_3_months': 0,
-            'confidence': 'غير متوفرة'
-        }
-
-    return render_template('owner/forecasting.html',
-                         historical=historical_data,
-                         forecast=forecast)
+    historical, forecast = AnalyticsService.get_forecasting_data(tenant_id=tid, branch_id=scoped_branch_id)
+    return render_template('owner/forecasting.html', historical=historical, forecast=forecast)
 
 
 # ───────────────────────────────────────────────────────────────
