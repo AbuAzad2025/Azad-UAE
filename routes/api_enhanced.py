@@ -20,8 +20,13 @@ def get_sales():
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 20, type=int)
     
+    tid = get_active_tenant_id(current_user)
     query = optimize_query(Sale, relationships=['customer', 'seller', 'lines'], strategy='joined')
-    query = query.filter_by(is_active=True).order_by(Sale.sale_date.desc())
+    query = query.filter(Sale.is_active == True)
+    if tid:
+        query = query.filter(Sale.tenant_id == tid)
+
+    query = query.order_by(Sale.sale_date.desc())
     
     pagination = paginate_optimized(query, page=page, per_page=per_page)
     
@@ -41,8 +46,13 @@ def get_sales():
 def get_sale(sale_id):
     from models import Sale
     
+    tid = get_active_tenant_id(current_user)
     query = optimize_query(Sale, relationships=['customer', 'seller', 'lines'], strategy='joined')
-    sale = query.filter_by(id=sale_id).first_or_404()
+    query = query.filter(Sale.id == sale_id)
+    if tid:
+        query = query.filter(Sale.tenant_id == tid)
+
+    sale = query.first_or_404()
     
     return jsonify({
         'success': True,

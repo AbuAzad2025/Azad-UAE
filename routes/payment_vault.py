@@ -749,7 +749,7 @@ def decrypt_card(card_id):
 @owner_only
 @limiter.limit("20 per minute")
 def process_payment():
-    """معالجة الدفع (كريبتو أو بطاقة) - عام، لا يحتاج تسجيل دخول"""
+    """معالجة الدفع (كريبتو أو بطاقة) - متاح للمالك فقط لتوثيق العمليات اليدوية"""
     try:
         data = request.get_json()
         
@@ -1532,6 +1532,7 @@ def export_report_pdf():
 @limiter.limit("100 per minute")
 def nowpayments_webhook():
     """Webhook من NOWPayments"""
+    # TODO: Add timestamp verification and event ID deduplication to prevent replay attacks.
     try:
         from services.webhook_service import WebhookService
         
@@ -1585,6 +1586,7 @@ def nowpayments_webhook():
 @limiter.limit("100 per minute")
 def stripe_webhook():
     """Webhook من Stripe"""
+    # TODO: Add timestamp verification and event ID deduplication to prevent replay attacks.
     try:
         from services.webhook_service import WebhookService
         
