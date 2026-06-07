@@ -7,6 +7,7 @@ def smoke_app():
     class SmokeConfig(Config):
         TESTING = True
         SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
+        SQLALCHEMY_ENGINE_OPTIONS = {}
         WTF_CSRF_ENABLED = False
     
     app = create_app(SmokeConfig)
