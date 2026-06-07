@@ -140,7 +140,7 @@
 | A3 | Secret key refactor | ✅ **DONE** | Jun 7 | Jun 7 | `utils/bootstrap_keys.py` created; `config.py` I/O removed; `app.py` calls `bootstrap_keys(app, config.instance_dir)` |
 | B1 | Blueprint split | ⏸️ | — | — | Code-only |
 | B2 | logging_setup extract | ⏸️ | — | — | Code-only |
-| B3 | _exempt_super cleanup | ⏸️ | — | — | Code-only |
+| B3 | _exempt_super cleanup | ✅ **DONE** | Jun 7 | Jun 7 | Removed dead `@limiter.request_filter` returning `False` always; +14 tests in `test_extensions.py` |
 | B4 | NowPayments provider | ⏸️ | — | — | Code-only |
 | C1 | CDN SRI | ⏸️ | — | — | HTML/CDN |
 | C2 | Session security | ⏸️ | — | — | Config-only |
