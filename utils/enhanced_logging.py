@@ -26,6 +26,22 @@ def _ensure_utf8_stream(stream):
     return stream
 
 
+class SafeLogRecordFilter(logging.Filter):
+    """Inject default values for missing custom fields so formatters never KeyError."""
+    DEFAULTS = {
+        "user": "-",
+        "ip": "-",
+        "tenant": "-",
+        "request_id": "-",
+    }
+
+    def filter(self, record):
+        for field, default in self.DEFAULTS.items():
+            if not hasattr(record, field):
+                setattr(record, field, default)
+        return True
+
+
 def setup_enhanced_logging(app):
     """إعداد نظام تسجيل محسّن"""
 
@@ -73,6 +89,7 @@ def setup_enhanced_logging(app):
         'Message: %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S'
     ))
+    security_handler.addFilter(SafeLogRecordFilter())
     
     perf_handler = RotatingFileHandler(
         os.path.join(logs_dir, 'performance.log'),
