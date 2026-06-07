@@ -137,7 +137,7 @@
 |-------|------|--------|---------|------|-------|
 | A1 | Branch Protection | ⏸️ | — | — | Needs repo admin |
 | A2 | flake8 strict gate | ⏸️ | — | — | Needs cleanup pass |
-| A3 | Secret key refactor | ⏸️ | — | — | Code-only |
+| A3 | Secret key refactor | ✅ **DONE** | Jun 7 | Jun 7 | `utils/bootstrap_keys.py` created; `config.py` I/O removed; `app.py` calls `bootstrap_keys(app, config.instance_dir)` |
 | B1 | Blueprint split | ⏸️ | — | — | Code-only |
 | B2 | logging_setup extract | ⏸️ | — | — | Code-only |
 | B3 | _exempt_super cleanup | ⏸️ | — | — | Code-only |
@@ -150,7 +150,7 @@
 
 ## Recommended Order of Attack
 
-1. **A3** (1 hour) — Secret key refactor → quick win, improves testability
+1. ~~**A3** (1 hour) — Secret key refactor → quick win, improves testability~~ ✅ **DONE**
 2. **A2** (1-2 hours) — flake8 cleanup → enables strict CI gate
 3. **B1** (2 hours) — Blueprint split → cleans app.py
 4. **B2** (2 hours) — logging_setup extract → cleans extensions.py
