@@ -139,7 +139,7 @@
 | A2 | flake8 strict gate | ✅ **DONE** | Jun 7 | Jun 7 | `.flake8` config created (ignore E301,E302,E704,W293,W391,W503; max-line-length=120); `continue-on-error: true` removed from CI; 16 tests added |
 | A3 | Secret key refactor | ✅ **DONE** | Jun 7 | Jun 7 | `utils/bootstrap_keys.py` created; `config.py` I/O removed; `app.py` calls `bootstrap_keys(app, config.instance_dir)` |
 | B1 | Blueprint split | ⏸️ | — | — | Code-only |
-| B2 | logging_setup extract | ⏸️ | — | — | Code-only |
+| B2 | logging_setup extract | ✅ **DONE** | Jun 7 | Jun 7 | `utils/logging_setup.py` + `utils/compat_patches.py` created; `extensions.py` reduced from 255 to 98 lines; `app.py` imports compat_patches before extensions; 340 tests pass |
 | B3 | _exempt_super cleanup | ✅ **DONE** | Jun 7 | Jun 7 | Removed dead `@limiter.request_filter` returning `False` always; +14 tests in `test_extensions.py` |
 | B4 | NowPayments provider | ⏸️ | — | — | Code-only |
 | C1 | CDN SRI | ⏸️ | — | — | HTML/CDN |
