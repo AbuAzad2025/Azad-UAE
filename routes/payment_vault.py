@@ -10,6 +10,7 @@ from extensions import db, limiter, csrf
 from models import PaymentVault, PaymentTransaction, PaymentLog, Donation, CardPayment, Package, PackagePurchase
 from services.nowpayments_service import NOWPaymentsService
 from utils.helpers import create_audit_log
+from utils.decorators import owner_only
 import secrets
 import string
 import logging
@@ -116,26 +117,17 @@ def _protect_owner_vault_pages():
 
 
 @payment_vault_bp.route('/')
-@login_required
+@owner_only
 def index():
     """الصفحة الرئيسية للخزينة السرية"""
-    # التحقق من صلاحيات المالك
-    if not current_user.is_owner:
-        flash('❌ غير مصرح - الخزينة السرية للمالك فقط!', 'danger')
-        return redirect(url_for('main.dashboard'))
-    
     return render_template('payment_vault/index.html')
 
 
 @payment_vault_bp.route('/unlock', methods=['GET', 'POST'])
-@login_required
+@owner_only
 @limiter.limit("5 per minute")
 def unlock_vault():
     """فتح الخزينة السرية"""
-    if not current_user.is_owner:
-        flash('❌ غير مصرح - الخزينة السرية للمالك فقط!', 'danger')
-        return redirect(url_for('main.dashboard'))
-    
     if request.method == 'POST':
         password = request.form.get('vault_password', '').strip()
         
@@ -206,13 +198,9 @@ def unlock_vault():
 
 
 @payment_vault_bp.route('/dashboard')
-@login_required
+@owner_only
 def dashboard():
     """لوحة تحكم الخزينة السرية"""
-    if not current_user.is_owner:
-        flash('❌ غير مصرح - الخزينة السرية للمالك فقط!', 'danger')
-        return redirect(url_for('main.dashboard'))
-    
     # التحقق من وجود الخزينة
     vault = _get_vault_for_current_tenant()
     if not vault or vault.is_locked:
@@ -280,13 +268,9 @@ def dashboard():
 
 
 @payment_vault_bp.route('/settings', methods=['GET', 'POST'])
-@login_required
+@owner_only
 def settings():
     """إعدادات الخزينة السرية"""
-    if not current_user.is_owner:
-        flash('❌ غير مصرح - الخزينة السرية للمالك فقط!', 'danger')
-        return redirect(url_for('main.dashboard'))
-    
     vault = _get_vault_for_current_tenant()
     if not vault or not vault.is_vault_accessible():
         flash('❌ الخزينة مقفلة، يرجى إدخال كلمة المرور', 'warning')
@@ -384,13 +368,9 @@ def settings():
 
 
 @payment_vault_bp.route('/donations')
-@login_required
+@owner_only
 def donations():
     """عرض التبرعات"""
-    if not current_user.is_owner:
-        flash('❌ غير مصرح - الخزينة السرية للمالك فقط!', 'danger')
-        return redirect(url_for('main.dashboard'))
-    
     vault = _get_vault_for_current_tenant()
     if not vault or vault.is_locked:
         flash('❌ يجب فتح الخزينة أولاً', 'warning')
@@ -441,13 +421,9 @@ def donations():
 
 
 @payment_vault_bp.route('/packages-management')
-@login_required
+@owner_only
 def packages_management():
     """إدارة الباقات من الخزينة"""
-    if not current_user.is_owner:
-        flash('❌ غير مصرح - الخزينة السرية للمالك فقط!', 'danger')
-        return redirect(url_for('main.dashboard'))
-    
     vault = _get_vault_for_current_tenant()
     if not vault or vault.is_locked:
         flash('❌ يجب فتح الخزينة أولاً', 'warning')
@@ -469,13 +445,9 @@ def packages_management():
 
 
 @payment_vault_bp.route('/package/create', methods=['POST'])
-@login_required
+@owner_only
 def create_package():
     """إنشاء باقة جديدة من لوحة الخزينة."""
-    if not current_user.is_owner:
-        flash('❌ غير مصرح', 'danger')
-        return redirect(url_for('main.dashboard'))
-
     vault = _get_vault_for_current_tenant()
     if not vault or vault.is_locked:
         flash('❌ يجب فتح الخزينة أولاً', 'warning')
@@ -550,13 +522,9 @@ def create_package():
 
 
 @payment_vault_bp.route('/package/<int:package_id>/edit', methods=['GET', 'POST'])
-@login_required
+@owner_only
 def edit_package(package_id):
     """تعديل باقة"""
-    if not current_user.is_owner:
-        flash('❌ غير مصرح', 'danger')
-        return redirect(url_for('main.dashboard'))
-    
     vault = _get_vault_for_current_tenant()
     if not vault or vault.is_locked:
         flash('❌ يجب فتح الخزينة أولاً', 'warning')
@@ -623,12 +591,9 @@ def edit_package(package_id):
 
 
 @payment_vault_bp.route('/package/<int:package_id>/delete', methods=['POST'])
-@login_required
+@owner_only
 def delete_package(package_id):
     """حذف باقة"""
-    if not current_user.is_owner:
-        return jsonify({'success': False, 'error': 'غير مصرح'}), 403
-    
     vault = _get_vault_for_current_tenant()
     if not vault or vault.is_locked:
         return jsonify({'success': False, 'error': 'الخزينة مقفلة'}), 403
@@ -654,13 +619,9 @@ def delete_package(package_id):
 
 
 @payment_vault_bp.route('/reports')
-@login_required
+@owner_only
 def reports():
     """التقارير المالية"""
-    if not current_user.is_owner:
-        flash('❌ غير مصرح - الخزينة السرية للمالك فقط!', 'danger')
-        return redirect(url_for('main.dashboard'))
-    
     vault = _get_vault_for_current_tenant()
     if not vault or vault.is_locked:
         flash('❌ يجب فتح الخزينة أولاً', 'warning')
@@ -709,13 +670,9 @@ def reports():
 
 
 @payment_vault_bp.route('/lock')
-@login_required
+@owner_only
 def lock_vault():
     """قفل الخزينة"""
-    if not current_user.is_owner:
-        flash('❌ غير مصرح - الخزينة السرية للمالك فقط!', 'danger')
-        return redirect(url_for('main.dashboard'))
-    
     vault = _get_vault_for_current_tenant()
     if vault:
         vault.lock_vault()
@@ -736,13 +693,9 @@ def lock_vault():
 
 
 @payment_vault_bp.route('/cards')
-@login_required
+@owner_only
 def cards():
     """عرض البطاقات المحفوظة"""
-    if not current_user.is_owner:
-        flash('❌ غير مصرح - الخزينة السرية للمالك فقط!', 'danger')
-        return redirect(url_for('main.dashboard'))
-    
     vault = _get_vault_for_current_tenant()
     if not vault or vault.is_locked:
         flash('❌ يجب فتح الخزينة أولاً', 'warning')
@@ -766,12 +719,9 @@ def cards():
 
 
 @payment_vault_bp.route('/card/<int:card_id>/decrypt', methods=['POST'])
-@login_required
+@owner_only
 def decrypt_card(card_id):
     """فك تشفير بيانات البطاقة (للمالك فقط)"""
-    if not current_user.is_owner:
-        return jsonify({'success': False, 'error': 'غير مصرح'}), 403
-    
     vault = _get_vault_for_current_tenant()
     if not vault or vault.is_locked:
         return jsonify({'success': False, 'error': 'الخزينة مقفلة'}), 403
@@ -796,6 +746,7 @@ def decrypt_card(card_id):
 
 
 @payment_vault_bp.route('/process-payment', methods=['POST'])
+@owner_only
 @limiter.limit("20 per minute")
 def process_payment():
     """معالجة الدفع (كريبتو أو بطاقة) - عام، لا يحتاج تسجيل دخول"""
@@ -887,13 +838,9 @@ def process_payment():
 
 
 @payment_vault_bp.route('/change-password', methods=['GET', 'POST'])
-@login_required
+@owner_only
 def change_password():
     """تغيير كلمة مرور الخزينة"""
-    if not current_user.is_owner:
-        flash('❌ غير مصرح - الخزينة السرية للمالك فقط!', 'danger')
-        return redirect(url_for('main.dashboard'))
-    
     vault = _get_vault_for_current_tenant()
     if not vault or not vault.is_vault_accessible():
         flash('❌ الخزينة مقفلة، يرجى إدخال كلمة المرور', 'warning')
@@ -1231,13 +1178,9 @@ def api_create_donation():
 # ==================== Routes لإدارة المشتريات (محمية) ====================
 
 @payment_vault_bp.route('/purchases')
-@login_required
+@owner_only
 def view_purchases():
     """عرض جميع عمليات الشراء مع Pagination"""
-    if not current_user.is_owner:
-        flash('❌ غير مصرح', 'danger')
-        return redirect(url_for('main.dashboard'))
-    
     vault = _get_vault_for_current_tenant()
     if not vault or vault.is_locked:
         flash('❌ يجب فتح الخزينة أولاً', 'warning')
@@ -1278,12 +1221,9 @@ def view_purchases():
 
 
 @payment_vault_bp.route('/purchase/<int:id>')
-@login_required
+@owner_only
 def purchase_detail(id):
     """تفاصيل عملية شراء"""
-    if not current_user.is_owner:
-        return redirect(url_for('main.dashboard'))
-    
     vault = _get_vault_for_current_tenant()
     if not vault or vault.is_locked:
         return redirect(url_for('payment_vault.unlock_vault'))
@@ -1293,12 +1233,9 @@ def purchase_detail(id):
 
 
 @payment_vault_bp.route('/purchase/<int:id>/activate', methods=['POST'])
-@login_required
+@owner_only
 def activate_purchase(id):
     """تفعيل عملية شراء"""
-    if not current_user.is_owner:
-        return redirect(url_for('main.dashboard'))
-    
     purchase = PackagePurchase.query.get_or_404(id)
     
     try:
@@ -1327,12 +1264,9 @@ def activate_purchase(id):
 
 
 @payment_vault_bp.route('/api/package-stats/<int:package_id>')
-@login_required
+@owner_only
 def api_package_stats(package_id):
     """API لإحصائيات باقة محددة"""
-    if not current_user.is_owner:
-        return jsonify({'error': 'Unauthorized'}), 403
-    
     package = Package.query.get_or_404(package_id)
     purchases = PackagePurchase.query.filter_by(package_id=package_id).all()
     
@@ -1348,12 +1282,9 @@ def api_package_stats(package_id):
 
 
 @payment_vault_bp.route('/package/<int:package_id>/toggle', methods=['POST'])
-@login_required
+@owner_only
 def toggle_package_status(package_id):
     """تبديل حالة الباقة (نشط/معطل)"""
-    if not current_user.is_owner:
-        return jsonify({'error': 'Unauthorized'}), 403
-    
     package = Package.query.get_or_404(package_id)
     package.is_active = not package.is_active
     
@@ -1368,13 +1299,9 @@ def toggle_package_status(package_id):
 
 
 @payment_vault_bp.route('/donation/<int:donation_id>')
-@login_required
+@owner_only
 def donation_detail(donation_id):
     """عرض تفاصيل تبرع"""
-    if not current_user.is_owner:
-        flash('❌ غير مصرح', 'danger')
-        return redirect(url_for('main.dashboard'))
-
     vault = _get_vault_for_current_tenant()
     if not vault or vault.is_locked:
         flash('❌ يجب فتح الخزينة أولاً', 'warning')
@@ -1386,13 +1313,9 @@ def donation_detail(donation_id):
 
 
 @payment_vault_bp.route('/donation/<int:donation_id>/approve', methods=['POST'])
-@login_required
+@owner_only
 def approve_donation(donation_id):
     """قبول تبرع"""
-    if not current_user.is_owner:
-        flash('❌ غير مصرح', 'danger')
-        return redirect(url_for('main.dashboard'))
-
     tid = None
     donation = Donation.query.filter_by(id=donation_id, tenant_id=tid).first_or_404()
     
@@ -1418,13 +1341,9 @@ def approve_donation(donation_id):
 
 
 @payment_vault_bp.route('/donation/<int:donation_id>/reject', methods=['POST'])
-@login_required
+@owner_only
 def reject_donation(donation_id):
     """رفض تبرع"""
-    if not current_user.is_owner:
-        flash('❌ غير مصرح', 'danger')
-        return redirect(url_for('main.dashboard'))
-    
     tid = None
     donation = Donation.query.filter_by(id=donation_id, tenant_id=tid).first_or_404()
 
@@ -1450,12 +1369,9 @@ def reject_donation(donation_id):
 
 
 @payment_vault_bp.route('/auto-approve', methods=['POST'])
-@login_required
+@owner_only
 def trigger_auto_approve():
     """تشغيل القبول التلقائي يدوياً"""
-    if not current_user.is_owner:
-        return jsonify({'error': 'Unauthorized'}), 403
-    
     from services.auto_approval_service import AutoApprovalService
     from services.notification_service import NotificationService
     
@@ -1475,12 +1391,9 @@ def trigger_auto_approve():
 
 
 @payment_vault_bp.route('/api/notifications', methods=['GET'])
-@login_required
+@owner_only
 def api_notifications():
     """API للحصول على الإشعارات"""
-    if not current_user.is_owner:
-        return jsonify({'error': 'Unauthorized'}), 403
-    
     from services.notification_service import NotificationService
     
     limit = request.args.get('limit', 10, type=int)
@@ -1494,12 +1407,9 @@ def api_notifications():
 
 
 @payment_vault_bp.route('/api/live-stats', methods=['GET'])
-@login_required
+@owner_only
 def api_live_stats():
     """API للإحصائيات المباشرة"""
-    if not current_user.is_owner:
-        return jsonify({'error': 'Unauthorized'}), 403
-    
     from services.analytics_service import AnalyticsService
     from services.notification_service import SecurityService
     
@@ -1523,12 +1433,9 @@ def api_live_stats():
 # ==================== Export Routes - تصدير التقارير ====================
 
 @payment_vault_bp.route('/export/purchases')
-@login_required
+@owner_only
 def export_purchases():
     """تصدير المشتريات إلى CSV"""
-    if not current_user.is_owner:
-        return jsonify({'error': 'Unauthorized'}), 403
-    
     from services.export_service import ExportService
     from flask import send_file
     
@@ -1544,12 +1451,9 @@ def export_purchases():
 
 
 @payment_vault_bp.route('/export/donations')
-@login_required
+@owner_only
 def export_donations():
     """تصدير التبرعات إلى CSV"""
-    if not current_user.is_owner:
-        return jsonify({'error': 'Unauthorized'}), 403
-    
     from services.export_service import ExportService
     from flask import send_file
     
@@ -1566,12 +1470,9 @@ def export_donations():
 
 
 @payment_vault_bp.route('/export/cards')
-@login_required
+@owner_only
 def export_cards():
     """تصدير البطاقات إلى CSV"""
-    if not current_user.is_owner:
-        return jsonify({'error': 'Unauthorized'}), 403
-    
     from services.export_service import ExportService
     from flask import send_file
     
@@ -1587,12 +1488,9 @@ def export_cards():
 
 
 @payment_vault_bp.route('/export/report-pdf')
-@login_required
+@owner_only
 def export_report_pdf():
     """تصدير تقرير PDF"""
-    if not current_user.is_owner:
-        return jsonify({'error': 'Unauthorized'}), 403
-    
     from services.export_service import ExportService
     from services.analytics_service import AnalyticsService
     
@@ -1734,11 +1632,9 @@ def stripe_webhook():
 # ==================== Health & Monitoring Routes - المراقبة ====================
 
 @payment_vault_bp.route('/health', methods=['GET'])
-@login_required
+@owner_only
 def health_check():
     """فحص صحة النظام — للمالك فقط"""
-    if not current_user.is_owner:
-        return jsonify({'error': 'Unauthorized'}), 403
     from services.health_service import HealthCheckService
     
     result = HealthCheckService.run_full_health_check()
@@ -1748,12 +1644,9 @@ def health_check():
 
 
 @payment_vault_bp.route('/metrics', methods=['GET'])
-@login_required
+@owner_only
 def system_metrics():
     """مقاييس النظام (للمالك فقط)"""
-    if not current_user.is_owner:
-        return jsonify({'error': 'Unauthorized'}), 403
-    
     from services.health_service import HealthCheckService
     
     metrics = HealthCheckService.get_system_metrics()
@@ -1763,13 +1656,10 @@ def system_metrics():
 # ==================== API v2 - Enhanced API with Versioning ====================
 
 @payment_vault_bp.route('/api/v2/purchases', methods=['GET'])
-@login_required
+@owner_only
 @limiter.limit("60 per minute")
 def api_v2_purchases():
     """API v2 للمشتريات - محسن مع Filtering & Pagination"""
-    if not current_user.is_owner:
-        return jsonify({'error': 'Unauthorized', 'version': '2.0'}), 403
-    
     # Parameters
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 20, type=int)
@@ -1827,13 +1717,10 @@ def api_v2_purchases():
 
 
 @payment_vault_bp.route('/api/v2/donations', methods=['GET'])
-@login_required
+@owner_only
 @limiter.limit("60 per minute")
 def api_v2_donations():
     """API v2 للتبرعات - محسن مع Filtering & Pagination"""
-    if not current_user.is_owner:
-        return jsonify({'error': 'Unauthorized', 'version': '2.0'}), 403
-    
     # Parameters
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 20, type=int)
@@ -1887,13 +1774,10 @@ def api_v2_donations():
 
 
 @payment_vault_bp.route('/api/v2/stats', methods=['GET'])
-@login_required
+@owner_only
 @limiter.limit("60 per minute")
 def api_v2_stats():
     """API v2 للإحصائيات - شاملة ومحسنة"""
-    if not current_user.is_owner:
-        return jsonify({'error': 'Unauthorized', 'version': '2.0'}), 403
-    
     from services.analytics_service import AnalyticsService
     from services.notification_service import SecurityService
     

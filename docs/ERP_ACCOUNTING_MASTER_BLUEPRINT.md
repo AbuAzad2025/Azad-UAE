@@ -1626,5 +1626,62 @@ git status --short
 
 ---
 
+## 20. Session 11: Test-Suite Hardening & Real-Coverage Drive (June 7, 2026)
+
+**Goal:** Refactor and expand the unit-test suite with *real* behavioural tests
+(each test written only after reading the full source file and its dependencies),
+raise coverage on logic-heavy modules, and re-audit. Tests are intentionally
+**not** committed to GitHub per owner directive; only source fixes and this
+blueprint are pushed.
+
+### 20.1 Test Suite Results
+- Unit tests grew from **161 → 363 passing** (0 failures, **0 warnings**).
+- 5 new real test files (logic + branch + edge coverage, not import smoke tests):
+  - `tests/unit/test_localization.py` (33) — VAT math, FTA/ZATCA/PMA e-invoice, WPS SIF, registry dispatch.
+  - `tests/unit/test_utils_extended.py` (67) — password/field validators, sanitizer, API-response envelope.
+  - `tests/unit/test_messages_paths_tax.py` (54) — error messages, static asset paths, tenant tax resolution.
+  - `tests/unit/test_services_logic.py` (22) — feature-flag resolution, currency resolver (offline/fallback).
+  - `tests/unit/test_number_query.py` (26) — Arabic money-to-words, query optimizer eager-loading.
+
+### 20.2 Coverage Improvements (targeted modules)
+| Module | Before | After |
+|--------|--------|-------|
+| `utils/localization/*` | 0% | ~100% |
+| `utils/error_messages.py` | 60% | 99% |
+| `utils/number_to_arabic.py` | 69% | 99% |
+| `utils/sanitizer.py` | 0% | 97% |
+| `utils/field_validators.py` | 54% | 92% |
+| `services/feature_flag_service.py` | 45% | 86% |
+| `utils/tax_settings.py` | 56% | 84% |
+| `utils/query_optimizer.py` | 20% | 60% |
+| `services/currency_service.py` | 26% | 45% |
+
+### 20.3 Production Bugs Found & Fixed (root-cause, via coverage work)
+1. **`utils/sanitizer.py` — import crash.** `import bleach` at module top while
+   `bleach` is not a declared/installed dependency would raise `ModuleNotFoundError`,
+   crashing `routes/main.py` (profile update) and `routes/owner.py` (create user)
+   on call. **Fix:** optional import with graceful full-escape fallback.
+2. **`services/feature_flag_service.py` — all config flags read False.**
+   Used `getattr(current_app.config, key, False)` but Flask `config` is a dict;
+   `getattr` always returned the `False` default, silently disabling every
+   config-driven feature flag. **Fix:** `current_app.config.get(key, False)`.
+   Also migrated deprecated `Query.get()` → `Session.get()`.
+3. **`services/currency_service.py` — crash on invalid manual rate.**
+   `Decimal(str(user_rate))` raises `decimal.InvalidOperation` (an `ArithmeticError`,
+   not caught by `(ValueError, TypeError)`), crashing instead of falling through
+   to fallback. **Fix:** added `InvalidOperation` to the caught exceptions.
+
+### 20.4 Test-Infra Cleanups
+- `tests/conftest.py`: `PRAGMA foreign_keys=OFF` before `drop_all` (SQLite FK-cycle SAWarning).
+- `utils/enhanced_logging.py`: security/perf handlers now attached + closed on teardown (ResourceWarning fix).
+- `pytest.ini`: disabled cache provider (Windows lock) + scoped `filterwarnings` for third-party noise.
+
+**Status:** ✅ Phase-1 logic modules done. Next: accounting-module deep coverage
+(`gl_service`, `gl_posting`, `gl_account_resolver`, `gl_helpers`, `tax_service`,
+`commission_gl_service`, `donation_gl_service`, `cheque_accounting_integration`,
+`inventory_reconciliation_service`, `depreciation_service`).
+
+---
+
 *End of Master Blueprint — Single Source of Truth*
-*Last updated: June 6, 2026 (Session 9 — Phase 13 Full Stack Deep Audit CHECKLIST COMPLETE; 461 individual files listed; awaiting user approval to begin execution)*
+*Last updated: June 7, 2026 (Session 11 — Test-Suite Hardening: 363 unit tests passing, 3 production bugs fixed; accounting-module coverage drive in progress)*

@@ -107,6 +107,18 @@ def owner_required(f):
     return decorated_function
 
 
+def owner_only(f):
+    """قفل صلاحيات المالك فقط - Owner-only access control."""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated:
+            abort(403)
+        if not getattr(current_user, 'is_owner', False):
+            abort(403)
+        return f(*args, **kwargs)
+    return decorated_function
+
+
 def platform_owner_required(f):
     """Platform routes — same gate as owner_required (owner / developer)."""
     return owner_required(f)

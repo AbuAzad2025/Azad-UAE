@@ -88,7 +88,17 @@ def setup_enhanced_logging(app):
     
     app.logger.addHandler(app_handler)
     app.logger.addHandler(error_handler)
+    app.logger.addHandler(security_handler)
+    app.logger.addHandler(perf_handler)
     app.logger.setLevel(logging.INFO if not app.debug else logging.DEBUG)
+
+    @app.teardown_appcontext
+    def _close_log_handlers(exc):
+        for h in (app_handler, error_handler, security_handler, perf_handler):
+            try:
+                h.close()
+            except Exception:
+                pass
 
     utf8_stdout = _ensure_utf8_stream(sys.stdout)
     utf8_stderr = _ensure_utf8_stream(sys.stderr)

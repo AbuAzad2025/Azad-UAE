@@ -12,7 +12,7 @@ CurrencyService remains as the low-level provider that those methods call
 when a system rate is needed. Do NOT call it directly from routes/forms.
 """
 
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import Decimal, ROUND_HALF_UP, InvalidOperation
 import time
 
 try:
@@ -212,7 +212,7 @@ class CurrencyService:
                         'cached': False,
                         'age_seconds': 0,
                     }
-            except (ValueError, TypeError):
+            except (ValueError, TypeError, InvalidOperation):
                 pass
 
         if from_currency == to_currency:

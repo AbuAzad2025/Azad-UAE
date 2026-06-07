@@ -4,7 +4,13 @@ XSS Prevention & Input Sanitization
 
 from markupsafe import escape, Markup
 import re
-import bleach
+
+try:
+    import bleach
+    _BLEACH_AVAILABLE = True
+except ImportError:  # pragma: no cover
+    bleach = None
+    _BLEACH_AVAILABLE = False
 
 
 class InputSanitizer:
@@ -19,7 +25,7 @@ class InputSanitizer:
         if not text:
             return ''
 
-        if allow_tags:
+        if allow_tags and _BLEACH_AVAILABLE:
             return bleach.clean(
                 text,
                 tags=InputSanitizer.ALLOWED_TAGS,

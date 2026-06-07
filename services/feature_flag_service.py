@@ -32,14 +32,15 @@ class FeatureFlagService:
         # 1. Tenant override (if tenant.settings has the flag)
         if tenant_id is not None:
             from models import Tenant
-            tenant = Tenant.query.get(tenant_id)
+            from extensions import db
+            tenant = db.session.get(Tenant, tenant_id)
             if tenant and hasattr(tenant, 'settings') and tenant.settings:
                 settings = tenant.settings if isinstance(tenant.settings, dict) else {}
                 if flag_key in settings:
                     return bool(settings[flag_key])
 
-        # 2. Global config default
-        return getattr(current_app.config, config_key, False)
+        # 2. Global config default (Flask config is a dict — use .get, not getattr)
+        return bool(current_app.config.get(config_key, False))
 
     @staticmethod
     def get_all_flags(tenant_id=None) -> dict:

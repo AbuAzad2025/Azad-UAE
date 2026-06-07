@@ -19,7 +19,8 @@ VAT_COUNTRY_LABELS = {
 def _resolve_tenant(tenant_id=None):
     if tenant_id is not None:
         from models.tenant import Tenant
-        return Tenant.query.get(int(tenant_id))
+        from extensions import db
+        return db.session.get(Tenant, int(tenant_id))
     try:
         from models.tenant import Tenant
         return Tenant.get_current()
