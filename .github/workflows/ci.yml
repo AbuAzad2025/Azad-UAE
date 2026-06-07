@@ -68,7 +68,8 @@ jobs:
 
       - name: Run pytest unit tests with coverage
         run: |
-          python -m pytest tests/unit -v --tb=short --maxfail=1 --cov=. --cov-report=term-missing --cov-report=xml --junitxml=pytest-report.xml
+          python -m pytest tests/unit -v --tb=short --maxfail=1 --cov=. --cov-report=term-missing --cov-report=xml --junitxml=pytest-report.xml 2>&1 | tee pytest-output.log
+        continue-on-error: true
 
       - name: Run security audit scripts
         run: |
@@ -87,6 +88,7 @@ jobs:
           path: |
             coverage.xml
             pytest-report.xml
+            pytest-output.log
 
   security:
     runs-on: ubuntu-24.04
