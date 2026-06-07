@@ -150,6 +150,8 @@ def number_to_arabic_words(amount: float | Decimal | int, currency: str = "AED")
     1500.75 -> "ألف و خمسمائة درهم إماراتي و خمسة و سبعون فلس فقط لا غير"
     """
     amount_decimal = Decimal(str(amount)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    if amount_decimal < 0:
+        return ""
     major = int(amount_decimal)
     minor = int((amount_decimal - Decimal(major)) * 100)
     major_label, minor_label = _currency_labels(currency)

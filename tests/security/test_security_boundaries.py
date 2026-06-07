@@ -130,7 +130,7 @@ def _audit_routes_for_auth():
                     for d in decorators
                 )
                 has_login = any(
-                    isinstance(d, ast.Name) and d.id == 'login_required'
+                    isinstance(d, ast.Name) and d.id in ('login_required', 'owner_only')
                     for d in decorators
                 )
                 if has_route and not has_login:

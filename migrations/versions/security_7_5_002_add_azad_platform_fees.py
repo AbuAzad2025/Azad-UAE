@@ -11,7 +11,7 @@ from sqlalchemy import inspect
 
 
 revision = 'security_7_5_002'
-down_revision = 'security_7_5_001'
+down_revision = 'merge_phase5_security_7_5'
 branch_labels = None
 depends_on = None
 

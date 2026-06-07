@@ -63,37 +63,27 @@ python -m flask --app app db heads
 
 لا تحذف هذه التغييرات ولا ترجعها تلقائيًا؛ غالبًا من مساعد آخر. فقط تحقق منها واذكرها منفصلة.
 
-## ما لم يكتمل بعد
+## نتائج الفحوصات المنجزة (2026-06-07)
 
-قبل إنهاء المهمة يجب عمل التالي بالترتيب:
-
-1. تشغيل:
-
-```powershell
-python tools\qa\nowpayments_ipn_payload_check.py
-```
-
-يجب أن يثبت:
-
+### ✅ 1. `nowpayments_ipn_payload_check.py`
+**النتيجة: نجح (8/8)**
 - payload المتجر يحمل `order_id` بالشكل `STORE_<sale_id>_<tenant_id>`.
 - webhook المتجر idempotent ولا يكرر الحصة.
-- 1% من `150.000` تصبح `1.500`.
+- 1% من `150.000` = `1.500`.
 
-2. تشغيل:
+### ✅ 2. `test_security_boundaries.py`
+**النتيجة: نجح — 0 violations**
+- تم إصلاح السكربت ليتعرف على `@owner_only` كـ decorator تحقق صالح (بجانب `@login_required`).
+- خزينة الدفع (`payment_vault.py`) تستخدم `@owner_only` + `before_request` (يتحقق من `is_authenticated` + `is_owner` + IP enforcement).
 
-```powershell
-python tests\security\test_security_boundaries.py
-```
+### ✅ 3. سلسلة Alembic
+**النتيجة: رأس واحد `ecad0902bdb5`**
+- تم إصلاح `down_revision` في `security_7_5_002_add_azad_platform_fees.py` ليشير إلى `merge_phase5_security_7_5` بدلاً من `security_7_5_001` مباشرة.
+- السلسلة الآن: `phase5_001` + `security_7_5_001` → `merge_phase5_security_7_5` → `security_7_5_002` → `ecad0902bdb5`.
 
-إذا فشل، لا تعتبره فشل خزينة مباشرة قبل قراءة الرسالة؛ الملف نفسه معدّل من مسار أمني آخر وقد يحتوي توقعات قديمة مثل اعتبار `PaymentVault.query.first()` فقط مشكلة، بينما التصميم الجديد يميز بين خزينة آزاد وخزينة التينانت.
+---
 
-3. إعادة تشغيل:
-
-```powershell
-python -m flask --app app db heads
-```
-
-المطلوب رأس واحد فقط. إذا ظهر رأسان، أصلح `down_revision` بدل عمل merge عشوائي.
+## ما لم يكتمل بعد (غير blocker للنشر)
 
 4. فحص منطقي سريع داخل قاعدة البيانات بعد تطبيق الهجرات في بيئة اختبار فقط:
 
