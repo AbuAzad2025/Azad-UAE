@@ -1,0 +1,49 @@
+[run]
+omit = 
+    */migrations/*
+    */templates/*
+    */static/*
+    tests/*
+    */__pycache__/*
+    config.py
+    wsgi.py
+    run.py
+    app_factory.py
+    */test_*.py
+    conftest.py
+    celery_worker.py
+    manage.py
+    */cli/*
+    */commands/*
+    */scripts/*
+    docs/*
+    */fixtures/*
+    .venv/*
+    venv/*
+    env/*
+    .tox/*
+    .eggs/*
+    *.egg-info/*
+
+[report]
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    raise NotImplementedError
+    if __name__ == .__main__.:
+    pass
+    except ImportError:
+    raise AssertionError
+    raise ValueError
+    raise TypeError
+    raise KeyError
+    raise IndexError
+    raise RuntimeError
+    raise Exception
+    raise AttributeError
+    raise ValidationError
+    raise FieldValidationError
+    raise Forbidden
+    raise NotFound
+    raise Unauthorized
+    raise HTTPException
