@@ -1753,5 +1753,18 @@ Next: routes coverage or deeper model-branch tests per owner priority.
 
 ---
 
+### 22. CI/CD Readiness & Deployment Blockers Status
+
+| Item | Status | Notes |
+|------|--------|-------|
+| CI workflow (pytest + coverage + PostgreSQL) | ✅ Ready | `.github/workflows/ci.yml` runs `tests/unit` + `tests/security` on PostgreSQL 16 with coverage artifacts |
+| Branch protection (required checks) | ⏸️ Deferred | Will be enabled at go-live; currently disabled to allow rapid iteration during active development |
+| Legacy naming (`garage` → `azad`) | ✅ Fixed | `config.py`, `celery_tasks.py` unified |
+| config.py import-time side effects | ✅ Fixed | `_init_env()` called from `create_app()` only |
+
+**Decision:** CI pipeline is production-ready. Branch protection will be activated when transitioning from development to production operations.
+
+---
+
 *End of Master Blueprint — Single Source of Truth*
-*Last updated: June 7, 2026 (Session 12 — Accounting-Module Coverage Drive: 291 unit tests passing, 5 production bugs fixed; Payment Vault Handoff closed: migration chain fixed, security audit 0 violations, NOWPayments IPN 8/8 pass)*
+*Last updated: June 7, 2026 (Session 12 — Accounting-Module Coverage Drive: 291 unit tests passing, 5 production bugs fixed; Payment Vault Handoff closed; CI/CD ready; branch protection deferred to go-live)*
