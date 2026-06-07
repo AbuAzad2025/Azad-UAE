@@ -1768,5 +1768,28 @@ Next: routes coverage or deeper model-branch tests per owner priority.
 
 ---
 
+### 23. Upcoming Work — Brand Positioning & Retail Depth (Session 13+ Planning)
+
+**Goal:** Clarify that Azad is a general-purpose ERP (retail, POS, e-commerce, accounting) not limited to garages or any single country.
+
+| # | Task | Priority | Notes |
+|---|------|----------|-------|
+| 1 | **README rewrite** | 🔴 High | Replace garage-centric language; emphasize multi-industry ERP: retail stores, POS, inventory, GL, payroll, e-commerce |
+| 2 | **Code-level garage cleanup** | 🟡 Medium | Audit for remaining `garage_` strings in `.env.example`, comments, templates, error messages |
+| 3 | **Retail / POS feature gap analysis** | 🟡 Medium | Assess what is already present (store module, POS routes, online payments) vs what could be deepened (multi-branch POS, barcode scanners, receipt printers, shift closing) |
+| 4 | **Rebrand repo name** | 🟢 Low (owner decision) | Consider `Azad-ERP` or similar when transitioning to private repo |
+
+**Context:** The codebase already supports:
+- `TenantStore` (online storefront per tenant)
+- `StoreCoupon`, `StorePaymentMethod`
+- `ShopCustomerAccount` (B2C customers)
+- POS routes (`routes/pos.py`)
+- Online payments via NOWPayments + cards
+- Full GL + inventory (MWAC) + treasury + payroll
+
+What is missing is primarily **narrative clarity** in documentation and possibly deeper POS hardware integrations.
+
+---
+
 *End of Master Blueprint — Single Source of Truth*
-*Last updated: June 7, 2026 (Session 12 — Accounting-Module Coverage Drive: 291 unit tests passing, 5 production bugs fixed; Payment Vault Handoff closed; CI/CD ready; branch protection deferred to go-live)*
+*Last updated: June 7, 2026 (Session 12 — Accounting-Module Coverage Drive: 291 unit tests passing, 5 production bugs fixed; Payment Vault Handoff closed; CI/CD ready; branch protection deferred to go-live; brand positioning & retail depth planned for Session 13+)*
