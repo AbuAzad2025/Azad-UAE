@@ -229,6 +229,30 @@ class BackupService:
             return False
 
     @classmethod
+    def list_backups(cls, auto_only: bool = False) -> List[Dict]:
+        """Return all backups sorted newest-first."""
+        cls.initialize()
+        results: List[Dict] = []
+        if not os.path.isdir(cls.BACKUP_DIR):
+            return results
+        for name in os.listdir(cls.BACKUP_DIR):
+            path = os.path.join(cls.BACKUP_DIR, name)
+            if not os.path.isfile(path):
+                continue
+            if not (name.startswith(cls.BACKUP_PREFIX) or LEGACY_NAME_RE.match(name)):
+                continue
+            is_auto = name.startswith(cls.BACKUP_PREFIX) and "auto" in name.lower()
+            if auto_only and not is_auto:
+                continue
+            meta = cls.get_backup_info(name) or {"filename": name}
+            meta.setdefault("filename", name)
+            meta.setdefault("size", os.path.getsize(path))
+            meta.setdefault("modified", os.path.getmtime(path))
+            results.append(meta)
+        results.sort(key=lambda b: b.get("modified", 0), reverse=True)
+        return results
+
+    @classmethod
     def pg_tools_status(cls) -> Dict[str, Any]:
         dump = cls._resolve_pg_tool("pg_dump", "PG_DUMP_PATH")
         restore = cls._resolve_pg_tool("pg_restore", "PG_RESTORE_PATH")
