@@ -142,7 +142,7 @@
 | B2 | logging_setup extract | ✅ **DONE** | Jun 7 | Jun 7 | `utils/logging_setup.py` + `utils/compat_patches.py` created; `extensions.py` reduced from 255 to 98 lines; `app.py` imports compat_patches before extensions; 340 tests pass |
 | B3 | _exempt_super cleanup | ✅ **DONE** | Jun 7 | Jun 7 | Removed dead `@limiter.request_filter` returning `False` always; +14 tests in `test_extensions.py` |
 | B4 | NowPayments provider | ⏸️ | — | — | Code-only |
-| C1 | CDN SRI | ⏸️ | — | — | HTML/CDN |
+| C1 | CDN SRI | ✅ **DONE** | Jun 7 | Jun 7 | `tools/generate_sri.py` created; SRI hashes added to 39 templates; `integrity` + `crossorigin="anonymous"` on all CDN resources; 9 tests |
 | C2 | Session security | ✅ **DONE** | Jun 7 | Jun 7 | `SESSION_COOKIE_SAMESITE` already in Config; `utils/session_security.py` with `rotate_session()` created; called after login (`auth.py`) and after password change (`main.py`); 7 tests; 347 total pass |
 | D1 | POS gap analysis | ⏸️ | — | — | Research |
 
