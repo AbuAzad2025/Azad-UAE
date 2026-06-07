@@ -17,13 +17,28 @@ jobs:
       APP_ENV: testing
       FLASK_ENV: testing
       SECRET_KEY: ci-test-secret-key
-      DATABASE_URL: sqlite:///:memory:
+      DATABASE_URL: postgresql://test:test@localhost:5432/test
       WTF_CSRF_ENABLED: "false"
       CACHE_TYPE: null
       CELERY_BROKER_URL: memory://
       CELERY_RESULT_BACKEND: memory://
       RATELIMIT_STORAGE_URI: memory://
       SKIP_SYSTEM_INTEGRITY: "1"
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
 
     steps:
       - uses: actions/checkout@v4
