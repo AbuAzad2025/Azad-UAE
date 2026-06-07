@@ -3514,49 +3514,9 @@ def export_excel(table_name):
 @login_required
 @owner_required
 def sales_insights():
-    today = datetime.now().date()
-    last_30_days = today - timedelta(days=30)
     scoped_branch_id = _owner_branch_scope()
     tid = get_active_tenant_id(current_user)
-
-    daily_sales = db.session.query(
-        func.date(Sale.sale_date).label('date'),
-        func.count(Sale.id).label('count'),
-        func.sum(Sale.total_amount).label('total')
-    ).filter(
-        Sale.sale_date >= last_30_days,
-        Sale.status == 'confirmed',
-        Sale.tenant_id == tid,
-    )
-    if scoped_branch_id is not None:
-        daily_sales = daily_sales.filter(Sale.branch_id == scoped_branch_id)
-    daily_sales = daily_sales.group_by(func.date(Sale.sale_date)).all()
-
-    top_products = db.session.query(
-        Product.name,
-        func.sum(SaleLine.quantity).label('total_qty'),
-        func.sum(SaleLine.line_total).label('total_revenue')
-    ).select_from(Product).join(
-        SaleLine, SaleLine.product_id == Product.id
-    ).join(
-        Sale, Sale.id == SaleLine.sale_id
-    ).filter(
-        Sale.sale_date >= last_30_days,
-        Sale.status == 'confirmed',
-        Sale.tenant_id == tid,
-    )
-    if scoped_branch_id is not None:
-        top_products = top_products.filter(Sale.branch_id == scoped_branch_id)
-    top_products = top_products.group_by(
-        Product.id,
-        Product.name,
-    ).order_by(desc('total_revenue')).limit(10).all()
-
-    insights = {
-        'daily_sales': [{'date': str(d.date), 'count': d.count, 'total': float(d.total)} for d in daily_sales],
-        'top_products': [{'name': p.name, 'qty': float(p.total_qty), 'revenue': float(p.total_revenue)} for p in top_products]
-    }
-
+    insights = AnalyticsService.get_sales_insights(tenant_id=tid, branch_id=scoped_branch_id)
     return render_template('owner/sales_insights.html', insights=insights)
 
 
