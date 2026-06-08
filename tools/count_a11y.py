@@ -8,6 +8,7 @@ def count_issues(templates_dir):
     selects_no_label = 0
     textareas_no_label = 0
     buttons_no_text = 0
+    viewport_missing = 0
     files_with_issues = set()
 
     input_pat = re.compile(r'<input\s+[^>]*?>', re.IGNORECASE)
@@ -44,12 +45,18 @@ def count_issues(templates_dir):
                 if 'title=' not in tag and 'aria-label=' not in tag:
                     buttons_no_text += 1
                     files_with_issues.add(fpath)
+            low = content.lower()
+            if '<!doctype' in low and 'name="viewport"' not in low:
+                viewport_missing += 1
+                files_with_issues.add(fpath)
 
     print(f'Inputs without label:    {inputs_no_label}')
     print(f'Selects without label:   {selects_no_label}')
     print(f'Textareas without label: {textareas_no_label}')
     print(f'Icon buttons no text:    {buttons_no_text}')
-    print(f'Total real a11y issues:  {inputs_no_label + selects_no_label + textareas_no_label + buttons_no_text}')
+    print(f'Viewport meta missing:   {viewport_missing}')
+    total = inputs_no_label + selects_no_label + textareas_no_label + buttons_no_text + viewport_missing
+    print(f'Total real error issues: {total}')
     print(f'Files affected:          {len(files_with_issues)}')
     for fp in sorted(files_with_issues):
         print('  - ' + fp)
