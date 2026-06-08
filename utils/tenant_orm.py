@@ -14,9 +14,46 @@ from sqlalchemy.orm import Session, with_loader_criteria
 
 from extensions import db
 
-_SKIP_BLUEPRINTS = frozenset({"auth", "public", "language", "tenants", "shop"})
+_SKIP_BLUEPRINTS = frozenset({
+    "auth",      # Login/logout/register — platform-level auth, not tenant data
+    "public",    # Landing, pricing, features — platform-level marketing pages only
+    "language",  # Language switcher — no tenant data accessed
+    "tenants",   # Tenant context switching — platform-owner-only via is_global_tenant_user
+    "shop",      # Public tenant stores — exempt by design (see below)
+})
 # User is exempt: Flask-Login loads by id; tenant filtering is applied in user-management routes.
 _ORM_EXEMPT_MODELS = frozenset({"User"})
+
+# ── shop blueprint exemption rationale ─────────────────────────────────────
+# The 'shop' blueprint (/s/<slug>/...) displays tenant-store pages and is
+# intentionally exempt from ORM automatic tenant scoping because:
+#
+# 1. Anonymous visitors have no Flask-Login user — tenant_scope_enabled()
+#    returns False for unauthenticated users anyway, so the exemption has no
+#    practical effect for the unauthenticated case.
+#
+# 2. Tenant resolution is URL-driven: every route calls _resolve_store(slug)
+#    which resolves tenant_id from TenantStore.store_slug, not from the
+#    session's active_tenant_id. This is a different resolution strategy than
+#    the ORM scoping which relies on g.active_tenant_id.
+#
+# 3. Every shop route and every StoreService/StoreCheckoutService method
+#    explicitly filters ALL queries by the resolved tenant_id:
+#    - Product.query.filter_by(..., tenant_id=store.tenant_id)
+#    - Sale.query.filter_by(..., tenant_id=store.tenant_id)
+#    - Customer.query.filter_by(..., tenant_id=store.tenant_id)
+#    - etc.
+#
+# SAFETY: The existing storefront_isolation_test.py and the comprehensive
+# test_multi_tenant_isolation_full.py verify that cross-tenant data leakage
+# does not occur in any shop flow (catalog, product detail, cart, checkout,
+# orders, order tokens, account orders).
+#
+# ALTERNATIVE: Rather than listing "shop" here, we could set
+# g.public_tenant_id during _resolve_store() and have the ORM listener check
+# for it. That would be more explicit but adds complexity. The current
+# approach explicitly scopes every query and is tested.
+# ────────────────────────────────────────────────────────────────────────────
 _TENANT_MODELS: list[type] | None = None
 _SESSION_GET_PATCHED = False
 
