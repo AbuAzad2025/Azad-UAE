@@ -1988,9 +1988,11 @@ What is missing is primarily **narrative clarity** in documentation and possibly
 - **Verified:** 275 templates compile (0 failures); `check_jinja_nesting.py` confirms 0 nesting errors.
 
 ##### D4. Mobile Responsiveness Fixes
-- **Status:** 🚧 **Scheduled (June 8, 2026)**
-- **Effort:** 2-3 days for custom templates below 768px
-- **Note:** Targeted for completion today; tablets and desktops already supported.
+- **Status:** ✅ **DONE (June 8, 2026)**
+- **Effort:** 2 hours
+- **Done:** Removed 279 `btn-sm` + 23 `btn-xs` across 145 templates (too small for touch; default Bootstrap btn is 44px min). Added `table-responsive` wrapper to 10 tables without it. Viewport meta already present in `base.html`. Bootstrap grid (`col-md-6` etc.) used throughout for responsive layout.
+- **Tools:** `tools/check_mobile_issues.py` (scanner), `tools/fix_mobile_issues.py` (batch fixer)
+- **Verified:** 275 templates compile; 0 failures.
 
 ##### D5. Accessibility Errors (WCAG) — Forms, Buttons, Viewport
 - **Status:** ✅ **DONE (June 8, 2026)**
@@ -2028,7 +2030,7 @@ What is missing is primarily **narrative clarity** in documentation and possibly
 | C3 | Permission audit | ✅ **DONE** | Jun 8 | Jun 8 | 497 routes, 1235 links, 127 gaps → 0 gaps; `permission_audit.py` enhanced (nested if, inline guards, is_owner/is_admin); `apply_permission_fixes.py` created; 5 new tests; all pass |
 | D1 | POS supermarket enhancements | ✅ **DONE** | Jun 7 | Jun 7 | Touch-friendly CSS (48px inputs, 52px tablet buttons), KPI sizing, scan-focus indicator, cash button styling; POS enable guard (`SystemSettings` + `Tenant` flags); `test_pos_helpers.py` (17 tests), `test_pos_routes.py` (25 tests); 404 total pass |
 | D3 | Client-side form validation | ✅ **DONE** | Jun 8 | Jun 8 | 149 templates needs-validation; form_validation.js engine; 70 templates enhanced with attrs; password match on 5; 0 compile failures |
-| D4 | Mobile responsiveness | 🚧 | Jun 8 | — | In progress; targeted for today |
+| D4 | Mobile responsiveness | ✅ **DONE** | Jun 8 | Jun 8 | 279 btn-sm + 23 btn-xs removed; 10 tables wrapped in table-responsive; viewport present; 0 failures |
 | D5 | Accessibility errors (WCAG) | ✅ **DONE** | Jun 8 | Jun 8 | ~1,050 a11y errors fixed in 137 templates; viewport added to 10 print templates; `fix_accessibility.py`, `count_a11y.py`, `fix_viewport.py`; 0 issues on disk |
 | D6 | CSS externalization | ✅ **DONE** | Jun 8 | Jun 8 | 961 styles externalized in 79 templates; 57 JS-toggled display left inline (intentional); 6-layer test suite all PASS |
 | ~~D7~~ | ~~Jinja2 linter false positives~~ | ⛔ **DROPPED** | — | — | IDE cosmetic warnings outside project scope |
@@ -2046,7 +2048,7 @@ What is missing is primarily **narrative clarity** in documentation and possibly
 7. **A1** (5 min) — Branch protection → final go-live gate
 8. ~~**C1, C2, C3** — Security polish~~ ✅ **ALL DONE**
 9. ~~**D3** — Client-side form validation~~ ✅ **DONE**
-10. **D4** — Mobile responsiveness fixes (June 8, 2026)
+10. ~~**D4** — Mobile responsiveness fixes~~ ✅ **DONE**
 11. **D2** — Post-launch (owner decision)
 
 ---
@@ -2057,7 +2059,7 @@ What is missing is primarily **narrative clarity** in documentation and possibly
 - [x] All 🟡 items closed (B1-B4, C1-C3 all done)
 - [x] Merged into `ERP_ACCOUNTING_MASTER_BLUEPRINT.md` as Section 25 (June 8, 2026)
 - [x] `OPEN_ITEMS_ROADMAP.md` deleted after merge
-- **Last updated:** June 8, 2026 — D3/D5/D6 DONE, Jinja2 errors fixed (0 failures), 275/275 templates compile
+- **Last updated:** June 8, 2026 — D3/D4/D5/D6 DONE, D7 DROPPED, Jinja2 0 failures, 275/275 templates compile
 
 ---
 
