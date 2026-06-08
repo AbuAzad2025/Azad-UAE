@@ -15,7 +15,7 @@
 
 {# Search #}
 <div class="ps-toolbar">
-  <form class="ps-search-form" method="get" action="{{ url_for('shop.catalog', slug=store.store_slug) }}">
+  <form class="needs-validation" class="ps-search-form" method="get" action="{{ url_for('shop.catalog', slug=store.store_slug) }}">
     {% if category_id %}<input type="hidden" name="category" value="{{ category_id }}" aria-label="category">{% endif %}
     <input type="search" name="q" value="{{ search or '' }}" placeholder="{{ t('search') }}" aria-label="{{ t('search') }}">
     <button type="submit" title="بحث"><i class="fas fa-search"></i></button>

@@ -48,7 +48,7 @@
               </td>
               <td>{% if m.is_builtin %}<span class="badge badge-secondary">أساسية</span>{% else %}<span class="badge badge-primary">مخصصة</span>{% endif %}</td>
               <td>
-                <form method="post" action="{{ url_for('owner.store_payment_method_toggle', method_id=m.id) }}" class="d-inline">
+                <form class="needs-validation" method="post" action="{{ url_for('owner.store_payment_method_toggle', method_id=m.id) }}" class="d-inline">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
                   <input type="hidden" name="is_enabled" value="{{ '0' if m.is_enabled else '1' }}" aria-label="is enabled">
                   <button type="submit" class="btn btn-sm btn-{{ 'success' if m.is_enabled else 'outline-secondary' }}">

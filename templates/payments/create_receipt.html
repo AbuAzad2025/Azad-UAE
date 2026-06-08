@@ -275,7 +275,7 @@
 
 <div class="card">
 
-  <form method="POST" action="{% if sale %}{{ url_for('payments.create_from_sale', sale_id=sale.id) }}{% elif purchase %}{{ url_for('payments.create_payment', purchase_id=purchase.id) }}{% else %}{{ url_for('payments.create_receipt') }}{% endif %}" class="receipt-create-form">
+  <form class="needs-validation" method="POST" action="{% if sale %}{{ url_for('payments.create_from_sale', sale_id=sale.id) }}{% elif purchase %}{{ url_for('payments.create_payment', purchase_id=purchase.id) }}{% else %}{{ url_for('payments.create_receipt') }}{% endif %}" class="receipt-create-form">
 
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 

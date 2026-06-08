@@ -82,7 +82,7 @@
     </h3>
   </div>
   <div class="card-body">
-    <form method="POST" action="{{ url_for('cheques.create') }}" id="chequeForm" class="cheque-create-form">
+    <form class="needs-validation" method="POST" action="{{ url_for('cheques.create') }}" id="chequeForm" class="cheque-create-form">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
       
       <!-- النوع -->

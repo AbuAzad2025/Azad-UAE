@@ -416,7 +416,7 @@
 
                                 {% if purchase.payment_status == 'pending' and purchase.activation_status != 'activated' %}
 
-                                <form method="POST" action="{{ url_for('payment_vault.activate_purchase', id=purchase.id) }}" onsubmit="return confirm('هل تريد تفعيل هذه الباقة؟')">
+                                <form class="needs-validation" method="POST" action="{{ url_for('payment_vault.activate_purchase', id=purchase.id) }}" onsubmit="return confirm('هل تريد تفعيل هذه الباقة؟')">
 
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 

@@ -98,7 +98,7 @@
           <strong>نظام ذكي:</strong> يحتفظ تلقائياً بآخر {{ settings.keep_count }} نسخ ويحذف الأقدم
         </div>
 
-        <form method="POST" action="">
+        <form class="needs-validation" method="POST" action="">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
           <div class="form-group">
             <label><i class="fas fa-sync"></i> التكرار:</label>

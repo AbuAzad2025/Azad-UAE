@@ -73,7 +73,7 @@
 
 {% block content %}
 <div class="card">
-  <form method="POST" action="{{ url_for('expenses.create') }}" class="expense-create-form">
+  <form class="needs-validation" method="POST" action="{{ url_for('expenses.create') }}" class="expense-create-form">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
     
     <div class="card-body">

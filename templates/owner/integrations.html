@@ -44,7 +44,7 @@
                             
                             <hr>
                             
-                            <form method="POST" action="{{ url_for('owner.update_integration', service='whatsapp') }}">
+                            <form class="needs-validation" method="POST" action="{{ url_for('owner.update_integration', service='whatsapp') }}">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
                                 
                                 <div class="form-group">

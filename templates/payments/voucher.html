@@ -51,7 +51,7 @@
   <div class="card-header bg-primary text-white">
     <h3 class="card-title mb-0"><i class="fas fa-money-bill-wave mr-2"></i>سند مالي جديد</h3>
   </div>
-  <form method="POST" action="{{ url_for('payments.create_voucher_submit') }}" id="voucherForm">
+  <form class="needs-validation" method="POST" action="{{ url_for('payments.create_voucher_submit') }}" id="voucherForm">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
     
     <div class="card-body">

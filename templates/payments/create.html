@@ -22,7 +22,7 @@
 <div class="card">
   {% set form_data = request.form %}
   {% if current_user.has_permission('manage_payments') %}
-  <form method="POST" action="{{ url_for('payments.create_voucher_submit') }}">
+  <form class="needs-validation" method="POST" action="{{ url_for('payments.create_voucher_submit') }}">
   {% endif %}
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
     

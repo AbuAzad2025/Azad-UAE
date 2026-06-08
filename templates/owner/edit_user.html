@@ -41,7 +41,7 @@
 
 <div class="content edit-user-page">
   <div class="container-fluid">
-    <form method="POST" action="{{ url_for('owner.edit_user', user_id=user.id) }}" id="editUserForm" class="edit-user-form">
+    <form class="needs-validation" method="POST" action="{{ url_for('owner.edit_user', user_id=user.id) }}" id="editUserForm" class="edit-user-form">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
       
       <div class="row">

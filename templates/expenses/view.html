@@ -216,7 +216,7 @@
 
                                 </a>
 
-                                <form action="{{ url_for('expenses.delete', id=expense.id) }}" method="POST" class="w-100" onsubmit="return confirm('هل أنت متأكد من حذف هذا المصروف؟');">
+                                <form class="needs-validation" action="{{ url_for('expenses.delete', id=expense.id) }}" method="POST" class="w-100" onsubmit="return confirm('هل أنت متأكد من حذف هذا المصروف؟');">
 
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 

@@ -7,7 +7,7 @@
       <h3><i class="fas fa-edit"></i> تعديل الفرع: {{ branch.name }}</h3>
     </div>
     <div class="card-body">
-      <form method="post">
+      <form class="needs-validation" method="post">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
         <div class="row">
           <div class="col-md-6">

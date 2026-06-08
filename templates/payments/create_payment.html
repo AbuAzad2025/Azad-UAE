@@ -53,7 +53,7 @@
         </h3>
       </div>
       {% if current_user.has_permission('manage_payments') %}
-      <form method="POST" action="{{ url_for('payments.create_payment', purchase_id=purchase.id) }}">
+      <form class="needs-validation" method="POST" action="{{ url_for('payments.create_payment', purchase_id=purchase.id) }}">
       {% endif %}
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
         <div class="card-body">

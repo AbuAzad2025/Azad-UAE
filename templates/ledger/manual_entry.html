@@ -62,7 +62,7 @@
     </h3>
   </div>
   <div class="card-body">
-    <form method="post" action="{{ url_for('ledger.manual_entry') }}" id="journalEntryForm" class="manual-entry-form">
+    <form class="needs-validation" method="post" action="{{ url_for('ledger.manual_entry') }}" id="journalEntryForm" class="manual-entry-form">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
       <input type="hidden" name="line_count" id="lineCountHidden" value="2" aria-label="line count">
       

@@ -122,7 +122,7 @@
                     أدخل كلمة مرور الخزينة للوصول إلى إدارة الدفع
                 </p>
                 
-                <form method="POST" action="{{ url_for('payment_vault.unlock_vault') }}">
+                <form class="needs-validation" method="POST" action="{{ url_for('payment_vault.unlock_vault') }}">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
                     <div class="form-group">
                         <label for="vault_password" class="form-label">

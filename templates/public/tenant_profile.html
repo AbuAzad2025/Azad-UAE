@@ -103,7 +103,7 @@
           <a href="{{ url_for('owner.tenant_edit', tenant_id=tenant.id) }}" class="btn btn-light btn-sm">
             <i class="bi bi-pencil mr-1"></i>تعديل
           </a>
-          <form method="POST" action="{{ url_for('owner.tenant_suspend', tenant_id=tenant.id) }}" class="d-inline" onsubmit="return confirm('تأكيد تعليق هذا التينانت؟');">
+          <form class="needs-validation" method="POST" action="{{ url_for('owner.tenant_suspend', tenant_id=tenant.id) }}" class="d-inline" onsubmit="return confirm('تأكيد تعليق هذا التينانت؟');">
             <input type="hidden" name="reason" value="Suspended from public profile" aria-label="reason">
             <button type="submit" class="btn btn-warning btn-sm">
               <i class="bi bi-pause-circle mr-1"></i>تعليق

@@ -69,7 +69,7 @@
   <!-- Filters -->
   <div class="card card-outline card-secondary mb-3">
     <div class="card-body p-2">
-      <form method="GET" action="{{ url_for('owner.error_logs') }}" class="form-inline">
+      <form class="needs-validation" method="GET" action="{{ url_for('owner.error_logs') }}" class="form-inline">
         <div class="input-group input-group-sm mr-2 ic-1">
           <div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-search"></i></span></div>
           <input type="text" name="search" class="form-control" placeholder="ابحث في الرسالة / الموديول / المسار..."

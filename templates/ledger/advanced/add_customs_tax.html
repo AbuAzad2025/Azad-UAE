@@ -14,7 +14,7 @@
         </div>
         <div class="card-body">
           {% set form_data = form_data if form_data is defined else request.form %}
-          <form method="post" action="">
+          <form class="needs-validation" method="post" action="">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
             
             <div class="row">

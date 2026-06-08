@@ -59,7 +59,7 @@
             <h6 class="m-0 font-weight-bold text-primary">تصفية التقرير</h6>
         </div>
         <div class="card-body">
-            <form method="get" class="row g-3 align-items-end">
+            <form class="needs-validation" method="get" class="row g-3 align-items-end">
                 <div class="col-md-4">
                     <label class="form-label" for="input_date_from">من تاريخ</label>
                     <input type="date" name="date_from" class="form-control" value="{{ request.args.get('date_from', '') }}" id="input_date_from" aria-label="من تاريخ">

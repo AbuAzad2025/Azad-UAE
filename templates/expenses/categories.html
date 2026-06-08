@@ -91,7 +91,7 @@
                     <span>&times;</span>
                 </button>
             </div>
-            <form method="POST" action="{{ url_for('expenses.create_category') }}">
+            <form class="needs-validation" method="POST" action="{{ url_for('expenses.create_category') }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
                 <div class="modal-body">
                     <div class="form-group">

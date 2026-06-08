@@ -96,7 +96,7 @@
           <i class="fas fa-edit mr-2"></i>تعديل بياناتي
         </div>
         <div class="card-body">
-          <form method="POST" action="{{ url_for('main.my_profile_update') }}">
+          <form class="needs-validation" method="POST" action="{{ url_for('main.my_profile_update') }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
             <div class="row g-3">
               <div class="col-md-6">

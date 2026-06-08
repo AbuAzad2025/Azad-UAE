@@ -30,7 +30,7 @@
 
 <section class="content">
   <div class="container-fluid">
-    <form method="POST" action="{{ url_for('owner.invoice_settings') }}" enctype="multipart/form-data" class="invoice-settings-form">
+    <form class="needs-validation" method="POST" action="{{ url_for('owner.invoice_settings') }}" enctype="multipart/form-data" class="invoice-settings-form">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
       
       <div class="row">

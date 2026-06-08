@@ -206,7 +206,7 @@
 
             {% if order.status == 'pending' %}
 
-            <form method="post" action="{{ url_for('store.admin_order_confirm', order_id=order.id) }}" class="d-inline" onsubmit="return confirm('تأكيد الطلب {{ order.sale_number }}؟');">
+            <form class="needs-validation" method="post" action="{{ url_for('store.admin_order_confirm', order_id=order.id) }}" class="d-inline" onsubmit="return confirm('تأكيد الطلب {{ order.sale_number }}؟');">
 
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 

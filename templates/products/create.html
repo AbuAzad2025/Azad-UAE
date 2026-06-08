@@ -48,7 +48,7 @@
   {% if not selected_warehouse and preselected_warehouse_id %}
     {% set selected_warehouse = preselected_warehouse_id|string %}
   {% endif %}
-  <form method="POST" action="{{ url_for('products.create') }}" enctype="multipart/form-data">
+  <form class="needs-validation" method="POST" action="{{ url_for('products.create') }}" enctype="multipart/form-data">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
     <div class="card-body">
       <!-- المعلومات الأساسية -->

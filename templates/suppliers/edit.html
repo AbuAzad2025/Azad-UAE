@@ -72,7 +72,7 @@
     <h3 class="card-title"><i class="fas fa-edit mr-2"></i>تعديل بيانات المورد</h3>
   </div>
   
-  <form method="POST" action="{{ url_for('suppliers.edit', id=supplier.id) }}" class="supplier-edit-form">
+  <form class="needs-validation" method="POST" action="{{ url_for('suppliers.edit', id=supplier.id) }}" class="supplier-edit-form">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
     
     <div class="card-body">

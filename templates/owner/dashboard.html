@@ -221,7 +221,7 @@
         <a href="{{ url_for('owner.scheduled_backups') }}" class="btn btn-outline-primary btn-sm btn-block mb-2">
           <i class="fas fa-clock mr-1"></i> النسخ المجدول
         </a>
-        <form method="POST" action="{{ url_for('owner.clear_cache') }}">
+        <form class="needs-validation" method="POST" action="{{ url_for('owner.clear_cache') }}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
           <button type="submit" class="btn btn-outline-secondary btn-sm btn-block">
             <i class="fas fa-sync mr-1"></i> مسح الذاكرة

@@ -22,7 +22,7 @@
                 <h3 class="card-title"><i class="fas fa-box"></i> تعديل: {{ package.name_ar }}</h3>
             </div>
             <div class="card-body">
-                <form method="POST" id="editPackageForm" action="">
+                <form class="needs-validation" method="POST" id="editPackageForm" action="">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
                     
                     <div class="row">

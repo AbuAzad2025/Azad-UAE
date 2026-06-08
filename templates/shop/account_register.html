@@ -10,7 +10,7 @@
 {% block content %}
 <div class="ps-panel ic-1">
   <h2 class="ic-2">{{ t('register') }}</h2>
-  <form method="post">
+  <form class="needs-validation" method="post">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
     <div class="ps-hp" aria-hidden="true"><input type="text" name="website" tabindex="-1" aria-label="website"></div>
     <div class="ps-form-group"><label for="reg_name">{{ t('name') }} *</label><input type="text" id="reg_name" name="name" required minlength="2" aria-label="name"></div>

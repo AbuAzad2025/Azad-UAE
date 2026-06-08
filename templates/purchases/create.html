@@ -348,7 +348,7 @@
 
   
 
-  <form method="POST" action="{{ url_for('purchases.create') }}" id="purchaseForm" class="purchase-create-form">
+  <form class="needs-validation" method="POST" action="{{ url_for('purchases.create') }}" id="purchaseForm" class="purchase-create-form">
 
     {{ form.hidden_tag() if form else '' }}
 

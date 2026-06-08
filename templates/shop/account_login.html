@@ -13,7 +13,7 @@
 <div class="ps-panel ic-1">
   <h2 class="ic-2">{{ t('login') }}</h2>
   <p class="ps-card-meta">{{ t('login_required') }}</p>
-  <form method="post">
+  <form class="needs-validation" method="post">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
     {% if next_url %}<input type="hidden" name="next" value="{{ next_url }}" aria-label="next">{% endif %}
     <div class="ps-form-group">

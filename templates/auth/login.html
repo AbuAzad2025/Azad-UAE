@@ -114,7 +114,7 @@
           {% endif %}
         {% endwith %}
 
-        <form method="POST" action="{{ url_for('auth.login') }}" id="azadLoginForm" class="azad-login-form" autocomplete="on">
+        <form class="needs-validation" method="POST" action="{{ url_for('auth.login') }}" id="azadLoginForm" class="azad-login-form" autocomplete="on">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
           <input type="hidden" name="access_mode" id="access_mode" value="{{ access_mode or 'users' }}" aria-label="access mode">
 

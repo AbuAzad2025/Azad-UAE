@@ -42,7 +42,7 @@
 <div class="content create-user-page">
   <div class="container-fluid">
     {% set form_data = form_data if form_data is defined else request.form %}
-    <form method="POST" action="{{ url_for('owner.create_user') }}" id="userForm" class="create-user-form">
+    <form method="POST" action="{{ url_for('owner.create_user') }}" id="userForm" class="create-user-form needs-validation">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
       
       <div class="row">

@@ -44,7 +44,7 @@
         <h3 class="card-title"><i class="fas fa-broadcast-tower mr-2"></i> إعداد الاتصال بمزود الرسائل</h3>
       </div>
       <div class="card-body">
-        <form method="POST" action="{{ url_for('owner.sms_settings') }}" class="sms-settings-form">
+        <form class="needs-validation" method="POST" action="{{ url_for('owner.sms_settings') }}" class="sms-settings-form">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 
           <div class="form-group">

@@ -98,7 +98,7 @@
 
 <div class="content">
   <div class="container-fluid">
-    <form method="POST" action="{{ url_for('owner.company_info') }}" enctype="multipart/form-data">
+    <form class="needs-validation" method="POST" action="{{ url_for('owner.company_info') }}" enctype="multipart/form-data">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
       
       <!-- معلومات أساسية -->

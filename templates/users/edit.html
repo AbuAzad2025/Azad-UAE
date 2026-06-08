@@ -12,7 +12,7 @@
           <h3 class="card-title"><i class="fas fa-user-cog"></i> بيانات المستخدم</h3>
         </div>
         <div class="card-body">
-          <form id="user-edit-form" method="post" action="{{ url_for('users.edit', id=user.id) }}">
+          <form class="needs-validation" id="user-edit-form" method="post" action="{{ url_for('users.edit', id=user.id) }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
             
             <div class="row">

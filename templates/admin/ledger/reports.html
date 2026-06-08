@@ -126,7 +126,7 @@
         <div class="row">
           <div class="col-md-6">
             <h6>تقرير مخصص حسب التاريخ:</h6>
-            <form method="GET" action="{{ url_for('ledger.admin_trial_balance') }}" class="ledger-reports-form">
+            <form class="needs-validation" method="GET" action="{{ url_for('ledger.admin_trial_balance') }}" class="ledger-reports-form">
               <div class="form-group">
                 <label for="tb_date_from">من تاريخ:</label>
                 <input type="date" id="tb_date_from" name="date_from" class="form-control" required aria-label="من تاريخ">

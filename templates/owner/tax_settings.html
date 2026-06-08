@@ -21,7 +21,7 @@
       <h3><i class="fas fa-percent"></i> إعدادات الضرائب — {{ tenant.name_ar or tenant.name }}</h3>
     </div>
     <div class="card-body">
-      <form method="post" action="">
+      <form class="needs-validation" method="post" action="">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 
         <div class="form-group">

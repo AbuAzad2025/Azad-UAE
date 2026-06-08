@@ -204,7 +204,7 @@
         <div class="row">
           {% if is_platform_owner %}
           <div class="col-md-6 mb-3 mb-md-0">
-            <form method="POST" action="{{ url_for('owner.backup_now') }}">
+            <form class="needs-validation" method="POST" action="{{ url_for('owner.backup_now') }}">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
               <label class="font-weight-bold mb-2">
                 <i class="fas fa-server text-danger mr-1"></i>

@@ -224,7 +224,7 @@
 
       <div class="card-footer">
 
-        <form method="post" action="{{ url_for('store.admin_order_confirm', order_id=order.id) }}" class="mb-2">
+        <form class="needs-validation" method="post" action="{{ url_for('store.admin_order_confirm', order_id=order.id) }}" class="mb-2">
 
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 

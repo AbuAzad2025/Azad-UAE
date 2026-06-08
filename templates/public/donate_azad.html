@@ -16,7 +16,7 @@
       <p class="az-intro">{{ vault.donation_intro_ar if not is_en else vault.donation_intro_en }}</p>
 
       <div class="az-card">
-        <form method="post" action="{{ url_for('public.donate_azad_submit') }}" id="donate-form">
+        <form class="needs-validation" method="post" action="{{ url_for('public.donate_azad_submit') }}" id="donate-form">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 
           <div class="az-field">

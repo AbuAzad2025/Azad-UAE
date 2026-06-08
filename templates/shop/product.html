@@ -42,7 +42,7 @@
     {% endif %}
 
     {% if is_shop_logged_in %}
-    <form method="post" action="{{ url_for('shop.cart_add', slug=store.store_slug) }}" class="ic-6">
+    <form class="needs-validation" method="post" action="{{ url_for('shop.cart_add', slug=store.store_slug) }}" class="ic-6">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
       <input type="hidden" name="product_id" value="{{ product.id }}" aria-label="product id">
       <div class="ps-form-group">

@@ -125,7 +125,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">إلغاء</button>
-        <form method="POST" id="deleteForm" style="display: inline;" action="">
+        <form class="needs-validation" method="POST" id="deleteForm" style="display: inline;" action="">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
           <button type="submit" class="btn btn-danger">حذف</button>
         </form>

@@ -17,7 +17,7 @@
 <h2 class="ic-1">{{ t('cart') }}</h2>
 
 {% if totals.lines %}
-<form id="cart-update-form" method="post" action="{{ url_for('shop.cart_update', slug=store.store_slug) }}">
+<form class="needs-validation" id="cart-update-form" method="post" action="{{ url_for('shop.cart_update', slug=store.store_slug) }}">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 </form>
 

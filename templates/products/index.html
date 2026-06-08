@@ -281,7 +281,7 @@
         </button>
       </div>
       <div class="modal-body">
-        <form id="stockForm" method="POST" action="">
+        <form class="needs-validation" id="stockForm" method="POST" action="">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
           <input type="hidden" id="productId" name="product_id" aria-label="product id">
           <div class="form-group">

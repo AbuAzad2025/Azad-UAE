@@ -27,7 +27,7 @@
     </h3>
   </div>
   <div class="card-body">
-    <form method="POST" action="{{ url_for('cheques.edit', id=cheque.id) }}" id="chequeForm">
+    <form class="needs-validation" method="POST" action="{{ url_for('cheques.edit', id=cheque.id) }}" id="chequeForm">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
       
       <!-- النوع -->
