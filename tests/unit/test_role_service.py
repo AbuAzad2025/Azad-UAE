@@ -5,7 +5,8 @@ from services.role_service import RoleService
 def test_get_roles_permissions_context():
     with patch('services.role_service.Role') as mock_role_model, \
          patch('services.role_service.Permission') as mock_perm_model, \
-         patch('services.role_service.User') as mock_user_model:
+         patch('services.role_service.User') as mock_user_model, \
+         patch('services.role_service.joinedload'):
         
         # Mock roles
         mock_role = MagicMock(id=1, name='Manager')
@@ -33,7 +34,8 @@ def test_get_roles_permissions_context():
 
 def test_get_roles_permissions_context_empty():
     with patch('services.role_service.Role') as mock_role_model, \
-         patch('services.role_service.Permission') as mock_perm_model:
+         patch('services.role_service.Permission') as mock_perm_model, \
+         patch('services.role_service.joinedload'):
         
         mock_role_model.query.filter_by.return_value.options.return_value.order_by.return_value.all.return_value = []
         mock_perm_model.query.order_by.return_value.all.return_value = []
