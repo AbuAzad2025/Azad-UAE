@@ -204,11 +204,8 @@
                 <strong>الاسم:</strong> 
 
                 {% if current_user.has_permission('manage_customers') %}
-                {% if current_user.has_permission('manage_customers') %}
                 <a href="{{ url_for('customers.view', id=sale.customer.id) }}" class="text-primary">
-
                   {{ sale.customer.name }}
-
                 </a>
                 {% else %}
                 {{ sale.customer.name }}

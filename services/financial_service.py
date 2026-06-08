@@ -2,10 +2,60 @@ from datetime import datetime, timezone, timedelta
 from decimal import Decimal
 from flask import render_template
 from extensions import db
-from models import Sale, Purchase, Receipt
+from models import Sale, Purchase, Receipt, Expense
 from sqlalchemy import func
 
 class FinancialService:
+    @staticmethod
+    def get_financial_dashboard_advanced_context(tenant_id, branch_id=None):
+        today = datetime.now().date()
+        month_start = today.replace(day=1)
+        months_data = []
+        for i in range(12):
+            month_date = month_start - timedelta(days=30*i)
+            month_start_date = month_date.replace(day=1)
+            
+            if month_date.month == 12:
+                month_end_date = month_date.replace(year=month_date.year+1, month=1, day=1) - timedelta(days=1)
+            else:
+                month_end_date = month_date.replace(month=month_date.month+1, day=1) - timedelta(days=1)
+            
+            revenue = db.session.query(func.sum(Sale.total_amount)).filter(
+                Sale.sale_date >= month_start_date,
+                Sale.sale_date <= month_end_date,
+                Sale.status == 'confirmed',
+                Sale.tenant_id == tenant_id,
+            )
+            if branch_id is not None:
+                revenue = revenue.filter(Sale.branch_id == branch_id)
+            revenue = revenue.scalar() or 0
+            
+            expenses = db.session.query(func.sum(Expense.amount)).filter(
+                Expense.expense_date >= month_start_date,
+                Expense.expense_date <= month_end_date,
+                Expense.tenant_id == tenant_id,
+            )
+            if branch_id is not None:
+                expenses = expenses.filter(Expense.branch_id == branch_id)
+            expenses = expenses.scalar() or 0
+            
+            profit = revenue - expenses
+            months_data.append({
+                'month': month_date.strftime('%Y-%m'),
+                'revenue': float(revenue),
+                'expenses': float(expenses),
+                'profit': float(profit),
+                'margin': (profit / revenue * 100) if revenue > 0 else 0
+            })
+        months_data.reverse()
+        kpis = {
+            'avg_revenue': sum(m['revenue'] for m in months_data) / 12,
+            'avg_profit': sum(m['profit'] for m in months_data) / 12,
+            'avg_margin': sum(m['margin'] for m in months_data) / 12,
+            'growth_rate': ((months_data[-1]['revenue'] - months_data[0]['revenue']) / months_data[0]['revenue'] * 100) if months_data[0]['revenue'] > 0 else 0
+        }
+        return {'months_data': months_data, 'kpis': kpis}
+
     @staticmethod
     def financial_overview(period, tid, scoped_branch_id):
         now = datetime.now(timezone.utc)

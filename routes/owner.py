@@ -2887,55 +2887,13 @@ def toggle_api_key(id):
 @login_required
 @owner_required
 def financial_dashboard_advanced():
-    today = datetime.now().date()
-    month_start = today.replace(day=1)
+    from services.financial_service import FinancialService
     tid = get_active_tenant_id(current_user)
-
-    months_data = []
-    for i in range(12):
-        month_date = month_start - timedelta(days=30*i)
-        month_start_date = month_date.replace(day=1)
-
-        if month_date.month == 12:
-            month_end_date = month_date.replace(year=month_date.year+1, month=1, day=1) - timedelta(days=1)
-        else:
-            month_end_date = month_date.replace(month=month_date.month+1, day=1) - timedelta(days=1)
-
-        revenue = db.session.query(func.sum(Sale.total_amount)).filter(
-            Sale.sale_date >= month_start_date,
-            Sale.sale_date <= month_end_date,
-            Sale.status == 'confirmed',
-            Sale.tenant_id == tid,
-        ).scalar() or 0
-
-        expenses = db.session.query(func.sum(Expense.amount)).filter(
-            Expense.expense_date >= month_start_date,
-            Expense.expense_date <= month_end_date,
-            Expense.tenant_id == tid,
-        ).scalar() or 0
-
-        profit = revenue - expenses
-
-        months_data.append({
-            'month': month_date.strftime('%Y-%m'),
-            'revenue': float(revenue),
-            'expenses': float(expenses),
-            'profit': float(profit),
-            'margin': (profit / revenue * 100) if revenue > 0 else 0
-        })
-
-    months_data.reverse()
-
-    kpis = {
-        'avg_revenue': sum(m['revenue'] for m in months_data) / 12,
-        'avg_profit': sum(m['profit'] for m in months_data) / 12,
-        'avg_margin': sum(m['margin'] for m in months_data) / 12,
-        'growth_rate': ((months_data[-1]['revenue'] - months_data[0]['revenue']) / months_data[0]['revenue'] * 100) if months_data[0]['revenue'] > 0 else 0
-    }
-
+    scoped_branch_id = _owner_branch_scope()
+    context = FinancialService.get_financial_dashboard_advanced_context(tenant_id=tid, branch_id=scoped_branch_id)
     return render_template('owner/financial_dashboard_advanced.html',
-                         months_data=months_data,
-                         kpis=kpis)
+                         months_data=context['months_data'],
+                         kpis=context['kpis'])
 
 @owner_bp.route('/tax-settings', methods=['GET', 'POST'])
 @login_required
