@@ -1,16 +1,14 @@
-"""Learning modules - continuous learning, quick learning, auto-retraining, external learning."""
-from .continuous_learner import ContinuousLearner, continuous_learner
-from .quick_learner import QuickLearner, quick_learner
-from .auto_retraining import AutoRetrainingScheduler, auto_retraining
-from .external_learning import get_external_learning, LEARNING_SOURCES_CATALOG
+"""Learning modules - consolidated in learning_engine.py"""
+from ai_knowledge.learning_engine import (
+    ContinuousLearner, continuous_learner,
+    QuickLearner, quick_learner,
+    AutoRetrainingScheduler, auto_retraining,
+    get_external_learning, LEARNING_SOURCES_CATALOG,
+)
 
 __all__ = [
-    'ContinuousLearner',
-    'continuous_learner',
-    'QuickLearner',
-    'quick_learner',
-    'AutoRetrainingScheduler',
-    'auto_retraining',
-    'get_external_learning',
-    'LEARNING_SOURCES_CATALOG',
+    'ContinuousLearner', 'continuous_learner',
+    'QuickLearner', 'quick_learner',
+    'AutoRetrainingScheduler', 'auto_retraining',
+    'get_external_learning', 'LEARNING_SOURCES_CATALOG',
 ]

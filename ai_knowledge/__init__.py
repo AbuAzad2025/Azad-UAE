@@ -2,22 +2,24 @@
 🤖 AI Knowledge Base - قاعدة معرفة أزاد
 المساعد الذكي الخبير في المحاسبة والمعدات الثقيلة
 
-Reorganized structure:
-- core/: Core AI systems (learning, memory, context, reasoning)
-- knowledge/: Knowledge bases (system, company, parts, automotive, tax, customs)
-- analytics/: Analytics & predictions
-- personality/: Personality & responses
-- neural/: Neural & ML components
-- agents/: Multi-agent systems
-- learning/: Learning modules
-- improvement/: Self-improvement
-- expansion/: Knowledge expansion
-- generation/: Content generation
-- specialized/: Specialized modules
+Consolidated modules (replacing 43 files in 17 sub-packages):
+- knowledge_base.py: System, company, parts, automotive, tax, customs knowledge
+- analytics_engine.py: Data analysis, predictions, market insights
+- specialized_knowledge.py: Advanced laws, security, guides, customer service, tax
+- personality_core.py: AI personality, responses, dialects, beginners mode
+- neural_network.py: Neural engine, transformers, semantic matching, vision
+- agents_core.py: Multi-agent coordinator, intelligent assistant, master brain
+- learning_engine.py: Continuous/quick/auto/external learning
+- improvement_core.py: Self-improvement and self-reflection
+- expansion_core.py: Knowledge expansion, sources, global knowledge
+- generation_core.py: Document and code generation
+- core_engine.py: Learning system, memory, context, conversation, reasoning, integration
 - data/training/: JSON training files
 - data/models/: Model files
 - data/expanded/: Expanded knowledge data
 - memory/: Memory system
+
+Old sub-packages (core/, knowledge/, analytics/, etc.) retained for backward compatibility.
 """
 import os
 
