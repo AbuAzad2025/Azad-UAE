@@ -111,7 +111,7 @@
             </div>
             <div class="card-body">
               <div class="form-group">
-                <label>الدور الوظيفي *</label>
+                <label for="role_select">الدور الوظيفي *</label>
                 {% set selected_role = form_data.get('role_id') %}
                 <select name="role_id" class="form-control" required id="role_select">
                   <option value="" {% if not selected_role %}selected{% endif %}>بلا</option>
@@ -125,8 +125,8 @@
 
               {% if show_tenant_picker and tenants %}
               <div class="form-group">
-                <label>الشركة (Tenant) *</label>
-                <select name="tenant_id" class="form-control" required aria-label="tenant id">
+                <label for="tenant_select">الشركة (Tenant) *</label>
+                <select name="tenant_id" id="tenant_select" class="form-control" required aria-label="tenant id">
                   <option value="">-- اختر الشركة --</option>
                   {% for t in tenants %}
                   <option value="{{ t.id }}" {% if form_data.get('tenant_id')|string == t.id|string %}selected{% endif %}>
@@ -139,7 +139,7 @@
               {% endif %}
 
               <div class="form-group">
-                <label>الفرع <span class="text-danger branch-required-indicator">*</span></label>
+                <label for="branch_id">الفرع <span class="text-danger branch-required-indicator">*</span></label>
                 <select name="branch_id" id="branch_id" class="form-control">
                   <option value="">-- اختر الفرع --</option>
                   {% for branch in branches %}
