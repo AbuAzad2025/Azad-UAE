@@ -5,7 +5,9 @@
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
   <h1 class="text-gradient mb-0"><i class="fas fa-users-cog mr-2"></i>الشركاء والمساهمين</h1>
+  {% if current_user.has_permission('manage_users') %}
   <a href="{{ url_for('partners.create') }}" class="btn btn-primary">
+  {% endif %}
     <i class="fas fa-plus me-1"></i> شريك جديد
   </a>
 </div>
@@ -68,7 +70,9 @@
               <a href="{{ url_for('partners.view', id=p.id) }}" class="btn btn-sm btn-info" title="عرض">
                 <i class="fas fa-eye"></i>
               </a>
+              {% if current_user.has_permission('manage_users') %}
               <a href="{{ url_for('partners.edit', id=p.id) }}" class="btn btn-sm btn-warning" title="تعديل">
+              {% endif %}
                 <i class="fas fa-edit"></i>
               </a>
             </td>

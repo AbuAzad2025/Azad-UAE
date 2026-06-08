@@ -86,7 +86,9 @@
             {% for item in stock %}
             <tr>
               <td>
+                {% if current_user.has_permission('manage_products') %}
                 <a href="{{ url_for('products.edit', id=item.product.id) }}">
+                {% endif %}
                   {{ item.product.name_ar or item.product.name }}
                 </a>
               </td>

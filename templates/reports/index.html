@@ -69,13 +69,19 @@
               </div>
               <div class="card-body">
                 <div class="list-group">
+                  {% if current_user.has_permission('view_ledger') %}
                   <a href="{{ url_for('ledger.trial_balance') }}" class="list-group-item list-group-item-action">
+                  {% endif %}
                     <i class="fas fa-balance-scale mr-2"></i>ميزان المراجعة
                   </a>
+                  {% if current_user.has_permission('view_ledger') %}
                   <a href="{{ url_for('ledger.income_statement') }}" class="list-group-item list-group-item-action">
+                  {% endif %}
                     <i class="fas fa-chart-line mr-2"></i>قائمة الدخل
                   </a>
+                  {% if current_user.has_permission('view_ledger') %}
                   <a href="{{ url_for('ledger.balance_sheet') }}" class="list-group-item list-group-item-action">
+                  {% endif %}
                     <i class="fas fa-file-invoice-dollar mr-2"></i>الميزانية العمومية
                   </a>
                   <a href="{{ url_for('reports.ar_reconciliation') }}" class="list-group-item list-group-item-action">
@@ -100,13 +106,21 @@
               </div>
               <div class="card-body">
                 <div class="list-group">
+                  {% if current_user.has_permission('manage_payments') %}
+                  {% if current_user.has_permission('manage_sales') %}
                   <a href="{{ url_for('sales.index') }}" class="list-group-item list-group-item-action">
+                  {% endif %}
+                  {% endif %}
                     <i class="fas fa-file-invoice mr-2"></i>فواتير المبيعات
                   </a>
+                  {% if current_user.has_permission('manage_purchases') %}
                   <a href="{{ url_for('purchases.index') }}" class="list-group-item list-group-item-action">
+                  {% endif %}
                     <i class="fas fa-shopping-bag mr-2"></i>فواتير المشتريات
                   </a>
+                  {% if current_user.has_permission('manage_payments') %}
                   <a href="{{ url_for('payments.receipts') }}" class="list-group-item list-group-item-action">
+                  {% endif %}
                     <i class="fas fa-money-bill-wave mr-2"></i>المدفوعات
                   </a>
                 </div>
@@ -122,13 +136,17 @@
               </div>
               <div class="card-body">
                 <div class="list-group">
+                  {% if current_user.has_permission('manage_customers') %}
                   <a href="{{ url_for('customers.index') }}" class="list-group-item list-group-item-action">
+                  {% endif %}
                     <i class="fas fa-users mr-2"></i>العملاء
                   </a>
-                  <a href="{{ url_for('products.index') }}" class="list-group-item list-group-item-action">
+                  {% if current_user.has_permission('manage_products') %}<a href="{{ url_for('products.index') }}" class="list-group-item list-group-item-action">
                     <i class="fas fa-cubes mr-2"></i>المنتجات
-                  </a>
+                  </a>{% endif %}
+                  {% if current_user.has_permission('manage_expenses') %}
                   <a href="{{ url_for('expenses.index') }}" class="list-group-item list-group-item-action">
+                  {% endif %}
                     <i class="fas fa-wallet mr-2"></i>المصروفات
                   </a>
                   <a href="{{ url_for('reports.partners') }}" class="list-group-item list-group-item-action">

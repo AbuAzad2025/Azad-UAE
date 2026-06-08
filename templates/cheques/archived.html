@@ -12,7 +12,9 @@
             <i class="fas fa-archive"></i> الشيكات المؤرشفة
           </h3>
           <div class="card-tools">
+            {% if current_user.has_permission('manage_payments') %}
             <a href="{{ url_for('cheques.index') }}" class="btn btn-secondary">
+            {% endif %}
               <i class="fas fa-arrow-left"></i> رجوع
             </a>
           </div>

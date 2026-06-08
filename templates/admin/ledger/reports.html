@@ -46,7 +46,9 @@
             <p class="mb-1">عرض الإيرادات والمصروفات وصافي الدخل</p>
           </a>
           
+          {% if current_user.has_permission('view_ledger') %}
           <a href="{{ url_for('ledger.cash_flow') }}" class="list-group-item list-group-item-action">
+          {% endif %}
             <div class="d-flex w-100 justify-content-between">
               <h6 class="mb-1">قائمة التدفقات النقدية</h6>
               <small class="text-muted">Cash Flow Statement</small>
@@ -68,7 +70,9 @@
       </div>
       <div class="card-body">
         <div class="list-group list-group-flush">
+          {% if current_user.has_permission('view_ledger') %}
           <a href="{{ url_for('ledger.aging_analysis', type='receivables') }}" class="list-group-item list-group-item-action">
+          {% endif %}
             <div class="d-flex w-100 justify-content-between">
               <h6 class="mb-1">تحليل عمر الذمم المدينة</h6>
               <small class="text-muted">Receivables Aging</small>
@@ -76,7 +80,9 @@
             <p class="mb-1">تحليل أعمار الديون المستحقة على العملاء</p>
           </a>
           
+          {% if current_user.has_permission('view_ledger') %}
           <a href="{{ url_for('ledger.aging_analysis', type='payables') }}" class="list-group-item list-group-item-action">
+          {% endif %}
             <div class="d-flex w-100 justify-content-between">
               <h6 class="mb-1">تحليل عمر الذمم الدائنة</h6>
               <small class="text-muted">Payables Aging</small>
@@ -84,7 +90,9 @@
             <p class="mb-1">تحليل أعمار الديون المستحقة للموردين</p>
           </a>
           
+          {% if current_user.has_permission('view_ledger') %}
           <a href="{{ url_for('ledger.accounts_tree') }}" class="list-group-item list-group-item-action">
+          {% endif %}
             <div class="d-flex w-100 justify-content-between">
               <h6 class="mb-1">شجرة الحسابات</h6>
               <small class="text-muted">Chart of Accounts</small>
@@ -92,7 +100,7 @@
             <p class="mb-1">عرض هيكل الحسابات المحاسبية</p>
           </a>
           
-          <a href="{{ url_for('ledger.journal_entries') }}" class="list-group-item list-group-item-action">
+          {% if current_user.has_permission('view_ledger') %}<a href="{{ url_for('ledger.journal_entries') }}" class="list-group-item list-group-item-action">
             <div class="d-flex w-100 justify-content-between">
               <h6 class="mb-1">دفتر اليومية</h6>
               <small class="text-muted">General Journal</small>
@@ -135,7 +143,9 @@
           
           <div class="col-md-6">
             <h6>تقرير مخصص حسب الحساب:</h6>
+            {% if current_user.has_permission('view_ledger') %}
             <form method="GET" action="{{ url_for('ledger.account_statement', id=0) }}" id="accountStatementForm" class="ledger-reports-form">
+            {% endif %}
               <div class="form-group">
                 <label>اختر الحساب:</label>
                 <select name="account_id" class="form-control" required>

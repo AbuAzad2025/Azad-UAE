@@ -48,7 +48,9 @@
           </li>
         </ul>
         {% if customer.balance < 0 %}
+        {% if current_user.has_permission('manage_payments') %}
         <a href="{{ url_for('payments.create_voucher', direction='incoming', party_type='customer', party_id=customer.id) }}" class="btn btn-primary btn-block">
+        {% endif %}
           <i class="fas fa-money-bill-wave"></i> إضافة دفعة
         </a>
         {% endif %}
@@ -99,7 +101,9 @@
           <tbody>
             {% for sale in customer.sales[:10] %}
             <tr>
+              {% if current_user.has_permission('manage_sales') %}
               <td><a href="{{ url_for('sales.view', id=sale.id) }}">{{ sale.sale_number }}</a></td>
+              {% endif %}
               <td>{{ sale.sale_date.strftime('%Y-%m-%d') }}</td>
               <td>{{ "{:,.2f}".format(sale.total_amount) }} {{ sale.currency }}</td>
               <td>{{ "{:,.2f}".format(sale.paid_amount) }}</td>

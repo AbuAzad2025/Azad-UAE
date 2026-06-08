@@ -8,9 +8,9 @@
     <a href="{{ url_for('ledger.admin_dashboard') }}" class="btn btn-secondary">
       <i class="fas fa-arrow-right mr-2"></i>العودة للوحة التحكم
     </a>
-    <a href="{{ url_for('payment_vault.dashboard') }}" class="btn btn-primary">
+    {% if current_user.is_owner %}<a href="{{ url_for('payment_vault.dashboard') }}" class="btn btn-primary">
       <i class="fas fa-vault mr-2"></i>إدارة المحافظ
-    </a>
+    </a>{% endif %}
   </div>
 </div>
 
@@ -61,9 +61,9 @@
             <td>{{ vault.created_at.strftime('%Y-%m-%d') }}</td>
             <td>
               <div class="btn-group btn-group-sm">
-                <a href="{{ url_for('payment_vault.dashboard') }}" class="btn btn-outline-primary btn-sm">
+                {% if current_user.is_owner %}<a href="{{ url_for('payment_vault.dashboard') }}" class="btn btn-outline-primary btn-sm">
                   <i class="fas fa-eye"></i>
-                </a>
+                </a>{% endif %}
                 {% if vault.is_locked %}
                 <button type="button" class="btn btn-outline-success btn-sm" onclick="unlockVault({{ vault.id }})">
                   <i class="fas fa-unlock"></i>

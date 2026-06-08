@@ -191,11 +191,15 @@
                    class="btn btn-success" title="كشف حساب" style="color: #ffffff !important;">
                   <i class="fas fa-file-invoice" style="color: #ffffff !important;"></i>
                 </a>
-                <a href="{{ url_for('payments.create_voucher', party_type='customer', party_id=customer.id) }}" 
+                {% if current_user.has_permission('manage_payments') %}
+                <a href="{{ url_for('payments.create_voucher', party_type='customer', party_id=customer.id) }}"
+                {% endif %}
                    class="btn btn-primary" title="قبض / دفع">
                   <i class="fas fa-money-bill-wave"></i>
                 </a>
-                <a href="{{ url_for('sales.create', customer_id=customer.id) }}" 
+                {% if current_user.has_permission('manage_sales') %}
+                <a href="{{ url_for('sales.create', customer_id=customer.id) }}"
+                {% endif %}
                    class="btn btn-success" title="بيع" style="color: #ffffff !important;">
                   <i class="fas fa-shopping-cart" style="color: #ffffff !important;"></i>
                 </a>

@@ -6,7 +6,9 @@
     <h1 class="mb-0"><i class="fas fa-receipt mr-2"></i>سند قبض جديد</h1>
   </div>
   <div>
+    {% if current_user.has_permission('manage_payments') %}
     <a href="{{ url_for('payments.receipts') }}" class="btn btn-secondary">
+    {% endif %}
       <i class="fas fa-arrow-right mr-2"></i>العودة للمدفوعات
     </a>
     <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
@@ -19,7 +21,9 @@
 {% block content %}
 <div class="card">
   {% set form_data = request.form %}
+  {% if current_user.has_permission('manage_payments') %}
   <form method="POST" action="{{ url_for('payments.create_voucher_submit') }}">
+  {% endif %}
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     
     <div class="card-body">
@@ -119,7 +123,9 @@
       <button type="submit" class="btn btn-success btn-lg">
         <i class="fas fa-save mr-2"></i>حفظ سند القبض
       </button>
+      {% if current_user.has_permission('manage_payments') %}
       <a href="{{ url_for('payments.receipts') }}" class="btn btn-secondary btn-lg">
+      {% endif %}
         <i class="fas fa-times mr-2"></i>{{ t('Cancel') }}
       </a>
     </div>

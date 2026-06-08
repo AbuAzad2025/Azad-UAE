@@ -120,7 +120,9 @@
         </div>
       </div>
       <div class="card-footer d-flex justify-content-between">
+        {% if current_user.has_permission('view_reports') %}
         <a href="{{ url_for('partners.view', id=partner.id) }}" class="btn btn-secondary">إلغاء</a>
+        {% endif %}
         <button type="submit" class="btn btn-warning"><i class="fas fa-save me-1"></i> حفظ التعديلات</button>
       </div>
     </form>

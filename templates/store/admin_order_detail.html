@@ -20,7 +20,9 @@
 
     <a href="{{ url_for('store.admin_orders') }}" class="btn btn-secondary btn-sm">كل الطلبات</a>
 
+    {% if current_user.has_permission('manage_sales') %}
     <a href="{{ url_for('sales.view', id=order.id) }}" class="btn btn-outline-primary btn-sm">عرض في المبيعات</a>
+    {% endif %}
 
   </div>
 

@@ -188,7 +188,9 @@
 <div class="modal fade" id="reverseModal" tabindex="-1" role="dialog">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
+      {% if current_user.has_permission('manage_ledger') %}
       <form method="post" action="{{ url_for('ledger.reverse_entry', id=entry.id) }}">
+      {% endif %}
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="modal-header bg-warning">
           <h5 class="modal-title">

@@ -105,6 +105,37 @@ class TestTemplateAnalyzer:
         links = TemplateAnalyzer(str(d)).analyze()
         assert links[0].has_login_check is True
 
+    def test_inline_has_permission(self, tmp_path):
+        d = tmp_path / "templates"
+        d.mkdir()
+        f = d / "item.html"
+        f.write_text(
+            '<td>{% if current_user.has_permission(\'manage_products\') %}'
+            '<a href="{{ url_for(\'products.edit\', id=1) }}">Edit</a>'
+            '{% else %}No{% endif %}</td>'
+        )
+        links = TemplateAnalyzer(str(d)).analyze()
+        assert len(links) == 1
+        assert links[0].endpoint == "products.edit"
+        assert "manage_products" in links[0].permission_conditions
+
+    def test_nested_if_scope(self, tmp_path):
+        d = tmp_path / "templates"
+        d.mkdir()
+        f = d / "base.html"
+        f.write_text(
+            "{% if current_user.has_permission('manage_sales') %}"
+            "{% if current_user.is_authenticated %}"
+            '<a href="{{ url_for(\'sales.create\') }}">New</a>'
+            "{% endif %}"
+            "{% endif %}"
+        )
+        links = TemplateAnalyzer(str(d)).analyze()
+        assert len(links) == 1
+        assert links[0].endpoint == "sales.create"
+        assert "manage_sales" in links[0].permission_conditions
+        assert links[0].has_login_check is True
+
 
 class TestPermissionMatcher:
     def test_safe_exact_permission(self):
@@ -181,6 +212,20 @@ class TestPermissionMatcher:
         report = PermissionMatcher().match(routes, templates, tg, tec)
         assert report.safe_count == 0
         assert report.gap_count == 1
+
+    def test_owner_decorator_matches_is_owner(self):
+        routes = [RouteInfo("payment_vault.dashboard", "dashboard", False, [], decorator_types={"owner_only"})]
+        templates = [TemplateLink("payment_vault.dashboard", "", False, ["is_owner"])]
+        report = PermissionMatcher().match(routes, templates)
+        assert report.safe_count == 1
+        assert report.gap_count == 0
+
+    def test_admin_decorator_matches_is_admin(self):
+        routes = [RouteInfo("admin.settings", "settings", False, [], decorator_types={"admin_required"})]
+        templates = [TemplateLink("admin.settings", "", False, ["is_admin"])]
+        report = PermissionMatcher().match(routes, templates)
+        assert report.safe_count == 1
+        assert report.gap_count == 0
 
 
 class TestAuditReporter:

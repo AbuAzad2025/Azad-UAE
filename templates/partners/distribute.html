@@ -30,7 +30,9 @@
         </div>
       </div>
       <div class="card-footer d-flex justify-content-between">
+        {% if current_user.has_permission('view_reports') %}
         <a href="{{ url_for('partners.index') }}" class="btn btn-secondary">إلغاء</a>
+        {% endif %}
         <button type="submit" class="btn btn-success"><i class="fas fa-calculator me-1"></i> إنشاء التوزيعات</button>
       </div>
     </form>

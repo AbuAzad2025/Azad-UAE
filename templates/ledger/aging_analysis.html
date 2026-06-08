@@ -133,7 +133,9 @@
             {% for item in report.customers %}
             <tr>
               <td>
+                {% if current_user.has_permission('manage_customers') %}
                 <a href="{{ url_for('customers.view', id=item.customer.id) }}">
+                {% endif %}
                   {{ item.customer.name }}
                 </a>
               </td>
@@ -151,7 +153,9 @@
             {% for item in report.suppliers %}
             <tr>
               <td>
+                {% if current_user.has_permission('manage_suppliers') %}
                 <a href="{{ url_for('suppliers.view', id=item.supplier.id) }}">
+                {% endif %}
                   {{ item.supplier.name }}
                 </a>
               </td>

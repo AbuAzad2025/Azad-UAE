@@ -662,7 +662,9 @@ $(document).ready(function() {
   if (!$('#customer_id').hasClass('select2-hidden-accessible')) {
     $('#customer_id').select2({
       ajax: {
+        {% if current_user.has_permission('view_reports') %}
         url: "{{ url_for('api.api_search') }}",
+        {% endif %}
         dataType: 'json',
         delay: 250,
         data: function(params) {

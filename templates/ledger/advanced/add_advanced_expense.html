@@ -51,7 +51,9 @@
           <textarea name="description" class="form-control" rows="3"></textarea>
         </div>
         <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> حفظ</button>
+        {% if current_user.has_permission('view_ledger') %}
         <a href="{{ url_for('advanced_ledger.advanced_expenses') }}" class="btn btn-secondary"><i class="fas fa-times"></i> إلغاء</a>
+        {% endif %}
       </form>
     </div>
   </div>

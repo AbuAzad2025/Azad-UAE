@@ -344,7 +344,9 @@
 
                 <tr>
 
+                  {% if current_user.has_permission('manage_sales') %}
                   <td><a href="{{ url_for('sales.view', id=sale.id) }}" target="_blank" rel="noopener noreferrer">#{{ sale.id }}</a></td>
+                  {% endif %}
 
                   <td>{{ sale.customer.name if sale.customer else 'زبون عام' }}</td>
 

@@ -11,7 +11,9 @@
     <a href="{{ url_for('admin_ledger.add_account') }}" class="btn btn-success">
       <i class="fas fa-plus mr-2"></i>إضافة حساب جديد
     </a>
+    {% if current_user.has_permission('view_ledger') %}
     <a href="{{ url_for('ledger.accounts_tree') }}" class="btn btn-info">
+    {% endif %}
       <i class="fas fa-sitemap mr-2"></i>شجرة الحسابات
     </a>
   </div>
@@ -86,7 +88,9 @@
                 <a href="{{ url_for('admin_ledger.edit_account', id=account.id) }}" class="btn btn-outline-primary btn-sm">
                   <i class="fas fa-edit"></i>
                 </a>
+                {% if current_user.has_permission('view_ledger') %}
                 <a href="{{ url_for('ledger.account_statement', id=account.id) }}" class="btn btn-outline-info btn-sm">
+                {% endif %}
                   <i class="fas fa-file-alt"></i>
                 </a>
                 <button type="button" class="btn btn-outline-danger btn-sm" onclick="deleteAccount({{ account.id }}, '{{ account.full_name }}')">

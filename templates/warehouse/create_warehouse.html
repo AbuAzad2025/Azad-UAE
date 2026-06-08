@@ -12,7 +12,9 @@
       <div class="col-sm-6">
         <ol class="breadcrumb float-sm-left">
           <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">{{ t('Dashboard') }}</a></li>
+          {% if current_user.has_permission('manage_warehouse') %}
           <li class="breadcrumb-item"><a href="{{ url_for('warehouse.list_warehouses') }}">المستودعات</a></li>
+          {% endif %}
           <li class="breadcrumb-item active">إنشاء جديد</li>
         </ol>
       </div>
@@ -159,7 +161,9 @@
               <button type="submit" class="btn btn-success btn-lg">
                 <i class="fas fa-save mr-2"></i> إنشاء المستودع
               </button>
+              {% if current_user.has_permission('manage_warehouse') %}
               <a href="{{ url_for('warehouse.list_warehouses') }}" class="btn btn-secondary btn-lg">
+              {% endif %}
                 <i class="fas fa-times mr-2"></i> إلغاء
               </a>
             </div>

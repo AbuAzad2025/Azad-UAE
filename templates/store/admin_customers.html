@@ -17,7 +17,9 @@
           <td>{{ acc.phone or '—' }}</td>
           <td>{{ acc.created_at.strftime('%Y-%m-%d') if acc.created_at else '—' }}</td>
           <td>{{ acc.last_login_at.strftime('%Y-%m-%d %H:%M') if acc.last_login_at else '—' }}</td>
+          {% if current_user.has_permission('manage_customers') %}
           <td>{% if acc.customer_id %}<a href="{{ url_for('customers.view', id=acc.customer_id) }}" class="btn btn-xs btn-outline-primary">CRM</a>{% endif %}</td>
+          {% endif %}
         </tr>
         {% else %}
         <tr><td colspan="6" class="text-center text-muted py-4">لا حسابات بعد</td></tr>

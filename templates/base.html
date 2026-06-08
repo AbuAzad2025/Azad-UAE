@@ -382,19 +382,25 @@
               </li>
               {% endif %}
               <li class="nav-item">
+                {% if current_user.has_permission('manage_sales') %}
                 <a href="{{ url_for('sales.create') }}" class="nav-link">
+                {% endif %}
                   <i class="fas fa-plus-circle nav-icon text-success"></i>
                   <p>فاتورة جديدة</p>
                 </a>
               </li>
               <li class="nav-item">
+                {% if current_user.has_permission('manage_sales') %}
                 <a href="{{ url_for('sales.index') }}" class="nav-link">
+                {% endif %}
                   <i class="fas fa-list nav-icon"></i>
                   <p>قائمة الفواتير</p>
                 </a>
               </li>
               <li class="nav-item">
+                {% if current_user.has_permission('manage_sales') %}
                 <a href="{{ url_for('returns.index') }}" class="nav-link">
+                {% endif %}
                   <i class="fas fa-undo-alt nav-icon text-warning"></i>
                   <p>المرتجعات</p>
                 </a>

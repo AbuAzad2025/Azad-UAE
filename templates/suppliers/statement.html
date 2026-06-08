@@ -52,10 +52,14 @@
     <button onclick="window.print()" class="btn btn-primary">
       <i class="fas fa-print mr-2"></i>طباعة
     </button>
+    {% if current_user.has_permission('manage_suppliers') %}
     <a href="{{ url_for('suppliers.view', id=supplier.id) }}" class="btn btn-info">
+    {% endif %}
       <i class="fas fa-truck mr-2"></i>تفاصيل المورد
     </a>
+    {% if current_user.has_permission('manage_suppliers') %}
     <a href="{{ url_for('suppliers.index') }}" class="btn btn-secondary">
+    {% endif %}
       <i class="fas fa-arrow-right mr-2"></i>العودة للقائمة
     </a>
     <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
@@ -285,7 +289,9 @@
   <button onclick="window.print()" class="btn btn-lg btn-primary">
     <i class="fas fa-print mr-2"></i>طباعة كشف الحساب
   </button>
+  {% if current_user.has_permission('manage_suppliers') %}
   <a href="{{ url_for('suppliers.view', id=supplier.id) }}" class="btn btn-lg btn-secondary">
+  {% endif %}
     <i class="fas fa-arrow-right mr-2"></i>العودة للمورد
   </a>
 </div>

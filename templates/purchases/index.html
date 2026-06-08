@@ -150,7 +150,9 @@
               </a>
               {% set balance = (purchase.total_amount - purchase.get_paid_amount()) %}
               {% if balance > 0 %}
-              <a href="{{ url_for('payments.create_payment', purchase_id=purchase.id) }}" 
+              {% if current_user.has_permission('manage_payments') %}
+              <a href="{{ url_for('payments.create_payment', purchase_id=purchase.id) }}"
+              {% endif %}
                  class="btn btn-danger" title="سند صرف">
                 <i class="fas fa-money-bill-wave"></i>
               </a>

@@ -13,6 +13,7 @@
 {% block content %}
 <!-- Modern Stats Cards -->
 <div class="row mb-4">
+  {% if current_user.has_permission('manage_sales') %}
   <div class="col-lg-3 col-md-6 mb-4">
     <div class="stat-card">
       <div class="stat-icon" style="background: linear-gradient(135deg, #007A3D 0%, #1B4D89 100%);">
@@ -31,7 +32,9 @@
       </a>
     </div>
   </div>
+  {% endif %}
 
+  {% if current_user.has_permission('manage_customers') %}
   <div class="col-lg-3 col-md-6 mb-4">
     <div class="stat-card">
       <div class="stat-icon" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
@@ -47,7 +50,9 @@
       </a>
     </div>
   </div>
+  {% endif %}
 
+  {% if current_user.has_permission('view_reports') %}
   <div class="col-lg-3 col-md-6 mb-4">
     <div class="stat-card">
       <div class="stat-icon" style="background: linear-gradient(135deg, #D4AF37 0%, #C19A6B 100%);">
@@ -63,7 +68,9 @@
       </a>
     </div>
   </div>
+  {% endif %}
 
+  {% if current_user.has_permission('manage_products') %}
   <div class="col-lg-3 col-md-6 mb-4">
     <div class="stat-card">
       <div class="stat-icon" style="background: linear-gradient(135deg, #CE1126 0%, #dc3545 100%);">
@@ -79,6 +86,7 @@
       </a>
     </div>
   </div>
+  {% endif %}
 </div>
 
 {% if current_user.can_see_costs() and stats.cash_balance is defined %}
@@ -131,6 +139,7 @@
 </div>
 {% endif %}
 
+{% if current_user.has_permission('manage_sales') %}
 <!-- Recent Sales - Modern Table -->
 <div class="row">
   <div class="col-12">
@@ -209,10 +218,14 @@
                   </td>
                   <td class="text-center">
                     <div class="btn-group btn-group-sm">
+                      {% if current_user.has_permission('manage_sales') %}
                       <a href="{{ url_for('sales.view', id=sale.id) }}" class="btn btn-info" title="{{ t('View') }}">
+                      {% endif %}
                         <i class="fas fa-eye"></i>
                       </a>
+                      {% if current_user.has_permission('manage_sales') %}
                       <a href="{{ url_for('sales.print_invoice', id=sale.id) }}" class="btn btn-secondary" target="_blank" rel="noopener noreferrer" title="{{ t('Print') }}">
+                      {% endif %}
                         <i class="fas fa-print"></i>
                       </a>
                     </div>
@@ -224,7 +237,9 @@
                   <td colspan="7" class="text-center py-5">
                     <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
                     <p class="text-muted">لا توجد مبيعات حتى الآن</p>
+                    {% if current_user.has_permission('manage_sales') %}
                     <a href="{{ url_for('sales.create') }}" class="btn btn-primary">
+                    {% endif %}
                       <i class="fas fa-plus mr-2"></i>إنشاء فاتورة جديدة
                     </a>
                   </td>
@@ -236,7 +251,9 @@
       </div>
       {% if stats.recent_sales and stats.recent_sales|length >= 10 %}
       <div class="card-footer text-center">
+        {% if current_user.has_permission('manage_sales') %}
         <a href="{{ url_for('sales.index') }}" class="btn btn-link">
+        {% endif %}
           عرض جميع المبيعات <i class="fas fa-arrow-left mr-2"></i>
         </a>
       </div>
@@ -244,9 +261,11 @@
     </div>
   </div>
 </div>
+{% endif %}
 
 <!-- Quick Actions -->
 <div class="row">
+  {% if current_user.has_permission('manage_sales') %}
   <div class="col-md-3 mb-3">
     <a href="{{ url_for('sales.create') }}" class="card text-center text-decoration-none hover-card">
       <div class="card-body">
@@ -255,6 +274,8 @@
       </div>
     </a>
   </div>
+  {% endif %}
+  {% if current_user.has_permission('manage_customers') %}
   <div class="col-md-3 mb-3">
     <a href="{{ url_for('customers.create') }}" class="card text-center text-decoration-none hover-card">
       <div class="card-body">
@@ -263,6 +284,8 @@
       </div>
     </a>
   </div>
+  {% endif %}
+  {% if current_user.has_permission('manage_products') %}
   <div class="col-md-3 mb-3">
     <a href="{{ url_for('products.create') }}" class="card text-center text-decoration-none hover-card">
       <div class="card-body">
@@ -271,6 +294,8 @@
       </div>
     </a>
   </div>
+  {% endif %}
+  {% if current_user.has_permission('view_reports') %}
   <div class="col-md-3 mb-3">
     <a href="{{ url_for('reports.sales') }}" class="card text-center text-decoration-none hover-card">
       <div class="card-body">
@@ -279,6 +304,7 @@
       </div>
     </a>
   </div>
+  {% endif %}
 </div>
 
 <style>

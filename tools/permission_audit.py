@@ -218,6 +218,8 @@ class RouteAnalyzer:
 class TemplateAnalyzer:
     _URL_FOR = re.compile(r"url_for\(['\"](.+?)['\"]")
     _HAS_PERMISSION = re.compile(r"has_permission\(['\"](.+?)['\"]\)")
+    _IS_OWNER = re.compile(r"current_user\.is_owner")
+    _IS_ADMIN = re.compile(r"current_user\.is_admin")
     _IS_AUTHENTICATED = re.compile(r"current_user\.is_authenticated")
     _IF_AUTH = re.compile(r"{%\s*if\s+current_user\.is_authenticated\s*%}")
 
@@ -238,25 +240,44 @@ class TemplateAnalyzer:
         with open(fpath, "r", encoding="utf-8") as fh:
             lines = fh.readlines()
         links: List[TemplateLink] = []
+        scope_stack: List[Tuple[bool, List[str]]] = []
         scope_login = False
         scope_perms: List[str] = []
         for lineno, raw in enumerate(lines, start=1):
             line = raw.strip()
             if line.startswith("{% if "):
-                if self._IS_AUTHENTICATED.search(line):
-                    scope_login = True
                 matches = self._HAS_PERMISSION.findall(line)
-                if matches:
-                    scope_perms.extend(matches)
-            if line.startswith("{% endif %}"):
-                scope_login = False
+                if self._IS_OWNER.search(line):
+                    matches.append("is_owner")
+                if self._IS_ADMIN.search(line):
+                    matches.append("is_admin")
+                login = bool(self._IS_AUTHENTICATED.search(line))
+                scope_stack.append((login, list(matches)))
+                scope_login = any(s[0] for s in scope_stack)
                 scope_perms = []
+                for s in scope_stack:
+                    scope_perms.extend(s[1])
+            if line.startswith("{% endif %}"):
+                if scope_stack:
+                    scope_stack.pop()
+                scope_login = any(s[0] for s in scope_stack)
+                scope_perms = []
+                for s in scope_stack:
+                    scope_perms.extend(s[1])
             for endpoint in self._URL_FOR.findall(line):
+                inline_perms = list(dict.fromkeys(scope_perms))
+                inline_has = self._HAS_PERMISSION.findall(line)
+                if inline_has:
+                    inline_perms.extend(inline_has)
+                if self._IS_OWNER.search(line):
+                    inline_perms.append("is_owner")
+                if self._IS_ADMIN.search(line):
+                    inline_perms.append("is_admin")
                 links.append(TemplateLink(
                     endpoint=endpoint,
                     raw_line=line[:120],
                     has_login_check=scope_login or bool(self._IS_AUTHENTICATED.search(line)),
-                    permission_conditions=list(scope_perms),
+                    permission_conditions=list(dict.fromkeys(inline_perms)),
                     file_path=fpath,
                     line_number=lineno,
                 ))
@@ -329,6 +350,10 @@ class PermissionMatcher:
                 else:
                     if link.has_login_check or route.login_required:
                         report.safe_count += 1
+                    elif "is_owner" in link.permission_conditions and ("owner_only" in route.decorator_types or "owner_required" in route.decorator_types):
+                        report.safe_count += 1
+                    elif "is_admin" in link.permission_conditions and "admin_required" in route.decorator_types:
+                        report.safe_count += 1
                     else:
                         report.gap_count += 1
                         report.gaps.append(Gap(
@@ -374,7 +399,13 @@ class PermissionMatcher:
             return True
         if not tmpl_codes:
             return False
-        return bool(set(route_codes) & set(tmpl_codes))
+        rc = set(route_codes)
+        tc = set(tmpl_codes)
+        if "is_owner" in tc and ("owner_only" in rc or "owner_required" in rc):
+            return True
+        if "is_admin" in tc and "admin_required" in rc:
+            return True
+        return bool(rc & tc)
 
 
 class AuditReporter:

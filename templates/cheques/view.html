@@ -167,7 +167,9 @@
                 <tr>
                   <th>العميل:</th>
                   <td>
+                    {% if current_user.has_permission('manage_customers') %}
                     <a href="{{ url_for('customers.view', id=cheque.customer.id) }}">
+                    {% endif %}
                       {{ cheque.customer.name }}
                     </a>
                   </td>
@@ -188,7 +190,9 @@
                 <tr>
                   <th>المورد:</th>
                   <td>
+                    {% if current_user.has_permission('manage_suppliers') %}
                     <a href="{{ url_for('suppliers.view', id=cheque.supplier.id) }}">
+                    {% endif %}
                       {{ cheque.supplier.name }}
                     </a>
                   </td>

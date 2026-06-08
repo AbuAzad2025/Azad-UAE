@@ -1,361 +1,724 @@
-{% extends 'base.html' %}
-{% block title %}شركة أزاد للأنظمة الذكية - إدارة المبيعات والفواتير{% endblock %}
-{% block page_title %}
-<div class="d-flex justify-content-between align-items-center">
-  <div>
-    <h1 class="text-gradient mb-0"><i class="fas fa-file-invoice mr-3"></i>{{ t('Sales Management') }}</h1>
-    <p class="text-muted">جميع فواتير البيع والمعاملات المالية</p>
-  </div>
-  <div>
-    <a href="{{ url_for('sales.create') }}" class="btn btn-primary btn-lg pulse text-white" style="color:#ffffff !important;">
-      <i class="fas fa-plus-circle mr-2" style="color:#ffffff !important"></i>فاتورة جديدة
-    </a>
-    <a href="{{ url_for('sales.archived') }}" class="btn btn-warning btn-lg">
-      <i class="fas fa-archive mr-2"></i>الأرشيف
-    </a>
-  </div>
-</div>
-{% endblock %}
-
-{% block extra_css %}
-<style>
-.invoice-row {
-  transition: all 0.2s ease;
-}
-.invoice-row:hover {
-  background: rgba(0, 122, 61, 0.05);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-.payment-progress {
-  height: 6px;
-  background: #e9ecef;
-  border-radius: 10px;
-  overflow: hidden;
-  margin-top: 4px;
-}
-.payment-progress-bar {
-  height: 100%;
-  background: linear-gradient(90deg, #28a745 0%, #20c997 100%);
-  transition: width 0.3s ease;
-}
-
-a.btn[href*="/sales/create"] {
-  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%) !important;
-  border-color: #00bfff !important;
-  color: #ffffff !important;
-}
-
-a.btn[href*="/sales/create"] i,
-a.btn[href*="/sales/create"] span {
-  color: #ffffff !important;
-}
-
-a.btn.btn-warning,
-.btn.btn-warning {
-  color: #111827 !important;
-  -webkit-text-fill-color: #111827 !important;
-}
-
-a.btn.btn-warning i,
-a.btn.btn-warning span {
-  color: #111827 !important;
-}
-
-@media print {
-  @page {
-    size: A4 landscape;
-    margin: 10mm;
-  }
-
-  body {
-    -webkit-print-color-adjust: exact !important;
-    font-size: 11pt;
-    direction: rtl;
-  }
-
-  .main-sidebar,
-  .main-header,
-  .main-footer,
-  .content-header,
-  .btn,
-  .card-header,
-  .card-footer,
-  .btn-group,
-  .dataTables_filter,
-  .dataTables_length,
-  .dataTables_info,
-  .dataTables_paginate,
-  .dt-buttons,
-  .pulse,
-  .small-box {
-    display: none !important;
-  }
-
-  .content-wrapper {
-    margin: 0 !important;
-    padding: 0 !important;
-  }
-
-  .card {
-    border: none !important;
-    box-shadow: none !important;
-  }
-
-  .table-responsive {
-    overflow: visible !important;
-  }
-
-  table {
-    width: 100% !important;
-    border-collapse: collapse !important;
-  }
-
-  table th,
-  table td {
-    border: 1px solid #dee2e6 !important;
-    padding: 6px 8px !important;
-    text-align: center !important;
-  }
-
-  table thead th {
-    background: #007A3D !important;
-    color: #fff !important;
-  }
-
-  table tbody tr:nth-child(even) {
-    background: #f8f9fa !important;
-  }
-
-  .payment-progress,
-  .payment-progress-bar {
-    display: none !important;
-  }
-}
-</style>
-{% endblock %}
-
-{% block content %}
-<div class="card">
-  <div class="card-header">
-    <div class="d-flex justify-content-between align-items-center">
-      <h3 class="card-title mb-0">
-        <i class="fas fa-list mr-2"></i>سجل المبيعات
-      </h3>
-      <div class="btn-group">
-        <button type="button" class="btn btn-sm btn-outline-info" id="printSalesBtn">
-          <i class="fas fa-print mr-1"></i>طباعة
-        </button>
-        <button type="button" class="btn btn-sm btn-outline-primary active" id="filterAll">
-          <i class="fas fa-list mr-1"></i>الكل
-        </button>
-        <button type="button" class="btn btn-sm btn-outline-success" id="filterPaid">
-          <i class="fas fa-check mr-1"></i>مدفوع
-        </button>
-        <button type="button" class="btn btn-sm btn-outline-warning" id="filterPartial">
-          <i class="fas fa-clock mr-1"></i>جزئي
-        </button>
-        <button type="button" class="btn btn-sm btn-outline-danger" id="filterUnpaid">
-          <i class="fas fa-times mr-1"></i>آجل
-        </button>
-      </div>
-    </div>
-  </div>
-  <div class="card-body">
-    <div class="table-responsive">
-      <table id="salesTable" class="table table-hover">
-        <thead style="background: linear-gradient(135deg, #007A3D 0%, #1B4D89 100%); color: white;">
-          <tr>
-            <th><i class="fas fa-hashtag mr-2"></i>{{ t('Invoice Number') }}</th>
-            <th><i class="fas fa-building mr-2"></i>الشركة</th>
-            <th><i class="fas fa-user mr-2"></i>الزبون</th>
-            <th><i class="far fa-calendar mr-2"></i>{{ t('Date') }}</th>
-            <th><i class="fas fa-money-bill-wave mr-2"></i>{{ t('Amount') }}</th>
-            <th><i class="fas fa-check-circle mr-2"></i>{{ t('Paid') }}</th>
-            <th><i class="fas fa-exclamation-circle mr-2"></i>الباقي</th>
-            <th><i class="fas fa-exchange-alt mr-2"></i>سعر الصرف</th>
-            <th><i class="fas fa-code-branch mr-2"></i>الفرع</th>
-            <th><i class="fas fa-wallet mr-2"></i>{{ t('Status') }}</th>
-            <th class="text-center"><i class="fas fa-cog mr-2"></i>{{ t('Actions') }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for sale in sales %}
-          <tr class="invoice-row" data-status="{{ sale.payment_status }}">
-            <td>
-              <a href="{{ url_for('sales.view', id=sale.id) }}" class="font-weight-bold text-primary">
-                {{ sale.sale_number }}
-              </a>
-            </td>
-            <td>
-              <span class="badge badge-light border">{{ tenant_name_ar or company_name_ar or '-' }}</span>
-            </td>
-            <td>
-              <div class="d-flex align-items-center">
-                <i class="fas fa-user-circle fa-2x text-muted mr-2"></i>
-                <div>
-                  <strong>{{ sale.customer.name if sale.customer else '-' }}</strong>
-                  {% if sale.customer and sale.customer.phone %}
-                  <br><small class="text-muted">{{ sale.customer.phone }}</small>
-                  {% endif %}
-                </div>
-              </div>
-            </td>
-            <td>
-              <span>{{ sale.sale_date.strftime('%Y-%m-%d') }}</span>
-              <br><small class="text-muted">{{ sale.sale_date.strftime('%H:%M') }}</small>
-            </td>
-            <td>
-              <strong style="color: #007A3D;">{{ "{:,.2f}".format(sale.total_amount) }}</strong>
-              <small class="text-muted">{{ sale.currency }}</small>
-            </td>
-            <td>
-              <strong class="text-success">{{ "{:,.2f}".format(sale.paid_amount) }}</strong>
-              {% set payment_percent = (sale.paid_amount / sale.total_amount * 100) if sale.total_amount > 0 else 0 %}
-              <div class="payment-progress">
-                <div class="payment-progress-bar" style="width: {{ payment_percent }}%"></div>
-              </div>
-            </td>
-            <td>
-              {% if sale.balance_due > 0 %}
-                <strong class="text-danger">{{ "{:,.2f}".format(sale.balance_due) }}</strong>
-              {% else %}
-                <span class="text-muted">0.00</span>
-              {% endif %}
-            </td>
-            <td>
-              {% if sale.exchange_rate and sale.exchange_rate != 1 %}
-                <span class="badge badge-info" title="سعر الصرف وقت المعاملة">
-                  <i class="fas fa-exchange-alt mr-1"></i>{{ "{:.4f}".format(sale.exchange_rate) }}
-                </span>
-              {% else %}
-                <span class="text-muted">-</span>
-              {% endif %}
-            </td>
-            <td>
-              {% if sale.branch %}
-                <span class="badge badge-light border">{{ sale.branch.name }}{% if sale.branch.code %} ({{ sale.branch.code }}){% endif %}</span>
-              {% else %}
-                <span class="text-muted">-</span>
-              {% endif %}
-            </td>
-            <td>
-              {% if sale.payment_status == 'paid' %}
-                <span class="badge badge-success px-3">
-                  <i class="fas fa-check mr-1"></i>مدفوع
-                </span>
-              {% elif sale.payment_status == 'partial' %}
-                <span class="badge badge-warning px-3">
-                  <i class="fas fa-clock mr-1"></i>جزئي
-                </span>
-              {% else %}
-                <span class="badge badge-danger px-3">
-                  <i class="fas fa-hourglass-half mr-1"></i>آجل
-                </span>
-              {% endif %}
-            </td>
-            <td class="text-center">
-              <div class="btn-group btn-group-sm">
-                <a href="{{ url_for('sales.view', id=sale.id) }}" 
-                   class="btn btn-info" title="{{ t('View') }}">
-                  <i class="fas fa-eye"></i>
-                </a>
-                <a href="{{ url_for('sales.print_invoice', id=sale.id) }}" 
-                   class="btn btn-secondary" target="_blank" rel="noopener noreferrer" title="{{ t('Print') }}">
-                  <i class="fas fa-print"></i>
-                </a>
-                {% if sale.balance_due > 0 %}
-                <a href="{{ url_for('payments.create_voucher', direction='incoming', party_type='customer', party_id=sale.customer_id, amount=sale.balance_due) }}" 
-                   class="btn btn-success" title="سند دفع">
-                  <i class="fas fa-credit-card"></i>
-                </a>
-                {% endif %}
-                {% if current_user.is_owner %}
-                <button type="button" class="btn btn-danger" 
-                        onclick="deleteItem('sales', {{ sale.id }}, '{{ sale.sale_number }}')" 
-                        title="حذف">
-                  <i class="fas fa-trash"></i>
-                </button>
-                {% endif %}
-              </div>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-    {% set endpoint = 'sales.index' %}
-    {% include 'partials/flask_pagination.html' %}
-  </div>
-</div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-$(document).ready(function() {
-  const $tableEl = $('#salesTable');
-  const printOptions = {
-    title: 'سجل المبيعات',
-    headerColor: '#007A3D'
-  };
-
-  let table;
-  if ($.fn.DataTable.isDataTable($tableEl)) {
-    table = $tableEl.DataTable();
-  } else {
-    table = $tableEl.DataTable({
-      language: { url: "{{ url_for('static', filename='datatables/Arabic.json') }}" },
-      order: [[2, 'desc']],
-      pageLength: 25,
-      responsive: true,
-      dom: 'Bfrtip',
-      buttons: SmartPrint.buildButtons(printOptions),
-      footerCallback: function() {
-        const api = this.api();
-
-        const total = api.column(3, { page: 'current' }).data().reduce(function(a, b) {
-          const val = parseFloat(b.replace(/[^\d.-]/g, ''));
-          return a + (isNaN(val) ? 0 : val);
-        }, 0);
-
-        const paid = api.column(4, { page: 'current' }).data().reduce(function(a, b) {
-          const val = parseFloat((b.match(/[\d.]+/) || [0])[0]);
-          return a + (isNaN(val) ? 0 : val);
-        }, 0);
-
-        UI.toast(`إجمالي الصفحة: ${total.toFixed(2)} | مدفوع: ${paid.toFixed(2)}`, 'info', 2000);
-      }
-    });
-  }
-
-  if (!$tableEl.data('smartPrintInit')) {
-    SmartPrint.attachTrigger(table, '#printSalesBtn', printOptions);
-    $tableEl.data('smartPrintInit', true);
-  }
-
-  $('#filterAll').off('click.smartPrint').on('click.smartPrint', function() {
-    table.search('').draw();
-    $('.btn-group .btn').removeClass('active');
-    $(this).addClass('active');
-  });
-
-  $('#filterPaid').off('click.smartPrint').on('click.smartPrint', function() {
-    table.column(6).search('مدفوع').draw();
-    $('.btn-group .btn').removeClass('active');
-    $(this).addClass('active');
-  });
-
-  $('#filterPartial').off('click.smartPrint').on('click.smartPrint', function() {
-    table.column(6).search('جزئي').draw();
-    $('.btn-group .btn').removeClass('active');
-    $(this).addClass('active');
-  });
-
-  $('#filterUnpaid').off('click.smartPrint').on('click.smartPrint', function() {
-    table.column(6).search('آجل').draw();
-    $('.btn-group .btn').removeClass('active');
-    $(this).addClass('active');
-  });
-});
-</script>
-{% endblock %}
-
+{% extends 'base.html' %}
+
+{% block title %}شركة أزاد للأنظمة الذكية - إدارة المبيعات والفواتير{% endblock %}
+
+{% block page_title %}
+
+<div class="d-flex justify-content-between align-items-center">
+
+  <div>
+
+    <h1 class="text-gradient mb-0"><i class="fas fa-file-invoice mr-3"></i>{{ t('Sales Management') }}</h1>
+
+    <p class="text-muted">جميع فواتير البيع والمعاملات المالية</p>
+
+  </div>
+
+  <div>
+
+    <a href="{{ url_for('sales.create') }}" class="btn btn-primary btn-lg pulse text-white" style="color:#ffffff !important;">
+
+      <i class="fas fa-plus-circle mr-2" style="color:#ffffff !important"></i>فاتورة جديدة
+
+    </a>
+
+    <a href="{{ url_for('sales.archived') }}" class="btn btn-warning btn-lg">
+
+      <i class="fas fa-archive mr-2"></i>الأرشيف
+
+    </a>
+
+  </div>
+
+</div>
+
+{% endblock %}
+
+
+
+{% block extra_css %}
+
+<style>
+
+.invoice-row {
+
+  transition: all 0.2s ease;
+
+}
+
+.invoice-row:hover {
+
+  background: rgba(0, 122, 61, 0.05);
+
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+
+}
+
+.payment-progress {
+
+  height: 6px;
+
+  background: #e9ecef;
+
+  border-radius: 10px;
+
+  overflow: hidden;
+
+  margin-top: 4px;
+
+}
+
+.payment-progress-bar {
+
+  height: 100%;
+
+  background: linear-gradient(90deg, #28a745 0%, #20c997 100%);
+
+  transition: width 0.3s ease;
+
+}
+
+
+
+a.btn[href*="/sales/create"] {
+
+  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%) !important;
+
+  border-color: #00bfff !important;
+
+  color: #ffffff !important;
+
+}
+
+
+
+a.btn[href*="/sales/create"] i,
+
+a.btn[href*="/sales/create"] span {
+
+  color: #ffffff !important;
+
+}
+
+
+
+a.btn.btn-warning,
+
+.btn.btn-warning {
+
+  color: #111827 !important;
+
+  -webkit-text-fill-color: #111827 !important;
+
+}
+
+
+
+a.btn.btn-warning i,
+
+a.btn.btn-warning span {
+
+  color: #111827 !important;
+
+}
+
+
+
+@media print {
+
+  @page {
+
+    size: A4 landscape;
+
+    margin: 10mm;
+
+  }
+
+
+
+  body {
+
+    -webkit-print-color-adjust: exact !important;
+
+    font-size: 11pt;
+
+    direction: rtl;
+
+  }
+
+
+
+  .main-sidebar,
+
+  .main-header,
+
+  .main-footer,
+
+  .content-header,
+
+  .btn,
+
+  .card-header,
+
+  .card-footer,
+
+  .btn-group,
+
+  .dataTables_filter,
+
+  .dataTables_length,
+
+  .dataTables_info,
+
+  .dataTables_paginate,
+
+  .dt-buttons,
+
+  .pulse,
+
+  .small-box {
+
+    display: none !important;
+
+  }
+
+
+
+  .content-wrapper {
+
+    margin: 0 !important;
+
+    padding: 0 !important;
+
+  }
+
+
+
+  .card {
+
+    border: none !important;
+
+    box-shadow: none !important;
+
+  }
+
+
+
+  .table-responsive {
+
+    overflow: visible !important;
+
+  }
+
+
+
+  table {
+
+    width: 100% !important;
+
+    border-collapse: collapse !important;
+
+  }
+
+
+
+  table th,
+
+  table td {
+
+    border: 1px solid #dee2e6 !important;
+
+    padding: 6px 8px !important;
+
+    text-align: center !important;
+
+  }
+
+
+
+  table thead th {
+
+    background: #007A3D !important;
+
+    color: #fff !important;
+
+  }
+
+
+
+  table tbody tr:nth-child(even) {
+
+    background: #f8f9fa !important;
+
+  }
+
+
+
+  .payment-progress,
+
+  .payment-progress-bar {
+
+    display: none !important;
+
+  }
+
+}
+
+</style>
+
+{% endblock %}
+
+
+
+{% block content %}
+
+<div class="card">
+
+  <div class="card-header">
+
+    <div class="d-flex justify-content-between align-items-center">
+
+      <h3 class="card-title mb-0">
+
+        <i class="fas fa-list mr-2"></i>سجل المبيعات
+
+      </h3>
+
+      <div class="btn-group">
+
+        <button type="button" class="btn btn-sm btn-outline-info" id="printSalesBtn">
+
+          <i class="fas fa-print mr-1"></i>طباعة
+
+        </button>
+
+        <button type="button" class="btn btn-sm btn-outline-primary active" id="filterAll">
+
+          <i class="fas fa-list mr-1"></i>الكل
+
+        </button>
+
+        <button type="button" class="btn btn-sm btn-outline-success" id="filterPaid">
+
+          <i class="fas fa-check mr-1"></i>مدفوع
+
+        </button>
+
+        <button type="button" class="btn btn-sm btn-outline-warning" id="filterPartial">
+
+          <i class="fas fa-clock mr-1"></i>جزئي
+
+        </button>
+
+        <button type="button" class="btn btn-sm btn-outline-danger" id="filterUnpaid">
+
+          <i class="fas fa-times mr-1"></i>آجل
+
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="card-body">
+
+    <div class="table-responsive">
+
+      <table id="salesTable" class="table table-hover">
+
+        <thead style="background: linear-gradient(135deg, #007A3D 0%, #1B4D89 100%); color: white;">
+
+          <tr>
+
+            <th><i class="fas fa-hashtag mr-2"></i>{{ t('Invoice Number') }}</th>
+
+            <th><i class="fas fa-building mr-2"></i>الشركة</th>
+
+            <th><i class="fas fa-user mr-2"></i>الزبون</th>
+
+            <th><i class="far fa-calendar mr-2"></i>{{ t('Date') }}</th>
+
+            <th><i class="fas fa-money-bill-wave mr-2"></i>{{ t('Amount') }}</th>
+
+            <th><i class="fas fa-check-circle mr-2"></i>{{ t('Paid') }}</th>
+
+            <th><i class="fas fa-exclamation-circle mr-2"></i>الباقي</th>
+
+            <th><i class="fas fa-exchange-alt mr-2"></i>سعر الصرف</th>
+
+            <th><i class="fas fa-code-branch mr-2"></i>الفرع</th>
+
+            <th><i class="fas fa-wallet mr-2"></i>{{ t('Status') }}</th>
+
+            <th class="text-center"><i class="fas fa-cog mr-2"></i>{{ t('Actions') }}</th>
+
+          </tr>
+
+        </thead>
+
+        <tbody>
+
+          {% for sale in sales %}
+
+          <tr class="invoice-row" data-status="{{ sale.payment_status }}">
+
+            <td>
+
+              <a href="{{ url_for('sales.view', id=sale.id) }}" class="font-weight-bold text-primary">
+
+                {{ sale.sale_number }}
+
+              </a>
+
+            </td>
+
+            <td>
+
+              <span class="badge badge-light border">{{ tenant_name_ar or company_name_ar or '-' }}</span>
+
+            </td>
+
+            <td>
+
+              <div class="d-flex align-items-center">
+
+                <i class="fas fa-user-circle fa-2x text-muted mr-2"></i>
+
+                <div>
+
+                  <strong>{{ sale.customer.name if sale.customer else '-' }}</strong>
+
+                  {% if sale.customer and sale.customer.phone %}
+
+                  <br><small class="text-muted">{{ sale.customer.phone }}</small>
+
+                  {% endif %}
+
+                </div>
+
+              </div>
+
+            </td>
+
+            <td>
+
+              <span>{{ sale.sale_date.strftime('%Y-%m-%d') }}</span>
+
+              <br><small class="text-muted">{{ sale.sale_date.strftime('%H:%M') }}</small>
+
+            </td>
+
+            <td>
+
+              <strong style="color: #007A3D;">{{ "{:,.2f}".format(sale.total_amount) }}</strong>
+
+              <small class="text-muted">{{ sale.currency }}</small>
+
+            </td>
+
+            <td>
+
+              <strong class="text-success">{{ "{:,.2f}".format(sale.paid_amount) }}</strong>
+
+              {% set payment_percent = (sale.paid_amount / sale.total_amount * 100) if sale.total_amount > 0 else 0 %}
+
+              <div class="payment-progress">
+
+                <div class="payment-progress-bar" style="width: {{ payment_percent }}%"></div>
+
+              </div>
+
+            </td>
+
+            <td>
+
+              {% if sale.balance_due > 0 %}
+
+                <strong class="text-danger">{{ "{:,.2f}".format(sale.balance_due) }}</strong>
+
+              {% else %}
+
+                <span class="text-muted">0.00</span>
+
+              {% endif %}
+
+            </td>
+
+            <td>
+
+              {% if sale.exchange_rate and sale.exchange_rate != 1 %}
+
+                <span class="badge badge-info" title="سعر الصرف وقت المعاملة">
+
+                  <i class="fas fa-exchange-alt mr-1"></i>{{ "{:.4f}".format(sale.exchange_rate) }}
+
+                </span>
+
+              {% else %}
+
+                <span class="text-muted">-</span>
+
+              {% endif %}
+
+            </td>
+
+            <td>
+
+              {% if sale.branch %}
+
+                <span class="badge badge-light border">{{ sale.branch.name }}{% if sale.branch.code %} ({{ sale.branch.code }}){% endif %}</span>
+
+              {% else %}
+
+                <span class="text-muted">-</span>
+
+              {% endif %}
+
+            </td>
+
+            <td>
+
+              {% if sale.payment_status == 'paid' %}
+
+                <span class="badge badge-success px-3">
+
+                  <i class="fas fa-check mr-1"></i>مدفوع
+
+                </span>
+
+              {% elif sale.payment_status == 'partial' %}
+
+                <span class="badge badge-warning px-3">
+
+                  <i class="fas fa-clock mr-1"></i>جزئي
+
+                </span>
+
+              {% else %}
+
+                <span class="badge badge-danger px-3">
+
+                  <i class="fas fa-hourglass-half mr-1"></i>آجل
+
+                </span>
+
+              {% endif %}
+
+            </td>
+
+            <td class="text-center">
+
+              <div class="btn-group btn-group-sm">
+
+                <a href="{{ url_for('sales.view', id=sale.id) }}" 
+
+                   class="btn btn-info" title="{{ t('View') }}">
+
+                  <i class="fas fa-eye"></i>
+
+                </a>
+
+                <a href="{{ url_for('sales.print_invoice', id=sale.id) }}" 
+
+                   class="btn btn-secondary" target="_blank" rel="noopener noreferrer" title="{{ t('Print') }}">
+
+                  <i class="fas fa-print"></i>
+
+                </a>
+
+                {% if sale.balance_due > 0 %}
+
+                {% if current_user.has_permission('manage_payments') %}
+                <a href="{{ url_for('payments.create_voucher', direction='incoming', party_type='customer', party_id=sale.customer_id, amount=sale.balance_due) }}"
+                {% endif %}
+
+                   class="btn btn-success" title="سند دفع">
+
+                  <i class="fas fa-credit-card"></i>
+
+                </a>
+
+                {% endif %}
+
+                {% if current_user.is_owner %}
+
+                <button type="button" class="btn btn-danger" 
+
+                        onclick="deleteItem('sales', {{ sale.id }}, '{{ sale.sale_number }}')" 
+
+                        title="حذف">
+
+                  <i class="fas fa-trash"></i>
+
+                </button>
+
+                {% endif %}
+
+              </div>
+
+            </td>
+
+          </tr>
+
+          {% endfor %}
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+    {% set endpoint = 'sales.index' %}
+
+    {% include 'partials/flask_pagination.html' %}
+
+  </div>
+
+</div>
+
+{% endblock %}
+
+
+
+{% block extra_js %}
+
+<script>
+
+$(document).ready(function() {
+
+  const $tableEl = $('#salesTable');
+
+  const printOptions = {
+
+    title: 'سجل المبيعات',
+
+    headerColor: '#007A3D'
+
+  };
+
+
+
+  let table;
+
+  if ($.fn.DataTable.isDataTable($tableEl)) {
+
+    table = $tableEl.DataTable();
+
+  } else {
+
+    table = $tableEl.DataTable({
+
+      language: { url: "{{ url_for('static', filename='datatables/Arabic.json') }}" },
+
+      order: [[2, 'desc']],
+
+      pageLength: 25,
+
+      responsive: true,
+
+      dom: 'Bfrtip',
+
+      buttons: SmartPrint.buildButtons(printOptions),
+
+      footerCallback: function() {
+
+        const api = this.api();
+
+
+
+        const total = api.column(3, { page: 'current' }).data().reduce(function(a, b) {
+
+          const val = parseFloat(b.replace(/[^\d.-]/g, ''));
+
+          return a + (isNaN(val) ? 0 : val);
+
+        }, 0);
+
+
+
+        const paid = api.column(4, { page: 'current' }).data().reduce(function(a, b) {
+
+          const val = parseFloat((b.match(/[\d.]+/) || [0])[0]);
+
+          return a + (isNaN(val) ? 0 : val);
+
+        }, 0);
+
+
+
+        UI.toast(`إجمالي الصفحة: ${total.toFixed(2)} | مدفوع: ${paid.toFixed(2)}`, 'info', 2000);
+
+      }
+
+    });
+
+  }
+
+
+
+  if (!$tableEl.data('smartPrintInit')) {
+
+    SmartPrint.attachTrigger(table, '#printSalesBtn', printOptions);
+
+    $tableEl.data('smartPrintInit', true);
+
+  }
+
+
+
+  $('#filterAll').off('click.smartPrint').on('click.smartPrint', function() {
+
+    table.search('').draw();
+
+    $('.btn-group .btn').removeClass('active');
+
+    $(this).addClass('active');
+
+  });
+
+
+
+  $('#filterPaid').off('click.smartPrint').on('click.smartPrint', function() {
+
+    table.column(6).search('مدفوع').draw();
+
+    $('.btn-group .btn').removeClass('active');
+
+    $(this).addClass('active');
+
+  });
+
+
+
+  $('#filterPartial').off('click.smartPrint').on('click.smartPrint', function() {
+
+    table.column(6).search('جزئي').draw();
+
+    $('.btn-group .btn').removeClass('active');
+
+    $(this).addClass('active');
+
+  });
+
+
+
+  $('#filterUnpaid').off('click.smartPrint').on('click.smartPrint', function() {
+
+    table.column(6).search('آجل').draw();
+
+    $('.btn-group .btn').removeClass('active');
+
+    $(this).addClass('active');
+
+  });
+
+});
+
+</script>
+
+{% endblock %}
+
+
+

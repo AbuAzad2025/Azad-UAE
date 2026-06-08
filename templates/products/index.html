@@ -246,7 +246,9 @@
                         title="حذف">
                   <i class="fas fa-trash"></i>
                 </button>
-                <a href="{{ url_for('sales.create', product_id=product.id) }}" 
+                {% if current_user.has_permission('manage_sales') %}
+                <a href="{{ url_for('sales.create', product_id=product.id) }}"
+                {% endif %}
                    class="btn btn-success" title="بيع">
                   <i class="fas fa-shopping-cart"></i>
                 </a>

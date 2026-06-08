@@ -73,7 +73,9 @@
         <p><i class="fas fa-user-tie mr-1"></i> العملاء</p>
       </div>
       <div class="icon"><i class="fas fa-handshake"></i></div>
+      {% if current_user.has_permission('manage_customers') %}
       <a href="{{ url_for('customers.index') }}" class="small-box-footer">
+      {% endif %}
         عرض الكل <i class="fas fa-arrow-circle-left ml-1"></i>
       </a>
     </div>
@@ -86,7 +88,9 @@
         <p class="text-white"><i class="fas fa-shopping-cart mr-1"></i> المبيعات</p>
       </div>
       <div class="icon"><i class="fas fa-chart-line"></i></div>
+      {% if current_user.has_permission('manage_sales') %}
       <a href="{{ url_for('sales.index') }}" class="small-box-footer">
+      {% endif %}
         عرض الكل <i class="fas fa-arrow-circle-left ml-1"></i>
       </a>
     </div>
@@ -99,7 +103,9 @@
         <p><i class="fas fa-money-bill-wave mr-1"></i> الإيرادات ({{ tenant_currency_symbol or 'AED' }})</p>
       </div>
       <div class="icon"><i class="fas fa-coins"></i></div>
+      {% if current_user.has_permission('view_reports') %}
       <a href="{{ url_for('reports.sales') }}" class="small-box-footer">
+      {% endif %}
         التقارير <i class="fas fa-arrow-circle-left ml-1"></i>
       </a>
     </div>
@@ -161,7 +167,9 @@
                     {% endif %}
                   </td>
                   <td class="text-center">
+                    {% if current_user.has_permission('view_ledger') %}
                     <a href="{{ url_for('ledger.trial_balance', branch_id=branch.id) }}" class="btn btn-sm btn-outline-primary" title="ميزان المراجعة">
+                    {% endif %}
                       <i class="fas fa-balance-scale"></i> ميزان المراجعة
                     </a>
                   </td>
@@ -191,15 +199,17 @@
           <i class="fas fa-info-circle mr-1"></i>
           إدارة الجداول والنسخ الاحتياطي والذاكرة المؤقتة
         </p>
+        {% if current_user.is_owner %}
         <a href="{{ url_for('owner.database_tools') }}" class="btn btn-outline-primary btn-sm btn-block mb-2">
+        {% endif %}
           <i class="fas fa-table mr-1"></i> إدارة الجداول
         </a>
         <a href="{{ url_for('owner.list_backups') }}" class="btn btn-outline-info btn-sm btn-block mb-2">
           <i class="fas fa-archive mr-1"></i> النسخ الاحتياطية
         </a>
-        <a href="{{ url_for('payment_vault.index') }}" class="btn btn-outline-warning btn-sm btn-block mb-2">
+        {% if current_user.is_owner %}<a href="{{ url_for('payment_vault.index') }}" class="btn btn-outline-warning btn-sm btn-block mb-2">
           <i class="fas fa-vault mr-1"></i> الخزينة السرية
-        </a>
+        </a>{% endif %}
         <a href="{{ url_for('owner.reports') }}" class="btn btn-outline-info btn-sm btn-block mb-2">
           <i class="fas fa-chart-line mr-1"></i> التقارير
         </a>
@@ -521,7 +531,7 @@
               {% if stats.low_stock %}
                 {% for p in stats.low_stock %}
                 <tr>
-                  <td><a href="{{ url_for('products.edit', id=p.id) }}">{{ p.name }}</a></td>
+                  <td>{% if current_user.has_permission('manage_products') %}<a href="{{ url_for('products.edit', id=p.id) }}">{{ p.name }}</a>{% else %}{{ p.name }}{% endif %}</td>
                   <td class="text-center"><span class="badge badge-danger">{{ p.current_stock or 0 }}</span></td>
                   <td class="text-center">{{ p.min_stock_alert or 0 }}</td>
                 </tr>
@@ -533,7 +543,7 @@
           </table>
         </div>
         <div class="card-footer text-muted small">
-          <a href="{{ url_for('products.index') }}">عرض المنتجات <i class="fas fa-arrow-left"></i></a>
+          {% if current_user.has_permission('manage_products') %}<a href="{{ url_for('products.index') }}">عرض المنتجات <i class="fas fa-arrow-left"></i></a>{% else %}عرض المنتجات{% endif %}
         </div>
       </div>
     </div>

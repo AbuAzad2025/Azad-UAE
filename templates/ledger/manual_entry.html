@@ -6,10 +6,14 @@
 
 <div class="row mb-3">
   <div class="col-12">
+    {% if current_user.has_permission('view_ledger') %}
     <a href="{{ url_for('ledger.index') }}" class="btn btn-secondary">
+    {% endif %}
       <i class="fas fa-arrow-right mr-2"></i>العودة
     </a>
+    {% if current_user.has_permission('view_ledger') %}
     <a href="{{ url_for('ledger.journal_entries') }}" class="btn btn-info">
+    {% endif %}
       <i class="fas fa-book mr-2"></i>عرض القيود
     </a>
   </div>

@@ -13,7 +13,9 @@
     <a href="{{ url_for('warehouse.index') }}" class="btn btn-info btn-lg">
       <i class="fas fa-warehouse mr-2"></i>المستودع
     </a>
+    {% if current_user.has_permission('manage_purchases') %}
     <a href="{{ url_for('purchases.create') }}" class="btn btn-success btn-lg pulse">
+    {% endif %}
       <i class="fas fa-shopping-cart mr-2"></i>طلب شراء عاجل
     </a>
   </div>
@@ -130,15 +132,21 @@
             </td>
             <td class="text-center">
               <div class="btn-group btn-group-sm">
-                <a href="{{ url_for('products.view', id=product.id) }}" 
+                {% if current_user.has_permission('manage_products') %}
+                <a href="{{ url_for('products.view', id=product.id) }}"
+                {% endif %}
                    class="btn btn-info" title="{{ t('View') }}">
                   <i class="fas fa-eye"></i>
                 </a>
-                <a href="{{ url_for('products.edit', id=product.id) }}" 
+                {% if current_user.has_permission('manage_products') %}
+                <a href="{{ url_for('products.edit', id=product.id) }}"
+                {% endif %}
                    class="btn btn-warning" title="{{ t('Edit') }}">
                   <i class="fas fa-edit"></i>
                 </a>
-                <a href="{{ url_for('purchases.create') }}" 
+                {% if current_user.has_permission('manage_purchases') %}
+                <a href="{{ url_for('purchases.create') }}"
+                {% endif %}
                    class="btn btn-success" title="طلب شراء عاجل">
                   <i class="fas fa-shopping-cart"></i>
                 </a>

@@ -8,7 +8,9 @@
     <a href="{{ url_for('ledger.index') }}" class="btn btn-secondary">
       <i class="fas fa-arrow-right mr-2"></i>العودة
     </a>
+    {% if current_user.has_permission('manage_ledger') %}
     <a href="{{ url_for('ledger.manual_entry') }}" class="btn btn-success">
+    {% endif %}
       <i class="fas fa-plus-circle mr-2"></i>قيد يدوي
     </a>
   </div>
