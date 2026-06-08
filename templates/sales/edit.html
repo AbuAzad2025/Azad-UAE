@@ -19,7 +19,7 @@
         </div>
         <div class="card-body">
           <form method="post" action="{{ url_for('sales.edit', id=sale.id) }}">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
             
             <!-- معلومات الفاتورة (للعرض فقط) -->
             <div class="row mb-4">
@@ -74,7 +74,7 @@
                 <div class="form-group">
                   <label for="input_discount_amount">الخصم الإضافي ({{ tenant_currency_symbol or 'AED' }})</label>
                   <input type="number" name="discount_amount" class="form-control" 
-                         value="{{ sale.discount_amount or 0 }}" step="0.01" min="0" id="input_discount_amount">
+                         value="{{ sale.discount_amount or 0 }}" step="0.01" min="0" id="input_discount_amount" aria-label="discount amount">
                   <small class="text-muted">خصم إضافي على إجمالي الفاتورة</small>
                 </div>
               </div>

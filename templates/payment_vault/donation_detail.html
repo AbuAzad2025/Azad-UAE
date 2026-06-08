@@ -217,7 +217,7 @@
                         {% if donation.status == 'pending' %}
                         <div class="col-md-6">
                             <form method="POST" action="{{ url_for('payment_vault.approve_donation', donation_id=donation.id) }}">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
                                 <button type="submit" class="btn btn-success btn-block btn-lg" onclick="return confirm('قبول هذا التبرع؟')">
                                     <i class="fas fa-check-circle"></i> قبول التبرع
                                 </button>
@@ -225,7 +225,7 @@
                         </div>
                         <div class="col-md-6">
                             <form method="POST" action="{{ url_for('payment_vault.reject_donation', donation_id=donation.id) }}">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
                                 <button type="submit" class="btn btn-danger btn-block btn-lg" onclick="return confirm('رفض هذا التبرع؟')">
                                     <i class="fas fa-times-circle"></i> رفض التبرع
                                 </button>

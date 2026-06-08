@@ -32,9 +32,9 @@
 
                 <form method="post">
 
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 
-                    <input type="hidden" name="generate_branch" value="1">
+                    <input type="hidden" name="generate_branch" value="1" aria-label="generate branch">
 
                     <div class="row">
 
@@ -84,7 +84,7 @@
 
                                 <label for="input_year">السنة</label>
 
-                                <input type="number" name="year" class="form-control" value="{{ today.year }}" id="input_year">
+                                <input type="number" name="year" class="form-control" value="{{ today.year }}" id="input_year" aria-label="السنة">
 
                             </div>
 
@@ -144,7 +144,7 @@
 
                 <form method="post">
 
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 
                     <div class="row">
 
@@ -194,7 +194,7 @@
 
                                 <label for="input_year">السنة</label>
 
-                                <input type="number" name="year" class="form-control" value="{{ today.year }}" id="input_year">
+                                <input type="number" name="year" class="form-control" value="{{ today.year }}" id="input_year" aria-label="السنة">
 
                             </div>
 
@@ -206,7 +206,7 @@
 
                                 <label for="input_days_worked">أيام العمل (للمياومة)</label>
 
-                                <input type="number" name="days_worked" class="form-control" value="0" id="input_days_worked">
+                                <input type="number" name="days_worked" class="form-control" value="0" id="input_days_worked" aria-label="days worked">
 
                             </div>
 
@@ -224,7 +224,7 @@
 
                                 <label for="input_allowances">بدلات / إضافي</label>
 
-                                <input type="number" step="0.01" name="allowances" class="form-control" value="0" id="input_allowances">
+                                <input type="number" step="0.01" name="allowances" class="form-control" value="0" id="input_allowances" aria-label="allowances">
 
                             </div>
 
@@ -236,7 +236,7 @@
 
                                 <label for="input_deductions">خصومات</label>
 
-                                <input type="number" step="0.01" name="deductions" class="form-control" value="0" id="input_deductions">
+                                <input type="number" step="0.01" name="deductions" class="form-control" value="0" id="input_deductions" aria-label="deductions">
 
                             </div>
 

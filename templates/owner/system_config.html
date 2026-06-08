@@ -27,7 +27,7 @@
 <div class="content">
   <div class="container-fluid">
     <form method="POST" action="{{ url_for('owner.system_config') }}" class="system-config-form">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
       
       <!-- الوحدات -->
       <div class="card">
@@ -38,7 +38,7 @@
           <div class="row">
             <div class="col-md-3">
               <div class="custom-control custom-switch">
-                <input type="checkbox" class="custom-control-input" id="enable_sales" name="enable_sales" {{ 'checked' if settings.enable_sales }}>
+                <input type="checkbox" class="custom-control-input" id="enable_sales" name="enable_sales" {{ 'checked' if settings.enable_sales }} aria-label="enable sales">
                 <label class="custom-control-label" for="enable_sales">
                   <i class="fas fa-shopping-cart text-success"></i> المبيعات
                 </label>
@@ -46,7 +46,7 @@
             </div>
             <div class="col-md-3">
               <div class="custom-control custom-switch">
-                <input type="checkbox" class="custom-control-input" id="enable_purchases" name="enable_purchases" {{ 'checked' if settings.enable_purchases }}>
+                <input type="checkbox" class="custom-control-input" id="enable_purchases" name="enable_purchases" {{ 'checked' if settings.enable_purchases }} aria-label="enable purchases">
                 <label class="custom-control-label" for="enable_purchases">
                   <i class="fas fa-truck text-primary"></i> المشتريات
                 </label>
@@ -54,7 +54,7 @@
             </div>
             <div class="col-md-3">
               <div class="custom-control custom-switch">
-                <input type="checkbox" class="custom-control-input" id="enable_inventory" name="enable_inventory" {{ 'checked' if settings.enable_inventory }}>
+                <input type="checkbox" class="custom-control-input" id="enable_inventory" name="enable_inventory" {{ 'checked' if settings.enable_inventory }} aria-label="enable inventory">
                 <label class="custom-control-label" for="enable_inventory">
                   <i class="fas fa-boxes text-warning"></i> المخزون
                 </label>
@@ -62,7 +62,7 @@
             </div>
             <div class="col-md-3">
               <div class="custom-control custom-switch">
-                <input type="checkbox" class="custom-control-input" id="enable_customers" name="enable_customers" {{ 'checked' if settings.enable_customers }}>
+                <input type="checkbox" class="custom-control-input" id="enable_customers" name="enable_customers" {{ 'checked' if settings.enable_customers }} aria-label="enable customers">
                 <label class="custom-control-label" for="enable_customers">
                   <i class="fas fa-users text-info"></i> الزبائن
                 </label>
@@ -73,7 +73,7 @@
           <div class="row mt-3">
             <div class="col-md-3">
               <div class="custom-control custom-switch">
-                <input type="checkbox" class="custom-control-input" id="enable_expenses" name="enable_expenses" {{ 'checked' if settings.enable_expenses }}>
+                <input type="checkbox" class="custom-control-input" id="enable_expenses" name="enable_expenses" {{ 'checked' if settings.enable_expenses }} aria-label="enable expenses">
                 <label class="custom-control-label" for="enable_expenses">
                   <i class="fas fa-money-bill-wave text-danger"></i> المصروفات
                 </label>
@@ -81,7 +81,7 @@
             </div>
             <div class="col-md-3">
               <div class="custom-control custom-switch">
-                <input type="checkbox" class="custom-control-input" id="enable_gl" name="enable_gl" {{ 'checked' if settings.enable_gl }}>
+                <input type="checkbox" class="custom-control-input" id="enable_gl" name="enable_gl" {{ 'checked' if settings.enable_gl }} aria-label="enable gl">
                 <label class="custom-control-label" for="enable_gl">
                   <i class="fas fa-book text-secondary"></i> دفتر الأستاذ
                 </label>
@@ -89,7 +89,7 @@
             </div>
             <div class="col-md-3">
               <div class="custom-control custom-switch">
-                <input type="checkbox" class="custom-control-input" id="enable_reports" name="enable_reports" {{ 'checked' if settings.enable_reports }}>
+                <input type="checkbox" class="custom-control-input" id="enable_reports" name="enable_reports" {{ 'checked' if settings.enable_reports }} aria-label="enable reports">
                 <label class="custom-control-label" for="enable_reports">
                   <i class="fas fa-chart-line text-success"></i> التقارير
                 </label>
@@ -97,7 +97,7 @@
             </div>
             <div class="col-md-3">
               <div class="custom-control custom-switch">
-                <input type="checkbox" class="custom-control-input" id="enable_ai_assistant" name="enable_ai_assistant" {{ 'checked' if settings.enable_ai_assistant }}>
+                <input type="checkbox" class="custom-control-input" id="enable_ai_assistant" name="enable_ai_assistant" {{ 'checked' if settings.enable_ai_assistant }} aria-label="enable ai assistant">
                 <label class="custom-control-label" for="enable_ai_assistant">
                   <i class="fas fa-robot text-primary"></i> المساعد الذكي
                 </label>
@@ -116,7 +116,7 @@
           <div class="row">
             <div class="col-md-4">
               <div class="custom-control custom-switch">
-                <input type="checkbox" class="custom-control-input" id="enable_barcode_scanner" name="enable_barcode_scanner" {{ 'checked' if settings.enable_barcode_scanner }}>
+                <input type="checkbox" class="custom-control-input" id="enable_barcode_scanner" name="enable_barcode_scanner" {{ 'checked' if settings.enable_barcode_scanner }} aria-label="enable barcode scanner">
                 <label class="custom-control-label" for="enable_barcode_scanner">
                   <i class="fas fa-barcode"></i> قارئ الباركود
                 </label>
@@ -124,7 +124,7 @@
             </div>
             <div class="col-md-4">
               <div class="custom-control custom-switch">
-                <input type="checkbox" class="custom-control-input" id="enable_multi_warehouse" name="enable_multi_warehouse" {{ 'checked' if settings.enable_multi_warehouse }}>
+                <input type="checkbox" class="custom-control-input" id="enable_multi_warehouse" name="enable_multi_warehouse" {{ 'checked' if settings.enable_multi_warehouse }} aria-label="enable multi warehouse">
                 <label class="custom-control-label" for="enable_multi_warehouse">
                   <i class="fas fa-warehouse"></i> مستودعات متعددة
                 </label>
@@ -132,7 +132,7 @@
             </div>
             <div class="col-md-4">
               <div class="custom-control custom-switch">
-                <input type="checkbox" class="custom-control-input" id="enable_multi_currency" name="enable_multi_currency" {{ 'checked' if settings.enable_multi_currency }}>
+                <input type="checkbox" class="custom-control-input" id="enable_multi_currency" name="enable_multi_currency" {{ 'checked' if settings.enable_multi_currency }} aria-label="enable multi currency">
                 <label class="custom-control-label" for="enable_multi_currency">
                   <i class="fas fa-dollar-sign"></i> عملات متعددة
                 </label>
@@ -143,7 +143,7 @@
           <div class="row mt-3">
             <div class="col-md-4">
               <div class="custom-control custom-switch">
-                <input type="checkbox" class="custom-control-input" id="enable_discounts" name="enable_discounts" {{ 'checked' if settings.enable_discounts }}>
+                <input type="checkbox" class="custom-control-input" id="enable_discounts" name="enable_discounts" {{ 'checked' if settings.enable_discounts }} aria-label="enable discounts">
                 <label class="custom-control-label" for="enable_discounts">
                   <i class="fas fa-percent"></i> الخصومات
                 </label>
@@ -151,7 +151,7 @@
             </div>
             <div class="col-md-4">
               <div class="custom-control custom-switch">
-                <input type="checkbox" class="custom-control-input" id="enable_returns" name="enable_returns" {{ 'checked' if settings.enable_returns }}>
+                <input type="checkbox" class="custom-control-input" id="enable_returns" name="enable_returns" {{ 'checked' if settings.enable_returns }} aria-label="enable returns">
                 <label class="custom-control-label" for="enable_returns">
                   <i class="fas fa-undo"></i> المرتجعات
                 </label>
@@ -162,7 +162,7 @@
           <div class="row mt-3">
             <div class="col-md-12">
               <div class="custom-control custom-switch">
-                <input type="checkbox" class="custom-control-input" id="enable_ecommerce" name="enable_ecommerce" {{ 'checked' if settings.enable_ecommerce }}>
+                <input type="checkbox" class="custom-control-input" id="enable_ecommerce" name="enable_ecommerce" {{ 'checked' if settings.enable_ecommerce }} aria-label="enable ecommerce">
                 <label class="custom-control-label font-weight-bold" for="enable_ecommerce">
                   <i class="fas fa-store text-success"></i> المتاجر الإلكترونية (تشغيل/إيقاف كل المتاجر بكبسة واحدة)
                 </label>
@@ -214,7 +214,7 @@
             <div class="col-md-3">
               <div class="form-group">
                 <label for="input_items_per_page">عناصر لكل صفحة</label>
-                <input type="number" name="items_per_page" class="form-control" value="{{ settings.items_per_page or 25 }}" min="10" max="100" id="input_items_per_page">
+                <input type="number" name="items_per_page" class="form-control" value="{{ settings.items_per_page or 25 }}" min="10" max="100" id="input_items_per_page" aria-label="items per page">
               </div>
             </div>
           </div>

@@ -19,7 +19,7 @@
     </div>
     <div class="card-body">
       <form method="post" action="">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
         
         <div class="form-group">
           <label for="input_whatsapp_api_url">API URL</label>
@@ -35,7 +35,7 @@
           <input type="password" 
                  name="whatsapp_api_key" 
                  class="form-control" 
-                 value="{{ settings.whatsapp_api_key or '' }}" id="input_whatsapp_api_key">
+                 value="{{ settings.whatsapp_api_key or '' }}" id="input_whatsapp_api_key" aria-label="whatsapp api key">
         </div>
         
         <div class="form-group">
@@ -53,7 +53,7 @@
                    class="custom-control-input" 
                    id="whatsapp_enabled" 
                    name="whatsapp_enabled" 
-                   {% if settings.whatsapp_enabled %}checked{% endif %}>
+                   {% if settings.whatsapp_enabled %}checked{% endif %} aria-label="whatsapp enabled">
             <label class="custom-control-label" for="whatsapp_enabled">
               تفعيل واتساب
             </label>

@@ -22,7 +22,7 @@
     </div>
     <div class="card-body">
       <form method="post" action="">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 
         <div class="form-group">
           <div class="custom-control custom-switch">
@@ -30,7 +30,7 @@
                    class="custom-control-input"
                    id="enable_tax"
                    name="enable_tax"
-                   {% if tenant.enable_tax %}checked{% endif %}>
+                   {% if tenant.enable_tax %}checked{% endif %} aria-label="enable tax">
             <label class="custom-control-label" for="enable_tax">
               تفعيل الضريبة / VAT لهذه الشركة
             </label>
@@ -57,7 +57,7 @@
                    value="{{ tenant.default_tax_rate or 0 }}"
                    step="0.01"
                    min="0"
-                   max="100">
+                   max="100" aria-label="default tax rate">
           </div>
 
           <div class="form-group">
@@ -74,7 +74,7 @@
             <input type="text"
                    name="tax_number"
                    class="form-control"
-                   value="{{ tenant.tax_number or '' }}" id="input_tax_number">
+                   value="{{ tenant.tax_number or '' }}" id="input_tax_number" aria-label="tax number">
           </div>
         </div>
 

@@ -36,7 +36,7 @@
 
       <form id="groqForm" method="POST" class="api-key-form" action="">
 
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 
         <div class="card-body">
 
@@ -54,7 +54,7 @@
 
 
 
-          <input type="hidden" name="provider" value="groq">
+          <input type="hidden" name="provider" value="groq" aria-label="provider">
 
 
 
@@ -126,7 +126,7 @@
 
       <form id="otherForm" method="POST" class="api-key-form" action="">
 
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 
         <div class="card-body">
 

@@ -12,11 +12,11 @@
     <form method="GET" class="row g-3 align-items-end">
       <div class="col-md-4">
         <label class="form-label" for="input_start_date">من تاريخ</label>
-        <input type="date" name="start_date" class="form-control" value="{{ start_date }}" id="input_start_date">
+        <input type="date" name="start_date" class="form-control" value="{{ start_date }}" id="input_start_date" aria-label="start date">
       </div>
       <div class="col-md-4">
         <label class="form-label" for="input_end_date">إلى تاريخ</label>
-        <input type="date" name="end_date" class="form-control" value="{{ end_date }}" id="input_end_date">
+        <input type="date" name="end_date" class="form-control" value="{{ end_date }}" id="input_end_date" aria-label="end date">
       </div>
       <div class="col-md-4 d-flex flex-wrap">
         <button type="submit" class="btn btn-primary mr-2 mb-2"><i class="fas fa-filter mr-1"></i> عرض</button>

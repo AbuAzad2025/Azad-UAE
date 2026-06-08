@@ -372,7 +372,7 @@
               <i class="fas fa-file-excel mr-2"></i>رفع ملف Excel - معالج ذكي خارق
             </h4>
             <form id="excelUploadForm" method="POST" enctype="multipart/form-data" action="">
-              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
               <div class="form-group">
                 <label>اختر ملف Excel (.xlsx, .xls)</label>
                 <input type="file" id="excelFile" accept=".xlsx,.xls" class="form-control" required>

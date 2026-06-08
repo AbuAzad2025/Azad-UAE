@@ -23,9 +23,9 @@
 <div class="card mb-3">
   <div class="card-body">
     <form method="get" class="form-inline" action="">
-      <input type="hidden" name="type" value="{{ analysis_type }}">
+      <input type="hidden" name="type" value="{{ analysis_type }}" aria-label="type">
       <label class="ml-2 mr-2" for="input_as_of_date">حتى تاريخ:</label>
-      <input type="date" name="as_of_date" class="form-control mr-3" value="{{ as_of_date }}" required id="input_as_of_date">
+      <input type="date" name="as_of_date" class="form-control mr-3" value="{{ as_of_date }}" required id="input_as_of_date" aria-label="as of date">
       <button type="submit" class="btn btn-primary">
         <i class="fas fa-filter mr-2"></i>عرض
       </button>

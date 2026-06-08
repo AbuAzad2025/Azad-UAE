@@ -30,19 +30,19 @@
               </select>
 
               <label class="mr-2" for="input_in_date_from">تاريخ الإدخال:</label>
-              <input type="date" name="in_date_from" value="{{ in_date_from or '' }}" class="form-control form-control-sm mr-2" id="input_in_date_from">
-              <input type="date" name="in_date_to" value="{{ in_date_to or '' }}" class="form-control form-control-sm mr-2">
+              <input type="date" name="in_date_from" value="{{ in_date_from or '' }}" class="form-control form-control-sm mr-2" id="input_in_date_from" aria-label="in date from">
+              <input type="date" name="in_date_to" value="{{ in_date_to or '' }}" class="form-control form-control-sm mr-2" aria-label="in date to">
 
               <label class="mr-2" for="input_out_date_from">تاريخ الإخراج:</label>
-              <input type="date" name="out_date_from" value="{{ out_date_from or '' }}" class="form-control form-control-sm mr-2" id="input_out_date_from">
-              <input type="date" name="out_date_to" value="{{ out_date_to or '' }}" class="form-control form-control-sm mr-2">
+              <input type="date" name="out_date_from" value="{{ out_date_from or '' }}" class="form-control form-control-sm mr-2" id="input_out_date_from" aria-label="out date from">
+              <input type="date" name="out_date_to" value="{{ out_date_to or '' }}" class="form-control form-control-sm mr-2" aria-label="out date to">
 
               <div class="form-check mr-2">
-                <input class="form-check-input" type="checkbox" id="includeZero" name="include_zero" value="1" {{ 'checked' if include_zero else '' }}>
+                <input class="form-check-input" type="checkbox" id="includeZero" name="include_zero" value="1" {{ 'checked' if include_zero else '' }} aria-label="include zero">
                 <label class="form-check-label" for="includeZero">عرض الصفر</label>
               </div>
 
-              {% if category_id %}<input type="hidden" name="category" value="{{ category_id }}">{% endif %}
+              {% if category_id %}<input type="hidden" name="category" value="{{ category_id }}" aria-label="category">{% endif %}
               <button type="submit" class="btn btn-outline-primary btn-sm mr-2">
                 تطبيق
               </button>

@@ -55,14 +55,14 @@
       {% if current_user.has_permission('manage_payments') %}
       <form method="POST" action="{{ url_for('payments.create_payment', purchase_id=purchase.id) }}">
       {% endif %}
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
         <div class="card-body">
           <div class="form-group">
             <label for="amount">المبلغ المدفوع <span class="text-danger">*</span></label>
             <div class="input-group">
               <input type="number" class="form-control" id="amount" name="amount" 
                      step="0.01" min="0.01" max="{{ balance }}" 
-                     value="{{ submitted_amount }}" required>
+                     value="{{ submitted_amount }}" required aria-label="amount">
               <div class="input-group-append">
                 <span class="input-group-text">{{ tenant_currency_symbol or 'AED' }}</span>
               </div>

@@ -43,7 +43,7 @@
   <div class="container-fluid">
     {% set form_data = form_data if form_data is defined else request.form %}
     <form method="POST" action="{{ url_for('owner.create_user') }}" id="userForm" class="create-user-form">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
       
       <div class="row">
         <!-- المعلومات الأساسية -->
@@ -159,7 +159,7 @@
               <div class="form-group">
                 <div class="custom-control custom-switch">
                   <input type="checkbox" class="custom-control-input" id="is_owner" name="is_owner"
-                         {% if form_data.get('is_owner') == 'on' %}checked{% endif %}>
+                         {% if form_data.get('is_owner') == 'on' %}checked{% endif %} aria-label="is owner">
                   <label class="custom-control-label" for="is_owner">
                     <i class="fas fa-crown text-warning"></i> <strong>مالك النظام</strong>
                     <br><small class="text-danger">⚠️ صلاحيات كاملة - استخدم بحذر!</small>
@@ -170,7 +170,7 @@
               <div class="form-group">
                 <div class="custom-control custom-switch">
                   <input type="checkbox" class="custom-control-input" id="is_active" name="is_active"
-                         {% if form_data.get('is_active', 'on') == 'on' %}checked{% endif %}>
+                         {% if form_data.get('is_active', 'on') == 'on' %}checked{% endif %} aria-label="is active">
                   <label class="custom-control-label" for="is_active">
                     <i class="fas fa-check-circle text-success"></i> تفعيل الحساب
                   </label>

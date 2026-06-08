@@ -13,7 +13,7 @@
         </div>
         <div class="card-body">
           <form id="user-edit-form" method="post" action="{{ url_for('users.edit', id=user.id) }}">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
             
             <div class="row">
               <div class="col-md-6">
@@ -25,7 +25,7 @@
               <div class="col-md-6">
                 <div class="form-group">
                   <label for="input_full_name">الاسم الكامل</label>
-                  <input type="text" name="full_name" class="form-control" value="{{ user.full_name or '' }}" id="input_full_name">
+                  <input type="text" name="full_name" class="form-control" value="{{ user.full_name or '' }}" id="input_full_name" aria-label="full name">
                 </div>
               </div>
             </div>
@@ -34,13 +34,13 @@
               <div class="col-md-6">
                 <div class="form-group">
                   <label for="input_full_name_ar">الاسم الكامل بالعربية</label>
-                  <input type="text" name="full_name_ar" class="form-control" value="{{ user.full_name_ar or '' }}" id="input_full_name_ar">
+                  <input type="text" name="full_name_ar" class="form-control" value="{{ user.full_name_ar or '' }}" id="input_full_name_ar" aria-label="full name ar">
                 </div>
               </div>
               <div class="col-md-6">
                 <div class="form-group">
                   <label for="input_email">البريد الإلكتروني</label>
-                  <input type="email" name="email" class="form-control" value="{{ user.email or '' }}" id="input_email">
+                  <input type="email" name="email" class="form-control" value="{{ user.email or '' }}" id="input_email" aria-label="email">
                 </div>
               </div>
             </div>
@@ -49,7 +49,7 @@
               <div class="col-md-6">
                 <div class="form-group">
                   <label for="input_phone">رقم الهاتف</label>
-                  <input type="text" name="phone" class="form-control" value="{{ user.phone or '' }}" id="input_phone">
+                  <input type="text" name="phone" class="form-control" value="{{ user.phone or '' }}" id="input_phone" aria-label="phone">
                 </div>
               </div>
               <div class="col-md-6">
@@ -84,7 +84,7 @@
               <div class="col-md-6">
                 <div class="form-group">
                   <label>كلمة المرور الجديدة</label>
-                  <input type="password" name="new_password" id="new_password" class="form-control" minlength="10" autocomplete="new-password">
+                  <input type="password" name="new_password" id="new_password" class="form-control" minlength="10" autocomplete="new-password" aria-label="new password">
                 </div>
               </div>
               <div class="col-md-6">
@@ -101,7 +101,7 @@
               <a href="{{ url_for('users.view', id=user.id) }}" class="btn btn-secondary"><i class="fas fa-times"></i> إلغاء</a>
               {% endif %}
               <form method="post" action="{{ url_for('users.toggle_active', id=user.id) }}" style="display:inline;">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
                 {% if user.is_active %}
                   <button type="submit" class="btn btn-warning"><i class="fas fa-user-slash"></i> إلغاء تفعيل</button>
                 {% else %}

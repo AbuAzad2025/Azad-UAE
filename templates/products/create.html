@@ -43,7 +43,7 @@
     {% set selected_warehouse = preselected_warehouse_id|string %}
   {% endif %}
   <form method="POST" action="{{ url_for('products.create') }}" enctype="multipart/form-data">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
     <div class="card-body">
       <!-- المعلومات الأساسية -->
       <div class="row">
@@ -219,7 +219,7 @@
         <div class="col-md-6">
           <div class="form-group">
             <div class="custom-control custom-switch mt-4">
-              <input type="checkbox" class="custom-control-input" id="has_serial_number" name="has_serial_number">
+              <input type="checkbox" class="custom-control-input" id="has_serial_number" name="has_serial_number" aria-label="has serial number">
               <label class="custom-control-label font-weight-bold" for="has_serial_number">
                 <i class="fas fa-fingerprint text-info mr-1"></i> تتبع الأرقام التسلسلية (Serial Number Tracking)
               </label>
@@ -358,7 +358,7 @@
               <i class="fas fa-image text-success"></i> صورة المنتج
               <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="صورة توضيحية للمنتج (اختياري)"></i>
             </label>
-            <input type="file" id="product_image" name="image" class="form-control-file" accept="image/*">
+            <input type="file" id="product_image" name="image" class="form-control-file" accept="image/*" aria-label="image">
           </div>
         </div>
       </div>
@@ -405,7 +405,7 @@
       </div>
       <div class="modal-body">
         <form id="addCategoryForm" method="POST" action="">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
           <div class="form-group">
             <label for="category_name">
               <i class="fas fa-font text-primary"></i> اسم الفئة

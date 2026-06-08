@@ -191,7 +191,7 @@
       {% if current_user.has_permission('manage_ledger') %}
       <form method="post" action="{{ url_for('ledger.reverse_entry', id=entry.id) }}">
       {% endif %}
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
         <div class="modal-header bg-warning">
           <h5 class="modal-title">
             <i class="fas fa-undo mr-2"></i>عكس القيد

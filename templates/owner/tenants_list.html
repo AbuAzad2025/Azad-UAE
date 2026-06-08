@@ -70,7 +70,7 @@
                   </button>
                   {% else %}
                   <form method="POST" action="{{ url_for('owner.tenant_activate', tenant_id=t.id) }}" class="d-inline" onsubmit="return confirm('تأكيد تفعيل التينانت؟');">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
                     <button type="submit" class="btn btn-outline-success" title="تفعيل">
                       <i class="bi bi-play-circle"></i>
                     </button>
@@ -98,7 +98,7 @@
   <div class="modal-dialog">
     <div class="modal-content">
       <form method="POST" action="{{ url_for('owner.tenant_suspend', tenant_id=t.id) }}">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
         <div class="modal-header bg-warning text-dark">
           <h5 class="modal-title"><i class="bi bi-pause-circle me-2"></i>تعليق تينانت</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -127,7 +127,7 @@
   <div class="modal-dialog">
     <div class="modal-content">
       <form method="POST" action="{{ url_for('owner.tenant_delete', tenant_id=t.id) }}">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
         <div class="modal-header bg-danger text-white">
           <h5 class="modal-title"><i class="bi bi-trash me-2"></i>حذف تينانت</h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>

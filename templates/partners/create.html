@@ -10,7 +10,7 @@
 <div class="row">
   <div class="col-lg-8">
     <form method="POST" class="card">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
       <div class="card-header bg-primary text-white">
         <i class="fas fa-user-tie mr-2"></i>بيانات الشريك
       </div>
@@ -18,11 +18,11 @@
         <div class="row g-3">
           <div class="col-md-6">
             <label class="form-label fw-semibold">الاسم <span class="text-danger">*</span></label>
-            <input type="text" name="name" class="form-control" required>
+            <input type="text" name="name" class="form-control" required aria-label="name">
           </div>
           <div class="col-md-6">
             <label class="form-label fw-semibold" for="input_name_en">الاسم الإنجليزي</label>
-            <input type="text" name="name_en" class="form-control" id="input_name_en">
+            <input type="text" name="name_en" class="form-control" id="input_name_en" aria-label="name en">
           </div>
           <div class="col-md-4">
             <label class="form-label fw-semibold" for="input_code">الكود</label>
@@ -30,7 +30,7 @@
           </div>
           <div class="col-md-4">
             <label class="form-label fw-semibold" for="input_id_number">رقم الهوية</label>
-            <input type="text" name="id_number" class="form-control" id="input_id_number">
+            <input type="text" name="id_number" class="form-control" id="input_id_number" aria-label="id number">
           </div>
           <div class="col-md-4">
             <label class="form-label fw-semibold">النوع</label>
@@ -60,37 +60,37 @@
 
           <div class="col-md-4">
             <label class="form-label fw-semibold" for="input_investment_amount">رأس المال</label>
-            <input type="number" name="investment_amount" class="form-control" value="0" step="0.01" id="input_investment_amount">
+            <input type="number" name="investment_amount" class="form-control" value="0" step="0.01" id="input_investment_amount" aria-label="investment amount">
           </div>
           <div class="col-md-4">
             <label class="form-label fw-semibold" for="input_share_percentage">نسبة الربح %</label>
-            <input type="number" name="share_percentage" class="form-control" value="0" step="0.01" max="100" id="input_share_percentage">
+            <input type="number" name="share_percentage" class="form-control" value="0" step="0.01" max="100" id="input_share_percentage" aria-label="share percentage">
           </div>
           <div class="col-md-4">
             <label class="form-label fw-semibold" for="input_fixed_monthly_amount">مبلغ شهري ثابت</label>
-            <input type="number" name="fixed_monthly_amount" class="form-control" value="0" step="0.01" id="input_fixed_monthly_amount">
+            <input type="number" name="fixed_monthly_amount" class="form-control" value="0" step="0.01" id="input_fixed_monthly_amount" aria-label="fixed monthly amount">
           </div>
 
           <div class="col-md-4">
             <label class="form-label fw-semibold" for="input_expense_share_percentage">نسبة المصاريف %</label>
-            <input type="number" name="expense_share_percentage" class="form-control" value="0" step="0.01" max="100" id="input_expense_share_percentage">
+            <input type="number" name="expense_share_percentage" class="form-control" value="0" step="0.01" max="100" id="input_expense_share_percentage" aria-label="expense share percentage">
           </div>
           <div class="col-md-4">
             <label class="form-label fw-semibold" for="input_loss_share_percentage">نسبة الخسارة %</label>
-            <input type="number" name="loss_share_percentage" class="form-control" value="0" step="0.01" max="100" id="input_loss_share_percentage">
+            <input type="number" name="loss_share_percentage" class="form-control" value="0" step="0.01" max="100" id="input_loss_share_percentage" aria-label="loss share percentage">
           </div>
           <div class="col-md-4">
             <label class="form-label fw-semibold" for="input_min_profit_threshold">حد أدنى للربح</label>
-            <input type="number" name="min_profit_threshold" class="form-control" value="0" step="0.01" id="input_min_profit_threshold">
+            <input type="number" name="min_profit_threshold" class="form-control" value="0" step="0.01" id="input_min_profit_threshold" aria-label="min profit threshold">
           </div>
 
           <div class="col-md-6">
             <label class="form-label fw-semibold" for="input_phone">الهاتف</label>
-            <input type="text" name="phone" class="form-control" id="input_phone">
+            <input type="text" name="phone" class="form-control" id="input_phone" aria-label="phone">
           </div>
           <div class="col-md-6">
             <label class="form-label fw-semibold" for="input_email">البريد</label>
-            <input type="email" name="email" class="form-control" id="input_email">
+            <input type="email" name="email" class="form-control" id="input_email" aria-label="email">
           </div>
           <div class="col-12">
             <label class="form-label fw-semibold">العنوان</label>

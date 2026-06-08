@@ -390,11 +390,11 @@ table.statement-table thead th {
   <form method="get" class="form-inline no-print">
     <div class="form-group mx-1 mb-2">
       <label for="date_from" class="sr-only">من تاريخ</label>
-      <input type="date" id="date_from" name="date_from" class="form-control form-control-sm" value="{{ active_filters.date_from }}">
+      <input type="date" id="date_from" name="date_from" class="form-control form-control-sm" value="{{ active_filters.date_from }}" aria-label="من تاريخ">
     </div>
     <div class="form-group mx-1 mb-2">
       <label for="date_to" class="sr-only">إلى تاريخ</label>
-      <input type="date" id="date_to" name="date_to" class="form-control form-control-sm" value="{{ active_filters.date_to }}">
+      <input type="date" id="date_to" name="date_to" class="form-control form-control-sm" value="{{ active_filters.date_to }}" aria-label="إلى تاريخ">
     </div>
     <div class="form-group mx-1 mb-2">
       <label for="transaction_type" class="sr-only">نوع الحركة</label>

@@ -80,7 +80,7 @@
   </div>
   <div class="card-body">
     <form method="POST" action="{{ url_for('cheques.create') }}" id="chequeForm" class="cheque-create-form">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
       
       <!-- النوع -->
       <div class="row">
@@ -169,14 +169,14 @@
           <div class="form-group">
             <label><i class="far fa-calendar"></i> تاريخ الإصدار: <span class="text-danger">*</span></label>
             <input type="date" name="issue_date" class="form-control" 
-                   value="{{ today }}" required>
+                   value="{{ today }}" required aria-label="issue date">
           </div>
         </div>
         
         <div class="col-md-6">
           <div class="form-group">
             <label><i class="far fa-calendar-check"></i> تاريخ الاستحقاق: <span class="text-danger">*</span></label>
-            <input type="date" name="due_date" class="form-control" required>
+            <input type="date" name="due_date" class="form-control" required aria-label="due date">
           </div>
         </div>
       </div>

@@ -15,20 +15,20 @@
         <div class="card-body">
           {% set form_data = form_data if form_data is defined else request.form %}
           <form method="post" action="">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
             
             <div class="row">
               <div class="col-md-6">
                 <div class="form-group">
                   <label for="input_name">الاسم (EN) *</label>
-                  <input type="text" name="name" class="form-control" required value="{{ form_data.get('name', '') }}" id="input_name">
+                  <input type="text" name="name" class="form-control" required value="{{ form_data.get('name', '') }}" id="input_name" aria-label="name">
                 </div>
               </div>
               
               <div class="col-md-6">
                 <div class="form-group">
                   <label for="input_name_ar">الاسم (AR) *</label>
-                  <input type="text" name="name_ar" class="form-control" required value="{{ form_data.get('name_ar', '') }}" id="input_name_ar">
+                  <input type="text" name="name_ar" class="form-control" required value="{{ form_data.get('name_ar', '') }}" id="input_name_ar" aria-label="name ar">
                 </div>
               </div>
             </div>
@@ -37,7 +37,7 @@
               <div class="col-md-4">
                 <div class="form-group">
                   <label for="input_rate">النسبة % *</label>
-                  <input type="number" name="rate" class="form-control" step="0.01" required value="{{ form_data.get('rate', '') }}" id="input_rate">
+                  <input type="number" name="rate" class="form-control" step="0.01" required value="{{ form_data.get('rate', '') }}" id="input_rate" aria-label="rate">
                 </div>
               </div>
               
@@ -73,7 +73,7 @@
               <div class="col-md-4">
                 <div class="form-group">
                   <div class="form-check mt-4">
-                    <input type="checkbox" name="is_percentage" id="is_percentage" class="form-check-input" {% if form_data.get('is_percentage') %}checked{% endif %}>
+                    <input type="checkbox" name="is_percentage" id="is_percentage" class="form-check-input" {% if form_data.get('is_percentage') %}checked{% endif %} aria-label="is percentage">
                     <label class="form-check-label" for="is_percentage">احتساب كنسبة مئوية</label>
                   </div>
                 </div>
@@ -81,13 +81,13 @@
               <div class="col-md-4">
                 <div class="form-group">
                   <label for="input_effective_from">ساري من *</label>
-                  <input type="date" name="effective_from" class="form-control" required value="{{ form_data.get('effective_from', '') }}" id="input_effective_from">
+                  <input type="date" name="effective_from" class="form-control" required value="{{ form_data.get('effective_from', '') }}" id="input_effective_from" aria-label="effective from">
                 </div>
               </div>
               <div class="col-md-4">
                 <div class="form-group">
                   <label for="input_effective_to">ساري إلى</label>
-                  <input type="date" name="effective_to" class="form-control" value="{{ form_data.get('effective_to', '') }}" id="input_effective_to">
+                  <input type="date" name="effective_to" class="form-control" value="{{ form_data.get('effective_to', '') }}" id="input_effective_to" aria-label="effective to">
                 </div>
               </div>
             </div>

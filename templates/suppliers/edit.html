@@ -73,7 +73,7 @@
   </div>
   
   <form method="POST" action="{{ url_for('suppliers.edit', id=supplier.id) }}" class="supplier-edit-form">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
     
     <div class="card-body">
       <!-- معلومات أساسية -->
@@ -93,7 +93,7 @@
               <span class="text-danger">*</span>
             </label>
             <input type="text" name="name" class="form-control" required
-                   value="{{ supplier.name }}">
+                   value="{{ supplier.name }}" aria-label="name">
           </div>
         </div>
         
@@ -103,7 +103,7 @@
               <i class="fas fa-font text-info"></i> الاسم بالإنجليزية
             </label>
             <input type="text" name="name_en" class="form-control"
-                   value="{{ supplier.name_en or '' }}">
+                   value="{{ supplier.name_en or '' }}" aria-label="name en">
           </div>
         </div>
         
@@ -113,7 +113,7 @@
               <i class="fas fa-building text-primary"></i> اسم الشركة
             </label>
             <input type="text" name="company_name" class="form-control"
-                   value="{{ supplier.company_name or '' }}">
+                   value="{{ supplier.company_name or '' }}" aria-label="company name">
           </div>
         </div>
       </div>
@@ -164,7 +164,7 @@
             <label>&nbsp;</label>
             <div class="custom-control custom-checkbox">
               <input type="checkbox" class="custom-control-input" id="is_verified" name="is_verified"
-                     {% if supplier.is_verified %}checked{% endif %}>
+                     {% if supplier.is_verified %}checked{% endif %} aria-label="is verified">
               <label class="custom-control-label" for="is_verified">
                 <i class="fas fa-check-circle text-success"></i> مورد موثوق
               </label>
@@ -188,7 +188,7 @@
           <div class="form-group">
             <label for="input_phone">الهاتف 1</label>
             <input type="text" name="phone" class="form-control"
-                   value="{{ supplier.phone or '' }}" id="input_phone">
+                   value="{{ supplier.phone or '' }}" id="input_phone" aria-label="phone">
           </div>
         </div>
         
@@ -196,7 +196,7 @@
           <div class="form-group">
             <label for="input_phone2">الهاتف 2</label>
             <input type="text" name="phone2" class="form-control"
-                   value="{{ supplier.phone2 or '' }}" id="input_phone2">
+                   value="{{ supplier.phone2 or '' }}" id="input_phone2" aria-label="phone2">
           </div>
         </div>
         
@@ -204,7 +204,7 @@
           <div class="form-group">
             <label for="input_email">{{ t('Email') }}</label>
             <input type="email" name="email" class="form-control"
-                   value="{{ supplier.email or '' }}" id="input_email">
+                   value="{{ supplier.email or '' }}" id="input_email" aria-label="email">
           </div>
         </div>
         
@@ -212,7 +212,7 @@
           <div class="form-group">
             <label for="input_website">الموقع الإلكتروني</label>
             <input type="url" name="website" class="form-control"
-                   value="{{ supplier.website or '' }}" id="input_website">
+                   value="{{ supplier.website or '' }}" id="input_website" aria-label="website">
           </div>
         </div>
       </div>
@@ -222,7 +222,7 @@
           <div class="form-group">
             <label for="input_city">{{ t('City') }}</label>
             <input type="text" name="city" class="form-control"
-                   value="{{ supplier.city or '' }}" id="input_city">
+                   value="{{ supplier.city or '' }}" id="input_city" aria-label="city">
           </div>
         </div>
         
@@ -230,7 +230,7 @@
           <div class="form-group">
             <label for="input_country">{{ t('Country') }}</label>
             <input type="text" name="country" class="form-control"
-                   value="{{ supplier.country or 'UAE' }}" id="input_country">
+                   value="{{ supplier.country or 'UAE' }}" id="input_country" aria-label="country">
           </div>
         </div>
         
@@ -238,7 +238,7 @@
           <div class="form-group">
             <label for="input_address">{{ t('Address') }}</label>
             <input type="text" name="address" class="form-control"
-                   value="{{ supplier.address or '' }}" id="input_address">
+                   value="{{ supplier.address or '' }}" id="input_address" aria-label="address">
           </div>
         </div>
       </div>
@@ -258,7 +258,7 @@
           <div class="form-group">
             <label for="input_tax_number">الرقم الضريبي (TRN)</label>
             <input type="text" name="tax_number" class="form-control"
-                   value="{{ supplier.tax_number or '' }}" id="input_tax_number">
+                   value="{{ supplier.tax_number or '' }}" id="input_tax_number" aria-label="tax number">
           </div>
         </div>
         
@@ -266,7 +266,7 @@
           <div class="form-group">
             <label for="input_commercial_registration">السجل التجاري</label>
             <input type="text" name="commercial_registration" class="form-control"
-                   value="{{ supplier.commercial_registration or '' }}" id="input_commercial_registration">
+                   value="{{ supplier.commercial_registration or '' }}" id="input_commercial_registration" aria-label="commercial registration">
           </div>
         </div>
         
@@ -274,7 +274,7 @@
           <div class="form-group">
             <label for="input_credit_limit">الحد الائتماني ({{ tenant_default_currency or 'AED' }})</label>
             <input type="number" name="credit_limit" class="form-control"
-                   value="{{ supplier.credit_limit or 0 }}" step="0.01" min="0" id="input_credit_limit">
+                   value="{{ supplier.credit_limit or 0 }}" step="0.01" min="0" id="input_credit_limit" aria-label="credit limit">
           </div>
         </div>
         
@@ -282,7 +282,7 @@
           <div class="form-group">
             <label for="input_payment_terms_days">شروط الدفع (أيام)</label>
             <input type="number" name="payment_terms_days" class="form-control"
-                   value="{{ supplier.payment_terms_days or 30 }}" min="0" id="input_payment_terms_days">
+                   value="{{ supplier.payment_terms_days or 30 }}" min="0" id="input_payment_terms_days" aria-label="payment terms days">
           </div>
         </div>
       </div>
@@ -294,7 +294,7 @@
           <div class="form-group">
             <label for="input_tags">الوسوم (Tags)</label>
             <input type="text" name="tags" class="form-control"
-                   value="{{ supplier.tags or '' }}" id="input_tags">
+                   value="{{ supplier.tags or '' }}" id="input_tags" aria-label="tags">
           </div>
         </div>
         

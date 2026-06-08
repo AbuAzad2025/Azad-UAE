@@ -16,10 +16,10 @@
     {% endif %}
 
     <form method="post" action="{{ url_for('shop.checkout', slug=store.store_slug) }}" id="checkout-form">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
       <div class="ps-hp" aria-hidden="true">
         <label for="input_website">Website</label>
-        <input type="text" name="website" tabindex="-1" autocomplete="off" id="input_website">
+        <input type="text" name="website" tabindex="-1" autocomplete="off" id="input_website" aria-label="website">
       </div>
 
       <div class="ps-form-group">
@@ -27,7 +27,7 @@
         <div class="ps-pay-methods" role="radiogroup">
           {% for pm in payment_methods %}
           <label class="ps-pay-option">
-            <input type="radio" name="payment_method" value="{{ pm.code }}" {% if loop.first %}checked{% endif %} required data-hint="{{ payment_hint(pm)|e }}">
+            <input type="radio" name="payment_method" value="{{ pm.code }}" {% if loop.first %}checked{% endif %} required data-hint="{{ payment_hint(pm)|e }}" aria-label="payment method">
             <span class="ps-pay-card">
               <i class="{{ pm.icon }}"></i>
               <span class="ps-pay-name">{{ pm.display_name(lang) }}</span>
@@ -40,11 +40,11 @@
 
       <div class="ps-form-group">
         <label for="customer_name">{{ t('name') }} *</label>
-        <input type="text" id="customer_name" name="customer_name" required minlength="2" autocomplete="name" value="{{ prefilled.name or '' }}">
+        <input type="text" id="customer_name" name="customer_name" required minlength="2" autocomplete="name" value="{{ prefilled.name or '' }}" aria-label="customer name">
       </div>
       <div class="ps-form-group">
         <label for="phone">{{ t('phone') }} *</label>
-        <input type="tel" id="phone" name="phone" required autocomplete="tel" value="{{ prefilled.phone or '' }}">
+        <input type="tel" id="phone" name="phone" required autocomplete="tel" value="{{ prefilled.phone or '' }}" aria-label="phone">
       </div>
       <div class="ps-form-group">
         <label for="address">{{ t('address') }} *</label>

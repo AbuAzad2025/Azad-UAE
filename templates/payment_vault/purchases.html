@@ -193,7 +193,7 @@
                                         </a>
                                         {% if purchase.payment_status == 'pending' and purchase.activation_status != 'activated' %}
                                         <form method="POST" action="{{ url_for('payment_vault.activate_purchase', id=purchase.id) }}" style="display: inline;">
-                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
                                             <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('هل تريد تفعيل هذه الباقة؟')" title="تأكيد">
                                                 <i class="fas fa-check"></i>
                                             </button>

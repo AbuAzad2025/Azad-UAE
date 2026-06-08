@@ -51,12 +51,12 @@
                     <div class="col-md-3">
                         <label for="input_from_date">من تاريخ</label>
                         <input type="date" name="from_date" class="form-control" 
-                               value="{{ request.args.get('from_date', '') }}" id="input_from_date">
+                               value="{{ request.args.get('from_date', '') }}" id="input_from_date" aria-label="from date">
                     </div>
                     <div class="col-md-3">
                         <label for="input_to_date">إلى تاريخ</label>
                         <input type="date" name="to_date" class="form-control" 
-                               value="{{ request.args.get('to_date', '') }}" id="input_to_date">
+                               value="{{ request.args.get('to_date', '') }}" id="input_to_date" aria-label="to date">
                     </div>
                     <div class="col-md-3">
                         <label>نوع التقرير</label>

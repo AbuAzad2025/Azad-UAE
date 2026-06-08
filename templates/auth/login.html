@@ -115,8 +115,8 @@
         {% endwith %}
 
         <form method="POST" action="{{ url_for('auth.login') }}" id="azadLoginForm" class="azad-login-form" autocomplete="on">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <input type="hidden" name="access_mode" id="access_mode" value="{{ access_mode or 'users' }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
+          <input type="hidden" name="access_mode" id="access_mode" value="{{ access_mode or 'users' }}" aria-label="access mode">
 
           <div class="azad-login-field">
             <label for="username">اسم المستخدم</label>
@@ -156,7 +156,7 @@
 
           <div class="azad-login-row">
             <label class="azad-login-remember">
-              <input type="checkbox" name="remember_me" id="remember" value="1" {% if remember_checked %}checked{% endif %}>
+              <input type="checkbox" name="remember_me" id="remember" value="1" {% if remember_checked %}checked{% endif %} aria-label="remember me">
               <span>تذكرني</span>
             </label>
             <a class="azad-login-forgot" href="{{ url_for('auth.support') }}">

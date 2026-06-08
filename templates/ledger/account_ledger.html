@@ -13,8 +13,8 @@
         <option value="{{ b.id }}" {{ 'selected' if selected_branch == b.id else '' }}>{{ b.name }} ({{ b.code }})</option>
         {% endfor %}
       </select>
-      <input type="hidden" name="date_from" value="{{ date_from or '' }}">
-      <input type="hidden" name="date_to" value="{{ date_to or '' }}">
+      <input type="hidden" name="date_from" value="{{ date_from or '' }}" aria-label="من تاريخ">
+      <input type="hidden" name="date_to" value="{{ date_to or '' }}" aria-label="إلى تاريخ">
     </form>
     <button onclick="window.print()" class="btn btn-secondary ml-2">
       <i class="fas fa-print mr-2"></i>طباعة

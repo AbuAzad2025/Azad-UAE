@@ -22,7 +22,7 @@
 {% block content %}
 <div class="card">
   <form method="POST" action="{{ url_for('expenses.edit', id=expense.id) }}">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
     
     <div class="card-body">
       <div class="row">
@@ -145,7 +145,7 @@
       </div>
       <div class="modal-body">
         <form id="addExpenseCategoryForm" method="POST" action="">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
           <div class="form-group">
             <label>
               <i class="fas fa-font text-primary"></i> الاسم بالإنجليزية

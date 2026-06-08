@@ -8,18 +8,18 @@
     </div>
     <div class="card-body">
       <form method="post">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
         <div class="row">
             <div class="col-md-6">
                 <div class="form-group">
                     <label for="input_name">الاسم الكامل (English)</label>
-                    <input type="text" name="name" class="form-control" required id="input_name">
+                    <input type="text" name="name" class="form-control" required id="input_name" aria-label="name">
                 </div>
             </div>
             <div class="col-md-6">
                 <div class="form-group">
                     <label for="input_name_ar">الاسم بالعربية</label>
-                    <input type="text" name="name_ar" class="form-control" id="input_name_ar">
+                    <input type="text" name="name_ar" class="form-control" id="input_name_ar" aria-label="name ar">
                 </div>
             </div>
         </div>
@@ -28,7 +28,7 @@
             <div class="col-md-4">
                 <div class="form-group">
                     <label for="input_phone">الهاتف</label>
-                    <input type="text" name="phone" class="form-control" id="input_phone">
+                    <input type="text" name="phone" class="form-control" id="input_phone" aria-label="phone">
                 </div>
             </div>
             <div class="col-md-4">
@@ -46,7 +46,7 @@
             <div class="col-md-4">
                 <div class="form-group">
                     <label for="input_joined_date">تاريخ الانضمام</label>
-                    <input type="date" name="joined_date" class="form-control" value="{{ now }}" id="input_joined_date">
+                    <input type="date" name="joined_date" class="form-control" value="{{ now }}" id="input_joined_date" aria-label="joined date">
                 </div>
             </div>
         </div>

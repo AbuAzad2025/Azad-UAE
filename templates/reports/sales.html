@@ -58,9 +58,9 @@
     <div class="d-flex align-items-center">
       <form method="get" class="form-inline mr-2">
         <label class="mr-2" for="input_date_from">من</label>
-        <input type="date" name="date_from" value="{{ date_from or '' }}" class="form-control form-control-sm mr-2" id="input_date_from">
+        <input type="date" name="date_from" value="{{ date_from or '' }}" class="form-control form-control-sm mr-2" id="input_date_from" aria-label="من تاريخ">
         <label class="mr-2" for="input_date_to">إلى</label>
-        <input type="date" name="date_to" value="{{ date_to or '' }}" class="form-control form-control-sm mr-2" id="input_date_to">
+        <input type="date" name="date_to" value="{{ date_to or '' }}" class="form-control form-control-sm mr-2" id="input_date_to" aria-label="إلى تاريخ">
         <label class="mr-2">الزبون</label>
         <select name="customer" class="form-control form-control-sm mr-2" style="min-width: 180px;" aria-label="customer">
           <option value="">الكل</option>

@@ -20,7 +20,7 @@
   <div class="card-body">
     {% set form_data = form_data if form_data is defined else request.form %}
     <form method="POST" action="{{ url_for('admin_ledger.add_account') }}" class="ledger-account-form">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
       <div class="row">
         <div class="col-md-6">
           <div class="form-group">
@@ -109,9 +109,9 @@
       <div class="row">
         <div class="col-md-6">
           <div class="form-check">
-            <input type="hidden" name="is_header" value="off">
+            <input type="hidden" name="is_header" value="off" aria-label="is header">
             <input type="checkbox" name="is_header" class="form-check-input" id="is_header" value="on"
-                   {% if form_data.get('is_header') == 'on' %}checked{% endif %}>
+                   {% if form_data.get('is_header') == 'on' %}checked{% endif %} aria-label="is header">
             <label class="form-check-label" for="is_header">
               حساب رئيسي (لا يقبل قيود مباشرة)
             </label>
@@ -120,9 +120,9 @@
         </div>
         <div class="col-md-6">
           <div class="form-check">
-            <input type="hidden" name="is_active" value="off">
+            <input type="hidden" name="is_active" value="off" aria-label="is active">
             <input type="checkbox" name="is_active" class="form-check-input" id="is_active" value="on"
-                   {% if form_data.get('is_active', 'on') == 'on' %}checked{% endif %}>
+                   {% if form_data.get('is_active', 'on') == 'on' %}checked{% endif %} aria-label="is active">
             <label class="form-check-label" for="is_active">
               حساب نشط
             </label>

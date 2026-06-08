@@ -74,7 +74,7 @@
 {% block content %}
 <div class="card">
   <form method="POST" action="{{ url_for('expenses.create') }}" class="expense-create-form">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
     
     <div class="card-body">
       <div class="row">
@@ -141,7 +141,7 @@
             <label>
               <i class="fas fa-exchange-alt text-secondary"></i> سعر الصرف
             </label>
-            <input type="number" name="exchange_rate" id="exchange_rate" class="form-control" value="1.00" step="0.000001" readonly>
+            <input type="number" name="exchange_rate" id="exchange_rate" class="form-control" value="1.00" step="0.000001" readonly aria-label="exchange rate">
           </div>
         </div>
       </div>
@@ -208,7 +208,7 @@
       </div>
       <div class="modal-body">
         <form id="addExpenseCategoryForm" method="POST" action="">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
           <div class="form-group">
             <label>
               <i class="fas fa-font text-primary"></i> الاسم بالإنجليزية

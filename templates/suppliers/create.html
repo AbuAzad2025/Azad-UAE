@@ -93,7 +93,7 @@
   </div>
   
   <form method="POST" action="{{ url_for('suppliers.create') }}" class="supplier-create-form">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
     
     <div class="card-body">
       <!-- معلومات أساسية -->
@@ -192,7 +192,7 @@
           <div class="form-group">
             <label>&nbsp;</label>
             <div class="custom-control custom-checkbox">
-              <input type="checkbox" class="custom-control-input" id="is_verified" name="is_verified">
+              <input type="checkbox" class="custom-control-input" id="is_verified" name="is_verified" aria-label="is verified">
               <label class="custom-control-label" for="is_verified">
                 <i class="fas fa-check-circle text-success"></i> مورد موثوق
               </label>
@@ -265,7 +265,7 @@
         <div class="col-md-4">
           <div class="form-group">
             <label for="input_country">{{ t('Country') }}</label>
-            <input type="text" name="country" class="form-control" value="UAE" id="input_country">
+            <input type="text" name="country" class="form-control" value="UAE" id="input_country" aria-label="country">
           </div>
         </div>
         

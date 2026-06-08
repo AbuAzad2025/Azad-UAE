@@ -14,7 +14,7 @@
   <div class="row">
     <div class="col-lg-8">
       <form method="POST" class="card shadow-sm">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
         <div class="card-header bg-primary text-white">
           <i class="bi bi-pencil-square me-2"></i>بيانات التينانت
         </div>
@@ -22,31 +22,31 @@
           <div class="row g-3">
             <div class="col-md-6">
               <label class="form-label fw-semibold" for="input_name_ar">الاسم العربي</label>
-              <input type="text" name="name_ar" class="form-control" value="{{ tenant.name_ar or '' }}" required id="input_name_ar">
+              <input type="text" name="name_ar" class="form-control" value="{{ tenant.name_ar or '' }}" required id="input_name_ar" aria-label="name ar">
             </div>
             <div class="col-md-6">
               <label class="form-label fw-semibold" for="input_name_en">الاسم الإنجليزي</label>
-              <input type="text" name="name_en" class="form-control" value="{{ tenant.name_en or '' }}" id="input_name_en">
+              <input type="text" name="name_en" class="form-control" value="{{ tenant.name_en or '' }}" id="input_name_en" aria-label="name en">
             </div>
             <div class="col-md-6">
               <label class="form-label fw-semibold" for="input_slug">الاسم الفريد (Slug)</label>
-              <input type="text" name="slug" class="form-control" value="{{ tenant.slug or '' }}" required id="input_slug">
+              <input type="text" name="slug" class="form-control" value="{{ tenant.slug or '' }}" required id="input_slug" aria-label="slug">
             </div>
             <div class="col-md-6">
               <label class="form-label fw-semibold" for="input_business_type">نوع النشاط</label>
-              <input type="text" name="business_type" class="form-control" value="{{ tenant.business_type or '' }}" id="input_business_type">
+              <input type="text" name="business_type" class="form-control" value="{{ tenant.business_type or '' }}" id="input_business_type" aria-label="business type">
             </div>
             <div class="col-md-6">
               <label class="form-label fw-semibold" for="input_phone_1">الهاتف 1</label>
-              <input type="text" name="phone_1" class="form-control" value="{{ tenant.phone_1 or '' }}" id="input_phone_1">
+              <input type="text" name="phone_1" class="form-control" value="{{ tenant.phone_1 or '' }}" id="input_phone_1" aria-label="phone 1">
             </div>
             <div class="col-md-6">
               <label class="form-label fw-semibold" for="input_phone_2">الهاتف 2</label>
-              <input type="text" name="phone_2" class="form-control" value="{{ tenant.phone_2 or '' }}" id="input_phone_2">
+              <input type="text" name="phone_2" class="form-control" value="{{ tenant.phone_2 or '' }}" id="input_phone_2" aria-label="phone 2">
             </div>
             <div class="col-md-6">
               <label class="form-label fw-semibold" for="input_email">البريد الإلكتروني</label>
-              <input type="email" name="email" class="form-control" value="{{ tenant.email or '' }}" id="input_email">
+              <input type="email" name="email" class="form-control" value="{{ tenant.email or '' }}" id="input_email" aria-label="email">
             </div>
             <div class="col-md-6">
               <label class="form-label fw-semibold">العملة الافتراضية</label>
@@ -62,39 +62,39 @@
             </div>
             <div class="col-md-4">
               <label class="form-label fw-semibold" for="input_max_users">حد المستخدمين</label>
-              <input type="number" name="max_users" class="form-control" value="{{ tenant.max_users or 5 }}" min="1" id="input_max_users">
+              <input type="number" name="max_users" class="form-control" value="{{ tenant.max_users or 5 }}" min="1" id="input_max_users" aria-label="max users">
             </div>
             <div class="col-md-4">
               <label class="form-label fw-semibold" for="input_max_products">حد المنتجات</label>
-              <input type="number" name="max_products" class="form-control" value="{{ tenant.max_products or 1000 }}" min="1" id="input_max_products">
+              <input type="number" name="max_products" class="form-control" value="{{ tenant.max_products or 1000 }}" min="1" id="input_max_products" aria-label="max products">
             </div>
             <div class="col-md-4">
               <label class="form-label fw-semibold" for="input_max_customers">حد العملاء</label>
-              <input type="number" name="max_customers" class="form-control" value="{{ tenant.max_customers or 500 }}" min="1" id="input_max_customers">
+              <input type="number" name="max_customers" class="form-control" value="{{ tenant.max_customers or 500 }}" min="1" id="input_max_customers" aria-label="max customers">
             </div>
             <div class="col-md-4">
               <label class="form-label fw-semibold" for="input_max_suppliers">حد الموردين</label>
-              <input type="number" name="max_suppliers" class="form-control" value="{{ tenant.max_suppliers or 200 }}" min="1" id="input_max_suppliers">
+              <input type="number" name="max_suppliers" class="form-control" value="{{ tenant.max_suppliers or 200 }}" min="1" id="input_max_suppliers" aria-label="max suppliers">
             </div>
             <div class="col-md-4">
               <label class="form-label fw-semibold" for="input_max_branches">حد الفروع</label>
-              <input type="number" name="max_branches" class="form-control" value="{{ tenant.max_branches or 3 }}" min="1" id="input_max_branches">
+              <input type="number" name="max_branches" class="form-control" value="{{ tenant.max_branches or 3 }}" min="1" id="input_max_branches" aria-label="max branches">
             </div>
             <div class="col-md-4">
               <label class="form-label fw-semibold" for="input_max_warehouses">حد المستودعات</label>
-              <input type="number" name="max_warehouses" class="form-control" value="{{ tenant.max_warehouses or 2 }}" min="1" id="input_max_warehouses">
+              <input type="number" name="max_warehouses" class="form-control" value="{{ tenant.max_warehouses or 2 }}" min="1" id="input_max_warehouses" aria-label="max warehouses">
             </div>
             <div class="col-md-4">
               <label class="form-label fw-semibold" for="input_max_invoices_per_month">حد الفواتير/شهر</label>
-              <input type="number" name="max_invoices_per_month" class="form-control" value="{{ tenant.max_invoices_per_month or 1000 }}" min="1" id="input_max_invoices_per_month">
+              <input type="number" name="max_invoices_per_month" class="form-control" value="{{ tenant.max_invoices_per_month or 1000 }}" min="1" id="input_max_invoices_per_month" aria-label="max invoices per month">
             </div>
             <div class="col-md-4">
               <label class="form-label fw-semibold" for="input_max_sales_per_month">حد المبيعات/شهر</label>
-              <input type="number" name="max_sales_per_month" class="form-control" value="{{ tenant.max_sales_per_month or 5000 }}" min="1" id="input_max_sales_per_month">
+              <input type="number" name="max_sales_per_month" class="form-control" value="{{ tenant.max_sales_per_month or 5000 }}" min="1" id="input_max_sales_per_month" aria-label="max sales per month">
             </div>
             <div class="col-md-4">
               <label class="form-label fw-semibold" for="input_data_retention_days">حفظ البيانات (يوم)</label>
-              <input type="number" name="data_retention_days" class="form-control" value="{{ tenant.data_retention_days or 365 }}" min="1" id="input_data_retention_days">
+              <input type="number" name="data_retention_days" class="form-control" value="{{ tenant.data_retention_days or 365 }}" min="1" id="input_data_retention_days" aria-label="data retention days">
             </div>
           </div>
 
@@ -103,43 +103,43 @@
           <div class="row g-3">
             <div class="col-md-3">
               <div class="form-check form-switch">
-                <input class="form-check-input" type="checkbox" name="enable_pos" id="enable_pos" {% if tenant.enable_pos %}checked{% endif %}>
+                <input class="form-check-input" type="checkbox" name="enable_pos" id="enable_pos" {% if tenant.enable_pos %}checked{% endif %} aria-label="enable pos">
                 <label class="form-check-label" for="enable_pos">POS كاشير</label>
               </div>
             </div>
             <div class="col-md-3">
               <div class="form-check form-switch">
-                <input class="form-check-input" type="checkbox" name="enable_payroll" id="enable_payroll" {% if tenant.enable_payroll %}checked{% endif %}>
+                <input class="form-check-input" type="checkbox" name="enable_payroll" id="enable_payroll" {% if tenant.enable_payroll %}checked{% endif %} aria-label="enable payroll">
                 <label class="form-check-label" for="enable_payroll">الرواتب</label>
               </div>
             </div>
             <div class="col-md-3">
               <div class="form-check form-switch">
-                <input class="form-check-input" type="checkbox" name="enable_cheques" id="enable_cheques" {% if tenant.enable_cheques %}checked{% endif %}>
+                <input class="form-check-input" type="checkbox" name="enable_cheques" id="enable_cheques" {% if tenant.enable_cheques %}checked{% endif %} aria-label="enable cheques">
                 <label class="form-check-label" for="enable_cheques">الشيكات</label>
               </div>
             </div>
             <div class="col-md-3">
               <div class="form-check form-switch">
-                <input class="form-check-input" type="checkbox" name="enable_expenses" id="enable_expenses" {% if tenant.enable_expenses %}checked{% endif %}>
+                <input class="form-check-input" type="checkbox" name="enable_expenses" id="enable_expenses" {% if tenant.enable_expenses %}checked{% endif %} aria-label="enable expenses">
                 <label class="form-check-label" for="enable_expenses">المصاريف</label>
               </div>
             </div>
             <div class="col-md-3">
               <div class="form-check form-switch">
-                <input class="form-check-input" type="checkbox" name="enable_store" id="enable_store" {% if tenant.enable_store %}checked{% endif %}>
+                <input class="form-check-input" type="checkbox" name="enable_store" id="enable_store" {% if tenant.enable_store %}checked{% endif %} aria-label="enable store">
                 <label class="form-check-label" for="enable_store">المتجر الإلكتروني</label>
               </div>
             </div>
             <div class="col-md-3">
               <div class="form-check form-switch">
-                <input class="form-check-input" type="checkbox" name="allow_data_export" id="allow_data_export" {% if tenant.allow_data_export %}checked{% endif %}>
+                <input class="form-check-input" type="checkbox" name="allow_data_export" id="allow_data_export" {% if tenant.allow_data_export %}checked{% endif %} aria-label="allow data export">
                 <label class="form-check-label" for="allow_data_export">تصدير البيانات</label>
               </div>
             </div>
             <div class="col-md-3">
               <div class="form-check form-switch">
-                <input class="form-check-input" type="checkbox" name="allow_custom_integrations" id="allow_custom_integrations" {% if tenant.allow_custom_integrations %}checked{% endif %}>
+                <input class="form-check-input" type="checkbox" name="allow_custom_integrations" id="allow_custom_integrations" {% if tenant.allow_custom_integrations %}checked{% endif %} aria-label="allow custom integrations">
                 <label class="form-check-label" for="allow_custom_integrations">تكاملات مخصصة</label>
               </div>
             </div>

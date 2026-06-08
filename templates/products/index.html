@@ -278,15 +278,15 @@
       </div>
       <div class="modal-body">
         <form id="stockForm" method="POST" action="">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <input type="hidden" id="productId" name="product_id">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
+          <input type="hidden" id="productId" name="product_id" aria-label="product id">
           <div class="form-group">
             <label for="productName">اسم المنتج</label>
-            <input type="text" id="productName" name="product_name" class="form-control" readonly autocomplete="off">
+            <input type="text" id="productName" name="product_name" class="form-control" readonly autocomplete="off" aria-label="product name">
           </div>
           <div class="form-group">
             <label for="currentStock">المخزون الحالي</label>
-            <input type="number" id="currentStock" name="current_stock" class="form-control" readonly autocomplete="off">
+            <input type="number" id="currentStock" name="current_stock" class="form-control" readonly autocomplete="off" aria-label="current stock">
           </div>
           <div class="form-group">
             <label for="adjustmentType">نوع التعديل</label>
@@ -299,7 +299,7 @@
           </div>
           <div class="form-group">
             <label for="adjustmentQuantity">{{ t('Quantity') }}</label>
-            <input type="number" id="adjustmentQuantity" name="adjustment_quantity" class="form-control" step="0.001" min="0" required autocomplete="off">
+            <input type="number" id="adjustmentQuantity" name="adjustment_quantity" class="form-control" step="0.001" min="0" required autocomplete="off" aria-label="adjustment quantity">
           </div>
           <div class="form-group">
             <label for="adjustmentReason">السبب</label>

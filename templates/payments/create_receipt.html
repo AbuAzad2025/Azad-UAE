@@ -273,7 +273,7 @@
 
   <form method="POST" action="{% if sale %}{{ url_for('payments.create_from_sale', sale_id=sale.id) }}{% elif purchase %}{{ url_for('payments.create_payment', purchase_id=purchase.id) }}{% else %}{{ url_for('payments.create_receipt') }}{% endif %}" class="receipt-create-form">
 
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 
     
 
@@ -331,7 +331,7 @@
 
             </label>
 
-            <input type="text" class="form-control" id="supplier_display" name="supplier_display" value="{{ supplier.name if supplier else purchase.supplier_name }}" readonly>
+            <input type="text" class="form-control" id="supplier_display" name="supplier_display" value="{{ supplier.name if supplier else purchase.supplier_name }}" readonly aria-label="supplier display">
 
           </div>
 
@@ -451,7 +451,7 @@
 
                    value="{% if purchase %}{{ purchase.exchange_rate }}{% elif sale %}{{ sale.exchange_rate }}{% else %}1{% endif %}" 
 
-                   readonly style="background-color: #f8f9fa;">
+                   readonly style="background-color: #f8f9fa;" aria-label="exchange rate">
 
             <small class="form-text text-muted">
 
@@ -547,7 +547,7 @@
 
             <label><i class="fas fa-calendar"></i> تاريخ استحقاق الشيك <span class="text-danger">*</span></label>
 
-            <input type="date" name="cheque_date" class="form-control">
+            <input type="date" name="cheque_date" class="form-control" aria-label="cheque date">
 
           </div>
 

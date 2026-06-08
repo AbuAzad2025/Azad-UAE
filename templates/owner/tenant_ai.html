@@ -56,19 +56,19 @@
             </td>
             <td class="text-center">
               <form method="POST" action="{{ url_for('owner.tenant_ai_toggle', tenant_id=tenant.id) }}" class="d-inline">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
                 <select name="ai_access_level" class="form-control form-control-sm d-inline-block" style="width: 120px;" aria-label="ai access level">
                   <option value="basic" {% if (tenant_ai_levels.get(tenant.id, 'execute') or 'execute')|lower == 'basic' %}selected{% endif %}>Basic</option>
                   <option value="advanced" {% if (tenant_ai_levels.get(tenant.id, 'execute') or 'execute')|lower == 'advanced' %}selected{% endif %}>Advanced</option>
                   <option value="execute" {% if (tenant_ai_levels.get(tenant.id, 'execute') or 'execute')|lower == 'execute' %}selected{% endif %}>Execute</option>
                 </select>
                 {% if tenant.enable_ai %}
-                  <input type="hidden" name="enable_ai" value="0">
+                  <input type="hidden" name="enable_ai" value="0" aria-label="enable ai">
                   <button type="submit" class="btn btn-sm btn-outline-danger">
                     <i class="fas fa-ban mr-1"></i>إيقاف للتينانت
                   </button>
                 {% else %}
-                  <input type="hidden" name="enable_ai" value="1">
+                  <input type="hidden" name="enable_ai" value="1" aria-label="enable ai">
                   <button type="submit" class="btn btn-sm btn-outline-success">
                     <i class="fas fa-power-off mr-1"></i>تفعيل للتينانت
                   </button>

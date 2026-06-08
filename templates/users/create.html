@@ -98,7 +98,7 @@
   
   {% set form_data = form_data if form_data is defined else request.form %}
   <form method="POST" action="{{ url_for('users.create') }}" id="createUserForm">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
     
     <div class="card-body">
       

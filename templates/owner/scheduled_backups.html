@@ -93,7 +93,7 @@
         </div>
 
         <form method="POST" action="">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
           <div class="form-group">
             <label><i class="fas fa-sync"></i> التكرار:</label>
             <select name="frequency" class="form-control" required aria-label="frequency">
@@ -107,7 +107,7 @@
           <div class="form-group">
             <label><i class="fas fa-clock"></i> الوقت المفضل:</label>
             <input type="time" name="backup_time" class="form-control" 
-                   value="{{ settings.backup_time }}" required>
+                   value="{{ settings.backup_time }}" required aria-label="backup time">
             <small class="form-text text-muted">
               يُنصح باختيار وقت قليل الاستخدام (مثل 2:00 صباحاً)
             </small>
@@ -116,7 +116,7 @@
           <div class="form-group">
             <label><i class="fas fa-layer-group"></i> عدد النسخ المحفوظة:</label>
             <input type="number" name="keep_count" class="form-control" 
-                   value="{{ settings.keep_count }}" min="3" max="50" required>
+                   value="{{ settings.keep_count }}" min="3" max="50" required aria-label="keep count">
             <small class="form-text text-muted">
               الحد الأدنى: 3 | الحد الأقصى: 50
             </small>
@@ -124,7 +124,7 @@
 
           <div class="custom-control custom-switch mb-3">
             <input type="checkbox" class="custom-control-input" id="enableSchedule" 
-                   name="enabled" {% if settings.enabled %}checked{% endif %}>
+                   name="enabled" {% if settings.enabled %}checked{% endif %} aria-label="enabled">
             <label class="custom-control-label" for="enableSchedule">
               <strong>تفعيل النسخ الاحتياطي التلقائي</strong>
             </label>
@@ -139,7 +139,7 @@
 
         <div class="text-center">
           <form method="POST" action="{{ url_for('owner.backup_now') }}" style="display: inline;">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
             <button type="submit" class="btn btn-success">
               <i class="fas fa-download"></i> نسخة احتياطية الآن
             </button>

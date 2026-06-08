@@ -94,15 +94,15 @@
                 </button>
             </div>
             <form method="POST" action="{{ url_for('products.create_category') }}">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
                 <div class="modal-body">
                     <div class="form-group">
                         <label for="name">الاسم:</label>
-                        <input type="text" class="form-control" id="name" name="name" required>
+                        <input type="text" class="form-control" id="name" name="name" required aria-label="name">
                     </div>
                     <div class="form-group">
                         <label for="name_ar">الاسم بالعربية:</label>
-                        <input type="text" class="form-control" id="name_ar" name="name_ar">
+                        <input type="text" class="form-control" id="name_ar" name="name_ar" aria-label="name ar">
                     </div>
                     <div class="form-group">
                         <label for="description">الوصف:</label>

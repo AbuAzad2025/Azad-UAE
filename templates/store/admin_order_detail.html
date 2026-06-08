@@ -226,13 +226,13 @@
 
         <form method="post" action="{{ url_for('store.admin_order_confirm', order_id=order.id) }}" class="mb-2">
 
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 
           {% if order.checkout_payment_method != 'cod' and order.payment_status != 'paid' %}
 
           <div class="custom-control custom-checkbox mb-2">
 
-            <input type="checkbox" class="custom-control-input" id="mark_paid" name="mark_paid">
+            <input type="checkbox" class="custom-control-input" id="mark_paid" name="mark_paid" aria-label="mark paid">
 
             <label class="custom-control-label" for="mark_paid">تسجيل الدفع مع التأكيد</label>
 
@@ -242,7 +242,7 @@
 
           <div class="custom-control custom-checkbox mb-2">
 
-            <input type="checkbox" class="custom-control-input" id="mark_paid" name="mark_paid">
+            <input type="checkbox" class="custom-control-input" id="mark_paid" name="mark_paid" aria-label="mark paid">
 
             <label class="custom-control-label" for="mark_paid">استلام نقداً (COD) — تسجيل الدفع</label>
 
@@ -260,7 +260,7 @@
 
         <form method="post" action="{{ url_for('store.admin_order_cancel', order_id=order.id) }}" onsubmit="return confirm('إلغاء الطلب {{ order.sale_number }}؟');">
 
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 
           <button type="submit" class="btn btn-outline-danger btn-block"><i class="fas fa-times mr-1"></i>إلغاء الطلب</button>
 
@@ -274,7 +274,7 @@
 
         <form method="post" action="{{ url_for('store.admin_order_cancel', order_id=order.id) }}" onsubmit="return confirm('إلغاء طلب مؤكد سيُعيد المخزون ويعكس القيود — متابعة؟');">
 
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 
           <button type="submit" class="btn btn-outline-danger btn-block"><i class="fas fa-ban mr-1"></i>إلغاء (مع عكس المخزون)</button>
 

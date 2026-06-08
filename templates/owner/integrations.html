@@ -45,14 +45,14 @@
                             <hr>
                             
                             <form method="POST" action="{{ url_for('owner.update_integration', service='whatsapp') }}">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
                                 
                                 <div class="form-group">
                                     <label>
                                         <i class="fas fa-toggle-on text-success mr-1"></i>تفعيل WhatsApp
                                     </label>
                                     <div class="custom-control custom-switch custom-switch-on-success">
-                                        <input type="checkbox" class="custom-control-input" id="whatsapp_enabled" name="enabled" {% if integrations.whatsapp.enabled %}checked{% endif %}>
+                                        <input type="checkbox" class="custom-control-input" id="whatsapp_enabled" name="enabled" {% if integrations.whatsapp.enabled %}checked{% endif %} aria-label="enabled">
                                         <label class="custom-control-label" for="whatsapp_enabled">تفعيل الإرسال التلقائي عبر WhatsApp</label>
                                     </div>
                                 </div>
@@ -130,14 +130,14 @@
                             <hr>
                             
                             <form method="POST" action="{{ url_for('owner.update_integration', service='email') }}">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
                                 
                                 <div class="form-group">
                                     <label>
                                         <i class="fas fa-toggle-on text-success mr-1"></i>تفعيل البريد الإلكتروني
                                     </label>
                                     <div class="custom-control custom-switch custom-switch-on-success">
-                                        <input type="checkbox" class="custom-control-input" id="email_enabled" name="enabled" {% if integrations.email.enabled %}checked{% endif %}>
+                                        <input type="checkbox" class="custom-control-input" id="email_enabled" name="enabled" {% if integrations.email.enabled %}checked{% endif %} aria-label="enabled">
                                         <label class="custom-control-label" for="email_enabled">تفعيل الإرسال التلقائي عبر Email</label>
                                     </div>
                                 </div>
@@ -259,14 +259,14 @@
                             <hr>
                             
                             <form method="POST" action="{{ url_for('owner.update_integration', service='redis') }}">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
                                 
                                 <div class="form-group">
                                     <label>
                                         <i class="fas fa-toggle-on text-success mr-1"></i>تفعيل Redis
                                     </label>
                                     <div class="custom-control custom-switch custom-switch-on-success">
-                                        <input type="checkbox" class="custom-control-input" id="redis_enabled" name="enabled" {% if integrations.redis.enabled %}checked{% endif %}>
+                                        <input type="checkbox" class="custom-control-input" id="redis_enabled" name="enabled" {% if integrations.redis.enabled %}checked{% endif %} aria-label="enabled">
                                         <label class="custom-control-label" for="redis_enabled">تفعيل Redis Cache</label>
                                     </div>
                                 </div>
@@ -333,14 +333,14 @@
                             <hr>
                             
                             <form method="POST" action="{{ url_for('owner.update_integration', service='currency_api') }}">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
                                 
                                 <div class="form-group">
                                     <label>
                                         <i class="fas fa-toggle-on text-success mr-1"></i>تفعيل API سعر الصرف
                                     </label>
                                     <div class="custom-control custom-switch custom-switch-on-success">
-                                        <input type="checkbox" class="custom-control-input" id="currency_enabled" name="enabled" {% if integrations.currency_api.enabled %}checked{% endif %}>
+                                        <input type="checkbox" class="custom-control-input" id="currency_enabled" name="enabled" {% if integrations.currency_api.enabled %}checked{% endif %} aria-label="enabled">
                                         <label class="custom-control-label" for="currency_enabled">جلب الأسعار تلقائياً من الإنترنت</label>
                                     </div>
                                 </div>

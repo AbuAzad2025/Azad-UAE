@@ -97,23 +97,23 @@
         </div>
         <div class="card-body">
           <form method="POST" action="{{ url_for('main.my_profile_update') }}">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
             <div class="row g-3">
               <div class="col-md-6">
                 <label class="form-label fw-semibold" for="profile_full_name">الاسم الكامل (إنجليزي)</label>
-                <input type="text" id="profile_full_name" name="full_name" class="form-control" value="{{ user.full_name or '' }}">
+                <input type="text" id="profile_full_name" name="full_name" class="form-control" value="{{ user.full_name or '' }}" aria-label="full name">
               </div>
               <div class="col-md-6">
                 <label class="form-label fw-semibold" for="profile_full_name_ar">الاسم الكامل (عربي)</label>
-                <input type="text" id="profile_full_name_ar" name="full_name_ar" class="form-control" value="{{ user.full_name_ar or '' }}">
+                <input type="text" id="profile_full_name_ar" name="full_name_ar" class="form-control" value="{{ user.full_name_ar or '' }}" aria-label="full name ar">
               </div>
               <div class="col-md-6">
                 <label class="form-label fw-semibold" for="profile_email">البريد الإلكتروني</label>
-                <input type="email" id="profile_email" name="email" class="form-control" value="{{ user.email or '' }}">
+                <input type="email" id="profile_email" name="email" class="form-control" value="{{ user.email or '' }}" aria-label="email">
               </div>
               <div class="col-md-6">
                 <label class="form-label fw-semibold" for="profile_phone">رقم الهاتف</label>
-                <input type="text" id="profile_phone" name="phone" class="form-control" value="{{ user.phone or '' }}">
+                <input type="text" id="profile_phone" name="phone" class="form-control" value="{{ user.phone or '' }}" aria-label="phone">
               </div>
             </div>
 

@@ -99,7 +99,7 @@
 <div class="content">
   <div class="container-fluid">
     <form method="POST" action="{{ url_for('owner.company_info') }}" enctype="multipart/form-data">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
       
       <!-- معلومات أساسية -->
       <div class="card">
@@ -111,19 +111,19 @@
             <div class="col-xl-4 col-lg-6">
               <div class="form-group">
                 <label for="input_name_ar">الاسم بالعربي *</label>
-                <input type="text" name="name_ar" class="form-control compact-control" value="{{ tenant.name_ar or '' }}" required id="input_name_ar">
+                <input type="text" name="name_ar" class="form-control compact-control" value="{{ tenant.name_ar or '' }}" required id="input_name_ar" aria-label="name ar">
               </div>
             </div>
             <div class="col-xl-4 col-lg-6">
               <div class="form-group">
                 <label for="input_name_en">الاسم بالإنجليزي</label>
-                <input type="text" name="name_en" class="form-control compact-control" value="{{ tenant.name_en or '' }}" id="input_name_en">
+                <input type="text" name="name_en" class="form-control compact-control" value="{{ tenant.name_en or '' }}" id="input_name_en" aria-label="name en">
               </div>
             </div>
             <div class="col-xl-4 col-lg-12">
               <div class="form-group">
                 <label for="input_slug">الكود (Slug)</label>
-                <input type="text" name="slug" class="form-control compact-control" value="{{ tenant.slug or '' }}" pattern="[a-z0-9-]+" id="input_slug">
+                <input type="text" name="slug" class="form-control compact-control" value="{{ tenant.slug or '' }}" pattern="[a-z0-9-]+" id="input_slug" aria-label="slug">
                 <small class="text-muted">حروف صغيرة وأرقام وشرطة فقط</small>
               </div>
             </div>
@@ -178,7 +178,7 @@
             <div class="col-xl-4 col-lg-5 col-md-6 col-sm-8">
               <div class="form-group">
                 <label for="input_city">{{ t('City') }}</label>
-                <input type="text" name="city" class="form-control compact-control" value="{{ tenant.city or '' }}" id="input_city">
+                <input type="text" name="city" class="form-control compact-control" value="{{ tenant.city or '' }}" id="input_city" aria-label="city">
               </div>
             </div>
             <div class="col-xl-4 col-lg-6 col-md-7">
@@ -204,25 +204,25 @@
             <div class="col-md-3">
               <div class="form-group">
                 <label for="input_phone_1">هاتف 1</label>
-                <input type="tel" name="phone_1" class="form-control" value="{{ tenant.phone_1 or '' }}" id="input_phone_1">
+                <input type="tel" name="phone_1" class="form-control" value="{{ tenant.phone_1 or '' }}" id="input_phone_1" aria-label="phone 1">
               </div>
             </div>
             <div class="col-md-3">
               <div class="form-group">
                 <label for="input_phone_2">هاتف 2</label>
-                <input type="tel" name="phone_2" class="form-control" value="{{ tenant.phone_2 or '' }}" id="input_phone_2">
+                <input type="tel" name="phone_2" class="form-control" value="{{ tenant.phone_2 or '' }}" id="input_phone_2" aria-label="phone 2">
               </div>
             </div>
             <div class="col-md-3">
               <div class="form-group">
                 <label for="input_mobile">موبايل</label>
-                <input type="tel" name="mobile" class="form-control" value="{{ tenant.mobile or '' }}" id="input_mobile">
+                <input type="tel" name="mobile" class="form-control" value="{{ tenant.mobile or '' }}" id="input_mobile" aria-label="mobile">
               </div>
             </div>
             <div class="col-md-3">
               <div class="form-group">
                 <label for="input_email">{{ t('Email') }}</label>
-                <input type="email" name="email" class="form-control" value="{{ tenant.email or '' }}" id="input_email">
+                <input type="email" name="email" class="form-control" value="{{ tenant.email or '' }}" id="input_email" aria-label="email">
               </div>
             </div>
           </div>
@@ -243,19 +243,19 @@
             <div class="col-md-4">
               <div class="form-group">
                 <label for="input_tax_number">الرقم الضريبي (TRN)</label>
-                <input type="text" name="tax_number" class="form-control" value="{{ tenant.tax_number or '' }}" id="input_tax_number">
+                <input type="text" name="tax_number" class="form-control" value="{{ tenant.tax_number or '' }}" id="input_tax_number" aria-label="tax number">
               </div>
             </div>
             <div class="col-md-4">
               <div class="form-group">
                 <label for="input_commercial_register">السجل التجاري</label>
-                <input type="text" name="commercial_register" class="form-control" value="{{ tenant.commercial_register or '' }}" id="input_commercial_register">
+                <input type="text" name="commercial_register" class="form-control" value="{{ tenant.commercial_register or '' }}" id="input_commercial_register" aria-label="commercial register">
               </div>
             </div>
             <div class="col-md-4">
               <div class="form-group">
                 <label for="input_license_number">رقم الترخيص</label>
-                <input type="text" name="license_number" class="form-control" value="{{ tenant.license_number or '' }}" id="input_license_number">
+                <input type="text" name="license_number" class="form-control" value="{{ tenant.license_number or '' }}" id="input_license_number" aria-label="license number">
               </div>
             </div>
           </div>
@@ -272,13 +272,13 @@
             <div class="col-md-6">
               <div class="form-group">
                 <label for="input_brand_color_primary">اللون الأساسي</label>
-                <input type="color" name="brand_color_primary" class="form-control" value="{{ tenant.brand_color_primary or '#007A3D' }}" id="input_brand_color_primary">
+                <input type="color" name="brand_color_primary" class="form-control" value="{{ tenant.brand_color_primary or '#007A3D' }}" id="input_brand_color_primary" aria-label="brand color primary">
               </div>
             </div>
             <div class="col-md-6">
               <div class="form-group">
                 <label for="input_brand_color_secondary">اللون الثانوي</label>
-                <input type="color" name="brand_color_secondary" class="form-control" value="{{ tenant.brand_color_secondary or '#D4AF37' }}" id="input_brand_color_secondary">
+                <input type="color" name="brand_color_secondary" class="form-control" value="{{ tenant.brand_color_secondary or '#D4AF37' }}" id="input_brand_color_secondary" aria-label="brand color secondary">
               </div>
             </div>
           </div>

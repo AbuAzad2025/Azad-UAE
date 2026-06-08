@@ -8,18 +8,18 @@
     </div>
     <div class="card-body">
       <form method="post">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
         <div class="row">
           <div class="col-md-6">
             <div class="form-group">
               <label for="input_name">الاسم *</label>
-              <input type="text" name="name" class="form-control" required id="input_name">
+              <input type="text" name="name" class="form-control" required id="input_name" aria-label="name">
             </div>
           </div>
           <div class="col-md-6">
             <div class="form-group">
               <label for="input_code">الكود (مثال: HQ, HEB) *</label>
-              <input type="text" name="code" class="form-control" required id="input_code">
+              <input type="text" name="code" class="form-control" required id="input_code" aria-label="code">
             </div>
           </div>
         </div>
@@ -27,13 +27,13 @@
           <div class="col-md-6">
             <div class="form-group">
               <label for="input_city">المدينة</label>
-              <input type="text" name="city" class="form-control" id="input_city">
+              <input type="text" name="city" class="form-control" id="input_city" aria-label="city">
             </div>
           </div>
           <div class="col-md-6">
             <div class="form-group">
               <label for="input_phone">رقم الهاتف</label>
-              <input type="text" name="phone" class="form-control" id="input_phone">
+              <input type="text" name="phone" class="form-control" id="input_phone" aria-label="phone">
             </div>
           </div>
         </div>
@@ -42,7 +42,7 @@
           <textarea name="address" class="form-control"></textarea>
         </div>
         <div class="form-group form-check">
-          <input type="checkbox" name="is_main" class="form-check-input" id="isMain">
+          <input type="checkbox" name="is_main" class="form-check-input" id="isMain" aria-label="is main">
           <label class="form-check-label" for="isMain">هذا هو الفرع الرئيسي</label>
         </div>
         <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> حفظ</button>

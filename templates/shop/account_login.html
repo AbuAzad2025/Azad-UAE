@@ -5,15 +5,15 @@
   <h2 style="margin:0 0 1rem;font-weight:800;">{{ t('login') }}</h2>
   <p class="ps-card-meta">{{ t('login_required') }}</p>
   <form method="post">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    {% if next_url %}<input type="hidden" name="next" value="{{ next_url }}">{% endif %}
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
+    {% if next_url %}<input type="hidden" name="next" value="{{ next_url }}" aria-label="next">{% endif %}
     <div class="ps-form-group">
       <label for="login_email">{{ t('email') }}</label>
-      <input type="email" id="login_email" name="email" required autocomplete="email" dir="ltr">
+      <input type="email" id="login_email" name="email" required autocomplete="email" dir="ltr" aria-label="email">
     </div>
     <div class="ps-form-group">
       <label for="login_password">{{ t('password') }}</label>
-      <input type="password" id="login_password" name="password" required minlength="6" autocomplete="current-password">
+      <input type="password" id="login_password" name="password" required minlength="6" autocomplete="current-password" aria-label="password">
     </div>
     <button type="submit" class="ps-btn ps-btn-primary ps-btn-block">{{ t('login') }}</button>
   </form>

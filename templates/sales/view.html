@@ -735,7 +735,7 @@
 
           <form id="cancelForm" action="{{ url_for('sales.cancel', id=sale.id) }}" method="POST" style="display:none;">
 
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 
           </form>
 
@@ -753,7 +753,7 @@
 
           <form id="deleteForm" action="{{ url_for('sales.delete', id=sale.id) }}" method="POST" style="display:none;">
 
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 
           </form>
 
@@ -797,9 +797,9 @@
 
         <form id="returnForm" method="POST" action="">
 
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 
-          <input type="hidden" id="return_sale_id" name="return_sale_id" value="{{ sale.id }}">
+          <input type="hidden" id="return_sale_id" name="return_sale_id" value="{{ sale.id }}" aria-label="return sale id">
 
           <div class="table-responsive">
 
@@ -837,7 +837,7 @@
 
                     <input type="number" class="form-control return-qty" id="return_qty_{{ line.id }}" name="return_qty_{{ line.id }}"
 
-                           min="0" max="{{ line.quantity }}" value="0" step="any">
+                           min="0" max="{{ line.quantity }}" value="0" step="any" aria-label="return qty {{ line.id }}">
 
                   </td>
 

@@ -22,7 +22,7 @@
 
       <form method="POST" enctype="multipart/form-data">
 
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 
         <div class="card-body">
 
@@ -37,7 +37,7 @@
 
           <div class="custom-control custom-switch mb-4">
 
-            <input type="checkbox" class="custom-control-input" id="is_enabled" name="is_enabled" {% if store.is_enabled %}checked{% endif %} {% if store.platform_disabled %}disabled{% endif %}>
+            <input type="checkbox" class="custom-control-input" id="is_enabled" name="is_enabled" {% if store.is_enabled %}checked{% endif %} {% if store.platform_disabled %}disabled{% endif %} aria-label="is enabled">
 
             <label class="custom-control-label font-weight-bold" for="is_enabled">تفعيل المتجر الإلكتروني</label>
 
@@ -49,7 +49,7 @@
 
             <label for="input_title">عنوان المتجر</label>
 
-            <input type="text" name="title" class="form-control" value="{{ store.title or '' }}" required id="input_title">
+            <input type="text" name="title" class="form-control" value="{{ store.title or '' }}" required id="input_title" aria-label="title">
 
           </div>
 
@@ -57,7 +57,7 @@
 
             <label for="input_tagline">شعار قصير (Tagline)</label>
 
-            <input type="text" name="tagline" class="form-control" value="{{ store.tagline or '' }}" id="input_tagline">
+            <input type="text" name="tagline" class="form-control" value="{{ store.tagline or '' }}" id="input_tagline" aria-label="tagline">
 
           </div>
 
@@ -71,7 +71,7 @@
 
             {% endif %}
 
-            <input type="file" name="logo" class="form-control-file" accept="image/*">
+            <input type="file" name="logo" class="form-control-file" accept="image/*" aria-label="logo">
 
           </div>
 
@@ -83,7 +83,7 @@
 
               <div class="input-group-prepend"><span class="input-group-text">/s/</span></div>
 
-              <input type="text" name="store_slug" class="form-control" value="{{ store.store_slug }}" pattern="[a-z0-9-]+" required dir="ltr">
+              <input type="text" name="store_slug" class="form-control" value="{{ store.store_slug }}" pattern="[a-z0-9-]+" required dir="ltr" aria-label="store slug">
 
             </div>
 
@@ -101,7 +101,7 @@
 
               <label for="input_meta_title">Meta Title (AR)</label>
 
-              <input type="text" name="meta_title" class="form-control" value="{{ store.meta_title or '' }}" maxlength="200" id="input_meta_title">
+              <input type="text" name="meta_title" class="form-control" value="{{ store.meta_title or '' }}" maxlength="200" id="input_meta_title" aria-label="meta title">
 
             </div>
 
@@ -109,7 +109,7 @@
 
               <label for="input_meta_title_en">Meta Title (EN)</label>
 
-              <input type="text" name="meta_title_en" class="form-control" value="{{ store.meta_title_en or '' }}" maxlength="200" id="input_meta_title_en">
+              <input type="text" name="meta_title_en" class="form-control" value="{{ store.meta_title_en or '' }}" maxlength="200" id="input_meta_title_en" aria-label="meta title en">
 
             </div>
 
@@ -181,7 +181,7 @@
 
               <label for="input_phone">هاتف</label>
 
-              <input type="text" name="phone" class="form-control" value="{{ store.phone or '' }}" id="input_phone">
+              <input type="text" name="phone" class="form-control" value="{{ store.phone or '' }}" id="input_phone" aria-label="phone">
 
             </div>
 
@@ -189,7 +189,7 @@
 
               <label for="input_whatsapp">واتساب</label>
 
-              <input type="text" name="whatsapp" class="form-control" value="{{ store.whatsapp or '' }}" id="input_whatsapp">
+              <input type="text" name="whatsapp" class="form-control" value="{{ store.whatsapp or '' }}" id="input_whatsapp" aria-label="whatsapp">
 
             </div>
 
@@ -197,7 +197,7 @@
 
               <label for="input_email">بريد</label>
 
-              <input type="email" name="email" class="form-control" value="{{ store.email or '' }}" id="input_email">
+              <input type="email" name="email" class="form-control" value="{{ store.email or '' }}" id="input_email" aria-label="email">
 
             </div>
 
@@ -205,7 +205,7 @@
 
           <div class="custom-control custom-checkbox mb-2">
 
-            <input type="checkbox" class="custom-control-input" id="notify_email" name="notify_email_on_order" {% if store.notify_email_on_order %}checked{% endif %}>
+            <input type="checkbox" class="custom-control-input" id="notify_email" name="notify_email_on_order" {% if store.notify_email_on_order %}checked{% endif %} aria-label="notify email on order">
 
             <label class="custom-control-label" for="notify_email">إشعار بريد عند طلب جديد</label>
 
@@ -213,7 +213,7 @@
 
           <div class="custom-control custom-checkbox mb-3">
 
-            <input type="checkbox" class="custom-control-input" id="notify_wa" name="notify_whatsapp_on_order" {% if store.notify_whatsapp_on_order %}checked{% endif %}>
+            <input type="checkbox" class="custom-control-input" id="notify_wa" name="notify_whatsapp_on_order" {% if store.notify_whatsapp_on_order %}checked{% endif %} aria-label="notify whatsapp on order">
 
             <label class="custom-control-label" for="notify_wa">تفعيل رابط واتساب للطلبات (من لوحة الطلبات)</label>
 
@@ -227,7 +227,7 @@
 
               <label for="input_min_order_amount">الحد الأدنى للطلب</label>
 
-              <input type="number" name="min_order_amount" class="form-control" value="{{ store.min_order_amount or '' }}" min="0" step="0.01" id="input_min_order_amount">
+              <input type="number" name="min_order_amount" class="form-control" value="{{ store.min_order_amount or '' }}" min="0" step="0.01" id="input_min_order_amount" aria-label="min order amount">
 
             </div>
 
@@ -235,7 +235,7 @@
 
               <label for="input_low_stock_threshold">حد تنبيه المخزون المنخفض</label>
 
-              <input type="number" name="low_stock_threshold" class="form-control" value="{{ store.low_stock_threshold or 5 }}" min="0" step="1" id="input_low_stock_threshold">
+              <input type="number" name="low_stock_threshold" class="form-control" value="{{ store.low_stock_threshold or 5 }}" min="0" step="1" id="input_low_stock_threshold" aria-label="low stock threshold">
 
             </div>
 
@@ -245,7 +245,7 @@
 
             <label for="input_delivery_note">ملاحظة التوصيل</label>
 
-            <input type="text" name="delivery_note" class="form-control" value="{{ store.delivery_note or '' }}" maxlength="500" id="input_delivery_note">
+            <input type="text" name="delivery_note" class="form-control" value="{{ store.delivery_note or '' }}" maxlength="500" id="input_delivery_note" aria-label="delivery note">
 
           </div>
 

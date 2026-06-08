@@ -42,7 +42,7 @@
       </div>
       <div class="card-body">
         <form method="POST" action="{{ url_for('owner.currency_settings') }}" class="currency-settings-form mb-4">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 
           <div class="form-group">
             <label>العملة الافتراضية</label>
@@ -60,7 +60,7 @@
                      class="custom-control-input"
                      id="auto_update"
                      name="auto_update_rates"
-                     {% if settings.auto_update_rates %}checked{% endif %}>
+                     {% if settings.auto_update_rates %}checked{% endif %} aria-label="auto update rates">
               <label class="custom-control-label" for="auto_update">
                 تحديث تلقائي لأسعار الصرف
               </label>

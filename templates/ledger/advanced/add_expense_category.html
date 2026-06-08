@@ -7,18 +7,18 @@
     <div class="card-body">
       {% set form_data = form_data if form_data is defined else request.form %}
       <form method="post" action="">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
         <div class="row">
           <div class="col-md-6">
             <div class="form-group">
               <label for="input_name">الاسم (EN) *</label>
-              <input type="text" name="name" class="form-control" required value="{{ form_data.get('name', '') }}" id="input_name">
+              <input type="text" name="name" class="form-control" required value="{{ form_data.get('name', '') }}" id="input_name" aria-label="name">
             </div>
           </div>
           <div class="col-md-6">
             <div class="form-group">
               <label for="input_name_ar">الاسم (AR) *</label>
-              <input type="text" name="name_ar" class="form-control" required value="{{ form_data.get('name_ar', '') }}" id="input_name_ar">
+              <input type="text" name="name_ar" class="form-control" required value="{{ form_data.get('name_ar', '') }}" id="input_name_ar" aria-label="name ar">
             </div>
           </div>
         </div>

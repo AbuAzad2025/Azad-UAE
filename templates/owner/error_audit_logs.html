@@ -200,7 +200,7 @@
               <td>
                 {% if not log.is_resolved %}
                 <form method="post" action="{{ url_for('owner.resolve_error_log', log_id=log.id) }}" class="d-inline">
-                  <input type="hidden" name="note" value="">
+                  <input type="hidden" name="note" value="" aria-label="note">
                   <button type="submit" class="btn btn-xs btn-success" title="تحديد كمحلول">
                     <i class="fas fa-check"></i>
                   </button>

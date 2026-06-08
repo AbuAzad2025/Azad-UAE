@@ -32,7 +32,7 @@
           </div>
           {% set form_data = form_data if form_data is defined else request.form %}
           <form method="POST" action="{{ url_for('warehouse.create_warehouse') }}" class="warehouse-create-form">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
             <div class="card-body">
               <div class="row">
                 <div class="col-md-6">
@@ -149,7 +149,7 @@
 
               <div class="form-group">
                 <div class="custom-control custom-checkbox">
-                  <input type="checkbox" class="custom-control-input" id="is_main" name="is_main" {% if form_data.get('is_main') %}checked{% endif %}>
+                  <input type="checkbox" class="custom-control-input" id="is_main" name="is_main" {% if form_data.get('is_main') %}checked{% endif %} aria-label="is main">
                   <label class="custom-control-label" for="is_main">
                     <i class="fas fa-star text-warning"></i> مستودع رئيسي
                   </label>

@@ -13,7 +13,7 @@
     </div>
     <div>
         <form method="POST" action="{{ url_for('payment_vault.trigger_auto_approve') }}" style="display: inline;">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
             <button type="submit" class="btn btn-success mr-2" onclick="return confirm('تشغيل القبول التلقائي للعمليات الأقدم من ساعة؟')">
                 <i class="fas fa-check-circle"></i> قبول تلقائي
             </button>

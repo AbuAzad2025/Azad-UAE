@@ -27,13 +27,13 @@
 
     {% if is_shop_logged_in %}
     <form method="post" action="{{ url_for('shop.cart_add', slug=store.store_slug) }}" style="margin-top:1.5rem;">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <input type="hidden" name="product_id" value="{{ product.id }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
+      <input type="hidden" name="product_id" value="{{ product.id }}" aria-label="product id">
       <div class="ps-form-group">
         <label>{{ t('quantity') }}</label>
         <div class="ps-qty-wrap" style="display:flex;align-items:center;gap:0.5rem;max-width:160px;">
           <button type="button" class="ps-btn ps-btn-outline" data-qty-minus style="padding:0.4rem 0.65rem;">−</button>
-          <input type="number" name="quantity" value="1" min="1" max="{{ available|int }}" step="1" class="ps-qty-input" style="flex:1;">
+          <input type="number" name="quantity" value="1" min="1" max="{{ available|int }}" step="1" class="ps-qty-input" style="flex:1;" aria-label="quantity">
           <button type="button" class="ps-btn ps-btn-outline" data-qty-plus style="padding:0.4rem 0.65rem;">+</button>
         </div>
       </div>

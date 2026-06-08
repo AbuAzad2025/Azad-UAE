@@ -10,7 +10,7 @@
 <div class="row justify-content-center">
   <div class="col-lg-6">
     <form method="POST" class="card">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
       <div class="card-header bg-success text-white">
         <i class="fas fa-calculator mr-2"></i>حساب وتوزيع الأرباح
       </div>
@@ -21,11 +21,11 @@
         <div class="row g-3">
           <div class="col-md-6">
             <label class="form-label fw-semibold" for="input_period_start">من تاريخ</label>
-            <input type="date" name="period_start" class="form-control" value="{{ default_start }}" id="input_period_start">
+            <input type="date" name="period_start" class="form-control" value="{{ default_start }}" id="input_period_start" aria-label="period start">
           </div>
           <div class="col-md-6">
             <label class="form-label fw-semibold" for="input_period_end">إلى تاريخ</label>
-            <input type="date" name="period_end" class="form-control" value="{{ default_end }}" id="input_period_end">
+            <input type="date" name="period_end" class="form-control" value="{{ default_end }}" id="input_period_end" aria-label="period end">
           </div>
         </div>
       </div>

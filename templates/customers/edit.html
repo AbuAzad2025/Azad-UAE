@@ -22,7 +22,7 @@
 {% block content %}
 <div class="card">
   <form method="POST" action="{{ url_for('customers.edit', id=customer.id) }}" class="customer-edit-form">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
     <div class="card-body">
       <div class="row">
         <div class="col-md-6">

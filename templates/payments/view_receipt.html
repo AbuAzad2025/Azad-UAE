@@ -24,7 +24,7 @@
 
     <form action="{{ url_for('payments.delete_payment', id=receipt.id) }}" method="POST" class="d-inline" onsubmit="return confirm('هل أنت متأكد من حذف سند الصرف هذا؟\n\nتنبيه: سيتم أرشفة السند إذا كان مرتبطاً بشيكات، أو حذفه نهائياً إذا كان غير مرتبط.');">
 
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 
       <button type="submit" class="btn btn-danger">
 
@@ -38,7 +38,7 @@
 
     <form action="{{ url_for('payments.delete_receipt', id=receipt.id) }}" method="POST" class="d-inline" onsubmit="return confirm('هل أنت متأكد من حذف سند القبض هذا؟\n\nتنبيه: سيتم أرشفة السند إذا كان له تخصيصات أو مرتبط بشيكات، أو حذفه نهائياً إذا كان غير مرتبط.');">
 
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 
       <button type="submit" class="btn btn-danger">
 

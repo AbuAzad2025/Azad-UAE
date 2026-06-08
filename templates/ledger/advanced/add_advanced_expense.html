@@ -6,12 +6,12 @@
     <div class="card-header"><h3><i class="fas fa-plus"></i> إضافة مصروف متقدم</h3></div>
     <div class="card-body">
       <form method="post" action="">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
         <div class="row">
           <div class="col-md-3">
             <div class="form-group">
               <label for="input_expense_date">التاريخ *</label>
-              <input type="date" name="expense_date" class="form-control" required value="{{ today }}" id="input_expense_date">
+              <input type="date" name="expense_date" class="form-control" required value="{{ today }}" id="input_expense_date" aria-label="expense date">
             </div>
           </div>
           <div class="col-md-3">
@@ -42,7 +42,7 @@
           <div class="col-md-3">
             <div class="form-group">
               <label for="input_amount">المبلغ *</label>
-              <input type="number" name="amount" class="form-control" step="0.01" required id="input_amount">
+              <input type="number" name="amount" class="form-control" step="0.01" required id="input_amount" aria-label="amount">
             </div>
           </div>
         </div>

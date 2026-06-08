@@ -23,9 +23,9 @@
       <div class="card-body py-2">
         <form method="get" class="form-inline">
           <label class="mr-2" for="input_date_from">من:</label>
-          <input type="date" name="date_from" class="form-control mr-2" value="{{ date_from or '' }}" id="input_date_from">
+          <input type="date" name="date_from" class="form-control mr-2" value="{{ date_from or '' }}" id="input_date_from" aria-label="من تاريخ">
           <label class="mr-2" for="input_date_to">إلى:</label>
-          <input type="date" name="date_to" class="form-control mr-2" value="{{ date_to or '' }}" id="input_date_to">
+          <input type="date" name="date_to" class="form-control mr-2" value="{{ date_to or '' }}" id="input_date_to" aria-label="إلى تاريخ">
           <label class="mr-2">الفرع:</label>
           <select name="branch_id" class="form-control mr-2" aria-label="اختر الفرع">
             <option value="">-- الكل --</option>

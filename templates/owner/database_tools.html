@@ -182,8 +182,8 @@
           </div>
           <div class="col-md-4">
             <form action="{{ url_for('owner.export_database') }}" method="POST" style="display: inline;">
-              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-              <input type="hidden" name="format" value="json">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
+              <input type="hidden" name="format" value="json" aria-label="format">
               <button type="submit" class="btn btn-success btn-block btn-lg">
                 <i class="fas fa-file-export"></i> تصدير JSON
               </button>
@@ -201,9 +201,9 @@
 </div>
 
 <form id="truncateForm" method="POST" action="{{ url_for('owner.truncate_table') }}" style="display: none;">
-  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-  <input type="hidden" name="table_name" id="truncateTableName">
-  <input type="hidden" name="confirm" id="truncateConfirm">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
+  <input type="hidden" name="table_name" id="truncateTableName" aria-label="table name">
+  <input type="hidden" name="confirm" id="truncateConfirm" aria-label="confirm">
 </form>
 {% endblock %}
 

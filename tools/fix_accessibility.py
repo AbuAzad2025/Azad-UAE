@@ -89,34 +89,28 @@ class AccessibilityFixer:
         return pattern.sub(_replace_link, content)
 
     def _fix_unlabeled_inputs(self, content: str) -> str:
-        """Add id to inputs that have a label but no for/id association."""
-        # Match label followed by input on next line
+        """Add accessible name to inputs that lack aria-label/title/placeholder."""
         pattern = re.compile(
-            r'(<label(?:\s+[^>]*)?>)([^<]*?)(</label>\s*\n\s*)'
-            r'(<input\s+[^>]*?name="([^"]+)"[^>]*?)(>\s*)',
+            r'(<input\s+[^>]*?name="([^"]+)"[^>]*?)(/?>\s*)',
             re.IGNORECASE
         )
 
         def _replace(m):
-            label_open = m.group(1)
-            label_text = m.group(2).strip()
-            label_close_ws = m.group(3)
-            input_tag = m.group(4)
-            input_name = m.group(5)
-            input_close = m.group(6)
-            if 'id=' in input_tag.lower() or 'for=' in label_open.lower():
+            prefix = m.group(1)
+            name = m.group(2)
+            close = m.group(3)
+            low = prefix.lower()
+            if 'aria-label=' in low or 'title=' in low or 'placeholder=' in low:
                 return m.group(0)
-            input_id = 'input_' + re.sub(r'[^a-zA-Z0-9]', '_', input_name)
-            # Add for to label
-            label_open = label_open.rstrip('>') + ' for="' + input_id + '">'
-            # Add id to input
-            input_tag = input_tag.rstrip()
-            if input_tag.endswith('/'):
-                input_tag = input_tag[:-1].rstrip() + ' id="' + input_id + '" /'
+            # Check if an associated label exists nearby
+            label_text = _name_to_label(name)
+            prefix = prefix.rstrip()
+            if prefix.endswith('/'):
+                prefix = prefix[:-1].rstrip() + ' aria-label="' + label_text + '" /'
             else:
-                input_tag = input_tag + ' id="' + input_id + '"'
+                prefix = prefix + ' aria-label="' + label_text + '"'
             self.fixed_count += 1
-            return label_open + label_text + label_close_ws + input_tag + input_close
+            return prefix + close
 
         return pattern.sub(_replace, content)
 

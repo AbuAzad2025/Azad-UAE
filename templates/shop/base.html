@@ -67,7 +67,7 @@
           {% if cart_count %}<span class="ps-cart-badge">{{ cart_count|int }}</span>{% endif %}
         </a>
         <form method="post" action="{{ url_for('shop.account_logout', slug=store.store_slug) }}" style="display:inline;">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
           <button type="submit" class="ps-btn ps-btn-outline ps-btn-sm">{{ t('logout') }}</button>
         </form>
         {% else %}

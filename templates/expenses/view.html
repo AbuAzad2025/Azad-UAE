@@ -1,124 +1,248 @@
-{% extends "base.html" %}
-
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - تفاصيل المصروف{% endblock %}
-
-{% block content %}
-<div class="content-wrapper">
-    <div class="content-header">
-        <div class="container-fluid">
-            <div class="row mb-2">
-                <div class="col-sm-6">
-                    <h1 class="m-0">عرض المصروف</h1>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <section class="content">
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-md-8">
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title">تفاصيل المصروف</h3>
-                        </div>
-                        <div class="card-body">
-                            <table class="table table-bordered">
-                                <tr>
-                                    <th>رقم المصروف</th>
-                                    <td>{{ expense.expense_number }}</td>
-                                </tr>
-                                <tr>
-                                    <th>{{ t('Date') }}</th>
-                                    <td>{{ expense.expense_date.strftime('%Y-%m-%d') }}</td>
-                                </tr>
-                                <tr>
-                                    <th>الفئة</th>
-                                    <td>{{ expense.category.name if expense.category else 'غير محدد' }}</td>
-                                </tr>
-                                <tr>
-                                    <th>{{ t('Description') }}</th>
-                                    <td>{{ expense.description }}</td>
-                                </tr>
-                                <tr>
-                                    <th>الوصف بالعربية</th>
-                                    <td>{{ expense.description_ar or '' }}</td>
-                                </tr>
-                                <tr>
-                                    <th>{{ t('Amount') }}</th>
-                                    <td>{{ "%.2f"|format(expense.amount) }} {{ expense.currency }}</td>
-                                </tr>
-                                <tr>
-                                    <th>المبلغ بـ{{ tenant_currency_name_ar or "درهم إماراتي" }}</th>
-                                    <td>{{ "%.2f"|format(expense.base_amount or expense.amount_aed) }} {{ tenant_currency_symbol or "AED" }}</td>
-                                </tr>
-                                <tr>
-                                    <th>طريقة الدفع</th>
-                                    <td>{{ expense.payment_method }}</td>
-                                </tr>
-                                <tr>
-                                    <th>اسم المورد</th>
-                                    <td>{{ expense.supplier_name or '' }}</td>
-                                </tr>
-                                <tr>
-                                    <th>{{ t('Reference Number') }}</th>
-                                    <td>{{ expense.reference_number or '' }}</td>
-                                </tr>
-                                <tr>
-                                    <th>رقم الشيك</th>
-                                    <td>{{ expense.cheque_number or '' }}</td>
-                                </tr>
-                                <tr>
-                                    <th>تاريخ الشيك</th>
-                                    <td>{{ expense.cheque_date.strftime('%Y-%m-%d') if expense.cheque_date else '' }}</td>
-                                </tr>
-                                <tr>
-                                    <th>اسم البنك</th>
-                                    <td>{{ expense.bank_name or '' }}</td>
-                                </tr>
-                                <tr>
-                                    <th>{{ t('Notes') }}</th>
-                                    <td>{{ expense.notes or '' }}</td>
-                                </tr>
-                                <tr>
-                                    <th>المستخدم</th>
-                                    <td>{{ expense.user.username if expense.user else 'غير محدد' }}</td>
-                                </tr>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="col-md-4">
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title">الإجراءات</h3>
-                        </div>
-                        <div class="card-body">
-                            <div class="btn-group-vertical w-100">
-                                <a href="{{ url_for('expenses.index') }}" class="btn btn-secondary mb-2">
-                                    <i class="fas fa-arrow-left"></i> العودة للقائمة
-                                </a>
-                                <a href="{{ url_for('expenses.edit', id=expense.id) }}" class="btn btn-primary mb-2">
-                                    <i class="fas fa-edit"></i> تعديل المصروف
-                                </a>
-                                <a href="{{ url_for('expenses.print_expense', id=expense.id) }}"
-                                   target="_blank" rel="noopener noreferrer"
-                                   class="btn btn-info mb-2">
-                                    <i class="fas fa-print"></i> طباعة
-                                </a>
-                                <form action="{{ url_for('expenses.delete', id=expense.id) }}" method="POST" class="w-100" onsubmit="return confirm('هل أنت متأكد من حذف هذا المصروف؟');">
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    <button type="submit" class="btn btn-danger mb-2 w-100">
-                                        <i class="fas fa-trash"></i> حذف المصروف
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-</div>
-{% endblock %}
+{% extends "base.html" %}
+
+
+
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - تفاصيل المصروف{% endblock %}
+
+
+
+{% block content %}
+
+<div class="content-wrapper">
+
+    <div class="content-header">
+
+        <div class="container-fluid">
+
+            <div class="row mb-2">
+
+                <div class="col-sm-6">
+
+                    <h1 class="m-0">عرض المصروف</h1>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <section class="content">
+
+        <div class="container-fluid">
+
+            <div class="row">
+
+                <div class="col-md-8">
+
+                    <div class="card">
+
+                        <div class="card-header">
+
+                            <h3 class="card-title">تفاصيل المصروف</h3>
+
+                        </div>
+
+                        <div class="card-body">
+
+                            <table class="table table-bordered">
+
+                                <tr>
+
+                                    <th>رقم المصروف</th>
+
+                                    <td>{{ expense.expense_number }}</td>
+
+                                </tr>
+
+                                <tr>
+
+                                    <th>{{ t('Date') }}</th>
+
+                                    <td>{{ expense.expense_date.strftime('%Y-%m-%d') }}</td>
+
+                                </tr>
+
+                                <tr>
+
+                                    <th>الفئة</th>
+
+                                    <td>{{ expense.category.name if expense.category else 'غير محدد' }}</td>
+
+                                </tr>
+
+                                <tr>
+
+                                    <th>{{ t('Description') }}</th>
+
+                                    <td>{{ expense.description }}</td>
+
+                                </tr>
+
+                                <tr>
+
+                                    <th>الوصف بالعربية</th>
+
+                                    <td>{{ expense.description_ar or '' }}</td>
+
+                                </tr>
+
+                                <tr>
+
+                                    <th>{{ t('Amount') }}</th>
+
+                                    <td>{{ "%.2f"|format(expense.amount) }} {{ expense.currency }}</td>
+
+                                </tr>
+
+                                <tr>
+
+                                    <th>المبلغ بـ{{ tenant_currency_name_ar or "درهم إماراتي" }}</th>
+
+                                    <td>{{ "%.2f"|format(expense.base_amount or expense.amount_aed) }} {{ tenant_currency_symbol or "AED" }}</td>
+
+                                </tr>
+
+                                <tr>
+
+                                    <th>طريقة الدفع</th>
+
+                                    <td>{{ expense.payment_method }}</td>
+
+                                </tr>
+
+                                <tr>
+
+                                    <th>اسم المورد</th>
+
+                                    <td>{{ expense.supplier_name or '' }}</td>
+
+                                </tr>
+
+                                <tr>
+
+                                    <th>{{ t('Reference Number') }}</th>
+
+                                    <td>{{ expense.reference_number or '' }}</td>
+
+                                </tr>
+
+                                <tr>
+
+                                    <th>رقم الشيك</th>
+
+                                    <td>{{ expense.cheque_number or '' }}</td>
+
+                                </tr>
+
+                                <tr>
+
+                                    <th>تاريخ الشيك</th>
+
+                                    <td>{{ expense.cheque_date.strftime('%Y-%m-%d') if expense.cheque_date else '' }}</td>
+
+                                </tr>
+
+                                <tr>
+
+                                    <th>اسم البنك</th>
+
+                                    <td>{{ expense.bank_name or '' }}</td>
+
+                                </tr>
+
+                                <tr>
+
+                                    <th>{{ t('Notes') }}</th>
+
+                                    <td>{{ expense.notes or '' }}</td>
+
+                                </tr>
+
+                                <tr>
+
+                                    <th>المستخدم</th>
+
+                                    <td>{{ expense.user.username if expense.user else 'غير محدد' }}</td>
+
+                                </tr>
+
+                            </table>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                
+
+                <div class="col-md-4">
+
+                    <div class="card">
+
+                        <div class="card-header">
+
+                            <h3 class="card-title">الإجراءات</h3>
+
+                        </div>
+
+                        <div class="card-body">
+
+                            <div class="btn-group-vertical w-100">
+
+                                <a href="{{ url_for('expenses.index') }}" class="btn btn-secondary mb-2">
+
+                                    <i class="fas fa-arrow-left"></i> العودة للقائمة
+
+                                </a>
+
+                                <a href="{{ url_for('expenses.edit', id=expense.id) }}" class="btn btn-primary mb-2">
+
+                                    <i class="fas fa-edit"></i> تعديل المصروف
+
+                                </a>
+
+                                <a href="{{ url_for('expenses.print_expense', id=expense.id) }}"
+
+                                   target="_blank" rel="noopener noreferrer"
+
+                                   class="btn btn-info mb-2">
+
+                                    <i class="fas fa-print"></i> طباعة
+
+                                </a>
+
+                                <form action="{{ url_for('expenses.delete', id=expense.id) }}" method="POST" class="w-100" onsubmit="return confirm('هل أنت متأكد من حذف هذا المصروف؟');">
+
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
+
+                                    <button type="submit" class="btn btn-danger mb-2 w-100">
+
+                                        <i class="fas fa-trash"></i> حذف المصروف
+
+                                    </button>
+
+                                </form>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+</div>
+
+{% endblock %}
+

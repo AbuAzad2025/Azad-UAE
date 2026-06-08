@@ -104,7 +104,7 @@
           {% if current_user.is_admin %}
           <div class="mt-4">
             <form method="post" action="{{ url_for('admin_ledger.reverse_journal', id=entry.id) }}" style="display: inline;">
-              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
               <button type="submit" class="btn btn-warning" onclick="return confirm('هل تريد عكس هذا القيد؟')">
                 <i class="fas fa-undo"></i> عكس القيد
               </button>

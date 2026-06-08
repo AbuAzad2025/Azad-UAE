@@ -45,7 +45,7 @@
       </div>
       <div class="card-body">
         <form method="POST" action="{{ url_for('owner.sms_settings') }}" class="sms-settings-form">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 
           <div class="form-group">
             <label>مزود الخدمة</label>
@@ -89,7 +89,7 @@
                      class="custom-control-input"
                      id="sms_enabled"
                      name="sms_enabled"
-                     {% if settings.sms_enabled %}checked{% endif %}>
+                     {% if settings.sms_enabled %}checked{% endif %} aria-label="sms enabled">
               <label class="custom-control-label" for="sms_enabled">
                 تفعيل الرسائل النصية
               </label>

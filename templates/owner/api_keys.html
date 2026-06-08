@@ -42,7 +42,7 @@
       </div>
       <div class="card-body">
         <form method="POST" action="{{ url_for('owner.api_keys') }}" class="api-keys-form mb-4">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
           <div class="row align-items-end">
             <div class="col-md-5">
               <div class="form-group">
@@ -101,7 +101,7 @@
                   </td>
                   <td class="text-center">
                     <form method="POST" action="{{ url_for('owner.toggle_api_key', id=key.id) }}" class="d-inline">
-                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
                       <button type="submit" class="btn btn-sm btn-outline-warning" title="تفعيل/تعطيل">
                         <i class="fas fa-toggle-on"></i>
                       </button>

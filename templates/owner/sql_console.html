@@ -24,7 +24,7 @@
                         </div>
                         <div class="card-body">
                             <form method="POST" action="">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
                                 <div class="form-group">
                                     <label for="sql_query">استعلام SQL:</label>
                                     <textarea class="form-control" id="sql_query" name="sql_query" rows="10" 

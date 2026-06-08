@@ -348,9 +348,9 @@
 
     {{ form.hidden_tag() if form else '' }}
 
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 
-    <input type="hidden" name="line_count" id="line_count" value="0">
+    <input type="hidden" name="line_count" id="line_count" value="0" aria-label="line count">
 
     
 
@@ -486,7 +486,7 @@
 
             </label>
 
-            <input type="text" name="supplier_phone" id="supplier_phone" class="form-control" readonly>
+            <input type="text" name="supplier_phone" id="supplier_phone" class="form-control" readonly aria-label="supplier phone">
 
           </div>
 
@@ -506,7 +506,7 @@
 
             </label>
 
-            <input type="email" name="supplier_email" id="supplier_email" class="form-control" readonly>
+            <input type="email" name="supplier_email" id="supplier_email" class="form-control" readonly aria-label="supplier email">
 
           </div>
 
@@ -578,7 +578,7 @@
 
             <input type="number" name="exchange_rate" id="exchange_rate" 
 
-                   class="form-control" value="1.000000" step="0.000001" min="0">
+                   class="form-control" value="1.000000" step="0.000001" min="0" aria-label="exchange rate">
 
             <small class="form-text text-muted">سعر الصرف مقابل {{ tenant_currency_name_ar or 'الدرهم الإماراتي' }}</small>
 
@@ -598,7 +598,7 @@
 
             <input type="number" name="tax_rate" id="tax_rate" 
 
-                   class="form-control" value="{{ _default_tax_rate }}" step="0.01" min="0" max="100">
+                   class="form-control" value="{{ _default_tax_rate }}" step="0.01" min="0" max="100" aria-label="tax rate">
 
             <small class="form-text text-muted">تُفعّل من إعدادات الضرائب للشركة</small>
 
@@ -608,7 +608,7 @@
 
         {% if not tenant_enable_tax %}
 
-        <input type="hidden" name="tax_rate" value="0">
+        <input type="hidden" name="tax_rate" value="0" aria-label="tax rate">
 
         {% endif %}
 
@@ -642,7 +642,7 @@
 
             <label for="freight"><i class="fas fa-truck"></i> الشحن</label>
 
-            <input type="number" name="freight" id="freight" class="form-control" value="0" step="0.01" min="0">
+            <input type="number" name="freight" id="freight" class="form-control" value="0" step="0.01" min="0" aria-label="freight">
 
           </div>
 
@@ -654,7 +654,7 @@
 
             <label for="insurance"><i class="fas fa-shield-alt"></i> التأمين</label>
 
-            <input type="number" name="insurance" id="insurance" class="form-control" value="0" step="0.01" min="0">
+            <input type="number" name="insurance" id="insurance" class="form-control" value="0" step="0.01" min="0" aria-label="insurance">
 
           </div>
 
@@ -666,7 +666,7 @@
 
             <label for="customs_duty"><i class="fas fa-landmark"></i> الجمارك</label>
 
-            <input type="number" name="customs_duty" id="customs_duty" class="form-control" value="0" step="0.01" min="0">
+            <input type="number" name="customs_duty" id="customs_duty" class="form-control" value="0" step="0.01" min="0" aria-label="customs duty">
 
           </div>
 
@@ -678,7 +678,7 @@
 
             <label for="other_landed_cost"><i class="fas fa-ellipsis-h"></i> أخرى</label>
 
-            <input type="number" name="other_landed_cost" id="other_landed_cost" class="form-control" value="0" step="0.01" min="0">
+            <input type="number" name="other_landed_cost" id="other_landed_cost" class="form-control" value="0" step="0.01" min="0" aria-label="other landed cost">
 
           </div>
 

@@ -22,7 +22,7 @@
 {% block content %}
 <div class="card">
   <form method="POST" action="{{ url_for('products.edit', id=product.id) }}">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
     
     <div class="card-body">
       <div class="row">
@@ -32,7 +32,7 @@
               <i class="fas fa-box text-primary"></i> الاسم 
               <span class="text-danger">*</span>
             </label>
-            <input type="text" name="name" class="form-control" value="{{ product.name }}" required>
+            <input type="text" name="name" class="form-control" value="{{ product.name }}" required aria-label="name">
           </div>
         </div>
         <div class="col-md-6">
@@ -40,7 +40,7 @@
             <label>
               <i class="fas fa-font text-info"></i> الاسم بالعربي
             </label>
-            <input type="text" name="name_ar" class="form-control" value="{{ product.name_ar or '' }}">
+            <input type="text" name="name_ar" class="form-control" value="{{ product.name_ar or '' }}" aria-label="name ar">
           </div>
         </div>
       </div>
@@ -52,7 +52,7 @@
               <i class="fas fa-hashtag text-primary"></i> رقم القطعة (SKU)
               <span class="text-danger">*</span>
             </label>
-            <input type="text" name="sku" class="form-control" value="{{ product.sku or '' }}" required>
+            <input type="text" name="sku" class="form-control" value="{{ product.sku or '' }}" required aria-label="sku">
           </div>
         </div>
         <div class="col-md-6 col-lg-3">
@@ -61,7 +61,7 @@
               <i class="fas fa-hashtag text-primary"></i> رقم القطعة (Part Number)
               <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="رقم المورد أو الرقم الداخلي (اختياري)"></i>
             </label>
-            <input type="text" name="part_number" class="form-control" value="{{ product.part_number or '' }}">
+            <input type="text" name="part_number" class="form-control" value="{{ product.part_number or '' }}" aria-label="part number">
           </div>
         </div>
         <div class="col-md-6 col-lg-3">
@@ -70,7 +70,7 @@
               <i class="fas fa-barcode text-secondary"></i> {{ t('Barcode') }}
               <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="الباركود (اختياري)"></i>
             </label>
-            <input type="text" name="barcode" class="form-control" value="{{ product.barcode or '' }}">
+            <input type="text" name="barcode" class="form-control" value="{{ product.barcode or '' }}" aria-label="barcode">
           </div>
         </div>
         <div class="col-md-6 col-lg-3">
@@ -100,7 +100,7 @@
               <i class="fas fa-globe text-info"></i> بلد المنشأ
               <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="بلد الصنع (اختياري)"></i>
             </label>
-            <input type="text" name="country_of_origin" class="form-control" value="{{ product.country_of_origin or '' }}">
+            <input type="text" name="country_of_origin" class="form-control" value="{{ product.country_of_origin or '' }}" aria-label="country of origin">
           </div>
         </div>
       </div>
@@ -114,7 +114,7 @@
               <i class="fas fa-dollar-sign text-danger"></i> سعر التكلفة
               <span class="text-danger">*</span>
             </label>
-            <input type="number" name="cost_price" class="form-control" value="{{ product.cost_price }}" step="0.01" required>
+            <input type="number" name="cost_price" class="form-control" value="{{ product.cost_price }}" step="0.01" required aria-label="cost price">
           </div>
         </div>
         <div class="col-md-3">
@@ -124,7 +124,7 @@
               <span class="text-danger">*</span>
               <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="سعر التجزئة (إجباري)"></i>
             </label>
-            <input type="number" name="regular_price" class="form-control" value="{{ product.regular_price }}" step="0.01" required>
+            <input type="number" name="regular_price" class="form-control" value="{{ product.regular_price }}" step="0.01" required aria-label="regular price">
           </div>
         </div>
         <div class="col-md-3">
@@ -312,7 +312,7 @@
       </div>
       <div class="modal-body">
         <form id="addCategoryForm" method="POST" action="">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
           <div class="form-group">
             <label>
               <i class="fas fa-font text-primary"></i> اسم الفئة

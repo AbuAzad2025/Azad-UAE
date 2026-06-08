@@ -31,7 +31,7 @@
 <section class="content">
   <div class="container-fluid">
     <form method="POST" action="{{ url_for('owner.invoice_settings') }}" enctype="multipart/form-data" class="invoice-settings-form">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
       
       <div class="row">
         <!-- Left Column -->
@@ -357,7 +357,7 @@
                 </label>
                 <input type="color" class="form-control" name="header_color" 
                        value="{{ settings.header_color or '#667eea' }}"
-                       style="height: 45px;">
+                       style="height: 45px;" aria-label="header color">
                 <small class="form-text text-muted">
                   🎨 لون رأس الفاتورة والعناصر الرئيسية
                 </small>
@@ -369,7 +369,7 @@
                 </label>
                 <input type="color" class="form-control" name="accent_color" 
                        value="{{ settings.accent_color or '#764ba2' }}"
-                       style="height: 45px;">
+                       style="height: 45px;" aria-label="accent color">
                 <small class="form-text text-muted">
                   🎨 لون الأزرار والعناصر الثانوية
                 </small>
@@ -380,7 +380,7 @@
               
               <div class="custom-control custom-checkbox mb-3">
                 <input type="checkbox" class="custom-control-input" id="show_logo" name="show_logo" 
-                       {% if settings.show_logo %}checked{% endif %}>
+                       {% if settings.show_logo %}checked{% endif %} aria-label="show logo">
                 <label class="custom-control-label" for="show_logo">
                   <i class="fas fa-image text-primary"></i> إظهار الشعار
                 </label>
@@ -392,7 +392,7 @@
                 <label>
                   <i class="fas fa-upload text-primary"></i> رفع شعار الشركة
                 </label>
-                <input type="file" class="form-control-file" name="company_logo" accept="image/png,image/jpeg,image/jpg,image/webp">
+                <input type="file" class="form-control-file" name="company_logo" accept="image/png,image/jpeg,image/jpg,image/webp" aria-label="company logo">
                 <small class="form-text text-muted">
                   المقاس الموصى به: 400×160 بكسل. الصيغ: PNG, JPG, WEBP.
                 </small>
@@ -408,7 +408,7 @@
               
               <div class="custom-control custom-checkbox mb-3">
                 <input type="checkbox" class="custom-control-input" id="enable_qr_code" name="enable_qr_code" 
-                       {% if settings.enable_qr_code %}checked{% endif %}>
+                       {% if settings.enable_qr_code %}checked{% endif %} aria-label="enable qr code">
                 <label class="custom-control-label" for="enable_qr_code">
                   <i class="fas fa-qrcode text-success"></i> إظهار QR Code
                 </label>
@@ -418,7 +418,7 @@
               
               <div class="custom-control custom-checkbox mb-3">
                 <input type="checkbox" class="custom-control-input" id="show_barcode" name="show_barcode" 
-                       {% if settings.show_barcode %}checked{% endif %}>
+                       {% if settings.show_barcode %}checked{% endif %} aria-label="show barcode">
                 <label class="custom-control-label" for="show_barcode">
                   <i class="fas fa-barcode text-info"></i> إظهار Barcode
                 </label>
@@ -428,7 +428,7 @@
               
               <div class="custom-control custom-checkbox mb-3">
                 <input type="checkbox" class="custom-control-input" id="enable_watermark" name="enable_watermark" 
-                       {% if settings.enable_watermark %}checked{% endif %}>
+                       {% if settings.enable_watermark %}checked{% endif %} aria-label="enable watermark">
                 <label class="custom-control-label" for="enable_watermark">
                   <i class="fas fa-stamp text-warning"></i> علامة مائية
                 </label>
@@ -452,7 +452,7 @@
                 <label>
                   <i class="fas fa-image text-warning"></i> أو رفع صورة للعلامة المائية (اختياري)
                 </label>
-                <input type="file" class="form-control-file" name="watermark_image" accept="image/png,image/jpeg,image/jpg">
+                <input type="file" class="form-control-file" name="watermark_image" accept="image/png,image/jpeg,image/jpg" aria-label="watermark image">
                 <small class="form-text text-muted">
                   🖼️ <strong>ملاحظة:</strong> الصورة ستظهر شفافة بنسبة 5% في خلفية الفاتورة<br>
                   📐 <strong>الأبعاد:</strong> 300×300 بكسل (مربعة) أو 400×200 (مستطيلة)<br>

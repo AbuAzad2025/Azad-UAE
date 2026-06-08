@@ -72,7 +72,7 @@
         </div>
 
         <form method="POST" action="{{ url_for('owner.data_cleanup') }}" class="data-cleanup-form">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 
           <div class="form-group">
             <label>نوع البيانات للحذف</label>
@@ -86,7 +86,7 @@
 
           <div class="form-group">
             <label for="input_days">حذف البيانات الأقدم من (أيام)</label>
-            <input type="number" name="days" class="form-control" value="90" min="30" max="365" id="input_days">
+            <input type="number" name="days" class="form-control" value="90" min="30" max="365" id="input_days" aria-label="days">
             <small class="form-text text-muted">يمكنك اختيار فترة زمنية مختلفة، لكن الحد الأدنى 30 يوماً للحفاظ على السجلات الحديثة.</small>
           </div>
 

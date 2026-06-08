@@ -322,7 +322,7 @@
         <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
       </div>
       <form method="POST" action="{{ url_for('cheques.clear_cheque', id=cheque.id) }}">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
         <div class="modal-body">
           <p>تأكيد صرف الشيك رقم: <strong>{{ cheque.cheque_bank_number }}</strong></p>
           <p>المبلغ: <strong>{{ "{:,.2f}".format(cheque.amount) }} {{ cheque.currency }}</strong></p>
@@ -330,7 +330,7 @@
           <div class="form-group">
             <label>تاريخ الصرف: <span class="text-danger">*</span></label>
             <input type="date" name="clearance_date" class="form-control" 
-                   value="{{ today }}" required>
+                   value="{{ today }}" required aria-label="clearance date">
           </div>
           
           {% if cheque.currency != tenant_default_currency %}
@@ -343,7 +343,7 @@
             <label>سعر الصرف الحالي (وقت الصرف): <span class="text-danger">*</span></label>
             <input type="number" name="clearance_exchange_rate" id="clearance_exchange_rate" 
                    class="form-control" step="0.000001" 
-                   value="{{ suggested_rate|default(cheque.exchange_rate, true) }}" required>
+                   value="{{ suggested_rate|default(cheque.exchange_rate, true) }}" required aria-label="clearance exchange rate">
             <small class="form-text text-muted">
               سيتم جلب السعر الحالي تلقائياً من API - يمكنك التعديل
             </small>
@@ -388,7 +388,7 @@
         <button type="button" class="close" data-dismiss="modal">&times;</button>
       </div>
       <form method="POST" action="{{ url_for('cheques.bounce_cheque', id=cheque.id) }}">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
         <div class="modal-body">
           <p>تسجيل إرتداد للشيك: <strong>{{ cheque.cheque_bank_number }}</strong></p>
           
@@ -420,7 +420,7 @@
         <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
       </div>
       <form method="POST" action="{{ url_for('cheques.deposit_cheque', id=cheque.id) }}">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
         <div class="modal-body">
           <div class="alert alert-info">
             <i class="fas fa-info-circle"></i>
@@ -433,7 +433,7 @@
           <div class="form-group">
             <label>تاريخ الإيداع: <span class="text-danger">*</span></label>
             <input type="date" name="deposit_date" class="form-control" 
-                   value="{{ today }}" required>
+                   value="{{ today }}" required aria-label="deposit date">
           </div>
         </div>
         <div class="modal-footer">
@@ -458,7 +458,7 @@
         <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
       </div>
       <form method="POST" action="{{ url_for('cheques.cancel', id=cheque.id) }}">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
         <div class="modal-body">
           <p>إلغاء الشيك: <strong>{{ cheque.cheque_bank_number }}</strong></p>
           

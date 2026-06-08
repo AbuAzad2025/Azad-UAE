@@ -6,7 +6,7 @@
 
 {% if totals.lines %}
 <form id="cart-update-form" method="post" action="{{ url_for('shop.cart_update', slug=store.store_slug) }}">
-  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 </form>
 
 <div class="ps-layout-2">
@@ -21,9 +21,9 @@
         <strong>{{ product.get_display_name(lang) }}</strong>
         <div class="ps-card-meta">{{ '%.2f'|format(product.regular_price) }} × {{ line.quantity|int }}</div>
         <div style="display:flex;align-items:center;gap:0.5rem;margin-top:0.5rem;">
-          <input type="number" form="cart-update-form" name="qty_{{ product.id }}" value="{{ line.quantity|int }}" min="0" class="ps-qty-input">
+          <input type="number" form="cart-update-form" name="qty_{{ product.id }}" value="{{ line.quantity|int }}" min="0" class="ps-qty-input" aria-label="qty {{ product.id }}">
           <form method="post" action="{{ url_for('shop.cart_remove', slug=store.store_slug, product_id=product.id) }}">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
             <button type="submit" class="ps-btn ps-btn-danger" style="padding:0.35rem 0.65rem;font-size:0.8rem;">{{ t('remove') }}</button>
           </form>
         </div>

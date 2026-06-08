@@ -23,21 +23,21 @@
             </div>
             <div class="card-body">
                 <form method="POST" id="editPackageForm" action="">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
                     
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label>الاسم بالعربية <span class="text-danger">*</span></label>
                                 <input type="text" name="name_ar" class="form-control" 
-                                       value="{{ package.name_ar }}" required>
+                                       value="{{ package.name_ar }}" required aria-label="name ar">
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label>الاسم بالإنجليزية <span class="text-danger">*</span></label>
                                 <input type="text" name="name_en" class="form-control" 
-                                       value="{{ package.name_en }}" required>
+                                       value="{{ package.name_en }}" required aria-label="name en">
                             </div>
                         </div>
                     </div>
@@ -57,21 +57,21 @@
                             <div class="form-group">
                                 <label>السعر (USD) <span class="text-danger">*</span></label>
                                 <input type="number" name="price" class="form-control" step="0.01"
-                                       value="{{ package.price }}" required>
+                                       value="{{ package.price }}" required aria-label="price">
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="form-group">
                                 <label for="input_max_users">عدد المستخدمين</label>
                                 <input type="number" name="max_users" class="form-control" 
-                                       value="{{ package.max_users or 1 }}" id="input_max_users">
+                                       value="{{ package.max_users or 1 }}" id="input_max_users" aria-label="max users">
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="form-group">
                                 <label for="input_max_branches">عدد الفروع</label>
                                 <input type="number" name="max_branches" class="form-control" 
-                                       value="{{ package.max_branches or 1 }}" id="input_max_branches">
+                                       value="{{ package.max_branches or 1 }}" id="input_max_branches" aria-label="max branches">
                             </div>
                         </div>
                     </div>
@@ -81,7 +81,7 @@
                             <div class="form-group">
                                 <label for="input_support_duration_months">مدة الدعم (شهور)</label>
                                 <input type="number" name="support_duration_months" class="form-control" 
-                                       value="{{ package.support_duration_months }}" id="input_support_duration_months">
+                                       value="{{ package.support_duration_months }}" id="input_support_duration_months" aria-label="support duration months">
                             </div>
                         </div>
                         <div class="col-md-6">
@@ -104,7 +104,7 @@
                         <div class="col-md-6">
                             <div class="custom-control custom-switch">
                                 <input type="checkbox" class="custom-control-input" id="is_active" 
-                                       name="is_active" {% if package.is_active %}checked{% endif %}>
+                                       name="is_active" {% if package.is_active %}checked{% endif %} aria-label="is active">
                                 <label class="custom-control-label" for="is_active">
                                     <i class="fas fa-toggle-on text-success"></i> نشطة
                                 </label>
@@ -113,7 +113,7 @@
                         <div class="col-md-6">
                             <div class="custom-control custom-switch">
                                 <input type="checkbox" class="custom-control-input" id="is_featured" 
-                                       name="is_featured" {% if package.is_featured %}checked{% endif %}>
+                                       name="is_featured" {% if package.is_featured %}checked{% endif %} aria-label="is featured">
                                 <label class="custom-control-label" for="is_featured">
                                     <i class="fas fa-star text-warning"></i> مميزة
                                 </label>

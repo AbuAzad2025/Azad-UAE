@@ -52,14 +52,14 @@
               {% if current_user.has_permission('manage_users') %}
               <form method="POST" action="{{ url_for('partners.approve_distribution', dist_id=d.id) }}" style="display:inline;">
               {% endif %}
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
                 <button type="submit" class="btn btn-sm btn-info" title="اعتماد"><i class="fas fa-check"></i></button>
               </form>
               {% elif d.status == 'approved' %}
               {% if current_user.has_permission('manage_payments') %}
               <form method="POST" action="{{ url_for('partners.pay_distribution', dist_id=d.id) }}" style="display:inline;">
               {% endif %}
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
                 <button type="submit" class="btn btn-sm btn-success" title="تسجيل دفع"><i class="fas fa-money-bill-wave"></i></button>
               </form>
               {% endif %}

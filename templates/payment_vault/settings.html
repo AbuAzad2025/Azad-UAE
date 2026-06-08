@@ -23,7 +23,7 @@
                     </div>
                     <div class="card-body">
                         <form method="POST" action="{{ url_for('payment_vault.settings') }}">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
                             <!-- Payment Settings -->
                             <div class="row">
                                 <div class="col-md-6">
@@ -242,28 +242,28 @@
                             <div class="row mb-3">
                                 <div class="col-md-6">
                                     <div class="custom-control custom-switch">
-                                        <input type="checkbox" class="custom-control-input" id="donations_enabled" name="donations_enabled" {% if vault.donations_enabled %}checked{% endif %}>
+                                        <input type="checkbox" class="custom-control-input" id="donations_enabled" name="donations_enabled" {% if vault.donations_enabled %}checked{% endif %} aria-label="donations enabled">
                                         <label class="custom-control-label" for="donations_enabled">تفعيل التبرعات</label>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="custom-control custom-switch">
-                                        <input type="checkbox" class="custom-control-input" id="donation_page_enabled" name="donation_page_enabled" {% if vault.donation_page_enabled %}checked{% endif %}>
+                                        <input type="checkbox" class="custom-control-input" id="donation_page_enabled" name="donation_page_enabled" {% if vault.donation_page_enabled %}checked{% endif %} aria-label="donation page enabled">
                                         <label class="custom-control-label" for="donation_page_enabled">صفحة <code>/donate</code></label>
                                     </div>
                                 </div>
                             </div>
                             <div class="row">
-                                <div class="col-md-6 form-group"><label>عنوان (عربي)</label><input class="form-control" name="donation_title_ar" value="{{ vault.donation_title_ar or 'ادعم شركة أزاد' }}"></div>
-                                <div class="col-md-6 form-group"><label>Title (EN)</label><input class="form-control" name="donation_title_en" value="{{ vault.donation_title_en or 'Support Azad' }}" dir="ltr"></div>
+                                <div class="col-md-6 form-group"><label>عنوان (عربي)</label><input class="form-control" name="donation_title_ar" value="{{ vault.donation_title_ar or 'ادعم شركة أزاد' }}" aria-label="donation title ar"></div>
+                                <div class="col-md-6 form-group"><label>Title (EN)</label><input class="form-control" name="donation_title_en" value="{{ vault.donation_title_en or 'Support Azad' }}" dir="ltr" aria-label="donation title en"></div>
                             </div>
                             <div class="row">
                                 <div class="col-md-6 form-group"><label>مقدمة عربي</label><textarea class="form-control" name="donation_intro_ar" rows="2">{{ vault.donation_intro_ar or '' }}</textarea></div>
                                 <div class="col-md-6 form-group"><label>Intro EN</label><textarea class="form-control" name="donation_intro_en" rows="2" dir="ltr">{{ vault.donation_intro_en or '' }}</textarea></div>
                             </div>
                             <div class="row">
-                                <div class="col-md-6 form-group"><label>GL مدين (1120 بنك)</label><input class="form-control" name="donation_debit_account" value="{{ vault.donation_debit_account or '1120' }}" dir="ltr"></div>
-                                <div class="col-md-6 form-group"><label>GL دائن (4200 إيراد)</label><input class="form-control" name="donation_credit_account" value="{{ vault.donation_credit_account or '4200' }}" dir="ltr"></div>
+                                <div class="col-md-6 form-group"><label>GL مدين (1120 بنك)</label><input class="form-control" name="donation_debit_account" value="{{ vault.donation_debit_account or '1120' }}" dir="ltr" aria-label="donation debit account"></div>
+                                <div class="col-md-6 form-group"><label>GL دائن (4200 إيراد)</label><input class="form-control" name="donation_credit_account" value="{{ vault.donation_credit_account or '4200' }}" dir="ltr" aria-label="donation credit account"></div>
                             </div>
                             
                             <!-- Payment Limits -->
@@ -278,7 +278,7 @@
                                                id="min_donation_amount" 
                                                name="min_donation_amount" 
                                                value="{{ vault.min_donation_amount or 1 }}"
-                                               min="1" step="0.01">
+                                               min="1" step="0.01" aria-label="min donation amount">
                                     </div>
                                 </div>
                                 <div class="col-md-4">
@@ -291,7 +291,7 @@
                                                id="max_donation_amount" 
                                                name="max_donation_amount" 
                                                value="{{ vault.max_donation_amount or 10000 }}"
-                                               min="1" step="0.01">
+                                               min="1" step="0.01" aria-label="max donation amount">
                                     </div>
                                 </div>
                                 <div class="col-md-4">
@@ -304,7 +304,7 @@
                                                id="daily_limit" 
                                                name="daily_limit" 
                                                value="{{ vault.daily_limit or 50000 }}"
-                                               min="1" step="0.01">
+                                               min="1" step="0.01" aria-label="daily limit">
                                     </div>
                                 </div>
                             </div>
@@ -318,7 +318,7 @@
                                                    class="form-check-input" 
                                                    id="require_2fa" 
                                                    name="require_2fa" 
-                                                   {% if vault.require_2fa %}checked{% endif %}>
+                                                   {% if vault.require_2fa %}checked{% endif %} aria-label="require 2fa">
                                             <label class="form-check-label" for="require_2fa">
                                                 <i class="fas fa-shield-alt mr-2"></i>يتطلب مصادقة ثنائية
                                             </label>
@@ -335,7 +335,7 @@
                                                id="auto_lock_minutes" 
                                                name="auto_lock_minutes" 
                                                value="{{ vault.auto_lock_minutes or 30 }}"
-                                               min="1" max="1440">
+                                               min="1" max="1440" aria-label="auto lock minutes">
                                     </div>
                                 </div>
                                 <div class="col-md-4">
@@ -348,7 +348,7 @@
                                                id="max_failed_attempts" 
                                                name="max_failed_attempts" 
                                                value="{{ vault.max_failed_attempts or 3 }}"
-                                               min="1" max="10">
+                                               min="1" max="10" aria-label="max failed attempts">
                                     </div>
                                 </div>
                             </div>
