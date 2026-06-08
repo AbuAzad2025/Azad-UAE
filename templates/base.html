@@ -189,13 +189,6 @@
             <i class="fas fa-building mr-2"></i>تبديل الشركة
           </a>
           {% endif %}
-          <div class="dropdown-divider"></div>
-          <div class="dropdown-item">
-            <select class="custom-select custom-select-sm erp-variant-select" data-ui-action="set-variant" aria-label="اختيار الثيم" title="اختيار الثيم">
-              <option value="palestinian">فلسطيني</option>
-              <option value="gulf">خليجي</option>
-            </select>
-          </div>
         </div>
       </div>
       <div class="dropdown">
@@ -215,6 +208,14 @@
       <button type="button" class="btn btn-outline-light erp-navbar-icon-btn" data-ui-action="toggle-mode" title="التبديل إلى الوضع الداكن" aria-label="التبديل إلى الوضع الداكن">
         <i class="fas fa-sun" data-ui-role="mode-icon"></i>
       </button>
+      <div class="erp-theme-switcher d-none d-md-flex" role="group" aria-label="اختيار الثيم">
+        <button type="button" class="erp-theme-option" data-value="palestinian" data-ui-action="set-variant" title="الثيم الفلسطيني">
+          <span>فلسطيني</span>
+        </button>
+        <button type="button" class="erp-theme-option" data-value="gulf" data-ui-action="set-variant" title="الثيم الخليجي">
+          <span>خليجي</span>
+        </button>
+      </div>
       <div class="dropdown">
         <button class="btn btn-outline-light erp-navbar-user-btn" type="button" data-toggle="dropdown" title="الملف الشخصي">
           <span class="erp-user-avatar"><i class="far fa-user"></i></span>
@@ -235,7 +236,6 @@
     </div>
   </nav>
 
-  <!-- Currency Exchange Modal (عرض فقط — لا يُستخدم في الحسابات) -->
   <div class="modal fade" id="fxModal" tabindex="-1" role="dialog" aria-labelledby="fxModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered erp-modal-fx" role="document">
       <div class="modal-content">
@@ -305,14 +305,16 @@
       </div>
 
       <nav class="mt-2">
-        <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview">
+        <ul class="nav nav-pills nav-sidebar flex-column erp-sidebar-nav" data-widget="treeview">
           <li class="nav-item">
             <a href="{{ url_for('main.dashboard') }}" class="nav-link {% if request.endpoint == 'main.dashboard' %}active{% endif %}">
               <i class="nav-icon fas fa-tachometer-alt"></i>
               <p>{{ t('Dashboard') }}</p>
             </a>
           </li>
-          
+          {% if current_user.is_authenticated and (current_user.has_permission('manage_sales') or current_user.has_permission('manage_customers')) %}
+          <li class="erp-sidebar-section-label">المبيعات والزبائن</li>
+          {% endif %}
           {% if current_user.is_authenticated and current_user.has_permission('manage_sales') %}
           <li class="nav-item has-treeview {% if request.endpoint and ('sales' in request.endpoint or 'pos' in request.endpoint) %}menu-open{% endif %}">
             <a href="#" class="nav-link {% if request.endpoint and ('sales' in request.endpoint or 'pos' in request.endpoint) %}active{% endif %}">
@@ -384,7 +386,9 @@
             </ul>
           </li>
           {% endif %}
-          
+          {% if current_user.is_authenticated and (current_user.has_permission('manage_products') or current_user.has_permission('manage_purchases') or current_user.has_permission('manage_suppliers') or current_user.has_permission('manage_warehouse')) %}
+          <li class="erp-sidebar-section-label">المخزون والتوريد</li>
+          {% endif %}
           {% if current_user.is_authenticated and current_user.has_permission('manage_products') %}
           <li class="nav-item has-treeview {% if request.endpoint and 'products' in request.endpoint %}menu-open{% endif %}">
             <a href="#" class="nav-link {% if request.endpoint and 'products' in request.endpoint %}active{% endif %}">
@@ -462,7 +466,9 @@
             </ul>
           </li>
           {% endif %}
-          
+          {% if current_user.is_authenticated and (current_user.has_permission('manage_payments') or current_user.has_permission('manage_expenses') or current_user.has_permission('manage_payroll') or current_user.has_permission('view_ledger')) %}
+          <li class="erp-sidebar-section-label">المالية والمحاسبة</li>
+          {% endif %}
           {% if current_user.is_authenticated and current_user.has_permission('manage_users') %}
           <li class="nav-item has-treeview {% if request.endpoint and 'users' in request.endpoint %}menu-open{% endif %}">
             <a href="#" class="nav-link {% if request.endpoint and 'users' in request.endpoint %}active{% endif %}">
@@ -644,7 +650,9 @@
             </ul>
           </li>
           {% endif %}
-          
+          {% if current_user.is_authenticated and current_user.has_permission('view_reports') %}
+          <li class="erp-sidebar-section-label">التقارير والشركاء</li>
+          {% endif %}
           {% if current_user.is_authenticated and current_user.has_permission('view_reports') %}
           <li class="nav-item">
             <a href="{{ url_for('partners.index') }}" class="nav-link {% if request.endpoint and 'partners' in request.endpoint %}active{% endif %}">
@@ -703,7 +711,9 @@
             </ul>
           </li>
           {% endif %}
-
+          {% if current_user.is_authenticated and (current_user.has_permission('manage_backups') or current_user.has_permission('manage_store')) %}
+          <li class="erp-sidebar-section-label">الإدارة والأدوات</li>
+          {% endif %}
           {% if current_user.is_authenticated and current_user.has_permission('manage_backups') %}
           <li class="nav-item {% if request.endpoint and request.endpoint in ['owner.list_backups', 'owner.scheduled_backups'] %}menu-open{% endif %}">
             <a href="{{ url_for('owner.list_backups') }}" class="nav-link {% if request.endpoint and request.endpoint in ['owner.list_backups', 'owner.scheduled_backups'] %}active{% endif %}">
@@ -802,9 +812,10 @@
             </ul>
           </li>
           {% endif %}
-          
+          {% if current_user.is_authenticated and (current_user.is_owner or (current_user.role and current_user.role.slug in ['developer','super_admin','manager'])) %}
+          <li class="erp-sidebar-section-label">إدارة الشركة</li>
+          {% endif %}
           {% if current_user.is_authenticated and (current_user.is_owner or (current_user.role and current_user.role.slug == 'developer')) %}
-          <li class="nav-header">OWNER MODE</li>
           <li class="nav-item">
             <a href="{{ url_for('owner.dashboard') }}" class="nav-link {% if request.endpoint == 'owner.dashboard' %}active{% endif %}">
               <i class="nav-icon fas fa-crown text-warning"></i>
@@ -836,7 +847,6 @@
             </a>
           </li>
           {% elif current_user.is_authenticated and current_user.role and current_user.role.slug in ['super_admin', 'manager'] %}
-          <li class="nav-header">إدارة الشركة</li>
           <li class="nav-item">
             <a href="{{ url_for('owner.company_dashboard') }}" class="nav-link {% if request.endpoint == 'owner.company_dashboard' %}active{% endif %}">
               <i class="nav-icon fas fa-building text-info"></i>

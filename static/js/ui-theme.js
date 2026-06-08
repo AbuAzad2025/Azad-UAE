@@ -91,6 +91,18 @@
     }
   }
 
+  function updateThemeSwitcher(variant) {
+    var buttons = document.querySelectorAll('.erp-theme-switcher .erp-theme-option');
+    buttons.forEach(function(btn) {
+      var btnVariant = btn.getAttribute('data-value');
+      if (btnVariant === variant) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+  }
+
   function applyTheme(mode, variant) {
     mode = normalizeMode(mode);
     variant = normalizeVariant(variant);
@@ -102,11 +114,7 @@
     localStorage.setItem(STORAGE_VARIANT, variant);
 
     updateModeToggle(mode);
-
-    var variantSelect = document.querySelector('[data-ui-action="set-variant"]');
-    if (variantSelect && variantSelect.value !== variant) {
-      variantSelect.value = variant;
-    }
+    updateThemeSwitcher(variant);
   }
 
   function boot() {
@@ -124,14 +132,15 @@
       });
     }
 
-    var variantSelect = document.querySelector('[data-ui-action="set-variant"]');
-    if (variantSelect) {
-      variantSelect.addEventListener('change', function() {
-        var variant = normalizeVariant(this.value);
+    var variantButtons = document.querySelectorAll('.erp-theme-switcher .erp-theme-option[data-ui-action="set-variant"]');
+    variantButtons.forEach(function(btn) {
+      btn.addEventListener('click', function(ev) {
+        ev.preventDefault();
+        var variant = normalizeVariant(btn.getAttribute('data-value'));
         var mode = normalizeMode(document.documentElement.dataset.uiMode || 'light');
         applyTheme(mode, variant);
       });
-    }
+    });
 
     window.toggleSidebarDirection = function() {
       var body = document.body;
