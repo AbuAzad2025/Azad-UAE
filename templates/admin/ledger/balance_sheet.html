@@ -25,8 +25,8 @@
     <form method="GET" class="row" action="">
       <div class="col-md-6">
         <div class="form-group">
-          <label>اعتباراً من تاريخ:</label>
-          <input type="date" name="as_of_date" class="form-control" value="{{ as_of_date.strftime('%Y-%m-%d') }}">
+          <label for="input_as_of_date">اعتباراً من تاريخ:</label>
+          <input type="date" name="as_of_date" class="form-control" value="{{ as_of_date.strftime('%Y-%m-%d') }}" id="input_as_of_date">
         </div>
       </div>
       <div class="col-md-6">

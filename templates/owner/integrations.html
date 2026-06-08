@@ -204,7 +204,7 @@
                                     <label>
                                         <i class="fas fa-shield-alt text-success mr-1"></i>التشفير (TLS/SSL)
                                     </label>
-                                    <select class="form-control" name="smtp_encryption">
+                                    <select class="form-control" name="smtp_encryption" aria-label="smtp encryption">
                                         {% set encryption = integrations.email.config.smtp_encryption or 'tls' %}
                                         <option value="tls" {{ 'selected' if encryption == 'tls' }}>TLS (Port 587) - الأكثر شيوعاً</option>
                                         <option value="ssl" {{ 'selected' if encryption == 'ssl' }}>SSL (Port 465)</option>
@@ -355,7 +355,7 @@
                                         <i class="fas fa-link text-primary mr-1"></i>API Provider
                                     </label>
                                     {% set provider = integrations.currency_api.config.api_provider or 'exchangerate' %}
-                                    <select class="form-control" name="api_provider">
+                                    <select class="form-control" name="api_provider" aria-label="api provider">
                                         <option value="exchangerate" {{ 'selected' if provider == 'exchangerate' }}>ExchangeRate-API (مجاني)</option>
                                         <option value="fixer" {{ 'selected' if provider == 'fixer' }}>Fixer.io</option>
                                         <option value="currencyapi" {{ 'selected' if provider == 'currencyapi' }}>CurrencyAPI</option>
@@ -383,7 +383,7 @@
                                         <i class="fas fa-dollar-sign text-success mr-1"></i>العملة الأساسية
                                     </label>
                                     {% set base_currency = integrations.currency_api.config.base_currency or 'USD' %}
-                                    <select class="form-control" name="base_currency">
+                                    <select class="form-control" name="base_currency" aria-label="base currency">
                                         <option value="USD" {{ 'selected' if base_currency == 'USD' }}>USD - دولار أمريكي</option>
                                         <option value="AED" {{ 'selected' if base_currency == 'AED' }}>AED - درهم إماراتي</option>
                                         <option value="EUR" {{ 'selected' if base_currency == 'EUR' }}>EUR - يورو</option>
@@ -399,7 +399,7 @@
                                         <i class="fas fa-clock text-info mr-1"></i>تكرار التحديث
                                     </label>
                                     {% set freq = integrations.currency_api.config.update_frequency or 'daily' %}
-                                    <select class="form-control" name="update_frequency">
+                                    <select class="form-control" name="update_frequency" aria-label="update frequency">
                                         <option value="hourly" {{ 'selected' if freq == 'hourly' }}>كل ساعة</option>
                                         <option value="daily" {{ 'selected' if freq == 'daily' }}>يومياً</option>
                                         <option value="manual" {{ 'selected' if freq == 'manual' }}>يدوي فقط</option>

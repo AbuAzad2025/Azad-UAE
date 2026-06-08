@@ -47,17 +47,17 @@
 
           <div class="form-group">
 
-            <label>عنوان المتجر</label>
+            <label for="input_title">عنوان المتجر</label>
 
-            <input type="text" name="title" class="form-control" value="{{ store.title or '' }}" required>
+            <input type="text" name="title" class="form-control" value="{{ store.title or '' }}" required id="input_title">
 
           </div>
 
           <div class="form-group">
 
-            <label>شعار قصير (Tagline)</label>
+            <label for="input_tagline">شعار قصير (Tagline)</label>
 
-            <input type="text" name="tagline" class="form-control" value="{{ store.tagline or '' }}">
+            <input type="text" name="tagline" class="form-control" value="{{ store.tagline or '' }}" id="input_tagline">
 
           </div>
 
@@ -99,17 +99,17 @@
 
             <div class="col-md-6 form-group">
 
-              <label>Meta Title (AR)</label>
+              <label for="input_meta_title">Meta Title (AR)</label>
 
-              <input type="text" name="meta_title" class="form-control" value="{{ store.meta_title or '' }}" maxlength="200">
+              <input type="text" name="meta_title" class="form-control" value="{{ store.meta_title or '' }}" maxlength="200" id="input_meta_title">
 
             </div>
 
             <div class="col-md-6 form-group">
 
-              <label>Meta Title (EN)</label>
+              <label for="input_meta_title_en">Meta Title (EN)</label>
 
-              <input type="text" name="meta_title_en" class="form-control" value="{{ store.meta_title_en or '' }}" maxlength="200">
+              <input type="text" name="meta_title_en" class="form-control" value="{{ store.meta_title_en or '' }}" maxlength="200" id="input_meta_title_en">
 
             </div>
 
@@ -133,9 +133,9 @@
 
           <div class="form-group">
 
-            <label>Meta Keywords</label>
+            <label for="input_meta_keywords">Meta Keywords</label>
 
-            <input type="text" name="meta_keywords" class="form-control" value="{{ store.meta_keywords or '' }}" placeholder="منتجات, فلسطين, ...">
+            <input type="text" name="meta_keywords" class="form-control" value="{{ store.meta_keywords or '' }}" placeholder="منتجات, فلسطين, ..." id="input_meta_keywords">
 
           </div>
 
@@ -151,9 +151,9 @@
 
             <div class="col-md-6 form-group">
 
-              <label>Subdomain</label>
+              <label for="input_subdomain">Subdomain</label>
 
-              <input type="text" name="subdomain" class="form-control" value="{{ store.subdomain or '' }}" dir="ltr" placeholder="myshop">
+              <input type="text" name="subdomain" class="form-control" value="{{ store.subdomain or '' }}" dir="ltr" placeholder="myshop" id="input_subdomain">
 
               <small class="text-muted">مثال: myshop.yourdomain.com</small>
 
@@ -161,9 +161,9 @@
 
             <div class="col-md-6 form-group">
 
-              <label>Custom Domain</label>
+              <label for="input_custom_domain">Custom Domain</label>
 
-              <input type="text" name="custom_domain" class="form-control" value="{{ store.custom_domain or '' }}" dir="ltr" placeholder="shop.example.com">
+              <input type="text" name="custom_domain" class="form-control" value="{{ store.custom_domain or '' }}" dir="ltr" placeholder="shop.example.com" id="input_custom_domain">
 
             </div>
 
@@ -179,25 +179,25 @@
 
             <div class="col-md-4 form-group">
 
-              <label>هاتف</label>
+              <label for="input_phone">هاتف</label>
 
-              <input type="text" name="phone" class="form-control" value="{{ store.phone or '' }}">
-
-            </div>
-
-            <div class="col-md-4 form-group">
-
-              <label>واتساب</label>
-
-              <input type="text" name="whatsapp" class="form-control" value="{{ store.whatsapp or '' }}">
+              <input type="text" name="phone" class="form-control" value="{{ store.phone or '' }}" id="input_phone">
 
             </div>
 
             <div class="col-md-4 form-group">
 
-              <label>بريد</label>
+              <label for="input_whatsapp">واتساب</label>
 
-              <input type="email" name="email" class="form-control" value="{{ store.email or '' }}">
+              <input type="text" name="whatsapp" class="form-control" value="{{ store.whatsapp or '' }}" id="input_whatsapp">
+
+            </div>
+
+            <div class="col-md-4 form-group">
+
+              <label for="input_email">بريد</label>
+
+              <input type="email" name="email" class="form-control" value="{{ store.email or '' }}" id="input_email">
 
             </div>
 
@@ -225,17 +225,17 @@
 
             <div class="col-md-6 form-group">
 
-              <label>الحد الأدنى للطلب</label>
+              <label for="input_min_order_amount">الحد الأدنى للطلب</label>
 
-              <input type="number" name="min_order_amount" class="form-control" value="{{ store.min_order_amount or '' }}" min="0" step="0.01">
+              <input type="number" name="min_order_amount" class="form-control" value="{{ store.min_order_amount or '' }}" min="0" step="0.01" id="input_min_order_amount">
 
             </div>
 
             <div class="col-md-6 form-group">
 
-              <label>حد تنبيه المخزون المنخفض</label>
+              <label for="input_low_stock_threshold">حد تنبيه المخزون المنخفض</label>
 
-              <input type="number" name="low_stock_threshold" class="form-control" value="{{ store.low_stock_threshold or 5 }}" min="0" step="1">
+              <input type="number" name="low_stock_threshold" class="form-control" value="{{ store.low_stock_threshold or 5 }}" min="0" step="1" id="input_low_stock_threshold">
 
             </div>
 
@@ -243,9 +243,9 @@
 
           <div class="form-group">
 
-            <label>ملاحظة التوصيل</label>
+            <label for="input_delivery_note">ملاحظة التوصيل</label>
 
-            <input type="text" name="delivery_note" class="form-control" value="{{ store.delivery_note or '' }}" maxlength="500">
+            <input type="text" name="delivery_note" class="form-control" value="{{ store.delivery_note or '' }}" maxlength="500" id="input_delivery_note">
 
           </div>
 

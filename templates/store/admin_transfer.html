@@ -32,7 +32,7 @@
           </div>
           <div class="form-group" id="source_wh_group">
             <label id="source_wh_label">المستودع الفعلي (المصدر)</label>
-            <select name="source_warehouse_id" class="form-control" required>
+            <select name="source_warehouse_id" class="form-control" required aria-label="source warehouse id">
               <option value="">— اختر —</option>
               {% for wh in physical_warehouses %}
               <option value="{{ wh.id }}">{{ wh.name_ar or wh.name }} ({{ wh.code or wh.id }})</option>
@@ -40,8 +40,8 @@
             </select>
           </div>
           <div class="form-group">
-            <label>الكمية</label>
-            <input type="number" name="quantity" class="form-control" min="0.001" step="any" required>
+            <label for="input_quantity">الكمية</label>
+            <input type="number" name="quantity" class="form-control" min="0.001" step="any" required id="input_quantity">
           </div>
           <div class="form-group">
             <label>ملاحظات</label>

@@ -39,20 +39,20 @@
         <div class="row">
           <div class="col-md-6">
             <div class="form-group">
-              <label>الاسم بالعربي</label>
-              <input type="text" name="developer_name_ar" class="form-control" value="{{ dev.developer_name_ar or '' }}" placeholder="شركة أزاد للأنظمة الذكية">
+              <label for="input_developer_name_ar">الاسم بالعربي</label>
+              <input type="text" name="developer_name_ar" class="form-control" value="{{ dev.developer_name_ar or '' }}" placeholder="شركة أزاد للأنظمة الذكية" id="input_developer_name_ar">
             </div>
           </div>
           <div class="col-md-6">
             <div class="form-group">
-              <label>الاسم بالإنجليزي</label>
-              <input type="text" name="developer_name" class="form-control" value="{{ dev.developer_name or '' }}" placeholder="Azad Smart Systems">
+              <label for="input_developer_name">الاسم بالإنجليزي</label>
+              <input type="text" name="developer_name" class="form-control" value="{{ dev.developer_name or '' }}" placeholder="Azad Smart Systems" id="input_developer_name">
             </div>
           </div>
         </div>
         <div class="form-group">
-          <label>عبارة «طور بواسطة» (تظهر في التذييل)</label>
-          <input type="text" name="developer_credit" class="form-control" value="{{ dev.developer_credit or '' }}" placeholder="تطوير وبرمجة: م. أحمد غنام | Developed by Eng. Ahmad Ghannam - Azad Systems">
+          <label for="input_developer_credit">عبارة «طور بواسطة» (تظهر في التذييل)</label>
+          <input type="text" name="developer_credit" class="form-control" value="{{ dev.developer_credit or '' }}" placeholder="تطوير وبرمجة: م. أحمد غنام | Developed by Eng. Ahmad Ghannam - Azad Systems" id="input_developer_credit">
         </div>
       </div>
     </div>
@@ -65,34 +65,34 @@
         <div class="row">
           <div class="col-md-6">
             <div class="form-group">
-              <label>الهاتف</label>
-              <input type="text" name="developer_phone" class="form-control" value="{{ dev.developer_phone or '' }}" placeholder="+972562150193">
+              <label for="input_developer_phone">الهاتف</label>
+              <input type="text" name="developer_phone" class="form-control" value="{{ dev.developer_phone or '' }}" placeholder="+972562150193" id="input_developer_phone">
             </div>
           </div>
           <div class="col-md-6">
             <div class="form-group">
-              <label>واتساب (رقم كامل مع مفتاح الدولة)</label>
-              <input type="text" name="developer_whatsapp" class="form-control" value="{{ dev.developer_whatsapp or '' }}" placeholder="+972562150193">
+              <label for="input_developer_whatsapp">واتساب (رقم كامل مع مفتاح الدولة)</label>
+              <input type="text" name="developer_whatsapp" class="form-control" value="{{ dev.developer_whatsapp or '' }}" placeholder="+972562150193" id="input_developer_whatsapp">
             </div>
           </div>
         </div>
         <div class="row">
           <div class="col-md-6">
             <div class="form-group">
-              <label>البريد الإلكتروني</label>
-              <input type="email" name="developer_email" class="form-control" value="{{ dev.developer_email or '' }}" placeholder="support@example.com">
+              <label for="input_developer_email">البريد الإلكتروني</label>
+              <input type="email" name="developer_email" class="form-control" value="{{ dev.developer_email or '' }}" placeholder="support@example.com" id="input_developer_email">
             </div>
           </div>
           <div class="col-md-6">
             <div class="form-group">
-              <label>الموقع الإلكتروني</label>
-              <input type="url" name="developer_website" class="form-control" value="{{ dev.developer_website or '' }}" placeholder="https://azadsystems.com">
+              <label for="input_developer_website">الموقع الإلكتروني</label>
+              <input type="url" name="developer_website" class="form-control" value="{{ dev.developer_website or '' }}" placeholder="https://azadsystems.com" id="input_developer_website">
             </div>
           </div>
         </div>
         <div class="form-group">
-          <label>مسار الشعار الرسمي (مثل: assets/brand/azad/logos/logo.png)</label>
-          <input type="text" name="developer_logo" class="form-control" value="{{ dev.developer_logo or '' }}" placeholder="assets/brand/azad/logos/logo.png">
+          <label for="input_developer_logo">مسار الشعار الرسمي (مثل: assets/brand/azad/logos/logo.png)</label>
+          <input type="text" name="developer_logo" class="form-control" value="{{ dev.developer_logo or '' }}" placeholder="assets/brand/azad/logos/logo.png" id="input_developer_logo">
         </div>
       </div>
     </div>

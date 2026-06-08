@@ -96,7 +96,7 @@
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <div class="form-group">
             <label><i class="fas fa-sync"></i> التكرار:</label>
-            <select name="frequency" class="form-control" required>
+            <select name="frequency" class="form-control" required aria-label="frequency">
               <option value="hourly" {% if settings.frequency == 'hourly' %}selected{% endif %}>كل ساعة</option>
               <option value="daily" {% if settings.frequency == 'daily' %}selected{% endif %}>يومياً (موصى به)</option>
               <option value="weekly" {% if settings.frequency == 'weekly' %}selected{% endif %}>أسبوعياً</option>

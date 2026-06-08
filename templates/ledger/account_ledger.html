@@ -7,7 +7,7 @@
   <div class="col-12">
     <form method="get" class="form-inline d-inline">
       <label class="mr-2">الفرع:</label>
-      <select name="branch_id" class="form-control mr-2" onchange="this.form.submit()" style="min-width: 140px;">
+      <select name="branch_id" class="form-control mr-2" onchange="this.form.submit()" style="min-width: 140px;" aria-label="اختر الفرع">
         <option value="">كل الفروع</option>
         {% for b in branches or [] %}
         <option value="{{ b.id }}" {{ 'selected' if selected_branch == b.id else '' }}>{{ b.name }} ({{ b.code }})</option>

@@ -31,16 +31,16 @@
     <!-- فلتر التاريخ والفرع (عزل الفروع عند اللزوم) -->
     <form method="get" class="form-inline mb-3 flex-wrap" action="">
       <label class="ml-2 mr-2">الفرع:</label>
-      <select name="branch_id" class="form-control mr-3" style="min-width: 140px;">
+      <select name="branch_id" class="form-control mr-3" style="min-width: 140px;" aria-label="اختر الفرع">
         <option value="">كل الفروع</option>
         {% for b in branches or [] %}
         <option value="{{ b.id }}" {{ 'selected' if selected_branch == b.id else '' }}>{{ b.name }} ({{ b.code }})</option>
         {% endfor %}
       </select>
-      <label class="ml-2 mr-2">من تاريخ:</label>
-      <input type="date" name="date_from" class="form-control mr-3" value="{{ date_from or '' }}">
-      <label class="ml-2 mr-2">إلى تاريخ:</label>
-      <input type="date" name="date_to" class="form-control mr-3" value="{{ date_to or '' }}">
+      <label class="ml-2 mr-2" for="input_date_from">من تاريخ:</label>
+      <input type="date" name="date_from" class="form-control mr-3" value="{{ date_from or '' }}" id="input_date_from">
+      <label class="ml-2 mr-2" for="input_date_to">إلى تاريخ:</label>
+      <input type="date" name="date_to" class="form-control mr-3" value="{{ date_to or '' }}" id="input_date_to">
       <button type="submit" class="btn btn-primary">
         <i class="fas fa-filter mr-2"></i>فلتر
       </button>

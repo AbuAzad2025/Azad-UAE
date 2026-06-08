@@ -49,7 +49,7 @@
 
           <div class="form-group">
             <label>مزود الخدمة</label>
-            <select name="sms_provider" class="form-control">
+            <select name="sms_provider" class="form-control" aria-label="sms provider">
               <option value="" {{ 'selected' if not settings.sms_provider }}>بلا</option>
               <option value="twilio" {{ 'selected' if settings.sms_provider == 'twilio' }}>Twilio</option>
               <option value="nexmo" {{ 'selected' if settings.sms_provider == 'nexmo' }}>Nexmo (Vonage)</option>
@@ -61,25 +61,25 @@
           </div>
 
           <div class="form-group">
-            <label>API Key</label>
+            <label for="input_sms_api_key">API Key</label>
             <input type="password"
                    name="sms_api_key"
                    class="form-control"
                    value="{{ settings.sms_api_key or '' }}"
-                   placeholder="API Key من المزود">
+                   placeholder="API Key من المزود" id="input_sms_api_key">
             <small class="form-text text-muted">
               أدخل مفتاح API الخاص بالحساب لدى المزود، سيتم حفظه بشكل آمن.
             </small>
           </div>
 
           <div class="form-group">
-            <label>اسم المرسل</label>
+            <label for="input_sms_sender_name">اسم المرسل</label>
             <input type="text"
                    name="sms_sender_name"
                    class="form-control"
                    value="{{ settings.sms_sender_name or '' }}"
                    placeholder="Azad Garage"
-                   maxlength="11">
+                   maxlength="11" id="input_sms_sender_name">
             <small class="form-text text-muted">الحد الأقصى 11 حرفاً، بدون مسافات لمنتجات بعض المزودين.</small>
           </div>
 

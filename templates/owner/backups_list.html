@@ -230,7 +230,7 @@
                 {% endif %}
               </select>
               {% if is_platform_owner and tenants %}
-              <select name="tenant_id" class="form-control mb-2" required>
+              <select name="tenant_id" class="form-control mb-2" required aria-label="tenant id">
                 {% for t in tenants %}
                 <option value="{{ t.id }}">{{ t.name }} ({{ t.slug }})</option>
                 {% endfor %}
@@ -486,9 +486,9 @@
           </div>
           <p class="small text-muted">الملف: <strong id="targetRestoreFilename"></strong></p>
           <div class="form-group">
-            <label>رابط PostgreSQL للهدف (TARGET_TEST_DATABASE_URL)</label>
+            <label for="input_target_database_url">رابط PostgreSQL للهدف (TARGET_TEST_DATABASE_URL)</label>
             <input type="password" name="target_database_url" class="form-control" autocomplete="off"
-                   placeholder="postgresql://user:pass@host:5432/new_db" required>
+                   placeholder="postgresql://user:pass@host:5432/new_db" required id="input_target_database_url">
           </div>
           <div class="form-group">
             <label>اكتب للتأكيد: <code>RESTORE CONFIRM</code></label>

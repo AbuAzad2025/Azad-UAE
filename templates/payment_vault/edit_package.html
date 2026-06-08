@@ -62,16 +62,16 @@
                         </div>
                         <div class="col-md-4">
                             <div class="form-group">
-                                <label>عدد المستخدمين</label>
+                                <label for="input_max_users">عدد المستخدمين</label>
                                 <input type="number" name="max_users" class="form-control" 
-                                       value="{{ package.max_users or 1 }}">
+                                       value="{{ package.max_users or 1 }}" id="input_max_users">
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="form-group">
-                                <label>عدد الفروع</label>
+                                <label for="input_max_branches">عدد الفروع</label>
                                 <input type="number" name="max_branches" class="form-control" 
-                                       value="{{ package.max_branches or 1 }}">
+                                       value="{{ package.max_branches or 1 }}" id="input_max_branches">
                             </div>
                         </div>
                     </div>
@@ -79,17 +79,17 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label>مدة الدعم (شهور)</label>
+                                <label for="input_support_duration_months">مدة الدعم (شهور)</label>
                                 <input type="number" name="support_duration_months" class="form-control" 
-                                       value="{{ package.support_duration_months }}">
+                                       value="{{ package.support_duration_months }}" id="input_support_duration_months">
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label>نص الشارة (Badge)</label>
+                                <label for="input_badge_text">نص الشارة (Badge)</label>
                                 <input type="text" name="badge_text" class="form-control" 
                                        value="{{ package.badge_text or '' }}" 
-                                       placeholder="مثال: الأكثر شعبية">
+                                       placeholder="مثال: الأكثر شعبية" id="input_badge_text">
                             </div>
                         </div>
                     </div>

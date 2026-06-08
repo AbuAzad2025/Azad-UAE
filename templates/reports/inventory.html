@@ -14,7 +14,7 @@
           <div class="card-tools">
             <form method="get" class="form-inline d-inline mr-2">
               <label class="mr-2">الفرع:</label>
-              <select name="branch_id" class="form-control form-control-sm mr-2" style="min-width: 140px;">
+              <select name="branch_id" class="form-control form-control-sm mr-2" style="min-width: 140px;" aria-label="اختر الفرع">
                 <option value="">كل الفروع</option>
                 {% for b in branches or [] %}
                 <option value="{{ b.id }}" {{ 'selected' if selected_branch_id == b.id else '' }}>{{ b.name }} ({{ b.code }})</option>
@@ -22,19 +22,19 @@
               </select>
 
               <label class="mr-2">المستودع:</label>
-              <select name="warehouse_id" class="form-control form-control-sm mr-2" style="min-width: 160px;">
+              <select name="warehouse_id" class="form-control form-control-sm mr-2" style="min-width: 160px;" aria-label="warehouse id">
                 <option value="">كل المستودعات</option>
                 {% for w in warehouses or [] %}
                 <option value="{{ w.id }}" {{ 'selected' if selected_warehouse_id == w.id else '' }}>{{ w.name_ar or w.name }}</option>
                 {% endfor %}
               </select>
 
-              <label class="mr-2">تاريخ الإدخال:</label>
-              <input type="date" name="in_date_from" value="{{ in_date_from or '' }}" class="form-control form-control-sm mr-2">
+              <label class="mr-2" for="input_in_date_from">تاريخ الإدخال:</label>
+              <input type="date" name="in_date_from" value="{{ in_date_from or '' }}" class="form-control form-control-sm mr-2" id="input_in_date_from">
               <input type="date" name="in_date_to" value="{{ in_date_to or '' }}" class="form-control form-control-sm mr-2">
 
-              <label class="mr-2">تاريخ الإخراج:</label>
-              <input type="date" name="out_date_from" value="{{ out_date_from or '' }}" class="form-control form-control-sm mr-2">
+              <label class="mr-2" for="input_out_date_from">تاريخ الإخراج:</label>
+              <input type="date" name="out_date_from" value="{{ out_date_from or '' }}" class="form-control form-control-sm mr-2" id="input_out_date_from">
               <input type="date" name="out_date_to" value="{{ out_date_to or '' }}" class="form-control form-control-sm mr-2">
 
               <div class="form-check mr-2">

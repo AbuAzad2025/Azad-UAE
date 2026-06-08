@@ -20,15 +20,15 @@
             <div class="row">
               <div class="col-md-6">
                 <div class="form-group">
-                  <label>الاسم (EN) *</label>
-                  <input type="text" name="name" class="form-control" required value="{{ form_data.get('name', '') }}">
+                  <label for="input_name">الاسم (EN) *</label>
+                  <input type="text" name="name" class="form-control" required value="{{ form_data.get('name', '') }}" id="input_name">
                 </div>
               </div>
               
               <div class="col-md-6">
                 <div class="form-group">
-                  <label>الاسم (AR) *</label>
-                  <input type="text" name="name_ar" class="form-control" required value="{{ form_data.get('name_ar', '') }}">
+                  <label for="input_name_ar">الاسم (AR) *</label>
+                  <input type="text" name="name_ar" class="form-control" required value="{{ form_data.get('name_ar', '') }}" id="input_name_ar">
                 </div>
               </div>
             </div>
@@ -36,8 +36,8 @@
             <div class="row">
               <div class="col-md-4">
                 <div class="form-group">
-                  <label>النسبة % *</label>
-                  <input type="number" name="rate" class="form-control" step="0.01" required value="{{ form_data.get('rate', '') }}">
+                  <label for="input_rate">النسبة % *</label>
+                  <input type="number" name="rate" class="form-control" step="0.01" required value="{{ form_data.get('rate', '') }}" id="input_rate">
                 </div>
               </div>
               
@@ -45,7 +45,7 @@
                 <div class="form-group">
                   <label>نوع الحساب *</label>
                   {% set selected_tax_type = form_data.get('tax_type', 'customs') %}
-                  <select name="tax_type" class="form-control" required>
+                  <select name="tax_type" class="form-control" required aria-label="tax type">
                     <option value="customs" {% if selected_tax_type == 'customs' %}selected{% endif %}>جمارك</option>
                     <option value="vat" {% if selected_tax_type == 'vat' %}selected{% endif %}>ضريبة القيمة المضافة</option>
                     <option value="excise" {% if selected_tax_type == 'excise' %}selected{% endif %}>ضريبة انتقائية</option>
@@ -57,7 +57,7 @@
               <div class="col-md-4">
                 <div class="form-group">
                   <label>الحساب المحاسبي *</label>
-                  <select name="gl_account_id" class="form-control" required>
+                  <select name="gl_account_id" class="form-control" required aria-label="gl account id">
                     <option value="" {% if not form_data.get('gl_account_id') %}selected{% endif %}>بلا</option>
                     {% for account in accounts %}
                     <option value="{{ account.id }}" {% if form_data.get('gl_account_id') and form_data.get('gl_account_id')|int == account.id %}selected{% endif %}>
@@ -80,14 +80,14 @@
               </div>
               <div class="col-md-4">
                 <div class="form-group">
-                  <label>ساري من *</label>
-                  <input type="date" name="effective_from" class="form-control" required value="{{ form_data.get('effective_from', '') }}">
+                  <label for="input_effective_from">ساري من *</label>
+                  <input type="date" name="effective_from" class="form-control" required value="{{ form_data.get('effective_from', '') }}" id="input_effective_from">
                 </div>
               </div>
               <div class="col-md-4">
                 <div class="form-group">
-                  <label>ساري إلى</label>
-                  <input type="date" name="effective_to" class="form-control" value="{{ form_data.get('effective_to', '') }}">
+                  <label for="input_effective_to">ساري إلى</label>
+                  <input type="date" name="effective_to" class="form-control" value="{{ form_data.get('effective_to', '') }}" id="input_effective_to">
                 </div>
               </div>
             </div>

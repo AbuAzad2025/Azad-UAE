@@ -30,7 +30,7 @@
     <div class="card-body py-2">
         <form method="get" class="form-inline">
             <label class="mr-2">التصنيف:</label>
-            <select name="category" class="form-control mr-2" onchange="this.form.submit()">
+            <select name="category" class="form-control mr-2" onchange="this.form.submit()" aria-label="category">
                 <option value="">-- الكل --</option>
                 {% for category in categories %}
                 <option value="{{ category.id }}" {% if request.args.get('category', type=int) == category.id %}selected{% endif %}>

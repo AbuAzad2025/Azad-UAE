@@ -11,14 +11,14 @@
         <div class="row">
           <div class="col-md-6">
             <div class="form-group">
-              <label>الاسم (EN) *</label>
-              <input type="text" name="name" class="form-control" required value="{{ form_data.get('name', '') }}">
+              <label for="input_name">الاسم (EN) *</label>
+              <input type="text" name="name" class="form-control" required value="{{ form_data.get('name', '') }}" id="input_name">
             </div>
           </div>
           <div class="col-md-6">
             <div class="form-group">
-              <label>الاسم (AR) *</label>
-              <input type="text" name="name_ar" class="form-control" required value="{{ form_data.get('name_ar', '') }}">
+              <label for="input_name_ar">الاسم (AR) *</label>
+              <input type="text" name="name_ar" class="form-control" required value="{{ form_data.get('name_ar', '') }}" id="input_name_ar">
             </div>
           </div>
         </div>
@@ -26,7 +26,7 @@
           <div class="col-md-6">
             <div class="form-group">
               <label>الفئة الأب</label>
-              <select name="parent_id" class="form-control">
+              <select name="parent_id" class="form-control" aria-label="parent id">
                 <option value="" {% if not form_data.get('parent_id') %}selected{% endif %}>بلا</option>
                 {% for parent in parent_categories %}
                 <option value="{{ parent.id }}" {% if form_data.get('parent_id') and form_data.get('parent_id')|int == parent.id %}selected{% endif %}>
@@ -39,7 +39,7 @@
           <div class="col-md-6">
             <div class="form-group">
               <label>الحساب المحاسبي *</label>
-              <select name="gl_account_id" class="form-control" required>
+              <select name="gl_account_id" class="form-control" required aria-label="gl account id">
                 {% for account in accounts %}
                 <option value="{{ account.id }}" {% if form_data.get('gl_account_id') and form_data.get('gl_account_id')|int == account.id %}selected{% endif %}>
                   {{ account.code }} - {{ account.name_ar }}

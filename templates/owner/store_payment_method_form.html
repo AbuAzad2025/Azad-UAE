@@ -18,8 +18,8 @@
             <div class="card-body">
               {% if not method or not method.is_builtin %}
               <div class="form-group">
-                <label>الرمز (code)</label>
-                <input type="text" name="code" class="form-control" value="{{ method.code if method else '' }}" pattern="[a-z][a-z0-9_]+" dir="ltr" {% if method %}required{% else %}required{% endif %} placeholder="my_wallet">
+                <label for="input_code">الرمز (code)</label>
+                <input type="text" name="code" class="form-control" value="{{ method.code if method else '' }}" pattern="[a-z][a-z0-9_]+" dir="ltr" {% if method %}required{% else %}required{% endif %} placeholder="my_wallet" id="input_code">
                 <small class="text-muted">حروف إنجليزية صغيرة — يُستخدم داخلياً</small>
               </div>
               {% else %}
@@ -31,12 +31,12 @@
 
               <div class="row">
                 <div class="col-md-6 form-group">
-                  <label>الاسم (عربي) *</label>
-                  <input type="text" name="name_ar" class="form-control" value="{{ method.name_ar if method else '' }}" required>
+                  <label for="input_name_ar">الاسم (عربي) *</label>
+                  <input type="text" name="name_ar" class="form-control" value="{{ method.name_ar if method else '' }}" required id="input_name_ar">
                 </div>
                 <div class="col-md-6 form-group">
-                  <label>الاسم (English) *</label>
-                  <input type="text" name="name_en" class="form-control" value="{{ method.name_en if method else '' }}" required dir="ltr">
+                  <label for="input_name_en">الاسم (English) *</label>
+                  <input type="text" name="name_en" class="form-control" value="{{ method.name_en if method else '' }}" required dir="ltr" id="input_name_en">
                 </div>
               </div>
 
@@ -53,12 +53,12 @@
 
               <div class="row">
                 <div class="col-md-4 form-group">
-                  <label>أيقونة FontAwesome</label>
-                  <input type="text" name="icon" class="form-control" value="{{ method.icon if method else 'fas fa-money-bill-wave' }}" dir="ltr">
+                  <label for="input_icon">أيقونة FontAwesome</label>
+                  <input type="text" name="icon" class="form-control" value="{{ method.icon if method else 'fas fa-money-bill-wave' }}" dir="ltr" id="input_icon">
                 </div>
                 <div class="col-md-4 form-group">
-                  <label>الترتيب</label>
-                  <input type="number" name="sort_order" class="form-control" value="{{ method.sort_order if method else 100 }}">
+                  <label for="input_sort_order">الترتيب</label>
+                  <input type="number" name="sort_order" class="form-control" value="{{ method.sort_order if method else 100 }}" id="input_sort_order">
                 </div>
                 <div class="col-md-4 form-group pt-4">
                   <div class="custom-control custom-switch">
@@ -73,16 +73,16 @@
               {% set cfg = method.get_config() if method else {} %}
               <div class="row">
                 <div class="col-md-4 form-group">
-                  <label>اسم البنك</label>
-                  <input type="text" name="bank_name" class="form-control" value="{{ cfg.get('bank_name', '') }}">
+                  <label for="input_bank_name">اسم البنك</label>
+                  <input type="text" name="bank_name" class="form-control" value="{{ cfg.get('bank_name', '') }}" id="input_bank_name">
                 </div>
                 <div class="col-md-4 form-group">
-                  <label>IBAN</label>
-                  <input type="text" name="iban" class="form-control" value="{{ cfg.get('iban', '') }}" dir="ltr">
+                  <label for="input_iban">IBAN</label>
+                  <input type="text" name="iban" class="form-control" value="{{ cfg.get('iban', '') }}" dir="ltr" id="input_iban">
                 </div>
                 <div class="col-md-4 form-group">
-                  <label>اسم الحساب</label>
-                  <input type="text" name="account_name" class="form-control" value="{{ cfg.get('account_name', '') }}">
+                  <label for="input_account_name">اسم الحساب</label>
+                  <input type="text" name="account_name" class="form-control" value="{{ cfg.get('account_name', '') }}" id="input_account_name">
                 </div>
               </div>
               <div class="form-group">

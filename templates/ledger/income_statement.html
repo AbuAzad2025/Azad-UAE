@@ -22,12 +22,12 @@
     <div class="card">
       <div class="card-body py-2">
         <form method="get" class="form-inline">
-          <label class="mr-2">من:</label>
-          <input type="date" name="date_from" class="form-control mr-2" value="{{ date_from or '' }}">
-          <label class="mr-2">إلى:</label>
-          <input type="date" name="date_to" class="form-control mr-2" value="{{ date_to or '' }}">
+          <label class="mr-2" for="input_date_from">من:</label>
+          <input type="date" name="date_from" class="form-control mr-2" value="{{ date_from or '' }}" id="input_date_from">
+          <label class="mr-2" for="input_date_to">إلى:</label>
+          <input type="date" name="date_to" class="form-control mr-2" value="{{ date_to or '' }}" id="input_date_to">
           <label class="mr-2">الفرع:</label>
-          <select name="branch_id" class="form-control mr-2">
+          <select name="branch_id" class="form-control mr-2" aria-label="اختر الفرع">
             <option value="">-- الكل --</option>
             {% for branch in branches %}
             <option value="{{ branch.id }}" {% if selected_branch == branch.id %}selected{% endif %}>{{ branch.name }}</option>
@@ -45,7 +45,7 @@
   <div class="card-header bg-gradient-success">
     <h3 class="card-title text-white">{{ t('Income Statement') }}</h3>
     <div class="card-tools">
-      <button class="btn btn-tool" onclick="window.print()">
+      <button class="btn btn-tool" onclick="window.print()" title="طباعة">
         <i class="fas fa-print"></i>
       </button>
     </div>

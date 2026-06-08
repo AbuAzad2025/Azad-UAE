@@ -69,7 +69,7 @@
           <input type="text" name="search" class="form-control" placeholder="ابحث في الرسالة / الموديول / المسار..."
                  value="{{ search or '' }}">
         </div>
-        <select name="level" class="form-control form-control-sm mr-2">
+        <select name="level" class="form-control form-control-sm mr-2" aria-label="level">
           <option value="">كل المستويات</option>
           <option value="ERROR" {% if level_filter=='ERROR' %}selected{% endif %}>ERROR</option>
           <option value="WARNING" {% if level_filter=='WARNING' %}selected{% endif %}>WARNING</option>

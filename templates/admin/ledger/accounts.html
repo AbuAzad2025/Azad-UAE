@@ -85,7 +85,7 @@
             </td>
             <td>
               <div class="btn-group btn-group-sm">
-                <a href="{{ url_for('admin_ledger.edit_account', id=account.id) }}" class="btn btn-outline-primary btn-sm">
+                <a href="{{ url_for('admin_ledger.edit_account', id=account.id) }}" class="btn btn-outline-primary btn-sm" title="تعديل">
                   <i class="fas fa-edit"></i>
                 </a>
                 {% if current_user.has_permission('view_ledger') %}
@@ -93,7 +93,7 @@
                 {% endif %}
                   <i class="fas fa-file-alt"></i>
                 </a>
-                <button type="button" class="btn btn-outline-danger btn-sm" onclick="deleteAccount({{ account.id }}, '{{ account.full_name }}')">
+                <button type="button" class="btn btn-outline-danger btn-sm" onclick="deleteAccount({{ account.id }}, '{{ account.full_name }}')" title="حذف">
                   <i class="fas fa-trash"></i>
                 </button>
               </div>

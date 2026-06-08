@@ -339,7 +339,7 @@
                 <label>
                   <i class="fas fa-file-invoice text-primary"></i> القالب النشط
                 </label>
-                <select class="form-control" name="active_template">
+                <select class="form-control" name="active_template" aria-label="active template">
                   <option value="modern" {% if settings.active_template == 'modern' %}selected{% endif %}>🎨 عصري (Modern) - ملون وحديث</option>
                   <option value="classic" {% if settings.active_template == 'classic' %}selected{% endif %}>📄 كلاسيكي (Classic) - تقليدي بسيط</option>
                   <option value="minimal" {% if settings.active_template == 'minimal' %}selected{% endif %}>✨ بسيط (Minimal) - أنيق ونظيف</option>
@@ -480,7 +480,7 @@
                 <label>
                   <i class="fas fa-file-alt text-info"></i> حجم الورق
                 </label>
-                <select class="form-control" name="paper_size">
+                <select class="form-control" name="paper_size" aria-label="paper size">
                   <option value="A4" {% if settings.paper_size == 'A4' %}selected{% endif %}>📄 A4 (210 × 297 مم) - الأكثر شيوعاً</option>
                   <option value="A5" {% if settings.paper_size == 'A5' %}selected{% endif %}>📃 A5 (148 × 210 مم) - نصف A4</option>
                   <option value="Letter" {% if settings.paper_size == 'Letter' %}selected{% endif %}>📋 Letter (216 × 279 مم) - أمريكي</option>
@@ -494,7 +494,7 @@
                 <label>
                   <i class="fas fa-arrows-alt-h text-warning"></i> الاتجاه
                 </label>
-                <select class="form-control" name="orientation">
+                <select class="form-control" name="orientation" aria-label="orientation">
                   <option value="portrait" {% if settings.orientation == 'portrait' %}selected{% endif %}>⬆️ عمودي (Portrait) - الافتراضي</option>
                   <option value="landscape" {% if settings.orientation == 'landscape' %}selected{% endif %}>↔️ أفقي (Landscape) - عريض</option>
                 </select>
@@ -507,7 +507,7 @@
                 <label>
                   <i class="fas fa-language text-primary"></i> اللغة الافتراضية
                 </label>
-                <select class="form-control" name="default_language">
+                <select class="form-control" name="default_language" aria-label="default language">
                   <option value="ar" {% if settings.default_language == 'ar' %}selected{% endif %}>🇦🇪 عربي - Arabic</option>
                   <option value="en" {% if settings.default_language == 'en' %}selected{% endif %}>🇬🇧 English - إنجليزي</option>
                   <option value="both" {% if settings.default_language == 'both' %}selected{% endif %}>🌍 ثنائي اللغة - Bilingual</option>

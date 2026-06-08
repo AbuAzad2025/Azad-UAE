@@ -188,13 +188,13 @@
                                         </span>
                                     </td>
                                     <td>
-                                        <a href="{{ url_for('payment_vault.purchase_detail', id=purchase.id) }}" class="btn btn-sm btn-info">
+                                        <a href="{{ url_for('payment_vault.purchase_detail', id=purchase.id) }}" class="btn btn-sm btn-info" title="عرض">
                                             <i class="fas fa-eye"></i>
                                         </a>
                                         {% if purchase.payment_status == 'pending' and purchase.activation_status != 'activated' %}
                                         <form method="POST" action="{{ url_for('payment_vault.activate_purchase', id=purchase.id) }}" style="display: inline;">
                                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                            <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('هل تريد تفعيل هذه الباقة؟')">
+                                            <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('هل تريد تفعيل هذه الباقة؟')" title="تأكيد">
                                                 <i class="fas fa-check"></i>
                                             </button>
                                         </form>

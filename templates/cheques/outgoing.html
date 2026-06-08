@@ -72,7 +72,7 @@
     <form method="GET" class="form-inline" action="">
       <div class="form-group ml-2">
         <label class="ml-2">الحالة:</label>
-        <select name="status" class="form-control">
+        <select name="status" class="form-control" aria-label="status">
           <option value="">بلا</option>
           <option value="pending" {% if request.args.get('status') == 'pending' %}selected{% endif %}>قيد الانتظار</option>
           <option value="deposited" {% if request.args.get('status') == 'deposited' %}selected{% endif %}>مودع</option>

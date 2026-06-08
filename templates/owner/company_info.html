@@ -110,20 +110,20 @@
           <div class="row gy-3">
             <div class="col-xl-4 col-lg-6">
               <div class="form-group">
-                <label>الاسم بالعربي *</label>
-                <input type="text" name="name_ar" class="form-control compact-control" value="{{ tenant.name_ar or '' }}" required>
+                <label for="input_name_ar">الاسم بالعربي *</label>
+                <input type="text" name="name_ar" class="form-control compact-control" value="{{ tenant.name_ar or '' }}" required id="input_name_ar">
               </div>
             </div>
             <div class="col-xl-4 col-lg-6">
               <div class="form-group">
-                <label>الاسم بالإنجليزي</label>
-                <input type="text" name="name_en" class="form-control compact-control" value="{{ tenant.name_en or '' }}">
+                <label for="input_name_en">الاسم بالإنجليزي</label>
+                <input type="text" name="name_en" class="form-control compact-control" value="{{ tenant.name_en or '' }}" id="input_name_en">
               </div>
             </div>
             <div class="col-xl-4 col-lg-12">
               <div class="form-group">
-                <label>الكود (Slug)</label>
-                <input type="text" name="slug" class="form-control compact-control" value="{{ tenant.slug or '' }}" pattern="[a-z0-9-]+">
+                <label for="input_slug">الكود (Slug)</label>
+                <input type="text" name="slug" class="form-control compact-control" value="{{ tenant.slug or '' }}" pattern="[a-z0-9-]+" id="input_slug">
                 <small class="text-muted">حروف صغيرة وأرقام وشرطة فقط</small>
               </div>
             </div>
@@ -132,7 +132,7 @@
             <div class="col-lg-8 col-md-7">
               <div class="form-group">
                 <label>نوع النشاط</label>
-                <select name="business_type" class="form-control compact-control select-center">
+                <select name="business_type" class="form-control compact-control select-center" aria-label="business type">
                   <option value="garage" {{ 'selected' if tenant.business_type == 'garage' }}>كراج</option>
                   <option value="workshop" {{ 'selected' if tenant.business_type == 'workshop' }}>ورشة</option>
                   <option value="parts_shop" {{ 'selected' if tenant.business_type == 'parts_shop' }}>محل قطع</option>
@@ -143,7 +143,7 @@
             <div class="col-lg-8 col-md-7">
               <div class="form-group">
                 <label>الصناعة</label>
-                <select name="industry" class="form-control compact-control select-center">
+                <select name="industry" class="form-control compact-control select-center" aria-label="industry">
                   <option value="automotive" {{ 'selected' if tenant.industry == 'automotive' }}>سيارات</option>
                   <option value="heavy_equipment" {{ 'selected' if tenant.industry == 'heavy_equipment' }}>معدات ثقيلة</option>
                   <option value="mixed" {{ 'selected' if tenant.industry == 'mixed' }}>مختلط</option>
@@ -177,14 +177,14 @@
           <div class="row gy-3">
             <div class="col-xl-4 col-lg-5 col-md-6 col-sm-8">
               <div class="form-group">
-                <label>{{ t('City') }}</label>
-                <input type="text" name="city" class="form-control compact-control" value="{{ tenant.city or '' }}">
+                <label for="input_city">{{ t('City') }}</label>
+                <input type="text" name="city" class="form-control compact-control" value="{{ tenant.city or '' }}" id="input_city">
               </div>
             </div>
             <div class="col-xl-4 col-lg-6 col-md-7">
               <div class="form-group">
                 <label>{{ t('Country') }}</label>
-                <select name="country" class="form-control compact-control select-center">
+                <select name="country" class="form-control compact-control select-center" aria-label="country">
                   <option value="UAE" {{ 'selected' if tenant.country == 'UAE' }}>الإمارات</option>
                   <option value="Saudi" {{ 'selected' if tenant.country == 'Saudi' }}>السعودية</option>
                   <option value="Palestine" {{ 'selected' if tenant.country == 'Palestine' }}>فلسطين</option>
@@ -195,40 +195,40 @@
             </div>
             <div class="col-xl-4 col-lg-6 col-md-7">
               <div class="form-group">
-                <label>الموقع الجغرافي</label>
-                <input type="text" name="location_coords" class="form-control compact-control" value="{{ tenant.location_coords or '' }}" placeholder="25.2048,55.2708">
+                <label for="input_location_coords">الموقع الجغرافي</label>
+                <input type="text" name="location_coords" class="form-control compact-control" value="{{ tenant.location_coords or '' }}" placeholder="25.2048,55.2708" id="input_location_coords">
               </div>
             </div>
           </div>
           <div class="row">
             <div class="col-md-3">
               <div class="form-group">
-                <label>هاتف 1</label>
-                <input type="tel" name="phone_1" class="form-control" value="{{ tenant.phone_1 or '' }}">
+                <label for="input_phone_1">هاتف 1</label>
+                <input type="tel" name="phone_1" class="form-control" value="{{ tenant.phone_1 or '' }}" id="input_phone_1">
               </div>
             </div>
             <div class="col-md-3">
               <div class="form-group">
-                <label>هاتف 2</label>
-                <input type="tel" name="phone_2" class="form-control" value="{{ tenant.phone_2 or '' }}">
+                <label for="input_phone_2">هاتف 2</label>
+                <input type="tel" name="phone_2" class="form-control" value="{{ tenant.phone_2 or '' }}" id="input_phone_2">
               </div>
             </div>
             <div class="col-md-3">
               <div class="form-group">
-                <label>موبايل</label>
-                <input type="tel" name="mobile" class="form-control" value="{{ tenant.mobile or '' }}">
+                <label for="input_mobile">موبايل</label>
+                <input type="tel" name="mobile" class="form-control" value="{{ tenant.mobile or '' }}" id="input_mobile">
               </div>
             </div>
             <div class="col-md-3">
               <div class="form-group">
-                <label>{{ t('Email') }}</label>
-                <input type="email" name="email" class="form-control" value="{{ tenant.email or '' }}">
+                <label for="input_email">{{ t('Email') }}</label>
+                <input type="email" name="email" class="form-control" value="{{ tenant.email or '' }}" id="input_email">
               </div>
             </div>
           </div>
           <div class="form-group">
-            <label>الموقع الإلكتروني</label>
-            <input type="url" name="website" class="form-control" value="{{ tenant.website or '' }}" placeholder="https://example.com">
+            <label for="input_website">الموقع الإلكتروني</label>
+            <input type="url" name="website" class="form-control" value="{{ tenant.website or '' }}" placeholder="https://example.com" id="input_website">
           </div>
         </div>
       </div>
@@ -242,20 +242,20 @@
           <div class="row">
             <div class="col-md-4">
               <div class="form-group">
-                <label>الرقم الضريبي (TRN)</label>
-                <input type="text" name="tax_number" class="form-control" value="{{ tenant.tax_number or '' }}">
+                <label for="input_tax_number">الرقم الضريبي (TRN)</label>
+                <input type="text" name="tax_number" class="form-control" value="{{ tenant.tax_number or '' }}" id="input_tax_number">
               </div>
             </div>
             <div class="col-md-4">
               <div class="form-group">
-                <label>السجل التجاري</label>
-                <input type="text" name="commercial_register" class="form-control" value="{{ tenant.commercial_register or '' }}">
+                <label for="input_commercial_register">السجل التجاري</label>
+                <input type="text" name="commercial_register" class="form-control" value="{{ tenant.commercial_register or '' }}" id="input_commercial_register">
               </div>
             </div>
             <div class="col-md-4">
               <div class="form-group">
-                <label>رقم الترخيص</label>
-                <input type="text" name="license_number" class="form-control" value="{{ tenant.license_number or '' }}">
+                <label for="input_license_number">رقم الترخيص</label>
+                <input type="text" name="license_number" class="form-control" value="{{ tenant.license_number or '' }}" id="input_license_number">
               </div>
             </div>
           </div>
@@ -271,14 +271,14 @@
           <div class="row">
             <div class="col-md-6">
               <div class="form-group">
-                <label>اللون الأساسي</label>
-                <input type="color" name="brand_color_primary" class="form-control" value="{{ tenant.brand_color_primary or '#007A3D' }}">
+                <label for="input_brand_color_primary">اللون الأساسي</label>
+                <input type="color" name="brand_color_primary" class="form-control" value="{{ tenant.brand_color_primary or '#007A3D' }}" id="input_brand_color_primary">
               </div>
             </div>
             <div class="col-md-6">
               <div class="form-group">
-                <label>اللون الثانوي</label>
-                <input type="color" name="brand_color_secondary" class="form-control" value="{{ tenant.brand_color_secondary or '#D4AF37' }}">
+                <label for="input_brand_color_secondary">اللون الثانوي</label>
+                <input type="color" name="brand_color_secondary" class="form-control" value="{{ tenant.brand_color_secondary or '#D4AF37' }}" id="input_brand_color_secondary">
               </div>
             </div>
           </div>

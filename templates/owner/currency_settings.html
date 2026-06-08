@@ -46,7 +46,7 @@
 
           <div class="form-group">
             <label>العملة الافتراضية</label>
-            <select name="default_currency" class="form-control">
+            <select name="default_currency" class="form-control" aria-label="default currency">
               <option value="AED" {{ 'selected' if settings.default_currency == 'AED' }}>AED - درهم إماراتي</option>
               <option value="USD" {{ 'selected' if settings.default_currency == 'USD' }}>USD - دولار أمريكي</option>
               <option value="EUR" {{ 'selected' if settings.default_currency == 'EUR' }}>EUR - يورو</option>

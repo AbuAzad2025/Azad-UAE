@@ -49,18 +49,18 @@
             <div class="card-body">
                 <form method="GET" class="row" action="">
                     <div class="col-md-3">
-                        <label>من تاريخ</label>
+                        <label for="input_from_date">من تاريخ</label>
                         <input type="date" name="from_date" class="form-control" 
-                               value="{{ request.args.get('from_date', '') }}">
+                               value="{{ request.args.get('from_date', '') }}" id="input_from_date">
                     </div>
                     <div class="col-md-3">
-                        <label>إلى تاريخ</label>
+                        <label for="input_to_date">إلى تاريخ</label>
                         <input type="date" name="to_date" class="form-control" 
-                               value="{{ request.args.get('to_date', '') }}">
+                               value="{{ request.args.get('to_date', '') }}" id="input_to_date">
                     </div>
                     <div class="col-md-3">
                         <label>نوع التقرير</label>
-                        <select name="report_type" class="form-control">
+                        <select name="report_type" class="form-control" aria-label="report type">
                             <option value="all">الكل</option>
                             <option value="purchases">المشتريات فقط</option>
                             <option value="donations">التبرعات فقط</option>

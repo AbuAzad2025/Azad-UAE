@@ -35,7 +35,7 @@
           <div class="form-group">
             <label>نوع الحساب <span class="text-danger">*</span></label>
             {% set selected_type = form_data.get('type', '') %}
-            <select name="type" class="form-control" required>
+            <select name="type" class="form-control" required aria-label="type">
               <option value="" {% if not selected_type %}selected{% endif %}>بلا</option>
               <option value="asset" {% if selected_type == 'asset' %}selected{% endif %}>أصول</option>
               <option value="liability" {% if selected_type == 'liability' %}selected{% endif %}>خصوم</option>
@@ -58,10 +58,10 @@
         </div>
         <div class="col-md-6">
           <div class="form-group">
-            <label>اسم الحساب (إنجليزي)</label>
+            <label for="input_name">اسم الحساب (إنجليزي)</label>
             <input type="text" name="name" class="form-control" 
                    placeholder="مثال: Cash, Accounts Receivable"
-                   value="{{ form_data.get('name', '') }}">
+                   value="{{ form_data.get('name', '') }}" id="input_name">
           </div>
         </div>
       </div>
@@ -71,7 +71,7 @@
           <div class="form-group">
             <label>الحساب الرئيسي</label>
             {% set selected_parent = form_data.get('parent_id') %}
-            <select name="parent_id" class="form-control">
+            <select name="parent_id" class="form-control" aria-label="parent id">
               <option value="" {% if not selected_parent %}selected{% endif %}>بلا</option>
               {% for parent in parent_accounts %}
               <option value="{{ parent.id }}" {% if selected_parent and selected_parent|int == parent.id %}selected{% endif %}>
@@ -86,7 +86,7 @@
           <div class="form-group">
             <label>العملة</label>
             {% set selected_currency = form_data.get('currency', tenant_default_currency or 'AED') %}
-            <select name="currency" class="form-control">
+            <select name="currency" class="form-control" aria-label="العملة">
               <option value="AED" {% if selected_currency == 'AED' %}selected{% endif %}>درهم إماراتي (AED)</option>
               <option value="USD" {% if selected_currency == 'USD' %}selected{% endif %}>دولار أمريكي (USD)</option>
               <option value="EUR" {% if selected_currency == 'EUR' %}selected{% endif %}>يورو (EUR)</option>

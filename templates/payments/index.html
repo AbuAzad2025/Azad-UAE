@@ -65,8 +65,7 @@
               class="btn btn-sm btn-secondary js-print-receipt"
               {% if current_user.has_permission('manage_payments') %}
               data-print-url="{{ url_for('payments.print_receipt', id=receipt.id) }}"
-              {% endif %}
-            >
+              {% endif %} title="طباعة">
               <i class="fas fa-print"></i>
             </button>
           </td>

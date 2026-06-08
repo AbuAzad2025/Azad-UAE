@@ -28,23 +28,23 @@
         <div class="row">
           <div class="col-md-6">
             <div class="form-group">
-              <label>Publishable Key</label>
+              <label for="input_stripe_publishable_key">Publishable Key</label>
               <input type="text" 
                      name="stripe_publishable_key" 
                      class="form-control" 
                      value="{{ vault.stripe_publishable_key or '' }}"
-                     placeholder="pk_live_...">
+                     placeholder="pk_live_..." id="input_stripe_publishable_key">
               <small class="text-muted">المفتاح العام للواجهة الأمامية</small>
             </div>
           </div>
           <div class="col-md-6">
             <div class="form-group">
-              <label>Secret Key</label>
+              <label for="input_stripe_secret_key">Secret Key</label>
               <input type="password" 
                      name="stripe_secret_key" 
                      class="form-control" 
                      value="{{ vault.stripe_secret_key or '' }}"
-                     placeholder="sk_live_...">
+                     placeholder="sk_live_..." id="input_stripe_secret_key">
               <small class="text-muted">المفتاح السري (لا تشاركه أبداً)</small>
             </div>
           </div>
@@ -56,22 +56,22 @@
         <div class="row">
           <div class="col-md-6">
             <div class="form-group">
-              <label>Client ID</label>
+              <label for="input_paypal_client_id">Client ID</label>
               <input type="text" 
                      name="paypal_client_id" 
                      class="form-control" 
                      value="{{ vault.paypal_client_id or '' }}"
-                     placeholder="AYSq3R...">
+                     placeholder="AYSq3R..." id="input_paypal_client_id">
             </div>
           </div>
           <div class="col-md-6">
             <div class="form-group">
-              <label>Client Secret</label>
+              <label for="input_paypal_client_secret">Client Secret</label>
               <input type="password" 
                      name="paypal_client_secret" 
                      class="form-control" 
                      value="{{ vault.paypal_client_secret or '' }}"
-                     placeholder="EH...">
+                     placeholder="EH..." id="input_paypal_client_secret">
             </div>
           </div>
         </div>
@@ -82,12 +82,12 @@
         <div class="row">
           <div class="col-md-12">
             <div class="form-group">
-              <label>API Key</label>
+              <label for="input_nowpayments_api_key">API Key</label>
               <input type="password" 
                      name="nowpayments_api_key" 
                      class="form-control" 
                      value="{{ vault.nowpayments_api_key or '' }}"
-                     placeholder="NP_API_...">
+                     placeholder="NP_API_..." id="input_nowpayments_api_key">
               <small class="text-muted">مفتاح API للدفع بالعملات المشفرة</small>
             </div>
           </div>

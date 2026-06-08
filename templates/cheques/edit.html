@@ -91,7 +91,7 @@
         <div class="col-md-4">
           <div class="form-group">
             <label><i class="fas fa-dollar-sign"></i> العملة:</label>
-            <select name="currency" class="form-control">
+            <select name="currency" class="form-control" aria-label="العملة">
               <option value="AED" {% if cheque.currency == 'AED' %}selected{% endif %}>AED - درهم إماراتي</option>
               <option value="USD" {% if cheque.currency == 'USD' %}selected{% endif %}>USD - دولار أمريكي</option>
               <option value="EUR" {% if cheque.currency == 'EUR' %}selected{% endif %}>EUR - يورو</option>
@@ -138,7 +138,7 @@
           <div class="col-md-6">
             <div class="form-group">
               <label><i class="fas fa-user"></i> العميل (اختياري):</label>
-              <select name="customer_id" class="form-control customer-select">
+              <select name="customer_id" class="form-control customer-select" aria-label="customer id">
                 <option value="">بلا</option>
                 {% for customer in customers %}
                 <option value="{{ customer.id }}" {% if cheque.customer_id == customer.id %}selected{% endif %}>
@@ -174,7 +174,7 @@
           <div class="col-md-6">
             <div class="form-group">
               <label><i class="fas fa-truck"></i> المورد (اختياري):</label>
-              <select name="supplier_id" class="form-control supplier-select">
+              <select name="supplier_id" class="form-control supplier-select" aria-label="supplier id">
                 <option value="">بلا</option>
                 {% for supplier in suppliers %}
                 <option value="{{ supplier.id }}" {% if cheque.supplier_id == supplier.id %}selected{% endif %}>

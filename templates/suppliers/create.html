@@ -147,7 +147,7 @@
               <i class="fas fa-tag text-success"></i> نوع المورد 
               <span class="text-danger">*</span>
             </label>
-            <select name="supplier_type" class="form-control" required>
+            <select name="supplier_type" class="form-control" required aria-label="supplier type">
               <option value="" {% if supplier_type_value == '' %}selected{% endif %}>بلا</option>
               <option value="parts" {% if supplier_type_value == 'parts' %}selected{% endif %}>قطع غيار</option>
               <option value="equipment" {% if supplier_type_value == 'equipment' %}selected{% endif %}>معدات</option>
@@ -163,7 +163,7 @@
             <label>
               <i class="fas fa-star text-warning"></i> التقييم
             </label>
-            <select name="rating" class="form-control">
+            <select name="rating" class="form-control" aria-label="rating">
               <option value="" {% if rating_value == '' %}selected{% endif %}>بلا</option>
               <option value="1" {% if rating_value == '1' %}selected{% endif %}>⭐ نجمة واحدة</option>
               <option value="2" {% if rating_value == '2' %}selected{% endif %}>⭐⭐ نجمتان</option>
@@ -179,7 +179,7 @@
             <label>
               <i class="fas fa-dollar-sign text-success"></i> العملة المفضلة
             </label>
-            <select name="preferred_currency" class="form-control">
+            <select name="preferred_currency" class="form-control" aria-label="preferred currency">
               <option value="AED">AED - درهم</option>
               <option value="USD">USD - دولار</option>
               <option value="EUR">EUR - يورو</option>
@@ -257,23 +257,23 @@
       <div class="row">
         <div class="col-md-4">
           <div class="form-group">
-            <label>{{ t('City') }}</label>
-            <input type="text" name="city" class="form-control" placeholder="دبي">
+            <label for="input_city">{{ t('City') }}</label>
+            <input type="text" name="city" class="form-control" placeholder="دبي" id="input_city">
           </div>
         </div>
         
         <div class="col-md-4">
           <div class="form-group">
-            <label>{{ t('Country') }}</label>
-            <input type="text" name="country" class="form-control" value="UAE">
+            <label for="input_country">{{ t('Country') }}</label>
+            <input type="text" name="country" class="form-control" value="UAE" id="input_country">
           </div>
         </div>
         
         <div class="col-md-4">
           <div class="form-group">
-            <label>{{ t('Address') }}</label>
+            <label for="input_address">{{ t('Address') }}</label>
             <input type="text" name="address" class="form-control"
-                   placeholder="{{ t('Full Address') }}">
+                   placeholder="{{ t('Full Address') }}" id="input_address">
           </div>
         </div>
       </div>
@@ -361,9 +361,9 @@
       <div class="row">
         <div class="col-md-6">
           <div class="form-group">
-            <label>الوسوم (Tags)</label>
+            <label for="input_tags">الوسوم (Tags)</label>
             <input type="text" name="tags" class="form-control"
-                   placeholder="مثال: محلي، سريع، مضمون (افصل بفاصلة)">
+                   placeholder="مثال: محلي، سريع، مضمون (افصل بفاصلة)" id="input_tags">
             <small class="form-text text-muted">
               <i class="fas fa-info-circle"></i> افصل الوسوم بفاصلة
             </small>

@@ -458,7 +458,7 @@ $(document).ready(function() {
     const html = `
       <tr id="row-${rowId}">
         <td>
-          <select name="partner_customer_id[]" class="form-control form-control-sm" required>
+          <select name="partner_customer_id[]" class="form-control form-control-sm" required aria-label="partner customer id[]">
             ${partnerOptions}
           </select>
         </td>
@@ -471,7 +471,7 @@ $(document).ready(function() {
           </div>
         </td>
         <td>
-          <button type="button" class="btn btn-danger btn-sm remove-partner-btn" data-row="row-${rowId}">
+          <button type="button" class="btn btn-danger btn-sm remove-partner-btn" data-row="row-${rowId}" title="حذف">
             <i class="fas fa-trash"></i>
           </button>
         </td>

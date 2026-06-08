@@ -76,7 +76,7 @@
 
           <div class="form-group">
             <label>نوع البيانات للحذف</label>
-            <select name="cleanup_type" class="form-control" required>
+            <select name="cleanup_type" class="form-control" required aria-label="cleanup type">
               <option value="">اختر...</option>
               <option value="logs">سجلات المراجعة</option>
               <option value="archived">السجلات المؤرشفة</option>
@@ -85,8 +85,8 @@
           </div>
 
           <div class="form-group">
-            <label>حذف البيانات الأقدم من (أيام)</label>
-            <input type="number" name="days" class="form-control" value="90" min="30" max="365">
+            <label for="input_days">حذف البيانات الأقدم من (أيام)</label>
+            <input type="number" name="days" class="form-control" value="90" min="30" max="365" id="input_days">
             <small class="form-text text-muted">يمكنك اختيار فترة زمنية مختلفة، لكن الحد الأدنى 30 يوماً للحفاظ على السجلات الحديثة.</small>
           </div>
 

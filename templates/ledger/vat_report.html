@@ -22,7 +22,7 @@
 
     <div class="col-md-3 mb-2">
       <label class="small text-muted d-block">الفرع</label>
-      <select name="branch_id" class="form-control">
+      <select name="branch_id" class="form-control" aria-label="اختر الفرع">
         <option value="">-- الكل --</option>
         {% for branch in branches %}
         <option value="{{ branch.id }}" {% if selected_branch == branch.id %}selected{% endif %}>{{ branch.name }}</option>

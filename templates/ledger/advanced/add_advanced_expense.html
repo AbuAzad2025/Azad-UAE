@@ -10,14 +10,14 @@
         <div class="row">
           <div class="col-md-3">
             <div class="form-group">
-              <label>التاريخ *</label>
-              <input type="date" name="expense_date" class="form-control" required value="{{ today }}">
+              <label for="input_expense_date">التاريخ *</label>
+              <input type="date" name="expense_date" class="form-control" required value="{{ today }}" id="input_expense_date">
             </div>
           </div>
           <div class="col-md-3">
              <div class="form-group">
                <label>الفرع *</label>
-               <select name="branch_id" class="form-control" required>
+               <select name="branch_id" class="form-control" required aria-label="اختر الفرع">
                  {% if current_user.is_super_admin() or current_user.is_owner %}
                     <option value="">-- عام --</option>
                     {% for branch in branches %}
@@ -32,7 +32,7 @@
           <div class="col-md-3">
             <div class="form-group">
               <label>الفئة *</label>
-              <select name="category_id" class="form-control" required>
+              <select name="category_id" class="form-control" required aria-label="category id">
                 {% for cat in categories %}
                 <option value="{{ cat.id }}">{{ cat.name_ar }}</option>
                 {% endfor %}
@@ -41,8 +41,8 @@
           </div>
           <div class="col-md-3">
             <div class="form-group">
-              <label>المبلغ *</label>
-              <input type="number" name="amount" class="form-control" step="0.01" required>
+              <label for="input_amount">المبلغ *</label>
+              <input type="number" name="amount" class="form-control" step="0.01" required id="input_amount">
             </div>
           </div>
         </div>

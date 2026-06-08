@@ -22,29 +22,29 @@
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         
         <div class="form-group">
-          <label>API URL</label>
+          <label for="input_whatsapp_api_url">API URL</label>
           <input type="url" 
                  name="whatsapp_api_url" 
                  class="form-control" 
                  value="{{ settings.whatsapp_api_url or '' }}" 
-                 placeholder="https://api.whatsapp.com">
+                 placeholder="https://api.whatsapp.com" id="input_whatsapp_api_url">
         </div>
         
         <div class="form-group">
-          <label>API Key</label>
+          <label for="input_whatsapp_api_key">API Key</label>
           <input type="password" 
                  name="whatsapp_api_key" 
                  class="form-control" 
-                 value="{{ settings.whatsapp_api_key or '' }}">
+                 value="{{ settings.whatsapp_api_key or '' }}" id="input_whatsapp_api_key">
         </div>
         
         <div class="form-group">
-          <label>رقم الهاتف</label>
+          <label for="input_whatsapp_phone_number">رقم الهاتف</label>
           <input type="text" 
                  name="whatsapp_phone_number" 
                  class="form-control" 
                  value="{{ settings.whatsapp_phone_number or '' }}" 
-                 placeholder="+971501234567">
+                 placeholder="+971501234567" id="input_whatsapp_phone_number">
         </div>
         
         <div class="form-group">

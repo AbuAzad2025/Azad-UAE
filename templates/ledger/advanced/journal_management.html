@@ -32,10 +32,10 @@
               {% endif %}
             </td>
             <td>
-              <a href="{{ url_for('admin_ledger.view_journal', id=entry.id) }}" class="btn btn-sm btn-info"><i class="fas fa-eye"></i></a>
+              <a href="{{ url_for('admin_ledger.view_journal', id=entry.id) }}" class="btn btn-sm btn-info" title="عرض"><i class="fas fa-eye"></i></a>
               <form method="post" action="{{ url_for('advanced_ledger.reverse_journal_entry', entry_id=entry.id) }}" style="display:inline">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button type="submit" class="btn btn-sm btn-warning" onclick="return confirm('عكس هذا القيد؟')"><i class="fas fa-undo"></i></button>
+                <button type="submit" class="btn btn-sm btn-warning" onclick="return confirm('عكس هذا القيد؟')" title="تراجع"><i class="fas fa-undo"></i></button>
               </form>
             </td>
           </tr>

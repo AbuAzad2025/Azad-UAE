@@ -1,181 +1,361 @@
-{% extends 'base.html' %}
-{% block title %}صرف الرواتب{% endblock %}
-{% block content %}
-<div class="container-fluid">
-  
-  <!-- Branch Payroll Generation -->
-  <div class="row mb-3">
-    <div class="col-md-12">
-        <div class="card card-primary collapsed-card">
-            <div class="card-header">
-                <h3 class="card-title"><i class="fas fa-layer-group"></i> توليد رواتب الفرع (دفعة واحدة)</h3>
-                <div class="card-tools">
-                    <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-plus"></i></button>
-                </div>
-            </div>
-            <div class="card-body">
-                <form method="post">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <input type="hidden" name="generate_branch" value="1">
-                    <div class="row">
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label>الفرع</label>
-                                <select name="branch_id" class="form-control select2" required>
-                                    {% for branch in branches %}
-                                    <option value="{{ branch.id }}">{{ branch.name }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label>الشهر</label>
-                                <select name="month" class="form-control">
-                                    {% for i in range(1, 13) %}
-                                    <option value="{{ i }}" {% if i == today.month %}selected{% endif %}>{{ i }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label>السنة</label>
-                                <input type="number" name="year" class="form-control" value="{{ today.year }}">
-                            </div>
-                        </div>
-                        <div class="col-md-2">
-                             <div class="form-group">
-                                <label>&nbsp;</label>
-                                <button type="submit" class="btn btn-primary btn-block">توليد الرواتب</button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="alert alert-warning mt-2">
-                        <i class="fas fa-info-circle"></i> سيتم توليد رواتب جميع موظفين الفرع (نظام الراتب الشهري) فقط. موظفي المياومة يجب معالجتهم فردياً لتحديد أيام العمل.
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-  </div>
-
-  <div class="row">
-    <div class="col-md-12">
-        <div class="card collapsed-card">
-            <div class="card-header bg-gradient-success text-white">
-                <h3 class="card-title"><i class="fas fa-money-bill-wave"></i> معالجة راتب موظف (فردي)</h3>
-                <div class="card-tools">
-                    <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-plus"></i></button>
-                </div>
-            </div>
-            <div class="card-body">
-                <form method="post">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <div class="row">
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label>الموظف</label>
-                                <select name="employee_id" class="form-control select2" required>
-                                    {% for emp in employees %}
-                                    <option value="{{ emp.id }}">{{ emp.name }} ({{ emp.employment_type }})</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-2">
-                            <div class="form-group">
-                                <label>الشهر</label>
-                                <select name="month" class="form-control">
-                                    {% for i in range(1, 13) %}
-                                    <option value="{{ i }}" {% if i == today.month %}selected{% endif %}>{{ i }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-2">
-                            <div class="form-group">
-                                <label>السنة</label>
-                                <input type="number" name="year" class="form-control" value="{{ today.year }}">
-                            </div>
-                        </div>
-                        <div class="col-md-2">
-                            <div class="form-group">
-                                <label>أيام العمل (للمياومة)</label>
-                                <input type="number" name="days_worked" class="form-control" value="0">
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label>بدلات / إضافي</label>
-                                <input type="number" step="0.01" name="allowances" class="form-control" value="0">
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label>خصومات</label>
-                                <input type="number" step="0.01" name="deductions" class="form-control" value="0">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="alert alert-info mt-4">
-                                سيتم خصم السلف المعلقة تلقائياً.
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <button type="submit" class="btn btn-success">اعتماد وصرف</button>
-                </form>
-            </div>
-        </div>
-    </div>
-  </div>
-  
-  <div class="row mt-3">
-      <div class="col-12">
-          <div class="card">
-              <div class="card-header">
-                  <h3 class="card-title">سجل الرواتب المصروفة</h3>
-              </div>
-              <div class="card-body">
-                  <table class="table table-bordered">
-                      <thead>
-                          <tr>
-                              <th>التاريخ</th>
-                              <th>الموظف</th>
-                              <th>الفترة</th>
-                              <th>الأساسي</th>
-                              <th>إضافي</th>
-                              <th>خصومات</th>
-                              <th>سلف</th>
-                              <th>الصافي</th>
-                              <th>طباعة</th>
-                          </tr>
-                      </thead>
-                      <tbody>
-                          {% for t in transactions %}
-                          <tr>
-                              <td>{{ t.payment_date }}</td>
-                              <td>{{ t.employee.name }}</td>
-                              <td>{{ t.month }}/{{ t.year }}</td>
-                              <td>{{ t.basic_amount }}</td>
-                              <td class="text-success">{{ t.allowances }}</td>
-                              <td class="text-danger">{{ t.deductions }}</td>
-                              <td class="text-warning">{{ t.advances_deducted }}</td>
-                              <td class="font-weight-bold">{{ t.net_salary }}</td>
-                              <td>
-                                  <a href="{{ url_for('payroll.salary_slip', id=t.id) }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-primary"><i class="fas fa-print"></i></a>
-                              </td>
-                          </tr>
-                          {% endfor %}
-                      </tbody>
-                  </table>
-              </div>
-          </div>
-      </div>
-  </div>
-</div>
+{% extends 'base.html' %}
+
+{% block title %}صرف الرواتب{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+  
+
+  <!-- Branch Payroll Generation -->
+
+  <div class="row mb-3">
+
+    <div class="col-md-12">
+
+        <div class="card card-primary collapsed-card">
+
+            <div class="card-header">
+
+                <h3 class="card-title"><i class="fas fa-layer-group"></i> توليد رواتب الفرع (دفعة واحدة)</h3>
+
+                <div class="card-tools">
+
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse" title="إضافة"><i class="fas fa-plus"></i></button>
+
+                </div>
+
+            </div>
+
+            <div class="card-body">
+
+                <form method="post">
+
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <input type="hidden" name="generate_branch" value="1">
+
+                    <div class="row">
+
+                        <div class="col-md-4">
+
+                            <div class="form-group">
+
+                                <label>الفرع</label>
+
+                                <select name="branch_id" class="form-control select2" required aria-label="اختر الفرع">
+
+                                    {% for branch in branches %}
+
+                                    <option value="{{ branch.id }}">{{ branch.name }}</option>
+
+                                    {% endfor %}
+
+                                </select>
+
+                            </div>
+
+                        </div>
+
+                        <div class="col-md-3">
+
+                            <div class="form-group">
+
+                                <label>الشهر</label>
+
+                                <select name="month" class="form-control" aria-label="الشهر">
+
+                                    {% for i in range(1, 13) %}
+
+                                    <option value="{{ i }}" {% if i == today.month %}selected{% endif %}>{{ i }}</option>
+
+                                    {% endfor %}
+
+                                </select>
+
+                            </div>
+
+                        </div>
+
+                        <div class="col-md-3">
+
+                            <div class="form-group">
+
+                                <label for="input_year">السنة</label>
+
+                                <input type="number" name="year" class="form-control" value="{{ today.year }}" id="input_year">
+
+                            </div>
+
+                        </div>
+
+                        <div class="col-md-2">
+
+                             <div class="form-group">
+
+                                <label>&nbsp;</label>
+
+                                <button type="submit" class="btn btn-primary btn-block">توليد الرواتب</button>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="alert alert-warning mt-2">
+
+                        <i class="fas fa-info-circle"></i> سيتم توليد رواتب جميع موظفين الفرع (نظام الراتب الشهري) فقط. موظفي المياومة يجب معالجتهم فردياً لتحديد أيام العمل.
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+
+  </div>
+
+
+
+  <div class="row">
+
+    <div class="col-md-12">
+
+        <div class="card collapsed-card">
+
+            <div class="card-header bg-gradient-success text-white">
+
+                <h3 class="card-title"><i class="fas fa-money-bill-wave"></i> معالجة راتب موظف (فردي)</h3>
+
+                <div class="card-tools">
+
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse" title="إضافة"><i class="fas fa-plus"></i></button>
+
+                </div>
+
+            </div>
+
+            <div class="card-body">
+
+                <form method="post">
+
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <div class="row">
+
+                        <div class="col-md-4">
+
+                            <div class="form-group">
+
+                                <label>الموظف</label>
+
+                                <select name="employee_id" class="form-control select2" required aria-label="اختر الموظف">
+
+                                    {% for emp in employees %}
+
+                                    <option value="{{ emp.id }}">{{ emp.name }} ({{ emp.employment_type }})</option>
+
+                                    {% endfor %}
+
+                                </select>
+
+                            </div>
+
+                        </div>
+
+                        <div class="col-md-2">
+
+                            <div class="form-group">
+
+                                <label>الشهر</label>
+
+                                <select name="month" class="form-control" aria-label="الشهر">
+
+                                    {% for i in range(1, 13) %}
+
+                                    <option value="{{ i }}" {% if i == today.month %}selected{% endif %}>{{ i }}</option>
+
+                                    {% endfor %}
+
+                                </select>
+
+                            </div>
+
+                        </div>
+
+                        <div class="col-md-2">
+
+                            <div class="form-group">
+
+                                <label for="input_year">السنة</label>
+
+                                <input type="number" name="year" class="form-control" value="{{ today.year }}" id="input_year">
+
+                            </div>
+
+                        </div>
+
+                        <div class="col-md-2">
+
+                            <div class="form-group">
+
+                                <label for="input_days_worked">أيام العمل (للمياومة)</label>
+
+                                <input type="number" name="days_worked" class="form-control" value="0" id="input_days_worked">
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    
+
+                    <div class="row">
+
+                        <div class="col-md-3">
+
+                            <div class="form-group">
+
+                                <label for="input_allowances">بدلات / إضافي</label>
+
+                                <input type="number" step="0.01" name="allowances" class="form-control" value="0" id="input_allowances">
+
+                            </div>
+
+                        </div>
+
+                        <div class="col-md-3">
+
+                            <div class="form-group">
+
+                                <label for="input_deductions">خصومات</label>
+
+                                <input type="number" step="0.01" name="deductions" class="form-control" value="0" id="input_deductions">
+
+                            </div>
+
+                        </div>
+
+                        <div class="col-md-6">
+
+                            <div class="alert alert-info mt-4">
+
+                                سيتم خصم السلف المعلقة تلقائياً.
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    
+
+                    <button type="submit" class="btn btn-success">اعتماد وصرف</button>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+
+  </div>
+
+  
+
+  <div class="row mt-3">
+
+      <div class="col-12">
+
+          <div class="card">
+
+              <div class="card-header">
+
+                  <h3 class="card-title">سجل الرواتب المصروفة</h3>
+
+              </div>
+
+              <div class="card-body">
+
+                  <table class="table table-bordered">
+
+                      <thead>
+
+                          <tr>
+
+                              <th>التاريخ</th>
+
+                              <th>الموظف</th>
+
+                              <th>الفترة</th>
+
+                              <th>الأساسي</th>
+
+                              <th>إضافي</th>
+
+                              <th>خصومات</th>
+
+                              <th>سلف</th>
+
+                              <th>الصافي</th>
+
+                              <th>طباعة</th>
+
+                          </tr>
+
+                      </thead>
+
+                      <tbody>
+
+                          {% for t in transactions %}
+
+                          <tr>
+
+                              <td>{{ t.payment_date }}</td>
+
+                              <td>{{ t.employee.name }}</td>
+
+                              <td>{{ t.month }}/{{ t.year }}</td>
+
+                              <td>{{ t.basic_amount }}</td>
+
+                              <td class="text-success">{{ t.allowances }}</td>
+
+                              <td class="text-danger">{{ t.deductions }}</td>
+
+                              <td class="text-warning">{{ t.advances_deducted }}</td>
+
+                              <td class="font-weight-bold">{{ t.net_salary }}</td>
+
+                              <td>
+
+                                  <a href="{{ url_for('payroll.salary_slip', id=t.id) }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-primary" title="طباعة"><i class="fas fa-print"></i></a>
+
+                              </td>
+
+                          </tr>
+
+                          {% endfor %}
+
+                      </tbody>
+
+                  </table>
+
+              </div>
+
+          </div>
+
+      </div>
+
+  </div>
+
+</div>
+
 {% endblock %}

@@ -46,15 +46,15 @@
           <div class="row align-items-end">
             <div class="col-md-5">
               <div class="form-group">
-                <label>اسم المفتاح</label>
-                <input type="text" name="name" class="form-control" placeholder="My API Key" required>
+                <label for="input_name">اسم المفتاح</label>
+                <input type="text" name="name" class="form-control" placeholder="My API Key" required id="input_name">
                 <small class="form-text text-muted">اسم واضح يساعدك على تمييز استخدام المفتاح لاحقاً.</small>
               </div>
             </div>
             <div class="col-md-5">
               <div class="form-group">
                 <label>الخدمة</label>
-                <select name="service" class="form-control" required>
+                <select name="service" class="form-control" required aria-label="service">
                   <option value="api">API عام</option>
                   <option value="integration">Integration</option>
                   <option value="webhook">Webhook</option>

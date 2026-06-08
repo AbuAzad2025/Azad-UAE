@@ -184,7 +184,7 @@
             <div class="col-md-3">
               <div class="form-group">
                 <label>العملة الافتراضية</label>
-                <select name="default_currency" class="form-control">
+                <select name="default_currency" class="form-control" aria-label="default currency">
                   <option value="AED" {{ 'selected' if settings.default_currency == 'AED' }}>AED - درهم إماراتي</option>
                   <option value="USD" {{ 'selected' if settings.default_currency == 'USD' }}>USD - دولار أمريكي</option>
                   <option value="EUR" {{ 'selected' if settings.default_currency == 'EUR' }}>EUR - يورو</option>
@@ -195,7 +195,7 @@
             <div class="col-md-3">
               <div class="form-group">
                 <label>اللغة الافتراضية</label>
-                <select name="default_language" class="form-control">
+                <select name="default_language" class="form-control" aria-label="default language">
                   <option value="ar" {{ 'selected' if settings.default_language == 'ar' }}>العربية</option>
                   <option value="en" {{ 'selected' if settings.default_language == 'en' }}>English</option>
                 </select>
@@ -204,7 +204,7 @@
             <div class="col-md-3">
               <div class="form-group">
                 <label>المنطقة الزمنية</label>
-                <select name="timezone" class="form-control">
+                <select name="timezone" class="form-control" aria-label="timezone">
                   <option value="Asia/Dubai" {{ 'selected' if settings.timezone == 'Asia/Dubai' }}>Asia/Dubai (GST +4)</option>
                   <option value="Asia/Riyadh" {{ 'selected' if settings.timezone == 'Asia/Riyadh' }}>Asia/Riyadh (AST +3)</option>
                   <option value="Asia/Jerusalem" {{ 'selected' if settings.timezone == 'Asia/Jerusalem' }}>Asia/Jerusalem (IST +2)</option>
@@ -213,8 +213,8 @@
             </div>
             <div class="col-md-3">
               <div class="form-group">
-                <label>عناصر لكل صفحة</label>
-                <input type="number" name="items_per_page" class="form-control" value="{{ settings.items_per_page or 25 }}" min="10" max="100">
+                <label for="input_items_per_page">عناصر لكل صفحة</label>
+                <input type="number" name="items_per_page" class="form-control" value="{{ settings.items_per_page or 25 }}" min="10" max="100" id="input_items_per_page">
               </div>
             </div>
           </div>

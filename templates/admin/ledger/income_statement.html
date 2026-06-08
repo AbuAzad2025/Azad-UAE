@@ -25,14 +25,14 @@
     <form method="GET" class="row" action="">
       <div class="col-md-4">
         <div class="form-group">
-          <label>من تاريخ:</label>
-          <input type="date" name="date_from" class="form-control" value="{{ date_from.strftime('%Y-%m-%d') }}">
+          <label for="input_date_from">من تاريخ:</label>
+          <input type="date" name="date_from" class="form-control" value="{{ date_from.strftime('%Y-%m-%d') }}" id="input_date_from">
         </div>
       </div>
       <div class="col-md-4">
         <div class="form-group">
-          <label>إلى تاريخ:</label>
-          <input type="date" name="date_to" class="form-control" value="{{ date_to.strftime('%Y-%m-%d') }}">
+          <label for="input_date_to">إلى تاريخ:</label>
+          <input type="date" name="date_to" class="form-control" value="{{ date_to.strftime('%Y-%m-%d') }}" id="input_date_to">
         </div>
       </div>
       <div class="col-md-4">

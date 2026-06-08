@@ -72,9 +72,9 @@
             <div class="row">
               <div class="col-md-6">
                 <div class="form-group">
-                  <label>الخصم الإضافي ({{ tenant_currency_symbol or 'AED' }})</label>
+                  <label for="input_discount_amount">الخصم الإضافي ({{ tenant_currency_symbol or 'AED' }})</label>
                   <input type="number" name="discount_amount" class="form-control" 
-                         value="{{ sale.discount_amount or 0 }}" step="0.01" min="0">
+                         value="{{ sale.discount_amount or 0 }}" step="0.01" min="0" id="input_discount_amount">
                   <small class="text-muted">خصم إضافي على إجمالي الفاتورة</small>
                 </div>
               </div>

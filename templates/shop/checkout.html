@@ -18,8 +18,8 @@
     <form method="post" action="{{ url_for('shop.checkout', slug=store.store_slug) }}" id="checkout-form">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="ps-hp" aria-hidden="true">
-        <label>Website</label>
-        <input type="text" name="website" tabindex="-1" autocomplete="off">
+        <label for="input_website">Website</label>
+        <input type="text" name="website" tabindex="-1" autocomplete="off" id="input_website">
       </div>
 
       <div class="ps-form-group">

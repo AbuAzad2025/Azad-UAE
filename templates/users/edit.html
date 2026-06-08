@@ -24,8 +24,8 @@
               </div>
               <div class="col-md-6">
                 <div class="form-group">
-                  <label>الاسم الكامل</label>
-                  <input type="text" name="full_name" class="form-control" value="{{ user.full_name or '' }}">
+                  <label for="input_full_name">الاسم الكامل</label>
+                  <input type="text" name="full_name" class="form-control" value="{{ user.full_name or '' }}" id="input_full_name">
                 </div>
               </div>
             </div>
@@ -33,14 +33,14 @@
             <div class="row">
               <div class="col-md-6">
                 <div class="form-group">
-                  <label>الاسم الكامل بالعربية</label>
-                  <input type="text" name="full_name_ar" class="form-control" value="{{ user.full_name_ar or '' }}">
+                  <label for="input_full_name_ar">الاسم الكامل بالعربية</label>
+                  <input type="text" name="full_name_ar" class="form-control" value="{{ user.full_name_ar or '' }}" id="input_full_name_ar">
                 </div>
               </div>
               <div class="col-md-6">
                 <div class="form-group">
-                  <label>البريد الإلكتروني</label>
-                  <input type="email" name="email" class="form-control" value="{{ user.email or '' }}">
+                  <label for="input_email">البريد الإلكتروني</label>
+                  <input type="email" name="email" class="form-control" value="{{ user.email or '' }}" id="input_email">
                 </div>
               </div>
             </div>
@@ -48,8 +48,8 @@
             <div class="row">
               <div class="col-md-6">
                 <div class="form-group">
-                  <label>رقم الهاتف</label>
-                  <input type="text" name="phone" class="form-control" value="{{ user.phone or '' }}">
+                  <label for="input_phone">رقم الهاتف</label>
+                  <input type="text" name="phone" class="form-control" value="{{ user.phone or '' }}" id="input_phone">
                 </div>
               </div>
               <div class="col-md-6">

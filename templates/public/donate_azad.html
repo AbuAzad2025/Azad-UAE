@@ -20,8 +20,8 @@
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
           <div class="az-field">
-            <label>{{ 'المبلغ (USD)' if not is_en else 'Amount (USD)' }}</label>
-            <input type="number" name="amount" min="{{ vault.min_donation_amount or 10 }}" max="{{ vault.max_donation_amount or 10000 }}" step="0.01" required>
+            <label for="input_amount">{{ 'المبلغ (USD)' if not is_en else 'Amount (USD)' }}</label>
+            <input type="number" name="amount" min="{{ vault.min_donation_amount or 10 }}" max="{{ vault.max_donation_amount or 10000 }}" step="0.01" required id="input_amount">
           </div>
 
           <div class="az-field">
@@ -48,12 +48,12 @@
           {% endif %}
 
           <div class="az-field">
-            <label>{{ 'الاسم' if not is_en else 'Name' }}</label>
-            <input type="text" name="donor_name" required>
+            <label for="input_donor_name">{{ 'الاسم' if not is_en else 'Name' }}</label>
+            <input type="text" name="donor_name" required id="input_donor_name">
           </div>
           <div class="az-field">
-            <label>Email</label>
-            <input type="email" name="donor_email" dir="ltr">
+            <label for="input_donor_email">Email</label>
+            <input type="email" name="donor_email" dir="ltr" id="input_donor_email">
           </div>
           <div class="az-field">
             <label>{{ 'رسالة (اختياري)' if not is_en else 'Message (optional)' }}</label>

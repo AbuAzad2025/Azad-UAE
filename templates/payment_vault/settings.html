@@ -115,7 +115,7 @@
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label><i class="fas fa-cog mr-2"></i>وضع PayPal</label>
-                                        <select class="form-control" name="paypal_mode">
+                                        <select class="form-control" name="paypal_mode" aria-label="paypal mode">
                                             <option value="sandbox" {% if vault.paypal_mode == 'sandbox' %}selected{% endif %}>Sandbox (اختبار)</option>
                                             <option value="live" {% if vault.paypal_mode == 'live' %}selected{% endif %}>Live (إنتاج)</option>
                                         </select>

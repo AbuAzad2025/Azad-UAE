@@ -21,20 +21,20 @@
             <input type="text" name="name" class="form-control" required>
           </div>
           <div class="col-md-6">
-            <label class="form-label fw-semibold">الاسم الإنجليزي</label>
-            <input type="text" name="name_en" class="form-control">
+            <label class="form-label fw-semibold" for="input_name_en">الاسم الإنجليزي</label>
+            <input type="text" name="name_en" class="form-control" id="input_name_en">
           </div>
           <div class="col-md-4">
-            <label class="form-label fw-semibold">الكود</label>
-            <input type="text" name="code" class="form-control" placeholder="P001">
+            <label class="form-label fw-semibold" for="input_code">الكود</label>
+            <input type="text" name="code" class="form-control" placeholder="P001" id="input_code">
           </div>
           <div class="col-md-4">
-            <label class="form-label fw-semibold">رقم الهوية</label>
-            <input type="text" name="id_number" class="form-control">
+            <label class="form-label fw-semibold" for="input_id_number">رقم الهوية</label>
+            <input type="text" name="id_number" class="form-control" id="input_id_number">
           </div>
           <div class="col-md-4">
             <label class="form-label fw-semibold">النوع</label>
-            <select name="partner_type" class="form-select">
+            <select name="partner_type" class="form-select" aria-label="partner type">
               <option value="investor">شريك استثماري</option>
               <option value="working_partner">شريك عامل</option>
               <option value="silent_partner">شريك صامت</option>
@@ -59,38 +59,38 @@
           </div>
 
           <div class="col-md-4">
-            <label class="form-label fw-semibold">رأس المال</label>
-            <input type="number" name="investment_amount" class="form-control" value="0" step="0.01">
+            <label class="form-label fw-semibold" for="input_investment_amount">رأس المال</label>
+            <input type="number" name="investment_amount" class="form-control" value="0" step="0.01" id="input_investment_amount">
           </div>
           <div class="col-md-4">
-            <label class="form-label fw-semibold">نسبة الربح %</label>
-            <input type="number" name="share_percentage" class="form-control" value="0" step="0.01" max="100">
+            <label class="form-label fw-semibold" for="input_share_percentage">نسبة الربح %</label>
+            <input type="number" name="share_percentage" class="form-control" value="0" step="0.01" max="100" id="input_share_percentage">
           </div>
           <div class="col-md-4">
-            <label class="form-label fw-semibold">مبلغ شهري ثابت</label>
-            <input type="number" name="fixed_monthly_amount" class="form-control" value="0" step="0.01">
+            <label class="form-label fw-semibold" for="input_fixed_monthly_amount">مبلغ شهري ثابت</label>
+            <input type="number" name="fixed_monthly_amount" class="form-control" value="0" step="0.01" id="input_fixed_monthly_amount">
           </div>
 
           <div class="col-md-4">
-            <label class="form-label fw-semibold">نسبة المصاريف %</label>
-            <input type="number" name="expense_share_percentage" class="form-control" value="0" step="0.01" max="100">
+            <label class="form-label fw-semibold" for="input_expense_share_percentage">نسبة المصاريف %</label>
+            <input type="number" name="expense_share_percentage" class="form-control" value="0" step="0.01" max="100" id="input_expense_share_percentage">
           </div>
           <div class="col-md-4">
-            <label class="form-label fw-semibold">نسبة الخسارة %</label>
-            <input type="number" name="loss_share_percentage" class="form-control" value="0" step="0.01" max="100">
+            <label class="form-label fw-semibold" for="input_loss_share_percentage">نسبة الخسارة %</label>
+            <input type="number" name="loss_share_percentage" class="form-control" value="0" step="0.01" max="100" id="input_loss_share_percentage">
           </div>
           <div class="col-md-4">
-            <label class="form-label fw-semibold">حد أدنى للربح</label>
-            <input type="number" name="min_profit_threshold" class="form-control" value="0" step="0.01">
+            <label class="form-label fw-semibold" for="input_min_profit_threshold">حد أدنى للربح</label>
+            <input type="number" name="min_profit_threshold" class="form-control" value="0" step="0.01" id="input_min_profit_threshold">
           </div>
 
           <div class="col-md-6">
-            <label class="form-label fw-semibold">الهاتف</label>
-            <input type="text" name="phone" class="form-control">
+            <label class="form-label fw-semibold" for="input_phone">الهاتف</label>
+            <input type="text" name="phone" class="form-control" id="input_phone">
           </div>
           <div class="col-md-6">
-            <label class="form-label fw-semibold">البريد</label>
-            <input type="email" name="email" class="form-control">
+            <label class="form-label fw-semibold" for="input_email">البريد</label>
+            <input type="email" name="email" class="form-control" id="input_email">
           </div>
           <div class="col-12">
             <label class="form-label fw-semibold">العنوان</label>

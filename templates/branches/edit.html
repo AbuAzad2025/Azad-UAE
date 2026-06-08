@@ -12,28 +12,28 @@
         <div class="row">
           <div class="col-md-6">
             <div class="form-group">
-              <label>الاسم *</label>
-              <input type="text" name="name" class="form-control" value="{{ branch.name }}" required>
+              <label for="input_name">الاسم *</label>
+              <input type="text" name="name" class="form-control" value="{{ branch.name }}" required id="input_name">
             </div>
           </div>
           <div class="col-md-6">
             <div class="form-group">
-              <label>الكود *</label>
-              <input type="text" name="code" class="form-control" value="{{ branch.code }}" required disabled>
+              <label for="input_code">الكود *</label>
+              <input type="text" name="code" class="form-control" value="{{ branch.code }}" required disabled id="input_code">
             </div>
           </div>
         </div>
         <div class="row">
           <div class="col-md-6">
             <div class="form-group">
-              <label>المدينة</label>
-              <input type="text" name="city" class="form-control" value="{{ branch.city }}">
+              <label for="input_city">المدينة</label>
+              <input type="text" name="city" class="form-control" value="{{ branch.city }}" id="input_city">
             </div>
           </div>
           <div class="col-md-6">
             <div class="form-group">
-              <label>رقم الهاتف</label>
-              <input type="text" name="phone" class="form-control" value="{{ branch.phone }}">
+              <label for="input_phone">رقم الهاتف</label>
+              <input type="text" name="phone" class="form-control" value="{{ branch.phone }}" id="input_phone">
             </div>
           </div>
         </div>

@@ -63,15 +63,15 @@
               </div>
               
               <div class="form-group">
-                <label>{{ t('Full Name') }}</label>
+                <label for="input_full_name">{{ t('Full Name') }}</label>
                 <input type="text" name="full_name" class="form-control" placeholder="أحمد محمود"
-                       value="{{ form_data.get('full_name', '') }}">
+                       value="{{ form_data.get('full_name', '') }}" id="input_full_name">
               </div>
               
               <div class="form-group">
-                <label>{{ t('Email') }}</label>
+                <label for="input_email">{{ t('Email') }}</label>
                 <input type="email" name="email" class="form-control" placeholder="ahmad@example.com"
-                       value="{{ form_data.get('email', '') }}">
+                       value="{{ form_data.get('email', '') }}" id="input_email">
               </div>
               
               <div class="form-group">
@@ -126,7 +126,7 @@
               {% if show_tenant_picker and tenants %}
               <div class="form-group">
                 <label>الشركة (Tenant) *</label>
-                <select name="tenant_id" class="form-control" required>
+                <select name="tenant_id" class="form-control" required aria-label="tenant id">
                   <option value="">-- اختر الشركة --</option>
                   {% for t in tenants %}
                   <option value="{{ t.id }}" {% if form_data.get('tenant_id')|string == t.id|string %}selected{% endif %}>

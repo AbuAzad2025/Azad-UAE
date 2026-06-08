@@ -183,7 +183,7 @@
               <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="سيُطبّق تعديل المخزون على هذا المستودع."></i>
             </label>
             {% set selected_warehouse = request.form.get('warehouse_id', '') if request.method == 'POST' else '' %}
-            <select name="warehouse_id" class="form-control">
+            <select name="warehouse_id" class="form-control" aria-label="warehouse id">
               <option value="" {% if not selected_warehouse %}selected{% endif %}>بلا</option>
               {% for warehouse in warehouses %}
               <option value="{{ warehouse.id }}"
@@ -203,7 +203,7 @@
               <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="يمكن اختيار الوحدة أو تركها بلا للمنتجات غير المقيسة."></i>
             </label>
             {% set selected_unit = request.form.get('unit') if request.method == 'POST' else product.unit %}
-            <select name="unit" class="form-control select2" data-placeholder="اختر الوحدة..." data-allow-clear="true">
+            <select name="unit" class="form-control select2" data-placeholder="اختر الوحدة..." data-allow-clear="true" aria-label="unit">
               <option value="" {% if not selected_unit %}selected{% endif %}>بلا</option>
               <option value="piece" {% if selected_unit == 'piece' %}selected{% endif %}>قطعة</option>
               <option value="kg" {% if selected_unit == 'kg' %}selected{% endif %}>كيلو</option>
@@ -365,7 +365,7 @@ $(function () {
     const html = `
       <tr id="row-${rowId}">
         <td>
-          <select name="partner_customer_id[]" class="form-control form-control-sm" required>
+          <select name="partner_customer_id[]" class="form-control form-control-sm" required aria-label="partner customer id[]">
             ${partnerOptions}
           </select>
         </td>
@@ -378,7 +378,7 @@ $(function () {
           </div>
         </td>
         <td>
-          <button type="button" class="btn btn-danger btn-sm remove-partner-btn" data-row="row-${rowId}">
+          <button type="button" class="btn btn-danger btn-sm remove-partner-btn" data-row="row-${rowId}" title="حذف">
             <i class="fas fa-trash"></i>
           </button>
         </td>
