@@ -1999,10 +1999,11 @@ What is missing is primarily **narrative clarity** in documentation and possibly
 - **Verified:** 0 inputs/selects/textareas/buttons without accessible name on disk
 
 ##### D6. CSS Externalization (inline styles → external files)
-- **Status:** ⏸️ **Pending**
-- **Effort:** 2-3 days
-- **Scope:** ~300 `CSS inline styles should not be used` warnings across templates (dashboard.html, owner/, shop/, invoices/, receipts/, base.html). Move `style="..."` attributes to external `.css` files or `<style>` blocks with classes
-- **Note:** Cosmetic warnings only — do not affect functionality. Lower priority than D3/D4.
+- **Status:** ✅ **DONE (June 8, 2026)**
+- **Effort:** 4 hours
+- **Done:** 961 static inline styles externalized across 79 templates into per-file `<style>` blocks as `.ic-N` classes. Tool `externalize_inline_css.py` created with JS-toggle safety (skips `display:none/inline/block/flex`).
+- **Remaining:** 57 static styles intentionally left inline — all are `display:none/inline/block/flex` toggled by JavaScript at runtime. Moving them to classes would break JS show/hide logic (Bootstrap `.d-none` uses `!important` which overrides `el.style.display='block'`). 37 dynamic Jinja2 styles also untouched.
+- **Verification:** 6-layer test suite (Jinja compile, residual audit, HTML integrity, CSS validity, JS-toggle preservation, visual diff) — all PASS on 275 templates (0 issues, 0 CSS errors, 0 JS violations).
 
 ##### D7. Jinja2 Linter False Positives (document & suppress)
 - **Status:** ⏸️ **Pending (investigation)**
@@ -2036,7 +2037,7 @@ What is missing is primarily **narrative clarity** in documentation and possibly
 | D3 | Client-side form validation | 🚧 | Jun 8 | — | In progress; targeted for today |
 | D4 | Mobile responsiveness | 🚧 | Jun 8 | — | In progress; targeted for today |
 | D5 | Accessibility errors (WCAG) | ✅ **DONE** | Jun 8 | Jun 8 | ~1,050 a11y errors fixed in 137 templates; viewport added to 10 print templates; `fix_accessibility.py`, `count_a11y.py`, `fix_viewport.py`; 0 issues on disk |
-| D6 | CSS externalization | ⏸️ | — | — | ~300 inline-style warnings; cosmetic only; move to external CSS |
+| D6 | CSS externalization | ✅ **DONE** | Jun 8 | Jun 8 | 961 styles externalized in 79 templates; 57 JS-toggled display left inline (intentional); 6-layer test suite all PASS |
 | D7 | Jinja2 linter false positives | ⏸️ | — | — | Document/suppress Edge Tools warnings caused by Jinja2 templating; no code fix needed |
 
 ---
