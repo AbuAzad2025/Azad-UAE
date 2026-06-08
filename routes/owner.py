@@ -772,33 +772,15 @@ def delete_user(user_id):
 @owner_required
 def roles_permissions():
     """صفحة الأدوار والصلاحيات — بيانات حقيقية من قاعدة البيانات."""
-    from models import Role, Permission
-    from sqlalchemy.orm import joinedload
-
+    from services.role_service import RoleService
     tid = get_active_tenant_id(current_user)
-
-    roles = Role.query.filter_by(is_active=True).options(joinedload(Role.permissions)).order_by(Role.name).all()
-    permissions = Permission.query.order_by(Permission.category, Permission.name).all()
-
-    # Group permissions by category
-    perm_categories = {}
-    for p in permissions:
-        perm_categories.setdefault(p.category or 'عام', []).append(p)
-
-    # User counts per role (scoped by tenant if available)
-    role_user_counts = {}
-    for r in roles:
-        q = User.query.filter_by(role_id=r.id, is_active=True)
-        if tid:
-            q = q.filter_by(tenant_id=tid)
-        role_user_counts[r.id] = q.count()
-
+    context = RoleService.get_roles_permissions_context(tenant_id=tid)
     return render_template(
         'owner/roles_permissions.html',
-        roles=roles,
-        permissions=permissions,
-        perm_categories=perm_categories,
-        role_user_counts=role_user_counts,
+        roles=context['roles'],
+        permissions=context['permissions'],
+        perm_categories=context['perm_categories'],
+        role_user_counts=context['role_user_counts'],
     )
 
 @owner_bp.route('/financial-overview')
