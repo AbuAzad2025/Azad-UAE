@@ -211,7 +211,7 @@
         </div>
       </div>
 
-      <table>
+      <div class="table-responsive"><table>
         <thead>
           <tr>
             <th>#</th>
@@ -232,7 +232,7 @@
           </tr>
           {% endfor %}
         </tbody>
-      </table>
+      </table></div>
 
       <div class="total-section">
         <div class="total-row">
@@ -255,7 +255,7 @@
       {% if sale.payments %}
       <div class="ic-2">
         <h4 style="color: {{ settings.header_color if settings else '#667eea' }}; font-size: 9px; margin-bottom: 8px; font-weight: 700;">💰 الدفعات</h4>
-        <table class="ic-3">
+        <div class="table-responsive"><table class="ic-3">
           <thead>
             <tr>
               <th class="ic-4">رقم الدفعة</th>
@@ -292,7 +292,7 @@
             </tr>
             {% endfor %}
           </tbody>
-        </table>
+        </table></div>
       </div>
       {% endif %}
 

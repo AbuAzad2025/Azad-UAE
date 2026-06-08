@@ -153,7 +153,7 @@
 
     <div class="ic-1">
 
-        <a href="{{ url_for('language.set_language', lang='en' if session.get('language', 'ar') == 'ar' else 'ar') }}" class="btn btn-sm ic-2">
+        <a href="{{ url_for('language.set_language', lang='en' if session.get('language', 'ar') == 'ar' else 'ar') }}" class="btn ic-2">
 
             <i class="fas fa-globe mr-2"></i>{{ 'English' if session.get('language', 'ar') == 'ar' else 'العربية' }}
 

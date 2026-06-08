@@ -13,7 +13,7 @@
 
 <div class="card">
   <div class="card-body">
-    <table class="table table-bordered table-striped">
+    <div class="table-responsive"><table class="table table-bordered table-striped">
       <thead>
         <tr>
           <th>{{ t('Username') }}</th>
@@ -49,14 +49,14 @@
           </td>
           <td>{{ user.last_login.strftime('%Y-%m-%d %H:%M') if user.last_login else '-' }}</td>
           <td>
-            <a href="{{ url_for('users.view', id=user.id) }}" class="btn btn-sm btn-info" title="عرض">
+            <a href="{{ url_for('users.view', id=user.id) }}" class="btn btn-info" title="عرض">
               <i class="fas fa-eye"></i>
             </a>
-            <a href="{{ url_for('users.edit', id=user.id) }}" class="btn btn-sm btn-warning" title="تعديل">
+            <a href="{{ url_for('users.edit', id=user.id) }}" class="btn btn-warning" title="تعديل">
               <i class="fas fa-edit"></i>
             </a>
             {% if current_user.is_owner and user.id != current_user.id %}
-            <button type="button" class="btn btn-sm btn-danger" 
+            <button type="button" class="btn btn-danger" 
                     onclick="deleteItem('users', {{ user.id }}, '{{ user.username }}')" 
                     title="حذف (المالك فقط)">
               <i class="fas fa-trash"></i>
@@ -66,7 +66,7 @@
         </tr>
         {% endfor %}
       </tbody>
-    </table>
+    </table></div>
     {% set endpoint = 'users.index' %}
     {% include 'partials/flask_pagination.html' %}
   </div>

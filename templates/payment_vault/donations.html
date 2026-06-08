@@ -171,25 +171,25 @@
                                         <small>{{ donation.gateway_name or 'N/A' }}</small>
                                     </td>
                                     <td>
-                                        <button class="btn btn-sm btn-info" onclick="viewDonation({{ donation.id }})" title="عرض">
+                                        <button class="btn btn-info" onclick="viewDonation({{ donation.id }})" title="عرض">
                                             <i class="fas fa-eye"></i>
                                         </button>
                                         {% if donation.status == 'pending' %}
                                         <form method="POST" action="{{ url_for('payment_vault.approve_donation', donation_id=donation.id) }}" class="ic-1">
                                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
-                                            <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('قبول هذا التبرع؟')" title="تأكيد">
+                                            <button type="submit" class="btn btn-success" onclick="return confirm('قبول هذا التبرع؟')" title="تأكيد">
                                                 <i class="fas fa-check"></i>
                                             </button>
                                         </form>
                                         <form method="POST" action="{{ url_for('payment_vault.reject_donation', donation_id=donation.id) }}" class="ic-1">
                                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
-                                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('رفض هذا التبرع؟')" title="إغلاق">
+                                            <button type="submit" class="btn btn-danger" onclick="return confirm('رفض هذا التبرع؟')" title="إغلاق">
                                                 <i class="fas fa-times"></i>
                                             </button>
                                         </form>
                                         {% endif %}
                                         {% if donation.donor_email %}
-                                        <button class="btn btn-sm btn-primary" onclick="sendThankYou('{{ donation.donor_email }}', '{{ donation.donor_name or "متبرع" }}', {{ donation.amount_usd }})" title="Envelope">
+                                        <button class="btn btn-primary" onclick="sendThankYou('{{ donation.donor_email }}', '{{ donation.donor_name or "متبرع" }}', {{ donation.amount_usd }})" title="Envelope">
                                             <i class="fas fa-envelope"></i>
                                         </button>
                                         {% endif %}

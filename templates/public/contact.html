@@ -209,7 +209,7 @@
 
     <div class="ic-1">
 
-        <a href="{{ url_for('language.set_language', lang='en' if session.get('language', 'ar') == 'ar' else 'ar') }}" class="btn btn-sm ic-2">
+        <a href="{{ url_for('language.set_language', lang='en' if session.get('language', 'ar') == 'ar' else 'ar') }}" class="btn ic-2">
 
             <i class="fas fa-globe mr-2"></i>{{ 'English' if session.get('language', 'ar') == 'ar' else 'العربية' }}
 
@@ -319,9 +319,9 @@
 
             <p class="ic-6"><strong>دعم فني / المطور:</strong> {{ developer_credit or config.DEVELOPER_CREDIT }}</p>
 
-            <a href="https://wa.me/{{ developer_whatsapp_link }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-light btn-sm">واتساب المطور</a>
+            <a href="https://wa.me/{{ developer_whatsapp_link }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-light">واتساب المطور</a>
 
-            <a href="mailto:{{ developer_email or config.DEVELOPER_EMAIL }}" class="btn btn-outline-light btn-sm ml-2">بريد المطور</a>
+            <a href="mailto:{{ developer_email or config.DEVELOPER_EMAIL }}" class="btn btn-outline-light ml-2">بريد المطور</a>
 
         </div>
 

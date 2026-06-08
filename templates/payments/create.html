@@ -156,14 +156,14 @@ function loadCustomerSales() {
   
   $.get(`/customers/${customerId}/balance`, function(data) {
     if (data.unpaid_sales && data.unpaid_sales.length > 0) {
-      let html = '<table class="table table-sm"><tbody>';
+      let html = '<div class="table-responsive"><table class="table table-sm"><tbody>';
       data.unpaid_sales.forEach(sale => {
         html += `<tr>
           <td>${sale.sale_number}</td>
           <td class="text-danger">${sale.balance_due} {{ tenant_currency_symbol or 'AED' }}</td>
         </tr>`;
       });
-      html += '</tbody></table>';
+      html += '</tbody></table></div>';
       $('#salesList').html(html);
       $('#customerSales').slideDown();
     } else {

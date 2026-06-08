@@ -20,7 +20,7 @@
           </div>
         </div>
         <div class="card-body">
-          <table class="table table-bordered table-striped">
+          <div class="table-responsive"><table class="table table-bordered table-striped">
             <thead>
               <tr>
                 <th>رقم الشيك</th>
@@ -54,7 +54,7 @@
                 <td>
                   <form class="needs-validation" method="post" action="{{ url_for('cheques.restore', id=cheque.id) }}" style="display: inline;">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
-                    <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('استعادة هذا الشيك؟')">
+                    <button type="submit" class="btn btn-success" onclick="return confirm('استعادة هذا الشيك؟')">
                       <i class="fas fa-undo"></i> استعادة
                     </button>
                   </form>
@@ -66,7 +66,7 @@
               </tr>
               {% endfor %}
             </tbody>
-          </table>
+          </table></div>
 
           {% set endpoint = 'cheques.archived' %}
           {% include 'partials/flask_pagination.html' %}

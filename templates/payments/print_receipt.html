@@ -144,7 +144,7 @@
       <div><span class="info-label">المستخدم:</span> {{ print_user_name or (receipt.user.full_name if receipt.user else 'موظف') }}</div>
     </div>
     
-    <table>
+    <div class="table-responsive"><table>
       <thead>
         <tr>
           <th>البيان</th>
@@ -182,7 +182,7 @@
           <td>{{ "%.2f"|format(receipt.base_amount) }} {{ receipt.currency or tenant_currency_symbol or 'AED' }}</td>
         </tr>
       </tfoot>
-    </table>
+    </table></div>
 
     {% set _payment_words = amount_in_words or (number_to_arabic_words(receipt.base_amount or receipt.amount or 0, receipt.currency or tenant_default_currency or 'AED') if number_to_arabic_words is defined else '') %}
     <div class="ic-3">

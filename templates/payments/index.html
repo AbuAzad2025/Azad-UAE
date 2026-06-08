@@ -15,7 +15,7 @@
 
 <div class="card">
   <div class="card-body">
-    <table id="receiptsTable" class="table table-bordered table-striped" data-lang-url="{{ url_for('static', filename='datatables/Arabic.json') }}">
+    <div class="table-responsive"><table id="receiptsTable" class="table table-bordered table-striped" data-lang-url="{{ url_for('static', filename='datatables/Arabic.json') }}">
       <thead>
         <tr>
           <th>رقم السند</th>
@@ -56,13 +56,13 @@
           <td><span class="badge badge-success">{{ receipt.payment_method }}</span></td>
           <td>
             {% if current_user.has_permission('manage_payments') %}
-            <a href="{{ url_for('payments.view_receipt', id=receipt.id) }}" class="btn btn-sm btn-info">
+            <a href="{{ url_for('payments.view_receipt', id=receipt.id) }}" class="btn btn-info">
             {% endif %}
               <i class="fas fa-eye"></i>
             </a>
             <button
               type="button"
-              class="btn btn-sm btn-secondary js-print-receipt"
+              class="btn btn-secondary js-print-receipt"
               {% if current_user.has_permission('manage_payments') %}
               data-print-url="{{ url_for('payments.print_receipt', id=receipt.id) }}"
               {% endif %} title="طباعة">
@@ -72,7 +72,7 @@
         </tr>
         {% endfor %}
       </tbody>
-    </table>
+    </table></div>
   </div>
 </div>
 {% endblock %}

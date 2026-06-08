@@ -173,7 +173,7 @@
                   </td>
                   <td class="text-center">
                     {% if current_user.has_permission('view_ledger') %}
-                    <a href="{{ url_for('ledger.trial_balance', branch_id=branch.id) }}" class="btn btn-sm btn-outline-primary" title="ميزان المراجعة">
+                    <a href="{{ url_for('ledger.trial_balance', branch_id=branch.id) }}" class="btn btn-outline-primary" title="ميزان المراجعة">
                     {% endif %}
                       <i class="fas fa-balance-scale"></i> ميزان المراجعة
                     </a>
@@ -205,25 +205,25 @@
           إدارة الجداول والنسخ الاحتياطي والذاكرة المؤقتة
         </p>
         {% if current_user.is_owner %}
-        <a href="{{ url_for('owner.database_tools') }}" class="btn btn-outline-primary btn-sm btn-block mb-2">
+        <a href="{{ url_for('owner.database_tools') }}" class="btn btn-outline-primary btn-block mb-2">
         {% endif %}
           <i class="fas fa-table mr-1"></i> إدارة الجداول
         </a>
-        <a href="{{ url_for('owner.list_backups') }}" class="btn btn-outline-info btn-sm btn-block mb-2">
+        <a href="{{ url_for('owner.list_backups') }}" class="btn btn-outline-info btn-block mb-2">
           <i class="fas fa-archive mr-1"></i> النسخ الاحتياطية
         </a>
-        {% if current_user.is_owner %}<a href="{{ url_for('payment_vault.index') }}" class="btn btn-outline-warning btn-sm btn-block mb-2">
+        {% if current_user.is_owner %}<a href="{{ url_for('payment_vault.index') }}" class="btn btn-outline-warning btn-block mb-2">
           <i class="fas fa-vault mr-1"></i> الخزينة السرية
         </a>{% endif %}
-        <a href="{{ url_for('owner.reports') }}" class="btn btn-outline-info btn-sm btn-block mb-2">
+        <a href="{{ url_for('owner.reports') }}" class="btn btn-outline-info btn-block mb-2">
           <i class="fas fa-chart-line mr-1"></i> التقارير
         </a>
-        <a href="{{ url_for('owner.scheduled_backups') }}" class="btn btn-outline-primary btn-sm btn-block mb-2">
+        <a href="{{ url_for('owner.scheduled_backups') }}" class="btn btn-outline-primary btn-block mb-2">
           <i class="fas fa-clock mr-1"></i> النسخ المجدول
         </a>
         <form class="needs-validation" method="POST" action="{{ url_for('owner.clear_cache') }}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
-          <button type="submit" class="btn btn-outline-secondary btn-sm btn-block">
+          <button type="submit" class="btn btn-outline-secondary btn-block">
             <i class="fas fa-sync mr-1"></i> مسح الذاكرة
           </button>
         </form>
@@ -242,7 +242,7 @@
           <i class="fas fa-info-circle mr-1"></i>
           حفظ آمن لبطاقات الائتمان بتشفير عالي الأمان
         </p>
-        <a href="{{ url_for('owner.cards_vault') }}" class="btn btn-outline-danger btn-sm btn-block mb-2">
+        <a href="{{ url_for('owner.cards_vault') }}" class="btn btn-outline-danger btn-block mb-2">
           <i class="fas fa-credit-card mr-1"></i> خزينة البطاقات
         </a>
         <div class="alert alert-light border mb-0 mt-3">
@@ -265,28 +265,28 @@
           <i class="fas fa-info-circle mr-1"></i>
           اسم النشاط، الشعار، العنوان، التواصل — تظهر في الفواتير وصفحة الدخول
         </p>
-        <a href="{{ url_for('owner.company_info') }}" class="btn btn-outline-primary btn-sm btn-block mb-2">
+        <a href="{{ url_for('owner.company_info') }}" class="btn btn-outline-primary btn-block mb-2">
           <i class="fas fa-building mr-1"></i> بيانات التينانت
         </a>
-        <a href="{{ url_for('owner.invoice_settings') }}" class="btn btn-outline-warning btn-sm btn-block mb-2">
+        <a href="{{ url_for('owner.invoice_settings') }}" class="btn btn-outline-warning btn-block mb-2">
           <i class="fas fa-file-invoice mr-1"></i> ترويسات الفواتير
         </a>
-        <a href="{{ url_for('owner.system_config') }}" class="btn btn-outline-success btn-sm btn-block mb-2">
+        <a href="{{ url_for('owner.system_config') }}" class="btn btn-outline-success btn-block mb-2">
           <i class="fas fa-sliders-h mr-1"></i> إعدادات النظام
         </a>
-        <a href="{{ url_for('owner.store_payment_methods') }}" class="btn btn-outline-success btn-sm btn-block mb-2">
+        <a href="{{ url_for('owner.store_payment_methods') }}" class="btn btn-outline-success btn-block mb-2">
           <i class="fas fa-credit-card mr-1"></i> طرق دفع المتاجر
         </a>
-        <a href="{{ url_for('owner.tenants_list') }}" class="btn btn-outline-danger btn-sm btn-block mb-2">
+        <a href="{{ url_for('owner.tenants_list') }}" class="btn btn-outline-danger btn-block mb-2">
           <i class="fas fa-building mr-1"></i> إدارة التينانتس
         </a>
-        <a href="{{ url_for('owner.tenant_stores') }}" class="btn btn-outline-success btn-sm btn-block mb-2">
+        <a href="{{ url_for('owner.tenant_stores') }}" class="btn btn-outline-success btn-block mb-2">
           <i class="fas fa-store mr-1"></i> متاجر التينانتس
         </a>
-        <a href="{{ url_for('owner.tenant_ai') }}" class="btn btn-outline-primary btn-sm btn-block mb-2">
+        <a href="{{ url_for('owner.tenant_ai') }}" class="btn btn-outline-primary btn-block mb-2">
           <i class="fas fa-robot mr-1"></i> AI للتينانتس
         </a>
-        <a href="{{ url_for('owner.integrations') }}" class="btn btn-outline-secondary btn-sm btn-block">
+        <a href="{{ url_for('owner.integrations') }}" class="btn btn-outline-secondary btn-block">
           <i class="fas fa-plug mr-1"></i> الاتصالات
         </a>
       </div>
@@ -304,7 +304,7 @@
           <i class="fas fa-info-circle mr-1"></i>
           اسم المطور، واتساب الدعم، البريد — تظهر في التذييل و«طور بواسطة»
         </p>
-        <a href="{{ url_for('owner.developer_settings') }}" class="btn btn-outline-dark btn-sm btn-block">
+        <a href="{{ url_for('owner.developer_settings') }}" class="btn btn-outline-dark btn-block">
           <i class="fas fa-cog mr-1"></i> إعدادات الشركة المطورة
         </a>
       </div>
@@ -322,22 +322,22 @@
           <i class="fas fa-info-circle mr-1"></i>
           إدارة المستخدمين وصلاحياتهم وفروع النشاط
         </p>
-        <a href="{{ url_for('owner.users_list') }}" class="btn btn-outline-primary btn-sm btn-block mb-2">
+        <a href="{{ url_for('owner.users_list') }}" class="btn btn-outline-primary btn-block mb-2">
           <i class="fas fa-users mr-1"></i> قائمة المستخدمين
         </a>
-        <a href="{{ url_for('owner.create_user') }}" class="btn btn-outline-success btn-sm btn-block mb-2">
+        <a href="{{ url_for('owner.create_user') }}" class="btn btn-outline-success btn-block mb-2">
           <i class="fas fa-user-plus mr-1"></i> إضافة مستخدم
         </a>
-        <a href="{{ url_for('branches.index') }}" class="btn btn-outline-info btn-sm btn-block mb-2">
+        <a href="{{ url_for('branches.index') }}" class="btn btn-outline-info btn-block mb-2">
           <i class="fas fa-sitemap mr-1"></i> إدارة الفروع
         </a>
-        <a href="{{ url_for('owner.roles_permissions') }}" class="btn btn-outline-info btn-sm btn-block mb-2">
+        <a href="{{ url_for('owner.roles_permissions') }}" class="btn btn-outline-info btn-block mb-2">
           <i class="fas fa-user-shield mr-1"></i> الأدوار والصلاحيات
         </a>
-        <a href="{{ url_for('owner.audit_logs') }}" class="btn btn-outline-secondary btn-sm btn-block mb-2">
+        <a href="{{ url_for('owner.audit_logs') }}" class="btn btn-outline-secondary btn-block mb-2">
           <i class="fas fa-clipboard-list mr-1"></i> سجل التدقيق
         </a>
-        <a href="{{ url_for('owner.error_audit_logs') }}" class="btn btn-outline-danger btn-sm btn-block">
+        <a href="{{ url_for('owner.error_audit_logs') }}" class="btn btn-outline-danger btn-block">
           <i class="fas fa-bug mr-1"></i> سجل أخطاء النظام
           {% if stats and stats.critical_errors_count %}
           <span class="badge badge-danger ml-1">{{ stats.critical_errors_count }}</span>
@@ -356,12 +356,12 @@
       </div>
       <div class="card-body">
         <p class="text-muted small mb-3"><i class="fas fa-info-circle mr-1"></i> صحة النظام والأمان والأداء</p>
-        <a href="{{ url_for('owner.system_health') }}" class="btn btn-outline-success btn-sm btn-block mb-2"><i class="fas fa-heartbeat mr-1"></i> صحة النظام</a>
-        <a href="{{ url_for('owner.activity_monitor') }}" class="btn btn-outline-info btn-sm btn-block mb-2"><i class="fas fa-chart-line mr-1"></i> المراقبة الحية</a>
-        <a href="{{ url_for('owner.error_logs') }}" class="btn btn-outline-danger btn-sm btn-block mb-2"><i class="fas fa-exclamation-triangle mr-1"></i> سجل الأخطاء</a>
-        <a href="{{ url_for('owner.login_history') }}" class="btn btn-outline-primary btn-sm btn-block mb-2"><i class="fas fa-history mr-1"></i> سجل الدخول</a>
-        <a href="{{ url_for('owner.performance_metrics') }}" class="btn btn-outline-warning btn-sm btn-block mb-2"><i class="fas fa-tachometer-alt mr-1"></i> الأداء</a>
-        <a href="{{ url_for('owner.security_alerts') }}" class="btn btn-outline-danger btn-sm btn-block"><i class="fas fa-shield-alt mr-1"></i> تنبيهات أمنية</a>
+        <a href="{{ url_for('owner.system_health') }}" class="btn btn-outline-success btn-block mb-2"><i class="fas fa-heartbeat mr-1"></i> صحة النظام</a>
+        <a href="{{ url_for('owner.activity_monitor') }}" class="btn btn-outline-info btn-block mb-2"><i class="fas fa-chart-line mr-1"></i> المراقبة الحية</a>
+        <a href="{{ url_for('owner.error_logs') }}" class="btn btn-outline-danger btn-block mb-2"><i class="fas fa-exclamation-triangle mr-1"></i> سجل الأخطاء</a>
+        <a href="{{ url_for('owner.login_history') }}" class="btn btn-outline-primary btn-block mb-2"><i class="fas fa-history mr-1"></i> سجل الدخول</a>
+        <a href="{{ url_for('owner.performance_metrics') }}" class="btn btn-outline-warning btn-block mb-2"><i class="fas fa-tachometer-alt mr-1"></i> الأداء</a>
+        <a href="{{ url_for('owner.security_alerts') }}" class="btn btn-outline-danger btn-block"><i class="fas fa-shield-alt mr-1"></i> تنبيهات أمنية</a>
       </div>
     </div>
   </div>
@@ -373,11 +373,11 @@
       </div>
       <div class="card-body">
         <p class="text-muted small mb-3"><i class="fas fa-info-circle mr-1"></i> رؤى عميقة وتنبؤات مالية</p>
-        <a href="{{ url_for('owner.financial_dashboard_advanced') }}" class="btn btn-outline-success btn-sm btn-block mb-2"><i class="fas fa-chart-pie mr-1"></i> لوحة مالية</a>
-        <a href="{{ url_for('owner.sales_insights') }}" class="btn btn-outline-primary btn-sm btn-block mb-2"><i class="fas fa-shopping-cart mr-1"></i> تحليل المبيعات</a>
-        <a href="{{ url_for('owner.customer_insights') }}" class="btn btn-outline-info btn-sm btn-block mb-2"><i class="fas fa-users mr-1"></i> تحليل العملاء</a>
-        <a href="{{ url_for('owner.product_performance') }}" class="btn btn-outline-warning btn-sm btn-block mb-2"><i class="fas fa-box mr-1"></i> أداء المنتجات</a>
-        <a href="{{ url_for('owner.forecasting') }}" class="btn btn-outline-danger btn-sm btn-block"><i class="fas fa-chart-line mr-1"></i> التنبؤ</a>
+        <a href="{{ url_for('owner.financial_dashboard_advanced') }}" class="btn btn-outline-success btn-block mb-2"><i class="fas fa-chart-pie mr-1"></i> لوحة مالية</a>
+        <a href="{{ url_for('owner.sales_insights') }}" class="btn btn-outline-primary btn-block mb-2"><i class="fas fa-shopping-cart mr-1"></i> تحليل المبيعات</a>
+        <a href="{{ url_for('owner.customer_insights') }}" class="btn btn-outline-info btn-block mb-2"><i class="fas fa-users mr-1"></i> تحليل العملاء</a>
+        <a href="{{ url_for('owner.product_performance') }}" class="btn btn-outline-warning btn-block mb-2"><i class="fas fa-box mr-1"></i> أداء المنتجات</a>
+        <a href="{{ url_for('owner.forecasting') }}" class="btn btn-outline-danger btn-block"><i class="fas fa-chart-line mr-1"></i> التنبؤ</a>
       </div>
     </div>
   </div>
@@ -389,12 +389,12 @@
       </div>
       <div class="card-body">
         <p class="text-muted small mb-3"><i class="fas fa-info-circle mr-1"></i> ضرائب وعملات ودفع</p>
-        <a href="{{ url_for('owner.tax_settings') }}" class="btn btn-outline-success btn-sm btn-block mb-2"><i class="fas fa-percent mr-1"></i> الضرائب</a>
-        <a href="{{ url_for('owner.currency_settings') }}" class="btn btn-outline-info btn-sm btn-block mb-2"><i class="fas fa-dollar-sign mr-1"></i> العملات</a>
-        <a href="{{ url_for('owner.payment_gateways') }}" class="btn btn-outline-primary btn-sm btn-block mb-2"><i class="fas fa-credit-card mr-1"></i> بوابات الدفع</a>
-        <a href="{{ url_for('owner.email_settings') }}" class="btn btn-outline-secondary btn-sm btn-block mb-2"><i class="fas fa-envelope mr-1"></i> البريد</a>
-        <a href="{{ url_for('owner.sms_settings') }}" class="btn btn-outline-warning btn-sm btn-block mb-2"><i class="fas fa-sms mr-1"></i> الرسائل</a>
-        <a href="{{ url_for('owner.whatsapp_settings') }}" class="btn btn-outline-success btn-sm btn-block"><i class="fab fa-whatsapp mr-1"></i> واتساب</a>
+        <a href="{{ url_for('owner.tax_settings') }}" class="btn btn-outline-success btn-block mb-2"><i class="fas fa-percent mr-1"></i> الضرائب</a>
+        <a href="{{ url_for('owner.currency_settings') }}" class="btn btn-outline-info btn-block mb-2"><i class="fas fa-dollar-sign mr-1"></i> العملات</a>
+        <a href="{{ url_for('owner.payment_gateways') }}" class="btn btn-outline-primary btn-block mb-2"><i class="fas fa-credit-card mr-1"></i> بوابات الدفع</a>
+        <a href="{{ url_for('owner.email_settings') }}" class="btn btn-outline-secondary btn-block mb-2"><i class="fas fa-envelope mr-1"></i> البريد</a>
+        <a href="{{ url_for('owner.sms_settings') }}" class="btn btn-outline-warning btn-block mb-2"><i class="fas fa-sms mr-1"></i> الرسائل</a>
+        <a href="{{ url_for('owner.whatsapp_settings') }}" class="btn btn-outline-success btn-block"><i class="fab fa-whatsapp mr-1"></i> واتساب</a>
       </div>
     </div>
   </div>
@@ -406,12 +406,12 @@
       </div>
       <div class="card-body">
         <p class="text-muted small mb-3"><i class="fas fa-info-circle mr-1"></i> تنظيف واستيراد وأمان</p>
-        <a href="{{ url_for('owner.ip_whitelist') }}" class="btn btn-outline-primary btn-sm btn-block mb-2"><i class="fas fa-network-wired mr-1"></i> IPs</a>
-        <a href="{{ url_for('owner.api_keys') }}" class="btn btn-outline-warning btn-sm btn-block mb-2"><i class="fas fa-key mr-1"></i> API Keys</a>
-        <a href="{{ url_for('owner.verify_backups') }}" class="btn btn-outline-success btn-sm btn-block mb-2"><i class="fas fa-check-double mr-1"></i> تحقق نسخ</a>
-        <a href="{{ url_for('owner.data_cleanup') }}" class="btn btn-outline-danger btn-sm btn-block mb-2"><i class="fas fa-trash mr-1"></i> تنظيف</a>
-        <a href="{{ url_for('owner.import_export_tools') }}" class="btn btn-outline-info btn-sm btn-block mb-2"><i class="fas fa-file-export mr-1"></i> استيراد/تصدير</a>
-        <a href="{{ url_for('owner.notification_templates') }}" class="btn btn-outline-secondary btn-sm btn-block"><i class="fas fa-bell mr-1"></i> قوالب الإشعارات</a>
+        <a href="{{ url_for('owner.ip_whitelist') }}" class="btn btn-outline-primary btn-block mb-2"><i class="fas fa-network-wired mr-1"></i> IPs</a>
+        <a href="{{ url_for('owner.api_keys') }}" class="btn btn-outline-warning btn-block mb-2"><i class="fas fa-key mr-1"></i> API Keys</a>
+        <a href="{{ url_for('owner.verify_backups') }}" class="btn btn-outline-success btn-block mb-2"><i class="fas fa-check-double mr-1"></i> تحقق نسخ</a>
+        <a href="{{ url_for('owner.data_cleanup') }}" class="btn btn-outline-danger btn-block mb-2"><i class="fas fa-trash mr-1"></i> تنظيف</a>
+        <a href="{{ url_for('owner.import_export_tools') }}" class="btn btn-outline-info btn-block mb-2"><i class="fas fa-file-export mr-1"></i> استيراد/تصدير</a>
+        <a href="{{ url_for('owner.notification_templates') }}" class="btn btn-outline-secondary btn-block"><i class="fas fa-bell mr-1"></i> قوالب الإشعارات</a>
       </div>
     </div>
   </div>

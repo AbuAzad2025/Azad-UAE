@@ -23,7 +23,7 @@
                             <h3 class="card-title">معلومات البطاقة</h3>
                         </div>
                         <div class="card-body">
-                            <table class="table table-bordered">
+                            <div class="table-responsive"><table class="table table-bordered">
                                 <tr>
                                     <th>العميل</th>
                                     <td>{{ card.customer.name if card.customer else 'غير محدد' }}</td>
@@ -68,7 +68,7 @@
                                     <th>آخر استخدام</th>
                                     <td>{{ card.last_used_at.strftime('%Y-%m-%d %H:%M') if card.last_used_at else 'لم يتم الاستخدام' }}</td>
                                 </tr>
-                            </table>
+                            </table></div>
                         </div>
                     </div>
                 </div>

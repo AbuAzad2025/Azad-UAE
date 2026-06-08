@@ -1,131 +1,262 @@
-{% extends 'base.html' %}
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - أرشيف المبيعات{% endblock %}
-{% block page_title %}
-<div class="d-flex justify-content-between align-items-center">
-  <div>
-    <h1 class="text-gradient mb-0"><i class="fas fa-archive mr-3"></i>أرشيف المبيعات</h1>
-    <p class="text-muted">جميع فواتير البيع المؤرشفة</p>
-  </div>
-  <div>
-    <a href="{{ url_for('sales.index') }}" class="btn btn-secondary btn-lg">
-      <i class="fas fa-arrow-right mr-2"></i>رجوع
-    </a>
-  </div>
-</div>
-{% endblock %}
-
-{% block content %}
-<div class="card">
-  <div class="card-body">
-    <style>
-      a.btn.btn-secondary,
-      .btn.btn-secondary {
-        color: #ffffff !important;
-        -webkit-text-fill-color: #ffffff !important;
-        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%) !important;
-        border-color: #3498db !important;
-        box-shadow: 0 0 10px rgba(52, 152, 219, 0.3) !important;
-      }
-      a.btn.btn-secondary i,
-      a.btn.btn-secondary span {
-        color: #ffffff !important;
-      }
-    </style>
-    <table id="salesTable" class="table table-bordered table-striped table-hover">
-      <thead>
-        <tr>
-          <th>رقم الفاتورة</th>
-          <th>الشركة</th>
-          <th>الفرع</th>
-          <th>التاريخ</th>
-          <th>العميل</th>
-          <th>المبلغ</th>
-          <th>حالة الدفع</th>
-          <th>تاريخ الأرشفة</th>
-          <th>الإجراءات</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for sale in sales %}
-        <tr>
-          <td><strong>{{ sale.sale_number }}</strong></td>
-          <td><span class="badge badge-light border">{{ tenant_name_ar or company_name_ar or '-' }}</span></td>
-          <td>
-            {% if sale.branch %}
-              <span class="badge badge-light border">{{ sale.branch.name }}{% if sale.branch.code %} ({{ sale.branch.code }}){% endif %}</span>
-            {% else %}
-              <span class="text-muted">-</span>
-            {% endif %}
-          </td>
-          <td>{{ sale.sale_date.strftime('%Y-%m-%d') }}</td>
-          <td>{{ sale.customer.name if sale.customer else '-' }}</td>
-          <td><strong>{{ "{:,.2f}".format(sale.total_amount) }} {{ sale.currency }}</strong></td>
-          <td>
-            {% if sale.payment_status == 'paid' %}
-              <span class="badge badge-success">مدفوع</span>
-            {% elif sale.payment_status == 'partial' %}
-              <span class="badge badge-warning">جزئي</span>
-            {% else %}
-              <span class="badge badge-danger">آجل</span>
-            {% endif %}
-          </td>
-          <td><small>{{ sale.archived_at.strftime('%Y-%m-%d %H:%M') }}</small></td>
-          <td>
-            <div class="btn-group btn-group-sm">
-              <a href="{{ url_for('sales.view', id=sale.id) }}" 
-                 class="btn btn-info" title="عرض">
-                <i class="fas fa-eye"></i>
-              </a>
-              <a href="{{ url_for('sales.print_invoice', id=sale.id) }}" 
-                 class="btn btn-secondary" target="_blank" rel="noopener noreferrer" title="طباعة">
-                <i class="fas fa-print"></i>
-              </a>
-              <button type="button" class="btn btn-success restore-sale-btn" 
-                      data-id="{{ sale.id }}" title="استعادة">
-                <i class="fas fa-undo"></i>
-              </button>
-            </div>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-</div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-$(document).ready(function() {
-  $('#salesTable').DataTable({
-    language: { url: "{{ url_for('static', filename='datatables/Arabic.json') }}" },
-    order: [[5, 'desc']],
-    pageLength: 25
-  });
-  
-  // استعادة فاتورة
-  $(document).on('click', '.restore-sale-btn', function(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    var id = $(this).data('id');
-    var csrfToken = $('meta[name="csrf-token"]').attr('content');
-    
-    $.ajax({
-      url: '/sales/' + id + '/restore',
-      type: 'POST',
-      headers: {
-        'X-CSRFToken': csrfToken
-      },
-      success: function(response) {
-        location.reload();
-      },
-      error: function(xhr) {
-        location.reload();
-      }
-    });
-  });
-});
-</script>
-{% endblock %}
-
+{% extends 'base.html' %}
+
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - أرشيف المبيعات{% endblock %}
+
+{% block page_title %}
+
+<div class="d-flex justify-content-between align-items-center">
+
+  <div>
+
+    <h1 class="text-gradient mb-0"><i class="fas fa-archive mr-3"></i>أرشيف المبيعات</h1>
+
+    <p class="text-muted">جميع فواتير البيع المؤرشفة</p>
+
+  </div>
+
+  <div>
+
+    <a href="{{ url_for('sales.index') }}" class="btn btn-secondary btn-lg">
+
+      <i class="fas fa-arrow-right mr-2"></i>رجوع
+
+    </a>
+
+  </div>
+
+</div>
+
+{% endblock %}
+
+
+
+{% block content %}
+
+<div class="card">
+
+  <div class="card-body">
+
+    <style>
+
+      a.btn.btn-secondary,
+
+      .btn.btn-secondary {
+
+        color: #ffffff !important;
+
+        -webkit-text-fill-color: #ffffff !important;
+
+        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%) !important;
+
+        border-color: #3498db !important;
+
+        box-shadow: 0 0 10px rgba(52, 152, 219, 0.3) !important;
+
+      }
+
+      a.btn.btn-secondary i,
+
+      a.btn.btn-secondary span {
+
+        color: #ffffff !important;
+
+      }
+
+    </style>
+
+    <div class="table-responsive"><table id="salesTable" class="table table-bordered table-striped table-hover">
+
+      <thead>
+
+        <tr>
+
+          <th>رقم الفاتورة</th>
+
+          <th>الشركة</th>
+
+          <th>الفرع</th>
+
+          <th>التاريخ</th>
+
+          <th>العميل</th>
+
+          <th>المبلغ</th>
+
+          <th>حالة الدفع</th>
+
+          <th>تاريخ الأرشفة</th>
+
+          <th>الإجراءات</th>
+
+        </tr>
+
+      </thead>
+
+      <tbody>
+
+        {% for sale in sales %}
+
+        <tr>
+
+          <td><strong>{{ sale.sale_number }}</strong></td>
+
+          <td><span class="badge badge-light border">{{ tenant_name_ar or company_name_ar or '-' }}</span></td>
+
+          <td>
+
+            {% if sale.branch %}
+
+              <span class="badge badge-light border">{{ sale.branch.name }}{% if sale.branch.code %} ({{ sale.branch.code }}){% endif %}</span>
+
+            {% else %}
+
+              <span class="text-muted">-</span>
+
+            {% endif %}
+
+          </td>
+
+          <td>{{ sale.sale_date.strftime('%Y-%m-%d') }}</td>
+
+          <td>{{ sale.customer.name if sale.customer else '-' }}</td>
+
+          <td><strong>{{ "{:,.2f}".format(sale.total_amount) }} {{ sale.currency }}</strong></td>
+
+          <td>
+
+            {% if sale.payment_status == 'paid' %}
+
+              <span class="badge badge-success">مدفوع</span>
+
+            {% elif sale.payment_status == 'partial' %}
+
+              <span class="badge badge-warning">جزئي</span>
+
+            {% else %}
+
+              <span class="badge badge-danger">آجل</span>
+
+            {% endif %}
+
+          </td>
+
+          <td><small>{{ sale.archived_at.strftime('%Y-%m-%d %H:%M') }}</small></td>
+
+          <td>
+
+            <div class="btn-group btn-group-sm">
+
+              <a href="{{ url_for('sales.view', id=sale.id) }}" 
+
+                 class="btn btn-info" title="عرض">
+
+                <i class="fas fa-eye"></i>
+
+              </a>
+
+              <a href="{{ url_for('sales.print_invoice', id=sale.id) }}" 
+
+                 class="btn btn-secondary" target="_blank" rel="noopener noreferrer" title="طباعة">
+
+                <i class="fas fa-print"></i>
+
+              </a>
+
+              <button type="button" class="btn btn-success restore-sale-btn" 
+
+                      data-id="{{ sale.id }}" title="استعادة">
+
+                <i class="fas fa-undo"></i>
+
+              </button>
+
+            </div>
+
+          </td>
+
+        </tr>
+
+        {% endfor %}
+
+      </tbody>
+
+    </table></div>
+
+  </div>
+
+</div>
+
+{% endblock %}
+
+
+
+{% block extra_js %}
+
+<script>
+
+$(document).ready(function() {
+
+  $('#salesTable').DataTable({
+
+    language: { url: "{{ url_for('static', filename='datatables/Arabic.json') }}" },
+
+    order: [[5, 'desc']],
+
+    pageLength: 25
+
+  });
+
+  
+
+  // استعادة فاتورة
+
+  $(document).on('click', '.restore-sale-btn', function(e) {
+
+    e.preventDefault();
+
+    e.stopPropagation();
+
+    
+
+    var id = $(this).data('id');
+
+    var csrfToken = $('meta[name="csrf-token"]').attr('content');
+
+    
+
+    $.ajax({
+
+      url: '/sales/' + id + '/restore',
+
+      type: 'POST',
+
+      headers: {
+
+        'X-CSRFToken': csrfToken
+
+      },
+
+      success: function(response) {
+
+        location.reload();
+
+      },
+
+      error: function(xhr) {
+
+        location.reload();
+
+      }
+
+    });
+
+  });
+
+});
+
+</script>
+
+{% endblock %}
+
+
+

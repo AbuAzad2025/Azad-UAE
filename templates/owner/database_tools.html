@@ -149,24 +149,24 @@
                 <td><strong>{{ table.rows_count }}</strong></td>
                 <td>
                   <a href="{{ url_for('owner.browse_table', table_name=table.name) }}" 
-                     class="btn btn-sm btn-browse" 
+                     class="btn btn-browse" 
                      title="عرض البيانات فقط - آمن">
                     <i class="fas fa-eye"></i> تصفح
                   </a>
                   {% if table.name not in ['alembic_version'] %}
                   <a href="{{ url_for('owner.edit_table_data', table_name=table.name) }}" 
-                     class="btn btn-sm btn-edit"
+                     class="btn btn-edit"
                      title="تعديل مرئي سهل - متوسط الخطورة">
                     <i class="fas fa-edit"></i> تعديل مرئي
                   </a>
                   <a href="{{ url_for('owner.sql_console') }}" 
-                     class="btn btn-sm btn-sql"
+                     class="btn btn-sql"
                      title="تعديل متقدم بـ SQL - خطير!">
                     <i class="fas fa-code"></i> SQL
                   </a>
                   {% endif %}
                   {% if table.name not in ['users', 'alembic_version', 'system_settings'] %}
-                  <button class="btn btn-sm btn-danger" 
+                  <button class="btn btn-danger" 
                           onclick="truncateTable('{{ table.name }}')"
                           title="حذف كل البيانات - خطير جداً!">
                     <i class="fas fa-trash"></i> مسح الكل

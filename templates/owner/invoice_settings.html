@@ -531,14 +531,14 @@
                     </div>
                     <div>
                       <a href="{{ url_for('owner.preview_invoice', template='modern') }}" 
-                         target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-primary">
+                         target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary">
                         <i class="fas fa-file-invoice"></i> فاتورة
                       </a>
                       <a href="{{ url_for('owner.preview_receipt', template='modern') }}" 
-                         target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-success">
+                         target="_blank" rel="noopener noreferrer" class="btn btn-outline-success">
                         <i class="fas fa-receipt"></i> سند
                       </a>
-                      <button type="button" class="btn btn-sm btn-primary" onclick="applyTemplate('modern')">
+                      <button type="button" class="btn btn-primary" onclick="applyTemplate('modern')">
                         <i class="fas fa-check"></i> تطبيق
                       </button>
                     </div>
@@ -553,14 +553,14 @@
                     </div>
                     <div>
                       <a href="{{ url_for('owner.preview_invoice', template='classic') }}" 
-                         target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-secondary">
+                         target="_blank" rel="noopener noreferrer" class="btn btn-outline-secondary">
                         <i class="fas fa-file-invoice"></i> فاتورة
                       </a>
                       <a href="{{ url_for('owner.preview_receipt', template='classic') }}" 
-                         target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-success">
+                         target="_blank" rel="noopener noreferrer" class="btn btn-outline-success">
                         <i class="fas fa-receipt"></i> سند
                       </a>
-                      <button type="button" class="btn btn-sm btn-secondary" onclick="applyTemplate('classic')">
+                      <button type="button" class="btn btn-secondary" onclick="applyTemplate('classic')">
                         <i class="fas fa-check"></i> تطبيق
                       </button>
                     </div>
@@ -575,14 +575,14 @@
                     </div>
                     <div>
                       <a href="{{ url_for('owner.preview_invoice', template='minimal') }}" 
-                         target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-info">
+                         target="_blank" rel="noopener noreferrer" class="btn btn-outline-info">
                         <i class="fas fa-file-invoice"></i> فاتورة
                       </a>
                       <a href="{{ url_for('owner.preview_receipt', template='minimal') }}" 
-                         target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-success">
+                         target="_blank" rel="noopener noreferrer" class="btn btn-outline-success">
                         <i class="fas fa-receipt"></i> سند
                       </a>
-                      <button type="button" class="btn btn-sm btn-info" onclick="applyTemplate('minimal')">
+                      <button type="button" class="btn btn-info" onclick="applyTemplate('minimal')">
                         <i class="fas fa-check"></i> تطبيق
                       </button>
                     </div>
@@ -597,14 +597,14 @@
                     </div>
                     <div>
                       <a href="{{ url_for('owner.preview_invoice', template='gulf') }}" 
-                         target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-warning">
+                         target="_blank" rel="noopener noreferrer" class="btn btn-outline-warning">
                         <i class="fas fa-file-invoice"></i> فاتورة
                       </a>
                       <a href="{{ url_for('owner.preview_receipt', template='gulf') }}" 
-                         target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-success">
+                         target="_blank" rel="noopener noreferrer" class="btn btn-outline-success">
                         <i class="fas fa-receipt"></i> سند
                       </a>
-                      <button type="button" class="btn btn-sm btn-warning" onclick="applyTemplate('gulf')">
+                      <button type="button" class="btn btn-warning" onclick="applyTemplate('gulf')">
                         <i class="fas fa-check"></i> تطبيق
                       </button>
                     </div>
@@ -619,14 +619,14 @@
                     </div>
                     <div>
                       <a href="{{ url_for('owner.preview_invoice', template='simple') }}" 
-                         target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-success">
+                         target="_blank" rel="noopener noreferrer" class="btn btn-outline-success">
                         <i class="fas fa-file-invoice"></i> فاتورة
                       </a>
                       <a href="{{ url_for('owner.preview_receipt', template='simple') }}" 
-                         target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-success">
+                         target="_blank" rel="noopener noreferrer" class="btn btn-outline-success">
                         <i class="fas fa-receipt"></i> سند
                       </a>
-                      <button type="button" class="btn btn-sm btn-success" onclick="applyTemplate('simple')">
+                      <button type="button" class="btn btn-success" onclick="applyTemplate('simple')">
                         <i class="fas fa-check"></i> تطبيق
                       </button>
                     </div>
@@ -672,7 +672,7 @@
                   <p><strong>العميل:</strong> عميل تجريبي</p>
                 </div>
                 
-                <table class="table table-sm table-bordered mt-3 ic-12">
+                <div class="table-responsive"><table class="table table-sm table-bordered mt-3 ic-12">
                   <thead class="ic-13">
                     <tr>
                       <th>المنتج</th>
@@ -693,7 +693,7 @@
                       <th>200 {{ tenant_currency_symbol or 'AED' }}</th>
                     </tr>
                   </tfoot>
-                </table>
+                </table></div>
                 
                 {% if settings.enable_qr_code %}
                 <div class="qr-code mt-3">

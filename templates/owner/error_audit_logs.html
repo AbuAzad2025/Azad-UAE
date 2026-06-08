@@ -127,16 +127,16 @@
               <option value="1" {% if selected_resolved == '1' %}selected{% endif %}>محلول</option>
             </select>
           </div>
-          <button type="submit" class="btn btn-primary btn-sm mb-2 mr-2">
+          <button type="submit" class="btn btn-primary mb-2 mr-2">
             <i class="fas fa-filter"></i> تصفية
           </button>
-          <a href="{{ url_for('owner.error_audit_logs') }}" class="btn btn-outline-secondary btn-sm mb-2 mr-2">
+          <a href="{{ url_for('owner.error_audit_logs') }}" class="btn btn-outline-secondary mb-2 mr-2">
             <i class="fas fa-times"></i> إلغاء
           </a>
-          <a href="{{ url_for('owner.export_error_audit_logs', format='json', category=selected_category, level=selected_level, resolved=selected_resolved) }}" class="btn btn-success btn-sm mb-2 mr-2">
+          <a href="{{ url_for('owner.export_error_audit_logs', format='json', category=selected_category, level=selected_level, resolved=selected_resolved) }}" class="btn btn-success mb-2 mr-2">
             <i class="fas fa-file-code"></i> تصدير JSON
           </a>
-          <a href="{{ url_for('owner.export_error_audit_logs', format='txt', category=selected_category, level=selected_level, resolved=selected_resolved) }}" class="btn btn-outline-success btn-sm mb-2">
+          <a href="{{ url_for('owner.export_error_audit_logs', format='txt', category=selected_category, level=selected_level, resolved=selected_resolved) }}" class="btn btn-outline-success mb-2">
             <i class="fas fa-file-alt"></i> تصدير TXT
           </a>
         </form>
@@ -214,12 +214,12 @@
                 {% if not log.is_resolved %}
                 <form method="post" action="{{ url_for('owner.resolve_error_log', log_id=log.id) }}" class="d-inline">
                   <input type="hidden" name="note" value="" aria-label="note">
-                  <button type="submit" class="btn btn-xs btn-success" title="تحديد كمحلول">
+                  <button type="submit" class="btn btn-success" title="تحديد كمحلول">
                     <i class="fas fa-check"></i>
                   </button>
                 </form>
                 {% endif %}
-                <button class="btn btn-xs btn-info" data-toggle="modal" data-target="#errorDetailModal" data-error-id="{{ log.id }}" title="تفاصيل">
+                <button class="btn btn-info" data-toggle="modal" data-target="#errorDetailModal" data-error-id="{{ log.id }}" title="تفاصيل">
                   <i class="fas fa-eye"></i>
                 </button>
               </td>

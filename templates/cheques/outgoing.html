@@ -93,7 +93,7 @@
 <!-- الجدول -->
 <div class="card">
   <div class="card-body">
-    <table class="table table-hover">
+    <div class="table-responsive"><table class="table table-hover">
       <thead>
         <tr>
           <th>رقم الشيك</th>
@@ -158,15 +158,15 @@
             {% endif %}
           </td>
           <td>
-            <a href="{{ url_for('cheques.view', id=cheque.id) }}" class="btn btn-sm btn-info" title="عرض">
+            <a href="{{ url_for('cheques.view', id=cheque.id) }}" class="btn btn-info" title="عرض">
               <i class="fas fa-eye"></i>
             </a>
             {% if cheque.status not in ['cleared', 'cancelled', 'bounced'] %}
-            <a href="{{ url_for('cheques.edit', id=cheque.id) }}" class="btn btn-sm btn-warning" title="تعديل">
+            <a href="{{ url_for('cheques.edit', id=cheque.id) }}" class="btn btn-warning" title="تعديل">
               <i class="fas fa-edit"></i>
             </a>
             {% endif %}
-            <button type="button" class="btn btn-sm btn-danger" 
+            <button type="button" class="btn btn-danger" 
                     onclick="deleteItem('cheques', {{ cheque.id }}, '{{ cheque.cheque_bank_number }}')" 
                     title="حذف">
               <i class="fas fa-trash"></i>
@@ -179,7 +179,7 @@
         </tr>
         {% endfor %}
       </tbody>
-    </table>
+    </table></div>
     
     {% set endpoint = 'cheques.outgoing' %}
     {% include 'partials/flask_pagination.html' %}

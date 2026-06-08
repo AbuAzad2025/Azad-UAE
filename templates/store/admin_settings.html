@@ -302,7 +302,7 @@
         <p class="mb-1"><span class="badge badge-info">أونلاين</span> <code>{{ online_warehouse.code }}</code></p>
 
         {% if current_user.has_permission('manage_warehouse') %}
-        <a href="{{ url_for('warehouse.view_warehouse', id=online_warehouse.id) }}" class="btn btn-sm btn-outline-info mt-2">عرض المستودع</a>
+        <a href="{{ url_for('warehouse.view_warehouse', id=online_warehouse.id) }}" class="btn btn-outline-info mt-2">عرض المستودع</a>
         {% endif %}
 
         {% endif %}

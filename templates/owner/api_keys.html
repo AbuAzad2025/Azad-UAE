@@ -102,7 +102,7 @@
                   <td class="text-center">
                     <form method="POST" action="{{ url_for('owner.toggle_api_key', id=key.id) }}" class="d-inline">
                       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
-                      <button type="submit" class="btn btn-sm btn-outline-warning" title="تفعيل/تعطيل">
+                      <button type="submit" class="btn btn-outline-warning" title="تفعيل/تعطيل">
                         <i class="fas fa-toggle-on"></i>
                       </button>
                     </form>

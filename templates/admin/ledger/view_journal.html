@@ -25,7 +25,7 @@
           <div class="row mb-4">
             <div class="col-md-6">
               <h5>معلومات القيد</h5>
-              <table class="table table-bordered">
+              <div class="table-responsive"><table class="table table-bordered">
                 <tr>
                   <th width="40%">رقم القيد</th>
                   <td>{{ entry.entry_number }}</td>
@@ -42,12 +42,12 @@
                   <th>البيان</th>
                   <td>{{ entry.description }}</td>
                 </tr>
-              </table>
+              </table></div>
             </div>
             
             <div class="col-md-6">
               <h5>الإجماليات</h5>
-              <table class="table table-bordered">
+              <div class="table-responsive"><table class="table table-bordered">
                 <tr>
                   <th width="40%">إجمالي المدين</th>
                   <td class="text-success">{{ entry.total_debit }} {{ tenant_currency_symbol or 'AED' }}</td>
@@ -66,13 +66,13 @@
                     {% endif %}
                   </td>
                 </tr>
-              </table>
+              </table></div>
             </div>
           </div>
 
           <!-- تفاصيل القيد -->
           <h5>تفاصيل القيد</h5>
-          <table class="table table-bordered table-striped">
+          <div class="table-responsive"><table class="table table-bordered table-striped">
             <thead>
               <tr>
                 <th>الحساب</th>
@@ -98,7 +98,7 @@
                 <td class="text-danger">{{ entry.total_credit }}</td>
               </tr>
             </tfoot>
-          </table>
+          </table></div>
 
           <!-- الإجراءات -->
           {% if current_user.is_admin %}

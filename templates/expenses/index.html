@@ -39,7 +39,7 @@
                 {% endfor %}
             </select>
             {% if request.args.get('category') %}
-            <a href="{{ url_for('expenses.index') }}" class="btn btn-outline-secondary btn-sm">إزالة الفلتر</a>
+            <a href="{{ url_for('expenses.index') }}" class="btn btn-outline-secondary">إزالة الفلتر</a>
             {% endif %}
         </form>
     </div>

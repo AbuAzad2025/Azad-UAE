@@ -17,7 +17,7 @@
       </div>
     </div>
     <div class="card-body">
-      <table class="table table-bordered table-striped">
+      <div class="table-responsive"><table class="table table-bordered table-striped">
         <thead>
           <tr>
             <th>الاسم</th>
@@ -45,12 +45,12 @@
               {% endif %}
             </td>
             <td>
-              <a href="{{ url_for('branches.edit', id=branch.id) }}" class="btn btn-sm btn-info"><i class="fas fa-edit"></i> تعديل</a>
+              <a href="{{ url_for('branches.edit', id=branch.id) }}" class="btn btn-info"><i class="fas fa-edit"></i> تعديل</a>
             </td>
           </tr>
           {% endfor %}
         </tbody>
-      </table>
+      </table></div>
     </div>
   </div>
 </div>

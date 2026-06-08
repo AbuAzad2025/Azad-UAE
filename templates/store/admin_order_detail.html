@@ -18,10 +18,10 @@
 
   <div class="mt-2 mt-md-0">
 
-    <a href="{{ url_for('store.admin_orders') }}" class="btn btn-secondary btn-sm">كل الطلبات</a>
+    <a href="{{ url_for('store.admin_orders') }}" class="btn btn-secondary">كل الطلبات</a>
 
     {% if current_user.has_permission('manage_sales') %}
-    <a href="{{ url_for('sales.view', id=order.id) }}" class="btn btn-outline-primary btn-sm">عرض في المبيعات</a>
+    <a href="{{ url_for('sales.view', id=order.id) }}" class="btn btn-outline-primary">عرض في المبيعات</a>
     {% endif %}
 
   </div>

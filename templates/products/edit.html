@@ -270,7 +270,7 @@
           <label>
             <i class="fas fa-handshake text-info"></i> الشركاء ونسب الأرباح
           </label>
-          <table class="table table-bordered table-sm">
+          <div class="table-responsive"><table class="table table-bordered table-sm">
             <thead>
               <tr>
                 <th class="ic-2">الشريك</th>
@@ -284,13 +284,13 @@
             <tfoot>
               <tr>
                 <td colspan="3">
-                  <button type="button" class="btn btn-sm btn-outline-primary" id="addPartnerBtn">
+                  <button type="button" class="btn btn-outline-primary" id="addPartnerBtn">
                     <i class="fas fa-plus"></i> إضافة شريك
                   </button>
                 </td>
               </tr>
             </tfoot>
-          </table>
+          </table></div>
         </div>
       </div>
     </div>
@@ -386,7 +386,7 @@ $(function () {
           </div>
         </td>
         <td>
-          <button type="button" class="btn btn-danger btn-sm remove-partner-btn" data-row="row-${rowId}" title="حذف">
+          <button type="button" class="btn btn-danger remove-partner-btn" data-row="row-${rowId}" title="حذف">
             <i class="fas fa-trash"></i>
           </button>
         </td>

@@ -20,7 +20,7 @@
       <div class="card-tools">
         <form class="needs-validation" method="post" action="{{ url_for('owner.database_optimize') }}" style="display:inline">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
-          <button type="submit" class="btn btn-warning btn-sm">
+          <button type="submit" class="btn btn-warning">
             <i class="fas fa-tools"></i> تحسين قاعدة البيانات
           </button>
         </form>
@@ -83,7 +83,7 @@
       <div class="row mt-4">
         <div class="col-md-12">
           <h5>معلومات النظام</h5>
-          <table class="table table-bordered">
+          <div class="table-responsive"><table class="table table-bordered">
             <tr>
               <th width="30%">نظام التشغيل</th>
               <td>{{ health.system.os }}</td>
@@ -100,7 +100,7 @@
               <th>المستخدمون النشطون الآن</th>
               <td>{{ health.active_users }}</td>
             </tr>
-          </table>
+          </table></div>
         </div>
       </div>
     </div>

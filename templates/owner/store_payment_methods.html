@@ -10,8 +10,8 @@
         <p class="text-muted small mb-0">تُطبَّق على كل متاجر التينانتس فوراً — تشغيل / إيقاف / تعديل</p>
       </div>
       <div class="col-sm-6 text-left">
-        <a href="{{ url_for('owner.store_payment_method_create') }}" class="btn btn-success btn-sm"><i class="fas fa-plus mr-1"></i>إضافة طريقة</a>
-        <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary btn-sm">رجوع</a>
+        <a href="{{ url_for('owner.store_payment_method_create') }}" class="btn btn-success"><i class="fas fa-plus mr-1"></i>إضافة طريقة</a>
+        <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary">رجوع</a>
       </div>
     </div>
   </div>
@@ -51,17 +51,17 @@
                 <form class="needs-validation" method="post" action="{{ url_for('owner.store_payment_method_toggle', method_id=m.id) }}" class="d-inline">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
                   <input type="hidden" name="is_enabled" value="{{ '0' if m.is_enabled else '1' }}" aria-label="is enabled">
-                  <button type="submit" class="btn btn-sm btn-{{ 'success' if m.is_enabled else 'outline-secondary' }}">
+                  <button type="submit" class="btn btn-{{ 'success' if m.is_enabled else 'outline-secondary' }}">
                     {% if m.is_enabled %}<i class="fas fa-check-circle"></i> مفعّلة{% else %}<i class="fas fa-pause-circle"></i> متوقفة{% endif %}
                   </button>
                 </form>
               </td>
               <td class="text-left">
-                <a href="{{ url_for('owner.store_payment_method_edit', method_id=m.id) }}" class="btn btn-xs btn-outline-primary" title="تعديل"><i class="fas fa-edit"></i></a>
+                <a href="{{ url_for('owner.store_payment_method_edit', method_id=m.id) }}" class="btn btn-outline-primary" title="تعديل"><i class="fas fa-edit"></i></a>
                 {% if not m.is_builtin %}
                 <form method="post" action="{{ url_for('owner.store_payment_method_delete', method_id=m.id) }}" class="d-inline" onsubmit="return confirm('حذف طريقة الدفع؟');">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
-                  <button type="submit" class="btn btn-xs btn-outline-danger" title="حذف"><i class="fas fa-trash"></i></button>
+                  <button type="submit" class="btn btn-outline-danger" title="حذف"><i class="fas fa-trash"></i></button>
                 </form>
                 {% endif %}
               </td>

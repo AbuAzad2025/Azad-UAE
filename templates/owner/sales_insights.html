@@ -16,7 +16,7 @@
       <i class="fas fa-link"></i> المنتجات
     </a>
   </div>
-  <div class="card"><div class="card-header"><h3>تحليلات المبيعات (30 يوم)</h3></div><div class="card-body"><canvas id="salesChart" height="100"></canvas><hr><h5 class="mt-4">أفضل 10 منتجات</h5><table class="table table-bordered"><thead><tr><th>المنتج</th><th>الكمية المباعة</th><th>الإيرادات</th></tr></thead><tbody>{% for p in insights.top_products %}<tr><td>{{ p.name }}</td><td>{{ p.qty }}</td><td>{{ "%.2f"|format(p.revenue) }} AED</td></tr>{% endfor %}</tbody></table></div></div></div>
+  <div class="card"><div class="card-header"><h3>تحليلات المبيعات (30 يوم)</h3></div><div class="card-body"><canvas id="salesChart" height="100"></canvas><hr><h5 class="mt-4">أفضل 10 منتجات</h5><div class="table-responsive"><table class="table table-bordered"><thead><tr><th>المنتج</th><th>الكمية المباعة</th><th>الإيرادات</th></tr></thead><tbody>{% for p in insights.top_products %}<tr><td>{{ p.name }}</td><td>{{ p.qty }}</td><td>{{ "%.2f"|format(p.revenue) }} AED</td></tr>{% endfor %}</tbody></table></div></div></div></div>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@3" integrity="sha384-9MhbyIRcBVQiiC7FSd7T38oJNj2Zh+EfxS7/vjhBi4OOT78NlHSnzM31EZRWR1LZ" crossorigin="anonymous"></script>
 <script>
 new Chart(document.getElementById('salesChart'), {

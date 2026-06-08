@@ -96,10 +96,10 @@
           <td class="text-center"><span class="badge owner-badge-{{ row.backup_status }}">{{ row.backup_label }}</span></td>
           <td class="text-center"><span class="badge owner-badge-{{ row.status }}">{{ row.status_label }}</span></td>
           <td class="text-nowrap">
-            <a href="{{ url_for('tenants.switch', tenant_id=row.tenant.id) }}" class="btn btn-xs btn-outline-primary" title="تبديل"><i class="fas fa-exchange-alt"></i></a>
-            <a href="{{ url_for('tenants.switch', tenant_id=row.tenant.id) }}" class="btn btn-xs btn-outline-secondary" title="تعديل بعد التبديل"><i class="fas fa-edit"></i></a>
-            <a href="{{ url_for('owner.create_user', tenant_id=row.tenant.id) }}" class="btn btn-xs btn-outline-success" title="مستخدم"><i class="fas fa-user-plus"></i></a>
-            <a href="{{ url_for('owner.list_backups') }}" class="btn btn-xs btn-outline-info" title="نسخ"><i class="fas fa-database"></i></a>
+            <a href="{{ url_for('tenants.switch', tenant_id=row.tenant.id) }}" class="btn btn-outline-primary" title="تبديل"><i class="fas fa-exchange-alt"></i></a>
+            <a href="{{ url_for('tenants.switch', tenant_id=row.tenant.id) }}" class="btn btn-outline-secondary" title="تعديل بعد التبديل"><i class="fas fa-edit"></i></a>
+            <a href="{{ url_for('owner.create_user', tenant_id=row.tenant.id) }}" class="btn btn-outline-success" title="مستخدم"><i class="fas fa-user-plus"></i></a>
+            <a href="{{ url_for('owner.list_backups') }}" class="btn btn-outline-info" title="نسخ"><i class="fas fa-database"></i></a>
           </td>
         </tr>
         {% endfor %}
@@ -127,9 +127,9 @@
                 {% endif %}
               </td>
               <td>
-                <a href="{{ br.invoice_preview_url }}" target="_blank" rel="noopener" class="btn btn-xs btn-link">فاتورة</a>
-                <a href="{{ br.receipt_preview_url }}" target="_blank" rel="noopener" class="btn btn-xs btn-link">سند</a>
-                <a href="{{ url_for('owner.invoice_settings') }}" class="btn btn-xs btn-link">إعدادات</a>
+                <a href="{{ br.invoice_preview_url }}" target="_blank" rel="noopener" class="btn btn-link">فاتورة</a>
+                <a href="{{ br.receipt_preview_url }}" target="_blank" rel="noopener" class="btn btn-link">سند</a>
+                <a href="{{ url_for('owner.invoice_settings') }}" class="btn btn-link">إعدادات</a>
               </td>
             </tr>
             {% endfor %}
@@ -147,8 +147,8 @@
         <p><strong>Static audit:</strong> <span class="badge {% if health_summary.static_audit == 'PASS' %}badge-success{% elif health_summary.static_audit == 'FAIL' %}badge-danger{% else %}badge-warning{% endif %}">{{ health_summary.static_audit }}</span></p>
         <p><strong>Branding audit:</strong> <span class="badge {% if health_summary.branding_audit == 'PASS' %}badge-success{% elif health_summary.branding_audit == 'FAIL' %}badge-danger{% else %}badge-warning{% endif %}">{{ health_summary.branding_audit }}</span></p>
         <p class="text-muted small mb-2">{{ health_summary.predeploy_hint }}</p>
-        <a href="{{ url_for('owner.system_health') }}" class="btn btn-sm btn-outline-success">تفاصيل</a>
-        <a href="{{ url_for('owner.list_backups') }}" class="btn btn-sm btn-outline-info">نسخ احتياطية</a>
+        <a href="{{ url_for('owner.system_health') }}" class="btn btn-outline-success">تفاصيل</a>
+        <a href="{{ url_for('owner.list_backups') }}" class="btn btn-outline-info">نسخ احتياطية</a>
       </div>
     </div>
     {% endif %}

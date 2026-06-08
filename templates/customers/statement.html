@@ -380,10 +380,10 @@ table.statement-table thead th {
 
 <div class="statement-actions d-flex flex-wrap justify-content-between align-items-center mb-3">
   <div class="mb-2">
-    <button onclick="window.print()" class="btn btn-secondary btn-sm">
+    <button onclick="window.print()" class="btn btn-secondary">
       <i class="fas fa-print mr-2"></i>طباعة
     </button>
-    <a href="{{ url_for('customers.view', id=customer.id) }}" class="btn btn-info btn-sm">
+    <a href="{{ url_for('customers.view', id=customer.id) }}" class="btn btn-info">
       <i class="fas fa-arrow-right mr-2"></i>العودة
     </a>
   </div>
@@ -405,8 +405,8 @@ table.statement-table thead th {
       </select>
     </div>
     <div class="form-group mx-1 mb-2">
-      <button type="submit" class="btn btn-primary btn-sm">تطبيق</button>
-      <a href="{{ url_for('customers.statement', id=customer.id) }}" class="btn btn-light btn-sm ml-1">إعادة تعيين</a>
+      <button type="submit" class="btn btn-primary">تطبيق</button>
+      <a href="{{ url_for('customers.statement', id=customer.id) }}" class="btn btn-light ml-1">إعادة تعيين</a>
     </div>
   </form>
 </div>

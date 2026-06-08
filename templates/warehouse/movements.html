@@ -83,16 +83,16 @@
         {% endif %}
       </form>
       <div class="btn-group">
-        <button type="button" class="btn btn-sm btn-outline-primary active" id="filterAll">
+        <button type="button" class="btn btn-outline-primary active" id="filterAll">
           <i class="fas fa-list mr-1"></i>الكل
         </button>
-        <button type="button" class="btn btn-sm btn-outline-success" id="filterIn">
+        <button type="button" class="btn btn-outline-success" id="filterIn">
           <i class="fas fa-arrow-down mr-1"></i>دخول
         </button>
-        <button type="button" class="btn btn-sm btn-outline-danger" id="filterOut">
+        <button type="button" class="btn btn-outline-danger" id="filterOut">
           <i class="fas fa-arrow-up mr-1"></i>خروج
         </button>
-        <button type="button" class="btn btn-sm btn-outline-warning" id="filterAdjust">
+        <button type="button" class="btn btn-outline-warning" id="filterAdjust">
           <i class="fas fa-edit mr-1"></i>تعديل
         </button>
       </div>
@@ -118,7 +118,7 @@
           <tr class="fade-in 
                      {% if movement.movement_type == 'in' %}movement-in
                      {% elif movement.movement_type == 'out' %}movement-out
-                     {% else %}movement-adjustment{% endif %}"
+                   {% else %}movement-adjustment{% endif %}"
               data-type="{{ movement.movement_type }}">
             <td>
               <div class="d-flex align-items-center">
@@ -217,9 +217,9 @@ $(document).ready(function() {
     responsive: true,
     dom: 'Bfrtip',
     buttons: [
-      {extend: 'excel', text: '<i class="fas fa-file-excel mr-1"></i> Excel', className: 'btn-sm btn-success'},
-      {extend: 'pdf', text: '<i class="fas fa-file-pdf mr-1"></i> PDF', className: 'btn-sm btn-danger'},
-      {extend: 'print', text: '<i class="fas fa-print mr-1"></i> طباعة', className: 'btn-sm btn-info'}
+      {extend: 'excel', text: '<i class="fas fa-file-excel mr-1"></i> Excel', className: ' btn-success'},
+      {extend: 'pdf', text: '<i class="fas fa-file-pdf mr-1"></i> PDF', className: ' btn-danger'},
+      {extend: 'print', text: '<i class="fas fa-print mr-1"></i> طباعة', className: ' btn-info'}
     ]
   });
 

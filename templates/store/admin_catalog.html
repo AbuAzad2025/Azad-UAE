@@ -6,11 +6,11 @@
   <h1 class="mb-0"><i class="fas fa-boxes mr-2"></i>كتalog المتجر (مستودع أونلاين)</h1>
   <div>
     {% if include_zero %}
-    <a href="{{ url_for('store.admin_catalog') }}" class="btn btn-outline-secondary btn-sm">إخفاء بدون مخزون</a>
+    <a href="{{ url_for('store.admin_catalog') }}" class="btn btn-outline-secondary">إخفاء بدون مخزون</a>
     {% else %}
-    <a href="{{ url_for('store.admin_catalog', all=1) }}" class="btn btn-outline-secondary btn-sm">عرض الكل</a>
+    <a href="{{ url_for('store.admin_catalog', all=1) }}" class="btn btn-outline-secondary">عرض الكل</a>
     {% endif %}
-    <a href="{{ url_for('store.admin_transfer') }}" class="btn btn-success btn-sm"><i class="fas fa-plus mr-1"></i>تحويل مخزون</a>
+    <a href="{{ url_for('store.admin_transfer') }}" class="btn btn-success"><i class="fas fa-plus mr-1"></i>تحويل مخزون</a>
   </div>
 </div>
 {% endblock %}
@@ -50,7 +50,7 @@
             {% endif %}
           </td>
           <td>
-            <a href="{{ url_for('store.admin_transfer', product_id=row.product.id) }}" class="btn btn-xs btn-outline-primary">تحويل</a>
+            <a href="{{ url_for('store.admin_transfer', product_id=row.product.id) }}" class="btn btn-outline-primary">تحويل</a>
           </td>
         </tr>
         {% else %}

@@ -25,7 +25,7 @@
             <!-- المعلومات الأساسية -->
             <div class="col-md-6">
               <h4>المعلومات الأساسية</h4>
-              <table class="table table-bordered">
+              <div class="table-responsive"><table class="table table-bordered">
                 <tr>
                   <th width="40%">اسم المستخدم</th>
                   <td>{{ user.username }}</td>
@@ -60,13 +60,13 @@
                     {% endif %}
                   </td>
                 </tr>
-              </table>
+              </table></div>
             </div>
 
             <!-- معلومات إضافية -->
             <div class="col-md-6">
               <h4>معلومات إضافية</h4>
-              <table class="table table-bordered">
+              <div class="table-responsive"><table class="table table-bordered">
                 <tr>
                   <th width="40%">تاريخ الإنشاء</th>
                   <td>{{ user.created_at.strftime('%Y-%m-%d %H:%M') if user.created_at else '-' }}</td>
@@ -79,7 +79,7 @@
                   <th>عدد المبيعات</th>
                   <td>{{ user.sales.count() if user.sales else 0 }}</td>
                 </tr>
-              </table>
+              </table></div>
             </div>
           </div>
         </div>

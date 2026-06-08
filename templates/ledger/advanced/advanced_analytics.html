@@ -115,7 +115,7 @@
           <canvas id="expenseChart" height="300"></canvas>
           <div class="mt-3">
             <h5>الإجمالي: {{ "{:,.2f}".format(expense_breakdown.total) }} د.إ</h5>
-            <table class="table table-sm">
+            <div class="table-responsive"><table class="table table-sm">
               <thead>
                 <tr>
                   <th>الحساب</th>
@@ -132,7 +132,7 @@
                 </tr>
                 {% endfor %}
               </tbody>
-            </table>
+            </table></div>
           </div>
         </div>
       </div>
@@ -147,7 +147,7 @@
           <canvas id="revenueChart" height="300"></canvas>
           <div class="mt-3">
             <h5>الإجمالي: {{ "{:,.2f}".format(revenue_breakdown.total) }} د.إ</h5>
-            <table class="table table-sm">
+            <div class="table-responsive"><table class="table table-sm">
               <thead>
                 <tr>
                   <th>الحساب</th>
@@ -164,7 +164,7 @@
                 </tr>
                 {% endfor %}
               </tbody>
-            </table>
+            </table></div>
           </div>
         </div>
       </div>

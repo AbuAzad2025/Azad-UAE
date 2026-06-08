@@ -27,13 +27,13 @@
           <label class="mr-2" for="input_date_to">إلى:</label>
           <input type="date" name="date_to" class="form-control mr-2" value="{{ date_to or '' }}" onchange="this.form.submit()" id="input_date_to" aria-label="إلى تاريخ">
           <div class="ml-auto">
-            <a href="{{ url_for('reports.inventory_reconciliation_export', format='xlsx', branch_id=selected_branch, warehouse_id=selected_warehouse, date_from=date_from, date_to=date_to) }}" class="btn btn-success btn-sm">
+            <a href="{{ url_for('reports.inventory_reconciliation_export', format='xlsx', branch_id=selected_branch, warehouse_id=selected_warehouse, date_from=date_from, date_to=date_to) }}" class="btn btn-success">
               <i class="fas fa-file-excel mr-1"></i>Excel
             </a>
-            <a href="{{ url_for('reports.inventory_reconciliation_export', format='csv', branch_id=selected_branch, warehouse_id=selected_warehouse, date_from=date_from, date_to=date_to) }}" class="btn btn-secondary btn-sm">
+            <a href="{{ url_for('reports.inventory_reconciliation_export', format='csv', branch_id=selected_branch, warehouse_id=selected_warehouse, date_from=date_from, date_to=date_to) }}" class="btn btn-secondary">
               <i class="fas fa-file-csv mr-1"></i>CSV
             </a>
-            <a href="{{ url_for('reports.ar_reconciliation') }}" class="btn btn-outline-secondary btn-sm">
+            <a href="{{ url_for('reports.ar_reconciliation') }}" class="btn btn-outline-secondary">
               <i class="fas fa-balance-scale mr-1"></i>تسوية الذمم
             </a>
           </div>

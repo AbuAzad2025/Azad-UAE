@@ -132,9 +132,9 @@
 
         <p class="text-muted small">{{ branding.company_name_en }}</p>
 
-        <a href="{{ url_for('owner.preview_invoice', template='modern') }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-primary">معاينة فاتورة</a>
+        <a href="{{ url_for('owner.preview_invoice', template='modern') }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary">معاينة فاتورة</a>
 
-        <a href="{{ url_for('owner.invoice_settings') }}" class="btn btn-sm btn-outline-secondary">إعدادات الترويسة</a>
+        <a href="{{ url_for('owner.invoice_settings') }}" class="btn btn-outline-secondary">إعدادات الترويسة</a>
 
       </div>
 
@@ -151,28 +151,28 @@
       <div class="card-body">
 
         {% if current_user.has_permission('manage_users') %}
-        <a href="{{ url_for('users.index') }}" class="btn btn-outline-primary btn-sm mb-1"><i class="fas fa-users"></i> المستخدمون</a>
+        <a href="{{ url_for('users.index') }}" class="btn btn-outline-primary mb-1"><i class="fas fa-users"></i> المستخدمون</a>
         {% endif %}
 
         {% if current_user.has_permission('manage_backups') %}
 
-        <a href="{{ url_for('owner.list_backups') }}" class="btn btn-outline-info btn-sm mb-1"><i class="fas fa-database"></i> نسخ الشركة</a>
+        <a href="{{ url_for('owner.list_backups') }}" class="btn btn-outline-info mb-1"><i class="fas fa-database"></i> نسخ الشركة</a>
 
         {% endif %}
 
-        <a href="{{ url_for('owner.company_info') }}" class="btn btn-outline-success btn-sm mb-1"><i class="fas fa-building"></i> بيانات الشركة</a>
+        <a href="{{ url_for('owner.company_info') }}" class="btn btn-outline-success mb-1"><i class="fas fa-building"></i> بيانات الشركة</a>
 
-        <a href="{{ url_for('branches.index') }}" class="btn btn-outline-info btn-sm mb-1"><i class="fas fa-sitemap"></i> الفروع ({{ branches_count }})</a>
+        <a href="{{ url_for('branches.index') }}" class="btn btn-outline-info mb-1"><i class="fas fa-sitemap"></i> الفروع ({{ branches_count }})</a>
 
         {% if current_user.has_permission('manage_store') %}
 
-        <a href="{{ url_for('store.admin_index') }}" class="btn btn-outline-warning btn-sm mb-1"><i class="fas fa-store"></i> المتجر</a>
+        <a href="{{ url_for('store.admin_index') }}" class="btn btn-outline-warning mb-1"><i class="fas fa-store"></i> المتجر</a>
 
         {% endif %}
 
         {% if current_user.is_owner or (current_user.role and current_user.role.slug == 'super_admin') %}
 
-        <a href="{{ url_for('ledger.admin_dashboard') }}" class="btn btn-outline-dark btn-sm mb-1"><i class="fas fa-book"></i> دفتر الأستاذ</a>
+        <a href="{{ url_for('ledger.admin_dashboard') }}" class="btn btn-outline-dark mb-1"><i class="fas fa-book"></i> دفتر الأستاذ</a>
 
         {% endif %}
 

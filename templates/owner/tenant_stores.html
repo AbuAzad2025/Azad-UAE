@@ -10,7 +10,7 @@
         <p class="text-muted small mb-0">مالك المنصة يستطيع تعطيل أي متجر؛ عند التعطيل لا يستطيع مالك التينانت تفعيله.</p>
       </div>
       <div class="col-sm-6 text-left">
-        <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary btn-sm">رجوع</a>
+        <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary">رجوع</a>
       </div>
     </div>
   </div>
@@ -77,10 +77,10 @@
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
                   {% if row.platform_disabled %}
                   <input type="hidden" name="platform_disabled" value="0" aria-label="platform disabled">
-                  <button type="submit" class="btn btn-outline-success btn-sm"><i class="fas fa-unlock mr-1"></i>فك القفل</button>
+                  <button type="submit" class="btn btn-outline-success"><i class="fas fa-unlock mr-1"></i>فك القفل</button>
                   {% else %}
                   <input type="hidden" name="platform_disabled" value="1" aria-label="platform disabled">
-                  <button type="submit" class="btn btn-outline-danger btn-sm"
+                  <button type="submit" class="btn btn-outline-danger"
                           onclick="return confirm('تعطيل هذا المتجر من مستوى المنصة؟ لن يتمكن مالك التينانت من تفعيله.');">
                     <i class="fas fa-lock mr-1"></i>قفل (تعطيل)
                   </button>

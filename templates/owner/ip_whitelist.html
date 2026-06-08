@@ -45,7 +45,7 @@
         </div>
       </form>
       
-      <table class="table table-bordered table-striped">
+      <div class="table-responsive"><table class="table table-bordered table-striped">
         <thead>
           <tr>
             <th width="35%">IP Address</th>
@@ -62,7 +62,7 @@
               <td>
                 <form method="post" action="{{ url_for('owner.delete_ip_whitelist', index=loop.index0) }}" style="display:inline" onsubmit="return confirm('هل أنت متأكد من حذف هذا IP؟')">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
-                  <button type="submit" class="btn btn-sm btn-danger">
+                  <button type="submit" class="btn btn-danger">
                     <i class="fas fa-trash"></i> حذف
                   </button>
                 </form>
@@ -77,7 +77,7 @@
             </tr>
           {% endif %}
         </tbody>
-      </table>
+      </table></div>
     </div>
   </div>
 </div>

@@ -78,7 +78,7 @@
                         <h3 class="card-title">إحصائيات التطبيق</h3>
                     </div>
                     <div class="card-body">
-                        <table class="table">
+                        <div class="table-responsive"><table class="table">
                             <tr>
                                 <td>إجمالي الفواتير</td>
                                 <td><strong>{{ metrics.total_sales or 0 }}</strong></td>
@@ -99,7 +99,7 @@
                                 <td>منتجات منخفضة المخزون</td>
                                 <td><strong class="text-danger">{{ metrics.low_stock_products or 0 }}</strong></td>
                             </tr>
-                        </table>
+                        </table></div>
                     </div>
                 </div>
             </div>
@@ -110,7 +110,7 @@
                         <h3 class="card-title">معلومات الموارد</h3>
                     </div>
                     <div class="card-body">
-                        <table class="table">
+                        <div class="table-responsive"><table class="table">
                             <tr>
                                 <td>إجمالي المساحة</td>
                                 <td><strong>{{ health.disk.total_gb }} GB</strong></td>
@@ -131,7 +131,7 @@
                                 <td>عدد المعالجات</td>
                                 <td><strong>{{ health.cpu.cores }}</strong></td>
                             </tr>
-                        </table>
+                        </table></div>
                     </div>
                 </div>
             </div>

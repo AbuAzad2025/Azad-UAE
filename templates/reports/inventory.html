@@ -49,12 +49,12 @@
               </div>
 
               {% if category_id %}<input type="hidden" name="category" value="{{ category_id }}" aria-label="category">{% endif %}
-              <button type="submit" class="btn btn-outline-primary btn-sm mr-2">
+              <button type="submit" class="btn btn-outline-primary mr-2">
                 تطبيق
               </button>
 
               <div class="btn-group mr-2">
-                <button type="button" class="btn btn-outline-success btn-sm dropdown-toggle" data-toggle="dropdown">
+                <button type="button" class="btn btn-outline-success dropdown-toggle" data-toggle="dropdown">
                   تصدير
                 </button>
                 <div class="dropdown-menu dropdown-menu-right">
@@ -112,7 +112,7 @@
           {% endif %}
 
           <!-- جدول المخزون -->
-          <table class="table table-bordered table-striped">
+          <div class="table-responsive"><table class="table table-bordered table-striped">
             <thead>
               <tr>
                 <th>المنتج</th>
@@ -161,7 +161,7 @@
               </tr>
               {% endfor %}
             </tbody>
-          </table>
+          </table></div>
         </div>
       </div>
     </div>

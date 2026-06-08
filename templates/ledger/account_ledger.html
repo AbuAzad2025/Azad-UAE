@@ -31,7 +31,7 @@
     </div>
   </div>
   <div class="card-body p-0">
-    <table class="table table-bordered table-striped">
+    <div class="table-responsive"><table class="table table-bordered table-striped">
       <thead>
         <tr>
           <th>{{ t('Date') }}</th>
@@ -68,7 +68,7 @@
           <td><strong>{{ "{:,.2f}".format(summary.final_balance) }} AED</strong></td>
         </tr>
       </tfoot>
-    </table>
+    </table></div>
   </div>
 </div>
 {% endblock %}

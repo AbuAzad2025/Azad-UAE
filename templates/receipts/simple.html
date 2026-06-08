@@ -169,7 +169,7 @@
     {% include 'partials/print_unified_banner.html' %}
 
     <!-- Receipt Number & Date -->
-    <table class="info-table">
+    <div class="table-responsive"><table class="info-table">
       <tr>
         <td><strong>رقم السند:</strong> {{ receipt.receipt_number }}</td>
         <td><strong>التاريخ:</strong> {{ receipt.receipt_date.strftime('%Y-%m-%d') }}</td>
@@ -197,7 +197,7 @@
         </td>
       </tr>
       {% endif %}
-    </table>
+    </table></div>
 
     <!-- Amount -->
     <div class="amount-box">
@@ -213,7 +213,7 @@
     {% if source_info %}
     <div class="ic-4">
       <strong class="ic-5">تفاصيل الفاتورة:</strong>
-      <table class="ic-6">
+      <div class="table-responsive"><table class="ic-6">
         <thead>
           <tr>
             <th>رقم الفاتورة</th>
@@ -228,7 +228,7 @@
             <td><strong>{{ "{:,.2f}".format(receipt.amount) }} {{ receipt.currency }}</strong></td>
           </tr>
         </tbody>
-      </table>
+      </table></div>
     </div>
     {% endif %}
 

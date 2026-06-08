@@ -288,7 +288,7 @@
       </div>
 
       <!-- Items Table -->
-      <table class="items-table">
+      <div class="table-responsive"><table class="items-table">
         <thead>
           <tr>
             <th>#</th>
@@ -311,7 +311,7 @@
           </tr>
           {% endfor %}
         </tbody>
-      </table>
+      </table></div>
 
       <!-- Totals -->
       <div class="totals-section">
@@ -378,7 +378,7 @@
       <h3 style="color: {{ settings.header_color if settings else '#667eea' }}; font-size: 12px; margin-bottom: 8px; font-weight: 700;">
         💰 الدفعات
       </h3>
-      <table class="ic-10">
+      <div class="table-responsive"><table class="ic-10">
         <thead>
           <tr style="background: #f8f9fa; border-bottom: 1px solid {{ settings.header_color if settings else '#667eea' }};">
             <th class="ic-11">رقم الدفعة</th>
@@ -417,7 +417,7 @@
           </tr>
           {% endfor %}
         </tbody>
-      </table>
+      </table></div>
     </div>
     {% endif %}
 
