@@ -4,6 +4,8 @@ from flask import Blueprint, jsonify, render_template, request
 from flask_login import current_user, login_required
 from extensions import csrf, db
 from models import Customer, Product
+from models.system_settings import SystemSettings
+from models.tenant import Tenant
 from services.sale_service import SaleService
 from utils.branching import ensure_warehouse_access, get_accessible_warehouses
 from utils.decorators import permission_required
@@ -16,11 +18,24 @@ from utils.pos_helpers import (
     serialize_pos_product,
 )
 from utils.structured_logging import log_mutation
-from utils.tenanting import tenant_get, tenant_query
-
+from utils.tenanting import tenant_get, tenant_query, get_active_tenant_id
 
 pos_bp = Blueprint("pos", __name__, url_prefix="/pos")
 
+@pos_bp.before_request
+def _require_pos_enabled():
+    global_setting = SystemSettings.query.order_by(SystemSettings.id.desc()).first()
+    if global_setting and not global_setting.enable_pos:
+        if request.is_json or request.path.startswith("/pos/api/"):
+            return jsonify({"success": False, "error": "POS غير مفعل على مستوى النظام."}), 403
+        return render_template("pos/disabled.html", reason="system"), 403
+    tid = get_active_tenant_id()
+    if tid:
+        tenant = Tenant.query.get(tid)
+        if tenant and not tenant.enable_pos:
+            if request.is_json or request.path.startswith("/pos/api/"):
+                return jsonify({"success": False, "error": "POS غير مفعل لهذه الشركة."}), 403
+            return render_template("pos/disabled.html", reason="tenant"), 403
 
 @pos_bp.route("/")
 @login_required

@@ -373,12 +373,14 @@
               </p>
             </a>
             <ul class="nav nav-treeview">
+              {% if system_enable_pos and tenant_enable_pos %}
               <li class="nav-item">
                 <a href="{{ url_for('pos.index') }}" class="nav-link">
                   <i class="fas fa-cash-register nav-icon text-info"></i>
                   <p>POS (الكاشير)</p>
                 </a>
               </li>
+              {% endif %}
               <li class="nav-item">
                 <a href="{{ url_for('sales.create') }}" class="nav-link">
                   <i class="fas fa-plus-circle nav-icon text-success"></i>

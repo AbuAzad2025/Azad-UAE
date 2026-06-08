@@ -1,15 +1,11 @@
 """NOWPayments IPN URL and secret helpers."""
 from __future__ import annotations
 
-from flask import current_app
-
 
 def get_nowpayments_ipn_url() -> str:
     """Canonical IPN callback URL for per-payment NOWPayments requests."""
-    base = (current_app.config.get("BASE_URL") or "").rstrip("/")
-    if not base:
-        return "/payment-vault/webhook/nowpayments"
-    return f"{base}/payment-vault/webhook/nowpayments"
+    from services.payments.nowpayments_provider import NowPaymentsProvider
+    return NowPaymentsProvider().build_webhook_url()
 
 
 def resolve_nowpayments_ipn_secret(vault=None) -> str:
@@ -31,4 +27,5 @@ def resolve_nowpayments_ipn_secret(vault=None) -> str:
                 return secret
     except Exception:
         pass
-    return (current_app.config.get("NOWPAYMENTS_IPN_SECRET") or "").strip()
+    from services.payments.nowpayments_provider import NowPaymentsProvider
+    return (NowPaymentsProvider().ipn_secret or "").strip()

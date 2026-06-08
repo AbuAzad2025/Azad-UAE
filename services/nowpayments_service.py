@@ -7,28 +7,30 @@ import requests
 import json
 import hashlib
 import hmac
-import time
 from datetime import datetime
 from decimal import Decimal
 from flask import current_app
 from extensions import db
 from models import Donation
 from utils.nowpayments_ipn import get_nowpayments_ipn_url
+from services.payments.nowpayments_provider import NowPaymentsProvider
 
 
 class NOWPaymentsService:
     """خدمة NOWPayments للدفع بالعملات الرقمية"""
     
     def __init__(self):
-        self.api_key = current_app.config.get('NOWPAYMENTS_API_KEY')
-        self.api_url = 'https://api.nowpayments.io/v1'
-        self.ipn_secret = current_app.config.get('NOWPAYMENTS_IPN_SECRET')
+        self.provider = NowPaymentsProvider()
+        self.api_key = self.provider.api_key
+        self.api_url = self.provider.api_base
+        self.ipn_secret = self.provider.ipn_secret
         
-    def create_payment(self, amount, currency='USD', crypto_currency='btc', 
-                      order_id=None, customer_email=None, description=None,
-                      transaction_type='donation', package=None, 
-                      customer_name=None, customer_phone=None,
-                      donor_name=None, donor_email=None, donor_message=None):
+    def create_payment(
+            self, amount, currency='USD', crypto_currency='btc',
+            order_id=None, customer_email=None, description=None,
+            transaction_type='donation', package=None,
+            customer_name=None, customer_phone=None,
+            donor_name=None, donor_email=None, donor_message=None):
         """
         إنشاء دفعة جديدة
         
@@ -206,7 +208,9 @@ class NOWPaymentsService:
                     'currencies': response.json()
                 }
             else:
-                current_app.logger.warning('NOWPayments get_available_currencies failed: status=%s', response.status_code)
+                current_app.logger.warning(
+                    'NOWPayments get_available_currencies failed: status=%s',
+                    response.status_code)
                 return {
                     'success': False,
                     'error': 'تعذر جلب العملات المتاحة حالياً'
