@@ -229,10 +229,43 @@
         padding: 0 !important;
       }
     }
+  
+    /* D6: externalized inline styles */
+    .ic-1 { text-align: center; margin-bottom: 8px; }
+    .ic-2 { margin-top: 5px; }
+    .ic-3 { width: 5%; }
+    .ic-4 { width: 40%; }
+    .ic-5 { width: 13%; }
+    .ic-6 { width: 14%; }
+    .ic-7 { width: 15%; }
+    .ic-8 { text-align: right; }
+    .ic-9 { color: #dc3545; }
+    .ic-10 { padding: 10px; }
+    .ic-11 { font-size: 8px; }
+    .ic-12 { display: flex; justify-content: space-between; margin-bottom: 5px; }
+    .ic-13 { margin: 0 8px; }
+    .ic-14 { font-weight: bold; color: #28a745; font-size: 9px; }
+    .ic-15 { font-size: 9px; color: #666; }
+    .ic-16 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; text-align: center; }
+    .ic-17 { font-size: 8px; font-weight: bold; }
+    .ic-18 { background: #fff3cd; border: 1px solid #ffc107; border-radius: 5px; padding: 10px; margin-top: 8px; }
+    .ic-19 { margin-top: 5px; font-size: 8px; }
+    .ic-20 { font-size: 9px; margin-bottom: 5px; }
+    .ic-21 { margin: 12px 0; padding: 6px; background: rgba(255,255,255,0.15); border-radius: 8px; border: 1px solid rgba(255,255,255,0.3); }
+    .ic-22 { font-weight: 700; font-size: 9px; margin-bottom: 6px; text-align: center; }
+    .ic-23 { font-size: 9px; line-height: 1.6; text-align: center; }
+    .ic-24 { font-size: 8px; opacity: 0.8; margin-bottom: 8px; text-align: center; }
+    .ic-25 { background: rgba(255,243,205,0.3); border-right: 3px solid #ffc107; padding: 8px; margin: 10px 0; border-radius: 5px; }
+    .ic-26 { font-size: 9px; margin: 0; }
+    .ic-27 { margin-top: 10px; font-size: 8px; }
+    .ic-28 { margin: 0 5px; color: rgba(255,255,255,0.9); text-decoration: none; }
+    .ic-29 { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 0.05; z-index: 0; pointer-events: none; }
+    .ic-30 { width: 100%; }
+    .ic-31 { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg); font-size: 90px; color: rgba(201,169,97,0.05); font-weight: 700; z-index: 0; pointer-events: none; font-family: 'Noto Kufi Arabic'; }
   </style>
 </head>
 <body class="invoice-print gulf-invoice">
-  <div class="no-print" style="text-align: center; margin-bottom: 8px;">
+  <div class="no-print ic-1">
     <button onclick="window.print()" style="background: linear-gradient(135deg, {{ settings.header_color or '#c9a961' }} 0%, {{ settings.accent_color or '#8b7355' }} 100%); color: white; border: none; padding: 12px 30px; border-radius: 8px; font-size: 9px; cursor: pointer;">
       🖨️ طباعة الفاتورة
     </button>
@@ -246,7 +279,7 @@
         <div>{{ (settings.address_ar if settings and settings.address_ar else none) or tenant_address or company_address }}</div>
         <div>📞 {{ (settings.phone_1 if settings and settings.phone_1 else none) or tenant_phone or company_phone }} {% if settings and settings.phone_2 and settings.phone_2 != 'None' %}| {{ settings.phone_2 }}{% endif %}</div>
         <div>📧 {{ (settings.email if settings and settings.email else none) or tenant_email or company_email }} {% if settings and settings.website and settings.website != 'None' %}| 🌐 {{ settings.website }}{% endif %}</div>
-        {% if settings and settings.tax_number and settings.tax_number != 'None' %}<div style="margin-top: 5px;">الرقم الضريبي: {{ settings.tax_number }}</div>{% endif %}
+        {% if settings and settings.tax_number and settings.tax_number != 'None' %}<div class="ic-2">الرقم الضريبي: {{ settings.tax_number }}</div>{% endif %}
         {% if print_branch %}
         <div>🏢 الفرع: {{ print_branch.name }}{% if print_branch.code %} ({{ print_branch.code }}){% endif %}</div>
         {% if print_branch.address %}
@@ -279,19 +312,19 @@
       <table>
         <thead>
           <tr>
-            <th style="width: 5%;">#</th>
-            <th style="width: 40%;">المنتج</th>
-            <th style="width: 13%;">الكمية</th>
-            <th style="width: 14%;">السعر</th>
-            <th style="width: 13%;">الخصم%</th>
-            <th style="width: 15%;">الإجمالي</th>
+            <th class="ic-3">#</th>
+            <th class="ic-4">المنتج</th>
+            <th class="ic-5">الكمية</th>
+            <th class="ic-6">السعر</th>
+            <th class="ic-5">الخصم%</th>
+            <th class="ic-7">الإجمالي</th>
           </tr>
         </thead>
         <tbody>
           {% for line in sale.lines %}
           <tr>
             <td>{{ loop.index }}</td>
-            <td style="text-align: right;"><strong>{{ line.product.name if line.product else '-' }}</strong></td>
+            <td class="ic-8"><strong>{{ line.product.name if line.product else '-' }}</strong></td>
             <td>{{ line.quantity }}</td>
             <td>{{ "{:,.2f}".format(line.unit_price) }}</td>
             <td>{{ line.discount_percent if line.discount_percent else '-' }}</td>
@@ -309,7 +342,7 @@
         {% if sale.discount_amount > 0 %}
         <div class="total-row">
           <span>الخصم:</span>
-          <strong style="color: #dc3545;">- {{ "{:,.2f}".format(sale.discount_amount) }}</strong>
+          <strong class="ic-9">- {{ "{:,.2f}".format(sale.discount_amount) }}</strong>
         </div>
         {% endif %}
         {% if sale.shipping_cost > 0 %}
@@ -335,20 +368,20 @@
       {% if sale.payments %}
       <div class="payments-table">
         <div class="payments-header">💰 الدفعات المسددة</div>
-        <div style="padding: 10px;">
+        <div class="ic-10">
           {% for payment in sale.payments %}
-          <div class="payment-row" style="font-size: 8px;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+          <div class="payment-row ic-11">
+            <div class="ic-12">
               <div>
                 <strong style="color: {{ settings.header_color or '#c9a961' }};">{{ payment.payment_number }}</strong>
-                <span style="margin: 0 8px;">|</span>
+                <span class="ic-13">|</span>
                 {{ payment.payment_date.strftime('%Y-%m-%d') }}
               </div>
-              <div style="font-weight: bold; color: #28a745; font-size: 9px;">
+              <div class="ic-14">
                 {{ "{:,.2f}".format(payment.amount_aed) }} AED
               </div>
             </div>
-            <div style="font-size: 9px; color: #666;">
+            <div class="ic-15">
               طريقة الدفع: 
               {% if payment.payment_method == 'cash' %}💵 نقدي
               {% elif payment.payment_method == 'card' %}💳 بطاقة ائتمانية
@@ -358,18 +391,18 @@
             </div>
             {% if payment.payment_method == 'cheque' and payment.cheque_number %}
             <div class="cheque-details">
-              <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; text-align: center;">
+              <div class="ic-16">
                 <div>
                   <div style="color: {{ settings.header_color or '#c9a961' }}; font-weight: bold;">📝 رقم الشيك</div>
-                  <div style="font-size: 8px; font-weight: bold;">{{ payment.cheque_number }}</div>
+                  <div class="ic-17">{{ payment.cheque_number }}</div>
                 </div>
                 <div>
                   <div style="color: {{ settings.header_color or '#c9a961' }}; font-weight: bold;">📅 تاريخ الاستحقاق</div>
-                  <div style="font-size: 8px; font-weight: bold;">{{ payment.cheque_date.strftime('%Y-%m-%d') if payment.cheque_date else '-' }}</div>
+                  <div class="ic-17">{{ payment.cheque_date.strftime('%Y-%m-%d') if payment.cheque_date else '-' }}</div>
                 </div>
                 <div>
                   <div style="color: {{ settings.header_color or '#c9a961' }}; font-weight: bold;">🏦 البنك</div>
-                  <div style="font-size: 8px; font-weight: bold;">{{ payment.bank_name or '-' }}</div>
+                  <div class="ic-17">{{ payment.bank_name or '-' }}</div>
                 </div>
               </div>
             </div>
@@ -381,32 +414,32 @@
       {% endif %}
 
       {% if sale.notes %}
-      <div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 5px; padding: 10px; margin-top: 8px;">
+      <div class="ic-18">
         <strong style="color: {{ settings.header_color or '#c9a961' }};">📝 ملاحظات:</strong>
-        <p style="margin-top: 5px; font-size: 8px;">{{ sale.notes }}</p>
+        <p class="ic-19">{{ sale.notes }}</p>
       </div>
       {% endif %}
 
       <div class="signature-section">
         <div class="signature-box">
-          <div style="font-size: 9px; color: #666;">ختم وتوقيع البائع</div>
+          <div class="ic-15">ختم وتوقيع البائع</div>
           <div class="signature-line"></div>
         </div>
         <div class="signature-box">
-          <div style="font-size: 9px; color: #666;">توقيع العميل</div>
+          <div class="ic-15">توقيع العميل</div>
           <div class="signature-line"></div>
         </div>
       </div>
     </div>
 
     <div class="footer">
-      <div style="font-size: 9px; margin-bottom: 5px;">{{ settings.payment_terms_ar if settings and settings.payment_terms_ar else 'نرجو الالتزام بمواعيد الدفع المحددة' }}</div>
+      <div class="ic-20">{{ settings.payment_terms_ar if settings and settings.payment_terms_ar else 'نرجو الالتزام بمواعيد الدفع المحددة' }}</div>
       
       <!-- Bank Info -->
       {% if settings and ((settings.bank_name and settings.bank_name != 'None') or (settings.iban and settings.iban != 'None') or (settings.swift_code and settings.swift_code != 'None')) %}
-      <div style="margin: 12px 0; padding: 6px; background: rgba(255,255,255,0.15); border-radius: 8px; border: 1px solid rgba(255,255,255,0.3);">
-        <p style="font-weight: 700; font-size: 9px; margin-bottom: 6px; text-align: center;">🏦 معلومات التحويل البنكي</p>
-        <div style="font-size: 9px; line-height: 1.6; text-align: center;">
+      <div class="ic-21">
+        <p class="ic-22">🏦 معلومات التحويل البنكي</p>
+        <div class="ic-23">
           {% if settings.bank_name and settings.bank_name != 'None' %}<span><strong>البنك:</strong> {{ settings.bank_name }}</span>{% endif %}
           {% if (settings.bank_name and settings.bank_name != 'None') and (settings.iban and settings.iban != 'None') %}<br>{% endif %}
           {% if settings.iban and settings.iban != 'None' %}<span><strong>IBAN:</strong> {{ settings.iban }}</span>{% endif %}
@@ -417,7 +450,7 @@
       
       <!-- Business Registration -->
       {% if settings and ((settings.commercial_register and settings.commercial_register != 'None') or (settings.license_number and settings.license_number != 'None')) %}
-      <div style="font-size: 8px; opacity: 0.8; margin-bottom: 8px; text-align: center;">
+      <div class="ic-24">
         {% if settings.commercial_register and settings.commercial_register != 'None' %}<span>السجل التجاري: {{ settings.commercial_register }}</span>{% endif %}
         {% if (settings.commercial_register and settings.commercial_register != 'None') and (settings.license_number and settings.license_number != 'None') %} ☪ {% endif %}
         {% if settings.license_number and settings.license_number != 'None' %}<span>الرخصة: {{ settings.license_number }}</span>{% endif %}
@@ -426,22 +459,22 @@
       
       <!-- Default Note -->
       {% if settings and settings.default_invoice_note_ar and settings.default_invoice_note_ar != 'None' %}
-      <div style="background: rgba(255,243,205,0.3); border-right: 3px solid #ffc107; padding: 8px; margin: 10px 0; border-radius: 5px;">
-        <p style="font-size: 9px; margin: 0;">💬 {{ settings.default_invoice_note_ar }}</p>
+      <div class="ic-25">
+        <p class="ic-26">💬 {{ settings.default_invoice_note_ar }}</p>
       </div>
       {% endif %}
       
       <div>شكراً لتعاملكم الكريم معنا</div>
       {% if settings and settings.website and settings.website != 'None' %}
-      <div style="margin-top: 5px; font-size: 8px;">🌐 {{ settings.website }}</div>
+      <div class="ic-19">🌐 {{ settings.website }}</div>
       {% endif %}
       
       <!-- Social Media -->
       {% if settings and (settings.facebook_url or settings.instagram_url or settings.whatsapp_number) %}
-      <div style="margin-top: 10px; font-size: 8px;">
-        {% if settings.facebook_url %}<a href="{{ settings.facebook_url }}" style="margin: 0 5px; color: rgba(255,255,255,0.9); text-decoration: none;">📘 Facebook</a>{% endif %}
-        {% if settings.instagram_url %}<a href="{{ settings.instagram_url }}" style="margin: 0 5px; color: rgba(255,255,255,0.9); text-decoration: none;">📷 Instagram</a>{% endif %}
-        {% if settings.whatsapp_number %}<a href="https://wa.me/{{ settings.whatsapp_number }}" style="margin: 0 5px; color: rgba(255,255,255,0.9); text-decoration: none;">💬 WhatsApp</a>{% endif %}
+      <div class="ic-27">
+        {% if settings.facebook_url %}<a href="{{ settings.facebook_url }}" class="ic-28">📘 Facebook</a>{% endif %}
+        {% if settings.instagram_url %}<a href="{{ settings.instagram_url }}" class="ic-28">📷 Instagram</a>{% endif %}
+        {% if settings.whatsapp_number %}<a href="https://wa.me/{{ settings.whatsapp_number }}" class="ic-28">💬 WhatsApp</a>{% endif %}
       </div>
       {% endif %}
     </div>
@@ -449,11 +482,11 @@
     <!-- Watermark -->
     {% if settings and settings.enable_watermark %}
       {% if settings.watermark_image_path %}
-        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 0.05; z-index: 0; pointer-events: none;">
-          <img src="{{ url_for('static', filename=settings.watermark_image_path) }}" alt="Watermark" style="width: 100%;">
+        <div class="ic-29">
+          <img src="{{ url_for('static', filename=settings.watermark_image_path) }}" alt="Watermark" class="ic-30">
         </div>
       {% elif settings.watermark_text %}
-        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg); font-size: 90px; color: rgba(201,169,97,0.05); font-weight: 700; z-index: 0; pointer-events: none; font-family: 'Noto Kufi Arabic';">
+        <div class="ic-31">
           {{ settings.watermark_text }}
         </div>
       {% endif %}

@@ -210,14 +210,34 @@
         margin: 8mm;
       }
     }
+  
+    /* D6: externalized inline styles */
+    .ic-1 { text-align: center; margin-bottom: 20px; }
+    .ic-2 { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 12px 30px; border-radius: 8px; font-size: 16px; font-weight: 700; cursor: pointer; }
+    .ic-3 { background: #6c757d; color: white; border: none; padding: 12px 30px; border-radius: 8px; font-size: 16px; font-weight: 700; cursor: pointer; margin-right: 10px; }
+    .ic-4 { margin-top: 5px; font-size: 11px; }
+    .ic-5 { color: #dc3545; }
+    .ic-6 { color: #28a745; font-weight: 600; }
+    .ic-7 { color: #dc3545; font-weight: 600; }
+    .ic-8 { background: #fff3cd; padding: 15px; border-radius: 8px; border-right: 4px solid #ffc107; margin: 20px 0; }
+    .ic-9 { padding: 12px 15px; border-top: 1px dashed #ccc; margin-top: 10px; }
+    .ic-10 { width: 100%; border-collapse: collapse; font-size: 9px; }
+    .ic-11 { padding: 5px; text-align: right; border: 1px solid #dee2e6; font-size: 10px; }
+    .ic-12 { padding: 5px; text-align: center; border: 1px solid #dee2e6; font-size: 10px; }
+    .ic-13 { padding: 4px 6px; border: 1px solid #dee2e6; font-size: 9px; }
+    .ic-14 { padding: 4px 6px; text-align: center; border: 1px solid #dee2e6; font-size: 9px; }
+    .ic-15 { padding: 4px 6px; text-align: center; border: 1px solid #dee2e6; color: #28a745; font-weight: bold; font-size: 10px; }
+    .ic-16 { padding: 4px 6px; border: 1px solid #dee2e6; font-size: 8px; }
+    .ic-17 { background: #fff3cd; padding: 4px 6px; border-radius: 3px; border-right: 2px solid #ffc107; }
+    .ic-18 { margin-top: 15px; font-size: 12px; opacity: 0.9; }
   </style>
 </head>
 <body class="invoice-print sale-invoice">
-  <div class="no-print" style="text-align: center; margin-bottom: 20px;">
-    <button onclick="window.print()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 12px 30px; border-radius: 8px; font-size: 16px; font-weight: 700; cursor: pointer;">
+  <div class="no-print ic-1">
+    <button onclick="window.print()" class="ic-2">
       <i class="fas fa-print"></i> طباعة الفاتورة
     </button>
-    <button onclick="window.close()" style="background: #6c757d; color: white; border: none; padding: 12px 30px; border-radius: 8px; font-size: 16px; font-weight: 700; cursor: pointer; margin-right: 10px;">
+    <button onclick="window.close()" class="ic-3">
       إغلاق
     </button>
   </div>
@@ -239,7 +259,7 @@
           {% if ph %}📞 {{ ph }}{% endif %}{% if em %} | 📧 {{ em }}{% endif %}
         </div>
         {% if settings.tax_number %}
-        <div style="margin-top: 5px; font-size: 11px;">الرقم الضريبي: {{ settings.tax_number }}</div>
+        <div class="ic-4">الرقم الضريبي: {{ settings.tax_number }}</div>
         {% endif %}
       </div>
     </div>
@@ -300,7 +320,7 @@
           <span>{{ "{:,.2f}".format(sale.subtotal) }} {{ sale.currency }}</span>
         </div>
         {% if sale.discount_amount > 0 %}
-        <div class="total-row" style="color: #dc3545;">
+        <div class="total-row ic-5">
           <span>الخصم:</span>
           <span>- {{ "{:,.2f}".format(sale.discount_amount) }} {{ sale.currency }}</span>
         </div>
@@ -321,12 +341,12 @@
           <span>الإجمالي النهائي:</span>
           <span>{{ "{:,.2f}".format(sale.total_amount) }} {{ sale.currency }}</span>
         </div>
-        <div class="total-row" style="color: #28a745; font-weight: 600;">
+        <div class="total-row ic-6">
           <span>المدفوع:</span>
           <span>{{ "{:,.2f}".format(sale.paid_amount) }} {{ sale.currency }}</span>
         </div>
         {% if sale.balance_due > 0 %}
-        <div class="total-row" style="color: #dc3545; font-weight: 600;">
+        <div class="total-row ic-7">
           <span>المتبقي:</span>
           <span>{{ "{:,.2f}".format(sale.balance_due) }} {{ sale.currency }}</span>
         </div>
@@ -334,7 +354,7 @@
       </div>
 
       {% if sale.notes %}
-      <div style="background: #fff3cd; padding: 15px; border-radius: 8px; border-right: 4px solid #ffc107; margin: 20px 0;">
+      <div class="ic-8">
         <strong>📝 ملاحظات:</strong> {{ sale.notes }}
       </div>
       {% endif %}
@@ -354,36 +374,36 @@
 
     <!-- قسم الدفعات -->
     {% if sale.payments %}
-    <div style="padding: 12px 15px; border-top: 1px dashed #ccc; margin-top: 10px;">
+    <div class="ic-9">
       <h3 style="color: {{ settings.header_color if settings else '#667eea' }}; font-size: 12px; margin-bottom: 8px; font-weight: 700;">
         💰 الدفعات
       </h3>
-      <table style="width: 100%; border-collapse: collapse; font-size: 9px;">
+      <table class="ic-10">
         <thead>
           <tr style="background: #f8f9fa; border-bottom: 1px solid {{ settings.header_color if settings else '#667eea' }};">
-            <th style="padding: 5px; text-align: right; border: 1px solid #dee2e6; font-size: 10px;">رقم الدفعة</th>
-            <th style="padding: 5px; text-align: center; border: 1px solid #dee2e6; font-size: 10px;">التاريخ</th>
-            <th style="padding: 5px; text-align: center; border: 1px solid #dee2e6; font-size: 10px;">المبلغ</th>
-            <th style="padding: 5px; text-align: center; border: 1px solid #dee2e6; font-size: 10px;">الطريقة</th>
-            <th style="padding: 5px; text-align: right; border: 1px solid #dee2e6; font-size: 10px;">التفاصيل</th>
+            <th class="ic-11">رقم الدفعة</th>
+            <th class="ic-12">التاريخ</th>
+            <th class="ic-12">المبلغ</th>
+            <th class="ic-12">الطريقة</th>
+            <th class="ic-11">التفاصيل</th>
           </tr>
         </thead>
         <tbody>
           {% for payment in sale.payments %}
           <tr>
-            <td style="padding: 4px 6px; border: 1px solid #dee2e6; font-size: 9px;"><strong>{{ payment.payment_number }}</strong></td>
-            <td style="padding: 4px 6px; text-align: center; border: 1px solid #dee2e6; font-size: 9px;">{{ payment.payment_date.strftime('%Y-%m-%d') }}</td>
-            <td style="padding: 4px 6px; text-align: center; border: 1px solid #dee2e6; color: #28a745; font-weight: bold; font-size: 10px;">{{ "{:,.2f}".format(payment.base_amount) }} {{ tenant_currency_symbol or 'AED' }}</td>
-            <td style="padding: 4px 6px; text-align: center; border: 1px solid #dee2e6; font-size: 9px;">
+            <td class="ic-13"><strong>{{ payment.payment_number }}</strong></td>
+            <td class="ic-14">{{ payment.payment_date.strftime('%Y-%m-%d') }}</td>
+            <td class="ic-15">{{ "{:,.2f}".format(payment.base_amount) }} {{ tenant_currency_symbol or 'AED' }}</td>
+            <td class="ic-14">
               {% if payment.payment_method == 'cash' %}نقدي
               {% elif payment.payment_method == 'card' %}بطاقة
               {% elif payment.payment_method == 'bank_transfer' %}تحويل بنكي
               {% elif payment.payment_method == 'cheque' %}شيك
               {% else %}محفظة إلكترونية{% endif %}
             </td>
-            <td style="padding: 4px 6px; border: 1px solid #dee2e6; font-size: 8px;">
+            <td class="ic-16">
               {% if payment.payment_method == 'cheque' and payment.cheque_number %}
-                <div style="background: #fff3cd; padding: 4px 6px; border-radius: 3px; border-right: 2px solid #ffc107;">
+                <div class="ic-17">
                   <strong>📝 شيك:</strong> {{ payment.cheque_number }}<br>
                   <strong>📅 استحقاق:</strong> {{ payment.cheque_date.strftime('%Y-%m-%d') if payment.cheque_date else '-' }}<br>
                   <strong>🏦 بنك:</strong> {{ payment.bank_name or '-' }}
@@ -409,7 +429,7 @@
         <div>📧 {{ developer_email or config.DEVELOPER_EMAIL }}</div>
         <div>🌐 {{ developer_website or config.DEVELOPER_WEBSITE }}</div>
       </div>
-      <div style="margin-top: 15px; font-size: 12px; opacity: 0.9;">
+      <div class="ic-18">
         شكراً لتعاملكم معنا <span class="palestine-flag"></span> نتمنى لكم تجربة ممتازة
       </div>
     </div>

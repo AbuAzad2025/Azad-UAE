@@ -96,12 +96,25 @@
         padding: 6mm 5mm !important;
       }
     }
+  
+    /* D6: externalized inline styles */
+    .ic-1 { margin-bottom: 8px; }
+    .ic-2 { margin: 8px 0 0 0; font-size: 14px; }
+    .ic-3 { margin: 10px 0; padding: 8px 10px; background: #f8fafc; border-right: 4px solid #64748b; border-radius: 6px; font-size: 9px; color: #1f2937; }
+    .ic-4 { margin: 10px 0 6px 0; text-align: center; }
+    .ic-5 { width: 110px; height: 110px; border: 1px solid #e2e8f0; border-radius: 8px; padding: 4px; background: #fff; }
+    .ic-6 { font-size: 8px; color: #64748b; margin-top: 4px; }
+    .ic-7 { margin-top: 20px; }
+    .ic-8 { font-size: 0.9em; color: #666; }
+    .ic-9 { text-align: center; margin-top: 20px; }
+    .ic-10 { padding: 10px 30px; font-size: 1.1em; }
+    .ic-11 { padding: 10px 30px; font-size: 1.1em; margin-right: 10px; }
   </style>
 </head>
 <body class="receipt-print payment-receipt">
   <div class="receipt">
     <div class="header">
-      <div style="margin-bottom: 8px;">{% include 'partials/print_tenant_logo.html' %}</div>
+      <div class="ic-1">{% include 'partials/print_tenant_logo.html' %}</div>
       <h1>{{ company.name_ar if company else (print_branding.company_name_ar if print_branding is defined else (tenant_name_ar or company_name_ar or 'نظام المحاسبة')) }}</h1>
       <p>{{ company.address or '' }}</p>
       <p>هاتف: {{ company.phone or '' }}</p>
@@ -111,7 +124,7 @@
       <p><strong>عنوان الفرع:</strong> {{ print_branch.address }}</p>
       {% endif %}
       {% endif %}
-      <h2 style="margin: 8px 0 0 0; font-size: 14px;">{{ 'سند صرف' if is_payment else 'سند قبض' }}</h2>
+      <h2 class="ic-2">{{ 'سند صرف' if is_payment else 'سند قبض' }}</h2>
     </div>
     
     {% set doc_title = ('💸 سند صرف' if is_payment else '💵 سند قبض') %}
@@ -172,33 +185,33 @@
     </table>
 
     {% set _payment_words = amount_in_words or (number_to_arabic_words(receipt.base_amount or receipt.amount or 0, receipt.currency or tenant_default_currency or 'AED') if number_to_arabic_words is defined else '') %}
-    <div style="margin: 10px 0; padding: 8px 10px; background: #f8fafc; border-right: 4px solid #64748b; border-radius: 6px; font-size: 9px; color: #1f2937;">
+    <div class="ic-3">
       <strong>المبلغ بالحروف:</strong> {{ _payment_words or ("{:.2f}".format(receipt.base_amount) + " " + (receipt.currency or tenant_currency_symbol or 'AED')) }}
     </div>
     {% if qr_data_url %}
-    <div style="margin: 10px 0 6px 0; text-align: center;">
-      <img src="{{ qr_data_url }}" alt="QR" style="width: 110px; height: 110px; border: 1px solid #e2e8f0; border-radius: 8px; padding: 4px; background: #fff;">
-      <div style="font-size: 8px; color: #64748b; margin-top: 4px;">رمز تحقق السند</div>
+    <div class="ic-4">
+      <img src="{{ qr_data_url }}" alt="QR" class="ic-5">
+      <div class="ic-6">رمز تحقق السند</div>
     </div>
     {% endif %}
     
     {% if receipt.notes %}
-    <div style="margin-top: 20px;">
+    <div class="ic-7">
       <strong>ملاحظات:</strong> {{ receipt.notes }}
     </div>
     {% endif %}
     
     <div class="footer">
       <p>شكراً لتعاملكم معنا</p>
-      <p style="font-size: 0.9em; color: #666;">تم الطباعة: {{ printed_at.strftime('%Y-%m-%d %H:%M') }}</p>
+      <p class="ic-8">تم الطباعة: {{ printed_at.strftime('%Y-%m-%d %H:%M') }}</p>
     </div>
   </div>
   
-  <div class="no-print" style="text-align: center; margin-top: 20px;">
-    <button onclick="window.print()" class="btn btn-primary" style="padding: 10px 30px; font-size: 1.1em;">
+  <div class="no-print ic-9">
+    <button onclick="window.print()" class="btn btn-primary ic-10">
       <i class="fas fa-print"></i> طباعة
     </button>
-    <button onclick="window.close()" class="btn btn-secondary" style="padding: 10px 30px; font-size: 1.1em; margin-right: 10px;">
+    <button onclick="window.close()" class="btn btn-secondary ic-11">
       إغلاق
     </button>
   </div>

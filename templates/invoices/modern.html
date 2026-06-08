@@ -149,6 +149,28 @@
         padding: 0 !important;
       }
     }
+  
+    /* D6: externalized inline styles */
+    .ic-1 { color: #28a745; }
+    .ic-2 { margin-top: 8px; padding-top: 10px; border-top: 1px dashed #ccc; }
+    .ic-3 { font-size: 9px; }
+    .ic-4 { padding: 5px; font-size: 8px; }
+    .ic-5 { padding: 4px; }
+    .ic-6 { padding: 4px; font-weight: bold; color: #28a745; }
+    .ic-7 { padding: 4px; font-size: 8px; }
+    .ic-8 { background: #fff3cd; padding: 3px 5px; border-radius: 3px; border-right: 2px solid #ffc107; }
+    .ic-9 { font-size: 9px; margin: 3px 0; }
+    .ic-10 { margin-top: 8px; font-size: 8px; color: #666; text-align: center; }
+    .ic-11 { margin-top: 10px; padding: 8px; background: #fff3cd; border-radius: 4px; border-right: 2px solid #ffc107; }
+    .ic-12 { font-size: 9px; color: #856404; margin: 0; }
+    .ic-13 { margin-top: 10px; font-size: 9px; }
+    .ic-14 { margin-top: 10px; text-align: center; }
+    .ic-15 { margin: 0 5px; color: #1877f2; text-decoration: none; font-size: 8px; }
+    .ic-16 { margin: 0 5px; color: #e4405f; text-decoration: none; font-size: 8px; }
+    .ic-17 { margin: 0 5px; color: #25d366; text-decoration: none; font-size: 8px; }
+    .ic-18 { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 0.05; z-index: 0; pointer-events: none; }
+    .ic-19 { width: 100%; max-height: 400px; }
+    .ic-20 { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg); font-size: 80px; color: rgba(0,0,0,0.05); font-weight: 700; z-index: 0; pointer-events: none; white-space: nowrap; }
   </style>
 </head>
 <body class="invoice-print modern-invoice">
@@ -184,7 +206,7 @@
         <div class="info-box">
           <h3>📅 بيانات الفاتورة</h3>
           <p><strong>التاريخ:</strong> {{ sale.sale_date.strftime('%Y-%m-%d') }}</p>
-          <p><strong>الحالة:</strong> <span style="color: #28a745">مكتملة</span></p>
+          <p><strong>الحالة:</strong> <span class="ic-1">مكتملة</span></p>
           <p><strong>المستخدم:</strong> {{ print_user_name or (sale.seller.full_name if sale.seller else '-') }}</p>
         </div>
       </div>
@@ -231,34 +253,34 @@
 
       <!-- قسم الدفعات -->
       {% if sale.payments %}
-      <div style="margin-top: 8px; padding-top: 10px; border-top: 1px dashed #ccc;">
+      <div class="ic-2">
         <h4 style="color: {{ settings.header_color if settings else '#667eea' }}; font-size: 9px; margin-bottom: 8px; font-weight: 700;">💰 الدفعات</h4>
-        <table style="font-size: 9px;">
+        <table class="ic-3">
           <thead>
             <tr>
-              <th style="padding: 5px; font-size: 8px;">رقم الدفعة</th>
-              <th style="padding: 5px; font-size: 8px;">التاريخ</th>
-              <th style="padding: 5px; font-size: 8px;">المبلغ</th>
-              <th style="padding: 5px; font-size: 8px;">الطريقة</th>
-              <th style="padding: 5px; font-size: 8px;">التفاصيل</th>
+              <th class="ic-4">رقم الدفعة</th>
+              <th class="ic-4">التاريخ</th>
+              <th class="ic-4">المبلغ</th>
+              <th class="ic-4">الطريقة</th>
+              <th class="ic-4">التفاصيل</th>
             </tr>
           </thead>
           <tbody>
             {% for payment in sale.payments %}
             <tr>
-              <td style="padding: 4px;">{{ payment.payment_number }}</td>
-              <td style="padding: 4px;">{{ payment.payment_date.strftime('%Y-%m-%d') }}</td>
-              <td style="padding: 4px; font-weight: bold; color: #28a745;">{{ "{:,.2f}".format(payment.base_amount) }} {{ tenant_currency_symbol or 'AED' }}</td>
-              <td style="padding: 4px;">
+              <td class="ic-5">{{ payment.payment_number }}</td>
+              <td class="ic-5">{{ payment.payment_date.strftime('%Y-%m-%d') }}</td>
+              <td class="ic-6">{{ "{:,.2f}".format(payment.base_amount) }} {{ tenant_currency_symbol or 'AED' }}</td>
+              <td class="ic-5">
                 {% if payment.payment_method == 'cash' %}نقدي
                 {% elif payment.payment_method == 'card' %}بطاقة
                 {% elif payment.payment_method == 'bank_transfer' %}تحويل
                 {% elif payment.payment_method == 'cheque' %}شيك
                 {% else %}محفظة{% endif %}
               </td>
-              <td style="padding: 4px; font-size: 8px;">
+              <td class="ic-7">
                 {% if payment.payment_method == 'cheque' and payment.cheque_number %}
-                  <div style="background: #fff3cd; padding: 3px 5px; border-radius: 3px; border-right: 2px solid #ffc107;">
+                  <div class="ic-8">
                     📝 {{ payment.cheque_number }}<br>
                     📅 {{ payment.cheque_date.strftime('%Y-%m-%d') if payment.cheque_date else '-' }}<br>
                     🏦 {{ payment.bank_name or '-' }}
@@ -285,23 +307,23 @@
       <div style="margin-top: 8px; padding: 10px; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-radius: 5px; border-right: 3px solid {{ settings.header_color if settings else '#667eea' }};">
         <p style="font-weight: 700; font-size: 9px; color: {{ settings.header_color if settings else '#667eea' }}; margin-bottom: 5px;">🏦 معلومات التحويل البنكي</p>
         {% if settings.bank_name and settings.bank_name != 'None' %}
-        <p style="font-size: 9px; margin: 3px 0;"><strong>البنك:</strong> {{ settings.bank_name }}</p>
+        <p class="ic-9"><strong>البنك:</strong> {{ settings.bank_name }}</p>
         {% endif %}
         {% if settings.bank_account_number %}
-        <p style="font-size: 9px; margin: 3px 0;"><strong>رقم الحساب:</strong> {{ settings.bank_account_number }}</p>
+        <p class="ic-9"><strong>رقم الحساب:</strong> {{ settings.bank_account_number }}</p>
         {% endif %}
         {% if settings.iban and settings.iban != 'None' %}
-        <p style="font-size: 9px; margin: 3px 0;"><strong>IBAN:</strong> {{ settings.iban }}</p>
+        <p class="ic-9"><strong>IBAN:</strong> {{ settings.iban }}</p>
         {% endif %}
         {% if settings.swift_code and settings.swift_code != 'None' %}
-        <p style="font-size: 9px; margin: 3px 0;"><strong>SWIFT:</strong> {{ settings.swift_code }}</p>
+        <p class="ic-9"><strong>SWIFT:</strong> {{ settings.swift_code }}</p>
         {% endif %}
       </div>
       {% endif %}
       
       <!-- Business Registration Info -->
       {% if settings and ((settings.commercial_register and settings.commercial_register != 'None') or (settings.license_number and settings.license_number != 'None')) %}
-      <div style="margin-top: 8px; font-size: 8px; color: #666; text-align: center;">
+      <div class="ic-10">
         {% if settings.commercial_register and settings.commercial_register != 'None' %}
         <span>السجل التجاري: {{ settings.commercial_register }}</span>
         {% endif %}
@@ -314,28 +336,28 @@
       
       <!-- Default Invoice Note -->
       {% if settings and settings.default_invoice_note_ar and settings.default_invoice_note_ar != 'None' %}
-      <div style="margin-top: 10px; padding: 8px; background: #fff3cd; border-radius: 4px; border-right: 2px solid #ffc107;">
-        <p style="font-size: 9px; color: #856404; margin: 0;">💬 {{ settings.default_invoice_note_ar }}</p>
+      <div class="ic-11">
+        <p class="ic-12">💬 {{ settings.default_invoice_note_ar }}</p>
       </div>
       {% endif %}
       
-      <p style="margin-top: 10px; font-size: 9px;">شكراً لتعاملكم معنا</p>
+      <p class="ic-13">شكراً لتعاملكم معنا</p>
       
       <!-- Social Media Links -->
       {% if settings and (settings.facebook_url or settings.instagram_url or settings.whatsapp_number) %}
-      <div style="margin-top: 10px; text-align: center;">
+      <div class="ic-14">
         {% if settings.facebook_url %}
-        <a href="{{ settings.facebook_url }}" style="margin: 0 5px; color: #1877f2; text-decoration: none; font-size: 8px;">
+        <a href="{{ settings.facebook_url }}" class="ic-15">
           <i class="fab fa-facebook"></i> Facebook
         </a>
         {% endif %}
         {% if settings.instagram_url %}
-        <a href="{{ settings.instagram_url }}" style="margin: 0 5px; color: #e4405f; text-decoration: none; font-size: 8px;">
+        <a href="{{ settings.instagram_url }}" class="ic-16">
           <i class="fab fa-instagram"></i> Instagram
         </a>
         {% endif %}
         {% if settings.whatsapp_number %}
-        <a href="https://wa.me/{{ settings.whatsapp_number }}" style="margin: 0 5px; color: #25d366; text-decoration: none; font-size: 8px;">
+        <a href="https://wa.me/{{ settings.whatsapp_number }}" class="ic-17">
           <i class="fab fa-whatsapp"></i> WhatsApp
         </a>
         {% endif %}
@@ -346,11 +368,11 @@
     <!-- Watermark -->
     {% if settings and settings.enable_watermark %}
       {% if settings.watermark_image_path %}
-        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 0.05; z-index: 0; pointer-events: none;">
-          <img src="{{ url_for('static', filename=settings.watermark_image_path) }}" alt="Watermark" style="width: 100%; max-height: 400px;">
+        <div class="ic-18">
+          <img src="{{ url_for('static', filename=settings.watermark_image_path) }}" alt="Watermark" class="ic-19">
         </div>
       {% elif settings.watermark_text %}
-        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg); font-size: 80px; color: rgba(0,0,0,0.05); font-weight: 700; z-index: 0; pointer-events: none; white-space: nowrap;">
+        <div class="ic-20">
           {{ settings.watermark_text }}
         </div>
       {% endif %}

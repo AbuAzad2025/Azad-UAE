@@ -143,11 +143,25 @@
         padding: 0 !important;
       }
     }
+  
+    /* D6: externalized inline styles */
+    .ic-1 { text-align: center; margin-bottom: 10px; }
+    .ic-2 { background: #000; color: white; border: none; padding: 8px 20px; cursor: pointer; border-radius: 3px; }
+    .ic-3 { width: 5%; }
+    .ic-4 { width: 45%; }
+    .ic-5 { width: 15%; }
+    .ic-6 { width: 20%; }
+    .ic-7 { font-size: 9px; margin: 5px 0; }
+    .ic-8 { margin: 10px 0; padding: 5px; border: 1px dashed #999; font-size: 8px; }
+    .ic-9 { margin-top: 10px; }
+    .ic-10 { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 0.02; z-index: -1; pointer-events: none; }
+    .ic-11 { width: 100%; }
+    .ic-12 { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg); font-size: 100px; color: rgba(0,0,0,0.02); font-weight: bold; z-index: -1; }
   </style>
 </head>
 <body class="invoice-print">
-  <div class="no-print" style="text-align: center; margin-bottom: 10px;">
-    <button onclick="window.print()" style="background: #000; color: white; border: none; padding: 8px 20px; cursor: pointer; border-radius: 3px;">
+  <div class="no-print ic-1">
+    <button onclick="window.print()" class="ic-2">
       طباعة
     </button>
   </div>
@@ -189,11 +203,11 @@
     <table>
       <thead>
         <tr>
-          <th style="width: 5%;">#</th>
-          <th style="width: 45%;">المنتج</th>
-          <th style="width: 15%;">الكمية</th>
-          <th style="width: 15%;">السعر</th>
-          <th style="width: 20%;">المجموع</th>
+          <th class="ic-3">#</th>
+          <th class="ic-4">المنتج</th>
+          <th class="ic-5">الكمية</th>
+          <th class="ic-5">السعر</th>
+          <th class="ic-6">المجموع</th>
         </tr>
       </thead>
       <tbody>
@@ -241,7 +255,7 @@
       
       <!-- Business Info -->
       {% if settings and (settings.tax_number or settings.commercial_register) %}
-      <div style="font-size: 9px; margin: 5px 0;">
+      <div class="ic-7">
         {% if settings.tax_number %}ض.ر: {{ settings.tax_number }}{% endif %}
         {% if settings.tax_number and settings.commercial_register %} • {% endif %}
         {% if settings.commercial_register and settings.commercial_register != 'None' %}س.ت: {{ settings.commercial_register }}{% endif %}
@@ -250,12 +264,12 @@
       
       <!-- Default Note -->
       {% if settings and settings.default_invoice_note_ar and settings.default_invoice_note_ar != 'None' %}
-      <div style="margin: 10px 0; padding: 5px; border: 1px dashed #999; font-size: 8px;">
+      <div class="ic-8">
         {{ settings.default_invoice_note_ar }}
       </div>
       {% endif %}
       
-      <div style="margin-top: 10px;">شكراً لتعاملكم معنا</div>
+      <div class="ic-9">شكراً لتعاملكم معنا</div>
     </div>
 
     <!-- Signature -->
@@ -271,11 +285,11 @@
     <!-- Watermark -->
     {% if settings and settings.enable_watermark %}
       {% if settings.watermark_image_path %}
-        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 0.02; z-index: -1; pointer-events: none;">
-          <img src="{{ url_for('static', filename=settings.watermark_image_path) }}" alt="Watermark" style="width: 100%;">
+        <div class="ic-10">
+          <img src="{{ url_for('static', filename=settings.watermark_image_path) }}" alt="Watermark" class="ic-11">
         </div>
       {% elif settings.watermark_text %}
-        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg); font-size: 100px; color: rgba(0,0,0,0.02); font-weight: bold; z-index: -1;">
+        <div class="ic-12">
           {{ settings.watermark_text }}
         </div>
       {% endif %}

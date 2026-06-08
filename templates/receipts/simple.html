@@ -120,11 +120,27 @@
     @media print {
       .no-print { display: none !important; }
     }
+  
+    /* D6: externalized inline styles */
+    .ic-1 { text-align: center; margin-bottom: 10px; }
+    .ic-2 { background: #000; color: white; border: none; padding: 8px 20px; cursor: pointer; border-radius: 3px; }
+    .ic-3 { font-size: 9px; margin-top: 5px; }
+    .ic-4 { margin: 15px 0; }
+    .ic-5 { font-size: 9px; }
+    .ic-6 { margin-top: 8px; font-size: 8px; }
+    .ic-7 { margin: 15px 0; padding: 10px; border: 1px dashed #999; background: #f9f9f9; }
+    .ic-8 { font-size: 8px; margin: 5px 0; }
+    .ic-9 { margin: 10px 0; font-size: 8px; font-style: italic; }
+    .ic-10 { margin-top: 10px; }
+    .ic-11 { margin-top: 8px; font-size: 9px; }
+    .ic-12 { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 0.02; z-index: -1; pointer-events: none; }
+    .ic-13 { width: 100%; }
+    .ic-14 { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg); font-size: 100px; color: rgba(0,0,0,0.02); font-weight: bold; z-index: -1; }
   </style>
 </head>
 <body class="receipt-print">
-  <div class="no-print" style="text-align: center; margin-bottom: 10px;">
-    <button onclick="window.print()" style="background: #000; color: white; border: none; padding: 8px 20px; cursor: pointer; border-radius: 3px;">
+  <div class="no-print ic-1">
+    <button onclick="window.print()" class="ic-2">
       طباعة
     </button>
   </div>
@@ -187,7 +203,7 @@
     <div class="amount-box">
       <div class="amount-label">المبلغ المستلم</div>
       <div class="amount-value">{{ "{:,.2f}".format(receipt.base_amount) }} {{ tenant_currency_symbol or 'AED' }}</div>
-      <div style="font-size: 9px; margin-top: 5px;">
+      <div class="ic-3">
         {{ amount_in_words or '' }}
       </div>
     </div>
@@ -195,9 +211,9 @@
     <!-- Allocations -->
     {% set source_info = receipt.get_source_info() %}
     {% if source_info %}
-    <div style="margin: 15px 0;">
-      <strong style="font-size: 9px;">تفاصيل الفاتورة:</strong>
-      <table style="margin-top: 8px; font-size: 8px;">
+    <div class="ic-4">
+      <strong class="ic-5">تفاصيل الفاتورة:</strong>
+      <table class="ic-6">
         <thead>
           <tr>
             <th>رقم الفاتورة</th>
@@ -218,7 +234,7 @@
 
     <!-- Notes -->
     {% if receipt.notes %}
-    <div style="margin: 15px 0; padding: 10px; border: 1px dashed #999; background: #f9f9f9;">
+    <div class="ic-7">
       <strong>ملاحظات:</strong> {{ receipt.notes }}
     </div>
     {% endif %}
@@ -239,7 +255,7 @@
       
       <!-- Business Registration -->
       {% if settings and ((settings.commercial_register and settings.commercial_register != 'None') or (settings.license_number and settings.license_number != 'None')) %}
-      <div style="font-size: 8px; margin: 5px 0;">
+      <div class="ic-8">
         {% if settings.commercial_register and settings.commercial_register != 'None' %}س.ت: {{ settings.commercial_register }}{% endif %}
         {% if settings.commercial_register and settings.license_number %} | {% endif %}
         {% if settings.license_number and settings.license_number != 'None' %}رخصة: {{ settings.license_number }}{% endif %}
@@ -248,16 +264,16 @@
       
       <!-- Default Receipt Note -->
       {% if settings and settings.default_receipt_note_ar and settings.default_receipt_note_ar != 'None' %}
-      <div style="margin: 10px 0; font-size: 8px; font-style: italic;">
+      <div class="ic-9">
         {{ settings.default_receipt_note_ar }}
       </div>
       {% endif %}
       
-      <div style="margin-top: 10px;">شكراً لكم</div>
+      <div class="ic-10">شكراً لكم</div>
       
       <!-- Social Media -->
       {% if settings and (settings.facebook_url or settings.instagram_url or settings.whatsapp_number) %}
-      <div style="margin-top: 8px; font-size: 9px;">
+      <div class="ic-11">
         {% if settings.whatsapp_number %}<span>📱 {{ settings.whatsapp_number }}</span>{% endif %}
       </div>
       {% endif %}
@@ -276,11 +292,11 @@
     <!-- Watermark -->
     {% if settings and settings.enable_watermark %}
       {% if settings.watermark_image_path %}
-        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 0.02; z-index: -1; pointer-events: none;">
-          <img src="{{ url_for('static', filename=settings.watermark_image_path) }}" alt="Watermark" style="width: 100%;">
+        <div class="ic-12">
+          <img src="{{ url_for('static', filename=settings.watermark_image_path) }}" alt="Watermark" class="ic-13">
         </div>
       {% elif settings.watermark_text %}
-        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg); font-size: 100px; color: rgba(0,0,0,0.02); font-weight: bold; z-index: -1;">
+        <div class="ic-14">
           {{ settings.watermark_text }}
         </div>
       {% endif %}
