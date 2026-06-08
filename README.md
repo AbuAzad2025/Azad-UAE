@@ -221,6 +221,15 @@ python tools/qa/storefront_verify_cleanup_check.py
 | `permission_audit.py` | تدقيق صلاحيات الروابط والمسارات |
 | `apply_permission_fixes.py` | إصلاح ثغرات الصلاحيات تلقائياً |
 | `generate_sri.py` | توليد SRI hashes لـ CDN |
+| `check_mobile_issues.py` | فحص مشاكل responsiveness (btn-sm, tables) |
+| `fix_mobile_issues.py` | إصلاح batch للموبايل (btn-sm → btn, table-responsive) |
+
+### 9.2 وثائق التصميم
+
+| الوثيقة | الغرض |
+|---------|-------|
+| [`docs/UI_VISUAL_AUDIT.md`](docs/UI_VISUAL_AUDIT.md) | تقرير تدقيق UI — الوضع الحالي والمقترحات |
+| [`docs/UI_DESIGN_SYSTEM.md`](docs/UI_DESIGN_SYSTEM.md) | نظام التصميم — tokens, ألوان, مكونات, RTL, موبايل |
 
 ---
 

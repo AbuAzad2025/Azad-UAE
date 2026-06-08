@@ -217,7 +217,7 @@
                     </span>
                   </td>
                   <td class="text-center">
-                    <div class="btn-group btn-group-sm">
+                    <div class="btn-group">
                       {% if current_user.has_permission('manage_sales') %}
                       <a href="{{ url_for('sales.view', id=sale.id) }}" class="btn btn-info" title="{{ t('View') }}">
                       {% endif %}
@@ -308,15 +308,6 @@
 </div>
 
 <style>
-.hover-card {
-  transition: all 0.3s ease;
-  cursor: pointer;
-}
-.hover-card:hover {
-  transform: translateY(-8px) scale(1.05);
-  box-shadow: 0 12px 32px rgba(0, 122, 61, 0.2);
-}
-
     /* D6: externalized inline styles */
     .ic-1 { background: linear-gradient(135deg, #007A3D 0%, #1B4D89 100%); }
     .ic-2 { color: #007A3D; font-size: 1.2rem; }
