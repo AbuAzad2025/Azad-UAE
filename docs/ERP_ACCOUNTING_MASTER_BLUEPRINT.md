@@ -1982,14 +1982,14 @@ What is missing is primarily **narrative clarity** in documentation and possibly
 - **Proposed:** `Azad-ERP` when transitioning to private repo
 
 ##### D3. Client-Side Form Validation
-- **Status:** ⏸️ **Deferred (post-launch)**
+- **Status:** 🚧 **Scheduled (June 8, 2026)**
 - **Effort:** 2-3 days across all forms
-- **Note:** Not blocking go-live. Will improve UX after launch.
+- **Note:** Targeted for completion today; improves UX before go-live.
 
 ##### D4. Mobile Responsiveness Fixes
-- **Status:** ⏸️ **Deferred (post-launch)**
+- **Status:** 🚧 **Scheduled (June 8, 2026)**
 - **Effort:** 2-3 days for custom templates below 768px
-- **Note:** Not blocking go-live. Tablets and desktops fully supported.
+- **Note:** Targeted for completion today; tablets and desktops already supported.
 
 ---
 
@@ -2008,8 +2008,8 @@ What is missing is primarily **narrative clarity** in documentation and possibly
 | C2 | Session security | ✅ **DONE** | Jun 7 | Jun 7 | `SESSION_COOKIE_SAMESITE` already in Config; `utils/session_security.py` with `rotate_session()` created; called after login (`auth.py`) and after password change (`main.py`); 7 tests; 347 total pass |
 | C3 | Permission audit | ✅ **DONE** | Jun 8 | Jun 8 | 497 routes, 1235 links, 127 gaps → 0 gaps; `permission_audit.py` enhanced (nested if, inline guards, is_owner/is_admin); `apply_permission_fixes.py` created; 5 new tests; all pass |
 | D1 | POS supermarket enhancements | ✅ **DONE** | Jun 7 | Jun 7 | Touch-friendly CSS (48px inputs, 52px tablet buttons), KPI sizing, scan-focus indicator, cash button styling; POS enable guard (`SystemSettings` + `Tenant` flags); `test_pos_helpers.py` (17 tests), `test_pos_routes.py` (25 tests); 404 total pass |
-| D3 | Client-side form validation | ⏸️ | — | — | Deferred post-launch; not blocking go-live |
-| D4 | Mobile responsiveness | ⏸️ | — | — | Deferred post-launch; tablets and desktops fully supported |
+| D3 | Client-side form validation | 🚧 | Jun 8 | — | In progress; targeted for today |
+| D4 | Mobile responsiveness | 🚧 | Jun 8 | — | In progress; targeted for today |
 
 ---
 
@@ -2023,7 +2023,8 @@ What is missing is primarily **narrative clarity** in documentation and possibly
 6. **B4** (2 hours) — NowPayments provider → removes config duplication
 7. **A1** (5 min) — Branch protection → final go-live gate
 8. ~~**C1, C2, C3** — Security polish~~ ✅ **ALL DONE**
-9. **D2-D4** — Post-launch enhancements
+9. **D3, D4** — In progress (June 8, 2026)
+10. **D2** — Post-launch (owner decision)
 
 ---
 
