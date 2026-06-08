@@ -2032,3 +2032,35 @@ html[data-ui-mode="dark"] .dataTables_wrapper .dataTables_paginate .paginate_but
   margin-inline-end: 0.35rem;
   margin-inline-start: 0;
 }
+
+/* ── View Mode Toggle: Desktop / Mobile / Auto ── */
+body.view-desktop {
+  min-width: 1200px;
+  overflow-x: auto;
+}
+body.view-desktop .wrapper {
+  min-width: 1200px;
+}
+body.view-desktop .erp-mobile-nav {
+  display: none !important;
+}
+body.view-desktop .main-sidebar {
+  display: block !important;
+  transform: translateX(0) !important;
+}
+
+body.view-mobile .main-sidebar {
+  display: none !important;
+}
+body.view-mobile .erp-mobile-nav {
+  display: flex !important;
+}
+body.view-mobile .content-wrapper {
+  margin-inline-start: 0 !important;
+}
+body.view-mobile .main-header {
+  margin-inline-start: 0 !important;
+}
+body.view-mobile .main-header .navbar-nav .nav-link[data-widget="pushmenu"] {
+  display: none;
+}

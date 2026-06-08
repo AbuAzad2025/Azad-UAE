@@ -1,8 +1,8 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="{{ current_language }}" dir="{{ 'rtl' if is_rtl else 'ltr' }}" data-ui-variant="palestinian" data-ui-mode="light">
 <head>
   <meta charset="utf-8">
-  <title>{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }}{% endblock %}</title>
+  <title>{% block title %}{{ tenant_name_ar or company_name_ar or 'Ù†Ø¸Ø§Ù… Ø§Ù„Ù…Ø­Ø§Ø³Ø¨Ø©' }}{% endblock %}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="csrf-token" content="{{ csrf_token() }}">
   
@@ -13,8 +13,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   
   <!-- SEO Meta Tags -->
-  <meta name="description" content="{% block meta_description %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - نظام متكامل لإدارة المستودعات والمبيعات والمشتريات{% endblock %}">
-  <meta name="keywords" content="{% block meta_keywords %}نظام إدارة المستودعات، برنامج محاسبة، فواتير إلكترونية، إدارة المبيعات، إدارة المخزون{% endblock %}">
+  <meta name="description" content="{% block meta_description %}{{ tenant_name_ar or company_name_ar or 'Ù†Ø¸Ø§Ù… Ø§Ù„Ù…Ø­Ø§Ø³Ø¨Ø©' }} - Ù†Ø¸Ø§Ù… Ù…ØªÙƒØ§Ù…Ù„ Ù„Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„Ù…Ø³ØªÙˆØ¯Ø¹Ø§Øª ÙˆØ§Ù„Ù…Ø¨ÙŠØ¹Ø§Øª ÙˆØ§Ù„Ù…Ø´ØªØ±ÙŠØ§Øª{% endblock %}">
+  <meta name="keywords" content="{% block meta_keywords %}Ù†Ø¸Ø§Ù… Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„Ù…Ø³ØªÙˆØ¯Ø¹Ø§ØªØŒ Ø¨Ø±Ù†Ø§Ù…Ø¬ Ù…Ø­Ø§Ø³Ø¨Ø©ØŒ ÙÙˆØ§ØªÙŠØ± Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠØ©ØŒ Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„Ù…Ø¨ÙŠØ¹Ø§ØªØŒ Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„Ù…Ø®Ø²ÙˆÙ†{% endblock %}">
   <meta name="author" content="{{ developer_name_ar or config.DEVELOPER_NAME_AR }}">
   <meta name="robots" content="{% block robots %}index, follow{% endblock %}">
   <meta name="language" content="{{ current_language }}">
@@ -29,7 +29,7 @@
   {% set _logo_internal = _logo_path if _logo_path.startswith('http') else url_for('static', filename=_logo_path) %}
   <meta property="og:image" content="{{ _logo_external }}">
   <meta property="og:locale" content="{{ 'ar_AE' if current_language == 'ar' else 'en_US' }}">
-  <meta property="og:site_name" content="{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }}">
+  <meta property="og:site_name" content="{{ tenant_name_ar or company_name_ar or 'Ù†Ø¸Ø§Ù… Ø§Ù„Ù…Ø­Ø§Ø³Ø¨Ø©' }}">
   
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
@@ -51,12 +51,12 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://cdn.jsdelivr.net" integrity="sha384-R4QB47a9SQ6y4D38cAyN5aSMhASP1+n7pTwwA53PDbPPKawIMOd9ThfJA0zGZSPg" crossorigin="anonymous">
   
-  <!-- Critical CSS - تحميل فوري (Bootstrap 4 قبل AdminLTE) -->
+  <!-- Critical CSS - ØªØ­Ù…ÙŠÙ„ ÙÙˆØ±ÙŠ (Bootstrap 4 Ù‚Ø¨Ù„ AdminLTE) -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N" crossorigin="anonymous">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css" integrity="sha384-qrt37eUXKQgF1p6OlpdB29OTyKryxbxdJHkvfVN4suujWnn6PibIvbnygcK4uJfA" crossorigin="anonymous" integrity="sha384-qrt37eUXKQgF1p6OlpdB29OTyKryxbxdJHkvfVN4suujWnn6PibIvbnYgcK4uJfA" crossorigin="anonymous">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/erp-theme.css') }}">
   
-  <!-- Non-Critical CSS - تحميل متأخر -->
+  <!-- Non-Critical CSS - ØªØ­Ù…ÙŠÙ„ Ù…ØªØ£Ø®Ø± -->
   <link rel="preload" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" integrity="sha384-I/XmlxwF3yaWheimilZTCgZ85zwZ+NL93B11+pw6Z92PDgmicv5LyuQMtIJt3i96" crossorigin="anonymous" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'" integrity="sha384-DyZ88mC6Up2uqS4h/KRgHuoeGwBcD4Ng9SiP4dIRy0EXTlnuz47vAwmeGwVChigm" crossorigin="anonymous">
   <link rel="preload" href="{{ url_for('static', filename='adminlte/plugins/select2/css/select2.min.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
@@ -76,16 +76,16 @@
   </noscript>
   {% block extra_css %}{% endblock %}
   
-  <!-- Schema.org JSON-LD للتحسين في محركات البحث -->
+  <!-- Schema.org JSON-LD Ù„Ù„ØªØ­Ø³ÙŠÙ† ÙÙŠ Ù…Ø­Ø±ÙƒØ§Øª Ø§Ù„Ø¨Ø­Ø« -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "Organization",
-    "name": "{{ developer_name_ar or developer_name or 'شركة أزاد للأنظمة الذكية' }}",
+    "name": "{{ developer_name_ar or developer_name or 'Ø´Ø±ÙƒØ© Ø£Ø²Ø§Ø¯ Ù„Ù„Ø£Ù†Ø¸Ù…Ø© Ø§Ù„Ø°ÙƒÙŠØ©' }}",
     "alternateName": "{{ developer_name or 'Azad Smart Systems' }}",
     "url": "{{ request.url_root }}",
     "logo": "{{ _logo_external }}",
-    "description": "نظام متكامل لإدارة المستودعات والمبيعات والمشتريات مع ذكاء اصطناعي متقدم",
+    "description": "Ù†Ø¸Ø§Ù… Ù…ØªÙƒØ§Ù…Ù„ Ù„Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„Ù…Ø³ØªÙˆØ¯Ø¹Ø§Øª ÙˆØ§Ù„Ù…Ø¨ÙŠØ¹Ø§Øª ÙˆØ§Ù„Ù…Ø´ØªØ±ÙŠØ§Øª Ù…Ø¹ Ø°ÙƒØ§Ø¡ Ø§ØµØ·Ù†Ø§Ø¹ÙŠ Ù…ØªÙ‚Ø¯Ù…",
     "address": {
       "@type": "PostalAddress",
       "addressCountry": "AE",
@@ -108,7 +108,7 @@
   <nav class="main-header navbar navbar-expand navbar-white navbar-light">
     <ul class="navbar-nav">
       <li class="nav-item">
-        <a class="nav-link" data-widget="pushmenu" href="#" role="button" title="تبديل القائمة الجانبية"><i class="fas fa-bars"></i></a>
+        <a class="nav-link" data-widget="pushmenu" href="#" role="button" title="ØªØ¨Ø¯ÙŠÙ„ Ø§Ù„Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ø¬Ø§Ù†Ø¨ÙŠØ©"><i class="fas fa-bars"></i></a>
       </li>
       <li class="nav-item d-none d-sm-inline-block">
         <a href="{{ url_for('main.dashboard') }}" class="nav-link"><i class="fas fa-home mr-2"></i>{{ t('Dashboard') }}</a>
@@ -116,11 +116,11 @@
     </ul>
 
     <ul class="navbar-nav ml-auto erp-header-controls">
-      <!-- الساعة والتاريخ وسعر الصرف -->
+      <!-- Ø§Ù„Ø³Ø§Ø¹Ø© ÙˆØ§Ù„ØªØ§Ø±ÙŠØ® ÙˆØ³Ø¹Ø± Ø§Ù„ØµØ±Ù -->
       <li class="nav-item d-none d-lg-inline-block">
         <div class="nav-link erp-nav-metrics">
           <div class="erp-nav-metrics-row">
-            <!-- الساعة والتاريخ -->
+            <!-- Ø§Ù„Ø³Ø§Ø¹Ø© ÙˆØ§Ù„ØªØ§Ø±ÙŠØ® -->
             <div class="erp-metric-block">
               <div id="current-time" class="erp-metric-primary">
                 <i class="fas fa-clock mr-1"></i>
@@ -132,19 +132,19 @@
               </div>
             </div>
             
-            <!-- سعر الصرف (عرض فقط — لا يستخدم في الحسابات) -->
-            <div class="erp-exchange-box" data-toggle="modal" data-target="#fxModal" title="أسعار صرف حية (عرض فقط)">
+            <!-- Ø³Ø¹Ø± Ø§Ù„ØµØ±Ù (Ø¹Ø±Ø¶ ÙÙ‚Ø· â€” Ù„Ø§ ÙŠØ³ØªØ®Ø¯Ù… ÙÙŠ Ø§Ù„Ø­Ø³Ø§Ø¨Ø§Øª) -->
+            <div class="erp-exchange-box" data-toggle="modal" data-target="#fxModal" title="Ø£Ø³Ø¹Ø§Ø± ØµØ±Ù Ø­ÙŠØ© (Ø¹Ø±Ø¶ ÙÙ‚Ø·)">
               <span class="d-none d-lg-inline erp-exchange-label">
                 <i class="fas fa-coins mr-1"></i>
-                <small>العملات</small>
+                <small>Ø§Ù„Ø¹Ù…Ù„Ø§Øª</small>
               </span>
               <span class="d-inline d-lg-none">
                 <i class="fas fa-coins text-white"></i>
               </span>
               <span class="erp-exchange-live-badges ml-1" id="fx-nav-badges">
-                <span class="badge badge-light text-dark" title="دولار">$</span>
-                <span class="badge badge-light text-dark" title="دينار">JD</span>
-                <span class="badge badge-light text-dark" title="شيقل">₪</span>
+                <span class="badge badge-light text-dark" title="Ø¯ÙˆÙ„Ø§Ø±">$</span>
+                <span class="badge badge-light text-dark" title="Ø¯ÙŠÙ†Ø§Ø±">JD</span>
+                <span class="badge badge-light text-dark" title="Ø´ÙŠÙ‚Ù„">â‚ª</span>
               </span>
             </div>
           </div>
@@ -152,9 +152,9 @@
       </li>
       
       <li class="nav-item d-none d-md-inline-block">
-        <span class="nav-link erp-navbar-brand-text" title="{{ tenant_name_ar or company_name_ar or 'أزاد' }}">
+        <span class="nav-link erp-navbar-brand-text" title="{{ tenant_name_ar or company_name_ar or 'Ø£Ø²Ø§Ø¯' }}">
           <i class="fas fa-cube mr-1"></i>
-          <span class="d-none d-lg-inline">{{ tenant_name_ar or company_name_ar or 'أزاد' }}</span>
+          <span class="d-none d-lg-inline">{{ tenant_name_ar or company_name_ar or 'Ø£Ø²Ø§Ø¯' }}</span>
         </span>
       </li>
 
@@ -163,14 +163,14 @@
       <li class="nav-item d-none d-lg-inline-block">
         <span class="nav-link py-1">
           {% if active_branch %}
-          <span class="badge badge-info" title="الفرع النشط حالياً">
+          <span class="badge badge-info" title="Ø§Ù„ÙØ±Ø¹ Ø§Ù„Ù†Ø´Ø· Ø­Ø§Ù„ÙŠØ§Ù‹">
             <i class="fas fa-code-branch mr-1"></i>
-            الفرع: {{ active_branch.name }}{% if active_branch.code %} ({{ active_branch.code }}){% endif %}
+            Ø§Ù„ÙØ±Ø¹: {{ active_branch.name }}{% if active_branch.code %} ({{ active_branch.code }}){% endif %}
           </span>
           {% else %}
-          <span class="badge badge-success" title="وضع كل الفروع">
+          <span class="badge badge-success" title="ÙˆØ¶Ø¹ ÙƒÙ„ Ø§Ù„ÙØ±ÙˆØ¹">
             <i class="fas fa-sitemap mr-1"></i>
-            الفرع: كل الفروع
+            Ø§Ù„ÙØ±Ø¹: ÙƒÙ„ Ø§Ù„ÙØ±ÙˆØ¹
           </span>
           {% endif %}
         </span>
@@ -179,13 +179,13 @@
 
       {% if is_global_scope_user %}
       <li class="nav-item dropdown erp-header-control">
-        <a class="nav-link" data-toggle="dropdown" href="#" title="تبديل الشركة">
+        <a class="nav-link" data-toggle="dropdown" href="#" title="ØªØ¨Ø¯ÙŠÙ„ Ø§Ù„Ø´Ø±ÙƒØ©">
           <i class="fas fa-building mr-1"></i>
           <span class="d-none d-md-inline">{{ tenant_name_ar or company_name_ar }}</span>
         </a>
         <div class="dropdown-menu dropdown-menu-right">
           <a class="dropdown-item {% if not active_tenant_id %}active{% endif %}" href="{{ url_for('tenants.switch', tenant_id=0) }}">
-            كل الشركات
+            ÙƒÙ„ Ø§Ù„Ø´Ø±ÙƒØ§Øª
           </a>
           <div class="dropdown-divider"></div>
           {% for tnt in available_tenants %}
@@ -198,16 +198,23 @@
       {% endif %}
 
       <li class="nav-item erp-header-control erp-theme-controls d-none d-lg-flex">
-        <select class="custom-select custom-select-sm erp-variant-select" data-ui-action="set-variant" aria-label="اختيار الثيم: فلسطيني أو خليجي" title="اختيار الثيم">
-          <option value="palestinian">فلسطيني</option>
-          <option value="gulf">خليجي</option>
+        <select class="custom-select custom-select-sm erp-variant-select" data-ui-action="set-variant" aria-label="Ø§Ø®ØªÙŠØ§Ø± Ø§Ù„Ø«ÙŠÙ…: ÙÙ„Ø³Ø·ÙŠÙ†ÙŠ Ø£Ùˆ Ø®Ù„ÙŠØ¬ÙŠ" title="Ø§Ø®ØªÙŠØ§Ø± Ø§Ù„Ø«ÙŠÙ…">
+          <option value="palestinian">ÙÙ„Ø³Ø·ÙŠÙ†ÙŠ</option>
+          <option value="gulf">Ø®Ù„ÙŠØ¬ÙŠ</option>
         </select>
       </li>
 
       <li class="nav-item erp-header-control">
-        <button type="button" class="btn btn-outline-light erp-mode-toggle" data-ui-action="toggle-mode" aria-label="التبديل إلى الوضع الداكن" title="التبديل إلى الوضع الداكن">
+        <button type="button" class="btn btn-outline-light erp-mode-toggle" data-ui-action="toggle-mode" aria-label="Ø§Ù„ØªØ¨Ø¯ÙŠÙ„ Ø¥Ù„Ù‰ Ø§Ù„ÙˆØ¶Ø¹ Ø§Ù„Ø¯Ø§ÙƒÙ†" title="Ø§Ù„ØªØ¨Ø¯ÙŠÙ„ Ø¥Ù„Ù‰ Ø§Ù„ÙˆØ¶Ø¹ Ø§Ù„Ø¯Ø§ÙƒÙ†">
           <i class="fas fa-sun" data-ui-role="mode-icon" aria-hidden="true"></i>
-          <span class="d-none d-md-inline" data-ui-role="mode-label">فاتح</span>
+          <span class="d-none d-md-inline" data-ui-role="mode-label">ÙØ§ØªØ­</span>
+        </button>
+      </li>
+
+      <li class="nav-item erp-header-control">
+        <button type="button" class="btn btn-outline-light erp-viewmode-toggle" data-ui-action="toggle-viewmode" aria-label="ØªØ¨Ø¯ÙŠÙ„ Ø¹Ø±Ø¶ Ø§Ù„Ø´Ø§Ø´Ø©" title="ØªØ¨Ø¯ÙŠÙ„ Ø¹Ø±Ø¶ Ø§Ù„Ø´Ø§Ø´Ø©">
+          <i class="fas fa-desktop" data-ui-role="viewmode-icon" aria-hidden="true"></i>
+          <span class="d-none d-md-inline" data-ui-role="viewmode-label">ØªÙ„Ù‚Ø§Ø¦ÙŠ</span>
         </button>
       </li>
 
@@ -217,42 +224,42 @@
           class="btn btn-outline-light erp-calc-toggle"
           data-toggle="modal"
           data-target="#navbarCalculatorModal"
-          title="الآلة الحاسبة"
-          aria-label="الآلة الحاسبة"
+          title="Ø§Ù„Ø¢Ù„Ø© Ø§Ù„Ø­Ø§Ø³Ø¨Ø©"
+          aria-label="Ø§Ù„Ø¢Ù„Ø© Ø§Ù„Ø­Ø§Ø³Ø¨Ø©"
         >
           <i class="fas fa-calculator" aria-hidden="true"></i>
-          <span class="d-none d-md-inline">حاسبة</span>
+          <span class="d-none d-md-inline">Ø­Ø§Ø³Ø¨Ø©</span>
         </button>
       </li>
       
       <!-- AI Assistant -->
       {% if current_user.is_authenticated and ai_nav_visible %}
       <li class="nav-item">
-        <a href="{{ url_for('ai.assistant_page') }}" class="nav-link" title="المساعد الذكي">
+        <a href="{{ url_for('ai.assistant_page') }}" class="nav-link" title="Ø§Ù„Ù…Ø³Ø§Ø¹Ø¯ Ø§Ù„Ø°ÙƒÙŠ">
           <i class="fas fa-robot mr-1 erp-ai-icon"></i>
-          <span class="d-none d-md-inline">المساعد</span>
+          <span class="d-none d-md-inline">Ø§Ù„Ù…Ø³Ø§Ø¹Ø¯</span>
         </a>
       </li>
       {% endif %}
       
       <!-- Sidebar Direction Toggle -->
       <li class="nav-item d-none d-md-inline-block">
-        <a class="nav-link erp-sidebar-dir-toggle" href="#" onclick="toggleSidebarDirection(); return false;" title="نقل القائمة الجانبية للجهة الأخرى" aria-label="نقل القائمة الجانبية للجهة الأخرى">
+        <a class="nav-link erp-sidebar-dir-toggle" href="#" onclick="toggleSidebarDirection(); return false;" title="Ù†Ù‚Ù„ Ø§Ù„Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ø¬Ø§Ù†Ø¨ÙŠØ© Ù„Ù„Ø¬Ù‡Ø© Ø§Ù„Ø£Ø®Ø±Ù‰" aria-label="Ù†Ù‚Ù„ Ø§Ù„Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ø¬Ø§Ù†Ø¨ÙŠØ© Ù„Ù„Ø¬Ù‡Ø© Ø§Ù„Ø£Ø®Ø±Ù‰">
           <i class="fas fa-exchange-alt erp-sidebar-toggle-icon" aria-hidden="true"></i>
-          <span class="d-none d-lg-inline">موقع القائمة</span>
+          <span class="d-none d-lg-inline">Ù…ÙˆÙ‚Ø¹ Ø§Ù„Ù‚Ø§Ø¦Ù…Ø©</span>
         </a>
       </li>
       
       <!-- Language Switcher -->
       <li class="nav-item dropdown">
-        <a class="nav-link" data-toggle="dropdown" href="#" title="تغيير اللغة">
+        <a class="nav-link" data-toggle="dropdown" href="#" title="ØªØºÙŠÙŠØ± Ø§Ù„Ù„ØºØ©">
           <i class="fas fa-globe mr-1"></i>
           <span class="d-none d-md-inline">{{ session.get('language', 'ar')|upper }}</span>
         </a>
         <div class="dropdown-menu dropdown-menu-sm dropdown-menu-left">
           <a href="{{ url_for('language.set_language', lang='ar', next=request.full_path) }}" class="dropdown-item {% if session.get('language', 'ar') == 'ar' %}active{% endif %}">
             <i class="fas fa-check mr-2 {% if session.get('language', 'ar') != 'ar' %}invisible{% endif %}"></i>
-            العربية
+            Ø§Ù„Ø¹Ø±Ø¨ÙŠØ©
           </a>
           <a href="{{ url_for('language.set_language', lang='en', next=request.full_path) }}" class="dropdown-item {% if session.get('language') == 'en' %}active{% endif %}">
             <i class="fas fa-check mr-2 {% if session.get('language') != 'en' %}invisible{% endif %}"></i>
@@ -267,7 +274,7 @@
             <span class="erp-user-avatar"><i class="far fa-user"></i></span>
             <span class="d-none d-md-inline">
               <div class="erp-user-name">{{ current_user.username }}</div>
-              <div class="erp-user-role">{{ current_user.role.name_ar if (current_user.is_authenticated and current_user.role) else 'مستخدم' }}</div>
+              <div class="erp-user-role">{{ current_user.role.name_ar if (current_user.is_authenticated and current_user.role) else 'Ù…Ø³ØªØ®Ø¯Ù…' }}</div>
             </span>
           </span>
         </a>
@@ -275,24 +282,24 @@
           <span class="dropdown-item dropdown-header">{{ current_user.username }}</span>
           <div class="dropdown-divider"></div>
           <a href="{{ url_for('main.my_profile') }}" class="dropdown-item">
-            <i class="fas fa-user-circle mr-2"></i>بروفايلي
+            <i class="fas fa-user-circle mr-2"></i>Ø¨Ø±ÙˆÙØ§ÙŠÙ„ÙŠ
           </a>
           <div class="dropdown-divider"></div>
           <a href="{{ url_for('auth.logout') }}" class="dropdown-item">
-            <i class="fas fa-sign-out-alt mr-2"></i>تسجيل خروج
+            <i class="fas fa-sign-out-alt mr-2"></i>ØªØ³Ø¬ÙŠÙ„ Ø®Ø±ÙˆØ¬
           </a>
         </div>
       </li>
     </ul>
   </nav>
 
-  <!-- Currency Exchange Modal (عرض فقط — لا يُستخدم في الحسابات) -->
+  <!-- Currency Exchange Modal (Ø¹Ø±Ø¶ ÙÙ‚Ø· â€” Ù„Ø§ ÙŠÙØ³ØªØ®Ø¯Ù… ÙÙŠ Ø§Ù„Ø­Ø³Ø§Ø¨Ø§Øª) -->
   <div class="modal fade" id="fxModal" tabindex="-1" role="dialog" aria-labelledby="fxModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered erp-modal-fx" role="document">
       <div class="modal-content">
         <div class="modal-header bg-primary text-white py-2">
-          <h6 class="modal-title" id="fxModalLabel"><i class="fas fa-coins mr-2"></i>أسعار الصرف (عرض فقط)</h6>
-          <button type="button" class="close text-white" data-dismiss="modal" aria-label="إغلاق">
+          <h6 class="modal-title" id="fxModalLabel"><i class="fas fa-coins mr-2"></i>Ø£Ø³Ø¹Ø§Ø± Ø§Ù„ØµØ±Ù (Ø¹Ø±Ø¶ ÙÙ‚Ø·)</h6>
+          <button type="button" class="close text-white" data-dismiss="modal" aria-label="Ø¥ØºÙ„Ø§Ù‚">
             <span aria-hidden="true">&times;</span>
           </button>
         </div>
@@ -301,19 +308,19 @@
             <table class="table table-sm table-striped table-hover text-center mb-0" id="fx-rates-table">
               <thead class="thead-dark">
                 <tr>
-                  <th class="text-right">العملة</th>
-                  <th>القيمة</th>
-                  <th class="text-muted small">مقابل USD</th>
+                  <th class="text-right">Ø§Ù„Ø¹Ù…Ù„Ø©</th>
+                  <th>Ø§Ù„Ù‚ÙŠÙ…Ø©</th>
+                  <th class="text-muted small">Ù…Ù‚Ø§Ø¨Ù„ USD</th>
                 </tr>
               </thead>
               <tbody id="fx-rates-body">
-                <!-- يُملأ ديناميكياً -->
+                <!-- ÙŠÙÙ…Ù„Ø£ Ø¯ÙŠÙ†Ø§Ù…ÙŠÙƒÙŠØ§Ù‹ -->
               </tbody>
             </table>
           </div>
           <div class="p-2 bg-light border-top text-center">
             <small class="text-muted" id="fx-last-updated">
-              <i class="fas fa-sync-alt mr-1"></i>اضغط للتحديث
+              <i class="fas fa-sync-alt mr-1"></i>Ø§Ø¶ØºØ· Ù„Ù„ØªØ­Ø¯ÙŠØ«
             </small>
             <span id="fx-source-badge" class="badge badge-secondary ml-1 erp-fx-source-hidden"></span>
           </div>
@@ -325,7 +332,7 @@
   <aside class="main-sidebar sidebar-dark-primary elevation-4">
     <a href="{{ url_for('main.dashboard') }}" class="brand-link text-center erp-sidebar-brand-link">
       <span class="brand-text font-weight-light">
-        <i class="fas fa-cube mr-1"></i>{{ tenant_name_ar or company_name_ar or 'أزاد' }}
+        <i class="fas fa-cube mr-1"></i>{{ tenant_name_ar or company_name_ar or 'Ø£Ø²Ø§Ø¯' }}
       </span>
     </a>
 
@@ -336,7 +343,7 @@
         </div>
         <div class="info">
           <a href="#" class="d-block text-white">{{ current_user.username }}</a>
-          <small class="text-white-50">{{ current_user.role.name_ar if (current_user.is_authenticated and current_user.role) else 'مستخدم' }}</small>
+          <small class="text-white-50">{{ current_user.role.name_ar if (current_user.is_authenticated and current_user.role) else 'Ù…Ø³ØªØ®Ø¯Ù…' }}</small>
           {% if is_global_scope_user %}
           <div class="mt-1">
             {% if active_branch %}
@@ -347,7 +354,7 @@
             {% else %}
             <small class="text-success">
               <i class="fas fa-sitemap mr-1"></i>
-              كل الفروع
+              ÙƒÙ„ Ø§Ù„ÙØ±ÙˆØ¹
             </small>
             {% endif %}
           </div>
@@ -369,16 +376,16 @@
             <a href="#" class="nav-link {% if request.endpoint and ('sales' in request.endpoint or 'pos' in request.endpoint) %}active{% endif %}">
               <i class="nav-icon fas fa-file-invoice"></i>
               <p>
-                المبيعات
+                Ø§Ù„Ù…Ø¨ÙŠØ¹Ø§Øª
                 <i class="right fas fa-angle-left"></i>
               </p>
             </a>
             <ul class="nav nav-treeview">
-              {% if system_enable_pos and tenant_enable_pos %}
+              {% if tenant_enable_pos %}
               <li class="nav-item">
                 <a href="{{ url_for('pos.index') }}" class="nav-link">
                   <i class="fas fa-cash-register nav-icon text-info"></i>
-                  <p>POS (الكاشير)</p>
+                  <p>POS (Ø§Ù„ÙƒØ§Ø´ÙŠØ±)</p>
                 </a>
               </li>
               {% endif %}
@@ -387,7 +394,7 @@
                 <a href="{{ url_for('sales.create') }}" class="nav-link">
                 {% endif %}
                   <i class="fas fa-plus-circle nav-icon text-success"></i>
-                  <p>فاتورة جديدة</p>
+                  <p>ÙØ§ØªÙˆØ±Ø© Ø¬Ø¯ÙŠØ¯Ø©</p>
                 </a>
               </li>
               <li class="nav-item">
@@ -395,7 +402,7 @@
                 <a href="{{ url_for('sales.index') }}" class="nav-link">
                 {% endif %}
                   <i class="fas fa-list nav-icon"></i>
-                  <p>قائمة الفواتير</p>
+                  <p>Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„ÙÙˆØ§ØªÙŠØ±</p>
                 </a>
               </li>
               <li class="nav-item">
@@ -403,7 +410,7 @@
                 <a href="{{ url_for('returns.index') }}" class="nav-link">
                 {% endif %}
                   <i class="fas fa-undo-alt nav-icon text-warning"></i>
-                  <p>المرتجعات</p>
+                  <p>Ø§Ù„Ù…Ø±ØªØ¬Ø¹Ø§Øª</p>
                 </a>
               </li>
             </ul>
@@ -415,7 +422,7 @@
             <a href="#" class="nav-link {% if request.endpoint and 'customers' in request.endpoint %}active{% endif %}">
               <i class="nav-icon fas fa-users"></i>
               <p>
-                الزبائن
+                Ø§Ù„Ø²Ø¨Ø§Ø¦Ù†
                 <i class="right fas fa-angle-left"></i>
               </p>
             </a>
@@ -423,13 +430,13 @@
               <li class="nav-item">
                 <a href="{{ url_for('customers.create') }}" class="nav-link">
                   <i class="fas fa-user-plus nav-icon text-success"></i>
-                  <p>زبون جديد</p>
+                  <p>Ø²Ø¨ÙˆÙ† Ø¬Ø¯ÙŠØ¯</p>
                 </a>
               </li>
               <li class="nav-item">
                 <a href="{{ url_for('customers.index') }}" class="nav-link">
                   <i class="fas fa-list nav-icon"></i>
-                  <p>قائمة الزبائن</p>
+                  <p>Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ø²Ø¨Ø§Ø¦Ù†</p>
                 </a>
               </li>
             </ul>
@@ -441,7 +448,7 @@
             <a href="#" class="nav-link {% if request.endpoint and 'products' in request.endpoint %}active{% endif %}">
               <i class="nav-icon fas fa-box"></i>
               <p>
-                المنتجات
+                Ø§Ù„Ù…Ù†ØªØ¬Ø§Øª
                 <i class="right fas fa-angle-left"></i>
               </p>
             </a>
@@ -455,7 +462,7 @@
               <li class="nav-item">
                 <a href="{{ url_for('products.index') }}" class="nav-link">
                   <i class="fas fa-list nav-icon"></i>
-                  <p>قائمة المنتجات</p>
+                  <p>Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ù…Ù†ØªØ¬Ø§Øª</p>
                 </a>
               </li>
             </ul>
@@ -467,7 +474,7 @@
             <a href="#" class="nav-link {% if request.endpoint and 'purchases' in request.endpoint %}active{% endif %}">
               <i class="nav-icon fas fa-shopping-cart"></i>
               <p>
-                المشتريات
+                Ø§Ù„Ù…Ø´ØªØ±ÙŠØ§Øª
                 <i class="right fas fa-angle-left"></i>
               </p>
             </a>
@@ -475,13 +482,13 @@
               <li class="nav-item">
                 <a href="{{ url_for('purchases.create') }}" class="nav-link">
                   <i class="fas fa-plus-circle nav-icon text-success"></i>
-                  <p>مشترى جديد</p>
+                  <p>Ù…Ø´ØªØ±Ù‰ Ø¬Ø¯ÙŠØ¯</p>
                 </a>
               </li>
               <li class="nav-item">
                 <a href="{{ url_for('purchases.index') }}" class="nav-link">
                   <i class="fas fa-list nav-icon"></i>
-                  <p>قائمة المشتريات</p>
+                  <p>Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ù…Ø´ØªØ±ÙŠØ§Øª</p>
                 </a>
               </li>
             </ul>
@@ -493,7 +500,7 @@
             <a href="#" class="nav-link {% if request.endpoint and 'suppliers' in request.endpoint %}active{% endif %}">
               <i class="nav-icon fas fa-truck"></i>
               <p>
-                الموردين
+                Ø§Ù„Ù…ÙˆØ±Ø¯ÙŠÙ†
                 <i class="right fas fa-angle-left"></i>
               </p>
             </a>
@@ -501,13 +508,13 @@
               <li class="nav-item">
                 <a href="{{ url_for('suppliers.create') }}" class="nav-link">
                   <i class="fas fa-plus-circle nav-icon text-success"></i>
-                  <p>مورد جديد</p>
+                  <p>Ù…ÙˆØ±Ø¯ Ø¬Ø¯ÙŠØ¯</p>
                 </a>
               </li>
               <li class="nav-item">
                 <a href="{{ url_for('suppliers.index') }}" class="nav-link">
                   <i class="fas fa-list nav-icon"></i>
-                  <p>قائمة الموردين</p>
+                  <p>Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ù…ÙˆØ±Ø¯ÙŠÙ†</p>
                 </a>
               </li>
             </ul>
@@ -519,7 +526,7 @@
             <a href="#" class="nav-link {% if request.endpoint and 'users' in request.endpoint %}active{% endif %}">
               <i class="nav-icon fas fa-users-cog"></i>
               <p>
-                المستخدمين
+                Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù…ÙŠÙ†
                 <i class="right fas fa-angle-left"></i>
               </p>
             </a>
@@ -527,13 +534,13 @@
               <li class="nav-item">
                 <a href="{{ url_for('users.create') }}" class="nav-link">
                   <i class="fas fa-user-plus nav-icon text-success"></i>
-                  <p>مستخدم جديد</p>
+                  <p>Ù…Ø³ØªØ®Ø¯Ù… Ø¬Ø¯ÙŠØ¯</p>
                 </a>
               </li>
               <li class="nav-item">
                 <a href="{{ url_for('users.index') }}" class="nav-link">
                   <i class="fas fa-users nav-icon"></i>
-                  <p>قائمة المستخدمين</p>
+                  <p>Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù…ÙŠÙ†</p>
                 </a>
               </li>
             </ul>
@@ -545,7 +552,7 @@
             <a href="#" class="nav-link {% if request.endpoint and 'payments' in request.endpoint %}active{% endif %}">
               <i class="nav-icon fas fa-money-bill-wave"></i>
               <p>
-                المدفوعات
+                Ø§Ù„Ù…Ø¯ÙÙˆØ¹Ø§Øª
                 <i class="right fas fa-angle-left"></i>
               </p>
             </a>
@@ -553,13 +560,13 @@
               <li class="nav-item">
                 <a href="{{ url_for('payments.create_voucher') }}" class="nav-link">
                   <i class="fas fa-plus-circle nav-icon text-success"></i>
-                  <p>سند قبض جديد</p>
+                  <p>Ø³Ù†Ø¯ Ù‚Ø¨Ø¶ Ø¬Ø¯ÙŠØ¯</p>
                 </a>
               </li>
               <li class="nav-item">
                 <a href="{{ url_for('payments.receipts') }}" class="nav-link">
                   <i class="fas fa-list nav-icon"></i>
-                  <p>قائمة السندات</p>
+                  <p>Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ø³Ù†Ø¯Ø§Øª</p>
                 </a>
               </li>
             </ul>
@@ -571,7 +578,7 @@
             <a href="#" class="nav-link {% if request.endpoint and 'cheques' in request.endpoint %}active{% endif %}">
               <i class="nav-icon fas fa-money-check-alt"></i>
               <p>
-                إدارة الشيكات
+                Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„Ø´ÙŠÙƒØ§Øª
                 <i class="right fas fa-angle-left"></i>
               </p>
             </a>
@@ -579,13 +586,13 @@
               <li class="nav-item">
                 <a href="{{ url_for('cheques.index') }}" class="nav-link">
                   <i class="fas fa-list nav-icon text-info"></i>
-                  <p>الشيكات</p>
+                  <p>Ø§Ù„Ø´ÙŠÙƒØ§Øª</p>
                 </a>
               </li>
               <li class="nav-item">
                 <a href="{{ url_for('cheques.alerts') }}" class="nav-link">
                   <i class="fas fa-bell nav-icon text-warning"></i>
-                  <p>تنبيهات الشيكات</p>
+                  <p>ØªÙ†Ø¨ÙŠÙ‡Ø§Øª Ø§Ù„Ø´ÙŠÙƒØ§Øª</p>
                 </a>
               </li>
             </ul>
@@ -597,7 +604,7 @@
             <a href="#" class="nav-link {% if request.endpoint and 'expenses' in request.endpoint %}active{% endif %}">
               <i class="nav-icon fas fa-receipt"></i>
               <p>
-                المصروفات
+                Ø§Ù„Ù…ØµØ±ÙˆÙØ§Øª
                 <i class="right fas fa-angle-left"></i>
               </p>
             </a>
@@ -605,13 +612,13 @@
               <li class="nav-item">
                 <a href="{{ url_for('expenses.create') }}" class="nav-link">
                   <i class="fas fa-plus-circle nav-icon text-success"></i>
-                  <p>مصروف جديد</p>
+                  <p>Ù…ØµØ±ÙˆÙ Ø¬Ø¯ÙŠØ¯</p>
                 </a>
               </li>
               <li class="nav-item">
                 <a href="{{ url_for('expenses.index') }}" class="nav-link">
                   <i class="fas fa-list nav-icon"></i>
-                  <p>قائمة المصروفات</p>
+                  <p>Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ù…ØµØ±ÙˆÙØ§Øª</p>
                 </a>
               </li>
             </ul>
@@ -623,7 +630,7 @@
             <a href="#" class="nav-link {% if request.endpoint and 'payroll' in request.endpoint %}active{% endif %}">
               <i class="nav-icon fas fa-users-cog"></i>
               <p>
-                الرواتب وشؤون الموظفين
+                Ø§Ù„Ø±ÙˆØ§ØªØ¨ ÙˆØ´Ø¤ÙˆÙ† Ø§Ù„Ù…ÙˆØ¸ÙÙŠÙ†
                 <i class="right fas fa-angle-left"></i>
               </p>
             </a>
@@ -631,19 +638,19 @@
               <li class="nav-item">
                 <a href="{{ url_for('payroll.employees_list') }}" class="nav-link">
                   <i class="fas fa-users nav-icon text-info"></i>
-                  <p>الموظفين</p>
+                  <p>Ø§Ù„Ù…ÙˆØ¸ÙÙŠÙ†</p>
                 </a>
               </li>
               <li class="nav-item">
                 <a href="{{ url_for('payroll.advances') }}" class="nav-link">
                   <i class="fas fa-hand-holding-usd nav-icon text-warning"></i>
-                  <p>السلف</p>
+                  <p>Ø§Ù„Ø³Ù„Ù</p>
                 </a>
               </li>
               <li class="nav-item">
                 <a href="{{ url_for('payroll.process_payroll') }}" class="nav-link">
                   <i class="fas fa-money-check-alt nav-icon text-success"></i>
-                  <p>صرف الرواتب</p>
+                  <p>ØµØ±Ù Ø§Ù„Ø±ÙˆØ§ØªØ¨</p>
                 </a>
               </li>
             </ul>
@@ -655,7 +662,7 @@
             <a href="#" class="nav-link {% if request.endpoint and 'ledger' in request.endpoint %}active{% endif %}">
               <i class="nav-icon fas fa-book"></i>
               <p>
-                دفتر الأستاذ
+                Ø¯ÙØªØ± Ø§Ù„Ø£Ø³ØªØ§Ø°
                 <i class="right fas fa-angle-left"></i>
               </p>
             </a>
@@ -663,32 +670,32 @@
               <li class="nav-item">
                 <a href="{{ url_for('ledger.index') }}" class="nav-link">
                   <i class="far fa-circle nav-icon"></i>
-                  <p>الحسابات</p>
+                  <p>Ø§Ù„Ø­Ø³Ø§Ø¨Ø§Øª</p>
                 </a>
               </li>
               <li class="nav-item">
                 <a href="{{ url_for('ledger.trial_balance') }}" class="nav-link">
                   <i class="far fa-circle nav-icon"></i>
-                  <p>ميزان المراجعة</p>
+                  <p>Ù…ÙŠØ²Ø§Ù† Ø§Ù„Ù…Ø±Ø§Ø¬Ø¹Ø©</p>
                 </a>
               </li>
               <li class="nav-item">
                 <a href="{{ url_for('ledger.income_statement') }}" class="nav-link">
                   <i class="far fa-circle nav-icon"></i>
-                  <p>قائمة الدخل</p>
+                  <p>Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ø¯Ø®Ù„</p>
                 </a>
               </li>
               <li class="nav-item">
                 <a href="{{ url_for('ledger.balance_sheet') }}" class="nav-link">
                   <i class="far fa-circle nav-icon"></i>
-                  <p>الميزانية</p>
+                  <p>Ø§Ù„Ù…ÙŠØ²Ø§Ù†ÙŠØ©</p>
                 </a>
               </li>
               {% if current_user.is_admin() %}
               <li class="nav-item">
                 <a href="{{ url_for('ledger.admin_dashboard') }}" class="nav-link">
                   <i class="fas fa-cogs nav-icon"></i>
-                  <p>لوحة التحكم الإدارية</p>
+                  <p>Ù„ÙˆØ­Ø© Ø§Ù„ØªØ­ÙƒÙ… Ø§Ù„Ø¥Ø¯Ø§Ø±ÙŠØ©</p>
                 </a>
               </li>
               {% endif %}
@@ -700,7 +707,7 @@
           <li class="nav-item">
             <a href="{{ url_for('partners.index') }}" class="nav-link {% if request.endpoint and 'partners' in request.endpoint %}active{% endif %}">
               <i class="nav-icon fas fa-handshake"></i>
-              <p>الشركاء</p>
+              <p>Ø§Ù„Ø´Ø±ÙƒØ§Ø¡</p>
             </a>
           </li>
           {% endif %}
@@ -710,7 +717,7 @@
             <a href="#" class="nav-link {% if request.endpoint and 'reports' in request.endpoint %}active{% endif %}">
               <i class="nav-icon fas fa-chart-bar"></i>
               <p>
-                التقارير
+                Ø§Ù„ØªÙ‚Ø§Ø±ÙŠØ±
                 <i class="right fas fa-angle-left"></i>
               </p>
             </a>
@@ -718,37 +725,37 @@
               <li class="nav-item">
                 <a href="{{ url_for('reports.sales') }}" class="nav-link">
                   <i class="far fa-circle nav-icon"></i>
-                  <p>تقرير المبيعات</p>
+                  <p>ØªÙ‚Ø±ÙŠØ± Ø§Ù„Ù…Ø¨ÙŠØ¹Ø§Øª</p>
                 </a>
               </li>
               <li class="nav-item">
                 <a href="{{ url_for('reports.receivables') }}" class="nav-link">
                   <i class="far fa-circle nav-icon"></i>
-                  <p>الذمم المدينة</p>
+                  <p>Ø§Ù„Ø°Ù…Ù… Ø§Ù„Ù…Ø¯ÙŠÙ†Ø©</p>
                 </a>
               </li>
               <li class="nav-item">
                 <a href="{{ url_for('reports.partners') }}" class="nav-link">
                   <i class="far fa-circle nav-icon"></i>
-                  <p>تقرير الشركاء والتجار</p>
+                  <p>ØªÙ‚Ø±ÙŠØ± Ø§Ù„Ø´Ø±ÙƒØ§Ø¡ ÙˆØ§Ù„ØªØ¬Ø§Ø±</p>
                 </a>
               </li>
               <li class="nav-item">
                 <a href="{{ url_for('reports.inventory_reconciliation') }}" class="nav-link">
                   <i class="far fa-circle nav-icon"></i>
-                  <p>تسوية المخزون</p>
+                  <p>ØªØ³ÙˆÙŠØ© Ø§Ù„Ù…Ø®Ø²ÙˆÙ†</p>
                 </a>
               </li>
               <li class="nav-item">
                 <a href="{{ url_for('treasury.treasury') }}" class="nav-link">
                   <i class="far fa-circle nav-icon"></i>
-                  <p>مركز الخزينة</p>
+                  <p>Ù…Ø±ÙƒØ² Ø§Ù„Ø®Ø²ÙŠÙ†Ø©</p>
                 </a>
               </li>
               <li class="nav-item">
                 <a href="{{ url_for('reports.ar_reconciliation') }}" class="nav-link">
                   <i class="far fa-circle nav-icon"></i>
-                  <p>مطابقة الذمم</p>
+                  <p>Ù…Ø·Ø§Ø¨Ù‚Ø© Ø§Ù„Ø°Ù…Ù…</p>
                 </a>
               </li>
             </ul>
@@ -759,7 +766,7 @@
           <li class="nav-item {% if request.endpoint and request.endpoint in ['owner.list_backups', 'owner.scheduled_backups'] %}menu-open{% endif %}">
             <a href="{{ url_for('owner.list_backups') }}" class="nav-link {% if request.endpoint and request.endpoint in ['owner.list_backups', 'owner.scheduled_backups'] %}active{% endif %}">
               <i class="nav-icon fas fa-database"></i>
-              <p>النسخ الاحتياطية</p>
+              <p>Ø§Ù„Ù†Ø³Ø® Ø§Ù„Ø§Ø­ØªÙŠØ§Ø·ÙŠØ©</p>
             </a>
           </li>
           {% endif %}
@@ -769,7 +776,7 @@
             <a href="#" class="nav-link {% if request.endpoint and 'store' in request.endpoint %}active{% endif %}">
               <i class="nav-icon fas fa-store"></i>
               <p>
-                المتجر الإلكتروني
+                Ø§Ù„Ù…ØªØ¬Ø± Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ
                 <i class="right fas fa-angle-left"></i>
               </p>
             </a>
@@ -777,25 +784,25 @@
               <li class="nav-item">
                 <a href="{{ url_for('store.admin_index') }}" class="nav-link">
                   <i class="fas fa-tachometer-alt nav-icon text-info"></i>
-                  <p>لوحة المتجر</p>
+                  <p>Ù„ÙˆØ­Ø© Ø§Ù„Ù…ØªØ¬Ø±</p>
                 </a>
               </li>
               <li class="nav-item">
                 <a href="{{ url_for('store.admin_catalog') }}" class="nav-link">
                   <i class="fas fa-boxes nav-icon text-success"></i>
-                  <p>منتجات المتجر</p>
+                  <p>Ù…Ù†ØªØ¬Ø§Øª Ø§Ù„Ù…ØªØ¬Ø±</p>
                 </a>
               </li>
               <li class="nav-item">
                 <a href="{{ url_for('store.admin_transfer') }}" class="nav-link">
                   <i class="fas fa-exchange-alt nav-icon text-warning"></i>
-                  <p>تحويل مخزون</p>
+                  <p>ØªØ­ÙˆÙŠÙ„ Ù…Ø®Ø²ÙˆÙ†</p>
                 </a>
               </li>
               <li class="nav-item">
                 <a href="{{ url_for('store.admin_settings') }}" class="nav-link">
                   <i class="fas fa-cog nav-icon"></i>
-                  <p>إعدادات المتجر</p>
+                  <p>Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª Ø§Ù„Ù…ØªØ¬Ø±</p>
                 </a>
               </li>
             </ul>
@@ -807,7 +814,7 @@
             <a href="#" class="nav-link {% if request.endpoint and 'warehouse' in request.endpoint %}active{% endif %}">
               <i class="nav-icon fas fa-warehouse"></i>
               <p>
-                المستودعات والمخزون
+                Ø§Ù„Ù…Ø³ØªÙˆØ¯Ø¹Ø§Øª ÙˆØ§Ù„Ù…Ø®Ø²ÙˆÙ†
                 <i class="right fas fa-angle-left"></i>
               </p>
             </a>
@@ -815,39 +822,39 @@
               <li class="nav-item">
                 <a href="{{ url_for('warehouse.index') }}" class="nav-link">
                   <i class="fas fa-boxes nav-icon text-info"></i>
-                  <p>إدارة المخزون</p>
+                  <p>Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„Ù…Ø®Ø²ÙˆÙ†</p>
                 </a>
               </li>
               <li class="nav-item">
                 <a href="{{ url_for('warehouse.list_warehouses') }}" class="nav-link">
                   <i class="fas fa-building nav-icon text-primary"></i>
-                  <p>المستودعات</p>
+                  <p>Ø§Ù„Ù…Ø³ØªÙˆØ¯Ø¹Ø§Øª</p>
                 </a>
               </li>
               {% if current_user.is_admin() %}
               <li class="nav-item">
                 <a href="{{ url_for('warehouse.create_warehouse') }}" class="nav-link">
                   <i class="fas fa-plus-circle nav-icon text-success"></i>
-                  <p>إضافة مستودع</p>
+                  <p>Ø¥Ø¶Ø§ÙØ© Ù…Ø³ØªÙˆØ¯Ø¹</p>
                 </a>
               </li>
               {% endif %}
               <li class="nav-item">
                 <a href="{{ url_for('warehouse.movements') }}" class="nav-link">
                   <i class="fas fa-exchange-alt nav-icon text-secondary"></i>
-                  <p>حركات المخزون</p>
+                  <p>Ø­Ø±ÙƒØ§Øª Ø§Ù„Ù…Ø®Ø²ÙˆÙ†</p>
                 </a>
               </li>
               <li class="nav-item">
                 <a href="{{ url_for('warehouse.low_stock') }}" class="nav-link">
                   <i class="fas fa-exclamation-triangle nav-icon text-warning"></i>
-                  <p>مخزون منخفض</p>
+                  <p>Ù…Ø®Ø²ÙˆÙ† Ù…Ù†Ø®ÙØ¶</p>
                 </a>
               </li>
               <li class="nav-item">
                 <a href="{{ url_for('warehouse.out_of_stock') }}" class="nav-link">
                   <i class="fas fa-ban nav-icon text-danger"></i>
-                  <p>نفذ من المخزون</p>
+                  <p>Ù†ÙØ° Ù…Ù† Ø§Ù„Ù…Ø®Ø²ÙˆÙ†</p>
                 </a>
               </li>
             </ul>
@@ -859,59 +866,59 @@
           <li class="nav-item">
             <a href="{{ url_for('owner.dashboard') }}" class="nav-link {% if request.endpoint == 'owner.dashboard' %}active{% endif %}">
               <i class="nav-icon fas fa-crown text-warning"></i>
-              <p>لوحة المالك</p>
+              <p>Ù„ÙˆØ­Ø© Ø§Ù„Ù…Ø§Ù„Ùƒ</p>
             </a>
           </li>
           <li class="nav-item">
             <a href="{{ url_for('owner.users_list') }}" class="nav-link">
               <i class="nav-icon fas fa-users-cog"></i>
-              <p>مستخدمي المنصة</p>
+              <p>Ù…Ø³ØªØ®Ø¯Ù…ÙŠ Ø§Ù„Ù…Ù†ØµØ©</p>
             </a>
           </li>
           <li class="nav-item">
             <a href="{{ url_for('owner.list_backups') }}" class="nav-link">
               <i class="nav-icon fas fa-database"></i>
-              <p>نسخ النظام</p>
+              <p>Ù†Ø³Ø® Ø§Ù„Ù†Ø¸Ø§Ù…</p>
             </a>
           </li>
           <li class="nav-item">
             <a href="{{ url_for('owner.system_health') }}" class="nav-link">
               <i class="nav-icon fas fa-heartbeat"></i>
-              <p>صحة النظام</p>
+              <p>ØµØ­Ø© Ø§Ù„Ù†Ø¸Ø§Ù…</p>
             </a>
           </li>
           <li class="nav-item">
             <a href="{{ url_for('ai.config') }}" class="nav-link">
               <i class="nav-icon fas fa-key text-info"></i>
-              <p>مفاتيح AI (Groq)</p>
+              <p>Ù…ÙØ§ØªÙŠØ­ AI (Groq)</p>
             </a>
           </li>
           {% elif current_user.is_authenticated and current_user.role and current_user.role.slug in ['super_admin', 'manager'] %}
-          <li class="nav-header">إدارة الشركة</li>
+          <li class="nav-header">Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„Ø´Ø±ÙƒØ©</li>
           <li class="nav-item">
             <a href="{{ url_for('owner.company_dashboard') }}" class="nav-link {% if request.endpoint == 'owner.company_dashboard' %}active{% endif %}">
               <i class="nav-icon fas fa-building text-info"></i>
-              <p>لوحة الشركة</p>
+              <p>Ù„ÙˆØ­Ø© Ø§Ù„Ø´Ø±ÙƒØ©</p>
             </a>
           </li>
           {% if current_user.has_permission('manage_backups') %}
           <li class="nav-item">
             <a href="{{ url_for('owner.list_backups') }}" class="nav-link">
               <i class="nav-icon fas fa-database"></i>
-              <p>نسخ الشركة</p>
+              <p>Ù†Ø³Ø® Ø§Ù„Ø´Ø±ÙƒØ©</p>
             </a>
           </li>
           {% endif %}
           <li class="nav-item">
             <a href="{{ url_for('owner.company_info') }}" class="nav-link">
               <i class="nav-icon fas fa-id-card"></i>
-              <p>بيانات الشركة</p>
+              <p>Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„Ø´Ø±ÙƒØ©</p>
             </a>
           </li>
           <li class="nav-item">
             <a href="{{ url_for('owner.invoice_settings') }}" class="nav-link">
               <i class="nav-icon fas fa-file-invoice"></i>
-              <p>ترويسات الفواتير</p>
+              <p>ØªØ±ÙˆÙŠØ³Ø§Øª Ø§Ù„ÙÙˆØ§ØªÙŠØ±</p>
             </a>
           </li>
           {% endif %}
@@ -950,7 +957,7 @@
                   <div class="erp-flash-body">{{ message }}</div>
                   <button type="button" class="close" data-dismiss="alert">&times;</button>
                   <div class="progress mt-2 w-100">
-                    <div class="progress-bar flash-timer" role="progressbar" aria-label="مؤقت التنبيه"></div>
+                    <div class="progress-bar flash-timer" role="progressbar" aria-label="Ù…Ø¤Ù‚Øª Ø§Ù„ØªÙ†Ø¨ÙŠÙ‡"></div>
                   </div>
                 </div>
               {% endfor %}
@@ -997,17 +1004,17 @@
           <div class="erp-footer-actions">
             {% if developer_whatsapp_link %}
               <a href="https://wa.me/{{ developer_whatsapp_link }}" target="_blank" rel="noopener noreferrer" class="erp-footer-action">
-                <i class="fab fa-whatsapp"></i><span>واتساب</span>
+                <i class="fab fa-whatsapp"></i><span>ÙˆØ§ØªØ³Ø§Ø¨</span>
               </a>
             {% endif %}
             {% if _footer_phone %}
               <a href="tel:{{ _footer_phone }}" class="erp-footer-action">
-                <i class="fas fa-phone"></i><span>اتصال</span>
+                <i class="fas fa-phone"></i><span>Ø§ØªØµØ§Ù„</span>
               </a>
             {% endif %}
             {% if _footer_email %}
               <a href="mailto:{{ _footer_email }}" class="erp-footer-action">
-                <i class="fas fa-envelope"></i><span>بريد</span>
+                <i class="fas fa-envelope"></i><span>Ø¨Ø±ÙŠØ¯</span>
               </a>
             {% endif %}
           </div>
@@ -1016,50 +1023,50 @@
     </div>
   </footer>
 
-  <nav class="erp-mobile-nav d-md-none" aria-label="تنقل سريع">
+  <nav class="erp-mobile-nav d-md-none" aria-label="ØªÙ†Ù‚Ù„ Ø³Ø±ÙŠØ¹">
     <a href="{{ url_for('main.dashboard') }}" class="{% if request.endpoint == 'main.dashboard' %}active{% endif %}">
       <i class="fas fa-home"></i>
-      <span>الرئيسية</span>
+      <span>Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠØ©</span>
     </a>
     {% if current_user.is_authenticated and current_user.has_permission('manage_sales') %}
     <a href="{{ url_for('sales.index') }}" class="{% if request.endpoint and 'sales' in request.endpoint %}active{% endif %}">
       <i class="fas fa-file-invoice"></i>
-      <span>المبيعات</span>
+      <span>Ø§Ù„Ù…Ø¨ÙŠØ¹Ø§Øª</span>
     </a>
     {% endif %}
     {% if current_user.is_authenticated and current_user.has_permission('manage_purchases') %}
     <a href="{{ url_for('purchases.index') }}" class="{% if request.endpoint and 'purchases' in request.endpoint %}active{% endif %}">
       <i class="fas fa-shopping-cart"></i>
-      <span>المشتريات</span>
+      <span>Ø§Ù„Ù…Ø´ØªØ±ÙŠØ§Øª</span>
     </a>
     {% endif %}
     {% if current_user.is_authenticated and current_user.has_permission('manage_products') %}
     <a href="{{ url_for('products.index') }}" class="{% if request.endpoint and 'products' in request.endpoint %}active{% endif %}">
       <i class="fas fa-box"></i>
-      <span>المنتجات</span>
+      <span>Ø§Ù„Ù…Ù†ØªØ¬Ø§Øª</span>
     </a>
     {% endif %}
     {% if current_user.is_authenticated and current_user.has_permission('view_reports') %}
     <a href="{{ url_for('reports.sales') }}" class="{% if request.endpoint and 'reports' in request.endpoint %}active{% endif %}">
       <i class="fas fa-chart-bar"></i>
-      <span>التقارير</span>
+      <span>Ø§Ù„ØªÙ‚Ø§Ø±ÙŠØ±</span>
     </a>
     {% endif %}
   </nav>
 </div>
 
-<!-- مصدر موحد للصلاحيات والـ ENUMs (Backend = Frontend) -->
+<!-- Ù…ØµØ¯Ø± Ù…ÙˆØ­Ø¯ Ù„Ù„ØµÙ„Ø§Ø­ÙŠØ§Øª ÙˆØ§Ù„Ù€ ENUMs (Backend = Frontend) -->
 <script>
   window.APP_ENUMS = {{ app_enums | tojson | safe }};
   window.CURRENT_USER_PERMISSIONS = {{ current_user_permissions | tojson | safe }};
   window.hasPermission = function(code) { return (window.CURRENT_USER_PERMISSIONS || []).indexOf(code) !== -1; };
 </script>
-<!-- Critical Scripts - تحميل فوري -->
+<!-- Critical Scripts - ØªØ­Ù…ÙŠÙ„ ÙÙˆØ±ÙŠ -->
 <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.min.js" integrity="sha384-UG8ao2jwOWB7/oDdObZc6ItJmwUkR/PfMyt9Qs5AwX7PsnYn1CRKCTWyncPTWvaS" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-Fy6S3B9q64WdZWQUiU+q4/2Lc9npb8tCaSX9FK7E8HnRr0Jz8D6OP9dO5Vg3Q9ct" crossorigin="anonymous"></script>
 <script src="{{ url_for('static', filename='adminlte/js/adminlte.min.js') }}"></script>
 
-<!-- Non-Critical Scripts - تحميل متأخر مع defer -->
+<!-- Non-Critical Scripts - ØªØ­Ù…ÙŠÙ„ Ù…ØªØ£Ø®Ø± Ù…Ø¹ defer -->
 <script defer src="{{ url_for('static', filename='adminlte/plugins/select2/js/select2.full.min.js') }}"></script>
 <script defer src="{{ url_for('static', filename='adminlte/plugins/datatables/jquery.dataTables.min.js') }}"></script>
 <script defer src="{{ url_for('static', filename='adminlte/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') }}"></script>
@@ -1087,16 +1094,16 @@
   <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="navbarCalculatorTitle"><i class="fas fa-calculator mr-2"></i>الآلة الحاسبة</h5>
+        <h5 class="modal-title" id="navbarCalculatorTitle"><i class="fas fa-calculator mr-2"></i>Ø§Ù„Ø¢Ù„Ø© Ø§Ù„Ø­Ø§Ø³Ø¨Ø©</h5>
         <button type="button" class="close ml-0 mr-auto" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
       <div class="modal-body">
         <ul class="nav nav-pills mb-3" id="calcTabs" role="tablist">
-          <li class="nav-item"><a class="nav-link active" id="tab-classic" data-toggle="pill" href="#calc-classic" role="tab">كلاسيكية</a></li>
-          <li class="nav-item"><a class="nav-link" id="tab-financial" data-toggle="pill" href="#calc-financial" role="tab">مالية</a></li>
-          <li class="nav-item"><a class="nav-link" id="tab-scientific" data-toggle="pill" href="#calc-scientific" role="tab">علمية</a></li>
+          <li class="nav-item"><a class="nav-link active" id="tab-classic" data-toggle="pill" href="#calc-classic" role="tab">ÙƒÙ„Ø§Ø³ÙŠÙƒÙŠØ©</a></li>
+          <li class="nav-item"><a class="nav-link" id="tab-financial" data-toggle="pill" href="#calc-financial" role="tab">Ù…Ø§Ù„ÙŠØ©</a></li>
+          <li class="nav-item"><a class="nav-link" id="tab-scientific" data-toggle="pill" href="#calc-scientific" role="tab">Ø¹Ù„Ù…ÙŠØ©</a></li>
         </ul>
         <div class="tab-content">
           <div class="tab-pane fade show active" id="calc-classic" role="tabpanel">
@@ -1106,18 +1113,18 @@
           <div class="tab-pane fade" id="calc-financial" role="tabpanel">
             <div class="row">
               <div class="col-md-6 mb-2">
-                <h6>قسط التمويل الشهري</h6>
-                <input class="form-control mb-2" id="loanPrincipal" type="number" placeholder="قيمة القرض">
-                <input class="form-control mb-2" id="loanRate" type="number" step="0.01" placeholder="الفائدة السنوية %">
-                <input class="form-control mb-2" id="loanMonths" type="number" placeholder="عدد الأشهر">
-                <button type="button" class="btn btn-primary" id="btnLoanCalc">احسب</button>
+                <h6>Ù‚Ø³Ø· Ø§Ù„ØªÙ…ÙˆÙŠÙ„ Ø§Ù„Ø´Ù‡Ø±ÙŠ</h6>
+                <input class="form-control mb-2" id="loanPrincipal" type="number" placeholder="Ù‚ÙŠÙ…Ø© Ø§Ù„Ù‚Ø±Ø¶">
+                <input class="form-control mb-2" id="loanRate" type="number" step="0.01" placeholder="Ø§Ù„ÙØ§Ø¦Ø¯Ø© Ø§Ù„Ø³Ù†ÙˆÙŠØ© %">
+                <input class="form-control mb-2" id="loanMonths" type="number" placeholder="Ø¹Ø¯Ø¯ Ø§Ù„Ø£Ø´Ù‡Ø±">
+                <button type="button" class="btn btn-primary" id="btnLoanCalc">Ø§Ø­Ø³Ø¨</button>
                 <div class="small text-muted mt-2" id="loanResult">--</div>
               </div>
               <div class="col-md-6 mb-2">
-                <h6>الربح والهامش</h6>
-                <input class="form-control mb-2" id="costValue" type="number" step="0.01" placeholder="التكلفة">
-                <input class="form-control mb-2" id="sellValue" type="number" step="0.01" placeholder="سعر البيع">
-                <button type="button" class="btn btn-success" id="btnMarginCalc">احسب</button>
+                <h6>Ø§Ù„Ø±Ø¨Ø­ ÙˆØ§Ù„Ù‡Ø§Ù…Ø´</h6>
+                <input class="form-control mb-2" id="costValue" type="number" step="0.01" placeholder="Ø§Ù„ØªÙƒÙ„ÙØ©">
+                <input class="form-control mb-2" id="sellValue" type="number" step="0.01" placeholder="Ø³Ø¹Ø± Ø§Ù„Ø¨ÙŠØ¹">
+                <button type="button" class="btn btn-success" id="btnMarginCalc">Ø§Ø­Ø³Ø¨</button>
                 <div class="small text-muted mt-2" id="marginResult">--</div>
               </div>
             </div>
@@ -1169,9 +1176,9 @@ $(function() {
     }, { once: true, passive: true });
   });
   
-  // Auto-hide flash messages with progress bar (إلا التحذيرات الدائمة)
+  // Auto-hide flash messages with progress bar (Ø¥Ù„Ø§ Ø§Ù„ØªØ­Ø°ÙŠØ±Ø§Øª Ø§Ù„Ø¯Ø§Ø¦Ù…Ø©)
   document.querySelectorAll('.flash-message').forEach((alert, index) => {
-    // لا تخفي التحذيرات الدائمة أو alert-danger
+    // Ù„Ø§ ØªØ®ÙÙŠ Ø§Ù„ØªØ­Ø°ÙŠØ±Ø§Øª Ø§Ù„Ø¯Ø§Ø¦Ù…Ø© Ø£Ùˆ alert-danger
     if (!alert.classList.contains('alert-permanent') && !alert.classList.contains('alert-danger')) {
       const progressBar = alert.querySelector('.flash-timer');
       
@@ -1182,7 +1189,7 @@ $(function() {
         }
       }, 100);
       
-      // Auto-hide after 40 seconds (ضعف المدة السابقة)
+      // Auto-hide after 40 seconds (Ø¶Ø¹Ù Ø§Ù„Ù…Ø¯Ø© Ø§Ù„Ø³Ø§Ø¨Ù‚Ø©)
       setTimeout(() => {
         alert.style.transition = 'all 0.5s ease-out';
         alert.style.transform = 'translateX(100%)';
@@ -1192,11 +1199,11 @@ $(function() {
     }
   });
   
-  // تحديث الساعة والتاريخ وسعر الصرف
+  // ØªØ­Ø¯ÙŠØ« Ø§Ù„Ø³Ø§Ø¹Ø© ÙˆØ§Ù„ØªØ§Ø±ÙŠØ® ÙˆØ³Ø¹Ø± Ø§Ù„ØµØ±Ù
   function updateDateTime() {
     const now = new Date();
     
-    // تحديث الساعة
+    // ØªØ­Ø¯ÙŠØ« Ø§Ù„Ø³Ø§Ø¹Ø©
     const timeString = now.toLocaleTimeString('ar-SA', {
       hour: '2-digit',
       minute: '2-digit',
@@ -1204,14 +1211,14 @@ $(function() {
       hour12: false
     });
     
-    // تحديث التاريخ
+    // ØªØ­Ø¯ÙŠØ« Ø§Ù„ØªØ§Ø±ÙŠØ®
     const dateString = now.toLocaleDateString('ar-SA', {
       year: 'numeric',
       month: '2-digit',
       day: '2-digit'
     });
     
-    // تحديث العرض
+    // ØªØ­Ø¯ÙŠØ« Ø§Ù„Ø¹Ø±Ø¶
     const timeDisplay = document.getElementById('time-display');
     const dateDisplay = document.getElementById('date-display');
     
@@ -1219,11 +1226,11 @@ $(function() {
     if (dateDisplay) dateDisplay.textContent = dateString;
   }
   
-  // ── أسعار صرف حية — عرض فقط (لا تُستخدم في الحسابات) ──
-  // يستدعي endpoint داخلي بدل API خارجي مباشر من المتصفح
+  // â”€â”€ Ø£Ø³Ø¹Ø§Ø± ØµØ±Ù Ø­ÙŠØ© â€” Ø¹Ø±Ø¶ ÙÙ‚Ø· (Ù„Ø§ ØªÙØ³ØªØ®Ø¯Ù… ÙÙŠ Ø§Ù„Ø­Ø³Ø§Ø¨Ø§Øª) â”€â”€
+  // ÙŠØ³ØªØ¯Ø¹ÙŠ endpoint Ø¯Ø§Ø®Ù„ÙŠ Ø¨Ø¯Ù„ API Ø®Ø§Ø±Ø¬ÙŠ Ù…Ø¨Ø§Ø´Ø± Ù…Ù† Ø§Ù„Ù…ØªØµÙØ­
   let fxDisplayCache = null;
   let fxDisplayCacheTime = 0;
-  const FX_DISPLAY_CACHE_MS = 300000; // 5 دقائق في الواجهة
+  const FX_DISPLAY_CACHE_MS = 300000; // 5 Ø¯Ù‚Ø§Ø¦Ù‚ ÙÙŠ Ø§Ù„ÙˆØ§Ø¬Ù‡Ø©
 
   function formatFxRate(val) {
     if (val === null || val === undefined) return '--';
@@ -1237,14 +1244,14 @@ $(function() {
   async function loadFxRates() {
     const now = Date.now();
 
-    // استخدم cache محلي في المتصفح
+    // Ø§Ø³ØªØ®Ø¯Ù… cache Ù…Ø­Ù„ÙŠ ÙÙŠ Ø§Ù„Ù…ØªØµÙØ­
     if (fxDisplayCache && (now - fxDisplayCacheTime) < FX_DISPLAY_CACHE_MS) {
       populateFxDisplay(fxDisplayCache);
       return;
     }
 
     const tbody = document.getElementById('fx-rates-body');
-    if (tbody) tbody.innerHTML = '<tr><td colspan="3"><span class="spinner-border spinner-border-sm text-muted"></span> جارٍ التحميل...</td></tr>';
+    if (tbody) tbody.innerHTML = '<tr><td colspan="3"><span class="spinner-border spinner-border-sm text-muted"></span> Ø¬Ø§Ø±Ù Ø§Ù„ØªØ­Ù…ÙŠÙ„...</td></tr>';
 
     try {
       const res = await fetch('{{ url_for("api.exchange_rates_display") }}?base={{ tenant_default_currency or 'USD' }}', { cache: 'no-store' });
@@ -1255,7 +1262,7 @@ $(function() {
       fxDisplayCacheTime = now;
       populateFxDisplay(data);
     } catch (e) {
-      // fallback عرضي محلي — لا يؤثر على الحسابات
+      // fallback Ø¹Ø±Ø¶ÙŠ Ù…Ø­Ù„ÙŠ â€” Ù„Ø§ ÙŠØ¤Ø«Ø± Ø¹Ù„Ù‰ Ø§Ù„Ø­Ø³Ø§Ø¨Ø§Øª
       populateFxDisplay({
         ok: false,
         base: '{{ tenant_default_currency or 'USD' }}',
@@ -1274,14 +1281,14 @@ $(function() {
     const source = data.source || 'unknown';
 
     const labels = {
-      USD: { ar: 'دولار أمريكي', sym: '$' },
-      ILS: { ar: 'شيقل إسرائيلي', sym: '₪' },
-      JOD: { ar: 'دينار أردني', sym: 'JD' },
-      EUR: { ar: 'يورو', sym: '€' },
-      AED: { ar: '{{ tenant_currency_name_ar or 'درهم إماراتي' }}', sym: '{{ tenant_currency_symbol or 'د.إ' }}' },
-      SAR: { ar: 'ريال سعودي', sym: 'ر.س' },
-      EGP: { ar: 'جنيه مصري', sym: 'ج.م' },
-      GBP: { ar: 'جنيه إسترليني', sym: '£' },
+      USD: { ar: 'Ø¯ÙˆÙ„Ø§Ø± Ø£Ù…Ø±ÙŠÙƒÙŠ', sym: '$' },
+      ILS: { ar: 'Ø´ÙŠÙ‚Ù„ Ø¥Ø³Ø±Ø§Ø¦ÙŠÙ„ÙŠ', sym: 'â‚ª' },
+      JOD: { ar: 'Ø¯ÙŠÙ†Ø§Ø± Ø£Ø±Ø¯Ù†ÙŠ', sym: 'JD' },
+      EUR: { ar: 'ÙŠÙˆØ±Ùˆ', sym: 'â‚¬' },
+      AED: { ar: '{{ tenant_currency_name_ar or 'Ø¯Ø±Ù‡Ù… Ø¥Ù…Ø§Ø±Ø§ØªÙŠ' }}', sym: '{{ tenant_currency_symbol or 'Ø¯.Ø¥' }}' },
+      SAR: { ar: 'Ø±ÙŠØ§Ù„ Ø³Ø¹ÙˆØ¯ÙŠ', sym: 'Ø±.Ø³' },
+      EGP: { ar: 'Ø¬Ù†ÙŠÙ‡ Ù…ØµØ±ÙŠ', sym: 'Ø¬.Ù…' },
+      GBP: { ar: 'Ø¬Ù†ÙŠÙ‡ Ø¥Ø³ØªØ±Ù„ÙŠÙ†ÙŠ', sym: 'Â£' },
     };
 
     const tbody = document.getElementById('fx-rates-body');
@@ -1298,35 +1305,35 @@ $(function() {
     }
     tbody.innerHTML = html;
 
-    // شارة المصدر
+    // Ø´Ø§Ø±Ø© Ø§Ù„Ù…ØµØ¯Ø±
     const badge = document.getElementById('fx-source-badge');
     if (badge) {
       badge.style.display = 'inline-block';
       if (stale || source === 'fallback_static') {
         badge.className = 'badge badge-warning ml-1';
-        badge.textContent = 'آخر سعر محفوظ';
+        badge.textContent = 'Ø¢Ø®Ø± Ø³Ø¹Ø± Ù…Ø­ÙÙˆØ¸';
       } else {
         badge.className = 'badge badge-success ml-1';
-        badge.textContent = 'مباشر';
+        badge.textContent = 'Ù…Ø¨Ø§Ø´Ø±';
       }
     }
 
-    // وقت التحديث
+    // ÙˆÙ‚Øª Ø§Ù„ØªØ­Ø¯ÙŠØ«
     const updatedEl = document.getElementById('fx-last-updated');
     if (updatedEl && data.last_updated) {
       const d = new Date(data.last_updated);
       const timeStr = isNaN(d) ? '--' : d.toLocaleTimeString('ar-AE', { hour: '2-digit', minute: '2-digit' });
-      updatedEl.innerHTML = '<i class="fas fa-clock mr-1"></i>آخر تحديث: ' + timeStr;
+      updatedEl.innerHTML = '<i class="fas fa-clock mr-1"></i>Ø¢Ø®Ø± ØªØ­Ø¯ÙŠØ«: ' + timeStr;
     }
   }
 
-  // فتح النافذة يُحمل الأسعار
+  // ÙØªØ­ Ø§Ù„Ù†Ø§ÙØ°Ø© ÙŠÙØ­Ù…Ù„ Ø§Ù„Ø£Ø³Ø¹Ø§Ø±
   $('#fxModal').on('show.bs.modal', loadFxRates);
 
-  // تشغيل التحديثات
+  // ØªØ´ØºÙŠÙ„ Ø§Ù„ØªØ­Ø¯ÙŠØ«Ø§Øª
   updateDateTime();
 
-  // تحديث الساعة كل ثانية
+  // ØªØ­Ø¯ÙŠØ« Ø§Ù„Ø³Ø§Ø¹Ø© ÙƒÙ„ Ø«Ø§Ù†ÙŠØ©
   setInterval(updateDateTime, 1000);
 
   function initNavbarCalculator() {
@@ -1337,10 +1344,10 @@ $(function() {
 
     function safeEval(expr) {
       const normalized = String(expr || '')
-        .replace(/÷/g, '/')
-        .replace(/×/g, '*')
+        .replace(/Ã·/g, '/')
+        .replace(/Ã—/g, '*')
         .replace(/\^/g, '**')
-        .replace(/π/g, 'Math.PI')
+        .replace(/Ï€/g, 'Math.PI')
         .replace(/\be\b/g, 'Math.E')
         .replace(/sin\(/g, 'Math.sin(')
         .replace(/cos\(/g, 'Math.cos(')
@@ -1381,8 +1388,8 @@ $(function() {
       });
     }
 
-    wirePad(classicContainer, classicDisplay, ['7', '8', '9', '÷', '4', '5', '6', '×', '1', '2', '3', '-', '0', '.', '=', '+', '(', ')', 'DEL', 'C']);
-    wirePad(scientificContainer, scientificDisplay, ['sin(', 'cos(', 'tan(', 'sqrt(', 'log(', 'ln(', 'π', 'e', '7', '8', '9', '÷', '4', '5', '6', '×', '1', '2', '3', '-', '0', '.', '^', '+', '(', ')', 'DEL', 'C', '=']);
+    wirePad(classicContainer, classicDisplay, ['7', '8', '9', 'Ã·', '4', '5', '6', 'Ã—', '1', '2', '3', '-', '0', '.', '=', '+', '(', ')', 'DEL', 'C']);
+    wirePad(scientificContainer, scientificDisplay, ['sin(', 'cos(', 'tan(', 'sqrt(', 'log(', 'ln(', 'Ï€', 'e', '7', '8', '9', 'Ã·', '4', '5', '6', 'Ã—', '1', '2', '3', '-', '0', '.', '^', '+', '(', ')', 'DEL', 'C', '=']);
 
     const btnLoanCalc = document.getElementById('btnLoanCalc');
     const btnMarginCalc = document.getElementById('btnMarginCalc');
@@ -1393,12 +1400,12 @@ $(function() {
         const months = parseInt(document.getElementById('loanMonths').value || '0', 10);
         const out = document.getElementById('loanResult');
         if (!(p > 0) || !(months > 0)) {
-          out.textContent = 'أدخل قيم صحيحة.';
+          out.textContent = 'Ø£Ø¯Ø®Ù„ Ù‚ÙŠÙ… ØµØ­ÙŠØ­Ø©.';
           return;
         }
         const r = (annual / 100) / 12;
         const emi = r > 0 ? (p * r * Math.pow(1 + r, months)) / (Math.pow(1 + r, months) - 1) : (p / months);
-        out.textContent = `القسط الشهري: ${emi.toFixed(2)}`;
+        out.textContent = `Ø§Ù„Ù‚Ø³Ø· Ø§Ù„Ø´Ù‡Ø±ÙŠ: ${emi.toFixed(2)}`;
       });
     }
     if (btnMarginCalc) {
@@ -1407,19 +1414,19 @@ $(function() {
         const sell = parseFloat(document.getElementById('sellValue').value || '0');
         const out = document.getElementById('marginResult');
         if (!(cost >= 0) || !(sell > 0)) {
-          out.textContent = 'أدخل قيم صحيحة.';
+          out.textContent = 'Ø£Ø¯Ø®Ù„ Ù‚ÙŠÙ… ØµØ­ÙŠØ­Ø©.';
           return;
         }
         const profit = sell - cost;
         const margin = (profit / sell) * 100;
         const markup = cost > 0 ? (profit / cost) * 100 : 0;
-        out.textContent = `الربح: ${profit.toFixed(2)} | Margin: ${margin.toFixed(2)}% | Markup: ${markup.toFixed(2)}%`;
+        out.textContent = `Ø§Ù„Ø±Ø¨Ø­: ${profit.toFixed(2)} | Margin: ${margin.toFixed(2)}% | Markup: ${markup.toFixed(2)}%`;
       });
     }
   }
   initNavbarCalculator();
 
-  // ── Frontend Error Catcher ─────────────────────────────────
+  // â”€â”€ Frontend Error Catcher â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   (function() {
     const LOG_ENDPOINT = '{{ url_for("api.log_client_error") }}';
     const sentErrors = new Map();
@@ -1747,6 +1754,49 @@ $(function() {
         attributeFilter: ['data-ui-mode', 'data-ui-variant']
       });
     } catch (_) {}
+
+    const VIEW_MODES = ['auto', 'desktop', 'mobile'];
+    const VIEW_MODE_LABELS = { auto: 'ØªÙ„Ù‚Ø§Ø¦ÙŠ', desktop: 'ÙƒÙ…Ø¨ÙŠÙˆØªØ±', mobile: 'Ù…ÙˆØ¨Ø§ÙŠÙ„' };
+    const VIEW_MODE_ICONS = { auto: 'fa-desktop', desktop: 'fa-desktop', mobile: 'fa-mobile-alt' };
+
+    function getSavedViewMode() {
+      try { return localStorage.getItem('azad_view_mode') || 'auto'; } catch (_) { return 'auto'; }
+    }
+
+    function setViewMode(mode) {
+      if (VIEW_MODES.indexOf(mode) === -1) mode = 'auto';
+      const body = document.body;
+      body.classList.remove('view-desktop', 'view-mobile');
+      if (mode === 'desktop') body.classList.add('view-desktop');
+      if (mode === 'mobile') body.classList.add('view-mobile');
+      try { localStorage.setItem('azad_view_mode', mode); } catch (_) {}
+      updateViewModeButton(mode);
+    }
+
+    function updateViewModeButton(mode) {
+      const btn = document.querySelector('[data-ui-action="toggle-viewmode"]');
+      if (!btn) return;
+      const icon = btn.querySelector('[data-ui-role="viewmode-icon"]');
+      const label = btn.querySelector('[data-ui-role="viewmode-label"]');
+      if (icon) {
+        icon.classList.remove('fa-desktop', 'fa-mobile-alt');
+        icon.classList.add(VIEW_MODE_ICONS[mode] || 'fa-desktop');
+      }
+      if (label) label.textContent = VIEW_MODE_LABELS[mode] || 'ØªÙ„Ù‚Ø§Ø¦ÙŠ';
+    }
+
+    function cycleViewMode() {
+      const current = getSavedViewMode();
+      const nextIdx = (VIEW_MODES.indexOf(current) + 1) % VIEW_MODES.length;
+      setViewMode(VIEW_MODES[nextIdx]);
+    }
+
+    document.addEventListener('click', function(e) {
+      const btn = e.target.closest('[data-ui-action="toggle-viewmode"]');
+      if (btn) { e.preventDefault(); cycleViewMode(); }
+    });
+
+    setViewMode(getSavedViewMode());
   })();
 
 })();
