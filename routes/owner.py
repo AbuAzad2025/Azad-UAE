@@ -3316,7 +3316,14 @@ def export_excel(table_name):
             return redirect(url_for('owner.import_export_tools'))
 
         model = model_map[normalized]
-        data = model.query.all()
+        tid = get_active_tenant_id(current_user)
+        scoped_branch_id = _owner_branch_scope()
+        
+        query = model.query.filter_by(tenant_id=tid)
+        if hasattr(model, 'branch_id') and scoped_branch_id is not None:
+            query = query.filter_by(branch_id=scoped_branch_id)
+        
+        data = query.all()
 
         df_data = []
         for item in data:
