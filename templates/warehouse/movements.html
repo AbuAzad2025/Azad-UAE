@@ -59,7 +59,7 @@
       </div>
       <form method="GET" class="form-inline d-flex align-items-center" style="gap: .5rem;">
         <label class="sr-only" for="warehouseFilter">المستودع</label>
-        <select name="warehouse" id="warehouseFilter" class="form-control select2" style="min-width: 220px;" data-placeholder="اختر مستودع...">
+        <select name="warehouse" id="warehouseFilter" class="form-control select2" style="min-width: 220px;" data-placeholder="اختر مستودع..." aria-label="warehouse">
           <option value="">كل المستودعات</option>
           {% for w in warehouses %}
           <option value="{{ w.id }}" {% if current_warehouse and w.id == current_warehouse.id %}selected{% endif %}>

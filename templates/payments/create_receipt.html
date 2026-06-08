@@ -297,7 +297,7 @@
 
             </label>
 
-            <select name="customer_id" id="customer_id" class="form-control customer-select" required>
+            <select name="customer_id" id="customer_id" class="form-control customer-select" required aria-label="customer id">
 
               <option value="" {% if not selected_customer_id %}selected{% endif %}>بلا</option>
 
@@ -391,7 +391,7 @@
 
             </label>
 
-            <select name="currency" id="currency" class="form-control">
+            <select name="currency" id="currency" class="form-control" aria-label="العملة">
 
               {% set currency_options = [
 
@@ -481,7 +481,7 @@
 
             </label>
 
-            <select name="payment_method" id="payment_method" class="form-control" required>
+            <select name="payment_method" id="payment_method" class="form-control" required aria-label="payment method">
 
               <option value="cash" {% if selected_payment_method == 'cash' %}selected{% endif %}>نقداً</option>
 

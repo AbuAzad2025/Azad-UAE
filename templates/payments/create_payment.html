@@ -74,7 +74,7 @@
 
           <div class="form-group">
             <label for="payment_method">طريقة الدفع <span class="text-danger">*</span></label>
-            <select class="form-control" id="payment_method" name="payment_method" required>
+            <select class="form-control" id="payment_method" name="payment_method" required aria-label="payment method">
               <option value="cash" {% if selected_payment_method == 'cash' %}selected{% endif %}>نقدي</option>
               <option value="bank_transfer" {% if selected_payment_method == 'bank_transfer' %}selected{% endif %}>تحويل بنكي</option>
               <option value="cheque" {% if selected_payment_method == 'cheque' %}selected{% endif %}>شيك</option>

@@ -87,7 +87,7 @@
         <div class="col-md-6">
           <div class="form-group">
             <label><i class="fas fa-exchange-alt"></i> نوع الشيك: <span class="text-danger">*</span></label>
-            <select name="cheque_type" id="cheque_type" class="form-control" required>
+            <select name="cheque_type" id="cheque_type" class="form-control" required aria-label="cheque type">
               <option value="">بلا</option>
               <option value="incoming">وارد (من عميل)</option>
               <option value="outgoing">صادر (لمورد)</option>
@@ -145,7 +145,7 @@
           <div class="form-group">
             <label><i class="fas fa-dollar-sign"></i> العملة:</label>
             {% set dc = company_default_currency or system_default_currency or 'AED' %}
-            <select name="currency" id="currency" class="form-control">
+            <select name="currency" id="currency" class="form-control" aria-label="العملة">
               <option value="AED" {% if dc == 'AED' %}selected{% endif %}>AED - {{ tenant_currency_name_ar or "درهم إماراتي" }}</option>
               <option value="USD" {% if dc == 'USD' %}selected{% endif %}>USD - دولار أمريكي</option>
               <option value="EUR" {% if dc == 'EUR' %}selected{% endif %}>EUR - يورو</option>

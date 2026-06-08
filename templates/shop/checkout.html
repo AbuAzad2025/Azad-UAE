@@ -48,7 +48,7 @@
       </div>
       <div class="ps-form-group">
         <label for="address">{{ t('address') }} *</label>
-        <textarea id="address" name="address" rows="3" required autocomplete="street-address">{{ prefilled.address or '' }}</textarea>
+        <textarea id="address" name="address" rows="3" required autocomplete="street-address" aria-label="address">{{ prefilled.address or '' }}</textarea>
       </div>
       <div class="ps-form-group">
         <label for="coupon_code">{{ t('coupon_code') }}</label>
@@ -56,7 +56,7 @@
       </div>
       <div class="ps-form-group">
         <label for="notes">{{ t('notes') }}</label>
-        <textarea id="notes" name="notes" rows="2"></textarea>
+        <textarea id="notes" name="notes" rows="2" aria-label="notes"></textarea>
       </div>
       <p style="font-size:0.82rem;color:var(--ps-muted);margin-bottom:1rem;"><i class="fas fa-lock"></i> {{ t('secure_checkout') }}</p>
       <button type="submit" class="ps-btn ps-btn-primary ps-btn-block" style="padding:0.9rem;">{{ t('place_order') }}</button>

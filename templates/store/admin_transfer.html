@@ -14,14 +14,14 @@
         <div class="card-body">
           <div class="form-group">
             <label>نوع التحويل</label>
-            <select name="direction" id="direction" class="form-control" required>
+            <select name="direction" id="direction" class="form-control" required aria-label="direction">
               <option value="to_online">إلى مستودع الأونلاين (نشر للمتجر)</option>
               <option value="from_online">من مستودع الأونلاين (سحب من المتجر)</option>
             </select>
           </div>
           <div class="form-group">
             <label>المنتج</label>
-            <select name="product_id" id="product_id" class="form-control select2" required>
+            <select name="product_id" id="product_id" class="form-control select2" required aria-label="product id">
               <option value="">— اختر —</option>
               {% for product in products %}
               <option value="{{ product.id }}" {% if request.args.get('product_id', type=int) == product.id %}selected{% endif %}>
@@ -45,7 +45,7 @@
           </div>
           <div class="form-group">
             <label>ملاحظات</label>
-            <textarea name="notes" class="form-control" rows="2"></textarea>
+            <textarea name="notes" class="form-control" rows="2" aria-label="notes"></textarea>
           </div>
         </div>
         <div class="card-footer">

@@ -392,7 +392,7 @@
 
             <div class="input-group">
 
-              <select name="supplier_id" id="supplier_id" class="form-control supplier-select" required>
+              <select name="supplier_id" id="supplier_id" class="form-control supplier-select" required aria-label="supplier id">
 
                 <option value="" selected>بلا</option>
 
@@ -438,7 +438,7 @@
 
             </label>
 
-            <select name="warehouse_id" id="warehouse_id" class="form-control" required>
+            <select name="warehouse_id" id="warehouse_id" class="form-control" required aria-label="warehouse id">
 
               <option value="" selected>بلا</option>
 
@@ -550,7 +550,7 @@
 
             {% set dc = company_default_currency or system_default_currency or 'AED' %}
 
-            <select name="currency" id="currency" class="form-control">
+            <select name="currency" id="currency" class="form-control" aria-label="العملة">
 
               <option value="AED" {% if dc == 'AED' %}selected{% endif %}>درهم إماراتي (AED)</option>
 
@@ -880,7 +880,7 @@ function addLine() {
 
                   class="form-control product-select line-product" 
 
-                  data-line="${lineIndex}" required>
+                  data-line="${lineIndex}" required aria-label="lines[${lineIndex}][product id]">
 
             <option value="">بلا</option>
 

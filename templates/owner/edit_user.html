@@ -98,8 +98,8 @@
             </div>
             <div class="card-body">
               <div class="form-group">
-                <label>الدور الوظيفي *</label>
-                <select name="role_id" class="form-control" required id="role_select">
+                <label for="role_select">الدور الوظيفي *</label>
+                <select name="role_id" class="form-control" required id="role_select" aria-label="role id">
                   {% for role in roles %}
                   <option value="{{ role.id }}" data-role-slug="{{ role.slug }}" {{ 'selected' if user.role_id == role.id }}>
                     {{ role.name }}
@@ -109,8 +109,8 @@
               </div>
 
               <div class="form-group">
-                <label>الفرع <span class="text-danger branch-required-indicator">*</span></label>
-                <select name="branch_id" id="branch_id" class="form-control">
+                <label for="branch_id">الفرع <span class="text-danger branch-required-indicator">*</span></label>
+                <select name="branch_id" id="branch_id" class="form-control" aria-label="اختر الفرع">
                   <option value="">-- اختر الفرع --</option>
                   {% for branch in branches %}
                   <option value="{{ branch.id }}" {{ 'selected' if user.branch_id == branch.id }}>

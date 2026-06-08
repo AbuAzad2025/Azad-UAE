@@ -79,7 +79,7 @@
         <div class="col-md-4">
           <div class="form-group">
             <label class="font-weight-bold">نوع الجهة</label>
-            <select class="form-control" name="party_type" id="party_type" onchange="updatePartyList()">
+            <select class="form-control" name="party_type" id="party_type" onchange="updatePartyList()" aria-label="party type">
               <option value="customer">عميل / شريك / تاجر</option>
               <option value="supplier">مورد</option>
             </select>
@@ -88,7 +88,7 @@
         <div class="col-md-8">
           <div class="form-group">
             <label class="font-weight-bold">اسم الجهة</label>
-            <select class="form-control select2" name="party_id" id="party_id" required>
+            <select class="form-control select2" name="party_id" id="party_id" required aria-label="party id">
               <option value="">اختر الجهة...</option>
               <!-- Populated via JS -->
             </select>
@@ -112,7 +112,7 @@
           <div class="form-group">
             <label class="font-weight-bold">العملة</label>
             {% set selected_voucher_currency = preselected_currency or tenant_default_currency or 'AED' %}
-            <select class="form-control" name="currency" id="currency">
+            <select class="form-control" name="currency" id="currency" aria-label="العملة">
               {% for code in ['AED','USD','EUR','GBP','SAR','QAR','KWD','BHD','OMR','ILS','JOD','EGP'] %}
               <option value="{{ code }}" {% if selected_voucher_currency == code %}selected{% endif %}>{{ code }}</option>
               {% endfor %}
@@ -128,7 +128,7 @@
         <div class="col-md-4">
           <div class="form-group">
             <label class="font-weight-bold">طريقة الدفع</label>
-            <select class="form-control" name="payment_method" id="payment_method" onchange="toggleChequeFields()">
+            <select class="form-control" name="payment_method" id="payment_method" onchange="toggleChequeFields()" aria-label="payment method">
               <option value="cash">نقدي</option>
               <option value="bank_transfer">تحويل بنكي</option>
               <option value="cheque">شيك</option>

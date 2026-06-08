@@ -290,7 +290,7 @@
           </div>
           <div class="form-group">
             <label for="adjustmentType">نوع التعديل</label>
-            <select id="adjustmentType" name="adjustment_type" class="form-control" required autocomplete="off">
+            <select id="adjustmentType" name="adjustment_type" class="form-control" required autocomplete="off" aria-label="adjustment type">
               <option value="" selected>بلا</option>
               <option value="add">{{ t('Add') }}</option>
               <option value="subtract">خصم</option>
@@ -303,7 +303,7 @@
           </div>
           <div class="form-group">
             <label for="adjustmentReason">السبب</label>
-            <select id="adjustmentReason" name="adjustment_reason" class="form-control" required autocomplete="off">
+            <select id="adjustmentReason" name="adjustment_reason" class="form-control" required autocomplete="off" aria-label="adjustment reason">
               <option value="" selected>بلا</option>
               <option value="purchase">شراء</option>
               <option value="return">إرجاع</option>
@@ -314,7 +314,7 @@
           </div>
           <div class="form-group">
             <label for="adjustmentNotes">{{ t('Notes') }}</label>
-            <textarea id="adjustmentNotes" name="adjustment_notes" class="form-control" rows="3" autocomplete="off"></textarea>
+            <textarea id="adjustmentNotes" name="adjustment_notes" class="form-control" rows="3" autocomplete="off" aria-label="adjustment notes"></textarea>
           </div>
         </form>
       </div>

@@ -218,7 +218,7 @@
                 <span class="text-danger">*</span>
               </label>
               {% set selected_role = form_data.get('role_id') %}
-              <select name="role_id" id="role_id" class="form-control" required>
+              <select name="role_id" id="role_id" class="form-control" required aria-label="role id">
                 <option value="" {% if not selected_role %}selected{% endif %}>بلا</option>
                 {% for role in roles %}
                 <option value="{{ role.id }}" data-role-slug="{{ role.slug }}" {% if selected_role and selected_role|int == role.id %}selected{% endif %}>
@@ -237,7 +237,7 @@
                 <i class="fas fa-building text-info"></i> الفرع
                 <span class="text-danger branch-required-indicator">*</span>
               </label>
-              <select name="branch_id" id="branch_id" class="form-control">
+              <select name="branch_id" id="branch_id" class="form-control" aria-label="اختر الفرع">
                 <option value="">-- اختر الفرع --</option>
                 {% for branch in branches %}
                 <option value="{{ branch.id }}" {% if form_data.get('branch_id')|int == branch.id %}selected{% endif %}>

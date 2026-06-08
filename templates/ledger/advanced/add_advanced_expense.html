@@ -48,7 +48,7 @@
         </div>
         <div class="form-group">
           <label>البيان</label>
-          <textarea name="description" class="form-control" rows="3"></textarea>
+          <textarea name="description" class="form-control" rows="3" aria-label="description"></textarea>
         </div>
         <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> حفظ</button>
         {% if current_user.has_permission('view_ledger') %}

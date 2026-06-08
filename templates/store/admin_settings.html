@@ -119,7 +119,7 @@
 
             <label>Meta Description (AR)</label>
 
-            <textarea name="meta_description" class="form-control" rows="2" maxlength="500">{{ store.meta_description or '' }}</textarea>
+            <textarea name="meta_description" class="form-control" rows="2" maxlength="500" aria-label="meta description">{{ store.meta_description or '' }}</textarea>
 
           </div>
 
@@ -127,7 +127,7 @@
 
             <label>Meta Description (EN)</label>
 
-            <textarea name="meta_description_en" class="form-control" rows="2" maxlength="500">{{ store.meta_description_en or '' }}</textarea>
+            <textarea name="meta_description_en" class="form-control" rows="2" maxlength="500" aria-label="meta description en">{{ store.meta_description_en or '' }}</textarea>
 
           </div>
 
@@ -259,7 +259,7 @@
 
             <label>بالعربية</label>
 
-            <textarea name="return_policy_ar" class="form-control" rows="4">{{ store.return_policy_ar or '' }}</textarea>
+            <textarea name="return_policy_ar" class="form-control" rows="4" aria-label="return policy ar">{{ store.return_policy_ar or '' }}</textarea>
 
           </div>
 
@@ -267,7 +267,7 @@
 
             <label>English</label>
 
-            <textarea name="return_policy_en" class="form-control" rows="4">{{ store.return_policy_en or '' }}</textarea>
+            <textarea name="return_policy_en" class="form-control" rows="4" aria-label="return policy en">{{ store.return_policy_en or '' }}</textarea>
 
           </div>
 

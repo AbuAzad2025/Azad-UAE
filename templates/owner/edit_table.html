@@ -57,6 +57,7 @@
                      value="{{ row[loop.index0] if row[loop.index0] is not none else '' }}"
                      data-column="{{ col }}"
                      data-original="{{ row[loop.index0] if row[loop.index0] is not none else '' }}"
+                     aria-label="{{ col }}"
                      readonly>
             </td>
             {% endfor %}

@@ -55,7 +55,7 @@
               <div class="col-md-6">
                 <div class="form-group">
                   <label>الدور</label>
-                  <select name="role_id" id="role_id" class="form-control">
+                  <select name="role_id" id="role_id" class="form-control" aria-label="role id">
                     {% for r in roles %}
                       <option value="{{ r.id }}" data-role-slug="{{ r.slug }}" {% if user.role_id == r.id %}selected{% endif %}>
                         {{ r.name_ar or r.name }}
@@ -67,7 +67,7 @@
               <div class="col-md-6">
                 <div class="form-group">
                   <label>الفرع</label>
-                  <select name="branch_id" id="branch_id" class="form-control">
+                  <select name="branch_id" id="branch_id" class="form-control" aria-label="اختر الفرع">
                     <option value="">-- اختر الفرع --</option>
                     {% for branch in branches %}
                     <option value="{{ branch.id }}" {% if user.branch_id == branch.id %}selected{% endif %}>

@@ -41,7 +41,7 @@
         <div id="tax-fields">
           <div class="form-group">
             <label>دولة الضريبة</label>
-            <select name="vat_country" class="form-control" id="vat_country">
+            <select name="vat_country" class="form-control" id="vat_country" aria-label="vat country">
               {% for code, label in vat_countries.items() %}
               <option value="{{ code }}" {% if (tenant.vat_country or 'AE') == code %}selected{% endif %}>{{ label }}</option>
               {% endfor %}

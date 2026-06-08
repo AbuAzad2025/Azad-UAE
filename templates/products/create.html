@@ -105,7 +105,7 @@
             </label>
             <div class="input-group">
               {% set selected_category = form_data.get('category_id') %}
-              <select name="category_id" id="product_category" class="form-control select2" style="flex: 1;" data-placeholder="اختر الفئة..." autocomplete="off">
+              <select name="category_id" id="product_category" class="form-control select2" style="flex: 1;" data-placeholder="اختر الفئة..." autocomplete="off" aria-label="category id">
                 <option value="0" {% if not selected_category or selected_category == '0' %}selected{% endif %}>بلا</option>
                 {% for category in categories %}
                 <option value="{{ category.id }}" {% if selected_category and selected_category|int == category.id %}selected{% endif %}>
@@ -178,7 +178,7 @@
               <span class="text-danger">*</span>
               <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="المستودع الذي سيُضاف إليه المنتج (إجباري)"></i>
             </label>
-            <select id="warehouse_id" name="warehouse_id" class="form-control warehouse-select" required autocomplete="off">
+            <select id="warehouse_id" name="warehouse_id" class="form-control warehouse-select" required autocomplete="off" aria-label="warehouse id">
               <option value="" {% if not selected_warehouse %}selected{% endif %}>بلا</option>
               {% if warehouses %}
                 {% for warehouse in warehouses %}
@@ -256,7 +256,7 @@
               <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="يمكن اختيار الوحدة أو تركها بلا للمنتجات غير المقيسة"></i>
             </label>
             {% set selected_unit = form_data.get('unit') if form_data.get('unit') is not none else 'piece' %}
-            <select id="product_unit" name="unit" class="form-control select2" data-placeholder="اختر الوحدة..." data-allow-clear="true" autocomplete="off">
+            <select id="product_unit" name="unit" class="form-control select2" data-placeholder="اختر الوحدة..." data-allow-clear="true" autocomplete="off" aria-label="unit">
               <option value="" {% if not selected_unit %}selected{% endif %}>بلا</option>
               <option value="piece" {% if selected_unit == 'piece' %}selected{% endif %}>قطعة</option>
               <option value="kg" {% if selected_unit == 'kg' %}selected{% endif %}>كيلو</option>
@@ -281,7 +281,7 @@
               <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="اختر التاجر إذا كان هذا المنتج مملوكاً لتاجر معين"></i>
             </label>
             <div class="input-group">
-              <select name="merchant_customer_id" id="merchant_customer_id" class="form-control select2">
+              <select name="merchant_customer_id" id="merchant_customer_id" class="form-control select2" aria-label="merchant customer id">
                 <option value="">-- اختر التاجر --</option>
                 {% for merchant in merchants %}
                 <option value="{{ merchant.id }}" {% if request.form.get('merchant_customer_id') == merchant.id|string %}selected{% endif %}>{{ merchant.name }}</option>

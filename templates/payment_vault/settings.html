@@ -258,8 +258,8 @@
                                 <div class="col-md-6 form-group"><label>Title (EN)</label><input class="form-control" name="donation_title_en" value="{{ vault.donation_title_en or 'Support Azad' }}" dir="ltr" aria-label="donation title en"></div>
                             </div>
                             <div class="row">
-                                <div class="col-md-6 form-group"><label>مقدمة عربي</label><textarea class="form-control" name="donation_intro_ar" rows="2">{{ vault.donation_intro_ar or '' }}</textarea></div>
-                                <div class="col-md-6 form-group"><label>Intro EN</label><textarea class="form-control" name="donation_intro_en" rows="2" dir="ltr">{{ vault.donation_intro_en or '' }}</textarea></div>
+                                <div class="col-md-6 form-group"><label>مقدمة عربي</label><textarea class="form-control" name="donation_intro_ar" rows="2" aria-label="donation intro ar">{{ vault.donation_intro_ar or '' }}</textarea></div>
+                                <div class="col-md-6 form-group"><label>Intro EN</label><textarea class="form-control" name="donation_intro_en" rows="2" dir="ltr" aria-label="donation intro en">{{ vault.donation_intro_en or '' }}</textarea></div>
                             </div>
                             <div class="row">
                                 <div class="col-md-6 form-group"><label>GL مدين (1120 بنك)</label><input class="form-control" name="donation_debit_account" value="{{ vault.donation_debit_account or '1120' }}" dir="ltr" aria-label="donation debit account"></div>

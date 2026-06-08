@@ -35,7 +35,7 @@
         <div class="col-md-6">
           <div class="form-group">
             <label><i class="fas fa-exchange-alt"></i> نوع الشيك: <span class="text-danger">*</span></label>
-            <select name="cheque_type" id="cheque_type" class="form-control" required>
+            <select name="cheque_type" id="cheque_type" class="form-control" required aria-label="cheque type">
               <option value="incoming" {% if cheque.cheque_type == 'incoming' %}selected{% endif %}>وارد (من عميل)</option>
               <option value="outgoing" {% if cheque.cheque_type == 'outgoing' %}selected{% endif %}>صادر (لمورد)</option>
             </select>
@@ -198,7 +198,7 @@
       <!-- ملاحظات -->
       <div class="form-group">
         <label><i class="fas fa-sticky-note"></i> ملاحظات:</label>
-        <textarea name="notes" class="form-control" rows="3">{{ cheque.notes or '' }}</textarea>
+        <textarea name="notes" class="form-control" rows="3" aria-label="notes">{{ cheque.notes or '' }}</textarea>
       </div>
 
       <!-- الأزرار -->

@@ -153,7 +153,7 @@ a.btn.btn-outline-secondary span {
                   <span class="text-danger">*</span>
                   <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="اختر العميل - الفلتر الذكي: ابحث بالاسم أو الهاتف (إجباري)"></i>
                 </label>
-                <select name="customer_id" id="customer_id" class="form-control customer-select" required>
+                <select name="customer_id" id="customer_id" class="form-control customer-select" required aria-label="customer id">
                   <option value="" selected>بلا</option>
                 </select>
                 <small class="form-text text-muted">💡 الفلتر الذكي: ابحث بالاسم أو رقم الهاتف</small>
@@ -166,7 +166,7 @@ a.btn.btn-outline-secondary span {
                   <span class="text-danger">*</span>
                   <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="المستودع الذي سيُخصم منه المخزون (إجباري)"></i>
                 </label>
-                <select name="warehouse_id" id="warehouse_id" class="form-control" required>
+                <select name="warehouse_id" id="warehouse_id" class="form-control" required aria-label="warehouse id">
                   <option value="" selected>بلا</option>
                   {% if warehouses %}
                     {% for warehouse in warehouses %}
@@ -192,7 +192,7 @@ a.btn.btn-outline-secondary span {
                   <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="العملة التي سيدفع بها العميل - الفاتورة بال{{ tenant_currency_name_ar or 'درهم إماراتي' }} دائماً (اختياري)"></i>
                 </label>
                 {% set dc = company_default_currency or system_default_currency or 'AED' %}
-                <select name="currency" id="currency" class="form-control">
+                <select name="currency" id="currency" class="form-control" aria-label="العملة">
                   <option value="AED" {% if dc == 'AED' %}selected{% endif %}>درهم إماراتي (AED)</option>
                   <option value="USD" {% if dc == 'USD' %}selected{% endif %}>دولار أمريكي (USD)</option>
                   <option value="ILS" {% if dc == 'ILS' %}selected{% endif %}>شيقل إسرائيلي (ILS)</option>
@@ -315,7 +315,7 @@ a.btn.btn-outline-secondary span {
               <i class="fas fa-credit-card text-info"></i> طريقة الدفع
               <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="اختر طريقة الدفع أو اتركها فارغة للدفع الآجل"></i>
             </label>
-            <select name="payment_method" id="payment_method" class="form-control">
+            <select name="payment_method" id="payment_method" class="form-control" aria-label="payment method">
               <option value="">آجل (بدون دفع)</option>
               <option value="cash">💵 نقدي</option>
               <option value="card">💳 بطاقة</option>

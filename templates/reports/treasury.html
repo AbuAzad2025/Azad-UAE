@@ -18,7 +18,7 @@
           <form method="get" class="form-inline">
             <div class="form-group mr-3">
               <label for="branch_id" class="mr-2">الفرع:</label>
-              <select name="branch_id" id="branch_id" class="form-control">
+              <select name="branch_id" id="branch_id" class="form-control" aria-label="اختر الفرع">
                 <option value="">جميع الفروع</option>
                 {% for b in branches %}
                 <option value="{{ b.id }}" {% if selected_branch == b.id %}selected{% endif %}>{{ b.name }}</option>

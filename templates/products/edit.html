@@ -80,7 +80,7 @@
               <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="يمكن تركها بلا لتصنيف المنتج لاحقاً (اختياري)"></i>
             </label>
             <div class="input-group">
-              <select name="category_id" id="product_category" class="form-control select2" style="flex: 1;" data-placeholder="اختر الفئة...">
+              <select name="category_id" id="product_category" class="form-control select2" style="flex: 1;" data-placeholder="اختر الفئة..." aria-label="category id">
                 <option value="0" {% if not product.category_id %}selected{% endif %}>بلا</option>
                 {% for category in categories %}
                 <option value="{{ category.id }}" {% if product.category_id == category.id %}selected{% endif %}>{{ category.name }}</option>
@@ -152,7 +152,7 @@
           <i class="fas fa-align-left text-secondary"></i> {{ t('Description') }}
           <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="وصف تفصيلي (اختياري)"></i>
         </label>
-        <textarea name="description" class="form-control" rows="3">{{ product.description or '' }}</textarea>
+        <textarea name="description" class="form-control" rows="3" aria-label="description">{{ product.description or '' }}</textarea>
       </div>
 
       <hr>
@@ -228,7 +228,7 @@
               <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="اختر التاجر إذا كان هذا المنتج مملوكاً لتاجر معين"></i>
             </label>
             <div class="input-group">
-              <select name="merchant_customer_id" id="merchant_customer_id" class="form-control select2">
+              <select name="merchant_customer_id" id="merchant_customer_id" class="form-control select2" aria-label="merchant customer id">
                 <option value="">-- اختر التاجر --</option>
                 {% for merchant in merchants %}
                 <option value="{{ merchant.id }}" {% if product.merchant_customer_id == merchant.id %}selected{% endif %}>{{ merchant.name }}</option>

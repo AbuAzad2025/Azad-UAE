@@ -35,7 +35,7 @@
               <span class="text-danger">*</span>
               <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="اختر العميل - يظهر رصيده الحالي (إجباري)"></i>
             </label>
-            <select name="customer_id" id="customer_id" class="form-control customer-select" required onchange="loadCustomerSales()">
+            <select name="customer_id" id="customer_id" class="form-control customer-select" required onchange="loadCustomerSales()" aria-label="customer id">
               <option value="" {% if not form_data.get('customer_id') %}selected{% endif %}>بلا</option>
               {% for customer in customers %}
               <option value="{{ customer.id }}" {% if form_data.get('customer_id') and form_data.get('customer_id')|int == customer.id %}selected{% endif %}>
@@ -64,7 +64,7 @@
               <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="عملة الدفع (افتراضي: {{ tenant_default_currency or 'AED' }})"></i>
             </label>
             {% set dc = company_default_currency or system_default_currency or 'AED' %}
-            <select name="currency" id="currency" class="form-control">
+            <select name="currency" id="currency" class="form-control" aria-label="العملة">
               <option value="AED" {% if dc == 'AED' %}selected{% endif %}>درهم إماراتي</option>
               <option value="USD" {% if dc == 'USD' %}selected{% endif %}>دولار</option>
               <option value="EUR" {% if dc == 'EUR' %}selected{% endif %}>يورو</option>
@@ -81,7 +81,7 @@
               <span class="text-danger">*</span>
               <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="كيف تم استلام المبلغ؟ (إجباري)"></i>
             </label>
-            <select name="payment_method" id="payment_method" class="form-control" required>
+            <select name="payment_method" id="payment_method" class="form-control" required aria-label="payment method">
               <option value="cash">نقدي</option>
               <option value="card">بطاقة</option>
               <option value="bank_transfer">تحويل بنكي</option>

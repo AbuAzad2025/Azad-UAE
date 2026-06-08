@@ -90,7 +90,7 @@
         <form method="get" action="{{ url_for('owner.error_audit_logs') }}" class="form-inline">
           <div class="form-group mr-3 mb-2">
             <label for="category" class="mr-2">الفئة</label>
-            <select name="category" id="category" class="form-control form-control-sm">
+            <select name="category" id="category" class="form-control form-control-sm" aria-label="category">
               <option value="">الكل</option>
               {% for cat in categories %}
               <option value="{{ cat }}" {% if cat == selected_category %}selected{% endif %}>{{ cat }}</option>
@@ -99,7 +99,7 @@
           </div>
           <div class="form-group mr-3 mb-2">
             <label for="level" class="mr-2">المستوى</label>
-            <select name="level" id="level" class="form-control form-control-sm">
+            <select name="level" id="level" class="form-control form-control-sm" aria-label="level">
               <option value="">الكل</option>
               {% for lvl in levels %}
               <option value="{{ lvl }}" {% if lvl == selected_level %}selected{% endif %}>{{ lvl }}</option>
@@ -108,7 +108,7 @@
           </div>
           <div class="form-group mr-3 mb-2">
             <label for="resolved" class="mr-2">الحالة</label>
-            <select name="resolved" id="resolved" class="form-control form-control-sm">
+            <select name="resolved" id="resolved" class="form-control form-control-sm" aria-label="resolved">
               <option value="" {% if selected_resolved == '' %}selected{% endif %}>الكل</option>
               <option value="0" {% if selected_resolved == '0' %}selected{% endif %}>غير محلول</option>
               <option value="1" {% if selected_resolved == '1' %}selected{% endif %}>محلول</option>

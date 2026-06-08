@@ -35,6 +35,9 @@ class AccessibilityFixer:
         # Fix 4: Selects without accessible name
         content = self._fix_unlabeled_selects(content)
 
+        # Fix 5: Textareas without accessible name
+        content = self._fix_unlabeled_textareas(content)
+
         if content != original:
             with open(fpath, 'w', encoding='utf-8') as f:
                 f.write(content)
@@ -125,11 +128,33 @@ class AccessibilityFixer:
             prefix = m.group(1)
             name = m.group(2)
             close = m.group(3)
-            if 'aria-label=' in prefix.lower() or 'id=' in prefix.lower():
+            if 'aria-label=' in prefix.lower() or 'title=' in prefix.lower():
                 return m.group(0)
             aria = 'aria-label="' + _name_to_label(name) + '"'
             prefix = prefix.rstrip()
             prefix += ' ' + aria
+            self.fixed_count += 1
+            return prefix + close
+
+        return pattern.sub(_replace, content)
+
+    def _fix_unlabeled_textareas(self, content: str) -> str:
+        """Add aria-label to textareas without accessible name."""
+        pattern = re.compile(
+            r'(<textarea\s+[^>]*?)(>)',
+            re.IGNORECASE
+        )
+
+        def _replace(m):
+            prefix = m.group(1)
+            close = m.group(2)
+            low = prefix.lower()
+            if 'aria-label=' in low or 'title=' in low or 'placeholder=' in low:
+                return m.group(0)
+            name_m = re.search(r'name="([^"]+)"', prefix)
+            label = _name_to_label(name_m.group(1)) if name_m else 'نص'
+            prefix = prefix.rstrip()
+            prefix += ' aria-label="' + label + '"'
             self.fixed_count += 1
             return prefix + close
 

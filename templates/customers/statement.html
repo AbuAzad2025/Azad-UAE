@@ -398,7 +398,7 @@ table.statement-table thead th {
     </div>
     <div class="form-group mx-1 mb-2">
       <label for="transaction_type" class="sr-only">نوع الحركة</label>
-      <select id="transaction_type" name="transaction_type" class="form-control form-control-sm">
+      <select id="transaction_type" name="transaction_type" class="form-control form-control-sm" aria-label="transaction type">
         <option value="all" {% if active_filters.transaction_type == 'all' %}selected{% endif %}>كل الحركات</option>
         <option value="sale" {% if active_filters.transaction_type == 'sale' %}selected{% endif %}>الفواتير فقط</option>
         <option value="payment" {% if active_filters.transaction_type == 'payment' %}selected{% endif %}>الدفعات فقط</option>

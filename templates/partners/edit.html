@@ -45,7 +45,7 @@
 
           <div class="col-md-6">
             <label class="form-label fw-semibold">مستوى الشراكة</label>
-            <select name="scope_type" id="scope_type" class="form-select" onchange="updateScopeOptions()">
+            <select name="scope_type" id="scope_type" class="form-select" onchange="updateScopeOptions()" aria-label="scope type">
               <option value="company" {% if partner.scope_type == 'company' %}selected{% endif %}>مستوى الشركة</option>
               <option value="branch" {% if partner.scope_type == 'branch' %}selected{% endif %}>فرع محدد</option>
               <option value="warehouse" {% if partner.scope_type == 'warehouse' %}selected{% endif %}>مستودع محدد</option>
@@ -55,7 +55,7 @@
             <label class="form-label fw-semibold" id="scope_id_label">
               {% if partner.scope_type == 'branch' %}الفرع{% elif partner.scope_type == 'warehouse' %}المستودع{% else %}—{% endif %}
             </label>
-            <select name="scope_id" id="scope_id" class="form-select">
+            <select name="scope_id" id="scope_id" class="form-select" aria-label="scope id">
               <option value="">— اختر —</option>
               {% if partner.scope_type == 'branch' %}
                 {% for b in branches %}
@@ -105,11 +105,11 @@
           </div>
           <div class="col-12">
             <label class="form-label fw-semibold">العنوان</label>
-            <textarea name="address" class="form-control" rows="2">{{ partner.address or '' }}</textarea>
+            <textarea name="address" class="form-control" rows="2" aria-label="address">{{ partner.address or '' }}</textarea>
           </div>
           <div class="col-12">
             <label class="form-label fw-semibold">ملاحظات</label>
-            <textarea name="notes" class="form-control" rows="2">{{ partner.notes or '' }}</textarea>
+            <textarea name="notes" class="form-control" rows="2" aria-label="notes">{{ partner.notes or '' }}</textarea>
           </div>
           <div class="col-12">
             <div class="form-check form-switch">
