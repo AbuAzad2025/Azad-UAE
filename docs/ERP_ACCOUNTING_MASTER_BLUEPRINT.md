@@ -2006,17 +2006,9 @@ What is missing is primarily **narrative clarity** in documentation and possibly
 - **Remaining:** 57 static styles intentionally left inline — all are `display:none/inline/block/flex` toggled by JavaScript at runtime. Moving them to classes would break JS show/hide logic (Bootstrap `.d-none` uses `!important` which overrides `el.style.display='block'`). 37 dynamic Jinja2 styles also untouched.
 - **Verification:** 6-layer test suite (Jinja compile, residual audit, HTML integrity, CSS validity, JS-toggle preservation, visual diff) — all PASS on 275 templates (0 issues, 0 CSS errors, 0 JS violations).
 
-##### D7. Jinja2 Linter False Positives (document & suppress)
-- **Status:** ⏸️ **Pending (investigation)**
-- **Effort:** 2 hours
-- **Scope:** Persistent IDE warnings that are NOT real bugs — caused by Edge Tools linter not understanding Jinja2 templating:
-  - `<ul> must only contain <li>` — caused by `{% if %}` tags creating whitespace text nodes (base.html:118,358,375,661,813)
-  - CSS/JS syntax errors in `<style>`/`<script>` — caused by `{{ }}` interpolation
-  - `apple-touch-icon should be in <head>` (base.html:47) — it IS in head; linter misreads Jinja2 vars
-  - `lang attribute not valid` (base.html:2) — `lang="ar"` is valid ISO 639-1
-  - `manifest extension should be webmanifest` — `.json` is valid
-  - `theme-color not supported by Firefox` — works in Chrome/Safari
-- **Action:** Document as known false positives; consider `.eslintrc`/linter config suppression or Jinja2-aware linter. No code changes needed for correctness.
+##### ~~D7. Jinja2 Linter False Positives~~ ⛔ **DROPPED**
+- **Status:** ⛔ **NOT TRACKED** — IDE cosmetic warnings only; do not affect runtime.
+- **Reason:** Linter limitations with Jinja2 templating are outside project scope. No code changes needed.
 
 ---
 
@@ -2039,7 +2031,7 @@ What is missing is primarily **narrative clarity** in documentation and possibly
 | D4 | Mobile responsiveness | 🚧 | Jun 8 | — | In progress; targeted for today |
 | D5 | Accessibility errors (WCAG) | ✅ **DONE** | Jun 8 | Jun 8 | ~1,050 a11y errors fixed in 137 templates; viewport added to 10 print templates; `fix_accessibility.py`, `count_a11y.py`, `fix_viewport.py`; 0 issues on disk |
 | D6 | CSS externalization | ✅ **DONE** | Jun 8 | Jun 8 | 961 styles externalized in 79 templates; 57 JS-toggled display left inline (intentional); 6-layer test suite all PASS |
-| D7 | Jinja2 linter false positives | ⏸️ | — | — | Document/suppress Edge Tools warnings caused by Jinja2 templating; no code fix needed |
+| ~~D7~~ | ~~Jinja2 linter false positives~~ | ⛔ **DROPPED** | — | — | IDE cosmetic warnings outside project scope |
 
 ---
 
