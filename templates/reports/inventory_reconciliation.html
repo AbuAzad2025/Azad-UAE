@@ -70,7 +70,7 @@
   <div class="col-md-3">
     <div class="card bg-gradient-info text-white">
       <div class="card-body text-center">
-        <h4 class="mb-0">{{ '{:,.2f}'.format(report.summary.total_pwc_qty) }}</h4>
+        <h4 class="mb-0">{{ format_currency(report.summary.total_pwc_qty) }}</h4>
         <small>إجمالي كمية PWC</small>
       </div>
     </div>
@@ -78,7 +78,7 @@
   <div class="col-md-3">
     <div class="card bg-gradient-secondary text-white">
       <div class="card-body text-center">
-        <h4 class="mb-0">{{ '{:,.2f}'.format(report.summary.total_movement_qty) }}</h4>
+        <h4 class="mb-0">{{ format_currency(report.summary.total_movement_qty) }}</h4>
         <small>إجمالي كمية الحركات</small>
       </div>
     </div>
@@ -114,8 +114,8 @@
           <th class="text-left">كمية PWC</th>
           <th class="text-left">كمية الحركات</th>
           <th class="text-left">فرق الكمية</th>
-          <th class="text-left">قيمة PWC ({{ tenant_currency_symbol or 'AED' }})</th>
-          <th class="text-left">رصيد GL ({{ tenant_currency_symbol or 'AED' }})</th>
+          <th class="text-left">قيمة PWC ({{ tenant_currency_symbol }})</th>
+          <th class="text-left">رصيد GL ({{ tenant_currency_symbol }})</th>
           <th class="text-left">فرق القيمة</th>
           <th class="text-center">الحالة</th>
         </tr>
@@ -130,15 +130,15 @@
           <td class="text-left {% if not row.matched_qty %}text-danger font-weight-bold{% endif %}">
             {{ '{:+.3f}'.format(row.qty_diff) }}
           </td>
-          <td class="text-left">{{ '{:,.2f}'.format(row.pwc_value) }}</td>
+          <td class="text-left">{{ format_currency(row.pwc_value) }}</td>
           <td class="text-left">
-            {{ '{:,.2f}'.format(row.gl_value) }}
+            {{ format_currency(row.gl_value) }}
             {% if row.gl_untagged %}
             <span class="badge badge-info" title="قيود GL قديمة بدون warehouse_id">legacy</span>
             {% endif %}
           </td>
           <td class="text-left {% if not row.matched_value %}text-warning{% endif %}">
-            {{ '{:,.2f}'.format(row.value_diff) }}
+            {{ format_currency(row.value_diff) }}
           </td>
           <td class="text-center">
             {% if row.matched_qty and row.matched_value %}
@@ -162,9 +162,9 @@
           <td class="text-left {% if report.summary.overall_qty_diff|abs > 0.01 %}text-danger{% endif %}">
             {{ '{:+.3f}'.format(report.summary.overall_qty_diff) }}
           </td>
-          <td class="text-left">{{ '{:,.2f}'.format(report.summary.total_pwc_value) }}</td>
-          <td class="text-left">{{ '{:,.2f}'.format(report.summary.total_gl_value) }}</td>
-          <td class="text-left">{{ '{:,.2f}'.format(report.summary.overall_value_diff) }}</td>
+          <td class="text-left">{{ format_currency(report.summary.total_pwc_value) }}</td>
+          <td class="text-left">{{ format_currency(report.summary.total_gl_value) }}</td>
+          <td class="text-left">{{ format_currency(report.summary.overall_value_diff) }}</td>
           <td></td>
         </tr>
       </tfoot>
@@ -175,7 +175,7 @@
     <strong>الكمية:</strong> مقارنة بين PWC.total_quantity و SUM(stock_movements.quantity) &nbsp;|&nbsp;
     <strong>القيمة:</strong> مقارنة بين PWC.total_value ورصيد حساب GL 1140.
     {% if report.summary.has_unallocated_gl %}
-    &nbsp;|&nbsp; <strong>GL غير موزع على مستودع:</strong> {{ '{:,.2f}'.format(report.summary.unallocated_gl_value) }}
+    &nbsp;|&nbsp; <strong>GL غير موزع على مستودع:</strong> {{ format_currency(report.summary.unallocated_gl_value) }}
     {% endif %}
   </div>
 </div>
@@ -213,7 +213,7 @@
               {{ '{:+.3f}'.format(row.qty_diff) }}
             </td>
             <td class="text-left">{{ '{:,.4f}'.format(row.pwc_avg_cost) }}</td>
-            <td class="text-left">{{ '{:,.2f}'.format(row.pwc_value) }}</td>
+            <td class="text-left">{{ format_currency(row.pwc_value) }}</td>
             <td class="text-center">
               {% if row.matched_qty %}
               <span class="badge badge-success">OK</span>

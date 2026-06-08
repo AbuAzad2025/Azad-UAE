@@ -28,7 +28,7 @@ class ProductWarehouseCost(db.Model):
     total_value = db.Column(db.Numeric(18, 3), default=0, nullable=False)
 
     # Currency of the stored cost (usually AED or tenant default)
-    currency = db.Column(db.String(3), default='AED', nullable=False)
+    currency = db.Column(db.String(3), default='AED', nullable=False)  # TODO: use Config.DEFAULT_CURRENCY
 
     # Lock to prevent concurrent WAC updates
     last_updated = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)

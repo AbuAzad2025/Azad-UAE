@@ -114,7 +114,7 @@
 
         <h3>{{ '{:,.0f}'.format(stats.total_amount) }}</h3>
 
-        <p>إجمالي المبلغ ({{ tenant_currency_symbol or 'AED' }})</p>
+        <p>إجمالي المبلغ ({{ tenant_currency_symbol }})</p>
 
       </div>
 
@@ -136,9 +136,9 @@
 
       <div class="inner">
 
-        <h3>{{ '{:,.2f}'.format(stats.balance) }}</h3>
+        <h3>{{ format_currency(stats.balance) }}</h3>
 
-        <p>الرصيد المستحق ({{ tenant_currency_symbol or 'AED' }})</p>
+        <p>الرصيد المستحق ({{ tenant_currency_symbol }})</p>
 
       </div>
 
@@ -162,7 +162,7 @@
 
         <h3>{{ '{:,.0f}'.format(stats.avg_purchase) }}</h3>
 
-        <p>متوسط الشراء ({{ tenant_currency_symbol or 'AED' }})</p>
+        <p>متوسط الشراء ({{ tenant_currency_symbol }})</p>
 
       </div>
 
@@ -332,7 +332,7 @@
 
             <th><i class="fas fa-coins text-muted mr-2"></i>الحد الائتماني:</th>
 
-            <td><strong>{{ '{:,.2f}'.format(supplier.credit_limit or 0) }}</strong> {{ tenant_currency_symbol or 'AED' }}</td>
+            <td><strong>{{ format_currency(supplier.credit_limit or 0) }}</strong></td>
 
           </tr>
 
@@ -356,7 +356,7 @@
 
             <th><i class="fas fa-shopping-cart text-muted mr-2"></i>إجمالي المشتريات:</th>
 
-            <td class="text-success"><strong>{{ '{:,.2f}'.format(supplier.total_purchases_base or 0) }}</strong> {{ tenant_currency_symbol or 'AED' }}</td>
+            <td class="text-success"><strong>{{ format_currency(supplier.total_purchases_base or 0) }}</strong></td>
 
           </tr>
 
@@ -364,7 +364,7 @@
 
             <th><i class="fas fa-hand-holding-usd text-muted mr-2"></i>المدفوع:</th>
 
-            <td class="text-primary"><strong>{{ '{:,.2f}'.format(supplier.total_paid_base or 0) }}</strong> {{ tenant_currency_symbol or 'AED' }}</td>
+            <td class="text-primary"><strong>{{ format_currency(supplier.total_paid_base or 0) }}</strong></td>
 
           </tr>
 
@@ -508,7 +508,7 @@
 
                 <th>{{ t('Amount') }}</th>
 
-                <th>المبلغ ({{ tenant_currency_symbol or 'AED' }})</th>
+                <th>المبلغ ({{ tenant_currency_symbol }})</th>
 
                 <th>{{ t('Status') }}</th>
 
@@ -530,9 +530,9 @@
 
                 <td><span class="badge badge-info">{{ purchase.currency }}</span></td>
 
-                <td>{{ '{:,.2f}'.format(purchase.total_amount) }}</td>
+                <td>{{ format_currency(purchase.total_amount) }}</td>
 
-                <td class="text-success"><strong>{{ '{:,.2f}'.format(purchase.base_amount) }}</strong></td>
+                <td class="text-success"><strong>{{ format_currency(purchase.base_amount) }}</strong></td>
 
                 <td>
 

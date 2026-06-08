@@ -115,7 +115,7 @@
           {% endif %}
           <td>{{ sale.customer.name if sale.customer else '-' }}</td>
           <td>{{ sale.sale_date.strftime('%Y-%m-%d') }}</td>
-          <td>{{ "{:,.2f}".format(sale.base_amount) }} {{ tenant_currency_symbol or 'AED' }}</td>
+          <td>{{ format_currency(sale.base_amount) }}</td>
           <td>
             {% if sale.exchange_rate and sale.exchange_rate != 1 %}
               <span class="badge badge-info" title="سعر الصرف وقت المعاملة">

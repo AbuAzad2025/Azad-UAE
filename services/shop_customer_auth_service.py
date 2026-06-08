@@ -10,6 +10,7 @@ from flask import session
 from extensions import db
 from models import Customer
 from models.shop_customer_account import ShopCustomerAccount
+from utils.currency_utils import resolve_default_currency
 
 
 class ShopCustomerAuthService:
@@ -187,7 +188,7 @@ class ShopCustomerAuthService:
             return None
         pname = product.get_display_name(lang)
         price = product.regular_price
-        currency = getattr(getattr(store, 'tenant', None), 'default_currency', None) or 'AED'
+        currency = resolve_default_currency(getattr(store, 'tenant', None))
         if lang == 'en':
             text = (
                 f"Hello, I'd like to order from {store.title or 'your store'}:\n"

@@ -215,9 +215,9 @@
         <tr>
           <td>{{ loop.index }}</td>
           <td>{{ line.product.name if line.product else '-' }}</td>
-          <td>{{ "{:,.2f}".format(line.quantity) }}</td>
-          <td>{{ "{:,.2f}".format(line.unit_price) }}</td>
-          <td><strong>{{ "{:,.2f}".format(line.line_total) }}</strong></td>
+          <td>{{ format_currency(line.quantity) }}</td>
+          <td>{{ format_currency(line.unit_price) }}</td>
+          <td><strong>{{ format_currency(line.line_total) }}</strong></td>
         </tr>
         {% endfor %}
       </tbody>
@@ -227,17 +227,17 @@
     <div class="totals">
       <div class="total-line">
         <span>المجموع:</span>
-        <strong>{{ "{:,.2f}".format(sale.subtotal) }} {{ sale.currency }}</strong>
+        <strong>{{ format_currency(sale.subtotal, sale.currency) }}</strong>
       </div>
       {% if sale.tax_amount > 0 %}
       <div class="total-line">
         <span>الضريبة ({{ sale.tax_rate }}%):</span>
-        <strong>{{ "{:,.2f}".format(sale.tax_amount) }} {{ sale.currency }}</strong>
+        <strong>{{ format_currency(sale.tax_amount, sale.currency) }}</strong>
       </div>
       {% endif %}
       <div class="total-line total-final">
         <span>الإجمالي:</span>
-        <strong>{{ "{:,.2f}".format(sale.total_amount) }} {{ sale.currency }}</strong>
+        <strong>{{ format_currency(sale.total_amount, sale.currency) }}</strong>
       </div>
       {% include 'partials/print_unified_amount_qr.html' %}
     </div>

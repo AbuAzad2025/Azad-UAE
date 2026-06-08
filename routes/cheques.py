@@ -13,6 +13,7 @@ from utils.decorators import admin_required, permission_required, branch_scope_i
 from utils.tenanting import get_active_tenant_id
 from utils.branching import should_show_all_branch_columns
 from utils.helpers import create_audit_log, generate_number
+from utils.currency_utils import resolve_default_currency, get_system_default_currency
 from datetime import datetime, timedelta
 from decimal import Decimal
 
@@ -222,9 +223,9 @@ def create():
                 suppliers = _scoped_suppliers_query().order_by(Supplier.name).all()
                 try:
                     from models import Tenant
-                    _dc = (Tenant.get_current().default_currency or '').strip() or 'AED'
+                    _dc = resolve_default_currency()
                 except Exception:
-                    _dc = 'AED'
+                    _dc = get_system_default_currency()
                 exchange_rates = CurrencyService.get_all_rates(_dc)
                 return render_template('cheques/create.html',
                                      customers=customers,
@@ -233,7 +234,7 @@ def create():
             amount = Decimal(str(request.form.get('amount')))
             try:
                 from models import Tenant
-                default_currency = (Tenant.get_current().default_currency or '').strip() or 'AED'
+                default_currency = resolve_default_currency()
             except Exception as e:
                 import sys
                 import traceback
@@ -249,7 +250,7 @@ def create():
                     )
                 except Exception:
                     pass
-                default_currency = 'AED'
+                default_currency = get_system_default_currency()
             currency = request.form.get('currency') or default_currency
             
             # حساب سعر الصرف
@@ -331,9 +332,9 @@ def create():
     
     try:
         from models import Tenant
-        default_currency = (Tenant.get_current().default_currency or '').strip() or 'AED'
+        default_currency = resolve_default_currency()
     except Exception:
-        default_currency = 'AED'
+        default_currency = get_system_default_currency()
     customers = _scoped_customers_query().order_by(Customer.name).all()
     suppliers = _scoped_suppliers_query().order_by(Supplier.name).all()
     exchange_rates = CurrencyService.get_all_rates(default_currency)
@@ -385,7 +386,7 @@ def edit(id):
             cheque.amount = Decimal(str(request.form.get('amount')))
             try:
                 from models import Tenant
-                default_currency = (Tenant.get_current().default_currency or '').strip() or 'AED'
+                default_currency = resolve_default_currency()
             except Exception as e:
                 import sys
                 import traceback
@@ -401,7 +402,7 @@ def edit(id):
                     )
                 except Exception:
                     pass
-                default_currency = 'AED'
+                default_currency = get_system_default_currency()
             cheque.currency = request.form.get('currency') or default_currency
             
             exchange_rate = _resolve_transaction_rate(
@@ -436,9 +437,9 @@ def edit(id):
     
     try:
         from models import Tenant
-        default_currency = (Tenant.get_current().default_currency or '').strip() or 'AED'
+        default_currency = resolve_default_currency()
     except Exception:
-        default_currency = 'AED'
+        default_currency = get_system_default_currency()
     customers = _scoped_customers_query().order_by(Customer.name).all()
     suppliers = _scoped_suppliers_query().order_by(Supplier.name).all()
     exchange_rates = CurrencyService.get_all_rates(default_currency)
@@ -500,9 +501,9 @@ def clear_cheque(id):
         
         try:
             from models import Tenant
-            default_currency = (Tenant.get_current().default_currency or '').strip() or 'AED'
+            default_currency = resolve_default_currency()
         except Exception:
-            default_currency = 'AED'
+            default_currency = get_system_default_currency()
         
         # تأكيد الصرف - هنا تحدث المحاسبة!
         cheque.clear_cheque(clearance_date, clearance_exchange_rate)

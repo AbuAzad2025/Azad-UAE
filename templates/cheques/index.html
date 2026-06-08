@@ -263,7 +263,7 @@
               {% endif %}
             </td>
             <td>
-              <strong>{{ "{:,.2f}".format(cheque.amount) }}</strong>
+              <strong>{{ format_currency(cheque.amount) }}</strong>
               <small class="text-muted">{{ cheque.currency }}</small>
             </td>
             <td>

@@ -86,7 +86,7 @@ class Tenant(db.Model):
     allow_custom_integrations = db.Column(db.Boolean, default=False)
     
     # Preferences - التفضيلات
-    default_currency = db.Column(db.String(3), default='AED')
+    default_currency = db.Column(db.String(3), default='AED')  # TODO: use Config.DEFAULT_CURRENCY
     default_language = db.Column(db.String(10), default='ar')
     timezone = db.Column(db.String(50), default='Asia/Dubai')
     date_format = db.Column(db.String(20), default='%Y-%m-%d')

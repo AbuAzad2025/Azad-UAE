@@ -76,14 +76,14 @@
             <td>{{ item.account.full_name }}</td>
             <td class="text-center">
               {% if item.debit > 0 %}
-                <span class="text-success">{{ "{:,.2f}".format(item.debit) }}</span>
+                <span class="text-success">{{ format_currency(item.debit) }}</span>
               {% else %}
                 <span class="text-muted">-</span>
               {% endif %}
             </td>
             <td class="text-center">
               {% if item.credit > 0 %}
-                <span class="text-danger">{{ "{:,.2f}".format(item.credit) }}</span>
+                <span class="text-danger">{{ format_currency(item.credit) }}</span>
               {% else %}
                 <span class="text-muted">-</span>
               {% endif %}
@@ -94,8 +94,8 @@
         <tfoot class="bg-light">
           <tr>
             <th colspan="2" class="text-center">الإجمالي</th>
-            <th class="text-center text-success">{{ "{:,.2f}".format(total_debit) }}</th>
-            <th class="text-center text-danger">{{ "{:,.2f}".format(total_credit) }}</th>
+            <th class="text-center text-success">{{ format_currency(total_debit) }}</th>
+            <th class="text-center text-danger">{{ format_currency(total_credit) }}</th>
           </tr>
           <tr>
             <th colspan="2" class="text-center">الفرق</th>
@@ -104,7 +104,7 @@
               {% if difference == 0 %}
                 <span class="badge badge-success">متوازن</span>
               {% else %}
-                <span class="badge badge-danger">{{ "{:,.2f}".format(difference) }}</span>
+                <span class="badge badge-danger">{{ format_currency(difference) }}</span>
               {% endif %}
             </th>
           </tr>

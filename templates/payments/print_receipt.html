@@ -153,8 +153,8 @@
       </thead>
       <tbody>
         <tr>
-          <td>المبلغ ({{ receipt.currency or tenant_currency_symbol or 'AED' }})</td>
-          <td>{{ "%.2f"|format(receipt.base_amount) }} {{ receipt.currency or tenant_currency_symbol or 'AED' }}</td>
+          <td>المبلغ ({{ receipt.currency or tenant_currency_symbol }})</td>
+          <td>{{ "%.2f"|format(receipt.base_amount) }} {{ receipt.currency or tenant_currency_symbol }}</td>
         </tr>
         {% if receipt.payment_method %}
         <tr>
@@ -179,14 +179,14 @@
       <tfoot>
         <tr class="total">
           <td>الإجمالي</td>
-          <td>{{ "%.2f"|format(receipt.base_amount) }} {{ receipt.currency or tenant_currency_symbol or 'AED' }}</td>
+          <td>{{ "%.2f"|format(receipt.base_amount) }} {{ receipt.currency or tenant_currency_symbol }}</td>
         </tr>
       </tfoot>
     </table></div>
 
     {% set _payment_words = amount_in_words or (number_to_arabic_words(receipt.base_amount or receipt.amount or 0, receipt.currency or tenant_default_currency or 'AED') if number_to_arabic_words is defined else '') %}
     <div class="ic-3">
-      <strong>المبلغ بالحروف:</strong> {{ _payment_words or ("{:.2f}".format(receipt.base_amount) + " " + (receipt.currency or tenant_currency_symbol or 'AED')) }}
+      <strong>المبلغ بالحروف:</strong> {{ _payment_words or ("{:.2f}".format(receipt.base_amount) + " " + (receipt.currency or tenant_currency_symbol)) }}
     </div>
     {% if qr_data_url %}
     <div class="ic-4">

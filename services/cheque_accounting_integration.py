@@ -74,7 +74,7 @@ class ChequeAccountingIntegration:
         try:
             # تمرير فرق العملة اليدوي إن وُجد (bank_charges غير مدعوم في Cheque حالياً)
             exchange_rate = None
-            if exchange_gain_loss and cheque.currency != 'AED' and cheque.amount:
+            if exchange_gain_loss and cheque.currency and cheque.currency.upper() != get_system_default_currency().upper() and cheque.amount:
                 from decimal import Decimal as D
                 amt_aed = cheque.amount_aed or D('0')
                 target_aed = amt_aed + D(str(exchange_gain_loss))

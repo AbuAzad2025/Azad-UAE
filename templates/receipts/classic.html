@@ -277,10 +277,10 @@
 
     <div class="amount-section">
       <div class="amount-label">المبلغ المستلم</div>
-      <div class="amount-value">{{ "{:,.2f}".format(receipt.base_amount) }} {{ tenant_currency_symbol or 'AED' }}</div>
+      <div class="amount-value">{{ format_currency(receipt.base_amount) }}</div>
       {% if receipt.currency != tenant_default_currency %}
       <div class="ic-4">
-        ({{ "{:,.2f}".format(receipt.amount) }} {{ receipt.currency }})
+        ({{ format_currency(receipt.amount, receipt.currency) }})
       </div>
       {% endif %}
     </div>
@@ -321,7 +321,7 @@
       <h4>تفاصيل الفاتورة</h4>
       <div class="allocation-row">
         <div><strong>{{ source_info.number }}</strong> - {{ source_info.date }}</div>
-        <div class="ic-7">{{ "{:,.2f}".format(receipt.amount) }} {{ receipt.currency }}</div>
+        <div class="ic-7">{{ format_currency(receipt.amount, receipt.currency) }}</div>
       </div>
     </div>
     {% endif %}

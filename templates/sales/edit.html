@@ -35,11 +35,11 @@
               </div>
               <div class="col-md-6">
                 <h5>الإجماليات</h5>
-                <p><strong>المجموع الفرعي:</strong> {{ sale.subtotal }} {{ tenant_currency_symbol or 'AED' }}</p>
-                <p><strong>الضريبة:</strong> {{ sale.tax_amount }} {{ tenant_currency_symbol or 'AED' }}</p>
-                <p><strong>الإجمالي:</strong> {{ sale.total_amount }} {{ tenant_currency_symbol or 'AED' }}</p>
-                <p><strong>المدفوع:</strong> {{ sale.paid_amount }} {{ tenant_currency_symbol or 'AED' }}</p>
-                <p><strong>المتبقي:</strong> {{ sale.balance_due }} {{ tenant_currency_symbol or 'AED' }}</p>
+                <p><strong>المجموع الفرعي:</strong> {{ sale.subtotal }} {{ tenant_currency_symbol }}</p>
+                <p><strong>الضريبة:</strong> {{ sale.tax_amount }} {{ tenant_currency_symbol }}</p>
+                <p><strong>الإجمالي:</strong> {{ sale.total_amount }} {{ tenant_currency_symbol }}</p>
+                <p><strong>المدفوع:</strong> {{ sale.paid_amount }} {{ tenant_currency_symbol }}</p>
+                <p><strong>المتبقي:</strong> {{ sale.balance_due }} {{ tenant_currency_symbol }}</p>
               </div>
             </div>
 
@@ -72,7 +72,7 @@
             <div class="row">
               <div class="col-md-6">
                 <div class="form-group">
-                  <label for="input_discount_amount">الخصم الإضافي ({{ tenant_currency_symbol or 'AED' }})</label>
+                  <label for="input_discount_amount">الخصم الإضافي ({{ tenant_currency_symbol }})</label>
                   <input type="number" name="discount_amount" class="form-control" 
                          value="{{ sale.discount_amount or 0 }}" step="0.01" min="0" id="input_discount_amount" aria-label="discount amount">
                   <small class="text-muted">خصم إضافي على إجمالي الفاتورة</small>

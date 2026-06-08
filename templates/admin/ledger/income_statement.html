@@ -81,13 +81,13 @@
           <tr>
             <td><strong>{{ revenue.code }}</strong></td>
             <td>{{ revenue.full_name }}</td>
-            <td class="text-center text-success">{{ "{:,.2f}".format(abs(balance)) }}</td>
+            <td class="text-center text-success">{{ format_currency(abs(balance)) }}</td>
           </tr>
           {% endif %}
           {% endfor %}
           <tr class="bg-light">
             <th colspan="2" class="text-center">إجمالي الإيرادات</th>
-            <th class="text-center text-success">{{ "{:,.2f}".format(revenues_total) }}</th>
+            <th class="text-center text-success">{{ format_currency(revenues_total) }}</th>
           </tr>
           
           <!-- المصروفات -->
@@ -102,13 +102,13 @@
           <tr>
             <td><strong>{{ expense.code }}</strong></td>
             <td>{{ expense.full_name }}</td>
-            <td class="text-center text-danger">{{ "{:,.2f}".format(balance) }}</td>
+            <td class="text-center text-danger">{{ format_currency(balance) }}</td>
           </tr>
           {% endif %}
           {% endfor %}
           <tr class="bg-light">
             <th colspan="2" class="text-center">إجمالي المصروفات</th>
-            <th class="text-center text-danger">{{ "{:,.2f}".format(expenses_total) }}</th>
+            <th class="text-center text-danger">{{ format_currency(expenses_total) }}</th>
           </tr>
           
           <!-- صافي الدخل -->
@@ -118,9 +118,9 @@
             </th>
             <th class="text-center">
               {% if net_income > 0 %}
-                <span class="text-success">{{ "{:,.2f}".format(net_income) }}</span>
+                <span class="text-success">{{ format_currency(net_income) }}</span>
               {% elif net_income < 0 %}
-                <span class="text-danger">{{ "{:,.2f}".format(net_income) }}</span>
+                <span class="text-danger">{{ format_currency(net_income) }}</span>
               {% else %}
                 <span class="text-white">0.00</span>
               {% endif %}

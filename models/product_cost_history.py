@@ -37,7 +37,7 @@ class ProductCostHistory(db.Model):
     # Unit cost of this movement (for purchases)
     movement_unit_cost = db.Column(db.Numeric(18, 6), nullable=True)
 
-    currency = db.Column(db.String(3), default='AED', nullable=False)
+    currency = db.Column(db.String(3), default='AED', nullable=False)  # TODO: use Config.DEFAULT_CURRENCY
 
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 

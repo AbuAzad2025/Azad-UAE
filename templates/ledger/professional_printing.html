@@ -336,13 +336,13 @@
             </span>
           </td>
           <td class="amount-{{ 'positive' if item.debit > 0 else 'zero' }}">
-            {{ "{:,.2f}".format(item.debit) if item.debit > 0 else '-' }}
+            {{ format_currency(item.debit) if item.debit > 0 else '-' }}
           </td>
           <td class="amount-{{ 'positive' if item.credit > 0 else 'zero' }}">
-            {{ "{:,.2f}".format(item.credit) if item.credit > 0 else '-' }}
+            {{ format_currency(item.credit) if item.credit > 0 else '-' }}
           </td>
           <td class="amount-{{ 'positive' if item.account.get_balance() > 0 else 'negative' if item.account.get_balance() < 0 else 'zero' }}">
-            {{ "{:,.2f}".format(item.account.get_balance()) }}
+            {{ format_currency(item.account.get_balance()) }}
           </td>
         </tr>
         {% endfor %}
@@ -350,14 +350,14 @@
       <tfoot>
         <tr class="ic-1">
           <td colspan="3"><strong>الإجمالي</strong></td>
-          <td>{{ "{:,.2f}".format(total_debit) }}</td>
-          <td>{{ "{:,.2f}".format(total_credit) }}</td>
+          <td>{{ format_currency(total_debit) }}</td>
+          <td>{{ format_currency(total_credit) }}</td>
           <td>
             {% set difference = total_debit - total_credit %}
             {% if difference == 0 %}
               <span class="badge badge-success">متوازن</span>
             {% else %}
-              {{ "{:,.2f}".format(difference) }}
+              {{ format_currency(difference) }}
             {% endif %}
           </td>
         </tr>

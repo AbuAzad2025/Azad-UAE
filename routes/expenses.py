@@ -9,6 +9,7 @@ from services.gl_posting import post_or_fail
 from utils.decorators import permission_required, branch_scope_id
 from utils.branching import should_show_all_branch_columns
 from utils.helpers import create_audit_log, generate_number
+from utils.currency_utils import resolve_default_currency, get_system_default_currency
 from utils.tenanting import tenant_query, tenant_get_or_404, require_active_tenant_id, get_active_tenant_id
 from utils.gl_reference_types import GLRef
 from decimal import Decimal
@@ -89,9 +90,9 @@ def create():
             
             try:
                 from models import Tenant
-                default_currency = (Tenant.get_current().default_currency or '').strip() or 'AED'
+                default_currency = resolve_default_currency()
             except Exception:
-                default_currency = 'AED'
+                default_currency = get_system_default_currency()
             currency = request.form.get('currency') or default_currency
             user_exchange_rate = request.form.get('exchange_rate', type=float)
             
@@ -219,9 +220,9 @@ def create():
                 flash(f'❌ فشل الترحيل المحاسبي: {str(e)}', 'danger')
                 try:
                     from models import Tenant
-                    _dc = (Tenant.get_current().default_currency or '').strip() or 'AED'
+                    _dc = resolve_default_currency()
                 except Exception:
-                    _dc = 'AED'
+                    _dc = get_system_default_currency()
                 return render_template('expenses/create.html',
                                      categories=tenant_query(ExpenseCategory).filter_by(is_active=True).all(),
                                      exchange_rates=CurrencyService.get_all_rates(_dc))
@@ -239,9 +240,9 @@ def create():
     
     try:
         from models import Tenant
-        _dc = (Tenant.get_current().default_currency or '').strip() or 'AED'
+        _dc = resolve_default_currency()
     except Exception:
-        _dc = 'AED'
+        _dc = get_system_default_currency()
     categories = tenant_query(ExpenseCategory).filter_by(is_active=True).all()
     exchange_rates = CurrencyService.get_all_rates(_dc)
     
@@ -302,9 +303,9 @@ def edit(id):
             # تحديث البيانات
             try:
                 from models import Tenant
-                default_currency = (Tenant.get_current().default_currency or '').strip() or 'AED'
+                default_currency = resolve_default_currency()
             except Exception:
-                default_currency = 'AED'
+                default_currency = get_system_default_currency()
             expense.category_id = request.form.get('category_id')
             expense.description = request.form.get('description')
             expense.description_ar = request.form.get('description_ar')

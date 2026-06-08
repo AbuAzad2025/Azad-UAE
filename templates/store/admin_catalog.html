@@ -41,7 +41,7 @@
         <tr>
           <td>{{ row.product.name_ar or row.product.name }}</td>
           <td><code>{{ row.product.sku or '—' }}</code></td>
-          <td>{{ '{:,.2f}'.format(row.product.regular_price) }} AED</td>
+          <td>{{ format_currency(row.product.regular_price, 'AED') }}</td>
           <td>
             {% if row.quantity > 0 %}
             <span class="badge badge-success">{{ '{:,.3f}'.format(row.quantity) }}</span>

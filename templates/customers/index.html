@@ -159,14 +159,14 @@
               {% set balance = customer.get_balance_base() %}
               {% if balance < 0 %}
                 {# رصيد سالب: لنا على العميل (ذمم) => أحمر #}
-                <strong class="text-danger">{{ "{:,.2f}".format(balance) }}</strong>
+                <strong class="text-danger">{{ format_currency(balance) }}</strong>
               {% elif balance > 0 %}
                 {# رصيد موجب: للعميل علينا => أخضر #}
-                <strong class="text-success">{{ "{:,.2f}".format(balance) }}</strong>
+                <strong class="text-success">{{ format_currency(balance) }}</strong>
               {% else %}
                 <span class="text-muted">0.00</span>
               {% endif %}
-              <small class="text-muted">{{ tenant_currency_symbol or 'AED' }}</small>
+              <small class="text-muted">{{ tenant_currency_symbol }}</small>
             </td>
             <td>
               {% if customer.branch_labels %}

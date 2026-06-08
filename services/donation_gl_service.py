@@ -69,7 +69,6 @@ class DonationGLService:
                 description=desc,
                 reference_type=GLRef.DONATION,
                 reference_id=donation.id,
-                currency='AED',
                 exchange_rate=1,
                 tenant_id=tenant_id,
             )

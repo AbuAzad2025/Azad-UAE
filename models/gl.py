@@ -17,7 +17,7 @@ class GLAccount(db.Model):
     parent_id = db.Column(db.Integer, db.ForeignKey('gl_accounts.id'))
     branch_id = db.Column(db.Integer, db.ForeignKey('branches.id'), nullable=True, index=True)
     type = db.Column(db.String(20), nullable=False, index=True)  # asset, liability, equity, revenue, expense
-    currency = db.Column(db.String(3), default='AED', nullable=False)
+    currency = db.Column(db.String(3), default='AED', nullable=False)  # TODO: use Config.DEFAULT_CURRENCY
     is_active = db.Column(db.Boolean, default=True, nullable=False)
     is_header = db.Column(db.Boolean, default=False)  # حساب رئيسي (لا يقبل قيود مباشرة)
     level = db.Column(db.Integer, default=0)  # مستوى الحساب في الشجرة
@@ -95,7 +95,7 @@ class GLJournalEntry(db.Model):
     reference_id = db.Column(db.Integer)
     branch_id = db.Column(db.Integer, db.ForeignKey('branches.id'), nullable=True, index=True) # New Branch ID
     entry_type = db.Column(db.String(30), default='manual')  # manual, auto, adjustment, closing, reversing
-    currency = db.Column(db.String(3), default='AED', nullable=False)
+    currency = db.Column(db.String(3), default='AED', nullable=False)  # TODO: use Config.DEFAULT_CURRENCY
     exchange_rate = db.Column(db.Numeric(15, 6), default=1)
     total_debit = db.Column(db.Numeric(18, 3), default=0)
     total_credit = db.Column(db.Numeric(18, 3), default=0)

@@ -120,7 +120,7 @@
 
           <td>{{ sale.customer.name if sale.customer else '-' }}</td>
 
-          <td><strong>{{ "{:,.2f}".format(sale.total_amount) }} {{ sale.currency }}</strong></td>
+          <td><strong>{{ format_currency(sale.total_amount, sale.currency) }}</strong></td>
 
           <td>
 

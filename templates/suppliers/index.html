@@ -247,12 +247,12 @@
               {{ supplier.country or 'غير محدد' }}
             </td>
             <td class="text-success">
-              <strong>{{ '{:,.2f}'.format(supplier.total_purchases_base or 0) }}</strong> {{ tenant_currency_symbol or 'AED' }}
+              <strong>{{ format_currency(supplier.total_purchases_base or 0) }}</strong>
             </td>
             <td>
               {% set balance = supplier.get_balance_base() %}
               <span class="{% if balance > 0 %}text-danger{% else %}text-success{% endif %}">
-                <strong>{{ '{:,.2f}'.format(balance) }}</strong> {{ tenant_currency_symbol or 'AED' }}
+                <strong>{{ format_currency(balance) }}</strong>
               </span>
             </td>
             <td>

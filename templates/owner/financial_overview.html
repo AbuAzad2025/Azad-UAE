@@ -39,7 +39,7 @@
                                         <span class="info-box-icon bg-success"><i class="fas fa-chart-line"></i></span>
                                         <div class="info-box-content">
                                             <span class="info-box-text">إجمالي المبيعات</span>
-                                            <span class="info-box-number">{{ "%.2f"|format(financial_data.sales_total) }} {{ tenant_currency_symbol or "د.إ" }}</span>
+                                            <span class="info-box-number">{{ "%.2f"|format(financial_data.sales_total) }} {{ tenant_currency_symbol }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -48,7 +48,7 @@
                                         <span class="info-box-icon bg-info"><i class="fas fa-money-bill-wave"></i></span>
                                         <div class="info-box-content">
                                             <span class="info-box-text">المبلغ المدفوع</span>
-                                            <span class="info-box-number">{{ "%.2f"|format(financial_data.sales_paid) }} {{ tenant_currency_symbol or "د.إ" }}</span>
+                                            <span class="info-box-number">{{ "%.2f"|format(financial_data.sales_paid) }} {{ tenant_currency_symbol }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -57,7 +57,7 @@
                                         <span class="info-box-icon bg-warning"><i class="fas fa-shopping-cart"></i></span>
                                         <div class="info-box-content">
                                             <span class="info-box-text">إجمالي المشتريات</span>
-                                            <span class="info-box-number">{{ "%.2f"|format(financial_data.purchases_total) }} {{ tenant_currency_symbol or "د.إ" }}</span>
+                                            <span class="info-box-number">{{ "%.2f"|format(financial_data.purchases_total) }} {{ tenant_currency_symbol }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -66,7 +66,7 @@
                                         <span class="info-box-icon bg-primary"><i class="fas fa-calculator"></i></span>
                                         <div class="info-box-content">
                                             <span class="info-box-text">صافي الإيرادات</span>
-                                            <span class="info-box-number">{{ "%.2f"|format(financial_data.net_revenue) }} {{ tenant_currency_symbol or "د.إ" }}</span>
+                                            <span class="info-box-number">{{ "%.2f"|format(financial_data.net_revenue) }} {{ tenant_currency_symbol }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -80,8 +80,8 @@
                                         </div>
                                         <div class="card-body">
                                             <p><strong>عدد الفواتير:</strong> {{ financial_data.sales_count }}</p>
-                                            <p><strong>إجمالي المبيعات:</strong> {{ "%.2f"|format(financial_data.sales_total) }} {{ tenant_currency_symbol or "د.إ" }}</p>
-                                            <p><strong>المبلغ المدفوع:</strong> {{ "%.2f"|format(financial_data.sales_paid) }} {{ tenant_currency_symbol or "د.إ" }}</p>
+                                            <p><strong>إجمالي المبيعات:</strong> {{ "%.2f"|format(financial_data.sales_total) }} {{ tenant_currency_symbol }}</p>
+                                            <p><strong>المبلغ المدفوع:</strong> {{ "%.2f"|format(financial_data.sales_paid) }} {{ tenant_currency_symbol }}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -92,8 +92,8 @@
                                         </div>
                                         <div class="card-body">
                                             <p><strong>عدد فواتير الشراء:</strong> {{ financial_data.purchases_count }}</p>
-                                            <p><strong>إجمالي المشتريات:</strong> {{ "%.2f"|format(financial_data.purchases_total) }} {{ tenant_currency_symbol or "د.إ" }}</p>
-                                            <p><strong>إجمالي الإيصالات:</strong> {{ "%.2f"|format(financial_data.receipts_total) }} {{ tenant_currency_symbol or "د.إ" }}</p>
+                                            <p><strong>إجمالي المشتريات:</strong> {{ "%.2f"|format(financial_data.purchases_total) }} {{ tenant_currency_symbol }}</p>
+                                            <p><strong>إجمالي الإيصالات:</strong> {{ "%.2f"|format(financial_data.receipts_total) }} {{ tenant_currency_symbol }}</p>
                                         </div>
                                     </div>
                                 </div>

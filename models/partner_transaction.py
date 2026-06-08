@@ -33,7 +33,7 @@ class PartnerTransaction(db.Model):
     amount = db.Column(db.Numeric(15, 3), nullable=False)
     # positive = credit to partner, negative = debit from partner
 
-    currency = db.Column(db.String(3), default='AED')
+    currency = db.Column(db.String(3), default='AED')  # TODO: use Config.DEFAULT_CURRENCY
     exchange_rate = db.Column(db.Numeric(15, 6), default=1)
     amount_base = db.Column(db.Numeric(15, 3), nullable=False)
 

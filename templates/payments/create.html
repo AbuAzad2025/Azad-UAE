@@ -39,7 +39,7 @@
               <option value="" {% if not form_data.get('customer_id') %}selected{% endif %}>بلا</option>
               {% for customer in customers %}
               <option value="{{ customer.id }}" {% if form_data.get('customer_id') and form_data.get('customer_id')|int == customer.id %}selected{% endif %}>
-                {{ customer.name }} - {{ "{:,.2f}".format(customer.get_balance_base()) }} {{ tenant_currency_symbol or 'AED' }}
+                {{ customer.name }} - {{ format_currency(customer.get_balance_base()) }}
               </option>
               {% endfor %}
             </select>
@@ -160,7 +160,7 @@ function loadCustomerSales() {
       data.unpaid_sales.forEach(sale => {
         html += `<tr>
           <td>${sale.sale_number}</td>
-          <td class="text-danger">${sale.balance_due} {{ tenant_currency_symbol or 'AED' }}</td>
+          <td class="text-danger">${sale.balance_due} {{ tenant_currency_symbol }}</td>
         </tr>`;
       });
       html += '</tbody></table></div>';

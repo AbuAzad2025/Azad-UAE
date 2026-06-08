@@ -10,6 +10,7 @@ from utils.gl_reference_types import GLRef
 from utils.branching import ensure_warehouse_access
 from utils.helpers import generate_number, create_audit_log
 from utils.tenanting import get_active_tenant_id
+from utils.currency_utils import resolve_default_currency, get_system_default_currency
 from utils.field_validators import validate_currency_code
 from utils.tax_settings import normalize_tax_rate, should_post_vat_gl
 
@@ -43,9 +44,10 @@ class PurchaseService:
         if not currency:
             try:
                 from models import Tenant
-                currency = (Tenant.get_current().default_currency or '').strip() or 'AED'
+                currency = resolve_default_currency(Tenant.get_current())
             except Exception:
-                currency = 'AED'
+                currency = get_system_default_currency()
+        currency = (currency or '').strip() or get_system_default_currency()
         currency = validate_currency_code(currency)
         # Validate Warehouse
         if not warehouse_id:

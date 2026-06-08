@@ -14,7 +14,7 @@ class Employee(db.Model):
     # Employment Details
     employment_type = db.Column(db.String(20), default='salary') # salary (monthly), daily (miyawama)
     basic_salary = db.Column(db.Numeric(10, 2), default=0) # Monthly salary or Daily rate
-    currency = db.Column(db.String(3), default='AED')
+    currency = db.Column(db.String(3), default='AED')  # TODO: use Config.DEFAULT_CURRENCY
     
     # Branch Link
     branch_id = db.Column(db.Integer, db.ForeignKey('branches.id'), nullable=True)

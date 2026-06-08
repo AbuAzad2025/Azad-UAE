@@ -9,6 +9,7 @@ from services.purchase_service import PurchaseService
 from utils.decorators import permission_required
 from utils.branching import ensure_warehouse_access, get_accessible_warehouses, should_show_all_branch_columns
 from utils.helpers import create_audit_log, generate_number
+from utils.currency_utils import resolve_default_currency, get_system_default_currency
 from decimal import Decimal
 from utils.tenanting import tenant_query, tenant_get_or_404
 from utils.db_safety import atomic_transaction
@@ -90,9 +91,9 @@ def create():
             # Create Purchase via Service
             try:
                 from models import Tenant
-                default_currency = (Tenant.get_current().default_currency or '').strip() or 'AED'
+                default_currency = resolve_default_currency()
             except Exception:
-                default_currency = 'AED'
+                default_currency = get_system_default_currency()
 
             with atomic_transaction('purchase_creation'):
                 purchase = PurchaseService.create_purchase(
@@ -133,9 +134,9 @@ def create():
     try:
         from models import Tenant
         tenant = Tenant.get_current()
-        base_currency = tenant.default_currency if tenant else 'AED'
+        base_currency = resolve_default_currency(tenant)
     except Exception:
-        base_currency = 'AED'
+        base_currency = get_system_default_currency()
     exchange_rates = CurrencyService.get_all_rates(base_currency)
     warehouses = get_accessible_warehouses(current_user)
     

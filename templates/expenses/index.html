@@ -56,7 +56,7 @@
                         <th>الوصف</th>
                         <th>{{ t('Amount') }}</th>
                         <th>{{ t('Currency') }}</th>
-                        <th>{{ t('Amount') }} ({{ tenant_currency_symbol or 'AED' }})</th>
+                        <th>{{ t('Amount') }} ({{ tenant_currency_symbol }})</th>
                         <th>{{ t('Date') }}</th>
                         <th>{{ t('Payment Method') }}</th>
                         <th>الفرع</th>
@@ -70,9 +70,9 @@
                         <td><span class="badge badge-light border">{{ tenant_name_ar or company_name_ar or '-' }}</span></td>
                         <td><span class="badge badge-primary">{{ expense.category.name }}</span></td>
                         <td>{{ expense.description or '-' }}</td>
-                        <td>{{ '{:,.2f}'.format(expense.amount) }}</td>
+                        <td>{{ format_currency(expense.amount) }}</td>
                         <td>{{ expense.currency }}</td>
-                        <td>{{ '{:,.2f}'.format(expense.amount_aed) }}</td>
+                        <td>{{ format_currency(expense.amount_aed) }}</td>
                         <td>{{ expense.expense_date.strftime('%Y-%m-%d') }}</td>
                         <td><span class="badge badge-info">{{ expense.payment_method }}</span></td>
                         <td>

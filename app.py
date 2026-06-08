@@ -23,6 +23,7 @@ from utils.logging_setup import setup_logging
 from utils.monitoring import setup_advanced_logging
 from utils.enhanced_logging import setup_enhanced_logging
 from utils.asset_compression import register_compression_cli
+from utils.currency_utils import resolve_default_currency, get_system_default_currency
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 try:
@@ -226,20 +227,8 @@ def create_app(config_class=Config):
     def utility_processor():
         from utils.helpers import format_currency, timeago
         from utils.number_to_arabic import number_to_arabic_words
-        from utils.constants import CURRENCIES
         from utils.i18n import t, is_rtl, get_current_language
-
-        def get_currency_symbol(code):
-            for c_code, data in CURRENCIES:
-                if c_code == code:
-                    return data.get('symbol', code)
-            return code
-
-        def get_currency_name_ar(code):
-            for c_code, data in CURRENCIES:
-                if c_code == code:
-                    return data.get('ar', code)
-            return code
+        from utils.currency_utils import get_currency_symbol, get_currency_name_ar
 
         tenant_name_ar = ''
         tenant_name = ''
@@ -322,7 +311,7 @@ def create_app(config_class=Config):
             if developer_logo_raw.startswith("static/"):
                 developer_logo_raw = developer_logo_raw[len("static/"):]
             developer_logo = developer_logo_raw or app.config.get('DEVELOPER_LOGO', 'assets/brand/azad/logos/logo.png')
-            system_default_currency = (sys_settings.default_currency or '').strip() or 'AED'
+            system_default_currency = (sys_settings.default_currency or '').strip() or get_system_default_currency()
             system_currency_symbol = (sys_settings.currency_symbol or '').strip() or system_default_currency
             system_currency_position = (sys_settings.currency_position or '').strip() or 'after'
             system_decimal_places = sys_settings.decimal_places if isinstance(sys_settings.decimal_places, int) else 2
@@ -352,8 +341,8 @@ def create_app(config_class=Config):
             developer_website = app.config.get('DEVELOPER_WEBSITE', '')
             developer_whatsapp = app.config.get('DEVELOPER_WHATSAPP', '')
             developer_logo = app.config.get('DEVELOPER_LOGO', 'assets/brand/azad/logos/logo.png')
-            system_default_currency = 'AED'
-            system_currency_symbol = 'AED'
+            system_default_currency = get_system_default_currency()
+            system_currency_symbol = get_system_default_currency()
             system_currency_position = 'after'
             system_decimal_places = 2
             system_enable_tax = True
@@ -434,9 +423,9 @@ def create_app(config_class=Config):
             'tenant_logo_url': tenant_logo_url,
             'tenant_logo_dark_url': tenant_logo_dark_url,
             'tenant_favicon_url': tenant_favicon_url,
-            'tenant_default_currency': tenant_default_currency or system_default_currency,
-            'tenant_currency_symbol': get_currency_symbol(tenant_default_currency or system_default_currency),
-            'tenant_currency_name_ar': get_currency_name_ar(tenant_default_currency or system_default_currency),
+            'tenant_default_currency': tenant_default_currency or system_default_currency or get_system_default_currency(),
+            'tenant_currency_symbol': get_currency_symbol(tenant_default_currency or system_default_currency or get_system_default_currency()),
+            'tenant_currency_name_ar': get_currency_name_ar(tenant_default_currency or system_default_currency or get_system_default_currency()),
             'tenant_enable_tax': tenant_enable_tax if tenant_enable_tax is not None else system_enable_tax,
             'tenant_default_tax_rate': tenant_default_tax_rate if tenant_default_tax_rate is not None else system_default_tax_rate,
             'company_name': tenant_name or 'ERP System',
@@ -516,6 +505,8 @@ def create_app(config_class=Config):
     # Security Headers + Request ID
     @app.after_request
     def add_security_headers(response):
+        if 'charset' not in response.content_type and response.content_type.startswith('text/'):
+            response.headers['Content-Type'] = response.content_type + '; charset=utf-8'
         response.headers['X-Content-Type-Options'] = 'nosniff'
         response.headers['X-Frame-Options'] = 'SAMEORIGIN'
         # Propagate request_id so client logs can correlate with server logs
@@ -568,32 +559,6 @@ def create_app(config_class=Config):
         app.logger.warning(f'Enhanced CLI commands not registered: {e}')
     
     app.logger.info('[OK] Application initialized successfully')
-    
-    # Register Jinja filters for unified currency display
-    @app.template_filter('currency')
-    def currency_filter(value, currency_code=None, decimals=2):
-        """Format a number with the tenant's currency symbol."""
-        from flask import g
-        try:
-            amount = float(value) if value is not None else 0.0
-        except (TypeError, ValueError):
-            amount = 0.0
-        # Try to get tenant currency from g or context
-        if currency_code is None:
-            try:
-                from models import Tenant
-                tenant = Tenant.get_current()
-                currency_code = tenant.default_currency if tenant else 'AED'
-            except Exception:
-                currency_code = 'AED'
-        from utils.constants import CURRENCIES
-        symbol = currency_code
-        for c_code, data in CURRENCIES:
-            if c_code == currency_code:
-                symbol = data.get('symbol', currency_code)
-                break
-        formatted = f'{amount:,.{decimals}f}'
-        return f'{formatted} {symbol}'
     
     return app
 

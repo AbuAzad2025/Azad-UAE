@@ -1,7 +1,6 @@
 from .decorators import permission_required, admin_required, seller_or_above, owner_required
 from .helpers import (
     generate_number,
-    format_currency_display,
     format_currency,
     timeago,
     get_next_number,
@@ -24,7 +23,6 @@ __all__ = [
     'admin_required',
     'seller_or_above',
     'generate_number',
-    'format_currency_display',
     'format_currency',
     'timeago',
     'get_next_number',

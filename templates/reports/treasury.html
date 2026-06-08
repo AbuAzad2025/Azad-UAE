@@ -45,7 +45,7 @@
     <div class="col-md-2">
       <div class="small-box bg-success">
         <div class="inner">
-          <h3>{{ '{:,.2f}'.format(report.liquidity.kind_summary.get('cash', {}).get('total_balance', 0)) }}</h3>
+          <h3>{{ format_currency(report.liquidity.kind_summary.get('cash', {}).get('total_balance', 0)) }}</h3>
           <p>نقدية</p>
         </div>
         <div class="icon"><i class="fas fa-coins"></i></div>
@@ -54,7 +54,7 @@
     <div class="col-md-2">
       <div class="small-box bg-primary">
         <div class="inner">
-          <h3>{{ '{:,.2f}'.format(report.liquidity.kind_summary.get('bank', {}).get('total_balance', 0)) }}</h3>
+          <h3>{{ format_currency(report.liquidity.kind_summary.get('bank', {}).get('total_balance', 0)) }}</h3>
           <p>بنوك</p>
         </div>
         <div class="icon"><i class="fas fa-university"></i></div>
@@ -63,7 +63,7 @@
     <div class="col-md-2">
       <div class="small-box bg-warning">
         <div class="inner">
-          <h3>{{ '{:,.2f}'.format(report.liquidity.kind_summary.get('in_transit', {}).get('total_balance', 0)) }}</h3>
+          <h3>{{ format_currency(report.liquidity.kind_summary.get('in_transit', {}).get('total_balance', 0)) }}</h3>
           <p>تحت التحصيل</p>
         </div>
         <div class="icon"><i class="fas fa-exchange-alt"></i></div>
@@ -72,7 +72,7 @@
     <div class="col-md-2">
       <div class="small-box bg-info">
         <div class="inner">
-          <h3>{{ '{:,.2f}'.format(report.liquidity.kind_summary.get('gateway', {}).get('total_balance', 0)) }}</h3>
+          <h3>{{ format_currency(report.liquidity.kind_summary.get('gateway', {}).get('total_balance', 0)) }}</h3>
           <p>بوابات دفع</p>
         </div>
         <div class="icon"><i class="fas fa-credit-card"></i></div>
@@ -81,7 +81,7 @@
     <div class="col-md-4">
       <div class="small-box bg-dark">
         <div class="inner">
-          <h3>{{ '{:,.2f}'.format(report.liquidity.total_balance) }}</h3>
+          <h3>{{ format_currency(report.liquidity.total_balance) }}</h3>
           <p>الإجمالي (AED)</p>
         </div>
         <div class="icon"><i class="fas fa-wallet"></i></div>
@@ -115,7 +115,7 @@
                 <td>{{ a.code }}</td>
                 <td>{{ a.name }}</td>
                 <td>{{ a.currency }}</td>
-                <td class="text-right font-weight-bold">{{ '{:,.2f}'.format(a.balance_aed) }}</td>
+                <td class="text-right font-weight-bold">{{ format_currency(a.balance_aed) }}</td>
                 <td>{{ 'CashBox' if a.source == 'cash_box' else 'GL' }}</td>
               </tr>
               {% else %}
@@ -135,7 +135,7 @@
         <div class="card-header">
           <h3 class="card-title"><i class="fas fa-arrow-down mr-2"></i> الشيكات الواردة ({{ report.cheques.incoming.total_count }})</h3>
           <div class="card-tools">
-            <span class="badge badge-light">{{ '{:,.2f}'.format(report.cheques.incoming.total_amount) }} AED</span>
+            <span class="badge badge-light">{{ format_currency(report.cheques.incoming.total_amount, 'AED') }}</span>
           </div>
         </div>
         <div class="card-body p-0">
@@ -152,7 +152,7 @@
               <tr class="{{ 'table-danger' if key == 'overdue' else 'table-warning' if key == '0_7_days' else '' }}">
                 <td>{{ bucket.label }}</td>
                 <td>{{ bucket.count }}</td>
-                <td class="text-right font-weight-bold">{{ '{:,.2f}'.format(bucket.total_amount) }}</td>
+                <td class="text-right font-weight-bold">{{ format_currency(bucket.total_amount) }}</td>
               </tr>
               {% endfor %}
             </tbody>
@@ -165,7 +165,7 @@
         <div class="card-header">
           <h3 class="card-title"><i class="fas fa-arrow-up mr-2"></i> الشيكات الصادرة ({{ report.cheques.outgoing.total_count }})</h3>
           <div class="card-tools">
-            <span class="badge badge-light">{{ '{:,.2f}'.format(report.cheques.outgoing.total_amount) }} AED</span>
+            <span class="badge badge-light">{{ format_currency(report.cheques.outgoing.total_amount, 'AED') }}</span>
           </div>
         </div>
         <div class="card-body p-0">
@@ -182,7 +182,7 @@
               <tr class="{{ 'table-danger' if key == 'overdue' else 'table-warning' if key == '0_7_days' else '' }}">
                 <td>{{ bucket.label }}</td>
                 <td>{{ bucket.count }}</td>
-                <td class="text-right font-weight-bold">{{ '{:,.2f}'.format(bucket.total_amount) }}</td>
+                <td class="text-right font-weight-bold">{{ format_currency(bucket.total_amount) }}</td>
               </tr>
               {% endfor %}
             </tbody>
@@ -217,7 +217,7 @@
                 <tr class="{{ 'table-danger' if bkey == 'overdue' else 'table-warning' if bkey == '0_7_days' else '' }}">
                   <td>{{ c.cheque_bank_number or c.cheque_number }}</td>
                   <td>{{ c.bank_name }}</td>
-                  <td class="text-right">{{ '{:,.2f}'.format(c.amount_aed) }}</td>
+                  <td class="text-right">{{ format_currency(c.amount_aed) }}</td>
                   <td>
                     {% if c.days_until_due is not none %}
                       {% if c.days_until_due < 0 %}
@@ -267,9 +267,9 @@
                 <td>{{ r.reconciliation_number }}</td>
                 <td>{{ r.bank_account_code }} - {{ r.bank_account_name or '' }}</td>
                 <td>{{ r.period_start }} إلى {{ r.period_end }}</td>
-                <td class="text-right">{{ '{:,.2f}'.format(r.closing_balance_per_books) }}</td>
-                <td class="text-right">{{ '{:,.2f}'.format(r.closing_balance_per_bank) }}</td>
-                <td class="text-right font-weight-bold">{{ '{:,.2f}'.format(r.difference) }}</td>
+                <td class="text-right">{{ format_currency(r.closing_balance_per_books) }}</td>
+                <td class="text-right">{{ format_currency(r.closing_balance_per_bank) }}</td>
+                <td class="text-right font-weight-bold">{{ format_currency(r.difference) }}</td>
                 <td>
                   <span class="badge badge-{{ 'success' if r.status == 'completed' else 'warning' if r.status == 'draft' else 'info' }}">
                     {{ r.status_ar or r.status }}

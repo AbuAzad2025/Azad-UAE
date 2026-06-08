@@ -47,8 +47,8 @@
           <tr>
             <td>{{ d.period_start }} – {{ d.period_end }}</td>
             <td>{{ d.partner.name }}</td>
-            <td class="text-center">{{ "{:,.2f}".format(d.net_profit or 0) }}</td>
-            <td class="text-center"><strong>{{ "{:,.2f}".format(d.net_due or 0) }}</strong></td>
+            <td class="text-center">{{ format_currency(d.net_profit or 0) }}</td>
+            <td class="text-center"><strong>{{ format_currency(d.net_due or 0) }}</strong></td>
             <td class="text-center">
               <span class="badge bg-{{ {'draft':'secondary','approved':'info','paid':'success','cancelled':'danger'}[d.status] }}">{{ d.status_label }}</span>
             </td>

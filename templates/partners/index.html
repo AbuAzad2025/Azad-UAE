@@ -53,10 +53,10 @@
             <td class="text-center">
               <span class="badge bg-info">{{ "%.2f"|format(p.share_percentage or 0) }}%</span>
             </td>
-            <td class="text-center">{{ "{:,.2f}".format(p.investment_amount or 0) }}</td>
+            <td class="text-center">{{ format_currency(p.investment_amount or 0) }}</td>
             <td class="text-center">
               <strong class="{% if (p.current_balance or 0) >= 0 %}text-success{% else %}text-danger{% endif %}">
-                {{ "{:,.2f}".format(p.current_balance or 0) }}
+                {{ format_currency(p.current_balance or 0) }}
               </strong>
             </td>
             <td>

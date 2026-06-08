@@ -126,14 +126,14 @@
             <td>{{ line.description }}</td>
             <td class="text-center text-success">
               {% if line.debit > 0 %}
-              <strong>{{ "{:,.2f}".format(line.debit) }}</strong>
+              <strong>{{ format_currency(line.debit) }}</strong>
               {% else %}
               -
               {% endif %}
             </td>
             <td class="text-center text-danger">
               {% if line.credit > 0 %}
-              <strong>{{ "{:,.2f}".format(line.credit) }}</strong>
+              <strong>{{ format_currency(line.credit) }}</strong>
               {% else %}
               -
               {% endif %}
@@ -145,10 +145,10 @@
           <tr>
             <th colspan="4" class="text-left">الإجمالي:</th>
             <th class="text-center text-success">
-              {{ "{:,.2f}".format(entry.total_debit) }}
+              {{ format_currency(entry.total_debit) }}
             </th>
             <th class="text-center text-danger">
-              {{ "{:,.2f}".format(entry.total_credit) }}
+              {{ format_currency(entry.total_credit) }}
             </th>
           </tr>
           <tr>
@@ -156,7 +156,7 @@
             <th colspan="2" class="text-center">
               {% set diff = entry.total_debit - entry.total_credit %}
               <span class="badge badge-{{ 'success' if diff|abs < 0.01 else 'danger' }}">
-                {{ "{:,.2f}".format(diff|abs) }}
+                {{ format_currency(diff|abs) }}
               </span>
             </th>
           </tr>

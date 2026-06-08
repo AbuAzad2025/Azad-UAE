@@ -29,7 +29,7 @@ class Purchase(db.Model):
     tax_amount = db.Column(db.Numeric(15, 3), default=0)
     total_amount = db.Column(db.Numeric(15, 3), nullable=False)
     
-    currency = db.Column(db.String(3), default='AED', nullable=False)
+    currency = db.Column(db.String(3), default='AED', nullable=False)  # TODO: use Config.DEFAULT_CURRENCY
     exchange_rate = db.Column(db.Numeric(15, 6), default=1)
     amount_aed = db.Column(db.Numeric(15, 3), nullable=False)
 

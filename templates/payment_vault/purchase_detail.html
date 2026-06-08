@@ -80,7 +80,7 @@
 
                                             <th>السعر:</th>
 
-                                            <td><strong class="ic-3">${{ "{:,.2f}".format(purchase.amount_paid) }}</strong></td>
+                                            <td><strong class="ic-3">{{ format_currency(purchase.amount_paid, 'USD') }}</strong></td>
 
                                         </tr>
 

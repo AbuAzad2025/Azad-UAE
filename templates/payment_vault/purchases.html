@@ -107,7 +107,7 @@
                     <div class="stat-label">إجمالي المشتريات</div>
                 </div>
                 <div class="stat-box">
-                    <div class="stat-number">${{ "{:,.2f}".format(stats.revenue) }}</div>
+                    <div class="stat-number">{{ format_currency(stats.revenue, 'USD') }}</div>
                     <div class="stat-label">المبلغ الإجمالي</div>
                 </div>
                 <div class="stat-box">
@@ -163,7 +163,7 @@
                                         <br><small><i class="fas fa-building"></i> {{ purchase.company_name }}</small>
                                         {% endif %}
                                     </td>
-                                    <td><strong>${{ "{:,.2f}".format(purchase.amount_paid) }}</strong></td>
+                                    <td><strong>{{ format_currency(purchase.amount_paid, 'USD') }}</strong></td>
                                     <td>
                                         {% if purchase.payment_method == 'crypto' %}
                                             <i class="fab fa-bitcoin"></i> عملات رقمية

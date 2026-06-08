@@ -23,7 +23,7 @@
     <div class="card text-center">
       <div class="card-body">
         <h5 class="text-muted">رأس المال</h5>
-        <h3 class="text-primary">{{ "{:,.2f}".format(balance_summary.investment) }}</h3>
+        <h3 class="text-primary">{{ format_currency(balance_summary.investment) }}</h3>
       </div>
     </div>
   </div>
@@ -32,7 +32,7 @@
       <div class="card-body">
         <h5 class="text-muted">الرصيد الجاري</h5>
         <h3 class="{% if balance_summary.current_balance >= 0 %}text-success{% else %}text-danger{% endif %}">
-          {{ "{:,.2f}".format(balance_summary.current_balance) }}
+          {{ format_currency(balance_summary.current_balance) }}
         </h3>
       </div>
     </div>
@@ -41,7 +41,7 @@
     <div class="card text-center">
       <div class="card-body">
         <h5 class="text-muted">إجمالي الأرباح</h5>
-        <h3 class="text-success">{{ "{:,.2f}".format(balance_summary.total_profit) }}</h3>
+        <h3 class="text-success">{{ format_currency(balance_summary.total_profit) }}</h3>
       </div>
     </div>
   </div>
@@ -49,7 +49,7 @@
     <div class="card text-center">
       <div class="card-body">
         <h5 class="text-muted">إجمالي المسحوبات</h5>
-        <h3 class="text-danger">{{ "{:,.2f}".format(balance_summary.total_withdrawals) }}</h3>
+        <h3 class="text-danger">{{ format_currency(balance_summary.total_withdrawals) }}</h3>
       </div>
     </div>
   </div>
@@ -71,10 +71,10 @@
             <span>نسبة الخسارة</span><strong>{{ "%.2f"|format(partner.loss_share_percentage or 0) }}%</strong>
           </li>
           <li class="list-group-item d-flex justify-content-between">
-            <span>مبلغ شهري ثابت</span><strong>{{ "{:,.2f}".format(partner.fixed_monthly_amount or 0) }}</strong>
+            <span>مبلغ شهري ثابت</span><strong>{{ format_currency(partner.fixed_monthly_amount or 0) }}</strong>
           </li>
           <li class="list-group-item d-flex justify-content-between">
-            <span>حد أدنى للربح</span><strong>{{ "{:,.2f}".format(partner.min_profit_threshold or 0) }}</strong>
+            <span>حد أدنى للربح</span><strong>{{ format_currency(partner.min_profit_threshold or 0) }}</strong>
           </li>
         </ul>
       </div>
@@ -108,8 +108,8 @@
             {% for d in latest_distributions %}
             <tr>
               <td>{{ d.period_start }} – {{ d.period_end }}</td>
-              <td>{{ "{:,.2f}".format(d.net_profit or 0) }}</td>
-              <td>{{ "{:,.2f}".format(d.net_due or 0) }}</td>
+              <td>{{ format_currency(d.net_profit or 0) }}</td>
+              <td>{{ format_currency(d.net_due or 0) }}</td>
               <td><span class="badge bg-{{ {'draft':'secondary','approved':'info','paid':'success','cancelled':'danger'}[d.status] }}">{{ d.status_label }}</span></td>
             </tr>
             {% else %}
@@ -131,8 +131,8 @@
             <tr>
               <td>{{ t.transaction_date }}</td>
               <td>{{ t.transaction_type_label }}</td>
-              <td class="{% if t.is_credit %}text-success{% else %}text-danger{% endif %}">{{ "{:,.2f}".format(t.amount_base or 0) }}</td>
-              <td>{{ "{:,.2f}".format(t.balance_after or 0) }}</td>
+              <td class="{% if t.is_credit %}text-success{% else %}text-danger{% endif %}">{{ format_currency(t.amount_base or 0) }}</td>
+              <td>{{ format_currency(t.balance_after or 0) }}</td>
             </tr>
             {% else %}
             <tr><td colspan="4" class="text-center text-muted">لا توجد حركات.</td></tr>

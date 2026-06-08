@@ -77,7 +77,7 @@
             <div class="table-responsive"><table class="table table-sm">
               <tr>
                 <th>المبلغ:</th>
-                <td><strong>{{ "{:,.2f}".format(cheque.amount) }}</strong> {{ cheque.currency }}</td>
+                <td><strong>{{ format_currency(cheque.amount) }}</strong> {{ cheque.currency }}</td>
               </tr>
               <tr>
                 <th>سعر الصرف (الإنشاء):</th>
@@ -86,8 +86,8 @@
                 </td>
               </tr>
               <tr>
-                <th>المبلغ المتوقع ({{ tenant_currency_symbol or 'AED' }}):</th>
-                <td><strong>{{ "{:,.2f}".format(cheque.base_amount) }}</strong> {{ tenant_currency_symbol or 'AED' }}</td>
+                <th>المبلغ المتوقع ({{ tenant_currency_symbol }}):</th>
+                <td><strong>{{ format_currency(cheque.base_amount) }}</strong></td>
               </tr>
               {% if cheque.status == 'cleared' and cheque.clearance_exchange_rate %}
               <tr class="table-success">
@@ -97,15 +97,15 @@
                 </td>
               </tr>
               <tr class="table-success">
-                <th>المبلغ الفعلي ({{ tenant_currency_symbol or 'AED' }}):</th>
-                <td><strong>{{ "{:,.2f}".format(cheque.actual_base_amount) }}</strong> {{ tenant_currency_symbol or 'AED' }}</td>
+                <th>المبلغ الفعلي ({{ tenant_currency_symbol }}):</th>
+                <td><strong>{{ format_currency(cheque.actual_base_amount) }}</strong></td>
               </tr>
               {% if cheque.currency_gain_loss and cheque.currency_gain_loss != 0 %}
               <tr class="{% if cheque.currency_gain_loss > 0 %}table-success{% else %}table-danger{% endif %}">
                 <th>ربح/خسارة العملة:</th>
                 <td>
                   <strong class="{% if cheque.currency_gain_loss > 0 %}text-success{% else %}text-danger{% endif %}">
-                    {% if cheque.currency_gain_loss > 0 %}+{% endif %}{{ "{:,.2f}".format(cheque.currency_gain_loss) }} {{ tenant_currency_symbol or 'AED' }}
+                    {% if cheque.currency_gain_loss > 0 %}+{% endif %}{{ format_currency(cheque.currency_gain_loss) }}
                   </strong>
                 </td>
               </tr>
@@ -325,7 +325,7 @@
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
         <div class="modal-body">
           <p>تأكيد صرف الشيك رقم: <strong>{{ cheque.cheque_bank_number }}</strong></p>
-          <p>المبلغ: <strong>{{ "{:,.2f}".format(cheque.amount) }} {{ cheque.currency }}</strong></p>
+          <p>المبلغ: <strong>{{ format_currency(cheque.amount, cheque.currency) }}</strong></p>
           
           <div class="form-group">
             <label>تاريخ الصرف: <span class="text-danger">*</span></label>
@@ -352,7 +352,7 @@
           <div class="form-group">
             <label>المبلغ المتوقع ({{ tenant_currency_name_ar or 'درهم' }}):</label>
             <input type="text" class="form-control" 
-                   value="{{ "{:,.2f}".format(cheque.base_amount) }} {{ tenant_currency_symbol or 'AED' }}" readonly aria-label="المبلغ المتوقع ({{ tenant_currency_name_ar or 'درهم' }})">
+                   value="{{ format_currency(cheque.base_amount) }}" readonly aria-label="المبلغ المتوقع ({{ tenant_currency_name_ar or 'درهم' }})">
           </div>
           
           <div class="form-group">
@@ -428,7 +428,7 @@
           </div>
           
           <p>إيداع الشيك رقم: <strong>{{ cheque.cheque_bank_number }}</strong></p>
-          <p>المبلغ: <strong>{{ "{:,.2f}".format(cheque.base_amount) }} {{ tenant_currency_symbol or 'AED' }}</strong></p>
+          <p>المبلغ: <strong>{{ format_currency(cheque.base_amount) }}</strong></p>
           
           <div class="form-group">
             <label>تاريخ الإيداع: <span class="text-danger">*</span></label>
@@ -532,7 +532,7 @@ function calculateActualAmount() {
   const difference = actualAmount - originalAmount;
   
   // عرض المبلغ الفعلي
-  $('#actual_amount_preview').val(actualAmount.toFixed(2) + ' {{ tenant_currency_symbol or 'AED' }}');
+  $('#actual_amount_preview').val(actualAmount.toFixed(2) + ' {{ tenant_currency_symbol }}');
   
   // عرض الفرق
   if (Math.abs(difference) > 0.01) {
@@ -541,10 +541,10 @@ function calculateActualAmount() {
     
     if (difference > 0) {
       $gainLoss.removeClass('alert-danger').addClass('alert-success').show();
-      $amount.html('<span class="text-success">+' + difference.toFixed(2) + ' {{ tenant_currency_symbol or 'AED' }} (ربح)</span>');
+      $amount.html('<span class="text-success">+' + difference.toFixed(2) + ' {{ tenant_currency_symbol }} (ربح)</span>');
     } else {
       $gainLoss.removeClass('alert-success').addClass('alert-danger').show();
-      $amount.html('<span class="text-danger">' + difference.toFixed(2) + ' {{ tenant_currency_symbol or 'AED' }} (خسارة)</span>');
+      $amount.html('<span class="text-danger">' + difference.toFixed(2) + ' {{ tenant_currency_symbol }} (خسارة)</span>');
     }
   } else {
     $('#gain_loss_preview').hide();

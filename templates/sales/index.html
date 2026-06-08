@@ -417,7 +417,7 @@ a.btn.btn-warning span {
 
             <td>
 
-              <strong class="ic-3">{{ "{:,.2f}".format(sale.total_amount) }}</strong>
+              <strong class="ic-3">{{ format_currency(sale.total_amount) }}</strong>
 
               <small class="text-muted">{{ sale.currency }}</small>
 
@@ -425,7 +425,7 @@ a.btn.btn-warning span {
 
             <td>
 
-              <strong class="text-success">{{ "{:,.2f}".format(sale.paid_amount) }}</strong>
+              <strong class="text-success">{{ format_currency(sale.paid_amount) }}</strong>
 
               {% set payment_percent = (sale.paid_amount / sale.total_amount * 100) if sale.total_amount > 0 else 0 %}
 
@@ -441,7 +441,7 @@ a.btn.btn-warning span {
 
               {% if sale.balance_due > 0 %}
 
-                <strong class="text-danger">{{ "{:,.2f}".format(sale.balance_due) }}</strong>
+                <strong class="text-danger">{{ format_currency(sale.balance_due) }}</strong>
 
               {% else %}
 

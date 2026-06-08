@@ -15,8 +15,8 @@
   </div>
   
 <div class="row">
-<div class="col-md-6"><div class="card bg-gradient-success"><div class="card-body"><h4>التنبؤ للشهر القادم</h4><h2>{{ "%.0f"|format(forecast.next_month) }} {{ tenant_currency_symbol or 'AED' }}</h2><p>الثقة: {{ forecast.confidence }}</p></div></div></div>
-<div class="col-md-6"><div class="card bg-gradient-info"><div class="card-body"><h4>التنبؤ لـ 3 أشهر</h4><h2>{{ "%.0f"|format(forecast.next_3_months) }} {{ tenant_currency_symbol or 'AED' }}</h2><p>الثقة: {{ forecast.confidence }}</p></div></div></div>
+<div class="col-md-6"><div class="card bg-gradient-success"><div class="card-body"><h4>التنبؤ للشهر القادم</h4><h2>{{ "%.0f"|format(forecast.next_month) }} {{ tenant_currency_symbol }}</h2><p>الثقة: {{ forecast.confidence }}</p></div></div></div>
+<div class="col-md-6"><div class="card bg-gradient-info"><div class="card-body"><h4>التنبؤ لـ 3 أشهر</h4><h2>{{ "%.0f"|format(forecast.next_3_months) }} {{ tenant_currency_symbol }}</h2><p>الثقة: {{ forecast.confidence }}</p></div></div></div>
 </div>
 <div class="card"><div class="card-header"><h3>البيانات التاريخية</h3></div><div class="card-body"><canvas id="forecastChart" height="80"></canvas></div></div>
 </div>

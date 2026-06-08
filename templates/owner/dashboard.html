@@ -105,7 +105,7 @@
     <div class="small-box bg-gradient-danger shadow">
       <div class="inner">
         <h3>{{ "{:,.0f}".format(stats.year_sales_amount|default(0)) }}</h3>
-        <p><i class="fas fa-money-bill-wave mr-1"></i> الإيرادات ({{ tenant_currency_symbol or 'AED' }})</p>
+        <p><i class="fas fa-money-bill-wave mr-1"></i> الإيرادات ({{ tenant_currency_symbol }})</p>
       </div>
       <div class="icon"><i class="fas fa-coins"></i></div>
       {% if current_user.has_permission('view_reports') %}
@@ -151,24 +151,24 @@
                     <small class="text-muted">{{ branch.code }}</small>
                   </td>
                   <td class="text-center">
-                    <span class="text-success font-weight-bold">{{ "{:,.2f}".format(branch.total_sales_amount) }} {{ tenant_currency_symbol or 'AED' }}</span>
+                    <span class="text-success font-weight-bold">{{ format_currency(branch.total_sales_amount) }}</span>
                     <br>
                     <small class="text-muted">{{ branch.total_sales_count }} فاتورة</small>
                   </td>
                   <td class="text-center">
-                    <span class="text-info">{{ "{:,.2f}".format(branch.month_sales_amount) }} {{ tenant_currency_symbol or 'AED' }}</span>
+                    <span class="text-info">{{ format_currency(branch.month_sales_amount) }}</span>
                   </td>
                   <td class="text-center">
-                    <span class="text-danger">{{ "{:,.2f}".format(branch.total_expenses) }} {{ tenant_currency_symbol or 'AED' }}</span>
+                    <span class="text-danger">{{ format_currency(branch.total_expenses) }}</span>
                   </td>
                   <td class="text-center">
-                    <span class="text-secondary">{{ "{:,.2f}".format(branch.inventory_value|default(0)) }} {{ tenant_currency_symbol or 'AED' }}</span>
+                    <span class="text-secondary">{{ format_currency(branch.inventory_value|default(0)) }}</span>
                   </td>
                   <td class="text-center">
                     {% if branch.net_profit_indicator >= 0 %}
-                      <span class="badge badge-success p-2">{{ "{:,.2f}".format(branch.net_profit_indicator) }} {{ tenant_currency_symbol or 'AED' }}</span>
+                      <span class="badge badge-success p-2">{{ format_currency(branch.net_profit_indicator) }}</span>
                     {% else %}
-                      <span class="badge badge-danger p-2">{{ "{:,.2f}".format(branch.net_profit_indicator) }} {{ tenant_currency_symbol or 'AED' }}</span>
+                      <span class="badge badge-danger p-2">{{ format_currency(branch.net_profit_indicator) }}</span>
                     {% endif %}
                   </td>
                   <td class="text-center">
@@ -453,7 +453,7 @@
     <div class="info-box shadow-sm">
       <span class="info-box-icon bg-danger"><i class="fas fa-coins"></i></span>
       <div class="info-box-content">
-        <span class="info-box-text">الإيرادات ({{ tenant_currency_symbol or 'AED' }})</span>
+        <span class="info-box-text">الإيرادات ({{ tenant_currency_symbol }})</span>
         <span class="info-box-number">{{ "{:,.0f}".format(stats.year_sales_amount|default(0)) }}</span>
       </div>
     </div>
@@ -466,7 +466,7 @@
     <div class="small-box bg-info">
       <div class="inner">
         <h3>{{ "{:,.0f}".format(stats.total_receivables|default(0)) }}</h3>
-        <p>إجمالي المستحقات ({{ tenant_currency_symbol or 'AED' }})</p>
+        <p>إجمالي المستحقات ({{ tenant_currency_symbol }})</p>
       </div>
       <div class="icon"><i class="fas fa-file-invoice-dollar"></i></div>
     </div>
@@ -484,7 +484,7 @@
     <div class="small-box bg-secondary">
       <div class="inner">
         <h3>{{ "{:,.0f}".format(stats.inventory_value|default(0)) }}</h3>
-        <p>قيمة المخزون ({{ tenant_currency_symbol or 'AED' }})</p>
+        <p>قيمة المخزون ({{ tenant_currency_symbol }})</p>
       </div>
       <div class="icon"><i class="fas fa-boxes"></i></div>
     </div>
@@ -501,14 +501,14 @@
       <div class="card-body p-0">
         <div class="table-responsive">
           <table class="table table-sm table-hover mb-0">
-            <thead><tr><th>المنتج</th><th class="text-center">الكمية</th><th class="text-center">الإيراد ({{ tenant_currency_symbol or 'AED' }})</th></tr></thead>
+            <thead><tr><th>المنتج</th><th class="text-center">الكمية</th><th class="text-center">الإيراد ({{ tenant_currency_symbol }})</th></tr></thead>
             <tbody>
               {% if stats.top_products %}
                 {% for p in stats.top_products %}
                 <tr>
                   <td>{{ p.name }}</td>
                   <td class="text-center">{{ p.quantity or 0 }}</td>
-                  <td class="text-center">{{ "{:,.2f}".format(p.revenue or 0) }}</td>
+                  <td class="text-center">{{ format_currency(p.revenue or 0) }}</td>
                 </tr>
                 {% endfor %}
               {% else %}

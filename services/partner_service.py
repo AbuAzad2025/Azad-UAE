@@ -271,7 +271,7 @@ class PartnerService:
         partner_id: int,
         transaction_type: str,
         amount: Decimal,
-        currency: str = 'AED',
+        currency: str = None,
         exchange_rate: Decimal = Decimal('1'),
         notes: str = '',
         created_by: Optional[int] = None,
@@ -279,7 +279,10 @@ class PartnerService:
     ) -> Optional[int]:
         """Record a manual transaction and update partner balance."""
         from models import Partner, PartnerTransaction
+        from utils.currency_utils import get_system_default_currency
 
+        if not currency:
+            currency = get_system_default_currency()
         partner = Partner.query.get(partner_id)
         if not partner:
             return None

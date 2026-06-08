@@ -315,7 +315,7 @@
 
                 </td>
 
-                <td class="text-center">{{ "{:,.2f}".format(line.unit_price) }}</td>
+                <td class="text-center">{{ format_currency(line.unit_price) }}</td>
 
                 <td class="text-center">
 
@@ -333,7 +333,7 @@
 
                 <td class="text-center">
 
-                  <strong class="ic-2">{{ "{:,.2f}".format(line.line_total) }}</strong>
+                  <strong class="ic-2">{{ format_currency(line.line_total) }}</strong>
 
                 </td>
 
@@ -401,7 +401,7 @@
 
                 <td>{{ payment.payment_date.strftime('%Y-%m-%d') }}</td>
 
-                <td><strong class="text-success">{{ "{:,.2f}".format(payment.base_amount) }} {{ tenant_currency_symbol or 'AED' }}</strong></td>
+                <td><strong class="text-success">{{ format_currency(payment.base_amount) }}</strong></td>
 
                 <td>
 
@@ -545,7 +545,7 @@
 
             <span>المجموع الفرعي:</span>
 
-            <strong>{{ "{:,.2f}".format(sale.subtotal) }}</strong>
+            <strong>{{ format_currency(sale.subtotal) }}</strong>
 
           </div>
 
@@ -557,7 +557,7 @@
 
             <span><i class="fas fa-tag text-danger mr-1"></i>الخصم:</span>
 
-            <strong class="text-danger">-{{ "{:,.2f}".format(sale.discount_amount) }}</strong>
+            <strong class="text-danger">-{{ format_currency(sale.discount_amount) }}</strong>
 
           </div>
 
@@ -571,7 +571,7 @@
 
             <span><i class="fas fa-truck text-info mr-1"></i>الشحن:</span>
 
-            <strong class="text-info">+{{ "{:,.2f}".format(sale.shipping_cost) }}</strong>
+            <strong class="text-info">+{{ format_currency(sale.shipping_cost) }}</strong>
 
           </div>
 
@@ -585,7 +585,7 @@
 
             <span><i class="fas fa-percent text-warning mr-1"></i>الضريبة:</span>
 
-            <strong class="text-warning">+{{ "{:,.2f}".format(sale.tax_amount) }}</strong>
+            <strong class="text-warning">+{{ format_currency(sale.tax_amount) }}</strong>
 
           </div>
 
@@ -605,7 +605,7 @@
 
           <strong class="ic-2">
 
-            {{ "{:,.2f}".format(sale.total_amount) }} {{ sale.currency }}
+            {{ format_currency(sale.total_amount, sale.currency) }}
 
           </strong>
 
@@ -619,7 +619,7 @@
 
           <span>بال{{ tenant_currency_name_ar or 'درهم' }}:</span>
 
-          <strong>{{ "{:,.2f}".format(sale.base_amount) }} {{ tenant_currency_symbol or 'AED' }}</strong>
+          <strong>{{ format_currency(sale.base_amount) }}</strong>
 
         </div>
 
@@ -631,7 +631,7 @@
 
           <span><i class="fas fa-check-circle text-success mr-1"></i>المدفوع المؤكد:</span>
 
-          <strong class="text-success">{{ "{:,.2f}".format(sale.paid_amount) }} {{ sale.currency or tenant_currency_symbol or 'AED' }}</strong>
+          <strong class="text-success">{{ format_currency(sale.paid_amount, sale.currency) }}</strong>
 
         </div>
 
@@ -643,7 +643,7 @@
 
           <span><i class="fas fa-hourglass-half text-warning mr-1"></i>شيكات معلقة:</span>
 
-          <strong class="text-warning">{{ "{:,.2f}".format(sale.pending_cheques_amount) }} {{ tenant_currency_symbol or 'AED' }}</strong>
+          <strong class="text-warning">{{ format_currency(sale.pending_cheques_amount) }}</strong>
 
         </div>
 
@@ -663,7 +663,7 @@
 
           <strong class="text-danger ic-4">
 
-            {{ "{:,.2f}".format(sale.balance_due) }} {{ tenant_currency_symbol or 'AED' }}
+            {{ format_currency(sale.balance_due) }}
 
           </strong>
 

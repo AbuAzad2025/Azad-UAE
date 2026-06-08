@@ -116,10 +116,10 @@ def calculate_vat(amount, vat_rate):
     return (amount * vat_rate / Decimal('100')).quantize(Decimal('0.01'))
 
 
-def format_currency_display(amount, currency=None, lang='ar'):
+def format_currency(amount, currency=None, lang='ar'):
     if not amount:
         return '0.00'
-    
+
     try:
         if isinstance(amount, (int, float)):
             amount = Decimal(str(amount))
@@ -137,7 +137,7 @@ def format_currency_display(amount, currency=None, lang='ar'):
             settings_decimals = getattr(settings, "decimal_places", None)
         except Exception:
             pass
-        # Tenant-aware fallback
+
         try:
             from models.tenant import Tenant
             tenant = Tenant.get_current()
@@ -146,23 +146,12 @@ def format_currency_display(amount, currency=None, lang='ar'):
         except Exception:
             pass
 
-        currency = (currency or settings_currency or 'AED').upper()
+        from utils.currency_utils import get_system_default_currency, get_currency_symbol
+        currency = (currency or settings_currency or get_system_default_currency()).upper()
         decimals = settings_decimals if isinstance(settings_decimals, int) and settings_decimals >= 0 else 2
         formatted = f'{amount:,.{decimals}f}'
 
-        symbols = {
-            'AED': 'د.إ',
-            'USD': '$',
-            'EUR': '€',
-            'GBP': '£',
-            'SAR': 'ر.س',
-            'KWD': 'د.ك',
-            'QAR': 'ر.ق',
-            'OMR': 'ر.ع',
-            'BHD': 'د.ب',
-            'ILS': '₪',
-        }
-        symbol = settings_symbol if settings_currency == currency and settings_symbol else symbols.get(currency, currency)
+        symbol = settings_symbol if settings_currency == currency and settings_symbol else get_currency_symbol(currency)
         position = settings_position if settings_currency == currency and settings_position else None
         if position not in ('before', 'after'):
             position = 'after' if lang == 'ar' else 'before'
@@ -170,14 +159,9 @@ def format_currency_display(amount, currency=None, lang='ar'):
         if position == 'before':
             return f'{symbol} {formatted}'
         return f'{formatted} {symbol}'
-    
+
     except Exception:
         return str(amount)
-
-
-def format_currency(amount, currency=None, lang='ar'):
-    """Alias for format_currency_display to maintain backward compatibility"""
-    return format_currency_display(amount, currency, lang)
 
 
 def timeago(date):

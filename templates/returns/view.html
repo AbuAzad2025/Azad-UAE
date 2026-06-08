@@ -80,8 +80,8 @@
             <tr>
               <td>{{ line.product.name if line.product else '-' }}</td>
               <td>{{ line.quantity }}</td>
-              <td>{{ "{:,.2f}".format(line.unit_price or 0) }}</td>
-              <td>{{ "{:,.2f}".format(line.line_total or 0) }}</td>
+              <td>{{ format_currency(line.unit_price or 0) }}</td>
+              <td>{{ format_currency(line.line_total or 0) }}</td>
               <td>{{ line.condition or '-' }}</td>
               <td>{{ line.notes or '-' }}</td>
             </tr>
@@ -100,13 +100,13 @@
       <div class="card-body">
         <dl class="row">
           <dt class="col-6">الإجمالي:</dt>
-          <dd class="col-6 text-left">{{ "{:,.2f}".format(product_return.total_amount or 0) }} {{ product_return.currency }}</dd>
+          <dd class="col-6 text-left">{{ format_currency(product_return.total_amount or 0, product_return.currency) }}</dd>
 
           <dt class="col-6">سعر الصرف:</dt>
           <dd class="col-6 text-left">{{ "{:,.6f}".format(product_return.exchange_rate or 1) }}</dd>
 
-          <dt class="col-6">({{ tenant_currency_symbol or 'AED' }}):</dt>
-          <dd class="col-6 text-left">{{ "{:,.2f}".format(product_return.base_amount or 0) }}</dd>
+          <dt class="col-6">({{ tenant_currency_symbol }}):</dt>
+          <dd class="col-6 text-left">{{ format_currency(product_return.base_amount or 0) }}</dd>
         </dl>
       </div>
     </div>

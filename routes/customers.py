@@ -10,6 +10,7 @@ from services.payment_service import PaymentService
 from decimal import Decimal
 from datetime import datetime
 from utils.tenanting import get_active_tenant_id, tenant_query, tenant_get_or_404, assert_tenant_record
+from utils.currency_utils import resolve_default_currency, get_system_default_currency
 
 customers_bp = Blueprint('customers', __name__, url_prefix='/customers')
 
@@ -291,9 +292,9 @@ def create():
             from utils.field_validators import normalize_phone_optional, validate_currency_code
             try:
                 from models import Tenant
-                default_currency = (Tenant.get_current().default_currency or '').strip() or 'AED'
+                default_currency = resolve_default_currency()
             except Exception:
-                default_currency = 'AED'
+                default_currency = get_system_default_currency()
 
             # Check tenant customer limit
             try:
@@ -374,9 +375,9 @@ def edit(id):
             from utils.field_validators import normalize_phone_optional, validate_currency_code
             try:
                 from models import Tenant
-                default_currency = (Tenant.get_current().default_currency or '').strip() or 'AED'
+                default_currency = resolve_default_currency()
             except Exception:
-                default_currency = 'AED'
+                default_currency = get_system_default_currency()
 
             customer.phone = normalize_phone_optional(request.form.get('phone'))
             customer.email = request.form.get('email')
@@ -469,9 +470,9 @@ def statement(id):
     
     try:
         from models import Tenant
-        default_currency = (Tenant.get_current().default_currency or '').strip() or 'AED'
+        default_currency = resolve_default_currency()
     except Exception:
-        default_currency = 'AED'
+        default_currency = get_system_default_currency()
     
     date_from = request.args.get('date_from', type=str)
     date_to = request.args.get('date_to', type=str)
@@ -702,9 +703,9 @@ def customer_balance(id):
         return jsonify({'error': 'forbidden'}), 403
     try:
         from models import Tenant
-        default_currency = (Tenant.get_current().default_currency or '').strip() or 'AED'
+        default_currency = resolve_default_currency()
     except Exception:
-        default_currency = 'AED'
+        default_currency = get_system_default_currency()
     return jsonify({
         'balance_aed': float(_get_customer_balance(id)),
         'balance': float(_get_customer_balance(id)),

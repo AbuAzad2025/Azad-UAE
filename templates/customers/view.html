@@ -39,12 +39,12 @@
           <li class="list-group-item">
             <b>{{ t('Balance') }}</b>
             <span class="float-left {% if customer.get_balance_base() < 0 %}text-danger{% elif customer.get_balance_base() > 0 %}text-success{% else %}text-muted{% endif %}">
-              {{ "{:,.2f}".format(customer.get_balance_base()) }} {{ tenant_currency_symbol or 'AED' }}
+              {{ format_currency(customer.get_balance_base()) }}
             </span>
           </li>
           <li class="list-group-item">
             <b>إجمالي المشتريات</b>
-            <span class="float-left">{{ "{:,.2f}".format(customer.total_purchases) }} {{ tenant_currency_symbol or 'AED' }}</span>
+            <span class="float-left">{{ format_currency(customer.total_purchases) }}</span>
           </li>
         </ul>
         {% if customer.balance < 0 %}
@@ -105,9 +105,9 @@
               <td><a href="{{ url_for('sales.view', id=sale.id) }}">{{ sale.sale_number }}</a></td>
               {% endif %}
               <td>{{ sale.sale_date.strftime('%Y-%m-%d') }}</td>
-              <td>{{ "{:,.2f}".format(sale.total_amount) }} {{ sale.currency }}</td>
-              <td>{{ "{:,.2f}".format(sale.paid_amount) }}</td>
-              <td class="text-danger">{{ "{:,.2f}".format(sale.balance_due) }}</td>
+              <td>{{ format_currency(sale.total_amount, sale.currency) }}</td>
+              <td>{{ format_currency(sale.paid_amount) }}</td>
+              <td class="text-danger">{{ format_currency(sale.balance_due) }}</td>
             </tr>
             {% endfor %}
           </tbody>

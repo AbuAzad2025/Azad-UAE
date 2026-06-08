@@ -10,6 +10,7 @@ from services.commission_gl_service import post_sale_commissions
 from services.gl_service import GLService
 from utils.branching import ensure_warehouse_access
 from utils.constants import normalize_payment_method_code
+from utils.currency_utils import resolve_default_currency, get_system_default_currency
 from utils.field_validators import (
     canonical_payment_type,
     validate_currency_code,
@@ -46,9 +47,10 @@ class SaleService:
         if not currency:
             try:
                 from models import Tenant
-                currency = (Tenant.get_current().default_currency or '').strip() or 'AED'
+                currency = resolve_default_currency(Tenant.get_current())
             except Exception:
-                currency = 'AED'
+                currency = get_system_default_currency()
+        currency = (currency or '').strip() or get_system_default_currency()
         currency = validate_currency_code(currency)
 
         # Validate discount and tax (rate finalized after tenant/warehouse resolved)
@@ -266,7 +268,7 @@ class SaleService:
             # Handle payment if provided
             if payment_data:
                 paid_amount = Decimal(str(payment_data.get('amount', 0)))
-                payment_currency = payment_data.get('currency', 'AED')
+                payment_currency = payment_data.get('currency', get_system_default_currency())
                 payment_exchange_rate = payment_data.get('exchange_rate', 1.0)
                 
                 # Convert payment to AED
@@ -289,9 +291,10 @@ class SaleService:
                     payment_note = f"\n[دفع زائد] مبلغ {overpayment} AED سُجّل كرصيد للزبون"
                     sale.notes = (sale.notes or '') + payment_note
                 
-                # Add payment currency info to notes if not AED
-                if payment_currency != 'AED':
-                    payment_note = f"\n[دفعة] {paid_amount} {payment_currency} = {paid_amount_aed} AED (سعر: {payment_exchange_rate})"
+                # Add payment currency info to notes if not default
+                default_curr = get_system_default_currency()
+                if payment_currency.upper() != default_curr.upper():
+                    payment_note = f"\n[دفعة] {paid_amount} {payment_currency} = {paid_amount_aed} {default_curr} (سعر: {payment_exchange_rate})"
                     sale.notes = (sale.notes or '') + payment_note
             
             sale.calculate_totals()
@@ -367,10 +370,10 @@ class SaleService:
                 payment_note = f"\n[دفع زائد] مبلغ {overpayment} AED سُجّل كرصيد للزبون"
                 sale.notes = (sale.notes or '') + payment_note
 
-            payment_currency = payment_data.get('currency', 'AED')
-            if payment_currency != 'AED':
+            payment_currency = payment_data.get('currency', get_system_default_currency())
+            if payment_currency.upper() != get_system_default_currency().upper():
                 payment_note = (
-                    f"\n[دفعة] {paid_amount} {payment_currency} = {paid_aed} AED "
+                    f"\n[دفعة] {paid_amount} {payment_currency} = {paid_aed} {get_system_default_currency()} "
                     f"(سعر: {payment_exchange_rate})"
                 )
                 sale.notes = (sale.notes or '') + payment_note
@@ -379,7 +382,7 @@ class SaleService:
                 sale=sale,
                 amount=payment_data['amount'],
                 payment_method=payment_data['payment_method'],
-                currency=payment_data.get('currency', 'AED'),
+                currency=payment_data.get('currency', get_system_default_currency()),
                 exchange_rate=payment_data.get('exchange_rate', 1.0),
                 reference_number=payment_data.get('reference_number'),
                 cheque_number=payment_data.get('cheque_number'),
@@ -471,7 +474,6 @@ class SaleService:
                 description=f'COGS - Sale {sale.sale_number}',
                 reference_type=GLRef.SALE_COGS,
                 reference_id=sale.id,
-                currency='AED',
                 exchange_rate=1.0,
                 branch_id=sale.branch_id,
             )
@@ -493,7 +495,7 @@ class SaleService:
         ).first() is not None
     
     @staticmethod
-    def create_payment_for_sale(sale, amount, payment_method, currency='AED', exchange_rate=1.0,
+    def create_payment_for_sale(sale, amount, payment_method, currency=None, exchange_rate=1.0,
                                 reference_number=None, cheque_number=None, cheque_date=None, 
                                 bank_name=None, notes=None):
         """
@@ -509,6 +511,8 @@ class SaleService:
             raise ValueError('مبلغ الدفع يجب أن يكون أكبر من صفر')
         
         payment_method = validate_payment_method(payment_method)
+        if not currency:
+            currency = get_system_default_currency()
         currency = validate_currency_code(currency)
         
         # Validate cheque details if payment method is cheque

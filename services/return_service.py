@@ -365,7 +365,6 @@ class ReturnService:
                     description=f'Sales Return COGS {product_return.return_number} for Sale {sale.sale_number}',
                     reference_type=GLRef.PRODUCT_RETURN,
                     reference_id=product_return.id,
-                    currency='AED',
                     exchange_rate=1.0,
                     branch_id=product_return.branch_id,
                     user_id=processed_by,

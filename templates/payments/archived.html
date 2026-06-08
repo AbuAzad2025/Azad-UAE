@@ -98,11 +98,11 @@
 
           <td>
 
-            <strong>{{ "{:,.2f}".format(item.amount) }} {{ item.currency }}</strong>
+            <strong>{{ format_currency(item.amount, item.currency) }}</strong>
 
             {% if item.currency != tenant_default_currency %}
 
-              <br><small class="text-muted">{{ "{:,.2f}".format(item.base_amount) }} {{ tenant_currency_symbol or 'AED' }}</small>
+              <br><small class="text-muted">{{ format_currency(item.base_amount) }}</small>
 
             {% endif %}
 

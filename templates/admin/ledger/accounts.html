@@ -70,7 +70,7 @@
             <td>
               {% set balance = account.get_balance() %}
               <span class="badge badge-{{ 'success' if balance > 0 else 'danger' if balance < 0 else 'secondary' }}">
-                {{ "{:,.2f}".format(balance) }}
+                {{ format_currency(balance) }}
               </span>
             </td>
             <td>

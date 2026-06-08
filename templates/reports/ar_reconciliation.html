@@ -41,8 +41,8 @@
         <tr>
           <th>كود الحساب</th>
           <th>الوصف</th>
-          <th class="text-left">رصيد GL ({{ tenant_currency_symbol or 'AED' }})</th>
-          <th class="text-left">ذمم تشغيلية — فواتير غير مدفوعة ({{ tenant_currency_symbol or 'AED' }})</th>
+          <th class="text-left">رصيد GL ({{ tenant_currency_symbol }})</th>
+          <th class="text-left">ذمم تشغيلية — فواتير غير مدفوعة ({{ tenant_currency_symbol }})</th>
           <th class="text-left">الفرق (GL − تشغيلي)</th>
           <th class="text-center">الحالة</th>
         </tr>
@@ -52,10 +52,10 @@
         <tr>
           <td><code>{{ row.code }}</code></td>
           <td>{{ row.label }}</td>
-          <td class="text-left">{{ '{:,.2f}'.format(row.gl_balance) }}</td>
-          <td class="text-left">{{ '{:,.2f}'.format(row.ops_balance) }}</td>
+          <td class="text-left">{{ format_currency(row.gl_balance) }}</td>
+          <td class="text-left">{{ format_currency(row.ops_balance) }}</td>
           <td class="text-left {% if row.difference|abs > 1 %}text-danger font-weight-bold{% endif %}">
-            {{ '{:,.2f}'.format(row.difference) }}
+            {{ format_currency(row.difference) }}
           </td>
           <td class="text-center">
             {% if row.matched %}
@@ -70,9 +70,9 @@
       <tfoot class="bg-light font-weight-bold">
         <tr>
           <td colspan="2">الإجمالي</td>
-          <td class="text-left">{{ '{:,.2f}'.format(report.total_gl) }}</td>
-          <td class="text-left">{{ '{:,.2f}'.format(report.total_ops) }}</td>
-          <td class="text-left">{{ '{:,.2f}'.format(report.total_difference) }}</td>
+          <td class="text-left">{{ format_currency(report.total_gl) }}</td>
+          <td class="text-left">{{ format_currency(report.total_ops) }}</td>
+          <td class="text-left">{{ format_currency(report.total_difference) }}</td>
           <td></td>
         </tr>
       </tfoot>

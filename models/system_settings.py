@@ -47,8 +47,8 @@ class SystemSettings(db.Model):
     datetime_format = db.Column(db.String(50), default='%Y-%m-%d %H:%M')
     
     # Currency - العملة
-    default_currency = db.Column(db.String(3), default='AED')
-    currency_symbol = db.Column(db.String(10), default='AED')
+    default_currency = db.Column(db.String(3), default='AED')  # TODO: use Config.DEFAULT_CURRENCY
+    currency_symbol = db.Column(db.String(10), default='AED')  # TODO: use Config.DEFAULT_CURRENCY
     currency_position = db.Column(db.String(10), default='after')  # before, after
     decimal_places = db.Column(db.Integer, default=2)
     

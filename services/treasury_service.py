@@ -6,6 +6,7 @@ Phase 8: Multi-branch bank, cashier, and post-dated cheque position tracking.
 from datetime import datetime, timezone, timedelta
 from decimal import Decimal
 from extensions import db
+from utils.currency_utils import get_system_default_currency
 
 
 class TreasuryService:
@@ -62,7 +63,7 @@ class TreasuryService:
                     'name_en': box.name_en,
                     'kind': kind,
                     'kind_label': TreasuryService.LIQUIDITY_KINDS.get(kind, kind),
-                    'currency': box.currency or 'AED',
+                    'currency': box.currency or get_system_default_currency(),
                     'balance': float(balance),
                     'balance_aed': float(balance),
                     'source': 'cash_box',
@@ -91,7 +92,7 @@ class TreasuryService:
                     'name_en': getattr(acc, 'name_en', None),
                     'kind': kind,
                     'kind_label': TreasuryService.LIQUIDITY_KINDS.get(kind, kind),
-                    'currency': getattr(acc, 'currency', 'AED') or 'AED',
+                    'currency': getattr(acc, 'currency', get_system_default_currency()) or get_system_default_currency(),
                     'balance': float(balance),
                     'balance_aed': float(balance),
                     'source': 'gl_account',

@@ -13,6 +13,7 @@ from services.gl_posting import post_or_fail, GlPostingError
 from utils.gl_reference_types import GLRef, delete_entries_by_ref
 from utils.decorators import permission_required
 from utils.branching import should_show_all_branch_columns
+from utils.currency_utils import resolve_default_currency, get_system_default_currency
 from utils.helpers import create_audit_log
 from utils.number_to_arabic import number_to_arabic_words
 from utils.qr_generator import generate_qr_data_url
@@ -456,9 +457,9 @@ def print_payment(id):
     print_branding = get_print_header_context(tid)
     print_branch = Branch.query.filter_by(id=payment_branch_id, tenant_id=tid).first() if payment_branch_id else None
     try:
-        default_currency = (tenant.default_currency if tenant else '').strip() or 'AED'
+        default_currency = resolve_default_currency(tenant)
     except Exception:
-        default_currency = 'AED'
+        default_currency = get_system_default_currency()
     print_user_name = (
         payment.user.get_display_name('ar')
         if payment.user and hasattr(payment.user, 'get_display_name')
@@ -575,7 +576,9 @@ def create_from_sale(sale_id):
         return render_template('errors/403.html'), 403
     sale_balance_aed = float(sale.balance_due or 0)
     sale_rate = float(sale.exchange_rate or 1)
-    if (sale.currency or 'AED') != 'AED' and sale_rate > 0:
+    from utils.currency_utils import get_system_default_currency
+    _sys_default = get_system_default_currency()
+    if (sale.currency or _sys_default) != _sys_default and sale_rate > 0:
         suggested_sale_amount = sale_balance_aed / sale_rate
     else:
         suggested_sale_amount = sale_balance_aed
@@ -585,7 +588,7 @@ def create_from_sale(sale_id):
             amount = request.form.get('amount', type=float)
             try:
                 from models import Tenant
-                default_currency = (sale.currency or '').strip() or (Tenant.get_current().default_currency or '').strip() or 'AED'
+                default_currency = (sale.currency or '').strip() or resolve_default_currency()
             except Exception as e:
                 import sys
                 import traceback
@@ -601,7 +604,7 @@ def create_from_sale(sale_id):
                     )
                 except Exception:
                     pass
-                default_currency = (sale.currency or '').strip() or 'AED'
+                default_currency = (sale.currency or '').strip() or resolve_default_currency()
             currency = request.form.get('currency') or default_currency
             user_exchange_rate = request.form.get('exchange_rate', type=float)
             payment_method_value = (request.form.get('payment_method') or '').strip()
@@ -724,7 +727,7 @@ def create_voucher_submit():
         # العملة وسعر الصرف (افتراضي: AED بمعدل 1)
         try:
             from models import Tenant
-            default_currency = (Tenant.get_current().default_currency or '').strip() or 'AED'
+            default_currency = resolve_default_currency()
         except Exception as e:
             import sys
             import traceback
@@ -740,7 +743,7 @@ def create_voucher_submit():
                 )
             except Exception:
                 pass
-            default_currency = 'AED'
+            default_currency = get_system_default_currency()
         currency = request.form.get('currency') or default_currency
         user_exchange_rate = request.form.get('exchange_rate', type=float, default=1.0)
         
@@ -1104,9 +1107,9 @@ def print_receipt(id):
     tenant, settings, company = InvoiceSettings.company_print_context(tid)
     print_branch = Branch.query.filter_by(id=receipt_branch_id, tenant_id=tid).first() if receipt_branch_id else None
     try:
-        default_currency = (tenant.default_currency if tenant else '').strip() or 'AED'
+        default_currency = resolve_default_currency(tenant)
     except Exception:
-        default_currency = 'AED'
+        default_currency = get_system_default_currency()
     print_user_name = (
         receipt.user.get_display_name('ar')
         if receipt.user and hasattr(receipt.user, 'get_display_name')
@@ -1452,7 +1455,9 @@ def create_payment(purchase_id):
     # حساب المبلغ المتبقي
     balance_aed = float(purchase.amount_aed or 0) - float(paid_amount)
     purchase_rate = float(purchase.exchange_rate or 1)
-    if (purchase.currency or 'AED') != 'AED' and purchase_rate > 0:
+    from utils.currency_utils import get_system_default_currency
+    _sys_def_pur = get_system_default_currency()
+    if (purchase.currency or _sys_def_pur) != _sys_def_pur and purchase_rate > 0:
         suggested_amount = (balance_aed / purchase_rate) if balance_aed > 0 else 0
     else:
         suggested_amount = balance_aed if balance_aed > 0 else 0
@@ -1486,7 +1491,7 @@ def create_payment(purchase_id):
             user_exchange_rate = request.form.get('exchange_rate', type=float, default=1.0)
             try:
                 from models import Tenant
-                default_currency = (purchase.currency or '').strip() or (Tenant.get_current().default_currency or '').strip() or 'AED'
+                default_currency = (purchase.currency or '').strip() or resolve_default_currency()
             except Exception as e:
                 import sys
                 import traceback
@@ -1502,7 +1507,7 @@ def create_payment(purchase_id):
                     )
                 except Exception:
                     pass
-                default_currency = (purchase.currency or '').strip() or 'AED'
+                default_currency = (purchase.currency or '').strip() or resolve_default_currency()
             currency = request.form.get('currency') or default_currency
             
             reference_number = request.form.get('reference_number')
@@ -1642,15 +1647,15 @@ def api_customer_balance(customer_id):
 
     try:
         from models import Tenant
-        default_currency = (Tenant.get_current().default_currency or '').strip() or 'AED'
+        default_currency = resolve_default_currency()
     except Exception:
-        default_currency = 'AED'
+        default_currency = get_system_default_currency()
     unpaid_sales = _scoped_customer_unpaid_sales(customer.id)
     unpaid_sale_rows = []
     for sale in unpaid_sales:
         sale_rate = float(sale.exchange_rate or 1)
         balance_due_aed = float(sale.balance_due or 0)
-        if (sale.currency or default_currency) != 'AED' and sale_rate > 0:
+        if (sale.currency or default_currency) != get_system_default_currency() and sale_rate > 0:
             balance_due_display = balance_due_aed / sale_rate
         else:
             balance_due_display = balance_due_aed

@@ -10,6 +10,7 @@ from utils.gl_reference_types import GLRef
 from utils.helpers import generate_number
 from utils.branching import branch_scope_id_for
 from utils.constants import normalize_payment_method_code
+from utils.currency_utils import get_system_default_currency
 from utils.field_validators import (
     canonical_payment_type,
     validate_currency_code,
@@ -60,7 +61,7 @@ class PaymentService:
         
         supplier_id = payment_data.get('supplier_id')
         amount = payment_data.get('amount')
-        currency = validate_currency_code(payment_data.get('currency', 'AED'))
+        currency = validate_currency_code(payment_data.get('currency', get_system_default_currency()))
         payment_method = validate_payment_method(payment_data.get('payment_method', 'cash'))
         notes = payment_data.get('notes')
         user_exchange_rate = payment_data.get('user_exchange_rate')
@@ -166,7 +167,7 @@ class PaymentService:
         
         customer_id = payment_data.get('customer_id')
         amount = payment_data.get('amount')
-        currency = validate_currency_code(payment_data.get('currency', 'AED'))
+        currency = validate_currency_code(payment_data.get('currency', get_system_default_currency()))
         payment_method = validate_payment_method(payment_data.get('payment_method', 'cash'))
         notes = payment_data.get('notes')
         user_exchange_rate = payment_data.get('user_exchange_rate')
@@ -412,7 +413,7 @@ class PaymentService:
             'sale_date': s.sale_date.strftime('%Y-%m-%d') if getattr(s.sale_date, 'strftime', None) else str(s.sale_date),
             'total_amount': float(s.total_amount),
             'balance_due': float(s.balance_due),
-            'currency': s.currency or 'AED',
+            'currency': s.currency or get_system_default_currency(),
         } for s in unpaid]
         return {'balance_aed': balance_aed, 'balance': balance_aed, 'unpaid_sales': unpaid_sales}
 

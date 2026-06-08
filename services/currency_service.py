@@ -27,6 +27,9 @@ try:
 except Exception:
     REQUESTS_AVAILABLE = False
 
+from utils.currency_utils import get_system_default_currency
+
+
 class CurrencyService:
     
     CACHE_TTL_SECONDS = 300  # 5 دقائق
@@ -109,8 +112,8 @@ class CurrencyService:
             return {}
     
     @staticmethod
-    def get_all_rates(base='AED'):
-        base = (base or 'AED').upper()
+    def get_all_rates(base=None):
+        base = (base or get_system_default_currency()).upper()
         
         # Check cache first
         cache_entry = CurrencyService._rates_cache.get(base)

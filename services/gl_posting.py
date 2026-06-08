@@ -5,6 +5,8 @@ from __future__ import annotations
 
 from decimal import Decimal
 
+from utils.currency_utils import get_system_default_currency, resolve_default_currency
+
 
 class GlPostingError(Exception):
     """Raised when a journal entry cannot be posted."""
@@ -28,9 +30,9 @@ def post_or_fail(
         try:
             from models.tenant import Tenant
             t = Tenant.query.get(tenant_id) if tenant_id else Tenant.get_current()
-            currency = t.default_currency if t and t.default_currency else 'AED'
+            currency = resolve_default_currency(t)
         except Exception:
-            currency = 'AED'
+            currency = get_system_default_currency()
     from services.gl_service import GLService
 
     if not lines:

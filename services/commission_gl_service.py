@@ -38,7 +38,6 @@ def post_sale_commissions(sale):
         description=f'Partner commissions {sale.sale_number}',
         reference_type=GLRef.PARTNER_COMMISSION,
         reference_id=sale.id,
-        currency='AED',
         exchange_rate=1.0,
         branch_id=sale.branch_id,
     )

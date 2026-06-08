@@ -31,7 +31,7 @@
     <div class="card text-center">
       <div class="card-body">
         <h6 class="text-muted">الرصيد الافتتاحي</h6>
-        <h4>{{ "{:,.2f}".format(statement.opening_balance) }}</h4>
+        <h4>{{ format_currency(statement.opening_balance) }}</h4>
       </div>
     </div>
   </div>
@@ -39,7 +39,7 @@
     <div class="card text-center">
       <div class="card-body">
         <h6 class="text-muted">إجمالي الدائن</h6>
-        <h4 class="text-success">{{ "{:,.2f}".format(statement.total_credit) }}</h4>
+        <h4 class="text-success">{{ format_currency(statement.total_credit) }}</h4>
       </div>
     </div>
   </div>
@@ -47,7 +47,7 @@
     <div class="card text-center">
       <div class="card-body">
         <h6 class="text-muted">إجمالي المدين</h6>
-        <h4 class="text-danger">{{ "{:,.2f}".format(statement.total_debit) }}</h4>
+        <h4 class="text-danger">{{ format_currency(statement.total_debit) }}</h4>
       </div>
     </div>
   </div>
@@ -56,7 +56,7 @@
       <div class="card-body">
         <h6 class="text-muted">الرصيد الختامي</h6>
         <h4 class="{% if statement.closing_balance >= 0 %}text-success{% else %}text-danger{% endif %}">
-          {{ "{:,.2f}".format(statement.closing_balance) }}
+          {{ format_currency(statement.closing_balance) }}
         </h4>
       </div>
     </div>
@@ -87,12 +87,12 @@
             <td>{{ t.transaction_type_label }}</td>
             <td>{{ t.notes or '—' }}</td>
             <td class="text-center {% if t.is_debit %}text-danger fw-bold{% endif %}">
-              {% if t.is_debit %}{{ "{:,.2f}".format(abs(t.amount_base or 0)) }}{% else %}—{% endif %}
+              {% if t.is_debit %}{{ format_currency(abs(t.amount_base or 0)) }}{% else %}—{% endif %}
             </td>
             <td class="text-center {% if t.is_credit %}text-success fw-bold{% endif %}">
-              {% if t.is_credit %}{{ "{:,.2f}".format(t.amount_base or 0) }}{% else %}—{% endif %}
+              {% if t.is_credit %}{{ format_currency(t.amount_base or 0) }}{% else %}—{% endif %}
             </td>
-            <td class="text-center">{{ "{:,.2f}".format(t.balance_after or 0) }}</td>
+            <td class="text-center">{{ format_currency(t.balance_after or 0) }}</td>
           </tr>
           {% else %}
           <tr><td colspan="7" class="text-center text-muted py-4">لا توجد حركات في الفترة المحددة.</td></tr>

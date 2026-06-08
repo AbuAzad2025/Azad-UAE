@@ -43,11 +43,11 @@
               <div class="table-responsive"><table class="table table-borderless">
                 <tr>
                   <td><strong>المبلغ:</strong></td>
-                  <td><strong>{{ "{:,.2f}".format(payment.amount) }} {{ payment.currency }}</strong></td>
+                  <td><strong>{{ format_currency(payment.amount, payment.currency) }}</strong></td>
                 </tr>
                 <tr>
                   <td><strong>المبلغ بـ{{ tenant_currency_name_ar or 'درهم إماراتي' }}:</strong></td>
-                  <td><strong>{{ "{:,.2f}".format(payment.base_amount or payment.amount_aed) }} {{ tenant_currency_symbol or 'AED' }}</strong></td>
+                  <td><strong>{{ format_currency(payment.base_amount or payment.amount_aed) }}</strong></td>
                 </tr>
                 <tr>
                   <td><strong>طريقة الدفع:</strong></td>

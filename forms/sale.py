@@ -9,7 +9,7 @@ class SaleForm(FlaskForm):
         ('AED', 'درهم'),
         ('USD', 'دولار'),
         ('EUR', 'يورو')
-    ], default='AED', validators=[DataRequired()])
+    ], default='AED', validators=[DataRequired()])  # TODO: use Config.DEFAULT_CURRENCY
     exchange_rate = DecimalField('سعر الصرف', default=1.0, validators=[Optional(), NumberRange(min=0)])
     discount_amount = DecimalField('الخصم', default=0, validators=[Optional(), NumberRange(min=0)])
     shipping_cost = DecimalField('الشحن', default=0, validators=[Optional(), NumberRange(min=0)])

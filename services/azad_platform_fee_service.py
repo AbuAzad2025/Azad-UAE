@@ -114,7 +114,6 @@ class AzadPlatformFeeService:
             description=f'Azad platform fee {sale.sale_number}',
             reference_type=GLRef.AZAD_PLATFORM_FEE,
             reference_id=fee.id,
-            currency='AED',
             exchange_rate=1.0,
             branch_id=getattr(sale, 'branch_id', None),
             tenant_id=int(tenant_id),

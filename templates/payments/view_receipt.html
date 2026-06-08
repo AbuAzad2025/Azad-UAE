@@ -148,7 +148,7 @@
 
           <dt class="col-sm-5">المبلغ:</dt>
 
-          <dd class="col-sm-7"><h4 class="text-success">{{ "{:,.2f}".format(receipt.amount) }} {{ receipt.currency }}</h4></dd>
+          <dd class="col-sm-7"><h4 class="text-success">{{ format_currency(receipt.amount, receipt.currency) }}</h4></dd>
 
           
 
@@ -156,7 +156,7 @@
 
           <dt class="col-sm-5">المبلغ ({{ tenant_currency_name_ar or 'درهم' }}):</dt>
 
-          <dd class="col-sm-7">{{ "{:,.2f}".format(receipt.base_amount) }} {{ tenant_currency_symbol or 'AED' }}</dd>
+          <dd class="col-sm-7">{{ format_currency(receipt.base_amount) }}</dd>
 
           {% endif %}
 
@@ -260,7 +260,7 @@
 
                 <td>{{ source_info.type }} #{{ source_info.number }} ({{ source_info.date }})</td>
 
-                <td>{{ "{:,.2f}".format(receipt.amount) }} {{ receipt.currency }}</td>
+                <td>{{ format_currency(receipt.amount, receipt.currency) }}</td>
 
               </tr>
 

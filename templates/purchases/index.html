@@ -110,12 +110,12 @@
           <td><span class="badge badge-light border">{{ tenant_name_ar or company_name_ar or '-' }}</span></td>
           <td>{{ purchase.supplier_name }}</td>
           <td>{{ purchase.purchase_date.strftime('%Y-%m-%d') }}</td>
-          <td class="text-right"><strong>{{ "{:,.2f}".format(purchase.total_amount) }}</strong></td>
-          <td class="text-right text-success">{{ "{:,.2f}".format(purchase.get_paid_amount()) }}</td>
+          <td class="text-right"><strong>{{ format_currency(purchase.total_amount) }}</strong></td>
+          <td class="text-right text-success">{{ format_currency(purchase.get_paid_amount()) }}</td>
           <td class="text-right">
             {% set balance = (purchase.total_amount - purchase.get_paid_amount()) %}
             <strong class="{% if balance > 0 %}text-danger{% else %}text-success{% endif %}">
-              {{ "{:,.2f}".format(balance) }}
+              {{ format_currency(balance) }}
             </strong>
           </td>
           <td>

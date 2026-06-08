@@ -6,7 +6,7 @@
 <div class="row mb-3">
   <div class="col-12">
     <div class="alert alert-info">
-      <h4><i class="fas fa-info-circle"></i> إجمالي الذمم: {{ "{:,.2f}".format(summary.total_receivables) }} {{ tenant_currency_symbol or 'AED' }}</h4>
+      <h4><i class="fas fa-info-circle"></i> إجمالي الذمم: {{ format_currency(summary.total_receivables) }}</h4>
     </div>
   </div>
 </div>
@@ -114,7 +114,7 @@
             <td>{{ sale.customer.name if sale.customer else '-' }}</td>
             <td>{{ sale.sale_date.strftime('%Y-%m-%d') }}</td>
             <td>{{ sale.days_old }}</td>
-            <td>{{ "{:,.2f}".format(sale.calculated_balance) }} {{ tenant_currency_symbol or 'AED' }}</td>
+            <td>{{ format_currency(sale.calculated_balance) }}</td>
             <td>
               {% if sale.exchange_rate and sale.exchange_rate != 1 %}
                 <span class="badge badge-info" title="سعر الصرف وقت المعاملة">

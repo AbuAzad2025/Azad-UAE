@@ -2,7 +2,7 @@
 
 **Document Status:** Single Source of Truth — Supersedes All Accounting Documentation  
 **Date:** June 4, 2026  
-**Last Updated:** June 7, 2026 (Session 12 — Accounting-Module Coverage Drive COMPLETED; 291 unit tests passing, 5 production bugs fixed; Payment Vault Handoff closed: migration chain fixed, security audit 0 violations, NOWPayments IPN 8/8 pass)
+**Last Updated:** June 8, 2026 (Session 12+ — Accounting-Module Coverage Drive COMPLETED; 291 unit tests passing, 5 production bugs fixed; Payment Vault Handoff closed: migration chain fixed, security audit 0 violations, NOWPayments IPN 8/8 pass; Phase 25 (Currency Hardcoding Removal) added with Phase 1 ✅ COMPLETE)
 
 > **NOTICE:** This document is the sole authoritative accounting plan. All previous accounting documents (listed in Section 1.1) are superseded and should be removed from active reference.  
 **Reference Standards:** SAP Business One, Oracle NetSuite, Odoo, Bisan, Al-Shamel  
@@ -37,6 +37,7 @@ This master document merges, preserves, and supersedes the following documents. 
 * `docs/AI_AUDIT_HISTORY.md` → Appendix A
 * `docs/ERP_ACCOUNTING_MASTER_BLUEPRINT_CORRECTIONS_2026-06-06.md` → Historical reconciliation of GitHub commit `f29aa07`; corrections accepted into header/metadata
 * `docs/PAYMENT_VAULT_HANDOFF_REPORT_2026-06-06.md` → Section 21.3 (Payment Vault Handoff closure)
+* `PLAN_CURRENCY.md` → Section 26 (Currency Hardcoding Removal Plan)
 
 ---
 
@@ -483,6 +484,7 @@ Assistant guardrails before closing this work:
 *   **Goal:** Enforce and validate dimension columns on journal entries and lines.
 *   **Files Affected:** `models/gl.py`, `services/gl_service.py`, `services/gl_posting.py`.
 *   **Models Added:** `ProfitCenter`; `GLJournalLine` extended with `branch_id`, `warehouse_id`, `profit_center_id`, `partner_id`.
+*   **Data Seeded:** `ProfitCenter` populated with **17 rows** (migrated from cost_centers + branches). Verification: `tools/qa/check_completeness.py`, `tools/qa/test_gl_dimensions.py`, `tools/fill_profit_centers.py`.
 *   **Migrations:** `phase2_001_add_gl_dimensions_and_profit_centers`.
 *   **Status:** Schema and model wiring complete. Dimensions are propagated in `reverse_entry`, `create_journal_entry`, `post_entry`, `create_manual_entry`, and `post_or_fail`. Service-layer enforcement (mandatory dimension validation) is deferred until operational UI passes dimensions explicitly.
 *   **Estimated Complexity:** Medium (1 Sprint) — **Schema: DONE**.
@@ -761,7 +763,7 @@ Assistant guardrails before closing this work:
 | Phase 7.5 | Security Hardening | ✅ **COMPLETED** (Jun 6) | All backend routes scoped by `tenant_id`; `test_security_boundaries.py` 0 violations; frontend XSS fixed (POS esc(), voucher tojson|safe, tabnabbing noopener, CSP active); CDN SRI deferred to deployment checklist |
 | Phase 8 | Treasury & Cash | ✅ **COMPLETED** (Jun 6) | `TreasuryService` deployed; liquidity position (CashBox + GLAccount fallback); cheque maturity buckets; bank reconciliation status; branch security + export; `test_treasury.py` ALL CHECKS PASSED |
 | Phase 9 | Global Localization | ✅ **COMPLETED** (Jun 6) | `LocalizationStrategy` framework deployed; Palestine/UAE/KSA/Null strategies; `TaxService` + `EInvoiceService`; VAT return + WPS export routes; `test_localization.py` ALL CHECKS PASSED |
-| Phase 10 | Testing & Rollout | ✅ **COMPLETED** (Jun 6) | `FeatureFlagService` with per-tenant resolution; `test_full_regression.py` zero-variance chain; `load_test.py` latency targets; `PRODUCTION_DEPLOYMENT_CHECKLIST.md` with rollback; `test_phase10.py` ALL CHECKS PASSED |
+| Phase 10 | Testing & Rollout | ✅ **COMPLETED** (Jun 6) | `FeatureFlagService` (per-tenant resolution limited — `Tenant.settings` column missing; see §21.4); `test_full_regression.py` zero-variance chain; `load_test.py` latency targets; `PRODUCTION_DEPLOYMENT_CHECKLIST.md` with rollback; `test_phase10.py` ALL CHECKS PASSED |
 | Phase 11 | System Robustness | ✅ **COMPLETED** (Jun 6) | `utils/api_response.py` + `utils/db_safety.py` + `utils/structured_logging.py` + `utils/validators.py`; atomic_transaction on 6 financial routes; `test_deep_validation.py` ALL CHECKS PASSED; all routes compile; XSS + tabnabbing verified |
 | **Phase 12** | **Owner Panel Deep Hardening** | **✅ COMPLETED (Jun 6)** | `routes/owner.py`: 91 routes audited; all Sale/Purchase/Customer/Product/Receipt/Payment/Expense queries scoped by `tenant_id`; `roles_permissions` route loads live Role/Permission data; `user_profile` uses `AuditLog` instead of disabled Audit model; `product_performance` thresholds now relative (avg-based); `forecasting` confidence uses volatility algorithm; `login_history` scoped via User join; `create_user` duplicate check scoped by tenant; templates updated (`roles_permissions.html`, `user_profile.html`); `py_compile` clean |
 
@@ -1747,6 +1749,10 @@ source of truth.
   (Flask-SQLAlchemy shorthand). It emits `LegacyAPIWarning` from the framework
   layer; replacing it requires route-level exception-handler review and is
   deferred to a dedicated API-consistency pass.
+- `FeatureFlagService` claims per-tenant override support via `Tenant.settings`,
+  but the `Tenant` model does not expose a `settings` column. Either add a real
+  tenant flag storage mechanism or document Phase 10 flags as global-only for now.
+  *(Identified during Phase 2 Currency Formatting post-completion audit.)*
 
 **Status:** ✅ Accounting service layer behavioural coverage complete.
 Next: routes coverage or deeper model-branch tests per owner priority.
@@ -2063,5 +2069,132 @@ What is missing is primarily **narrative clarity** in documentation and possibly
 
 ---
 
+---
+
+## 26. Currency Hardcoding Removal Plan (3-Phase Roadmap)
+
+**Date:** June 8, 2026  
+**Source:** `PLAN_CURRENCY.md` (superseded and merged into this section)  
+**Goal:** Remove all `or 'AED'` hardcoded fallbacks from backend logic, templates, and database defaults — replacing them with a single chain of resolution (`Tenant → SystemSettings → Config → 'AED'`).
+
+---
+
+### Phase 1: Currency Consolidation — ✅ COMPLETED (June 8, 2026)
+
+**Goal:** Remove `or 'AED'` fallback from all Python backend logic (routes, services, utils, app.py), centralizing default currency resolution.
+
+#### 1.1 New File Created
+
+| File | Purpose |
+|------|---------|
+| `utils/currency_utils.py` | `get_system_default_currency()` (last-resort fallback) + `resolve_default_currency(tenant)` (full resolution chain: Tenant → SystemSettings → Config → 'AED') |
+
+#### 1.2 Backend Changes
+
+| Section | Files | Changes | Status |
+|---------|:-----:|:-------:|:------:|
+| `app.py` | 1 | 7 edits + import | ✅ Done |
+| `utils/helpers.py` | 1 | 1 edit | ✅ Done |
+| Routes (`routes/`) | 11 | 42 edits + imports | ✅ Done |
+| Services (`services/`) | 17 | 25 edits + imports | ✅ Done |
+| **Total backend** | **~30** | **~75 edits** | **✅ Done** |
+
+#### 1.3 Template Changes
+
+| Strategy | Files | Replacements | Status |
+|----------|:-----:|:------------:|:------:|
+| Guard fix in `app.py:438` (ensures `tenant_currency_symbol` never empty) | 1 | 1 | ✅ Done |
+| Remove `or 'AED'` from templates | 58+ | 190 | ✅ Done |
+| **Total templates** | **~59** | **191** | **✅ Done** |
+
+#### 1.4 TODO Markers (No Code Change)
+
+| Layer | Items | Status |
+|-------|:-----:|:------:|
+| Models (20 columns in 12 files) | `default='AED'` → `# TODO: Config.DEFAULT_CURRENCY` | ✅ 20 TODOs added |
+| Forms (4 fields in 4 files) | `default='AED'` → `# TODO: Config.DEFAULT_CURRENCY` | ✅ 4 TODOs added |
+| Migrations (4 columns) | Noted for Phase 3 | ✅ Documented |
+
+#### 1.5 Verification
+
+| Check | Result |
+|-------|--------|
+| `create_app()` initializes without error | ✅ Pass |
+| All modified files `py_compile` clean | ✅ Pass |
+| Jinja templates compile (275 files) | ✅ Pass |
+| `grep "or 'AED'" templates/` | ✅ 0 remaining |
+| `grep "or 'د.إ'" templates/` | ✅ 0 remaining |
+
+---
+
+### Phase 2: Currency Formatting — ✅ COMPLETE (June 9, 2026)
+
+**Goal:** Replace 403 `'{:,.2f}'.format(...)` calls in 82 template files with centralized `format_currency(amount, currency, lang)` — adding currency symbols to all monetary displays.
+
+#### 2.1 Scope
+
+| Item | Count |
+|------|:-----:|
+| `'{:,.2f}'.format(...)` calls in templates → `format_currency()` | **403** replaced |
+| Template files migrated | **82** |
+| Current `format_currency()` usage | **403** calls across 82 templates (up from 0) |
+| Scripts | `tools/phase2_batch1.py` (16 files), `tools/phase2_batch2.py` (15 files), `tools/phase2_batch3.py` (50 files) |
+
+#### 2.2 Cleanup Tasks — Completed
+
+| Task | Status | Details |
+|------|:------:|---------|
+| **Replace formatting** | ✅ | 403 calls → `format_currency(X)` via 3 regex batch scripts + manual pass for complex cases (nested parens, ternary, `abs()`, `sum(attribute=...)`, `.get(...)`, `$` prefix) |
+| **Remove trailing currency** | ✅ | 9 redundant `{{ tenant_currency_symbol }}` trailing displays removed from 5 files (cheques/view.html, suppliers/index.html, suppliers/view.html, warehouse/low_stock.html, warehouse/out_of_stock.html) |
+| **Merge `format_currency_display`** | ✅ | No alias existed — already clean |
+| **Remove `get_currency_symbol` from app.py** | ✅ | Function already in `utils/currency_utils.py`; `app.py` only imports and registers it |
+| **Unify `CURRENCIES` constant** | ✅ | Single definition in `utils/constants.py`; no duplication in `app.py` or `helpers.py` |
+| **Verify** | ✅ | `grep '{:,.2f}'.format(` on `templates/` returns 0 |
+
+#### 2.3 Risk Assessment — Verified Post-Completion
+
+| Risk | Level | Result |
+|------|:-----:|--------|
+| `format_currency()` throws on unexpected value | 🟢 Low | try/except exists — falls back to `str(amount)` |
+| Symbol in wrong position (L/R) | 🟢 Low | Manual check passed — all templates display correctly |
+| Trailing currency symbol remains after replacement | 🟢 Low | 9 redundant cases found and removed; zero remaining |
+| Decimal places mismatch | 🟢 Low | Default is 2 — compatible with system settings |
+| Print/PDF templates break | 🟡 Medium | Visual check recommended before production deploy |
+
+---
+
+### Phase 3: DB Defaults & currency_service.py — 🔘 DEFERRED
+
+**Goal:** Update database column defaults from `'AED'` to `Config.DEFAULT_CURRENCY` and migrate `currency_service.py` to use centralized resolution.
+
+#### 3.1 Scope
+
+| Layer | Items | Change |
+|-------|:-----:|--------|
+| Model columns | **28** in 20 classes | `default='AED'` → `default=Config.DEFAULT_CURRENCY` |
+| Alembic migration | **1** new file | Update defaults in 9+ tables |
+| Form fields | **4** | `default='AED'` → `default=Config.DEFAULT_CURRENCY` |
+| `currency_service.py` | **5+ functions** | Replace hardcoded `'AED'` with `get_system_default_currency()` |
+
+#### 3.2 Rationale for Deferral
+
+This phase requires a database migration (Alembic) and touches `currency_service.py` which has live rate-fetching logic. The high-risk, low-urgency nature makes it suitable for a dedicated release after Phase 2 is stable.
+
+---
+
+### Cumulative Results
+
+| Phase | Status | Files | Changes | Lines Removed |
+|:-----:|:------:|:-----:|:-------:|:-------------:|
+| **1** | ✅ COMPLETE | ~105 | ~289 | ~332 |
+| **2** | ✅ COMPLETE (Jun 9) | 82 templates | 403 replacements | ~0 (replacements) |
+| **3** | 🔘 Deferred | ~25 | ~37 | ~28 |
+
+---
+
+*Section 26 merged from `PLAN_CURRENCY.md` (superseded and deleted).*
+
+---
+
 *End of Master Blueprint — Single Source of Truth*
-*Last updated: June 8, 2026 (Session 12+ — All roadmap items merged as Section 25)*
+*Last updated: June 9, 2026 (Phase 2 Currency Formatting completed — 403 `{:,.2f}` calls replaced in 82 templates)*

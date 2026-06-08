@@ -72,13 +72,13 @@
               {{ item.code }}
           </td>
           <td>{{ item.name }}</td>
-          <td class="text-danger text-center">{{ "{:,.2f}".format(item.debit) if item.debit != 0 else '-' }}</td>
-          <td class="text-success text-center">{{ "{:,.2f}".format(item.credit) if item.credit != 0 else '-' }}</td>
+          <td class="text-danger text-center">{{ format_currency(item.debit) if item.debit != 0 else '-' }}</td>
+          <td class="text-success text-center">{{ format_currency(item.credit) if item.credit != 0 else '-' }}</td>
           <td class="text-center font-weight-bold" dir="ltr">
               {% if item.balance > 0 %}
-                <span class="text-danger">{{ "{:,.2f}".format(item.balance) }} Dr</span>
+                <span class="text-danger">{{ format_currency(item.balance) }} Dr</span>
               {% elif item.balance < 0 %}
-                <span class="text-success">{{ "{:,.2f}".format(item.balance|abs) }} Cr</span>
+                <span class="text-success">{{ format_currency(item.balance|abs) }} Cr</span>
               {% else %}
                 -
               {% endif %}
@@ -89,8 +89,8 @@
       <tfoot class="bg-light">
         <tr class="ic-2">
           <td colspan="2" class="text-center">{{ t('Total') }}</td>
-          <td class="text-danger text-center">{{ "{:,.2f}".format(total_debit) }}</td>
-          <td class="text-success text-center">{{ "{:,.2f}".format(total_credit) }}</td>
+          <td class="text-danger text-center">{{ format_currency(total_debit) }}</td>
+          <td class="text-success text-center">{{ format_currency(total_credit) }}</td>
           <td></td>
         </tr>
       </tfoot>

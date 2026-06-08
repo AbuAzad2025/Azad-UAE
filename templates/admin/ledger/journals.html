@@ -53,7 +53,7 @@
                 {{ entry.entry_type_ar }}
               </span>
             </td>
-            <td>{{ "{:,.2f}".format(entry.total_debit) }}</td>
+            <td>{{ format_currency(entry.total_debit) }}</td>
             <td>
               {% if entry.is_posted %}
                 <span class="badge badge-success">مرحل</span>

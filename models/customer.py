@@ -24,7 +24,7 @@ class Customer(db.Model):
     address = db.Column(db.Text)
     tax_number = db.Column(db.String(50))
     
-    preferred_currency = db.Column(db.String(3), default='AED')
+    preferred_currency = db.Column(db.String(3), default='AED')  # TODO: use Config.DEFAULT_CURRENCY
     
     credit_limit = db.Column(db.Numeric(15, 3), default=0)
     total_purchases = db.Column(db.Numeric(15, 3), default=0)

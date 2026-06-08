@@ -25,7 +25,7 @@
         <strong class="erp-stat-value-success erp-stat-value-lg">
           {{ "{:,.0f}".format(stats.today_sales_amount|default(0)) }}
         </strong>
-        <small class="text-muted"> {{ tenant_currency_symbol or 'د.إ' }}</small>
+        <small class="text-muted"> {{ tenant_currency_symbol }}</small>
       </div>
       <a href="{{ url_for('sales.index') }}" class="btn btn-primary mt-2 w-100">
         <i class="fas fa-arrow-left"></i> عرض الكل
@@ -100,7 +100,7 @@
         </div>
         <h5 class="text-muted">رصيد الصندوق</h5>
         <h2 class="mb-0 erp-stat-value-success erp-stat-value-xl">
-          {{ "{:,.2f}".format(stats.cash_balance|default(0)) }}
+          {{ format_currency(stats.cash_balance|default(0)) }}
         </h2>
         <small class="text-muted">{{ tenant_currency_name_ar or 'درهم إماراتي' }}</small>
       </div>
@@ -115,7 +115,7 @@
         </div>
         <h5 class="text-muted">رصيد البنك</h5>
         <h2 class="mb-0 erp-stat-value-info erp-stat-value-xl">
-          {{ "{:,.2f}".format(stats.bank_balance|default(0)) }}
+          {{ format_currency(stats.bank_balance|default(0)) }}
         </h2>
         <small class="text-muted">{{ tenant_currency_name_ar or 'درهم إماراتي' }}</small>
       </div>
@@ -130,7 +130,7 @@
         </div>
         <h5 class="text-muted">قيمة المخزون</h5>
         <h2 class="mb-0 erp-stat-value-warning erp-stat-value-xl">
-          {{ "{:,.2f}".format(stats.inventory_value_gl|default(0)) }}
+          {{ format_currency(stats.inventory_value_gl|default(0)) }}
         </h2>
         <small class="text-muted">{{ tenant_currency_name_ar or 'درهم إماراتي' }}</small>
       </div>
@@ -193,7 +193,7 @@
                     <br><small class="text-muted">{{ sale.sale_date.strftime('%H:%M') }}</small>
                   </td>
                   <td class="text-center">
-                    <strong class="erp-stat-value-success">{{ "{:,.2f}".format(sale.total_amount) }}</strong>
+                    <strong class="erp-stat-value-success">{{ format_currency(sale.total_amount) }}</strong>
                     <small class="text-muted">{{ sale.currency }}</small>
                   </td>
                   <td class="text-center">

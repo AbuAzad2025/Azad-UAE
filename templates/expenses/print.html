@@ -39,7 +39,7 @@
               <h5 class="section-title">المبالغ</h5>
               <p><span class="label">المبلغ:</span> {{ "%.2f"|format(expense.amount) }} {{ expense.currency }}</p>
               <p><span class="label">سعر الصرف:</span> {{ "%.6f"|format(expense.exchange_rate) }}</p>
-              <p><span class="label">المبلغ بـ{{ tenant_currency_name_ar or "درهم إماراتي" }}:</span> {{ "%.2f"|format(expense.base_amount or expense.amount_aed) }} {{ tenant_currency_symbol or "AED" }}</p>
+              <p><span class="label">المبلغ بـ{{ tenant_currency_name_ar or "درهم إماراتي" }}:</span> {{ "%.2f"|format(expense.base_amount or expense.amount_aed) }} {{ tenant_currency_symbol }}</p>
               <p><span class="label">طريقة الدفع:</span> {{ expense.payment_method or '-' }}</p>
             </div>
           </div>

@@ -177,21 +177,21 @@
     <div class="col-md-3">
       <div class="stat-box ic-1">
         <p>إجمالي الإيرادات</p>
-        <h3>{{ "{:,.2f}".format(total_revenue) }}</h3>
+        <h3>{{ format_currency(total_revenue) }}</h3>
         <p><i class="fas fa-arrow-up trend-up"></i> +15.3% من الشهر الماضي</p>
       </div>
     </div>
     <div class="col-md-3">
       <div class="stat-box ic-2">
         <p>إجمالي المصروفات</p>
-        <h3>{{ "{:,.2f}".format(total_expenses) }}</h3>
+        <h3>{{ format_currency(total_expenses) }}</h3>
         <p><i class="fas fa-arrow-down trend-up"></i> -5.2% من الشهر الماضي</p>
       </div>
     </div>
     <div class="col-md-3">
       <div class="stat-box ic-3">
         <p>صافي الربح</p>
-        <h3>{{ "{:,.2f}".format(net_profit) }}</h3>
+        <h3>{{ format_currency(net_profit) }}</h3>
         <p><i class="fas fa-arrow-up trend-up"></i> +23.7% من الشهر الماضي</p>
       </div>
     </div>
@@ -297,9 +297,9 @@
               {% for month_data in monthly_data %}
               <tr>
                 <td><strong>{{ month_data.month }}</strong></td>
-                <td class="text-success">{{ "{:,.2f}".format(month_data.revenue) }}</td>
-                <td class="text-danger">{{ "{:,.2f}".format(month_data.expenses) }}</td>
-                <td class="text-primary"><strong>{{ "{:,.2f}".format(month_data.profit) }}</strong></td>
+                <td class="text-success">{{ format_currency(month_data.revenue) }}</td>
+                <td class="text-danger">{{ format_currency(month_data.expenses) }}</td>
+                <td class="text-primary"><strong>{{ format_currency(month_data.profit) }}</strong></td>
                 <td>{{ "{:.1f}".format(month_data.margin) }}%</td>
                 <td>
                   {% if month_data.change > 0 %}
@@ -314,9 +314,9 @@
             <tfoot class="ic-7">
               <tr>
                 <td>الإجمالي</td>
-                <td class="text-success">{{ "{:,.2f}".format(total_revenue) }}</td>
-                <td class="text-danger">{{ "{:,.2f}".format(total_expenses) }}</td>
-                <td class="text-primary">{{ "{:,.2f}".format(net_profit) }}</td>
+                <td class="text-success">{{ format_currency(total_revenue) }}</td>
+                <td class="text-danger">{{ format_currency(total_expenses) }}</td>
+                <td class="text-primary">{{ format_currency(net_profit) }}</td>
                 <td>{{ "{:.1f}".format(profit_margin) }}%</td>
                 <td>-</td>
               </tr>

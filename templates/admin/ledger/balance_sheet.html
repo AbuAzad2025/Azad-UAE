@@ -67,7 +67,7 @@
               <tr>
                 <td><strong>{{ asset.code }}</strong></td>
                 <td>{{ asset.full_name }}</td>
-                <td class="text-center text-success">{{ "{:,.2f}".format(balance) }}</td>
+                <td class="text-center text-success">{{ format_currency(balance) }}</td>
               </tr>
               {% endif %}
               {% endfor %}
@@ -75,7 +75,7 @@
             <tfoot class="bg-light">
               <tr>
                 <th colspan="2" class="text-center">إجمالي الأصول</th>
-                <th class="text-center text-success">{{ "{:,.2f}".format(assets_total) }}</th>
+                <th class="text-center text-success">{{ format_currency(assets_total) }}</th>
               </tr>
             </tfoot>
           </table>
@@ -110,7 +110,7 @@
               <tr>
                 <td><strong>{{ liability.code }}</strong></td>
                 <td>{{ liability.full_name }}</td>
-                <td class="text-center text-danger">{{ "{:,.2f}".format(abs(balance)) }}</td>
+                <td class="text-center text-danger">{{ format_currency(abs(balance)) }}</td>
               </tr>
               {% endif %}
               {% endfor %}
@@ -122,7 +122,7 @@
               <tr>
                 <td><strong>{{ equity_item.code }}</strong></td>
                 <td>{{ equity_item.full_name }}</td>
-                <td class="text-center text-info">{{ "{:,.2f}".format(abs(balance)) }}</td>
+                <td class="text-center text-info">{{ format_currency(abs(balance)) }}</td>
               </tr>
               {% endif %}
               {% endfor %}
@@ -130,15 +130,15 @@
             <tfoot class="bg-light">
               <tr>
                 <th colspan="2" class="text-center">إجمالي الخصوم</th>
-                <th class="text-center text-danger">{{ "{:,.2f}".format(liabilities_total) }}</th>
+                <th class="text-center text-danger">{{ format_currency(liabilities_total) }}</th>
               </tr>
               <tr>
                 <th colspan="2" class="text-center">إجمالي حقوق الملكية</th>
-                <th class="text-center text-info">{{ "{:,.2f}".format(equity_total) }}</th>
+                <th class="text-center text-info">{{ format_currency(equity_total) }}</th>
               </tr>
               <tr>
                 <th colspan="2" class="text-center">إجمالي الخصوم وحقوق الملكية</th>
-                <th class="text-center text-primary">{{ "{:,.2f}".format(liabilities_total + equity_total) }}</th>
+                <th class="text-center text-primary">{{ format_currency(liabilities_total + equity_total) }}</th>
               </tr>
             </tfoot>
           </table>
@@ -161,13 +161,13 @@
         <div class="row">
           <div class="col-md-4">
             <div class="text-center">
-              <h4 class="text-success">{{ "{:,.2f}".format(assets_total) }}</h4>
+              <h4 class="text-success">{{ format_currency(assets_total) }}</h4>
               <p class="mb-0">إجمالي الأصول</p>
             </div>
           </div>
           <div class="col-md-4">
             <div class="text-center">
-              <h4 class="text-primary">{{ "{:,.2f}".format(liabilities_total + equity_total) }}</h4>
+              <h4 class="text-primary">{{ format_currency(liabilities_total + equity_total) }}</h4>
               <p class="mb-0">إجمالي الخصوم وحقوق الملكية</p>
             </div>
           </div>
@@ -178,7 +178,7 @@
                 <h4 class="text-success">متوازن</h4>
                 <p class="mb-0">الميزانية متوازنة</p>
               {% else %}
-                <h4 class="text-danger">{{ "{:,.2f}".format(difference) }}</h4>
+                <h4 class="text-danger">{{ format_currency(difference) }}</h4>
                 <p class="mb-0">الفرق</p>
               {% endif %}
             </div>

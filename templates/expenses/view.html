@@ -102,7 +102,7 @@
 
                                     <th>المبلغ بـ{{ tenant_currency_name_ar or "درهم إماراتي" }}</th>
 
-                                    <td>{{ "%.2f"|format(expense.base_amount or expense.amount_aed) }} {{ tenant_currency_symbol or "AED" }}</td>
+                                    <td>{{ "%.2f"|format(expense.base_amount or expense.amount_aed) }} {{ tenant_currency_symbol }}</td>
 
                                 </tr>
 

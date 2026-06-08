@@ -9,6 +9,7 @@ from services.aging_analysis_service import AgingAnalysisService
 from utils.branching import get_accessible_branches, user_can_access_branch
 from utils.decorators import admin_required, permission_required, branch_scope_id
 from utils.helpers import create_audit_log
+from utils.currency_utils import resolve_default_currency, get_system_default_currency
 from decimal import Decimal
 from datetime import datetime, date, timedelta
 
@@ -754,9 +755,9 @@ def admin_add_account():
         try:
             try:
                 from models import Tenant
-                default_currency = (Tenant.get_current().default_currency or '').strip() or 'AED'
+                default_currency = resolve_default_currency()
             except Exception:
-                default_currency = 'AED'
+                default_currency = get_system_default_currency()
             code = request.form.get('code')
             name = request.form.get('name')
             name_ar = request.form.get('name_ar')

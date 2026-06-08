@@ -78,7 +78,7 @@
             {% endif %}
           </td>
           <td>{{ cheque.bank_name }}</td>
-          <td>{{ "{:,.2f}".format(cheque.amount) }} {{ cheque.currency }}</td>
+          <td>{{ format_currency(cheque.amount, cheque.currency) }}</td>
           <td>{{ cheque.due_date.strftime('%Y-%m-%d') }}</td>
           <td>
             <span class="badge badge-warning">
@@ -155,7 +155,7 @@
             {% endif %}
           </td>
           <td>
-            <strong class="text-danger">{{ "{:,.2f}".format(cheque.amount) }}</strong>
+            <strong class="text-danger">{{ format_currency(cheque.amount) }}</strong>
             <small>{{ cheque.currency }}</small>
           </td>
           <td>{{ cheque.due_date.strftime('%Y-%m-%d') }}</td>
@@ -226,7 +226,7 @@
               {{ cheque.payee_name or '-' }}
             {% endif %}
           </td>
-          <td>{{ "{:,.2f}".format(cheque.amount) }} {{ cheque.currency }}</td>
+          <td>{{ format_currency(cheque.amount, cheque.currency) }}</td>
           <td>
             <span class="text-danger">
               <i class="fas fa-info-circle mr-1"></i>

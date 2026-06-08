@@ -43,7 +43,7 @@
           </td>
           <td>{{ receipt.customer.name if receipt.customer else '-' }}</td>
           <td>{{ receipt.receipt_date.strftime('%Y-%m-%d') }}</td>
-          <td>{{ "{:,.2f}".format(receipt.amount) }} {{ receipt.currency }}</td>
+          <td>{{ format_currency(receipt.amount, receipt.currency) }}</td>
           <td>
             {% if receipt.exchange_rate and receipt.exchange_rate != 1 %}
               <span class="badge badge-info" title="سعر الصرف وقت المعاملة">

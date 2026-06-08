@@ -13,6 +13,7 @@ from services.real_time_listeners import accounting_event_stream
 from services.advanced_analytics import AdvancedFinancialAnalytics
 from utils.decorators import permission_required, admin_required
 from utils.helpers import create_audit_log
+from utils.currency_utils import resolve_default_currency, get_system_default_currency
 from utils.gl_tenant import gl_account_query, gl_entry_query, active_tenant_id
 
 advanced_ledger_bp = Blueprint('advanced_ledger', __name__, url_prefix='/ledger/advanced')
@@ -199,9 +200,9 @@ def add_advanced_expense():
         try:
             try:
                 from models import Tenant
-                default_currency = (Tenant.get_current().default_currency or '').strip() or 'AED'
+                default_currency = resolve_default_currency()
             except Exception:
-                default_currency = 'AED'
+                default_currency = get_system_default_currency()
             tid = active_tenant_id(current_user)
             expense = AdvancedExpense(
                 tenant_id=tid,

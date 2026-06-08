@@ -10,6 +10,7 @@ from services.aging_analysis_service import AgingAnalysisService
 from services.bank_reconciliation_service import BankReconciliationService
 from utils.decorators import admin_required
 from utils.helpers import create_audit_log
+from utils.currency_utils import resolve_default_currency, get_system_default_currency
 from utils.gl_tenant import gl_account_query, gl_entry_query, scoped_model_query, active_tenant_id
 from utils.tenanting import tenant_query, assert_tenant_record
 
@@ -104,9 +105,9 @@ def add_account():
         try:
             try:
                 from models import Tenant
-                default_currency = (Tenant.get_current().default_currency or '').strip() or 'AED'
+                default_currency = resolve_default_currency()
             except Exception:
-                default_currency = 'AED'
+                default_currency = get_system_default_currency()
             code = (request.form.get('code') or '').strip()
             name = (request.form.get('name') or '').strip()
             name_ar = (request.form.get('name_ar') or '').strip()
@@ -197,9 +198,9 @@ def edit_account(id):
             account.parent_id = request.form.get('parent_id') or None
             try:
                 from models import Tenant
-                default_currency = (Tenant.get_current().default_currency or '').strip() or 'AED'
+                default_currency = resolve_default_currency()
             except Exception:
-                default_currency = 'AED'
+                default_currency = get_system_default_currency()
             account.currency = request.form.get('currency') or default_currency
             account.is_header = bool(request.form.get('is_header'))
             account.description = request.form.get('description')

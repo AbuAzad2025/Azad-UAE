@@ -10,6 +10,7 @@ from services.gl_account_resolver import (
 )
 from services.gl_tree_builder import GLTreeBuilder
 from utils.helpers import generate_number
+from utils.currency_utils import get_system_default_currency, resolve_default_currency
 
 _JE_SEQ = {}
 
@@ -224,9 +225,9 @@ class GLService:
             try:
                 from models.tenant import Tenant
                 tenant = Tenant.query.get(tenant_id)
-                currency = tenant.default_currency if tenant else 'AED'
+                currency = resolve_default_currency(tenant)
             except Exception:
-                currency = 'AED'
+                currency = get_system_default_currency()
         if exchange_rate is None:
             exchange_rate = Decimal('1')
 
@@ -322,12 +323,14 @@ class GLService:
 
     
     @staticmethod
-    def post_entry(lines, description, reference_type=None, reference_id=None, date=None, currency='AED', exchange_rate=1.0, branch_id=None, user_id=None, tenant_id=None):
+    def post_entry(lines, description, reference_type=None, reference_id=None, date=None, currency=None, exchange_rate=1.0, branch_id=None, user_id=None, tenant_id=None):
         """
         Wrapper for create_journal_entry: converts amounts to AED and creates balanced entry.
         """
+        if not currency:
+            currency = get_system_default_currency()
         rate = Decimal(str(exchange_rate)) if exchange_rate else Decimal('1')
-        if currency and currency.upper() != 'AED' and rate <= 0:
+        if currency and currency.upper() != get_system_default_currency().upper() and rate <= 0:
             rate = Decimal('1')
         adapted_lines = []
         for line in lines:
@@ -537,7 +540,9 @@ class GLService:
         return code
     
     @staticmethod
-    def create_manual_entry(description, lines, entry_date=None, notes=None, created_by=None, currency='AED', exchange_rate=1.0, branch_id=None):
+    def create_manual_entry(description, lines, entry_date=None, notes=None, created_by=None, currency=None, exchange_rate=1.0, branch_id=None):
+        if not currency:
+            currency = get_system_default_currency()
         """إنشاء قيد يدوي"""
         from flask_login import current_user
         from utils.field_validators import validate_gl_line_sides

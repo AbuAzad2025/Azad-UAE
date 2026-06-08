@@ -114,11 +114,11 @@
 
               <td>{{ line.quantity }}</td>
 
-              <td>{{ "{:,.2f}".format(line.unit_cost) }}</td>
+              <td>{{ format_currency(line.unit_cost) }}</td>
 
               <td>{{ line.discount_percent }}%</td>
 
-              <td>{{ "{:,.2f}".format(line.line_total) }}</td>
+              <td>{{ format_currency(line.line_total) }}</td>
 
             </tr>
 
@@ -152,25 +152,25 @@
 
           <dt class="col-6">المجموع قبل الخصم:</dt>
 
-          <dd class="col-6 text-left">{{ "{:,.2f}".format((purchase.subtotal or 0) + (purchase.discount_amount or 0)) }}</dd>
+          <dd class="col-6 text-left">{{ format_currency((purchase.subtotal or 0) + (purchase.discount_amount or 0)) }}</dd>
 
           
 
           <dt class="col-6">الخصم:</dt>
 
-          <dd class="col-6 text-left text-danger">{{ "{:,.2f}".format(purchase.discount_amount or 0) }}</dd>
+          <dd class="col-6 text-left text-danger">{{ format_currency(purchase.discount_amount or 0) }}</dd>
 
           
 
           <dt class="col-6">المجموع بعد الخصم:</dt>
 
-          <dd class="col-6 text-left">{{ "{:,.2f}".format(purchase.subtotal) }}</dd>
+          <dd class="col-6 text-left">{{ format_currency(purchase.subtotal) }}</dd>
 
           
 
           <dt class="col-6">الضريبة:</dt>
 
-          <dd class="col-6 text-left">{{ "{:,.2f}".format(purchase.tax_amount) }}</dd>
+          <dd class="col-6 text-left">{{ format_currency(purchase.tax_amount) }}</dd>
 
         </dl>
 
@@ -180,7 +180,7 @@
 
           <dt class="col-6"><h5>الإجمالي:</h5></dt>
 
-          <dd class="col-6 text-left"><h5>{{ "{:,.2f}".format(purchase.total_amount) }} {{ purchase.currency }}</h5></dd>
+          <dd class="col-6 text-left"><h5>{{ format_currency(purchase.total_amount, purchase.currency) }}</h5></dd>
 
         </dl>
 

@@ -195,7 +195,7 @@
               {% endif %}
             </td>
             <td>
-              <strong class="ic-3">{{ "{:,.2f}".format(product.regular_price) }}</strong>
+              <strong class="ic-3">{{ format_currency(product.regular_price) }}</strong>
               <small class="text-muted">{{ tenant_default_currency or 'AED' }}</small>
             </td>
             <td>

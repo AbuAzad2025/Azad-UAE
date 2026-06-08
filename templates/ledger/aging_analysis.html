@@ -139,13 +139,13 @@
                   {{ item.customer.name }}
                 </a>
               </td>
-              <td class="text-center">{{ "{:,.2f}".format(item['0-30']) }}</td>
-              <td class="text-center text-info">{{ "{:,.2f}".format(item['31-60']) }}</td>
-              <td class="text-center text-warning">{{ "{:,.2f}".format(item['61-90']) }}</td>
-              <td class="text-center text-orange">{{ "{:,.2f}".format(item['91-120']) }}</td>
-              <td class="text-center text-danger">{{ "{:,.2f}".format(item['over_120']) }}</td>
+              <td class="text-center">{{ format_currency(item['0-30']) }}</td>
+              <td class="text-center text-info">{{ format_currency(item['31-60']) }}</td>
+              <td class="text-center text-warning">{{ format_currency(item['61-90']) }}</td>
+              <td class="text-center text-orange">{{ format_currency(item['91-120']) }}</td>
+              <td class="text-center text-danger">{{ format_currency(item['over_120']) }}</td>
               <td class="text-center">
-                <strong>{{ "{:,.2f}".format(item['total']) }}</strong>
+                <strong>{{ format_currency(item['total']) }}</strong>
               </td>
             </tr>
             {% endfor %}
@@ -159,13 +159,13 @@
                   {{ item.supplier.name }}
                 </a>
               </td>
-              <td class="text-center">{{ "{:,.2f}".format(item['0-30']) }}</td>
-              <td class="text-center text-info">{{ "{:,.2f}".format(item['31-60']) }}</td>
-              <td class="text-center text-warning">{{ "{:,.2f}".format(item['61-90']) }}</td>
-              <td class="text-center text-orange">{{ "{:,.2f}".format(item['91-120']) }}</td>
-              <td class="text-center text-danger">{{ "{:,.2f}".format(item['over_120']) }}</td>
+              <td class="text-center">{{ format_currency(item['0-30']) }}</td>
+              <td class="text-center text-info">{{ format_currency(item['31-60']) }}</td>
+              <td class="text-center text-warning">{{ format_currency(item['61-90']) }}</td>
+              <td class="text-center text-orange">{{ format_currency(item['91-120']) }}</td>
+              <td class="text-center text-danger">{{ format_currency(item['over_120']) }}</td>
               <td class="text-center">
-                <strong>{{ "{:,.2f}".format(item['total']) }}</strong>
+                <strong>{{ format_currency(item['total']) }}</strong>
               </td>
             </tr>
             {% endfor %}
@@ -174,13 +174,13 @@
         <tfoot class="bg-dark text-white">
           <tr>
             <th class="text-left">الإجمالي:</th>
-            <th class="text-center">{{ "{:,.2f}".format(report.totals['0-30']) }}</th>
-            <th class="text-center">{{ "{:,.2f}".format(report.totals['31-60']) }}</th>
-            <th class="text-center">{{ "{:,.2f}".format(report.totals['61-90']) }}</th>
-            <th class="text-center">{{ "{:,.2f}".format(report.totals['91-120']) }}</th>
-            <th class="text-center">{{ "{:,.2f}".format(report.totals['over_120']) }}</th>
+            <th class="text-center">{{ format_currency(report.totals['0-30']) }}</th>
+            <th class="text-center">{{ format_currency(report.totals['31-60']) }}</th>
+            <th class="text-center">{{ format_currency(report.totals['61-90']) }}</th>
+            <th class="text-center">{{ format_currency(report.totals['91-120']) }}</th>
+            <th class="text-center">{{ format_currency(report.totals['over_120']) }}</th>
             <th class="text-center">
-              <strong>{{ "{:,.2f}".format(report.totals['total']) }}</strong>
+              <strong>{{ format_currency(report.totals['total']) }}</strong>
             </th>
           </tr>
         </tfoot>

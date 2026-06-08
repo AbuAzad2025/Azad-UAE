@@ -19,7 +19,7 @@ class CustomerForm(FlaskForm):
         ('AED', 'درهم'),
         ('USD', 'دولار'),
         ('EUR', 'يورو')
-    ], default='AED', validators=[Optional()])
+    ], default='AED', validators=[Optional()])  # TODO: use Config.DEFAULT_CURRENCY
     is_active = BooleanField('نشط', default=True)
     notes = TextAreaField('ملاحظات', validators=[Optional()])
     submit = SubmitField('حفظ')

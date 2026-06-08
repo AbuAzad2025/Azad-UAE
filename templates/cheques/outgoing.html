@@ -60,7 +60,7 @@
       <span class="info-box-icon"><i class="fas fa-money-bill-wave"></i></span>
       <div class="info-box-content">
         <span class="info-box-text">الإجمالي</span>
-        <span class="info-box-number">{{ "{:,.0f}".format(stats.outgoing_total_amount or 0) }} {{ tenant_currency_symbol or 'AED' }}</span>
+        <span class="info-box-number">{{ "{:,.0f}".format(stats.outgoing_total_amount or 0) }} {{ tenant_currency_symbol }}</span>
       </div>
     </div>
   </div>
@@ -115,7 +115,7 @@
             </a>
           </td>
           <td>{{ cheque.payee_name }}</td>
-          <td class="text-danger"><strong>{{ "{:,.2f}".format(cheque.base_amount) }} {{ tenant_currency_symbol or 'AED' }}</strong></td>
+          <td class="text-danger"><strong>{{ format_currency(cheque.base_amount) }}</strong></td>
           <td>
             {% if cheque.status == 'cleared' and cheque.clearance_exchange_rate and cheque.currency != tenant_default_currency %}
               <!-- عرض سعري الصرف للشيكات المصروفة -->

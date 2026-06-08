@@ -359,7 +359,7 @@
 
                   <td>{{ sale.customer.name if sale.customer else 'زبون عام' }}</td>
 
-                  <td>{{ '{:,.2f}'.format(sale.amount_aed) }} AED</td>
+                  <td>{{ format_currency(sale.amount_aed, 'AED') }}</td>
 
                   <td>
 

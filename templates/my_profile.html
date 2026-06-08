@@ -168,7 +168,7 @@
                   {% endif %}
                   <td>{{ sale.customer.name if sale.customer else '—' }}</td>
                   <td>{{ sale.sale_date.strftime('%Y-%m-%d') if sale.sale_date else '—' }}</td>
-                  <td class="text-end fw-semibold">{{ "%.2f"|format(sale.base_amount or 0) }} {{ tenant_currency_symbol or 'AED' }}</td>
+                  <td class="text-end fw-semibold">{{ "%.2f"|format(sale.base_amount or 0) }} {{ tenant_currency_symbol }}</td>
                 </tr>
                 {% endfor %}
               </tbody>

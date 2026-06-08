@@ -80,7 +80,7 @@
         </h5>
       </div>
       <div class="card-body">
-        <h3 class="text-success">{{ "{:,.2f}".format(total_cash) }} {{ tenant_currency_symbol or 'د.إ' }}</h3>
+        <h3 class="text-success">{{ format_currency(total_cash) }}</h3>
         <p class="text-muted mb-0">إجمالي الأرصدة النقدية</p>
       </div>
     </div>
@@ -172,7 +172,7 @@
                     {{ entry.entry_type_ar }}
                   </span>
                 </td>
-                <td>{{ "{:,.2f}".format(entry.total_debit) }}</td>
+                <td>{{ format_currency(entry.total_debit) }}</td>
                 <td>
                   {% if entry.is_posted %}
                     <span class="badge badge-success">مرحل</span>

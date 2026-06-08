@@ -11,7 +11,7 @@
         <div class="text-white">
             <span class="ml-3"><i class="fas fa-phone ml-1"></i> {{ entity.phone or '---' }}</span>
             <span class="font-weight-bold ml-3">
-                الرصيد: {{ "{:,.2f}".format(balance) }} {{ tenant_currency_symbol or 'AED' }}
+                الرصيد: {{ format_currency(balance) }}
                 <small>({{ balance_label }})</small>
             </span>
         </div>
@@ -46,7 +46,7 @@
                             <tr>
                                 <th>المنتج</th>
                                 <th>الكمية</th>
-                                <th>المجموع ({{ tenant_currency_symbol or 'AED' }})</th>
+                                <th>المجموع ({{ tenant_currency_symbol }})</th>
                                 <th>آخر حركة</th>
                             </tr>
                         </thead>
@@ -55,7 +55,7 @@
                             <tr>
                                 <td>{{ prod.name }}</td>
                                 <td>{{ prod.quantity }}</td>
-                                <td>{{ "{:,.2f}".format(prod.total) }}</td>
+                                <td>{{ format_currency(prod.total) }}</td>
                                 <td>{{ prod.last_date }}</td>
                             </tr>
                             {% else %}
@@ -75,7 +75,7 @@
                                 <th>رقم الفاتورة</th>
                                 <th>التاريخ</th>
                                 <th>الحالة</th>
-                                <th>المبلغ ({{ tenant_currency_symbol or 'AED' }})</th>
+                                <th>المبلغ ({{ tenant_currency_symbol }})</th>
                                 <th>المدفوع</th>
                                 <th>المتبقي</th>
                             </tr>
@@ -90,9 +90,9 @@
                                         {{ inv.status }}
                                     </span>
                                 </td>
-                                <td>{{ "{:,.2f}".format(inv.amount) }}</td>
-                                <td class="text-success">{{ "{:,.2f}".format(inv.paid) }}</td>
-                                <td class="text-danger">{{ "{:,.2f}".format(inv.balance) }}</td>
+                                <td>{{ format_currency(inv.amount) }}</td>
+                                <td class="text-success">{{ format_currency(inv.paid) }}</td>
+                                <td class="text-danger">{{ format_currency(inv.balance) }}</td>
                             </tr>
                             {% else %}
                             <tr><td colspan="6" class="text-center text-muted">لا توجد فواتير</td></tr>
@@ -111,7 +111,7 @@
                                 <th>رقم السند</th>
                                 <th>النوع</th>
                                 <th>التاريخ</th>
-                                <th>المبلغ ({{ tenant_currency_symbol or 'AED' }})</th>
+                                <th>المبلغ ({{ tenant_currency_symbol }})</th>
                                 <th>طريقة الدفع</th>
                                 <th>البيان</th>
                             </tr>
@@ -128,7 +128,7 @@
                                     {% endif %}
                                 </td>
                                 <td>{{ trans.date }}</td>
-                                <td class="font-weight-bold">{{ "{:,.2f}".format(trans.amount) }}</td>
+                                <td class="font-weight-bold">{{ format_currency(trans.amount) }}</td>
                                 <td>{{ trans.method }}</td>
                                 <td>{{ trans.notes }}</td>
                             </tr>

@@ -34,7 +34,7 @@
                         <td><strong>{{ expense.expense_number }}</strong></td>
                         <td>{{ expense.category_name }}</td>
                         <td>{{ expense.description }}</td>
-                        <td><strong>{{ "{:,.2f}".format(expense.amount) }} {{ expense.currency }}</strong></td>
+                        <td><strong>{{ format_currency(expense.amount, expense.currency) }}</strong></td>
                         <td>{{ expense.expense_date.strftime('%Y-%m-%d') }}</td>
                         <td><span class="badge bg-info">{{ expense.payment_method }}</span></td>
                         <td><small>{{ expense.archived_at.strftime('%Y-%m-%d %H:%M') }}</small></td>

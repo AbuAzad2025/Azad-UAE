@@ -145,8 +145,7 @@
               </div>
             </td>
             <td>
-              <strong class="ic-7">{{ "{:,.2f}".format(product.regular_price) }}</strong>
-              <small class="text-muted">{{ tenant_currency_symbol or 'AED' }}</small>
+              <strong class="ic-7">{{ format_currency(product.regular_price) }}</strong>
             </td>
             <td class="text-center">
               <div class="btn-group btn-group-sm">

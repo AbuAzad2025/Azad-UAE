@@ -130,8 +130,7 @@
               <span class="badge badge-secondary">{{ product.min_stock_alert }}</span>
             </td>
             <td>
-              <strong class="ic-6">{{ "{:,.2f}".format(product.regular_price) }}</strong>
-              <small class="text-muted">{{ tenant_currency_symbol or 'AED' }}</small>
+              <strong class="ic-6">{{ format_currency(product.regular_price) }}</strong>
             </td>
             <td>
               <i class="fas fa-map-marker-alt text-danger mr-1"></i>

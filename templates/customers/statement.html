@@ -448,7 +448,7 @@ table.statement-table thead th {
                 <div class="text-md-right">
                   <div class="final-balance-display">
                     <span>الرصيد الحالي</span>
-                    <strong>{{ "{:,.2f}".format(final_balance|default(0)) }} {{ tenant_currency_symbol or 'AED' }}</strong>
+                    <strong>{{ format_currency(final_balance|default(0)) }}</strong>
                   </div>
                   <div class="small text-muted mt-1">
                     رقم العميل: {{ customer.id }}
@@ -488,12 +488,12 @@ table.statement-table thead th {
                   </div>
                   <div class="transaction-meta">
                     {% if trans.type == 'sale' and trans.sale %}
-                      <span>إجمالي: {{ "{:,.2f}".format(trans.sale.total_amount) }} {{ tenant_currency_symbol or 'AED' }}</span>
-                      <span>مدفوع: {{ "{:,.2f}".format(trans.paid_amount) }} {{ tenant_currency_symbol or 'AED' }}</span>
-                      <span>متبقي: {{ "{:,.2f}".format(trans.balance_due) }} {{ tenant_currency_symbol or 'AED' }}</span>
+                      <span>إجمالي: {{ format_currency(trans.sale.total_amount) }}</span>
+                      <span>مدفوع: {{ format_currency(trans.paid_amount) }}</span>
+                      <span>متبقي: {{ format_currency(trans.balance_due) }}</span>
                     {% elif trans.type == 'payment' and trans.payment %}
-                      <span>المبلغ الأصلي: {{ "{:,.2f}".format(trans.payment.amount_original) }} {{ trans.payment.currency }}</span>
-                      <span>محول: {{ "{:,.2f}".format(trans.payment.base_amount) }} {{ tenant_currency_symbol or 'AED' }}</span>
+                      <span>المبلغ الأصلي: {{ format_currency(trans.payment.amount_original, trans.payment.currency) }}</span>
+                      <span>محول: {{ format_currency(trans.payment.base_amount) }}</span>
                       <span>الطريقة: {{ trans.payment.payment_method_display }}</span>
                       {% if trans.payment.payment_method == 'cheque' %}
                         {% if trans.payment.payment_confirmed %}
@@ -505,9 +505,9 @@ table.statement-table thead th {
                     {% endif %}
                   </div>
                 </td>
-                <td class="text-danger amount-cell">{{ "{:,.2f}".format(trans.debit) if trans.debit else '0.00' }}</td>
-                <td class="text-success amount-cell">{{ "{:,.2f}".format(trans.credit) if trans.credit else '0.00' }}</td>
-                <td class="amount-cell">{{ "{:,.2f}".format(trans.balance) }}</td>
+                <td class="text-danger amount-cell">{{ format_currency(trans.debit) if trans.debit else '0.00' }}</td>
+                <td class="text-success amount-cell">{{ format_currency(trans.credit) if trans.credit else '0.00' }}</td>
+                <td class="amount-cell">{{ format_currency(trans.balance) }}</td>
                 <td>
                   {% if trans.type == 'sale' %}
                     {% if trans.status == 'paid' %}
@@ -559,9 +559,9 @@ table.statement-table thead th {
                             {% endif %}
                           </div>
                           <div class="invoice-summary text-md-right mt-3 mt-md-0">
-                            <div><span class="label">الإجمالي:</span> <span class="value">{{ "{:,.2f}".format(trans.sale.total_amount) }} {{ tenant_currency_symbol or 'AED' }}</span></div>
-                            <div><span class="label">المدفوع:</span> <span class="value text-success">{{ "{:,.2f}".format(trans.sale.paid_amount) }} {{ tenant_currency_symbol or 'AED' }}</span></div>
-                            <div><span class="label">المتبقي:</span> <span class="value text-danger">{{ "{:,.2f}".format(trans.sale.balance_due) }} {{ tenant_currency_symbol or 'AED' }}</span></div>
+                            <div><span class="label">الإجمالي:</span> <span class="value">{{ format_currency(trans.sale.total_amount) }}</span></div>
+                            <div><span class="label">المدفوع:</span> <span class="value text-success">{{ format_currency(trans.sale.paid_amount) }}</span></div>
+                            <div><span class="label">المتبقي:</span> <span class="value text-danger">{{ format_currency(trans.sale.balance_due) }}</span></div>
                             {% if trans.sale.last_payment_date %}
                               <div class="small text-muted mt-1">آخر دفعة: {{ trans.sale.last_payment_date.strftime('%Y-%m-%d %H:%M') }}</div>
                             {% endif %}
@@ -597,17 +597,17 @@ table.statement-table thead th {
                                   </td>
                                   <td class="amount-cell">{{ line.unit or '-' }}</td>
                                   <td class="amount-cell">{{ "{:,.3f}".format(line.quantity) }}</td>
-                                  <td class="amount-cell">{{ "{:,.2f}".format(line.unit_price) }}</td>
+                                  <td class="amount-cell">{{ format_currency(line.unit_price) }}</td>
                                   <td>
                                     {% if line.discount_percent %}
-                                      <div class="amount-cell">{{ "{:,.2f}".format(line.discount_value) }} {{ tenant_currency_symbol or 'AED' }}</div>
-                                      <div class="small text-muted text-left" style="direction:ltr;">{{ "{:,.2f}".format(line.discount_percent) }}%</div>
+                                      <div class="amount-cell">{{ format_currency(line.discount_value) }}</div>
+                                      <div class="small text-muted text-left" style="direction:ltr;">{{ format_currency(line.discount_percent) }}%</div>
                                     {% else %}
                                       -
                                     {% endif %}
                                   </td>
-                                  <td class="amount-cell">{{ "{:,.2f}".format(line.gross_amount) }}</td>
-                                  <td class="amount-cell">{{ "{:,.2f}".format(line.line_total) }}</td>
+                                  <td class="amount-cell">{{ format_currency(line.gross_amount) }}</td>
+                                  <td class="amount-cell">{{ format_currency(line.line_total) }}</td>
                                 </tr>
                               {% endfor %}
                             </tbody>
@@ -619,21 +619,21 @@ table.statement-table thead th {
                             <tbody>
                               <tr>
                                 <th>إجمالي البنود</th>
-                                <td class="amount-cell">{{ "{:,.2f}".format(trans.sale.subtotal) }} {{ tenant_currency_symbol or 'AED' }}</td>
+                                <td class="amount-cell">{{ format_currency(trans.sale.subtotal) }}</td>
                                 <th>الخصم</th>
-                                <td class="amount-cell">{{ "{:,.2f}".format(trans.sale.discount_amount) }} {{ tenant_currency_symbol or 'AED' }}</td>
+                                <td class="amount-cell">{{ format_currency(trans.sale.discount_amount) }}</td>
                                 <th>الضريبة</th>
-                                <td class="amount-cell">{{ "{:,.2f}".format(trans.sale.tax_amount) }} {{ tenant_currency_symbol or 'AED' }}</td>
+                                <td class="amount-cell">{{ format_currency(trans.sale.tax_amount) }}</td>
                                 <th>الشحن</th>
-                                <td class="amount-cell">{{ "{:,.2f}".format(trans.sale.shipping_cost) }} {{ tenant_currency_symbol or 'AED' }}</td>
+                                <td class="amount-cell">{{ format_currency(trans.sale.shipping_cost) }}</td>
                               </tr>
                               <tr>
                                 <th>الإجمالي النهائي</th>
-                                <td class="total-cell amount-cell">{{ "{:,.2f}".format(trans.sale.total_amount) }} {{ tenant_currency_symbol or 'AED' }}</td>
+                                <td class="total-cell amount-cell">{{ format_currency(trans.sale.total_amount) }}</td>
                                 <th>المدفوع</th>
-                                <td class="amount-cell">{{ "{:,.2f}".format(trans.sale.paid_amount) }} {{ tenant_currency_symbol or 'AED' }}</td>
+                                <td class="amount-cell">{{ format_currency(trans.sale.paid_amount) }}</td>
                                 <th>المتبقي</th>
-                                <td class="balance-cell amount-cell">{{ "{:,.2f}".format(trans.sale.balance_due) }} {{ tenant_currency_symbol or 'AED' }}</td>
+                                <td class="balance-cell amount-cell">{{ format_currency(trans.sale.balance_due) }}</td>
                                 <th>آخر دفعة</th>
                                 <td class="amount-cell">{{ trans.sale.last_payment_date.strftime('%Y-%m-%d') if trans.sale.last_payment_date else '-' }}</td>
                               </tr>
@@ -658,7 +658,7 @@ table.statement-table thead th {
           <tr class="final-balance-row">
             <td colspan="5" class="text-center">الرصيد النهائي حتى تاريخ التقرير</td>
             <td colspan="3" class="text-right amount-cell">
-              {{ "{:,.2f}".format(final_balance|default(0)) }} {{ tenant_currency_symbol or 'AED' }}
+              {{ format_currency(final_balance|default(0)) }}
             </td>
           </tr>
         </tbody>

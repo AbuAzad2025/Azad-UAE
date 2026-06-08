@@ -57,7 +57,7 @@
           <tr>
             <td width="70%">{{ item.description }}</td>
             <td width="30%" class="text-center {{ 'text-success' if item.type == 'inflow' else 'text-danger' }}">
-              {{ "+" if item.type == 'inflow' else "-" }}{{ "{:,.2f}".format(item.amount) }}
+              {{ "+" if item.type == 'inflow' else "-" }}{{ format_currency(item.amount) }}
             </td>
           </tr>
           {% endfor %}
@@ -66,7 +66,7 @@
           <tr>
             <th class="text-left">صافي النقدية من الأنشطة التشغيلية:</th>
             <th class="text-center {{ 'text-success' if report.operating_activities.net_cash_from_operating > 0 else 'text-danger' }}">
-              {{ "{:,.2f}".format(report.operating_activities.net_cash_from_operating) }} {{ tenant_currency_symbol or 'AED' }}
+              {{ format_currency(report.operating_activities.net_cash_from_operating) }}
             </th>
           </tr>
         </tfoot>
@@ -85,7 +85,7 @@
           <tr>
             <td width="70%">{{ item.description }}</td>
             <td width="30%" class="text-center {{ 'text-success' if item.type == 'inflow' else 'text-danger' }}">
-              {{ "+" if item.type == 'inflow' else "-" }}{{ "{:,.2f}".format(item.amount) }}
+              {{ "+" if item.type == 'inflow' else "-" }}{{ format_currency(item.amount) }}
             </td>
           </tr>
           {% endif %}
@@ -95,7 +95,7 @@
           <tr>
             <th class="text-left">صافي النقدية من الأنشطة الاستثمارية:</th>
             <th class="text-center {{ 'text-success' if report.investing_activities.net_cash_from_investing > 0 else 'text-danger' }}">
-              {{ "{:,.2f}".format(report.investing_activities.net_cash_from_investing) }} {{ tenant_currency_symbol or 'AED' }}
+              {{ format_currency(report.investing_activities.net_cash_from_investing) }}
             </th>
           </tr>
         </tfoot>
@@ -114,7 +114,7 @@
           <tr>
             <td width="70%">{{ item.description }}</td>
             <td width="30%" class="text-center {{ 'text-success' if item.type == 'inflow' else 'text-danger' }}">
-              {{ "+" if item.type == 'inflow' else "-" }}{{ "{:,.2f}".format(item.amount) }}
+              {{ "+" if item.type == 'inflow' else "-" }}{{ format_currency(item.amount) }}
             </td>
           </tr>
           {% endif %}
@@ -124,7 +124,7 @@
           <tr>
             <th class="text-left">صافي النقدية من الأنشطة التمويلية:</th>
             <th class="text-center {{ 'text-success' if report.financing_activities.net_cash_from_financing > 0 else 'text-danger' }}">
-              {{ "{:,.2f}".format(report.financing_activities.net_cash_from_financing) }} {{ tenant_currency_symbol or 'AED' }}
+              {{ format_currency(report.financing_activities.net_cash_from_financing) }}
             </th>
           </tr>
         </tfoot>
@@ -139,20 +139,20 @@
             <td width="70%"><strong>صافي التغير في النقدية:</strong></td>
             <td width="30%" class="text-center">
               <strong class="{{ 'text-success' if report.net_change_in_cash > 0 else 'text-danger' }}">
-                {{ "{:,.2f}".format(report.net_change_in_cash) }} {{ tenant_currency_symbol or 'AED' }}
+                {{ format_currency(report.net_change_in_cash) }}
               </strong>
             </td>
           </tr>
           <tr>
             <td><strong>النقدية في بداية الفترة:</strong></td>
             <td class="text-center">
-              <strong>{{ "{:,.2f}".format(report.cash_beginning) }} {{ tenant_currency_symbol or 'AED' }}</strong>
+              <strong>{{ format_currency(report.cash_beginning) }}</strong>
             </td>
           </tr>
           <tr class="border-top">
             <td><strong>النقدية في نهاية الفترة:</strong></td>
             <td class="text-center">
-              <strong class="text-warning">{{ "{:,.2f}".format(report.cash_ending) }} {{ tenant_currency_symbol or 'AED' }}</strong>
+              <strong class="text-warning">{{ format_currency(report.cash_ending) }}</strong>
             </td>
           </tr>
         </table></div>
@@ -181,7 +181,7 @@ new Chart(ctx, {
     data: {
         labels: ['الأنشطة التشغيلية', 'الأنشطة الاستثمارية', 'الأنشطة التمويلية', 'صافي التغير'],
         datasets: [{
-            label: 'التدفق النقدي ({{ tenant_currency_symbol or 'AED' }})',
+            label: 'التدفق النقدي ({{ tenant_currency_symbol }})',
             data: [
                 {{ report.operating_activities.net_cash_from_operating }},
                 {{ report.investing_activities.net_cash_from_investing }},
@@ -213,7 +213,7 @@ new Chart(ctx, {
             tooltip: {
                 callbacks: {
                     label: function(context) {
-                        return context.parsed.y.toLocaleString('ar-AE') + ' {{ tenant_currency_symbol or 'AED' }}';
+                        return context.parsed.y.toLocaleString('ar-AE') + ' {{ tenant_currency_symbol }}';
                     }
                 }
             }
@@ -223,7 +223,7 @@ new Chart(ctx, {
                 beginAtZero: true,
                 ticks: {
                     callback: function(value) {
-                        return value.toLocaleString('ar-AE') + ' {{ tenant_currency_symbol or 'AED' }}';
+                        return value.toLocaleString('ar-AE') + ' {{ tenant_currency_symbol }}';
                     }
                 }
             }

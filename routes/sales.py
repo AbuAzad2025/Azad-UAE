@@ -8,6 +8,7 @@ from services.currency_service import CurrencyService
 from utils.decorators import permission_required
 from utils.branching import ensure_warehouse_access, get_accessible_warehouses, should_show_all_branch_columns
 from utils.helpers import create_audit_log
+from utils.currency_utils import resolve_default_currency, get_system_default_currency
 from utils.tenanting import tenant_query, tenant_get_or_404, tenant_get, get_active_tenant_id
 from utils.db_safety import atomic_transaction
 from utils.structured_logging import log_mutation
@@ -126,7 +127,7 @@ def create():
             
             try:
                 from models import Tenant
-                default_currency = (Tenant.get_current().default_currency or '').strip() or 'AED'
+                default_currency = resolve_default_currency()
             except Exception as e:
                 import sys
                 import traceback
@@ -142,7 +143,7 @@ def create():
                     )
                 except Exception:
                     pass
-                default_currency = 'AED'
+                default_currency = get_system_default_currency()
             currency_value = request.form.get('currency')
             currency = currency_value if currency_value else default_currency
             user_exchange_rate = request.form.get('exchange_rate', type=float)
@@ -278,14 +279,14 @@ def print_invoice(id):
         if sale.seller and hasattr(sale.seller, 'get_display_name')
         else (sale.seller.full_name if sale.seller and sale.seller.full_name else (sale.seller.username if sale.seller else ''))
     )
-    amount_in_words = number_to_arabic_words(float(sale.total_amount or 0), sale.currency or default_currency or 'AED')
+    amount_in_words = number_to_arabic_words(float(sale.total_amount or 0), sale.currency or default_currency)
     qr_data_url = ''
     if settings and settings.enable_qr_code:
         qr_data_url = generate_qr_data_url({
             't': 'invoice',
             'n': sale.sale_number,
             'a': float(sale.total_amount or 0),
-            'c': sale.currency or default_currency or 'AED',
+            'c': sale.currency or default_currency,
             'd': sale.sale_date.strftime('%Y-%m-%d') if sale.sale_date else '',
             'co': (
                 settings.company_name_ar

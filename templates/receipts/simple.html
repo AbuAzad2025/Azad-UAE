@@ -202,7 +202,7 @@
     <!-- Amount -->
     <div class="amount-box">
       <div class="amount-label">المبلغ المستلم</div>
-      <div class="amount-value">{{ "{:,.2f}".format(receipt.base_amount) }} {{ tenant_currency_symbol or 'AED' }}</div>
+      <div class="amount-value">{{ format_currency(receipt.base_amount) }}</div>
       <div class="ic-3">
         {{ amount_in_words or '' }}
       </div>
@@ -225,7 +225,7 @@
           <tr>
             <td>{{ source_info.number }}</td>
             <td>{{ source_info.date }}</td>
-            <td><strong>{{ "{:,.2f}".format(receipt.amount) }} {{ receipt.currency }}</strong></td>
+            <td><strong>{{ format_currency(receipt.amount, receipt.currency) }}</strong></td>
           </tr>
         </tbody>
       </table></div>

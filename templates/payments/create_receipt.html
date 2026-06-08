@@ -172,7 +172,7 @@
 
             <strong>المبلغ الإجمالي:</strong><br>
 
-            <span class="text-success">{{ "{:,.2f}".format(sale.total_amount) }} {{ sale.currency }}</span>
+            <span class="text-success">{{ format_currency(sale.total_amount, sale.currency) }}</span>
 
           </div>
 
@@ -184,7 +184,7 @@
             {% if sale.currency != 'AED' and sale.exchange_rate %}
               {% set sale_balance_display = sale.balance_due / sale.exchange_rate %}
             {% endif %}
-            <span class="text-danger">{{ "{:,.2f}".format(sale_balance_display) }} {{ sale.currency }}</span>
+            <span class="text-danger">{{ format_currency(sale_balance_display, sale.currency) }}</span>
           </div>
 
         </div>
@@ -237,7 +237,7 @@
 
             <strong>المبلغ الإجمالي:</strong><br>
 
-            <span class="text-success">{{ "{:,.2f}".format(purchase.total_amount) }} {{ purchase.currency }}</span>
+            <span class="text-success">{{ format_currency(purchase.total_amount, purchase.currency) }}</span>
 
           </div>
 
@@ -249,10 +249,10 @@
 
               {% if suggested_amount is not none %}
 
-                {{ "{:,.2f}".format(suggested_amount) }} {{ selected_currency }}
+                {{ format_currency(suggested_amount, selected_currency) }}
               {% else %}
 
-                {{ "{:,.2f}".format(purchase.total_amount) }} {{ purchase.currency }}
+                {{ format_currency(purchase.total_amount, purchase.currency) }}
               {% endif %}
 
             </span>
@@ -719,7 +719,7 @@
 
                 <strong>الرصيد الحالي:</strong> 
 
-                <span id="customerBalance" class="badge badge-secondary">0.00 {{ tenant_currency_symbol or 'AED' }}</span>
+                <span id="customerBalance" class="badge badge-secondary">0.00 {{ tenant_currency_symbol }}</span>
 
               </div>
 
@@ -955,7 +955,7 @@ function loadCustomerBalance() {
 
     var balanceClass = data.balance < 0 ? 'text-danger' : 'text-success';
 
-    $('#customerBalance').text(data.balance.toFixed(2) + ' {{ tenant_currency_symbol or 'AED' }}')
+    $('#customerBalance').text(data.balance.toFixed(2) + ' {{ tenant_currency_symbol }}')
 
       .removeClass('text-danger text-success').addClass(balanceClass);
 
@@ -994,7 +994,7 @@ function loadCustomerBalance() {
         var saleUrl = "{{ url_for('sales.view', id=0) }}".replace('0', sale.id);
         {% endif %}
 
-        html += '<li><a href="' + saleUrl + '" target="_blank" rel="noopener noreferrer">' + sale.sale_number + '</a>: ' + parseFloat(sale.balance_due_aed || sale.balance_due).toFixed(2) + ' {{ tenant_currency_symbol or 'AED' }}</li>';
+        html += '<li><a href="' + saleUrl + '" target="_blank" rel="noopener noreferrer">' + sale.sale_number + '</a>: ' + parseFloat(sale.balance_due_aed || sale.balance_due).toFixed(2) + ' {{ tenant_currency_symbol }}</li>';
       });
 
       html += '</ul>';

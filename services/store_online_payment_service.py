@@ -8,6 +8,7 @@ from flask import current_app
 
 from extensions import db
 from models.payment_vault import PaymentVault
+from utils.currency_utils import get_system_default_currency
 from utils.nowpayments_ipn import get_nowpayments_ipn_url
 
 
@@ -43,7 +44,7 @@ class StoreOnlinePaymentService:
         if amount < 1:
             raise ValueError('الحد الأدنى للدفع الإلكتروني 1 USD/AED equivalent.')
 
-        currency = (sale.currency or 'AED').lower()
+        currency = (sale.currency or get_system_default_currency()).lower()
         order_id = f'{StoreOnlinePaymentService.ORDER_PREFIX}{sale.id}_{store.tenant_id}'
         ipn_url = get_nowpayments_ipn_url()
 

@@ -10,6 +10,7 @@ from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 from extensions import db
 from models import Customer, Product, Sale, User, Warehouse
 from services.sale_service import SaleService
+from utils.currency_utils import resolve_default_currency
 from services.stock_service import StockService
 from services.store_service import StoreService
 from services.store_payment_method_service import StorePaymentMethodService
@@ -206,7 +207,7 @@ class StoreCheckoutService:
         from services.store_notification_service import StoreNotificationService
 
         tenant = db.session.get(Tenant, tenant_id)
-        currency = (tenant.default_currency if tenant else None) or 'AED'
+        currency = resolve_default_currency(tenant)
 
         subtotal = Decimal('0')
         for line_data in lines_data:

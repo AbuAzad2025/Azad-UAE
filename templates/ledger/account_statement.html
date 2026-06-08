@@ -59,7 +59,7 @@
           <div class="info-box-content">
             <span class="info-box-text">الرصيد الافتتاحي</span>
             <span class="info-box-number">
-              {{ "{:,.2f}".format(statement.opening_balance) }} {{ tenant_currency_symbol or 'AED' }}
+              {{ format_currency(statement.opening_balance) }}
             </span>
           </div>
         </div>
@@ -70,7 +70,7 @@
           <div class="info-box-content">
             <span class="info-box-text">إجمالي المدين</span>
             <span class="info-box-number text-success">
-              {{ "{:,.2f}".format(statement.total_debit) }} {{ tenant_currency_symbol or 'AED' }}
+              {{ format_currency(statement.total_debit) }}
             </span>
           </div>
         </div>
@@ -81,7 +81,7 @@
           <div class="info-box-content">
             <span class="info-box-text">إجمالي الدائن</span>
             <span class="info-box-number text-danger">
-              {{ "{:,.2f}".format(statement.total_credit) }} {{ tenant_currency_symbol or 'AED' }}
+              {{ format_currency(statement.total_credit) }}
             </span>
           </div>
         </div>
@@ -108,7 +108,7 @@
           <tr class="table-info">
             <td colspan="7" class="text-center"><strong>الرصيد الافتتاحي</strong></td>
             <td class="text-center">
-              <strong>{{ "{:,.2f}".format(statement.opening_balance) }}</strong>
+              <strong>{{ format_currency(statement.opening_balance) }}</strong>
             </td>
           </tr>
           {% endif %}
@@ -125,14 +125,14 @@
             <td>{{ trans.description }}</td>
             <td><small>{{ trans.reference }}</small></td>
             <td class="text-center text-success">
-              {% if trans.debit > 0 %}{{ "{:,.2f}".format(trans.debit) }}{% else %}-{% endif %}
+              {% if trans.debit > 0 %}{{ format_currency(trans.debit) }}{% else %}-{% endif %}
             </td>
             <td class="text-center text-danger">
-              {% if trans.credit > 0 %}{{ "{:,.2f}".format(trans.credit) }}{% else %}-{% endif %}
+              {% if trans.credit > 0 %}{{ format_currency(trans.credit) }}{% else %}-{% endif %}
             </td>
             <td class="text-center">
               <strong class="{{ 'text-success' if trans.balance > 0 else 'text-danger' if trans.balance < 0 else '' }}">
-                {{ "{:,.2f}".format(trans.balance) }}
+                {{ format_currency(trans.balance) }}
               </strong>
             </td>
           </tr>
@@ -141,11 +141,11 @@
         <tfoot class="bg-light">
           <tr>
             <th colspan="5" class="text-left">الإجمالي:</th>
-            <th class="text-center text-success">{{ "{:,.2f}".format(statement.total_debit) }}</th>
-            <th class="text-center text-danger">{{ "{:,.2f}".format(statement.total_credit) }}</th>
+            <th class="text-center text-success">{{ format_currency(statement.total_debit) }}</th>
+            <th class="text-center text-danger">{{ format_currency(statement.total_credit) }}</th>
             <th class="text-center">
               <strong class="{{ 'text-success' if statement.closing_balance > 0 else 'text-danger' if statement.closing_balance < 0 else '' }}">
-                {{ "{:,.2f}".format(statement.closing_balance) }}
+                {{ format_currency(statement.closing_balance) }}
               </strong>
             </th>
           </tr>

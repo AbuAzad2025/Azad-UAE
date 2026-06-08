@@ -10,6 +10,7 @@ from models import Supplier, Purchase, Payment
 from utils.decorators import permission_required, admin_required, branch_scope_id
 from utils.branching import should_show_all_branch_columns
 from utils.helpers import create_audit_log
+from utils.currency_utils import resolve_default_currency, get_system_default_currency
 from utils.tenanting import tenant_query, tenant_get_or_404, get_active_tenant_id
 from sqlalchemy import func, desc
 from utils.db_safety import atomic_transaction
@@ -177,9 +178,9 @@ def create():
             from utils.field_validators import normalize_phone_optional, validate_currency_code
             try:
                 from models import Tenant
-                default_currency = (Tenant.get_current().default_currency or '').strip() or 'AED'
+                default_currency = resolve_default_currency()
             except Exception:
-                default_currency = 'AED'
+                default_currency = get_system_default_currency()
 
             initial_balance = request.form.get('initial_balance', type=float, default=0)
 
@@ -302,9 +303,9 @@ def edit(id):
             supplier.rating = int(rating_value) if rating_value else None
             try:
                 from models import Tenant
-                default_currency = (Tenant.get_current().default_currency or '').strip() or 'AED'
+                default_currency = resolve_default_currency()
             except Exception:
-                default_currency = 'AED'
+                default_currency = get_system_default_currency()
             supplier.credit_limit = request.form.get('credit_limit', type=float)
             supplier.payment_terms_days = request.form.get('payment_terms_days', type=int)
             supplier.preferred_currency = validate_currency_code(

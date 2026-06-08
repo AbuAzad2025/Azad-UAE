@@ -36,11 +36,11 @@
 
   <div class="row">
 
-    <div class="col-md-4"><div class="card"><div class="card-body"><h6>VAT Output (2130) — مبيعات</h6><h3>{{ '{:,.2f}'.format(report.vat_output) }}</h3></div></div></div>
+    <div class="col-md-4"><div class="card"><div class="card-body"><h6>VAT Output (2130) — مبيعات</h6><h3>{{ format_currency(report.vat_output) }}</h3></div></div></div>
 
-    <div class="col-md-4"><div class="card"><div class="card-body"><h6>VAT Input (1170) — مشتريات</h6><h3>{{ '{:,.2f}'.format(report.vat_input) }}</h3></div></div></div>
+    <div class="col-md-4"><div class="card"><div class="card-body"><h6>VAT Input (1170) — مشتريات</h6><h3>{{ format_currency(report.vat_input) }}</h3></div></div></div>
 
-    <div class="col-md-4"><div class="card border-primary"><div class="card-body"><h6>صافي VAT مستحق</h6><h3>{{ '{:,.2f}'.format(report.net_vat) }}</h3></div></div></div>
+    <div class="col-md-4"><div class="card border-primary"><div class="card-body"><h6>صافي VAT مستحق</h6><h3>{{ format_currency(report.net_vat) }}</h3></div></div></div>
 
   </div>
 

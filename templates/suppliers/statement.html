@@ -116,16 +116,16 @@
         </div>
         <div class="col-md-3">
           <h6 class="text-muted">إجمالي المبلغ</h6>
-          <h3 class="text-success">{{ '{:,.2f}'.format(supplier.total_purchases_base or 0) }} {{ tenant_currency_symbol or 'AED' }}</h3>
+          <h3 class="text-success">{{ format_currency(supplier.total_purchases_base or 0) }}</h3>
         </div>
         <div class="col-md-3">
           <h6 class="text-muted">{{ t('Paid') }}</h6>
-          <h3 class="text-primary">{{ '{:,.2f}'.format(supplier.total_paid_base or 0) }} {{ tenant_currency_symbol or 'AED' }}</h3>
+          <h3 class="text-primary">{{ format_currency(supplier.total_paid_base or 0) }}</h3>
         </div>
         <div class="col-md-3">
           <h6 class="text-muted">الرصيد المستحق</h6>
           <h3 class="{% if supplier.get_balance_base() > 0 %}text-danger{% else %}text-success{% endif %}">
-            {{ '{:,.2f}'.format(supplier.get_balance_base()) }} {{ tenant_currency_symbol or 'AED' }}
+            {{ format_currency(supplier.get_balance_base()) }}
           </h3>
         </div>
       </div>
@@ -144,7 +144,7 @@
             <th><i class="fas fa-exchange-alt mr-1"></i>سعر الصرف</th>
             <th class="text-center">عدد المنتجات</th>
             <th class="text-left">{{ t('Amount') }}</th>
-            <th class="text-left">المبلغ ({{ tenant_currency_symbol or 'AED' }})</th>
+            <th class="text-left">المبلغ ({{ tenant_currency_symbol }})</th>
             <th class="text-center">{{ t('Status') }}</th>
           </tr>
         </thead>
@@ -165,8 +165,8 @@
               {% endif %}
             </td>
             <td class="text-center">{{ purchase.lines|length }}</td>
-            <td class="text-left">{{ '{:,.2f}'.format(purchase.total_amount) }}</td>
-            <td class="text-left text-success"><strong>{{ '{:,.2f}'.format(purchase.base_amount) }}</strong></td>
+            <td class="text-left">{{ format_currency(purchase.total_amount) }}</td>
+            <td class="text-left text-success"><strong>{{ format_currency(purchase.base_amount) }}</strong></td>
             <td class="text-center">
               <span class="badge badge-success">
                 <i class="fas fa-check"></i> مؤكد
@@ -179,14 +179,14 @@
           <tr>
             <td colspan="7" class="text-left">الإجمالي:</td>
             <td class="text-left text-success">
-              <h5 class="mb-0">{{ '{:,.2f}'.format(supplier.total_purchases_base or 0) }} {{ tenant_currency_symbol or 'AED' }}</h5>
+              <h5 class="mb-0">{{ format_currency(supplier.total_purchases_base or 0) }}</h5>
             </td>
             <td></td>
           </tr>
           <tr>
             <td colspan="7" class="text-left">الرصيد المستحق:</td>
             <td class="text-left {% if supplier.get_balance_base() > 0 %}text-danger{% else %}text-success{% endif %}">
-              <h5 class="mb-0">{{ '{:,.2f}'.format(supplier.get_balance_base()) }} {{ tenant_currency_symbol or 'AED' }}</h5>
+              <h5 class="mb-0">{{ format_currency(supplier.get_balance_base()) }}</h5>
             </td>
             <td></td>
           </tr>
@@ -214,7 +214,7 @@
               <th>الطريقة</th>
               <th>الحالة</th>
               <th>تاريخ الاستحقاق/الصرف</th>
-              <th class="text-left">المبلغ ({{ tenant_currency_symbol or 'AED' }})</th>
+              <th class="text-left">المبلغ ({{ tenant_currency_symbol }})</th>
               <th>ملاحظات</th>
             </tr>
           </thead>
@@ -245,7 +245,7 @@
                   -
                 {% endif %}
               </td>
-              <td class="text-left text-primary"><strong>{{ '{:,.2f}'.format(p.base_amount or 0) }}</strong></td>
+              <td class="text-left text-primary"><strong>{{ format_currency(p.base_amount or 0) }}</strong></td>
               <td>{{ p.notes or '-' }}</td>
             </tr>
             {% endfor %}
@@ -255,7 +255,7 @@
               <td colspan="6" class="text-left">إجمالي الدفعات:</td>
               <td class="text-left text-primary">
                 <h5 class="mb-0">
-                  {{ '{:,.2f}'.format(payments|sum(attribute='base_amount') or 0) }} {{ tenant_currency_symbol or 'AED' }}
+                  {{ format_currency(payments|sum(attribute='base_amount') or 0) }}
                 </h5>
               </td>
               <td></td>

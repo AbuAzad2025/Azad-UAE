@@ -326,9 +326,9 @@
             <td>{{ loop.index }}</td>
             <td class="ic-8"><strong>{{ line.product.name if line.product else '-' }}</strong></td>
             <td>{{ line.quantity }}</td>
-            <td>{{ "{:,.2f}".format(line.unit_price) }}</td>
+            <td>{{ format_currency(line.unit_price) }}</td>
             <td>{{ line.discount_percent if line.discount_percent else '-' }}</td>
-            <td><strong>{{ "{:,.2f}".format(line.line_total) }}</strong></td>
+            <td><strong>{{ format_currency(line.line_total) }}</strong></td>
           </tr>
           {% endfor %}
         </tbody>
@@ -337,29 +337,29 @@
       <div class="totals">
         <div class="total-row">
           <span>المجموع الفرعي:</span>
-          <strong>{{ "{:,.2f}".format(sale.subtotal) }} {{ sale.currency }}</strong>
+          <strong>{{ format_currency(sale.subtotal, sale.currency) }}</strong>
         </div>
         {% if sale.discount_amount > 0 %}
         <div class="total-row">
           <span>الخصم:</span>
-          <strong class="ic-9">- {{ "{:,.2f}".format(sale.discount_amount) }}</strong>
+          <strong class="ic-9">- {{ format_currency(sale.discount_amount) }}</strong>
         </div>
         {% endif %}
         {% if sale.shipping_cost > 0 %}
         <div class="total-row">
           <span>الشحن:</span>
-          <strong>{{ "{:,.2f}".format(sale.shipping_cost) }}</strong>
+          <strong>{{ format_currency(sale.shipping_cost) }}</strong>
         </div>
         {% endif %}
         {% if sale.tax_amount > 0 %}
         <div class="total-row">
           <span>الضريبة ({{ sale.tax_rate }}%):</span>
-          <strong>{{ "{:,.2f}".format(sale.tax_amount) }}</strong>
+          <strong>{{ format_currency(sale.tax_amount) }}</strong>
         </div>
         {% endif %}
         <div class="total-row final">
           <span>الإجمالي النهائي</span>
-          <strong>{{ "{:,.2f}".format(sale.total_amount) }} {{ sale.currency }}</strong>
+          <strong>{{ format_currency(sale.total_amount, sale.currency) }}</strong>
         </div>
         {% include 'partials/print_unified_amount_qr.html' %}
       </div>
@@ -378,7 +378,7 @@
                 {{ payment.payment_date.strftime('%Y-%m-%d') }}
               </div>
               <div class="ic-14">
-                {{ "{:,.2f}".format(payment.amount_aed) }} AED
+                {{ format_currency(payment.amount_aed, 'AED') }}
               </div>
             </div>
             <div class="ic-15">

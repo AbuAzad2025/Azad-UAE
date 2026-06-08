@@ -23,6 +23,7 @@ from utils.branching import role_requires_branch, get_visible_products_query
 from utils.auth_helpers import role_level_for, role_level_for_user
 from utils.ai_access import get_tenant_ai_level, set_tenant_ai_level
 from utils.tenanting import get_active_tenant_id
+from utils.currency_utils import get_system_default_currency, resolve_default_currency
 from sqlalchemy import text, inspect
 import json
 import logging
@@ -2453,9 +2454,9 @@ def preview_invoice(template):
     from utils.qr_generator import generate_qr_data_url
     try:
         from models import Tenant
-        default_currency = (Tenant.get_current().default_currency or '').strip() or 'AED'
+        default_currency = resolve_default_currency(Tenant.get_current())
     except Exception:
-        default_currency = 'AED'
+        default_currency = get_system_default_currency()
 
     # Sample data for preview
     class SampleCustomer:
@@ -2564,9 +2565,9 @@ def preview_receipt(template):
     print_branding = get_print_header_context(tid)
     try:
         from models import Tenant
-        default_currency = (Tenant.get_current().default_currency or '').strip() or 'AED'
+        default_currency = resolve_default_currency(Tenant.get_current())
     except Exception:
-        default_currency = 'AED'
+        default_currency = get_system_default_currency()
     from utils.number_to_arabic import number_to_arabic_words
     from utils.qr_generator import generate_qr_data_url
 
@@ -2960,9 +2961,9 @@ def currency_settings():
     settings = SystemSettings.get_current()
     try:
         from models import Tenant
-        default_currency = (Tenant.get_current().default_currency or '').strip() or 'AED'
+        default_currency = resolve_default_currency(Tenant.get_current())
     except Exception:
-        default_currency = 'AED'
+        default_currency = get_system_default_currency()
     rates = CurrencyService.get_all_rates(default_currency)
 
     return render_template('owner/currency_settings.html',
@@ -3362,7 +3363,7 @@ def tenant_edit(tenant_id):
             tenant.phone_2 = request.form.get('phone_2', tenant.phone_2).strip() or None
             tenant.email = request.form.get('email', tenant.email).strip() or None
             tenant.address_ar = request.form.get('address_ar', tenant.address_ar).strip() or None
-            tenant.default_currency = request.form.get('default_currency', tenant.default_currency).strip() or 'AED'
+            tenant.default_currency = request.form.get('default_currency', tenant.default_currency).strip() or get_system_default_currency()
             tenant.max_users = int(request.form.get('max_users', tenant.max_users or 5))
             tenant.max_products = int(request.form.get('max_products', tenant.max_products or 1000))
             tenant.max_customers = int(request.form.get('max_customers', tenant.max_customers or 500))
