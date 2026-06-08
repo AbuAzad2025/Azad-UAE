@@ -277,6 +277,198 @@ img {
   font-weight: 800;
 }
 
+.erp-navbar {
+  min-height: 68px;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: nowrap !important;
+  gap: 12px;
+}
+
+.erp-navbar-brand-zone,
+.erp-navbar-main-zone,
+.erp-navbar-actions-zone {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.erp-navbar-main-zone {
+  flex: 1 1 auto;
+  justify-content: center;
+  gap: 4px;
+}
+
+.erp-navbar-actions-zone {
+  gap: 6px;
+}
+
+.erp-navbar-pushmenu {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  color: var(--ui-navbar-fg);
+  font-size: 1.15rem;
+  text-decoration: none;
+  transition: background 0.2s ease;
+}
+
+.erp-navbar-pushmenu:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--ui-navbar-fg);
+  text-decoration: none;
+}
+
+.erp-navbar-brand-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ui-navbar-fg);
+  text-decoration: none;
+  font-weight: 800;
+  font-size: 1.05rem;
+  padding: 6px 10px;
+  border-radius: 10px;
+  transition: background 0.2s ease;
+  white-space: nowrap;
+}
+
+.erp-navbar-brand-link:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--ui-navbar-fg);
+  text-decoration: none;
+}
+
+.erp-navbar-brand-icon {
+  font-size: 1.25rem;
+  color: var(--ui-gold);
+}
+
+.erp-nav-main-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  color: var(--ui-navbar-fg);
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 0.95rem;
+  opacity: 0.85;
+  transition: opacity 0.2s ease, background 0.2s ease;
+  white-space: nowrap;
+}
+
+.erp-nav-main-link:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--ui-navbar-fg);
+  text-decoration: none;
+}
+
+.erp-nav-main-link.active {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.18);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.22);
+}
+
+.erp-navbar-tool-btn,
+.erp-navbar-icon-btn,
+.erp-navbar-user-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 6px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: transparent;
+  color: var(--ui-navbar-fg);
+  font-weight: 700;
+  font-size: 0.9rem;
+  transition: background 0.2s ease;
+  white-space: nowrap;
+}
+
+.erp-navbar-tool-btn:hover,
+.erp-navbar-icon-btn:hover,
+.erp-navbar-user-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--ui-navbar-fg);
+}
+
+.erp-navbar-user-btn .erp-user-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.18);
+  color: var(--ui-navbar-fg);
+}
+
+.erp-navbar-tool-dropdown .dropdown-menu {
+  min-width: 240px;
+}
+
+.erp-navbar-tool-dropdown .dropdown-item .erp-variant-select {
+  width: 100%;
+  min-height: 36px;
+}
+
+@media (max-width: 1199.98px) {
+  .erp-navbar {
+    padding: 0 10px;
+  }
+  .erp-nav-main-link {
+    padding: 8px 10px;
+    font-size: 0.88rem;
+  }
+  .erp-nav-main-link span {
+    display: none !important;
+  }
+  .erp-navbar-brand-name {
+    display: none !important;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .erp-navbar {
+    min-height: 56px;
+    padding: 0 8px;
+    gap: 6px;
+  }
+  .erp-navbar-main-zone {
+    display: none;
+  }
+  .erp-navbar-tool-btn span,
+  .erp-navbar-icon-btn span {
+    display: none !important;
+  }
+  .erp-navbar-user-btn span {
+    display: none !important;
+  }
+  .erp-navbar-tool-btn,
+  .erp-navbar-icon-btn,
+  .erp-navbar-user-btn {
+    padding: 6px 8px;
+    min-height: 36px;
+    min-width: 36px;
+  }
+  .erp-navbar-pushmenu {
+    width: 36px;
+    height: 36px;
+  }
+}
+
 .main-sidebar {
   background: var(--ui-sidebar-bg) !important;
   box-shadow: var(--ui-shadow-strong);
@@ -840,7 +1032,7 @@ html[data-ui-mode="dark"] .table thead th {
   display: flex;
   align-items: center;
   gap: 10px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 
 .erp-header-control {

@@ -104,180 +104,122 @@
 
 <body class="hold-transition sidebar-mini layout-fixed" data-sidebar-side="{{ 'right' if is_rtl else 'left' }}">
 <div class="wrapper">
+  {% set is_global_scope_user = current_user.is_authenticated and (current_user.is_owner or (current_user.role and current_user.role.slug == 'developer')) %}
 
-  <nav class="main-header navbar navbar-expand navbar-white navbar-light">
-    <ul class="navbar-nav">
-      <li class="nav-item">
-        <a class="nav-link" data-widget="pushmenu" href="#" role="button" title="تبديل القائمة الجانبية"><i class="fas fa-bars"></i></a>
-      </li>
-      <li class="nav-item d-none d-sm-inline-block">
-        <a href="{{ url_for('main.dashboard') }}" class="nav-link"><i class="fas fa-home mr-2"></i>{{ t('Dashboard') }}</a>
-      </li>
-    </ul>
-
-    <ul class="navbar-nav ml-auto erp-header-controls">
-      <!-- الساعة والتاريخ وسعر الصرف -->
-      <li class="nav-item d-none d-lg-inline-block">
-        <div class="nav-link erp-nav-metrics">
-          <div class="erp-nav-metrics-row">
-            <!-- الساعة والتاريخ -->
-            <div class="erp-metric-block">
-              <div id="current-time" class="erp-metric-primary">
-                <i class="fas fa-clock mr-1"></i>
-                <span id="time-display">--:--</span>
-              </div>
-              <div id="current-date" class="erp-metric-secondary">
-                <i class="fas fa-calendar mr-1"></i>
-                <span id="date-display">--/--/----</span>
-              </div>
-            </div>
-            
-            <!-- سعر الصرف (عرض فقط — لا يستخدم في الحسابات) -->
-            <div class="erp-exchange-box" data-toggle="modal" data-target="#fxModal" title="أسعار صرف حية (عرض فقط)">
-              <span class="d-none d-lg-inline erp-exchange-label">
-                <i class="fas fa-coins mr-1"></i>
-                <small>العملات</small>
-              </span>
-              <span class="d-inline d-lg-none">
-                <i class="fas fa-coins text-white"></i>
-              </span>
-              <span class="erp-exchange-live-badges ml-1" id="fx-nav-badges">
-                <span class="badge badge-light text-dark" title="دولار">$</span>
-                <span class="badge badge-light text-dark" title="دينار">JD</span>
-                <span class="badge badge-light text-dark" title="شيقل">₪</span>
-              </span>
-            </div>
-          </div>
-        </div>
-      </li>
-      
-      <li class="nav-item d-none d-md-inline-block">
-        <span class="nav-link erp-navbar-brand-text" title="{{ tenant_name_ar or company_name_ar or 'أزاد' }}">
-          <i class="fas fa-cube mr-1"></i>
-          <span class="d-none d-lg-inline">{{ tenant_name_ar or company_name_ar or 'أزاد' }}</span>
-        </span>
-      </li>
-
-      {% set is_global_scope_user = current_user.is_authenticated and (current_user.is_owner or (current_user.role and current_user.role.slug == 'developer')) %}
-      {% if is_global_scope_user %}
-      <li class="nav-item d-none d-lg-inline-block">
-        <span class="nav-link py-1">
+  <nav class="main-header navbar navbar-expand navbar-white navbar-light erp-navbar">
+    <div class="erp-navbar-brand-zone">
+      <a class="erp-navbar-pushmenu" data-widget="pushmenu" href="#" role="button" title="تبديل القائمة الجانبية">
+        <i class="fas fa-bars"></i>
+      </a>
+      <a href="{{ url_for('main.dashboard') }}" class="erp-navbar-brand-link">
+        <i class="fas fa-shield-alt erp-navbar-brand-icon"></i>
+        <span class="erp-navbar-brand-name d-none d-md-inline">{{ tenant_name_ar or company_name_ar or 'أزاد' }}</span>
+      </a>
+    </div>
+    <div class="erp-navbar-main-zone">
+      <a href="{{ url_for('main.dashboard') }}" class="erp-nav-main-link {% if request.endpoint == 'main.dashboard' %}active{% endif %}">
+        <i class="fas fa-home"></i>
+        <span class="d-none d-lg-inline">{{ t('Dashboard') }}</span>
+      </a>
+      {% if current_user.is_authenticated and current_user.has_permission('manage_sales') %}
+      <a href="{{ url_for('sales.index') }}" class="erp-nav-main-link {% if request.endpoint and 'sales' in request.endpoint %}active{% endif %}">
+        <i class="fas fa-file-invoice"></i>
+        <span class="d-none d-lg-inline">المبيعات</span>
+      </a>
+      {% endif %}
+      {% if current_user.is_authenticated and current_user.has_permission('manage_users') %}
+      <a href="{{ url_for('users.index') }}" class="erp-nav-main-link {% if request.endpoint and 'users' in request.endpoint %}active{% endif %}">
+        <i class="fas fa-users-cog"></i>
+        <span class="d-none d-lg-inline">المستخدمين</span>
+      </a>
+      {% endif %}
+      {% if current_user.is_authenticated and current_user.has_permission('view_reports') %}
+      <a href="{{ url_for('reports.sales') }}" class="erp-nav-main-link {% if request.endpoint and 'reports' in request.endpoint %}active{% endif %}">
+        <i class="fas fa-chart-bar"></i>
+        <span class="d-none d-lg-inline">التقارير</span>
+      </a>
+      {% endif %}
+      {% if current_user.is_authenticated and (current_user.is_owner or (current_user.role and current_user.role.slug in ['developer','super_admin','manager'])) %}
+      <a href="{{ url_for('owner.company_info' if (current_user.role and current_user.role.slug in ['super_admin','manager']) else 'owner.system_config') }}" class="erp-nav-main-link {% if request.endpoint and 'owner.' in request.endpoint %}active{% endif %}">
+        <i class="fas fa-cog"></i>
+        <span class="d-none d-lg-inline">الإعدادات</span>
+      </a>
+      {% endif %}
+    </div>
+    <div class="erp-navbar-actions-zone">
+      <div class="dropdown erp-navbar-tool-dropdown d-none d-md-block">
+        <button class="btn btn-outline-light erp-navbar-tool-btn" type="button" data-toggle="dropdown" aria-expanded="false" title="أدوات النظام">
+          <i class="fas fa-tools"></i>
+          <span class="d-none d-lg-inline">أدوات</span>
+        </button>
+        <div class="dropdown-menu dropdown-menu-left">
+          <span class="dropdown-item dropdown-header">أدوات النظام</span>
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-item" href="#" data-toggle="modal" data-target="#fxModal">
+            <i class="fas fa-coins text-warning mr-2"></i>أسعار الصرف
+          </a>
+          <a class="dropdown-item" href="#" data-toggle="modal" data-target="#navbarCalculatorModal">
+            <i class="fas fa-calculator text-info mr-2"></i>الآلة الحاسبة
+          </a>
+          <a class="dropdown-item" href="#" onclick="toggleSidebarDirection(); return false;">
+            <i class="fas fa-exchange-alt text-success mr-2"></i>موقع القائمة
+          </a>
+          {% if current_user.is_authenticated and ai_nav_visible %}
+          <a class="dropdown-item" href="{{ url_for('ai.assistant_page') }}">
+            <i class="fas fa-robot text-primary mr-2"></i>المساعد الذكي
+          </a>
+          {% endif %}
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-item" href="#" data-ui-action="toggle-viewmode">
+            <i class="fas fa-desktop text-secondary mr-2"></i><span data-ui-role="viewmode-label">تلقائي</span>
+          </a>
+          {% if is_global_scope_user %}
+          <div class="dropdown-divider"></div>
+          <span class="dropdown-item dropdown-header">الشركة / الفرع</span>
           {% if active_branch %}
-          <span class="badge badge-info" title="الفرع النشط حالياً">
-            <i class="fas fa-code-branch mr-1"></i>
-            الفرع: {{ active_branch.name }}{% if active_branch.code %} ({{ active_branch.code }}){% endif %}
+          <span class="dropdown-item text-muted small">
+            <i class="fas fa-code-branch mr-2"></i>الفرع: {{ active_branch.name }}
           </span>
           {% else %}
-          <span class="badge badge-success" title="وضع كل الفروع">
-            <i class="fas fa-sitemap mr-1"></i>
-            الفرع: كل الفروع
+          <span class="dropdown-item text-muted small">
+            <i class="fas fa-sitemap mr-2"></i>كل الفروع
           </span>
           {% endif %}
-        </span>
-      </li>
-      {% endif %}
-
-      {% if is_global_scope_user %}
-      <li class="nav-item dropdown erp-header-control">
-        <a class="nav-link" data-toggle="dropdown" href="#" title="تبديل الشركة">
-          <i class="fas fa-building mr-1"></i>
-          <span class="d-none d-md-inline">{{ tenant_name_ar or company_name_ar }}</span>
-        </a>
-        <div class="dropdown-menu dropdown-menu-right">
-          <a class="dropdown-item {% if not active_tenant_id %}active{% endif %}" href="{{ url_for('tenants.switch', tenant_id=0) }}">
-            كل الشركات
+          <a class="dropdown-item" href="{{ url_for('tenants.switch', tenant_id=0) }}">
+            <i class="fas fa-building mr-2"></i>تبديل الشركة
           </a>
+          {% endif %}
           <div class="dropdown-divider"></div>
-          {% for tnt in available_tenants %}
-          <a class="dropdown-item {% if active_tenant_id == tnt.id %}active{% endif %}" href="{{ url_for('tenants.switch', tenant_id=tnt.id) }}">
-            {{ tnt.name_ar or tnt.name }}
-          </a>
-          {% endfor %}
+          <div class="dropdown-item">
+            <select class="custom-select custom-select-sm erp-variant-select" data-ui-action="set-variant" aria-label="اختيار الثيم" title="اختيار الثيم">
+              <option value="palestinian">فلسطيني</option>
+              <option value="gulf">خليجي</option>
+            </select>
+          </div>
         </div>
-      </li>
-      {% endif %}
-
-      <li class="nav-item erp-header-control erp-theme-controls d-none d-lg-flex">
-        <select class="custom-select custom-select-sm erp-variant-select" data-ui-action="set-variant" aria-label="اختيار الثيم: فلسطيني أو خليجي" title="اختيار الثيم">
-          <option value="palestinian">فلسطيني</option>
-          <option value="gulf">خليجي</option>
-        </select>
-      </li>
-
-      <li class="nav-item erp-header-control">
-        <button type="button" class="btn btn-outline-light erp-mode-toggle" data-ui-action="toggle-mode" aria-label="التبديل إلى الوضع الداكن" title="التبديل إلى الوضع الداكن">
-          <i class="fas fa-sun" data-ui-role="mode-icon" aria-hidden="true"></i>
-          <span class="d-none d-md-inline" data-ui-role="mode-label">فاتح</span>
+      </div>
+      <div class="dropdown">
+        <button class="btn btn-outline-light erp-navbar-icon-btn" type="button" data-toggle="dropdown" title="تغيير اللغة">
+          <i class="fas fa-globe"></i>
+          <span class="d-none d-lg-inline">{{ session.get('language', 'ar')|upper }}</span>
         </button>
-      </li>
-
-      <li class="nav-item erp-header-control">
-        <button type="button" class="btn btn-outline-light erp-viewmode-toggle" data-ui-action="toggle-viewmode" aria-label="تبديل عرض الشاشة" title="تبديل عرض الشاشة">
-          <i class="fas fa-desktop" data-ui-role="viewmode-icon" aria-hidden="true"></i>
-          <span class="d-none d-md-inline" data-ui-role="viewmode-label">تلقائي</span>
-        </button>
-      </li>
-
-      <li class="nav-item erp-header-control d-none d-sm-flex">
-        <button
-          type="button"
-          class="btn btn-outline-light erp-calc-toggle"
-          data-toggle="modal"
-          data-target="#navbarCalculatorModal"
-          title="الآلة الحاسبة"
-          aria-label="الآلة الحاسبة"
-        >
-          <i class="fas fa-calculator" aria-hidden="true"></i>
-          <span class="d-none d-md-inline">حاسبة</span>
-        </button>
-      </li>
-      
-      <!-- AI Assistant -->
-      {% if current_user.is_authenticated and ai_nav_visible %}
-      <li class="nav-item">
-        <a href="{{ url_for('ai.assistant_page') }}" class="nav-link" title="المساعد الذكي">
-          <i class="fas fa-robot mr-1 erp-ai-icon"></i>
-          <span class="d-none d-md-inline">المساعد</span>
-        </a>
-      </li>
-      {% endif %}
-      
-      <!-- Sidebar Direction Toggle -->
-      <li class="nav-item d-none d-md-inline-block">
-        <a class="nav-link erp-sidebar-dir-toggle" href="#" onclick="toggleSidebarDirection(); return false;" title="نقل القائمة الجانبية للجهة الأخرى" aria-label="نقل القائمة الجانبية للجهة الأخرى">
-          <i class="fas fa-exchange-alt erp-sidebar-toggle-icon" aria-hidden="true"></i>
-          <span class="d-none d-lg-inline">موقع القائمة</span>
-        </a>
-      </li>
-      
-      <!-- Language Switcher -->
-      <li class="nav-item dropdown">
-        <a class="nav-link" data-toggle="dropdown" href="#" title="تغيير اللغة">
-          <i class="fas fa-globe mr-1"></i>
-          <span class="d-none d-md-inline">{{ session.get('language', 'ar')|upper }}</span>
-        </a>
         <div class="dropdown-menu dropdown-menu-sm dropdown-menu-left">
           <a href="{{ url_for('language.set_language', lang='ar', next=request.full_path) }}" class="dropdown-item {% if session.get('language', 'ar') == 'ar' %}active{% endif %}">
-            <i class="fas fa-check mr-2 {% if session.get('language', 'ar') != 'ar' %}invisible{% endif %}"></i>
-            العربية
+            <i class="fas fa-check mr-2 {% if session.get('language', 'ar') != 'ar' %}invisible{% endif %}"></i>العربية
           </a>
           <a href="{{ url_for('language.set_language', lang='en', next=request.full_path) }}" class="dropdown-item {% if session.get('language') == 'en' %}active{% endif %}">
-            <i class="fas fa-check mr-2 {% if session.get('language') != 'en' %}invisible{% endif %}"></i>
-            English
+            <i class="fas fa-check mr-2 {% if session.get('language') != 'en' %}invisible{% endif %}"></i>English
           </a>
         </div>
-      </li>
-      
-      <li class="nav-item dropdown">
-        <a class="nav-link" data-toggle="dropdown" href="#">
-          <span class="erp-user-block">
-            <span class="erp-user-avatar"><i class="far fa-user"></i></span>
-            <span class="d-none d-md-inline">
-              <div class="erp-user-name">{{ current_user.username }}</div>
-              <div class="erp-user-role">{{ current_user.role.name_ar if (current_user.is_authenticated and current_user.role) else 'مستخدم' }}</div>
-            </span>
-          </span>
-        </a>
+      </div>
+      <button type="button" class="btn btn-outline-light erp-navbar-icon-btn" data-ui-action="toggle-mode" title="التبديل إلى الوضع الداكن" aria-label="التبديل إلى الوضع الداكن">
+        <i class="fas fa-sun" data-ui-role="mode-icon"></i>
+      </button>
+      <div class="dropdown">
+        <button class="btn btn-outline-light erp-navbar-user-btn" type="button" data-toggle="dropdown" title="الملف الشخصي">
+          <span class="erp-user-avatar"><i class="far fa-user"></i></span>
+          <span class="d-none d-lg-inline ml-2">{{ current_user.username }}</span>
+        </button>
         <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
           <span class="dropdown-item dropdown-header">{{ current_user.username }}</span>
           <div class="dropdown-divider"></div>
@@ -289,8 +231,8 @@
             <i class="fas fa-sign-out-alt mr-2"></i>تسجيل خروج
           </a>
         </div>
-      </li>
-    </ul>
+      </div>
+    </div>
   </nav>
 
   <!-- Currency Exchange Modal (عرض فقط — لا يُستخدم في الحسابات) -->
