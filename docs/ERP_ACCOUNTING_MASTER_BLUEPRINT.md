@@ -1991,6 +1991,31 @@ What is missing is primarily **narrative clarity** in documentation and possibly
 - **Effort:** 2-3 days for custom templates below 768px
 - **Note:** Targeted for completion today; tablets and desktops already supported.
 
+##### D5. Accessibility Errors (WCAG) — Forms, Buttons, Viewport
+- **Status:** ✅ **DONE (June 8, 2026)**
+- **Effort:** 4 hours
+- **Done:** ~1,050 real a11y errors fixed across 137 templates; `aria-label`/`for`/`id`/`title` added to all inputs, selects, textareas, icon buttons/links; viewport meta added to 10 standalone print templates (invoices/, receipts/)
+- **Tools:** `tools/fix_accessibility.py` (label-pairing, icon labeling, aria-label injection), `tools/count_a11y.py` (disk-based verifier bypassing IDE cache), `tools/fix_viewport.py`
+- **Verified:** 0 inputs/selects/textareas/buttons without accessible name on disk
+
+##### D6. CSS Externalization (inline styles → external files)
+- **Status:** ⏸️ **Pending**
+- **Effort:** 2-3 days
+- **Scope:** ~300 `CSS inline styles should not be used` warnings across templates (dashboard.html, owner/, shop/, invoices/, receipts/, base.html). Move `style="..."` attributes to external `.css` files or `<style>` blocks with classes
+- **Note:** Cosmetic warnings only — do not affect functionality. Lower priority than D3/D4.
+
+##### D7. Jinja2 Linter False Positives (document & suppress)
+- **Status:** ⏸️ **Pending (investigation)**
+- **Effort:** 2 hours
+- **Scope:** Persistent IDE warnings that are NOT real bugs — caused by Edge Tools linter not understanding Jinja2 templating:
+  - `<ul> must only contain <li>` — caused by `{% if %}` tags creating whitespace text nodes (base.html:118,358,375,661,813)
+  - CSS/JS syntax errors in `<style>`/`<script>` — caused by `{{ }}` interpolation
+  - `apple-touch-icon should be in <head>` (base.html:47) — it IS in head; linter misreads Jinja2 vars
+  - `lang attribute not valid` (base.html:2) — `lang="ar"` is valid ISO 639-1
+  - `manifest extension should be webmanifest` — `.json` is valid
+  - `theme-color not supported by Firefox` — works in Chrome/Safari
+- **Action:** Document as known false positives; consider `.eslintrc`/linter config suppression or Jinja2-aware linter. No code changes needed for correctness.
+
 ---
 
 #### Execution Tracker
@@ -2010,6 +2035,9 @@ What is missing is primarily **narrative clarity** in documentation and possibly
 | D1 | POS supermarket enhancements | ✅ **DONE** | Jun 7 | Jun 7 | Touch-friendly CSS (48px inputs, 52px tablet buttons), KPI sizing, scan-focus indicator, cash button styling; POS enable guard (`SystemSettings` + `Tenant` flags); `test_pos_helpers.py` (17 tests), `test_pos_routes.py` (25 tests); 404 total pass |
 | D3 | Client-side form validation | 🚧 | Jun 8 | — | In progress; targeted for today |
 | D4 | Mobile responsiveness | 🚧 | Jun 8 | — | In progress; targeted for today |
+| D5 | Accessibility errors (WCAG) | ✅ **DONE** | Jun 8 | Jun 8 | ~1,050 a11y errors fixed in 137 templates; viewport added to 10 print templates; `fix_accessibility.py`, `count_a11y.py`, `fix_viewport.py`; 0 issues on disk |
+| D6 | CSS externalization | ⏸️ | — | — | ~300 inline-style warnings; cosmetic only; move to external CSS |
+| D7 | Jinja2 linter false positives | ⏸️ | — | — | Document/suppress Edge Tools warnings caused by Jinja2 templating; no code fix needed |
 
 ---
 
