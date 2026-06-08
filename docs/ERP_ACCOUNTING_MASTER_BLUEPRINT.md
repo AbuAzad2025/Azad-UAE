@@ -1982,9 +1982,10 @@ What is missing is primarily **narrative clarity** in documentation and possibly
 - **Proposed:** `Azad-ERP` when transitioning to private repo
 
 ##### D3. Client-Side Form Validation
-- **Status:** 🚧 **Scheduled (June 8, 2026)**
-- **Effort:** 2-3 days across all forms
-- **Note:** Targeted for completion today; improves UX before go-live.
+- **Status:** ✅ **DONE (June 8, 2026)**
+- **Effort:** 3 hours
+- **Done:** 149 templates with `needs-validation` class; `static/js/form_validation.js` created (lightweight, Arabic messages, Bootstrap `is-invalid`); validation attributes added to 70 templates (`type=email`, `pattern` for phone, `min` for amounts, `minlength/maxlength`); password match via `data-equal-to` on 5 templates; `tools/apply_form_validation.py` and `tools/enhance_form_fields.py` created.
+- **Verified:** 275 templates compile (0 failures); `check_jinja_nesting.py` confirms 0 nesting errors.
 
 ##### D4. Mobile Responsiveness Fixes
 - **Status:** 🚧 **Scheduled (June 8, 2026)**
@@ -2034,7 +2035,7 @@ What is missing is primarily **narrative clarity** in documentation and possibly
 | C2 | Session security | ✅ **DONE** | Jun 7 | Jun 7 | `SESSION_COOKIE_SAMESITE` already in Config; `utils/session_security.py` with `rotate_session()` created; called after login (`auth.py`) and after password change (`main.py`); 7 tests; 347 total pass |
 | C3 | Permission audit | ✅ **DONE** | Jun 8 | Jun 8 | 497 routes, 1235 links, 127 gaps → 0 gaps; `permission_audit.py` enhanced (nested if, inline guards, is_owner/is_admin); `apply_permission_fixes.py` created; 5 new tests; all pass |
 | D1 | POS supermarket enhancements | ✅ **DONE** | Jun 7 | Jun 7 | Touch-friendly CSS (48px inputs, 52px tablet buttons), KPI sizing, scan-focus indicator, cash button styling; POS enable guard (`SystemSettings` + `Tenant` flags); `test_pos_helpers.py` (17 tests), `test_pos_routes.py` (25 tests); 404 total pass |
-| D3 | Client-side form validation | 🚧 | Jun 8 | — | In progress; targeted for today |
+| D3 | Client-side form validation | ✅ **DONE** | Jun 8 | Jun 8 | 149 templates needs-validation; form_validation.js engine; 70 templates enhanced with attrs; password match on 5; 0 compile failures |
 | D4 | Mobile responsiveness | 🚧 | Jun 8 | — | In progress; targeted for today |
 | D5 | Accessibility errors (WCAG) | ✅ **DONE** | Jun 8 | Jun 8 | ~1,050 a11y errors fixed in 137 templates; viewport added to 10 print templates; `fix_accessibility.py`, `count_a11y.py`, `fix_viewport.py`; 0 issues on disk |
 | D6 | CSS externalization | ✅ **DONE** | Jun 8 | Jun 8 | 961 styles externalized in 79 templates; 57 JS-toggled display left inline (intentional); 6-layer test suite all PASS |
@@ -2052,8 +2053,9 @@ What is missing is primarily **narrative clarity** in documentation and possibly
 6. **B4** (2 hours) — NowPayments provider → removes config duplication
 7. **A1** (5 min) — Branch protection → final go-live gate
 8. ~~**C1, C2, C3** — Security polish~~ ✅ **ALL DONE**
-9. **D3, D4** — In progress (June 8, 2026)
-10. **D2** — Post-launch (owner decision)
+9. ~~**D3** — Client-side form validation~~ ✅ **DONE**
+10. **D4** — Mobile responsiveness fixes (June 8, 2026)
+11. **D2** — Post-launch (owner decision)
 
 ---
 
