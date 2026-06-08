@@ -2065,7 +2065,7 @@ What is missing is primarily **narrative clarity** in documentation and possibly
 - [x] All 🟡 items closed (B1-B4, C1-C3 all done)
 - [x] Merged into `ERP_ACCOUNTING_MASTER_BLUEPRINT.md` as Section 25 (June 8, 2026)
 - [x] `OPEN_ITEMS_ROADMAP.md` deleted after merge
-- **Last updated:** June 8, 2026 — C3 Permission Audit: 0 gaps, 1084 safe links
+- **Last updated:** June 8, 2026 — D3/D5/D6 DONE, Jinja2 errors fixed (0 failures), 275/275 templates compile
 
 ---
 

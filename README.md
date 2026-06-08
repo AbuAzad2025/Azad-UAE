@@ -171,6 +171,10 @@ python app.py                   # تطوير محلي فقط
 | UAT (operational) | **59/59 PASS** |
 | pip_audit | **Clean** |
 | create_app | **OK** |
+| Jinja2 templates compile | **275/275 PASS** |
+| Accessibility (WCAG) | **0 errors on disk** |
+| CSS externalization | **961 styles moved, 0 issues** |
+| Form validation | **149 templates covered** |
 | Critical / High مفتوح | **لا يوجد** |
 | Cross-tenant leak مثبت | **لا يوجد** |
 | Tenant isolation | **مُختبر** |
@@ -195,6 +199,28 @@ python tools/qa/storefront_verify_cleanup_check.py
 ```
 
 **لا تُشغّل على production DB مباشرة.** بعض الاختبارات تنشئ بيانات مؤقتة وتنظفها.
+
+### 9.1 أدوات الصيانة والتحسين
+
+موجودة في [`tools/`](tools/) — **آمنة للتشغيل على أي بيئة** (read-only أو safe edits):
+
+| السكربت | الغرض |
+|---------|-------|
+| `fix_accessibility.py` | إصلاح أخطاء WCAG تلقائياً |
+| `count_a11y.py` | عدّاد أخطاء accessibility على القرص |
+| `fix_viewport.py` | إضافة viewport meta لقوالب الطباعة |
+| `externalize_inline_css.py` | نقل CSS inline إلى classes |
+| `analyze_inline_styles.py` | تحليل styles المطلوب نقلها |
+| `check_templates_compile.py` | التحقق من Jinja2 syntax |
+| `check_jinja_nesting.py` | فحص nesting errors في Jinja2 |
+| `verify_d6_integrity.py` | التحقق من صحة CSS المُ_externalized |
+| `verify_css_validity.py` | parse CSS blocks بـ tinycss2 |
+| `verify_js_toggles.py` | التأكد من بقاء JS display toggles |
+| `apply_form_validation.py` | إضافة needs-validation للنماذج |
+| `enhance_form_fields.py` | إضافة attributes للحقول تلقائياً |
+| `permission_audit.py` | تدقيق صلاحيات الروابط والمسارات |
+| `apply_permission_fixes.py` | إصلاح ثغرات الصلاحيات تلقائياً |
+| `generate_sri.py` | توليد SRI hashes لـ CDN |
 
 ---
 
@@ -304,6 +330,10 @@ The app auto-creates owner, roles, core COA, default tenant, and runs idempotent
 | UAT | **59/59 PASS** |
 | pip_audit | **Clean** |
 | create_app | **OK** |
+| Jinja2 templates compile | **275/275 PASS** |
+| Accessibility (WCAG) | **0 errors on disk** |
+| CSS externalization | **961 styles moved, 0 issues** |
+| Form validation | **149 templates covered** |
 | Open Critical/High | **None** |
 | Proven cross-tenant leak | **None** |
 
