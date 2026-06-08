@@ -1,8 +1,20 @@
 {% extends 'shop/base.html' %}
 {% block title %}{{ t('cart') }} — {{ store.title }}{% endblock %}
 
+<style>
+    /* D6: externalized inline styles */
+    .ic-1 { margin:0 0 1.25rem; font-weight:800; }
+    .ic-2 { height:100%; display:grid; place-items:center; }
+    .ic-3 { flex:1; }
+    .ic-4 { display:flex; align-items:center; gap:0.5rem; margin-top:0.5rem; }
+    .ic-5 { padding:0.35rem 0.65rem; font-size:0.8rem; }
+    .ic-6 { margin-top:1rem; }
+    .ic-7 { margin-top:1.25rem; padding:0.85rem; }
+    .ic-8 { margin-top:0.5rem; }
+</style>
+
 {% block content %}
-<h2 style="margin:0 0 1.25rem;font-weight:800;">{{ t('cart') }}</h2>
+<h2 class="ic-1">{{ t('cart') }}</h2>
 
 {% if totals.lines %}
 <form id="cart-update-form" method="post" action="{{ url_for('shop.cart_update', slug=store.store_slug) }}">
@@ -15,23 +27,23 @@
     {% set product = line.product %}
     <div class="ps-line-item">
       <div class="ps-line-thumb">
-        {% if product.image_url %}<img src="{{ product.image_url }}" alt="">{% else %}<div class="ps-placeholder" style="height:100%;display:grid;place-items:center;"><i class="fas fa-box"></i></div>{% endif %}
+        {% if product.image_url %}<img src="{{ product.image_url }}" alt="">{% else %}<div class="ps-placeholder ic-2"><i class="fas fa-box"></i></div>{% endif %}
       </div>
-      <div style="flex:1;">
+      <div class="ic-3">
         <strong>{{ product.get_display_name(lang) }}</strong>
         <div class="ps-card-meta">{{ '%.2f'|format(product.regular_price) }} × {{ line.quantity|int }}</div>
-        <div style="display:flex;align-items:center;gap:0.5rem;margin-top:0.5rem;">
+        <div class="ic-4">
           <input type="number" form="cart-update-form" name="qty_{{ product.id }}" value="{{ line.quantity|int }}" min="0" class="ps-qty-input" aria-label="qty {{ product.id }}">
           <form method="post" action="{{ url_for('shop.cart_remove', slug=store.store_slug, product_id=product.id) }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
-            <button type="submit" class="ps-btn ps-btn-danger" style="padding:0.35rem 0.65rem;font-size:0.8rem;">{{ t('remove') }}</button>
+            <button type="submit" class="ps-btn ps-btn-danger ic-5">{{ t('remove') }}</button>
           </form>
         </div>
       </div>
       <strong class="ps-price">{{ '%.2f'|format(line.line_total) }}</strong>
     </div>
     {% endfor %}
-    <button type="submit" form="cart-update-form" class="ps-btn ps-btn-outline" style="margin-top:1rem;">{{ t('update') }}</button>
+    <button type="submit" form="cart-update-form" class="ps-btn ps-btn-outline ic-6">{{ t('update') }}</button>
   </div>
 
   <div class="ps-panel">
@@ -40,15 +52,15 @@
       <span>{{ t('total') }}</span>
       <span>{{ '%.2f'|format(totals.subtotal) }} {{ tenant.default_currency or 'AED' }}</span>
     </div>
-    <a href="{{ url_for('shop.checkout', slug=store.store_slug) }}" class="ps-btn ps-btn-primary ps-btn-block" style="margin-top:1.25rem;padding:0.85rem;">{{ t('checkout') }} <i class="fas fa-arrow-{{ 'left' if is_rtl else 'right' }}"></i></a>
-    <a href="{{ url_for('shop.catalog', slug=store.store_slug) }}" class="ps-btn ps-btn-outline ps-btn-block" style="margin-top:0.5rem;">{{ t('continue_shopping') }}</a>
+    <a href="{{ url_for('shop.checkout', slug=store.store_slug) }}" class="ps-btn ps-btn-primary ps-btn-block ic-7">{{ t('checkout') }} <i class="fas fa-arrow-{{ 'left' if is_rtl else 'right' }}"></i></a>
+    <a href="{{ url_for('shop.catalog', slug=store.store_slug) }}" class="ps-btn ps-btn-outline ps-btn-block ic-8">{{ t('continue_shopping') }}</a>
   </div>
 </div>
 {% else %}
 <div class="ps-empty">
   <div class="ps-empty-icon"><i class="fas fa-shopping-basket"></i></div>
   <h3>{{ t('empty_cart') }}</h3>
-  <a href="{{ url_for('shop.catalog', slug=store.store_slug) }}" class="ps-btn ps-btn-primary" style="margin-top:1rem;">{{ t('continue_shopping') }}</a>
+  <a href="{{ url_for('shop.catalog', slug=store.store_slug) }}" class="ps-btn ps-btn-primary ic-6">{{ t('continue_shopping') }}</a>
 </div>
 {% endif %}
 {% endblock %}

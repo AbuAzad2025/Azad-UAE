@@ -56,7 +56,15 @@
 .stock-good {
   background: linear-gradient(90deg, #28a745 0%, #20c997 100%);
 }
-</style>
+
+    /* D6: externalized inline styles */
+    .ic-1 { background: linear-gradient(135deg, #007A3D 0%, #1B4D89 100%); }
+    .ic-2 { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); }
+    .ic-3 { background: linear-gradient(135deg, #ffc107 0%, #ffca2c 100%); }
+    .ic-4 { background: linear-gradient(135deg, #dc3545 0%, #ff6b6b 100%); }
+    .ic-5 { background: linear-gradient(135deg, #007A3D 0%, #1B4D89 100%); color: white; }
+    .ic-6 { width: 0%; }
+  </style>
 {% endblock %}
 
 {% block content %}
@@ -64,7 +72,7 @@
 <div class="row mb-4">
   <div class="col-md-3">
     <div class="stat-card">
-      <div class="stat-icon" style="background: linear-gradient(135deg, #007A3D 0%, #1B4D89 100%);">
+      <div class="stat-icon ic-1">
         <i class="fas fa-boxes"></i>
       </div>
       <div class="stat-value">{{ summary.total_products if summary else (products|length) }}</div>
@@ -73,7 +81,7 @@
   </div>
   <div class="col-md-3">
     <div class="stat-card">
-      <div class="stat-icon" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
+      <div class="stat-icon ic-2">
         <i class="fas fa-check-circle"></i>
       </div>
       <div class="stat-value">
@@ -84,7 +92,7 @@
   </div>
   <div class="col-md-3">
     <div class="stat-card">
-      <div class="stat-icon" style="background: linear-gradient(135deg, #ffc107 0%, #ffca2c 100%);">
+      <div class="stat-icon ic-3">
         <i class="fas fa-exclamation-triangle"></i>
       </div>
       <div class="stat-value">
@@ -95,7 +103,7 @@
   </div>
   <div class="col-md-3">
     <div class="stat-card">
-      <div class="stat-icon" style="background: linear-gradient(135deg, #dc3545 0%, #ff6b6b 100%);">
+      <div class="stat-icon ic-4">
         <i class="fas fa-times-circle"></i>
       </div>
       <div class="stat-value">
@@ -129,7 +137,7 @@
   <div class="card-body">
     <div class="table-responsive">
       <table id="warehouseTable" class="table table-hover">
-        <thead style="background: linear-gradient(135deg, #007A3D 0%, #1B4D89 100%); color: white;">
+        <thead class="ic-5">
           <tr>
             <th><i class="fas fa-barcode mr-2"></i>SKU</th>
             <th><i class="fas fa-box mr-2"></i>المنتج</th>
@@ -183,7 +191,7 @@
                     <i class="fas fa-times mr-1"></i>نفذ
                   </span>
                   <div class="stock-indicator">
-                    <div class="stock-indicator-bar stock-critical" style="width: 0%"></div>
+                    <div class="stock-indicator-bar stock-critical ic-6"></div>
                   </div>
                 </div>
               {% elif product.visible_stock <= (product.min_stock_alert or 0) %}
@@ -242,7 +250,7 @@
 <div class="modal fade" id="adjustStockModal" tabindex="-1">
   <div class="modal-dialog">
     <div class="modal-content">
-      <div class="modal-header" style="background: linear-gradient(135deg, #007A3D 0%, #1B4D89 100%); color: white;">
+      <div class="modal-header ic-5">
         <h5 class="modal-title">
           <i class="fas fa-edit mr-2"></i>تعديل المخزون
         </h5>

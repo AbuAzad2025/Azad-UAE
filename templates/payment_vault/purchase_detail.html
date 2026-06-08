@@ -40,7 +40,7 @@
 
                     <div class="card">
 
-                        <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                        <div class="card-header ic-1">
 
                             <h3 class="card-title"><i class="fas fa-info-circle"></i> معلومات الشراء</h3>
 
@@ -58,7 +58,7 @@
 
                                         <tr>
 
-                                            <th style="width: 40%;">الباقة:</th>
+                                            <th class="ic-2">الباقة:</th>
 
                                             <td>
 
@@ -80,7 +80,7 @@
 
                                             <th>السعر:</th>
 
-                                            <td><strong style="color: #28a745; font-size: 1.3rem;">${{ "{:,.2f}".format(purchase.amount_paid) }}</strong></td>
+                                            <td><strong class="ic-3">${{ "{:,.2f}".format(purchase.amount_paid) }}</strong></td>
 
                                         </tr>
 
@@ -114,7 +114,7 @@
 
                                         <tr>
 
-                                            <th style="width: 40%;">الاسم:</th>
+                                            <th class="ic-2">الاسم:</th>
 
                                             <td><strong>{{ purchase.customer_name }}</strong></td>
 
@@ -186,7 +186,7 @@
 
                                         <tr>
 
-                                            <th style="width: 20%;">طريقة الدفع:</th>
+                                            <th class="ic-4">طريقة الدفع:</th>
 
                                             <td>
 
@@ -260,7 +260,7 @@
 
                                         <h6><i class="fas fa-info-circle"></i> تفاصيل إضافية:</h6>
 
-                                        <pre style="max-height: 200px; overflow-y: auto;">{{ purchase.payment_details | tojson(indent=2) }}</pre>
+                                        <pre class="ic-5">{{ purchase.payment_details | tojson(indent=2) }}</pre>
 
                                     </div>
 
@@ -516,7 +516,14 @@
 
 }
 
-</style>
+
+    /* D6: externalized inline styles */
+    .ic-1 { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+    .ic-2 { width: 40%; }
+    .ic-3 { color: #28a745; font-size: 1.3rem; }
+    .ic-4 { width: 20%; }
+    .ic-5 { max-height: 200px; overflow-y: auto; }
+  </style>
 
 
 

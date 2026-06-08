@@ -9,6 +9,15 @@
 </div>
 {% endblock %}
 
+<style>
+    /* D6: externalized inline styles */
+    .ic-1 { height: 25px; }
+    .ic-2 { width: 0%; }
+    .ic-3 { width: 20%; }
+    .ic-4 { width: 15%; }
+    .ic-5 { width: 5%; }
+</style>
+
 {% block content %}
 <div class="card shadow-lg">
   <div class="card-header bg-primary text-white">
@@ -47,8 +56,8 @@
     </form>
     
     <div id="progressArea" class="mt-4 d-none">
-        <div class="progress" style="height: 25px;">
-            <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%">0%</div>
+        <div class="progress ic-1">
+            <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated ic-2" role="progressbar">0%</div>
         </div>
         <p class="text-center mt-2 text-muted">جاري المعالجة... يرجى الانتظار</p>
     </div>
@@ -70,13 +79,13 @@
         <table class="table table-bordered table-sm" id="gridTable">
           <thead class="thead-light">
             <tr>
-              <th style="width: 20%">اسم المنتج *</th>
-              <th style="width: 15%">السعر *</th>
-              <th style="width: 15%">التكلفة</th>
-              <th style="width: 15%">المخزون</th>
-              <th style="width: 15%">SKU (اختياري)</th>
-              <th style="width: 15%">الباركود (اختياري)</th>
-              <th style="width: 5%"></th>
+              <th class="ic-3">اسم المنتج *</th>
+              <th class="ic-4">السعر *</th>
+              <th class="ic-4">التكلفة</th>
+              <th class="ic-4">المخزون</th>
+              <th class="ic-4">SKU (اختياري)</th>
+              <th class="ic-4">الباركود (اختياري)</th>
+              <th class="ic-5"></th>
             </tr>
           </thead>
           <tbody>

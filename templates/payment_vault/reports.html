@@ -4,7 +4,7 @@
 
 {% block page_title %}
 <div class="d-flex align-items-center">
-    <i class="fas fa-chart-line text-info mr-3" style="font-size: 2rem;"></i>
+    <i class="fas fa-chart-line text-info mr-3 ic-1"></i>
     <div>
         <h1 class="mb-0">📊 التقارير المالية</h1>
         <p class="text-muted mb-0">تقارير شاملة للمشتريات والتبرعات</p>
@@ -40,7 +40,13 @@
         font-size: 0.9rem;
         opacity: 0.9;
     }
-</style>
+
+    /* D6: externalized inline styles */
+    .ic-1 { font-size: 2rem; }
+    .ic-2 { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+    .ic-3 { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+    .ic-4 { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+  </style>
 {% endblock %}
 
 {% block content %}
@@ -85,19 +91,19 @@
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="metric-box" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <div class="metric-box ic-2">
                     <div class="metric-value">${{ summary.total_purchases_amount|default(0) }}</div>
                     <div class="metric-label">إيرادات المشتريات</div>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="metric-box" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                <div class="metric-box ic-3">
                     <div class="metric-value">${{ summary.total_donations_amount|default(0) }}</div>
                     <div class="metric-label">إيرادات التبرعات</div>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="metric-box" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                <div class="metric-box ic-4">
                     <div class="metric-value">{{ summary.total_transactions|default(0) }}</div>
                     <div class="metric-label">إجمالي العمليات</div>
                 </div>

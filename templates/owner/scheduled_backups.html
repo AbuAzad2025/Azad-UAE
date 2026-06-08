@@ -3,6 +3,12 @@
 {% block title %}شركة أزاد للأنظمة الذكية - النسخ الاحتياطي المجدول التلقائي{% endblock %}
 {% block page_title %}<i class="fas fa-clock"></i> النسخ الاحتياطي المجدول{% endblock %}
 
+<style>
+    /* D6: externalized inline styles */
+    .ic-1 { word-break: break-word; }
+    .ic-2 { display: inline; }
+</style>
+
 {% block content %}
 <div class="row">
   <!-- الإحصائيات -->
@@ -60,7 +66,7 @@
   <div class="col-md-12">
     <div class="alert alert-danger">
       <strong><i class="fas fa-exclamation-triangle mr-1"></i>آخر خطأ في النسخ التلقائي:</strong>
-      <div class="mt-2" style="word-break: break-word;">{{ schedule_state.last_error }}</div>
+      <div class="mt-2 ic-1">{{ schedule_state.last_error }}</div>
       <div class="mt-2 text-muted">
         {% if schedule_state.last_run_at %}<span>آخر تشغيل: {{ schedule_state.last_run_at }}</span>{% endif %}
         {% if schedule_state.last_filename %}<span>{% if schedule_state.last_run_at %} | {% endif %}الملف: {{ schedule_state.last_filename }}</span>{% endif %}
@@ -138,7 +144,7 @@
         <hr>
 
         <div class="text-center">
-          <form method="POST" action="{{ url_for('owner.backup_now') }}" style="display: inline;">
+          <form method="POST" action="{{ url_for('owner.backup_now') }}" class="ic-2">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
             <button type="submit" class="btn btn-success">
               <i class="fas fa-download"></i> نسخة احتياطية الآن

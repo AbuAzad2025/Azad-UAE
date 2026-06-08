@@ -51,8 +51,8 @@
       <div class="col-lg-3 col-6">
         <div class="small-box bg-warning">
           <div class="inner">
-            <h3 style="color: #000;">{{ stats.admins + stats.managers }}</h3>
-            <p style="color: #000;">المدراء والإداريون</p>
+            <h3 class="ic-1">{{ stats.admins + stats.managers }}</h3>
+            <p class="ic-1">المدراء والإداريون</p>
           </div>
           <div class="icon">
             <i class="fas fa-user-tie"></i>
@@ -115,19 +115,19 @@
               <td>
                 <div class="user-avatar">
                   {% if user.is_owner %}
-                    <span class="badge badge-danger badge-lg" style="font-size: 1.2rem;">
+                    <span class="badge badge-danger badge-lg ic-2">
                       <i class="fas fa-crown"></i>
                     </span>
                   {% elif user.role and user.role.name == 'Super Admin' %}
-                    <span class="badge badge-primary badge-lg" style="font-size: 1.2rem;">
+                    <span class="badge badge-primary badge-lg ic-2">
                       <i class="fas fa-user-shield"></i>
                     </span>
                   {% elif user.role and user.role.name == 'Manager' %}
-                    <span class="badge badge-info badge-lg" style="font-size: 1.2rem;">
+                    <span class="badge badge-info badge-lg ic-2">
                       <i class="fas fa-user-tie"></i>
                     </span>
                   {% else %}
-                    <span class="badge badge-secondary badge-lg" style="font-size: 1.2rem;">
+                    <span class="badge badge-secondary badge-lg ic-2">
                       <i class="fas fa-user"></i>
                     </span>
                   {% endif %}
@@ -190,7 +190,7 @@
                     <i class="fas fa-edit"></i>
                   </a>
                   {% if not user.is_owner and user.id != current_user.id %}
-                  <form method="POST" action="{{ url_for('owner.delete_user', user_id=user.id) }}" style="display: inline;" onsubmit="return confirm('هل تريد تعطيل هذا المستخدم؟');">
+                  <form method="POST" action="{{ url_for('owner.delete_user', user_id=user.id) }}" onsubmit="return confirm('هل تريد تعطيل هذا المستخدم؟');" class="ic-3">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
                     <button type="submit" class="btn btn-danger" title="تعطيل">
                       <i class="fas fa-ban"></i>
@@ -226,7 +226,12 @@
 .small-box .icon {
   font-size: 70px;
 }
-</style>
+
+    /* D6: externalized inline styles */
+    .ic-1 { color: #000; }
+    .ic-2 { font-size: 1.2rem; }
+    .ic-3 { display: inline; }
+  </style>
 
 <script>
 $(document).ready(function() {

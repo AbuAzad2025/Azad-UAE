@@ -316,7 +316,11 @@
 
 }
 
-</style>
+
+    /* D6: externalized inline styles */
+    .ic-1 { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; }
+    .ic-2 { padding: 5px; }
+  </style>
 
 <style>
 
@@ -862,9 +866,7 @@ function addLine() {
 
   const html = `
 
-    <div class="product-line mb-3 p-3" id="line_${lineIndex}" 
-
-         style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px;">
+    <div class="product-line mb-3 p-3 ic-1" id="line_${lineIndex}">
 
       <div class="row align-items-end">
 
@@ -1088,7 +1090,7 @@ function addLine() {
 
         return $(`
 
-          <div style="padding: 5px;">
+          <div class="ic-2">
 
             <div class="d-flex justify-content-between">
 

@@ -39,9 +39,10 @@ def process_file(path: str) -> int:
     with open(path, 'r', encoding='utf-8') as f:
         content = f.read()
 
-    if '</style>' not in content:
-        print(f'  SKIP (no <style> block): {path}')
-        return 0
+    has_style_block = '</style>' in content
+    has_head = '</head>' in content
+    has_block_content = '{% block content %}' in content or '{%block content%}' in content
+    extends_base = '{% extends' in content
 
     style_to_class = {}
     counter = [0]
@@ -85,8 +86,22 @@ def process_file(path: str) -> int:
     rules = ['', '    /* D6: externalized inline styles */']
     for norm, cls in style_to_class.items():
         rules.append(f'    .{cls} {{ {norm}; }}')
-    rules_block = '\n'.join(rules) + '\n  '
-    new_content = new_content.replace('</style>', rules_block + '</style>', 1)
+
+    if has_style_block:
+        rules_block = '\n'.join(rules) + '\n  '
+        new_content = new_content.replace('</style>', rules_block + '</style>', 1)
+    elif has_head:
+        style_block = '  <style>' + '\n'.join(rules) + '\n  </style>\n</head>'
+        new_content = new_content.replace('</head>', style_block, 1)
+    elif has_block_content:
+        style_block = '<style>' + '\n'.join(rules) + '\n</style>\n\n{% block content %}'
+        new_content = new_content.replace('{% block content %}', style_block, 1)
+    elif extends_base:
+        style_block = '\n<style>' + '\n'.join(rules) + '\n</style>\n'
+        new_content = new_content.replace('\n{% block', style_block + '{% block', 1)
+    else:
+        print(f'  SKIP (no injectable anchor): {path}')
+        return 0
 
     with open(path, 'w', encoding='utf-8') as f:
         f.write(new_content)

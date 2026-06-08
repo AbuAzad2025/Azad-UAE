@@ -78,13 +78,13 @@
                 <label>كلمة المرور * <small class="text-muted">(10+ أحرف، حرف كبير، رقم، رمز خاص)</small></label>
                 <input type="password" name="password" class="form-control" required minlength="10" 
                        placeholder="••••••••" id="password">
-                <div class="mt-2" id="password-strength" style="display: none;">
-                  <div class="progress" style="height: 8px;">
-                    <div class="progress-bar" id="password-strength-bar" role="progressbar" style="width: 0%"></div>
+                <div class="mt-2 ic-1" id="password-strength">
+                  <div class="progress ic-2">
+                    <div class="progress-bar ic-3" id="password-strength-bar" role="progressbar"></div>
                   </div>
                   <small id="password-strength-text" class="text-muted"></small>
                 </div>
-                <div id="password-requirements" class="mt-2" style="font-size: 0.85em;">
+                <div id="password-requirements" class="mt-2 ic-4">
                   <div><i class="fas fa-circle text-muted" id="req-length"></i> <span id="req-length-text">10 أحرف على الأقل</span></div>
                   <div><i class="fas fa-circle text-muted" id="req-upper"></i> حرف كبير (A-Z)</div>
                   <div><i class="fas fa-circle text-muted" id="req-lower"></i> حرف صغير (a-z)</div>
@@ -182,10 +182,10 @@
           <!-- نصائح -->
           <div class="card">
             <div class="card-header bg-gradient-warning">
-              <h3 class="card-title" style="color: #000;">💡 نصائح</h3>
+              <h3 class="card-title ic-5">💡 نصائح</h3>
             </div>
             <div class="card-body">
-              <ul class="mb-0" style="color: #000;">
+              <ul class="mb-0 ic-5">
                 <li><strong>Owner</strong>: كل الصلاحيات بدون قيود</li>
                 <li><strong>Super Admin</strong>: إدارة + تقارير كاملة</li>
                 <li><strong>Manager</strong>: مبيعات + مشتريات + زبائن</li>
@@ -491,6 +491,13 @@ $(document).ready(function() {
     text-align: center;
     padding: 0.75rem 1rem;
   }
-</style>
+
+    /* D6: externalized inline styles */
+    .ic-1 { display: none; }
+    .ic-2 { height: 8px; }
+    .ic-3 { width: 0%; }
+    .ic-4 { font-size: 0.85em; }
+    .ic-5 { color: #000; }
+  </style>
 {% endblock %}
 

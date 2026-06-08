@@ -110,7 +110,11 @@
 
 }
 
-</style>
+
+    /* D6: externalized inline styles */
+    .ic-1 { background-color: #f8f9fa; }
+    .ic-2 { display: none; }
+  </style>
 
 {% endblock %}
 
@@ -445,13 +449,7 @@
 
             </label>
 
-            <input type="number" name="exchange_rate" id="exchange_rate" 
-
-                   class="form-control" step="0.000001" min="0.000001"
-
-                   value="{% if purchase %}{{ purchase.exchange_rate }}{% elif sale %}{{ sale.exchange_rate }}{% else %}1{% endif %}" 
-
-                   readonly style="background-color: #f8f9fa;" aria-label="exchange rate">
+            <input type="number" name="exchange_rate" id="exchange_rate" class="form-control ic-1" step="0.000001" min="0.000001" value="{% if purchase %}{{ purchase.exchange_rate }}{% elif sale %}{{ sale.exchange_rate }}{% else %}1{% endif %}" readonly aria-label="exchange rate">
 
             <small class="form-text text-muted">
 
@@ -527,7 +525,7 @@
 
       <!-- حقول الشيك (تظهر عند اختيار شيك) -->
 
-      <div id="cheque_fields" class="row" style="display: none;">
+      <div id="cheque_fields" class="row ic-2">
 
         <div class="col-md-4">
 
@@ -571,7 +569,7 @@
 
       <!-- حقول البطاقة (فيزا/ماستركارد) -->
 
-      <div id="card_fields" class="row" style="display: none;">
+      <div id="card_fields" class="row ic-2">
 
         <div class="col-md-6">
 
@@ -603,7 +601,7 @@
 
       <!-- حقول التحويل البنكي -->
 
-      <div id="bank_transfer_fields" class="row" style="display: none;">
+      <div id="bank_transfer_fields" class="row ic-2">
 
         <div class="col-md-6">
 
@@ -635,7 +633,7 @@
 
       <!-- حقول المحفظة الإلكترونية -->
 
-      <div id="ewallet_fields" class="row" style="display: none;">
+      <div id="ewallet_fields" class="row ic-2">
 
         <div class="col-md-6">
 
@@ -707,7 +705,7 @@
 
       <!-- معلومات العميل (تظهر عند اختيار عميل) -->
 
-      <div id="customerInfo" class="row" style="display: none;">
+      <div id="customerInfo" class="row ic-2">
 
         <div class="col-12">
 

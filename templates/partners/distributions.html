@@ -11,6 +11,11 @@
 </div>
 {% endblock %}
 
+<style>
+    /* D6: externalized inline styles */
+    .ic-1 { display:inline; }
+</style>
+
 {% block content %}
 <div class="card">
   <div class="card-header">
@@ -50,14 +55,14 @@
             <td class="text-center">
               {% if d.status == 'draft' %}
               {% if current_user.has_permission('manage_users') %}
-              <form method="POST" action="{{ url_for('partners.approve_distribution', dist_id=d.id) }}" style="display:inline;">
+              <form method="POST" action="{{ url_for('partners.approve_distribution', dist_id=d.id) }}" class="ic-1">
               {% endif %}
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
                 <button type="submit" class="btn btn-sm btn-info" title="اعتماد"><i class="fas fa-check"></i></button>
               </form>
               {% elif d.status == 'approved' %}
               {% if current_user.has_permission('manage_payments') %}
-              <form method="POST" action="{{ url_for('partners.pay_distribution', dist_id=d.id) }}" style="display:inline;">
+              <form method="POST" action="{{ url_for('partners.pay_distribution', dist_id=d.id) }}" class="ic-1">
               {% endif %}
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
                 <button type="submit" class="btn btn-sm btn-success" title="تسجيل دفع"><i class="fas fa-money-bill-wave"></i></button>

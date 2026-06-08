@@ -1,8 +1,18 @@
 {% extends 'shop/base.html' %}
 {% block title %}{{ t('checkout') }} — {{ store.title }}{% endblock %}
 
+<style>
+    /* D6: externalized inline styles */
+    .ic-1 { margin:0 0 1.25rem; font-weight:800; }
+    .ic-2 { margin:0 0 1rem; font-size:0.88rem; color:var(--ps-muted); }
+    .ic-3 { display:none; }
+    .ic-4 { font-size:0.82rem; color:var(--ps-muted); margin-bottom:1rem; }
+    .ic-5 { padding:0.9rem; }
+    .ic-6 { font-size:0.82rem; color:var(--ps-muted); margin-top:0.75rem; }
+</style>
+
 {% block content %}
-<h2 style="margin:0 0 1.25rem;font-weight:800;">{{ t('checkout') }}</h2>
+<h2 class="ic-1">{{ t('checkout') }}</h2>
 
 {% if not payment_methods %}
 <div class="ps-alert ps-alert-warning">{{ t('no_payment_methods') }}</div>
@@ -12,7 +22,7 @@
   <div class="ps-panel">
     <h3>{{ t('place_order') }}</h3>
     {% if store.delivery_note %}
-    <p style="margin:0 0 1rem;font-size:0.88rem;color:var(--ps-muted);">{{ store.delivery_note }}</p>
+    <p class="ic-2">{{ store.delivery_note }}</p>
     {% endif %}
 
     <form method="post" action="{{ url_for('shop.checkout', slug=store.store_slug) }}" id="checkout-form">
@@ -35,7 +45,7 @@
           </label>
           {% endfor %}
         </div>
-        <div id="ps-pay-hint" class="ps-pay-hint" style="display:none;"></div>
+        <div id="ps-pay-hint" class="ps-pay-hint ic-3"></div>
       </div>
 
       <div class="ps-form-group">
@@ -58,8 +68,8 @@
         <label for="notes">{{ t('notes') }}</label>
         <textarea id="notes" name="notes" rows="2" aria-label="notes"></textarea>
       </div>
-      <p style="font-size:0.82rem;color:var(--ps-muted);margin-bottom:1rem;"><i class="fas fa-lock"></i> {{ t('secure_checkout') }}</p>
-      <button type="submit" class="ps-btn ps-btn-primary ps-btn-block" style="padding:0.9rem;">{{ t('place_order') }}</button>
+      <p class="ic-4"><i class="fas fa-lock"></i> {{ t('secure_checkout') }}</p>
+      <button type="submit" class="ps-btn ps-btn-primary ps-btn-block ic-5">{{ t('place_order') }}</button>
     </form>
   </div>
 
@@ -76,7 +86,7 @@
       <span>{{ '%.2f'|format(totals.subtotal) }} {{ tenant.default_currency or 'AED' }}</span>
     </div>
     {% if min_order and min_order > 0 %}
-    <p style="font-size:0.82rem;color:var(--ps-muted);margin-top:0.75rem;">{{ t('free_from') }}: {{ '%.2f'|format(min_order) }}</p>
+    <p class="ic-6">{{ t('free_from') }}: {{ '%.2f'|format(min_order) }}</p>
     {% endif %}
   </div>
 </div>

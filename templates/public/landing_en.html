@@ -1268,6 +1268,16 @@
 
     }
 
+  
+    /* D6: externalized inline styles */
+    .ic-1 { margin-top: 18px; display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
+    .ic-2 { min-width:240px; }
+    .ic-3 { margin-top: 22px; }
+    .ic-4 { min-width: 260px; }
+    .ic-5 { display:inline-flex; margin-top: 14px; }
+    .ic-6 { color: rgba(255,255,255,0.9); font-size: 1rem; margin-bottom: 8px; }
+    .ic-7 { cursor: default; }
+    .ic-8 { margin-top: 26px; display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
   </style>
 
 </head>
@@ -1404,17 +1414,17 @@
 
       </div>
 
-      <div style="margin-top: 18px; display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+      <div class="ic-1">
 
-        <a href="https://wa.me/{{ developer_whatsapp_link }}?text={{ 'Hello, I want to buy Azad system' | urlencode }}" class="btn-hero btn-outline" style="min-width:240px;"><i class="fab fa-whatsapp"></i> Buy via WhatsApp</a>
+        <a href="https://wa.me/{{ developer_whatsapp_link }}?text={{ 'Hello, I want to buy Azad system' | urlencode }}" class="btn-hero btn-outline ic-2"><i class="fab fa-whatsapp"></i> Buy via WhatsApp</a>
 
-        <a href="mailto:{{ developer_email or config.DEVELOPER_EMAIL }}?subject={{ 'Source code or customization request' | urlencode }}" class="btn-hero btn-outline" style="min-width:240px;"><i class="fas fa-envelope"></i> Buy code / customize</a>
+        <a href="mailto:{{ developer_email or config.DEVELOPER_EMAIL }}?subject={{ 'Source code or customization request' | urlencode }}" class="btn-hero btn-outline ic-2"><i class="fas fa-envelope"></i> Buy code / customize</a>
 
       </div>
 
-      <div style="margin-top: 22px;">
+      <div class="ic-3">
 
-        <a href="{{ url_for('public.pricing') }}" class="btn-hero btn-outline" style="min-width: 260px;"><i class="fas fa-gem"></i> View pricing</a>
+        <a href="{{ url_for('public.pricing') }}" class="btn-hero btn-outline ic-4"><i class="fas fa-gem"></i> View pricing</a>
 
       </div>
 
@@ -1524,7 +1534,7 @@
 
         </ul>
 
-        <a href="{{ url_for('public.pricing') }}" class="btn-hero btn-primary" style="display:inline-flex; margin-top: 14px;">Choose</a>
+        <a href="{{ url_for('public.pricing') }}" class="btn-hero btn-primary ic-5">Choose</a>
 
       </div>
 
@@ -1546,7 +1556,7 @@
 
         </ul>
 
-        <a href="{{ url_for('public.pricing') }}" class="btn-hero btn-primary" style="display:inline-flex; margin-top: 14px;">Choose</a>
+        <a href="{{ url_for('public.pricing') }}" class="btn-hero btn-primary ic-5">Choose</a>
 
       </div>
 
@@ -1568,7 +1578,7 @@
 
         </ul>
 
-        <a href="{{ url_for('public.contact') }}" class="btn-hero btn-primary" style="display:inline-flex; margin-top: 14px;">Contact</a>
+        <a href="{{ url_for('public.contact') }}" class="btn-hero btn-primary ic-5">Contact</a>
 
       </div>
 
@@ -1582,7 +1592,7 @@
 
     <h2>Contact</h2>
 
-    <p style="color: rgba(255,255,255,0.9); font-size: 1rem; margin-bottom: 8px;">We respond quickly and help you get started.</p>
+    <p class="ic-6">We respond quickly and help you get started.</p>
 
     <div class="contact-info">
 
@@ -1622,13 +1632,13 @@
 
         <strong>Address</strong>
 
-        <a style="cursor: default;">{{ company_address_en }}</a>
+        <a class="ic-7">{{ company_address_en }}</a>
 
       </div>
 
     </div>
 
-    <div style="margin-top: 26px; display: flex; gap: 14px; justify-content: center; flex-wrap: wrap;">
+    <div class="ic-8">
 
       <a href="{{ url_for('public.features') }}" class="btn-hero btn-outline"><i class="fas fa-layer-group"></i> Features</a>
 

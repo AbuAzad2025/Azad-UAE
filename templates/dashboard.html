@@ -16,13 +16,13 @@
   {% if current_user.has_permission('manage_sales') %}
   <div class="col-lg-3 col-md-6 mb-4">
     <div class="stat-card">
-      <div class="stat-icon" style="background: linear-gradient(135deg, #007A3D 0%, #1B4D89 100%);">
+      <div class="stat-icon ic-1">
         <i class="fas fa-shopping-cart"></i>
       </div>
       <div class="stat-value">{{ stats.today_sales_count|default(0) }}</div>
       <div class="stat-label">مبيعات اليوم</div>
       <div class="mt-2">
-        <strong style="color: #007A3D; font-size: 1.2rem;">
+        <strong class="ic-2">
           {{ "{:,.0f}".format(stats.today_sales_amount|default(0)) }}
         </strong>
         <small class="text-muted"> {{ tenant_currency_symbol or 'د.إ' }}</small>
@@ -37,7 +37,7 @@
   {% if current_user.has_permission('manage_customers') %}
   <div class="col-lg-3 col-md-6 mb-4">
     <div class="stat-card">
-      <div class="stat-icon" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
+      <div class="stat-icon ic-3">
         <i class="fas fa-users"></i>
       </div>
       <div class="stat-value">{{ stats.customers_count|default(0) }}</div>
@@ -55,7 +55,7 @@
   {% if current_user.has_permission('view_reports') %}
   <div class="col-lg-3 col-md-6 mb-4">
     <div class="stat-card">
-      <div class="stat-icon" style="background: linear-gradient(135deg, #D4AF37 0%, #C19A6B 100%);">
+      <div class="stat-icon ic-4">
         <i class="fas fa-file-invoice-dollar"></i>
       </div>
       <div class="stat-value">{{ "{:,.0f}".format(stats.total_receivables|default(0)) }}</div>
@@ -73,7 +73,7 @@
   {% if current_user.has_permission('manage_products') %}
   <div class="col-lg-3 col-md-6 mb-4">
     <div class="stat-card">
-      <div class="stat-icon" style="background: linear-gradient(135deg, #CE1126 0%, #dc3545 100%);">
+      <div class="stat-icon ic-5">
         <i class="fas fa-box-open"></i>
       </div>
       <div class="stat-value">{{ stats.products_count|default(0) }}</div>
@@ -96,10 +96,10 @@
     <div class="card glass-effect border-0">
       <div class="card-body text-center">
         <div class="mb-3">
-          <i class="fas fa-wallet fa-3x" style="color: #28a745;"></i>
+          <i class="fas fa-wallet fa-3x ic-6"></i>
         </div>
         <h5 class="text-muted">رصيد الصندوق</h5>
-        <h2 class="mb-0" style="color: #28a745; font-weight: 700;">
+        <h2 class="mb-0 ic-7">
           {{ "{:,.2f}".format(stats.cash_balance|default(0)) }}
         </h2>
         <small class="text-muted">{{ tenant_currency_name_ar or 'درهم إماراتي' }}</small>
@@ -111,10 +111,10 @@
     <div class="card glass-effect border-0">
       <div class="card-body text-center">
         <div class="mb-3">
-          <i class="fas fa-university fa-3x" style="color: #1B4D89;"></i>
+          <i class="fas fa-university fa-3x ic-8"></i>
         </div>
         <h5 class="text-muted">رصيد البنك</h5>
-        <h2 class="mb-0" style="color: #1B4D89; font-weight: 700;">
+        <h2 class="mb-0 ic-9">
           {{ "{:,.2f}".format(stats.bank_balance|default(0)) }}
         </h2>
         <small class="text-muted">{{ tenant_currency_name_ar or 'درهم إماراتي' }}</small>
@@ -126,10 +126,10 @@
     <div class="card glass-effect border-0">
       <div class="card-body text-center">
         <div class="mb-3">
-          <i class="fas fa-boxes fa-3x" style="color: #17a2b8;"></i>
+          <i class="fas fa-boxes fa-3x ic-10"></i>
         </div>
         <h5 class="text-muted">قيمة المخزون</h5>
-        <h2 class="mb-0" style="color: #17a2b8; font-weight: 700;">
+        <h2 class="mb-0 ic-11">
           {{ "{:,.2f}".format(stats.inventory_value_gl|default(0)) }}
         </h2>
         <small class="text-muted">{{ tenant_currency_name_ar or 'درهم إماراتي' }}</small>
@@ -193,7 +193,7 @@
                     <br><small class="text-muted">{{ sale.sale_date.strftime('%H:%M') }}</small>
                   </td>
                   <td>
-                    <strong style="color: #007A3D;">{{ "{:,.2f}".format(sale.total_amount) }}</strong>
+                    <strong class="ic-12">{{ "{:,.2f}".format(sale.total_amount) }}</strong>
                     <small class="text-muted">{{ sale.currency }}</small>
                   </td>
                   <td>
@@ -269,7 +269,7 @@
   <div class="col-md-3 mb-3">
     <a href="{{ url_for('sales.create') }}" class="card text-center text-decoration-none hover-card">
       <div class="card-body">
-        <i class="fas fa-plus-circle fa-3x mb-3" style="color: #007A3D;"></i>
+        <i class="fas fa-plus-circle fa-3x mb-3 ic-12"></i>
         <h5 class="mb-0">{{ t('New Invoice') }}</h5>
       </div>
     </a>
@@ -279,7 +279,7 @@
   <div class="col-md-3 mb-3">
     <a href="{{ url_for('customers.create') }}" class="card text-center text-decoration-none hover-card">
       <div class="card-body">
-        <i class="fas fa-user-plus fa-3x mb-3" style="color: #28a745;"></i>
+        <i class="fas fa-user-plus fa-3x mb-3 ic-6"></i>
         <h5 class="mb-0">{{ t('New Customer') }}</h5>
       </div>
     </a>
@@ -289,7 +289,7 @@
   <div class="col-md-3 mb-3">
     <a href="{{ url_for('products.create') }}" class="card text-center text-decoration-none hover-card">
       <div class="card-body">
-        <i class="fas fa-box fa-3x mb-3" style="color: #D4AF37;"></i>
+        <i class="fas fa-box fa-3x mb-3 ic-13"></i>
         <h5 class="mb-0">{{ t('New Product') }}</h5>
       </div>
     </a>
@@ -299,7 +299,7 @@
   <div class="col-md-3 mb-3">
     <a href="{{ url_for('reports.sales') }}" class="card text-center text-decoration-none hover-card">
       <div class="card-body">
-        <i class="fas fa-chart-bar fa-3x mb-3" style="color: #1B4D89;"></i>
+        <i class="fas fa-chart-bar fa-3x mb-3 ic-8"></i>
         <h5 class="mb-0">{{ t('Reports') }}</h5>
       </div>
     </a>
@@ -316,7 +316,22 @@
   transform: translateY(-8px) scale(1.05);
   box-shadow: 0 12px 32px rgba(0, 122, 61, 0.2);
 }
-</style>
+
+    /* D6: externalized inline styles */
+    .ic-1 { background: linear-gradient(135deg, #007A3D 0%, #1B4D89 100%); }
+    .ic-2 { color: #007A3D; font-size: 1.2rem; }
+    .ic-3 { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); }
+    .ic-4 { background: linear-gradient(135deg, #D4AF37 0%, #C19A6B 100%); }
+    .ic-5 { background: linear-gradient(135deg, #CE1126 0%, #dc3545 100%); }
+    .ic-6 { color: #28a745; }
+    .ic-7 { color: #28a745; font-weight: 700; }
+    .ic-8 { color: #1B4D89; }
+    .ic-9 { color: #1B4D89; font-weight: 700; }
+    .ic-10 { color: #17a2b8; }
+    .ic-11 { color: #17a2b8; font-weight: 700; }
+    .ic-12 { color: #007A3D; }
+    .ic-13 { color: #D4AF37; }
+  </style>
 {% endblock %}
 
 {% block extra_js %}

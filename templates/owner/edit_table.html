@@ -14,6 +14,11 @@
 </div>
 {% endblock %}
 
+<style>
+    /* D6: externalized inline styles */
+    .ic-1 { display: none; }
+</style>
+
 {% block content %}
 <div class="card">
   <div class="card-header bg-primary text-white">
@@ -65,10 +70,10 @@
               <button class="btn btn-sm btn-warning edit-btn" onclick="enableEdit(this)">
                 <i class="fas fa-pencil-alt"></i> تعديل
               </button>
-              <button class="btn btn-sm btn-success save-btn" onclick="saveRow(this)" style="display: none;">
+              <button class="btn btn-sm btn-success save-btn ic-1" onclick="saveRow(this)">
                 <i class="fas fa-save"></i> حفظ
               </button>
-              <button class="btn btn-sm btn-secondary cancel-btn" onclick="cancelEdit(this)" style="display: none;">
+              <button class="btn btn-sm btn-secondary cancel-btn ic-1" onclick="cancelEdit(this)">
                 <i class="fas fa-times"></i> إلغاء
               </button>
             </td>

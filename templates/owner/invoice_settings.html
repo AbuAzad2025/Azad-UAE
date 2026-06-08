@@ -355,9 +355,7 @@
                 <label>
                   <i class="fas fa-paint-brush"></i> لون الترويسة
                 </label>
-                <input type="color" class="form-control" name="header_color" 
-                       value="{{ settings.header_color or '#667eea' }}"
-                       style="height: 45px;" aria-label="header color">
+                <input type="color" class="form-control ic-1" name="header_color" value="{{ settings.header_color or '#667eea' }}" aria-label="header color">
                 <small class="form-text text-muted">
                   🎨 لون رأس الفاتورة والعناصر الرئيسية
                 </small>
@@ -367,9 +365,7 @@
                 <label>
                   <i class="fas fa-fill-drip"></i> اللون الثانوي
                 </label>
-                <input type="color" class="form-control" name="accent_color" 
-                       value="{{ settings.accent_color or '#764ba2' }}"
-                       style="height: 45px;" aria-label="accent color">
+                <input type="color" class="form-control ic-1" name="accent_color" value="{{ settings.accent_color or '#764ba2' }}" aria-label="accent color">
                 <small class="form-text text-muted">
                   🎨 لون الأزرار والعناصر الثانوية
                 </small>
@@ -398,8 +394,7 @@
                 </small>
                 {% if settings and settings.logo_path %}
                 <div class="mt-2">
-                  <img src="{{ url_for('static', filename=settings.logo_path) }}" 
-                       alt="Current Logo" style="max-height: 60px; border: 1px solid #ddd; padding: 5px; background: white;">
+                  <img src="{{ url_for('static', filename=settings.logo_path) }}" alt="Current Logo" class="ic-2">
                   <br>
                   <small class="text-success">✅ الشعار الحالي</small>
                 </div>
@@ -460,8 +455,7 @@
                 </small>
                 {% if settings and settings.watermark_image_path %}
                 <div class="mt-2">
-                  <img src="{{ url_for('static', filename=settings.watermark_image_path) }}" 
-                       alt="Watermark" style="max-height: 50px; opacity: 0.3; border: 1px dashed #ffc107; padding: 5px;">
+                  <img src="{{ url_for('static', filename=settings.watermark_image_path) }}" alt="Watermark" class="ic-3">
                   <br>
                   <small class="text-warning">✅ صورة العلامة المائية الحالية</small>
                 </div>
@@ -646,40 +640,40 @@
 
         <!-- Right Column - Preview -->
         <div class="col-lg-4">
-          <div class="card card-widget sticky-top" style="top: 70px;">
+          <div class="card card-widget sticky-top ic-4">
             <div class="card-header bg-gradient-primary">
               <h3 class="card-title"><i class="fas fa-desktop"></i> معاينة حية</h3>
             </div>
             <div class="card-body text-center" id="live-preview">
-              <div class="invoice-preview p-3" style="background: white; border: 2px solid #ddd; border-radius: 8px; min-height: 400px;">
-                <div class="header" style="border-bottom: 3px solid var(--header-color, #667eea); padding-bottom: 15px; margin-bottom: 15px;">
+              <div class="invoice-preview p-3 ic-5">
+                <div class="header ic-6">
                   {% if settings.show_logo %}
                   {% set _logo_path = tenant_document_logo(settings) %}
                   {% if _logo_path.startswith('http') %}
-                    <img src="{{ _logo_path }}" alt="Logo" style="height: 50px; margin-bottom: 10px;">
+                    <img src="{{ _logo_path }}" alt="Logo" class="ic-7">
                   {% else %}
-                    <img src="{{ url_for('static', filename=_logo_path) }}" alt="Logo" style="height: 50px; margin-bottom: 10px;">
+                    <img src="{{ url_for('static', filename=_logo_path) }}" alt="Logo" class="ic-7">
                   {% endif %}
                   {% endif %}
-                  <h4 style="color: var(--header-color, #667eea); margin: 0;">
+                  <h4 class="ic-8">
                     {{ settings.company_name_ar }}
                   </h4>
-                  <p style="font-size: 12px; color: #666; margin: 5px 0;">
+                  <p class="ic-9">
                     {{ settings.address_ar or 'العنوان' }}
                   </p>
-                  <p style="font-size: 11px; color: #999;">
+                  <p class="ic-10">
                     <i class="fas fa-phone"></i> {{ settings.phone_1 or '---' }}
                   </p>
                 </div>
                 
-                <div class="invoice-info" style="text-align: right; font-size: 11px; color: #333;">
+                <div class="invoice-info ic-11">
                   <p><strong>رقم الفاتورة:</strong> INV-2025-0001</p>
                   <p><strong>التاريخ:</strong> 2025-10-17</p>
                   <p><strong>العميل:</strong> عميل تجريبي</p>
                 </div>
                 
-                <table class="table table-sm table-bordered mt-3" style="font-size: 11px;">
-                  <thead style="background: var(--accent-color, #764ba2); color: white;">
+                <table class="table table-sm table-bordered mt-3 ic-12">
+                  <thead class="ic-13">
                     <tr>
                       <th>المنتج</th>
                       <th>{{ t('Quantity') }}</th>
@@ -704,11 +698,11 @@
                 {% if settings.enable_qr_code %}
                 <div class="qr-code mt-3">
                   <i class="fas fa-qrcode fa-3x text-muted"></i>
-                  <p style="font-size: 10px; color: #999;">QR Code</p>
+                  <p class="ic-14">QR Code</p>
                 </div>
                 {% endif %}
                 
-                <div class="footer mt-3" style="border-top: 1px solid #ddd; padding-top: 10px; font-size: 10px; color: #666;">
+                <div class="footer mt-3 ic-15">
                   {{ settings.footer_text_ar or 'شكراً لتعاملكم معنا' }}
                 </div>
               </div>
@@ -797,7 +791,24 @@
     opacity: 0.85;
     text-align: center;
   }
-</style>
+
+    /* D6: externalized inline styles */
+    .ic-1 { height: 45px; }
+    .ic-2 { max-height: 60px; border: 1px solid #ddd; padding: 5px; background: white; }
+    .ic-3 { max-height: 50px; opacity: 0.3; border: 1px dashed #ffc107; padding: 5px; }
+    .ic-4 { top: 70px; }
+    .ic-5 { background: white; border: 2px solid #ddd; border-radius: 8px; min-height: 400px; }
+    .ic-6 { border-bottom: 3px solid var(--header-color, #667eea); padding-bottom: 15px; margin-bottom: 15px; }
+    .ic-7 { height: 50px; margin-bottom: 10px; }
+    .ic-8 { color: var(--header-color, #667eea); margin: 0; }
+    .ic-9 { font-size: 12px; color: #666; margin: 5px 0; }
+    .ic-10 { font-size: 11px; color: #999; }
+    .ic-11 { text-align: right; font-size: 11px; color: #333; }
+    .ic-12 { font-size: 11px; }
+    .ic-13 { background: var(--accent-color, #764ba2); color: white; }
+    .ic-14 { font-size: 10px; color: #999; }
+    .ic-15 { border-top: 1px solid #ddd; padding-top: 10px; font-size: 10px; color: #666; }
+  </style>
 
 <script>
 // Live preview update

@@ -43,7 +43,12 @@
   font-weight: 700;
   box-shadow: 0 2px 8px rgba(212, 175, 55, 0.3);
 }
-</style>
+
+    /* D6: externalized inline styles */
+    .ic-1 { background: linear-gradient(135deg, #007A3D 0%, #1B4D89 100%); color: white; }
+    .ic-2 { background: linear-gradient(135deg, #007A3D 0%, #1B4D89 100%); }
+    .ic-3 { color: #ffffff !important; }
+  </style>
 {% endblock %}
 
 {% block content %}
@@ -96,7 +101,7 @@
   <div class="card-body">
     <div class="table-responsive">
       <table id="customersTable" class="table table-hover">
-        <thead style="background: linear-gradient(135deg, #007A3D 0%, #1B4D89 100%); color: white;">
+        <thead class="ic-1">
           <tr>
             <th><i class="fas fa-user mr-2"></i>{{ t('Name') }}</th>
             <th><i class="fas fa-building mr-2"></i>الشركة</th>
@@ -113,7 +118,7 @@
           <tr class="fade-in" data-type="{{ customer.customer_type }}" data-classification="{{ customer.customer_classification }}">
             <td>
               <div class="d-flex align-items-center">
-                <div class="avatar-circle mr-2" style="background: linear-gradient(135deg, #007A3D 0%, #1B4D89 100%);">
+                <div class="avatar-circle mr-2 ic-2">
                   {{ customer.name[0] }}
                 </div>
                 <div>
@@ -187,9 +192,8 @@
                         title="حذف">
                   <i class="fas fa-trash"></i>
                 </button>
-                <a href="{{ url_for('customers.statement', id=customer.id) }}" 
-                   class="btn btn-success" title="كشف حساب" style="color: #ffffff !important;">
-                  <i class="fas fa-file-invoice" style="color: #ffffff !important;"></i>
+                <a href="{{ url_for('customers.statement', id=customer.id) }}" class="btn btn-success ic-3" title="كشف حساب">
+                  <i class="fas fa-file-invoice ic-3"></i>
                 </a>
                 {% if current_user.has_permission('manage_payments') %}
                 <a href="{{ url_for('payments.create_voucher', party_type='customer', party_id=customer.id) }}"
@@ -198,10 +202,8 @@
                   <i class="fas fa-money-bill-wave"></i>
                 </a>
                 {% if current_user.has_permission('manage_sales') %}
-                <a href="{{ url_for('sales.create', customer_id=customer.id) }}"
-                {% endif %}
-                   class="btn btn-success" title="بيع" style="color: #ffffff !important;">
-                  <i class="fas fa-shopping-cart" style="color: #ffffff !important;"></i>
+                <a href="{{ url_for('sales.create', customer_id=customer.id) }}" {% endif %} class="btn btn-success ic-3" title="بيع">
+                  <i class="fas fa-shopping-cart ic-3"></i>
                 </a>
               </div>
             </td>

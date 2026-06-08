@@ -32,7 +32,13 @@
 .content-header .btn-outline-secondary span {
   color: #ffffff !important;
 }
-</style>
+
+    /* D6: externalized inline styles */
+    .ic-1 { flex: 1; }
+    .ic-2 { width: 50%; }
+    .ic-3 { width: 40%; }
+    .ic-4 { width: 10%; }
+  </style>
 {% endblock %}
 
 {% block content %}
@@ -105,7 +111,7 @@
             </label>
             <div class="input-group">
               {% set selected_category = form_data.get('category_id') %}
-              <select name="category_id" id="product_category" class="form-control select2" style="flex: 1;" data-placeholder="اختر الفئة..." autocomplete="off" aria-label="category id">
+              <select name="category_id" id="product_category" class="form-control select2 ic-1" data-placeholder="اختر الفئة..." autocomplete="off" aria-label="category id">
                 <option value="0" {% if not selected_category or selected_category == '0' %}selected{% endif %}>بلا</option>
                 {% for category in categories %}
                 <option value="{{ category.id }}" {% if selected_category and selected_category|int == category.id %}selected{% endif %}>
@@ -318,9 +324,9 @@
           <table class="table table-bordered table-sm">
             <thead>
               <tr>
-                <th style="width: 50%">الشريك</th>
-                <th style="width: 40%">النسبة (%)</th>
-                <th style="width: 10%">حذف</th>
+                <th class="ic-2">الشريك</th>
+                <th class="ic-3">النسبة (%)</th>
+                <th class="ic-4">حذف</th>
               </tr>
             </thead>
             <tbody id="partnersList">

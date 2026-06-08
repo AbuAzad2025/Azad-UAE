@@ -47,7 +47,16 @@
   font-family: 'Courier New', monospace;
   font-size: 0.7rem;
 }
-</style>
+
+    /* D6: externalized inline styles */
+    .ic-1 { word-break: break-all; }
+    .ic-2 { word-break: break-word; }
+    .ic-3 { border-radius: 10px; border-left: 4px solid #17a2b8; }
+    .ic-4 { font-size: 1.5rem; margin-top: 3px; }
+    .ic-5 { padding-right: 20px; }
+    .ic-6 { display:none; }
+    .ic-7 { display: inline-block; }
+  </style>
 {% endblock %}
 
 {% block content %}
@@ -61,7 +70,7 @@
         <div class="row">
           <div class="col-md-4 mb-2">
             <div><strong><i class="fas fa-folder-open mr-1"></i>مسار التخزين:</strong></div>
-            <div class="text-muted" style="word-break: break-all;">{{ backup_dir }}</div>
+            <div class="text-muted ic-1">{{ backup_dir }}</div>
           </div>
           <div class="col-md-4 mb-2">
             <div><strong><i class="fas fa-clock mr-1"></i>الجدولة:</strong></div>
@@ -88,7 +97,7 @@
         {% if schedule_state and schedule_state.last_error %}
           <div class="alert alert-danger mt-3 mb-0">
             <div><strong><i class="fas fa-exclamation-triangle mr-1"></i>آخر خطأ:</strong></div>
-            <div style="word-break: break-word;">{{ schedule_state.last_error }}</div>
+            <div class="ic-2">{{ schedule_state.last_error }}</div>
             <div class="mt-2 text-muted">
               {% if schedule_state.last_action %}<span>العملية: {{ schedule_state.last_action }}</span>{% endif %}
               {% if schedule_state.last_filename %}<span>{% if schedule_state.last_action %} | {% endif %}الملف: {{ schedule_state.last_filename }}</span>{% endif %}
@@ -159,11 +168,11 @@
 <!-- بطاقة تعليمات وإرشادات -->
 <div class="row mb-3">
   <div class="col-md-12">
-    <div class="alert alert-info d-flex align-items-start" style="border-radius: 10px; border-left: 4px solid #17a2b8;">
-      <i class="fas fa-lightbulb mr-3" style="font-size: 1.5rem; margin-top: 3px;"></i>
+    <div class="alert alert-info d-flex align-items-start ic-3">
+      <i class="fas fa-lightbulb mr-3 ic-4"></i>
       <div>
         <h5 class="mb-2"><i class="fas fa-question-circle mr-2"></i>كيف تعمل النسخ الاحتياطية؟</h5>
-        <ul class="mb-0" style="padding-right: 20px;">
+        <ul class="mb-0 ic-5">
           <li><strong>مستويات النسخ:</strong> System · Tenant · Branch · Store</li>
           <li><strong>System:</strong> <code>azad_backup_system_*.tar.gz</code> — <code>pg_dump -Fc</code> + كل uploads</li>
           <li><strong>Scoped:</strong> <code>data/*.jsonl</code> + uploads + <code>checksums.sha256</code></li>
@@ -236,13 +245,13 @@
                 {% endfor %}
               </select>
               {% endif %}
-              <select name="branch_id" id="backupBranchSelect" class="form-control mb-2" style="display:none;" aria-label="اختر الفرع">
+              <select name="branch_id" id="backupBranchSelect" class="form-control mb-2 ic-6" aria-label="اختر الفرع">
                 <option value="">— اختر الفرع —</option>
                 {% for b in branches %}
                 <option value="{{ b.id }}">{{ b.name }} ({{ b.code }})</option>
                 {% endfor %}
               </select>
-              <select name="store_id" id="backupStoreSelect" class="form-control mb-2" style="display:none;" aria-label="store id">
+              <select name="store_id" id="backupStoreSelect" class="form-control mb-2 ic-6" aria-label="store id">
                 <option value="">— اختر المتجر —</option>
                 {% for s in stores %}
                 <option value="{{ s.id }}">{{ s.store_slug }} (tenant {{ s.tenant_id }})</option>
@@ -387,9 +396,7 @@
           {% endif %}
 
           <!-- زر الحذف -->
-          <form method="POST" action="{{ url_for('owner.delete_backup') }}" 
-                style="display: inline-block;"
-                onsubmit="return confirm('⚠️ هل أنت متأكد من حذف النسخة الاحتياطية؟\n\n📁 {{ backup.get('filename') }}\n\n{% if not backup.get('manual') %}⚠️ تنبيه: هذه نسخة تلقائية.\n{% endif %}⚠️ لا يمكن التراجع عن هذا الإجراء!');">
+          <form method="POST" action="{{ url_for('owner.delete_backup') }}" onsubmit="return confirm('⚠️ هل أنت متأكد من حذف النسخة الاحتياطية؟\n\n📁 {{ backup.get('filename') }}\n\n{% if not backup.get('manual') %}⚠️ تنبيه: هذه نسخة تلقائية.\n{% endif %}⚠️ لا يمكن التراجع عن هذا الإجراء!');" class="ic-7">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
             <input type="hidden" name="filename" value="{{ backup.get('filename') }}" aria-label="filename">
             <button type="submit" class="btn btn-sm btn-danger" title="حذف النسخة نهائياً">

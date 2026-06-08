@@ -1,5 +1,11 @@
 {% extends 'base.html' %}
 {% block title %}مقاييس الأداء{% endblock %}
+<style>
+    /* D6: externalized inline styles */
+    .ic-1 { background:#1e1e1e; color:#fff; padding:20px; border-radius:8px; max-height:500px; overflow-y:auto; font-family:monospace; font-size:12px; }
+    .ic-2 { padding:10px; margin-bottom:8px; background:#2d2d2d; border-left:3px solid #ffc107; }
+</style>
+
 {% block content %}
 <div class="container-fluid">
   <div class="mb-3">
@@ -19,10 +25,10 @@
     </div>
     <div class="card-body">
       <h5 class="mb-3">الاستعلامات البطيئة</h5>
-      <div style="background:#1e1e1e;color:#fff;padding:20px;border-radius:8px;max-height:500px;overflow-y:auto;font-family:monospace;font-size:12px">
+      <div class="ic-1">
         {% if metrics.slow_queries %}
           {% for query in metrics.slow_queries %}
-          <div style="padding:10px;margin-bottom:8px;background:#2d2d2d;border-left:3px solid #ffc107">
+          <div class="ic-2">
             {{ query }}
           </div>
           {% endfor %}

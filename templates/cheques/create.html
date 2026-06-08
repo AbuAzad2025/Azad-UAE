@@ -68,7 +68,10 @@
 .cheque-create-form textarea.form-control::placeholder {
   text-align: right;
 }
-</style>
+
+    /* D6: externalized inline styles */
+    .ic-1 { display: none; }
+  </style>
 {% endblock %}
 
 {% block content %}
@@ -182,7 +185,7 @@
       </div>
 
       <!-- معلومات الطرف الآخر (تتغير حسب النوع) -->
-      <div id="incomingFields" style="display: none;">
+      <div id="incomingFields" class="ic-1">
         <div class="row">
           <div class="col-md-6">
             <div class="form-group">
@@ -212,7 +215,7 @@
         </div>
       </div>
 
-      <div id="outgoingFields" style="display: none;">
+      <div id="outgoingFields" class="ic-1">
         <div class="row">
           <div class="col-md-6">
             <div class="form-group">

@@ -16,9 +16,9 @@
 
   <div>
 
-    <a href="{{ url_for('sales.create') }}" class="btn btn-primary btn-lg pulse text-white" style="color:#ffffff !important;">
+    <a href="{{ url_for('sales.create') }}" class="btn btn-primary btn-lg pulse text-white ic-1">
 
-      <i class="fas fa-plus-circle mr-2" style="color:#ffffff !important"></i>فاتورة جديدة
+      <i class="fas fa-plus-circle mr-2 ic-1"></i>فاتورة جديدة
 
     </a>
 
@@ -264,7 +264,12 @@ a.btn.btn-warning span {
 
 }
 
-</style>
+
+    /* D6: externalized inline styles */
+    .ic-1 { color:#ffffff !important; }
+    .ic-2 { background: linear-gradient(135deg, #007A3D 0%, #1B4D89 100%); color: white; }
+    .ic-3 { color: #007A3D; }
+  </style>
 
 {% endblock %}
 
@@ -328,7 +333,7 @@ a.btn.btn-warning span {
 
       <table id="salesTable" class="table table-hover">
 
-        <thead style="background: linear-gradient(135deg, #007A3D 0%, #1B4D89 100%); color: white;">
+        <thead class="ic-2">
 
           <tr>
 
@@ -412,7 +417,7 @@ a.btn.btn-warning span {
 
             <td>
 
-              <strong style="color: #007A3D;">{{ "{:,.2f}".format(sale.total_amount) }}</strong>
+              <strong class="ic-3">{{ "{:,.2f}".format(sale.total_amount) }}</strong>
 
               <small class="text-muted">{{ sale.currency }}</small>
 

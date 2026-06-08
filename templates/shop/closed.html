@@ -1,12 +1,20 @@
 {% extends 'shop/base.html' %}
 {% block title %}{{ t('store_closed') }}{% endblock %}
 
+<style>
+    /* D6: externalized inline styles */
+    .ic-1 { font-size:3rem; color:var(--ps-red); margin-bottom:1rem; }
+    .ic-2 { margin:0 0 0.75rem; font-weight:800; }
+    .ic-3 { color:var(--ps-muted); margin:0; }
+    .ic-4 { margin-top:1.25rem; }
+</style>
+
 {% block content %}
 <div class="ps-closed">
   <div class="ps-closed-box">
-    <div style="font-size:3rem;color:var(--ps-red);margin-bottom:1rem;"><i class="fas fa-store-slash"></i></div>
-    <h2 style="margin:0 0 0.75rem;font-weight:800;">{{ t('store_closed') }}</h2>
-    <p style="color:var(--ps-muted);margin:0;">
+    <div class="ic-1"><i class="fas fa-store-slash"></i></div>
+    <h2 class="ic-2">{{ t('store_closed') }}</h2>
+    <p class="ic-3">
       {% if reason == 'platform' %}
       {{ t('platform_closed') }}
       {% else %}
@@ -14,7 +22,7 @@
       {% endif %}
     </p>
     {% if store.phone %}
-    <p style="margin-top:1.25rem;"><i class="fas fa-phone"></i> {{ store.phone }}</p>
+    <p class="ic-4"><i class="fas fa-phone"></i> {{ store.phone }}</p>
     {% endif %}
   </div>
 </div>

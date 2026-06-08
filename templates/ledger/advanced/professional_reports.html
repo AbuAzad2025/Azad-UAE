@@ -134,7 +134,17 @@
   transform: translateY(-2px);
   box-shadow: 0 5px 15px rgba(0,0,0,0.2);
 }
-</style>
+
+    /* D6: externalized inline styles */
+    .ic-1 { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .ic-2 { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+    .ic-3 { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+    .ic-4 { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+    .ic-5 { background: #667eea; }
+    .ic-6 { background: #f5576c; }
+    .ic-7 { background: #f8f9fa; font-weight: bold; }
+    .ic-8 { height: 200px; }
+  </style>
 {% endblock %}
 
 {% block content %}
@@ -165,28 +175,28 @@
   <!-- إحصائيات سريعة -->
   <div class="row">
     <div class="col-md-3">
-      <div class="stat-box" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+      <div class="stat-box ic-1">
         <p>إجمالي الإيرادات</p>
         <h3>{{ "{:,.2f}".format(total_revenue) }}</h3>
         <p><i class="fas fa-arrow-up trend-up"></i> +15.3% من الشهر الماضي</p>
       </div>
     </div>
     <div class="col-md-3">
-      <div class="stat-box" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+      <div class="stat-box ic-2">
         <p>إجمالي المصروفات</p>
         <h3>{{ "{:,.2f}".format(total_expenses) }}</h3>
         <p><i class="fas fa-arrow-down trend-up"></i> -5.2% من الشهر الماضي</p>
       </div>
     </div>
     <div class="col-md-3">
-      <div class="stat-box" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+      <div class="stat-box ic-3">
         <p>صافي الربح</p>
         <h3>{{ "{:,.2f}".format(net_profit) }}</h3>
         <p><i class="fas fa-arrow-up trend-up"></i> +23.7% من الشهر الماضي</p>
       </div>
     </div>
     <div class="col-md-3">
-      <div class="stat-box" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+      <div class="stat-box ic-4">
         <p>هامش الربح</p>
         <h3>{{ "{:.1f}".format(profit_margin) }}%</h3>
         <p><i class="fas fa-arrow-up trend-up"></i> +2.1% من الشهر الماضي</p>
@@ -232,11 +242,11 @@
         </div>
         <div class="chart-legend">
           <div class="legend-item">
-            <div class="legend-color" style="background: #667eea;"></div>
+            <div class="legend-color ic-5"></div>
             <span>الإيرادات</span>
           </div>
           <div class="legend-item">
-            <div class="legend-color" style="background: #f5576c;"></div>
+            <div class="legend-color ic-6"></div>
             <span>المصروفات</span>
           </div>
         </div>
@@ -301,7 +311,7 @@
               </tr>
               {% endfor %}
             </tbody>
-            <tfoot style="background: #f8f9fa; font-weight: bold;">
+            <tfoot class="ic-7">
               <tr>
                 <td>الإجمالي</td>
                 <td class="text-success">{{ "{:,.2f}".format(total_revenue) }}</td>
@@ -322,7 +332,7 @@
     <div class="col-md-4">
       <div class="report-card">
         <h5><i class="fas fa-analytics mr-2"></i>معدل النمو السنوي</h5>
-        <div class="chart-container" style="height: 200px;">
+        <div class="chart-container ic-8">
           <canvas id="growthRateChart"></canvas>
         </div>
         <div class="text-center mt-3">
@@ -335,7 +345,7 @@
     <div class="col-md-4">
       <div class="report-card">
         <h5><i class="fas fa-balance-scale mr-2"></i>نسبة السيولة</h5>
-        <div class="chart-container" style="height: 200px;">
+        <div class="chart-container ic-8">
           <canvas id="liquidityChart"></canvas>
         </div>
         <div class="text-center mt-3">
@@ -348,7 +358,7 @@
     <div class="col-md-4">
       <div class="report-card">
         <h5><i class="fas fa-percentage mr-2"></i>العائد على الاستثمار</h5>
-        <div class="chart-container" style="height: 200px;">
+        <div class="chart-container ic-8">
           <canvas id="roiChart"></canvas>
         </div>
         <div class="text-center mt-3">

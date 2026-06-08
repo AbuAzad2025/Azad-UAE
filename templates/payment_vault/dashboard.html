@@ -5,14 +5,14 @@
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
     <div class="d-flex align-items-center">
-        <i class="fas fa-vault text-danger mr-3" style="font-size: 2rem;"></i>
+        <i class="fas fa-vault text-danger mr-3 ic-1"></i>
         <div>
             <h1 class="mb-0">🔐 لوحة تحكم الخزينة السرية</h1>
             <p class="text-muted mb-0">إدارة المشتريات والتبرعات والباقات</p>
         </div>
     </div>
     <div>
-        <form method="POST" action="{{ url_for('payment_vault.trigger_auto_approve') }}" style="display: inline;">
+        <form method="POST" action="{{ url_for('payment_vault.trigger_auto_approve') }}" class="ic-2">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
             <button type="submit" class="btn btn-success mr-2" onclick="return confirm('تشغيل القبول التلقائي للعمليات الأقدم من ساعة؟')">
                 <i class="fas fa-check-circle"></i> قبول تلقائي
@@ -79,43 +79,53 @@
         padding: 20px;
         box-shadow: 0 5px 15px rgba(0,0,0,0.1);
     }
-</style>
+
+    /* D6: externalized inline styles */
+    .ic-1 { font-size: 2rem; }
+    .ic-2 { display: inline; }
+    .ic-3 { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .ic-4 { opacity: 0.8; }
+    .ic-5 { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+    .ic-6 { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+    .ic-7 { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+    .ic-8 { font-size: 1.5rem; }
+  </style>
 {% endblock %}
 
 {% block content %}
 <div class="row mb-4">
             <div class="col-md-3">
-                <div class="stat-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="stat-card ic-3">
                     <div class="stat-number" id="live-purchases">{{ stats.total_purchases }}</div>
                     <div class="stat-label">
                         <i class="fas fa-shopping-bag"></i> إجمالي المشتريات
                     </div>
-                    <small class="d-block mt-2" style="opacity: 0.8;">اليوم: <span id="today-purchases">{{ stats.completed_today or 0 }}</span></small>
+                    <small class="d-block mt-2 ic-4">اليوم: <span id="today-purchases">{{ stats.completed_today or 0 }}</span></small>
                 </div>
             </div>
             
             <div class="col-md-3">
-                <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <div class="stat-card ic-5">
                     <div class="stat-number" id="live-donations">{{ stats.total_donations }}</div>
                     <div class="stat-label">
                         <i class="fas fa-heart"></i> إجمالي التبرعات
                     </div>
-                    <small class="d-block mt-2" style="opacity: 0.8;">اليوم: <span id="today-donations">{{ stats.today_transactions or 0 }}</span></small>
+                    <small class="d-block mt-2 ic-4">اليوم: <span id="today-donations">{{ stats.today_transactions or 0 }}</span></small>
                 </div>
             </div>
             
             <div class="col-md-3">
-                <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                <div class="stat-card ic-6">
                     <div class="stat-number" id="live-revenue">${{ "%.2f"|format(stats.total_revenue) }}</div>
                     <div class="stat-label">
                         <i class="fas fa-dollar-sign"></i> إجمالي الإيرادات
                     </div>
-                    <small class="d-block mt-2" style="opacity: 0.8;">اليوم: $<span id="today-revenue">{{ "%.2f"|format(stats.today_revenue or 0) }}</span></small>
+                    <small class="d-block mt-2 ic-4">اليوم: $<span id="today-revenue">{{ "%.2f"|format(stats.today_revenue or 0) }}</span></small>
                 </div>
             </div>
             
             <div class="col-md-3">
-                <div class="stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                <div class="stat-card ic-7">
                     <div class="stat-number" id="live-pending">{{ stats.pending_count }}</div>
                     <div class="stat-label">
                         <i class="fas fa-clock"></i> قيد الانتظار
@@ -140,11 +150,11 @@
                                 <div class="text-center mb-3">
                                     <h3 class="mb-0">
                                         {% if security_status.security_level == 'high' %}
-                                            <span class="badge badge-success" style="font-size: 1.5rem;">🛡️ عالي</span>
+                                            <span class="badge badge-success ic-8">🛡️ عالي</span>
                                         {% elif security_status.security_level == 'medium' %}
-                                            <span class="badge badge-warning" style="font-size: 1.5rem;">⚠️ متوسط</span>
+                                            <span class="badge badge-warning ic-8">⚠️ متوسط</span>
                                         {% else %}
-                                            <span class="badge badge-danger" style="font-size: 1.5rem;">🚨 منخفض</span>
+                                            <span class="badge badge-danger ic-8">🚨 منخفض</span>
                                         {% endif %}
                                     </h3>
                                     <p class="text-muted mb-0">مستوى الأمان</p>

@@ -100,6 +100,12 @@
   }
   </script>
   
+  <style>
+    /* D6: externalized inline styles */
+    .ic-1 { max-width: 480px; }
+    .ic-2 { max-height: 320px; overflow-y: auto; }
+    .ic-3 { display:none; }
+  </style>
 </head>
 
 <body class="hold-transition sidebar-mini layout-fixed" data-sidebar-side="{{ 'right' if is_rtl else 'left' }}">
@@ -287,7 +293,7 @@
 
   <!-- Currency Exchange Modal (عرض فقط — لا يُستخدم في الحسابات) -->
   <div class="modal fade" id="fxModal" tabindex="-1" role="dialog" aria-labelledby="fxModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 480px;">
+    <div class="modal-dialog modal-dialog-centered ic-1" role="document">
       <div class="modal-content">
         <div class="modal-header bg-primary text-white py-2">
           <h6 class="modal-title" id="fxModalLabel"><i class="fas fa-coins mr-2"></i>أسعار الصرف (عرض فقط)</h6>
@@ -296,7 +302,7 @@
           </button>
         </div>
         <div class="modal-body p-0">
-          <div class="table-responsive" style="max-height: 320px; overflow-y: auto;">
+          <div class="table-responsive ic-2">
             <table class="table table-sm table-striped table-hover text-center mb-0" id="fx-rates-table">
               <thead class="thead-dark">
                 <tr>
@@ -314,7 +320,7 @@
             <small class="text-muted" id="fx-last-updated">
               <i class="fas fa-sync-alt mr-1"></i>اضغط للتحديث
             </small>
-            <span id="fx-source-badge" class="badge badge-secondary ml-1" style="display:none;"></span>
+            <span id="fx-source-badge" class="badge badge-secondary ml-1 ic-3"></span>
           </div>
         </div>
       </div>

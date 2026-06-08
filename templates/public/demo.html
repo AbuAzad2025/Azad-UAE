@@ -136,7 +136,12 @@
 
         }
 
-    </style>
+    
+    /* D6: externalized inline styles */
+    .ic-1 { position: fixed; top: 20px; right: 20px; z-index: 9999; }
+    .ic-2 { background: rgba(255,255,255,0.9); border-radius: 20px; padding: 8px 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+    .ic-3 { margin-top: 30px; font-size: 1rem; }
+  </style>
 
 </head>
 
@@ -146,9 +151,9 @@
 
     <!-- Language Switcher -->
 
-    <div style="position: fixed; top: 20px; right: 20px; z-index: 9999;">
+    <div class="ic-1">
 
-        <a href="{{ url_for('language.set_language', lang='en' if session.get('language', 'ar') == 'ar' else 'ar') }}" class="btn btn-sm" style="background: rgba(255,255,255,0.9); border-radius: 20px; padding: 8px 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+        <a href="{{ url_for('language.set_language', lang='en' if session.get('language', 'ar') == 'ar' else 'ar') }}" class="btn btn-sm ic-2">
 
             <i class="fas fa-globe mr-2"></i>{{ 'English' if session.get('language', 'ar') == 'ar' else 'العربية' }}
 
@@ -196,7 +201,7 @@
 
 
 
-        <p style="margin-top: 30px; font-size: 1rem;">أو اتصل بنا على: {{ config.COMPANY_PHONE }} / {{ config.COMPANY_PHONE_2 }}</p>
+        <p class="ic-3">أو اتصل بنا على: {{ config.COMPANY_PHONE }} / {{ config.COMPANY_PHONE_2 }}</p>
 
     </div>
 

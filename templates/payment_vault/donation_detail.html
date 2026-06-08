@@ -56,7 +56,13 @@
         font-size: 1.2rem;
         padding: 10px 20px;
     }
-</style>
+
+    /* D6: externalized inline styles */
+    .ic-1 { opacity: 0.9; }
+    .ic-2 { background: #f5f5f5; padding: 5px 10px; border-radius: 5px; }
+    .ic-3 { background: #f5f5f5; padding: 5px 10px; border-radius: 5px; font-size: 0.85rem; }
+    .ic-4 { color: #999; }
+  </style>
 {% endblock %}
 
 {% block content %}
@@ -70,7 +76,7 @@
                             <h2 class="mb-0">
                                 <i class="fas fa-heart"></i> تفاصيل التبرع #{{ donation.id }}
                             </h2>
-                            <p class="mb-0 mt-2" style="opacity: 0.9;">
+                            <p class="mb-0 mt-2 ic-1">
                                 {{ donation.created_at.strftime('%Y-%m-%d %H:%M') if donation.created_at else 'N/A' }}
                             </p>
                         </div>
@@ -157,7 +163,7 @@
                     <div class="info-row">
                         <div class="info-label">رقم المعاملة:</div>
                         <div class="info-value">
-                            <code style="background: #f5f5f5; padding: 5px 10px; border-radius: 5px;">
+                            <code class="ic-2">
                                 {{ donation.transaction_hash }}
                             </code>
                         </div>
@@ -168,7 +174,7 @@
                     <div class="info-row">
                         <div class="info-label">عنوان المحفظة:</div>
                         <div class="info-value">
-                            <code style="background: #f5f5f5; padding: 5px 10px; border-radius: 5px; font-size: 0.85rem;">
+                            <code class="ic-3">
                                 {{ donation.wallet_address }}
                             </code>
                         </div>
@@ -198,7 +204,7 @@
                     <div class="info-row">
                         <div class="info-label">User Agent:</div>
                         <div class="info-value">
-                            <small style="color: #999;">{{ donation.user_agent[:100] }}...</small>
+                            <small class="ic-4">{{ donation.user_agent[:100] }}...</small>
                         </div>
                     </div>
                     {% endif %}

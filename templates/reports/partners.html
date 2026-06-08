@@ -2,6 +2,11 @@
 
 {% block title %}تقرير الشركاء والتجار{% endblock %}
 
+<style>
+    /* D6: externalized inline styles */
+    .ic-1 { z-index: 1000; display: none; max-height: 300px; overflow-y: auto; }
+</style>
+
 {% block content %}
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -38,7 +43,7 @@
                         <span class="input-group-text"><i class="fas fa-search"></i></span>
                         <input type="text" class="form-control" id="searchInput" placeholder="ابدأ بالكتابة للبحث..." autocomplete="off">
                     </div>
-                    <div id="searchResults" class="list-group position-absolute w-100 shadow mt-1" style="z-index: 1000; display: none; max-height: 300px; overflow-y: auto;"></div>
+                    <div id="searchResults" class="list-group position-absolute w-100 shadow mt-1 ic-1"></div>
                 </div>
             </div>
             

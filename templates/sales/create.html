@@ -130,7 +130,14 @@ a.btn.btn-outline-secondary i,
 a.btn.btn-outline-secondary span {
   color: #111827 !important;
 }
-</style>
+
+    /* D6: externalized inline styles */
+    .ic-1 { background: rgba(255,255,255,0.2); border: none; }
+    .ic-2 { border-color: rgba(255,255,255,0.3); margin: 15px 0; }
+    .ic-3 { font-size: 36px; font-weight: 700; }
+    .ic-4 { opacity: 0.9; font-size: 1.1rem; }
+    .ic-5 { display:none; }
+  </style>
 {% endblock %}
 
 {% block content %}
@@ -296,16 +303,16 @@ a.btn.btn-outline-secondary span {
           {% endif %}
           
           <div class="total-box text-center">
-            <div class="alert alert-info mb-3" style="background: rgba(255,255,255,0.2); border: none;">
+            <div class="alert alert-info mb-3 ic-1">
               <i class="fas fa-info-circle"></i>
               <strong>ملاحظة:</strong> جميع الأسعار بال{{ tenant_currency_name_ar or 'درهم إماراتي' }} ({{ tenant_default_currency or 'AED' }})
             </div>
             <h6 class="mb-2">{{ t('Subtotal') }}</h6>
             <h3 id="subtotal" class="mb-3">0.00</h3>
-            <hr style="border-color: rgba(255,255,255,0.3); margin: 15px 0;">
+            <hr class="ic-2">
             <h5 class="mb-2">{{ t('Final Total') }}</h5>
-            <h2 id="total" class="mb-0" style="font-size: 36px; font-weight: 700;">0.00</h2>
-            <small style="opacity: 0.9; font-size: 1.1rem;">
+            <h2 id="total" class="mb-0 ic-3">0.00</h2>
+            <small class="ic-4">
               <i class="fas fa-coins"></i> <span id="total_currency_label">{{ tenant_currency_name_ar or 'درهم إماراتي' }} ({{ tenant_default_currency or 'AED' }})</span>
             </small>
           </div>
@@ -331,7 +338,7 @@ a.btn.btn-outline-secondary span {
           <!-- Dynamic payment fields will be inserted here -->
           <div id="payment_fields_container"></div>
 
-          <div class="form-group" id="payment_amount_group" style="display:none;">
+          <div class="form-group ic-5" id="payment_amount_group">
             <label class="font-weight-bold">
               <i class="fas fa-hand-holding-usd mr-1"></i>المبلغ المدفوع
               <i class="fas fa-info-circle text-info" title="أدخل المبلغ بالعملة المختارة - سيتم تحويله لـ{{ tenant_currency_name_ar or 'درهم إماراتي' }} تلقائياً"></i>
@@ -410,7 +417,7 @@ a.btn.btn-outline-secondary span {
         </ul>
       </div>
       <div class="modal-footer justify-content-between">
-        <button type="button" class="btn btn-outline-info" id="print_serials_btn" style="display:none;">
+        <button type="button" class="btn btn-outline-info ic-5" id="print_serials_btn">
             <i class="fas fa-print mr-1"></i> طباعة ملصقات
         </button>
         <div>
@@ -425,7 +432,7 @@ a.btn.btn-outline-secondary span {
 </div>
 
 <!-- Print Frame -->
-<iframe id="print_frame" style="display:none;"></iframe>
+<iframe id="print_frame" class="ic-5"></iframe>
 
 {% endblock %}
 

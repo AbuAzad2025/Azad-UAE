@@ -4,15 +4,21 @@
 
 
 
+<style>
+    /* D6: externalized inline styles */
+    .ic-1 { white-space:pre-wrap; line-height:1.75; color:var(--ps-muted); }
+    .ic-2 { margin-top:1.25rem; }
+</style>
+
 {% block content %}
 
 <div class="ps-panel">
 
   <h2 class="ps-page-title">{{ t('return_policy') }}</h2>
 
-  <div class="ps-policy-body" style="white-space:pre-wrap;line-height:1.75;color:var(--ps-muted);">{{ policy }}</div>
+  <div class="ps-policy-body ic-1">{{ policy }}</div>
 
-  <a href="{{ url_for('shop.catalog', slug=store.store_slug) }}" class="ps-btn ps-btn-outline" style="margin-top:1.25rem;">{{ t('continue_shopping') }}</a>
+  <a href="{{ url_for('shop.catalog', slug=store.store_slug) }}" class="ps-btn ps-btn-outline ic-2">{{ t('continue_shopping') }}</a>
 
 </div>
 

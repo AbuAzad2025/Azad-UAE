@@ -118,7 +118,13 @@
 
         footer { background: #2d3748; color: white; padding: 40px 20px; text-align: center; }
 
-    </style>
+    
+    /* D6: externalized inline styles */
+    .ic-1 { position: fixed; top: 20px; left: 20px; z-index: 9999; }
+    .ic-2 { background: rgba(255,255,255,0.9); border-radius: 20px; padding: 8px 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+    .ic-3 { text-align: right; }
+    .ic-4 { margin-top: 10px; }
+  </style>
 
 </head>
 
@@ -132,9 +138,9 @@
 
     <!-- Language Switcher -->
 
-    <div style="position: fixed; top: 20px; left: 20px; z-index: 9999;">
+    <div class="ic-1">
 
-        <a href="{{ url_for('language.set_language', lang='en' if session.get('language', 'ar') == 'ar' else 'ar') }}" class="btn btn-sm" style="background: rgba(255,255,255,0.9); border-radius: 20px; padding: 8px 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+        <a href="{{ url_for('language.set_language', lang='en' if session.get('language', 'ar') == 'ar' else 'ar') }}" class="btn btn-sm ic-2">
 
             <i class="fas fa-globe mr-2"></i>{{ 'English' if session.get('language', 'ar') == 'ar' else 'العربية' }}
 
@@ -364,7 +370,7 @@
 
                     <tr>
 
-                        <td style="text-align: right;">عدد المستخدمين</td>
+                        <td class="ic-3">عدد المستخدمين</td>
 
                         <td>1</td>
 
@@ -378,7 +384,7 @@
 
                     <tr>
 
-                        <td style="text-align: right;">{{ t('Products') }}</td>
+                        <td class="ic-3">{{ t('Products') }}</td>
 
                         <td>100</td>
 
@@ -392,7 +398,7 @@
 
                     <tr>
 
-                        <td style="text-align: right;">ذكاء اصطناعي</td>
+                        <td class="ic-3">ذكاء اصطناعي</td>
 
                         <td><i class="cross fas fa-times"></i></td>
 
@@ -406,7 +412,7 @@
 
                     <tr>
 
-                        <td style="text-align: right;">دفتر أستاذ GL</td>
+                        <td class="ic-3">دفتر أستاذ GL</td>
 
                         <td><i class="cross fas fa-times"></i></td>
 
@@ -420,7 +426,7 @@
 
                     <tr>
 
-                        <td style="text-align: right;">API</td>
+                        <td class="ic-3">API</td>
 
                         <td><i class="cross fas fa-times"></i></td>
 
@@ -434,7 +440,7 @@
 
                     <tr>
 
-                        <td style="text-align: right;">دعم فني</td>
+                        <td class="ic-3">دعم فني</td>
 
                         <td>بريد</td>
 
@@ -490,7 +496,7 @@
 
         <p>&copy; 2025 {{ config.COMPANY_NAME_AR }}. جميع الحقوق محفوظة.</p>
 
-        <p style="margin-top: 10px;">{{ config.DEVELOPER_CREDIT }}</p>
+        <p class="ic-4">{{ config.DEVELOPER_CREDIT }}</p>
 
     </footer>
 

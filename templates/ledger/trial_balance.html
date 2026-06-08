@@ -43,11 +43,11 @@
     <h3 class="card-title text-white">{{ t('Trial Balance') }}</h3>
     <div class="card-tools">
       {% if total_debit == total_credit %}
-      <span class="badge badge-success" style="font-size: 14px;">
+      <span class="badge badge-success ic-1">
         <i class="fas fa-check-circle"></i> متوازن
       </span>
       {% else %}
-      <span class="badge badge-danger" style="font-size: 14px;">
+      <span class="badge badge-danger ic-1">
         <i class="fas fa-exclamation-triangle"></i> غير متوازن
       </span>
       {% endif %}
@@ -87,7 +87,7 @@
         {% endfor %}
       </tbody>
       <tfoot class="bg-light">
-        <tr style="font-weight: 700; font-size: 16px;">
+        <tr class="ic-2">
           <td colspan="2" class="text-center">{{ t('Total') }}</td>
           <td class="text-danger text-center">{{ "{:,.2f}".format(total_debit) }}</td>
           <td class="text-success text-center">{{ "{:,.2f}".format(total_credit) }}</td>
@@ -140,7 +140,11 @@
     display: table-footer-group;
   }
 }
-</style>
+
+    /* D6: externalized inline styles */
+    .ic-1 { font-size: 14px; }
+    .ic-2 { font-weight: 700; font-size: 16px; }
+  </style>
 {% endblock %}
 
 

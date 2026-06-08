@@ -236,7 +236,12 @@
   box-shadow: 0 10px 30px rgba(0,0,0,0.1);
   margin-bottom: 30px;
 }
-</style>
+
+    /* D6: externalized inline styles */
+    .ic-1 { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; font-weight: bold; }
+    .ic-2 { margin-top: 30px; border-radius: 15px; border-right: 5px solid #17a2b8; }
+    .ic-3 { margin-top: 30px; font-size: 12px; opacity: 0.8; }
+  </style>
 {% endblock %}
 
 {% block content %}
@@ -343,7 +348,7 @@
         {% endfor %}
       </tbody>
       <tfoot>
-        <tr style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; font-weight: bold;">
+        <tr class="ic-1">
           <td colspan="3"><strong>الإجمالي</strong></td>
           <td>{{ "{:,.2f}".format(total_debit) }}</td>
           <td>{{ "{:,.2f}".format(total_credit) }}</td>
@@ -360,7 +365,7 @@
     </table>
 
     <!-- ملاحظات مهمة -->
-    <div class="alert alert-info" style="margin-top: 30px; border-radius: 15px; border-right: 5px solid #17a2b8;">
+    <div class="alert alert-info ic-2">
       <h5><i class="fas fa-info-circle mr-2"></i>ملاحظات مهمة:</h5>
       <ul class="mb-0">
         <li>تم إعداد هذا التقرير وفقاً للمعايير المحاسبية الدولية</li>
@@ -393,7 +398,7 @@
         </div>
       </div>
       
-      <div style="margin-top: 30px; font-size: 12px; opacity: 0.8;">
+      <div class="ic-3">
         <p>© 2025 شركة الإمارات للمرائب - جميع الحقوق محفوظة</p>
         <p>تم إنشاء هذا التقرير بواسطة النظام المحاسبي المتقدم</p>
       </div>

@@ -50,7 +50,14 @@
             .guide-container { flex-direction: column; }
             .sidebar { position: static; }
         }
-    </style>
+    
+    /* D6: externalized inline styles */
+    .ic-1 { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+    .ic-2 { color: white; }
+    .ic-3 { display: flex; gap: 30px; margin-top: 20px; flex-wrap: wrap; }
+    .ic-4 { font-size: 2rem; }
+    .ic-5 { margin-top: 10px; }
+  </style>
 </head>
 <body>
     {% set platform_name_ar = config.COMPANY_NAME_AR or 'شركة أزاد للأنظمة الذكية' %}
@@ -209,13 +216,13 @@
                 </ul>
             </section>
 
-            <section class="section" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
-                <h2 style="color: white;"><i class="fas fa-headset"></i> الدعم الفني</h2>
+            <section class="section ic-1">
+                <h2 class="ic-2"><i class="fas fa-headset"></i> الدعم الفني</h2>
                 <p>للاستفسارات التشغيلية والتدريب، تواصل عبر القنوات الرسمية الظاهرة داخل النظام.</p>
-                <div style="display: flex; gap: 30px; margin-top: 20px; flex-wrap: wrap;">
-                    <div><i class="fab fa-whatsapp" style="font-size: 2rem;"></i><br><strong>واتساب:</strong> {{ developer_whatsapp or config.DEVELOPER_WHATSAPP }}</div>
-                    <div><i class="fas fa-phone" style="font-size: 2rem;"></i><br><strong>جوال:</strong> {{ developer_phone or config.DEVELOPER_PHONE }}</div>
-                    <div><i class="fas fa-envelope" style="font-size: 2rem;"></i><br><strong>بريد:</strong> {{ developer_email or config.DEVELOPER_EMAIL }}</div>
+                <div class="ic-3">
+                    <div><i class="fab fa-whatsapp ic-4"></i><br><strong>واتساب:</strong> {{ developer_whatsapp or config.DEVELOPER_WHATSAPP }}</div>
+                    <div><i class="fas fa-phone ic-4"></i><br><strong>جوال:</strong> {{ developer_phone or config.DEVELOPER_PHONE }}</div>
+                    <div><i class="fas fa-envelope ic-4"></i><br><strong>بريد:</strong> {{ developer_email or config.DEVELOPER_EMAIL }}</div>
                 </div>
             </section>
         </main>
@@ -223,7 +230,7 @@
 
     <footer>
         <p>&copy; 2025 {{ platform_name_ar }}. جميع الحقوق محفوظة.</p>
-        <p style="margin-top: 10px;">{{ developer_credit or config.DEVELOPER_CREDIT }}</p>
+        <p class="ic-5">{{ developer_credit or config.DEVELOPER_CREDIT }}</p>
     </footer>
 
     <script>

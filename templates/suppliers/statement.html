@@ -39,7 +39,12 @@
   border-radius: 8px;
   margin-bottom: 20px;
 }
-</style>
+
+    /* D6: externalized inline styles */
+    .ic-1 { background: #007bff; color: white; }
+    .ic-2 { background: #f8f9fa; font-weight: bold; }
+    .ic-3 { background: #17a2b8; color: white; }
+  </style>
 {% endblock %}
 
 {% block page_title %}
@@ -130,7 +135,7 @@
     {% if purchases %}
     <div class="table-responsive">
       <table class="table table-bordered table-striped">
-        <thead style="background: #007bff; color: white;">
+        <thead class="ic-1">
           <tr>
             <th class="text-center">#</th>
             <th>رقم الشراء</th>
@@ -170,7 +175,7 @@
           </tr>
           {% endfor %}
         </tbody>
-        <tfoot style="background: #f8f9fa; font-weight: bold;">
+        <tfoot class="ic-2">
           <tr>
             <td colspan="7" class="text-left">الإجمالي:</td>
             <td class="text-left text-success">
@@ -201,7 +206,7 @@
       <h4 class="mb-3"><i class="fas fa-money-check-alt mr-2"></i>الدفعات إلى المورد</h4>
       <div class="table-responsive">
         <table class="table table-bordered table-striped">
-          <thead style="background: #17a2b8; color: white;">
+          <thead class="ic-3">
             <tr>
               <th class="text-center">#</th>
               <th>رقم السند</th>
@@ -245,7 +250,7 @@
             </tr>
             {% endfor %}
           </tbody>
-          <tfoot style="background: #f8f9fa; font-weight: bold;">
+          <tfoot class="ic-2">
             <tr>
               <td colspan="6" class="text-left">إجمالي الدفعات:</td>
               <td class="text-left text-primary">

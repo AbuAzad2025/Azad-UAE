@@ -102,7 +102,12 @@
         box-shadow: 0 5px 20px rgba(0,0,0,0.1);
         margin-bottom: 24px;
     }
-</style>
+
+    /* D6: externalized inline styles */
+    .ic-1 { position: absolute; top: -15px; right: 50%; transform: translateX(50%); background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 5px 20px; border-radius: 20px; font-weight: 700; font-size: 0.85rem; }
+    .ic-2 { margin: 15px 0; padding: 10px; background: #f8f9fa; border-radius: 5px; font-size: 0.85rem; }
+    .ic-3 { text-align: right; }
+  </style>
 {% endblock %}
 
 {% block content %}
@@ -198,7 +203,7 @@
                 {% for package in packages %}
                 <div class="package-item {% if package.is_featured %}featured{% endif %}">
                     {% if package.is_featured and package.badge_text %}
-                    <div style="position: absolute; top: -15px; right: 50%; transform: translateX(50%); background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 5px 20px; border-radius: 20px; font-weight: 700; font-size: 0.85rem;">
+                    <div class="ic-1">
                         ⭐ {{ package.badge_text }}
                     </div>
                     {% endif %}
@@ -215,7 +220,7 @@
                         {% endfor %}
                     </ul>
                     
-                    <div style="margin: 15px 0; padding: 10px; background: #f8f9fa; border-radius: 5px; font-size: 0.85rem;">
+                    <div class="ic-2">
                         <div><i class="fas fa-users"></i> المستخدمين: {{ package.max_users or '∞' }}</div>
                         <div><i class="fas fa-building"></i> الفروع: {{ package.max_branches or '∞' }}</div>
                         <div><i class="fas fa-headset"></i> الدعم: {{ package.support_duration_months }} شهر</div>
@@ -310,7 +315,7 @@ function viewPackageStats(packageId, packageName) {
             Swal.fire({
                 title: `إحصائيات ${packageName}`,
                 html: `
-                    <div style="text-align: right;">
+                    <div class="ic-3">
                         <p><strong>إجمالي المبيعات:</strong> ${data.total_sales || 0}</p>
                         <p><strong>الإيرادات:</strong> $${data.total_revenue || 0}</p>
                         <p><strong>معلق:</strong> ${data.pending || 0}</p>

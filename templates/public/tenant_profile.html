@@ -70,6 +70,10 @@
       padding: 1.5rem 0;
       margin-top: 3rem;
     }
+  
+    /* D6: externalized inline styles */
+    .ic-1 { font-size:3rem; }
+    .ic-2 { margin-top:-20px; position:relative; z-index:2; }
   </style>
 </head>
 <body>
@@ -83,7 +87,7 @@
             {% if tenant.logo_url %}
             <img src="{{ tenant.logo_url }}" alt="{{ tenant.name_ar or tenant.name }}">
             {% else %}
-            <i class="bi bi-building text-primary" style="font-size:3rem;"></i>
+            <i class="bi bi-building text-primary ic-1"></i>
             {% endif %}
           </div>
         </div>
@@ -111,7 +115,7 @@
     </div>
   </div>
 
-  <div class="container" style="margin-top:-20px; position:relative; z-index:2;">
+  <div class="container ic-2">
     <div class="row g-4">
 
       <!-- Contact Info -->

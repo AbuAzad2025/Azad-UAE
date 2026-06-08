@@ -296,6 +296,52 @@
 
 
 
+  <style>
+    /* D6: externalized inline styles */
+    .ic-1 { font-size: 1.2rem; margin-top: 15px; }
+    .ic-2 { font-size: 1rem; margin-top: 10px; color: rgba(255,255,255,0.9); }
+    .ic-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; max-width: 900px; margin: 0 auto; }
+    .ic-4 { flex: 1; }
+    .ic-5 { margin-top: 18px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .ic-6 { display: inline-flex; min-width: 240px; }
+    .ic-7 { margin-top: 30px; text-align: center; }
+    .ic-8 { display: inline-block; min-width: 250px; }
+    .ic-9 { margin-top: 20px; display: inline-block; }
+    .ic-10 { background: #667eea; color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.9rem; }
+    .ic-11 { color: rgba(255,255,255,0.9); font-size: 1rem; margin-bottom: 8px; }
+    .ic-12 { color: var(--gulf-gold); font-weight: 700; font-size: 1rem; }
+    .ic-13 { cursor: default; }
+    .ic-14 { margin-top: 30px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; }
+    .ic-15 { padding: 80px 20px; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); }
+    .ic-16 { max-width: 1000px; margin: 0 auto; }
+    .ic-17 { text-align: center; font-size: 2.5rem; margin-bottom: 30px; color: var(--gulf-blue); }
+    .ic-18 { margin-inline-start: 10px; }
+    .ic-19 { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+    .ic-20 { font-size: 1.15rem; line-height: 2; color: #333; text-align: justify; margin-bottom: 25px; }
+    .ic-21 { font-size: 1.15rem; line-height: 2; color: #333; text-align: justify; }
+    .ic-22 { padding: 80px 20px; background: white; }
+    .ic-23 { text-align: center; font-size: 2.5rem; margin-bottom: 20px; color: var(--gulf-blue); }
+    .ic-24 { text-align: center; color: #666; margin-bottom: 50px; font-size: 1.1rem; }
+    .ic-25 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; }
+    .ic-26 { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 35px; border-radius: 15px; color: white; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
+    .ic-27 { font-size: 1.5rem; margin-bottom: 15px; }
+    .ic-28 { line-height: 1.8; opacity: 0.95; }
+    .ic-29 { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 35px; border-radius: 15px; color: white; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
+    .ic-30 { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); padding: 35px; border-radius: 15px; color: white; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
+    .ic-31 { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); padding: 35px; border-radius: 15px; color: white; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
+    .ic-32 { padding: 80px 20px; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: white; }
+    .ic-33 { max-width: 900px; margin: 0 auto; }
+    .ic-34 { text-align: center; font-size: 2.5rem; margin-bottom: 20px; background: var(--gradient-gulf); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .ic-35 { text-align: center; color: rgba(255,255,255,0.8); margin-bottom: 50px; font-size: 1.1rem; }
+    .ic-36 { background: rgba(255,255,255,0.05); border-radius: 15px; padding: 25px; margin-bottom: 20px; border: 1px solid rgba(212, 175, 55, 0.2); }
+    .ic-37 { color: var(--gulf-gold); margin-bottom: 15px; font-size: 1.3rem; }
+    .ic-38 { color: rgba(255,255,255,0.9); line-height: 1.8; font-size: 1.05rem; }
+    .ic-39 { color: var(--gulf-gold); text-decoration: underline; }
+    .ic-40 { background: rgba(255,255,255,0.05); border-radius: 15px; padding: 25px; border: 1px solid rgba(212, 175, 55, 0.2); }
+    .ic-41 { text-align: center; margin-top: 50px; }
+    .ic-42 { display: inline-block; padding: 18px 45px; background: var(--gulf-gold); color: var(--gulf-blue); border-radius: 50px; text-decoration: none; font-weight: 700; font-size: 1.2rem; box-shadow: 0 10px 30px rgba(212, 175, 55, 0.3); }
+    .ic-43 { text-decoration:none; }
+  </style>
 </head>
 
 <body>
@@ -436,39 +482,39 @@
 
             </p>
 
-            <p class="hero-tagline" style="font-size: 1.2rem; margin-top: 15px;">
+            <p class="hero-tagline ic-1">
 
                 {{ t('Complete accounting software | E-invoices | Inventory | Advanced AI') }}
 
             </p>
 
-            <p class="hero-tagline" style="font-size: 1rem; margin-top: 10px; color: rgba(255,255,255,0.9);">
+            <p class="hero-tagline ic-2">
 
                 {{ t('Professional solutions for auto parts and retail in UAE') }}
 
             </p>
 
-            <div class="hero-buttons" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; max-width: 900px; margin: 0 auto;">
+            <div class="hero-buttons ic-3">
 
-                <a href="{{ url_for('auth.support') }}?tab=purchase" class="btn-hero btn-success" style="flex: 1;">
+                <a href="{{ url_for('auth.support') }}?tab=purchase" class="btn-hero btn-success ic-4">
 
                     <i class="fas fa-shopping-cart"></i> {{ t('Buy Now') }}
 
                 </a>
 
-                <a href="{{ url_for('public.contact') }}" class="btn-hero btn-primary" style="flex: 1;">
+                <a href="{{ url_for('public.contact') }}" class="btn-hero btn-primary ic-4">
 
                     <i class="fas fa-phone-alt"></i> {{ 'تواصل معنا' if not is_en else 'Contact us' }}
 
                 </a>
 
-                <a href="{{ url_for('auth.support') }}?tab=donation" class="btn-hero btn-warning" style="flex: 1;">
+                <a href="{{ url_for('auth.support') }}?tab=donation" class="btn-hero btn-warning ic-4">
 
                     <i class="fas fa-heart"></i> {{ t('Support Project') }}
 
                 </a>
 
-                <a href="{{ url_for('auth.login') }}" class="btn-hero btn-login" style="flex: 1;">
+                <a href="{{ url_for('auth.login') }}" class="btn-hero btn-login ic-4">
 
                     <i class="fas fa-sign-in-alt"></i> {{ t('Login') }}
 
@@ -478,15 +524,15 @@
 
 
 
-            <div style="margin-top: 18px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+            <div class="ic-5">
 
-                <a href="https://wa.me/{{ developer_whatsapp_link }}?text={{ ('مرحباً، أريد شراء نظام أزاد' if not is_en else 'Hello, I want to buy Azad system') | urlencode }}" class="btn-hero btn-outline" style="display: inline-flex; min-width: 240px;">
+                <a href="https://wa.me/{{ developer_whatsapp_link }}?text={{ ('مرحباً، أريد شراء نظام أزاد' if not is_en else 'Hello, I want to buy Azad system') | urlencode }}" class="btn-hero btn-outline ic-6">
 
                     <i class="fab fa-whatsapp"></i> {{ 'شراء النظام عبر واتساب' if not is_en else 'Buy via WhatsApp' }}
 
                 </a>
 
-                <a href="mailto:{{ developer_email or config.DEVELOPER_EMAIL }}?subject={{ ('طلب شراء الكود أو تخصيص النظام' if not is_en else 'Source code or customization request') | urlencode }}" class="btn-hero btn-outline" style="display: inline-flex; min-width: 240px;">
+                <a href="mailto:{{ developer_email or config.DEVELOPER_EMAIL }}?subject={{ ('طلب شراء الكود أو تخصيص النظام' if not is_en else 'Source code or customization request') | urlencode }}" class="btn-hero btn-outline ic-6">
 
                     <i class="fas fa-envelope"></i> {{ 'شراء الكود أو التخصيص' if not is_en else 'Buy code / customize' }}
 
@@ -496,9 +542,9 @@
 
             
 
-            <div style="margin-top: 30px; text-align: center;">
+            <div class="ic-7">
 
-                <a href="{{ url_for('public.pricing') }}" class="btn-hero btn-outline" style="display: inline-block; min-width: 250px;">
+                <a href="{{ url_for('public.pricing') }}" class="btn-hero btn-outline ic-8">
 
                     <i class="fas fa-gem"></i> {{ t('View All Plans and Pricing') }}
 
@@ -678,7 +724,7 @@
 
                 </ul>
 
-                <a href="{{ url_for('public.pricing') }}" class="btn-hero btn-primary" style="margin-top: 20px; display: inline-block;">{{ 'اختر الباقة' if not is_en else 'Choose plan' }}</a>
+                <a href="{{ url_for('public.pricing') }}" class="btn-hero btn-primary ic-9">{{ 'اختر الباقة' if not is_en else 'Choose plan' }}</a>
 
             </div>
 
@@ -686,7 +732,7 @@
 
             <div class="price-card featured" data-badge="{{ '⭐ الأكثر شعبية' if not is_en else '⭐ Most popular' }}">
 
-                <span style="background: #667eea; color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.9rem;">{{ 'الأكثر شعبية' if not is_en else 'Most popular' }}</span>
+                <span class="ic-10">{{ 'الأكثر شعبية' if not is_en else 'Most popular' }}</span>
 
                 <h3>{{ 'الباقة الاحترافية' if not is_en else 'Professional Plan' }}</h3>
 
@@ -706,7 +752,7 @@
 
                 </ul>
 
-                <a href="{{ url_for('public.pricing') }}" class="btn-hero btn-primary" style="margin-top: 20px; display: inline-block;">{{ 'اختر الباقة' if not is_en else 'Choose plan' }}</a>
+                <a href="{{ url_for('public.pricing') }}" class="btn-hero btn-primary ic-9">{{ 'اختر الباقة' if not is_en else 'Choose plan' }}</a>
 
             </div>
 
@@ -732,7 +778,7 @@
 
                 </ul>
 
-                <a href="{{ url_for('public.contact') }}" class="btn-hero btn-primary" style="margin-top: 20px; display: inline-block;">{{ 'اتصل بنا' if not is_en else 'Contact' }}</a>
+                <a href="{{ url_for('public.contact') }}" class="btn-hero btn-primary ic-9">{{ 'اتصل بنا' if not is_en else 'Contact' }}</a>
 
             </div>
 
@@ -748,9 +794,9 @@
 
         <h2>{{ 'تواصل معنا' if not is_en else 'Contact Us' }}</h2>
 
-        <p style="color: rgba(255,255,255,0.9); font-size: 1rem; margin-bottom: 8px;">{{ 'فريقنا جاهز لمساعدتك' if not is_en else 'Our team is ready to help you.' }}</p>
+        <p class="ic-11">{{ 'فريقنا جاهز لمساعدتك' if not is_en else 'Our team is ready to help you.' }}</p>
 
-        <p style="color: var(--gulf-gold); font-weight: 700; font-size: 1rem;">{{ '🇵🇸 من فلسطين للعالم العربي 🇦🇪' if not is_en else 'From Palestine to the Arab world' }}</p>
+        <p class="ic-12">{{ '🇵🇸 من فلسطين للعالم العربي 🇦🇪' if not is_en else 'From Palestine to the Arab world' }}</p>
 
         <div class="contact-info">
 
@@ -780,13 +826,13 @@
 
                 <strong>{{ t('Address') }}</strong>
 
-                <a style="cursor: default;">{{ config.COMPANY_ADDRESS_AR or company_address or tenant_address or '—' }}</a>
+                <a class="ic-13">{{ config.COMPANY_ADDRESS_AR or company_address or tenant_address or '—' }}</a>
 
             </div>
 
         </div>
 
-        <div style="margin-top: 30px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+        <div class="ic-14">
 
             <a href="{{ url_for('public.user_guide') }}" class="btn-hero btn-primary">
 
@@ -820,21 +866,21 @@
 
     <!-- من نحن Section -->
 
-    <section id="about" style="padding: 80px 20px; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
+    <section id="about" class="ic-15">
 
-        <div style="max-width: 1000px; margin: 0 auto;">
+        <div class="ic-16">
 
-            <h2 style="text-align: center; font-size: 2.5rem; margin-bottom: 30px; color: var(--gulf-blue);">
+            <h2 class="ic-17">
 
-                <i class="fas fa-building" style="margin-inline-start: 10px;"></i>
+                <i class="fas fa-building ic-18"></i>
 
                 {{ 'من نحن - شركة أزاد للأنظمة الذكية' if not is_en else 'About Azad Smart Systems' }}
 
             </h2>
 
-            <div style="background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+            <div class="ic-19">
 
-                <p style="font-size: 1.15rem; line-height: 2; color: #333; text-align: justify; margin-bottom: 25px;">
+                <p class="ic-20">
 
                     {% if not is_en %}
 
@@ -848,7 +894,7 @@
 
                 </p>
 
-                <p style="font-size: 1.15rem; line-height: 2; color: #333; text-align: justify; margin-bottom: 25px;">
+                <p class="ic-20">
 
                     {% if not is_en %}
 
@@ -862,7 +908,7 @@
 
                 </p>
 
-                <p style="font-size: 1.15rem; line-height: 2; color: #333; text-align: justify;">
+                <p class="ic-21">
 
                     {% if not is_en %}
 
@@ -886,19 +932,19 @@
 
     <!-- من يستفيد من نظامنا -->
 
-    <section id="benefits" style="padding: 80px 20px; background: white;">
+    <section id="benefits" class="ic-22">
 
-        <div style="max-width: 1000px; margin: 0 auto;">
+        <div class="ic-16">
 
-            <h2 style="text-align: center; font-size: 2.5rem; margin-bottom: 20px; color: var(--gulf-blue);">
+            <h2 class="ic-23">
 
-                <i class="fas fa-users-cog" style="margin-inline-start: 10px;"></i>
+                <i class="fas fa-users-cog ic-18"></i>
 
                 {{ 'من يستفيد من نظام أزاد لإدارة المستودعات؟' if not is_en else 'Who benefits from Azad?' }}
 
             </h2>
 
-            <p style="text-align: center; color: #666; margin-bottom: 50px; font-size: 1.1rem;">
+            <p class="ic-24">
 
                 {{ 'حلول مخصصة لمختلف القطاعات التجارية في الإمارات' if not is_en else 'Tailored solutions for multiple business sectors in the UAE.' }}
 
@@ -906,19 +952,19 @@
 
             
 
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px;">
+            <div class="ic-25">
 
-                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 35px; border-radius: 15px; color: white; box-shadow: 0 5px 20px rgba(0,0,0,0.1);">
+                <div class="ic-26">
 
-                    <h3 style="font-size: 1.5rem; margin-bottom: 15px;">
+                    <h3 class="ic-27">
 
-                        <i class="fas fa-car" style="margin-inline-start: 10px;"></i>
+                        <i class="fas fa-car ic-18"></i>
 
                         {{ 'محلات قطع غيار السيارات' if not is_en else 'Auto Parts Stores' }}
 
                     </h3>
 
-                    <p style="line-height: 1.8; opacity: 0.95;">
+                    <p class="ic-28">
 
                         {% if not is_en %}
 
@@ -936,17 +982,17 @@
 
                 
 
-                <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 35px; border-radius: 15px; color: white; box-shadow: 0 5px 20px rgba(0,0,0,0.1);">
+                <div class="ic-29">
 
-                    <h3 style="font-size: 1.5rem; margin-bottom: 15px;">
+                    <h3 class="ic-27">
 
-                        <i class="fas fa-store" style="margin-inline-start: 10px;"></i>
+                        <i class="fas fa-store ic-18"></i>
 
                         {{ 'المحلات التجارية والسوبرماركت' if not is_en else 'Retail & Supermarkets' }}
 
                     </h3>
 
-                    <p style="line-height: 1.8; opacity: 0.95;">
+                    <p class="ic-28">
 
                         {% if not is_en %}
 
@@ -964,17 +1010,17 @@
 
                 
 
-                <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); padding: 35px; border-radius: 15px; color: white; box-shadow: 0 5px 20px rgba(0,0,0,0.1);">
+                <div class="ic-30">
 
-                    <h3 style="font-size: 1.5rem; margin-bottom: 15px;">
+                    <h3 class="ic-27">
 
-                        <i class="fas fa-industry" style="margin-inline-start: 10px;"></i>
+                        <i class="fas fa-industry ic-18"></i>
 
                         {{ 'الشركات الصغيرة والمتوسطة' if not is_en else 'SMEs' }}
 
                     </h3>
 
-                    <p style="line-height: 1.8; opacity: 0.95;">
+                    <p class="ic-28">
 
                         {% if not is_en %}
 
@@ -992,17 +1038,17 @@
 
                 
 
-                <div style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); padding: 35px; border-radius: 15px; color: white; box-shadow: 0 5px 20px rgba(0,0,0,0.1);">
+                <div class="ic-31">
 
-                    <h3 style="font-size: 1.5rem; margin-bottom: 15px;">
+                    <h3 class="ic-27">
 
-                        <i class="fas fa-wrench" style="margin-inline-start: 10px;"></i>
+                        <i class="fas fa-wrench ic-18"></i>
 
                         {{ 'ورش الصيانة والخدمات' if not is_en else 'Workshops & Services' }}
 
                     </h3>
 
-                    <p style="line-height: 1.8; opacity: 0.95;">
+                    <p class="ic-28">
 
                         {% if not is_en %}
 
@@ -1028,17 +1074,17 @@
 
     <!-- FAQ Section - الأسئلة الشائعة -->
 
-    <section class="faq-section" id="faq" style="padding: 80px 20px; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: white;">
+    <section class="faq-section ic-32" id="faq">
 
-        <div style="max-width: 900px; margin: 0 auto;">
+        <div class="ic-33">
 
-            <h2 style="text-align: center; font-size: 2.5rem; margin-bottom: 20px; background: var(--gradient-gulf); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+            <h2 class="ic-34">
 
                 {{ 'الأسئلة الشائعة - FAQ' if not is_en else 'FAQ' }}
 
             </h2>
 
-            <p style="text-align: center; color: rgba(255,255,255,0.8); margin-bottom: 50px; font-size: 1.1rem;">
+            <p class="ic-35">
 
                 {{ 'إجابات على أكثر الأسئلة شيوعاً حول نظام إدارة المستودعات والمبيعات' if not is_en else 'Answers to the most common questions about the system.' }}
 
@@ -1050,17 +1096,17 @@
 
                 <!-- السؤال 1 -->
 
-                <div class="faq-item" style="background: rgba(255,255,255,0.05); border-radius: 15px; padding: 25px; margin-bottom: 20px; border: 1px solid rgba(212, 175, 55, 0.2);">
+                <div class="faq-item ic-36">
 
-                    <h3 style="color: var(--gulf-gold); margin-bottom: 15px; font-size: 1.3rem;">
+                    <h3 class="ic-37">
 
-                        <i class="fas fa-question-circle" style="margin-inline-start: 10px;"></i>
+                        <i class="fas fa-question-circle ic-18"></i>
 
                         {{ 'ما هو نظام إدارة المستودعات من شركة أزاد؟' if not is_en else 'What is Azad warehouse & sales system?' }}
 
                     </h3>
 
-                    <p style="color: rgba(255,255,255,0.9); line-height: 1.8; font-size: 1.05rem;">
+                    <p class="ic-38">
 
                         {% if not is_en %}
 
@@ -1080,17 +1126,17 @@
 
                 <!-- السؤال 2 -->
 
-                <div class="faq-item" style="background: rgba(255,255,255,0.05); border-radius: 15px; padding: 25px; margin-bottom: 20px; border: 1px solid rgba(212, 175, 55, 0.2);">
+                <div class="faq-item ic-36">
 
-                    <h3 style="color: var(--gulf-gold); margin-bottom: 15px; font-size: 1.3rem;">
+                    <h3 class="ic-37">
 
-                        <i class="fas fa-question-circle" style="margin-inline-start: 10px;"></i>
+                        <i class="fas fa-question-circle ic-18"></i>
 
                         {{ 'هل البرنامج مناسب لمحلات قطع غيار السيارات؟' if not is_en else 'Is it suitable for auto parts stores?' }}
 
                     </h3>
 
-                    <p style="color: rgba(255,255,255,0.9); line-height: 1.8; font-size: 1.05rem;">
+                    <p class="ic-38">
 
                         {% if not is_en %}
 
@@ -1110,25 +1156,25 @@
 
                 <!-- السؤال 3 -->
 
-                <div class="faq-item" style="background: rgba(255,255,255,0.05); border-radius: 15px; padding: 25px; margin-bottom: 20px; border: 1px solid rgba(212, 175, 55, 0.2);">
+                <div class="faq-item ic-36">
 
-                    <h3 style="color: var(--gulf-gold); margin-bottom: 15px; font-size: 1.3rem;">
+                    <h3 class="ic-37">
 
-                        <i class="fas fa-question-circle" style="margin-inline-start: 10px;"></i>
+                        <i class="fas fa-question-circle ic-18"></i>
 
                         {{ 'كم يكلف برنامج إدارة المستودعات؟' if not is_en else 'How much does it cost?' }}
 
                     </h3>
 
-                    <p style="color: rgba(255,255,255,0.9); line-height: 1.8; font-size: 1.05rem;">
+                    <p class="ic-38">
 
                         {% if not is_en %}
 
-                            نوفر <strong>باقات مرنة</strong> تناسب أحجام الأعمال المختلفة في الإمارات. السعر النهائي يعتمد على احتياجك الفعلي وعدد المستخدمين والميزات المطلوبة. <a href="{{ url_for('public.pricing') }}" style="color: var(--gulf-gold); text-decoration: underline;">شاهد تفاصيل الباقات</a>
+                            نوفر <strong>باقات مرنة</strong> تناسب أحجام الأعمال المختلفة في الإمارات. السعر النهائي يعتمد على احتياجك الفعلي وعدد المستخدمين والميزات المطلوبة. <a href="{{ url_for('public.pricing') }}" class="ic-39">شاهد تفاصيل الباقات</a>
 
                         {% else %}
 
-                            We offer multiple flexible plans based on your needs. <a href="{{ url_for('public.pricing') }}" style="color: var(--gulf-gold); text-decoration: underline;">View pricing details</a>
+                            We offer multiple flexible plans based on your needs. <a href="{{ url_for('public.pricing') }}" class="ic-39">View pricing details</a>
 
                         {% endif %}
 
@@ -1140,17 +1186,17 @@
 
                 <!-- السؤال 4 -->
 
-                <div class="faq-item" style="background: rgba(255,255,255,0.05); border-radius: 15px; padding: 25px; margin-bottom: 20px; border: 1px solid rgba(212, 175, 55, 0.2);">
+                <div class="faq-item ic-36">
 
-                    <h3 style="color: var(--gulf-gold); margin-bottom: 15px; font-size: 1.3rem;">
+                    <h3 class="ic-37">
 
-                        <i class="fas fa-question-circle" style="margin-inline-start: 10px;"></i>
+                        <i class="fas fa-question-circle ic-18"></i>
 
                         {{ 'هل يدعم النظام الفواتير الإلكترونية المعتمدة في الإمارات؟' if not is_en else 'Does it support e-invoices in the UAE?' }}
 
                     </h3>
 
-                    <p style="color: rgba(255,255,255,0.9); line-height: 1.8; font-size: 1.05rem;">
+                    <p class="ic-38">
 
                         {% if not is_en %}
 
@@ -1170,17 +1216,17 @@
 
                 <!-- السؤال 5 -->
 
-                <div class="faq-item" style="background: rgba(255,255,255,0.05); border-radius: 15px; padding: 25px; margin-bottom: 20px; border: 1px solid rgba(212, 175, 55, 0.2);">
+                <div class="faq-item ic-36">
 
-                    <h3 style="color: var(--gulf-gold); margin-bottom: 15px; font-size: 1.3rem;">
+                    <h3 class="ic-37">
 
-                        <i class="fas fa-question-circle" style="margin-inline-start: 10px;"></i>
+                        <i class="fas fa-question-circle ic-18"></i>
 
                         {{ 'ما هي مميزات الذكاء الاصطناعي في البرنامج؟' if not is_en else 'What AI features are included?' }}
 
                     </h3>
 
-                    <p style="color: rgba(255,255,255,0.9); line-height: 1.8; font-size: 1.05rem;">
+                    <p class="ic-38">
 
                         {% if not is_en %}
 
@@ -1200,17 +1246,17 @@
 
                 <!-- السؤال 6 -->
 
-                <div class="faq-item" style="background: rgba(255,255,255,0.05); border-radius: 15px; padding: 25px; margin-bottom: 20px; border: 1px solid rgba(212, 175, 55, 0.2);">
+                <div class="faq-item ic-36">
 
-                    <h3 style="color: var(--gulf-gold); margin-bottom: 15px; font-size: 1.3rem;">
+                    <h3 class="ic-37">
 
-                        <i class="fas fa-question-circle" style="margin-inline-start: 10px;"></i>
+                        <i class="fas fa-question-circle ic-18"></i>
 
                         {{ 'هل يمكن استخدام البرنامج في أكثر من فرع؟' if not is_en else 'Can I use it for multiple branches?' }}
 
                     </h3>
 
-                    <p style="color: rgba(255,255,255,0.9); line-height: 1.8; font-size: 1.05rem;">
+                    <p class="ic-38">
 
                         {% if not is_en %}
 
@@ -1230,21 +1276,21 @@
 
                 <!-- السؤال 7 -->
 
-                <div class="faq-item" style="background: rgba(255,255,255,0.05); border-radius: 15px; padding: 25px; margin-bottom: 20px; border: 1px solid rgba(212, 175, 55, 0.2);">
+                <div class="faq-item ic-36">
 
-                    <h3 style="color: var(--gulf-gold); margin-bottom: 15px; font-size: 1.3rem;">
+                    <h3 class="ic-37">
 
-                        <i class="fas fa-question-circle" style="margin-inline-start: 10px;"></i>
+                        <i class="fas fa-question-circle ic-18"></i>
 
                         {{ 'كيف أبدأ باستخدام نظام أزاد للمستودعات؟' if not is_en else 'How do I get started?' }}
 
                     </h3>
 
-                    <p style="color: rgba(255,255,255,0.9); line-height: 1.8; font-size: 1.05rem;">
+                    <p class="ic-38">
 
                         {% if not is_en %}
 
-                            البداية سهلة جداً! <strong>3 خطوات فقط:</strong> (1) <a href="{{ url_for('public.contact') }}" style="color: var(--gulf-gold); text-decoration: underline;">تواصل معنا</a>، (2) اختر الباقة المناسبة، (3) ابدأ فوراً! نوفر <strong>تدريب مجاني</strong> لفريقك، استيراد بياناتك القديمة، دعم فني 24/7، ومتابعة مستمرة. <strong>لا حاجة لخبرة تقنية</strong> - النظام بسيط وسهل الاستخدام.
+                            البداية سهلة جداً! <strong>3 خطوات فقط:</strong> (1) <a href="{{ url_for('public.contact') }}" class="ic-39">تواصل معنا</a>، (2) اختر الباقة المناسبة، (3) ابدأ فوراً! نوفر <strong>تدريب مجاني</strong> لفريقك، استيراد بياناتك القديمة، دعم فني 24/7، ومتابعة مستمرة. <strong>لا حاجة لخبرة تقنية</strong> - النظام بسيط وسهل الاستخدام.
 
                         {% else %}
 
@@ -1260,17 +1306,17 @@
 
                 <!-- السؤال 8 -->
 
-                <div class="faq-item" style="background: rgba(255,255,255,0.05); border-radius: 15px; padding: 25px; border: 1px solid rgba(212, 175, 55, 0.2);">
+                <div class="faq-item ic-40">
 
-                    <h3 style="color: var(--gulf-gold); margin-bottom: 15px; font-size: 1.3rem;">
+                    <h3 class="ic-37">
 
-                        <i class="fas fa-question-circle" style="margin-inline-start: 10px;"></i>
+                        <i class="fas fa-question-circle ic-18"></i>
 
                         {{ 'هل النظام آمن ويحمي بياناتي؟' if not is_en else 'Is my data secure?' }}
 
                     </h3>
 
-                    <p style="color: rgba(255,255,255,0.9); line-height: 1.8; font-size: 1.05rem;">
+                    <p class="ic-38">
 
                         {% if not is_en %}
 
@@ -1290,11 +1336,11 @@
 
             
 
-            <div style="text-align: center; margin-top: 50px;">
+            <div class="ic-41">
 
-                <a href="{{ url_for('public.contact') }}" class="btn-hero btn-primary" style="display: inline-block; padding: 18px 45px; background: var(--gulf-gold); color: var(--gulf-blue); border-radius: 50px; text-decoration: none; font-weight: 700; font-size: 1.2rem; box-shadow: 0 10px 30px rgba(212, 175, 55, 0.3);">
+                <a href="{{ url_for('public.contact') }}" class="btn-hero btn-primary ic-42">
 
-                    <i class="fas fa-phone-alt" style="margin-inline-start: 10px;"></i>
+                    <i class="fas fa-phone-alt ic-18"></i>
 
                     {{ 'تواصل معنا للمزيد من المعلومات' if not is_en else 'Contact us for more information' }}
 
@@ -1358,7 +1404,7 @@
 
                     {% if developer_whatsapp_link %}
 
-                    <a class="landing-footer-chip" style="text-decoration:none;" href="https://wa.me/{{ developer_whatsapp_link }}" target="_blank" rel="noopener">
+                    <a class="landing-footer-chip ic-43" href="https://wa.me/{{ developer_whatsapp_link }}" target="_blank" rel="noopener">
 
                         <i class="fab fa-whatsapp"></i> {{ 'واتساب' if not is_en else 'WhatsApp' }}
 

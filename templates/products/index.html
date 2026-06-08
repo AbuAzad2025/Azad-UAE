@@ -117,7 +117,12 @@
     background: #f8f9fa !important;
   }
 }
-</style>
+
+    /* D6: externalized inline styles */
+    .ic-1 { background: linear-gradient(135deg, #007A3D 0%, #1B4D89 100%); color: white; }
+    .ic-2 { background: linear-gradient(135deg, #007A3D 0%, #1B4D89 100%); }
+    .ic-3 { color: #007A3D; }
+  </style>
 {% endblock %}
 
 {% block content %}
@@ -146,7 +151,7 @@
   <div class="card-body">
     <div class="table-responsive">
       <table id="productsTable" class="table table-hover table-bordered">
-        <thead style="background: linear-gradient(135deg, #007A3D 0%, #1B4D89 100%); color: white;">
+        <thead class="ic-1">
           <tr>
             <th><i class="fas fa-image mr-2"></i>صورة</th>
             <th><i class="fas fa-box mr-2"></i>المنتج</th>
@@ -168,8 +173,7 @@
                 <img src="{{ url_for('static', filename=product.image_url) }}" 
                      alt="{{ product.name }}" class="product-image">
               {% else %}
-                <div class="product-image d-flex align-items-center justify-content-center" 
-                     style="background: linear-gradient(135deg, #007A3D 0%, #1B4D89 100%);">
+                <div class="product-image d-flex align-items-center justify-content-center ic-2">
                   <i class="fas fa-box text-white"></i>
                 </div>
               {% endif %}
@@ -191,7 +195,7 @@
               {% endif %}
             </td>
             <td>
-              <strong style="color: #007A3D;">{{ "{:,.2f}".format(product.regular_price) }}</strong>
+              <strong class="ic-3">{{ "{:,.2f}".format(product.regular_price) }}</strong>
               <small class="text-muted">{{ tenant_default_currency or 'AED' }}</small>
             </td>
             <td>

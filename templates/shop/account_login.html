@@ -1,8 +1,17 @@
 {% extends 'shop/base.html' %}
 {% block title %}{{ t('login') }} — {{ store.title }}{% endblock %}
+<style>
+    /* D6: externalized inline styles */
+    .ic-1 { max-width:420px; margin:2rem auto; }
+    .ic-2 { margin:0 0 1rem; font-weight:800; }
+    .ic-3 { margin-top:0.75rem; text-align:center; font-size:0.85rem; }
+    .ic-4 { margin-top:0.75rem; text-align:center; font-size:0.9rem; }
+    .ic-5 { color:var(--ps-green-dark); font-weight:700; }
+</style>
+
 {% block content %}
-<div class="ps-panel" style="max-width:420px;margin:2rem auto;">
-  <h2 style="margin:0 0 1rem;font-weight:800;">{{ t('login') }}</h2>
+<div class="ps-panel ic-1">
+  <h2 class="ic-2">{{ t('login') }}</h2>
   <p class="ps-card-meta">{{ t('login_required') }}</p>
   <form method="post">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
@@ -17,11 +26,11 @@
     </div>
     <button type="submit" class="ps-btn ps-btn-primary ps-btn-block">{{ t('login') }}</button>
   </form>
-  <p style="margin-top:0.75rem;text-align:center;font-size:0.85rem;">
+  <p class="ic-3">
     <a href="{{ url_for('shop.account_forgot_password', slug=store.store_slug) }}">{{ t('forgot_password') }}</a>
   </p>
-  <p style="margin-top:0.75rem;text-align:center;font-size:0.9rem;">
-    {{ t('register') }}؟ <a href="{{ url_for('shop.account_register', slug=store.store_slug) }}" style="color:var(--ps-green-dark);font-weight:700;">{{ t('register') }}</a>
+  <p class="ic-4">
+    {{ t('register') }}؟ <a href="{{ url_for('shop.account_register', slug=store.store_slug) }}" class="ic-5">{{ t('register') }}</a>
   </p>
 </div>
 {% endblock %}

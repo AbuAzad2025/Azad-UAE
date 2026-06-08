@@ -6,6 +6,15 @@
 
 
 
+<style>
+    /* D6: externalized inline styles */
+    .ic-1 { width: 150px; height: 150px; margin: 0 auto; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3); }
+    .ic-2 { font-size: 4rem; }
+    .ic-3 { color: #000; }
+    .ic-4 { max-height: 400px; overflow-y: auto; }
+    .ic-5 { position: sticky; top: 0; background: white; }
+</style>
+
 {% block content %}
 
 <div class="content-header">
@@ -60,23 +69,23 @@
 
             <div class="text-center">
 
-              <div class="profile-user-img" style="width: 150px; height: 150px; margin: 0 auto; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);">
+              <div class="profile-user-img ic-1">
 
                 {% if user.is_owner %}
 
-                  <i class="fas fa-crown text-white" style="font-size: 4rem;"></i>
+                  <i class="fas fa-crown text-white ic-2"></i>
 
                 {% elif user.role and user.role.name == 'Super Admin' %}
 
-                  <i class="fas fa-user-shield text-white" style="font-size: 4rem;"></i>
+                  <i class="fas fa-user-shield text-white ic-2"></i>
 
                 {% elif user.role and user.role.name == 'Manager' %}
 
-                  <i class="fas fa-user-tie text-white" style="font-size: 4rem;"></i>
+                  <i class="fas fa-user-tie text-white ic-2"></i>
 
                 {% else %}
 
-                  <i class="fas fa-user text-white" style="font-size: 4rem;"></i>
+                  <i class="fas fa-user text-white ic-2"></i>
 
                 {% endif %}
 
@@ -268,9 +277,9 @@
 
               <div class="info-box-content">
 
-                <span class="info-box-text" style="color: #000;">{{ t('Payments') }}</span>
+                <span class="info-box-text ic-3">{{ t('Payments') }}</span>
 
-                <span class="info-box-number" style="color: #000;">{{ stats.payments_count }}</span>
+                <span class="info-box-number ic-3">{{ stats.payments_count }}</span>
 
               </div>
 
@@ -392,7 +401,7 @@
 
           <div class="card-header bg-gradient-warning">
 
-            <h3 class="card-title" style="color: #000;">
+            <h3 class="card-title ic-3">
 
               <i class="fas fa-clipboard-list mr-2"></i>آخر النشاطات (10)
 
@@ -402,11 +411,11 @@
 
           <div class="card-body p-0">
 
-            <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+            <div class="table-responsive ic-4">
 
               <table class="table table-sm">
 
-                <thead style="position: sticky; top: 0; background: white;">
+                <thead class="ic-5">
 
                   <tr>
 

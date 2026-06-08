@@ -24,6 +24,13 @@
 </div>
 {% endblock %}
 
+<style>
+    /* D6: externalized inline styles */
+    .ic-1 { display: inline; }
+    .ic-2 { display: none; }
+    .ic-3 { color: red; }
+</style>
+
 {% block content %}
 <div class="row">
   <div class="col-md-12">
@@ -181,7 +188,7 @@
             </a>
           </div>
           <div class="col-md-4">
-            <form action="{{ url_for('owner.export_database') }}" method="POST" style="display: inline;">
+            <form action="{{ url_for('owner.export_database') }}" method="POST" class="ic-1">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
               <input type="hidden" name="format" value="json" aria-label="format">
               <button type="submit" class="btn btn-success btn-block btn-lg">
@@ -200,7 +207,7 @@
   </div>
 </div>
 
-<form id="truncateForm" method="POST" action="{{ url_for('owner.truncate_table') }}" style="display: none;">
+<form id="truncateForm" method="POST" action="{{ url_for('owner.truncate_table') }}" class="ic-2">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
   <input type="hidden" name="table_name" id="truncateTableName" aria-label="table name">
   <input type="hidden" name="confirm" id="truncateConfirm" aria-label="confirm">
@@ -215,7 +222,7 @@ function truncateTable(tableName) {
     title: 'تحذير خطير!',
     html: `
       <p>أنت على وشك مسح <strong>جميع</strong> البيانات من جدول:</p>
-      <h3 style="color: red;">${tableName}</h3>
+      <h3 class="ic-3">${tableName}</h3>
       <p>هذا الإجراء <strong>لا يمكن التراجع عنه!</strong></p>
       <p>اكتب <code>YES_DELETE_ALL</code> للتأكيد:</p>
     `,

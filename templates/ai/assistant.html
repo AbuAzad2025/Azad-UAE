@@ -18,7 +18,7 @@
         <i class="fas fa-cloud ml-1"></i> Groq
       </button>
     </div>
-    <span class="badge {% if ai_enabled %}badge-success{% else %}badge-primary{% endif %} badge-lg px-4 py-2" style="font-size: 1.1rem;" id="ai-status-badge">
+    <span class="badge {% if ai_enabled %}badge-success{% else %}badge-primary{% endif %} badge-lg px-4 py-2 ic-1" id="ai-status-badge">
       {% if ai_enabled %}
         <i class="fas fa-brain mr-2"></i>AI كامل مفعّل
       {% else %}
@@ -179,7 +179,27 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
-</style>
+
+    /* D6: externalized inline styles */
+    .ic-1 { font-size: 1.1rem; }
+    .ic-2 { width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; }
+    .ic-3 { flex: 1; }
+    .ic-4 { color: #667eea; font-size: 1.1rem; }
+    .ic-5 { color: #667eea; }
+    .ic-6 { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center; }
+    .ic-7 { background: white; padding: 30px; border-radius: 16px; max-width: 500px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+    .ic-8 { color: #667eea; margin-bottom: 20px; }
+    .ic-9 { display: none; }
+    .ic-10 { width: 100%; }
+    .ic-11 { border-radius: 12px 0 0 12px; border: 2px solid #667eea; }
+    .ic-12 { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 0 12px 12px 0; padding: 0 30px; }
+    .ic-13 { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+    .ic-14 { width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .ic-15 { width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, #007A3D 0%, #1B4D89 100%); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .ic-16 { color: ${isBot ? '#667eea' : '#007A3D'}; }
+    .ic-17 { margin-top: 8px; white-space: pre-wrap; }
+    .ic-18 { font-size: 1.5rem; }
+  </style>
 {% endblock %}
 
 {% block content %}
@@ -281,16 +301,16 @@
       <div class="bot-message">
         <div class="d-flex align-items-start">
           <div class="mr-3">
-            <div style="width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center;">
+            <div class="ic-2">
               <i class="fas fa-robot text-white fa-2x"></i>
             </div>
           </div>
-          <div style="flex: 1;">
-            <strong style="color: #667eea; font-size: 1.1rem;">المساعد الذكي الخارق</strong>
+          <div class="ic-3">
+            <strong class="ic-4">المساعد الذكي الخارق</strong>
             <p class="mt-2 mb-0">مرحباً! 👋 أنا أذكى مساعد محاسبي في العالم 🌟</p>
             
             <div class="mt-3">
-              <h6 style="color: #667eea;">🧠 قدراتي الخارقة:</h6>
+              <h6 class="ic-5">🧠 قدراتي الخارقة:</h6>
               <ul class="mb-0">
                 <li>📊 <strong>تنبؤ بالمبيعات</strong> - توقع دقيق للإيرادات القادمة</li>
                 <li>💰 <strong>تحليل الربحية</strong> - فهم عميق لهوامش الربح</li>
@@ -366,9 +386,9 @@
         </div>
 
         <!-- Excel Uploader Modal -->
-        <div id="excelUploaderModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center;">
-          <div style="background: white; padding: 30px; border-radius: 16px; max-width: 500px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
-            <h4 style="color: #667eea; margin-bottom: 20px;">
+        <div id="excelUploaderModal" class="ic-6">
+          <div class="ic-7">
+            <h4 class="ic-8">
               <i class="fas fa-file-excel mr-2"></i>رفع ملف Excel - معالج ذكي خارق
             </h4>
             <form id="excelUploadForm" method="POST" enctype="multipart/form-data" action="">
@@ -409,9 +429,9 @@
                   <i class="fas fa-upload mr-2"></i>رفع ومعالجة
                 </button>
               </div>
-              <div id="uploadProgress" class="mt-3" style="display: none;">
+              <div id="uploadProgress" class="mt-3 ic-9">
                 <div class="progress">
-                  <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%"></div>
+                  <div class="progress-bar progress-bar-striped progress-bar-animated ic-10" role="progressbar"></div>
                 </div>
                 <small class="text-muted">جاري المعالجة الذكية...</small>
               </div>
@@ -420,12 +440,9 @@
         </div>
         
         <div class="input-group">
-        <input type="text" id="userMessage" class="form-control form-control-lg" 
-               placeholder="اسأل أي سؤال... 🤖" autocomplete="off"
-               style="border-radius: 12px 0 0 12px; border: 2px solid #667eea;">
+        <input type="text" id="userMessage" class="form-control form-control-lg ic-11" placeholder="اسأل أي سؤال... 🤖" autocomplete="off">
           <div class="input-group-append">
-          <button class="btn btn-lg" id="sendBtn"
-                  style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 0 12px 12px 0; padding: 0 30px;">
+          <button class="btn btn-lg ic-12" id="sendBtn">
             <i class="fas fa-paper-plane mr-2"></i>إرسال
             </button>
           </div>
@@ -472,7 +489,7 @@
 <div class="row mt-4">
   <div class="col-12">
     <div class="card">
-      <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+      <div class="card-header ic-13">
         <h3 class="card-title text-white mb-0">
           <i class="fas fa-lightbulb mr-2"></i>رؤى فورية من المساعد الذكي
         </h3>
@@ -504,10 +521,10 @@ function addMessage(sender, text, isBot = false) {
   const chatBox = $('#chatBox');
     const messageClass = isBot ? 'bot-message' : 'user-message';
     const avatar = isBot 
-      ? `<div style="width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+      ? `<div class="ic-14">
            <i class="fas fa-robot text-white fa-2x"></i>
          </div>`
-      : `<div style="width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, #007A3D 0%, #1B4D89 100%); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+      : `<div class="ic-15">
            <i class="fas fa-user text-white fa-2x"></i>
          </div>`;
     
@@ -518,9 +535,9 @@ function addMessage(sender, text, isBot = false) {
       <div class="${messageClass}">
         <div class="d-flex align-items-start">
           ${isBot ? avatar : ''}
-          <div class="${isBot ? 'mr-3' : 'ml-3'}" style="flex: 1;">
-            <strong style="color: ${isBot ? '#667eea' : '#007A3D'};">${senderName}</strong>
-            <div style="margin-top: 8px; white-space: pre-wrap;">${text}</div>
+          <div class="${isBot ? 'mr-3' : 'ml-3'} ic-3">
+            <strong class="ic-16">${senderName}</strong>
+            <div class="ic-17">${text}</div>
           </div>
           ${!isBot ? avatar : ''}
         </div>
@@ -538,11 +555,11 @@ function showTyping() {
   const typingHtml = `
     <div class="bot-message" id="typing-indicator">
       <div class="d-flex align-items-center">
-        <div style="width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center;">
+        <div class="ic-2">
           <i class="fas fa-robot text-white fa-2x"></i>
         </div>
         <div class="mr-3">
-          <strong style="color: #667eea;">المساعد يفكر</strong>
+          <strong class="ic-5">المساعد يفكر</strong>
           <div class="typing-indicator mt-2">
             <span></span><span></span><span></span>
           </div>
@@ -795,7 +812,7 @@ function loadBusinessInsights() {
             <div class="col-md-6 mb-3">
               <div class="alert alert-info mb-0">
                 <h6>
-                  <span style="font-size: 1.5rem;">${insight.icon}</span>
+                  <span class="ic-18">${insight.icon}</span>
                   ${insight.title}
                 </h6>
                 <p class="mb-2"><strong>${insight.insight}</strong></p>

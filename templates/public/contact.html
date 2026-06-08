@@ -180,7 +180,20 @@
 
         }
 
-    </style>
+    
+    /* D6: externalized inline styles */
+    .ic-1 { position: fixed; top: 20px; left: 20px; z-index: 9999; }
+    .ic-2 { background: rgba(255,255,255,0.9); border-radius: 20px; padding: 8px 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+    .ic-3 { margin-top: 10px; color: rgba(255,255,255,0.6); font-size: 0.95rem; }
+    .ic-4 { font-size: 1.2rem; font-weight: 700; }
+    .ic-5 { text-align: center; margin-top: 30px; padding: 20px; background: rgba(0,0,0,0.2); border-radius: 12px; }
+    .ic-6 { margin-bottom: 10px; }
+    .ic-7 { text-align: center; margin-top: 60px; }
+    .ic-8 { padding: 18px 45px; background: var(--gulf-gold); color: var(--gulf-blue); border-radius: 50px; text-decoration: none; font-weight: 700; font-size: 1.2rem; display: inline-block; transition: all 0.3s; }
+    .ic-9 { margin-top: 16px; display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
+    .ic-10 { padding: 14px 28px; background: #25D366; color: white; border-radius: 50px; text-decoration: none; font-weight: 700; }
+    .ic-11 { padding: 14px 28px; background: #667eea; color: white; border-radius: 50px; text-decoration: none; font-weight: 700; }
+  </style>
 
 </head>
 
@@ -194,9 +207,9 @@
 
     <!-- Language Switcher -->
 
-    <div style="position: fixed; top: 20px; left: 20px; z-index: 9999;">
+    <div class="ic-1">
 
-        <a href="{{ url_for('language.set_language', lang='en' if session.get('language', 'ar') == 'ar' else 'ar') }}" class="btn btn-sm" style="background: rgba(255,255,255,0.9); border-radius: 20px; padding: 8px 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+        <a href="{{ url_for('language.set_language', lang='en' if session.get('language', 'ar') == 'ar' else 'ar') }}" class="btn btn-sm ic-2">
 
             <i class="fas fa-globe mr-2"></i>{{ 'English' if session.get('language', 'ar') == 'ar' else 'العربية' }}
 
@@ -254,7 +267,7 @@
 
                 <a href="https://wa.me/{{ developer_whatsapp_link }}" target="_blank" rel="noopener noreferrer">{{ developer_whatsapp or config.DEVELOPER_WHATSAPP or '—' }}</a>
 
-                <p style="margin-top: 10px; color: rgba(255,255,255,0.6); font-size: 0.95rem;">{{ developer_name_ar or developer_name or 'شركة أزاد للأنظمة الذكية' }}</p>
+                <p class="ic-3">{{ developer_name_ar or developer_name or 'شركة أزاد للأنظمة الذكية' }}</p>
 
             </div>
 
@@ -268,7 +281,7 @@
 
                 <a href="tel:{{ developer_phone or config.DEVELOPER_PHONE }}">{{ developer_phone or config.DEVELOPER_PHONE or '—' }}</a>
 
-                <p style="margin-top: 10px; color: rgba(255,255,255,0.6); font-size: 0.95rem;">متاح 24/7</p>
+                <p class="ic-3">متاح 24/7</p>
 
             </div>
 
@@ -282,7 +295,7 @@
 
                 <a href="mailto:{{ developer_email or config.DEVELOPER_EMAIL }}">{{ developer_email or config.DEVELOPER_EMAIL or '—' }}</a>
 
-                <p style="margin-top: 10px; color: rgba(255,255,255,0.6); font-size: 0.95rem;">للاستفسارات</p>
+                <p class="ic-3">للاستفسارات</p>
 
             </div>
 
@@ -294,7 +307,7 @@
 
                 <h3>{{ t('Address') }}</h3>
 
-                <p style="font-size: 1.2rem; font-weight: 700;">{{ config.COMPANY_ADDRESS_AR or company_address or tenant_address or '—' }}</p>
+                <p class="ic-4">{{ config.COMPANY_ADDRESS_AR or company_address or tenant_address or '—' }}</p>
 
             </div>
 
@@ -302,9 +315,9 @@
 
 
 
-        <div style="text-align: center; margin-top: 30px; padding: 20px; background: rgba(0,0,0,0.2); border-radius: 12px;">
+        <div class="ic-5">
 
-            <p style="margin-bottom: 10px;"><strong>دعم فني / المطور:</strong> {{ developer_credit or config.DEVELOPER_CREDIT }}</p>
+            <p class="ic-6"><strong>دعم فني / المطور:</strong> {{ developer_credit or config.DEVELOPER_CREDIT }}</p>
 
             <a href="https://wa.me/{{ developer_whatsapp_link }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-light btn-sm">واتساب المطور</a>
 
@@ -314,23 +327,23 @@
 
 
 
-        <div style="text-align: center; margin-top: 60px;">
+        <div class="ic-7">
 
-            <a href="{{ url_for('public.pricing') }}" style="padding: 18px 45px; background: var(--gulf-gold); color: var(--gulf-blue); border-radius: 50px; text-decoration: none; font-weight: 700; font-size: 1.2rem; display: inline-block; transition: all 0.3s;">
+            <a href="{{ url_for('public.pricing') }}" class="ic-8">
 
                 <i class="fas fa-tags"></i> عرض الأسعار والباقات
 
             </a>
 
-            <div style="margin-top: 16px; display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;">
+            <div class="ic-9">
 
-                <a href="https://wa.me/{{ developer_whatsapp_link }}?text={{ 'مرحباً، أريد شراء النظام أو الحصول على عرض سعر' | urlencode }}" style="padding: 14px 28px; background: #25D366; color: white; border-radius: 50px; text-decoration: none; font-weight: 700;">
+                <a href="https://wa.me/{{ developer_whatsapp_link }}?text={{ 'مرحباً، أريد شراء النظام أو الحصول على عرض سعر' | urlencode }}" class="ic-10">
 
                     <i class="fab fa-whatsapp"></i> شراء النظام عبر واتساب
 
                 </a>
 
-                <a href="mailto:{{ developer_email or config.DEVELOPER_EMAIL }}?subject={{ 'طلب شراء الكود أو تخصيص النظام' | urlencode }}" style="padding: 14px 28px; background: #667eea; color: white; border-radius: 50px; text-decoration: none; font-weight: 700;">
+                <a href="mailto:{{ developer_email or config.DEVELOPER_EMAIL }}?subject={{ 'طلب شراء الكود أو تخصيص النظام' | urlencode }}" class="ic-11">
 
                     <i class="fas fa-envelope"></i> شراء الكود أو التخصيص
 

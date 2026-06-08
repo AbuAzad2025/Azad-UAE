@@ -112,7 +112,13 @@
         font-weight: 900;
         margin-bottom: 5px;
     }
-</style>
+
+    /* D6: externalized inline styles */
+    .ic-1 { position: relative; z-index: 1; }
+    .ic-2 { font-size: 0.9rem; margin-bottom: 10px; }
+    .ic-3 { display: block; }
+    .ic-4 { text-align: right; font-family: monospace; }
+  </style>
 {% endblock %}
 
 {% block content %}
@@ -159,8 +165,8 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="card-visual {{ card.card_type|lower }}">
-                                    <div style="position: relative; z-index: 1;">
-                                        <div style="font-size: 0.9rem; margin-bottom: 10px;">
+                                    <div class="ic-1">
+                                        <div class="ic-2">
                                             {{ card.card_type|upper }}
                                         </div>
                                         <div class="card-number">
@@ -238,7 +244,7 @@
             {% else %}
                 <div class="col-12">
                     <div class="alert alert-info text-center">
-                        <i class="fas fa-info-circle fa-3x mb-3" style="display: block;"></i>
+                        <i class="fas fa-info-circle fa-3x mb-3 ic-3"></i>
                         <h5>لا توجد بطاقات محفوظة</h5>
                         <p>سيتم حفظ البطاقات تلقائياً عند إجراء عمليات دفع جديدة</p>
                     </div>
@@ -299,7 +305,7 @@
         .then(data => {
             if (data.success && data.card) {
                 const cardInfo = `
-                    <div style="text-align: right; font-family: monospace;">
+                    <div class="ic-4">
                         <p><strong>رقم البطاقة:</strong> ${data.card.card_number}</p>
                         <p><strong>CVV:</strong> ${data.card.cvv}</p>
                         <p><strong>تاريخ الانتهاء:</strong> ${data.card.expiry}</p>

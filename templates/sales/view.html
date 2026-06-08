@@ -132,7 +132,14 @@
 
 }
 
-</style>
+
+    /* D6: externalized inline styles */
+    .ic-1 { background: linear-gradient(135deg, #007A3D 0%, #1B4D89 100%); color: white; }
+    .ic-2 { color: #007A3D; }
+    .ic-3 { font-size: 1.3rem; }
+    .ic-4 { font-size: 1.2rem; }
+    .ic-5 { display:none; }
+  </style>
 
 {% endblock %}
 
@@ -255,7 +262,7 @@
 
           <table class="table table-hover">
 
-            <thead style="background: linear-gradient(135deg, #007A3D 0%, #1B4D89 100%); color: white;">
+            <thead class="ic-1">
 
               <tr>
 
@@ -329,7 +336,7 @@
 
                 <td class="text-center">
 
-                  <strong style="color: #007A3D;">{{ "{:,.2f}".format(line.line_total) }}</strong>
+                  <strong class="ic-2">{{ "{:,.2f}".format(line.line_total) }}</strong>
 
                 </td>
 
@@ -523,7 +530,7 @@
 
     <div class="card mb-3">
 
-      <div class="card-header" style="background: linear-gradient(135deg, #007A3D 0%, #1B4D89 100%); color: white;">
+      <div class="card-header ic-1">
 
         <h3 class="card-title text-white mb-0">
 
@@ -595,11 +602,11 @@
 
         
 
-        <div class="d-flex justify-content-between align-items-center mb-3" style="font-size: 1.3rem;">
+        <div class="d-flex justify-content-between align-items-center mb-3 ic-3">
 
           <strong>الإجمالي:</strong>
 
-          <strong style="color: #007A3D;">
+          <strong class="ic-2">
 
             {{ "{:,.2f}".format(sale.total_amount) }} {{ sale.currency }}
 
@@ -657,7 +664,7 @@
 
           <span><i class="fas fa-exclamation-circle text-danger mr-1"></i>الباقي:</span>
 
-          <strong class="text-danger" style="font-size: 1.2rem;">
+          <strong class="text-danger ic-4">
 
             {{ "{:,.2f}".format(sale.balance_due) }} {{ tenant_currency_symbol or 'AED' }}
 
@@ -733,7 +740,7 @@
 
           </button>
 
-          <form id="cancelForm" action="{{ url_for('sales.cancel', id=sale.id) }}" method="POST" style="display:none;">
+          <form id="cancelForm" action="{{ url_for('sales.cancel', id=sale.id) }}" method="POST" class="ic-5">
 
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 
@@ -751,7 +758,7 @@
 
           </button>
 
-          <form id="deleteForm" action="{{ url_for('sales.delete', id=sale.id) }}" method="POST" style="display:none;">
+          <form id="deleteForm" action="{{ url_for('sales.delete', id=sale.id) }}" method="POST" class="ic-5">
 
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 
