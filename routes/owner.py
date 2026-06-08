@@ -475,39 +475,16 @@ def archived():
 @owner_required
 def users_list():
     """قائمة المستخدمين — platform: all or filtered by active tenant."""
-    from sqlalchemy.orm import joinedload
-    from utils.tenanting import get_active_tenant_id, scoped_user_query
-
-    query = (
-        scoped_user_query(exclude_owners=True)
-        .options(
-            joinedload(User.role),
-            joinedload(User.branch),
-        )
-        .order_by(User.created_at.desc())
-    )
-    active_tid = get_active_tenant_id(current_user)
-    users = query.all()
-    tenants = Tenant.query.filter_by(is_active=True).order_by(Tenant.name_ar).all()
-
-    from models import Role
-    base = scoped_user_query(exclude_owners=True)
-    stats = {
-        'total': base.count(),
-        'active': base.filter_by(is_active=True).count(),
-        'inactive': base.filter_by(is_active=False).count(),
-        'owners': User.query.filter_by(is_owner=True).count(),
-        'admins': base.join(Role).filter(Role.slug == 'super_admin').count(),
-        'managers': base.join(Role).filter(Role.slug == 'manager').count(),
-        'sellers': base.join(Role).filter(Role.slug == 'seller').count(),
-    }
-
+    from services.user_service import UserService
+    from utils.tenanting import get_active_tenant_id
+    tid = get_active_tenant_id(current_user)
+    context = UserService.get_users_list_context(tenant_id=tid)
     return render_template(
         'owner/users_list.html',
-        users=users,
-        stats=stats,
-        active_tenant_id=active_tid,
-        tenants=tenants,
+        users=context['users'],
+        stats=context['stats'],
+        active_tenant_id=context['active_tenant_id'],
+        tenants=context['tenants'],
     )
 
 @owner_bp.route('/users/create', methods=['GET', 'POST'])
