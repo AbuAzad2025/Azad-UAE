@@ -13,7 +13,7 @@
           <div class="col-md-6">
             <div class="form-group">
               <label for="input_name">الاسم *</label>
-              <input type="text" name="name" class="form-control" required id="input_name" aria-label="name">
+              <input type="text" name="name" class="form-control" required id="input_name" aria-label="name" minlength="2" maxlength="100">
             </div>
           </div>
           <div class="col-md-6">
@@ -33,13 +33,13 @@
           <div class="col-md-6">
             <div class="form-group">
               <label for="input_phone">رقم الهاتف</label>
-              <input type="text" name="phone" class="form-control" id="input_phone" aria-label="phone">
+              <input type="text" name="phone" class="form-control" id="input_phone" aria-label="phone" pattern="^\+?[0-9\s\-]{8,20}$">
             </div>
           </div>
         </div>
         <div class="form-group">
           <label>العنوان</label>
-          <textarea name="address" class="form-control" aria-label="address"></textarea>
+          <textarea name="address" class="form-control" aria-label="address" maxlength="255"></textarea>
         </div>
         <div class="form-group form-check">
           <input type="checkbox" name="is_main" class="form-check-input" id="isMain" aria-label="is main">

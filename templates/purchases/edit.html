@@ -72,7 +72,7 @@
             <!-- الملاحظات (قابلة للتعديل) -->
             <div class="form-group">
               <label>الملاحظات</label>
-              <textarea name="notes" class="form-control" rows="4" aria-label="notes">{{ purchase.notes or '' }}</textarea>
+              <textarea name="notes" class="form-control" rows="4" aria-label="notes" maxlength="500">{{ purchase.notes or '' }}</textarea>
               <small class="text-muted">يمكنك إضافة أو تعديل الملاحظات</small>
             </div>
 

@@ -105,7 +105,7 @@
           <div class="form-group">
             <label class="font-weight-bold">المبلغ</label>
             <div class="input-group">
-              <input type="number" step="0.01" class="form-control font-weight-bold text-center" name="amount" id="amount" required placeholder="0.00">
+              <input type="number" step="0.01" class="form-control font-weight-bold text-center" name="amount" id="amount" required placeholder="0.00" min="0">
               <div class="input-group-append">
                 <span class="input-group-text" id="amount_currency_label">{{ preselected_currency or tenant_default_currency or 'AED' }}</span>
               </div>
@@ -165,7 +165,7 @@
         <div class="col-md-4">
           <div class="form-group mb-0">
             <label for="input_bank_name">اسم البنك</label>
-            <input type="text" class="form-control" name="bank_name" id="input_bank_name" aria-label="bank name">
+            <input type="text" class="form-control" name="bank_name" id="input_bank_name" aria-label="bank name" minlength="2" maxlength="100">
           </div>
         </div>
       </div>
@@ -174,7 +174,7 @@
         <div class="col-md-12">
           <div class="form-group">
             <label>ملاحظات / البيان</label>
-            <textarea class="form-control" name="notes" rows="3" placeholder="أدخل تفاصيل السند..."></textarea>
+            <textarea class="form-control" name="notes" rows="3" placeholder="أدخل تفاصيل السند..." maxlength="500"></textarea>
           </div>
         </div>
       </div>

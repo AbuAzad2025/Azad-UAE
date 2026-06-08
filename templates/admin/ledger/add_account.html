@@ -53,7 +53,7 @@
             <label>اسم الحساب (عربي) <span class="text-danger">*</span></label>
             <input type="text" name="name_ar" class="form-control" required 
                    placeholder="مثال: الصندوق، الذمم المدينة"
-                   value="{{ form_data.get('name_ar', '') }}">
+                   value="{{ form_data.get('name_ar', '') }}" minlength="2" maxlength="100">
           </div>
         </div>
         <div class="col-md-6">
@@ -61,7 +61,7 @@
             <label for="input_name">اسم الحساب (إنجليزي)</label>
             <input type="text" name="name" class="form-control" 
                    placeholder="مثال: Cash, Accounts Receivable"
-                   value="{{ form_data.get('name', '') }}" id="input_name">
+                   value="{{ form_data.get('name', '') }}" id="input_name" minlength="2" maxlength="100">
           </div>
         </div>
       </div>
@@ -101,7 +101,7 @@
           <div class="form-group">
             <label>وصف الحساب</label>
             <textarea name="description" class="form-control" rows="3" 
-                      placeholder="وصف تفصيلي للحساب (اختياري)">{{ form_data.get('description', '') }}</textarea>
+                      placeholder="وصف تفصيلي للحساب (اختياري)" maxlength="500">{{ form_data.get('description', '') }}</textarea>
           </div>
         </div>
       </div>

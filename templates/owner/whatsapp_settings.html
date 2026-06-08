@@ -44,7 +44,7 @@
                  name="whatsapp_phone_number" 
                  class="form-control" 
                  value="{{ settings.whatsapp_phone_number or '' }}" 
-                 placeholder="+971501234567" id="input_whatsapp_phone_number">
+                 placeholder="+971501234567" id="input_whatsapp_phone_number" pattern="^\+?[0-9\s\-]{8,20}$">
         </div>
         
         <div class="form-group">

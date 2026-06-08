@@ -32,22 +32,22 @@
               <div class="row">
                 <div class="col-md-6 form-group">
                   <label for="input_name_ar">الاسم (عربي) *</label>
-                  <input type="text" name="name_ar" class="form-control" value="{{ method.name_ar if method else '' }}" required id="input_name_ar" aria-label="name ar">
+                  <input type="text" name="name_ar" class="form-control" value="{{ method.name_ar if method else '' }}" required id="input_name_ar" aria-label="name ar" minlength="2" maxlength="100">
                 </div>
                 <div class="col-md-6 form-group">
                   <label for="input_name_en">الاسم (English) *</label>
-                  <input type="text" name="name_en" class="form-control" value="{{ method.name_en if method else '' }}" required dir="ltr" id="input_name_en" aria-label="name en">
+                  <input type="text" name="name_en" class="form-control" value="{{ method.name_en if method else '' }}" required dir="ltr" id="input_name_en" aria-label="name en" minlength="2" maxlength="100">
                 </div>
               </div>
 
               <div class="row">
                 <div class="col-md-6 form-group">
                   <label>وصف للعميل (عربي)</label>
-                  <textarea name="description_ar" class="form-control" rows="3" aria-label="description ar">{{ method.description_ar if method else '' }}</textarea>
+                  <textarea name="description_ar" class="form-control" rows="3" aria-label="description ar" maxlength="500">{{ method.description_ar if method else '' }}</textarea>
                 </div>
                 <div class="col-md-6 form-group">
                   <label>وصف للعميل (English)</label>
-                  <textarea name="description_en" class="form-control" rows="3" dir="ltr" aria-label="description en">{{ method.description_en if method else '' }}</textarea>
+                  <textarea name="description_en" class="form-control" rows="3" dir="ltr" aria-label="description en" maxlength="500">{{ method.description_en if method else '' }}</textarea>
                 </div>
               </div>
 
@@ -74,15 +74,15 @@
               <div class="row">
                 <div class="col-md-4 form-group">
                   <label for="input_bank_name">اسم البنك</label>
-                  <input type="text" name="bank_name" class="form-control" value="{{ cfg.get('bank_name', '') }}" id="input_bank_name" aria-label="bank name">
+                  <input type="text" name="bank_name" class="form-control" value="{{ cfg.get('bank_name', '') }}" id="input_bank_name" aria-label="bank name" minlength="2" maxlength="100">
                 </div>
                 <div class="col-md-4 form-group">
                   <label for="input_iban">IBAN</label>
-                  <input type="text" name="iban" class="form-control" value="{{ cfg.get('iban', '') }}" dir="ltr" id="input_iban" aria-label="iban">
+                  <input type="text" name="iban" class="form-control" value="{{ cfg.get('iban', '') }}" dir="ltr" id="input_iban" aria-label="iban" maxlength="34">
                 </div>
                 <div class="col-md-4 form-group">
                   <label for="input_account_name">اسم الحساب</label>
-                  <input type="text" name="account_name" class="form-control" value="{{ cfg.get('account_name', '') }}" id="input_account_name" aria-label="account name">
+                  <input type="text" name="account_name" class="form-control" value="{{ cfg.get('account_name', '') }}" id="input_account_name" aria-label="account name" minlength="2" maxlength="100">
                 </div>
               </div>
               <div class="form-group">

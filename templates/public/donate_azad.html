@@ -49,7 +49,7 @@
 
           <div class="az-field">
             <label for="input_donor_name">{{ 'الاسم' if not is_en else 'Name' }}</label>
-            <input type="text" name="donor_name" required id="input_donor_name" aria-label="donor name">
+            <input type="text" name="donor_name" required id="input_donor_name" aria-label="donor name" minlength="2" maxlength="100">
           </div>
           <div class="az-field">
             <label for="input_donor_email">Email</label>

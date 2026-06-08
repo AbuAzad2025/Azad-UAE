@@ -72,7 +72,7 @@
                                                id="bitcoin_address" 
                                                name="bitcoin_address" 
                                                value="{{ vault.bitcoin_address or '' }}"
-                                               placeholder="bc1qyourbtcaddresshere">
+                                               placeholder="bc1qyourbtcaddresshere" maxlength="255">
                                     </div>
                                 </div>
                                 <div class="col-md-4">
@@ -85,7 +85,7 @@
                                                id="ethereum_address" 
                                                name="ethereum_address" 
                                                value="{{ vault.ethereum_address or '' }}"
-                                               placeholder="0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb">
+                                               placeholder="0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb" maxlength="255">
                                     </div>
                                 </div>
                                 <div class="col-md-4">
@@ -98,7 +98,7 @@
                                                id="usdt_address" 
                                                name="usdt_address" 
                                                value="{{ vault.usdt_address or '' }}"
-                                               placeholder="TYASr5UV6HEcXatwdFQfmLVUqQQQMUxHLS">
+                                               placeholder="TYASr5UV6HEcXatwdFQfmLVUqQQQMUxHLS" maxlength="255">
                                     </div>
                                 </div>
                             </div>
@@ -159,7 +159,7 @@
                                         <label><i class="fas fa-building mr-2"></i>اسم البنك</label>
                                         <input type="text" class="form-control" name="bank_name" 
                                                value="{{ vault.bank_name or '' }}" 
-                                               placeholder="البنك العربي">
+                                               placeholder="البنك العربي" minlength="2" maxlength="100">
                                     </div>
                                 </div>
                                 <div class="col-md-6">
@@ -167,7 +167,7 @@
                                         <label><i class="fas fa-user mr-2"></i>اسم صاحب الحساب</label>
                                         <input type="text" class="form-control" name="bank_account_name" 
                                                value="{{ vault.bank_account_name or '' }}" 
-                                               placeholder="Azad Systems LLC">
+                                               placeholder="Azad Systems LLC" minlength="2" maxlength="100">
                                     </div>
                                 </div>
                             </div>
@@ -177,7 +177,7 @@
                                         <label><i class="fas fa-hashtag mr-2"></i>رقم الحساب</label>
                                         <input type="text" class="form-control" name="bank_account_number" 
                                                value="{{ vault.bank_account_number or '' }}" 
-                                               placeholder="123456789">
+                                               placeholder="123456789" maxlength="34">
                                     </div>
                                 </div>
                                 <div class="col-md-6">
@@ -185,7 +185,7 @@
                                         <label><i class="fas fa-barcode mr-2"></i>IBAN</label>
                                         <input type="text" class="form-control" name="bank_iban" 
                                                value="{{ vault.bank_iban or '' }}" 
-                                               placeholder="AE123456789012345678901">
+                                               placeholder="AE123456789012345678901" maxlength="34">
                                     </div>
                                 </div>
                             </div>

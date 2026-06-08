@@ -181,7 +181,7 @@
 
               <label for="input_phone">هاتف</label>
 
-              <input type="text" name="phone" class="form-control" value="{{ store.phone or '' }}" id="input_phone" aria-label="phone">
+              <input type="text" name="phone" class="form-control" value="{{ store.phone or '' }}" id="input_phone" aria-label="phone" pattern="^\+?[0-9\s\-]{8,20}$">
 
             </div>
 

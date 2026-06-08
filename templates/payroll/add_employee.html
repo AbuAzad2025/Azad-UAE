@@ -13,13 +13,13 @@
             <div class="col-md-6">
                 <div class="form-group">
                     <label for="input_name">الاسم الكامل (English)</label>
-                    <input type="text" name="name" class="form-control" required id="input_name" aria-label="name">
+                    <input type="text" name="name" class="form-control" required id="input_name" aria-label="name" minlength="2" maxlength="100">
                 </div>
             </div>
             <div class="col-md-6">
                 <div class="form-group">
                     <label for="input_name_ar">الاسم بالعربية</label>
-                    <input type="text" name="name_ar" class="form-control" id="input_name_ar" aria-label="name ar">
+                    <input type="text" name="name_ar" class="form-control" id="input_name_ar" aria-label="name ar" minlength="2" maxlength="100">
                 </div>
             </div>
         </div>
@@ -28,7 +28,7 @@
             <div class="col-md-4">
                 <div class="form-group">
                     <label for="input_phone">الهاتف</label>
-                    <input type="text" name="phone" class="form-control" id="input_phone" aria-label="phone">
+                    <input type="text" name="phone" class="form-control" id="input_phone" aria-label="phone" pattern="^\+?[0-9\s\-]{8,20}$">
                 </div>
             </div>
             <div class="col-md-4">
@@ -66,7 +66,7 @@
             <div class="col-md-4">
                 <div class="form-group">
                     <label for="input_basic_salary">القيمة الأساسية</label>
-                    <input type="number" step="0.01" name="basic_salary" class="form-control" placeholder="الراتب الشهري أو أجرة اليوم" required id="input_basic_salary">
+                    <input type="number" step="0.01" name="basic_salary" class="form-control" placeholder="الراتب الشهري أو أجرة اليوم" required id="input_basic_salary" min="0">
                 </div>
             </div>
         </div>

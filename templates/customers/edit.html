@@ -32,7 +32,7 @@
               <span class="text-danger">*</span>
               <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="اسم العميل الكامل (إجباري)"></i>
             </label>
-            <input type="text" name="name" class="form-control" value="{{ customer.name }}" placeholder="اسم الزبون" required>
+            <input type="text" name="name" class="form-control" value="{{ customer.name }}" placeholder="اسم الزبون" required minlength="2" maxlength="100">
           </div>
         </div>
         <div class="col-md-3">
@@ -71,7 +71,7 @@
               <span class="text-danger">*</span>
               <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="رقم الهاتف (يجب أن يكون فريداً)"></i>
             </label>
-            <input type="text" name="phone" class="form-control" value="{{ customer.phone or '' }}" placeholder="+971-5x-xxx-xxxx" required>
+            <input type="text" name="phone" class="form-control" value="{{ customer.phone or '' }}" placeholder="+971-5x-xxx-xxxx" required pattern="^\+?[0-9\s\-]{8,20}$">
           </div>
         </div>
         <div class="col-md-4">
@@ -103,7 +103,7 @@
           <i class="fas fa-map-marker-alt text-warning"></i> {{ t('Address') }}
           <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="عنوان العميل (اختياري - للتوصيل)"></i>
         </label>
-        <textarea name="address" class="form-control" rows="2" placeholder="العنوان الكامل...">{{ customer.address or '' }}</textarea>
+        <textarea name="address" class="form-control" rows="2" placeholder="العنوان الكامل..." maxlength="255">{{ customer.address or '' }}</textarea>
       </div>
 
       <div class="form-group">
@@ -111,7 +111,7 @@
           <i class="fas fa-sticky-note text-secondary"></i> {{ t('Notes') }}
           <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="ملاحظات إضافية (اختياري)"></i>
         </label>
-        <textarea name="notes" class="form-control" rows="3" placeholder="أي ملاحظات عن العميل...">{{ customer.notes or '' }}</textarea>
+        <textarea name="notes" class="form-control" rows="3" placeholder="أي ملاحظات عن العميل..." maxlength="500">{{ customer.notes or '' }}</textarea>
       </div>
     </div>
 

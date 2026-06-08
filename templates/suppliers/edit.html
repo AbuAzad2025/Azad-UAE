@@ -93,7 +93,7 @@
               <span class="text-danger">*</span>
             </label>
             <input type="text" name="name" class="form-control" required
-                   value="{{ supplier.name }}" aria-label="name">
+                   value="{{ supplier.name }}" aria-label="name" minlength="2" maxlength="100">
           </div>
         </div>
         
@@ -103,7 +103,7 @@
               <i class="fas fa-font text-info"></i> الاسم بالإنجليزية
             </label>
             <input type="text" name="name_en" class="form-control"
-                   value="{{ supplier.name_en or '' }}" aria-label="name en">
+                   value="{{ supplier.name_en or '' }}" aria-label="name en" minlength="2" maxlength="100">
           </div>
         </div>
         
@@ -113,7 +113,7 @@
               <i class="fas fa-building text-primary"></i> اسم الشركة
             </label>
             <input type="text" name="company_name" class="form-control"
-                   value="{{ supplier.company_name or '' }}" aria-label="company name">
+                   value="{{ supplier.company_name or '' }}" aria-label="company name" minlength="2" maxlength="100">
           </div>
         </div>
       </div>
@@ -188,7 +188,7 @@
           <div class="form-group">
             <label for="input_phone">الهاتف 1</label>
             <input type="text" name="phone" class="form-control"
-                   value="{{ supplier.phone or '' }}" id="input_phone" aria-label="phone">
+                   value="{{ supplier.phone or '' }}" id="input_phone" aria-label="phone" pattern="^\+?[0-9\s\-]{8,20}$">
           </div>
         </div>
         
@@ -196,7 +196,7 @@
           <div class="form-group">
             <label for="input_phone2">الهاتف 2</label>
             <input type="text" name="phone2" class="form-control"
-                   value="{{ supplier.phone2 or '' }}" id="input_phone2" aria-label="phone2">
+                   value="{{ supplier.phone2 or '' }}" id="input_phone2" aria-label="phone2" pattern="^\+?[0-9\s\-]{8,20}$">
           </div>
         </div>
         
@@ -238,7 +238,7 @@
           <div class="form-group">
             <label for="input_address">{{ t('Address') }}</label>
             <input type="text" name="address" class="form-control"
-                   value="{{ supplier.address or '' }}" id="input_address" aria-label="address">
+                   value="{{ supplier.address or '' }}" id="input_address" aria-label="address" maxlength="255">
           </div>
         </div>
       </div>
@@ -258,7 +258,7 @@
           <div class="form-group">
             <label for="input_tax_number">الرقم الضريبي (TRN)</label>
             <input type="text" name="tax_number" class="form-control"
-                   value="{{ supplier.tax_number or '' }}" id="input_tax_number" aria-label="tax number">
+                   value="{{ supplier.tax_number or '' }}" id="input_tax_number" aria-label="tax number" maxlength="20">
           </div>
         </div>
         
@@ -301,7 +301,7 @@
         <div class="col-md-6">
           <div class="form-group">
             <label>{{ t('Notes') }}</label>
-            <textarea name="notes" class="form-control" rows="3" aria-label="notes">{{ supplier.notes or '' }}</textarea>
+            <textarea name="notes" class="form-control" rows="3" aria-label="notes" maxlength="500">{{ supplier.notes or '' }}</textarea>
           </div>
         </div>
       </div>

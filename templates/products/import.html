@@ -91,12 +91,12 @@
           <tbody>
             {% for i in range(10) %}
             <tr class="product-row">
-              <td><input type="text" name="name[]" class="form-control form-control-sm" placeholder="اسم المنتج"></td>
+              <td><input type="text" name="name[]" class="form-control form-control-sm" placeholder="اسم المنتج" minlength="2" maxlength="100"></td>
               <td><input type="number" name="price[]" class="form-control form-control-sm" step="0.01" min="0" aria-label="price[]"></td>
               <td><input type="number" name="cost[]" class="form-control form-control-sm" step="0.01" min="0" aria-label="cost[]"></td>
               <td><input type="number" name="stock[]" class="form-control form-control-sm" step="1" min="0" aria-label="stock[]"></td>
-              <td><input type="text" name="sku[]" class="form-control form-control-sm" placeholder="Auto"></td>
-              <td><input type="text" name="barcode[]" class="form-control form-control-sm" placeholder="Auto"></td>
+              <td><input type="text" name="sku[]" class="form-control form-control-sm" placeholder="Auto" maxlength="50"></td>
+              <td><input type="text" name="barcode[]" class="form-control form-control-sm" placeholder="Auto" maxlength="50"></td>
               <td class="text-center">
                 <button type="button" class="btn btn-sm btn-outline-danger remove-row" tabindex="-1" title="إغلاق"><i class="fas fa-times"></i></button>
               </td>

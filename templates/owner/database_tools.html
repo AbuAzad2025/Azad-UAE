@@ -209,7 +209,7 @@
 
 <form id="truncateForm" method="POST" action="{{ url_for('owner.truncate_table') }}" class="ic-2">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
-  <input type="hidden" name="table_name" id="truncateTableName" aria-label="table name">
+  <input type="hidden" name="table_name" id="truncateTableName" aria-label="table name" minlength="2" maxlength="100">
   <input type="hidden" name="confirm" id="truncateConfirm" aria-label="confirm">
 </form>
 {% endblock %}

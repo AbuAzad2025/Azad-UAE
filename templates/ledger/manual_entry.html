@@ -72,7 +72,7 @@
           <div class="form-group">
             <label>وصف القيد <span class="text-danger">*</span></label>
             <input type="text" name="description" class="form-control" required 
-                   placeholder="مثال: قيد تسوية، شراء معدات، تعديل رصيد">
+                   placeholder="مثال: قيد تسوية، شراء معدات، تعديل رصيد" maxlength="500">
           </div>
         </div>
         <div class="col-md-3">
@@ -99,7 +99,7 @@
           <div class="form-group">
             <label>ملاحظات (اختياري)</label>
             <textarea name="notes" class="form-control" rows="2" 
-                      placeholder="أي ملاحظات إضافية..."></textarea>
+                      placeholder="أي ملاحظات إضافية..." maxlength="500"></textarea>
           </div>
         </div>
       </div>
@@ -214,7 +214,7 @@ function addLine() {
     </td>
     <td>
       <input type="text" name="line_${lineCounter}_description" class="form-control" 
-             placeholder="البيان (اختياري)">
+             placeholder="البيان (اختياري)" maxlength="500">
     </td>
     <td>
       <input type="number" name="line_${lineCounter}_debit" class="form-control text-center debit-input" 
@@ -372,7 +372,7 @@ function addLineWithData(accountCode, accountName, debit, credit) {
     </td>
     <td>
       <input type="text" name="line_${lineCounter}_description" class="form-control" 
-             value="${accountName}" placeholder="البيان (اختياري)">
+             value="${accountName}" placeholder="البيان (اختياري)" maxlength="500">
     </td>
     <td>
       <input type="number" name="line_${lineCounter}_debit" class="form-control text-center debit-input" 

@@ -58,14 +58,14 @@
                 <input type="text" name="username" class="form-control" required 
                        pattern="[a-zA-Z0-9_]{3,20}" 
                        placeholder="مثال: ahmad_manager"
-                       value="{{ form_data.get('username', '') }}">
+                       value="{{ form_data.get('username', '') }}" minlength="2" maxlength="100">
                 <small class="text-muted">حروف إنجليزية وأرقام و_ فقط (3-20 حرف)</small>
               </div>
               
               <div class="form-group">
                 <label for="input_full_name">{{ t('Full Name') }}</label>
                 <input type="text" name="full_name" class="form-control" placeholder="أحمد محمود"
-                       value="{{ form_data.get('full_name', '') }}" id="input_full_name">
+                       value="{{ form_data.get('full_name', '') }}" id="input_full_name" minlength="2" maxlength="100">
               </div>
               
               <div class="form-group">

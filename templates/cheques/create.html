@@ -113,7 +113,7 @@
           <div class="form-group">
             <label><i class="fas fa-university"></i> البنك: <span class="text-danger">*</span></label>
             <input type="text" name="bank_name" class="form-control" 
-                   placeholder="اسم البنك" required>
+                   placeholder="اسم البنك" required minlength="2" maxlength="100">
           </div>
         </div>
         
@@ -129,7 +129,7 @@
           <div class="form-group">
             <label><i class="fas fa-credit-card"></i> رقم الحساب:</label>
             <input type="text" name="account_number" class="form-control" 
-                   placeholder="رقم الحساب">
+                   placeholder="رقم الحساب" maxlength="34">
           </div>
         </div>
       </div>
@@ -140,7 +140,7 @@
           <div class="form-group">
             <label><i class="fas fa-money-bill-wave"></i> المبلغ: <span class="text-danger">*</span></label>
             <input type="number" name="amount" step="0.01" class="form-control" 
-                   placeholder="0.00" required>
+                   placeholder="0.00" required min="0">
           </div>
         </div>
         
@@ -203,7 +203,7 @@
             <div class="form-group">
               <label><i class="fas fa-signature"></i> اسم الساحب:</label>
               <input type="text" name="drawer_name" class="form-control" 
-                     placeholder="اسم الشخص الساحب للشيك">
+                     placeholder="اسم الشخص الساحب للشيك" minlength="2" maxlength="100">
             </div>
           </div>
         </div>
@@ -233,7 +233,7 @@
             <div class="form-group">
               <label><i class="fas fa-user-tie"></i> اسم المستفيد:</label>
               <input type="text" name="payee_name" class="form-control" 
-                     placeholder="اسم المستفيد من الشيك">
+                     placeholder="اسم المستفيد من الشيك" minlength="2" maxlength="100">
             </div>
           </div>
         </div>
@@ -243,7 +243,7 @@
       <div class="form-group">
         <label><i class="fas fa-sticky-note"></i> ملاحظات:</label>
         <textarea name="notes" class="form-control" rows="3" 
-                  placeholder="أي ملاحظات إضافية..."></textarea>
+                  placeholder="أي ملاحظات إضافية..." maxlength="500"></textarea>
       </div>
 
       <!-- الأزرار -->

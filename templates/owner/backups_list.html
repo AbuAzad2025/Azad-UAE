@@ -211,7 +211,7 @@
                 نسخة نظام كاملة (System)
               </label>
               <div class="input-group">
-                <input type="text" name="description" placeholder="وصف (اختياري)" class="form-control">
+                <input type="text" name="description" placeholder="وصف (اختياري)" class="form-control" maxlength="500">
                 <div class="input-group-append">
                   <button type="submit" class="btn btn-danger">
                     <i class="fas fa-database mr-1"></i> System backup
@@ -258,7 +258,7 @@
                 {% endfor %}
               </select>
               <div class="input-group">
-                <input type="text" name="description" placeholder="وصف (اختياري)" class="form-control">
+                <input type="text" name="description" placeholder="وصف (اختياري)" class="form-control" maxlength="500">
                 <div class="input-group-append">
                   <button type="submit" class="btn btn-success">
                     <i class="fas fa-download mr-1"></i> إنشاء
@@ -398,7 +398,7 @@
           <!-- زر الحذف -->
           <form method="POST" action="{{ url_for('owner.delete_backup') }}" onsubmit="return confirm('⚠️ هل أنت متأكد من حذف النسخة الاحتياطية؟\n\n📁 {{ backup.get('filename') }}\n\n{% if not backup.get('manual') %}⚠️ تنبيه: هذه نسخة تلقائية.\n{% endif %}⚠️ لا يمكن التراجع عن هذا الإجراء!');" class="ic-7">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
-            <input type="hidden" name="filename" value="{{ backup.get('filename') }}" aria-label="filename">
+            <input type="hidden" name="filename" value="{{ backup.get('filename') }}" aria-label="filename" minlength="2" maxlength="100">
             <button type="submit" class="btn btn-sm btn-danger" title="حذف النسخة نهائياً">
               <i class="fas fa-trash mr-1"></i> حذف
             </button>

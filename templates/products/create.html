@@ -60,7 +60,7 @@
               <span class="text-danger">*</span>
               <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="اسم المنتج بالإنجليزية (إجباري)"></i>
             </label>
-            <input type="text" id="product_name" name="name" class="form-control" placeholder="Product Name" required autocomplete="off">
+            <input type="text" id="product_name" name="name" class="form-control" placeholder="Product Name" required autocomplete="off" minlength="2" maxlength="100">
           </div>
         </div>
         <div class="col-md-6">
@@ -69,7 +69,7 @@
               <i class="fas fa-font text-info"></i> الاسم بالعربية
               <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="اسم المنتج بالعربية (اختياري)"></i>
             </label>
-            <input type="text" id="product_name_ar" name="name_ar" class="form-control" placeholder="اسم المنتج" autocomplete="off">
+            <input type="text" id="product_name_ar" name="name_ar" class="form-control" placeholder="اسم المنتج" autocomplete="off" minlength="2" maxlength="100">
           </div>
         </div>
       </div>
@@ -91,7 +91,7 @@
               <span class="text-danger">*</span>
               <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="رقم القطعة الفريد - يتم توليده تلقائياً إن لم يُدخل"></i>
             </label>
-            <input type="text" id="product_sku" name="sku" class="form-control" placeholder="يتم توليده تلقائياً" autocomplete="off">
+            <input type="text" id="product_sku" name="sku" class="form-control" placeholder="يتم توليده تلقائياً" autocomplete="off" maxlength="50">
           </div>
         </div>
         <div class="col-md-6 col-lg-3">
@@ -100,7 +100,7 @@
               <i class="fas fa-barcode text-secondary"></i> {{ t('Barcode') }}
               <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="الباركود للمسح - يتم توليده تلقائياً إن لم يُدخل"></i>
             </label>
-            <input type="text" id="product_barcode" name="barcode" class="form-control" placeholder="يتم توليده تلقائياً" autocomplete="off">
+            <input type="text" id="product_barcode" name="barcode" class="form-control" placeholder="يتم توليده تلقائياً" autocomplete="off" maxlength="50">
           </div>
         </div>
         <div class="col-md-6 col-lg-3">
@@ -374,7 +374,7 @@
           <i class="fas fa-align-left text-secondary"></i> {{ t('Description') }}
           <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="وصف تفصيلي للمنتج (اختياري)"></i>
         </label>
-        <textarea id="product_description" name="description" class="form-control" rows="3" placeholder="وصف المنتج وميزاته..." autocomplete="off"></textarea>
+        <textarea id="product_description" name="description" class="form-control" rows="3" placeholder="وصف المنتج وميزاته..." autocomplete="off" maxlength="500"></textarea>
       </div>
 
       <div class="form-group">
@@ -382,7 +382,7 @@
           <i class="fas fa-sticky-note text-warning"></i> {{ t('Notes') }}
           <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="ملاحظات داخلية عن المنتج (اختياري)"></i>
         </label>
-        <textarea id="product_notes" name="notes" class="form-control" rows="2" placeholder="ملاحظات إضافية..." autocomplete="off"></textarea>
+        <textarea id="product_notes" name="notes" class="form-control" rows="2" placeholder="ملاحظات إضافية..." autocomplete="off" maxlength="500"></textarea>
       </div>
     </div>
 
@@ -417,13 +417,13 @@
               <i class="fas fa-font text-primary"></i> اسم الفئة
               <span class="text-danger">*</span>
             </label>
-            <input type="text" id="category_name" name="category_name" class="form-control" placeholder="مثال: زيوت، فلاتر، إطارات..." required autocomplete="off">
+            <input type="text" id="category_name" name="category_name" class="form-control" placeholder="مثال: زيوت، فلاتر، إطارات..." required autocomplete="off" minlength="2" maxlength="100">
           </div>
           <div class="form-group">
             <label for="category_description">
               <i class="fas fa-align-right text-info"></i> الوصف
             </label>
-            <textarea id="category_description" name="category_description" class="form-control" rows="3" placeholder="وصف الفئة (اختياري)" autocomplete="off"></textarea>
+            <textarea id="category_description" name="category_description" class="form-control" rows="3" placeholder="وصف الفئة (اختياري)" autocomplete="off" maxlength="500"></textarea>
           </div>
         </form>
       </div>

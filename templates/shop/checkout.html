@@ -50,15 +50,15 @@
 
       <div class="ps-form-group">
         <label for="customer_name">{{ t('name') }} *</label>
-        <input type="text" id="customer_name" name="customer_name" required minlength="2" autocomplete="name" value="{{ prefilled.name or '' }}" aria-label="customer name">
+        <input type="text" id="customer_name" name="customer_name" required minlength="2" autocomplete="name" value="{{ prefilled.name or '' }}" aria-label="customer name" maxlength="100">
       </div>
       <div class="ps-form-group">
         <label for="phone">{{ t('phone') }} *</label>
-        <input type="tel" id="phone" name="phone" required autocomplete="tel" value="{{ prefilled.phone or '' }}" aria-label="phone">
+        <input type="tel" id="phone" name="phone" required autocomplete="tel" value="{{ prefilled.phone or '' }}" aria-label="phone" pattern="^\+?[0-9\s\-]{8,20}$">
       </div>
       <div class="ps-form-group">
         <label for="address">{{ t('address') }} *</label>
-        <textarea id="address" name="address" rows="3" required autocomplete="street-address" aria-label="address">{{ prefilled.address or '' }}</textarea>
+        <textarea id="address" name="address" rows="3" required autocomplete="street-address" aria-label="address" maxlength="255">{{ prefilled.address or '' }}</textarea>
       </div>
       <div class="ps-form-group">
         <label for="coupon_code">{{ t('coupon_code') }}</label>
@@ -66,7 +66,7 @@
       </div>
       <div class="ps-form-group">
         <label for="notes">{{ t('notes') }}</label>
-        <textarea id="notes" name="notes" rows="2" aria-label="notes"></textarea>
+        <textarea id="notes" name="notes" rows="2" aria-label="notes" maxlength="500"></textarea>
       </div>
       <p class="ic-4"><i class="fas fa-lock"></i> {{ t('secure_checkout') }}</p>
       <button type="submit" class="ps-btn ps-btn-primary ps-btn-block ic-5">{{ t('place_order') }}</button>

@@ -57,7 +57,7 @@
           <div class="form-group">
             <label><i class="fas fa-university"></i> البنك: <span class="text-danger">*</span></label>
             <input type="text" name="bank_name" class="form-control" 
-                   value="{{ cheque.bank_name }}" required aria-label="bank name">
+                   value="{{ cheque.bank_name }}" required aria-label="bank name" minlength="2" maxlength="100">
           </div>
         </div>
         
@@ -73,7 +73,7 @@
           <div class="form-group">
             <label><i class="fas fa-credit-card"></i> رقم الحساب:</label>
             <input type="text" name="account_number" class="form-control" 
-                   value="{{ cheque.account_number or '' }}" aria-label="account number">
+                   value="{{ cheque.account_number or '' }}" aria-label="account number" maxlength="34">
           </div>
         </div>
       </div>
@@ -84,7 +84,7 @@
           <div class="form-group">
             <label><i class="fas fa-money-bill-wave"></i> المبلغ: <span class="text-danger">*</span></label>
             <input type="number" name="amount" step="0.01" class="form-control" 
-                   value="{{ cheque.amount }}" required aria-label="amount">
+                   value="{{ cheque.amount }}" required aria-label="amount" min="0">
           </div>
         </div>
         
@@ -153,7 +153,7 @@
             <div class="form-group">
               <label><i class="fas fa-signature"></i> اسم الساحب:</label>
               <input type="text" name="drawer_name" class="form-control" 
-                     value="{{ cheque.drawer_name or '' }}" aria-label="drawer name">
+                     value="{{ cheque.drawer_name or '' }}" aria-label="drawer name" minlength="2" maxlength="100">
             </div>
           </div>
         </div>
@@ -189,7 +189,7 @@
             <div class="form-group">
               <label><i class="fas fa-user-tie"></i> اسم المستفيد:</label>
               <input type="text" name="payee_name" class="form-control" 
-                     value="{{ cheque.payee_name or '' }}" aria-label="payee name">
+                     value="{{ cheque.payee_name or '' }}" aria-label="payee name" minlength="2" maxlength="100">
             </div>
           </div>
         </div>
@@ -198,7 +198,7 @@
       <!-- ملاحظات -->
       <div class="form-group">
         <label><i class="fas fa-sticky-note"></i> ملاحظات:</label>
-        <textarea name="notes" class="form-control" rows="3" aria-label="notes">{{ cheque.notes or '' }}</textarea>
+        <textarea name="notes" class="form-control" rows="3" aria-label="notes" maxlength="500">{{ cheque.notes or '' }}</textarea>
       </div>
 
       <!-- الأزرار -->

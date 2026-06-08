@@ -40,13 +40,13 @@
           <div class="col-md-6">
             <div class="form-group">
               <label for="input_developer_name_ar">الاسم بالعربي</label>
-              <input type="text" name="developer_name_ar" class="form-control" value="{{ dev.developer_name_ar or '' }}" placeholder="شركة أزاد للأنظمة الذكية" id="input_developer_name_ar">
+              <input type="text" name="developer_name_ar" class="form-control" value="{{ dev.developer_name_ar or '' }}" placeholder="شركة أزاد للأنظمة الذكية" id="input_developer_name_ar" minlength="2" maxlength="100">
             </div>
           </div>
           <div class="col-md-6">
             <div class="form-group">
               <label for="input_developer_name">الاسم بالإنجليزي</label>
-              <input type="text" name="developer_name" class="form-control" value="{{ dev.developer_name or '' }}" placeholder="Azad Smart Systems" id="input_developer_name">
+              <input type="text" name="developer_name" class="form-control" value="{{ dev.developer_name or '' }}" placeholder="Azad Smart Systems" id="input_developer_name" minlength="2" maxlength="100">
             </div>
           </div>
         </div>
@@ -66,7 +66,7 @@
           <div class="col-md-6">
             <div class="form-group">
               <label for="input_developer_phone">الهاتف</label>
-              <input type="text" name="developer_phone" class="form-control" value="{{ dev.developer_phone or '' }}" placeholder="+972562150193" id="input_developer_phone">
+              <input type="text" name="developer_phone" class="form-control" value="{{ dev.developer_phone or '' }}" placeholder="+972562150193" id="input_developer_phone" pattern="^\+?[0-9\s\-]{8,20}$">
             </div>
           </div>
           <div class="col-md-6">

@@ -42,13 +42,13 @@
           <div class="col-md-3">
             <div class="form-group">
               <label for="input_amount">المبلغ *</label>
-              <input type="number" name="amount" class="form-control" step="0.01" required id="input_amount" aria-label="amount">
+              <input type="number" name="amount" class="form-control" step="0.01" required id="input_amount" aria-label="amount" min="0">
             </div>
           </div>
         </div>
         <div class="form-group">
           <label>البيان</label>
-          <textarea name="description" class="form-control" rows="3" aria-label="description"></textarea>
+          <textarea name="description" class="form-control" rows="3" aria-label="description" maxlength="500"></textarea>
         </div>
         <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> حفظ</button>
         {% if current_user.has_permission('view_ledger') %}

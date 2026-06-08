@@ -73,7 +73,7 @@
                                     <label>
                                         <i class="fas fa-phone text-primary mr-1"></i>رقم WhatsApp Business
                                     </label>
-                                    <input type="text" class="form-control" name="phone_number" placeholder="+971501234567" value="{{ integrations.whatsapp.config.phone_number or '' }}">
+                                    <input type="text" class="form-control" name="phone_number" placeholder="+971501234567" value="{{ integrations.whatsapp.config.phone_number or '' }}" pattern="^\+?[0-9\s\-]{8,20}$">
                                     <small class="form-text text-muted">
                                         📱 <strong>مثال:</strong> +971501234567 (بالصيغة الدولية مع +)
                                     </small>
@@ -191,7 +191,7 @@
                                             <label>
                                                 <i class="fas fa-lock text-danger mr-1"></i>SMTP Password / App Password
                                             </label>
-                                            <input type="password" class="form-control" name="smtp_password" placeholder="••••••••••" value="{{ integrations.email.config.smtp_password or '' }}">
+                                            <input type="password" class="form-control" name="smtp_password" placeholder="••••••••••" value="{{ integrations.email.config.smtp_password or '' }}" minlength="6">
                                             <small class="form-text text-muted">
                                                 🔐 <strong>Gmail:</strong> استخدم App Password (ليس كلمة المرور العادية)<br>
                                                 <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noopener noreferrer">إنشاء App Password</a>
@@ -219,7 +219,7 @@
                                     <label>
                                         <i class="fas fa-paper-plane text-info mr-1"></i>اسم المُرسل
                                     </label>
-                                    <input type="text" class="form-control" name="sender_name" placeholder="كراج الامارات" value="{{ integrations.email.config.sender_name or '' }}">
+                                    <input type="text" class="form-control" name="sender_name" placeholder="كراج الامارات" value="{{ integrations.email.config.sender_name or '' }}" minlength="2" maxlength="100">
                                     <small class="form-text text-muted">
                                         ✉️ الاسم الذي سيظهر للمستلم (مثال: "كراج الامارات" <no-reply@garage.ae>)
                                     </small>
@@ -296,7 +296,7 @@
                                     <label>
                                         <i class="fas fa-key text-warning mr-1"></i>Redis Password (اختياري)
                                     </label>
-                                    <input type="password" class="form-control" name="redis_password" placeholder="••••••••••" value="{{ integrations.redis.config.redis_password or '' }}">
+                                    <input type="password" class="form-control" name="redis_password" placeholder="••••••••••" value="{{ integrations.redis.config.redis_password or '' }}" minlength="6">
                                     <small class="form-text text-muted">
                                         🔐 اتركه فارغاً إذا لم يكن Redis محمياً بكلمة مرور
                                     </small>

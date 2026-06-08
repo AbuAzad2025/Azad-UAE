@@ -286,7 +286,7 @@
           <input type="hidden" id="productId" name="product_id" aria-label="product id">
           <div class="form-group">
             <label for="productName">اسم المنتج</label>
-            <input type="text" id="productName" name="product_name" class="form-control" readonly autocomplete="off" aria-label="product name">
+            <input type="text" id="productName" name="product_name" class="form-control" readonly autocomplete="off" aria-label="product name" minlength="2" maxlength="100">
           </div>
           <div class="form-group">
             <label for="currentStock">المخزون الحالي</label>
@@ -318,7 +318,7 @@
           </div>
           <div class="form-group">
             <label for="adjustmentNotes">{{ t('Notes') }}</label>
-            <textarea id="adjustmentNotes" name="adjustment_notes" class="form-control" rows="3" autocomplete="off" aria-label="adjustment notes"></textarea>
+            <textarea id="adjustmentNotes" name="adjustment_notes" class="form-control" rows="3" autocomplete="off" aria-label="adjustment notes" maxlength="500"></textarea>
           </div>
         </form>
       </div>

@@ -27,7 +27,7 @@
         
         <div class="form-group">
           <label><i class="fas fa-envelope"></i> قالب البريد للفواتير</label>
-          <textarea name="invoice_email_template" class="form-control" rows="5" placeholder="مرحباً {customer_name}، تم إصدار فاتورة رقم {sale_number} بمبلغ {total_amount} {{ tenant_currency_symbol or 'AED' }}">{{ templates.invoice_email or '' }}</textarea>
+          <textarea name="invoice_email_template" class="form-control" rows="5" placeholder="مرحباً {customer_name}، تم إصدار فاتورة رقم {sale_number} بمبلغ {total_amount} {{ tenant_currency_symbol or 'AED' }}" type="email">{{ templates.invoice_email or '' }}</textarea>
           <small class="text-muted">
             <i class="fas fa-info-circle"></i>
             المتغيرات المتاحة: <code>{customer_name}</code>, <code>{sale_number}</code>, <code>{total_amount}</code>, <code>{date}</code>

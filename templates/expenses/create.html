@@ -106,7 +106,7 @@
               <i class="fas fa-align-left text-info"></i> الوصف 
               <span class="text-danger">*</span>
             </label>
-            <input type="text" name="description" class="form-control" placeholder="وصف المصروف..." required>
+            <input type="text" name="description" class="form-control" placeholder="وصف المصروف..." required maxlength="500">
           </div>
         </div>
       </div>
@@ -167,7 +167,7 @@
             <label>
               <i class="fas fa-user-tie text-info"></i> اسم المورد/الجهة
             </label>
-            <input type="text" name="supplier_name" class="form-control" placeholder="اسم المستفيد...">
+            <input type="text" name="supplier_name" class="form-control" placeholder="اسم المستفيد..." minlength="2" maxlength="100">
           </div>
         </div>
       </div>
@@ -179,7 +179,7 @@
         <label>
           <i class="fas fa-sticky-note text-secondary"></i> {{ t('Notes') }}
         </label>
-        <textarea name="notes" class="form-control" rows="3" placeholder="أي ملاحظات..."></textarea>
+        <textarea name="notes" class="form-control" rows="3" placeholder="أي ملاحظات..." maxlength="500"></textarea>
       </div>
     </div>
 

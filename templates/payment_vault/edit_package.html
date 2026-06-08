@@ -30,26 +30,26 @@
                             <div class="form-group">
                                 <label>الاسم بالعربية <span class="text-danger">*</span></label>
                                 <input type="text" name="name_ar" class="form-control" 
-                                       value="{{ package.name_ar }}" required aria-label="name ar">
+                                       value="{{ package.name_ar }}" required aria-label="name ar" minlength="2" maxlength="100">
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label>الاسم بالإنجليزية <span class="text-danger">*</span></label>
                                 <input type="text" name="name_en" class="form-control" 
-                                       value="{{ package.name_en }}" required aria-label="name en">
+                                       value="{{ package.name_en }}" required aria-label="name en" minlength="2" maxlength="100">
                             </div>
                         </div>
                     </div>
                     
                     <div class="form-group">
                         <label>الوصف بالعربية</label>
-                        <textarea name="description_ar" class="form-control" rows="2" aria-label="description ar">{{ package.description_ar or '' }}</textarea>
+                        <textarea name="description_ar" class="form-control" rows="2" aria-label="description ar" maxlength="500">{{ package.description_ar or '' }}</textarea>
                     </div>
                     
                     <div class="form-group">
                         <label>الوصف بالإنجليزية</label>
-                        <textarea name="description_en" class="form-control" rows="2" aria-label="description en">{{ package.description_en or '' }}</textarea>
+                        <textarea name="description_en" class="form-control" rows="2" aria-label="description en" maxlength="500">{{ package.description_en or '' }}</textarea>
                     </div>
                     
                     <div class="row">
@@ -57,7 +57,7 @@
                             <div class="form-group">
                                 <label>السعر (USD) <span class="text-danger">*</span></label>
                                 <input type="number" name="price" class="form-control" step="0.01"
-                                       value="{{ package.price }}" required aria-label="price">
+                                       value="{{ package.price }}" required aria-label="price" min="0">
                             </div>
                         </div>
                         <div class="col-md-4">

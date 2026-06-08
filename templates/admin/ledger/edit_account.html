@@ -43,14 +43,14 @@
               <div class="col-md-6">
                 <div class="form-group">
                   <label for="input_name_ar">الاسم بالعربي *</label>
-                  <input type="text" name="name_ar" class="form-control" value="{{ account.name_ar }}" required id="input_name_ar" aria-label="name ar">
+                  <input type="text" name="name_ar" class="form-control" value="{{ account.name_ar }}" required id="input_name_ar" aria-label="name ar" minlength="2" maxlength="100">
                 </div>
               </div>
               
               <div class="col-md-6">
                 <div class="form-group">
                   <label for="input_name">الاسم بالإنجليزي</label>
-                  <input type="text" name="name" class="form-control" value="{{ account.name or '' }}" id="input_name" aria-label="name">
+                  <input type="text" name="name" class="form-control" value="{{ account.name or '' }}" id="input_name" aria-label="name" minlength="2" maxlength="100">
                 </div>
               </div>
             </div>
@@ -83,7 +83,7 @@
 
             <div class="form-group">
               <label>الوصف</label>
-              <textarea name="description" class="form-control" rows="3" aria-label="description">{{ account.description or '' }}</textarea>
+              <textarea name="description" class="form-control" rows="3" aria-label="description" maxlength="500">{{ account.description or '' }}</textarea>
             </div>
 
             <div class="form-group">

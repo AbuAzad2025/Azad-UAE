@@ -25,7 +25,7 @@
               <div class="col-md-6">
                 <div class="form-group">
                   <label for="input_full_name">الاسم الكامل</label>
-                  <input type="text" name="full_name" class="form-control" value="{{ user.full_name or '' }}" id="input_full_name" aria-label="full name">
+                  <input type="text" name="full_name" class="form-control" value="{{ user.full_name or '' }}" id="input_full_name" aria-label="full name" minlength="2" maxlength="100">
                 </div>
               </div>
             </div>
@@ -34,7 +34,7 @@
               <div class="col-md-6">
                 <div class="form-group">
                   <label for="input_full_name_ar">الاسم الكامل بالعربية</label>
-                  <input type="text" name="full_name_ar" class="form-control" value="{{ user.full_name_ar or '' }}" id="input_full_name_ar" aria-label="full name ar">
+                  <input type="text" name="full_name_ar" class="form-control" value="{{ user.full_name_ar or '' }}" id="input_full_name_ar" aria-label="full name ar" minlength="2" maxlength="100">
                 </div>
               </div>
               <div class="col-md-6">
@@ -49,7 +49,7 @@
               <div class="col-md-6">
                 <div class="form-group">
                   <label for="input_phone">رقم الهاتف</label>
-                  <input type="text" name="phone" class="form-control" value="{{ user.phone or '' }}" id="input_phone" aria-label="phone">
+                  <input type="text" name="phone" class="form-control" value="{{ user.phone or '' }}" id="input_phone" aria-label="phone" pattern="^\+?[0-9\s\-]{8,20}$">
                 </div>
               </div>
               <div class="col-md-6">

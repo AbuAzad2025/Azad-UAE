@@ -118,7 +118,7 @@
                 <span class="text-danger">*</span>
               </label>
               <input type="text" name="username" class="form-control" placeholder="مثال: {{ username_example or 'DEF_ahmad' }}" required minlength="3" pattern="[A-Za-z][A-Za-z0-9_]{2,48}" title="بادئة الشركة ثم شرطة سفلية ثم الاسم"
-                     value="{{ form_data.get('username', '') }}">
+                     value="{{ form_data.get('username', '') }}" maxlength="100">
               <small class="form-text text-muted">صيغة إلزامية: <strong>{{ username_example or 'CODE_ahmad' }}</strong> — owner و azad محجوزان للمنصة فقط</small>
             </div>
           </div>
@@ -149,7 +149,7 @@
                 <span class="text-danger">*</span>
               </label>
               <input type="text" name="full_name" class="form-control" placeholder="Ahmed Mohamed Ali" required minlength="3"
-                     value="{{ form_data.get('full_name', '') }}">
+                     value="{{ form_data.get('full_name', '') }}" maxlength="100">
               <small class="form-text text-muted">الاسم الكامل بالإنجليزية</small>
             </div>
           </div>
@@ -160,7 +160,7 @@
                 <i class="fas fa-user-tag text-success"></i> الاسم بالعربية
               </label>
               <input type="text" name="full_name_ar" class="form-control" placeholder="أحمد محمد علي"
-                     value="{{ form_data.get('full_name_ar', '') }}">
+                     value="{{ form_data.get('full_name_ar', '') }}" minlength="2" maxlength="100">
               <small class="form-text text-muted">الاسم الكامل بالعربية</small>
             </div>
           </div>
@@ -173,7 +173,7 @@
                 <i class="fas fa-phone text-warning"></i> رقم الهاتف
               </label>
               <input type="text" name="phone" class="form-control" placeholder="+971-50-123-4567"
-                     value="{{ form_data.get('phone', '') }}">
+                     value="{{ form_data.get('phone', '') }}" pattern="^\+?[0-9\s\-]{8,20}$">
               <small class="form-text text-muted">رقم الهاتف للتواصل</small>
             </div>
           </div>
@@ -202,7 +202,7 @@
                 <i class="fas fa-check-circle text-success"></i> تأكيد كلمة المرور
                 <span class="text-danger">*</span>
               </label>
-              <input type="password" name="confirm_password" id="confirm_password" class="form-control" placeholder="••••••••" required>
+              <input type="password" name="confirm_password" id="confirm_password" class="form-control" placeholder="••••••••" required minlength="6">
               <small class="form-text text-muted">أعد كتابة كلمة المرور</small>
               <div id="password-match-message" class="mt-2"></div>
             </div>

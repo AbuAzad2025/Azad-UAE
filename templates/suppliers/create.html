@@ -115,7 +115,7 @@
               <span class="text-danger">*</span>
             </label>
             <input type="text" name="name" class="form-control" required
-                   placeholder="اسم المورد بالعربي">
+                   placeholder="اسم المورد بالعربي" minlength="2" maxlength="100">
           </div>
         </div>
         
@@ -125,7 +125,7 @@
               <i class="fas fa-font text-info"></i> الاسم بالإنجليزية
             </label>
             <input type="text" name="name_en" class="form-control"
-                   placeholder="Supplier Name">
+                   placeholder="Supplier Name" minlength="2" maxlength="100">
           </div>
         </div>
         
@@ -135,7 +135,7 @@
               <i class="fas fa-building text-primary"></i> اسم الشركة
             </label>
             <input type="text" name="company_name" class="form-control"
-                   placeholder="Company Name LLC">
+                   placeholder="Company Name LLC" minlength="2" maxlength="100">
           </div>
         </div>
       </div>
@@ -219,7 +219,7 @@
               <span class="text-danger">*</span>
             </label>
             <input type="text" name="phone" class="form-control" required
-                   placeholder="+971-5x-xxx-xxxx">
+                   placeholder="+971-5x-xxx-xxxx" pattern="^\+?[0-9\s\-]{8,20}$">
           </div>
         </div>
         
@@ -229,7 +229,7 @@
               <i class="fas fa-mobile-alt text-info"></i> الهاتف 2
             </label>
             <input type="text" name="phone2" class="form-control"
-                   placeholder="+971-xx-xxx-xxxx">
+                   placeholder="+971-xx-xxx-xxxx" pattern="^\+?[0-9\s\-]{8,20}$">
           </div>
         </div>
         
@@ -273,7 +273,7 @@
           <div class="form-group">
             <label for="input_address">{{ t('Address') }}</label>
             <input type="text" name="address" class="form-control"
-                   placeholder="{{ t('Full Address') }}" id="input_address">
+                   placeholder="{{ t('Full Address') }}" id="input_address" maxlength="255">
           </div>
         </div>
       </div>
@@ -296,7 +296,7 @@
               <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="الرقم الضريبي للمورد (15 رقم)"></i>
             </label>
             <input type="text" name="tax_number" class="form-control"
-                   placeholder="123456789012345">
+                   placeholder="123456789012345" maxlength="20">
           </div>
         </div>
         
@@ -374,7 +374,7 @@
           <div class="form-group">
             <label>{{ t('Notes') }}</label>
             <textarea name="notes" class="form-control" rows="3"
-                      placeholder="أي ملاحظات إضافية عن المورد..."></textarea>
+                      placeholder="أي ملاحظات إضافية عن المورد..." maxlength="500"></textarea>
           </div>
         </div>
       </div>

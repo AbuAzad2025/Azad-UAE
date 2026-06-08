@@ -111,13 +111,13 @@
             <div class="col-xl-4 col-lg-6">
               <div class="form-group">
                 <label for="input_name_ar">الاسم بالعربي *</label>
-                <input type="text" name="name_ar" class="form-control compact-control" value="{{ tenant.name_ar or '' }}" required id="input_name_ar" aria-label="name ar">
+                <input type="text" name="name_ar" class="form-control compact-control" value="{{ tenant.name_ar or '' }}" required id="input_name_ar" aria-label="name ar" minlength="2" maxlength="100">
               </div>
             </div>
             <div class="col-xl-4 col-lg-6">
               <div class="form-group">
                 <label for="input_name_en">الاسم بالإنجليزي</label>
-                <input type="text" name="name_en" class="form-control compact-control" value="{{ tenant.name_en or '' }}" id="input_name_en" aria-label="name en">
+                <input type="text" name="name_en" class="form-control compact-control" value="{{ tenant.name_en or '' }}" id="input_name_en" aria-label="name en" minlength="2" maxlength="100">
               </div>
             </div>
             <div class="col-xl-4 col-lg-12">
@@ -164,13 +164,13 @@
             <div class="col-md-6">
               <div class="form-group">
                 <label for="company_address_ar">العنوان بالعربي</label>
-                <textarea id="company_address_ar" name="address_ar" class="form-control" rows="2" aria-label="address ar">{{ tenant.address_ar or '' }}</textarea>
+                <textarea id="company_address_ar" name="address_ar" class="form-control" rows="2" aria-label="address ar" maxlength="255">{{ tenant.address_ar or '' }}</textarea>
               </div>
             </div>
             <div class="col-md-6">
               <div class="form-group">
                 <label for="company_address_en">العنوان بالإنجليزي</label>
-                <textarea id="company_address_en" name="address_en" class="form-control" rows="2" aria-label="address en">{{ tenant.address_en or '' }}</textarea>
+                <textarea id="company_address_en" name="address_en" class="form-control" rows="2" aria-label="address en" maxlength="255">{{ tenant.address_en or '' }}</textarea>
               </div>
             </div>
           </div>
@@ -204,19 +204,19 @@
             <div class="col-md-3">
               <div class="form-group">
                 <label for="input_phone_1">هاتف 1</label>
-                <input type="tel" name="phone_1" class="form-control" value="{{ tenant.phone_1 or '' }}" id="input_phone_1" aria-label="phone 1">
+                <input type="tel" name="phone_1" class="form-control" value="{{ tenant.phone_1 or '' }}" id="input_phone_1" aria-label="phone 1" pattern="^\+?[0-9\s\-]{8,20}$">
               </div>
             </div>
             <div class="col-md-3">
               <div class="form-group">
                 <label for="input_phone_2">هاتف 2</label>
-                <input type="tel" name="phone_2" class="form-control" value="{{ tenant.phone_2 or '' }}" id="input_phone_2" aria-label="phone 2">
+                <input type="tel" name="phone_2" class="form-control" value="{{ tenant.phone_2 or '' }}" id="input_phone_2" aria-label="phone 2" pattern="^\+?[0-9\s\-]{8,20}$">
               </div>
             </div>
             <div class="col-md-3">
               <div class="form-group">
                 <label for="input_mobile">موبايل</label>
-                <input type="tel" name="mobile" class="form-control" value="{{ tenant.mobile or '' }}" id="input_mobile" aria-label="mobile">
+                <input type="tel" name="mobile" class="form-control" value="{{ tenant.mobile or '' }}" id="input_mobile" aria-label="mobile" pattern="^\+?[0-9\s\-]{8,20}$">
               </div>
             </div>
             <div class="col-md-3">
@@ -243,7 +243,7 @@
             <div class="col-md-4">
               <div class="form-group">
                 <label for="input_tax_number">الرقم الضريبي (TRN)</label>
-                <input type="text" name="tax_number" class="form-control" value="{{ tenant.tax_number or '' }}" id="input_tax_number" aria-label="tax number">
+                <input type="text" name="tax_number" class="form-control" value="{{ tenant.tax_number or '' }}" id="input_tax_number" aria-label="tax number" maxlength="20">
               </div>
             </div>
             <div class="col-md-4">

@@ -490,7 +490,7 @@
 
             </label>
 
-            <input type="text" name="supplier_phone" id="supplier_phone" class="form-control" readonly aria-label="supplier phone">
+            <input type="text" name="supplier_phone" id="supplier_phone" class="form-control" readonly aria-label="supplier phone" pattern="^\+?[0-9\s\-]{8,20}$">
 
           </div>
 
@@ -732,7 +732,7 @@
 
             <textarea name="notes" id="notes" class="form-control" rows="4" 
 
-                      placeholder="أي ملاحظات إضافية عن فاتورة الشراء..."></textarea>
+                      placeholder="أي ملاحظات إضافية عن فاتورة الشراء..." maxlength="500"></textarea>
 
           </div>
 

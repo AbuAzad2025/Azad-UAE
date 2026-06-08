@@ -22,11 +22,11 @@
           <div class="row g-3">
             <div class="col-md-6">
               <label class="form-label fw-semibold" for="input_name_ar">الاسم العربي</label>
-              <input type="text" name="name_ar" class="form-control" value="{{ tenant.name_ar or '' }}" required id="input_name_ar" aria-label="name ar">
+              <input type="text" name="name_ar" class="form-control" value="{{ tenant.name_ar or '' }}" required id="input_name_ar" aria-label="name ar" minlength="2" maxlength="100">
             </div>
             <div class="col-md-6">
               <label class="form-label fw-semibold" for="input_name_en">الاسم الإنجليزي</label>
-              <input type="text" name="name_en" class="form-control" value="{{ tenant.name_en or '' }}" id="input_name_en" aria-label="name en">
+              <input type="text" name="name_en" class="form-control" value="{{ tenant.name_en or '' }}" id="input_name_en" aria-label="name en" minlength="2" maxlength="100">
             </div>
             <div class="col-md-6">
               <label class="form-label fw-semibold" for="input_slug">الاسم الفريد (Slug)</label>
@@ -38,11 +38,11 @@
             </div>
             <div class="col-md-6">
               <label class="form-label fw-semibold" for="input_phone_1">الهاتف 1</label>
-              <input type="text" name="phone_1" class="form-control" value="{{ tenant.phone_1 or '' }}" id="input_phone_1" aria-label="phone 1">
+              <input type="text" name="phone_1" class="form-control" value="{{ tenant.phone_1 or '' }}" id="input_phone_1" aria-label="phone 1" pattern="^\+?[0-9\s\-]{8,20}$">
             </div>
             <div class="col-md-6">
               <label class="form-label fw-semibold" for="input_phone_2">الهاتف 2</label>
-              <input type="text" name="phone_2" class="form-control" value="{{ tenant.phone_2 or '' }}" id="input_phone_2" aria-label="phone 2">
+              <input type="text" name="phone_2" class="form-control" value="{{ tenant.phone_2 or '' }}" id="input_phone_2" aria-label="phone 2" pattern="^\+?[0-9\s\-]{8,20}$">
             </div>
             <div class="col-md-6">
               <label class="form-label fw-semibold" for="input_email">البريد الإلكتروني</label>
@@ -58,7 +58,7 @@
             </div>
             <div class="col-12">
               <label class="form-label fw-semibold">العنوان</label>
-              <textarea name="address_ar" class="form-control" rows="2" aria-label="address ar">{{ tenant.address_ar or '' }}</textarea>
+              <textarea name="address_ar" class="form-control" rows="2" aria-label="address ar" maxlength="255">{{ tenant.address_ar or '' }}</textarea>
             </div>
             <div class="col-md-4">
               <label class="form-label fw-semibold" for="input_max_users">حد المستخدمين</label>

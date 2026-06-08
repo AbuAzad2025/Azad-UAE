@@ -40,7 +40,7 @@
               <i class="fas fa-box text-primary"></i> الاسم 
               <span class="text-danger">*</span>
             </label>
-            <input type="text" name="name" class="form-control" value="{{ product.name }}" required aria-label="name">
+            <input type="text" name="name" class="form-control" value="{{ product.name }}" required aria-label="name" minlength="2" maxlength="100">
           </div>
         </div>
         <div class="col-md-6">
@@ -48,7 +48,7 @@
             <label>
               <i class="fas fa-font text-info"></i> الاسم بالعربي
             </label>
-            <input type="text" name="name_ar" class="form-control" value="{{ product.name_ar or '' }}" aria-label="name ar">
+            <input type="text" name="name_ar" class="form-control" value="{{ product.name_ar or '' }}" aria-label="name ar" minlength="2" maxlength="100">
           </div>
         </div>
       </div>
@@ -60,7 +60,7 @@
               <i class="fas fa-hashtag text-primary"></i> رقم القطعة (SKU)
               <span class="text-danger">*</span>
             </label>
-            <input type="text" name="sku" class="form-control" value="{{ product.sku or '' }}" required aria-label="sku">
+            <input type="text" name="sku" class="form-control" value="{{ product.sku or '' }}" required aria-label="sku" maxlength="50">
           </div>
         </div>
         <div class="col-md-6 col-lg-3">
@@ -78,7 +78,7 @@
               <i class="fas fa-barcode text-secondary"></i> {{ t('Barcode') }}
               <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="الباركود (اختياري)"></i>
             </label>
-            <input type="text" name="barcode" class="form-control" value="{{ product.barcode or '' }}" aria-label="barcode">
+            <input type="text" name="barcode" class="form-control" value="{{ product.barcode or '' }}" aria-label="barcode" maxlength="50">
           </div>
         </div>
         <div class="col-md-6 col-lg-3">
@@ -122,7 +122,7 @@
               <i class="fas fa-dollar-sign text-danger"></i> سعر التكلفة
               <span class="text-danger">*</span>
             </label>
-            <input type="number" name="cost_price" class="form-control" value="{{ product.cost_price }}" step="0.01" required aria-label="cost price">
+            <input type="number" name="cost_price" class="form-control" value="{{ product.cost_price }}" step="0.01" required aria-label="cost price" min="0">
           </div>
         </div>
         <div class="col-md-3">
@@ -132,7 +132,7 @@
               <span class="text-danger">*</span>
               <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="سعر التجزئة (إجباري)"></i>
             </label>
-            <input type="number" name="regular_price" class="form-control" value="{{ product.regular_price }}" step="0.01" required aria-label="regular price">
+            <input type="number" name="regular_price" class="form-control" value="{{ product.regular_price }}" step="0.01" required aria-label="regular price" min="0">
           </div>
         </div>
         <div class="col-md-3">
@@ -160,7 +160,7 @@
           <i class="fas fa-align-left text-secondary"></i> {{ t('Description') }}
           <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="وصف تفصيلي (اختياري)"></i>
         </label>
-        <textarea name="description" class="form-control" rows="3" aria-label="description">{{ product.description or '' }}</textarea>
+        <textarea name="description" class="form-control" rows="3" aria-label="description" maxlength="500">{{ product.description or '' }}</textarea>
       </div>
 
       <hr>
