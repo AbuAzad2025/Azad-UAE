@@ -12,30 +12,23 @@ def test_export_excel_scoping_customers(app):
     with app.app_context():
         with patch('routes.owner.get_active_tenant_id', return_value=1), \
              patch('routes.owner._owner_branch_scope', return_value=None), \
-             patch('models.Customer') as mock_customer_model, \
+             patch('routes.owner.Customer') as mock_customer_model, \
              patch('routes.owner.flash'), patch('routes.owner.redirect'), patch('routes.owner.url_for'), \
              patch('flask.send_file'), patch('routes.owner._audit_owner_db_action'):
             
-            # The code: model = model_map[normalized] where model_map['customers'] = Customer
-            # And query = model.query.filter_by(tenant_id=tid)
-            print(f"DEBUG: Customer Model: {mock_customer_model}")
             mock_query = MagicMock()
             mock_customer_model.query = mock_query
-            
-            # Setup chaining
             mock_query.filter_by.return_value.all.return_value = []
             
             export_excel('customers')
             
-            # Verify the call
-            print(f"DEBUG: Was filter_by called? {mock_query.filter_by.called}")
             mock_query.filter_by.assert_called_with(tenant_id=1)
 
 def test_export_excel_scoping_products(app):
     with app.app_context():
         with patch('routes.owner.get_active_tenant_id', return_value=1), \
              patch('routes.owner._owner_branch_scope', return_value=None), \
-             patch('models.Product') as mock_product_model, \
+             patch('routes.owner.Product') as mock_product_model, \
              patch('routes.owner.flash'), patch('routes.owner.redirect'), patch('routes.owner.url_for'), \
              patch('flask.send_file'), patch('routes.owner._audit_owner_db_action'):
             
@@ -50,27 +43,24 @@ def test_export_excel_scoping_sales_with_branch(app):
     with app.app_context():
         with patch('routes.owner.get_active_tenant_id', return_value=1), \
              patch('routes.owner._owner_branch_scope', return_value=10), \
-             patch('models.Sale') as mock_sale_model, \
+             patch('routes.owner.Sale') as mock_sale_model, \
              patch('routes.owner.flash'), patch('routes.owner.redirect'), patch('routes.owner.url_for'), \
              patch('flask.send_file'), patch('routes.owner._audit_owner_db_action'):
             
             mock_query = MagicMock()
             mock_sale_model.query = mock_query
             
-            # Chaining mock
             mock_query.filter_by.return_value.filter_by.return_value.all.return_value = []
             
             export_excel('sales')
-            # Verify tenant scope
             mock_query.filter_by.assert_called_with(tenant_id=1)
-            # Verify branch scope
             mock_query.filter_by.return_value.filter_by.assert_called_with(branch_id=10)
 
 def test_export_excel_scoping_expenses_with_branch(app):
     with app.app_context():
         with patch('routes.owner.get_active_tenant_id', return_value=1), \
              patch('routes.owner._owner_branch_scope', return_value=10), \
-             patch('models.Expense') as mock_expense_model, \
+             patch('routes.owner.Expense') as mock_expense_model, \
              patch('routes.owner.flash'), patch('routes.owner.redirect'), patch('routes.owner.url_for'), \
              patch('flask.send_file'), patch('routes.owner._audit_owner_db_action'):
             

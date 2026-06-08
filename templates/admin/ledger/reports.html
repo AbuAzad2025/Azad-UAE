@@ -128,12 +128,12 @@
             <h6>تقرير مخصص حسب التاريخ:</h6>
             <form method="GET" action="{{ url_for('ledger.admin_trial_balance') }}" class="ledger-reports-form">
               <div class="form-group">
-                <label>من تاريخ:</label>
-                <input type="date" name="date_from" class="form-control" required>
+                <label for="tb_date_from">من تاريخ:</label>
+                <input type="date" id="tb_date_from" name="date_from" class="form-control" required>
               </div>
               <div class="form-group">
-                <label>إلى تاريخ:</label>
-                <input type="date" name="date_to" class="form-control" required>
+                <label for="tb_date_to">إلى تاريخ:</label>
+                <input type="date" id="tb_date_to" name="date_to" class="form-control" required>
               </div>
               <button type="submit" class="btn btn-primary">
                 <i class="fas fa-search mr-2"></i>إنشاء التقرير
@@ -147,19 +147,18 @@
             <form method="GET" action="{{ url_for('ledger.account_statement', id=0) }}" id="accountStatementForm" class="ledger-reports-form">
             {% endif %}
               <div class="form-group">
-                <label>اختر الحساب:</label>
-                <select name="account_id" class="form-control" required>
+                <label for="stmt_account_id">اختر الحساب:</label>
+                <select id="stmt_account_id" name="account_id" class="form-control" required>
                   <option value="">بلا</option>
-                  <!-- سيتم ملء هذا من JavaScript -->
                 </select>
               </div>
               <div class="form-group">
-                <label>من تاريخ:</label>
-                <input type="date" name="date_from" class="form-control">
+                <label for="stmt_date_from">من تاريخ:</label>
+                <input type="date" id="stmt_date_from" name="date_from" class="form-control">
               </div>
               <div class="form-group">
-                <label>إلى تاريخ:</label>
-                <input type="date" name="date_to" class="form-control">
+                <label for="stmt_date_to">إلى تاريخ:</label>
+                <input type="date" id="stmt_date_to" name="date_to" class="form-control">
               </div>
               <button type="submit" class="btn btn-success">
                 <i class="fas fa-file-alt mr-2"></i>كشف الحساب

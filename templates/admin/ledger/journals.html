@@ -66,11 +66,11 @@
             </td>
             <td>
               <div class="btn-group btn-group-sm">
-                {% if current_user.has_permission('view_ledger') %}<a href="{{ url_for('ledger.view_entry', id=entry.id) }}" class="btn btn-outline-primary btn-sm">
+                {% if current_user.has_permission('view_ledger') %}<a href="{{ url_for('ledger.view_entry', id=entry.id) }}" class="btn btn-outline-primary btn-sm" title="عرض القيد">
                   <i class="fas fa-eye"></i>
                 </a>{% endif %}
                 {% if not entry.is_reversed %}
-                <button type="button" class="btn btn-outline-danger btn-sm" onclick="reverseEntry({{ entry.id }})">
+                <button type="button" class="btn btn-outline-danger btn-sm" onclick="reverseEntry({{ entry.id }})" title="عكس القيد">
                   <i class="fas fa-undo"></i>
                 </button>
                 {% endif %}
