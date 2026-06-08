@@ -1,4 +1,9 @@
 (function() {
+  var STORAGE_MODE = 'ui_mode';
+  var STORAGE_VARIANT = 'ui_variant';
+  var STORAGE_SIDEBAR = 'sidebarLayout';
+  var STORAGE_SIDEBAR_DIR = 'sidebarLayoutDir';
+
   function normalizeMode(v) {
     return v === 'dark' ? 'dark' : 'light';
   }
@@ -7,8 +12,16 @@
     return v === 'gulf' ? 'gulf' : 'palestinian';
   }
 
+  function normalizeSidebarSide(v) {
+    return v === 'left' ? 'left' : v === 'right' ? 'right' : null;
+  }
+
+  function getDefaultSidebarSide() {
+    return document.documentElement.getAttribute('dir') === 'rtl' ? 'right' : 'left';
+  }
+
   function getInitialMode() {
-    const stored = localStorage.getItem('ui_mode');
+    var stored = localStorage.getItem(STORAGE_MODE);
     if (stored) {
       return normalizeMode(stored);
     }
@@ -20,94 +33,123 @@
   }
 
   function getInitialVariant() {
-    const stored = localStorage.getItem('ui_variant');
+    var stored = localStorage.getItem(STORAGE_VARIANT);
     if (stored) {
       return normalizeVariant(stored);
     }
     return 'palestinian';
   }
 
-  function applyTheme(mode, variant) {
-    const el = document.documentElement;
-    el.dataset.uiMode = mode;
-    el.dataset.uiVariant = variant;
-    localStorage.setItem('ui_mode', mode);
-    localStorage.setItem('ui_variant', variant);
+  function getInitialSidebarSide() {
+    var stored = normalizeSidebarSide(localStorage.getItem(STORAGE_SIDEBAR));
+    var storedDir = localStorage.getItem(STORAGE_SIDEBAR_DIR);
+    var currentDir = document.documentElement.getAttribute('dir') || 'rtl';
 
-    const toggle = document.querySelector('[data-ui-action="toggle-mode"]');
-    if (toggle) {
-      toggle.setAttribute('data-ui-mode', mode);
-      toggle.setAttribute('aria-pressed', mode === 'dark' ? 'true' : 'false');
-      const label = toggle.querySelector('[data-ui-role="mode-label"]');
-      if (label) {
-        label.textContent = mode === 'dark' ? 'داكن' : 'فاتح';
-      }
-      const icon = toggle.querySelector('[data-ui-role="mode-icon"]');
-      if (icon) {
-        icon.className = mode === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
-      }
+    if (!stored) {
+      return getDefaultSidebarSide();
     }
 
-    const variantSelect = document.querySelector('[data-ui-action="set-variant"]');
+    if (storedDir && storedDir !== currentDir) {
+      return getDefaultSidebarSide();
+    }
+
+    return stored;
+  }
+
+  function applySidebarSide(side) {
+    var body = document.body;
+    if (!body) return;
+    var normalized = normalizeSidebarSide(side) || getDefaultSidebarSide();
+    body.dataset.sidebarSide = normalized;
+    localStorage.setItem(STORAGE_SIDEBAR, normalized);
+    localStorage.setItem(STORAGE_SIDEBAR_DIR, document.documentElement.getAttribute('dir') || 'rtl');
+  }
+
+  function updateModeToggle(mode) {
+    var toggle = document.querySelector('[data-ui-action="toggle-mode"]');
+    if (!toggle) return;
+
+    toggle.setAttribute('data-ui-mode', mode);
+    toggle.setAttribute('aria-pressed', mode === 'dark' ? 'true' : 'false');
+
+    if (mode === 'dark') {
+      toggle.setAttribute('aria-label', 'التبديل إلى الوضع الفاتح');
+      toggle.setAttribute('title', 'التبديل إلى الوضع الفاتح');
+    } else {
+      toggle.setAttribute('aria-label', 'التبديل إلى الوضع الداكن');
+      toggle.setAttribute('title', 'التبديل إلى الوضع الداكن');
+    }
+
+    var label = toggle.querySelector('[data-ui-role="mode-label"]');
+    if (label) {
+      label.textContent = mode === 'dark' ? 'داكن' : 'فاتح';
+    }
+
+    var icon = toggle.querySelector('[data-ui-role="mode-icon"]');
+    if (icon) {
+      icon.className = mode === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
+    }
+  }
+
+  function applyTheme(mode, variant) {
+    mode = normalizeMode(mode);
+    variant = normalizeVariant(variant);
+
+    var el = document.documentElement;
+    el.dataset.uiMode = mode;
+    el.dataset.uiVariant = variant;
+    localStorage.setItem(STORAGE_MODE, mode);
+    localStorage.setItem(STORAGE_VARIANT, variant);
+
+    updateModeToggle(mode);
+
+    var variantSelect = document.querySelector('[data-ui-action="set-variant"]');
     if (variantSelect && variantSelect.value !== variant) {
       variantSelect.value = variant;
     }
   }
 
   function boot() {
-    const initialMode = getInitialMode();
-    const initialVariant = getInitialVariant();
-    applyTheme(initialMode, initialVariant);
+    applyTheme(getInitialMode(), getInitialVariant());
+    applySidebarSide(getInitialSidebarSide());
 
-    const savedSidebar = localStorage.getItem('sidebarLayout');
-    const initialSidebar = savedSidebar === 'left' ? 'left' : savedSidebar === 'right' ? 'right' : null;
-    const body = document.body;
-    if (body) {
-      if (initialSidebar) {
-        body.dataset.sidebarSide = initialSidebar;
-      } else if (!body.dataset.sidebarSide) {
-        body.dataset.sidebarSide = document.documentElement.getAttribute('dir') === 'rtl' ? 'right' : 'left';
-      }
-    }
-
-    const toggle = document.querySelector('[data-ui-action="toggle-mode"]');
+    var toggle = document.querySelector('[data-ui-action="toggle-mode"]');
     if (toggle) {
       toggle.addEventListener('click', function(ev) {
         ev.preventDefault();
-        const current = normalizeMode(document.documentElement.dataset.uiMode || 'light');
-        const next = current === 'dark' ? 'light' : 'dark';
-        const variant = normalizeVariant(document.documentElement.dataset.uiVariant || 'palestinian');
+        var current = normalizeMode(document.documentElement.dataset.uiMode || 'light');
+        var next = current === 'dark' ? 'light' : 'dark';
+        var variant = normalizeVariant(document.documentElement.dataset.uiVariant || 'palestinian');
         applyTheme(next, variant);
       });
     }
 
-    const variantSelect = document.querySelector('[data-ui-action="set-variant"]');
+    var variantSelect = document.querySelector('[data-ui-action="set-variant"]');
     if (variantSelect) {
       variantSelect.addEventListener('change', function() {
-        const variant = normalizeVariant(this.value);
-        const mode = normalizeMode(document.documentElement.dataset.uiMode || 'light');
+        var variant = normalizeVariant(this.value);
+        var mode = normalizeMode(document.documentElement.dataset.uiMode || 'light');
         applyTheme(mode, variant);
       });
     }
 
     window.toggleSidebarDirection = function() {
-      const b = document.body;
-      if (!b) return;
-      const current = b.dataset.sidebarSide === 'left' ? 'left' : 'right';
-      const next = current === 'left' ? 'right' : 'left';
-      b.dataset.sidebarSide = next;
-      localStorage.setItem('sidebarLayout', next);
+      var body = document.body;
+      if (!body) return;
+      var current = body.dataset.sidebarSide === 'left' ? 'left' : 'right';
+      var next = current === 'left' ? 'right' : 'left';
+      applySidebarSide(next);
     };
 
-    const flashes = document.querySelectorAll('.flash-message');
-    flashes.forEach((el) => {
-      const bar = el.querySelector('.flash-timer');
+    var flashes = document.querySelectorAll('.flash-message');
+    flashes.forEach(function(el) {
+      var bar = el.querySelector('.flash-timer');
       if (bar) {
-        requestAnimationFrame(() => {
+        requestAnimationFrame(function() {
           bar.style.width = '0%';
         });
       }
-      window.setTimeout(() => {
+      window.setTimeout(function() {
         try {
           if (window.jQuery && window.jQuery.fn && window.jQuery.fn.alert) {
             window.jQuery(el).alert('close');
@@ -125,4 +167,3 @@
     boot();
   }
 })();
-

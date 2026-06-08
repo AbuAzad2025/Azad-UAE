@@ -99,11 +99,11 @@ class Config:
     SQLALCHEMY_ENGINE_OPTIONS = {
         "pool_pre_ping": True,
         "pool_recycle": 1800,
-        "pool_size": 10,
-        "max_overflow": 20,
     }
     
     if _db_uri.startswith("postgresql"):
+        SQLALCHEMY_ENGINE_OPTIONS["pool_size"] = 10
+        SQLALCHEMY_ENGINE_OPTIONS["max_overflow"] = 20
         SQLALCHEMY_ENGINE_OPTIONS["connect_args"] = {"options": "-c statement_timeout=5000"}
     
     SQLALCHEMY_ECHO = False

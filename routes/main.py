@@ -1,15 +1,16 @@
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
-from flask import Blueprint, render_template, current_app, redirect, url_for
+from flask import Blueprint, render_template, current_app, redirect, url_for, request, flash
 from flask_login import login_required, current_user
 from sqlalchemy import func
 from sqlalchemy.orm import joinedload
 from extensions import db
-from models import Sale, Customer, Product, Payment, Receipt, GLAccount, GLJournalLine
+from models import Sale, Customer, Product, Payment, Receipt, GLAccount, GLJournalLine, User
 from services.stock_service import StockService
 from utils.decorators import branch_scope_id
 from utils.branching import get_visible_products_query
 from utils.tenanting import get_active_tenant_id
+from utils.gl_tenant import get_gl_account_by_code
 
 main_bp = Blueprint('main', __name__)
 

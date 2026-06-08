@@ -100,12 +100,6 @@
   }
   </script>
   
-  <style>
-    /* D6: externalized inline styles */
-    .ic-1 { max-width: 480px; }
-    .ic-2 { max-height: 320px; overflow-y: auto; }
-    .ic-3 { display:none; }
-  </style>
 </head>
 
 <body class="hold-transition sidebar-mini layout-fixed" data-sidebar-side="{{ 'right' if is_rtl else 'left' }}">
@@ -203,30 +197,31 @@
       </li>
       {% endif %}
 
-      <li class="nav-item erp-header-control d-none d-lg-flex">
-        <select class="custom-select custom-select-sm" data-ui-action="set-variant" aria-label="اختيار النسخة">
+      <li class="nav-item erp-header-control erp-theme-controls d-none d-lg-flex">
+        <select class="custom-select custom-select-sm erp-variant-select" data-ui-action="set-variant" aria-label="اختيار الثيم: فلسطيني أو خليجي" title="اختيار الثيم">
           <option value="palestinian">فلسطيني</option>
           <option value="gulf">خليجي</option>
         </select>
       </li>
 
       <li class="nav-item erp-header-control">
-        <button type="button" class="btn btn-outline-light" data-ui-action="toggle-mode">
-          <i class="fas fa-sun" data-ui-role="mode-icon"></i>
-          <span class="d-none d-md-inline ml-2" data-ui-role="mode-label">فاتح</span>
+        <button type="button" class="btn btn-outline-light erp-mode-toggle" data-ui-action="toggle-mode" aria-label="التبديل إلى الوضع الداكن" title="التبديل إلى الوضع الداكن">
+          <i class="fas fa-sun" data-ui-role="mode-icon" aria-hidden="true"></i>
+          <span class="d-none d-md-inline" data-ui-role="mode-label">فاتح</span>
         </button>
       </li>
 
-      <li class="nav-item erp-header-control">
+      <li class="nav-item erp-header-control d-none d-sm-flex">
         <button
           type="button"
-          class="btn btn-outline-light"
+          class="btn btn-outline-light erp-calc-toggle"
           data-toggle="modal"
           data-target="#navbarCalculatorModal"
           title="الآلة الحاسبة"
+          aria-label="الآلة الحاسبة"
         >
-          <i class="fas fa-calculator"></i>
-          <span class="d-none d-md-inline ml-2">حاسبة</span>
+          <i class="fas fa-calculator" aria-hidden="true"></i>
+          <span class="d-none d-md-inline">حاسبة</span>
         </button>
       </li>
       
@@ -241,10 +236,10 @@
       {% endif %}
       
       <!-- Sidebar Direction Toggle -->
-      <li class="nav-item">
-        <a class="nav-link" href="#" onclick="toggleSidebarDirection(); return false;" title="تبديل موقع القائمة الجانبية">
-          <i class="fas fa-exchange-alt erp-sidebar-toggle-icon"></i>
-          <span class="d-none d-md-inline">تبديل القائمة</span>
+      <li class="nav-item d-none d-md-inline-block">
+        <a class="nav-link erp-sidebar-dir-toggle" href="#" onclick="toggleSidebarDirection(); return false;" title="نقل القائمة الجانبية للجهة الأخرى" aria-label="نقل القائمة الجانبية للجهة الأخرى">
+          <i class="fas fa-exchange-alt erp-sidebar-toggle-icon" aria-hidden="true"></i>
+          <span class="d-none d-lg-inline">موقع القائمة</span>
         </a>
       </li>
       
@@ -293,7 +288,7 @@
 
   <!-- Currency Exchange Modal (عرض فقط — لا يُستخدم في الحسابات) -->
   <div class="modal fade" id="fxModal" tabindex="-1" role="dialog" aria-labelledby="fxModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered ic-1" role="document">
+    <div class="modal-dialog modal-dialog-centered erp-modal-fx" role="document">
       <div class="modal-content">
         <div class="modal-header bg-primary text-white py-2">
           <h6 class="modal-title" id="fxModalLabel"><i class="fas fa-coins mr-2"></i>أسعار الصرف (عرض فقط)</h6>
@@ -302,7 +297,7 @@
           </button>
         </div>
         <div class="modal-body p-0">
-          <div class="table-responsive ic-2">
+          <div class="table-responsive erp-modal-scroll">
             <table class="table table-sm table-striped table-hover text-center mb-0" id="fx-rates-table">
               <thead class="thead-dark">
                 <tr>
@@ -320,7 +315,7 @@
             <small class="text-muted" id="fx-last-updated">
               <i class="fas fa-sync-alt mr-1"></i>اضغط للتحديث
             </small>
-            <span id="fx-source-badge" class="badge badge-secondary ml-1 ic-3"></span>
+            <span id="fx-source-badge" class="badge badge-secondary ml-1 erp-fx-source-hidden"></span>
           </div>
         </div>
       </div>

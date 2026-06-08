@@ -413,6 +413,7 @@ def delete(id):
     if not _customer_in_scope(id):
         return render_template('errors/403.html'), 403
     
+    tid = get_active_tenant_id(current_user)
     try:
         # Check for related records preventing deletion
         sales_query = Sale.query.filter_by(customer_id=id, tenant_id=tid)

@@ -2562,6 +2562,11 @@ def preview_receipt(template):
         abort(403)
     settings = InvoiceSettings.get_active(tid)
     print_branding = get_print_header_context(tid)
+    try:
+        from models import Tenant
+        default_currency = (Tenant.get_current().default_currency or '').strip() or 'AED'
+    except Exception:
+        default_currency = 'AED'
     from utils.number_to_arabic import number_to_arabic_words
     from utils.qr_generator import generate_qr_data_url
 

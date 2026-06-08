@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify, flash, redirect, url_for
-from flask_login import login_required
+from flask_login import current_user, login_required
 from services.whatsapp_service import WhatsAppService
 from utils.decorators import admin_required, permission_required
 

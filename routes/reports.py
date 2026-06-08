@@ -1509,8 +1509,7 @@ def entity_report_fragment(type, id):
     try:
         from models import Receipt, Payment, PurchaseLine, Supplier
         scoped_branch_id = report_branch_scope_id()
-
-
+        tenant_id = get_active_tenant_id(current_user)
         
         context = {
             'entity': None,

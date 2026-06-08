@@ -146,7 +146,7 @@ class ErrorMessages:
         return f'ليس لديك صلاحية للقيام بـ "{action}".\nاتصل بالمدير لطلب الصلاحية.'
     
     @staticmethod
-    def owner_only():
+    def owner_only_message():
         return 'هذه الصفحة للمالك فقط.\nفقط مالك النظام يمكنه الوصول لهذه الميزة.'
     
     @staticmethod
