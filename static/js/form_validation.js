@@ -60,6 +60,13 @@
       }
     }
 
+    if (!err && input.dataset.equalTo) {
+      const target = document.querySelector(input.dataset.equalTo);
+      if (target && val !== target.value.trim()) {
+        err = MSG.equalTo;
+      }
+    }
+
     if (err) showError(input, err);
     else clearError(input);
     return !err;
