@@ -100,20 +100,20 @@
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="row g-3">
               <div class="col-md-6">
-                <label class="form-label fw-semibold">الاسم الكامل (إنجليزي)</label>
-                <input type="text" name="full_name" class="form-control" value="{{ user.full_name or '' }}">
+                <label class="form-label fw-semibold" for="profile_full_name">الاسم الكامل (إنجليزي)</label>
+                <input type="text" id="profile_full_name" name="full_name" class="form-control" value="{{ user.full_name or '' }}">
               </div>
               <div class="col-md-6">
-                <label class="form-label fw-semibold">الاسم الكامل (عربي)</label>
-                <input type="text" name="full_name_ar" class="form-control" value="{{ user.full_name_ar or '' }}">
+                <label class="form-label fw-semibold" for="profile_full_name_ar">الاسم الكامل (عربي)</label>
+                <input type="text" id="profile_full_name_ar" name="full_name_ar" class="form-control" value="{{ user.full_name_ar or '' }}">
               </div>
               <div class="col-md-6">
-                <label class="form-label fw-semibold">البريد الإلكتروني</label>
-                <input type="email" name="email" class="form-control" value="{{ user.email or '' }}">
+                <label class="form-label fw-semibold" for="profile_email">البريد الإلكتروني</label>
+                <input type="email" id="profile_email" name="email" class="form-control" value="{{ user.email or '' }}">
               </div>
               <div class="col-md-6">
-                <label class="form-label fw-semibold">رقم الهاتف</label>
-                <input type="text" name="phone" class="form-control" value="{{ user.phone or '' }}">
+                <label class="form-label fw-semibold" for="profile_phone">رقم الهاتف</label>
+                <input type="text" id="profile_phone" name="phone" class="form-control" value="{{ user.phone or '' }}">
               </div>
             </div>
 

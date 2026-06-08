@@ -6,11 +6,11 @@
   <form method="post">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="ps-hp" aria-hidden="true"><input type="text" name="website" tabindex="-1"></div>
-    <div class="ps-form-group"><label>{{ t('name') }} *</label><input type="text" name="name" required minlength="2"></div>
-    <div class="ps-form-group"><label>{{ t('email') }} *</label><input type="email" name="email" required dir="ltr"></div>
-    <div class="ps-form-group"><label>{{ t('phone') }} *</label><input type="tel" name="phone" required></div>
-    <div class="ps-form-group"><label>{{ t('address') }}</label><textarea name="address" rows="2"></textarea></div>
-    <div class="ps-form-group"><label>{{ t('password') }} *</label><input type="password" name="password" required minlength="6" autocomplete="new-password"></div>
+    <div class="ps-form-group"><label for="reg_name">{{ t('name') }} *</label><input type="text" id="reg_name" name="name" required minlength="2"></div>
+    <div class="ps-form-group"><label for="reg_email">{{ t('email') }} *</label><input type="email" id="reg_email" name="email" required dir="ltr"></div>
+    <div class="ps-form-group"><label for="reg_phone">{{ t('phone') }} *</label><input type="tel" id="reg_phone" name="phone" required></div>
+    <div class="ps-form-group"><label for="reg_address">{{ t('address') }}</label><textarea id="reg_address" name="address" rows="2"></textarea></div>
+    <div class="ps-form-group"><label for="reg_password">{{ t('password') }} *</label><input type="password" id="reg_password" name="password" required minlength="6" autocomplete="new-password"></div>
     <button type="submit" class="ps-btn ps-btn-primary ps-btn-block">{{ t('register') }}</button>
   </form>
   <p style="margin-top:1rem;text-align:center;"><a href="{{ url_for('shop.account_login', slug=store.store_slug) }}">{{ t('login') }}</a></p>
