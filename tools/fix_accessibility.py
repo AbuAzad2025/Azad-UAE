@@ -23,6 +23,9 @@ class AccessibilityFixer:
             content = f.read()
         original = content
 
+        # Fix 0: Pair preceding label text to controls lacking name/id
+        content = self._fix_label_paired_controls(content)
+
         # Fix 1: Buttons with only icon, no title
         content = self._fix_icon_buttons(content)
 
@@ -42,6 +45,37 @@ class AccessibilityFixer:
             with open(fpath, 'w', encoding='utf-8') as f:
                 f.write(content)
             self.files_changed.add(fpath)
+
+    def _fix_label_paired_controls(self, content: str) -> str:
+        """Add aria-label from preceding label text for controls lacking name/id."""
+        pattern = re.compile(
+            r'(<label[^>]*>)([^<]*?)(</label>\s*(?:<div[^>]*>\s*)?)'
+            r'(<(?:select|input|textarea)\s+)([^>]*?)(/?>)',
+            re.IGNORECASE
+        )
+
+        def _replace(m):
+            label_open = m.group(1)
+            label_text = m.group(2).strip()
+            between = m.group(3)
+            tag_open = m.group(4)
+            attrs = m.group(5)
+            tag_close = m.group(6)
+            low = attrs.lower()
+            if 'type="hidden"' in low:
+                return m.group(0)
+            if 'aria-label=' in low or 'title=' in low or 'placeholder=' in low or 'id=' in low or 'name=' in low:
+                return m.group(0)
+            if 'for=' in label_open.lower():
+                return m.group(0)
+            clean = re.sub(r'<[^>]+>', '', label_text).strip().rstrip(':*').strip()
+            if not clean:
+                return m.group(0)
+            attrs = attrs.rstrip()
+            self.fixed_count += 1
+            return label_open + m.group(2) + between + tag_open + attrs + ' aria-label="' + clean + '"' + tag_close
+
+        return pattern.sub(_replace, content)
 
     def _fix_icon_buttons(self, content: str) -> str:
         """Add title to buttons containing only <i> or <span> with icon classes."""
@@ -94,19 +128,24 @@ class AccessibilityFixer:
     def _fix_unlabeled_inputs(self, content: str) -> str:
         """Add accessible name to inputs that lack aria-label/title/placeholder."""
         pattern = re.compile(
-            r'(<input\s+[^>]*?name="([^"]+)"[^>]*?)(/?>\s*)',
+            r'(<input\s+[^>]*?)(/?>\s*)',
             re.IGNORECASE
         )
 
         def _replace(m):
             prefix = m.group(1)
-            name = m.group(2)
-            close = m.group(3)
+            close = m.group(2)
             low = prefix.lower()
+            if 'type="hidden"' in low:
+                return m.group(0)
             if 'aria-label=' in low or 'title=' in low or 'placeholder=' in low:
                 return m.group(0)
-            # Check if an associated label exists nearby
-            label_text = _name_to_label(name)
+            name_m = re.search(r'name="([^"]+)"', prefix)
+            id_m = re.search(r'id="([^"]+)"', prefix)
+            key = name_m.group(1) if name_m else (id_m.group(1) if id_m else None)
+            if not key:
+                return m.group(0)
+            label_text = _name_to_label(key)
             prefix = prefix.rstrip()
             if prefix.endswith('/'):
                 prefix = prefix[:-1].rstrip() + ' aria-label="' + label_text + '" /'
@@ -120,17 +159,21 @@ class AccessibilityFixer:
     def _fix_unlabeled_selects(self, content: str) -> str:
         """Add aria-label to selects without label."""
         pattern = re.compile(
-            r'(<select\s+[^>]*?name="([^"]+)"[^>]*?)(>)',
+            r'(<select\s+[^>]*?)(>)',
             re.IGNORECASE
         )
 
         def _replace(m):
             prefix = m.group(1)
-            name = m.group(2)
-            close = m.group(3)
+            close = m.group(2)
             if 'aria-label=' in prefix.lower() or 'title=' in prefix.lower():
                 return m.group(0)
-            aria = 'aria-label="' + _name_to_label(name) + '"'
+            name_m = re.search(r'name="([^"]+)"', prefix)
+            id_m = re.search(r'id="([^"]+)"', prefix)
+            key = name_m.group(1) if name_m else (id_m.group(1) if id_m else None)
+            if not key:
+                return m.group(0)
+            aria = 'aria-label="' + _name_to_label(key) + '"'
             prefix = prefix.rstrip()
             prefix += ' ' + aria
             self.fixed_count += 1

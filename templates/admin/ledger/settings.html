@@ -24,7 +24,7 @@
         <form action="">
           <div class="form-group">
             <label>العملة الأساسية:</label>
-            <select class="form-control">
+            <select class="form-control" aria-label="العملة الأساسية">
               <option value="AED" selected>درهم إماراتي (AED)</option>
               <option value="USD">دولار أمريكي (USD)</option>
               <option value="EUR">يورو (EUR)</option>
@@ -34,7 +34,7 @@
           
           <div class="form-group">
             <label>السنة المالية:</label>
-            <select class="form-control">
+            <select class="form-control" aria-label="السنة المالية">
               <option value="calendar">تقويمي (يناير - ديسمبر)</option>
               <option value="fiscal">مالي (أبريل - مارس)</option>
             </select>
@@ -42,7 +42,7 @@
           
           <div class="form-group">
             <label>نظام الترقيم:</label>
-            <select class="form-control">
+            <select class="form-control" aria-label="نظام الترقيم">
               <option value="auto">تلقائي</option>
               <option value="manual">يدوي</option>
             </select>
@@ -50,7 +50,7 @@
           
           <div class="form-group">
             <label>عدد الأرقام العشرية:</label>
-            <select class="form-control">
+            <select class="form-control" aria-label="عدد الأرقام العشرية">
               <option value="2" selected>2</option>
               <option value="3">3</option>
               <option value="4">4</option>
@@ -77,7 +77,7 @@
         <form action="">
           <div class="form-group">
             <label>طول كود الحساب:</label>
-            <select class="form-control">
+            <select class="form-control" aria-label="طول كود الحساب">
               <option value="4" selected>4 أرقام</option>
               <option value="6">6 أرقام</option>
               <option value="8">8 أرقام</option>
@@ -86,7 +86,7 @@
           
           <div class="form-group">
             <label>مستوى الحسابات:</label>
-            <select class="form-control">
+            <select class="form-control" aria-label="مستوى الحسابات">
               <option value="3" selected>3 مستويات</option>
               <option value="4">4 مستويات</option>
               <option value="5">5 مستويات</option>
@@ -96,7 +96,7 @@
           <div class="form-group">
             <label>التحقق من التوازن:</label>
             <div class="form-check">
-              <input type="checkbox" class="form-check-input" id="balance_check" checked>
+              <input type="checkbox" class="form-check-input" id="balance_check" checked aria-label="balance check">
               <label class="form-check-label" for="balance_check">
                 التحقق من توازن القيود تلقائياً
               </label>
@@ -106,7 +106,7 @@
           <div class="form-group">
             <label>التحقق من الحسابات الرئيسية:</label>
             <div class="form-check">
-              <input type="checkbox" class="form-check-input" id="header_check" checked>
+              <input type="checkbox" class="form-check-input" id="header_check" checked aria-label="header check">
               <label class="form-check-label" for="header_check">
                 منع القيود المباشرة على الحسابات الرئيسية
               </label>
@@ -135,7 +135,7 @@
         <form action="">
           <div class="form-group">
             <label>تنسيق التواريخ:</label>
-            <select class="form-control">
+            <select class="form-control" aria-label="تنسيق التواريخ">
               <option value="dd/mm/yyyy" selected>يوم/شهر/سنة</option>
               <option value="mm/dd/yyyy">شهر/يوم/سنة</option>
               <option value="yyyy-mm-dd">سنة-شهر-يوم</option>
@@ -144,7 +144,7 @@
           
           <div class="form-group">
             <label>تنسيق الأرقام:</label>
-            <select class="form-control">
+            <select class="form-control" aria-label="تنسيق الأرقام">
               <option value="1,234.56" selected>1,234.56</option>
               <option value="1.234,56">1.234,56</option>
               <option value="1 234,56">1 234,56</option>
@@ -153,7 +153,7 @@
           
           <div class="form-group">
             <label>اللغة الافتراضية:</label>
-            <select class="form-control">
+            <select class="form-control" aria-label="اللغة الافتراضية">
               <option value="ar" selected>العربية</option>
               <option value="en">الإنجليزية</option>
             </select>
@@ -162,7 +162,7 @@
           <div class="form-group">
             <label>تضمين الصفحة الرئيسية:</label>
             <div class="form-check">
-              <input type="checkbox" class="form-check-input" id="header_page" checked>
+              <input type="checkbox" class="form-check-input" id="header_page" checked aria-label="header page">
               <label class="form-check-label" for="header_page">
                 إضافة رأس الصفحة في التقارير
               </label>
@@ -189,18 +189,18 @@
         <form action="">
           <div class="form-group">
             <label>مدة انتهاء الجلسة (دقيقة):</label>
-            <input type="number" class="form-control" value="30" min="5" max="480">
+            <input type="number" class="form-control" value="30" min="5" max="480" aria-label="مدة انتهاء الجلسة (دقيقة)">
           </div>
           
           <div class="form-group">
             <label>عدد المحاولات المسموحة:</label>
-            <input type="number" class="form-control" value="3" min="1" max="10">
+            <input type="number" class="form-control" value="3" min="1" max="10" aria-label="عدد المحاولات المسموحة">
           </div>
           
           <div class="form-group">
             <label>تشفير البيانات:</label>
             <div class="form-check">
-              <input type="checkbox" class="form-check-input" id="encryption" checked>
+              <input type="checkbox" class="form-check-input" id="encryption" checked aria-label="encryption">
               <label class="form-check-label" for="encryption">
                 تشفير البيانات الحساسة
               </label>
@@ -210,7 +210,7 @@
           <div class="form-group">
             <label>سجل العمليات:</label>
             <div class="form-check">
-              <input type="checkbox" class="form-check-input" id="audit_log" checked>
+              <input type="checkbox" class="form-check-input" id="audit_log" checked aria-label="audit log">
               <label class="form-check-label" for="audit_log">
                 تسجيل جميع العمليات
               </label>
@@ -241,7 +241,7 @@
             <form action="">
               <div class="form-group">
                 <label>تكرار النسخ الاحتياطي:</label>
-                <select class="form-control">
+                <select class="form-control" aria-label="تكرار النسخ الاحتياطي">
                   <option value="daily" selected>يومي</option>
                   <option value="weekly">أسبوعي</option>
                   <option value="monthly">شهري</option>
@@ -250,12 +250,12 @@
               
               <div class="form-group">
                 <label>وقت النسخ الاحتياطي:</label>
-                <input type="time" class="form-control" value="02:00">
+                <input type="time" class="form-control" value="02:00" aria-label="وقت النسخ الاحتياطي">
               </div>
               
               <div class="form-group">
                 <label>عدد النسخ المحفوظة:</label>
-                <input type="number" class="form-control" value="30" min="1" max="365">
+                <input type="number" class="form-control" value="30" min="1" max="365" aria-label="عدد النسخ المحفوظة">
               </div>
               
               <button type="submit" class="btn btn-secondary">
