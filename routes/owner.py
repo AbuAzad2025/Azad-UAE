@@ -959,39 +959,8 @@ def execute_query():
 @owner_required
 def integrations():
     """عرض إعدادات التكاملات من قاعدة البيانات"""
-    # جلب إعدادات كل خدمة من قاعدة البيانات
-    whatsapp = IntegrationSettings.get_service_config('whatsapp')
-    email = IntegrationSettings.get_service_config('email')
-    redis = IntegrationSettings.get_service_config('redis')
-    currency_api = IntegrationSettings.get_service_config('currency_api')
-
-    integrations_data = {
-        'whatsapp': {
-            'enabled': whatsapp.enabled,
-            'config': whatsapp.get_config(),
-            'last_tested': whatsapp.last_tested_at,
-            'status': whatsapp.last_test_status or 'not_configured'
-        },
-        'email': {
-            'enabled': email.enabled,
-            'config': email.get_config(),
-            'last_tested': email.last_tested_at,
-            'status': email.last_test_status or 'not_configured'
-        },
-        'redis': {
-            'enabled': redis.enabled,
-            'config': redis.get_config(),
-            'last_tested': redis.last_tested_at,
-            'status': redis.last_test_status or 'not_configured'
-        },
-        'currency_api': {
-            'enabled': currency_api.enabled,
-            'config': currency_api.get_config(),
-            'last_tested': currency_api.last_tested_at,
-            'status': currency_api.last_test_status or 'not_configured'
-        }
-    }
-
+    from services.integration_service import IntegrationService
+    integrations_data = IntegrationService.get_integrations_context()
     return render_template('owner/integrations.html', integrations=integrations_data)
 
 @owner_bp.route('/integrations/update/<service>', methods=['POST'])
