@@ -138,6 +138,13 @@ ai_knowledge/data/training/*.json
 !ai_knowledge/data/training/improvement_goals.json
 
 
+# Dev-only scripts & outputs
+scripts/audit/*.txt
+scripts/backup/*.json
+
+# Large generated index files
+/PROJECT_AI_INDEX.md
+
 # Local analysis/cache files
 .codegraph/
 security-reports/
