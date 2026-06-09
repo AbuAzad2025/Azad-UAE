@@ -2721,3 +2721,23 @@ body.view-mobile .main-header .navbar-nav .nav-link[data-widget="pushmenu"] {
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
   border-radius: 5px;
 }
+
+/* ── Form Control & Select2 Centering ── */
+.form-control,
+.form-select,
+select,
+input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]):not([type="color"]) {
+  text-align: center;
+}
+textarea.form-control {
+  text-align: start;
+}
+
+.select2-container--bootstrap4 .select2-selection__rendered,
+.select2-results__option {
+  text-align: center;
+}
+
+.erp-footer-copyright {
+  border-top-color: var(--ui-border);
+}

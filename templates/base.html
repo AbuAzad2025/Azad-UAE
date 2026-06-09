@@ -13,8 +13,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   
   
-  <meta name="description" content="{% block meta_description %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - Ù†Ø¸Ø§Ù… Ù…ØªÙƒØ§Ù…Ù„ Ù„Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„Ù…Ø³ØªÙˆØ¯Ø¹Ø§Øª ÙˆØ§Ù„Ù…Ø¨ÙŠØ¹Ø§Øª ÙˆØ§Ù„Ù…Ø´ØªØ±ÙŠØ§Øª{% endblock %}">
-  <meta name="keywords" content="{% block meta_keywords %}Ù†Ø¸Ø§Ù… Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„Ù…Ø³ØªÙˆØ¯Ø¹Ø§ØªØŒ Ø¨Ø±Ù†Ø§Ù…Ø¬ Ù…Ø­Ø§Ø³Ø¨Ø©ØŒ ÙÙˆØ§ØªÙŠØ± Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠØ©ØŒ Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„Ù…Ø¨ÙŠØ¹Ø§ØªØŒ Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„Ù…Ø®Ø²ÙˆÙ†{% endblock %}">
+  <meta name="description" content="{% block meta_description %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - نظام متكامل لإدارة المستودعات والمبيعات والمشتريات{% endblock %}">
+  <meta name="keywords" content="{% block meta_keywords %}نظام إدارة المستودعات، برنامج محاسبة، فواتير إلكترونية، إدارة المبيعات، إدارة المخزون{% endblock %}">
   <meta name="author" content="{{ developer_name_ar or config.DEVELOPER_NAME_AR }}">
   <meta name="robots" content="{% block robots %}index, follow{% endblock %}">
   <meta name="language" content="{{ current_language }}">
@@ -49,11 +49,11 @@
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="preconnect" href="https://cdn.jsdelivr.net" integrity="sha384-R4QB47a9SQ6y4D38cAyN5aSMhASP1+n7pTwwA53PDbPPKawIMOd9ThfJA0zGZSPg" crossorigin="anonymous">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin="anonymous">
   
   
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N" crossorigin="anonymous">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css" integrity="sha384-qrt37eUXKQgF1p6OlpdB29OTyKryxbxdJHkvfVN4suujWnn6PibIvbnygcK4uJfA" crossorigin="anonymous" integrity="sha384-qrt37eUXKQgF1p6OlpdB29OTyKryxbxdJHkvfVN4suujWnn6PibIvbnYgcK4uJfA" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css" integrity="sha384-qrt37eUXKQgF1p6OlpdB29OTyKryxbxdJHkvfVN4suujWnn6PibIvbnYgcK4uJfA" crossorigin="anonymous">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/erp-theme.css') }}">
   
   
@@ -81,11 +81,11 @@
   {
     "@context": "https://schema.org",
     "@type": "Organization",
-    "name": "{{ developer_name_ar or developer_name or 'Ø´Ø±ÙƒØ© Ø£Ø²Ø§Ø¯ Ù„Ù„Ø£Ù†Ø¸Ù…Ø© Ø§Ù„Ø°ÙƒÙŠØ©' }}",
+    "name": "{{ developer_name_ar or developer_name or 'شركة أزاد للأنظمة الذكية' }}",
     "alternateName": "{{ developer_name or 'Azad Smart Systems' }}",
     "url": "{{ request.url_root }}",
     "logo": "{{ _logo_external }}",
-    "description": "Ù†Ø¸Ø§Ù… Ù…ØªÙƒØ§Ù…Ù„ Ù„Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„Ù…Ø³ØªÙˆØ¯Ø¹Ø§Øª ÙˆØ§Ù„Ù…Ø¨ÙŠØ¹Ø§Øª ÙˆØ§Ù„Ù…Ø´ØªØ±ÙŠØ§Øª Ù…Ø¹ Ø°ÙƒØ§Ø¡ Ø§ØµØ·Ù†Ø§Ø¹ÙŠ Ù…ØªÙ‚Ø¯Ù…",
+    "description": "نظام متكامل لإدارة المستودعات والمبيعات والمشتريات مع ذكاء اصطناعي متقدم",
     "address": {
       "@type": "PostalAddress",
       "addressCountry": "AE",
@@ -971,10 +971,13 @@
             {% endif %}
           </div>
         </div>
+        <div class="erp-footer-copyright text-center mt-3 pt-2 border-top small text-muted">
+          &copy; {{ current_year }} {{ tenant_name_ar or company_name_ar or _developer_title }} &mdash; جميع الحقوق محفوظة
+        </div>
       </div>
     </div>
   </footer>
-
+  
   <nav class="erp-mobile-nav d-md-none" aria-label="تنقل سريع">
     <a href="{{ url_for('main.dashboard') }}" class="{% if request.endpoint == 'main.dashboard' %}active{% endif %}">
       <i class="fas fa-home"></i>

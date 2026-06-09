@@ -421,7 +421,7 @@
 
     // Debounced search
     let searchTimeout;
-    $(root).find('[data-search]').on('input', function() {
+    $(root).find('[data-search]').off('.erpSearch').on('input.erpSearch', function() {
       clearTimeout(searchTimeout);
       const $this = $(this);
       searchTimeout = setTimeout(() => {
@@ -430,12 +430,10 @@
     });
 
     // Auto-save forms
-    $(root).find('[data-autosave]').on('input change', debounce(function() {
+    $(root).find('[data-autosave]').off('.erpAutoSave').on('input change.erpAutoSave', debounce(function() {
       saveFormData($(this).closest('form'));
     }, 1000));
 
-    // Enhanced notifications
-    initNotifications();
   }
 
   function performSearch(query, target) {
@@ -456,29 +454,7 @@
   function saveFormData($form) {
     const formData = $form.find('input, select, textarea').not('[type="password"], [type="hidden"], [name*="csrf"], [name*="token"], [name*="secret"], [name*="api_key"], [name*="password"]').serialize();
     localStorage.setItem(`form_${$form.attr('id')}`, formData);
-    showNotification('تم حفظ البيانات تلقائياً', 'success');
-  }
-
-  function initNotifications() {
-    if (!$('#notification-container').length) {
-      $('body').append('<div id="notification-container" class="position-fixed" style="top: 20px; right: 20px; z-index: 9999;"></div>');
-    }
-  }
-
-  function showNotification(message, type = 'info') {
-    const $container = $('#notification-container');
-    const $notification = $(`
-      <div class="alert alert-${type} alert-dismissible fade show" style="min-width: 300px;">
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-      </div>
-    `);
-    
-    $container.append($notification);
-    
-    setTimeout(() => {
-      $notification.alert('close');
-    }, 10000);
+    showNotification('تم الحفظ', 'تم حفظ البيانات تلقائياً', 'success');
   }
 
   function debounce(func, wait) {
@@ -493,7 +469,6 @@
     };
   }
 
-  // نظام الإشعارات الفورية
   function initNotifications() {
     if (typeof io === 'undefined') {
       // Socket.IO غير مطلوب للنظام الأساسي

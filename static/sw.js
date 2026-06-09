@@ -1,6 +1,5 @@
-const CACHE_NAME = 'azad-uae-ui-v6';
+const CACHE_NAME = 'azad-uae-ui-v7';
 const urlsToCache = [
-  '/',
   '/static/css/erp-theme.css',
   '/static/js/ui-theme.js',
   '/static/js/app.js',
@@ -9,6 +8,12 @@ const urlsToCache = [
   '/static/assets/brand/azad/logos/logo-dark.png',
   '/offline.html'
 ];
+
+const STATIC_PREFIXES = ['/static/', '/adminlte/'];
+
+function isStaticAsset(url) {
+  return STATIC_PREFIXES.some(p => url.pathname.startsWith(p));
+}
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -23,42 +28,34 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  const accept = event.request.headers.get('accept') || '';
-  const isHtml = event.request.mode === 'navigate' || accept.includes('text/html');
+  const url = new URL(event.request.url);
 
-  if (isHtml) {
+  if (event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request)
-        .then((response) => {
-          if (response && response.status === 200) {
-            const responseToCache = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseToCache));
-          }
-          return response;
-        })
-        .catch(() => {
-          return caches.match(event.request).then((cached) => cached || caches.match('/offline.html'));
-        })
+        .catch(() => caches.match('/offline.html'))
     );
     return;
   }
 
-  event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) {
-        return cached;
-      }
-      return fetch(event.request)
-        .then((response) => {
-          if (response && response.status === 200) {
-            const responseToCache = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseToCache));
-          }
-          return response;
-        })
-        .catch(() => caches.match('/offline.html'));
-    })
-  );
+  if (isStaticAsset(url)) {
+    event.respondWith(
+      caches.match(event.request).then((cached) => {
+        if (cached) return cached;
+        return fetch(event.request)
+          .then((response) => {
+            if (response && response.status === 200) {
+              const responseToCache = response.clone();
+              caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseToCache));
+            }
+            return response;
+          });
+      })
+    );
+    return;
+  }
+
+  event.respondWith(fetch(event.request).catch(() => new Response(null, { status: 503 })));
 });
 
 self.addEventListener('activate', (event) => {

@@ -34,23 +34,27 @@ function initializeApp() {
  * Initialize Select2 for all select elements
  */
 function initializeSelect2() {
-    if ($.fn.select2) {
-        $('.select2').select2({
+    if (!$.fn.select2) return;
+    $('.select2').not('.select2-hidden-accessible').each(function() {
+        if ($(this).data('select2')) return;
+        $(this).select2({
             theme: 'bootstrap4',
             language: 'ar',
             dir: 'rtl',
             width: '100%',
             placeholder: 'اختر...'
         });
-    }
+    });
 }
 
 /**
  * Initialize DataTables with Arabic language
  */
 function initializeDataTables() {
-    if ($.fn.DataTable) {
-        $('.datatable').DataTable({
+    if (!$.fn.DataTable) return;
+    $('.datatable').each(function() {
+        if ($.fn.DataTable.isDataTable(this)) return;
+        $(this).DataTable({
             language: {
                 url: '/static/datatables/Arabic.json'
             },
