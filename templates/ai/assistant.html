@@ -4,13 +4,13 @@
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
   <div>
-    <h1 class="text-gradient mb-0">
-      <i class="fas fa-robot mr-3"></i>المساعد الذكي
+    <h1 class="mb-0">
+      <i class="fas fa-robot ml-2"></i>المساعد الذكي
     </h1>
-    <p class="text-muted">تحليلات متقدمة ومساعدة في التقارير والاستعلامات</p>
+    <p class="text-muted">تحليلات وتقارير واستعلامات ذكية</p>
   </div>
   <div class="d-flex align-items-center">
-    <div class="btn-group mr-3" role="group">
+    <div class="btn-group ml-3" role="group">
       <button type="button" class="btn btn-secondary" id="ai-mode-local" onclick="switchAIMode('local')">
         <i class="fas fa-microchip ml-1"></i> محلي
       </button>
@@ -18,11 +18,11 @@
         <i class="fas fa-cloud ml-1"></i> Groq
       </button>
     </div>
-    <span class="badge {% if ai_enabled %}badge-success{% else %}badge-primary{% endif %} badge-lg px-4 py-2 ic-1" id="ai-status-badge">
+    <span class="badge {% if ai_enabled %}badge-success{% else %}badge-primary{% endif %} py-2 px-3" id="ai-status-badge">
       {% if ai_enabled %}
-        <i class="fas fa-brain mr-2"></i>AI كامل مفعّل
+        <i class="fas fa-brain ml-1"></i>AI كامل
       {% else %}
-        <i class="fas fa-microchip mr-2"></i>AI محلي مفعّل
+        <i class="fas fa-microchip ml-1"></i>AI محلي
       {% endif %}
     </span>
   </div>
@@ -31,181 +31,79 @@
 
 {% block extra_css %}
 <style>
-.super-ai-container {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 20px;
-  padding: 30px;
-  box-shadow: 0 20px 60px rgba(102, 126, 234, 0.4);
-  position: relative;
-  overflow: hidden;
-}
-
-.super-ai-container::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  right: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-  animation: rotate 20s linear infinite;
-}
-
-@keyframes rotate {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.chat-container {
+.chat-card {
   background: white;
   border-radius: 16px;
   box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-  min-height: 600px;
-  max-height: 800px;
-  height: 70vh;
+  min-height: 500px;
+  max-height: 750px;
+  height: 65vh;
   display: flex;
   flex-direction: column;
-  position: relative;
-  z-index: 1;
 }
-
 .chat-messages {
   flex: 1;
   overflow-y: auto;
   padding: 20px;
   background: #f8f9fa;
-  scroll-behavior: smooth;
 }
-
-.chat-input-area {
-  padding: 20px;
-  background: white;
-  border-top: 2px solid #e0e0e0;
-}
-
 .bot-message {
-  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+  background: #e3f2fd;
   border-right: 4px solid #2196F3;
   padding: 15px;
   border-radius: 12px;
   margin: 10px 0;
   animation: slideInRight 0.3s ease;
-  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.2);
 }
-
 .user-message {
-  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+  background: #e8f5e9;
   border-left: 4px solid #4CAF50;
   padding: 15px;
   border-radius: 12px;
   margin: 10px 0;
   animation: slideInLeft 0.3s ease;
-  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.2);
 }
-
 @keyframes slideInRight {
-  from {
-    opacity: 0;
-    transform: translateX(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
 }
-
 @keyframes slideInLeft {
-  from {
-    opacity: 0;
-    transform: translateX(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
 }
-
 .typing-indicator {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
+  display: inline-flex; align-items: center; gap: 4px;
 }
-
 .typing-indicator span {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #2196F3;
+  width: 8px; height: 8px; border-radius: 50%; background: #2196F3;
   animation: typing 1.4s infinite;
 }
-
-.typing-indicator span:nth-child(2) {
-  animation-delay: 0.2s;
-}
-
-.typing-indicator span:nth-child(3) {
-  animation-delay: 0.4s;
-}
-
+.typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+.typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
 @keyframes typing {
-  0%, 60%, 100% {
-    transform: translateY(0);
-  }
-  30% {
-    transform: translateY(-10px);
-  }
+  0%, 60%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-10px); }
 }
-
-.ai-feature-card {
-  background: white;
-  border-radius: 12px;
-  padding: 20px;
-  text-align: center;
-  transition: all 0.3s ease;
-  cursor: pointer;
-  border: 2px solid transparent;
+.avatar-circle {
+  width: 50px; height: 50px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
-
-.ai-feature-card:hover {
-  transform: translateY(-8px);
-  border-color: #667eea;
-  box-shadow: 0 12px 32px rgba(102, 126, 234, 0.3);
+.modal-overlay {
+  display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.5); z-index: 9999;
+  justify-content: center; align-items: center;
 }
-
-.ai-feature-icon {
-  font-size: 3rem;
-  margin-bottom: 15px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+.modal-box {
+  background: white; padding: 30px; border-radius: 16px;
+  max-width: 500px; width: 90%;
 }
-
-    /* D6: externalized inline styles */
-    .ic-1 { font-size: 1.1rem; }
-    .ic-2 { width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; }
-    .ic-3 { flex: 1; }
-    .ic-4 { color: #667eea; font-size: 1.1rem; }
-    .ic-5 { color: #667eea; }
-    .ic-6 { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center; }
-    .ic-7 { background: white; padding: 30px; border-radius: 16px; max-width: 500px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
-    .ic-8 { color: #667eea; margin-bottom: 20px; }
-    .ic-9 { display: none; }
-    .ic-10 { width: 100%; }
-    .ic-11 { border-radius: 12px 0 0 12px; border: 2px solid #667eea; }
-    .ic-12 { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 0 12px 12px 0; padding: 0 30px; }
-    .ic-13 { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
-    .ic-14 { width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-    .ic-15 { width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, #007A3D 0%, #1B4D89 100%); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-    .ic-16 { color: ${isBot ? '#667eea' : '#007A3D'}; }
-    .ic-17 { margin-top: 8px; white-space: pre-wrap; }
-    .ic-18 { font-size: 1.5rem; }
-  </style>
+</style>
 {% endblock %}
 
 {% block content %}
 {% if ai_disable_reason %}
 <div class="alert alert-warning">
-  <h5 class="mb-2"><i class="fas fa-ban mr-2"></i>المساعد الذكي غير مفعّل لهذا السياق</h5>
+  <h5 class="mb-2"><i class="fas fa-ban ml-2"></i>المساعد الذكي غير مفعّل</h5>
   {% if ai_disable_reason == 'global_disabled' %}
     <p class="mb-0">تم تعطيل AI من إعدادات المنصة العامة.</p>
   {% elif ai_disable_reason == 'tenant_disabled' %}
@@ -218,710 +116,289 @@
 </div>
 {% endif %}
 
-<!-- Super AI Features -->
+<!-- Feature Cards -->
 <div class="row mb-4">
   <div class="col-md-3 mb-3">
-    <div class="ai-feature-card" onclick="quickAnalysis('sales')">
-      <div class="ai-feature-icon">
-        <i class="fas fa-chart-line"></i>
+    <div class="card text-center h-100" onclick="quickAsk('حلل المبيعات')" style="cursor:pointer">
+      <div class="card-body">
+        <i class="fas fa-chart-line fa-3x text-primary mb-2"></i>
+        <h6>توقع المبيعات</h6>
+        <small class="text-muted">تنبؤ بالمبيعات القادمة</small>
       </div>
-      <h5>توقع المبيعات</h5>
-      <p class="text-muted">تنبؤ ذكي بالمبيعات القادمة</p>
     </div>
   </div>
   <div class="col-md-3 mb-3">
-    <div class="ai-feature-card" onclick="quickAnalysis('margins')">
-      <div class="ai-feature-icon">
-        <i class="fas fa-percentage"></i>
+    <div class="card text-center h-100" onclick="quickAsk('هوامش الربح')" style="cursor:pointer">
+      <div class="card-body">
+        <i class="fas fa-percentage fa-3x text-success mb-2"></i>
+        <h6>هوامش الربح</h6>
+        <small class="text-muted">تحليل الربحية</small>
       </div>
-      <h5>هوامش الربح</h5>
-      <p class="text-muted">تحليل تفصيلي للربحية</p>
     </div>
   </div>
   <div class="col-md-3 mb-3">
-    <div class="ai-feature-card" onclick="quickAnalysis('inventory')">
-      <div class="ai-feature-icon">
-        <i class="fas fa-boxes"></i>
+    <div class="card text-center h-100" onclick="quickAsk('صحة المخزون')" style="cursor:pointer">
+      <div class="card-body">
+        <i class="fas fa-boxes fa-3x text-warning mb-2"></i>
+        <h6>صحة المخزون</h6>
+        <small class="text-muted">تقييم المخزون</small>
       </div>
-      <h5>صحة المخزون</h5>
-      <p class="text-muted">تقييم ذكي للمخزون</p>
     </div>
   </div>
   <div class="col-md-3 mb-3">
-    <div class="ai-feature-card" onclick="quickAnalysis('patterns')">
-      <div class="ai-feature-icon">
-        <i class="fas fa-brain"></i>
+    <div class="card text-center h-100" onclick="quickAsk('أنماط المبيعات')" style="cursor:pointer">
+      <div class="card-body">
+        <i class="fas fa-brain fa-3x text-info mb-2"></i>
+        <h6>كشف الأنماط</h6>
+        <small class="text-muted">سلوكيات خفية</small>
       </div>
-      <h5>كشف الأنماط</h5>
-      <p class="text-muted">أنماط وسلوكيات خفية</p>
-    </div>
-  </div>
-  <div class="col-md-3 mb-3">
-    <div class="ai-feature-card" onclick="showSelfImprovement()">
-      <div class="ai-feature-icon">
-        <i class="fas fa-rocket"></i>
-      </div>
-      <h5>التحسين الذاتي</h5>
-      <p class="text-muted">أزاد يتطور ذاتياً</p>
-    </div>
-        </div>
-  <div class="col-md-3 mb-3">
-    <div class="ai-feature-card" onclick="showLearningStatus()">
-      <div class="ai-feature-icon">
-        <i class="fas fa-graduation-cap"></i>
-      </div>
-      <h5>حالة التعلم</h5>
-      <p class="text-muted">تتبع تقدم أزاد</p>
-    </div>
-  </div>
-  <div class="col-md-3 mb-3">
-    <div class="ai-feature-card" onclick="showNeuralStatus()">
-      <div class="ai-feature-icon">
-        <i class="fas fa-network-wired"></i>
-      </div>
-      <h5>الشبكات العصبية</h5>
-      <p class="text-muted">11 نموذج عصبي</p>
-    </div>
-  </div>
-  <div class="col-md-3 mb-3">
-    <div class="ai-feature-card" onclick="showAutomotiveKnowledge()">
-      <div class="ai-feature-icon">
-        <i class="fas fa-car"></i>
-      </div>
-      <h5>كمبيوترات السيارات</h5>
-      <p class="text-muted">خبير ECU/OBD-II</p>
     </div>
   </div>
 </div>
 
 <!-- Chat Interface -->
-<div class="super-ai-container">
-  <div class="chat-container">
-    <div class="chat-messages" id="chatBox">
-      <div class="bot-message">
-        <div class="d-flex align-items-start">
-          <div class="mr-3">
-            <div class="ic-2">
-              <i class="fas fa-robot text-white fa-2x"></i>
-            </div>
-          </div>
-          <div class="ic-3">
-            <strong class="ic-4">المساعد الذكي الخارق</strong>
-            <p class="mt-2 mb-0">مرحباً! 👋 أنا أذكى مساعد محاسبي في العالم 🌟</p>
-            
-            <div class="mt-3">
-              <h6 class="ic-5">🧠 قدراتي الخارقة:</h6>
-              <ul class="mb-0">
-                <li>📊 <strong>تنبؤ بالمبيعات</strong> - توقع دقيق للإيرادات القادمة</li>
-                <li>💰 <strong>تحليل الربحية</strong> - فهم عميق لهوامش الربح</li>
-                <li>🔍 <strong>كشف الأنماط</strong> - أنماط مخفية في البيانات</li>
-                <li>💵 <strong>توقع التدفق النقدي</strong> - تخطيط مالي استباقي</li>
-                <li>💎 <strong>تسعير ذكي</strong> - أسعار مثالية لكل عميل</li>
-                <li>⚠️ <strong>توقع فقدان العملاء</strong> - احتفظ بعملائك</li>
-                <li>📦 <strong>تحسين المخزون</strong> - مستويات مثالية</li>
-                <li>💡 <strong>رؤى أعمال فورية</strong> - قرارات ذكية</li>
-            </ul>
-            </div>
-            
-            <div class="alert alert-info mt-3 mb-0">
-              <strong>جرب أسئلة مثل:</strong>
-              <br>• "حلل المبيعات"
-              <br>• "توقع الأسبوع القادم"
-              <br>• "صحة المخزون"
-              <br>• "أفضل العملاء"
-              <br>• "منتجات منخفضة الربح"
-            </div>
-            
-            <div class="alert alert-success mt-3 mb-0">
-              <strong>🎯 أوامر سريعة:</strong>
-              <br>• <strong>تعديل رصيد:</strong> "رصيد: أحمد محمد، 500 درهم"
-              <br>• <strong>استلام دفعة:</strong> "استلام: أحمد محمد، 200 درهم، نقد"
-              <br>• <strong>إعطاء دفعة:</strong> "إعطاء: أحمد محمد، 100 درهم، استرداد"
-              <br>• <strong>إنشاء عميل:</strong> "عميل: أحمد محمد، 0561234567، دبي"
-              <br>• <strong>إنشاء منتج:</strong> "منتج: فلتر زيت، 12345، 50 درهم، 100 قطعة"
-            </div>
-            
-            <div class="alert alert-warning mt-3 mb-0">
-              <strong>💡 نصيحة ذكية:</strong>
-              <br>• اكتب كلمة واحدة مثل "رصيد" أو "عميل" وسأعطيك الخيارات!
-              <br>• أو اكتب الطلب كاملاً وسأنفذه فوراً!
-              <br>• أنا أفهم أي طريقة تكتب بها! 🤖
-            </div>
+<div class="chat-card">
+  <div class="chat-messages" id="chatBox">
+    <div class="bot-message">
+      <div class="d-flex align-items-start">
+        <div class="ml-3">
+          <div class="avatar-circle" style="background:linear-gradient(135deg,#667eea,#764ba2)">
+            <i class="fas fa-robot text-white fa-2x"></i>
           </div>
         </div>
+        <div>
+          <strong class="text-primary">المساعد الذكي</strong>
+          <p class="mt-2 mb-0">مرحباً! أنا مساعدك الذكي للنظام.</p>
+          <div class="alert alert-info mt-2 mb-0 py-2">
+            <small>
+              <strong>اقتراحات:</strong>
+              "حلل المبيعات" · "أفضل العملاء" · "ملخص النظام" ·
+              <strong class="text-success">عميل:</strong> أحمد، 0561234567 ·
+              <strong class="text-success">فاتورة:</strong> محمد، فلتر زيت، 2
+            </small>
           </div>
         </div>
-        
-    <div class="chat-input-area">
-        <!-- أدوات المحادثة -->
-        <div class="d-flex justify-content-between mb-2">
-          <div class="btn-group btn-group-sm">
-            <button type="button" class="btn btn-outline-danger" onclick="clearChat()" title="مسح المحادثة">
-              <i class="fas fa-trash"></i> مسح
-            </button>
-            <button type="button" class="btn btn-outline-info" onclick="getSummary()" title="ملخص المحادثة">
-              <i class="fas fa-list"></i> ملخص
-            </button>
-            <button type="button" class="btn btn-outline-success" onclick="toggleBeginnersMode()" id="beginnersBtn" title="وضع المبتدئين">
-              <i class="fas fa-graduation-cap"></i> مبتدئ
-            </button>
-            <button type="button" class="btn btn-outline-primary" onclick="showExcelUploader()" title="رفع ملف Excel">
-              <i class="fas fa-file-excel"></i> Excel
-            </button>
-            <button type="button" class="btn btn-outline-success" onclick="openExcelTemplate()" title="فتح Excel للتعديل">
-              <i class="fas fa-external-link-alt"></i> فتح Excel
-            </button>
-          </div>
-          <div class="btn-group btn-group-sm">
-            <button type="button" class="btn btn-outline-secondary" onclick="setDialect('formal')" title="فصحى" id="formalBtn">
-              <i class="fas fa-book"></i>
-            </button>
-            <button type="button" class="btn btn-outline-primary active" onclick="setDialect('palestinian')" title="فلسطيني" id="palestinianBtn">
-              <i class="fas fa-flag"></i> 🇵🇸
-            </button>
-            <button type="button" class="btn btn-outline-info" onclick="setDialect('gulf')" title="خليجي" id="gulfBtn">
-              <i class="fas fa-mosque"></i>
-            </button>
-          </div>
-        </div>
+      </div>
+    </div>
+  </div>
 
-        <!-- Excel Uploader Modal -->
-        <div id="excelUploaderModal" class="ic-6">
-          <div class="ic-7">
-            <h4 class="ic-8">
-              <i class="fas fa-file-excel mr-2"></i>رفع ملف Excel - معالج ذكي خارق
-            </h4>
-            <form class="needs-validation" id="excelUploadForm" method="POST" enctype="multipart/form-data" action="">
-              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
-              <div class="form-group">
-                <label>اختر ملف Excel (.xlsx, .xls)</label>
-                <input type="file" id="excelFile" accept=".xlsx,.xls" class="form-control" required aria-label="excelFile">
-              </div>
-              <div class="form-group">
-                <label>المستودع</label>
-                <select id="warehouseSelect" class="form-control" aria-label="warehouseSelect">
-                  {% for warehouse in warehouses %}
-                  <option value="{{ warehouse.id }}">{{ warehouse.name }}</option>
-                  {% endfor %}
-                </select>
-              </div>
-              <div class="form-group">
-                <div class="alert alert-info">
-                  <i class="fas fa-lightbulb mr-2"></i>
-                  <strong>AI الذكي سيفهم تلقائياً:</strong><br>
-                  - أعمدة Excel (عربي أو إنجليزي)<br>
-                  - يُنشئ منتجات جديدة أو يحدث الموجودة<br>
-                  - دقة 100% - لا أخطاء بشرية
-                </div>
-                <div class="alert alert-warning">
-                  <i class="fas fa-edit mr-2"></i>
-                  <strong>نصيحة:</strong> اضغط "فتح Excel" أولاً لتعديل البيانات قبل الرفع
-                </div>
-              </div>
-              <div class="d-flex justify-content-between">
-                <div>
-                  <button type="button" class="btn btn-info mr-2" onclick="openExcelTemplate()">
-                    <i class="fas fa-external-link-alt mr-2"></i>فتح Excel
-                  </button>
-                  <button type="button" class="btn btn-secondary" onclick="hideExcelUploader()">إلغاء</button>
-                </div>
-                <button type="submit" class="btn btn-success" id="uploadExcelBtn">
-                  <i class="fas fa-upload mr-2"></i>رفع ومعالجة
-                </button>
-              </div>
-              <div id="uploadProgress" class="mt-3 ic-9">
-                <div class="progress">
-                  <div class="progress-bar progress-bar-striped progress-bar-animated ic-10" role="progressbar"></div>
-                </div>
-                <small class="text-muted">جاري المعالجة الذكية...</small>
-              </div>
-            </form>
-          </div>
-        </div>
-        
-        <div class="input-group">
-        <input type="text" id="userMessage" class="form-control form-control-lg ic-11" placeholder="اسأل أي سؤال... 🤖" autocomplete="off">
-          <div class="input-group-append">
-          <button class="btn btn-lg ic-12" id="sendBtn">
-            <i class="fas fa-paper-plane mr-2"></i>إرسال
-            </button>
-          </div>
-        </div>
-        
-      <div class="mt-2 d-flex justify-content-between align-items-center">
-          <small class="text-muted">
-          <i class="fas fa-shield-alt mr-1"></i>
-            {% if ai_enabled %}
-            AI خارجي + محلي معاً - قوة مضاعفة
-            {% else %}
-            AI محلي خارق - لا يحتاج إنترنت
-            {% endif %}
-          </small>
-        <div class="btn-group btn-group-sm">
-          <button type="button" class="btn btn-outline-secondary" onclick="quickAnalysis('sales')" title="Chart Line">
-            <i class="fas fa-chart-line"></i>
-          </button>
-          <button type="button" class="btn btn-outline-secondary" onclick="quickAnalysis('inventory')" title="Boxes">
-            <i class="fas fa-boxes"></i>
-          </button>
-          <button type="button" class="btn btn-outline-secondary" onclick="clearChat()" title="حذف">
-            <i class="fas fa-trash"></i>
-          </button>
-          <button type="button" class="btn btn-success" onclick="showSelfImprovement()" title="التحسين الذاتي">
-            <i class="fas fa-rocket"></i>
-          </button>
-          <button type="button" class="btn btn-info" onclick="showSystemSummary()" title="ملخص النظام">
-            <i class="fas fa-chart-bar"></i>
-          </button>
-          <button type="button" class="btn btn-warning" onclick="showKnowledgeManager()" title="إدارة المعرفة">
-            <i class="fas fa-book"></i>
-          </button>
-          <button type="button" class="btn btn-dark" onclick="searchInSystem()" title="البحث في النظام">
-            <i class="fas fa-search"></i>
-          </button>
-        </div>
+  <div class="px-3 py-2 bg-white border-top">
+    <div class="d-flex justify-content-between mb-2">
+      <div class="btn-group btn-group-sm">
+        <button type="button" class="btn btn-outline-danger" onclick="clearChat()" title="مسح المحادثة">
+          <i class="fas fa-trash"></i>
+        </button>
+        <button type="button" class="btn btn-outline-info" onclick="getSummary()" title="ملخص">
+          <i class="fas fa-list"></i>
+        </button>
+        <button type="button" class="btn btn-outline-success" onclick="toggleBeginnersMode()" id="beginnersBtn" title="وضع المبتدئين">
+          <i class="fas fa-graduation-cap"></i>
+        </button>
+      </div>
+      <div class="btn-group btn-group-sm">
+        <button type="button" class="btn btn-outline-secondary" onclick="setDialect('formal')" id="formalBtn" title="فصحى">
+          <i class="fas fa-book"></i>
+        </button>
+        <button type="button" class="btn btn-outline-primary active" onclick="setDialect('palestinian')" id="palestinianBtn" title="فلسطيني">
+          🇵🇸
+        </button>
+        <button type="button" class="btn btn-outline-info" onclick="setDialect('gulf')" id="gulfBtn" title="خليجي">
+          🏝️
+        </button>
+      </div>
+    </div>
+
+    <div class="input-group">
+      <input type="text" id="userMessage" class="form-control" placeholder="اكتب سؤالك أو أمراً..." autocomplete="off">
+      <div class="input-group-append">
+        <button class="btn btn-primary" id="sendBtn">
+          <i class="fas fa-paper-plane ml-1"></i>إرسال
+        </button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- AI Insights -->
-<div class="row mt-4">
-  <div class="col-12">
-    <div class="card">
-      <div class="card-header ic-13">
-        <h3 class="card-title text-white mb-0">
-          <i class="fas fa-lightbulb mr-2"></i>رؤى فورية من المساعد الذكي
-        </h3>
+<!-- Excel Upload Modal -->
+<div id="excelUploaderModal" class="modal-overlay">
+  <div class="modal-box">
+    <h4 class="text-primary mb-3"><i class="fas fa-file-excel ml-2"></i>رفع ملف Excel</h4>
+    <form id="excelUploadForm" method="POST" enctype="multipart/form-data">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="form-group">
+        <label>اختر ملف (.xlsx, .xls)</label>
+        <input type="file" id="excelFile" accept=".xlsx,.xls" class="form-control" required>
       </div>
-      <div class="card-body" id="insights-container">
-        <div class="text-center text-muted">
-          <i class="fas fa-spinner fa-spin fa-2x mb-3"></i>
-          <p>جاري تحليل البيانات وتوليد الرؤى...</p>
+      <div class="form-group">
+        <label>المستودع</label>
+        <select id="warehouseSelect" class="form-control">
+          {% for warehouse in warehouses %}
+          <option value="{{ warehouse.id }}">{{ warehouse.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="d-flex justify-content-between">
+        <button type="button" class="btn btn-secondary" onclick="hideExcelUploader()">إلغاء</button>
+        <button type="submit" class="btn btn-success" id="uploadExcelBtn">
+          <i class="fas fa-upload ml-1"></i>رفع ومعالجة
+        </button>
+      </div>
+      <div id="uploadProgress" class="mt-3" style="display:none">
+        <div class="progress">
+          <div class="progress-bar progress-bar-striped progress-bar-animated" style="width:100%"></div>
         </div>
+        <small class="text-muted">جاري المعالجة...</small>
       </div>
-    </div>
+    </form>
   </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-// Global function - must be outside document.ready
-function addMessage(sender, text, isBot = false) {
-  // حفظ في السجل
-  if (typeof chatHistory !== 'undefined') {
-    chatHistory.push({
-      role: isBot ? 'bot' : 'user',
-      content: text,
-      timestamp: new Date()
-    });
-  }
-  
-  const chatBox = $('#chatBox');
-    const messageClass = isBot ? 'bot-message' : 'user-message';
-    const avatar = isBot 
-      ? `<div class="ic-14">
-           <i class="fas fa-robot text-white fa-2x"></i>
-         </div>`
-      : `<div class="ic-15">
-           <i class="fas fa-user text-white fa-2x"></i>
-         </div>`;
-    
-    const senderName = isBot ? 'أزاد 🤖' : '{{ current_user.username }}' || 'أنت';
-    
-    // إضافة الرسالة للـ chatBox
-    chatBox.append(`
-      <div class="${messageClass}">
-        <div class="d-flex align-items-start">
-          ${isBot ? avatar : ''}
-          <div class="${isBot ? 'mr-3' : 'ml-3'} ic-3">
-            <strong class="ic-16">${senderName}</strong>
-            <div class="ic-17">${text}</div>
-          </div>
-          ${!isBot ? avatar : ''}
-        </div>
-      </div>
-    `);
-    
-    // تمرير تلقائي للأسفل لآخر رسالة
-    setTimeout(() => {
-      chatBox.scrollTop(chatBox[0].scrollHeight);
-    }, 100);
+var chatHistory = [];
+var currentDialect = 'palestinian';
+var beginnersMode = false;
+
+function addMessage(sender, text, isBot) {
+  chatHistory.push({role: isBot ? 'bot' : 'user', content: text, timestamp: new Date()});
+  var cls = isBot ? 'bot-message' : 'user-message';
+  var avatar = isBot
+    ? '<div class="avatar-circle" style="background:linear-gradient(135deg,#667eea,#764ba2)"><i class="fas fa-robot text-white fa-2x"></i></div>'
+    : '<div class="avatar-circle" style="background:linear-gradient(135deg,#007A3D,#1B4D89)"><i class="fas fa-user text-white fa-2x"></i></div>';
+  var name = isBot ? 'المساعد الذكي' : '{{ current_user.username }}' || 'أنت';
+  var align = isBot ? 'ml-3' : 'mr-3';
+  $('#chatBox').append(
+    '<div class="' + cls + '"><div class="d-flex align-items-start">' +
+    (isBot ? avatar : '') +
+    '<div class="' + align + '"><strong class="' + (isBot ? 'text-primary' : 'text-success') + '">' + name + '</strong>' +
+    '<div style="white-space:pre-wrap">' + text + '</div></div>' +
+    (!isBot ? avatar : '') + '</div></div>'
+  );
+  setTimeout(function() { $('#chatBox').scrollTop($('#chatBox')[0].scrollHeight); }, 100);
 }
 
 function showTyping() {
-  const chatBox = $('#chatBox');
-  const typingHtml = `
-    <div class="bot-message" id="typing-indicator">
-      <div class="d-flex align-items-center">
-        <div class="ic-2">
-          <i class="fas fa-robot text-white fa-2x"></i>
-        </div>
-        <div class="mr-3">
-          <strong class="ic-5">المساعد يفكر</strong>
-          <div class="typing-indicator mt-2">
-            <span></span><span></span><span></span>
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
-  chatBox.append(typingHtml);
-  chatBox.scrollTop(chatBox[0].scrollHeight);
+  $('#chatBox').append(
+    '<div class="bot-message" id="typing-indicator"><div class="d-flex align-items-center">' +
+    '<div class="ml-3"><div class="avatar-circle" style="background:linear-gradient(135deg,#667eea,#764ba2)"><i class="fas fa-robot text-white fa-2x"></i></div></div>' +
+    '<div><strong>المساعد يفكر</strong><div class="typing-indicator mt-2"><span></span><span></span><span></span></div></div>' +
+    '</div></div>'
+  );
+  $('#chatBox').scrollTop($('#chatBox')[0].scrollHeight);
 }
 
-function hideTyping() {
-  $('#typing-indicator').remove();
-}
+function hideTyping() { $('#typing-indicator').remove(); }
 
 $(document).ready(function() {
-  const chatBox = $('#chatBox');
-  const chatMessages = chatBox;  // نفس المرجع
-  const userMessage = $('#userMessage');
-  const sendBtn = $('#sendBtn');
-  
-  function sendMessage() {
-    const message = userMessage.val().trim();
-    if (!message) return;
-    
-    addMessage('user', message, false);
-    userMessage.val('');
-    sendBtn.prop('disabled', true);
-    
-    showTyping();
-    
-    const aiMode = localStorage.getItem('ai_mode') || 'groq';
-    
-    $.ajax({
-      {% if current_user.has_permission('view_reports') %}
-      url: '{{ url_for("ai.chat") }}',
-      {% endif %}
-      method: 'POST',
-      contentType: 'application/json',
-      headers: {
-        'X-CSRFToken': '{{ csrf_token() }}'
-      },
-      data: JSON.stringify({ 
-        message: message,
-        ai_mode: aiMode,
-        context: {
-          dialect: currentDialect || 'palestinian',
-          beginners_mode: beginnersMode || false
-        }
-      }),
-      success: function(response) {
-        hideTyping();
-        addMessage('bot', response.response, true);
-        sendBtn.prop('disabled', false);
-        userMessage.focus();
-      },
-      error: function() {
-        hideTyping();
-        addMessage('bot', '❌ عذراً، حدث خطأ. حاول مرة أخرى.', true);
-        sendBtn.prop('disabled', false);
-      }
-    });
-  }
-  
-  sendBtn.click(sendMessage);
-  
-  userMessage.keypress(function(e) {
-    if (e.which === 13) {
-      e.preventDefault();
-      sendMessage();
-    }
-  });
-  
-  // Focus on input
-  userMessage.focus();
-  
-  // Load business insights
-  loadBusinessInsights();
-  
-  // Global Variables
-  let currentDialect = 'palestinian';
-  let beginnersMode = false;
-  let chatHistory = [];
-  
-  // Clear Chat
-  window.clearChat = function() {
-    if (confirm('هل تريد مسح المحادثة؟')) {
-      $('#chatBox').empty();
-      if (typeof chatHistory !== 'undefined') {
-        chatHistory = [];
-      }
-      addMessage('bot', 'تم مسح المحادثة! 🆕 كيف يمكنني مساعدتك؟', true);
-    }
-  };
-  
-  // Get Summary
-  window.getSummary = function() {
-    if (chatHistory.length === 0) {
-      addMessage('bot', '📝 لا توجد محادثة لتلخيصها بعد!', true);
-      return;
-    }
-    
-    const questions = chatHistory.filter(m => m.role === 'user').length;
-    const summary = `📊 **ملخص المحادثة:**\n\n• عدد الأسئلة: ${questions}\n• عدد الردود: ${chatHistory.filter(m => m.role === 'bot').length}\n\n🔍 **المواضيع:**\n${chatHistory.filter(m => m.role === 'user').map((m, i) => `${i + 1}. ${m.content.substring(0, 50)}...`).join('\n')}`;
-    
-    addMessage('bot', summary, true);
-  };
-  
-  // Toggle Beginners Mode
-  window.toggleBeginnersMode = function() {
-    beginnersMode = !beginnersMode;
-    const btn = $('#beginnersBtn');
-    
-    if (beginnersMode) {
-      btn.removeClass('btn-outline-success').addClass('btn-success');
-      addMessage('bot', '👨‍🎓 **وضع المبتدئين مفعّل!**\n\nسأشرح كل شيء بالتفصيل مع أمثلة وخطوات واضحة! 📚', true);
-    } else {
-      btn.removeClass('btn-success').addClass('btn-outline-success');
-      addMessage('bot', '👔 **وضع المحترفين مفعّل!**\n\nردود مباشرة وسريعة! ⚡', true);
-    }
-  };
-  
-  // Set Dialect
-  window.setDialect = function(dialect) {
-    currentDialect = dialect;
-    
-    // Update buttons
-    $('.btn-group .btn').removeClass('active');
-    $(`#${dialect}Btn`).addClass('active');
-    
-    const dialectMessages = {
-      'formal': '📖 **اللغة: فصحى**\n\nسأتحدث بالعربية الفصحى المعيارية.',
-      'palestinian': '🇵🇸 **اللهجة: فلسطينية**\n\nأهلاً وسهلاً! إيش بدك يا زميل؟ 😊',
-      'gulf': '🏝️ **اللهجة: خليجية**\n\nأهلاً وسهلاً! شخبارك؟ شلونك؟ 😊'
-    };
-    
-    addMessage('bot', dialectMessages[dialect], true);
-  };
-  
-  // Quick Analysis function - MUST be inside ready
-  window.quickAnalysis = function(type) {
-    const questions = {
-      'sales': 'حلل المبيعات',
-      'margins': 'هوامش الربح',
-      'inventory': 'صحة المخزون',
-      'patterns': 'أنماط المبيعات'
-    };
-    
-    $('#userMessage').val(questions[type]);
-    $('#sendBtn').click();
-  };
-  
-  // Show Self Improvement
-  window.showSelfImprovement = function() {
-    $('#userMessage').val('تحسين ذاتي');
-    $('#sendBtn').click();
-  };
-  
-  // Show Learning Status
-  window.showLearningStatus = function() {
-    $('#userMessage').val('حالة التعلم');
-    $('#sendBtn').click();
-  };
-  
-  // Show System Summary
-  window.showSystemSummary = function() {
-    $('#userMessage').val('ملخص النظام');
-    $('#sendBtn').click();
-  };
-  
-  // Show Knowledge Manager
-  window.showKnowledgeManager = function() {
-    $('#userMessage').val('مصادر كل');
-    $('#sendBtn').click();
-  };
-  
-  // Show Neural Networks Status - جديد!
-  window.showNeuralStatus = function() {
-    $('#userMessage').val('حالة الشبكات العصبية');
-    $('#sendBtn').click();
-  };
-  
-  // Show Automotive Knowledge - جديد!
-  window.showAutomotiveKnowledge = function() {
-    $('#userMessage').val('أخبرني عن كمبيوترات السيارات');
-    $('#sendBtn').click();
-  };
-  
-  // Switch AI Mode
-  window.switchAIMode = function(mode) {
-    localStorage.setItem('ai_mode', mode);
-    
-    if (mode === 'local') {
-      $('#ai-mode-local').css({
-        'background': '#495057',
-        'box-shadow': '0 0 15px rgba(73,80,87,0.8)',
-        'transform': 'scale(1.05)'
-      });
-      $('#ai-mode-groq').css({
-        'background': '#20c997',
-        'box-shadow': 'none',
-        'opacity': '0.5',
-        'transform': 'scale(1)'
-      });
-      $('#ai-status-badge').removeClass('badge-success').addClass('badge-secondary')
-        .html('<i class="fas fa-microchip mr-2"></i>محلي 💻');
-    } else {
-      $('#ai-mode-groq').css({
-        'background': '#17a2b8',
-        'box-shadow': '0 0 15px rgba(23,162,184,0.8)',
-        'transform': 'scale(1.05)'
-      });
-      $('#ai-mode-local').css({
-        'background': '#6c757d',
-        'box-shadow': 'none',
-        'opacity': '0.5',
-        'transform': 'scale(1)'
-      });
-      $('#ai-status-badge').removeClass('badge-secondary').addClass('badge-info')
-        .html('<i class="fas fa-cloud mr-2"></i>Groq ☁️');
-    }
-  };
-  
-  const savedMode = localStorage.getItem('ai_mode') || 'groq';
-  switchAIMode(savedMode);
+  $('#sendBtn').click(sendMessage);
+  $('#userMessage').keypress(function(e) { if (e.which === 13) { e.preventDefault(); sendMessage(); } });
+  $('#userMessage').focus();
+});
 
-});  // نهاية document.ready
-
-// ============================================
-// Global Variables (Outside ready)
-// ============================================
-let chatHistoryGlobal = [];
-
-// ============================================
-// Load Business Insights - Outside ready
-// ============================================
-
-function loadBusinessInsights() {
+function sendMessage() {
+  var msg = $('#userMessage').val().trim();
+  if (!msg) return;
+  addMessage('user', msg, false);
+  $('#userMessage').val('');
+  $('#sendBtn').prop('disabled', true);
+  showTyping();
   $.ajax({
-    {% if current_user.has_permission('view_reports') %}
-    url: '{{ url_for("ai.business_insights") }}',
-    {% endif %}
-    method: 'GET',
-    success: function(response) {
-      if (response.success && response.insights.length > 0) {
-        let html = '<div class="row">';
-        
-        response.insights.forEach(function(insight, index) {
-          html += `
-            <div class="col-md-6 mb-3">
-              <div class="alert alert-info mb-0">
-                <h6>
-                  <span class="ic-18">${insight.icon}</span>
-                  ${insight.title}
-                </h6>
-                <p class="mb-2"><strong>${insight.insight}</strong></p>
-                <small class="text-muted">
-                  <i class="fas fa-lightbulb mr-1"></i>${insight.action}
-                </small>
-              </div>
-            </div>
-          `;
-        });
-        
-        html += '</div>';
-        $('#insights-container').html(html);
-      } else {
-        $('#insights-container').html('<p class="text-muted text-center">لا توجد رؤى متاحة حالياً</p>');
-      }
-    },
-    error: function() {
-      $('#insights-container').html('<p class="text-danger text-center">فشل تحميل الرؤى</p>');
-    }
+    url: '{{ url_for("ai.chat") }}',
+    method: 'POST',
+    contentType: 'application/json',
+    headers: { 'X-CSRFToken': '{{ csrf_token() }}' },
+    data: JSON.stringify({
+      message: msg,
+      ai_mode: localStorage.getItem('ai_mode') || 'groq',
+      context: { dialect: currentDialect, beginners_mode: beginnersMode }
+    }),
+    success: function(r) { hideTyping(); addMessage('bot', r.response, true); $('#sendBtn').prop('disabled', false); $('#userMessage').focus(); },
+    error: function() { hideTyping(); addMessage('bot', '❌ عذراً، حدث خطأ. حاول مرة أخرى.', true); $('#sendBtn').prop('disabled', false); }
   });
 }
 
-function showExcelUploader() {
-  $('#excelUploaderModal').css('display', 'flex');
-}
+window.clearChat = function() {
+  if (!confirm('مسح المحادثة؟')) return;
+  $('#chatBox').empty(); chatHistory = [];
+  addMessage('bot', 'تم مسح المحادثة! كيف يمكنني مساعدتك؟', true);
+};
 
-function hideExcelUploader() {
-  $('#excelUploaderModal').css('display', 'none');
-  $('#excelUploadForm')[0].reset();
-  $('#uploadProgress').hide();
-}
+window.getSummary = function() {
+  if (chatHistory.length === 0) { addMessage('bot', '📝 لا توجد محادثة بعد.', true); return; }
+  var q = chatHistory.filter(function(m) { return m.role === 'user'; }).length;
+  addMessage('bot', '📊 **ملخص المحادثة:**\n\n• الأسئلة: ' + q + '\n• الردود: ' + chatHistory.filter(function(m) { return m.role === 'bot'; }).length, true);
+};
+
+window.toggleBeginnersMode = function() {
+  beginnersMode = !beginnersMode;
+  var btn = $('#beginnersBtn');
+  btn.toggleClass('btn-success btn-outline-success');
+  addMessage('bot', beginnersMode ? '👨‍🎓 وضع المبتدئين مفعّل! سأشرح بالتفصيل.' : '⚡ وضع المحترفين مفعّل! ردود مباشرة.', true);
+};
+
+window.setDialect = function(d) {
+  currentDialect = d;
+  $('.btn-group .btn').removeClass('active');
+  $('#' + d + 'Btn').addClass('active');
+  var msgs = {formal: '📖 اللغة: فصحى', palestinian: '🇵🇸 اللهجة: فلسطينية', gulf: '🏝️ اللهجة: خليجية'};
+  addMessage('bot', msgs[d], true);
+};
+
+window.quickAsk = function(q) {
+  $('#userMessage').val(q);
+  sendMessage();
+};
+
+window.switchAIMode = function(mode) {
+  localStorage.setItem('ai_mode', mode);
+  if (mode === 'local') {
+    $('#ai-mode-local').css({background:'#495057', boxShadow:'0 0 15px rgba(73,80,87,0.8)', transform:'scale(1.05)'});
+    $('#ai-mode-groq').css({background:'#20c997', boxShadow:'none', opacity:'0.5', transform:'scale(1)'});
+    $('#ai-status-badge').removeClass('badge-success').addClass('badge-secondary').html('<i class="fas fa-microchip ml-1"></i>محلي');
+  } else {
+    $('#ai-mode-groq').css({background:'#17a2b8', boxShadow:'0 0 15px rgba(23,162,184,0.8)', transform:'scale(1.05)'});
+    $('#ai-mode-local').css({background:'#6c757d', boxShadow:'none', opacity:'0.5', transform:'scale(1)'});
+    $('#ai-status-badge').removeClass('badge-secondary').addClass('badge-info').html('<i class="fas fa-cloud ml-1"></i>Groq');
+  }
+};
+
+var savedMode = localStorage.getItem('ai_mode') || 'groq';
+switchAIMode(savedMode);
+
+// Excel Upload
+function showExcelUploader() { $('#excelUploaderModal').css('display', 'flex'); }
+function hideExcelUploader() { $('#excelUploaderModal').css('display', 'none'); $('#excelUploadForm')[0].reset(); $('#uploadProgress').hide(); }
 
 $('#excelUploadForm').on('submit', function(e) {
   e.preventDefault();
-  
-  const fileInput = $('#excelFile')[0];
-  const warehouseId = $('#warehouseSelect').val();
-  
-  if (!fileInput.files || !fileInput.files[0]) {
-    alert('يرجى اختيار ملف Excel');
-    return;
-  }
-  
-  const csrfToken = $(this).find('input[name="csrf_token"]').val()
-    || $('meta[name="csrf-token"]').attr('content');
-
-  const formData = new FormData();
-  formData.append('file', fileInput.files[0]);
-  formData.append('warehouse_id', warehouseId);
-  if (csrfToken) {
-    formData.append('csrf_token', csrfToken);
-  }
-  
+  var file = $('#excelFile')[0];
+  if (!file.files || !file.files[0]) { alert('اختر ملفاً'); return; }
+  var fd = new FormData();
+  fd.append('file', file.files[0]);
+  fd.append('warehouse_id', $('#warehouseSelect').val());
+  var csrf = $(this).find('input[name="csrf_token"]').val();
+  if (csrf) fd.append('csrf_token', csrf);
   $('#uploadExcelBtn').prop('disabled', true);
   $('#uploadProgress').show();
-  
   $.ajax({
-    {% if current_user.has_permission('manage_products') %}
     url: '{{ url_for("ai.upload_excel") }}',
-    {% endif %}
     method: 'POST',
-    data: formData,
+    data: fd,
     processData: false,
     contentType: false,
-    headers: csrfToken ? { 'X-CSRFToken': csrfToken } : {},
-    success: function(response) {
-      if (response.success) {
-        addMessage('bot', response.message, true);
-        hideExcelUploader();
-      } else {
-        addMessage('bot', `❌ خطأ: ${response.error}`, true);
-      }
+    headers: csrf ? { 'X-CSRFToken': csrf } : {},
+    success: function(r) {
+      if (r.success) addMessage('bot', r.message, true); else addMessage('bot', '❌ ' + r.error, true);
+      hideExcelUploader();
       $('#uploadExcelBtn').prop('disabled', false);
-      $('#uploadProgress').hide();
     },
-    error: function(xhr) {
-      const errorMsg = xhr.responseJSON ? xhr.responseJSON.error : 'حدث خطأ غير متوقع';
-      addMessage('bot', `❌ خطأ: ${errorMsg}`, true);
+    error: function(x) {
+      addMessage('bot', '❌ ' + (x.responseJSON ? x.responseJSON.error : 'خطأ'), true);
       $('#uploadExcelBtn').prop('disabled', false);
       $('#uploadProgress').hide();
     }
   });
 });
-
-// دالة فتح ملف Excel للتعديل
-function openExcelTemplate() {
-  // فتح ملف Excel مباشرة في التطبيق الافتراضي (Excel)
-  const filePath = '/static/template_products.xlsx';
-  
-  // إنشاء رابط لفتح الملف في Excel
-  const link = document.createElement('a');
-  link.href = filePath;
-  link.target = '_blank';
-  link.style.display = 'none';
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  
-  // إظهار رسالة للمستخدم
-  addMessage('bot', `📗 تم فتح ملف Excel في التطبيق!
-  
-  💡 تعليمات:
-  1. عدّل البيانات في Excel
-  2. احفظ الملف (Ctrl+S)
-  3. ارجع هنا واضغط "Excel" لرفع الملف المحدث
-  
-  🤖 المصدر: GROQ API + التحليل المحلي`, true);
-}
 </script>
 {% endblock %}
-

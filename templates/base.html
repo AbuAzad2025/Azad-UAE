@@ -164,7 +164,7 @@
           <a class="dropdown-item" href="#" onclick="toggleSidebarDirection(); return false;">
             <i class="fas fa-exchange-alt text-success mr-2"></i>موقع القائمة
           </a>
-          {% if current_user.is_authenticated and ai_nav_visible %}
+          {% if current_user.is_authenticated and ai_nav_visible and current_user.has_permission('view_reports') %}
           <a class="dropdown-item" href="{{ url_for('ai.assistant_page') }}">
             <i class="fas fa-robot text-primary mr-2"></i>المساعد الذكي
           </a>

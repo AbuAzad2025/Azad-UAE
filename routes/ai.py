@@ -405,6 +405,13 @@ def chat():
     
     response = AIService.chat_response(message, context)
     
+    # Train local assistant from successful interaction
+    try:
+        from ai_knowledge.trainer import trainer
+        trainer.learn_from_interaction(message, str(response)[:500], current_user.id, success=True)
+    except Exception:
+        pass
+    
     state = get_ai_access_state(current_user)
     return jsonify({
         'response': response,
@@ -3037,9 +3044,9 @@ http://localhost:5000/ai/assistant
 
 @ai_bp.route('/assistant', methods=['GET'])
 @login_required
-@owner_required
+@permission_required('view_reports')
 def assistant_page():
-    """صفحة المساعد الذكي"""
+    """صفحة المساعد الذكي - متاحة لكل مستخدم لديه صلاحية view_reports وتفعيل AI"""
     try:
         from models import Warehouse
         from utils.branching import get_accessible_warehouses
