@@ -3,8 +3,7 @@
 {% block title %}تقرير ضريبة القيمة المضافة{% endblock %}
 
 {% block content %}
-
-<div class="container py-4">
+<div class="no-print container py-4">
 
   <h2 class="mb-2">تقرير VAT — ضريبة القيمة المضافة</h2>
 
@@ -34,6 +33,18 @@
 
   </form>
 
+</div>
+
+<div class="erp-report-print container py-4">
+  <div class="erp-report-header">
+    <h2>تقرير ضريبة القيمة المضافة - VAT</h2>
+    <div class="erp-report-meta">
+      {{ date_from }} — {{ date_to }}
+      {% if vat_country %} | {{ vat_country }}{% endif %}
+      {% if company_name_ar %} | {{ company_name_ar }}{% endif %}
+    </div>
+  </div>
+
   <div class="row">
 
     <div class="col-md-4"><div class="card"><div class="card-body"><h6>VAT Output (2130) — مبيعات</h6><h3>{{ format_currency(report.vat_output) }}</h3></div></div></div>
@@ -43,8 +54,6 @@
     <div class="col-md-4"><div class="card border-primary"><div class="card-body"><h6>صافي VAT مستحق</h6><h3>{{ format_currency(report.net_vat) }}</h3></div></div></div>
 
   </div>
-
 </div>
-
 {% endblock %}
 

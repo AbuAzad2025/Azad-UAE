@@ -76,7 +76,10 @@ function initializeDataTables() {
                 {
                     extend: 'print',
                     text: '<i class="fas fa-print"></i> طباعة',
-                    className: 'btn btn-info btn-sm'
+                    className: 'btn btn-info btn-sm',
+                    customize: function(win) {
+                        if (window.applyDataTablePrintStyles) window.applyDataTablePrintStyles(win);
+                    }
                 }
             ]
         });

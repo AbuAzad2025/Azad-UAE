@@ -423,17 +423,26 @@
   function applyPrintStyles(win, options) {
     const title = options.title || '';
     const headerColor = options.headerColor || '#0d6efd';
+    const isWide = (options.wide !== false);
+
+    const pageSize = isWide ? 'A4 landscape' : 'A4 portrait';
 
     const css = [
-      '@page { size: A4 landscape; margin: 8mm; }',
-      'body { font-size: 9pt; direction: rtl; font-family: "Cairo", "Tahoma", sans-serif; -webkit-print-color-adjust: exact; position: relative; }',
-      'body::before { content: "تصميم شركة أزاد للأنظمة الذكية"; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-10deg); font-size: 18pt; color: rgba(108, 117, 125, 0.12); white-space: nowrap; z-index: 0; pointer-events: none; }',
-      'table { width: 100% !important; border-collapse: collapse !important; position: relative; z-index: 1; }',
-      'table th, table td { border: 1px solid #dee2e6 !important; padding: 3px 4px !important; text-align: center !important; }',
-      `table thead th { background: ${headerColor} !important; color: #fff !important; font-size: 8.5pt; }`,
+      `@page { size: ${pageSize}; margin: 10mm; }`,
+      'body { font-size: 9pt; direction: rtl; font-family: "Cairo", "Tahoma", sans-serif; -webkit-print-color-adjust: exact; background: #fff; padding: 5mm; }',
+      'body::before { content: "Azad ERP"; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-10deg); font-size: 24pt; color: rgba(108, 117, 125, 0.08); white-space: nowrap; z-index: 0; pointer-events: none; }',
+      'h1.print-title { text-align: center; margin-bottom: 3mm; font-size: 12pt; font-weight: 700; position: relative; z-index: 1; }',
+      '.print-meta { text-align: center; font-size: 8pt; color: #666; margin-bottom: 3mm; }',
+      '.table-responsive { overflow: visible !important; width: 100% !important; }',
+      'table { width: 100% !important; max-width: 100% !important; table-layout: auto !important; border-collapse: collapse !important; position: relative; z-index: 1; }',
+      'table th, table td { border: 1px solid #adb5bd !important; padding: 2mm 3mm !important; text-align: center !important; vertical-align: middle; white-space: normal !important; overflow: visible !important; word-break: break-word; }',
+      `table thead th { background: ${headerColor} !important; color: #fff !important; font-size: 8.5pt; font-weight: 600; }`,
       'table tbody td { font-size: 8pt; }',
       'table tbody tr:nth-child(even) { background: #f8f9fa !important; }',
-      'h1.print-title { text-align: center; margin-bottom: 0.3rem; font-size: 8pt; position: relative; z-index: 1; }'
+      'thead { display: table-header-group; }',
+      'tfoot { display: table-footer-group; }',
+      'tr { page-break-inside: avoid; break-inside: avoid; }',
+      'th, td { white-space: normal !important; overflow: visible !important; text-overflow: clip !important; word-break: break-word; overflow-wrap: anywhere; }'
     ].join('\n');
 
     const head = win.document.head || win.document.getElementsByTagName('head')[0];
@@ -448,14 +457,15 @@
     }
 
     const $body = jQueryInstance(win.document.body);
-    $body.css('padding', '8mm');
+    $body.css('padding', '0');
     $body.find('h1').remove();
     if (title) {
       $body.prepend(`<h1 class="print-title">${title}</h1>`);
     }
+    $body.prepend('<div class="print-meta">Azad ERP System</div>');
 
     const $table = $body.find('table').first();
-    $table.removeClass('display').addClass('table table-striped table-bordered');
+    $table.removeClass('display').addClass('table table-bordered');
   }
 
   const SmartPrint = {
@@ -480,6 +490,7 @@
           extend: 'print',
           text: '<i class="fas fa-print mr-1"></i> طباعة',
           title: '',
+          name: 'smart-print',
           className: 'btn btn-info btn-sm smart-print-button d-none',
           attr: {
             'data-smart-print-title': opts.title || '',
@@ -533,10 +544,20 @@
         return;
       }
 
-      const buttonApi = table.button('.smart-print-button');
-      if (!buttonApi.length) {
-        console.warn('SmartPrint: hidden print button not available.');
-        return;
+      let buttonApi = table.button('.smart-print-button');
+      if (!buttonApi || !buttonApi.length) {
+        // Fallback: find by name if set, or use last button
+        buttonApi = table.button('smart-print:name');
+        if (!buttonApi || !buttonApi.length) {
+          const allButtons = table.buttons();
+          if (allButtons && allButtons.count() > 0) {
+            buttonApi = table.button(allButtons.count() - 1);
+          }
+        }
+        if (!buttonApi || !buttonApi.length) {
+          console.warn('SmartPrint: hidden print button not available.');
+          return;
+        }
       }
 
       let opts = options;

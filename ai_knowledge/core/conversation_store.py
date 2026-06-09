@@ -22,12 +22,16 @@ def get_context(user_id: int, tenant_id: int = None):
     try:
         data = json.loads(mem.value)
         updated = mem.last_accessed or mem.created_at
-        if updated and datetime.now(timezone.utc) - updated > timedelta(hours=2):
-            mem.is_active = False
-            db.session.commit()
-            return None
+        now = datetime.now(timezone.utc)
+        if updated:
+            if updated.tzinfo is None:
+                updated = updated.replace(tzinfo=timezone.utc)
+            if now - updated > timedelta(hours=2):
+                mem.is_active = False
+                db.session.commit()
+                return None
         mem.access_count = (mem.access_count or 0) + 1
-        mem.last_accessed = datetime.now(timezone.utc)
+        mem.last_accessed = now
         db.session.commit()
         return data
     except Exception:

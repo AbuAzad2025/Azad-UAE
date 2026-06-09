@@ -3,7 +3,7 @@
 {% block page_title %}قائمة التدفقات النقدية{% endblock %}
 
 {% block content %}
-<div class="row mb-3">
+<div class="row mb-3 no-print">
   <div class="col-12">
     <a href="{{ url_for('ledger.index') }}" class="btn btn-secondary">
       <i class="fas fa-arrow-right mr-2"></i>العودة
@@ -15,7 +15,7 @@
 </div>
 
 
-<div class="card mb-3">
+<div class="card mb-3 no-print">
   <div class="card-body">
     <form class="needs-validation" method="get" class="form-inline" action="">
       <label class="ml-2 mr-2" for="input_date_from">من تاريخ:</label>
@@ -31,19 +31,16 @@
   </div>
 </div>
 
-
-<div class="card">
-  <div class="card-header bg-gradient-primary">
-    <h3 class="card-title text-white">
-      <i class="fas fa-money-bill-wave mr-2"></i>
-      قائمة التدفقات النقدية
-    </h3>
-    <div class="card-tools">
-      <span class="badge badge-light">
-        من {{ report.period_start.strftime('%d/%m/%Y') }} إلى {{ report.period_end.strftime('%d/%m/%Y') }}
-      </span>
+<div class="erp-report-print">
+  <div class="erp-report-header">
+    <h2>قائمة التدفقات النقدية</h2>
+    <div class="erp-report-meta">
+      من {{ report.period_start.strftime('%d/%m/%Y') }} إلى {{ report.period_end.strftime('%d/%m/%Y') }}
+      {% if company_name_ar %} | {{ company_name_ar }}{% endif %}
     </div>
   </div>
+
+  <div class="card">
   <div class="card-body">
     
     
@@ -158,18 +155,18 @@
         </table></div>
       </div>
     </div>
+  </div>
+</div>
 
-    
-    <div class="card mt-4">
-      <div class="card-header">
-        <h5 class="mb-0">
-          <i class="fas fa-chart-bar mr-2"></i>التحليل البياني
-        </h5>
-      </div>
-      <div class="card-body">
-        <canvas id="cashFlowChart" height="80"></canvas>
-      </div>
-    </div>
+
+<div class="card mt-4 no-print">
+  <div class="card-header">
+    <h5 class="mb-0">
+      <i class="fas fa-chart-bar mr-2"></i>التحليل البياني
+    </h5>
+  </div>
+  <div class="card-body">
+    <canvas id="cashFlowChart" height="80"></canvas>
   </div>
 </div>
 
@@ -234,9 +231,11 @@ new Chart(ctx, {
 
 <style>
 @media print {
-  .btn, form, canvas {
-    display: none !important;
+  @page {
+    size: A4 landscape;
+    margin: 15mm;
   }
+  .card-header { display: none !important; }
 }
 </style>
 {% endblock %}

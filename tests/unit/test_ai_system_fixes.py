@@ -74,8 +74,6 @@ class TestConversationStore:
         )
         with app.app_context():
             set_context(1, {"last_action": "عميل", "step": 1}, tenant_id=1)
-            all_mem = AiMemory.query.filter_by(tenant_id=1, category="conversation").all()
-            print("MEMS", [(m.key, m.value, m.is_active) for m in all_mem])
             ctx = get_context(1, tenant_id=1)
             assert ctx == {"last_action": "عميل", "step": 1}
             clear_context(1, tenant_id=1)

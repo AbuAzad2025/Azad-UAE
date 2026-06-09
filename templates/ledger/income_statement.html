@@ -17,7 +17,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="row mb-3 d-print-none">
+<div class="row mb-3 d-print-none no-print">
   <div class="col-12">
     <div class="card">
       <div class="card-body py-2">
@@ -41,63 +41,65 @@
   </div>
 </div>
 
-<div class="card">
-  <div class="card-header bg-gradient-success">
-    <h3 class="card-title text-white">{{ t('Income Statement') }}</h3>
-    <div class="card-tools">
-      <button class="btn btn-tool" onclick="window.print()" title="طباعة">
-        <i class="fas fa-print"></i>
-      </button>
+<div class="erp-report-print">
+  <div class="erp-report-header">
+    <h2>{{ t('Income Statement') }}</h2>
+    <div class="erp-report-meta">
+      {{ date_from }} — {{ date_to }}
+      {% if company_name_ar %} | {{ company_name_ar }}{% endif %}
     </div>
   </div>
-  <div class="card-body">
-    <div class="row">
-      <div class="col-md-6">
-        <h4 class="text-success"><i class="fas fa-arrow-up"></i> الإيرادات</h4>
-        <div class="table-responsive"><table class="table table-sm">
-          {% for name, amount in revenues.items() %}
-          <tr>
-            <td>{{ name }}</td>
-            <td class="text-left">{{ format_currency(amount) }}</td>
-          </tr>
-          {% endfor %}
-          <tr class="font-weight-bold bg-light">
-            <td>إجمالي الإيرادات</td>
-            <td class="text-left text-success">{{ format_currency(total_revenue) }}</td>
-          </tr>
-        </table></div>
+
+  <div class="card">
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-6">
+          <h4 class="text-success"><i class="fas fa-arrow-up"></i> الإيرادات</h4>
+          <div class="table-responsive"><table class="table table-sm">
+            {% for name, amount in revenues.items() %}
+            <tr>
+              <td>{{ name }}</td>
+              <td class="text-left">{{ format_currency(amount) }}</td>
+            </tr>
+            {% endfor %}
+            <tr class="font-weight-bold bg-light">
+              <td>إجمالي الإيرادات</td>
+              <td class="text-left text-success">{{ format_currency(total_revenue) }}</td>
+            </tr>
+          </table></div>
+        </div>
+
+        <div class="col-md-6">
+          <h4 class="text-danger"><i class="fas fa-arrow-down"></i> المصروفات</h4>
+          <div class="table-responsive"><table class="table table-sm">
+            {% for name, amount in expenses.items() %}
+            <tr>
+              <td>{{ name }}</td>
+              <td class="text-left">{{ format_currency(amount) }}</td>
+            </tr>
+            {% endfor %}
+            <tr class="font-weight-bold bg-light">
+              <td>إجمالي المصروفات</td>
+              <td class="text-left text-danger">{{ format_currency(total_expense) }}</td>
+            </tr>
+          </table></div>
+        </div>
       </div>
 
-      <div class="col-md-6">
-        <h4 class="text-danger"><i class="fas fa-arrow-down"></i> المصروفات</h4>
-        <div class="table-responsive"><table class="table table-sm">
-          {% for name, amount in expenses.items() %}
-          <tr>
-            <td>{{ name }}</td>
-            <td class="text-left">{{ format_currency(amount) }}</td>
-          </tr>
-          {% endfor %}
-          <tr class="font-weight-bold bg-light">
-            <td>إجمالي المصروفات</td>
-            <td class="text-left text-danger">{{ format_currency(total_expense) }}</td>
-          </tr>
-        </table></div>
-      </div>
-    </div>
+      <hr>
 
-    <hr>
-
-    <div class="row">
-      <div class="col-12">
-        <div class="alert {% if net_profit >= 0 %}alert-success{% else %}alert-danger{% endif %} text-center">
-          <h3>
-            {% if net_profit >= 0 %}
-            <i class="fas fa-check-circle"></i> صافي الربح
-            {% else %}
-            <i class="fas fa-exclamation-triangle"></i> صافي الخسارة
-            {% endif %}
-          </h3>
-          <h2 class="mb-0">{{ format_currency(net_profit|abs) }}</h2>
+      <div class="row">
+        <div class="col-12">
+          <div class="alert {% if net_profit >= 0 %}alert-success{% else %}alert-danger{% endif %} text-center">
+            <h3>
+              {% if net_profit >= 0 %}
+              صافي الربح
+              {% else %}
+              صافي الخسارة
+              {% endif %}
+            </h3>
+            <h2 class="mb-0">{{ format_currency(net_profit|abs) }}</h2>
+          </div>
         </div>
       </div>
     </div>
@@ -112,39 +114,7 @@
     size: A4 {{ 'landscape' if request.args.get('orientation') == 'landscape' else 'portrait' }};
     margin: 15mm;
   }
-  /* إخفاء عناصر UI */
-  .main-sidebar, .main-header, .main-footer, 
-  .content-header, .no-print, button, .btn,
-  .breadcrumb, .navbar, .sidebar {
-    display: none !important;
-  }
-  /* تحسين المحتوى للطباعة */
-  .content-wrapper {
-    margin: 0 !important;
-    padding: 0 !important;
-  }
-  .card {
-    border: 1px solid #dee2e6 !important;
-    box-shadow: none !important;
-    page-break-inside: avoid;
-  }
-  body {
-    background: white !important;
-  }
-  /* تحسين الجداول */
-  table {
-    page-break-inside: auto;
-  }
-  tr {
-    page-break-inside: avoid;
-    page-break-after: auto;
-  }
-  thead {
-    display: table-header-group;
-  }
-  tfoot {
-    display: table-footer-group;
-  }
+  .card-header { display: none !important; }
 }
 </style>
 {% endblock %}

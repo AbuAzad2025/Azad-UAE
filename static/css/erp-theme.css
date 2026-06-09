@@ -2767,23 +2767,140 @@ textarea.form-control {
 
 /* ── Global Print Override (for templates extending base.html) ── */
 @media print {
-  .main-sidebar, .main-header, .main-footer, .content-header,
-  .no-print, .btn, .card-tools, .breadcrumb, .navbar, .sidebar {
+  /* Hide ALL application shell / chrome */
+  .main-header, .main-sidebar, .main-footer,
+  .app-footer, .erp-footer, .erp-mobile-nav,
+  .navbar, .sidebar, .breadcrumb,
+  .content-header, .card-tools,
+  .dataTables_filter, .dataTables_length,
+  .dataTables_paginate, .dataTables_info,
+  .dt-buttons, .dt-buttons btn-group,
+  .btn, .no-print,
+  .modal, .modal-backdrop, .modal-open,
+  .dropdown, .dropdown-menu, .dropdown-backdrop,
+  .select2, .select2-container,
+  form:not(.erp-print-form) {
     display: none !important;
   }
-  .content-wrapper {
-    margin: 0 !important; padding: 0 !important;
-  }
-  body, .card {
+
+  /* Reset layout for printed content */
+  body {
     background: #fff !important;
+    direction: rtl;
+    font-size: 10pt;
+    line-height: 1.4;
+    width: 100% !important;
+    min-width: auto !important;
   }
+
+  .content-wrapper, .content, .container-fluid {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    min-height: 0 !important;
+  }
+
   .card {
-    border: none !important; box-shadow: none !important;
+    border: 1px solid #dee2e6 !important;
+    box-shadow: none !important;
+    background: #fff !important;
+    page-break-inside: avoid;
+    break-inside: avoid;
   }
-  table {
-    width: 100% !important; table-layout: auto;
+
+  .card-body {
+    padding: 4mm !important;
   }
-  thead { display: table-header-group; }
-  tfoot { display: table-footer-group; }
-  tr { page-break-inside: avoid; }
+
+  /* ── Print document containers ── */
+  .erp-report-print, .erp-ledger-print, .erp-print-document {
+    display: block !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+  }
+
+  .erp-report-print .card,
+  .erp-ledger-print .card,
+  .erp-print-document .card {
+    border: none !important;
+    box-shadow: none !important;
+    margin-bottom: 4mm !important;
+  }
+
+  /* ── Report header / metadata ── */
+  .erp-report-header {
+    display: block !important;
+    text-align: center;
+    margin-bottom: 4mm;
+    border-bottom: 2px solid #333;
+    padding-bottom: 2mm;
+  }
+  .erp-report-header h1, .erp-report-header h2, .erp-report-header h3 {
+    margin: 0 0 2mm;
+  }
+  .erp-report-header .erp-report-meta {
+    font-size: 9pt;
+    color: #555;
+  }
+
+  /* ── Table styles for clean report printing ── */
+  .table-responsive {
+    overflow: visible !important;
+    display: block !important;
+    width: 100% !important;
+  }
+
+  table, .table {
+    width: 100% !important;
+    max-width: 100% !important;
+    table-layout: auto !important;
+    border-collapse: collapse !important;
+    page-break-inside: auto;
+    font-size: 9pt;
+  }
+
+  thead {
+    display: table-header-group;
+  }
+  tfoot {
+    display: table-footer-group;
+  }
+
+  tr {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  th, td {
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    vertical-align: middle;
+    padding: 2mm 3mm !important;
+  }
+
+  th {
+    background: #f0f0f0 !important;
+    font-weight: 600;
+  }
+
+  /* ── Badges / labels in print ── */
+  .badge {
+    border: 1px solid #999;
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  /* ── Utility ── */
+  .d-print-none { display: none !important; }
+  .d-print-block { display: block !important; }
+  .d-print-inline { display: inline !important; }
 }

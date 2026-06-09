@@ -275,7 +275,7 @@
         dom: hasButtons ? "Bfrtip" : "frtip",
         buttons: hasButtons ? [
           { extend: "excelHtml5", text: '<i class="fas fa-file-excel"></i> Excel' },
-          { extend: "print", text: '<i class="fas fa-print"></i> طباعة' }
+          { extend: "print", text: '<i class="fas fa-print"></i> طباعة', customize: function(win) { applyDataTablePrintStyles(win); } }
         ] : [],
         pageLength: pageLen,
         responsive: true,
@@ -571,4 +571,58 @@
       $alert.alert('close');
     }, 10000);
   }
+
+  // ── Shared print helpers ──
+
+  /**
+   * AzadPrint.printPageReport() - clean window.print() for report/ledger pages.
+   * Adds .is-printing class to body before print, removes after.
+   * Use with: <button onclick="AzadPrint.printPageReport()">
+   */
+  window.AzadPrint = {
+    printPageReport: function() {
+      document.body.classList.add('is-printing-report');
+      setTimeout(function() {
+        window.print();
+        setTimeout(function() {
+          document.body.classList.remove('is-printing-report');
+        }, 500);
+      }, 100);
+    },
+    printElement: function(selector, options) {
+      var $el = $(selector);
+      if (!$el.length) return;
+      var $clone = $el.clone();
+      var $printWin = window.open('', '_blank', 'width=1200,height=800');
+      if (!$printWin) return;
+      $printWin.document.write('<!DOCTYPE html><html dir="rtl"><head><title>' + (options && options.title || 'طباعة') + '</title>');
+      $printWin.document.write('<style>body { font-family: "Cairo", Tahoma, sans-serif; font-size: 10pt; direction: rtl; background: #fff; padding: 10mm; } table { width: 100%; border-collapse: collapse; } th, td { border: 1px solid #adb5bd; padding: 2mm 3mm; text-align: center; } thead th { background: ' + (options && options.headerColor || '#0d6efd') + '; color: #fff; } thead { display: table-header-group; } tfoot { display: table-footer-group; } tr { page-break-inside: avoid; } @page { size: A4 landscape; margin: 10mm; }</style></head><body>');
+      $printWin.document.write($clone[0].outerHTML);
+      $printWin.document.write('</body></html>');
+      $printWin.document.close();
+      setTimeout(function() { $printWin.print(); $printWin.close(); }, 500);
+    }
+  };
+
+  // Shared print styles for DataTables print windows
+  window.applyDataTablePrintStyles = function(win) {
+    if (!win || !win.document) return;
+    const css = [
+      '@page { size: A4 landscape; margin: 10mm; }',
+      'body { font-size: 9pt; direction: rtl; font-family: "Cairo", "Tahoma", sans-serif; -webkit-print-color-adjust: exact; background: #fff; }',
+      'h1 { text-align: center; font-size: 12pt; margin-bottom: 3mm; }',
+      '.table-responsive { overflow: visible !important; width: 100% !important; }',
+      'table { width: 100% !important; max-width: 100% !important; table-layout: auto !important; border-collapse: collapse !important; }',
+      'table th, table td { border: 1px solid #adb5bd !important; padding: 2mm 3mm !important; text-align: center !important; vertical-align: middle; white-space: normal !important; word-break: break-word; }',
+      'table thead th { background: #0d6efd !important; color: #fff !important; }',
+      'thead { display: table-header-group; }',
+      'tfoot { display: table-footer-group; }',
+      'tr { page-break-inside: avoid; break-inside: avoid; }',
+      'th, td { white-space: normal !important; overflow: visible !important; word-break: break-word; overflow-wrap: anywhere; }'
+    ].join('\n');
+    const style = win.document.createElement('style');
+    style.type = 'text/css';
+    style.appendChild(win.document.createTextNode(css));
+    win.document.head.appendChild(style);
+  };
 })(jQuery);
