@@ -2649,6 +2649,7 @@ http://localhost:5000/ai/assistant
                         address=address,
                         is_active=True
                     )
+                    assign_tenant_id(customer, user)
                     db.session.add(customer)
                     db.session.commit()
                     
@@ -2769,6 +2770,7 @@ http://localhost:5000/ai/assistant
                         payment_status='paid' if payment_method == 'cash' else 'unpaid',
                         status='confirmed'
                     )
+                    assign_tenant_id(sale, user)
                     db.session.add(sale)
                     db.session.flush()
                     
@@ -2779,6 +2781,7 @@ http://localhost:5000/ai/assistant
                         unit_price=product.regular_price,
                         line_total=product.regular_price * quantity
                     )
+                    assign_tenant_id(sale_line, user)
                     db.session.add(sale_line)
                     
                     product.current_stock -= quantity

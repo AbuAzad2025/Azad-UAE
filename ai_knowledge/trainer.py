@@ -137,17 +137,34 @@ class Trainer:
         return self.quick_learner
 
     def seed(self):
-        """Seed quick_learner with essential knowledge."""
+        """Seed quick_learner with essential knowledge + expertise files."""
         if self._seeded:
             return
         ql = self._get_ql()
         count = 0
         for question, answer in SEED_QA:
-            # Only seed if not already known
             existing = ql.get_answer(question)
             if existing is None:
                 ql.learn(question, answer, category='system')
                 count += 1
+        # Also seed from expertise JSON files
+        try:
+            import glob, json, os
+            training_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'ai_training')
+            for path in glob.glob(os.path.join(training_dir, 'GLOBAL', 'expertise', '*.json')):
+                with open(path, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                areas = data.get('expertise_areas', []) if isinstance(data, dict) else data
+                for area in areas:
+                    topic = area.get('topic', '')
+                    knowledge = area.get('knowledge', '')
+                    if topic and knowledge:
+                        existing = ql.get_answer(topic)
+                        if existing is None:
+                            ql.learn(topic, knowledge, category='expertise')
+                            count += 1
+        except Exception as e:
+            logger.debug(f"Trainer: expertise seed skipped ({e})")
         self._seeded = True
         if count > 0:
             logger.info(f"Trainer: seeded {count} new Q&A pairs")

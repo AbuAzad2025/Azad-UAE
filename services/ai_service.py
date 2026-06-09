@@ -1236,7 +1236,88 @@ class AIService:
             'help': help_content.get(page, 'لا توجد مساعدة متاحة لهذه الصفحة'),
             'user_role': user_role
         }
-    
+
+    @staticmethod
+    def deep_business_analysis():
+        """تحليل عميق شامل للأعمال"""
+        try:
+            analysis = AIService.generate_business_insights()
+            return {
+                'success': True,
+                'analysis': analysis,
+                'summary': f'تم تحليل {len(analysis)} جانب من أداء النظام',
+                'generated_at': datetime.now().isoformat()
+            }
+        except Exception as e:
+            return {'success': False, 'error': str(e)}
+
+    @staticmethod
+    def predict_cash_flow(days=30):
+        """توقع التدفق النقدي"""
+        try:
+            return AIService.predict_cash_flow_neural(months_ahead=max(1, days // 30))
+        except Exception as e:
+            return {'success': False, 'error': str(e)}
+
+    @staticmethod
+    def smart_pricing_engine(product_id, customer_id, quantity=1):
+        """محرك التسعير الذكي"""
+        try:
+            from models import Product
+            product = Product.query.get(product_id)
+            if not product:
+                return None
+            base_price = float(product.regular_price or 0)
+            discount = 0
+            if quantity >= 10:
+                discount = 0.10
+            elif quantity >= 5:
+                discount = 0.05
+            return {
+                'base_price': base_price,
+                'quantity': quantity,
+                'discount_percentage': discount * 100,
+                'discount_amount': round(base_price * quantity * discount, 2),
+                'total_before_discount': round(base_price * quantity, 2),
+                'total_after_discount': round(base_price * quantity * (1 - discount), 2),
+                'unit_price_after_discount': round(base_price * (1 - discount), 2),
+                'currency': 'AED'
+            }
+        except Exception as e:
+            return None
+
+    @staticmethod
+    def predict_customer_churn():
+        """توقع فقدان العملاء"""
+        try:
+            from models import Customer, Sale
+            from datetime import datetime, timedelta
+            from extensions import db
+
+            three_months_ago = datetime.now() - timedelta(days=90)
+            at_risk = []
+            active_customers = Customer.query.filter_by(is_active=True).all()
+            for customer in active_customers:
+                last_sale = Sale.query.filter_by(customer_id=customer.id)\
+                    .order_by(Sale.sale_date.desc()).first()
+                if last_sale and last_sale.sale_date < three_months_ago:
+                    at_risk.append({
+                        'customer_id': customer.id,
+                        'customer_name': customer.name,
+                        'last_purchase': last_sale.sale_date.strftime('%Y-%m-%d'),
+                        'days_since_last_purchase': (datetime.now() - last_sale.sale_date).days,
+                        'risk_level': 'high' if (datetime.now() - last_sale.sale_date).days > 180 else 'medium'
+                    })
+            return {
+                'success': True,
+                'at_risk_customers': at_risk,
+                'total_at_risk': len(at_risk),
+                'total_customers': len(active_customers),
+                'churn_rate_percentage': round(len(at_risk) / max(len(active_customers), 1) * 100, 1)
+            }
+        except Exception as e:
+            return {'success': False, 'error': str(e)}
+
     @staticmethod
     def _local_response(message, context=None):
         """رد محلي ذكي - Backward Compatibility"""

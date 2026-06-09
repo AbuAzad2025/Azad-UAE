@@ -14,6 +14,7 @@ Old import paths still work via backward-compatible shims in the original files.
 """
 import json
 import os
+import difflib
 from typing import Dict, Optional
 import logging
 
@@ -44,29 +45,50 @@ class QuickLearner:
         except Exception as e:
             logger.error(f"Failed to save quick knowledge: {e}")
             
-    def learn(self, question: str, answer: str, category: str = 'general'):
+    def learn(self, question: str, answer: str, category: str = 'general',
+              tenant_id: int = None):
         """تعلم معلومة جديدة"""
         question_key = question.strip().lower()
-        self.knowledge_base[question_key] = {
+        entry = {
             'answer': answer,
             'category': category,
-            'confidence': 1.0  # تعلم مباشر
+            'confidence': 1.0,
         }
+        if tenant_id is not None:
+            entry['tenant_id'] = tenant_id
+        self.knowledge_base[question_key] = entry
         self.save_knowledge()
         return True
         
-    def get_answer(self, question: str) -> Optional[str]:
-        """البحث عن إجابة"""
-        # مطابقة تامة
+    def get_answer(self, question: str, tenant_id: int = None) -> Optional[str]:
+        """البحث عن إجابة - مع مطابقة ضبابية وعزل حسب المستأجر"""
         key = question.strip().lower()
+        
+        # 1. مطابقة تامة (ضمن نطاق المستأجر إن وجد)
+        if key in self.knowledge_base:
+            entry = self.knowledge_base[key]
+            if tenant_id is None or entry.get('tenant_id') is None or entry.get('tenant_id') == tenant_id:
+                return entry['answer']
+        
+        # 2. مطابقة تامة في جميع الإدخالات (إذا لم نجد في نطاق المستأجر)
         if key in self.knowledge_base:
             return self.knowledge_base[key]['answer']
-            
-        # مطابقة جزئية
+        
+        # 3. مطابقة جزئية
+        candidates = []
         for k, v in self.knowledge_base.items():
+            if tenant_id is not None and v.get('tenant_id') is not None and v.get('tenant_id') != tenant_id:
+                continue
             if k in key or key in k:
                 return v['answer']
-                
+            candidates.append(k)
+        
+        # 4. مطابقة ضبابية باستخدام difflib
+        if candidates:
+            close = difflib.get_close_matches(key, candidates, n=1, cutoff=0.6)
+            if close:
+                return self.knowledge_base[close[0]]['answer']
+        
         return None
 
 # Singleton

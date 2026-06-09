@@ -240,14 +240,30 @@ class IntelligentAssistant:
             from models import Sale, Customer, Product, Payment
             from extensions import db
             from sqlalchemy import func
-            
+            from flask import g, has_request_context
+            from utils.tenanting import get_active_tenant_id
+            from flask_login import current_user
+
+            tid = None
+            if has_request_context():
+                try:
+                    tid = get_active_tenant_id(current_user)
+                except Exception:
+                    pass
+
             data = {}
             
+            def _f(model):
+                q = model.query
+                if tid is not None:
+                    q = q.filter_by(tenant_id=tid)
+                return q
+
             # بيانات عامة للنظام
             data['system_stats'] = {
-                'total_customers': Customer.query.filter_by(is_active=True).count(),
-                'total_products': Product.query.filter_by(is_active=True).count(),
-                'total_sales_today': Sale.query.filter(
+                'total_customers': _f(Customer).filter_by(is_active=True).count(),
+                'total_products': _f(Product).filter_by(is_active=True).count(),
+                'total_sales_today': _f(Sale).filter(
                     func.date(Sale.sale_date) == datetime.now().date()
                 ).count()
             }
@@ -256,7 +272,7 @@ class IntelligentAssistant:
             if intent in ['sales_analysis', 'customer_balance', 'inventory_check']:
                 # مبيعات آخر 30 يوم
                 thirty_days_ago = datetime.now() - timedelta(days=30)
-                recent_sales = Sale.query.filter(Sale.sale_date >= thirty_days_ago).all()
+                recent_sales = _f(Sale).filter(Sale.sale_date >= thirty_days_ago).all()
                 
                 data['recent_sales'] = {
                     'count': len(recent_sales),
@@ -276,7 +292,7 @@ class IntelligentAssistant:
             if intent in ['customer_balance'] and entities.get('names'):
                 # بحث عن العميل المحدد
                 customer_name = entities['names'][0]
-                customer = Customer.query.filter(
+                customer = _f(Customer).filter(
                     Customer.name.ilike(f'%{customer_name}%')
                 ).first()
                 
@@ -285,7 +301,7 @@ class IntelligentAssistant:
             
             if intent in ['inventory_check']:
                 # المنتجات بمخزون منخفض
-                low_stock = Product.query.filter(
+                low_stock = _f(Product).filter(
                     Product.is_active == True,
                     Product.current_stock <= Product.min_stock_alert
                 ).all()
