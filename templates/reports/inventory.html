@@ -17,7 +17,7 @@
           <h3 class="card-title">
             <i class="fas fa-boxes"></i> تقرير المخزون
           </h3>
-          <div class="card-tools">
+          <div class="card-tools no-print">
             <form class="needs-validation" method="get" class="form-inline d-inline mr-2">
               <label class="mr-2">الفرع:</label>
               <select name="branch_id" class="form-control form-control-sm mr-2 ic-1" aria-label="اختر الفرع">
@@ -70,6 +70,7 @@
         </div>
         <div class="card-body">
           
+          <div class="erp-report-print">
           {% if stats %}
           <div class="row mb-4">
             <div class="col-md-3">
@@ -162,10 +163,11 @@
               {% endfor %}
             </tbody>
           </table></div>
-        </div>
+        </div></div>
       </div>
     </div>
   </div>
 </div>
+{% block extra_css %}<style>@media print{@page{size:A4 landscape;margin:10mm}}</style>{% endblock %}
 {% endblock %}
 
