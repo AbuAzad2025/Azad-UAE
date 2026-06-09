@@ -53,7 +53,12 @@ class GamificationService:
         
         level_up = old_badge['name_ar'] != new_badge['name_ar']
         
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
+
         
         return {
             'success': True,

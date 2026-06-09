@@ -80,7 +80,12 @@ class ChequeAccountingIntegration:
                 target_aed = amt_aed + D(str(exchange_gain_loss))
                 exchange_rate = target_aed / cheque.amount
             cheque.clear_cheque(clearance_date=None, clearance_exchange_rate=exchange_rate)
-            db.session.commit()
+            try:
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+                raise
+
             # إرجاع القيد الأخير المرتبط (Cheque لا يُرجع القيد)
             entry = ChequeAccountingIntegration._scoped_entries(
                 cheque, reference_type=GLRef.CHEQUE_CLEAR, reference_id=cheque.id

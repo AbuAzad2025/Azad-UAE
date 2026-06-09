@@ -94,7 +94,12 @@ class AdvancedJournalEntryManager:
             reason or "تحديث القيد", updated_by
         )
         
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
+
         return entry
     
     @staticmethod
@@ -182,7 +187,12 @@ class AdvancedJournalEntryManager:
             f"حذف القيد - السبب: {reason}", deleted_by
         )
         
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
+
         return True
     
     @staticmethod
@@ -211,7 +221,12 @@ class AdvancedJournalEntryManager:
             approved_by
         )
         
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
+
         return entry
     
     @staticmethod

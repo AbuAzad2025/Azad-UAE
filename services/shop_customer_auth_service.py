@@ -99,7 +99,12 @@ class ShopCustomerAuthService:
         )
         account.set_password(password)
         db.session.add(account)
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
+
         return account
 
     @staticmethod
@@ -110,7 +115,12 @@ class ShopCustomerAuthService:
             raise ValueError('بيانات الدخول غير صحيحة.')
         from datetime import datetime, timezone
         account.last_login_at = datetime.now(timezone.utc)
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
+
         return account
 
     @staticmethod
@@ -127,7 +137,12 @@ class ShopCustomerAuthService:
 
         account.password_reset_token = secrets.token_urlsafe(32)
         account.password_reset_expires_at = datetime.now(timezone.utc) + timedelta(hours=2)
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
+
         return account
 
     @staticmethod
@@ -152,7 +167,12 @@ class ShopCustomerAuthService:
         account.set_password(new_password)
         account.password_reset_token = None
         account.password_reset_expires_at = None
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
+
         return account
 
     @staticmethod

@@ -141,7 +141,12 @@ class PaymentService:
                 db.session.rollback()
                 raise ValueError(f'فشل الترحيل المحاسبي للدفعة: {e}') from e
                 
-            db.session.commit()
+            try:
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+                raise
+
             return payment
             
         except Exception as e:
@@ -386,7 +391,12 @@ class PaymentService:
                     
                     remaining_amount_aed -= allocated_amount_aed
             
-            db.session.commit()
+            try:
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+                raise
+
             
             current_app.logger.info(f'Receipt created: {receipt.receipt_number}')
             
@@ -455,7 +465,12 @@ class PaymentService:
                 
                 remaining_amount_aed -= allocated_aed
             
-            db.session.commit()
+            try:
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+                raise
+
             
             current_app.logger.info(f'Receipt {receipt.receipt_number} allocated to sales')
         

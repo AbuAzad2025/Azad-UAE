@@ -202,7 +202,12 @@ class PartnerService:
             db.session.flush()
             distribution_ids.append(dist.id)
 
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
+
         return distribution_ids
 
     # ── Distribution lifecycle ──────────────────────────────────
@@ -248,7 +253,12 @@ class PartnerService:
                                              + (abs(Decimal(str(tx.amount))) if net < 0 else Decimal('0')))
                 tx.balance_after = new_bal
 
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
+
         return True
 
     @staticmethod
@@ -261,7 +271,12 @@ class PartnerService:
             return False
 
         dist.status = 'paid'
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
+
         return True
 
     # ── Manual transactions ───────────────────────────────────
@@ -313,7 +328,12 @@ class PartnerService:
         elif transaction_type == 'additional_investment':
             partner.total_additional_investment = (Decimal(str(partner.total_additional_investment or 0)) + amount_base)
 
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
+
         return tx.id
 
     # ── Reports ─────────────────────────────────────────────────

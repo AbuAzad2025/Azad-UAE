@@ -113,7 +113,12 @@ class NOWPaymentsService:
                 )
                 
                 db.session.add(donation)
-                db.session.commit()
+                try:
+                    db.session.commit()
+                except Exception:
+                    db.session.rollback()
+                    raise
+
                 
                 return {
                     'success': True,
@@ -327,7 +332,12 @@ class NOWPaymentsService:
             elif status == 'refunded':
                 donation.status = 'refunded'
             
-            db.session.commit()
+            try:
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+                raise
+
             return True
             
         except Exception as e:

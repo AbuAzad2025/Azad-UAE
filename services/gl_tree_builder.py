@@ -95,7 +95,12 @@ class GLTreeBuilder:
         Args:
             tenant_id: معرف المستأجر
             cleanup_extra: إذا كان True، سيتم إيقاف الحسابات غير الموجودة في الشجرة الأساسية
-            commit: إذا كان True، سيتم تنفيذ db.session.commit() تلقائيًا
+            try:
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+                raise
+
             
         Returns:
             dict: تقرير بالتغييرات التي تمت
@@ -169,7 +174,12 @@ class GLTreeBuilder:
         if has_changes:
             db.session.flush()
             if commit:
-                db.session.commit()
+                try:
+                    db.session.commit()
+                except Exception:
+                    db.session.rollback()
+                    raise
+
         
         return audit_report
     

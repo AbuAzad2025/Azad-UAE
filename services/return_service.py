@@ -378,7 +378,12 @@ class ReturnService:
                 db.session.expire(sale, ['returns'])
                 sale.recalculate_payment_status()
 
-            db.session.commit()
+            try:
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+                raise
+
             return product_return
 
         except Exception as e:

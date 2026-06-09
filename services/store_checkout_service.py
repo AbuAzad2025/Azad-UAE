@@ -243,7 +243,12 @@ class StoreCheckoutService:
         if coupon_obj:
             sale.coupon_code = coupon_obj.code
             StoreCouponService.mark_used(coupon_obj)
-            db.session.commit()
+            try:
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+                raise
+
 
         StoreNotificationService.notify_new_order(sale, store)
         return sale

@@ -160,7 +160,12 @@ class CreateSale(graphene.Mutation):
         )
         assign_tenant_id(sale)
         db.session.add(sale)
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
+
         
         sale_type = SaleType(
             id=sale.id,

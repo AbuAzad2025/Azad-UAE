@@ -72,7 +72,12 @@ class PayrollService:
 
         db.session.add(employee)
 
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
+
 
         return employee
 
@@ -141,7 +146,12 @@ class PayrollService:
 
         advance.gl_entry_id = gl_entry.id
 
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
+
 
         return advance
 
@@ -271,7 +281,12 @@ class PayrollService:
 
         transaction.gl_entry_id = gl_entry.id
 
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
+
 
         return transaction
 

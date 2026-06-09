@@ -26,7 +26,12 @@ class ArchiveService:
             db.session.add(archived)
 
             if commit:
-                db.session.commit()
+                try:
+                    db.session.commit()
+                except Exception:
+                    db.session.rollback()
+                    raise
+
                 current_app.logger.info(f'Archived: {table_name} #{record.id}')
             else:
                 db.session.flush()
@@ -43,7 +48,12 @@ class ArchiveService:
     @staticmethod
     def soft_delete(record):
         record.is_active = False
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
+
 
     @staticmethod
     def hard_delete(table_name, record, archive_first=True):
@@ -115,7 +125,12 @@ class ArchiveService:
             db.session.delete(archive)
             count += 1
 
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
+
 
         current_app.logger.info(f'Cleaned up {count} old archives')
 

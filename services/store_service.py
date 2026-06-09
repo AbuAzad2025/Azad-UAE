@@ -220,7 +220,12 @@ class StoreService:
     def set_platform_disabled(store: 'TenantStore', disabled: bool):
         """Platform-owner only: hard force-OFF lock. Tenant cannot re-enable while locked."""
         store.platform_disabled = bool(disabled)
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
+
         return store
 
     @staticmethod

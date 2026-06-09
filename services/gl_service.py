@@ -627,7 +627,12 @@ class GLService:
             )
             db.session.add(line)
 
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
+
         return entry
     
     @staticmethod

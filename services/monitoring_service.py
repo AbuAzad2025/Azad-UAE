@@ -41,7 +41,12 @@ class MonitoringService:
             source='owner_panel'
         )
         db.session.add(new_log)
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
+
 
     @staticmethod
     def get_system_stats_context(resolve_table_fn, is_sensitive_table_fn) -> Tuple[Dict[str, int], int]:

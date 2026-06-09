@@ -73,7 +73,12 @@ class StoreCouponService:
             is_active=bool(data.get('is_active', True)),
         )
         db.session.add(coupon)
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
+
         return coupon
 
     @staticmethod
@@ -93,7 +98,12 @@ class StoreCouponService:
             coupon.max_uses = int(data['max_uses']) if data.get('max_uses') else None
         if 'is_active' in data:
             coupon.is_active = bool(data.get('is_active'))
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
+
         return coupon
 
     @staticmethod

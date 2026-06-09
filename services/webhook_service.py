@@ -115,7 +115,12 @@ class WebhookService:
             purchase.payment_status = 'failed'
             logger.warning(f'❌ Purchase {purchase.id} failed')
         
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
+
         
         return {'success': True, 'message': f'Purchase updated to {payment_status}'}
     
@@ -158,7 +163,12 @@ class WebhookService:
             donation.status = 'failed'
             logger.warning(f'❌ Donation {donation.id} failed')
         
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
+
         
         return {'success': True, 'message': f'Donation updated to {payment_status}'}
     
@@ -195,7 +205,12 @@ class WebhookService:
                 sale,
                 gateway_reference=payment_id or getattr(sale, 'checkout_gateway_ref', None),
             )
-            db.session.commit()
+            try:
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+                raise
+
             return {'success': True, 'message': 'Store order already confirmed (idempotent)'}
 
         if payment_status == 'finished':

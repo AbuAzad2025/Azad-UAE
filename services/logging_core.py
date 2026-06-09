@@ -1620,7 +1620,12 @@ class LoggingCore:
                 user.login_attempts = (user.login_attempts or 0) + 1
                 if user.login_attempts >= 5:
                     user.locked_until = datetime.now(timezone.utc) + timedelta(minutes=15)
-            db.session.commit()
+            try:
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+                raise
+
 
     @classmethod
     def get_security_events(cls, user_id: int | None = None, days: int = 30) -> list:

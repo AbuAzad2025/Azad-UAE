@@ -53,7 +53,12 @@ class AutoApprovalService:
                 approved_count += 1
                 approved_amount += float(donation.amount_usd or 0)
             
-            db.session.commit()
+            try:
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+                raise
+
             
             if approved_count > 0:
                 logger.info(f'✅ Auto-approved {approved_count} donations, total: ${approved_amount}')
@@ -123,7 +128,12 @@ class AutoApprovalService:
                 approved_count += 1
                 approved_amount += float(purchase.amount_paid or 0)
             
-            db.session.commit()
+            try:
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+                raise
+
             
             if approved_count > 0:
                 logger.info(f'✅ Auto-approved {approved_count} purchases, total: ${approved_amount}')

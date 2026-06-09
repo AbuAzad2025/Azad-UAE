@@ -115,7 +115,12 @@ class StoreOrderService:
                 AzadPlatformFeeService.record_store_online_fee(sale, payment=payment)
             sale.recalculate_payment_status()
 
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
+
         current_app.logger.info('Store order confirmed: %s', sale.sale_number)
         return sale
 
@@ -131,14 +136,24 @@ class StoreOrderService:
             if coupon_code:
                 from services.store_coupon_service import StoreCouponService
                 StoreCouponService.release_use(coupon_code, sale.tenant_id)
-                db.session.commit()
+                try:
+                    db.session.commit()
+                except Exception:
+                    db.session.rollback()
+                    raise
+
             return sale
 
         sale.status = 'cancelled'
         if sale.coupon_code:
             from services.store_coupon_service import StoreCouponService
             StoreCouponService.release_use(sale.coupon_code, sale.tenant_id)
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
+
         current_app.logger.info('Store order cancelled (unfulfilled): %s', sale.sale_number)
         return sale
 

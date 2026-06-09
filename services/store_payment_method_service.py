@@ -87,7 +87,12 @@ class StorePaymentMethodService:
             if cfg:
                 row.set_config(cfg)
             db.session.add(row)
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
+
 
     @staticmethod
     def list_all(*, enabled_only=False):
@@ -127,7 +132,12 @@ class StorePaymentMethodService:
         if not method:
             raise ValueError('طريقة الدفع غير موجودة.')
         method.is_enabled = bool(enabled)
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
+
         return method
 
     @staticmethod
@@ -160,7 +170,12 @@ class StorePaymentMethodService:
         if config:
             method.set_config(config)
         db.session.add(method)
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
+
         return method
 
     @staticmethod
@@ -201,7 +216,12 @@ class StorePaymentMethodService:
                 elif key in cfg:
                     cfg.pop(key, None)
         method.set_config(cfg)
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
+
         return method
 
     @staticmethod
@@ -212,7 +232,12 @@ class StorePaymentMethodService:
         if method.is_builtin:
             raise ValueError('لا يمكن حذف طرق الدفع الأساسية — يمكن إيقافها فقط.')
         db.session.delete(method)
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
+
 
     @staticmethod
     def format_checkout_instructions(method: StorePaymentMethod, lang='ar') -> str:

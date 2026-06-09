@@ -657,7 +657,12 @@ class GLAccountingSetupService:
         if dry_run:
             db.session.rollback()
         else:
-            db.session.commit()
+            try:
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+                raise
+
 
         return SetupResult(
             tenant_id=tenant.id,

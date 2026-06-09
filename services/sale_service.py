@@ -308,13 +308,23 @@ class SaleService:
                 sale.checkout_payment_method = str(checkout_payment_method).strip().lower()[:50]
 
             if defer_fulfillment:
-                db.session.commit()
+                try:
+                    db.session.commit()
+                except Exception:
+                    db.session.rollback()
+                    raise
+
                 current_app.logger.info(f'Sale created (deferred): {sale.sale_number}')
                 return sale
 
             SaleService.fulfill_sale(sale, payment_data=payment_data, paid_amount_aed=paid_amount_aed)
 
-            db.session.commit()
+            try:
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+                raise
+
             
             current_app.logger.info(f'Sale created: {sale.sale_number}')
             
@@ -662,7 +672,12 @@ class SaleService:
                 db.session.rollback()
                 raise ValueError(f'فشل عكس القيد المحاسبي: {e}') from e
             
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
+
         
         current_app.logger.info(f'Sale cancelled: {sale.sale_number}')
     
@@ -687,5 +702,10 @@ class SaleService:
             sale.payment_status = 'unpaid'
             sale.balance_due = total
         
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
+
 

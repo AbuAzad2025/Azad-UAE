@@ -80,7 +80,12 @@ class StoreOnlinePaymentService:
 
         sale.checkout_gateway_ref = str(payment_id)
         sale.checkout_payment_method = sale.checkout_payment_method or 'online_pay'
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
+
 
         return {
             'payment_id': payment_id,

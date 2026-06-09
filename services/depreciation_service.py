@@ -42,5 +42,10 @@ class DepreciationService:
             except Exception as exc:
                 errors.append(f'{asset.asset_number}: {exc}')
 
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
+
         return {'posted': posted, 'skipped': skipped, 'errors': errors}
