@@ -93,7 +93,7 @@
                 {% endif %}
                   <i class="fas fa-file-alt"></i>
                 </a>
-                <button type="button" class="btn btn-outline-danger" onclick="deleteAccount({{ account.id }}, '{{ account.full_name }}')" title="حذف">
+                <button type="button" class="btn btn-outline-danger" onclick="deleteAccount({{ account.id }}, {{ account.full_name|tojson }})" title="حذف">
                   <i class="fas fa-trash"></i>
                 </button>
               </div>
@@ -125,7 +125,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">إلغاء</button>
-        <form class="needs-validation" method="POST" id="deleteForm" style="display: inline;" action="">
+        <form class="needs-validation d-inline" method="POST" id="deleteForm" action="">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
           <button type="submit" class="btn btn-danger">حذف</button>
         </form>

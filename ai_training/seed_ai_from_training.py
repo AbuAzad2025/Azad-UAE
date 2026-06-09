@@ -243,9 +243,31 @@ def seed_documents(conn):
     return count
 
 
+def seed_quick_learner():
+    """Seed trainer's quick_learner from expertise files."""
+    try:
+        from ai_knowledge.trainer import trainer
+        trainer.seed()
+        files = _list_json_files("GLOBAL/expertise")
+        for path in files:
+            with open(path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            areas = data.get("expertise_areas", []) if isinstance(data, dict) else data
+            for area in areas:
+                topic = area.get("topic", "")
+                knowledge = area.get("knowledge", "")
+                if topic and knowledge:
+                    trainer.learn_from_interaction(topic, knowledge, success=True)
+        print(f"  Seeded quick_learner from {len(files)} expertise files")
+        return True
+    except Exception as e:
+        print(f"  ⚠️ Quick learner seed skipped: {e}")
+        return False
+
+
 def main():
     print("=" * 60)
-    print("  SEED AI TABLES FROM ORGANIZED TRAINING DATA")
+    print("  SEED AI TABLES & QUICK LEARNER")
     print("=" * 60)
 
     app = create_app()
@@ -265,6 +287,9 @@ def main():
             print(f"  Added {exp_count} expertise areas")
 
             conn.commit()
+
+    print("\n📌 Seeding quick_learner (local AI)...")
+    seed_quick_learner()
 
     print("\n" + "=" * 60)
     print(f"  Done: {mem_count} memories, {doc_count} docs, {int_count} interactions, {exp_count} expertise")
