@@ -64,10 +64,12 @@
                 </div>
             </div>
         </div>
+        </div>
         <div class="card-footer d-print-none">
             <button onclick="window.print()" class="btn btn-primary"><i class="fas fa-print"></i> طباعة</button>
             <a href="{{ url_for('payroll.process_payroll') }}" class="btn btn-secondary">العودة</a>
         </div>
     </div>
 </div>
+{% block extra_css %}<style>@media print{@page{size:A4 portrait;margin:10mm}}</style>{% endblock %}
 {% endblock %}

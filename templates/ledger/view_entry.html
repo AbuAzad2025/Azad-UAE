@@ -3,7 +3,7 @@
 {% block page_title %}تفاصيل القيد{% endblock %}
 
 {% block content %}
-<div class="row mb-3">
+<div class="row mb-3 no-print">
   <div class="col-12">
     <a href="{{ url_for('ledger.journal_entries') }}" class="btn btn-secondary">
       <i class="fas fa-arrow-right mr-2"></i>العودة للقيود
@@ -19,6 +19,7 @@
   </div>
 </div>
 
+<div class="erp-report-print">
 <div class="card">
   <div class="card-header bg-gradient-{{ 'success' if entry.is_balanced() else 'danger' }}">
     <h3 class="card-title text-white">
@@ -183,7 +184,7 @@
     </div>
   </div>
 </div>
-
+</div>
 
 <div class="modal fade" id="reverseModal" tabindex="-1" role="dialog">
   <div class="modal-dialog" role="document">
@@ -224,13 +225,7 @@
 
 <style>
 @media print {
-  .btn, .modal {
-    display: none !important;
-  }
-  .card {
-    border: none !important;
-    box-shadow: none !important;
-  }
+  @page { size: A4 portrait; margin: 15mm; }
 }
 </style>
 {% endblock %}

@@ -4,26 +4,7 @@
 {% block extra_css %}
 <style>
 @media print {
-  @page {
-    size: A4 portrait;
-    margin: 15mm;
-  }
-  .main-sidebar, .main-header, .main-footer,
-  .content-header, .no-print, button, .btn {
-    display: none !important;
-  }
-  .content-wrapper {
-    margin: 0 !important;
-    padding: 0 !important;
-  }
-  .card {
-    border: none !important;
-    box-shadow: none !important;
-  }
-  body {
-    background: white !important;
-    padding: 20px;
-  }
+  @page { size: A4 portrait; margin: 15mm; }
 }
 
 .statement-header {

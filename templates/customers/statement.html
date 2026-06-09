@@ -239,70 +239,7 @@ table.statement-table thead th {
 }
 
 @media print {
-  @page {
-    size: A4 portrait;
-    margin: 0.5mm;
-  }
-  .main-sidebar,
-  .main-header,
-  .main-footer,
-  .content-header,
-  .no-print,
-  button,
-  .btn {
-    display: none !important;
-  }
-  .content-wrapper {
-    margin: 0 !important;
-    padding: 0 !important;
-  }
-  .card {
-    border: none !important;
-    box-shadow: none !important;
-  }
-  body {
-    background: white !important;
-  }
-  .transaction-row.sale-row,
-  .transaction-row.payment-row {
-    background-color: transparent !important;
-  }
-  .toggle-details {
-    display: none !important;
-  }
-  .collapse {
-    display: block !important;
-    height: auto !important;
-    visibility: visible !important;
-  }
-  .invoice-detail-card {
-    page-break-inside: avoid;
-    background: none !important;
-    border: none !important;
-    padding: 0 !important;
-  }
-  .table.statement-table {
-    page-break-inside: auto;
-  }
-  .table-responsive {
-    overflow: visible !important;
-  }
-  .statement-actions {
-    display: none !important;
-  }
-  .contentinfo {
-    display: none !important;
-  }
-  .card-body,
-  .table-responsive {
-    padding: 0 !important;
-  }
-  .payment-chip,
-  .status-badge {
-    background: transparent !important;
-    color: #000 !important;
-    border: 1px solid #000 !important;
-  }
+  @page { size: A4 landscape; margin: 5mm; }
   .transaction-row.sale-row,
   .transaction-row.payment-row,
   .invoice-totals-table td.total-cell,
@@ -310,79 +247,37 @@ table.statement-table thead th {
     background: transparent !important;
     color: #000 !important;
   }
-  .final-balance-display {
-    padding: 0.3rem 0.6rem;
-    border-width: 1px;
-  }
-  body {
-    font-size: 7pt;
-  }
-  .statement-table {
-    table-layout: fixed;
-    font-size: 0.34rem;
-  }
-  .statement-table th,
-  .statement-table td {
-    padding: 0.16rem 0.2rem;
-    font-size: 0.34rem;
-    border: 0.4pt solid #000;
-  }
-  .statement-table thead th {
-    font-size: 0.45rem;
-  }
-  .transaction-row td,
-  .detail-row td {
-    font-size: 0.32rem;
-  }
-  .transaction-meta {
-    font-size: 0.28rem;
-    margin-top: 0.05rem;
-  }
-  .transaction-meta span {
-    display: block;
-    margin: 0;
-  }
-  .transaction-meta span + span::before {
-    content: '';
-    margin: 0;
-  }
-  .status-badge,
-  .payment-chip {
-    font-size: 0.28rem;
-    padding: 0.06rem 0.15rem;
-    border-width: 0.4pt !important;
-  }
-  .table.table-sm th,
-  .table.table-sm td,
-  .invoice-totals-table th,
-  .invoice-totals-table td {
-    font-size: 0.28rem;
-    padding: 0.1rem 0.12rem;
-    border: 0.35pt solid #000;
-  }
-  .invoice-totals-table th,
-  .invoice-totals-table td {
-    font-size: 0.34rem;
-    padding: 0.14rem 0.18rem;
-  }
-  .final-balance-row td {
-    font-size: 0.38rem;
-  }
+  .toggle-details { display: none !important; }
+  .collapse { display: block !important; height: auto !important; visibility: visible !important; }
   .invoice-detail-card {
+    page-break-inside: avoid;
+    background: none !important;
+    border: none !important;
+    padding: 0 !important;
     margin-bottom: 0.3rem;
   }
-}
-
-@media print {
-  @page { margin: 15mm; }
-  .main-sidebar, .main-header, .main-footer, .content-header, .no-print, button, .btn, .card-tools { display: none !important; }
-  .content-wrapper { margin: 0 !important; padding: 0 !important; }
-  body { background: white !important; }
-  .card { border: none !important; box-shadow: none !important; }
-  .statement-table { width: 100% !important; table-layout: auto; }
-  thead { display: table-header-group; }
-  tfoot { display: table-footer-group; }
-  tr, .totals, .final-balance-row { page-break-inside: avoid; break-inside: avoid; }
+  .payment-chip, .status-badge {
+    background: transparent !important;
+    color: #000 !important;
+    border: 1px solid #000 !important;
+  }
+  .final-balance-display { padding: 0.3rem 0.6rem; border-width: 1px; }
+  body { font-size: 7pt; }
+  .statement-table { table-layout: fixed; font-size: 0.34rem; }
+  .statement-table th, .statement-table td {
+    padding: 0.16rem 0.2rem; font-size: 0.34rem; border: 0.4pt solid #000;
+  }
+  .statement-table thead th { font-size: 0.45rem; }
+  .transaction-row td, .detail-row td { font-size: 0.32rem; }
+  .transaction-meta { font-size: 0.28rem; margin-top: 0.05rem; }
+  .transaction-meta span { display: block; margin: 0; }
+  .transaction-meta span + span::before { content: ''; margin: 0; }
+  .status-badge, .payment-chip { font-size: 0.28rem; padding: 0.06rem 0.15rem; border-width: 0.4pt !important; }
+  .table.table-sm th, .table.table-sm td, .invoice-totals-table th, .invoice-totals-table td {
+    font-size: 0.28rem; padding: 0.1rem 0.12rem; border: 0.35pt solid #000;
+  }
+  .invoice-totals-table th, .invoice-totals-table td { font-size: 0.34rem; padding: 0.14rem 0.18rem; }
+  .final-balance-row td { font-size: 0.38rem; }
 }
 </style>
 {% endblock %}
