@@ -146,25 +146,14 @@
       border-top: 1px solid #333;
     }
     @media print {
-      body { padding: 0; }
+      html, body { width: auto !important; height: auto !important; overflow: visible !important; background: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .invoice { width: auto !important; max-width: none !important; height: auto !important; min-height: auto !important; max-height: none !important; overflow: visible !important; box-shadow: none !important; border: 2px double #333 !important; }
+      table { width: 100% !important; table-layout: auto; border-collapse: collapse; }
+      thead { display: table-header-group; } tfoot { display: table-footer-group; }
+      tr, .totals, .signature, .invoice-footer, .notes { page-break-inside: avoid; break-inside: avoid; }
       .no-print { display: none !important; }
-      .invoice { border: 2px double #333; }
     }
-  
-    @media print {
-      .invoice {
-        width: 100% !important;
-        max-width: none !important;
-        margin: 0 !important;
-        box-shadow: none !important;
-        border: none !important;
-      }
-      body {
-        margin: 0 !important;
-        padding: 0 !important;
-      }
-    }
-  
+
     /* D6: externalized inline styles */
     .ic-1 { text-align: center; margin-bottom: 8px; }
     .ic-2 { background: #333; color: white; border: none; padding: 10px 25px; border-radius: 5px; font-size: 9px; cursor: pointer; }
@@ -188,15 +177,6 @@
     .ic-20 { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 0.04; z-index: 0; pointer-events: none; }
     .ic-21 { width: 100%; }
     .ic-22 { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg); font-size: 70px; color: rgba(0,0,0,0.04); font-weight: 700; z-index: 0; pointer-events: none; }
-
-    @media print {
-      html, body { width: auto !important; height: auto !important; overflow: visible !important; background: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-      .invoice { width: auto !important; max-width: none !important; height: auto !important; min-height: auto !important; max-height: none !important; overflow: visible !important; box-shadow: none !important; border: 1px solid #333 !important; }
-      table { width: 100% !important; table-layout: auto; border-collapse: collapse; }
-      thead { display: table-header-group; } tfoot { display: table-footer-group; }
-      tr, .totals, .signature, .invoice-footer, .notes { page-break-inside: avoid; break-inside: avoid; }
-      .no-print { display: none !important; }
-    }
   </style>
 </head>
 <body class="invoice-print classic-invoice">

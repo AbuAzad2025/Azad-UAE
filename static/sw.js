@@ -32,16 +32,17 @@ self.addEventListener('fetch', (event) => {
   }
 
   const url = new URL(event.request.url);
+  const isSameOrigin = url.origin === self.location.origin;
 
   if (event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request)
-        .catch(() => caches.match('/offline.html'))
+        .catch(() => isSameOrigin ? caches.match('/offline.html') : new Response(null, { status: 503 }))
     );
     return;
   }
 
-  if (isStaticAsset(url)) {
+  if (isSameOrigin && isStaticAsset(url)) {
     event.respondWith(
       caches.match(event.request).then((cached) => {
         if (cached) return cached;

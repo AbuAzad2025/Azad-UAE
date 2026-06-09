@@ -258,6 +258,7 @@
     if (!$.fn.DataTable) return;
     $(root).find(".datatable").each(function () {
       const $tbl = $(this);
+      if ($.fn.DataTable.isDataTable(this)) return;
       if ($tbl.data("dt-initialized")) return;
       $tbl.data("dt-initialized", 1);
 

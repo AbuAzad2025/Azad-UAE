@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>طباعة إيصال - {{ doc_number or receipt.receipt_number or receipt.payment_number }}</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/accessibility.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/erp-theme.css') }}">
   <style>
     * { box-sizing: border-box; }
     body {
@@ -23,19 +23,19 @@
     .receipt {
       {% if settings and settings.paper_size == 'A5' %}
       width: 212mm;
-      height: {{ '210mm' if settings.orientation == 'portrait' else '148mm' }};
+      min-height: {{ '210mm' if settings.orientation == 'portrait' else '148mm' }};
       {% elif settings and settings.paper_size == 'Letter' %}
       width: 212mm;
-      height: {{ '279mm' if settings.orientation == 'portrait' else '216mm' }};
+      min-height: {{ '279mm' if settings.orientation == 'portrait' else '216mm' }};
       {% else %}
       width: {{ '210mm' if (not settings or settings.orientation == 'portrait') else '297mm' }};
-      height: {{ '297mm' if (not settings or settings.orientation == 'portrait') else '210mm' }};
+      min-height: {{ '297mm' if (not settings or settings.orientation == 'portrait') else '210mm' }};
       {% endif %}
       margin: 0 auto;
       padding: 12px 14px;
       border: 1px solid #334155;
       background: #fff;
-      overflow: auto;
+      overflow: visible;
       box-shadow: 0 0 16px rgba(0,0,0,0.25);
     }
     .header {
@@ -109,6 +109,15 @@
     .ic-9 { text-align: center; margin-top: 20px; }
     .ic-10 { padding: 10px 30px; font-size: 1.1em; }
     .ic-11 { padding: 10px 30px; font-size: 1.1em; margin-right: 10px; }
+    
+    @media print {
+      html, body { width: auto !important; height: auto !important; overflow: visible !important; background: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; padding: 0 !important; margin: 0 !important; }
+      .receipt { width: 100% !important; max-width: none !important; height: auto !important; min-height: auto !important; max-height: none !important; overflow: visible !important; box-shadow: none !important; border: none !important; padding: 8px !important; }
+      table { width: 100% !important; table-layout: auto !important; border-collapse: collapse !important; }
+      thead { display: table-header-group; } tfoot { display: table-footer-group; }
+      tr, .total, .totals, .footer, .qr-code, .notes, .signature { page-break-inside: avoid; break-inside: avoid; }
+      .no-print { display: none !important; }
+    }
   </style>
 </head>
 <body class="receipt-print payment-receipt">

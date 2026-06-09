@@ -212,24 +212,14 @@
       font-size: 8px;
     }
     @media print {
-      body { padding: 0; }
+      html, body { width: auto !important; height: auto !important; overflow: visible !important; background: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .invoice { width: 100% !important; max-width: none !important; height: auto !important; min-height: auto !important; max-height: none !important; overflow: visible !important; box-shadow: none !important; border: 1px solid #ccc !important; }
+      table { width: 100% !important; table-layout: auto; border-collapse: collapse; }
+      thead { display: table-header-group; } tfoot { display: table-footer-group; }
+      tr, .totals, .signature, .invoice-footer, .notes, .payments-table { page-break-inside: avoid; break-inside: avoid; }
       .no-print { display: none !important; }
     }
-  
-    @media print {
-      .invoice {
-        width: 100% !important;
-        max-width: none !important;
-        margin: 0 !important;
-        box-shadow: none !important;
-        border: none !important;
-      }
-      body {
-        margin: 0 !important;
-        padding: 0 !important;
-      }
-    }
-  
+
     /* D6: externalized inline styles */
     .ic-1 { text-align: center; margin-bottom: 8px; }
     .ic-2 { margin-top: 5px; }
@@ -262,15 +252,6 @@
     .ic-29 { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 0.05; z-index: 0; pointer-events: none; }
     .ic-30 { width: 100%; }
     .ic-31 { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg); font-size: 90px; color: rgba(201,169,97,0.05); font-weight: 700; z-index: 0; pointer-events: none; font-family: 'Noto Kufi Arabic'; }
-
-    @media print {
-      html, body { width: auto !important; height: auto !important; overflow: visible !important; background: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-      .invoice { width: 100% !important; max-width: none !important; height: auto !important; min-height: auto !important; max-height: none !important; overflow: visible !important; box-shadow: none !important; border: 1px solid #ccc !important; }
-      table { width: 100% !important; table-layout: auto; border-collapse: collapse; }
-      thead { display: table-header-group; } tfoot { display: table-footer-group; }
-      tr, .totals, .signature, .invoice-footer, .notes, .payments-table { page-break-inside: avoid; break-inside: avoid; }
-      .no-print { display: none !important; }
-    }
   </style>
 </head>
 <body class="invoice-print gulf-invoice">

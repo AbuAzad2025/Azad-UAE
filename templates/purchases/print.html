@@ -84,9 +84,16 @@
 
 <style>
 @media print {
-  .card-tools, .main-sidebar, .main-header, .main-footer {
-    display: none !important;
-  }
+  @page { size: A4 portrait; margin: 15mm; }
+  .card-tools, .main-sidebar, .main-header, .main-footer, .content-header, .no-print { display: none !important; }
+  .content-wrapper { margin: 0 !important; padding: 0 !important; }
+  body { background: #fff !important; }
+  .card { border: none !important; box-shadow: none !important; }
+  .table-responsive { overflow: visible !important; }
+  table { width: 100% !important; table-layout: auto; }
+  thead { display: table-header-group; }
+  tfoot { display: table-footer-group; }
+  tr { page-break-inside: avoid; break-inside: avoid; }
 }
 </style>
 {% endblock %}
