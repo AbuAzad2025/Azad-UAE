@@ -372,6 +372,18 @@ table.statement-table thead th {
     margin-bottom: 0.3rem;
   }
 }
+
+@media print {
+  @page { margin: 15mm; }
+  .main-sidebar, .main-header, .main-footer, .content-header, .no-print, button, .btn, .card-tools { display: none !important; }
+  .content-wrapper { margin: 0 !important; padding: 0 !important; }
+  body { background: white !important; }
+  .card { border: none !important; box-shadow: none !important; }
+  .statement-table { width: 100% !important; table-layout: auto; }
+  thead { display: table-header-group; }
+  tfoot { display: table-footer-group; }
+  tr, .totals, .final-balance-row { page-break-inside: avoid; break-inside: avoid; }
+}
 </style>
 {% endblock %}
 

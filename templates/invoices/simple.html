@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>فاتورة #{{ sale.sale_number }}</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/accessibility.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/erp-theme.css') }}">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -157,6 +157,15 @@
     .ic-10 { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 0.02; z-index: -1; pointer-events: none; }
     .ic-11 { width: 100%; }
     .ic-12 { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg); font-size: 100px; color: rgba(0,0,0,0.02); font-weight: bold; z-index: -1; }
+
+    @media print {
+      html, body { width: auto !important; height: auto !important; overflow: visible !important; background: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .invoice { max-width: none !important; height: auto !important; min-height: auto !important; max-height: none !important; overflow: visible !important; }
+      table { width: 100% !important; table-layout: auto; border-collapse: collapse; }
+      thead { display: table-header-group; } tfoot { display: table-footer-group; }
+      tr, .totals, .signature, .invoice-footer, .notes { page-break-inside: avoid; break-inside: avoid; }
+      .no-print { display: none !important; }
+    }
   </style>
 </head>
 <body class="invoice-print">

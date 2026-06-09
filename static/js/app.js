@@ -304,7 +304,7 @@
   function initSelect2Basic(root) {
     if (!$.fn.select2) return;
     // تجنب التداخل مع customer-select.js و supplier-select
-    $(root).find("select.select2:not(.ajax-select):not(.customer-select):not(.supplier-select)").each(function () {
+    $(root).find("select.select2:not(.ajax-select):not(.customer-select):not(.supplier-select)").not('.select2-hidden-accessible').each(function () {
       const $el = $(this);
       if ($el.data("s2-initialized")) return;
       $el.data("s2-initialized", 1);

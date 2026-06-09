@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - فاتورة #{{ sale.sale_number }}</title>
-  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&display=swap" integrity="sha384-dDRz72nlSV5ma/yzwNSbMrzZHPI1KOMQ92VL3/OBGvurDa2ux91WkpYJpWvZm/of" crossorigin="anonymous" rel="stylesheet">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/accessibility.css') }}">
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&display=swap" crossorigin="anonymous" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/erp-theme.css') }}">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -188,6 +188,15 @@
     .ic-20 { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 0.04; z-index: 0; pointer-events: none; }
     .ic-21 { width: 100%; }
     .ic-22 { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg); font-size: 70px; color: rgba(0,0,0,0.04); font-weight: 700; z-index: 0; pointer-events: none; }
+
+    @media print {
+      html, body { width: auto !important; height: auto !important; overflow: visible !important; background: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .invoice { width: auto !important; max-width: none !important; height: auto !important; min-height: auto !important; max-height: none !important; overflow: visible !important; box-shadow: none !important; border: 1px solid #333 !important; }
+      table { width: 100% !important; table-layout: auto; border-collapse: collapse; }
+      thead { display: table-header-group; } tfoot { display: table-footer-group; }
+      tr, .totals, .signature, .invoice-footer, .notes { page-break-inside: avoid; break-inside: avoid; }
+      .no-print { display: none !important; }
+    }
   </style>
 </head>
 <body class="invoice-print classic-invoice">

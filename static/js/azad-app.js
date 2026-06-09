@@ -87,7 +87,7 @@ function initializeDataTables() {
  * Initialize Bootstrap Tooltips
  */
 function initializeTooltips() {
-    $('[data-toggle="tooltip"]').tooltip();
+    $('[data-toggle="tooltip"]').not('[data-tt-initialized]').tooltip().attr('data-tt-initialized', '1');
 }
 
 /**

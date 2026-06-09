@@ -164,13 +164,14 @@
 
 <style>
 @media print {
-  .btn, .form-inline, .card-tools {
-    display: none !important;
-  }
-  .card {
-    border: none !important;
-    box-shadow: none !important;
-  }
+  @page { margin: 15mm; }
+  .main-sidebar, .main-header, .main-footer, .content-header, .no-print, .btn, .form-inline, .card-tools { display: none !important; }
+  .content-wrapper { margin: 0 !important; padding: 0 !important; }
+  body { background: white !important; }
+  .card { border: none !important; box-shadow: none !important; }
+  thead { display: table-header-group; }
+  tfoot { display: table-footer-group; }
+  tr { page-break-inside: avoid; break-inside: avoid; }
 }
 </style>
 {% endblock %}

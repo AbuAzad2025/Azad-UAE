@@ -202,10 +202,18 @@
       body { padding: 0; margin: 0; }
       .no-print { display: none !important; }
       .invoice-container { 
-        border: none; 
-        max-width: 100%;
-        margin: 0;
+        border: none !important; 
+        max-width: 100% !important;
+        margin: 0 !important;
+        height: auto !important;
+        min-height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+        border-radius: 0 !important;
       }
+      table { width: 100% !important; table-layout: auto; border-collapse: collapse; }
+      thead { display: table-header-group; } tfoot { display: table-footer-group; }
+      tr, .totals, .signature, .invoice-footer, .notes { page-break-inside: avoid; break-inside: avoid; }
       @page {
         margin: 8mm;
       }

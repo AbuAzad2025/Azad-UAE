@@ -2741,3 +2741,49 @@ textarea.form-control {
 .erp-footer-copyright {
   border-top-color: var(--ui-border);
 }
+
+/* ── ERP Reusable Utilities ── */
+.erp-gradient-primary {
+  background: linear-gradient(135deg, var(--ui-primary) 0%, var(--ui-primary-2) 100%);
+}
+.erp-gradient-accent {
+  background: linear-gradient(135deg, var(--ui-accent) 0%, var(--ui-primary-2) 100%);
+}
+.erp-gradient-gold {
+  background: linear-gradient(135deg, var(--ui-gold) 0%, var(--ui-warning) 100%);
+}
+.erp-badge-success {
+  background: var(--ui-success); color: #fff;
+}
+.erp-badge-danger {
+  background: var(--ui-danger); color: #fff;
+}
+.erp-badge-warning {
+  background: var(--ui-warning); color: #fff;
+}
+.erp-badge-info {
+  background: var(--ui-info); color: #fff;
+}
+
+/* ── Global Print Override (for templates extending base.html) ── */
+@media print {
+  .main-sidebar, .main-header, .main-footer, .content-header,
+  .no-print, .btn, .card-tools, .breadcrumb, .navbar, .sidebar {
+    display: none !important;
+  }
+  .content-wrapper {
+    margin: 0 !important; padding: 0 !important;
+  }
+  body, .card {
+    background: #fff !important;
+  }
+  .card {
+    border: none !important; box-shadow: none !important;
+  }
+  table {
+    width: 100% !important; table-layout: auto;
+  }
+  thead { display: table-header-group; }
+  tfoot { display: table-footer-group; }
+  tr { page-break-inside: avoid; }
+}
