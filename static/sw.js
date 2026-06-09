@@ -1,4 +1,4 @@
-const CACHE_NAME = 'azad-uae-ui-v8';
+const CACHE_NAME = 'azad-uae-ui-v9';
 const urlsToCache = [
   '/static/css/erp-theme.css',
   '/static/css/accessibility.css',
