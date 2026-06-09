@@ -1,85 +1,81 @@
 """
 🧠 Quick Learner - المتعلم السريع
-نظام بسيط للتعلم الفوري من ملفات JSON وتصحيحات المستخدم
+الآن يستخدم قاعدة البيانات بدلاً من ملف JSON.
 """
-import json
-import os
 import difflib
-from typing import Dict, Optional
+from typing import Optional
 import logging
 
 logger = logging.getLogger(__name__)
 
 class QuickLearner:
     def __init__(self):
-        from ai_knowledge import get_knowledge_path
-        self.knowledge_file = get_knowledge_path('quick_knowledge.json')
-        self.knowledge_base = self._load_knowledge()
-    
-    def _load_knowledge(self) -> Dict:
-        """تحميل المعرفة السريعة"""
-        if os.path.exists(self.knowledge_file):
-            try:
-                with open(self.knowledge_file, 'r', encoding='utf-8') as f:
-                    return json.load(f)
-            except Exception as e:
-                logger.error(f"Failed to load quick knowledge: {e}")
-                return {}
-        return {}
-    
-    def save_knowledge(self):
-        """حفظ المعرفة"""
-        try:
-            with open(self.knowledge_file, 'w', encoding='utf-8') as f:
-                json.dump(self.knowledge_base, f, ensure_ascii=False, indent=2)
-        except Exception as e:
-            logger.error(f"Failed to save quick knowledge: {e}")
-            
-    def learn(self, question: str, answer: str, category: str = 'general',
-              tenant_id: int = None):
-        """تعلم معلومة جديدة"""
-        question_key = question.strip().lower()
-        entry = {
-            'answer': answer,
-            'category': category,
-            'confidence': 1.0,
-        }
-        if tenant_id is not None:
-            entry['tenant_id'] = tenant_id
-        self.knowledge_base[question_key] = entry
-        self.save_knowledge()
+        pass
+
+    def learn(self, question: str, answer: str, category: str = 'general', tenant_id: int = None):
+        """تعلم معلومة جديدة وحفظها في قاعدة البيانات."""
+        from extensions import db
+        from models.ai import AiMemory
+        existing = AiMemory.query.filter_by(key=question.strip().lower(), tenant_id=tenant_id).first()
+        if existing:
+            existing.value = answer
+            existing.category = category
+            existing.confidence = 1.0
+            existing.source = 'quick_learner'
+        else:
+            mem = AiMemory(
+                key=question.strip().lower(),
+                value=answer,
+                category=category,
+                tenant_id=tenant_id,
+                confidence=1.0,
+                source='quick_learner',
+                is_active=True,
+            )
+            db.session.add(mem)
+        db.session.commit()
         return True
-        
+
     def get_answer(self, question: str, tenant_id: int = None) -> Optional[str]:
-        """البحث عن إجابة - مع مطابقة ضبابية وعزل حسب المستأجر"""
+        """البحث عن إجابة — مطابقة تامة أو جزئية أو ضبابية مع عزل حسب المستأجر."""
+        from extensions import db
+        from models.ai import AiMemory
         key = question.strip().lower()
-        
-        # 1. مطابقة تامة (ضمن نطاق المستأجر إن وجد)
-        if key in self.knowledge_base:
-            entry = self.knowledge_base[key]
-            if tenant_id is None or entry.get('tenant_id') is None or entry.get('tenant_id') == tenant_id:
-                return entry['answer']
-        
-        # 2. مطابقة تامة في جميع الإدخالات (إذا لم نجد في نطاق المستأجر)
-        if key in self.knowledge_base:
-            return self.knowledge_base[key]['answer']
-        
-        # 3. مطابقة جزئية
+        query = AiMemory.query.filter_by(is_active=True)
+        if tenant_id is not None:
+            query = query.filter(
+                db.or_(
+                    AiMemory.tenant_id == tenant_id,
+                    AiMemory.tenant_id.is_(None),
+                )
+            )
+        rows = query.all()
         candidates = []
-        for k, v in self.knowledge_base.items():
-            if tenant_id is not None and v.get('tenant_id') is not None and v.get('tenant_id') != tenant_id:
-                continue
+        for row in rows:
+            k = row.key
+            if k == key:
+                self._bump_access(row)
+                return row.value
             if k in key or key in k:
-                return v['answer']
-            candidates.append(k)
-        
-        # 4. مطابقة ضبابية باستخدام difflib
+                self._bump_access(row)
+                return row.value
+            candidates.append((k, row))
         if candidates:
-            close = difflib.get_close_matches(key, candidates, n=1, cutoff=0.6)
+            keys = [k for k, _ in candidates]
+            close = difflib.get_close_matches(key, keys, n=1, cutoff=0.6)
             if close:
-                return self.knowledge_base[close[0]]['answer']
-        
+                for k, row in candidates:
+                    if k == close[0]:
+                        self._bump_access(row)
+                        return row.value
         return None
 
-# Singleton
+    def _bump_access(self, row):
+        from extensions import db
+        from models.ai import AiMemory
+        row.access_count = (row.access_count or 0) + 1
+        from datetime import datetime, timezone
+        row.last_accessed = datetime.now(timezone.utc)
+        db.session.commit()
+
 quick_learner = QuickLearner()

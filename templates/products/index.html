@@ -353,10 +353,14 @@ $(document).ready(function() {
     });
   }
 
-  if (!$tableEl.data('smartPrintInit')) {
-    SmartPrint.attachTrigger(table, '#printProductsBtn', printOptions);
-    $tableEl.data('smartPrintInit', true);
-  }
+  // Wire print button to SmartPrint's hidden DataTable button (index 2)
+  $('#printProductsBtn').on('click', function(e) {
+    e.preventDefault();
+    const btn = table.button(2);
+    if (btn && btn.length) {
+      btn.trigger();
+    }
+  });
 
   // Smart filtering
   $('#filterAll').off('click.smartPrint').on('click.smartPrint', function() {

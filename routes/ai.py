@@ -118,8 +118,49 @@ def _audit_ai_requests(response):
         pass
     return response
 
-# ========== نظام حفظ السياق المتقدم للمحادثة ==========
-conversation_context = {}  # {user_id: {'last_action': 'عميل', 'step': 1, 'option': '1', 'data': {}, 'history': []}}
+from ai_knowledge.core.conversation_store import get_context as _get_conversation_context
+from ai_knowledge.core.conversation_store import set_context as _set_conversation_context
+from ai_knowledge.core.conversation_store import clear_context as _clear_conversation_context
+
+class _AutoSaveCtx(dict):
+    """Dict that auto-persists changes to DB."""
+    def __init__(self, user_id, tenant_id, data):
+        super().__init__(data or {})
+        self._user_id = user_id
+        self._tenant_id = tenant_id
+
+    def __setitem__(self, key, value):
+        super().__setitem__(key, value)
+        _set_conversation_context(self._user_id, dict(self), self._tenant_id)
+
+    def __delitem__(self, key):
+        super().__delitem__(key)
+        _set_conversation_context(self._user_id, dict(self), self._tenant_id)
+
+    def pop(self, key, *args):
+        result = super().pop(key, *args)
+        _set_conversation_context(self._user_id, dict(self), self._tenant_id)
+        return result
+
+    def update(self, *args, **kwargs):
+        super().update(*args, **kwargs)
+        _set_conversation_context(self._user_id, dict(self), self._tenant_id)
+
+    def clear(self):
+        super().clear()
+        _set_conversation_context(self._user_id, dict(self), self._tenant_id)
+
+
+def _conversation_ctx(user_id: int, tenant_id: int = None):
+    """Fetch persisted context wrapped in auto-save dict."""
+    data = _get_conversation_context(user_id, tenant_id) or {}
+    return _AutoSaveCtx(user_id, tenant_id, data)
+
+def _conversation_set(user_id: int, data: dict, tenant_id: int = None):
+    _set_conversation_context(user_id, data, tenant_id)
+
+def _conversation_clear(user_id: int, tenant_id: int = None):
+    _clear_conversation_context(user_id, tenant_id)
 
 # ========== مستمعات ذكية ==========
 def smart_listener(message, context):
@@ -403,15 +444,34 @@ def chat():
             'action_executed': True
         })
     
+    import time
+    t0 = time.time()
     response = AIService.chat_response(message, context)
-    
-    # Train local assistant from successful interaction
+    elapsed_ms = int((time.time() - t0) * 1000)
+
+    try:
+        from models.ai import AiInteraction
+        from extensions import db
+        log = AiInteraction(
+            tenant_id=getattr(current_user, 'tenant_id', None),
+            user_id=current_user.id,
+            query=message[:2000],
+            response=str(response)[:4000],
+            intent=context.get('intent'),
+            was_successful=True,
+            response_time_ms=elapsed_ms,
+        )
+        db.session.add(log)
+        db.session.commit()
+    except Exception:
+        pass
+
     try:
         from ai_knowledge.trainer import trainer
         trainer.learn_from_interaction(message, str(response)[:500], current_user.id, success=True)
     except Exception:
         pass
-    
+
     state = get_ai_access_state(current_user)
     return jsonify({
         'response': response,
@@ -444,15 +504,16 @@ def _process_user_action(message, user):
         import re
         
         msg_lower = message.lower()
-        
-        # ========== نظام الحوار الذكي التفاعلي ==========
         user_id = user.id
         tid = get_active_tenant_id(user)
+        ctx = _conversation_ctx(user_id, tid)
+        
+        # ========== نظام الحوار الذكي التفاعلي ==========
         
         # إذا كان المستخدم يطلب مساعدة أو خيارات
         if any(word in msg_lower for word in ['رصيد', 'رصيد العميل', 'رصيد عميل', 'تعديل رصيد']):
             if ':' not in message:
-                conversation_context[user_id] = {'last_action': 'رصيد', 'step': 0}
+                ctx = {'last_action': 'رصيد', 'step': 0}
                 return """🤖 فهمت! تريد التعامل مع رصيد العميل. إليك الخيارات:
 
 📋 **ما الذي تريد فعله؟**
@@ -466,31 +527,31 @@ def _process_user_action(message, user):
 🤖 مثال: اكتب "1" لتعديل رصيد العميل"""
         
         # ========== معالجة خيارات "رصيد" ==========
-        if msg_lower.strip() == '2' and user_id in conversation_context and conversation_context[user_id].get('last_action') == 'رصيد':
+        if msg_lower.strip() == '2' and ctx.get('last_action') == 'رصيد':
             # توجيه لخيار "استلام دفعة"
-            conversation_context[user_id] = {'last_action': 'استلام', 'step': 0}
+            ctx = {'last_action': 'استلام', 'step': 0}
             return """🤖 تم التحويل لخيار "استلام دفعة من العميل"
 
 اكتب "1" للمتابعة أو "عودة" للرجوع
 
 🤖 المصدر: GROQ API + التحليل المحلي"""
         
-        if msg_lower.strip() == '3' and user_id in conversation_context and conversation_context[user_id].get('last_action') == 'رصيد':
+        if msg_lower.strip() == '3' and ctx.get('last_action') == 'رصيد':
             # توجيه لخيار "إعطاء دفعة"
-            conversation_context[user_id] = {'last_action': 'إعطاء', 'step': 0}
+            ctx = {'last_action': 'إعطاء', 'step': 0}
             return """🤖 تم التحويل لخيار "إعطاء دفعة للعميل"
 
 اكتب "1" للمتابعة أو "عودة" للرجوع
 
 🤖 المصدر: GROQ API + التحليل المحلي"""
         
-        if msg_lower.strip() == '4' and user_id in conversation_context and conversation_context[user_id].get('last_action') == 'رصيد':
+        if msg_lower.strip() == '4' and ctx.get('last_action') == 'رصيد':
             # عرض رصيد العميل
             from models.customer import Customer
             customers = Customer.query.filter_by(tenant_id=tid, is_active=True).all()
             if customers:
                 customers_list = "\n".join([f"• {c.name}: {c.balance} درهم" for c in customers[:10]])
-                del conversation_context[user_id]
+                del ctx
                 return f"""📊 **أرصدة العملاء:**
 
 {customers_list}
@@ -500,16 +561,16 @@ def _process_user_action(message, user):
 
 🤖 المصدر: GROQ API + التحليل المحلي"""
             else:
-                del conversation_context[user_id]
+                del ctx
                 return """❌ **لا يوجد عملاء في النظام**
 
 🤖 المصدر: GROQ API + التحليل المحلي"""
         
-        if msg_lower.strip() == '1' and user_id in conversation_context and conversation_context[user_id].get('last_action') == 'رصيد':
+        if msg_lower.strip() == '1' and ctx.get('last_action') == 'رصيد':
             # تعديل رصيد العميل
-            conversation_context[user_id]['step'] = 1
-            conversation_context[user_id]['option'] = '1'
-            conversation_context[user_id]['data'] = {}
+            ctx['step'] = 1
+            ctx['option'] = '1'
+            ctx['data'] = {}
             return """🤖 ممتاز! اخترت تعديل رصيد العميل. سأرشدك خطوة بخطوة:
 
 📝 **الخطوة 1: اسم العميل**
@@ -520,9 +581,9 @@ def _process_user_action(message, user):
 🤖 اكتب اسم العميل الآن..."""
         
         # ========== معالجة خطوات تعديل الرصيد ==========
-        if user_id in conversation_context and conversation_context[user_id].get('last_action') == 'رصيد' and conversation_context[user_id].get('option') == '1':
-            step = conversation_context[user_id].get('step', 0)
-            data = conversation_context[user_id].get('data', {})
+        if ctx.get('last_action') == 'رصيد' and ctx.get('option') == '1':
+            step = ctx.get('step', 0)
+            data = ctx.get('data', {})
             
             if step == 1:
                 # البحث عن العميل
@@ -538,8 +599,8 @@ def _process_user_action(message, user):
                 data['customer_id'] = customer.id
                 data['customer_name'] = customer.name
                 data['current_balance'] = customer.balance
-                conversation_context[user_id]['data'] = data
-                conversation_context[user_id]['step'] = 2
+                ctx['data'] = data
+                ctx['step'] = 2
                 return f"""✅ **تم العثور على العميل:** {customer.name}
 💰 **الرصيد الحالي:** {customer.balance} درهم
 
@@ -561,7 +622,7 @@ def _process_user_action(message, user):
                     
                     train_local_ai('update_balance', data, {'success': True, 'new_balance': new_balance})
                     
-                    del conversation_context[user_id]
+                    del ctx
                     
                     return f"""✅ **تم تعديل رصيد العميل بنجاح!**
 
@@ -587,7 +648,7 @@ def _process_user_action(message, user):
         
         if any(word in msg_lower for word in ['عميل', 'عميل جديد', 'إضافة عميل', 'إنشاء عميل']):
             if ':' not in message:
-                conversation_context[user_id] = {'last_action': 'عميل', 'step': 0}
+                ctx = {'last_action': 'عميل', 'step': 0}
                 return """🤖 فهمت! تريد إضافة عميل جديد. إليك الخيارات:
 
 📋 **ما الذي تريد فعله؟**
@@ -601,7 +662,7 @@ def _process_user_action(message, user):
         
         if any(word in msg_lower for word in ['منتج', 'منتج جديد', 'إضافة منتج', 'إنشاء منتج']):
             if ':' not in message:
-                conversation_context[user_id] = {'last_action': 'منتج', 'step': 0}
+                ctx = {'last_action': 'منتج', 'step': 0}
                 return """🤖 فهمت! تريد إضافة منتج جديد. إليك الخيارات:
 
 📋 **ما الذي تريد فعله؟**
@@ -616,7 +677,7 @@ def _process_user_action(message, user):
         
         if any(word in msg_lower for word in ['فاتورة', 'بيع', 'مبيعات', 'إنشاء فاتورة']):
             if ':' not in message:
-                conversation_context[user_id] = {'last_action': 'فاتورة', 'step': 0}
+                ctx = {'last_action': 'فاتورة', 'step': 0}
                 return """🤖 فهمت! تريد إنشاء فاتورة مبيعات. إليك الخيارات:
 
 📋 **ما الذي تريد فعله؟**
@@ -630,7 +691,7 @@ def _process_user_action(message, user):
         
         if any(word in msg_lower for word in ['استلام', 'استلم', 'دفعة من']):
             if ':' not in message:
-                conversation_context[user_id] = {'last_action': 'استلام', 'step': 0}
+                ctx = {'last_action': 'استلام', 'step': 0}
                 return """🤖 فهمت! تريد استلام دفعة من عميل. إليك الخيارات:
 
 📋 **ما الذي تريد فعله؟**
@@ -644,7 +705,7 @@ def _process_user_action(message, user):
         
         if any(word in msg_lower for word in ['إعطاء', 'أعطى', 'دفعة لل', 'دفعة ل']):
             if ':' not in message:
-                conversation_context[user_id] = {'last_action': 'إعطاء', 'step': 0}
+                ctx = {'last_action': 'إعطاء', 'step': 0}
                 return """🤖 فهمت! تريد إعطاء دفعة للعميل. إليك الخيارات:
 
 📋 **ما الذي تريد فعله؟**
@@ -658,7 +719,7 @@ def _process_user_action(message, user):
         
         if any(word in msg_lower for word in ['مصروف', 'إضافة مصروف', 'إنشاء مصروف']):
             if ':' not in message:
-                conversation_context[user_id] = {'last_action': 'مصروف', 'step': 0}
+                ctx = {'last_action': 'مصروف', 'step': 0}
                 return """🤖 فهمت! تريد إضافة مصروف. إليك الخيارات:
 
 📋 **ما الذي تريد فعله؟**
@@ -673,7 +734,7 @@ def _process_user_action(message, user):
         # ========== نظام الحوار للموردين ==========
         if any(word in msg_lower for word in ['مورد', 'مورد جديد', 'إضافة مورد', 'إنشاء مورد']):
             if ':' not in message:
-                conversation_context[user_id] = {'last_action': 'مورد', 'step': 0}
+                ctx = {'last_action': 'مورد', 'step': 0}
                 return """🤖 فهمت! تريد إضافة مورد جديد. إليك الخيارات:
 
 📋 **ما الذي تريد فعله؟**
@@ -688,7 +749,7 @@ def _process_user_action(message, user):
         # ========== نظام الحوار للمشتريات ==========
         if any(word in msg_lower for word in ['مشتريات', 'شراء', 'إضافة مشتريات', 'إنشاء مشتريات']):
             if ':' not in message:
-                conversation_context[user_id] = {'last_action': 'مشتريات', 'step': 0}
+                ctx = {'last_action': 'مشتريات', 'step': 0}
                 return """🤖 فهمت! تريد إضافة مشتريات. إليك الخيارات:
 
 📋 **ما الذي تريد فعله؟**
@@ -703,7 +764,7 @@ def _process_user_action(message, user):
         # ========== نظام الحوار للشيكات ==========
         if any(word in msg_lower for word in ['شيك', 'شيكات', 'إضافة شيك', 'إنشاء شيك']):
             if ':' not in message:
-                conversation_context[user_id] = {'last_action': 'شيك', 'step': 0}
+                ctx = {'last_action': 'شيك', 'step': 0}
                 return """🤖 فهمت! تريد إضافة شيك. إليك الخيارات:
 
 📋 **ما الذي تريد فعله؟**
@@ -718,7 +779,7 @@ def _process_user_action(message, user):
         # ========== نظام الحوار لدفتر الأستاذ ==========
         if any(word in msg_lower for word in ['دفتر', 'دفتر الأستاذ', 'دفتر استاذ', 'قيد']):
             if ':' not in message:
-                conversation_context[user_id] = {'last_action': 'دفتر', 'step': 0}
+                ctx = {'last_action': 'دفتر', 'step': 0}
                 return """🤖 فهمت! تريد التعامل مع دفتر الأستاذ. إليك الخيارات:
 
 📋 **ما الذي تريد فعله؟**
@@ -732,7 +793,7 @@ def _process_user_action(message, user):
         # ========== نظام الحوار للمستودعات ==========
         if any(word in msg_lower for word in ['مستودع', 'مستودعات', 'مخزون', 'إدارة مستودعات']):
             if ':' not in message:
-                conversation_context[user_id] = {'last_action': 'مستودع', 'step': 0}
+                ctx = {'last_action': 'مستودع', 'step': 0}
                 return """🤖 فهمت! تريد إدارة المستودعات. إليك الخيارات:
 
 📋 **ما الذي تريد فعله؟**
@@ -747,7 +808,7 @@ def _process_user_action(message, user):
         # ========== نظام الحوار لإدارة المستخدمين ==========
         if any(word in msg_lower for word in ['مستخدم', 'مستخدمين', 'إضافة مستخدم', 'إنشاء مستخدم']):
             if ':' not in message:
-                conversation_context[user_id] = {'last_action': 'مستخدم', 'step': 0}
+                ctx = {'last_action': 'مستخدم', 'step': 0}
                 return """🤖 فهمت! تريد إدارة المستخدمين. إليك الخيارات:
 
 📋 **ما الذي تريد فعله؟**
@@ -760,10 +821,10 @@ def _process_user_action(message, user):
 🤖 مثال: اكتب "1" لإضافة مستخدم جديد"""
         
         # ========== نظام الحوار التفاعلي للرقم 1 (إضافة عميل جديد) ==========
-        if msg_lower.strip() == '1' and user_id in conversation_context and conversation_context[user_id].get('last_action') == 'عميل':
-            conversation_context[user_id]['step'] = 1
-            conversation_context[user_id]['option'] = '1'
-            conversation_context[user_id]['data'] = {}
+        if msg_lower.strip() == '1' and ctx.get('last_action') == 'عميل':
+            ctx['step'] = 1
+            ctx['option'] = '1'
+            ctx['data'] = {}
             return """🤖 ممتاز! اخترت إضافة عميل جديد. سأرشدك خطوة بخطوة:
 
 📝 **الخطوة 1: اسم العميل**
@@ -774,16 +835,16 @@ def _process_user_action(message, user):
 🤖 اكتب الاسم الآن..."""
         
         # ========== معالجة الخطوات التالية (إضافة عميل) ==========
-        if user_id in conversation_context and conversation_context[user_id].get('last_action') == 'عميل' and conversation_context[user_id].get('option') == '1':
-            step = conversation_context[user_id].get('step', 0)
-            data = conversation_context[user_id].get('data', {})
+        if ctx.get('last_action') == 'عميل' and ctx.get('option') == '1':
+            step = ctx.get('step', 0)
+            data = ctx.get('data', {})
             
             # التحقق من المستمع الذكي
-            listener_response = smart_listener(message, conversation_context[user_id])
+            listener_response = smart_listener(message, ctx)
             
             if listener_response == 'back':
                 # العودة للقائمة الرئيسية
-                del conversation_context[user_id]
+                del ctx
                 return """🔙 **تم العودة للقائمة الرئيسية**
 
 💡 **يمكنك البدء من جديد:**
@@ -817,9 +878,9 @@ def _process_user_action(message, user):
             if step == 1:
                 # حفظ الاسم والانتقال للخطوة التالية
                 data['name'] = message.strip()
-                conversation_context[user_id]['data'] = data
-                conversation_context[user_id]['step'] = 2
-                conversation_context[user_id]['history'] = conversation_context[user_id].get('history', []) + [{'step': 1, 'data': message.strip()}]
+                ctx['data'] = data
+                ctx['step'] = 2
+                ctx['history'] = ctx.get('history', []) + [{'step': 1, 'data': message.strip()}]
                 return """✅ **تم حفظ الاسم:** {name}
 
 📝 **الخطوة 2: رقم الهاتف**
@@ -834,8 +895,8 @@ def _process_user_action(message, user):
             elif step == 2:
                 # حفظ الهاتف والانتقال للخطوة التالية
                 data['phone'] = message.strip()
-                conversation_context[user_id]['data'] = data
-                conversation_context[user_id]['step'] = 3
+                ctx['data'] = data
+                ctx['step'] = 3
                 return """✅ **تم حفظ رقم الهاتف:** {phone}
 
 📝 **الخطوة 3: العنوان**
@@ -848,9 +909,9 @@ def _process_user_action(message, user):
             elif step == 2:
                 # حفظ الهاتف والانتقال للخطوة التالية
                 data['phone'] = message.strip()
-                conversation_context[user_id]['data'] = data
-                conversation_context[user_id]['step'] = 3
-                conversation_context[user_id]['history'] = conversation_context[user_id].get('history', []) + [{'step': 2, 'data': message.strip()}]
+                ctx['data'] = data
+                ctx['step'] = 3
+                ctx['history'] = ctx.get('history', []) + [{'step': 2, 'data': message.strip()}]
                 return """✅ **تم حفظ رقم الهاتف:** {phone}
 
 📝 **الخطوة 3: العنوان**
@@ -883,7 +944,7 @@ def _process_user_action(message, user):
                     train_local_ai('create_customer', data, {'success': True, 'customer_id': customer.id})
                     
                     # مسح السياق
-                    del conversation_context[user_id]
+                    del ctx
                     
                     return f"""✅ **تم إنشاء العميل بنجاح!**
 
@@ -909,7 +970,7 @@ def _process_user_action(message, user):
                     train_local_ai('create_customer', data, {'success': False, 'error': str(e)})
                     
                     # مسح السياق في حالة الخطأ
-                    del conversation_context[user_id]
+                    del ctx
                     return f"""❌ **خطأ في إنشاء العميل:**
 
 {str(e)}
@@ -919,10 +980,10 @@ def _process_user_action(message, user):
 🤖 المصدر: GROQ API + التحليل المحلي"""
         
         # ========== نظام الحوار التفاعلي للرقم 1 (إضافة منتج جديد) ==========
-        if msg_lower.strip() == '1' and user_id in conversation_context and conversation_context[user_id].get('last_action') == 'منتج':
-            conversation_context[user_id]['step'] = 1
-            conversation_context[user_id]['option'] = '1'
-            conversation_context[user_id]['data'] = {}
+        if msg_lower.strip() == '1' and ctx.get('last_action') == 'منتج':
+            ctx['step'] = 1
+            ctx['option'] = '1'
+            ctx['data'] = {}
             return """🤖 ممتاز! اخترت إضافة منتج جديد. سأرشدك خطوة بخطوة:
 
 📝 **الخطوة 1: اسم المنتج**
@@ -933,15 +994,15 @@ def _process_user_action(message, user):
 🤖 اكتب اسم المنتج الآن..."""
         
         # ========== معالجة الخطوات التالية (إضافة منتج) ==========
-        if user_id in conversation_context and conversation_context[user_id].get('last_action') == 'منتج' and conversation_context[user_id].get('option') == '1':
-            step = conversation_context[user_id].get('step', 0)
-            data = conversation_context[user_id].get('data', {})
+        if ctx.get('last_action') == 'منتج' and ctx.get('option') == '1':
+            step = ctx.get('step', 0)
+            data = ctx.get('data', {})
             
             # التحقق من المستمع الذكي
-            listener_response = smart_listener(message, conversation_context[user_id])
+            listener_response = smart_listener(message, ctx)
             
             if listener_response == 'back':
-                del conversation_context[user_id]
+                del ctx
                 return """🔙 **تم العودة للقائمة الرئيسية**
 
 💡 **يمكنك البدء من جديد:**
@@ -966,8 +1027,8 @@ def _process_user_action(message, user):
             if step == 1:
                 # حفظ الاسم والانتقال للخطوة التالية
                 data['name'] = message.strip()
-                conversation_context[user_id]['data'] = data
-                conversation_context[user_id]['step'] = 2
+                ctx['data'] = data
+                ctx['step'] = 2
                 return """✅ **تم حفظ الاسم:** {name}
 
 📝 **الخطوة 2: رقم القطعة**
@@ -980,8 +1041,8 @@ def _process_user_action(message, user):
             elif step == 2:
                 # حفظ رقم القطعة والانتقال للخطوة التالية
                 data['part_number'] = message.strip()
-                conversation_context[user_id]['data'] = data
-                conversation_context[user_id]['step'] = 3
+                ctx['data'] = data
+                ctx['step'] = 3
                 return """✅ **تم حفظ رقم القطعة:** {part_number}
 
 📝 **الخطوة 3: السعر**
@@ -995,8 +1056,8 @@ def _process_user_action(message, user):
                 # حفظ السعر والانتقال للخطوة التالية
                 try:
                     data['price'] = float(message.strip().replace('درهم', '').replace('د.إ', '').strip())
-                    conversation_context[user_id]['data'] = data
-                    conversation_context[user_id]['step'] = 4
+                    ctx['data'] = data
+                    ctx['step'] = 4
                     return """✅ **تم حفظ السعر:** {price} درهم
 
 📝 **الخطوة 4: الكمية**
@@ -1035,7 +1096,7 @@ def _process_user_action(message, user):
                     train_local_ai('create_product', data, {'success': True, 'product_id': product.id})
                     
                     # مسح السياق
-                    del conversation_context[user_id]
+                    del ctx
                     
                     return f"""✅ **تم إنشاء المنتج بنجاح!**
 
@@ -1061,7 +1122,7 @@ def _process_user_action(message, user):
                     train_local_ai('create_product', data, {'success': False, 'error': str(e)})
                     
                     # مسح السياق في حالة الخطأ
-                    del conversation_context[user_id]
+                    del ctx
                     return f"""❌ **خطأ في إنشاء المنتج:**
 
 {str(e)}
@@ -1071,10 +1132,10 @@ def _process_user_action(message, user):
 🤖 المصدر: GROQ API + التحليل المحلي"""
         
         # ========== نظام الحوار التفاعلي للرقم 1 (إنشاء فاتورة جديدة) ==========
-        if msg_lower.strip() == '1' and user_id in conversation_context and conversation_context[user_id].get('last_action') == 'فاتورة':
-            conversation_context[user_id]['step'] = 1
-            conversation_context[user_id]['option'] = '1'
-            conversation_context[user_id]['data'] = {}
+        if msg_lower.strip() == '1' and ctx.get('last_action') == 'فاتورة':
+            ctx['step'] = 1
+            ctx['option'] = '1'
+            ctx['data'] = {}
             return """🤖 ممتاز! اخترت إنشاء فاتورة جديدة. سأرشدك خطوة بخطوة:
 
 📝 **الخطوة 1: اسم العميل**
@@ -1085,14 +1146,14 @@ def _process_user_action(message, user):
 🤖 اكتب اسم العميل الآن..."""
         
         # ========== معالجة الخطوات التالية (إنشاء فاتورة) ==========
-        if user_id in conversation_context and conversation_context[user_id].get('last_action') == 'فاتورة' and conversation_context[user_id].get('option') == '1':
-            step = conversation_context[user_id].get('step', 0)
-            data = conversation_context[user_id].get('data', {})
+        if ctx.get('last_action') == 'فاتورة' and ctx.get('option') == '1':
+            step = ctx.get('step', 0)
+            data = ctx.get('data', {})
             
-            listener_status, listener_msg = apply_smart_listeners(message, conversation_context[user_id], 'فاتورة')
+            listener_status, listener_msg = apply_smart_listeners(message, ctx, 'فاتورة')
             if listener_status in ['back', 'help']:
                 if listener_status == 'back':
-                    del conversation_context[user_id]
+                    del ctx
                 return listener_msg
             
             if step == 1:
@@ -1133,8 +1194,8 @@ def _process_user_action(message, user):
                 
                 data['customer_id'] = customer.id
                 data['customer_name'] = customer.name
-                conversation_context[user_id]['data'] = data
-                conversation_context[user_id]['step'] = 2
+                ctx['data'] = data
+                ctx['step'] = 2
                 return """✅ **تم العثور على العميل:** {customer_name}
 
 📝 **الخطوة 2: اسم المنتج**
@@ -1184,8 +1245,8 @@ def _process_user_action(message, user):
                 data['product_id'] = product.id
                 data['product_name'] = product.name
                 data['product_price'] = product.regular_price
-                conversation_context[user_id]['data'] = data
-                conversation_context[user_id]['step'] = 3
+                ctx['data'] = data
+                ctx['step'] = 3
                 return """✅ **تم العثور على المنتج:** {product_name}
 💰 **السعر:** {product_price} درهم
 
@@ -1235,7 +1296,7 @@ def _process_user_action(message, user):
                     train_local_ai('create_sale', data, {'success': True, 'sale_id': sale.id})
                     
                     # مسح السياق
-                    del conversation_context[user_id]
+                    del ctx
                     
                     final_options = create_final_options('فاتورة', data['customer_name'], sale.id)
                     
@@ -1260,7 +1321,7 @@ def _process_user_action(message, user):
                     train_local_ai('create_sale', data, {'success': False, 'error': str(e)})
                     
                     # مسح السياق في حالة الخطأ
-                    del conversation_context[user_id]
+                    del ctx
                     return f"""❌ **خطأ في إنشاء الفاتورة:**
 
 {str(e)}
@@ -1270,10 +1331,10 @@ def _process_user_action(message, user):
 🤖 المصدر: GROQ API + التحليل المحلي"""
         
         # ========== نظام الحوار التفاعلي للرقم 1 (استلام دفعة) ==========
-        if msg_lower.strip() == '1' and user_id in conversation_context and conversation_context[user_id].get('last_action') == 'استلام':
-            conversation_context[user_id]['step'] = 1
-            conversation_context[user_id]['option'] = '1'
-            conversation_context[user_id]['data'] = {}
+        if msg_lower.strip() == '1' and ctx.get('last_action') == 'استلام':
+            ctx['step'] = 1
+            ctx['option'] = '1'
+            ctx['data'] = {}
             return """🤖 ممتاز! اخترت استلام دفعة من عميل. سأرشدك خطوة بخطوة:
 
 📝 **الخطوة 1: اسم العميل**
@@ -1284,14 +1345,14 @@ def _process_user_action(message, user):
 🤖 اكتب اسم العميل الآن..."""
         
         # ========== معالجة الخطوات التالية (استلام دفعة) ==========
-        if user_id in conversation_context and conversation_context[user_id].get('last_action') == 'استلام' and conversation_context[user_id].get('option') == '1':
-            step = conversation_context[user_id].get('step', 0)
-            data = conversation_context[user_id].get('data', {})
+        if ctx.get('last_action') == 'استلام' and ctx.get('option') == '1':
+            step = ctx.get('step', 0)
+            data = ctx.get('data', {})
             
-            listener_status, listener_msg = apply_smart_listeners(message, conversation_context[user_id], 'استلام')
+            listener_status, listener_msg = apply_smart_listeners(message, ctx, 'استلام')
             if listener_status in ['back', 'help']:
                 if listener_status == 'back':
-                    del conversation_context[user_id]
+                    del ctx
                 return listener_msg
             
             if step == 1:
@@ -1308,8 +1369,8 @@ def _process_user_action(message, user):
                 data['customer_id'] = customer.id
                 data['customer_name'] = customer.name
                 data['current_balance'] = customer.balance
-                conversation_context[user_id]['data'] = data
-                conversation_context[user_id]['step'] = 2
+                ctx['data'] = data
+                ctx['step'] = 2
                 return """✅ **تم العثور على العميل:** {customer_name}
 💰 **الرصيد الحالي:** {current_balance} درهم
 
@@ -1324,8 +1385,8 @@ def _process_user_action(message, user):
                 # حفظ المبلغ والانتقال للخطوة التالية
                 try:
                     data['amount'] = float(message.strip().replace('درهم', '').replace('د.إ', '').strip())
-                    conversation_context[user_id]['data'] = data
-                    conversation_context[user_id]['step'] = 3
+                    ctx['data'] = data
+                    ctx['step'] = 3
                     return """✅ **تم حفظ المبلغ:** {amount} درهم
 
 📝 **الخطوة 3: طريقة الدفع**
@@ -1374,7 +1435,7 @@ def _process_user_action(message, user):
                     train_local_ai('receive_payment', data, {'success': True, 'payment_id': payment.id})
                     
                     # مسح السياق
-                    del conversation_context[user_id]
+                    del ctx
                     
                     final_options = create_final_options('استلام', data['customer_name'], payment.id)
                     
@@ -1398,7 +1459,7 @@ def _process_user_action(message, user):
                     train_local_ai('receive_payment', data, {'success': False, 'error': str(e)})
                     
                     # مسح السياق في حالة الخطأ
-                    del conversation_context[user_id]
+                    del ctx
                     return f"""❌ **خطأ في تسجيل الدفعة:**
 
 {str(e)}
@@ -1408,10 +1469,10 @@ def _process_user_action(message, user):
 🤖 المصدر: GROQ API + التحليل المحلي"""
         
         # ========== نظام الحوار التفاعلي للرقم 1 (إعطاء دفعة) ==========
-        if msg_lower.strip() == '1' and user_id in conversation_context and conversation_context[user_id].get('last_action') == 'إعطاء':
-            conversation_context[user_id]['step'] = 1
-            conversation_context[user_id]['option'] = '1'
-            conversation_context[user_id]['data'] = {}
+        if msg_lower.strip() == '1' and ctx.get('last_action') == 'إعطاء':
+            ctx['step'] = 1
+            ctx['option'] = '1'
+            ctx['data'] = {}
             return """🤖 ممتاز! اخترت إعطاء دفعة للعميل. سأرشدك خطوة بخطوة:
 
 📝 **الخطوة 1: اسم العميل**
@@ -1422,14 +1483,14 @@ def _process_user_action(message, user):
 🤖 اكتب اسم العميل الآن..."""
         
         # ========== معالجة الخطوات التالية (إعطاء دفعة) ==========
-        if user_id in conversation_context and conversation_context[user_id].get('last_action') == 'إعطاء' and conversation_context[user_id].get('option') == '1':
-            step = conversation_context[user_id].get('step', 0)
-            data = conversation_context[user_id].get('data', {})
+        if ctx.get('last_action') == 'إعطاء' and ctx.get('option') == '1':
+            step = ctx.get('step', 0)
+            data = ctx.get('data', {})
             
-            listener_status, listener_msg = apply_smart_listeners(message, conversation_context[user_id], 'إعطاء')
+            listener_status, listener_msg = apply_smart_listeners(message, ctx, 'إعطاء')
             if listener_status in ['back', 'help']:
                 if listener_status == 'back':
-                    del conversation_context[user_id]
+                    del ctx
                 return listener_msg
             
             if step == 1:
@@ -1446,8 +1507,8 @@ def _process_user_action(message, user):
                 data['customer_id'] = customer.id
                 data['customer_name'] = customer.name
                 data['current_balance'] = customer.balance
-                conversation_context[user_id]['data'] = data
-                conversation_context[user_id]['step'] = 2
+                ctx['data'] = data
+                ctx['step'] = 2
                 return """✅ **تم العثور على العميل:** {customer_name}
 💰 **الرصيد الحالي:** {current_balance} درهم
 
@@ -1462,8 +1523,8 @@ def _process_user_action(message, user):
                 # حفظ المبلغ والانتقال للخطوة التالية
                 try:
                     data['amount'] = float(message.strip().replace('درهم', '').replace('د.إ', '').strip())
-                    conversation_context[user_id]['data'] = data
-                    conversation_context[user_id]['step'] = 3
+                    ctx['data'] = data
+                    ctx['step'] = 3
                     return """✅ **تم حفظ المبلغ:** {amount} درهم
 
 📝 **الخطوة 3: السبب**
@@ -1512,7 +1573,7 @@ def _process_user_action(message, user):
                     train_local_ai('give_payment', data, {'success': True, 'payment_id': payment.id})
                     
                     # مسح السياق
-                    del conversation_context[user_id]
+                    del ctx
                     
                     final_options = create_final_options('إعطاء', data['customer_name'], payment.id)
                     
@@ -1536,7 +1597,7 @@ def _process_user_action(message, user):
                     train_local_ai('give_payment', data, {'success': False, 'error': str(e)})
                     
                     # مسح السياق في حالة الخطأ
-                    del conversation_context[user_id]
+                    del ctx
                     return f"""❌ **خطأ في تسجيل الدفعة:**
 
 {str(e)}
@@ -1546,10 +1607,10 @@ def _process_user_action(message, user):
 🤖 المصدر: GROQ API + التحليل المحلي"""
         
         # ========== نظام الحوار التفاعلي للرقم 1 (إضافة مصروف) ==========
-        if msg_lower.strip() == '1' and user_id in conversation_context and conversation_context[user_id].get('last_action') == 'مصروف':
-            conversation_context[user_id]['step'] = 1
-            conversation_context[user_id]['option'] = '1'
-            conversation_context[user_id]['data'] = {}
+        if msg_lower.strip() == '1' and ctx.get('last_action') == 'مصروف':
+            ctx['step'] = 1
+            ctx['option'] = '1'
+            ctx['data'] = {}
             return """🤖 ممتاز! اخترت إضافة مصروف جديد. سأرشدك خطوة بخطوة:
 
 📝 **الخطوة 1: وصف المصروف**
@@ -1560,21 +1621,21 @@ def _process_user_action(message, user):
 🤖 اكتب وصف المصروف الآن..."""
         
         # ========== معالجة الخطوات التالية (إضافة مصروف) ==========
-        if user_id in conversation_context and conversation_context[user_id].get('last_action') == 'مصروف' and conversation_context[user_id].get('option') == '1':
-            step = conversation_context[user_id].get('step', 0)
-            data = conversation_context[user_id].get('data', {})
+        if ctx.get('last_action') == 'مصروف' and ctx.get('option') == '1':
+            step = ctx.get('step', 0)
+            data = ctx.get('data', {})
             
-            listener_status, listener_msg = apply_smart_listeners(message, conversation_context[user_id], 'مصروف')
+            listener_status, listener_msg = apply_smart_listeners(message, ctx, 'مصروف')
             if listener_status in ['back', 'help']:
                 if listener_status == 'back':
-                    del conversation_context[user_id]
+                    del ctx
                 return listener_msg
             
             if step == 1:
                 # حفظ الوصف والانتقال للخطوة التالية
                 data['description'] = message.strip()
-                conversation_context[user_id]['data'] = data
-                conversation_context[user_id]['step'] = 2
+                ctx['data'] = data
+                ctx['step'] = 2
                 return """✅ **تم حفظ الوصف:** {description}
 
 📝 **الخطوة 2: المبلغ**
@@ -1588,8 +1649,8 @@ def _process_user_action(message, user):
                 # حفظ المبلغ والانتقال للخطوة التالية
                 try:
                     data['amount'] = float(message.strip().replace('درهم', '').replace('د.إ', '').strip())
-                    conversation_context[user_id]['data'] = data
-                    conversation_context[user_id]['step'] = 3
+                    ctx['data'] = data
+                    ctx['step'] = 3
                     return """✅ **تم حفظ المبلغ:** {amount} درهم
 
 📝 **الخطوة 3: الفئة**
@@ -1627,7 +1688,7 @@ def _process_user_action(message, user):
                     train_local_ai('create_expense', data, {'success': True, 'expense_id': expense.id})
                     
                     # مسح السياق
-                    del conversation_context[user_id]
+                    del ctx
                     
                     final_options = create_final_options('مصروف', data['description'], expense.id)
                     
@@ -1651,7 +1712,7 @@ def _process_user_action(message, user):
                     train_local_ai('create_expense', data, {'success': False, 'error': str(e)})
                     
                     # مسح السياق في حالة الخطأ
-                    del conversation_context[user_id]
+                    del ctx
                     return f"""❌ **خطأ في إنشاء المصروف:**
 
 {str(e)}
@@ -1661,10 +1722,10 @@ def _process_user_action(message, user):
 🤖 المصدر: GROQ API + التحليل المحلي"""
         
         # ========== نظام الحوار التفاعلي للرقم 1 (إضافة مورد جديد) ==========
-        if msg_lower.strip() == '1' and user_id in conversation_context and conversation_context[user_id].get('last_action') == 'مورد':
-            conversation_context[user_id]['step'] = 1
-            conversation_context[user_id]['option'] = '1'
-            conversation_context[user_id]['data'] = {}
+        if msg_lower.strip() == '1' and ctx.get('last_action') == 'مورد':
+            ctx['step'] = 1
+            ctx['option'] = '1'
+            ctx['data'] = {}
             return """🤖 ممتاز! اخترت إضافة مورد جديد. سأرشدك خطوة بخطوة:
 
 📝 **الخطوة 1: اسم المورد**
@@ -1677,20 +1738,20 @@ def _process_user_action(message, user):
 🤖 اكتب اسم المورد الآن..."""
         
         # ========== معالجة الخطوات التالية (إضافة مورد) ==========
-        if user_id in conversation_context and conversation_context[user_id].get('last_action') == 'مورد' and conversation_context[user_id].get('option') == '1':
-            step = conversation_context[user_id].get('step', 0)
-            data = conversation_context[user_id].get('data', {})
+        if ctx.get('last_action') == 'مورد' and ctx.get('option') == '1':
+            step = ctx.get('step', 0)
+            data = ctx.get('data', {})
             
-            listener_status, listener_msg = apply_smart_listeners(message, conversation_context[user_id], 'مورد')
+            listener_status, listener_msg = apply_smart_listeners(message, ctx, 'مورد')
             if listener_status in ['back', 'help']:
                 if listener_status == 'back':
-                    del conversation_context[user_id]
+                    del ctx
                 return listener_msg
             
             if step == 1:
                 data['name'] = message.strip()
-                conversation_context[user_id]['data'] = data
-                conversation_context[user_id]['step'] = 2
+                ctx['data'] = data
+                ctx['step'] = 2
                 return """✅ **تم حفظ الاسم:** {name}
 
 📝 **الخطوة 2: رقم الهاتف**
@@ -1704,8 +1765,8 @@ def _process_user_action(message, user):
             
             elif step == 2:
                 data['phone'] = message.strip()
-                conversation_context[user_id]['data'] = data
-                conversation_context[user_id]['step'] = 3
+                ctx['data'] = data
+                ctx['step'] = 3
                 return """✅ **تم حفظ رقم الهاتف:** {phone}
 
 📝 **الخطوة 3: العنوان**
@@ -1719,8 +1780,8 @@ def _process_user_action(message, user):
             
             elif step == 3:
                 data['address'] = message.strip()
-                conversation_context[user_id]['data'] = data
-                conversation_context[user_id]['step'] = 4
+                ctx['data'] = data
+                ctx['step'] = 4
                 return """✅ **تم حفظ العنوان:** {address}
 
 📝 **الخطوة 4: الرصيد الابتدائي (المبلغ المستحق للمورد)**
@@ -1736,8 +1797,8 @@ def _process_user_action(message, user):
                 try:
                     initial_balance = float(message.strip().replace('درهم', '').strip())
                     data['initial_balance'] = initial_balance
-                    conversation_context[user_id]['data'] = data
-                    conversation_context[user_id]['step'] = 5
+                    ctx['data'] = data
+                    ctx['step'] = 5
                     return """✅ **تم حفظ الرصيد الابتدائي:** {balance} درهم
 
 📝 **الخطوة 5: الرقم الضريبي (اختياري)**
@@ -1775,7 +1836,7 @@ def _process_user_action(message, user):
                     
                     train_local_ai('create_supplier', data, {'success': True, 'supplier_id': supplier.id})
                     
-                    del conversation_context[user_id]
+                    del ctx
                     
                     balance_info = f"- الرصيد الابتدائي: {data['initial_balance']} درهم" if data['initial_balance'] > 0 else "- لا يوجد رصيد مستحق"
                     tax_info = f"- الرقم الضريبي: {data['tax_number']}" if data.get('tax_number') else ""
@@ -1802,7 +1863,7 @@ def _process_user_action(message, user):
                 
                 except Exception as e:
                     train_local_ai('create_supplier', data, {'success': False, 'error': str(e)})
-                    del conversation_context[user_id]
+                    del ctx
                     return f"""❌ **خطأ في إنشاء المورد:** {str(e)}
 
 💡 **حاول مرة أخرى:** اكتب "مورد" ثم "1"
@@ -1810,10 +1871,10 @@ def _process_user_action(message, user):
 🤖 المصدر: GROQ API + التحليل المحلي"""
         
         # ========== نظام الحوار التفاعلي للرقم 1 (إضافة مشتريات جديدة) ==========
-        if msg_lower.strip() == '1' and user_id in conversation_context and conversation_context[user_id].get('last_action') == 'مشتريات':
-            conversation_context[user_id]['step'] = 1
-            conversation_context[user_id]['option'] = '1'
-            conversation_context[user_id]['data'] = {}
+        if msg_lower.strip() == '1' and ctx.get('last_action') == 'مشتريات':
+            ctx['step'] = 1
+            ctx['option'] = '1'
+            ctx['data'] = {}
             return """🤖 ممتاز! اخترت إضافة مشتريات جديدة. سأرشدك خطوة بخطوة:
 
 📝 **الخطوة 1: اسم المورد**
@@ -1824,14 +1885,14 @@ def _process_user_action(message, user):
 🤖 اكتب اسم المورد الآن..."""
         
         # ========== معالجة الخطوات التالية (إضافة مشتريات) ==========
-        if user_id in conversation_context and conversation_context[user_id].get('last_action') == 'مشتريات' and conversation_context[user_id].get('option') == '1':
-            step = conversation_context[user_id].get('step', 0)
-            data = conversation_context[user_id].get('data', {})
+        if ctx.get('last_action') == 'مشتريات' and ctx.get('option') == '1':
+            step = ctx.get('step', 0)
+            data = ctx.get('data', {})
             
-            listener_status, listener_msg = apply_smart_listeners(message, conversation_context[user_id], 'مشتريات')
+            listener_status, listener_msg = apply_smart_listeners(message, ctx, 'مشتريات')
             if listener_status in ['back', 'help']:
                 if listener_status == 'back':
-                    del conversation_context[user_id]
+                    del ctx
                 return listener_msg
             
             if step == 1:
@@ -1846,8 +1907,8 @@ def _process_user_action(message, user):
                 
                 data['supplier_id'] = supplier.id
                 data['supplier_name'] = supplier.name
-                conversation_context[user_id]['data'] = data
-                conversation_context[user_id]['step'] = 2
+                ctx['data'] = data
+                ctx['step'] = 2
                 return """✅ **تم العثور على المورد:** {supplier_name}
 
 📝 **الخطوة 2: اسم المنتج**
@@ -1869,8 +1930,8 @@ def _process_user_action(message, user):
                 
                 data['product_id'] = product.id
                 data['product_name'] = product.name
-                conversation_context[user_id]['data'] = data
-                conversation_context[user_id]['step'] = 3
+                ctx['data'] = data
+                ctx['step'] = 3
                 return """✅ **تم العثور على المنتج:** {product_name}
 
 📝 **الخطوة 3: الكمية**
@@ -1883,8 +1944,8 @@ def _process_user_action(message, user):
             elif step == 3:
                 try:
                     data['quantity'] = float(message.strip())
-                    conversation_context[user_id]['data'] = data
-                    conversation_context[user_id]['step'] = 4
+                    ctx['data'] = data
+                    ctx['step'] = 4
                     return """✅ **تم حفظ الكمية:** {quantity}
 
 📝 **الخطوة 4: سعر الشراء**
@@ -1933,7 +1994,7 @@ def _process_user_action(message, user):
                     
                     train_local_ai('create_purchase', data, {'success': True, 'purchase_id': purchase.id})
                     
-                    del conversation_context[user_id]
+                    del ctx
                     
                     return f"""✅ **تم إنشاء المشتريات بنجاح!**
 
@@ -1956,7 +2017,7 @@ def _process_user_action(message, user):
                 
                 except Exception as e:
                     train_local_ai('create_purchase', data, {'success': False, 'error': str(e)})
-                    del conversation_context[user_id]
+                    del ctx
                     return f"""❌ **خطأ في إنشاء المشتريات:** {str(e)}
 
 💡 **حاول مرة أخرى:** اكتب "مشتريات" ثم "1"
@@ -1964,10 +2025,10 @@ def _process_user_action(message, user):
 🤖 المصدر: GROQ API + التحليل المحلي"""
         
         # ========== نظام الحوار التفاعلي للرقم 1 (إضافة شيك جديد) ==========
-        if msg_lower.strip() == '1' and user_id in conversation_context and conversation_context[user_id].get('last_action') == 'شيك':
-            conversation_context[user_id]['step'] = 1
-            conversation_context[user_id]['option'] = '1'
-            conversation_context[user_id]['data'] = {}
+        if msg_lower.strip() == '1' and ctx.get('last_action') == 'شيك':
+            ctx['step'] = 1
+            ctx['option'] = '1'
+            ctx['data'] = {}
             return """🤖 ممتاز! اخترت إضافة شيك جديد. سأرشدك خطوة بخطوة:
 
 📝 **الخطوة 1: نوع الشيك**
@@ -1978,14 +2039,14 @@ def _process_user_action(message, user):
 🤖 اكتب نوع الشيك الآن..."""
         
         # ========== معالجة الخطوات التالية (إضافة شيك) ==========
-        if user_id in conversation_context and conversation_context[user_id].get('last_action') == 'شيك' and conversation_context[user_id].get('option') == '1':
-            step = conversation_context[user_id].get('step', 0)
-            data = conversation_context[user_id].get('data', {})
+        if ctx.get('last_action') == 'شيك' and ctx.get('option') == '1':
+            step = ctx.get('step', 0)
+            data = ctx.get('data', {})
             
-            listener_status, listener_msg = apply_smart_listeners(message, conversation_context[user_id], 'شيك')
+            listener_status, listener_msg = apply_smart_listeners(message, ctx, 'شيك')
             if listener_status in ['back', 'help']:
                 if listener_status == 'back':
-                    del conversation_context[user_id]
+                    del ctx
                 return listener_msg
             
             if step == 1:
@@ -1998,8 +2059,8 @@ def _process_user_action(message, user):
 🤖 أعد إدخال نوع الشيك..."""
                 
                 data['cheque_type'] = 'incoming' if 'وارد' in cheque_type else 'outgoing'
-                conversation_context[user_id]['data'] = data
-                conversation_context[user_id]['step'] = 2
+                ctx['data'] = data
+                ctx['step'] = 2
                 return """✅ **تم حفظ نوع الشيك:** {type}
 
 📝 **الخطوة 2: رقم الشيك**
@@ -2011,8 +2072,8 @@ def _process_user_action(message, user):
             
             elif step == 2:
                 data['cheque_number'] = message.strip()
-                conversation_context[user_id]['data'] = data
-                conversation_context[user_id]['step'] = 3
+                ctx['data'] = data
+                ctx['step'] = 3
                 return """✅ **تم حفظ رقم الشيك:** {number}
 
 📝 **الخطوة 3: المبلغ**
@@ -2025,8 +2086,8 @@ def _process_user_action(message, user):
             elif step == 3:
                 try:
                     data['amount'] = float(message.strip().replace('درهم', '').strip())
-                    conversation_context[user_id]['data'] = data
-                    conversation_context[user_id]['step'] = 4
+                    ctx['data'] = data
+                    ctx['step'] = 4
                     return """✅ **تم حفظ المبلغ:** {amount} درهم
 
 📝 **الخطوة 4: تاريخ الاستحقاق**
@@ -2062,7 +2123,7 @@ def _process_user_action(message, user):
                     
                     train_local_ai('create_cheque', data, {'success': True, 'cheque_id': cheque.id})
                     
-                    del conversation_context[user_id]
+                    del ctx
                     
                     return f"""✅ **تم إنشاء الشيك بنجاح!**
 
@@ -2084,7 +2145,7 @@ def _process_user_action(message, user):
                 
                 except Exception as e:
                     train_local_ai('create_cheque', data, {'success': False, 'error': str(e)})
-                    del conversation_context[user_id]
+                    del ctx
                     return f"""❌ **خطأ في إنشاء الشيك:** {str(e)}
 
 💡 **حاول مرة أخرى:** اكتب "شيك" ثم "1"
@@ -2092,11 +2153,11 @@ def _process_user_action(message, user):
 🤖 المصدر: GROQ API + التحليل المحلي"""
         
         # ========== نظام الحوار التفاعلي للرقم 1 (عرض دفتر الأستاذ) ==========
-        if msg_lower.strip() == '1' and user_id in conversation_context and conversation_context[user_id].get('last_action') == 'دفتر':
+        if msg_lower.strip() == '1' and ctx.get('last_action') == 'دفتر':
             from models.gl import GLJournalEntry
             gl_entries = GLJournalEntry.query.filter_by(is_active=True, tenant_id=tid).order_by(GLJournalEntry.entry_date.desc()).limit(20).all()
             
-            del conversation_context[user_id]
+            del ctx
             
             if gl_entries:
                 gl_list = "\n".join([f"• #{g.id} - {g.description} - {g.debit_amount} درهم - {g.entry_date.strftime('%Y-%m-%d')}" for g in gl_entries])
@@ -2119,11 +2180,11 @@ def _process_user_action(message, user):
 🤖 المصدر: GROQ API + التحليل المحلي"""
         
         # ========== نظام الحوار التفاعلي للرقم 1 (عرض المستودعات) ==========
-        if msg_lower.strip() == '1' and user_id in conversation_context and conversation_context[user_id].get('last_action') == 'مستودع':
+        if msg_lower.strip() == '1' and ctx.get('last_action') == 'مستودع':
             from models.warehouse import Warehouse
             warehouses = Warehouse.query.filter_by(is_active=True, tenant_id=tid).all()
             
-            del conversation_context[user_id]
+            del ctx
             
             if warehouses:
                 wh_list = "\n".join([f"• {w.name} - {w.location or 'لا يوجد موقع'}" for w in warehouses])
@@ -2145,10 +2206,10 @@ def _process_user_action(message, user):
 🤖 المصدر: GROQ API + التحليل المحلي"""
         
         # ========== نظام الحوار التفاعلي للرقم 1 (إضافة مستخدم جديد) ==========
-        if msg_lower.strip() == '1' and user_id in conversation_context and conversation_context[user_id].get('last_action') == 'مستخدم':
-            conversation_context[user_id]['step'] = 1
-            conversation_context[user_id]['option'] = '1'
-            conversation_context[user_id]['data'] = {}
+        if msg_lower.strip() == '1' and ctx.get('last_action') == 'مستخدم':
+            ctx['step'] = 1
+            ctx['option'] = '1'
+            ctx['data'] = {}
             return """🤖 ممتاز! اخترت إضافة مستخدم جديد. سأرشدك خطوة بخطوة:
 
 📝 **الخطوة 1: اسم المستخدم (Username)**
@@ -2159,20 +2220,20 @@ def _process_user_action(message, user):
 🤖 اكتب اسم المستخدم الآن..."""
         
         # ========== معالجة الخطوات التالية (إضافة مستخدم) ==========
-        if user_id in conversation_context and conversation_context[user_id].get('last_action') == 'مستخدم' and conversation_context[user_id].get('option') == '1':
-            step = conversation_context[user_id].get('step', 0)
-            data = conversation_context[user_id].get('data', {})
+        if ctx.get('last_action') == 'مستخدم' and ctx.get('option') == '1':
+            step = ctx.get('step', 0)
+            data = ctx.get('data', {})
             
-            listener_status, listener_msg = apply_smart_listeners(message, conversation_context[user_id], 'مستخدم')
+            listener_status, listener_msg = apply_smart_listeners(message, ctx, 'مستخدم')
             if listener_status in ['back', 'help']:
                 if listener_status == 'back':
-                    del conversation_context[user_id]
+                    del ctx
                 return listener_msg
             
             if step == 1:
                 data['username'] = message.strip()
-                conversation_context[user_id]['data'] = data
-                conversation_context[user_id]['step'] = 2
+                ctx['data'] = data
+                ctx['step'] = 2
                 return """✅ **تم حفظ اسم المستخدم:** {username}
 
 📝 **الخطوة 2: كلمة المرور**
@@ -2184,8 +2245,8 @@ def _process_user_action(message, user):
             
             elif step == 2:
                 data['password'] = message.strip()
-                conversation_context[user_id]['data'] = data
-                conversation_context[user_id]['step'] = 3
+                ctx['data'] = data
+                ctx['step'] = 3
                 return """✅ **تم حفظ كلمة المرور**
 
 📝 **الخطوة 3: الدور (Role)**
@@ -2210,8 +2271,8 @@ def _process_user_action(message, user):
 🤖 أعد إدخال الدور..."""
                 
                 data['role'] = role
-                conversation_context[user_id]['data'] = data
-                conversation_context[user_id]['step'] = 4
+                ctx['data'] = data
+                ctx['step'] = 4
                 return """✅ **تم حفظ الدور:** {role}
 
 📝 **الخطوة 4: البريد الإلكتروني (اختياري)**
@@ -2240,7 +2301,7 @@ def _process_user_action(message, user):
                     
                     train_local_ai('create_user', data, {'success': True, 'user_id': new_user.id})
                     
-                    del conversation_context[user_id]
+                    del ctx
                     
                     return f"""✅ **تم إنشاء المستخدم بنجاح!**
 
@@ -2261,7 +2322,7 @@ def _process_user_action(message, user):
                 
                 except Exception as e:
                     train_local_ai('create_user', data, {'success': False, 'error': str(e)})
-                    del conversation_context[user_id]
+                    del ctx
                     return f"""❌ **خطأ في إنشاء المستخدم:** {str(e)}
 
 💡 **حاول مرة أخرى:** اكتب "مستخدم" ثم "1"
@@ -2269,7 +2330,7 @@ def _process_user_action(message, user):
 🤖 المصدر: GROQ API + التحليل المحلي"""
         
         # ========== نظام الحوار التفاعلي للرقم 2 (عرض جميع العناصر) ==========
-        if msg_lower.strip() == '2' and user_id in conversation_context and conversation_context[user_id].get('last_action') == 'عميل':
+        if msg_lower.strip() == '2' and ctx.get('last_action') == 'عميل':
             from models.customer import Customer
             customers = Customer.query.filter_by(tenant_id=tid, is_active=True).all()
             if customers:
@@ -2289,7 +2350,7 @@ def _process_user_action(message, user):
 
 🤖 المصدر: GROQ API + التحليل المحلي"""
         
-        if msg_lower.strip() == '2' and user_id in conversation_context and conversation_context[user_id].get('last_action') == 'منتج':
+        if msg_lower.strip() == '2' and ctx.get('last_action') == 'منتج':
             from models.product import Product
             products = Product.query.filter_by(tenant_id=tid, is_active=True).all()
             if products:
@@ -2309,7 +2370,7 @@ def _process_user_action(message, user):
 
 🤖 المصدر: GROQ API + التحليل المحلي"""
         
-        if msg_lower.strip() == '2' and user_id in conversation_context and conversation_context[user_id].get('last_action') == 'فاتورة':
+        if msg_lower.strip() == '2' and ctx.get('last_action') == 'فاتورة':
             from models.sale import Sale
             sales = Sale.query.filter_by(is_active=True).all()
             if sales:
@@ -2329,7 +2390,7 @@ def _process_user_action(message, user):
 
 🤖 المصدر: GROQ API + التحليل المحلي"""
         
-        if msg_lower.strip() == '2' and user_id in conversation_context and conversation_context[user_id].get('last_action') == 'مصروف':
+        if msg_lower.strip() == '2' and ctx.get('last_action') == 'مصروف':
             from models.expense import Expense
             expenses = Expense.query.filter_by(is_active=True).all()
             if expenses:
@@ -2349,10 +2410,10 @@ def _process_user_action(message, user):
 
 🤖 المصدر: GROQ API + التحليل المحلي"""
         
-        if msg_lower.strip() == '2' and user_id in conversation_context and conversation_context[user_id].get('last_action') == 'مورد':
+        if msg_lower.strip() == '2' and ctx.get('last_action') == 'مورد':
             from models.supplier import Supplier
             suppliers = Supplier.query.filter_by(is_active=True, tenant_id=tid).all()
-            del conversation_context[user_id]
+            del ctx
             if suppliers:
                 suppliers_list = "\n".join([f"• {s.name} - {s.phone or 'لا يوجد هاتف'}" for s in suppliers[:10]])
                 more_text = f"\n\n... و {len(suppliers) - 10} مورد آخر" if len(suppliers) > 10 else ""
@@ -2366,10 +2427,10 @@ def _process_user_action(message, user):
 
 🤖 المصدر: GROQ API + التحليل المحلي"""
         
-        if msg_lower.strip() == '2' and user_id in conversation_context and conversation_context[user_id].get('last_action') == 'مشتريات':
+        if msg_lower.strip() == '2' and ctx.get('last_action') == 'مشتريات':
             from models.purchase import Purchase
             purchases = Purchase.query.filter_by(is_active=True).all()
-            del conversation_context[user_id]
+            del ctx
             if purchases:
                 purchases_list = "\n".join([f"• #{p.id} - {p.supplier.name if p.supplier else 'غير محدد'} - {p.total_amount} درهم" for p in purchases[:10]])
                 more_text = f"\n\n... و {len(purchases) - 10} مشتريات أخرى" if len(purchases) > 10 else ""
@@ -2383,10 +2444,10 @@ def _process_user_action(message, user):
 
 🤖 المصدر: GROQ API + التحليل المحلي"""
         
-        if msg_lower.strip() == '2' and user_id in conversation_context and conversation_context[user_id].get('last_action') == 'شيك':
+        if msg_lower.strip() == '2' and ctx.get('last_action') == 'شيك':
             from models.cheque import Cheque
             cheques = Cheque.query.filter_by(is_active=True).all()
-            del conversation_context[user_id]
+            del ctx
             if cheques:
                 cheques_list = "\n".join([f"• #{c.id} - {c.cheque_number} - {c.amount} درهم - {c.status}" for c in cheques[:10]])
                 more_text = f"\n\n... و {len(cheques) - 10} شيك آخر" if len(cheques) > 10 else ""
@@ -2400,11 +2461,11 @@ def _process_user_action(message, user):
 
 🤖 المصدر: GROQ API + التحليل المحلي"""
         
-        if msg_lower.strip() == '2' and user_id in conversation_context and conversation_context[user_id].get('last_action') == 'مستخدم':
+        if msg_lower.strip() == '2' and ctx.get('last_action') == 'مستخدم':
             from models.user import User
             from utils.tenanting import scoped_user_query
             users = scoped_user_query(active_only=True).all()
-            del conversation_context[user_id]
+            del ctx
             if users:
                 users_list = "\n".join([f"• {u.username} - {u.role}" for u in users[:10]])
                 more_text = f"\n\n... و {len(users) - 10} مستخدم آخر" if len(users) > 10 else ""
@@ -2418,10 +2479,10 @@ def _process_user_action(message, user):
 
 🤖 المصدر: GROQ API + التحليل المحلي"""
         
-        if msg_lower.strip() == '2' and user_id in conversation_context and conversation_context[user_id].get('last_action') == 'دفتر':
+        if msg_lower.strip() == '2' and ctx.get('last_action') == 'دفتر':
             from models.gl import GLJournalEntry
             gl_entries = GLJournalEntry.query.filter_by(is_active=True, tenant_id=tid).order_by(GLJournalEntry.entry_date.desc()).limit(20).all()
-            del conversation_context[user_id]
+            del ctx
             if gl_entries:
                 gl_list = "\n".join([f"• #{g.id} - {g.description} - {g.debit_amount} درهم - {g.entry_date.strftime('%Y-%m-%d')}" for g in gl_entries])
                 return f"""✅ **القيود المحاسبية (آخر 20 قيد):**
@@ -2434,10 +2495,10 @@ def _process_user_action(message, user):
 
 🤖 المصدر: GROQ API + التحليل المحلي"""
         
-        if msg_lower.strip() == '2' and user_id in conversation_context and conversation_context[user_id].get('last_action') == 'مستودع':
+        if msg_lower.strip() == '2' and ctx.get('last_action') == 'مستودع':
             from models.product import Product
             products = Product.query.filter_by(tenant_id=tid, is_active=True).all()
-            del conversation_context[user_id]
+            del ctx
             if products:
                 stock_list = "\n".join([f"• {p.name} - {p.current_stock} {p.unit}" for p in products[:15]])
                 more_text = f"\n\n... و {len(products) - 15} منتج آخر" if len(products) > 15 else ""
@@ -2452,9 +2513,9 @@ def _process_user_action(message, user):
 🤖 المصدر: GROQ API + التحليل المحلي"""
         
         # ========== نظام الحوار التفاعلي للرقم 3 (البحث عن العناصر) ==========
-        if msg_lower.strip() == '3' and user_id in conversation_context and conversation_context[user_id].get('last_action') == 'عميل':
-            conversation_context[user_id]['step'] = 1
-            conversation_context[user_id]['option'] = '3'
+        if msg_lower.strip() == '3' and ctx.get('last_action') == 'عميل':
+            ctx['step'] = 1
+            ctx['option'] = '3'
             return """🤖 ممتاز! اخترت البحث عن عميل. سأرشدك خطوة بخطوة:
 
 📝 **اكتب اسم العميل أو رقم هاتفه**
@@ -2467,9 +2528,9 @@ def _process_user_action(message, user):
 
 🤖 اكتب اسم العميل أو رقم هاتفه الآن..."""
         
-        if msg_lower.strip() == '3' and user_id in conversation_context and conversation_context[user_id].get('last_action') == 'منتج':
-            conversation_context[user_id]['step'] = 1
-            conversation_context[user_id]['option'] = '3'
+        if msg_lower.strip() == '3' and ctx.get('last_action') == 'منتج':
+            ctx['step'] = 1
+            ctx['option'] = '3'
             return """🤖 ممتاز! اخترت البحث عن منتج. سأرشدك خطوة بخطوة:
 
 📝 **اكتب اسم المنتج أو رقم القطعة**
@@ -2615,8 +2676,8 @@ def _process_user_action(message, user):
 🤖 اكتب اسم المستخدم الآن..."""
         
         # ========== نظام الحوار التفاعلي للرقم 4 (رفع منتجات من Excel) ==========
-        if msg_lower.strip() == '4' and user_id in conversation_context and conversation_context[user_id].get('last_action') == 'منتج':
-            del conversation_context[user_id]
+        if msg_lower.strip() == '4' and ctx.get('last_action') == 'منتج':
+            del ctx
             return """🤖 ممتاز! اخترت رفع منتجات من Excel.
 
 📂 **قم بتحميل ملف Excel:**
