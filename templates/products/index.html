@@ -246,7 +246,7 @@
                   <i class="fas fa-edit"></i>
                 </a>
                 <button type="button" class="btn btn-danger" 
-                        onclick="deleteItem('products', {{ product.id }}, '{{ product.name }}')" 
+                        onclick="deleteItem('products', {{ product.id }}, {{ product.name|tojson }})" 
                         title="حذف">
                   <i class="fas fa-trash"></i>
                 </button>
@@ -257,7 +257,7 @@
                   <i class="fas fa-shopping-cart"></i>
                 </a>
                 <button type="button" class="btn btn-primary" title="إضافة كمية" 
-                        onclick="adjustStock({{ product.id }}, '{{ product.name }}', {{ shown_stock }})">
+                        onclick="adjustStock({{ product.id }}, {{ product.name|tojson }}, {{ shown_stock }})">
                   <i class="fas fa-plus"></i>
                 </button>
               </div>

@@ -51,7 +51,7 @@
   <form class="needs-validation" method="POST" action="{{ url_for('products.create') }}" enctype="multipart/form-data">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
     <div class="card-body">
-      <!-- المعلومات الأساسية -->
+      
       <div class="row">
         <div class="col-md-6">
           <div class="form-group">
@@ -129,7 +129,7 @@
         </div>
       </div>
 
-      <!-- الأسعار -->
+      
       <hr>
       <h5 class="text-success"><i class="fas fa-money-bill-wave"></i> الأسعار</h5>
       <div class="row">
@@ -173,7 +173,7 @@
         </div>
       </div>
 
-      <!-- المخزون -->
+      
       <hr>
       <h5 class="text-warning"><i class="fas fa-warehouse"></i> المخزون والضمان</h5>
       <div class="row">
@@ -275,11 +275,11 @@
         </div>
       </div>
 
-      <!-- حقوق الملكية والشركاء -->
+      
       <hr>
       <h5 class="text-primary"><i class="fas fa-users-cog"></i> حقوق الملكية والشركاء</h5>
       <div class="row">
-        <!-- Merchant Selection -->
+        
         <div class="col-md-6">
           <div class="form-group">
             <label for="merchant_customer_id">
@@ -296,7 +296,7 @@
             </div>
           </div>
         </div>
-        <div class="col-md-6" id="merchantShareContainer" style="display: {% if request.form.get('merchant_customer_id') %}block{% else %}none{% endif %};">
+        <div class="col-md-6" id="merchantShareContainer" class="{% if request.form.get('merchant_customer_id') %}d-block{% else %}d-none{% endif %}">
           <div class="form-group">
             <label for="merchant_share">
               <i class="fas fa-percentage text-warning"></i> نسبة التاجر من المبيعات (%)
@@ -315,7 +315,7 @@
         </div>
       </div>
       
-      <!-- Partners Table -->
+      
       <div class="row">
         <div class="col-12">
           <label>
@@ -330,7 +330,7 @@
               </tr>
             </thead>
             <tbody id="partnersList">
-              <!-- Rows added via JS -->
+              
             </tbody>
             <tfoot>
               <tr>
@@ -345,7 +345,7 @@
         </div>
       </div>
 
-      <!-- معلومات إضافية -->
+      
       <hr>
       <h5 class="text-info"><i class="fas fa-info-circle"></i> معلومات إضافية</h5>
       <div class="row">
@@ -397,7 +397,7 @@
   </form>
 </div>
 
-<!-- Modal: إضافة فئة منتجات -->
+
 <div class="modal fade" id="addCategoryModal" tabindex="-1" role="dialog">
   <div class="modal-dialog" role="document">
     <div class="modal-content">

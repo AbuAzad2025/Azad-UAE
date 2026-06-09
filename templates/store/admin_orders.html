@@ -206,7 +206,7 @@
 
             {% if order.status == 'pending' %}
 
-            <form class="needs-validation" method="post" action="{{ url_for('store.admin_order_confirm', order_id=order.id) }}" class="d-inline" onsubmit="return confirm('تأكيد الطلب {{ order.sale_number }}؟');">
+            <form class="needs-validation" method="post" action="{{ url_for('store.admin_order_confirm', order_id=order.id) }}" class="d-inline" onsubmit="return confirm('تأكيد الطلب ' + {{ order.sale_number|tojson }} + '؟');">
 
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 
@@ -238,22 +238,10 @@
 
     <nav>
 
-      <ul class="pagination pagination-sm mb-0 justify-content-center">
-
-        {% if pagination.has_prev %}
-
-        <li class="page-item"><a class="page-link" href="{{ url_for('store.admin_orders', page=pagination.prev_num, status=status_filter or none) }}">السابق</a></li>
-
-        {% endif %}
-
-        <li class="page-item disabled"><span class="page-link">{{ pagination.page }} / {{ pagination.pages }}</span></li>
-
-        {% if pagination.has_next %}
-
-        <li class="page-item"><a class="page-link" href="{{ url_for('store.admin_orders', page=pagination.next_num, status=status_filter or none) }}">التالي</a></li>
-
-        {% endif %}
-
+      <ul class="pagination pagination-sm mb-0 justify-content-center">{%- if pagination.has_prev %}
+        <li class="page-item"><a class="page-link" href="{{ url_for('store.admin_orders', page=pagination.prev_num, status=status_filter or none) }}">السابق</a></li>{%- endif %}
+        <li class="page-item disabled"><span class="page-link">{{ pagination.page }} / {{ pagination.pages }}</span></li>{%- if pagination.has_next %}
+        <li class="page-item"><a class="page-link" href="{{ url_for('store.admin_orders', page=pagination.next_num, status=status_filter or none) }}">التالي</a></li>{%- endif %}
       </ul>
 
     </nav>

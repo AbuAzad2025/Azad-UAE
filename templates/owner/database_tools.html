@@ -167,7 +167,7 @@
                   {% endif %}
                   {% if table.name not in ['users', 'alembic_version', 'system_settings'] %}
                   <button class="btn btn-danger" 
-                          onclick="truncateTable('{{ table.name }}')"
+                          onclick="truncateTable({{ table.name|tojson }})"
                           title="حذف كل البيانات - خطير جداً!">
                     <i class="fas fa-trash"></i> مسح الكل
                   </button>

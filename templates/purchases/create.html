@@ -80,9 +80,9 @@
 
   padding-inline-end: 2.2rem;
 
-  appearance: none;
+  -webkit-appearance: none;appearance: none;
 
-  -webkit-appearance: none;
+  
 
   background-color: #fff;
 
@@ -360,7 +360,7 @@
 
     <div class="card-body">
 
-      <!-- ================== معلومات المورد ================== -->
+      
 
       <div class="row">
 
@@ -520,7 +520,7 @@
 
       
 
-      <!-- ================== العملة والضريبة ================== -->
+      
 
       <div class="row mt-3">
 
@@ -592,7 +592,7 @@
 
         
 
-        <div class="col-md-4" id="tax-rate-group" {% if not tenant_enable_tax %}style="display:none"{% endif %}>
+        <div class="col-md-4" id="tax-rate-group" {% if not tenant_enable_tax %}class="d-none"{% endif %}>
 
           <div class="form-group">
 
@@ -620,7 +620,7 @@
 
       
 
-      <!-- ================== المنتجات ================== -->
+      
 
       <div class="row mt-4">
 
@@ -720,7 +720,7 @@
 
       
 
-      <!-- ================== الملخص المالي ================== -->
+      
 
       <div class="row mt-4">
 
@@ -796,7 +796,7 @@
 
     
 
-    <!-- ================== الأزرار ================== -->
+    
 
     <div class="card-footer">
 
@@ -870,7 +870,7 @@ function addLine() {
 
       <div class="row align-items-end">
 
-        <!-- المنتج -->
+        
 
         <div class="col-md-4">
 
@@ -892,7 +892,7 @@ function addLine() {
 
         
 
-        <!-- الكمية -->
+        
 
         <div class="col-md-2">
 
@@ -910,7 +910,7 @@ function addLine() {
 
         
 
-        <!-- التكلفة -->
+        
 
         <div class="col-md-2">
 
@@ -928,7 +928,7 @@ function addLine() {
 
         
 
-        <!-- الخصم -->
+        
 
         <div class="col-md-2">
 
@@ -946,7 +946,7 @@ function addLine() {
 
         
 
-        <!-- الإجمالي -->
+        
 
         <div class="col-md-1">
 
@@ -960,7 +960,7 @@ function addLine() {
 
         
 
-        <!-- حذف -->
+        
 
         <div class="col-md-1">
 

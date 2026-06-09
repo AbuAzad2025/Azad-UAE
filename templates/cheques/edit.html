@@ -30,7 +30,7 @@
     <form class="needs-validation" method="POST" action="{{ url_for('cheques.edit', id=cheque.id) }}" id="chequeForm">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
       
-      <!-- النوع -->
+      
       <div class="row">
         <div class="col-md-6">
           <div class="form-group">
@@ -51,7 +51,7 @@
         </div>
       </div>
 
-      <!-- المعلومات البنكية -->
+      
       <div class="row">
         <div class="col-md-4">
           <div class="form-group">
@@ -78,7 +78,7 @@
         </div>
       </div>
 
-      <!-- المبلغ والعملة -->
+      
       <div class="row">
         <div class="col-md-4">
           <div class="form-group">
@@ -109,7 +109,7 @@
         </div>
       </div>
 
-      <!-- التواريخ -->
+      
       <div class="row">
         <div class="col-md-6">
           <div class="form-group">
@@ -128,8 +128,8 @@
         </div>
       </div>
 
-      <!-- معلومات الطرف الآخر -->
-      <div id="incomingFields" style="display: {% if cheque.cheque_type == 'incoming' %}block{% else %}none{% endif %};">
+      
+      <div id="incomingFields" class="{% if cheque.cheque_type == 'incoming' %}d-block{% else %}d-none{% endif %}">
         <div class="alert alert-success">
           <i class="fas fa-arrow-down mr-2"></i><strong>شيك وارد</strong> - من عميل
         </div>
@@ -165,7 +165,7 @@
         </div>
       </div>
 
-      <div id="outgoingFields" style="display: {% if cheque.cheque_type == 'outgoing' %}block{% else %}none{% endif %};">
+      <div id="outgoingFields" class="{% if cheque.cheque_type == 'outgoing' %}d-block{% else %}d-none{% endif %}">
         <div class="alert alert-danger">
           <i class="fas fa-arrow-up mr-2"></i><strong>شيك صادر</strong> - لمورد أو مستفيد
         </div>
@@ -195,13 +195,13 @@
         </div>
       </div>
 
-      <!-- ملاحظات -->
+      
       <div class="form-group">
         <label><i class="fas fa-sticky-note"></i> ملاحظات:</label>
         <textarea name="notes" class="form-control" rows="3" aria-label="notes" maxlength="500">{{ cheque.notes or '' }}</textarea>
       </div>
 
-      <!-- الأزرار -->
+      
       <div class="form-group">
         <button type="submit" class="btn btn-success">
           <i class="fas fa-save mr-2"></i>حفظ التعديلات

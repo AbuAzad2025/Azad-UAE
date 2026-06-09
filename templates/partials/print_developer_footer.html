@@ -1,8 +1,8 @@
 {# Developer/platform footer — Azad only, not tenant header logo. #}
-<div class="print-developer-footer" style="margin-top: 20px; padding-top: 10px; border-top: 1px solid #ddd; text-align: center; color: #666; font-size: 11px;">
-  <p style="margin: 0;">{{ print_branding.powered_by_text if print_branding is defined else (developer_credit or config.DEVELOPER_CREDIT) }}</p>
+<div class="print-developer-footer">
+  <p class="mb-0">{{ print_branding.powered_by_text if print_branding is defined else (developer_credit or config.DEVELOPER_CREDIT) }}</p>
   {% if developer_phone or developer_email %}
-  <p style="margin: 4px 0 0;">
+  <p class="erp-print-footer-contact">
     {% if developer_phone %}📞 {{ developer_phone }}{% endif %}
     {% if developer_phone and developer_email %} | {% endif %}
     {% if developer_email %}📧 {{ developer_email }}{% endif %}

@@ -25,7 +25,7 @@
                         <div class="card-body">
                             <form class="needs-validation" method="get" class="form-inline mb-3">
                                 <label class="mr-2">الفرع:</label>
-                                <select name="branch_id" class="form-control mr-2" onchange="this.form.submit()" style="min-width: 160px;" aria-label="اختر الفرع">
+                                <select name="branch_id" class="form-control mr-2 erp-min-w-160" onchange="this.form.submit()" aria-label="اختر الفرع">
                                     <option value="">كل الفروع</option>
                                     {% for b in branches or [] %}
                                     <option value="{{ b.id }}" {{ 'selected' if selected_branch == b.id else '' }}>{{ b.name }} ({{ b.code }})</option>

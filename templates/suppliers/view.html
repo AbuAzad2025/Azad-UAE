@@ -50,7 +50,7 @@
 
     <button type="button" class="btn btn-danger" 
 
-            onclick="deleteItem('suppliers', {{ supplier.id }}, '{{ supplier.name }}', '{{ url_for('suppliers.index') }}')">
+            onclick="deleteItem('suppliers', {{ supplier.id }}, {{ supplier.name|tojson }}, {{ url_for('suppliers.index')|tojson }})">
 
       <i class="fas fa-trash mr-1"></i>حذف
 
@@ -80,7 +80,7 @@
 
 <div class="row">
 
-  <!-- Statistics Cards -->
+  
 
   <div class="col-lg-3 col-6">
 
@@ -182,7 +182,7 @@
 
 <div class="row">
 
-  <!-- معلومات المورد -->
+  
 
   <div class="col-md-6">
 
@@ -296,7 +296,7 @@
 
   
 
-  <!-- معلومات قانونية ومالية -->
+  
 
   <div class="col-md-6">
 
@@ -400,7 +400,7 @@
 
 
 
-<!-- Tags and Notes -->
+
 
 {% if supplier.tags or supplier.notes %}
 
@@ -460,7 +460,7 @@
 
 
 
-<!-- آخر المشتريات -->
+
 
 <div class="row">
 

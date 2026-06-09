@@ -551,7 +551,7 @@ a.btn.btn-warning span {
 
                 <button type="button" class="btn btn-danger" 
 
-                        onclick="deleteItem('sales', {{ sale.id }}, '{{ sale.sale_number }}')" 
+                        onclick="deleteItem('sales', {{ sale.id }}, {{ sale.sale_number|tojson }})" 
 
                         title="حذف">
 

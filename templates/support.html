@@ -6,16 +6,16 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>دعم المشروع - Support Azad Systems</title>
     
-    <!-- Favicon -->
+    
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='assets/brand/azad/favicons/favicon.png') }}">
     
-    <!-- Font Awesome -->
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha384-iw3OoTErCYJJB9mCa8LNS2hbsQ7M3C0EpIsO/H5+EGAkPGc6rk+V8i04oW/K5xq0" crossorigin="anonymous">
     
-    <!-- Bootstrap RTL -->
+    
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.rtl.min.css">
     
-    <!-- Google Fonts -->
+    
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" integrity="sha384-cPX4+t0Da407ff76kkpJq7Tm1b+IZ2+iwi6hAcAf6lIJF/FKq5t1cW0j4I91dWwt" crossorigin="anonymous" rel="stylesheet">
     
     <link rel="stylesheet" href="{{ url_for('static', filename='css/accessibility.css') }}">
@@ -1004,7 +1004,7 @@
     </a>
 
     <div class="support-container">
-        <!-- Hero Section -->
+        
         <div class="hero-section">
             <div class="hero-content">
                 <div class="mb-4">
@@ -1083,7 +1083,7 @@
                     </div>
                 </div>
                 
-                <!-- Tab Buttons -->
+                
                 <div class="tab-section-label">اختر نوع العملية أولاً ثم أكمل الدفع أو التواصل المباشر</div>
                 <div class="tab-buttons">
                     <button class="tab-btn active" onclick="switchTab('purchase', event)">
@@ -1117,9 +1117,9 @@
             </div>
         </div>
 
-        <!-- Purchase Tab Content -->
+        
         <div class="tab-content active" id="purchase-tab">
-            <!-- Progress Steps -->
+            
             <div class="progress-steps" id="purchase-progress">
                 <div class="step active" id="step-package">
                     <div class="step-number">1</div>
@@ -1143,18 +1143,16 @@
                 <div class="package-grid">
                     {% if packages %}
                         {% for package in packages %}
-                        <div class="package-card" onclick="selectPackage('{{ package.slug }}', {{ package.price }}, event)" data-package-id="{{ package.id }}">
+                        <div class="package-card" onclick="selectPackage({{ package.slug|tojson }}, {{ package.price }}, event)" data-package-id="{{ package.id }}">
                             <div class="package-name">{{ package.icon }} {{ package.name_ar }}</div>
                             <div class="package-price">${{ package.price }}</div>
                             {% if package.badge_text %}
-                            <div style="background: linear-gradient(135deg, {% if package.badge_color == 'success' %}#28a745 0%, #20c997{% elif package.badge_color == 'primary' %}#667eea 0%, #764ba2{% elif package.badge_color == 'danger' %}#ff6b6b 0%, #ee5a24{% else %}#667eea 0%, #764ba2{% endif %} 100%); color: white; padding: 8px; border-radius: 20px; margin: 10px 0; font-weight: 700; font-size: 0.9rem;">
+                            <div class="erp-badge-gradient" style="background: linear-gradient(135deg, {% if package.badge_color == 'success' %}#28a745 0%, #20c997{% elif package.badge_color == 'primary' %}#667eea 0%, #764ba2{% elif package.badge_color == 'danger' %}#ff6b6b 0%, #ee5a24{% else %}#667eea 0%, #764ba2{% endif %} 100%);">
                                 {% if package.badge_color == 'success' %}<i class="fas fa-star"></i>{% elif package.badge_color == 'primary' %}<i class="fas fa-crown"></i>{% elif package.badge_color == 'danger' %}<i class="fas fa-gem"></i>{% else %}<i class="fas fa-star"></i>{% endif %} {{ package.badge_text }}
                             </div>
                             {% endif %}
-                            <ul class="package-features">
-                                {% for feature in package.features %}
-                                <li><i class="fas fa-check"></i> {{ feature }}</li>
-                                {% endfor %}
+                            <ul class="package-features">{%- for feature in package.features %}
+                                <li><i class="fas fa-check"></i> {{ feature }}</li>{%- endfor %}
                             </ul>
                         </div>
                         {% endfor %}
@@ -1189,7 +1187,7 @@
                 </div>
             </div>
             
-            <!-- طرق الدفع للشراء (تظهر بعد اختيار الباقة) -->
+            
             <div id="purchase-payment-methods" class="ic-14">
                 <div class="payment-card ic-15">
                     <h3 class="ic-16">
@@ -1238,7 +1236,7 @@
             </div>
         </div>
         
-        <!-- Donation Tab Content -->
+        
         <div class="tab-content" id="donation-tab">
             <div class="payment-card ic-18">
                 <div class="ic-19">❤️</div>
@@ -1299,7 +1297,7 @@
                 </div>
             </div>
             
-            <!-- طرق الدفع للتبرعات -->
+            
             <div class="payment-methods">
                 <div class="payment-card" onclick="selectMethod('crypto', event)">
                 <i class="fab fa-bitcoin payment-icon"></i>
@@ -1339,7 +1337,7 @@
             </div>
         </div>
 
-        <!-- Crypto Donation Form -->
+        
         <div id="crypto-form" class="donation-form">
             <div class="ic-28">
                 <i class="fab fa-bitcoin ic-19"></i>
@@ -1429,7 +1427,7 @@
                 
                 <div class="text-center">
                     <div class="qr-code" id="qrCode">
-                        <!-- QR Code will be generated here -->
+                        
                         <canvas id="qrCanvas"></canvas>
                     </div>
                 </div>
@@ -1462,7 +1460,7 @@
             </div>
         </div>
 
-        <!-- Card Payment Form -->
+        
         <div id="card-form" class="donation-form">
             <div class="ic-38">
                 <i class="fas fa-credit-card ic-19"></i>
@@ -1528,7 +1526,7 @@
             </form>
         </div>
 
-        <!-- PayPal Form -->
+        
         <div id="paypal-form" class="donation-form">
             <div class="ic-47">
                 <i class="fab fa-paypal ic-19"></i>
@@ -1544,7 +1542,7 @@
             </div>
             
             <div class="text-center" id="paypal-button-container">
-                <!-- PayPal Button will be rendered here -->
+                
                 <button class="btn btn-lg ic-49" onclick="handlePayPalPayment()" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 20px rgba(0,0,0,0.3)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 5px 15px rgba(0,0,0,0.2)'">
                     <i class="fab fa-paypal mr-2 ic-50"></i>
                     <span>متابعة مع PayPal</span>
@@ -1555,7 +1553,7 @@
             </div>
         </div>
 
-        <!-- Bank Transfer Form -->
+        
         <div id="bank-form" class="donation-form">
             <div class="ic-51">
                 <i class="fas fa-university ic-19"></i>
@@ -1601,7 +1599,7 @@
         </div>
     </div>
 
-    <!-- Scripts -->
+    
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.min.js" integrity="sha384-UG8ao2jwOWB7/oDdObZc6ItJmwUkR/PfMyt9Qs5AwX7PsnYn1CRKCTWyncPTWvaS" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-Fy6S3B9q64WdZWQUiU+q4/2Lc9npb8tCaSX9FK7E8HnRr0Jz8D6OP9dO5Vg3Q9ct" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11" integrity="sha384-nLoOnA/BDh8A/jxqtckg4DumuCGOBYUnNJLZdQz/zfYNp3wcjGSoWTAzgko06G/2" crossorigin="anonymous"></script>
@@ -2511,7 +2509,7 @@
         });
     </script>
     
-    <!-- Footer -->
+    
     <footer class="ic-85">
         <div class="container">
             <div class="row">

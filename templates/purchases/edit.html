@@ -21,7 +21,7 @@
           <form class="needs-validation" method="post" action="{{ url_for('purchases.edit', id=purchase.id) }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
             
-            <!-- معلومات الفاتورة (للعرض فقط) -->
+            
             <div class="row mb-4">
               <div class="col-md-6">
                 <h5>معلومات الفاتورة</h5>
@@ -44,7 +44,7 @@
               </div>
             </div>
 
-            <!-- المنتجات (للعرض فقط) -->
+            
             <h5>المنتجات</h5>
             <div class="table-responsive"><table class="table table-bordered mb-4">
               <thead class="thead-light">
@@ -69,7 +69,7 @@
               </tbody>
             </table></div>
 
-            <!-- الملاحظات (قابلة للتعديل) -->
+            
             <div class="form-group">
               <label>الملاحظات</label>
               <textarea name="notes" class="form-control" rows="4" aria-label="notes" maxlength="500">{{ purchase.notes or '' }}</textarea>

@@ -282,7 +282,7 @@ a.btn.btn-outline-secondary span {
             <small class="form-text text-muted">تُضاف للمجموع قبل الضريبة</small>
           </div>
 
-          <div class="form-group" id="tax-rate-group" {% if not tenant_enable_tax %}style="display:none"{% endif %}>
+          <div class="form-group" id="tax-rate-group" {% if not tenant_enable_tax %}class="d-none"{% endif %}>
             <label class="font-weight-bold">
               <i class="fas fa-receipt text-warning mr-1"></i>نسبة الضريبة
               <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="نسبة ضريبة القيمة المضافة VAT% (اختياري)"></i>
@@ -335,7 +335,7 @@ a.btn.btn-outline-secondary span {
             </small>
           </div>
 
-          <!-- Dynamic payment fields will be inserted here -->
+          
           <div id="payment_fields_container"></div>
 
           <div class="form-group ic-5" id="payment_amount_group">
@@ -376,7 +376,7 @@ a.btn.btn-outline-secondary span {
     </div>
   </div>
 </form>
-<!-- Serial Number Modal -->
+
 <div class="modal fade" id="serialNumberModal" tabindex="-1" role="dialog" aria-labelledby="serialNumberModalLabel" aria-hidden="true">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
@@ -413,7 +413,7 @@ a.btn.btn-outline-secondary span {
         </div>
         
         <ul class="list-group" id="serial_list">
-          <!-- Serials will be added here -->
+          
         </ul>
       </div>
       <div class="modal-footer justify-content-between">
@@ -431,7 +431,7 @@ a.btn.btn-outline-secondary span {
   </div>
 </div>
 
-<!-- Print Frame -->
+
 <iframe id="print_frame" class="ic-5"></iframe>
 
 {% endblock %}
@@ -439,7 +439,7 @@ a.btn.btn-outline-secondary span {
 {% block extra_js %}
 <script src="{{ url_for('static', filename='js/sales-enhanced.js') }}"></script>
 <script src="{{ url_for('static', filename='js/ai-sales.js') }}"></script>
-<!-- Hidden input for collected serials -->
+
 <div id="serials_container"></div>
 
 <script>

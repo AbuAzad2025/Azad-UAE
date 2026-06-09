@@ -57,7 +57,7 @@
         <a href="{{ url_for('customers.edit', id=customer.id) }}" class="btn btn-warning btn-block"><i class="fas fa-edit"></i> تعديل</a>
         <a href="{{ url_for('customers.statement', id=customer.id) }}" class="btn btn-success btn-block"><i class="fas fa-file-alt"></i> كشف حساب</a>
         <button type="button" class="btn btn-danger btn-block" 
-                onclick="deleteItem('customers', {{ customer.id }}, '{{ customer.name }}', '{{ url_for('customers.index') }}')">
+                onclick="deleteItem('customers', {{ customer.id }}, {{ customer.name|tojson }}, {{ url_for('customers.index')|tojson }})">
           <i class="fas fa-trash"></i> حذف
         </button>
       </div>

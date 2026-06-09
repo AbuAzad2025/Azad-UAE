@@ -81,7 +81,7 @@
             </div>
         </div>
         
-        <!-- فلاتر البحث -->
+        
         <div class="filters-card">
             <form class="needs-validation" method="GET" class="row" action="">
                 <div class="col-md-3">
@@ -120,7 +120,7 @@
             </form>
         </div>
         
-        <!-- جدول التبرعات -->
+        
         <div class="card">
             <div class="card-header bg-gradient-danger">
                 <h5 class="mb-0 text-white">
@@ -189,7 +189,7 @@
                                         </form>
                                         {% endif %}
                                         {% if donation.donor_email %}
-                                        <button class="btn btn-primary" onclick="sendThankYou('{{ donation.donor_email }}', '{{ donation.donor_name or "متبرع" }}', {{ donation.amount_usd }})" title="Envelope">
+                                        <button class="btn btn-primary" onclick="sendThankYou({{ donation.donor_email|tojson }}, {{ (donation.donor_name or 'متبرع')|tojson }}, {{ donation.amount_usd }})" title="Envelope">
                                             <i class="fas fa-envelope"></i>
                                         </button>
                                         {% endif %}

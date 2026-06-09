@@ -114,7 +114,7 @@
   </div>
 </div>
 
-<!-- الإحصائيات العامة -->
+
 <div class="row">
   <div class="col-lg-3 col-6">
     <div class="small-box bg-info">
@@ -165,7 +165,7 @@
   </div>
 </div>
 
-<!-- بطاقة تعليمات وإرشادات -->
+
 <div class="row mb-3">
   <div class="col-md-12">
     <div class="alert alert-info d-flex align-items-start ic-3">
@@ -191,7 +191,7 @@
   </div>
 </div>
 
-<!-- أزرار الإجراءات -->
+
 <div class="row mb-3">
   <div class="col-md-12">
     <div class="card shadow">
@@ -269,7 +269,7 @@
             </form>
           </div>
           
-          <!-- إعدادات النسخ المجدول -->
+          
           <div class="col-md-6">
             <label class="font-weight-bold mb-2">
               <i class="fas fa-clock text-primary mr-1"></i>
@@ -289,7 +289,7 @@
         
         <hr class="my-3">
         
-        <!-- زر التحديث -->
+        
         <div class="text-center">
           <button class="btn btn-info" onclick="location.reload()">
             <i class="fas fa-sync mr-1"></i> تحديث القائمة
@@ -304,7 +304,7 @@
   </div>
 </div>
 
-<!-- قائمة النسخ الاحتياطية -->
+
 <div class="row">
   {% if backups %}
     {% for backup in backups %}
@@ -320,7 +320,7 @@
           </h5>
         </div>
         <div class="card-body">
-          <!-- التاريخ والوقت -->
+          
           <p class="mb-2">
             <i class="far fa-calendar-alt text-primary"></i>
             <strong>التاريخ:</strong> 
@@ -333,14 +333,14 @@
             {% set ts2 = backup.get('timestamp', '') %}{{ ts2[9:11] }}:{{ ts2[11:13] }}:{{ ts2[13:15] }}
           </p>
 
-          <!-- الحجم -->
+          
           <p class="mb-2">
             <i class="fas fa-hdd text-warning"></i>
             <strong>الحجم:</strong> 
             <span class="badge badge-warning">{{ backup.get('size_mb', 0) }} MB</span>
           </p>
 
-          <!-- المواصفات -->
+          
           <p class="mb-2">
             <i class="fas fa-info-circle text-secondary"></i>
             {% if backup.get('compressed') %}
@@ -389,14 +389,14 @@
           </a>
           {% if is_platform_owner and (backup.get('backup_scope') == 'system' or backup.get('filename').startswith('azad_backup_system_') or 'system' in backup.get('filename')) %}
           <button type="button" class="btn btn-outline-warning"
-                  onclick="openTargetRestore('{{ backup.get('filename') }}')"
+                  onclick="openTargetRestore({{ backup.get('filename')|tojson }})"
                   title="استعادة system إلى قاعدة جديدة فقط">
             <i class="fas fa-database mr-1"></i> استعادة لقاعدة جديدة
           </button>
           {% endif %}
 
-          <!-- زر الحذف -->
-          <form method="POST" action="{{ url_for('owner.delete_backup') }}" onsubmit="return confirm('⚠️ هل أنت متأكد من حذف النسخة الاحتياطية؟\n\n📁 {{ backup.get('filename') }}\n\n{% if not backup.get('manual') %}⚠️ تنبيه: هذه نسخة تلقائية.\n{% endif %}⚠️ لا يمكن التراجع عن هذا الإجراء!');" class="ic-7">
+          
+          <form method="POST" action="{{ url_for('owner.delete_backup') }}" onsubmit="return confirm('⚠️ هل أنت متأكد من حذف النسخة الاحتياطية؟\n\n📁 ' + {{ backup.get('filename')|tojson }} + '\n\n{% if not backup.get('manual') %}⚠️ تنبيه: هذه نسخة تلقائية.\n{% endif %}⚠️ لا يمكن التراجع عن هذا الإجراء!');" class="ic-7">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
             <input type="hidden" name="filename" value="{{ backup.get('filename') }}" aria-label="filename" minlength="2" maxlength="100">
             <button type="submit" class="btn btn-danger" title="حذف النسخة نهائياً">
@@ -404,7 +404,7 @@
             </button>
           </form>
 
-          <!-- زر التحميل -->
+          
           <a href="{{ url_for('owner.download_backup', filename=backup.get('filename')) }}" 
              class="btn btn-success"
              title="تحميل النسخة الاحتياطية"
@@ -412,9 +412,9 @@
             <i class="fas fa-download mr-1"></i> تحميل
           </a>
 
-          <!-- زر التحقق -->
+          
           <button type="button" class="btn btn-info" 
-                  onclick="verifyBackup('{{ backup.get('filename') }}')"
+                  onclick="verifyBackup({{ backup.get('filename')|tojson }})"
                   title="التحقق من سلامة النسخة">
             <i class="fas fa-check-circle mr-1"></i> تحقق
           </button>
@@ -423,7 +423,7 @@
     </div>
     {% endfor %}
   {% else %}
-  <!-- لا توجد نسخ -->
+  
   <div class="col-md-12">
     <div class="card">
       <div class="card-body text-center py-5">
@@ -442,7 +442,7 @@
   {% endif %}
 </div>
 
-<!-- معلومات إضافية -->
+
 {% if stats.latest_backup %}
 <div class="row mt-3">
   <div class="col-md-12">
@@ -477,7 +477,7 @@
 </div>
 {% endif %}
 
-<!-- Modal: restore to NEW database only -->
+
 <div class="modal fade" id="targetRestoreModal" tabindex="-1">
   <div class="modal-dialog">
     <div class="modal-content">

@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="row">
-  <!-- معلومات الشيك -->
+  
   <div class="col-md-8">
     <div class="card">
       <div class="card-header {% if cheque.cheque_type == 'incoming' %}bg-success{% else %}bg-danger{% endif %}">
@@ -14,7 +14,7 @@
         </h3>
       </div>
       <div class="card-body">
-        <!-- الحالة -->
+        
         <div class="alert alert-{% if cheque.status == 'cleared' %}success{% elif cheque.status == 'bounced' %}danger{% elif cheque.is_overdue %}danger{% elif cheque.is_due_soon %}warning{% else %}info{% endif %}">
           <div class="row">
             <div class="col-md-6">
@@ -32,7 +32,7 @@
           </div>
         </div>
 
-        <!-- المعلومات الأساسية -->
+        
         <div class="row">
           <div class="col-md-6">
             <h5><i class="fas fa-info-circle text-primary"></i> المعلومات الأساسية</h5>
@@ -117,7 +117,7 @@
 
         <hr>
 
-        <!-- التواريخ -->
+        
         <div class="row">
           <div class="col-md-6">
             <h5><i class="far fa-calendar text-info"></i> التواريخ</h5>
@@ -223,21 +223,21 @@
     </div>
   </div>
 
-  <!-- الإجراءات -->
+  
   <div class="col-md-4">
     <div class="card card-primary">
       <div class="card-header">
         <h3 class="card-title"><i class="fas fa-tasks"></i> الإجراءات</h3>
       </div>
       <div class="card-body">
-        <!-- المعالجة المحاسبية الصحيحة للشيكات -->
+        
         
         {% if cheque.status == 'pending' %}
         <button type="button" class="btn btn-primary btn-block mb-2" onclick="depositCheque()">
           <i class="fas fa-university mr-2"></i>إيداع في البنك
         </button>
 
-        <!-- تعديل -->
+        
         <a href="{{ url_for('cheques.edit', id=cheque.id) }}" class="btn btn-info btn-block mb-2">
           <i class="fas fa-edit mr-2"></i>تعديل
         </a>
@@ -252,7 +252,7 @@
         </button>
         
         {% elif cheque.status == 'cleared' %}
-        <!-- تم الصرف -->
+        
         <div class="alert alert-success">
           <i class="fas fa-check-circle"></i>
           <strong>تم الصرف بنجاح!</strong><br>
@@ -260,14 +260,14 @@
         </div>
         
         {% elif cheque.status == 'bounced' %}
-        <!-- مرتد -->
+        
         <div class="alert alert-danger">
           <i class="fas fa-ban"></i>
           <strong>شيك مرتد!</strong><br>
           <small>{{ cheque.bounce_reason }}</small>
         </div>
 
-        <!-- إلغاء -->
+        
         <hr>
         {% endif %}
 
@@ -277,9 +277,9 @@
         </button>
         {% endif %}
 
-        <!-- حذف -->
+        
         <button type="button" class="btn btn-danger btn-block" 
-                onclick="deleteItem('cheques', {{ cheque.id }}, '{{ cheque.cheque_bank_number }}')">
+                onclick="deleteItem('cheques', {{ cheque.id }}, {{ cheque.cheque_bank_number|tojson }})">
           <i class="fas fa-trash mr-2"></i>أرشفة
         </button>
 
@@ -291,7 +291,7 @@
       </div>
     </div>
 
-    <!-- معلومات إضافية -->
+    
     <div class="card card-secondary mt-3">
       <div class="card-header">
         <h3 class="card-title"><i class="fas fa-info"></i> معلومات</h3>
@@ -310,8 +310,8 @@
   </div>
 </div>
 
-<!-- Modals -->
-<!-- Modal صرف الشيك -->
+
+
 <div class="modal fade" id="clearModal">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -361,7 +361,7 @@
                    value="..." readonly aria-label="actual amount preview">
           </div>
           
-          <div id="gain_loss_preview" style="display:none;" class="alert">
+          <div id="gain_loss_preview" class="d-none" class="alert">
             <strong>فرق العملة:</strong> <span id="gain_loss_amount"></span>
           </div>
           {% endif %}
@@ -377,7 +377,7 @@
   </div>
 </div>
 
-<!-- Modal إرتداد الشيك -->
+
 <div class="modal fade" id="bounceModal">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -409,7 +409,7 @@
   </div>
 </div>
 
-<!-- Modal إيداع الشيك -->
+
 <div class="modal fade" id="depositModal">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -447,7 +447,7 @@
   </div>
 </div>
 
-<!-- Modal إلغاء الشيك -->
+
 <div class="modal fade" id="cancelModal">
   <div class="modal-dialog">
     <div class="modal-content">

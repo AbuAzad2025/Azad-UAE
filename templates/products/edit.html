@@ -224,11 +224,11 @@
         </div>
       </div>
 
-      <!-- حقوق الملكية والشركاء -->
+      
       <hr>
       <h5 class="text-primary"><i class="fas fa-users-cog"></i> حقوق الملكية والشركاء</h5>
       <div class="row">
-        <!-- Merchant Selection -->
+        
         <div class="col-md-6">
           <div class="form-group">
             <label for="merchant_customer_id">
@@ -245,7 +245,7 @@
             </div>
           </div>
         </div>
-        <div class="col-md-6" id="merchantShareContainer" style="display: {% if product.merchant_customer_id %}block{% else %}none{% endif %};">
+        <div class="col-md-6" id="merchantShareContainer" class="{% if product.merchant_customer_id %}d-block{% else %}d-none{% endif %}">
           <div class="form-group">
             <label for="merchant_share">
               <i class="fas fa-percentage text-warning"></i> نسبة التاجر من المبيعات (%)
@@ -264,7 +264,7 @@
         </div>
       </div>
       
-      <!-- Partners Table -->
+      
       <div class="row">
         <div class="col-12">
           <label>
@@ -279,7 +279,7 @@
               </tr>
             </thead>
             <tbody id="partnersList">
-              <!-- Rows added via JS -->
+              
             </tbody>
             <tfoot>
               <tr>
@@ -306,7 +306,7 @@
   </form>
 </div>
 
-<!-- Modal: إضافة فئة منتجات -->
+
 <div class="modal fade" id="addCategoryModal" tabindex="-1" role="dialog">
   <div class="modal-dialog" role="document">
     <div class="modal-content">

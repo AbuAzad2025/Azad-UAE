@@ -26,7 +26,7 @@
 {% endblock %}
 
 {% block content %}
-<!-- الإحصائيات -->
+
 <div class="row mb-3">
   <div class="col-md-3">
     <div class="info-box bg-info">
@@ -66,7 +66,7 @@
   </div>
 </div>
 
-<!-- فلاتر -->
+
 <div class="card mb-3">
   <div class="card-body">
     <form class="needs-validation" method="GET" class="form-inline" action="">
@@ -90,7 +90,7 @@
   </div>
 </div>
 
-<!-- الجدول -->
+
 <div class="card">
   <div class="card-body">
     <div class="table-responsive"><table class="table table-hover">
@@ -118,7 +118,7 @@
           <td class="text-success"><strong>{{ format_currency(cheque.base_amount) }}</strong></td>
           <td>
             {% if cheque.status == 'cleared' and cheque.clearance_exchange_rate and cheque.currency != tenant_default_currency %}
-              <!-- عرض سعري الصرف للشيكات المصروفة -->
+              
               <div>
                 <small class="text-muted">إنشاء:</small>
                 <span class="badge badge-info">{{ "{:.4f}".format(cheque.exchange_rate) }}</span>
@@ -167,7 +167,7 @@
             </a>
             {% endif %}
             <button type="button" class="btn btn-danger" 
-                    onclick="deleteItem('cheques', {{ cheque.id }}, '{{ cheque.cheque_bank_number }}')" 
+                    onclick="deleteItem('cheques', {{ cheque.id }}, {{ cheque.cheque_bank_number|tojson }})" 
                     title="حذف">
               <i class="fas fa-trash"></i>
             </button>

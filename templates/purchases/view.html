@@ -190,7 +190,7 @@
 
 
 
-    <!-- Actions Card -->
+    
 
     <div class="card">
 
@@ -218,7 +218,7 @@
 
           <button type="button" class="btn btn-danger" 
 
-                  onclick="deleteItem('purchases', {{ purchase.id }}, '{{ purchase.purchase_number }}')">
+                  onclick="deleteItem('purchases', {{ purchase.id }}, {{ purchase.purchase_number|tojson }})">
 
             <i class="fas fa-trash-alt mr-2"></i>حذف الفاتورة
 

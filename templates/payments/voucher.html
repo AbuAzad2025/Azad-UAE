@@ -56,7 +56,7 @@
     
     <div class="card-body">
       
-      <!-- 1. Voucher Direction (In/Out) -->
+      
       <div class="row mb-4 justify-content-center">
         <div class="col-md-5">
           <div class="card type-card text-center p-3 selected" id="card-incoming" onclick="selectDirection('incoming')">
@@ -78,7 +78,7 @@
 
       <hr>
 
-      <!-- 2. Party Selection -->
+      
       <div class="row">
         <div class="col-md-4">
           <div class="form-group">
@@ -94,7 +94,7 @@
             <label class="font-weight-bold">اسم الجهة</label>
             <select class="form-control select2" name="party_id" id="party_id" required aria-label="party id">
               <option value="">اختر الجهة...</option>
-              <!-- Populated via JS -->
+              
             </select>
           </div>
         </div>
@@ -148,7 +148,7 @@
         </div>
       </div>
 
-      <!-- Cheque Fields -->
+      
       <div class="row bg-light p-3 rounded mb-3 ic-2" id="cheque_fields">
         <div class="col-md-4">
           <div class="form-group mb-0">
@@ -187,7 +187,7 @@
   </form>
 </div>
 
-<!-- Data Store for JS -->
+
 <div id="customers-data" class="ic-1">{{ customers_json|tojson|safe }}</div>
 <div id="suppliers-data" class="ic-1">{{ suppliers_json|tojson|safe }}</div>
 
@@ -210,8 +210,8 @@ function toggleChequeFields() {
 }
 
 // Parse data
-var customers = JSON.parse(document.getElementById('customers-data').textContent || '[]');
-var suppliers = JSON.parse(document.getElementById('suppliers-data').textContent || '[]');
+var customers = JSON.parse(document.getElementById('customers-data').textContent || '[]') || [];
+var suppliers = JSON.parse(document.getElementById('suppliers-data').textContent || '[]') || [];
 
 function updatePartyList() {
   var type = $('#party_type').val();

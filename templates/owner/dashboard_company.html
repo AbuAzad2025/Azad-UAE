@@ -124,7 +124,7 @@
 
         {% if logo_url %}
 
-        <img src="{{ logo_url if logo_url.startswith('http') else url_for('static', filename=logo_url.replace('/static/','').lstrip('/')) }}" alt="logo" class="img-fluid mb-2" style="max-height:80px">
+        <img src="{{ logo_url if logo_url.startswith('http') else url_for('static', filename=logo_url.replace('/static/','').lstrip('/')) }}" alt="logo" class="img-fluid mb-2 erp-logo-md"
 
         {% endif %}
 

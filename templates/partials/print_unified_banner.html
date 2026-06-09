@@ -1,12 +1,12 @@
 {% set _company_name = (settings.company_name_ar if settings is defined and settings and settings.company_name_ar else none) or (company.name_ar if company is defined and company and company.name_ar else none) or tenant_name_ar or company_name_ar or 'نظام المحاسبة' %}
-<div style="background: linear-gradient(135deg, #f8f9fa 0%, #eef2f7 100%); border: 1px solid #d6dbe3; border-radius: 10px; margin: 10px 10px 14px 10px; padding: 10px 12px; text-align: center;">
-  <div style="font-size: 17px; font-weight: 700; color: #1f2937; margin-bottom: 4px;">
+<div class="erp-print-banner">
+  <div class="erp-print-banner-title">
     {{ doc_title or 'مستند مالي' }}
   </div>
-  <div style="font-size: 9px; color: #475569; margin-bottom: 8px;">
+  <div class="erp-print-banner-sub">
     رقم المستند: <strong>{{ doc_number or '-' }}</strong>
   </div>
-  <div style="display: inline-block; background: #ffffff; border: 1px dashed #94a3b8; border-radius: 8px; padding: 6px 10px; font-size: 9px; color: #334155; line-height: 1.8;">
+  <div class="erp-print-banner-meta">
     <div><strong>الشركة:</strong> {{ _company_name }}</div>
     <div><strong>المستخدم:</strong> {{ print_user_name or '—' }}</div>
     {% if print_branch %}

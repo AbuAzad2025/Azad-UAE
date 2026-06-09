@@ -69,7 +69,7 @@
     <div>
       <form class="needs-validation" method="get" class="form-inline d-inline mr-2">
         <label class="mr-2">الزبون</label>
-        <select name="customer" class="form-control form-control-sm mr-2" style="min-width: 200px;" aria-label="customer">
+        <select name="customer" class="form-control form-control-sm mr-2 erp-min-w-200" aria-label="customer">
           <option value="">الكل</option>
           {% for c in customers or [] %}
           <option value="{{ c.id }}" {{ 'selected' if customer_id == c.id else '' }}>{{ c.name }}</option>

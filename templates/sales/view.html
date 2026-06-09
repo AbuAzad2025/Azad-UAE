@@ -40,7 +40,7 @@
 
     <button type="button" class="btn btn-danger btn-lg" 
 
-            onclick="deleteItem('sales', {{ sale.id }}, '{{ sale.sale_number }}')">
+            onclick="deleteItem('sales', {{ sale.id }}, {{ sale.sale_number|tojson }})">
 
       <i class="fas fa-trash mr-2"></i>حذف
 
@@ -363,7 +363,7 @@
 
         
 
-        <!-- قسم الدفعات -->
+        
 
         {% if sale.payments %}
 
@@ -483,7 +483,7 @@
 
   <div class="col-md-4">
 
-    <!-- Payment Status Card -->
+    
 
     <div class="card mb-3">
 
@@ -523,7 +523,7 @@
 
 
 
-    <!-- Totals Card -->
+    
 
     <div class="card mb-3">
 
@@ -701,7 +701,7 @@
 
 
 
-    <!-- Actions Card -->
+    
 
     <div class="card">
 
@@ -747,7 +747,7 @@
 
           <hr>
 
-          <!-- Delete Button -->
+          
 
           <button type="button" class="btn btn-outline-danger w-100" onclick="confirmDelete()">
 
@@ -777,7 +777,7 @@
 
 
 
-<!-- Return Modal -->
+
 
 <div class="modal fade" id="returnModal" tabindex="-1" role="dialog" aria-labelledby="returnModalLabel" aria-hidden="true">
 

@@ -197,7 +197,7 @@
     </div>
 </div>
 
-<!-- الباقات من قاعدة البيانات -->
+
 <div class="package-grid">
             {% if packages %}
                 {% for package in packages %}
@@ -214,10 +214,8 @@
                         <small class="text-muted">{{ package.currency }}</small>
                     </div>
                     
-                    <ul class="package-features">
-                        {% for feature in package.features %}
-                        <li><i class="fas fa-check"></i> {{ feature }}</li>
-                        {% endfor %}
+                    <ul class="package-features">{%- for feature in package.features %}
+                        <li><i class="fas fa-check"></i> {{ feature }}</li>{%- endfor %}
                     </ul>
                     
                     <div class="ic-2">
@@ -230,7 +228,7 @@
                         <button class="btn btn-primary" onclick="editPackage({{ package.id }})">
                             <i class="fas fa-edit"></i> تعديل
                         </button>
-                        <button class="btn btn-info" onclick="viewPackageStats({{ package.id }}, '{{ package.name_ar }}')">
+                        <button class="btn btn-info" onclick="viewPackageStats({{ package.id }}, {{ package.name_ar|tojson }})">
                             <i class="fas fa-chart-bar"></i> إحصائيات
                         </button>
                         <button class="btn {% if package.is_active %}btn-success{% else %}btn-secondary{% endif %}" onclick="togglePackageStatus({{ package.id }})">
@@ -246,7 +244,7 @@
             {% endif %}
         </div>
         
-        <!-- إحصائيات الباقات -->
+        
         <div class="card">
             <div class="card-header bg-gradient-info">
                 <h5 class="mb-0 text-white">

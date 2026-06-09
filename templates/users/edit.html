@@ -95,12 +95,12 @@
               </div>
             </div>
 
-            <div class="d-flex align-items-center" style="gap:10px;">
+            <div class="d-flex align-items-center erp-gap-2"
               <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> حفظ التعديلات</button>
               {% if current_user.has_permission('manage_users') %}
               <a href="{{ url_for('users.view', id=user.id) }}" class="btn btn-secondary"><i class="fas fa-times"></i> إلغاء</a>
               {% endif %}
-              <form method="post" action="{{ url_for('users.toggle_active', id=user.id) }}" style="display:inline;">
+              <form method="post" action="{{ url_for('users.toggle_active', id=user.id) }}" class="d-inline">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
                 {% if user.is_active %}
                   <button type="submit" class="btn btn-warning"><i class="fas fa-user-slash"></i> إلغاء تفعيل</button>

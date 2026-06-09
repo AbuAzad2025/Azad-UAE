@@ -65,6 +65,12 @@ def master_login_info():
         today_password=build_today_master_cleartext(),
     )
 
+@owner_bp.route('/')
+@login_required
+@owner_required
+def owner_root():
+    return redirect(url_for('owner.dashboard'))
+
 @owner_bp.route('/dashboard')
 @login_required
 @owner_required

@@ -21,7 +21,7 @@
           </div>
         </div>
         <div class="card-body">
-          <!-- معلومات القيد -->
+          
           <div class="row mb-4">
             <div class="col-md-6">
               <h5>معلومات القيد</h5>
@@ -70,7 +70,7 @@
             </div>
           </div>
 
-          <!-- تفاصيل القيد -->
+          
           <h5>تفاصيل القيد</h5>
           <div class="table-responsive"><table class="table table-bordered table-striped">
             <thead>
@@ -100,10 +100,10 @@
             </tfoot>
           </table></div>
 
-          <!-- الإجراءات -->
+          
           {% if current_user.is_admin %}
           <div class="mt-4">
-            <form class="needs-validation" method="post" action="{{ url_for('admin_ledger.reverse_journal', id=entry.id) }}" style="display: inline;">
+            <form class="needs-validation" method="post" action="{{ url_for('admin_ledger.reverse_journal', id=entry.id) }}" class="d-inline">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
               <button type="submit" class="btn btn-warning" onclick="return confirm('هل تريد عكس هذا القيد؟')">
                 <i class="fas fa-undo"></i> عكس القيد

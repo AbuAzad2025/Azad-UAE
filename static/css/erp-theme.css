@@ -2066,8 +2066,8 @@ html[data-ui-mode="dark"] .login-page .input-group-text {
 .glass-effect {
   background: linear-gradient(135deg, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.55) 100%);
   border: 1px solid rgba(255,255,255,0.35);
-  backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
   border-radius: var(--ui-radius-md);
   box-shadow: var(--ui-shadow);
 }
@@ -2548,4 +2548,176 @@ body.view-mobile .main-header {
 }
 body.view-mobile .main-header .navbar-nav .nav-link[data-widget="pushmenu"] {
   display: none;
+}
+
+.erp-clickable { cursor: pointer; }
+.erp-pre-wrap { white-space: pre-wrap; }
+.erp-scroll-200 { max-height: 200px; overflow: auto; }
+.erp-scroll-300 { max-height: 300px; overflow-y: auto; }
+.erp-scroll-400 { max-height: 400px; overflow-y: auto; }
+.erp-gap-1 { gap: .5rem; }
+.erp-gap-2 { gap: .75rem; }
+.erp-gap-3 { gap: 1rem; }
+.erp-flex-1 { flex: 1; }
+.erp-icon-xl { font-size: 2rem; }
+.erp-fs-lg { font-size: 1.1em; }
+.erp-min-w-140 { min-width: 140px; }
+.erp-min-w-160 { min-width: 160px; }
+.erp-min-w-200 { min-width: 200px; }
+.erp-w-120 { width: 120px; }
+.erp-max-w-200 { max-width: 200px; }
+.erp-badge-fs { font-size: 1rem; }
+.erp-logo-thumb { max-height: 64px; }
+.erp-avatar-100 { width: 100px; height: 100px; }
+.erp-logo-md { max-height: 80px; }
+
+.erp-print-banner {
+  background: linear-gradient(135deg, #f8f9fa 0%, #eef2f7 100%);
+  border: 1px solid #d6dbe3;
+  border-radius: 10px;
+  margin: 10px 10px 14px 10px;
+  padding: 10px 12px;
+  text-align: center;
+}
+.erp-print-banner-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 4px;
+}
+.erp-print-banner-sub {
+  font-size: 9px;
+  color: #475569;
+  margin-bottom: 8px;
+}
+.erp-print-banner-meta {
+  display: inline-block;
+  background: #ffffff;
+  border: 1px dashed #94a3b8;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 9px;
+  color: #334155;
+  line-height: 1.8;
+}
+.erp-print-amount-box {
+  margin: 10px 0;
+  padding: 8px 10px;
+  background: #f8fafc;
+  border-right: 4px solid #64748b;
+  border-radius: 6px;
+  font-size: 9px;
+  color: #1f2937;
+}
+.erp-print-qr-wrap {
+  margin: 10px 0 6px 0;
+  text-align: center;
+}
+.erp-print-qr-img {
+  width: 110px;
+  height: 110px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 4px;
+  background: #fff;
+}
+.erp-print-qr-label {
+  font-size: 8px;
+  color: #64748b;
+  margin-top: 4px;
+}
+.print-developer-footer {
+  margin-top: 20px;
+  padding-top: 10px;
+  border-top: 1px solid #ddd;
+  text-align: center;
+  color: #666;
+  font-size: 11px;
+}
+.erp-print-footer-contact {
+  margin: 4px 0 0;
+}
+.erp-img-rounded { border-radius: 8px; }
+.erp-word-break-all { word-break: break-all; }
+.erp-max-w-420 { max-width: 420px; }
+.erp-mx-auto { margin-left: auto; margin-right: auto; }
+.erp-avatar-gradient { background: linear-gradient(135deg, #667eea, #764ba2); }
+.erp-user-avatar-gradient { background: linear-gradient(135deg, #007A3D, #1B4D89); }
+.erp-font-inherit { font-family: inherit; }
+.erp-dir-ltr { direction: ltr; }
+.erp-badge-gradient {
+  color: white;
+  padding: 8px;
+  border-radius: 20px;
+  margin: 10px 0;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+.erp-invoice-h3 {
+  font-size: 9px;
+  margin-bottom: 8px;
+  font-weight: 700;
+}
+.erp-invoice-tr-head {
+  background: #f8f9fa;
+}
+.erp-invoice-btn-print {
+  color: white;
+  border: none;
+  padding: 10px 25px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.erp-invoice-bank-box {
+  margin-bottom: 8px;
+  padding: 10px;
+  background: #f8f9fa;
+  border-radius: 5px;
+}
+.erp-invoice-bank-title {
+  font-weight: 700;
+  font-size: 8px;
+  margin-bottom: 5px;
+}
+.erp-invoice-pay-detail {
+  color: var(--erp-primary);
+  font-weight: bold;
+}
+.erp-invoice-bank-detail {
+  color: var(--erp-primary);
+  font-weight: bold;
+}
+.erp-receipt-bank-box {
+  margin-bottom: 12px;
+  padding: 10px;
+  background: #f8f9fa;
+  border-radius: 5px;
+  border-left-width: 3px;
+  border-left-style: solid;
+}
+.erp-receipt-bank-title {
+  font-weight: 700;
+  font-size: 8px;
+  margin-bottom: 5px;
+}
+.erp-gradient-btn {
+  border: none;
+  padding: 12px 30px;
+  border-radius: 8px;
+  font-size: 9px;
+  cursor: pointer;
+}
+.erp-sales-print-h3 {
+  font-size: 12px;
+  margin-bottom: 8px;
+  font-weight: 700;
+}
+.erp-sales-print-tr-head {
+  background: #f8f9fa;
+}
+.erp-modern-bank-box {
+  margin-top: 8px;
+  padding: 10px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 5px;
 }

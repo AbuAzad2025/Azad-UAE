@@ -28,15 +28,19 @@
       }
     },
 
-    // Prefetch Links on Hover
     prefetchLinks() {
       document.querySelectorAll('a[href^="/"]').forEach(link => {
+        const url = link.getAttribute('href');
+        if (!url) return;
+        if (/\/\d+\/?$/.test(url)) return;
+        if (/^\/(reports|owner|store|pos|api)\//.test(url)) return;
+        if (/\?/.test(url)) return;
         link.addEventListener('mouseenter', function() {
-          const url = this.getAttribute('href');
-          if (url && !document.querySelector(`link[rel="prefetch"][href="${url}"]`)) {
+          const hoverUrl = this.getAttribute('href');
+          if (hoverUrl && !document.querySelector(`link[rel="prefetch"][href="${hoverUrl}"]`)) {
             const prefetch = document.createElement('link');
             prefetch.rel = 'prefetch';
-            prefetch.href = url;
+            prefetch.href = hoverUrl;
             document.head.appendChild(prefetch);
           }
         }, { once: true });

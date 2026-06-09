@@ -10,7 +10,7 @@
     </div>
   </div>
 
-  <!-- Filters -->
+  
   <div class="row mb-3">
     <div class="col-md-12">
       <div class="card card-outline card-primary">
@@ -40,7 +40,7 @@
     </div>
   </div>
 
-  <!-- Summary Cards -->
+  
   <div class="row mb-3">
     <div class="col-md-2">
       <div class="small-box bg-success">
@@ -89,7 +89,7 @@
     </div>
   </div>
 
-  <!-- Liquidity Accounts Table -->
+  
   <div class="row mb-3">
     <div class="col-md-12">
       <div class="card card-outline card-primary">
@@ -128,7 +128,7 @@
     </div>
   </div>
 
-  <!-- Cheque Maturity -->
+  
   <div class="row mb-3">
     <div class="col-md-6">
       <div class="card card-outline card-success">
@@ -192,7 +192,7 @@
     </div>
   </div>
 
-  <!-- Cheque Detail Tables -->
+  
   <div class="row mb-3">
     {% for direction, label, color in [('incoming', 'الشيكات الواردة المتبقية', 'success'), ('outgoing', 'الشيكات الصادرة المتبقية', 'danger')] %}
     <div class="col-md-6">
@@ -200,7 +200,7 @@
         <div class="card-header">
           <h3 class="card-title"><i class="fas fa-list mr-2"></i> {{ label }}</h3>
         </div>
-        <div class="card-body table-responsive p-0" style="max-height: 300px; overflow-y: auto;">
+        <div class="card-body table-responsive p-0 erp-scroll-300"
           <table class="table table-sm table-hover">
             <thead>
               <tr>
@@ -241,7 +241,7 @@
     {% endfor %}
   </div>
 
-  <!-- Bank Reconciliation Status -->
+  
   <div class="row mb-3">
     <div class="col-md-12">
       <div class="card card-outline card-secondary">

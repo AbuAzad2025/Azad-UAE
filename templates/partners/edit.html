@@ -51,7 +51,7 @@
               <option value="warehouse" {% if partner.scope_type == 'warehouse' %}selected{% endif %}>مستودع محدد</option>
             </select>
           </div>
-          <div class="col-md-6" id="scope_id_container" {% if partner.scope_type == 'company' %}style="display:none;"{% endif %}>
+          <div class="col-md-6" id="scope_id_container" {% if partner.scope_type == 'company' %}class="d-none"{% endif %}>
             <label class="form-label fw-semibold" id="scope_id_label">
               {% if partner.scope_type == 'branch' %}الفرع{% elif partner.scope_type == 'warehouse' %}المستودع{% else %}—{% endif %}
             </label>

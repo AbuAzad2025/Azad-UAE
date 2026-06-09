@@ -462,7 +462,7 @@
     </div>
 
     <div class="footer">
-      <!-- Bank Info -->
+      
       {% if settings and ((settings.bank_name and settings.bank_name != 'None') or (settings.iban and settings.iban != 'None') or (settings.swift_code and settings.swift_code != 'None')) %}
       <div class="ic-9">
         <div class="ic-10">🏦 معلومات التحويل البنكي</div>
@@ -474,7 +474,7 @@
       </div>
       {% endif %}
       
-      <!-- Business Registration -->
+      
       {% if settings and ((settings.commercial_register and settings.commercial_register != 'None') or (settings.license_number and settings.license_number != 'None')) %}
       <div class="ic-12">
         {% if settings.commercial_register and settings.commercial_register != 'None' %}<span>السجل التجاري: {{ settings.commercial_register }}</span>{% endif %}
@@ -483,7 +483,7 @@
       </div>
       {% endif %}
       
-      <!-- Default Note -->
+      
       {% if settings and settings.default_receipt_note_ar and settings.default_receipt_note_ar != 'None' %}
       <div class="ic-13">
         <div class="ic-14">💬 {{ settings.default_receipt_note_ar }}</div>
@@ -498,7 +498,7 @@
       <div class="ic-16">🌐 {{ settings.website }}</div>
       {% endif %}
       
-      <!-- Social Media -->
+      
       {% if settings and (settings.facebook_url or settings.instagram_url or settings.whatsapp_number) %}
       <div class="ic-17">
         {% if settings.facebook_url %}<a href="{{ settings.facebook_url }}" class="ic-18">📘 Facebook</a>{% endif %}
@@ -508,7 +508,7 @@
       {% endif %}
     </div>
     
-    <!-- Watermark -->
+    
     {% if settings and settings.enable_watermark %}
       {% if settings.watermark_image_path %}
         <div class="ic-19">

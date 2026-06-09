@@ -12,14 +12,14 @@
 {% set _display_amount_words = amount_in_words or _words_fallback %}
 
 {% if _display_amount_words %}
-<div style="margin: 10px 0; padding: 8px 10px; background: #f8fafc; border-right: 4px solid #64748b; border-radius: 6px; font-size: 9px; color: #1f2937;">
+<div class="erp-print-amount-box">
   <strong>المبلغ بالحروف:</strong> {{ _display_amount_words }}
 </div>
 {% endif %}
 
 {% if qr_data_url %}
-<div style="margin: 10px 0 6px 0; text-align: center;">
-  <img src="{{ qr_data_url }}" alt="QR" style="width: 110px; height: 110px; border: 1px solid #e2e8f0; border-radius: 8px; padding: 4px; background: #fff;">
-  <div style="font-size: 8px; color: #64748b; margin-top: 4px;">رمز تحقق المستند</div>
+<div class="erp-print-qr-wrap">
+  <img src="{{ qr_data_url }}" alt="QR" class="erp-print-qr-img">
+  <div class="erp-print-qr-label">رمز تحقق المستند</div>
 </div>
 {% endif %}

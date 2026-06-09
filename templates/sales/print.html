@@ -243,7 +243,7 @@
   </div>
 
   <div class="invoice-container">
-    <!-- Header -->
+    
     <div class="invoice-header">
       {% if settings.show_logo != false %}
       {% with logo_class='company-logo', logo_style='background: white; padding: 10px; border-radius: 10px;' %}
@@ -264,13 +264,13 @@
       </div>
     </div>
 
-    <!-- Title -->
+    
     <div class="invoice-title">
       <h2>فاتورة بيع <span class="palestine-flag"></span></h2>
       <div class="invoice-number">رقم الفاتورة: <strong>{{ sale.sale_number }}</strong></div>
     </div>
 
-    <!-- Details -->
+    
     <div class="invoice-details">
       <div class="details-row">
         <div class="detail-box">
@@ -287,7 +287,7 @@
         </div>
       </div>
 
-      <!-- Items Table -->
+      
       <div class="table-responsive"><table class="items-table">
         <thead>
           <tr>
@@ -313,7 +313,7 @@
         </tbody>
       </table></div>
 
-      <!-- Totals -->
+      
       <div class="totals-section">
         <div class="total-row">
           <span>المجموع الفرعي:</span>
@@ -359,7 +359,7 @@
       </div>
       {% endif %}
 
-      <!-- Signatures -->
+      
       <div class="signature-section">
         <div class="signature-box">
           <div class="signature-line"></div>
@@ -372,15 +372,15 @@
       </div>
     </div>
 
-    <!-- قسم الدفعات -->
+    
     {% if sale.payments %}
     <div class="ic-9">
-      <h3 style="color: {{ settings.header_color if settings else '#667eea' }}; font-size: 12px; margin-bottom: 8px; font-weight: 700;">
+      <h3 class="erp-sales-print-h3" style="color: {{ settings.header_color if settings else '#667eea' }};">
         💰 الدفعات
       </h3>
       <div class="table-responsive"><table class="ic-10">
         <thead>
-          <tr style="background: #f8f9fa; border-bottom: 1px solid {{ settings.header_color if settings else '#667eea' }};">
+          <tr class="erp-sales-print-tr-head" style="border-bottom: 1px solid {{ settings.header_color if settings else '#667eea' }};">
             <th class="ic-11">رقم الدفعة</th>
             <th class="ic-12">التاريخ</th>
             <th class="ic-12">المبلغ</th>
@@ -421,7 +421,7 @@
     </div>
     {% endif %}
 
-    <!-- Footer: بيانات المطور فقط -->
+    
     <div class="invoice-footer">
       <div><strong>{{ developer_credit or config.DEVELOPER_CREDIT }}</strong></div>
       <div class="footer-info">

@@ -116,10 +116,10 @@
 </div>
 {% endif %}
 
-<!-- Feature Cards -->
+
 <div class="row mb-4">
   <div class="col-md-3 mb-3">
-    <div class="card text-center h-100" onclick="quickAsk('حلل المبيعات')" style="cursor:pointer">
+    <div class="card text-center h-100" onclick="quickAsk('حلل المبيعات')" class="erp-clickable">
       <div class="card-body">
         <i class="fas fa-chart-line fa-3x text-primary mb-2"></i>
         <h6>توقع المبيعات</h6>
@@ -128,7 +128,7 @@
     </div>
   </div>
   <div class="col-md-3 mb-3">
-    <div class="card text-center h-100" onclick="quickAsk('هوامش الربح')" style="cursor:pointer">
+    <div class="card text-center h-100" onclick="quickAsk('هوامش الربح')" class="erp-clickable">
       <div class="card-body">
         <i class="fas fa-percentage fa-3x text-success mb-2"></i>
         <h6>هوامش الربح</h6>
@@ -137,7 +137,7 @@
     </div>
   </div>
   <div class="col-md-3 mb-3">
-    <div class="card text-center h-100" onclick="quickAsk('صحة المخزون')" style="cursor:pointer">
+    <div class="card text-center h-100" onclick="quickAsk('صحة المخزون')" class="erp-clickable">
       <div class="card-body">
         <i class="fas fa-boxes fa-3x text-warning mb-2"></i>
         <h6>صحة المخزون</h6>
@@ -146,7 +146,7 @@
     </div>
   </div>
   <div class="col-md-3 mb-3">
-    <div class="card text-center h-100" onclick="quickAsk('أنماط المبيعات')" style="cursor:pointer">
+    <div class="card text-center h-100" onclick="quickAsk('أنماط المبيعات')" class="erp-clickable">
       <div class="card-body">
         <i class="fas fa-brain fa-3x text-info mb-2"></i>
         <h6>كشف الأنماط</h6>
@@ -156,13 +156,13 @@
   </div>
 </div>
 
-<!-- Chat Interface -->
+
 <div class="chat-card">
   <div class="chat-messages" id="chatBox">
     <div class="bot-message">
       <div class="d-flex align-items-start">
         <div class="ml-3">
-          <div class="avatar-circle" style="background:linear-gradient(135deg,#667eea,#764ba2)">
+<div class="avatar-circle erp-avatar-gradient"
             <i class="fas fa-robot text-white fa-2x"></i>
           </div>
         </div>
@@ -219,7 +219,7 @@
   </div>
 </div>
 
-<!-- Excel Upload Modal -->
+
 <div id="excelUploaderModal" class="modal-overlay">
   <div class="modal-box">
     <h4 class="text-primary mb-3"><i class="fas fa-file-excel ml-2"></i>رفع ملف Excel</h4>
@@ -243,9 +243,9 @@
           <i class="fas fa-upload ml-1"></i>رفع ومعالجة
         </button>
       </div>
-      <div id="uploadProgress" class="mt-3" style="display:none">
+      <div id="uploadProgress" class="mt-3" class="d-none">
         <div class="progress">
-          <div class="progress-bar progress-bar-striped progress-bar-animated" style="width:100%"></div>
+          <div class="progress-bar progress-bar-striped progress-bar-animated w-100"></div>
         </div>
         <small class="text-muted">جاري المعالجة...</small>
       </div>

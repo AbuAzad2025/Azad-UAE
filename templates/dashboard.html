@@ -11,7 +11,7 @@
 {% endblock %}
 
 {% block content %}
-<!-- Modern Stats Cards -->
+
 <div class="row mb-4">
   {% if current_user.has_permission('manage_sales') %}
   <div class="col-lg-3 col-md-6 mb-4">
@@ -90,7 +90,7 @@
 </div>
 
 {% if current_user.can_see_costs() and stats.cash_balance is defined %}
-<!-- Financial Overview Cards -->
+
 <div class="row mb-4">
   <div class="col-md-4 mb-3">
     <div class="card glass-effect border-0">
@@ -140,7 +140,7 @@
 {% endif %}
 
 {% if current_user.has_permission('manage_sales') %}
-<!-- Recent Sales - Modern Table -->
+
 <div class="row">
   <div class="col-12">
     <div class="card">
@@ -263,7 +263,7 @@
 </div>
 {% endif %}
 
-<!-- Quick Actions -->
+
 <div class="row">
   {% if current_user.has_permission('manage_sales') %}
   <div class="col-md-3 mb-3">

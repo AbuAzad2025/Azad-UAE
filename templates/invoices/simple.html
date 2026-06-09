@@ -167,7 +167,7 @@
   </div>
 
   <div class="invoice">
-    <!-- Header -->
+    
     <div class="header">
       {% include 'partials/print_tenant_logo.html' %}
       <div class="company-name">{{ (settings.company_name_ar if settings and settings.company_name_ar else none) or tenant_name_ar or company_name_ar or 'نظام المحاسبة' }}</div>
@@ -189,7 +189,7 @@
     {% set doc_number = sale.sale_number %}
     {% include 'partials/print_unified_banner.html' %}
 
-    <!-- Basic Info -->
+    
     <div class="info-row">
       <div><strong>رقم الفاتورة:</strong> {{ sale.sale_number }}</div>
       <div><strong>التاريخ:</strong> {{ sale.sale_date.strftime('%Y-%m-%d') }}</div>
@@ -199,7 +199,7 @@
       <div><strong>المستخدم:</strong> {{ print_user_name or (sale.seller.full_name if sale.seller else '-') }}</div>
     </div>
 
-    <!-- Items Table -->
+    
     <div class="table-responsive"><table>
       <thead>
         <tr>
@@ -223,7 +223,7 @@
       </tbody>
     </table></div>
 
-    <!-- Totals -->
+    
     <div class="totals">
       <div class="total-line">
         <span>المجموع:</span>
@@ -242,9 +242,9 @@
       {% include 'partials/print_unified_amount_qr.html' %}
     </div>
 
-    <!-- Footer -->
+    
     <div class="footer">
-      <!-- Bank Info -->
+      
       {% if settings and (settings.bank_name or settings.iban) %}
       <div class="bank-info">
         <strong>معلومات التحويل:</strong><br>
@@ -253,7 +253,7 @@
       </div>
       {% endif %}
       
-      <!-- Business Info -->
+      
       {% if settings and (settings.tax_number or settings.commercial_register) %}
       <div class="ic-7">
         {% if settings.tax_number %}ض.ر: {{ settings.tax_number }}{% endif %}
@@ -262,7 +262,7 @@
       </div>
       {% endif %}
       
-      <!-- Default Note -->
+      
       {% if settings and settings.default_invoice_note_ar and settings.default_invoice_note_ar != 'None' %}
       <div class="ic-8">
         {{ settings.default_invoice_note_ar }}
@@ -272,7 +272,7 @@
       <div class="ic-9">شكراً لتعاملكم معنا</div>
     </div>
 
-    <!-- Signature -->
+    
     <div class="signature">
       <div class="sig-box">
         <div class="sig-line">البائع</div>
@@ -282,7 +282,7 @@
       </div>
     </div>
     
-    <!-- Watermark -->
+    
     {% if settings and settings.enable_watermark %}
       {% if settings.watermark_image_path %}
         <div class="ic-10">

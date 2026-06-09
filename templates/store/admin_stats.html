@@ -86,13 +86,8 @@
 
         {% if chart %}
 
-        <ul class="list-unstyled mb-0 small">
-
-          {% for row in chart %}
-
-          <li class="d-flex justify-content-between border-bottom py-1"><span>{{ row.day }}</span><strong>{{ row.count }}</strong></li>
-
-          {% endfor %}
+        <ul class="list-unstyled mb-0 small">{%- for row in chart %}
+          <li class="d-flex justify-content-between border-bottom py-1"><span>{{ row.day }}</span><strong>{{ row.count }}</strong></li>{%- endfor %}
 
         </ul>
 

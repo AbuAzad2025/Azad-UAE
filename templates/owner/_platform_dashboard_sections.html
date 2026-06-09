@@ -45,10 +45,8 @@
 {% if platform_overview.warnings %}
 <div class="alert alert-warning owner-panel-card">
   <strong><i class="fas fa-exclamation-triangle"></i> تحذيرات تشغيلية:</strong>
-  <ul class="mb-0 mt-2">
-    {% for w in platform_overview.warnings %}
-    <li>{{ w }}</li>
-    {% endfor %}
+  <ul class="mb-0 mt-2">{%- for w in platform_overview.warnings %}
+    <li>{{ w }}</li>{%- endfor %}
   </ul>
 </div>
 {% endif %}

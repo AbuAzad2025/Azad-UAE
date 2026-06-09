@@ -601,7 +601,7 @@ table.statement-table thead th {
                                   <td>
                                     {% if line.discount_percent %}
                                       <div class="amount-cell">{{ format_currency(line.discount_value) }}</div>
-                                      <div class="small text-muted text-left" style="direction:ltr;">{{ format_currency(line.discount_percent) }}%</div>
+                                      <div class="small text-muted text-left erp-dir-ltr">{{ format_currency(line.discount_percent) }}%</div>
                                     {% else %}
                                       -
                                     {% endif %}

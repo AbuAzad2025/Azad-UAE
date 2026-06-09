@@ -14,7 +14,7 @@
   </div>
 </div>
 
-<!-- فلتر التاريخ -->
+
 <div class="card mb-4">
   <div class="card-header bg-gradient-primary">
     <h5 class="card-title text-white mb-0">
@@ -42,7 +42,7 @@
 </div>
 
 <div class="row">
-  <!-- الأصول -->
+  
   <div class="col-md-6">
     <div class="card">
       <div class="card-header bg-gradient-success">
@@ -84,7 +84,7 @@
     </div>
   </div>
   
-  <!-- الخصوم وحقوق الملكية -->
+  
   <div class="col-md-6">
     <div class="card">
       <div class="card-header bg-gradient-danger">
@@ -103,7 +103,7 @@
               </tr>
             </thead>
             <tbody>
-              <!-- الخصوم -->
+              
               {% for liability in liabilities %}
               {% set balance = liability.get_balance(as_of_date=as_of_date) %}
               {% if balance < 0 %}
@@ -115,7 +115,7 @@
               {% endif %}
               {% endfor %}
               
-              <!-- حقوق الملكية -->
+              
               {% for equity_item in equity %}
               {% set balance = equity_item.get_balance(as_of_date=as_of_date) %}
               {% if balance < 0 %}
@@ -148,7 +148,7 @@
   </div>
 </div>
 
-<!-- ملخص التوازن -->
+
 <div class="row mt-4">
   <div class="col-12">
     <div class="card">
@@ -189,7 +189,7 @@
   </div>
 </div>
 
-<!-- ملاحظات -->
+
 <div class="card mt-4">
   <div class="card-header bg-gradient-info">
     <h5 class="card-title text-white mb-0">

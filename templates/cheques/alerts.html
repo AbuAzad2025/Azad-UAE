@@ -3,7 +3,7 @@
 {% block page_title %}<i class="fas fa-bell"></i> تنبيهات الشيكات{% endblock %}
 
 {% block content %}
-<!-- الإحصائيات -->
+
 <div class="row">
   <div class="col-lg-4">
     <div class="small-box bg-warning">
@@ -42,7 +42,7 @@
   </div>
 </div>
 
-<!-- الشيكات القريبة من الاستحقاق -->
+
 {% if due_soon %}
 <div class="card card-warning">
   <div class="card-header">
@@ -112,7 +112,7 @@
 </div>
 {% endif %}
 
-<!-- الشيكات المتأخرة -->
+
 {% if overdue %}
 <div class="card card-danger mt-3">
   <div class="card-header">
@@ -191,7 +191,7 @@
 </div>
 {% endif %}
 
-<!-- الشيكات المرتدة -->
+
 {% if bounced %}
 <div class="card card-dark mt-3">
   <div class="card-header">
@@ -260,7 +260,7 @@
 </div>
 {% endif %}
 
-<!-- لا توجد تنبيهات -->
+
 {% if not due_soon and not overdue and not bounced %}
 <div class="card">
   <div class="card-body text-center py-5">

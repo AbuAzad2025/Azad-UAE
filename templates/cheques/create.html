@@ -85,7 +85,7 @@
     <form class="needs-validation" method="POST" action="{{ url_for('cheques.create') }}" id="chequeForm" class="cheque-create-form">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
       
-      <!-- النوع -->
+      
       <div class="row">
         <div class="col-md-6">
           <div class="form-group">
@@ -107,7 +107,7 @@
         </div>
       </div>
 
-      <!-- المعلومات البنكية -->
+      
       <div class="row">
         <div class="col-md-4">
           <div class="form-group">
@@ -134,7 +134,7 @@
         </div>
       </div>
 
-      <!-- المبلغ والعملة -->
+      
       <div class="row">
         <div class="col-md-4">
           <div class="form-group">
@@ -166,7 +166,7 @@
         </div>
       </div>
 
-      <!-- التواريخ -->
+      
       <div class="row">
         <div class="col-md-6">
           <div class="form-group">
@@ -184,7 +184,7 @@
         </div>
       </div>
 
-      <!-- معلومات الطرف الآخر (تتغير حسب النوع) -->
+      
       <div id="incomingFields" class="ic-1">
         <div class="row">
           <div class="col-md-6">
@@ -239,14 +239,14 @@
         </div>
       </div>
 
-      <!-- ملاحظات -->
+      
       <div class="form-group">
         <label><i class="fas fa-sticky-note"></i> ملاحظات:</label>
         <textarea name="notes" class="form-control" rows="3" 
                   placeholder="أي ملاحظات إضافية..." maxlength="500"></textarea>
       </div>
 
-      <!-- الأزرار -->
+      
       <div class="form-group">
         <button type="submit" class="btn btn-success">
           <i class="fas fa-save mr-2"></i>حفظ الشيك

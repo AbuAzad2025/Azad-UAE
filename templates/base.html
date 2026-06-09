@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="{{ current_language }}" dir="{{ 'rtl' if is_rtl else 'ltr' }}" data-ui-variant="palestinian" data-ui-mode="light">
 <head>
   <meta charset="utf-8">
@@ -12,14 +12,14 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   
-  <!-- SEO Meta Tags -->
+  
   <meta name="description" content="{% block meta_description %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - Ù†Ø¸Ø§Ù… Ù…ØªÙƒØ§Ù…Ù„ Ù„Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„Ù…Ø³ØªÙˆØ¯Ø¹Ø§Øª ÙˆØ§Ù„Ù…Ø¨ÙŠØ¹Ø§Øª ÙˆØ§Ù„Ù…Ø´ØªØ±ÙŠØ§Øª{% endblock %}">
   <meta name="keywords" content="{% block meta_keywords %}Ù†Ø¸Ø§Ù… Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„Ù…Ø³ØªÙˆØ¯Ø¹Ø§ØªØŒ Ø¨Ø±Ù†Ø§Ù…Ø¬ Ù…Ø­Ø§Ø³Ø¨Ø©ØŒ ÙÙˆØ§ØªÙŠØ± Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠØ©ØŒ Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„Ù…Ø¨ÙŠØ¹Ø§ØªØŒ Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„Ù…Ø®Ø²ÙˆÙ†{% endblock %}">
   <meta name="author" content="{{ developer_name_ar or config.DEVELOPER_NAME_AR }}">
   <meta name="robots" content="{% block robots %}index, follow{% endblock %}">
   <meta name="language" content="{{ current_language }}">
   
-  <!-- Open Graph / Facebook -->
+  
   <meta property="og:type" content="{% block og_type %}website{% endblock %}">
   <meta property="og:url" content="{{ request.url }}">
   <meta property="og:title" content="{% block og_title %}{{ self.title() }}{% endblock %}">
@@ -31,32 +31,32 @@
   <meta property="og:locale" content="{{ 'ar_AE' if current_language == 'ar' else 'en_US' }}">
   <meta property="og:site_name" content="{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }}">
   
-  <!-- Twitter -->
+  
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:url" content="{{ request.url }}">
   <meta name="twitter:title" content="{{ self.title() }}">
   <meta name="twitter:description" content="{{ self.meta_description() }}">
   <meta name="twitter:image" content="{{ _logo_external }}">
   
-  <!-- Canonical URL -->
+  
   <link rel="canonical" href="{{ request.url }}">
   
-  <!-- Favicon -->
+  
   {% set _favicon_path = tenant_favicon_url or 'assets/brand/azad/favicons/favicon.png' %}
   <link rel="icon" href="{{ _favicon_path if _favicon_path.startswith('http') else url_for('static', filename=_favicon_path) }}">
   <link rel="apple-touch-icon" href="{{ url_for('static', filename='assets/brand/azad/icons/icon-192.png') }}">
   
-  <!-- Preload Critical Resources -->
+  
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://cdn.jsdelivr.net" integrity="sha384-R4QB47a9SQ6y4D38cAyN5aSMhASP1+n7pTwwA53PDbPPKawIMOd9ThfJA0zGZSPg" crossorigin="anonymous">
   
-  <!-- Critical CSS - ØªØ­Ù…ÙŠÙ„ ÙÙˆØ±ÙŠ (Bootstrap 4 Ù‚Ø¨Ù„ AdminLTE) -->
+  
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N" crossorigin="anonymous">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css" integrity="sha384-qrt37eUXKQgF1p6OlpdB29OTyKryxbxdJHkvfVN4suujWnn6PibIvbnygcK4uJfA" crossorigin="anonymous" integrity="sha384-qrt37eUXKQgF1p6OlpdB29OTyKryxbxdJHkvfVN4suujWnn6PibIvbnYgcK4uJfA" crossorigin="anonymous">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/erp-theme.css') }}">
   
-  <!-- Non-Critical CSS - ØªØ­Ù…ÙŠÙ„ Ù…ØªØ£Ø®Ø± -->
+  
   <link rel="preload" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" integrity="sha384-I/XmlxwF3yaWheimilZTCgZ85zwZ+NL93B11+pw6Z92PDgmicv5LyuQMtIJt3i96" crossorigin="anonymous" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'" integrity="sha384-DyZ88mC6Up2uqS4h/KRgHuoeGwBcD4Ng9SiP4dIRy0EXTlnuz47vAwmeGwVChigm" crossorigin="anonymous">
   <link rel="preload" href="{{ url_for('static', filename='adminlte/plugins/select2/css/select2.min.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
@@ -76,7 +76,7 @@
   </noscript>
   {% block extra_css %}{% endblock %}
   
-  <!-- Schema.org JSON-LD Ù„Ù„ØªØ­Ø³ÙŠÙ† ÙÙŠ Ù…Ø­Ø±ÙƒØ§Øª Ø§Ù„Ø¨Ø­Ø« -->
+  
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -256,7 +256,7 @@
                 </tr>
               </thead>
               <tbody id="fx-rates-body">
-                <!-- يُملأ ديناميكياً -->
+                
               </tbody>
             </table>
           </div>
@@ -1007,18 +1007,18 @@
   </nav>
 </div>
 
-<!-- مصدر موحد للصلاحيات والـ ENUMs (Backend = Frontend) -->
+
 <script>
   window.APP_ENUMS = {{ app_enums | tojson | safe }};
   window.CURRENT_USER_PERMISSIONS = {{ current_user_permissions | tojson | safe }};
   window.hasPermission = function(code) { return (window.CURRENT_USER_PERMISSIONS || []).indexOf(code) !== -1; };
 </script>
-<!-- Critical Scripts - ØªØ­Ù…ÙŠÙ„ ÙÙˆØ±ÙŠ -->
+
 <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.min.js" integrity="sha384-UG8ao2jwOWB7/oDdObZc6ItJmwUkR/PfMyt9Qs5AwX7PsnYn1CRKCTWyncPTWvaS" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-Fy6S3B9q64WdZWQUiU+q4/2Lc9npb8tCaSX9FK7E8HnRr0Jz8D6OP9dO5Vg3Q9ct" crossorigin="anonymous"></script>
 <script src="{{ url_for('static', filename='adminlte/js/adminlte.min.js') }}"></script>
 
-<!-- Non-Critical Scripts - ØªØ­Ù…ÙŠÙ„ Ù…ØªØ£Ø®Ø± Ù…Ø¹ defer -->
+
 <script defer src="{{ url_for('static', filename='adminlte/plugins/select2/js/select2.full.min.js') }}"></script>
 <script defer src="{{ url_for('static', filename='adminlte/plugins/datatables/jquery.dataTables.min.js') }}"></script>
 <script defer src="{{ url_for('static', filename='adminlte/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') }}"></script>
@@ -1755,7 +1755,7 @@ $(function() {
 
 </script>
 
-<!-- D3: Client-side form validation -->
+
 <script src="{{ url_for('static', filename='js/form_validation.js') }}"></script>
 
 </body>

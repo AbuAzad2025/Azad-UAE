@@ -33,7 +33,7 @@
               <span class="text-danger">*</span>
             </label>
             <div class="input-group">
-              <select name="category_id" id="expense_category" class="form-control" required style="flex: 1;" aria-label="category id">
+              <select name="category_id" id="expense_category" class="form-control erp-flex-1" required aria-label="category id">
                 <option value="">بلا</option>
                 {% for category in categories %}
                 <option value="{{ category.id }}" {% if expense.category_id == category.id %}selected{% endif %}>
@@ -131,7 +131,7 @@
   </form>
 </div>
 
-<!-- Modal: إضافة فئة مصروفات -->
+
 <div class="modal fade" id="addExpenseCategoryModal" tabindex="-1" role="dialog">
   <div class="modal-dialog" role="document">
     <div class="modal-content">

@@ -33,7 +33,7 @@
 {% endblock %}
 {% block content %}
 <div class="container-fluid">
-  <!-- Header -->
+  
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h3 class="m-0"><i class="fas fa-bug text-danger mr-2"></i> سجلات الأخطاء</h3>
     <div>
@@ -46,7 +46,7 @@
     </div>
   </div>
 
-  <!-- Stats Row -->
+  
   {% if stats %}
   <div class="row mb-3">
     <div class="col-md-3">
@@ -66,7 +66,7 @@
   </div>
   {% endif %}
 
-  <!-- Filters -->
+  
   <div class="card card-outline card-secondary mb-3">
     <div class="card-body p-2">
       <form class="needs-validation" method="GET" action="{{ url_for('owner.error_logs') }}" class="form-inline">
@@ -91,7 +91,7 @@
     </div>
   </div>
 
-  <!-- Errors List -->
+  
   {% if errors %}
     {% for err in errors %}
     <div class="card error-card error-{{ err.level }} mb-3" id="err-{{ err.hash }}">
@@ -102,26 +102,26 @@
           <span class="module-chip"><i class="fas fa-code mr-1"></i>{{ err.module }}:{{ err.lineno }}</span>
         </div>
         <div>
-          <button class="btn btn-outline-dark mr-1" onclick="copyErr('{{ err.hash }}')"
+          <button class="btn btn-outline-dark mr-1" onclick="copyErr({{ err.hash|tojson }})"
                   title="نسخ الخطأ كامل"><i class="fas fa-copy"></i></button>
           <button class="btn btn-outline-primary" data-toggle="collapse" data-target="#tb-{{ err.hash }}"
                   title="عرض/إخفاء التفاصيل"><i class="fas fa-expand-alt"></i></button>
         </div>
       </div>
       <div class="card-body py-3">
-        <!-- Message -->
+        
         <div class="mb-2">
           <strong class="text-dark"><i class="fas fa-comment-alt text-secondary mr-1"></i> الرسالة:</strong>
           <p class="m-0 mt-1 text-break ic-2">{{ err.message or '(بدون رسالة)' }}</p>
         </div>
-        <!-- Path -->
+        
         {% if err.path %}
         <div class="mb-2">
           <strong class="text-muted"><i class="fas fa-file-code text-secondary mr-1"></i> الملف:</strong>
           <code class="bg-light px-2 py-1 rounded ic-3">{{ err.path }}</code>
         </div>
         {% endif %}
-        <!-- Collapsible Traceback -->
+        
         <div class="collapse" id="tb-{{ err.hash }}">
           {% if err.traceback %}
           <div class="mt-3">
@@ -131,7 +131,7 @@
           {% else %}
           <div class="mt-3 alert alert-light border"><i class="fas fa-info-circle mr-1"></i> لا يوجد تتبع لهذا الخطأ.</div>
           {% endif %}
-          <!-- Raw -->
+          
           <div class="mt-3">
             <strong class="text-muted d-block mb-2"><i class="fas fa-align-left text-secondary mr-1"></i> النص الخام (Raw):</strong>
             <textarea class="form-control font-monospace ic-4" rows="6" readonly aria-label="النص الخام للخطأ">{{ err.raw }}</textarea>
@@ -148,31 +148,21 @@
   </div>
   {% endif %}
 
-  <!-- Pagination -->
+  
   {% if total_pages > 1 %}
   <nav class="mt-4 mb-5">
-    <ul class="pagination justify-content-center">
-      {% if page > 1 %}
+    <ul class="pagination justify-content-center">{%- if page > 1 %}
       <li class="page-item">
         <a class="page-link" href="?page={{ page-1 }}{% if search %}&search={{ search|urlencode }}{% endif %}{% if level_filter %}&level={{ level_filter }}{% endif %}">السابق</a>
-      </li>
-      {% endif %}
-      {% for p in range(1, total_pages+1) %}
-        {% if p == page %}
-        <li class="page-item active"><span class="page-link">{{ p }}</span></li>
-        {% elif (p - page)|abs <= 2 or p == 1 or p == total_pages %}
+      </li>{%- endif -%}{%- for p in range(1, total_pages+1) -%}{%- if p == page %}
+        <li class="page-item active"><span class="page-link">{{ p }}</span></li>{%- elif (p - page)|abs <= 2 or p == 1 or p == total_pages %}
         <li class="page-item">
           <a class="page-link" href="?page={{ p }}{% if search %}&search={{ search|urlencode }}{% endif %}{% if level_filter %}&level={{ level_filter }}{% endif %}">{{ p }}</a>
-        </li>
-        {% elif (p - page)|abs == 3 %}
-        <li class="page-item disabled"><span class="page-link">...</span></li>
-        {% endif %}
-      {% endfor %}
-      {% if page < total_pages %}
+        </li>{%- elif (p - page)|abs == 3 %}
+        <li class="page-item disabled"><span class="page-link">...</span></li>{%- endif -%}{%- endfor -%}{%- if page < total_pages %}
       <li class="page-item">
         <a class="page-link" href="?page={{ page+1 }}{% if search %}&search={{ search|urlencode }}{% endif %}{% if level_filter %}&level={{ level_filter }}{% endif %}">التالي</a>
-      </li>
-      {% endif %}
+      </li>{%- endif %}
     </ul>
   </nav>
   {% endif %}

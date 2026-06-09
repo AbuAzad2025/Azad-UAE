@@ -28,10 +28,10 @@
     </div>
   </div>
   <div class="card-body">
-    <!-- فلتر التاريخ والفرع (عزل الفروع عند اللزوم) -->
+    
     <form class="needs-validation" method="get" class="form-inline mb-3 flex-wrap" action="">
       <label class="ml-2 mr-2">الفرع:</label>
-      <select name="branch_id" class="form-control mr-3" style="min-width: 140px;" aria-label="اختر الفرع">
+      <select name="branch_id" class="form-control mr-3 erp-min-w-140" aria-label="اختر الفرع">
         <option value="">كل الفروع</option>
         {% for b in branches or [] %}
         <option value="{{ b.id }}" {{ 'selected' if selected_branch == b.id else '' }}>{{ b.name }} ({{ b.code }})</option>
@@ -51,7 +51,7 @@
       {% endif %}
     </form>
 
-    <!-- معلومات الحساب -->
+    
     <div class="row mb-3">
       <div class="col-md-4">
         <div class="info-box bg-light">
@@ -88,7 +88,7 @@
       </div>
     </div>
 
-    <!-- جدول المعاملات -->
+    
     <div class="table-responsive">
       <table class="table table-bordered table-striped table-hover">
         <thead class="bg-light">

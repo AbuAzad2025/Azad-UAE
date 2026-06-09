@@ -233,7 +233,7 @@
 </head>
 <body class="receipt-print minimal-receipt">
   <div class="no-print ic-1">
-    <button onclick="window.print()" style="background: {{ settings.header_color or '#28a745' }}; color: white; border: none; padding: 10px 25px; border-radius: 5px; cursor: pointer;">
+    <button onclick="window.print()" class="erp-invoice-btn-print" style="background: {{ settings.header_color or '#28a745' }};">
       طباعة
     </button>
   </div>
@@ -370,10 +370,10 @@
     </div>
 
     <div class="footer">
-      <!-- Bank Info -->
+      
       {% if settings and ((settings.bank_name and settings.bank_name != 'None') or (settings.iban and settings.iban != 'None') or (settings.swift_code and settings.swift_code != 'None')) %}
-      <div style="margin-bottom: 12px; padding: 10px; background: #f8f9fa; border-radius: 5px; border-left: 3px solid {{ settings.header_color or '#2c3e50' }};">
-        <div style="font-weight: 700; font-size: 8px; margin-bottom: 5px; color: {{ settings.header_color or '#2c3e50' }};">🏦 Bank Details</div>
+      <div class="erp-receipt-bank-box" style="border-left: 3px solid {{ settings.header_color or '#2c3e50' }};">
+        <div class="erp-receipt-bank-title" style="color: {{ settings.header_color or '#2c3e50' }};">🏦 Bank Details</div>
         <div class="ic-10">
           {% if settings.bank_name and settings.bank_name != 'None' %}{{ settings.bank_name }}{% if settings.iban and settings.iban != 'None' %} • {% endif %}{% endif %}
           {% if settings.iban and settings.iban != 'None' %}IBAN: {{ settings.iban }}{% endif %}
@@ -382,7 +382,7 @@
       </div>
       {% endif %}
       
-      <!-- Business Registration -->
+      
       {% if settings and ((settings.commercial_register and settings.commercial_register != 'None') or (settings.license_number and settings.license_number != 'None')) %}
       <div class="ic-11">
         {% if settings.commercial_register and settings.commercial_register != 'None' %}CR: {{ settings.commercial_register }}{% endif %}
@@ -391,7 +391,7 @@
       </div>
       {% endif %}
       
-      <!-- Default Note -->
+      
       {% if settings and settings.default_receipt_note_ar and settings.default_receipt_note_ar != 'None' %}
       <div class="ic-12">
         <div class="ic-13">💬 {{ settings.default_receipt_note_ar }}</div>
@@ -401,7 +401,7 @@
       <div>{{ settings.footer_text_ar if settings and settings.footer_text_ar else 'شكراً لثقتكم' }}</div>
       {% if settings and settings.website and settings.website != 'None' %}<div class="ic-14">🌐 {{ settings.website }}</div>{% endif %}
       
-      <!-- Social Media -->
+      
       {% if settings and (settings.facebook_url or settings.instagram_url or settings.whatsapp_number) %}
       <div class="ic-15">
         {% if settings.facebook_url %}<a href="{{ settings.facebook_url }}" class="ic-16">FB</a>{% endif %}
@@ -411,7 +411,7 @@
       {% endif %}
     </div>
     
-    <!-- Watermark -->
+    
     {% if settings and settings.enable_watermark %}
       {% if settings.watermark_image_path %}
         <div class="ic-19">

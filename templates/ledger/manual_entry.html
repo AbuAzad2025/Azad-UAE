@@ -19,7 +19,7 @@
   </div>
 </div>
 
-<!-- قوالب سريعة - FIXED -->
+
 <div class="card border-success mb-3 ic-1" id="quickTemplatesCard">
   <div class="card-header bg-success text-white">
     <h5 class="mb-0">
@@ -66,7 +66,7 @@
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
       <input type="hidden" name="line_count" id="lineCountHidden" value="2" aria-label="line count">
       
-      <!-- معلومات القيد -->
+      
       <div class="row">
         <div class="col-md-6">
           <div class="form-group">
@@ -104,7 +104,7 @@
         </div>
       </div>
 
-      <!-- جدول السطور -->
+      
       <div class="card">
         <div class="card-header bg-light">
           <h5 class="mb-0">
@@ -135,7 +135,7 @@
                 </tr>
               </thead>
               <tbody id="linesTableBody">
-                <!-- سطور القيد ستضاف هنا بواسطة JavaScript -->
+                
               </tbody>
               <tfoot class="bg-light">
                 <tr>
@@ -159,7 +159,7 @@
         </div>
       </div>
 
-      <!-- أزرار الحفظ -->
+      
       <div class="row mt-3">
         <div class="col-12">
           <button type="submit" class="btn btn-success btn-lg" id="submitBtn" disabled>
@@ -458,8 +458,8 @@ document.addEventListener('DOMContentLoaded', function() {
     text-align-last: center;
     padding-inline-start: 2.2rem;
     padding-inline-end: 2.2rem;
-    appearance: none;
-    -webkit-appearance: none;
+    -webkit-appearance: none;appearance: none;
+    
     background-color: #fff;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23647894' d='M6 8a1 1 0 0 1-.707-.293l-5-5a1 1 0 0 1 1.414-1.414L6 5.586 10.293 1.293a1 1 0 0 1 1.414 1.414l-5 5A1 1 0 0 1 6 8'/%3E%3C/svg%3E");
     background-repeat: no-repeat;

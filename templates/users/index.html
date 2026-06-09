@@ -57,7 +57,7 @@
             </a>
             {% if current_user.is_owner and user.id != current_user.id %}
             <button type="button" class="btn btn-danger" 
-                    onclick="deleteItem('users', {{ user.id }}, '{{ user.username }}')" 
+                    onclick="deleteItem('users', {{ user.id }}, {{ user.username|tojson }})" 
                     title="حذف (المالك فقط)">
               <i class="fas fa-trash"></i>
             </button>

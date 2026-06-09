@@ -54,10 +54,12 @@ $(document).ready(function() {
         document.head.appendChild(link);
     }
 
-    // Preload on hover
     $('.nav-link, .btn').hover(function() {
         const href = $(this).attr('href');
-        if (href && href.startsWith('/') && !href.includes('#')) {
+        if (href && href.startsWith('/') && !href.includes('#') &&
+            !/\/\d+\/?$/.test(href) &&
+            !/^\/(reports|owner|store|pos|api)\//.test(href) &&
+            !/\?/.test(href)) {
             preloadPage(href);
         }
     });

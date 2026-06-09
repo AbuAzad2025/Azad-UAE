@@ -188,7 +188,7 @@
                   <i class="fas fa-edit"></i>
                 </a>
                 <button type="button" class="btn btn-danger" 
-                        onclick="deleteItem('customers', {{ customer.id }}, '{{ customer.name }}')" 
+                        onclick="deleteItem('customers', {{ customer.id }}, {{ customer.name|tojson }})" 
                         title="حذف">
                   <i class="fas fa-trash"></i>
                 </button>

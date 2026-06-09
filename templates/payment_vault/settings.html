@@ -30,7 +30,7 @@
                     <div class="card-body">
                         <form class="needs-validation" method="POST" action="{{ url_for('payment_vault.settings') }}">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
-                            <!-- Payment Settings -->
+                            
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
@@ -60,7 +60,7 @@
                                 </div>
                             </div>
                             
-                            <!-- Crypto Addresses -->
+                            
                             <div class="row">
                                 <div class="col-md-4">
                                     <div class="form-group">
@@ -105,7 +105,7 @@
                             
                             <hr>
                             
-                            <!-- PayPal Settings -->
+                            
                             <h5 class="border-bottom pb-2 mb-3">
                                 <i class="fab fa-paypal text-primary"></i> إعدادات PayPal
                             </h5>
@@ -149,7 +149,7 @@
                             
                             <hr>
                             
-                            <!-- Bank Account Settings -->
+                            
                             <h5 class="border-bottom pb-2 mb-3">
                                 <i class="fas fa-university text-success"></i> معلومات الحساب البنكي
                             </h5>
@@ -218,7 +218,7 @@
                             
                             <hr>
                             
-                            <!-- Stripe Settings -->
+                            
                             <h5 class="border-bottom pb-2 mb-3">
                                 <i class="fab fa-stripe-s text-info"></i> إعدادات Stripe
                             </h5>
@@ -272,7 +272,7 @@
                                 <div class="col-md-6 form-group"><label>GL دائن (4200 إيراد)</label><input class="form-control" name="donation_credit_account" value="{{ vault.donation_credit_account or '4200' }}" dir="ltr" aria-label="donation credit account"></div>
                             </div>
                             
-                            <!-- Payment Limits -->
+                            
                             <div class="row">
                                 <div class="col-md-4">
                                     <div class="form-group">
@@ -315,7 +315,7 @@
                                 </div>
                             </div>
                             
-                            <!-- Security Settings -->
+                            
                             <div class="row">
                                 <div class="col-md-4">
                                     <div class="form-group">

@@ -31,7 +31,7 @@
 <section class="content">
   <div class="container-fluid">
     
-    <!-- Warehouse Info Card -->
+    
     <div class="card mb-4">
       <div class="card-header bg-gradient-light">
         <h3 class="card-title"><i class="fas fa-info-circle"></i> معلومات المستودع</h3>
@@ -60,7 +60,7 @@
       </div>
     </div>
 
-    <!-- Stock Table -->
+    
     <div class="card">
       <div class="card-header bg-primary">
         <h3 class="card-title"><i class="fas fa-boxes"></i> المخزون الحالي في المستودع</h3>
@@ -101,7 +101,7 @@
                 {% endif %}
               </td>
               <td class="text-center">
-                <span class="badge {% if item.quantity <= 0 %}badge-danger{% elif item.quantity <= item.product.min_stock_alert %}badge-warning{% else %}badge-success{% endif %} p-2" style="font-size: 1rem;">
+                <span class="badge {% if item.quantity <= 0 %}badge-danger{% elif item.quantity <= item.product.min_stock_alert %}badge-warning{% else %}badge-success{% endif %} p-2 erp-badge-fs"
                   {{ item.quantity }}
                 </span>
               </td>

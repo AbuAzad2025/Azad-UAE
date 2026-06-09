@@ -41,12 +41,12 @@
 <div class="content roles-permissions-page">
   <div class="container-fluid">
     
-    <!-- نظرة عامة -->
+    
     <div class="alert alert-info">
       <i class="fas fa-info-circle mr-2"></i>يتحكم النظام بـ 4 أدوار رئيسية بصلاحيات محددة لضمان الأمان.
     </div>
     
-    <!-- بطاقات الأدوار الحقيقية من قاعدة البيانات -->
+    
     <div class="row">
       {% for role in roles %}
       <div class="col-md-6 mb-4">
@@ -85,7 +85,7 @@
       {% endfor %}
     </div>
     
-    <!-- إحصائيات سريعة -->
+    
     <div class="row mb-4">
       <div class="col-lg-3 col-md-6">
         <div class="small-box bg-info">
@@ -125,7 +125,7 @@
       </div>
     </div>
     
-    <!-- جدول الصلاحيات الحقيقي -->
+    
     <div class="card">
       <div class="card-header bg-gradient-primary">
         <h3 class="card-title text-white">
@@ -178,7 +178,7 @@
       </div>
     </div>
     
-    <!-- الأمان -->
+    
     <div class="card card-warning">
       <div class="card-header">
         <h3 class="card-title ic-2">
@@ -211,7 +211,7 @@
       </div>
     </div>
     
-    <!-- إرشادات -->
+    
     <div class="card card-success">
       <div class="card-header">
         <h3 class="card-title text-white">
@@ -237,7 +237,7 @@
       </div>
     </div>
     
-    <!-- زر العودة -->
+    
     <div class="row">
       <div class="col-12">
         <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary btn-lg">

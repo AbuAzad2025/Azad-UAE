@@ -68,7 +68,7 @@
 {% endblock %}
 
 {% block content %}
-<!-- Stock Overview -->
+
 <div class="row mb-4">
   <div class="col-md-3">
     <div class="stat-card">
@@ -114,7 +114,7 @@
   </div>
 </div>
 
-<!-- Products in Warehouse -->
+
 <div class="card">
   <div class="card-header">
     <div class="d-flex justify-content-between align-items-center">
@@ -230,7 +230,7 @@
                   <i class="fas fa-eye"></i>
                 </a>
                 <button type="button" class="btn btn-warning" 
-                        onclick="adjustStock({{ product.id }}, '{{ product.name }}')"
+                        onclick="adjustStock({{ product.id }}, {{ product.name|tojson }})"
                         title="تعديل المخزون">
                   <i class="fas fa-edit"></i>
                 </button>
@@ -246,7 +246,7 @@
   </div>
 </div>
 
-<!-- Stock Adjustment Modal -->
+
 <div class="modal fade" id="adjustStockModal" tabindex="-1">
   <div class="modal-dialog">
     <div class="modal-content">
