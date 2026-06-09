@@ -304,9 +304,9 @@ class TestShopCustomerAuthService:
 class TestMonitoringService:
     """Test monitoring service."""
 
-    def test_monitoring_service_import(self):
-        from services.monitoring_service import MonitoringService
-        assert MonitoringService is not None
+    def test_logging_core_import(self):
+        from services.logging_core import LoggingCore
+        assert LoggingCore is not None
 
 
 class TestBackupService:

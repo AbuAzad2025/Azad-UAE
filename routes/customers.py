@@ -5,7 +5,7 @@ from extensions import db, limiter
 from models import Customer, Sale
 from utils.decorators import permission_required, branch_scope_id
 from utils.branching import should_show_all_branch_columns
-from utils.helpers import create_audit_log
+from services.logging_core import LoggingCore
 from services.payment_service import PaymentService
 from decimal import Decimal
 from datetime import datetime
@@ -320,7 +320,7 @@ def create():
             db.session.add(customer)
             db.session.commit()
             
-            create_audit_log('create', 'customers', customer.id)
+            LoggingCore.log_audit('create', 'customers', customer.id)
             
             flash('✅ تم إضافة الزبون بنجاح!', 'success')
             return redirect(url_for('customers.index'))
@@ -392,7 +392,7 @@ def edit(id):
             
             db.session.commit()
             
-            create_audit_log('update', 'customers', customer.id)
+            LoggingCore.log_audit('update', 'customers', customer.id)
             
             flash('✅ تم تحديث بيانات الزبون بنجاح!', 'success')
             return redirect(url_for('customers.view', id=customer.id))
@@ -438,7 +438,7 @@ def delete(id):
             db.session.commit()
             flash(f'✅ تم حذف العميل "{customer.name}" نهائياً!', 'success')
         
-        create_audit_log('delete', 'customers', id)
+        LoggingCore.log_audit('delete', 'customers', id)
         
     except Exception as e:
         db.session.rollback()

@@ -14,7 +14,7 @@ from utils.gl_reference_types import GLRef, delete_entries_by_ref
 from utils.decorators import permission_required
 from utils.branching import should_show_all_branch_columns
 from utils.currency_utils import resolve_default_currency, get_system_default_currency
-from utils.helpers import create_audit_log
+from services.logging_core import LoggingCore
 from utils.number_to_arabic import number_to_arabic_words
 from utils.qr_generator import generate_qr_data_url
 from utils.tenanting import tenant_query, tenant_get_or_404, tenant_get, get_active_tenant_id
@@ -512,7 +512,7 @@ def archive_payment(id):
         
         # 1. Archive the record (No commit yet)
         archive_service.archive_record('payments', payment, reason='تم أرشفة سند الصرف', commit=False)
-        create_audit_log('archive', 'payments', payment.id)
+        LoggingCore.log_audit('archive', 'payments', payment.id)
         
         # 2. Reverse GL Entry (Must succeed)
         from utils.gl_tenant import reverse_document_gl
@@ -555,7 +555,7 @@ def restore_payment(id):
     try:
         db.session.delete(archived)
         db.session.commit()
-        create_audit_log('restore', 'payments', id)
+        LoggingCore.log_audit('restore', 'payments', id)
     except Exception as e:
         db.session.rollback()
     
@@ -595,12 +595,13 @@ def create_from_sale(sale_id):
                 sys.stderr.write(f"[PAYMENTS_WARNING] Failed to get tenant default currency: {e}\n")
                 traceback.print_exc()
                 try:
-                    from services.error_audit_service import ErrorAuditService
-                    ErrorAuditService.log_exception(
-                        e,
+                    from services.logging_core import LoggingCore
+                    LoggingCore.log_error(
+                        message=str(e),
                         category="PAYMENTS",
                         source="routes.payments.create_from_sale.get_default_currency",
-                        level="WARNING"
+                        level="WARNING",
+                        exception=e
                     )
                 except Exception:
                     pass
@@ -646,7 +647,7 @@ def create_from_sale(sale_id):
             
             receipt = PaymentService.create_receipt(receipt_data)
             
-            create_audit_log('create', 'receipts', receipt.id)
+            LoggingCore.log_audit('create', 'receipts', receipt.id)
             
             flash('تم إنشاء سند القبض بنجاح', 'success')
             return redirect(url_for('payments.view_receipt', id=receipt.id))
@@ -732,12 +733,13 @@ def create_voucher_submit():
             sys.stderr.write(f"[PAYMENTS_WARNING] Failed to get tenant default currency (voucher submit): {e}\n")
             traceback.print_exc()
             try:
-                from services.error_audit_service import ErrorAuditService
-                ErrorAuditService.log_exception(
-                    e,
+                from services.logging_core import LoggingCore
+                LoggingCore.log_error(
+                    message=str(e),
                     category="PAYMENTS",
                     source="routes.payments.create_voucher_submit.get_default_currency",
-                    level="WARNING"
+                    level="WARNING",
+                    exception=e
                 )
             except Exception:
                 pass
@@ -1147,12 +1149,13 @@ def print_receipt(id):
         sys.stderr.write(f"[PAYMENTS_WARNING] Failed to render custom receipt template, falling back to modern: {e}\n")
         traceback.print_exc()
         try:
-            from services.error_audit_service import ErrorAuditService
-            ErrorAuditService.log_exception(
-                e,
+            from services.logging_core import LoggingCore
+            LoggingCore.log_error(
+                message=str(e),
                 category="PAYMENTS",
                 source="routes.payments.print_receipt.render_template",
-                level="WARNING"
+                level="WARNING",
+                exception=e
             )
         except Exception:
             pass
@@ -1246,7 +1249,7 @@ def archive_receipt(id):
     try:
         archive_service = ArchiveService()
         archive_service.archive_record('receipts', receipt, reason='تم أرشفة سند القبض')
-        create_audit_log('archive', 'receipts', receipt.id)
+        LoggingCore.log_audit('archive', 'receipts', receipt.id)
     except Exception as e:
         db.session.rollback()
     
@@ -1270,7 +1273,7 @@ def restore_receipt(id):
     try:
         db.session.delete(archived)
         db.session.commit()
-        create_audit_log('restore', 'receipts', id)
+        LoggingCore.log_audit('restore', 'receipts', id)
     except Exception as e:
         db.session.rollback()
     
@@ -1339,7 +1342,7 @@ def delete_receipt(id):
             if receipt.cheque:
                 archive_service.archive_record('cheques', receipt.cheque, reason='تم أرشفة الشيك لارتباطه بسند مؤرشف', commit=False)
             
-            create_audit_log('archive', 'receipts', id)
+            LoggingCore.log_audit('archive', 'receipts', id)
             db.session.commit()
             flash(f'تم أرشفة سند القبض "{receipt.receipt_number}" (لوجود حركات مرتبطة)', 'warning')
         else:
@@ -1353,7 +1356,7 @@ def delete_receipt(id):
                 db.session.delete(receipt.cheque)
                 
             db.session.delete(receipt)
-            create_audit_log('delete', 'receipts', id)
+            LoggingCore.log_audit('delete', 'receipts', id)
             db.session.commit()
             flash(f'تم حذف سند القبض "{receipt.receipt_number}" نهائياً', 'success')
             
@@ -1402,7 +1405,7 @@ def delete_payment(id):
             if payment.cheque:
                 archive_service.archive_record('cheques', payment.cheque, reason='تم أرشفة الشيك لارتباطه بسند مؤرشف', commit=False)
 
-            create_audit_log('archive', 'payments', id)
+            LoggingCore.log_audit('archive', 'payments', id)
             db.session.commit()
             flash(f'تم أرشفة سند الصرف "{payment.payment_number}" (لوجود حركات مرتبطة)', 'warning')
         else:
@@ -1416,7 +1419,7 @@ def delete_payment(id):
                 db.session.delete(payment.cheque)
 
             db.session.delete(payment)
-            create_audit_log('delete', 'payments', id)
+            LoggingCore.log_audit('delete', 'payments', id)
             db.session.commit()
             flash(f'تم حذف سند الصرف "{payment.payment_number}" نهائياً', 'success')
             
@@ -1496,12 +1499,13 @@ def create_payment(purchase_id):
                 sys.stderr.write(f"[PAYMENTS_WARNING] Failed to get tenant default currency (create from purchase): {e}\n")
                 traceback.print_exc()
                 try:
-                    from services.error_audit_service import ErrorAuditService
-                    ErrorAuditService.log_exception(
-                        e,
+                    from services.logging_core import LoggingCore
+                    LoggingCore.log_error(
+                        message=str(e),
                         category="PAYMENTS",
                         source="routes.payments.create_payment.get_default_currency",
-                        level="WARNING"
+                        level="WARNING",
+                        exception=e
                     )
                 except Exception:
                     pass

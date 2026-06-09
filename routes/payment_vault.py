@@ -9,7 +9,7 @@ from flask_login import login_required, current_user
 from extensions import db, limiter, csrf
 from models import PaymentVault, PaymentTransaction, PaymentLog, Donation, CardPayment, Package, PackagePurchase
 from services.nowpayments_service import NOWPaymentsService
-from utils.helpers import create_audit_log
+from services.logging_core import LoggingCore
 from utils.decorators import owner_only
 import secrets
 import string
@@ -506,7 +506,7 @@ def create_package():
         db.session.add(package)
         db.session.commit()
 
-        create_audit_log(
+        LoggingCore.log_audit(
             action='create',
             table_name='packages',
             record_id=package.id,
@@ -574,7 +574,7 @@ def edit_package(package_id):
             
             db.session.commit()
             
-            create_audit_log(
+            LoggingCore.log_audit(
                 action='update',
                 table_name='packages',
                 record_id=package.id,
@@ -604,7 +604,7 @@ def delete_package(package_id):
         db.session.delete(package)
         db.session.commit()
         
-        create_audit_log(
+        LoggingCore.log_audit(
             action='delete',
             table_name='packages',
             record_id=package_id,
@@ -1024,7 +1024,7 @@ def api_create_purchase():
             db.session.commit()
         
         # تسجيل في الخزينة
-        create_audit_log(
+        LoggingCore.log_audit(
             action=f'purchase_created: {package.name_ar} - ${purchase.amount_paid}',
             table_name='package_purchases',
             record_id=purchase.id,
@@ -1142,7 +1142,7 @@ def api_create_donation():
             donation.gateway_name = 'nowpayments'
             db.session.commit()
         
-        create_audit_log(
+        LoggingCore.log_audit(
             action=f'donation_created: ${donation.amount_usd}',
             table_name='donations',
             record_id=donation.id,
@@ -1326,7 +1326,7 @@ def approve_donation(donation_id):
         DonationGLService.post_completed_donation(donation)
         db.session.commit()
         
-        create_audit_log(
+        LoggingCore.log_audit(
             action=f'donation_approved: ${donation.amount_usd}',
             table_name='donations',
             record_id=donation.id
@@ -1351,7 +1351,7 @@ def reject_donation(donation_id):
         donation.status = 'failed'
         db.session.commit()
         
-        create_audit_log(
+        LoggingCore.log_audit(
             action=f'donation_rejected: ${donation.amount_usd}',
             table_name='donations',
             record_id=donation.id

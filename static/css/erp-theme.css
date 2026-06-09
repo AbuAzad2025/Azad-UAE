@@ -540,17 +540,17 @@ img {
 .main-sidebar {
   background: var(--ui-sidebar-bg) !important;
   box-shadow: var(--ui-shadow-strong);
-  z-index: 1040 !important;
+  z-index: 1035 !important;
+  transition: transform .3s ease-in-out;
 }
 
 .content-wrapper {
   position: relative;
-  z-index: 1;
 }
 
 .main-header {
   position: relative;
-  z-index: 1050;
+  z-index: 1040;
 }
 
 .main-sidebar .brand-link {
@@ -910,11 +910,20 @@ body.sidebar-mini.sidebar-collapse[data-sidebar-side="left"] .main-footer {
 }
 
 @media (max-width: 991.98px) {
-  body[data-sidebar-side] .content-wrapper,
-  body[data-sidebar-side] .main-header,
-  body[data-sidebar-side] .main-footer {
+  body[data-sidebar-side]:not(.view-desktop) .content-wrapper,
+  body[data-sidebar-side]:not(.view-desktop) .main-header,
+  body[data-sidebar-side]:not(.view-desktop) .main-footer {
     margin-left: 0 !important;
     margin-right: 0 !important;
+  }
+  body:not(.view-desktop):not(.sidebar-open) .main-sidebar {
+    transform: translateX(-100%) !important;
+  }
+  body:not(.view-desktop):not(.sidebar-open)[data-sidebar-side="right"] .main-sidebar {
+    transform: translateX(100%) !important;
+  }
+  body.sidebar-open .main-sidebar {
+    transform: translateX(0) !important;
   }
 }
 
@@ -2574,10 +2583,40 @@ body.view-desktop .erp-mobile-nav {
 body.view-desktop .main-sidebar {
   display: block !important;
   transform: translateX(0) !important;
+  width: 250px !important;
+  min-height: 100vh !important;
+  position: fixed !important;
+  top: 0 !important;
+  bottom: 0 !important;
+}
+body.view-desktop[data-sidebar-side="left"] .main-sidebar {
+  left: 0 !important;
+  right: auto !important;
+}
+body.view-desktop[data-sidebar-side="right"] .main-sidebar {
+  left: auto !important;
+  right: 0 !important;
+}
+body.view-desktop .main-sidebar .sidebar {
+  display: block !important;
+  min-height: calc(100vh - 100px) !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+body.view-desktop.sidebar-mini.sidebar-collapse .main-sidebar {
+  width: 4.6rem !important;
+}
+body.view-desktop.sidebar-mini.sidebar-collapse .main-sidebar .nav-sidebar .nav-icon,
+body.view-desktop.sidebar-mini.sidebar-collapse .main-sidebar .erp-sidebar-nav .nav-icon {
+  display: inline-flex !important;
 }
 
 body.view-mobile .main-sidebar {
-  display: none !important;
+  transform: translateX(-100%) !important;
+}
+
+body.view-mobile[data-sidebar-side="right"] .main-sidebar {
+  transform: translateX(100%) !important;
 }
 body.view-mobile .erp-mobile-nav {
   display: flex !important;

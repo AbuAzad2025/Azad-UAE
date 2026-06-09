@@ -15,7 +15,8 @@ from services.store_payment_method_service import StorePaymentMethodService
 from services.store_service import StoreService
 from utils.decorators import permission_required
 from utils.error_messages import ErrorMessages
-from utils.helpers import create_audit_log, save_uploaded_file
+from services.logging_core import LoggingCore
+from utils.helpers import save_uploaded_file
 from utils.tenanting import get_active_tenant_id
 
 store_bp = Blueprint('store', __name__, url_prefix='/store')
@@ -137,7 +138,7 @@ def admin_settings():
                     store.logo_path = logo_path
 
             db.session.commit()
-            create_audit_log('update', 'tenant_stores', store.id)
+            LoggingCore.log_audit('update', 'tenant_stores', store.id)
             flash('تم حفظ إعدادات المتجر.', 'success')
             return redirect(url_for('store.admin_index'))
         except ValueError as exc:
@@ -229,7 +230,7 @@ def admin_transfer():
                 notes=label,
             )
             db.session.commit()
-            create_audit_log('transfer', 'stock_movements', product_id)
+            LoggingCore.log_audit('transfer', 'stock_movements', product_id)
             flash('تم تحويل المخزون بنجاح.', 'success')
             return redirect(url_for('store.admin_catalog'))
         except ValueError as exc:
@@ -322,7 +323,7 @@ def admin_order_confirm(order_id):
     mark_paid = request.form.get('mark_paid') == 'on'
     try:
         StoreOrderService.confirm_order(sale, mark_paid=mark_paid)
-        create_audit_log('confirm', 'store_orders', sale.id)
+        LoggingCore.log_audit('confirm', 'store_orders', sale.id)
         flash(f'تم تأكيد الطلب {sale.sale_number}.', 'success')
     except ValueError as exc:
         db.session.rollback()
@@ -345,7 +346,7 @@ def admin_order_cancel(order_id):
         abort(404)
     try:
         StoreOrderService.cancel_order(sale)
-        create_audit_log('cancel', 'store_orders', sale.id)
+        LoggingCore.log_audit('cancel', 'store_orders', sale.id)
         flash(f'تم إلغاء الطلب {sale.sale_number}.', 'success')
     except ValueError as exc:
         db.session.rollback()

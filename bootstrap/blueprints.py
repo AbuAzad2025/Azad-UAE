@@ -11,12 +11,14 @@ def _import_bp(app, module_path, var_name):
         sys.stderr.write(f"[SYSTEM_INIT_ERROR] Failed to import blueprint {module_path}.{var_name}: {exc}\n")
         traceback.print_exc()
         try:
-            from services.error_audit_service import ErrorAuditService
+            from services.logging_core import LoggingCore
             with app.app_context():
-                ErrorAuditService.log_exception(
-                    exc,
+                LoggingCore.log_error(
+                    message=str(exc),
                     category="SYSTEM_INIT",
                     source=f"bootstrap.blueprints._import_bp({module_path})",
+                    level="ERROR",
+                    exception=exc,
                 )
         except Exception as log_exc:
             sys.stderr.write(f"[SYSTEM_INIT_ERROR] Failed to log to DB: {log_exc}\n")
@@ -85,11 +87,13 @@ def _make_ai_fallback(ai_import_error):
             sys.stderr.write(f"[AI_FALLBACK_WARNING] Failed to set session notification: {e}\n")
             traceback.print_exc()
             try:
-                from services.error_audit_service import ErrorAuditService
-                ErrorAuditService.log_exception(
-                    e,
+                from services.logging_core import LoggingCore
+                LoggingCore.log_error(
+                    message=str(e),
                     category="SYSTEM_INIT",
                     source="bootstrap.blueprints.ai_fallback.catch_all",
+                    level="ERROR",
+                    exception=e,
                 )
             except Exception:
                 pass

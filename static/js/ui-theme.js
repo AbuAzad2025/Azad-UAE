@@ -58,11 +58,35 @@
 
   function applySidebarSide(side) {
     var body = document.body;
+    var html = document.documentElement;
     if (!body) return;
     var normalized = normalizeSidebarSide(side) || getDefaultSidebarSide();
     body.dataset.sidebarSide = normalized;
     localStorage.setItem(STORAGE_SIDEBAR, normalized);
-    localStorage.setItem(STORAGE_SIDEBAR_DIR, document.documentElement.getAttribute('dir') || 'rtl');
+    localStorage.setItem(STORAGE_SIDEBAR_DIR, html.getAttribute('dir') || 'rtl');
+
+    // Force inline styles so the switch actually moves elements regardless of CSS specificity
+    var sidebar = document.querySelector('.main-sidebar');
+    var content = document.querySelector('.content-wrapper');
+    var header = document.querySelector('.main-header');
+    var footer = document.querySelector('.main-footer');
+    if (sidebar) {
+      if (normalized === 'right') {
+        sidebar.style.left = 'auto';
+        sidebar.style.right = '0';
+      } else {
+        sidebar.style.left = '0';
+        sidebar.style.right = 'auto';
+      }
+    }
+    var marginProp = normalized === 'right' ? 'margin-right' : 'margin-left';
+    var otherProp = normalized === 'right' ? 'margin-left' : 'margin-right';
+    var width = body.classList.contains('sidebar-mini') && body.classList.contains('sidebar-collapse') ? '4.6rem' : '250px';
+    [content, header, footer].forEach(function(el) {
+      if (!el) return;
+      el.style.setProperty(marginProp, width, 'important');
+      el.style.setProperty(otherProp, '0px', 'important');
+    });
   }
 
   function updateModeToggle(mode) {

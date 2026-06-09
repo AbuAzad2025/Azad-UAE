@@ -13,7 +13,8 @@ from utils.branching import (
     get_branch_stock_map,
     should_show_all_branch_columns,
 )
-from utils.helpers import create_audit_log, generate_sku, generate_barcode, save_uploaded_file
+from services.logging_core import LoggingCore
+from utils.helpers import generate_sku, generate_barcode, save_uploaded_file
 from utils.static_asset_paths import tenant_upload_dir
 from services.stock_service import StockService
 from utils.gl_reference_types import GLRef
@@ -670,7 +671,7 @@ def create():
                 
                 db.session.commit()
                 
-                create_audit_log('create', 'products', product.id)
+                LoggingCore.log_audit('create', 'products', product.id)
                 
                 flash(f'✓ تم إضافة المنتج "{product.name}" بنجاح إلى المستودع "{warehouse.name_ar or warehouse.name}"', 'success')
                 return redirect(url_for('products.index'))
@@ -845,7 +846,7 @@ def edit(id):
             
             db.session.commit()
             
-            create_audit_log('update', 'products', product.id)
+            LoggingCore.log_audit('update', 'products', product.id)
             
             flash('✅ تم تحديث بيانات المنتج بنجاح!', 'success')
             return redirect(url_for('products.view', id=product.id))
@@ -885,13 +886,13 @@ def delete(id):
             product.is_active = False
             db.session.commit()
             flash(f'⚠️ تم إلغاء تفعيل المنتج "{product.name}" (لديه عمليات مسجلة).\n💡 لا يمكن حذفه نهائياً للحفاظ على السجلات.', 'warning')
-            create_audit_log('deactivate', 'products', id)
+            LoggingCore.log_audit('deactivate', 'products', id)
         else:
             # hard delete
             db.session.delete(product)
             db.session.commit()
             flash(f'✅ تم حذف المنتج "{product.name}" نهائياً!', 'success')
-            create_audit_log('delete', 'products', id)
+            LoggingCore.log_audit('delete', 'products', id)
         
         return redirect(url_for('products.index'))
     
@@ -1072,7 +1073,7 @@ def adjust_stock(id):
         )
         db.session.commit()
         
-        create_audit_log('update', 'products', product.id, f'تعديل مخزون: {old_stock} → {new_stock}')
+        LoggingCore.log_audit('update', 'products', product.id, f'تعديل مخزون: {old_stock} → {new_stock}')
         
         return jsonify({
             'success': True, 

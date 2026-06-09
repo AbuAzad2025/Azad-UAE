@@ -22,7 +22,7 @@ from ai_knowledge.learning.external_learning import get_external_learning, LEARN
 from utils.decorators import permission_required, owner_required, admin_required
 from utils.tenanting import assign_tenant_id, get_active_tenant_id
 from utils.ai_access import get_ai_access_state, ai_level_allows
-from utils.helpers import create_audit_log
+from services.logging_core import LoggingCore
 from datetime import datetime, timezone
 
 ai_bp = Blueprint('ai', __name__, url_prefix='/ai')
@@ -97,7 +97,7 @@ def _audit_ai_requests(response):
             return response
         state = getattr(g, 'ai_access_state', None) or get_ai_access_state(current_user)
         status = int(getattr(response, 'status_code', 0) or 0)
-        create_audit_log(
+        LoggingCore.log_audit(
             action='ai_request',
             table_name='ai',
             record_id=0,
@@ -3099,8 +3099,13 @@ http://localhost:5000/ai/assistant
         
     except Exception as e:
         try:
-            from services.error_audit_service import ErrorAuditService
-            ErrorAuditService.log_exception(e, category="AI", source="routes.ai._process_user_action", level="ERROR")
+            LoggingCore.log_error(
+                message=str(e) or "AI processing error",
+                category="AI",
+                level="ERROR",
+                source="routes.ai._process_user_action",
+                exception=e,
+            )
         except Exception:
             pass
         return f"❌ خطأ في التنفيذ: {str(e)}"

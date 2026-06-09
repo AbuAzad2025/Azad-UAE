@@ -1,23 +1,36 @@
 from functools import wraps
-from flask import current_app
+from flask import current_app, g, has_request_context
 from extensions import cache
 import hashlib
 import json
+
+
+def _tenant_cache_salt() -> str:
+    """Return the active tenant id as a cache salt to prevent cross-tenant leakage.
+
+    Replaces: None (new security fix — cross-tenant cache poisoning).
+    """
+    if has_request_context():
+        tid = getattr(g, "active_tenant_id", None) or getattr(g, "tenant_id", None)
+        if tid is not None:
+            return str(tid)
+    return ""
 
 
 def cached_query(timeout=300, key_prefix=None):
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
-            if key_prefix:
-                cache_key = f"{key_prefix}:{hashlib.sha256(json.dumps(str(args) + str(kwargs)).encode(), usedforsecurity=False).hexdigest()}"
-            else:
-                cache_key = f"{f.__name__}:{hashlib.sha256(json.dumps(str(args) + str(kwargs)).encode(), usedforsecurity=False).hexdigest()}"
-            
+            salt = _tenant_cache_salt()
+            raw_key = json.dumps(str(args) + str(kwargs) + salt, ensure_ascii=False)
+            digest = hashlib.sha256(raw_key.encode(), usedforsecurity=False).hexdigest()
+            prefix = key_prefix or f.__name__
+            cache_key = f"{prefix}:{digest}"
+
             result = cache.get(cache_key)
             if result is not None:
                 return result
-            
+
             result = f(*args, **kwargs)
             try:
                 cache.set(cache_key, result, timeout=timeout)

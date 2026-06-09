@@ -174,6 +174,7 @@ class User(UserMixin, db.Model):
             data.update({
                 'email_verified': self.email_verified,
                 'login_attempts': self.login_attempts,
+                'locked_until': self.locked_until.isoformat() if self.locked_until else None,
                 'last_login': self.last_login.isoformat() if self.last_login else None,
             })
         

@@ -60,8 +60,8 @@ def init_extensions(app):
     db.init_app(app)
     migrate.init_app(app, db)
     if app.config.get("SQLALCHEMY_ECHO"):
-        from utils.performance_tracker import log_slow_queries
-        log_slow_queries(app)
+        from services.logging_core import LoggingCore
+        LoggingCore.register_slow_query_listener(app)
     login_manager.init_app(app)
     csrf.init_app(app)
     cache.init_app(app)

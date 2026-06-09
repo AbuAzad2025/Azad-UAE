@@ -9,7 +9,7 @@ from extensions import db, limiter
 from models import Supplier, Purchase, Payment
 from utils.decorators import permission_required, admin_required, branch_scope_id
 from utils.branching import should_show_all_branch_columns
-from utils.helpers import create_audit_log
+from services.logging_core import LoggingCore
 from utils.currency_utils import resolve_default_currency, get_system_default_currency
 from utils.tenanting import tenant_query, tenant_get_or_404, get_active_tenant_id
 from sqlalchemy import func, desc
@@ -224,7 +224,7 @@ def create():
                 db.session.add(supplier)
                 db.session.commit()
 
-                create_audit_log('create', 'suppliers', supplier.id)
+                LoggingCore.log_audit('create', 'suppliers', supplier.id)
 
             log_mutation('create', 'Supplier', supplier.id, {'name': supplier.name})
             flash('✅ تم إضافة المورد بنجاح!', 'success')
@@ -317,7 +317,7 @@ def edit(id):
 
             db.session.commit()
 
-            create_audit_log('update', 'suppliers', supplier.id)
+            LoggingCore.log_audit('update', 'suppliers', supplier.id)
 
             flash('✅ تم تحديث المورد بنجاح!', 'success')
             return redirect(url_for('suppliers.view', id=supplier.id))
@@ -359,7 +359,7 @@ def delete(id):
             db.session.commit()
             flash(f'✅ تم حذف المورد "{supplier.name}" نهائياً!', 'success')
 
-        create_audit_log('delete', 'suppliers', supplier.id)
+        LoggingCore.log_audit('delete', 'suppliers', supplier.id)
 
     except Exception as e:
         db.session.rollback()

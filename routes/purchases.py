@@ -8,7 +8,8 @@ from services.gl_service import GLService
 from services.purchase_service import PurchaseService
 from utils.decorators import permission_required
 from utils.branching import ensure_warehouse_access, get_accessible_warehouses, should_show_all_branch_columns
-from utils.helpers import create_audit_log, generate_number
+from services.logging_core import LoggingCore
+from utils.helpers import generate_number
 from utils.currency_utils import resolve_default_currency, get_system_default_currency
 from decimal import Decimal
 from utils.tenanting import tenant_query, tenant_get_or_404
@@ -201,7 +202,7 @@ def edit(id):
             purchase.notes = request.form.get('notes', '')
             
             db.session.commit()
-            create_audit_log('update', 'purchases', id)
+            LoggingCore.log_audit('update', 'purchases', id)
             
             flash('✅ تم تحديث فاتورة الشراء بنجاح!', 'success')
             return redirect(url_for('purchases.view', id=id))
@@ -258,7 +259,7 @@ def delete(id):
             archive_service = ArchiveService()
             archive_service.archive_record('purchases', purchase, reason='تم أرشفة الفاتورة لوجود مدفوعات أو شيكات', commit=False)
             
-            create_audit_log('archive', 'purchases', id)
+            LoggingCore.log_audit('archive', 'purchases', id)
             db.session.commit()
             flash(f'✅ تم أرشفة فاتورة الشراء "{purchase.purchase_number}" (لوجود ارتباطات مالية)', 'warning')
         else:
@@ -271,7 +272,7 @@ def delete(id):
             
             # 3. حذف الفاتورة
             db.session.delete(purchase)
-            create_audit_log('delete', 'purchases', id)
+            LoggingCore.log_audit('delete', 'purchases', id)
             db.session.commit()
             flash(f'✅ تم حذف فاتورة الشراء "{purchase.purchase_number}" نهائياً', 'success')
             

@@ -12,7 +12,7 @@ from services.cheque_accounting_integration import ChequeAccountingIntegration
 from services.real_time_listeners import accounting_event_stream
 from services.advanced_analytics import AdvancedFinancialAnalytics
 from utils.decorators import permission_required, admin_required
-from utils.helpers import create_audit_log
+from services.logging_core import LoggingCore
 from utils.currency_utils import resolve_default_currency, get_system_default_currency
 from utils.gl_tenant import gl_account_query, gl_entry_query, active_tenant_id
 
@@ -101,7 +101,7 @@ def add_customs_tax():
             db.session.add(tax)
             db.session.commit()
             
-            create_audit_log('create', 'customs_taxes', tax.id)
+            LoggingCore.log_audit('create', 'customs_taxes', tax.id)
             flash(f'✅ تم إضافة {tax.name_ar} بنجاح', 'success')
             return redirect(url_for('advanced_ledger.customs_taxes'))
             
@@ -158,7 +158,7 @@ def add_expense_category():
             db.session.add(category)
             db.session.commit()
             
-            create_audit_log('create', 'expense_categories', category.id)
+            LoggingCore.log_audit('create', 'expense_categories', category.id)
             flash(f'✅ تم إضافة فئة المصروفات {category.name_ar} بنجاح', 'success')
             return redirect(url_for('advanced_ledger.expense_categories'))
             
@@ -239,7 +239,7 @@ def add_advanced_expense():
             db.session.add(expense)
             db.session.commit()
             
-            create_audit_log('create', 'advanced_expenses', expense.id)
+            LoggingCore.log_audit('create', 'advanced_expenses', expense.id)
             flash(f'✅ تم إضافة المصروف {expense.expense_number} بنجاح', 'success')
             return redirect(url_for('advanced_ledger.advanced_expenses'))
             

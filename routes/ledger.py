@@ -8,7 +8,7 @@ from services.cash_flow_service import CashFlowService
 from services.aging_analysis_service import AgingAnalysisService
 from utils.branching import get_accessible_branches, user_can_access_branch
 from utils.decorators import admin_required, permission_required, branch_scope_id
-from utils.helpers import create_audit_log
+from services.logging_core import LoggingCore
 from utils.currency_utils import resolve_default_currency, get_system_default_currency
 from decimal import Decimal
 from datetime import datetime, date, timedelta
@@ -483,7 +483,7 @@ def manual_entry():
                 branch_id=branch_id
             )
             
-            create_audit_log('create', 'gl_journal_entries', entry.id)
+            LoggingCore.log_audit('create', 'gl_journal_entries', entry.id)
             
             flash(f'✅ تم إنشاء القيد {entry.entry_number} بنجاح', 'success')
             return redirect(url_for('ledger.view_entry', id=entry.id))
@@ -534,7 +534,7 @@ def reverse_entry(id):
         
         db.session.commit()
         
-        create_audit_log('create', 'gl_journal_entries', reversed_entry.id, 
+        LoggingCore.log_audit('create', 'gl_journal_entries', reversed_entry.id, 
                         changes={'reversed_from': entry.entry_number})
         
         flash(f'✅ تم عكس القيد بنجاح - القيد الجديد: {reversed_entry.entry_number}', 'success')
@@ -795,7 +795,7 @@ def admin_add_account():
             db.session.add(account)
             db.session.commit()
             
-            create_audit_log('create', 'gl_accounts', account.id)
+            LoggingCore.log_audit('create', 'gl_accounts', account.id)
             flash(f'✅ تم إنشاء الحساب {account.full_name} بنجاح', 'success')
             return redirect(url_for('ledger.admin_accounts'))
             

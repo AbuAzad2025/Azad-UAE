@@ -53,16 +53,12 @@ def ai_orm_listeners_enabled() -> bool:
     Register SQLAlchemy AI/neural ORM listeners (file I/O, learning, full-table scans).
 
     Explicit AI_ORM_LISTENERS_ENABLED overrides defaults.
-    Production default: off (safe). Non-production / DEBUG: on (dev learning).
+    Default: off (safe). Requires explicit env var to enable.
     """
     explicit = os.environ.get("AI_ORM_LISTENERS_ENABLED")
     if explicit is not None:
         return _bool(explicit, False)
-    app_env = (os.environ.get("APP_ENV") or os.environ.get("FLASK_ENV") or "production").strip().lower()
-    debug = _bool(os.environ.get("DEBUG"), False)
-    if app_env == "production" and not debug:
-        return False
-    return True
+    return False
 
 
 class Config:

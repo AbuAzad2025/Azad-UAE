@@ -8,7 +8,8 @@ from services.gl_service import GLService
 from services.gl_posting import post_or_fail
 from utils.decorators import permission_required, branch_scope_id
 from utils.branching import should_show_all_branch_columns
-from utils.helpers import create_audit_log, generate_number
+from services.logging_core import LoggingCore
+from utils.helpers import generate_number
 from utils.currency_utils import resolve_default_currency, get_system_default_currency
 from utils.tenanting import tenant_query, tenant_get_or_404, require_active_tenant_id, get_active_tenant_id
 from utils.gl_reference_types import GLRef
@@ -229,7 +230,7 @@ def create():
             
             db.session.commit()
             
-            create_audit_log('create', 'expenses', expense.id)
+            LoggingCore.log_audit('create', 'expenses', expense.id)
             
             flash('✅ تم إضافة المصروف بنجاح!', 'success')
             return redirect(url_for('expenses.view', id=expense.id))
@@ -321,7 +322,7 @@ def edit(id):
             
             db.session.commit()
             
-            create_audit_log('update', 'expenses', id)
+            LoggingCore.log_audit('update', 'expenses', id)
             flash('✅ تم تحديث المصروف بنجاح!', 'success')
             return redirect(url_for('expenses.view', id=id))
         
@@ -369,7 +370,7 @@ def delete(id):
             if cheque:
                  archive_service.archive_record('cheques', cheque, reason='تم أرشفة الشيك لارتباطه بمصروف مؤرشف', commit=False)
             
-            create_audit_log('archive', 'expenses', id)
+            LoggingCore.log_audit('archive', 'expenses', id)
             db.session.commit()
             flash(f'✅ تم أرشفة المصروف "{expense.expense_number}" (لوجود ارتباطات)', 'warning')
             
@@ -402,7 +403,7 @@ def delete(id):
                 
             # 3. حذف المصروف
             db.session.delete(expense)
-            create_audit_log('delete', 'expenses', id)
+            LoggingCore.log_audit('delete', 'expenses', id)
             db.session.commit()
             flash(f'✅ تم حذف المصروف "{expense.expense_number}" نهائياً', 'success')
             
@@ -522,7 +523,7 @@ def archive(id):
     try:
         archive_service = ArchiveService()
         archive_service.archive_record('expenses', expense, reason='تم أرشفة المصروف')
-        create_audit_log('archive', 'expenses', expense.id)
+        LoggingCore.log_audit('archive', 'expenses', expense.id)
     except Exception as e:
         db.session.rollback()
     
@@ -548,7 +549,7 @@ def restore(id):
     try:
         db.session.delete(archived)
         db.session.commit()
-        create_audit_log('restore', 'expenses', id)
+        LoggingCore.log_audit('restore', 'expenses', id)
     except Exception as e:
         db.session.rollback()
     

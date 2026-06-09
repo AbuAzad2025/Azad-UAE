@@ -24,6 +24,7 @@ from utils.auth_helpers import role_level_for, role_level_for_user
 from utils.ai_access import get_tenant_ai_level, set_tenant_ai_level
 from utils.tenanting import get_active_tenant_id
 from utils.currency_utils import get_system_default_currency, resolve_default_currency
+from services.logging_core import LoggingCore
 from sqlalchemy import text, inspect
 import json
 import logging
@@ -413,12 +414,10 @@ def company_dashboard():
 @owner_required
 def system_stats():
     """عرض إحصائيات قاعدة البيانات"""
-    from services.monitoring_service import MonitoringService
+    from services.logging_core import LoggingCore
 
     try:
-        db_stats, restricted_count = MonitoringService.get_system_stats_context(
-            _resolve_known_table, _is_sensitive_stats_table
-        )
+        db_stats, restricted_count = LoggingCore.get_db_stats_context()
     except Exception as e:
         current_app.logger.error('system_stats failed user_id=%s: %s', current_user.id, e)
         flash('❌ خطأ في جلب الإحصائيات. حاول تحديث الصفحة.', 'danger')
@@ -440,15 +439,13 @@ def system_stats():
 @owner_required
 def audit_logs():
     """سجل التدقيق الشامل - مراقبة كل عمليات النظام"""
-    from services.audit_service import AuditService
-
     page = request.args.get('page', 1, type=int)
     action = request.args.get('action', '', type=str)
     user_id = request.args.get('user', type=int)
     per_page = request.args.get('per_page', 50, type=int)
     tid = get_active_tenant_id(current_user)
 
-    logs, pagination, stats, users = AuditService.get_audit_logs_data(tid, page, per_page, action, user_id)
+    logs, pagination, stats, users = LoggingCore.get_audit_logs(tid, page, per_page, action, user_id)
 
     return render_template('owner/audit_logs.html',
                          logs=logs,
@@ -570,6 +567,10 @@ def create_user():
             if role_requires_branch(role, is_owner=is_owner) and not branch_id:
                 flash('⚠️ يجب ربط هذا المستخدم بفرع محدد.', 'warning')
                 return render_template('owner/create_user.html', roles=roles, branches=branches, tenants=tenants, show_tenant_picker=True, form_data=_form_values())
+            # Server-side role-level hierarchy enforcement
+            if role_level_for(getattr(role, 'slug', None)) > current_level:
+                flash('⚠️ لا يمكنك تعيين دور أعلى من دورك.', 'danger')
+                return render_template('owner/create_user.html', roles=roles, branches=branches, tenants=tenants, show_tenant_picker=True, form_data=_form_values())
 
             from utils.auth_helpers import enforce_company_user_tenant
 
@@ -653,6 +654,10 @@ def edit_user(user_id):
             role = Role.query.get(role_id)
             if role_requires_branch(role, is_owner=is_owner) and not branch_id:
                 flash('⚠️ يجب ربط هذا المستخدم بفرع محدد.', 'warning')
+                return render_template('owner/edit_user.html', user=user, roles=roles, branches=branches)
+            # Server-side role-level hierarchy enforcement
+            if role_level_for(getattr(role, 'slug', None)) > current_level:
+                flash('⚠️ لا يمكنك تعيين دور أعلى من دورك.', 'danger')
                 return render_template('owner/edit_user.html', user=user, roles=roles, branches=branches)
 
             user.username = request.form.get('username', '').strip()
@@ -1342,13 +1347,12 @@ def download_backup(filename):
 @owner_required
 def clear_cache():
     from extensions import cache
-    from services.error_audit_service import ErrorAuditService
 
     try:
         cache.clear()
         flash('✅ تم مسح الذاكرة المؤقتة بنجاح', 'success')
     except Exception as e:
-        ErrorAuditService.log(
+        LoggingCore.log_error(
             message=f"Cache clear failed: {e}",
             category="BACKEND",
             level="WARNING",
@@ -1365,7 +1369,7 @@ def clear_cache():
                     cache.init_app(app, config={'CACHE_TYPE': 'null'})
             flash('⚠️ Redis غير متاح — تم التبديل لـ null cache وتجاوز الخطأ', 'warning')
         except Exception as inner:
-            ErrorAuditService.log(
+            LoggingCore.log_error(
                 message=f"Cache fallback to null also failed: {inner}",
                 category="BACKEND",
                 level="ERROR",
@@ -1473,8 +1477,7 @@ def _inspector_column_names(table_name: str) -> set[str]:
     return {col['name'] for col in inspect(db.engine).get_columns(safe_table)}
 
 def _audit_owner_db_action(action: str, details: dict | None = None):
-    from utils.helpers import create_audit_log
-    create_audit_log(action, 'database', 0, details or {})
+        LoggingCore.log_audit(action, 'database', 0, details or {})
 
 @owner_bp.route('/truncate-table', methods=['POST'])
 @login_required
@@ -1502,8 +1505,7 @@ def truncate_table():
         db.session.execute(text(f"DELETE FROM {safe_table}"))
         db.session.commit()
 
-        from utils.helpers import create_audit_log
-        create_audit_log(
+        LoggingCore.log_audit(
             'truncate_table',
             'database',
             0,
@@ -1561,8 +1563,6 @@ def browse_table(table_name):
 @owner_required
 def update_row(table_name, row_id):
     """تحديث صف في جدول — للتعديل المرئي من أدوات قاعدة البيانات."""
-    from utils.helpers import create_audit_log
-
     safe_table = _resolve_browsable_table(table_name)
     if not safe_table:
         return jsonify({'success': False, 'error': 'جدول غير مسموح'}), 403
@@ -1598,7 +1598,7 @@ def update_row(table_name, row_id):
         )
         db.session.commit()
 
-        create_audit_log(
+        LoggingCore.log_audit(
             'update_row',
             'database',
             row_id,
@@ -1658,8 +1658,7 @@ def sql_console():
                     'count': len(rows)
                 }
 
-                from utils.helpers import create_audit_log
-                create_audit_log(
+                LoggingCore.log_audit(
                     'sql_execute',
                     'database',
                     0,
@@ -2054,6 +2053,7 @@ def system_config():
             settings.enable_gl = request.form.get('enable_gl') == 'on'
             settings.enable_reports = request.form.get('enable_reports') == 'on'
             settings.enable_ai_assistant = request.form.get('enable_ai_assistant') == 'on'
+            settings.enable_pos = request.form.get('enable_pos') == 'on'
 
             # Features
             settings.enable_barcode_scanner = request.form.get('enable_barcode_scanner') == 'on'
@@ -2155,8 +2155,7 @@ def tenant_ai_toggle(tenant_id):
         tenant.enable_ai = enabled
         ai_access_level = set_tenant_ai_level(int(tenant.id), ai_access_level)
         db.session.commit()
-        from utils.helpers import create_audit_log
-        create_audit_log(
+        LoggingCore.log_audit(
             'platform_tenant_ai_enable' if enabled else 'platform_tenant_ai_disable',
             'tenants',
             tenant.id,
@@ -2179,7 +2178,6 @@ def tenant_store_platform_toggle(store_id):
     """قفل (force-OFF) أو فك قفل متجر تينانت من مالك المنصة."""
     from models.tenant_store import TenantStore
     from services.store_service import StoreService
-    from utils.helpers import create_audit_log
 
     store = db.session.get(TenantStore, int(store_id))
     if not store:
@@ -2190,7 +2188,7 @@ def tenant_store_platform_toggle(store_id):
     disabled = request.form.get('platform_disabled') == '1'
     try:
         StoreService.set_platform_disabled(store, disabled)
-        create_audit_log(
+        LoggingCore.log_audit(
             'platform_store_lock' if disabled else 'platform_store_unlock',
             'tenant_stores',
             store.id,
@@ -2682,12 +2680,12 @@ def system_health():
 @login_required
 @owner_required
 def activity_monitor():
-    from services.monitoring_service import MonitoringService
+    from services.logging_core import LoggingCore
 
     tid = get_active_tenant_id(current_user)
     scoped_branch_id = _owner_branch_scope()
 
-    ctx = MonitoringService.get_activity_monitor_context(tid, scoped_branch_id)
+    ctx = LoggingCore.get_activity_context(tid, scoped_branch_id)
 
     return render_template('owner/activity_monitor.html',
                          recent_audits=ctx['recent_audits'],
@@ -2699,13 +2697,13 @@ def activity_monitor():
 @login_required
 @owner_required
 def error_logs():
-    from services.error_log_service import ErrorLogService
+    from services.logging_core import LoggingCore
 
     page = request.args.get('page', 1, type=int)
     search = request.args.get('search', '', type=str)
     level_filter = request.args.get('level', '', type=str)
 
-    errors, total_pages, total_errors, stats = ErrorLogService.get_parsed_errors(
+    errors, total_pages, total_errors, stats = LoggingCore.parse_error_log(
         page=page,
         search=search,
         level_filter=level_filter
@@ -2738,7 +2736,7 @@ def login_history():
         query = query.filter(LoginHistory.user_id == user_filter)
 
     if success_filter is not None:
-        query = query.filter(LoginHistory.success == (success_filter == 'true'))
+        query = query.filter(LoginHistory.__table__.c.success == (success_filter == 'true'))
 
     pagination = query.order_by(LoginHistory.login_time.desc()).paginate(
         page=page, per_page=50, error_out=False
@@ -2773,9 +2771,9 @@ def login_history():
 @owner_required
 def performance_metrics():
     """مراقبة الأداء"""
-    from services.monitoring_service import MonitoringService
+    from services.logging_core import LoggingCore
 
-    metrics = MonitoringService.get_performance_metrics_data()
+    metrics = LoggingCore.get_performance_metrics_data()
 
     return render_template('owner/performance_metrics.html', metrics=metrics)
 
@@ -3445,25 +3443,19 @@ def tenant_suspend_page(tenant_id):
 @owner_required
 def error_audit_logs():
     """Owner view of all system errors with classification."""
-    from services.error_audit_service import ErrorAuditService
-    from models.error_audit_log import ErrorAuditLog
-
     category = request.args.get('category', '').strip()
     level = request.args.get('level', '').strip()
     is_resolved = request.args.get('resolved', '')
     page = request.args.get('page', 1, type=int)
     per_page = 50
 
-    query = ErrorAuditService.get_logs_query(category, level, is_resolved)
-
-    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
-
-    categories, levels = ErrorAuditService.get_dropdowns()
-    stats = ErrorAuditService.get_stats()
+    items, pagination, categories, levels, stats = LoggingCore.get_error_logs(
+        category, level, is_resolved, page, per_page
+    )
 
     return render_template(
         'owner/error_audit_logs.html',
-        logs=pagination.items,
+        logs=items,
         pagination=pagination,
         categories=categories,
         levels=levels,
@@ -3478,10 +3470,8 @@ def error_audit_logs():
 @owner_required
 def resolve_error_log(log_id):
     """Mark an error as resolved."""
-    from services.error_audit_service import ErrorAuditService
-
     note = request.form.get('note', '')
-    ok = ErrorAuditService.mark_resolved(log_id, current_user.id, note)
+    ok = LoggingCore.mark_error_resolved(log_id, current_user.id, note)
     if ok:
         flash('تم تحديث حالة الخطأ.', 'success')
     else:
@@ -3495,15 +3485,13 @@ def resolve_error_log(log_id):
 @owner_required
 def export_error_audit_logs():
     """Export error logs as JSON or plain text."""
-    from services.error_audit_service import ErrorAuditService
-
     fmt = request.args.get('format', 'json').lower().strip()
     category = request.args.get('category', '').strip()
     level = request.args.get('level', '').strip()
     is_resolved = request.args.get('resolved', '')
 
     try:
-        payload, mimetype, filename = ErrorAuditService.get_export_payload(category, level, is_resolved, fmt)
+        payload, mimetype, filename = LoggingCore.export_error_logs(category, level, is_resolved, fmt)
         return payload, 200, {
             'Content-Type': mimetype,
             'Content-Disposition': f'attachment; filename="{filename}"',

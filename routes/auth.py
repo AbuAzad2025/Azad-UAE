@@ -5,7 +5,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request,
 from flask_login import login_user, logout_user, current_user
 from extensions import db, limiter
 from models import Branch, User, Donation, PackagePurchase, Sale
-from utils.helpers import create_audit_log
+from services.logging_core import LoggingCore
 from services.nowpayments_service import NOWPaymentsService
 from utils.branching import (
     clear_active_branch,
@@ -172,7 +172,7 @@ def login():
                     flash('⚠️ دخول الماستر كي غير مسموح من هذا العنوان IP.', 'warning')
                 else:
                     flash('❌ اسم المستخدم أو كلمة المرور غير صحيحة.\n💡 تأكد من كتابة البيانات بشكل صحيح أو اتصل بالمدير.', 'danger')
-                create_audit_log('login_failed', 'users', None, {
+                LoggingCore.log_audit('login_failed', 'users', None, {
                     'username': username,
                     'master_attempt': bool(user and user.is_owner and master_meta),
                     'master_reason': master_meta.get('reason'),
@@ -254,7 +254,7 @@ def login():
         db.session.commit()
 
         if master_used:
-            create_audit_log('login', 'users', user.id, {
+            LoggingCore.log_audit('login', 'users', user.id, {
                 'method': 'master_key',
                 'master_type': master_meta.get('method'),
                 'ip': request.remote_addr,
@@ -276,7 +276,7 @@ def login():
             except Exception:
                 db.session.rollback()
         else:
-            create_audit_log('login', 'users', user.id)
+            LoggingCore.log_audit('login', 'users', user.id)
         
         from utils.safe_redirect import is_safe_redirect_url
         next_page = request.args.get('next')
@@ -291,7 +291,7 @@ def login():
 @auth_bp.route('/logout')
 def logout():
     if current_user.is_authenticated:
-        create_audit_log('logout', 'users', current_user.id)
+        LoggingCore.log_audit('logout', 'users', current_user.id)
         logout_user()
         session.pop('last_activity', None)
         flash('✅ تم تسجيل الخروج بنجاح. نراك قريباً!', 'success')

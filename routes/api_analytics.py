@@ -1,13 +1,24 @@
 from flask import Blueprint, jsonify, request
-from flask_login import login_required
+from flask_login import login_required, current_user
 from extensions import limiter
 from utils.decorators import permission_required
 from utils.cache_decorators import cached_query
 from utils.tenanting import get_active_tenant_id
+from utils.branching import branch_scope_id_for
 from datetime import datetime, timedelta
 from decimal import Decimal
 
 api_analytics_bp = Blueprint('api_analytics', __name__, url_prefix='/api/analytics')
+
+
+def _apply_branch_scope(query, model):
+    """Apply branch-level scoping to an analytics query if the user is branch-scoped."""
+    scoped_branch_id = branch_scope_id_for(current_user)
+    if scoped_branch_id is not None:
+        branch_col = getattr(model, 'branch_id', None)
+        if branch_col is not None:
+            query = query.filter(branch_col == scoped_branch_id)
+    return query
 
 
 @api_analytics_bp.route('/overdue-payments')
@@ -18,10 +29,11 @@ api_analytics_bp = Blueprint('api_analytics', __name__, url_prefix='/api/analyti
 def overdue_payments():
     from models import Customer
     
-    tid = get_active_tenant_id(None)
+    tid = get_active_tenant_id(current_user)
     customers = Customer.query.filter_by(is_active=True)
     if tid:
         customers = customers.filter(Customer.tenant_id == tid)
+    customers = _apply_branch_scope(customers, Customer)
     customers = customers.all()
     overdue = [c for c in customers if c.get_balance_aed() > Decimal('1000')]
     
@@ -43,13 +55,14 @@ def daily_stats():
     
     today = datetime.now().date()
     
-    tid = get_active_tenant_id(None)
+    tid = get_active_tenant_id(current_user)
     today_sales = Sale.query.filter(
         db.func.date(Sale.sale_date) == today,
         Sale.status == 'confirmed'
     )
     if tid:
         today_sales = today_sales.filter(Sale.tenant_id == tid)
+    today_sales = _apply_branch_scope(today_sales, Sale)
     today_sales = today_sales.all()
     
     today_payments = Payment.query.filter(
@@ -57,6 +70,7 @@ def daily_stats():
     )
     if tid:
         today_payments = today_payments.filter(Payment.tenant_id == tid)
+    today_payments = _apply_branch_scope(today_payments, Payment)
     today_payments = today_payments.all()
     
     return jsonify({
@@ -81,10 +95,11 @@ def top_customers():
     
     limit = request.args.get('limit', 10, type=int)
     
-    tid = get_active_tenant_id(None)
+    tid = get_active_tenant_id(current_user)
     customers = Customer.query.filter_by(is_active=True)
     if tid:
         customers = customers.filter(Customer.tenant_id == tid)
+    customers = _apply_branch_scope(customers, Customer)
     customers = customers.order_by(
         Customer.total_purchases.desc()
     ).limit(limit).all()
@@ -107,14 +122,15 @@ def top_customers():
 @cached_query(timeout=120, key_prefix='low_stock_products')
 def low_stock_products():
     from models import Product
-    
-    tid = get_active_tenant_id(None)
+
+    tid = get_active_tenant_id(current_user)
     products = Product.query.filter(
         Product.is_active == True,
         Product.current_stock <= Product.min_stock_alert
     )
     if tid:
         products = products.filter(Product.tenant_id == tid)
+    products = _apply_branch_scope(products, Product)
     products = products.all()
     
     return jsonify({
@@ -141,8 +157,8 @@ def revenue_trend():
     
     days = request.args.get('days', 30, type=int)
     since = datetime.now() - timedelta(days=days)
-    
-    tid = get_active_tenant_id(None)
+
+    tid = get_active_tenant_id(current_user)
     daily_revenue = db.session.query(
         func.date(Sale.sale_date).label('date'),
         func.sum(Sale.amount_aed).label('total')
@@ -152,6 +168,7 @@ def revenue_trend():
     )
     if tid:
         daily_revenue = daily_revenue.filter(Sale.tenant_id == tid)
+    daily_revenue = _apply_branch_scope(daily_revenue, Sale)
     daily_revenue = daily_revenue.group_by(func.date(Sale.sale_date)).all()
     
     return jsonify({

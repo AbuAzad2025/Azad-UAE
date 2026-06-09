@@ -15,6 +15,7 @@ from sqlalchemy import func
 from werkzeug.security import generate_password_hash
 
 from extensions import db
+from services.logging_core import LoggingCore
 
 # ===== HELPERS =====
 
@@ -54,9 +55,8 @@ def _is_owner() -> bool:
 def _audit(action: str, entity: str, entity_id: int | None = None, details: dict | None = None):
     """Log an audit entry."""
     try:
-        from utils.helpers import create_audit_log
-        create_audit_log(action=action, entity_type=entity,
-                         entity_id=entity_id, details=details or {})
+        LoggingCore.log_audit(action=action, table_name=entity,
+                              record_id=entity_id, changes=details or {})
     except Exception:
         pass
 

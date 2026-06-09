@@ -7,7 +7,7 @@ from services.stock_service import StockService
 from services.currency_service import CurrencyService
 from utils.decorators import permission_required
 from utils.branching import ensure_warehouse_access, get_accessible_warehouses, should_show_all_branch_columns
-from utils.helpers import create_audit_log
+from services.logging_core import LoggingCore
 from utils.currency_utils import resolve_default_currency, get_system_default_currency
 from utils.tenanting import tenant_query, tenant_get_or_404, tenant_get, get_active_tenant_id
 from utils.db_safety import atomic_transaction
@@ -134,12 +134,13 @@ def create():
                 sys.stderr.write(f"[SALES_WARNING] Failed to get tenant default currency (create sale): {e}\n")
                 traceback.print_exc()
                 try:
-                    from services.error_audit_service import ErrorAuditService
-                    ErrorAuditService.log_exception(
-                        e,
+                    from services.logging_core import LoggingCore
+                    LoggingCore.log_error(
+                        message=str(e),
                         category="SALES",
                         source="routes.sales.create_sale.get_default_currency",
-                        level="WARNING"
+                        level="WARNING",
+                        exception=e
                     )
                 except Exception:
                     pass
@@ -198,7 +199,7 @@ def create():
                 payment_data=payment_data
             )
             
-            create_audit_log('create', 'sales', sale.id)
+            LoggingCore.log_audit('create', 'sales', sale.id)
             
             flash('✅ تم إنشاء الفاتورة بنجاح!', 'success')
             return redirect(url_for('sales.view', id=sale.id))
@@ -362,7 +363,7 @@ def edit(id):
             sale.calculate_totals()
             
             db.session.commit()
-            create_audit_log('update', 'sales', id)
+            LoggingCore.log_audit('update', 'sales', id)
             
             flash('✅ تم تحديث الفاتورة بنجاح!', 'success')
             return redirect(url_for('sales.view', id=id))
@@ -392,7 +393,7 @@ def cancel(id):
     try:
         SaleService.cancel_sale(sale)
         
-        create_audit_log('cancel', 'sales', sale.id)
+        LoggingCore.log_audit('cancel', 'sales', sale.id)
         
         flash('✅ تم إلغاء الفاتورة بنجاح!', 'success')
     
@@ -516,7 +517,7 @@ def delete(id):
             # يمكن أرشفة المدفوعات والشيكات المرتبطة أيضاً إذا لزم الأمر، ولكن سنكتفي بأرشفة الفاتورة حالياً
             # أو يمكن تركها كما هي ولكن الفاتورة ستختفي من القائمة النشطة
             
-            create_audit_log('archive', 'sales', id)
+            LoggingCore.log_audit('archive', 'sales', id)
             db.session.commit()
             flash(f'✅ تم أرشفة الفاتورة "{sale.sale_number}" (لوجود ارتباطات مالية)', 'warning')
         else:
@@ -529,7 +530,7 @@ def delete(id):
             
             # 3. حذف الفاتورة
             db.session.delete(sale)
-            create_audit_log('delete', 'sales', id)
+            LoggingCore.log_audit('delete', 'sales', id)
             db.session.commit()
             flash(f'✅ تم حذف الفاتورة "{sale.sale_number}" نهائياً', 'success')
             
@@ -561,7 +562,7 @@ def archive(id):
 
         archive_service = ArchiveService()
         archive_service.archive_record('sales', sale, reason='تم أرشفة فاتورة المبيعات')
-        create_audit_log('archive', 'sales', sale.id)
+        LoggingCore.log_audit('archive', 'sales', sale.id)
     except Exception as e:
         db.session.rollback()
     
@@ -587,7 +588,7 @@ def restore(id):
     try:
         db.session.delete(archived)
         db.session.commit()
-        create_audit_log('restore', 'sales', id)
+        LoggingCore.log_audit('restore', 'sales', id)
     except Exception as e:
         db.session.rollback()
     

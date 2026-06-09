@@ -7,6 +7,7 @@ from flask_login import login_required, current_user
 from sqlalchemy import select
 from extensions import db, limiter, csrf
 from models import Customer, Supplier, Product, User
+from services.logging_core import LoggingCore
 from services.stock_service import StockService
 from utils.branching import get_accessible_warehouse_ids, get_branch_stock_map
 from utils.decorators import branch_scope_id, permission_required
@@ -454,6 +455,7 @@ def check_username():
 
 @api_bp.route('/products/low-stock')
 @login_required
+@permission_required('view_reports')
 def products_low_stock():
     """API للمنتجات قليلة المخزون"""
     try:
@@ -521,7 +523,7 @@ def echo():
 @csrf.exempt
 @limiter.limit("30 per minute")
 def log_client_error():
-    """Receive JS errors from the browser and store them via ErrorAuditService.
+    """Receive JS errors from the browser and store them via LoggingCore.
 
     Defenses:
     - Origin/Referer allowlist to prevent cross-site log spam.
@@ -533,8 +535,6 @@ def log_client_error():
     origin_error = _validate_public_telemetry_origin()
     if origin_error:
         return origin_error
-
-    from services.error_audit_service import ErrorAuditService
 
     if request.content_length and request.content_length > 50 * 1024:
         return '', 413
@@ -597,7 +597,7 @@ def log_client_error():
         extra['user_id'] = getattr(current_user, 'id', None)
         extra['tenant_id'] = getattr(current_user, 'tenant_id', None)
 
-    ErrorAuditService.log_frontend(
+    LoggingCore.log_frontend_error(
         message=enriched_message,
         level=level,
         source=source,

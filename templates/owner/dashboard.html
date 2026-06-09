@@ -15,10 +15,21 @@
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
-    /* D6: externalized inline styles */
     .ic-1 { padding: 12px 20px; border-radius: 8px; border: 1px solid #dc3545; background: #fff5f5; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
     .ic-2 { font-size: 1.5rem; }
     .ic-3 { color: #c0392b; font-weight: 600; font-size: 1rem; flex: 1; }
+    .owner-warning-permanent {
+      display: flex !important;
+      opacity: 1 !important;
+      visibility: visible !important;
+      pointer-events: auto !important;
+      transition: none !important;
+      animation: none !important;
+    }
+    .owner-warning-permanent * {
+      opacity: 1 !important;
+      visibility: visible !important;
+    }
   </style>
 {% endblock %}
 
@@ -26,35 +37,12 @@
 
 {% include 'owner/_platform_dashboard_sections.html' %}
 
-
 <div class="owner-warning-permanent d-flex align-items-center mb-4 ic-1">
   <i class="fas fa-shield-alt mr-3 text-danger ic-2"></i>
   <span class="ic-3">
     منطقة الإدارة العليا - جميع العمليات في هذه اللوحة مسجلة لأغراض التدقيق والأمان.
   </span>
 </div>
-
-<style>
-@keyframes pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.6; transform: scale(1.1); }
-}
-
-/* حماية البطاقة من الإخفاء - لا يمكن إخفاؤها بأي طريقة */
-.owner-warning-permanent {
-  display: flex !important;
-  opacity: 1 !important;
-  visibility: visible !important;
-  pointer-events: auto !important;
-  transition: none !important;
-  animation: none !important;
-}
-
-.owner-warning-permanent * {
-  opacity: 1 !important;
-  visibility: visible !important;
-}
-</style>
 
 
 <div class="row">
@@ -78,9 +66,7 @@
         <p><i class="fas fa-user-tie mr-1"></i> العملاء</p>
       </div>
       <div class="icon"><i class="fas fa-handshake"></i></div>
-      {% if current_user.has_permission('manage_customers') %}
-      <a href="{{ url_for('customers.index') }}" class="small-box-footer">
-      {% endif %}
+      <a href="{% if current_user.has_permission('manage_customers') %}{{ url_for('customers.index') }}{% else %}#{% endif %}" class="small-box-footer">
         عرض الكل <i class="fas fa-arrow-circle-left ml-1"></i>
       </a>
     </div>
@@ -93,9 +79,7 @@
         <p class="text-white"><i class="fas fa-shopping-cart mr-1"></i> المبيعات</p>
       </div>
       <div class="icon"><i class="fas fa-chart-line"></i></div>
-      {% if current_user.has_permission('manage_sales') %}
-      <a href="{{ url_for('sales.index') }}" class="small-box-footer">
-      {% endif %}
+      <a href="{% if current_user.has_permission('manage_sales') %}{{ url_for('sales.index') }}{% else %}#{% endif %}" class="small-box-footer">
         عرض الكل <i class="fas fa-arrow-circle-left ml-1"></i>
       </a>
     </div>
@@ -108,15 +92,42 @@
         <p><i class="fas fa-money-bill-wave mr-1"></i> الإيرادات ({{ tenant_currency_symbol }})</p>
       </div>
       <div class="icon"><i class="fas fa-coins"></i></div>
-      {% if current_user.has_permission('view_reports') %}
-      <a href="{{ url_for('reports.sales') }}" class="small-box-footer">
-      {% endif %}
+      <a href="{% if current_user.has_permission('view_reports') %}{{ url_for('reports.sales') }}{% else %}#{% endif %}" class="small-box-footer">
         التقارير <i class="fas fa-arrow-circle-left ml-1"></i>
       </a>
     </div>
   </div>
 </div>
 
+<div class="row mt-3">
+  <div class="col-md-4">
+    <div class="small-box bg-info">
+      <div class="inner">
+        <h3>{{ "{:,.0f}".format(stats.total_receivables|default(0)) }}</h3>
+        <p>إجمالي المستحقات ({{ tenant_currency_symbol }})</p>
+      </div>
+      <div class="icon"><i class="fas fa-file-invoice-dollar"></i></div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="small-box bg-warning">
+      <div class="inner">
+        <h3>{{ stats.overdue_invoices|default(0) }}</h3>
+        <p>فواتير متأخرة (&gt; 30 يوم)</p>
+      </div>
+      <div class="icon"><i class="fas fa-exclamation-triangle"></i></div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="small-box bg-secondary">
+      <div class="inner">
+        <h3>{{ "{:,.0f}".format(stats.inventory_value|default(0)) }}</h3>
+        <p>قيمة المخزون ({{ tenant_currency_symbol }})</p>
+      </div>
+      <div class="icon"><i class="fas fa-boxes"></i></div>
+    </div>
+  </div>
+</div>
 
 <div class="row mb-4">
   <div class="col-12">
@@ -172,9 +183,7 @@
                     {% endif %}
                   </td>
                   <td class="text-center">
-                    {% if current_user.has_permission('view_ledger') %}
-                    <a href="{{ url_for('ledger.trial_balance', branch_id=branch.id) }}" class="btn btn-outline-primary" title="ميزان المراجعة">
-                    {% endif %}
+                    <a href="{% if current_user.has_permission('view_ledger') %}{{ url_for('ledger.trial_balance', branch_id=branch.id) }}{% else %}#{% endif %}" class="btn btn-outline-primary" title="ميزان المراجعة">
                       <i class="fas fa-balance-scale"></i> ميزان المراجعة
                     </a>
                   </td>
@@ -204,9 +213,7 @@
           <i class="fas fa-info-circle mr-1"></i>
           إدارة الجداول والنسخ الاحتياطي والذاكرة المؤقتة
         </p>
-        {% if current_user.is_owner %}
-        <a href="{{ url_for('owner.database_tools') }}" class="btn btn-outline-primary btn-block mb-2">
-        {% endif %}
+        <a href="{% if current_user.is_owner %}{{ url_for('owner.database_tools') }}{% else %}#{% endif %}" class="btn btn-outline-primary btn-block mb-2">
           <i class="fas fa-table mr-1"></i> إدارة الجداول
         </a>
         <a href="{{ url_for('owner.list_backups') }}" class="btn btn-outline-info btn-block mb-2">
@@ -293,25 +300,6 @@
     </div>
   </div>
 
-  
-  <div class="col-lg-3 col-md-6">
-    <div class="card shadow-sm border-0 hover-lift">
-      <div class="card-header bg-secondary text-white">
-        <h5 class="mb-0"><i class="fas fa-code mr-2"></i> الشركة المطورة</h5>
-      </div>
-      <div class="card-body">
-        <p class="text-muted small mb-3">
-          <i class="fas fa-info-circle mr-1"></i>
-          اسم المطور، واتساب الدعم، البريد — تظهر في التذييل و«طور بواسطة»
-        </p>
-        <a href="{{ url_for('owner.developer_settings') }}" class="btn btn-outline-dark btn-block">
-          <i class="fas fa-cog mr-1"></i> إعدادات الشركة المطورة
-        </a>
-      </div>
-    </div>
-  </div>
-
-  
   <div class="col-lg-3 col-md-6">
     <div class="card shadow-sm border-0 hover-lift">
       <div class="card-header bg-gradient-purple text-white">
@@ -417,80 +405,19 @@
   </div>
 </div>
 
-
 <div class="row mt-3">
   <div class="col-lg-3 col-md-6">
-    <div class="info-box shadow-sm">
-      <span class="info-box-icon bg-info"><i class="fas fa-users"></i></span>
-      <div class="info-box-content">
-        <span class="info-box-text">المستخدمين</span>
-        <span class="info-box-number">{{ total_users }}</span>
+    <div class="card shadow-sm border-0 hover-lift">
+      <div class="card-header bg-secondary text-white">
+        <h5 class="mb-0"><i class="fas fa-code mr-2"></i> الشركة المطورة</h5>
       </div>
-    </div>
-  </div>
-
-  <div class="col-lg-3 col-md-6">
-    <div class="info-box shadow-sm">
-      <span class="info-box-icon bg-success"><i class="fas fa-user-tie"></i></span>
-      <div class="info-box-content">
-        <span class="info-box-text">العملاء</span>
-        <span class="info-box-number">{{ total_customers }}</span>
-      </div>
-    </div>
-  </div>
-
-  <div class="col-lg-3 col-md-6">
-    <div class="info-box shadow-sm">
-      <span class="info-box-icon bg-warning"><i class="fas fa-shopping-cart"></i></span>
-      <div class="info-box-content">
-        <span class="info-box-text">مبيعات الشهر</span>
-        <span class="info-box-number">{{ total_sales }}</span>
-      </div>
-    </div>
-  </div>
-
-  <div class="col-lg-3 col-md-6">
-    <div class="info-box shadow-sm">
-      <span class="info-box-icon bg-danger"><i class="fas fa-coins"></i></span>
-      <div class="info-box-content">
-        <span class="info-box-text">الإيرادات ({{ tenant_currency_symbol }})</span>
-        <span class="info-box-number">{{ "{:,.0f}".format(stats.year_sales_amount|default(0)) }}</span>
+      <div class="card-body">
+        <p class="text-muted small mb-3"><i class="fas fa-info-circle mr-1"></i> اسم المطور وواتساب الدعم والبريد</p>
+        <a href="{{ url_for('owner.developer_settings') }}" class="btn btn-outline-dark btn-block"><i class="fas fa-cog mr-1"></i> إعدادات الشركة المطورة</a>
       </div>
     </div>
   </div>
 </div>
-
-
-<div class="row mt-2">
-  <div class="col-md-4">
-    <div class="small-box bg-info">
-      <div class="inner">
-        <h3>{{ "{:,.0f}".format(stats.total_receivables|default(0)) }}</h3>
-        <p>إجمالي المستحقات ({{ tenant_currency_symbol }})</p>
-      </div>
-      <div class="icon"><i class="fas fa-file-invoice-dollar"></i></div>
-    </div>
-  </div>
-  <div class="col-md-4">
-    <div class="small-box bg-warning">
-      <div class="inner">
-        <h3>{{ stats.overdue_invoices|default(0) }}</h3>
-        <p>فواتير متأخرة (&gt; 30 يوم)</p>
-      </div>
-      <div class="icon"><i class="fas fa-exclamation-triangle"></i></div>
-    </div>
-  </div>
-  <div class="col-md-4">
-    <div class="small-box bg-secondary">
-      <div class="inner">
-        <h3>{{ "{:,.0f}".format(stats.inventory_value|default(0)) }}</h3>
-        <p>قيمة المخزون ({{ tenant_currency_symbol }})</p>
-      </div>
-      <div class="icon"><i class="fas fa-boxes"></i></div>
-    </div>
-  </div>
-</div>
-
 
 <div class="row mt-3">
   <div class="col-lg-6">

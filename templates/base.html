@@ -53,7 +53,7 @@
   
   
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N" crossorigin="anonymous">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css" crossorigin="anonymous">
+  <link rel="stylesheet" href="{{ url_for('static', filename='adminlte/css/adminlte.min.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/erp-theme.css') }}">
   
   
@@ -66,6 +66,7 @@
   
   <noscript>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N" crossorigin="anonymous">
+    <link rel="stylesheet" href="{{ url_for('static', filename='adminlte/css/adminlte.min.css') }}">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" crossorigin="anonymous">
     <link rel="stylesheet" href="{{ url_for('static', filename='adminlte/plugins/select2/css/select2.min.css') }}">
@@ -147,6 +148,9 @@
       {% endif %}
     </div>
     <div class="erp-navbar-actions-zone">
+      <button class="btn btn-outline-light erp-navbar-tool-btn" type="button" onclick="toggleSidebarDirection();" title="تبديل موقع القائمة">
+        <i class="fas fa-exchange-alt"></i>
+      </button>
       <div class="dropdown erp-navbar-tool-dropdown d-none d-md-block">
         <button class="btn btn-outline-light erp-navbar-tool-btn" type="button" data-toggle="dropdown" aria-expanded="false" title="أدوات النظام">
           <i class="fas fa-tools"></i>
@@ -823,6 +827,12 @@
             </a>
           </li>
           <li class="nav-item">
+            <a href="{{ url_for('owner.system_config') }}" class="nav-link {% if request.endpoint == 'owner.system_config' %}active{% endif %}">
+              <i class="nav-icon fas fa-cogs text-info"></i>
+              <p>إعدادات النظام</p>
+            </a>
+          </li>
+          <li class="nav-item">
             <a href="{{ url_for('owner.users_list') }}" class="nav-link">
               <i class="nav-icon fas fa-users-cog"></i>
               <p>مستخدمي المنصة</p>
@@ -1017,8 +1027,8 @@
   window.hasPermission = function(code) { return (window.CURRENT_USER_PERMISSIONS || []).indexOf(code) !== -1; };
 </script>
 
-<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.min.js" integrity="sha384-UG8ao2jwOWB7/oDdObZc6ItJmwUkR/PfMyt9Qs5AwX7PsnYn1CRKCTWyncPTWvaS" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-Fy6S3B9q64WdZWQUiU+q4/2Lc9npb8tCaSX9FK7E8HnRr0Jz8D6OP9dO5Vg3Q9ct" crossorigin="anonymous"></script>
+<script src="{{ url_for('static', filename='adminlte/plugins/jquery/jquery.min.js') }}"></script>
+<script src="{{ url_for('static', filename='adminlte/plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
 <script src="{{ url_for('static', filename='adminlte/js/adminlte.min.js') }}"></script>
 
 
@@ -1751,7 +1761,9 @@ $(function() {
       if (btn) { e.preventDefault(); cycleViewMode(); }
     });
 
-    setViewMode(getSavedViewMode());
+    const currentMode = getSavedViewMode();
+    console.log('[Azad] View mode:', currentMode, '| Screen:', window.innerWidth + 'x' + window.innerHeight);
+    setViewMode(currentMode);
   })();
 
 })();

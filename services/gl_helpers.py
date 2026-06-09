@@ -38,12 +38,13 @@ def resolve_tenant_id(branch_id=None, user_id=None):
             sys.stderr.write(f"[GL_HELPERS_WARNING] get_active_tenant_id() failed: {e}\n")
             traceback.print_exc()
             try:
-                from services.error_audit_service import ErrorAuditService
-                ErrorAuditService.log_exception(
-                    e,
+                from services.logging_core import LoggingCore
+                LoggingCore.log_error(
+                    message=str(e),
                     category="GL",
                     source="services.gl_helpers.resolve_tenant_id.get_active_tenant_id",
-                    level="WARNING"
+                    level="WARNING",
+                    exception=e
                 )
             except Exception:
                 pass
@@ -108,12 +109,13 @@ def next_entry_number(tenant_id, entry_date=None):
             sys.stderr.write(f"[GL_HELPERS_WARNING] Failed to parse entry_number '{latest.entry_number}': {e}\n")
             traceback.print_exc()
             try:
-                from services.error_audit_service import ErrorAuditService
-                ErrorAuditService.log_exception(
-                    e,
+                from services.logging_core import LoggingCore
+                LoggingCore.log_error(
+                    message=str(e),
                     category="GL",
                     source="services.gl_helpers.next_entry_number.parse_entry_number",
-                    level="WARNING"
+                    level="WARNING",
+                    exception=e
                 )
             except Exception:
                 pass

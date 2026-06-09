@@ -42,7 +42,6 @@ def get_sales():
 @api_enhanced_bp.route('/sales/<int:sale_id>', methods=['GET'])
 @login_required
 @permission_required('manage_sales')
-@cached_query(timeout=120, key_prefix='api_sale_detail')
 def get_sale(sale_id):
     from models import Sale
     

@@ -933,9 +933,9 @@ class AIService:
             except Exception as e:
                 print(f"Groq collaboration failed: {str(e)}")
                 try:
-                    from services.error_audit_service import ErrorAuditService
-                    ErrorAuditService.log_exception(
-                        e, category="AI", source="services.ai_service.chat_response", level="ERROR"
+                    from services.logging_core import LoggingCore
+                    LoggingCore.log_error(
+                        message=str(e), category="AI", source="services.ai_service.chat_response", level="ERROR", exception=e
                     )
                 except Exception:
                     pass
@@ -991,8 +991,8 @@ class AIService:
         except Exception as e:
             print(f"Action execution error: {e}")
             try:
-                from services.error_audit_service import ErrorAuditService
-                ErrorAuditService.log_exception(e, category="AI", source="services.ai_service._execute_ai_action", level="WARNING")
+                from services.logging_core import LoggingCore
+                LoggingCore.log_error(message=str(e), category="AI", source="services.ai_service._execute_ai_action", level="WARNING", exception=e)
             except Exception:
                 pass
             return None
@@ -1364,12 +1364,13 @@ class AIService:
             sys.stderr.write(f"[AI_ERROR] Failed to process chat message: {e}\n")
             traceback.print_exc()
             try:
-                from services.error_audit_service import ErrorAuditService
-                ErrorAuditService.log_exception(
-                    e,
+                from services.logging_core import LoggingCore
+                LoggingCore.log_error(
+                    message=str(e),
                     category="AI",
                     source="services.ai_service.process_chat_message",
-                    level="ERROR"
+                    level="ERROR",
+                    exception=e
                 )
             except Exception:
                 pass

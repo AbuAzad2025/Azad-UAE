@@ -120,12 +120,13 @@ class BackupService:
             sys.stderr.write(f"[BACKUP_WARNING] Failed to load JSON file {file_path}: {e}\n")
             traceback.print_exc()
             try:
-                from services.error_audit_service import ErrorAuditService
-                ErrorAuditService.log_exception(
-                    e,
+                from services.logging_core import LoggingCore
+                LoggingCore.log_error(
+                    message=str(e),
                     category="BACKUP",
                     source=f"services.backup_service.BackupService._load_json_file[{file_path}]",
-                    level="WARNING"
+                    level="WARNING",
+                    exception=e
                 )
             except Exception:
                 pass
@@ -144,12 +145,13 @@ class BackupService:
             sys.stderr.write(f"[BACKUP_WARNING] Failed to write JSON file {file_path}: {e}\n")
             traceback.print_exc()
             try:
-                from services.error_audit_service import ErrorAuditService
-                ErrorAuditService.log_exception(
-                    e,
+                from services.logging_core import LoggingCore
+                LoggingCore.log_error(
+                    message=str(e),
                     category="BACKUP",
                     source=f"services.backup_service.BackupService._write_json_file[{file_path}]",
-                    level="WARNING"
+                    level="WARNING",
+                    exception=e
                 )
             except Exception:
                 pass

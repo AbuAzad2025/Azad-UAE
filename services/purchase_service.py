@@ -8,7 +8,8 @@ from services.gl_service import GLService, GL_ACCOUNTS
 from services.gl_posting import post_or_fail
 from utils.gl_reference_types import GLRef
 from utils.branching import ensure_warehouse_access
-from utils.helpers import generate_number, create_audit_log
+from utils.helpers import generate_number
+from services.logging_core import LoggingCore
 from utils.tenanting import get_active_tenant_id
 from utils.currency_utils import resolve_default_currency, get_system_default_currency
 from utils.field_validators import validate_currency_code
@@ -221,6 +222,6 @@ class PurchaseService:
                 current_app.logger.warning(f'Supplier stats update failed: {e}')
         
         db.session.commit()
-        create_audit_log('create', 'purchases', purchase.id)
+        LoggingCore.log_audit('create', 'purchases', purchase.id)
         
         return purchase

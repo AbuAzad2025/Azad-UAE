@@ -19,9 +19,7 @@ from extensions import (
     db, migrate, login_manager, csrf, limiter, mail,
     init_extensions
 )
-from utils.logging_setup import setup_logging
-from utils.monitoring import setup_advanced_logging
-from utils.enhanced_logging import setup_enhanced_logging
+from services.logging_core import LoggingCore
 from utils.asset_compression import register_compression_cli
 from utils.currency_utils import resolve_default_currency, get_system_default_currency
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -49,7 +47,6 @@ def create_app(config_class=Config):
     assert_production_sanity(config_class)
     
     # Initialize Extensions
-    setup_logging(app)
     init_extensions(app)
 
     # Initialize User Loader for Flask-Login
@@ -60,8 +57,8 @@ def create_app(config_class=Config):
     def load_user(user_id):
         return db.session.get(User, int(user_id))
 
-    setup_advanced_logging(app)
-    setup_enhanced_logging(app)
+    LoggingCore.setup(app)
+    LoggingCore.schedule_cleanup(app, interval_hours=24)
     
     # --- SYSTEM INTEGRITY CHECK (MASTER KEY & CORE DATA) ---
     # This ensures that even after a full DB wipe, the system regenerates
@@ -97,7 +94,7 @@ def create_app(config_class=Config):
             return redirect(url_for('shop.catalog', slug=store.store_slug))
         return None
 
-    # Error Handlers — use ErrorAuditService (independent of db.session)
+    # Error Handlers — use LoggingCore (independent of db.session)
     @app.route('/favicon.ico')
     def favicon():
         return send_from_directory(
@@ -110,8 +107,6 @@ def create_app(config_class=Config):
     def chrome_devtools_metadata():
         return '', 204
 
-    from services.error_audit_service import ErrorAuditService
-
     def _wants_json_error_response():
         return (
             request.is_json
@@ -122,7 +117,7 @@ def create_app(config_class=Config):
 
     @app.errorhandler(CSRFError)
     def handle_csrf_error(exc):
-        ErrorAuditService.log(
+        LoggingCore.log_error(
             message=str(exc) or "CSRF validation failed",
             category="SECURITY",
             level="WARNING",
@@ -138,7 +133,7 @@ def create_app(config_class=Config):
 
     @app.errorhandler(500)
     def handle_500(exc):
-        ErrorAuditService.log(
+        LoggingCore.log_error(
             message=str(exc) or "Internal Server Error",
             category="BACKEND",
             level="ERROR",
@@ -160,7 +155,7 @@ def create_app(config_class=Config):
                 break
         
         if not skip_log:
-            ErrorAuditService.log(
+            LoggingCore.log_error(
                 message=f"Page not found: {request.path}",
                 category="API",
                 level="WARNING",
@@ -172,7 +167,7 @@ def create_app(config_class=Config):
 
     @app.errorhandler(403)
     def handle_403(exc):
-        ErrorAuditService.log(
+        LoggingCore.log_error(
             message=f"Forbidden access: {request.path}",
             category="SECURITY",
             level="WARNING",
@@ -186,7 +181,7 @@ def create_app(config_class=Config):
     def handle_http_exception(exc):
         """Log HTTP exceptions not handled by a more specific handler."""
         category = "SECURITY" if exc.code in (401, 429) else "API"
-        ErrorAuditService.log(
+        LoggingCore.log_error(
             message=f"{exc.name}: {request.path}",
             category=category,
             level="WARNING",
@@ -208,10 +203,12 @@ def create_app(config_class=Config):
             return exc
         category = "DATABASE" if isinstance(exc, SQLAlchemyError) else "BACKEND"
         source = "app.errorhandler.database" if category == "DATABASE" else "app.errorhandler.generic"
-        ErrorAuditService.log_exception(
-            exc,
+        LoggingCore.log_error(
+            message=str(exc) or f"{type(exc).__name__} (no message)",
             category=category,
+            level="ERROR",
             source=source,
+            exception=exc,
         )
         if app.config.get("DEBUG"):
             raise exc
@@ -278,17 +275,13 @@ def create_app(config_class=Config):
                 if not tenant_name:
                     tenant_name = branding.get('company_name_en') or tenant_name
         except Exception as e:
-            import sys
-            import traceback
-            sys.stderr.write(f"[CONTEXT_PROCESSOR_WARNING] Failed to load tenant/invoice settings: {e}\n")
-            traceback.print_exc()
             try:
-                from services.error_audit_service import ErrorAuditService
-                ErrorAuditService.log_exception(
-                    e,
+                LoggingCore.log_error(
+                    message=str(e) or "Failed to load tenant/invoice settings",
                     category="FRONTEND",
+                    level="WARNING",
                     source="app.context_processor.tenant_settings",
-                    level="WARNING"
+                    exception=e,
                 )
             except Exception:
                 pass
@@ -319,17 +312,13 @@ def create_app(config_class=Config):
             system_default_tax_rate = getattr(sys_settings, "default_tax_rate", None)
             system_enable_pos = bool(getattr(sys_settings, "enable_pos", False))
         except Exception as e:
-            import sys
-            import traceback
-            sys.stderr.write(f"[CONTEXT_PROCESSOR_WARNING] Failed to load system settings: {e}\n")
-            traceback.print_exc()
             try:
-                from services.error_audit_service import ErrorAuditService
-                ErrorAuditService.log_exception(
-                    e,
+                LoggingCore.log_error(
+                    message=str(e) or "Failed to load system settings",
                     category="FRONTEND",
+                    level="WARNING",
                     source="app.context_processor.system_settings",
-                    level="WARNING"
+                    exception=e,
                 )
             except Exception:
                 pass
@@ -376,17 +365,13 @@ def create_app(config_class=Config):
                 from models.tenant import Tenant as TenantModel
                 available_tenants = TenantModel.query.filter_by(is_active=True).order_by(TenantModel.id.asc()).all()
         except Exception as e:
-            import sys
-            import traceback
-            sys.stderr.write(f"[CONTEXT_PROCESSOR_WARNING] Failed to load available tenants: {e}\n")
-            traceback.print_exc()
             try:
-                from services.error_audit_service import ErrorAuditService
-                ErrorAuditService.log_exception(
-                    e,
+                LoggingCore.log_error(
+                    message=str(e) or "Failed to load available tenants",
                     category="FRONTEND",
+                    level="WARNING",
                     source="app.context_processor.available_tenants",
-                    level="WARNING"
+                    exception=e,
                 )
             except Exception:
                 pass
@@ -474,7 +459,10 @@ def create_app(config_class=Config):
     @app.before_request
     def before_request():
         g.request_start_time = time.time()
-        g.request_id = str(uuid.uuid4())
+        from services.logging_core import LoggingCore
+        LoggingCore.set_trace_id()
+        if not hasattr(g, 'request_id') or not g.request_id:
+            g.request_id = str(uuid.uuid4())
         
         from utils.i18n import get_current_language, is_rtl
         g.lang_code = get_current_language()
@@ -660,17 +648,13 @@ if __name__ == '__main__':
             user = creds.split(':', 1)[0]
             return f"{scheme}://{user}:***@{tail}"
         except Exception as e:
-            import sys
-            import traceback
-            sys.stderr.write(f"[LOG_WARNING] Failed to mask DB URI: {e}\n")
-            traceback.print_exc()
             try:
-                from services.error_audit_service import ErrorAuditService
-                ErrorAuditService.log_exception(
-                    e,
-                    category="SYSTEM",
+                LoggingCore.log_error(
+                    message=str(e) or "Failed to mask DB URI",
+                    category="SYSTEM_INIT",
+                    level="WARNING",
                     source="app._mask_db_uri",
-                    level="WARNING"
+                    exception=e,
                 )
             except Exception:
                 pass

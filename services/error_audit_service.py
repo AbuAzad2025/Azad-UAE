@@ -466,13 +466,22 @@ class ErrorAuditService:
             k_lower = str(key).lower()
             if any(sk in k_lower for sk in _SECRET_KEYS):
                 clean[key] = "***REDACTED***"
-            elif isinstance(value, dict):
+                continue
+            try:
+                tname = type(value).__name__
+            except Exception:
+                tname = ""
+            if tname == "Undefined":
+                clean[key] = None
+                continue
+            if isinstance(value, dict):
                 clean[key] = ErrorAuditService._sanitize_dict(value)
-            elif isinstance(value, list):
+                continue
+            if isinstance(value, list):
                 clean[key] = [
-                    ErrorAuditService._sanitize_dict(v) if isinstance(v, dict) else v
+                    ErrorAuditService._sanitize_dict(v) if isinstance(v, dict) else (None if type(v).__name__ == "Undefined" else v)
                     for v in value
                 ]
-            else:
-                clean[key] = value
+                continue
+            clean[key] = value
         return clean

@@ -9,7 +9,7 @@ from services.cash_flow_service import CashFlowService
 from services.aging_analysis_service import AgingAnalysisService
 from services.bank_reconciliation_service import BankReconciliationService
 from utils.decorators import admin_required
-from utils.helpers import create_audit_log
+from services.logging_core import LoggingCore
 from utils.currency_utils import resolve_default_currency, get_system_default_currency
 from utils.gl_tenant import gl_account_query, gl_entry_query, scoped_model_query, active_tenant_id
 from utils.tenanting import tenant_query, assert_tenant_record
@@ -162,7 +162,7 @@ def add_account():
             db.session.add(account)
             db.session.commit()
             
-            create_audit_log('create', 'gl_accounts', account.id)
+            LoggingCore.log_audit('create', 'gl_accounts', account.id)
             flash(f'✅ تم إنشاء الحساب {account.full_name} بنجاح', 'success')
             return redirect(url_for('admin_ledger.accounts_management'))
             
@@ -215,7 +215,7 @@ def edit_account(id):
             
             db.session.commit()
             
-            create_audit_log('update', 'gl_accounts', account.id)
+            LoggingCore.log_audit('update', 'gl_accounts', account.id)
             flash(f'✅ تم تحديث الحساب {account.full_name} بنجاح', 'success')
             return redirect(url_for('admin_ledger.accounts_management'))
             
@@ -251,7 +251,7 @@ def delete_account(id):
         db.session.delete(account)
         db.session.commit()
         
-        create_audit_log('delete', 'gl_accounts', id)
+        LoggingCore.log_audit('delete', 'gl_accounts', id)
         flash(f'✅ تم حذف الحساب {account.full_name} بنجاح', 'success')
         
     except Exception as e:
@@ -301,7 +301,7 @@ def reverse_journal(id):
         reversed_entry = entry.reverse_entry()
         db.session.commit()
         
-        create_audit_log('reverse', 'gl_journal_entries', id)
+        LoggingCore.log_audit('reverse', 'gl_journal_entries', id)
         flash(f'✅ تم عكس القيد {entry.entry_number} بنجاح', 'success')
         
     except Exception as e:

@@ -5,7 +5,7 @@ Auto Approval Service
 from datetime import datetime, timezone, timedelta
 from extensions import db
 from models import Donation, PackagePurchase
-from utils.helpers import create_audit_log
+from services.logging_core import LoggingCore
 import logging
 
 logger = logging.getLogger(__name__)
@@ -43,7 +43,7 @@ class AutoApprovalService:
                 donation.completed_at = datetime.now(timezone.utc)
                 
                 # تسجيل في Audit Log
-                create_audit_log(
+                LoggingCore.log_audit(
                     action=f'auto_approved_donation: ${donation.amount_usd}',
                     table_name='donations',
                     record_id=donation.id,
@@ -113,7 +113,7 @@ class AutoApprovalService:
                     related_donation.completed_at = datetime.now(timezone.utc)
                 
                 # تسجيل
-                create_audit_log(
+                LoggingCore.log_audit(
                     action=f'auto_approved_purchase: {purchase.package.name_ar if purchase.package else "N/A"}',
                     table_name='package_purchases',
                     record_id=purchase.id,

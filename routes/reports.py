@@ -14,9 +14,12 @@ reports_bp = Blueprint('reports', __name__, url_prefix='/reports')
 
 @reports_bp.before_request
 def _enforce_report_tenant_scope():
+    from utils.auth_helpers import is_global_owner_user
     if request.endpoint == 'reports.index':
         return
     if request.endpoint and request.endpoint.startswith('reports.'):
+        if is_global_owner_user(current_user):
+            return
         require_report_tenant_id()
 
 

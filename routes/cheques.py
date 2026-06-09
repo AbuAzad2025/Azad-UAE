@@ -12,7 +12,8 @@ from services.exchange_rate_service import ExchangeRateService
 from utils.decorators import admin_required, permission_required, branch_scope_id
 from utils.tenanting import get_active_tenant_id
 from utils.branching import should_show_all_branch_columns
-from utils.helpers import create_audit_log, generate_number
+from services.logging_core import LoggingCore
+from utils.helpers import generate_number
 from utils.currency_utils import resolve_default_currency, get_system_default_currency
 from datetime import datetime, timedelta
 from decimal import Decimal
@@ -241,12 +242,13 @@ def create():
                 sys.stderr.write(f"[CHEQUES_WARNING] Failed to get tenant default currency (create cheque): {e}\n")
                 traceback.print_exc()
                 try:
-                    from services.error_audit_service import ErrorAuditService
-                    ErrorAuditService.log_exception(
-                        e,
+                    from services.logging_core import LoggingCore
+                    LoggingCore.log_error(
+                        message=str(e),
                         category="CHEQUES",
                         source="routes.cheques.create_cheque.get_default_currency",
-                        level="WARNING"
+                        level="WARNING",
+                        exception=e
                     )
                 except Exception:
                     pass
@@ -319,7 +321,7 @@ def create():
                 cheque.issue_cheque()
             db.session.commit()
             
-            create_audit_log('create', 'cheques', cheque.id)
+            LoggingCore.log_audit('create', 'cheques', cheque.id)
             
             flash(f'✅ تم إضافة الشيك {cheque.cheque_bank_number} بنجاح', 'success')
             return redirect(url_for('cheques.view', id=cheque.id))
@@ -393,12 +395,13 @@ def edit(id):
                 sys.stderr.write(f"[CHEQUES_WARNING] Failed to get tenant default currency (create cheque): {e}\n")
                 traceback.print_exc()
                 try:
-                    from services.error_audit_service import ErrorAuditService
-                    ErrorAuditService.log_exception(
-                        e,
+                    from services.logging_core import LoggingCore
+                    LoggingCore.log_error(
+                        message=str(e),
                         category="CHEQUES",
                         source="routes.cheques.create_cheque.get_default_currency",
-                        level="WARNING"
+                        level="WARNING",
+                        exception=e
                     )
                 except Exception:
                     pass
@@ -424,7 +427,7 @@ def edit(id):
             
             db.session.commit()
             
-            create_audit_log('update', 'cheques', id)
+            LoggingCore.log_audit('update', 'cheques', id)
             
             flash('✅ تم تحديث الشيك بنجاح', 'success')
             return redirect(url_for('cheques.view', id=id))
@@ -467,7 +470,7 @@ def deposit_cheque(id):
         cheque.deposit_cheque(deposit_date)
         db.session.commit()
         
-        create_audit_log('cheque_deposit', 'cheques', id, 
+        LoggingCore.log_audit('cheque_deposit', 'cheques', id, 
                         f'إيداع شيك رقم {cheque.cheque_bank_number} في البنك')
         
         flash(f'✅ تم إيداع الشيك {cheque.cheque_bank_number} في البنك', 'success')
@@ -518,7 +521,7 @@ def clear_cheque(id):
         else:
             gain_loss_msg = ''
         
-        create_audit_log('cheque_clear', 'cheques', id,
+        LoggingCore.log_audit('cheque_clear', 'cheques', id,
                         f'تأكيد صرف شيك رقم {cheque.cheque_bank_number} من البنك - تم تحديث الحسابات{gain_loss_msg}')
         
         flash(f'✅ تم تأكيد صرف الشيك {cheque.cheque_bank_number} - تم تحديث الحسابات المالية{gain_loss_msg}', 'success')
@@ -552,7 +555,7 @@ def bounce_cheque(id):
         cheque.bounce_cheque(full_reason)
         db.session.commit()
         
-        create_audit_log('cheque_bounce', 'cheques', id,
+        LoggingCore.log_audit('cheque_bounce', 'cheques', id,
                         f'رفض شيك رقم {cheque.cheque_bank_number}: {full_reason}')
         
         flash(f'❌ تم رفض الشيك {cheque.cheque_bank_number} - تم إرجاع الدين للزبون', 'warning')
@@ -587,7 +590,7 @@ def cancel(id):
         cheque.cancel_cheque(reason)
         db.session.commit()
         
-        create_audit_log('cancel', 'cheques', id)
+        LoggingCore.log_audit('cancel', 'cheques', id)
         
         flash(f'✅ تم إلغاء الشيك {cheque.cheque_bank_number}', 'success')
     
@@ -627,7 +630,7 @@ def delete(id):
             cheque.archive(reason)
             db.session.commit()
             
-            create_audit_log('archive', 'cheques', id)
+            LoggingCore.log_audit('archive', 'cheques', id)
             flash(f'✅ تم أرشفة الشيك {cheque.cheque_bank_number} (لوجود ارتباطات)', 'warning')
             
         else:
@@ -649,7 +652,7 @@ def delete(id):
             db.session.delete(cheque)
             db.session.commit()
             
-            create_audit_log('delete', 'cheques', id)
+            LoggingCore.log_audit('delete', 'cheques', id)
             flash(f'✅ تم حذف الشيك {cheque.cheque_bank_number} نهائياً', 'success')
             
         return redirect(url_for('cheques.index'))
@@ -673,7 +676,7 @@ def restore(id):
         cheque.restore()
         db.session.commit()
         
-        create_audit_log('restore', 'cheques', id)
+        LoggingCore.log_audit('restore', 'cheques', id)
         
         flash(f'✅ تم استعادة الشيك {cheque.cheque_bank_number}', 'success')
     

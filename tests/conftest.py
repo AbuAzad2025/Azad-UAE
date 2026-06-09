@@ -84,15 +84,13 @@ def app():
     """Create and configure the Flask app for testing."""
     from app import create_app
     from extensions import db
-    import services.error_audit_service as eas
+    from services.logging_core import LoggingCore
 
     # Disable error audit logging during tests to avoid DB locked errors
-    original_log = eas.ErrorAuditService.log
-    original_log_exception = eas.ErrorAuditService.log_exception
-    original_log_frontend = eas.ErrorAuditService.log_frontend
-    eas.ErrorAuditService.log = lambda *args, **kwargs: None
-    eas.ErrorAuditService.log_exception = lambda *args, **kwargs: None
-    eas.ErrorAuditService.log_frontend = lambda *args, **kwargs: None
+    original_log_error = LoggingCore.log_error
+    original_log_frontend = LoggingCore.log_frontend_error
+    LoggingCore.log_error = lambda *args, **kwargs: None
+    LoggingCore.log_frontend_error = lambda *args, **kwargs: None
 
     app = create_app(config_class=TestConfig)
 
@@ -107,9 +105,8 @@ def app():
         db.drop_all()
 
     # Restore original functions
-    eas.ErrorAuditService.log = original_log
-    eas.ErrorAuditService.log_exception = original_log_exception
-    eas.ErrorAuditService.log_frontend = original_log_frontend
+    LoggingCore.log_error = original_log_error
+    LoggingCore.log_frontend_error = original_log_frontend
 
 
 @pytest.fixture

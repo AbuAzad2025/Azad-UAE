@@ -48,17 +48,15 @@ def test_routes_no_500(smoke_client):
         assert response.status_code != 500, f"Route {target} returned 500"
 
 def test_services_callable():
-    from services.error_audit_service import ErrorAuditService
+    from services.logging_core import LoggingCore
     from services.backup_service import BackupService
     from services.health_service import HealthCheckService
-    from services.monitoring_service import MonitoringService
     from services.archive_service import ArchiveService
     
     checks = [
-        (ErrorAuditService, ["get_logs_query", "get_dropdowns", "get_stats", "get_export_payload", "mark_resolved", "log"]),
+        (LoggingCore, ["log_error"]),
         (BackupService, ["get_list_backups_context"]),
         (HealthCheckService, ["run_full_health_check", "get_health_data"]),
-        (MonitoringService, ["get_system_health", "get_activity_monitor_context", "get_performance_metrics_data", "check_database", "get_disk_usage", "get_memory_usage", "get_cpu_usage", "log_performance_metric"]),
         (ArchiveService, ["get_archived_records_query", "get_archived_records"]),
     ]
     

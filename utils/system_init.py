@@ -37,12 +37,13 @@ def _ensure_system_integrity_inner(app):
         sys.stderr.write(f"[SYSTEM_INIT_WARNING] Tenant.get_current() failed: {e}\n")
         traceback.print_exc()
         try:
-            from services.error_audit_service import ErrorAuditService
-            ErrorAuditService.log_exception(
-                e,
+            from services.logging_core import LoggingCore
+            LoggingCore.log_error(
+                message=str(e),
                 category="SYSTEM_INIT",
                 source="utils.system_init._ensure_system_integrity_inner.get_tenant",
-                level="WARNING"
+                level="WARNING",
+                exception=e
             )
         except Exception:
             pass
@@ -75,8 +76,8 @@ def _ensure_system_integrity_inner(app):
         ensure_branch_isolation_schema_and_data()
         current_app.logger.info("SystemInit: Branch isolation repair verified.")
     except Exception as e:
-        from services.error_audit_service import ErrorAuditService
-        ErrorAuditService.log(
+        from services.logging_core import LoggingCore
+        LoggingCore.log_error(
             message=f"Branch isolation repair failed: {e}",
             category="SYSTEM_INIT",
             level="ERROR",
@@ -89,8 +90,8 @@ def _ensure_system_integrity_inner(app):
         _ensure_tenant_gl_trees()
         current_app.logger.info("SystemInit: Tenant GL trees verified.")
     except Exception as e:
-        from services.error_audit_service import ErrorAuditService
-        ErrorAuditService.log(
+        from services.logging_core import LoggingCore
+        LoggingCore.log_error(
             message=f"Tenant GL tree verification failed: {e}",
             category="SYSTEM_INIT",
             level="ERROR",
@@ -104,8 +105,8 @@ def _ensure_system_integrity_inner(app):
         repair_accounting_data()
         current_app.logger.info("SystemInit: Accounting data repair verified.")
     except Exception as e:
-        from services.error_audit_service import ErrorAuditService
-        ErrorAuditService.log(
+        from services.logging_core import LoggingCore
+        LoggingCore.log_error(
             message=f"Accounting data repair failed: {e}",
             category="SYSTEM_INIT",
             level="ERROR",
@@ -124,12 +125,13 @@ def _ensure_system_integrity_inner(app):
             sys.stderr.write(f"[SYSTEM_INIT_WARNING] Telemetry start failed: {e}\n")
             traceback.print_exc()
             try:
-                from services.error_audit_service import ErrorAuditService
-                ErrorAuditService.log_exception(
-                    e,
+                from services.logging_core import LoggingCore
+                LoggingCore.log_error(
+                    message=str(e),
                     category="SYSTEM_INIT",
                     source="utils.system_init.ensure_system_integrity.start_telemetry",
-                    level="WARNING"
+                    level="WARNING",
+                    exception=e
                 )
             except Exception:
                 pass
@@ -643,12 +645,13 @@ def _record_server_activation(owner_user, owner_created: bool):
         sys.stderr.write(f"[SYSTEM_INIT_ERROR] _record_server_activation failed: {e}\n")
         traceback.print_exc()
         try:
-            from services.error_audit_service import ErrorAuditService
-            ErrorAuditService.log_exception(
-                e,
+            from services.logging_core import LoggingCore
+            LoggingCore.log_error(
+                message=str(e),
                 category="SYSTEM_INIT",
                 source="utils.system_init._record_server_activation",
-                level="ERROR"
+                level="ERROR",
+                exception=e
             )
         except Exception:
             pass

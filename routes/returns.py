@@ -6,7 +6,7 @@ from services.return_service import ReturnService
 from models import Sale, ProductReturn
 from utils.decorators import permission_required, branch_scope_id
 from utils.branching import should_show_all_branch_columns
-from utils.helpers import create_audit_log
+from services.logging_core import LoggingCore
 from utils.tenanting import get_active_tenant_id, is_platform_owner
 
 
@@ -81,7 +81,7 @@ def api_create_return():
             manual_refund_amount=manual_refund_amount
         )
 
-        create_audit_log(
+        LoggingCore.log_audit(
             'create',
             'product_returns',
             result.id,

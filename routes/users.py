@@ -1,11 +1,11 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, abort, current_app
 from flask_login import login_required, current_user
-from extensions import db
+from extensions import db, limiter
 from models import User, Role, Branch
 from utils.decorators import admin_required, permission_required
 from utils.branching import branch_scope_id_for, role_requires_branch
 from utils.error_messages import ErrorMessages
-from utils.helpers import create_audit_log
+from services.logging_core import LoggingCore
 from utils.auth_helpers import role_level_for, role_level_for_user, enforce_company_user_tenant
 from utils.tenanting import get_active_tenant_id
 from utils.db_safety import atomic_transaction
@@ -101,6 +101,7 @@ def index():
 @users_bp.route('/create', methods=['GET', 'POST'])
 @login_required
 @permission_required('manage_users')
+@limiter.limit("10 per minute", methods=['POST'])
 def create():
     current_level = role_level_for_user(current_user)
     roles = Role.query.filter_by(is_active=True).all()
@@ -125,7 +126,20 @@ def create():
 
             is_active = request.form.get('is_active', '1') == '1'
             branch_id = _clean_branch_id(request.form.get('branch_id'))
-            _validate_user_branch(role_id, branch_id)
+            role = _validate_user_branch(role_id, branch_id)
+
+            # Server-side role-level hierarchy enforcement
+            if role_level_for(getattr(role, 'slug', None)) > current_level:
+                flash('⚠️ لا يمكنك تعيين دور أعلى من دورك.', 'danger')
+                form_values = request.form.to_dict()
+                form_values['is_active'] = request.form.get('is_active', '1')
+                return render_template(
+                    'users/create.html',
+                    roles=roles,
+                    branches=branches,
+                    form_data=form_values,
+                    username_example=_username_example(),
+                )
 
             username = (request.form.get('username') or '').strip()
             if is_platform_reserved(username):
@@ -207,7 +221,7 @@ def create():
                 db.session.add(user)
                 db.session.flush()
 
-                create_audit_log('create', 'users', user.id)
+                LoggingCore.log_audit('create', 'users', user.id)
 
             log_mutation('create', 'User', user.id, {'username': user.username})
             flash('✅ تم إضافة المستخدم بنجاح!', 'success')
@@ -254,6 +268,7 @@ def view(id):
 @users_bp.route('/<int:id>/edit', methods=['GET', 'POST'])
 @login_required
 @admin_required
+@limiter.limit("10 per minute", methods=['POST'])
 def edit(id):
     tid = get_active_tenant_id(current_user)
     user_query = User.query.filter_by(id=id, is_owner=False)
@@ -278,6 +293,12 @@ def edit(id):
             role_id = request.form.get('role_id', type=int)
             branch_id = _clean_branch_id(request.form.get('branch_id'))
             role = _validate_user_branch(role_id, branch_id)
+
+            # Server-side role-level hierarchy enforcement
+            if role_level_for(getattr(role, 'slug', None)) > current_level:
+                flash('⚠️ لا يمكنك تعيين دور أعلى من دورك.', 'danger')
+                return render_template('users/edit.html', user=user, roles=roles, branches=branches)
+
             user.role_id = role_id
             user.branch_id = branch_id
             enforce_company_user_tenant(user, role=role, is_owner=False)
@@ -288,7 +309,7 @@ def edit(id):
 
             user.is_active = request.form.get('is_active') == '1'
 
-            create_audit_log('update', 'users', user.id)
+            LoggingCore.log_audit('update', 'users', user.id)
 
             db.session.commit()
             flash('✅ تم تحديث بيانات المستخدم بنجاح!', 'success')
@@ -321,7 +342,7 @@ def toggle_active(id):
     status_msg = 'تفعيل' if user.is_active else 'إلغاء تفعيل'
     flash(f'✅ تم {status_msg} المستخدم "{user.username}" بنجاح!', 'success')
 
-    create_audit_log('toggle_active', 'users', user.id)
+    LoggingCore.log_audit('toggle_active', 'users', user.id)
 
     return redirect(url_for('users.index'))
 
@@ -338,6 +359,14 @@ def delete(id):
     user = user_query.first_or_404()
     _ensure_user_in_scope(user)
 
+    # Server-side role-level hierarchy enforcement on delete
+    current_level = role_level_for_user(current_user)
+    target_role = getattr(user, 'role', None)
+    target_slug = getattr(target_role, 'slug', None) if target_role else None
+    if role_level_for(target_slug) > current_level:
+        flash('⚠️ لا يمكنك حذف مستخدم بدور أعلى من دورك.', 'danger')
+        return redirect(url_for('users.index'))
+
     if user.id == current_user.id:
         flash('⚠️ لا يمكنك حذف حسابك الخاص.\n💡 اطلب من مدير آخر حذف حسابك إذا لزم الأمر.', 'danger')
         return redirect(url_for('users.index'))
@@ -353,13 +382,13 @@ def delete(id):
             user.is_active = False
             db.session.commit()
             flash(f'⚠️ تم إلغاء تفعيل المستخدم "{user.username}" (لديه {sales_count} عملية مسجلة).\n💡 لا يمكن حذفه نهائياً للحفاظ على السجلات.', 'warning')
-            create_audit_log('deactivate', 'users', id)
+            LoggingCore.log_audit('deactivate', 'users', id)
         else:
             username = user.username
             db.session.delete(user)
             db.session.commit()
             flash(f'✅ تم حذف المستخدم "{username}" نهائياً!', 'success')
-            create_audit_log('delete', 'users', id)
+            LoggingCore.log_audit('delete', 'users', id)
 
         return redirect(url_for('users.index'))
 

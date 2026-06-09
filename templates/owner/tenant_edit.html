@@ -102,45 +102,45 @@
           <h5 class="fw-semibold text-primary mb-3"><i class="bi bi-sliders me-2"></i>المميزات والصلاحيات</h5>
           <div class="row g-3">
             <div class="col-md-3">
-              <div class="form-check form-switch">
-                <input class="form-check-input" type="checkbox" name="enable_pos" id="enable_pos" {% if tenant.enable_pos %}checked{% endif %} aria-label="enable pos">
-                <label class="form-check-label" for="enable_pos">POS كاشير</label>
+              <div class="custom-control custom-switch">
+                <input type="checkbox" class="custom-control-input" name="enable_pos" id="enable_pos" {% if tenant.enable_pos %}checked{% endif %} aria-label="enable pos">
+                <label class="custom-control-label" for="enable_pos">POS كاشير</label>
               </div>
             </div>
             <div class="col-md-3">
-              <div class="form-check form-switch">
-                <input class="form-check-input" type="checkbox" name="enable_payroll" id="enable_payroll" {% if tenant.enable_payroll %}checked{% endif %} aria-label="enable payroll">
-                <label class="form-check-label" for="enable_payroll">الرواتب</label>
+              <div class="custom-control custom-switch">
+                <input type="checkbox" class="custom-control-input" name="enable_payroll" id="enable_payroll" {% if tenant.enable_payroll %}checked{% endif %} aria-label="enable payroll">
+                <label class="custom-control-label" for="enable_payroll">الرواتب</label>
               </div>
             </div>
             <div class="col-md-3">
-              <div class="form-check form-switch">
-                <input class="form-check-input" type="checkbox" name="enable_cheques" id="enable_cheques" {% if tenant.enable_cheques %}checked{% endif %} aria-label="enable cheques">
-                <label class="form-check-label" for="enable_cheques">الشيكات</label>
+              <div class="custom-control custom-switch">
+                <input type="checkbox" class="custom-control-input" name="enable_cheques" id="enable_cheques" {% if tenant.enable_cheques %}checked{% endif %} aria-label="enable cheques">
+                <label class="custom-control-label" for="enable_cheques">الشيكات</label>
               </div>
             </div>
             <div class="col-md-3">
-              <div class="form-check form-switch">
-                <input class="form-check-input" type="checkbox" name="enable_expenses" id="enable_expenses" {% if tenant.enable_expenses %}checked{% endif %} aria-label="enable expenses">
-                <label class="form-check-label" for="enable_expenses">المصاريف</label>
+              <div class="custom-control custom-switch">
+                <input type="checkbox" class="custom-control-input" name="enable_expenses" id="enable_expenses" {% if tenant.enable_expenses %}checked{% endif %} aria-label="enable expenses">
+                <label class="custom-control-label" for="enable_expenses">المصاريف</label>
               </div>
             </div>
             <div class="col-md-3">
-              <div class="form-check form-switch">
-                <input class="form-check-input" type="checkbox" name="enable_store" id="enable_store" {% if tenant.enable_store %}checked{% endif %} aria-label="enable store">
-                <label class="form-check-label" for="enable_store">المتجر الإلكتروني</label>
+              <div class="custom-control custom-switch">
+                <input type="checkbox" class="custom-control-input" name="enable_store" id="enable_store" {% if tenant.enable_store %}checked{% endif %} aria-label="enable store">
+                <label class="custom-control-label" for="enable_store">المتجر الإلكتروني</label>
               </div>
             </div>
             <div class="col-md-3">
-              <div class="form-check form-switch">
-                <input class="form-check-input" type="checkbox" name="allow_data_export" id="allow_data_export" {% if tenant.allow_data_export %}checked{% endif %} aria-label="allow data export">
-                <label class="form-check-label" for="allow_data_export">تصدير البيانات</label>
+              <div class="custom-control custom-switch">
+                <input type="checkbox" class="custom-control-input" name="allow_data_export" id="allow_data_export" {% if tenant.allow_data_export %}checked{% endif %} aria-label="allow data export">
+                <label class="custom-control-label" for="allow_data_export">تصدير البيانات</label>
               </div>
             </div>
             <div class="col-md-3">
-              <div class="form-check form-switch">
-                <input class="form-check-input" type="checkbox" name="allow_custom_integrations" id="allow_custom_integrations" {% if tenant.allow_custom_integrations %}checked{% endif %} aria-label="allow custom integrations">
-                <label class="form-check-label" for="allow_custom_integrations">تكاملات مخصصة</label>
+              <div class="custom-control custom-switch">
+                <input type="checkbox" class="custom-control-input" name="allow_custom_integrations" id="allow_custom_integrations" {% if tenant.allow_custom_integrations %}checked{% endif %} aria-label="allow custom integrations">
+                <label class="custom-control-label" for="allow_custom_integrations">تكاملات مخصصة</label>
               </div>
             </div>
           </div>
