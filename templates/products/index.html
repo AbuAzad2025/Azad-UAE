@@ -251,11 +251,10 @@
                   <i class="fas fa-trash"></i>
                 </button>
                 {% if current_user.has_permission('manage_sales') %}
-                <a href="{{ url_for('sales.create', product_id=product.id) }}"
-                {% endif %}
-                   class="btn btn-success" title="بيع">
+                <a href="{{ url_for('sales.create', product_id=product.id) }}" class="btn btn-success" title="بيع">
                   <i class="fas fa-shopping-cart"></i>
                 </a>
+                {% endif %}
                 <button type="button" class="btn btn-primary" title="إضافة كمية" 
                         onclick="adjustStock({{ product.id }}, {{ product.name|tojson }}, {{ shown_stock }})">
                   <i class="fas fa-plus"></i>
@@ -347,7 +346,7 @@ $(document).ready(function() {
     table = $tableEl.DataTable({
       language: { url: "{{ url_for('static', filename='datatables/Arabic.json') }}" },
       pageLength: 25,
-      order: [[5, 'asc']],  // Sort by stock (low first)
+      order: [[7, 'asc']],  // Sort by stock (low first)
       responsive: true,
       dom: 'Bfrtip',
       buttons: SmartPrint.buildButtons(printOptions)
@@ -361,14 +360,14 @@ $(document).ready(function() {
 
   // Smart filtering
   $('#filterAll').off('click.smartPrint').on('click.smartPrint', function() {
-    table.search('').column(5).search('').draw();
+    table.search('').column(7).search('').draw();
     $('.btn-group .btn').removeClass('active');
     $(this).addClass('active');
   });
 
   $('#filterLow').off('click.smartPrint').on('click.smartPrint', function() {
     $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
-      const stock = parseFloat(data[5].match(/\d+/)?.[0] || 0);
+      const stock = parseFloat(data[7].match(/\d+/)?.[0] || 0);
       const row = table.row(dataIndex).node();
       const min = parseFloat($(row).data('min')) || 0;
       return stock > 0 && stock <= min;
@@ -381,7 +380,7 @@ $(document).ready(function() {
 
   $('#filterOut').off('click.smartPrint').on('click.smartPrint', function() {
     $.fn.dataTable.ext.search.push(function(settings, data) {
-      return data[5].includes('نفذ');
+      return data[7].includes('نفذ');
     });
     table.draw();
     $.fn.dataTable.ext.search.pop();

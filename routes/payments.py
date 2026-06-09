@@ -670,8 +670,6 @@ def create_from_sale(sale_id):
 @permission_required('manage_payments')
 def create_voucher():
     """عرض صفحة إنشاء سند مالي موحد (قبض/صرف)"""
-    import json
-
     # تحضير البيانات لـ JS
     customers = _scoped_customers_query().order_by(Customer.name).all()
     suppliers = _scoped_suppliers_query().order_by(Supplier.name).all()
@@ -698,8 +696,8 @@ def create_voucher():
     preselected_exchange_rate = request.args.get('exchange_rate', type=float)
 
     return render_template('payments/voucher.html',
-                         customers_json=json.dumps(customers_data),
-                         suppliers_json=json.dumps(suppliers_data),
+                         customers_json=customers_data,
+                         suppliers_json=suppliers_data,
                          today_date=datetime.now().date().isoformat(),
                          preselected_direction=preselected_direction,
                          preselected_party_type=preselected_party_type,

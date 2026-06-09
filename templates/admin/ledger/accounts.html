@@ -90,9 +90,9 @@
                 </a>
                 {% if current_user.has_permission('view_ledger') %}
                 <a href="{{ url_for('ledger.account_statement', id=account.id) }}" class="btn btn-outline-info">
-                {% endif %}
                   <i class="fas fa-file-alt"></i>
                 </a>
+                {% endif %}
                 <button type="button" class="btn btn-outline-danger" onclick="deleteAccount({{ account.id }}, {{ account.full_name|tojson }})" title="حذف">
                   <i class="fas fa-trash"></i>
                 </button>

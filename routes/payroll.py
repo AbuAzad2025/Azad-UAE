@@ -153,7 +153,7 @@ def salary_slip(id):
     scoped_branch_id = branch_scope_id()
     if scoped_branch_id is not None and transaction.branch_id != scoped_branch_id:
         return render_template('errors/403.html'), 403
-    return render_template('payroll/slip.html', t=transaction)
+    return render_template('payroll/slip.html', slip=transaction)
 
 @payroll_bp.route('/statement/<int:id>')
 @login_required
