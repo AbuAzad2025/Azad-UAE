@@ -3,27 +3,7 @@ from extensions import db
 from decimal import Decimal
 from sqlalchemy import event
 from models.gl import GLJournalEntry, GLJournalLine
-
-class JournalEntryAudit(db.Model):
-    """سجل تدقيق القيود المحاسبية"""
-    __tablename__ = 'journal_entry_audits'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    journal_entry_id = db.Column(db.Integer, db.ForeignKey('gl_journal_entries.id'), nullable=False)
-    action = db.Column(db.String(50), nullable=False)  # create, update, reverse, delete, approve
-    old_values = db.Column(db.Text)  # JSON للقيم القديمة
-    new_values = db.Column(db.Text)  # JSON للقيم الجديدة
-    reason = db.Column(db.Text)
-    performed_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    performed_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
-    ip_address = db.Column(db.String(45))
-    user_agent = db.Column(db.Text)
-    
-    journal_entry = db.relationship('GLJournalEntry')
-    user = db.relationship('User')
-    
-    def __repr__(self):
-        return f'<JournalEntryAudit {self.action} - {self.journal_entry_id}>'
+from models.journal_entry_audit import JournalEntryAudit
 
 class AdvancedJournalEntryManager:
     """مدير القيود المحاسبية المتقدم"""

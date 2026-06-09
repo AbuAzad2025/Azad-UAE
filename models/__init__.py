@@ -47,6 +47,7 @@ from .security_alert import SecurityAlert
 from .api_key import APIKey
 from .product_serial import ProductSerial
 from .payroll import Employee, SalaryAdvance, PayrollTransaction
+from .journal_entry_audit import JournalEntryAudit
 from .partner_commission import PartnerCommissionEntry
 from .azad_platform_fee import AzadPlatformFee
 from .partner import Partner
@@ -102,5 +103,6 @@ __all__ = [
     'Partner',
     'PartnerProfitDistribution',
     'PartnerTransaction',
+    'JournalEntryAudit',
 ]
 
