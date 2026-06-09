@@ -813,9 +813,39 @@ class AIService:
         force_local = context.get('force_local', False) if context else False
         knowledge_context = '' if force_local else AIService._gather_relevant_knowledge(message, local_result)
         
-        # ========== المرحلة 2: التعاون مع Groq ==========
+        # إضافة سياق معرفة النظام الشامل (جدول النظام، الأدوار، الصلاحيات)
+        system_context = ''
+        try:
+            from ai_knowledge.system_knowledge import search_knowledge
+            ctx = search_knowledge(message, user_role=context.get('current_user').role.slug if context.get('current_user') else None)
+            if ctx:
+                system_context = '\n📘 **معلومات النظام:**\n' + ctx[:2000]
+        except Exception:
+            pass
+        
+        # ========== المرحلة 2: مسار التنفيذ المباشر (للأوامر الواضحة) ==========
+        try:
+            from ai_knowledge.action_dispatcher import action_dispatcher
+            parsed = action_dispatcher.parse_chat_action(message)
+            if parsed:
+                action_type, args = parsed
+                result = action_dispatcher.dispatch(action_type, args)
+                if result.success:
+                    return f"{result.message}\n\n<sub>🤖 المصدر: محرك التنفيذ الذكي</sub>"
+        except Exception:
+            pass
+        
+        # ========== المرحلة 3: مسار المعرفة المضمنة (للأسئلة المعرفية) ==========
+        try:
+            from ai_knowledge.agents_core import ask_azad_enhanced
+            fast_path = ask_azad_enhanced(message, current_user=context.get('current_user'))
+            if fast_path and fast_path.get('answer') and fast_path.get('source') != 'local':
+                return f"{fast_path['answer']}\n\n<sub>🤖 المصدر: GROQ API + معرفة النظام</sub>"
+        except Exception:
+            pass
+        
+        # ========== المرحلة 4: التعاون مع Groq ==========
         api_key = AIService.get_api_key()
-        # السماح بالرسائل للوصول لـ Groq إذا كان مفعلاً (الاعتماد على الزر فقط)
         use_groq = api_key and not force_local
         
         if use_groq:
@@ -836,32 +866,37 @@ class AIService:
                     url = "https://api.openai.com/v1/chat/completions"
                     model = "gpt-4"
                 
-                # Groq مع صلاحيات كاملة
-                expert_prompt = f"""أنت أزاد - مساعد ذكي تفاعلي لنظام إدارة كراجات.
+                # بناء البرومبت مع معرفة النظام الشاملة
+                role_slug = context.get('current_user').role.slug if context.get('current_user') else 'user'
+                expert_prompt = f"""أنت أزاد - مساعد ذكي خبير لنظام إدارة كراجات وورش المعدات الثقيلة.
+
+دور المستخدم: {role_slug}
 
 السؤال:
 {message}
 
 📊 بيانات النظام الحالية:
 {knowledge_context}
+{system_context}
 
 🎯 قدراتك:
-1. قراءة البيانات (Users, Customers, Products, Sales, etc)
-2. إنشاء سجلات جديدة (عملاء، منتجات، فواتير)
-3. تحديث البيانات الموجودة
-4. تحليل وتقارير
-5. استشارات تقنية (معدات ثقيلة)
+1. قراءة وتحليل البيانات (Users, Customers, Products, Sales, Purchases, Expenses, Payments, Cheques)
+2. إنشاء وتحديث السجلات (عملاء، منتجات، فواتير بيع وشراء، مصروفات، مدفوعات)
+3. تحليلات وتقارير مالية متقدمة (إيرادات، أرباح، هوامش، تكاليف)
+4. استشارات فنية ومحاسبية متخصصة
+5. شؤون الموظفين وحساباتهم
+6. إدارة المخزون ومستويات التخزين
 
 📝 إذا طلب إنشاء/تعديل:
 - اطلب المعلومات المطلوبة بوضوح
 - ردّ بصيغة JSON واضحة:
   {{
-    "action": "create_customer/create_product/etc",
+    "action": "create_customer/create_product/create_sale",
     "data_needed": ["الاسم", "الهاتف", "..."],
     "message": "رسالة للمستخدم"
   }}
 
-⚠️ مهم: إذا سأل عن بيانات - استخدم الأرقام الموجودة."""
+⚠️ مهم: إذا سأل عن بيانات - استخدم الأرقام الموجودة. إذا سأل عن واجهة النظام أو جداوله - أخبره بناءً على المعلومات أعلاه."""
                 
                 response = requests.post(
                     url,
@@ -897,6 +932,13 @@ class AIService:
             
             except Exception as e:
                 print(f"Groq collaboration failed: {str(e)}")
+                try:
+                    from services.error_audit_service import ErrorAuditService
+                    ErrorAuditService.log_exception(
+                        e, category="AI", source="services.ai_service.chat_response", level="ERROR"
+                    )
+                except Exception:
+                    pass
         
         return f"{local_response}\n\n<sub>💻 المصدر: النظام المحلي الذكي</sub>"
     
@@ -948,6 +990,11 @@ class AIService:
             
         except Exception as e:
             print(f"Action execution error: {e}")
+            try:
+                from services.error_audit_service import ErrorAuditService
+                ErrorAuditService.log_exception(e, category="AI", source="services.ai_service._execute_ai_action", level="WARNING")
+            except Exception:
+                pass
             return None
     
     @staticmethod

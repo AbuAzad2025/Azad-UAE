@@ -374,8 +374,28 @@ def chat():
     action_result = None
     ai_state = getattr(g, 'ai_access_state', None) or get_ai_access_state(current_user)
     can_execute_mutations = ai_state.get('is_platform_user') or ai_level_allows(ai_state.get('ai_level'), 'execute')
+    
+    # Try new action dispatcher first (clean, permission-validated, error-logged)
     if can_execute_mutations and _user_can_ai_execute_actions(current_user):
+        from ai_knowledge.action_dispatcher import action_dispatcher
+        from ai_knowledge.agents_core import intelligent_response
+        parsed = action_dispatcher.parse_chat_action(message)
+        if parsed:
+            action_type, args = parsed
+            if action_type in ("greeting", "help"):
+                action_result = intelligent_response(message, current_user.id, context)
+            else:
+                result = action_dispatcher.dispatch(action_type, args)
+                if result.success:
+                    action_result = result.message
+                else:
+                    # Fall back to old wizard on failure
+                    action_result = _process_user_action(message, current_user)
+        else:
+            action_result = _process_user_action(message, current_user)
+    elif _user_can_ai_execute_actions(current_user):
         action_result = _process_user_action(message, current_user)
+    
     if action_result:
         return jsonify({
             'response': action_result,
@@ -3007,6 +3027,11 @@ http://localhost:5000/ai/assistant
         return None
         
     except Exception as e:
+        try:
+            from services.error_audit_service import ErrorAuditService
+            ErrorAuditService.log_exception(e, category="AI", source="routes.ai._process_user_action", level="ERROR")
+        except Exception:
+            pass
         return f"❌ خطأ في التنفيذ: {str(e)}"
 
 
