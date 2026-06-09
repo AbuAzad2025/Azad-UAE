@@ -17,7 +17,7 @@
                 </div>
                 <div class="col-md-6 text-left">
                     <p><strong>الراتب الأساسي:</strong> {{ employee.basic_salary }}</p>
-                    <p><strong>تاريخ الطباعة:</strong> {{ now }}</p>
+                    <p><strong>تاريخ الطباعة:</strong> {{ now().strftime('%Y-%m-%d %H:%M:%S') }}</p>
                 </div>
             </div>
             

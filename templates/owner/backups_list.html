@@ -296,7 +296,7 @@
           </button>
           <small class="d-block text-muted mt-2">
             <i class="fas fa-clock mr-1"></i>
-            آخر تحديث: {{ now.strftime('%Y-%m-%d %H:%M:%S') if now else 'الآن' }}
+            آخر تحديث: {{ now().strftime('%Y-%m-%d %H:%M:%S') }}
           </small>
         </div>
       </div>
@@ -539,7 +539,8 @@
 
 function openTargetRestore(filename) {
   $('#targetRestoreFilename').text(filename);
-  $('#targetRestoreForm').attr('action', '{{ url_for("owner.restore_backup_target", filename="__FILENAME__") }}'.replace('__FILENAME__', encodeURIComponent(filename)));
+  const actionUrl = {{ url_for("owner.restore_backup_target", filename="__FILENAME__")|tojson }};
+  $('#targetRestoreForm').attr('action', actionUrl.replace('__FILENAME__', encodeURIComponent(filename)));
   $('#targetRestoreModal').modal('show');
 }
 
@@ -554,7 +555,7 @@ function verifyBackup(filename) {
   });
   
   const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-  const urlTemplate = '{{ url_for("owner.verify_backup", filename="__FILENAME__") }}';
+  const urlTemplate = {{ url_for("owner.verify_backup", filename="__FILENAME__")|tojson }};
   const url = urlTemplate.replace('__FILENAME__', encodeURIComponent(filename));
 
   fetch(url, {

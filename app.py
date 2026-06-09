@@ -458,7 +458,7 @@ def create_app(config_class=Config):
             'available_tenants': available_tenants,
             'active_tenant_id': active_tenant_id,
             'current_year': datetime.now().year,
-            'now': datetime.now(),
+            'now': datetime.now,
             'ai_enabled': 'ai' in app.blueprints,
             'ai_access_state': ai_access_state,
             'ai_nav_visible': bool(ai_access_state.get('allowed')),

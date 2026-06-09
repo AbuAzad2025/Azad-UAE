@@ -46,7 +46,7 @@
             <div class="col-md-4">
                 <div class="form-group">
                     <label for="input_joined_date">تاريخ الانضمام</label>
-                    <input type="date" name="joined_date" class="form-control" value="{{ now }}" id="input_joined_date" aria-label="joined date">
+                    <input type="date" name="joined_date" class="form-control" value="{{ now().strftime('%Y-%m-%d') }}" id="input_joined_date" aria-label="joined date">
                 </div>
             </div>
         </div>
