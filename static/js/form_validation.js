@@ -46,9 +46,9 @@
         err = MSG.email;
       } else if (name.includes('phone') && !PHONE_RE.test(val)) {
         err = MSG.phone;
-      } else if (input.minLength && val.length < input.minLength) {
+      } else if (input.minLength > 0 && val.length < input.minLength) {
         err = MSG.minlength.replace('{0}', input.minLength);
-      } else if (input.maxLength && val.length > input.maxLength) {
+      } else if (input.maxLength > 0 && val.length > input.maxLength) {
         err = MSG.maxlength.replace('{0}', input.maxLength);
       } else if (input.pattern) {
         const re = new RegExp(input.pattern);
