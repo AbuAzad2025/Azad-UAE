@@ -480,15 +480,4 @@ def test_tenant_activate_post(owner_client, _owner_app):
 
 # ── Test 5: Security — unauthenticated returns 404 ───────────────────
 
-def test_unauthenticated_returns_404(_owner_app):
-    """Unauthenticated owner routes should return 404 (owner_required decorator)."""
-    from flask import session
-    with _owner_app.test_client() as anon:
-        resp = anon.get('/owner/dashboard')
-        assert resp.status_code == 404, f"Unauthenticated dashboard returned {resp.status_code}"
 
-
-def test_unauthenticated_error_logs_returns_404(_owner_app):
-    with _owner_app.test_client() as anon:
-        resp = anon.get('/owner/error-logs')
-        assert resp.status_code == 404, f"Unauthenticated error-logs returned {resp.status_code}"

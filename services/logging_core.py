@@ -1466,8 +1466,11 @@ class LoggingCore:
                     if current:
                         raw_entries.append(current)
                     current = [line]
-                elif current:
-                    current.append(line)
+                else:
+                    if not current:
+                        current = [line]
+                    else:
+                        current.append(line)
             if current:
                 raw_entries.append(current)
 
