@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <title>بطاقات المنتجات</title>
+  <style>
+    @page { size: A4; margin: 8mm; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Cairo', 'Tahoma', sans-serif; direction: rtl; background: #fff; }
+    .label-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6mm; }
+    .label-card { border: 1px solid #333; border-radius: 4px; padding: 4mm; page-break-inside: avoid; break-inside: avoid; }
+    .label-card .name { font-size: 11pt; font-weight: 700; margin-bottom: 2mm; text-align: center; }
+    .label-card .sku { font-size: 8pt; color: #555; margin-bottom: 1mm; text-align: center; }
+    .label-card .barcode { font-family: 'Libre Barcode 39', 'monospace'; font-size: 28pt; text-align: center; margin: 2mm 0; letter-spacing: 2px; }
+    .label-card .barcode-text { font-size: 7pt; text-align: center; color: #333; margin-top: -1mm; }
+    .label-card .details { display: flex; justify-content: space-between; font-size: 9pt; margin-top: 2mm; border-top: 1px dashed #aaa; padding-top: 2mm; }
+    .label-card .details span { }
+    .label-card .price { color: #28a745; font-weight: 700; font-size: 12pt; }
+    .label-card .cost { color: #856404; font-size: 8pt; }
+    .label-card .category { font-size: 7pt; color: #777; text-align: center; margin-top: 1mm; }
+    @media print {
+      .no-print { display: none; }
+    }
+    .no-print { text-align: center; margin-bottom: 10px; }
+    .no-print button { padding: 8px 24px; font-size: 14px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div class="no-print">
+    <button onclick="window.print()">طباعة</button>
+    <button onclick="window.close()">إغلاق</button>
+  </div>
+  <div class="label-grid">
+    {% for p in products %}
+    <div class="label-card">
+      <div class="name">{{ p.name_ar or p.name }}</div>
+      {% if p.sku %}<div class="sku">SKU: {{ p.sku }}</div>{% endif %}
+      {% if p.barcode %}
+      <div class="barcode">*{{ p.barcode }}*</div>
+      <div class="barcode-text">{{ p.barcode }}</div>
+      {% endif %}
+      <div class="details">
+        <span class="price">{{ format_currency(p.price) }}</span>
+        {% if p.cost %}<span class="cost">التكلفة: {{ format_currency(p.cost) }}</span>{% endif %}
+      </div>
+      {% if p.category %}<div class="category">{{ p.category }}</div>{% endif %}
+    </div>
+    {% endfor %}
+  </div>
+</body>
+</html>

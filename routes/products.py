@@ -1085,3 +1085,38 @@ def adjust_stock(id):
         db.session.rollback()
         current_app.logger.exception('Product stock update failed')
         return jsonify({'success': False, 'message': 'تعذر تحديث المخزون حالياً'})
+
+
+@products_bp.route('/<int:id>/print-label')
+@login_required
+@permission_required('view_products')
+def print_label(id):
+    from services.label_print_service import get_single_label_html
+    product = tenant_get_or_404(Product, id, get_active_tenant_id(current_user))
+    branch_id = None
+    try:
+        from utils.branching import report_branch_scope_id
+        branch_id = report_branch_scope_id()
+    except Exception:
+        pass
+    return get_single_label_html(product, branch_id=branch_id)
+
+
+@products_bp.route('/print-labels', methods=['POST'])
+@login_required
+@permission_required('view_products')
+def print_labels():
+    from services.label_print_service import get_product_labels_html
+    ids = request.json.get('product_ids', []) if request.is_json else request.form.getlist('product_ids')
+    ids = [int(i) for i in ids if str(i).isdigit()]
+    if not ids:
+        flash('اختر منتجات للطباعة.', 'warning')
+        return redirect(url_for('products.index'))
+    tenant_id = get_active_tenant_id(current_user)
+    branch_id = None
+    try:
+        from utils.branching import report_branch_scope_id
+        branch_id = report_branch_scope_id()
+    except Exception:
+        pass
+    return get_product_labels_html(ids, tenant_id, branch_id=branch_id)

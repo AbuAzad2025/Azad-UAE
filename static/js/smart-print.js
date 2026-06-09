@@ -320,7 +320,7 @@
     // Body
     html += '<tbody>';
     for (let i = 0; i < data.body.length; i++) {
-      html += 'tr';
+      html += '<tr>';
       for (let j = 0; j < data.body[i].length; j++) {
         html += '<td>' + data.body[i][j] + '</td>';
       }

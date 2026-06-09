@@ -1,0 +1,55 @@
+{% macro render_filter_bar(date_from='', date_to='', branches=[], selected_branch='', show_date_to_label='إلى:', single_date=False, extra_filters='', print_endpoint='', export_urls=[]) %}
+<div class="row mb-3 fin-no-print">
+  <div class="col-12">
+    <div class="card fin-filter-card">
+      <div class="card-body py-2">
+        <form method="get" class="form-inline flex-wrap">
+          {% if not single_date %}
+          <label class="mr-1" for="input_date_from">من:</label>
+          <input type="date" name="date_from" class="form-control form-control-sm mr-2" value="{{ date_from or '' }}" id="input_date_from" aria-label="من تاريخ">
+          {% endif %}
+          <label class="mr-1" for="input_date_to">{{ show_date_to_label }}</label>
+          <input type="date" name="date_to" class="form-control form-control-sm mr-2" value="{{ date_to or '' }}" id="input_date_to" aria-label="{{ show_date_to_label }}">
+          <label class="mr-1">الفرع:</label>
+          <select name="branch_id" class="form-control form-control-sm mr-2" aria-label="اختر الفرع">
+            <option value="">-- الكل --</option>
+            {% for branch in branches %}
+            <option value="{{ branch.id }}" {% if selected_branch == branch.id %}selected{% endif %}>{{ branch.name }}</option>
+            {% endfor %}
+          </select>
+          {{ extra_filters }}
+          <button type="submit" class="btn btn-primary btn-sm mr-1"><i class="fas fa-filter"></i> تصفية</button>
+          <button type="button" onclick="window.print()" class="btn btn-info btn-sm mr-1"><i class="fas fa-print"></i> طباعة</button>
+          {% for eu in export_urls %}
+          <a href="{{ eu.url }}" class="btn btn-{{ eu.color or 'secondary' }} btn-sm mr-1"><i class="fas fa-{{ eu.icon or 'download' }}"></i> {{ eu.label }}</a>
+          {% endfor %}
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endmacro %}
+
+{% macro render_kpi_cards(cards) %}
+<div class="row mb-3">
+  {% for card in cards %}
+  <div class="col-md-{{ card.col_md or '3' }} col-6 mb-2">
+    <div class="card fin-kpi-card bg-gradient-{{ card.color or 'primary' }} text-white">
+      <div class="card-body position-relative">
+        <i class="fas {{ card.icon or 'fa-chart-bar' }} kpi-icon"></i>
+        <div class="kpi-value">{{ card.value }}</div>
+        <div class="kpi-label">{{ card.label }}</div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endmacro %}
+
+{% macro render_report_header(title, subtitle='', meta='') %}
+<div class="fin-report-header">
+  <h2>{{ title }}</h2>
+  {% if subtitle %}<div class="meta">{{ subtitle }}</div>{% endif %}
+  {% if meta %}<div class="meta">{{ meta }}</div>{% endif %}
+</div>
+{% endmacro %}

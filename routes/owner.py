@@ -2718,6 +2718,26 @@ def error_logs():
                          level_filter=level_filter,
                          stats=stats)
 
+@owner_bp.route('/error-logs/export')
+@login_required
+@owner_required
+def export_error_logs():
+    """Export raw errors.log as text file download."""
+    import os
+    basedir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
+    log_path = os.path.join(basedir, 'logs', 'errors.log')
+    if not os.path.exists(log_path):
+        flash('ملف سجلات الأخطاء غير موجود.', 'warning')
+        return redirect(url_for('owner.error_logs'))
+    with open(log_path, 'r', encoding='utf-8') as f:
+        content = f.read()
+    from datetime import datetime, timezone
+    ts = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
+    return content, 200, {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'Content-Disposition': f'attachment; filename="errors_{ts}.txt"',
+    }
+
 @owner_bp.route('/login-history')
 @login_required
 @owner_required
@@ -2983,6 +3003,7 @@ def payment_gateways():
     vault = PaymentVault.get_platform_vault()
     if not vault:
         vault = PaymentVault(tenant_id=None)
+        vault.set_vault_password(current_app.config.get('SECRET_KEY', 'default-vault-password'))
         db.session.add(vault)
         db.session.commit()
         _invalidate_owner_changes()
@@ -3257,6 +3278,7 @@ def export_excel(table_name):
 @login_required
 @owner_required
 def sales_insights():
+    from services.analytics_service import AnalyticsService
     scoped_branch_id = _owner_branch_scope()
     tid = get_active_tenant_id(current_user)
     insights = AnalyticsService.get_sales_insights(tenant_id=tid, branch_id=scoped_branch_id)
@@ -3266,6 +3288,7 @@ def sales_insights():
 @login_required
 @owner_required
 def customer_insights():
+    from services.analytics_service import AnalyticsService
     scoped_branch_id = _owner_branch_scope()
     tid = get_active_tenant_id(current_user)
     customers = AnalyticsService.get_customer_insights(tenant_id=tid, branch_id=scoped_branch_id)
@@ -3275,6 +3298,7 @@ def customer_insights():
 @login_required
 @owner_required
 def product_performance():
+    from services.analytics_service import AnalyticsService
     scoped_branch_id = _owner_branch_scope()
     tid = get_active_tenant_id(current_user)
     products = AnalyticsService.get_product_performance(tenant_id=tid, branch_id=scoped_branch_id)
@@ -3284,6 +3308,7 @@ def product_performance():
 @login_required
 @owner_required
 def forecasting():
+    from services.analytics_service import AnalyticsService
     scoped_branch_id = _owner_branch_scope()
     tid = get_active_tenant_id(current_user)
     historical, forecast = AnalyticsService.get_forecasting_data(tenant_id=tid, branch_id=scoped_branch_id)
@@ -3306,6 +3331,63 @@ def tenants_list():
         branch_counts=context['branch_counts'],
         store_counts=context['store_counts'],
     )
+
+@owner_bp.route('/tenants/create', methods=['GET', 'POST'])
+@login_required
+@owner_required
+def tenant_create():
+    """Create a new tenant from the owner panel."""
+    if request.method == 'POST':
+        try:
+            name_ar = request.form.get('name_ar', '').strip()
+            name_en = request.form.get('name_en', '').strip() or name_ar
+            slug = request.form.get('slug', '').strip()
+            if not name_ar or not slug:
+                flash('الاسم العربي والـ Slug مطلوبان.', 'danger')
+                return redirect(url_for('owner.tenant_create'))
+            if Tenant.query.filter_by(slug=slug).first():
+                flash('الـ Slug مستخدم مسبقاً.', 'danger')
+                return redirect(url_for('owner.tenant_create'))
+            tenant = Tenant(
+                name=name_ar,
+                name_ar=name_ar,
+                name_en=name_en,
+                slug=slug,
+                business_type=request.form.get('business_type', 'general').strip(),
+                phone_1=request.form.get('phone_1', '').strip() or None,
+                phone_2=request.form.get('phone_2', '').strip() or None,
+                email=request.form.get('email', '').strip() or None,
+                address_ar=request.form.get('address_ar', '').strip() or None,
+                default_currency=request.form.get('default_currency', 'AED').strip(),
+                max_users=int(request.form.get('max_users', 5)),
+                max_products=int(request.form.get('max_products', 1000)),
+                max_customers=int(request.form.get('max_customers', 500)),
+                max_suppliers=int(request.form.get('max_suppliers', 200)),
+                max_branches=int(request.form.get('max_branches', 3)),
+                max_warehouses=int(request.form.get('max_warehouses', 2)),
+                max_invoices_per_month=int(request.form.get('max_invoices_per_month', 1000)),
+                max_sales_per_month=int(request.form.get('max_sales_per_month', 5000)),
+                data_retention_days=int(request.form.get('data_retention_days', 365)),
+                enable_pos=request.form.get('enable_pos') == 'on',
+                enable_payroll=request.form.get('enable_payroll') == 'on',
+                enable_cheques=request.form.get('enable_cheques') == 'on',
+                enable_expenses=request.form.get('enable_expenses') == 'on',
+                enable_store=request.form.get('enable_store') == 'on',
+                allow_data_export=request.form.get('allow_data_export') == 'on',
+                allow_custom_integrations=request.form.get('allow_custom_integrations') == 'on',
+                is_active=True,
+                is_suspended=False,
+            )
+            db.session.add(tenant)
+            db.session.commit()
+            _invalidate_owner_changes()
+            _audit_owner_db_action('tenant_create', {'tenant_id': tenant.id, 'slug': slug})
+            flash(f'تم إنشاء التينانت "{tenant.name_ar}" بنجاح.', 'success')
+            return redirect(url_for('owner.tenants_list'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'خطأ في إنشاء التينانت: {str(e)}', 'danger')
+    return render_template('owner/tenant_create.html')
 
 @owner_bp.route('/tenants/<int:tenant_id>/suspend', methods=['POST'])
 @login_required
@@ -3358,7 +3440,7 @@ def tenant_edit(tenant_id):
 
     if request.method == 'POST':
         try:
-            tenant.name = request.form.get('name', tenant.name).strip()
+            tenant.name = request.form.get('name_ar', tenant.name).strip()
             tenant.name_ar = request.form.get('name_ar', tenant.name_ar).strip()
             tenant.name_en = request.form.get('name_en', tenant.name_en).strip()
             tenant.slug = request.form.get('slug', tenant.slug).strip()

@@ -43,6 +43,9 @@
       <a href="{{ url_for('owner.activity_monitor') }}" class="btn btn-info">
         <i class="fas fa-chart-line ml-1"></i> النشاط
       </a>
+      <a href="{{ url_for('owner.export_error_logs') }}" class="btn btn-success">
+        <i class="fas fa-download ml-1"></i> تصدير كملف نصي
+      </a>
     </div>
   </div>
 
@@ -69,7 +72,7 @@
   
   <div class="card card-outline card-secondary mb-3">
     <div class="card-body p-2">
-      <form class="needs-validation" method="GET" action="{{ url_for('owner.error_logs') }}" class="form-inline">
+      <form method="GET" action="{{ url_for('owner.error_logs') }}" class="form-inline">
         <div class="input-group input-group-sm mr-2 ic-1">
           <div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-search"></i></span></div>
           <input type="text" name="search" class="form-control" placeholder="ابحث في الرسالة / الموديول / المسار..."
@@ -80,6 +83,8 @@
           <option value="ERROR" {% if level_filter=='ERROR' %}selected{% endif %}>ERROR</option>
           <option value="WARNING" {% if level_filter=='WARNING' %}selected{% endif %}>WARNING</option>
           <option value="CRITICAL" {% if level_filter=='CRITICAL' %}selected{% endif %}>CRITICAL</option>
+          <option value="DEBUG" {% if level_filter=='DEBUG' %}selected{% endif %}>DEBUG</option>
+          <option value="UNKNOWN" {% if level_filter=='UNKNOWN' %}selected{% endif %}>UNKNOWN</option>
         </select>
         <button type="submit" class="btn btn-primary"><i class="fas fa-filter mr-1"></i> تصفية</button>
         {% if search or level_filter %}

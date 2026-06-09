@@ -41,41 +41,7 @@
 
 
 {% block extra_css %}
-
-<style>
-
-  .pos-wrap .form-control { min-height: 48px; font-size: 1rem; }
-
-  .pos-cart-table td, .pos-cart-table th { vertical-align: middle; }
-
-  .pos-cart-table input { min-height: 40px; }
-
-  .pos-results { max-height: 280px; overflow: auto; }
-
-  .pos-kpi { background: linear-gradient(135deg,#667eea 0%,#764ba2 100%); color: #fff; border-radius: 12px; }
-
-  .pos-kpi .value { font-size: 1.7rem; font-weight: 800; }
-
-  .pos-scan-focus { box-shadow: 0 0 0 3px rgba(102,126,234,.45); border-color: #667eea; }
-  .pos-btn-cash { background: #28a745; border-color: #28a745; color: #fff; font-size: 1.15rem; }
-  .pos-btn-cash:hover { background: #218838; border-color: #1e7e34; }
-  @media (max-width: 991px) {
-    .pos-right { margin-top: 12px; }
-    .pos-wrap .form-control, .pos-wrap .btn { min-height: 52px; }
-  }
-  @media (max-width: 576px) {
-    .pos-kpi .value { font-size: 1.35rem; }
-  }
-
-
-    /* D6: externalized inline styles */
-    .ic-1 { width: 38%; }
-    .ic-2 { width: 12%; }
-    .ic-3 { width: 14%; }
-    .ic-4 { width: 10%; }
-    .ic-5 { width: 16%; }
-  </style>
-
+<link rel="stylesheet" href="{{ url_for('static', filename='css/pos.css') }}">
 {% endblock %}
 
 
@@ -130,7 +96,7 @@
 
               <div class="input-group">
 
-                <input id="productSearch" class="form-control" placeholder="امسح الباركود أو اكتب الاسم/الكود">
+                <input id="productSearch" class="form-control barcode-input" placeholder="امسح الباركود أو اكتب الاسم/الكود">
 
                 <div class="input-group-append">
 
@@ -416,15 +382,17 @@
 
 
 
-          <button id="checkoutBtn" class="btn btn-success btn-block btn-lg">
+          <button id="checkoutBtn" class="btn btn-success btn-block btn-lg pos-checkout-btn">
 
-            <i class="fas fa-check mr-2"></i>حفظ الفاتورة
+            <span class="btn-text"><i class="fas fa-check mr-2"></i>حفظ الفاتورة</span>
+            <span class="btn-spinner"><i class="fas fa-spinner fa-spin"></i></span>
 
           </button>
 
-          <button id="checkoutPrintBtn" class="btn btn-primary btn-block mt-2">
+          <button id="checkoutPrintBtn" class="btn btn-primary btn-block mt-2 pos-checkout-btn">
 
-            <i class="fas fa-print mr-2"></i>حفظ + طباعة
+            <span class="btn-text"><i class="fas fa-print mr-2"></i>حفظ + طباعة</span>
+            <span class="btn-spinner"><i class="fas fa-spinner fa-spin"></i></span>
 
           </button>
 
@@ -489,6 +457,7 @@
 
 
 {% block extra_js %}
+<script src="{{ url_for('static', filename='js/barcode-scanner.js') }}"></script>
 
 <script>
 
@@ -502,7 +471,9 @@
 
       cart: [],
 
-      lastProductResults: []
+      lastProductResults: [],
+
+      barcodeScanner: null
 
     };
 
@@ -1257,9 +1228,9 @@
       checkoutBusy = true;
 
       qs('#checkoutBtn').disabled = true;
-
+      qs('#checkoutBtn').classList.add('loading');
       qs('#checkoutPrintBtn').disabled = true;
-
+      qs('#checkoutPrintBtn').classList.add('loading');
       try {
 
         const r = await fetch('/pos/api/checkout', {
@@ -1323,8 +1294,9 @@
         checkoutBusy = false;
 
         qs('#checkoutBtn').disabled = false;
-
+        qs('#checkoutBtn').classList.remove('loading');
         qs('#checkoutPrintBtn').disabled = false;
+        qs('#checkoutPrintBtn').classList.remove('loading');
 
       }
 
@@ -1385,6 +1357,24 @@
     renderCart();
 
     qs('#productSearch').focus();
+
+    
+    state.barcodeScanner = new BarcodeScanner({
+      onScan: async (code) => {
+        if (!code || !code.trim()) return;
+        try {
+          const p = await fetchJson('/pos/api/product?code=' + encodeURIComponent(code.trim()) + warehouseParam());
+          if (p && p.id) {
+            if (p.is_inactive) { showAlert(p.warning || 'المنتج غير نشط.', 'warning'); return; }
+            addToCart(p);
+            qs('#productSearch').value = '';
+            qs('#productResults').classList.add('d-none');
+            showAlert('تمت إضافة ' + p.name, 'success');
+          }
+        } catch (_) {}
+      }
+    });
+    state.barcodeScanner.start();
 
   })();
 

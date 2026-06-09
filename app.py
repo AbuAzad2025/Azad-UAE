@@ -226,6 +226,7 @@ def create_app(config_class=Config):
         from utils.number_to_arabic import number_to_arabic_words
         from utils.i18n import t, is_rtl, get_current_language
         from utils.currency_utils import get_currency_symbol, get_currency_name_ar
+        from utils.report_registry import REPORT_REGISTRY, REPORT_CATEGORIES, get_reports_by_category
 
         tenant_name_ar = ''
         tenant_name = ''
@@ -454,6 +455,9 @@ def create_app(config_class=Config):
                     ai_access_state.get('tenant_enabled') is not False
                 )
             ),
+            'report_categories': REPORT_CATEGORIES,
+            'report_registry_by_category': get_reports_by_category(current_user),
+            'report_registry': REPORT_REGISTRY,
         }
         
     @app.before_request

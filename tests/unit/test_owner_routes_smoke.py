@@ -23,11 +23,19 @@ def test_routes_exist(smoke_app):
         targets = [
             "/owner/error-audit-logs",
             "/owner/error-audit-logs/export",
+            "/owner/error-logs",
+            "/owner/error-logs/export",
             "/owner/backups/list",
             "/owner/system-health",
             "/owner/activity-monitor",
             "/owner/performance-metrics",
             "/owner/archived",
+            "/owner/tenants",
+            "/owner/tenants/create",
+            "/owner/tenants/<int:tenant_id>/edit",
+            "/owner/tenants/<int:tenant_id>/suspend-page",
+            "/owner/tenant-stores",
+            "/owner/tenant-ai",
         ]
         for target in targets:
             assert any(target in r for r in rules), f"Route {target} not found"
@@ -36,11 +44,18 @@ def test_routes_no_500(smoke_client):
     targets = [
         "/owner/error-audit-logs",
         "/owner/error-audit-logs/export?format=json",
+        "/owner/error-logs",
+        "/owner/error-logs/export",
         "/owner/backups/list",
         "/owner/system-health",
         "/owner/activity-monitor",
         "/owner/performance-metrics",
         "/owner/archived",
+        "/owner/tenants",
+        "/owner/tenants/create",
+        "/owner/tenants/1/edit",
+        "/owner/tenant-stores",
+        "/owner/tenant-ai",
     ]
     for target in targets:
         response = smoke_client.get(target)

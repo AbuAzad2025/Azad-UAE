@@ -1440,6 +1440,7 @@ class LoggingCore:
 
         Replaces services/error_log_service.py → ErrorLogService.get_parsed_errors()
         """
+        import os as _os
         import re as _re
         from collections import Counter
 
@@ -1449,47 +1450,66 @@ class LoggingCore:
             with open(log_file, "r", encoding="utf-8") as f:
                 raw = f.read()
 
-            entries = _re.split(r"\n(?:\s*\n)+", raw)
-            for entry in reversed(entries):
-                entry = entry.strip()
-                if not entry:
-                    continue
-                lines = entry.splitlines()
-                if not lines:
-                    continue
+            _header_re = _re.compile(
+                r"^(?:"
+                r"\[(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})\]\s+(\w+)\s+in\s+([^:]+):(\d+)"  # new format
+                r"|"
+                r"(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}(?:,\d+)?)\s+-\s+(\w+)\s+-\s+(.+?):(\d+)\s+-\s+(.*)"  # old format
+                r")$"
+            )
 
-                header_match = _re.match(
-                    r"^\[(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})\]\s+(\w+)\s+in\s+([^:]+):(\d+)$",
-                    lines[0].strip(),
-                )
-                if not header_match:
+            lines = raw.splitlines()
+            raw_entries: list[list[str]] = []
+            current: list[str] = []
+            for line in lines:
+                if _header_re.match(line.strip()):
+                    if current:
+                        raw_entries.append(current)
+                    current = [line]
+                elif current:
+                    current.append(line)
+            if current:
+                raw_entries.append(current)
+
+            for entry_lines in reversed(raw_entries):
+                entry_text = "\n".join(entry_lines)
+                first = entry_lines[0].strip()
+
+                header_match = _header_re.match(first)
+                if header_match:
+                    groups = header_match.groups()
+                    if groups[0] is not None:
+                        ts, level, mod, ln = groups[0], groups[1], groups[2], groups[3]
+                        _path = ""
+                        message = ""
+                        i = 1
+                        if len(entry_lines) > i and entry_lines[i].strip().startswith("Message:"):
+                            message = entry_lines[i].strip()[len("Message:"):].strip()
+                            i += 1
+                        if len(entry_lines) > i and entry_lines[i].strip().startswith("Path:"):
+                            _path = entry_lines[i].strip()[len("Path:"):].strip()
+                            i += 1
+                        tb_text = "\n".join(entry_lines[i:]).strip()
+                        if tb_text == "None":
+                            tb_text = ""
+                    else:
+                        _ts, level, _path, ln, message = groups[4], groups[5], groups[6], groups[7], groups[8]
+                        ts = _ts
+                        mod = _os.path.splitext(_os.path.basename(_path))[0]
+                        tb_text = "\n".join(entry_lines[1:]).strip()
+
+                    parsed.append({
+                        "timestamp": ts, "level": level, "module": mod, "lineno": ln,
+                        "message": message, "path": _path, "traceback": tb_text, "raw": entry_text,
+                        "hash": hash(entry_text) & 0xFFFFFFFF,
+                    })
+                else:
                     parsed.append({
                         "timestamp": "", "level": "UNKNOWN", "module": "", "lineno": "",
-                        "message": lines[0] if lines else "", "path": "",
-                        "traceback": "\n".join(lines[1:]), "raw": entry,
+                        "message": first, "path": "",
+                        "traceback": "\n".join(entry_lines[1:]), "raw": entry_text,
+                        "hash": hash(entry_text) & 0xFFFFFFFF,
                     })
-                    continue
-
-                ts, level, mod, ln = header_match.groups()
-                message = ""
-                path = ""
-                i = 1
-                if i < len(lines) and lines[i].strip().startswith("Message:"):
-                    message = lines[i].strip()[len("Message:"):].strip()
-                    i += 1
-                if i < len(lines) and lines[i].strip().startswith("Path:"):
-                    path = lines[i].strip()[len("Path:"):].strip()
-                    i += 1
-
-                tb_text = "\n".join(lines[i:]).strip()
-                if tb_text == "None":
-                    tb_text = ""
-
-                parsed.append({
-                    "timestamp": ts, "level": level, "module": mod, "lineno": ln,
-                    "message": message, "path": path, "traceback": tb_text, "raw": entry,
-                    "hash": hash(entry) & 0xFFFFFFFF,
-                })
 
         if search:
             search = search.strip().lower()

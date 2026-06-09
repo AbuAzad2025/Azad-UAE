@@ -2,165 +2,57 @@
 {% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - التقارير والإحصائيات{% endblock %}
 {% block page_title %}التقارير{% endblock %}
 
+{% block head %}
+<style>
+.report-card { transition: transform .15s ease, box-shadow .15s ease; cursor: pointer; }
+.report-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,.12); }
+.report-card .card-footer { background: transparent; border-top: 1px solid rgba(0,0,0,.06); }
+.report-card .export-link { font-size: .8rem; }
+.category-header { border-bottom: 2px solid var(--primary, #007bff); padding-bottom: .5rem; margin-bottom: 1.25rem; }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="row">
-  <div class="col-12">
-    <div class="card">
-      <div class="card-header bg-gradient-primary">
-        <h3 class="card-title text-white">
-          <i class="fas fa-chart-bar mr-2"></i>
-          التقارير والإحصائيات
-        </h3>
-      </div>
-      <div class="card-body">
-        <div class="row">
-          
-          
-          <div class="col-md-4">
-            <div class="info-box bg-gradient-success">
-              <span class="info-box-icon"><i class="fas fa-shopping-cart"></i></span>
-              <div class="info-box-content">
-                <span class="info-box-text">{{ t('Sales Report') }}</span>
-                <span class="info-box-number">Sales Report</span>
-                <a href="{{ url_for('reports.sales') }}" class="btn btn-light mt-2 stretched-link">
-                  عرض التقرير <i class="fas fa-arrow-left mr-1"></i>
-                </a>
-              </div>
-            </div>
+<div class="container-fluid">
+  {% for cat in report_categories %}
+  {% set cat_reports = report_registry_by_category.get(cat.id) %}
+  {% if cat_reports %}
+  <div class="row mb-4">
+    <div class="col-12">
+      <h5 class="category-header"><i class="fas {{ cat.icon }} ml-2"></i>{{ cat.name_ar }}</h5>
+    </div>
+    {% for r in cat_reports %}
+    <div class="col-lg-3 col-md-4 col-sm-6 mb-3">
+      <a href="{{ url_for(r.endpoint) }}" class="text-decoration-none">
+        <div class="card report-card h-100 border-{{ r.color }} shadow-sm">
+          <div class="card-body text-center">
+            <i class="fas {{ r.icon }} fa-2x text-{{ r.color }} mb-2"></i>
+            <h6 class="card-title mb-1">{{ r.name_ar }}</h6>
+            <small class="text-muted">{{ r.description }}</small>
           </div>
-
-          
-          <div class="col-md-4">
-            <div class="info-box bg-gradient-warning">
-              <span class="info-box-icon"><i class="fas fa-boxes"></i></span>
-              <div class="info-box-content">
-                <span class="info-box-text">{{ t('Inventory Report') }}</span>
-                <span class="info-box-number">Inventory Report</span>
-                <a href="{{ url_for('reports.inventory') }}" class="btn btn-light mt-2 stretched-link">
-                  عرض التقرير <i class="fas fa-arrow-left mr-1"></i>
-                </a>
-              </div>
-            </div>
+          {% if r.has_export %}
+          <div class="card-footer text-center py-1">
+            <small class="export-link text-{{ r.color }}">
+              <i class="fas fa-download ml-1"></i>تصدير
+            </small>
           </div>
-
-          
-          <div class="col-md-4">
-            <div class="info-box bg-gradient-danger">
-              <span class="info-box-icon"><i class="fas fa-user-clock"></i></span>
-              <div class="info-box-content">
-                <span class="info-box-text">الذمم المدينة</span>
-                <span class="info-box-number">Receivables</span>
-                <a href="{{ url_for('reports.receivables') }}" class="btn btn-light mt-2 stretched-link">
-                  عرض التقرير <i class="fas fa-arrow-left mr-1"></i>
-                </a>
-              </div>
-            </div>
-          </div>
-
+          {% endif %}
         </div>
+      </a>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% endfor %}
 
-        <div class="row mt-3">
-          
-          
-          <div class="col-md-4">
-            <div class="card card-outline card-primary">
-              <div class="card-header">
-                <h3 class="card-title"><i class="fas fa-book mr-2"></i>التقارير المالية</h3>
-              </div>
-              <div class="card-body">
-                <div class="list-group">
-                  {% if current_user.has_permission('view_ledger') %}
-                  <a href="{{ url_for('ledger.trial_balance') }}" class="list-group-item list-group-item-action">
-                  {% endif %}
-                    <i class="fas fa-balance-scale mr-2"></i>ميزان المراجعة
-                  </a>
-                  {% if current_user.has_permission('view_ledger') %}
-                  <a href="{{ url_for('ledger.income_statement') }}" class="list-group-item list-group-item-action">
-                  {% endif %}
-                    <i class="fas fa-chart-line mr-2"></i>قائمة الدخل
-                  </a>
-                  {% if current_user.has_permission('view_ledger') %}
-                  <a href="{{ url_for('ledger.balance_sheet') }}" class="list-group-item list-group-item-action">
-                  {% endif %}
-                    <i class="fas fa-file-invoice-dollar mr-2"></i>الميزانية العمومية
-                  </a>
-                  <a href="{{ url_for('reports.ar_reconciliation') }}" class="list-group-item list-group-item-action">
-                    <i class="fas fa-balance-scale-right mr-2"></i>مطابقة الذمم (1130/3350/2115)
-                  </a>
-                  <a href="{{ url_for('reports.inventory_reconciliation') }}" class="list-group-item list-group-item-action">
-                    <i class="fas fa-warehouse mr-2"></i>تسوية المخزون (1140)
-                  </a>
-                  <a href="{{ url_for('treasury.treasury') }}" class="list-group-item list-group-item-action">
-                    <i class="fas fa-university mr-2"></i>مركز الخزينة
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          
-          <div class="col-md-4">
-            <div class="card card-outline card-success">
-              <div class="card-header">
-                <h3 class="card-title"><i class="fas fa-clipboard-list mr-2"></i>تقارير العمليات</h3>
-              </div>
-              <div class="card-body">
-                <div class="list-group">
-                  {% if current_user.has_permission('manage_payments') %}
-                  {% if current_user.has_permission('manage_sales') %}
-                  <a href="{{ url_for('sales.index') }}" class="list-group-item list-group-item-action">
-                  {% endif %}
-                  {% endif %}
-                    <i class="fas fa-file-invoice mr-2"></i>فواتير المبيعات
-                  </a>
-                  {% if current_user.has_permission('manage_purchases') %}
-                  <a href="{{ url_for('purchases.index') }}" class="list-group-item list-group-item-action">
-                  {% endif %}
-                    <i class="fas fa-shopping-bag mr-2"></i>فواتير المشتريات
-                  </a>
-                  {% if current_user.has_permission('manage_payments') %}
-                  <a href="{{ url_for('payments.receipts') }}" class="list-group-item list-group-item-action">
-                  {% endif %}
-                    <i class="fas fa-money-bill-wave mr-2"></i>المدفوعات
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          
-          <div class="col-md-4">
-            <div class="card card-outline card-info">
-              <div class="card-header">
-                <h3 class="card-title"><i class="fas fa-list mr-2"></i>تقارير أخرى</h3>
-              </div>
-              <div class="card-body">
-                <div class="list-group">
-                  {% if current_user.has_permission('manage_customers') %}
-                  <a href="{{ url_for('customers.index') }}" class="list-group-item list-group-item-action">
-                  {% endif %}
-                    <i class="fas fa-users mr-2"></i>العملاء
-                  </a>
-                  {% if current_user.has_permission('manage_products') %}<a href="{{ url_for('products.index') }}" class="list-group-item list-group-item-action">
-                    <i class="fas fa-cubes mr-2"></i>المنتجات
-                  </a>{% endif %}
-                  {% if current_user.has_permission('manage_expenses') %}
-                  <a href="{{ url_for('expenses.index') }}" class="list-group-item list-group-item-action">
-                  {% endif %}
-                    <i class="fas fa-wallet mr-2"></i>المصروفات
-                  </a>
-                  <a href="{{ url_for('reports.partners') }}" class="list-group-item list-group-item-action">
-                    <i class="fas fa-handshake mr-2"></i>تقرير الشركاء والتجار
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-
-        </div>
+  {% if report_registry_by_category|length == 0 %}
+  <div class="row">
+    <div class="col-12">
+      <div class="alert alert-info">
+        <i class="fas fa-info-circle ml-2"></i>ليست لديك صلاحية عرض أي تقرير.
       </div>
     </div>
   </div>
+  {% endif %}
 </div>
 {% endblock %}
-

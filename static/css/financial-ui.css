@@ -1,0 +1,33 @@
+/* === Financial UI Kit — Scoped Styles === */
+.fin-filter-card .card-body { padding: .5rem .75rem; }
+.fin-filter-card .form-control-sm { min-height: 36px; font-size: .85rem; }
+.fin-filter-card .btn-sm { min-height: 36px; }
+.fin-filter-card label { margin-bottom: 0; font-size: .8rem; color: #555; }
+.fin-kpi-card { border-radius: 10px; transition: box-shadow .15s; }
+.fin-kpi-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,.1); }
+.fin-kpi-card .kpi-value { font-size: 1.5rem; font-weight: 700; line-height: 1.2; }
+.fin-kpi-card .kpi-label { font-size: .8rem; opacity: .85; }
+.fin-kpi-card .kpi-icon { font-size: 1.8rem; opacity: .3; position: absolute; left: .75rem; top: .5rem; }
+.fin-report-header { text-align: center; padding: 1rem 0 .5rem; border-bottom: 2px solid #dee2e6; margin-bottom: 1rem; }
+.fin-report-header h2 { font-size: 1.3rem; font-weight: 700; margin-bottom: .25rem; }
+.fin-report-header .meta { font-size: .8rem; color: #6c757d; }
+.fin-table-wrap { position: relative; }
+.fin-table-wrap table { margin-bottom: 0; }
+.fin-table-wrap thead th { position: sticky; top: 0; background: #f8f9fa; z-index: 2; border-bottom: 2px solid #dee2e6; }
+.fin-amount-dr { color: #dc3545; direction: ltr; display: inline-block; text-align: right; min-width: 80px; }
+.fin-amount-cr { color: #28a745; direction: ltr; display: inline-block; text-align: right; min-width: 80px; }
+.fin-amount-neutral { direction: ltr; display: inline-block; text-align: right; min-width: 80px; }
+.fin-total-row { background: #f8f9fa; font-weight: 700; }
+.fin-total-row td { border-top: 2px solid #adb5bd; }
+.fin-section-header td { background: #e9ecef; font-weight: 700; }
+.fin-badge-matched { background: #28a745; color: #fff; padding: 2px 10px; border-radius: 12px; font-size: .75rem; }
+.fin-badge-diff { background: #ffc107; color: #333; padding: 2px 10px; border-radius: 12px; font-size: .75rem; }
+.fin-status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-left: 4px; }
+.fin-status-dot.ok { background: #28a745; }
+.fin-status-dot.warn { background: #ffc107; }
+.fin-status-dot.err { background: #dc3545; }
+@media print {
+  .fin-no-print { display: none !important; }
+  .fin-report-header { border-bottom-color: #333; }
+  @page { margin: 12mm; }
+}
