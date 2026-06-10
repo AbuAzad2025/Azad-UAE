@@ -15,7 +15,7 @@ from flask import (
 from extensions import db, limiter
 
 from models import Product, ProductCategory, Sale, Tenant
-from models.sale_line import SaleLine
+from models.sale import SaleLine
 
 from models.shop_customer_account import ShopCustomerAccount
 from models.shop_wishlist import ShopWishlist
@@ -987,6 +987,8 @@ def checkout(slug):
 
             name = (request.form.get('customer_name') or (account.name if account else '') or '').strip()
 
+            email = (request.form.get('customer_email') or (account.email if account else '') or '').strip()
+
             phone = (request.form.get('phone') or (account.phone if account else '') or '').strip()
 
             address = (request.form.get('address') or (account.address if account else '') or '').strip()
@@ -1018,6 +1020,8 @@ def checkout(slug):
                 shop_account=account,
 
                 coupon_code=(request.form.get('coupon_code') or '').strip(),
+
+                customer_email=email or None,
 
             )
 
@@ -1089,6 +1093,8 @@ def checkout(slug):
         prefilled={
 
             'name': (request.form.get('customer_name') or (account.name if account else '') or '') if request.method == 'POST' else ((account.name if account else '') or ''),
+
+            'email': (request.form.get('customer_email') or (account.email if account else '') or '') if request.method == 'POST' else ((account.email if account else '') or ''),
 
             'phone': (request.form.get('phone') or (account.phone if account else '') or '') if request.method == 'POST' else ((account.phone if account else '') or ''),
 

@@ -143,6 +143,10 @@ class Product(db.Model):
     notes = db.Column(db.Text)
     
     is_active = db.Column(db.Boolean, default=True, nullable=False, index=True)
+    
+    industry = db.Column(db.String(50), nullable=False)  # defaults to tenant.business_type on create
+    extra_fields = db.Column(db.JSON, default=dict)
+    
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     
@@ -150,6 +154,8 @@ class Product(db.Model):
     purchase_lines = db.relationship('PurchaseLine', back_populates='product', lazy='dynamic')
     stock_movements = db.relationship('StockMovement', back_populates='product', lazy='dynamic')
     partner_shares = db.relationship('ProductPartner', back_populates='product', cascade='all, delete-orphan')
+    warehouse_stocks = db.relationship('ProductWarehouseStock', back_populates='product', lazy='dynamic')
+    price_tiers = db.relationship('ProductPriceTier', back_populates='product', lazy='dynamic')
     
     def __repr__(self):
         return f'<Product {self.name}>'

@@ -1,10 +1,25 @@
 from decimal import Decimal, ROUND_HALF_UP
+from datetime import datetime, timezone
 from flask import current_app
 from flask_login import current_user
 from extensions import db
 from models import Product, StockMovement, Warehouse, ProductWarehouseCost, ProductCostHistory
+from models.warehouse import ProductWarehouseStock
 from utils.branching import get_accessible_warehouse_ids, get_branch_stock_map
 from utils.gl_reference_types import GLRef
+
+
+def _resolve_gl_concept_account(concept_code, fallback_account_code, tenant_id=None):
+    from services.gl_service import GL_ACCOUNTS, GL_ACCOUNT_CONCEPTS
+    from services.gl_account_resolver import resolve_gl_account, is_dynamic_gl_mapping_enabled
+    if is_dynamic_gl_mapping_enabled():
+        resolved = resolve_gl_account(tenant_id=tenant_id, concept_code=concept_code)
+        if resolved:
+            return resolved.account_code
+    concept_key = {v: k for k, v in GL_ACCOUNT_CONCEPTS.items()}.get(concept_code)
+    if concept_key and concept_key in GL_ACCOUNTS:
+        return GL_ACCOUNTS[concept_key]
+    return fallback_account_code
 
 
 class StockService:
@@ -44,19 +59,23 @@ class StockService:
         cost_value = abs(Decimal(str(movement.quantity))) * Decimal(str(product.cost_price))
         if cost_value <= 0:
             return
+        warehouse = Warehouse.query.get(movement.warehouse_id) if getattr(movement, 'warehouse_id', None) else None
+        tenant_id = getattr(movement, 'tenant_id', None) or getattr(product, 'tenant_id', None)
+        loss_account = _resolve_gl_concept_account('INVENTORY_ADJUSTMENT_LOSS', '5150', tenant_id)
+        asset_account = _resolve_gl_concept_account('INVENTORY_ASSET', '1140', tenant_id)
+        gain_account = _resolve_gl_concept_account('INVENTORY_ADJUSTMENT_GAIN', '5150', tenant_id)
+
         if Decimal(str(movement.quantity)) < 0:
             lines = [
-                {'account': '5150', 'concept_code': 'INVENTORY_ADJUSTMENT_LOSS', 'debit': cost_value, 'credit': 0, 'description': f'Inventory Adjustment (Loss) - {product.name}'},
-                {'account': '1140', 'concept_code': 'INVENTORY_ASSET', 'debit': 0, 'credit': cost_value, 'description': f'Stock Decrease - {product.name}'},
+                {'account': loss_account, 'concept_code': 'INVENTORY_ADJUSTMENT_LOSS', 'debit': cost_value, 'credit': 0, 'description': f'Inventory Adjustment (Loss) - {product.name}'},
+                {'account': asset_account, 'concept_code': 'INVENTORY_ASSET', 'debit': 0, 'credit': cost_value, 'description': f'Stock Decrease - {product.name}'},
             ]
         else:
             lines = [
-                {'account': '1140', 'concept_code': 'INVENTORY_ASSET', 'debit': cost_value, 'credit': 0, 'description': f'Stock Increase - {product.name}'},
-                {'account': '5150', 'concept_code': 'INVENTORY_ADJUSTMENT_GAIN', 'debit': 0, 'credit': cost_value, 'description': f'Inventory Adjustment (Gain) - {product.name}'},
+                {'account': asset_account, 'concept_code': 'INVENTORY_ASSET', 'debit': cost_value, 'credit': 0, 'description': f'Stock Increase - {product.name}'},
+                {'account': gain_account, 'concept_code': 'INVENTORY_ADJUSTMENT_GAIN', 'debit': 0, 'credit': cost_value, 'description': f'Inventory Adjustment (Gain) - {product.name}'},
             ]
-        warehouse = Warehouse.query.get(movement.warehouse_id) if getattr(movement, 'warehouse_id', None) else None
         branch_id = warehouse.branch_id if warehouse else None
-        tenant_id = getattr(movement, 'tenant_id', None) or getattr(product, 'tenant_id', None)
         GLService.ensure_core_accounts(tenant_id=tenant_id)
         post_or_fail(
             lines=lines,
@@ -91,44 +110,38 @@ class StockService:
         from utils.field_validators import validate_stock_movement_type
 
         movement_type = validate_stock_movement_type(movement_type)
+        qty = Decimal(str(quantity))
         try:
             product = Product.query.get(product_id)
             
             if not product:
                 raise ValueError(f'⚠️ المنتج غير موجود (ID: {product_id}).\n💡 تأكد من اختيار منتج صحيح من القائمة.')
             
-            # تحديد المستودع
-            if warehouse_id:
-                # استخدام المستودع المحدد
-                warehouse = Warehouse.query.filter_by(id=warehouse_id, is_active=True).first()
-                if not warehouse:
-                    raise ValueError(f'⚠️ المستودع المحدد غير موجود أو غير نشط (ID: {warehouse_id}).')
-            else:
-                # البحث عن المستودع الرئيسي أولاً، ثم أول مستودع نشط
-                warehouse = Warehouse.query.filter_by(is_active=True, is_main=True).first()
-                if not warehouse:
-                    warehouse = Warehouse.query.filter_by(is_active=True).first()
-                
-                # إذا لم يوجد أي مستودع، إنشاء واحد افتراضي
-                if not warehouse:
-                    warehouse = Warehouse(name='Main Warehouse', name_ar='المستودع الرئيسي', is_active=True, is_main=True)
-                    db.session.add(warehouse)
-                    db.session.flush()
-            
             try:
                 user_id = current_user.id if current_user and current_user.is_authenticated else None
             except:
                 user_id = None
 
-            tenant_id = getattr(warehouse, "tenant_id", None)
-            if tenant_id is None:
-                try:
-                    if current_user and current_user.is_authenticated:
-                        tenant_id = getattr(current_user, "tenant_id", None)
-                except Exception:
-                    tenant_id = None
-            if tenant_id is None:
-                tenant_id = getattr(product, "tenant_id", None)
+            tenant_id = getattr(product, "tenant_id", None)
+            
+            # تحديد المستودع
+            if warehouse_id:
+                warehouse = Warehouse.query.filter_by(id=warehouse_id, is_active=True).first()
+                if not warehouse:
+                    raise ValueError(f'⚠️ المستودع المحدد غير موجود أو غير نشط (ID: {warehouse_id}).')
+            else:
+                warehouse = Warehouse.query.filter_by(tenant_id=tenant_id, is_active=True, is_main=True).first()
+                if not warehouse:
+                    warehouse = Warehouse.query.filter_by(tenant_id=tenant_id, is_active=True).first()
+                
+                if not warehouse:
+                    warehouse = Warehouse(
+                        name='Main Warehouse', name_ar='المستودع الرئيسي',
+                        is_active=True, is_main=True, tenant_id=tenant_id,
+                    )
+                    db.session.add(warehouse)
+                    db.session.flush()
+            
             if getattr(warehouse, "tenant_id", None) is None and tenant_id is not None:
                 warehouse.tenant_id = tenant_id
             
@@ -137,7 +150,7 @@ class StockService:
                 product_id=product_id,
                 warehouse_id=warehouse.id,
                 movement_type=movement_type,
-                quantity=Decimal(str(quantity)),
+                quantity=qty,
                 reference_type=reference_type,
                 reference_id=reference_id,
                 user_id=user_id,
@@ -146,7 +159,26 @@ class StockService:
             
             db.session.add(movement)
             
-            product.current_stock += Decimal(str(quantity))
+            # Update ProductWarehouseStock (per-warehouse tracking)
+            pws = ProductWarehouseStock.query.filter_by(
+                tenant_id=tenant_id,
+                product_id=product_id,
+                warehouse_id=warehouse.id,
+            ).first()
+            if pws:
+                pws.quantity += qty
+                pws.updated_at = datetime.now(timezone.utc)
+            else:
+                pws = ProductWarehouseStock(
+                    tenant_id=tenant_id,
+                    product_id=product_id,
+                    warehouse_id=warehouse.id,
+                    quantity=qty,
+                )
+                db.session.add(pws)
+            
+            # Update global current_stock (legacy)
+            product.current_stock += qty
             
             if product.current_stock < 0:
                 raise ValueError(f'❌ المخزون غير كافٍ للمنتج "{product.name}"!\n📦 المتوفر: {product.current_stock} | المطلوب: {quantity}\n💡 قلل الكمية أو اطلب مخزون جديد من المورد.')

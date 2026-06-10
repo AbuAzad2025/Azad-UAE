@@ -76,7 +76,7 @@ class StoreCheckoutService:
         return digits
 
     @staticmethod
-    def get_or_create_customer(tenant_id: int, name: str, phone: str, address: str = None) -> Customer:
+    def get_or_create_customer(tenant_id: int, name: str, phone: str, address: str = None, email: str = None) -> Customer:
         phone_norm = StoreCheckoutService.normalize_phone(phone)
         name = (name or '').strip()
         if len(name) < 2:
@@ -88,6 +88,8 @@ class StoreCheckoutService:
                 customer.name = name
             if address and not customer.address:
                 customer.address = address
+            if email and not customer.email:
+                customer.email = email
             return customer
 
         customer = Customer(
@@ -96,6 +98,7 @@ class StoreCheckoutService:
             customer_type='regular',
             phone=phone_norm,
             address=address,
+            email=email,
             is_active=True,
         )
         db.session.add(customer)
@@ -171,6 +174,7 @@ class StoreCheckoutService:
         payment_method_code: str = None,
         shop_account=None,
         coupon_code: str = None,
+        customer_email: str = None,
     ) -> Sale:
         tenant_id = int(store.tenant_id)
         online_wh = db.session.get(Warehouse, store.warehouse_id)
@@ -183,7 +187,7 @@ class StoreCheckoutService:
         if shop_account and shop_account.customer_id:
             customer = db.session.get(Customer, shop_account.customer_id)
             if not customer:
-                customer = StoreCheckoutService.get_or_create_customer(tenant_id, customer_name, phone, address)
+                customer = StoreCheckoutService.get_or_create_customer(tenant_id, customer_name, phone, address, email=customer_email)
             else:
                 if customer_name:
                     customer.name = customer_name
@@ -191,8 +195,10 @@ class StoreCheckoutService:
                     customer.address = address
                 if phone:
                     customer.phone = StoreCheckoutService.normalize_phone(phone)
+                if customer_email and not customer.email:
+                    customer.email = customer_email
         else:
-            customer = StoreCheckoutService.get_or_create_customer(tenant_id, customer_name, phone, address)
+            customer = StoreCheckoutService.get_or_create_customer(tenant_id, customer_name, phone, address, email=customer_email)
         seller = StoreCheckoutService.resolve_seller(tenant_id)
 
         delivery_block = (

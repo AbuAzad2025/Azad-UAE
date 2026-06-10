@@ -147,8 +147,20 @@ P4.6 SEARCH & REPLACE all hardcoded '_aed' references
     In templates: display currency symbol based on tenant currency
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-PHASE 5 — Industry-Adaptive Dynamic Fields
+PHASE 5 — Industry-Adaptive Dynamic Fields (Hybrid Core + Dynamic)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+ARCHITECTURE: Two-tier field system
+
+  Tier 1 — CORE FIELDS (all products, all industries):
+    name, name_ar, sku, barcode, cost_price, regular_price,
+    current_stock, min_stock_alert, category_id, unit,
+    is_active, has_serial_number, warranty_days
+
+  Tier 2 — INDUSTRY FIELDS (dynamic, per product.industry):
+    Stored in product.extra_fields JSONB
+    Defined in IndustryFieldDefinition registry
+    Product can override tenant's default industry
 
 P5.1 CREATE models/industry_field_definition.py
     class IndustryFieldDefinition:
@@ -166,38 +178,94 @@ P5.2 ALTER models/tenant.py
       restaurant, construction, textile, jewelry, retail, trading,
       batteries, mobile_new, mobile_used, mobile_parts, clothing
 
-P5.3 CREATE services/industry_service.py
-    get_fields_for(tenant, applies_to='product') -> list
-    save_extra_fields(entity, form_data, tenant) -> None
+P5.3 ALTER models/product.py
+    Add: industry = db.Column(db.String(50), nullable=False)
+    # defaults to tenant.business_type on create
+    # but can be overridden per product
+    Add: extra_fields = db.Column(db.JSON, default=dict)
+
+P5.4 CREATE services/industry_service.py
+    get_fields_for(industry_code, applies_to='product') -> list
+    # Returns IndustryFieldDefinition rows for given industry_code
+    # NOT tenant.business_type — allows per-product override
+
+    save_extra_fields(entity, form_data, industry_code) -> None
+    # Saves only fields defined for that industry_code
+
+    get_product_effective_industry(product, tenant) -> str
+    # Returns product.industry if set, else tenant.business_type
+
+    get_core_fields() -> list
+    # Returns the 13 core field definitions (static, always shown)
+
     get_business_type_choices() -> list of tuples
     validate_industry_code(code) -> bool
+    get_all_field_names_for(industry_code) -> list
 
-P5.4 CREATE scripts/seed_industry_fields.py
-    Seed definitions for ALL industries including user's specific ones:
-      batteries: battery_type, voltage, capacity_ah, cold_cranking_amps, dimensions, terminal_type, application (car/truck/motorcycle/ups)
+P5.5 CREATE scripts/seed_industry_fields.py
+    Seed CORE field definitions (applies_to='product', industry_code='core'):
+      name, name_ar, sku, barcode, cost_price, regular_price,
+      current_stock, min_stock_alert, category_id, unit,
+      is_active, has_serial_number, warranty_days
+
+    Seed INDUSTRY field definitions:
+      batteries: battery_type, voltage, capacity_ah, cold_cranking_amps, dimensions, terminal_type, application
       mobile_new: imei_required, storage_gb, color, model_year, condition, warranty_period
-      mobile_used: condition, grade (A/B/C), battery_health_pct, original_box, charger_included, scratches_level
-      mobile_parts: compatible_models (JSON), part_type (screen/battery/charging_port/camera), oem_or_aftermarket
-      clothing: size (S/M/L/XL/28/30...), color, fabric_type, season, style_code, brand, care_instructions
+      mobile_used: condition, grade, battery_health_pct, original_box, charger_included, scratches_level
+      mobile_parts: compatible_models, part_type, oem_or_aftermarket
+      clothing: size, color, fabric_type, season, style_code, brand, care_instructions
+      automotive: car_make, car_model, year, engine_cc, transmission, fuel_type
+      supermarket: expiry_date, weight_kg, organic, halal_certified, batch_number
+      electronics: device_type, storage_gb, color, screen_size, battery_mah
+      pharmacy: expiry_date, batch_number, prescription_required, storage_temp
+      construction: material_type, unit_type, grade, supplier_cert
+      textile: fabric_type, color, size_chart, origin_country
+      jewelry: metal_type, purity_karat, weight_gram, gem_type
 
-P5.5 MODIFY templates/owner/tenant_create.html + tenant_edit.html
+P5.6 MODIFY templates/owner/tenant_create.html + tenant_edit.html
     Replace <input business_type> with <select required>
     Options from IndustryService.get_business_type_choices()
 
-P5.6 CREATE templates/partials/industry_fields.html
+P5.7 CREATE templates/partials/industry_fields.html
     Reusable partial: receives industry_code, applies_to, existing_values
     Renders inputs dynamically based on IndustryFieldDefinition
+    Core fields always shown first, then industry fields
 
-P5.7 MODIFY templates/products/create.html + edit.html
-    Include industry_fields partial after standard fields
-    Pass: tenant.business_type, 'product', product.extra_fields
+P5.8 MODIFY templates/products/create.html + edit.html
+    Always show: Core fields (name, sku, barcode, cost_price, ...)
+    Then show: Industry dropdown (default = tenant.business_type)
+      <select name="industry">
+        <option value="{{ tenant.business_type }}" selected>
+          {{ tenant.business_type_display }}
+        </option>
+        {% for code, name in all_industries %}
+        <option value="{{ code }}">{{ name }}</option>
+        {% endfor %}
+      </select>
+    Then include: industry_fields partial with selected industry
+    Pass: product.industry or tenant.business_type, 'product', product.extra_fields
 
-P5.8 MODIFY routes/products.py
-    In create/edit POST: call IndustryService.save_extra_fields(product, request.form, tenant)
-    In GET: pass industry_fields = IndustryService.get_fields_for(tenant, 'product')
+P5.9 MODIFY routes/products.py
+    In create():
+      product.industry = request.form.get('industry', tenant.business_type)
+      IndustryService.save_extra_fields(product, request.form, product.industry)
+    In edit():
+      product.industry = request.form.get('industry', product.industry)
+      IndustryService.save_extra_fields(product, request.form, product.industry)
+    In GET handlers:
+      effective_industry = product.industry if product else tenant.business_type
+      core_fields = IndustryService.get_core_fields()
+      industry_fields = IndustryService.get_fields_for(effective_industry, 'product')
 
-P5.9 MODIFY templates/warehouse/create.html + edit.html
+P5.10 MODIFY templates/warehouse/create.html + edit.html
     Include industry_fields partial for warehouse-specific fields
+    Warehouses inherit tenant.business_type (no per-warehouse override needed)
+
+P5.11 ADD JavaScript for dynamic field switching
+    When user changes industry dropdown on product form:
+      Fetch fields via AJAX: GET /api/industry-fields?code=INDUSTRY
+      Replace industry fields section dynamically
+    File: static/js/products/industry-fields.js
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 PHASE 6 — Warranty Tracking

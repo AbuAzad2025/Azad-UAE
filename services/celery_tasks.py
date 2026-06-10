@@ -211,7 +211,7 @@ def send_payment_reminders():
 @celery.task
 def send_abandoned_cart_reminders():
     """Send reminders for abandoned carts (1h and 24h after creation)."""
-    from datetime import timedelta
+    from datetime import datetime, timedelta, timezone
     from models.shop_abandoned_cart import ShopAbandonedCart
     from services.store_service import StoreService
     from extensions import db

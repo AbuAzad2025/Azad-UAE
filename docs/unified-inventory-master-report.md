@@ -238,7 +238,7 @@ industry = db.Column(db.String(100))                         # غير مستخد
 <input type="text" name="business_type">  <!-- حقل نص بدون قائمة -->
 ```
 
-### E16. Product/Warehouse حقول ثابتة (عالي)
+### E16. Product/Warehouse حقول ثابتة — لا تتأقلم + لا يوجد override (عالي)
 
 | الصناعة | ما يراه المستخدم | ما يحتاجه |
 |---|---|---|
@@ -248,7 +248,20 @@ industry = db.Column(db.String(100))                         # غير مستخد
 | **موبايلات مستعملة** | نفس الحقول | `condition` (used/refurbished), `grade` (A/B/C), `battery_health_pct`, `original_box`, `charger_included` |
 | **قطع غيار موبايلات** | `part_number` | `compatible_models` (JSON), `part_type` (screen/battery/charging_port), `oem_or_aftermarket` |
 
-**الحل**: `extra_fields` JSONB على `Product` + `IndustryFieldDefinition` registry.
+**المشكلة الأولى**: لا يوجد فصل بين الحقول الأساسية (الكل يراها) والحقول الديناميكية (حسب الصناعة).
+
+**المشكلة الثانية**: لا يوجد `product_industry` — المنتج يرث صناعة التينانت فقط. لا يمكن أن يبيع تينانت "سوبرماركت" منتج إلكتروني بحقول IMEI.
+
+**الحل**: نظام هجين:
+1. **Core Fields**: `name`, `name_ar`, `sku`, `barcode`, `cost_price`, `regular_price`, `current_stock` — للجميع
+2. **Industry Fields**: من `IndustryFieldDefinition` — حسب `product.industry` (يفترض `tenant.business_type`)
+3. **Per-Product Override**: `product.industry` يمكن أن يختلف عن `tenant.business_type`
+
+```python
+class Product:
+    industry = db.Column(db.String(50), nullable=False)  # defaults to tenant.business_type
+    extra_fields = db.Column(db.JSON, default=dict)      # industry-specific fields stored here
+```
 
 ---
 

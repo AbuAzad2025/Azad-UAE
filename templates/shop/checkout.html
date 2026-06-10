@@ -53,6 +53,10 @@
         <input type="text" id="customer_name" name="customer_name" required minlength="2" autocomplete="name" value="{{ prefilled.name or '' }}" aria-label="customer name" maxlength="100">
       </div>
       <div class="ps-form-group">
+        <label for="customer_email">{{ t('email') }}</label>
+        <input type="email" id="customer_email" name="customer_email" autocomplete="email" value="{{ prefilled.email or account.email if account else '' }}" aria-label="email" maxlength="120">
+      </div>
+      <div class="ps-form-group">
         <label for="phone">{{ t('phone') }} *</label>
         <input type="tel" id="phone" name="phone" required autocomplete="tel" value="{{ prefilled.phone or '' }}" aria-label="phone" pattern="^\+?[0-9\s\-]{8,20}$">
       </div>

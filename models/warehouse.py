@@ -29,11 +29,14 @@ class Warehouse(db.Model):
     is_main = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     
+    extra_fields = db.Column(db.JSON, default=dict)
+    
     parent = db.relationship('Warehouse', remote_side=[id], backref='sub_warehouses')
     manager = db.relationship('User', foreign_keys=[manager_id])
     branch = db.relationship('Branch', backref='warehouses', foreign_keys=[branch_id])
     tenant = db.relationship('Tenant', backref='warehouses', foreign_keys=[tenant_id])
     stock_movements = db.relationship('StockMovement', back_populates='warehouse', lazy='dynamic')
+    warehouse_stocks = db.relationship('ProductWarehouseStock', back_populates='warehouse', lazy='dynamic')
     
     def __repr__(self):
         return f'<Warehouse {self.name}>'
@@ -44,6 +47,33 @@ class Warehouse(db.Model):
 
     def type_label_ar(self):
         return 'أونلاين' if self.is_online else 'فعلي'
+
+
+class ProductWarehouseStock(db.Model):
+    __tablename__ = 'product_warehouse_stock'
+    __table_args__ = (
+        db.UniqueConstraint('tenant_id', 'product_id', 'warehouse_id', name='uq_product_warehouse_stock'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=False, index=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id', ondelete='CASCADE'), nullable=False, index=True)
+    warehouse_id = db.Column(db.Integer, db.ForeignKey('warehouses.id', ondelete='CASCADE'), nullable=False, index=True)
+    quantity = db.Column(db.Numeric(15, 3), default=0, nullable=False)
+    
+    warehouse_barcode = db.Column(db.String(100), nullable=True)
+    warehouse_description_ar = db.Column(db.Text, nullable=True)
+    warehouse_description_en = db.Column(db.Text, nullable=True)
+    warehouse_country_of_origin = db.Column(db.String(100), nullable=True)
+    
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    
+    product = db.relationship('Product', back_populates='warehouse_stocks')
+    warehouse = db.relationship('Warehouse', back_populates='warehouse_stocks')
+    tenant = db.relationship('Tenant', backref='product_warehouse_stocks', foreign_keys=[tenant_id])
+
+    def __repr__(self):
+        return f'<ProductWarehouseStock P#{self.product_id} W#{self.warehouse_id} qty={self.quantity}>'
 
 
 class StockMovement(db.Model):
