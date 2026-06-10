@@ -545,3 +545,51 @@ class TestTenantCurrencyMandatory:
         html = open('templates/owner/tenant_create.html', encoding='utf-8').read()
         assert 'currency_select' in html or 'default_currency' in html
         assert 'AED' in html
+
+
+class TestReportsTenantScoping:
+    def test_reports_uses_tenant_query(self):
+        code = open('routes/reports.py', encoding='utf-8').read()
+        assert "tenant_query(Product)" in code
+        assert "tenant_query(SaleLine)" in code
+
+    def test_reports_partners_uses_tenant_filters(self):
+        code = open('routes/reports.py', encoding='utf-8').read()
+        assert "partner_products = tenant_query(Product)" in code
+        assert "merchant_products = tenant_query(Product)" in code
+
+    def test_reports_partners_financials_uses_tenant_filter(self):
+        code = open('routes/reports.py', encoding='utf-8').read()
+        assert "paid_query.filter(Payment.tenant_id == tenant_id)" in code
+        assert "receipts_query.filter(Receipt.tenant_id == tenant_id)" in code
+
+    def test_reports_sales_uses_tenant_query(self):
+        code = open('routes/reports.py', encoding='utf-8').read()
+        assert "tenant_query(Sale).filter_by(status='confirmed')" in code
+
+    def test_reports_purchases_uses_tenant_query(self):
+        code = open('routes/reports.py', encoding='utf-8').read()
+        assert "tenant_query(Purchase).filter_by(status='confirmed')" in code
+
+    def test_reports_inventory_uses_tenant_query(self):
+        code = open('routes/reports.py', encoding='utf-8').read()
+        assert "tenant_query(Warehouse)" in code
+        assert "tenant_query(Product).filter_by(is_active=True)" in code
+
+    def test_reports_receivables_uses_tenant_query(self):
+        code = open('routes/reports.py', encoding='utf-8').read()
+        assert "tenant_query(Sale).filter(" in code
+
+    def test_reports_entity_fragment_uses_tenant_scoping(self):
+        code = open('routes/reports.py', encoding='utf-8').read()
+        assert "tenant_get_or_404(Supplier, id)" in code
+        assert "tenant_get_or_404(Customer, id)" in code
+
+    def test_reports_top_selling_uses_tenant_filter(self):
+        code = open('routes/reports.py', encoding='utf-8').read()
+        assert "query.filter(Sale.tenant_id == tenant_id)" in code
+
+    def test_reports_treasury_uses_tenant_scoping(self):
+        code = open('routes/treasury.py', encoding='utf-8').read()
+        assert "tenant_id=tenant_id" in code
+        assert "TaxService.get_vat_return" in code

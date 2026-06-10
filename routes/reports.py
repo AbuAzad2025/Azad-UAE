@@ -141,16 +141,18 @@ def partners():
             })
             partner_share_totals[r.partner_id] = partner_share_totals.get(r.partner_id, Decimal('0')) + partner_amount
     else:
-        partner_products = Product.query.join(ProductPartner).filter(Product.is_active == True)
+        partner_products = tenant_query(Product).join(ProductPartner).filter(Product.is_active == True)
         if tenant_id is not None:
             partner_products = partner_products.filter(Product.tenant_id == tenant_id)
         partner_products = partner_products.distinct().all()
 
         for product in partner_products:
-            sales_query = SaleLine.query.join(Sale).filter(
+            sales_query = tenant_query(SaleLine).join(Sale).filter(
                 SaleLine.product_id == product.id,
                 Sale.status == 'confirmed'
             )
+            if tenant_id is not None:
+                sales_query = sales_query.filter(SaleLine.tenant_id == tenant_id)
             if scoped_branch_id is not None:
                 sales_query = sales_query.filter(Sale.branch_id == scoped_branch_id)
 
@@ -184,31 +186,32 @@ def partners():
                     partner_share_totals[p_id] = partner_share_totals.get(p_id, Decimal('0')) + partner_amount
 
     # Find products linked to a merchant
-    merchant_products = Product.query.filter(
+    merchant_products = tenant_query(Product).filter(
         Product.merchant_customer_id.isnot(None),
         Product.is_active == True
     )
     if tenant_id is not None:
         merchant_products = merchant_products.filter(Product.tenant_id == tenant_id)
     merchant_products = merchant_products.all()
-    
+
     merchants_data = []
-    # Dictionary to aggregate shares per merchant: {merchant_id: total_share_amount}
     merchant_share_totals = {}
-    
+
     for product in merchant_products:
-        sales_query = SaleLine.query.join(Sale).filter(
+        sales_query = tenant_query(SaleLine).join(Sale).filter(
             SaleLine.product_id == product.id,
             Sale.status == 'confirmed'
         )
+        if tenant_id is not None:
+            sales_query = sales_query.filter(SaleLine.tenant_id == tenant_id)
         if scoped_branch_id is not None:
             sales_query = sales_query.filter(Sale.branch_id == scoped_branch_id)
-        
+
         if date_from:
             sales_query = sales_query.filter(func.date(Sale.sale_date) >= date_from)
         if date_to:
             sales_query = sales_query.filter(func.date(Sale.sale_date) <= date_to)
-            
+
         sales_lines = sales_query.all()
         
         total_revenue = sum(line.line_total for line in sales_lines)
@@ -245,22 +248,21 @@ def partners():
         summary_list = []
         
         for cust in customers:
-            # Paid TO Customer (Outgoing Payments)
             paid_query = db.session.query(func.sum(Payment.amount_aed)).filter(
                 Payment.customer_id == cust.id,
                 Payment.direction == 'outgoing'
             )
-            # Received FROM Customer (Receipts OR Incoming Payments)
-            # 1. Receipts
             receipts_query = db.session.query(func.sum(Receipt.amount_aed)).filter(
                 Receipt.customer_id == cust.id
             )
-            # 2. Incoming Payments (Refunds/etc)
             payment_in_query = db.session.query(func.sum(Payment.amount_aed)).filter(
                 Payment.customer_id == cust.id,
                 Payment.direction == 'incoming'
             )
-            
+            if tenant_id is not None:
+                paid_query = paid_query.filter(Payment.tenant_id == tenant_id)
+                receipts_query = receipts_query.filter(Receipt.tenant_id == tenant_id)
+                payment_in_query = payment_in_query.filter(Payment.tenant_id == tenant_id)
             if date_from:
                 paid_query = paid_query.filter(func.date(Payment.payment_date) >= date_from)
                 receipts_query = receipts_query.filter(func.date(Receipt.receipt_date) >= date_from)
