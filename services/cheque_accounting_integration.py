@@ -132,7 +132,7 @@ class ChequeAccountingIntegration:
             'cheque_info': {
                 'id': cheque.id,
                 'number': cheque.cheque_bank_number,
-                'type': cheque.type_ar,
+                'type': cheque.cheque_type_ar,
                 'amount': float(cheque.amount_aed or 0),
                 'status': cheque.status_ar,
                 'date': (cheque.issue_date or cheque.due_date).isoformat() if (cheque.issue_date or cheque.due_date) else None

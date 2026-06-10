@@ -191,15 +191,6 @@ class Cheque(db.Model):
         """هل الشيك معلّق (لا يُحسب في الإيرادات الفعلية)"""
         return self.status in ['pending', 'deposited', 'under_collection']
     
-    @property
-    def type_ar(self):
-        """النوع بالعربي"""
-        types = {
-            'incoming': 'وارد',
-            'outgoing': 'صادر'
-        }
-        return types.get(self.cheque_type, self.cheque_type)
-    
     def to_dict(self):
         """تحويل إلى dict"""
         return {
@@ -207,7 +198,7 @@ class Cheque(db.Model):
             'cheque_number': self.cheque_number,
             'cheque_bank_number': self.cheque_bank_number,
             'cheque_type': self.cheque_type,
-            'type_ar': self.type_ar,
+            'type_ar': self.cheque_type_ar,
             'bank_name': self.bank_name,
             'amount': float(self.amount),
             'currency': self.currency,
@@ -231,135 +222,123 @@ class Cheque(db.Model):
         }
     
     @staticmethod
-    def get_incoming_cheques(customer_id=None, status=None):
+    def get_incoming_cheques(tenant_id=None, customer_id=None, status=None):
         """الشيكات الواردة"""
         query = Cheque.query.filter_by(cheque_type='incoming', is_active=True)
-        
+        if tenant_id is not None:
+            query = query.filter(Cheque.tenant_id == tenant_id)
         if customer_id:
             query = query.filter_by(customer_id=customer_id)
-        
         if status:
             query = query.filter_by(status=status)
-        
         return query.order_by(Cheque.due_date).all()
     
     @staticmethod
-    def get_outgoing_cheques(supplier_id=None, status=None):
+    def get_outgoing_cheques(tenant_id=None, supplier_id=None, status=None):
         """الشيكات الصادرة"""
         query = Cheque.query.filter_by(cheque_type='outgoing', is_active=True)
-        
+        if tenant_id is not None:
+            query = query.filter(Cheque.tenant_id == tenant_id)
         if supplier_id:
             query = query.filter_by(supplier_id=supplier_id)
-        
         if status:
             query = query.filter_by(status=status)
-        
         return query.order_by(Cheque.due_date).all()
     
     @staticmethod
-    def get_due_soon_cheques(branch_id=None):
+    def get_due_soon_cheques(tenant_id=None, branch_id=None):
         """الشيكات القريبة من الاستحقاق (7 أيام)"""
-        Cheque.update_all_statuses(branch_id=branch_id)
+        Cheque.update_all_statuses(tenant_id=tenant_id, branch_id=branch_id)
         query = Cheque.query.filter(
             Cheque.is_active == True,
             Cheque.status == 'pending',
             Cheque.days_until_due <= 7,
             Cheque.days_until_due >= 0
         )
+        if tenant_id is not None:
+            query = query.filter(Cheque.tenant_id == tenant_id)
         if branch_id is not None:
             query = query.filter(Cheque.branch_id == branch_id)
         return query.order_by(Cheque.due_date).all()
     
     @staticmethod
-    def get_overdue_cheques(branch_id=None):
+    def get_overdue_cheques(tenant_id=None, branch_id=None):
         """الشيكات المتأخرة"""
-        Cheque.update_all_statuses(branch_id=branch_id)
+        Cheque.update_all_statuses(tenant_id=tenant_id, branch_id=branch_id)
         query = Cheque.query.filter(
             Cheque.is_active == True,
             Cheque.status == 'pending',
             Cheque.is_overdue == True
         )
+        if tenant_id is not None:
+            query = query.filter(Cheque.tenant_id == tenant_id)
         if branch_id is not None:
             query = query.filter(Cheque.branch_id == branch_id)
         return query.order_by(Cheque.due_date).all()
     
     @staticmethod
-    def update_all_statuses(branch_id=None):
+    def update_all_statuses(tenant_id=None, branch_id=None):
         """تحديث حالة كل الشيكات"""
         query = Cheque.query.filter_by(status='pending', is_active=True)
+        if tenant_id is not None:
+            query = query.filter(Cheque.tenant_id == tenant_id)
         if branch_id is not None:
             query = query.filter(Cheque.branch_id == branch_id)
         pending_cheques = query.all()
-        
         for cheque in pending_cheques:
             cheque.update_status_based_on_date()
-        
-        db.session.commit()
     
     @staticmethod
-    def get_statistics(branch_id=None):
+    def get_statistics(tenant_id=None, branch_id=None):
         """إحصائيات الشيكات"""
         base_query = Cheque.query.filter_by(is_active=True)
+        if tenant_id is not None:
+            base_query = base_query.filter(Cheque.tenant_id == tenant_id)
         if branch_id is not None:
             base_query = base_query.filter(Cheque.branch_id == branch_id)
 
         total_incoming = base_query.filter_by(cheque_type='incoming').count()
         total_outgoing = base_query.filter_by(cheque_type='outgoing').count()
-        
-        pending_incoming = base_query.filter_by(
-            cheque_type='incoming', 
-            status='pending', 
-        ).count()
-        
-        pending_outgoing = base_query.filter_by(
-            cheque_type='outgoing', 
-            status='pending', 
-        ).count()
-        
-        # المبالغ
+        pending_incoming = base_query.filter_by(cheque_type='incoming', status='pending').count()
+        pending_outgoing = base_query.filter_by(cheque_type='outgoing', status='pending').count()
+
         incoming_amount_query = db.session.query(
             db.func.sum(Cheque.amount_aed)
-        ).filter_by(
-            cheque_type='incoming',
-            status='pending',
-            is_active=True
-        )
+        ).filter_by(cheque_type='incoming', status='pending', is_active=True)
+        if tenant_id is not None:
+            incoming_amount_query = incoming_amount_query.filter(Cheque.tenant_id == tenant_id)
         if branch_id is not None:
             incoming_amount_query = incoming_amount_query.filter(Cheque.branch_id == branch_id)
         incoming_amount = incoming_amount_query.scalar() or Decimal('0')
-        
+
         outgoing_amount_query = db.session.query(
             db.func.sum(Cheque.amount_aed)
-        ).filter_by(
-            cheque_type='outgoing',
-            status='pending',
-            is_active=True
-        )
+        ).filter_by(cheque_type='outgoing', status='pending', is_active=True)
+        if tenant_id is not None:
+            outgoing_amount_query = outgoing_amount_query.filter(Cheque.tenant_id == tenant_id)
         if branch_id is not None:
             outgoing_amount_query = outgoing_amount_query.filter(Cheque.branch_id == branch_id)
         outgoing_amount = outgoing_amount_query.scalar() or Decimal('0')
-        
-        # المتأخرة
-        overdue_query = Cheque.query.filter_by(
-            status='pending',
-            is_active=True,
-            is_overdue=True
-        )
+
+        overdue_query = Cheque.query.filter_by(status='pending', is_active=True, is_overdue=True)
+        if tenant_id is not None:
+            overdue_query = overdue_query.filter(Cheque.tenant_id == tenant_id)
         if branch_id is not None:
             overdue_query = overdue_query.filter(Cheque.branch_id == branch_id)
         overdue = overdue_query.count()
-        
-        # القريبة من الاستحقاق
+
         due_soon_query = Cheque.query.filter(
             Cheque.status == 'pending',
             Cheque.is_active == True,
             Cheque.days_until_due <= 7,
             Cheque.days_until_due >= 0
         )
+        if tenant_id is not None:
+            due_soon_query = due_soon_query.filter(Cheque.tenant_id == tenant_id)
         if branch_id is not None:
             due_soon_query = due_soon_query.filter(Cheque.branch_id == branch_id)
         due_soon = due_soon_query.count()
-        
+
         return {
             'total_incoming': total_incoming,
             'total_outgoing': total_outgoing,

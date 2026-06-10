@@ -713,3 +713,83 @@ class TestBankCashGlIntegration:
         code = open('services/gl_posting.py', encoding='utf-8').read()
         assert "tenant_id=None" in code
         assert "tenant_id=tenant_id" in code
+
+
+class TestChequeModule:
+    def test_cheque_model_has_tenant_id(self):
+        code = open('models/cheque.py', encoding='utf-8').read()
+        assert "tenant_id = db.Column" in code
+        assert "db.ForeignKey('tenants.id'" in code
+
+    def test_cheque_model_no_duplicate_type_ar(self):
+        code = open('models/cheque.py', encoding='utf-8').read()
+        assert code.count("def type_ar") == 0
+        assert "def cheque_type_ar" in code
+
+    def test_cheque_model_to_dict_uses_cheque_type_ar(self):
+        code = open('models/cheque.py', encoding='utf-8').read()
+        assert "'type_ar': self.cheque_type_ar" in code
+
+    def test_cheque_static_methods_accept_tenant_id(self):
+        code = open('models/cheque.py', encoding='utf-8').read()
+        assert "def get_incoming_cheques(tenant_id=None" in code
+        assert "def get_outgoing_cheques(tenant_id=None" in code
+        assert "def get_due_soon_cheques(tenant_id=None" in code
+        assert "def get_overdue_cheques(tenant_id=None" in code
+        assert "def update_all_statuses(tenant_id=None" in code
+        assert "def get_statistics(tenant_id=None" in code
+
+    def test_cheque_static_methods_filter_by_tenant(self):
+        code = open('models/cheque.py', encoding='utf-8').read()
+        assert code.count("query.filter(Cheque.tenant_id == tenant_id)") >= 4
+
+    def test_cheque_update_all_statuses_no_db_commit(self):
+        code = open('models/cheque.py', encoding='utf-8').read()
+        assert "db.session.commit()" not in code.split("def update_all_statuses")[1].split("def ")[0]
+
+    def test_cheque_service_clear_uses_tenant_filter(self):
+        code = open('services/cheque_service.py', encoding='utf-8').read()
+        assert "pmt_q.filter(Payment.tenant_id == tid)" in code
+        assert "rcpt_q.filter(Receipt.tenant_id == tid)" in code
+
+    def test_cheque_service_bounce_uses_tenant_filter(self):
+        code = open('services/cheque_service.py', encoding='utf-8').read()
+        clear_section = code.split("def process_cheque_clear")[1].split("def _create_bounce_journal_entry")[0]
+        bounce_section = code.split("def process_cheque_bounce")[1].split("def _create_cancel_journal_entry")[0]
+        assert "pmt_q.filter(Payment.tenant_id == tid)" in clear_section
+        assert "rcpt_q.filter(Receipt.tenant_id == tid)" in clear_section
+        assert "pmt_q.filter(Payment.tenant_id == tid)" in bounce_section
+        assert "rcpt_q.filter(Receipt.tenant_id == tid)" in bounce_section
+
+    def test_cheque_service_type_ar_references_updated(self):
+        code = open('services/cheque_service.py', encoding='utf-8').read()
+        assert "cheque.type_ar" not in code
+        assert "cheque.cheque_type_ar" in code
+
+    def test_cheque_routes_ensure_scope_checks_tenant(self):
+        code = open('routes/cheques.py', encoding='utf-8').read()
+        assert "get_active_tenant_id(current_user)" in code.split("def _ensure_cheque_scope")[1].split("def _resolve_transaction_rate")[0]
+
+    def test_cheque_routes_pass_tenant_to_statistics(self):
+        code = open('routes/cheques.py', encoding='utf-8').read()
+        assert code.count("get_statistics(tenant_id=tid") >= 4
+
+    def test_cheque_routes_pass_tenant_to_due_soon(self):
+        code = open('routes/cheques.py', encoding='utf-8').read()
+        assert "get_due_soon_cheques(tenant_id=tid" in code
+
+    def test_cheque_routes_pass_tenant_to_overdue(self):
+        code = open('routes/cheques.py', encoding='utf-8').read()
+        assert "get_overdue_cheques(tenant_id=tid" in code
+
+    def test_cheque_routes_pass_tenant_to_update_statuses(self):
+        code = open('routes/cheques.py', encoding='utf-8').read()
+        assert code.count("update_all_statuses(tenant_id=tid") >= 6
+
+    def test_cheque_routes_bounced_query_uses_scoped(self):
+        code = open('routes/cheques.py', encoding='utf-8').read()
+        assert "_scoped_cheques_query().filter_by(status='bounced')" in code
+
+    def test_cheque_routes_archived_query_uses_scoped(self):
+        code = open('routes/cheques.py', encoding='utf-8').read()
+        assert "_scoped_cheques_query().filter_by(is_active=False)" in code

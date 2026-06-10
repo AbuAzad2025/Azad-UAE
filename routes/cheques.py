@@ -42,6 +42,9 @@ def _scoped_cheques_query():
 
 
 def _ensure_cheque_scope(cheque):
+    tid = get_active_tenant_id(current_user)
+    if tid is not None and getattr(cheque, 'tenant_id', None) != tid:
+        return False
     scoped_branch_id = branch_scope_id()
     return scoped_branch_id is None or cheque.branch_id == scoped_branch_id
 
@@ -116,18 +119,19 @@ def index():
     status = request.args.get('status', '', type=str)
     search = request.args.get('search', '', type=str)
     
+    tid = get_active_tenant_id(current_user)
     # تحديث حالة كل الشيكات
     scoped_branch_id = branch_scope_id()
-    Cheque.update_all_statuses(branch_id=scoped_branch_id)
-    
+    Cheque.update_all_statuses(tenant_id=tid, branch_id=scoped_branch_id)
+
     query = _scoped_cheques_query()
-    
+
     if cheque_type:
         query = query.filter_by(cheque_type=cheque_type)
-    
+
     if status:
         query = query.filter_by(status=status)
-    
+
     if search:
         search_filter = f'%{search}%'
         query = query.filter(
@@ -139,14 +143,14 @@ def index():
                 Cheque.payee_name.ilike(search_filter)
             )
         )
-    
+
     pagination = query.order_by(Cheque.due_date).paginate(
         page=page,
         per_page=per_page,
         error_out=False
     )
-    
-    stats = Cheque.get_statistics(branch_id=scoped_branch_id)
+
+    stats = Cheque.get_statistics(tenant_id=tid, branch_id=scoped_branch_id)
     
     return render_template('cheques/index.html',
                          cheques=pagination.items,
@@ -163,22 +167,23 @@ def incoming():
     page = request.args.get('page', 1, type=int)
     status = request.args.get('status', '', type=str)
     
+    tid = get_active_tenant_id(current_user)
     scoped_branch_id = branch_scope_id()
-    Cheque.update_all_statuses(branch_id=scoped_branch_id)
-    
+    Cheque.update_all_statuses(tenant_id=tid, branch_id=scoped_branch_id)
+
     query = _scoped_cheques_query().filter_by(cheque_type='incoming')
-    
+
     if status:
         query = query.filter_by(status=status)
-    
+
     pagination = query.order_by(Cheque.due_date).paginate(
         page=page,
         per_page=25,
         error_out=False
     )
-    
-    stats = Cheque.get_statistics(branch_id=scoped_branch_id)
-    
+
+    stats = Cheque.get_statistics(tenant_id=tid, branch_id=scoped_branch_id)
+
     return render_template('cheques/incoming.html',
                          cheques=pagination.items,
                          pagination=pagination,
@@ -193,22 +198,23 @@ def outgoing():
     page = request.args.get('page', 1, type=int)
     status = request.args.get('status', '', type=str)
     
+    tid = get_active_tenant_id(current_user)
     scoped_branch_id = branch_scope_id()
-    Cheque.update_all_statuses(branch_id=scoped_branch_id)
-    
+    Cheque.update_all_statuses(tenant_id=tid, branch_id=scoped_branch_id)
+
     query = _scoped_cheques_query().filter_by(cheque_type='outgoing')
-    
+
     if status:
         query = query.filter_by(status=status)
-    
+
     pagination = query.order_by(Cheque.due_date).paginate(
         page=page,
         per_page=25,
         error_out=False
     )
-    
-    stats = Cheque.get_statistics(branch_id=scoped_branch_id)
-    
+
+    stats = Cheque.get_statistics(tenant_id=tid, branch_id=scoped_branch_id)
+
     return render_template('cheques/outgoing.html',
                          cheques=pagination.items,
                          pagination=pagination,
@@ -700,17 +706,16 @@ def restore(id):
 @permission_required('manage_payments')
 def alerts():
     """تنبيهات الشيكات"""
+    tid = get_active_tenant_id(current_user)
     scoped_branch_id = branch_scope_id()
-    Cheque.update_all_statuses(branch_id=scoped_branch_id)
-    
-    due_soon = Cheque.get_due_soon_cheques(branch_id=scoped_branch_id)
-    overdue = Cheque.get_overdue_cheques(branch_id=scoped_branch_id)
-    bounced = Cheque.query.filter_by(status='bounced', is_active=True)
-    if scoped_branch_id is not None:
-        bounced = bounced.filter(Cheque.branch_id == scoped_branch_id)
+    Cheque.update_all_statuses(tenant_id=tid, branch_id=scoped_branch_id)
+
+    due_soon = Cheque.get_due_soon_cheques(tenant_id=tid, branch_id=scoped_branch_id)
+    overdue = Cheque.get_overdue_cheques(tenant_id=tid, branch_id=scoped_branch_id)
+    bounced = _scoped_cheques_query().filter_by(status='bounced')
     bounced = bounced.all()
-    
-    stats = Cheque.get_statistics(branch_id=scoped_branch_id)
+
+    stats = Cheque.get_statistics(tenant_id=tid, branch_id=scoped_branch_id)
     
     return render_template('cheques/alerts.html',
                          due_soon=due_soon,
@@ -727,10 +732,7 @@ def archived():
     """الشيكات المؤرشفة"""
     page = request.args.get('page', 1, type=int)
 
-    query = Cheque.query.filter_by(is_active=False)
-    scoped_branch_id = branch_scope_id()
-    if scoped_branch_id is not None:
-        query = query.filter(Cheque.branch_id == scoped_branch_id)
+    query = _scoped_cheques_query().filter_by(is_active=False)
 
     pagination = query.order_by(
         Cheque.archived_at.desc()
@@ -746,9 +748,10 @@ def archived():
 @permission_required('manage_payments')
 def api_stats():
     """API للإحصائيات"""
+    tid = get_active_tenant_id(current_user)
     scoped_branch_id = branch_scope_id()
-    Cheque.update_all_statuses(branch_id=scoped_branch_id)
-    stats = Cheque.get_statistics(branch_id=scoped_branch_id)
+    Cheque.update_all_statuses(tenant_id=tid, branch_id=scoped_branch_id)
+    stats = Cheque.get_statistics(tenant_id=tid, branch_id=scoped_branch_id)
     return jsonify(stats)
 
 
@@ -757,12 +760,13 @@ def api_stats():
 @permission_required('manage_payments')
 def api_alerts():
     """API للتنبيهات"""
+    tid = get_active_tenant_id(current_user)
     scoped_branch_id = branch_scope_id()
-    Cheque.update_all_statuses(branch_id=scoped_branch_id)
-    
-    due_soon = Cheque.get_due_soon_cheques(branch_id=scoped_branch_id)
-    overdue = Cheque.get_overdue_cheques(branch_id=scoped_branch_id)
-    
+    Cheque.update_all_statuses(tenant_id=tid, branch_id=scoped_branch_id)
+
+    due_soon = Cheque.get_due_soon_cheques(tenant_id=tid, branch_id=scoped_branch_id)
+    overdue = Cheque.get_overdue_cheques(tenant_id=tid, branch_id=scoped_branch_id)
+
     return jsonify({
         'due_soon': len(due_soon),
         'overdue': len(overdue),

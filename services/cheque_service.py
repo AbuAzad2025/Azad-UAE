@@ -211,7 +211,7 @@ def _create_clearing_journal_entry(cheque):
         _post_gl(
             cheque,
             lines=lines,
-            description=f'صرف شيك {cheque.type_ar} رقم {cheque.cheque_bank_number}',
+            description=f'صرف شيك {cheque.cheque_type_ar} رقم {cheque.cheque_bank_number}',
             reference_type=GLRef.CHEQUE_CLEAR,
         )
 
@@ -235,10 +235,17 @@ def process_cheque_clear(cheque, clearance_date=None, clearance_exchange_rate=No
     cheque.currency_gain_loss = cheque.actual_amount_aed - cheque.amount_aed
     _create_clearing_journal_entry(cheque)
     from models.payment import Payment, Receipt
-    payment = Payment.query.filter_by(cheque_id=cheque.id).first()
+    tid = getattr(cheque, 'tenant_id', None)
+    pmt_q = Payment.query.filter_by(cheque_id=cheque.id)
+    if tid:
+        pmt_q = pmt_q.filter(Payment.tenant_id == tid)
+    payment = pmt_q.first()
     if payment:
         payment.confirm_payment()
-    receipt = Receipt.query.filter_by(cheque_id=cheque.id).first()
+    rcpt_q = Receipt.query.filter_by(cheque_id=cheque.id)
+    if tid:
+        rcpt_q = rcpt_q.filter(Receipt.tenant_id == tid)
+    receipt = rcpt_q.first()
     if receipt:
         receipt.confirm_receipt()
 
@@ -316,10 +323,17 @@ def process_cheque_bounce(cheque, reason):
         except Exception:
             pass
     from models.payment import Payment, Receipt
-    payment = Payment.query.filter_by(cheque_id=cheque.id).first()
+    tid = getattr(cheque, 'tenant_id', None)
+    pmt_q = Payment.query.filter_by(cheque_id=cheque.id)
+    if tid:
+        pmt_q = pmt_q.filter(Payment.tenant_id == tid)
+    payment = pmt_q.first()
     if payment:
         payment.reject_payment(reason)
-    receipt = Receipt.query.filter_by(cheque_id=cheque.id).first()
+    rcpt_q = Receipt.query.filter_by(cheque_id=cheque.id)
+    if tid:
+        rcpt_q = rcpt_q.filter(Receipt.tenant_id == tid)
+    receipt = rcpt_q.first()
     if receipt:
         receipt.reject_receipt(reason)
 
@@ -363,7 +377,7 @@ def _create_cancel_journal_entry(cheque):
         _post_gl(
             cheque,
             lines=lines,
-            description=f'إلغاء شيك {cheque.type_ar} رقم {cheque.cheque_bank_number}',
+            description=f'إلغاء شيك {cheque.cheque_type_ar} رقم {cheque.cheque_bank_number}',
             reference_type=GLRef.CHEQUE_CANCEL,
         )
 
