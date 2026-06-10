@@ -21,7 +21,7 @@
 
 {% macro currency_select(name='currency', id='currency', default_code='AED', extra_classes='') %}
   {% from 'macros/currency_options.html' import currency_options %}
-  <select name="{{ name }}" id="{{ id }}" class="form-control {{ extra_classes }}" aria-label="العملة">
+  <select name="{{ name }}" id="{{ id }}" class="{{ extra_classes or 'form-control' }}" aria-label="العملة">
     {{ currency_options(default_code=default_code) }}
   </select>
 {% endmacro %}

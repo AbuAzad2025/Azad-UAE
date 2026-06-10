@@ -3345,6 +3345,10 @@ def tenant_create():
             if not name_ar or not slug:
                 flash('الاسم العربي والـ Slug مطلوبان.', 'danger')
                 return redirect(url_for('owner.tenant_create'))
+            default_currency = request.form.get('default_currency', '').strip().upper()
+            if not default_currency:
+                flash('يجب اختيار العملة الافتراضية للتينانت.', 'danger')
+                return redirect(url_for('owner.tenant_create'))
             if Tenant.query.filter_by(slug=slug).first():
                 flash('الـ Slug مستخدم مسبقاً.', 'danger')
                 return redirect(url_for('owner.tenant_create'))
@@ -3358,7 +3362,7 @@ def tenant_create():
                 phone_2=request.form.get('phone_2', '').strip() or None,
                 email=request.form.get('email', '').strip() or None,
                 address_ar=request.form.get('address_ar', '').strip() or None,
-                default_currency=request.form.get('default_currency', 'AED').strip(),
+                default_currency=default_currency,
                 max_users=int(request.form.get('max_users', 5)),
                 max_products=int(request.form.get('max_products', 1000)),
                 max_customers=int(request.form.get('max_customers', 500)),

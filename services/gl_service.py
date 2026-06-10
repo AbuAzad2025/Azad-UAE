@@ -334,16 +334,19 @@ class GLService:
             rate = Decimal('1')
         adapted_lines = []
         for line in lines:
-            debit = Decimal(str(line.get('debit', 0) or 0)) * rate
-            credit = Decimal(str(line.get('credit', 0) or 0)) * rate
+            orig_debit = Decimal(str(line.get('debit', 0) or 0))
+            orig_credit = Decimal(str(line.get('credit', 0) or 0))
+            debit = orig_debit * rate
+            credit = orig_credit * rate
             adapted_lines.append({
                 'account_code': line.get('account_code') or line.get('account'),
                 'concept_code': line.get('concept_code'),
                 'explicit_account_allowed': line.get('explicit_account_allowed', False),
                 'debit': debit,
                 'credit': credit,
+                'original_debit': orig_debit,
+                'original_credit': orig_credit,
                 'description': line.get('description', description),
-                # الأبعاد المالية
                 'branch_id': line.get('branch_id') or branch_id,
                 'warehouse_id': line.get('warehouse_id'),
                 'cost_center_id': line.get('cost_center_id'),

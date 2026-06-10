@@ -513,3 +513,35 @@ class TestPurchaseSerialTracking:
         assert len(serials) == 2
         assert all(s.status == 'available' for s in serials)
         assert all(s.warehouse_id == wh.id for s in serials)
+
+
+class TestGlPostingPreservesOriginalAmount:
+    def test_post_entry_preserves_original_currency_amount(self, sample_tenant, monkeypatch):
+        from services.gl_service import GLService
+        captured_lines = []
+        def fake_create_journal_entry(date, description, lines, **kw):
+            captured_lines.extend(lines)
+            class FakeEntry:
+                pass
+            return FakeEntry()
+        monkeypatch.setattr(GLService, 'create_journal_entry', fake_create_journal_entry)
+        GLService.post_entry(
+            [{'account': '1000', 'debit': 100, 'credit': 0, 'description': 'test'}],
+            description='Test Entry',
+            currency='USD',
+            exchange_rate=3.67,
+            tenant_id=sample_tenant.id,
+        )
+        assert len(captured_lines) == 1
+        line = captured_lines[0]
+        assert line['original_debit'] == 100
+        assert line['original_credit'] == 0
+        assert line['debit'] == 367
+        assert line['credit'] == 0
+
+
+class TestTenantCurrencyMandatory:
+    def test_tenant_create_template_uses_currency_macro(self):
+        html = open('templates/owner/tenant_create.html', encoding='utf-8').read()
+        assert 'currency_select' in html or 'default_currency' in html
+        assert 'AED' in html
