@@ -17,6 +17,7 @@
 {% endblock %}
 
 {% block extra_css %}
+{% include 'partials/select2_assets.html' %}
 <style>
 .content-header .btn-secondary,
 .content-header .btn-outline-secondary {
@@ -393,6 +394,7 @@
 {% endblock %}
 
 {% block extra_js %}
+{% include 'partials/select2_assets.html' %}
 <script>
 $(document).ready(function() {
   // تفعيل Tooltips

@@ -6,23 +6,13 @@
   <title>شركة أزاد للأنظمة الذكية - فاتورة مبيعات #{{ sale.sale_number }}</title>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;700&display=swap" crossorigin="anonymous" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/erp-theme.css') }}">
+  {% include 'partials/print_styles.html' %}
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Cairo', 'Arial', sans-serif;
       background: #34495e;
-      padding: 10px;
-      margin: 0;
       font-size: 8px;
       color: #2c3e50;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      min-height: 100vh;
-    }
-    @page {
-      size: {{ settings.paper_size or 'A4' }} {{ settings.orientation or 'portrait' }};
-      margin: 5mm;
     }
     .invoice {
       {% if settings.paper_size == 'A5' %}
@@ -35,8 +25,6 @@
         width: {{ '210mm' if settings.orientation == 'portrait' else '297mm' }};
         height: {{ '297mm' if settings.orientation == 'portrait' else '210mm' }};
       {% endif %}
-      margin: 0 auto;
-      background: white;
       padding: 8px;
       box-shadow: 0 0 30px rgba(0,0,0,0.5);
       overflow: auto;
@@ -55,12 +43,7 @@
     .header-right {
       text-align: left;
     }
-    .company-name { 
-      font-size: 20px; 
-      font-weight: 700; 
-      color: {{ settings.header_color or '#2c3e50' }}; 
-      margin-bottom: 5px;
-    }
+    .company-name { font-size: 20px; font-weight: 700; color: {{ settings.header_color or '#2c3e50' }}; margin-bottom: 5px; }
     .company-info { font-size: 9px; color: #7f8c8d; line-height: 1.6; }
     .invoice-title {
       font-size: 16px;
@@ -85,38 +68,12 @@
       background: #ecf0f1;
       border-left: 3px solid {{ settings.accent_color or '#3498db' }};
     }
-    .info-item label { 
-      font-size: 9px; 
-      color: #7f8c8d; 
-      text-transform: uppercase; 
-      display: block;
-      margin-bottom: 3px;
-    }
-    .info-item value { 
-      font-size: 9px; 
-      font-weight: 600; 
-      color: #2c3e50;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 15px 0;
-      font-size: 8px;
-    }
-    thead {
-      background: {{ settings.header_color or '#2c3e50' }};
-      color: white;
-    }
-    th {
-      padding: 8px;
-      text-align: right;
-      font-weight: 600;
-      font-size: 8px;
-    }
-    td {
-      padding: 8px;
-      border-bottom: 1px solid #ecf0f1;
-    }
+    .info-item label { font-size: 9px; color: #7f8c8d; text-transform: uppercase; display: block; margin-bottom: 3px; }
+    .info-item value { font-size: 9px; font-weight: 600; color: #2c3e50; }
+    table { margin: 15px 0; }
+    thead { background: {{ settings.header_color or '#2c3e50' }}; }
+    th { padding: 8px; font-weight: 600; font-size: 8px; }
+    td { padding: 8px; border-bottom: 1px solid #ecf0f1; }
     tbody tr:hover { background: #f8f9fa; }
     .totals {
       margin-top: 10px;
@@ -124,19 +81,12 @@
       margin-right: 0;
       margin-left: auto;
     }
-    .total-row {
-      display: flex;
-      justify-content: space-between;
-      padding: 6px 10px;
-      font-size: 9px;
-    }
+    .total-row { padding: 6px 10px; }
     .total-row.final {
       background: {{ settings.header_color or '#2c3e50' }};
       color: white;
       padding: 10px;
       margin-top: 5px;
-      font-size: 9px;
-      font-weight: 700;
     }
     .payments-section {
       margin-top: 10px;
@@ -144,12 +94,7 @@
       background: #f8f9fa;
       border-left: 4px solid {{ settings.accent_color or '#3498db' }};
     }
-    .payments-section h4 {
-      font-size: 9px;
-      color: {{ settings.header_color or '#2c3e50' }};
-      margin-bottom: 10px;
-      font-weight: 700;
-    }
+    .payments-section h4 { font-size: 9px; color: {{ settings.header_color or '#2c3e50' }}; margin-bottom: 10px; font-weight: 700; }
     .payment-item {
       padding: 8px;
       margin-bottom: 8px;
@@ -170,17 +115,7 @@
       margin-top: 20px;
       padding-top: 15px;
       border-top: 1px solid #dee2e6;
-      text-align: center;
-      font-size: 9px;
       color: #7f8c8d;
-    }
-    @media print {
-      html, body { width: auto !important; height: auto !important; overflow: visible !important; background: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-      .invoice { width: auto !important; max-width: none !important; height: auto !important; min-height: auto !important; max-height: none !important; overflow: visible !important; box-shadow: none !important; }
-      table { width: 100% !important; table-layout: auto; border-collapse: collapse; }
-      thead { display: table-header-group; } tfoot { display: table-footer-group; }
-      tr, .totals, .signature, .invoice-footer, .notes { page-break-inside: avoid; break-inside: avoid; }
-      .no-print { display: none !important; }
     }
 
     /* D6: externalized inline styles */

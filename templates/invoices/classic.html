@@ -6,22 +6,11 @@
   <title>{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - فاتورة #{{ sale.sale_number }}</title>
   <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&display=swap" crossorigin="anonymous" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/erp-theme.css') }}">
+  {% include 'partials/print_styles.html' %}
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Amiri', 'Times New Roman', serif;
       background: #7f8c8d;
-      padding: 10px;
-      margin: 0;
-      font-size: 9px;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      min-height: 100vh;
-    }
-    @page {
-      size: {{ settings.paper_size or 'A4' }} {{ settings.orientation or 'portrait' }};
-      margin: 5mm;
     }
     .invoice {
       {% if settings.paper_size == 'A5' %}
@@ -34,8 +23,6 @@
         width: {{ '210mm' if settings.orientation == 'portrait' else '297mm' }};
         height: {{ '297mm' if settings.orientation == 'portrait' else '210mm' }};
       {% endif %}
-      margin: 0 auto;
-      background: white;
       border: 3px double #333;
       padding: 15px 20px;
       box-shadow: 0 0 25px rgba(0,0,0,0.4);
@@ -47,7 +34,6 @@
       padding-bottom: 12px;
       margin-bottom: 8px;
     }
-    .logo { height: 50px; margin-bottom: 8px; }
     .company-name { font-size: 20px; font-weight: 700; color: #333; margin: 5px 0; }
     .company-info { font-size: 9px; color: #666; line-height: 1.5; }
     .invoice-title {
@@ -87,22 +73,15 @@
     .info-box h3 { font-size: 9px; margin-bottom: 8px; color: #333; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
     .info-box p { margin: 4px 0; font-size: 8px; }
     table {
-      width: 100%;
-      border-collapse: collapse;
       margin: 15px 0;
       border: 1px solid #333;
-      font-size: 8px;
     }
     thead {
       background: #333;
-      color: white;
     }
     th, td {
-      padding: 6px 8px;
-      text-align: right;
       border: 1px solid #ddd;
     }
-    th { font-size: 9px; }
     tbody tr:nth-child(even) { background: #f9f9f9; }
     .totals {
       margin-top: 8px;
@@ -112,10 +91,6 @@
       margin-left: auto;
     }
     .total-row {
-      display: flex;
-      justify-content: space-between;
-      padding: 5px 0;
-      font-size: 9px;
       border-bottom: 1px solid #eee;
     }
     .total-row.final {
@@ -123,16 +98,11 @@
       border-bottom: 3px double #333;
       padding: 8px 0;
       margin-top: 8px;
-      font-size: 9px;
-      font-weight: 700;
     }
     .footer {
-      text-align: center;
       margin-top: 20px;
       padding-top: 15px;
       border-top: 2px solid #333;
-      font-size: 9px;
-      color: #666;
     }
     .signature {
       margin-top: 40px;
@@ -146,12 +116,7 @@
       border-top: 1px solid #333;
     }
     @media print {
-      html, body { width: auto !important; height: auto !important; overflow: visible !important; background: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-      .invoice { width: auto !important; max-width: none !important; height: auto !important; min-height: auto !important; max-height: none !important; overflow: visible !important; box-shadow: none !important; border: 2px double #333 !important; }
-      table { width: 100% !important; table-layout: auto; border-collapse: collapse; }
-      thead { display: table-header-group; } tfoot { display: table-footer-group; }
-      tr, .totals, .signature, .invoice-footer, .notes { page-break-inside: avoid; break-inside: avoid; }
-      .no-print { display: none !important; }
+      .invoice { border: 2px double #333 !important; }
     }
 
     /* D6: externalized inline styles */

@@ -1,0 +1,910 @@
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.min.js" integrity="sha384-UG8ao2jwOWB7/oDdObZc6ItJmwUkR/PfMyt9Qs5AwX7PsnYn1CRKCTWyncPTWvaS" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-Fy6S3B9q64WdZWQUiU+q4/2Lc9npb8tCaSX9FK7E8HnRr0Jz8D6OP9dO5Vg3Q9ct" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11" integrity="sha384-nLoOnA/BDh8A/jxqtckg4DumuCGOBYUnNJLZdQz/zfYNp3wcjGSoWTAzgko06G/2" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js" integrity="sha384-3zSEDfvllQohrq0PHL1fOXJuC/jSOO34H46t6UQfobFOmxE5BpjjaIJY5F2/bMnU" crossorigin="anonymous"></script>
+    
+    <script>
+        let selectedAmount = 0;
+        let selectedMethod = '';
+        let selectedCrypto = 'btc';
+        let selectedPackage = '';
+        let currentTab = 'purchase';
+        const supportWhatsapp = "{{ developer_whatsapp_link }}";
+        const supportWhatsappDisplay = "{{ developer_whatsapp or config.DEVELOPER_WHATSAPP or '+972562150193' }}";
+        const supportEmail = "{{ developer_email or config.DEVELOPER_EMAIL }}";
+        const supportBrand = "{{ developer_name_ar or developer_name or 'Azad Systems' }}";
+
+        function buildSupportMessage(kind, amountOverride = null, recordId = '') {
+            const amount = amountOverride || selectedAmount || document.getElementById('customAmount')?.value || document.getElementById('cardAmount')?.value || '';
+            const packageLabel = selectedPackage || 'غير محددة بعد';
+            const orderRef = recordId ? ` رقم المرجع: #${recordId}.` : '';
+
+            switch (kind) {
+                case 'buy_code':
+                    return `مرحباً ${supportBrand}، أريد شراء الكود المصدري أو تنفيذ تخصيص خاص للنظام.${orderRef}`;
+                case 'donation_help':
+                    return `مرحباً ${supportBrand}، أريد التبرع أو رعاية تطوير ميزة في النظام. المبلغ المتوقع: ${amount || 'سأحدده معكم'} دولار.${orderRef}`;
+                case 'payment_help':
+                    return `مرحباً ${supportBrand}، أحتاج مساعدة في إتمام ${currentTab === 'purchase' ? 'شراء النظام' : 'التبرع'}.${orderRef}`;
+                case 'refund_help':
+                    return `مرحباً ${supportBrand}، أريد الاستفسار عن حالة دفع أو استرداد.${orderRef}`;
+                case 'buy_system':
+                default:
+                    return `مرحباً ${supportBrand}، أريد شراء النظام${currentTab === 'purchase' ? ` والباقـة الحالية: ${packageLabel}` : ''}. المبلغ المتوقع: ${amount || 'سأحدده معكم'} دولار.${orderRef}`;
+            }
+        }
+
+        function buildSupportEmail(kind, amountOverride = null, recordId = '') {
+            const message = buildSupportMessage(kind, amountOverride, recordId);
+            const subjectMap = {
+                buy_system: 'طلب شراء النظام',
+                buy_code: 'طلب شراء الكود أو تخصيص',
+                donation_help: 'استفسار تبرع أو رعاية',
+                payment_help: 'مساعدة في إتمام الدفع',
+                refund_help: 'استفسار استرداد أو حالة دفع'
+            };
+            const subject = `${subjectMap[kind] || 'استفسار'} - ${supportBrand}`;
+            const body = `${message}\n\nبيانات التواصل:\nواتساب: ${supportWhatsappDisplay}\nالبريد: ${supportEmail}`;
+            return { subject, body };
+        }
+
+        function openWhatsApp(kind, amountOverride = null, recordId = '') {
+            const message = buildSupportMessage(kind, amountOverride, recordId);
+            window.open(`https://wa.me/${supportWhatsapp}?text=${encodeURIComponent(message)}`, '_blank');
+        }
+
+        function openSupportEmail(kind, amountOverride = null, recordId = '') {
+            const payload = buildSupportEmail(kind, amountOverride, recordId);
+            window.location.href = `mailto:${supportEmail}?subject=${encodeURIComponent(payload.subject)}&body=${encodeURIComponent(payload.body)}`;
+        }
+
+        function buildSupportStatusHtml(recordId, paymentAmount, label) {
+            return `
+                <div class="ic-57">
+                    <p class="ic-58"><strong>الحالة الحالية:</strong> ${label}</p>
+                    <p class="ic-58"><strong>المرجع:</strong> #${recordId || '—'}</p>
+                    <p class="ic-59"><strong>المبلغ:</strong> $${paymentAmount || '—'}</p>
+                </div>
+                <div class="ic-60">
+                    <div><i class="fas fa-check-circle ic-61"></i> عند النجاح ستصلك تفاصيل واضحة أو عنوان دفع مباشر.</div>
+                    <div><i class="fas fa-hourglass-half ic-62"></i> عند المراجعة اليدوية يمكنك المتابعة فوراً مع أزاد.</div>
+                    <div><i class="fas fa-undo-alt ic-63"></i> لأي استرداد أو تسوية استخدم واتساب أو البريد الرسمي.</div>
+                </div>
+            `;
+        }
+
+        function escapeHtml(value) {
+            const div = document.createElement('div');
+            div.textContent = value || '';
+            return div.innerHTML;
+        }
+
+        function showSupportAssistanceModal(title, introHtml, kind, amountOverride = null, recordId = '') {
+            Swal.fire({
+                icon: 'info',
+                title,
+                html: `
+                    <div class="ic-64">
+                        ${introHtml}
+                        <div class="ic-65">
+                            <p class="ic-66"><strong>التواصل الرسمي مع أزاد:</strong></p>
+                            <p class="ic-67"><i class="fab fa-whatsapp ic-68"></i> ${supportWhatsappDisplay}</p>
+                            <p class="ic-59"><i class="fas fa-envelope ic-69"></i> ${supportEmail}</p>
+                        </div>
+                    </div>
+                `,
+                confirmButtonText: 'فتح واتساب أزاد',
+                confirmButtonColor: '#25D366',
+                showDenyButton: true,
+                denyButtonText: 'إرسال بريد',
+                showCancelButton: true,
+                cancelButtonText: 'إغلاق'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    openWhatsApp(kind, amountOverride, recordId);
+                } else if (result.isDenied) {
+                    openSupportEmail(kind, amountOverride, recordId);
+                }
+            });
+        }
+        
+        // Check URL parameters on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const tabParam = urlParams.get('tab');
+            
+            if (tabParam === 'donation') {
+                // Switch to donation tab
+                document.querySelectorAll('.tab-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                document.querySelectorAll('.tab-btn')[1].classList.add('active');
+                
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                document.getElementById('donation-tab').classList.add('active');
+                
+                // Update hero icon
+                const heroIcon = document.querySelector('.hero-section .mb-4 i');
+                heroIcon.className = 'fas fa-heart';
+                heroIcon.style.color = '#e74c3c';
+                
+                currentTab = 'donation';
+            }
+        });
+        
+        // Switch between tabs
+        function switchTab(tab, event) {
+            currentTab = tab;
+            
+            // Update tab buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            if (event && event.target) {
+                event.target.classList.add('active');
+            } else {
+                // fallback
+                document.querySelectorAll('.tab-btn').forEach((btn, idx) => {
+                    if ((tab === 'purchase' && idx === 0) || (tab === 'donation' && idx === 1)) {
+                        btn.classList.add('active');
+                    }
+                });
+            }
+            
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(tab + '-tab').classList.add('active');
+            
+            // Hide purchase payment methods when switching tabs
+            const purchasePaymentMethods = document.getElementById('purchase-payment-methods');
+            if (purchasePaymentMethods && tab !== 'purchase') {
+                purchasePaymentMethods.style.display = 'none';
+            }
+            
+            // Reset selected package when switching to donation
+            if (tab === 'donation') {
+                document.querySelectorAll('.package-card').forEach(card => {
+                    card.classList.remove('active');
+                });
+                selectedPackage = null;
+                selectedAmount = 0;
+            }
+            
+            // Update hero icon
+            const heroIcon = document.querySelector('.hero-section .mb-4 i');
+            if (tab === 'purchase') {
+                heroIcon.className = 'fas fa-shopping-cart';
+                heroIcon.style.color = '#667eea';
+            } else {
+                heroIcon.className = 'fas fa-heart';
+                heroIcon.style.color = '#e74c3c';
+            }
+        }
+        
+        // Select package
+        function selectPackage(packageName, price, event) {
+            selectedPackage = packageName;
+            selectedAmount = price;
+            
+            // Update UI
+            document.querySelectorAll('.package-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            if (event && event.currentTarget) {
+                event.currentTarget.classList.add('active');
+            }
+            
+            // Update progress
+            updateProgress('step-package', 'completed');
+            updateProgress('step-payment', 'active');
+            updateProgress('step-complete', '');
+            
+            // Show payment methods for purchase
+            const purchasePaymentMethods = document.getElementById('purchase-payment-methods');
+            if (purchasePaymentMethods) {
+                purchasePaymentMethods.style.display = 'grid';
+                
+                // Scroll to payment methods
+                setTimeout(() => {
+                    purchasePaymentMethods.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 100);
+            }
+        }
+        
+        function updateProgress(stepId, status) {
+            const step = document.getElementById(stepId);
+            if (!step) return;
+            
+            step.className = 'step';
+            if (status) {
+                step.classList.add(status);
+            }
+        }
+        
+        function selectMethod(method, event) {
+            // Hide all forms
+            document.querySelectorAll('.donation-form').forEach(form => {
+                form.classList.remove('active');
+            });
+            
+            // Remove active class from all cards
+            document.querySelectorAll('.payment-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            
+            // Show selected form
+            const selectedForm = document.getElementById(method + '-form');
+            if (selectedForm) {
+                selectedForm.classList.add('active');
+                
+                // Pre-fill amount ONLY if in purchase tab and package was selected
+                if (currentTab === 'purchase' && selectedAmount > 0) {
+                    if (method === 'card') {
+                        const cardAmountInput = document.getElementById('cardAmount');
+                        if (cardAmountInput) {
+                            cardAmountInput.value = selectedAmount;
+                        }
+                    } else if (method === 'crypto') {
+                        const customAmountInput = document.getElementById('customAmount');
+                        if (customAmountInput) {
+                            customAmountInput.value = selectedAmount;
+                        }
+                    }
+                } else {
+                    // Clear amount fields for donation
+                    if (method === 'card') {
+                        const cardAmountInput = document.getElementById('cardAmount');
+                        if (cardAmountInput) {
+                            cardAmountInput.value = '';
+                        }
+                    } else if (method === 'crypto') {
+                        const customAmountInput = document.getElementById('customAmount');
+                        if (customAmountInput) {
+                            customAmountInput.value = '';
+                        }
+                    }
+                }
+                
+                // Scroll to form
+                selectedForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            
+            // Add active class to selected card
+            if (event && event.currentTarget) {
+                event.currentTarget.classList.add('active');
+            }
+            
+            selectedMethod = method;
+        }
+        
+        async function collectSupportContactData(title) {
+            const { value: formValues } = await Swal.fire({
+                title,
+                html:
+                    '<input id="swal-name" class="swal2-input" placeholder="الاسم الكامل">' +
+                    '<input id="swal-email" class="swal2-input" placeholder="البريد الإلكتروني" type="email">' +
+                    '<input id="swal-phone" class="swal2-input" placeholder="رقم الجوال" type="tel">' +
+                    '<textarea id="swal-message" class="swal2-textarea" placeholder="' + (currentTab === 'purchase' ? 'اسم الشركة أو ملاحظة إضافية (اختياري)' : 'رسالة قصيرة (اختياري)') + '"></textarea>',
+                focusConfirm: false,
+                showCancelButton: true,
+                cancelButtonText: 'إلغاء',
+                confirmButtonText: 'متابعة',
+                preConfirm: () => ({
+                    name: document.getElementById('swal-name').value.trim(),
+                    email: document.getElementById('swal-email').value.trim(),
+                    phone: document.getElementById('swal-phone').value.trim(),
+                    extra: document.getElementById('swal-message').value.trim()
+                })
+            });
+
+            if (!formValues) {
+                return null;
+            }
+
+            if (currentTab === 'purchase' && (!formValues.name || !formValues.email)) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'خطأ',
+                    text: 'الاسم والبريد الإلكتروني مطلوبان لشراء الباقة',
+                    confirmButtonColor: '#667eea'
+                });
+                return null;
+            }
+
+            return formValues;
+        }
+
+        function selectAmount(amount, event) {
+            selectedAmount = amount;
+            
+            // Remove active class from all buttons
+            document.querySelectorAll('.amount-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Add active class to selected button
+            if (event && event.currentTarget) {
+                event.currentTarget.classList.add('active');
+            }
+            
+            // Clear custom amount
+            document.getElementById('customAmount').value = '';
+        }
+        
+        async function generateCryptoPayment() {
+            // Get amount
+            const customAmount = document.getElementById('customAmount').value;
+            const paymentAmount = customAmount || selectedAmount;
+            
+            if (!paymentAmount || paymentAmount < 15) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'خطأ',
+                    text: 'الحد الأدنى للتبرع هو $15',
+                    confirmButtonColor: '#667eea'
+                });
+                return;
+            }
+            
+            const cryptoType = document.getElementById('cryptoType').value;
+            
+            // Show loading
+            Swal.fire({
+                title: 'جاري إنشاء عنوان الدفع...',
+                html: '<i class="fas fa-spinner fa-spin fa-3x"></i>',
+                showConfirmButton: false,
+                allowOutsideClick: false
+            });
+            
+            // تحديد نوع المعاملة والبيانات
+            let apiEndpoint = '';
+            let requestData = {};
+            
+            // إضافة بيانات المشترية إذا كان شراء
+            if (currentTab === 'purchase') {
+                if (!selectedPackage) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'تنبيه',
+                        text: 'الرجاء اختيار باقة أولاً',
+                        confirmButtonColor: '#667eea'
+                    });
+                    return;
+                }
+                
+                // جلب package_id من البطاقة المحددة
+                const packageCard = document.querySelector('.package-card.active');
+                const packageId = packageCard ? packageCard.getAttribute('data-package-id') : null;
+                
+                if (!packageId) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'خطأ',
+                        text: 'لم يتم التعرف على الباقة المحددة',
+                        confirmButtonColor: '#667eea'
+                    });
+                    return;
+                }
+                
+                const formValues = await collectSupportContactData('بيانات شراء الباقة');
+                if (!formValues) {
+                    Swal.close();
+                    return;
+                }
+                
+                apiEndpoint = '/payment-vault/api/purchase';
+                requestData = {
+                    package_id: parseInt(packageId),
+                    customer_name: formValues.name,
+                    customer_email: formValues.email,
+                    customer_phone: formValues.phone || '',
+                    company_name: formValues.extra || '',
+                    payment_method: 'crypto',
+                    amount_paid: paymentAmount,
+                    currency: 'USD',
+                    crypto_currency: cryptoType,
+                    transaction_id: 'CRYPTO_' + Date.now(),
+                    payment_details: {
+                        crypto_type: cryptoType,
+                        amount: paymentAmount
+                    }
+                };
+            } else {
+                // بيانات التبرع (اختيارية)
+                const formValues = await collectSupportContactData('بيانات التبرع');
+                if (!formValues) {
+                    Swal.close();
+                    return;
+                }
+                
+                apiEndpoint = '/payment-vault/api/donation';
+                requestData = {
+                    amount: paymentAmount,
+                    payment_method: 'crypto',
+                    crypto_type: cryptoType,
+                    crypto_currency: cryptoType,
+                    donor_name: formValues.name || null,
+                    donor_email: formValues.email || null,
+                    message: formValues.extra || null,
+                    transaction_id: 'DONATION_' + Date.now()
+                };
+            }
+            
+            // Create payment via API
+            fetch(apiEndpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(requestData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                Swal.close();
+                
+                if (data.success) {
+                    const recordId = data.purchase_id || data.donation_id;
+                    const recordType = data.purchase_id ? 'شراء' : 'تبرع';
+                    const paymentUrlButton = data.payment_url
+                        ? `<a href="${data.payment_url}" target="_blank" rel="noopener noreferrer" class="btn btn-primary mt-2">
+                                <i class="fas fa-external-link-alt"></i> فتح صفحة الدفع
+                           </a>`
+                        : '';
+                    
+                    if (data.payment_address) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: `تم إنشاء ${recordType} بنجاح`,
+                            html: `
+                                <div class="ic-70">
+                                    <p class="ic-71">${data.message}</p>
+                                    <div class="ic-72">
+                                        <p><strong>رقم الطلب:</strong> #${recordId}</p>
+                                        <p><strong>المبلغ المطلوب:</strong> ${data.payment_amount || paymentAmount} ${data.crypto_currency || cryptoType.toUpperCase()}</p>
+                                        <hr>
+                                        <p><strong>عنوان الدفع:</strong></p>
+                                        <p class="ic-73">
+                                            ${data.payment_address}
+                                        </p>
+                                        <button onclick="navigator.clipboard.writeText('${data.payment_address}')" class="btn btn-outline-primary mt-2">
+                                            <i class="fas fa-copy"></i> نسخ العنوان
+                                        </button>
+                                        ${paymentUrlButton}
+                                    </div>
+                                    <p class="ic-74">
+                                        <i class="fas fa-info-circle"></i>
+                                        أرسل المبلغ إلى العنوان أعلاه وسيتم تأكيد الحالة تلقائياً.
+                                    </p>
+                                        ${buildSupportStatusHtml(recordId, paymentAmount, 'بانتظار تحويلك إلى عنوان الدفع')}
+                                </div>
+                            `,
+                            confirmButtonText: 'تم، سأدفع الآن',
+                            confirmButtonColor: '#28a745',
+                            showDenyButton: true,
+                            denyButtonText: 'واتساب أزاد',
+                            showCancelButton: true,
+                            cancelButtonText: 'راسلنا بالبريد',
+                            width: 650,
+                            allowOutsideClick: false
+                        }).then((result) => {
+                            if (result.isDenied) {
+                                openWhatsApp('payment_help', paymentAmount, recordId);
+                            } else if (result.dismiss === Swal.DismissReason.cancel) {
+                                openSupportEmail('payment_help', paymentAmount, recordId);
+                            }
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'تم حفظ الطلب بنجاح',
+                            html: `
+                                <div class="ic-70">
+                                    <p class="ic-75">${data.message}</p>
+                                    <div class="ic-72">
+                                        <p><strong>رقم الطلب:</strong> #${recordId}</p>
+                                        <p><strong>المبلغ:</strong> $${paymentAmount}</p>
+                                        <p><strong>طريقة الدفع:</strong> ${data.payment_method_display || cryptoType.toUpperCase()}</p>
+                                    </div>
+                                    ${buildSupportStatusHtml(recordId, paymentAmount, 'تم تسجيل الطلب بانتظار المتابعة أو التأكيد')}
+                                </div>
+                            `,
+                            confirmButtonText: 'واتساب أزاد',
+                            confirmButtonColor: '#28a745',
+                            showDenyButton: true,
+                            denyButtonText: 'راسلنا بالبريد',
+                            allowOutsideClick: false
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                openWhatsApp('payment_help', paymentAmount, recordId);
+                            } else if (result.isDenied) {
+                                openSupportEmail('payment_help', paymentAmount, recordId);
+                            }
+                        });
+                    }
+                } else {
+                    showSupportAssistanceModal(
+                        'تعذر إنشاء الطلب',
+                        `<p>${escapeHtml(data.error || 'حدث خطأ أثناء إنشاء الطلب.')}</p><p>يمكنك إعادة المحاولة أو إكمال العملية مباشرة مع شركة أزاد.</p>`,
+                        'payment_help',
+                        paymentAmount
+                    );
+                }
+            })
+            .catch(error => {
+                Swal.close();
+                showSupportAssistanceModal(
+                    'تعذر الاتصال بالخادم',
+                    `<p>لم نتمكن من إنشاء ${currentTab === 'purchase' ? 'طلب الشراء' : 'طلب التبرع'} الآن.</p><p>يمكنك المتابعة مباشرة مع أزاد عبر واتساب أو البريد بنفس المبلغ: <strong>$${paymentAmount}</strong>.</p>`,
+                    'payment_help',
+                    paymentAmount
+                );
+            });
+        }
+        
+        function copyAddress() {
+            const address = document.getElementById('walletAddress').textContent;
+            
+            navigator.clipboard.writeText(address).then(() => {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'تم النسخ!',
+                    text: 'تم نسخ العنوان إلى الحافظة',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            });
+        }
+        
+        // Handle PayPal payment
+        async function handlePayPalPayment() {
+            const customAmount = document.getElementById('customAmount').value;
+            const paymentAmount = customAmount || selectedAmount || 0;
+            
+            if (!paymentAmount || paymentAmount < 15) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'خطأ',
+                    text: 'الحد الأدنى للتبرع $15',
+                    confirmButtonColor: '#667eea'
+                });
+                return;
+            }
+            
+            // طلب بيانات العميل
+            const { value: formValues } = await Swal.fire({
+                title: 'بيانات الدفع - PayPal',
+                html:
+                    '<input id="swal-name" class="swal2-input" placeholder="الاسم الكامل" required>' +
+                    '<input id="swal-email" class="swal2-input" placeholder="البريد الإلكتروني" type="email" required>' +
+                    '<input id="swal-phone" class="swal2-input" placeholder="رقم الجوال" type="tel">' +
+                    (currentTab === 'purchase' ? '<input id="swal-company" class="swal2-input" placeholder="اسم الشركة (اختياري)">' : ''),
+                focusConfirm: false,
+                showCancelButton: true,
+                cancelButtonText: 'إلغاء',
+                confirmButtonText: 'متابعة',
+                preConfirm: () => {
+                    return {
+                        name: document.getElementById('swal-name').value,
+                        email: document.getElementById('swal-email').value,
+                        phone: document.getElementById('swal-phone').value,
+                        company: currentTab === 'purchase' ? document.getElementById('swal-company')?.value : ''
+                    }
+                }
+            });
+            
+            if (!formValues || !formValues.name || !formValues.email) {
+                return;
+            }
+            
+            // حفظ في DB
+            const apiEndpoint = currentTab === 'purchase' ? '/payment-vault/api/purchase' : '/payment-vault/api/donation';
+            let requestData = {};
+            
+            if (currentTab === 'purchase') {
+                const packageCard = document.querySelector('.package-card.active');
+                const packageId = packageCard ? packageCard.getAttribute('data-package-id') : null;
+                
+                if (!packageId) {
+                    Swal.fire({icon: 'error', title: 'خطأ', text: 'الرجاء اختيار باقة'});
+                    return;
+                }
+                
+                requestData = {
+                    package_id: parseInt(packageId),
+                    customer_name: formValues.name,
+                    customer_email: formValues.email,
+                    customer_phone: formValues.phone,
+                    company_name: formValues.company,
+                    payment_method: 'paypal',
+                    amount_paid: paymentAmount,
+                    currency: 'USD',
+                    transaction_id: 'PAYPAL_PENDING_' + Date.now()
+                };
+            } else {
+                requestData = {
+                    amount: paymentAmount,
+                    payment_method: 'paypal',
+                    donor_name: formValues.name,
+                    donor_email: formValues.email,
+                    transaction_id: 'PAYPAL_DONATION_' + Date.now()
+                };
+            }
+            
+            try {
+                const response = await fetch(apiEndpoint, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(requestData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // إذا كان هناك عنوان دفع (تحويل تلقائي لـ Bitcoin)
+                    if (data.payment_address) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'معلومات الدفع',
+                            html: `
+                                <div class="ic-70">
+                                    <p class="ic-71">
+                                        <i class="fab fa-paypal ic-76"></i> 
+                                        <strong>دفع عبر PayPal</strong>
+                                    </p>
+                                    <p>رقم الطلب: #${data.purchase_id || data.donation_id}</p>
+                                    <div class="ic-72">
+                                        <p><strong>المبلغ:</strong> $${paymentAmount}</p>
+                                        <p class="ic-77">
+                                            <i class="fas fa-exchange-alt"></i> يتم التحويل تلقائياً إلى Bitcoin
+                                        </p>
+                                        <hr>
+                                        <p class="ic-78">
+                                            ${data.payment_address}
+                                        </p>
+                                        <button onclick="navigator.clipboard.writeText('${data.payment_address}')" 
+                                                class="btn btn-primary">
+                                            <i class="fas fa-copy"></i> نسخ
+                                        </button>
+                                    </div>
+                                    <p class="ic-79">
+                                        ✅ تم حفظ طلبك بنجاح
+                                    </p>
+                                    ${buildSupportStatusHtml(data.purchase_id || data.donation_id, paymentAmount, 'قيد انتظار إتمام الدفع أو التواصل')}
+                                </div>
+                            `,
+                            confirmButtonText: 'متابعة الدفع',
+                            confirmButtonColor: '#0070ba',
+                            showDenyButton: true,
+                            denyButtonText: 'واتساب أزاد',
+                            showCancelButton: true,
+                            cancelButtonText: 'راسلنا بالبريد',
+                            width: 600
+                        }).then((result) => {
+                            const recordId = data.purchase_id || data.donation_id;
+                            if (result.isDenied) {
+                                openWhatsApp('payment_help', paymentAmount, recordId);
+                            } else if (result.dismiss === Swal.DismissReason.cancel) {
+                                openSupportEmail('payment_help', paymentAmount, recordId);
+                            }
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'تم حفظ الطلب',
+                            html: `
+                                ${buildSupportStatusHtml(data.purchase_id || data.donation_id, paymentAmount, 'بانتظار التنسيق مع فريق أزاد')}
+                                <p class="ic-80">يمكنك الآن اختيار واتساب أو البريد لإكمال الدفع أو الاستفسار.</p>
+                            `,
+                            confirmButtonText: 'واتساب أزاد',
+                            confirmButtonColor: '#25D366',
+                            showDenyButton: true,
+                            denyButtonText: 'راسلنا بالبريد'
+                        }).then((result) => {
+                            const recordId = data.purchase_id || data.donation_id;
+                            if (result.isConfirmed) {
+                                openWhatsApp('payment_help', paymentAmount, recordId);
+                            } else if (result.isDenied) {
+                                openSupportEmail('payment_help', paymentAmount, recordId);
+                            }
+                        });
+                    }
+                } else {
+                    showSupportAssistanceModal(
+                        'تعذر إكمال طلب PayPal',
+                        `<p>${escapeHtml(data.error || 'تعذر حفظ طلب PayPal حالياً.')}</p><p>يمكنك المتابعة مباشرة مع أزاد عبر واتساب أو البريد.</p>`,
+                        'payment_help',
+                        paymentAmount
+                    );
+                }
+            } catch (error) {
+                showSupportAssistanceModal(
+                    'فشل الاتصال أثناء PayPal',
+                    `<p>تعذر التواصل مع الخادم أثناء تجهيز الطلب.</p><p>استخدم واتساب أو البريد لإتمام الشراء أو التبرع بنفس التفاصيل.</p>`,
+                    'payment_help',
+                    paymentAmount
+                );
+            }
+        }
+        
+        // Handle card payment form
+        document.getElementById('cardPaymentForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Get form data
+            const cardAmountInput = document.getElementById('cardAmount');
+            const paymentAmount = parseFloat(cardAmountInput.value) || selectedAmount || 0;
+            
+            if (!paymentAmount || paymentAmount < 15) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'خطأ',
+                    text: 'الحد الأدنى للتبرع $15',
+                    confirmButtonColor: '#667eea'
+                });
+                return;
+            }
+            
+            // طلب بيانات العميل
+            const { value: formValues } = await Swal.fire({
+                title: 'بيانات الدفع',
+                html:
+                    '<input id="swal-name" class="swal2-input" placeholder="الاسم الكامل" required>' +
+                    '<input id="swal-email" class="swal2-input" placeholder="البريد الإلكتروني" type="email" required>' +
+                    '<input id="swal-phone" class="swal2-input" placeholder="رقم الجوال" type="tel">' +
+                    (currentTab === 'purchase' ? '<input id="swal-company" class="swal2-input" placeholder="اسم الشركة (اختياري)">' : ''),
+                focusConfirm: false,
+                showCancelButton: true,
+                cancelButtonText: 'إلغاء',
+                confirmButtonText: 'متابعة',
+                preConfirm: () => {
+                    return {
+                        name: document.getElementById('swal-name').value,
+                        email: document.getElementById('swal-email').value,
+                        phone: document.getElementById('swal-phone').value,
+                        company: currentTab === 'purchase' ? document.getElementById('swal-company')?.value : ''
+                    }
+                }
+            });
+            
+            if (!formValues || !formValues.name || !formValues.email) {
+                return;
+            }
+            
+            // إنشاء السجل
+            const apiEndpoint = currentTab === 'purchase' ? '/payment-vault/api/purchase' : '/payment-vault/api/donation';
+            let requestData = {};
+            
+            if (currentTab === 'purchase') {
+                const packageCard = document.querySelector('.package-card.active');
+                const packageId = packageCard ? packageCard.getAttribute('data-package-id') : null;
+                
+                if (!packageId) {
+                    Swal.fire({icon: 'error', title: 'خطأ', text: 'الرجاء اختيار باقة'});
+                    return;
+                }
+                
+                requestData = {
+                    package_id: parseInt(packageId),
+                    customer_name: formValues.name,
+                    customer_email: formValues.email,
+                    customer_phone: formValues.phone,
+                    company_name: formValues.company,
+                    payment_method: 'card',
+                    amount_paid: paymentAmount,
+                    currency: 'USD',
+                    transaction_id: 'CARD_PENDING_' + Date.now()
+                };
+            } else {
+                requestData = {
+                    amount: paymentAmount,
+                    payment_method: 'card',
+                    donor_name: formValues.name,
+                    donor_email: formValues.email,
+                    transaction_id: 'CARD_DONATION_' + Date.now()
+                };
+            }
+            
+            // حفظ في DB
+            try {
+                const response = await fetch(apiEndpoint, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(requestData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // إذا كان هناك عنوان دفع (من NOWPayments)
+                    if (data.payment_address) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'تم إنشاء عنوان الدفع!',
+                            html: `
+                                <div class="ic-70">
+                                    <p class="ic-81">
+                                        <strong>رقم الطلب: #${data.purchase_id || data.donation_id}</strong>
+                                    </p>
+                                    <div class="ic-72">
+                                        <p><strong>المبلغ المطلوب:</strong></p>
+                                        <p class="ic-82">
+                                            ${data.payment_amount || paymentAmount} ${data.crypto_currency || 'BTC'}
+                                        </p>
+                                        <hr>
+                                        <p><strong>عنوان المحفظة:</strong></p>
+                                        <p class="ic-83">
+                                            ${data.payment_address}
+                                        </p>
+                                        <button onclick="navigator.clipboard.writeText('${data.payment_address}')" 
+                                                class="btn btn-primary mt-2">
+                                            <i class="fas fa-copy"></i> نسخ العنوان
+                                        </button>
+                                    </div>
+                                    <p class="ic-84">
+                                        <i class="fas fa-check-circle"></i> 
+                                        أرسل المبلغ المحدد إلى العنوان أعلاه
+                                    </p>
+                                    ${buildSupportStatusHtml(data.purchase_id || data.donation_id, paymentAmount, 'بانتظار إتمام الدفع أو المتابعة مع أزاد')}
+                                </div>
+                            `,
+                            confirmButtonText: 'متابعة الدفع',
+                            confirmButtonColor: '#28a745',
+                            showDenyButton: true,
+                            denyButtonText: 'واتساب أزاد',
+                            showCancelButton: true,
+                            cancelButtonText: 'راسلنا بالبريد',
+                            width: 600,
+                            allowOutsideClick: false
+                        }).then((result) => {
+                            const recordId = data.purchase_id || data.donation_id;
+                            if (result.isDenied) {
+                                openWhatsApp('payment_help', paymentAmount, recordId);
+                            } else if (result.dismiss === Swal.DismissReason.cancel) {
+                                openSupportEmail('payment_help', paymentAmount, recordId);
+                            }
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'تم حفظ الطلب',
+                            html: `
+                                ${buildSupportStatusHtml(data.purchase_id || data.donation_id, paymentAmount, 'تم تسجيل الطلب بانتظار تأكيد أو متابعة يدوية')}
+                                <p class="ic-80">يمكنك المتابعة مباشرة مع شركة أزاد عبر واتساب أو البريد.</p>
+                            `,
+                            confirmButtonText: 'واتساب أزاد',
+                            confirmButtonColor: '#25D366',
+                            showDenyButton: true,
+                            denyButtonText: 'راسلنا بالبريد'
+                        }).then((result) => {
+                            const recordId = data.purchase_id || data.donation_id;
+                            if (result.isConfirmed) {
+                                openWhatsApp('payment_help', paymentAmount, recordId);
+                            } else if (result.isDenied) {
+                                openSupportEmail('payment_help', paymentAmount, recordId);
+                            }
+                        });
+                    }
+                } else {
+                    showSupportAssistanceModal(
+                        'تعذر تجهيز طلب البطاقة',
+                        `<p>${escapeHtml(data.error || 'تعذر حفظ طلب البطاقة حالياً.')}</p><p>يمكنك إكمال العملية مباشرة مع أزاد عبر واتساب أو البريد.</p>`,
+                        'payment_help',
+                        paymentAmount
+                    );
+                }
+            } catch (error) {
+                showSupportAssistanceModal(
+                    'فشل الاتصال أثناء الدفع',
+                    `<p>تعذر الوصول إلى الخادم أثناء معالجة الطلب.</p><p>لا تقلق، يمكنك المتابعة الآن مباشرة مع شركة أزاد.</p>`,
+                    'payment_help',
+                    paymentAmount
+                );
+            }
+        });
+    </script>
+    
+    

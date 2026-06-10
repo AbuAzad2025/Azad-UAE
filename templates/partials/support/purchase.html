@@ -1,0 +1,119 @@
+        
+        <div class="tab-content active" id="purchase-tab">
+            
+            <div class="progress-steps" id="purchase-progress">
+                <div class="step active" id="step-package">
+                    <div class="step-number">1</div>
+                    <div class="step-label">اختر الباقة</div>
+                </div>
+                <div class="step" id="step-payment">
+                    <div class="step-number">2</div>
+                    <div class="step-label">طريقة الدفع</div>
+                </div>
+                <div class="step" id="step-complete">
+                    <div class="step-number">3</div>
+                    <div class="step-label">إتمام الدفع</div>
+                </div>
+            </div>
+            
+            <div class="payment-card ic-8">
+                <h3 class="ic-9">
+                    <i class="fas fa-box-open"></i> اختر الباقة المناسبة لك
+                </h3>
+                
+                <div class="package-grid">
+                    {% if packages %}
+                        {% for package in packages %}
+                        <div class="package-card" onclick="selectPackage({{ package.slug|tojson }}, {{ package.price }}, event)" data-package-id="{{ package.id }}">
+                            <div class="package-name">{{ package.icon }} {{ package.name_ar }}</div>
+                            <div class="package-price">${{ package.price }}</div>
+                            {% if package.badge_text %}
+                            <div class="erp-badge-gradient" style="background: linear-gradient(135deg, {% if package.badge_color == 'success' %}#28a745 0%, #20c997{% elif package.badge_color == 'primary' %}#667eea 0%, #764ba2{% elif package.badge_color == 'danger' %}#ff6b6b 0%, #ee5a24{% else %}#667eea 0%, #764ba2{% endif %} 100%);">
+                                {% if package.badge_color == 'success' %}<i class="fas fa-star"></i>{% elif package.badge_color == 'primary' %}<i class="fas fa-crown"></i>{% elif package.badge_color == 'danger' %}<i class="fas fa-gem"></i>{% else %}<i class="fas fa-star"></i>{% endif %} {{ package.badge_text }}
+                            </div>
+                            {% endif %}
+                            <ul class="package-features">{%- for feature in package.features %}
+                                <li><i class="fas fa-check"></i> {{ feature }}</li>{%- endfor %}
+                            </ul>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="alert alert-warning ic-10">
+                            <i class="fas fa-exclamation-triangle"></i> لا توجد باقات متاحة حالياً. يُرجى المحاولة لاحقاً.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="payment-card ic-11">
+                <h4 class="ic-12">
+                    <i class="fas fa-comments"></i> تفضّل إتمام الشراء مباشرة مع شركة أزاد؟
+                </h4>
+                <p class="ic-13">
+                    يمكنك طلب شراء النظام أو الكود أو عرض سعر مخصص مباشرة دون انتظار البوابة.
+                </p>
+                <div class="quick-contact-actions">
+                    <button type="button" class="quick-contact-btn whatsapp" onclick="openWhatsApp('buy_system')">
+                        <i class="fab fa-whatsapp"></i> شراء النظام عبر واتساب
+                    </button>
+                    <button type="button" class="quick-contact-btn dark" onclick="openWhatsApp('buy_code')">
+                        <i class="fas fa-code"></i> شراء الكود عبر واتساب
+                    </button>
+                    <button type="button" class="quick-contact-btn email" onclick="openSupportEmail('buy_system')">
+                        <i class="fas fa-envelope"></i> شراء النظام عبر البريد
+                    </button>
+                    <button type="button" class="quick-contact-btn email" onclick="openSupportEmail('buy_code')">
+                        <i class="fas fa-file-code"></i> شراء الكود عبر البريد
+                    </button>
+                </div>
+            </div>
+            
+            
+            <div id="purchase-payment-methods" class="ic-14">
+                <div class="payment-card ic-15">
+                    <h3 class="ic-16">
+                        <i class="fas fa-credit-card"></i> اختر طريقة الدفع المناسبة
+                    </h3>
+                    <p class="ic-17">جميع الطرق آمنة ومحمية بتشفير SSL</p>
+                </div>
+                <div class="payment-methods">
+                
+                <div class="payment-card" onclick="selectMethod('crypto', event)">
+                    <i class="fab fa-bitcoin payment-icon"></i>
+                    <div class="payment-title">العملات الرقمية</div>
+                    <p class="payment-desc">
+                        Bitcoin, Ethereum, USDT, BNB
+                        <br><small class="text-success"><i class="fas fa-shield-alt"></i> آمن ومجهول</small>
+                    </p>
+                </div>
+                
+                <div class="payment-card" onclick="selectMethod('card', event)">
+                    <i class="fas fa-credit-card payment-icon"></i>
+                    <div class="payment-title">البطاقات البنكية</div>
+                    <p class="payment-desc">
+                        Visa, Mastercard, Amex
+                        <br><small class="text-info"><i class="fas fa-lock"></i> تشفير SSL</small>
+                    </p>
+                </div>
+                
+                <div class="payment-card" onclick="selectMethod('paypal', event)">
+                    <i class="fab fa-paypal payment-icon"></i>
+                    <div class="payment-title">PayPal</div>
+                    <p class="payment-desc">
+                        دفع سريع وآمن
+                        <br><small class="text-primary"><i class="fas fa-check-circle"></i> حماية المشتري</small>
+                    </p>
+                </div>
+                
+                <div class="payment-card" onclick="selectMethod('bank', event)">
+                    <i class="fas fa-university payment-icon"></i>
+                    <div class="payment-title">تحويل بنكي</div>
+                    <p class="payment-desc">
+                        التحويل المباشر
+                        <br><small class="text-secondary"><i class="fas fa-building"></i> للمبالغ الكبيرة</small>
+                    </p>
+                </div>
+                </div>
+            </div>
+        </div>
+        

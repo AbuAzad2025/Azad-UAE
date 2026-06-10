@@ -141,6 +141,7 @@
 {% endblock %}
 
 {% block extra_js %}
+{% include 'partials/datatables_assets.html' %}
 <script>
 $(document).ready(function() {
   const $tableEl = $('#receivablesTable');
@@ -170,6 +171,7 @@ $(document).ready(function() {
 </script>
 {% endblock %}
 {% block extra_css %}
+{% include 'partials/datatables_assets.html' %}
 <style>
 @media print {
   @page {

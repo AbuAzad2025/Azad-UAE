@@ -216,6 +216,7 @@
 {% endblock %}
 
 {% block extra_js %}
+{% include 'partials/select2_assets.html' %}
 <script>
 // تغيير الحقول حسب نوع الشيك
 $('#cheque_type').change(function() {

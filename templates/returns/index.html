@@ -2,6 +2,7 @@
 {% block title %}المرتجعات{% endblock %}
 
 {% block extra_css %}
+{% include 'partials/datatables_assets.html' %}
 <style>
   #returnsTable th,
   #returnsTable td {
@@ -15,6 +16,7 @@
 {% endblock %}
 
 {% block extra_js %}
+{% include 'partials/datatables_assets.html' %}
 <script>
   (function() {
     const tableSelector = '#returnsTable';

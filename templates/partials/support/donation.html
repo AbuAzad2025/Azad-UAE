@@ -1,0 +1,101 @@
+        
+        <div class="tab-content" id="donation-tab">
+            <div class="payment-card ic-18">
+                <div class="ic-19">❤️</div>
+                <h3 class="ic-20">
+                    <i class="fas fa-heart"></i> ساهم في تطوير المشروع
+                </h3>
+                <p class="ic-21">
+                    تبرعك يساعدنا في تحسين النظام وإضافة ميزات جديدة وتقديم خدمات أفضل للجميع
+                </p>
+                <div class="ic-22">
+                    <div class="ic-23">
+                        <i class="fas fa-code ic-24"></i>
+                        <p class="ic-25">تطوير ميزات جديدة</p>
+                    </div>
+                    <div class="ic-23">
+                        <i class="fas fa-bug ic-24"></i>
+                        <p class="ic-25">إصلاح الأخطاء</p>
+                    </div>
+                    <div class="ic-23">
+                        <i class="fas fa-headset ic-24"></i>
+                        <p class="ic-25">تحسين الدعم الفني</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="payment-card ic-11">
+                <h4 class="ic-26">
+                    <i class="fas fa-life-ring"></i> ماذا يحدث بعد إرسال التبرع أو الطلب؟
+                </h4>
+                <p class="ic-27">
+                    نحن نعطيك رسالة حالة واضحة عند كل خطوة، ويمكنك دائماً التحول إلى التواصل المباشر مع أزاد عبر واتساب أو البريد إذا رغبت في متابعة أسرع أو ترتيب تحويل رسمي.
+                </p>
+                <div class="status-grid">
+                    <div class="status-card success">
+                        <h5><i class="fas fa-check-circle"></i> نجاح</h5>
+                        <p>تم إنشاء الطلب أو عنوان الدفع بنجاح ويمكنك الإكمال فوراً أو مراسلتنا للمتابعة.</p>
+                    </div>
+                    <div class="status-card warning">
+                        <h5><i class="fas fa-hourglass-half"></i> قيد المراجعة</h5>
+                        <p>بعض الطرق تحتاج متابعة بشرية أو انتظار تأكيد البوابة، وسنوضح لك ذلك داخل الرسالة.</p>
+                    </div>
+                    <div class="status-card danger">
+                        <h5><i class="fas fa-times-circle"></i> تعذر أو فشل</h5>
+                        <p>لن نتركك أمام رسالة عامة فقط، بل سنعرض واتساب وبريد أزاد كخيارين مباشرَين لإكمال العملية.</p>
+                    </div>
+                    <div class="status-card info">
+                        <h5><i class="fas fa-undo-alt"></i> استرداد أو تسوية</h5>
+                        <p>أي استفسار بخصوص الاسترداد أو المراجعة اليدوية يمكن ترتيبه مباشرة مع فريق أزاد عبر القنوات الرسمية.</p>
+                    </div>
+                </div>
+                <div class="quick-contact-actions">
+                    <button type="button" class="quick-contact-btn whatsapp" onclick="openWhatsApp('donation_help')">
+                        <i class="fab fa-whatsapp"></i> واتساب التبرع
+                    </button>
+                    <button type="button" class="quick-contact-btn email" onclick="openSupportEmail('donation_help')">
+                        <i class="fas fa-envelope"></i> بريد التبرع
+                    </button>
+                </div>
+            </div>
+            
+            
+            <div class="payment-methods">
+                <div class="payment-card" onclick="selectMethod('crypto', event)">
+                <i class="fab fa-bitcoin payment-icon"></i>
+                <div class="payment-title">العملات الرقمية</div>
+                <p class="payment-desc">
+                    Bitcoin, Ethereum, USDT, BNB
+                    <br><small class="text-success"><i class="fas fa-shield-alt"></i> آمن ومجهول</small>
+                </p>
+            </div>
+            
+            <div class="payment-card" onclick="selectMethod('card', event)">
+                <i class="fas fa-credit-card payment-icon"></i>
+                <div class="payment-title">البطاقات البنكية</div>
+                <p class="payment-desc">
+                    Visa, Mastercard, Amex
+                    <br><small class="text-info"><i class="fas fa-lock"></i> تشفير SSL</small>
+                </p>
+            </div>
+            
+            <div class="payment-card" onclick="selectMethod('paypal', event)">
+                <i class="fab fa-paypal payment-icon"></i>
+                <div class="payment-title">PayPal</div>
+                <p class="payment-desc">
+                    دفع سريع وآمن
+                    <br><small class="text-primary"><i class="fas fa-check-circle"></i> حماية المشتري</small>
+                </p>
+            </div>
+            
+            <div class="payment-card" onclick="selectMethod('bank', event)">
+                <i class="fas fa-university payment-icon"></i>
+                <div class="payment-title">تحويل بنكي</div>
+                <p class="payment-desc">
+                    التحويل المباشر
+                    <br><small class="text-secondary"><i class="fas fa-building"></i> للمبالغ الكبيرة</small>
+                </p>
+            </div>
+            </div>
+        </div>
+

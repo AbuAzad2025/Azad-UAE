@@ -17,6 +17,7 @@
 {% endblock %}
 
 {% block extra_css %}
+{% include 'partials/datatables_assets.html' %}
 <style>
 #chequesTable thead.cheques-table-head th {
   background: linear-gradient(135deg, #0d6efd 0%, #1b4d89 100%);
@@ -345,6 +346,7 @@
 {% endblock %}
 
 {% block extra_js %}
+{% include 'partials/datatables_assets.html' %}
 <script>
 (function() {
   const tableSelector = '#chequesTable';

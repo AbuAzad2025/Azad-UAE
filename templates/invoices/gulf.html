@@ -6,23 +6,12 @@
   <title>{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - فاتورة #{{ sale.sale_number }}</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;700&display=swap" crossorigin="anonymous" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/erp-theme.css') }}">
+  {% include 'partials/print_styles.html' %}
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Noto Kufi Arabic', 'Arial', sans-serif;
       background: linear-gradient(135deg, #8b7355 0%, #c9a961 100%);
-      padding: 10px;
-      margin: 0;
-      font-size: 9px;
       color: #1a1a1a;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      min-height: 100vh;
-    }
-    @page {
-      size: {{ settings.paper_size or 'A4' }} {{ settings.orientation or 'portrait' }};
-      margin: 5mm;
     }
     .invoice {
       {% if settings.paper_size == 'A5' %}
@@ -35,8 +24,6 @@
         width: 100%;
         max-height: {{ '287mm' if settings.orientation == 'portrait' else '200mm' }};
       {% endif %}
-      margin: 0 auto;
-      background: white;
       border: 1px solid {{ settings.header_color or '#c9a961' }};
       border-radius: 5px;
       overflow: hidden;
@@ -58,12 +45,7 @@
       opacity: 0.2;
     }
     .logo { height: 40px; background: white; padding: 5px; border-radius: 5px; margin-bottom: 5px; }
-    .company-name { 
-      font-size: 16px; 
-      font-weight: 700; 
-      margin-bottom: 3px;
-      text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
-    }
+    .company-name { font-size: 16px; font-weight: 700; margin-bottom: 3px; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
     .company-info { font-size: 8px; opacity: 0.95; line-height: 1.4; }
     .title-section {
       background: #f8f9fa;
@@ -71,19 +53,9 @@
       text-align: center;
       border-bottom: 1px solid {{ settings.accent_color or '#8b7355' }};
     }
-    .invoice-title {
-      font-size: 9px;
-      font-weight: 700;
-      color: {{ settings.header_color or '#c9a961' }};
-      margin-bottom: 3px;
-    }
-    .invoice-number {
-      font-size: 9px;
-      color: #666;
-    }
-    .content {
-      padding: 10px;
-    }
+    .invoice-title { font-size: 9px; font-weight: 700; color: {{ settings.header_color or '#c9a961' }}; margin-bottom: 3px; }
+    .invoice-number { font-size: 9px; color: #666; }
+    .content { padding: 10px; }
     .info-boxes {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -96,39 +68,15 @@
       border-radius: 5px;
       padding: 6px;
     }
-    .info-box h3 {
-      color: {{ settings.header_color or '#c9a961' }};
-      font-size: 8px;
-      margin-bottom: 4px;
-      border-bottom: 1px solid {{ settings.accent_color or '#8b7355' }};
-      padding-bottom: 3px;
-    }
-    .info-box p {
-      margin: 2px 0;
-      font-size: 8px;
-    }
+    .info-box h3 { color: {{ settings.header_color or '#c9a961' }}; font-size: 8px; margin-bottom: 4px; border-bottom: 1px solid {{ settings.accent_color or '#8b7355' }}; padding-bottom: 3px; }
+    .info-box p { margin: 2px 0; font-size: 8px; }
     table {
-      width: 100%;
-      border-collapse: collapse;
       margin: 8px 0;
       border: 1px solid {{ settings.accent_color or '#8b7355' }};
-      font-size: 8px;
     }
-    thead {
-      background: linear-gradient(135deg, {{ settings.header_color or '#c9a961' }} 0%, {{ settings.accent_color or '#8b7355' }} 100%);
-      color: white;
-    }
-    th {
-      padding: 5px 4px;
-      text-align: center;
-      font-size: 9px;
-      font-weight: 700;
-    }
-    td {
-      padding: 4px;
-      text-align: center;
-      border-bottom: 1px solid #dee2e6;
-    }
+    thead { background: linear-gradient(135deg, {{ settings.header_color or '#c9a961' }} 0%, {{ settings.accent_color or '#8b7355' }} 100%); }
+    th { padding: 5px 4px; text-align: center; font-weight: 700; }
+    td { padding: 4px; text-align: center; border-bottom: 1px solid #dee2e6; }
     tbody tr:nth-child(even) { background: #f8f9fa; }
     .totals {
       margin-top: 10px;
@@ -140,20 +88,12 @@
       margin-right: 0;
       margin-left: auto;
     }
-    .total-row {
-      display: flex;
-      justify-content: space-between;
-      padding: 5px 0;
-      font-size: 9px;
-      border-bottom: 1px dashed #dee2e6;
-    }
+    .total-row { border-bottom: 1px dashed #dee2e6; }
     .total-row.final {
       background: linear-gradient(135deg, {{ settings.header_color or '#c9a961' }} 0%, {{ settings.accent_color or '#8b7355' }} 100%);
       color: white;
       padding: 10px;
       margin-top: 10px;
-      font-size: 9px;
-      font-weight: 700;
       border-radius: 5px;
       border: none;
     }
@@ -192,7 +132,6 @@
       text-align: center;
       margin-top: 10px;
       border-radius: 0 0 8px 8px;
-      font-size: 9px;
     }
     .signature-section {
       display: flex;
@@ -201,23 +140,11 @@
       padding-top: 20px;
       border-top: 2px dashed {{ settings.accent_color or '#8b7355' }};
     }
-    .signature-box {
-      text-align: center;
-      width: 150px;
-    }
-    .signature-line {
-      border-top: 2px solid #333;
-      margin-top: 40px;
-      padding-top: 8px;
-      font-size: 8px;
-    }
+    .signature-box { text-align: center; width: 150px; }
+    .signature-line { border-top: 2px solid #333; margin-top: 40px; padding-top: 8px; font-size: 8px; }
     @media print {
-      html, body { width: auto !important; height: auto !important; overflow: visible !important; background: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-      .invoice { width: 100% !important; max-width: none !important; height: auto !important; min-height: auto !important; max-height: none !important; overflow: visible !important; box-shadow: none !important; border: 1px solid #ccc !important; }
-      table { width: 100% !important; table-layout: auto; border-collapse: collapse; }
-      thead { display: table-header-group; } tfoot { display: table-footer-group; }
+      .invoice { width: 100% !important; border: 1px solid #ccc !important; }
       tr, .totals, .signature, .invoice-footer, .notes, .payments-table { page-break-inside: avoid; break-inside: avoid; }
-      .no-print { display: none !important; }
     }
 
     /* D6: externalized inline styles */

@@ -23,6 +23,7 @@
 {% endblock %}
 
 {% block extra_css %}
+{% include 'partials/datatables_assets.html' %}
 <style>
 .alert-priority {
   background: linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 152, 0, 0.1) 100%);
@@ -189,6 +190,7 @@
 {% endblock %}
 
 {% block extra_js %}
+{% include 'partials/datatables_assets.html' %}
 <script>
 $(document).ready(function() {
   $('#lowStockTable').DataTable({

@@ -1,0 +1,263 @@
+        
+        <div id="crypto-form" class="donation-form">
+            <div class="ic-28">
+                <i class="fab fa-bitcoin ic-19"></i>
+                <h3 class="ic-16">
+                    الدفع بالعملات الرقمية
+                </h3>
+                <p class="ic-17">دفع آمن ومجهول بدون رسوم إضافية</p>
+            </div>
+            
+            <div class="alert alert-success ic-29">
+                <i class="fas fa-shield-alt mr-2"></i>
+                <strong>أمان كامل:</strong> لا تتبع، لا رسوم إضافية، تحويل فوري ⚡
+            </div>
+            
+            <div class="form-group">
+                <label class="ic-30">
+                    <i class="fas fa-coins mr-2 ic-31"></i>اختر المبلغ (بالدولار)
+                </label>
+                <div class="amount-options">
+                    <button class="amount-btn" onclick="selectAmount(15, event)">
+                        <div class="ic-32">$15</div>
+                        <small class="ic-33">شكراً</small>
+                    </button>
+                    <button class="amount-btn" onclick="selectAmount(25, event)">
+                        <div class="ic-32">$25</div>
+                        <small class="ic-33">رائع</small>
+                    </button>
+                    <button class="amount-btn" onclick="selectAmount(50, event)">
+                        <div class="ic-32">$50</div>
+                        <small class="ic-33">مميز</small>
+                    </button>
+                    <button class="amount-btn" onclick="selectAmount(100, event)">
+                        <div class="ic-32">$100</div>
+                        <small class="ic-33">رهيب</small>
+                    </button>
+                    <button class="amount-btn" onclick="selectAmount(250, event)">
+                        <div class="ic-32">$250</div>
+                        <small class="ic-33">سخي</small>
+                    </button>
+                    <button class="amount-btn" onclick="selectAmount(500, event)">
+                        <div class="ic-32">$500</div>
+                        <small class="ic-33">VIP</small>
+                    </button>
+                </div>
+                <input type="number" id="customAmount" class="form-control ic-34" placeholder="💰 أو أدخل مبلغ مخصص (الحد الأدنى $15)" min="15">
+            </div>
+            
+            <div class="form-group">
+                <label class="ic-30">
+                    <i class="fab fa-bitcoin mr-2 ic-35"></i>اختر العملة الرقمية
+                </label>
+                <select class="form-control ic-36" id="cryptoType" aria-label="cryptoType">
+                    <option value="btc">🟠 Bitcoin (BTC) - الأكثر أماناً وشهرة</option>
+                    <option value="eth">🔷 Ethereum (ETH) - سريع وموثوق</option>
+                    <option value="usdt">💵 Tether (USDT) - عملة مستقرة (1 USDT = 1 USD)</option>
+                    <option value="usdc">💲 USD Coin (USDC) - عملة مستقرة موثوقة</option>
+                    <option value="bnb">🟡 Binance Coin (BNB) - رسوم منخفضة</option>
+                </select>
+            </div>
+            
+            <button class="btn btn-donate btn-block ic-37" onclick="generateCryptoPayment()">
+                <i class="fas fa-wallet mr-2"></i>
+                <span>إنشاء عنوان الدفع الآن</span>
+                <i class="fas fa-arrow-left mr-2"></i>
+            </button>
+            
+            <div class="crypto-info ic-14" id="cryptoPaymentInfo">
+                <h4 class="text-center mb-4">
+                    <i class="fas fa-qrcode mr-2"></i>
+                    معلومات الدفع
+                </h4>
+                
+                <div class="features-list">
+                    <div class="feature-item">
+                        <i class="fas fa-user-secret"></i>
+                        <strong>خصوصية كاملة:</strong> لا نحتفظ بأي معلومات شخصية
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-bolt"></i>
+                        <strong>فوري:</strong> التأكيد خلال 10-30 دقيقة
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-shield-alt"></i>
+                        <strong>آمن:</strong> تشفير متقدم وحماية كاملة
+                    </div>
+                </div>
+                
+                <div class="text-center">
+                    <div class="qr-code" id="qrCode">
+                        
+                        <canvas id="qrCanvas"></canvas>
+                    </div>
+                </div>
+                
+                <div class="wallet-address">
+                    <span id="walletAddress">bc1q...</span>
+                    <button class="copy-btn" onclick="copyAddress()">
+                        <i class="fas fa-copy"></i> نسخ
+                    </button>
+                </div>
+                
+                <p class="text-center mt-3 mb-0">
+                    <small>
+                        <i class="fas fa-info-circle"></i>
+                        أرسل المبلغ المحدد إلى العنوان أعلاه
+                    </small>
+                </p>
+            </div>
+            
+            <div class="text-center mt-4">
+                <span class="security-badge">
+                    <i class="fas fa-lock mr-1"></i>SSL Encrypted
+                </span>
+                <span class="security-badge">
+                    <i class="fas fa-shield-alt mr-1"></i>Anonymous
+                </span>
+                <span class="security-badge">
+                    <i class="fas fa-bolt mr-1"></i>Instant
+                </span>
+            </div>
+        </div>
+
+        
+        <div id="card-form" class="donation-form">
+            <div class="ic-38">
+                <i class="fas fa-credit-card ic-19"></i>
+                <h3 class="ic-16">
+                    الدفع بالبطاقة البنكية
+                </h3>
+                <p class="ic-17">Visa • Mastercard • American Express</p>
+            </div>
+            
+            <div class="alert alert-info ic-39">
+                <i class="fas fa-lock mr-2"></i>
+                <strong>دفع آمن 100%:</strong> جميع البيانات محمية بتشفير SSL 256-bit 🔒
+            </div>
+            
+            <form class="needs-validation" id="cardPaymentForm" method="POST" action="">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
+                <div class="form-group">
+                    <label class="ic-30">
+                        <i class="fas fa-dollar-sign mr-2 ic-40"></i>المبلغ (USD)
+                    </label>
+                    <input type="number" id="cardAmount" class="form-control ic-34" min="15" placeholder="💵 أدخل المبلغ (الحد الأدنى $15)" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="ic-30">
+                        <i class="fas fa-credit-card mr-2 ic-41"></i>رقم البطاقة
+                    </label>
+                    <input type="text" class="form-control ic-42" placeholder="1234 5678 9012 3456" maxlength="19" required>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="ic-43">
+                                <i class="fas fa-calendar mr-2 ic-41"></i>تاريخ الانتهاء
+                            </label>
+                            <input type="text" class="form-control ic-36" placeholder="MM/YY" maxlength="5" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="ic-43">
+                                <i class="fas fa-lock mr-2 ic-40"></i>CVV
+                            </label>
+                            <input type="text" class="form-control ic-44" placeholder="123" maxlength="4" required>
+                        </div>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn btn-donate btn-block ic-37">
+                    <i class="fas fa-check-circle mr-2"></i>
+                    <span>تأكيد الدفع الآن</span>
+                    <i class="fas fa-arrow-left mr-2"></i>
+                </button>
+                
+                <div class="text-center mt-4">
+                    <div class="ic-45">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/0/04/Visa.svg" alt="Visa" class="ic-46">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="Mastercard" class="ic-46">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/3/30/American_Express_logo.svg" alt="Amex" class="ic-46">
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        
+        <div id="paypal-form" class="donation-form">
+            <div class="ic-47">
+                <i class="fab fa-paypal ic-19"></i>
+                <h3 class="ic-16">
+                    الدفع عبر PayPal
+                </h3>
+                <p class="ic-17">دفع سريع وآمن مع حماية المشتري</p>
+            </div>
+            
+            <div class="alert alert-info ic-48">
+                <i class="fas fa-shield-alt mr-2"></i>
+                <strong>حماية كاملة:</strong> استرداد الأموال متاح • لا حاجة لبطاقة ائتمان 💳
+            </div>
+            
+            <div class="text-center" id="paypal-button-container">
+                
+                <button class="btn btn-lg ic-49" onclick="handlePayPalPayment()" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 20px rgba(0,0,0,0.3)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 5px 15px rgba(0,0,0,0.2)'">
+                    <i class="fab fa-paypal mr-2 ic-50"></i>
+                    <span>متابعة مع PayPal</span>
+                </button>
+                <p class="mt-3 text-muted">
+                    <i class="fas fa-info-circle"></i> سيتم توجيهك إلى صفحة PayPal الآمنة
+                </p>
+            </div>
+        </div>
+
+        
+        <div id="bank-form" class="donation-form">
+            <div class="ic-51">
+                <i class="fas fa-university ic-19"></i>
+                <h3 class="ic-16">
+                    التحويل البنكي المباشر
+                </h3>
+                <p class="ic-17">للمبالغ الكبيرة والتعاملات الرسمية</p>
+            </div>
+            
+            <div class="alert alert-warning ic-52">
+                <i class="fas fa-info-circle mr-2"></i>
+                <strong>ملاحظة:</strong> للتحويلات البنكية (+$500)، يُرجى التواصل معنا للحصول على تفاصيل الحساب البنكي
+            </div>
+            
+            <div class="text-center">
+                <a href="mailto:{{ developer_email or config.DEVELOPER_EMAIL }}?subject=Bank Transfer Request" class="btn btn-donate btn-lg ic-53">
+                    <i class="fas fa-envelope mr-2"></i>
+                    طلب تفاصيل الحساب عبر البريد
+                </a>
+                
+                <p class="mt-4 ic-54">
+                    <strong>أو تواصل معنا مباشرة:</strong>
+                </p>
+                <a href="https://wa.me/{{ developer_whatsapp_link }}" class="btn btn-lg mt-2 ic-55">
+                    <i class="fab fa-whatsapp mr-2 ic-50"></i>
+                    تواصل عبر WhatsApp
+                </a>
+
+                <div class="quick-contact-actions ic-56">
+                    <button type="button" class="quick-contact-btn dark" onclick="openWhatsApp('buy_code')">
+                        <i class="fas fa-code"></i> شراء الكود عبر واتساب
+                    </button>
+                    <button type="button" class="quick-contact-btn email" onclick="openSupportEmail('buy_code')">
+                        <i class="fas fa-file-code"></i> شراء الكود عبر البريد
+                    </button>
+                </div>
+                
+                <div class="alert alert-info mt-3">
+                    <i class="fas fa-info-circle mr-2"></i>
+                    <strong>للمبالغ الكبيرة (+$500):</strong> يُرجى التواصل معنا للحصول على تفاصيل الحساب البنكي
+                </div>
+            </div>
+        </div>
+    </div>
+
+    

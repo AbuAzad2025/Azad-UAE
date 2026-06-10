@@ -24,6 +24,7 @@
 {% endblock %}
 
 {% block extra_css %}
+{% include 'partials/datatables_assets.html' %}
 <style>
 .customer-card {
   transition: all 0.3s ease;
@@ -234,6 +235,7 @@
 {% endblock %}
 
 {% block extra_js %}
+{% include 'partials/datatables_assets.html' %}
 <script>
 $(document).ready(function() {
   const table = $('#customersTable').DataTable({

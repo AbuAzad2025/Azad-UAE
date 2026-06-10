@@ -23,6 +23,7 @@
 {% endblock %}
 
 {% block extra_css %}
+{% include 'partials/datatables_assets.html' %}
 <style>
 .warehouse-card {
   border-radius: 16px;
@@ -304,6 +305,7 @@
 {% endblock %}
 
 {% block extra_js %}
+{% include 'partials/datatables_assets.html' %}
 <script>
 $(document).ready(function() {
   const table = $('#warehouseTable').DataTable({

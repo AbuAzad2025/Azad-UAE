@@ -1,0 +1,61 @@
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+@page {
+  size: {{ settings.paper_size or 'A4' }} {{ settings.orientation or 'portrait' }};
+  margin: 5mm;
+}
+body {
+  padding: 10px;
+  margin: 0;
+  font-size: 9px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+}
+.invoice {
+  margin: 0 auto;
+  background: white;
+}
+.logo {
+  height: 50px;
+  margin-bottom: 8px;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 8px;
+}
+th { font-size: 9px; }
+thead { color: white; }
+th, td {
+  padding: 6px 8px;
+  text-align: right;
+}
+.total-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 0;
+  font-size: 9px;
+}
+.total-row.final {
+  border-top: 2px solid #333;
+  padding-top: 8px;
+  margin-top: 8px;
+  font-size: 9px;
+  font-weight: 700;
+}
+.footer {
+  text-align: center;
+  font-size: 9px;
+  color: #666;
+}
+@media print {
+  html, body { width: auto !important; height: auto !important; overflow: visible !important; background: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .invoice { width: auto !important; max-width: none !important; height: auto !important; min-height: auto !important; max-height: none !important; overflow: visible !important; box-shadow: none !important; }
+  table { width: 100% !important; table-layout: auto; border-collapse: collapse; }
+  thead { display: table-header-group; } tfoot { display: table-footer-group; }
+  tr, .totals, .signature, .invoice-footer, .notes { page-break-inside: avoid; break-inside: avoid; }
+  .no-print { display: none !important; }
+}
+</style>

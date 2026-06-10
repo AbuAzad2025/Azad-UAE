@@ -18,6 +18,7 @@
 {% endblock %}
 
 {% block extra_css %}
+{% include 'partials/datatables_assets.html' %}
 <style>
 .product-image {
   width: 50px;
@@ -331,6 +332,7 @@
 {% endblock %}
 
 {% block extra_js %}
+{% include 'partials/datatables_assets.html' %}
 <script>
 $(document).ready(function() {
   const $tableEl = $('#productsTable');

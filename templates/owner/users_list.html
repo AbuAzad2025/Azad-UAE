@@ -2,6 +2,9 @@
 
 {% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - إدارة المستخدمين والصلاحيات{% endblock %}
 
+{% block extra_js %}
+{% include 'partials/datatables_assets.html' %}
+{% endblock %}
 {% block content %}
 <div class="content-header">
   <div class="container-fluid">

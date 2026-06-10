@@ -3,6 +3,7 @@
 {% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - قائمة المستودعات{% endblock %}
 
 {% block extra_css %}
+{% include 'partials/datatables_assets.html' %}
 <style>
   #warehousesTable th,
   #warehousesTable td {
@@ -21,6 +22,7 @@
 {% endblock %}
 
 {% block extra_js %}
+{% include 'partials/datatables_assets.html' %}
 <script>
   (function() {
     const tableSelector = '#warehousesTable';

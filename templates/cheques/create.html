@@ -17,6 +17,7 @@
 {% endblock %}
 
 {% block extra_css %}
+{% include 'partials/select2_assets.html' %}
 <style>
 .cheque-create-form .form-control,
 .cheque-create-form .form-select {
@@ -261,6 +262,7 @@
 {% endblock %}
 
 {% block extra_js %}
+{% include 'partials/select2_assets.html' %}
 <script>
 const TENANT_BASE_CURRENCY = {{ tenant_default_currency|tojson }} || 'AED';
 

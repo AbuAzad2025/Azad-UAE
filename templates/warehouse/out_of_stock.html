@@ -23,6 +23,7 @@
 {% endblock %}
 
 {% block extra_css %}
+{% include 'partials/datatables_assets.html' %}
 <style>
 .alert-critical {
   background: linear-gradient(135deg, rgba(220, 53, 69, 0.1) 0%, rgba(206, 17, 38, 0.1) 100%);
@@ -178,6 +179,7 @@
 {% endblock %}
 
 {% block extra_js %}
+{% include 'partials/datatables_assets.html' %}
 <script>
 $(document).ready(function() {
   $('#outOfStockTable').DataTable({

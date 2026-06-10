@@ -3,6 +3,7 @@
 {% block page_title %}المشتريات{% endblock %}
 
 {% block extra_css %}
+{% include 'partials/datatables_assets.html' %}
 <style>
 @media print {
   @page {
@@ -175,6 +176,7 @@
 {% endblock %}
 
 {% block extra_js %}
+{% include 'partials/datatables_assets.html' %}
 <script>
 $(document).ready(function() {
   const $tableEl = $('#purchasesTable');

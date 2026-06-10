@@ -1,5 +1,10 @@
 {% extends "base.html" %}
 
+{# NOTE: This file stays separate from main base.html because it provides owner-section-specific
+   functionality: bootstrap-icons CDN, BS5-to-BS4 modal compatibility, and inline .btn-close styles.
+   Unlike the main base.html (for all authenticated users), this extends it with owner-only assets.
+   All 60+ owner templates inherit from this, not from base.html directly. #}
+
 {% block extra_css %}
 {{ super() }}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" integrity="sha384-XGjxtQfXaH2tnPFa9x+ruJTuLE3Aa6LhHSWRr1XeTyhezb4abCG4ccI5AkVDxqC+" crossorigin="anonymous">

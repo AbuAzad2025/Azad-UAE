@@ -5,22 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - فاتورة #{{ sale.sale_number }}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/erp-theme.css') }}">
+  {% include 'partials/print_styles.html' %}
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Tajawal', 'Arial', sans-serif;
       background: #95a5a6;
-      padding: 10px;
-      margin: 0;
-      font-size: 9px;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      min-height: 100vh;
-    }
-    @page {
-      size: {{ settings.paper_size if settings else 'A4' }} {{ settings.orientation if settings else 'portrait' }};
-      margin: 5mm;
     }
     .invoice {
       {% if settings and settings.paper_size == 'A5' %}
@@ -33,8 +22,6 @@
         width: {{ '210mm' if (not settings or settings.orientation == 'portrait') else '297mm' }};
         height: {{ '297mm' if (not settings or settings.orientation == 'portrait') else '210mm' }};
       {% endif %}
-      margin: 0 auto;
-      background: white;
       border-radius: 0;
       overflow: auto;
       box-shadow: 0 0 20px rgba(0,0,0,0.3);
@@ -46,7 +33,7 @@
       padding: 15px 20px;
       text-align: center;
     }
-    .logo { height: 50px; background: white; padding: 8px; border-radius: 8px; margin-bottom: 8px; }
+    .logo { background: white; padding: 8px; border-radius: 8px; }
     .company-name { font-size: 9px; font-weight: 700; margin-bottom: 3px; }
     .company-info { font-size: 8px; opacity: 0.95; }
     .invoice-title {
@@ -84,21 +71,14 @@
     .info-box h3 { color: {{ settings.header_color if settings else '#667eea' }}; margin-bottom: 8px; font-size: 9px; }
     .info-box p { margin: 4px 0; color: #555; font-size: 8px; }
     table {
-      width: 100%;
-      border-collapse: collapse;
       margin: 10px 0;
-      font-size: 8px;
     }
     thead {
       background: linear-gradient(135deg, {{ settings.header_color if settings else '#667eea' }} 0%, {{ settings.accent_color if settings else '#764ba2' }} 100%);
-      color: white;
     }
     th, td {
-      padding: 6px 8px;
-      text-align: right;
       border-bottom: 1px solid #e0e0e0;
     }
-    th { font-size: 9px; }
     tbody tr:hover { background: #f8f9fa; }
     .total-section {
       margin-top: 12px;
@@ -107,18 +87,8 @@
       padding: 12px 15px;
       border-radius: 6px;
     }
-    .total-row {
-      display: flex;
-      justify-content: space-between;
-      padding: 5px 0;
-      font-size: 9px;
-    }
     .total-row.final {
       border-top: 2px solid {{ settings.header_color if settings else '#667eea' }};
-      padding-top: 8px;
-      margin-top: 8px;
-      font-size: 9px;
-      font-weight: 700;
       color: {{ settings.header_color if settings else '#667eea' }};
     }
     .footer {
@@ -126,18 +96,8 @@
       padding: 12px 15px;
       text-align: center;
       border-top: 2px solid {{ settings.accent_color if settings else '#764ba2' }};
-      color: #666;
-      font-size: 9px;
     }
-    .qr-code { margin: 10px 0;     }
-    @media print {
-      html, body { width: auto !important; height: auto !important; overflow: visible !important; background: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-      .invoice { width: auto !important; max-width: none !important; height: auto !important; min-height: auto !important; max-height: none !important; overflow: visible !important; box-shadow: none !important; }
-      table { width: 100% !important; table-layout: auto; border-collapse: collapse; }
-      thead { display: table-header-group; } tfoot { display: table-footer-group; }
-      tr, .totals, .signature, .invoice-footer, .notes { page-break-inside: avoid; break-inside: avoid; }
-      .no-print { display: none !important; }
-    }
+    .qr-code { margin: 10px 0; }
 
     /* D6: externalized inline styles */
     .ic-1 { color: #28a745; }

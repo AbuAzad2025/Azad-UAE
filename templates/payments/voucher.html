@@ -3,6 +3,7 @@
 {% block page_title %}إنشاء سند مالي (قبض/صرف){% endblock %}
 
 {% block extra_css %}
+{% include 'partials/select2_assets.html' %}
 <style>
 .voucher-form .form-control,
 .voucher-form .form-select {
@@ -194,6 +195,7 @@
 {% endblock %}
 
 {% block extra_js %}
+{% include 'partials/select2_assets.html' %}
 <script>
 function selectDirection(dir) {
   $('.type-card').removeClass('selected');
