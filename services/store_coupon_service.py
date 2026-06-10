@@ -108,7 +108,18 @@ class StoreCouponService:
 
     @staticmethod
     def mark_used(coupon: StoreCoupon):
-        coupon.used_count = int(coupon.used_count or 0) + 1
+        result = db.session.query(StoreCoupon).filter(
+            StoreCoupon.id == coupon.id,
+            db.or_(
+                StoreCoupon.max_uses.is_(None),
+                StoreCoupon.used_count < StoreCoupon.max_uses
+            )
+        ).update(
+            {StoreCoupon.used_count: StoreCoupon.used_count + 1},
+            synchronize_session=False
+        )
+        if result == 0:
+            raise ValueError('كود الخصم تجاوز الحد الأقصى للاستخدام.')
         db.session.flush()
 
     @staticmethod

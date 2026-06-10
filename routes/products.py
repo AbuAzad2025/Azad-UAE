@@ -220,6 +220,7 @@ def import_products():
             return redirect(request.url)
         
         if file:
+            filepath = None
             try:
                 import uuid
                 ext = os.path.splitext(secure_filename(file.filename))[1].lower()
@@ -385,6 +386,12 @@ def import_products():
             except Exception as e:
                 flash(f'❌ حدث خطأ أثناء معالجة الملف: {str(e)}', 'danger')
                 current_app.logger.error(f"Import Failed: {e}")
+            finally:
+                if filepath and os.path.exists(filepath):
+                    try:
+                        os.remove(filepath)
+                    except Exception:
+                        pass
     
     return render_template('products/import.html')
 
@@ -682,15 +689,12 @@ def create():
                         assign_tenant_id(partner_row, current_user)
                         product.partner_shares.append(partner_row)
                 
-                # إضافة حركة مخزون إذا كانت الكمية أكبر من صفر
                 if initial_stock > 0:
-                    StockService.adjust_stock(
+                    StockService.add_opening_stock(
                         product_id=product.id,
                         quantity=initial_stock,
-                        notes=f'مخزون أولي عند إضافة المنتج إلى المستودع: {warehouse.name_ar or warehouse.name}',
+                        notes=f'مخزون افتتاحي عند إضافة المنتج إلى المستودع: {warehouse.name_ar or warehouse.name}',
                         warehouse_id=warehouse_id,
-                        reference_type=GLRef.PRODUCT_CREATION,
-                        reference_id=product.id,
                     )
                 
                 db.session.commit()
@@ -830,7 +834,14 @@ def edit(id):
                         extra_fields.pop(key[6:], None)
             product.extra_fields = extra_fields if extra_fields else None
             if current_user.can_see_costs():
-                product.cost_price = safe_float(request.form.get('cost_price'), default=0)
+                new_cost = safe_float(request.form.get('cost_price'), default=0)
+                if new_cost != (product.cost_price or 0):
+                    from services.stock_service import StockService
+                    total_stock = StockService.get_product_stock(product.id)
+                    if total_stock > 0:
+                        flash('⚠️ لا يمكن تعديل سعر التكلفة لوجود مخزون. قم بتسوية المخزون أولاً.', 'warning')
+                    else:
+                        product.cost_price = new_cost
             
             if partner_rows and not product.tenant_id:
                 flash('⚠️ المنتج غير مرتبط بشركة — لا يمكن حفظ شركاء المنتج.', 'warning')

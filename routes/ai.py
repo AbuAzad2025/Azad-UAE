@@ -2328,6 +2328,11 @@ def _process_user_action(message, user):
                 try:
                     from models.user import User
                     from werkzeug.security import generate_password_hash
+                    from utils.password_validator import PasswordValidator
+                    
+                    is_valid, pwd_errors = PasswordValidator.validate(data.get('password', ''))
+                    if not is_valid:
+                        raise ValueError('; '.join(pwd_errors))
                     
                     new_user = User(
                         username=data['username'],

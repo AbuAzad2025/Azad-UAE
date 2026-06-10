@@ -1025,23 +1025,21 @@ def checkout(slug):
 
             )
 
-            if account:
-                from decimal import Decimal
-                StoreService.earn_loyalty_points(store.tenant_id, account.id, sale.id, Decimal(str(totals['subtotal'])))
-
             StoreService.save_cart(session, store.tenant_id, {})
 
             if payment_method == 'online_pay':
 
                 from services.store_online_payment_service import StoreOnlinePaymentService
 
-                payment = StoreOnlinePaymentService.create_payment_for_sale(
-
-                    sale, store, customer_email=getattr(account, 'email', None),
-
-                )
-
-                return redirect(payment['payment_url'])
+                try:
+                    payment = StoreOnlinePaymentService.create_payment_for_sale(
+                        sale, store, customer_email=getattr(account, 'email', None),
+                    )
+                    return redirect(payment['payment_url'])
+                except ValueError as pe:
+                    token = StoreCheckoutService.make_order_token(sale.id, store.tenant_id)
+                    flash(str(pe) + ' — تم حفظ طلبك، يمكنك إتمام الدفع لاحقاً.', 'warning')
+                    return redirect(url_for('shop.order_confirmation', slug=store.store_slug, token=token))
 
             token = StoreCheckoutService.make_order_token(sale.id, store.tenant_id)
 
@@ -1049,6 +1047,7 @@ def checkout(slug):
 
         except ValueError as exc:
 
+            db.session.rollback()
             flash(str(exc), 'danger')
 
         except Exception:

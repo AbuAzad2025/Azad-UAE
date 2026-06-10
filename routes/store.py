@@ -214,11 +214,15 @@ def admin_transfer():
             if direction == 'to_online':
                 if not source_id:
                     raise ValueError('اختر المستودع المصدر.')
+                if source_id not in [w.id for w in physical_warehouses]:
+                    raise ValueError('المستودع المحدد غير صالح أو غير متاح لك.')
                 from_id, to_id = source_id, online_wh.id
                 label = notes or 'نشر للمتجر — تحويل إلى مستودع أونلاين'
             else:
                 if not source_id:
                     source_id = online_wh.id
+                if source_id not in [w.id for w in physical_warehouses] and source_id != online_wh.id:
+                    raise ValueError('المستودع المحدد غير صالح أو غير متاح لك.')
                 from_id, to_id = online_wh.id, source_id
                 label = notes or 'سحب من المتجر — تحويل من مستودع أونلاين'
 

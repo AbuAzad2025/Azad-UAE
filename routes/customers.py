@@ -480,25 +480,30 @@ def statement(id):
     transaction_type = request.args.get('transaction_type', 'all')
     
     from sqlalchemy import func
-    from models import Payment
+    from models import Payment, Receipt
     
     tid = get_active_tenant_id(current_user)
     sales_query = Sale.query.filter_by(customer_id=id, status='confirmed', tenant_id=tid)
     payments_query = Payment.query.filter_by(customer_id=id, tenant_id=tid)
+    receipts_query = Receipt.query.filter_by(customer_id=id, tenant_id=tid)
     if branch_scope_id() is not None:
         sales_query = sales_query.filter(Sale.branch_id == branch_scope_id())
         payments_query = payments_query.filter(Payment.branch_id == branch_scope_id())
+        receipts_query = receipts_query.filter(Receipt.branch_id == branch_scope_id())
     
     if date_from:
         sales_query = sales_query.filter(func.date(Sale.sale_date) >= date_from)
         payments_query = payments_query.filter(func.date(Payment.payment_date) >= date_from)
+        receipts_query = receipts_query.filter(func.date(Receipt.receipt_date) >= date_from)
     
     if date_to:
         sales_query = sales_query.filter(func.date(Sale.sale_date) <= date_to)
         payments_query = payments_query.filter(func.date(Payment.payment_date) <= date_to)
+        receipts_query = receipts_query.filter(func.date(Receipt.receipt_date) <= date_to)
     
     sales = sales_query.order_by(Sale.sale_date).all()
     payments = payments_query.order_by(Payment.payment_date).all()
+    receipts = receipts_query.order_by(Receipt.receipt_date).all()
 
     transactions = []
 
@@ -636,9 +641,25 @@ def statement(id):
             }
         })
 
+    for receipt in receipts:
+        transactions.append({
+            'date': receipt.receipt_date,
+            'type': 'receipt',
+            'reference': receipt.receipt_number or f'قبض #{receipt.id}',
+            'debit': 0,
+            'credit': float(receipt.amount_aed or 0),
+            'balance': 0,
+            'description': 'سند قبض',
+            'currency': default_currency,
+            'exchange_rate': 1.0,
+            'paid_amount': float(receipt.amount_aed or 0),
+            'balance_due': 0,
+            'status': 'مؤكدة' if receipt.payment_confirmed else 'معلقة',
+        })
+
     transactions.sort(key=lambda x: (x['date'] or datetime.min))
 
-    if transaction_type in {'sale', 'payment'}:
+    if transaction_type in {'sale', 'payment', 'receipt'}:
         transactions = [trans for trans in transactions if trans['type'] == transaction_type]
 
     running_balance = 0

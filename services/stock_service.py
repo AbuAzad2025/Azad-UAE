@@ -107,6 +107,41 @@ class StockService:
             db.session.rollback()
             current_app.logger.error(f"Failed stock adjustment: {e}")
             raise
+
+    @staticmethod
+    def add_opening_stock(product_id, quantity, notes=None, warehouse_id=None, cost_price=None):
+        movement = StockService.create_movement(
+            product_id=product_id,
+            quantity=Decimal(str(quantity)),
+            movement_type='purchase',
+            notes=notes or 'مخزون افتتاحي',
+            warehouse_id=warehouse_id,
+            reference_type=GLRef.PRODUCT_CREATION,
+        )
+        from services.gl_posting import post_or_fail
+        from services.gl_service import GLService
+        from models import Product, Warehouse
+        product = Product.query.get(product_id)
+        warehouse = Warehouse.query.get(warehouse_id) if warehouse_id else None
+        if product and product.cost_price:
+            cost_value = Decimal(str(quantity)) * Decimal(str(product.cost_price))
+            if cost_value > 0:
+                tenant_id = getattr(product, 'tenant_id', None)
+                asset_account = _resolve_gl_concept_account('INVENTORY_ASSET', '1140', tenant_id)
+                equity_account = _resolve_gl_concept_account('OPENING_BALANCE_EQUITY', '3130', tenant_id)
+                GLService.ensure_core_accounts(tenant_id=tenant_id)
+                post_or_fail(
+                    lines=[
+                        {'account': asset_account, 'concept_code': 'INVENTORY_ASSET', 'debit': cost_value, 'credit': 0, 'description': f'مخزون افتتاحي - {product.name}'},
+                        {'account': equity_account, 'concept_code': 'OPENING_BALANCE_EQUITY', 'debit': 0, 'credit': cost_value, 'description': f'مخزون افتتاحي - {product.name}'},
+                    ],
+                    description=f'مخزون افتتاحي - {product.name}',
+                    reference_type=GLRef.PRODUCT_CREATION,
+                    reference_id=product.id,
+                    branch_id=warehouse.branch_id if warehouse else None,
+                    tenant_id=tenant_id,
+                )
+        return movement
     
     @staticmethod
     def create_movement(product_id, quantity, movement_type, reference_type=None, reference_id=None, notes=None, warehouse_id=None):

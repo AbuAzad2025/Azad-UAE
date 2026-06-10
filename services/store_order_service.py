@@ -127,8 +127,27 @@ class StoreOrderService:
             db.session.rollback()
             raise
 
+        StoreOrderService._award_loyalty_points(sale)
+
         current_app.logger.info('Store order confirmed: %s', sale.sale_number)
         return sale
+
+    @staticmethod
+    def _award_loyalty_points(sale: Sale):
+        if not sale.customer_id:
+            return
+        from models.shop_customer_account import ShopCustomerAccount
+        from services.store_service import StoreService
+        account = ShopCustomerAccount.query.filter_by(
+            customer_id=sale.customer_id,
+            tenant_id=sale.tenant_id
+        ).first()
+        if not account:
+            return
+        from decimal import Decimal
+        total = Decimal(str(sale.total_amount or 0))
+        if total > 0:
+            StoreService.earn_loyalty_points(sale.tenant_id, account.id, sale.id, total)
 
     @staticmethod
     def cancel_order(sale: Sale) -> Sale:

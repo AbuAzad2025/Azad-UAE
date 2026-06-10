@@ -223,6 +223,21 @@ def create():
             with atomic_transaction('supplier_creation'):
                 db.session.add(supplier)
 
+                if initial_balance and initial_balance > 0:
+                    from services.gl_posting import post_or_fail
+                    from services.gl_service import GLService
+                    GLService.ensure_core_accounts(tenant_id=tid)
+                    post_or_fail(
+                        lines=[
+                            {'account': '3130', 'concept_code': 'OPENING_BALANCE_EQUITY', 'debit': initial_balance, 'credit': 0, 'description': f'رصيد افتتاحي للمورد {supplier.name}'},
+                            {'account': '2110', 'concept_code': 'ACCOUNTS_PAYABLE', 'debit': 0, 'credit': initial_balance, 'description': f'رصيد افتتاحي للمورد {supplier.name}'},
+                        ],
+                        description=f'رصيد افتتاحي للمورد {supplier.name}',
+                        reference_type='supplier_opening',
+                        reference_id=supplier.id,
+                        tenant_id=tid,
+                    )
+
                 LoggingCore.log_audit('create', 'suppliers', supplier.id)
 
             log_mutation('create', 'Supplier', supplier.id, {'name': supplier.name})
