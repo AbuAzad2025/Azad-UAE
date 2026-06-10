@@ -1,0 +1,11 @@
+{% extends 'shop/base.html' %}
+{% block title %}{{ t('offline') }} — {{ store.title }}{% endblock %}
+{% block content %}
+<div class="ps-offline">
+  <div class="ps-offline-icon"><i class="fas fa-wifi-slash"></i></div>
+  <h2>{{ t('offline_title') }}</h2>
+  <p>{{ t('offline_msg') }}</p>
+  <a href="{{ url_for('shop.catalog', slug=store.store_slug) }}" class="ps-btn ps-btn-primary">{{ t('try_again') }}</a>
+</div>
+{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/shop-utilities.css') }}">{% endblock %}

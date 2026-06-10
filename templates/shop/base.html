@@ -11,14 +11,24 @@
   <meta property="og:description" content="{{ store.seo_description(lang) }}">
   {% if store.logo_url() %}<meta property="og:image" content="{{ request.url_root.rstrip('/') }}{{ store.logo_url() }}">{% endif %}
   <link rel="canonical" href="{{ request.url }}">
+  {% if noindex %}<meta name="robots" content="noindex, nofollow">{% endif %}
   <meta name="csrf-token" content="{{ csrf_token() }}">
   {% endblock %}
+  <link rel="manifest" href="{{ url_for('static', filename='shop-manifest.json') }}">
+  <meta name="theme-color" content="{{ theme_primary or '#1B7A4E' }}">
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700;800&display=swap" as="style">
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&display=swap" as="style">
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700;800&family=Sora:wght@400;500;600;700;800&display=swap" integrity="sha384-Wn8XN5vULCukPAAEaxYTMow8YzD38hKD8JVzC1+o3+voPZxEdxS+m6qSBy2f5nR4" crossorigin="anonymous" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha384-t1nt8BQoYMLFN5p42tRAtuAAFQaCQODekUVeKKZrEnEyp4H2R0RHFz0KWpmj7i8g" crossorigin="anonymous">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/shop-palestine.css') }}">
    <style>:root { --theme-primary: {{ theme_primary }}; --theme-secondary: {{ theme_secondary }}; }</style>
   {% block extra_head %}{% endblock %}
   {% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/shop-utilities.css') }}">{% endblock %}
+  {% if analytics_id %}
+<script async src="https://www.googletagmanager.com/gtag/js?id={{ analytics_id }}"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','{{ analytics_id }}');</script>
+{% endif %}
+  {% block tracking_head %}{% endblock %}
 </head>
 <body class="ps-shop {{ 'rtl' if is_rtl else 'ltr' }}" data-store-slug="{{ store.store_slug }}">
   <div class="ps-tatreez-bar" aria-hidden="true"></div>
@@ -38,6 +48,11 @@
   {% if not is_shop_logged_in %}
   <div class="ps-guest-banner"><i class="fas fa-eye"></i> {{ t('guest_browse') }}</div>
   {% endif %}
+  <div id="ps-install-banner" class="ps-install-banner" style="display:none">
+    <span>{{ t('install_app') }}</span>
+    <button onclick="deferredPrompt.prompt();" class="ps-btn ps-btn-primary ps-btn-sm">{{ t('install') }}</button>
+    <button onclick="this.closest('.ps-install-banner').style.display='none'" class="ps-btn ps-btn-ghost ps-btn-sm">✕</button>
+  </div>
 
   <header class="ps-header">
     <div class="ps-header-inner">
@@ -164,6 +179,15 @@
       </div>
     </div>
 
+    <div class="ps-newsletter">
+      <h4>{{ t('newsletter') }}</h4>
+      <form method="post" action="{{ url_for('shop.newsletter_subscribe', slug=store.store_slug) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="email" name="email" placeholder="{{ t('email_placeholder') }}" required>
+        <button type="submit" class="ps-btn ps-btn-primary ps-btn-sm">{{ t('subscribe') }}</button>
+      </form>
+    </div>
+
     <div class="ps-tatreez-bar" aria-hidden="true"></div>
 
     {# Bottom copyright bar — tenant left, AZAD center #}
@@ -175,10 +199,22 @@
   </footer>
 
   <script src="{{ url_for('static', filename='js/shop-storefront.js') }}" defer></script>
+  <script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/static/sw.js');
+  }
+  </script>
   <script src="{{ url_for('static', filename='js/shop-cart.js') }}" defer></script>
   <script src="{{ url_for('static', filename='js/shop-search.js') }}" defer></script>
   <script src="{{ url_for('static', filename='js/shop-gallery.js') }}" defer></script>
   <script src="{{ url_for('static', filename='js/shop-quickview.js') }}" defer></script>
   {% block extra_js %}{% endblock %}
+<div id="ps-cookie-banner" class="ps-cookie-banner" style="display:none">
+  <p>{{ t('cookie_notice') }}</p>
+  <button onclick="document.getElementById('ps-cookie-banner').style.display='none';localStorage.setItem('cookie_consent','1')" class="ps-btn ps-btn-sm">{{ t('cookie_accept') }}</button>
+</div>
+<script>
+if (!localStorage.getItem('cookie_consent')) { document.getElementById('ps-cookie-banner').style.display='flex'; }
+</script>
 </body>
 </html>

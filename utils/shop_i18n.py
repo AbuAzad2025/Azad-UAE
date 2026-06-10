@@ -168,6 +168,20 @@ STRINGS = {
     'no_saved_payments': {'ar': 'لا توجد طرق دفع محفوظة', 'en': 'No saved payment methods'},
     'payment_saved': {'ar': 'تم حفظ طريقة الدفع', 'en': 'Payment method saved'},
     'payment_deleted': {'ar': 'تم حذف طريقة الدفع', 'en': 'Payment method deleted'},
+    'cookie_notice': {'ar': 'نستخدم ملفات تعريف الارتباط لتحسين تجربتك', 'en': 'We use cookies to improve your experience'},
+    'cookie_accept': {'ar': 'موافق', 'en': 'Accept'},
+    'newsletter': {'ar': 'النشرة البريدية', 'en': 'Newsletter'},
+    'email_placeholder': {'ar': 'بريدك الإلكتروني', 'en': 'Your email'},
+    'subscribe': {'ar': 'اشتراك', 'en': 'Subscribe'},
+    'newsletter_subscribed': {'ar': 'تم الاشتراك في النشرة البريدية', 'en': 'Subscribed to newsletter'},
+    'invalid_email': {'ar': 'البريد الإلكتروني غير صالح', 'en': 'Invalid email'},
+    'share': {'ar': 'مشاركة', 'en': 'Share'},
+    'install_app': {'ar': 'ثبّت التطبيق على شاشتك الرئيسية', 'en': 'Add to Home Screen'},
+    'install': {'ar': 'تثبيت', 'en': 'Install'},
+    'offline': {'ar': 'غير متصل', 'en': 'Offline'},
+    'offline_title': {'ar': 'أنت غير متصل بالإنترنت', 'en': 'You are offline'},
+    'offline_msg': {'ar': 'لا يمكن الوصول إلى المتجر حالياً. تحقق من اتصالك.', 'en': 'Cannot reach the store. Check your connection.'},
+    'try_again': {'ar': 'حاول مجدداً', 'en': 'Try again'},
 }
 
 

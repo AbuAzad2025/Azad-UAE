@@ -109,6 +109,13 @@
   </div>
 </div>
 
+<div class="ps-share">
+  <span>{{ t('share') }}:</span>
+  <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.url|urlencode }}" target="_blank" rel="noopener" class="ps-share-btn"><i class="fab fa-facebook"></i></a>
+  <a href="https://twitter.com/intent/tweet?url={{ request.url|urlencode }}&text={{ product.get_display_name(lang)|urlencode }}" target="_blank" rel="noopener" class="ps-share-btn"><i class="fab fa-twitter"></i></a>
+  <a href="https://wa.me/?text={{ product.get_display_name(lang)|urlencode }}%20{{ request.url|urlencode }}" target="_blank" rel="noopener" class="ps-share-btn"><i class="fab fa-whatsapp"></i></a>
+</div>
+
 {% if related_products %}
 <section class="ps-related">
   <h2><i class="fas fa-tags"></i> {{ t('you_may_also_like') }}</h2>

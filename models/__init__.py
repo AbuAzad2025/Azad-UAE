@@ -28,6 +28,7 @@ from .shop_abandoned_cart import ShopAbandonedCart
 from .shop_saved_payment import ShopSavedPayment
 from .shop_product_variant import ShopProductVariant
 from .shop_stock_alert import ShopStockAlert
+from .shop_newsletter import ShopNewsletter
 from .shop_loyalty import ShopLoyalty, ShopLoyaltyTransaction
 from .store_coupon import StoreCoupon
 from .system_settings import SystemSettings
@@ -88,6 +89,7 @@ __all__ = [
     'ShopSavedPayment',
     'ShopProductVariant',
     'ShopStockAlert',
+    'ShopNewsletter',
     'ShopLoyalty', 'ShopLoyaltyTransaction',
     'StoreCoupon',
     'SystemSettings',

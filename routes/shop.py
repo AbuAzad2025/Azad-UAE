@@ -6,7 +6,7 @@ from urllib.parse import quote
 
 from flask import (
 
-    Blueprint, abort, flash, jsonify, redirect, render_template, request, session, url_for,
+    Blueprint, abort, current_app, flash, jsonify, redirect, render_template, request, session, url_for,
 
 )
 
@@ -155,6 +155,8 @@ def _store_context(store):
 
         'is_shop_logged_in': account is not None,
 
+        'analytics_id': current_app.config.get('ANALYTICS_GA_ID', ''),
+
     }
 
 
@@ -228,6 +230,16 @@ def set_lang(slug, lang_code):
 
 
 
+@shop_bp.route('/<slug>/offline')
+def offline(slug):
+    store = _resolve_store(slug)
+    ctx = _store_context(store)
+    return render_template('shop/offline.html', **ctx)
+
+
+
+
+
 @shop_bp.route('/<slug>/wishlist/add/<int:product_id>', methods=['POST'])
 @limiter.limit('30 per minute')
 def wishlist_add(slug, product_id):
@@ -271,7 +283,7 @@ def wishlist_view(slug):
         flash(t('login_required', ctx['lang']), 'warning')
         return redirect(url_for('shop.account_login', slug=store.store_slug))
     items = ShopWishlist.query.filter_by(account_id=account.id).order_by(ShopWishlist.created_at.desc()).all()
-    return render_template('shop/wishlist.html', wishlist_items=items, **ctx)
+    return render_template('shop/wishlist.html', wishlist_items=items, noindex=True, **ctx)
 
 
 
@@ -323,7 +335,7 @@ def account_login(slug):
 
             flash(str(exc), 'danger')
 
-    return render_template('shop/account_login.html', next_url=next_url, **ctx)
+    return render_template('shop/account_login.html', next_url=next_url, noindex=True, **ctx)
 
 
 
@@ -383,7 +395,7 @@ def account_register(slug):
 
             flash(str(exc), 'danger')
 
-    return render_template('shop/account_register.html', **ctx)
+    return render_template('shop/account_register.html', noindex=True, **ctx)
 
 
 
@@ -439,6 +451,8 @@ def account_orders(slug):
 
         payment_methods=payment_methods,
 
+        noindex=True,
+
         **ctx,
 
     )
@@ -485,6 +499,8 @@ def account_order_detail(slug, order_id):
 
         status_label=StoreOrderService.status_label(sale.status, ctx['lang']),
 
+        noindex=True,
+
         **ctx,
 
     )
@@ -500,6 +516,10 @@ def account_order_detail(slug, order_id):
 def catalog(slug):
 
     store = _resolve_store(slug)
+
+    for param in ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content']:
+        if request.args.get(param):
+            session[param] = request.args.get(param)
 
     blocked = _require_open_store(store)
 
@@ -715,6 +735,24 @@ def stock_alert(slug, product_id):
 
 
 
+@shop_bp.route('/<slug>/newsletter/subscribe', methods=['POST'])
+@limiter.limit('10 per minute', methods=['POST'])
+def newsletter_subscribe(slug):
+    store = _resolve_store(slug)
+    email = (request.form.get('email') or '').strip()
+    if not email or '@' not in email:
+        flash(t('invalid_email', shop_lang()), 'danger')
+        return redirect(request.referrer or url_for('shop.catalog', slug=store.store_slug))
+    from models.shop_newsletter import ShopNewsletter
+    existing = ShopNewsletter.query.filter_by(tenant_id=store.tenant_id, email=email).first()
+    if not existing:
+        sub = ShopNewsletter(tenant_id=store.tenant_id, email=email)
+        db.session.add(sub)
+        db.session.commit()
+    flash(t('newsletter_subscribed', shop_lang()), 'success')
+    return redirect(request.referrer or url_for('shop.catalog', slug=store.store_slug))
+
+
 @shop_bp.route('/<slug>/cart')
 
 def cart_view(slug):
@@ -733,7 +771,7 @@ def cart_view(slug):
 
     totals = StoreService.cart_totals(store.tenant_id, cart)
 
-    return render_template('shop/cart.html', totals=totals, **ctx)
+    return render_template('shop/cart.html', totals=totals, noindex=True, **ctx)
 
 
 
@@ -1038,6 +1076,8 @@ def checkout(slug):
 
         min_order=min_order,
 
+        noindex=True,
+
         payment_methods=payment_methods,
 
         payment_hint=lambda pm: StorePaymentMethodService.format_checkout_instructions(pm, ctx['lang']),
@@ -1136,7 +1176,20 @@ def store_sitemap(slug):
     return Response('\n'.join(xml), mimetype='application/xml')
 
 
-
+@shop_bp.route('/<slug>/robots.txt')
+def store_robots(slug):
+    from flask import Response
+    store = _resolve_store(slug)
+    lines = [
+        'User-agent: *',
+        'Disallow: /s/' + store.store_slug + '/cart',
+        'Disallow: /s/' + store.store_slug + '/checkout',
+        'Disallow: /s/' + store.store_slug + '/account/',
+        'Disallow: /s/' + store.store_slug + '/wishlist',
+        '',
+        'Sitemap: ' + request.url_root.rstrip('/') + url_for('shop.store_sitemap', slug=store.store_slug),
+    ]
+    return Response('\n'.join(lines), mimetype='text/plain')
 
 
 @shop_bp.route('/<slug>/account/forgot-password', methods=['GET', 'POST'])
@@ -1189,7 +1242,7 @@ def account_forgot_password(slug):
 
             flash(str(exc), 'danger')
 
-    return render_template('shop/account_forgot_password.html', **ctx)
+    return render_template('shop/account_forgot_password.html', noindex=True, **ctx)
 
 
 
@@ -1229,7 +1282,7 @@ def account_reset_password(slug, token):
 
             flash(str(exc), 'danger')
 
-    return render_template('shop/account_reset_password.html', token=token, **ctx)
+    return render_template('shop/account_reset_password.html', token=token, noindex=True, **ctx)
 
 
 
@@ -1244,7 +1297,7 @@ def saved_payments(slug):
         return redirect(url_for('shop.account_login', slug=store.store_slug))
     from models.shop_saved_payment import ShopSavedPayment
     payments = ShopSavedPayment.query.filter_by(account_id=account.id).all()
-    return render_template('shop/saved_payments.html', payments=payments, **ctx)
+    return render_template('shop/saved_payments.html', payments=payments, noindex=True, **ctx)
 
 
 @shop_bp.route('/<slug>/account/payments/save', methods=['POST'])

@@ -1,80 +1,34 @@
-const CACHE_NAME = 'azad-uae-ui-v9';
+const CACHE_NAME = 'azad-shop-v1';
 const urlsToCache = [
-  '/static/css/erp-theme.css',
-  '/static/css/accessibility.css',
-  '/static/css/print.css',
-  '/static/js/ui-theme.js',
-  '/static/js/app.js',
-  '/static/js/azad-app.js',
-  '/static/adminlte/js/adminlte.min.js',
-  '/static/assets/brand/azad/logos/logo.png',
-  '/static/assets/brand/azad/logos/logo-dark.png',
-  '/offline.html'
+  '/',
+  '/static/css/shop-palestine.css',
+  '/static/css/shop-utilities.css',
 ];
 
-const STATIC_PREFIXES = ['/static/', '/adminlte/'];
-
-function isStaticAsset(url) {
-  return STATIC_PREFIXES.some(p => url.pathname.startsWith(p));
-}
-
-self.addEventListener('install', (event) => {
+self.addEventListener('install', function(event) {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(urlsToCache))
+    caches.open(CACHE_NAME).then(function(cache) {
+      return cache.addAll(urlsToCache);
+    })
   );
-  self.skipWaiting();
 });
 
-self.addEventListener('fetch', (event) => {
-  if (!event.request || event.request.method !== 'GET') {
-    return;
-  }
-
-  const url = new URL(event.request.url);
-  const isSameOrigin = url.origin === self.location.origin;
-
-  if (event.request.mode === 'navigate') {
-    event.respondWith(
-      fetch(event.request)
-        .catch(() => isSameOrigin ? caches.match('/offline.html') : new Response(null, { status: 503 }))
-    );
-    return;
-  }
-
-  if (isSameOrigin && isStaticAsset(url)) {
-    event.respondWith(
-      caches.match(event.request).then((cached) => {
-        if (cached) return cached;
-        return fetch(event.request)
-          .then((response) => {
-            if (response && response.status === 200) {
-              const responseToCache = response.clone();
-              caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseToCache));
-            }
-            return response;
-          });
-      })
-    );
-    return;
-  }
-
-  event.respondWith(fetch(event.request).catch(() => new Response(null, { status: 503 })));
+self.addEventListener('fetch', function(event) {
+  event.respondWith(
+    caches.match(event.request).then(function(response) {
+      return response || fetch(event.request).catch(function() {
+        return caches.match('/s/offline');
+      });
+    })
+  );
 });
 
-self.addEventListener('activate', (event) => {
-  const cacheWhitelist = [CACHE_NAME];
+self.addEventListener('activate', function(event) {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
+    caches.keys().then(function(cacheNames) {
       return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheWhitelist.indexOf(cacheName) === -1) {
-            return caches.delete(cacheName);
-          }
-        })
+        cacheNames.filter(function(name) { return name !== CACHE_NAME; }).map(function(name) { return caches.delete(name); })
       );
     })
   );
-  self.clients.claim();
 });
-

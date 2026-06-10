@@ -77,6 +77,14 @@
     });
   }
 
+  var deferredPrompt;
+  window.addEventListener('beforeinstallprompt', function(e) {
+    e.preventDefault();
+    deferredPrompt = e;
+    var banner = document.getElementById('ps-install-banner');
+    if (banner) banner.style.display = 'flex';
+  });
+
   var sentinel = document.querySelector('.ps-infinite-sentinel');
   if (sentinel) {
     var currentPage = parseInt(sentinel.getAttribute('data-page') || '1');
