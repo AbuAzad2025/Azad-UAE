@@ -593,3 +593,42 @@ class TestReportsTenantScoping:
         code = open('routes/treasury.py', encoding='utf-8').read()
         assert "tenant_id=tenant_id" in code
         assert "TaxService.get_vat_return" in code
+
+
+class TestPosIntegration:
+    def test_pos_route_exists(self):
+        code = open('routes/pos.py', encoding='utf-8').read()
+        assert "pos_bp" in code
+        assert "/api/checkout" in code
+        assert "/api/products" in code
+
+    def test_pos_uses_sale_service(self):
+        code = open('routes/pos.py', encoding='utf-8').read()
+        assert "SaleService.create_sale" in code
+
+    def test_pos_uses_tenant_get_for_customer(self):
+        code = open('routes/pos.py', encoding='utf-8').read()
+        assert "tenant_get(Customer" in code
+
+    def test_pos_uses_tenant_get_for_product(self):
+        code = open('routes/pos.py', encoding='utf-8').read()
+        assert "tenant_get(Product" in code
+
+    def test_pos_ensure_warehouse_access(self):
+        code = open('routes/pos.py', encoding='utf-8').read()
+        assert "ensure_warehouse_access" in code
+
+    def test_pos_helpers_use_tenant_query(self):
+        code = open('utils/pos_helpers.py', encoding='utf-8').read()
+        assert "tenant_query" in code
+        assert "get_active_tenant_id" in code
+
+    def test_pos_template_uses_currency_macro(self):
+        html = open('templates/pos/index.html', encoding='utf-8').read()
+        assert 'currency_select' in html
+        assert 'macros/currency_options' in html
+
+    def test_pos_before_request_checks_tenant_enable_pos(self):
+        code = open('routes/pos.py', encoding='utf-8').read()
+        assert "tenant.enable_pos" in code
+        assert "enable_pos" in code

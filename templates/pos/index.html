@@ -224,15 +224,9 @@
 
                 <label>Ø§Ù„Ø¹Ù…Ù„Ø©</label>
 
-                <select id="currency" class="form-control" aria-label="Ø§Ù„Ø¹Ù…Ù„Ø©">
+                {% from 'macros/currency_options.html' import currency_select %}
 
-                  <option value="{{ tenant_default_currency or 'AED' }}" selected>{{ tenant_default_currency or 'AED' }}</option>
-
-                  <option value="USD">USD</option>
-
-                  <option value="EUR">EUR</option>
-
-                </select>
+                {{ currency_select(name='currency', id='currency', default_code=tenant_default_currency or 'AED') }}
 
               </div>
 
