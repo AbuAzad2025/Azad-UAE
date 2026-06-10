@@ -39,9 +39,10 @@ def repair_accounting_data():
 
     GLService.ensure_core_accounts(tenant_id=tenant_id)
 
-    merchant = Customer.query.filter_by(customer_type="merchant").order_by(Customer.id.asc()).first()
+    merchant = Customer.query.filter_by(customer_type="merchant", tenant_id=tenant_id).order_by(Customer.id.asc()).first()
     if not merchant:
         merchant = Customer(
+            tenant_id=tenant_id,
             name="Default Merchant",
             name_ar="التاجر الافتراضي",
             customer_type="merchant",

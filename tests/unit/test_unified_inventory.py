@@ -817,3 +817,72 @@ class TestBranchesRoutes:
     def test_branches_no_manual_tenant_check_after_get(self):
         code = open('routes/branches.py', encoding='utf-8').read()
         assert "branch.tenant_id != tenant_id" not in code
+
+
+class TestDatabaseSchemaAudit:
+    def test_tables_match_models(self, app):
+        from extensions import db
+        from sqlalchemy import inspect
+        with app.app_context():
+            inspector = inspect(db.engine)
+            db_tables = set(inspector.get_table_names())
+            model_tables = set(db.metadata.tables.keys())
+            extra_in_db = db_tables - model_tables
+            missing_in_db = model_tables - db_tables
+            assert missing_in_db == set(), f'Tables in models but missing in DB: {missing_in_db}'
+            assert extra_in_db <= {'alembic_version'}, f'Unexpected extra tables in DB: {extra_in_db}'
+
+    def test_no_missing_columns(self, app):
+        from extensions import db
+        from sqlalchemy import inspect
+        with app.app_context():
+            inspector = inspect(db.engine)
+            issues = []
+            for table_name in db.metadata.tables:
+                if not inspector.has_table(table_name):
+                    issues.append(f'MISSING TABLE: {table_name}')
+                    continue
+                db_cols = {c['name'] for c in inspector.get_columns(table_name)}
+                model_cols = {c.name for c in db.metadata.tables[table_name].columns}
+                missing = model_cols - db_cols
+                for col in missing:
+                    issues.append(f'MISSING COLUMN: {table_name}.{col}')
+            assert issues == [], f'Schema issues: {issues}'
+
+    def test_no_broken_foreign_keys(self, app):
+        from extensions import db
+        from sqlalchemy import inspect
+        with app.app_context():
+            inspector = inspect(db.engine)
+            db_tables = set(inspector.get_table_names())
+            issues = []
+            for table_name in db.metadata.tables:
+                if not inspector.has_table(table_name):
+                    continue
+                for fk in db.metadata.tables[table_name].foreign_keys:
+                    if fk.column.table.name not in db_tables:
+                        issues.append(f'BROKEN FK: {table_name}.{fk.parent.name} -> {fk.column.table.name}')
+            assert issues == [], f'Broken FKs: {issues}'
+
+    def test_no_backref_conflicts(self, app):
+        from extensions import db
+        with app.app_context():
+            backrefs = {}
+            issues = []
+            for cls in db.Model.registry._class_registry.values():
+                if not hasattr(cls, '__mapper__'):
+                    continue
+                for rel in cls.__mapper__.relationships:
+                    backref_name = None
+                    if rel.backref:
+                        if isinstance(rel.backref, str):
+                            backref_name = rel.backref
+                        elif isinstance(rel.backref, dict):
+                            backref_name = rel.backref.get('name')
+                    if backref_name:
+                        key = (rel.target.name, backref_name)
+                        if key in backrefs:
+                            issues.append(f'BACKREF CONFLICT: {backrefs[key]} and {cls.__name__}.{rel.key}')
+                        else:
+                            backrefs[key] = f'{cls.__name__}.{rel.key}'
+            assert issues == [], f'Backref conflicts: {issues}'
