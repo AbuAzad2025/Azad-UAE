@@ -124,7 +124,6 @@ class TestImportGraph:
 
         assert not cycles, f"Circular dependencies detected involving: {cycles}"
 
-    @pytest.mark.xfail(strict=False, reason="Architectural debt: models/cheque.py, fixed_asset.py, gl.py, advanced_accounting.py use lazy service imports")
     def test_models_do_not_import_services(self):
         """Models layer must not import from services layer."""
         violations = []

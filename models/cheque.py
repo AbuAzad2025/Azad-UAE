@@ -1,3 +1,11 @@
+from utils.gl_services import (
+    gl_post_or_fail,
+    gl_ensure_core_accounts,
+    gl_get_customer_credit_account,
+    gl_get_customer_credit_concept,
+    gl_get_default_liquidity_account,
+    gl_resolve_exchange_rate,
+)
 """
 نموذج الشيكات - Cheque Model
 إدارة شاملة للشيكات الواردة والصادرة
@@ -8,7 +16,6 @@ from extensions import db
 from decimal import Decimal
 from flask import current_app
 from utils.gl_reference_types import GLRef
-
 
 class Cheque(db.Model):
     """
@@ -157,10 +164,8 @@ class Cheque(db.Model):
             self.amount_aed = self.amount
     
     def _post_gl(self, lines, description, reference_type):
-        from services.gl_posting import post_or_fail
-        from services.gl_service import GLService
-        GLService.ensure_core_accounts(tenant_id=getattr(self, 'tenant_id', None))
-        return post_or_fail(
+        gl_ensure_core_accounts(tenant_id=getattr(self, 'tenant_id', None))
+        return gl_post_or_fail(
             lines=lines,
             description=description,
             reference_type=reference_type,
@@ -175,13 +180,12 @@ class Cheque(db.Model):
         """تسجيل استلام الشيك الوارد - يُرجع القيد المحاسبي إن وُجد"""
         if self.cheque_type != 'incoming':
             return None
-        from services.gl_service import GLService
-        credit_account = GLService.get_customer_credit_account(
+        credit_account = gl_get_customer_credit_account(
             self.customer,
             branch_id=self.branch_id,
             tenant_id=getattr(self, 'tenant_id', None),
         ) if self.customer_id else '1130'
-        credit_concept = GLService.get_customer_credit_concept(self.customer) if self.customer_id else 'AR'
+        credit_concept = gl_get_customer_credit_concept(self.customer) if self.customer_id else 'AR'
         lines = [
             {
                 'account': '1150',
@@ -208,17 +212,16 @@ class Cheque(db.Model):
         """تسجيل إصدار الشيك الصادر"""
         if self.cheque_type != 'outgoing':
             return None
-        from services.gl_service import GLService
         if self.supplier_id:
             debit_account = '2110'
             debit_concept = 'AP'
         elif self.customer_id:
-            debit_account = GLService.get_customer_credit_account(
+            debit_account = gl_get_customer_credit_account(
                 self.customer,
                 branch_id=self.branch_id,
                 tenant_id=getattr(self, 'tenant_id', None),
             )
-            debit_concept = GLService.get_customer_credit_concept(self.customer)
+            debit_concept = gl_get_customer_credit_concept(self.customer)
         else:
             debit_account = '2110'
             debit_concept = 'AP'
@@ -267,9 +270,8 @@ class Cheque(db.Model):
             self.clearance_exchange_rate = Decimal(str(clearance_exchange_rate))
         elif self.currency != 'AED':
             # جلب السعر الحالي تلقائياً
-            from services.exchange_rate_service import ExchangeRateService
             try:
-                rate_info = ExchangeRateService.resolve_exchange_rate_for_transaction(
+                rate_info = gl_resolve_exchange_rate(
                     self.currency,
                     'AED',
                 )
@@ -303,8 +305,7 @@ class Cheque(db.Model):
     
     def _create_clearing_journal_entry(self):
         """إنشاء القيد المحاسبي عند صرف الشيك"""
-        from services.gl_service import GLService
-        bank_account = GLService.get_default_liquidity_account(
+        bank_account = gl_get_default_liquidity_account(
             'bank',
             branch_id=self.branch_id,
             tenant_id=getattr(self, 'tenant_id', None),
@@ -416,15 +417,14 @@ class Cheque(db.Model):
     
     def _create_bounce_journal_entry(self):
         """إنشاء القيد المحاسبي عند ارتداد الشيك"""
-        from services.gl_service import GLService
         lines = []
         if self.cheque_type == 'incoming':
-            ar_account = GLService.get_customer_credit_account(
+            ar_account = gl_get_customer_credit_account(
                 self.customer,
                 branch_id=self.branch_id,
                 tenant_id=getattr(self, 'tenant_id', None),
             ) if self.customer_id else '1130'
-            ar_concept = GLService.get_customer_credit_concept(self.customer) if self.customer_id else 'AR'
+            ar_concept = gl_get_customer_credit_concept(self.customer) if self.customer_id else 'AR'
             lines.append({
                 'account': ar_account,
                 'concept_code': ar_concept,
@@ -451,12 +451,12 @@ class Cheque(db.Model):
                 credit_account = '2110'
                 credit_concept = 'AP'
             elif self.customer_id:
-                credit_account = GLService.get_customer_credit_account(
+                credit_account = gl_get_customer_credit_account(
                     self.customer,
                     branch_id=self.branch_id,
                     tenant_id=getattr(self, 'tenant_id', None),
                 )
-                credit_concept = GLService.get_customer_credit_concept(self.customer)
+                credit_concept = gl_get_customer_credit_concept(self.customer)
             else:
                 credit_account = '2110'
                 credit_concept = 'AP'
@@ -488,15 +488,14 @@ class Cheque(db.Model):
 
     def _create_cancel_journal_entry(self):
         """إنشاء قيد عكسي عند إلغاء الشيك"""
-        from services.gl_service import GLService
         lines = []
         if self.cheque_type == 'incoming':
-            ar_account = GLService.get_customer_credit_account(
+            ar_account = gl_get_customer_credit_account(
                 self.customer,
                 branch_id=self.branch_id,
                 tenant_id=getattr(self, 'tenant_id', None),
             ) if self.customer_id else '1130'
-            ar_concept = GLService.get_customer_credit_concept(self.customer) if self.customer_id else 'AR'
+            ar_concept = gl_get_customer_credit_concept(self.customer) if self.customer_id else 'AR'
             lines = [
                 {'account': ar_account, 'concept_code': ar_concept, 'debit': self.amount_aed, 'credit': 0,
                  'description': f'إلغاء شيك وارد رقم {self.cheque_bank_number}'},
@@ -508,12 +507,12 @@ class Cheque(db.Model):
                 credit_account = '2110'
                 credit_concept = 'AP'
             elif self.customer_id:
-                credit_account = GLService.get_customer_credit_account(
+                credit_account = gl_get_customer_credit_account(
                     self.customer,
                     branch_id=self.branch_id,
                     tenant_id=getattr(self, 'tenant_id', None),
                 )
-                credit_concept = GLService.get_customer_credit_concept(self.customer)
+                credit_concept = gl_get_customer_credit_concept(self.customer)
             else:
                 credit_account = '2110'
                 credit_concept = 'AP'

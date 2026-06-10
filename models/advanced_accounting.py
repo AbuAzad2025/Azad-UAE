@@ -1,6 +1,10 @@
 from datetime import datetime, timezone
 from extensions import db
 from decimal import Decimal
+from utils.gl_services import (
+    gl_get_default_liquidity_account,
+    gl_create_manual_entry,
+)
 
 class CustomsTax(db.Model):
     """نموذج الجمارك والضرائب"""
@@ -169,8 +173,7 @@ class AdvancedExpense(db.Model):
         self.reversal_reason = reason
         
         # إنشاء قيد عكسي
-        from services.gl_service import GLService
-        cash_account = GLService.get_default_liquidity_account(
+        cash_account = gl_get_default_liquidity_account(
             'cash',
             branch_id=self.branch_id,
             tenant_id=self.tenant_id,
@@ -188,7 +191,7 @@ class AdvancedExpense(db.Model):
             'description': f'استرداد مصروف {self.expense_number}'
         }]
         
-        GLService.create_manual_entry(
+        gl_create_manual_entry(
             description=f'عكس مصروف {self.expense_number}',
             lines=lines,
             entry_date=datetime.now().date(),

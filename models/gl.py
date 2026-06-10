@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 import sqlalchemy as sa
 from extensions import db
-
+from utils.gl_services import gl_next_entry_number
 
 class GLAccount(db.Model):
     __tablename__ = 'gl_accounts'
@@ -79,7 +79,6 @@ class GLAccount(db.Model):
             result.extend(child.get_children_recursive())
         return result
 
-
 class GLJournalEntry(db.Model):
     __tablename__ = 'gl_journal_entries'
     __table_args__ = (
@@ -140,10 +139,9 @@ class GLJournalEntry(db.Model):
         
         from utils.helpers import generate_number
         
-        from services import gl_helpers
         reversed_entry = GLJournalEntry(
             tenant_id=self.tenant_id,
-            entry_number=gl_helpers.next_entry_number(self.tenant_id),
+            entry_number=gl_next_entry_number(self.tenant_id),
             entry_date=datetime.now(timezone.utc),
             description=description or f'عكس قيد: {self.description}',
             reference_type=self.reference_type,
@@ -186,7 +184,6 @@ class GLJournalEntry(db.Model):
         db.session.flush()
         return reversed_entry
 
-
 class GLPeriod(db.Model):
     """Accounting period lock — prevents posting into closed months."""
     __tablename__ = 'gl_periods'
@@ -205,7 +202,6 @@ class GLPeriod(db.Model):
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
     tenant = db.relationship('Tenant', backref='gl_periods', foreign_keys=[tenant_id])
-
 
 class GLJournalLine(db.Model):
     __tablename__ = 'gl_journal_lines'
@@ -247,7 +243,6 @@ class GLJournalLine(db.Model):
 
     def __repr__(self):
         return f'<GLLine acc={self.account_id} d={self.debit} c={self.credit}>'
-
 
 # ---------------------------------------------------------------------------
 # Phase 1E – GL Concept Registry & Dynamic Mapping Foundation
@@ -378,7 +373,6 @@ REQUIRED_GL_CONCEPTS = frozenset(
 _GL_CONCEPT_CODE_CHECK = "concept_code IN ({})".format(
     ", ".join(f"'{code}'" for code in GL_CONCEPT_CODES)
 )
-
 
 class GLAccountMapping(db.Model):
     """

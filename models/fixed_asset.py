@@ -1,3 +1,9 @@
+from utils.gl_services import (
+    gl_post_or_fail,
+    gl_ensure_core_accounts,
+    gl_get_default_liquidity_account,
+    gl_post_entry,
+)
 """
 نموذج الأصول الثابتة والاستهلاك - Fixed Assets & Depreciation Model
 """
@@ -5,7 +11,6 @@
 from datetime import datetime, timezone, date
 from extensions import db
 from decimal import Decimal, ROUND_HALF_UP
-
 
 class FixedAsset(db.Model):
     """
@@ -174,10 +179,8 @@ class FixedAsset(db.Model):
         if depreciation_amount == 0:
             return None
         
-        from services.gl_posting import post_or_fail
         from utils.gl_reference_types import GLRef
-        from services.gl_service import GLService
-        GLService.ensure_core_accounts(tenant_id=getattr(self, 'tenant_id', None))
+        gl_ensure_core_accounts(tenant_id=getattr(self, 'tenant_id', None))
         
         lines = [
             {
@@ -196,7 +199,7 @@ class FixedAsset(db.Model):
             }
         ]
         
-        entry = post_or_fail(
+        entry = gl_post_or_fail(
             lines=lines,
             description=f'قيد استهلاك شهري - {self.asset_number}',
             reference_type=GLRef.DEPRECIATION,
@@ -246,7 +249,6 @@ class FixedAsset(db.Model):
             self.notes = (self.notes or '') + f'\n{notes}'
         
         # إنشاء قيد محاسبي للتخلص
-        from services.gl_service import GLService
         
         lines = []
         
@@ -261,8 +263,7 @@ class FixedAsset(db.Model):
         
         if self.disposal_price > 0:
             # بيع
-            from services.gl_service import GLService
-            bank_account = GLService.get_default_liquidity_account(
+            bank_account = gl_get_default_liquidity_account(
                 'bank',
                 branch_id=self.branch_id,
                 tenant_id=getattr(self, 'tenant_id', None),
@@ -304,7 +305,7 @@ class FixedAsset(db.Model):
         })
         
         disposal_type = 'بيع' if self.disposal_price > 0 else 'إتلاف'
-        GLService.post_entry(
+        gl_post_entry(
             lines=lines,
             description=f'قيد {disposal_type} أصل - {self.asset_number}',
             reference_type=GLRef.ASSET_DISPOSAL,
@@ -314,7 +315,6 @@ class FixedAsset(db.Model):
         )
         
         db.session.commit()
-
 
 class DepreciationSchedule(db.Model):
     """
