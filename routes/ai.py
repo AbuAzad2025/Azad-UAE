@@ -929,6 +929,7 @@ def _process_user_action(message, user):
                 
                 try:
                     from models.customer import Customer
+                    from utils.tenanting import assign_tenant_id
                     
                     # إنشاء العميل الجديد
                     customer = Customer(
@@ -937,6 +938,7 @@ def _process_user_action(message, user):
                         address=data['address'],
                         balance=0
                     )
+                    assign_tenant_id(customer)
                     db.session.add(customer)
                     db.session.commit()
                     
@@ -1263,28 +1265,36 @@ def _process_user_action(message, user):
                     data['quantity'] = float(message.strip())
                     total_amount = data['product_price'] * data['quantity']
                     
-                    from models.sale import Sale
-                    from models.sale_item import SaleItem
+                    from models.sale import Sale, SaleLine
+                    from utils.tenanting import assign_tenant_id
+                    from utils.helpers import generate_number
                     
                     # إنشاء الفاتورة
+                    sale_number = generate_number('S', Sale, 'sale_number', branch_id=getattr(current_user, 'branch_id', None))
                     sale = Sale(
+                        sale_number=sale_number,
                         customer_id=data['customer_id'],
+                        seller_id=user.id,
                         total_amount=total_amount,
-                        payment_method='نقد',
-                        user_id=user.id
+                        checkout_payment_method='cash',
+                        amount=total_amount,
+                        amount_aed=total_amount,
+                        currency='AED',
+                        exchange_rate=1
                     )
+                    assign_tenant_id(sale)
                     db.session.add(sale)
                     db.session.flush()  # للحصول على ID
                     
                     # إضافة عنصر الفاتورة
-                    sale_item = SaleItem(
+                    sale_line = SaleLine(
                         sale_id=sale.id,
                         product_id=data['product_id'],
                         quantity=data['quantity'],
                         unit_price=data['product_price'],
-                        total_price=total_amount
+                        total=total_amount
                     )
-                    db.session.add(sale_item)
+                    db.session.add(sale_line)
                     
                     # تحديث المخزون
                     product = Product.query.filter_by(id=data['product_id'], tenant_id=tid).first()
@@ -1412,17 +1422,22 @@ def _process_user_action(message, user):
                     
                     # تسجيل الدفعة
                     from utils.helpers import generate_number
+                    from utils.tenanting import assign_tenant_id
                     payment_number = generate_number('PAY', Payment, 'payment_number', branch_id=getattr(current_user, 'branch_id', None))
                     payment = Payment(
                         payment_number=payment_number,
                         customer_id=data['customer_id'],
+                        amount=data['amount'],
                         amount_aed=data['amount'],
+                        currency='AED',
+                        exchange_rate=1,
                         payment_date=datetime.now(timezone.utc),
                         payment_method=data['payment_method'],
                         user_id=user.id,
                         direction='incoming',
                         payment_type='customer_payment'
                     )
+                    assign_tenant_id(payment)
                     db.session.add(payment)
                     
                     # تحديث رصيد العميل
@@ -1550,17 +1565,22 @@ def _process_user_action(message, user):
                     
                     # تسجيل الدفعة (سالبة لأننا نعطي للعميل)
                     from utils.helpers import generate_number
+                    from utils.tenanting import assign_tenant_id
                     payment_number = generate_number('PAY', Payment, 'payment_number', branch_id=getattr(current_user, 'branch_id', None))
                     payment = Payment(
                         payment_number=payment_number,
                         customer_id=data['customer_id'],
+                        amount=-data['amount'],  # سالب لأننا نعطي للعميل
                         amount_aed=-data['amount'],  # سالب لأننا نعطي للعميل
+                        currency='AED',
+                        exchange_rate=1,
                         payment_date=datetime.now(timezone.utc),
                         payment_method='refund',
                         user_id=user.id,
                         direction='outgoing',
                         payment_type='refund'
                     )
+                    assign_tenant_id(payment)
                     db.session.add(payment)
                     
                     # تحديث رصيد العميل (زيادة)
@@ -1674,13 +1694,21 @@ def _process_user_action(message, user):
                     from models.expense import Expense
                     
                     # إنشاء المصروف الجديد
+                    from utils.tenanting import assign_tenant_id
+                    from utils.helpers import generate_number
+                    expense_number = generate_number('EXP', Expense, 'expense_number', branch_id=getattr(current_user, 'branch_id', None))
                     expense = Expense(
+                        expense_number=expense_number,
                         description=data['description'],
                         amount=data['amount'],
-                        category=data['category'],
+                        amount_aed=data['amount'],
+                        currency='AED',
+                        exchange_rate=1,
                         expense_date=datetime.now(timezone.utc),
+                        payment_method='cash',
                         user_id=user.id
                     )
+                    assign_tenant_id(expense)
                     db.session.add(expense)
                     db.session.commit()
                     
@@ -1822,6 +1850,7 @@ def _process_user_action(message, user):
                 
                 try:
                     from models.supplier import Supplier
+                    from utils.tenanting import assign_tenant_id
                     
                     supplier = Supplier(
                         name=data['name'],
@@ -1831,6 +1860,7 @@ def _process_user_action(message, user):
                         total_purchases_aed=data['initial_balance'],
                         total_paid_aed=0
                     )
+                    assign_tenant_id(supplier)
                     db.session.add(supplier)
                     db.session.commit()
                     
@@ -1966,26 +1996,35 @@ def _process_user_action(message, user):
                     data['unit_price'] = float(message.strip().replace('درهم', '').strip())
                     total_amount = data['unit_price'] * data['quantity']
                     
-                    from models.purchase import Purchase
-                    from models.purchase_item import PurchaseItem
+                    from models.purchase import Purchase, PurchaseLine
                     from models.product import Product
+                    from utils.tenanting import assign_tenant_id
+                    from utils.helpers import generate_number
                     
+                    purchase_number = generate_number('P', Purchase, 'purchase_number', branch_id=getattr(current_user, 'branch_id', None))
                     purchase = Purchase(
+                        purchase_number=purchase_number,
                         supplier_id=data['supplier_id'],
+                        supplier_name=data.get('supplier_name', ''),
                         total_amount=total_amount,
+                        amount=total_amount,
+                        amount_aed=total_amount,
+                        currency='AED',
+                        exchange_rate=1,
                         user_id=user.id
                     )
+                    assign_tenant_id(purchase)
                     db.session.add(purchase)
                     db.session.flush()
                     
-                    purchase_item = PurchaseItem(
+                    purchase_line = PurchaseLine(
                         purchase_id=purchase.id,
                         product_id=data['product_id'],
                         quantity=data['quantity'],
-                        unit_price=data['unit_price'],
-                        total_price=total_amount
+                        unit_cost=data['unit_price'],
+                        total=total_amount
                     )
-                    db.session.add(purchase_item)
+                    db.session.add(purchase_line)
                     
                     product = Product.query.filter_by(id=data['product_id'], tenant_id=tid).first()
                     product.current_stock += data['quantity']
@@ -2783,6 +2822,7 @@ http://localhost:5000/ai/assistant
                         address=address,
                         is_active=True
                     )
+                    assign_tenant_id(supplier)
                     db.session.add(supplier)
                     db.session.commit()
                     
@@ -2827,7 +2867,10 @@ http://localhost:5000/ai/assistant
                         sale_date=datetime.now(timezone.utc),
                         subtotal=product.regular_price * quantity,
                         total_amount=product.regular_price * quantity,
+                        amount=product.regular_price * quantity,
                         amount_aed=product.regular_price * quantity,
+                        currency='AED',
+                        exchange_rate=1,
                         payment_status='paid' if payment_method == 'cash' else 'unpaid',
                         status='confirmed'
                     )
@@ -2875,13 +2918,21 @@ http://localhost:5000/ai/assistant
                     amount = float(parts[1].replace('درهم', '').replace('د.إ', '').strip())
                     category = parts[2] if len(parts) > 2 else 'عام'
                     
+                    from utils.helpers import generate_number
+                    from utils.tenanting import assign_tenant_id
+                    expense_number = generate_number('EXP', Expense, 'expense_number', branch_id=getattr(current_user, 'branch_id', None))
                     expense = Expense(
+                        expense_number=expense_number,
                         description=description,
+                        amount=amount,
                         amount_aed=amount,
+                        currency='AED',
+                        exchange_rate=1,
                         expense_date=datetime.now(timezone.utc),
-                        category=category,
+                        payment_method='cash',
                         user_id=user.id
                     )
+                    assign_tenant_id(expense)
                     db.session.add(expense)
                     db.session.commit()
                     
@@ -2913,17 +2964,22 @@ http://localhost:5000/ai/assistant
                         return f"❌ العميل '{customer_name}' غير موجود!"
                     
                     from utils.helpers import generate_number
+                    from utils.tenanting import assign_tenant_id
                     payment_number = generate_number('PAY', Payment, 'payment_number', branch_id=getattr(current_user, 'branch_id', None))
                     payment = Payment(
                         payment_number=payment_number,
                         customer_id=customer.id,
+                        amount=amount,
                         amount_aed=amount,
+                        currency='AED',
+                        exchange_rate=1,
                         payment_date=datetime.now(timezone.utc),
                         payment_method=payment_method,
                         user_id=user.id,
                         direction='incoming',
                         payment_type='customer_payment'
                     )
+                    assign_tenant_id(payment)
                     db.session.add(payment)
                     
                     customer.apply_receipt(amount)
@@ -2990,17 +3046,22 @@ http://localhost:5000/ai/assistant
                         return f"❌ العميل '{customer_name}' غير موجود!"
                     
                     from utils.helpers import generate_number
+                    from utils.tenanting import assign_tenant_id
                     payment_number = generate_number('PAY', Payment, 'payment_number', branch_id=getattr(current_user, 'branch_id', None))
                     payment = Payment(
                         payment_number=payment_number,
                         customer_id=customer.id,
+                        amount=amount,
                         amount_aed=amount,
+                        currency='AED',
+                        exchange_rate=1,
                         payment_date=datetime.now(timezone.utc),
                         payment_method=payment_method,
                         user_id=user.id,
                         direction='incoming',
                         payment_type='customer_payment'
                     )
+                    assign_tenant_id(payment)
                     db.session.add(payment)
                     
                     customer.apply_receipt(amount)
@@ -3071,13 +3132,23 @@ http://localhost:5000/ai/assistant
                     customer.adjust_balance(amount)
                     
                     # تسجيل العملية كدفعة سالبة
+                    from utils.helpers import generate_number
+                    from utils.tenanting import assign_tenant_id
+                    payment_number = generate_number('PAY', Payment, 'payment_number', branch_id=getattr(current_user, 'branch_id', None))
                     payment = Payment(
+                        payment_number=payment_number,
                         customer_id=customer.id,
+                        amount=-amount,  # سالب لأننا نعطي للعميل
                         amount_aed=-amount,  # سالب لأننا نعطي للعميل
+                        currency='AED',
+                        exchange_rate=1,
                         payment_date=datetime.now(timezone.utc),
                         payment_method='refund',
-                        user_id=user.id
+                        user_id=user.id,
+                        direction='outgoing',
+                        payment_type='refund'
                     )
+                    assign_tenant_id(payment)
                     db.session.add(payment)
                     
                     db.session.commit()
