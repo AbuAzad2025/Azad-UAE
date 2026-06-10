@@ -21,8 +21,10 @@ class GLAccount(db.Model):
     is_active = db.Column(db.Boolean, default=True, nullable=False, index=True)
     is_header = db.Column(db.Boolean, default=False)  # حساب رئيسي (لا يقبل قيود مباشرة)
     level = db.Column(db.Integer, default=0)  # مستوى الحساب في الشجرة
-    description = db.Column(db.Text)  # وصف الحساب
-    liquidity_kind = db.Column(db.String(20), nullable=True, index=True)  # cash, bank, card, gateway, in_transit
+    description = db.Column(db.Text)
+    industry_code = db.Column(db.String(50), nullable=True, index=True)
+    module_code = db.Column(db.String(50), nullable=True, index=True)
+    liquidity_kind = db.Column(db.String(20), nullable=True, index=True)
     is_default_liquidity = db.Column(db.Boolean, default=False, nullable=False)
     bank_name = db.Column(db.String(200), nullable=True)
     bank_account_number = db.Column(db.String(100), nullable=True)

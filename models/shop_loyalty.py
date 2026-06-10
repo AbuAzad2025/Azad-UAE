@@ -20,7 +20,7 @@ class ShopLoyaltyTransaction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=False, index=True)
     account_id = db.Column(db.Integer, db.ForeignKey('shop_customer_accounts.id', ondelete='CASCADE'), nullable=False, index=True)
-    sale_id = db.Column(db.Integer, db.ForeignKey('sales.id'), nullable=True)
+    sale_id = db.Column(db.Integer, db.ForeignKey('sales.id'), nullable=True, index=True)
     points = db.Column(db.Integer, nullable=False)
     reason = db.Column(db.String(100), nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, index=True, default=lambda: datetime.now(timezone.utc))

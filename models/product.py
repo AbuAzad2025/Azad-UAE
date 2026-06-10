@@ -144,7 +144,7 @@ class Product(db.Model):
     
     is_active = db.Column(db.Boolean, default=True, nullable=False, index=True)
     
-    industry = db.Column(db.String(50), nullable=False)  # defaults to tenant.business_type on create
+    industry = db.Column(db.String(50), default='general')  # overrides tenant.business_type
     extra_fields = db.Column(db.JSON, default=dict)
     
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)

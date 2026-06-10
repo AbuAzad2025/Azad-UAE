@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 class ShopReview(db.Model):
     __tablename__ = 'shop_reviews'
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=False, index=True)
     product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False, index=True)
     account_id = db.Column(db.Integer, db.ForeignKey('shop_customer_accounts.id'), nullable=True, index=True)
     customer_name = db.Column(db.String(100), nullable=False)

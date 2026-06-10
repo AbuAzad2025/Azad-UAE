@@ -34,6 +34,18 @@ GL_CONCEPT_DEPRECIATION_EXPENSE = 'DEPRECIATION_EXPENSE'
 GL_CONCEPT_ACCUMULATED_DEPRECIATION = 'ACCUMULATED_DEPRECIATION'
 GL_CONCEPT_FIXED_ASSET_GAIN = 'FIXED_ASSET_GAIN'
 GL_CONCEPT_FIXED_ASSET_LOSS = 'FIXED_ASSET_LOSS'
+GL_CONCEPT_SHOP_SALES_REVENUE = 'SHOP_SALES_REVENUE'
+GL_CONCEPT_COUPON_EXPENSE = 'COUPON_EXPENSE'
+GL_CONCEPT_LOYALTY_LIABILITY = 'LOYALTY_LIABILITY'
+GL_CONCEPT_SHIPPING_COST_EXPENSE = 'SHIPPING_COST_EXPENSE'
+GL_CONCEPT_CAMPAIGN_DISCOUNT_EXPENSE = 'CAMPAIGN_DISCOUNT_EXPENSE'
+GL_CONCEPT_WARRANTY_CLAIM_EXPENSE = 'WARRANTY_CLAIM_EXPENSE'
+GL_CONCEPT_PURCHASE_RETURNS = 'PURCHASE_RETURNS'
+GL_CONCEPT_SALES_COMMISSION = 'SALES_COMMISSION'
+GL_CONCEPT_TIER_DISCOUNT = 'TIER_DISCOUNT'
+GL_CONCEPT_CARD_PROCESSING_FEES = 'CARD_PROCESSING_FEES'
+GL_CONCEPT_PURCHASES = 'PURCHASES'
+GL_CONCEPT_LANDED_COST = 'LANDED_COST'
 
 GL_CONCEPT_CODES = (
     GL_CONCEPT_AR,
@@ -72,6 +84,18 @@ GL_CONCEPT_CODES = (
     GL_CONCEPT_ACCUMULATED_DEPRECIATION,
     GL_CONCEPT_FIXED_ASSET_GAIN,
     GL_CONCEPT_FIXED_ASSET_LOSS,
+    GL_CONCEPT_SHOP_SALES_REVENUE,
+    GL_CONCEPT_COUPON_EXPENSE,
+    GL_CONCEPT_LOYALTY_LIABILITY,
+    GL_CONCEPT_SHIPPING_COST_EXPENSE,
+    GL_CONCEPT_CAMPAIGN_DISCOUNT_EXPENSE,
+    GL_CONCEPT_WARRANTY_CLAIM_EXPENSE,
+    GL_CONCEPT_PURCHASE_RETURNS,
+    GL_CONCEPT_SALES_COMMISSION,
+    GL_CONCEPT_TIER_DISCOUNT,
+    GL_CONCEPT_CARD_PROCESSING_FEES,
+    GL_CONCEPT_PURCHASES,
+    GL_CONCEPT_LANDED_COST,
 )
 
 GL_CONCEPT_REGISTRY = {
@@ -111,6 +135,18 @@ GL_CONCEPT_REGISTRY = {
     GL_CONCEPT_ACCUMULATED_DEPRECIATION: {'meaning': 'Accumulated Depreciation', 'legacy_code': '1290', 'required': False, 'normal_balance': 'credit'},
     GL_CONCEPT_FIXED_ASSET_GAIN: {'meaning': 'Fixed Asset Disposal Gain', 'legacy_code': '4500', 'required': False, 'normal_balance': 'credit'},
     GL_CONCEPT_FIXED_ASSET_LOSS: {'meaning': 'Fixed Asset Disposal Loss', 'legacy_code': '6990', 'required': False, 'normal_balance': 'debit'},
+    GL_CONCEPT_SHOP_SALES_REVENUE: {'meaning': 'Online Store Sales Revenue', 'legacy_code': '4103', 'required': False, 'normal_balance': 'credit'},
+    GL_CONCEPT_COUPON_EXPENSE: {'meaning': 'Store Coupon Discount Expense', 'legacy_code': '6130', 'required': False, 'normal_balance': 'debit'},
+    GL_CONCEPT_LOYALTY_LIABILITY: {'meaning': 'Customer Loyalty Points Liability', 'legacy_code': '2160', 'required': False, 'normal_balance': 'credit'},
+    GL_CONCEPT_SHIPPING_COST_EXPENSE: {'meaning': 'Shipping Cost Expense', 'legacy_code': '6140', 'required': False, 'normal_balance': 'debit'},
+    GL_CONCEPT_CAMPAIGN_DISCOUNT_EXPENSE: {'meaning': 'Campaign Discount Expense', 'legacy_code': '6131', 'required': False, 'normal_balance': 'debit'},
+    GL_CONCEPT_WARRANTY_CLAIM_EXPENSE: {'meaning': 'Warranty Claim Expense', 'legacy_code': '6400', 'required': False, 'normal_balance': 'debit'},
+    GL_CONCEPT_PURCHASE_RETURNS: {'meaning': 'Purchase Returns', 'legacy_code': None, 'required': False, 'normal_balance': 'credit'},
+    GL_CONCEPT_SALES_COMMISSION: {'meaning': 'Sales Representative Commission', 'legacy_code': '6120', 'required': False, 'normal_balance': 'debit'},
+    GL_CONCEPT_TIER_DISCOUNT: {'meaning': 'Price Tier Discount', 'legacy_code': None, 'required': False, 'normal_balance': 'debit'},
+    GL_CONCEPT_CARD_PROCESSING_FEES: {'meaning': 'Card Processing Fees', 'legacy_code': '6260', 'required': False, 'normal_balance': 'debit'},
+    GL_CONCEPT_PURCHASES: {'meaning': 'Purchases', 'legacy_code': None, 'required': True, 'normal_balance': 'debit'},
+    GL_CONCEPT_LANDED_COST: {'meaning': 'Landed Cost Allocation', 'legacy_code': '5300', 'required': False, 'normal_balance': 'debit'},
 }
 
 VALID_GL_CONCEPT_CODES = frozenset(GL_CONCEPT_CODES)

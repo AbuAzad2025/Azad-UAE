@@ -12,10 +12,13 @@ from utils.gl_reference_types import GLRef
 def _resolve_gl_concept_account(concept_code, fallback_account_code, tenant_id=None):
     from services.gl_service import GL_ACCOUNTS, GL_ACCOUNT_CONCEPTS
     from services.gl_account_resolver import resolve_gl_account, is_dynamic_gl_mapping_enabled
-    if is_dynamic_gl_mapping_enabled():
-        resolved = resolve_gl_account(tenant_id=tenant_id, concept_code=concept_code)
-        if resolved:
-            return resolved.account_code
+    if is_dynamic_gl_mapping_enabled() and tenant_id:
+        try:
+            resolved = resolve_gl_account(tenant_id=tenant_id, concept_code=concept_code)
+            if resolved:
+                return resolved.account_code
+        except Exception:
+            pass
     concept_key = {v: k for k, v in GL_ACCOUNT_CONCEPTS.items()}.get(concept_code)
     if concept_key and concept_key in GL_ACCOUNTS:
         return GL_ACCOUNTS[concept_key]
@@ -548,4 +551,107 @@ class StockService:
             product for product in products
             if (product.current_stock or Decimal('0')) <= 0
         ]
+
+    @staticmethod
+    def reconcile_stock(tenant_id=None, commit=False):
+        """Sync ProductWarehouseStock with aggregated StockMovement data
+        and update Product.current_stock from PWS sums.
+        Returns dict with reconciliation stats."""
+        from sqlalchemy import func
+        from datetime import datetime, timezone
+
+        query = db.session.query(
+            ProductWarehouseStock.tenant_id,
+            ProductWarehouseStock.product_id,
+            ProductWarehouseStock.warehouse_id,
+        )
+        if tenant_id:
+            query = query.filter(ProductWarehouseStock.tenant_id == tenant_id)
+
+        movement_totals = db.session.query(
+            StockMovement.product_id,
+            StockMovement.warehouse_id,
+            func.sum(StockMovement.quantity).label('total_qty'),
+        )
+        if tenant_id:
+            movement_totals = movement_totals.filter(StockMovement.tenant_id == tenant_id)
+        movement_totals = movement_totals.group_by(
+            StockMovement.product_id, StockMovement.warehouse_id
+        ).all()
+
+        now = datetime.now(timezone.utc)
+        created = 0
+        updated = 0
+        deleted = 0
+        errors = 0
+
+        mov_map = {}
+        for row in movement_totals:
+            key = (row.product_id, row.warehouse_id)
+            mov_map[key] = Decimal(str(row.total_qty))
+
+        existing = query.all()
+        existing_keys = set()
+        for row in existing:
+            key = (row.product_id, row.warehouse_id)
+            existing_keys.add(key)
+            move_qty = mov_map.get(key, Decimal('0'))
+            pws = ProductWarehouseStock.query.filter_by(
+                tenant_id=row.tenant_id,
+                product_id=row.product_id,
+                warehouse_id=row.warehouse_id,
+            ).first()
+            if pws and pws.quantity != move_qty:
+                pws.quantity = move_qty
+                pws.updated_at = now
+                updated += 1
+
+        for (pid, wid), move_qty in mov_map.items():
+            if (pid, wid) not in existing_keys:
+                warehouse = Warehouse.query.get(wid)
+                if warehouse:
+                    tid = warehouse.tenant_id if tenant_id is None else tenant_id
+                    pws = ProductWarehouseStock(
+                        tenant_id=tid,
+                        product_id=pid,
+                        warehouse_id=wid,
+                        quantity=move_qty,
+                    )
+                    db.session.add(pws)
+                    created += 1
+
+        all_pws = db.session.query(
+            ProductWarehouseStock.product_id,
+            func.sum(ProductWarehouseStock.quantity).label('total'),
+        )
+        if tenant_id:
+            all_pws = all_pws.filter(ProductWarehouseStock.tenant_id == tenant_id)
+        all_pws = all_pws.group_by(ProductWarehouseStock.product_id).all()
+
+        prod_ids = [r.product_id for r in all_pws]
+        products = Product.query.filter(Product.id.in_(prod_ids)).all() if prod_ids else []
+        prod_map = {p.id: p for p in products}
+        for row in all_pws:
+            prod = prod_map.get(row.product_id)
+            if prod:
+                pws_sum = Decimal(str(row.total))
+                if prod.current_stock != pws_sum:
+                    prod.current_stock = pws_sum
+                    updated += 1
+
+        if commit:
+            try:
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+                errors += 1
+        else:
+            db.session.flush()
+
+        return {
+            'created': created,
+            'updated': updated,
+            'errors': errors,
+            'total_pws': len(existing) + created,
+        }
 

@@ -1,81 +1,33 @@
 from extensions import db
 from models import GLAccount
+from models.gl_account_registry import BASE_ACCOUNTS, INDUSTRY_EXTENSIONS
 from sqlalchemy import or_
 
-# === شجرة الحسابات الأساسية (58 حسابًا كاملاً) ===
-# (code, name_ar, name_en, type, parent_code, is_header, level)
-CORE_ACCOUNT_TREE = [
-    # === الأصول Assets ===
-    ('1000', 'الأصول', 'Assets', 'asset', None, True, 0),
-    ('1100', 'الأصول المتداولة', 'Current Assets', 'asset', '1000', True, 1),
-    ('1110', 'الصناديق والنقدية', 'Cash and Cashboxes', 'asset', '1100', True, 2),
-    ('1120', 'الحسابات البنكية', 'Bank Accounts', 'asset', '1100', True, 2),
-    ('1121', 'البنك - حساب توفير', 'Bank - Savings Account', 'asset', '1120', False, 3),
-    ('1130', 'الذمم المدينة', 'Accounts Receivable', 'asset', '1100', False, 2),
-    ('1140', 'المخزون', 'Inventory', 'asset', '1100', False, 2),
-    ('1150', 'شيكات تحت التحصيل', 'Cheques Under Collection', 'asset', '1100', False, 2),
-    ('1160', 'سلف الموظفين', 'Employee Advances', 'asset', '1100', False, 2),
-    ('1170', 'ضريبة مدخلات', 'VAT Input', 'asset', '1100', False, 2),
-    ('1175', 'تسوية ضريبة', 'VAT Clearing', 'asset', '1100', False, 2),
-    ('1200', 'الأصول الثابتة', 'Fixed Assets', 'asset', '1000', True, 1),
-    ('1210', 'أراضي', 'Land', 'asset', '1200', False, 2),
-    ('1220', 'مباني', 'Buildings', 'asset', '1200', False, 2),
-    ('1230', 'سيارات', 'Vehicles', 'asset', '1200', False, 2),
-    ('1240', 'معدات', 'Equipment', 'asset', '1200', False, 2),
-    ('1250', 'أثاث', 'Furniture', 'asset', '1200', False, 2),
-    ('1290', 'مجمع الاستهلاك', 'Accumulated Depreciation', 'asset', '1200', False, 2),
-    
-    # === الخصوم Liabilities ===
-    ('2000', 'الخصوم', 'Liabilities', 'liability', None, True, 0),
-    ('2100', 'الخصوم المتداولة', 'Current Liabilities', 'liability', '2000', True, 1),
-    ('2110', 'الذمم الدائنة', 'Accounts Payable', 'liability', '2100', False, 2),
-    ('2115', 'ذمم التجار', 'Merchants Payable', 'liability', '2100', False, 2),
-    ('2120', 'شيكات مؤجلة الدفع', 'Deferred Cheques Payable', 'liability', '2100', False, 2),
-    ('2130', 'ضرائب مستحقة', 'Taxes Payable', 'liability', '2100', False, 2),
-    ('2140', 'رواتب مستحقة', 'Salaries Payable', 'liability', '2100', False, 2),
-    ('2200', 'الخصوم طويلة الأجل', 'Long-term Liabilities', 'liability', '2000', True, 1),
-    ('2210', 'قروض', 'Loans', 'liability', '2200', False, 2),
-    
-    # === حقوق الملكية Equity ===
-    ('3000', 'حقوق الملكية', 'Equity', 'equity', None, True, 0),
-    ('3100', 'رأس المال', 'Capital', 'equity', '3000', False, 1),
-    ('3200', 'الأرباح المحتجزة', 'Retained Earnings', 'equity', '3000', False, 1),
-    ('3300', 'جاري المالك', 'Owner Draw', 'equity', '3000', False, 1),
-    ('3350', 'جاري الشركاء', 'Partners Current Account', 'equity', '3000', False, 1),
-    ('3400', 'أرباح السنة الحالية', 'Current Year Profit', 'equity', '3000', False, 1),
-    
-    # === الإيرادات Revenues ===
-    ('4000', 'الإيرادات', 'Revenues', 'revenue', None, True, 0),
-    ('4100', 'إيرادات المبيعات', 'Sales Revenue', 'revenue', '4000', False, 1),
-    ('4200', 'إيرادات الخدمات', 'Service Revenue', 'revenue', '4000', False, 1),
-    ('4300', 'إيرادات الشحن', 'Shipping Revenue', 'revenue', '4000', False, 1),
-    ('4400', 'أرباح فرق العملة', 'Foreign Exchange Gain', 'revenue', '4000', False, 1),
-    ('4500', 'إيرادات أخرى', 'Other Revenue', 'revenue', '4000', False, 1),
-    
-    # === المصروفات Expenses ===
-    ('5000', 'تكلفة المبيعات', 'Cost of Sales', 'expense', None, True, 0),
-    ('5100', 'تكلفة البضاعة المباعة', 'Cost of Goods Sold', 'expense', '5000', False, 1),
-    ('5150', 'تعديلات المخزون', 'Inventory Adjustments', 'expense', '5000', False, 1),
-    ('5200', 'الخصومات الممنوحة', 'Discounts Given', 'expense', '5000', False, 1),
-    ('5300', 'مصروفات الشحن', 'Shipping Expense', 'expense', '5000', False, 1),
-    ('6000', 'المصروفات التشغيلية', 'Operating Expenses', 'expense', None, True, 0),
-    ('6100', 'رواتب وأجور', 'Salaries & Wages', 'expense', '6000', False, 1),
-    ('6150', 'مصروف عمولات شركاء', 'Partner Commission Expense', 'expense', '6000', False, 1),
-    ('6180', 'مصروف استهلاك', 'Depreciation Expense', 'expense', '6000', False, 1),
-    ('6200', 'إيجار', 'Rent', 'expense', '6000', False, 1),
-    ('6300', 'كهرباء وماء', 'Utilities', 'expense', '6000', False, 1),
-    ('6400', 'صيانة', 'Maintenance', 'expense', '6000', False, 1),
-    ('6500', 'تسويق وإعلان', 'Marketing & Advertising', 'expense', '6000', False, 1),
-    ('6600', 'مواصلات', 'Transportation', 'expense', '6000', False, 1),
-    ('6700', 'اتصالات', 'Communications', 'expense', '6000', False, 1),
-    ('6800', 'قرطاسية', 'Stationery', 'expense', '6000', False, 1),
-    ('6900', 'خسائر فرق العملة', 'Foreign Exchange Loss', 'expense', '6000', False, 1),
-    ('6950', 'مصروفات بنكية', 'Bank Charges', 'expense', '6000', False, 1),
-    ('6990', 'مصروفات متنوعة', 'Miscellaneous Expenses', 'expense', '6000', False, 1),
-]
 
-# مجموعة من الأكواد الأساسية للبحث السريع
-CORE_ACCOUNT_CODES = {code for code, _, _, _, _, _, _ in CORE_ACCOUNT_TREE}
+def _template_to_tuple(tmpl):
+    return (
+        tmpl.code,
+        tmpl.name_ar,
+        tmpl.name,
+        tmpl.type,
+        tmpl.parent_code,
+        tmpl.is_header,
+        tmpl.level,
+    )
+
+
+def _get_core_account_tree():
+    return [_template_to_tuple(t) for t in BASE_ACCOUNTS]
+
+
+def _get_industry_tree(industry_code):
+    if not industry_code:
+        return []
+    industry = industry_code.strip().lower()
+    return [_template_to_tuple(t) for t in INDUSTRY_EXTENSIONS.get(industry, [])]
+
+
+CORE_ACCOUNT_CODES = {t.code for t in BASE_ACCOUNTS}
 
 
 class GLTreeBuilder:
@@ -114,17 +66,22 @@ class GLTreeBuilder:
             'errors': []
         }
         
-        # خريطة للحسابات الموجودة بالفعل
         existing_accounts = {}
         account_query = GLAccount.query.filter_by(tenant_id=tenant_id).all()
         for acc in account_query:
             existing_accounts[acc.code] = acc
-        
-        # خريطة لتتبع الحسابات التي تم إنشاؤها/تحديثها
         processed = {}
-        
-        # معالجة الحسابات بالترتيب (الأولوية للأبواب)
-        for code, name_ar, name_en, acc_type, parent_code, is_header, level in CORE_ACCOUNT_TREE:
+        core_tree = _get_core_account_tree()
+        industry_tree = []
+        try:
+            from models.tenant import Tenant
+            tenant = Tenant.query.get(tenant_id)
+            if tenant and tenant.business_type:
+                industry_tree = _get_industry_tree(tenant.business_type)
+        except Exception:
+            pass
+        full_tree = core_tree + industry_tree
+        for code, name_ar, name_en, acc_type, parent_code, is_header, level in full_tree:
             try:
                 result = GLTreeBuilder._process_account(
                     tenant_id,
@@ -132,28 +89,23 @@ class GLTreeBuilder:
                     existing_accounts,
                     processed
                 )
-                
                 if result['action'] == 'created':
                     audit_report['created'].append(result)
                 elif result['action'] == 'updated':
                     audit_report['updated'].append(result)
                 elif result['action'] == 'converted':
                     audit_report['converted'].append(result)
-                
             except Exception as e:
                 audit_report['errors'].append({
                     'code': code,
                     'error': str(e)
                 })
-        
-        # تنظيف الحسابات الزائدة (إذا طلبنا ذلك)
         GLTreeBuilder._ensure_branch_liquidity_accounts(
             tenant_id=tenant_id,
             existing_accounts=existing_accounts,
             processed=processed,
             audit_report=audit_report,
         )
-
         if cleanup_extra:
             for code, acc in existing_accounts.items():
                 if code not in CORE_ACCOUNT_CODES and acc.is_active and not getattr(acc, 'liquidity_kind', None):

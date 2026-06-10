@@ -208,7 +208,7 @@ def _ensure_core_data():
     - System Settings
     """
     from decimal import Decimal
-    from models import Branch, Currency, GLAccount, Warehouse, ExpenseCategory, SystemSettings, ExchangeRate
+    from models import Branch, Currency, Warehouse, ExpenseCategory, SystemSettings, ExchangeRate
     
     current_app.logger.info("SystemInit: Ensuring Core Data Integrity...")
     
@@ -285,85 +285,9 @@ def _ensure_core_data():
     elif getattr(main_wh, 'branch_id', None) is None:
         main_wh.branch_id = main_branch.id
 
-    # 5. Chart of Accounts (Basic Structure)
-    # Assets (1000) -> Current (1100) -> Cashboxes (1110), Bank Accounts (1120), AR (1130), Inventory (1140)
-    # Liabilities (2000) -> Current (2100) -> AP (2110)
-    # Equity (3000) -> Capital (3100)
-    # Revenue (4000) -> Sales (4100)
-    # Expenses (5000) -> COGS (5100)
-    # Expenses (6000) -> Opex (6100) -> Rent (6200), Salaries (6300)
-    
-    accounts = [
-        # Assets
-        {'code': '1000', 'name': 'Assets', 'name_ar': 'الأصول', 'type': 'asset', 'level': 0, 'is_header': True},
-        {'code': '1100', 'name': 'Current Assets', 'name_ar': 'أصول متداولة', 'type': 'asset', 'parent_code': '1000', 'level': 1, 'is_header': True},
-        {'code': '1110', 'name': 'Cash and Cashboxes', 'name_ar': 'الصناديق والنقدية', 'type': 'asset', 'parent_code': '1100', 'level': 2, 'is_header': True},
-        {'code': '1120', 'name': 'Bank Accounts', 'name_ar': 'الحسابات البنكية', 'type': 'asset', 'parent_code': '1100', 'level': 2, 'is_header': True},
-        {'code': '1121', 'name': 'Bank - Savings Account', 'name_ar': 'البنك - حساب توفير', 'type': 'asset', 'parent_code': '1120', 'level': 3},
-        {'code': '1130', 'name': 'Accounts Receivable', 'name_ar': 'العملاء (ذمم مدينة)', 'type': 'asset', 'parent_code': '1100', 'level': 2},
-        {'code': '1140', 'name': 'Inventory', 'name_ar': 'المخزون', 'type': 'asset', 'parent_code': '1100', 'level': 2},
-        {'code': '1150', 'name': 'Cheques Under Collection', 'name_ar': 'شيكات برسم التحصيل', 'type': 'asset', 'parent_code': '1100', 'level': 2},
-        
-        # Liabilities
-        {'code': '2000', 'name': 'Liabilities', 'name_ar': 'الخصوم', 'type': 'liability', 'level': 0, 'is_header': True},
-        {'code': '2100', 'name': 'Current Liabilities', 'name_ar': 'خصوم متداولة', 'type': 'liability', 'parent_code': '2000', 'level': 1, 'is_header': True},
-        {'code': '2110', 'name': 'Accounts Payable', 'name_ar': 'الموردين (ذمم دائنة)', 'type': 'liability', 'parent_code': '2100', 'level': 2},
-        {'code': '2120', 'name': 'PDC Payable', 'name_ar': 'شيكات برسم الدفع', 'type': 'liability', 'parent_code': '2100', 'level': 2},
-        {'code': '2130', 'name': 'VAT Payable', 'name_ar': 'ضريبة القيمة المضافة', 'type': 'liability', 'parent_code': '2100', 'level': 2},
-
-        # Equity
-        {'code': '3000', 'name': 'Equity', 'name_ar': 'حقوق الملكية', 'type': 'equity', 'level': 0, 'is_header': True},
-        {'code': '3100', 'name': 'Capital', 'name_ar': 'رأس المال', 'type': 'equity', 'parent_code': '3000', 'level': 1},
-
-        # Revenue
-        {'code': '4000', 'name': 'Revenue', 'name_ar': 'الإيرادات', 'type': 'revenue', 'level': 0, 'is_header': True},
-        {'code': '4100', 'name': 'Sales Revenue', 'name_ar': 'إيرادات المبيعات', 'type': 'revenue', 'parent_code': '4000', 'level': 1},
-        {'code': '4200', 'name': 'Service Revenue', 'name_ar': 'إيرادات الخدمات', 'type': 'revenue', 'parent_code': '4000', 'level': 1},
-
-        # Expenses (COGS)
-        {'code': '5000', 'name': 'Cost of Sales', 'name_ar': 'تكلفة المبيعات', 'type': 'expense', 'level': 0, 'is_header': True},
-        {'code': '5100', 'name': 'Cost of Goods Sold', 'name_ar': 'تكلفة البضاعة المباعة', 'type': 'expense', 'parent_code': '5000', 'level': 1},
-
-        # Expenses (Opex)
-        {'code': '6000', 'name': 'Operating Expenses', 'name_ar': 'مصروفات تشغيلية', 'type': 'expense', 'level': 0, 'is_header': True},
-        {'code': '6100', 'name': 'General Expenses', 'name_ar': 'مصروفات عامة', 'type': 'expense', 'parent_code': '6000', 'level': 1, 'is_header': True},
-        {'code': '6200', 'name': 'Rent', 'name_ar': 'الإيجار', 'type': 'expense', 'parent_code': '6100', 'level': 2},
-        {'code': '6300', 'name': 'Salaries', 'name_ar': 'الرواتب', 'type': 'expense', 'parent_code': '6100', 'level': 2},
-        {'code': '6400', 'name': 'Utilities', 'name_ar': 'الكهرباء والمياه', 'type': 'expense', 'parent_code': '6100', 'level': 2},
-    ]
-
-    for acc_data in accounts:
-        acc = GLAccount.query.filter_by(code=acc_data['code']).first()
-        if not acc:
-            # Find parent ID if parent_code exists
-            parent_id = None
-            if 'parent_code' in acc_data:
-                parent = GLAccount.query.filter_by(code=acc_data['parent_code']).first()
-                if parent:
-                    parent_id = parent.id
-            
-            # Determine currency from first active tenant or default to AED
-            account_currency = 'AED'
-            try:
-                from models.tenant import Tenant
-                first_tenant = Tenant.query.filter_by(is_active=True).first()
-                if first_tenant and first_tenant.default_currency:
-                    account_currency = first_tenant.default_currency
-            except Exception:
-                pass
-            acc = GLAccount(
-                code=acc_data['code'],
-                name=acc_data['name'],
-                name_ar=acc_data['name_ar'],
-                type=acc_data['type'],
-                level=acc_data['level'],
-                is_header=acc_data.get('is_header', False),
-                parent_id=parent_id,
-                currency=account_currency,
-                is_active=True
-            )
-            db.session.add(acc)
-            current_app.logger.info(f"SystemInit: Created Account {acc.code}")
+    # 5. Chart of Accounts — now handled by GLTreeBuilder via _ensure_tenant_gl_trees()
+    # Registry-driven provisioning replaces hardcoded accounts.
+    # See: services/gl_tree_builder.py, models/gl_account_registry.py
 
     # 6. Expense Categories
     categories = [
