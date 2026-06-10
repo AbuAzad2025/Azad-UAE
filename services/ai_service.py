@@ -881,23 +881,38 @@ class AIService:
 
 🎯 قدراتك:
 1. قراءة وتحليل البيانات (Users, Customers, Products, Sales, Purchases, Expenses, Payments, Cheques)
-2. إنشاء وتحديث السجلات (عملاء، منتجات، فواتير بيع وشراء، مصروفات، مدفوعات)
+2. إنشاء وتحديث السجلات (عملاء، منتجات، فواتير بيع وشراء، مصروفات، مدفوعات، موردين، موظفين)
 3. تحليلات وتقارير مالية متقدمة (إيرادات، أرباح، هوامش، تكاليف)
 4. استشارات فنية ومحاسبية متخصصة
 5. شؤون الموظفين وحساباتهم
 6. إدارة المخزون ومستويات التخزين
 
-📝 إذا طلب إنشاء/تعديل:
-- اطلب المعلومات المطلوبة بوضوح
-- ردّ بصيغة JSON واضحة:
-  {{
-    "action": "create_customer/create_product/create_sale",
-    "data_needed": ["الاسم", "الهاتف", "..."],
-    "message": "رسالة للمستخدم"
-  }}
+📝 تنفيذ الأوامر مباشرة:
+إذا طلب المستخدم إنشاء/إضافة شيء، ردّ بصيغة JSON التالية وسيتم التنفيذ مباشرة:
 
-⚠️ مهم: إذا سأل عن بيانات - استخدم الأرقام الموجودة. إذا سأل عن واجهة النظام أو جداوله - أخبره بناءً على المعلومات أعلاه."""
-                
+لإنشاء عميل:
+  {{"action": "create_customer", "data": {{"name": "الاسم", "phone": "الهاتف", "email": "", "address": "العنوان", "customer_type": "regular"}}, "message": "جاري إنشاء العميل..."}}
+
+لإنشاء منتج:
+  {{"action": "create_product", "data": {{"name": "اسم المنتج", "sku": "الرقم", "price": 0, "cost_price": 0, "stock": 0}}, "message": "جاري إنشاء المنتج..."}}
+
+لإنشاء فاتورة:
+  {{"action": "create_sale", "data": {{"customer_name": "اسم العميل", "products": [{{"name": "منتج1", "quantity": 1}}], "payment_method": "cash"}}, "message": "جاري إنشاء الفاتورة..."}}
+
+لاستلام دفعة:
+  {{"action": "receive_payment", "data": {{"customer_name": "اسم العميل", "amount": 0, "method": "cash"}}, "message": "جاري استلام الدفعة..."}}
+
+لتسجيل مصروف:
+  {{"action": "add_expense", "data": {{"description": "الوصف", "amount": 0}}, "message": "جاري تسجيل المصروف..."}}
+
+لإنشاء مورد:
+  {{"action": "create_supplier", "data": {{"name": "الاسم", "phone": "الهاتف"}}, "message": "جاري إنشاء المورد..."}}
+
+لإنشاء موظف:
+  {{"action": "create_employee", "data": {{"name": "الاسم", "phone": "الهاتف", "salary": 0}}, "message": "جاري إنشاء الموظف..."}}
+
+⚠️ مهم: إذا سأل عن بيانات - استخدم الأرقام الموجودة. إذا سأل عن واجهة النظام أو جداوله - أخبره بناءً على المعلومات أعلاه. إذا طلب شيئاً خارج قدراتك - أخبره أنك لا تستطيع."""
+
                 response = requests.post(
                     url,
                     headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
@@ -944,47 +959,91 @@ class AIService:
     
     @staticmethod
     def _execute_ai_action(groq_response, user_id):
-        """تنفيذ الأوامر التي يطلبها Groq (إنشاء/تعديل/حذف)"""
+        """تنفيذ الأوامر التي يطلبها Groq — يستخدم AIExecutor الحقيقي"""
         try:
             import json
             import re
+            from flask_login import current_user as flask_user
+            from services.ai_executor import AIExecutor
             
-            # البحث عن JSON في الرد
             json_match = re.search(r'\{[\s\S]*"action"[\s\S]*\}', groq_response)
             if not json_match:
                 return None
             
             action_data = json.loads(json_match.group(0))
             action_type = action_data.get('action', '')
+            data = action_data.get('data', {})
+            message = action_data.get('message', '')
             
-            # إنشاء عميل
+            if not action_type:
+                return None
+
+            user = flask_user if flask_user.is_authenticated else None
+            ex = AIExecutor(user=user)
+            result = None
+
             if action_type == 'create_customer':
-                data_needed = action_data.get('data_needed', [])
-                return f"""✅ تمام! لإنشاء عميل جديد، أعطني المعلومات التالية:
-
-{chr(10).join([f'{i+1}. {field}' for i, field in enumerate(data_needed)])}
-
-أدخل البيانات بهذا الشكل:
-عميل جديد: الاسم، الهاتف، العنوان، ..."""
-            
-            # إنشاء منتج
+                result = ex.create_customer(
+                    name=data.get('name') or data.get('الاسم', ''),
+                    phone=data.get('phone') or data.get('الهاتف', ''),
+                    email=data.get('email', ''),
+                    address=data.get('address') or data.get('العنوان', ''),
+                    customer_type=data.get('customer_type', 'regular'),
+                )
             elif action_type == 'create_product':
-                return """✅ لإنشاء منتج جديد، أعطني:
-1. اسم المنتج
-2. رقم القطعة
-3. السعر
-4. الكمية
-
-مثال: منتج: فلتر زيت كاتربلر، 1R0716، 50 درهم، 100 قطعة"""
-            
-            # إنشاء فاتورة
+                result = ex.create_product(
+                    name=data.get('name') or data.get('الاسم', ''),
+                    sku=data.get('sku') or data.get('رقم_القطعة', ''),
+                    regular_price=float(data.get('price') or data.get('سعر', 0)),
+                    cost_price=float(data.get('cost_price', 0)),
+                    current_stock=float(data.get('stock') or data.get('الكمية', 0)),
+                    unit=data.get('unit', 'piece'),
+                )
             elif action_type == 'create_sale':
-                return """✅ لإنشاء فاتورة، أعطني:
-1. اسم العميل
-2. المنتجات والكميات
-3. طريقة الدفع
+                lines_raw = data.get('lines') or data.get('products', [])
+                if isinstance(lines_raw, list) and len(lines_raw) > 0:
+                    product_lines = lines_raw
+                else:
+                    product_lines = [{
+                        "name": data.get('product_name') or data.get('اسم_المنتج', ''),
+                        "quantity": int(data.get('quantity', 1)),
+                    }]
+                result = ex.create_sale(
+                    customer_name=data.get('customer_name') or data.get('اسم_العميل', ''),
+                    product_lines=product_lines,
+                    payment_method=data.get('payment_method', 'cash'),
+                    paid_amount=float(data.get('paid_amount', data.get('المبلغ', 0))),
+                    notes=message,
+                )
+            elif action_type == 'receive_payment':
+                result = ex.receive_payment(
+                    customer_name=data.get('customer_name') or data.get('اسم_العميل', ''),
+                    amount=float(data.get('amount') or data.get('المبلغ', 0)),
+                    method=data.get('method') or data.get('طريقة_الدفع', 'cash'),
+                )
+            elif action_type == 'add_expense':
+                result = ex.add_expense(
+                    description=data.get('description') or data.get('الوصف', ''),
+                    amount=float(data.get('amount') or data.get('المبلغ', 0)),
+                    payment_method=data.get('payment_method', 'cash'),
+                )
+            elif action_type == 'create_supplier':
+                result = ex.create_supplier(
+                    name=data.get('name') or data.get('الاسم', ''),
+                    phone=data.get('phone') or data.get('الهاتف', ''),
+                    email=data.get('email', ''),
+                )
+            elif action_type == 'create_employee':
+                result = ex.create_employee(
+                    name=data.get('name') or data.get('الاسم', ''),
+                    phone=data.get('phone') or data.get('الهاتف', ''),
+                    basic_salary=float(data.get('salary') or data.get('الراتب', 0)),
+                )
 
-مثال: فاتورة لعميل أحمد: فلتر زيت x2، كاش"""
+            if result and result.get('success'):
+                return f"{result['message']}\n\n<sub>🤖 تم التنفيذ بواسطة أزاد</sub>"
+            elif result:
+                return f"⚠️ {result.get('message', 'حدث خطأ أثناء التنفيذ')}\n\n<sub>🤖 أزاد</sub>"
             
             return None
             
@@ -995,7 +1054,7 @@ class AIService:
                 LoggingCore.log_error(message=str(e), category="AI", source="services.ai_service._execute_ai_action", level="WARNING", exception=e)
             except Exception:
                 pass
-            return None
+            return f"⚠️ حدث خطأ أثناء تنفيذ العملية: {str(e)[:100]}"
     
     @staticmethod
     def _train_local_from_groq(question, local_answer, groq_answer, user_id):

@@ -261,57 +261,33 @@ class ActionDispatcher:
 
         # ===== SALES / INVOICES =====
         def _create_sale(args: dict) -> ActionResult:
+            from services.ai_executor import AIExecutor
             customer_name = args.get("customer_name", "").strip()
             product_name = args.get("product_name", "").strip()
             quantity = int(args.get("quantity", 1))
             if not customer_name or not product_name:
                 return ActionResult(False, "يرجى إدخال اسم العميل والمنتج")
             try:
-                from models import Customer, Product, Sale, SaleLine
-                tid = _get_active_tenant_id()
-                customer = Customer.query.filter_by(
-                    tenant_id=tid, name=customer_name, is_active=True).first()
-                if not customer:
-                    return ActionResult(False, f"العميل {customer_name} غير موجود")
-                product = Product.query.filter_by(
-                    tenant_id=tid, name=product_name, is_active=True).first()
-                if not product:
-                    return ActionResult(False, f"المنتج {product_name} غير موجود")
-                if (product.current_stock or 0) < quantity:
-                    return ActionResult(False,
-                        f"الكمية غير متوفرة. المتوفر: {product.current_stock}")
-                price = float(args.get("price", product.selling_price or 0))
-                total = Decimal(str(price * quantity))
-                sale = Sale(
-                    tenant_id=tid, customer_id=customer.id,
-                    sale_date=datetime.utcnow(),
-                    subtotal=total, total_amount=total,
-                    paid_amount=Decimal("0"), balance_due=total,
-                    currency="AED", amount_aed=total,
-                    payment_status="unpaid", status="active",
+                ex = AIExecutor()
+                lines = [{"name": product_name, "quantity": quantity}]
+                if args.get("unit_price"):
+                    lines[0]["unit_price"] = float(args["unit_price"])
+                result = ex.create_sale(
+                    customer_name=customer_name,
+                    product_lines=lines,
                     payment_method=args.get("payment_method", "cash"),
-                    seller_id=getattr(current_user, 'id', None),
+                    paid_amount=float(args.get("paid_amount", 0)),
                 )
-                db.session.add(sale)
-                db.session.flush()
-                line = SaleLine(
-                    sale_id=sale.id, product_id=product.id,
-                    quantity=quantity, unit_price=Decimal(str(price)),
-                    total=total,
-                )
-                db.session.add(line)
-                product.current_stock = (product.current_stock or 0) - quantity
-                customer.balance = (customer.balance or 0) + total
-                db.session.commit()
-                _audit("create", "Sale", sale.id,
-                       {"customer": customer_name, "total": float(total)})
-                return ActionResult(True,
-                    f"تم إنشاء الفاتورة رقم {sale.sale_number} بقيمة {float(total):,.2f} درهم",
-                    {"sale_id": sale.id, "sale_number": sale.sale_number,
-                     "total": float(total)},
-                    "sale_create", "manage_sales")
+                if result.get("success"):
+                    _audit("create", "Sale", result.get("sale_id"),
+                           {"customer": customer_name, "total": result.get("total", 0)})
+                    return ActionResult(True, result["message"],
+                                        {"sale_id": result.get("sale_id"),
+                                         "sale_number": result.get("sale_number"),
+                                         "total": result.get("total", 0)},
+                                        "sale_create", "manage_sales")
+                return ActionResult(False, result.get("message", "حدث خطأ"))
             except Exception as e:
-                db.session.rollback()
                 _log_ai_error("sale_create_error", str(e), request_data=args)
                 return ActionResult(False, f"خطأ في إنشاء الفاتورة: {str(e)[:100]}")
 
@@ -333,58 +309,28 @@ class ActionDispatcher:
 
         # ===== PAYMENTS =====
         def _receive_payment(args: dict) -> ActionResult:
+            from services.ai_executor import AIExecutor
             customer_name = args.get("customer_name", "").strip()
-            amount = Decimal(str(args.get("amount", 0)))
+            amount = float(args.get("amount", 0))
             if not customer_name or amount <= 0:
                 return ActionResult(False, "يرجى إدخال اسم العميل والمبلغ")
             try:
-                from models import Customer, Payment, Sale
-                tid = _get_active_tenant_id()
-                customer = Customer.query.filter_by(
-                    tenant_id=tid, name=customer_name, is_active=True).first()
-                if not customer:
-                    return ActionResult(False, f"العميل {customer_name} غير موجود")
-                payment = Payment(
-                    tenant_id=tid, direction="incoming",
-                    customer_id=customer.id, amount=amount,
-                    currency="AED", amount_aed=amount,
-                    payment_method=args.get("method", "cash"),
-                    payment_date=datetime.utcnow(),
+                ex = AIExecutor()
+                result = ex.receive_payment(
+                    customer_name=customer_name,
+                    amount=amount,
+                    method=args.get("method", "cash"),
                     notes=args.get("notes", ""),
                 )
-                db.session.add(payment)
-                customer.balance = (customer.balance or 0) - amount
-                # Auto-apply to unpaid sales
-                unpaid = Sale.query.filter(
-                    Sale.tenant_id == tid,
-                    Sale.customer_id == customer.id,
-                    Sale.balance_due > 0,
-                    Sale.status == "active",
-                ).order_by(Sale.sale_date).all()
-                remaining = amount
-                for sale in unpaid:
-                    if remaining <= 0:
-                        break
-                    due = sale.balance_due or 0
-                    if remaining >= due:
-                        sale.paid_amount = (sale.paid_amount or 0) + due
-                        sale.balance_due = 0
-                        sale.payment_status = "paid"
-                        remaining -= due
-                    else:
-                        sale.paid_amount = (sale.paid_amount or 0) + remaining
-                        sale.balance_due = due - remaining
-                        sale.payment_status = "partial"
-                        remaining = 0
-                db.session.commit()
-                _audit("create", "Payment", payment.id,
-                       {"customer": customer_name, "amount": float(amount)})
-                return ActionResult(True,
-                    f"تم استلام {float(amount):,.2f} درهم من {customer_name}",
-                    {"payment_id": payment.id, "amount": float(amount)},
-                    "payment_receive", "manage_payments")
+                if result.get("success"):
+                    _audit("create", "Payment", result.get("payment_id"),
+                           {"customer": customer_name, "amount": amount})
+                    return ActionResult(True, result["message"],
+                                        {"payment_id": result.get("payment_id"),
+                                         "amount": amount},
+                                        "payment_receive", "manage_payments")
+                return ActionResult(False, result.get("message", "حدث خطأ"))
             except Exception as e:
-                db.session.rollback()
                 _log_ai_error("payment_error", str(e), request_data=args)
                 return ActionResult(False, f"خطأ في استلام الدفعة: {str(e)[:100]}")
 
@@ -482,6 +428,61 @@ class ActionDispatcher:
             except Exception as e:
                 return ActionResult(False, f"خطأ: {str(e)[:100]}")
 
+        # ===== EMPLOYEES =====
+        def _create_employee(args: dict) -> ActionResult:
+            from services.ai_executor import AIExecutor
+            name = args.get("name", "").strip()
+            if not name:
+                return ActionResult(False, "يرجى إدخال اسم الموظف")
+            try:
+                ex = AIExecutor()
+                result = ex.create_employee(
+                    name=name,
+                    phone=args.get("phone", ""),
+                    email=args.get("email", ""),
+                    basic_salary=float(args.get("salary", 0)),
+                    employment_type=args.get("employment_type", "salary"),
+                )
+                if result.get("success"):
+                    _audit("create", "Employee", result.get("id"),
+                           {"name": name})
+                    return ActionResult(True, result["message"],
+                                        {"id": result.get("id"), "name": name},
+                                        "employee_create", "manage_employees")
+                return ActionResult(False, result.get("message", "حدث خطأ"))
+            except Exception as e:
+                _log_ai_error("employee_create_error", str(e), request_data=args)
+                return ActionResult(False, f"خطأ: {str(e)[:100]}")
+
+        # ===== PURCHASES =====
+        def _create_purchase(args: dict) -> ActionResult:
+            from services.ai_executor import AIExecutor
+            supplier_name = args.get("supplier_name", "").strip()
+            product_name = args.get("product_name", "").strip()
+            quantity = int(args.get("quantity", 1))
+            if not supplier_name or not product_name:
+                return ActionResult(False, "يرجى إدخال اسم المورد والمنتج")
+            try:
+                ex = AIExecutor()
+                lines = [{"name": product_name, "quantity": quantity,
+                          "unit_cost": float(args.get("unit_cost", 0))}]
+                result = ex.create_purchase(
+                    supplier_name=supplier_name,
+                    product_lines=lines,
+                    notes=args.get("notes", ""),
+                )
+                if result.get("success"):
+                    _audit("create", "Purchase", result.get("purchase_id"),
+                           {"supplier": supplier_name})
+                    return ActionResult(True, result["message"],
+                                        {"purchase_id": result.get("purchase_id"),
+                                         "purchase_number": result.get("purchase_number")},
+                                        "purchase_create", "manage_purchases")
+                return ActionResult(False, result.get("message", "حدث خطأ"))
+            except Exception as e:
+                _log_ai_error("purchase_create_error", str(e), request_data=args)
+                return ActionResult(False, f"خطأ: {str(e)[:100]}")
+
         # ===== USERS (owner only) =====
         def _create_user(args: dict) -> ActionResult:
             if not _is_owner():
@@ -528,6 +529,8 @@ class ActionDispatcher:
         self._register("create_supplier", _create_supplier, "manage_suppliers", "إنشاء مورد")
         self._register("sales_summary", _sales_summary, "view_reports", "ملخص المبيعات")
         self._register("profit_summary", _profit_summary, "view_reports", "ملخص الأرباح")
+        self._register("create_employee", _create_employee, "manage_employees", "إنشاء موظف")
+        self._register("create_purchase", _create_purchase, "manage_purchases", "إنشاء أمر شراء")
         self._register("create_user", _create_user, "manage_users", "إنشاء مستخدم")
 
     def get_registered_actions(self) -> list[str]:
@@ -660,6 +663,28 @@ class ActionDispatcher:
                 "phone": parts[2] if len(parts) > 2 else "",
             })
 
+        # ===== EMPLOYEE OPERATIONS =====
+        # موظف: الاسم, الهاتف, الراتب
+        m = re.match(r'^(موظف|employee)\s*[::=]\s*(.+)$', msg, re.IGNORECASE)
+        if m:
+            parts = [p.strip() for p in m.group(2).split(",")]
+            return ("create_employee", {
+                "name": parts[0] if len(parts) > 0 else "",
+                "phone": parts[1] if len(parts) > 1 else "",
+                "salary": float(re.search(r'[\d.]+', parts[2]).group()) if len(parts) > 2 and re.search(r'[\d.]+', parts[2]) else 0,
+            })
+
+        # ===== PURCHASE OPERATIONS =====
+        # أمر شراء: اسم المورد, اسم المنتج, الكمية
+        m = re.match(r'^(أمر\s*شراء|شراء|purchase|order)\s*[::=]\s*(.+)$', msg, re.IGNORECASE)
+        if m:
+            parts = [p.strip() for p in m.group(2).split(",")]
+            return ("create_purchase", {
+                "supplier_name": parts[0] if len(parts) > 0 else "",
+                "product_name": parts[1] if len(parts) > 1 else "",
+                "quantity": int(re.search(r'\d+', parts[2]).group()) if len(parts) > 2 and re.search(r'\d+', parts[2]) else 1,
+            })
+
         # ===== PROFIT / REPORTS =====
         if re.search(r'(أرباح|ربح|profit|هامش|margin)', msg, re.IGNORECASE) and \
            re.search(r'(تقرير|ملخص|summary|report|تحليل|analysis)', msg, re.IGNORECASE):
@@ -684,6 +709,8 @@ class ActionDispatcher:
 💳 **المدفوعات:** `استلام: اسم العميل, المبلغ`
 📊 **المصروفات:** `مصروف: الوصف, المبلغ`
 🤝 **الموردين:** `مورد: الاسم, الهاتف`
+👥 **الموظفين:** `موظف: الاسم, الهاتف, الراتب`
+📦 **المشتريات:** `أمر شراء: اسم المورد, اسم المنتج, الكمية`
 📈 **التقارير:** `ملخص المبيعات` | `تقرير الأرباح`
 ❓ اسألني عن أي شيء عن النظام!
 

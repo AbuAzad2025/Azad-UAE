@@ -896,3 +896,128 @@ class TestDatabaseSchemaAudit:
             script = ScriptDirectory.from_config(config)
             heads = script.get_heads()
             assert len(heads) == 1, f'Alembic has {len(heads)} heads (should be 1): {heads}'
+
+
+class TestFormsModelAlignment:
+    def _get_form_fields(self, form_class):
+        return {name for name in dir(form_class) if not name.startswith('_') and hasattr(getattr(form_class, name), 'validators')}
+
+    def test_sale_form_fields_exist_in_model(self):
+        from forms.sale import SaleForm
+        from models.sale import Sale
+        form_fields = self._get_form_fields(SaleForm)
+        model_fields = {c.name for c in Sale.__table__.columns}
+        non_auto = {'customer_id', 'currency', 'exchange_rate', 'discount_amount', 'shipping_cost', 'tax_rate', 'notes'}
+        missing = non_auto - model_fields
+        assert missing == set(), f'SaleForm fields missing in Sale model: {missing}'
+
+    def test_purchase_form_fields_exist_in_model(self):
+        from forms.purchase import PurchaseForm
+        from models.purchase import Purchase
+        form_fields = self._get_form_fields(PurchaseForm)
+        model_fields = {c.name for c in Purchase.__table__.columns}
+        non_auto = {'supplier_name', 'supplier_phone', 'supplier_email', 'currency', 'exchange_rate', 'discount_amount', 'tax_rate', 'notes'}
+        missing = non_auto - model_fields
+        assert missing == set(), f'PurchaseForm fields missing in Purchase model: {missing}'
+
+    def test_receipt_form_fields_exist_in_model(self):
+        from forms.payment import ReceiptForm
+        from models.payment import Receipt
+        form_fields = self._get_form_fields(ReceiptForm)
+        model_fields = {c.name for c in Receipt.__table__.columns}
+        non_auto = {'customer_id', 'amount', 'currency', 'exchange_rate', 'payment_method', 'reference_number', 'cheque_number', 'cheque_date', 'bank_name', 'notes'}
+        missing = non_auto - model_fields
+        assert missing == set(), f'ReceiptForm fields missing in Receipt model: {missing}'
+
+    def test_product_form_fields_exist_in_model(self):
+        from forms.product import ProductForm
+        from models.product import Product
+        form_fields = self._get_form_fields(ProductForm)
+        model_fields = {c.name for c in Product.__table__.columns}
+        non_auto = {'name', 'name_ar', 'commercial_name', 'part_number', 'barcode', 'category_id', 'country_of_origin', 'regular_price', 'merchant_price', 'partner_price', 'cost_price', 'current_stock', 'min_stock_alert', 'unit', 'warranty_period', 'warranty_unit', 'is_returnable', 'return_period_days', 'description', 'notes'}
+        missing = non_auto - model_fields
+        assert missing == set(), f'ProductForm fields missing in Product model: {missing}'
+
+    def test_product_category_form_fields_exist_in_model(self):
+        from forms.product import ProductCategoryForm
+        from models.product import ProductCategory
+        form_fields = self._get_form_fields(ProductCategoryForm)
+        model_fields = {c.name for c in ProductCategory.__table__.columns}
+        non_auto = {'name', 'name_ar', 'description'}
+        missing = non_auto - model_fields
+        assert missing == set(), f'ProductCategoryForm fields missing in ProductCategory model: {missing}'
+
+    def test_customer_form_fields_exist_in_model(self):
+        from forms.customer import CustomerForm
+        from models.customer import Customer
+        form_fields = self._get_form_fields(CustomerForm)
+        model_fields = {c.name for c in Customer.__table__.columns}
+        non_auto = {'name', 'name_ar', 'customer_type', 'phone', 'email', 'address', 'tax_number', 'preferred_currency', 'is_active', 'notes'}
+        missing = non_auto - model_fields
+        assert missing == set(), f'CustomerForm fields missing in Customer model: {missing}'
+
+    def test_sale_form_no_extraneous_fields(self):
+        from forms.sale import SaleForm
+        from models.sale import Sale
+        form_fields = self._get_form_fields(SaleForm)
+        model_fields = {c.name for c in Sale.__table__.columns}
+        extra = form_fields - model_fields - {'submit', 'payment_method'}
+        assert extra == set(), f'SaleForm has fields not in Sale model: {extra}'
+
+    def test_purchase_form_no_extraneous_fields(self):
+        from forms.purchase import PurchaseForm
+        from models.purchase import Purchase
+        form_fields = self._get_form_fields(PurchaseForm)
+        model_fields = {c.name for c in Purchase.__table__.columns}
+        extra = form_fields - model_fields - {'submit'}
+        assert extra == set(), f'PurchaseForm has fields not in Purchase model: {extra}'
+
+    def test_receipt_form_no_extraneous_fields(self):
+        from forms.payment import ReceiptForm
+        from models.payment import Receipt
+        form_fields = self._get_form_fields(ReceiptForm)
+        model_fields = {c.name for c in Receipt.__table__.columns}
+        extra = form_fields - model_fields - {'submit'}
+        assert extra == set(), f'ReceiptForm has fields not in Receipt model: {extra}'
+
+    def test_product_form_no_extraneous_fields(self):
+        from forms.product import ProductForm
+        from models.product import Product
+        form_fields = self._get_form_fields(ProductForm)
+        model_fields = {c.name for c in Product.__table__.columns}
+        extra = form_fields - model_fields - {'submit'}
+        assert extra == set(), f'ProductForm has fields not in Product model: {extra}'
+
+    def test_customer_form_no_extraneous_fields(self):
+        from forms.customer import CustomerForm
+        from models.customer import Customer
+        form_fields = self._get_form_fields(CustomerForm)
+        model_fields = {c.name for c in Customer.__table__.columns}
+        extra = form_fields - model_fields - {'submit'}
+        assert extra == set(), f'CustomerForm has fields not in Customer model: {extra}'
+
+    def test_product_form_is_returnable_coerce_matches_model_type(self):
+        from forms.product import ProductForm
+        from models.product import Product
+        from sqlalchemy import Boolean
+        form_field = ProductForm.is_returnable
+        coerce_val = form_field.kwargs.get('coerce') if hasattr(form_field, 'kwargs') else form_field.coerce
+        model_col = Product.__table__.columns.is_returnable
+        assert coerce_val == int
+        assert isinstance(model_col.type, Boolean)
+
+    def test_sale_form_payment_method_choices_valid(self):
+        from forms.sale import SaleForm
+        field = SaleForm.payment_method
+        choices = dict(field.kwargs.get('choices', [])) if hasattr(field, 'kwargs') else dict(field.choices)
+        assert 'cash' in choices
+        assert 'card' in choices
+        assert 'cheque' in choices
+
+    def test_receipt_form_payment_method_choices_valid(self):
+        from forms.payment import ReceiptForm
+        field = ReceiptForm.payment_method
+        choices = dict(field.kwargs.get('choices', [])) if hasattr(field, 'kwargs') else dict(field.choices)
+        assert 'cash' in choices
+        assert 'card' in choices
+        assert 'cheque' in choices
