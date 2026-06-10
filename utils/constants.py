@@ -59,6 +59,7 @@ CURRENCIES = [
     ('EUR', {'ar': 'يورو', 'en': 'Euro', 'symbol': '€'}),
     ('GBP', {'ar': 'جنيه إسترليني', 'en': 'British Pound', 'symbol': '£'}),
     ('SAR', {'ar': 'ريال سعودي', 'en': 'Saudi Riyal', 'symbol': 'ر.س'}),
+    ('JOD', {'ar': 'دينار أردني', 'en': 'Jordanian Dinar', 'symbol': 'د.أ'}),
     ('KWD', {'ar': 'دينار كويتي', 'en': 'Kuwaiti Dinar', 'symbol': 'د.ك'}),
     ('QAR', {'ar': 'ريال قطري', 'en': 'Qatari Riyal', 'symbol': 'ر.ق'}),
     ('OMR', {'ar': 'ريال عماني', 'en': 'Omani Rial', 'symbol': 'ر.ع'}),

@@ -1,0 +1,27 @@
+{% macro currency_options(default_code='AED', constants=None) %}
+  {% if not constants %}
+    {% set constants = [
+      ('AED', {'ar': 'درهم إماراتي', 'symbol': 'د.إ'}),
+      ('USD', {'ar': 'دولار أمريكي', 'symbol': '$'}),
+      ('ILS', {'ar': 'شيكل إسرائيلي', 'symbol': '₪'}),
+      ('EUR', {'ar': 'يورو', 'symbol': '€'}),
+      ('GBP', {'ar': 'جنيه إسترليني', 'symbol': '£'}),
+      ('SAR', {'ar': 'ريال سعودي', 'symbol': 'ر.س'}),
+      ('JOD', {'ar': 'دينار أردني', 'symbol': 'د.أ'}),
+      ('KWD', {'ar': 'دينار كويتي', 'symbol': 'د.ك'}),
+      ('QAR', {'ar': 'ريال قطري', 'symbol': 'ر.ق'}),
+      ('OMR', {'ar': 'ريال عماني', 'symbol': 'ر.ع'}),
+      ('BHD', {'ar': 'دينار بحريني', 'symbol': 'د.ب'}),
+    ] %}
+  {% endif %}
+  {% for code, data in constants %}
+    <option value="{{ code }}" {% if default_code == code %}selected{% endif %}>{{ data.ar }} ({{ code }})</option>
+  {% endfor %}
+{% endmacro %}
+
+{% macro currency_select(name='currency', id='currency', default_code='AED', extra_classes='') %}
+  {% from 'macros/currency_options.html' import currency_options %}
+  <select name="{{ name }}" id="{{ id }}" class="form-control {{ extra_classes }}" aria-label="العملة">
+    {{ currency_options(default_code=default_code) }}
+  </select>
+{% endmacro %}

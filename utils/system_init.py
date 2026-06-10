@@ -288,6 +288,7 @@ def _ensure_core_data():
     main_wh = Warehouse.query.filter_by(is_main=True).first()
     if not main_wh:
         main_wh = Warehouse(
+            tenant_id=main_branch.tenant_id,
             name='Main Warehouse',
             name_ar='المستودع الرئيسي',
             code='WH-MAIN',
@@ -299,6 +300,8 @@ def _ensure_core_data():
         current_app.logger.info("SystemInit: Created Main Warehouse")
     elif getattr(main_wh, 'branch_id', None) is None:
         main_wh.branch_id = main_branch.id
+    if getattr(main_wh, 'tenant_id', None) is None:
+        main_wh.tenant_id = main_branch.tenant_id
 
     # 5. Chart of Accounts — now handled by GLTreeBuilder via _ensure_tenant_gl_trees()
     # Registry-driven provisioning replaces hardcoded accounts.
@@ -315,9 +318,10 @@ def _ensure_core_data():
     ]
     
     for cat_data in categories:
-        cat = ExpenseCategory.query.filter_by(name=cat_data['name']).first()
+        cat = ExpenseCategory.query.filter_by(name=cat_data['name'], tenant_id=main_branch.tenant_id).first()
         if not cat:
             cat = ExpenseCategory(
+                tenant_id=main_branch.tenant_id,
                 name=cat_data['name'],
                 name_ar=cat_data['name_ar'],
                 gl_account_code=cat_data['code']

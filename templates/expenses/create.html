@@ -129,14 +129,8 @@
               <i class="fas fa-dollar-sign text-warning"></i> العملة
             </label>
             {% set dc = company_default_currency or system_default_currency or 'AED' %}
-            <select name="currency" id="currency" class="form-control" aria-label="العملة">
-              <option value="AED" {% if dc == 'AED' %}selected{% endif %}>درهم (AED)</option>
-              <option value="USD" {% if dc == 'USD' %}selected{% endif %}>دولار (USD)</option>
-              <option value="ILS" {% if dc == 'ILS' %}selected{% endif %}>شيقل (ILS)</option>
-              <option value="EUR" {% if dc == 'EUR' %}selected{% endif %}>يورو (EUR)</option>
-              <option value="GBP" {% if dc == 'GBP' %}selected{% endif %}>جنيه (GBP)</option>
-              <option value="SAR" {% if dc == 'SAR' %}selected{% endif %}>ريال (SAR)</option>
-            </select>
+            {% from 'macros/currency_options.html' import currency_select %}
+            {{ currency_select(name='currency', id='currency', default_code=dc) }}
           </div>
         </div>
 

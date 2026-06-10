@@ -155,11 +155,29 @@ class PurchaseService:
                     line_discount = line_subtotal * (discount_percent / Decimal('100'))
                     line_total = line_subtotal - line_discount
                     
-                    line.line_total = line_total # Assuming model has this field or similar logic
-                    
+                    line.line_total = line_total
                     db.session.add(line)
+                    db.session.flush()
                     subtotal += line_total
                     lines_added += 1
+                    if getattr(product, 'has_serial_number', False):
+                        from models.product_serial import ProductSerial
+                        provided_serials = line_data.get('serials', [])
+                        for sn in provided_serials:
+                            if sn:
+                                serial_obj = ProductSerial(
+                                    tenant_id=tenant_id,
+                                    product_id=product_id,
+                                    serial_number=sn,
+                                    status='available',
+                                    warehouse_id=warehouse_id,
+                                    purchase_line_id=line.id,
+                                )
+                                if getattr(product, 'warranty_days', 0) > 0:
+                                    from datetime import datetime, timedelta
+                                    serial_obj.warranty_start_date = datetime.now()
+                                    serial_obj.warranty_end_date = datetime.now() + timedelta(days=int(product.warranty_days))
+                                db.session.add(serial_obj)
         
         if lines_added == 0:
             db.session.rollback()

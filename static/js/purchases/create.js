@@ -130,6 +130,22 @@ function addLine() {
 
       </div>
 
+      <div class="row mt-2 serial-row" id="serial_row_${lineIndex}" style="display:none;">
+
+        <div class="col-md-12">
+
+          <label class="small"><i class="fas fa-barcode"></i> أرقام السيريال / IMEI <small class="text-muted">(واحد لكل سطر)</small></label>
+
+          <textarea name="lines[${lineIndex}][serials]" id="line_${lineIndex}_serials"
+
+                    class="form-control serial-textarea" rows="2"
+
+                    placeholder="SN001&#10;SN002" data-line="${lineIndex}"></textarea>
+
+        </div>
+
+      </div>
+
     </div>
 
   `;
@@ -316,8 +332,6 @@ function addLine() {
 
   
 
-  // تعبئة السعر عند اختيار المنتج
-
   $productSelect.on('select2:select', function(e) {
 
     const data = e.params.data;
@@ -327,6 +341,16 @@ function addLine() {
       $(`.line-cost[data-line="${lineIndex}"]`).data('base-cost', parseFloat(data.cost_price) || 0);
 
       updateLineCosts();
+
+    }
+
+    if (data && data.has_serial_number) {
+
+      $(`#serial_row_${lineIndex}`).show();
+
+    } else {
+
+      $(`#serial_row_${lineIndex}`).hide();
 
     }
 

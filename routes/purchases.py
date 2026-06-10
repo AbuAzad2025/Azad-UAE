@@ -80,13 +80,15 @@ def create():
                 quantity = request.form.get(f'lines[{i}][quantity]', type=float)
                 unit_cost = request.form.get(f'lines[{i}][unit_cost]', type=float)
                 discount_percent = request.form.get(f'lines[{i}][discount_percent]', type=float, default=0)
-                
+                serials_raw = request.form.get(f'lines[{i}][serials]', '')
+                serials = [s.strip() for s in serials_raw.split('\n') if s.strip()] if serials_raw else []
                 if product_id and quantity and quantity > 0:
                     lines_data.append({
                         'product_id': product_id,
                         'quantity': quantity,
                         'unit_cost': unit_cost,
-                        'discount_percent': discount_percent
+                        'discount_percent': discount_percent,
+                        'serials': serials,
                     })
             
             # Create Purchase via Service

@@ -78,14 +78,8 @@
               <i class="fas fa-dollar-sign text-warning"></i> العملة
               <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="عملة الدفع"></i>
             </label>
-            <select name="currency" id="currency" class="form-control" aria-label="العملة">
-              <option value="AED" {% if expense.currency == 'AED' %}selected{% endif %}>درهم (AED)</option>
-              <option value="USD" {% if expense.currency == 'USD' %}selected{% endif %}>دولار (USD)</option>
-              <option value="ILS" {% if expense.currency == 'ILS' %}selected{% endif %}>شيقل (ILS)</option>
-              <option value="EUR" {% if expense.currency == 'EUR' %}selected{% endif %}>يورو (EUR)</option>
-              <option value="GBP" {% if expense.currency == 'GBP' %}selected{% endif %}>جنيه (GBP)</option>
-              <option value="SAR" {% if expense.currency == 'SAR' %}selected{% endif %}>ريال (SAR)</option>
-            </select>
+            {% from 'macros/currency_options.html' import currency_select %}
+            {{ currency_select(name='currency', id='currency', default_code=expense.currency) }}
           </div>
         </div>
 

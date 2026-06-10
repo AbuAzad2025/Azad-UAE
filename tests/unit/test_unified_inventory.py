@@ -424,8 +424,8 @@ class TestPurchaseAmountFix:
 
     def test_purchase_template_has_ils(self):
         html = open('templates/purchases/create.html', encoding='utf-8').read()
-        assert 'ILS' in html
-        assert 'شيقل' in html
+        assert 'currency_select' in html or 'ILS' in html
+        assert 'macros/currency_options' in html or 'شيقل' in html
 
 
 class TestExpenseAmountBase:
@@ -455,10 +455,61 @@ class TestExpenseAmountBase:
 
     def test_expense_create_template_has_ils(self):
         html = open('templates/expenses/create.html', encoding='utf-8').read()
-        assert 'ILS' in html
-        assert 'شيقل' in html
+        assert 'currency_select' in html or 'ILS' in html
+        assert 'macros/currency_options' in html or 'شيقل' in html
 
     def test_expense_edit_template_has_ils(self):
         html = open('templates/expenses/edit.html', encoding='utf-8').read()
+        assert 'currency_select' in html or 'ILS' in html
+        assert 'macros/currency_options' in html or 'شيقل' in html
+
+
+class TestCurrencyConstants:
+    def test_jod_in_currencies(self):
+        from utils.constants import CURRENCIES
+        codes = [c[0] for c in CURRENCIES]
+        assert 'JOD' in codes
+        jod = next(c[1] for c in CURRENCIES if c[0] == 'JOD')
+        assert 'دينار أردني' in jod['ar']
+
+    def test_currency_macro_template_exists(self):
+        html = open('templates/macros/currency_options.html', encoding='utf-8').read()
+        assert 'JOD' in html
+        assert 'AED' in html
+        assert 'USD' in html
         assert 'ILS' in html
-        assert 'شيقل' in html
+        assert 'SAR' in html
+        assert 'currency_select' in html
+
+
+class TestPurchaseSerialTracking:
+    def test_serial_created_on_purchase(self, sample_tenant, sample_user, monkeypatch):
+        from models.supplier import Supplier
+        from models.product import Product
+        from models.warehouse import Warehouse
+        from models.product_serial import ProductSerial
+        from services.purchase_service import PurchaseService
+        from services.stock_service import StockService
+        from extensions import db
+        def _noop(movement):
+            return None
+        monkeypatch.setattr(StockService, '_post_adjustment_gl', _noop)
+        monkeypatch.setattr('services.purchase_service.post_or_fail', lambda *a, **kw: None)
+        supplier = Supplier(tenant_id=sample_tenant.id, name='Test Supplier', phone='123')
+        db.session.add(supplier)
+        wh = Warehouse(tenant_id=sample_tenant.id, name='Test WH', name_ar='مستودع', code='WH-PUR2', is_main=True, is_active=True)
+        db.session.add(wh)
+        product = Product(tenant_id=sample_tenant.id, name='SerialP', sku='SRL-PUR', regular_price=100, cost_price=50, has_serial_number=True, warranty_days=30, current_stock=0)
+        db.session.add(product)
+        db.session.flush()
+        purchase = PurchaseService.create_purchase(
+            user=sample_user,
+            supplier_data={'supplier_id': supplier.id, 'supplier_name': supplier.name, 'phone': '', 'email': ''},
+            lines_data=[{'product_id': product.id, 'quantity': 2, 'unit_cost': 50, 'discount_percent': 0, 'serials': ['SN-001', 'SN-002']}],
+            warehouse_id=wh.id,
+            currency='AED',
+        )
+        serials = ProductSerial.query.filter_by(purchase_line_id=purchase.lines[0].id).all()
+        assert len(serials) == 2
+        assert all(s.status == 'available' for s in serials)
+        assert all(s.warehouse_id == wh.id for s in serials)

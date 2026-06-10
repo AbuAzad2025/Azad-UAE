@@ -347,6 +347,7 @@ def api_search():
             'cost_price': float(p.cost_price) if p.cost_price else 0,
             'unit': p.unit,
             'is_low_stock': p.is_low_stock(),
+            'has_serial_number': getattr(p, 'has_serial_number', False),
         } for p in products]
 
         return jsonify({'results': results, 'has_more': len(results) >= per_page})

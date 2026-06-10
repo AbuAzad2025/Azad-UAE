@@ -102,18 +102,8 @@
                   <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="العملة التي سيدفع بها العميل - الفاتورة بال{{ tenant_currency_name_ar or 'درهم إماراتي' }} دائماً (اختياري)"></i>
                 </label>
                 {% set dc = company_default_currency or system_default_currency or 'AED' %}
-                <select name="currency" id="currency" class="form-control" aria-label="العملة">
-                  <option value="AED" {% if dc == 'AED' %}selected{% endif %}>درهم إماراتي (AED)</option>
-                  <option value="USD" {% if dc == 'USD' %}selected{% endif %}>دولار أمريكي (USD)</option>
-                  <option value="ILS" {% if dc == 'ILS' %}selected{% endif %}>شيقل إسرائيلي (ILS)</option>
-                  <option value="EUR" {% if dc == 'EUR' %}selected{% endif %}>يورو (EUR)</option>
-                  <option value="GBP" {% if dc == 'GBP' %}selected{% endif %}>جنيه استرليني (GBP)</option>
-                  <option value="SAR" {% if dc == 'SAR' %}selected{% endif %}>ريال سعودي (SAR)</option>
-                  <option value="KWD" {% if dc == 'KWD' %}selected{% endif %}>دينار كويتي (KWD)</option>
-                  <option value="QAR" {% if dc == 'QAR' %}selected{% endif %}>ريال قطري (QAR)</option>
-                  <option value="OMR" {% if dc == 'OMR' %}selected{% endif %}>ريال عماني (OMR)</option>
-                  <option value="BHD" {% if dc == 'BHD' %}selected{% endif %}>دينار بحريني (BHD)</option>
-                </select>
+                {% from 'macros/currency_options.html' import currency_select %}
+                {{ currency_select(name='currency', id='currency', default_code=dc) }}
                 <small class="form-text text-info">
                   <i class="fas fa-lightbulb"></i> الأسعار بال{{ tenant_currency_name_ar or 'درهم إماراتي' }} - العملة فقط لتحويل المدفوع
                 </small>
