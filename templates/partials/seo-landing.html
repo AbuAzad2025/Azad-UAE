@@ -1,0 +1,193 @@
+    <script type="application/ld+json">
+
+    {
+
+      "@context": "https://schema.org",
+
+      "@type": "SoftwareApplication",
+
+      "name": "{{ 'Azad warehouse management system' if current_language == 'en' else 'نظام أزاد لإدارة المستودعات' }}",
+
+      "applicationCategory": "BusinessApplication",
+
+      "operatingSystem": "Web, Cloud",
+
+      "offers": {
+
+        "@type": "AggregateOffer",
+
+        "priceCurrency": "{{ tenant_default_currency or 'AED' }}",
+
+        "availability": "https://schema.org/InStock"
+
+      },
+
+      "aggregateRating": {
+
+        "@type": "AggregateRating",
+
+        "ratingValue": "4.9",
+
+        "reviewCount": "150",
+
+        "bestRating": "5"
+
+      },
+
+      "provider": {
+
+        "@type": "Organization",
+
+        "name": "{{ 'Azad Smart Systems' if current_language == 'en' else 'شركة أزاد للأنظمة الذكية' }}",
+
+        "url": "{{ request.url_root }}"
+
+      }
+
+    }
+
+    </script>
+
+    <script type="application/ld+json">
+
+    {
+
+      "@context": "https://schema.org",
+
+      "@type": "FAQPage",
+
+      "mainEntity": [
+
+        {
+
+          "@type": "Question",
+
+          "name": "{{ 'What is Azad warehouse & sales system?' if current_language == 'en' else 'ما هو نظام إدارة المستودعات من شركة أزاد؟' }}",
+
+          "acceptedAnswer": {
+
+            "@type": "Answer",
+
+            "text": "{{ 'Azad is an all-in-one accounting and inventory system built for businesses in the UAE. It covers sales, purchases, inventory, e-invoices, statements, cheques/receipts, and financial reporting with AI-powered insights.' if current_language == 'en' else 'نظام أزاد هو برنامج محاسبة ومستودعات متكامل مصمم خصيصاً للشركات في الإمارات ودبي وأبوظبي. يوفر النظام إدارة شاملة للمبيعات، المشتريات، المخزون، الفواتير الإلكترونية، كشوفات الحسابات، إدارة الشيكات، والتقارير المالية مع ذكاء اصطناعي متقدم.' }}"
+
+          }
+
+        },
+
+        {
+
+          "@type": "Question",
+
+          "name": "{{ 'Is it suitable for auto parts stores?' if current_language == 'en' else 'هل البرنامج مناسب لمحلات قطع غيار السيارات؟' }}",
+
+          "acceptedAnswer": {
+
+            "@type": "Answer",
+
+            "text": "{{ 'Yes. It supports multi-price levels, accurate stock tracking, professional invoices, and auto-parts workflows.' if current_language == 'en' else 'نعم بالتأكيد! النظام مصمم خصيصاً لمحلات قطع غيار السيارات في الإمارات. يتضمن ميزات متخصصة مثل: معرفة توافق القطع مع موديلات السيارات، إدارة 3 مستويات أسعار، تتبع المخزون بدقة، فواتير احترافية، وتحليل المبيعات.' }}"
+
+          }
+
+        },
+
+        {
+
+          "@type": "Question",
+
+          "name": "{{ 'How much does it cost?' if current_language == 'en' else 'كم يكلف برنامج إدارة المستودعات؟' }}",
+
+          "acceptedAnswer": {
+
+            "@type": "Answer",
+
+            "text": "{{ 'We offer multiple flexible plans based on your needs.' if current_language == 'en' else 'نوفر باقات مرنة تناسب أحجام الأعمال المختلفة. تختلف الأسعار حسب عدد المستخدمين والميزات المطلوبة، مع دعم فني وتحديثات مستمرة.' }}"
+
+          }
+
+        },
+
+        {
+
+          "@type": "Question",
+
+          "name": "{{ 'Does it support e-invoices in the UAE?' if current_language == 'en' else 'هل يدعم النظام الفواتير الإلكترونية المعتمدة في الإمارات؟' }}",
+
+          "acceptedAnswer": {
+
+            "@type": "Answer",
+
+            "text": "{{ 'Yes. Create professional invoices with templates, print sizes (A4/A5/Thermal), QR code, and PDF export.' if current_language == 'en' else 'نعم! النظام يدعم الفواتير الإلكترونية بالكامل. يمكنك إنشاء فواتير احترافية بتصاميم متعددة، طباعة بأحجام مختلفة، إضافة شعارك وبياناتك، QR Code، وتصدير PDF. متوافق 100% مع قوانين الإمارات.' }}"
+
+          }
+
+        },
+
+        {
+
+          "@type": "Question",
+
+          "name": "{{ 'What AI features are included?' if current_language == 'en' else 'ما هي مميزات الذكاء الاصطناعي في البرنامج؟' }}",
+
+          "acceptedAnswer": {
+
+            "@type": "Answer",
+
+            "text": "{{ 'AI-driven insights including pricing recommendations, forecasting, customer behavior analysis, and smart assistance.' if current_language == 'en' else 'الذكاء الاصطناعي يوفر: توصيات أسعار ذكية، تحليل سلوك العملاء، تنبؤ بالمبيعات، تحليل أداء المنتجات، كشف الأنماط المخفية، توصيات لزيادة الأرباح، ومساعد محادثة ذكي يتعلم من بياناتك.' }}"
+
+          }
+
+        },
+
+        {
+
+          "@type": "Question",
+
+          "name": "{{ 'Can I use it for multiple branches?' if current_language == 'en' else 'هل يمكن استخدام البرنامج في أكثر من فرع؟' }}",
+
+          "acceptedAnswer": {
+
+            "@type": "Answer",
+
+            "text": "{{ 'Yes. Multi-warehouse and multi-branch support with centralized management and branch-level reporting.' if current_language == 'en' else 'نعم! النظام يدعم إدارة متعددة المستودعات والفروع. يمكنك متابعة المخزون في كل فرع، نقل البضائع بين المستودعات، تقارير منفصلة لكل فرع. مثالي للشركات التي لديها عدة فروع في دبي، أبوظبي، الشارقة.' }}"
+
+          }
+
+        },
+
+        {
+
+          "@type": "Question",
+
+          "name": "{{ 'How do I get started?' if current_language == 'en' else 'كيف أبدأ باستخدام نظام أزاد للمستودعات؟' }}",
+
+          "acceptedAnswer": {
+
+            "@type": "Answer",
+
+            "text": "{{ 'It is easy: (1) Contact us, (2) choose your plan, (3) start immediately. We provide training, data import, and support.' if current_language == 'en' else 'البداية سهلة جداً! 3 خطوات فقط: (1) احجز عرضاً توضيحياً مجانياً، (2) اختر الباقة المناسبة، (3) ابدأ فوراً! نوفر تدريب مجاني لفريقك، استيراد بياناتك القديمة، دعم فني 24/7، ومتابعة مستمرة.' }}"
+
+          }
+
+        },
+
+        {
+
+          "@type": "Question",
+
+          "name": "{{ 'Is my data secure?' if current_language == 'en' else 'هل النظام آمن ويحمي بياناتي؟' }}",
+
+          "acceptedAnswer": {
+
+            "@type": "Answer",
+
+            "text": "{{ 'Security-first: SSL, automatic backups, strict permissions, audit logs, and secure storage options.' if current_language == 'en' else 'الأمان أولويتنا! نستخدم: تشفير SSL كامل، نسخ احتياطي تلقائي يومي، حماية من الاختراق، صلاحيات متقدمة، سجل تدقيق شامل، وخزنة آمنة للبطاقات. بياناتك محمية بأعلى معايير الأمان العالمية ومتوافق 100% مع قوانين حماية البيانات في الإمارات.' }}"
+
+          }
+
+        }
+
+      ]
+
+    }
+
+    </script>
