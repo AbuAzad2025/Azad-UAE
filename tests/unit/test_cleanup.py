@@ -44,13 +44,12 @@ class TestCleanup:
 
     # ── M10 ─────────────────────────────────────────────────────────────────
 
-    def test_font_display_swap(self):
-        """Google Fonts URL includes display=swap for better LCP/performance."""
+    def test_font_local_not_google(self):
+        """Local Tajawal font is used instead of Google Fonts CDN for privacy/offline support."""
         head = _read("templates/partials/head.html")
-        match = re.search(r'fonts\.googleapis\.com/css2\?family=Tajawal[^"\']*', head)
-        assert match, "Tajawal Google Fonts link not found in head.html"
-        assert "display=swap" in match.group(), \
-            f"Google Fonts URL missing &display=swap: {match.group()}"
+        assert "fonts/tajawal/tajawal.css" in head, "Local Tajawal font not found in head.html"
+        assert "fonts.googleapis.com/css2?family=Tajawal" not in head, \
+            "Google Fonts CDN link should not be present when local font is used"
 
     # ── M11 ─────────────────────────────────────────────────────────────────
 

@@ -24,3 +24,12 @@ def test_model_imports():
     from services.cheque_service import validate_cheque
     assert Cheque is not None
     assert validate_cheque is not None
+
+
+def test_process_cheque_cancel_accepts_create_gl_param():
+    from services.cheque_service import process_cheque_cancel
+    import inspect
+    sig = inspect.signature(process_cheque_cancel)
+    assert 'create_gl' in sig.parameters
+    assert sig.parameters['create_gl'].default is True
+    assert sig.parameters['create_gl'].kind == inspect.Parameter.KEYWORD_ONLY

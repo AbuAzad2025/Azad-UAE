@@ -2,6 +2,16 @@ import pytest
 from utils.report_registry import REPORT_REGISTRY, REPORT_CATEGORIES, get_visible_reports, get_reports_by_category
 
 
+def test_get_confirmed_sale_paid_aed_importable():
+    from routes.reports import get_confirmed_sale_paid_aed
+    assert callable(get_confirmed_sale_paid_aed)
+
+
+def test_get_confirmed_supplier_paid_aed_importable():
+    from routes.reports import get_confirmed_supplier_paid_aed
+    assert callable(get_confirmed_supplier_paid_aed)
+
+
 def _make_permissioned_user(db_session, tenant, permissions=None):
     import uuid
     from models import User, Role, Permission

@@ -16,7 +16,7 @@ def test_tajawal_css_declares_fontface():
 
 
 def test_base_html_uses_local_font():
-    with open('templates/base.html', 'r', encoding='utf-8') as f:
+    with open('templates/partials/head.html', 'r', encoding='utf-8') as f:
         html = f.read()
     assert "fonts/tajawal/tajawal.css" in html
     assert 'fonts.googleapis.com/css2?family=Tajawal' not in html

@@ -6,6 +6,12 @@ import pytest
 from decimal import Decimal
 
 
+def test_password_validator_import():
+    from utils.password_validator import PasswordValidator, validate_password_with_helpful_message
+    assert PasswordValidator is not None
+    assert validate_password_with_helpful_message is not None
+
+
 class TestValidators:
     """Test input validation utilities."""
 

@@ -1037,6 +1037,7 @@ def checkout(slug):
                     )
                     return redirect(payment['payment_url'])
                 except ValueError as pe:
+                    sale.payment_status = 'init_failed'
                     sale.notes = (sale.notes or '') + f'\n[فشل init الدفع الإلكتروني: {str(pe)}]'
                     try:
                         db.session.commit()

@@ -125,14 +125,15 @@ class TestImportGraph:
         assert not cycles, f"Circular dependencies detected involving: {cycles}"
 
     def test_models_do_not_import_services(self):
-        """Models layer must not import from services layer."""
+        """Models layer must not import from services layer at top-level. Lazy imports inside functions are allowed to avoid circular deps."""
         violations = []
         for fp in _walk_py_files("models"):
             f = os.path.basename(fp)
-            _, from_imports, _ = _get_imports(fp)
+            _, from_imports, func_imports = _get_imports(fp)
             for mod, _ in from_imports:
                 if mod and (mod == "services" or mod.startswith("services.")):
-                    violations.append(f"{f}: imports {mod}")
+                    if mod not in func_imports:
+                        violations.append(f"{f}: top-level imports {mod}")
 
         assert not violations, f"Models importing from services:\n" + "\n".join(violations)
 

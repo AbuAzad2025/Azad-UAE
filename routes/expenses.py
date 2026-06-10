@@ -511,19 +511,20 @@ def cancel(id):
         from services.gl_helpers import assert_period_open
         assert_period_open(expense.expense_date, expense.tenant_id)
 
-        # عكس القيد المحاسبي
-        reverse_document_gl(
-            GLRef.EXPENSE, expense.id,
-            f'Cancel Expense {expense.expense_number}',
-            tenant_id=getattr(expense, 'tenant_id', None),
-        )
-        expense.is_reversed = True
-
-        # إلغاء الشيك المرتبط إن وجد
         cheque = Cheque.query.filter_by(expense_id=expense.id, tenant_id=expense.tenant_id).first()
+
+        # عكس القيد المحاسبي — إذا كان هناك شيك مرتبط، فـ process_cheque_cancel يتولى القيد
         if cheque and cheque.status not in ('cancelled',):
             from services.cheque_service import process_cheque_cancel
-            process_cheque_cancel(cheque, reason=f'إلغاء المصروف {expense.expense_number}')
+            process_cheque_cancel(cheque, reason=f'إلغاء المصروف {expense.expense_number}', create_gl=True)
+        else:
+            reverse_document_gl(
+                GLRef.EXPENSE, expense.id,
+                f'Cancel Expense {expense.expense_number}',
+                tenant_id=getattr(expense, 'tenant_id', None),
+            )
+
+        expense.is_reversed = True
 
         db.session.commit()
         LoggingCore.log_audit('cancel', 'expenses', id)

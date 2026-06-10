@@ -70,19 +70,44 @@ def upgrade():
         sa.text("UPDATE salary_advances SET remaining_amount = total_amount - deducted_amount WHERE remaining_amount IS NULL OR remaining_amount = 0")
     )
 
-    # --- SalaryAdvance: make tenant_id NOT NULL after backfill ---
+    # --- SalaryAdvance: backfill tenant_id from employee before NOT NULL ---
     if _has_column('salary_advances', 'tenant_id'):
+        bind.execute(
+            sa.text(
+                "UPDATE salary_advances SET tenant_id = ("
+                "  SELECT employees.tenant_id FROM employees"
+                "  WHERE employees.id = salary_advances.employee_id"
+                ") WHERE tenant_id IS NULL"
+            )
+        )
         op.alter_column('salary_advances', 'tenant_id', nullable=False)
 
-    # --- PayrollTransaction: add unique constraint if not exists ---
-    try:
-        op.create_unique_constraint(
-            'uq_payroll_tenant_employee_period',
-            'payroll_transactions',
-            ['tenant_id', 'employee_id', 'month', 'year']
+    # --- PayrollTransaction: detect duplicates before unique constraint ---
+    conn = op.get_context().bind
+    duplicates = conn.execute(
+        sa.text(
+            "SELECT tenant_id, employee_id, month, year, COUNT(*) AS cnt"
+            " FROM payroll_transactions"
+            " WHERE tenant_id IS NOT NULL AND employee_id IS NOT NULL"
+            " GROUP BY tenant_id, employee_id, month, year"
+            " HAVING COUNT(*) > 1"
         )
-    except Exception:
-        pass  # constraint may already exist
+    ).fetchall()
+    if duplicates:
+        raise RuntimeError(
+            "Found duplicate payroll_transactions records that must be resolved "
+            "before adding unique constraint:\n" +
+            "\n".join(
+                f"  tenant_id={r[0]}, employee_id={r[1]}, month={r[2]}, year={r[3]} ({r[4]} records)"
+                for r in duplicates
+            )
+        )
+
+    op.create_unique_constraint(
+        'uq_payroll_tenant_employee_period',
+        'payroll_transactions',
+        ['tenant_id', 'employee_id', 'month', 'year']
+    )
 
 
 def downgrade():
