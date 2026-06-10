@@ -1,0 +1,637 @@
+<aside class="main-sidebar sidebar-dark-primary elevation-4">
+    <a href="{{ url_for('main.dashboard') }}" class="brand-link text-center erp-sidebar-brand-link">
+      <span class="brand-text font-weight-light">
+        <i class="fas fa-cube mr-1"></i>{{ tenant_name_ar or company_name_ar or 'أزاد' }}
+      </span>
+    </a>
+
+    <div class="sidebar erp-scrollbar">
+      <div class="user-panel mt-3 pb-3 mb-3 d-flex">
+        <div class="image">
+          <i class="fas fa-user-circle fa-2x text-white"></i>
+        </div>
+        <div class="info">
+          <a href="#" class="d-block text-white">{{ current_user.username }}</a>
+          <small class="text-white-50">{{ current_user.role.name_ar if (current_user.is_authenticated and current_user.role) else 'مستخدم' }}</small>
+          {% if is_global_scope_user %}
+          <div class="mt-1">
+            {% if active_branch %}
+            <small class="text-info">
+              <i class="fas fa-code-branch mr-1"></i>
+              {{ active_branch.name }}{% if active_branch.code %} ({{ active_branch.code }}){% endif %}
+            </small>
+            {% else %}
+            <small class="text-success">
+              <i class="fas fa-sitemap mr-1"></i>
+              كل الفروع
+            </small>
+            {% endif %}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <nav class="mt-2">
+        <ul class="nav nav-pills nav-sidebar flex-column erp-sidebar-nav" data-widget="treeview">
+          <li class="nav-item">
+            <a href="{{ url_for('main.dashboard') }}" class="nav-link {% if request.endpoint == 'main.dashboard' %}active{% endif %}">
+              <i class="nav-icon fas fa-tachometer-alt"></i>
+              <p>{{ t('Dashboard') }}</p>
+            </a>
+          </li>
+          {% if current_user.is_authenticated and (current_user.has_permission('manage_sales') or current_user.has_permission('manage_customers')) %}
+          <li class="erp-sidebar-section-label">المبيعات والزبائن</li>
+          {% endif %}
+          {% if current_user.is_authenticated and current_user.has_permission('manage_sales') %}
+          <li class="nav-item has-treeview {% if request.endpoint and ('sales' in request.endpoint or 'pos' in request.endpoint) %}menu-open{% endif %}">
+            <a href="#" class="nav-link {% if request.endpoint and ('sales' in request.endpoint or 'pos' in request.endpoint) %}active{% endif %}">
+              <i class="nav-icon fas fa-file-invoice"></i>
+              <p>
+                المبيعات
+                <i class="right fas fa-angle-left"></i>
+              </p>
+            </a>
+            <ul class="nav nav-treeview">
+              {% if tenant_enable_pos %}
+              <li class="nav-item">
+                <a href="{{ url_for('pos.index') }}" class="nav-link">
+                  <i class="fas fa-cash-register nav-icon text-info"></i>
+                  <p>POS (الكاشير)</p>
+                </a>
+              </li>
+              {% endif %}
+              <li class="nav-item">
+                {% if current_user.has_permission('manage_sales') %}
+                <a href="{{ url_for('sales.create') }}" class="nav-link">
+                {% endif %}
+                  <i class="fas fa-plus-circle nav-icon text-success"></i>
+                  <p>فاتورة جديدة</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                {% if current_user.has_permission('manage_sales') %}
+                <a href="{{ url_for('sales.index') }}" class="nav-link">
+                {% endif %}
+                  <i class="fas fa-list nav-icon"></i>
+                  <p>قائمة الفواتير</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                {% if current_user.has_permission('manage_sales') %}
+                <a href="{{ url_for('returns.index') }}" class="nav-link">
+                {% endif %}
+                  <i class="fas fa-undo-alt nav-icon text-warning"></i>
+                  <p>المرتجعات</p>
+                </a>
+              </li>
+            </ul>
+          </li>
+          {% endif %}
+          
+          {% if current_user.is_authenticated and current_user.has_permission('manage_customers') %}
+          <li class="nav-item has-treeview {% if request.endpoint and 'customers' in request.endpoint %}menu-open{% endif %}">
+            <a href="#" class="nav-link {% if request.endpoint and 'customers' in request.endpoint %}active{% endif %}">
+              <i class="nav-icon fas fa-users"></i>
+              <p>
+                الزبائن
+                <i class="right fas fa-angle-left"></i>
+              </p>
+            </a>
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <a href="{{ url_for('customers.create') }}" class="nav-link">
+                  <i class="fas fa-user-plus nav-icon text-success"></i>
+                  <p>زبون جديد</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{{ url_for('customers.index') }}" class="nav-link">
+                  <i class="fas fa-list nav-icon"></i>
+                  <p>قائمة الزبائن</p>
+                </a>
+              </li>
+            </ul>
+          </li>
+          {% endif %}
+          {% if current_user.is_authenticated and (current_user.has_permission('manage_products') or current_user.has_permission('manage_purchases') or current_user.has_permission('manage_suppliers') or current_user.has_permission('manage_warehouse')) %}
+          <li class="erp-sidebar-section-label">المخزون والتوريد</li>
+          {% endif %}
+          {% if current_user.is_authenticated and current_user.has_permission('manage_products') %}
+          <li class="nav-item has-treeview {% if request.endpoint and 'products' in request.endpoint %}menu-open{% endif %}">
+            <a href="#" class="nav-link {% if request.endpoint and 'products' in request.endpoint %}active{% endif %}">
+              <i class="nav-icon fas fa-box"></i>
+              <p>
+                المنتجات
+                <i class="right fas fa-angle-left"></i>
+              </p>
+            </a>
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <a href="{{ url_for('products.create') }}" class="nav-link">
+                  <i class="fas fa-plus-circle nav-icon text-success"></i>
+                  <p>{{ t('New Product') }}</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{{ url_for('products.index') }}" class="nav-link">
+                  <i class="fas fa-list nav-icon"></i>
+                  <p>قائمة المنتجات</p>
+                </a>
+              </li>
+            </ul>
+          </li>
+          {% endif %}
+          
+          {% if current_user.is_authenticated and current_user.has_permission('manage_purchases') %}
+          <li class="nav-item has-treeview {% if request.endpoint and 'purchases' in request.endpoint %}menu-open{% endif %}">
+            <a href="#" class="nav-link {% if request.endpoint and 'purchases' in request.endpoint %}active{% endif %}">
+              <i class="nav-icon fas fa-shopping-cart"></i>
+              <p>
+                المشتريات
+                <i class="right fas fa-angle-left"></i>
+              </p>
+            </a>
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <a href="{{ url_for('purchases.create') }}" class="nav-link">
+                  <i class="fas fa-plus-circle nav-icon text-success"></i>
+                  <p>مشترى جديد</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{{ url_for('purchases.index') }}" class="nav-link">
+                  <i class="fas fa-list nav-icon"></i>
+                  <p>قائمة المشتريات</p>
+                </a>
+              </li>
+            </ul>
+          </li>
+          {% endif %}
+          
+          {% if current_user.is_authenticated and current_user.has_permission('manage_suppliers') %}
+          <li class="nav-item has-treeview {% if request.endpoint and 'suppliers' in request.endpoint %}menu-open{% endif %}">
+            <a href="#" class="nav-link {% if request.endpoint and 'suppliers' in request.endpoint %}active{% endif %}">
+              <i class="nav-icon fas fa-truck"></i>
+              <p>
+                الموردين
+                <i class="right fas fa-angle-left"></i>
+              </p>
+            </a>
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <a href="{{ url_for('suppliers.create') }}" class="nav-link">
+                  <i class="fas fa-plus-circle nav-icon text-success"></i>
+                  <p>مورد جديد</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{{ url_for('suppliers.index') }}" class="nav-link">
+                  <i class="fas fa-list nav-icon"></i>
+                  <p>قائمة الموردين</p>
+                </a>
+              </li>
+            </ul>
+          </li>
+          {% endif %}
+          {% if current_user.is_authenticated and (current_user.has_permission('manage_payments') or current_user.has_permission('manage_expenses') or current_user.has_permission('manage_payroll') or current_user.has_permission('view_ledger')) %}
+          <li class="erp-sidebar-section-label">المالية والمحاسبة</li>
+          {% endif %}
+          {% if current_user.is_authenticated and current_user.has_permission('manage_users') %}
+          <li class="nav-item has-treeview {% if request.endpoint and 'users' in request.endpoint %}menu-open{% endif %}">
+            <a href="#" class="nav-link {% if request.endpoint and 'users' in request.endpoint %}active{% endif %}">
+              <i class="nav-icon fas fa-users-cog"></i>
+              <p>
+                المستخدمين
+                <i class="right fas fa-angle-left"></i>
+              </p>
+            </a>
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <a href="{{ url_for('users.create') }}" class="nav-link">
+                  <i class="fas fa-user-plus nav-icon text-success"></i>
+                  <p>مستخدم جديد</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{{ url_for('users.index') }}" class="nav-link">
+                  <i class="fas fa-users nav-icon"></i>
+                  <p>قائمة المستخدمين</p>
+                </a>
+              </li>
+            </ul>
+          </li>
+          {% endif %}
+          
+          {% if current_user.is_authenticated and current_user.has_permission('manage_payments') %}
+          <li class="nav-item has-treeview {% if request.endpoint and 'payments' in request.endpoint %}menu-open{% endif %}">
+            <a href="#" class="nav-link {% if request.endpoint and 'payments' in request.endpoint %}active{% endif %}">
+              <i class="nav-icon fas fa-money-bill-wave"></i>
+              <p>
+                المدفوعات
+                <i class="right fas fa-angle-left"></i>
+              </p>
+            </a>
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <a href="{{ url_for('payments.create_voucher') }}" class="nav-link">
+                  <i class="fas fa-plus-circle nav-icon text-success"></i>
+                  <p>سند قبض جديد</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{{ url_for('payments.receipts') }}" class="nav-link">
+                  <i class="fas fa-list nav-icon"></i>
+                  <p>قائمة السندات</p>
+                </a>
+              </li>
+            </ul>
+          </li>
+          {% endif %}
+          
+          {% if current_user.is_authenticated and current_user.has_permission('manage_payments') %}
+          <li class="nav-item has-treeview {% if request.endpoint and 'cheques' in request.endpoint %}menu-open{% endif %}">
+            <a href="#" class="nav-link {% if request.endpoint and 'cheques' in request.endpoint %}active{% endif %}">
+              <i class="nav-icon fas fa-money-check-alt"></i>
+              <p>
+                إدارة الشيكات
+                <i class="right fas fa-angle-left"></i>
+              </p>
+            </a>
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <a href="{{ url_for('cheques.index') }}" class="nav-link">
+                  <i class="fas fa-list nav-icon text-info"></i>
+                  <p>الشيكات</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{{ url_for('cheques.alerts') }}" class="nav-link">
+                  <i class="fas fa-bell nav-icon text-warning"></i>
+                  <p>تنبيهات الشيكات</p>
+                </a>
+              </li>
+            </ul>
+          </li>
+          {% endif %}
+          
+          {% if current_user.is_authenticated and current_user.has_permission('manage_expenses') %}
+          <li class="nav-item has-treeview {% if request.endpoint and 'expenses' in request.endpoint %}menu-open{% endif %}">
+            <a href="#" class="nav-link {% if request.endpoint and 'expenses' in request.endpoint %}active{% endif %}">
+              <i class="nav-icon fas fa-receipt"></i>
+              <p>
+                المصروفات
+                <i class="right fas fa-angle-left"></i>
+              </p>
+            </a>
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <a href="{{ url_for('expenses.create') }}" class="nav-link">
+                  <i class="fas fa-plus-circle nav-icon text-success"></i>
+                  <p>مصروف جديد</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{{ url_for('expenses.index') }}" class="nav-link">
+                  <i class="fas fa-list nav-icon"></i>
+                  <p>قائمة المصروفات</p>
+                </a>
+              </li>
+            </ul>
+          </li>
+          {% endif %}
+
+          {% if current_user.is_authenticated and current_user.has_permission('manage_payroll') %}
+          <li class="nav-item has-treeview {% if request.endpoint and 'payroll' in request.endpoint %}menu-open{% endif %}">
+            <a href="#" class="nav-link {% if request.endpoint and 'payroll' in request.endpoint %}active{% endif %}">
+              <i class="nav-icon fas fa-users-cog"></i>
+              <p>
+                الرواتب وشؤون الموظفين
+                <i class="right fas fa-angle-left"></i>
+              </p>
+            </a>
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <a href="{{ url_for('payroll.employees_list') }}" class="nav-link">
+                  <i class="fas fa-users nav-icon text-info"></i>
+                  <p>الموظفين</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{{ url_for('payroll.advances') }}" class="nav-link">
+                  <i class="fas fa-hand-holding-usd nav-icon text-warning"></i>
+                  <p>السلف</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{{ url_for('payroll.process_payroll') }}" class="nav-link">
+                  <i class="fas fa-money-check-alt nav-icon text-success"></i>
+                  <p>صرف الرواتب</p>
+                </a>
+              </li>
+            </ul>
+          </li>
+          {% endif %}
+          
+          {% if current_user.is_authenticated and current_user.has_permission('view_ledger') %}
+          <li class="nav-item has-treeview {% if request.endpoint and 'ledger' in request.endpoint %}menu-open{% endif %}">
+            <a href="#" class="nav-link {% if request.endpoint and 'ledger' in request.endpoint %}active{% endif %}">
+              <i class="nav-icon fas fa-book"></i>
+              <p>
+                دفتر الأستاذ
+                <i class="right fas fa-angle-left"></i>
+              </p>
+            </a>
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <a href="{{ url_for('ledger.index') }}" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>الحسابات</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{{ url_for('ledger.trial_balance') }}" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>ميزان المراجعة</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{{ url_for('ledger.income_statement') }}" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>قائمة الدخل</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{{ url_for('ledger.balance_sheet') }}" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>الميزانية</p>
+                </a>
+              </li>
+              {% if current_user.is_admin() %}
+              <li class="nav-item">
+                <a href="{{ url_for('ledger.admin_dashboard') }}" class="nav-link">
+                  <i class="fas fa-cogs nav-icon"></i>
+                  <p>لوحة التحكم الإدارية</p>
+                </a>
+              </li>
+              {% endif %}
+            </ul>
+          </li>
+          {% endif %}
+          {% if current_user.is_authenticated and current_user.has_permission('view_reports') %}
+          <li class="erp-sidebar-section-label">التقارير والشركاء</li>
+          {% endif %}
+          {% if current_user.is_authenticated and current_user.has_permission('view_reports') %}
+          <li class="nav-item">
+            <a href="{{ url_for('partners.index') }}" class="nav-link {% if request.endpoint and 'partners' in request.endpoint %}active{% endif %}">
+              <i class="nav-icon fas fa-handshake"></i>
+              <p>الشركاء</p>
+            </a>
+          </li>
+          {% endif %}
+
+          {% if current_user.is_authenticated and current_user.has_permission('view_reports') %}
+          <li class="nav-item has-treeview {% if request.endpoint and 'reports' in request.endpoint %}menu-open{% endif %}">
+            <a href="#" class="nav-link {% if request.endpoint and 'reports' in request.endpoint %}active{% endif %}">
+              <i class="nav-icon fas fa-chart-bar"></i>
+              <p>
+                التقارير
+                <i class="right fas fa-angle-left"></i>
+              </p>
+            </a>
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <a href="{{ url_for('reports.sales') }}" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>تقرير المبيعات</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{{ url_for('reports.purchases') }}" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>تقرير المشتريات</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{{ url_for('reports.inventory') }}" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>تقرير المخزون</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{{ url_for('reports.receivables') }}" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>الذمم المدينة</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{{ url_for('reports.partners') }}" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>تقرير الشركاء والتجار</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{{ url_for('reports.inventory_reconciliation') }}" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>تسوية المخزون</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{{ url_for('reports.ar_reconciliation') }}" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>مطابقة الذمم</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{{ url_for('reports.top_selling') }}" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>الأكثر مبيعاً</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{{ url_for('treasury.treasury') }}" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>مركز الخزينة</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{{ url_for('treasury.vat_return') }}" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>إقرار ضريبة القيمة المضافة</p>
+                </a>
+              </li>
+            </ul>
+          </li>
+          {% endif %}
+          {% if current_user.is_authenticated and (current_user.has_permission('manage_backups') or current_user.has_permission('manage_store')) %}
+          <li class="erp-sidebar-section-label">الإدارة والأدوات</li>
+          {% endif %}
+          {% if current_user.is_authenticated and current_user.has_permission('manage_backups') %}
+          <li class="nav-item {% if request.endpoint and request.endpoint in ['owner.list_backups', 'owner.scheduled_backups'] %}menu-open{% endif %}">
+            <a href="{{ url_for('owner.list_backups') }}" class="nav-link {% if request.endpoint and request.endpoint in ['owner.list_backups', 'owner.scheduled_backups'] %}active{% endif %}">
+              <i class="nav-icon fas fa-database"></i>
+              <p>النسخ الاحتياطية</p>
+            </a>
+          </li>
+          {% endif %}
+
+          {% if current_user.is_authenticated and current_user.has_permission('manage_store') %}
+          <li class="nav-item has-treeview {% if request.endpoint and 'store' in request.endpoint %}menu-open{% endif %}">
+            <a href="#" class="nav-link {% if request.endpoint and 'store' in request.endpoint %}active{% endif %}">
+              <i class="nav-icon fas fa-store"></i>
+              <p>
+                المتجر الإلكتروني
+                <i class="right fas fa-angle-left"></i>
+              </p>
+            </a>
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <a href="{{ url_for('store.admin_index') }}" class="nav-link">
+                  <i class="fas fa-tachometer-alt nav-icon text-info"></i>
+                  <p>لوحة المتجر</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{{ url_for('store.admin_catalog') }}" class="nav-link">
+                  <i class="fas fa-boxes nav-icon text-success"></i>
+                  <p>منتجات المتجر</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{{ url_for('store.admin_transfer') }}" class="nav-link">
+                  <i class="fas fa-exchange-alt nav-icon text-warning"></i>
+                  <p>تحويل مخزون</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{{ url_for('store.admin_settings') }}" class="nav-link">
+                  <i class="fas fa-cog nav-icon"></i>
+                  <p>إعدادات المتجر</p>
+                </a>
+              </li>
+            </ul>
+          </li>
+          {% endif %}
+
+          {% if current_user.is_authenticated and current_user.has_permission('manage_warehouse') %}
+          <li class="nav-item has-treeview {% if request.endpoint and 'warehouse' in request.endpoint %}menu-open{% endif %}">
+            <a href="#" class="nav-link {% if request.endpoint and 'warehouse' in request.endpoint %}active{% endif %}">
+              <i class="nav-icon fas fa-warehouse"></i>
+              <p>
+                المستودعات والمخزون
+                <i class="right fas fa-angle-left"></i>
+              </p>
+            </a>
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <a href="{{ url_for('warehouse.index') }}" class="nav-link">
+                  <i class="fas fa-boxes nav-icon text-info"></i>
+                  <p>إدارة المخزون</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{{ url_for('warehouse.list_warehouses') }}" class="nav-link">
+                  <i class="fas fa-building nav-icon text-primary"></i>
+                  <p>المستودعات</p>
+                </a>
+              </li>
+              {% if current_user.is_admin() %}
+              <li class="nav-item">
+                <a href="{{ url_for('warehouse.create_warehouse') }}" class="nav-link">
+                  <i class="fas fa-plus-circle nav-icon text-success"></i>
+                  <p>إضافة مستودع</p>
+                </a>
+              </li>
+              {% endif %}
+              <li class="nav-item">
+                <a href="{{ url_for('warehouse.movements') }}" class="nav-link">
+                  <i class="fas fa-exchange-alt nav-icon text-secondary"></i>
+                  <p>حركات المخزون</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{{ url_for('warehouse.low_stock') }}" class="nav-link">
+                  <i class="fas fa-exclamation-triangle nav-icon text-warning"></i>
+                  <p>مخزون منخفض</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{{ url_for('warehouse.out_of_stock') }}" class="nav-link">
+                  <i class="fas fa-ban nav-icon text-danger"></i>
+                  <p>نفذ من المخزون</p>
+                </a>
+              </li>
+            </ul>
+          </li>
+          {% endif %}
+          {% if current_user.is_authenticated and (current_user.is_owner or (current_user.role and current_user.role.slug in ['developer','super_admin','manager'])) %}
+          <li class="erp-sidebar-section-label">إدارة الشركة</li>
+          {% endif %}
+          {% if current_user.is_authenticated and (current_user.is_owner or (current_user.role and current_user.role.slug == 'developer')) %}
+          <li class="nav-item">
+            <a href="{{ url_for('owner.dashboard') }}" class="nav-link {% if request.endpoint == 'owner.dashboard' %}active{% endif %}">
+              <i class="nav-icon fas fa-crown text-warning"></i>
+              <p>لوحة المالك</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="{{ url_for('owner.system_config') }}" class="nav-link {% if request.endpoint == 'owner.system_config' %}active{% endif %}">
+              <i class="nav-icon fas fa-cogs text-info"></i>
+              <p>إعدادات النظام</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="{{ url_for('owner.users_list') }}" class="nav-link">
+              <i class="nav-icon fas fa-users-cog"></i>
+              <p>مستخدمي المنصة</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="{{ url_for('owner.list_backups') }}" class="nav-link">
+              <i class="nav-icon fas fa-database"></i>
+              <p>نسخ النظام</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="{{ url_for('owner.system_health') }}" class="nav-link">
+              <i class="nav-icon fas fa-heartbeat"></i>
+              <p>صحة النظام</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="{{ url_for('ai.config') }}" class="nav-link">
+              <i class="nav-icon fas fa-key text-info"></i>
+              <p>مفاتيح AI (Groq)</p>
+            </a>
+          </li>
+          {% elif current_user.is_authenticated and current_user.role and current_user.role.slug in ['super_admin', 'manager'] %}
+          <li class="nav-item">
+            <a href="{{ url_for('owner.company_dashboard') }}" class="nav-link {% if request.endpoint == 'owner.company_dashboard' %}active{% endif %}">
+              <i class="nav-icon fas fa-building text-info"></i>
+              <p>لوحة الشركة</p>
+            </a>
+          </li>
+          {% if current_user.has_permission('manage_backups') %}
+          <li class="nav-item">
+            <a href="{{ url_for('owner.list_backups') }}" class="nav-link">
+              <i class="nav-icon fas fa-database"></i>
+              <p>نسخ الشركة</p>
+            </a>
+          </li>
+          {% endif %}
+          <li class="nav-item">
+            <a href="{{ url_for('owner.company_info') }}" class="nav-link">
+              <i class="nav-icon fas fa-id-card"></i>
+              <p>بيانات الشركة</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="{{ url_for('owner.invoice_settings') }}" class="nav-link">
+              <i class="nav-icon fas fa-file-invoice"></i>
+              <p>ترويسات الفواتير</p>
+            </a>
+          </li>
+          {% endif %}
+        </ul>
+      </nav>
+    </div>
+  </aside>

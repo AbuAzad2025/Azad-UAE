@@ -1,0 +1,56 @@
+<footer class="main-footer erp-footer">
+    <div class="erp-footer-inner">
+      <div class="container-fluid">
+        {% set _developer_title = (developer_name_ar or developer_name or 'AZAD') %}
+        {% set _developer_credit_text = (developer_credit or config.DEVELOPER_CREDIT) %}
+        {% set _developer_logo_path = (developer_logo or config.DEVELOPER_LOGO or 'assets/brand/azad/logos/logo.png')|trim %}
+        {% set _developer_logo_rel = _developer_logo_path %}
+        {% if _developer_logo_rel.startswith('/static/') %}
+          {% set _developer_logo_rel = _developer_logo_rel[8:] %}
+        {% endif %}
+        {% if _developer_logo_rel.startswith('static/') %}
+          {% set _developer_logo_rel = _developer_logo_rel[7:] %}
+        {% endif %}
+        {% set _footer_phone = (developer_phone or '')|trim %}
+        {% set _footer_email = (developer_email or '')|trim %}
+        <div class="erp-footer-row">
+          <div class="erp-footer-brand">
+            <img
+              src="{{ _developer_logo_path if (_developer_logo_path.startswith('http') or _developer_logo_path.startswith('/')) else url_for('static', filename=_developer_logo_rel) }}"
+              data-fallback="{{ url_for('static', filename='assets/brand/azad/logos/logo.png') }}"
+              onerror="if(this.dataset.fallback){this.onerror=null;this.src=this.dataset.fallback;}"
+              alt="{{ _developer_title }}"
+              class="erp-footer-logo"
+            >
+            <div class="erp-footer-brand-text">
+              <div class="erp-footer-title">{{ _developer_title }}</div>
+              <div class="erp-footer-muted"><i class="fas fa-code"></i> {{ _developer_credit_text }}</div>
+            </div>
+          </div>
+          <div class="erp-footer-center">
+            <span class="erp-footer-chip">v{{ config.APP_VERSION }}</span>
+          </div>
+          <div class="erp-footer-actions">
+            {% if developer_whatsapp_link %}
+              <a href="https://wa.me/{{ developer_whatsapp_link }}" target="_blank" rel="noopener noreferrer" class="erp-footer-action">
+                <i class="fab fa-whatsapp"></i><span>واتساب</span>
+              </a>
+            {% endif %}
+            {% if _footer_phone %}
+              <a href="tel:{{ _footer_phone }}" class="erp-footer-action">
+                <i class="fas fa-phone"></i><span>اتصال</span>
+              </a>
+            {% endif %}
+            {% if _footer_email %}
+              <a href="mailto:{{ _footer_email }}" class="erp-footer-action">
+                <i class="fas fa-envelope"></i><span>بريد</span>
+              </a>
+            {% endif %}
+          </div>
+        </div>
+        <div class="erp-footer-copyright text-center mt-3 pt-2 border-top small text-muted">
+          &copy; {{ current_year }} {{ tenant_name_ar or company_name_ar or _developer_title }} &mdash; جميع الحقوق محفوظة
+        </div>
+      </div>
+    </div>
+  </footer>

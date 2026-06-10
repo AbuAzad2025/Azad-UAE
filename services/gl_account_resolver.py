@@ -13,11 +13,8 @@ from dataclasses import dataclass
 from flask import current_app, has_app_context
 
 from config import Config
-from models.gl import (
-    GLAccount,
-    GLAccountMapping,
-    VALID_GL_CONCEPT_CODES,
-)
+from models._constants import VALID_GL_CONCEPT_CODES
+from models.gl import GLAccount, GLAccountMapping
 
 
 @dataclass(frozen=True)

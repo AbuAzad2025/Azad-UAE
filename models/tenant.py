@@ -111,6 +111,7 @@ class Tenant(db.Model):
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True, index=True)
     
     # Relationships
+    created_by_user = db.relationship('User', foreign_keys=[created_by])
     
     def __repr__(self):
         return f'<Tenant {self.name}>'

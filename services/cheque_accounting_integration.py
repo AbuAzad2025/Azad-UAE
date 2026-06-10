@@ -3,6 +3,12 @@ from extensions import db
 from decimal import Decimal
 from models.cheque import Cheque
 from models.gl import GLAccount, GLJournalEntry, GLJournalLine
+from services.cheque_service import (
+    process_cheque_receive,
+    process_cheque_issue,
+    process_cheque_clear,
+    process_cheque_bounce,
+)
 from utils.gl_reference_types import GLRef
 from utils.gl_tenant import scope_journal_entries, get_gl_account_by_code, active_tenant_id
 
@@ -32,14 +38,14 @@ class ChequeAccountingIntegration:
     
     @staticmethod
     def receive_cheque(cheque_id, received_by=None):
-        """تسجيل استلام شيك وارد - يفوض إلى Cheque.receive_cheque()"""
+        """تسجيل استلام شيك وارد"""
         cheque = Cheque.query.get_or_404(cheque_id)
         if cheque.cheque_type != 'incoming':
             raise ValueError("هذا الشيك ليس شيك وارد")
         if cheque.status != 'pending':
             raise ValueError("الشيك ليس في حالة معلق")
         try:
-            entry = cheque.receive_cheque()
+            entry = process_cheque_receive(cheque)
             db.session.commit()
             return entry
         except Exception as e:
@@ -48,14 +54,14 @@ class ChequeAccountingIntegration:
     
     @staticmethod
     def issue_cheque(cheque_id, issued_by=None):
-        """تسجيل إصدار شيك صادر - يفوض إلى Cheque.issue_cheque()"""
+        """تسجيل إصدار شيك صادر"""
         cheque = Cheque.query.get_or_404(cheque_id)
         if cheque.cheque_type != 'outgoing':
             raise ValueError("هذا الشيك ليس شيك صادر")
         if cheque.status != 'pending':
             raise ValueError("الشيك ليس في حالة معلق")
         try:
-            cheque.issue_cheque()
+            process_cheque_issue(cheque)
             db.session.commit()
             entry = ChequeAccountingIntegration._scoped_entries(
                 cheque, reference_type=GLRef.CHEQUE_ISSUE, reference_id=cheque.id
@@ -67,19 +73,18 @@ class ChequeAccountingIntegration:
     
     @staticmethod
     def clear_cheque(cheque_id, cleared_by=None, bank_charges=0, exchange_gain_loss=0):
-        """تسجيل صرف شيك - يفوض إلى Cheque.clear_cheque()"""
+        """تسجيل صرف شيك"""
         cheque = Cheque.query.get_or_404(cheque_id)
         if cheque.status not in ['pending', 'under_collection', 'deposited']:
             raise ValueError("الشيك ليس في حالة يمكن صرفه")
         try:
-            # تمرير فرق العملة اليدوي إن وُجد (bank_charges غير مدعوم في Cheque حالياً)
             exchange_rate = None
             if exchange_gain_loss and cheque.currency and cheque.currency.upper() != get_system_default_currency().upper() and cheque.amount:
                 from decimal import Decimal as D
                 amt_aed = cheque.amount_aed or D('0')
                 target_aed = amt_aed + D(str(exchange_gain_loss))
                 exchange_rate = target_aed / cheque.amount
-            cheque.clear_cheque(clearance_date=None, clearance_exchange_rate=exchange_rate)
+            process_cheque_clear(cheque, clearance_date=None, clearance_exchange_rate=exchange_rate)
             try:
                 db.session.commit()
             except Exception:
@@ -102,12 +107,12 @@ class ChequeAccountingIntegration:
     
     @staticmethod
     def bounce_cheque(cheque_id, bounced_by=None, bounce_reason=None):
-        """تسجيل ارتداد شيك - يفوض إلى Cheque.bounce_cheque()"""
+        """تسجيل ارتداد شيك"""
         cheque = Cheque.query.get_or_404(cheque_id)
         if cheque.status not in ['pending', 'under_collection', 'deposited']:
             raise ValueError("الشيك ليس في حالة يمكن ارتداده")
         try:
-            cheque.bounce_cheque(reason=bounce_reason or 'غير محدد')
+            process_cheque_bounce(cheque, reason=bounce_reason or 'غير محدد')
             db.session.commit()
             # إرجاع القيد المرتبط
             entry = ChequeAccountingIntegration._scoped_entries(

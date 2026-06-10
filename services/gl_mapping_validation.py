@@ -14,12 +14,8 @@ import sqlalchemy as sa
 
 from extensions import db
 from models import Branch, GLAccountMapping, Tenant
-from models.gl import (
-    GL_CONCEPT_REGISTRY,
-    GLAccount,
-    REQUIRED_GL_CONCEPTS,
-    VALID_GL_CONCEPT_CODES,
-)
+from models._constants import GL_CONCEPT_REGISTRY, REQUIRED_GL_CONCEPTS, VALID_GL_CONCEPT_CODES
+from models.gl import GLAccount
 
 
 REPORT_FIELDS = (

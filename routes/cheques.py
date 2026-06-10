@@ -9,6 +9,15 @@ from extensions import db, limiter
 from models import Cheque, Customer, Supplier, Sale, Receipt, Expense
 from services.currency_service import CurrencyService
 from services.exchange_rate_service import ExchangeRateService
+from services.cheque_service import (
+    calculate_amount_aed,
+    process_cheque_receive,
+    process_cheque_issue,
+    process_cheque_deposit,
+    process_cheque_clear,
+    process_cheque_bounce,
+    process_cheque_cancel,
+)
 from utils.decorators import admin_required, permission_required, branch_scope_id
 from utils.tenanting import get_active_tenant_id
 from utils.branching import should_show_all_branch_columns
@@ -308,17 +317,16 @@ def create():
                 branch_id=cheque_branch_id,
             )
             
-            cheque.calculate_amount_aed()
+            calculate_amount_aed(cheque)
             cheque.update_status_based_on_date()
             
             db.session.add(cheque)
             db.session.flush()
             
-            # إنشاء القيد المحاسبي الأولي
             if cheque.cheque_type == 'incoming':
-                cheque.receive_cheque()
+                process_cheque_receive(cheque)
             elif cheque.cheque_type == 'outgoing':
-                cheque.issue_cheque()
+                process_cheque_issue(cheque)
             db.session.commit()
             
             LoggingCore.log_audit('create', 'cheques', cheque.id)
@@ -422,7 +430,7 @@ def edit(id):
             cheque.payee_name = request.form.get('payee_name')
             cheque.notes = request.form.get('notes')
             
-            cheque.calculate_amount_aed()
+            calculate_amount_aed(cheque)
             cheque.update_status_based_on_date()
             
             db.session.commit()
@@ -467,7 +475,7 @@ def deposit_cheque(id):
         deposit_date_str = request.form.get('deposit_date')
         deposit_date = datetime.strptime(deposit_date_str, '%Y-%m-%d').date() if deposit_date_str else None
         
-        cheque.deposit_cheque(deposit_date)
+        process_cheque_deposit(cheque, deposit_date)
         db.session.commit()
         
         LoggingCore.log_audit('cheque_deposit', 'cheques', id, 
@@ -509,7 +517,7 @@ def clear_cheque(id):
             default_currency = get_system_default_currency()
         
         # تأكيد الصرف - هنا تحدث المحاسبة!
-        cheque.clear_cheque(clearance_date, clearance_exchange_rate)
+        process_cheque_clear(cheque, clearance_date, clearance_exchange_rate)
         db.session.commit()
         
         # رسالة مفصلة عند وجود فرق عملة
@@ -552,7 +560,7 @@ def bounce_cheque(id):
         full_reason = f"{reason}. {details}" if details else reason
         
         # رفض الشيك - إرجاع الدين
-        cheque.bounce_cheque(full_reason)
+        process_cheque_bounce(cheque, full_reason)
         db.session.commit()
         
         LoggingCore.log_audit('cheque_bounce', 'cheques', id,
@@ -587,7 +595,7 @@ def cancel(id):
     try:
         reason = request.form.get('cancel_reason')
         
-        cheque.cancel_cheque(reason)
+        process_cheque_cancel(cheque, reason)
         db.session.commit()
         
         LoggingCore.log_audit('cancel', 'cheques', id)

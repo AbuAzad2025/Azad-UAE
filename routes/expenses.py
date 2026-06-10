@@ -6,6 +6,7 @@ from services.currency_service import CurrencyService
 from services.exchange_rate_service import ExchangeRateService
 from services.gl_service import GLService
 from services.gl_posting import post_or_fail
+from services.cheque_service import process_cheque_issue
 from utils.decorators import permission_required, branch_scope_id
 from utils.branching import should_show_all_branch_columns
 from services.logging_core import LoggingCore
@@ -214,7 +215,7 @@ def create():
                 )
                 
                 if cheque:
-                    cheque.issue_cheque()
+                    process_cheque_issue(cheque)
                     
             except Exception as e:
                 db.session.rollback()

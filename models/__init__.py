@@ -1,6 +1,3 @@
-# models/__init__.py
-# All database models
-
 from .user import User, Role, Permission
 from .customer import Customer
 from .supplier import Supplier
@@ -53,7 +50,6 @@ from .azad_platform_fee import AzadPlatformFee
 from .partner import Partner
 from .partner_profit_distribution import PartnerProfitDistribution
 from .partner_transaction import PartnerTransaction
-
 __all__ = [
     'User', 'Role', 'Permission',
     'Customer',
@@ -105,4 +101,3 @@ __all__ = [
     'PartnerTransaction',
     'JournalEntryAudit',
 ]
-

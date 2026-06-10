@@ -7,6 +7,7 @@ from sqlalchemy import select
 from extensions import db
 from models import Receipt, Customer, InvoiceSettings, Supplier, Payment
 from services.payment_service import PaymentService
+from services.cheque_service import process_cheque_issue
 from services.currency_service import CurrencyService
 from services.exchange_rate_service import ExchangeRateService
 from services.gl_posting import post_or_fail, GlPostingError
@@ -908,8 +909,7 @@ def create_voucher_submit():
                     payment.cheque_id = cheque.id
                     payment.payment_confirmed = False
                     
-                    # استخدام منطق الشيك المحاسبي (ذمم دائنة -> شيكات مؤجلة)
-                    cheque.issue_cheque()
+                    process_cheque_issue(cheque)
                     
                 else:
                     from services.gl_service import GLService
@@ -994,8 +994,7 @@ def create_voucher_submit():
                     payment.cheque_id = cheque.id
                     payment.payment_confirmed = False
                     
-                    # استخدام منطق الشيك المحاسبي المركزي
-                    cheque.issue_cheque()
+                    process_cheque_issue(cheque)
 
                 else:
                     from services.gl_service import GLService

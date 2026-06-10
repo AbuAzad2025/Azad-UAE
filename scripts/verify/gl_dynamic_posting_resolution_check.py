@@ -165,7 +165,7 @@ def main() -> int:
     args = parser.parse_args()
 
     from app import create_app
-    from models.gl import VALID_GL_CONCEPT_CODES
+    from models._constants import VALID_GL_CONCEPT_CODES
     from services.gl_account_resolver import GLMappingError, resolve_gl_account
     from services.gl_service import GLService
 

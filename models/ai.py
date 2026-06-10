@@ -18,6 +18,7 @@ class AiMemory(db.Model):
     is_active = db.Column(db.Boolean, nullable=False, default=True, index=True)
     created_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(timezone.utc), index=True)
     updated_at = db.Column(db.DateTime, nullable=True, onupdate=lambda: datetime.now(timezone.utc))
+    tenant = db.relationship('Tenant', backref='ai_memories', foreign_keys=[tenant_id])
 
     def to_dict(self):
         return {
@@ -49,6 +50,8 @@ class AiInteraction(db.Model):
     response_time_ms = db.Column(db.Integer, nullable=True)
     is_training_sample = db.Column(db.Boolean, nullable=False, default=False, index=True)
     created_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(timezone.utc), index=True)
+    tenant = db.relationship('Tenant', backref='ai_interactions', foreign_keys=[tenant_id])
+    user = db.relationship('User', foreign_keys=[user_id])
 
     def to_dict(self):
         return {
@@ -78,6 +81,7 @@ class AiExpertise(db.Model):
     usage_count = db.Column(db.Integer, nullable=False, default=0)
     is_active = db.Column(db.Boolean, nullable=False, default=True, index=True)
     created_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(timezone.utc), index=True)
+    tenant = db.relationship('Tenant', backref='ai_expertise', foreign_keys=[tenant_id])
 
     def to_dict(self):
         return {

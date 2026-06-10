@@ -18,6 +18,7 @@ class Donation(db.Model):
 
     # NULL means Azad/platform donation; tenant_id means a project/tenant donation.
     tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=True, index=True)
+    tenant = db.relationship('Tenant', backref='donations', foreign_keys=[tenant_id])
 
     # Amount Info - معلومات المبلغ
     amount_usd = db.Column(db.Numeric(15, 2), nullable=False)  # المبلغ بالدولار

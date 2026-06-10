@@ -100,13 +100,8 @@ from typing import Iterable
 
 from extensions import db
 from models import Tenant
-from models.gl import (
-    GLAccount,
-    GLAccountMapping,
-    GL_CONCEPT_REGISTRY,
-    REQUIRED_GL_CONCEPTS,
-    VALID_GL_CONCEPT_CODES,
-)
+from models._constants import GL_CONCEPT_REGISTRY, REQUIRED_GL_CONCEPTS, VALID_GL_CONCEPT_CODES
+from models.gl import GLAccount, GLAccountMapping
 
 
 # ---------------------------------------------------------------------------

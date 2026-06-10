@@ -1,0 +1,123 @@
+GL_CONCEPT_AR = 'AR'
+GL_CONCEPT_AP = 'AP'
+GL_CONCEPT_CASH = 'CASH'
+GL_CONCEPT_BANK = 'BANK'
+GL_CONCEPT_INVENTORY_ASSET = 'INVENTORY_ASSET'
+GL_CONCEPT_COGS = 'COGS'
+GL_CONCEPT_COGS_REVERSAL = 'COGS_REVERSAL'
+GL_CONCEPT_SALES_REVENUE = 'SALES_REVENUE'
+GL_CONCEPT_SALES_RETURNS = 'SALES_RETURNS'
+GL_CONCEPT_SALES_DISCOUNT = 'SALES_DISCOUNT'
+GL_CONCEPT_VAT_INPUT = 'VAT_INPUT'
+GL_CONCEPT_VAT_OUTPUT = 'VAT_OUTPUT'
+GL_CONCEPT_FX_GAIN = 'FX_GAIN'
+GL_CONCEPT_FX_LOSS = 'FX_LOSS'
+GL_CONCEPT_CHEQUES_UNDER_COLLECTION = 'CHEQUES_UNDER_COLLECTION'
+GL_CONCEPT_INVENTORY_ADJUSTMENT_GAIN = 'INVENTORY_ADJUSTMENT_GAIN'
+GL_CONCEPT_INVENTORY_ADJUSTMENT_LOSS = 'INVENTORY_ADJUSTMENT_LOSS'
+GL_CONCEPT_FREIGHT_IN = 'FREIGHT_IN'
+GL_CONCEPT_CUSTOMS_DUTY = 'CUSTOMS_DUTY'
+GL_CONCEPT_DEFERRED_CHEQUES_PAYABLE = 'DEFERRED_CHEQUES_PAYABLE'
+GL_CONCEPT_PARTNER_CURRENT_ACCOUNT = 'PARTNER_CURRENT_ACCOUNT'
+GL_CONCEPT_MERCHANT_CURRENT_ACCOUNT = 'MERCHANT_CURRENT_ACCOUNT'
+GL_CONCEPT_SHIPPING_REVENUE = 'SHIPPING_REVENUE'
+GL_CONCEPT_MISC_EXPENSE = 'MISC_EXPENSE'
+GL_CONCEPT_COMMISSION_EXPENSE = 'COMMISSION_EXPENSE'
+GL_CONCEPT_EMPLOYEE_ADVANCES = 'EMPLOYEE_ADVANCES'
+GL_CONCEPT_PAYROLL_EXPENSE = 'PAYROLL_EXPENSE'
+GL_CONCEPT_PAYROLL_PAYABLE = 'PAYROLL_PAYABLE'
+GL_CONCEPT_BANK_FEES = 'BANK_FEES'
+GL_CONCEPT_BANK_INTEREST_INCOME = 'BANK_INTEREST_INCOME'
+GL_CONCEPT_DONATION_REVENUE = 'DONATION_REVENUE'
+GL_CONCEPT_FIXED_ASSET_ASSET = 'FIXED_ASSET_ASSET'
+GL_CONCEPT_DEPRECIATION_EXPENSE = 'DEPRECIATION_EXPENSE'
+GL_CONCEPT_ACCUMULATED_DEPRECIATION = 'ACCUMULATED_DEPRECIATION'
+GL_CONCEPT_FIXED_ASSET_GAIN = 'FIXED_ASSET_GAIN'
+GL_CONCEPT_FIXED_ASSET_LOSS = 'FIXED_ASSET_LOSS'
+
+GL_CONCEPT_CODES = (
+    GL_CONCEPT_AR,
+    GL_CONCEPT_AP,
+    GL_CONCEPT_CASH,
+    GL_CONCEPT_BANK,
+    GL_CONCEPT_INVENTORY_ASSET,
+    GL_CONCEPT_COGS,
+    GL_CONCEPT_COGS_REVERSAL,
+    GL_CONCEPT_SALES_REVENUE,
+    GL_CONCEPT_SALES_RETURNS,
+    GL_CONCEPT_SALES_DISCOUNT,
+    GL_CONCEPT_VAT_INPUT,
+    GL_CONCEPT_VAT_OUTPUT,
+    GL_CONCEPT_FX_GAIN,
+    GL_CONCEPT_FX_LOSS,
+    GL_CONCEPT_CHEQUES_UNDER_COLLECTION,
+    GL_CONCEPT_INVENTORY_ADJUSTMENT_GAIN,
+    GL_CONCEPT_INVENTORY_ADJUSTMENT_LOSS,
+    GL_CONCEPT_FREIGHT_IN,
+    GL_CONCEPT_CUSTOMS_DUTY,
+    GL_CONCEPT_DEFERRED_CHEQUES_PAYABLE,
+    GL_CONCEPT_PARTNER_CURRENT_ACCOUNT,
+    GL_CONCEPT_MERCHANT_CURRENT_ACCOUNT,
+    GL_CONCEPT_SHIPPING_REVENUE,
+    GL_CONCEPT_MISC_EXPENSE,
+    GL_CONCEPT_COMMISSION_EXPENSE,
+    GL_CONCEPT_EMPLOYEE_ADVANCES,
+    GL_CONCEPT_PAYROLL_EXPENSE,
+    GL_CONCEPT_PAYROLL_PAYABLE,
+    GL_CONCEPT_BANK_FEES,
+    GL_CONCEPT_BANK_INTEREST_INCOME,
+    GL_CONCEPT_DONATION_REVENUE,
+    GL_CONCEPT_FIXED_ASSET_ASSET,
+    GL_CONCEPT_DEPRECIATION_EXPENSE,
+    GL_CONCEPT_ACCUMULATED_DEPRECIATION,
+    GL_CONCEPT_FIXED_ASSET_GAIN,
+    GL_CONCEPT_FIXED_ASSET_LOSS,
+)
+
+GL_CONCEPT_REGISTRY = {
+    GL_CONCEPT_AR: {'meaning': 'Accounts Receivable', 'legacy_code': '1130', 'required': True},
+    GL_CONCEPT_AP: {'meaning': 'Accounts Payable', 'legacy_code': '2110', 'required': True},
+    GL_CONCEPT_CASH: {'meaning': 'Cash', 'legacy_code': None, 'required': True},
+    GL_CONCEPT_BANK: {'meaning': 'Bank', 'legacy_code': '1120', 'required': True},
+    GL_CONCEPT_INVENTORY_ASSET: {'meaning': 'Inventory Asset', 'legacy_code': '1140', 'required': True},
+    GL_CONCEPT_COGS: {'meaning': 'Cost of Goods Sold', 'legacy_code': '5100', 'required': True},
+    GL_CONCEPT_COGS_REVERSAL: {'meaning': 'Cost of Goods Sold Reversal', 'legacy_code': None, 'required': False},
+    GL_CONCEPT_SALES_REVENUE: {'meaning': 'Sales Revenue', 'legacy_code': '4100', 'required': True},
+    GL_CONCEPT_SALES_RETURNS: {'meaning': 'Sales Returns', 'legacy_code': None, 'required': False},
+    GL_CONCEPT_SALES_DISCOUNT: {'meaning': 'Sales Discount', 'legacy_code': None, 'required': False},
+    GL_CONCEPT_VAT_INPUT: {'meaning': 'VAT Input', 'legacy_code': None, 'required': True},
+    GL_CONCEPT_VAT_OUTPUT: {'meaning': 'VAT Output', 'legacy_code': '2130', 'required': True},
+    GL_CONCEPT_FX_GAIN: {'meaning': 'Foreign Exchange Gain', 'legacy_code': None, 'required': False},
+    GL_CONCEPT_FX_LOSS: {'meaning': 'Foreign Exchange Loss', 'legacy_code': None, 'required': False},
+    GL_CONCEPT_CHEQUES_UNDER_COLLECTION: {'meaning': 'Cheques Under Collection', 'legacy_code': '1150', 'required': False},
+    GL_CONCEPT_INVENTORY_ADJUSTMENT_GAIN: {'meaning': 'Inventory Adjustment Gain', 'legacy_code': None, 'required': False},
+    GL_CONCEPT_INVENTORY_ADJUSTMENT_LOSS: {'meaning': 'Inventory Adjustment Loss', 'legacy_code': None, 'required': False},
+    GL_CONCEPT_FREIGHT_IN: {'meaning': 'Freight In', 'legacy_code': None, 'required': False},
+    GL_CONCEPT_CUSTOMS_DUTY: {'meaning': 'Customs Duty', 'legacy_code': None, 'required': False},
+    GL_CONCEPT_DEFERRED_CHEQUES_PAYABLE: {'meaning': 'Deferred Cheques Payable', 'legacy_code': '2120', 'required': False, 'normal_balance': 'credit'},
+    GL_CONCEPT_PARTNER_CURRENT_ACCOUNT: {'meaning': 'Partner Current Account', 'legacy_code': '3350', 'required': False},
+    GL_CONCEPT_MERCHANT_CURRENT_ACCOUNT: {'meaning': 'Merchant Current Account', 'legacy_code': '2115', 'required': False},
+    GL_CONCEPT_SHIPPING_REVENUE: {'meaning': 'Shipping Revenue', 'legacy_code': '4300', 'required': False, 'normal_balance': 'credit'},
+    GL_CONCEPT_MISC_EXPENSE: {'meaning': 'Miscellaneous Expense', 'legacy_code': '6990', 'required': False, 'normal_balance': 'debit'},
+    GL_CONCEPT_COMMISSION_EXPENSE: {'meaning': 'Commission Expense', 'legacy_code': '6150', 'required': False, 'normal_balance': 'debit'},
+    GL_CONCEPT_EMPLOYEE_ADVANCES: {'meaning': 'Employee Advances', 'legacy_code': '1160', 'required': False},
+    GL_CONCEPT_PAYROLL_EXPENSE: {'meaning': 'Payroll Expense', 'legacy_code': '6100', 'required': False, 'normal_balance': 'debit'},
+    GL_CONCEPT_PAYROLL_PAYABLE: {'meaning': 'Payroll Payable', 'legacy_code': '2140', 'required': False, 'normal_balance': 'credit'},
+    GL_CONCEPT_BANK_FEES: {'meaning': 'Bank Fees', 'legacy_code': '6950', 'required': False, 'normal_balance': 'debit'},
+    GL_CONCEPT_BANK_INTEREST_INCOME: {'meaning': 'Bank Interest Income', 'legacy_code': '4500', 'required': False, 'normal_balance': 'credit'},
+    GL_CONCEPT_DONATION_REVENUE: {'meaning': 'Donation Revenue', 'legacy_code': '4200', 'required': False, 'normal_balance': 'credit'},
+    GL_CONCEPT_FIXED_ASSET_ASSET: {'meaning': 'Fixed Asset Asset', 'legacy_code': '1240', 'required': False},
+    GL_CONCEPT_DEPRECIATION_EXPENSE: {'meaning': 'Depreciation Expense', 'legacy_code': '6180', 'required': False, 'normal_balance': 'debit'},
+    GL_CONCEPT_ACCUMULATED_DEPRECIATION: {'meaning': 'Accumulated Depreciation', 'legacy_code': '1290', 'required': False, 'normal_balance': 'credit'},
+    GL_CONCEPT_FIXED_ASSET_GAIN: {'meaning': 'Fixed Asset Disposal Gain', 'legacy_code': '4500', 'required': False, 'normal_balance': 'credit'},
+    GL_CONCEPT_FIXED_ASSET_LOSS: {'meaning': 'Fixed Asset Disposal Loss', 'legacy_code': '6990', 'required': False, 'normal_balance': 'debit'},
+}
+
+VALID_GL_CONCEPT_CODES = frozenset(GL_CONCEPT_CODES)
+REQUIRED_GL_CONCEPTS = frozenset(
+    code for code, meta in GL_CONCEPT_REGISTRY.items() if meta['required']
+)
+
+_GL_CONCEPT_CODE_CHECK = "concept_code IN ({})".format(
+    ", ".join(f"'{code}'" for code in GL_CONCEPT_CODES)
+)

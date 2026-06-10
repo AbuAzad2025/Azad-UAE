@@ -714,12 +714,12 @@ class TestGLJournalLineSide:
 
 class TestGLConceptRegistry:
     def test_required_concepts(self):
-        from models.gl import REQUIRED_GL_CONCEPTS, GL_CONCEPT_REGISTRY
+        from models._constants import REQUIRED_GL_CONCEPTS, GL_CONCEPT_REGISTRY
         for code in REQUIRED_GL_CONCEPTS:
             assert GL_CONCEPT_REGISTRY[code]["required"] is True
 
     def test_all_codes_valid(self):
-        from models.gl import VALID_GL_CONCEPT_CODES, GL_CONCEPT_CODES
+        from models._constants import VALID_GL_CONCEPT_CODES, GL_CONCEPT_CODES
         assert VALID_GL_CONCEPT_CODES == set(GL_CONCEPT_CODES)
 
     def test_unknown_code_raises(self):

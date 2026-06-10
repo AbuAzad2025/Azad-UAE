@@ -15,6 +15,13 @@ import os
 import sys
 from datetime import date, datetime, timezone
 from decimal import Decimal
+from services.cheque_service import (
+    process_cheque_receive,
+    process_cheque_issue,
+    process_cheque_deposit,
+    process_cheque_clear,
+    process_cheque_bounce,
+)
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, PROJECT_ROOT)
@@ -278,12 +285,12 @@ def _flow_cheque_receive(app, tenant_id, branch_id, tracker, result):
     )
     db.session.add(cheque); db.session.flush()
     tracker.cheque_ids.append(cheque.id)
-    entry1 = cheque.receive_cheque()
+    entry1 = process_cheque_receive(cheque)
     if entry1:
         tracker.add_je(entry1.id); _verify_entry(entry1, tenant_id, result)
-    cheque.deposit_cheque(deposit_date=today)
+    process_cheque_deposit(cheque, deposit_date=today)
     db.session.commit()
-    entry2 = cheque.clear_cheque(clearance_date=today)
+    process_cheque_clear(cheque, clearance_date=today)
     if entry2:
         tracker.add_je(entry2.id); _verify_entry(entry2, tenant_id, result)
     from services.gl_service import GLService
@@ -313,12 +320,10 @@ def _flow_cheque_issue(app, tenant_id, branch_id, tracker, result):
     )
     db.session.add(cheque); db.session.flush()
     tracker.cheque_ids.append(cheque.id)
-    entry1 = cheque.issue_cheque()
+    entry1 = process_cheque_issue(cheque)
     if entry1:
         tracker.add_je(entry1.id); _verify_entry(entry1, tenant_id, result)
-    entry2 = cheque.bounce_cheque(reason=f"{_TEST_PREFIX} bounce test")
-    if entry2:
-        tracker.add_je(entry2.id); _verify_entry(entry2, tenant_id, result)
+    process_cheque_bounce(cheque, reason=f"{_TEST_PREFIX} bounce test")
     result.concepts_used.extend(["AP", "DEFERRED_CHEQUES_PAYABLE"])
     result.success = not result.errors
     db.session.commit()

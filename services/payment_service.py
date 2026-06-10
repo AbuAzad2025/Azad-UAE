@@ -6,6 +6,7 @@ from models import Receipt, Sale
 from services.exchange_rate_service import ExchangeRateService
 from services.gl_service import GLService
 from services.gl_posting import post_or_fail, GlPostingError
+from services.cheque_service import process_cheque_receive
 from utils.gl_reference_types import GLRef
 from utils.helpers import generate_number
 from utils.branching import branch_scope_id_for
@@ -279,7 +280,7 @@ class PaymentService:
                 receipt.cheque_id = cheque.id
                 
                 # استخدام منطق الشيك المحاسبي (شيكات تحت التحصيل -> ذمم مدينة)
-                gl_entry = cheque.receive_cheque()
+                gl_entry = process_cheque_receive(cheque)
                 if gl_entry is None:
                     raise GlPostingError('فشل ترحيل الشيك محاسبياً')
                 # تحديث رصيد العميل التراكمي عند استلام الشيك
