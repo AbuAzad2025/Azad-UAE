@@ -118,6 +118,34 @@
     });
   }
 
+  function wishlistToggle(productId) {
+    var btn = document.querySelector('[data-wishlist-toggle][data-product-id="' + productId + '"]');
+    var isOn = btn && btn.querySelector('.fas.fa-heart');
+    var path = isOn ? '/wishlist/remove/' + productId : '/wishlist/add/' + productId;
+    return apiPost(path, { product_id: productId }).then(function (data) {
+      if (data.success) {
+        if (data.wishlisted) {
+          if (btn) btn.innerHTML = '<i class="fas fa-heart"></i>';
+          showToast('Added to wishlist', 'success');
+        } else {
+          if (btn) btn.innerHTML = '<i class="far fa-heart"></i>';
+          showToast('Removed from wishlist', 'success');
+        }
+      }
+      return data;
+    });
+  }
+
+  function setupWishlistToggle() {
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest('[data-wishlist-toggle]');
+      if (!btn) return;
+      e.preventDefault();
+      var productId = btn.getAttribute('data-product-id');
+      if (productId) wishlistToggle(parseInt(productId));
+    });
+  }
+
   function setupAutoUpdateCart() {
     var form = document.getElementById('cart-update-form');
     if (!form) return;
@@ -146,6 +174,7 @@
     if (!SLUG) return;
     setupAddToCartButtons();
     setupRemoveButtons();
+    setupWishlistToggle();
     setupAutoUpdateCart();
     refreshCartBadge();
   }
@@ -159,6 +188,7 @@
   window.ShopCart = {
     addToCart: addToCart,
     removeFromCart: removeFromCart,
+    wishlistToggle: wishlistToggle,
     updateCart: updateCart,
     refreshCartBadge: refreshCartBadge,
     showToast: showToast,

@@ -49,7 +49,7 @@
     }, 5000);
   });
 
-  var searchInput = document.querySelector('.ps-search-form input[type="search"]');
+  var searchInput = document.querySelector('.ps-search-form input[type="search"]:not([data-search-autocomplete])');
   if (searchInput) {
     var searchForm = searchInput.closest('form');
     var searchTimer;
@@ -75,5 +75,39 @@
         }
       });
     });
+  }
+
+  var sentinel = document.querySelector('.ps-infinite-sentinel');
+  if (sentinel) {
+    var currentPage = parseInt(sentinel.getAttribute('data-page') || '1');
+    var totalPages = parseInt(sentinel.getAttribute('data-total') || '1');
+    var loading = false;
+    var observer = new IntersectionObserver(function (entries) {
+      if (entries[0].isIntersecting && !loading && currentPage < totalPages) {
+        loading = true;
+        var nextPage = currentPage + 1;
+        var url = new URL(window.location.href);
+        url.searchParams.set('page', nextPage);
+        fetch(url.toString(), { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+          .then(function (r) { return r.text(); })
+          .then(function (html) {
+            var parser = new DOMParser();
+            var doc = parser.parseFromString(html, 'text/html');
+            var newItems = doc.querySelectorAll('.ps-card');
+            var grid = document.querySelector('.ps-grid');
+            if (grid && newItems.length) {
+              newItems.forEach(function (item) { grid.appendChild(item); });
+            }
+            currentPage = nextPage;
+            if (currentPage >= totalPages) {
+              sentinel.style.display = 'none';
+            }
+            sentinel.setAttribute('data-page', currentPage);
+            loading = false;
+          })
+          .catch(function () { loading = false; });
+      }
+    }, { threshold: 0.1 });
+    observer.observe(sentinel);
   }
 })();

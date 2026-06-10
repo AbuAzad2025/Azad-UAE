@@ -48,13 +48,15 @@
 <div class="ps-product-detail">
   <div class="ps-product-gallery">
     {% if product.image_url %}
-    <img src="{{ product.image_url }}" alt="{{ product.get_display_name(lang) }}">
+    <div class="ps-gallery-main">
+      <img src="{{ product.image_url }}" alt="{{ product.get_display_name(lang) }}" data-zoom>
+    </div>
     {% else %}
     <div class="ps-placeholder ic-2"><i class="fas fa-box-open"></i></div>
     {% endif %}
   </div>
   <div>
-    <h2 class="ic-3">{{ product.get_display_name(lang) }}</h2>
+    <h2 class="ic-3">{{ product.get_display_name(lang) }}{% if is_shop_logged_in %} <button class="ps-wishlist-btn" data-wishlist-toggle data-product-id="{{ product.id }}" aria-label="{{ t('wishlist') }}"><i class="far fa-heart"></i></button>{% endif %}</h2>
     {% if product.sku %}<p class="ps-card-meta">{{ product.sku }}</p>{% endif %}
     <p class="ps-price ic-4">{{ '%.2f'|format(product.regular_price) }} {{ tenant.default_currency or 'AED' }}</p>
     <p class="ps-stock-ok"><i class="fas fa-check-circle"></i> {{ t('in_stock') }} — {{ available|int }}</p>
@@ -81,5 +83,107 @@
     {% endif %}
   </div>
 </div>
+
+{% if related_products %}
+<section class="ps-related">
+  <h2><i class="fas fa-tags"></i> {{ t('you_may_also_like') }}</h2>
+  <div class="ps-grid ps-grid-sm">
+    {% for row in related_products %}
+    {% set rp = row.product %}
+    <article class="ps-card">
+      <a href="{{ url_for('shop.product_detail', slug=store.store_slug, product_id=rp.id) }}" class="ps-card-img">
+        {% if rp.image_url %}
+        <img src="{{ rp.image_url }}" alt="{{ rp.get_display_name(lang) }}" loading="lazy">
+        {% else %}
+        <div class="ps-placeholder"><i class="fas fa-box-open"></i></div>
+        {% endif %}
+      </a>
+      <div class="ps-card-body">
+        <h3 class="ps-card-title"><a href="{{ url_for('shop.product_detail', slug=store.store_slug, product_id=rp.id) }}">{{ rp.get_display_name(lang) }}</a></h3>
+        <div class="ps-card-footer">
+          <span class="ps-price">{{ '%.2f'|format(rp.regular_price) }} {{ tenant.default_currency or 'AED' }}</span>
+          <form method="post" action="{{ url_for('shop.cart_add', slug=store.store_slug) }}" data-ajax-cart>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="product_id" value="{{ rp.id }}">
+            <input type="hidden" name="quantity" value="1">
+            <button type="submit" class="ps-btn ps-btn-sm"><i class="fas fa-plus"></i></button>
+          </form>
+        </div>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{% if recent_products %}
+<section class="ps-recently">
+  <h2><i class="fas fa-clock-rotate"></i> {{ t('recently_viewed') }}</h2>
+  <div class="ps-grid ps-grid-sm">
+    {% for rp in recent_products %}
+    <article class="ps-card">
+      <a href="{{ url_for('shop.product_detail', slug=store.store_slug, product_id=rp.id) }}" class="ps-card-img">
+        {% if rp.image_url %}
+        <img src="{{ rp.image_url }}" alt="{{ rp.get_display_name(lang) }}" loading="lazy">
+        {% else %}
+        <div class="ps-placeholder"><i class="fas fa-box-open"></i></div>
+        {% endif %}
+      </a>
+      <div class="ps-card-body">
+        <h3 class="ps-card-title"><a href="{{ url_for('shop.product_detail', slug=store.store_slug, product_id=rp.id) }}">{{ rp.get_display_name(lang) }}</a></h3>
+        <div class="ps-card-footer">
+          <span class="ps-price">{{ '%.2f'|format(rp.regular_price) }} {{ tenant.default_currency or 'AED' }}</span>
+        </div>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<section class="ps-reviews">
+  <h2><i class="fas fa-star"></i> {{ t('reviews') }} ({{ review_count or 0 }})</h2>
+  {% if avg_rating %}
+  <div class="ps-rating-summary">
+    <span class="ps-rating-stars">{{ avg_rating }}</span>
+    <span class="ps-rating-text">{{ avg_rating }}/5 — {{ review_count }} {{ t('reviews') }}</span>
+  </div>
+  {% endif %}
+  {% if reviews %}
+  <div class="ps-review-list">
+    {% for review in reviews %}
+    <div class="ps-review-item">
+      <div class="ps-review-header">
+        <strong>{{ review.customer_name }}</strong>
+        <span class="ps-rating-stars">{{ review.rating }}</span>
+      </div>
+      {% if review.comment %}<p>{{ review.comment }}</p>{% endif %}
+      <small class="ps-review-date">{{ review.created_at.strftime('%Y-%m-%d') if review.created_at else '' }}</small>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% if is_shop_logged_in %}
+  <form method="post" action="{{ url_for('shop.add_review', slug=store.store_slug, product_id=product.id) }}" class="ps-review-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <h3>{{ t('write_review') }}</h3>
+    <div class="ps-form-group">
+      <label>{{ t('rating') }}</label>
+      <select name="rating" required>
+        <option value="5">★★★★★</option>
+        <option value="4">★★★★</option>
+        <option value="3">★★★</option>
+        <option value="2">★★</option>
+        <option value="1">★</option>
+      </select>
+    </div>
+    <div class="ps-form-group">
+      <label for="comment">{{ t('comment') }}</label>
+      <textarea id="comment" name="comment" rows="3" maxlength="1000"></textarea>
+    </div>
+    <button type="submit" class="ps-btn ps-btn-primary">{{ t('submit_review') }}</button>
+  </form>
+  {% endif %}
+</section>
 {% endblock %}
 {% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/shop-utilities.css') }}">{% endblock %}

@@ -17,6 +17,8 @@ from extensions import db, limiter
 from models import Product, ProductCategory, Sale, Tenant
 
 from models.shop_customer_account import ShopCustomerAccount
+from models.shop_wishlist import ShopWishlist
+from models.shop_review import ShopReview
 
 from services.shop_customer_auth_service import ShopCustomerAuthService
 
@@ -194,6 +196,55 @@ def set_lang(slug, lang_code):
     session['shop_lang'] = 'en' if str(lang_code).lower().startswith('en') else 'ar'
 
     return redirect(safe_redirect_target(request.referrer, 'shop.catalog', slug=store.store_slug))
+
+
+
+
+
+@shop_bp.route('/<slug>/wishlist/add/<int:product_id>', methods=['POST'])
+@limiter.limit('30 per minute')
+def wishlist_add(slug, product_id):
+    store = _resolve_store(slug)
+    account = _shop_account(store)
+    if not account:
+        return jsonify({'success': False, 'message': 'Login required'}), 401
+    if request.content_type and 'application/json' in request.content_type:
+        existing = ShopWishlist.query.filter_by(account_id=account.id, product_id=product_id).first()
+        if not existing:
+            wl = ShopWishlist(tenant_id=store.tenant_id, account_id=account.id, product_id=product_id)
+            db.session.add(wl)
+            db.session.commit()
+        count = ShopWishlist.query.filter_by(account_id=account.id).count()
+        return jsonify({'success': True, 'wishlisted': True, 'count': count})
+    return redirect(request.referrer or url_for('shop.catalog', slug=store.store_slug))
+
+
+@shop_bp.route('/<slug>/wishlist/remove/<int:product_id>', methods=['POST'])
+def wishlist_remove(slug, product_id):
+    store = _resolve_store(slug)
+    account = _shop_account(store)
+    if not account:
+        return jsonify({'success': False}), 401
+    ShopWishlist.query.filter_by(account_id=account.id, product_id=product_id).delete()
+    db.session.commit()
+    if request.content_type and 'application/json' in request.content_type:
+        return jsonify({'success': True, 'wishlisted': False})
+    return redirect(request.referrer or url_for('shop.catalog', slug=store.store_slug))
+
+
+@shop_bp.route('/<slug>/wishlist')
+def wishlist_view(slug):
+    store = _resolve_store(slug)
+    blocked = _require_open_store(store)
+    if blocked:
+        return blocked
+    ctx = _store_context(store)
+    account = ctx['shop_account']
+    if not account:
+        flash(t('login_required', ctx['lang']), 'warning')
+        return redirect(url_for('shop.account_login', slug=store.store_slug))
+    items = ShopWishlist.query.filter_by(account_id=account.id).order_by(ShopWishlist.created_at.desc()).all()
+    return render_template('shop/wishlist.html', wishlist_items=items, **ctx)
 
 
 
@@ -439,7 +490,13 @@ def catalog(slug):
 
     page = request.args.get('page', 1, type=int)
 
-    catalog_result = StoreService.get_public_catalog(store.tenant_id, category_id=category_id, search=search, page=page)
+    sort = request.args.get('sort', '')
+    valid_sorts = ['price_asc', 'price_desc', 'name_asc', 'name_desc', 'newest']
+    current_sort = sort if sort in valid_sorts else ''
+    min_price = request.args.get('min_price', type=float)
+    max_price = request.args.get('max_price', type=float)
+    in_stock_only = request.args.get('in_stock_only', type=int) == 1
+    catalog_result = StoreService.get_public_catalog(store.tenant_id, category_id=category_id, search=search, page=page, sort=current_sort, min_price=min_price, max_price=max_price, in_stock_only=in_stock_only)
 
     items = catalog_result['items']
 
@@ -475,12 +532,41 @@ def catalog(slug):
 
         total=catalog_result['total'],
 
+        current_sort=current_sort,
+
+        min_price=min_price,
+
+        max_price=max_price,
+
+        in_stock_only=in_stock_only,
+
         **ctx,
 
     )
 
 
 
+
+
+@shop_bp.route('/<slug>/api/search')
+def api_search(slug):
+    """AJAX search — returns JSON for autocomplete."""
+    store = _resolve_store(slug)
+    q = (request.args.get('q') or '').strip()
+    if not q or len(q) < 2:
+        return jsonify({'results': []})
+    items = StoreService.get_public_catalog(store.tenant_id, search=q, page=1, per_page=5)
+    results = []
+    for row in items['items']:
+        product = row['product']
+        results.append({
+            'id': product.id,
+            'name': product.get_display_name(shop_lang()),
+            'price': float(product.regular_price or 0),
+            'image': product.image_url or '',
+            'url': url_for('shop.product_detail', slug=store.store_slug, product_id=product.id),
+        })
+    return jsonify({'results': results})
 
 
 @shop_bp.route('/<slug>/p/<int:product_id>')
@@ -509,10 +595,74 @@ def product_detail(slug, product_id):
 
         abort(404)
 
+    related_products = StoreService.get_related_products(
+        store.tenant_id, product.id, product.category_id, limit=4
+    )
+
+    recent_key = f'shop_recent_{store.tenant_id}'
+    recent = session.get(recent_key, [])
+    recent = [pid for pid in recent if pid != product.id]
+    recent.insert(0, product.id)
+    recent = recent[:10]
+    session[recent_key] = recent
+    session.modified = True
+
+    recent_ids = session.get(f'shop_recent_{store.tenant_id}', [])
+    recent_products = StoreService.get_recently_viewed_products(store.tenant_id, recent_ids, exclude_id=product.id, limit=6)
+
     wa_url = ShopCustomerAuthService.whatsapp_order_url(store, product, ctx['lang'], 1)
 
-    return render_template('shop/product.html', product=product, available=qty, wa_url=wa_url, **ctx)
+    reviews = ShopReview.query.filter_by(product_id=product.id, tenant_id=store.tenant_id, is_approved=True).order_by(ShopReview.created_at.desc()).all()
+    review_count = len(reviews)
+    avg_rating = round(sum(r.rating for r in reviews) / review_count, 1) if review_count else None
+    return render_template('shop/product.html', product=product, available=qty, wa_url=wa_url, related_products=related_products, recent_products=recent_products, reviews=reviews, review_count=review_count, avg_rating=avg_rating, **ctx)
 
+
+
+
+@shop_bp.route('/<slug>/p/<int:product_id>/reviews', methods=['GET'])
+def product_reviews(slug, product_id):
+    store = _resolve_store(slug)
+    reviews = ShopReview.query.filter_by(
+        product_id=product_id, tenant_id=store.tenant_id, is_approved=True
+    ).order_by(ShopReview.created_at.desc()).all()
+    return jsonify({
+        'reviews': [{
+            'id': r.id,
+            'customer_name': r.customer_name,
+            'rating': r.rating,
+            'comment': r.comment,
+            'created_at': r.created_at.isoformat() if r.created_at else '',
+        } for r in reviews]
+    })
+
+
+@shop_bp.route('/<slug>/p/<int:product_id>/review/add', methods=['POST'])
+@limiter.limit('10 per minute', methods=['POST'])
+def add_review(slug, product_id):
+    store = _resolve_store(slug)
+    account = _shop_account(store)
+    if not account:
+        flash(t('login_required', shop_lang()), 'warning')
+        return redirect(url_for('shop.account_login', slug=store.store_slug))
+    rating = request.form.get('rating', type=int)
+    comment = (request.form.get('comment') or '').strip()
+    if not rating or rating < 1 or rating > 5:
+        flash('Rating must be 1-5', 'danger')
+        return redirect(request.referrer or url_for('shop.product_detail', slug=store.store_slug, product_id=product_id))
+    review = ShopReview(
+        tenant_id=store.tenant_id,
+        product_id=product_id,
+        account_id=account.id,
+        customer_name=account.name or 'Customer',
+        rating=rating,
+        comment=comment or None,
+        is_approved=False,
+    )
+    db.session.add(review)
+    db.session.commit()
+    flash(t('review_submitted', shop_lang()), 'success')
+    return redirect(url_for('shop.product_detail', slug=store.store_slug, product_id=product_id))
 
 
 
@@ -872,6 +1022,17 @@ def return_policy(slug):
 
 
 
+
+
+@shop_bp.route('/<slug>/quick-view/<int:product_id>')
+def quick_view(slug, product_id):
+    store = _resolve_store(slug)
+    ctx = _store_context(store)
+    product = Product.query.filter_by(id=product_id, tenant_id=store.tenant_id, is_active=True).first_or_404()
+    stock_map = StoreService.online_stock_map(store.tenant_id, [product.id])
+    qty = stock_map.get(product.id, Decimal('0'))
+    wa_url = ShopCustomerAuthService.whatsapp_order_url(store, product, ctx['lang'], 1) if not ctx['is_shop_logged_in'] else None
+    return render_template('shop/partials/quick_view_body.html', product=product, available=qty, wa_url=wa_url, **ctx)
 
 
 @shop_bp.route('/<slug>/sitemap.xml')

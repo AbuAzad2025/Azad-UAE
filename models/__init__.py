@@ -22,6 +22,8 @@ from .tenant import Tenant
 from .tenant_store import TenantStore
 from .store_payment_method import StorePaymentMethod
 from .shop_customer_account import ShopCustomerAccount
+from .shop_wishlist import ShopWishlist
+from .shop_review import ShopReview
 from .store_coupon import StoreCoupon
 from .system_settings import SystemSettings
 from .integration_settings import IntegrationSettings
@@ -75,6 +77,8 @@ __all__ = [
     'TenantStore',
     'StorePaymentMethod',
     'ShopCustomerAccount',
+    'ShopWishlist',
+    'ShopReview',
     'StoreCoupon',
     'SystemSettings',
     'IntegrationSettings',

@@ -162,6 +162,25 @@ class StoreService:
         return products, stock_map
 
     @staticmethod
+    def get_related_products(tenant_id: int, product_id: int, category_id: int, limit: int = 4):
+        products, stock_map = StoreService.get_catalog_products(tenant_id, include_zero=False)
+        related = []
+        for product in products:
+            if product.id == product_id:
+                continue
+            if product.category_id != category_id:
+                continue
+            if product.has_serial_number:
+                continue
+            qty = stock_map.get(product.id, Decimal('0'))
+            if qty <= 0:
+                continue
+            related.append({'product': product, 'quantity': qty})
+            if len(related) >= limit:
+                break
+        return related
+
+    @staticmethod
     def count_visible_products(tenant_id: int) -> int:
         products, _ = StoreService.get_catalog_products(tenant_id, include_zero=False)
         return len(products)
@@ -309,7 +328,7 @@ class StoreService:
         session.modified = True
 
     @staticmethod
-    def get_public_catalog(tenant_id: int, *, category_id=None, search: str = None, page=1, per_page=24):
+    def get_public_catalog(tenant_id: int, *, category_id=None, search: str = None, page=1, per_page=24, sort=None, min_price=None, max_price=None, in_stock_only=False):
         """Storefront catalog — in-stock online warehouse, no serial-tracked products."""
         products, stock_map = StoreService.get_catalog_products(tenant_id, include_zero=False)
         items = []
@@ -326,7 +345,23 @@ class StoreService:
             qty = stock_map.get(product.id, Decimal('0'))
             if qty <= 0:
                 continue
+            if in_stock_only and qty <= 0:
+                continue
             items.append({'product': product, 'quantity': qty})
+        if min_price is not None:
+            items = [i for i in items if float(i['product'].regular_price or 0) >= float(min_price)]
+        if max_price is not None:
+            items = [i for i in items if float(i['product'].regular_price or 0) <= float(max_price)]
+        if sort == 'price_asc':
+            items.sort(key=lambda x: float(x['product'].regular_price or 0))
+        elif sort == 'price_desc':
+            items.sort(key=lambda x: float(x['product'].regular_price or 0), reverse=True)
+        elif sort == 'name_asc':
+            items.sort(key=lambda x: (x['product'].get_display_name('en') or '').lower())
+        elif sort == 'name_desc':
+            items.sort(key=lambda x: (x['product'].get_display_name('en') or '').lower(), reverse=True)
+        elif sort == 'newest':
+            items.sort(key=lambda x: x['product'].created_at or '', reverse=True)
         total = len(items)
         start = (page - 1) * per_page
         end = start + per_page
@@ -352,3 +387,18 @@ class StoreService:
             subtotal += line_total
             lines.append({'product': product, 'quantity': qty, 'line_total': line_total})
         return {'lines': lines, 'subtotal': subtotal, 'count': sum(l['quantity'] for l in lines)}
+
+    @staticmethod
+    def get_recently_viewed_products(tenant_id: int, product_ids: list, exclude_id: int | None = None, limit: int = 6):
+        if not product_ids:
+            return []
+        ids = [pid for pid in product_ids if pid != exclude_id]
+        ids = ids[:limit]
+        products = Product.query.filter(
+            Product.id.in_(ids),
+            Product.tenant_id == int(tenant_id),
+            Product.is_active == True,
+        ).all()
+        product_map = {p.id: p for p in products}
+        ordered = [product_map[pid] for pid in ids if pid in product_map]
+        return ordered

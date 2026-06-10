@@ -1,0 +1,32 @@
+<div class="ps-qv-grid">
+  <div class="ps-qv-image">
+    {% if product.image_url %}
+    <img src="{{ product.image_url }}" alt="{{ product.get_display_name(lang) }}">
+    {% else %}
+    <div class="ps-placeholder"><i class="fas fa-box-open"></i></div>
+    {% endif %}
+  </div>
+  <div class="ps-qv-info">
+    <h2>{{ product.get_display_name(lang) }}</h2>
+    {% if product.sku %}<p class="ps-card-meta">{{ product.sku }}</p>{% endif %}
+    <p class="ps-price ps-qv-price">{{ '%.2f'|format(product.regular_price) }} {{ tenant.default_currency or 'AED' }}</p>
+    <p class="ps-stock-ok"><i class="fas fa-check-circle"></i> {{ t('in_stock') }} — {{ available|int }}</p>
+    {% if product.description %}
+    <div class="ps-qv-desc">{{ product.description }}</div>
+    {% endif %}
+    <form method="post" action="{{ url_for('shop.cart_add', slug=store.store_slug) }}" data-ajax-cart>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="product_id" value="{{ product.id }}">
+      <div class="ps-qv-qty">
+        <label>{{ t('quantity') }}</label>
+        <div class="ps-qty-wrap">
+          <button type="button" class="ps-btn ps-btn-outline" data-qty-minus>−</button>
+          <input type="number" name="quantity" value="1" min="1" max="{{ available|int }}" step="1" class="ps-qty-input">
+          <button type="button" class="ps-btn ps-btn-outline" data-qty-plus>+</button>
+        </div>
+      </div>
+      <button type="submit" class="ps-btn ps-btn-primary ps-btn-block"><i class="fas fa-shopping-basket"></i> {{ t('add_to_cart') }}</button>
+    </form>
+    <a href="{{ url_for('shop.product_detail', slug=store.store_slug, product_id=product.id) }}" class="ps-btn ps-btn-outline ps-btn-block">{{ t('view_details') }}</a>
+  </div>
+</div>

@@ -68,6 +68,7 @@
         {% if is_shop_logged_in %}
         <span class="ps-nav-user"><i class="fas fa-user-check"></i> {{ shop_account.name.split()[0] }}</span>
         <a href="{{ url_for('shop.account_orders', slug=store.store_slug) }}"><i class="fas fa-receipt"></i> {{ t('my_orders') }}</a>
+        <a href="{{ url_for('shop.wishlist_view', slug=store.store_slug) }}"><i class="fas fa-heart"></i> {{ t('wishlist') }}</a>
         <form class="needs-validation" method="post" action="{{ url_for('shop.account_logout', slug=store.store_slug) }}" class="ic-1">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
           <button type="submit" class="ps-btn ps-btn-outline ps-">{{ t('logout') }}</button>
@@ -174,6 +175,9 @@
 
   <script src="{{ url_for('static', filename='js/shop-storefront.js') }}" defer></script>
   <script src="{{ url_for('static', filename='js/shop-cart.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/shop-search.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/shop-gallery.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/shop-quickview.js') }}" defer></script>
   {% block extra_js %}{% endblock %}
 </body>
 </html>

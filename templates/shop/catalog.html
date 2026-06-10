@@ -18,10 +18,31 @@
 
 {# Search #}
 <div class="ps-toolbar">
-  <form class="needs-validation" class="ps-search-form" method="get" action="{{ url_for('shop.catalog', slug=store.store_slug) }}">
+  <form class="needs-validation ps-search-form" method="get" action="{{ url_for('shop.catalog', slug=store.store_slug) }}">
     {% if category_id %}<input type="hidden" name="category" value="{{ category_id }}" aria-label="category">{% endif %}
-    <input type="search" name="q" value="{{ search or '' }}" placeholder="{{ t('search') }}" aria-label="{{ t('search') }}">
+    <input type="search" name="q" value="{{ search or '' }}" placeholder="{{ t('search') }}" aria-label="{{ t('search') }}" data-search-autocomplete>
     <button type="submit" title="بحث"><i class="fas fa-search"></i></button>
+    <div class="ps-autocomplete-wrap" style="position:relative">
+      <div class="ps-autocomplete-results" style="display:none"></div>
+    </div>
+    <div class="ps-toolbar-row">
+      <div class="ps-sort">
+        <label for="sort-select">{{ t('sort_by') }}:</label>
+        <select id="sort-select" name="sort" onchange="this.form.submit()">
+          <option value="">{{ t('default') }}</option>
+          <option value="price_asc" {% if current_sort == 'price_asc' %}selected{% endif %}>{{ t('price_low') }}</option>
+          <option value="price_desc" {% if current_sort == 'price_desc' %}selected{% endif %}>{{ t('price_high') }}</option>
+          <option value="name_asc" {% if current_sort == 'name_asc' %}selected{% endif %}>{{ t('name_az') }}</option>
+          <option value="newest" {% if current_sort == 'newest' %}selected{% endif %}>{{ t('newest') }}</option>
+        </select>
+      </div>
+      <div class="ps-filters">
+        <input type="number" name="min_price" placeholder="{{ t('min') }}" value="{{ min_price or '' }}" min="0" step="0.01">
+        <input type="number" name="max_price" placeholder="{{ t('max') }}" value="{{ max_price or '' }}" min="0" step="0.01">
+        <label><input type="checkbox" name="in_stock_only" value="1" {% if in_stock_only %}checked{% endif %}> {{ t('in_stock_only') }}</label>
+        <button type="submit" class="ps-btn ps-btn-sm">{{ t('filter') }}</button>
+      </div>
+    </div>
   </form>
 </div>
 
@@ -66,10 +87,16 @@
         {% else %}
         <div class="ps-placeholder"><i class="fas fa-box-open"></i></div>
         {% endif %}
+        <button type="button" class="ps-btn ps-btn-ghost ps-btn-sm" data-quick-view data-product-id="{{ product.id }}" title="{{ t('quick_view') }}">
+          <i class="fas fa-eye"></i>
+        </button>
       </a>
       <div class="ps-card-body">
         <h3 class="ps-card-title">
           <a href="{{ url_for('shop.product_detail', slug=store.store_slug, product_id=product.id) }}">{{ product.get_display_name(lang) }}</a>
+          {% if is_shop_logged_in %}
+          <button class="ps-wishlist-btn ps-wishlist-btn-sm" data-wishlist-toggle data-product-id="{{ product.id }}" aria-label="{{ t('wishlist') }}"><i class="far fa-heart"></i></button>
+          {% endif %}
         </h3>
         {% if product.sku %}<div class="ps-card-meta">{{ product.sku }}</div>{% endif %}
         <div class="ps-card-footer">
@@ -90,6 +117,9 @@
     {% endfor %}
   </div>
   {% include 'shop/partials/pagination.html' %}
+  {% if pages and pages > 1 %}
+  <div class="ps-infinite-sentinel" data-page="{{ page }}" data-total="{{ pages }}" aria-hidden="true"></div>
+  {% endif %}
   {% else %}
   <div class="ps-empty">
     <div class="ps-empty-icon"><i class="fas fa-box-open"></i></div>
@@ -122,4 +152,5 @@
     <div><div class="ps-benefit-title">{{ t('benefit_support') }}</div><div class="ps-benefit-sub">{{ t('benefit_support_sub') }}</div></div>
   </div>
 </section>
+{% include 'shop/partials/quick_view_modal.html' %}
 {% endblock %}
