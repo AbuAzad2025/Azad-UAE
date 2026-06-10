@@ -49,6 +49,11 @@ def _ensure_cheque_scope(cheque):
     return scoped_branch_id is None or cheque.branch_id == scoped_branch_id
 
 
+def _get_cheque_or_404(cheque_id):
+    from utils.tenanting import tenant_get_or_404
+    return tenant_get_or_404(Cheque, cheque_id)
+
+
 def _resolve_transaction_rate(currency, user_rate=None):
     rate_info = ExchangeRateService.resolve_exchange_rate_for_transaction(
         currency,
@@ -366,11 +371,10 @@ def create():
 @permission_required('manage_payments')
 def view(id):
     """عرض تفاصيل الشيك"""
-    cheque = Cheque.query.get_or_404(id)
+    cheque = _get_cheque_or_404(id)
     if not _ensure_cheque_scope(cheque):
         return render_template('errors/403.html'), 403
     cheque.update_status_based_on_date()
-    db.session.commit()
     
     # إضافة today للـ template
     today = datetime.now().strftime('%Y-%m-%d')
@@ -383,10 +387,10 @@ def view(id):
 @permission_required('manage_payments')
 def edit(id):
     """تعديل الشيك"""
-    cheque = Cheque.query.get_or_404(id)
+    cheque = _get_cheque_or_404(id)
     if not _ensure_cheque_scope(cheque):
         return render_template('errors/403.html'), 403
-    
+
     # لا يمكن تعديل شيك تم صرفه أو ملغي
     if cheque.status in ['cleared', 'cancelled', 'bounced']:
         flash('⚠️ لا يمكن تعديل شيك تم صرفه أو إلغاؤه.\n💡 الشيكات المصروفة أو الملغاة لا يمكن تعديلها للحفاظ على السجلات.', 'danger')
@@ -473,10 +477,10 @@ def edit(id):
 @permission_required('manage_payments')
 def deposit_cheque(id):
     """إيداع الشيك في البنك - الخطوة 1"""
-    cheque = Cheque.query.get_or_404(id)
+    cheque = _get_cheque_or_404(id)
     if not _ensure_cheque_scope(cheque):
         return render_template('errors/403.html'), 403
-    
+
     try:
         deposit_date_str = request.form.get('deposit_date')
         deposit_date = datetime.strptime(deposit_date_str, '%Y-%m-%d').date() if deposit_date_str else None
@@ -505,10 +509,10 @@ def deposit_cheque(id):
 @permission_required('manage_payments')
 def clear_cheque(id):
     """تأكيد صرف الشيك من البنك - الخطوة 2 - المحاسبة الفعلية"""
-    cheque = Cheque.query.get_or_404(id)
+    cheque = _get_cheque_or_404(id)
     if not _ensure_cheque_scope(cheque):
         return render_template('errors/403.html'), 403
-    
+
     try:
         clearance_date_str = request.form.get('clearance_date')
         clearance_date = datetime.strptime(clearance_date_str, '%Y-%m-%d').date() if clearance_date_str else None
@@ -556,10 +560,10 @@ def clear_cheque(id):
 @permission_required('manage_payments')
 def bounce_cheque(id):
     """رفض الشيك من البنك - إرجاع الدين"""
-    cheque = Cheque.query.get_or_404(id)
+    cheque = _get_cheque_or_404(id)
     if not _ensure_cheque_scope(cheque):
         return render_template('errors/403.html'), 403
-    
+
     try:
         reason = request.form.get('bounce_reason', 'غير محدد')
         details = request.form.get('bounce_details', '')
@@ -590,10 +594,10 @@ def bounce_cheque(id):
 @admin_required
 def cancel(id):
     """إلغاء الشيك"""
-    cheque = Cheque.query.get_or_404(id)
+    cheque = _get_cheque_or_404(id)
     if not _ensure_cheque_scope(cheque):
         return render_template('errors/403.html'), 403
-    
+
     if cheque.status == 'cleared':
         flash('⚠️ لا يمكن إلغاء شيك تم صرفه.\n💡 الشيك تم صرفه بالفعل. لا يمكن التراجع عنه.', 'danger')
         return redirect(url_for('cheques.view', id=id))
@@ -620,10 +624,10 @@ def cancel(id):
 @admin_required
 def delete(id):
     """حذف (أرشفة) الشيك"""
-    cheque = Cheque.query.get_or_404(id)
+    cheque = _get_cheque_or_404(id)
     if not _ensure_cheque_scope(cheque):
         return render_template('errors/403.html'), 403
-    
+
     # التحقق من الارتباطات
     has_links = False
     
@@ -682,10 +686,10 @@ def delete(id):
 @admin_required
 def restore(id):
     """استعادة شيك من الأرشيف"""
-    cheque = Cheque.query.get_or_404(id)
+    cheque = _get_cheque_or_404(id)
     if not _ensure_cheque_scope(cheque):
         return render_template('errors/403.html'), 403
-    
+
     try:
         cheque.restore()
         db.session.commit()

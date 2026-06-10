@@ -793,3 +793,17 @@ class TestChequeModule:
     def test_cheque_routes_archived_query_uses_scoped(self):
         code = open('routes/cheques.py', encoding='utf-8').read()
         assert "_scoped_cheques_query().filter_by(is_active=False)" in code
+
+    def test_cheque_routes_no_raw_get_or_404(self):
+        code = open('routes/cheques.py', encoding='utf-8').read()
+        assert "Cheque.query.get_or_404" not in code
+
+    def test_cheque_routes_uses_scoped_get_or_404(self):
+        code = open('routes/cheques.py', encoding='utf-8').read()
+        assert "def _get_cheque_or_404" in code
+        assert "tenant_get_or_404(Cheque" in code
+
+    def test_cheque_routes_view_no_commit(self):
+        code = open('routes/cheques.py', encoding='utf-8').read()
+        view_body = code.split("def view(id):")[1].split("def edit(id):")[0]
+        assert "db.session.commit()" not in view_body
