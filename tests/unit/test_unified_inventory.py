@@ -886,3 +886,13 @@ class TestDatabaseSchemaAudit:
                         else:
                             backrefs[key] = f'{cls.__name__}.{rel.key}'
             assert issues == [], f'Backref conflicts: {issues}'
+
+    def test_single_alembic_head(self, app):
+        from alembic.script import ScriptDirectory
+        from alembic.config import Config
+        with app.app_context():
+            config = Config('migrations/alembic.ini')
+            config.set_main_option('script_location', 'migrations')
+            script = ScriptDirectory.from_config(config)
+            heads = script.get_heads()
+            assert len(heads) == 1, f'Alembic has {len(heads)} heads (should be 1): {heads}'
