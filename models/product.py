@@ -156,6 +156,7 @@ class Product(db.Model):
     partner_shares = db.relationship('ProductPartner', back_populates='product', cascade='all, delete-orphan')
     warehouse_stocks = db.relationship('ProductWarehouseStock', back_populates='product', lazy='dynamic')
     price_tiers = db.relationship('ProductPriceTier', back_populates='product', lazy='dynamic')
+    images = db.relationship('ProductImage', back_populates='product', lazy='dynamic')
     
     def __repr__(self):
         return f'<Product {self.name}>'

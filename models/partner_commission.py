@@ -16,8 +16,17 @@ class PartnerCommissionEntry(db.Model):
     product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=True, index=True)
 
     percentage = db.Column(db.Numeric(5, 2), nullable=False)
+    currency = db.Column(db.String(3), default='AED')
     base_amount_aed = db.Column(db.Numeric(15, 3), nullable=False)
     commission_amount_aed = db.Column(db.Numeric(15, 3), nullable=False)
+    
+    @property
+    def commission_amount(self):
+        return self.commission_amount_aed
+    
+    @commission_amount.setter
+    def commission_amount(self, value):
+        self.commission_amount_aed = value
     
     # Aliases for unified currency handling
     @property

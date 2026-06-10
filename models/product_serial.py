@@ -7,8 +7,13 @@ class ProductSerial(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=False, index=True)
     product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False, index=True)
+    warehouse_id = db.Column(db.Integer, db.ForeignKey('warehouses.id'), nullable=True, index=True)
     
-    serial_number = db.Column(db.String(100), nullable=False, unique=True, index=True)
+    serial_number = db.Column(db.String(100), nullable=False, index=True)
+    imei1 = db.Column(db.String(15), nullable=True, index=True)
+    imei2 = db.Column(db.String(15), nullable=True, index=True)
+    model_number = db.Column(db.String(50), nullable=True)
+    iccid = db.Column(db.String(20), nullable=True)
     
     # Lifecycle Status
     status = db.Column(db.String(20), default='available', index=True) 
@@ -34,6 +39,7 @@ class ProductSerial(db.Model):
     product = db.relationship('Product', backref='serials')
     purchase_line = db.relationship('PurchaseLine', backref='serials')
     sale_line = db.relationship('SaleLine', backref='serials')
+    warehouse = db.relationship('Warehouse', foreign_keys=[warehouse_id])
     
     def __repr__(self):
         return f'<Serial {self.serial_number} ({self.status})>'

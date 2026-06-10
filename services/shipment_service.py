@@ -1,17 +1,17 @@
-from datetime import datetime, timezone
 from extensions import db
 
 
 class ShipmentService:
 
     @staticmethod
-    def create_shipment(source_type, source_id, carrier, tracking_number, **kwargs):
+    def create_shipment(source_type, source_id, carrier_name, tracking_number, **kwargs):
         from models.shipment import Shipment
+
         shipment = Shipment(
             tenant_id=kwargs.get('tenant_id'),
             source_type=source_type,
             source_id=source_id,
-            carrier_name=carrier,
+            carrier_name=carrier_name,
             tracking_number=tracking_number,
             tracking_url=kwargs.get('tracking_url'),
             shipping_cost=kwargs.get('shipping_cost', 0),
@@ -21,7 +21,7 @@ class ShipmentService:
             estimated_delivery=kwargs.get('estimated_delivery'),
             recipient_name=kwargs.get('recipient_name'),
             recipient_phone=kwargs.get('recipient_phone'),
-            recipient_address=kwargs.get('recipient_address')
+            recipient_address=kwargs.get('recipient_address'),
         )
         db.session.add(shipment)
         return shipment
@@ -29,6 +29,8 @@ class ShipmentService:
     @staticmethod
     def update_status(shipment_id, status):
         from models.shipment import Shipment
+        from datetime import datetime, timezone
+
         shipment = Shipment.query.get(shipment_id)
         if shipment:
             shipment.status = status

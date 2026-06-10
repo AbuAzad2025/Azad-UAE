@@ -29,9 +29,18 @@ class Purchase(db.Model):
     tax_amount = db.Column(db.Numeric(15, 3), default=0)
     total_amount = db.Column(db.Numeric(15, 3), nullable=False)
     
-    currency = db.Column(db.String(3), default='AED', nullable=False)  # TODO: use Config.DEFAULT_CURRENCY
+    amount = db.Column(db.Numeric(15, 3), nullable=False)
+    currency = db.Column(db.String(3), default='AED', nullable=False)
     exchange_rate = db.Column(db.Numeric(15, 6), default=1)
     amount_aed = db.Column(db.Numeric(15, 3), nullable=False)
+
+    @property
+    def amount_base(self):
+        return self.amount_aed
+    
+    @amount_base.setter
+    def amount_base(self, value):
+        self.amount_aed = value
 
     # Landed cost components (Phase 5)
     freight = db.Column(db.Numeric(15, 3), default=0, nullable=False)

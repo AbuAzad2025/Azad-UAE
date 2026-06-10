@@ -1,0 +1,252 @@
+import pytest
+from decimal import Decimal
+from datetime import datetime, timezone, timedelta
+
+
+class TestSaleSalesRep:
+    def test_sales_rep_id_column(self, sample_tenant, sample_user):
+        from models.sale import Sale
+        from models.customer import Customer
+        from extensions import db
+        customer = Customer(tenant_id=sample_tenant.id, name='Test', phone='123')
+        db.session.add(customer)
+        db.session.flush()
+        sale = Sale(
+            tenant_id=sample_tenant.id,
+            sale_number='S-001',
+            customer_id=customer.id,
+            seller_id=sample_user.id,
+            sales_rep_id=sample_user.id,
+            total_amount=100,
+            amount=100,
+            amount_aed=100,
+        )
+        db.session.add(sale)
+        db.session.flush()
+        assert sale.sales_rep_id == sample_user.id
+        assert sale.sales_rep is not None
+
+    def test_sale_amount_base_alias(self, sample_tenant, sample_user):
+        from models.sale import Sale
+        from models.customer import Customer
+        from extensions import db
+        customer = Customer(tenant_id=sample_tenant.id, name='Test', phone='123')
+        db.session.add(customer)
+        db.session.flush()
+        sale = Sale(
+            tenant_id=sample_tenant.id,
+            sale_number='S-002',
+            customer_id=customer.id,
+            seller_id=sample_user.id,
+            total_amount=200,
+            amount=200,
+            amount_aed=200,
+        )
+        db.session.add(sale)
+        db.session.flush()
+        assert sale.amount_base == 200
+        assert sale.base_amount == 200
+        sale.amount_base = 300
+        assert sale.amount_aed == 300
+
+
+class TestPurchaseAmount:
+    def test_purchase_amount_base_alias(self, sample_tenant, sample_user):
+        from models.purchase import Purchase
+        from extensions import db
+        purchase = Purchase(
+            tenant_id=sample_tenant.id,
+            user_id=sample_user.id,
+            purchase_number='P-001',
+            supplier_name='Test Supplier',
+            total_amount=100,
+            amount=100,
+            amount_aed=100,
+        )
+        db.session.add(purchase)
+        db.session.flush()
+        assert purchase.amount_base == 100
+        purchase.amount_base = 150
+        assert purchase.amount_aed == 150
+
+
+class TestPartnerCommissionCurrency:
+    def test_partner_commission_currency(self, sample_tenant):
+        from models.partner_commission import PartnerCommissionEntry
+        from extensions import db
+        entry = PartnerCommissionEntry(
+            tenant_id=sample_tenant.id,
+            sale_id=1,
+            partner_customer_id=1,
+            percentage=10,
+            base_amount_aed=100,
+            commission_amount_aed=10,
+            currency='AED',
+        )
+        db.session.add(entry)
+        db.session.flush()
+        assert entry.currency == 'AED'
+        assert entry.commission_amount == 10
+
+
+class TestSaleLineWarranty:
+    def test_warranty_dates(self, sample_tenant, sample_user):
+        from models.sale import Sale, SaleLine
+        from models.customer import Customer
+        from models.product import Product
+        from extensions import db
+        customer = Customer(tenant_id=sample_tenant.id, name='Test', phone='123')
+        db.session.add(customer)
+        db.session.flush()
+        product = Product(tenant_id=sample_tenant.id, name='Test Product', regular_price=100)
+        db.session.add(product)
+        db.session.flush()
+        sale = Sale(
+            tenant_id=sample_tenant.id,
+            sale_number='S-003',
+            customer_id=customer.id,
+            seller_id=sample_user.id,
+            total_amount=100,
+            amount=100,
+            amount_aed=100,
+        )
+        db.session.add(sale)
+        db.session.flush()
+        line = SaleLine(
+            tenant_id=sample_tenant.id,
+            sale_id=sale.id,
+            product_id=product.id,
+            quantity=1,
+            unit_price=100,
+            line_total=100,
+            warranty_start_date=datetime.now(timezone.utc),
+            warranty_end_date=datetime.now(timezone.utc) + timedelta(days=365),
+        )
+        db.session.add(line)
+        db.session.flush()
+        assert line.warranty_start_date is not None
+        assert line.warranty_end_date is not None
+
+
+class TestProductSerialImei:
+    def test_imei_fields(self, sample_tenant):
+        from models.product_serial import ProductSerial
+        from models.product import Product
+        from extensions import db
+        product = Product(tenant_id=sample_tenant.id, name='Test Product', regular_price=100)
+        db.session.add(product)
+        db.session.flush()
+        serial = ProductSerial(
+            tenant_id=sample_tenant.id,
+            product_id=product.id,
+            serial_number='SN-001',
+            imei1='123456789012345',
+            imei2='543210987654321',
+            model_number='MODEL-X',
+            iccid='12345678901234567890',
+        )
+        db.session.add(serial)
+        db.session.flush()
+        assert serial.imei1 == '123456789012345'
+        assert serial.imei2 == '543210987654321'
+        assert serial.model_number == 'MODEL-X'
+        assert serial.iccid == '12345678901234567890'
+
+
+class TestIndustryService:
+    def test_validate_industry_code(self):
+        from services.industry_service import IndustryService
+        assert IndustryService.validate_industry_code('general') is True
+        assert IndustryService.validate_industry_code('invalid') is False
+
+    def test_get_business_type_choices(self):
+        from services.industry_service import IndustryService
+        choices = IndustryService.get_business_type_choices()
+        assert len(choices) > 0
+        codes = [c[0] for c in choices]
+        assert 'general' in codes
+        assert 'automotive' in codes
+
+    def test_get_core_fields(self, sample_tenant):
+        from services.industry_service import IndustryService
+        fields = IndustryService.get_core_fields()
+        assert isinstance(fields, list)
+
+    def test_get_fields_for_industry(self, sample_tenant):
+        from services.industry_service import IndustryService
+        fields = IndustryService.get_fields_for('automotive')
+        assert isinstance(fields, list)
+
+    def test_get_product_effective_industry(self, sample_tenant):
+        from services.industry_service import IndustryService
+        from models.product import Product
+        from extensions import db
+        product = Product(tenant_id=sample_tenant.id, name='Test', regular_price=50, industry='automotive')
+        db.session.add(product)
+        db.session.flush()
+        assert IndustryService.get_product_effective_industry(product, sample_tenant) == 'automotive'
+
+
+class TestPricingService:
+    def test_get_price_regular(self, sample_tenant):
+        from services.pricing_service import PricingService
+        from models.product import Product
+        from extensions import db
+        product = Product(tenant_id=sample_tenant.id, name='Test', regular_price=50)
+        db.session.add(product)
+        db.session.flush()
+        price = PricingService.get_price(product)
+        assert price == 50
+
+    def test_get_price_for_sale_line(self, sample_tenant):
+        from services.pricing_service import PricingService
+        from models.product import Product
+        from extensions import db
+        product = Product(tenant_id=sample_tenant.id, name='Test', regular_price=50)
+        db.session.add(product)
+        db.session.flush()
+        result = PricingService.get_price_for_sale_line(product, 1, None)
+        assert 'unit_price' in result
+        assert 'commission_rate' in result
+
+
+class TestCampaignService:
+    def test_validate_coupon_no_match(self, sample_tenant):
+        from services.campaign_service import CampaignService
+        result = CampaignService.validate_coupon('INVALID', sample_tenant.id)
+        assert result is None
+
+
+class TestWarrantyService:
+    def test_get_expiring_warranties_empty(self):
+        from services.warranty_service import WarrantyService
+        result = WarrantyService.get_expiring_warranties(days=30)
+        assert isinstance(result, list)
+
+
+class TestShipmentService:
+    def test_get_shipments_for_sale_empty(self):
+        from services.shipment_service import ShipmentService
+        result = ShipmentService.get_shipments_for_sale(99999)
+        assert isinstance(result, list)
+        assert len(result) == 0
+
+
+class TestProductImageService:
+    def test_get_images_for_product_empty(self):
+        from services.product_image_service import ProductImageService
+        result = ProductImageService.get_images_for_product(99999)
+        assert isinstance(result, list)
+        assert len(result) == 0
+
+
+class TestSerialTrackingService:
+    def test_validate_imei_valid(self):
+        from services.serial_tracking_service import SerialTrackingService
+        assert SerialTrackingService.validate_imei('123456789012345') is True
+
+    def test_validate_imei_invalid(self):
+        from services.serial_tracking_service import SerialTrackingService
+        assert SerialTrackingService.validate_imei('invalid') is False
+        assert SerialTrackingService.validate_imei('123') is False
+        assert SerialTrackingService.validate_imei(None) is False

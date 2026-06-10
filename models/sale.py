@@ -19,6 +19,7 @@ class Sale(db.Model):
     
     customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'), nullable=False, index=True)
     seller_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
+    sales_rep_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True, index=True)
     warehouse_id = db.Column(db.Integer, db.ForeignKey('warehouses.id'), nullable=True, index=True)
     branch_id = db.Column(db.Integer, db.ForeignKey('branches.id'), nullable=True, index=True) # New Branch ID
     
@@ -31,15 +32,31 @@ class Sale(db.Model):
     tax_amount = db.Column(db.Numeric(15, 3), default=0)
     total_amount = db.Column(db.Numeric(15, 3), nullable=False)
     
+    amount = db.Column(db.Numeric(15, 3), nullable=False)
     paid_amount = db.Column(db.Numeric(15, 3), default=0)
     balance_due = db.Column(db.Numeric(15, 3), default=0)
     
-    currency = db.Column(db.String(3), default='AED', nullable=False)  # TODO: use Config.DEFAULT_CURRENCY
+    currency = db.Column(db.String(3), default='AED', nullable=False)
     exchange_rate = db.Column(db.Numeric(15, 6), default=1)
     amount_aed = db.Column(db.Numeric(15, 3), nullable=False)
     paid_amount_aed = db.Column(db.Numeric(15, 3), default=0)
     
-    # Aliases for unified currency handling — amount_aed stores the tenant's base currency
+    @property
+    def amount_base(self):
+        return self.amount_aed
+    
+    @amount_base.setter
+    def amount_base(self, value):
+        self.amount_aed = value
+    
+    @property
+    def paid_amount_base(self):
+        return self.paid_amount_aed
+    
+    @paid_amount_base.setter
+    def paid_amount_base(self, value):
+        self.paid_amount_aed = value
+    
     @property
     def base_amount(self):
         return self.amount_aed
@@ -73,6 +90,7 @@ class Sale(db.Model):
     
     customer = db.relationship('Customer', back_populates='sales')
     seller = db.relationship('User', back_populates='sales', foreign_keys=[seller_id])
+    sales_rep = db.relationship('User', foreign_keys=[sales_rep_id])
     warehouse = db.relationship('Warehouse', foreign_keys=[warehouse_id])
     branch = db.relationship('Branch', backref='sales', foreign_keys=[branch_id])
     lines = db.relationship('SaleLine', back_populates='sale', lazy='joined')
@@ -246,6 +264,8 @@ class SaleLine(db.Model):
     line_total = db.Column(db.Numeric(15, 3), nullable=False)
     
     cost_price = db.Column(db.Numeric(15, 3), default=0)
+    warranty_start_date = db.Column(db.DateTime, nullable=True)
+    warranty_end_date = db.Column(db.DateTime, nullable=True)
     
     notes = db.Column(db.String(255))
     

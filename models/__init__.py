@@ -57,6 +57,11 @@ from .partner_commission import PartnerCommissionEntry
 from .azad_platform_fee import AzadPlatformFee
 from .partner import Partner
 from .product_price_tier import ProductPriceTier
+from .product_image import ProductImage
+from .industry_field_definition import IndustryFieldDefinition
+from .campaign import Campaign, SaleCampaign
+from .warranty_claim import WarrantyClaim
+from .shipment import Shipment
 from .partner_profit_distribution import PartnerProfitDistribution
 from .partner_transaction import PartnerTransaction
 __all__ = [
@@ -117,5 +122,10 @@ __all__ = [
     'PartnerProfitDistribution',
     'PartnerTransaction',
     'ProductPriceTier',
+    'ProductImage',
+    'IndustryFieldDefinition',
+    'Campaign', 'SaleCampaign',
+    'WarrantyClaim',
+    'Shipment',
     'JournalEntryAudit',
 ]
