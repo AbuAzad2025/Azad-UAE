@@ -59,6 +59,9 @@
     <h2 class="ic-3">{{ product.get_display_name(lang) }}{% if is_shop_logged_in %} <button class="ps-wishlist-btn" data-wishlist-toggle data-product-id="{{ product.id }}" aria-label="{{ t('wishlist') }}"><i class="far fa-heart"></i></button>{% endif %}</h2>
     {% if product.sku %}<p class="ps-card-meta">{{ product.sku }}</p>{% endif %}
     <p class="ps-price ic-4">{{ '%.2f'|format(product.regular_price) }} {{ tenant.default_currency or 'AED' }}</p>
+    {% if is_shop_logged_in %}
+    <small class="ps-loyalty-earn"><i class="fas fa-gem"></i> {{ t('earn_points') }} {{ '%d'|format(product.regular_price|int) }}</small>
+    {% endif %}
     <p class="ps-stock-ok"><i class="fas fa-check-circle"></i> {{ t('in_stock') }} — {{ available|int }}</p>
     {% if product.description %}
     <div class="ic-5">{{ product.description }}</div>
@@ -67,6 +70,18 @@
     <form method="post" action="{{ url_for('shop.cart_add', slug=store.store_slug) }}" data-ajax-cart>
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
       <input type="hidden" name="product_id" value="{{ product.id }}" aria-label="product id">
+      {% if variants %}
+      <div class="ps-form-group">
+        <label>{{ t('variant') }}</label>
+        <select name="variant_id" class="ps-variant-select" data-price-base="{{ product.regular_price }}">
+          {% for v in variants %}
+          <option value="{{ v.id }}" data-price="{{ '%.2f'|format(product.regular_price + v.price_adjustment) }}">
+            {{ v.get_display_name(lang) }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      {% endif %}
       <div class="ps-form-group">
         <label>{{ t('quantity') }}</label>
         <div class="ps-qty-wrap ic-7">
@@ -77,6 +92,16 @@
       </div>
       <button type="submit" class="ps-btn ps-btn-primary ps-btn-block ic-10"><i class="fas fa-shopping-basket"></i> {{ t('add_to_cart') }}</button>
     </form>
+    {% if available <= 0 %}
+    <div class="ps-stock-alert">
+      <p><i class="fas fa-bell"></i> {{ t('out_of_stock_notify') }}</p>
+      <form method="post" action="{{ url_for('shop.stock_alert', slug=store.store_slug, product_id=product.id) }}" class="ps-stock-alert-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="email" name="email" placeholder="{{ t('email') }}" required>
+        <button type="submit" class="ps-btn ps-btn-outline">{{ t('notify_me') }}</button>
+      </form>
+    </div>
+    {% endif %}
     {% if not is_shop_logged_in and wa_url %}
     <a href="{{ wa_url }}" target="_blank" rel="noopener" class="ps-btn ps-btn-wa ps-btn-block ic-11"><i class="fab fa-whatsapp"></i> {{ t('order_whatsapp') }}</a>
     <p class="ps-card-meta ic-12">{{ t('guest_checkout') }} — <a href="{{ url_for('shop.account_login', slug=store.store_slug) }}">{{ t('login') }}</a></p>

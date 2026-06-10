@@ -14,12 +14,18 @@ from utils.constants import normalize_payment_method_code
 STATUS_LABELS_AR = {
     'pending': 'بانتظار التأكيد',
     'confirmed': 'مؤكد',
+    'processing': 'قيد التجهيز',
+    'shipped': 'تم الشحن',
+    'delivered': 'تم التوصيل',
     'cancelled': 'ملغى',
 }
 
 STATUS_LABELS_EN = {
     'pending': 'Pending',
     'confirmed': 'Confirmed',
+    'processing': 'Processing',
+    'shipped': 'Shipped',
+    'delivered': 'Delivered',
     'cancelled': 'Cancelled',
 }
 
@@ -33,7 +39,7 @@ CHECKOUT_PAYMENT_MAP = {
 
 
 class StoreOrderService:
-    STORE_ORDER_STATUSES = ('pending', 'confirmed', 'cancelled')
+    STORE_ORDER_STATUSES = ('pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled')
 
     @staticmethod
     def status_label(status: str, lang: str = 'ar') -> str:

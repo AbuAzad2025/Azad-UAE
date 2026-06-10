@@ -24,6 +24,11 @@ from .store_payment_method import StorePaymentMethod
 from .shop_customer_account import ShopCustomerAccount
 from .shop_wishlist import ShopWishlist
 from .shop_review import ShopReview
+from .shop_abandoned_cart import ShopAbandonedCart
+from .shop_saved_payment import ShopSavedPayment
+from .shop_product_variant import ShopProductVariant
+from .shop_stock_alert import ShopStockAlert
+from .shop_loyalty import ShopLoyalty, ShopLoyaltyTransaction
 from .store_coupon import StoreCoupon
 from .system_settings import SystemSettings
 from .integration_settings import IntegrationSettings
@@ -79,6 +84,11 @@ __all__ = [
     'ShopCustomerAccount',
     'ShopWishlist',
     'ShopReview',
+    'ShopAbandonedCart',
+    'ShopSavedPayment',
+    'ShopProductVariant',
+    'ShopStockAlert',
+    'ShopLoyalty', 'ShopLoyaltyTransaction',
     'StoreCoupon',
     'SystemSettings',
     'IntegrationSettings',

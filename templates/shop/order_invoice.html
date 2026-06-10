@@ -1,0 +1,89 @@
+{% extends 'shop/base.html' %}
+{% block title %}{{ t('invoice') }} — {{ sale.sale_number }}{% endblock %}
+{% block content %}
+<div class="ps-invoice">
+  <div class="ps-invoice-header">
+    <div class="ps-invoice-brand">
+      {% if store.logo_url %}<img src="{{ store.logo_url }}" alt="{{ store.title }}" class="ps-invoice-logo">{% endif %}
+      <h1>{{ store.title }}</h1>
+      {% if store.phone %}<p>{{ t('phone') }}: {{ store.phone }}</p>{% endif %}
+      {% if store.whatsapp %}<p>WhatsApp: {{ store.whatsapp }}</p>{% endif %}
+      {% if store.email %}<p>{{ t('email') }}: {{ store.email }}</p>{% endif %}
+    </div>
+    <div class="ps-invoice-title-bar">
+      <h2>{{ t('invoice') }} #{{ sale.sale_number }}</h2>
+      <p>{{ sale.sale_date.strftime('%Y-%m-%d %H:%M') if sale.sale_date else '' }}</p>
+    </div>
+  </div>
+  <div class="ps-invoice-body">
+    <div class="ps-invoice-customer">
+      <h4>{{ t('name') }}</h4>
+      <p>{{ sale.customer.name if sale.customer else '—' }}</p>
+      <h4>{{ t('phone') }}</h4>
+      <p>{{ sale.customer.phone if sale.customer else '—' }}</p>
+      <h4>{{ t('address') }}</h4>
+      <p>{{ sale.customer.address if sale.customer else '—' }}</p>
+    </div>
+    <table class="ps-table ps-invoice-table">
+      <thead>
+        <tr>
+          <th>{{ t('shop') }}</th>
+          <th>{{ t('quantity') }}</th>
+          <th>{{ t('price') }}</th>
+          <th>{{ t('total') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for line in sale.lines %}
+        <tr>
+          <td>{{ line.product.name if line.product else '—' }}</td>
+          <td>{{ line.quantity|int if line.quantity == line.quantity|int else line.quantity }}</td>
+          <td>{{ '%.2f'|format(line.unit_price) }}</td>
+          <td>{{ '%.2f'|format(line.line_total) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        {% if sale.discount_amount and sale.discount_amount > 0 %}
+        <tr>
+          <td colspan="3" class="text-right">{{ t('coupon_discount') }}</td>
+          <td>-{{ '%.2f'|format(sale.discount_amount) }}</td>
+        </tr>
+        {% endif %}
+        <tr>
+          <td colspan="3" class="text-right">{{ t('total') }}</td>
+          <td><strong>{{ '%.2f'|format(sale.total_amount) }} {{ sale.currency }}</strong></td>
+        </tr>
+      </tfoot>
+    </table>
+    <div class="ps-invoice-payment">
+      <p><strong>{{ t('payment_method') }}:</strong> {{ pay_method.display_name(lang) if pay_method else sale.checkout_payment_method or t('cod') }}</p>
+      <p><strong>{{ t('payment_status') }}:</strong> {% if sale.payment_status == 'paid' %}{{ t('paid') }}{% elif sale.payment_status == 'partial' %}{{ t('partial') }}{% else %}{{ t('unpaid') }}{% endif %}</p>
+      <p><strong>{{ t('status') }}:</strong> {{ status_label }}</p>
+    </div>
+  </div>
+  <div class="ps-invoice-footer">
+    <button onclick="window.print()" class="ps-btn ps-btn-primary"><i class="fas fa-print"></i> {{ t('print_invoice') }}</button>
+  </div>
+</div>
+{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/shop-utilities.css') }}">
+<style>
+@media print {
+  .ps-header, .ps-footer, .ps-breadcrumbs, .ps-invoice-footer { display: none !important; }
+  body { background: #fff !important; }
+  .ps-invoice { box-shadow: none !important; padding: 0 !important; }
+}
+.ps-invoice { max-width: 800px; margin: 0 auto; padding: 2rem; background: #fff; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+.ps-invoice-header { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; margin-bottom: 2rem; border-bottom: 2px solid #eee; padding-bottom: 1rem; }
+.ps-invoice-logo { max-height: 60px; margin-bottom: 0.5rem; }
+.ps-invoice-title-bar { text-align: right; }
+.ps-invoice-customer { margin-bottom: 1.5rem; }
+.ps-invoice-customer h4 { margin: 0.5rem 0 0.25rem; font-size: 0.85rem; color: #666; }
+.ps-invoice-customer p { margin: 0; }
+.ps-invoice-payment { margin-top: 1.5rem; }
+.ps-invoice-payment p { margin: 0.25rem 0; }
+.ps-invoice-footer { margin-top: 2rem; text-align: center; }
+</style>
+{% endblock %}

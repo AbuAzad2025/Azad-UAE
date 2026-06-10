@@ -7,6 +7,13 @@
 {% endwith %}
 <h2 class="ic-1">{{ t('checkout') }}</h2>
 
+{% if is_shop_logged_in and loyalty_points and loyalty_points > 0 %}
+<div class="ps-loyalty-info">
+  <i class="fas fa-gem"></i> {{ t('loyalty_points') }}: <strong>{{ loyalty_points }}</strong>
+  <small>(= {{ '%.2f'|format(loyalty_points / 100) }} {{ tenant.default_currency or 'AED' }})</small>
+</div>
+{% endif %}
+
 {% if not payment_methods %}
 <div class="ps-alert ps-alert-warning">{{ t('no_payment_methods') }}</div>
 {% else %}
@@ -62,6 +69,7 @@
         <textarea id="notes" name="notes" rows="2" aria-label="notes" maxlength="500"></textarea>
       </div>
       <p class="ic-4"><i class="fas fa-lock"></i> {{ t('secure_checkout') }}</p>
+      <p class="ic-4"><i class="fas fa-bell"></i> {{ t('whatsapp_email_notify') }}</p>
       <button type="submit" class="ps-btn ps-btn-primary ps-btn-block ic-5">{{ t('place_order') }}</button>
     </form>
   </div>

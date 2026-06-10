@@ -13,6 +13,12 @@
     <span>{{ t('total') }}</span>
     <span>{{ '%.2f'|format(sale.total_amount) }} {{ sale.currency }}</span>
   </div>
+  {% if sale.coupon_code %}
+  <div class="ps-summary-row ic-4">
+    <span>{{ t('coupon_code') }} ({{ sale.coupon_code }})</span>
+    <span>-{{ '%.2f'|format(sale.discount_amount or 0) }} {{ sale.currency }}</span>
+  </div>
+  {% endif %}
   <span class="ps-badge-cod ic-5">
     <i class="{{ pay_method.icon if pay_method else 'fas fa-hand-holding-usd' }}"></i>
     {% if pay_method %}{{ pay_method.display_name(lang) }}{% else %}{{ t('cod') }}{% endif %}

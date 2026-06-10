@@ -59,7 +59,7 @@ def test_store_context_always_calculates_cart():
         end = content.find('def ', content.find('return {', start))
     func = content[start:end]
     assert 'cart_count' in func
-    assert 'if account else 0' not in content, '_store_context still has if account else 0'
+    assert 'if account else 0' not in func, '_store_context still has if account else 0'
 
 
 def test_catalog_includes_pagination():

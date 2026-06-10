@@ -1,0 +1,39 @@
+{% extends 'shop/base.html' %}
+{% block title %}{{ t('track_order') }} — {{ store.title }}{% endblock %}
+{% block content %}
+{% with current_page_name = t('track_order') %}
+{% include 'shop/partials/breadcrumbs.html' with context %}
+{% endwith %}
+<h2><i class="fas fa-truck"></i> {{ t('track_order') }}</h2>
+<form method="get" action="{{ url_for('shop.order_track', slug=store.store_slug) }}" class="ps-track-form">
+  <div class="ps-form-group">
+    <label for="order">{{ t('order_number') }}</label>
+    <input type="text" id="order" name="order" value="{{ order_number or '' }}" required placeholder="ORD-12345">
+  </div>
+  <button type="submit" class="ps-btn ps-btn-primary"><i class="fas fa-search"></i> {{ t('track') }}</button>
+</form>
+{% if sale %}
+<hr>
+<h3>{{ t('order') }}: {{ sale.sale_number }}</h3>
+<div class="ps-order-status">
+  <div class="ps-status-timeline">
+    <div class="ps-status-step {% if sale.status in ('pending','confirmed','processing','shipped','delivered') %}active{% endif %}">
+      <i class="fas fa-clock"></i> <span>{{ t('pending') }}</span>
+    </div>
+    <div class="ps-status-step {% if sale.status in ('confirmed','processing','shipped','delivered') %}active{% endif %}">
+      <i class="fas fa-check"></i> <span>{{ t('confirmed') }}</span>
+    </div>
+    <div class="ps-status-step {% if sale.status in ('shipped','delivered') %}active{% endif %}">
+      <i class="fas fa-truck"></i> <span>{{ t('shipped') }}</span>
+    </div>
+    <div class="ps-status-step {% if sale.status == 'delivered' %}active{% endif %}">
+      <i class="fas fa-circle-check"></i> <span>{{ t('delivered') }}</span>
+    </div>
+  </div>
+  <p><strong>{{ t('status') }}:</strong> {{ status_label }}</p>
+  <p><strong>{{ t('payment_method') }}:</strong> {{ sale.checkout_payment_method or 'COD' }}</p>
+  <p><strong>{{ t('total') }}:</strong> {{ '%.2f'|format(sale.total_amount) }} {{ sale.currency }}</p>
+</div>
+{% endif %}
+{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/shop-utilities.css') }}">{% endblock %}

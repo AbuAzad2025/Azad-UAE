@@ -21,6 +21,10 @@ celery.conf.update(
             'schedule': 86400.0,  # 24 hours in seconds
             'args': (None,),      # tenant_id=None → reconcile all tenants
         },
+        'check-abandoned-carts': {
+            'task': 'services.celery_tasks.send_abandoned_cart_reminders',
+            'schedule': 900.0,  # Every 15 minutes
+        },
     },
 )
 
@@ -202,6 +206,51 @@ def send_payment_reminders():
                     sent += 1
         
         return {'sent': sent, 'total_checked': len(customers)}
+
+
+@celery.task
+def send_abandoned_cart_reminders():
+    """Send reminders for abandoned carts (1h and 24h after creation)."""
+    from datetime import timedelta
+    from models.shop_abandoned_cart import ShopAbandonedCart
+    from services.store_service import StoreService
+    from extensions import db
+    now = datetime.now(timezone.utc)
+
+    first_reminder = ShopAbandonedCart.query.filter(
+        ShopAbandonedCart.reminder_sent_at.is_(None),
+        ShopAbandonedCart.created_at <= now - timedelta(hours=1),
+        ShopAbandonedCart.recovered == False,
+    ).all()
+
+    for ac in first_reminder:
+        try:
+            store = StoreService.get_tenant_store(ac.tenant_id)
+            if not store or not store.email:
+                continue
+            ac.reminder_sent_at = now
+            ac.reminder_count = (ac.reminder_count or 0) + 1
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+
+    second_reminder = ShopAbandonedCart.query.filter(
+        ShopAbandonedCart.reminder_sent_at.isnot(None),
+        ShopAbandonedCart.created_at <= now - timedelta(hours=24),
+        ShopAbandonedCart.recovered == False,
+        ShopAbandonedCart.reminder_count == 1,
+    ).all()
+
+    for ac in second_reminder:
+        try:
+            store = StoreService.get_tenant_store(ac.tenant_id)
+            if not store or not store.email:
+                continue
+            ac.reminder_sent_at = now
+            ac.reminder_count = (ac.reminder_count or 0) + 1
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
 
 
 @celery.task

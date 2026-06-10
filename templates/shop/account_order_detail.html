@@ -122,6 +122,14 @@
 
       {% endif %}
 
+      <div class="ps-order-actions">
+        <form method="post" action="{{ url_for('shop.reorder', slug=store.store_slug, sale_id=order.id) }}" style="display:inline">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="ps-btn ps-btn-primary"><i class="fas fa-rotate-right"></i> {{ t('reorder') }}</button>
+        </form>
+        <a href="{{ url_for('shop.order_invoice', slug=store.store_slug, sale_id=order.id) }}" class="ps-btn ps-btn-outline" target="_blank"><i class="fas fa-file-pdf"></i> {{ t('download_invoice') }}</a>
+      </div>
+
     </aside>
 
   </div>

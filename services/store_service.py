@@ -402,3 +402,45 @@ class StoreService:
         product_map = {p.id: p for p in products}
         ordered = [product_map[pid] for pid in ids if pid in product_map]
         return ordered
+
+    @staticmethod
+    def get_product_variants(tenant_id: int, product_id: int):
+        from models.shop_product_variant import ShopProductVariant
+        return ShopProductVariant.query.filter_by(
+            tenant_id=int(tenant_id),
+            product_id=int(product_id),
+            is_active=True,
+        ).order_by(ShopProductVariant.sort_order.asc()).all()
+
+    @staticmethod
+    def get_loyalty_points(account_id: int):
+        from models.shop_loyalty import ShopLoyalty
+        lp = ShopLoyalty.query.filter_by(account_id=int(account_id)).first()
+        return lp.points if lp else 0
+
+    @staticmethod
+    def earn_loyalty_points(tenant_id: int, account_id: int, sale_id: int, total_amount: Decimal):
+        if not account_id:
+            return
+        from models.shop_loyalty import ShopLoyalty, ShopLoyaltyTransaction
+        points_earned = int(total_amount)
+        lp = ShopLoyalty.query.filter_by(account_id=int(account_id)).first()
+        if not lp:
+            lp = ShopLoyalty(tenant_id=int(tenant_id), account_id=int(account_id), points=0, points_earned=0, points_redeemed=0)
+            db.session.add(lp)
+        lp.points = (lp.points or 0) + points_earned
+        lp.points_earned = (lp.points_earned or 0) + points_earned
+        txn = ShopLoyaltyTransaction(tenant_id=int(tenant_id), account_id=int(account_id), sale_id=sale_id, points=points_earned, reason='order')
+        db.session.add(txn)
+
+    @staticmethod
+    def redeem_loyalty_points(tenant_id: int, account_id: int, points: int):
+        from models.shop_loyalty import ShopLoyalty, ShopLoyaltyTransaction
+        lp = ShopLoyalty.query.filter_by(account_id=int(account_id)).first()
+        if not lp or (lp.points or 0) < points:
+            raise ValueError('Insufficient loyalty points')
+        lp.points = (lp.points or 0) - points
+        lp.points_redeemed = (lp.points_redeemed or 0) + points
+        txn = ShopLoyaltyTransaction(tenant_id=int(tenant_id), account_id=int(account_id), points=-points, reason='redeem')
+        db.session.add(txn)
+        return Decimal(points) / Decimal('100')
