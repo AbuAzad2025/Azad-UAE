@@ -35,6 +35,11 @@ PURCHASE_STATUSES = [
     ('cancelled', {'ar': 'ملغاة', 'en': 'Cancelled'}),
 ]
 
+EXPENSE_STATUSES = [
+    ('confirmed', {'ar': 'مؤكدة', 'en': 'Confirmed'}),
+    ('cancelled', {'ar': 'ملغاة', 'en': 'Cancelled'}),
+]
+
 STOCK_MOVEMENT_TYPES = [
     ('purchase', {'ar': 'شراء', 'en': 'Purchase'}),
     ('sale', {'ar': 'بيع', 'en': 'Sale'}),

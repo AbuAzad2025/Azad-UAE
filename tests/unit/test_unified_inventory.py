@@ -632,3 +632,27 @@ class TestPosIntegration:
         code = open('routes/pos.py', encoding='utf-8').read()
         assert "tenant.enable_pos" in code
         assert "enable_pos" in code
+
+
+class TestEnumsConsistency:
+    def test_expense_statuses_constant_exists(self):
+        from utils.constants import EXPENSE_STATUSES
+        assert EXPENSE_STATUSES is not None
+        codes = [s[0] for s in EXPENSE_STATUSES]
+        assert 'confirmed' in codes
+        assert 'cancelled' in codes
+
+    def test_normalize_payment_method_alias_bank(self):
+        from utils.constants import normalize_payment_method_code
+        assert normalize_payment_method_code('bank') == 'bank_transfer'
+        assert normalize_payment_method_code('BANK') == 'bank_transfer'
+        assert normalize_payment_method_code('cash') == 'cash'
+        assert normalize_payment_method_code(None) is None
+
+    def test_payment_model_imports_normalize(self):
+        code = open('models/payment.py', encoding='utf-8').read()
+        assert 'normalize_payment_method_code' in code
+
+    def test_payment_get_method_display_uses_normalize(self):
+        code = open('models/payment.py', encoding='utf-8').read()
+        assert code.count('canonical = normalize_payment_method_code') == 2

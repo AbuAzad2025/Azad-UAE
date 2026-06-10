@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 from extensions import db
+from utils.constants import normalize_payment_method_code
 
 
 class Payment(db.Model):
@@ -80,12 +81,12 @@ class Payment(db.Model):
         methods = {
             'cash': {'ar': 'نقدي', 'en': 'Cash'},
             'card': {'ar': 'بطاقة', 'en': 'Card'},
-            'bank': {'ar': 'تحويل بنكي', 'en': 'Bank Transfer'},
             'bank_transfer': {'ar': 'تحويل بنكي', 'en': 'Bank Transfer'},
             'cheque': {'ar': 'شيك', 'en': 'Cheque'},
             'e_wallet': {'ar': 'محفظة إلكترونية', 'en': 'E-Wallet'},
         }
-        return methods.get(self.payment_method, {}).get(lang, self.payment_method)
+        canonical = normalize_payment_method_code(self.payment_method)
+        return methods.get(canonical, {}).get(lang, self.payment_method)
     
     def confirm_payment(self):
         """تأكيد الدفعة (بعد صرف الشيك)"""
@@ -214,12 +215,12 @@ class Receipt(db.Model):
         methods = {
             'cash': {'ar': 'نقدي', 'en': 'Cash'},
             'card': {'ar': 'بطاقة', 'en': 'Card'},
-            'bank': {'ar': 'تحويل بنكي', 'en': 'Bank Transfer'},
             'bank_transfer': {'ar': 'تحويل بنكي', 'en': 'Bank Transfer'},
             'cheque': {'ar': 'شيك', 'en': 'Cheque'},
             'e_wallet': {'ar': 'محفظة إلكترونية', 'en': 'E-Wallet'},
         }
-        return methods.get(self.payment_method, {}).get(lang, self.payment_method)
+        canonical = normalize_payment_method_code(self.payment_method)
+        return methods.get(canonical, {}).get(lang, self.payment_method)
     
     def confirm_receipt(self):
         """تأكيد السند (بعد صرف الشيك)"""
