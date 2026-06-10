@@ -32,10 +32,10 @@ class IntegrationSettings(db.Model):
     last_test_message = db.Column(db.Text)  # رسالة الاختبار
     
     # Meta
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), 
                           onupdate=lambda: datetime.now(timezone.utc))
-    updated_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    updated_by = db.Column(db.Integer, db.ForeignKey('users.id'), index=True)
     
     # Relationships
     user = db.relationship('User', foreign_keys=[updated_by])

@@ -9,7 +9,7 @@ class ArchivedRecord(db.Model):
     )
 
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=False, index=True)
 
     table_name = db.Column(db.String(50), nullable=False, index=True)
     record_id = db.Column(db.Integer, nullable=False)
@@ -17,7 +17,7 @@ class ArchivedRecord(db.Model):
     data = db.Column(db.JSON, nullable=False)
 
     archived_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
-    archived_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    archived_by = db.Column(db.Integer, db.ForeignKey('users.id'), index=True)
 
     reason = db.Column(db.String(255))
 

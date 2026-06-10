@@ -14,20 +14,20 @@ class Warehouse(db.Model):
     WAREHOUSE_TYPES = (TYPE_PHYSICAL, TYPE_ONLINE)
     
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=False, index=True)
     name = db.Column(db.String(100), nullable=False)
     name_ar = db.Column(db.String(100))
     code = db.Column(db.String(50))
     location = db.Column(db.String(255))
     warehouse_type = db.Column(db.String(20), default=TYPE_PHYSICAL, nullable=False, index=True)
     
-    parent_id = db.Column(db.Integer, db.ForeignKey('warehouses.id'))
+    parent_id = db.Column(db.Integer, db.ForeignKey('warehouses.id'), index=True)
     branch_id = db.Column(db.Integer, db.ForeignKey('branches.id'), nullable=True, index=True) # Linked Branch
     
-    manager_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    is_active = db.Column(db.Boolean, default=True)
+    manager_id = db.Column(db.Integer, db.ForeignKey('users.id'), index=True)
+    is_active = db.Column(db.Boolean, default=True, index=True)
     is_main = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     
     parent = db.relationship('Warehouse', remote_side=[id], backref='sub_warehouses')
     manager = db.relationship('User', foreign_keys=[manager_id])
@@ -50,10 +50,10 @@ class StockMovement(db.Model):
     __tablename__ = 'stock_movements'
     
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=False, index=True)
 
     product_id = db.Column(db.Integer, db.ForeignKey('products.id', ondelete='RESTRICT'), nullable=False, index=True)
-    warehouse_id = db.Column(db.Integer, db.ForeignKey('warehouses.id'), nullable=False)
+    warehouse_id = db.Column(db.Integer, db.ForeignKey('warehouses.id'), nullable=False, index=True)
     
     movement_type = db.Column(db.String(20), nullable=False, index=True)
     

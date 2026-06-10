@@ -24,7 +24,7 @@ class Partner(db.Model):
     )
 
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=False, index=True)
 
     # Identity
     name = db.Column(db.String(200), nullable=False)
@@ -77,13 +77,13 @@ class Partner(db.Model):
     total_additional_investment = db.Column(db.Numeric(15, 3), default=0)
 
     # Status
-    is_active = db.Column(db.Boolean, default=True, nullable=False)
+    is_active = db.Column(db.Boolean, default=True, nullable=False, index=True)
     start_date = db.Column(db.Date, default=lambda: datetime.now(timezone.utc).date())
     end_date = db.Column(db.Date, nullable=True)
 
     notes = db.Column(db.Text)
 
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc),
                           onupdate=lambda: datetime.now(timezone.utc))
 

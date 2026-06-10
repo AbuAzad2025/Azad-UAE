@@ -10,7 +10,7 @@ class ProductReturn(db.Model):
     )
     
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=False, index=True)
     return_number = db.Column(db.String(50), nullable=False, index=True)
     
     sale_id = db.Column(db.Integer, db.ForeignKey('sales.id'), nullable=False, index=True)
@@ -41,7 +41,7 @@ class ProductReturn(db.Model):
     notes = db.Column(db.Text)
     
     processed_by = db.Column(db.Integer, db.ForeignKey('users.id'), index=True)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
     
     sale = db.relationship('Sale', backref='returns')
     customer = db.relationship('Customer', backref='returns')
@@ -67,10 +67,10 @@ class ProductReturnLine(db.Model):
     __tablename__ = 'product_return_lines'
     
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=False, index=True)
     return_id = db.Column(db.Integer, db.ForeignKey('product_returns.id'), nullable=False, index=True)
-    sale_line_id = db.Column(db.Integer, db.ForeignKey('sale_lines.id'))
-    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
+    sale_line_id = db.Column(db.Integer, db.ForeignKey('sale_lines.id'), index=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False, index=True)
     
     quantity = db.Column(db.Numeric(15, 3), nullable=False)
     unit_price = db.Column(db.Numeric(15, 3), nullable=False)

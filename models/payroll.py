@@ -5,7 +5,7 @@ class Employee(db.Model):
     __tablename__ = 'employees'
 
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=False, index=True)
     name = db.Column(db.String(100), nullable=False)
     name_ar = db.Column(db.String(100))
     phone = db.Column(db.String(50))
@@ -17,13 +17,13 @@ class Employee(db.Model):
     currency = db.Column(db.String(3), default='AED')  # TODO: use Config.DEFAULT_CURRENCY
     
     # Branch Link
-    branch_id = db.Column(db.Integer, db.ForeignKey('branches.id'), nullable=True)
+    branch_id = db.Column(db.Integer, db.ForeignKey('branches.id'), nullable=True, index=True)
     
     # Status
-    is_active = db.Column(db.Boolean, default=True)
+    is_active = db.Column(db.Boolean, default=True, index=True)
     joined_date = db.Column(db.Date, default=datetime.now)
     
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     
     # Relationships
     branch = db.relationship('Branch', backref='employees')
@@ -47,28 +47,28 @@ class SalaryAdvance(db.Model):
     __tablename__ = 'salary_advances'
 
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
-    employee_id = db.Column(db.Integer, db.ForeignKey('employees.id'), nullable=False)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=False, index=True)
+    employee_id = db.Column(db.Integer, db.ForeignKey('employees.id'), nullable=False, index=True)
     amount = db.Column(db.Numeric(10, 2), nullable=False)
     date = db.Column(db.Date, default=datetime.now)
     description = db.Column(db.String(255))
     
-    status = db.Column(db.String(20), default='approved') # pending, approved, paid, deducted
+    status = db.Column(db.String(20), default='approved', index=True) # pending, approved, paid, deducted
     is_deducted = db.Column(db.Boolean, default=False) # True if deducted from next salary
     
     # Link to GL
-    gl_entry_id = db.Column(db.Integer, db.ForeignKey('gl_journal_entries.id'), nullable=True)
+    gl_entry_id = db.Column(db.Integer, db.ForeignKey('gl_journal_entries.id'), nullable=True, index=True)
     
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
-    created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), index=True)
 
 
 class PayrollTransaction(db.Model):
     __tablename__ = 'payroll_transactions'
 
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
-    employee_id = db.Column(db.Integer, db.ForeignKey('employees.id'), nullable=False)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=False, index=True)
+    employee_id = db.Column(db.Integer, db.ForeignKey('employees.id'), nullable=False, index=True)
     
     # Period
     month = db.Column(db.Integer) # 1-12
@@ -85,11 +85,11 @@ class PayrollTransaction(db.Model):
     net_salary = db.Column(db.Numeric(10, 2), nullable=False)
     
     payment_date = db.Column(db.Date, default=datetime.now)
-    status = db.Column(db.String(20), default='paid') # draft, posted, paid
+    status = db.Column(db.String(20), default='paid', index=True) # draft, posted, paid
     
     # Link to GL
-    gl_entry_id = db.Column(db.Integer, db.ForeignKey('gl_journal_entries.id'), nullable=True)
-    branch_id = db.Column(db.Integer, db.ForeignKey('branches.id'), nullable=True)
+    gl_entry_id = db.Column(db.Integer, db.ForeignKey('gl_journal_entries.id'), nullable=True, index=True)
+    branch_id = db.Column(db.Integer, db.ForeignKey('branches.id'), nullable=True, index=True)
     
     notes = db.Column(db.Text)
-    created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), index=True)

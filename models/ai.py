@@ -7,7 +7,7 @@ class AiMemory(db.Model):
     __tablename__ = "ai_memories"
 
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey("tenants.id", ondelete="SET NULL"), nullable=True, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey("tenants.id", ondelete="CASCADE"), nullable=True, index=True)
     category = db.Column(db.String(50), nullable=False, default="general", index=True)
     key = db.Column(db.String(255), nullable=False, index=True)
     value = db.Column(db.Text, nullable=False)
@@ -16,7 +16,7 @@ class AiMemory(db.Model):
     access_count = db.Column(db.Integer, nullable=False, default=0)
     last_accessed = db.Column(db.DateTime, nullable=True)
     is_active = db.Column(db.Boolean, nullable=False, default=True, index=True)
-    created_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
+    created_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(timezone.utc), index=True)
     updated_at = db.Column(db.DateTime, nullable=True, onupdate=lambda: datetime.now(timezone.utc))
 
     def to_dict(self):
@@ -39,7 +39,7 @@ class AiInteraction(db.Model):
     __tablename__ = "ai_interactions"
 
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey("tenants.id", ondelete="SET NULL"), nullable=True, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey("tenants.id", ondelete="CASCADE"), nullable=True, index=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
     session_id = db.Column(db.String(100), nullable=True, index=True)
     query = db.Column(db.Text, nullable=False)
@@ -48,7 +48,7 @@ class AiInteraction(db.Model):
     was_successful = db.Column(db.Boolean, nullable=True)
     response_time_ms = db.Column(db.Integer, nullable=True)
     is_training_sample = db.Column(db.Boolean, nullable=False, default=False, index=True)
-    created_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
+    created_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(timezone.utc), index=True)
 
     def to_dict(self):
         return {
@@ -70,14 +70,14 @@ class AiExpertise(db.Model):
     __tablename__ = "ai_expertise"
 
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey("tenants.id", ondelete="SET NULL"), nullable=True, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey("tenants.id", ondelete="CASCADE"), nullable=True, index=True)
     domain = db.Column(db.String(100), nullable=False, index=True)
     topic = db.Column(db.String(200), nullable=False)
     knowledge = db.Column(db.Text, nullable=False)
     priority = db.Column(db.Integer, nullable=False, default=5)
     usage_count = db.Column(db.Integer, nullable=False, default=0)
     is_active = db.Column(db.Boolean, nullable=False, default=True, index=True)
-    created_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
+    created_at = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(timezone.utc), index=True)
 
     def to_dict(self):
         return {

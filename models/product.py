@@ -10,14 +10,14 @@ class ProductCategory(db.Model):
     )
 
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=False, index=True)
     name = db.Column(db.String(100), nullable=False, index=True)
     name_ar = db.Column(db.String(100))
     description = db.Column(db.Text)
-    parent_id = db.Column(db.Integer, db.ForeignKey('product_categories.id'))
+    parent_id = db.Column(db.Integer, db.ForeignKey('product_categories.id'), index=True)
     sort_order = db.Column(db.Integer, default=0)
-    is_active = db.Column(db.Boolean, default=True)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    is_active = db.Column(db.Boolean, default=True, index=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     
     parent = db.relationship('ProductCategory', remote_side=[id], backref='subcategories')
     products = db.relationship('Product', back_populates='category', lazy='dynamic')
@@ -42,11 +42,11 @@ class ProductPartner(db.Model):
     )
     
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
-    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
-    partner_customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'), nullable=False)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=False, index=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False, index=True)
+    partner_customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'), nullable=False, index=True)
     percentage = db.Column(db.Numeric(5, 2), nullable=False, default=0)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
     
     product = db.relationship('Product', back_populates='partner_shares')
     partner_customer = db.relationship('Customer', foreign_keys=[partner_customer_id])
@@ -76,7 +76,7 @@ class Product(db.Model):
     )
 
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=False, index=True)
     name = db.Column(db.String(200), nullable=False, index=True)
     name_ar = db.Column(db.String(200))
     commercial_name = db.Column(db.String(200))
@@ -87,7 +87,7 @@ class Product(db.Model):
     
     country_of_origin = db.Column(db.String(100))
     
-    category_id = db.Column(db.Integer, db.ForeignKey('product_categories.id'))
+    category_id = db.Column(db.Integer, db.ForeignKey('product_categories.id'), index=True)
     category = db.relationship('ProductCategory', back_populates='products')
     tenant = db.relationship('Tenant', backref='products', foreign_keys=[tenant_id])
     
@@ -143,7 +143,7 @@ class Product(db.Model):
     notes = db.Column(db.Text)
     
     is_active = db.Column(db.Boolean, default=True, nullable=False, index=True)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     
     sale_lines = db.relationship('SaleLine', back_populates='product', lazy='dynamic')

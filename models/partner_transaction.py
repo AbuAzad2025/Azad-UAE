@@ -18,7 +18,7 @@ class PartnerTransaction(db.Model):
     __tablename__ = 'partner_transactions'
 
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=False, index=True)
     partner_id = db.Column(db.Integer, db.ForeignKey('partners.id'), nullable=False, index=True)
 
     # Link to distribution (optional)
@@ -51,8 +51,8 @@ class PartnerTransaction(db.Model):
 
     notes = db.Column(db.Text)
 
-    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True, index=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
 
     # Relationships
     tenant = db.relationship('Tenant', foreign_keys=[tenant_id])

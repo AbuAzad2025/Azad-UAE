@@ -15,7 +15,7 @@ class AzadPlatformFee(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     idempotency_key = db.Column(db.String(180), nullable=False)
 
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=False, index=True)
     sale_id = db.Column(db.Integer, db.ForeignKey('sales.id'), nullable=False, index=True)
     payment_id = db.Column(db.Integer, db.ForeignKey('payments.id'), nullable=True, index=True)
     vault_id = db.Column(db.Integer, db.ForeignKey('payment_vault.id'), nullable=True, index=True)
@@ -31,7 +31,7 @@ class AzadPlatformFee(db.Model):
     status = db.Column(db.String(20), nullable=False, default='accrued', index=True)
     gl_posted = db.Column(db.Boolean, nullable=False, default=False)
 
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
     updated_at = db.Column(
         db.DateTime,
         default=lambda: datetime.now(timezone.utc),

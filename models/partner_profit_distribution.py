@@ -12,7 +12,7 @@ class PartnerProfitDistribution(db.Model):
     __tablename__ = 'partner_profit_distributions'
 
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=False, index=True)
     partner_id = db.Column(db.Integer, db.ForeignKey('partners.id'), nullable=False, index=True)
 
     # Period
@@ -49,16 +49,16 @@ class PartnerProfitDistribution(db.Model):
     # formula: share_amount - expense_share_amount - loss_share_amount + fixed_amount
 
     # Status
-    status = db.Column(db.String(20), default='draft')  # draft / approved / paid / cancelled
+    status = db.Column(db.String(20), default='draft', index=True)  # draft / approved / paid / cancelled
 
     # Audit
-    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
-    approved_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True, index=True)
+    approved_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True, index=True)
     approved_at = db.Column(db.DateTime, nullable=True)
 
     notes = db.Column(db.Text)
 
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc),
                           onupdate=lambda: datetime.now(timezone.utc))
 

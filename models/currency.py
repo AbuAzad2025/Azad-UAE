@@ -12,9 +12,9 @@ class Currency(db.Model):
     symbol = db.Column(db.String(10))
     
     is_base = db.Column(db.Boolean, default=False)
-    is_active = db.Column(db.Boolean, default=True)
+    is_active = db.Column(db.Boolean, default=True, index=True)
     
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     
     exchange_rates = db.relationship('ExchangeRate', back_populates='currency', lazy='dynamic')
@@ -57,8 +57,8 @@ class ExchangeRate(db.Model):
     valid_from = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
     valid_until = db.Column(db.DateTime)
     
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
-    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True, index=True)
     
     currency = db.relationship('Currency', back_populates='exchange_rates')
     

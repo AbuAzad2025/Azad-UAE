@@ -11,19 +11,19 @@ class CustomsTax(db.Model):
     __tablename__ = 'customs_taxes'
     
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=False, index=True)
     name = db.Column(db.String(200), nullable=False)
     name_ar = db.Column(db.String(200), nullable=False)
     tax_type = db.Column(db.String(50), nullable=False)  # customs, vat, excise, income, corporate
     rate = db.Column(db.Numeric(5, 4), nullable=False)  # نسبة الضريبة (0.05 = 5%)
     is_percentage = db.Column(db.Boolean, default=True)
     fixed_amount = db.Column(db.Numeric(18, 3), default=0)  # مبلغ ثابت
-    gl_account_id = db.Column(db.Integer, db.ForeignKey('gl_accounts.id'), nullable=False)
-    is_active = db.Column(db.Boolean, default=True)
+    gl_account_id = db.Column(db.Integer, db.ForeignKey('gl_accounts.id'), nullable=False, index=True)
+    is_active = db.Column(db.Boolean, default=True, index=True)
     effective_from = db.Column(db.Date, nullable=False)
     effective_to = db.Column(db.Date)
     description = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     
     gl_account = db.relationship('GLAccount')
@@ -51,13 +51,13 @@ class AdvancedExpense(db.Model):
     )
     
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=False, index=True)
     expense_number = db.Column(db.String(50), nullable=False, index=True)
     expense_date = db.Column(db.Date, nullable=False, index=True)
     description = db.Column(db.String(255), nullable=False)
     description_ar = db.Column(db.String(255), nullable=False)
-    category_id = db.Column(db.Integer, db.ForeignKey('expense_categories.id'), nullable=False)
-    supplier_id = db.Column(db.Integer, db.ForeignKey('suppliers.id'))
+    category_id = db.Column(db.Integer, db.ForeignKey('expense_categories.id'), nullable=False, index=True)
+    supplier_id = db.Column(db.Integer, db.ForeignKey('suppliers.id'), index=True)
     amount = db.Column(db.Numeric(18, 3), nullable=False)
     currency = db.Column(db.String(3), default='AED', nullable=False)  # TODO: use Config.DEFAULT_CURRENCY
     exchange_rate = db.Column(db.Numeric(15, 6), default=1)
@@ -83,7 +83,7 @@ class AdvancedExpense(db.Model):
     # معلومات الموافقة
     requires_approval = db.Column(db.Boolean, default=False)
     approval_status = db.Column(db.String(50), default='pending')  # pending, approved, rejected
-    approved_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    approved_by = db.Column(db.Integer, db.ForeignKey('users.id'), index=True)
     approved_at = db.Column(db.DateTime)
     approval_notes = db.Column(db.Text)
     
@@ -93,15 +93,15 @@ class AdvancedExpense(db.Model):
     receipt_number = db.Column(db.String(100))
     
     # معلومات النظام
-    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
     branch_id = db.Column(db.Integer, db.ForeignKey('branches.id'), nullable=True, index=True) # New Branch ID
-    gl_journal_entry_id = db.Column(db.Integer, db.ForeignKey('gl_journal_entries.id'))
+    gl_journal_entry_id = db.Column(db.Integer, db.ForeignKey('gl_journal_entries.id'), index=True)
     is_reversed = db.Column(db.Boolean, default=False)
     reversed_at = db.Column(db.DateTime)
-    reversed_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    reversed_by = db.Column(db.Integer, db.ForeignKey('users.id'), index=True)
     reversal_reason = db.Column(db.Text)
     
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     
     # العلاقات
@@ -205,17 +205,17 @@ class TaxCalculationRule(db.Model):
     __tablename__ = 'tax_calculation_rules'
     
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=False, index=True)
     name = db.Column(db.String(200), nullable=False)
     name_ar = db.Column(db.String(200), nullable=False)
     rule_type = db.Column(db.String(50), nullable=False)  # expense, income, purchase, sale
     condition_field = db.Column(db.String(100))  # الحقل المراد فحصه
     condition_operator = db.Column(db.String(20))  # =, >, <, >=, <=, LIKE
     condition_value = db.Column(db.String(255))  # القيمة المطلوبة
-    tax_id = db.Column(db.Integer, db.ForeignKey('customs_taxes.id'), nullable=False)
+    tax_id = db.Column(db.Integer, db.ForeignKey('customs_taxes.id'), nullable=False, index=True)
     priority = db.Column(db.Integer, default=0)  # أولوية التطبيق
-    is_active = db.Column(db.Boolean, default=True)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    is_active = db.Column(db.Boolean, default=True, index=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     
     tax = db.relationship('CustomsTax')
     tenant = db.relationship('Tenant')

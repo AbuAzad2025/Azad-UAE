@@ -43,7 +43,7 @@ class CardPayment(db.Model):
     gateway_response = db.Column(db.Text)  # JSON response
     
     # الحالة
-    status = db.Column(db.String(20), default='pending')  # pending, completed, failed, refunded
+    status = db.Column(db.String(20), default='pending', index=True)  # pending, completed, failed, refunded
     
     # معلومات الأمان
     ip_address = db.Column(db.String(50))

@@ -17,9 +17,9 @@ class BankReconciliation(db.Model):
     )
 
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=False, index=True)
     reconciliation_number = db.Column(db.String(50), nullable=False, index=True)
-    bank_account_id = db.Column(db.Integer, db.ForeignKey('gl_accounts.id'), nullable=False)
+    bank_account_id = db.Column(db.Integer, db.ForeignKey('gl_accounts.id'), nullable=False, index=True)
 
     # الفترة
     period_start = db.Column(db.Date, nullable=False)
@@ -47,9 +47,9 @@ class BankReconciliation(db.Model):
     notes = db.Column(db.Text)
     
     # Meta
-    created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
-    approved_by = db.Column(db.Integer, db.ForeignKey('users.id'))
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), index=True)
+    approved_by = db.Column(db.Integer, db.ForeignKey('users.id'), index=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), 
                           onupdate=lambda: datetime.now(timezone.utc))
     approved_at = db.Column(db.DateTime)
@@ -121,8 +121,8 @@ class BankReconciliationItem(db.Model):
     __tablename__ = 'bank_reconciliation_items'
 
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
-    reconciliation_id = db.Column(db.Integer, db.ForeignKey('bank_reconciliations.id'), nullable=False)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=False, index=True)
+    reconciliation_id = db.Column(db.Integer, db.ForeignKey('bank_reconciliations.id'), nullable=False, index=True)
 
     # نوع العنصر
     item_type = db.Column(db.String(30), nullable=False)  # outstanding_deposit, outstanding_withdrawal, bank_charge, etc.
@@ -133,8 +133,8 @@ class BankReconciliationItem(db.Model):
     amount = db.Column(db.Numeric(18, 3), nullable=False)
 
     # الربط
-    journal_entry_id = db.Column(db.Integer, db.ForeignKey('gl_journal_entries.id'))
-    cheque_id = db.Column(db.Integer, db.ForeignKey('cheques.id'))
+    journal_entry_id = db.Column(db.Integer, db.ForeignKey('gl_journal_entries.id'), index=True)
+    cheque_id = db.Column(db.Integer, db.ForeignKey('cheques.id'), index=True)
 
     # الحالة
     is_cleared = db.Column(db.Boolean, default=False)

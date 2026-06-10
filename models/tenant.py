@@ -101,14 +101,14 @@ class Tenant(db.Model):
     
     # Status - الحالة
     is_active = db.Column(db.Boolean, default=True, nullable=False, index=True)
-    is_suspended = db.Column(db.Boolean, default=False)
+    is_suspended = db.Column(db.Boolean, default=False, index=True)
     suspension_reason = db.Column(db.Text)
     
     # Meta
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), 
                           onupdate=lambda: datetime.now(timezone.utc))
-    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True, index=True)
     
     # Relationships
     

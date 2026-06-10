@@ -24,7 +24,7 @@ class Package(db.Model):
     features = db.Column(db.JSON, default=list)  # قائمة بالميزات
     
     # الإعدادات
-    is_active = db.Column(db.Boolean, default=True)  # هل الباقة نشطة
+    is_active = db.Column(db.Boolean, default=True, index=True)  # هل الباقة نشطة
     is_featured = db.Column(db.Boolean, default=False)  # باقة مميزة
     badge_text = db.Column(db.String(50))  # نص الشارة (مثل: الأكثر شعبية)
     badge_color = db.Column(db.String(20), default='primary')  # لون الشارة
@@ -47,7 +47,7 @@ class Package(db.Model):
     has_priority_support = db.Column(db.Boolean, default=False)  # دعم أولوية
     
     # Timestamps
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     def __repr__(self):
@@ -91,7 +91,7 @@ class PackagePurchase(db.Model):
     __tablename__ = 'package_purchases'
     
     id = db.Column(db.Integer, primary_key=True)
-    package_id = db.Column(db.Integer, db.ForeignKey('packages.id'), nullable=False)
+    package_id = db.Column(db.Integer, db.ForeignKey('packages.id'), nullable=False, index=True)
     
     # بيانات المشتري
     customer_name = db.Column(db.String(200), nullable=False)
@@ -118,7 +118,7 @@ class PackagePurchase(db.Model):
     notes = db.Column(db.Text)
     
     # Timestamps
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # العلاقات

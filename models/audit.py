@@ -8,7 +8,7 @@ class AuditLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
 
     # Tenant isolation
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=True, index=True)
 
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), index=True)
     

@@ -18,7 +18,7 @@ class ExchangeRateRecord(db.Model):
     )
 
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=False, index=True)
 
     from_currency = db.Column(db.String(3), nullable=False, index=True)
     to_currency = db.Column(db.String(3), nullable=False, index=True)
@@ -37,8 +37,8 @@ class ExchangeRateRecord(db.Model):
     locked_by_document_id = db.Column(db.Integer, nullable=True)
 
     # Audit
-    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True, index=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
 
     # Relationships
     tenant = db.relationship('Tenant', backref='exchange_rate_records', foreign_keys=[tenant_id])

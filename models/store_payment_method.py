@@ -22,7 +22,7 @@ class StorePaymentMethod(db.Model):
     is_builtin = db.Column(db.Boolean, default=False, nullable=False)
     sort_order = db.Column(db.Integer, default=100, nullable=False)
     config_json = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
     updated_at = db.Column(
         db.DateTime,
         default=lambda: datetime.now(timezone.utc),

@@ -11,7 +11,7 @@ class StoreCoupon(db.Model):
     )
 
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=False, index=True)
     code = db.Column(db.String(50), nullable=False, index=True)
     description = db.Column(db.String(255))
     discount_percent = db.Column(db.Numeric(5, 2))
@@ -19,10 +19,10 @@ class StoreCoupon(db.Model):
     min_order_amount = db.Column(db.Numeric(15, 3))
     max_uses = db.Column(db.Integer)
     used_count = db.Column(db.Integer, default=0, nullable=False)
-    is_active = db.Column(db.Boolean, default=True, nullable=False)
+    is_active = db.Column(db.Boolean, default=True, nullable=False, index=True)
     valid_from = db.Column(db.DateTime)
     valid_until = db.Column(db.DateTime)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
 
     tenant = db.relationship('Tenant', backref=db.backref('store_coupons', lazy='dynamic'))
 

@@ -6,14 +6,14 @@ class PartnerCommissionEntry(db.Model):
     __tablename__ = 'partner_commission_entries'
 
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=False, index=True)
     branch_id = db.Column(db.Integer, db.ForeignKey('branches.id'), nullable=True, index=True)
 
     sale_id = db.Column(db.Integer, db.ForeignKey('sales.id'), nullable=False, index=True)
-    sale_line_id = db.Column(db.Integer, db.ForeignKey('sale_lines.id'), nullable=True)
+    sale_line_id = db.Column(db.Integer, db.ForeignKey('sale_lines.id'), nullable=True, index=True)
 
     partner_customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'), nullable=False, index=True)
-    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=True, index=True)
 
     percentage = db.Column(db.Numeric(5, 2), nullable=False)
     base_amount_aed = db.Column(db.Numeric(15, 3), nullable=False)
@@ -36,7 +36,7 @@ class PartnerCommissionEntry(db.Model):
     def commission_amount_base(self, value):
         self.commission_amount_aed = value
 
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
 
     tenant = db.relationship('Tenant', foreign_keys=[tenant_id])
     branch = db.relationship('Branch', foreign_keys=[branch_id])

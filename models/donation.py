@@ -17,7 +17,7 @@ class Donation(db.Model):
     id = db.Column(db.Integer, primary_key=True)
 
     # NULL means Azad/platform donation; tenant_id means a project/tenant donation.
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=True, index=True)
 
     # Amount Info - معلومات المبلغ
     amount_usd = db.Column(db.Numeric(15, 2), nullable=False)  # المبلغ بالدولار
@@ -32,7 +32,7 @@ class Donation(db.Model):
     transaction_hash = db.Column(db.String(200))  # Transaction ID/Hash
     
     # Status - الحالة
-    status = db.Column(db.String(20), default='pending')  # pending, confirmed, completed, failed
+    status = db.Column(db.String(20), default='pending', index=True)  # pending, confirmed, completed, failed
     
     # Donor Info - معلومات المتبرع (اختياري)
     donor_name = db.Column(db.String(200))

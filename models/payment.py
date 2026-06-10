@@ -9,7 +9,7 @@ class Payment(db.Model):
     )
 
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=False, index=True)
     payment_number = db.Column(db.String(50), nullable=False, index=True)
     
     payment_type = db.Column(db.String(20), nullable=False, index=True)
@@ -63,7 +63,7 @@ class Payment(db.Model):
     notes = db.Column(db.Text)
     
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True, index=True)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
     
     sale = db.relationship('Sale', back_populates='payments')
     customer = db.relationship('Customer')
@@ -151,7 +151,7 @@ class Receipt(db.Model):
     )
     
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=False, index=True)
     receipt_number = db.Column(db.String(50), nullable=False, index=True)
     
     # تصنيف مصدر السند
@@ -199,7 +199,7 @@ class Receipt(db.Model):
     notes = db.Column(db.Text)
     
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True, index=True)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
     
     customer = db.relationship('Customer', back_populates='receipts')
     branch = db.relationship('Branch', foreign_keys=[branch_id])

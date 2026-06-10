@@ -16,17 +16,17 @@ class ProfitCenter(db.Model):
     )
 
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=False, index=True)
     code = db.Column(db.String(20), nullable=False, index=True)
     name_ar = db.Column(db.String(200), nullable=False)
     name_en = db.Column(db.String(200))
 
     # التسلسل الهرمي
-    parent_id = db.Column(db.Integer, db.ForeignKey('profit_centers.id'))
+    parent_id = db.Column(db.Integer, db.ForeignKey('profit_centers.id'), index=True)
     level = db.Column(db.Integer, default=0)
 
     # المسؤول
-    manager_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    manager_id = db.Column(db.Integer, db.ForeignKey('users.id'), index=True)
 
     # الحالة
     is_active = db.Column(db.Boolean, default=True, index=True)
@@ -34,7 +34,7 @@ class ProfitCenter(db.Model):
     description = db.Column(db.Text)
 
     # Meta
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc),
                           onupdate=lambda: datetime.now(timezone.utc))
 

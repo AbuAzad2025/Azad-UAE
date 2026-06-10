@@ -5,7 +5,7 @@ class ProductSerial(db.Model):
     __tablename__ = 'product_serials'
 
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=False, index=True)
     product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False, index=True)
     
     serial_number = db.Column(db.String(100), nullable=False, unique=True, index=True)
@@ -19,14 +19,14 @@ class ProductSerial(db.Model):
     # lost: Lost/Stolen
     
     # Tracking
-    purchase_line_id = db.Column(db.Integer, db.ForeignKey('purchase_lines.id'), nullable=True) # Where did we get it?
-    sale_line_id = db.Column(db.Integer, db.ForeignKey('sale_lines.id'), nullable=True) # Who did we sell it to?
+    purchase_line_id = db.Column(db.Integer, db.ForeignKey('purchase_lines.id'), nullable=True, index=True) # Where did we get it?
+    sale_line_id = db.Column(db.Integer, db.ForeignKey('sale_lines.id'), nullable=True, index=True) # Who did we sell it to?
     
     # Warranty Info (Calculated from Sale Date)
     warranty_start_date = db.Column(db.DateTime, nullable=True)
     warranty_end_date = db.Column(db.DateTime, nullable=True)
     
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     
     # Relationships

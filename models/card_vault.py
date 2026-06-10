@@ -16,7 +16,7 @@ class CardVault(db.Model):
     __tablename__ = 'card_vault'
 
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=False, index=True)
 
     customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'), nullable=False, index=True)
     
@@ -33,13 +33,13 @@ class CardVault(db.Model):
     last_four = db.Column(db.String(4), nullable=False)
     
     is_default = db.Column(db.Boolean, default=False)
-    is_active = db.Column(db.Boolean, default=True)
+    is_active = db.Column(db.Boolean, default=True, index=True)
     
     usage_count = db.Column(db.Integer, default=0)
     last_used = db.Column(db.DateTime)
     
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
-    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True, index=True)
     
     tenant = db.relationship('Tenant', backref='card_vaults', foreign_keys=[tenant_id])
     customer = db.relationship('Customer', backref='cards')

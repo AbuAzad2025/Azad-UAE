@@ -10,15 +10,15 @@ class GLAccount(db.Model):
     )
 
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=False, index=True)
     code = db.Column(db.String(20), nullable=False, index=True)
     name = db.Column(db.String(200), nullable=False)  # English name
     name_ar = db.Column(db.String(200))  # Arabic name
-    parent_id = db.Column(db.Integer, db.ForeignKey('gl_accounts.id'))
+    parent_id = db.Column(db.Integer, db.ForeignKey('gl_accounts.id'), index=True)
     branch_id = db.Column(db.Integer, db.ForeignKey('branches.id'), nullable=True, index=True)
     type = db.Column(db.String(20), nullable=False, index=True)  # asset, liability, equity, revenue, expense
     currency = db.Column(db.String(3), default='AED', nullable=False)  # TODO: use Config.DEFAULT_CURRENCY
-    is_active = db.Column(db.Boolean, default=True, nullable=False)
+    is_active = db.Column(db.Boolean, default=True, nullable=False, index=True)
     is_header = db.Column(db.Boolean, default=False)  # حساب رئيسي (لا يقبل قيود مباشرة)
     level = db.Column(db.Integer, default=0)  # مستوى الحساب في الشجرة
     description = db.Column(db.Text)  # وصف الحساب
@@ -28,7 +28,7 @@ class GLAccount(db.Model):
     bank_account_number = db.Column(db.String(100), nullable=True)
     bank_iban = db.Column(db.String(50), nullable=True)
     bank_swift_code = db.Column(db.String(20), nullable=True)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), 
                           onupdate=lambda: datetime.now(timezone.utc))
 
@@ -86,7 +86,7 @@ class GLJournalEntry(db.Model):
     )
 
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=False, index=True)
     entry_number = db.Column(db.String(50), nullable=False, index=True)
     entry_date = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
     description = db.Column(db.String(255))
@@ -100,10 +100,10 @@ class GLJournalEntry(db.Model):
     total_credit = db.Column(db.Numeric(18, 3), default=0)
     is_posted = db.Column(db.Boolean, default=True)  # هل تم ترحيل القيد
     is_reversed = db.Column(db.Boolean, default=False)  # هل تم عكس القيد
-    reversed_entry_id = db.Column(db.Integer, db.ForeignKey('gl_journal_entries.id'))  # القيد المعكوس
+    reversed_entry_id = db.Column(db.Integer, db.ForeignKey('gl_journal_entries.id'), index=True)  # القيد المعكوس
     notes = db.Column(db.Text)  # ملاحظات إضافية
-    created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), index=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), 
                           onupdate=lambda: datetime.now(timezone.utc))
 
@@ -192,14 +192,14 @@ class GLPeriod(db.Model):
     )
 
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=False, index=True)
     year = db.Column(db.Integer, nullable=False)
     month = db.Column(db.Integer, nullable=False)
     is_closed = db.Column(db.Boolean, default=False, nullable=False)
     closed_at = db.Column(db.DateTime)
-    closed_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    closed_by = db.Column(db.Integer, db.ForeignKey('users.id'), index=True)
     notes = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
 
     tenant = db.relationship('Tenant', backref='gl_periods', foreign_keys=[tenant_id])
 
@@ -207,7 +207,7 @@ class GLJournalLine(db.Model):
     __tablename__ = 'gl_journal_lines'
 
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=False, index=True)
     entry_id = db.Column(db.Integer, db.ForeignKey('gl_journal_entries.id', ondelete='RESTRICT'), nullable=False, index=True)
     account_id = db.Column(db.Integer, db.ForeignKey('gl_accounts.id'), nullable=False, index=True)
     description = db.Column(db.String(255))
@@ -415,7 +415,7 @@ class GLAccountMapping(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     tenant_id = db.Column(
         db.Integer,
-        db.ForeignKey('tenants.id', ondelete='RESTRICT'),
+        db.ForeignKey('tenants.id', ondelete='CASCADE'),
         nullable=False,
         index=True,
     )
@@ -432,11 +432,12 @@ class GLAccountMapping(db.Model):
         nullable=True,
         index=True,
     )
-    is_active = db.Column(db.Boolean, default=True, nullable=False)
+    is_active = db.Column(db.Boolean, default=True, nullable=False, index=True)
     created_at = db.Column(
         db.DateTime,
         default=lambda: datetime.now(timezone.utc),
         nullable=False,
+        index=True,
     )
     updated_at = db.Column(
         db.DateTime,

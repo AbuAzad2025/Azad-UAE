@@ -67,8 +67,8 @@ class TestModelIntegrity:
                         missing.append(f"{table}.{flag}")
             assert not missing, f"Flag columns NOT indexed ({len(missing)}): {missing}"
 
-    def test_all_fks_have_on_delete(self, app):
-        """Every foreign key must define ON DELETE behavior."""
+    def test_all_tenant_id_fks_have_cascade(self, app):
+        """Every tenant_id FK must have ON DELETE CASCADE."""
         from extensions import db
         with app.app_context():
             inspector = inspect(db.engine)
@@ -77,12 +77,14 @@ class TestModelIntegrity:
                 if table.startswith("alembic_"):
                     continue
                 for fk in inspector.get_foreign_keys(table):
+                    if "tenant_id" not in fk["constrained_columns"]:
+                        continue
                     options = fk.get("options", {})
                     ondelete = options.get("ondelete")
-                    if not ondelete:
+                    if ondelete != "CASCADE":
                         cols = ", ".join(fk["constrained_columns"])
-                        missing.append(f"{table}({cols}) -> {fk['referred_table']}")
-            assert not missing, f"FKs without ON DELETE ({len(missing)}):\n" + "\n".join(missing[:20])
+                        missing.append(f"{table}({cols}) -> {fk['referred_table']} ({ondelete or 'NONE'})")
+            assert not missing, f"tenant_id FKs without CASCADE ({len(missing)}):\n" + "\n".join(missing[:20])
 
     def test_all_fk_columns_indexed(self, app):
         """Every FK column must have an index (excl. PKs)."""

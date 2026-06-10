@@ -15,7 +15,7 @@ class InvoiceSettings(db.Model):
     __tablename__ = 'invoice_settings'
     
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=False, index=True)
     
     # Company Info - معلومات الشركة
     company_name_ar = db.Column(db.String(200), nullable=False, default='شركة أزاد')
@@ -106,11 +106,11 @@ class InvoiceSettings(db.Model):
     active_template = db.Column(db.String(50), default='modern')  # modern, classic, minimal
     
     # Meta
-    is_active = db.Column(db.Boolean, default=True)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    is_active = db.Column(db.Boolean, default=True, index=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), 
                           onupdate=lambda: datetime.now(timezone.utc))
-    updated_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    updated_by = db.Column(db.Integer, db.ForeignKey('users.id'), index=True)
     
     # Relationships
     tenant = db.relationship('Tenant', backref='invoice_settings', foreign_keys=[tenant_id])

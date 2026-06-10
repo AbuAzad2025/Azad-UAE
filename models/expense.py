@@ -9,12 +9,12 @@ class ExpenseCategory(db.Model):
     )
     
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=False, index=True)
     name = db.Column(db.String(100), nullable=False, index=True)
     name_ar = db.Column(db.String(100))
     gl_account_code = db.Column(db.String(20))
-    is_active = db.Column(db.Boolean, default=True)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    is_active = db.Column(db.Boolean, default=True, index=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     
     expenses = db.relationship('Expense', back_populates='category', lazy='dynamic')
     tenant = db.relationship('Tenant', backref='expense_categories', foreign_keys=[tenant_id])
@@ -30,7 +30,7 @@ class Expense(db.Model):
     )
     
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=False, index=True)
     expense_number = db.Column(db.String(50), nullable=False, index=True)
     
     category_id = db.Column(db.Integer, db.ForeignKey('expense_categories.id'), nullable=False, index=True)
@@ -60,7 +60,7 @@ class Expense(db.Model):
     is_active = db.Column(db.Boolean, default=True, index=True)
     
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
     
     # Branch Support
     branch_id = db.Column(db.Integer, db.ForeignKey('branches.id'), nullable=True, index=True)

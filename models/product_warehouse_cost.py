@@ -18,7 +18,7 @@ class ProductWarehouseCost(db.Model):
     )
 
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=False, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=False, index=True)
     product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False, index=True)
     warehouse_id = db.Column(db.Integer, db.ForeignKey('warehouses.id'), nullable=False, index=True)
 
@@ -32,10 +32,10 @@ class ProductWarehouseCost(db.Model):
 
     # Lock to prevent concurrent WAC updates
     last_updated = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
-    updated_by_movement_id = db.Column(db.Integer, db.ForeignKey('stock_movements.id'), nullable=True)
+    updated_by_movement_id = db.Column(db.Integer, db.ForeignKey('stock_movements.id'), nullable=True, index=True)
 
     # Audit
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc),
                           onupdate=lambda: datetime.now(timezone.utc))
 

@@ -24,7 +24,7 @@ class Permission(db.Model):
     name_ar = db.Column(db.String(100))  # Arabic name
     description = db.Column(db.String(255))
     category = db.Column(db.String(50))  # Group permissions: 'sales', 'products', 'reports', etc.
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     
     def __repr__(self):
         return f'<Permission {self.code}>'
@@ -48,8 +48,8 @@ class Role(db.Model):
     name_ar = db.Column(db.String(50))  # Arabic name
     slug = db.Column(db.String(50), unique=True, nullable=False, index=True)  # e.g., 'super_admin'
     description = db.Column(db.String(255))
-    is_active = db.Column(db.Boolean, default=True)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    is_active = db.Column(db.Boolean, default=True, index=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     
     # Relationships
@@ -88,16 +88,16 @@ class User(UserMixin, db.Model):
     phone = db.Column(db.String(50))
     
     # Role
-    role_id = db.Column(db.Integer, db.ForeignKey('roles.id'), nullable=False)
+    role_id = db.Column(db.Integer, db.ForeignKey('roles.id'), nullable=False, index=True)
     role = db.relationship('Role', back_populates='users')
-    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id'), nullable=True, index=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=True, index=True)
     branch_id = db.Column(db.Integer, db.ForeignKey('branches.id'), nullable=True, index=True) # User Home Branch
     branch = db.relationship('Branch', backref='users', foreign_keys=[branch_id])
     tenant = db.relationship('Tenant', backref='users', foreign_keys=[tenant_id])
     
     is_owner = db.Column(db.Boolean, default=False, nullable=False, index=True)
     
-    is_active = db.Column(db.Boolean, default=True, nullable=False)
+    is_active = db.Column(db.Boolean, default=True, nullable=False, index=True)
     email_verified = db.Column(db.Boolean, default=False)
     
     # Login tracking
@@ -107,7 +107,7 @@ class User(UserMixin, db.Model):
     locked_until = db.Column(db.DateTime)
     
     # Timestamps
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     
     # Relationships
