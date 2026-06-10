@@ -3,7 +3,7 @@ from flask_login import login_required, current_user
 from extensions import db
 from models import Branch
 from utils.decorators import admin_required
-from utils.tenanting import get_active_tenant_id, tenant_query
+from utils.tenanting import get_active_tenant_id, tenant_query, tenant_get_or_404
 
 branches_bp = Blueprint('branches', __name__, url_prefix='/branches')
 
@@ -78,10 +78,7 @@ def create():
 @login_required
 @admin_required
 def edit(id):
-    branch = Branch.query.get_or_404(id)
-    tenant_id = get_active_tenant_id(current_user)
-    if tenant_id is not None and branch.tenant_id != tenant_id:
-        abort(404)
+    branch = tenant_get_or_404(Branch, id)
 
     if request.method == 'POST':
         branch.name = request.form.get('name')
@@ -105,10 +102,7 @@ def edit(id):
 @login_required
 @admin_required
 def delete(id):
-    branch = Branch.query.get_or_404(id)
-    tenant_id = get_active_tenant_id(current_user)
-    if tenant_id is not None and branch.tenant_id != tenant_id:
-        abort(404)
+    branch = tenant_get_or_404(Branch, id)
 
     # Check for related data before deletion
     # This is a basic check. In a real system, you might want to soft-delete or strict check.

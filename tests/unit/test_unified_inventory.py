@@ -807,3 +807,13 @@ class TestChequeModule:
         code = open('routes/cheques.py', encoding='utf-8').read()
         view_body = code.split("def view(id):")[1].split("def edit(id):")[0]
         assert "db.session.commit()" not in view_body
+
+
+class TestBranchesRoutes:
+    def test_branches_uses_tenant_get_or_404(self):
+        code = open('routes/branches.py', encoding='utf-8').read()
+        assert "tenant_get_or_404(Branch, id)" in code
+
+    def test_branches_no_manual_tenant_check_after_get(self):
+        code = open('routes/branches.py', encoding='utf-8').read()
+        assert "branch.tenant_id != tenant_id" not in code

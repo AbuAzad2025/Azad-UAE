@@ -2,6 +2,7 @@ from extensions import db
 from models import GLAccount
 from models.gl_account_registry import BASE_ACCOUNTS, INDUSTRY_EXTENSIONS
 from sqlalchemy import or_
+from utils.currency_utils import resolve_default_currency
 
 
 def _template_to_tuple(tmpl):
@@ -228,6 +229,18 @@ class GLTreeBuilder:
             processed[code] = new_acc
             result['action'] = 'created'
             return result
+
+    @staticmethod
+    def _resolve_tenant_currency(tenant_id):
+        """Resolve default currency for tenant, fallback to AED."""
+        try:
+            from models.tenant import Tenant
+            tenant = Tenant.query.get(int(tenant_id))
+            if tenant and tenant.default_currency:
+                return tenant.default_currency
+        except Exception:
+            pass
+        return 'AED'
 
     @staticmethod
     def _branch_account_code(prefix, branch_id):
