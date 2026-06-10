@@ -426,3 +426,39 @@ class TestPurchaseAmountFix:
         html = open('templates/purchases/create.html', encoding='utf-8').read()
         assert 'ILS' in html
         assert 'شيقل' in html
+
+
+class TestExpenseAmountBase:
+    def test_expense_amount_base_alias(self, sample_tenant, sample_user):
+        from models.expense import Expense, ExpenseCategory
+        from extensions import db
+        cat = ExpenseCategory(tenant_id=sample_tenant.id, name='Test Cat', name_ar='اختبار', gl_account_code='6100')
+        db.session.add(cat)
+        db.session.flush()
+        expense = Expense(
+            tenant_id=sample_tenant.id,
+            expense_number='EXP-001',
+            category_id=cat.id,
+            description='Test',
+            amount=100,
+            currency='AED',
+            exchange_rate=1,
+            amount_aed=100,
+            payment_method='cash',
+            user_id=sample_user.id,
+        )
+        db.session.add(expense)
+        db.session.flush()
+        assert expense.amount_base == 100
+        expense.amount_base = 200
+        assert expense.amount_aed == 200
+
+    def test_expense_create_template_has_ils(self):
+        html = open('templates/expenses/create.html', encoding='utf-8').read()
+        assert 'ILS' in html
+        assert 'شيقل' in html
+
+    def test_expense_edit_template_has_ils(self):
+        html = open('templates/expenses/edit.html', encoding='utf-8').read()
+        assert 'ILS' in html
+        assert 'شيقل' in html

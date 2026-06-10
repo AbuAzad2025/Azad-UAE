@@ -81,7 +81,10 @@
             <select name="currency" id="currency" class="form-control" aria-label="العملة">
               <option value="AED" {% if expense.currency == 'AED' %}selected{% endif %}>درهم (AED)</option>
               <option value="USD" {% if expense.currency == 'USD' %}selected{% endif %}>دولار (USD)</option>
+              <option value="ILS" {% if expense.currency == 'ILS' %}selected{% endif %}>شيقل (ILS)</option>
               <option value="EUR" {% if expense.currency == 'EUR' %}selected{% endif %}>يورو (EUR)</option>
+              <option value="GBP" {% if expense.currency == 'GBP' %}selected{% endif %}>جنيه (GBP)</option>
+              <option value="SAR" {% if expense.currency == 'SAR' %}selected{% endif %}>ريال (SAR)</option>
             </select>
           </div>
         </div>

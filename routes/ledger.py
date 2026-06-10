@@ -912,6 +912,57 @@ def admin_balance_sheet():
                          equity_total=equity_total,
                          as_of_date=as_of_date)
 
+@ledger_bp.route('/budget-vs-actual')
+@login_required
+@permission_required('view_ledger')
+def budget_vs_actual():
+    """Budget vs Actual Report - compares budgeted amounts with GL actuals"""
+    from models import Budget, BudgetLine
+    from utils.gl_tenant import scope_gl_accounts
+    from utils.tenanting import require_active_tenant_id
+    from datetime import date
+    from sqlalchemy import func
+    
+    tenant_id = require_active_tenant_id()
+    branch_id = _effective_branch_id()
+    
+    # Get active budgets
+    budget_query = Budget.query.filter_by(tenant_id=tenant_id, status='active')
+    if branch_id:
+        budget_query = budget_query.filter_by(branch_id=branch_id)
+    budgets = budget_query.all()
+    
+    budget_data = []
+    for budget in budgets:
+        # Update actuals from GL
+        budget.update_actuals()
+        
+        lines_data = []
+        for line in budget.lines:
+            lines_data.append({
+                'account': line.account,
+                'budgeted': float(line.budgeted_amount or 0),
+                'actual': float(line.actual_amount or 0),
+                'variance': float(line.variance or 0),
+                'variance_pct': float(line.variance_percentage or 0),
+                'status': line.variance_status,
+                'status_ar': line.variance_status_ar,
+            })
+        
+        budget_data.append({
+            'budget': budget,
+            'lines': lines_data,
+            'total_budgeted': float(budget.total_budgeted or 0),
+            'total_actual': float(budget.total_actual or 0),
+            'total_variance': float(budget.total_variance or 0),
+            'variance_pct': float(budget.variance_percentage or 0),
+        })
+    
+    return render_template('ledger/budget_vs_actual.html',
+                         budgets=budget_data,
+                         branches=get_accessible_branches(current_user),
+                         selected_branch=branch_id)
+
 @ledger_bp.route('/admin-income-statement')
 @login_required
 @admin_required

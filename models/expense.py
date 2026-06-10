@@ -39,10 +39,18 @@ class Expense(db.Model):
     description_ar = db.Column(db.String(255))
     
     amount = db.Column(db.Numeric(15, 3), nullable=False)
-    currency = db.Column(db.String(3), default='AED', nullable=False)  # TODO: use Config.DEFAULT_CURRENCY
+    currency = db.Column(db.String(3), default='AED', nullable=False)
     exchange_rate = db.Column(db.Numeric(15, 6), default=1)
     amount_aed = db.Column(db.Numeric(15, 3), nullable=False)
-    
+
+    @property
+    def amount_base(self):
+        return self.amount_aed
+
+    @amount_base.setter
+    def amount_base(self, value):
+        self.amount_aed = value
+
     expense_date = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
     
     payment_method = db.Column(db.String(20), nullable=False)
