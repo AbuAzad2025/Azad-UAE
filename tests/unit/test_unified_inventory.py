@@ -656,3 +656,60 @@ class TestEnumsConsistency:
     def test_payment_get_method_display_uses_normalize(self):
         code = open('models/payment.py', encoding='utf-8').read()
         assert code.count('canonical = normalize_payment_method_code') == 2
+
+
+class TestBankCashGlIntegration:
+    def test_cash_box_has_tenant_id(self):
+        code = open('models/cash_box.py', encoding='utf-8').read()
+        assert "tenant_id = db.Column" in code
+        assert "db.ForeignKey('tenants.id'" in code
+
+    def test_cash_box_has_gl_account_link(self):
+        code = open('models/cash_box.py', encoding='utf-8').read()
+        assert "gl_account_id" in code
+        assert "gl_account = db.relationship('GLAccount'" in code
+
+    def test_gl_account_has_tenant_unique_constraint(self):
+        code = open('models/gl.py', encoding='utf-8').read()
+        assert "db.UniqueConstraint('tenant_id', 'code'" in code
+
+    def test_gl_account_has_liquidity_kind(self):
+        code = open('models/gl.py', encoding='utf-8').read()
+        assert "liquidity_kind = db.Column" in code
+
+    def test_bank_reconciliation_model_has_tenant_id(self):
+        code = open('models/bank_reconciliation.py', encoding='utf-8').read()
+        assert "tenant_id = db.Column" in code
+        assert "db.ForeignKey('tenants.id'" in code
+
+    def test_bank_reconciliation_service_uses_tenant_get_or_404(self):
+        code = open('services/bank_reconciliation_service.py', encoding='utf-8').read()
+        assert 'tenant_get_or_404(GLAccount' in code
+
+    def test_bank_reconciliation_auto_populate_uses_tenant_filter(self):
+        code = open('services/bank_reconciliation_service.py', encoding='utf-8').read()
+        assert "tid = getattr(reconciliation, 'tenant_id'" in code
+        assert "in_q.filter(Cheque.tenant_id == tid)" in code
+        assert "out_q.filter(Cheque.tenant_id == tid)" in code
+
+    def test_treasury_service_filters_cashbox_by_tenant(self):
+        code = open('services/treasury_service.py', encoding='utf-8').read()
+        assert "CashBox.query.filter_by(tenant_id=tenant_id" in code
+
+    def test_treasury_service_filters_gl_fallback_by_tenant(self):
+        code = open('services/treasury_service.py', encoding='utf-8').read()
+        assert "GLAccount.tenant_id == tenant_id" in code
+
+    def test_treasury_service_filters_cheques_by_tenant(self):
+        code = open('services/treasury_service.py', encoding='utf-8').read()
+        assert "Cheque.tenant_id == tenant_id" in code
+
+    def test_treasury_service_reconciliation_joins_tenant(self):
+        code = open('services/treasury_service.py', encoding='utf-8').read()
+        assert "GLAccount.tenant_id == tenant_id" in code
+        assert "BankReconciliation.query" in code
+
+    def test_gl_posting_accepts_tenant_id(self):
+        code = open('services/gl_posting.py', encoding='utf-8').read()
+        assert "tenant_id=None" in code
+        assert "tenant_id=tenant_id" in code

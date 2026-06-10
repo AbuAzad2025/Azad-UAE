@@ -12,7 +12,7 @@
             <div class="row mb-4">
                 <div class="col-6">
                     <p><strong>الموظف:</strong> {{ slip.employee.name }}</p>
-                    <p><strong>الفرع:</strong> {{ t.employee.branch.name if t.employee.branch else 'المركز الرئيسي' }}</p>
+                    <p><strong>الفرع:</strong> {{ slip.employee.branch.name if slip.employee.branch else 'المركز الرئيسي' }}</p>
                 </div>
                 <div class="col-6 text-right">
                     <p><strong>التاريخ:</strong> {{ slip.payment_date }}</p>

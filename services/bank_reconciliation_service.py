@@ -25,8 +25,9 @@ class BankReconciliationService:
         """
         from flask_login import current_user
         
-        bank_account = GLAccount.query.get_or_404(bank_account_id)
-        
+        from utils.tenanting import tenant_get_or_404
+        bank_account = tenant_get_or_404(GLAccount, bank_account_id)
+
         # حساب رصيد الدفاتر
         from services.gl_service import GLService
         statement = GLService.get_account_statement(
@@ -74,13 +75,17 @@ class BankReconciliationService:
         """
         ملء العناصر تلقائياً (شيكات معلقة، عمليات غير مطابقة)
         """
+        tid = getattr(reconciliation, 'tenant_id', None)
         # 1. الشيكات الواردة المعلقة (pending, deposited)
-        outstanding_cheques_in = Cheque.query.filter(
+        in_q = Cheque.query.filter(
             Cheque.cheque_type == 'incoming',
             Cheque.status.in_(['pending', 'deposited']),
             Cheque.is_active == True,
             Cheque.due_date <= reconciliation.period_end
-        ).all()
+        )
+        if tid:
+            in_q = in_q.filter(Cheque.tenant_id == tid)
+        outstanding_cheques_in = in_q.all()
         
         for cheque in outstanding_cheques_in:
             item = BankReconciliationItem(
@@ -95,12 +100,15 @@ class BankReconciliationService:
             reconciliation.outstanding_deposits += cheque.amount_aed
         
         # 2. الشيكات الصادرة المعلقة
-        outstanding_cheques_out = Cheque.query.filter(
+        out_q = Cheque.query.filter(
             Cheque.cheque_type == 'outgoing',
             Cheque.status.in_(['pending', 'deposited']),
             Cheque.is_active == True,
             Cheque.due_date <= reconciliation.period_end
-        ).all()
+        )
+        if tid:
+            out_q = out_q.filter(Cheque.tenant_id == tid)
+        outstanding_cheques_out = out_q.all()
         
         for cheque in outstanding_cheques_out:
             item = BankReconciliationItem(
