@@ -214,6 +214,14 @@ def create():
             )
 
             password = request.form.get('password')
+            from utils.password_validator import PasswordValidator
+            is_valid, pwd_errors = PasswordValidator.validate(password)
+            if not is_valid:
+                from utils.error_messages import ErrorMessages
+                flash(ErrorMessages.weak_password(pwd_errors), 'danger')
+                form_values = request.form.to_dict()
+                form_values['is_active'] = request.form.get('is_active', '1')
+                return render_template('users/create.html', roles=roles, branches=branches, form_data=form_values, username_example=_username_example())
             user.set_password(password)
             assign_tenant_id(user)
 
@@ -305,6 +313,12 @@ def edit(id):
 
             new_password = request.form.get('new_password')
             if new_password:
+                from utils.password_validator import PasswordValidator
+                is_valid, pwd_errors = PasswordValidator.validate(new_password)
+                if not is_valid:
+                    from utils.error_messages import ErrorMessages
+                    flash(ErrorMessages.weak_password(pwd_errors), 'danger')
+                    return render_template('users/edit.html', user=user, roles=roles, branches=branches)
                 user.set_password(new_password)
 
             user.is_active = request.form.get('is_active') == '1'

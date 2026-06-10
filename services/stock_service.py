@@ -235,11 +235,16 @@ class StockService:
             raise
 
     @staticmethod
-    def transfer_stock(product_id, from_warehouse_id, to_warehouse_id, quantity, notes=None):
+    def transfer_stock(product_id, from_warehouse_id, to_warehouse_id, quantity, notes=None, user=None):
         """Transfer quantity between warehouses (net zero on product.current_stock)."""
         qty = abs(Decimal(str(quantity)))
         if qty <= 0:
             raise ValueError('الكمية يجب أن تكون أكبر من صفر.')
+
+        product = Product.query.get(product_id)
+        if not product:
+            raise ValueError('المنتج غير موجود.')
+        tenant_id = getattr(product, 'tenant_id', None)
 
         from_wh = Warehouse.query.filter_by(id=int(from_warehouse_id), is_active=True).first()
         to_wh = Warehouse.query.filter_by(id=int(to_warehouse_id), is_active=True).first()
@@ -247,6 +252,23 @@ class StockService:
             raise ValueError('المستودع المصدر أو الوجهة غير موجود أو غير نشط.')
         if from_wh.id == to_wh.id:
             raise ValueError('لا يمكن التحويل إلى نفس المستودع.')
+
+        # التحقق من التينانت
+        if tenant_id is not None:
+            wh_tenant_ids = [getattr(from_wh, 'tenant_id', None), getattr(to_wh, 'tenant_id', None)]
+            if tenant_id not in wh_tenant_ids:
+                raise ValueError('المنتج لا ينتمي إلى نفس المستودع (تعارض في التينانت).')
+            if from_wh.tenant_id != tenant_id or to_wh.tenant_id != tenant_id:
+                raise ValueError('المستودع المصدر والوجهة يجب أن ينتميان لنفس شركة المنتج.')
+
+        # التحقق من صلاحية المستخدم - إذا تم تمرير مستخدم
+        if user is not None:
+            from utils.auth_helpers import is_global_owner_user
+            if not is_global_owner_user(user):
+                from utils.branching import get_accessible_warehouse_ids
+                accessible = get_accessible_warehouse_ids(user)
+                if accessible and (from_wh.id not in accessible or to_wh.id not in accessible):
+                    raise ValueError('ليس لديك صلاحية الوصول لأحد المستودعين.')
 
         available = StockService.get_product_stock(product_id, warehouse_id=from_wh.id)
         if available < qty:

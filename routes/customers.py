@@ -662,10 +662,14 @@ def statement(id):
     if transaction_type in {'sale', 'payment', 'receipt'}:
         transactions = [trans for trans in transactions if trans['type'] == transaction_type]
 
+    # الرصيد الجاري: المؤكد فقط
     running_balance = 0
     for trans in transactions:
-        running_balance += trans['debit'] - trans['credit']
+        is_confirmed = trans.get('payment', {}).get('payment_confirmed', True) if trans['type'] == 'payment' else (trans.get('status') != 'معلقة' if trans['type'] == 'receipt' else True)
+        if is_confirmed:
+            running_balance += trans['debit'] - trans['credit']
         trans['balance'] = running_balance
+        trans['is_confirmed'] = is_confirmed
 
     return render_template(
         'customers/statement.html',

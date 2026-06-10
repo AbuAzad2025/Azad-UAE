@@ -373,8 +373,8 @@ def edit(id):
                     expense_concept = 'MISC_EXPENSE'
                 
                 if expense.payment_method == 'cheque':
-                    payment_account = '2110'
-                    payment_concept = 'AP'
+                    payment_account = '2120'
+                    payment_concept = 'DEFERRED_CHEQUES_PAYABLE'
                 else:
                     payment_account = GLService.get_payment_credit_account(
                         expense.payment_method,
@@ -444,15 +444,6 @@ def delete(id):
         
     try:
         if has_links:
-            # أرشفة (Soft Delete)
-            # عكس القيد المحاسبي للحفاظ على السجل
-            from utils.gl_tenant import reverse_document_gl
-            reverse_document_gl(
-                GLRef.EXPENSE, expense.id,
-                f'Reverse Expense {expense.expense_number}',
-                tenant_id=getattr(expense, 'tenant_id', None),
-            )
-                
             archive_service = ArchiveService()
             archive_service.archive_record('expenses', expense, reason='تم أرشفة المصروف لوجود ارتباطات', commit=False)
             
@@ -504,6 +495,46 @@ def delete(id):
         return redirect(url_for('expenses.view', id=id))
 
 
+@expenses_bp.route('/<int:id>/cancel', methods=['POST'])
+@login_required
+@permission_required('manage_expenses')
+def cancel(id):
+    """إلغاء مصروف — عكس القيد المحاسبي وتحديث حالة الشيك"""
+    from models import Cheque, GLJournalEntry
+    from utils.gl_tenant import reverse_document_gl
+
+    expense = tenant_get_or_404(Expense, id)
+    if not _expense_in_scope(expense):
+        return render_template('errors/403.html'), 403
+
+    try:
+        from services.gl_helpers import assert_period_open
+        assert_period_open(expense.expense_date, expense.tenant_id)
+
+        # عكس القيد المحاسبي
+        reverse_document_gl(
+            GLRef.EXPENSE, expense.id,
+            f'Cancel Expense {expense.expense_number}',
+            tenant_id=getattr(expense, 'tenant_id', None),
+        )
+        expense.is_reversed = True
+
+        # إلغاء الشيك المرتبط إن وجد
+        cheque = Cheque.query.filter_by(expense_id=expense.id, tenant_id=expense.tenant_id).first()
+        if cheque and cheque.status not in ('cancelled',):
+            from services.cheque_service import process_cheque_cancel
+            process_cheque_cancel(cheque, reason=f'إلغاء المصروف {expense.expense_number}')
+
+        db.session.commit()
+        LoggingCore.log_audit('cancel', 'expenses', id)
+        flash(f'✅ تم إلغاء المصروف "{expense.expense_number}" وعكس القيد المحاسبي.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'❌ خطأ في الإلغاء: {str(e)}', 'danger')
+
+    return redirect(url_for('expenses.view', id=id))
+
+
 @expenses_bp.route('/categories')
 @login_required
 @permission_required('manage_expenses')
@@ -527,6 +558,17 @@ def _validate_gl_account_code(gl_account_code, tenant_id):
         raise ValueError(f'⚠️ حساب "{account.name}" هو حساب رئيسي ولا يمكن الترحيل إليه.')
     if not account.is_active:
         raise ValueError(f'⚠️ حساب "{account.name}" غير نشط.')
+    # التحقق من أن الحساب مناسب للمصروفات
+    code_str = str(gl_account_code)
+    first_digit = code_str[0] if code_str else ''
+    # حسابات الأصول (1xxx), الخصوم (2xxx), حقوق ملكية (3xxx), إيرادات (4xxx)
+    # وحسابات خاصة معروفة
+    restricted_prefixes = ['1', '2', '3', '4']
+    restricted_codes = ['1130', '1150', '1160', '2110', '2120', '2140', '3130', '3350']
+    if code_str in restricted_codes:
+        raise ValueError(f'⚠️ حساب "{account.name}" هو حساب أصول/خصوم/حقوق ملكية ولا يمكن استخدامه كمصروف.')
+    if first_digit in restricted_prefixes and code_str != '6990':
+        raise ValueError(f'⚠️ حساب "{account.name}" (يبدأ بـ {first_digit}) ليس حساب مصروفات. استخدم حساب من فئة 5xxx أو 6xxx.')
     return True
 
 

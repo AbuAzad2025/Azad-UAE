@@ -232,6 +232,7 @@ def admin_transfer():
                 to_warehouse_id=to_id,
                 quantity=quantity,
                 notes=label,
+                user=current_user,
             )
             db.session.commit()
             LoggingCore.log_audit('transfer', 'stock_movements', product_id)

@@ -78,7 +78,8 @@ def advances():
                 employee_id=employee_id,
                 amount=float(request.form.get('amount')),
                 description=request.form.get('description'),
-                user_id=current_user.id
+                user_id=current_user.id,
+                actor_user=current_user
             )
             flash('تم تسجيل السلفة بنجاح', 'success')
         except Exception as e:
@@ -132,7 +133,8 @@ def process_payroll():
                     days_worked=float(request.form.get('days_worked', 0)),
                     allowances=float(request.form.get('allowances', 0)),
                     deductions=float(request.form.get('deductions', 0)),
-                    user_id=current_user.id
+                    user_id=current_user.id,
+                    actor_user=current_user
                 )
                 flash('تم صرف الراتب بنجاح', 'success')
             except Exception as e:

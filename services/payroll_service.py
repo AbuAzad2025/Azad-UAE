@@ -85,11 +85,23 @@ class PayrollService:
 
     @staticmethod
 
-    def create_advance(employee_id, amount, description, user_id):
+    def create_advance(employee_id, amount, description, user_id, actor_user=None):
 
         employee = Employee.query.get_or_404(employee_id)
 
         tenant_id = PayrollService._require_employee_tenant_id(employee)
+
+        if actor_user is not None:
+            from utils.auth_helpers import is_global_owner_user
+            if not is_global_owner_user(actor_user):
+                from utils.branching import branch_scope_id_for
+                scoped = branch_scope_id_for(actor_user)
+                if scoped is not None and employee.branch_id != scoped:
+                    raise ValueError('لا يمكنك إنشاء سلفة لموظف في فرع آخر.')
+                from utils.tenanting import get_active_tenant_id
+                actor_tid = get_active_tenant_id(actor_user)
+                if actor_tid is not None and int(employee.tenant_id) != int(actor_tid):
+                    raise ValueError('الموظف لا ينتمي إلى شركتك النشطة.')
 
         advance = SalaryAdvance(
 
@@ -162,11 +174,23 @@ class PayrollService:
 
     @staticmethod
 
-    def process_payroll(employee_id, month, year, days_worked, allowances, deductions, user_id):
+    def process_payroll(employee_id, month, year, days_worked, allowances, deductions, user_id, actor_user=None):
 
         employee = Employee.query.get_or_404(employee_id)
 
         tenant_id = PayrollService._require_employee_tenant_id(employee)
+
+        if actor_user is not None:
+            from utils.auth_helpers import is_global_owner_user
+            if not is_global_owner_user(actor_user):
+                from utils.branching import branch_scope_id_for
+                scoped = branch_scope_id_for(actor_user)
+                if scoped is not None and employee.branch_id != scoped:
+                    raise ValueError('لا يمكنك معالجة راتب لموظف في فرع آخر.')
+                from utils.tenanting import get_active_tenant_id
+                actor_tid = get_active_tenant_id(actor_user)
+                if actor_tid is not None and int(employee.tenant_id) != int(actor_tid):
+                    raise ValueError('الموظف لا ينتمي إلى شركتك النشطة.')
 
         basic_amount = Decimal(0)
 
@@ -187,11 +211,17 @@ class PayrollService:
             tenant_id=tenant_id
         ).all()
 
-        
+        # حساب إجمالي الرصيد المتبقي للسلف (من remaining_amount أو fallback آمن)
+        advance_deduction_total = Decimal('0')
+        for adv in pending_advances:
+            remaining = Decimal(str(adv.remaining_amount or 0))
+            if remaining <= Decimal('0'):
+                remaining = Decimal(str(adv.total_amount or 0)) - Decimal(str(adv.deducted_amount or 0))
+                if remaining < Decimal('0'):
+                    remaining = Decimal('0')
+            advance_deduction_total += remaining
 
-        advances_total = sum(adv.amount for adv in pending_advances)
-
-        net_salary = basic_amount + Decimal(allowances) - Decimal(deductions) - advances_total
+        net_salary = basic_amount + Decimal(allowances) - Decimal(deductions) - advance_deduction_total
 
         # التحقق من عدم وجود راتب مكرر لنفس الموظف/الشهر/السنة
         existing = PayrollTransaction.query.filter_by(
@@ -203,18 +233,14 @@ class PayrollService:
         if existing:
             raise ValueError(f'تمت معالجة راتب الموظف "{employee.name}" لشهر {month}/{year} مسبقاً.')
 
-        # التحقق من أن صافي الراتب غير سالب
+        # التحقق من أن صافي الراتب غير سالب — خصم جزئي للسلفة
+        actual_deduction = advance_deduction_total  # المبلغ الذي سيتم خصمه فعلياً من السلف
         if net_salary < Decimal('0'):
-            # خصم جزئي للسلفة بدلاً من منع العملية
             max_deductible = basic_amount + Decimal(allowances) - Decimal(deductions)
             if max_deductible <= Decimal('0'):
                 raise ValueError(f'صافي راتب الموظف "{employee.name}" سالب ({net_salary}). لا يمكن صرف الراتب.')
-            # حساب الخصم الجزئي
-            partial_deduction = max_deductible
-            advances_total = partial_deduction
+            actual_deduction = max_deductible
             net_salary = Decimal('0')
-
-        
 
         transaction = PayrollTransaction(
 
@@ -232,7 +258,7 @@ class PayrollService:
 
             deductions=Decimal(deductions),
 
-            advances_deducted=advances_total,
+            advances_deducted=actual_deduction,
 
             net_salary=net_salary,
 
@@ -250,20 +276,23 @@ class PayrollService:
 
         db.session.flush()
 
-        
-
+        # توزيع الخصم على السلف — يستخدم actual_deduction (ثابت) للتكرار
+        remaining_to_apply = actual_deduction
         for adv in pending_advances:
-            remaining = Decimal(str(adv.total_amount or 0)) - Decimal(str(adv.deducted_amount or 0))
-            if remaining > 0 and advances_total > 0:
-                to_deduct = min(remaining, advances_total)
-                adv.deducted_amount = Decimal(str(adv.deducted_amount or 0)) + to_deduct
-                adv.remaining_amount = Decimal(str(adv.total_amount or 0)) - Decimal(str(adv.deducted_amount or 0))
-                advances_total -= to_deduct
-                if adv.remaining_amount <= Decimal('0'):
-                    adv.is_deducted = True
-                    adv.fully_deducted_at = datetime.now()
-
-            
+            if remaining_to_apply <= Decimal('0'):
+                break
+            remaining = Decimal(str(adv.remaining_amount or 0))
+            if remaining <= Decimal('0'):
+                remaining = Decimal(str(adv.total_amount or 0)) - Decimal(str(adv.deducted_amount or 0))
+                if remaining <= Decimal('0'):
+                    continue
+            to_deduct = min(remaining, remaining_to_apply)
+            adv.deducted_amount = Decimal(str(adv.deducted_amount or 0)) + to_deduct
+            adv.remaining_amount = Decimal(str(adv.total_amount or 0)) - Decimal(str(adv.deducted_amount or 0))
+            remaining_to_apply -= to_deduct
+            if adv.remaining_amount <= Decimal('0'):
+                adv.is_deducted = True
+                adv.fully_deducted_at = datetime.now()
 
         total_expense = basic_amount + Decimal(allowances)
 
@@ -286,9 +315,9 @@ class PayrollService:
 
             lines.append({'account': '2140', 'concept_code': 'PAYROLL_PAYABLE', 'debit': 0, 'credit': Decimal(str(deductions)), 'description': 'Salary Deductions'})
 
-        if advances_total > 0:
+        if actual_deduction > 0:
 
-            lines.append({'account': '1160', 'concept_code': 'EMPLOYEE_ADVANCES', 'debit': 0, 'credit': Decimal(str(advances_total)), 'description': 'Advance Deduction'})
+            lines.append({'account': '1160', 'concept_code': 'EMPLOYEE_ADVANCES', 'debit': 0, 'credit': Decimal(str(actual_deduction)), 'description': 'Advance Deduction'})
 
 
 

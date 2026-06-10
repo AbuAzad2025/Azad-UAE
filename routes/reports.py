@@ -23,6 +23,47 @@ def _enforce_report_tenant_scope():
         require_report_tenant_id()
 
 
+def get_confirmed_sale_paid_aed(sale_id, tenant_id=None, branch_id=None):
+    from models import Payment
+    q = db.session.query(func.coalesce(func.sum(Payment.amount_aed), 0)).filter(
+        Payment.sale_id == sale_id,
+        Payment.payment_confirmed == True,
+        Payment.direction == 'incoming',
+    )
+    if tenant_id is not None:
+        q = q.filter(Payment.tenant_id == tenant_id)
+    if branch_id is not None:
+        q = q.filter(Payment.branch_id == branch_id)
+    return Decimal(str(q.scalar() or 0))
+
+
+def get_confirmed_supplier_paid_aed(supplier_id, purchase_id=None, tenant_id=None, branch_id=None):
+    from models import Payment
+    q = db.session.query(func.coalesce(func.sum(Payment.amount_aed), 0)).filter(
+        Payment.supplier_id == supplier_id,
+        Payment.payment_confirmed == True,
+        Payment.direction == 'outgoing',
+    )
+    if purchase_id is not None:
+        q = q.filter(Payment.purchase_id == purchase_id)
+    if tenant_id is not None:
+        q = q.filter(Payment.tenant_id == tenant_id)
+    if branch_id is not None:
+        q = q.filter(Payment.branch_id == branch_id)
+    return Decimal(str(q.scalar() or 0))
+    from models import Payment
+    q = db.session.query(func.coalesce(func.sum(Payment.amount_aed), 0)).filter(
+        Payment.sale_id == sale_id,
+        Payment.payment_confirmed == True,
+        Payment.direction == 'incoming',
+    )
+    if tenant_id is not None:
+        q = q.filter(Payment.tenant_id == tenant_id)
+    if branch_id is not None:
+        q = q.filter(Payment.branch_id == branch_id)
+    return Decimal(str(q.scalar() or 0))
+
+
 def _scoped_customer_query():
     from models import Payment, Receipt
 
@@ -410,9 +451,11 @@ def sales():
     total_due = Decimal('0')
     
     for sale in sales_list:
+        confirmed_paid = get_confirmed_sale_paid_aed(sale.id, tenant_id, scoped_branch_id)
+        sale._confirmed_paid = confirmed_paid
         total_sales += (sale.amount_aed or Decimal('0'))
-        total_paid += (sale.paid_amount_aed or Decimal('0'))
-        total_due += ((sale.amount_aed or Decimal('0')) - (sale.paid_amount_aed or Decimal('0')))
+        total_paid += confirmed_paid
+        total_due += ((sale.amount_aed or Decimal('0')) - confirmed_paid)
     
     total_profit = Decimal('0')
     if current_user.can_see_costs():
@@ -581,42 +624,56 @@ def purchases():
     purchases_list = query.order_by(Purchase.purchase_date.desc()).limit(5000).all()
     
     total_amount = Decimal('0')
+    total_paid = Decimal('0')
+    total_due = Decimal('0')
     
-    # Calculate total purchases amount
-    for p in purchases_list:
-        amount = p.amount_aed or Decimal('0')
-        total_amount += amount
-        # Add dummy attributes for template compatibility if not present
-        if not hasattr(p, 'paid_amount'):
-            p.paid_amount = Decimal('0')
-        if not hasattr(p, 'balance_due'):
-            p.balance_due = amount
-
-    # Calculate total paid from Payments table
+    # Calculate purchase-level confirmed payments (FIFO allocation)
+    from decimal import Decimal
+    
+    # Group payments by supplier for FIFO allocation
     from models import Payment
-    payment_query = tenant_query(Payment).filter(
+    supplier_payments = {}
+    pmt_query = tenant_query(Payment).filter(
         Payment.direction == 'outgoing',
         Payment.supplier_id != None,
         Payment.payment_confirmed == True
     )
     if tenant_id is not None:
-        payment_query = payment_query.filter(Payment.tenant_id == tenant_id)
+        pmt_query = pmt_query.filter(Payment.tenant_id == tenant_id)
     if scoped_branch_id is not None:
-        payment_query = payment_query.filter(Payment.branch_id == scoped_branch_id)
-    
+        pmt_query = pmt_query.filter(Payment.branch_id == scoped_branch_id)
     if date_from:
-        payment_query = payment_query.filter(func.date(Payment.payment_date) >= date_from)
+        pmt_query = pmt_query.filter(func.date(Payment.payment_date) >= date_from)
     if date_to:
-        payment_query = payment_query.filter(func.date(Payment.payment_date) <= date_to)
+        pmt_query = pmt_query.filter(func.date(Payment.payment_date) <= date_to)
     if supplier_id:
-        payment_query = payment_query.filter_by(supplier_id=supplier_id)
-        
-    payments_list = payment_query.all()
-    total_paid = sum((p.amount_aed or Decimal('0') for p in payments_list), Decimal('0'))
+        pmt_query = pmt_query.filter(Payment.supplier_id == supplier_id)
     
-    # Total due is rough estimate: Purchases - Payments
-    # Note: This doesn't account for opening balance
-    total_due = total_amount - total_paid
+    for pmt in pmt_query.order_by(Payment.payment_date.asc()).all():
+        sid = pmt.supplier_id
+        if sid not in supplier_payments:
+            supplier_payments[sid] = []
+        supplier_payments[sid].append(Decimal(str(pmt.amount_aed or 0)))
+    
+    # Apply FIFO per supplier
+    remaining_payments = {}
+    for sid, amounts in supplier_payments.items():
+        remaining_payments[sid] = sum(amounts)
+    
+    for p in purchases_list:
+        amount = p.amount_aed or Decimal('0')
+        total_amount += amount
+        
+        sid = p.supplier_id
+        allocated = Decimal('0')
+        if sid and sid in remaining_payments and remaining_payments[sid] > 0:
+            allocated = min(amount, remaining_payments[sid])
+            remaining_payments[sid] -= allocated
+        
+        p.paid_amount = allocated
+        p.balance_due = amount - allocated
+        total_paid += allocated
+        total_due += p.balance_due
      
     stats = {
         'total_purchases': len(purchases_list),
@@ -1604,7 +1661,7 @@ def entity_report_fragment(type, id):
             } for p in purchases]
             
             # Transactions (Payments TO Supplier)
-            payments = Payment.query.filter_by(supplier_id=id)
+            payments = Payment.query.filter_by(supplier_id=id, payment_confirmed=True)
             if tenant_id is not None:
                 payments = payments.filter(Payment.tenant_id == tenant_id)
             if scoped_branch_id is not None:
@@ -1614,7 +1671,7 @@ def entity_report_fragment(type, id):
             total_payments_amount = sum(
                 (p.amount_aed or 0)
                 for p in payments
-                if p.direction == 'outgoing' and getattr(p, 'payment_confirmed', True)
+                if p.direction == 'outgoing'
             )
 
             # Balance
@@ -1649,7 +1706,7 @@ def entity_report_fragment(type, id):
                 Receipt.payment_confirmed == True
             )
             # Payments made TO customer (e.g. returns/share/drawings)
-            total_payments_query = db.session.query(func.sum(Payment.amount_aed)).filter(Payment.customer_id==id, Payment.direction=='outgoing')
+            total_payments_query = db.session.query(func.sum(Payment.amount_aed)).filter(Payment.customer_id==id, Payment.direction=='outgoing', Payment.payment_confirmed == True)
             if tenant_id is not None:
                 total_sales_query = total_sales_query.filter(Sale.tenant_id == tenant_id)
                 total_receipts_query = total_receipts_query.filter(Receipt.tenant_id == tenant_id)
@@ -1768,8 +1825,8 @@ def entity_report_fragment(type, id):
             } for s in sales]
             
             # Transactions (Receipts + Payments)
-            receipts = Receipt.query.filter_by(customer_id=id)
-            payments_out = Payment.query.filter_by(customer_id=id, direction='outgoing')
+            receipts = Receipt.query.filter_by(customer_id=id, payment_confirmed=True)
+            payments_out = Payment.query.filter_by(customer_id=id, direction='outgoing', payment_confirmed=True)
             if tenant_id is not None:
                 receipts = receipts.filter(Receipt.tenant_id == tenant_id)
                 payments_out = payments_out.filter(Payment.tenant_id == tenant_id)

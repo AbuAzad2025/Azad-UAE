@@ -362,9 +362,13 @@ def import_products():
                         db.session.add(new_product)
                         db.session.flush()
                         
-                        # Add Initial Stock
                         if stock > 0:
-                            StockService.add_stock(new_product.id, stock, "Initial Import", None, "Import", warehouse.id if warehouse else None)
+                            StockService.add_opening_stock(
+                                product_id=new_product.id,
+                                quantity=stock,
+                                notes='مخزون افتتاحي من استيراد ملف',
+                                warehouse_id=warehouse.id if warehouse else None,
+                            )
                         
                         success_count += 1
                         
@@ -445,7 +449,12 @@ def import_grid():
             db.session.flush()
             
             if stock > 0:
-                StockService.add_stock(new_product.id, stock, "Grid Import", None, "Quick Entry", warehouse.id if warehouse else None)
+                StockService.add_opening_stock(
+                    product_id=new_product.id,
+                    quantity=stock,
+                    notes='مخزون افتتاحي من إدخال سريع',
+                    warehouse_id=warehouse.id if warehouse else None,
+                )
             
             count += 1
         except Exception as e:
@@ -840,8 +849,8 @@ def edit(id):
                     total_stock = StockService.get_product_stock(product.id)
                     if total_stock > 0:
                         flash('⚠️ لا يمكن تعديل سعر التكلفة لوجود مخزون. قم بتسوية المخزون أولاً.', 'warning')
-                    else:
-                        product.cost_price = new_cost
+                        return render_template('products/edit.html', form=form, product=product, categories=categories, warehouses=warehouses, merchants=merchants, partners=partners)
+                    product.cost_price = new_cost
             
             if partner_rows and not product.tenant_id:
                 flash('⚠️ المنتج غير مرتبط بشركة — لا يمكن حفظ شركاء المنتج.', 'warning')

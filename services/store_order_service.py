@@ -137,7 +137,17 @@ class StoreOrderService:
         if not sale.customer_id:
             return
         from models.shop_customer_account import ShopCustomerAccount
+        from models.shop_loyalty import ShopLoyaltyTransaction
         from services.store_service import StoreService
+
+        # Idempotency: check if loyalty already awarded for this sale
+        existing = ShopLoyaltyTransaction.query.filter_by(
+            sale_id=sale.id,
+            reason='order',
+        ).first()
+        if existing:
+            return
+
         account = ShopCustomerAccount.query.filter_by(
             customer_id=sale.customer_id,
             tenant_id=sale.tenant_id
@@ -150,11 +160,51 @@ class StoreOrderService:
             StoreService.earn_loyalty_points(sale.tenant_id, account.id, sale.id, total)
 
     @staticmethod
+    def _reverse_loyalty_points(sale: Sale):
+        if not sale.customer_id:
+            return
+        from models.shop_customer_account import ShopCustomerAccount
+        from models.shop_loyalty import ShopLoyalty, ShopLoyaltyTransaction
+        from decimal import Decimal
+
+        txn = ShopLoyaltyTransaction.query.filter_by(
+            sale_id=sale.id,
+            reason='order',
+        ).first()
+        if not txn:
+            return
+
+        account = ShopCustomerAccount.query.filter_by(
+            customer_id=sale.customer_id,
+            tenant_id=sale.tenant_id
+        ).first()
+        if not account:
+            return
+
+        lp = ShopLoyalty.query.filter_by(account_id=int(account.id)).first()
+        if lp:
+            points = abs(int(txn.points or 0))
+            lp.points = max(0, (lp.points or 0) - points)
+            lp.points_earned = max(0, (lp.points_earned or 0) - points)
+
+        reversal = ShopLoyaltyTransaction(
+            tenant_id=sale.tenant_id,
+            account_id=account.id,
+            sale_id=sale.id,
+            points=-abs(int(txn.points or 0)),
+            reason='cancel',
+        )
+        db.session.add(reversal)
+
+    @staticmethod
     def cancel_order(sale: Sale) -> Sale:
         if not StoreOrderService.is_online_order(sale):
             raise ValueError('هذا ليس طلب متجر إلكتروني.')
         if sale.status == 'cancelled':
             raise ValueError('الطلب ملغى بالفعل.')
+
+        StoreOrderService._reverse_loyalty_points(sale)
+
         if sale.status == 'confirmed' or StoreOrderService.is_fulfilled(sale):
             coupon_code = sale.coupon_code
             SaleService.cancel_sale(sale)

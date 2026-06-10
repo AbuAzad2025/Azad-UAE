@@ -1037,6 +1037,11 @@ def checkout(slug):
                     )
                     return redirect(payment['payment_url'])
                 except ValueError as pe:
+                    sale.notes = (sale.notes or '') + f'\n[فشل init الدفع الإلكتروني: {str(pe)}]'
+                    try:
+                        db.session.commit()
+                    except Exception:
+                        db.session.rollback()
                     token = StoreCheckoutService.make_order_token(sale.id, store.tenant_id)
                     flash(str(pe) + ' — تم حفظ طلبك، يمكنك إتمام الدفع لاحقاً.', 'warning')
                     return redirect(url_for('shop.order_confirmation', slug=store.store_slug, token=token))
