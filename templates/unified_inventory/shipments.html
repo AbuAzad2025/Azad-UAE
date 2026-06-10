@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block title %}Shipments{% endblock %}
+{% block content %}
+<div class="card">
+  <div class="card-header"><h3>Shipments</h3></div>
+  <div class="card-body">
+    <table class="table table-sm">
+      <thead><tr><th>Carrier</th><th>Tracking #</th><th>Status</th><th>Cost</th></tr></thead>
+      <tbody>
+        {% for s in shipments %}
+        <tr><td>{{ s.carrier_name }}</td><td>{{ s.tracking_number }}</td><td>{{ s.status }}</td><td>{{ s.shipping_cost }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <form method="POST" action="{{ url_for('unified_inventory.shipments_create') }}" class="mt-3">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="row">
+        <div class="col"><input name="carrier_name" class="form-control" placeholder="Carrier" required></div>
+        <div class="col"><input name="tracking_number" class="form-control" placeholder="Tracking #" required></div>
+        <div class="col"><input name="source_id" type="number" class="form-control" placeholder="Sale ID" required></div>
+        <div class="col"><input name="shipping_cost" type="number" class="form-control" placeholder="Cost" step="0.01"></div>
+        <div class="col"><button class="btn btn-success">Add</button></div>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

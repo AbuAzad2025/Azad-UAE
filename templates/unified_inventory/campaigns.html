@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block title %}Campaigns{% endblock %}
+{% block content %}
+<div class="card">
+  <div class="card-header"><h3>Campaigns</h3></div>
+  <div class="card-body">
+    <table class="table table-sm">
+      <thead><tr><th>Code</th><th>Name</th><th>Discount</th><th>Status</th></tr></thead>
+      <tbody>
+        {% for c in campaigns %}
+        <tr><td>{{ c.coupon_code }}</td><td>{{ c.name }}</td><td>{{ c.discount_value }}</td><td>{{ 'Active' if c.is_active else 'Inactive' }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <form method="POST" action="{{ url_for('unified_inventory.campaigns_create') }}" class="mt-3">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="row">
+        <div class="col"><input name="name" class="form-control" placeholder="Name" required></div>
+        <div class="col"><input name="coupon_code" class="form-control" placeholder="Coupon Code" required></div>
+        <div class="col"><input name="discount_value" type="number" class="form-control" placeholder="Discount" step="0.01" required></div>
+        <div class="col"><button class="btn btn-success">Add</button></div>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

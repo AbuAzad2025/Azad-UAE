@@ -258,7 +258,22 @@ def _ensure_core_data():
     # 3. Main Branch
     main_branch = Branch.query.filter_by(is_main=True).first()
     if not main_branch:
+        # Get or create a default tenant for the main branch
+        from models.tenant import Tenant
+        default_tenant = Tenant.query.filter_by(is_active=True).first()
+        if not default_tenant:
+            default_tenant = Tenant(
+                name='Default Tenant',
+                name_ar='الشركة الافتراضية',
+                slug='default',
+                is_active=True,
+                is_suspended=False,
+            )
+            db.session.add(default_tenant)
+            db.session.flush()
+        
         main_branch = Branch(
+            tenant_id=default_tenant.id,
             name='Main Branch',
             code='MAIN',
             city='HQ',
@@ -318,6 +333,13 @@ def _ensure_core_data():
         StorePaymentMethodService.ensure_defaults()
     except Exception as e:
         current_app.logger.warning(f"SystemInit: store payment methods seed skipped: {e}")
+
+    try:
+        from scripts.seed_industry_fields import seed_industry_fields
+        seed_industry_fields()
+        current_app.logger.info("SystemInit: Industry fields seeded.")
+    except Exception as e:
+        current_app.logger.warning(f"SystemInit: industry fields seed skipped: {e}")
 
 
 def _ensure_permissions():

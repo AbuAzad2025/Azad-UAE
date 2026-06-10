@@ -191,14 +191,15 @@ def create():
                 customer=customer,
                 seller=current_user,
                 lines_data=lines_data,
-                warehouse_id=warehouse_id,  # ← تمرير المستودع
+                warehouse_id=warehouse_id,
                 currency=currency,
                 user_exchange_rate=user_exchange_rate,
                 discount_amount=discount_amount,
                 shipping_cost=shipping_cost,
                 tax_rate=tax_rate,
                 notes=notes,
-                payment_data=payment_data
+                payment_data=payment_data,
+                sales_rep_id=sales_rep_id,
             )
             
             LoggingCore.log_audit('create', 'sales', sale.id)

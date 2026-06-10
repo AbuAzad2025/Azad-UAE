@@ -25,10 +25,10 @@ from utils.tax_settings import normalize_tax_rate, should_post_vat_gl
 class SaleService:
     
     @staticmethod
-    def create_sale(customer, seller, lines_data, warehouse_id=None, currency=None, user_exchange_rate=None, 
+    def create_sale(customer, seller, lines_data, warehouse_id=None, currency=None, user_exchange_rate=None,
                     discount_amount=0, shipping_cost=0, tax_rate=0, notes=None, payment_data=None,
                     source='internal', sale_status=None, checkout_payment_method=None,
-                    defer_fulfillment=False):
+                    defer_fulfillment=False, sales_rep_id=None):
         """
         Create a new sale with proper validations and decimal precision
         All financial calculations use Decimal for accuracy
@@ -108,15 +108,17 @@ class SaleService:
                 sale_number=sale_number,
                 customer_id=customer.id,
                 seller_id=seller.id,
-                warehouse_id=warehouse_id,  # ← المستودع المحدد
+                sales_rep_id=sales_rep_id,
+                warehouse_id=warehouse_id,
                 branch_id=sale_branch_id,
                 currency=currency,
                 exchange_rate=exchange_rate,
                 discount_amount=discount_decimal,
                 shipping_cost=shipping_decimal,
                 tax_rate=tax_rate_decimal,
-                total_amount=Decimal('0'),  # Temporary - will be calculated
-                amount_aed=Decimal('0'),    # Temporary - will be calculated
+                total_amount=Decimal('0'),
+                amount=Decimal('0'),
+                amount_aed=Decimal('0'),
                 notes=notes
             )
             
@@ -253,12 +255,10 @@ class SaleService:
                         if serial_obj:
                             serial_obj.status = 'sold'
                             serial_obj.sale_line_id = line.id
-                            
-                            # Calculate Warranty
+                            serial_obj.warehouse_id = warehouse_id
                             if product.warranty_days > 0:
                                 serial_obj.warranty_start_date = datetime.now()
                                 serial_obj.warranty_end_date = datetime.now() + timedelta(days=product.warranty_days)
-                            
                             db.session.add(serial_obj)
                 # ---------------------------------
             

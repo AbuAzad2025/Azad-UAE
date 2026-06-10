@@ -318,3 +318,75 @@ class TestProductExtraFields:
         product.extra_fields = {'new': 'value'}
         db.session.flush()
         assert product.extra_fields == {'new': 'value'}
+
+
+class TestSaleServiceSalesRepId:
+    def test_create_sale_sets_sales_rep_id(self, sample_tenant, sample_user):
+        from models.sale import Sale
+        from models.customer import Customer
+        from extensions import db
+        customer = Customer(tenant_id=sample_tenant.id, name='Test', phone='123')
+        db.session.add(customer)
+        db.session.flush()
+        sale = Sale(
+            tenant_id=sample_tenant.id,
+            sale_number='S-TEST-001',
+            customer_id=customer.id,
+            seller_id=sample_user.id,
+            sales_rep_id=sample_user.id,
+            total_amount=100,
+            amount=100,
+            amount_aed=100,
+        )
+        db.session.add(sale)
+        db.session.flush()
+        assert sale.sales_rep_id == sample_user.id
+
+
+class TestProductSerialWarehouse:
+    def test_serial_warehouse_id_set_directly(self, sample_tenant):
+        from models.product import Product
+        from models.product_serial import ProductSerial
+        from extensions import db
+        product = Product(tenant_id=sample_tenant.id, name='SerialP', sku='SRL', regular_price=100, cost_price=50)
+        db.session.add(product)
+        db.session.flush()
+        serial = ProductSerial(tenant_id=sample_tenant.id, product_id=product.id, serial_number='SN001', status='available', warehouse_id=5)
+        db.session.add(serial)
+        db.session.flush()
+        assert serial.warehouse_id == 5
+        serial.status = 'sold'
+        serial.warehouse_id = 10
+        db.session.flush()
+        assert serial.warehouse_id == 10
+
+
+class TestUnifiedInventoryRoutes:
+    def _login(self, client, user):
+        with client.session_transaction() as sess:
+            sess['_user_id'] = str(user.id)
+            sess['_fresh'] = True
+
+    def test_campaigns_index(self, client, sample_user):
+        from extensions import db
+        sample_user.is_owner = True
+        db.session.commit()
+        self._login(client, sample_user)
+        resp = client.get('/uinv/campaigns')
+        assert resp.status_code == 200
+
+    def test_warranty_index(self, client, sample_user):
+        from extensions import db
+        sample_user.is_owner = True
+        db.session.commit()
+        self._login(client, sample_user)
+        resp = client.get('/uinv/warranty')
+        assert resp.status_code == 200
+
+    def test_shipments_index(self, client, sample_user):
+        from extensions import db
+        sample_user.is_owner = True
+        db.session.commit()
+        self._login(client, sample_user)
+        resp = client.get('/uinv/shipments')
+        assert resp.status_code == 200
