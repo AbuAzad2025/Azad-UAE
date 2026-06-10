@@ -390,3 +390,39 @@ class TestUnifiedInventoryRoutes:
         self._login(client, sample_user)
         resp = client.get('/uinv/shipments')
         assert resp.status_code == 200
+
+
+class TestPurchaseAmountFix:
+    def test_purchase_service_sets_amount(self, sample_tenant, sample_user, monkeypatch):
+        from models.supplier import Supplier
+        from models.product import Product
+        from models.warehouse import Warehouse
+        from services.purchase_service import PurchaseService
+        from services.stock_service import StockService
+        from extensions import db
+        def _noop(movement):
+            return None
+        monkeypatch.setattr(StockService, '_post_adjustment_gl', _noop)
+        monkeypatch.setattr('services.purchase_service.post_or_fail', lambda *a, **kw: None)
+        supplier = Supplier(tenant_id=sample_tenant.id, name='Test Supplier', phone='123')
+        db.session.add(supplier)
+        wh = Warehouse(tenant_id=sample_tenant.id, name='Test WH', name_ar='مستودع', code='WH-PUR', is_main=True, is_active=True)
+        db.session.add(wh)
+        product = Product(tenant_id=sample_tenant.id, name='P', sku='PUR-1', regular_price=10, cost_price=5, current_stock=0)
+        db.session.add(product)
+        db.session.flush()
+        purchase = PurchaseService.create_purchase(
+            user=sample_user,
+            supplier_data={'supplier_id': supplier.id, 'supplier_name': supplier.name, 'phone': '', 'email': ''},
+            lines_data=[{'product_id': product.id, 'quantity': 5, 'unit_cost': 5, 'discount_percent': 0}],
+            warehouse_id=wh.id,
+            currency='AED',
+        )
+        assert purchase.amount is not None
+        assert purchase.amount_aed is not None
+        assert purchase.total_amount is not None
+
+    def test_purchase_template_has_ils(self):
+        html = open('templates/purchases/create.html', encoding='utf-8').read()
+        assert 'ILS' in html
+        assert 'شيقل' in html

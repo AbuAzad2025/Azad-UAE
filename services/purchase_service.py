@@ -117,6 +117,7 @@ class PurchaseService:
             subtotal=Decimal('0'),
             tax_amount=Decimal('0'),
             total_amount=Decimal('0'),
+            amount=Decimal('0'),
             amount_aed=Decimal('0'),
             freight=Decimal(str(freight or 0)),
             insurance=Decimal(str(insurance or 0)),

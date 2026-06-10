@@ -185,7 +185,8 @@ class SaleService:
                                 product_id=product.id,
                                 serial_number=sn,
                                 status='available', # Will change to sold below
-                                purchase_line_id=None # Unknown origin
+                                purchase_line_id=None, # Unknown origin
+                                warehouse_id=warehouse_id,  # Assign to sale warehouse
                             )
                             db.session.add(existing_sn)
                             db.session.flush() # Get ID
