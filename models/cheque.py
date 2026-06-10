@@ -147,11 +147,7 @@ class Cheque(db.Model):
             self.is_overdue = False
     
     def archive(self, reason=None):
-        """أرشفة الشيك - مع عكس القيد إذا كان نشطاً"""
-        if self.is_active and self.status in ['pending', 'deposited', 'under_collection']:
-            from services.cheque_service import _create_cancel_journal_entry
-            _create_cancel_journal_entry(self)
-
+        """أرشفة الشيك - إخفاء إداري فقط، دون عكس القيد"""
         self.is_active = False
         self.archived_at = datetime.now(timezone.utc)
         if reason:

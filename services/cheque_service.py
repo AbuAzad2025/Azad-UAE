@@ -383,12 +383,19 @@ def _create_cancel_journal_entry(cheque):
 
 
 def process_cheque_cancel(cheque, reason=None):
+    from models import Payment, Receipt
     if cheque.status == 'cancelled':
         return
     cheque.status = 'cancelled'
     if reason:
         cheque.notes = (cheque.notes or '') + f'\nسبب الإلغاء: {reason}'
     _create_cancel_journal_entry(cheque)
+
+    # تحديث المدفوعات والسندات المرتبطة
+    for payment in Payment.query.filter_by(cheque_id=cheque.id).all():
+        payment.reject_payment(reason or 'تم إلغاء الشيك')
+    for receipt in Receipt.query.filter_by(cheque_id=cheque.id).all():
+        receipt.reject_receipt(reason or 'تم إلغاء الشيك')
 
 
 def register_cheque_event_listeners():

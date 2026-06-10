@@ -74,6 +74,40 @@ def generate_number(
     return f'{prefix}-{year}-{next_number:04d}'
 
 
+def generate_number_and_save(
+    prefix,
+    model,
+    field_name,
+    save_func,
+    date_format='%Y',
+    branch_code=None,
+    branch_id=None,
+    tenant_id=None,
+    max_attempts=20,
+):
+    """
+    Generate a unique number and create the record via save_func().
+    Retries on unique-constraint violation to handle concurrent requests.
+    """
+    from sqlalchemy.exc import IntegrityError
+    for attempt in range(max_attempts):
+        number = generate_number(
+            prefix=prefix,
+            model=model,
+            field_name=field_name,
+            date_format=date_format,
+            branch_code=branch_code,
+            branch_id=branch_id,
+            tenant_id=tenant_id,
+        )
+        try:
+            return save_func(number)
+        except IntegrityError:
+            db.session.rollback()
+            continue
+    raise RuntimeError(f'Could not generate unique number after {max_attempts} attempts')
+
+
 def get_next_number(prefix, model_class, number_field='number', branch_code=None, branch_id=None):
     year = datetime.now().year
     resolved_branch_code = _resolve_branch_code(branch_code=branch_code, branch_id=branch_id)

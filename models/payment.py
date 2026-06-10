@@ -101,13 +101,13 @@ class Payment(db.Model):
                 self.sale.recalculate_payment_status()
     
     def reject_payment(self, reason):
-        """رفض الدفعة (شيك مرتد)"""
+        """رفض الدفعة (شيك مرتد) - يعكس التوزيع على فاتورة البيع"""
         if self.payment_confirmed:
             self.payment_confirmed = False
 
         self.rejection_reason = reason
 
-        # تحديث حالة الفاتورة
+        # تحديث حالة الفاتورة (recalculate يستثني الدفعات غير المؤكدة)
         if self.sale:
             self.sale.recalculate_payment_status()
     
@@ -232,11 +232,26 @@ class Receipt(db.Model):
             self.confirmation_date = datetime.now(timezone.utc)
     
     def reject_receipt(self, reason):
-        """رفض السند (شيك مرتد)"""
+        """رفض السند (شيك مرتد) - يعكس التوزيع على فواتير البيع"""
         if self.payment_confirmed:
             self.payment_confirmed = False
 
         self.rejection_reason = reason
+
+        # عكس الدفعات المرتبطة بالسند (التوزيع على فواتير البيع)
+        linked_payments = Payment.query.filter(
+            db.or_(
+                Payment.cheque_id == self.cheque_id,
+                Payment.reference_number == self.receipt_number,
+            ),
+            Payment.payment_type == 'sale_payment',
+            Payment.payment_confirmed == True,
+        ).all()
+        for pmt in linked_payments:
+            pmt.payment_confirmed = False
+            pmt.rejection_reason = reason
+            if pmt.sale_id and pmt.sale:
+                pmt.sale.recalculate_payment_status()
     
     @property
     def is_pending(self):

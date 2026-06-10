@@ -466,13 +466,13 @@ def print_payment(id):
         if payment.user and hasattr(payment.user, 'get_display_name')
         else (payment.user.full_name if payment.user and payment.user.full_name else (payment.user.username if payment.user else ''))
     )
-    amount_in_words = number_to_arabic_words(float(payment.amount_aed or 0), payment.currency or default_currency)
+    amount_in_words = number_to_arabic_words(float(payment.amount or 0), payment.currency or default_currency)
     qr_data_url = ''
     if settings and settings.enable_qr_code:
         qr_data_url = generate_qr_data_url({
             't': 'payment',
             'n': payment.payment_number,
-            'a': float(payment.amount_aed or 0),
+            'a': float(payment.amount or 0),
             'c': payment.currency or default_currency,
             'd': payment.payment_date.strftime('%Y-%m-%d') if payment.payment_date else '',
             'co': company.get('name_ar') or 'نظام المحاسبة',
@@ -1104,13 +1104,13 @@ def print_receipt(id):
         if receipt.user and hasattr(receipt.user, 'get_display_name')
         else (receipt.user.full_name if receipt.user and receipt.user.full_name else (receipt.user.username if receipt.user else ''))
     )
-    amount_in_words = number_to_arabic_words(float(receipt.amount_aed or 0), receipt.currency or default_currency)
+    amount_in_words = number_to_arabic_words(float(receipt.amount or 0), receipt.currency or default_currency)
     qr_data_url = ''
     if settings and settings.enable_qr_code:
         qr_data_url = generate_qr_data_url({
             't': 'receipt',
             'n': receipt.receipt_number,
-            'a': float(receipt.amount_aed or 0),
+            'a': float(receipt.amount or 0),
             'c': receipt.currency or default_currency,
             'd': receipt.receipt_date.strftime('%Y-%m-%d') if receipt.receipt_date else '',
             'co': company.get('name_ar') or 'نظام المحاسبة',
@@ -1418,11 +1418,9 @@ def create_payment(purchase_id):
         return render_template('errors/403.html'), 403
     supplier = tenant_get(Supplier, purchase.supplier_id, or_404=False) if purchase.supplier_id else None
     
-    # حساب المبلغ المدفوع من جدول payments
+    # حساب المبلغ المدفوع من جدول payments (مرتبط بالمشتريات عبر purchase_id)
     paid_amount = db.session.query(func.sum(Payment.amount_aed)).filter(
-        Payment.supplier_id == purchase.supplier_id,
-        Payment.branch_id == purchase.branch_id,
-        Payment.direction == 'outgoing',
+        Payment.purchase_id == purchase.id,
         Payment.payment_confirmed == True,
     ).scalar() or 0
     

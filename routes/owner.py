@@ -2643,13 +2643,13 @@ def preview_receipt(template):
 
     sample_receipt = SampleReceipt()
     sample_user_name = sample_receipt.user.get_display_name('ar')
-    sample_amount_in_words = number_to_arabic_words(float(sample_receipt.amount_aed), sample_receipt.currency)
+    sample_amount_in_words = number_to_arabic_words(float(sample_receipt.amount), sample_receipt.currency)
     sample_qr_data_url = ''
     if settings and settings.enable_qr_code:
         sample_qr_data_url = generate_qr_data_url({
             't': 'receipt',
             'n': sample_receipt.receipt_number,
-            'a': float(sample_receipt.amount_aed),
+            'a': float(sample_receipt.amount),
             'c': sample_receipt.currency,
             'd': sample_receipt.receipt_date.strftime('%Y-%m-%d'),
             'co': settings.company_name_ar if settings and settings.company_name_ar else 'نظام المحاسبة',
