@@ -160,36 +160,48 @@ class SaleService:
                 if product.has_serial_number:
                     required_serials = int(quantity)
                     provided_serials = line_data.get('serials', [])
+                    clean_serials = [s.strip() for s in provided_serials if s and s.strip()]
                     
                     # Validate count
-                    if len(provided_serials) != required_serials:
-                        raise ValueError(f'⚠️ المنتج "{product.name}" يتطلب {required_serials} رقم تسلسلي، ولكن تم إدخال {len(provided_serials)} فقط.\n💡 اضغط على زر "سيريال" بجانب المنتج لإدخال الأرقام.')
+                    if len(clean_serials) != required_serials:
+                        raise ValueError(f'⚠️ المنتج "{product.name}" يتطلب {required_serials} رقم تسلسلي، ولكن تم إدخال {len(clean_serials)} فقط.\n💡 اضغط على زر "سيريال" بجانب المنتج لإدخال الأرقام.')
                     
-                    # Validate uniqueness and availability
+                    # منع تكرار السيريال في نفس السطر
+                    if len(clean_serials) != len(set(clean_serials)):
+                        raise ValueError(f'⚠️ يوجد أرقام تسلسلية مكررة للمنتج "{product.name}".')
+                    
+                    # Validate existence, tenant scope, warehouse, and availability
                     from models import ProductSerial
-                    for sn in provided_serials:
-                        sn = sn.strip()
-                        if not sn: continue
-                        
-                        # Check if SN exists for this product
-                        existing_sn = ProductSerial.query.filter_by(product_id=product.id, serial_number=sn).first()
+                    for sn in clean_serials:
+                        existing_sn = ProductSerial.query.filter_by(
+                            tenant_id=tenant_id,
+                            product_id=product.id,
+                            serial_number=sn
+                        ).first()
                         
                         if existing_sn:
-                            # If exists, must be 'available' or 'returned' (ready to sell)
+                            # If exists, must be 'available' or 'returned'
                             if existing_sn.status not in ['available', 'returned']:
                                 raise ValueError(f'⚠️ السيريال "{sn}" للمنتج "{product.name}" غير متاح للبيع (حالة: {existing_sn.status}).')
+                            
+                            # التحقق من أن السيريال في المستودع الصحيح
+                            if warehouse_id and existing_sn.warehouse_id and existing_sn.warehouse_id != warehouse_id:
+                                raise ValueError(f'⚠️ السيريال "{sn}" موجود في مستودع مختلف. يرجى تحويل المخزون أولاً.')
                         else:
-                            # If not exists, create it on fly (Scenario 1: Deferred Entry)
-                            # This means we are introducing this SN to system at moment of sale
+                            # إنشاء السيريال وقت البيع مسموح فقط إذا كان مفعلاً في الإعدادات
+                            allow_onsale = current_app.config.get('ALLOW_SERIAL_CREATION_ON_SALE', False)
+                            if not allow_onsale:
+                                raise ValueError(f'⚠️ السيريال "{sn}" للمنتج "{product.name}" غير موجود في النظام.\n💡 يجب إدخال الأرقام التسلسلية أثناء استلام المشتريات.')
+                            
                             existing_sn = ProductSerial(
+                                tenant_id=tenant_id,
                                 product_id=product.id,
                                 serial_number=sn,
-                                status='available', # Will change to sold below
-                                purchase_line_id=None, # Unknown origin
-                                warehouse_id=warehouse_id,  # Assign to sale warehouse
+                                status='available',
+                                warehouse_id=warehouse_id,
                             )
                             db.session.add(existing_sn)
-                            db.session.flush() # Get ID
+                            db.session.flush()
                 # ------------------------------
                 
                 # Create Sale Line
@@ -251,8 +263,13 @@ class SaleService:
                     from datetime import datetime, timedelta
                     
                     provided_serials = line_data.get('serials', [])
-                    for sn in provided_serials:
-                        serial_obj = ProductSerial.query.filter_by(product_id=product.id, serial_number=sn).first()
+                    clean_serials = [s.strip() for s in provided_serials if s and s.strip()]
+                    for sn in clean_serials:
+                        serial_obj = ProductSerial.query.filter_by(
+                            tenant_id=tenant_id,
+                            product_id=product.id,
+                            serial_number=sn
+                        ).first()
                         if serial_obj:
                             serial_obj.status = 'sold'
                             serial_obj.sale_line_id = line.id
@@ -567,6 +584,8 @@ class SaleService:
             exchange_rate=exchange_rate_decimal,
             amount_aed=amount_aed,
             payment_method=payment_method,
+            payment_confirmed=(payment_method != 'cheque'),
+            confirmation_date=None if payment_method == 'cheque' else datetime.now(timezone.utc),
             reference_number=reference_number,
             cheque_number=cheque_number,
             cheque_date=cheque_date,

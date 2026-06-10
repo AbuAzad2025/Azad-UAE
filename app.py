@@ -239,6 +239,7 @@ def create_app(config_class=Config):
         tenant_default_currency = ''
         tenant_enable_tax = None
         tenant_default_tax_rate = None
+        tenant_enable_pos = True
         try:
             from models import Tenant
             from models.invoice_settings import InvoiceSettings

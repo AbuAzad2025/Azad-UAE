@@ -246,33 +246,33 @@ def delete(id):
     if linked_cheques > 0:
         has_links = True
 
+    # التحقق من حركات المخزون (منع الحذف النهائي للفواتير التي أثرت على المخزون)
+    from models.warehouse import StockMovement
+    has_stock = StockMovement.query.filter_by(
+        reference_type=GLRef.PURCHASE,
+        reference_id=purchase.id,
+    ).count() > 0
+
     try:
         if has_links:
-            # أرشفة (Soft Delete)
-            # عكس القيد المحاسبي
-            if purchase.status != 'cancelled':
-                from utils.gl_tenant import reverse_document_gl
-                reverse_document_gl(
-                    GLRef.PURCHASE, purchase.id,
-                    f'Reverse Purchase {purchase.purchase_number} (Archived)',
-                    tenant_id=getattr(purchase, 'tenant_id', None),
-                )
-
+            # أرشفة فقط (بدون عكس القيد - الأرشفة إخفاء إداري)
             archive_service = ArchiveService()
             archive_service.archive_record('purchases', purchase, reason='تم أرشفة الفاتورة لوجود مدفوعات أو شيكات', commit=False)
             
             LoggingCore.log_audit('archive', 'purchases', id)
             db.session.commit()
             flash(f'✅ تم أرشفة فاتورة الشراء "{purchase.purchase_number}" (لوجود ارتباطات مالية)', 'warning')
+        elif has_stock:
+            # منع الحذف النهائي لفواتير الشراء التي أثرت على المخزون
+            flash(f'⚠️ لا يمكن حذف فاتورة الشراء "{purchase.purchase_number}" لأنها أثرت على المخزون. يمكنك أرشفتها بدلاً من ذلك.', 'warning')
+            archive_service = ArchiveService()
+            archive_service.archive_record('purchases', purchase, reason='تم أرشفة الفاتورة لوجود حركة مخزون', commit=False)
+            LoggingCore.log_audit('archive', 'purchases', id)
+            db.session.commit()
         else:
-            # حذف نهائي (Hard Delete)
-            # 1. حذف البنود (PurchaseLines)
+            # حذف نهائي (Hard Delete) - فقط للفواتير غير المرتبطة
             PurchaseLine.query.filter_by(purchase_id=purchase.id).delete()
-            
-            # 2. حذف القيود المحاسبية
             delete_entries_by_ref(purchase.id, GLRef.PURCHASE)
-            
-            # 3. حذف الفاتورة
             db.session.delete(purchase)
             LoggingCore.log_audit('delete', 'purchases', id)
             db.session.commit()

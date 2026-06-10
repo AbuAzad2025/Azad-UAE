@@ -103,7 +103,7 @@ class PaymentService:
                 notes=notes,
                 user_id=current_user.id if current_user and current_user.is_authenticated else 1,
                 branch_id=branch_id,
-                payment_confirmed=True # Assuming direct payment for now
+                payment_confirmed=(payment_method != 'cheque')
             )
             
             db.session.add(payment)
@@ -241,6 +241,7 @@ class PaymentService:
                 exchange_rate=exchange_rate,
                 amount_aed=Decimal(str(amount)) * exchange_rate,
                 payment_method=payment_method,
+                payment_confirmed=(payment_method != 'cheque'),
                 reference_number=reference_number,
                 cheque_number=cheque_number,
                 cheque_date=cheque_date,

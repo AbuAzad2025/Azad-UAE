@@ -3,6 +3,15 @@ from extensions import db
 
 class ProductSerial(db.Model):
     __tablename__ = 'product_serials'
+    __table_args__ = (
+        db.UniqueConstraint('tenant_id', 'serial_number', name='uq_serial_tenant_serial'),
+        db.Index('ix_serial_tenant_imei1', 'tenant_id', 'imei1',
+                 sqlite_where=db.text('imei1 IS NOT NULL AND imei1 != \'\''),
+                 postgresql_where=db.text('imei1 IS NOT NULL AND imei1 != \'\'')),
+        db.Index('ix_serial_tenant_imei2', 'tenant_id', 'imei2',
+                 sqlite_where=db.text('imei2 IS NOT NULL AND imei2 != \'\''),
+                 postgresql_where=db.text('imei2 IS NOT NULL AND imei2 != \'\'')),
+    )
 
     id = db.Column(db.Integer, primary_key=True)
     tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=False, index=True)

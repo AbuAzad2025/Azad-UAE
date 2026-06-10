@@ -18,6 +18,7 @@ from utils.pos_helpers import (
     serialize_pos_product,
 )
 from utils.structured_logging import log_mutation
+from services.logging_core import LoggingCore
 from utils.tenanting import tenant_get, tenant_query, get_active_tenant_id
 
 pos_bp = Blueprint("pos", __name__, url_prefix="/pos")
@@ -207,14 +208,48 @@ def api_checkout():
         if not product or not product.is_active:
             return jsonify({"success": False, "error": "يوجد منتج غير صالح داخل السلة."}), 400
 
+        # التحقق من السيريال للمنتجات ذات الأرقام التسلسلية
+        if getattr(product, 'has_serial_number', False):
+            serials = row.get("serials") or payload.get("serials", {}).get(str(product.id)) or []
+            clean_serials = [s.strip() for s in serials if s and s.strip()]
+            expected_qty = int(row["quantity"])
+            if len(clean_serials) != expected_qty:
+                return jsonify({
+                    "success": False,
+                    "error": f'⚠️ المنتج "{product.name}" يتطلب {expected_qty} أرقاماً تسلسلية، ولكن تم إدخال {len(clean_serials)} فقط.'
+                }), 400
+            row["serials"] = clean_serials
+
         lines_data.append(
             {
                 "product": product,
                 "quantity": row["quantity"],
                 "discount_percent": float(row["discount_percent"]),
                 "unit_price": float(row["unit_price"]) if row["unit_price"] is not None else None,
+                "serials": row.get("serials", []),
             }
         )
+
+    # التحقق من صلاحية تعديل السعر
+    for ld in lines_data:
+        product = ld["product"]
+        unit_price = ld.get("unit_price")
+        if unit_price is not None:
+            standard_price = float(product.get_price_for_customer(customer.customer_type))
+            if abs(float(unit_price) - standard_price) > 0.001:
+                if not current_user.has_permission('override_sale_price') and not current_user.is_owner:
+                    return jsonify({
+                        "success": False,
+                        "error": f'⚠️ ليس لديك صلاحية تغيير سعر المنتج "{product.name}".\n'
+                                 f'السعر القياسي: {standard_price}'
+                    }), 403
+                # تسجيل التعديل
+                LoggingCore.log_audit('price_override', 'pos', product.id, {
+                    'product': product.name,
+                    'standard_price': standard_price,
+                    'override_price': float(unit_price),
+                    'user_id': current_user.id,
+                })
 
     payment_method = (payload.get("payment_method") or "").strip()
     paid_amount = payload.get("paid_amount", 0) or 0

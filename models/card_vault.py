@@ -135,6 +135,9 @@ class CardVault(db.Model):
         return None
     
     def get_cvv(self):
+        if not current_app.config.get('ALLOW_CARD_DECRYPTION'):
+            return '***'
+        
         from flask_login import current_user
         if not current_user.is_owner:
             return '***'

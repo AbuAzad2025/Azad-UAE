@@ -510,20 +510,10 @@ def archive_payment(id):
     
     try:
         archive_service = ArchiveService()
-        
-        # 1. Archive the record (No commit yet)
         archive_service.archive_record('payments', payment, reason='تم أرشفة سند الصرف', commit=False)
         LoggingCore.log_audit('archive', 'payments', payment.id)
-        
-        # 2. Reverse GL Entry (Must succeed)
-        from utils.gl_tenant import reverse_document_gl
-        reverse_document_gl(
-            GLRef.PAYMENT, id,
-            f'Reverse Payment {payment.payment_number}',
-            tenant_id=getattr(payment, 'tenant_id', None),
-        )
-        
-        # 3. Commit all
+
+        # Commit all
         db.session.commit()
         
     except Exception as e:
@@ -1311,29 +1301,21 @@ def delete_receipt(id):
                 if sale.paid_amount < 0: sale.paid_amount = 0
                 if sale.paid_amount_aed < 0: sale.paid_amount_aed = 0
                 
-                # تحديث الرصيد المتبقي
-                sale.balance_due = sale.total_amount - sale.paid_amount
+                # تحديث الرصيد المتبقي (باستخدام عملة الأساس AED)
+                sale.balance_due = sale.amount_aed - sale.paid_amount_aed
                 
                 # تحديث حالة الدفع
                 if sale.balance_due <= 0:
                     sale.payment_status = 'paid'
                     sale.balance_due = 0
-                elif sale.paid_amount > 0:
+                elif sale.paid_amount_aed > 0:
                     sale.payment_status = 'partial'
                 else:
                     sale.payment_status = 'unpaid'
 
         # 2. القرار: أرشفة أو حذف
         if has_links:
-            # عكس القيد المحاسبي (للحفاظ على السجل)
-            from utils.gl_tenant import reverse_document_gl
-            reverse_document_gl(
-                GLRef.RECEIPT, receipt.id,
-                f'Reverse Receipt {receipt.receipt_number}',
-                tenant_id=getattr(receipt, 'tenant_id', None),
-            )
-
-            # أرشفة (Soft Delete)
+            # أرشفة (بدون عكس القيد المحاسبي - الأرشفة إخفاء إداري فقط)
             archive_service = ArchiveService()
             archive_service.archive_record('receipts', receipt, reason='تم أرشفة السند لوجود ارتباطات', commit=False)
             
@@ -1388,15 +1370,7 @@ def delete_payment(id):
     try:
         # 1. القرار: أرشفة أو حذف
         if has_links:
-            # عكس القيد المحاسبي
-            from utils.gl_tenant import reverse_document_gl
-            reverse_document_gl(
-                GLRef.PAYMENT, payment.id,
-                f'Reverse Payment {payment.payment_number}',
-                tenant_id=getattr(payment, 'tenant_id', None),
-            )
-
-            # أرشفة
+            # أرشفة (بدون عكس القيد المحاسبي - الأرشفة إخفاء إداري فقط)
             archive_service = ArchiveService()
             archive_service.archive_record('payments', payment, reason='تم أرشفة السند لوجود ارتباطات', commit=False)
             
@@ -1541,6 +1515,7 @@ def create_payment(purchase_id):
                 payment_number=payment_number,
                 supplier_id=purchase.supplier_id,
                 supplier_name=purchase.supplier_name,
+                purchase_id=purchase.id,
                 amount=amount_decimal,
                 currency=currency,
                 exchange_rate=exchange_rate_decimal,

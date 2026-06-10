@@ -612,6 +612,10 @@ class GLService:
             credit = Decimal(str(line_data.get('credit', 0) or 0))
             validate_gl_line_sides(debit, credit)
 
+            exchange_rate_decimal = Decimal(str(exchange_rate))
+            debit_aed = (debit * exchange_rate_decimal).quantize(Decimal('0.001'), rounding=ROUND_HALF_UP)
+            credit_aed = (credit * exchange_rate_decimal).quantize(Decimal('0.001'), rounding=ROUND_HALF_UP)
+
             line = GLJournalLine(
                 tenant_id=tenant_id,
                 entry_id=entry.id,
@@ -620,7 +624,7 @@ class GLService:
                 debit=debit,
                 credit=credit,
                 amount=debit - credit,
-                amount_aed=debit - credit,
+                amount_aed=debit_aed - credit_aed,
                 # الأبعاد المالية
                 branch_id=line_data.get('branch_id'),
                 warehouse_id=line_data.get('warehouse_id'),

@@ -15,7 +15,12 @@ class ArchiveService:
             else:
                 data = {c.name: getattr(record, c.name) for c in record.__table__.columns}
 
+            tenant_id = getattr(record, 'tenant_id', None)
+            if tenant_id is None:
+                raise ValueError(f'Cannot archive {table_name} #{record.id}: record has no tenant_id')
+
             archived = ArchivedRecord(
+                tenant_id=tenant_id,
                 table_name=table_name,
                 record_id=record.id,
                 data=data,
@@ -71,13 +76,32 @@ class ArchiveService:
             current_app.logger.error(f'Hard delete failed: {e}')
             raise
 
+    ARCHIVE_MODEL_MAP = {
+        "sales": None,
+        "purchases": None,
+        "payments": None,
+        "receipts": None,
+        "cheques": None,
+        "expenses": None,
+    }
+
     @staticmethod
     def restore_record(archived_record):
         try:
-            model_class = db.Model.registry._class_registry.get(archived_record.table_name)
+            if ArchiveService.ARCHIVE_MODEL_MAP.get(archived_record.table_name) is None:
+                ArchiveService._init_archive_model_map()
+
+            model_class = ArchiveService.ARCHIVE_MODEL_MAP.get(archived_record.table_name)
 
             if not model_class:
-                raise ValueError(f'Model not found: {archived_record.table_name}')
+                raise ValueError(f'Model not found for table: {archived_record.table_name}')
+
+            # Tenant scope check
+            from flask_login import current_user
+            from utils.tenanting import get_active_tenant_id
+            tid = get_active_tenant_id(current_user)
+            if tid is not None and archived_record.tenant_id != tid:
+                raise PermissionError(f'Cannot restore {archived_record.table_name} #{archived_record.record_id}: tenant mismatch')
 
             existing = model_class.query.get(archived_record.record_id)
 
@@ -93,6 +117,18 @@ class ArchiveService:
             db.session.rollback()
             current_app.logger.error(f'Restore failed: {e}')
             raise
+
+    @staticmethod
+    def _init_archive_model_map():
+        from models import Sale, Purchase, Payment, Receipt, Cheque, Expense
+        ArchiveService.ARCHIVE_MODEL_MAP.update({
+            "sales": Sale,
+            "purchases": Purchase,
+            "payments": Payment,
+            "receipts": Receipt,
+            "cheques": Cheque,
+            "expenses": Expense,
+        })
 
     @staticmethod
     def get_archived_records_query(table_name=None):

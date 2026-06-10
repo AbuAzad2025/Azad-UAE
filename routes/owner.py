@@ -827,6 +827,8 @@ def cards_vault():
         'mastercard_count': CardVault.query.filter_by(card_type='mastercard', is_active=True).count(),
     }
 
+    _audit_owner_db_action('view_card_vault_list', {'total_cards': total_cards})
+
     return render_template('owner/cards_vault.html',
                          cards=pagination.items,
                          pagination=pagination,
@@ -839,6 +841,13 @@ def view_card(id):
     card = CardVault.query.get_or_404(id)
 
     card_data = card.to_dict(include_sensitive=True)
+
+    _audit_owner_db_action('view_card_vault_detail', {
+        'card_id': id,
+        'customer_id': card.customer_id,
+        'last_four': card.last_four,
+        'include_sensitive': True,
+    })
 
     return render_template('owner/view_card.html', card=card, card_data=card_data)
 

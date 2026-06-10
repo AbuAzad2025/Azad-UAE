@@ -434,9 +434,11 @@ class StockService:
     
     @staticmethod
     def reverse_sale(sale):
-        """إلغاء بيع - إرجاع للمستودع الأصلي"""
-        # استخدام نفس المستودع الذي تم البيع منه
+        """إلغاء بيع - إرجاع للمستودع الأصلي مع عكس MWAC"""
+        from datetime import datetime, timezone
         warehouse_id = getattr(sale, 'warehouse_id', None)
+        tenant_id = getattr(sale, 'tenant_id', None)
+        mwac_enabled = current_app.config.get('ENABLE_MWAC', False)
         
         for line in sale.lines:
             StockService.add_stock(
@@ -445,8 +447,67 @@ class StockService:
                 reference_type=GLRef.SALE_REVERSED,
                 reference_id=sale.id,
                 notes=f'إلغاء بيع: {sale.sale_number}',
-                warehouse_id=warehouse_id  # ← نفس المستودع
+                warehouse_id=warehouse_id
             )
+            
+            # عكس MWAC إذا كان مفعلاً
+            if mwac_enabled and tenant_id and warehouse_id:
+                pwc = ProductWarehouseCost.query.filter_by(
+                    tenant_id=tenant_id,
+                    product_id=line.product_id,
+                    warehouse_id=warehouse_id,
+                ).first()
+                
+                if pwc:
+                    # البحث عن سجل التكلفة الأصلي للبيع لاستخدام قيمة COGS الأصلية
+                    cost_history = ProductCostHistory.query.filter_by(
+                        tenant_id=tenant_id,
+                        product_id=line.product_id,
+                        warehouse_id=warehouse_id,
+                        movement_type='sale',
+                        reference_type=GLRef.SALE,
+                        reference_id=sale.id,
+                    ).order_by(ProductCostHistory.id.desc()).first()
+                    
+                    qty = Decimal(str(line.quantity))
+                    if cost_history:
+                        # استخدام قيم COGS الأصلية من سجل التكلفة
+                        original_cogs = abs(Decimal(str(cost_history.movement_unit_cost)) * qty)
+                    else:
+                        # Fallback: استخدام متوسط التكلفة الحالي
+                        original_cogs = pwc.average_cost * qty if pwc.average_cost else Decimal('0')
+                    
+                    old_qty = pwc.total_quantity
+                    old_value = pwc.total_value
+                    old_avg = pwc.average_cost
+                    
+                    new_qty = old_qty + qty
+                    new_value = old_value + original_cogs
+                    new_avg = (new_value / new_qty) if new_qty > 0 else Decimal('0')
+                    
+                    pwc.total_quantity = new_qty
+                    pwc.total_value = new_value
+                    pwc.average_cost = new_avg.quantize(Decimal('0.0001'))
+                    pwc.last_updated = datetime.now(timezone.utc)
+                    
+                    # سجل تدقيق عكس التكلفة
+                    pch = ProductCostHistory(
+                        tenant_id=tenant_id,
+                        product_id=line.product_id,
+                        warehouse_id=warehouse_id,
+                        movement_type='sale_reversal',
+                        reference_type=GLRef.SALE_REVERSED,
+                        reference_id=sale.id,
+                        old_average_cost=old_avg.quantize(Decimal('0.0001')) if old_avg else None,
+                        new_average_cost=pwc.average_cost,
+                        quantity_change=qty,
+                        old_total_quantity=old_qty,
+                        new_total_quantity=new_qty,
+                        old_total_value=old_value,
+                        new_total_value=new_value,
+                        movement_unit_cost=(original_cogs / qty).quantize(Decimal('0.0001')) if qty > 0 else Decimal('0'),
+                    )
+                    db.session.add(pch)
     
     @staticmethod
     def check_availability(product_id, quantity):

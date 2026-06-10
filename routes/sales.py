@@ -508,15 +508,7 @@ def delete(id):
 
     try:
         if has_links:
-            # أرشفة (Soft Delete)
-            # عكس القيد المحاسبي
-            if sale.status != 'cancelled':
-                reverse_document_gl(
-                    [GLRef.SALE, GLRef.SALE_COGS], sale.id,
-                    f'Reverse Sale {sale.sale_number} (Archived)',
-                    tenant_id=getattr(sale, 'tenant_id', None),
-                )
-
+            # أرشفة فقط (بدون عكس القيد المحاسبي - الأرشفة إخفاء إداري فقط)
             archive_service = ArchiveService()
             archive_service.archive_record('sales', sale, reason='تم أرشفة الفاتورة لوجود ارتباطات مالية', commit=False)
             
@@ -558,14 +550,6 @@ def archive(id):
     sale = tenant_get_or_404(Sale, id)
     
     try:
-        # عكس القيد المحاسبي قبل الأرشفة (إذا لم تكن ملغاة)
-        if sale.status != 'cancelled':
-            reverse_document_gl(
-                [GLRef.SALE, GLRef.SALE_COGS], sale.id,
-                f'Reverse Sale {sale.sale_number} (Archived)',
-                tenant_id=getattr(sale, 'tenant_id', None),
-            )
-
         archive_service = ArchiveService()
         archive_service.archive_record('sales', sale, reason='تم أرشفة فاتورة المبيعات')
         LoggingCore.log_audit('archive', 'sales', sale.id)

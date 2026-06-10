@@ -356,7 +356,7 @@
         {% if sale.balance_due > 0 %}
         <div class="total-row ic-7">
           <span>المتبقي:</span>
-          <span>{{ format_currency(sale.balance_due, sale.currency) }}</span>
+          <span>{{ format_currency(sale.balance_due / sale.exchange_rate if sale.exchange_rate and sale.exchange_rate > 0 else sale.balance_due, sale.currency) }}</span>
         </div>
         {% endif %}
       </div>

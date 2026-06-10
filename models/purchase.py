@@ -91,7 +91,7 @@ class Purchase(db.Model):
         return f'<Purchase {self.purchase_number}>'
     
     def get_paid_amount(self, as_of_date=None):
-        """حساب المبلغ المدفوع المؤكد (صادر) حتى تاريخ مرجعي."""
+        """حساب المبلغ المدفوع المؤكد لهذه الفاتورة."""
         from models import Payment
         from sqlalchemy import func
         from decimal import Decimal
@@ -100,17 +100,58 @@ class Purchase(db.Model):
         if as_of_date is None:
             as_of_date = date.today()
         
+        # أولوية 1: المدفوعات المرتبطة مباشرة بهذه الفاتورة
         query = db.session.query(func.sum(Payment.amount_aed)).filter(
-            Payment.supplier_id == self.supplier_id,
+            Payment.purchase_id == self.id,
             Payment.direction == 'outgoing',
             Payment.payment_confirmed == True,
             func.date(Payment.payment_date) <= as_of_date
         )
         if self.branch_id is not None:
             query = query.filter(Payment.branch_id == self.branch_id)
-        paid = query.scalar()
+        direct_paid = query.scalar()
         
-        return Decimal(str(paid)) if paid else Decimal('0')
+        if direct_paid:
+            return Decimal(str(direct_paid))
+        
+        # أولوية 2 (للتوافق مع الإصدارات السابقة): توزيع FIFO على مستوى المورد
+        total_supplier_paid = db.session.query(func.sum(Payment.amount_aed)).filter(
+            Payment.supplier_id == self.supplier_id,
+            Payment.direction == 'outgoing',
+            Payment.payment_confirmed == True,
+            Payment.purchase_id == None,
+            func.date(Payment.payment_date) <= as_of_date
+        )
+        if self.branch_id is not None:
+            total_supplier_paid = total_supplier_paid.filter(Payment.branch_id == self.branch_id)
+        total_paid = total_supplier_paid.scalar()
+        
+        if not total_paid:
+            return Decimal('0')
+        
+        # توزيع FIFO: حساب إجمالي فواتير المورد غير المرتبطة بمدفوعات مباشرة
+        from models import Purchase
+        other_purchases = Purchase.query.filter(
+            Purchase.supplier_id == self.supplier_id,
+            Purchase.id != self.id,
+            Purchase.tenant_id == self.tenant_id,
+        )
+        if self.branch_id is not None:
+            other_purchases = other_purchases.filter(Purchase.branch_id == self.branch_id)
+        
+        other_total = sum(
+            Decimal(str(p.amount_aed or 0)) for p in other_purchases.all()
+        )
+        
+        total_paid_decimal = Decimal(str(total_paid))
+        my_amount = Decimal(str(self.amount_aed or 0))
+        
+        # توزيع المدفوعات على الفواتير حسب FIFO
+        if other_total >= total_paid_decimal:
+            return Decimal('0')
+        
+        allocated_to_me = total_paid_decimal - other_total
+        return min(allocated_to_me, my_amount)
     
     def calculate_totals(self):
         """

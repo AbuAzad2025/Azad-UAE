@@ -161,23 +161,46 @@ class PurchaseService:
                     subtotal += line_total
                     lines_added += 1
                     if getattr(product, 'has_serial_number', False):
+                        qty = Decimal(str(line_data.get('quantity', 0)))
+                        if qty % 1 != 0:
+                            raise ValueError(f'⚠️ المنتج "{product.name}" يتطلب أرقاماً تسلسلية (الكمية必須 أن تكون رقماً صحيحاً).')
+
                         from models.product_serial import ProductSerial
                         provided_serials = line_data.get('serials', [])
-                        for sn in provided_serials:
-                            if sn:
-                                serial_obj = ProductSerial(
-                                    tenant_id=tenant_id,
-                                    product_id=product_id,
-                                    serial_number=sn,
-                                    status='available',
-                                    warehouse_id=warehouse_id,
-                                    purchase_line_id=line.id,
-                                )
-                                if getattr(product, 'warranty_days', 0) > 0:
-                                    from datetime import datetime, timedelta
-                                    serial_obj.warranty_start_date = datetime.now()
-                                    serial_obj.warranty_end_date = datetime.now() + timedelta(days=int(product.warranty_days))
-                                db.session.add(serial_obj)
+                        clean_serials = [s.strip() for s in provided_serials if s and s.strip()]
+
+                        if len(clean_serials) != int(qty):
+                            raise ValueError(
+                                f'⚠️ المنتج "{product.name}" يتطلب {int(qty)} أرقاماً تسلسلية، '
+                                f'ولكن تم إدخال {len(clean_serials)} فقط.'
+                            )
+
+                        # منع تكرار السيريال في نفس السطر
+                        if len(clean_serials) != len(set(clean_serials)):
+                            raise ValueError(f'⚠️ يوجد أرقام تسلسلية مكررة للمنتج "{product.name}".')
+
+                        # التحقق من عدم وجود السيريال مسبقاً لدى نفس التيننت
+                        existing_serials = ProductSerial.query.filter(
+                            ProductSerial.tenant_id == tenant_id,
+                            ProductSerial.serial_number.in_(clean_serials)
+                        ).count()
+                        if existing_serials > 0:
+                            raise ValueError(f'⚠️ بعض الأرقام التسلسلية موجودة مسبقاً للمنتج "{product.name}".')
+
+                        for sn in clean_serials:
+                            serial_obj = ProductSerial(
+                                tenant_id=tenant_id,
+                                product_id=product_id,
+                                serial_number=sn,
+                                status='available',
+                                warehouse_id=warehouse_id,
+                                purchase_line_id=line.id,
+                            )
+                            if getattr(product, 'warranty_days', 0) > 0:
+                                from datetime import datetime, timedelta
+                                serial_obj.warranty_start_date = datetime.now()
+                                serial_obj.warranty_end_date = datetime.now() + timedelta(days=int(product.warranty_days))
+                            db.session.add(serial_obj)
         
         if lines_added == 0:
             db.session.rollback()

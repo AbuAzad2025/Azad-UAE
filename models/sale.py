@@ -64,14 +64,18 @@ class Sale(db.Model):
     @base_amount.setter
     def base_amount(self, value):
         self.amount_aed = value
-    
+
     @property
-    def base_paid_amount(self):
+    def paid_amount_base(self):
         return self.paid_amount_aed
     
-    @base_paid_amount.setter
-    def base_paid_amount(self, value):
+    @paid_amount_base.setter
+    def paid_amount_base(self, value):
         self.paid_amount_aed = value
+
+    @property
+    def balance_due_base(self):
+        return self.balance_due
     
     payment_status = db.Column(db.String(20), default='unpaid', index=True)
     status = db.Column(db.String(20), default='confirmed', index=True)

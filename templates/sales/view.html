@@ -664,6 +664,9 @@
           <strong class="text-danger ic-4">
 
             {{ format_currency(sale.balance_due) }}
+            {% if sale.currency and sale.currency != tenant_default_currency %}
+            <small class="d-block text-muted">{{ format_currency(sale.balance_due / sale.exchange_rate if sale.exchange_rate and sale.exchange_rate > 0 else sale.balance_due, sale.currency) }}</small>
+            {% endif %}
 
           </strong>
 

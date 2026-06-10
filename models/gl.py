@@ -73,7 +73,10 @@ class GLAccount(db.Model):
         if self.is_header:
             return sum((child.get_balance(_depth=_depth+1, _visited=_visited) for child in self.children if child.is_active), 0)
         
-        balance_sum = db.session.query(func.sum(GLJournalLine.amount_aed)).filter_by(account_id=self.id).scalar() or 0
+        balance_sum = db.session.query(func.sum(GLJournalLine.amount_aed))\
+            .join(GLJournalLine.entry)\
+            .filter(GLJournalLine.account_id == self.id, GLJournalEntry.is_posted == True)\
+            .scalar() or 0
         
         if self.type in ['asset', 'expense']:
             return balance_sum

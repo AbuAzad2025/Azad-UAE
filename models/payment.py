@@ -24,6 +24,7 @@ class Payment(db.Model):
     # معلومات المورد (لسندات الصرف)
     supplier_id = db.Column(db.Integer, db.ForeignKey('suppliers.id'), index=True)
     supplier_name = db.Column(db.String(200))
+    purchase_id = db.Column(db.Integer, db.ForeignKey('purchases.id'), index=True)
     branch_id = db.Column(db.Integer, db.ForeignKey('branches.id'), index=True)
     
     amount = db.Column(db.Numeric(15, 3), nullable=False)
@@ -67,6 +68,7 @@ class Payment(db.Model):
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
     
     sale = db.relationship('Sale', back_populates='payments')
+    purchase = db.relationship('Purchase', foreign_keys=[purchase_id])
     customer = db.relationship('Customer')
     supplier = db.relationship('Supplier', foreign_keys=[supplier_id])
     branch = db.relationship('Branch', foreign_keys=[branch_id])
@@ -102,11 +104,12 @@ class Payment(db.Model):
         """رفض الدفعة (شيك مرتد)"""
         if self.payment_confirmed:
             self.payment_confirmed = False
-            self.rejection_reason = reason
-            
-            # تحديث حالة الفاتورة
-            if self.sale:
-                self.sale.recalculate_payment_status()
+
+        self.rejection_reason = reason
+
+        # تحديث حالة الفاتورة
+        if self.sale:
+            self.sale.recalculate_payment_status()
     
     @property
     def is_pending(self):
@@ -232,7 +235,8 @@ class Receipt(db.Model):
         """رفض السند (شيك مرتد)"""
         if self.payment_confirmed:
             self.payment_confirmed = False
-            self.rejection_reason = reason
+
+        self.rejection_reason = reason
     
     @property
     def is_pending(self):
