@@ -13,7 +13,7 @@
         const n = Number(v);
         return Number.isFinite(n) ? n : 0;
     };
-    const baseCurrency = window.POS_BASE_CURRENCY;
+    const baseCurrency = document.querySelector('meta[name="pos-base-currency"]')?.getAttribute('content') || 'AED';
     const selectedCurrency = () => qs('#currency').value || baseCurrency;
     const currentRate = () => toNum(qs('#exchangeRate').value) || 1;
     const priceForCurrency = (basePrice) => {

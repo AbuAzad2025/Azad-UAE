@@ -6,7 +6,7 @@ from urllib.parse import quote
 
 from flask import (
 
-    Blueprint, abort, flash, redirect, render_template, request, session, url_for,
+    Blueprint, abort, flash, jsonify, redirect, render_template, request, session, url_for,
 
 )
 
@@ -128,7 +128,7 @@ def _store_context(store):
 
     secondary = (tenant.brand_color_secondary if tenant else None) or '#CE1126'
 
-    cart_count = int(sum(StoreService.get_cart(session, store.tenant_id).values()) or 0) if account else 0
+    cart_count = int(sum(StoreService.get_cart(session, store.tenant_id).values()) or 0)
 
     return {
 
@@ -181,7 +181,8 @@ def _whatsapp_digits(store) -> str:
     return re.sub(r'\D', '', wa)
 
 
-
+def _is_ajax():
+    return (request.content_type and 'application/json' in request.content_type) or request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
 
 @shop_bp.route('/<slug>/lang/<lang_code>')
@@ -436,7 +437,11 @@ def catalog(slug):
 
     search = (request.args.get('q') or '').strip()
 
-    items = StoreService.get_public_catalog(store.tenant_id, category_id=category_id, search=search)
+    page = request.args.get('page', 1, type=int)
+
+    catalog_result = StoreService.get_public_catalog(store.tenant_id, category_id=category_id, search=search, page=page)
+
+    items = catalog_result['items']
 
     categories = (
 
@@ -463,6 +468,12 @@ def catalog(slug):
         search=search,
 
         wa_digits=wa_digits,
+
+        page=catalog_result['page'],
+
+        pages=catalog_result['pages'],
+
+        total=catalog_result['total'],
 
         **ctx,
 
@@ -518,14 +529,6 @@ def cart_view(slug):
 
         return blocked
 
-    need_login = _require_shop_customer(store)
-
-    if need_login:
-
-        return need_login
-
-
-
     ctx = _store_context(store)
 
     cart = StoreService.get_cart(session, store.tenant_id)
@@ -550,20 +553,14 @@ def cart_add(slug):
 
         abort(503)
 
-    if not _shop_account(store):
-
-        login_url = url_for('shop.account_login', slug=store.store_slug)
-        if is_safe_redirect_url(request.referrer):
-            login_url = url_for('shop.account_login', slug=store.store_slug, next=request.referrer)
-        return redirect(login_url)
-
-
-
     product_id = request.form.get('product_id', type=int)
 
     quantity = request.form.get('quantity', type=float, default=1)
 
     if not product_id or quantity <= 0:
+
+        if _is_ajax():
+            return jsonify({'success': False, 'message': t('out_of_stock', shop_lang())}), 400
 
         flash(t('out_of_stock', shop_lang()), 'warning')
 
@@ -575,6 +572,8 @@ def cart_add(slug):
         is_active=True,
     ).first()
     if not product or product.has_serial_number:
+        if _is_ajax():
+            return jsonify({'success': False, 'message': t('out_of_stock', shop_lang())}), 400
         flash(t('out_of_stock', shop_lang()), 'warning')
         return redirect(safe_redirect_target(request.referrer, 'shop.catalog', slug=store.store_slug))
 
@@ -590,6 +589,9 @@ def cart_add(slug):
 
     if new_qty <= 0:
 
+        if _is_ajax():
+            return jsonify({'success': False, 'message': t('out_of_stock', shop_lang())}), 400
+
         flash(t('out_of_stock', shop_lang()), 'warning')
 
         return redirect(safe_redirect_target(request.referrer, 'shop.catalog', slug=store.store_slug))
@@ -599,6 +601,11 @@ def cart_add(slug):
     cart[str(product_id)] = new_qty
 
     StoreService.save_cart(session, store.tenant_id, cart)
+
+    if _is_ajax():
+        cart_ajax = StoreService.get_cart(session, store.tenant_id)
+        count = int(sum(cart_ajax.values()) or 0)
+        return jsonify({'success': True, 'cart_count': count, 'message': 'Added to cart'})
 
     return redirect(url_for('shop.cart_view', slug=store.store_slug))
 
@@ -617,14 +624,6 @@ def cart_update(slug):
     if _require_open_store(store):
 
         abort(503)
-
-    need_login = _require_shop_customer(store)
-
-    if need_login:
-
-        return need_login
-
-
 
     cart = StoreService.get_cart(session, store.tenant_id)
 
@@ -658,6 +657,12 @@ def cart_update(slug):
 
     StoreService.save_cart(session, store.tenant_id, cart)
 
+    if _is_ajax():
+        cart_ajax = StoreService.get_cart(session, store.tenant_id)
+        totals_ajax = StoreService.cart_totals(store.tenant_id, cart_ajax)
+        count = int(sum(cart_ajax.values()) or 0)
+        return jsonify({'success': True, 'cart_count': count, 'subtotal': float(totals_ajax['subtotal']), 'count': int(totals_ajax.get('count', 0))})
+
     return redirect(url_for('shop.cart_view', slug=store.store_slug))
 
 
@@ -672,20 +677,29 @@ def cart_remove(slug, product_id):
 
     store = _resolve_store(slug)
 
-    if not _shop_account(store):
-
-        return redirect(url_for('shop.account_login', slug=store.store_slug))
-
     cart = StoreService.get_cart(session, store.tenant_id)
 
     cart.pop(str(product_id), None)
 
     StoreService.save_cart(session, store.tenant_id, cart)
 
+    if _is_ajax():
+        cart_ajax = StoreService.get_cart(session, store.tenant_id)
+        count = int(sum(cart_ajax.values()) or 0)
+        return jsonify({'success': True, 'cart_count': count})
+
     return redirect(url_for('shop.cart_view', slug=store.store_slug))
 
 
 
+
+
+@shop_bp.route('/<slug>/cart/count', methods=['GET'])
+def cart_count(slug):
+    store = _resolve_store(slug)
+    cart = StoreService.get_cart(session, store.tenant_id)
+    count = int(sum(cart.values()) or 0)
+    return jsonify({'count': count})
 
 
 @shop_bp.route('/<slug>/checkout', methods=['GET', 'POST'])
@@ -701,14 +715,6 @@ def checkout(slug):
     if blocked:
 
         return blocked
-
-    need_login = _require_shop_customer(store)
-
-    if need_login:
-
-        return need_login
-
-
 
     ctx = _store_context(store)
 
@@ -740,11 +746,11 @@ def checkout(slug):
 
         try:
 
-            name = (request.form.get('customer_name') or account.name or '').strip()
+            name = (request.form.get('customer_name') or (account.name if account else '') or '').strip()
 
-            phone = (request.form.get('phone') or account.phone or '').strip()
+            phone = (request.form.get('phone') or (account.phone if account else '') or '').strip()
 
-            address = (request.form.get('address') or account.address or '').strip()
+            address = (request.form.get('address') or (account.address if account else '') or '').strip()
 
             notes = (request.form.get('notes') or '').strip()
 
@@ -835,9 +841,9 @@ def checkout(slug):
         coupon_code=(request.form.get('coupon_code') or '').strip() if request.method == 'POST' else '',
 
         prefilled={
-            'name': (request.form.get('customer_name') or account.name or '') if request.method == 'POST' else (account.name or ''),
-            'phone': (request.form.get('phone') or account.phone or '') if request.method == 'POST' else (account.phone or ''),
-            'address': (request.form.get('address') or account.address or '') if request.method == 'POST' else (account.address or ''),
+            'name': (request.form.get('customer_name') or (account.name if account else '') or '') if request.method == 'POST' else ((account.name if account else '') or ''),
+            'phone': (request.form.get('phone') or (account.phone if account else '') or '') if request.method == 'POST' else ((account.phone if account else '') or ''),
+            'address': (request.form.get('address') or (account.address if account else '') or '') if request.method == 'POST' else ((account.address if account else '') or ''),
         },
 
         **ctx,
@@ -884,7 +890,8 @@ def store_sitemap(slug):
 
     base = request.url_root.rstrip('/')
 
-    items = StoreService.get_public_catalog(store.tenant_id)
+    catalog_result = StoreService.get_public_catalog(store.tenant_id, per_page=9999)
+    items = catalog_result['items']
 
     xml = ['<?xml version="1.0" encoding="UTF-8"?>', '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
 

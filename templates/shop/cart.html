@@ -1,23 +1,14 @@
 {% extends 'shop/base.html' %}
 {% block title %}{{ t('cart') }} — {{ store.title }}{% endblock %}
 
-<style>
-    /* D6: externalized inline styles */
-    .ic-1 { margin:0 0 1.25rem; font-weight:800; }
-    .ic-2 { height:100%; display:grid; place-items:center; }
-    .ic-3 { flex:1; }
-    .ic-4 { display:flex; align-items:center; gap:0.5rem; margin-top:0.5rem; }
-    .ic-5 { padding:0.35rem 0.65rem; font-size:0.8rem; }
-    .ic-6 { margin-top:1rem; }
-    .ic-7 { margin-top:1.25rem; padding:0.85rem; }
-    .ic-8 { margin-top:0.5rem; }
-</style>
-
 {% block content %}
+{% with current_page_name = t('cart') %}
+{% include 'shop/partials/breadcrumbs.html' with context %}
+{% endwith %}
 <h2 class="ic-1">{{ t('cart') }}</h2>
 
 {% if totals.lines %}
-<form class="needs-validation" id="cart-update-form" method="post" action="{{ url_for('shop.cart_update', slug=store.store_slug) }}">
+<form class="needs-validation" id="cart-update-form" method="post" action="{{ url_for('shop.cart_update', slug=store.store_slug) }}" data-ajax-cart-update>
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 </form>
 
@@ -36,7 +27,7 @@
           <input type="number" form="cart-update-form" name="qty_{{ product.id }}" value="{{ line.quantity|int }}" min="0" class="ps-qty-input" aria-label="qty {{ product.id }}">
           <form method="post" action="{{ url_for('shop.cart_remove', slug=store.store_slug, product_id=product.id) }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
-            <button type="submit" class="ps-btn ps-btn-danger ic-5">{{ t('remove') }}</button>
+            <button type="submit" data-ajax-remove data-product-id="{{ product.id }}" class="ps-btn ps-btn-danger ic-5">{{ t('remove') }}</button>
           </form>
         </div>
       </div>
@@ -64,3 +55,4 @@
 </div>
 {% endif %}
 {% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/shop-utilities.css') }}">{% endblock %}

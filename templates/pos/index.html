@@ -424,7 +424,7 @@
 
 {% block extra_js %}
 <script src="{{ url_for('static', filename='js/barcode-scanner.js') }}"></script>
-<script>window.POS_BASE_CURRENCY='{{ tenant_default_currency or "AED" }}';</script>
+<meta name="pos-base-currency" content="{{ tenant_default_currency or 'AED' }}">
 <script src="{{ url_for('static', filename='js/pos/index.js') }}"></script>
 {% endblock %}
 

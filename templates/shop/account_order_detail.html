@@ -5,7 +5,9 @@
 
 
 {% block content %}
-
+{% with current_page_name = t('my_orders') %}
+{% include 'shop/partials/breadcrumbs.html' with context %}
+{% endwith %}
 <div class="ps-panel">
 
   <div class="ps-breadcrumb">

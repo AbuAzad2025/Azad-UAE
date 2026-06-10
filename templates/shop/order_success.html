@@ -1,19 +1,10 @@
 {% extends 'shop/base.html' %}
 {% block title %}{{ t('order_success') }} — {{ store.title }}{% endblock %}
 
-<style>
-    /* D6: externalized inline styles */
-    .ic-1 { max-width:520px; margin:2rem auto; text-align:center; }
-    .ic-2 { margin:0 0 0.5rem; font-weight:800; }
-    .ic-3 { color:var(--ps-muted); margin-bottom:1.25rem; }
-    .ic-4 { justify-content:center; gap:1rem; border:none; }
-    .ic-5 { margin:1rem 0; display:inline-flex; }
-    .ic-6 { font-size:0.88rem; color:var(--ps-muted); }
-    .ic-7 { margin-top:1rem; }
-    .ic-8 { margin-top:1.25rem; }
-</style>
-
 {% block content %}
+{% with current_page_name = t('order_success') %}
+{% include 'shop/partials/breadcrumbs.html' with context %}
+{% endwith %}
 <div class="ps-panel ic-1">
   <div class="ps-success-icon"><i class="fas fa-check"></i></div>
   <h2 class="ic-2">{{ t('order_success') }}</h2>
@@ -33,3 +24,4 @@
   <a href="{{ url_for('shop.catalog', slug=store.store_slug) }}" class="ps-btn ps-btn-primary ic-8">{{ t('continue_shopping') }}</a>
 </div>
 {% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/shop-utilities.css') }}">{% endblock %}

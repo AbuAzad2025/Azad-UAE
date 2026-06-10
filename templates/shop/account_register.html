@@ -8,6 +8,9 @@
 </style>
 
 {% block content %}
+{% with current_page_name = t('register') %}
+{% include 'shop/partials/breadcrumbs.html' with context %}
+{% endwith %}
 <div class="ps-panel ic-1">
   <h2 class="ic-2">{{ t('register') }}</h2>
   <form class="needs-validation" method="post">

@@ -309,7 +309,7 @@ class StoreService:
         session.modified = True
 
     @staticmethod
-    def get_public_catalog(tenant_id: int, *, category_id=None, search: str = None):
+    def get_public_catalog(tenant_id: int, *, category_id=None, search: str = None, page=1, per_page=24):
         """Storefront catalog — in-stock online warehouse, no serial-tracked products."""
         products, stock_map = StoreService.get_catalog_products(tenant_id, include_zero=False)
         items = []
@@ -327,7 +327,11 @@ class StoreService:
             if qty <= 0:
                 continue
             items.append({'product': product, 'quantity': qty})
-        return items
+        total = len(items)
+        start = (page - 1) * per_page
+        end = start + per_page
+        page_items = items[start:end]
+        return {'items': page_items, 'total': total, 'page': page, 'per_page': per_page, 'pages': (total + per_page - 1) // per_page}
 
     @staticmethod
     def cart_totals(tenant_id: int, cart: dict) -> dict:

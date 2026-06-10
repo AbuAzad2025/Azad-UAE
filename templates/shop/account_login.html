@@ -10,6 +10,9 @@
 </style>
 
 {% block content %}
+{% with current_page_name = t('login') %}
+{% include 'shop/partials/breadcrumbs.html' with context %}
+{% endwith %}
 <div class="ps-panel ic-1">
   <h2 class="ic-2">{{ t('login') }}</h2>
   <p class="ps-card-meta">{{ t('login_required') }}</p>

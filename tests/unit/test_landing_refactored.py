@@ -29,3 +29,11 @@ def test_fa6_loaded():
     with open(path, "r", encoding="utf-8") as f:
         content = f.read()
     assert "font-awesome/6." in content, "landing.html does not reference Font Awesome 6"
+
+def test_landing_uses_external_css_for_inline_styles():
+    path = os.path.join(BASE_DIR, "templates", "public", "landing.html")
+    with open(path, "r", encoding="utf-8") as f:
+        content = f.read()
+    assert "landing-page-en.css" in content, "landing.html should link landing-page-en.css"
+    assert "landing-page-ar.css" in content, "landing.html should link landing-page-ar.css"
+    assert "<style>" not in content, "landing.html should not contain inline <style> blocks"

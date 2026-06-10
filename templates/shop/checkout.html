@@ -1,17 +1,10 @@
 {% extends 'shop/base.html' %}
 {% block title %}{{ t('checkout') }} — {{ store.title }}{% endblock %}
 
-<style>
-    /* D6: externalized inline styles */
-    .ic-1 { margin:0 0 1.25rem; font-weight:800; }
-    .ic-2 { margin:0 0 1rem; font-size:0.88rem; color:var(--ps-muted); }
-    .ic-3 { display:none; }
-    .ic-4 { font-size:0.82rem; color:var(--ps-muted); margin-bottom:1rem; }
-    .ic-5 { padding:0.9rem; }
-    .ic-6 { font-size:0.82rem; color:var(--ps-muted); margin-top:0.75rem; }
-</style>
-
 {% block content %}
+{% with current_page_name = t('checkout') %}
+{% include 'shop/partials/breadcrumbs.html' with context %}
+{% endwith %}
 <h2 class="ic-1">{{ t('checkout') }}</h2>
 
 {% if not payment_methods %}
@@ -114,3 +107,4 @@
 })();
 </script>
 {% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/shop-utilities.css') }}">{% endblock %}

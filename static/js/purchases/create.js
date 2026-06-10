@@ -769,6 +769,22 @@ $(document).ready(function() {
 
   
 
+  // زر إعادة الحساب اليدوي
+
+  $('#recalcTotalsBtn').on('click', function() {    calculateTotals();
+
+  });
+
+  
+
+  // زر إضافة سطر منتج
+
+  $('#addLineBtn').on('click', function() {    addLine();
+
+  });
+
+  
+
   // التحقق قبل الإرسال
 
   $('#purchaseForm').on('submit', function(e) {    

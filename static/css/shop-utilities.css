@@ -1,0 +1,61 @@
+/* D6: externalized inline styles */
+.ic-1 { margin:0 0 1.25rem; font-weight:800; }
+.ic-2 { height:100%; display:grid; place-items:center; }
+.ic-3 { flex:1; }
+.ic-4 { display:flex; align-items:center; gap:0.5rem; margin-top:0.5rem; }
+.ic-5 { padding:0.35rem 0.65rem; font-size:0.8rem; }
+.ic-6 { margin-top:1rem; }
+.ic-7 { margin-top:1.25rem; padding:0.85rem; }
+.ic-8 { margin-top:0.5rem; }
+.ic-9 { flex:1; }
+.ic-10 { margin-top:0.5rem; padding:0.85rem; }
+.ic-11 { margin-top:1.5rem; padding:0.95rem; font-size:1rem; }
+.ic-12 { margin-top:0.75rem; }
+
+/* checkout */
+.ic-1 { margin:0 0 1.25rem; font-weight:800; }
+.ic-2 { margin:0 0 1rem; font-size:0.88rem; color:var(--ps-muted); }
+.ic-3 { display:none; }
+.ic-4 { font-size:0.82rem; color:var(--ps-muted); margin-bottom:1rem; }
+.ic-5 { padding:0.9rem; }
+.ic-6 { font-size:0.82rem; color:var(--ps-muted); margin-top:0.75rem; }
+
+/* order_success */
+.ic-1 { max-width:520px; margin:2rem auto; text-align:center; }
+.ic-2 { margin:0 0 0.5rem; font-weight:800; }
+.ic-3 { color:var(--ps-muted); margin-bottom:1.25rem; }
+.ic-4 { justify-content:center; gap:1rem; border:none; }
+.ic-5 { margin:1rem 0; display:inline-flex; }
+.ic-6 { font-size:0.88rem; color:var(--ps-muted); }
+.ic-7 { margin-top:1rem; }
+.ic-8 { margin-top:1.25rem; }
+
+/* account_login */
+.ic-1 { max-width:420px; margin:2rem auto; }
+.ic-2 { margin:0 0 1rem; font-weight:800; }
+.ic-3 { margin-top:0.75rem; text-align:center; font-size:0.85rem; }
+.ic-4 { margin-top:0.75rem; text-align:center; font-size:0.9rem; }
+.ic-5 { color:var(--ps-green-dark); font-weight:700; }
+
+/* account_register */
+.ic-1 { max-width:480px; margin:2rem auto; }
+.ic-2 { margin:0 0 1rem; font-weight:800; }
+.ic-3 { margin-top:1rem; text-align:center; }
+
+/* product */
+.ic-1 { margin-bottom:1rem; display:inline-flex; }
+.ic-2 { height:100%; display:grid; place-items:center; font-size:4rem; color:var(--ps-green); opacity:.3; }
+.ic-3 { margin:0 0 0.5rem; font-size:1.6rem; font-weight:800; }
+.ic-4 { font-size:1.5rem; margin:1rem 0; }
+.ic-5 { margin:1.25rem 0; color:var(--ps-muted); font-size:0.92rem; line-height:1.7; }
+.ic-6 { margin-top:1.5rem; }
+.ic-7 { display:flex; align-items:center; gap:0.5rem; max-width:160px; }
+.ic-8 { padding:0.4rem 0.65rem; }
+.ic-9 { flex:1; }
+.ic-10 { margin-top:0.5rem; padding:0.85rem; }
+.ic-11 { margin-top:1.5rem; padding:0.95rem; font-size:1rem; }
+.ic-12 { margin-top:0.75rem; }
+
+/* base */
+.ic-1 { display:inline; }
+.ic-2 { display:none; }

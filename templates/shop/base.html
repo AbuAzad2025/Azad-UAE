@@ -11,18 +11,16 @@
   <meta property="og:description" content="{{ store.seo_description(lang) }}">
   {% if store.logo_url() %}<meta property="og:image" content="{{ request.url_root.rstrip('/') }}{{ store.logo_url() }}">{% endif %}
   <link rel="canonical" href="{{ request.url }}">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
   {% endblock %}
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700;800&family=Sora:wght@400;500;600;700;800&display=swap" integrity="sha384-Wn8XN5vULCukPAAEaxYTMow8YzD38hKD8JVzC1+o3+voPZxEdxS+m6qSBy2f5nR4" crossorigin="anonymous" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha384-t1nt8BQoYMLFN5p42tRAtuAAFQaCQODekUVeKKZrEnEyp4H2R0RHFz0KWpmj7i8g" crossorigin="anonymous">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/shop-palestine.css') }}">
-  <style>:root { --theme-primary: {{ theme_primary }}; --theme-secondary: {{ theme_secondary }}; }
-    /* D6: externalized inline styles */
-    .ic-1 { display:inline; }
-    .ic-2 { display:none; }
-  </style>
+   <style>:root { --theme-primary: {{ theme_primary }}; --theme-secondary: {{ theme_secondary }}; }</style>
   {% block extra_head %}{% endblock %}
+  {% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/shop-utilities.css') }}">{% endblock %}
 </head>
-<body class="ps-shop {{ 'rtl' if is_rtl else 'ltr' }}">
+<body class="ps-shop {{ 'rtl' if is_rtl else 'ltr' }}" data-store-slug="{{ store.store_slug }}">
   <div class="ps-tatreez-bar" aria-hidden="true"></div>
 
   {# Top premium thin bar: location + language + currency #}
@@ -63,13 +61,13 @@
       <nav class="ps-nav">
         <a href="{{ url_for('shop.catalog', slug=store.store_slug) }}"><i class="fas fa-store"></i> {{ t('shop') }}</a>
         <a href="{{ url_for('shop.catalog', slug=store.store_slug) }}#categories"><i class="fas fa-layer-group"></i> {{ t('categories') }}</a>
-        {% if is_shop_logged_in %}
-        <span class="ps-nav-user"><i class="fas fa-user-check"></i> {{ shop_account.name.split()[0] }}</span>
-        <a href="{{ url_for('shop.account_orders', slug=store.store_slug) }}"><i class="fas fa-receipt"></i> {{ t('my_orders') }}</a>
         <a href="{{ url_for('shop.cart_view', slug=store.store_slug) }}" class="ps-cart-link">
           <i class="fas fa-shopping-basket"></i> {{ t('cart') }}
           {% if cart_count %}<span class="ps-cart-badge">{{ cart_count|int }}</span>{% endif %}
         </a>
+        {% if is_shop_logged_in %}
+        <span class="ps-nav-user"><i class="fas fa-user-check"></i> {{ shop_account.name.split()[0] }}</span>
+        <a href="{{ url_for('shop.account_orders', slug=store.store_slug) }}"><i class="fas fa-receipt"></i> {{ t('my_orders') }}</a>
         <form class="needs-validation" method="post" action="{{ url_for('shop.account_logout', slug=store.store_slug) }}" class="ic-1">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
           <button type="submit" class="ps-btn ps-btn-outline ps-">{{ t('logout') }}</button>
@@ -175,6 +173,7 @@
   </footer>
 
   <script src="{{ url_for('static', filename='js/shop-storefront.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/shop-cart.js') }}" defer></script>
   {% block extra_js %}{% endblock %}
 </body>
 </html>

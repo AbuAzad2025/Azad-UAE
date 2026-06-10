@@ -1,0 +1,9 @@
+<nav class="ps-breadcrumbs" aria-label="Breadcrumb">
+  <ol>
+    <li><a href="{{ url_for('shop.catalog', slug=store.store_slug) }}"><i class="fas fa-home"></i> {{ t('shop') }}</a></li>
+    {% if category_name %}
+    <li><a href="{{ url_for('shop.catalog', slug=store.store_slug, category=category_id) }}">{{ category_name }}</a></li>
+    {% endif %}
+    <li aria-current="page">{{ current_page_name }}</li>
+  </ol>
+</nav>
