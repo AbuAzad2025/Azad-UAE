@@ -352,7 +352,6 @@ def edit(id):
             expense.notes = new_notes
             
             # إعادة حساب المبلغ بالدرهم
-            from decimal import Decimal
             exchange_rate = CurrencyService.get_rate(expense.currency)
             expense.exchange_rate = exchange_rate
             expense.amount_aed = new_amount * exchange_rate
