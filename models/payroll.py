@@ -50,11 +50,15 @@ class SalaryAdvance(db.Model):
     tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=False, index=True)
     employee_id = db.Column(db.Integer, db.ForeignKey('employees.id'), nullable=False, index=True)
     amount = db.Column(db.Numeric(10, 2), nullable=False)
+    total_amount = db.Column(db.Numeric(10, 2), default=0)  # إجمالي السلفة (للسلف الجزئية)
+    deducted_amount = db.Column(db.Numeric(10, 2), default=0)  # المبلغ المخصوم
+    remaining_amount = db.Column(db.Numeric(10, 2), default=0)  # المبلغ المتبقي
     date = db.Column(db.Date, default=datetime.now)
     description = db.Column(db.String(255))
     
     status = db.Column(db.String(20), default='approved', index=True) # pending, approved, paid, deducted
-    is_deducted = db.Column(db.Boolean, default=False) # True if deducted from next salary
+    is_deducted = db.Column(db.Boolean, default=False) # True if fully deducted from salary
+    fully_deducted_at = db.Column(db.DateTime, nullable=True)  # تاريخ الاكتمال
     
     # Link to GL
     gl_entry_id = db.Column(db.Integer, db.ForeignKey('gl_journal_entries.id'), nullable=True, index=True)
@@ -65,6 +69,9 @@ class SalaryAdvance(db.Model):
 
 class PayrollTransaction(db.Model):
     __tablename__ = 'payroll_transactions'
+    __table_args__ = (
+        db.UniqueConstraint('tenant_id', 'employee_id', 'month', 'year', name='uq_payroll_tenant_employee_period'),
+    )
 
     id = db.Column(db.Integer, primary_key=True)
     tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=False, index=True)

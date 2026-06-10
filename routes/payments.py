@@ -1593,7 +1593,7 @@ def create_payment(purchase_id):
                 branch_id=payment.branch_id,
             )
             
-            db.session.commit()
+            # atomic_transaction ستقوم بالـ commit تلقائياً
             
             flash('تم إنشاء سند الصرف بنجاح', 'success')
             return redirect(url_for('purchases.view', id=purchase_id))

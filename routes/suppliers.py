@@ -222,7 +222,6 @@ def create():
 
             with atomic_transaction('supplier_creation'):
                 db.session.add(supplier)
-                db.session.commit()
 
                 LoggingCore.log_audit('create', 'suppliers', supplier.id)
 

@@ -96,6 +96,9 @@ class PayrollService:
             employee_id=employee_id,
 
             amount=Decimal(amount),
+            total_amount=Decimal(amount),
+            deducted_amount=Decimal('0'),
+            remaining_amount=Decimal(amount),
 
             description=description,
 
@@ -190,6 +193,27 @@ class PayrollService:
 
         net_salary = basic_amount + Decimal(allowances) - Decimal(deductions) - advances_total
 
+        # التحقق من عدم وجود راتب مكرر لنفس الموظف/الشهر/السنة
+        existing = PayrollTransaction.query.filter_by(
+            employee_id=employee_id,
+            tenant_id=tenant_id,
+            month=month,
+            year=year,
+        ).first()
+        if existing:
+            raise ValueError(f'تمت معالجة راتب الموظف "{employee.name}" لشهر {month}/{year} مسبقاً.')
+
+        # التحقق من أن صافي الراتب غير سالب
+        if net_salary < Decimal('0'):
+            # خصم جزئي للسلفة بدلاً من منع العملية
+            max_deductible = basic_amount + Decimal(allowances) - Decimal(deductions)
+            if max_deductible <= Decimal('0'):
+                raise ValueError(f'صافي راتب الموظف "{employee.name}" سالب ({net_salary}). لا يمكن صرف الراتب.')
+            # حساب الخصم الجزئي
+            partial_deduction = max_deductible
+            advances_total = partial_deduction
+            net_salary = Decimal('0')
+
         
 
         transaction = PayrollTransaction(
@@ -229,8 +253,15 @@ class PayrollService:
         
 
         for adv in pending_advances:
-
-            adv.is_deducted = True
+            remaining = Decimal(str(adv.total_amount or 0)) - Decimal(str(adv.deducted_amount or 0))
+            if remaining > 0 and advances_total > 0:
+                to_deduct = min(remaining, advances_total)
+                adv.deducted_amount = Decimal(str(adv.deducted_amount or 0)) + to_deduct
+                adv.remaining_amount = Decimal(str(adv.total_amount or 0)) - Decimal(str(adv.deducted_amount or 0))
+                advances_total -= to_deduct
+                if adv.remaining_amount <= Decimal('0'):
+                    adv.is_deducted = True
+                    adv.fully_deducted_at = datetime.now()
 
             
 

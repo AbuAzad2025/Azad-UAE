@@ -305,6 +305,7 @@ def create():
                 return redirect(url_for('customers.create'))
 
             customer = Customer(
+                tenant_id=get_active_tenant_id(current_user),
                 name=form.name.data,
                 name_ar=form.name_ar.data,
                 customer_type=form.customer_type.data,
@@ -446,7 +447,7 @@ def delete(id):
         # Fallback to soft delete if hard delete fails (e.g. other constraints)
         try:
             # Re-fetch customer to ensure it's attached to the new session transaction
-            customer = tenant_get(Customer, id)
+            customer = Customer.query.filter_by(id=id, tenant_id=tid).first()
             if customer:
                 customer.is_active = False
                 db.session.add(customer)

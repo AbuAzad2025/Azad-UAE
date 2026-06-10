@@ -97,6 +97,11 @@ def process_cheque_receive(cheque):
 def process_cheque_issue(cheque):
     if cheque.cheque_type != 'outgoing':
         return None
+
+    # الشيكات المرتبطة بالمصروفات: قيد المصروف سجّل Cr. Deferred Cheques Payable مباشرة
+    if cheque.expense_id:
+        return None
+
     if cheque.supplier_id:
         debit_account = '2110'
         debit_concept = 'AP'
@@ -281,7 +286,12 @@ def _create_bounce_journal_entry(cheque):
             'credit': 0,
             'description': f'ارتداد شيك صادر رقم {cheque.cheque_bank_number}'
         })
-        if cheque.supplier_id:
+        if cheque.expense_id:
+            from models.expense import Expense
+            expense = Expense.query.get(cheque.expense_id)
+            credit_account = (expense.category.gl_account_code if expense and expense.category and expense.category.gl_account_code else '6990')
+            credit_concept = None
+        elif cheque.supplier_id:
             credit_account = '2110'
             credit_concept = 'AP'
         elif cheque.customer_id:
@@ -354,7 +364,17 @@ def _create_cancel_journal_entry(cheque):
              'description': f'إلغاء شيك رقم {cheque.cheque_bank_number}'},
         ]
     elif cheque.cheque_type == 'outgoing':
-        if cheque.supplier_id:
+        if cheque.expense_id:
+            # شيك مصروف: عكس قيد المصروف (Dr. 2120, Cr. حساب المصروف)
+            from models.expense import Expense
+            expense = Expense.query.get(cheque.expense_id)
+            if expense and expense.category and expense.category.gl_account_code:
+                credit_account = expense.category.gl_account_code
+                credit_concept = None
+            else:
+                credit_account = '6990'
+                credit_concept = 'MISC_EXPENSE'
+        elif cheque.supplier_id:
             credit_account = '2110'
             credit_concept = 'AP'
         elif cheque.customer_id:

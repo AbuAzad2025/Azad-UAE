@@ -339,7 +339,7 @@ def create_warehouse():
                 if store and store.warehouse_id != warehouse.id:
                     store.warehouse_id = warehouse.id
 
-                db.session.commit()
+            # (atomic_transaction ستقوم بالـ commit عند الخروج)
             
             type_label = 'أونلاين' if warehouse_type == Warehouse.TYPE_ONLINE else ('فرعي' if parent_id else 'مستقل')
             flash(f'✓ تم إنشاء المستودع ({type_label}) "{name}" بنجاح', 'success')

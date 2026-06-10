@@ -44,11 +44,16 @@ def index():
     
     query = tenant_query(Expense).filter_by(status='confirmed')
     
-    # إخفاء المصروفات المؤرشفة
+    # إخفاء المصروفات المؤرشفة (مع نطاق التيننت)
     from models import ArchivedRecord
-    from sqlalchemy import select
+    from sqlalchemy import select, true
+    from utils.tenanting import get_active_tenant_id
+    _tid = get_active_tenant_id(current_user)
+    archived_filters = [ArchivedRecord.table_name == 'expenses']
+    if _tid is not None:
+        archived_filters.append(ArchivedRecord.tenant_id == _tid)
     archived_expenses = select(ArchivedRecord.record_id).filter(
-        ArchivedRecord.table_name == 'expenses'
+        *archived_filters
     ).scalar_subquery()
     query = query.filter(~Expense.id.in_(archived_expenses))
     
@@ -178,8 +183,8 @@ def create():
                 
                 # Determine Payment Account
                 if expense.payment_method == 'cheque':
-                    payment_account = '2110'  # Accounts Payable (cleared by Cheque Issue)
-                    payment_concept = 'AP'
+                    payment_account = '2120'  # Deferred Cheques Payable مباشرة (بدون AP وسيط)
+                    payment_concept = 'DEFERRED_CHEQUES_PAYABLE'
                 else:
                     payment_account = GLService.get_payment_credit_account(
                         expense.payment_method,
@@ -302,24 +307,107 @@ def edit(id):
     
     if request.method == 'POST':
         try:
-            # تحديث البيانات
+            # التحقق من أن الفترة المحاسبية مفتوحة
+            from services.gl_helpers import assert_period_open
+            assert_period_open(expense.expense_date, expense.tenant_id)
+
             try:
                 from models import Tenant
                 default_currency = resolve_default_currency()
             except Exception:
                 default_currency = get_system_default_currency()
-            expense.category_id = request.form.get('category_id')
-            expense.description = request.form.get('description')
-            expense.description_ar = request.form.get('description_ar')
-            expense.amount = request.form.get('amount')
-            expense.currency = request.form.get('currency') or default_currency
-            expense.supplier_name = request.form.get('supplier_name')
-            expense.notes = request.form.get('notes')
             
-            # حساب المبلغ بالدرهم
+            new_category_id = request.form.get('category_id', type=int)
+            new_amount = Decimal(str(request.form.get('amount', 0)))
+            new_currency = (request.form.get('currency') or default_currency).strip()
+            new_description = request.form.get('description', '').strip()
+            new_supplier_name = request.form.get('supplier_name', '').strip()
+            new_notes = request.form.get('notes', '').strip()
+            
+            # الكشف عن تغيير الحقول المالية
+            financial_change = (
+                new_amount != expense.amount or
+                new_currency != expense.currency or
+                new_category_id != expense.category_id
+            )
+            
+            if financial_change and expense.status == 'confirmed':
+                # عكس القيد المحاسبي القديم
+                from utils.gl_tenant import reverse_document_gl
+                reverse_document_gl(
+                    GLRef.EXPENSE, expense.id,
+                    f'Reverse Expense {expense.expense_number} (Edit)',
+                    tenant_id=expense.tenant_id,
+                )
+                expense.is_reversed = True
+                db.session.flush()
+
+            # تحديث الحقول
+            expense.category_id = new_category_id
+            expense.description = new_description
+            expense.description_ar = request.form.get('description_ar')
+            expense.amount = new_amount
+            expense.currency = new_currency
+            expense.supplier_name = new_supplier_name
+            expense.notes = new_notes
+            
+            # إعادة حساب المبلغ بالدرهم
+            from decimal import Decimal
             exchange_rate = CurrencyService.get_rate(expense.currency)
             expense.exchange_rate = exchange_rate
-            expense.amount_aed = float(expense.amount) * exchange_rate
+            expense.amount_aed = new_amount * exchange_rate
+            
+            if financial_change and expense.status == 'confirmed':
+                # إعادة ترحيل القيد المحاسبي بالقيم الجديدة
+                from utils.tenanting import get_active_tenant_id
+                GLService.ensure_core_accounts(tenant_id=expense.tenant_id or get_active_tenant_id())
+                
+                category = expense.category
+                expense_account = category.gl_account_code if category and category.gl_account_code else '6990'
+                expense_concept = None if category and category.gl_account_code else 'MISC_EXPENSE'
+                from models import GLAccount
+                tid = expense.tenant_id or get_active_tenant_id()
+                acc_check = GLAccount.query.filter_by(code=str(expense_account), tenant_id=int(tid) if tid else None).first()
+                if acc_check and acc_check.is_header:
+                    expense_account = '6990'
+                    expense_concept = 'MISC_EXPENSE'
+                
+                if expense.payment_method == 'cheque':
+                    payment_account = '2110'
+                    payment_concept = 'AP'
+                else:
+                    payment_account = GLService.get_payment_credit_account(
+                        expense.payment_method,
+                        branch_id=expense.branch_id,
+                        tenant_id=tid,
+                    )
+                    payment_concept = GLService.get_payment_credit_concept(expense.payment_method)
+                
+                lines = [
+                    {
+                        'account': expense_account,
+                        'concept_code': expense_concept,
+                        'explicit_account_allowed': expense_concept is None,
+                        'debit': expense.amount,
+                        'description': expense.description or '',
+                    },
+                    {
+                        'account': payment_account,
+                        'concept_code': payment_concept,
+                        'credit': expense.amount,
+                        'description': f'دفع {expense.payment_method}',
+                    }
+                ]
+                from services.gl_posting import post_or_fail
+                post_or_fail(
+                    lines,
+                    description=f'Expense {expense.expense_number} (Amended)',
+                    reference_type=GLRef.EXPENSE,
+                    reference_id=expense.id,
+                    currency=expense.currency,
+                    exchange_rate=expense.exchange_rate,
+                    branch_id=expense.branch_id,
+                )
             
             db.session.commit()
             
@@ -424,6 +512,24 @@ def categories():
     return render_template('expenses/categories.html', categories=categories)
 
 
+def _validate_gl_account_code(gl_account_code, tenant_id):
+    """التحقق من صحة حساب الأستاذ لفئة المصروف"""
+    if not gl_account_code:
+        return True  # سيتم استخدام الحساب الافتراضي 6990
+    from models import GLAccount
+    account = GLAccount.query.filter_by(
+        code=str(gl_account_code),
+        tenant_id=int(tenant_id) if tenant_id else None,
+    ).first()
+    if not account:
+        raise ValueError(f'⚠️ حساب الأستاذ "{gl_account_code}" غير موجود.')
+    if account.is_header:
+        raise ValueError(f'⚠️ حساب "{account.name}" هو حساب رئيسي ولا يمكن الترحيل إليه.')
+    if not account.is_active:
+        raise ValueError(f'⚠️ حساب "{account.name}" غير نشط.')
+    return True
+
+
 @expenses_bp.route('/categories/create', methods=['POST'])
 @login_required
 @permission_required('manage_expenses')
@@ -436,11 +542,16 @@ def create_category():
             data = request.form
         
         tenant_id = require_active_tenant_id(current_user)
+        
+        # التحقق من حساب الأستاذ
+        gl_account_code = data.get('gl_account_code')
+        _validate_gl_account_code(gl_account_code, tenant_id)
+        
         category = ExpenseCategory(
             tenant_id=tenant_id,
             name=data.get('name'),
             name_ar=data.get('name_ar'),
-            gl_account_code=data.get('gl_account_code')
+            gl_account_code=gl_account_code,
         )
         
         db.session.add(category)

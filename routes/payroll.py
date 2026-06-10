@@ -66,8 +66,16 @@ def add_employee():
 def advances():
     if request.method == 'POST':
         try:
+            scoped_branch_id = branch_scope_id()
+            employee_id = int(request.form.get('employee_id'))
+            # التحقق من نطاق الفرع
+            employee = Employee.query.get(employee_id)
+            if not employee:
+                raise ValueError('الموظف غير موجود.')
+            if scoped_branch_id is not None and employee.branch_id != scoped_branch_id:
+                raise ValueError('لا يمكنك إضافة سلفة لموظف من فرع آخر.')
             PayrollService.create_advance(
-                employee_id=int(request.form.get('employee_id')),
+                employee_id=employee_id,
                 amount=float(request.form.get('amount')),
                 description=request.form.get('description'),
                 user_id=current_user.id
@@ -110,8 +118,15 @@ def process_payroll():
                 flash(f'حدث خطأ: {e}', 'danger')
         else:
             try:
+                employee_id = int(request.form.get('employee_id'))
+                # التحقق من نطاق الفرع للموظف
+                employee = Employee.query.get(employee_id)
+                if not employee:
+                    raise ValueError('الموظف غير موجود.')
+                if scoped_branch_id is not None and employee.branch_id != scoped_branch_id:
+                    raise ValueError('لا يمكنك معالجة راتب لموظف من فرع آخر.')
                 PayrollService.process_payroll(
-                    employee_id=int(request.form.get('employee_id')),
+                    employee_id=employee_id,
                     month=int(request.form.get('month')),
                     year=int(request.form.get('year')),
                     days_worked=float(request.form.get('days_worked', 0)),

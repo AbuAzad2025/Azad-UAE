@@ -250,14 +250,17 @@ def partners():
         for cust in customers:
             paid_query = db.session.query(func.sum(Payment.amount_aed)).filter(
                 Payment.customer_id == cust.id,
-                Payment.direction == 'outgoing'
+                Payment.direction == 'outgoing',
+                Payment.payment_confirmed == True
             )
             receipts_query = db.session.query(func.sum(Receipt.amount_aed)).filter(
-                Receipt.customer_id == cust.id
+                Receipt.customer_id == cust.id,
+                Receipt.payment_confirmed == True
             )
             payment_in_query = db.session.query(func.sum(Payment.amount_aed)).filter(
                 Payment.customer_id == cust.id,
-                Payment.direction == 'incoming'
+                Payment.direction == 'incoming',
+                Payment.payment_confirmed == True
             )
             if tenant_id is not None:
                 paid_query = paid_query.filter(Payment.tenant_id == tenant_id)
@@ -317,12 +320,14 @@ def partners():
         # Paid TO Supplier (Outgoing)
         paid_query = db.session.query(func.sum(Payment.amount_aed)).filter(
             Payment.supplier_id == sup.id,
-            Payment.direction == 'outgoing'
+            Payment.direction == 'outgoing',
+            Payment.payment_confirmed == True
         )
         # Received FROM Supplier (Incoming - Refunds)
         received_query = db.session.query(func.sum(Payment.amount_aed)).filter(
             Payment.supplier_id == sup.id,
-            Payment.direction == 'incoming'
+            Payment.direction == 'incoming',
+            Payment.payment_confirmed == True
         )
         
         if date_from:
@@ -591,7 +596,8 @@ def purchases():
     from models import Payment
     payment_query = tenant_query(Payment).filter(
         Payment.direction == 'outgoing',
-        Payment.supplier_id != None
+        Payment.supplier_id != None,
+        Payment.payment_confirmed == True
     )
     if tenant_id is not None:
         payment_query = payment_query.filter(Payment.tenant_id == tenant_id)

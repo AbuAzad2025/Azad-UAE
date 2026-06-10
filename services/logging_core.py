@@ -1011,9 +1011,8 @@ class LoggingCore:
                 user_agent=ctx["ua"],
             )
             db.session.add(entry)
-            db.session.commit()
+            db.session.flush()
         except Exception as e:
-            db.session.rollback()
             cls._fallback_write(f"[AUDIT_FALLBACK] action={action} table={table_name} error={e}")
 
     # ──────────────────────────────────────────────────────────────
