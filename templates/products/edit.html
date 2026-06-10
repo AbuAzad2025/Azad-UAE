@@ -116,13 +116,14 @@
             <label>
               <i class="fas fa-industry text-info"></i> نوع النشاط
             </label>
-            <select name="industry" class="form-control">
+            <select name="industry" id="product_industry" class="form-control">
               {% from 'macros/industry_choices.html' import industry_options %}
               {{ industry_options(product.industry or 'general') }}
             </select>
           </div>
         </div>
       </div>
+      {% include 'partials/industry_fields.html' %}
       <hr>
       <h5 class="text-success"><i class="fas fa-money-bill-wave"></i> الأسعار</h5>
       <div class="row">
@@ -519,4 +520,5 @@ $(function () {
   });
 });
 </script>
+<script src="{{ url_for('static', filename='js/products/industry-fields.js') }}"></script>
 {% endblock %}

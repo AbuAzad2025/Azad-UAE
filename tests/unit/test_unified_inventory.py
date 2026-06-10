@@ -250,3 +250,71 @@ class TestSerialTrackingService:
         assert SerialTrackingService.validate_imei('invalid') is False
         assert SerialTrackingService.validate_imei('123') is False
         assert SerialTrackingService.validate_imei(None) is False
+
+
+class TestIndustryFieldsAPI:
+    def _login(self, client, user):
+        with client.session_transaction() as sess:
+            sess['_user_id'] = str(user.id)
+            sess['_fresh'] = True
+
+    def test_industry_fields_endpoint(self, client, sample_tenant, sample_user):
+        from models.industry_field_definition import IndustryFieldDefinition
+        from extensions import db
+        field = IndustryFieldDefinition(
+            industry_code='automotive',
+            field_code='engine_capacity',
+            field_name_ar='سعة المحرك',
+            field_name_en='Engine Capacity',
+            field_type='text',
+            applies_to='product',
+        )
+        db.session.add(field)
+        db.session.commit()
+        self._login(client, sample_user)
+        resp = client.get('/api/industry-fields?industry=automotive')
+        assert resp.status_code == 200
+        data = resp.get_json()
+        assert data['industry'] == 'automotive'
+        assert len(data['fields']) >= 1
+
+    def test_industry_fields_empty(self, client, sample_user):
+        self._login(client, sample_user)
+        resp = client.get('/api/industry-fields?industry=general')
+        assert resp.status_code == 200
+        data = resp.get_json()
+        assert data['industry'] == 'general'
+
+
+class TestProductExtraFields:
+    def test_extra_fields_saved_on_create(self, sample_tenant, sample_user):
+        from models.product import Product
+        from extensions import db
+        product = Product(
+            tenant_id=sample_tenant.id,
+            name='Test Extra',
+            sku='EXTRA-001',
+            regular_price=100,
+            cost_price=50,
+            extra_fields={'engine_capacity': '2000cc', 'color': 'red'},
+        )
+        db.session.add(product)
+        db.session.flush()
+        assert product.extra_fields == {'engine_capacity': '2000cc', 'color': 'red'}
+
+    def test_extra_fields_updated(self, sample_tenant, sample_user):
+        from models.product import Product
+        from extensions import db
+        product = Product(
+            tenant_id=sample_tenant.id,
+            name='Test Extra',
+            sku='EXTRA-002',
+            regular_price=100,
+            cost_price=50,
+            extra_fields={'old': 'value'},
+        )
+        db.session.add(product)
+        db.session.flush()
+        product.extra_fields = {'new': 'value'}
+        db.session.flush()
+        assert product.extra_fields == {'new': 'value'}

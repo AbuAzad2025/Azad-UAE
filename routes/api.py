@@ -607,3 +607,23 @@ def log_client_error():
         extra=extra,
     )
     return '', 204
+
+
+@api_bp.route('/industry-fields')
+@login_required
+def industry_fields():
+    industry_code = request.args.get('industry', 'general')
+    from services.industry_service import IndustryService
+    fields = IndustryService.get_fields_for(industry_code)
+    return jsonify({
+        'industry': industry_code,
+        'fields': [
+            {
+                'field_code': f.field_code,
+                'field_name_ar': f.field_name_ar,
+                'field_name_en': f.field_name_en,
+                'field_type': f.field_type,
+                'is_required': f.is_required,
+            } for f in fields
+        ],
+    })

@@ -635,6 +635,14 @@ def create():
                     warranty_days=warranty_days,
                     industry=request.form.get('industry', 'general') or 'general',
                 )
+                extra_fields = {}
+                for key in request.form:
+                    if key.startswith('extra_'):
+                        val = request.form.get(key)
+                        if val:
+                            extra_fields[key[6:]] = val
+                if extra_fields:
+                    product.extra_fields = extra_fields
                 assign_tenant_id(product, current_user)
                 
                 if 'image' in request.files:
@@ -812,6 +820,15 @@ def edit(id):
             product.notes = request.form.get('notes')
             product.merchant_customer_id = merchant_customer_id or None
             product.industry = request.form.get('industry', product.industry or 'general') or 'general'
+            extra_fields = dict(product.extra_fields or {})
+            for key in request.form:
+                if key.startswith('extra_'):
+                    val = request.form.get(key)
+                    if val:
+                        extra_fields[key[6:]] = val
+                    else:
+                        extra_fields.pop(key[6:], None)
+            product.extra_fields = extra_fields if extra_fields else None
             if current_user.can_see_costs():
                 product.cost_price = safe_float(request.form.get('cost_price'), default=0)
             

@@ -142,10 +142,12 @@
           <tr>
             <th><i class="fas fa-barcode mr-2"></i>SKU</th>
             <th><i class="fas fa-box mr-2"></i>المنتج</th>
+            <th><i class="fas fa-industry mr-2"></i>النوع</th>
             <th><i class="fas fa-layer-group mr-2"></i>المخزون الحالي</th>
             <th><i class="fas fa-bell mr-2"></i>حد التنبيه</th>
             <th><i class="fas fa-chart-bar mr-2"></i>{{ t('Status') }}</th>
             <th><i class="fas fa-map-marker-alt mr-2"></i>الموقع</th>
+            <th><i class="fas fa-fingerprint mr-2"></i>تسلسلي</th>
             <th class="text-center"><i class="fas fa-cog mr-2"></i>{{ t('Actions') }}</th>
           </tr>
         </thead>
@@ -159,7 +161,7 @@
             <td>
               <div class="d-flex align-items-center">
                 {% if product.image_url %}
-                  <img src="{{ url_for('static', filename=product.image_url) }}" 
+                  <img src="{{ url_for('static', filename=product.image_url) }}"
                        class="warehouse-product-img mr-2" alt="{{ product.name }}">
                 {% else %}
                   <div class="warehouse-product-img mr-2 bg-primary text-white d-flex align-items-center justify-content-center">
@@ -173,6 +175,9 @@
                   {% endif %}
                 </div>
               </div>
+            </td>
+            <td>
+              <span class="badge badge-light">{{ product.industry or 'عام' }}</span>
             </td>
             <td>
               <div>
@@ -221,6 +226,13 @@
             <td>
               <i class="fas fa-map-marker-alt text-muted mr-1"></i>
               {{ product.location or 'غير محدد' }}
+            </td>
+            <td>
+              {% if product.has_serial_number %}
+                <span class="badge badge-info"><i class="fas fa-fingerprint"></i> تسلسلي</span>
+              {% else %}
+                <span class="text-muted">-</span>
+              {% endif %}
             </td>
             <td class="text-center">
               <div class="btn-group btn-group-sm">
