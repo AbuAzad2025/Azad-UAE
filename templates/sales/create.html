@@ -33,10 +33,10 @@
         </div>
         <div class="card-body">
           <div class="row">
-            <div class="col-md-4">
+            <div class="col-md-3">
               <div class="form-group">
                 <label class="font-weight-bold">
-                  <i class="fas fa-user text-primary mr-1"></i>الزبون 
+                  <i class="fas fa-user text-primary mr-1"></i>الزبون
                   <span class="text-danger">*</span>
                   <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="اختر العميل - الفلتر الذكي: ابحث بالاسم أو الهاتف (إجباري)"></i>
                 </label>
@@ -46,10 +46,10 @@
                 <small class="form-text text-muted">💡 الفلتر الذكي: ابحث بالاسم أو رقم الهاتف</small>
               </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
               <div class="form-group">
                 <label class="font-weight-bold">
-                  <i class="fas fa-warehouse text-info mr-1"></i>المستودع 
+                  <i class="fas fa-warehouse text-info mr-1"></i>المستودع
                   <span class="text-danger">*</span>
                   <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="المستودع الذي سيُخصم منه المخزون (إجباري)"></i>
                 </label>
@@ -70,6 +70,29 @@
                 <small class="form-text text-info">
                   <i class="fas fa-info-circle"></i> سيُخصم المخزون من هذا المستودع
                 </small>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="form-group">
+                <label class="font-weight-bold">
+                  <i class="fas fa-id-badge text-warning mr-1"></i>مندوب المبيعات
+                  <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="اختر المندوب المسؤول عن هذه الفاتورة (اختياري)"></i>
+                </label>
+                <select name="sales_rep_id" class="form-control" aria-label="sales rep">
+                  <option value="">بلا</option>
+                  {% for u in users %}
+                  <option value="{{ u.id }}">{{ u.full_name or u.username }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="form-group">
+                <label class="font-weight-bold">
+                  <i class="fas fa-ticket-alt text-success mr-1"></i>كوبون خصم
+                  <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="أدخل كود الكوبون إذا كان العميل لديه (اختياري)"></i>
+                </label>
+                <input type="text" name="coupon_code" class="form-control" placeholder="كود الكوبون" autocomplete="off">
               </div>
             </div>
             <div class="col-md-2">

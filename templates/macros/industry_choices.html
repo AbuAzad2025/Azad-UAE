@@ -1,0 +1,23 @@
+{% macro industry_options(selected='general') %}
+  {% set industries = [
+    ('general', 'عام / General'),
+    ('automotive', 'كراج / قطع غيار سيارات / Automotive'),
+    ('electronics', 'إلكترونيات / Electronics'),
+    ('supermarket', 'سوبرماركت / Supermarket'),
+    ('pharmacy', 'صيدلية / Pharmacy'),
+    ('restaurant', 'مطعم / كافيه / Restaurant'),
+    ('construction', 'مقاولات / Construction'),
+    ('textile', 'أقمشة / ملابس / Textile'),
+    ('jewelry', 'مجوهرات / ذهب / Jewelry'),
+    ('retail', 'تجارة Retail / Retail'),
+    ('trading', 'تجارة عامة / Trading'),
+    ('batteries', 'بطاريات / Batteries'),
+    ('mobile_new', 'موبايلات جديدة / New Mobile Phones'),
+    ('mobile_used', 'موبايلات مستعملة / Used Mobile Phones'),
+    ('mobile_parts', 'قطع غيار موبايلات / Mobile Spare Parts'),
+    ('clothing', 'ملابس / Clothing'),
+  ] %}
+  {% for code, label in industries %}
+    <option value="{{ code }}" {% if selected == code %}selected{% endif %}>{{ label }}</option>
+  {% endfor %}
+{% endmacro %}

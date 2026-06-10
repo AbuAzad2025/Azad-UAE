@@ -158,8 +158,10 @@ def create():
             shipping_cost = request.form.get('shipping_cost', type=float, default=0)
             tax_rate = request.form.get('tax_rate', type=float, default=0)
             notes = request.form.get('notes')
-            
-            # Add exchange rate audit to notes if manually changed
+            sales_rep_id = request.form.get('sales_rep_id', type=int)
+            coupon_code = request.form.get('coupon_code', '').strip()
+            if coupon_code:
+                notes = (notes or '') + f'\n[كوبون] {coupon_code}'
             if exchange_rate_manual and exchange_rate_server and user_exchange_rate:
                 if user_exchange_rate < exchange_rate_server:
                     audit_note = f"\n[تنبيه] سعر صرف يدوي: {user_exchange_rate:.6f} (سعر السيرفر: {exchange_rate_server:.6f}, فرق: {exchange_rate_diff:.2f}%)"
@@ -224,10 +226,13 @@ def create():
     if preselected_customer_id:
         preselected_customer = tenant_get(Customer, preselected_customer_id)
     
+    from models import User
+    users = User.query.filter_by(tenant_id=tid, is_active=True).all() if tid else []
     return render_template(
         'sales/create.html',
         warehouses=warehouses,
         preselected_customer=preselected_customer,
+        users=users,
     )
 
 

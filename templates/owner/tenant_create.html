@@ -34,7 +34,10 @@
             </div>
             <div class="col-md-6">
               <label class="form-label fw-semibold" for="input_business_type">نوع النشاط</label>
-              <input type="text" name="business_type" class="form-control" id="input_business_type" aria-label="business type">
+              <select name="business_type" class="form-select" id="input_business_type" aria-label="business type">
+                {% from 'macros/industry_choices.html' import industry_options %}
+                {{ industry_options() }}
+              </select>
             </div>
             <div class="col-md-6">
               <label class="form-label fw-semibold" for="input_phone_1">الهاتف 1</label>

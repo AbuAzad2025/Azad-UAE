@@ -633,6 +633,7 @@ def create():
                     merchant_customer_id=merchant_customer_id or None,
                     has_serial_number=has_serial_number,
                     warranty_days=warranty_days,
+                    industry=request.form.get('industry', 'general') or 'general',
                 )
                 assign_tenant_id(product, current_user)
                 
@@ -646,8 +647,23 @@ def create():
                             product.image_url = image_path
                 
                 db.session.add(product)
-                db.session.flush()  # للحصول على product.id
-                
+                db.session.flush()
+                for tier_code, field_name in [
+                    ('wholesale', 'tier_wholesale_price'),
+                    ('retail', 'tier_retail_price'),
+                    ('distributor', 'tier_distributor_price'),
+                    ('rep', 'tier_rep_price'),
+                ]:
+                    price_val = safe_float(request.form.get(field_name))
+                    if price_val and price_val > 0:
+                        from models import ProductPriceTier
+                        tier = ProductPriceTier(
+                            tenant_id=product.tenant_id,
+                            product_id=product.id,
+                            tier_code=tier_code,
+                            price=price_val,
+                        )
+                        db.session.add(tier)
                 if partner_rows:
                     for row in partner_rows:
                         partner_row = ProductPartner(
@@ -795,7 +811,7 @@ def edit(id):
             product.description = request.form.get('description')
             product.notes = request.form.get('notes')
             product.merchant_customer_id = merchant_customer_id or None
-            
+            product.industry = request.form.get('industry', product.industry or 'general') or 'general'
             if current_user.can_see_costs():
                 product.cost_price = safe_float(request.form.get('cost_price'), default=0)
             
@@ -822,6 +838,31 @@ def edit(id):
                         tenant_id=product_tid,
                     ))
             
+            from models import ProductPriceTier
+            for tier_code, field_name in [
+                ('wholesale', 'tier_wholesale_price'),
+                ('retail', 'tier_retail_price'),
+                ('distributor', 'tier_distributor_price'),
+                ('rep', 'tier_rep_price'),
+            ]:
+                price_val = safe_float(request.form.get(field_name))
+                existing = ProductPriceTier.query.filter_by(
+                    product_id=product.id,
+                    tier_code=tier_code,
+                ).first()
+                if price_val and price_val > 0:
+                    if existing:
+                        existing.price = price_val
+                    else:
+                        tier = ProductPriceTier(
+                            tenant_id=product.tenant_id,
+                            product_id=product.id,
+                            tier_code=tier_code,
+                            price=price_val,
+                        )
+                        db.session.add(tier)
+                elif existing:
+                    existing.is_active = False
             if new_stock is not None and abs(new_stock - old_stock) > 1e-6:
                 if scoped_branch_id is not None and not warehouse_id:
                     flash('⚠️ يجب اختيار مستودع التعديل عند تغيير مخزون هذا الفرع.', 'warning')
