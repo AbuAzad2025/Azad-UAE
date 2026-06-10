@@ -597,6 +597,7 @@ def purchases():
     if current_user.is_seller():
         return render_template('errors/403.html'), 403
     
+    from decimal import Decimal
     from utils.gl_tenant import default_report_date_range
     date_from = request.args.get('start_date', '', type=str)
     date_to = request.args.get('end_date', '', type=str)
@@ -628,7 +629,6 @@ def purchases():
     total_due = Decimal('0')
     
     # Calculate purchase-level confirmed payments (FIFO allocation)
-    from decimal import Decimal
     
     # Group payments by supplier for FIFO allocation
     from models import Payment
@@ -1632,7 +1632,7 @@ def entity_report_fragment(type, id):
                 key=lambda p: (p.purchase_date or datetime.min, p.id or 0)
             )
 
-            # هل توجد مدفوعات مرتبطة مباشرة بفواتير محددة؟
+            # مدفوعات المورد الأساسية
             supplier_payments_base = Payment.query.filter(
                 Payment.supplier_id == id,
                 Payment.direction == 'outgoing',
@@ -1642,20 +1642,25 @@ def entity_report_fragment(type, id):
                 supplier_payments_base = supplier_payments_base.filter(Payment.tenant_id == tenant_id)
             if scoped_branch_id is not None:
                 supplier_payments_base = supplier_payments_base.filter(Payment.branch_id == scoped_branch_id)
-            has_direct_allocation = db.session.query(
-                supplier_payments_base.filter(Payment.purchase_id.isnot(None)).exists()
-            ).scalar()
+
+            # هل توجد مدفوعات مرتبطة مباشرة بفواتير محددة؟
+            direct_payments = supplier_payments_base.filter(Payment.purchase_id.isnot(None)).all()
+            unallocated_payments = supplier_payments_base.filter(Payment.purchase_id.is_(None)).all()
+            has_direct_allocation = len(direct_payments) > 0
 
             if has_direct_allocation:
-                # استخدام التوزيع الفعلي (purchase_id لكل دفعة)
-                direct_q = supplier_payments_base
+                # التوزيع الفعلي (purchase_id لكل دفعة)
                 paid_map = {}
-                for pymt in direct_q.all():
+                for pymt in direct_payments:
                     pid = pymt.purchase_id
                     if pid:
                         paid_map[pid] = paid_map.get(pid, Decimal('0')) + Decimal(str(pymt.amount_aed or 0))
+                # رصيد مورد غير موزع (مدفوعات بدون purchase_id)
+                unallocated_credit = sum(
+                    Decimal(str(p.amount_aed or 0)) for p in unallocated_payments
+                )
             else:
-                # توزيع FIFO تقديري على مستوى المورد
+                # توزيع FIFO تقديري على مستوى المورد (كل المدفوعات غير موزعة)
                 total_paid_fifo = Decimal(str(
                     supplier_payments_base.with_entities(func.sum(Payment.amount_aed)).scalar() or 0
                 ))
@@ -1666,6 +1671,7 @@ def entity_report_fragment(type, id):
                     allocated = min(amount, remaining_paid) if remaining_paid > 0 else Decimal('0')
                     paid_map[p.id] = allocated
                     remaining_paid = max(Decimal('0'), remaining_paid - allocated)
+                unallocated_credit = Decimal('0')
 
             context['invoices'] = [{
                 'number': p.purchase_number,
@@ -1676,6 +1682,7 @@ def entity_report_fragment(type, id):
                 'balance': (Decimal(str(p.amount_aed or 0)) - paid_map.get(p.id, Decimal('0')))
             } for p in purchases]
             context['allocation_exact'] = has_direct_allocation
+            context['unallocated_supplier_credit'] = unallocated_credit
             
             # Transactions (Payments TO Supplier)
             payments = Payment.query.filter_by(supplier_id=id, payment_confirmed=True)

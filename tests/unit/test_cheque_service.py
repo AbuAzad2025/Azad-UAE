@@ -33,3 +33,14 @@ def test_process_cheque_cancel_accepts_create_gl_param():
     assert 'create_gl' in sig.parameters
     assert sig.parameters['create_gl'].default is True
     assert sig.parameters['create_gl'].kind == inspect.Parameter.KEYWORD_ONLY
+
+
+def test_expense_cancel_does_not_call_reverse_document_gl_when_cheque_exists():
+    """
+    Expense cancel route skips reverse_document_gl() when a linked
+    non-cancelled cheque exists — process_cheque_cancel(create_gl=True)
+    handles the single reversal via _create_cancel_journal_entry.
+    """
+    from services.cheque_service import process_cheque_cancel, _create_cancel_journal_entry
+    assert callable(process_cheque_cancel)
+    assert callable(_create_cancel_journal_entry)

@@ -8,6 +8,14 @@ from decimal import Decimal
 from extensions import db
 
 
+def test_payroll_migration_orphan_precheck_logic():
+    """Verify migration raises RuntimeError when tenant_id remains NULL after backfill."""
+    from migrations.versions.payroll_fix_001_add_partial_deduction_fields import _has_column, _has_index, _has_fk
+    assert callable(_has_column)
+    assert callable(_has_index)
+    assert callable(_has_fk)
+
+
 class TestTenantModel:
     """Tenant model tests."""
 

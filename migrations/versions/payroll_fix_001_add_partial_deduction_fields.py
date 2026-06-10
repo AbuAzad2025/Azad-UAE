@@ -80,6 +80,21 @@ def upgrade():
                 ") WHERE tenant_id IS NULL"
             )
         )
+        # التحقق من عدم وجود سجلات يتيمة (بدون موظف أو tenant)
+        orphans = bind.execute(
+            sa.text(
+                "SELECT id, employee_id, amount FROM salary_advances WHERE tenant_id IS NULL"
+            )
+        ).fetchall()
+        if orphans:
+            raise RuntimeError(
+                "Cannot make salary_advances.tenant_id NOT NULL — "
+                f"{len(orphans)} record(s) have no matching employee or employee has no tenant:\n" +
+                "\n".join(
+                    f"  id={r[0]}, employee_id={r[1]}, amount={r[2]}"
+                    for r in orphans
+                )
+            )
         op.alter_column('salary_advances', 'tenant_id', nullable=False)
 
     # --- PayrollTransaction: detect duplicates before unique constraint ---

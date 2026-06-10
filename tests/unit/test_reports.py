@@ -12,6 +12,24 @@ def test_get_confirmed_supplier_paid_aed_importable():
     assert callable(get_confirmed_supplier_paid_aed)
 
 
+def test_sales_export_uses_confirmed_paid_helper():
+    """sales_export() must use get_confirmed_sale_paid_aed, not stale paid_amount_aed."""
+    import inspect
+    from routes.reports import sales_export
+    src = inspect.getsource(sales_export)
+    assert 'get_confirmed_sale_paid_aed' in src
+    assert 's.paid_amount_aed' not in src.replace('get_confirmed_sale_paid_aed', '')
+
+
+def test_purchase_report_context_keys():
+    """entity_report_fragment must expose allocation_exact and unallocated_supplier_credit."""
+    import inspect
+    from routes.reports import entity_report_fragment
+    src = inspect.getsource(entity_report_fragment)
+    assert 'allocation_exact' in src
+    assert 'unallocated_supplier_credit' in src
+
+
 def _make_permissioned_user(db_session, tenant, permissions=None):
     import uuid
     from models import User, Role, Permission
