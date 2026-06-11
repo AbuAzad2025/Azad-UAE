@@ -1,6 +1,6 @@
 # Azadexa Documentation Index
 
-This directory contains system documentation for **Azadexa**: product identity, module map, architecture, tenancy, accounting, inventory, platform-owner boundaries, and AI/developer rules.
+This directory contains system documentation for **Azadexa**: product identity, module map, system flows, architecture, tenancy, accounting, inventory, platform-owner boundaries, and AI/developer rules.
 
 **Azadexa** is an intelligent multi-tenant ERP, accounting, inventory, and commerce platform by **AZAD Intelligent Systems**.
 
@@ -12,6 +12,7 @@ This directory contains system documentation for **Azadexa**: product identity, 
 |----------|---------|
 | [`AZADEXA_BRAND.md`](AZADEXA_BRAND.md) | Product identity, brand wording, Arabic/English naming, positioning rules |
 | [`SYSTEM_MODULES.md`](SYSTEM_MODULES.md) | Code-derived module map: blueprints, model families, and platform surfaces |
+| [`SYSTEM_FLOWS.md`](SYSTEM_FLOWS.md) | Code-derived business flows: sale, purchase, stock, GL, store, payment, owner flows |
 | [`PROJECT_OVERVIEW.md`](PROJECT_OVERVIEW.md) | Business scope, actors, domains, tenant/store/platform boundaries |
 | [`ARCHITECTURE.md`](ARCHITECTURE.md) | Technical structure, data flow, tenancy model, service boundaries |
 | [`SECURITY_AND_TENANCY.md`](SECURITY_AND_TENANCY.md) | Tenant isolation, owner-only controls, payment boundaries, public/store rules |
@@ -46,9 +47,10 @@ The repository may also contain additional specialized documentation, such as UI
 1. [`../README.md`](../README.md)
 2. [`AZADEXA_BRAND.md`](AZADEXA_BRAND.md)
 3. [`SYSTEM_MODULES.md`](SYSTEM_MODULES.md)
-4. [`PROJECT_OVERVIEW.md`](PROJECT_OVERVIEW.md)
-5. [`ARCHITECTURE.md`](ARCHITECTURE.md)
-6. [`SECURITY_AND_TENANCY.md`](SECURITY_AND_TENANCY.md)
-7. [`ACCOUNTING_AND_INVENTORY_RULES.md`](ACCOUNTING_AND_INVENTORY_RULES.md)
-8. [`OPERATIONS_RUNBOOK.md`](OPERATIONS_RUNBOOK.md)
-9. [`../AGENTS.md`](../AGENTS.md)
+4. [`SYSTEM_FLOWS.md`](SYSTEM_FLOWS.md)
+5. [`PROJECT_OVERVIEW.md`](PROJECT_OVERVIEW.md)
+6. [`ARCHITECTURE.md`](ARCHITECTURE.md)
+7. [`SECURITY_AND_TENANCY.md`](SECURITY_AND_TENANCY.md)
+8. [`ACCOUNTING_AND_INVENTORY_RULES.md`](ACCOUNTING_AND_INVENTORY_RULES.md)
+9. [`OPERATIONS_RUNBOOK.md`](OPERATIONS_RUNBOOK.md)
+10. [`../AGENTS.md`](../AGENTS.md)
