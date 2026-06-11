@@ -747,6 +747,146 @@ class GLService:
         }
     
     @staticmethod
+    def get_general_ledger(date_from=None, date_to=None, branch_id=None, tenant_id=None):
+        """كشف حساب عام — running balance لكل حساب مع رصيد افتتاحي."""
+        from sqlalchemy import func
+
+        tenant_id = tenant_id or gl_helpers.resolve_tenant_id(branch_id=branch_id)
+
+        accounts = GLAccount.query.filter_by(is_header=False)
+        if tenant_id is not None:
+            accounts = accounts.filter_by(tenant_id=int(tenant_id))
+        accounts = accounts.order_by(GLAccount.code).all()
+
+        result = []
+        for account in accounts:
+            lines_query = GLJournalLine.query.filter_by(account_id=account.id).join(
+                GLJournalEntry
+            ).filter(GLJournalEntry.is_posted == True)
+
+            opening_query = GLJournalLine.query.filter_by(account_id=account.id).join(
+                GLJournalEntry
+            ).filter(GLJournalEntry.is_posted == True)
+
+            if branch_id:
+                lines_query = lines_query.filter(GLJournalEntry.branch_id == branch_id)
+                opening_query = opening_query.filter(GLJournalEntry.branch_id == branch_id)
+            if tenant_id is not None:
+                lines_query = lines_query.filter(GLJournalEntry.tenant_id == int(tenant_id))
+                opening_query = opening_query.filter(GLJournalEntry.tenant_id == int(tenant_id))
+            if date_from:
+                lines_query = lines_query.filter(func.date(GLJournalEntry.entry_date) >= date_from)
+                opening_query = opening_query.filter(func.date(GLJournalEntry.entry_date) < date_from)
+            if date_to:
+                lines_query = lines_query.filter(func.date(GLJournalEntry.entry_date) <= date_to)
+
+            opening_lines = opening_query.all()
+            opening_debit = sum(l.debit for l in opening_lines)
+            opening_credit = sum(l.credit for l in opening_lines)
+            if account.type in ('asset', 'expense'):
+                opening_balance = opening_debit - opening_credit
+            else:
+                opening_balance = opening_credit - opening_debit
+
+            lines = lines_query.order_by(GLJournalEntry.entry_date, GLJournalEntry.id).all()
+            running = opening_balance
+            transactions = []
+            for line in lines:
+                d = line.debit
+                c = line.credit
+                if account.type in ('asset', 'expense'):
+                    running += (d - c)
+                else:
+                    running += (c - d)
+                transactions.append({
+                    'date': line.entry.entry_date,
+                    'entry_number': line.entry.entry_number,
+                    'description': line.description or line.entry.description,
+                    'reference': f'{line.entry.reference_type}#{line.entry.reference_id}' if line.entry.reference_type else '',
+                    'debit': float(d),
+                    'credit': float(c),
+                    'balance': float(running),
+                    'branch_id': line.entry.branch_id,
+                })
+
+            result.append({
+                'account': account,
+                'account_code': account.code,
+                'account_name': account.full_name,
+                'account_type': account.type_ar,
+                'opening_balance': float(opening_balance),
+                'transactions': transactions,
+                'closing_balance': float(running) if transactions else float(opening_balance),
+                'total_debit': sum(t['debit'] for t in transactions),
+                'total_credit': sum(t['credit'] for t in transactions),
+            })
+
+        return result
+
+    @staticmethod
+    def get_partner_ledger(partner_id, date_from=None, date_to=None, branch_id=None, tenant_id=None):
+        """كشف حساب شريك (عميل/مورد) من GL حسب partner_id."""
+        from sqlalchemy import func
+
+        tenant_id = tenant_id or gl_helpers.resolve_tenant_id(branch_id=branch_id)
+
+        query = GLJournalLine.query.join(GLJournalEntry).filter(
+            GLJournalLine.partner_id == partner_id,
+            GLJournalEntry.is_posted == True,
+        )
+        if tenant_id is not None:
+            query = query.filter(GLJournalEntry.tenant_id == int(tenant_id))
+        if branch_id:
+            query = query.filter(GLJournalEntry.branch_id == branch_id)
+        if date_from:
+            query = query.filter(func.date(GLJournalEntry.entry_date) >= date_from)
+        if date_to:
+            query = query.filter(func.date(GLJournalEntry.entry_date) <= date_to)
+
+        lines = query.order_by(GLJournalEntry.entry_date, GLJournalEntry.id).all()
+
+        opening_query = GLJournalLine.query.join(GLJournalEntry).filter(
+            GLJournalLine.partner_id == partner_id,
+            GLJournalEntry.is_posted == True,
+        )
+        if tenant_id is not None:
+            opening_query = opening_query.filter(GLJournalEntry.tenant_id == int(tenant_id))
+        if branch_id:
+            opening_query = opening_query.filter(GLJournalEntry.branch_id == branch_id)
+        if date_from:
+            opening_query = opening_query.filter(func.date(GLJournalEntry.entry_date) < date_from)
+
+        opening_lines = opening_query.all()
+        opening_debit = sum(l.debit for l in opening_lines)
+        opening_credit = sum(l.credit for l in opening_lines)
+        opening_balance = opening_debit - opening_credit
+
+        running = opening_balance
+        transactions = []
+        for line in lines:
+            running += (line.debit - line.credit)
+            transactions.append({
+                'date': line.entry.entry_date,
+                'entry_number': line.entry.entry_number,
+                'account_code': line.account.code,
+                'account_name': line.account.full_name,
+                'description': line.description or line.entry.description,
+                'reference': f'{line.entry.reference_type}#{line.entry.reference_id}' if line.entry.reference_type else '',
+                'debit': float(line.debit),
+                'credit': float(line.credit),
+                'balance': float(running),
+            })
+
+        return {
+            'partner_id': partner_id,
+            'opening_balance': float(opening_balance),
+            'transactions': transactions,
+            'closing_balance': float(running),
+            'total_debit': sum(t['debit'] for t in transactions),
+            'total_credit': sum(t['credit'] for t in transactions),
+        }
+
+    @staticmethod
     def get_accounts_tree(tenant_id=None):
         """الحصول على شجرة الحسابات"""
         tenant_id = tenant_id or gl_helpers.resolve_tenant_id()

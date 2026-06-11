@@ -3,6 +3,7 @@ Mandatory GL posting — no financial document commits without a balanced journa
 """
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from decimal import Decimal
 
 from utils.currency_utils import get_system_default_currency, resolve_default_currency
@@ -33,10 +34,15 @@ def post_or_fail(
             currency = resolve_default_currency(t)
         except Exception:
             currency = get_system_default_currency()
+
+    from services.gl_helpers import assert_period_open
     from services.gl_service import GLService
 
     if not lines:
         raise GlPostingError(f'لا يمكن ترحيل "{description}" بدون سطور قيد.')
+
+    entry_date = date or datetime.now(timezone.utc)
+    assert_period_open(entry_date, tenant_id)
 
     try:
         return GLService.post_entry(
