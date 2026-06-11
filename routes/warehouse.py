@@ -468,3 +468,26 @@ def add_stock(product_id):
         current_app.logger.error(f"Error adding stock: {e}")
         return jsonify({'success': False, 'message': ErrorMessages.unexpected_error()}), 500
 
+
+@warehouse_bp.route('/api/upload_product_image', methods=['POST'])
+@login_required
+@permission_required('manage_products')
+def upload_product_image():
+    """رفع صورة منتج من صفحة المتجر"""
+    from utils.helpers import save_uploaded_file
+
+    file = request.files.get('file')
+    if not file:
+        return jsonify({'ok': False, 'error': 'لم يتم إرسال ملف'}), 400
+    try:
+        path = save_uploaded_file(file, upload_folder='uploads/products', allowed_extensions={'png', 'jpg', 'jpeg', 'gif', 'webp'})
+        if not path:
+            return jsonify({'ok': False, 'error': 'فشل حفظ الملف'}), 500
+        url = '/' + path
+        return jsonify({'ok': True, 'url': url, 'thumb_url': url})
+    except ValueError as e:
+        return jsonify({'ok': False, 'error': str(e)}), 400
+    except Exception as e:
+        current_app.logger.error(f"upload_product_image error: {e}")
+        return jsonify({'ok': False, 'error': 'حدث خطأ أثناء رفع الصورة'}), 500
+

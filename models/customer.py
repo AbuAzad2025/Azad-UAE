@@ -24,7 +24,9 @@ class Customer(db.Model):
     email = db.Column(db.String(120))
     address = db.Column(db.Text)
     tax_number = db.Column(db.String(50))
-    
+    country = db.Column(db.String(2))  # ISO country code for fiscal position matching
+    fiscal_position_id = db.Column(db.Integer, db.ForeignKey('fiscal_positions.id'), nullable=True, index=True)
+
     preferred_currency = db.Column(db.String(3), default=context_aware_default_currency)  # TODO: use Config.DEFAULT_CURRENCY
     
     credit_limit = db.Column(db.Numeric(15, 3), default=0)
@@ -42,6 +44,7 @@ class Customer(db.Model):
     sales = db.relationship('Sale', back_populates='customer', lazy='dynamic')
     receipts = db.relationship('Receipt', back_populates='customer', lazy='dynamic')
     tenant = db.relationship('Tenant', backref='customers', foreign_keys=[tenant_id])
+    fiscal_position = db.relationship('FiscalPosition', foreign_keys=[fiscal_position_id])
     
     def __repr__(self):
         return f'<Customer {self.name}>'

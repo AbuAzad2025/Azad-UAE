@@ -298,8 +298,6 @@ class ReturnService:
                             'description': f'COGS Reversal - {product.name}'
                         })
 
-                    # تحديث MWAC عند الإرجاع
-                    mwac_enabled = current_app.config.get('ENABLE_MWAC', False)
                     if mwac_enabled and tenant_id and sale.warehouse_id:
                         try:
                             from models.warehouse import ProductWarehouseCost
@@ -317,9 +315,7 @@ class ReturnService:
                                 old_qty = pwc.total_quantity
                                 old_value = pwc.total_value
                                 old_avg = pwc.average_cost
-                                new_qty = old_qty + qty_decimal
-                                new_value = old_value + cost_value
-                                new_avg = (new_value / new_qty).quantize(Decimal('0.0001')) if new_qty > 0 else Decimal('0')
+                                new_qty, new_value, new_avg = _mwac_calc(old_qty, old_value, qty_decimal, cost_unit)
                                 pwc.total_quantity = new_qty
                                 pwc.total_value = new_value
                                 pwc.average_cost = new_avg

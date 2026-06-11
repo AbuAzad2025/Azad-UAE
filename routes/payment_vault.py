@@ -669,7 +669,7 @@ def reports():
                          package_stats=package_stats)
 
 
-@payment_vault_bp.route('/lock')
+@payment_vault_bp.route('/lock', methods=['GET', 'POST'])
 @owner_only
 def lock_vault():
     """قفل الخزينة"""

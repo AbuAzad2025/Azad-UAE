@@ -628,3 +628,136 @@ def industry_fields():
             } for f in fields
         ],
     })
+
+
+def _query_accessible_warehouses():
+    from models import Warehouse
+    q = request.args.get('q', '').strip()
+    whs = get_accessible_warehouses(current_user)
+    if q:
+        whs = whs.filter(Warehouse.name.ilike(f'%{q}%'))
+    whs = whs.order_by(Warehouse.name).limit(20).all()
+    return [{'id': w.id, 'text': w.name, 'name': w.name} for w in whs]
+
+
+def _query_products(warehouse_id=None):
+    q = request.args.get('q', '').strip()
+    products = StockService.get_visible_products_query(current_user)
+    if q:
+        products = products.filter(
+            db.or_(
+                Product.name.ilike(f'%{q}%'),
+                Product.sku.ilike(f'%{q}%'),
+                Product.barcode.ilike(f'%{q}%')
+            )
+        )
+    products = products.order_by(Product.name).limit(20).all()
+    warehouse_ids = [warehouse_id] if warehouse_id else get_accessible_warehouse_ids(current_user)
+    stock_map = get_branch_stock_map(
+        product_ids=[p.id for p in products],
+        warehouse_ids=warehouse_ids,
+    ) if warehouse_ids else {}
+    return [{
+        'id': p.id, 'text': f"{p.name} ({p.sku})" if p.sku else p.name,
+        'name': p.name, 'sku': p.sku,
+        'price': float(p.regular_price or 0),
+        'stock': float(stock_map.get(p.id, p.current_stock or 0)),
+    } for p in products]
+
+
+@api_bp.route('/warehouses')
+@login_required
+def api_warehouses():
+    return jsonify({'results': _query_accessible_warehouses()})
+
+
+@api_bp.route('/products')
+@login_required
+@permission_required('view_reports')
+def api_products():
+    wid = request.args.get('warehouse_id', type=int)
+    return jsonify({'results': _query_products(wid)})
+
+
+@api_bp.route('/search_warehouses')
+@login_required
+def api_search_warehouses():
+    return jsonify({'results': _query_accessible_warehouses()})
+
+
+@api_bp.route('/warehouses/<int:wid>/products')
+@login_required
+def api_warehouse_products(wid):
+    """منتجات مستودع محدد (Select2)"""
+    return jsonify({'results': _query_products(wid)})
+
+
+@api_bp.route('/products/<int:pid>/info')
+@login_required
+def api_product_info(pid):
+    """معلومات منتج (سعر، مخزون)"""
+    product = db.session.get(Product, pid)
+    if not product:
+        return jsonify({'success': False, 'error': 'المنتج غير موجود'}), 404
+    tid = get_active_tenant_id(current_user)
+    if tid is not None and product.tenant_id != tid:
+        return jsonify({'success': False, 'error': 'المنتج غير موجود'}), 404
+    warehouse_id = request.args.get('warehouse_id', type=int)
+    stock = float(product.current_stock or 0)
+    if warehouse_id:
+        stock_map = get_branch_stock_map(
+            product_ids=[product.id],
+            warehouse_ids=[warehouse_id],
+        )
+        stock = float(stock_map.get(product.id, stock))
+    return jsonify({
+        'success': True,
+        'id': product.id,
+        'name': product.name,
+        'sku': product.sku,
+        'barcode': product.barcode,
+        'price': float(product.regular_price or 0),
+        'stock': stock,
+        'unit': product.unit,
+        'is_low_stock': stock <= float(product.min_stock_alert or 0),
+    })
+
+
+@api_bp.route('/products/barcode/<code>')
+@login_required
+def api_product_by_barcode(code):
+    """البحث عن منتج بواسطة الباركود"""
+    tid = get_active_tenant_id(current_user)
+    query = Product.query.filter(Product.barcode == code)
+    if tid is not None:
+        query = query.filter(Product.tenant_id == tid)
+    product = query.first()
+    if not product:
+        return jsonify({'success': False, 'error': 'لم يتم العثور على منتج بهذا الباركود'}), 404
+    return jsonify({
+        'success': True,
+        'id': product.id,
+        'name': product.name,
+        'text': f"{product.name} ({product.sku})" if product.sku else product.name,
+        'sku': product.sku,
+    })
+
+
+@api_bp.route('/barcode/validate')
+@login_required
+def api_barcode_validate():
+    """التحقق من صلاحية الباركود"""
+    code = request.args.get('code', '').strip()
+    if not code:
+        return jsonify({'valid': False, 'exists': False, 'normalized': ''})
+    normalized = code
+    tid = get_active_tenant_id(current_user)
+    query = Product.query.filter(Product.barcode == code)
+    if tid is not None:
+        query = query.filter(Product.tenant_id == tid)
+    exists = query.first() is not None
+    return jsonify({
+        'valid': not exists,
+        'exists': exists,
+        'normalized': normalized,
+    })

@@ -155,47 +155,13 @@
 <script>
 function unlockVault(vaultId) {
   if (confirm('هل أنت متأكد من فتح المحفظة؟')) {
-    // إرسال طلب فتح المحفظة
-    fetch(`/payment-vault/unlock/${vaultId}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': document.querySelector('meta[name=csrf-token]').getAttribute('content')
-      }
-    })
-    .then(response => response.json())
-    .then(data => {
-      if (data.success) {
-        location.reload();
-      } else {
-        alert('فشل في فتح المحفظة: ' + data.message);
-      }
-    })
-    .catch(error => {      alert('حدث خطأ في فتح المحفظة');
-    });
+    window.location.href = '/payment-vault/unlock';
   }
 }
 
 function lockVault(vaultId) {
   if (confirm('هل أنت متأكد من قفل المحفظة؟')) {
-    // إرسال طلب قفل المحفظة
-    fetch(`/payment-vault/lock/${vaultId}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': document.querySelector('meta[name=csrf-token]').getAttribute('content')
-      }
-    })
-    .then(response => response.json())
-    .then(data => {
-      if (data.success) {
-        location.reload();
-      } else {
-        alert('فشل في قفل المحفظة: ' + data.message);
-      }
-    })
-    .catch(error => {      alert('حدث خطأ في قفل المحفظة');
-    });
+    window.location.href = '/payment-vault/lock';
   }
 }
 </script>

@@ -9,6 +9,15 @@ from utils.branching import get_accessible_warehouse_ids, get_branch_stock_map
 from utils.gl_reference_types import GLRef
 
 
+def _mwac_calc(old_qty: Decimal, old_value: Decimal, change_qty: Decimal, unit_cost: Decimal) -> tuple[Decimal, Decimal, Decimal]:
+    """Pure MWAC math — no DB, no models, no side effects.
+    Returns (new_qty, new_value, new_avg)."""
+    new_qty = old_qty + change_qty
+    new_value = old_value + (change_qty * unit_cost)
+    new_avg = (new_value / new_qty).quantize(Decimal('0.0001')) if new_qty > 0 else Decimal('0')
+    return new_qty, new_value, new_avg
+
+
 def _resolve_gl_concept_account(concept_code, fallback_account_code, tenant_id=None):
     from services.gl_service import GL_ACCOUNTS, GL_ACCOUNT_CONCEPTS
     from services.gl_account_resolver import resolve_gl_account, is_dynamic_gl_mapping_enabled
@@ -376,14 +385,10 @@ class StockService:
                     avg_cost = pwc.average_cost
                     cogs = (avg_cost * qty).quantize(Decimal('0.001'), rounding=ROUND_HALF_UP)
                     
-                    # Deduct from PWC
-                    old_qty = pwc.total_quantity
-                    old_value = pwc.total_value
-                    old_avg = pwc.average_cost
-                    
-                    new_qty = old_qty - qty
-                    new_value = old_value - cogs
-                    new_avg = (new_value / new_qty) if new_qty > 0 else Decimal('0')
+                    new_qty, new_value, new_avg = _mwac_calc(
+                        pwc.total_quantity, pwc.total_value, -qty,
+                        avg_cost.quantize(Decimal('0.0001'))
+                    )
                     
                     pwc.total_quantity = new_qty
                     pwc.total_value = new_value
@@ -490,10 +495,7 @@ class StockService:
             old_qty = pwc.total_quantity
             old_value = pwc.total_value
             old_avg = pwc.average_cost
-            
-            new_qty = old_qty + received_qty
-            new_value = old_value + (received_qty * unit_cost_aed)
-            new_avg = (new_value / new_qty) if new_qty > 0 else Decimal('0')
+            new_qty, new_value, new_avg = _mwac_calc(old_qty, old_value, received_qty, unit_cost_aed)
             
             pwc.total_quantity = new_qty
             pwc.total_value = new_value
@@ -585,10 +587,10 @@ class StockService:
                     old_qty = pwc.total_quantity
                     old_value = pwc.total_value
                     old_avg = pwc.average_cost
-                    
-                    new_qty = old_qty + qty
-                    new_value = old_value + original_cogs
-                    new_avg = (new_value / new_qty) if new_qty > 0 else Decimal('0')
+                    new_qty, new_value, new_avg = _mwac_calc(
+                        old_qty, old_value, qty,
+                        (original_cogs / qty).quantize(Decimal('0.0001')) if qty > 0 else Decimal('0')
+                    )
                     
                     pwc.total_quantity = new_qty
                     pwc.total_value = new_value
@@ -659,11 +661,8 @@ class StockService:
                     old_qty = pwc.total_quantity
                     old_value = pwc.total_value
                     old_avg = pwc.average_cost
-
-                    new_qty = old_qty - qty
                     reversed_value = qty * original_unit_cost
-                    new_value = old_value - reversed_value
-                    new_avg = (new_value / new_qty) if new_qty > 0 else Decimal('0')
+                    new_qty, new_value, new_avg = _mwac_calc(old_qty, old_value, -qty, original_unit_cost)
 
                     pwc.total_quantity = new_qty if new_qty >= 0 else Decimal('0')
                     pwc.total_value = new_value if new_value >= 0 else Decimal('0')

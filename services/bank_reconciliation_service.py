@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from sqlalchemy import func, and_, or_
 from extensions import db
 from models import (
-    BankReconciliation, BankReconciliationItem, 
+    BankReconciliation, BankReconciliationItem, BankStatementLine,
     GLAccount, GLJournalEntry, GLJournalLine,
     Cheque
 )
@@ -299,4 +299,131 @@ class BankReconciliationService:
             'outstanding_cheques_in': outstanding_cheques_in,
             'outstanding_cheques_out': outstanding_cheques_out
         }
+
+    # ------------------------------------------------------------------
+    # Auto-matching with GL lines and Bank Statement Lines (Odoo-style)
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def auto_match_gl_lines(tenant_id, bank_account_id, period_start, period_end,
+                            amount_tolerance=Decimal('0.01'), date_tolerance_days=3):
+        """
+        Auto-match bank transactions to GL journal lines (payments, transfers).
+        Odoo-style: exact amount + date proximity.
+        Returns list of proposed matches.
+        """
+        from decimal import Decimal
+        from sqlalchemy import func
+
+        # Find un-matched GL lines affecting the bank account within the period
+        gl_lines = db.session.query(GLJournalLine).join(
+            GLJournalEntry, GLJournalLine.entry_id == GLJournalEntry.id
+        ).filter(
+            GLJournalLine.account_id == bank_account_id,
+            GLJournalEntry.entry_date.between(period_start, period_end),
+            GLJournalEntry.tenant_id == tenant_id,
+            GLJournalEntry.is_posted == True,
+        ).all()
+
+        # Find un-matched bank statement lines
+        stmt_lines = BankStatementLine.query.filter(
+            BankStatementLine.tenant_id == tenant_id,
+            BankStatementLine.bank_account_id == bank_account_id,
+            BankStatementLine.transaction_date.between(period_start, period_end),
+            BankStatementLine.matched == False,
+        ).all()
+
+        matches = []
+        matched_stmt_ids = set()
+        matched_gl_ids = set()
+
+        for stmt in stmt_lines:
+            stmt_amount = Decimal(str(stmt.amount))
+            for gl in gl_lines:
+                if gl.id in matched_gl_ids:
+                    continue
+                gl_amount = Decimal(str(gl.debit or 0)) - Decimal(str(gl.credit or 0))
+                # Match by exact amount
+                if abs(stmt_amount - gl_amount) <= amount_tolerance:
+                    # Check date proximity
+                    gl_date = gl.entry.date if gl.entry else stmt.transaction_date
+                    date_diff = abs((stmt.transaction_date - gl_date).days)
+                    if date_diff <= date_tolerance_days:
+                        match_type = 'exact' if abs(stmt_amount - gl_amount) < Decimal('0.001') else 'amount_date'
+                        matches.append({
+                            'statement_line_id': stmt.id,
+                            'journal_line_id': gl.id,
+                            'match_type': match_type,
+                            'amount_diff': float(abs(stmt_amount - gl_amount)),
+                            'date_diff': date_diff,
+                        })
+                        matched_stmt_ids.add(stmt.id)
+                        matched_gl_ids.add(gl.id)
+                        break
+
+        return matches
+
+    @staticmethod
+    def import_bank_statement(tenant_id, bank_account_id, csv_rows, statement_date=None):
+        """
+        Import bank statement lines from CSV.
+        csv_rows: list of dicts with keys: date, reference, description, amount
+        Returns count of imported lines.
+        """
+        from datetime import datetime
+
+        count = 0
+        for row in csv_rows:
+            line = BankStatementLine(
+                tenant_id=tenant_id,
+                bank_account_id=bank_account_id,
+                statement_date=statement_date or datetime.now().date(),
+                transaction_date=row.get('date'),
+                reference=row.get('reference', '')[:120],
+                description=row.get('description', '')[:255],
+                amount=Decimal(str(row.get('amount', 0))),
+                currency=row.get('currency', 'AED'),
+                raw_data=str(row),
+            )
+            db.session.add(line)
+            count += 1
+        db.session.flush()
+        return count
+
+    @staticmethod
+    def apply_matches(reconciliation_id, matches):
+        """
+        Apply proposed matches and create reconciliation items.
+        matches: list of dicts from auto_match_gl_lines
+        """
+        reconciliation = BankReconciliation.query.get_or_404(reconciliation_id)
+        if reconciliation.status != 'draft':
+            raise ValueError('لا يمكن تعديل مطابقة معتمدة')
+
+        for m in matches:
+            stmt = BankStatementLine.query.get(m['statement_line_id'])
+            gl = GLJournalLine.query.get(m['journal_line_id'])
+            if not stmt or not gl:
+                continue
+
+            stmt.matched = True
+            stmt.match_type = m['match_type']
+            stmt.matched_journal_entry_id = gl.entry_id
+
+            item = BankReconciliationItem(
+                reconciliation_id=reconciliation_id,
+                tenant_id=reconciliation.tenant_id,
+                item_type='cleared',
+                transaction_date=stmt.transaction_date,
+                description=f'مطابق: {stmt.reference} - {stmt.description}',
+                amount=abs(Decimal(str(stmt.amount))),
+                journal_entry_id=gl.entry_id,
+                is_cleared=True,
+                cleared_date=stmt.transaction_date,
+            )
+            db.session.add(item)
+
+        reconciliation.calculate_reconciliation()
+        db.session.commit()
+        return reconciliation
 

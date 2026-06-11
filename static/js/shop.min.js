@@ -584,7 +584,7 @@
         fd.append('quality', '82');
         
         try {
-          const r = await fetch('/warehouses/api/upload_product_image', {
+          const r = await fetch('/warehouse/api/upload_product_image', {
             method: 'POST',
             headers: { 'X-CSRFToken': csrf() },
             body: fd

@@ -38,7 +38,7 @@ from .donation import Donation
 from .payment_vault import PaymentVault, PaymentTransaction, PaymentLog
 from .card_payment import CardPayment
 from .package import Package, PackagePurchase
-from .bank_reconciliation import BankReconciliation, BankReconciliationItem
+from .bank_reconciliation import BankReconciliation, BankReconciliationItem, BankStatementLine
 from .budget import Budget, BudgetLine
 from .cost_center import CostCenter
 from .profit_center import ProfitCenter
@@ -67,6 +67,8 @@ from .shipment import Shipment
 from .partner_profit_distribution import PartnerProfitDistribution
 from .partner_transaction import PartnerTransaction
 from .pos_session import PosSession
+from .document_sequence import DocumentSequence
+from .fiscal_position import FiscalPosition, FiscalPositionTaxRule
 __all__ = [
     'User', 'Role', 'Permission',
     'Customer',
@@ -108,7 +110,7 @@ __all__ = [
     'CardPayment',
     'PaymentVault', 'PaymentTransaction', 'PaymentLog',
     'Package', 'PackagePurchase',
-    'BankReconciliation', 'BankReconciliationItem',
+    'BankReconciliation', 'BankReconciliationItem', 'BankStatementLine',
     'Budget', 'BudgetLine',
     'CostCenter',
     'ProfitCenter',
@@ -134,4 +136,7 @@ __all__ = [
     'Shipment',
     'JournalEntryAudit',
     'PosSession',
+    'DocumentSequence',
+    'FiscalPosition',
+    'FiscalPositionTaxRule',
 ]

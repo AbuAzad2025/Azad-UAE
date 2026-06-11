@@ -443,9 +443,20 @@
     const $container = $(`[data-search-target="${target}"]`);
     $container.html('<div class="text-center"><div class="spinner-border"></div></div>');
     
-    $.get(`/api/search/${target}`, { q: query })
+    $.get('/api/search', { type: target, q: query })
       .done(data => {
-        $container.html(data.html || 'لا توجد نتائج');
+        if (data.html) {
+          $container.html(data.html);
+        } else if (data.results && data.results.length) {
+          $container.html('<ul class="list-group">' + data.results.map(r =>
+            '<li class="list-group-item d-flex justify-content-between align-items-center">' +
+            (r.text || r.name || '') +
+            (r.phone ? '<span class="badge badge-secondary">' + r.phone + '</span>' : '') +
+            '</li>'
+          ).join('') + '</ul>');
+        } else {
+          $container.html('لا توجد نتائج');
+        }
       })
       .fail(() => {
         $container.html('<div class="alert alert-danger">خطأ في البحث</div>');

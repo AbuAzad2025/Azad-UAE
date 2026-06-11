@@ -211,18 +211,20 @@ class TestPosApiCheckoutExtra:
                 tenant.enable_pos = True
                 MockTenant.query.get.return_value = tenant
                 with patch("routes.pos.get_active_tenant_id", return_value=1):
-                    with patch("routes.pos.tenant_get", return_value=None):
-                        resp = client.post(
-                            "/pos/api/checkout",
-                            json={
-                                "lines": [{"product_id": 1, "quantity": 1, "discount_percent": 0}],
-                                "customer_id": 999,
-                            },
-                            headers={"Content-Type": "application/json"},
-                        )
-                        assert resp.status_code == 400
-                        data = json.loads(resp.data)
-                        assert data["success"] is False
+                    with patch("routes.pos.get_active_session") as mock_session:
+                        mock_session.return_value = MagicMock()
+                        with patch("routes.pos.tenant_get", return_value=None):
+                            resp = client.post(
+                                "/pos/api/checkout",
+                                json={
+                                    "lines": [{"product_id": 1, "quantity": 1, "discount_percent": 0}],
+                                    "customer_id": 999,
+                                },
+                                headers={"Content-Type": "application/json"},
+                            )
+                            assert resp.status_code == 400
+                            data = json.loads(resp.data)
+                            assert data["success"] is False
 
     def test_checkout_inactive_customer(self, app, client, pos_owner):
         with client.session_transaction() as sess:
@@ -237,20 +239,22 @@ class TestPosApiCheckoutExtra:
                 tenant.enable_pos = True
                 MockTenant.query.get.return_value = tenant
                 with patch("routes.pos.get_active_tenant_id", return_value=1):
-                    customer = MagicMock()
-                    customer.is_active = False
-                    with patch("routes.pos.tenant_get", return_value=customer):
-                        resp = client.post(
-                            "/pos/api/checkout",
-                            json={
-                                "lines": [{"product_id": 1, "quantity": 1, "discount_percent": 0}],
-                                "customer_id": 1,
-                            },
-                            headers={"Content-Type": "application/json"},
-                        )
-                        assert resp.status_code == 400
-                        data = json.loads(resp.data)
-                        assert data["success"] is False
+                    with patch("routes.pos.get_active_session") as mock_session:
+                        mock_session.return_value = MagicMock()
+                        customer = MagicMock()
+                        customer.is_active = False
+                        with patch("routes.pos.tenant_get", return_value=customer):
+                            resp = client.post(
+                                "/pos/api/checkout",
+                                json={
+                                    "lines": [{"product_id": 1, "quantity": 1, "discount_percent": 0}],
+                                    "customer_id": 1,
+                                },
+                                headers={"Content-Type": "application/json"},
+                            )
+                            assert resp.status_code == 400
+                            data = json.loads(resp.data)
+                            assert data["success"] is False
 
     def test_checkout_invalid_warehouse(self, app, client, pos_owner):
         with client.session_transaction() as sess:
@@ -265,15 +269,17 @@ class TestPosApiCheckoutExtra:
                 tenant.enable_pos = True
                 MockTenant.query.get.return_value = tenant
                 with patch("routes.pos.get_active_tenant_id", return_value=1):
-                    customer = MagicMock()
-                    with patch("routes.pos.get_pos_walkin_customer", return_value=customer):
-                        with patch("routes.pos.ensure_warehouse_access", side_effect=ValueError("denied")):
-                            resp = client.post(
-                                "/pos/api/checkout",
-                                json={
-                                    "lines": [{"product_id": 1, "quantity": 1, "discount_percent": 0}],
-                                    "warehouse_id": 99,
-                                    "payment_method": "cash",
+                    with patch("routes.pos.get_active_session") as mock_session:
+                        mock_session.return_value = MagicMock()
+                        customer = MagicMock()
+                        with patch("routes.pos.get_pos_walkin_customer", return_value=customer):
+                            with patch("routes.pos.ensure_warehouse_access", side_effect=ValueError("denied")):
+                                resp = client.post(
+                                    "/pos/api/checkout",
+                                    json={
+                                        "lines": [{"product_id": 1, "quantity": 1, "discount_percent": 0}],
+                                        "warehouse_id": 99,
+                                        "payment_method": "cash",
                                     "paid_amount": 10,
                                 },
                                 headers={"Content-Type": "application/json"},
@@ -295,17 +301,19 @@ class TestPosApiCheckoutExtra:
                 tenant.enable_pos = True
                 MockTenant.query.get.return_value = tenant
                 with patch("routes.pos.get_active_tenant_id", return_value=1):
-                    with patch("routes.pos.merge_checkout_lines", side_effect=ValueError("bad")):
-                        resp = client.post(
-                            "/pos/api/checkout",
-                            json={
-                                "lines": [{"product_id": 1, "quantity": 1, "discount_percent": 0}],
-                            },
-                            headers={"Content-Type": "application/json"},
-                        )
-                        assert resp.status_code == 400
-                        data = json.loads(resp.data)
-                        assert data["success"] is False
+                    with patch("routes.pos.get_active_session") as mock_session:
+                        mock_session.return_value = MagicMock()
+                        with patch("routes.pos.merge_checkout_lines", side_effect=ValueError("bad")):
+                            resp = client.post(
+                                "/pos/api/checkout",
+                                json={
+                                    "lines": [{"product_id": 1, "quantity": 1, "discount_percent": 0}],
+                                },
+                                headers={"Content-Type": "application/json"},
+                            )
+                            assert resp.status_code == 400
+                            data = json.loads(resp.data)
+                            assert data["success"] is False
 
     def test_checkout_paid_without_payment_method(self, app, client, pos_owner):
         with client.session_transaction() as sess:
@@ -320,25 +328,27 @@ class TestPosApiCheckoutExtra:
                 tenant.enable_pos = True
                 MockTenant.query.get.return_value = tenant
                 with patch("routes.pos.get_active_tenant_id", return_value=1):
-                    customer = MagicMock()
-                    with patch("routes.pos.get_pos_walkin_customer", return_value=customer):
-                        product = MagicMock()
-                        product.id = 1
-                        product.is_active = True
-                        with patch("routes.pos.tenant_get", return_value=product):
-                            resp = client.post(
-                                "/pos/api/checkout",
-                                json={
-                                    "lines": [
-                                        {"product_id": 1, "quantity": 1, "discount_percent": 0, "unit_price": 50}
-                                    ],
-                                    "paid_amount": 50,
-                                },
-                                headers={"Content-Type": "application/json"},
-                            )
-                            assert resp.status_code == 400
-                            data = json.loads(resp.data)
-                            assert data["success"] is False
+                    with patch("routes.pos.get_active_session") as mock_session:
+                        mock_session.return_value = MagicMock()
+                        customer = MagicMock()
+                        with patch("routes.pos.get_pos_walkin_customer", return_value=customer):
+                            product = MagicMock()
+                            product.id = 1
+                            product.is_active = True
+                            with patch("routes.pos.tenant_get", return_value=product):
+                                resp = client.post(
+                                    "/pos/api/checkout",
+                                    json={
+                                        "lines": [
+                                            {"product_id": 1, "quantity": 1, "discount_percent": 0, "unit_price": 50}
+                                        ],
+                                        "paid_amount": 50,
+                                    },
+                                    headers={"Content-Type": "application/json"},
+                                )
+                                assert resp.status_code == 400
+                                data = json.loads(resp.data)
+                                assert data["success"] is False
 
     def test_checkout_inactive_product(self, app, client, pos_owner):
         with client.session_transaction() as sess:
@@ -353,22 +363,24 @@ class TestPosApiCheckoutExtra:
                 tenant.enable_pos = True
                 MockTenant.query.get.return_value = tenant
                 with patch("routes.pos.get_active_tenant_id", return_value=1):
-                    customer = MagicMock()
-                    with patch("routes.pos.get_pos_walkin_customer", return_value=customer):
-                        product = MagicMock()
-                        product.id = 1
-                        product.is_active = False
-                        with patch("routes.pos.tenant_get", return_value=product):
-                            resp = client.post(
-                                "/pos/api/checkout",
-                                json={
-                                    "lines": [{"product_id": 1, "quantity": 1, "discount_percent": 0}],
-                                },
-                                headers={"Content-Type": "application/json"},
-                            )
-                            assert resp.status_code == 400
-                            data = json.loads(resp.data)
-                            assert data["success"] is False
+                    with patch("routes.pos.get_active_session") as mock_session:
+                        mock_session.return_value = MagicMock()
+                        customer = MagicMock()
+                        with patch("routes.pos.get_pos_walkin_customer", return_value=customer):
+                            product = MagicMock()
+                            product.id = 1
+                            product.is_active = False
+                            with patch("routes.pos.tenant_get", return_value=product):
+                                resp = client.post(
+                                    "/pos/api/checkout",
+                                    json={
+                                        "lines": [{"product_id": 1, "quantity": 1, "discount_percent": 0}],
+                                    },
+                                    headers={"Content-Type": "application/json"},
+                                )
+                                assert resp.status_code == 400
+                                data = json.loads(resp.data)
+                                assert data["success"] is False
 
     def test_checkout_qa_marker(self, app, client, pos_owner):
         with client.session_transaction() as sess:
@@ -383,30 +395,32 @@ class TestPosApiCheckoutExtra:
                 tenant.enable_pos = True
                 MockTenant.query.get.return_value = tenant
                 with patch("routes.pos.get_active_tenant_id", return_value=1):
-                    customer = MagicMock()
-                    customer.id = 1
-                    customer.name = "Walkin"
-                    with patch("routes.pos.get_pos_walkin_customer", return_value=customer):
-                        product = MagicMock()
-                        product.id = 1
-                        product.is_active = True
-                        with patch("routes.pos.tenant_get", return_value=product):
-                            sale = MagicMock()
-                            sale.id = 400
-                            sale.sale_number = "S-QA-001"
-                            sale.grand_total = 20
-                            with patch("routes.pos.SaleService.create_sale", return_value=sale) as mock_create:
-                                with patch("routes.pos.log_mutation"):
-                                    with patch("routes.pos.db"):
-                                        resp = client.post(
-                                            "/pos/api/checkout",
-                                            json={
-                                                "lines": [{"product_id": 1, "quantity": 1, "discount_percent": 0}],
-                                                "qa_marker": True,
-                                                "notes": "test note",
-                                            },
-                                            headers={"Content-Type": "application/json"},
-                                        )
-                                        assert resp.status_code == 200
+                    with patch("routes.pos.get_active_session") as mock_session:
+                        mock_session.return_value = MagicMock()
+                        customer = MagicMock()
+                        customer.id = 1
+                        customer.name = "Walkin"
+                        with patch("routes.pos.get_pos_walkin_customer", return_value=customer):
+                            product = MagicMock()
+                            product.id = 1
+                            product.is_active = True
+                            with patch("routes.pos.tenant_get", return_value=product):
+                                sale = MagicMock()
+                                sale.id = 400
+                                sale.sale_number = "S-QA-001"
+                                sale.grand_total = 20
+                                with patch("routes.pos.SaleService.create_sale", return_value=sale) as mock_create:
+                                    with patch("routes.pos.log_mutation"):
+                                        with patch("routes.pos.db"):
+                                            resp = client.post(
+                                                "/pos/api/checkout",
+                                                json={
+                                                    "lines": [{"product_id": 1, "quantity": 1, "discount_percent": 0}],
+                                                    "qa_marker": True,
+                                                    "notes": "test note",
+                                                },
+                                                headers={"Content-Type": "application/json"},
+                                            )
+                                            assert resp.status_code == 200
                                         call_kwargs = mock_create.call_args.kwargs
                                         assert "POS-QA" in (call_kwargs.get("notes") or "")
