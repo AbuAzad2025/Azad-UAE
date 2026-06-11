@@ -19,6 +19,7 @@ It is designed to manage real business operations across tenants, branches, stor
 | Full deployment guide | [`DEPLOYMENT_PYTHONANYWHERE.md`](DEPLOYMENT_PYTHONANYWHERE.md) |
 | Documentation index | [`docs/README.md`](docs/README.md) |
 | Brand identity | [`docs/AZADEXA_BRAND.md`](docs/AZADEXA_BRAND.md) |
+| AI/developer rules | [`AGENTS.md`](AGENTS.md) |
 
 Production must run through WSGI on PythonAnywhere or an equivalent WSGI host. Do **not** run `python app.py` as a production process.
 
@@ -103,6 +104,7 @@ AZAD Intelligent Systems
 | `runtime_core/` | startup/runtime integrity repairs |
 | `tools/` | development, QA, audit, and maintenance utilities |
 | `docs/` | product, architecture, security, operations, and brand documentation |
+| `AGENTS.md` | mandatory instructions for AI coding assistants and internal automation |
 
 ---
 
@@ -156,7 +158,7 @@ Azadexa is multi-tenant by design.
 - Public payments and package purchases are platform revenue and must not be mixed into tenant accounting unless an explicit business process requires that.
 - Platform-owner vault operations must remain owner-only.
 
-See [`docs/SECURITY_AND_TENANCY.md`](docs/SECURITY_AND_TENANCY.md).
+See [`docs/SECURITY_AND_TENANCY.md`](docs/SECURITY_AND_TENANCY.md) and [`docs/ACCOUNTING_AND_INVENTORY_RULES.md`](docs/ACCOUNTING_AND_INVENTORY_RULES.md).
 
 ---
 
@@ -169,7 +171,9 @@ See [`docs/SECURITY_AND_TENANCY.md`](docs/SECURITY_AND_TENANCY.md).
 | [`docs/PROJECT_OVERVIEW.md`](docs/PROJECT_OVERVIEW.md) | Business and technical overview |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | System architecture and module boundaries |
 | [`docs/SECURITY_AND_TENANCY.md`](docs/SECURITY_AND_TENANCY.md) | Security, tenant isolation, owner-only flows |
+| [`docs/ACCOUNTING_AND_INVENTORY_RULES.md`](docs/ACCOUNTING_AND_INVENTORY_RULES.md) | Accounting, ledger, stock, returns, and balance rules |
 | [`docs/OPERATIONS_RUNBOOK.md`](docs/OPERATIONS_RUNBOOK.md) | Local, staging, production, backups, and incident runbook |
+| [`AGENTS.md`](AGENTS.md) | Rules for AI coding assistants and internal automation |
 | [`DEPLOYMENT_PYTHONANYWHERE.md`](DEPLOYMENT_PYTHONANYWHERE.md) | PythonAnywhere deployment guide |
 
 ---
