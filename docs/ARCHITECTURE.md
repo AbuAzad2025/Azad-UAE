@@ -1,6 +1,8 @@
 # Azadexa Architecture
 
-This document describes the high-level architecture of **Azadexa**, the intelligent multi-tenant ERP and commerce platform by **AZAD Intelligent Systems**.
+This document describes the code-derived architecture of **Azadexa**, the intelligent multi-tenant ERP, accounting, inventory, and commerce platform by **AZAD Intelligent Systems**.
+
+Azadexa is not a single module application. It is a layered Flask system with tenant ERP, branch operations, GL accounting, warehouse inventory, tenant storefronts, platform-owner payment flows, public pages, APIs, monitoring, and optional AI surfaces.
 
 ---
 
@@ -8,33 +10,77 @@ This document describes the high-level architecture of **Azadexa**, the intellig
 
 Azadexa must support:
 
-- clear tenant isolation;
-- reliable ERP workflows;
-- correct accounting and inventory behavior;
-- owner-only platform controls;
-- Arabic-first business UI;
-- safe production deployment;
-- maintainable code organization;
-- predictable service boundaries.
+- tenant isolation as a core architecture rule;
+- branch-aware visibility and warehouse access;
+- reliable ERP workflows for sales, purchases, returns, payments, and cheques;
+- correct accounting and GL posting behavior;
+- traceable inventory movement and warehouse-level costing;
+- tenant-owned storefronts and public catalog/checkout behavior;
+- separate platform-owner flows for packages, donations, payment vault, and owner controls;
+- Arabic-first professional ERP UI;
+- maintainable service boundaries;
+- safe API, GraphQL, monitoring, WhatsApp, gamification, and AI surfaces.
 
 ---
 
-## System style
+## System request style
 
-Azadexa is a Flask-based web application with a layered structure:
+Azadexa follows a layered request structure:
 
 ```text
 HTTP request
-  -> Flask route / blueprint
-  -> decorators and permission checks
-  -> tenant resolution and scoping
-  -> service layer
+  -> Flask blueprint route
+  -> login / permission / owner / company-admin decorator
+  -> tenant, branch, store, or platform-owner scope resolution
+  -> service layer for business logic
   -> SQLAlchemy models
-  -> database
-  -> template / JSON response
+  -> database mutation or query
+  -> template, redirect, or JSON response
 ```
 
-The application should avoid putting complex business rules directly in templates or route handlers when those rules belong in reusable services.
+Complex business logic should live in services, not in templates or route handlers.
+
+---
+
+## Blueprint surface
+
+`bootstrap/blueprints.py` registers a broad system surface:
+
+| Surface | Main responsibility |
+|---------|---------------------|
+| `auth`, `users`, `tenants`, `language` | identity, user management, tenant context, language |
+| `main`, `public`, `owner` | dashboard, public pages, platform-owner panel |
+| `sales`, `pos`, `returns`, `payments`, `cheques` | selling, payment, return, receipt, cheque lifecycle |
+| `customers`, `suppliers`, `partners` | business parties, statements, partner behavior |
+| `purchases`, `expenses`, `treasury`, `payroll` | purchase-side, expenses, treasury, payroll |
+| `products`, `warehouse`, `unified_inventory` | product catalog, stock movement, warehouse inventory |
+| `ledger`, `advanced_ledger`, `admin_ledger`, `reports` | GL, accounting, financial reports, admin ledger surfaces |
+| `store`, `shop` | tenant store administration and public tenant storefront |
+| `payment_vault` | platform-owner payment vault and provider settings |
+| `monitoring`, `api`, `api_enhanced`, `api_analytics`, `api_docs`, `graphql` | control/API/observability surfaces |
+| `whatsapp`, `gamification`, `ai` | integrations, engagement, AI assistant/features |
+
+The architecture should preserve these surfaces instead of collapsing them into a generic “shop” or “accounting app”.
+
+---
+
+## Model families
+
+The model registry shows these main families:
+
+| Family | Important models |
+|--------|------------------|
+| Access | `User`, `Role`, `Permission`, `LoginHistory`, `SecurityAlert`, `APIKey` |
+| Tenant structure | `Tenant`, `Branch`, `InvoiceSettings`, `SystemSettings`, `IntegrationSettings` |
+| Sales/purchases | `Sale`, `SaleLine`, `Purchase`, `PurchaseLine`, `ProductReturn`, `ProductReturnLine` |
+| Payments | `Payment`, `Receipt`, `Cheque`, `CashBox` |
+| Inventory | `Product`, `ProductCategory`, `ProductSerial`, `Warehouse`, `StockMovement`, `ProductWarehouseStock` |
+| Costing | `ProductWarehouseCost`, `ProductCostHistory` |
+| GL/accounting | `GLAccount`, `GLJournalEntry`, `GLJournalLine`, `GLPeriod`, `GLAccountMapping`, `JournalEntryAudit` |
+| Advanced finance | `BankReconciliation`, `Budget`, `CostCenter`, `ProfitCenter`, `FixedAsset`, `DepreciationSchedule`, `CustomsTax`, `TaxCalculationRule` |
+| Tenant commerce | `TenantStore`, `StorePaymentMethod`, `StoreCoupon`, `ShopCustomerAccount`, `ShopWishlist`, `ShopReview`, `ShopLoyalty`, `ShopProductVariant`, `ShopStockAlert`, `Shipment` |
+| Platform owner | `PaymentVault`, `PaymentTransaction`, `PaymentLog`, `CardVault`, `CardPayment`, `Donation`, `Package`, `PackagePurchase`, `AzadPlatformFee` |
+| Partner/payroll | `Partner`, `PartnerCommissionEntry`, `PartnerProfitDistribution`, `PartnerTransaction`, `Employee`, `SalaryAdvance`, `PayrollTransaction` |
 
 ---
 
@@ -43,14 +89,15 @@ The application should avoid putting complex business rules directly in template
 | Layer | Purpose |
 |------|---------|
 | `routes/` | HTTP endpoints, page rendering, request validation, permission gates |
-| `services/` | business rules, accounting logic, inventory logic, reporting logic |
-| `models/` | SQLAlchemy tables and relationships |
-| `utils/` | shared helpers, tenant utilities, decorators, safety helpers |
-| `templates/` | Jinja2 user interface |
-| `static/` | JavaScript, CSS, images, frontend behavior |
-| `migrations/` | Alembic schema evolution |
+| `services/` | business rules, accounting posting, stock movement, store checkout, reporting, monitoring |
+| `models/` | SQLAlchemy tables, relationships, domain methods |
+| `utils/` | tenant helpers, decorators, branching, validators, constants, GL references |
+| `templates/` | Arabic-first and RTL-aware ERP UI |
+| `static/` | CSS, JavaScript, images, frontend behavior |
+| `migrations/` | database schema evolution |
 | `runtime_core/` | startup integrity and idempotent repairs |
-| `tools/` | development, audit, QA, and maintenance scripts |
+| `tools/` | development, QA, audit, and maintenance utilities |
+| `docs/` | system identity, flows, architecture, tenancy, accounting, inventory, and agent rules |
 
 ---
 
@@ -58,32 +105,30 @@ The application should avoid putting complex business rules directly in template
 
 Every route should answer these questions before reading or mutating data:
 
-1. Is the user authenticated?
-2. What role/permission is required?
-3. Is this route tenant-scoped, platform-scoped, or public?
-4. What is the active tenant?
-5. Is branch scoping required?
-6. Is the query protected by tenant filters or tenant helpers?
-7. Does the operation affect inventory, accounting, payments, or owner vault data?
-8. Is the operation auditable?
+1. Is the user authenticated, anonymous/public, tenant admin, branch user, accountant, or platform owner?
+2. What permission or decorator is required?
+3. Is this tenant-scoped, branch-scoped, tenant-store-scoped, platform-owner-scoped, or public?
+4. How is tenant id resolved?
+5. Is branch or warehouse access required?
+6. Does the query use tenant scoping, tenant helper, store tenant resolution, or owner-only context?
+7. Does the operation affect stock, GL, balances, payments, cheques, returns, or owner vault data?
+8. Is the operation traceable by source document and reference type?
 
 ---
 
 ## Tenant architecture
 
-Azadexa uses a multi-layer tenant isolation model.
+Azadexa uses layered tenant isolation:
 
-Expected isolation layers:
+- `utils.tenanting.get_active_tenant_id()` locks normal users to `user.tenant_id`.
+- Platform-owner users may switch active tenant context through session.
+- `tenant_query`, `tenant_get`, and `tenant_get_or_404` provide explicit query helpers.
+- `utils.tenant_orm` injects ORM criteria into SELECT statements for mapped models with `tenant_id`.
+- `Session.get()` is patched to reject cross-tenant objects when tenant scope is enabled.
+- `User` is exempt from automatic ORM scoping because Flask-Login loads users by id; user management must scope explicitly.
+- `shop` is intentionally exempt from automatic ORM scoping because public storefront routes resolve tenant from store slug/domain and must explicitly filter by `store.tenant_id`.
 
-- tenant-aware database models where applicable;
-- ORM-level filtering for tenant-owned models;
-- explicit tenant query helpers in route and service code;
-- branch scope checks where relevant;
-- permission checks on route entry;
-- tests and QA scripts for cross-tenant behavior;
-- conservative defaults for public and owner-only flows.
-
-Tenant isolation should not rely only on UI filtering.
+Tenant isolation is not a UI feature; it is a data-access architecture rule.
 
 ---
 
@@ -91,86 +136,141 @@ Tenant isolation should not rely only on UI filtering.
 
 | Scope | Description | Examples |
 |------|-------------|----------|
-| Tenant scope | Business data belonging to one tenant | sales, purchases, inventory, customers, suppliers, tenant accounting |
-| Branch scope | Sub-scope inside a tenant | branch-specific sales, stock, users, reports |
-| Tenant store scope | Storefront and commerce data for one tenant | tenant products, store checkout, tenant orders |
-| Platform-owner scope | System owner operations | packages, public payments, owner vault, platform settings |
-| Public scope | Routes accessible without tenant login | landing pages, public package pages, donation pages |
+| Tenant ERP scope | Business data belonging to one tenant | sales, purchases, inventory, customers, suppliers, tenant accounting |
+| Branch scope | Sub-scope inside a tenant | branch-specific sales, stock, users, reports, liquidity accounts |
+| Tenant store scope | Public commerce data for one tenant | catalog, cart, checkout, order token, loyalty, coupons |
+| Platform-owner scope | System owner operations | packages, donations, public revenue, owner vault, global store lock |
+| Public scope | Anonymous pages with limited safe behavior | landing, pricing/packages, public store catalog |
 
-Public scope must not become an accidental data access bypass.
+---
+
+## Sales architecture
+
+Sales are handled as business documents with multiple side effects.
+
+`SaleService.create_sale()` validates customer, seller, line data, currency, discount, tax, warehouse, serials, stock availability, and creates sale header/lines. It can defer fulfillment for online store orders.
+
+`SaleService.fulfill_sale()` performs the operational side:
+
+- validates stock again;
+- creates stock movements;
+- creates payment record if payment data exists;
+- recalculates totals and customer classification;
+- ensures GL accounts;
+- calculates COGS;
+- posts revenue/VAT/discount GL lines;
+- posts COGS and inventory asset GL lines;
+- posts partner commissions;
+- applies customer sale/receipt effects.
+
+This separation is important: a pending online order is not the same as a fulfilled sale.
+
+---
+
+## Purchase architecture
+
+Purchases are supplier-side documents with inventory and accounting effects.
+
+The purchase model supports:
+
+- tenant-aware purchase numbers;
+- supplier, branch, and warehouse references;
+- subtotal, discount, tax, total, currency, and base amount;
+- landed cost components: freight, insurance, customs duty, other landed cost;
+- purchase lines with landed unit cost.
+
+Purchase processing should update stock, cost, payable/accounting behavior, and supplier balances consistently.
+
+---
+
+## Inventory and costing architecture
+
+Inventory is movement-based.
+
+`StockService.create_movement()` creates tenant-aware stock movement records, updates `ProductWarehouseStock`, and updates legacy `Product.current_stock`.
+
+Warehouse-level costing uses:
+
+- `ProductWarehouseCost` for quantity, total value, and average cost;
+- `ProductCostHistory` for audit history;
+- purchase receipt to update WAC/MWAC using landed unit cost;
+- sale fulfillment to calculate COGS and reduce stock value;
+- sale reversal to restore stock and cost based on original cost history where possible.
+
+Direct quantity manipulation should be avoided in favor of movement-based behavior.
 
 ---
 
 ## Accounting architecture
 
-Accounting workflows should be handled through services rather than scattered route calculations.
+GL posting is centralized.
 
-A financial operation should define:
+`post_or_fail()` delegates to `GLService.post_entry()` and raises if a journal entry cannot be posted. `GLService` resolves tenant chart of accounts, concept mappings, liquidity accounts, VAT accounts, customer credit accounts, and validates balanced debit/credit totals.
 
-- tenant id;
-- branch id where relevant;
-- affected account(s);
-- debit and credit sides;
-- source document type and id;
-- currency and amount;
-- posting date;
-- reversal/void policy;
-- audit trail.
+Important GL concepts:
 
-Do not update balances in one place while ledger entries are created somewhere else without a clear consistency rule.
-
----
-
-## Inventory architecture
-
-Inventory operations should be traceable through movement records.
-
-A stock-changing operation should define:
-
-- tenant id;
-- product id;
-- warehouse id;
-- quantity change;
-- source document;
-- date/time;
-- user/action responsible;
-- whether the movement is reversible;
-- whether accounting should also be posted.
-
-Avoid direct stock edits that bypass movement tracking except for controlled administrative corrections.
+- tenant chart of accounts;
+- branch-aware liquidity account resolution;
+- account concept mapping through `GLAccountMapping`;
+- journal entries and lines with source reference type/id;
+- financial dimensions on lines: branch, warehouse, cost center, profit center, partner;
+- period locking;
+- reversing entries;
+- VAT reporting.
 
 ---
 
 ## Payment architecture
 
-Payments must be classified by business owner:
+Tenant payments use `Payment` and `Receipt` models with:
 
-| Payment type | Owner |
-|-------------|-------|
-| Tenant invoice/store payment | Tenant scope |
-| Public donation | Platform-owner scope |
-| Package/subscription purchase | Platform-owner scope |
-| Owner vault/card operation | Platform-owner scope only |
+- tenant-aware payment/receipt numbers;
+- incoming/outgoing direction;
+- sale, purchase, customer, supplier, branch references;
+- method normalization;
+- confirmed vs pending/rejected cheque state;
+- recalculation of sale status when cheque/payment state changes.
 
-Payment callbacks/webhooks must validate provider signatures/secrets where available, avoid logging sensitive data, and avoid changing tenant or owner balances without a clear source document.
+Platform-owner payment flows are separate and use vault/package/donation/payment-vault models.
 
 ---
 
-## Owner architecture
+## Store architecture
 
-Owner functionality must remain isolated from tenant administration.
+A tenant store is not a global marketplace bucket. It is one store per tenant.
 
-Owner-only features may include:
+`TenantStore` stores tenant id, online warehouse id, enabled state, platform disabled state, slug, domain/subdomain, SEO fields, contact data, low-stock threshold, and notification settings.
 
-- platform settings;
-- package/subscription workflows;
-- public payment tracking;
-- owner vault/payment management;
-- global diagnostics and maintenance;
+`StoreService` manages:
+
+- online warehouse creation;
+- one tenant store per tenant;
+- slug/subdomain uniqueness;
+- public availability checks;
+- public catalog from in-stock online warehouse products only;
+- tenant-specific cart session keys;
+- coupons, variants, loyalty, and related store features.
+
+`StoreCheckoutService` creates tenant sales with `source='online_store'` and `sale_status='pending'` using deferred fulfillment.
+
+---
+
+## Platform-owner architecture
+
+Owner functionality is separate from tenant administration.
+
+Owner/platform features include:
+
+- owner panel;
+- platform payment vault;
+- card/payment vault surfaces;
+- package and package purchase records;
+- public donations;
+- platform fee concepts;
 - tenant administration;
-- deployment and data tools when explicitly secured.
+- global controls such as store enablement and platform hard-locking.
 
-Owner-only does not mean normal tenant admin.
+Owner-only is not equivalent to tenant `super_admin`.
 
 ---
 
@@ -179,15 +279,13 @@ Owner-only does not mean normal tenant admin.
 The UI is Arabic-first and RTL-oriented. Frontend changes should preserve:
 
 - RTL layout correctness;
-- clear Arabic business wording;
-- professional ERP tone;
+- professional Arabic business wording;
+- ERP tone instead of beginner/demo language;
 - responsive tables and dashboards;
 - form validation;
 - accessibility improvements;
 - print/export behavior;
 - tenant-specific branding where applicable.
-
-Avoid adding beginner hints, exaggerated language, emoji-heavy status UI, or inconsistent colors in production screens.
 
 ---
 
@@ -195,26 +293,17 @@ Avoid adding beginner hints, exaggerated language, emoji-heavy status UI, or inc
 
 Prefer services for:
 
-- accounting calculations;
-- inventory movement logic;
-- payment state transitions;
-- export/report assembly;
-- monitoring and owner dashboards;
-- tenant bootstrap and integrity checks;
+- sale creation and fulfillment;
+- purchase processing;
+- stock movement and costing;
+- GL posting and account resolution;
+- payment and cheque state transitions;
+- store catalog and checkout;
+- owner/payment-vault behavior;
+- monitoring and reports;
 - reusable validation logic.
 
-Routes should be thin when possible: validate request, enforce permissions, call service, return response.
-
----
-
-## Data safety rules
-
-- No raw cross-tenant queries unless explicitly platform-owner and safe.
-- No production secrets in repository files.
-- No unprotected owner/payment/vault endpoints.
-- No destructive database tools without strict permission and whitelisting.
-- No public route should expose tenant data.
-- No direct SQL console behavior should allow mutation in production.
+Routes should stay thin where possible: validate request, enforce permissions, call service, return response.
 
 ---
 
@@ -223,11 +312,12 @@ Routes should be thin when possible: validate request, enforce permissions, call
 Before merging architecture-sensitive changes, verify:
 
 - tenant id is applied correctly;
-- branch scope is preserved;
-- permissions are checked at route level;
-- accounting side effects are correct;
-- inventory side effects are correct;
+- branch/warehouse scope is preserved;
+- owner-only routes remain owner-only;
+- tenant store routes resolve and filter by store tenant;
+- accounting side effects are balanced and referenced;
+- inventory side effects are movement-based;
 - payment ownership is clear;
+- public routes expose only public data;
 - templates do not expose unauthorized data;
-- migrations are safe;
 - tests or manual QA cover the changed path.
