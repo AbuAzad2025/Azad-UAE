@@ -434,4 +434,104 @@
         }
     });
     state.barcodeScanner.start();
+
+    async function loadSession() {
+        try {
+            const r = await fetch('/pos/api/session/current', { credentials: 'same-origin' });
+            const j = await r.json();
+            const bar = qs('#posSessionBar');
+            const required = qs('#posSessionRequired');
+            if (j.success && j.session) {
+                const s = j.session;
+                bar.classList.remove('d-none');
+                required.classList.add('d-none');
+                qs('#sessionNumber').textContent = s.number;
+                qs('#sessionBalance').textContent = fmt(s.opening_balance);
+                qs('#sessionTotal').textContent = fmt(s.total_sales);
+                qs('#sessionTime').textContent = 'Ù…ÙØªÙˆØ­Ø© Ù…Ù†Ø° ' + s.duration_minutes + ' Ø¯Ù‚ÙŠÙ‚Ø©';
+                qs('#closeOpening').textContent = fmt(s.opening_balance);
+            } else {
+                bar.classList.add('d-none');
+                required.classList.remove('d-none');
+            }
+        } catch (_) {}
+    }
+
+    qs('#openSessionBtn').addEventListener('click', () => {
+        qs('#openSessionBalance').value = '0';
+        qs('#openSessionNotes').value = '';
+        $('#openSessionModal').modal('show');
+    });
+
+    qs('#openSessionConfirm').addEventListener('click', async () => {
+        const balance = toNum(qs('#openSessionBalance').value);
+        const notes = qs('#openSessionNotes').value.trim();
+        qs('#openSessionConfirm').disabled = true;
+        try {
+            const r = await fetch('/pos/api/session/open', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
+                credentials: 'same-origin',
+                body: JSON.stringify({ opening_balance: balance, notes: notes || undefined })
+            });
+            const j = await r.json();
+            if (!r.ok || !j.success) throw new Error(j.error || 'ÙØ´Ù„ ÙØªØ­ Ø§Ù„Ø¬Ù„Ø³Ø©');
+            $('#openSessionModal').modal('hide');
+            await loadSession();
+            showAlert('ØªÙ… ÙØªØ­ Ø§Ù„Ø¬Ù„Ø³Ø©: ' + j.session.number, 'success');
+        } catch (err) {
+            showAlert(err.message, 'danger');
+        } finally {
+            qs('#openSessionConfirm').disabled = false;
+        }
+    });
+
+    qs('#closeSessionBtn').addEventListener('click', async () => {
+        try {
+            const r = await fetch('/pos/api/session/report', { credentials: 'same-origin' });
+            const j = await r.json();
+            if (j.success && j.session) {
+                qs('#closeOpening').textContent = fmt(j.session.opening_balance);
+                qs('#closeCashSales').textContent = fmt(j.session.total_cash_sales);
+                qs('#closeExpected').textContent = fmt((j.session.opening_balance || 0) + (j.session.total_cash_sales || 0));
+            }
+        } catch (_) {}
+        qs('#closeSessionBalance').value = '';
+        qs('#closeSessionNotes').value = '';
+        $('#closeSessionModal').modal('show');
+    });
+
+    qs('#closeSessionConfirm').addEventListener('click', async () => {
+        const balance = toNum(qs('#closeSessionBalance').value);
+        if (!balance && balance !== 0) {
+            showAlert('ÙŠØ±Ø¬Ù‰ Ø¥Ø¯Ø®Ø§Ù„ Ø±ØµÙŠØ¯ Ø§Ù„Ø¥ØºÙ„Ø§Ù‚.', 'warning');
+            return;
+        }
+        const notes = qs('#closeSessionNotes').value.trim();
+        qs('#closeSessionConfirm').disabled = true;
+        try {
+            const r = await fetch('/pos/api/session/close', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
+                credentials: 'same-origin',
+                body: JSON.stringify({ closing_balance: balance, notes: notes || undefined })
+            });
+            const j = await r.json();
+            if (!r.ok || !j.success) throw new Error(j.error || 'ÙØ´Ù„ Ø¥ØºÙ„Ø§Ù‚ Ø§Ù„Ø¬Ù„Ø³Ø©');
+            $('#closeSessionModal').modal('hide');
+            await loadSession();
+            const diff = j.session.difference;
+            if (Math.abs(diff) > 0.01) {
+                showAlert('ØªÙ… Ø¥ØºÙ„Ø§Ù‚ Ø§Ù„Ø¬Ù„Ø³Ø©. ÙØ±Ù‚ Ø§Ù„Ø±ØµÙŠØ¯: ' + fmt(diff), diff < 0 ? 'danger' : 'warning');
+            } else {
+                showAlert('ØªÙ… Ø¥ØºÙ„Ø§Ù‚ Ø§Ù„Ø¬Ù„Ø³Ø© Ø¨Ù†Ø¬Ø§Ø!. Ø§Ù„Ø±ØµÙŠØ¯ Ù…Ø·Ø§Ø¨Ù‚.', 'success');
+            }
+        } catch (err) {
+            showAlert(err.message, 'danger');
+        } finally {
+            qs('#closeSessionConfirm').disabled = false;
+        }
+    });
+
+    loadSession();
 })();

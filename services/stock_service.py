@@ -312,11 +312,45 @@ class StockService:
             )
     
     @staticmethod
+    def _resolve_cogs_unit_cost(product_id, warehouse_id, tenant_id, line_cost_price=None):
+        """Resolve unit cost for COGS using Odoo-style fallback chain:
+        1. ProductWarehouseCost.average_cost (if stock > 0)
+        2. SaleLine.cost_price
+        3. Last purchase price from ProductCostHistory
+        4. Raise error if all fail — never silently post COGS=0.
+        """
+        pwc = ProductWarehouseCost.query.filter_by(
+            tenant_id=tenant_id,
+            product_id=product_id,
+            warehouse_id=warehouse_id,
+        ).first()
+        if pwc and pwc.total_quantity > 0 and pwc.average_cost and pwc.average_cost > Decimal('0'):
+            return pwc.average_cost, 'mwac'
+        if line_cost_price:
+            cost = Decimal(str(line_cost_price))
+            if cost > Decimal('0'):
+                return cost, 'cost_price'
+        last_purchase = ProductCostHistory.query.filter_by(
+            tenant_id=tenant_id,
+            product_id=product_id,
+            warehouse_id=warehouse_id,
+            movement_type='purchase',
+        ).order_by(ProductCostHistory.created_at.desc()).first()
+        if last_purchase and last_purchase.movement_unit_cost and last_purchase.movement_unit_cost > Decimal('0'):
+            return Decimal(str(last_purchase.movement_unit_cost)), 'last_purchase'
+        raise ValueError(
+            f'لا يمكن تحديد تكلفة البضاعة المباعة (COGS) للمنتج {product_id}: '
+            'لا يوجد مخزون، ولا سعر تكلفة، ولا سجل شراء سابق. '
+            'يرجى إدخال تكلفة المنتج أو توريد مخزون قبل البيع.'
+        )
+
+    @staticmethod
     def calculate_sale_cogs_and_deduct(sale, warehouse_id=None):
         """
         Compute COGS using MWAC, deduct stock, update PWC, create audit trail.
         Returns total COGS in AED (Decimal).
         Falls back to SaleLine.cost_price when ENABLE_MWAC is False.
+        Never silently posts COGS=0 — raises error if cost cannot be resolved.
         """
         from datetime import datetime, timezone
         from config import Config
@@ -375,12 +409,18 @@ class StockService:
                     )
                     db.session.add(pch)
                 else:
-                    # No PWC record or zero stock — fallback to line cost_price
-                    avg_cost = Decimal(str(line.cost_price)) if line.cost_price else Decimal('0')
+                    avg_cost, source = StockService._resolve_cogs_unit_cost(
+                        line.product_id, warehouse_id, tenant_id, line_cost_price=line.cost_price
+                    )
                     cogs = (avg_cost * qty).quantize(Decimal('0.001'), rounding=ROUND_HALF_UP)
+                    current_app.logger.warning(
+                        'COGS resolved via fallback (%s) for product %s sale %s: unit_cost=%s',
+                        source, line.product_id, sale.sale_number, avg_cost
+                    )
             else:
-                # Legacy path
-                avg_cost = Decimal(str(line.cost_price)) if line.cost_price else Decimal('0')
+                avg_cost, source = StockService._resolve_cogs_unit_cost(
+                    line.product_id, warehouse_id, tenant_id, line_cost_price=line.cost_price
+                )
                 cogs = (avg_cost * qty).quantize(Decimal('0.001'), rounding=ROUND_HALF_UP)
             
             total_cogs += cogs

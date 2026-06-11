@@ -1,16 +1,20 @@
 from decimal import Decimal
+from datetime import datetime, timezone
 
 from flask import Blueprint, jsonify, render_template, request
 from flask_login import current_user, login_required
 from extensions import csrf, db
-from models import Customer, Product
+from models import Customer, PosSession, Product
 from models.system_settings import SystemSettings
 from models.tenant import Tenant
 from services.sale_service import SaleService
-from utils.branching import ensure_warehouse_access, get_accessible_warehouses
+from utils.branching import ensure_warehouse_access, get_accessible_warehouses, get_active_branch_id
 from utils.decorators import permission_required
 from utils.pos_helpers import (
     POS_QA_MARKER,
+    create_pos_session,
+    close_pos_session,
+    get_active_session,
     get_pos_walkin_customer,
     lookup_pos_product_exact,
     merge_checkout_lines,
@@ -167,6 +171,10 @@ def api_checkout():
         return jsonify({"success": False, "error": "Content-Type يجب أن يكون application/json."}), 415
     payload = request.get_json(silent=True) or {}
 
+    session = get_active_session(current_user)
+    if not session:
+        return jsonify({"success": False, "error": "لا توجد جلسة كاشير مفتوحة. يرجى فتح جلسة أولاً."}), 403
+
     use_quick = bool(payload.get("quick_customer") or payload.get("walkin"))
     customer_id = payload.get("customer_id")
 
@@ -313,3 +321,145 @@ def api_checkout():
             "print_url": f"/sales/{sale.id}/print",
         }
     )
+
+
+@pos_bp.route("/api/session/current")
+@login_required
+@permission_required("manage_sales")
+def api_session_current():
+    session = get_active_session(current_user)
+    if not session:
+        return jsonify({"success": False, "session": None}), 200
+    return jsonify({
+        "success": True,
+        "session": {
+            "id": session.id,
+            "number": session.session_number,
+            "opened_at": session.opened_at.isoformat(),
+            "duration_minutes": session.duration_minutes,
+            "opening_balance": float(session.opening_balance_cash or 0),
+            "total_sales": float(session.total_sales or 0),
+            "total_cash_sales": float(session.total_cash_sales or 0),
+            "total_card_sales": float(session.total_card_sales or 0),
+            "status": session.status,
+        }
+    })
+
+
+@pos_bp.route("/api/session/open", methods=["POST"])
+@login_required
+@permission_required("manage_sales")
+def api_session_open():
+    if not request.is_json:
+        return jsonify({"success": False, "error": "Content-Type يجب أن يكون application/json."}), 415
+    payload = request.get_json(silent=True) or {}
+    opening_balance = payload.get("opening_balance", 0) or 0
+    notes = (payload.get("notes") or "").strip() or None
+
+    existing = get_active_session(current_user)
+    if existing:
+        return jsonify({
+            "success": False,
+            "error": f"توجد جلسة مفتوحة بالفعل: {existing.session_number}. يرجى إغلاقها أولاً."
+        }), 409
+
+    branch_id = get_active_branch_id(current_user)
+    if not branch_id:
+        return jsonify({"success": False, "error": "لا يوجد فرع نشط. يرجى تحديد فرع."}), 400
+
+    try:
+        session = create_pos_session(current_user, branch_id, opening_balance, notes)
+        db.session.commit()
+    except Exception as exc:
+        db.session.rollback()
+        return jsonify({"success": False, "error": str(exc)}), 400
+
+    return jsonify({
+        "success": True,
+        "session": {
+            "id": session.id,
+            "number": session.session_number,
+            "opened_at": session.opened_at.isoformat(),
+            "opening_balance": float(session.opening_balance_cash or 0),
+            "status": session.status,
+        }
+    }), 201
+
+
+@pos_bp.route("/api/session/close", methods=["POST"])
+@login_required
+@permission_required("manage_sales")
+def api_session_close():
+    if not request.is_json:
+        return jsonify({"success": False, "error": "Content-Type يجب أن يكون application/json."}), 415
+    payload = request.get_json(silent=True) or {}
+    closing_cash = payload.get("closing_balance", 0) or 0
+    notes = (payload.get("notes") or "").strip() or None
+
+    try:
+        session = require_active_session(current_user)
+    except ValueError as exc:
+        return jsonify({"success": False, "error": str(exc)}), 404
+
+    try:
+        close_pos_session(session, closing_cash, notes)
+        db.session.commit()
+    except Exception as exc:
+        db.session.rollback()
+        return jsonify({"success": False, "error": str(exc)}), 400
+
+    return jsonify({
+        "success": True,
+        "session": {
+            "id": session.id,
+            "number": session.session_number,
+            "opened_at": session.opened_at.isoformat(),
+            "closed_at": session.closed_at.isoformat() if session.closed_at else None,
+            "opening_balance": float(session.opening_balance_cash or 0),
+            "closing_balance": float(session.closing_balance_cash or 0),
+            "expected_balance": float(session.expected_balance or 0),
+            "difference": float(session.difference or 0),
+            "total_sales": float(session.total_sales or 0),
+            "total_cash_sales": float(session.total_cash_sales or 0),
+            "total_card_sales": float(session.total_card_sales or 0),
+            "duration_minutes": session.duration_minutes,
+            "status": session.status,
+        }
+    })
+
+
+@pos_bp.route("/api/session/report")
+@login_required
+@permission_required("manage_sales")
+def api_session_report():
+    session_id = request.args.get("session_id", type=int)
+    if session_id:
+        session = tenant_get(PosSession, session_id)
+        if not session:
+            return jsonify({"success": False, "error": "الجلسة غير موجودة."}), 404
+    else:
+        session = get_active_session(current_user)
+        if not session:
+            return jsonify({"success": False, "session": None, "error": "لا توجد جلسة مفتوحة."}), 200
+
+    return jsonify({
+        "success": True,
+        "session": {
+            "id": session.id,
+            "number": session.session_number,
+            "user_id": session.user_id,
+            "branch_id": session.branch_id,
+            "opened_at": session.opened_at.isoformat(),
+            "closed_at": session.closed_at.isoformat() if session.closed_at else None,
+            "opening_balance": float(session.opening_balance_cash or 0),
+            "closing_balance": float(session.closing_balance_cash or 0) if session.closing_balance_cash is not None else None,
+            "expected_balance": float(session.expected_balance or 0) if session.expected_balance is not None else None,
+            "difference": float(session.difference or 0) if session.difference is not None else None,
+            "total_sales": float(session.total_sales or 0),
+            "total_cash_sales": float(session.total_cash_sales or 0),
+            "total_card_sales": float(session.total_card_sales or 0),
+            "duration_minutes": session.duration_minutes,
+            "status": session.status,
+            "notes": session.notes or "",
+        }
+    })

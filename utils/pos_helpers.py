@@ -1,12 +1,14 @@
-"""POS catalog, customer resolution, and checkout line helpers."""
+"""POS catalog, customer resolution, checkout line helpers, and session management."""
 from __future__ import annotations
 
 from decimal import Decimal
+from datetime import datetime, timezone
 
 from extensions import db
-from models import Customer, Product
+from models import Customer, PosSession, Product
 from services.stock_service import StockService
-from utils.branching import get_accessible_warehouse_ids, get_branch_stock_map
+from utils.branching import get_accessible_warehouse_ids, get_branch_stock_map, get_active_branch_id
+from utils.helpers import generate_number
 from utils.tenanting import get_active_tenant_id, tenant_query
 
 POS_WALKIN_MARKER = "[POS-WALKIN]"
@@ -200,3 +202,84 @@ def merge_checkout_lines(raw_lines: list) -> list[dict]:
             if unit_price is not None:
                 merged[product_id]["unit_price"] = unit_price
     return [merged[pid] for pid in order]
+
+
+def get_active_session(user=None, branch_id: int = None) -> PosSession | None:
+    tenant_id = get_active_tenant_id()
+    if not tenant_id:
+        return None
+    branch_id = branch_id or get_active_branch_id(user)
+    return PosSession.query.filter(
+        PosSession.tenant_id == int(tenant_id),
+        PosSession.branch_id == int(branch_id) if branch_id else True,
+        PosSession.user_id == user.id if user else True,
+        PosSession.status == 'open',
+    ).order_by(PosSession.id.desc()).first()
+
+
+def require_active_session(user=None, branch_id: int = None) -> PosSession:
+    session = get_active_session(user, branch_id)
+    if not session:
+        raise ValueError("لا توجد جلسة كاشير مفتوحة. يرجى فتح جلسة أولاً.")
+    return session
+
+
+def create_pos_session(user, branch_id: int, opening_balance: Decimal = Decimal('0'), notes: str = None) -> PosSession:
+    tenant_id = get_active_tenant_id()
+    if not tenant_id:
+        raise ValueError("لا توجد شركة نشطة.")
+    number = generate_number(
+        prefix='POS-SES',
+        model=PosSession,
+        field_name='session_number',
+        branch_code=branch_id,
+        tenant_id=int(tenant_id),
+    )
+    session = PosSession(
+        tenant_id=int(tenant_id),
+        branch_id=int(branch_id),
+        user_id=user.id,
+        session_number=number,
+        opening_balance_cash=opening_balance,
+        notes=notes,
+        status='open',
+    )
+    db.session.add(session)
+    db.session.flush()
+    return session
+
+
+def close_pos_session(session: PosSession, closing_cash: Decimal, notes: str = None):
+    from models import Payment, Sale
+
+    tenant_id = get_active_tenant_id()
+    sales_in_session = Sale.query.filter(
+        Sale.tenant_id == int(tenant_id),
+        Sale.seller_id == session.user_id,
+        Sale.branch_id == session.branch_id,
+        Sale.sale_date >= session.opened_at,
+        db.or_(
+            Sale.sale_date <= (session.closed_at or datetime.now(timezone.utc)),
+            Sale.sale_date == None,
+        ),
+    ).all()
+
+    total = Decimal('0')
+    cash_total = Decimal('0')
+    card_total = Decimal('0')
+    for sale in sales_in_session:
+        total += Decimal(str(sale.total_amount or 0))
+        for payment in sale.payments:
+            method = getattr(payment, 'payment_method', '')
+            amt = Decimal(str(payment.amount or 0))
+            if method == 'cash':
+                cash_total += amt
+            elif method in ('card', 'bank_transfer', 'e_wallet'):
+                card_total += amt
+
+    session.total_sales = total
+    session.total_cash_sales = cash_total
+    session.total_card_sales = card_total
+    session.close(closing_cash, notes)
+    db.session.flush()
+    return session

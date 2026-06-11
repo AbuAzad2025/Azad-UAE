@@ -807,3 +807,57 @@ class TestChequeAccountingGuards:
         assert summary["cheque_info"]["id"] == cheque.id
         assert "journal_entries" in summary
         assert "account_impact" in summary
+
+
+class TestCogsResolution:
+    """Test COGS fallback chain like Odoo."""
+
+    def test_resolve_cogs_raises_when_no_cost_data(self, app, db_session):
+        from services.stock_service import StockService
+        from models import Tenant, Product, Warehouse
+        with app.app_context():
+            tenant = Tenant(name='CGTest', name_ar='CGTest', slug='cgt', email='c@g.com', phone_1='050', country='AE', subscription_plan='basic')
+            db_session.add(tenant)
+            db_session.flush()
+            product = Product(tenant_id=tenant.id, name='NoCost', current_stock=0, regular_price=Decimal('1'))
+            db_session.add(product)
+            db_session.flush()
+            wh = Warehouse(tenant_id=tenant.id, name='WH', code='WH1')
+            db_session.add(wh)
+            db_session.flush()
+            with pytest.raises(ValueError, match='لا يمكن تحديد تكلفة البضاعة المباعة'):
+                StockService._resolve_cogs_unit_cost(product.id, wh.id, tenant.id, line_cost_price=None)
+
+    def test_resolve_cogs_uses_cost_price_when_no_pwc(self, app, db_session):
+        from services.stock_service import StockService
+        from models import Tenant, Product, Warehouse
+        with app.app_context():
+            tenant = Tenant(name='CGTest2', name_ar='CGTest2', slug='cgt2', email='c2@g.com', phone_1='050', country='AE', subscription_plan='basic')
+            db_session.add(tenant)
+            db_session.flush()
+            product = Product(tenant_id=tenant.id, name='WithCost', current_stock=0, cost_price=Decimal('150'), regular_price=Decimal('1'))
+            db_session.add(product)
+            db_session.flush()
+            wh = Warehouse(tenant_id=tenant.id, name='WH', code='WH1')
+            db_session.add(wh)
+            db_session.flush()
+            cost, source = StockService._resolve_cogs_unit_cost(product.id, wh.id, tenant.id, line_cost_price=Decimal('150'))
+            assert cost == Decimal('150')
+            assert source == 'cost_price'
+
+
+class TestAzadPlatformFeeSettlement:
+    """Test platform fee settlement summary and approval."""
+
+    def test_get_accrued_summary_empty(self, app, db_session):
+        from services.azad_platform_fee_service import AzadPlatformFeeService
+        with app.app_context():
+            result = AzadPlatformFeeService.get_accrued_summary(tenant_id=9999)
+            assert result == []
+
+    def test_get_settlement_report_empty(self, app, db_session):
+        from services.azad_platform_fee_service import AzadPlatformFeeService
+        with app.app_context():
+            result = AzadPlatformFeeService.get_settlement_report(tenant_id=9999)
+            assert result['count'] == 0
+            assert result['total_fee_aed'] == Decimal('0')

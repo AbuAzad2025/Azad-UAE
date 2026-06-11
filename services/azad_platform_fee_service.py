@@ -127,3 +127,94 @@ class AzadPlatformFeeService:
         fee.gl_posted = True
         current_app.logger.info('Azad platform fee accrued: sale=%s fee=%s', sale.sale_number, fee_amount)
         return fee
+
+    @staticmethod
+    def get_accrued_summary(tenant_id=None):
+        """Return total accrued (unapproved) platform fees per tenant."""
+        from sqlalchemy import func
+        q = db.session.query(
+            AzadPlatformFee.tenant_id,
+            func.coalesce(func.sum(AzadPlatformFee.fee_amount_aed), 0).label('total'),
+        ).filter(AzadPlatformFee.status == 'accrued')
+        if tenant_id:
+            q = q.filter(AzadPlatformFee.tenant_id == tenant_id)
+        q = q.group_by(AzadPlatformFee.tenant_id)
+        return [
+            {
+                'tenant_id': row.tenant_id,
+                'total_fee_aed': Decimal(str(row.total)).quantize(Decimal('0.001'), rounding=ROUND_HALF_UP),
+            }
+            for row in q.all()
+        ]
+
+    @staticmethod
+    def get_settlement_report(tenant_id=None, date_from=None, date_to=None):
+        """Return detailed settlement-ready fees."""
+        q = AzadPlatformFee.query.filter(
+            AzadPlatformFee.status.in_(['accrued', 'approved'])
+        )
+        if tenant_id:
+            q = q.filter(AzadPlatformFee.tenant_id == tenant_id)
+        if date_from:
+            q = q.filter(AzadPlatformFee.created_at >= date_from)
+        if date_to:
+            q = q.filter(AzadPlatformFee.created_at <= date_to)
+        q = q.order_by(AzadPlatformFee.created_at.desc())
+        items = q.all()
+        total = sum((Decimal(str(f.fee_amount_aed or 0)) for f in items), Decimal('0'))
+        return {
+            'items': items,
+            'total_fee_aed': total.quantize(Decimal('0.001'), rounding=ROUND_HALF_UP),
+            'count': len(items),
+        }
+
+    @staticmethod
+    def approve_settlement(tenant_ids, settlement_date=None, payment_method='bank'):
+        """Approve accrued fees for settlement and post GL entry (accounting recognition only).
+        No actual bank transfer — this records the tenant's liability payment to the platform.
+        """
+        from datetime import datetime, timezone
+        settlement_date = settlement_date or datetime.now(timezone.utc)
+        if isinstance(tenant_ids, int):
+            tenant_ids = [tenant_ids]
+        results = []
+        for tid in tenant_ids:
+            fees = AzadPlatformFee.query.filter_by(tenant_id=tid, status='accrued', gl_posted=True).all()
+            if not fees:
+                continue
+            total = sum(Decimal(str(f.fee_amount_aed or 0)) for f in fees)
+            if total <= Decimal('0'):
+                continue
+            lines = [
+                {
+                    'account': GL_ACCOUNTS['azad_platform_payable'],
+                    'concept_code': 'AZAD_PLATFORM_PAYABLE',
+                    'debit': total,
+                    'description': f'تسوية رسوم منصة أزاد — {len(fees)} سجل',
+                },
+                {
+                    'account': GL_ACCOUNTS[payment_method],
+                    'concept_code': 'BANK' if payment_method == 'bank' else 'CASH',
+                    'credit': total,
+                    'description': f'دفع رسوم منصة أزاد — {total} AED',
+                },
+            ]
+            post_or_fail(
+                lines,
+                description=f'تسوية رسوم منصة أزاد — Tenant {tid}',
+                reference_type=GLRef.AZAD_PLATFORM_FEE,
+                reference_id=fees[0].id,
+                date=settlement_date,
+                exchange_rate=1.0,
+                tenant_id=tid,
+            )
+            for fee in fees:
+                fee.status = 'approved'
+            db.session.commit()
+            results.append({
+                'tenant_id': tid,
+                'fee_count': len(fees),
+                'total_aed': total.quantize(Decimal('0.001'), rounding=ROUND_HALF_UP),
+            })
+            current_app.logger.info('Platform fee settlement approved: tenant=%s count=%s total=%s', tid, len(fees), total)
+        return results

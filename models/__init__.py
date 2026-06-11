@@ -66,6 +66,7 @@ from .warranty_claim import WarrantyClaim
 from .shipment import Shipment
 from .partner_profit_distribution import PartnerProfitDistribution
 from .partner_transaction import PartnerTransaction
+from .pos_session import PosSession
 __all__ = [
     'User', 'Role', 'Permission',
     'Customer',
@@ -132,4 +133,5 @@ __all__ = [
     'WarrantyClaim',
     'Shipment',
     'JournalEntryAudit',
+    'PosSession',
 ]
