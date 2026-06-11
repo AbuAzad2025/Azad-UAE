@@ -1,253 +1,127 @@
-# Azadexa Operations Runbook
+# Azadexa System Operating Model
 
-This runbook provides operational guidance for **Azadexa**, the proprietary multi-tenant ERP and commerce platform by **AZAD Intelligent Systems**.
+This document describes how **Azadexa** behaves as an internal business system. It is not a deployment guide.
 
-Use it for local development, staging checks, production deployment, backup planning, and incident handling.
-
----
-
-## Environment types
-
-| Environment | Purpose | Data rules |
-|------------|---------|------------|
-| Local development | Fast development and smoke testing | Use fake or disposable data |
-| Staging | Release validation and production-like testing | Use sanitized copies only |
-| Production | Real tenant and platform operations | Protect secrets, backups, and customer data |
-
-Do not run destructive tests or data-generation scripts directly against production.
+Azadexa is a multi-tenant ERP, accounting, inventory, and commerce platform. Its operating model is built around tenant ownership, branch visibility, financial correctness, stock traceability, tenant storefronts, and platform-owner boundaries.
 
 ---
 
-## Local setup
+## Operating scopes
 
-```bash
-python -m venv .venv
-.venv\Scripts\activate        # Windows
-# source .venv/bin/activate    # Linux/macOS
-pip install -r requirements.txt
-cp env.example .env
-python -m flask db upgrade
-python app.py
+Every feature belongs to one of these scopes:
+
+| Scope | Meaning | Examples |
+|------|---------|----------|
+| Tenant ERP scope | Normal company operations owned by one tenant | sales, purchases, customers, suppliers, warehouses, payments, ledger |
+| Branch scope | Operational visibility inside a tenant branch | branch sales, branch reports, warehouse access |
+| Tenant store scope | Public commerce for a specific tenant | store catalog, cart, checkout, store orders |
+| Platform-owner scope | AZAD/platform-level control | packages, donations, payment vault, tenant administration, owner panel |
+| Public scope | Anonymous pages with limited safe behavior | landing pages, package pages, public store catalog |
+
+A change is incomplete until its scope is known.
+
+---
+
+## Core operating loop
+
+A normal tenant business workflow follows this pattern:
+
+```text
+user action
+  -> permission check
+  -> tenant and branch resolution
+  -> document creation or update
+  -> stock effect when applicable
+  -> GL/accounting effect when applicable
+  -> balance/status recalculation
+  -> report visibility
 ```
 
-Local development can use the Flask development server for smoke testing only.
+This applies to sales, purchases, payments, returns, stock adjustments, cheque state changes, and accounting operations.
 
 ---
 
-## Production setup summary
+## Tenant and branch behavior
 
-Production should use:
+Authenticated company users are locked to their own `user.tenant_id`. Platform-owner users may work with a selected active tenant context.
 
-- Python 3.11 virtual environment;
-- PostgreSQL database;
-- WSGI application entrypoint;
-- HTTPS;
-- secure `.env` stored only on the server;
-- static file mapping;
-- scheduled backups;
-- separate staging validation before risky changes.
+Tenant-owned reads are protected through ORM-level scoping and explicit tenant helpers. Public storefront routes are special: they resolve tenant context from the store slug/domain and must filter by that store tenant.
 
-The expected WSGI pattern is:
-
-```python
-from app import create_app
-application = create_app()
-```
+Branch scope is separate from tenant scope. A branch-aware operation should preserve tenant id, branch id, warehouse id where relevant, user permissions, report branch visibility, and GL line branch dimensions when accounting is posted.
 
 ---
 
-## Required production checks
+## Sales behavior
 
-Before go-live or after a major deployment:
+A sale may affect customer balance, payment status, pending cheque state, return impact, warehouse stock, serial numbers, warranty dates, partner commissions, GL revenue, VAT output, COGS, inventory asset posting, and tenant store order state.
 
-- Confirm `.env` exists only on the server.
-- Confirm `DEBUG=false`.
-- Confirm `SKIP_SYSTEM_INTEGRITY` is not enabled.
-- Confirm PostgreSQL connection works.
-- Run database migrations.
-- Reload WSGI app.
-- Check login.
-- Check owner login.
-- Check one tenant admin login.
-- Check tenant isolation with at least two tenants.
-- Check sales, purchases, inventory, and customer flows.
-- Check accounting/ledger posting.
-- Check tenant store behavior if enabled.
-- Check public donation/package pages if enabled.
-- Check payment webhook URL configuration.
-- Check backups.
+Deferred online orders should not be treated the same as fulfilled POS/internal sales until fulfillment is confirmed.
 
 ---
 
-## Safe deployment flow
+## Purchase behavior
 
-1. Commit and push code.
-2. Pull code on staging.
-3. Install/update dependencies.
-4. Run migrations on staging.
-5. Run smoke tests.
-6. Validate tenant isolation.
-7. Validate accounting and inventory workflows.
-8. Validate payment flows using sandbox/test mode where possible.
-9. Backup production database.
-10. Pull code on production.
-11. Install/update dependencies.
-12. Run migrations.
-13. Reload WSGI app.
-14. Verify critical workflows.
-15. Monitor logs.
+A purchase may affect supplier balance, warehouse stock, product cost, landed cost allocation, MWAC/WAC records, VAT input, payable accounts, stock valuation, and GL posting.
+
+Purchase totals include subtotal, discount, tax, and landed-cost components such as freight, insurance, customs duty, and other landed costs.
 
 ---
 
-## Backup policy
+## Inventory and costing behavior
 
-Backups should include:
+Inventory is movement-based. Stock operations should create movement records and update warehouse-level quantities.
 
-- PostgreSQL database dump;
-- uploaded files if used;
-- environment configuration inventory without revealing secret values;
-- current Git commit SHA;
-- migration head;
-- deployment timestamp.
-
-Backups must not be stored in the public web root and must not be committed to Git.
-
-Example PostgreSQL backup pattern:
-
-```bash
-pg_dump "$DATABASE_URL" > backup_azadexa_YYYYMMDD_HHMM.sql
-```
-
-Use server-specific secure storage for real backups.
+When MWAC/WAC is enabled, stock valuation is warehouse-level through `ProductWarehouseCost` and `ProductCostHistory`. Landed unit cost from purchase lines feeds product cost and valuation behavior.
 
 ---
 
-## Restore policy
+## Accounting behavior
 
-Before restoring:
+GL posting is a central system behavior. Financial documents should create balanced journal entries when they have accounting impact.
 
-- Confirm the target environment.
-- Confirm whether this is staging or production.
-- Stop or isolate write traffic if needed.
-- Take a backup of the current state first.
-- Restore database.
-- Run migrations if required.
-- Verify tenant records.
-- Verify owner access.
-- Verify accounting and inventory samples.
-- Verify payment records are not duplicated.
-
-Never test restore procedures first on production.
+The system supports tenant chart of accounts, account tree validation, journal entries and lines, period locking, reversing entries, dynamic concept-to-account mapping, VAT reporting, liquidity account resolution, and manual/automatic entries.
 
 ---
 
-## Migration checklist
+## Payment and cheque behavior
 
-Before running migrations:
+The system distinguishes incoming and outgoing payments, customer and supplier flows, sale-linked and purchase-linked payments, and confirmed versus pending/rejected cheque states.
 
-- Know the current migration head.
-- Know the target migration head.
-- Backup the database.
-- Read migration contents if it touches financial, tenant, user, payment, or inventory tables.
-- Run on staging first.
-- Confirm app starts after migration.
-- Confirm tenant isolation still works.
+Pending cheques should not reduce confirmed balances until cleared. Rejected cheques must trigger recalculation of the affected sale/payment state.
 
 ---
 
-## Incident handling
+## Tenant storefront behavior
 
-For a production incident:
+Each tenant can have one tenant store. A tenant store has one tenant id, one online warehouse, slug/subdomain/custom-domain identity, enabled state, platform hard-lock option, public catalog, tenant cart, checkout, coupons, loyalty, variants, reviews, saved accounts, and notifications where enabled.
 
-1. Preserve logs and current commit SHA.
-2. Identify affected module: auth, tenant, accounting, inventory, payment, UI, deployment, or database.
-3. Stop risky actions if data corruption is possible.
-4. Take a backup before applying fixes.
-5. Reproduce on staging when possible.
-6. Patch with minimal targeted changes.
-7. Verify affected workflow.
-8. Document root cause and prevention.
+A public store visitor is not a tenant admin. Store routes derive tenant context from store identity, not from the visitor session.
 
 ---
 
-## Tenant leak response
+## Platform-owner behavior
 
-If a cross-tenant data leak is suspected:
+Platform-owner workflows are separate from tenant business workflows. They include the owner panel, platform payment vault, public donations, package purchases, platform fee concepts, tenant administration, and global controls such as store enablement.
 
-1. Treat it as high severity.
-2. Identify exact route/API/template/query.
-3. Disable or restrict the affected endpoint if needed.
-4. Preserve logs.
-5. Confirm affected tenants and data types.
-6. Patch tenant filters and route permissions.
-7. Add or update a regression test.
-8. Review similar routes for the same pattern.
+Public donations and package purchases are platform-owner revenue flows unless a documented business rule says otherwise.
 
 ---
 
-## Accounting incident response
+## Control surfaces
 
-If balances or ledger entries look wrong:
+Azadexa also includes AI routes, REST/API endpoints, GraphQL, analytics API, monitoring, WhatsApp integration, gamification, and API documentation.
 
-1. Stop further automated posting on the affected flow if possible.
-2. Identify source documents.
-3. Compare document totals, ledger entries, payments, returns, and inventory effects.
-4. Avoid manual database edits unless a documented correction script is prepared.
-5. Apply corrections with an audit trail.
-6. Add regression coverage for the broken calculation.
+These surfaces must follow the same tenant, branch, store, owner, and public-scope rules as the rest of the system.
 
 ---
 
-## Inventory incident response
+## Documentation maintenance rule
 
-If stock quantities look wrong:
+When system behavior changes, update the matching system document:
 
-1. Identify product, warehouse, tenant, and branch.
-2. Review movement records.
-3. Review source documents: sales, purchases, returns, adjustments.
-4. Avoid direct quantity edits unless documented as an administrative correction.
-5. Correct via movement/adjustment workflows where possible.
-6. Verify accounting side effects if inventory value is posted.
-
----
-
-## Payment incident response
-
-If payment state is wrong:
-
-1. Identify provider transaction id and internal order/payment id.
-2. Confirm whether it is tenant revenue or platform-owner revenue.
-3. Check webhook logs and provider status.
-4. Avoid double-crediting tenant or platform balances.
-5. Reconcile with accounting entries.
-6. Mask sensitive values in all reports and logs.
-
----
-
-## Post-deployment smoke checklist
-
-- Home/login loads.
-- Owner login works.
-- Tenant login works.
-- Dashboard loads.
-- Sales list and create flow load.
-- Purchase flow loads.
-- Product and stock screens load.
-- Ledger/accounting pages load.
-- Storefront route loads if enabled.
-- Public package/donation page loads if enabled.
-- No server error in logs.
-- Static assets load correctly.
-- Timezone/date formatting is acceptable.
-
----
-
-## Documentation update rule
-
-When core behavior changes, update the relevant docs:
-
-- product/brand change → `AZADEXA_BRAND.md`;
-- module/business scope change → `PROJECT_OVERVIEW.md`;
-- route/service/data-flow change → `ARCHITECTURE.md`;
-- tenant/security/payment change → `SECURITY_AND_TENANCY.md`;
-- deployment/backup/process change → `OPERATIONS_RUNBOOK.md`.
+- module/domain change → `SYSTEM_MODULES.md`;
+- business scope change → `PROJECT_OVERVIEW.md`;
+- tenant/security boundary → `SECURITY_AND_TENANCY.md`;
+- accounting/stock/balance rule → `ACCOUNTING_AND_INVENTORY_RULES.md`;
+- architecture/service boundary → `ARCHITECTURE.md`;
+- product naming/identity → `AZADEXA_BRAND.md`.
