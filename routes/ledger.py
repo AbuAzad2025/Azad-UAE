@@ -202,9 +202,8 @@ def income_statement():
     date_to = request.args.get('date_to', type=str)
     branch_id = _effective_branch_id()
     
-    revenue_accounts = scope_gl_accounts(GLAccount.query.filter(GLAccount.code.like('4%'))).all()
-    expense_accounts = scope_gl_accounts(GLAccount.query.filter(GLAccount.code.like('5%'))).all()
-    expense_accounts += scope_gl_accounts(GLAccount.query.filter(GLAccount.code.like('6%'))).all()
+    revenue_accounts = scope_gl_accounts(GLAccount.query.filter(GLAccount.type == 'revenue')).all()
+    expense_accounts = scope_gl_accounts(GLAccount.query.filter(GLAccount.type == 'expense')).all()
     
     revenues = {}
     total_revenue = Decimal('0')
@@ -283,9 +282,9 @@ def balance_sheet():
     liabilities = {}
     equity = {}
     
-    asset_accounts = scope_gl_accounts(GLAccount.query.filter(GLAccount.code.like('1%'))).all()
-    liability_accounts = scope_gl_accounts(GLAccount.query.filter(GLAccount.code.like('2%'))).all()
-    equity_accounts = scope_gl_accounts(GLAccount.query.filter(GLAccount.code.like('3%'))).all()
+    asset_accounts = scope_gl_accounts(GLAccount.query.filter(GLAccount.type == 'asset')).all()
+    liability_accounts = scope_gl_accounts(GLAccount.query.filter(GLAccount.type == 'liability')).all()
+    equity_accounts = scope_gl_accounts(GLAccount.query.filter(GLAccount.type == 'equity')).all()
     
     def _apply_entry_filters(q):
         if date_to:
@@ -656,14 +655,17 @@ def aging_analysis():
         if analysis_type == 'receivables':
             report = AgingAnalysisService.get_receivables_aging(as_of_date, branch_id=branch_id)
             title = 'تحليل عمر الذمم المدينة'
+            gl_verify = AgingAnalysisService.verify_receivables_with_gl(as_of_date, branch_id=branch_id)
         else:
             report = AgingAnalysisService.get_payables_aging(as_of_date, branch_id=branch_id)
             title = 'تحليل عمر الذمم الدائنة'
+            gl_verify = AgingAnalysisService.verify_payables_with_gl(as_of_date, branch_id=branch_id)
         
         return render_template('ledger/aging_analysis.html',
                              report=report,
                              analysis_type=analysis_type,
                              title=title,
+                             gl_verify=gl_verify,
                              as_of_date=as_of_date or date.today().strftime('%Y-%m-%d'),
                              branches=get_accessible_branches(current_user),
                              selected_branch=branch_id)

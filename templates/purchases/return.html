@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - مرتجع مشتريات{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row mb-3">
+    <div class="col-12">
+      <h2><i class="fas fa-undo-alt mr-2"></i> مرتجع مشتريات — فاتورة #{{ purchase.purchase_number }}</h2>
+      <p class="text-muted">المورد: {{ purchase.supplier.name if purchase.supplier else '—' }}</p>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-8">
+      <div class="card card-outline card-info">
+        <div class="card-header"><h3 class="card-title">بنود الفاتورة</h3></div>
+        <form method="POST" id="returnForm">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="card-body table-responsive p-0">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th style="width:40px"><input type="checkbox" id="selectAll"></th>
+                  <th>المنتج</th>
+                  <th>الكمية المشتراة</th>
+                  <th>الكمية المرتجعة</th>
+                  <th>سعر الوحدة</th>
+                  <th>الإجمالي</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for line in purchase.lines %}
+                <tr>
+                  <td><input type="checkbox" name="line_ids" value="{{ line.id }}" class="line-check" data-qty="{{ line.quantity }}" data-cost="{{ line.unit_cost }}"></td>
+                  <td>{{ line.product.name if line.product else '—' }}</td>
+                  <td>{{ line.quantity }}</td>
+                  <td>
+                    <input type="number" name="return_qty_{{ line.id }}" class="form-control form-control-sm return-qty" min="0" step="1" max="{{ line.quantity }}" value="{{ line.quantity }}" disabled style="width:90px">
+                  </td>
+                  <td>{{ line.unit_cost }}</td>
+                  <td class="line-total">{{ line.line_total }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <div class="card-footer">
+            <div class="form-group">
+              <label>سبب الإرجاع</label>
+              <input type="text" name="reason" class="form-control" placeholder="اختياري">
+            </div>
+            <div class="form-group">
+              <label>ملاحظات</label>
+              <textarea name="notes" class="form-control" rows="2" placeholder="اختياري"></textarea>
+            </div>
+            <button type="submit" class="btn btn-info" id="submitBtn">
+              <i class="fas fa-check mr-2"></i>تأكيد المرتجع
+            </button>
+            <a href="{{ url_for('purchases.view', id=purchase.id) }}" class="btn btn-secondary">إلغاء</a>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card card-outline card-secondary">
+        <div class="card-header"><h3 class="card-title">المرتجعات السابقة</h3></div>
+        <div class="card-body p-0">
+          {% if returns %}
+          <ul class="list-group list-group-flush">
+            {% for r in returns %}
+            <li class="list-group-item d-flex justify-content-between">
+              <span>{{ r.return_number }}</span>
+              <span class="text-muted small">{{ r.created_at.strftime('%Y-%m-%d') if r.created_at else '' }}</span>
+            </li>
+            {% endfor %}
+          </ul>
+          {% else %}
+          <p class="text-muted p-3 mb-0">لا توجد مرتجعات سابقة لهذه الفاتورة.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('selectAll').addEventListener('change', function() {
+  document.querySelectorAll('.line-check').forEach(cb => {
+    cb.checked = this.checked;
+    cb.dispatchEvent(new Event('change'));
+  });
+});
+document.querySelectorAll('.line-check').forEach(cb => {
+  cb.addEventListener('change', function() {
+    const qtyInput = this.closest('tr').querySelector('.return-qty');
+    qtyInput.disabled = !this.checked;
+    if (!this.checked) qtyInput.value = 0;
+  });
+});
+document.getElementById('returnForm').addEventListener('submit', function(e) {
+  const checked = document.querySelectorAll('.line-check:checked');
+  if (checked.length === 0) {
+    e.preventDefault();
+    alert('يرجى اختيار منتج واحد على الأقل للإرجاع');
+    return;
+  }
+  if (!confirm('تأكيد إنشاء مرتجع المشتريات؟')) {
+    e.preventDefault();
+  }
+});
+</script>
+{% endblock %}

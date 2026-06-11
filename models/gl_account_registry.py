@@ -82,6 +82,8 @@ BASE_ACCOUNTS = [
     GLAccountTemplate('2160', 'Loyalty Points Liability', 'التزام نقاط الولاء', 'liability', 2, False, '2100'),
     GLAccountTemplate('2170', 'Customer Deposits', 'عربون العملاء', 'liability', 2, False, '2100'),
     GLAccountTemplate('2180', 'Azad Platform Payable', 'ذمم دائنة - منصة أزاد', 'liability', 2, False, '2100'),
+    GLAccountTemplate('2181', 'Azad Platform Fee Accrued', 'رسوم منصة متراكمة', 'liability', 3, False, '2180'),
+    GLAccountTemplate('2182', 'Azad Platform Fee Paid', 'رسوم منصة مدفوعة', 'liability', 3, False, '2180'),
     GLAccountTemplate('2200', 'Non-Current Liabilities', 'خصوم غير متداولة', 'liability', 1, True, '2000'),
     GLAccountTemplate('3000', 'Equity', 'حقوق الملكية', 'equity', 0, True),
     GLAccountTemplate('3100', 'Capital', 'رأس المال', 'equity', 1, False, '3000'),
@@ -357,9 +359,13 @@ GL_MODULE_DEFINITIONS = {
         'azad_platform', False, 'enable_ecommerce',
         accounts=[
             GLAccountTemplate('2180', 'Azad Platform Payable', 'ذمم دائنة - منصة أزاد', 'liability', 2, False, '2100'),
+            GLAccountTemplate('2181', 'Azad Platform Fee Accrued', 'رسوم منصة متراكمة', 'liability', 3, False, '2180'),
+            GLAccountTemplate('2182', 'Azad Platform Fee Paid', 'رسوم منصة مدفوعة', 'liability', 3, False, '2180'),
         ],
         mappings=[
             GLConceptMappingTemplate('AZAD_PLATFORM_PAYABLE', '2180', 'azad_platform'),
+            GLConceptMappingTemplate('AZAD_PLATFORM_FEE_ACCRUED', '2181', 'azad_platform'),
+            GLConceptMappingTemplate('AZAD_PLATFORM_FEE_PAID', '2182', 'azad_platform'),
             GLConceptMappingTemplate('AZAD_SUBSCRIPTION_EXPENSE', '6410', 'azad_platform'),
             GLConceptMappingTemplate('AZAD_SUBSCRIPTION_REVENUE', '4700', 'azad_platform'),
         ],

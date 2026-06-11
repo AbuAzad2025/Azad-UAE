@@ -6,8 +6,9 @@ from decimal import Decimal
 from datetime import datetime, date, timedelta
 from sqlalchemy import func, and_
 from extensions import db
-from models import Customer, Supplier, Sale, Purchase, Payment
+from models import Customer, Supplier, Sale, Purchase, Payment, GLJournalLine, GLJournalEntry, GLAccount
 from utils.constants import SALE_PAYMENT_STATUSES
+from utils.gl_reference_types import GLRef
 
 
 class AgingAnalysisService:
@@ -272,5 +273,89 @@ class AgingAnalysisService:
             'totals': totals_float,
             'as_of_date': as_of_date,
             'supplier_count': len(results)
+        }
+
+    @staticmethod
+    def _resolve_aging_account(concept_code: str, tenant_id=None, branch_id=None):
+        """إيجاد حساب GL للمقارنة."""
+        from services.gl_service import GL_ACCOUNTS
+        code = GL_ACCOUNTS.get('receivable' if 'AR' in concept_code or 'receivable' in concept_code else 'payable', '1130')
+        if 'payable' in concept_code or 'AP' in concept_code:
+            code = GL_ACCOUNTS.get('payable', '2110')
+        q = GLAccount.query.filter_by(code=code)
+        if tenant_id:
+            q = q.filter_by(tenant_id=int(tenant_id))
+        return q.first()
+
+    @staticmethod
+    def verify_receivables_with_gl(as_of_date=None, branch_id=None, tenant_id=None):
+        """مقارنة تحليل أعمال الذمم المدينة مع GL Accounts Receivable."""
+        tid = tenant_id
+        if not as_of_date:
+            as_of_date = date.today()
+        elif isinstance(as_of_date, str):
+            as_of_date = datetime.strptime(as_of_date, '%Y-%m-%d').date()
+
+        ar_report = AgingAnalysisService.get_receivables_aging(as_of_date, branch_id, tid)
+        aging_total = Decimal(str(ar_report['totals']['total']))
+
+        ar_acc = AgingAnalysisService._resolve_aging_account('AR', tid, branch_id)
+        gl_total = Decimal('0')
+        if ar_acc:
+            query = db.session.query(
+                func.coalesce(func.sum(GLJournalLine.debit), 0) - func.coalesce(func.sum(GLJournalLine.credit), 0)
+            ).join(GLJournalEntry).filter(
+                GLJournalLine.account_id == ar_acc.id,
+                GLJournalEntry.is_posted == True,
+            )
+            if tid:
+                query = query.filter(GLJournalEntry.tenant_id == int(tid))
+            if branch_id:
+                query = query.filter(GLJournalEntry.branch_id == branch_id)
+            if as_of_date:
+                query = query.filter(func.date(GLJournalEntry.entry_date) <= as_of_date)
+            gl_total = abs(Decimal(str(query.scalar() or 0)))
+
+        return {
+            'aging_total': float(aging_total),
+            'gl_total': float(gl_total),
+            'difference': float(aging_total - gl_total),
+            'in_balance': abs(aging_total - gl_total) < Decimal('0.01'),
+        }
+
+    @staticmethod
+    def verify_payables_with_gl(as_of_date=None, branch_id=None, tenant_id=None):
+        """مقارنة تحليل أعمار الموردين مع GL Accounts Payable."""
+        tid = tenant_id
+        if not as_of_date:
+            as_of_date = date.today()
+        elif isinstance(as_of_date, str):
+            as_of_date = datetime.strptime(as_of_date, '%Y-%m-%d').date()
+
+        ap_report = AgingAnalysisService.get_payables_aging(as_of_date, branch_id, tid)
+        aging_total = Decimal(str(ap_report['totals']['total']))
+
+        ap_acc = AgingAnalysisService._resolve_aging_account('AP', tid, branch_id)
+        gl_total = Decimal('0')
+        if ap_acc:
+            query = db.session.query(
+                func.coalesce(func.sum(GLJournalLine.credit), 0) - func.coalesce(func.sum(GLJournalLine.debit), 0)
+            ).join(GLJournalEntry).filter(
+                GLJournalLine.account_id == ap_acc.id,
+                GLJournalEntry.is_posted == True,
+            )
+            if tid:
+                query = query.filter(GLJournalEntry.tenant_id == int(tid))
+            if branch_id:
+                query = query.filter(GLJournalEntry.branch_id == branch_id)
+            if as_of_date:
+                query = query.filter(func.date(GLJournalEntry.entry_date) <= as_of_date)
+            gl_total = abs(Decimal(str(query.scalar() or 0)))
+
+        return {
+            'aging_total': float(aging_total),
+            'gl_total': float(gl_total),
+            'difference': float(aging_total - gl_total),
+            'in_balance': abs(aging_total - gl_total) < Decimal('0.01'),
         }
 

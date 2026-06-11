@@ -276,6 +276,30 @@ class TestStoreCouponService:
         from services.store_coupon_service import StoreCouponService
         assert StoreCouponService is not None
 
+    def test_create_coupon_rejects_both_percent_and_amount(self, app, db_session):
+        from services.store_coupon_service import StoreCouponService
+        with app.app_context():
+            with pytest.raises(ValueError, match='حدد نسبة أو مبلغ خصم، لا كلاهما'):
+                StoreCouponService.create_coupon(1, {'code': 'BOTH01', 'discount_percent': 10, 'discount_amount': 50})
+
+    def test_create_coupon_rejects_zero_percent(self, app, db_session):
+        from services.store_coupon_service import StoreCouponService
+        with app.app_context():
+            with pytest.raises(ValueError, match='نسبة الخصم يجب أن تكون بين 0.01 و 100'):
+                StoreCouponService.create_coupon(1, {'code': 'ZERO01', 'discount_percent': 0})
+
+    def test_create_coupon_rejects_negative_amount(self, app, db_session):
+        from services.store_coupon_service import StoreCouponService
+        with app.app_context():
+            with pytest.raises(ValueError, match='مبلغ الخصم يجب أن يكون أكبر من صفر'):
+                StoreCouponService.create_coupon(1, {'code': 'NEG01', 'discount_amount': -10})
+
+    def test_create_coupon_rejects_over_100_percent(self, app, db_session):
+        from services.store_coupon_service import StoreCouponService
+        with app.app_context():
+            with pytest.raises(ValueError, match='نسبة الخصم يجب أن تكون بين 0.01 و 100'):
+                StoreCouponService.create_coupon(1, {'code': 'OVER01', 'discount_percent': 101})
+
 
 class TestStoreOrderService:
     """Test store order service."""

@@ -59,8 +59,20 @@ class StoreCouponService:
 
         pct = data.get('discount_percent')
         amt = data.get('discount_amount')
-        if not pct and not amt:
+        pct_provided = pct is not None
+        amt_provided = amt is not None
+        if pct_provided and amt_provided:
+            raise ValueError('حدد نسبة أو مبلغ خصم، لا كلاهما.')
+        if not pct_provided and not amt_provided:
             raise ValueError('حدد نسبة أو مبلغ خصم.')
+        if pct_provided:
+            pct_decimal = Decimal(str(pct))
+            if pct_decimal <= Decimal('0') or pct_decimal > Decimal('100'):
+                raise ValueError('نسبة الخصم يجب أن تكون بين 0.01 و 100.')
+        if amt_provided:
+            amt_decimal = Decimal(str(amt))
+            if amt_decimal <= Decimal('0'):
+                raise ValueError('مبلغ الخصم يجب أن يكون أكبر من صفر.')
 
         coupon = StoreCoupon(
             tenant_id=int(tenant_id),

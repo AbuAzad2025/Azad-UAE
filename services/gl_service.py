@@ -58,6 +58,8 @@ GL_ACCOUNTS = {
     'bank_charges': '6260',
     'misc_expense': '6500',
     'azad_platform_payable': '2180',
+    'azad_platform_fee_accrued': '2181',
+    'azad_platform_fee_paid': '2182',
     'azad_subscription_expense': '6410',
     'azad_subscription_revenue': '4700',
 }
@@ -90,6 +92,8 @@ GL_ACCOUNT_CONCEPTS = {
     'bank_charges': 'BANK_FEES',
     'misc_expense': 'MISC_EXPENSE',
     'azad_platform_payable': 'AZAD_PLATFORM_PAYABLE',
+    'azad_platform_fee_accrued': 'AZAD_PLATFORM_FEE_ACCRUED',
+    'azad_platform_fee_paid': 'AZAD_PLATFORM_FEE_PAID',
     'azad_subscription_expense': 'AZAD_SUBSCRIPTION_EXPENSE',
     'azad_subscription_revenue': 'AZAD_SUBSCRIPTION_REVENUE',
 }
@@ -219,7 +223,7 @@ class GLService:
 
 
     @staticmethod
-    def create_journal_entry(date, description, lines, user_id=None, branch_id=None, reference_type=None, reference_id=None, tenant_id=None, currency=None, exchange_rate=None):
+    def create_journal_entry(date, description, lines, user_id=None, branch_id=None, reference_type=None, reference_id=None, tenant_id=None, currency=None, exchange_rate=None, entry_type='auto'):
         """Standardized GL Entry Creation"""
         
         tenant_id = tenant_id or gl_helpers.resolve_tenant_id(branch_id=branch_id, user_id=user_id)
@@ -246,7 +250,7 @@ class GLService:
             description=description,
             created_by=user_id,
             branch_id=branch_id,
-            entry_type='auto',
+            entry_type=entry_type,
             is_posted=True,
             currency=currency,
             exchange_rate=exchange_rate,
@@ -331,7 +335,7 @@ class GLService:
 
     
     @staticmethod
-    def post_entry(lines, description, reference_type=None, reference_id=None, date=None, currency=None, exchange_rate=1.0, branch_id=None, user_id=None, tenant_id=None):
+    def post_entry(lines, description, reference_type=None, reference_id=None, date=None, currency=None, exchange_rate=1.0, branch_id=None, user_id=None, tenant_id=None, entry_type='auto'):
         """
         Wrapper for create_journal_entry: converts amounts to AED and creates balanced entry.
         """
@@ -372,7 +376,8 @@ class GLService:
             reference_id=reference_id,
             tenant_id=tenant_id,
             currency=currency,
-            exchange_rate=rate
+            exchange_rate=rate,
+            entry_type=entry_type,
         )
         return entry
     
@@ -555,11 +560,8 @@ class GLService:
     
     @staticmethod
     def create_manual_entry(description, lines, entry_date=None, notes=None, created_by=None, currency=None, exchange_rate=1.0, branch_id=None):
-        """إنشاء قيد يدوي"""
-        if not currency:
-            currency = get_system_default_currency()
+        """إنشاء قيد يدوي — يستخدم post_entry بعد التحقق من الحسابات."""
         from flask_login import current_user
-        from utils.field_validators import validate_gl_line_sides
 
         entry_date = entry_date or datetime.now(timezone.utc)
 
@@ -576,36 +578,6 @@ class GLService:
             current_user.id if hasattr(current_user, 'is_authenticated') and current_user.is_authenticated else None
         )
         tenant_id = gl_helpers.resolve_tenant_id(branch_id=branch_id, user_id=user_id)
-        gl_helpers.assert_period_open(entry_date, tenant_id)
-        entry_number = gl_helpers.next_entry_number(tenant_id, entry_date)
-
-        total_debit = Decimal('0')
-        total_credit = Decimal('0')
-
-        for line in lines:
-            total_debit += Decimal(str(line.get('debit', 0) or 0))
-            total_credit += Decimal(str(line.get('credit', 0) or 0))
-
-        if total_debit != total_credit:
-            raise ValueError(f'القيد غير متوازن: مدين={total_debit}, دائن={total_credit}')
-
-        entry = GLJournalEntry(
-            tenant_id=tenant_id,
-            entry_number=entry_number,
-            entry_date=entry_date,
-            description=description,
-            entry_type='manual',
-            branch_id=branch_id,
-            currency=currency,
-            exchange_rate=exchange_rate,
-            total_debit=total_debit,
-            total_credit=total_credit,
-            notes=notes,
-            created_by=user_id,
-            is_posted=True
-        )
-        db.session.add(entry)
-        db.session.flush()
 
         for line_data in lines:
             account_code = line_data.get('account_code') or line_data.get('account')
@@ -615,44 +587,25 @@ class GLService:
                 account = gl_helpers.get_account(account_code, tenant_id)
             if not account:
                 raise ValueError(f'الحساب {account_code} غير موجود')
-
             if account.is_header:
                 raise ValueError(f'الحساب {account.full_name} هو حساب رئيسي ولا يمكن إضافة قيود عليه')
             if not getattr(account, 'is_active', True):
                 raise ValueError(f'الحساب {account.full_name} غير نشط ولا يمكن إضافة قيود عليه')
 
-            debit = Decimal(str(line_data.get('debit', 0) or 0))
-            credit = Decimal(str(line_data.get('credit', 0) or 0))
-            validate_gl_line_sides(debit, credit)
-
-            exchange_rate_decimal = Decimal(str(exchange_rate))
-            debit_aed = (debit * exchange_rate_decimal).quantize(Decimal('0.001'), rounding=ROUND_HALF_UP)
-            credit_aed = (credit * exchange_rate_decimal).quantize(Decimal('0.001'), rounding=ROUND_HALF_UP)
-
-            line = GLJournalLine(
-                tenant_id=tenant_id,
-                entry_id=entry.id,
-                account_id=account.id,
-                description=line_data.get('description', ''),
-                debit=debit,
-                credit=credit,
-                amount=debit - credit,
-                amount_aed=debit_aed - credit_aed,
-                # الأبعاد المالية
-                branch_id=line_data.get('branch_id'),
-                warehouse_id=line_data.get('warehouse_id'),
-                cost_center_id=line_data.get('cost_center_id'),
-                profit_center_id=line_data.get('profit_center_id'),
-                partner_id=line_data.get('partner_id'),
-            )
-            db.session.add(line)
-
-        try:
+        entry = GLService.post_entry(
+            lines,
+            description=description,
+            date=entry_date,
+            currency=currency,
+            exchange_rate=exchange_rate,
+            branch_id=branch_id,
+            user_id=user_id,
+            tenant_id=tenant_id,
+            entry_type='manual',
+        )
+        if notes:
+            entry.notes = notes
             db.session.commit()
-        except Exception:
-            db.session.rollback()
-            raise
-
         return entry
     
     @staticmethod
@@ -1039,5 +992,51 @@ class GLService:
                 fallback_key='deferred_cheques',
             )
         return GLService.get_default_liquidity_account('cash', branch_id=branch_id, tenant_id=tenant_id)
+
+    @staticmethod
+    def reconciliation_check(tenant_id=None, branch_id=None):
+        """مقارنة أرصدة GL مع الأرصدة الدفترية — للكشف عن الانحرافات."""
+        from sqlalchemy import func
+        from decimal import Decimal
+
+        tenant_id = tenant_id or gl_helpers.resolve_tenant_id(branch_id=branch_id)
+
+        def _gl_balance(concept_code):
+            acc = GLService._resolve_journal_line_account(
+                {'concept_code': concept_code}, tenant_id, branch_id=branch_id,
+                ensure_core=False, missing_ok=True,
+            )
+            if not acc:
+                return Decimal('0')
+            q = db.session.query(
+                func.coalesce(func.sum(GLJournalLine.debit), 0) - func.coalesce(func.sum(GLJournalLine.credit), 0)
+            ).join(GLJournalEntry).filter(
+                GLJournalLine.account_id == acc.id,
+                GLJournalEntry.is_posted == True,
+            )
+            if tenant_id is not None:
+                q = q.filter(GLJournalEntry.tenant_id == int(tenant_id))
+            if branch_id:
+                q = q.filter(GLJournalEntry.branch_id == branch_id)
+            return Decimal(str(q.scalar() or 0))
+
+        gl_ar = abs(_gl_balance('AR'))
+        gl_ap = abs(_gl_balance('AP'))
+
+        from models import Customer, Supplier
+        customers = Customer.query.filter_by(is_active=True) if not tenant_id else Customer.query.filter_by(tenant_id=int(tenant_id), is_active=True)
+        total_customer_balance = sum(Decimal(str(c.balance or 0)) for c in customers.all())
+        suppliers = Supplier.query.filter_by(is_active=True) if not tenant_id else Supplier.query.filter_by(tenant_id=int(tenant_id), is_active=True)
+        total_supplier_balance = sum(Decimal(str(s.total_purchases_aed or 0) if hasattr(s, 'total_purchases_aed') else Decimal('0')) for s in suppliers.all())
+
+        return {
+            'tenant_id': tenant_id,
+            'ar_gl_balance': float(gl_ar),
+            'ar_subledger_balance': float(total_customer_balance),
+            'ar_difference': float(gl_ar - total_customer_balance),
+            'ap_gl_balance': float(gl_ap),
+            'ap_subledger_balance': float(total_supplier_balance),
+            'ap_difference': float(gl_ap - total_supplier_balance),
+        }
 
 

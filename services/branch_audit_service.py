@@ -46,10 +46,10 @@ def ensure_branch_liquidity_account(connection, branch, parent_code, liquidity_k
         text("""
             INSERT INTO gl_accounts (tenant_id, code, name, name_ar, parent_id, branch_id,
                 type, currency, is_active, is_header, level, liquidity_kind, is_default_liquidity,
-                created_at, updated_at)
+                is_reconcile, created_at, updated_at)
             VALUES (:tenant_id, :code, :name, :name_ar, :parent_id, :branch_id,
                 'asset', 'AED', TRUE, FALSE, 3, :liquidity_kind, TRUE,
-                CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                FALSE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
         """),
         params,
     )

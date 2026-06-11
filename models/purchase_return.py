@@ -16,7 +16,7 @@ class PurchaseReturn(db.Model):
 
     purchase_id = db.Column(db.Integer, db.ForeignKey('purchases.id'), nullable=False, index=True)
     supplier_id = db.Column(db.Integer, db.ForeignKey('suppliers.id'), nullable=False, index=True)
-    warehouse_id = db.Column(db.Integer, db.ForeignKey('warehouses.id'), nullable=True)
+    warehouse_id = db.Column(db.Integer, db.ForeignKey('warehouses.id'), nullable=True, index=True)
     branch_id = db.Column(db.Integer, db.ForeignKey('branches.id'), nullable=True, index=True)
 
     return_date = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)

@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app
 from flask_login import login_required, current_user
 from extensions import db, limiter, csrf
-from models import Purchase, PurchaseLine, Product, Supplier, Warehouse
+from models import Purchase, PurchaseLine, PurchaseReturn, PurchaseReturnLine, Product, Supplier, Warehouse
 from services.stock_service import StockService
 from services.currency_service import CurrencyService
 from services.gl_service import GLService
@@ -308,6 +308,48 @@ def cancel(id):
         flash(f'❌ حدث خطأ: {str(e)}', 'danger')
 
     return redirect(url_for('purchases.view', id=id))
+
+
+@purchases_bp.route('/<int:id>/return', methods=['GET', 'POST'])
+@login_required
+@permission_required('manage_purchases')
+def purchase_return(id):
+    """إنشاء مرتجع مشتريات"""
+    purchase = tenant_get_or_404(Purchase, id)
+    from utils.decorators import branch_scope_id
+    scoped_branch_id = branch_scope_id()
+    if scoped_branch_id is not None and purchase.branch_id != scoped_branch_id:
+        return render_template('errors/403.html'), 403
+
+    if purchase.status in ('draft', 'cancelled'):
+        flash('❌ لا يمكن عمل مرتجع لفاتورة شراء في حالة مسودة أو ملغاة', 'danger')
+        return redirect(url_for('purchases.view', id=id))
+
+    if request.method == 'POST':
+        lines_data = request.json.get('lines', []) if request.is_json else request.form.getlist('lines')
+        reason = request.form.get('reason', '')
+        notes = request.form.get('notes', '')
+
+        if not lines_data:
+            flash('❌ يجب تحديد منتج واحد على الأقل للإرجاع', 'danger')
+            return redirect(url_for('purchases.purchase_return', id=id))
+
+        try:
+            result = PurchaseService.create_purchase_return(
+                purchase, current_user, lines_data, reason=reason, notes=notes,
+            )
+            flash(f'✅ تم إنشاء مرتجع المشتريات رقم {result.return_number} بنجاح!', 'success')
+            return redirect(url_for('purchases.view', id=id))
+        except ValueError as e:
+            flash(f'❌ {str(e)}', 'danger')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'❌ حدث خطأ: {str(e)}', 'danger')
+            current_app.logger.exception('Purchase return error')
+
+    returns = PurchaseReturn.query.filter_by(purchase_id=purchase.id).order_by(PurchaseReturn.created_at.desc()).all()
+    return_lines = PurchaseReturnLine.query.filter(PurchaseReturnLine.return_id.in_([r.id for r in returns])).all() if returns else []
+    return render_template('purchases/return.html', purchase=purchase, returns=returns, return_lines=return_lines)
 
 
 # =====================================

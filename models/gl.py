@@ -19,6 +19,8 @@ class GLAccount(db.Model):
     parent_id = db.Column(db.Integer, db.ForeignKey('gl_accounts.id'), index=True)
     branch_id = db.Column(db.Integer, db.ForeignKey('branches.id'), nullable=True, index=True)
     type = db.Column(db.String(20), nullable=False, index=True)  # asset, liability, equity, revenue, expense
+    sub_type = db.Column(db.String(50), nullable=True, index=True)  # receivable, payable, cash, bank, inventory, fixed_asset, etc.
+    is_reconcile = db.Column(db.Boolean, default=False, nullable=False)  # هل الحساب قابل للتسوية
     currency = db.Column(db.String(3), default=context_aware_default_currency, nullable=False)  # TODO: use Config.DEFAULT_CURRENCY
     is_active = db.Column(db.Boolean, default=True, nullable=False, index=True)
     is_header = db.Column(db.Boolean, default=False)  # حساب رئيسي (لا يقبل قيود مباشرة)
@@ -59,6 +61,31 @@ class GLAccount(db.Model):
             'expense': 'مصروفات'
         }
         return types.get(self.type, self.type)
+
+    @property
+    def sub_type_ar(self):
+        """النوع الفرعي بالعربي"""
+        sub_types = {
+            'receivable': 'ذمم مدينة',
+            'payable': 'ذمم دائنة',
+            'cash': 'نقدية',
+            'bank': 'بنك',
+            'inventory': 'مخزون',
+            'fixed_asset': 'أصل ثابت',
+            'current_liability': 'خصم متداول',
+            'non_current_liability': 'خصم غير متداول',
+            'equity_share': 'حقوق ملكية',
+            'retained_earnings': 'أرباح مرحلة',
+            'revenue_operating': 'إيرادات تشغيلية',
+            'revenue_non_operating': 'إيرادات غير تشغيلية',
+            'cogs': 'تكلفة بضاعة',
+            'expense_operating': 'مصروف تشغيلي',
+            'expense_non_operating': 'مصروف غير تشغيلي',
+            'tax': 'ضريبة',
+            'depreciation': 'إهلاك',
+            'vat': 'ضريبة قيمة مضافة',
+        }
+        return sub_types.get(self.sub_type, self.sub_type or '')
     
     def get_balance(self, _depth=0, _visited=None):
         from sqlalchemy import func

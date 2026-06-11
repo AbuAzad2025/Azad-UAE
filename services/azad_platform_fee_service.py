@@ -14,9 +14,6 @@ from utils.gl_reference_types import GLRef
 
 
 class AzadPlatformFeeService:
-    DEFAULT_RATE = Decimal('0.01')
-    DEFAULT_RATE_PERCENT = Decimal('1.00')
-
     @staticmethod
     def _get_rate(tenant_id=None):
         """Read platform fee rate from SystemSettings (owner-configurable)."""

@@ -1,7 +1,7 @@
 from decimal import Decimal, ROUND_HALF_UP
 from flask import current_app
 from extensions import db
-from models import Purchase, PurchaseLine, Product, Supplier, Warehouse
+from models import Purchase, PurchaseLine, PurchaseReturn, PurchaseReturnLine, Product, Supplier, Warehouse
 from services.stock_service import StockService
 from services.exchange_rate_service import ExchangeRateService
 from services.gl_service import GLService, GL_ACCOUNTS
@@ -354,7 +354,6 @@ class PurchaseService:
     @staticmethod
     def create_purchase_return(purchase, user, lines_data, reason=None, notes=None):
         """إنشاء مرتجع مشتريات - عكس المخزون والقيد المحاسبي ورصيد المورد."""
-        from models import PurchaseReturn, PurchaseReturnLine
         from models.product_serial import ProductSerial
         from decimal import Decimal as _D
 
