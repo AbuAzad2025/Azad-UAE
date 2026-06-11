@@ -48,28 +48,11 @@ def _customer_in_scope(customer_id):
 
 
 def _get_customer_balance(customer_id):
-    from models import Payment, Receipt
-
     scoped_branch_id = branch_scope_id()
     if scoped_branch_id is None:
         customer = tenant_get_or_404(Customer, customer_id)
         return PaymentService.get_customer_balance_aed(customer)
-
-    sales_total = db.session.query(db.func.sum(Sale.amount_aed)).filter(
-        Sale.customer_id == customer_id,
-        Sale.status == 'confirmed',
-        Sale.branch_id == scoped_branch_id,
-    ).scalar() or Decimal('0')
-    receipts_total = db.session.query(db.func.sum(Receipt.amount_aed)).filter(
-        Receipt.customer_id == customer_id,
-        Receipt.branch_id == scoped_branch_id,
-    ).scalar() or Decimal('0')
-    outgoing_total = db.session.query(db.func.sum(Payment.amount_aed)).filter(
-        Payment.customer_id == customer_id,
-        Payment.direction == 'outgoing',
-        Payment.branch_id == scoped_branch_id,
-    ).scalar() or Decimal('0')
-    return Decimal(str(sales_total or 0)) + Decimal(str(outgoing_total or 0)) - Decimal(str(receipts_total or 0))
+    return PaymentService.get_customer_balance_scoped(customer_id, branch_id=scoped_branch_id)
 
 
 def _get_unpaid_sales(customer_id):

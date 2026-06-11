@@ -46,6 +46,8 @@ GL_CONCEPT_TIER_DISCOUNT = 'TIER_DISCOUNT'
 GL_CONCEPT_CARD_PROCESSING_FEES = 'CARD_PROCESSING_FEES'
 GL_CONCEPT_PURCHASES = 'PURCHASES'
 GL_CONCEPT_LANDED_COST = 'LANDED_COST'
+GL_CONCEPT_FOOD_SALES_REVENUE = 'FOOD_SALES_REVENUE'
+GL_CONCEPT_BEVERAGE_SALES_REVENUE = 'BEVERAGE_SALES_REVENUE'
 GL_CONCEPT_POS_CASH_DIFFERENCE = 'POS_CASH_DIFFERENCE'
 
 GL_CONCEPT_CODES = (
@@ -97,6 +99,8 @@ GL_CONCEPT_CODES = (
     GL_CONCEPT_CARD_PROCESSING_FEES,
     GL_CONCEPT_PURCHASES,
     GL_CONCEPT_LANDED_COST,
+    GL_CONCEPT_FOOD_SALES_REVENUE,
+    GL_CONCEPT_BEVERAGE_SALES_REVENUE,
     GL_CONCEPT_POS_CASH_DIFFERENCE,
 )
 
@@ -149,6 +153,8 @@ GL_CONCEPT_REGISTRY = {
     GL_CONCEPT_CARD_PROCESSING_FEES: {'meaning': 'Card Processing Fees', 'legacy_code': '6260', 'required': False, 'normal_balance': 'debit'},
     GL_CONCEPT_PURCHASES: {'meaning': 'Purchases', 'legacy_code': None, 'required': True, 'normal_balance': 'debit'},
     GL_CONCEPT_LANDED_COST: {'meaning': 'Landed Cost Allocation', 'legacy_code': '5300', 'required': False, 'normal_balance': 'debit'},
+    GL_CONCEPT_FOOD_SALES_REVENUE: {'meaning': 'Food Sales Revenue', 'legacy_code': '4114', 'required': False, 'normal_balance': 'credit'},
+    GL_CONCEPT_BEVERAGE_SALES_REVENUE: {'meaning': 'Beverage Sales Revenue', 'legacy_code': '4115', 'required': False, 'normal_balance': 'credit'},
     GL_CONCEPT_POS_CASH_DIFFERENCE: {'meaning': 'POS Cash Difference', 'legacy_code': None, 'required': False, 'normal_balance': 'debit'},
 }
 

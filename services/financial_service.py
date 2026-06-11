@@ -20,15 +20,11 @@ class FinancialService:
             else:
                 month_end_date = month_date.replace(month=month_date.month+1, day=1) - timedelta(days=1)
             
-            revenue = db.session.query(func.sum(Sale.total_amount)).filter(
-                Sale.sale_date >= month_start_date,
-                Sale.sale_date <= month_end_date,
-                Sale.status == 'confirmed',
-                Sale.tenant_id == tenant_id,
+            revenue = FinancialService.sum_sales(
+                tenant_id, branch_id=branch_id,
+                date_from=month_start_date, date_to=month_end_date,
+                field=Sale.total_amount
             )
-            if branch_id is not None:
-                revenue = revenue.filter(Sale.branch_id == branch_id)
-            revenue = revenue.scalar() or 0
             
             expenses = db.session.query(func.sum(Expense.amount)).filter(
                 Expense.expense_date >= month_start_date,
@@ -70,47 +66,42 @@ class FinancialService:
         else:
             start_date = now.date().replace(day=1)
 
-        sales_data = db.session.query(
-            func.sum(Sale.amount_aed).label('total_sales'),
-            func.sum(Sale.paid_amount_aed).label('total_paid'),
-            func.count(Sale.id).label('count')
-        ).filter(
+        sales_total = FinancialService.sum_sales(tid, branch_id=scoped_branch_id, date_from=start_date)
+        sales_paid_q = db.session.query(func.sum(Sale.paid_amount_aed)).filter(
             func.date(Sale.sale_date) >= start_date,
             Sale.status == 'confirmed',
             Sale.tenant_id == tid,
         )
         if scoped_branch_id is not None:
-            sales_data = sales_data.filter(Sale.branch_id == scoped_branch_id)
-        sales_data = sales_data.first()
+            sales_paid_q = sales_paid_q.filter(Sale.branch_id == scoped_branch_id)
+        sales_paid = sales_paid_q.scalar() or 0
+        sales_count_q = db.session.query(func.count(Sale.id)).filter(
+            func.date(Sale.sale_date) >= start_date,
+            Sale.status == 'confirmed',
+            Sale.tenant_id == tid,
+        )
+        if scoped_branch_id is not None:
+            sales_count_q = sales_count_q.filter(Sale.branch_id == scoped_branch_id)
+        sales_count = sales_count_q.scalar() or 0
 
-        purchases_data = db.session.query(
-            func.sum(Purchase.amount_aed).label('total_purchases'),
-            func.count(Purchase.id).label('count')
-        ).filter(
+        purchases_total = FinancialService.sum_purchases(tid, branch_id=scoped_branch_id, date_from=start_date)
+        purchases_count_q = db.session.query(func.count(Purchase.id)).filter(
             func.date(Purchase.purchase_date) >= start_date,
             Purchase.status == 'confirmed',
             Purchase.tenant_id == tid,
         )
         if scoped_branch_id is not None:
-            purchases_data = purchases_data.filter(Purchase.branch_id == scoped_branch_id)
-        purchases_data = purchases_data.first()
+            purchases_count_q = purchases_count_q.filter(Purchase.branch_id == scoped_branch_id)
+        purchases_count = purchases_count_q.scalar() or 0
 
-        receipts_total = db.session.query(
-            func.sum(Receipt.amount_aed)
-        ).filter(
-            func.date(Receipt.receipt_date) >= start_date,
-            Receipt.tenant_id == tid,
-        )
-        if scoped_branch_id is not None:
-            receipts_total = receipts_total.filter(Receipt.branch_id == scoped_branch_id)
-        receipts_total = receipts_total.scalar() or Decimal('0')
+        receipts_total = FinancialService.sum_receipts(tid, branch_id=scoped_branch_id, date_from=start_date)
 
         financial_data = {
-            'sales_total': float(sales_data[0] or 0),
-            'sales_paid': float(sales_data[1] or 0),
-            'sales_count': sales_data[2] or 0,
-            'purchases_total': float(purchases_data[0] or 0),
-            'purchases_count': purchases_data[1] or 0,
+            'sales_total': float(sales_total),
+            'sales_paid': float(sales_paid),
+            'sales_count': sales_count,
+            'purchases_total': float(purchases_total),
+            'purchases_count': purchases_count,
             'receipts_total': float(receipts_total),
             'net_revenue': float((sales_data[0] or 0) - (purchases_data[0] or 0)),
         }
@@ -118,3 +109,47 @@ class FinancialService:
         return render_template('owner/financial_overview.html',
                              financial_data=financial_data,
                              period=period)
+
+    @staticmethod
+    def sum_sales(tenant_id, *, branch_id=None, seller_id=None,
+                  date_from=None, date_to=None, status='confirmed',
+                  field=Sale.amount_aed):
+        """Centralized SUM(Sale.{field}) with consistent filtering.
+        All params optional — pass only what you need to filter on.
+        Returns scalar or 0."""
+        q = db.session.query(func.sum(field)).filter(Sale.tenant_id == tenant_id)
+        if branch_id is not None:
+            q = q.filter(Sale.branch_id == branch_id)
+        if seller_id is not None:
+            q = q.filter(Sale.seller_id == seller_id)
+        if date_from is not None:
+            q = q.filter(Sale.sale_date >= date_from)
+        if date_to is not None:
+            q = q.filter(Sale.sale_date <= date_to)
+        if status is not None:
+            q = q.filter(Sale.status == status)
+        return q.scalar() or 0
+
+    @staticmethod
+    def sum_purchases(tenant_id, *, branch_id=None, date_from=None, date_to=None, status='confirmed'):
+        q = db.session.query(func.sum(Purchase.amount_aed)).filter(Purchase.tenant_id == tenant_id)
+        if branch_id is not None:
+            q = q.filter(Purchase.branch_id == branch_id)
+        if date_from is not None:
+            q = q.filter(Purchase.purchase_date >= date_from)
+        if date_to is not None:
+            q = q.filter(Purchase.purchase_date <= date_to)
+        if status is not None:
+            q = q.filter(Purchase.status == status)
+        return q.scalar() or 0
+
+    @staticmethod
+    def sum_receipts(tenant_id, *, branch_id=None, date_from=None, date_to=None):
+        q = db.session.query(func.sum(Receipt.amount_aed)).filter(Receipt.tenant_id == tenant_id)
+        if branch_id is not None:
+            q = q.filter(Receipt.branch_id == branch_id)
+        if date_from is not None:
+            q = q.filter(Receipt.receipt_date >= date_from)
+        if date_to is not None:
+            q = q.filter(Receipt.receipt_date <= date_to)
+        return q.scalar() or 0

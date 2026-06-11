@@ -158,19 +158,10 @@ class SaleService:
                 
                 # --- Serial Number Handling ---
                 if product.has_serial_number:
-                    required_serials = int(quantity)
-                    provided_serials = line_data.get('serials', [])
-                    clean_serials = [s.strip() for s in provided_serials if s and s.strip()]
-                    
-                    # Validate count
-                    if len(clean_serials) != required_serials:
-                        raise ValueError(f'⚠️ المنتج "{product.name}" يتطلب {required_serials} رقم تسلسلي، ولكن تم إدخال {len(clean_serials)} فقط.\n💡 اضغط على زر "سيريال" بجانب المنتج لإدخال الأرقام.')
-                    
-                    # منع تكرار السيريال في نفس السطر
-                    if len(clean_serials) != len(set(clean_serials)):
-                        raise ValueError(f'⚠️ يوجد أرقام تسلسلية مكررة للمنتج "{product.name}".')
-                    
-                    # Validate existence, tenant scope, warehouse, and availability
+                    from utils.serial_helpers import extract_serials, validate_serials
+                    clean_serials = extract_serials(line_data)
+                    validate_serials(clean_serials, product.name, int(quantity))
+
                     from models import ProductSerial
                     for sn in clean_serials:
                         existing_sn = ProductSerial.query.filter_by(
@@ -178,21 +169,16 @@ class SaleService:
                             product_id=product.id,
                             serial_number=sn
                         ).first()
-                        
+
                         if existing_sn:
-                            # If exists, must be 'available' or 'returned'
                             if existing_sn.status not in ['available', 'returned']:
                                 raise ValueError(f'⚠️ السيريال "{sn}" للمنتج "{product.name}" غير متاح للبيع (حالة: {existing_sn.status}).')
-                            
-                            # التحقق من أن السيريال في المستودع الصحيح
                             if warehouse_id and existing_sn.warehouse_id and existing_sn.warehouse_id != warehouse_id:
                                 raise ValueError(f'⚠️ السيريال "{sn}" موجود في مستودع مختلف. يرجى تحويل المخزون أولاً.')
                         else:
-                            # إنشاء السيريال وقت البيع مسموح فقط إذا كان مفعلاً في الإعدادات
                             allow_onsale = current_app.config.get('ALLOW_SERIAL_CREATION_ON_SALE', False)
                             if not allow_onsale:
                                 raise ValueError(f'⚠️ السيريال "{sn}" للمنتج "{product.name}" غير موجود في النظام.\n💡 يجب إدخال الأرقام التسلسلية أثناء استلام المشتريات.')
-                            
                             existing_sn = ProductSerial(
                                 tenant_id=tenant_id,
                                 product_id=product.id,
@@ -203,6 +189,8 @@ class SaleService:
                             db.session.add(existing_sn)
                             db.session.flush()
                 # ------------------------------
+
+                # Create Sale Line
                 
                 # Create Sale Line
                 line = SaleLine(
@@ -261,9 +249,9 @@ class SaleService:
                 if product.has_serial_number:
                     from models import ProductSerial
                     from datetime import datetime, timedelta
-                    
-                    provided_serials = line_data.get('serials', [])
-                    clean_serials = [s.strip() for s in provided_serials if s and s.strip()]
+                    from utils.serial_helpers import extract_serials
+
+                    clean_serials = extract_serials(line_data)
                     for sn in clean_serials:
                         serial_obj = ProductSerial.query.filter_by(
                             tenant_id=tenant_id,

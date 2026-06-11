@@ -54,6 +54,28 @@ def index():
     return render_template("pos/index.html", warehouses=warehouses)
 
 
+@pos_bp.route("/grid")
+@login_required
+@permission_required("manage_sales")
+def grid():
+    warehouses = [
+        w
+        for w in get_accessible_warehouses(current_user)
+        if w.is_active and w.warehouse_type != w.TYPE_ONLINE
+    ]
+    return render_template("pos/grid.html", warehouses=warehouses)
+
+
+@pos_bp.route("/api/categories")
+@login_required
+@permission_required("manage_sales")
+def api_categories():
+    from models import ProductCategory
+    query = tenant_query(ProductCategory).filter_by(is_active=True)
+    cats = query.order_by(ProductCategory.sort_order, ProductCategory.name).all()
+    return jsonify([{"id": c.id, "name": c.name, "name_ar": c.name_ar} for c in cats])
+
+
 @pos_bp.route("/api/products")
 @login_required
 @permission_required("manage_sales")
@@ -61,12 +83,14 @@ def api_products():
     q = (request.args.get("q") or "").strip()
     per_page = request.args.get("per_page", 20, type=int)
     warehouse_id = request.args.get("warehouse_id", type=int)
+    category_id = request.args.get("category_id", type=int)
 
     products, stock_map, _ = search_pos_products(
         q,
         user=current_user,
         warehouse_id=warehouse_id,
         per_page=per_page,
+        category_id=category_id,
     )
     results = [
         serialize_pos_product(p, stock_map, warehouse_id=warehouse_id) for p in products
@@ -310,6 +334,28 @@ def api_checkout():
 
     log_mutation('create', 'Sale', sale.id, {'sale_number': sale.sale_number, 'source': 'pos', 'amount': float(sale.grand_total or 0)})
 
+    order_type = (payload.get('order_type') or '').strip()
+    if order_type in ('dine_in', 'takeaway', 'delivery'):
+        from models import PosKdsOrder
+        from flask import current_app
+        kds_order = PosKdsOrder(
+            tenant_id=sale.tenant_id,
+            sale_id=sale.id,
+            session_id=session.id,
+            branch_id=get_active_branch_id(),
+            order_number=sale.sale_number,
+            items_json=json.dumps([{
+                'name': getattr(ld['product'], 'name_ar', None) or ld['product'].name,
+                'quantity': ld['quantity'],
+                'unit_price': float(ld.get('unit_price') or 0),
+                'notes': ld.get('notes', ''),
+            } for ld in lines_data]),
+            status='pending',
+        )
+        db.session.add(kds_order)
+        db.session.commit()
+        _notify_kds({'type': 'new_order', 'order_id': kds_order.id, 'order_number': kds_order.order_number})
+
     return jsonify(
         {
             "success": True,
@@ -461,5 +507,305 @@ def api_session_report():
             "duration_minutes": session.duration_minutes,
             "status": session.status,
             "notes": session.notes or "",
-        }
-    })
+    }
+})
+
+
+import queue as _queue
+import os as _os
+import urllib.request
+
+_HARDWARE_AGENT_URL = _os.environ.get('POS_HARDWARE_AGENT_URL', 'http://127.0.0.1:8567')
+_KDS_SUBSCRIBERS: list[_queue.Queue] = []
+
+
+def _notify_kds(data):
+    msg = f'data: {json.dumps(data, ensure_ascii=False)}\n\n'
+    for q in _KDS_SUBSCRIBERS[:]:
+        try:
+            q.put_nowait(msg)
+        except Exception:
+            _KDS_SUBSCRIBERS.remove(q)
+
+
+@pos_bp.route("/api/kds/stream")
+@login_required
+def kds_stream():
+    def stream():
+        q = _queue.Queue()
+        _KDS_SUBSCRIBERS.append(q)
+        try:
+            while True:
+                msg = q.get()
+                yield msg
+        except GeneratorExit:
+            _KDS_SUBSCRIBERS.remove(q)
+
+    return stream(), {'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive'}
+
+
+@pos_bp.route("/api/kds/orders")
+@login_required
+def kds_orders():
+    from models import PosKdsOrder
+    tid = get_active_tenant_id()
+    orders = PosKdsOrder.query.filter_by(tenant_id=tid).order_by(PosKdsOrder.created_at.desc()).limit(50).all()
+    return jsonify([{
+        'id': o.id,
+        'order_number': o.order_number,
+        'status': o.status,
+        'created_at': o.created_at.isoformat(),
+        'items': json.loads(o.items_json),
+    } for o in orders])
+
+
+@pos_bp.route("/api/kds/orders/<int:order_id>/status", methods=["POST"])
+@login_required
+def kds_update_status(order_id):
+    from models import PosKdsOrder
+    from datetime import datetime, timezone
+    tid = get_active_tenant_id()
+    order = PosKdsOrder.query.filter_by(id=order_id, tenant_id=tid).first()
+    if not order:
+        return jsonify({'error': 'الطلب غير موجود'}), 404
+    payload = request.get_json(silent=True) or {}
+    new_status = payload.get('status', '')
+    if new_status not in ('pending', 'preparing', 'ready', 'served', 'cancelled'):
+        return jsonify({'error': 'حالة غير صالحة'}), 400
+    order.status = new_status
+    if new_status in ('served', 'cancelled'):
+        order.completed_at = datetime.now(timezone.utc)
+    order.updated_at = datetime.now(timezone.utc)
+    db.session.commit()
+    _notify_kds({'type': 'status_update', 'order_id': order.id, 'status': new_status})
+    return jsonify({'success': True})
+
+
+@pos_bp.route("/kds")
+@login_required
+def kds_dashboard():
+    return render_template("pos/kds.html")
+
+
+@pos_bp.route("/api/customer-display/<int:session_id>/stream")
+def customer_display_stream(session_id):
+    def stream():
+        last_status = None
+        while True:
+            from models import PosSession
+            session = db.session.get(PosSession, session_id)
+            if not session:
+                yield f'data: {json.dumps({"type":"closed"})}\n\n'
+                break
+            from models import Sale
+            sales = Sale.query.filter(
+                Sale.tenant_id == session.tenant_id,
+                Sale.pos_session_id == session_id,
+            ).order_by(Sale.id.desc()).limit(5).all()
+            if not sales:
+                yield f'data: {json.dumps({"type":"waiting"})}\n\n'
+                import time; time.sleep(3)
+                continue
+            latest = sales[0]
+            from models import PosKdsOrder
+            kds_order = PosKdsOrder.query.filter_by(sale_id=latest.id).first()
+            status = kds_order.status if kds_order else 'confirmed'
+            if status != last_status:
+                last_status = status
+                items = []
+                for line in latest.lines:
+                    items.append({
+                        'name': line.product.name_ar or line.product.name,
+                        'quantity': float(line.quantity),
+                        'total': float(line.line_total or 0),
+                    })
+                yield f'data: {json.dumps({"type":"order_update","order_number":latest.sale_number,"items":items,"total":float(latest.total_amount or 0),"status":status})}\n\n'
+            import time; time.sleep(3)
+    resp = stream()
+    resp.close = lambda: None
+    return resp, {'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache'}
+
+
+@pos_bp.route("/customer-display")
+def customer_display():
+    return render_template("pos/customer_display.html")
+
+
+@pos_bp.route("/api/hardware/print-receipt", methods=["POST"])
+@login_required
+def hardware_print_receipt():
+    """توجيه طباعة الفاتورة إلى وكيل الأجهزة المحلي"""
+    try:
+        body = request.get_data()
+        req = urllib.request.Request(
+            f'{_HARDWARE_AGENT_URL}/print-receipt',
+            data=body,
+            headers={'Content-Type': 'application/json'},
+            method='POST',
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            result = json.loads(resp.read().decode('utf-8'))
+        return jsonify(result), resp.status
+    except urllib.error.URLError:
+        return jsonify({'error': 'وكيل الأجهزة غير متصل. تأكد من تشغيل pos_hardware_agent.py'}), 503
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@pos_bp.route("/api/hardware/open-drawer", methods=["POST"])
+@login_required
+def hardware_open_drawer():
+    """فتح درج النقود"""
+    try:
+        body = request.get_data()
+        req = urllib.request.Request(
+            f'{_HARDWARE_AGENT_URL}/open-drawer',
+            data=body,
+            headers={'Content-Type': 'application/json'},
+            method='POST',
+        )
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            result = json.loads(resp.read().decode('utf-8'))
+        return jsonify(result), resp.status
+    except urllib.error.URLError:
+        return jsonify({'error': 'وكيل الأجهزة غير متصل'}), 503
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@pos_bp.route("/api/hardware/status")
+@login_required
+def hardware_status():
+    """حالة وكيل الأجهزة"""
+    try:
+        req = urllib.request.Request(f'{_HARDWARE_AGENT_URL}/status')
+        with urllib.request.urlopen(req, timeout=3) as resp:
+            result = json.loads(resp.read().decode('utf-8'))
+        return jsonify(result)
+    except urllib.error.URLError:
+        return jsonify({'status': 'disconnected', 'error': 'غير متصل'}), 200
+    except Exception as e:
+        return jsonify({'status': 'error', 'error': str(e)}), 200
+
+
+@pos_bp.route("/api/floors")
+@login_required
+def api_floors():
+    from models import PosFloor
+    tid = get_active_tenant_id()
+    floors = PosFloor.query.filter_by(tenant_id=tid).order_by(PosFloor.sort_order).all()
+    return jsonify([{
+        'id': f.id,
+        'name': f.name_ar or f.name,
+        'sort_order': f.sort_order,
+        'table_count': f.tables.filter_by(is_active=True).count(),
+    } for f in floors])
+
+
+@pos_bp.route("/api/floors/create", methods=["POST"])
+@login_required
+@permission_required("manage_sales")
+def api_floor_create():
+    from models import PosFloor
+    payload = request.get_json(silent=True) or {}
+    name = (payload.get('name') or '').strip()
+    name_ar = (payload.get('name_ar') or '').strip()
+    if not name:
+        return jsonify({'error': 'اسم الطابق مطلوب'}), 400
+    tid = get_active_tenant_id()
+    floor = PosFloor(tenant_id=tid, name=name, name_ar=name_ar or None)
+    db.session.add(floor)
+    db.session.commit()
+    return jsonify({'success': True, 'floor_id': floor.id})
+
+
+@pos_bp.route("/api/floors/<int:floor_id>/tables")
+@login_required
+def api_floor_tables(floor_id):
+    from models import PosFloor, PosTable
+    tid = get_active_tenant_id()
+    floor = PosFloor.query.filter_by(id=floor_id, tenant_id=tid).first()
+    if not floor:
+        return jsonify({'error': 'الطابق غير موجود'}), 404
+    tables = PosTable.query.filter_by(floor_id=floor_id, is_active=True).order_by(PosTable.sort_order).all()
+    return jsonify([{
+        'id': t.id,
+        'label': t.label,
+        'capacity': t.capacity,
+        'pos_x': t.pos_x,
+        'pos_y': t.pos_y,
+        'shape': t.shape,
+        'status': t.status,
+    } for t in tables])
+
+
+@pos_bp.route("/api/tables/create", methods=["POST"])
+@login_required
+@permission_required("manage_sales")
+def api_table_create():
+    from models import PosFloor, PosTable
+    payload = request.get_json(silent=True) or {}
+    floor_id = payload.get('floor_id')
+    label = (payload.get('label') or '').strip()
+    if not floor_id or not label:
+        return jsonify({'error': 'الطابق والتسمية مطلوبان'}), 400
+    tid = get_active_tenant_id()
+    floor = PosFloor.query.filter_by(id=floor_id, tenant_id=tid).first()
+    if not floor:
+        return jsonify({'error': 'الطابق غير موجود'}), 404
+    table = PosTable(
+        tenant_id=tid,
+        floor_id=floor_id,
+        label=label,
+        capacity=payload.get('capacity', 4),
+        pos_x=payload.get('pos_x', 0),
+        pos_y=payload.get('pos_y', 0),
+        shape=payload.get('shape', 'rectangle'),
+    )
+    db.session.add(table)
+    db.session.commit()
+    return jsonify({'success': True, 'table_id': table.id})
+
+
+@pos_bp.route("/api/tables/<int:table_id>/status", methods=["POST"])
+@login_required
+@permission_required("manage_sales")
+def api_table_update_status(table_id):
+    from models import PosTable
+    tid = get_active_tenant_id()
+    table = PosTable.query.filter_by(id=table_id, tenant_id=tid).first()
+    if not table:
+        return jsonify({'error': 'الطاولة غير موجودة'}), 404
+    payload = request.get_json(silent=True) or {}
+    new_status = payload.get('status', '')
+    if new_status not in ('free', 'occupied', 'reserved'):
+        return jsonify({'error': 'حالة غير صالحة'}), 400
+    table.status = new_status
+    db.session.commit()
+    return jsonify({'success': True})
+
+
+@pos_bp.route("/api/tables/<int:table_id>/assign", methods=["POST"])
+@login_required
+@permission_required("manage_sales")
+def api_table_assign(table_id):
+    from models import PosTable, PosTableOrder
+    tid = get_active_tenant_id()
+    table = PosTable.query.filter_by(id=table_id, tenant_id=tid).first()
+    if not table:
+        return jsonify({'error': 'الطاولة غير موجودة'}), 404
+    payload = request.get_json(silent=True) or {}
+    sale_id = payload.get('sale_id')
+    if not sale_id:
+        return jsonify({'error': 'رقم الفاتورة مطلوب'}), 400
+    table.status = 'occupied'
+    torder = PosTableOrder(
+        tenant_id=tid,
+        table_id=table_id,
+        sale_id=sale_id,
+        guest_count=payload.get('guest_count', 1),
+    )
+    db.session.add(torder)
+    db.session.commit()
+    return jsonify({'success': True})
+

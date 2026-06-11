@@ -8,6 +8,7 @@ from sqlalchemy import select
 from extensions import db, limiter, csrf
 from models import Customer, Supplier, Product, User
 from services.logging_core import LoggingCore
+from services.payment_service import PaymentService
 from services.stock_service import StockService
 from utils.branching import get_accessible_warehouse_ids, get_branch_stock_map
 from utils.decorators import branch_scope_id, permission_required
@@ -125,54 +126,19 @@ def _scoped_supplier_query():
 
 
 def _customer_balance(customer_id):
-    from models import Payment, Receipt, Sale
-
     scoped_branch_id = branch_scope_id()
     if scoped_branch_id is None:
         customer = db.session.get(Customer, customer_id)
         return float(customer.get_balance_aed()) if customer else 0.0
-
-    sales_total = db.session.query(db.func.sum(Sale.amount_aed)).filter(
-        Sale.customer_id == customer_id,
-        Sale.status == 'confirmed',
-        Sale.branch_id == scoped_branch_id,
-    ).scalar() or 0
-    receipts_total = db.session.query(db.func.sum(Receipt.amount_aed)).filter(
-        Receipt.customer_id == customer_id,
-        Receipt.branch_id == scoped_branch_id,
-    ).scalar() or 0
-    outgoing_total = db.session.query(db.func.sum(Payment.amount_aed)).filter(
-        Payment.customer_id == customer_id,
-        Payment.direction == 'outgoing',
-        Payment.branch_id == scoped_branch_id,
-    ).scalar() or 0
-    return float((sales_total or 0) + (outgoing_total or 0) - (receipts_total or 0))
+    return float(PaymentService.get_customer_balance_scoped(customer_id, branch_id=scoped_branch_id))
 
 
 def _supplier_balance(supplier_id):
-    from models import Payment, Purchase
-
     scoped_branch_id = branch_scope_id()
     if scoped_branch_id is None:
         supplier = db.session.get(Supplier, supplier_id)
         return float(supplier.get_balance_aed()) if supplier else 0.0
-
-    purchases_total = db.session.query(db.func.sum(Purchase.amount_aed)).filter(
-        Purchase.supplier_id == supplier_id,
-        Purchase.status == 'confirmed',
-        Purchase.branch_id == scoped_branch_id,
-    ).scalar() or 0
-    outgoing_total = db.session.query(db.func.sum(Payment.amount_aed)).filter(
-        Payment.supplier_id == supplier_id,
-        Payment.direction == 'outgoing',
-        Payment.branch_id == scoped_branch_id,
-    ).scalar() or 0
-    incoming_total = db.session.query(db.func.sum(Payment.amount_aed)).filter(
-        Payment.supplier_id == supplier_id,
-        Payment.direction == 'incoming',
-        Payment.branch_id == scoped_branch_id,
-    ).scalar() or 0
-    return float((purchases_total or 0) - ((outgoing_total or 0) - (incoming_total or 0)))
+    return float(PaymentService.get_supplier_balance_scoped(supplier_id, branch_id=scoped_branch_id))
 
 
 @api_bp.route('/health')

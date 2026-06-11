@@ -65,13 +65,8 @@ class ReturnService:
 
     @staticmethod
     def _serials_from_line_data(line_data):
-        serials = line_data.get('serials') or []
-        if isinstance(serials, str):
-            serials = serials.replace('\r', '\n').replace(',', '\n').split('\n')
-        cleaned = [str(sn).strip() for sn in serials if str(sn).strip()]
-        if len(cleaned) != len(set(cleaned)):
-            raise ValueError('Duplicate serial numbers are not allowed on the same return.')
-        return cleaned
+        from utils.serial_helpers import extract_serials
+        return extract_serials(line_data)
 
     @staticmethod
     def create_return(sale_id, return_lines_data, user=None, user_id=None, notes=None, manual_refund_amount=None):
@@ -170,9 +165,8 @@ class ReturnService:
                         raise ValueError(f'Product {product.name} requires a whole-number quantity because it uses serial numbers.')
 
                     serials_to_return = ReturnService._serials_from_line_data(line_data)
-                    required_qty = int(quantity)
-                    if len(serials_to_return) != required_qty:
-                        raise ValueError(f'Product {product.name} requires {required_qty} serial number(s) for this return.')
+                    from utils.serial_helpers import validate_serials
+                    validate_serials(serials_to_return, product.name, int(quantity))
 
                     for serial_number in serials_to_return:
                         serial_obj = ProductSerial.query.filter_by(
@@ -315,7 +309,7 @@ class ReturnService:
                                 old_qty = pwc.total_quantity
                                 old_value = pwc.total_value
                                 old_avg = pwc.average_cost
-                                new_qty, new_value, new_avg = _mwac_calc(old_qty, old_value, qty_decimal, cost_unit)
+                                new_qty, new_value, new_avg = StockService._mwac_calc(old_qty, old_value, qty_decimal, cost_unit)
                                 pwc.total_quantity = new_qty
                                 pwc.total_value = new_value
                                 pwc.average_cost = new_avg

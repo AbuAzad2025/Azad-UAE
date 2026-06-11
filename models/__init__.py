@@ -66,6 +66,8 @@ from .warranty_claim import WarrantyClaim
 from .shipment import Shipment
 from .partner_profit_distribution import PartnerProfitDistribution
 from .partner_transaction import PartnerTransaction
+from .pos_floor import PosFloor, PosTable, PosTableOrder
+from .pos_kds_order import PosKdsOrder
 from .pos_session import PosSession
 from .document_sequence import DocumentSequence
 from .fiscal_position import FiscalPosition, FiscalPositionTaxRule
@@ -135,6 +137,8 @@ __all__ = [
     'WarrantyClaim',
     'Shipment',
     'JournalEntryAudit',
+    'PosFloor', 'PosTable', 'PosTableOrder',
+    'PosKdsOrder',
     'PosSession',
     'DocumentSequence',
     'FiscalPosition',

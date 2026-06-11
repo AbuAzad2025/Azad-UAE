@@ -75,12 +75,15 @@ def search_pos_products(
     warehouse_id: int | None = None,
     per_page: int = 20,
     include_inactive: bool = False,
+    category_id: int | None = None,
 ):
     q = (q or "").strip()
     per_page = max(1, min(int(per_page or 20), 50))
     base = StockService.get_visible_products_query(user)
     if not include_inactive:
         base = base.filter(Product.is_active == True)
+    if category_id:
+        base = base.filter(Product.category_id == category_id)
 
     products = []
     if q:

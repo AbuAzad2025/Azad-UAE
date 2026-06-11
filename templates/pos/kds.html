@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+{% block title %}شاشة المطبخ KDS{% endblock %}
+{% block page_title %}
+<div class="d-flex justify-content-between align-items-center">
+  <h1 class="mb-0"><i class="fas fa-utensils mr-2"></i>شاشة المطبخ (KDS)</h1>
+  <a href="{{ url_for('pos.index') }}" class="btn btn-outline-secondary"><i class="fas fa-cash-register mr-1"></i>POS</a>
+</div>
+{% endblock %}
+{% block extra_css %}
+<style>
+.kds-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; padding: 8px 0; }
+.kds-card { border-radius: 8px; padding: 16px; box-shadow: 0 2px 6px rgba(0,0,0,.1); transition: all .2s; }
+.kds-card.pending { background: #fff3cd; border-right: 6px solid #ffc107; }
+.kds-card.preparing { background: #cce5ff; border-right: 6px solid #007bff; }
+.kds-card.ready { background: #d4edda; border-right: 6px solid #28a745; }
+.kds-card.served { opacity: .5; }
+.kds-card.cancelled { opacity: .4; }
+.kds-card h4 { margin: 0 0 8px; font-size: 1.1rem; }
+.kds-items { font-size: .95rem; }
+.kds-items li { padding: 2px 0; }
+.kds-actions { margin-top: 10px; display: flex; gap: 6px; flex-wrap: wrap; }
+.kds-actions .btn { font-size: .8rem; padding: 4px 10px; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="mb-3">
+  <div class="btn-group btn-group-sm">
+    <button class="btn btn-outline-secondary filter-btn active" data-filter="all">الكل</button>
+    <button class="btn btn-outline-warning filter-btn" data-filter="pending">قيد الانتظار</button>
+    <button class="btn btn-outline-primary filter-btn" data-filter="preparing">تحت التجهيز</button>
+    <button class="btn btn-outline-success filter-btn" data-filter="ready">جاهز</button>
+  </div>
+  <button id="kdsRefreshBtn" class="btn btn-sm btn-outline-info float-left"><i class="fas fa-sync-alt"></i></button>
+</div>
+<div id="kdsGrid" class="kds-grid">
+  <div class="text-center text-muted py-5 col-12"><i class="fas fa-spinner fa-spin fa-2x"></i><br>جارٍ التحميل...</div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+(function(){
+  const grid = document.getElementById('kdsGrid');
+  let currentFilter = 'all';
+
+  function loadOrders() {
+    fetch('/pos/api/kds/orders').then(r=>r.json()).then(orders=>{
+      renderOrders(orders);
+    }).catch(()=>{
+      grid.innerHTML = '<div class="text-center text-muted py-5 col-12">فشل التحميل</div>';
+    });
+  }
+
+  function renderOrders(orders) {
+    const filtered = currentFilter === 'all' ? orders : orders.filter(o => o.status === currentFilter);
+    if (!filtered.length) {
+      grid.innerHTML = '<div class="text-center text-muted py-5 col-12">لا توجد طلبات</div>';
+      return;
+    }
+    grid.innerHTML = filtered.map(o => `
+      <div class="kds-card ${o.status}" data-status="${o.status}">
+        <h4>#${o.order_number} <span class="badge badge-${statusBadge(o.status)} float-left">${statusLabel(o.status)}</span></h4>
+        <div class="text-muted small mb-2">${new Date(o.created_at).toLocaleTimeString('ar-SA')}</div>
+        <ul class="kds-items list-unstyled mb-0">
+          ${(o.items||[]).map(i => `<li>${i.quantity} x ${i.name}${i.notes ? ' <span class="text-muted">('+i.notes+')</span>' : ''}</li>`).join('')}
+        </ul>
+        <div class="kds-actions">
+          ${actionButtons(o)}
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function statusLabel(s) { return {pending:'قيد الانتظار',preparing:'تحت التجهيز',ready:'جاهز',served:'تم التقديم',cancelled:'ملغي'}[s]||s; }
+  function statusBadge(s) { return {pending:'warning',preparing:'primary',ready:'success',served:'secondary',cancelled:'danger'}[s]||'secondary'; }
+
+  function actionButtons(o) {
+    const btns = [];
+    if (o.status === 'pending') btns.push('<button class="btn btn-primary btn-sm status-btn" data-id="'+o.id+'" data-status="preparing">تجهيز</button>');
+    if (o.status === 'preparing') btns.push('<button class="btn btn-success btn-sm status-btn" data-id="'+o.id+'" data-status="ready">جاهز</button>');
+    if (o.status === 'ready') btns.push('<button class="btn btn-secondary btn-sm status-btn" data-id="'+o.id+'" data-status="served">تم التقديم</button>');
+    if (!['served','cancelled'].includes(o.status)) btns.push('<button class="btn btn-danger btn-sm status-btn" data-id="'+o.id+'" data-status="cancelled">إلغاء</button>');
+    return btns.join('');
+  }
+
+  grid.addEventListener('click', function(e){
+    const btn = e.target.closest('.status-btn');
+    if (!btn) return;
+    const orderId = btn.dataset.id;
+    const status = btn.dataset.status;
+    fetch('/pos/api/kds/orders/'+orderId+'/status', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({status})
+    }).then(r=>r.json()).then(d=>{ if(d.success) loadOrders(); });
+  });
+
+  document.querySelectorAll('.filter-btn').forEach(btn=>{
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+      this.classList.add('active');
+      currentFilter = this.dataset.filter;
+      loadOrders();
+    });
+  });
+
+  document.getElementById('kdsRefreshBtn').addEventListener('click', loadOrders);
+
+  function connectSSE() {
+    const es = new EventSource('/pos/api/kds/stream');
+    es.onmessage = function(e) {
+      try { const d = JSON.parse(e.data); if (d.type) loadOrders(); } catch(ex) {}
+    };
+    es.onerror = function() { es.close(); setTimeout(connectSSE, 3000); };
+  }
+
+  loadOrders();
+  connectSSE();
+  setInterval(loadOrders, 30000);
+})();
+</script>
+{% endblock %}

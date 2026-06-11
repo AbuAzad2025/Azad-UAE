@@ -493,3 +493,84 @@ class TestPosApiCheckoutPrint:
                                             assert resp.status_code == 200
                                             data = json.loads(resp.data)
                                             assert data["success"] is True
+
+class TestPosGrid:
+    def test_pos_grid_requires_login(self, client):
+        resp = client.get("/pos/grid", follow_redirects=False)
+        assert resp.status_code in (302, 401, 403)
+    def test_pos_grid_loads_for_authenticated_user(self, app, client, pos_owner):
+        _login_owner(client, pos_owner)
+        with patch("routes.pos.SystemSettings") as MockSettings:
+            setting = MagicMock()
+            setting.enable_pos = True
+            MockSettings.query.order_by.return_value.first.return_value = setting
+            with patch("routes.pos.Tenant") as MockTenant:
+                tenant = MagicMock()
+                tenant.enable_pos = True
+                MockTenant.query.get.return_value = tenant
+                with patch("routes.pos.get_active_tenant_id", return_value=1):
+                    with patch("routes.pos.get_accessible_warehouses", return_value=[]):
+                        resp = client.get("/pos/grid")
+                        assert resp.status_code == 200
+                        assert b"pos-product-grid" in resp.data
+    def test_pos_grid_contains_numpad(self, app, client, pos_owner):
+        _login_owner(client, pos_owner)
+        with patch("routes.pos.SystemSettings") as MockSettings:
+            setting = MagicMock()
+            setting.enable_pos = True
+            MockSettings.query.order_by.return_value.first.return_value = setting
+            with patch("routes.pos.Tenant") as MockTenant:
+                tenant = MagicMock()
+                tenant.enable_pos = True
+                MockTenant.query.get.return_value = tenant
+                with patch("routes.pos.get_active_tenant_id", return_value=1):
+                    with patch("routes.pos.get_accessible_warehouses", return_value=[]):
+                        resp = client.get("/pos/grid")
+                        assert resp.status_code == 200
+                        assert b"pos-numpad" in resp.data
+                        assert b"pos-cart-panel" in resp.data
+
+class TestPosApiCategories:
+    def test_api_categories_requires_auth(self, client):
+        resp = client.get("/pos/api/categories")
+        assert resp.status_code in (302, 401, 403)
+    def test_api_categories_returns_list(self, app, client, pos_owner):
+        _login_owner(client, pos_owner)
+        with patch("routes.pos.SystemSettings") as MockSettings:
+            setting = MagicMock()
+            setting.enable_pos = True
+            MockSettings.query.order_by.return_value.first.return_value = setting
+            with patch("routes.pos.Tenant") as MockTenant:
+                tenant = MagicMock()
+                tenant.enable_pos = True
+                MockTenant.query.get.return_value = tenant
+                with patch("routes.pos.get_active_tenant_id", return_value=1):
+                    with patch("routes.pos.tenant_query") as mock_query:
+                        cat = MagicMock()
+                        cat.id = 1
+                        cat.name = "Electronics"
+                        cat.name_ar = "Electronics AR"
+                        mock_query.return_value.filter_by.return_value.order_by.return_value.all.return_value = [cat]
+                        resp = client.get("/pos/api/categories")
+                        assert resp.status_code == 200
+                        data = json.loads(resp.data)
+                        assert isinstance(data, list)
+                        assert len(data) == 1
+                        assert data[0]["id"] == 1
+                        assert data[0]["name"] == "Electronics"
+    def test_api_products_with_category_filter(self, app, client, pos_owner):
+        _login_owner(client, pos_owner)
+        with patch("routes.pos.SystemSettings") as MockSettings:
+            setting = MagicMock()
+            setting.enable_pos = True
+            MockSettings.query.order_by.return_value.first.return_value = setting
+            with patch("routes.pos.Tenant") as MockTenant:
+                tenant = MagicMock()
+                tenant.enable_pos = True
+                MockTenant.query.get.return_value = tenant
+                with patch("routes.pos.get_active_tenant_id", return_value=1):
+                    with patch("routes.pos.search_pos_products", return_value=([], {}, [])) as mock_search:
+                        resp = client.get("/pos/api/products?category_id=5")
+                        assert resp.status_code == 200
+                        args, kwargs = mock_search.call_args
+                        assert kwargs.get("category_id") == 5

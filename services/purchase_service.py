@@ -161,25 +161,11 @@ class PurchaseService:
                     subtotal += line_total
                     lines_added += 1
                     if getattr(product, 'has_serial_number', False):
-                        qty = Decimal(str(line_data.get('quantity', 0)))
-                        if qty % 1 != 0:
-                            raise ValueError(f'⚠️ المنتج "{product.name}" يتطلب أرقاماً تسلسلية (الكمية必須 أن تكون رقماً صحيحاً).')
+                        from utils.serial_helpers import extract_serials, validate_serials
+                        clean_serials = extract_serials(line_data)
+                        validate_serials(clean_serials, product.name, int(Decimal(str(line_data.get('quantity', 0)))))
 
                         from models.product_serial import ProductSerial
-                        provided_serials = line_data.get('serials', [])
-                        clean_serials = [s.strip() for s in provided_serials if s and s.strip()]
-
-                        if len(clean_serials) != int(qty):
-                            raise ValueError(
-                                f'⚠️ المنتج "{product.name}" يتطلب {int(qty)} أرقاماً تسلسلية، '
-                                f'ولكن تم إدخال {len(clean_serials)} فقط.'
-                            )
-
-                        # منع تكرار السيريال في نفس السطر
-                        if len(clean_serials) != len(set(clean_serials)):
-                            raise ValueError(f'⚠️ يوجد أرقام تسلسلية مكررة للمنتج "{product.name}".')
-
-                        # التحقق من عدم وجود السيريال مسبقاً لدى نفس التيننت
                         existing_serials = ProductSerial.query.filter(
                             ProductSerial.tenant_id == tenant_id,
                             ProductSerial.serial_number.in_(clean_serials)
@@ -457,9 +443,7 @@ class PurchaseService:
                     old_value = pwc.total_value
                     old_avg = pwc.average_cost
 
-                    new_qty = old_qty - quantity
-                    new_value = old_value - reversed_value
-                    new_avg = (new_value / new_qty) if new_qty > 0 else _D('0')
+                    new_qty, new_value, new_avg = StockService._mwac_calc(old_qty, old_value, -quantity, original_unit_cost)
 
                     pwc.total_quantity = new_qty if new_qty >= 0 else _D('0')
                     pwc.total_value = new_value if new_value >= 0 else _D('0')

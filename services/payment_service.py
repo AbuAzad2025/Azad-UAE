@@ -444,6 +444,61 @@ class PaymentService:
         return Decimal(str(customer.get_balance_aed() or 0))
 
     @staticmethod
+    def get_customer_balance_scoped(customer_id, branch_id=None):
+        """رصيد العميل مقيد بالفرع. يحسب من SQL مباشر (Sale - Receipt + Payment).
+        يعيد Decimal. إذا كان branch_id = None يُرجع الرصيد الكامل (غير مقيد)."""
+        from models import Payment as PaymentModel
+
+        sales_total = db.session.query(db.func.sum(Sale.amount_aed)).filter(
+            Sale.customer_id == customer_id,
+            Sale.status == 'confirmed',
+        )
+        receipts_total = db.session.query(db.func.sum(Receipt.amount_aed)).filter(
+            Receipt.customer_id == customer_id,
+        )
+        outgoing_total = db.session.query(db.func.sum(PaymentModel.amount_aed)).filter(
+            PaymentModel.customer_id == customer_id,
+            PaymentModel.direction == 'outgoing',
+        )
+        if branch_id is not None:
+            sales_total = sales_total.filter(Sale.branch_id == branch_id)
+            receipts_total = receipts_total.filter(Receipt.branch_id == branch_id)
+            outgoing_total = outgoing_total.filter(PaymentModel.branch_id == branch_id)
+
+        return (
+            (sales_total.scalar() or Decimal('0'))
+            + (outgoing_total.scalar() or Decimal('0'))
+            - (receipts_total.scalar() or Decimal('0'))
+        )
+
+    @staticmethod
+    def get_supplier_balance_scoped(supplier_id, branch_id=None):
+        """رصيد المورد مقيد بالفرع. يحسب من SQL مباشر (Purchase - Payment out + Payment in).
+        يعيد Decimal. إذا كان branch_id = None يُرجع الرصيد الكامل."""
+        purchases_total = db.session.query(db.func.sum(Purchase.amount_aed)).filter(
+            Purchase.supplier_id == supplier_id,
+            Purchase.status == 'confirmed',
+        )
+        outgoing_total = db.session.query(db.func.sum(Payment.amount_aed)).filter(
+            Payment.supplier_id == supplier_id,
+            Payment.direction == 'outgoing',
+        )
+        incoming_total = db.session.query(db.func.sum(Payment.amount_aed)).filter(
+            Payment.supplier_id == supplier_id,
+            Payment.direction == 'incoming',
+        )
+        if branch_id is not None:
+            purchases_total = purchases_total.filter(Purchase.branch_id == branch_id)
+            outgoing_total = outgoing_total.filter(Payment.branch_id == branch_id)
+            incoming_total = incoming_total.filter(Payment.branch_id == branch_id)
+
+        return (
+            (purchases_total.scalar() or Decimal('0'))
+            - (outgoing_total.scalar() or Decimal('0'))
+            + (incoming_total.scalar() or Decimal('0'))
+        )
+
+    @staticmethod
     def get_customer_balance_and_unpaid_sales(customer):
         """استجابة موحدة لرصيد العميل + فواتير غير المدفوعة (للاستخدام في API واحد)."""
         balance_aed = float(PaymentService.get_customer_balance_aed(customer))

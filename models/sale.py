@@ -81,6 +81,9 @@ class Sale(db.Model):
     checkout_payment_method = db.Column(db.String(50), nullable=True, index=True)
     checkout_gateway_ref = db.Column(db.String(120), nullable=True)
     coupon_code = db.Column(db.String(50), nullable=True)
+    pos_session_id = db.Column(db.Integer, db.ForeignKey('pos_sessions.id'), nullable=True, index=True)
+    order_type = db.Column(db.String(20), nullable=True, index=True)
+    table_id = db.Column(db.Integer, db.ForeignKey('pos_tables.id'), nullable=True, index=True)
     
     # Active status for consistency with other models
     is_active = db.Column(db.Boolean, default=True, nullable=False, index=True)

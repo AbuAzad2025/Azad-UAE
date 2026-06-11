@@ -75,29 +75,8 @@ def _archived_item_branch_id(archived_record):
 
 
 def _scoped_customer_balance(customer_id):
-    from models import Payment, Sale
-
     branch_id = _current_branch_id()
-    sales_query = db.session.query(db.func.sum(Sale.amount_aed)).filter(
-        Sale.customer_id == customer_id,
-        Sale.status == 'confirmed',
-    )
-    receipts_query = db.session.query(db.func.sum(Receipt.amount_aed)).filter(
-        Receipt.customer_id == customer_id
-    )
-    outgoing_query = db.session.query(db.func.sum(Payment.amount_aed)).filter(
-        Payment.customer_id == customer_id,
-        Payment.direction == 'outgoing',
-    )
-    if branch_id is not None:
-        sales_query = sales_query.filter(Sale.branch_id == branch_id)
-        receipts_query = receipts_query.filter(Receipt.branch_id == branch_id)
-        outgoing_query = outgoing_query.filter(Payment.branch_id == branch_id)
-
-    sales_total = sales_query.scalar() or 0
-    receipts_total = receipts_query.scalar() or 0
-    outgoing_total = outgoing_query.scalar() or 0
-    return float((sales_total or 0) + (outgoing_total or 0) - (receipts_total or 0))
+    return float(PaymentService.get_customer_balance_scoped(customer_id, branch_id=branch_id))
 
 
 def _scoped_customer_unpaid_sales(customer_id):

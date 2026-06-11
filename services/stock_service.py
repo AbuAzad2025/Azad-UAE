@@ -9,13 +9,16 @@ from utils.branching import get_accessible_warehouse_ids, get_branch_stock_map
 from utils.gl_reference_types import GLRef
 
 
-def _mwac_calc(old_qty: Decimal, old_value: Decimal, change_qty: Decimal, unit_cost: Decimal) -> tuple[Decimal, Decimal, Decimal]:
-    """Pure MWAC math — no DB, no models, no side effects.
-    Returns (new_qty, new_value, new_avg)."""
-    new_qty = old_qty + change_qty
-    new_value = old_value + (change_qty * unit_cost)
-    new_avg = (new_value / new_qty).quantize(Decimal('0.0001')) if new_qty > 0 else Decimal('0')
-    return new_qty, new_value, new_avg
+class _MWACHelper:
+    """Pure MWAC math — no DB, no models, no side effects."""
+
+    @staticmethod
+    def calc(old_qty: Decimal, old_value: Decimal, change_qty: Decimal, unit_cost: Decimal) -> tuple[Decimal, Decimal, Decimal]:
+        new_qty = old_qty + change_qty
+        new_value = old_value + (change_qty * unit_cost)
+        new_avg = (new_value / new_qty).quantize(Decimal('0.0001')) if new_qty > 0 else Decimal('0')
+        return new_qty, new_value, new_avg
+
 
 
 def _resolve_gl_concept_account(concept_code, fallback_account_code, tenant_id=None):
@@ -35,7 +38,11 @@ def _resolve_gl_concept_account(concept_code, fallback_account_code, tenant_id=N
 
 
 class StockService:
-    
+
+    @staticmethod
+    def _mwac_calc(old_qty, old_value, change_qty, unit_cost):
+        return _MWACHelper.calc(old_qty, old_value, change_qty, unit_cost)
+
     @staticmethod
     def add_stock(product_id, quantity, reference_type=None, reference_id=None, notes=None, warehouse_id=None):
         return StockService.create_movement(
@@ -385,7 +392,7 @@ class StockService:
                     avg_cost = pwc.average_cost
                     cogs = (avg_cost * qty).quantize(Decimal('0.001'), rounding=ROUND_HALF_UP)
                     
-                    new_qty, new_value, new_avg = _mwac_calc(
+                    new_qty, new_value, new_avg = StockService._mwac_calc(
                         pwc.total_quantity, pwc.total_value, -qty,
                         avg_cost.quantize(Decimal('0.0001'))
                     )
@@ -495,7 +502,7 @@ class StockService:
             old_qty = pwc.total_quantity
             old_value = pwc.total_value
             old_avg = pwc.average_cost
-            new_qty, new_value, new_avg = _mwac_calc(old_qty, old_value, received_qty, unit_cost_aed)
+            new_qty, new_value, new_avg = StockService._mwac_calc(old_qty, old_value, received_qty, unit_cost_aed)
             
             pwc.total_quantity = new_qty
             pwc.total_value = new_value
@@ -587,7 +594,7 @@ class StockService:
                     old_qty = pwc.total_quantity
                     old_value = pwc.total_value
                     old_avg = pwc.average_cost
-                    new_qty, new_value, new_avg = _mwac_calc(
+                    new_qty, new_value, new_avg = StockService._mwac_calc(
                         old_qty, old_value, qty,
                         (original_cogs / qty).quantize(Decimal('0.0001')) if qty > 0 else Decimal('0')
                     )
@@ -662,7 +669,7 @@ class StockService:
                     old_value = pwc.total_value
                     old_avg = pwc.average_cost
                     reversed_value = qty * original_unit_cost
-                    new_qty, new_value, new_avg = _mwac_calc(old_qty, old_value, -qty, original_unit_cost)
+                    new_qty, new_value, new_avg = StockService._mwac_calc(old_qty, old_value, -qty, original_unit_cost)
 
                     pwc.total_quantity = new_qty if new_qty >= 0 else Decimal('0')
                     pwc.total_value = new_value if new_value >= 0 else Decimal('0')
