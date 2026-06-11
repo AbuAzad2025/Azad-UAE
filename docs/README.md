@@ -1,6 +1,6 @@
 # Azadexa Documentation Index
 
-This directory contains the product, architecture, security, operations, deployment, and brand documentation for **Azadexa**.
+This directory contains the product, architecture, security, operations, deployment, accounting, and brand documentation for **Azadexa**.
 
 **Azadexa** is an intelligent multi-tenant ERP and commerce platform by **AZAD Intelligent Systems**.
 
@@ -14,7 +14,9 @@ This directory contains the product, architecture, security, operations, deploym
 | [`PROJECT_OVERVIEW.md`](PROJECT_OVERVIEW.md) | Business scope, system goals, users, modules, and platform boundaries |
 | [`ARCHITECTURE.md`](ARCHITECTURE.md) | Technical structure, module map, data flow, tenancy model, service boundaries |
 | [`SECURITY_AND_TENANCY.md`](SECURITY_AND_TENANCY.md) | Tenant isolation, owner-only controls, payment boundaries, production security rules |
+| [`ACCOUNTING_AND_INVENTORY_RULES.md`](ACCOUNTING_AND_INVENTORY_RULES.md) | Ledger, balances, stock movement, returns, and financial correctness rules |
 | [`OPERATIONS_RUNBOOK.md`](OPERATIONS_RUNBOOK.md) | Local/staging/production operations, backup, deployment, incident checklist |
+| [`../AGENTS.md`](../AGENTS.md) | Mandatory instructions for AI coding assistants and internal automation |
 
 ---
 
@@ -32,6 +34,7 @@ The repository may also contain additional specialized documentation, such as UI
 - Never document real secrets, production passwords, private keys, card data, or customer data.
 - Any public payment, package purchase, or donation flow belongs to the platform-owner scope unless explicitly routed through tenant business logic.
 - Tenant storefronts and tenant operations must remain tenant-scoped.
+- Accounting and inventory documentation must preserve tenant ownership and auditability.
 
 ---
 
@@ -42,4 +45,6 @@ The repository may also contain additional specialized documentation, such as UI
 3. [`PROJECT_OVERVIEW.md`](PROJECT_OVERVIEW.md)
 4. [`ARCHITECTURE.md`](ARCHITECTURE.md)
 5. [`SECURITY_AND_TENANCY.md`](SECURITY_AND_TENANCY.md)
-6. [`OPERATIONS_RUNBOOK.md`](OPERATIONS_RUNBOOK.md)
+6. [`ACCOUNTING_AND_INVENTORY_RULES.md`](ACCOUNTING_AND_INVENTORY_RULES.md)
+7. [`OPERATIONS_RUNBOOK.md`](OPERATIONS_RUNBOOK.md)
+8. [`../AGENTS.md`](../AGENTS.md)
