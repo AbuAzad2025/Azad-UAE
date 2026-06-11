@@ -303,11 +303,15 @@ class ReturnService:
                     if mwac_enabled and tenant_id and sale.warehouse_id:
                         try:
                             from models.warehouse import ProductWarehouseCost
-                            pwc = ProductWarehouseCost.query.filter_by(
+                            query = ProductWarehouseCost.query.filter_by(
                                 tenant_id=tenant_id,
                                 product_id=sale_line.product_id,
                                 warehouse_id=sale.warehouse_id,
-                            ).first()
+                            )
+                            try:
+                                pwc = query.with_for_update().first()
+                            except Exception:
+                                pwc = query.first()
                             if pwc:
                                 qty_decimal = Decimal(str(quantity))
                                 old_qty = pwc.total_quantity
