@@ -167,34 +167,36 @@ class TestPosApiCheckoutExtra:
                 tenant.enable_pos = True
                 MockTenant.query.get.return_value = tenant
                 with patch("routes.pos.get_active_tenant_id", return_value=1):
-                    customer = MagicMock()
-                    customer.id = 1
-                    customer.name = "Walkin"
-                    with patch("routes.pos.get_pos_walkin_customer", return_value=customer):
-                        product = MagicMock()
-                        product.id = 1
-                        product.is_active = True
-                        with patch("routes.pos.tenant_get", return_value=product):
-                            sale = MagicMock()
-                            sale.id = 300
-                            sale.sale_number = "S-2024-004"
-                            sale.grand_total = 75
-                            with patch("routes.pos.SaleService.create_sale", return_value=sale):
-                                with patch("routes.pos.log_mutation"):
-                                    with patch("routes.pos.db"):
-                                        resp = client.post(
-                                            "/pos/api/checkout",
-                                            json={
-                                                "lines": [{"product_id": 1, "quantity": 1, "discount_percent": 0}],
-                                                "quick_customer": True,
-                                                "payment_method": "cash",
-                                                "paid_amount": 75,
-                                            },
-                                            headers={"Content-Type": "application/json"},
-                                        )
-                                        assert resp.status_code == 200
-                                        data = json.loads(resp.data)
-                                        assert data["success"] is True
+                    with patch("routes.pos.get_active_session") as mock_session:
+                        mock_session.return_value = MagicMock()
+                        customer = MagicMock()
+                        customer.id = 1
+                        customer.name = "Walkin"
+                        with patch("routes.pos.get_pos_walkin_customer", return_value=customer):
+                            product = MagicMock()
+                            product.id = 1
+                            product.is_active = True
+                            with patch("routes.pos.tenant_get", return_value=product):
+                                sale = MagicMock()
+                                sale.id = 300
+                                sale.sale_number = "S-2024-004"
+                                sale.grand_total = 75
+                                with patch("routes.pos.SaleService.create_sale", return_value=sale):
+                                    with patch("routes.pos.log_mutation"):
+                                        with patch("routes.pos.db"):
+                                            resp = client.post(
+                                                "/pos/api/checkout",
+                                                json={
+                                                    "lines": [{"product_id": 1, "quantity": 1, "discount_percent": 0}],
+                                                    "quick_customer": True,
+                                                    "payment_method": "cash",
+                                                    "paid_amount": 75,
+                                                },
+                                                headers={"Content-Type": "application/json"},
+                                            )
+                                            assert resp.status_code == 200
+                                            data = json.loads(resp.data)
+                                            assert data["success"] is True
 
     def test_checkout_invalid_customer_id(self, app, client, pos_owner):
         with client.session_transaction() as sess:
