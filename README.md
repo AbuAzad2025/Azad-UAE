@@ -1,164 +1,110 @@
 # Azadexa
 
-**Azadexa** / **أزاديكسا** is an intelligent **multi-tenant ERP and commerce platform** by **AZAD Intelligent Systems**.
+**Azadexa** / **أزاديكسا** is an intelligent **multi-tenant ERP, accounting, inventory, and commerce platform** by **AZAD Intelligent Systems**.
 
-It is designed to manage real business operations across tenants, branches, stores, warehouses, accounting, sales, purchases, customers, suppliers, payments, and platform-owner workflows.
+This repository represents a real business operating system. It is not a single online store, a demo Flask app, or a generic accounting template. The codebase includes tenant ERP operations, branch-aware workflows, inventory, general ledger accounting, tenant storefronts, public platform-owner flows, payment vault, monitoring, APIs, AI surfaces, and owner administration.
 
-> **Proprietary software.** This repository is public for project tracking and deployment continuity, but it does not grant any public license to copy, reuse, modify, redistribute, or commercialize the code. See [`LICENSE`](LICENSE).
-
----
-
-## Quick Start
-
-| Purpose | Command / Reference |
-|--------|----------------------|
-| Local setup | `cp env.example .env` → `python -m venv .venv` → activate venv → `pip install -r requirements.txt` |
-| Database migrations | `python -m flask db upgrade` |
-| Local smoke run | `python app.py` |
-| Unit tests | `pytest tests/unit -v --tb=short` |
-| Full deployment guide | [`DEPLOYMENT_PYTHONANYWHERE.md`](DEPLOYMENT_PYTHONANYWHERE.md) |
-| Documentation index | [`docs/README.md`](docs/README.md) |
-| Brand identity | [`docs/AZADEXA_BRAND.md`](docs/AZADEXA_BRAND.md) |
-| AI/developer rules | [`AGENTS.md`](AGENTS.md) |
-
-Production must run through WSGI on PythonAnywhere or an equivalent WSGI host. Do **not** run `python app.py` as a production process.
+> **Proprietary software.** This repository is public for project tracking and continuity, but it does not grant any public license to copy, reuse, modify, redistribute, host, or commercialize the code. See [`LICENSE`](LICENSE).
 
 ---
 
 ## العربية
 
-**أزاديكسا** منصة ERP وتجـارة ذكية متعددة المستأجرين لإدارة العمليات التجارية الحقيقية، وتشمل:
+**أزاديكسا** منصة ERP وتجـارة ومحاسبة ومخزون ذكية متعددة المستأجرين.
 
-- المبيعات والمشتريات والمخزون.
-- المحاسبة، دفتر الأستاذ، القيود اليومية، والتقارير المالية.
-- العملاء، الموردين، الصناديق، المدفوعات، والشيكات.
-- المستودعات، الفروع، المستخدمين، والصلاحيات.
-- المتاجر الخاصة بكل مستأجر عند تفعيلها.
-- لوحة مالك المنصة لإدارة المنصة، الاشتراكات، الدفعات العامة، والإعدادات العليا.
-- صفحات عامة للاندنج، التبرعات، وشراء الحزم، منفصلة عن بيانات المستأجرين.
+المنصة تدير:
 
-الهدف من المشروع هو توفير منصة تشغيل أعمال قابلة للنشر، قابلة للتوسع، ومعزولة بين المستأجرين، وليست مجرد متجر إلكتروني منفرد.
+- الشركات/المستأجرين والفروع والمستخدمين والصلاحيات.
+- المبيعات، نقاط البيع، المرتجعات، العملاء، والمدفوعات.
+- المشتريات، الموردين، الشيكات، المصاريف، والصناديق.
+- المنتجات، التصنيفات، المستودعات، الحركات، السيريالات، تكلفة المخزون، ومتوسط التكلفة.
+- دفتر الأستاذ العام، القيود اليومية، شجرة الحسابات، الفترات، التسويات، الموازنات، الأصول، ومراكز التكلفة والربح.
+- متجر خاص لكل مستأجر مرتبط بمستودع أونلاين خاص به.
+- صفحات عامة للاندنج، التبرعات، وشراء الحزم كجزء من نطاق مالك المنصة.
+- خزنة دفع وعمليات حساسة خاصة بمالك المنصة.
+- تكاملات وتقارير ومراقبة وواجهات API وGraphQL وAI عند تفعيلها.
 
----
-
-## English
-
-Azadexa is a business operating platform that combines ERP, commerce, accounting, inventory, payments, and tenant-specific store workflows in one multi-tenant SaaS system.
-
-The project is built for controlled deployment, tenant isolation, and progressive hardening toward production use.
+القاعدة الأساسية: **كل مستأجر له بياناته وعملياته ومتجره ومحاسبته، بينما صفحات اللاندنج والتبرعات وشراء الحزم وخزنة الدفع العامة هي نطاق مالك المنصة.**
 
 ---
 
-## Product Positioning
+## Product Identity
 
-**Azadexa — Intelligent ERP & Commerce Platform**
+| Item | Value |
+|------|-------|
+| Product | Azadexa / أزاديكسا |
+| Company | AZAD Intelligent Systems |
+| System type | Multi-Tenant ERP SaaS / Commerce and Accounting Platform |
+| Repository | `AbuAzad2025/Azad-UAE` |
+| License | Proprietary / All Rights Reserved |
 
-Extended positioning:
-
-**Azadexa — Multi-Tenant ERP Cloud for Commerce, Accounting & Operations**
-
-System type:
+Recommended positioning:
 
 ```text
-Multi-Tenant ERP SaaS / Commerce Platform
-```
-
-Company:
-
-```text
-AZAD Intelligent Systems
+Azadexa — Intelligent ERP, Accounting & Commerce Platform
 ```
 
 ---
 
-## Core Capabilities
+## System Surfaces
 
-| Area | Capabilities |
-|------|--------------|
-| Multi-tenancy | Tenant-aware data isolation, tenant-scoped business workflows, tenant-specific stores |
-| Sales | invoices, sales lines, payments, customer balances, returns where enabled |
-| Purchases | supplier workflows, purchase records, payable tracking, inventory effects |
-| Inventory | products, categories, stock movements, warehouse-level control |
-| Accounting | GL posting, ledger workflows, core accounts, reports, balances |
-| Warehouses | warehouse records, stock updates, movement tracking |
-| Customers & suppliers | profiles, balances, statements, related transactions |
-| Payments | payment flows, platform payment vault, tenant/store payment separation |
-| Branches & users | branch-aware access, roles, permissions, operational controls |
-| Platform owner | owner-only operations, package purchases, public payments, platform-level settings |
-| UI | RTL Arabic-first interface with modern ERP dashboard patterns |
+The codebase registers a broad set of modules, including sales, POS, returns, customers, suppliers, purchases, products, warehouse, unified inventory, branches, payments, cheques, expenses, ledger, advanced ledger, admin ledger, payroll, reports, treasury, tenant store, public shop, payment vault, monitoring, analytics API, API docs, GraphQL, gamification, AI, users, tenants, language, WhatsApp, public pages, and owner control.
+
+See [`docs/SYSTEM_MODULES.md`](docs/SYSTEM_MODULES.md) for the code-derived module map.
 
 ---
 
-## Repository Structure
+## Core Domains
 
-| Path | Purpose |
-|------|---------|
-| `app.py` | Flask application factory and startup wiring |
-| `routes/` | Web routes and API endpoints |
-| `models/` | SQLAlchemy models |
-| `services/` | Business logic and domain services |
-| `templates/` | Jinja2 HTML templates |
-| `static/` | CSS, JavaScript, images, and frontend assets |
-| `migrations/` | Alembic database migrations |
-| `utils/` | shared helpers, decorators, tenant helpers, security helpers |
-| `runtime_core/` | startup/runtime integrity repairs |
-| `tools/` | development, QA, audit, and maintenance utilities |
-| `docs/` | product, architecture, security, operations, and brand documentation |
-| `AGENTS.md` | mandatory instructions for AI coding assistants and internal automation |
+| Domain | What it covers |
+|--------|----------------|
+| Tenant ERP | tenant-specific sales, purchases, customers, suppliers, branches, users, roles, permissions |
+| Inventory | products, warehouses, stock movements, warehouse stock, serials, warranty, cost history, MWAC/WAC support |
+| Accounting | GL accounts, journal entries, journal lines, periods, mappings, budgets, assets, reconciliation, cost/profit centers |
+| Payments | tenant payments/receipts, cheques, pending confirmations, rejected cheque reversal behavior |
+| Commerce | tenant store settings, public catalog, checkout, coupons, variants, loyalty, reviews, saved accounts, stock alerts |
+| Platform owner | owner panel, package purchases, public donation/payment flows, payment vault, platform-level controls |
+| Integrations | WhatsApp, APIs, GraphQL, analytics, monitoring, AI fallback/features |
 
 ---
 
-## Required Runtime
-
-| Item | Recommendation |
-|------|---------------|
-| Python | Python 3.11 for production deployment compatibility |
-| Database | PostgreSQL for production |
-| Web server | WSGI host, such as PythonAnywhere Web app configuration |
-| Config | `.env` based on `env.example` / production example files |
-| Secrets | environment variables only; never commit real secrets |
-
----
-
-## Environment Variables
-
-Use placeholders only in committed files. Production secrets must live only on the server.
-
-```bash
-SECRET_KEY=CHANGE_ME
-CARD_ENCRYPTION_KEY=CHANGE_ME
-OWNER_PASSWORD=CHANGE_ME
-DATABASE_URL=postgresql+psycopg2://USER:PASS@HOST:5432/DBNAME
-DEBUG=false
-APP_ENV=production
-FLASK_ENV=production
-BASE_URL=https://YOUR-DOMAIN
-PREFERRED_URL_SCHEME=https
-AZAD_MASTER_DAILY_SEED=CHANGE_ME
-# AZAD_MASTER_LOGIN_DISABLED=1
-NOWPAYMENTS_IPN_SECRET=CHANGE_ME
-```
-
-Important production rules:
-
-- `DEBUG=false` requires HTTPS because secure cookies should be enabled.
-- Never use `SKIP_SYSTEM_INTEGRITY=1` in production.
-- Keep `.env`, database dumps, backups, upload folders, and private keys outside Git.
-- Register one canonical payment webhook URL per payment provider/environment.
-
----
-
-## Tenant and Payment Policy
+## Tenant Model
 
 Azadexa is multi-tenant by design.
 
-- Each tenant has its own operational data, users, branches, warehouse data, sales, purchases, inventory, accounting, and store scope.
-- Tenant storefronts must remain tenant-scoped.
-- Public pages such as landing pages, donations, and package purchases belong to platform-owner flows.
-- Public payments and package purchases are platform revenue and must not be mixed into tenant accounting unless an explicit business process requires that.
-- Platform-owner vault operations must remain owner-only.
+- Normal company users are locked to their own `tenant_id`.
+- Platform owner users can switch active tenant context.
+- Tenant-owned models are protected through ORM scoping and explicit tenant helpers.
+- Storefront routes resolve tenant context from the store slug/domain and must explicitly filter by that tenant.
+- User management is specially scoped because `User` is exempt from automatic ORM scoping for Flask-Login loading.
 
-See [`docs/SECURITY_AND_TENANCY.md`](docs/SECURITY_AND_TENANCY.md) and [`docs/ACCOUNTING_AND_INVENTORY_RULES.md`](docs/ACCOUNTING_AND_INVENTORY_RULES.md).
+See [`docs/SECURITY_AND_TENANCY.md`](docs/SECURITY_AND_TENANCY.md).
+
+---
+
+## Accounting and Inventory Model
+
+Financial and stock operations are first-class system behavior.
+
+- Sales calculate subtotals, discounts, tax, currency/base amount, confirmed payments, pending cheques, returns, and balance due.
+- Purchases support supplier linkage, warehouse/branch context, landed-cost components, and base-currency amounts.
+- GL posting is mandatory for financial documents that require accounting impact.
+- Stock movements update per-warehouse stock and legacy product stock while preserving movement history.
+- MWAC/WAC cost tracking uses warehouse-level cost and cost history where enabled.
+- Returns and reversals must be traceable, not silent deletes.
+
+See [`docs/ACCOUNTING_AND_INVENTORY_RULES.md`](docs/ACCOUNTING_AND_INVENTORY_RULES.md).
+
+---
+
+## Store and Platform Payment Boundaries
+
+Azadexa has two different commerce/payment meanings:
+
+1. **Tenant store commerce** — each tenant can have a tenant-specific public store, tied to its own online warehouse and tenant products.
+2. **Platform-owner public flows** — landing pages, donations, package purchases, and platform payment vault belong to AZAD/platform-owner scope.
+
+These must not be mixed. Tenant store orders are tenant operations; public donations and package purchases are platform-owner revenue flows unless an explicit business rule says otherwise.
 
 ---
 
@@ -167,86 +113,37 @@ See [`docs/SECURITY_AND_TENANCY.md`](docs/SECURITY_AND_TENANCY.md) and [`docs/AC
 | Document | Purpose |
 |----------|---------|
 | [`docs/README.md`](docs/README.md) | Documentation index |
-| [`docs/AZADEXA_BRAND.md`](docs/AZADEXA_BRAND.md) | Product name, positioning, and brand rules |
-| [`docs/PROJECT_OVERVIEW.md`](docs/PROJECT_OVERVIEW.md) | Business and technical overview |
-| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | System architecture and module boundaries |
-| [`docs/SECURITY_AND_TENANCY.md`](docs/SECURITY_AND_TENANCY.md) | Security, tenant isolation, owner-only flows |
-| [`docs/ACCOUNTING_AND_INVENTORY_RULES.md`](docs/ACCOUNTING_AND_INVENTORY_RULES.md) | Accounting, ledger, stock, returns, and balance rules |
-| [`docs/OPERATIONS_RUNBOOK.md`](docs/OPERATIONS_RUNBOOK.md) | Local, staging, production, backups, and incident runbook |
+| [`docs/AZADEXA_BRAND.md`](docs/AZADEXA_BRAND.md) | Product name, positioning, Arabic/English brand rules |
+| [`docs/SYSTEM_MODULES.md`](docs/SYSTEM_MODULES.md) | Code-derived module and model map |
+| [`docs/PROJECT_OVERVIEW.md`](docs/PROJECT_OVERVIEW.md) | Business and system overview |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | System architecture, tenant model, service boundaries |
+| [`docs/SECURITY_AND_TENANCY.md`](docs/SECURITY_AND_TENANCY.md) | Tenant isolation, owner-only flows, public/store/payment boundaries |
+| [`docs/ACCOUNTING_AND_INVENTORY_RULES.md`](docs/ACCOUNTING_AND_INVENTORY_RULES.md) | Ledger, payment, stock, returns, MWAC, and balance rules |
+| [`docs/OPERATIONS_RUNBOOK.md`](docs/OPERATIONS_RUNBOOK.md) | Internal operating model and incident thinking, not deployment instructions |
 | [`AGENTS.md`](AGENTS.md) | Rules for AI coding assistants and internal automation |
-| [`DEPLOYMENT_PYTHONANYWHERE.md`](DEPLOYMENT_PYTHONANYWHERE.md) | PythonAnywhere deployment guide |
 
 ---
 
-## Development Workflow
+## Development Guardrails
 
-```bash
-python -m venv .venv
-.venv\Scripts\activate        # Windows
-# source .venv/bin/activate    # Linux/macOS
-pip install -r requirements.txt
-python -m flask db upgrade
-python app.py
-```
-
-Before committing changes:
-
-```bash
-python -m py_compile app.py
-pytest tests/unit -v --tb=short
-```
-
-Run broader QA tools only against development or staging databases unless a tool is explicitly read-only and production-safe.
-
----
-
-## Deployment Summary
-
-Production deployment should follow this path:
-
-1. Prepare production server and Python 3.11 virtual environment.
-2. Clone the repository.
-3. Install requirements.
-4. Configure PostgreSQL.
-5. Create server-side `.env` with secure permissions.
-6. Run migrations with `python -m flask db upgrade`.
-7. Configure WSGI to import `create_app()` from `app.py`.
-8. Map static files.
-9. Reload the web app.
-10. Verify login, tenant isolation, store behavior, accounting flows, payments, and backups.
-
-See [`docs/OPERATIONS_RUNBOOK.md`](docs/OPERATIONS_RUNBOOK.md) and [`DEPLOYMENT_PYTHONANYWHERE.md`](DEPLOYMENT_PYTHONANYWHERE.md).
-
----
-
-## Security Principles
-
-- No real secrets in Git.
-- Tenant isolation is a core architecture requirement, not a UI preference.
-- Owner-only routes must remain protected with owner-level checks.
-- Payment vault and card-related workflows must be treated as sensitive platform-owner functionality.
-- Public payment callbacks and webhooks must be validated and logged safely.
-- Debug mode and bypass flags are forbidden in production.
-- All production changes should be tested first on staging or a disposable clone of production data with sensitive data removed.
-
----
-
-## Repository Topics
-
-Recommended GitHub topics:
+Before changing code, identify the scope:
 
 ```text
-azadexa
-erp
-multi-tenant
-saas
-commerce-platform
-inventory-management
-accounting
-flask
-python
-business-platform
+tenant-scoped / branch-scoped / tenant-store-scoped / platform-owner-scoped / public
 ```
+
+Do not casually change:
+
+- tenant filters;
+- owner-only guards;
+- payment vault boundaries;
+- customer/supplier balance logic;
+- GL debit/credit posting;
+- stock movement and warehouse cost logic;
+- tenant store slug/domain resolution;
+- public donation/package payment ownership.
+
+Read [`AGENTS.md`](AGENTS.md) before using AI coding assistants on this repository.
 
 ---
 
@@ -254,7 +151,8 @@ business-platform
 
 **Product:** Azadexa / أزاديكسا  
 **Company:** AZAD Intelligent Systems  
-**License model:** Proprietary / All Rights Reserved  
-**Repository:** `AbuAzad2025/Azad-UAE`
+**Owner:** Eng. Ahmad Ghannam  
+**Contact:** rafideen.ahmadghannam@gmail.com — 0562150193 / +972562150193  
+**License model:** Proprietary / All Rights Reserved
 
 © 2026 AZAD Intelligent Systems — All Rights Reserved.
