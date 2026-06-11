@@ -1,31 +1,31 @@
 # Azadexa Project Overview
 
-**Azadexa** / **أزاديكسا** is an intelligent multi-tenant ERP and commerce platform by **AZAD Intelligent Systems**.
+**Azadexa** / **أزاديكسا** is an intelligent multi-tenant ERP, accounting, inventory, and commerce platform by **AZAD Intelligent Systems**.
 
-The platform is intended to operate real business workflows, not only display products or run a simple online shop. It combines ERP, accounting, inventory, tenant-specific commerce, branch operations, and platform-owner administration in one system.
+The platform operates real business workflows. It combines tenant ERP operations, accounting, inventory, tenant-specific commerce, branch operations, platform-owner administration, public package/donation flows, payment vault, monitoring, APIs, and optional AI surfaces in one system.
 
 ---
 
 ## Product summary
 
-Azadexa is a proprietary SaaS platform for businesses that need:
+Azadexa is a proprietary business operating platform for organizations that need:
 
-- sales and purchases management;
-- inventory and warehouse control;
-- customer and supplier balances;
-- accounting and ledger workflows;
-- branch-aware permissions;
-- tenant-specific stores;
-- platform-owner payment and package flows;
-- Arabic-first ERP user experience with support for modern business workflows.
+- sales, POS, returns, customer balances, and payment workflows;
+- purchases, supplier balances, and payable workflows;
+- product catalog, warehouse control, stock movement, serials, warranty, and costing;
+- general ledger, journal entries, account mapping, VAT, budgets, assets, and financial dimensions;
+- branch-aware permissions and warehouse access;
+- tenant-specific stores with public catalog, cart, checkout, coupons, variants, loyalty, and notifications;
+- platform-owner package purchases, public donations, vault/payment settings, and owner controls;
+- Arabic-first ERP user experience with modern business workflows.
 
 ---
 
 ## Arabic summary
 
-**أزاديكسا** منصة ERP وتجـارة ذكية متعددة المستأجرين لإدارة الشركات، الفروع، المبيعات، المشتريات، المخزون، المحاسبة، العملاء، الموردين، المستودعات، المتاجر، المدفوعات، وعمليات مالك المنصة.
+**أزاديكسا** منصة ERP وتجـارة ومحاسبة ومخزون ذكية متعددة المستأجرين.
 
-المنصة ليست متجراً واحداً فقط؛ بل نظام تشغيل أعمال يسمح لكل مستأجر بإدارة بياناته وعملياته ومتجره بمعزل عن المستأجرين الآخرين، مع وجود لوحة عليا لمالك المنصة.
+هي ليست متجراً واحداً ولا برنامج فواتير بسيطاً؛ بل نظام تشغيل أعمال يسمح لكل مستأجر بإدارة بياناته وعملياته ومحاسبته ومخزونه ومتجره بمعزل عن الآخرين، مع وجود طبقة عليا لمالك المنصة لإدارة الحزم، الدفعات العامة، التبرعات، خزنة الدفع، والتحكمات العامة.
 
 ---
 
@@ -33,11 +33,33 @@ Azadexa is a proprietary SaaS platform for businesses that need:
 
 | Actor | Description |
 |------|-------------|
-| Platform owner | The system owner who controls platform-level settings, packages, public payments, and owner-only operations |
-| Tenant admin | A company/tenant administrator who manages users, branches, warehouse data, store settings, and operations inside the tenant scope |
-| Branch user | A user working inside a tenant branch according to assigned permissions |
-| Accountant | A user focused on ledger, payments, balances, reports, invoices, and financial workflows |
-| Store/customer user | A storefront visitor or customer interacting with tenant store or public landing flows, depending on route scope |
+| Platform owner | Controls owner panel, package purchases, public donations, vault/payment settings, tenant administration, and platform-level policies |
+| Tenant admin | Manages company users, branches, warehouses, store settings, and tenant operations |
+| Branch user | Works inside tenant branch visibility and assigned permissions |
+| Accountant | Manages ledger, payments, cheques, balances, reports, assets, budgets, and financial postings |
+| Seller / POS user | Creates sales, POS invoices, receipts, and related inventory effects |
+| Warehouse user | Manages stock, transfers, warehouse quantities, and stock adjustments |
+| Store visitor/customer | Uses a tenant-specific public store catalog, cart, checkout, account, reviews, loyalty, or order view |
+| API/integration actor | Interacts with API, GraphQL, analytics, WhatsApp, monitoring, or AI surfaces under the same boundaries |
+
+---
+
+## Code-derived module families
+
+The repository modules show these major families:
+
+| Family | Included areas |
+|--------|----------------|
+| Tenant ERP | sales, POS, returns, customers, suppliers, purchases, products, branches, users, roles, permissions |
+| Inventory | warehouses, stock movements, product warehouse stock, product serials, warranty claims, stock alerts |
+| Costing | product warehouse cost, product cost history, landed unit cost, MWAC/WAC behavior |
+| Accounting | GL accounts, journal entries, journal lines, periods, mappings, bank reconciliation, budgets, assets, cost/profit centers, tax rules |
+| Payments | payments, receipts, cheques, pending/rejected cheque behavior, cash boxes, treasury |
+| Commerce | tenant stores, store payment methods, shop accounts, wishlist, reviews, abandoned carts, saved payments, variants, coupons, loyalty, newsletters, shipments |
+| Platform owner | payment vault, card vault, card payments, donations, packages, package purchases, platform fees, owner panel |
+| Control surfaces | monitoring, API, enhanced API, analytics API, API docs, GraphQL, WhatsApp, gamification, AI |
+
+See [`SYSTEM_MODULES.md`](SYSTEM_MODULES.md) and [`SYSTEM_FLOWS.md`](SYSTEM_FLOWS.md) for deeper maps.
 
 ---
 
@@ -45,41 +67,45 @@ Azadexa is a proprietary SaaS platform for businesses that need:
 
 | Module | Purpose |
 |--------|---------|
-| Sales | sales records, invoices, line items, customer balances, payment links |
-| Purchases | purchase records, supplier balances, inventory effects |
-| Products | product catalog, categories, stock units, pricing data |
-| Inventory | stock movements, warehouse quantities, product availability |
-| Warehouses | warehouse-level control and movement records |
-| Accounting | chart of accounts, journal entries, general ledger, reports |
-| Customers | customer profiles, transaction history, statements, balances |
-| Suppliers | supplier profiles, purchase links, balances |
-| Payments | operational payments plus platform-owner payment vault boundaries |
-| Branches | branch-aware visibility and permissions |
-| Users and roles | authentication, authorization, role-based access |
-| Tenant stores | per-tenant commerce storefronts and store management |
-| Platform owner | owner-only vault, subscriptions/packages, public revenue flows, high-level controls |
+| Sales | sales records, invoices, line items, customer balances, payments, status, returns interaction |
+| POS | fast selling workflow with stock and payment impact |
+| Purchases | supplier documents, landed costs, stock receipt, supplier payable behavior |
+| Products | catalog, categories, pricing tiers, serials, images, warranty, partner shares |
+| Inventory | stock movements, warehouse quantities, transfers, adjustments, online warehouse stock |
+| Warehouses | physical and online warehouses, branch linkage, stock visibility |
+| Accounting | chart of accounts, journal entries, GL lines, account mappings, periods, VAT, reports |
+| Customers | customer profiles, classification, statements, balances, shop account linkage |
+| Suppliers | supplier profiles, purchase links, balances, payment history |
+| Payments and cheques | incoming/outgoing payments, receipts, confirmed/pending/rejected cheque states |
+| Branches | branch-aware operations, report scope, warehouse access |
+| Tenant stores | one store per tenant, online warehouse, public catalog, cart, checkout, coupons, loyalty |
+| Platform owner | owner panel, package purchases, donations, vault, platform payment settings, tenant administration |
 
 ---
 
 ## Platform boundaries
 
-Azadexa has three important scopes:
+Azadexa has five important scopes:
 
-1. **Tenant scope** — normal business operations for a specific tenant/company.
-2. **Tenant store scope** — store and commerce operations that belong to one tenant.
-3. **Platform-owner scope** — public landing pages, donations, package purchases, owner vault, and system-owner administration.
+1. **Tenant ERP scope** — normal business operations for one tenant/company.
+2. **Branch scope** — visibility and operations inside a branch/warehouse boundary.
+3. **Tenant store scope** — public commerce tied to one tenant and one online warehouse.
+4. **Platform-owner scope** — owner panel, payment vault, donations, package purchases, platform fees, and global controls.
+5. **Public scope** — anonymous pages that must expose only safe public information.
 
-These scopes must not be mixed accidentally.
+These scopes are core system boundaries and must not be mixed accidentally.
 
 ---
 
 ## Tenant policy
 
 - Each tenant owns its operational records.
-- Tenant data must be isolated in queries, services, routes, and templates.
-- Tenant stores are tenant-specific.
-- Public landing, donations, and package purchase flows are platform-level flows.
-- Platform public payments belong to the platform-owner treasury/vault unless explicitly designed otherwise.
+- Company users are locked to their own tenant context.
+- Platform-owner users may switch active tenant context.
+- Tenant data must be isolated in queries, services, routes, templates, reports, APIs, and store flows.
+- Tenant stores are tenant-specific and tied to their store identity.
+- Public landing, donations, and package purchase flows are platform-owner flows.
+- Public platform payments belong to the platform-owner vault unless explicitly designed otherwise.
 
 ---
 
@@ -91,25 +117,27 @@ A financial workflow should answer:
 
 - Which tenant owns this transaction?
 - Which branch is affected?
-- Which customer/supplier/account is affected?
+- Which customer, supplier, account, warehouse, cost center, profit center, or partner is affected?
 - Does this change inventory?
-- Does this create a ledger entry?
+- Does this create or reverse a ledger entry?
 - Does this affect tenant money or platform-owner money?
-- Is the operation reversible or auditable?
+- Is the operation traceable through source document, reference type, and audit trail?
 
 ---
 
-## Production goal
+## System goals
 
-The project should be treated as a production-bound proprietary ERP platform. Documentation, code, migrations, tests, and deployment procedures should support:
+The system documentation and code should support:
 
-- safe deployment;
-- reliable rollback/backup planning;
-- tenant isolation;
-- secure owner-only workflows;
-- clear development onboarding;
-- Arabic-first business usability;
-- stable accounting and inventory behavior.
+- accurate description of actual modules and model families;
+- tenant isolation and branch visibility as first-class concepts;
+- correct sales, purchase, payment, cheque, return, and balance behavior;
+- inventory movement traceability and warehouse-level costing;
+- GL posting with balanced entries and clear reference types;
+- tenant-store behavior as a tenant-owned commerce layer;
+- public donations and package purchases as platform-owner flows;
+- clear boundaries for AI, API, GraphQL, monitoring, and integrations;
+- Arabic-first business usability and professional ERP wording.
 
 ---
 
@@ -121,6 +149,7 @@ Azadexa should not be described as:
 - a generic open-source ERP template;
 - a single-tenant shop;
 - a demo-only Flask app;
-- a public reusable framework.
+- a public reusable framework;
+- a documentation-only project.
 
 It is a proprietary business platform owned by **AZAD Intelligent Systems**.
