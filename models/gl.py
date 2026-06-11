@@ -1,6 +1,8 @@
 from datetime import datetime, timezone
+from decimal import Decimal
 import sqlalchemy as sa
 from extensions import db
+from utils.currency_utils import context_aware_default_currency
 from utils.gl_services import gl_next_entry_number
 
 class GLAccount(db.Model):
@@ -17,7 +19,7 @@ class GLAccount(db.Model):
     parent_id = db.Column(db.Integer, db.ForeignKey('gl_accounts.id'), index=True)
     branch_id = db.Column(db.Integer, db.ForeignKey('branches.id'), nullable=True, index=True)
     type = db.Column(db.String(20), nullable=False, index=True)  # asset, liability, equity, revenue, expense
-    currency = db.Column(db.String(3), default='AED', nullable=False)  # TODO: use Config.DEFAULT_CURRENCY
+    currency = db.Column(db.String(3), default=context_aware_default_currency, nullable=False)  # TODO: use Config.DEFAULT_CURRENCY
     is_active = db.Column(db.Boolean, default=True, nullable=False, index=True)
     is_header = db.Column(db.Boolean, default=False)  # حساب رئيسي (لا يقبل قيود مباشرة)
     level = db.Column(db.Integer, default=0)  # مستوى الحساب في الشجرة
@@ -112,7 +114,7 @@ class GLJournalEntry(db.Model):
     reference_id = db.Column(db.Integer)
     branch_id = db.Column(db.Integer, db.ForeignKey('branches.id'), nullable=True, index=True) # New Branch ID
     entry_type = db.Column(db.String(30), default='manual')  # manual, auto, adjustment, closing, reversing
-    currency = db.Column(db.String(3), default='AED', nullable=False)  # TODO: use Config.DEFAULT_CURRENCY
+    currency = db.Column(db.String(3), default=context_aware_default_currency, nullable=False)  # TODO: use Config.DEFAULT_CURRENCY
     exchange_rate = db.Column(db.Numeric(15, 6), default=1)
     total_debit = db.Column(db.Numeric(18, 3), default=0)
     total_credit = db.Column(db.Numeric(18, 3), default=0)
@@ -358,3 +360,14 @@ class GLAccountMapping(db.Model):
                 f"Unknown GL concept code '{concept_code}'. "
                 f"Valid codes: {sorted(VALID_GL_CONCEPT_CODES)}"
             )
+
+
+@sa.event.listens_for(GLJournalEntry, 'before_insert')
+@sa.event.listens_for(GLJournalEntry, 'before_update')
+def _validate_journal_entry_balance(mapper, connection, target):
+    diff = abs((target.total_debit or Decimal('0')) - (target.total_credit or Decimal('0')))
+    if diff > Decimal('0.001'):
+        raise ValueError(
+            f'Journal entry {target.entry_number or "(new)"} is not balanced: '
+            f'debit={target.total_debit} credit={target.total_credit}'
+        )

@@ -10,9 +10,9 @@ def gl_ensure_core_accounts(tenant_id=None):
     return GLService.ensure_core_accounts(tenant_id=tenant_id)
 
 
-def gl_get_customer_credit_account(customer):
+def gl_get_customer_credit_account(customer, branch_id=None, tenant_id=None):
     from services.gl_service import GLService
-    return GLService.get_customer_credit_account(customer)
+    return GLService.get_customer_credit_account(customer, branch_id=branch_id, tenant_id=tenant_id)
 
 
 def gl_get_customer_credit_concept(customer):

@@ -59,36 +59,23 @@ class TaxService:
     @classmethod
     def get_vat_return(cls, date_from: str, date_to: str, tenant_id=None) -> dict:
         """
-        تجميع VAT Return: Output VAT (من المبيعات) - Input VAT (من المشتريات).
+        تقرير VAT موحد — يستخدم GL (القيود المحاسبية) بدلاً من فواتير المبيعات/المشتريات مباشرة.
         """
-        from models import Sale, Purchase
+        from services.gl_service import GLService
 
         strategy = cls._get_strategy(tenant_id)
+        try:
+            gl_report = GLService.get_vat_report(
+                date_from=date_from or None,
+                date_to=date_to or None,
+                tenant_id=tenant_id,
+            )
+            output_vat = Decimal(str(gl_report.get('vat_output', 0)))
+            input_vat = Decimal(str(gl_report.get('vat_input', 0)))
+        except Exception:
+            output_vat = Decimal('0')
+            input_vat = Decimal('0')
 
-        # Output VAT from confirmed sales in date range
-        sales = Sale.query.filter(
-            Sale.status == 'confirmed',
-            Sale.sale_date >= date_from,
-            Sale.sale_date <= date_to,
-        )
-        if tenant_id is not None:
-            sales = sales.filter(Sale.tenant_id == tenant_id)
-        output_vat = sum(
-            Decimal(str(s.amount_aed or 0)) * Decimal(str(s.tax_rate or 0)) / Decimal('100')
-            for s in sales.all()
-        )
-
-        # Input VAT from confirmed purchases in date range
-        purchases = Purchase.query.filter(
-            Purchase.status == 'confirmed',
-            Purchase.purchase_date >= date_from,
-            Purchase.purchase_date <= date_to,
-        )
-        if tenant_id is not None:
-            purchases = purchases.filter(Purchase.tenant_id == tenant_id)
-        input_vat = sum(
-            Decimal(str(p.amount_aed or 0)) * Decimal(str(p.tax_rate or 0)) / Decimal('100')
-            for p in purchases.all()
-        )
-
-        return strategy.format_tax_return(output_vat, input_vat, date_from, date_to)
+        result = strategy.format_tax_return(output_vat, input_vat, date_from, date_to)
+        result['source'] = 'gl'
+        return result

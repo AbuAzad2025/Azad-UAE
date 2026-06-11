@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 from extensions import db
+from utils.currency_utils import context_aware_default_currency
 
 
 class Customer(db.Model):
@@ -24,7 +25,7 @@ class Customer(db.Model):
     address = db.Column(db.Text)
     tax_number = db.Column(db.String(50))
     
-    preferred_currency = db.Column(db.String(3), default='AED')  # TODO: use Config.DEFAULT_CURRENCY
+    preferred_currency = db.Column(db.String(3), default=context_aware_default_currency)  # TODO: use Config.DEFAULT_CURRENCY
     
     credit_limit = db.Column(db.Numeric(15, 3), default=0)
     total_purchases = db.Column(db.Numeric(15, 3), default=0)

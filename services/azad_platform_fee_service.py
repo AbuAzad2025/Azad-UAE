@@ -14,8 +14,16 @@ from utils.gl_reference_types import GLRef
 
 
 class AzadPlatformFeeService:
-    RATE = Decimal('0.01')
-    RATE_PERCENT = Decimal('1.00')
+    DEFAULT_RATE = Decimal('0.01')
+    DEFAULT_RATE_PERCENT = Decimal('1.00')
+
+    @staticmethod
+    def _get_rate(tenant_id=None):
+        """Read platform fee rate from SystemSettings (owner-configurable)."""
+        from models import SystemSettings
+        settings = SystemSettings.get_current()
+        rate = Decimal(str(settings.azad_platform_fee_rate or 1.00))
+        return (rate / Decimal('100')).quantize(Decimal('0.0001'), rounding=ROUND_HALF_UP), rate
 
     @staticmethod
     def is_online_store_transaction(sale) -> bool:
@@ -71,7 +79,8 @@ class AzadPlatformFeeService:
         if base_amount <= Decimal('0'):
             return None
 
-        fee_amount = (base_amount * AzadPlatformFeeService.RATE).quantize(
+        rate_decimal, rate_percent = AzadPlatformFeeService._get_rate(tenant_id)
+        fee_amount = (base_amount * rate_decimal).quantize(
             Decimal('0.001'), rounding=ROUND_HALF_UP
         )
         if fee_amount <= Decimal('0'):
@@ -84,7 +93,7 @@ class AzadPlatformFeeService:
             sale_id=int(sale.id),
             payment_id=getattr(payment, 'id', None),
             vault_id=getattr(vault, 'id', None),
-            rate_percent=AzadPlatformFeeService.RATE_PERCENT,
+            rate_percent=rate_percent,
             base_amount_aed=base_amount,
             fee_amount_aed=fee_amount,
             payment_channel=(payment_channel or getattr(sale, 'checkout_payment_method', None) or 'online_pay')[:50],
@@ -102,16 +111,16 @@ class AzadPlatformFeeService:
                     'account': GL_ACCOUNTS['commission_expense'],
                     'concept_code': 'COMMISSION_EXPENSE',
                     'debit': fee_amount,
-                    'description': f'Azad online platform fee 1% - {sale.sale_number}',
+                    'description': f'Azad online platform fee {rate_percent}% - {sale.sale_number}',
                 },
                 {
-                    'account': GL_ACCOUNTS['payable'],
-                    'concept_code': 'AP',
+                    'account': GL_ACCOUNTS['azad_platform_payable'],
+                    'concept_code': 'AZAD_PLATFORM_PAYABLE',
                     'credit': fee_amount,
                     'description': f'Azad payable - online platform fee {sale.sale_number}',
                 },
             ],
-            description=f'Azad platform fee {sale.sale_number}',
+            description=f'Azad platform fee ({rate_percent}%) {sale.sale_number}',
             reference_type=GLRef.AZAD_PLATFORM_FEE,
             reference_id=fee.id,
             exchange_rate=1.0,

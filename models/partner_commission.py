@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 from extensions import db
+from utils.currency_utils import context_aware_default_currency
 
 
 class PartnerCommissionEntry(db.Model):
@@ -16,7 +17,7 @@ class PartnerCommissionEntry(db.Model):
     product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=True, index=True)
 
     percentage = db.Column(db.Numeric(5, 2), nullable=False)
-    currency = db.Column(db.String(3), default='AED')
+    currency = db.Column(db.String(3), default=context_aware_default_currency)
     base_amount_aed = db.Column(db.Numeric(15, 3), nullable=False)
     commission_amount_aed = db.Column(db.Numeric(15, 3), nullable=False)
     

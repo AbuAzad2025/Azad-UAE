@@ -522,8 +522,6 @@ class SaleService:
 
         from decimal import Decimal as _D
         customer.apply_sale(_D(str(sale.amount_aed or 0)))
-        if paid_aed > Decimal('0'):
-            customer.apply_receipt(_D(str(paid_aed)))
 
     @staticmethod
     def has_inventory_posted(sale):
@@ -693,6 +691,14 @@ class SaleService:
     def cancel_sale(sale):
         if sale.status == 'cancelled':
             raise ValueError('الفاتورة ملغاة بالفعل')
+        
+        from models import Payment
+        confirmed_payments = Payment.query.filter_by(
+            sale_id=sale.id,
+            payment_confirmed=True,
+        ).count()
+        if confirmed_payments > 0:
+            raise ValueError('لا يمكن إلغاء فاتورة لها دفعات مؤكدة. قم بإلغاء الدفعات أولاً.')
         
         customer = sale.customer
         

@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 from extensions import db
+from utils.currency_utils import context_aware_default_currency
 
 
 class ExpenseCategory(db.Model):
@@ -39,7 +40,7 @@ class Expense(db.Model):
     description_ar = db.Column(db.String(255))
     
     amount = db.Column(db.Numeric(15, 3), nullable=False)
-    currency = db.Column(db.String(3), default='AED', nullable=False)
+    currency = db.Column(db.String(3), default=context_aware_default_currency, nullable=False)
     exchange_rate = db.Column(db.Numeric(15, 6), default=1)
     amount_aed = db.Column(db.Numeric(15, 3), nullable=False)
 

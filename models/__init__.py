@@ -7,6 +7,7 @@ from .product import Product, ProductCategory, ProductPartner
 from .warehouse import Warehouse, StockMovement, ProductWarehouseStock
 from .sale import Sale, SaleLine
 from .purchase import Purchase, PurchaseLine
+from .purchase_return import PurchaseReturn, PurchaseReturnLine
 from .payment import Payment, Receipt
 from .currency import Currency, ExchangeRate
 from .audit import AuditLog
@@ -55,6 +56,7 @@ from .payroll import Employee, SalaryAdvance, PayrollTransaction
 from .journal_entry_audit import JournalEntryAudit
 from .partner_commission import PartnerCommissionEntry
 from .azad_platform_fee import AzadPlatformFee
+from .azad_subscription_fee import AzadSubscriptionFee
 from .partner import Partner
 from .product_price_tier import ProductPriceTier
 from .product_image import ProductImage
@@ -74,6 +76,7 @@ __all__ = [
     'Branch',
     'Sale', 'SaleLine',
     'Purchase', 'PurchaseLine',
+    'PurchaseReturn', 'PurchaseReturnLine',
     'Payment', 'Receipt',
     'Currency', 'ExchangeRate',
     'AuditLog',
@@ -118,6 +121,7 @@ __all__ = [
     'Employee', 'SalaryAdvance', 'PayrollTransaction',
     'PartnerCommissionEntry',
     'AzadPlatformFee',
+    'AzadSubscriptionFee',
     'Partner',
     'PartnerProfitDistribution',
     'PartnerTransaction',

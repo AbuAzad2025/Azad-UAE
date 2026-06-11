@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 from decimal import Decimal, ROUND_HALF_UP
 from extensions import db
+from utils.currency_utils import context_aware_default_currency
 
 
 class ProductReturn(db.Model):
@@ -22,7 +23,7 @@ class ProductReturn(db.Model):
     total_amount = db.Column(db.Numeric(15, 3), nullable=False)
     refund_amount = db.Column(db.Numeric(15, 3), default=0)
     
-    currency = db.Column(db.String(3), default='AED', nullable=False)  # TODO: use Config.DEFAULT_CURRENCY
+    currency = db.Column(db.String(3), default=context_aware_default_currency, nullable=False)  # TODO: use Config.DEFAULT_CURRENCY
     exchange_rate = db.Column(db.Numeric(15, 6), default=1)
     amount_aed = db.Column(db.Numeric(15, 3), nullable=False)
     

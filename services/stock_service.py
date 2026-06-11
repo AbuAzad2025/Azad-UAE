@@ -410,9 +410,13 @@ class StockService:
                 continue
                 
             # Phase 5: Use landed_unit_cost (FOB + allocated landed cost) for valuation
-            landed_unit_cost = line.landed_unit_cost
+            capitalize_landed = current_app.config.get('ENABLE_LANDED_COST_CAPITALIZATION', True)
+            if capitalize_landed:
+                unit_cost_for_valuation = line.landed_unit_cost
+            else:
+                unit_cost_for_valuation = Decimal(str(line.unit_cost)) if line.unit_cost else Decimal('0')
             exchange_rate_decimal = Decimal(str(purchase.exchange_rate))
-            cost_in_aed = landed_unit_cost * exchange_rate_decimal
+            cost_in_aed = unit_cost_for_valuation * exchange_rate_decimal
             product.cost_price = cost_in_aed
             
             # MWAC recalculation (Phase 4)
@@ -570,6 +574,80 @@ class StockService:
                     )
                     db.session.add(pch)
     
+    @staticmethod
+    def reverse_purchase(purchase):
+        """إلغاء شراء - حذف المخزون مع عكس MWAC واستخدام التكلفة الأصلية من سجل التدقيق"""
+        from datetime import datetime, timezone
+        warehouse_id = getattr(purchase, 'warehouse_id', None)
+        tenant_id = getattr(purchase, 'tenant_id', None)
+        mwac_enabled = current_app.config.get('ENABLE_MWAC', False)
+
+        for line in purchase.lines:
+            StockService.remove_stock(
+                product_id=line.product_id,
+                quantity=line.quantity,
+                reference_type=GLRef.PURCHASE,
+                reference_id=purchase.id,
+                notes=f'إلغاء شراء: {purchase.purchase_number}',
+                warehouse_id=warehouse_id,
+            )
+
+            if mwac_enabled and tenant_id and warehouse_id:
+                pwc = ProductWarehouseCost.query.filter_by(
+                    tenant_id=tenant_id,
+                    product_id=line.product_id,
+                    warehouse_id=warehouse_id,
+                ).first()
+
+                if pwc:
+                    cost_history = ProductCostHistory.query.filter_by(
+                        tenant_id=tenant_id,
+                        product_id=line.product_id,
+                        warehouse_id=warehouse_id,
+                        movement_type='purchase',
+                        reference_type=GLRef.PURCHASE,
+                        reference_id=purchase.id,
+                    ).order_by(ProductCostHistory.id.desc()).first()
+
+                    qty = Decimal(str(line.quantity))
+
+                    if cost_history:
+                        original_unit_cost = abs(Decimal(str(cost_history.movement_unit_cost)))
+                    else:
+                        original_unit_cost = pwc.average_cost if pwc.average_cost else Decimal('0')
+
+                    old_qty = pwc.total_quantity
+                    old_value = pwc.total_value
+                    old_avg = pwc.average_cost
+
+                    new_qty = old_qty - qty
+                    reversed_value = qty * original_unit_cost
+                    new_value = old_value - reversed_value
+                    new_avg = (new_value / new_qty) if new_qty > 0 else Decimal('0')
+
+                    pwc.total_quantity = new_qty if new_qty >= 0 else Decimal('0')
+                    pwc.total_value = new_value if new_value >= 0 else Decimal('0')
+                    pwc.average_cost = new_avg.quantize(Decimal('0.0001')) if new_qty > 0 else Decimal('0')
+                    pwc.last_updated = datetime.now(timezone.utc)
+
+                    pch = ProductCostHistory(
+                        tenant_id=tenant_id,
+                        product_id=line.product_id,
+                        warehouse_id=warehouse_id,
+                        movement_type='purchase_reversal',
+                        reference_type=GLRef.PURCHASE,
+                        reference_id=purchase.id,
+                        old_average_cost=old_avg.quantize(Decimal('0.0001')) if old_avg else None,
+                        new_average_cost=pwc.average_cost,
+                        quantity_change=-qty,
+                        old_total_quantity=old_qty,
+                        new_total_quantity=pwc.total_quantity,
+                        old_total_value=old_value,
+                        new_total_value=pwc.total_value,
+                        movement_unit_cost=original_unit_cost.quantize(Decimal('0.0001')),
+                    )
+                    db.session.add(pch)
+
     @staticmethod
     def check_availability(product_id, quantity):
         product = Product.query.get(product_id)

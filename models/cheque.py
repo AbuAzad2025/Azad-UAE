@@ -5,6 +5,7 @@
 
 from datetime import datetime, timezone
 from extensions import db
+from utils.currency_utils import context_aware_default_currency
 from decimal import Decimal
 
 class Cheque(db.Model):
@@ -33,7 +34,7 @@ class Cheque(db.Model):
     
     # المبلغ والعملة
     amount = db.Column(db.Numeric(15, 2), nullable=False)
-    currency = db.Column(db.String(10), default='AED')  # TODO: use Config.DEFAULT_CURRENCY
+    currency = db.Column(db.String(10), default=context_aware_default_currency)  # TODO: use Config.DEFAULT_CURRENCY
     exchange_rate = db.Column(db.Numeric(15, 6), default=Decimal('1.0'))  # سعر الصرف عند الإنشاء
     clearance_exchange_rate = db.Column(db.Numeric(15, 6))  # سعر الصرف عند الصرف الفعلي
     amount_aed = db.Column(db.Numeric(15, 2))  # المبلغ بالعملة الأساسية عند الإنشاء

@@ -57,6 +57,9 @@ GL_ACCOUNTS = {
     'fx_loss': '6600',
     'bank_charges': '6260',
     'misc_expense': '6500',
+    'azad_platform_payable': '2180',
+    'azad_subscription_expense': '6410',
+    'azad_subscription_revenue': '4700',
 }
 
 GL_ACCOUNT_CONCEPTS = {
@@ -86,6 +89,9 @@ GL_ACCOUNT_CONCEPTS = {
     'fx_loss': 'FX_LOSS',
     'bank_charges': 'BANK_FEES',
     'misc_expense': 'MISC_EXPENSE',
+    'azad_platform_payable': 'AZAD_PLATFORM_PAYABLE',
+    'azad_subscription_expense': 'AZAD_SUBSCRIPTION_EXPENSE',
+    'azad_subscription_revenue': 'AZAD_SUBSCRIPTION_REVENUE',
 }
 
 class GLService:
@@ -769,16 +775,45 @@ class GLService:
 
     @staticmethod
     def get_trial_balance(date_from=None, date_to=None, branch_id=None, tenant_id=None):
-        """ميزان المراجعة. عند تمرير branch_id يُعزل العرض لقيود الفرع فقط."""
+        """ميزان المراجعة - يستخدم استعلاماً مجمعاً لتحسين الأداء."""
         from sqlalchemy import func
+        from decimal import Decimal
         
         tenant_id = tenant_id or gl_helpers.resolve_tenant_id(branch_id=branch_id)
+        
+        # استعلام مجمع واحد لكل الحسابات
+        agg_query = db.session.query(
+            GLJournalLine.account_id,
+            func.sum(GLJournalLine.debit).label('total_debit'),
+            func.sum(GLJournalLine.credit).label('total_credit'),
+        ).join(
+            GLJournalEntry, GLJournalLine.entry_id == GLJournalEntry.id
+        ).filter(
+            GLJournalEntry.is_posted == True
+        )
+        if tenant_id is not None:
+            agg_query = agg_query.filter(GLJournalEntry.tenant_id == int(tenant_id))
+        if branch_id:
+            agg_query = agg_query.filter(GLJournalEntry.branch_id == branch_id)
+        if date_from:
+            agg_query = agg_query.filter(func.date(GLJournalEntry.entry_date) >= date_from)
+        if date_to:
+            agg_query = agg_query.filter(func.date(GLJournalEntry.entry_date) <= date_to)
+        agg_query = agg_query.group_by(GLJournalLine.account_id)
+        
+        account_totals = {}
+        for row in agg_query.all():
+            account_totals[row.account_id] = (
+                Decimal(str(row.total_debit or 0)),
+                Decimal(str(row.total_credit or 0))
+            )
+        
         accounts_query = GLAccount.query.filter_by(is_active=True)
         if tenant_id is not None:
             accounts_query = accounts_query.filter_by(tenant_id=int(tenant_id))
         accounts = accounts_query.order_by(GLAccount.code).all()
-        result = []
         
+        result = []
         total_debit = Decimal('0')
         total_credit = Decimal('0')
         
@@ -794,25 +829,12 @@ class GLService:
                     'level': account.level
                 })
                 continue
-                
-            query = GLJournalLine.query.filter_by(account_id=account.id).join(GLJournalEntry)
             
-            if branch_id:
-                query = query.filter(GLJournalEntry.branch_id == branch_id)
-                
-            if date_from:
-                query = query.filter(func.date(GLJournalEntry.entry_date) >= date_from)
-            if date_to:
-                query = query.filter(func.date(GLJournalEntry.entry_date) <= date_to)
-                
-            lines = query.all()
-            
-            debit_sum = sum(line.debit for line in lines)
-            credit_sum = sum(line.credit for line in lines)
+            debit_sum, credit_sum = account_totals.get(account.id, (Decimal('0'), Decimal('0')))
             
             if debit_sum == 0 and credit_sum == 0:
                 continue
-                
+            
             balance = debit_sum - credit_sum
             
             total_debit += debit_sum
@@ -827,7 +849,7 @@ class GLService:
                 'balance': float(balance),
                 'level': account.level
             })
-            
+        
         return {
             'lines': result,
             'total_debit': float(total_debit),

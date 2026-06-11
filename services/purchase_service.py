@@ -300,3 +300,260 @@ class PurchaseService:
         LoggingCore.log_audit('create', 'purchases', purchase.id)
         
         return purchase
+
+    @staticmethod
+    def cancel_purchase(purchase):
+        """إلغاء فاتورة شراء - عكس القيد المحاسبي والمخزون ورصيد المورد."""
+        if purchase.status == 'cancelled':
+            raise ValueError('فاتورة الشراء ملغاة بالفعل')
+
+        from models import Payment
+        direct_paid = db.session.query(db.func.sum(Payment.amount_aed)).filter(
+            Payment.purchase_id == purchase.id,
+            Payment.direction == 'outgoing',
+            Payment.payment_confirmed == True,
+        ).scalar()
+        if direct_paid and Decimal(str(direct_paid)) > 0:
+            raise ValueError('لا يمكن إلغاء فاتورة شراء لها مدفوعات مؤكدة. قم بإلغاء المدفوعات أولاً.')
+
+        supplier = purchase.supplier
+        amount_aed = Decimal(str(purchase.amount_aed or 0))
+
+        if supplier:
+            supplier.total_purchases_aed = max(
+                (supplier.total_purchases_aed or Decimal('0')) - amount_aed,
+                Decimal('0')
+            )
+
+        from models.warehouse import StockMovement
+        has_stock = StockMovement.query.filter_by(
+            reference_type=GLRef.PURCHASE,
+            reference_id=purchase.id,
+        ).first() is not None
+
+        if has_stock:
+            StockService.reverse_purchase(purchase)
+
+            GLService.reverse_entry(
+                reference_type=GLRef.PURCHASE,
+                reference_id=purchase.id,
+                description=f'Reverse Purchase {purchase.purchase_number} (Cancelled)',
+                tenant_id=getattr(purchase, 'tenant_id', None),
+            )
+
+        purchase.status = 'cancelled'
+
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
+
+        LoggingCore.log_audit('cancel', 'purchases', purchase.id)
+
+    @staticmethod
+    def create_purchase_return(purchase, user, lines_data, reason=None, notes=None):
+        """إنشاء مرتجع مشتريات - عكس المخزون والقيد المحاسبي ورصيد المورد."""
+        from models import PurchaseReturn, PurchaseReturnLine
+        from models.product_serial import ProductSerial
+        from decimal import Decimal as _D
+
+        if purchase.status == 'cancelled':
+            raise ValueError('لا يمكن عمل مرتجع لفاتورة شراء ملغاة')
+
+        if not lines_data:
+            raise ValueError('يجب إرجاع منتج واحد على الأقل')
+
+        tenant_id = getattr(purchase, 'tenant_id', None)
+        warehouse_id = getattr(purchase, 'warehouse_id', None)
+        branch_id = getattr(purchase, 'branch_id', None)
+
+        capitalized = current_app.config.get('ENABLE_LANDED_COST_CAPITALIZATION', True)
+        mwac = current_app.config.get('ENABLE_MWAC', False)
+
+        return_number = generate_number('PR', PurchaseReturn, 'return_number', branch_id=branch_id, tenant_id=tenant_id)
+
+        purchase_return = PurchaseReturn(
+            tenant_id=tenant_id,
+            return_number=return_number,
+            purchase_id=purchase.id,
+            supplier_id=purchase.supplier_id,
+            warehouse_id=warehouse_id,
+            branch_id=branch_id,
+            currency=purchase.currency,
+            exchange_rate=purchase.exchange_rate,
+            reason=reason,
+            notes=notes,
+            processed_by=user.id,
+        )
+        db.session.add(purchase_return)
+        db.session.flush()
+
+        subtotal = _D('0')
+        tax_amount = _D('0')
+
+        for line_data in lines_data:
+            purchase_line_id = line_data.get('purchase_line_id')
+            product_id = line_data.get('product_id')
+            quantity = _D(str(line_data.get('quantity') or 0))
+            unit_cost = _D(str(line_data.get('unit_cost') or 0))
+            return_reason = line_data.get('reason', '')
+
+            if quantity <= 0:
+                continue
+
+            line_total = (quantity * unit_cost).quantize(_D('0.001'), rounding=ROUND_HALF_UP)
+            subtotal += line_total
+
+            return_line = PurchaseReturnLine(
+                tenant_id=tenant_id,
+                return_id=purchase_return.id,
+                purchase_line_id=purchase_line_id,
+                product_id=product_id,
+                quantity=quantity,
+                unit_cost=unit_cost,
+                line_total=line_total,
+                reason=return_reason,
+            )
+            db.session.add(return_line)
+            db.session.flush()
+
+            # إعادة تعيين الأرقام التسلسلية إذا كانت موجودة
+            serials = ProductSerial.query.filter_by(
+                tenant_id=tenant_id,
+                product_id=product_id,
+                warehouse_id=warehouse_id,
+                purchase_line_id=purchase_line_id,
+                status='available',
+            ).limit(int(quantity)).all()
+            for serial in serials:
+                serial.status = 'returned'
+
+            # إزالة المخزون (إرجاع للمورد)
+            StockService.remove_stock(
+                product_id=product_id,
+                quantity=quantity,
+                reference_type=GLRef.PURCHASE,
+                reference_id=purchase_return.id,
+                notes=f'مرتجع مشتريات: {return_number}',
+                warehouse_id=warehouse_id,
+            )
+
+            # عكس MWAC
+            if mwac and tenant_id and warehouse_id:
+                from models.product_warehouse_cost import ProductWarehouseCost
+                from models.product_cost_history import ProductCostHistory
+                pwc = ProductWarehouseCost.query.filter_by(
+                    tenant_id=tenant_id, product_id=product_id, warehouse_id=warehouse_id,
+                ).first()
+                if pwc and pwc.total_quantity > 0:
+                    cost_history = ProductCostHistory.query.filter_by(
+                        tenant_id=tenant_id, product_id=product_id, warehouse_id=warehouse_id,
+                        movement_type='purchase', reference_type=GLRef.PURCHASE, reference_id=purchase.id,
+                    ).order_by(ProductCostHistory.id.desc()).first()
+                    original_unit_cost = abs(_D(str(cost_history.movement_unit_cost))) if cost_history else unit_cost
+                    reversed_value = quantity * original_unit_cost
+
+                    old_qty = pwc.total_quantity
+                    old_value = pwc.total_value
+                    old_avg = pwc.average_cost
+
+                    new_qty = old_qty - quantity
+                    new_value = old_value - reversed_value
+                    new_avg = (new_value / new_qty) if new_qty > 0 else _D('0')
+
+                    pwc.total_quantity = new_qty if new_qty >= 0 else _D('0')
+                    pwc.total_value = new_value if new_value >= 0 else _D('0')
+                    pwc.average_cost = new_avg.quantize(_D('0.0001')) if new_qty > 0 else _D('0')
+                    pwc.last_updated = datetime.now(timezone.utc)
+
+                    pch = ProductCostHistory(
+                        tenant_id=tenant_id, product_id=product_id, warehouse_id=warehouse_id,
+                        movement_type='purchase_reversal',
+                        reference_type=GLRef.PURCHASE, reference_id=purchase_return.id,
+                        old_average_cost=old_avg.quantize(_D('0.0001')) if old_avg else None,
+                        new_average_cost=pwc.average_cost,
+                        quantity_change=-quantity,
+                        old_total_quantity=old_qty, new_total_quantity=pwc.total_quantity,
+                        old_total_value=old_value, new_total_value=pwc.total_value,
+                        movement_unit_cost=original_unit_cost.quantize(_D('0.0001')),
+                    )
+                    db.session.add(pch)
+
+        if subtotal <= 0:
+            db.session.rollback()
+            raise ValueError('يجب إرجاع منتج واحد على الأقل')
+
+        # حساب الضريبة التناسبية
+        if purchase.tax_amount and purchase.subtotal and purchase.subtotal > 0:
+            tax_ratio = subtotal / _D(str(purchase.subtotal))
+            tax_amount = (_D(str(purchase.tax_amount)) * tax_ratio).quantize(_D('0.01'), rounding=ROUND_HALF_UP)
+
+        purchase_return.subtotal = subtotal
+        purchase_return.tax_amount = tax_amount
+        purchase_return.total_amount = subtotal + tax_amount
+        purchase_return.calculate_totals()
+        db.session.flush()
+
+        # GL posting
+        GLService.ensure_core_accounts(tenant_id=tenant_id)
+
+        gl_lines = [
+            {
+                'account': GL_ACCOUNTS['payable'],
+                'concept_code': 'AP',
+                'debit': purchase_return.total_amount,
+                'description': f'مرتجع مشتريات {return_number}',
+            },
+        ]
+
+        inventory_credit = subtotal
+        if capitalized:
+            for return_line in purchase_return.lines:
+                if return_line.purchase_line_id:
+                    pl = next((l for l in purchase.lines if l.id == return_line.purchase_line_id), None)
+                    if pl and pl.landed_cost and pl.landed_cost > 0:
+                        landed_ratio = _D(str(pl.landed_cost)) / _D(str(pl.line_total)) if pl.line_total > 0 else _D('0')
+                        inventory_credit += (_D(str(return_line.line_total)) * landed_ratio).quantize(_D('0.001'), rounding=ROUND_HALF_UP)
+
+        gl_lines.append({
+            'account': GL_ACCOUNTS['inventory'],
+            'concept_code': 'INVENTORY_ASSET',
+            'credit': inventory_credit,
+            'description': f'إرجاع بضاعة للمورد {return_number}',
+        })
+
+        if tax_amount > 0 and should_post_vat_gl(tenant_id):
+            gl_lines.append({
+                'account': GL_ACCOUNTS['vat_input'],
+                'concept_code': 'VAT_INPUT',
+                'credit': tax_amount,
+                'description': f'عكس ضريبة مدخلات {return_number}',
+            })
+
+        post_or_fail(
+            gl_lines,
+            description=f'Purchase Return {return_number}',
+            reference_type=GLRef.PURCHASE,
+            reference_id=purchase_return.id,
+            currency=purchase_return.currency,
+            exchange_rate=purchase_return.exchange_rate,
+            branch_id=branch_id,
+            tenant_id=tenant_id,
+        )
+
+        if purchase.supplier:
+            supplier = purchase.supplier
+            supplier.total_purchases_aed = max(
+                (supplier.total_purchases_aed or _D('0')) - _D(str(purchase_return.amount_aed or 0)),
+                _D('0'),
+            )
+
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
+
+        LoggingCore.log_audit('create', 'purchase_returns', purchase_return.id)
+        return purchase_return

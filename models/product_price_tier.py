@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 from extensions import db
+from utils.currency_utils import context_aware_default_currency
 
 
 class ProductPriceTier(db.Model):
@@ -17,7 +18,7 @@ class ProductPriceTier(db.Model):
 
     min_quantity = db.Column(db.Numeric(15, 3), default=0)
     price = db.Column(db.Numeric(15, 3), nullable=False)
-    currency = db.Column(db.String(3), default='AED')
+    currency = db.Column(db.String(3), default=context_aware_default_currency)
     is_active = db.Column(db.Boolean, default=True, index=True)
 
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)

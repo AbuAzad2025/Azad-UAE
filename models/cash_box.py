@@ -5,6 +5,7 @@ Phase 8: Treasury & Cash Position
 
 from datetime import datetime, timezone
 from extensions import db
+from utils.currency_utils import context_aware_default_currency
 
 
 class CashBox(db.Model):
@@ -30,7 +31,7 @@ class CashBox(db.Model):
     # cash, bank_account, payment_gateway, cheque_under_collection, digital_wallet
 
     # Currency
-    currency = db.Column(db.String(3), default='AED', nullable=False)  # TODO: use Config.DEFAULT_CURRENCY
+    currency = db.Column(db.String(3), default=context_aware_default_currency, nullable=False)  # TODO: use Config.DEFAULT_CURRENCY
 
     # Balance tracking (denormalized for fast reads)
     current_balance = db.Column(db.Numeric(18, 3), default=0, nullable=False)

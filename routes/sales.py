@@ -527,8 +527,8 @@ def delete(id):
                 description=f'Reverse COGS {sale.sale_number} (Archived)',
                 tenant_id=getattr(sale, 'tenant_id', None),
             )
-        except Exception:
-            pass
+        except Exception as rev_err:
+            current_app.logger.warning('GL reversal skipped for draft sale %s: %s', sale.sale_number, rev_err)
         archive_service = ArchiveService()
         archive_reason = 'تم أرشفة الفاتورة لوجود ارتباطات مالية' if has_links else 'تم أرشفة الفاتورة'
         archive_service.archive_record('sales', sale, reason=archive_reason, commit=False)
@@ -548,17 +548,23 @@ def delete(id):
 @login_required
 @permission_required('manage_sales')
 def archive(id):
-    """أرشفة فاتورة"""
+    """أرشفة فاتورة — يتطلب إلغاء كامل للفواتير المؤكدة/المنفذة مخزنياً"""
     from services.archive_service import ArchiveService
+    from services.sale_service import SaleService
     
     sale = tenant_get_or_404(Sale, id)
     
     try:
+        if sale.status == 'confirmed' or SaleService.has_inventory_posted(sale):
+            SaleService.cancel_sale(sale)
+        
         archive_service = ArchiveService()
         archive_service.archive_record('sales', sale, reason='تم أرشفة فاتورة المبيعات')
         LoggingCore.log_audit('archive', 'sales', sale.id)
+        db.session.commit()
     except Exception as e:
         db.session.rollback()
+        flash(f'❌ خطأ في الأرشفة: {str(e)}', 'danger')
     
     return redirect(url_for('sales.index'))
 

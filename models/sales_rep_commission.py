@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 from extensions import db
+from utils.currency_utils import context_aware_default_currency
 
 
 class SalesRepCommission(db.Model):
@@ -13,7 +14,7 @@ class SalesRepCommission(db.Model):
     product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=True, index=True)
     commission_rate = db.Column(db.Numeric(5, 2), nullable=False)
     commission_amount = db.Column(db.Numeric(15, 3), nullable=False)
-    currency = db.Column(db.String(3), default='AED')
+    currency = db.Column(db.String(3), default=context_aware_default_currency)
     is_paid = db.Column(db.Boolean, default=False, index=True)
     paid_at = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)

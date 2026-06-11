@@ -2072,6 +2072,25 @@ def system_config():
             settings.enable_returns = request.form.get('enable_returns') == 'on'
             settings.enable_ecommerce = request.form.get('enable_ecommerce') == 'on'
 
+            # Azad Platform Fees
+            try:
+                fee_rate = Decimal(request.form.get('azad_platform_fee_rate', '1.00'))
+                settings.azad_platform_fee_rate = fee_rate.quantize(Decimal('0.01'))
+            except Exception:
+                pass
+            try:
+                settings.subscription_monthly_fee_aed = Decimal(request.form.get('subscription_monthly_fee_aed', '0') or '0').quantize(Decimal('0.001'))
+            except Exception:
+                pass
+            try:
+                settings.subscription_yearly_fee_aed = Decimal(request.form.get('subscription_yearly_fee_aed', '0') or '0').quantize(Decimal('0.001'))
+            except Exception:
+                pass
+            try:
+                settings.subscription_perpetual_fee_aed = Decimal(request.form.get('subscription_perpetual_fee_aed', '0') or '0').quantize(Decimal('0.001'))
+            except Exception:
+                pass
+
             # General
             default_currency = request.form.get('default_currency', 'AED')
             settings.default_currency = default_currency

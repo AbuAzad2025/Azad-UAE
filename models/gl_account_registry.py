@@ -81,6 +81,7 @@ BASE_ACCOUNTS = [
     GLAccountTemplate('2152', 'Partner - Commission Hold', 'عمولات محتجزة', 'liability', 3, False, '2150'),
     GLAccountTemplate('2160', 'Loyalty Points Liability', 'التزام نقاط الولاء', 'liability', 2, False, '2100'),
     GLAccountTemplate('2170', 'Customer Deposits', 'عربون العملاء', 'liability', 2, False, '2100'),
+    GLAccountTemplate('2180', 'Azad Platform Payable', 'ذمم دائنة - منصة أزاد', 'liability', 2, False, '2100'),
     GLAccountTemplate('2200', 'Non-Current Liabilities', 'خصوم غير متداولة', 'liability', 1, True, '2000'),
     GLAccountTemplate('3000', 'Equity', 'حقوق الملكية', 'equity', 0, True),
     GLAccountTemplate('3100', 'Capital', 'رأس المال', 'equity', 1, False, '3000'),
@@ -97,6 +98,7 @@ BASE_ACCOUNTS = [
     GLAccountTemplate('4400', 'FX Gains', 'أرباح صرف العملات', 'revenue', 1, False, '4000'),
     GLAccountTemplate('4500', 'Donation Revenue', 'إيرادات التبرعات', 'revenue', 1, False, '4000'),
     GLAccountTemplate('4600', 'Fixed Asset Disposal Gain', 'أرباح بيع الأصول', 'revenue', 1, False, '4000'),
+    GLAccountTemplate('4700', 'Azad Subscription Revenue', 'إيرادات اشتراك أزاد', 'revenue', 1, False, '4000'),
     GLAccountTemplate('5000', 'Cost of Sales', 'تكلفة المبيعات', 'expense', 0, True),
     GLAccountTemplate('5100', 'Cost of Goods Sold', 'تكلفة البضاعة المباعة', 'expense', 1, False, '5000'),
     GLAccountTemplate('5101', 'COGS - Retail', 'تكلفة بضاعة تجزئة', 'expense', 2, False, '5100'),
@@ -128,6 +130,7 @@ BASE_ACCOUNTS = [
     GLAccountTemplate('6290', 'Communication', 'اتصالات', 'expense', 2, False, '6200'),
     GLAccountTemplate('6300', 'Depreciation Expense', 'مصروف الإهلاك', 'expense', 1, False, '6000'),
     GLAccountTemplate('6400', 'Warranty Claims', 'مطالبات الضمان', 'expense', 1, False, '6000'),
+    GLAccountTemplate('6410', 'Platform Subscription Expense', 'مصروف اشتراك المنصة', 'expense', 2, False, '6000'),
     GLAccountTemplate('6500', 'Miscellaneous Expenses', 'مصروفات متنوعة', 'expense', 1, False, '6000'),
     GLAccountTemplate('6600', 'FX Losses', 'خسائر صرف العملات', 'expense', 1, False, '6000'),
     GLAccountTemplate('6700', 'Fixed Asset Disposal Loss', 'خسائر بيع الأصول', 'expense', 1, False, '6000'),
@@ -348,6 +351,17 @@ GL_MODULE_DEFINITIONS = {
         accounts=[],
         mappings=[
             GLConceptMappingTemplate('BANK_INTEREST_INCOME', '4300', 'bank_reconciliation'),
+        ],
+    ),
+    'azad_platform': GLModuleDefinition(
+        'azad_platform', False, 'enable_ecommerce',
+        accounts=[
+            GLAccountTemplate('2180', 'Azad Platform Payable', 'ذمم دائنة - منصة أزاد', 'liability', 2, False, '2100'),
+        ],
+        mappings=[
+            GLConceptMappingTemplate('AZAD_PLATFORM_PAYABLE', '2180', 'azad_platform'),
+            GLConceptMappingTemplate('AZAD_SUBSCRIPTION_EXPENSE', '6410', 'azad_platform'),
+            GLConceptMappingTemplate('AZAD_SUBSCRIPTION_REVENUE', '4700', 'azad_platform'),
         ],
     ),
 }

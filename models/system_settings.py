@@ -5,6 +5,7 @@ System Settings Model
 
 from datetime import datetime, timezone
 from extensions import db
+from utils.currency_utils import context_aware_default_currency
 from decimal import Decimal
 import json
 
@@ -47,8 +48,8 @@ class SystemSettings(db.Model):
     datetime_format = db.Column(db.String(50), default='%Y-%m-%d %H:%M')
     
     # Currency - العملة
-    default_currency = db.Column(db.String(3), default='AED')  # TODO: use Config.DEFAULT_CURRENCY
-    currency_symbol = db.Column(db.String(10), default='AED')  # TODO: use Config.DEFAULT_CURRENCY
+    default_currency = db.Column(db.String(3), default=context_aware_default_currency)  # TODO: use Config.DEFAULT_CURRENCY
+    currency_symbol = db.Column(db.String(10), default=context_aware_default_currency)  # TODO: use Config.DEFAULT_CURRENCY
     currency_position = db.Column(db.String(10), default='after')  # before, after
     decimal_places = db.Column(db.Integer, default=2)
     
@@ -136,6 +137,12 @@ class SystemSettings(db.Model):
     vat_enabled = db.Column(db.Boolean, default=False)
     vat_number = db.Column(db.String(50))
     tax_id_number = db.Column(db.String(50))
+
+    # Azad Platform Fees - رسوم منصة أزاد
+    azad_platform_fee_rate = db.Column(db.Numeric(5, 2), default=Decimal('1.00'))
+    subscription_monthly_fee_aed = db.Column(db.Numeric(15, 3), default=Decimal('0.000'))
+    subscription_yearly_fee_aed = db.Column(db.Numeric(15, 3), default=Decimal('0.000'))
+    subscription_perpetual_fee_aed = db.Column(db.Numeric(15, 3), default=Decimal('0.000'))
     
     auto_update_rates = db.Column(db.Boolean, default=False)
     

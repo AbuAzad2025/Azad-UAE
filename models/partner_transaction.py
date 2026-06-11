@@ -12,6 +12,7 @@ Tracks every financial movement with a partner:
 """
 from datetime import datetime, timezone
 from extensions import db
+from utils.currency_utils import context_aware_default_currency
 
 
 class PartnerTransaction(db.Model):
@@ -33,7 +34,7 @@ class PartnerTransaction(db.Model):
     amount = db.Column(db.Numeric(15, 3), nullable=False)
     # positive = credit to partner, negative = debit from partner
 
-    currency = db.Column(db.String(3), default='AED')  # TODO: use Config.DEFAULT_CURRENCY
+    currency = db.Column(db.String(3), default=context_aware_default_currency)  # TODO: use Config.DEFAULT_CURRENCY
     exchange_rate = db.Column(db.Numeric(15, 6), default=1)
     amount_base = db.Column(db.Numeric(15, 3), nullable=False)
 

@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 from extensions import db
+from utils.currency_utils import context_aware_default_currency
 from decimal import Decimal
 from utils.gl_services import (
     gl_get_default_liquidity_account,
@@ -59,7 +60,7 @@ class AdvancedExpense(db.Model):
     category_id = db.Column(db.Integer, db.ForeignKey('expense_categories.id'), nullable=False, index=True)
     supplier_id = db.Column(db.Integer, db.ForeignKey('suppliers.id'), index=True)
     amount = db.Column(db.Numeric(18, 3), nullable=False)
-    currency = db.Column(db.String(3), default='AED', nullable=False)  # TODO: use Config.DEFAULT_CURRENCY
+    currency = db.Column(db.String(3), default=context_aware_default_currency, nullable=False)  # TODO: use Config.DEFAULT_CURRENCY
     exchange_rate = db.Column(db.Numeric(15, 6), default=1)
     amount_aed = db.Column(db.Numeric(18, 3), nullable=False)
     

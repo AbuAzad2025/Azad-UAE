@@ -212,6 +212,24 @@
 
           
 
+          {% if not current_user.is_seller() and purchase.status != 'cancelled' %}
+
+          <hr>
+
+          <button type="button" class="btn btn-warning" onclick="confirmCancel()">
+
+            <i class="fas fa-ban mr-2"></i>إلغاء الفاتورة
+
+          </button>
+
+          <form id="cancelForm" action="{{ url_for('purchases.cancel', id=purchase.id) }}" method="POST" style="display:none;">
+
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+          </form>
+
+          {% endif %}
+
           {% if current_user.is_admin %}
 
           <hr>
@@ -236,7 +254,14 @@
 
 </div>
 
+{% block scripts %}
+<script>
+function confirmCancel() {
+  if (confirm('هل أنت متأكد من إلغاء فاتورة الشراء هذه؟\nسيتم عكس القيد المحاسبي والمخزون ورصيد المورد.\nلا يمكن التراجع عن هذا الإجراء.')) {
+    document.getElementById('cancelForm').submit();
+  }
+}
+</script>
 {% endblock %}
-
-
+{% endblock %}
 

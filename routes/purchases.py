@@ -286,6 +286,30 @@ def delete(id):
         return redirect(url_for('purchases.view', id=id))
 
 
+@purchases_bp.route('/<int:id>/cancel', methods=['POST'])
+@login_required
+@permission_required('manage_purchases')
+def cancel(id):
+    """إلغاء فاتورة شراء مع عكس القيد المحاسبي والمخزون ورصيد المورد"""
+    purchase = tenant_get_or_404(Purchase, id)
+    from utils.decorators import branch_scope_id
+    scoped_branch_id = branch_scope_id()
+    if scoped_branch_id is not None and purchase.branch_id != scoped_branch_id:
+        return render_template('errors/403.html'), 403
+
+    try:
+        PurchaseService.cancel_purchase(purchase)
+        LoggingCore.log_audit('cancel', 'purchases', purchase.id)
+        flash('✅ تم إلغاء فاتورة الشراء بنجاح!', 'success')
+    except ValueError as e:
+        flash(f'❌ {str(e)}', 'danger')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'❌ حدث خطأ: {str(e)}', 'danger')
+
+    return redirect(url_for('purchases.view', id=id))
+
+
 # =====================================
 # API Endpoints - Backend Calculations
 # =====================================

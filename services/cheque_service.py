@@ -283,9 +283,11 @@ def process_cheque_clear(cheque, clearance_date=None, clearance_exchange_rate=No
         cheque.clearance_exchange_rate = Decimal(str(clearance_exchange_rate))
     elif cheque.currency != 'AED':
         try:
-            rate_info = gl_resolve_exchange_rate(cheque.currency, 'AED')
+            rate_info = gl_resolve_exchange_rate(
+                cheque.issue_date, cheque.currency, 'AED', getattr(cheque, 'tenant_id', None)
+            )
             cheque.clearance_exchange_rate = Decimal(str(rate_info['rate']))
-        except:
+        except Exception:
             cheque.clearance_exchange_rate = cheque.exchange_rate
     else:
         cheque.clearance_exchange_rate = Decimal('1.0')

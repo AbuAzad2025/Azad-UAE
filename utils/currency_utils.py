@@ -5,6 +5,27 @@ def get_system_default_currency() -> str:
     return getattr(Config, 'DEFAULT_CURRENCY', None) or 'AED'
 
 
+def context_aware_default_currency() -> str:
+    """Resolve default currency from current Flask request tenant if available,
+    falling back to system default currency. Used as SQLAlchemy column default."""
+    try:
+        from flask import has_request_context
+        if has_request_context():
+            from flask_login import current_user
+            if current_user and current_user.is_authenticated:
+                tenant_id = getattr(current_user, 'tenant_id', None)
+                if tenant_id:
+                    from models.tenant import Tenant
+                    tenant = Tenant.query.get(tenant_id)
+                    if tenant and getattr(tenant, 'default_currency', None):
+                        val = tenant.default_currency.strip()
+                        if val:
+                            return val.upper()
+        return get_system_default_currency()
+    except Exception:
+        return get_system_default_currency()
+
+
 def resolve_default_currency(tenant=None) -> str:
     if tenant and hasattr(tenant, 'default_currency'):
         val = (tenant.default_currency or '').strip()

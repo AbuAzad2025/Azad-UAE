@@ -5,6 +5,7 @@ Phase 3: MWAC Audit Trail
 
 from datetime import datetime, timezone
 from extensions import db
+from utils.currency_utils import context_aware_default_currency
 
 
 class ProductCostHistory(db.Model):
@@ -37,7 +38,7 @@ class ProductCostHistory(db.Model):
     # Unit cost of this movement (for purchases)
     movement_unit_cost = db.Column(db.Numeric(18, 6), nullable=True)
 
-    currency = db.Column(db.String(3), default='AED', nullable=False)  # TODO: use Config.DEFAULT_CURRENCY
+    currency = db.Column(db.String(3), default=context_aware_default_currency, nullable=False)  # TODO: use Config.DEFAULT_CURRENCY
 
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
 

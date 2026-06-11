@@ -174,7 +174,7 @@ class Config:
 
     # Phase 5: Landed Cost Capitalization
     # When False: freight/customs/insurance are expensed directly to P&L.
-    ENABLE_LANDED_COST_CAPITALIZATION = _bool(os.environ.get("ENABLE_LANDED_COST_CAPITALIZATION"), False)
+    ENABLE_LANDED_COST_CAPITALIZATION = _bool(os.environ.get("ENABLE_LANDED_COST_CAPITALIZATION"), True)
 
     # Phase 6: Exchange Rate Framework
     # When False: exchange rates are not locked on posted documents.
