@@ -66,14 +66,6 @@ class Sale(db.Model):
         self.amount_aed = value
 
     @property
-    def paid_amount_base(self):
-        return self.paid_amount_aed
-    
-    @paid_amount_base.setter
-    def paid_amount_base(self, value):
-        self.paid_amount_aed = value
-
-    @property
     def balance_due_base(self):
         return self.balance_due
 

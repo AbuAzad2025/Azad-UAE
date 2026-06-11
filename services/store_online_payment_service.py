@@ -40,9 +40,10 @@ class StoreOnlinePaymentService:
 
     @staticmethod
     def create_payment_for_sale(sale, store, *, customer_email: str = None, crypto_currency: str = 'btc'):
+        amount_aed = float(Decimal(str(sale.amount_aed or 0)))
+        if amount_aed < 1:
+            raise ValueError('الحد الأدنى للدفع الإلكتروني 1 AED.')
         amount = float(Decimal(str(sale.total_amount or 0)))
-        if amount < 1:
-            raise ValueError('الحد الأدنى للدفع الإلكتروني 1 USD/AED equivalent.')
 
         currency = (sale.currency or get_system_default_currency()).lower()
         order_id = f'{StoreOnlinePaymentService.ORDER_PREFIX}{sale.id}_{store.tenant_id}'

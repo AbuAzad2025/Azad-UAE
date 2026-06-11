@@ -549,9 +549,9 @@ class GLService:
     
     @staticmethod
     def create_manual_entry(description, lines, entry_date=None, notes=None, created_by=None, currency=None, exchange_rate=1.0, branch_id=None):
+        """إنشاء قيد يدوي"""
         if not currency:
             currency = get_system_default_currency()
-        """إنشاء قيد يدوي"""
         from flask_login import current_user
         from utils.field_validators import validate_gl_line_sides
 
@@ -612,6 +612,8 @@ class GLService:
 
             if account.is_header:
                 raise ValueError(f'الحساب {account.full_name} هو حساب رئيسي ولا يمكن إضافة قيود عليه')
+            if not getattr(account, 'is_active', True):
+                raise ValueError(f'الحساب {account.full_name} غير نشط ولا يمكن إضافة قيود عليه')
 
             debit = Decimal(str(line_data.get('debit', 0) or 0))
             credit = Decimal(str(line_data.get('credit', 0) or 0))
