@@ -76,6 +76,11 @@ class Sale(db.Model):
     @property
     def balance_due_base(self):
         return self.balance_due
+
+    @property
+    def balance_due_aed(self):
+        """Alias: balance_due is always in AED/base currency."""
+        return self.balance_due
     
     payment_status = db.Column(db.String(20), default='unpaid', index=True)
     status = db.Column(db.String(20), default='confirmed', index=True)
@@ -131,6 +136,9 @@ class Sale(db.Model):
             Decimal('0.001'), rounding=ROUND_HALF_UP
         )
         
+        # Ensure amount in invoice currency matches total_amount
+        self.amount = self.total_amount
+
         # Calculate amount in AED (Base Currency)
         if self.currency == 'AED':
             self.amount_aed = self.total_amount
@@ -153,24 +161,27 @@ class Sale(db.Model):
     
     def recalculate_payment_status(self):
         """
-        Recalculate payment status based on CONFIRMED payments and APPROVED returns
+        Recalculate payment status based on CONFIRMED payments, PENDING CHEQUES, and APPROVED returns
         المعالجة المحاسبية الذكية: خصم المرتجعات من المبلغ المستحق
+        States: unpaid, partial, pending_cheque, paid, cancelled
         """
         # 1. Calculate Returns Total
         returns_total_aed = Decimal('0')
-        # Check if returns relationship exists (it's a backref from ProductReturn)
         if hasattr(self, 'returns'):
             for ret in self.returns:
-                # Only count approved/completed returns
                 if getattr(ret, 'status', 'approved') in ['approved', 'completed']:
                     returns_total_aed += Decimal(str(ret.amount_aed))
 
         # 2. Calculate Confirmed Payments
         total_confirmed_paid_aed = Decimal('0')
+        total_pending_cheque_aed = Decimal('0')
         for p in self.payments:
             is_confirmed = getattr(p, 'payment_confirmed', True)
+            amount = Decimal(str(p.amount_aed))
             if is_confirmed:
-                total_confirmed_paid_aed += Decimal(str(p.amount_aed))
+                total_confirmed_paid_aed += amount
+            elif p.payment_method == 'cheque':
+                total_pending_cheque_aed += amount
         
         # Update paid amounts (confirmed only)
         self.paid_amount_aed = total_confirmed_paid_aed
@@ -186,20 +197,23 @@ class Sale(db.Model):
             self.paid_amount = self.paid_amount or Decimal('0')
         
         # 3. Calculate Balance Due (Smart Calculation)
-        # Balance = Total - Paid - Returns
+        # Balance = Total - Confirmed Paid - Returns
+        # (Pending cheques do NOT reduce balance due until cleared)
         total_aed = Decimal(str(self.amount_aed))
         self.balance_due = (total_aed - total_confirmed_paid_aed - returns_total_aed).quantize(
             Decimal('0.001'), rounding=ROUND_HALF_UP
         )
         
-        # 4. Update Status
+        # 4. Update Status with pending_cheque support
         if self.balance_due <= Decimal('0.01'):
             self.payment_status = 'paid'
-            # If negative balance (refund due), keep it negative to show overpayment
             if self.balance_due < 0:
-                 pass 
+                pass 
             else:
-                 self.balance_due = Decimal('0')
+                self.balance_due = Decimal('0')
+        elif total_pending_cheque_aed > Decimal('0'):
+            # Has pending cheques but not fully paid
+            self.payment_status = 'pending_cheque'
         elif total_confirmed_paid_aed > Decimal('0') or returns_total_aed > Decimal('0'):
             self.payment_status = 'partial'
         else:
@@ -211,18 +225,24 @@ class Sale(db.Model):
         try:
             total = Decimal('0')
             for p in self.payments:
-                # التحقق من وجود payment_confirmed
                 is_confirmed = getattr(p, 'payment_confirmed', True)
                 if not is_confirmed and p.payment_method == 'cheque':
                     total += Decimal(str(p.amount_aed))
             return total
         except Exception:
             return Decimal('0')
-    
+
     @property
     def confirmed_payments_amount(self):
         """المدفوع الفعلي المؤكد فقط"""
-        return self.paid_amount if self.paid_amount else Decimal('0')
+        try:
+            total = Decimal('0')
+            for p in self.payments:
+                if getattr(p, 'payment_confirmed', True):
+                    total += Decimal(str(p.amount_aed))
+            return total
+        except Exception:
+            return Decimal('0')
     
     def get_profit(self):
         """Calculate total profit with proper decimal precision"""

@@ -20,9 +20,9 @@ def gl_get_customer_credit_concept(customer):
     return GLService.get_customer_credit_concept(customer)
 
 
-def gl_get_default_liquidity_account(tenant_id=None):
+def gl_get_default_liquidity_account(liquidity_kind='bank', tenant_id=None, branch_id=None):
     from services.gl_service import GLService
-    return GLService.get_default_liquidity_account(tenant_id=tenant_id)
+    return GLService.get_default_liquidity_account(liquidity_kind, branch_id=branch_id, tenant_id=tenant_id)
 
 
 def gl_create_manual_entry(*args, **kwargs):

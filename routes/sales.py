@@ -481,17 +481,22 @@ def archived():
 @login_required
 @permission_required('manage_sales')
 def delete(id):
-    """حذف (أرشفة) فاتورة مبيعات"""
+    """حذف (أرشفة) فاتورة مبيعات — يُسمح فقط للحذف المادي للفواتير غير المُرحلة (draft/pending)"""
     if not current_user.is_owner:
         from utils.error_messages import ErrorMessages
         flash(ErrorMessages.permission_denied('حذف الفواتير'), 'danger')
         return redirect(url_for('sales.index'))
 
     from services.archive_service import ArchiveService
-    from models import Payment, Cheque, GLJournalEntry
-    from services.gl_service import GLService
+    from models import Payment, Cheque
+    from services.sale_service import SaleService
     
     sale = tenant_get_or_404(Sale, id)
+    
+    # منع الحذف المادي للفواتير المؤكدة أو المنفذة مخزنياً — استخدم الإلغاء بدلاً من الحذف
+    if sale.status == 'confirmed' or SaleService.has_inventory_posted(sale):
+        flash(f'⚠️ لا يمكن حذف فاتورة مؤكدة/منفذة مخزنياً. استخدم إلغاء الفاتورة بدلاً من الحذف.', 'danger')
+        return redirect(url_for('sales.view', id=id))
     
     # التحقق من الارتباطات
     has_links = False
@@ -507,30 +512,29 @@ def delete(id):
         has_links = True
 
     try:
-        if has_links:
-            # أرشفة فقط (بدون عكس القيد المحاسبي - الأرشفة إخفاء إداري فقط)
-            archive_service = ArchiveService()
-            archive_service.archive_record('sales', sale, reason='تم أرشفة الفاتورة لوجود ارتباطات مالية', commit=False)
-            
-            # يمكن أرشفة المدفوعات والشيكات المرتبطة أيضاً إذا لزم الأمر، ولكن سنكتفي بأرشفة الفاتورة حالياً
-            # أو يمكن تركها كما هي ولكن الفاتورة ستختفي من القائمة النشطة
-            
-            LoggingCore.log_audit('archive', 'sales', id)
-            db.session.commit()
-            flash(f'✅ تم أرشفة الفاتورة "{sale.sale_number}" (لوجود ارتباطات مالية)', 'warning')
-        else:
-            # حذف نهائي (Hard Delete)
-            # 1. حذف البنود (SaleLines) - يتم تلقائياً عادةً عبر cascade ولكن للأمان
-            SaleLine.query.filter_by(sale_id=sale.id).delete()
-            
-            # 2. حذف القيود المحاسبية
-            delete_entries_by_ref(sale.id, GLRef.SALE, GLRef.SALE_COGS)
-            
-            # 3. حذف الفاتورة
-            db.session.delete(sale)
-            LoggingCore.log_audit('delete', 'sales', id)
-            db.session.commit()
-            flash(f'✅ تم حذف الفاتورة "{sale.sale_number}" نهائياً', 'success')
+        # عكس القيود المحاسبية قبل الأرشفة للحفاظ على أثر التدقيق
+        try:
+            from services.gl_service import GLService
+            GLService.reverse_entry(
+                reference_type=GLRef.SALE,
+                reference_id=sale.id,
+                description=f'Reverse Sale {sale.sale_number} (Archived)',
+                tenant_id=getattr(sale, 'tenant_id', None),
+            )
+            GLService.reverse_entry(
+                reference_type=GLRef.SALE_COGS,
+                reference_id=sale.id,
+                description=f'Reverse COGS {sale.sale_number} (Archived)',
+                tenant_id=getattr(sale, 'tenant_id', None),
+            )
+        except Exception:
+            pass
+        archive_service = ArchiveService()
+        archive_reason = 'تم أرشفة الفاتورة لوجود ارتباطات مالية' if has_links else 'تم أرشفة الفاتورة'
+        archive_service.archive_record('sales', sale, reason=archive_reason, commit=False)
+        LoggingCore.log_audit('archive', 'sales', id)
+        db.session.commit()
+        flash(f'✅ تم أرشفة الفاتورة "{sale.sale_number}"', 'warning')
             
         return redirect(url_for('sales.index'))
         

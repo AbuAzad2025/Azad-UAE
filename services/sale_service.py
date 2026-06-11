@@ -441,7 +441,9 @@ class SaleService:
                 'description': f'فاتورة {sale.sale_number}',
             },
             {
-                'account': '4100',
+                'account': GLService.get_account_code_for_concept(
+                    'SALES_REVENUE', branch_id=sale.branch_id, tenant_id=tenant_id, fallback_key='sales_revenue'
+                ),
                 'concept_code': 'SALES_REVENUE',
                 'credit': sale.subtotal,
                 'description': 'إيرادات المبيعات',
@@ -450,7 +452,9 @@ class SaleService:
 
         if sale.shipping_cost > Decimal('0'):
             gl_lines.append({
-                'account': '4300',
+                'account': GLService.get_account_code_for_concept(
+                    'SHIPPING_REVENUE', branch_id=sale.branch_id, tenant_id=tenant_id, fallback_key='shipping_revenue'
+                ),
                 'concept_code': 'SHIPPING_REVENUE',
                 'credit': sale.shipping_cost,
                 'description': 'إيرادات الشحن',
@@ -458,7 +462,9 @@ class SaleService:
 
         if sale.discount_amount > Decimal('0'):
             gl_lines.append({
-                'account': '5200',
+                'account': GLService.get_account_code_for_concept(
+                    'SALES_DISCOUNT', branch_id=sale.branch_id, tenant_id=tenant_id, fallback_key='discounts_given'
+                ),
                 'concept_code': 'SALES_DISCOUNT',
                 'debit': sale.discount_amount,
                 'description': 'خصومات ممنوحة',
@@ -466,10 +472,12 @@ class SaleService:
 
         if sale.tax_amount > Decimal('0') and should_post_vat_gl(tenant_id):
             gl_lines.append({
-                'account': '2130',
+                'account': GLService.get_account_code_for_concept(
+                    'VAT_OUTPUT', branch_id=sale.branch_id, tenant_id=tenant_id, fallback_key='tax_payable'
+                ),
                 'concept_code': 'VAT_OUTPUT',
                 'credit': sale.tax_amount,
-                'description': 'ضرائب مستحقة',
+                'description': 'ضرائب مستحقة (VAT Output)',
             })
 
         post_or_fail(
@@ -485,13 +493,17 @@ class SaleService:
         if cogs_total_aed > Decimal('0'):
             cogs_lines = [
                 {
-                    'account': '5100',
+                    'account': GLService.get_account_code_for_concept(
+                        'COGS', branch_id=sale.branch_id, tenant_id=tenant_id, fallback_key='cogs'
+                    ),
                     'concept_code': 'COGS',
                     'debit': cogs_total_aed,
                     'description': 'تكلفة البضاعة المباعة',
                 },
                 {
-                    'account': '1140',
+                    'account': GLService.get_account_code_for_concept(
+                        'INVENTORY_ASSET', branch_id=sale.branch_id, tenant_id=tenant_id, fallback_key='inventory'
+                    ),
                     'concept_code': 'INVENTORY_ASSET',
                     'credit': cogs_total_aed,
                     'description': 'خصم من المخزون',
@@ -627,11 +639,21 @@ class SaleService:
         try:
             GLService.ensure_core_accounts(tenant_id=getattr(sale, 'tenant_id', None))
             
-            debit_account = GLService.get_payment_debit_account(
-                payment_method,
-                branch_id=sale.branch_id,
-                tenant_id=getattr(sale, 'tenant_id', None),
-            )
+            if payment_method == 'cheque':
+                debit_account = GLService.get_account_code_for_concept(
+                    'CHEQUES_UNDER_COLLECTION',
+                    branch_id=sale.branch_id,
+                    tenant_id=getattr(sale, 'tenant_id', None),
+                    fallback_key='cheques_under_collection',
+                )
+                debit_concept = 'CHEQUES_UNDER_COLLECTION'
+            else:
+                debit_account = GLService.get_payment_debit_account(
+                    payment_method,
+                    branch_id=sale.branch_id,
+                    tenant_id=getattr(sale, 'tenant_id', None),
+                )
+                debit_concept = GLService.get_payment_debit_concept(payment_method)
             credit_account = GLService.get_customer_credit_account(
                 sale.customer, branch_id=sale.branch_id, tenant_id=getattr(sale, 'tenant_id', None)
             )
@@ -639,35 +661,51 @@ class SaleService:
             post_or_fail(
                 [
                     {
-                        'account': debit_account, 
-                        'concept_code': GLService.get_payment_debit_concept(payment_method),
-                        'debit': amount_decimal, 
+                        'account': debit_account,
+                        'concept_code': debit_concept,
+                        'debit': amount_decimal,
                         'description': f'Payment for Sale {sale.sale_number} ({payment_method})'
                     },
                     {
                         'account': credit_account,
                         'concept_code': GLService.get_customer_credit_concept(sale.customer),
-                        'credit': amount_decimal, 
+                        'credit': amount_decimal,
                         'description': f'Payment Received {payment.payment_number}'
                     }
                 ],
-                description=f'Payment {payment.payment_number}', 
-                reference_type=GLRef.PAYMENT, 
-                reference_id=payment.id, 
-                currency=currency, 
+                description=f'Payment {payment.payment_number}',
+                reference_type=GLRef.PAYMENT,
+                reference_id=payment.id,
+                currency=currency,
                 exchange_rate=exchange_rate_decimal,
                 branch_id=sale.branch_id
             )
         except Exception as e:
             current_app.logger.error(f'GL posting failed for payment: {e}')
             raise
-        
+        from decimal import Decimal as _D
+        sale.customer.apply_receipt(_D(str(amount_aed or 0)))
+        sale.recalculate_payment_status()
+        db.session.flush()
         return payment
     
     @staticmethod
     def cancel_sale(sale):
         if sale.status == 'cancelled':
             raise ValueError('الفاتورة ملغاة بالفعل')
+        
+        customer = sale.customer
+        
+        # عكس رصيد العميل وإحصائيات الشراء
+        if customer:
+            from decimal import Decimal as _D
+            amount_aed = _D(str(sale.amount_aed or 0))
+            customer.adjust_balance(-amount_aed)
+            customer.total_purchases = max(
+                (customer.total_purchases or _D('0')) - amount_aed,
+                _D('0')
+            )
+            customer.update_classification()
         
         sale.status = 'cancelled'
         
@@ -692,6 +730,9 @@ class SaleService:
                 db.session.rollback()
                 raise ValueError(f'فشل عكس القيد المحاسبي: {e}') from e
             
+        # إعادة حساب حالة الدفع بعد الإلغاء
+        sale.recalculate_payment_status()
+        
         try:
             db.session.commit()
         except Exception:
@@ -704,24 +745,11 @@ class SaleService:
     @staticmethod
     def update_payment_status(sale):
         """
-        Update payment status based on paid amount
-        Uses Decimal for accurate comparisons
+        Update payment status for a sale.
+        Delegates to the canonical recalculate_payment_status() which correctly
+        accounts for pending cheques, confirmed-only payments, and returns.
         """
-        paid = Decimal(str(sale.paid_amount)) if sale.paid_amount else Decimal('0')
-        total = Decimal(str(sale.total_amount))
-        
-        balance = (total - paid).quantize(Decimal('0.001'), rounding=ROUND_HALF_UP)
-        
-        if balance <= Decimal('0'):
-            sale.payment_status = 'paid'
-            sale.balance_due = Decimal('0')
-        elif paid > Decimal('0'):
-            sale.payment_status = 'partial'
-            sale.balance_due = balance
-        else:
-            sale.payment_status = 'unpaid'
-            sale.balance_due = total
-        
+        sale.recalculate_payment_status()
         try:
             db.session.commit()
         except Exception:

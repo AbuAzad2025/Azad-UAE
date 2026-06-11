@@ -253,21 +253,45 @@ class ReturnService:
                         warehouse_id=sale.warehouse_id
                     )
 
-                    cost_unit = Decimal(str(sale_line.cost_price or product.cost_price or 0))
+                    # استخدام تكلفة COGS الأصلية من سجل التكلفة أولاً، ثم من بند الفاتورة، ثم من المنتج
+                    original_cost = Decimal('0')
+                    try:
+                        from models.warehouse import ProductCostHistory
+                        cost_hist = ProductCostHistory.query.filter_by(
+                            tenant_id=tenant_id,
+                            product_id=sale_line.product_id,
+                            warehouse_id=sale.warehouse_id,
+                            movement_type='sale',
+                            reference_type=GLRef.SALE,
+                            reference_id=sale.id,
+                        ).order_by(ProductCostHistory.id.desc()).first()
+                        if cost_hist and cost_hist.movement_unit_cost:
+                            original_cost = abs(Decimal(str(cost_hist.movement_unit_cost)))
+                    except Exception:
+                        pass
+                    if original_cost <= Decimal('0'):
+                        original_cost = Decimal(str(sale_line.cost_price or 0))
+                    if original_cost <= Decimal('0'):
+                        original_cost = Decimal(str(product.cost_price or 0))
+                    cost_unit = original_cost
                     cost_value = (quantity * cost_unit).quantize(
                         Decimal('0.001'), rounding=ROUND_HALF_UP
                     )
 
                     if cost_value > 0:
                         cost_lines.append({
-                            'account': '1140',
+                            'account': GLService.get_account_code_for_concept(
+                                'INVENTORY_ASSET', branch_id=product_return.branch_id, tenant_id=tenant_id, fallback_key='inventory'
+                            ),
                             'concept_code': 'INVENTORY_ASSET',
                             'debit': cost_value,
                             'credit': 0,
                             'description': f'Inventory Restock - {product.name}'
                         })
                         cost_lines.append({
-                            'account': '5100',
+                            'account': GLService.get_account_code_for_concept(
+                                'COGS', branch_id=product_return.branch_id, tenant_id=tenant_id, fallback_key='cogs'
+                            ),
                             'concept_code': 'COGS_REVERSAL',
                             'debit': 0,
                             'credit': cost_value,
@@ -360,7 +384,9 @@ class ReturnService:
 
             if net_return_amount > 0:
                 revenue_lines.append({
-                    'account': '4100',
+                    'account': GLService.get_account_code_for_concept(
+                        'SALES_REVENUE', branch_id=product_return.branch_id, tenant_id=tenant_id, fallback_key='sales_revenue'
+                    ),
                     'concept_code': 'SALES_RETURNS',
                     'debit': net_return_amount,
                     'credit': 0,
@@ -369,7 +395,9 @@ class ReturnService:
 
             if tax_amount > 0 and should_post_vat_gl(tenant_id):
                 revenue_lines.append({
-                    'account': '2130',
+                    'account': GLService.get_account_code_for_concept(
+                        'VAT_OUTPUT', branch_id=product_return.branch_id, tenant_id=tenant_id, fallback_key='tax_payable'
+                    ),
                     'concept_code': 'VAT_OUTPUT',
                     'debit': tax_amount,
                     'credit': 0,

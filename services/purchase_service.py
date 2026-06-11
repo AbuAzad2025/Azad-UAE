@@ -1,4 +1,4 @@
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 from flask import current_app
 from extensions import db
 from models import Purchase, PurchaseLine, Product, Supplier, Warehouse
@@ -225,7 +225,11 @@ class PurchaseService:
         # GL Entries
         GLService.ensure_core_accounts(tenant_id=tenant_id)
 
-        inventory_debit = (purchase.subtotal or Decimal('0')) - (purchase.discount_amount or Decimal('0')) + total_landed
+        capitalize_landed = current_app.config.get('ENABLE_LANDED_COST_CAPITALIZATION', True)
+
+        inventory_debit = (purchase.subtotal or Decimal('0')) - (purchase.discount_amount or Decimal('0'))
+        if capitalize_landed:
+            inventory_debit += total_landed
         if inventory_debit < Decimal('0'):
             inventory_debit = Decimal('0')
 
@@ -235,6 +239,37 @@ class PurchaseService:
             {'account': GL_ACCOUNTS['inventory'], 'concept_code': 'INVENTORY_ASSET', 'debit': inventory_debit, 'description': f'شراء بضاعة {purchase.purchase_number}'},
             {'account': GL_ACCOUNTS['payable'], 'concept_code': 'AP', 'credit': total_payable, 'description': f'ذمم دائنة - مورد: {purchase.supplier_name}'}
         ]
+
+        # إذا كانت التكاليف الإضافية لا تُرسمل، فترحيلها إلى حساباتها المناسبة
+        if not capitalize_landed and total_landed > 0:
+            if purchase.freight > 0:
+                lines.append({
+                    'account': GL_ACCOUNTS.get('freight_in', '5301'),
+                    'concept_code': 'FREIGHT_IN',
+                    'debit': purchase.freight,
+                    'description': f'أجور شحن - {purchase.purchase_number}'
+                })
+            if purchase.customs_duty > 0:
+                lines.append({
+                    'account': GL_ACCOUNTS.get('customs_duty', '5302'),
+                    'concept_code': 'CUSTOMS_DUTY',
+                    'debit': purchase.customs_duty,
+                    'description': f'رسوم جمركية - {purchase.purchase_number}'
+                })
+            if purchase.insurance > 0:
+                lines.append({
+                    'account': GL_ACCOUNTS.get('insurance_in', '5303'),
+                    'explicit_account_allowed': True,
+                    'debit': purchase.insurance,
+                    'description': f'تأمين شحن - {purchase.purchase_number}'
+                })
+            if purchase.other_landed_cost > 0:
+                lines.append({
+                    'account': GL_ACCOUNTS.get('misc_expense', '6500'),
+                    'explicit_account_allowed': True,
+                    'debit': purchase.other_landed_cost,
+                    'description': f'تكاليف إضافية أخرى - {purchase.purchase_number}'
+                })
         
         if purchase.tax_amount > 0 and should_post_vat_gl(tenant_id):
             lines.append({
@@ -254,12 +289,10 @@ class PurchaseService:
                 branch_id=purchase.branch_id
             )
         
-        # Update Supplier Stats
         if supplier:
             try:
-                # Assuming update_statistics exists on Supplier model or we implement it
-                if hasattr(supplier, 'update_statistics'):
-                    supplier.update_statistics()
+                from decimal import Decimal as _D
+                supplier.apply_purchase(_D(str(purchase.amount_aed or 0)))
             except Exception as e:
                 current_app.logger.warning(f'Supplier stats update failed: {e}')
         

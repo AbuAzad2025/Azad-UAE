@@ -177,6 +177,9 @@ class Purchase(db.Model):
             Decimal('0.001'), rounding=ROUND_HALF_UP
         )
 
+        # Ensure amount in invoice currency matches total_amount
+        self.amount = self.total_amount
+
         # Calculate AED amount with proper rounding (includes landed cost)
         self.amount_aed = (self.total_amount * exchange_rate_decimal).quantize(
             Decimal('0.001'), rounding=ROUND_HALF_UP

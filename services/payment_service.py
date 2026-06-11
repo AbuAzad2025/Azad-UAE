@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from decimal import Decimal
 from flask import current_app
 from flask_login import current_user
@@ -67,6 +68,9 @@ class PaymentService:
         notes = payment_data.get('notes')
         user_exchange_rate = payment_data.get('user_exchange_rate')
         reference_number = payment_data.get('reference_number')
+        cheque_number = payment_data.get('cheque_number')
+        cheque_date = payment_data.get('cheque_date')
+        bank_name = payment_data.get('bank_name') or 'Bank'
         branch_id = PaymentService._resolve_branch_id(
             payment_data.get('branch_id'),
             user=current_user if getattr(current_user, 'is_authenticated', False) else None,
@@ -109,9 +113,34 @@ class PaymentService:
             db.session.add(payment)
             db.session.flush()
 
-            # تحديث رصيد المورد التراكمي (ما تم دفعه له)
-            from decimal import Decimal as _D
-            supplier.apply_payment(_D(str(payment.amount_aed or 0)))
+            if payment_method == 'cheque' and cheque_number:
+                from models import Cheque
+                cheque = Cheque(
+                    tenant_id=getattr(supplier, 'tenant_id', None) or (getattr(current_user, 'tenant_id', None) if current_user and getattr(current_user, 'is_authenticated', False) else None),
+                    cheque_number=cheque_number,
+                    cheque_bank_number=cheque_number,
+                    cheque_type='outgoing',
+                    supplier_id=supplier.id,
+                    amount=Decimal(str(amount)),
+                    currency=currency,
+                    exchange_rate=exchange_rate,
+                    amount_aed=Decimal(str(amount)) * exchange_rate,
+                    issue_date=datetime.now(timezone.utc).date(),
+                    due_date=cheque_date or datetime.now(timezone.utc).date(),
+                    bank_name=bank_name,
+                    status='pending',
+                    notes=notes,
+                    branch_id=branch_id,
+                )
+                db.session.add(cheque)
+                db.session.flush()
+                payment.cheque_id = cheque.id
+
+            # تحديث رصيد المورد التراكمي للدفعات المؤكدة والشيكات الصادرة
+            # الشيك الصادر يخفض AP فوراً (قيد الإصدار: Dr AP / Cr Deferred Cheques)
+            if payment.payment_confirmed or payment_method == 'cheque':
+                from decimal import Decimal as _D
+                supplier.apply_payment(_D(str(payment.amount_aed or 0)))
             
             # GL Entries
             tenant_id = getattr(supplier, 'tenant_id', None) or (getattr(current_user, 'tenant_id', None) if current_user and getattr(current_user, 'is_authenticated', False) else None)
@@ -180,7 +209,7 @@ class PaymentService:
         reference_number = payment_data.get('reference_number')
         cheque_number = payment_data.get('cheque_number')
         cheque_date = payment_data.get('cheque_date')
-        bank_name = payment_data.get('bank_name')
+        bank_name = payment_data.get('bank_name') or 'Bank'
         allocate_to_sales = payment_data.get('allocate_to_sales')
         source_sale = None
         
@@ -284,7 +313,7 @@ class PaymentService:
                 gl_entry = process_cheque_receive(cheque)
                 if gl_entry is None:
                     raise GlPostingError('فشل ترحيل الشيك محاسبياً')
-                # تحديث رصيد العميل التراكمي عند استلام الشيك
+                # تحديث رصيد العميل فوراً لأن قيد الاستلام (Dr CUC / Cr AR) يخفض الذمم
                 from decimal import Decimal as _D
                 customer.apply_receipt(_D(str(receipt.amount_aed or 0)))
             
@@ -456,15 +485,32 @@ class PaymentService:
                 sale_rate = Decimal(str(sale.exchange_rate or 1))
                 allocated = (allocated_aed / sale_rate).quantize(Decimal('0.001'))
                 
-                sale.paid_amount += allocated
-                sale.paid_amount_aed += allocated_aed
-                sale.balance_due -= allocated_aed
-                
-                if sale.paid_amount >= sale.total_amount:
-                    sale.payment_status = 'paid'
-                elif sale.paid_amount > 0:
-                    sale.payment_status = 'partial'
-                
+                from models import Payment
+                sale_payment = Payment(
+                    tenant_id=getattr(sale, 'tenant_id', None) or getattr(customer, 'tenant_id', None),
+                    payment_number=generate_number(
+                        'PAY-S', Payment, 'payment_number',
+                        branch_id=sale.branch_id,
+                        tenant_id=getattr(sale, 'tenant_id', None),
+                    ),
+                    payment_type='sale_payment',
+                    direction='incoming',
+                    sale_id=sale.id,
+                    customer_id=customer.id,
+                    amount=allocated,
+                    amount_aed=allocated_aed,
+                    currency=receipt.currency,
+                    exchange_rate=receipt.exchange_rate,
+                    payment_method=receipt.payment_method,
+                    reference_number=receipt.receipt_number,
+                    payment_confirmed=receipt.payment_confirmed,
+                    cheque_id=receipt.cheque_id,
+                    notes=f"Allocated from Receipt {receipt.receipt_number}",
+                    user_id=current_user.id if current_user and current_user.is_authenticated else 1,
+                    branch_id=sale.branch_id or receipt.branch_id,
+                )
+                db.session.add(sale_payment)
+                sale.recalculate_payment_status()
                 remaining_amount_aed -= allocated_aed
             
             try:
@@ -472,10 +518,7 @@ class PaymentService:
             except Exception:
                 db.session.rollback()
                 raise
-
-            
             current_app.logger.info(f'Receipt {receipt.receipt_number} allocated to sales')
-        
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(f'Receipt allocation failed: {e}')

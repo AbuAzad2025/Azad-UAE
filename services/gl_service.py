@@ -15,10 +15,10 @@ from utils.currency_utils import get_system_default_currency, resolve_default_cu
 _JE_SEQ = {}
 
 # مرجع الحسابات: استخدم هذه الرموز للقيود لضمان الاتساق
-# أصول: 1110 صندوق، 1120 بنك، 1130 ذمم مدينة، 1140 مخزون، 1150 شيكات تحت التحصيل، 1160 سلف موظفين
-# خصوم: 2110 ذمم دائنة، 2115 ذمم تجار، 2120 شيكات مؤجلة، 2130 ضرائب، 2140 رواتب مستحقة
+# أصول: 1110 صندوق، 1120 بنك، 1130 ذمم مدينة، 1140 مخزون، 1150 شيكات تحت التحصيل، 1170 سلف موظفين
+# خصوم: 2110 ذمم دائنة، 2115 ذمم تجار، 2121 ضريبة مخرجات (VAT Output)، 2122 ضريبة مدخلات (VAT Input)، 2130 شيكات مؤجلة، 2140 رواتب مستحقة
 # إيرادات: 4100 مبيعات، 4200 خدمات، 4300 شحن، 4400 أرباح فرق عملة، 4500 أخرى
-# مصروفات: 5100 تكلفة بضاعة، 5150 تعديلات مخزون، 5200 خصومات ممنوحة، 6100 رواتب، 6900 خسائر فرق عملة، 6990 متنوعة
+# مصروفات: 5100 تكلفة بضاعة، 5150 تعديلات مخزون، 5200 خصومات ممنوحة، 6100 رواتب، 6600 خسائر فرق عملة، 6500 متنوعة
 # 'cash' and 'bank' are retained as header account references for legacy callers.
 # Operational postings must resolve branch-specific accounts through
 # get_default_liquidity_account().
@@ -29,13 +29,12 @@ GL_ACCOUNTS = {
     'receivable': '1130',
     'inventory': '1140',
     'cheques_under_collection': '1150',
-    'employee_advances': '1160',
-    'vat_input': '1170',
-    'vat_clearing': '1175',
+    'employee_advances': '1170',  # Employee advances / prepayments
+    'vat_input': '2122',          # VAT Input (recoverable tax on purchases)
     'payable': '2110',
     'merchants_payable': '2115',
-    'deferred_cheques': '2120',
-    'tax_payable': '2130',
+    'deferred_cheques': '2130',   # Deferred Cheques Payable (outgoing cheques not yet cleared)
+    'tax_payable': '2121',        # VAT Output (tax collected on sales)
     'salaries_payable': '2140',
     'sales_revenue': '4100',
     'service_revenue': '4200',
@@ -48,13 +47,16 @@ GL_ACCOUNTS = {
     'salaries_expense': '6100',
     'commission_expense': '6150',
     'depreciation_expense': '6180',
-    'accumulated_depreciation': '1290',
-    'rent': '6200',
-    'utilities': '6300',
-    'maintenance': '6400',
-    'fx_loss': '6900',
-    'bank_charges': '6950',
-    'misc_expense': '6990',
+    'accumulated_depreciation': '1190',  # Contra-asset: Accumulated Depreciation
+    'rent': '6210',
+    'utilities': '6230',
+    'maintenance': '6240',
+    'freight_in': '5301',
+    'customs_duty': '5302',
+    'insurance_in': '5303',
+    'fx_loss': '6600',
+    'bank_charges': '6260',
+    'misc_expense': '6500',
 }
 
 GL_ACCOUNT_CONCEPTS = {
@@ -370,7 +372,7 @@ class GLService:
     
     @staticmethod
     def get_vat_report(date_from=None, date_to=None, branch_id=None, tenant_id=None):
-        """VAT summary: output (2130 credits) vs input (1170 debits)."""
+        """VAT summary: output (2121 credits) vs input (2122 debits). Includes posted entries only."""
         from sqlalchemy import func
         from utils.tax_settings import is_tax_enabled
 
@@ -417,7 +419,10 @@ class GLService:
                 return Decimal('0')
             q = db.session.query(func.coalesce(func.sum(getattr(GLJournalLine, side)), 0)).join(
                 GLJournalEntry, GLJournalLine.entry_id == GLJournalEntry.id
-            ).filter(GLJournalLine.account_id == account.id, GLJournalEntry.is_reversed == False)
+            ).filter(
+                GLJournalLine.account_id == account.id,
+                GLJournalEntry.is_posted == True
+            )
             if tenant_id is not None:
                 q = q.filter(GLJournalEntry.tenant_id == int(tenant_id))
             if branch_id:
@@ -651,7 +656,7 @@ class GLService:
             return None
         q = db.session.query(func.sum(GLJournalLine.amount_aed)).filter(
             GLJournalLine.account_id == account_id
-        ).join(GLJournalEntry)
+        ).join(GLJournalEntry).filter(GLJournalEntry.is_posted == True)
         if branch_id:
             q = q.filter(GLJournalEntry.branch_id == branch_id)
         total = q.scalar() or Decimal('0')
@@ -666,7 +671,7 @@ class GLService:
         
         account = GLAccount.query.get_or_404(account_id)
         
-        query = GLJournalLine.query.filter_by(account_id=account_id).join(GLJournalEntry)
+        query = GLJournalLine.query.filter_by(account_id=account_id).join(GLJournalEntry).filter(GLJournalEntry.is_posted == True)
         
         if branch_id:
             query = query.filter(GLJournalEntry.branch_id == branch_id)
@@ -828,6 +833,33 @@ class GLService:
         }
 
     @staticmethod
+    def get_account_code_for_concept(concept_code, branch_id=None, tenant_id=None, fallback_key=None):
+        """Resolve GL account code for a concept.
+        Tries dynamic mapping first, then falls back to GL_ACCOUNTS dict.
+        Raises GLMappingError if no mapping and no fallback available.
+        """
+        tenant_id = tenant_id or gl_helpers.resolve_tenant_id(branch_id=branch_id)
+        if tenant_id:
+            try:
+                account = resolve_gl_account(
+                    tenant_id=int(tenant_id),
+                    concept_code=concept_code,
+                    branch_id=branch_id,
+                )
+                if account:
+                    return account.code
+            except GLMappingError:
+                pass
+        if fallback_key and fallback_key in GL_ACCOUNTS:
+            return GL_ACCOUNTS[fallback_key]
+        raise GLMappingError(
+            tenant_id=tenant_id or 0,
+            concept_code=concept_code,
+            branch_id=branch_id,
+            issue=f"No GL account mapping or fallback for concept {concept_code}.",
+        )
+
+    @staticmethod
     def get_payment_credit_account(payment_method, branch_id=None, tenant_id=None):
         """حساب الدائن عند الصرف (خروج نقدية)."""
         m = (payment_method or '').strip().lower()
@@ -836,7 +868,12 @@ class GLService:
         if m in ('bank_transfer', 'card', 'bank'):
             return GLService.get_default_liquidity_account('bank', branch_id=branch_id, tenant_id=tenant_id)
         if m == 'cheque':
-            return '2120'
+            return GLService.get_account_code_for_concept(
+                'DEFERRED_CHEQUES_PAYABLE',
+                branch_id=branch_id,
+                tenant_id=tenant_id,
+                fallback_key='deferred_cheques',
+            )
         return GLService.get_default_liquidity_account('cash', branch_id=branch_id, tenant_id=tenant_id)
 
 

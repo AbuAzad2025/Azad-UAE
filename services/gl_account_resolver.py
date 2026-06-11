@@ -17,7 +17,7 @@ from models._constants import VALID_GL_CONCEPT_CODES
 from models.gl import GLAccount, GLAccountMapping
 
 
-@dataclass(frozen=True)
+@dataclass
 class GLMappingError(RuntimeError):
     """Raised when dynamic GL concept resolution cannot safely resolve."""
 

@@ -432,11 +432,15 @@ class StockService:
         """Recalculate MWAC when stock is received. Must run inside an existing transaction."""
         from datetime import datetime, timezone
         
-        pwc = ProductWarehouseCost.query.filter_by(
+        query = ProductWarehouseCost.query.filter_by(
             tenant_id=tenant_id,
             product_id=product_id,
             warehouse_id=warehouse_id,
-        ).first()
+        )
+        try:
+            pwc = query.with_for_update().first()
+        except Exception:
+            pwc = query.first()
         
         if pwc:
             old_qty = pwc.total_quantity
