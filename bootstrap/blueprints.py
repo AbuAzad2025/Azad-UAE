@@ -153,6 +153,12 @@ def register_blueprints(app):
     api_docs_bp = _import_bp(app, "routes.api_docs", "api_docs_bp")
     graphql_bp = _import_bp(app, "routes.graphql", "graphql_bp")
     gamification_bp = _import_bp(app, "routes.gamification", "gamification_bp")
+    crm_bp = _import_bp(app, "routes.crm", "crm_bp")
+    tickets_bp = _import_bp(app, "routes.tickets", "tickets_bp")
+    projects_bp = _import_bp(app, "routes.projects", "projects_bp")
+    hr_bp = _import_bp(app, "routes.hr", "hr_bp")
+    email_marketing_bp = _import_bp(app, "routes.email_marketing", "email_marketing_bp")
+    printing_bp = _import_bp(app, "routes.printing", "printing_bp")
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(main_bp)
@@ -193,5 +199,11 @@ def register_blueprints(app):
     app.register_blueprint(graphql_bp)
     app.register_blueprint(users_bp)
     app.register_blueprint(owner_bp)
+    app.register_blueprint(crm_bp)
+    app.register_blueprint(tickets_bp)
+    app.register_blueprint(projects_bp)
+    app.register_blueprint(hr_bp)
+    app.register_blueprint(email_marketing_bp)
+    app.register_blueprint(printing_bp)
 
     return app

@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block title %}إحصائيات الحملة{% endblock %}
+{% block content %}
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-md-3">
+      <div class="card text-center"><div class="card-body">
+        <h3>{{ stats.campaign.sent_count }}</h3>
+        <small class="text-muted">أُرسل</small>
+      </div></div>
+    </div>
+    <div class="col-md-3">
+      <div class="card text-center"><div class="card-body">
+        <h3>{{ stats.campaign.open_count }}</h3>
+        <small class="text-muted">فتح</small>
+      </div></div>
+    </div>
+    <div class="col-md-3">
+      <div class="card text-center"><div class="card-body">
+        <h3>{{ stats.campaign.click_count }}</h3>
+        <small class="text-muted">نقر</small>
+      </div></div>
+    </div>
+    <div class="col-md-3">
+      <div class="card text-center"><div class="card-body">
+        <h3>{{ stats.campaign.bounce_count }}</h3>
+        <small class="text-muted">ارتداد</small>
+      </div></div>
+    </div>
+  </div>
+  {% if stats.campaign.status == 'draft' %}
+  <form method="POST" action="{{ url_for('email_marketing.send_campaign', campaign_id=stats.campaign.id) }}">
+    <button class="btn btn-primary"><i class="fas fa-paper-plane"></i> إرسال الآن</button>
+  </form>
+  {% endif %}
+  <div class="card mt-3">
+    <div class="card-header"><h5>سجل الإرسال</h5></div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-bordered">
+          <thead><tr><th>الحالة</th><th>أُرسل</th><th>فتح</th></tr></thead>
+          <tbody>
+            {% for log in stats.logs %}
+            <tr>
+              <td><span class="badge badge-{{ 'success' if log.status == 'sent' else 'danger' }}">{{ log.status }}</span></td>
+              <td>{{ log.sent_at or '-' }}</td>
+              <td>{{ log.opened_at or '-' }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <a href="{{ url_for('email_marketing.campaigns') }}" class="btn btn-secondary">عودة</a>
+</div>
+{% endblock %}

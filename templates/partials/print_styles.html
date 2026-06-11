@@ -1,9 +1,13 @@
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* ── Page setup — overridden by template-specific @page if needed ── */
 @page {
   size: {{ settings.paper_size or 'A4' }} {{ settings.orientation or 'portrait' }};
   margin: 5mm;
 }
+
+/* ── Body ── */
 body {
   padding: 10px;
   margin: 0;
@@ -13,14 +17,18 @@ body {
   align-items: flex-start;
   min-height: 100vh;
 }
+
 .invoice {
   margin: 0 auto;
   background: white;
 }
+
 .logo {
   height: 50px;
   margin-bottom: 8px;
 }
+
+/* ── Tables ── */
 table {
   width: 100%;
   border-collapse: collapse;
@@ -32,6 +40,7 @@ th, td {
   padding: 6px 8px;
   text-align: right;
 }
+
 .total-row {
   display: flex;
   justify-content: space-between;
@@ -45,11 +54,82 @@ th, td {
   font-size: 9px;
   font-weight: 700;
 }
+
 .footer {
   text-align: center;
   font-size: 9px;
   color: #666;
 }
+
+/* ── Print utility classes used by partials (self-contained, no erp-theme.css dependency) ── */
+.erp-print-banner {
+  background: linear-gradient(135deg, #f8f9fa 0%, #eef2f7 100%);
+  border: 1px solid #d6dbe3;
+  border-radius: 10px;
+  margin: 10px 10px 14px 10px;
+  padding: 10px 12px;
+  text-align: center;
+}
+.erp-print-banner-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 4px;
+}
+.erp-print-banner-sub {
+  font-size: 9px;
+  color: #475569;
+  margin-bottom: 8px;
+}
+.erp-print-banner-meta {
+  display: inline-block;
+  background: #ffffff;
+  border: 1px dashed #94a3b8;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 9px;
+  color: #334155;
+  line-height: 1.8;
+}
+.erp-print-amount-box {
+  margin: 10px 0;
+  padding: 8px 10px;
+  background: #f8fafc;
+  border-right: 4px solid #64748b;
+  border-radius: 6px;
+  font-size: 9px;
+  color: #1f2937;
+}
+.erp-print-qr-wrap {
+  margin: 10px 0 6px 0;
+  text-align: center;
+}
+.erp-print-qr-img {
+  width: 110px;
+  height: 110px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 4px;
+  background: #fff;
+}
+.erp-print-qr-label {
+  font-size: 8px;
+  color: #64748b;
+  margin-top: 4px;
+}
+.print-developer-footer {
+  margin-top: 20px;
+  padding-top: 10px;
+  border-top: 1px solid #ddd;
+  text-align: center;
+  color: #666;
+  font-size: 11px;
+}
+.erp-print-footer-contact {
+  margin: 4px 0 0;
+}
+
+/* ── Print @media rules ── */
 @media print {
   html, body { width: auto !important; height: auto !important; overflow: visible !important; background: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .invoice { width: auto !important; max-width: none !important; height: auto !important; min-height: auto !important; max-height: none !important; overflow: visible !important; box-shadow: none !important; }
@@ -57,5 +137,8 @@ th, td {
   thead { display: table-header-group; } tfoot { display: table-footer-group; }
   tr, .totals, .signature, .invoice-footer, .notes { page-break-inside: avoid; break-inside: avoid; }
   .no-print { display: none !important; }
+
+  /* Color adjustment for all print */
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
 </style>

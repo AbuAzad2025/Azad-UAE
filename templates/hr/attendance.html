@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% block title %}الحضور والانصراف{% endblock %}
+{% block content %}
+<div class="container-fluid">
+  <ul class="nav nav-tabs mb-3">
+    <li class="nav-item"><a class="nav-link {% if tab != 'departments' %}active{% endif %}" href="#attendance" data-toggle="tab">الحضور</a></li>
+    <li class="nav-item"><a class="nav-link {% if tab == 'departments' %}active{% endif %}" href="#departments" data-toggle="tab">الأقسام</a></li>
+    <li class="nav-item"><a class="nav-link" href="{{ url_for('hr.leaves_list') }}">الإجازات</a></li>
+  </ul>
+  <div class="tab-content">
+    <div class="tab-pane {% if tab != 'departments' %}active{% endif %}" id="attendance">
+      <div class="row mb-3">
+        <div class="col">
+          <form method="POST" action="{{ url_for('hr.clock_in') }}" style="display:inline">
+            <button class="btn btn-success"><i class="fas fa-sign-in-alt"></i> تسجيل دخول</button>
+          </form>
+          <form method="POST" action="{{ url_for('hr.clock_out') }}" style="display:inline">
+            <button class="btn btn-danger"><i class="fas fa-sign-out-alt"></i> تسجيل خروج</button>
+          </form>
+        </div>
+      </div>
+      <form class="form-inline mb-3" method="GET">
+        <select name="user_id" class="form-control form-control-sm ml-2">
+          <option value="">الكل</option>
+          {% for u in users %}
+          <option value="{{ u.id }}" {% if request.args.user_id|string == u.id|string %}selected{% endif %}>{{ u.name }}</option>
+          {% endfor %}
+        </select>
+        <input name="date_from" type="date" class="form-control form-control-sm ml-2" value="{{ request.args.date_from }}">
+        <input name="date_to" type="date" class="form-control form-control-sm ml-2" value="{{ request.args.date_to }}">
+        <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-search"></i></button>
+      </form>
+      <div class="table-responsive">
+        <table class="table table-bordered" id="attendanceTable">
+          <thead><tr><th>المستخدم</th><th>الفرع</th><th>دخول</th><th>خروج</th><th>ساعات</th><th>حالة</th></tr></thead>
+          <tbody>
+            {% for r in records %}
+            <tr>
+              <td>{{ r.user.name if r.user else '-' }}</td>
+              <td>{{ r.branch.name if r.branch else '-' }}</td>
+              <td>{{ r.check_in.strftime('%Y-%m-%d %H:%M') if r.check_in }}</td>
+              <td>{{ r.check_out.strftime('%Y-%m-%d %H:%M') if r.check_out else '-' }}</td>
+              <td>{{ r.work_hours or '-' }}</td>
+              <td><span class="badge badge-{{ 'success' if r.state == 'validated' else 'secondary' }}">{{ r.state }}</span></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="tab-pane {% if tab == 'departments' %}active{% endif %}" id="departments">
+      <button class="btn btn-success btn-sm mb-3" data-toggle="modal" data-target="#deptModal"><i class="fas fa-plus"></i> قسم</button>
+      <div class="table-responsive">
+        <table class="table table-bordered">
+          <thead><tr><th>الاسم</th><th>المدير</th><th>اللون</th></tr></thead>
+          <tbody>
+            {% for d in departments %}
+            <tr>
+              <td>{{ d.name_ar or d.name }}</td>
+              <td>{{ d.manager.name if d.manager else '-' }}</td>
+              <td><span style="display:inline-block;width:20px;height:20px;background:{{ d.color }};border-radius:4px"></span></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="deptModal">
+  <div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5>قسم جديد</h5></div>
+    <form method="POST" action="{{ url_for('hr.create_department') }}">
+    <div class="modal-body">
+      <div class="form-group"><label>الاسم</label><input name="name" class="form-control" required></div>
+      <div class="form-group"><label>الاسم (عربي)</label><input name="name_ar" class="form-control"></div>
+    </div>
+    <div class="modal-footer"><button type="submit" class="btn btn-success">حفظ</button></div>
+    </form>
+  </div></div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>$(document).ready(function(){if($.fn.DataTable&&!$.fn.DataTable.isDataTable('#attendanceTable')){$('#attendanceTable').DataTable({language:{url:"{{ url_for('static', filename='datatables/Arabic.json') }}"},pageLength:25})}});</script>
+{% endblock %}

@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% block title %}طلبات الإجازات{% endblock %}
+{% block content %}
+<div class="container-fluid">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4><i class="fas fa-calendar-alt"></i> طلبات الإجازات</h4>
+    <a href="{{ url_for('hr.request_leave') }}" class="btn btn-success btn-sm"><i class="fas fa-plus"></i> طلب إجازة</a>
+  </div>
+  <div class="card">
+    <div class="card-body">
+      <form class="form-inline mb-3" method="GET">
+        <select name="state" class="form-control form-control-sm ml-2">
+          <option value="">الكل</option>
+          <option value="draft" {% if request.args.state == 'draft' %}selected{% endif %}>مسودة</option>
+          <option value="approved" {% if request.args.state == 'approved' %}selected{% endif %}>معتمدة</option>
+          <option value="refused" {% if request.args.state == 'refused' %}selected{% endif %}>مرفوضة</option>
+        </select>
+        <select name="user_id" class="form-control form-control-sm ml-2">
+          <option value="">الكل</option>
+          {% for u in users %}
+          <option value="{{ u.id }}" {% if request.args.user_id|string == u.id|string %}selected{% endif %}>{{ u.name }}</option>
+          {% endfor %}
+        </select>
+        <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-search"></i></button>
+      </form>
+      <div class="table-responsive">
+        <table class="table table-bordered" id="leavesTable">
+          <thead><tr>
+            <th>المستخدم</th><th>النوع</th><th>من</th><th>إلى</th><th>المدة</th><th>الحالة</th><th></th>
+          </tr></thead>
+          <tbody>
+            {% for l in leaves %}
+            <tr>
+              <td>{{ l.user.name if l.user else '-' }}</td>
+              <td>{{ l.leave_type.name_ar or l.leave_type.name if l.leave_type else '-' }}</td>
+              <td>{{ l.date_from }}</td>
+              <td>{{ l.date_to }}</td>
+              <td>{{ l.duration }} يوم</td>
+              <td><span class="badge badge-{{ 'success' if l.state == 'approved' else ('danger' if l.state == 'refused' else 'warning') }}">{{ l.state }}</span></td>
+              <td>
+                {% if l.state == 'draft' %}
+                <form method="POST" action="{{ url_for('hr.approve_leave', leave_id=l.id) }}" style="display:inline">
+                  <button class="btn btn-sm btn-success"><i class="fas fa-check"></i></button>
+                </form>
+                <form method="POST" action="{{ url_for('hr.refuse_leave', leave_id=l.id) }}" style="display:inline">
+                  <button class="btn btn-sm btn-danger"><i class="fas fa-times"></i></button>
+                </form>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>$(document).ready(function(){if($.fn.DataTable&&!$.fn.DataTable.isDataTable('#leavesTable')){$('#leavesTable').DataTable({language:{url:"{{ url_for('static', filename='datatables/Arabic.json') }}"},pageLength:25})}});</script>
+{% endblock %}

@@ -1,75 +1,110 @@
-{% extends 'base.html' %}
-{% block title %}قسيمة راتب{% endblock %}
-{% block content %}
-<div class="container">
-    <div class="card mt-5 shadow">
-        <div class="card-body p-5">
-            <div class="erp-print-document">
-            <div class="text-center mb-4">
-                <h2>قسيمة راتب / Salary Slip</h2>
-                <hr>
-            </div>
-            <div class="row mb-4">
-                <div class="col-6">
-                    <p><strong>الموظف:</strong> {{ slip.employee.name }}</p>
-                    <p><strong>الفرع:</strong> {{ slip.employee.branch.name if slip.employee.branch else 'المركز الرئيسي' }}</p>
-                </div>
-                <div class="col-6 text-right">
-                    <p><strong>التاريخ:</strong> {{ slip.payment_date }}</p>
-                    <p><strong>الفترة:</strong> {{ slip.month }}/{{ slip.year }}</p>
-                </div>
-            </div>
-            
-            <div class="table-responsive"><table class="table table-bordered">
-                <thead class="bg-light">
-                    <tr>
-                        <th>البند</th>
-                        <th class="text-center">المبلغ</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>الراتب الأساسي / الأجر</td>
-                        <td class="text-center">{{ slip.basic_amount }}</td>
-                    </tr>
-                    <tr>
-                        <td>بدلات وإضافي</td>
-                        <td class="text-center text-success">{{ slip.allowances }}</td>
-                    </tr>
-                    <tr>
-                        <td>خصومات</td>
-                        <td class="text-center text-danger">({{ slip.deductions }})</td>
-                    </tr>
-                    <tr>
-                        <td>سلف مستردة</td>
-                        <td class="text-center text-warning">({{ slip.advances_deducted }})</td>
-                    </tr>
-                </tbody>
-                <tfoot>
-                    <tr class="h4">
-                        <th>صافي الراتب / Net Salary</th>
-                        <th class="text-center">{{ slip.net_salary }} {{ tenant_default_currency or 'AED' }}</th>
-                    </tr>
-                </tfoot>
-            </table></div>
-            
-            <div class="row mt-5">
-                <div class="col-6">
-                    <p class="text-muted">توقيع المحاسب</p>
-                    <br>..........................
-                </div>
-                <div class="col-6 text-right">
-                    <p class="text-muted">توقيع الموظف</p>
-                    <br>..........................
-                </div>
-            </div>
-        </div>
-        </div>
-        <div class="card-footer d-print-none">
-            <button onclick="window.print()" class="btn btn-primary"><i class="fas fa-print"></i> طباعة</button>
-            <a href="{{ url_for('payroll.process_payroll') }}" class="btn btn-secondary">العودة</a>
-        </div>
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ settings.company_name_ar if settings else tenant_name_ar or company_name_ar }} - قسيمة راتب</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/erp-theme.css') }}">
+  {% include 'partials/print_styles.html' %}
+  <style>
+    body { font-family: 'Tajawal', 'Arial', sans-serif; background: #95a5a6; }
+    .invoice {
+      width: 210mm; min-height: 148mm; border-radius: 0; overflow: auto;
+      box-shadow: 0 0 20px rgba(0,0,0,0.3); position: relative;
+    }
+    .header {
+      background: linear-gradient(135deg, {{ settings.header_color if settings else '#27ae60' }} 0%, {{ settings.accent_color if settings else '#1e8449' }} 100%);
+      color: white; padding: 15px 20px; text-align: center;
+    }
+    .logo { background: white; padding: 8px; border-radius: 8px; display: inline-block; }
+    .company-name { font-size: 10px; font-weight: 700; margin-bottom: 3px; }
+    .doc-title { background: #f8f9fa; padding: 10px 15px; text-align: center; }
+    .doc-title h2 { color: {{ settings.header_color if settings else '#27ae60' }}; font-size: 14px; margin: 0; }
+    .content { padding: 15px 20px; }
+    .info-row { display: flex; justify-content: space-between; margin-bottom: 12px; padding: 0 5px; }
+    .info-row p { margin: 0; font-size: 10px; }
+    .slip-table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+    .slip-table th { background: {{ settings.header_color if settings else '#27ae60' }}; color: white; padding: 10px 12px; font-size: 10px; text-align: center; }
+    .slip-table td { padding: 10px 12px; border-bottom: 1px solid #e0e0e0; font-size: 10px; }
+    .slip-table tr:last-child td { border-bottom: none; }
+    .net-row { background: {{ settings.header_color if settings else '#27ae60' }}; color: white; }
+    .net-row td { font-weight: 700; font-size: 12px; border: none; }
+    .signatures { display: flex; justify-content: space-around; margin-top: 30px; padding: 0 20px; }
+    .sig-box { text-align: center; width: 200px; }
+    .sig-line { border-top: 2px solid #333; width: 100%; height: 30px; margin-bottom: 5px; }
+    .footer { background: #f8f9fa; padding: 10px 15px; text-align: center; border-top: 2px solid {{ settings.accent_color if settings else '#1e8449' }}; }
+  </style>
+</head>
+<body class="invoice-print">
+  <div class="invoice">
+    <div class="header">
+      {% include 'partials/print_tenant_logo.html' %}
+      <div class="company-name">{{ settings.company_name_ar or tenant_name_ar or company_name_ar }}</div>
+      <div style="font-size:8px;opacity:0.9;">
+        {{ settings.address_ar or tenant_address or '' }} | 📞 {{ settings.phone_1 or tenant_phone or '' }}
+      </div>
     </div>
-</div>
-{% block extra_css %}<style>@media print{@page{size:A4 portrait;margin:10mm}}</style>{% endblock %}
-{% endblock %}
+
+    <div class="doc-title">
+      <h2>📄 قسيمة راتب / Salary Slip</h2>
+    </div>
+
+    <div class="content">
+      <div class="info-row">
+        <div>
+          <p><strong>الموظف:</strong> {{ slip.employee.name if slip.employee else '—' }}</p>
+          <p><strong>القسم:</strong> {{ slip.employee.department.name if slip.employee and slip.employee.department else '—' }}</p>
+        </div>
+        <div style="text-align:left;">
+          <p><strong>التاريخ:</strong> {{ slip.payment_date }}</p>
+          <p><strong>الفترة:</strong> {{ slip.month }}/{{ slip.year }}</p>
+        </div>
+      </div>
+
+      <table class="slip-table">
+        <thead>
+          <tr><th>#</th><th>البند</th><th>المبلغ</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>1</td><td>الراتب الأساسي / Basic Salary</td><td style="text-align:center;font-weight:700;">{{ format_currency(slip.basic_amount) }}</td></tr>
+          <tr><td>2</td><td>البدلات والإضافي / Allowances</td><td style="text-align:center;color:#27ae60;font-weight:700;">{{ format_currency(slip.allowances) }}</td></tr>
+          <tr><td>3</td><td>الخصومات / Deductions</td><td style="text-align:center;color:#e74c3c;font-weight:700;">({{ format_currency(slip.deductions) }})</td></tr>
+          <tr><td>4</td><td>السلف المستردة / Advances</td><td style="text-align:center;color:#f39c12;font-weight:700;">({{ format_currency(slip.advances_deducted) }})</td></tr>
+        </tbody>
+        <tfoot>
+          <tr class="net-row">
+            <td colspan="2" style="text-align:center;">صافي الراتب / Net Salary</td>
+            <td style="text-align:center;">{{ format_currency(slip.net_salary) }} {{ tenant_default_currency or 'AED' }}</td>
+          </tr>
+        </tfoot>
+      </table>
+
+      {% if slip.notes %}
+      <div style="margin-top:12px;padding:8px;background:#fff3cd;border-radius:4px;border-right:2px solid #ffc107;">
+        <p style="font-size:9px;color:#856404;margin:0;">💬 {{ slip.notes }}</p>
+      </div>
+      {% endif %}
+
+      <div class="signatures">
+        <div class="sig-box">
+          <div class="sig-line"></div>
+          <div style="font-size:9px;">توقيع المحاسب</div>
+        </div>
+        <div class="sig-box">
+          <div class="sig-line"></div>
+          <div style="font-size:9px;">توقيع الموظف</div>
+        </div>
+        <div class="sig-box">
+          <div class="sig-line"></div>
+          <div style="font-size:9px;">الختم</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <p>قسيمة راتب صادرة عن {{ settings.company_name_ar or tenant_name_ar or company_name_ar }}</p>
+      {% include 'partials/print_developer_footer.html' %}
+    </div>
+  </div>
+</body>
+</html>

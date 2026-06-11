@@ -574,3 +574,46 @@ class TestPosApiCategories:
                         assert resp.status_code == 200
                         args, kwargs = mock_search.call_args
                         assert kwargs.get("category_id") == 5
+
+class TestPosTenantCurrency:
+    def test_pos_route_imports_context_aware_default_currency(self, app, client, pos_owner):
+        import inspect
+        from routes import pos as pos_module
+        source = inspect.getsource(pos_module)
+        assert "context_aware_default_currency" in source
+    def test_pos_route_uses_tenant_aware_currency_in_checkout(self, app, client, pos_owner):
+        import inspect
+        from routes import pos as pos_module
+        source = inspect.getsource(pos_module)
+        assert 'currency = (payload.get("currency") or context_aware_default_currency()).strip().upper()' in source
+        assert 'or "AED"' not in source.split("def api_checkout")[1].split("def ")[0]
+    def test_pos_index_template_has_no_hardcoded_aed(self, app, client, pos_owner):
+        _login_owner(client, pos_owner)
+        with patch("routes.pos.SystemSettings") as MockSettings:
+            setting = MagicMock()
+            setting.enable_pos = True
+            MockSettings.query.order_by.return_value.first.return_value = setting
+            with patch("routes.pos.Tenant") as MockTenant:
+                tenant = MagicMock()
+                tenant.enable_pos = True
+                MockTenant.query.get.return_value = tenant
+                with patch("routes.pos.get_active_tenant_id", return_value=1):
+                    with open("templates/pos/index.html", "r", encoding="utf-8") as f:
+                        content = f.read()
+                    assert "or 'AED'" not in content
+                    assert "or \"AED\"" not in content
+    def test_pos_grid_template_has_no_hardcoded_aed(self, app, client, pos_owner):
+        _login_owner(client, pos_owner)
+        with patch("routes.pos.SystemSettings") as MockSettings:
+            setting = MagicMock()
+            setting.enable_pos = True
+            MockSettings.query.order_by.return_value.first.return_value = setting
+            with patch("routes.pos.Tenant") as MockTenant:
+                tenant = MagicMock()
+                tenant.enable_pos = True
+                MockTenant.query.get.return_value = tenant
+                with patch("routes.pos.get_active_tenant_id", return_value=1):
+                    with open("templates/pos/grid.html", "r", encoding="utf-8") as f:
+                        content = f.read()
+                    assert "or 'AED'" not in content
+                    assert "or \"AED\"" not in content

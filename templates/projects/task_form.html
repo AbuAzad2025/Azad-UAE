@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% block title %}{% if project %}تعديل مشروع{% else %}مشروع جديد{% endif %}{% endblock %}
+{% block content %}
+<div class="container-fluid">
+  <div class="card">
+    <div class="card-header"><h5>{% if project %}تعديل مشروع{% else %}مشروع جديد{% endif %}</h5></div>
+    <div class="card-body">
+      <form method="POST">
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group"><label>الاسم <span class="text-danger">*</span></label>
+              <input name="name" class="form-control" value="{{ project.name if project else '' }}" required></div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group"><label>الاسم (عربي)</label>
+              <input name="name_ar" class="form-control" value="{{ project.name_ar if project else '' }}"></div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group"><label>العميل</label>
+              <select name="customer_id" class="form-control">
+                <option value="">اختر</option>
+                {% for c in customers %}
+                <option value="{{ c.id }}" {% if project and project.customer_id == c.id %}selected{% endif %}>{{ c.name }}</option>
+                {% endfor %}
+              </select></div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group"><label>الحالة</label>
+              <select name="status" class="form-control">
+                {% for s in ['planning','active','done','cancelled'] %}
+                <option value="{{ s }}" {% if project and project.status == s %}selected{% endif %}>{{ s }}</option>
+                {% endfor %}
+              </select></div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group"><label>تاريخ البداية</label>
+              <input name="date_start" type="date" class="form-control" value="{{ project.date_start.strftime('%Y-%m-%d') if project and project.date_start else '' }}"></div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group"><label>تاريخ النهاية</label>
+              <input name="date_end" type="date" class="form-control" value="{{ project.date_end.strftime('%Y-%m-%d') if project and project.date_end else '' }}"></div>
+          </div>
+          <div class="col-12">
+            <div class="form-group"><label>الوصف</label>
+              <textarea name="description" class="form-control" rows="3">{{ project.description if project else '' }}</textarea></div>
+          </div>
+        </div>
+        {% if not project %}
+        <hr><h6>المهمة الأولى</h6>
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group"><label>اسم المهمة</label><input name="task_name" class="form-control" placeholder="اختياري"></div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group"><label>المسؤول</label>
+              <select name="task_user_id" class="form-control"><option value="">اختر</option></select></div>
+          </div>
+        </div>
+        {% endif %}
+        <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> حفظ</button>
+        <a href="{{ url_for('projects.list_projects') }}" class="btn btn-secondary">إلغاء</a>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

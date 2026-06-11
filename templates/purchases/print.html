@@ -1,100 +1,142 @@
-{% extends 'base.html' %}
-
-{% block title %}طباعة فاتورة الشراء #{{ purchase.purchase_number }}{% endblock %}
-
-{% block content %}
-<div class="container-fluid">
-  <div class="row">
-    <div class="col-12">
-      <div class="card">
-        <div class="card-header">
-          <h3 class="card-title">فاتورة شراء #{{ purchase.purchase_number }}</h3>
-          <div class="card-tools">
-            <button onclick="window.print()" class="btn btn-primary">
-              <i class="fas fa-print"></i> طباعة
-            </button>
-            <a href="{{ url_for('purchases.view', id=purchase.id) }}" class="btn btn-secondary">
-              <i class="fas fa-arrow-left"></i> رجوع
-            </a>
-          </div>
-        </div>
-        <div class="card-body">
-          <div class="row mb-4 align-items-center">
-            <div class="col-md-3 text-center">
-              {% include 'partials/print_tenant_logo.html' %}
-            </div>
-            <div class="col-md-9">
-              <h4>{{ print_branding.company_name_ar if print_branding is defined else (company.name_ar if company else company_name_ar) }}</h4>
-              <p class="mb-1">{{ print_branding.address_ar if print_branding is defined else (company.address if company else '') }}</p>
-              {% if print_branding is defined and print_branding.phone %}
-              <p class="mb-0">هاتف: {{ print_branding.phone }}</p>
-              {% endif %}
-            </div>
-          </div>
-          
-          <div class="row mb-4">
-            <div class="col-md-6">
-              <h4>معلومات المورد</h4>
-              <p><strong>المورد:</strong> {{ purchase.supplier_name }}</p>
-              <p><strong>الهاتف:</strong> {{ purchase.supplier_phone }}</p>
-            </div>
-            <div class="col-md-6 text-right">
-              <h4>معلومات الفاتورة</h4>
-              <p><strong>التاريخ:</strong> {{ purchase.purchase_date.strftime('%Y-%m-%d') }}</p>
-              <p><strong>المبلغ الإجمالي:</strong> {{ purchase.total_amount }} {{ tenant_currency_symbol }}</p>
-              <p><strong>المدفوع:</strong> {{ purchase.get_paid_amount() }} {{ tenant_currency_symbol }}</p>
-              <p><strong>المتبقي:</strong> {{ purchase.total_amount - purchase.get_paid_amount() }} {{ tenant_currency_symbol }}</p>
-            </div>
-          </div>
-
-          
-          <div class="table-responsive"><table class="table table-bordered">
-            <thead>
-              <tr>
-                <th>المنتج</th>
-                <th>الكمية</th>
-                <th>السعر</th>
-                <th>الإجمالي</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for line in purchase.lines %}
-              <tr>
-                <td>{{ line.product.name }}</td>
-                <td>{{ line.quantity }}</td>
-                <td>{{ line.unit_cost }}</td>
-                <td>{{ line.line_total }}</td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table></div>
-
-          
-          {% if purchase.notes %}
-          <div class="mt-3">
-            <strong>ملاحظات:</strong>
-            <p>{{ purchase.notes }}</p>
-          </div>
-          {% endif %}
-        </div>
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ settings.company_name_ar or tenant_name_ar or company_name_ar }} - فاتورة شراء #{{ purchase.purchase_number }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/erp-theme.css') }}">
+  {% include 'partials/print_styles.html' %}
+  <style>
+    body { font-family: 'Tajawal', 'Arial', sans-serif; background: #95a5a6; }
+    .invoice {
+      width: {{ '210mm' if (not settings or settings.orientation == 'portrait') else '297mm' }};
+      height: {{ '297mm' if (not settings or settings.orientation == 'portrait') else '210mm' }};
+      border-radius: 0; overflow: auto; box-shadow: 0 0 20px rgba(0,0,0,0.3); position: relative;
+    }
+    .header {
+      background: linear-gradient(135deg, {{ settings.header_color if settings else '#2c3e50' }} 0%, {{ settings.accent_color if settings else '#34495e' }} 100%);
+      color: white; padding: 15px 20px; text-align: center;
+    }
+    .logo { background: white; padding: 8px; border-radius: 8px; display: inline-block; }
+    .company-name { font-size: 9px; font-weight: 700; margin-bottom: 3px; }
+    .company-info { font-size: 8px; opacity: 0.95; }
+    .doc-title {
+      background: #f8f9fa; padding: 10px 15px; text-align: center;
+      border-bottom: 1px solid {{ settings.accent_color if settings else '#34495e' }};
+    }
+    .doc-title h2 { color: {{ settings.header_color if settings else '#2c3e50' }}; font-size: 14px; margin: 0; }
+    .content { padding: 12px 18px; }
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+    .info-box {
+      background: #f8f9fa; padding: 8px 12px; border-radius: 6px;
+      border-right: 3px solid {{ settings.accent_color if settings else '#34495e' }};
+    }
+    .info-box h3 { color: {{ settings.header_color if settings else '#2c3e50' }}; margin-bottom: 6px; font-size: 9px; }
+    .info-box p { margin: 3px 0; color: #555; font-size: 8px; }
+    thead { background: linear-gradient(135deg, {{ settings.header_color if settings else '#2c3e50' }} 0%, {{ settings.accent_color if settings else '#34495e' }} 100%); }
+    .total-section {
+      margin-top: 10px; text-align: left; background: #f8f9fa;
+      padding: 10px 15px; border-radius: 6px;
+    }
+    .total-row.final { border-top: 2px solid {{ settings.header_color if settings else '#2c3e50' }}; color: {{ settings.header_color if settings else '#2c3e50' }}; }
+    .footer {
+      background: #f8f9fa; padding: 10px 15px; text-align: center;
+      border-top: 2px solid {{ settings.accent_color if settings else '#34495e' }};
+    }
+  </style>
+</head>
+<body class="invoice-print">
+  <div class="invoice">
+    <div class="header">
+      {% include 'partials/print_tenant_logo.html' %}
+      <div class="company-name">{{ settings.company_name_ar or tenant_name_ar or company_name_ar }}</div>
+      <div class="company-info">
+        <div>{{ settings.address_ar or tenant_address or '' }}</div>
+        <div>📞 {{ settings.phone_1 or tenant_phone or '' }} {% if settings.email %} | 📧 {{ settings.email }}{% endif %}</div>
+        {% if settings and settings.tax_number %}<div>الرقم الضريبي: {{ settings.tax_number }}</div>{% endif %}
+        {% if purchase.branch %}<div>🏢 الفرع: {{ purchase.branch.name }}{% if purchase.branch.code %} ({{ purchase.branch.code }}){% endif %}</div>{% endif %}
       </div>
     </div>
+
+    <div class="doc-title">
+      <h2>🧾 فاتورة شراء</h2>
+      <div class="invoice-number" style="font-size:9px;color:#666;margin-top:4px;">
+        رقم الفاتورة: <strong>{{ purchase.purchase_number }}</strong> |
+        التاريخ: <strong>{{ purchase.purchase_date.strftime('%Y-%m-%d') if purchase.purchase_date else '' }}</strong>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="info-grid">
+        <div class="info-box">
+          <h3>🏢 بيانات المورد</h3>
+          <p><strong>المورد:</strong> {{ purchase.supplier.name if purchase.supplier else purchase.supplier_name }}</p>
+          {% if purchase.supplier and purchase.supplier.phone %}<p><strong>الهاتف:</strong> {{ purchase.supplier.phone }}</p>{% endif %}
+          {% if purchase.supplier and purchase.supplier.address %}<p><strong>العنوان:</strong> {{ purchase.supplier.address }}</p>{% endif %}
+        </div>
+        <div class="info-box">
+          <h3>📅 معلومات الفاتورة</h3>
+          <p><strong>المستخدم:</strong> {{ print_user_name or (purchase.user.full_name if purchase.user else '-') }}</p>
+          <p><strong>الحالة:</strong> مؤكدة</p>
+        </div>
+      </div>
+
+      <div class="table-responsive"><table>
+        <thead>
+          <tr><th>#</th><th>المنتج</th><th>الكمية</th><th>سعر الوحدة</th><th>الإجمالي</th></tr>
+        </thead>
+        <tbody>
+          {% for line in purchase.lines %}
+          <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ line.product.name if line.product else '-' }}</td>
+            <td>{{ "{:,.3f}".format(line.quantity) }}</td>
+            <td>{{ format_currency(line.unit_cost) }}</td>
+            <td>{{ format_currency(line.line_total) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table></div>
+
+      <div class="total-section">
+        <div class="total-row"><span>الإجمالي:</span> <strong>{{ format_currency(purchase.subtotal) }}</strong></div>
+        {% if purchase.tax_amount and purchase.tax_amount > 0 %}
+        <div class="total-row"><span>الضريبة:</span> <strong>{{ format_currency(purchase.tax_amount) }}</strong></div>
+        {% endif %}
+        {% if purchase.discount_amount and purchase.discount_amount > 0 %}
+        <div class="total-row"><span>الخصم:</span> <strong>-{{ format_currency(purchase.discount_amount) }}</strong></div>
+        {% endif %}
+        <div class="total-row final"><span>الإجمالي النهائي:</span> <strong>{{ format_currency(purchase.total_amount) }}</strong></div>
+      </div>
+
+      {% if purchase.notes %}
+      <div style="margin-top:10px;padding:8px;background:#fff3cd;border-radius:4px;border-right:2px solid #ffc107;">
+        <p style="font-size:9px;color:#856404;margin:0;">💬 {{ purchase.notes }}</p>
+      </div>
+      {% endif %}
+
+      <div style="margin-top:10px;">
+        {% set amount_value = purchase.total_amount or 0 %}
+        {% set amount_currency = tenant_default_currency or 'AED' %}
+        {% set qr_data_url = '' %}
+        {% if settings and settings.enable_qr_code %}
+          {% set qr_data = purchase.purchase_number ~ '|' ~ (purchase.purchase_date.strftime('%Y-%m-%d') if purchase.purchase_date else '') ~ '|' ~ (purchase.total_amount or 0) %}
+          {% set qr_data_url = url_for('static', filename='') %}
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="footer">
+      <p>شكراً لتعاملكم معنا</p>
+      {% if settings and settings.bank_name %}
+      <div style="font-size:8px;margin-top:5px;">
+        <strong>🏦 {{ settings.bank_name }}</strong> |
+        IBAN: {{ settings.iban or '-' }} |
+        SWIFT: {{ settings.swift_code or '-' }}
+      </div>
+      {% endif %}
+      {% include 'partials/print_developer_footer.html' %}
+    </div>
   </div>
-</div>
-
-<style>
-@media print {
-  @page { size: A4 portrait; margin: 15mm; }
-  .card-tools, .main-sidebar, .main-header, .main-footer, .content-header, .no-print { display: none !important; }
-  .content-wrapper { margin: 0 !important; padding: 0 !important; }
-  body { background: #fff !important; }
-  .card { border: none !important; box-shadow: none !important; }
-  .table-responsive { overflow: visible !important; }
-  table { width: 100% !important; table-layout: auto; }
-  thead { display: table-header-group; }
-  tfoot { display: table-footer-group; }
-  tr { page-break-inside: avoid; break-inside: avoid; }
-}
-</style>
-{% endblock %}
-
+</body>
+</html>

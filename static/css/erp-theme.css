@@ -2846,26 +2846,47 @@ textarea.form-control {
   background: var(--ui-info); color: #fff;
 }
 
-/* ── Global Print Override (for templates extending base.html) ── */
+/* ── Global Print Override (for templates extending base.html, NOT standalone invoice-print) ── */
 @media print {
-  /* Hide ALL application shell / chrome */
-  .main-header, .main-sidebar, .main-footer,
-  .app-footer, .erp-footer, .erp-mobile-nav,
-  .navbar, .sidebar, .breadcrumb,
-  .content-header, .card-tools,
-  .dataTables_filter, .dataTables_length,
-  .dataTables_paginate, .dataTables_info,
-  .dt-buttons, .dt-buttons btn-group,
-  .btn, .no-print,
-  .modal, .modal-backdrop, .modal-open,
-  .dropdown, .dropdown-menu, .dropdown-backdrop,
-  .select2, .select2-container,
-  form:not(.erp-print-form) {
+  /* Standalone print templates have their own complete styles — skip all overrides for them */
+  body.invoice-print * {
+    /* Let standalone templates control their own print appearance */
+  }
+
+  /* Hide ALL application shell / chrome (only for base.html-extending pages) */
+  body:not(.invoice-print) .main-header,
+  body:not(.invoice-print) .main-sidebar,
+  body:not(.invoice-print) .main-footer,
+  body:not(.invoice-print) .app-footer,
+  body:not(.invoice-print) .erp-footer,
+  body:not(.invoice-print) .erp-mobile-nav,
+  body:not(.invoice-print) .navbar,
+  body:not(.invoice-print) .sidebar,
+  body:not(.invoice-print) .breadcrumb,
+  body:not(.invoice-print) .content-header,
+  body:not(.invoice-print) .card-tools,
+  body:not(.invoice-print) .dataTables_filter,
+  body:not(.invoice-print) .dataTables_length,
+  body:not(.invoice-print) .dataTables_paginate,
+  body:not(.invoice-print) .dataTables_info,
+  body:not(.invoice-print) .dt-buttons,
+  body:not(.invoice-print) .dt-buttons btn-group,
+  body:not(.invoice-print) .btn,
+  body:not(.invoice-print) .no-print,
+  body:not(.invoice-print) .modal,
+  body:not(.invoice-print) .modal-backdrop,
+  body:not(.invoice-print) .modal-open,
+  body:not(.invoice-print) .dropdown,
+  body:not(.invoice-print) .dropdown-menu,
+  body:not(.invoice-print) .dropdown-backdrop,
+  body:not(.invoice-print) .select2,
+  body:not(.invoice-print) .select2-container,
+  body:not(.invoice-print) form:not(.erp-print-form) {
     display: none !important;
   }
 
-  /* Reset layout for printed content */
-  body {
+  /* Reset layout for printed content — only base.html pages */
+  body:not(.invoice-print) {
     background: #fff !important;
     direction: rtl;
     font-size: 10pt;
@@ -2874,7 +2895,9 @@ textarea.form-control {
     min-width: auto !important;
   }
 
-  .content-wrapper, .content, .container-fluid {
+  body:not(.invoice-print) .content-wrapper,
+  body:not(.invoice-print) .content,
+  body:not(.invoice-print) .container-fluid {
     margin: 0 !important;
     padding: 0 !important;
     width: 100% !important;
@@ -2882,7 +2905,7 @@ textarea.form-control {
     min-height: 0 !important;
   }
 
-  .card {
+  body:not(.invoice-print) .card {
     border: 1px solid #dee2e6 !important;
     box-shadow: none !important;
     background: #fff !important;
@@ -2890,7 +2913,7 @@ textarea.form-control {
     break-inside: avoid;
   }
 
-  .card-body {
+  body:not(.invoice-print) .card-body {
     padding: 4mm !important;
   }
 
@@ -2930,14 +2953,15 @@ textarea.form-control {
     color: #555;
   }
 
-  /* ── Table styles for clean report printing ── */
-  .table-responsive {
+  /* ── Table styles for clean report printing (only base.html pages) ── */
+  body:not(.invoice-print) .table-responsive {
     overflow: visible !important;
     display: block !important;
     width: 100% !important;
   }
 
-  table, .table {
+  body:not(.invoice-print) table,
+  body:not(.invoice-print) .table {
     width: 100% !important;
     max-width: 100% !important;
     table-layout: auto !important;
@@ -2946,19 +2970,20 @@ textarea.form-control {
     font-size: 9pt;
   }
 
-  thead {
+  body:not(.invoice-print) thead {
     display: table-header-group;
   }
-  tfoot {
+  body:not(.invoice-print) tfoot {
     display: table-footer-group;
   }
 
-  tr {
+  body:not(.invoice-print) tr {
     page-break-inside: avoid;
     break-inside: avoid;
   }
 
-  th, td {
+  body:not(.invoice-print) th,
+  body:not(.invoice-print) td {
     white-space: normal !important;
     overflow: visible !important;
     text-overflow: clip !important;
@@ -2968,13 +2993,13 @@ textarea.form-control {
     padding: 2mm 3mm !important;
   }
 
-  th {
+  body:not(.invoice-print) th {
     background: #f0f0f0 !important;
     font-weight: 600;
   }
 
   /* ── Badges / labels in print ── */
-  .badge {
+  body:not(.invoice-print) .badge {
     border: 1px solid #999;
     background: #fff !important;
     color: #000 !important;

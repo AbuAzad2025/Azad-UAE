@@ -24,6 +24,7 @@ from utils.pos_helpers import (
 from utils.structured_logging import log_mutation
 from services.logging_core import LoggingCore
 from utils.tenanting import tenant_get, tenant_query, get_active_tenant_id
+from utils.currency_utils import context_aware_default_currency
 
 pos_bp = Blueprint("pos", __name__, url_prefix="/pos")
 
@@ -222,7 +223,7 @@ def api_checkout():
     else:
         warehouse_id = None
 
-    currency = (payload.get("currency") or "AED").strip().upper()
+    currency = (payload.get("currency") or context_aware_default_currency()).strip().upper()
     exchange_rate = payload.get("exchange_rate", 1.0)
 
     lines = payload.get("lines") or []

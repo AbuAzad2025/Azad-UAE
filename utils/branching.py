@@ -285,3 +285,6 @@ def ensure_warehouse_access(warehouse_id, user=None):
     if not warehouse:
         raise ValueError("⚠️ المستودع المحدد خارج نطاق الفرع أو غير نشط.")
     return warehouse
+
+
+branch_scope_id = branch_scope_id_for

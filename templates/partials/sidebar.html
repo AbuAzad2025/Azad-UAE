@@ -630,6 +630,18 @@
               <p>ترويسات الفواتير</p>
             </a>
           </li>
+          <li class="nav-item">
+            <a href="{{ url_for('printing.print_history') }}" class="nav-link">
+              <i class="nav-icon fas fa-history"></i>
+              <p>سجل الطباعة</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="{{ url_for('printing.print_settings') }}" class="nav-link">
+              <i class="nav-icon fas fa-print"></i>
+              <p>إعدادات الطباعة</p>
+            </a>
+          </li>
           {% endif %}
         </ul>
       </nav>

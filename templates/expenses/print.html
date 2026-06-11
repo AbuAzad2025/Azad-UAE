@@ -1,162 +1,134 @@
-{% extends 'base.html' %}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ settings.company_name_ar or tenant_name_ar or company_name_ar }} - سند مصروف #{{ expense.expense_number }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/erp-theme.css') }}">
+  {% include 'partials/print_styles.html' %}
+  <style>
+    body { font-family: 'Tajawal', 'Arial', sans-serif; background: #95a5a6; }
+    .invoice {
+      width: {{ '210mm' if (not settings or settings.orientation == 'portrait') else '297mm' }};
+      height: {{ '297mm' if (not settings or settings.orientation == 'portrait') else '210mm' }};
+      border-radius: 0; overflow: auto; box-shadow: 0 0 20px rgba(0,0,0,0.3); position: relative;
+    }
+    .header {
+      background: linear-gradient(135deg, {{ settings.header_color if settings else '#e74c3c' }} 0%, {{ settings.accent_color if settings else '#c0392b' }} 100%);
+      color: white; padding: 15px 20px; text-align: center;
+    }
+    .logo { background: white; padding: 8px; border-radius: 8px; display: inline-block; }
+    .company-name { font-size: 9px; font-weight: 700; margin-bottom: 3px; }
+    .company-info { font-size: 8px; opacity: 0.95; }
+    .doc-title {
+      background: #f8f9fa; padding: 10px 15px; text-align: center;
+      border-bottom: 1px solid {{ settings.accent_color if settings else '#c0392b' }};
+    }
+    .doc-title h2 { color: {{ settings.header_color if settings else '#e74c3c' }}; font-size: 14px; margin: 0; }
+    .content { padding: 12px 18px; }
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+    .info-box {
+      background: #f8f9fa; padding: 8px 12px; border-radius: 6px;
+      border-right: 3px solid {{ settings.accent_color if settings else '#c0392b' }};
+    }
+    .info-box h3 { color: {{ settings.header_color if settings else '#e74c3c' }}; margin-bottom: 6px; font-size: 9px; }
+    .info-box p { margin: 3px 0; color: #555; font-size: 8px; }
+    .details-table { margin: 10px 0; }
+    .details-table th { background: {{ settings.header_color if settings else '#e74c3c' }}; color: white; padding: 8px 12px; font-size: 9px; }
+    .details-table td { padding: 8px 12px; border-bottom: 1px solid #e0e0e0; font-size: 9px; }
+    .amount-box {
+      margin-top: 12px; text-align: left; background: #f8f9fa;
+      padding: 12px 15px; border-radius: 6px; border-right: 3px solid {{ settings.accent_color if settings else '#c0392b' }};
+    }
+    .footer {
+      background: #f8f9fa; padding: 10px 15px; text-align: center;
+      border-top: 2px solid {{ settings.accent_color if settings else '#c0392b' }};
+    }
+  </style>
+</head>
+<body class="invoice-print">
+  <div class="invoice">
+    <div class="header">
+      {% include 'partials/print_tenant_logo.html' %}
+      <div class="company-name">{{ settings.company_name_ar or tenant_name_ar or company_name_ar }}</div>
+      <div class="company-info">
+        <div>{{ settings.address_ar or tenant_address or '' }}</div>
+        <div>📞 {{ settings.phone_1 or tenant_phone or '' }} {% if settings.email %} | 📧 {{ settings.email }}{% endif %}</div>
+        {% if settings and settings.tax_number %}<div>الرقم الضريبي: {{ settings.tax_number }}</div>{% endif %}
+        {% if expense.branch %}<div>🏢 الفرع: {{ expense.branch.name }}</div>{% endif %}
+      </div>
+    </div>
 
-{% block title %}طباعة المصروف #{{ expense.expense_number }}{% endblock %}
+    <div class="doc-title">
+      <h2>💰 سند مصروف</h2>
+      <div class="invoice-number" style="font-size:9px;color:#666;margin-top:4px;">
+        رقم السند: <strong>{{ expense.expense_number }}</strong> |
+        التاريخ: <strong>{{ expense.expense_date.strftime('%Y-%m-%d') if expense.expense_date else '' }}</strong>
+      </div>
+    </div>
 
-{% block content %}
-<div class="print-wrapper container-fluid py-4">
-  <div class="row justify-content-center">
-    <div class="col-xl-9 col-lg-10">
-      <div class="print-card card">
-        <div class="card-header d-flex flex-wrap gap-3 justify-content-between align-items-center">
-          <div>
-            <h2 class="card-title mb-1">سند مصروف</h2>
-            <p class="mb-0 text-muted">رقم السند: <strong>{{ expense.expense_number }}</strong></p>
-            {% if expense.branch %}
-            <p class="mb-0 text-muted">الفرع: <strong>{{ expense.branch.name }}</strong></p>
-            {% endif %}
-          </div>
-          <div class="card-tools d-print-none">
-            <button onclick="window.print()" class="btn btn-primary">
-              <i class="fas fa-print"></i> طباعة
-            </button>
-            <a href="{{ url_for('expenses.view', id=expense.id) }}" class="btn btn-outline-secondary">
-              <i class="fas fa-arrow-left"></i> رجوع
-            </a>
-          </div>
+    <div class="content">
+      <div class="info-grid">
+        <div class="info-box">
+          <h3>📋 تفاصيل المصروف</h3>
+          <p><strong>الفئة:</strong> {{ expense.category.name if expense.category else 'غير محدد' }}</p>
+          <p><strong>الوصف:</strong> {{ expense.description }}</p>
+          {% if expense.description_ar %}<p><strong>الوصف بالعربية:</strong> {{ expense.description_ar }}</p>{% endif %}
+          <p><strong>اسم المورد/الجهة:</strong> {{ expense.supplier_name or '-' }}</p>
         </div>
-        <div class="card-body">
-          <div class="row">
-            <div class="col-md-6">
-              <h5 class="section-title">تفاصيل المصروف</h5>
-              <p><span class="label">التاريخ:</span> {{ expense.expense_date.strftime('%Y-%m-%d') }}</p>
-              <p><span class="label">الفئة:</span> {{ expense.category.name if expense.category else 'غير محدد' }}</p>
-              <p><span class="label">الوصف:</span> {{ expense.description }}</p>
-              {% if expense.description_ar %}
-              <p><span class="label">الوصف بالعربية:</span> {{ expense.description_ar }}</p>
-              {% endif %}
-            </div>
-            <div class="col-md-6 text-md-right">
-              <h5 class="section-title">المبالغ</h5>
-              <p><span class="label">المبلغ:</span> {{ "%.2f"|format(expense.amount) }} {{ expense.currency }}</p>
-              <p><span class="label">سعر الصرف:</span> {{ "%.6f"|format(expense.exchange_rate) }}</p>
-              <p><span class="label">المبلغ بـ{{ tenant_currency_name_ar or "درهم إماراتي" }}:</span> {{ "%.2f"|format(expense.base_amount or expense.amount_aed) }} {{ tenant_currency_symbol }}</p>
-              <p><span class="label">طريقة الدفع:</span> {{ expense.payment_method or '-' }}</p>
-            </div>
-          </div>
+        <div class="info-box">
+          <h3>💳 المبالغ</h3>
+          <p><strong>المبلغ:</strong> {{ "{:,.2f}".format(expense.amount) }} {{ expense.currency }}</p>
+          <p><strong>سعر الصرف:</strong> {{ "{:,.6f}".format(expense.exchange_rate) }}</p>
+          <p><strong>المبلغ بـ{{ tenant_currency_name_ar or 'درهم' }}:</strong> <strong style="color:{{ settings.header_color if settings else '#e74c3c' }};">{{ format_currency(expense.base_amount or expense.amount_aed) }}</strong></p>
+          <p><strong>طريقة الدفع:</strong> {{ expense.payment_method or '-' }}</p>
+        </div>
+      </div>
 
-          <div class="divider my-4"></div>
+      <div class="info-grid">
+        <div class="info-box">
+          <h3>🔖 معلومات إضافية</h3>
+          <p><strong>رقم المرجع:</strong> {{ expense.reference_number or '-' }}</p>
+          <p><strong>رقم الشيك:</strong> {{ expense.cheque_number or '-' }}</p>
+        </div>
+        <div class="info-box">
+          <h3>🏦 تفاصيل البنك</h3>
+          <p><strong>اسم البنك:</strong> {{ expense.bank_name or '-' }}</p>
+          <p><strong>تاريخ الشيك:</strong> {{ expense.cheque_date.strftime('%Y-%m-%d') if expense.cheque_date else '-' }}</p>
+        </div>
+      </div>
 
-          <div class="row">
-            <div class="col-md-6">
-              <h5 class="section-title">معلومات إضافية</h5>
-              <p><span class="label">اسم المورد/الجهة:</span> {{ expense.supplier_name or '-' }}</p>
-              <p><span class="label">رقم المرجع:</span> {{ expense.reference_number or '-' }}</p>
-              <p><span class="label">رقم الشيك:</span> {{ expense.cheque_number or '-' }}</p>
-            </div>
-            <div class="col-md-6 text-md-right">
-              <h5 class="section-title">تفاصيل البنك</h5>
-              <p><span class="label">اسم البنك:</span> {{ expense.bank_name or '-' }}</p>
-              <p><span class="label">تاريخ الشيك:</span> {{ expense.cheque_date.strftime('%Y-%m-%d') if expense.cheque_date else '-' }}</p>
-              <p><span class="label">المستخدم:</span> {{ expense.user.username if expense.user else 'غير محدد' }}</p>
-            </div>
-          </div>
+      <div class="amount-box">
+        <p style="margin:0;font-size:10px;"><strong>المبلغ الإجمالي:</strong> <span style="font-size:14px;color:{{ settings.header_color if settings else '#e74c3c' }};">{{ format_currency(expense.base_amount or expense.amount_aed) }}</span></p>
+        {% if expense.amount_in_words %}
+        <p style="margin:5px 0 0;font-size:9px;color:#666;"><strong>المبلغ بالحروف:</strong> {{ expense.amount_in_words }}</p>
+        {% endif %}
+      </div>
 
-          {% if expense.notes %}
-          <div class="divider my-4"></div>
-          <div>
-            <h5 class="section-title">ملاحظات</h5>
-            <p class="notes">{{ expense.notes }}</p>
-          </div>
-          {% endif %}
+      {% if expense.notes %}
+      <div style="margin-top:10px;padding:8px;background:#fff3cd;border-radius:4px;border-right:2px solid #ffc107;">
+        <p style="font-size:9px;color:#856404;margin:0;">💬 ملاحظات: {{ expense.notes }}</p>
+      </div>
+      {% endif %}
+
+      <div style="margin-top:15px;display:flex;justify-content:space-between;padding:0 10px;">
+        <div style="text-align:center;">
+          <div style="border-top:2px solid #333;width:150px;padding-top:5px;font-size:9px;">توقيع الصرف</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="border-top:2px solid #333;width:150px;padding-top:5px;font-size:9px;">توقيع المحاسب</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="border-top:2px solid #333;width:150px;padding-top:5px;font-size:9px;">الختم</div>
         </div>
       </div>
     </div>
+
+    <div class="footer">
+      <p>شكراً لتعاملكم معنا</p>
+      <p style="font-size:8px;color:#999;margin:5px 0 0;">المستخدم: {{ print_user_name or (expense.user.username if expense.user else '-') }}</p>
+      {% include 'partials/print_developer_footer.html' %}
+    </div>
   </div>
-</div>
-
-<style>
-:root {
-  --print-text: #111827;
-  --print-muted: #6b7280;
-  --print-border: #e5e7eb;
-  --print-bg: #f8fafc;
-}
-
-.print-wrapper {
-  background: var(--print-bg);
-}
-
-.print-card {
-  border-radius: 18px;
-  border: 1px solid var(--print-border);
-  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.08);
-  overflow: hidden;
-}
-
-.card-title {
-  font-weight: 700;
-  color: var(--print-text);
-}
-
-.section-title {
-  font-weight: 600;
-  margin-bottom: 0.75rem;
-  color: #0f172a;
-  letter-spacing: 0.3px;
-}
-
-.label {
-  font-weight: 600;
-  color: var(--print-text);
-  margin-left: 0.35rem;
-}
-
-.card-body p {
-  margin-bottom: 0.4rem;
-  font-size: 1rem;
-  color: var(--print-text);
-}
-
-.notes {
-  white-space: pre-wrap;
-  line-height: 1.6;
-}
-
-.divider {
-  border-bottom: 1px dashed var(--print-border);
-}
-
-.text-muted {
-  color: var(--print-muted) !important;
-}
-
-@media print {
-  @page {
-    size: A4 portrait;
-    margin: 12mm;
-  }
-  .card-tools,
-  .main-sidebar,
-  .main-header,
-  .main-footer {
-    display: none !important;
-  }
-  body {
-    background: #fff !important;
-    color: #000;
-  }
-  .print-wrapper {
-    padding: 0 !important;
-    background: #fff !important;
-  }
-  .print-card {
-    border: none;
-    box-shadow: none;
-  }
-  .card-body p {
-    font-size: 12pt;
-  }
-}
-</style>
-{% endblock %}
-
+</body>
+</html>

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>طباعة شيك - {{ cheque.cheque_number or cheque.number }}</title>
+  {% include 'partials/print_styles.html' %}
+  <style>
+    @page { size: 8.5in 3.5in; margin: 0; }
+    body { margin: 0; padding: 0; font-family: 'Tajawal', 'Arial', sans-serif; background: #fff; display: flex; justify-content: center; align-items: center; min-height: 3.5in; }
+    .cheque {
+      width: 8in; height: 3.25in; position: relative; padding: 10px 15px;
+      background: #fff; border: 2px solid #2c3e50; border-radius: 8px;
+      display: flex; flex-direction: column; justify-content: space-between;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .cheque-bg { position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; opacity: 0.04; z-index: 0; }
+    .cheque-content { position: relative; z-index: 1; height: 100%; display: flex; flex-direction: column; }
+    .cheque-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #2c3e50; padding-bottom: 6px; }
+    .cheque-header .bank-name { font-size: 16px; font-weight: 700; color: #2c3e50; }
+    .cheque-header .cheque-number { font-size: 12px; color: #666; }
+    .cheque-number-display { font-size: 14px; font-weight: 700; color: #2c3e50; letter-spacing: 2px; }
+    .cheque-pay-section { display: flex; align-items: center; margin: 8px 0; padding: 5px 0; }
+    .cheque-pay-label { font-size: 11px; font-weight: 700; color: #555; margin-left: 10px; }
+    .cheque-payee { flex: 1; font-size: 14px; font-weight: 700; border-bottom: 1px solid #333; padding: 3px 5px; min-width: 200px; }
+    .cheque-amount-section { display: flex; align-items: center; margin: 5px 0; }
+    .cheque-amount-digits { font-size: 20px; font-weight: 700; color: #2c3e50; direction: ltr; text-align: left; flex: 1; }
+    .cheque-amount-words { font-size: 11px; color: #333; margin-top: 5px; padding: 5px 0; border-top: 1px solid #ccc; }
+    .cheque-footer { display: flex; justify-content: space-between; align-items: flex-end; margin-top: auto; padding-top: 5px; border-top: 1px solid #ddd; }
+    .cheque-date { text-align: center; }
+    .cheque-date span { font-size: 11px; color: #555; display: block; }
+    .cheque-date strong { font-size: 13px; color: #2c3e50; }
+    .cheque-signature { text-align: center; }
+    .cheque-signature .sig-line { border-top: 1px solid #333; width: 120px; margin: 0 auto 3px; }
+    .cheque-signature span { font-size: 9px; color: #666; }
+    .cheque-stamp { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -60%); opacity: 0.06; z-index: 0; }
+    .cheque-stamp span { font-size: 40px; font-weight: 700; color: #e74c3c; border: 3px solid #e74c3c; padding: 5px 15px; border-radius: 5px; transform: rotate(-15deg); display: inline-block; }
+    .company-info-cheque { font-size: 10px; color: #666; }
+    @media print { body { background: #fff; } .no-print { display: none !important; } }
+  </style>
+</head>
+<body class="invoice-print">
+  <div class="cheque">
+    <div class="cheque-bg"></div>
+    <div class="cheque-stamp"><span>نموذج</span></div>
+    <div class="cheque-content">
+      <div class="cheque-header">
+        <div>
+          <div class="bank-name">🏦 {{ cheque.bank_name or settings.bank_name or 'اسم البنك' }}</div>
+          <div class="company-info-cheque">{{ settings.company_name_ar or tenant_name_ar or company_name_ar }}</div>
+        </div>
+        <div class="cheque-number-display">{{ cheque.cheque_number or cheque.number or '—' }}</div>
+      </div>
+
+      <div class="cheque-pay-section">
+        <span class="cheque-pay-label">المستفيد / Pay to</span>
+        <span class="cheque-payee">{{ cheque.payee_name or cheque.supplier_name or cheque.customer_name or '—' }}</span>
+      </div>
+
+      <div class="cheque-amount-section">
+        <span class="cheque-pay-label">المبلغ / Amount</span>
+        <span class="cheque-amount-digits">{{ format_currency(cheque.amount) }}</span>
+      </div>
+
+      <div class="cheque-amount-words">
+        <strong>المبلغ بالحروف:</strong> {{ cheque.amount_in_words or number_to_arabic_words(cheque.amount, cheque.currency or tenant_default_currency or 'AED') }}
+      </div>
+
+      <div class="cheque-footer">
+        <div class="company-info-cheque">
+          {{ settings.address_ar or '' }}<br>
+          {{ settings.tax_number or '' }}
+        </div>
+        <div class="cheque-pay-section" style="margin:0;padding:0;">
+          <span class="cheque-pay-label" style="font-size:10px;">التاريخ / Date</span>
+          <span style="font-size:13px;font-weight:700;">{{ cheque.issue_date.strftime('%Y-%m-%d') if cheque.issue_date else cheque.due_date.strftime('%Y-%m-%d') if cheque.due_date else '—' }}</span>
+        </div>
+        <div class="cheque-signature">
+          <div class="sig-line"></div>
+          <span>التوقيع / Signature</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

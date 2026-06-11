@@ -230,8 +230,9 @@
     .ic-20 { width: 100%; }
     .ic-21 { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg); font-size: 70px; color: rgba(44,62,80,0.03); font-weight: 300; z-index: 0; pointer-events: none; }
   </style>
+  {% include 'partials/print_styles.html' %}
 </head>
-<body class="receipt-print minimal-receipt">
+<body class="invoice-print receipt-print minimal-receipt">
   <div class="no-print ic-1">
     <button onclick="window.print()" class="erp-invoice-btn-print" style="background: {{ settings.header_color or '#28a745' }};">
       طباعة

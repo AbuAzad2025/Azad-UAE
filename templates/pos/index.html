@@ -1,6 +1,6 @@
 ﻿{% extends 'base.html' %}
 
-{% block title %}Ù†Ù‚Ø·Ø© Ø§Ù„Ø¨ÙŠØ¹ POS{% endblock %}
+{% block title %}نقطة البيع POS{% endblock %}
 
 {% block page_title %}
 
@@ -8,9 +8,9 @@
 
   <div>
 
-    <h1 class="mb-0"><i class="fas fa-cash-register mr-2"></i>Ù†Ù‚Ø·Ø© Ø§Ù„Ø¨ÙŠØ¹ (POS)</h1>
+    <h1 class="mb-0"><i class="fas fa-cash-register mr-2"></i>نقطة البيع (POS)</h1>
 
-    <p class="text-muted mb-0">Ø´Ø§Ø´Ø© ÙƒØ§Ø´ÙŠØ± Ø³Ø±ÙŠØ¹Ø© Ù„Ù„Ø¨Ø§Ø±ÙƒÙˆØ¯ ÙˆØ§Ù„Ø·Ø¨Ø§Ø¹Ø©</p>
+    <p class="text-muted mb-0">شاشة كاشير سريعة للباركود والطباعة</p>
 
   </div>
 
@@ -18,13 +18,13 @@
 
     <a href="{{ url_for('sales.index') }}" class="btn btn-outline-secondary">
 
-      <i class="fas fa-file-invoice mr-2"></i>Ø§Ù„Ù…Ø¨ÙŠØ¹Ø§Øª
+      <i class="fas fa-file-invoice mr-2"></i>المبيعات
 
     </a>
 
     <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">
 
-      <i class="fas fa-home mr-2"></i>Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠØ©
+      <i class="fas fa-home mr-2"></i>الرئيسية
 
     </a>
 
@@ -36,34 +36,35 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/pos.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/pos_v2.css') }}">
 {% endblock %}
 
 {% block content %}
 
-<div id="posSessionBar" class="alert alert-info d-flex justify-content-between align-items-center py-2 mb-3 d-none">
+<div id="posSessionBar" class="pos-session-bar d-flex justify-content-between align-items-center d-none">
   <div>
     <i class="fas fa-cash-register mr-1"></i>
-    <span id="sessionLabel">Ø¬Ù„Ø³Ø©</span>
+    <span id="sessionLabel">جلسة</span>
     <strong id="sessionNumber"></strong>
     <span class="mx-2">|</span>
-    <span id="sessionTime" class="small"></span>
+    <span id="sessionTime" class="small opacity-75"></span>
     <span class="mx-2">|</span>
-    <span>Ø§Ù„Ø±ØµÙŠØ¯: <strong id="sessionBalance">0.00</strong></span>
+    <span>الرصيد: <strong id="sessionBalance">0.00</strong></span>
     <span class="mx-2">|</span>
-    <span>Ø§Ù„Ù…Ø¨ÙŠØ¹Ø§Øª: <strong id="sessionTotal">0.00</strong></span>
+    <span>المبيعات: <strong id="sessionTotal">0.00</strong></span>
   </div>
   <div>
-    <button id="closeSessionBtn" class="btn btn-sm btn-warning"><i class="fas fa-sign-out-alt mr-1"></i>Ø¥ØºÙ„Ø§Ù‚ Ø§Ù„Ø¬Ù„Ø³Ø©</button>
+    <button id="closeSessionBtn" class="btn btn-sm btn-warning"><i class="fas fa-sign-out-alt mr-1"></i>إغلاق الجلسة</button>
   </div>
 </div>
 
-<div id="posSessionRequired" class="alert alert-warning d-flex justify-content-between align-items-center py-2 mb-3 d-none">
+<div id="posSessionRequired" class="pos-session-required d-flex justify-content-between align-items-center d-none">
   <div>
     <i class="fas fa-exclamation-triangle mr-1"></i>
-    ÙŠØ¬Ø¨ ÙØªØ­ Ø¬Ù„Ø³Ø© ÙƒØ§Ø´ÙŠØ± Ù„Ù„Ø¨Ø¯Ø¡
+    يجب فتح جلسة كاشير للبدء
   </div>
   <div>
-    <button id="openSessionBtn" class="btn btn-sm btn-success"><i class="fas fa-plus mr-1"></i>ÙØªØ­ Ø¬Ù„Ø³Ø©</button>
+    <button id="openSessionBtn" class="btn btn-sm btn-success"><i class="fas fa-plus mr-1"></i>فتح جلسة</button>
   </div>
 </div>
 
@@ -77,7 +78,7 @@
 
         <div class="card-header">
 
-          <h3 class="card-title"><i class="fas fa-barcode mr-2"></i>Ø¥Ø¶Ø§ÙØ© Ù…Ù†ØªØ¬Ø§Øª</h3>
+          <h3 class="card-title"><i class="fas fa-barcode mr-2"></i>إضافة منتجات</h3>
 
         </div>
 
@@ -87,17 +88,17 @@
 
             <div class="col-md-6">
 
-              <label class="mb-1">Ø§Ù„Ø¹Ù…ÙŠÙ„</label>
+              <label class="mb-1">العميل</label>
 
               <div class="input-group">
 
-                <input id="customerSearch" class="form-control" placeholder="Ø§Ø¨Ø­Ø« Ø¨Ø§Ù„Ø§Ø³Ù… Ø£Ùˆ Ø§Ù„Ù‡Ø§ØªÙ (F4)">
+                <input id="customerSearch" class="form-control" placeholder="ابحث بالاسم أو الهاتف (F4)">
 
                 <div class="input-group-append">
 
-                  <button id="walkinCustomer" class="btn btn-outline-primary" type="button" title="Ø¹Ù…ÙŠÙ„ Ù†Ù‚Ø¯ÙŠ Ø³Ø±ÙŠØ¹">Ù†Ù‚Ø¯ÙŠ</button>
+                  <button id="walkinCustomer" class="btn btn-outline-primary" type="button" title="عميل نقدي سريع">نقدي</button>
 
-                  <button id="clearCustomer" class="btn btn-outline-secondary" type="button">Ù…Ø³Ø­</button>
+                  <button id="clearCustomer" class="btn btn-outline-secondary" type="button">مسح</button>
 
                 </div>
 
@@ -105,21 +106,21 @@
 
               <div id="customerResults" class="list-group mt-2 pos-results d-none"></div>
 
-              <div class="text-muted mt-2" id="customerSelectedHint">Ù„Ù… ÙŠØªÙ… Ø§Ø®ØªÙŠØ§Ø± Ø¹Ù…ÙŠÙ„ Ø¨Ø¹Ø¯ â€” Ø£Ùˆ Ø§Ø¶ØºØ· Â«Ù†Ù‚Ø¯ÙŠÂ»</div>
+              <div class="text-muted mt-2" id="customerSelectedHint">لم يتم اختيار عميل بعد — أو اضغط «نقدي»</div>
 
             </div>
 
             <div class="col-md-6">
 
-              <label class="mb-1">Ø¨Ø­Ø«/Ø¨Ø§Ø±ÙƒÙˆØ¯</label>
+              <label class="mb-1">بحث/باركود</label>
 
               <div class="input-group">
 
-                <input id="productSearch" class="form-control barcode-input" placeholder="Ø§Ù…Ø³Ø­ Ø§Ù„Ø¨Ø§Ø±ÙƒÙˆØ¯ Ø£Ùˆ Ø§ÙƒØªØ¨ Ø§Ù„Ø§Ø³Ù…/Ø§Ù„ÙƒÙˆØ¯">
+                <input id="productSearch" class="form-control barcode-input" placeholder="امسح الباركود أو اكتب الاسم/الكود">
 
                 <div class="input-group-append">
 
-                  <button id="clearProductSearch" class="btn btn-outline-secondary" type="button">Ù…Ø³Ø­</button>
+                  <button id="clearProductSearch" class="btn btn-outline-secondary" type="button">مسح</button>
 
                 </div>
 
@@ -127,9 +128,9 @@
 
               <div id="productResults" class="list-group mt-2 pos-results d-none"></div>
 
-              <div class="text-muted mt-2">Enter / F2 Ù„Ø¥Ø¶Ø§ÙØ© Â· F8 Ø­ÙØ¸+Ø·Ø¨Ø§Ø¹Ø© Â· Esc Ù…Ø³Ø­ Ø§Ù„Ø¨Ø­Ø«</div>
+              <div class="text-muted mt-2">Enter / F2 لإضافة · F8 حفظ+طباعة · Esc مسح البحث</div>
 
-              <div id="productLoading" class="small text-info d-none mt-1"><i class="fas fa-spinner fa-spin"></i> Ø¬Ø§Ø±ÙŠ Ø§Ù„Ø¨Ø­Ø«â€¦</div>
+              <div id="productLoading" class="small text-info d-none mt-1"><i class="fas fa-spinner fa-spin"></i> جاري البحث…</div>
 
             </div>
 
@@ -145,15 +146,15 @@
 
                 <tr>
 
-                  <th class="ic-1">Ø§Ù„Ù…Ù†ØªØ¬</th>
+                  <th class="ic-1">المنتج</th>
 
-                  <th class="ic-2">Ø§Ù„ÙƒÙ…ÙŠØ©</th>
+                  <th class="ic-2">الكمية</th>
 
-                  <th class="ic-3">Ø§Ù„Ø³Ø¹Ø±</th>
+                  <th class="ic-3">السعر</th>
 
-                  <th class="ic-4">Ø®ØµÙ…%</th>
+                  <th class="ic-4">خصم%</th>
 
-                  <th class="ic-5">Ø§Ù„Ø¥Ø¬Ù…Ø§Ù„ÙŠ</th>
+                  <th class="ic-5">الإجمالي</th>
 
                   <th class="ic-4"></th>
 
@@ -165,7 +166,7 @@
 
                 <tr id="cartEmptyRow">
 
-                  <td colspan="6" class="text-center text-muted py-4">Ø§Ù„Ø³Ù„Ø© ÙØ§Ø±ØºØ©</td>
+                  <td colspan="6" class="text-center text-muted py-4">السلة فارغة</td>
 
                 </tr>
 
@@ -191,7 +192,7 @@
 
             <div>
 
-              <div>Ø§Ù„Ø¥Ø¬Ù…Ø§Ù„ÙŠ</div>
+              <div>الإجمالي</div>
 
               <div class="value"><span id="kpiTotal">0.00</span> <span id="kpiCurrency">{{ tenant_currency_symbol }}</span></div>
 
@@ -199,11 +200,11 @@
 
             <div class="text-right">
 
-              <div class="small">Ø§Ù„Ù…Ø¬Ù…ÙˆØ¹</div>
+              <div class="small">المجموع</div>
 
               <div><strong id="kpiSubtotal">0.00</strong></div>
 
-              <div class="small mt-2">Ø§Ù„Ø®ØµÙ…</div>
+              <div class="small mt-2">الخصم</div>
 
               <div><strong id="kpiDiscount">0.00</strong></div>
 
@@ -219,7 +220,7 @@
 
         <div class="card-header">
 
-          <h3 class="card-title"><i class="fas fa-sliders-h mr-2"></i>Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª Ø§Ù„ÙØ§ØªÙˆØ±Ø©</h3>
+          <h3 class="card-title"><i class="fas fa-sliders-h mr-2"></i>إعدادات الفاتورة</h3>
 
         </div>
 
@@ -227,15 +228,15 @@
 
           <div class="form-group">
 
-            <label>Ø§Ù„Ù…Ø³ØªÙˆØ¯Ø¹</label>
+            <label>المستودع</label>
 
             <select id="warehouseId" class="form-control" aria-label="warehouseId">
 
-              <option value="">ØªÙ„Ù‚Ø§Ø¦ÙŠ (Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠ)</option>
+              <option value="">تلقائي (الرئيسي)</option>
 
               {% for w in warehouses %}
 
-                <option value="{{ w.id }}">{{ w.name_ar or w.name }}{% if w.is_main %} (Ø±Ø¦ÙŠØ³ÙŠ){% endif %}</option>
+                <option value="{{ w.id }}">{{ w.name_ar or w.name }}{% if w.is_main %} (رئيسي){% endif %}</option>
 
               {% endfor %}
 
@@ -249,11 +250,11 @@
 
               <div class="form-group">
 
-                <label>Ø§Ù„Ø¹Ù…Ù„Ø©</label>
+                <label>العملة</label>
 
                 {% from 'macros/currency_options.html' import currency_select %}
 
-                {{ currency_select(name='currency', id='currency', default_code=tenant_default_currency or 'AED') }}
+                {{ currency_select(name='currency', id='currency', default_code=tenant_default_currency) }}
 
               </div>
 
@@ -263,7 +264,7 @@
 
               <div class="form-group">
 
-                <label>Ø³Ø¹Ø± Ø§Ù„ØµØ±Ù</label>
+                <label>سعر الصرف</label>
 
                 <input id="exchangeRate" type="number" step="0.000001" class="form-control" value="1" aria-label="exchangeRate">
 
@@ -279,7 +280,7 @@
 
               <div class="form-group">
 
-                <label>Ø¶Ø±ÙŠØ¨Ø© %</label>
+                <label>ضريبة %</label>
 
                 {% set _default_tax_rate = (tenant_default_tax_rate if tenant_enable_tax else 0) %}
 
@@ -293,7 +294,7 @@
 
               <div class="form-group">
 
-                <label>Ø´Ø­Ù†</label>
+                <label>شحن</label>
 
                 <input id="shippingCost" type="number" step="0.01" class="form-control" value="0" aria-label="shippingCost">
 
@@ -305,7 +306,7 @@
 
           <div class="form-group">
 
-            <label>Ø®ØµÙ… Ø¹Ø§Ù…</label>
+            <label>خصم عام</label>
 
             <input id="discountAmount" type="number" step="0.01" class="form-control" value="0" aria-label="discountAmount">
 
@@ -319,7 +320,7 @@
 
         <div class="card-header">
 
-          <h3 class="card-title"><i class="fas fa-credit-card mr-2"></i>Ø§Ù„Ø¯ÙØ¹</h3>
+          <h3 class="card-title"><i class="fas fa-credit-card mr-2"></i>الدفع</h3>
 
         </div>
 
@@ -327,21 +328,21 @@
 
           <div class="form-group">
 
-            <label>Ø·Ø±ÙŠÙ‚Ø© Ø§Ù„Ø¯ÙØ¹</label>
+            <label>طريقة الدفع</label>
 
             <select id="paymentMethod" class="form-control" aria-label="paymentMethod">
 
-              <option value="">Ø¨Ø¯ÙˆÙ† Ø¯ÙØ¹ Ø§Ù„Ø¢Ù† (Ø¢Ø¬Ù„)</option>
+              <option value="">بدون دفع الآن (آجل)</option>
 
-              <option value="cash">Ù†Ù‚Ø¯ÙŠ</option>
+              <option value="cash">نقدي</option>
 
-              <option value="card">Ø¨Ø·Ø§Ù‚Ø©</option>
+              <option value="card">بطاقة</option>
 
-              <option value="bank_transfer">ØªØ­ÙˆÙŠÙ„ Ø¨Ù†ÙƒÙŠ</option>
+              <option value="bank_transfer">تحويل بنكي</option>
 
-              <option value="cheque">Ø´ÙŠÙƒ</option>
+              <option value="cheque">شيك</option>
 
-              <option value="e_wallet">Ù…Ø­ÙØ¸Ø© Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠØ©</option>
+              <option value="e_wallet">محفظة إلكترونية</option>
 
             </select>
 
@@ -353,7 +354,7 @@
 
               <div class="form-group">
 
-                <label>Ø§Ù„Ù…Ø¨Ù„Øº Ø§Ù„Ù…Ø¯ÙÙˆØ¹</label>
+                <label>المبلغ المدفوع</label>
 
                 <input id="paidAmount" type="number" step="0.01" class="form-control" value="0" aria-label="paidAmount">
 
@@ -365,9 +366,9 @@
 
               <div class="form-group">
 
-                <label>Ø±Ù‚Ù… Ù…Ø±Ø¬Ø¹</label>
+                <label>رقم مرجع</label>
 
-                <input id="referenceNumber" class="form-control" placeholder="Ø§Ø®ØªÙŠØ§Ø±ÙŠ">
+                <input id="referenceNumber" class="form-control" placeholder="اختياري">
 
               </div>
 
@@ -377,14 +378,14 @@
 
           <button id="checkoutBtn" class="btn btn-success btn-block btn-lg pos-checkout-btn">
 
-            <span class="btn-text"><i class="fas fa-check mr-2"></i>Ø­ÙØ¸ Ø§Ù„ÙØ§ØªÙˆØ±Ø©</span>
+            <span class="btn-text"><i class="fas fa-check mr-2"></i>حفظ الفاتورة</span>
             <span class="btn-spinner"><i class="fas fa-spinner fa-spin"></i></span>
 
           </button>
 
           <button id="checkoutPrintBtn" class="btn btn-primary btn-block mt-2 pos-checkout-btn">
 
-            <span class="btn-text"><i class="fas fa-print mr-2"></i>Ø­ÙØ¸ + Ø·Ø¨Ø§Ø¹Ø©</span>
+            <span class="btn-text"><i class="fas fa-print mr-2"></i>حفظ + طباعة</span>
             <span class="btn-spinner"><i class="fas fa-spinner fa-spin"></i></span>
 
           </button>
@@ -409,7 +410,7 @@
 
       <div class="modal-header">
 
-        <h5 class="modal-title">ØªÙ… Ø¥Ù†Ø´Ø§Ø¡ Ø§Ù„ÙØ§ØªÙˆØ±Ø©</h5>
+        <h5 class="modal-title">تم إنشاء الفاتورة</h5>
 
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
 
@@ -421,17 +422,17 @@
 
       <div class="modal-body">
 
-        <div>Ø±Ù‚Ù… Ø§Ù„ÙØ§ØªÙˆØ±Ø©: <strong id="doneSaleNumber"></strong></div>
+        <div>رقم الفاتورة: <strong id="doneSaleNumber"></strong></div>
 
       </div>
 
       <div class="modal-footer">
 
-        <a id="doneViewBtn" class="btn btn-outline-secondary" href="#" target="_blank" rel="noopener noreferrer">Ø¹Ø±Ø¶</a>
+        <a id="doneViewBtn" class="btn btn-outline-secondary" href="#" target="_blank" rel="noopener noreferrer">عرض</a>
 
-        <a id="donePrintBtn" class="btn btn-primary" href="#" target="_blank" rel="noopener noreferrer">Ø·Ø¨Ø§Ø¹Ø©</a>
+        <a id="donePrintBtn" class="btn btn-primary" href="#" target="_blank" rel="noopener noreferrer">طباعة</a>
 
-        <button type="button" class="btn btn-success" data-dismiss="modal">Ø¥ØºÙ„Ø§Ù‚</button>
+        <button type="button" class="btn btn-success" data-dismiss="modal">إغلاق</button>
 
       </div>
 
@@ -445,24 +446,24 @@
   <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title"><i class="fas fa-cash-register mr-2"></i>ÙØªØ­ Ø¬Ù„Ø³Ø© ÙƒØ§Ø´ÙŠØ±</h5>
+        <h5 class="modal-title"><i class="fas fa-cash-register mr-2"></i>فتح جلسة كاشير</h5>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
       <div class="modal-body">
         <div class="form-group">
-          <label>Ø±ØµÙŠØ¯ Ø§Ù„Ø§ÙØªØªØ§Ø­ (Ù†Ù‚Ø¯ÙŠ)</label>
+          <label>رصيد الافتتاح (نقدي)</label>
           <input id="openSessionBalance" type="number" step="0.01" class="form-control" value="0">
         </div>
         <div class="form-group">
-          <label>Ù…Ù„Ø§Ø­Ø¸Ø§Øª</label>
-          <textarea id="openSessionNotes" class="form-control" rows="2" placeholder="Ø§Ø®ØªÙŠØ§Ø±ÙŠ"></textarea>
+          <label>ملاحظات</label>
+          <textarea id="openSessionNotes" class="form-control" rows="2" placeholder="اختياري"></textarea>
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Ø¥Ù„ØºØ§Ø¡</button>
-        <button id="openSessionConfirm" type="button" class="btn btn-success"><i class="fas fa-check mr-1"></i>ÙØªØ­ Ø§Ù„Ø¬Ù„Ø³Ø©</button>
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">إلغاء</button>
+        <button id="openSessionConfirm" type="button" class="btn btn-success"><i class="fas fa-check mr-1"></i>فتح الجلسة</button>
       </div>
     </div>
   </div>
@@ -472,29 +473,29 @@
   <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title"><i class="fas fa-sign-out-alt mr-2"></i>Ø¥ØºÙ„Ø§Ù‚ Ø¬Ù„Ø³Ø© Ø§Ù„ÙƒØ§Ø´ÙŠØ±</h5>
+        <h5 class="modal-title"><i class="fas fa-sign-out-alt mr-2"></i>إغلاق جلسة الكاشير</h5>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
       <div class="modal-body">
         <div class="alert alert-info">
-          <strong>Ø±ØµÙŠØ¯ Ø§Ù„Ø§ÙØªØªØ§Ø­:</strong> <span id="closeOpening">0.00</span><br>
-          <strong>Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ù…Ø¨ÙŠØ¹Ø§Øª Ø§Ù„Ù†Ù‚Ø¯ÙŠØ©:</strong> <span id="closeCashSales">0.00</span><br>
-          <strong>Ø§Ù„Ø±ØµÙŠØ¯ Ø§Ù„Ù…ØªÙˆÙ‚Ø¹:</strong> <span id="closeExpected">0.00</span>
+          <strong>رصيد الافتتاح:</strong> <span id="closeOpening">0.00</span><br>
+          <strong>إجمالي المبيعات النقدية:</strong> <span id="closeCashSales">0.00</span><br>
+          <strong>الرصيد المتوقع:</strong> <span id="closeExpected">0.00</span>
         </div>
         <div class="form-group">
-          <label>Ø§Ù„Ø±ØµÙŠØ¯ Ø§Ù„ÙØ¹Ù„ÙŠ (Ø§Ù„Ù…Ø¹Ø¯ÙˆØ¯ ÙÙŠ Ø§Ù„Ø¯Ø±Ø¬)</label>
+          <label>الرصيد الفعلي (المعدود في الدرج)</label>
           <input id="closeSessionBalance" type="number" step="0.01" class="form-control">
         </div>
         <div class="form-group">
-          <label>Ù…Ù„Ø§Ø­Ø¸Ø§Øª</label>
-          <textarea id="closeSessionNotes" class="form-control" rows="2" placeholder="Ø§Ø®ØªÙŠØ§Ø±ÙŠ"></textarea>
+          <label>ملاحظات</label>
+          <textarea id="closeSessionNotes" class="form-control" rows="2" placeholder="اختياري"></textarea>
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Ø¥Ù„ØºØ§Ø¡</button>
-        <button id="closeSessionConfirm" type="button" class="btn btn-warning"><i class="fas fa-check mr-1"></i>Ø¥ØºÙ„Ø§Ù‚ Ø§Ù„Ø¬Ù„Ø³Ø©</button>
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">إلغاء</button>
+        <button id="closeSessionConfirm" type="button" class="btn btn-warning"><i class="fas fa-check mr-1"></i>إغلاق الجلسة</button>
       </div>
     </div>
   </div>
@@ -504,16 +505,16 @@
   <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title"><i class="fas fa-file-invoice mr-2"></i>ØªÙ‚Ø±ÙŠØ± Ø§Ù„Ø¬Ù„Ø³Ø©</h5>
+        <h5 class="modal-title"><i class="fas fa-file-invoice mr-2"></i>تقرير الجلسة</h5>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
       <div class="modal-body" id="sessionReportBody">
-        <div class="text-center py-3"><i class="fas fa-spinner fa-spin"></i> Ø¬Ø§Ø±ÙŠ Ø§Ù„ØªØ­Ù…ÙŠÙ„...</div>
+        <div class="text-center py-3"><i class="fas fa-spinner fa-spin"></i> جاري التحميل...</div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Ø¥ØºÙ„Ø§Ù‚</button>
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">إغلاق</button>
       </div>
     </div>
   </div>
@@ -523,7 +524,7 @@
 
 {% block extra_js %}
 <script src="{{ url_for('static', filename='js/barcode-scanner.js') }}"></script>
-<meta name="pos-base-currency" content="{{ tenant_default_currency or 'AED' }}">
+<meta name="pos-base-currency" content="{{ tenant_default_currency }}">
 <script src="{{ url_for('static', filename='js/pos/index.js') }}"></script>
 {% endblock %}
 

@@ -1,4 +1,4 @@
-(function(){
+﻿(function(){
     const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
     const state = {
         customer: null,
@@ -448,7 +448,7 @@
                 qs('#sessionNumber').textContent = s.number;
                 qs('#sessionBalance').textContent = fmt(s.opening_balance);
                 qs('#sessionTotal').textContent = fmt(s.total_sales);
-                qs('#sessionTime').textContent = 'Ù…ÙØªÙˆØ­Ø© Ù…Ù†Ø° ' + s.duration_minutes + ' Ø¯Ù‚ÙŠÙ‚Ø©';
+                qs('#sessionTime').textContent = 'مفتوحة منذ ' + s.duration_minutes + ' دقيقة';
                 qs('#closeOpening').textContent = fmt(s.opening_balance);
             } else {
                 bar.classList.add('d-none');
@@ -475,10 +475,10 @@
                 body: JSON.stringify({ opening_balance: balance, notes: notes || undefined })
             });
             const j = await r.json();
-            if (!r.ok || !j.success) throw new Error(j.error || 'ÙØ´Ù„ ÙØªØ­ Ø§Ù„Ø¬Ù„Ø³Ø©');
+            if (!r.ok || !j.success) throw new Error(j.error || 'فشل فتح الجلسة');
             $('#openSessionModal').modal('hide');
             await loadSession();
-            showAlert('ØªÙ… ÙØªØ­ Ø§Ù„Ø¬Ù„Ø³Ø©: ' + j.session.number, 'success');
+            showAlert('تم فتح الجلسة: ' + j.session.number, 'success');
         } catch (err) {
             showAlert(err.message, 'danger');
         } finally {
@@ -504,7 +504,7 @@
     qs('#closeSessionConfirm').addEventListener('click', async () => {
         const balance = toNum(qs('#closeSessionBalance').value);
         if (!balance && balance !== 0) {
-            showAlert('ÙŠØ±Ø¬Ù‰ Ø¥Ø¯Ø®Ø§Ù„ Ø±ØµÙŠØ¯ Ø§Ù„Ø¥ØºÙ„Ø§Ù‚.', 'warning');
+            showAlert('يرجى إدخال رصيد الإغلاق.', 'warning');
             return;
         }
         const notes = qs('#closeSessionNotes').value.trim();
@@ -517,14 +517,14 @@
                 body: JSON.stringify({ closing_balance: balance, notes: notes || undefined })
             });
             const j = await r.json();
-            if (!r.ok || !j.success) throw new Error(j.error || 'ÙØ´Ù„ Ø¥ØºÙ„Ø§Ù‚ Ø§Ù„Ø¬Ù„Ø³Ø©');
+            if (!r.ok || !j.success) throw new Error(j.error || 'فشل إغلاق الجلسة');
             $('#closeSessionModal').modal('hide');
             await loadSession();
             const diff = j.session.difference;
             if (Math.abs(diff) > 0.01) {
-                showAlert('ØªÙ… Ø¥ØºÙ„Ø§Ù‚ Ø§Ù„Ø¬Ù„Ø³Ø©. ÙØ±Ù‚ Ø§Ù„Ø±ØµÙŠØ¯: ' + fmt(diff), diff < 0 ? 'danger' : 'warning');
+                showAlert('تم إغلاق الجلسة. فرق الرصيد: ' + fmt(diff), diff < 0 ? 'danger' : 'warning');
             } else {
-                showAlert('ØªÙ… Ø¥ØºÙ„Ø§Ù‚ Ø§Ù„Ø¬Ù„Ø³Ø© Ø¨Ù†Ø¬Ø§Ø!. Ø§Ù„Ø±ØµÙŠØ¯ Ù…Ø·Ø§Ø¨Ù‚.', 'success');
+                showAlert('تم إغلاق الجلسة بنجاح. الرصيد مطابق.', 'success');
             }
         } catch (err) {
             showAlert(err.message, 'danger');

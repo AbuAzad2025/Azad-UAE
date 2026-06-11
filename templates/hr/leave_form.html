@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block title %}طلب إجازة{% endblock %}
+{% block content %}
+<div class="container-fluid">
+  <div class="card">
+    <div class="card-header"><h5><i class="fas fa-calendar-plus"></i> طلب إجازة</h5></div>
+    <div class="card-body">
+      <form method="POST">
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group"><label>نوع الإجازة <span class="text-danger">*</span></label>
+              <select name="leave_type_id" class="form-control" required>
+                {% for lt in leave_types %}
+                <option value="{{ lt.id }}">{{ lt.name_ar or lt.name }}</option>
+                {% endfor %}
+              </select></div>
+          </div>
+          <div class="col-md-3">
+            <div class="form-group"><label>من تاريخ</label>
+              <input name="date_from" type="date" class="form-control" required></div>
+          </div>
+          <div class="col-md-3">
+            <div class="form-group"><label>إلى تاريخ</label>
+              <input name="date_to" type="date" class="form-control" required></div>
+          </div>
+          <div class="col-12">
+            <div class="form-group"><label>السبب</label>
+              <textarea name="reason" class="form-control" rows="3"></textarea></div>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-success"><i class="fas fa-paper-plane"></i> إرسال الطلب</button>
+        <a href="{{ url_for('hr.leaves_list') }}" class="btn btn-secondary">إلغاء</a>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

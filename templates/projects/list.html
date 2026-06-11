@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block title %}المشاريع{% endblock %}
+{% block content %}
+<div class="container-fluid">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4><i class="fas fa-project-diagram"></i> المشاريع</h4>
+    <a href="{{ url_for('projects.create_project') }}" class="btn btn-success btn-sm"><i class="fas fa-plus"></i> مشروع جديد</a>
+  </div>
+  <div class="row">
+    {% for p in projects %}
+    <div class="col-md-4 col-lg-3 mb-3">
+      <div class="card h-100">
+        <div class="card-header" style="border-left:4px solid {{ p.color }}">
+          <a href="{{ url_for('projects.project_detail', project_id=p.id) }}" class="text-dark"><strong>{{ p.name_ar or p.name }}</strong></a>
+        </div>
+        <div class="card-body p-2">
+          <small class="text-muted d-block">{{ p.description|truncate(100) if p.description else '' }}</small>
+          <small class="d-block mt-2"><span class="badge badge-{{ 'success' if p.status == 'done' else ('info' if p.status == 'active' else 'secondary') }}">{{ p.status }}</span></small>
+          {% if p.date_start or p.date_end %}
+          <small class="d-block text-muted mt-1">{{ p.date_start.strftime('%Y-%m-%d') if p.date_start }} → {{ p.date_end.strftime('%Y-%m-%d') if p.date_end }}</small>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

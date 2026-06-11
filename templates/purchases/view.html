@@ -210,6 +210,12 @@
 
           </a>
 
+          <a href="{{ url_for('printing.purchase_pdf', id=purchase.id) }}" class="btn btn-danger mb-2" target="_blank" rel="noopener noreferrer">
+
+            <i class="fas fa-file-pdf mr-2"></i>PDF
+
+          </a>
+
           
 
           {% if not current_user.is_seller() and purchase.status != 'cancelled' %}

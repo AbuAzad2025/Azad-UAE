@@ -216,6 +216,16 @@
 
                                 </a>
 
+                                <a href="{{ url_for('printing.expense_pdf', id=expense.id) }}"
+
+                                   target="_blank" rel="noopener noreferrer"
+
+                                   class="btn btn-danger mb-2">
+
+                                    <i class="fas fa-file-pdf"></i> PDF
+
+                                </a>
+
                                 <form class="needs-validation" action="{{ url_for('expenses.delete', id=expense.id) }}" method="POST" class="w-100" onsubmit="return confirm('هل أنت متأكد من حذف هذا المصروف؟');">
 
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">

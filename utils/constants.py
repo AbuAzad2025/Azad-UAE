@@ -98,7 +98,13 @@ COUNTRIES = [
 PERMISSION_CODES = [
     'manage_sales', 'manage_purchases', 'manage_products', 'manage_customers', 'manage_suppliers',
     'manage_payments', 'manage_expenses', 'view_reports', 'manage_warehouse', 'manage_store', 'view_ledger', 'manage_ledger',
-    'admin', 'manage_users', 'manage_backups', 'manage_payroll',
+    'admin', 'manage_users', 'manage_backups',     'manage_payroll',
+    'crm.view', 'crm.manage',
+    'support.view', 'support.manage',
+    'project.view', 'project.manage',
+    'hr.view', 'hr.manage',
+    'marketing.manage',
+    'printing.print', 'printing.settings',
 ]
 
 # --- Unified Enums (canonical values only) ---
@@ -152,5 +158,16 @@ PERMISSIONS = {
     'manage_users': {'ar': 'إدارة المستخدمين', 'en': 'Manage Users'},
     'manage_backups': {'ar': 'إدارة النسخ الاحتياطي', 'en': 'Manage Backups'},
     'manage_payroll': {'ar': 'إدارة الرواتب', 'en': 'Manage Payroll'},
+    'crm.view': {'ar': 'عرض CRM', 'en': 'View CRM'},
+    'crm.manage': {'ar': 'إدارة CRM', 'en': 'Manage CRM'},
+    'support.view': {'ar': 'عرض الدعم الفني', 'en': 'View Support'},
+    'support.manage': {'ar': 'إدارة الدعم الفني', 'en': 'Manage Support'},
+    'project.view': {'ar': 'عرض المشاريع', 'en': 'View Projects'},
+    'project.manage': {'ar': 'إدارة المشاريع', 'en': 'Manage Projects'},
+    'hr.view': {'ar': 'عرض الموارد البشرية', 'en': 'View HR'},
+    'hr.manage': {'ar': 'إدارة الموارد البشرية', 'en': 'Manage HR'},
+    'marketing.manage': {'ar': 'إدارة التسويق', 'en': 'Manage Marketing'},
+    'printing.print': {'ar': 'طباعة المستندات', 'en': 'Print Documents'},
+    'printing.settings': {'ar': 'إعدادات الطباعة', 'en': 'Print Settings'},
 }
 

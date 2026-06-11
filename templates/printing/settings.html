@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% block title %}إعدادات الطباعة{% endblock %}
+{% block content %}
+<div class="container-fluid">
+  <div class="card">
+    <div class="card-header">
+      <h3 class="card-title mb-0"><i class="fas fa-print ml-2"></i>إعدادات الطباعة</h3>
+    </div>
+    <div class="card-body">
+      <form method="POST">
+        <div class="row">
+          <div class="col-md-6">
+            <h5 class="mb-3">📄 إعدادات الورق</h5>
+            <div class="form-group">
+              <label>حجم الورق</label>
+              <select name="paper_size" class="form-control">
+                <option value="A4" {{ 'selected' if settings.paper_size == 'A4' }}>A4</option>
+                <option value="A5" {{ 'selected' if settings.paper_size == 'A5' }}>A5</option>
+                <option value="Letter" {{ 'selected' if settings.paper_size == 'Letter' }}>Letter</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>اتجاه الطباعة</label>
+              <select name="orientation" class="form-control">
+                <option value="portrait" {{ 'selected' if settings.orientation == 'portrait' }}>عمودي</option>
+                <option value="landscape" {{ 'selected' if settings.orientation == 'landscape' }}>أفقي</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>القالب النشط</label>
+              <select name="active_template" class="form-control">
+                <option value="modern" {{ 'selected' if settings.active_template == 'modern' }}>حديث</option>
+                <option value="classic" {{ 'selected' if settings.active_template == 'classic' }}>كلاسيكي</option>
+                <option value="gulf" {{ 'selected' if settings.active_template == 'gulf' }}>خليجي</option>
+                <option value="simple" {{ 'selected' if settings.active_template == 'simple' }}>بسيط</option>
+                <option value="minimal" {{ 'selected' if settings.active_template == 'minimal' }}>أقلية</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <h5 class="mb-3">🎨 الألوان</h5>
+            <div class="form-group">
+              <label>لون الترويسة</label>
+              <input type="color" name="header_color" class="form-control form-control-color" value="{{ settings.header_color or '#667eea' }}" style="height:50px;">
+            </div>
+            <div class="form-group">
+              <label>اللون الثانوي</label>
+              <input type="color" name="accent_color" class="form-control form-control-color" value="{{ settings.accent_color or '#764ba2' }}" style="height:50px;">
+            </div>
+          </div>
+        </div>
+
+        <hr>
+        <h5 class="mb-3">⚙️ خيارات الطباعة</h5>
+        <div class="row">
+          <div class="col-md-4">
+            <div class="custom-control custom-switch">
+              <input type="checkbox" class="custom-control-input" id="show_logo" name="show_logo" {{ 'checked' if settings.show_logo }}>
+              <label class="custom-control-label" for="show_logo">إظهار الشعار</label>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="custom-control custom-switch">
+              <input type="checkbox" class="custom-control-input" id="enable_qr_code" name="enable_qr_code" {{ 'checked' if settings.enable_qr_code }}>
+              <label class="custom-control-label" for="enable_qr_code">رمز QR</label>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="custom-control custom-switch">
+              <input type="checkbox" class="custom-control-input" id="enable_watermark" name="enable_watermark" {{ 'checked' if settings.enable_watermark }}>
+              <label class="custom-control-label" for="enable_watermark">علامة مائية</label>
+            </div>
+          </div>
+          <div class="col-md-4 mt-3">
+            <div class="custom-control custom-switch">
+              <input type="checkbox" class="custom-control-input" id="show_terms" name="show_terms" {{ 'checked' if settings.show_terms }}>
+              <label class="custom-control-label" for="show_terms">إظهار الشروط والأحكام</label>
+            </div>
+          </div>
+        </div>
+
+        <hr>
+        <div class="text-center">
+          <button type="submit" class="btn btn-primary btn-lg px-5">
+            <i class="fas fa-save ml-2"></i> حفظ الإعدادات
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

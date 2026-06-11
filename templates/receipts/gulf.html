@@ -331,8 +331,9 @@
     .ic-20 { width: 100%; }
     .ic-21 { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg); font-size: 90px; color: rgba(201,169,97,0.05); font-weight: 700; z-index: 0; pointer-events: none; font-family: 'Noto Kufi Arabic'; }
   </style>
+  {% include 'partials/print_styles.html' %}
 </head>
-<body class="receipt-print gulf-receipt">
+<body class="invoice-print receipt-print gulf-receipt">
   <div class="no-print ic-1">
     <button onclick="window.print()" class="ic-2">
       🖨️ طباعة السند

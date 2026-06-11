@@ -137,8 +137,9 @@
     .ic-13 { width: 100%; }
     .ic-14 { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg); font-size: 100px; color: rgba(0,0,0,0.02); font-weight: bold; z-index: -1; }
   </style>
+  {% include 'partials/print_styles.html' %}
 </head>
-<body class="receipt-print">
+<body class="invoice-print receipt-print">
   <div class="no-print ic-1">
     <button onclick="window.print()" class="ic-2">
       طباعة

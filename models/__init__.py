@@ -71,6 +71,12 @@ from .pos_kds_order import PosKdsOrder
 from .pos_session import PosSession
 from .document_sequence import DocumentSequence
 from .fiscal_position import FiscalPosition, FiscalPositionTaxRule
+from .crm import CRMStage, CRMTeam, CRMTeamMember, CRMLead, CRMActivity
+from .helpdesk import TicketCategory, TicketPriority, Ticket, TicketComment
+from .projects import Project, TaskStage, Task, Timesheet, ProjectMember
+from .hr import Department, JobPosition, HRContract, Attendance, LeaveType, LeaveRequest
+from .email_marketing import EmailList, EmailSubscriber, EmailTemplate, EmailCampaign, CampaignLog
+from .print_history import PrintHistory
 __all__ = [
     'User', 'Role', 'Permission',
     'Customer',
@@ -141,6 +147,11 @@ __all__ = [
     'PosKdsOrder',
     'PosSession',
     'DocumentSequence',
-    'FiscalPosition',
-    'FiscalPositionTaxRule',
+    'FiscalPosition', 'FiscalPositionTaxRule',
+    'CRMStage', 'CRMTeam', 'CRMTeamMember', 'CRMLead', 'CRMActivity',
+    'TicketCategory', 'TicketPriority', 'Ticket', 'TicketComment',
+    'Project', 'TaskStage', 'Task', 'Timesheet', 'ProjectMember',
+    'Department', 'JobPosition', 'HRContract', 'Attendance', 'LeaveType', 'LeaveRequest',
+    'EmailList', 'EmailSubscriber', 'EmailTemplate', 'EmailCampaign', 'CampaignLog',
+    'PrintHistory',
 ]

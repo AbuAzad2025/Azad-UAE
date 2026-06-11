@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}خط أنابيب CRM{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/crm/pipeline.css') }}">
+{% endblock %}
+{% block content %}
+<div class="container-fluid">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4><i class="fas fa-funnel-dollar"></i> خط أنابيب المبيعات</h4>
+    <div>
+      <a href="{{ url_for('crm.leads_list') }}" class="btn btn-outline-primary btn-sm"><i class="fas fa-list"></i> كافة العملاء</a>
+      <a href="{{ url_for('crm.create_lead') }}" class="btn btn-success btn-sm"><i class="fas fa-plus"></i> عميل متوقع</a>
+    </div>
+  </div>
+  <div class="row pipeline-board" id="pipelineBoard">
+    {% for stage in stages %}
+    <div class="col-md-4 col-lg-3 mb-3">
+      <div class="card pipeline-column" data-stage-id="{{ stage.id }}">
+        <div class="card-header" style="background:{{ stage.color }};color:#fff">
+          <strong>{{ stage.name_ar or stage.name }}</strong>
+          <span class="badge badge-light float-right">{{ leads|selectattr('stage_id', 'eq', stage.id)|list|length }}</span>
+        </div>
+        <div class="card-body p-2 pipeline-cards" id="stage-{{ stage.id }}">
+          {% for lead in leads if lead.stage_id == stage.id %}
+          <div class="card pipeline-card mb-2" draggable="true" data-lead-id="{{ lead.id }}">
+            <div class="card-body p-2">
+              <h6 class="mb-1">{{ lead.name }}</h6>
+              {% if lead.company %}<small class="text-muted d-block">{{ lead.company }}</small>{% endif %}
+              {% if lead.expected_revenue %}<small class="text-success">{{ lead.expected_revenue|format_currency }}</small>{% endif %}
+              {% if lead.assigned_user %}<small class="d-block text-muted"><i class="fas fa-user"></i> {{ lead.assigned_user.name }}</small>{% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/crm/pipeline.js') }}"></script>
+{% endblock %}

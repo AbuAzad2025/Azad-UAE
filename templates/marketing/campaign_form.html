@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block title %}حملة جديدة{% endblock %}
+{% block content %}
+<div class="container-fluid">
+  <div class="card">
+    <div class="card-header"><h5><i class="fas fa-bullhorn"></i> حملة جديدة</h5></div>
+    <div class="card-body">
+      <form method="POST">
+        <div class="form-group"><label>الاسم</label><input name="name" class="form-control" required></div>
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group"><label>القائمة البريدية</label>
+              <select name="list_id" class="form-control">
+                <option value="">اختر</option>
+                {% for l in lists %}
+                <option value="{{ l.id }}">{{ l.name }}</option>
+                {% endfor %}
+              </select></div>
+          </div>
+          <div class="col-md-6">
+            <div class="form-group"><label>القالب</label>
+              <select name="template_id" class="form-control">
+                <option value="">اختر</option>
+                {% for t in templates %}
+                <option value="{{ t.id }}">{{ t.name }}</option>
+                {% endfor %}
+              </select></div>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> حفظ</button>
+        <a href="{{ url_for('email_marketing.campaigns') }}" class="btn btn-secondary">إلغاء</a>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

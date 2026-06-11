@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% block title %}الحملات البريدية{% endblock %}
+{% block content %}
+<div class="container-fluid">
+  <ul class="nav nav-tabs mb-3">
+    <li class="nav-item"><a class="nav-link {% if tab != 'lists' and tab != 'templates' %}active{% endif %}" href="#campaigns" data-toggle="tab">الحملات</a></li>
+    <li class="nav-item"><a class="nav-link {% if tab == 'lists' %}active{% endif %}" href="#lists" data-toggle="tab">القوائم</a></li>
+    <li class="nav-item"><a class="nav-link {% if tab == 'templates' %}active{% endif %}" href="#templates" data-toggle="tab">القوالب</a></li>
+  </ul>
+  <div class="tab-content">
+    <div class="tab-pane {% if tab != 'lists' and tab != 'templates' %}active{% endif %}" id="campaigns">
+      <div class="d-flex justify-content-between mb-3">
+        <h5>الحملات</h5>
+        <a href="{{ url_for('email_marketing.create_campaign') }}" class="btn btn-success btn-sm"><i class="fas fa-plus"></i> حملة</a>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-bordered" id="campaignsTable">
+          <thead><tr><th>الاسم</th><th>القائمة</th><th>الحالة</th><th>أُرسل</th><th>فتح</th><th></th></tr></thead>
+          <tbody>
+            {% for c in campaigns %}
+            <tr>
+              <td>{{ c.name }}</td>
+              <td>{{ c.list.name if c.list else '-' }}</td>
+              <td><span class="badge badge-{{ 'success' if c.status == 'sent' else 'secondary' }}">{{ c.status }}</span></td>
+              <td>{{ c.sent_count }}</td>
+              <td>{{ c.open_count }}</td>
+              <td><a href="{{ url_for('email_marketing.campaign_detail', campaign_id=c.id) }}" class="btn btn-sm btn-info"><i class="fas fa-chart-bar"></i></a></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="tab-pane {% if tab == 'lists' %}active{% endif %}" id="lists">
+      <button class="btn btn-success btn-sm mb-3" data-toggle="modal" data-target="#listModal"><i class="fas fa-plus"></i> قائمة</button>
+      <div class="table-responsive">
+        <table class="table table-bordered">
+          <thead><tr><th>الاسم</th><th>الوصف</th><th>المشتركون</th></tr></thead>
+          <tbody>
+            {% for l in lists %}
+            <tr>
+              <td>{{ l.name }}</td>
+              <td>{{ l.description or '-' }}</td>
+              <td>{{ l.subscribers|selectattr('status', 'eq', 'subscribed')|list|length }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="tab-pane {% if tab == 'templates' %}active{% endif %}" id="templates">
+      <button class="btn btn-success btn-sm mb-3" data-toggle="modal" data-target="#templateModal"><i class="fas fa-plus"></i> قالب</button>
+      <div class="table-responsive">
+        <table class="table table-bordered">
+          <thead><tr><th>الاسم</th><th>الموضوع</th><th>البريد المرسل</th></tr></thead>
+          <tbody>
+            {% for t in templates %}
+            <tr>
+              <td>{{ t.name }}</td>
+              <td>{{ t.subject }}</td>
+              <td>{{ t.from_email or '-' }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="listModal">
+  <div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header"><h5>قائمة جديدة</h5></div>
+    <form method="POST" action="{{ url_for('email_marketing.create_list') }}">
+    <div class="modal-body">
+      <div class="form-group"><label>الاسم</label><input name="name" class="form-control" required></div>
+      <div class="form-group"><label>الوصف</label><textarea name="description" class="form-control"></textarea></div>
+    </div>
+    <div class="modal-footer"><button type="submit" class="btn btn-success">حفظ</button></div>
+    </form>
+  </div></div>
+</div>
+<div class="modal fade" id="templateModal">
+  <div class="modal-dialog modal-lg"><div class="modal-content">
+    <div class="modal-header"><h5>قالب جديد</h5></div>
+    <form method="POST" action="{{ url_for('email_marketing.create_template') }}">
+    <div class="modal-body">
+      <div class="form-group"><label>الاسم</label><input name="name" class="form-control" required></div>
+      <div class="form-group"><label>الموضوع</label><input name="subject" class="form-control" required></div>
+      <div class="form-group"><label>البريد المرسل</label><input name="from_email" class="form-control" placeholder="noreply@example.com"></div>
+      <div class="form-group"><label>محتوى HTML</label><textarea name="body_html" class="form-control" rows="8" required></textarea></div>
+    </div>
+    <div class="modal-footer"><button type="submit" class="btn btn-success">حفظ</button></div>
+    </form>
+  </div></div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>$(document).ready(function(){if($.fn.DataTable&&!$.fn.DataTable.isDataTable('#campaignsTable')){$('#campaignsTable').DataTable({language:{url:"{{ url_for('static', filename='datatables/Arabic.json') }}"},pageLength:25})}});</script>
+{% endblock %}

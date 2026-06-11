@@ -1,89 +1,119 @@
-{% extends 'shop/base.html' %}
-{% block title %}{{ t('invoice') }} — {{ sale.sale_number }}{% endblock %}
-{% block content %}
-<div class="ps-invoice">
-  <div class="ps-invoice-header">
-    <div class="ps-invoice-brand">
-      {% if store.logo_url %}<img src="{{ store.logo_url }}" alt="{{ store.title }}" class="ps-invoice-logo">{% endif %}
-      <h1>{{ store.title }}</h1>
-      {% if store.phone %}<p>{{ t('phone') }}: {{ store.phone }}</p>{% endif %}
-      {% if store.whatsapp %}<p>WhatsApp: {{ store.whatsapp }}</p>{% endif %}
-      {% if store.email %}<p>{{ t('email') }}: {{ store.email }}</p>{% endif %}
+<!DOCTYPE html>
+<html lang="{{ current_language }}" dir="{{ 'rtl' if is_rtl else 'ltr' }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ store.title }} — {{ t('invoice') }} #{{ sale.sale_number }}</title>
+  {% include 'partials/print_styles.html' %}
+  <style>
+    body { font-family: 'Tajawal', 'Arial', sans-serif; background: #95a5a6; margin: 0; padding: 0; display: flex; justify-content: center; }
+    .invoice {
+      width: 210mm; min-height: 297mm; background: #fff; margin: 0 auto;
+      box-shadow: 0 0 20px rgba(0,0,0,0.3); position: relative; overflow: hidden;
+    }
+    .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px 25px; display: flex; justify-content: space-between; align-items: flex-start; }
+    .header-left { text-align: right; }
+    .header-left h1 { font-size: 18px; margin: 0 0 5px; }
+    .header-left p { font-size: 10px; margin: 3px 0; opacity: 0.9; }
+    .header-right { text-align: left; }
+    .header-right img { max-height: 60px; background: white; padding: 5px; border-radius: 6px; }
+    .invoice-title-bar { background: #f8f9fa; padding: 15px 25px; text-align: center; border-bottom: 2px solid #764ba2; }
+    .invoice-title-bar h2 { color: #667eea; font-size: 16px; margin: 0; }
+    .invoice-title-bar p { font-size: 10px; color: #666; margin: 5px 0 0; }
+    .content { padding: 20px 25px; }
+    .customer-info { margin-bottom: 15px; padding: 12px 15px; background: #f8f9fa; border-radius: 8px; border-right: 3px solid #764ba2; }
+    .customer-info h4 { color: #667eea; font-size: 11px; margin: 0 0 5px 0; }
+    .customer-info p { margin: 3px 0; font-size: 10px; color: #555; }
+    table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 10px; }
+    thead { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+    th, td { padding: 10px 12px; text-align: right; border-bottom: 1px solid #e0e0e0; }
+    tfoot td { padding: 8px 12px; font-size: 10px; }
+    .total-row { border-top: 2px solid #667eea; }
+    .total-row td { font-weight: 700; font-size: 12px; color: #667eea; }
+    .payment-info { margin-top: 15px; padding: 12px 15px; background: #f0f8ff; border-radius: 8px; border-right: 3px solid #28a745; }
+    .payment-info p { margin: 3px 0; font-size: 10px; }
+    .footer { margin-top: 30px; padding: 15px 25px; background: #f8f9fa; text-align: center; border-top: 2px solid #764ba2; }
+    .footer p { font-size: 10px; color: #666; margin: 3px 0; }
+    .watermark { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-30deg); font-size: 80px; color: rgba(102,126,234,0.04); font-weight: 700; z-index: 0; pointer-events: none; white-space: nowrap; }
+    .no-print { display: none !important; }
+    @media print {
+      body { background: #fff !important; }
+      .invoice { box-shadow: none !important; margin: 0; width: auto; }
+    }
+  </style>
+</head>
+<body class="invoice-print">
+  <div class="invoice">
+    <div class="watermark">{{ t('invoice') }}</div>
+    <div class="header">
+      <div class="header-left">
+        <h1>{{ store.title }}</h1>
+        {% if store.phone %}<p>📞 {{ store.phone }}</p>{% endif %}
+        {% if store.whatsapp %}<p>💬 WhatsApp: {{ store.whatsapp }}</p>{% endif %}
+        {% if store.email %}<p>📧 {{ store.email }}</p>{% endif %}
+        {% if store.address %}<p>📍 {{ store.address }}</p>{% endif %}
+      </div>
+      <div class="header-right">
+        {% if store.logo_url %}<img src="{{ store.logo_url }}" alt="{{ store.title }}">{% endif %}
+      </div>
     </div>
-    <div class="ps-invoice-title-bar">
-      <h2>{{ t('invoice') }} #{{ sale.sale_number }}</h2>
+
+    <div class="invoice-title-bar">
+      <h2>🧾 {{ t('invoice') }} #{{ sale.sale_number }}</h2>
       <p>{{ sale.sale_date.strftime('%Y-%m-%d %H:%M') if sale.sale_date else '' }}</p>
     </div>
-  </div>
-  <div class="ps-invoice-body">
-    <div class="ps-invoice-customer">
-      <h4>{{ t('name') }}</h4>
-      <p>{{ sale.customer.name if sale.customer else '—' }}</p>
-      <h4>{{ t('phone') }}</h4>
-      <p>{{ sale.customer.phone if sale.customer else '—' }}</p>
-      <h4>{{ t('address') }}</h4>
-      <p>{{ sale.customer.address if sale.customer else '—' }}</p>
+
+    <div class="content">
+      <div class="customer-info">
+        <h4>👤 {{ t('customer_info') if t('customer_info') != 'customer_info' else 'بيانات العميل' }}</h4>
+        <p><strong>{{ t('name') if t('name') != 'name' else 'الاسم' }}:</strong> {{ sale.customer.name if sale.customer else '—' }}</p>
+        <p><strong>{{ t('phone') if t('phone') != 'phone' else 'الهاتف' }}:</strong> {{ sale.customer.phone if sale.customer else '—' }}</p>
+        <p><strong>{{ t('address') if t('address') != 'address' else 'العنوان' }}:</strong> {{ sale.customer.address if sale.customer else '—' }}</p>
+      </div>
+
+      <table>
+        <thead>
+          <tr><th>#</th><th>{{ t('product') if t('product') != 'product' else 'المنتج' }}</th><th>{{ t('quantity') if t('quantity') != 'quantity' else 'الكمية' }}</th><th>{{ t('price') if t('price') != 'price' else 'السعر' }}</th><th>{{ t('total') if t('total') != 'total' else 'الإجمالي' }}</th></tr>
+        </thead>
+        <tbody>
+          {% for line in sale.lines %}
+          <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ line.product.name if line.product else '—' }}</td>
+            <td>{{ "{:,.3f}".format(line.quantity) }}</td>
+            <td>{{ '%.2f'|format(line.unit_price) }}</td>
+            <td><strong>{{ '%.2f'|format(line.line_total) }}</strong></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          {% if sale.discount_amount and sale.discount_amount > 0 %}
+          <tr><td colspan="4" style="text-align:left;">{{ t('coupon_discount') if t('coupon_discount') != 'coupon_discount' else 'خصم' }}:</td><td>-{{ '%.2f'|format(sale.discount_amount) }}</td></tr>
+          {% endif %}
+          <tr class="total-row"><td colspan="4" style="text-align:left;">{{ t('total') if t('total') != 'total' else 'الإجمالي النهائي' }}:</td><td><strong>{{ '%.2f'|format(sale.total_amount) }} {{ sale.currency }}</strong></td></tr>
+        </tfoot>
+      </table>
+
+      <div class="payment-info">
+        <p><strong>{{ t('payment_method') if t('payment_method') != 'payment_method' else 'طريقة الدفع' }}:</strong> {{ pay_method.display_name(lang) if pay_method else sale.checkout_payment_method or '—' }}</p>
+        <p><strong>{{ t('payment_status') if t('payment_status') != 'payment_status' else 'حالة الدفع' }}:</strong>
+          {% if sale.payment_status == 'paid' %}✅ {{ t('paid') if t('paid') != 'paid' else 'مدفوع' }}
+          {% elif sale.payment_status == 'partial' %}🟡 {{ t('partial') if t('partial') != 'partial' else 'جزئي' }}
+          {% else %}🔴 {{ t('unpaid') if t('unpaid') != 'unpaid' else 'غير مدفوع' }}{% endif %}
+        </p>
+        <p><strong>{{ t('status') if t('status') != 'status' else 'الحالة' }}:</strong> {{ status_label }}</p>
+      </div>
+
+      <div style="margin-top:20px;display:flex;justify-content:space-between;padding:0 20px;">
+        <div style="text-align:center;"><div style="border-top:2px solid #333;width:150px;height:35px;margin-bottom:5px;"></div><div style="font-size:9px;">توقيع المستلم</div></div>
+        <div style="text-align:center;"><div style="border-top:2px solid #333;width:150px;height:35px;margin-bottom:5px;"></div><div style="font-size:9px;">ختم الشركة</div></div>
+      </div>
     </div>
-    <table class="ps-table ps-invoice-table">
-      <thead>
-        <tr>
-          <th>{{ t('shop') }}</th>
-          <th>{{ t('quantity') }}</th>
-          <th>{{ t('price') }}</th>
-          <th>{{ t('total') }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for line in sale.lines %}
-        <tr>
-          <td>{{ line.product.name if line.product else '—' }}</td>
-          <td>{{ line.quantity|int if line.quantity == line.quantity|int else line.quantity }}</td>
-          <td>{{ '%.2f'|format(line.unit_price) }}</td>
-          <td>{{ '%.2f'|format(line.line_total) }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-      <tfoot>
-        {% if sale.discount_amount and sale.discount_amount > 0 %}
-        <tr>
-          <td colspan="3" class="text-right">{{ t('coupon_discount') }}</td>
-          <td>-{{ '%.2f'|format(sale.discount_amount) }}</td>
-        </tr>
-        {% endif %}
-        <tr>
-          <td colspan="3" class="text-right">{{ t('total') }}</td>
-          <td><strong>{{ '%.2f'|format(sale.total_amount) }} {{ sale.currency }}</strong></td>
-        </tr>
-      </tfoot>
-    </table>
-    <div class="ps-invoice-payment">
-      <p><strong>{{ t('payment_method') }}:</strong> {{ pay_method.display_name(lang) if pay_method else sale.checkout_payment_method or t('cod') }}</p>
-      <p><strong>{{ t('payment_status') }}:</strong> {% if sale.payment_status == 'paid' %}{{ t('paid') }}{% elif sale.payment_status == 'partial' %}{{ t('partial') }}{% else %}{{ t('unpaid') }}{% endif %}</p>
-      <p><strong>{{ t('status') }}:</strong> {{ status_label }}</p>
+
+    <div class="footer">
+      <p>{{ t('thank_you') if t('thank_you') != 'thank_you' else 'شكراً لتسوقكم معنا' }}</p>
+      <p style="font-size:9px;">{{ store.footer_text or '' }}</p>
     </div>
   </div>
-  <div class="ps-invoice-footer">
-    <button onclick="window.print()" class="ps-btn ps-btn-primary"><i class="fas fa-print"></i> {{ t('print_invoice') }}</button>
-  </div>
-</div>
-{% endblock %}
-{% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/shop-utilities.css') }}">
-<style>
-@media print {
-  .ps-header, .ps-footer, .ps-breadcrumbs, .ps-invoice-footer { display: none !important; }
-  body { background: #fff !important; }
-  .ps-invoice { box-shadow: none !important; padding: 0 !important; }
-}
-.ps-invoice { max-width: 800px; margin: 0 auto; padding: 2rem; background: #fff; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
-.ps-invoice-header { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; margin-bottom: 2rem; border-bottom: 2px solid #eee; padding-bottom: 1rem; }
-.ps-invoice-logo { max-height: 60px; margin-bottom: 0.5rem; }
-.ps-invoice-title-bar { text-align: right; }
-.ps-invoice-customer { margin-bottom: 1.5rem; }
-.ps-invoice-customer h4 { margin: 0.5rem 0 0.25rem; font-size: 0.85rem; color: #666; }
-.ps-invoice-customer p { margin: 0; }
-.ps-invoice-payment { margin-top: 1.5rem; }
-.ps-invoice-payment p { margin: 0.25rem 0; }
-.ps-invoice-footer { margin-top: 2rem; text-align: center; }
-</style>
-{% endblock %}
+</body>
+</html>
