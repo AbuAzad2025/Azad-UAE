@@ -398,23 +398,19 @@ class StockService:
                     pwc = query.first()
                 
                 if pwc and pwc.total_quantity > 0:
-                    avg_cost = pwc.average_cost
+                    avg_cost = Decimal(str(pwc.average_cost)) if pwc.average_cost is not None else Decimal('0')
                     cogs = (avg_cost * qty).quantize(Decimal('0.001'), rounding=ROUND_HALF_UP)
-                    
-                    old_qty = pwc.total_quantity
-                    old_value = pwc.total_value
-                    old_avg = pwc.average_cost
-                    
+                    old_qty = Decimal(str(pwc.total_quantity)) if pwc.total_quantity is not None else Decimal('0')
+                    old_value = Decimal(str(pwc.total_value)) if pwc.total_value is not None else Decimal('0')
+                    old_avg = avg_cost
                     new_qty, new_value, new_avg = StockService._mwac_calc(
                         old_qty, old_value, -qty,
                         avg_cost.quantize(Decimal('0.0001'))
                     )
-                    
                     pwc.total_quantity = new_qty
                     pwc.total_value = new_value
                     pwc.average_cost = new_avg.quantize(Decimal('0.0001'))
                     pwc.last_updated = datetime.now(timezone.utc)
-                    
                     pch = ProductCostHistory(
                         tenant_id=tenant_id,
                         product_id=line.product_id,

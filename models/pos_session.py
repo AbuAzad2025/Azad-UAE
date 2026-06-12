@@ -52,9 +52,15 @@ class PosSession(db.Model):
 
     @property
     def duration_minutes(self):
+        opened = self.opened_at
+        if opened and opened.tzinfo is None:
+            opened = opened.replace(tzinfo=timezone.utc)
         if not self.closed_at:
-            return int((datetime.now(timezone.utc) - self.opened_at).total_seconds() / 60)
-        return int((self.closed_at - self.opened_at).total_seconds() / 60)
+            return int((datetime.now(timezone.utc) - opened).total_seconds() / 60)
+        closed = self.closed_at
+        if closed and closed.tzinfo is None:
+            closed = closed.replace(tzinfo=timezone.utc)
+        return int((closed - opened).total_seconds() / 60)
 
     def __repr__(self):
         return f'<PosSession {self.session_number} ({self.status})>'

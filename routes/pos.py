@@ -18,6 +18,7 @@ from utils.pos_helpers import (
     get_pos_walkin_customer,
     lookup_pos_product_exact,
     merge_checkout_lines,
+    require_active_session,
     search_pos_products,
     serialize_pos_product,
 )
@@ -333,7 +334,16 @@ def api_checkout():
             {"success": False, "error": "فشل إنشاء الفاتورة. تحقق من البيانات وحاول مرة أخرى."}
         ), 500
 
-    log_mutation('create', 'Sale', sale.id, {'sale_number': sale.sale_number, 'source': 'pos', 'amount': float(sale.grand_total or 0)})
+    sale.pos_session_id = session.id
+    db.session.add(sale)
+    db.session.flush()
+    from decimal import Decimal as _Decimal
+    session.total_sales = _Decimal(str(session.total_sales or 0)) + _Decimal(str(sale.total_amount or 0))
+    if payment_data and payment_data.get('payment_method') == 'cash':
+        session.total_cash_sales = _Decimal(str(session.total_cash_sales or 0)) + _Decimal(str(payment_data.get('amount', 0)))
+    db.session.add(session)
+    db.session.commit()
+    log_mutation('create', 'Sale', sale.id, {'sale_number': sale.sale_number, 'source': 'pos', 'amount': float(sale.total_amount or 0)})
 
     order_type = (payload.get('order_type') or '').strip()
     if order_type in ('dine_in', 'takeaway', 'delivery'):

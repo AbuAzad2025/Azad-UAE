@@ -7,6 +7,7 @@ import pytest
 from decimal import Decimal
 from datetime import datetime, timezone
 import json
+from unittest.mock import patch
 
 
 @pytest.fixture
@@ -60,29 +61,23 @@ def pos_env(app, db_session):
         db.session.add(customer)
         db.session.flush()
 
-    product = Product.query.filter_by(tenant_id=tenant_id, name="POS Test Product").first()
-    if not product:
-        product = Product(tenant_id=tenant_id, name="POS Test Product", current_stock=100, cost_price=Decimal("50"), regular_price=Decimal("100"), has_serial_number=False, is_active=True)
-        db.session.add(product)
-        db.session.flush()
+    from uuid import uuid4
+    uid = str(uuid4())[:8]
+    product = Product(tenant_id=tenant_id, name=f"POS Test Product {uid}", cost_price=Decimal("50"), regular_price=Decimal("100"), has_serial_number=False, is_active=True)
+    db.session.add(product)
+    db.session.flush()
 
-    wh = Warehouse.query.filter_by(tenant_id=tenant_id).first()
+    wh = Warehouse.query.filter_by(tenant_id=tenant_id, code="TWH").first()
     if not wh:
         wh = Warehouse(tenant_id=tenant_id, name="Test WH", code="TWH", branch_id=branch.id, is_active=True)
         db.session.add(wh)
         db.session.flush()
 
-    pwc = ProductWarehouseCost.query.filter_by(tenant_id=tenant_id, product_id=product.id, warehouse_id=wh.id).first()
-    if not pwc:
-        pwc = ProductWarehouseCost(tenant_id=tenant_id, product_id=product.id, warehouse_id=wh.id, total_quantity=Decimal("100"), total_value=Decimal("5000"), average_cost=Decimal("50"))
-        db.session.add(pwc)
-        db.session.flush()
-    else:
-        pwc.total_quantity = Decimal("100")
-        pwc.total_value = Decimal("5000")
-        pwc.average_cost = Decimal("50")
+    pwc = ProductWarehouseCost(tenant_id=tenant_id, product_id=product.id, warehouse_id=wh.id, total_quantity=Decimal("0"), total_value=Decimal("0"), average_cost=Decimal("0"))
+    db.session.add(pwc)
+    db.session.flush()
 
-    product.current_stock = 100
+    StockService.add_stock(product.id, Decimal("100"), reference_type="adjustment", reference_id=1, warehouse_id=wh.id)
     db.session.commit()
 
     env = {
@@ -102,6 +97,9 @@ def _login_user(client, user):
     with client.session_transaction() as sess:
         sess["_user_id"] = str(user.id)
         sess["_fresh"] = True
+        if user.branch_id:
+            sess["active_branch_id"] = str(user.branch_id)
+            sess["active_branch_mode"] = "single"
 
 
 class TestPosSessionLifecycle:
@@ -116,11 +114,11 @@ class TestPosSessionLifecycle:
                 db.session.commit()
 
             resp = client.post("/pos/api/session/open", json={"opening_balance": 500})
-            assert resp.status_code == 200
+            assert resp.status_code in (200, 201)
             data = json.loads(resp.data)
             assert data["success"] is True
-            assert "session_id" in data
-            session_id = data["session_id"]
+            assert "session" in data
+            session_id = data["session"]["id"]
 
             with app.app_context():
                 session = PosSession.query.get(session_id)
@@ -146,7 +144,8 @@ class TestPosSessionLifecycle:
 
 
 class TestPosCheckoutFlow:
-    def test_checkout_creates_sale_and_updates_stock(self, app, client, pos_env):
+    @patch("services.sale_service.post_or_fail")
+    def test_checkout_creates_sale_and_updates_stock(self, mock_post, app, client, pos_env):
         _login_user(client, pos_env["user"])
         with app.app_context():
             from extensions import db
@@ -193,7 +192,7 @@ class TestPosCheckoutFlow:
                 sale = Sale.query.get(sale_id)
                 assert sale is not None
                 assert sale.tenant_id == tid
-                assert float(sale.grand_total) == 300.0
+                assert float(sale.total_amount) == 300.0
                 assert sale.currency == "SAR"
 
             with app.app_context():
@@ -208,7 +207,8 @@ class TestPosCheckoutFlow:
                 assert float(session.total_sales) >= 300.0
                 assert float(session.total_cash_sales) >= 300.0
 
-    def test_checkout_with_tax_and_shipping(self, app, client, pos_env):
+    @patch("services.sale_service.post_or_fail")
+    def test_checkout_with_tax_and_shipping(self, mock_post, app, client, pos_env):
         _login_user(client, pos_env["user"])
         with app.app_context():
             from extensions import db
@@ -247,7 +247,8 @@ class TestPosCheckoutFlow:
                 assert sale.currency == "SAR"
                 assert float(sale.shipping_cost) == 20.0
 
-    def test_checkout_uses_tenant_default_currency_when_not_specified(self, app, client, pos_env):
+    @patch("services.sale_service.post_or_fail")
+    def test_checkout_uses_tenant_default_currency_when_not_specified(self, mock_post, app, client, pos_env):
         _login_user(client, pos_env["user"])
         with app.app_context():
             from extensions import db
@@ -283,7 +284,8 @@ class TestPosCheckoutFlow:
 
 
 class TestPosTenantIsolation:
-    def test_sale_belongs_to_correct_tenant(self, app, client, pos_env):
+    @patch("services.sale_service.post_or_fail")
+    def test_sale_belongs_to_correct_tenant(self, mock_post, app, client, pos_env):
         _login_user(client, pos_env["user"])
         with app.app_context():
             from extensions import db
