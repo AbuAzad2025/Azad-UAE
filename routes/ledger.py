@@ -852,7 +852,8 @@ def admin_trial_balance():
     try:
         date_from = datetime.strptime(date_from, '%Y-%m-%d').date()
         date_to = datetime.strptime(date_to, '%Y-%m-%d').date()
-    except:
+    except (ValueError, TypeError):
+        current_app.logger.warning('Invalid date format in trial balance, falling back to today')
         date_from = date_to = date.today()
     
     # حساب أرصدة الحسابات
@@ -889,7 +890,8 @@ def admin_balance_sheet():
     
     try:
         as_of_date = datetime.strptime(as_of_date, '%Y-%m-%d').date()
-    except:
+    except (ValueError, TypeError):
+        current_app.logger.warning('Invalid date format in balance sheet, falling back to today')
         as_of_date = date.today()
     
     # الأصول
@@ -976,7 +978,8 @@ def admin_income_statement():
     try:
         date_from = datetime.strptime(date_from, '%Y-%m-%d').date()
         date_to = datetime.strptime(date_to, '%Y-%m-%d').date()
-    except:
+    except (ValueError, TypeError):
+        current_app.logger.warning('Invalid date format in income statement, falling back to defaults')
         date_from = date.today() - timedelta(days=30)
         date_to = date.today()
     

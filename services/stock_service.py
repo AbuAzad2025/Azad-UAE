@@ -173,7 +173,8 @@ class StockService:
             
             try:
                 user_id = current_user.id if current_user and current_user.is_authenticated else None
-            except:
+            except Exception:
+                current_app.logger.debug('Could not resolve current_user.id for stock movement')
                 user_id = None
 
             tenant_id = getattr(product, "tenant_id", None)
@@ -213,12 +214,16 @@ class StockService:
             
             db.session.add(movement)
             
-            # Update ProductWarehouseStock (per-warehouse tracking)
-            pws = ProductWarehouseStock.query.filter_by(
+            # Update ProductWarehouseStock (per-warehouse tracking) with row lock
+            q_pws = ProductWarehouseStock.query.filter_by(
                 tenant_id=tenant_id,
                 product_id=product_id,
                 warehouse_id=warehouse.id,
-            ).first()
+            )
+            try:
+                pws = q_pws.with_for_update().first()
+            except Exception:
+                pws = q_pws.first()
             if pws:
                 pws.quantity += qty
                 pws.updated_at = datetime.now(timezone.utc)
@@ -382,18 +387,26 @@ class StockService:
             qty = Decimal(str(line.quantity))
             
             if mwac_enabled and tenant_id and warehouse_id:
-                pwc = ProductWarehouseCost.query.filter_by(
+                query = ProductWarehouseCost.query.filter_by(
                     tenant_id=tenant_id,
                     product_id=line.product_id,
                     warehouse_id=warehouse_id,
-                ).first()
+                )
+                try:
+                    pwc = query.with_for_update().first()
+                except Exception:
+                    pwc = query.first()
                 
                 if pwc and pwc.total_quantity > 0:
                     avg_cost = pwc.average_cost
                     cogs = (avg_cost * qty).quantize(Decimal('0.001'), rounding=ROUND_HALF_UP)
                     
+                    old_qty = pwc.total_quantity
+                    old_value = pwc.total_value
+                    old_avg = pwc.average_cost
+                    
                     new_qty, new_value, new_avg = StockService._mwac_calc(
-                        pwc.total_quantity, pwc.total_value, -qty,
+                        old_qty, old_value, -qty,
                         avg_cost.quantize(Decimal('0.0001'))
                     )
                     
@@ -402,7 +415,6 @@ class StockService:
                     pwc.average_cost = new_avg.quantize(Decimal('0.0001'))
                     pwc.last_updated = datetime.now(timezone.utc)
                     
-                    # Audit trail
                     pch = ProductCostHistory(
                         tenant_id=tenant_id,
                         product_id=line.product_id,
@@ -566,11 +578,15 @@ class StockService:
             
             # عكس MWAC إذا كان مفعلاً
             if mwac_enabled and tenant_id and warehouse_id:
-                pwc = ProductWarehouseCost.query.filter_by(
+                q_rev = ProductWarehouseCost.query.filter_by(
                     tenant_id=tenant_id,
                     product_id=line.product_id,
                     warehouse_id=warehouse_id,
-                ).first()
+                )
+                try:
+                    pwc = q_rev.with_for_update().first()
+                except Exception:
+                    pwc = q_rev.first()
                 
                 if pwc:
                     # البحث عن سجل التكلفة الأصلي للبيع لاستخدام قيمة COGS الأصلية
@@ -642,11 +658,15 @@ class StockService:
             )
 
             if mwac_enabled and tenant_id and warehouse_id:
-                pwc = ProductWarehouseCost.query.filter_by(
+                q_rev_pur = ProductWarehouseCost.query.filter_by(
                     tenant_id=tenant_id,
                     product_id=line.product_id,
                     warehouse_id=warehouse_id,
-                ).first()
+                )
+                try:
+                    pwc = q_rev_pur.with_for_update().first()
+                except Exception:
+                    pwc = q_rev_pur.first()
 
                 if pwc:
                     cost_history = ProductCostHistory.query.filter_by(

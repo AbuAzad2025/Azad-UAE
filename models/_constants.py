@@ -49,6 +49,13 @@ GL_CONCEPT_LANDED_COST = 'LANDED_COST'
 GL_CONCEPT_FOOD_SALES_REVENUE = 'FOOD_SALES_REVENUE'
 GL_CONCEPT_BEVERAGE_SALES_REVENUE = 'BEVERAGE_SALES_REVENUE'
 GL_CONCEPT_POS_CASH_DIFFERENCE = 'POS_CASH_DIFFERENCE'
+GL_CONCEPT_OPENING_BALANCE_EQUITY = 'OPENING_BALANCE_EQUITY'
+GL_CONCEPT_ACCOUNTS_PAYABLE = 'ACCOUNTS_PAYABLE'
+GL_CONCEPT_AZAD_PLATFORM_PAYABLE = 'AZAD_PLATFORM_PAYABLE'
+GL_CONCEPT_AZAD_PLATFORM_FEE_ACCRUED = 'AZAD_PLATFORM_FEE_ACCRUED'
+GL_CONCEPT_AZAD_PLATFORM_FEE_PAID = 'AZAD_PLATFORM_FEE_PAID'
+GL_CONCEPT_AZAD_SUBSCRIPTION_EXPENSE = 'AZAD_SUBSCRIPTION_EXPENSE'
+GL_CONCEPT_AZAD_SUBSCRIPTION_REVENUE = 'AZAD_SUBSCRIPTION_REVENUE'
 
 GL_CONCEPT_CODES = (
     GL_CONCEPT_AR,
@@ -102,6 +109,13 @@ GL_CONCEPT_CODES = (
     GL_CONCEPT_FOOD_SALES_REVENUE,
     GL_CONCEPT_BEVERAGE_SALES_REVENUE,
     GL_CONCEPT_POS_CASH_DIFFERENCE,
+    GL_CONCEPT_AZAD_PLATFORM_PAYABLE,
+    GL_CONCEPT_AZAD_PLATFORM_FEE_ACCRUED,
+    GL_CONCEPT_AZAD_PLATFORM_FEE_PAID,
+    GL_CONCEPT_AZAD_SUBSCRIPTION_EXPENSE,
+    GL_CONCEPT_AZAD_SUBSCRIPTION_REVENUE,
+    GL_CONCEPT_OPENING_BALANCE_EQUITY,
+    GL_CONCEPT_ACCOUNTS_PAYABLE,
 )
 
 GL_CONCEPT_REGISTRY = {
@@ -156,6 +170,13 @@ GL_CONCEPT_REGISTRY = {
     GL_CONCEPT_FOOD_SALES_REVENUE: {'meaning': 'Food Sales Revenue', 'legacy_code': '4114', 'required': False, 'normal_balance': 'credit'},
     GL_CONCEPT_BEVERAGE_SALES_REVENUE: {'meaning': 'Beverage Sales Revenue', 'legacy_code': '4115', 'required': False, 'normal_balance': 'credit'},
     GL_CONCEPT_POS_CASH_DIFFERENCE: {'meaning': 'POS Cash Difference', 'legacy_code': None, 'required': False, 'normal_balance': 'debit'},
+    GL_CONCEPT_AZAD_PLATFORM_PAYABLE: {'meaning': 'Azad Platform Fee Payable', 'legacy_code': '2180', 'required': False, 'normal_balance': 'credit'},
+    GL_CONCEPT_AZAD_PLATFORM_FEE_ACCRUED: {'meaning': 'Azad Platform Fee Accrued', 'legacy_code': '2181', 'required': False, 'normal_balance': 'credit'},
+    GL_CONCEPT_AZAD_PLATFORM_FEE_PAID: {'meaning': 'Azad Platform Fee Paid', 'legacy_code': '2182', 'required': False, 'normal_balance': 'debit'},
+    GL_CONCEPT_AZAD_SUBSCRIPTION_EXPENSE: {'meaning': 'Azad Subscription Expense', 'legacy_code': '6410', 'required': False, 'normal_balance': 'debit'},
+    GL_CONCEPT_AZAD_SUBSCRIPTION_REVENUE: {'meaning': 'Azad Subscription Revenue', 'legacy_code': '4700', 'required': False, 'normal_balance': 'credit'},
+    GL_CONCEPT_OPENING_BALANCE_EQUITY: {'meaning': 'Opening Balance Equity', 'legacy_code': '3130', 'required': False, 'normal_balance': 'credit'},
+    GL_CONCEPT_ACCOUNTS_PAYABLE: {'meaning': 'Accounts Payable (Legacy)', 'legacy_code': '2110', 'required': False, 'normal_balance': 'credit'},
 }
 
 VALID_GL_CONCEPT_CODES = frozenset(GL_CONCEPT_CODES)

@@ -6,6 +6,7 @@
     <div class="card-header"><h5>{% if project %}تعديل مشروع{% else %}مشروع جديد{% endif %}</h5></div>
     <div class="card-body">
       <form method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="row">
           <div class="col-md-6">
             <div class="form-group"><label>الاسم <span class="text-danger">*</span></label>

@@ -6,9 +6,16 @@ Card Payment Model
 from datetime import datetime, timezone
 from extensions import db
 from flask import current_app
-import json
 import base64
+import json
 import hashlib
+
+try:
+    from cryptography.fernet import Fernet
+    HAS_CRYPTO = True
+except ImportError:
+    HAS_CRYPTO = False
+    Fernet = None
 
 
 class CardPayment(db.Model):
@@ -35,7 +42,7 @@ class CardPayment(db.Model):
     card_bin = db.Column(db.String(6))  # أول 6 أرقام (BIN)
     
     # بيانات مشفرة (لا تُحفظ إلا إذا ضروري جداً)
-    encrypted_data = db.Column(db.Text)  # بيانات مشفرة إضافية
+    encrypted_data = db.Column(db.LargeBinary)  # بيانات مشفرة إضافية (Fernet)
     
     # معلومات المعاملة
     transaction_id = db.Column(db.String(200), unique=True, index=True)
@@ -67,24 +74,43 @@ class CardPayment(db.Model):
         """عرض معلومات البطاقة بشكل آمن"""
         return f"{self.card_type or 'Card'} ****{self.card_last_4}"
     
+    @staticmethod
+    def _get_cipher():
+        if not HAS_CRYPTO:
+            raise RuntimeError('cryptography module not installed')
+        key = current_app.config.get('CARD_ENCRYPTION_KEY')
+        if not key:
+            raise ValueError('CARD_ENCRYPTION_KEY not configured')
+        key_bytes = key.encode() if isinstance(key, str) else key
+        key_bytes = base64.urlsafe_b64encode(hashlib.sha256(key_bytes).digest())
+        return Fernet(key_bytes)
+
+    @staticmethod
+    def _encrypt(data):
+        if not data:
+            return None
+        cipher = CardPayment._get_cipher()
+        return cipher.encrypt(data.encode() if isinstance(data, str) else data)
+
+    @staticmethod
+    def _decrypt(encrypted_data):
+        if not encrypted_data:
+            return None
+        cipher = CardPayment._get_cipher()
+        return cipher.decrypt(encrypted_data).decode()
+
     def encrypt_card_data(self, card_number, cvv, expiry):
-        """تشفير بيانات البطاقة"""
+        """تشفير بيانات البطاقة باستخدام Fernet"""
         try:
-            # تجهيز البيانات
-            data = {
+            payload = json.dumps({
                 'card_number': card_number,
                 'cvv': cvv,
-                'expiry': expiry
-            }
-            
-            # تشفير بسيط (base64) - في الإنتاج استخدم مكتبة cryptography
-            encrypted = base64.b64encode(json.dumps(data).encode()).decode()
-            self.encrypted_data = encrypted
-            
-            # حفظ آخر 4 أرقام ونوع البطاقة
+                'expiry': expiry,
+            })
+            self.encrypted_data = self._encrypt(payload)
+
             self.card_last_4 = card_number[-4:] if len(card_number) >= 4 else card_number
-            
-            # تحديد نوع البطاقة من BIN
+
             if card_number.startswith('4'):
                 self.card_type = 'Visa'
             elif card_number.startswith(('51', '52', '53', '54', '55')):
@@ -93,31 +119,28 @@ class CardPayment(db.Model):
                 self.card_type = 'Amex'
             else:
                 self.card_type = 'Unknown'
-            
-            # حفظ BIN
+
             self.card_bin = card_number[:6] if len(card_number) >= 6 else None
-            
             return True
-        except Exception as e:
+        except Exception:
             return False
-    
+
     def decrypt_card_data(self):
-        """فك تشفير بيانات البطاقة (للمالك فقط)"""
+        """فك تشفير بيانات البطاقة (للمالك فقط) — يعيد None إذا كان ALLOW_CARD_DECRYPTION=False"""
         try:
             if not self.encrypted_data:
                 return None
-            
-            # فك التشفير (base64)
-            decrypted = base64.b64decode(self.encrypted_data.encode()).decode()
-            data = json.loads(decrypted)
-            
+            if not current_app.config.get('ALLOW_CARD_DECRYPTION', False):
+                return None
+            raw = self._decrypt(self.encrypted_data)
+            data = json.loads(raw)
             return {
                 'card_number': data.get('card_number'),
                 'cvv': data.get('cvv'),
                 'expiry': data.get('expiry'),
-                'display': f"{self.card_type} {data.get('card_number')[:4]}****{self.card_last_4}"
+                'display': f"{self.card_type} {data.get('card_number', '')[:4]}****{self.card_last_4}",
             }
-        except Exception as e:
+        except Exception:
             return None
     
     def to_dict(self, include_encrypted=False):

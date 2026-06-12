@@ -44,8 +44,9 @@ def project_detail(project_id):
         return redirect(url_for('projects.list_projects'))
     stages = TaskStage.query.filter_by(project_id=project.id).order_by(TaskStage.sequence).all()
     tasks = Task.query.filter_by(project_id=project.id, is_active=True).order_by(Task.sort_order).all()
+    tid = get_active_tenant_id(current_user)
     members = ProjectMember.query.filter_by(project_id=project.id).all()
-    users = User.query.filter_by(is_active=True).order_by(User.name).all()
+    users = User.query.filter(User.tenant_id == tid, User.is_active == True).order_by(User.name).all() if tid else []
     return render_template(
         'projects/detail.html',
         project=project,

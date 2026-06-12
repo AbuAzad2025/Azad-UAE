@@ -40,9 +40,11 @@
               <td>
                 {% if l.state == 'draft' %}
                 <form method="POST" action="{{ url_for('hr.approve_leave', leave_id=l.id) }}" style="display:inline">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                   <button class="btn btn-sm btn-success"><i class="fas fa-check"></i></button>
                 </form>
                 <form method="POST" action="{{ url_for('hr.refuse_leave', leave_id=l.id) }}" style="display:inline">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                   <button class="btn btn-sm btn-danger"><i class="fas fa-times"></i></button>
                 </form>
                 {% endif %}

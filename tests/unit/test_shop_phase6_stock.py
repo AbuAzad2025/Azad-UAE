@@ -135,3 +135,22 @@ def test_product_price_tier_unique_constraint():
         and c.name == 'uq_product_price_tier'
     ]
     assert len(uq) == 1
+
+
+def test_mwac_calc_captures_old_qty_value_avg():
+    """Regression: old_qty/old_value/old_avg must be captured *before* _mwac_calc."""
+    from services.stock_service import StockService, _MWACHelper
+    from decimal import Decimal
+    old_qty = Decimal('20')
+    old_value = Decimal('500')
+    old_avg = Decimal('25')
+    change_qty = Decimal('-5')
+    unit_cost = Decimal('25')
+    new_qty, new_value, new_avg = StockService._mwac_calc(old_qty, old_value, change_qty, unit_cost)
+    assert new_qty == Decimal('15')
+    assert new_value == Decimal('375')
+    assert new_avg == Decimal('25')
+    # Verify old values remain readable after the call
+    assert old_qty == Decimal('20')
+    assert old_value == Decimal('500')
+    assert old_avg == Decimal('25')

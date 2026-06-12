@@ -23,8 +23,9 @@ def attendance():
     if request.args.get('date_to'):
         filters['date_to'] = request.args['date_to']
     records = HRService.report_attendance(filters, current_user)
+    tid = get_active_tenant_id(current_user)
     departments = Department.query.filter_by(is_active=True).order_by(Department.name).all()
-    users = User.query.filter_by(is_active=True).order_by(User.name).all()
+    users = User.query.filter(User.tenant_id == tid, User.is_active == True).order_by(User.name).all() if tid else []
     return render_template(
         'hr/attendance.html',
         records=records,
@@ -64,8 +65,9 @@ def clock_out():
 def leaves_list():
     filters = {k: v for k, v in request.args.items() if v}
     leaves = HRService.list_leaves(filters, current_user)
+    tid = get_active_tenant_id(current_user)
     leave_types = LeaveType.query.filter_by(is_active=True).all()
-    users = User.query.filter_by(is_active=True).order_by(User.name).all()
+    users = User.query.filter(User.tenant_id == tid, User.is_active == True).order_by(User.name).all() if tid else []
     return render_template(
         'hr/leave_list.html',
         leaves=leaves,

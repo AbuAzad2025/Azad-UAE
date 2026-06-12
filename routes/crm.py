@@ -23,7 +23,7 @@ def pipeline():
         ).order_by(CRMStage.sequence).all()
     leads = CRMLeadService.search_leads({}, current_user)
     teams = CRMTeam.query.filter_by(tenant_id=tid).all() if tid else []
-    users = User.query.filter_by(is_active=True).order_by(User.name).all()
+    users = User.query.filter(User.tenant_id == tid, User.is_active == True).order_by(User.name).all()
     return render_template(
         'crm/pipeline.html',
         stages=stages,
@@ -57,9 +57,10 @@ def create_lead():
             return redirect(url_for('crm.leads_list'))
         except Exception as e:
             flash(f'حدث خطأ: {e}', 'danger')
+    tid = get_active_tenant_id(current_user)
     stages = CRMStage.query.filter_by(is_active=True).all()
     customers = Customer.query.filter_by(is_active=True).order_by(Customer.name).all()
-    users = User.query.filter_by(is_active=True).order_by(User.name).all()
+    users = User.query.filter(User.tenant_id == tid, User.is_active == True).order_by(User.name).all() if tid else []
     teams = CRMTeam.query.filter_by(is_active=True).all()
     return render_template(
         'crm/lead_form.html',
@@ -79,8 +80,9 @@ def lead_detail(lead_id):
     except ValueError as e:
         flash(str(e), 'danger')
         return redirect(url_for('crm.leads_list'))
+    tid = get_active_tenant_id(current_user)
     stages = CRMStage.query.filter_by(is_active=True).all()
-    users = User.query.filter_by(is_active=True).all()
+    users = User.query.filter(User.tenant_id == tid, User.is_active == True).all() if tid else []
     return render_template('crm/lead_form.html', lead=lead, stages=stages, users=users, view=True)
 
 
@@ -100,9 +102,10 @@ def edit_lead(lead_id):
             return redirect(url_for('crm.leads_list'))
         except Exception as e:
             flash(f'حدث خطأ: {e}', 'danger')
+    tid = get_active_tenant_id(current_user)
     stages = CRMStage.query.filter_by(is_active=True).all()
     customers = Customer.query.filter_by(is_active=True).all()
-    users = User.query.filter_by(is_active=True).all()
+    users = User.query.filter(User.tenant_id == tid, User.is_active == True).all() if tid else []
     teams = CRMTeam.query.filter_by(is_active=True).all()
     return render_template(
         'crm/lead_form.html',

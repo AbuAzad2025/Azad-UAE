@@ -7,7 +7,7 @@ from flask import current_app
 
 from extensions import db
 from models import AzadPlatformFee
-from models.payment_vault import PaymentVault
+from models.payment_vault import PaymentVault, PaymentTransaction
 from services.gl_posting import post_or_fail
 from services.gl_service import GL_ACCOUNTS, GLService
 from utils.gl_reference_types import GLRef
@@ -84,12 +84,14 @@ class AzadPlatformFeeService:
             return None
 
         vault = PaymentVault.get_platform_vault()
+        if vault is None:
+            raise ValueError('Platform vault does not exist — cannot accrue platform fee.')
         fee = AzadPlatformFee(
             idempotency_key=key,
             tenant_id=int(tenant_id),
             sale_id=int(sale.id),
             payment_id=getattr(payment, 'id', None),
-            vault_id=getattr(vault, 'id', None),
+            vault_id=vault.id,
             rate_percent=rate_percent,
             base_amount_aed=base_amount,
             fee_amount_aed=fee_amount,
@@ -151,7 +153,7 @@ class AzadPlatformFeeService:
     def get_settlement_report(tenant_id=None, date_from=None, date_to=None):
         """Return detailed settlement-ready fees."""
         q = AzadPlatformFee.query.filter(
-            AzadPlatformFee.status.in_(['accrued', 'approved'])
+            AzadPlatformFee.status.in_(['accrued', 'settled', 'paid'])
         )
         if tenant_id:
             q = q.filter(AzadPlatformFee.tenant_id == tenant_id)
@@ -169,9 +171,13 @@ class AzadPlatformFeeService:
         }
 
     @staticmethod
-    def approve_settlement(tenant_ids, settlement_date=None, payment_method='bank'):
-        """Approve accrued fees for settlement and post GL entry (accounting recognition only).
-        No actual bank transfer — this records the tenant's liability payment to the platform.
+    def settle_fees(tenant_ids, settlement_date=None, payment_method='bank'):
+        """Settle accrued platform fees for a tenant.
+
+        Posts tenant-side GL (azad_platform_payable -> bank) and marks fees as 'settled'.
+        This recognises the tenant's payment of accrued fees to the platform
+        (accounting settlement).  Use confirm_settlement_paid() for the actual
+        platform-side payout confirmation.
         """
         from datetime import datetime, timezone
         settlement_date = settlement_date or datetime.now(timezone.utc)
@@ -209,12 +215,65 @@ class AzadPlatformFeeService:
                 tenant_id=tid,
             )
             for fee in fees:
-                fee.status = 'approved'
+                fee.status = 'settled'
             db.session.commit()
             results.append({
                 'tenant_id': tid,
                 'fee_count': len(fees),
                 'total_aed': total.quantize(Decimal('0.001'), rounding=ROUND_HALF_UP),
             })
-            current_app.logger.info('Platform fee settlement approved: tenant=%s count=%s total=%s', tid, len(fees), total)
+            current_app.logger.info('Platform fees settled: tenant=%s count=%s total=%s', tid, len(fees), total)
         return results
+
+    @staticmethod
+    def confirm_settlement_paid(fee_ids):
+        """Mark settled platform fees as paid and record platform-side vault evidence.
+
+        Creates PaymentTransaction records in the platform vault as evidence
+        of real-world receipt.  Sets fee.status = 'paid' for each fee.
+
+        Args:
+            fee_ids: single fee ID or list of fee IDs.
+
+        Returns:
+            dict with transaction_id, count, total_aed.
+        """
+        from datetime import datetime, timezone
+        from utils.helpers import generate_number
+        if isinstance(fee_ids, int):
+            fee_ids = [fee_ids]
+        fees = AzadPlatformFee.query.filter(
+            AzadPlatformFee.id.in_(fee_ids),
+            AzadPlatformFee.status == 'settled',
+        ).all()
+        if not fees:
+            raise ValueError('No settled fees found for the given IDs.')
+        vault = PaymentVault.get_platform_vault()
+        if not vault:
+            raise ValueError('Platform vault does not exist — cannot record payout.')
+        total = sum(Decimal(str(f.fee_amount_aed or 0)) for f in fees)
+        if total <= Decimal('0'):
+            raise ValueError('Total payout amount is zero.')
+        txn_id = f'PLATFORM-SETTLE-{generate_number("SETT")}'
+        txn = PaymentTransaction(
+            transaction_id=txn_id,
+            amount_usd=float(total),
+            amount_crypto=0,
+            crypto_currency='AED',
+            payment_status='completed',
+            payment_method='bank',
+            customer_name='Azad Platform Settlements',
+        )
+        vault.transactions.append(txn)
+        for fee in fees:
+            fee.status = 'paid'
+        db.session.commit()
+        current_app.logger.info(
+            'Platform settlement paid: txn=%s fees=%d total=%s',
+            txn_id, len(fees), total,
+        )
+        return {
+            'transaction_id': txn_id,
+            'count': len(fees),
+            'total_aed': total.quantize(Decimal('0.001'), rounding=ROUND_HALF_UP),
+        }

@@ -178,7 +178,8 @@ class CRMLeadService:
             revenue = db.session.query(db.func.sum(CRMLead.expected_revenue)).filter(
                 CRMLead.stage_id == stage.id,
                 CRMLead.is_active == True,
-            ).scalar() or 0
+                CRMLead.tenant_id == tid,
+            ).scalar() or 0 if tid else 0
             stats.append({
                 'stage': stage.to_dict(),
                 'count': total,

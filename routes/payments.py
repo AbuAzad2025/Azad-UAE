@@ -807,11 +807,12 @@ def create_voucher_submit():
                     currency=currency,
                     exchange_rate=exchange_rate,
                     branch_id=payment.branch_id,
+                    tenant_id=tenant_id,
                 )
                 db.session.commit()
                 flash('تم إنشاء سند قبض من مورد بنجاح', 'success')
                 return redirect(url_for('payments.receipts'))
-
+        
         # 2. معالجة سند الصرف (Payment) - صادر
         elif direction == 'outgoing':
             from models import Payment
@@ -901,6 +902,7 @@ def create_voucher_submit():
                         currency=currency,
                         exchange_rate=exchange_rate,
                         branch_id=payment.branch_id,
+                        tenant_id=tenant_id,
                     )
 
                 db.session.commit()
@@ -991,6 +993,7 @@ def create_voucher_submit():
                         currency=currency,
                         exchange_rate=exchange_rate,
                         branch_id=payment.branch_id,
+                        tenant_id=tenant_id,
                     )
 
                 db.session.commit()
@@ -1570,6 +1573,7 @@ def create_payment(purchase_id):
                 currency=payment.currency,
                 exchange_rate=payment.exchange_rate,
                 branch_id=payment.branch_id,
+                tenant_id=tenant_id,
             )
             
             # atomic_transaction ستقوم بالـ commit تلقائياً

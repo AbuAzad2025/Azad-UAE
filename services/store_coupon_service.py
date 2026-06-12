@@ -100,10 +100,33 @@ class StoreCouponService:
             raise ValueError('الكوبون غير موجود.')
         if data.get('description') is not None:
             coupon.description = (data.get('description') or '').strip() or None
-        if data.get('discount_percent') is not None:
-            coupon.discount_percent = Decimal(str(data['discount_percent'])) if data['discount_percent'] else None
-        if data.get('discount_amount') is not None:
-            coupon.discount_amount = Decimal(str(data['discount_amount'])) if data['discount_amount'] else None
+
+        pct_provided = 'discount_percent' in data
+        amt_provided = 'discount_amount' in data
+        if pct_provided and amt_provided:
+            raise ValueError('حدد نسبة أو مبلغ خصم، لا كلاهما.')
+        if pct_provided:
+            pct_raw = data['discount_percent']
+            if pct_raw is not None:
+                pct_decimal = Decimal(str(pct_raw))
+                if pct_decimal <= Decimal('0') or pct_decimal > Decimal('100'):
+                    raise ValueError('نسبة الخصم يجب أن تكون بين 0.01 و 100.')
+                if coupon.discount_amount is not None:
+                    raise ValueError('لا يمكن تعيين نسبة خصم عندما يكون هناك مبلغ خصم موجود.')
+                coupon.discount_percent = pct_decimal
+            else:
+                coupon.discount_percent = None
+        if amt_provided:
+            amt_raw = data['discount_amount']
+            if amt_raw is not None:
+                amt_decimal = Decimal(str(amt_raw))
+                if amt_decimal <= Decimal('0'):
+                    raise ValueError('مبلغ الخصم يجب أن يكون أكبر من صفر.')
+                if coupon.discount_percent is not None:
+                    raise ValueError('لا يمكن تعيين مبلغ خصم عندما تكون هناك نسبة خصم موجودة.')
+                coupon.discount_amount = amt_decimal
+            else:
+                coupon.discount_amount = None
         if 'min_order_amount' in data:
             coupon.min_order_amount = Decimal(str(data['min_order_amount'])) if data.get('min_order_amount') else None
         if 'max_uses' in data:

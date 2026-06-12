@@ -191,7 +191,8 @@ class HealthCheckService:
             size_result = db.session.execute(db.text("SELECT pg_database_size(current_database())"))
             db_size_bytes = size_result.scalar() or 0
             db_size_mb = db_size_bytes / (1024 * 1024)
-        except:
+        except Exception:
+            current_app.logger.debug('Could not query pg_database_size')
             db_size_mb = 0
 
         health_data = {
@@ -229,7 +230,8 @@ class HealthCheckService:
                 User.last_seen >= datetime.now(timezone.utc) - timedelta(minutes=30),
                 User.is_active == True
             ).scalar() or 0
-        except:
+        except Exception:
+            current_app.logger.debug('Could not query active users')
             active_users = 0
 
         health_data['active_users'] = active_users

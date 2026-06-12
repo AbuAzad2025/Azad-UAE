@@ -122,11 +122,6 @@ def owner_only(f):
     return decorated_function
 
 
-def platform_owner_required(f):
-    """Platform routes — same gate as owner_required (owner / developer)."""
-    return owner_required(f)
-
-
 def company_admin_required(f):
     """Tenant company admin surface — super_admin or manager with active tenant."""
     @wraps(f)

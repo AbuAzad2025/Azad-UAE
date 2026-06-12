@@ -40,4 +40,5 @@ def post_sale_commissions(sale):
         reference_id=sale.id,
         exchange_rate=1.0,
         branch_id=sale.branch_id,
+        tenant_id=getattr(sale, 'tenant_id', None),
     )

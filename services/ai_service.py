@@ -771,11 +771,14 @@ class AIService:
         }
     
     @staticmethod
-    def analyze_inventory_health():
-        """📦 تحليل صحة المخزون"""
+    def analyze_inventory_health(tenant_id=None):
+        """📦 تحليل صحة المخزون — يستوجب tenant_id للعزل البيني"""
         from models import Product
         
-        products = Product.query.filter_by(is_active=True).all()
+        q = Product.query.filter(Product.is_active == True)
+        if tenant_id:
+            q = q.filter(Product.tenant_id == int(tenant_id))
+        products = q.all()
         
         if not products:
             return {'success': False, 'message': 'لا توجد منتجات'}

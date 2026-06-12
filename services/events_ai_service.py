@@ -66,8 +66,8 @@ def _customer_analysis(mapper, connection, target):
                 user_feedback=5,
                 context={'type': 'customer_behavior', 'customer_id': target.id}
             )
-        except:
-            pass
+        except Exception:
+            logger.debug("AI learning system unavailable for customer insight")
     except Exception as e:
         logger.error(f"AI customer analysis failed: {e}")
 
@@ -282,8 +282,8 @@ def _learn_accounting_entries(mapper, connection, target):
                 context={'type': 'accounting_learning', 'subtype': 'journal_entry'}
             )
             logger.info(f"AI Accounting: Learned entry {target.entry_number} - {'Balanced' if entry_data['is_balanced'] else 'Unbalanced'}")
-        except:
-            pass
+        except Exception:
+            logger.debug("AI learning system unavailable for accounting entry")
     except Exception as e:
         logger.error(f"AI accounting learning failed: {e}")
 
@@ -434,8 +434,8 @@ def _neural_auto_retrain(mapper, connection, target):
                 thread = threading.Thread(target=_run)
                 thread.daemon = True
                 thread.start()
-            except:
-                pass
+            except Exception:
+                logger.debug("Could not start auto-retrain thread")
     except Exception as e:
         logger.error(f"Neural auto-retrain failed: {e}")
 

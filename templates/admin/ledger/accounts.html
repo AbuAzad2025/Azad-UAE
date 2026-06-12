@@ -89,11 +89,11 @@
                   <i class="fas fa-edit"></i>
                 </a>
                 {% if current_user.has_permission('view_ledger') %}
-                <a href="{{ url_for('ledger.account_statement', id=account.id) }}" class="btn btn-outline-info">
+                <a href="{{ url_for('ledger.account_statement', id=account.id) }}" class="btn btn-outline-info" title="كشف حساب">
                   <i class="fas fa-file-alt"></i>
                 </a>
                 {% endif %}
-                <button type="button" class="btn btn-outline-danger" onclick="deleteAccount({{ account.id }}, {{ account.full_name|tojson }})" title="حذف">
+                <button type="button" class="btn btn-outline-danger delete-account-btn" data-account-id="{{ account.id }}" data-account-name="{{ account.full_name }}" title="حذف">
                   <i class="fas fa-trash"></i>
                 </button>
               </div>
@@ -137,24 +137,20 @@
 
 {% block scripts %}
 <script>
-// حذف الحساب
 function deleteAccount(accountId, accountName) {
   document.getElementById('accountName').textContent = accountName;
   document.getElementById('deleteForm').action = "{{ url_for('admin_ledger.delete_account', id=0) }}".replace('0', accountId);
   $('#deleteModal').modal('show');
 }
-
-// البحث في الجدول
 $(document).ready(function() {
   $('#accountsTable').DataTable({
-    "language": {
-      "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Arabic.json"
-    },
-    "pageLength": 25,
-    "order": [[ 0, "asc" ]],
-    "columnDefs": [
-      { "orderable": false, "targets": 7 }
-    ]
+    language: { url: "//cdn.datatables.net/plug-ins/1.10.24/i18n/Arabic.json" },
+    pageLength: 25,
+    order: [[ 0, "asc" ]],
+    columnDefs: [ { orderable: false, targets: 7 } ]
+  });
+  $('.delete-account-btn').on('click', function() {
+    deleteAccount(+this.dataset.accountId, this.dataset.accountName);
   });
 });
 </script>

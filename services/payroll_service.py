@@ -152,7 +152,7 @@ class PayrollService:
             reference_id=advance.id,
 
             branch_id=employee.branch_id,
-
+            tenant_id=tenant_id,
             user_id=user_id,
 
         )
@@ -332,7 +332,7 @@ class PayrollService:
             reference_id=transaction.id,
 
             branch_id=employee.branch_id,
-
+            tenant_id=tenant_id,
             user_id=user_id,
 
         )

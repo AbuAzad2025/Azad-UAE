@@ -165,7 +165,8 @@ class PaymentService:
                     reference_id=payment.id,
                     currency=payment.currency,
                     exchange_rate=payment.exchange_rate,
-                    branch_id=payment.branch_id
+                    branch_id=payment.branch_id,
+                    tenant_id=tenant_id,
                 )
             except Exception as e:
                 db.session.rollback()
@@ -344,7 +345,8 @@ class PaymentService:
                         reference_id=receipt.id,
                         currency=receipt.currency,
                         exchange_rate=receipt.exchange_rate,
-                        branch_id=receipt.branch_id
+                        branch_id=receipt.branch_id,
+                        tenant_id=tenant_id,
                     )
                 except Exception as e:
                     db.session.rollback()

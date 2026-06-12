@@ -322,8 +322,8 @@ def print_invoice(id):
             print_branding=print_branding,
             print_tenant_id=tid,
         )
-    except:
-        # إذا لم يوجد القالب، استخدام modern كافتراضي
+    except Exception:
+        current_app.logger.warning('Invoice template %s not found, falling back to modern', template_name)
         return render_template(
             'invoices/modern.html',
             sale=sale,

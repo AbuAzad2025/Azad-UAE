@@ -15,9 +15,10 @@ tickets_bp = Blueprint('tickets', __name__, url_prefix='/tickets')
 def list_tickets():
     filters = {k: v for k, v in request.args.items() if v}
     tickets = TicketService.search_tickets(filters, current_user)
+    tid = get_active_tenant_id(current_user)
     categories = TicketCategory.query.filter_by(is_active=True).all()
     priorities = TicketPriority.query.filter_by(is_active=True).all()
-    users = User.query.filter_by(is_active=True).order_by(User.name).all()
+    users = User.query.filter(User.tenant_id == tid, User.is_active == True).order_by(User.name).all() if tid else []
     statuses = ['open', 'waiting', 'resolved', 'closed']
     return render_template(
         'tickets/list.html',
@@ -40,10 +41,11 @@ def create_ticket():
             return redirect(url_for('tickets.list_tickets'))
         except Exception as e:
             flash(f'حدث خطأ: {e}', 'danger')
+    tid = get_active_tenant_id(current_user)
     categories = TicketCategory.query.filter_by(is_active=True).all()
     priorities = TicketPriority.query.filter_by(is_active=True).all()
     customers = Customer.query.filter_by(is_active=True).order_by(Customer.name).all()
-    users = User.query.filter_by(is_active=True).order_by(User.name).all()
+    users = User.query.filter(User.tenant_id == tid, User.is_active == True).order_by(User.name).all() if tid else []
     return render_template(
         'tickets/detail.html',
         categories=categories,
@@ -62,9 +64,10 @@ def ticket_detail(ticket_id):
     except ValueError as e:
         flash(str(e), 'danger')
         return redirect(url_for('tickets.list_tickets'))
+    tid = get_active_tenant_id(current_user)
     categories = TicketCategory.query.filter_by(is_active=True).all()
     priorities = TicketPriority.query.filter_by(is_active=True).all()
-    users = User.query.filter_by(is_active=True).order_by(User.name).all()
+    users = User.query.filter(User.tenant_id == tid, User.is_active == True).order_by(User.name).all() if tid else []
     return render_template(
         'tickets/detail.html',
         ticket=ticket,

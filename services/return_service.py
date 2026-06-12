@@ -292,6 +292,7 @@ class ReturnService:
                             'description': f'COGS Reversal - {product.name}'
                         })
 
+                    mwac_enabled = current_app.config.get('ENABLE_MWAC', False)
                     if mwac_enabled and tenant_id and sale.warehouse_id:
                         try:
                             from models.warehouse import ProductWarehouseCost
@@ -333,7 +334,10 @@ class ReturnService:
                                 )
                                 db.session.add(pch)
                         except Exception:
-                            pass
+                            current_app.logger.exception(
+                                'MWAC update failed during return %s for product %s',
+                                getattr(product_return, 'id', None), sale_line.product_id
+                            )
 
             if lines_added == 0:
                 raise ValueError('At least one returned item is required.')

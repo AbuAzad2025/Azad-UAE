@@ -52,9 +52,9 @@ class StoreService:
         name = f'Online Store WH {suffix}'
         name_ar = f'مستودع المتجر الإلكتروني ({tenant.name_ar or tenant.name})'
 
-        if Warehouse.query.filter_by(code=code).first():
+        if Warehouse.query.filter_by(tenant_id=tenant_id, code=code).first():
             code = f'ONLINE-T{suffix}'
-        if Warehouse.query.filter_by(name=name).first():
+        if Warehouse.query.filter_by(tenant_id=tenant_id, name=name).first():
             name = f'Online Store WH T{suffix}'
 
         warehouse = Warehouse(

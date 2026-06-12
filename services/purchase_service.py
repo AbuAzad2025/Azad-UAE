@@ -272,7 +272,8 @@ class PurchaseService:
                 reference_id=purchase.id, 
                 currency=purchase.currency, 
                 exchange_rate=purchase.exchange_rate,
-                branch_id=purchase.branch_id
+                branch_id=purchase.branch_id,
+                tenant_id=tenant_id,
             )
         
         if supplier:
@@ -474,7 +475,19 @@ class PurchaseService:
 
         purchase_return.subtotal = subtotal
         purchase_return.tax_amount = tax_amount
-        purchase_return.total_amount = subtotal + tax_amount
+
+        # حساب رصيد المخزون شامل التكاليف الجمركية المرسملة
+        inventory_credit = subtotal
+        if capitalized:
+            for return_line in purchase_return.lines:
+                if return_line.purchase_line_id:
+                    pl = next((l for l in purchase.lines if l.id == return_line.purchase_line_id), None)
+                    if pl and pl.landed_cost and pl.landed_cost > 0:
+                        landed_ratio = _D(str(pl.landed_cost)) / _D(str(pl.line_total)) if pl.line_total > 0 else _D('0')
+                        inventory_credit += (_D(str(return_line.line_total)) * landed_ratio).quantize(_D('0.001'), rounding=ROUND_HALF_UP)
+
+        # total_amount يجب أن يساوي (inventory_credit + tax) لضمان توازن القيد
+        purchase_return.total_amount = inventory_credit + tax_amount
         purchase_return.calculate_totals()
         db.session.flush()
 
@@ -488,23 +501,13 @@ class PurchaseService:
                 'debit': purchase_return.total_amount,
                 'description': f'مرتجع مشتريات {return_number}',
             },
+            {
+                'account': GL_ACCOUNTS['inventory'],
+                'concept_code': 'INVENTORY_ASSET',
+                'credit': inventory_credit,
+                'description': f'إرجاع بضاعة للمورد {return_number}',
+            },
         ]
-
-        inventory_credit = subtotal
-        if capitalized:
-            for return_line in purchase_return.lines:
-                if return_line.purchase_line_id:
-                    pl = next((l for l in purchase.lines if l.id == return_line.purchase_line_id), None)
-                    if pl and pl.landed_cost and pl.landed_cost > 0:
-                        landed_ratio = _D(str(pl.landed_cost)) / _D(str(pl.line_total)) if pl.line_total > 0 else _D('0')
-                        inventory_credit += (_D(str(return_line.line_total)) * landed_ratio).quantize(_D('0.001'), rounding=ROUND_HALF_UP)
-
-        gl_lines.append({
-            'account': GL_ACCOUNTS['inventory'],
-            'concept_code': 'INVENTORY_ASSET',
-            'credit': inventory_credit,
-            'description': f'إرجاع بضاعة للمورد {return_number}',
-        })
 
         if tax_amount > 0 and should_post_vat_gl(tenant_id):
             gl_lines.append({

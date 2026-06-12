@@ -23,6 +23,8 @@ from utils.decorators import permission_required, owner_required, admin_required
 from utils.tenanting import assign_tenant_id, get_active_tenant_id
 from utils.ai_access import get_ai_access_state, ai_level_allows
 from services.logging_core import LoggingCore
+from services.stock_service import StockService
+from utils.gl_reference_types import GLRef
 from datetime import datetime, timezone
 
 ai_bp = Blueprint('ai', __name__, url_prefix='/ai')
@@ -1088,11 +1090,17 @@ def _process_user_action(message, user):
                         name=data['name'],
                         part_number=data['part_number'],
                         regular_price=data['price'],
-                        current_stock=data['quantity'],
+                        current_stock=0,
                         unit='قطعة'
                     )
                     assign_tenant_id(product, user)
                     db.session.add(product)
+                    db.session.flush()
+                    if data['quantity'] > 0:
+                        StockService.add_opening_stock(
+                            product_id=product.id,
+                            quantity=data['quantity'],
+                        )
                     db.session.commit()
                     
                     # تدريب الذكاء المحلي
@@ -1267,6 +1275,7 @@ def _process_user_action(message, user):
                     total_amount = data['product_price'] * data['quantity']
                     
                     from models.sale import Sale, SaleLine
+                    from models.warehouse import Warehouse
                     from utils.tenanting import assign_tenant_id
                     from utils.helpers import generate_number
                     
@@ -1297,9 +1306,15 @@ def _process_user_action(message, user):
                     )
                     db.session.add(sale_line)
                     
-                    # تحديث المخزون
-                    product = Product.query.filter_by(id=data['product_id'], tenant_id=tid).first()
-                    product.current_stock -= data['quantity']
+                    # تحديث المخزون عبر StockService
+                    wh = Warehouse.query.filter_by(tenant_id=tid, is_active=True).first()
+                    StockService.remove_stock(
+                        product_id=data['product_id'],
+                        quantity=data['quantity'],
+                        reference_type=GLRef.SALE,
+                        reference_id=sale.id,
+                        warehouse_id=wh.id if wh else None,
+                    )
                     
                     db.session.commit()
                     
@@ -1999,6 +2014,7 @@ def _process_user_action(message, user):
                     
                     from models.purchase import Purchase, PurchaseLine
                     from models.product import Product
+                    from models.warehouse import Warehouse
                     from utils.tenanting import assign_tenant_id
                     from utils.helpers import generate_number
                     
@@ -2027,8 +2043,14 @@ def _process_user_action(message, user):
                     )
                     db.session.add(purchase_line)
                     
-                    product = Product.query.filter_by(id=data['product_id'], tenant_id=tid).first()
-                    product.current_stock += data['quantity']
+                    wh = Warehouse.query.filter_by(tenant_id=tid, is_active=True).first()
+                    StockService.add_stock(
+                        product_id=data['product_id'],
+                        quantity=data['quantity'],
+                        reference_type=GLRef.PURCHASE,
+                        reference_id=purchase.id,
+                        warehouse_id=wh.id if wh else None,
+                    )
                     
                     db.session.commit()
                     
@@ -2788,11 +2810,17 @@ http://localhost:5000/ai/assistant
                         name=name,
                         part_number=part_number,
                         regular_price=float(price_str),
-                        current_stock=quantity,
+                        current_stock=0,
                         is_active=True
                     )
                     assign_tenant_id(product, user)
                     db.session.add(product)
+                    db.session.flush()
+                    if quantity > 0:
+                        StockService.add_opening_stock(
+                            product_id=product.id,
+                            quantity=quantity,
+                        )
                     db.session.commit()
                     
                     return f"""✅ تم إنشاء المنتج بنجاح!
@@ -2894,7 +2922,14 @@ http://localhost:5000/ai/assistant
                     assign_tenant_id(sale_line, user)
                     db.session.add(sale_line)
                     
-                    product.current_stock -= quantity
+                    wh_l3 = Warehouse.query.filter_by(tenant_id=tid, is_active=True).first()
+                    StockService.remove_stock(
+                        product_id=product.id,
+                        quantity=quantity,
+                        reference_type=GLRef.SALE,
+                        reference_id=sale.id,
+                        warehouse_id=wh_l3.id if wh_l3 else None,
+                    )
                     
                     db.session.commit()
                     
@@ -3380,18 +3415,30 @@ def _process_excel_intelligently(file, warehouse_id, user):
                 
                 if existing_product:
                     existing_product.regular_price = price
-                    existing_product.current_stock += quantity
                     products_updated += 1
+                    if quantity > 0:
+                        wh_import = Warehouse.query.filter_by(tenant_id=tid, is_active=True).first()
+                        StockService.add_stock(
+                            product_id=existing_product.id,
+                            quantity=quantity,
+                            reference_type=GLRef.PRODUCT_UPDATE,
+                            warehouse_id=wh_import.id if wh_import else None,
+                        )
                 else:
                     product = Product(
                         name=name,
                         part_number=part_number,
                         regular_price=price,
-                        current_stock=quantity,
+                        current_stock=0,
                         is_active=True
                     )
                     assign_tenant_id(product, user)
                     db.session.add(product)
+                    if quantity > 0:
+                        StockService.add_opening_stock(
+                            product_id=product.id,
+                            quantity=quantity,
+                        )
                     products_created += 1
                 
             except Exception as e:

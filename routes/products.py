@@ -289,9 +289,9 @@ def import_products():
                         warranty_raw = row.get('warranty', 0)
                         if not pd.isna(warranty_raw):
                             try:
-                                warranty_days = int(float(warranty_raw)) # Convert 365.0 to 365
-                            except:
-                                pass
+                                warranty_days = int(float(warranty_raw))
+                            except (ValueError, TypeError):
+                                warranty_days = 0
                         
                         sku = str(row.get('sku', '')).strip()
                         if pd.isna(sku) or not sku:

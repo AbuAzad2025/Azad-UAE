@@ -727,22 +727,17 @@ def decrypt_card(card_id):
         return jsonify({'success': False, 'error': 'الخزينة مقفلة'}), 403
     
     card = CardPayment.query.get_or_404(card_id)
-    decrypted = card.decrypt_card_data()
-    
-    if decrypted:
-        # تسجيل العملية
-        PaymentLog.log_action(
-            vault_id=vault.id,
-            action='card_decrypted',
-            description=f'فك تشفير بطاقة {card.get_card_display()}',
-            level='warning',
-            ip_address=request.remote_addr,
-            user_agent=request.headers.get('User-Agent')
-        )
-        
-        return jsonify({'success': True, 'card': decrypted})
-    else:
-        return jsonify({'success': False, 'error': 'فشل فك التشفير'}), 400
+    # لا نعيد أرقام البطاقة كاملة عبر API — فقط آخر 4 أرقام
+    PaymentLog.log_action(
+        vault_id=vault.id,
+        action='card_viewed',
+        description=f'عرض بطاقة {card.get_card_display()}',
+        level='info',
+        ip_address=request.remote_addr,
+        user_agent=request.headers.get('User-Agent')
+    )
+
+    return jsonify({'success': True, 'card': card.to_dict(include_encrypted=False)})
 
 
 @payment_vault_bp.route('/process-payment', methods=['POST'])

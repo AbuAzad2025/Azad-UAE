@@ -12,9 +12,11 @@
       <div class="row mb-3">
         <div class="col">
           <form method="POST" action="{{ url_for('hr.clock_in') }}" style="display:inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button class="btn btn-success"><i class="fas fa-sign-in-alt"></i> تسجيل دخول</button>
           </form>
           <form method="POST" action="{{ url_for('hr.clock_out') }}" style="display:inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button class="btn btn-danger"><i class="fas fa-sign-out-alt"></i> تسجيل خروج</button>
           </form>
         </div>
@@ -71,6 +73,7 @@
   <div class="modal-dialog"><div class="modal-content">
     <div class="modal-header"><h5>قسم جديد</h5></div>
     <form method="POST" action="{{ url_for('hr.create_department') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="modal-body">
       <div class="form-group"><label>الاسم</label><input name="name" class="form-control" required></div>
       <div class="form-group"><label>الاسم (عربي)</label><input name="name_ar" class="form-control"></div>

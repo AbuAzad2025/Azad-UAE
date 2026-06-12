@@ -476,6 +476,7 @@ class SaleService:
             currency=sale.currency,
             exchange_rate=sale.exchange_rate,
             branch_id=sale.branch_id,
+            tenant_id=tenant_id,
         )
 
         if cogs_total_aed > Decimal('0'):
@@ -504,6 +505,7 @@ class SaleService:
                 reference_id=sale.id,
                 exchange_rate=1.0,
                 branch_id=sale.branch_id,
+                tenant_id=tenant_id,
             )
 
         post_sale_commissions(sale)
@@ -664,7 +666,8 @@ class SaleService:
                 reference_id=payment.id,
                 currency=currency,
                 exchange_rate=exchange_rate_decimal,
-                branch_id=sale.branch_id
+                branch_id=sale.branch_id,
+                tenant_id=getattr(sale, 'tenant_id', None),
             )
         except Exception as e:
             current_app.logger.error(f'GL posting failed for payment: {e}')

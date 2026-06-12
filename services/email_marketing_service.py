@@ -80,10 +80,13 @@ class EmailMarketingService:
         return sub
 
     @staticmethod
-    def unsubscribe(email, list_id=None):
+    def unsubscribe(email, list_id=None, tenant_id=None):
         query = EmailSubscriber.query.filter_by(email=email)
         if list_id:
             query = query.filter_by(list_id=int(list_id))
+        if tenant_id:
+            from models.email_marketing import EmailList
+            query = query.join(EmailList, EmailSubscriber.list_id == EmailList.id).filter(EmailList.tenant_id == int(tenant_id))
         subs = query.all()
         now = datetime.now(timezone.utc)
         for sub in subs:
