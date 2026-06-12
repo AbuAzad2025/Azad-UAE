@@ -250,7 +250,7 @@ class ReturnService:
                     # استخدام تكلفة COGS الأصلية من سجل التكلفة أولاً، ثم من بند الفاتورة، ثم من المنتج
                     original_cost = Decimal('0')
                     try:
-                        from models.warehouse import ProductCostHistory
+                        from models import ProductCostHistory
                         cost_hist = ProductCostHistory.query.filter_by(
                             tenant_id=tenant_id,
                             product_id=sale_line.product_id,
@@ -295,7 +295,7 @@ class ReturnService:
                     mwac_enabled = current_app.config.get('ENABLE_MWAC', False)
                     if mwac_enabled and tenant_id and sale.warehouse_id:
                         try:
-                            from models.warehouse import ProductWarehouseCost
+                            from models import ProductWarehouseCost
                             query = ProductWarehouseCost.query.filter_by(
                                 tenant_id=tenant_id,
                                 product_id=sale_line.product_id,
@@ -315,7 +315,7 @@ class ReturnService:
                                 pwc.total_value = new_value
                                 pwc.average_cost = new_avg
                                 pwc.last_updated = datetime.now(timezone.utc)
-                                from models.warehouse import ProductCostHistory
+                                from models import ProductCostHistory
                                 pch = ProductCostHistory(
                                     tenant_id=tenant_id,
                                     product_id=sale_line.product_id,

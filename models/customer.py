@@ -32,7 +32,7 @@ class Customer(db.Model):
     credit_limit = db.Column(db.Numeric(15, 3), default=0)
     total_purchases = db.Column(db.Numeric(15, 3), default=0)
     
-    # Customer balance (receivables)
+    # Customer balance (credit balance: positive = customer has credit with us, negative = customer owes us)
     balance = db.Column(db.Numeric(15, 3), default=0, nullable=False)
     
     notes = db.Column(db.Text)
@@ -59,23 +59,24 @@ class Customer(db.Model):
         return self.get_balance_aed()
 
     # دوال مساعدة لتحديث الرصيد بشكل تراكمي وسريع
+    # الدلالة: موجب = رصيد/ائتمان للعميل، سالب = ذمة على العميل
     def apply_sale(self, amount_aed):
-        """تحديث رصيد العميل عند إنشاء فاتورة بيع (يزيد الذمم علينا)."""
+        """فاتورة بيع: العميل يدين لنا أكثر -> الرصيد ينقص (أكثر سالباً)."""
+        from decimal import Decimal
+        self.balance = (self.balance or Decimal('0')) - Decimal(str(amount_aed or 0))
+
+    def apply_receipt(self, amount_aed):
+        """سند قبض: العميل يدفع لنا -> الرصيد يزيد (أكثر موجبة)."""
         from decimal import Decimal
         self.balance = (self.balance or Decimal('0')) + Decimal(str(amount_aed or 0))
 
-    def apply_receipt(self, amount_aed):
-        """تحديث رصيد العميل عند سند قبض (يقلل الذمم علينا)."""
-        from decimal import Decimal
-        self.balance = (self.balance or Decimal('0')) - Decimal(str(amount_aed or 0))
-
     def apply_return(self, amount_aed):
-        """تحديث رصيد العميل عند مرتجع مبيعات لصالحه (يقلل الذمم علينا)."""
+        """مرتجع مبيعات: العميل يحصل ائتمان -> الرصيد يزيد (أكثر موجبة)."""
         from decimal import Decimal
-        self.balance = (self.balance or Decimal('0')) - Decimal(str(amount_aed or 0))
+        self.balance = (self.balance or Decimal('0')) + Decimal(str(amount_aed or 0))
 
     def adjust_balance(self, delta_aed):
-        """تعديل رصيد العميل بفرق موجب/سالب بشكل موحد."""
+        """تعديل الرصيد: delta موجب = زيادة رصيد العميل، delta سالب = زيادة ذمته."""
         from decimal import Decimal
         self.balance = (self.balance or Decimal('0')) + Decimal(str(delta_aed or 0))
 

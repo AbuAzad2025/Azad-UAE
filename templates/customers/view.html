@@ -38,8 +38,9 @@
           </li>
           <li class="list-group-item">
             <b>{{ t('Balance') }}</b>
-            <span class="float-left {% if customer.get_balance_base() < 0 %}text-danger{% elif customer.get_balance_base() > 0 %}text-success{% else %}text-muted{% endif %}">
+            <span class="float-left {% if customer.get_balance_base() > 0 %}text-success{% elif customer.get_balance_base() < 0 %}text-danger{% else %}text-muted{% endif %}">
               {{ format_currency(customer.get_balance_base()) }}
+              {% if customer.get_balance_base() > 0 %}<small class="text-success ms-1">(رصيد للعميل)</small>{% elif customer.get_balance_base() < 0 %}<small class="text-danger ms-1">(ذمة على العميل)</small>{% endif %}
             </span>
           </li>
           <li class="list-group-item">
@@ -47,11 +48,18 @@
             <span class="float-left">{{ format_currency(customer.total_purchases) }}</span>
           </li>
         </ul>
-        {% if customer.balance < 0 %}
+        {% if customer.get_balance_base() > 0 %}
         {% if current_user.has_permission('manage_payments') %}
         <a href="{{ url_for('payments.create_voucher', direction='incoming', party_type='customer', party_id=customer.id) }}" class="btn btn-primary btn-block">
         {% endif %}
-          <i class="fas fa-money-bill-wave"></i> إضافة دفعة
+          <i class="fas fa-money-bill-wave"></i> استلام دفعة (للعميل رصيد)
+        </a>
+        {% endif %}
+        {% elif customer.get_balance_base() < 0 %}
+        {% if current_user.has_permission('manage_payments') %}
+        <a href="{{ url_for('payments.create_voucher', direction='outgoing', party_type='customer', party_id=customer.id) }}" class="btn btn-warning btn-block">
+        {% endif %}
+          <i class="fas fa-money-bill-wave"></i> صرف دفعة (ذمة على العميل)
         </a>
         {% endif %}
         <a href="{{ url_for('customers.edit', id=customer.id) }}" class="btn btn-warning btn-block"><i class="fas fa-edit"></i> تعديل</a>

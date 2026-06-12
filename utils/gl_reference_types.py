@@ -89,7 +89,7 @@ def filter_entries_by_ref(query, canonical_or_legacy: str):
     return query.filter(GLJournalEntry.reference_type.in_(variants))
 
 
-def delete_entries_by_ref(reference_id, *canonical_types):
+def delete_entries_by_ref(reference_id, *canonical_types, tenant_id=None):
     from extensions import db
     from models import GLJournalEntry
 
@@ -98,7 +98,10 @@ def delete_entries_by_ref(reference_id, *canonical_types):
         types.extend(ref_variants(t))
     if not types:
         return 0
-    return GLJournalEntry.query.filter(
+    query = GLJournalEntry.query.filter(
         GLJournalEntry.reference_id == reference_id,
         GLJournalEntry.reference_type.in_(types),
-    ).delete(synchronize_session=False)
+    )
+    if tenant_id is not None:
+        query = query.filter(GLJournalEntry.tenant_id == int(tenant_id))
+    return query.delete(synchronize_session=False)

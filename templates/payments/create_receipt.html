@@ -953,11 +953,12 @@ function loadCustomerBalance() {
 
   }  $.get('/customers/' + customerId + '/balance', function(data) {    // عرض الرصيد مع اللون المناسب
 
-    var balanceClass = data.balance < 0 ? 'text-danger' : 'text-success';
+    var balanceClass = data.balance > 0 ? 'text-success' : (data.balance < 0 ? 'text-danger' : 'text-muted');
 
-    $('#customerBalance').text(data.balance.toFixed(2) + ' {{ tenant_currency_symbol }}')
+    var balanceLabel = data.balance > 0 ? ' (رصيد للعميل)' : (data.balance < 0 ? ' (ذمة على العميل)' : '');
 
-      .removeClass('text-danger text-success').addClass(balanceClass);
+    $('#customerBalance').text(data.balance.toFixed(2) + ' {{ tenant_currency_symbol }}' + balanceLabel)
+      .removeClass('text-danger text-success text-muted').addClass(balanceClass);
 
     $('#customerInfo').slideDown();
 

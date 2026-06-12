@@ -541,6 +541,7 @@ def _notify_kds(data):
 
 @pos_bp.route("/api/kds/stream")
 @login_required
+@permission_required("manage_sales")
 def kds_stream():
     def stream():
         q = _queue.Queue()
@@ -557,9 +558,10 @@ def kds_stream():
 
 @pos_bp.route("/api/kds/orders")
 @login_required
+@permission_required("manage_sales")
 def kds_orders():
     from models import PosKdsOrder
-    tid = get_active_tenant_id()
+    tid = get_active_tenant_id(current_user)
     orders = PosKdsOrder.query.filter_by(tenant_id=tid).order_by(PosKdsOrder.created_at.desc()).limit(50).all()
     return jsonify([{
         'id': o.id,
@@ -572,10 +574,11 @@ def kds_orders():
 
 @pos_bp.route("/api/kds/orders/<int:order_id>/status", methods=["POST"])
 @login_required
+@permission_required("manage_sales")
 def kds_update_status(order_id):
     from models import PosKdsOrder
     from datetime import datetime, timezone
-    tid = get_active_tenant_id()
+    tid = get_active_tenant_id(current_user)
     order = PosKdsOrder.query.filter_by(id=order_id, tenant_id=tid).first()
     if not order:
         return jsonify({'error': 'الطلب غير موجود'}), 404
@@ -594,6 +597,7 @@ def kds_update_status(order_id):
 
 @pos_bp.route("/kds")
 @login_required
+@permission_required("manage_sales")
 def kds_dashboard():
     return render_template("pos/kds.html")
 
@@ -644,6 +648,7 @@ def customer_display():
 
 @pos_bp.route("/api/hardware/print-receipt", methods=["POST"])
 @login_required
+@permission_required("manage_sales")
 def hardware_print_receipt():
     """توجيه طباعة الفاتورة إلى وكيل الأجهزة المحلي"""
     try:
@@ -665,6 +670,7 @@ def hardware_print_receipt():
 
 @pos_bp.route("/api/hardware/open-drawer", methods=["POST"])
 @login_required
+@permission_required("manage_sales")
 def hardware_open_drawer():
     """فتح درج النقود"""
     try:
@@ -686,6 +692,7 @@ def hardware_open_drawer():
 
 @pos_bp.route("/api/hardware/status")
 @login_required
+@permission_required("manage_sales")
 def hardware_status():
     """حالة وكيل الأجهزة"""
     try:
@@ -701,9 +708,10 @@ def hardware_status():
 
 @pos_bp.route("/api/floors")
 @login_required
+@permission_required("manage_sales")
 def api_floors():
     from models import PosFloor
-    tid = get_active_tenant_id()
+    tid = get_active_tenant_id(current_user)
     floors = PosFloor.query.filter_by(tenant_id=tid).order_by(PosFloor.sort_order).all()
     return jsonify([{
         'id': f.id,
@@ -723,7 +731,7 @@ def api_floor_create():
     name_ar = (payload.get('name_ar') or '').strip()
     if not name:
         return jsonify({'error': 'اسم الطابق مطلوب'}), 400
-    tid = get_active_tenant_id()
+    tid = get_active_tenant_id(current_user)
     floor = PosFloor(tenant_id=tid, name=name, name_ar=name_ar or None)
     db.session.add(floor)
     db.session.commit()
@@ -732,9 +740,10 @@ def api_floor_create():
 
 @pos_bp.route("/api/floors/<int:floor_id>/tables")
 @login_required
+@permission_required("manage_sales")
 def api_floor_tables(floor_id):
     from models import PosFloor, PosTable
-    tid = get_active_tenant_id()
+    tid = get_active_tenant_id(current_user)
     floor = PosFloor.query.filter_by(id=floor_id, tenant_id=tid).first()
     if not floor:
         return jsonify({'error': 'الطابق غير موجود'}), 404
@@ -760,7 +769,7 @@ def api_table_create():
     label = (payload.get('label') or '').strip()
     if not floor_id or not label:
         return jsonify({'error': 'الطابق والتسمية مطلوبان'}), 400
-    tid = get_active_tenant_id()
+    tid = get_active_tenant_id(current_user)
     floor = PosFloor.query.filter_by(id=floor_id, tenant_id=tid).first()
     if not floor:
         return jsonify({'error': 'الطابق غير موجود'}), 404
@@ -783,7 +792,7 @@ def api_table_create():
 @permission_required("manage_sales")
 def api_table_update_status(table_id):
     from models import PosTable
-    tid = get_active_tenant_id()
+    tid = get_active_tenant_id(current_user)
     table = PosTable.query.filter_by(id=table_id, tenant_id=tid).first()
     if not table:
         return jsonify({'error': 'الطاولة غير موجودة'}), 404
@@ -801,7 +810,7 @@ def api_table_update_status(table_id):
 @permission_required("manage_sales")
 def api_table_assign(table_id):
     from models import PosTable, PosTableOrder
-    tid = get_active_tenant_id()
+    tid = get_active_tenant_id(current_user)
     table = PosTable.query.filter_by(id=table_id, tenant_id=tid).first()
     if not table:
         return jsonify({'error': 'الطاولة غير موجودة'}), 404

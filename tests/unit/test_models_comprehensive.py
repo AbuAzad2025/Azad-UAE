@@ -260,9 +260,11 @@ class TestCustomerModel:
 
     def test_customer_balance_methods(self, sample_customer):
         sample_customer.apply_sale(Decimal("100"))
-        assert sample_customer.balance == Decimal("100")
+        assert sample_customer.balance == Decimal("-100")
         sample_customer.apply_receipt(Decimal("40"))
-        assert sample_customer.balance == Decimal("60")
+        assert sample_customer.balance == Decimal("-60")
+        sample_customer.apply_return(Decimal("20"))
+        assert sample_customer.balance == Decimal("-40")
 
 
 class TestSupplierModel:

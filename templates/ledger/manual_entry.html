@@ -123,15 +123,12 @@
                   <th width="15%" class="text-center">
                     <i class="fas fa-arrow-down text-success mr-1"></i>
                     <strong class="text-success">مدين</strong>
-                    <br>
-                    <small class="text-muted">(لنا)</small>
                   </th>
                   <th width="15%" class="text-center">
                     <i class="fas fa-arrow-up text-danger mr-1"></i>
                     <strong class="text-danger">دائن</strong>
-                    <br>
-                    <small class="text-muted">(علينا)</small>
                   </th>
+                  <th width="5%"></th>
                 </tr>
               </thead>
               <tbody id="linesTableBody">
@@ -220,10 +217,15 @@ function addLine() {
       <input type="number" name="line_${lineCounter}_debit" class="form-control text-center debit-input" 
              step="0.01" min="0" value="0" oninput="handleDebitChange(this)" onchange="handleDebitChange(this)" onkeyup="calculateJournalTotals()" aria-label="line ${lineCounter} debit">
     </td>
-    <td>
-      <input type="number" name="line_${lineCounter}_credit" class="form-control text-center credit-input" 
-             step="0.01" min="0" value="0" oninput="handleCreditChange(this)" onchange="handleCreditChange(this)" onkeyup="calculateTotals()" aria-label="line ${lineCounter} credit">
-    </td>
+  <td>
+    <input type="number" name="line_${lineCounter}_credit" class="form-control text-center credit-input" 
+            step="0.01" min="0" value="0" oninput="handleCreditChange(this)" onchange="handleCreditChange(this)" onkeyup="calculateJournalTotals()" aria-label="line ${lineCounter} credit">
+  </td>
+  <td>
+    <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteLine(this)" title="حذف السطر">
+      <i class="fas fa-trash"></i>
+    </button>
+  </td>
   `;
   tbody.appendChild(row);
   lineCounter++;
@@ -400,14 +402,40 @@ function toggleCard(cardName) {
   const body = document.getElementById(cardName + 'Body');
   const icon = document.getElementById(cardName + 'Icon');
   
-  if (body.style.display === 'none') {
-    body.style.display = 'block';
-    icon.classList.remove('fa-plus');
-    icon.classList.add('fa-minus');
-  } else {
-    body.style.display = 'none';
-    icon.classList.remove('fa-minus');
-    icon.classList.add('fa-plus');
+  if (body && icon) {
+    if (body.style.display === 'none') {
+      body.style.display = 'block';
+      icon.classList.remove('fa-plus');
+      icon.classList.add('fa-minus');
+    } else {
+      body.style.display = 'none';
+      icon.classList.remove('fa-minus');
+      icon.classList.add('fa-plus');
+    }
+  }
+}
+
+// حذف سطر من القيد
+function deleteLine(button) {
+  const row = button.closest('tr');
+  if (row) {
+    row.remove();
+    // إعادة ترقيم الأسطر
+    document.querySelectorAll('#linesTableBody tr').forEach((r, idx) => {
+      r.cells[0].textContent = idx + 1;
+      // تحديث name attributes
+      const selects = r.querySelectorAll('select, input');
+      selects.forEach(el => {
+        if (el.name) {
+          el.name = el.name.replace(/line_\d+/, `line_${idx}`);
+        }
+        if (el.id) {
+          el.id = el.id.replace(/line_\d+/, `line_${idx}`);
+        }
+      });
+      r.id = `line_${idx}`;
+    });
+    calculateJournalTotals();
   }
 }
 
@@ -422,9 +450,11 @@ document.addEventListener('DOMContentLoaded', function() {
   addLine();
   calculateJournalTotals();
   
-  // التأكد من أن البطاقات مرئية
-  document.getElementById('quickSummaryBody').style.display = 'block';
-  document.getElementById('quickTemplatesBody').style.display = 'block';
+  // التأكد من أن البطاقات مرئية (مع وجود التحقق)
+  const quickTemplatesBody = document.getElementById('quickTemplatesBody');
+  if (quickTemplatesBody) {
+    quickTemplatesBody.style.display = 'block';
+  }
 });
 </script>
 

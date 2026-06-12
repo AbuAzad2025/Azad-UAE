@@ -213,7 +213,7 @@ def export():
         outgoing_map = {cid: Decimal(str(total or 0)) for cid, total in outgoing_rows}
 
         for cid in customer_ids:
-            balance_map[cid] = sales_map.get(cid, Decimal('0')) + outgoing_map.get(cid, Decimal('0')) - receipts_map.get(cid, Decimal('0'))
+            balance_map[cid] = receipts_map.get(cid, Decimal('0')) - sales_map.get(cid, Decimal('0')) - outgoing_map.get(cid, Decimal('0'))
 
     headers = [
         'الاسم',
@@ -656,6 +656,7 @@ def statement(id):
     transactions.sort(key=lambda x: (x['date'] or datetime.min))
 
     # Opening balance: compute from ALL confirmed transactions before date_from
+    # الدلالة: credit - debit (موجب = رصيد للعميل)
     opening_balance = 0
     if date_from:
         from datetime import date as date_type
@@ -669,7 +670,7 @@ def statement(id):
                 is_confirmed = trans.get('payment', {}).get('payment_confirmed', True) if trans['type'] == 'payment' else (
                     trans.get('status') != 'معلقة' if trans['type'] == 'receipt' else True)
                 if is_confirmed:
-                    opening_balance += trans['debit'] - trans['credit']
+                    opening_balance += trans['credit'] - trans['debit']
             else:
                 remaining.append(trans)
         transactions = remaining
@@ -695,7 +696,7 @@ def statement(id):
             'is_confirmed': True,
         })
 
-    # الرصيد الجاري: المؤكد فقط
+    # الرصيد الجاري: المؤكد فقط (credit - debit)
     running_balance = opening_balance
     for trans in transactions:
         if trans['type'] == 'opening':
@@ -703,7 +704,7 @@ def statement(id):
             continue
         is_confirmed = trans.get('payment', {}).get('payment_confirmed', True) if trans['type'] == 'payment' else (trans.get('status') != 'معلقة' if trans['type'] == 'receipt' else True)
         if is_confirmed:
-            running_balance += trans['debit'] - trans['credit']
+            running_balance += trans['credit'] - trans['debit']
         trans['balance'] = running_balance
         trans['is_confirmed'] = is_confirmed
 

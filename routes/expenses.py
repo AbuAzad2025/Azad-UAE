@@ -454,30 +454,19 @@ def delete(id):
             flash(f'✅ تم أرشفة المصروف "{expense.expense_number}" (لوجود ارتباطات)', 'warning')
             
         else:
-            # حذف نهائي (Hard Delete)
-            # 1. حذف القيود المحاسبية للمصروف
-            from utils.gl_reference_types import delete_entries_by_ref, GLRef
-            delete_entries_by_ref(expense.id, GLRef.EXPENSE)
-            
-            # 2. حذف الشيك إذا كان معلقاً (وحذف قيوده إن وجدت)
+            # عكس القيود المحاسبية بدلاً من الحذف
+            from services.gl_service import GLService
+            GLService.reverse_entry(
+                reference_type=GLRef.EXPENSE,
+                reference_id=expense.id,
+                description=f'Reverse Expense {expense.expense_number} (Deleted)',
+                tenant_id=expense.tenant_id,
+            )
+
+            # 2. عكس/حذف الشيك إذا كان معلقاً
             if cheque:
-                # حذف قيود الشيك (نظرياً الشيك المعلق ليس له قيود، لكن للاحتياط)
-                from utils.gl_reference_types import ref_variants
-                ref_types = []
-                for rt in (
-                    GLRef.CHEQUE_RECEIVE, GLRef.CHEQUE_ISSUE, GLRef.CHEQUE_CANCEL,
-                    GLRef.CHEQUE_CLEAR, GLRef.CHEQUE_BOUNCE,
-                ):
-                    ref_types.extend(ref_variants(rt))
-                tid = get_active_tenant_id(current_user)
-                gl_query = GLJournalEntry.query.filter(
-                    GLJournalEntry.reference_type.in_(ref_types),
-                    GLJournalEntry.reference_id == cheque.id
-                )
-                if tid is not None:
-                    gl_query = gl_query.filter(GLJournalEntry.tenant_id == tid)
-                gl_query.delete(synchronize_session=False)
-                
+                from services.cheque_service import process_cheque_cancel
+                process_cheque_cancel(cheque, reason=f'حذف المصروف {expense.expense_number}')
                 db.session.delete(cheque)
                 
             # 3. حذف المصروف

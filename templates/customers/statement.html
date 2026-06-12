@@ -355,7 +355,10 @@ table.statement-table thead th {
                 <div class="text-md-right">
                   <div class="final-balance-display">
                     <span>الرصيد الحالي</span>
-                    <strong>{{ format_currency(final_balance|default(0)) }}</strong>
+                    <strong class="{% if final_balance > 0 %}text-success{% elif final_balance < 0 %}text-danger{% else %}text-muted{% endif %}">
+                      {{ format_currency(final_balance|default(0)) }}
+                      {% if final_balance > 0 %}<small class="text-success ms-1">(رصيد للعميل)</small>{% elif final_balance < 0 %}<small class="text-danger ms-1">(ذمة على العميل)</small>{% endif %}
+                    </strong>
                   </div>
                   <div class="small text-muted mt-1">
                     رقم العميل: {{ customer.id }}
@@ -414,7 +417,10 @@ table.statement-table thead th {
                 </td>
                 <td class="text-danger amount-cell">{{ format_currency(trans.debit) if trans.debit else '0.00' }}</td>
                 <td class="text-success amount-cell">{{ format_currency(trans.credit) if trans.credit else '0.00' }}</td>
-                <td class="amount-cell">{{ format_currency(trans.balance) }}</td>
+                <td class="amount-cell {% if trans.balance > 0 %}text-success{% elif trans.balance < 0 %}text-danger{% else %}text-muted{% endif %}">
+                  {{ format_currency(trans.balance) }}
+                  {% if trans.balance > 0 %}<small class="text-success ms-1">(رصيد)</small>{% elif trans.balance < 0 %}<small class="text-danger ms-1">(ذمة)</small>{% endif %}
+                </td>
                 <td>
                   {% if trans.type == 'sale' %}
                     {% if trans.status == 'paid' %}

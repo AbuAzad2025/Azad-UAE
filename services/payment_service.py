@@ -447,7 +447,9 @@ class PaymentService:
 
     @staticmethod
     def get_customer_balance_scoped(customer_id, branch_id=None):
-        """رصيد العميل مقيد بالفرع. يحسب من SQL مباشر (Sale - Receipt + Payment).
+        """رصيد العميل مقيد بالفرع. يحسب من SQL مباشر.
+        الدلالة: موجب = رصيد للعميل، سالب = ذمة على العميل.
+        الصيغة: Receipts - Sales - Outgoing_Payments_to_customer (refunds)
         يعيد Decimal. إذا كان branch_id = None يُرجع الرصيد الكامل (غير مقيد)."""
         from models import Payment as PaymentModel
 
@@ -468,15 +470,16 @@ class PaymentService:
             outgoing_total = outgoing_total.filter(PaymentModel.branch_id == branch_id)
 
         return (
-            (sales_total.scalar() or Decimal('0'))
-            + (outgoing_total.scalar() or Decimal('0'))
-            - (receipts_total.scalar() or Decimal('0'))
+            (receipts_total.scalar() or Decimal('0'))
+            - (sales_total.scalar() or Decimal('0'))
+            - (outgoing_total.scalar() or Decimal('0'))
         )
 
     @staticmethod
     def get_supplier_balance_scoped(supplier_id, branch_id=None):
-        """رصيد المورد مقيد بالفرع. يحسب من SQL مباشر (Purchase - Payment out + Payment in).
-        يعيد Decimal. إذا كان branch_id = None يُرجع الرصيد الكامل."""
+        """رصيد المورد مقيد بالفرع. يحسب من SQL مباشر.
+        الدلالة: موجب = مستحق للمورد (نحن ندين له)، سالب = المورد مدين لنا.
+        الصيغة: Purchases - Outgoing_Payments + Incoming_Payments (refunds from supplier)"""
         purchases_total = db.session.query(db.func.sum(Purchase.amount_aed)).filter(
             Purchase.supplier_id == supplier_id,
             Purchase.status == 'confirmed',

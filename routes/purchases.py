@@ -270,9 +270,25 @@ def delete(id):
             LoggingCore.log_audit('archive', 'purchases', id)
             db.session.commit()
         else:
-            # حذف نهائي (Hard Delete) - فقط للفواتير غير المرتبطة
-            PurchaseLine.query.filter_by(purchase_id=purchase.id).delete()
-            delete_entries_by_ref(purchase.id, GLRef.PURCHASE)
+            # عكس القيود المحاسبية بدلاً من الحذف
+            from services.gl_service import GLService
+            GLService.reverse_entry(
+                reference_type=GLRef.PURCHASE,
+                reference_id=purchase.id,
+                description=f'Reverse Purchase {purchase.purchase_number} (Deleted)',
+                tenant_id=purchase.tenant_id,
+            )
+
+            # عكس أثر المورد
+            if purchase.supplier_id:
+                from models import Supplier
+                supplier = Supplier.query.filter_by(id=purchase.supplier_id, tenant_id=purchase.tenant_id).first()
+                if supplier:
+                    from decimal import Decimal
+                    supplier.apply_payment(-Decimal(str(purchase.amount_aed or 0)))
+
+            # حذف بنود الفاتورة
+            PurchaseLine.query.filter_by(purchase_id=purchase.id, tenant_id=purchase.tenant_id).delete()
             db.session.delete(purchase)
             LoggingCore.log_audit('delete', 'purchases', id)
             db.session.commit()

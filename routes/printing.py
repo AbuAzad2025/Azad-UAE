@@ -288,6 +288,7 @@ def print_preview_api():
 
 @printing_bp.route('/api/print-history', methods=['GET'])
 @login_required
+@permission_required('view_reports')
 def api_print_history():
     tid = get_active_tenant_id(current_user)
     limit = request.args.get('limit', 20, type=int)
