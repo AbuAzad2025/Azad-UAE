@@ -232,15 +232,10 @@ class GLTreeBuilder:
 
     @staticmethod
     def _resolve_tenant_currency(tenant_id):
-        """Resolve default currency for tenant, fallback to AED."""
-        try:
-            from models.tenant import Tenant
-            tenant = Tenant.query.get(int(tenant_id))
-            if tenant and tenant.default_currency:
-                return tenant.default_currency
-        except Exception:
-            pass
-        return 'AED'
+        """Resolve default currency using utility helper for consistent priority."""
+        from models.tenant import Tenant
+        tenant = Tenant.query.get(int(tenant_id))
+        return resolve_default_currency(tenant)
 
     @staticmethod
     def _branch_account_code(prefix, branch_id):
@@ -387,7 +382,9 @@ class GLTreeBuilder:
         validation['total_accounts'] = len(accounts)
         
         # التحقق من الحسابات الأساسية
-        for code, name_ar, _, _, _, _, _ in CORE_ACCOUNT_TREE:
+        for template in BASE_ACCOUNTS:
+            code = template.code
+            name_ar = template.name_ar
             if code not in account_codes:
                 validation['missing_core_accounts'].append({
                     'code': code,

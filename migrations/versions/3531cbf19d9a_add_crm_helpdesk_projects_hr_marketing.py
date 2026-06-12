@@ -24,6 +24,9 @@ def upgrade():
         batch_op.create_index(batch_op.f('ix_customers_fiscal_position_id'), ['fiscal_position_id'], unique=False)
         batch_op.create_foreign_key(None, 'fiscal_positions', ['fiscal_position_id'], ['id'])
 
+    # PATCH: Backfill NULLs before NOT NULL constraint
+    op.execute("UPDATE gl_accounts SET is_reconcile = FALSE WHERE is_reconcile IS NULL")
+
     with op.batch_alter_table('gl_accounts', schema=None) as batch_op:
         batch_op.alter_column('is_reconcile',
                existing_type=sa.BOOLEAN(),

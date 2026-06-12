@@ -89,7 +89,7 @@ class Tenant(db.Model):
     # Preferences - التفضيلات
     default_currency = db.Column(db.String(3), default=context_aware_default_currency)  # TODO: use Config.DEFAULT_CURRENCY
     default_language = db.Column(db.String(10), default='ar')
-    timezone = db.Column(db.String(50), default='Asia/Dubai')
+    timezone = db.Column(db.String(50), default='Asia/Hebron')
     date_format = db.Column(db.String(20), default='%Y-%m-%d')
     time_format = db.Column(db.String(20), default='%H:%M')
     
