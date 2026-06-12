@@ -25,6 +25,34 @@ def _protect_api_docs_in_production():
     return None
 
 
+"""
+API Documentation using OpenAPI/Swagger
+"""
+import os
+import copy
+
+from flask import Blueprint, jsonify, render_template_string, current_app, abort
+from flask_login import current_user
+
+api_docs_bp = Blueprint('api_docs', __name__, url_prefix='/api-docs')
+
+
+def _api_docs_public() -> bool:
+    app_env = (os.environ.get('APP_ENV') or 'production').strip().lower()
+    debug = (os.environ.get('DEBUG') or '').strip().lower() in ('1', 'true', 'yes', 'y')
+    enable_swagger = (os.environ.get('ENABLE_SWAGGER_UI') or 'false').strip().lower() in ('1', 'true', 'yes', 'y')
+    return debug or (app_env != 'production' and enable_swagger)
+
+
+@api_docs_bp.before_request
+def _protect_api_docs_in_production():
+    if _api_docs_public():
+        return None
+    if not current_user.is_authenticated:
+        abort(404)
+    return None
+
+
 # OpenAPI 3.0 Specification
 OPENAPI_SPEC = {
     "openapi": "3.0.3",
@@ -53,10 +81,12 @@ OPENAPI_SPEC = {
         }
     ],
     "tags": [
+        {"name": "General", "description": "General system endpoints"},
         {"name": "Auth", "description": "Authentication endpoints"},
         {"name": "Customers", "description": "Customer management"},
         {"name": "Suppliers", "description": "Supplier management"},
         {"name": "Products", "description": "Product catalog"},
+        {"name": "Warehouses", "description": "Warehouse management"},
         {"name": "Sales", "description": "Sales operations"},
         {"name": "Purchases", "description": "Purchase operations"},
         {"name": "Payments", "description": "Payment processing"},
@@ -64,6 +94,24 @@ OPENAPI_SPEC = {
         {"name": "Search", "description": "Universal search"}
     ],
     "paths": {
+        "/health": {
+            "get": {
+                "tags": ["General"],
+                "summary": "Check API health",
+                "responses": {
+                    "200": {"description": "API is running"}
+                }
+            }
+        },
+        "/version": {
+            "get": {
+                "tags": ["General"],
+                "summary": "Get API version",
+                "responses": {
+                    "200": {"description": "Version information"}
+                }
+            }
+        },
         "/search": {
             "get": {
                 "tags": ["Search"],
@@ -102,8 +150,7 @@ OPENAPI_SPEC = {
                                                 "type": "object",
                                                 "properties": {
                                                     "id": {"type": "integer"},
-                                                    "text": {"type": "string"},
-                                                    "info": {"type": "string"}
+                                                    "text": {"type": "string"}
                                                 }
                                             }
                                         }
@@ -115,39 +162,38 @@ OPENAPI_SPEC = {
                 }
             }
         },
-        "/customer-balance/{id}": {
+        "/products": {
             "get": {
-                "tags": ["Customers"],
-                "summary": "Get customer balance",
+                "tags": ["Products"],
+                "summary": "List products",
+                "responses": {
+                    "200": {"description": "List of products"}
+                }
+            }
+        },
+        "/products/{id}/info": {
+            "get": {
+                "tags": ["Products"],
+                "summary": "Get product details",
                 "parameters": [
                     {
                         "name": "id",
                         "in": "path",
                         "required": True,
-                        "schema": {"type": "integer"},
-                        "description": "Customer ID"
+                        "schema": {"type": "integer"}
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "Customer balance information",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "customer_id": {"type": "integer"},
-                                        "name": {"type": "string"},
-                                        "balance": {"type": "number"},
-                                        "currency": {"type": "string"}
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Customer not found"
-                    }
+                    "200": {"description": "Product details"}
+                }
+            }
+        },
+        "/warehouses": {
+            "get": {
+                "tags": ["Warehouses"],
+                "summary": "List accessible warehouses",
+                "responses": {
+                    "200": {"description": "List of warehouses"}
                 }
             }
         }
@@ -190,23 +236,6 @@ OPENAPI_SPEC = {
                     "cost_price": {"type": "number"},
                     "quantity_in_stock": {"type": "integer"},
                     "is_active": {"type": "boolean"}
-                }
-            },
-            "Sale": {
-                "type": "object",
-                "properties": {
-                    "id": {"type": "integer"},
-                    "invoice_number": {"type": "string"},
-                    "customer_id": {"type": "integer"},
-                    "sale_date": {"type": "string", "format": "date-time"},
-                    "total_amount": {"type": "number"},
-                    "amount_paid": {"type": "number"},
-                    "remaining_balance": {"type": "number"},
-                    "payment_status": {
-                        "type": "string",
-                        "enum": ["paid", "partial", "credit"]
-                    },
-                    "currency": {"type": "string"}
                 }
             },
             "Error": {

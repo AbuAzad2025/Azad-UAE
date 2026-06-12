@@ -179,6 +179,9 @@ class BankStatementLine(db.Model):
     # Import metadata
     bank_account_id = db.Column(db.Integer, db.ForeignKey('gl_accounts.id'), nullable=False, index=True)
     statement_date = db.Column(db.Date, nullable=False, index=True)
+    source_filename = db.Column(db.String(255))
+    imported_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), index=True)
 
     # Transaction data
     transaction_date = db.Column(db.Date, nullable=False, index=True)
@@ -188,7 +191,9 @@ class BankStatementLine(db.Model):
     currency = db.Column(db.String(3), default='AED')
 
     # Matching status
-    matched = db.Column(db.Boolean, default=False, index=True)
+    status = db.Column(db.String(20), default='imported', index=True)  # imported, suggested_match, matched, ignored, reconciled
+    matched_at = db.Column(db.DateTime)
+    matched_by = db.Column(db.Integer, db.ForeignKey('users.id'), index=True)
     match_type = db.Column(db.String(30))  # exact, amount_date, fuzzy
     matched_journal_entry_id = db.Column(db.Integer, db.ForeignKey('gl_journal_entries.id'), index=True)
     matched_cheque_id = db.Column(db.Integer, db.ForeignKey('cheques.id'), index=True)
@@ -201,6 +206,8 @@ class BankStatementLine(db.Model):
 
     tenant = db.relationship('Tenant', backref='bank_statement_lines', foreign_keys=[tenant_id])
     bank_account = db.relationship('GLAccount', foreign_keys=[bank_account_id])
+    creator = db.relationship('User', foreign_keys=[created_by])
+    matcher = db.relationship('User', foreign_keys=[matched_by])
     matched_journal_entry = db.relationship('GLJournalEntry')
     matched_cheque = db.relationship('Cheque')
     reconciliation_item = db.relationship('BankReconciliationItem')

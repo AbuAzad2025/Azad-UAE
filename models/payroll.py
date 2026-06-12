@@ -14,15 +14,22 @@ class Employee(db.Model):
     
     # Employment Details
     employment_type = db.Column(db.String(20), default='salary') # salary (monthly), daily (miyawama)
+    contract_type = db.Column(db.String(20), default='limited') # limited, unlimited
     basic_salary = db.Column(db.Numeric(10, 2), default=0) # Monthly salary or Daily rate
-    currency = db.Column(db.String(3), default=context_aware_default_currency)  # TODO: use Config.DEFAULT_CURRENCY
+    allowances = db.Column(db.Numeric(10, 2), default=0) # Monthly allowances
+    currency = db.Column(db.String(3), default=context_aware_default_currency)
     
     # Branch Link
     branch_id = db.Column(db.Integer, db.ForeignKey('branches.id'), nullable=True, index=True)
     
-    # Status
+    # Status/Dates
     is_active = db.Column(db.Boolean, default=True, index=True)
     joined_date = db.Column(db.Date, default=datetime.now)
+    termination_date = db.Column(db.Date)
+    termination_reason = db.Column(db.String(255))
+    
+    # Leave Accrual
+    annual_leave_days = db.Column(db.Integer, default=30) # Annual leave entitlement
     
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     
@@ -30,18 +37,29 @@ class Employee(db.Model):
     branch = db.relationship('Branch', backref='employees')
     advances = db.relationship('SalaryAdvance', backref='employee', lazy='dynamic')
     payments = db.relationship('PayrollTransaction', backref='employee', lazy='dynamic')
+    leaves = db.relationship('EmployeeLeave', backref='employee', lazy='dynamic')
 
     def __repr__(self):
         return f'<Employee {self.name}>'
     
     def get_balance(self):
-        """
-        Calculate employee balance (Net Payable)
-        This is a simplified view. Usually, payroll is calculated period-based.
-        But for 'Account Statement', we might want to track Advances vs Repayments.
-        """
-        # Logic can be expanded based on requirements
         return 0
+
+class EmployeeLeave(db.Model):
+    __tablename__ = 'employee_leaves'
+
+    id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=False, index=True)
+    employee_id = db.Column(db.Integer, db.ForeignKey('employees.id'), nullable=False, index=True)
+    
+    leave_type = db.Column(db.String(20), default='annual') # annual, sick, unpaid
+    start_date = db.Column(db.Date, nullable=False)
+    end_date = db.Column(db.Date, nullable=False)
+    days_taken = db.Column(db.Integer, nullable=False)
+    
+    status = db.Column(db.String(20), default='approved', index=True) # pending, approved, rejected
+    
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
 
 
 class SalaryAdvance(db.Model):

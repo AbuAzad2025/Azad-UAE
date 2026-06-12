@@ -234,7 +234,7 @@
 
           </button>
 
-          <form id="cancelForm" action="{{ url_for('purchases.cancel', id=purchase.id) }}" method="POST" style="display:none;">
+          <form id="cancelForm" action="{{ url_for('purchases.cancel', id=purchase.id) }}" method="POST" class="d-none">
 
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 

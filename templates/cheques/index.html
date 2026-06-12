@@ -53,6 +53,7 @@
 
   body {
     -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
     font-size: 11pt;
     direction: rtl;
   }
@@ -125,7 +126,7 @@
       <div class="icon">
         <i class="fas fa-arrow-down"></i>
       </div>
-      <a href="{{ url_for('cheques.incoming') }}" class="small-box-footer text-white"
+      <a href="{{ url_for('cheques.incoming') }}" class="small-box-footer text-white" title="الشيكات الواردة">
         المزيد <i class="fas fa-arrow-circle-left"></i>
       </a>
     </div>

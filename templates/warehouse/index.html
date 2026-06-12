@@ -207,7 +207,7 @@
                   </span>
                   {% set stock_percent = (product.visible_stock / product.min_stock_alert * 100) if product.min_stock_alert > 0 else 0 %}
                   <div class="stock-indicator">
-                    <div class="stock-indicator-bar stock-low" style="width: {{ stock_percent }}%"></div>
+                    <div class="stock-indicator-bar stock-low" data-width="{{ stock_percent }}"></div>
                   </div>
                 </div>
               {% else %}
@@ -218,7 +218,7 @@
                   {% set stock_calc = (product.visible_stock / (product.min_stock_alert * 3) * 100) if product.min_stock_alert > 0 else 100 %}
                   {% set stock_percent = stock_calc if stock_calc < 100 else 100 %}
                   <div class="stock-indicator">
-                    <div class="stock-indicator-bar stock-good" style="width: {{ stock_percent }}%"></div>
+                    <div class="stock-indicator-bar stock-good" data-width="{{ stock_percent }}"></div>
                   </div>
                 </div>
               {% endif %}
@@ -374,6 +374,11 @@ $(document).on('click', '[data-action="adjust-stock"]', function() {
   const id = $(this).data('product-id');
   const name = $(this).data('product-name');
   adjustStock(id, name);
+});
+
+// Set stock indicator widths from data attributes to avoid inline styles
+$('.stock-indicator-bar[data-width]').each(function() {
+  $(this).css('width', $(this).data('width') + '%');
 });
 </script>
 {% endblock %}

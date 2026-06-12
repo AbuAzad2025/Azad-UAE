@@ -53,6 +53,7 @@ from .security_alert import SecurityAlert
 from .api_key import APIKey
 from .product_serial import ProductSerial
 from .payroll import Employee, SalaryAdvance, PayrollTransaction
+from .payroll_settings import PayrollSettings
 from .journal_entry_audit import JournalEntryAudit
 from .partner_commission import PartnerCommissionEntry
 from .azad_platform_fee import AzadPlatformFee
@@ -129,7 +130,7 @@ __all__ = [
     'FixedAsset', 'DepreciationSchedule',
     'CustomsTax', 'AdvancedExpense', 'TaxCalculationRule',
     'LoginHistory', 'SecurityAlert', 'APIKey',
-    'Employee', 'SalaryAdvance', 'PayrollTransaction',
+    'Employee', 'SalaryAdvance', 'PayrollTransaction', 'PayrollSettings',
     'PartnerCommissionEntry',
     'AzadPlatformFee',
     'AzadSubscriptionFee',
