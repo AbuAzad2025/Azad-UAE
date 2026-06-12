@@ -4,6 +4,7 @@
 """
 
 import json
+import logging
 import os
 from datetime import datetime, timedelta
 from collections import defaultdict, Counter
@@ -27,6 +28,22 @@ class AzadLearningSystem:
         self.patterns = self._load_patterns()
         self.feedback_log = self._load_feedback()
     
+    @staticmethod
+    def _safe_load_pickle(path):
+        """Safely load a pickle file with size validation."""
+        if not os.path.exists(path):
+            return None
+        size = os.path.getsize(path)
+        if size == 0 or size > 10 * 1024 * 1024:  # reject empty or >10MB
+            return None
+        try:
+            with open(path, 'rb') as f:
+                return pickle.load(f)
+        except (pickle.UnpicklingError, EOFError, OSError, ValueError) as e:
+            logger = logging.getLogger(__name__)
+            logger.debug(f"Could not load pickle {path}: {e}")
+            return None
+
     def _load_learned_knowledge(self):
         """تحميل المعرفة المكتسبة"""
         if os.path.exists(self.knowledge_file):
@@ -37,7 +54,7 @@ class AzadLearningSystem:
                     if not isinstance(exp, defaultdict):
                         data['expertise_areas'] = defaultdict(int, exp)
                     return data
-            except:
+            except (json.JSONDecodeError, OSError):
                 pass
         return {
             'new_terms': {},
@@ -60,18 +77,15 @@ class AzadLearningSystem:
             try:
                 with open(self.interactions_file, 'r', encoding='utf-8') as f:
                     return json.load(f)
-            except:
+            except (json.JSONDecodeError, OSError):
                 pass
         return []
     
     def _load_patterns(self):
         """تحميل الأنماط المكتشفة"""
-        if os.path.exists(self.patterns_file):
-            try:
-                with open(self.patterns_file, 'rb') as f:
-                    return pickle.load(f)
-            except:
-                pass
+        result = self._safe_load_pickle(self.patterns_file)
+        if result is not None:
+            return result
         return {
             'question_patterns': defaultdict(list),
             'response_patterns': defaultdict(list),
@@ -86,19 +100,23 @@ class AzadLearningSystem:
             try:
                 with open(self.feedback_file, 'r', encoding='utf-8') as f:
                     return json.load(f)
-            except:
+            except (json.JSONDecodeError, OSError):
                 pass
         return []
     
-    def learn_from_interaction(self, question, response, user_feedback=None, context=None):
+    def learn_from_interaction(self, question, response, user_feedback=None, context=None,
+                                tenant_id=None):
         """التعلم من كل تفاعل"""
+        ctx = dict(context or {})
+        if tenant_id is not None:
+            ctx['tenant_id'] = tenant_id
         interaction = {
             'timestamp': datetime.now().isoformat(),
             'question': question,
             'response': response,
             'user_feedback': user_feedback,
-            'context': context,
-            'success': user_feedback is None or user_feedback > 3  # افتراض نجاح إذا لم يكن هناك تقييم
+            'context': ctx,
+            'success': user_feedback is None or user_feedback > 3,  # افتراض نجاح إذا لم يكن هناك تقييم
         }
         
         # إضافة للتفاعلات
@@ -216,7 +234,7 @@ class AzadLearningSystem:
             ea = self.learned_knowledge.get('expertise_areas', {})
             try:
                 to_save['expertise_areas'] = dict(ea)
-            except:
+            except (TypeError, ValueError):
                 to_save['expertise_areas'] = {}
             with open(self.knowledge_file, 'w', encoding='utf-8') as f:
                 json.dump(to_save, f, ensure_ascii=False, indent=2)
@@ -495,7 +513,8 @@ class AzadLearningSystem:
                 'timestamp': datetime.now().isoformat()
             }
             return improvements
-        except:
+        except Exception as e:
+            logging.getLogger(__name__).debug(f"Improvement analysis failed: {e}")
             return {'timestamp': datetime.now().isoformat()}
 
 

@@ -264,7 +264,6 @@ import json
 import os
 from datetime import datetime, timedelta
 from collections import defaultdict
-import random
 
 
 class AzadSelfImprovement:
@@ -321,7 +320,7 @@ class AzadSelfImprovement:
             try:
                 with open(self.improvement_file, 'r', encoding='utf-8') as f:
                     return json.load(f)
-            except:
+            except (json.JSONDecodeError, OSError):
                 pass
         return {
             'total_improvements': 0,
@@ -337,7 +336,7 @@ class AzadSelfImprovement:
             try:
                 with open(self.performance_file, 'r', encoding='utf-8') as f:
                     return json.load(f)
-            except:
+            except (json.JSONDecodeError, OSError):
                 pass
         return {
             'daily_metrics': {},
@@ -352,7 +351,7 @@ class AzadSelfImprovement:
             try:
                 with open(self.goals_file, 'r', encoding='utf-8') as f:
                     return json.load(f)
-            except:
+            except (json.JSONDecodeError, OSError):
                 pass
         return {
             'short_term_goals': [
@@ -484,73 +483,62 @@ class AzadSelfImprovement:
         
         return recommendations
     
+    def _refresh_scores_from_db(self):
+        """Refresh scores from actual DB metrics instead of random simulation."""
+        try:
+            from extensions import db
+            from sqlalchemy import text as sql_text
+            # response_quality: ratio of successful interactions
+            row = db.session.execute(
+                sql_text("SELECT COUNT(*) FILTER (WHERE was_successful = true) AS ok, COUNT(*) AS total FROM ai_interactions")
+            ).fetchone()
+            total = row.total if row else 0
+            ok = row.ok if row else 0
+            if total > 0:
+                self.improvement_areas['response_quality']['current_score'] = round(ok / total * 10, 2)
+
+            # knowledge_depth: based on number of ai_memories
+            mem_count = db.session.execute(sql_text("SELECT COUNT(*) FROM ai_memories")).scalar() or 0
+            score = min(10.0, 5.0 + mem_count / 200.0)
+            self.improvement_areas['knowledge_depth']['current_score'] = round(score, 2)
+
+            # customer_satisfaction: same as response quality (proxy)
+            if total > 0:
+                self.improvement_areas['customer_satisfaction']['current_score'] = round(ok / total * 10, 2)
+        except Exception as e:
+            logger.debug(f"Could not refresh scores from DB: {e}")
+
     def implement_improvement(self, area, improvement_type='automatic'):
-        """تطبيق التحسين"""
+        """تطبيق التحسين — sets score from real DB data, not random."""
         if area not in self.improvement_areas:
             return {'success': False, 'error': 'المجال غير موجود'}
-        
+        self._refresh_scores_from_db()
         config = self.improvement_areas[area]
-        current_score = config['current_score']
-        improvement_rate = config['improvement_rate']
-        
-        # حساب التحسين
-        improvement_amount = improvement_rate * random.uniform(0.8, 1.2)  # تحسين عشوائي
-        new_score = min(current_score + improvement_amount, config['target_score'])
-        
-        # تحديث النقاط
-        self.improvement_areas[area]['current_score'] = round(new_score, 2)
-        self.improvement_areas[area]['last_improvement'] = datetime.now().isoformat()
-        
-        # تسجيل التحسين
+        new_score = config['current_score']
         improvement_record = {
             'area': area,
-            'old_score': current_score,
             'new_score': new_score,
-            'improvement': round(new_score - current_score, 2),
             'type': improvement_type,
             'timestamp': datetime.now().isoformat()
         }
-        
         self.improvement_data['improvement_history'].append(improvement_record)
         self.improvement_data['total_improvements'] += 1
         self.improvement_data['last_improvement_date'] = datetime.now().isoformat()
-        
-        # حفظ البيانات
         self._save_data()
-        
         return {
             'success': True,
             'area': area,
-            'old_score': current_score,
             'new_score': new_score,
-            'improvement': round(new_score - current_score, 2),
             'timestamp': datetime.now().isoformat()
         }
     
     def auto_improve(self):
-        """التحسين التلقائي"""
-        improvements_made = []
-        
-        # تحسين المجالات ذات الأولوية العالية
-        weaknesses = self._identify_weaknesses()
-        for weakness in weaknesses[:2]:  # تحسين أول مجالين
-            result = self.implement_improvement(weakness['area'], 'auto')
-            if result['success']:
-                improvements_made.append(result)
-        
-        # تحسين عشوائي لمجال آخر
-        available_areas = [area for area in self.improvement_areas.keys() 
-                          if area not in [w['area'] for w in weaknesses[:2]]]
-        
-        if available_areas:
-            random_area = random.choice(available_areas)
-            result = self.implement_improvement(random_area, 'auto')
-            if result['success']:
-                improvements_made.append(result)
-        
+        """التحسين التلقائي — refresh all scores from DB metrics."""
+        self._refresh_scores_from_db()
+        self._save_data()
         return {
-            'improvements_made': len(improvements_made),
-            'details': improvements_made,
+            'improvements_made': 1,
+            'details': [{'area': k, 'score': v['current_score']} for k, v in self.improvement_areas.items()],
             'timestamp': datetime.now().isoformat()
         }
     

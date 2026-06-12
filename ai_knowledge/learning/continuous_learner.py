@@ -20,6 +20,7 @@ from typing import Dict, List
 import requests
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
+from urllib.parse import quote
 
 logger = logging.getLogger(__name__)
 
@@ -89,8 +90,8 @@ class ContinuousLearner:
             try:
                 with open(history_file, 'r', encoding='utf-8') as f:
                     return json.load(f)
-            except:
-                pass
+            except (json.JSONDecodeError, OSError) as e:
+                logger.debug(f"Could not load history: {e}")
         
         return []
     
@@ -116,7 +117,8 @@ class ContinuousLearner:
             {success: bool, content: str}
         """
         try:
-            url = f"https://{lang}.wikipedia.org/api/rest_v1/page/summary/{topic.replace(' ', '_')}"
+            topic_encoded = quote(topic.replace(' ', '_'), safe='')
+            url = f"https://{lang}.wikipedia.org/api/rest_v1/page/summary/{topic_encoded}"
             
             response = self.session.get(url, timeout=10)
             
@@ -273,79 +275,10 @@ def get_continuous_learner():
 
 
 # =====================
-# Self-test integration
+# Self-test integration — delegates to consolidated learning_engine
 # =====================
 
-def evaluate_and_learn(qa_tests: list, ai_service=None):
-    """Run QA tests, evaluate by keyword heuristics, and learn from outcomes.
-    qa_tests: list of dicts: {"question": str, "expected_keywords": [str], "context": dict}
-    ai_service: optional AIService-like with ask_genius and get_learning_system
-    Returns: results list with success flags and scores
-    """
-    try:
-        from services.ai_service import AIService as DefaultAI
-    except Exception:
-        DefaultAI = None
-    svc = ai_service or DefaultAI
-    results = []
-    if not svc:
-        return results
-    memory = None
-    try:
-        memory = svc.get_learning_system()
-    except Exception:
-        memory = None
-    for test in qa_tests:
-        q = test.get("question", "").strip()
-        expected = [k.lower() for k in (test.get("expected_keywords") or [])]
-        context = test.get("context") or {}
-        if not q:
-            continue
-        try:
-            ans = svc.ask_genius(q, context=context)
-            text = "" if ans is None else (ans.get("answer") if isinstance(ans, dict) else str(ans))
-            text_l = (text or "").lower()
-            hits = sum(1 for k in expected if k in text_l)
-            score = 0.0 if not expected else hits / len(expected)
-            success = score >= 0.6 or (hits >= 2 and len(expected) >= 3)
-            results.append({
-                "question": q,
-                "expected": expected,
-                "answer": text,
-                "hits": hits,
-                "score": round(score, 3),
-                "success": success,
-            })
-            if memory:
-                try:
-                    memory.learn_from_interaction(
-                        question=q,
-                        response=text,
-                        user_feedback=5 if success else 2,
-                        context={"expected": expected, "score": score}
-                    )
-                except Exception:
-                    pass
-        except Exception as e:
-            results.append({
-                "question": q,
-                "expected": expected,
-                "answer": f"ERROR: {e}",
-                "hits": 0,
-                "score": 0.0,
-                "success": False,
-            })
-            if memory:
-                try:
-                    memory.learn_from_interaction(
-                        question=q,
-                        response=str(e),
-                        user_feedback=1,
-                        context={"expected": expected, "error": True}
-                    )
-                except Exception:
-                    pass
-    return results
+from ai_knowledge.learning_engine import evaluate_and_learn  # noqa: F401
 
 
 # إنشاء instance عام

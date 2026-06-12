@@ -9,87 +9,36 @@ Old import paths still work via backward-compatible shims in the original files.
 
 # ===== Consolidated from: learning/quick_learner.py =====
 """
-🧠 Quick Learner - المتعلم السريع
-نظام بسيط للتعلم الفوري من ملفات JSON وتصحيحات المستخدم
+QuickLearner - delegates to DB-backed learning/quick_learner.py
 """
-import json
-import os
-import difflib
-from typing import Dict, Optional
 import logging
 
 logger = logging.getLogger(__name__)
 
 class QuickLearner:
-    def __init__(self):
-        from ai_knowledge import get_knowledge_path
-        self.knowledge_file = get_knowledge_path('quick_knowledge.json')
-        self.knowledge_base = self._load_knowledge()
-    
-    def _load_knowledge(self) -> Dict:
-        """تحميل المعرفة السريعة"""
-        if os.path.exists(self.knowledge_file):
-            try:
-                with open(self.knowledge_file, 'r', encoding='utf-8') as f:
-                    return json.load(f)
-            except Exception as e:
-                logger.error(f"Failed to load quick knowledge: {e}")
-                return {}
-        return {}
-    
-    def save_knowledge(self):
-        """حفظ المعرفة"""
-        try:
-            with open(self.knowledge_file, 'w', encoding='utf-8') as f:
-                json.dump(self.knowledge_base, f, ensure_ascii=False, indent=2)
-        except Exception as e:
-            logger.error(f"Failed to save quick knowledge: {e}")
-            
+    """Delegates DB operations to the AiMemory-backed version in learning/quick_learner.py."""
+
+    _klass = None
+
+    def _impl(self):
+        if QuickLearner._klass is None:
+            from ai_knowledge.learning.quick_learner import QuickLearner as _QL
+            QuickLearner._klass = _QL
+        return QuickLearner._klass()
+
     def learn(self, question: str, answer: str, category: str = 'general',
               tenant_id: int = None):
-        """تعلم معلومة جديدة"""
-        question_key = question.strip().lower()
-        entry = {
-            'answer': answer,
-            'category': category,
-            'confidence': 1.0,
-        }
-        if tenant_id is not None:
-            entry['tenant_id'] = tenant_id
-        self.knowledge_base[question_key] = entry
-        self.save_knowledge()
-        return True
-        
-    def get_answer(self, question: str, tenant_id: int = None) -> Optional[str]:
-        """البحث عن إجابة - مع مطابقة ضبابية وعزل حسب المستأجر"""
-        key = question.strip().lower()
-        
-        # 1. مطابقة تامة (ضمن نطاق المستأجر إن وجد)
-        if key in self.knowledge_base:
-            entry = self.knowledge_base[key]
-            if tenant_id is None or entry.get('tenant_id') is None or entry.get('tenant_id') == tenant_id:
-                return entry['answer']
-        
-        # 2. مطابقة تامة في جميع الإدخالات (إذا لم نجد في نطاق المستأجر)
-        if key in self.knowledge_base:
-            return self.knowledge_base[key]['answer']
-        
-        # 3. مطابقة جزئية
-        candidates = []
-        for k, v in self.knowledge_base.items():
-            if tenant_id is not None and v.get('tenant_id') is not None and v.get('tenant_id') != tenant_id:
-                continue
-            if k in key or key in k:
-                return v['answer']
-            candidates.append(k)
-        
-        # 4. مطابقة ضبابية باستخدام difflib
-        if candidates:
-            close = difflib.get_close_matches(key, candidates, n=1, cutoff=0.6)
-            if close:
-                return self.knowledge_base[close[0]]['answer']
-        
-        return None
+        return self._impl().learn(question, answer, category, tenant_id)
+
+    def get_answer(self, question: str, tenant_id: int = None):
+        return self._impl().get_answer(question, tenant_id)
+
+    def save_knowledge(self):
+        pass  # DB-backed — no-op
+
+    @property
+    def knowledge_base(self):
+        return self._impl().knowledge_base
 
 # Singleton
 quick_learner = QuickLearner()
@@ -163,7 +112,7 @@ class AutoRetrainingScheduler:
                     history = json.load(f)
                     if history:
                         return history[-1]
-        except:
+        except (json.JSONDecodeError, OSError):
             pass
         return None
     
@@ -224,6 +173,7 @@ from typing import Dict, List
 import requests
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
+from urllib.parse import quote
 
 logger = logging.getLogger(__name__)
 
@@ -293,7 +243,7 @@ class ContinuousLearner:
             try:
                 with open(history_file, 'r', encoding='utf-8') as f:
                     return json.load(f)
-            except:
+            except (json.JSONDecodeError, OSError):
                 pass
         
         return []
@@ -320,7 +270,8 @@ class ContinuousLearner:
             {success: bool, content: str}
         """
         try:
-            url = f"https://{lang}.wikipedia.org/api/rest_v1/page/summary/{topic.replace(' ', '_')}"
+            topic_encoded = quote(topic.replace(' ', '_'), safe='')
+            url = f"https://{lang}.wikipedia.org/api/rest_v1/page/summary/{topic_encoded}"
             
             response = self.session.get(url, timeout=10)
             
@@ -488,7 +439,7 @@ def evaluate_and_learn(qa_tests: list, ai_service=None):
     """
     try:
         from services.ai_service import AIService as DefaultAI
-    except Exception:
+    except ImportError:
         DefaultAI = None
     svc = ai_service or DefaultAI
     results = []
@@ -497,7 +448,8 @@ def evaluate_and_learn(qa_tests: list, ai_service=None):
     memory = None
     try:
         memory = svc.get_learning_system()
-    except Exception:
+    except Exception as e:
+        logger.debug(f"Cannot get learning system: {e}")
         memory = None
     for test in qa_tests:
         q = test.get("question", "").strip()
@@ -528,8 +480,8 @@ def evaluate_and_learn(qa_tests: list, ai_service=None):
                         user_feedback=5 if success else 2,
                         context={"expected": expected, "score": score}
                     )
-                except Exception:
-                    pass
+                except Exception as learn_e:
+                    logger.debug(f"Feedback learn failed: {learn_e}")
         except Exception as e:
             results.append({
                 "question": q,
@@ -547,8 +499,8 @@ def evaluate_and_learn(qa_tests: list, ai_service=None):
                         user_feedback=1,
                         context={"expected": expected, "error": True}
                     )
-                except Exception:
-                    pass
+                except Exception as inner_e:
+                    logger.debug(f"Error feedback learn failed: {inner_e}")
     return results
 
 
@@ -848,7 +800,7 @@ class ExternalLearningSystem:
             try:
                 with open(learned_file, 'r', encoding='utf-8') as f:
                     return json.load(f)
-            except:
+            except (json.JSONDecodeError, OSError):
                 pass
         
         return {

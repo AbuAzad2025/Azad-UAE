@@ -47,8 +47,8 @@ def intelligent_response(message: str, user_id: int = None, context: dict = None
                 try:
                     from ai_knowledge.trainer import trainer
                     trainer.learn_from_interaction(message, result.message, user_id, success=True)
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.debug(f"Train from action failed: {e}")
                 return result.message
             if result.needs_permission:
                 return f"⚠️ {result.message}\n\nيمكنك سؤالي عن معلومات النظام بدلاً من ذلك."
@@ -263,7 +263,7 @@ def ask_azad_enhanced(question: str, context: dict = None, user_id: int = None) 
     try:
         from ai_knowledge.trainer import trainer
         trainer.learn_from_interaction(question, result["answer"], user_id, success=(result["source"] != "error"))
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug(f"Train from question failed: {e}")
 
     return result

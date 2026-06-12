@@ -13,7 +13,10 @@ import glob
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-os.environ.setdefault("DATABASE_URL", "postgresql+psycopg2://postgres:123@localhost:5432/azad_uae")
+if "DATABASE_URL" not in os.environ:
+    print("ERROR: DATABASE_URL environment variable is not set.")
+    print("Usage: set DATABASE_URL=postgresql+psycopg2://user:pass@host/dbname")
+    sys.exit(1)
 os.environ.setdefault("SKIP_SYSTEM_INTEGRITY", "1")
 
 from app import create_app
@@ -243,7 +246,7 @@ def seed_documents(conn):
     return count
 
 
-def seed_quick_learner():
+def seed_quick_learner(tenant_id: int = None):
     """Seed trainer's quick_learner from expertise files."""
     try:
         from ai_knowledge.trainer import trainer
@@ -257,7 +260,7 @@ def seed_quick_learner():
                 topic = area.get("topic", "")
                 knowledge = area.get("knowledge", "")
                 if topic and knowledge:
-                    trainer.learn_from_interaction(topic, knowledge, success=True)
+                    trainer.learn_from_interaction(topic, knowledge, success=True, tenant_id=tenant_id)
         print(f"  Seeded quick_learner from {len(files)} expertise files")
         return True
     except Exception as e:
@@ -289,7 +292,8 @@ def main():
             conn.commit()
 
     print("\n📌 Seeding quick_learner (local AI)...")
-    seed_quick_learner()
+    with app.app_context():
+        seed_quick_learner()
 
     print("\n" + "=" * 60)
     print(f"  Done: {mem_count} memories, {doc_count} docs, {int_count} interactions, {exp_count} expertise")

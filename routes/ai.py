@@ -468,7 +468,8 @@ def chat():
 
     try:
         from ai_knowledge.trainer import trainer
-        trainer.learn_from_interaction(message, str(response)[:500], current_user.id, success=True)
+        trainer.learn_from_interaction(message, str(response)[:500], current_user.id, success=True,
+                                        tenant_id=getattr(current_user, 'tenant_id', None))
     except Exception:
         pass
 

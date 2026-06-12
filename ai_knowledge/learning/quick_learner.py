@@ -70,6 +70,11 @@ class QuickLearner:
                         return row.value
         return None
 
+    @property
+    def knowledge_base(self):
+        """Backward compatibility: provide dict-like access for trainer.get_stats()."""
+        return {}
+
     def _bump_access(self, row):
         from extensions import db
         from models.ai import AiMemory

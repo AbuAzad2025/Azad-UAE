@@ -6,7 +6,6 @@ import sys
 import pytest
 from sqlalchemy import text as sa_text
 
-# Add project root to path
 PROJECT_ROOT = os.path.dirname(os.path.dirname(__file__))
 sys.path.insert(0, PROJECT_ROOT)
 
@@ -24,12 +23,10 @@ os.environ.setdefault("SKIP_SYSTEM_INTEGRITY", "1")
 
 
 class TestConfig:
-    """Test configuration that works with SQLite or PostgreSQL (CI)."""
     TESTING = True
     SECRET_KEY = "test-secret-key"
     SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL", "sqlite:///:memory:")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    # SQLite-only connect arg; leave empty for PostgreSQL
     SQLALCHEMY_ENGINE_OPTIONS = (
         {"connect_args": {"check_same_thread": False}}
         if os.environ.get("DATABASE_URL", "sqlite").startswith("sqlite")
@@ -86,7 +83,6 @@ def app():
     from extensions import db
     from services.logging_core import LoggingCore
 
-    # Disable error audit logging during tests to avoid DB locked errors
     original_log_error = LoggingCore.log_error
     original_log_frontend = LoggingCore.log_frontend_error
     LoggingCore.log_error = lambda *args, **kwargs: None
@@ -98,26 +94,22 @@ def app():
         db.create_all()
         yield app
         db.session.remove()
-        # Disable FK constraints before drop to avoid SAWarning on SQLite FK cycles
         if str(db.engine.url).startswith("sqlite"):
             with db.engine.connect() as conn:
                 conn.execute(sa_text("PRAGMA foreign_keys=OFF"))
         db.drop_all()
 
-    # Restore original functions
     LoggingCore.log_error = original_log_error
     LoggingCore.log_frontend_error = original_log_frontend
 
 
 @pytest.fixture
 def client(app):
-    """A test client for the app."""
     return app.test_client()
 
 
 @pytest.fixture
 def db_session(app):
-    """Yield a database session inside the app context."""
     from extensions import db
     with app.app_context():
         yield db.session
@@ -125,13 +117,11 @@ def db_session(app):
 
 @pytest.fixture
 def runner(app):
-    """A test CLI runner for the app."""
     return app.test_cli_runner()
 
 
 @pytest.fixture
 def sample_tenant(db_session):
-    """Create a sample tenant for tests."""
     import uuid
     from models import Tenant
     unique = str(uuid.uuid4())[:8]
@@ -150,8 +140,28 @@ def sample_tenant(db_session):
 
 
 @pytest.fixture
-def sample_role(db_session):
-    """Create a sample role for tests."""
+def sample_permissions(db_session):
+    """Create all commonly needed permissions for tests (idempotent)."""
+    from models import Permission
+    codes = [
+        "admin", "view_reports", "manage_sales", "manage_purchases",
+        "manage_expenses", "manage_payroll", "manage_payments", "manage_products",
+        "manage_customers", "manage_suppliers", "manage_inventory",
+    ]
+    existing = {p.code: p for p in Permission.query.all()}
+    perms = []
+    for code in codes:
+        p = existing.get(code)
+        if p is None:
+            p = Permission(code=code, name=code, name_ar=code, category="test")
+            db_session.add(p)
+        perms.append(p)
+    db_session.commit()
+    return perms
+
+
+@pytest.fixture
+def sample_role(db_session, sample_permissions):
     import uuid
     from models import Role
     unique = str(uuid.uuid4())[:8]
@@ -160,14 +170,33 @@ def sample_role(db_session):
         slug=f"manager-{unique}",
         is_active=True,
     )
+    for p in sample_permissions:
+        role.permissions.append(p)
     db_session.add(role)
     db_session.commit()
     return role
 
 
 @pytest.fixture
-def sample_user(db_session, sample_tenant, sample_role):
-    """Create a sample user for tests."""
+def sample_branch(db_session, sample_tenant):
+    """Creates a sample branch for a tenant."""
+    from models import Branch
+    import uuid
+    unique = str(uuid.uuid4())[:8]
+    branch = Branch(
+        tenant_id=sample_tenant.id,
+        name=f"Main Branch {unique}",
+        code=f"BR{unique[:4].upper()}",
+        is_active=True,
+        is_main=True,
+    )
+    db_session.add(branch)
+    db_session.commit()
+    return branch
+
+
+@pytest.fixture
+def sample_user(db_session, sample_tenant, sample_role, sample_branch):
     import uuid
     from models import User
     unique = str(uuid.uuid4())[:8]
@@ -177,6 +206,7 @@ def sample_user(db_session, sample_tenant, sample_role):
         full_name="Test User",
         tenant_id=sample_tenant.id,
         role_id=sample_role.id,
+        branch_id=sample_branch.id,
         is_active=True,
         is_owner=False,
     )
@@ -187,11 +217,244 @@ def sample_user(db_session, sample_tenant, sample_role):
 
 
 @pytest.fixture
+def sample_owner(db_session):
+    import uuid
+    from models import Tenant, Role, User
+    unique = str(uuid.uuid4())[:8]
+    tenant = Tenant(
+        name=f"Owner Co {unique}",
+        name_ar="شركة المالك",
+        slug=f"owner-co-{unique}",
+        email=f"owner-{unique}@example.com",
+        country="AE",
+        subscription_plan="basic",
+    )
+    db_session.add(tenant)
+    db_session.commit()
+    role = Role(name="Owner", slug="owner", is_active=True)
+    db_session.add(role)
+    db_session.commit()
+    user = User(
+        username=f"owner-{unique}",
+        email=f"owner-{unique}@example.com",
+        full_name="Platform Owner",
+        tenant_id=tenant.id,
+        role_id=role.id,
+        is_active=True,
+        is_owner=True,
+    )
+    user.set_password("password123")
+    db_session.add(user)
+    db_session.commit()
+    return user
+
+
+@pytest.fixture
 def auth_client(client, sample_user):
-    """A logged-in test client."""
-    from flask_login import login_user
-    from models import User
-    with client.session_transaction() as sess:
-        # Simulate login
-        pass
+    """A logged-in test client for tenant users via actual login."""
+    from flask import session
+    with client:
+        resp = client.post('/auth/login', data={
+            'username': sample_user.username,
+            'password': 'password123',
+        }, follow_redirects=True)
     return client
+
+
+@pytest.fixture
+def owner_client(client, sample_owner):
+    """A logged-in test client for platform owner via actual login."""
+    with client:
+        resp = client.post('/auth/login', data={
+            'username': sample_owner.username,
+            'password': 'password123',
+        }, follow_redirects=True)
+    return client
+
+
+@pytest.fixture
+def sample_supplier(db_session, sample_tenant):
+    from models import Supplier
+    supplier = Supplier(
+        tenant_id=sample_tenant.id,
+        name="Test Supplier",
+        email="supplier@test.com",
+        phone="0555000000",
+    )
+    db_session.add(supplier)
+    db_session.commit()
+    return supplier
+
+
+@pytest.fixture
+def sample_customer(db_session, sample_tenant):
+    from models import Customer
+    customer = Customer(
+        tenant_id=sample_tenant.id,
+        name="Test Customer",
+        email="customer@test.com",
+        phone="0555000001",
+    )
+    db_session.add(customer)
+    db_session.commit()
+    return customer
+
+
+@pytest.fixture
+def sample_purchase(db_session, sample_tenant, sample_supplier, sample_user):
+    from decimal import Decimal
+    from datetime import datetime, timezone
+    from models import Purchase
+    p = Purchase(
+        tenant_id=sample_tenant.id,
+        purchase_number="PUR-TEST-001",
+        supplier_id=sample_supplier.id,
+        supplier_name="Test Supplier",
+        purchase_date=datetime.now(timezone.utc),
+        user_id=sample_user.id,
+        subtotal=Decimal("100.000"),
+        total_amount=Decimal("105.000"),
+        amount=Decimal("105.000"),
+        amount_aed=Decimal("105.000"),
+    )
+    db_session.add(p)
+    db_session.commit()
+    return p
+
+
+@pytest.fixture
+def sample_expense_category(db_session, sample_tenant):
+    from models import ExpenseCategory
+    cat = ExpenseCategory(tenant_id=sample_tenant.id, name="Utilities")
+    db_session.add(cat)
+    db_session.commit()
+    return cat
+
+
+@pytest.fixture
+def sample_expense(db_session, sample_tenant, sample_expense_category, sample_user):
+    from datetime import datetime, timezone
+    from decimal import Decimal
+    from models import Expense
+    e = Expense(
+        tenant_id=sample_tenant.id,
+        expense_number="EXP-TEST-001",
+        category_id=sample_expense_category.id,
+        description="Test expense",
+        expense_date=datetime.now(timezone.utc),
+        user_id=sample_user.id,
+        amount=Decimal("500.000"),
+        amount_aed=Decimal("500.000"),
+        payment_method="cash",
+    )
+    db_session.add(e)
+    db_session.commit()
+    return e
+
+
+@pytest.fixture
+def sample_employee(db_session, sample_tenant):
+    from models import Employee
+    emp = Employee(
+        tenant_id=sample_tenant.id,
+        name="Test Employee",
+        basic_salary=5000,
+    )
+    db_session.add(emp)
+    db_session.commit()
+    return emp
+
+
+@pytest.fixture
+def sample_payroll_transaction(db_session, sample_tenant, sample_employee):
+    from datetime import datetime, timezone
+    from decimal import Decimal
+    from models import PayrollTransaction
+    pt = PayrollTransaction(
+        tenant_id=sample_tenant.id,
+        employee_id=sample_employee.id,
+        month=6,
+        year=2026,
+        basic_amount=Decimal("5000.00"),
+        net_salary=Decimal("5000.00"),
+        status="paid",
+    )
+    db_session.add(pt)
+    db_session.commit()
+    return pt
+
+
+@pytest.fixture
+def sample_cheque(db_session, sample_tenant):
+    from datetime import date
+    from decimal import Decimal
+    from models import Cheque
+    ch = Cheque(
+        tenant_id=sample_tenant.id,
+        cheque_number="CHQ-TEST-001",
+        cheque_bank_number="BNK-001",
+        cheque_type="incoming",
+        bank_name="Test Bank",
+        amount=Decimal("10000.00"),
+        amount_aed=Decimal("10000.00"),
+        issue_date=date.today(),
+        due_date=date.today(),
+    )
+    db_session.add(ch)
+    db_session.commit()
+    return ch
+
+
+@pytest.fixture
+def sample_sale(db_session, sample_tenant, sample_customer, sample_user):
+    from datetime import datetime, timezone
+    from decimal import Decimal
+    from models import Sale
+    s = Sale(
+        tenant_id=sample_tenant.id,
+        sale_number="SAL-TEST-001",
+        customer_id=sample_customer.id,
+        seller_id=sample_user.id,
+        sale_date=datetime.now(timezone.utc),
+        subtotal=Decimal("200.000"),
+        total_amount=Decimal("210.000"),
+        amount=Decimal("210.000"),
+        amount_aed=Decimal("210.000"),
+        paid_amount=Decimal("0"),
+        balance_due=Decimal("210.000"),
+    )
+    db_session.add(s)
+    db_session.commit()
+    return s
+
+
+@pytest.fixture
+def sample_warehouse(db_session, sample_tenant):
+    from models import Warehouse
+    w = Warehouse(
+        tenant_id=sample_tenant.id,
+        name="Main Warehouse",
+        name_ar="المستودع الرئيسي",
+    )
+    db_session.add(w)
+    db_session.commit()
+    return w
+
+
+@pytest.fixture
+def sample_product(db_session, sample_tenant, sample_warehouse):
+    from decimal import Decimal
+    from models import Product
+    p = Product(
+        tenant_id=sample_tenant.id,
+        name="Test Product",
+        sku="SKU-TEST-001",
+        cost_price=Decimal("50.000"),
+        regular_price=Decimal("100.000"),
+    )
+    db_session.add(p)
+    db_session.commit()
+    return p
+
+
+

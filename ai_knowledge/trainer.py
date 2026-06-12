@@ -323,7 +323,8 @@ class Trainer:
             logger.info(f"Trainer: seeded {count} new Q&A pairs")
 
     def learn_from_interaction(self, question: str, answer: str, user_id: int = None,
-                                success: bool = True, feedback: Optional[str] = None):
+                                success: bool = True, feedback: Optional[str] = None,
+                                tenant_id: int = None):
         """Learn from a real user interaction."""
         if not question or not answer:
             return
@@ -333,9 +334,9 @@ class Trainer:
 
         # Save to quick_learner for instant recall
         ql = self._get_ql()
-        existing = ql.get_answer(question)
+        existing = ql.get_answer(question, tenant_id=tenant_id)
         if existing is None and success:
-            ql.learn(question, answer, category='learned')
+            ql.learn(question, answer, category='learned', tenant_id=tenant_id)
 
         # Save to AzadLearningSystem for pattern analysis
         try:
@@ -344,15 +345,17 @@ class Trainer:
                 question=question,
                 response=answer,
                 user_feedback=feedback or ("success" if success else "failure"),
+                tenant_id=tenant_id,
                 context={"user_id": user_id, "source": "trainer"}
             )
         except Exception as e:
             logger.debug(f"Trainer: learning_system error (non-critical): {e}")
 
-    def train_from_feedback(self, question: str, correct_answer: str, user_id: int = None):
+    def train_from_feedback(self, question: str, correct_answer: str, user_id: int = None,
+                            tenant_id: int = None):
         """Train from explicit correction by user."""
         ql = self._get_ql()
-        ql.learn(question, correct_answer, category='corrected')
+        ql.learn(question, correct_answer, category='corrected', tenant_id=tenant_id)
         logger.info(f"Trainer: corrected answer for '{question[:50]}'")
         try:
             from ai_knowledge.core.learning_system import learning_system
@@ -360,21 +363,27 @@ class Trainer:
                 question=question,
                 response=correct_answer,
                 user_feedback="correction",
+                tenant_id=tenant_id,
                 context={"user_id": user_id, "source": "feedback"}
             )
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"Trainer: feedback save failed (non-critical): {e}")
 
     def get_stats(self) -> dict:
         """Return training statistics."""
-        ql = self._get_ql()
-        kb = getattr(ql, 'knowledge_base', {})
-        categories = {}
-        for k, v in kb.items():
-            cat = v.get('category', 'unknown')
-            categories[cat] = categories.get(cat, 0) + 1
+        from extensions import db
+        from models.ai import AiMemory
+        total = db.session.query(AiMemory).filter(
+            AiMemory.source.in_(["quick_learner", "system", "expertise", "learned", "corrected"])
+        ).count()
+        cat_rows = db.session.query(
+            AiMemory.category, db.func.count(AiMemory.id)
+        ).filter(
+            AiMemory.source.in_(["quick_learner", "system", "expertise", "learned", "corrected"])
+        ).group_by(AiMemory.category).all()
+        categories = {c: n for c, n in cat_rows}
         return {
-            "total_qa": len(kb),
+            "total_qa": total,
             "categories": categories,
             "seeded": self._seeded,
         }
