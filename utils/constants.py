@@ -59,17 +59,17 @@ USER_ROLES = [
 ]
 
 CURRENCIES = [
-    ('AED', {'ar': 'درهم إماراتي', 'en': 'UAE Dirham', 'symbol': 'د.إ'}),
+    ('ILS', {'ar': 'شيكل فلسطيني', 'en': 'Palestinian Shekel', 'symbol': '₪'}),
+    ('JOD', {'ar': 'دينار أردني', 'en': 'Jordanian Dinar', 'symbol': 'د.أ'}),
     ('USD', {'ar': 'دولار أمريكي', 'en': 'US Dollar', 'symbol': '$'}),
+    ('AED', {'ar': 'درهم إماراتي', 'en': 'UAE Dirham', 'symbol': 'د.إ'}),
     ('EUR', {'ar': 'يورو', 'en': 'Euro', 'symbol': '€'}),
     ('GBP', {'ar': 'جنيه إسترليني', 'en': 'British Pound', 'symbol': '£'}),
     ('SAR', {'ar': 'ريال سعودي', 'en': 'Saudi Riyal', 'symbol': 'ر.س'}),
-    ('JOD', {'ar': 'دينار أردني', 'en': 'Jordanian Dinar', 'symbol': 'د.أ'}),
     ('KWD', {'ar': 'دينار كويتي', 'en': 'Kuwaiti Dinar', 'symbol': 'د.ك'}),
     ('QAR', {'ar': 'ريال قطري', 'en': 'Qatari Riyal', 'symbol': 'ر.ق'}),
-    ('OMR', {'ar': 'ريال عماني', 'en': 'Omani Rial', 'symbol': 'ر.ع'}),
+    ('OMR', {'ar': 'ريال عماني', 'en': 'Omani Riyal', 'symbol': 'ر.ع'}),
     ('BHD', {'ar': 'دينار بحريني', 'en': 'Bahraini Dinar', 'symbol': 'د.ب'}),
-    ('ILS', {'ar': 'شيكل إسرائيلي', 'en': 'Israeli Shekel', 'symbol': '₪'}),
 ]
 
 PRODUCT_UNITS = [
@@ -82,6 +82,9 @@ PRODUCT_UNITS = [
 ]
 
 COUNTRIES = [
+    ('PS', {'ar': 'فلسطين', 'en': 'Palestine'}),
+    ('JO', {'ar': 'الأردن', 'en': 'Jordan'}),
+    ('IL', {'ar': 'إسرائيل', 'en': 'Israel'}),
     ('AE', {'ar': 'الإمارات', 'en': 'UAE'}),
     ('SA', {'ar': 'السعودية', 'en': 'Saudi Arabia'}),
     ('DE', {'ar': 'ألمانيا', 'en': 'Germany'}),
@@ -113,7 +116,7 @@ SALE_SOURCES = ('internal', 'online_store')
 CHEQUE_STATUSES = ('pending', 'deposited', 'cleared', 'bounced', 'cancelled', 'under_collection')
 PAYMENT_TYPES = (
     'sale_payment', 'supplier_payment', 'bill_payment', 'refund',
-    'customer_payment', 'manual',
+    'customer_payment', 'manual', 'prepayment',
 )
 RECEIPT_SOURCE_TYPES = ('sale', 'manual', 'refund', 'adjustment', 'other')
 PAYMENT_METHOD_CODES = ('cash', 'card', 'bank_transfer', 'cheque', 'e_wallet')

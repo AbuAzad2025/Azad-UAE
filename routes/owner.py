@@ -2086,7 +2086,7 @@ def company_info():
             tenant.address_ar = request.form.get('address_ar', '').strip()
             tenant.address_en = request.form.get('address_en', '').strip()
             tenant.city = request.form.get('city', '').strip()
-            tenant.country = request.form.get('country', 'UAE')
+            tenant.country = request.form.get('country', 'PS')
             tenant.phone_1 = request.form.get('phone_1', '').strip()
             tenant.phone_2 = request.form.get('phone_2', '').strip()
             tenant.mobile = request.form.get('mobile', '').strip()
@@ -2222,8 +2222,11 @@ def system_config():
                 pass
 
             # General
-            default_currency = request.form.get('default_currency', 'AED')
-            settings.default_currency = default_currency
+            try:
+                default_currency = request.form.get('default_currency', 'ILS')
+                settings.default_currency = default_currency
+            except Exception:
+                pass
             try:
                 from models import Tenant
                 tenant = Tenant.get_current()
@@ -3097,7 +3100,7 @@ def tax_settings():
 
     if request.method == 'POST':
         tenant.enable_tax = request.form.get('enable_tax') == 'on'
-        tenant.vat_country = (request.form.get('vat_country') or 'AE').strip().upper()[:2]
+        tenant.vat_country = (request.form.get('vat_country') or 'PS').strip().upper()[:2]
         rate = request.form.get('default_tax_rate', type=float)
         if rate is None and tenant.enable_tax:
             rate = float(suggested_rate_for_country(tenant.vat_country))

@@ -2,7 +2,7 @@ from config import Config
 
 
 def get_system_default_currency() -> str:
-    return getattr(Config, 'DEFAULT_CURRENCY', None) or 'AED'
+    return getattr(Config, 'DEFAULT_CURRENCY', None) or 'ILS'
 
 
 def context_aware_default_currency() -> str:

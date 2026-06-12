@@ -92,9 +92,11 @@ class SaleService:
             )
             paid_amount_aed = Decimal('0')
             
+            from utils.currency_utils import get_system_default_currency
+            base_currency = get_system_default_currency()
             rate_info = ExchangeRateService.resolve_exchange_rate_for_transaction(
                 currency,
-                'AED',
+                base_currency,
                 user_rate=user_exchange_rate,
             )
             exchange_rate = Decimal(str(rate_info['rate']))
@@ -318,6 +320,7 @@ class SaleService:
                 try:
                     db.session.commit()
                 except Exception:
+                    current_app.logger.exception('Deferred sale commit failed for %s', sale.sale_number)
                     db.session.rollback()
                     raise
 
@@ -329,6 +332,7 @@ class SaleService:
             try:
                 db.session.commit()
             except Exception:
+                current_app.logger.exception('Sale commit failed for %s', sale.sale_number)
                 db.session.rollback()
                 raise
 
@@ -337,9 +341,9 @@ class SaleService:
             
             return sale
         
-        except Exception as e:
+        except Exception:
+            current_app.logger.exception('Sale creation failed for customer %s', getattr(customer, 'id', None))
             db.session.rollback()
-            current_app.logger.error("Sale creation failed (%s)", e.__class__.__name__)
             raise
     
     @staticmethod
@@ -382,9 +386,10 @@ class SaleService:
 
             sale.paid_amount = paid_amount
             sale.paid_amount_aed = paid_aed
+            overpayment_aed = Decimal('0')
             if paid_aed > sale.amount_aed:
-                overpayment = paid_aed - sale.amount_aed
-                payment_note = f"\n[دفع زائد] مبلغ {overpayment} AED سُجّل كرصيد للزبون"
+                overpayment_aed = paid_aed - sale.amount_aed
+                payment_note = f"\n[دفع زائد] مبلغ {overpayment_aed} AED سُجّل كرصيد للزبون"
                 sale.notes = (sale.notes or '') + payment_note
 
             payment_currency = payment_data.get('currency', get_system_default_currency())
@@ -395,18 +400,66 @@ class SaleService:
                 )
                 sale.notes = (sale.notes or '') + payment_note
 
-            SaleService.create_payment_for_sale(
-                sale=sale,
-                amount=payment_data['amount'],
-                payment_method=payment_data['payment_method'],
-                currency=payment_data.get('currency', get_system_default_currency()),
-                exchange_rate=payment_data.get('exchange_rate', 1.0),
-                reference_number=payment_data.get('reference_number'),
-                cheque_number=payment_data.get('cheque_number'),
-                cheque_date=payment_data.get('cheque_date'),
-                bank_name=payment_data.get('bank_name'),
-                notes=payment_data.get('notes'),
-            )
+            if overpayment_aed > Decimal('0'):
+                # Cap sale payment at invoice amount; remainder becomes prepayment
+                overpayment_amount = (overpayment_aed / payment_exchange_decimal).quantize(
+                    Decimal('0.001'), rounding=ROUND_HALF_UP
+                )
+                sale_payment_amount = paid_amount - overpayment_amount
+                SaleService.create_payment_for_sale(
+                    sale=sale,
+                    amount=sale_payment_amount,
+                    payment_method=payment_data['payment_method'],
+                    currency=payment_currency,
+                    exchange_rate=payment_data.get('exchange_rate', 1.0),
+                    reference_number=payment_data.get('reference_number'),
+                    cheque_number=payment_data.get('cheque_number'),
+                    cheque_date=payment_data.get('cheque_date'),
+                    bank_name=payment_data.get('bank_name'),
+                    notes=payment_data.get('notes'),
+                )
+                # Record excess as customer prepayment (unlinked to sale for reuse)
+                from models import Payment
+                from utils.helpers import generate_number
+                prepayment = Payment(
+                    tenant_id=getattr(sale, 'tenant_id', None),
+                    payment_number=generate_number(
+                        'PRE',
+                        Payment,
+                        'payment_number',
+                        branch_id=sale.branch_id,
+                        tenant_id=getattr(sale, 'tenant_id', None),
+                    ),
+                    payment_type='prepayment',
+                    direction='incoming',
+                    customer_id=sale.customer_id,
+                    amount=overpayment_amount,
+                    currency=payment_currency,
+                    exchange_rate=payment_exchange_decimal,
+                    amount_aed=overpayment_aed,
+                    payment_method=payment_data['payment_method'],
+                    payment_confirmed=(payment_data['payment_method'] != 'cheque'),
+                    notes=f"دفع زائد من فاتورة {sale.sale_number}",
+                    user_id=sale.seller_id,
+                    branch_id=sale.branch_id,
+                )
+                db.session.add(prepayment)
+                db.session.flush()
+                from decimal import Decimal as _D
+                sale.customer.apply_receipt(_D(str(overpayment_aed or 0)))
+            else:
+                SaleService.create_payment_for_sale(
+                    sale=sale,
+                    amount=payment_data['amount'],
+                    payment_method=payment_data['payment_method'],
+                    currency=payment_data.get('currency', get_system_default_currency()),
+                    exchange_rate=payment_data.get('exchange_rate', 1.0),
+                    reference_number=payment_data.get('reference_number'),
+                    cheque_number=payment_data.get('cheque_number'),
+                    cheque_date=payment_data.get('cheque_date'),
+                    bank_name=payment_data.get('bank_name'),
+                    notes=payment_data.get('notes'),
+                )
 
         sale.calculate_totals()
         customer.total_purchases += sale.amount_aed
@@ -692,6 +745,20 @@ class SaleService:
         if confirmed_payments > 0:
             raise ValueError('لا يمكن إلغاء فاتورة لها دفعات مؤكدة. قم بإلغاء الدفعات أولاً.')
         
+        # Reject any pending payments/cheques linked to this sale
+        pending_payments = Payment.query.filter_by(
+            sale_id=sale.id,
+            payment_confirmed=False,
+        ).all()
+        for pmt in pending_payments:
+            if pmt.cheque_id:
+                from services.cheque_service import process_cheque_cancel
+                from models import Cheque
+                cheque = Cheque.query.get(pmt.cheque_id)
+                if cheque and cheque.status not in ['cancelled', 'bounced']:
+                    process_cheque_cancel(cheque, reason=f'إلغاء فاتورة {sale.sale_number}')
+            pmt.reject_payment(f'إلغاء فاتورة {sale.sale_number}')
+        
         customer = sale.customer
         
         # عكس رصيد العميل وإحصائيات الشراء
@@ -724,9 +791,10 @@ class SaleService:
                     description=f'Reverse COGS {sale.sale_number} (Cancelled)',
                     tenant_id=getattr(sale, 'tenant_id', None),
                 )
-            except Exception as e:
+            except Exception as _e:
+                current_app.logger.exception('GL reversal failed for cancelled sale %s', sale.sale_number)
                 db.session.rollback()
-                raise ValueError(f'فشل عكس القيد المحاسبي: {e}') from e
+                raise ValueError(f'فشل عكس القيد المحاسبي: {_e}') from _e
             
         # إعادة حساب حالة الدفع بعد الإلغاء
         sale.recalculate_payment_status()
@@ -734,6 +802,7 @@ class SaleService:
         try:
             db.session.commit()
         except Exception:
+            current_app.logger.exception('Cancel sale commit failed for %s', sale.sale_number)
             db.session.rollback()
             raise
 
@@ -751,6 +820,7 @@ class SaleService:
         try:
             db.session.commit()
         except Exception:
+            current_app.logger.exception('Payment status update commit failed for %s', sale.sale_number)
             db.session.rollback()
             raise
 

@@ -168,21 +168,24 @@ class PaymentService:
                     branch_id=payment.branch_id,
                     tenant_id=tenant_id,
                 )
-            except Exception as e:
+            except Exception as _e:
+                current_app.logger.exception('GL posting failed for payment: %s', _e)
                 db.session.rollback()
-                raise ValueError(f'فشل الترحيل المحاسبي للدفعة: {e}') from e
+                raise ValueError(f'فشل الترحيل المحاسبي للدفعة: {_e}') from _e
                 
             try:
                 db.session.commit()
             except Exception:
+                current_app.logger.exception('Payment commit failed for supplier payment')
                 db.session.rollback()
                 raise
 
             return payment
             
-        except Exception as e:
+        except Exception:
+            current_app.logger.exception('Payment creation failed')
             db.session.rollback()
-            raise e
+            raise
 
     @staticmethod
     def create_receipt(payment_data):
@@ -348,9 +351,10 @@ class PaymentService:
                         branch_id=receipt.branch_id,
                         tenant_id=tenant_id,
                     )
-                except Exception as e:
+                except Exception as _e:
+                    current_app.logger.exception('GL posting failed for receipt: %s', _e)
                     db.session.rollback()
-                    raise ValueError(f'فشل الترحيل المحاسبي لسند القبض: {e}') from e
+                    raise ValueError(f'فشل الترحيل المحاسبي لسند القبض: {_e}') from _e
 
                 # تحديث رصيد العميل التراكمي (ما دُفع منه)
                 from decimal import Decimal as _D
@@ -409,6 +413,7 @@ class PaymentService:
                         branch_id=sale.branch_id or receipt.branch_id,
                     )
                     db.session.add(sale_payment)
+                    db.session.flush()
                     
                     # Direct update (will be overwritten by recalculate, but good for immediate state)
                     sale.paid_amount_aed += allocated_amount_aed
@@ -427,6 +432,7 @@ class PaymentService:
             try:
                 db.session.commit()
             except Exception:
+                current_app.logger.exception('Receipt commit failed for %s', receipt.receipt_number)
                 db.session.rollback()
                 raise
 
@@ -435,9 +441,9 @@ class PaymentService:
             
             return receipt
         
-        except Exception as e:
+        except Exception:
+            current_app.logger.exception('Receipt creation failed')
             db.session.rollback()
-            current_app.logger.error(f'Receipt creation failed: {e}')
             raise
     
     @staticmethod
@@ -576,11 +582,12 @@ class PaymentService:
             try:
                 db.session.commit()
             except Exception:
+                current_app.logger.exception('Receipt allocation commit failed for %s', receipt.receipt_number)
                 db.session.rollback()
                 raise
             current_app.logger.info(f'Receipt {receipt.receipt_number} allocated to sales')
-        except Exception as e:
+        except Exception:
+            current_app.logger.exception('Receipt allocation failed')
             db.session.rollback()
-            current_app.logger.error(f'Receipt allocation failed: {e}')
             raise
 

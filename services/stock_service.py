@@ -454,6 +454,7 @@ class StockService:
         
         tenant_id = getattr(purchase, 'tenant_id', None)
         mwac_enabled = current_app.config.get('ENABLE_MWAC', False)
+        processed_product_ids = set()
         
         for line in purchase.lines:
             StockService.add_stock(
@@ -468,6 +469,7 @@ class StockService:
             product = Product.query.get(line.product_id)
             if not product:
                 continue
+            processed_product_ids.add(product.id)
                 
             # Phase 5: Use landed_unit_cost (FOB + allocated landed cost) for valuation
             capitalize_landed = current_app.config.get('ENABLE_LANDED_COST_CAPITALIZATION', True)
@@ -477,7 +479,6 @@ class StockService:
                 unit_cost_for_valuation = Decimal(str(line.unit_cost)) if line.unit_cost else Decimal('0')
             exchange_rate_decimal = Decimal(str(purchase.exchange_rate))
             cost_in_aed = unit_cost_for_valuation * exchange_rate_decimal
-            product.cost_price = cost_in_aed
             
             # MWAC recalculation (Phase 4)
             if mwac_enabled and tenant_id and warehouse_id:
@@ -490,6 +491,26 @@ class StockService:
                     reference_type=GLRef.PURCHASE,
                     reference_id=purchase.id,
                 )
+        
+        # Recalculate global product.cost_price as weighted average across all warehouses
+        # to prevent a single warehouse receipt from corrupting the global cost
+        for pid in processed_product_ids:
+            product = Product.query.get(pid)
+            if not product:
+                continue
+            pwc_list = ProductWarehouseCost.query.filter_by(
+                tenant_id=tenant_id,
+                product_id=pid,
+            ).all()
+            total_val = Decimal('0')
+            total_qty = Decimal('0')
+            for pwc in pwc_list:
+                total_val += Decimal(str(pwc.total_value or 0))
+                total_qty += Decimal(str(pwc.total_quantity or 0))
+            if total_qty > 0:
+                product.cost_price = (total_val / total_qty).quantize(Decimal('0.001'), rounding=ROUND_HALF_UP)
+            else:
+                product.cost_price = Decimal('0')
     
     @staticmethod
     def _update_wac_on_receipt(tenant_id, product_id, warehouse_id, received_qty, unit_cost_aed, reference_type, reference_id):

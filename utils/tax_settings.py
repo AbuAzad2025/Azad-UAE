@@ -4,15 +4,15 @@ from __future__ import annotations
 from decimal import Decimal
 
 VAT_RATES_BY_COUNTRY = {
-    'AE': Decimal('5.00'),
-    'IL': Decimal('17.00'),
     'PS': Decimal('16.00'),
+    'IL': Decimal('17.00'),
+    'AE': Decimal('5.00'),
 }
 
 VAT_COUNTRY_LABELS = {
-    'AE': 'الإمارات (5%)',
-    'IL': 'إسرائيل (17%)',
     'PS': 'فلسطين (16%)',
+    'IL': 'إسرائيل (17%)',
+    'AE': 'الإمارات (5%)',
 }
 
 

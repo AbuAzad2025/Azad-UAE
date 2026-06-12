@@ -91,9 +91,11 @@ class PurchaseService:
         )
         
         # Currency Handling
+        from utils.currency_utils import get_system_default_currency
+        base_currency = get_system_default_currency()
         rate_info = ExchangeRateService.resolve_exchange_rate_for_transaction(
             currency,
-            'AED',
+            base_currency,
             user_rate=user_exchange_rate,
         )
         exchange_rate = Decimal(str(rate_info['rate']))
@@ -190,6 +192,7 @@ class PurchaseService:
                             db.session.add(serial_obj)
         
         if lines_added == 0:
+            current_app.logger.warning('Purchase creation rolled back: no lines added for purchase %s', purchase.purchase_number)
             db.session.rollback()
             raise ValueError('⚠️ يجب إضافة منتج واحد على الأقل للفاتورة.')
             
@@ -334,6 +337,7 @@ class PurchaseService:
         try:
             db.session.commit()
         except Exception:
+            current_app.logger.exception('Purchase cancel commit failed for %s', purchase.purchase_number)
             db.session.rollback()
             raise
 
@@ -466,6 +470,7 @@ class PurchaseService:
                     db.session.add(pch)
 
         if subtotal <= 0:
+            current_app.logger.warning('Purchase return rolled back: no lines for return %s', getattr(purchase_return, 'return_number', None))
             db.session.rollback()
             raise ValueError('يجب إرجاع منتج واحد على الأقل')
 
@@ -539,6 +544,7 @@ class PurchaseService:
         try:
             db.session.commit()
         except Exception:
+            current_app.logger.exception('Purchase return commit failed for %s', getattr(purchase_return, 'return_number', None))
             db.session.rollback()
             raise
 

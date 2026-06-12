@@ -26,9 +26,11 @@ def _expense_in_scope(expense):
 
 
 def _resolve_transaction_rate(currency, user_rate=None):
+    from utils.currency_utils import get_system_default_currency
+    base = get_system_default_currency()
     rate_info = ExchangeRateService.resolve_exchange_rate_for_transaction(
         currency,
-        'AED',
+        base,
         user_rate=user_rate,
     )
     return Decimal(str(rate_info['rate']))

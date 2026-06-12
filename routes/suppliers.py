@@ -204,7 +204,7 @@ def create():
                 website=request.form.get('website'),
                 address=request.form.get('address'),
                 city=request.form.get('city'),
-                country=request.form.get('country', 'UAE'),
+                country=request.form.get('country', 'PS'),
                 tax_number=request.form.get('tax_number'),
                 commercial_registration=request.form.get('commercial_registration'),
                 supplier_type=supplier_type_value,

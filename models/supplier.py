@@ -29,7 +29,7 @@ class Supplier(db.Model):
     # العنوان
     address = db.Column(db.Text)
     city = db.Column(db.String(100))
-    country = db.Column(db.String(100), default='UAE')
+    country = db.Column(db.String(100), default='PS')
     
     # معلومات ضريبية وقانونية
     tax_number = db.Column(db.String(50))

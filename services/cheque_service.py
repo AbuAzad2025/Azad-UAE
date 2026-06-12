@@ -35,20 +35,26 @@ def validate_cheque(cheque):
 
 
 def calculate_amount_aed(cheque):
-    if cheque.exchange_rate:
+    from utils.currency_utils import get_system_default_currency
+    base_currency = get_system_default_currency()
+    if cheque.currency == base_currency:
+        cheque.amount_aed = cheque.amount
+    elif cheque.exchange_rate:
         cheque.amount_aed = cheque.amount * cheque.exchange_rate
     else:
         cheque.amount_aed = cheque.amount
 
 
 def _post_gl(cheque, lines, description, reference_type):
+    from utils.currency_utils import get_system_default_currency
+    base_currency = get_system_default_currency()
     gl_ensure_core_accounts(tenant_id=getattr(cheque, 'tenant_id', None))
     return gl_post_or_fail(
         lines=lines,
         description=description,
         reference_type=reference_type,
         reference_id=cheque.id,
-        currency='AED',
+        currency=base_currency,
         exchange_rate=1.0,
         branch_id=cheque.branch_id,
         tenant_id=getattr(cheque, 'tenant_id', None),
@@ -418,7 +424,10 @@ def process_cheque_bounce(cheque, reason):
     _create_bounce_journal_entry(cheque)
     if cheque.cheque_type == 'incoming' and cheque.customer_id:
         try:
-            cheque.customer.adjust_balance(cheque.amount_aed or Decimal('0'))
+            # Bounce reverses the receipt: AR increases (customer owes more again)
+            # adjust_balance(+x) increases credit balance; we need to INCREASE debt
+            # so we pass negative to reduce credit / increase debit balance
+            cheque.customer.adjust_balance(-(cheque.amount_aed or Decimal('0')))
         except Exception:
             pass
     from models.payment import Payment, Receipt
