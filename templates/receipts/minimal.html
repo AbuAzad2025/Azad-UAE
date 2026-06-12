@@ -234,7 +234,7 @@
 </head>
 <body class="invoice-print receipt-print minimal-receipt">
   <div class="no-print ic-1">
-    <button onclick="window.print()" class="erp-invoice-btn-print" style="background: {{ settings.header_color or '#28a745' }};">
+    <button data-action="window-print" class="erp-invoice-btn-print" style="background: {{ settings.header_color or '#28a745' }};">
       طباعة
     </button>
   </div>

@@ -36,7 +36,7 @@ def _require_pos_enabled():
         if request.is_json or request.path.startswith("/pos/api/"):
             return jsonify({"success": False, "error": "POS غير مفعل على مستوى النظام."}), 403
         return render_template("pos/disabled.html", reason="system"), 403
-    tid = get_active_tenant_id()
+    tid = get_active_tenant_id(current_user)
     if tid:
         tenant = Tenant.query.get(tid)
         if tenant and not tenant.enable_pos:

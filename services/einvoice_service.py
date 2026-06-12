@@ -19,7 +19,7 @@ class EInvoiceService:
         from models import Tenant
 
         if country_code is None:
-            tenant_id = get_active_tenant_id()
+            tenant_id = getattr(sale, 'tenant_id', None) or get_active_tenant_id()
             tenant = Tenant.query.get(tenant_id) if tenant_id else None
             country_code = (getattr(tenant, 'vat_country', None) or 'AE').strip().upper()
 

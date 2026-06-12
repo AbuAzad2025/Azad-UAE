@@ -242,8 +242,8 @@
                    class="btn btn-info" title="{{ t('View') }}">
                   <i class="fas fa-eye"></i>
                 </a>
-                <button type="button" class="btn btn-warning" 
-                        onclick="adjustStock({{ product.id }}, {{ product.name|tojson }})"
+                <button type="button" class="btn btn-warning"
+                        data-action="adjust-stock" data-product-id="{{ product.id }}" data-product-name="{{ product.name|tojson }}"
                         title="تعديل المخزون">
                   <i class="fas fa-edit"></i>
                 </button>
@@ -369,6 +369,12 @@ function adjustStock(productId, productName) {
   $('#adjustStockForm').attr('action', `/products/${productId}/adjust-stock`);
   $('#adjustStockModal').modal('show');
 }
+
+$(document).on('click', '[data-action="adjust-stock"]', function() {
+  const id = $(this).data('product-id');
+  const name = $(this).data('product-name');
+  adjustStock(id, name);
+});
 </script>
 {% endblock %}
 

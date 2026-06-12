@@ -314,8 +314,8 @@
       <a href="{{ url_for('suppliers.view', id=supplier.id) }}" class="btn btn-secondary btn-lg">
         <i class="fas fa-times mr-2"></i> إلغاء
       </a>
-      <button type="button" class="btn btn-danger btn-lg float-left" 
-              onclick="deleteSupplier({{ supplier.id }})">
+      <button type="button" class="btn btn-danger btn-lg float-left"
+              data-action="delete-supplier" data-supplier-id="{{ supplier.id }}">
         <i class="fas fa-trash mr-2"></i> حذف المورد
       </button>
     </div>
@@ -331,6 +331,10 @@ $(function () {
     placement: 'top',
     trigger: 'hover'
   });
+});
+
+$(document).on('click', '[data-action="delete-supplier"]', function() {
+  deleteSupplier($(this).data('supplier-id'));
 });
 
 function deleteSupplier(id) {

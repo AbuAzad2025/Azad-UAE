@@ -86,7 +86,7 @@
         <div class="card-footer">
           {% if current_user.is_admin %}
           <button type="button" class="btn btn-danger" 
-                  onclick="deleteItem('users', {{ user.id }}, {{ user.username|tojson }}, {{ url_for('users.index')|tojson }})">
+                  data-delete-item="{{user.id}}" data-item-type="users" data-item-name="{{user.username|tojson}}" data-redirect-url="{{url_for('users.index')|tojson}}">
             <i class="fas fa-trash"></i> حذف
           </button>
           {% endif %}

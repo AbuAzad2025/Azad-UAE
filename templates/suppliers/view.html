@@ -50,7 +50,7 @@
 
     <button type="button" class="btn btn-danger" 
 
-            onclick="deleteItem('suppliers', {{ supplier.id }}, {{ supplier.name|tojson }}, {{ url_for('suppliers.index')|tojson }})">
+            data-delete-item="{{supplier.id}}" data-item-type="suppliers" data-item-name="{{supplier.name|tojson}}" data-redirect-url="{{url_for('suppliers.index')|tojson}}">
 
       <i class="fas fa-trash mr-1"></i>حذف
 

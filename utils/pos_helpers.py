@@ -208,7 +208,7 @@ def merge_checkout_lines(raw_lines: list) -> list[dict]:
 
 
 def get_active_session(user=None, branch_id: int = None) -> PosSession | None:
-    tenant_id = get_active_tenant_id()
+    tenant_id = get_active_tenant_id(user)
     if not tenant_id:
         return None
     branch_id = branch_id or get_active_branch_id(user)
@@ -228,7 +228,7 @@ def require_active_session(user=None, branch_id: int = None) -> PosSession:
 
 
 def create_pos_session(user, branch_id: int, opening_balance: Decimal = Decimal('0'), notes: str = None) -> PosSession:
-    tenant_id = get_active_tenant_id()
+    tenant_id = get_active_tenant_id(user)
     if not tenant_id:
         raise ValueError("لا توجد شركة نشطة.")
     number = generate_number(
@@ -255,7 +255,7 @@ def create_pos_session(user, branch_id: int, opening_balance: Decimal = Decimal(
 def close_pos_session(session: PosSession, closing_cash: Decimal, notes: str = None):
     from models import Payment, Sale
 
-    tenant_id = get_active_tenant_id()
+    tenant_id = session.tenant_id
     sales_in_session = Sale.query.filter(
         Sale.tenant_id == int(tenant_id),
         Sale.seller_id == session.user_id,

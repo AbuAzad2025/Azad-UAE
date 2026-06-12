@@ -305,7 +305,7 @@ def import_products():
                         # Check existing (per-tenant)
                         from utils.tenanting import get_active_tenant_id
 
-                        tid = get_active_tenant_id()
+                        tid = get_active_tenant_id(current_user)
                         dup_q = Product.query.filter(
                             (Product.sku == sku) | (Product.barcode == barcode)
                         )

@@ -490,7 +490,7 @@
 
               <button type="button" class="btn btn-danger" 
 
-                      onclick="deleteItem({{ (item.type ~ 's')|tojson }}, {{ item.id }}, {{ item.number|tojson }})" 
+                      data-delete-item="{{ item.id }}" data-item-type="{{ item.type ~ 's' }}" data-item-name="{{ item.number }}" 
 
                       title="حذف">
 

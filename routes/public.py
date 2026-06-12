@@ -8,6 +8,21 @@ from datetime import datetime
 public_bp = Blueprint('public', __name__)
 
 
+def _safe_vault_for_public(vault):
+    if not vault:
+        return None
+    safe_fields = [
+        'donation_title_ar', 'donation_title_en', 'donation_intro_ar', 'donation_intro_en',
+        'min_donation_amount', 'max_donation_amount', 'bitcoin_address', 'bank_iban',
+        'bank_account_number', 'paypal_business_email', 'bank_name', 'donations_enabled',
+        'donation_page_enabled',
+    ]
+    safe = {}
+    for f in safe_fields:
+        safe[f] = getattr(vault, f, None)
+    return safe
+
+
 @public_bp.route('/')
 def landing():
     """Landing Page الفخمة"""
@@ -65,7 +80,7 @@ def donate_azad():
         abort(404)
     return render_template(
         'public/donate_azad.html',
-        vault=vault,
+        vault=_safe_vault_for_public(vault),
         lang=lang,
         is_en=lang == 'en',
     )
@@ -106,11 +121,13 @@ def donate_azad_submit():
         )
         db.session.add(donation)
         db.session.commit()
-        return render_template('public/donate_thanks.html', vault=vault, donation=donation, lang=lang, is_en=is_en)
+        return render_template('public/donate_thanks.html', vault=_safe_vault_for_public(vault), donation=donation, lang=lang, is_en=is_en)
     except ValueError as exc:
         flash(str(exc), 'danger')
         return redirect(url_for('public.donate_azad'))
     except Exception:
+        import logging
+        logging.getLogger(__name__).exception('Donation submit failed')
         db.session.rollback()
         flash('تعذر إرسال التبرع.' if not is_en else 'Could not submit donation.', 'danger')
         return redirect(url_for('public.donate_azad'))

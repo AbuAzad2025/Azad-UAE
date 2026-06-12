@@ -50,8 +50,8 @@
   {% endif %}
   <div id="ps-install-banner" class="ps-install-banner" style="display:none">
     <span>{{ t('install_app') }}</span>
-    <button onclick="deferredPrompt.prompt();" class="ps-btn ps-btn-primary ps-btn-sm">{{ t('install') }}</button>
-    <button onclick="this.closest('.ps-install-banner').style.display='none'" class="ps-btn ps-btn-ghost ps-btn-sm">✕</button>
+    <button data-action="pwa-install" class="ps-btn ps-btn-primary ps-btn-sm">{{ t('install') }}</button>
+    <button data-action="dismiss-banner" data-target=".ps-install-banner" class="ps-btn ps-btn-ghost ps-btn-sm">✕</button>
   </div>
 
   <header class="ps-header">
@@ -211,10 +211,18 @@
   {% block extra_js %}{% endblock %}
 <div id="ps-cookie-banner" class="ps-cookie-banner" style="display:none">
   <p>{{ t('cookie_notice') }}</p>
-  <button onclick="document.getElementById('ps-cookie-banner').style.display='none';localStorage.setItem('cookie_consent','1')" class="ps-btn ps-btn-sm">{{ t('cookie_accept') }}</button>
+  <button data-action="accept-cookies" data-banner="ps-cookie-banner" class="ps-btn ps-btn-sm">{{ t('cookie_accept') }}</button>
 </div>
 <script>
 if (!localStorage.getItem('cookie_consent')) { document.getElementById('ps-cookie-banner').style.display='flex'; }
+document.addEventListener('click', function(e) {
+  const installBtn = e.target.closest('[data-action="pwa-install"]');
+  if (installBtn && window.deferredPrompt) { e.preventDefault(); window.deferredPrompt.prompt(); }
+  const dismissBtn = e.target.closest('[data-action="dismiss-banner"]');
+  if (dismissBtn) { e.preventDefault(); const target = dismissBtn.closest(dismissBtn.dataset.target || '.ps-install-banner'); if (target) target.style.display = 'none'; }
+  const cookieBtn = e.target.closest('[data-action="accept-cookies"]');
+  if (cookieBtn) { e.preventDefault(); const banner = document.getElementById(cookieBtn.dataset.banner || 'ps-cookie-banner'); if (banner) banner.style.display = 'none'; localStorage.setItem('cookie_consent', '1'); }
+});
 </script>
 </body>
 </html>

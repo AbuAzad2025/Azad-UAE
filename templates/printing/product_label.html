@@ -27,8 +27,8 @@
 </head>
 <body>
   <div class="no-print">
-    <button onclick="window.print()">طباعة</button>
-    <button onclick="window.close()">إغلاق</button>
+    <button data-action="window-print">طباعة</button>
+    <button data-action="window-close">إغلاق</button>
   </div>
   <div class="label-grid">
     {% for p in products %}

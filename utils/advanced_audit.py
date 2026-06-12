@@ -39,6 +39,8 @@ def log_sensitive_action(action: str, table_name: str = None, record_id: int = N
             notify_admin_of_sensitive_action(action, audit_entry)
     
     except Exception as e:
+        import logging
+        logging.getLogger(__name__).exception('Audit log failed: %s', action)
         db.session.rollback()
 
 

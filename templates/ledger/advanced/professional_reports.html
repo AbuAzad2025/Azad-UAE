@@ -158,13 +158,13 @@
       </div>
       <div class="col-md-4 text-right">
         <div class="export-buttons">
-          <button class="btn btn-light export-btn" onclick="exportPDF()">
+          <button class="btn btn-light export-btn" data-action="export-pdf">
             <i class="fas fa-file-pdf mr-1"></i>PDF
           </button>
-          <button class="btn btn-light export-btn" onclick="exportExcel()">
+          <button class="btn btn-light export-btn" data-action="export-excel">
             <i class="fas fa-file-excel mr-1"></i>Excel
           </button>
-          <button class="btn btn-light export-btn" onclick="window.print()">
+          <button class="btn btn-light export-btn" data-action="window-print">
             <i class="fas fa-print mr-1"></i>طباعة
           </button>
         </div>
@@ -554,15 +554,15 @@ new Chart(roiCtx, {
   }
 });
 
-// دوال التصدير
+$(document).on('click', '[data-action="export-pdf"]', exportPDF);
+$(document).on('click', '[data-action="export-excel"]', exportExcel);
+
 function exportPDF() {
   alert('سيتم تصدير التقرير كملف PDF');
-  // يمكن إضافة كود jsPDF هنا
 }
 
 function exportExcel() {
   alert('سيتم تصدير التقرير كملف Excel');
-  // يمكن إضافة كود XLSX هنا
 }
 </script>
 {% endblock %}

@@ -37,13 +37,16 @@ def is_admin_surface_user(user):
 
 def is_global_owner_user(user):
     """
-    هل المستخدم مالك أو مطوّر (صلاحيات شاملة)؟
+    هل المستخدم مالك منصة أو مطوّر (صلاحيات شاملة)؟
     يُستخدم لـ owner_required و developer access.
+    الشرط: is_owner=True بالإضافة إلى tenant_id=NULL (platform owner فعلي).
     """
     if not user:
         return False
     if getattr(user, 'is_owner', False):
-        return True
+        tid = getattr(user, 'tenant_id', None)
+        if tid is None:
+            return True
     role = getattr(user, 'role', None)
     slug = getattr(role, 'slug', None) if role else None
     return slug == 'developer'

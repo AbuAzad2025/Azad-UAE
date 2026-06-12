@@ -723,7 +723,7 @@ def stock_alert(slug, product_id):
         flash('Email is required', 'danger')
         return redirect(request.referrer or url_for('shop.product_detail', slug=store.store_slug, product_id=product_id))
     from models.shop_stock_alert import ShopStockAlert
-    existing = ShopStockAlert.query.filter_by(email=email, product_id=product_id).first()
+    existing = ShopStockAlert.query.filter_by(email=email, product_id=product_id, tenant_id=store.tenant_id).first()
     if existing:
         flash(t('alert_exists', shop_lang()), 'info')
     else:

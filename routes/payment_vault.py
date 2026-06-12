@@ -45,6 +45,22 @@ def _is_production_env() -> bool:
     return app_env == 'production' and not debug
 
 
+def _is_duplicate_webhook(provider: str, event_id: str | None) -> bool:
+    """Idempotent webhook deduplication via cache (24h TTL)."""
+    if not event_id:
+        return False
+    try:
+        from extensions import cache
+        key = f'webhook:{provider}:{event_id}'
+        if cache.get(key):
+            logger.warning('%s webhook replay blocked: %s', provider, event_id)
+            return True
+        cache.set(key, '1', timeout=86400)
+    except Exception:
+        logger.exception('Webhook dedup cache error for %s %s', provider, event_id)
+    return False
+
+
 def _payment_vault_trusted_origins() -> frozenset[str]:
     from flask import current_app
 
@@ -1552,9 +1568,14 @@ def nowpayments_webhook():
         ):
             logger.warning('NOWPayments webhook signature verification failed')
             return jsonify({'error': 'Invalid signature'}), 403
-        
-        # معالجة الـ webhook
+
         data = request.get_json()
+        event_id = data.get('payment_id') if data else None
+        if _is_duplicate_webhook('nowpayments', event_id):
+            return jsonify({'status': 'duplicate'}), 200
+
+        # معالجة الـ webhook
+
         result = WebhookService.process_nowpayments_webhook(data)
         
         # تسجيل
@@ -1603,9 +1624,14 @@ def stripe_webhook():
         ):
             logger.warning('Stripe webhook signature verification failed')
             return jsonify({'error': 'Invalid signature'}), 403
-        
-        # معالجة الـ webhook
+
         data = request.get_json()
+        event_id = data.get('id') if data else None
+        if _is_duplicate_webhook('stripe', event_id):
+            return jsonify({'status': 'duplicate'}), 200
+
+        # معالجة الـ webhook
+
         result = WebhookService.process_stripe_webhook(data)
         
         # تسجيل

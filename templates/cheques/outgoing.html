@@ -167,7 +167,7 @@
             </a>
             {% endif %}
             <button type="button" class="btn btn-danger" 
-                    onclick="deleteItem('cheques', {{ cheque.id }}, {{ cheque.cheque_bank_number|tojson }})" 
+                    data-delete-item="{{cheque.id}}" data-item-type="cheques" data-item-name="{{cheque.cheque_bank_number|tojson}}" 
                     title="حذف">
               <i class="fas fa-trash"></i>
             </button>

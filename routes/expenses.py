@@ -169,13 +169,13 @@ def create():
             
             try:
                 from utils.tenanting import get_active_tenant_id
-                GLService.ensure_core_accounts(tenant_id=getattr(expense, 'tenant_id', None) or get_active_tenant_id())
+                GLService.ensure_core_accounts(tenant_id=getattr(expense, 'tenant_id', None) or get_active_tenant_id(current_user))
                 
                 category = expense.category
                 expense_account = category.gl_account_code if category and category.gl_account_code else '6990'
                 expense_concept = None if category and category.gl_account_code else 'MISC_EXPENSE'
                 from models import GLAccount
-                tid = getattr(expense, 'tenant_id', None) or get_active_tenant_id()
+                tid = getattr(expense, 'tenant_id', None) or get_active_tenant_id(current_user)
                 acc_check = GLAccount.query.filter_by(code=str(expense_account), tenant_id=int(tid) if tid else None).first()
                 if acc_check and acc_check.is_header:
                     expense_account = '6990'
@@ -359,13 +359,13 @@ def edit(id):
             if financial_change and expense.status == 'confirmed':
                 # إعادة ترحيل القيد المحاسبي بالقيم الجديدة
                 from utils.tenanting import get_active_tenant_id
-                GLService.ensure_core_accounts(tenant_id=expense.tenant_id or get_active_tenant_id())
+                GLService.ensure_core_accounts(tenant_id=expense.tenant_id or get_active_tenant_id(current_user))
                 
                 category = expense.category
                 expense_account = category.gl_account_code if category and category.gl_account_code else '6990'
                 expense_concept = None if category and category.gl_account_code else 'MISC_EXPENSE'
                 from models import GLAccount
-                tid = expense.tenant_id or get_active_tenant_id()
+                tid = expense.tenant_id or get_active_tenant_id(current_user)
                 acc_check = GLAccount.query.filter_by(code=str(expense_account), tenant_id=int(tid) if tid else None).first()
                 if acc_check and acc_check.is_header:
                     expense_account = '6990'

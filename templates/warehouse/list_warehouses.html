@@ -199,7 +199,7 @@
                     <a href="{{ url_for('warehouse.movements', warehouse=warehouse.id) }}" class="btn btn-outline-secondary" title="الحركات">
                       <i class="fas fa-exchange-alt"></i>
                     </a>
-                    <button type="button" class="btn btn-outline-danger" onclick='deleteItem("warehouses", {{ warehouse.id }}, {{ (warehouse.name_ar or warehouse.name)|tojson }})' title="حذف">
+                    <button type="button" class="btn btn-outline-danger" data-delete-item="{{warehouse.id}}" data-item-type="warehouses" data-item-name="{{(warehouse.name_ar or warehouse.name)|tojson}}" title="حذف">
                       <i class="fas fa-trash"></i>
                     </button>
                   </div>

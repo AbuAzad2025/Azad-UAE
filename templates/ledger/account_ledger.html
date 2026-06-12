@@ -16,7 +16,7 @@
       <input type="hidden" name="date_from" value="{{ date_from or '' }}" aria-label="من تاريخ">
       <input type="hidden" name="date_to" value="{{ date_to or '' }}" aria-label="إلى تاريخ">
     </form>
-    <button onclick="window.print()" class="btn btn-secondary ml-2">
+    <button data-action="window-print" class="btn btn-secondary ml-2">
       <i class="fas fa-print mr-2"></i>طباعة
     </button>
     <a href="{{ url_for('ledger.index') }}" class="btn btn-info ml-2">العودة</a>

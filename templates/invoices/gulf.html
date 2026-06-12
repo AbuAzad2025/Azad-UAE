@@ -183,7 +183,7 @@
 </head>
 <body class="invoice-print gulf-invoice">
   <div class="no-print ic-1">
-    <button onclick="window.print()" class="erp-gradient-btn" style="background: linear-gradient(135deg, {{ settings.header_color or '#c9a961' }} 0%, {{ settings.accent_color or '#8b7355' }} 100%);">
+    <button data-action="window-print" class="erp-gradient-btn" style="background: linear-gradient(135deg, {{ settings.header_color or '#c9a961' }} 0%, {{ settings.accent_color or '#8b7355' }} 100%);">
       🖨️ طباعة الفاتورة
     </button>
   </div>

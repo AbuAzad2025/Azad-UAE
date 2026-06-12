@@ -318,7 +318,7 @@
 
                 <button type="button" class="btn btn-danger" 
 
-                        onclick="deleteItem('sales', {{ sale.id }}, {{ sale.sale_number|tojson }})" 
+                        data-delete-item="{{sale.id}}" data-item-type="sales" data-item-name="{{sale.sale_number|tojson}}" 
 
                         title="حذف">
 

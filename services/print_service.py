@@ -22,7 +22,7 @@ class PrintService:
         from utils.tenant_branding import get_print_header_context
         from utils.tenanting import get_active_tenant_id
 
-        tid = tenant_id or get_active_tenant_id()
+        tid = tenant_id or get_active_tenant_id(current_user)
         tenant, settings, company = InvoiceSettings.company_print_context(tid)
         branding = get_print_header_context(tid)
         return {

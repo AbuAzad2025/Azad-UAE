@@ -40,7 +40,7 @@
 
     <button type="button" class="btn btn-danger btn-lg" 
 
-            onclick="deleteItem('sales', {{ sale.id }}, {{ sale.sale_number|tojson }})">
+            data-delete-item="{{sale.id}}" data-item-type="sales" data-item-name="{{sale.sale_number|tojson}}">
 
       <i class="fas fa-trash mr-2"></i>حذف
 
@@ -734,7 +734,7 @@
 
           {% if not current_user.is_seller() and sale.status != 'cancelled' %}
 
-          <button type="button" class="btn btn-danger" onclick="confirmCancel()">
+          <button type="button" class="btn btn-danger" data-action="cancel-sale">
 
             <i class="fas fa-ban mr-2"></i>إلغاء الفاتورة
 
@@ -752,7 +752,7 @@
 
           
 
-          <button type="button" class="btn btn-outline-danger w-100" onclick="confirmDelete()">
+          <button type="button" class="btn btn-outline-danger w-100" data-action="delete-sale">
 
             <i class="fas fa-trash-alt mr-2"></i>حذف الفاتورة
 
@@ -892,7 +892,7 @@
 
         <button type="button" class="btn btn-secondary" data-dismiss="modal">إلغاء</button>
 
-        <button type="button" class="btn btn-primary" onclick="submitReturn()">إنشاء المرتجع</button>
+        <button type="button" class="btn btn-primary" data-action="submit-return">إنشاء المرتجع</button>
 
       </div>
 
@@ -905,6 +905,10 @@
 
 
 <script>
+
+$(document).on('click', '[data-action="cancel-sale"]', confirmCancel);
+$(document).on('click', '[data-action="delete-sale"]', confirmDelete);
+$(document).on('click', '[data-action="submit-return"]', submitReturn);
 
 function submitReturn() {
 

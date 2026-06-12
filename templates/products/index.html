@@ -247,7 +247,7 @@
                   <i class="fas fa-edit"></i>
                 </a>
                 <button type="button" class="btn btn-danger" 
-                        onclick="deleteItem('products', {{ product.id }}, {{ product.name|tojson }})" 
+                        data-delete-item="{{product.id}}" data-item-type="products" data-item-name="{{product.name|tojson}}" 
                         title="حذف">
                   <i class="fas fa-trash"></i>
                 </button>
@@ -256,8 +256,8 @@
                   <i class="fas fa-shopping-cart"></i>
                 </a>
                 {% endif %}
-                <button type="button" class="btn btn-primary" title="إضافة كمية" 
-                        onclick="adjustStock({{ product.id }}, {{ product.name|tojson }}, {{ shown_stock }})">
+                <button type="button" class="btn btn-primary" title="إضافة كمية"
+                        data-action="adjust-stock" data-product-id="{{ product.id }}" data-product-name="{{ product.name|tojson }}" data-current-stock="{{ shown_stock }}">
                   <i class="fas fa-plus"></i>
                 </button>
               </div>
@@ -324,7 +324,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ t('Cancel') }}</button>
-        <button type="button" class="btn btn-primary" onclick="saveStockAdjustment()">{{ t('Save') }}</button>
+        <button type="button" class="btn btn-primary" data-action="save-stock-adjustment">{{ t('Save') }}</button>
       </div>
     </div>
   </div>
@@ -395,6 +395,13 @@ $(document).ready(function() {
   });
 });
 
+$(document).on('click', '[data-action="adjust-stock"]', function() {
+  const id = $(this).data('product-id');
+  const name = $(this).data('product-name');
+  const stock = $(this).data('current-stock');
+  adjustStock(id, name, stock);
+});
+
 function adjustStock(productId, productName, currentStock) {
   $('#productId').val(productId);
   $('#productName').val(productName);
@@ -405,6 +412,8 @@ function adjustStock(productId, productName, currentStock) {
   $('#adjustmentNotes').val('');
   $('#stockModal').modal('show');
 }
+
+$(document).on('click', '[data-action="save-stock-adjustment"]', saveStockAdjustment);
 
 function saveStockAdjustment() {
   const productId = $('#productId').val();

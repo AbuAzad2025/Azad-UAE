@@ -82,6 +82,12 @@
   window._FX_FALLBACK_BASE = '{{ tenant_default_currency or 'USD' }}';
   window._CURRENCY_NAME_AR = '{{ tenant_currency_name_ar or 'درهم إماراتي' }}';
   window._CURRENCY_SYMBOL = '{{ tenant_currency_symbol or 'د.إ' }}';
+  document.addEventListener('click', function(e) {
+    const btn = e.target.closest('[data-action="window-print"]');
+    if (btn) { e.preventDefault(); window.print(); }
+    const closeBtn = e.target.closest('[data-action="window-close"]');
+    if (closeBtn) { e.preventDefault(); window.close(); }
+  });
 </script>
 {% include 'partials/scripts.html' %}
 {% include 'partials/modals.html' %}

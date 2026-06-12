@@ -672,5 +672,9 @@ $(document).ready(function() {
         azad.showLoading();
         this.submit();
     });
+
+    $(document).on('click', '[data-action="add-line"]', function() {
+        addLine();
+    });
 });
 

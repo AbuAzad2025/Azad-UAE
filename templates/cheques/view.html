@@ -279,7 +279,7 @@
 
         
         <button type="button" class="btn btn-danger btn-block" 
-                onclick="deleteItem('cheques', {{ cheque.id }}, {{ cheque.cheque_bank_number|tojson }})">
+                data-delete-item="{{cheque.id}}" data-item-type="cheques" data-item-name="{{cheque.cheque_bank_number|tojson}}">
           <i class="fas fa-trash mr-2"></i>أرشفة
         </button>
 

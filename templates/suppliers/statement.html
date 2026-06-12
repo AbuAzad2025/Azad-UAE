@@ -56,7 +56,7 @@ table.statement-table thead th {
     <p class="text-muted mb-0">{{ supplier.name }}</p>
   </div>
   <div>
-    <button onclick="window.print()" class="btn btn-primary">
+    <button data-action="window-print" class="btn btn-primary">
       <i class="fas fa-print mr-2"></i>طباعة
     </button>
     <a href="{{ url_for('suppliers.view', id=supplier.id) }}" class="btn btn-info">
@@ -316,7 +316,7 @@ table.statement-table thead th {
 </div>
 
 <div class="text-center mt-3 no-print">
-  <button onclick="window.print()" class="btn btn-lg btn-primary">
+  <button data-action="window-print" class="btn btn-lg btn-primary">
     <i class="fas fa-print mr-2"></i>طباعة كشف الحساب
   </button>
   <a href="{{ url_for('suppliers.view', id=supplier.id) }}" class="btn btn-lg btn-secondary">

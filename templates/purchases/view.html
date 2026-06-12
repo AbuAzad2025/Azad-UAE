@@ -228,7 +228,7 @@
 
           </a>
 
-          <button type="button" class="btn btn-warning" onclick="confirmCancel()">
+          <button type="button" class="btn btn-warning" data-action="cancel-purchase">
 
             <i class="fas fa-ban mr-2"></i>إلغاء الفاتورة
 
@@ -248,7 +248,7 @@
 
           <button type="button" class="btn btn-danger" 
 
-                  onclick="deleteItem('purchases', {{ purchase.id }}, {{ purchase.purchase_number|tojson }})">
+                  data-delete-item="{{purchase.id}}" data-item-type="purchases" data-item-name="{{purchase.purchase_number|tojson}}">
 
             <i class="fas fa-trash-alt mr-2"></i>حذف الفاتورة
 
@@ -268,6 +268,8 @@
 
 {% block scripts %}
 <script>
+$(document).on('click', '[data-action="cancel-purchase"]', confirmCancel);
+
 function confirmCancel() {
   if (confirm('هل أنت متأكد من إلغاء فاتورة الشراء هذه؟\nسيتم عكس القيد المحاسبي والمخزون ورصيد المورد.\nلا يمكن التراجع عن هذا الإجراء.')) {
     document.getElementById('cancelForm').submit();

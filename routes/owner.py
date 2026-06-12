@@ -1541,6 +1541,7 @@ _FORBIDDEN_SQL_KEYWORDS = (
     'DROP ', 'TRUNCATE ', 'DELETE ', 'UPDATE ', 'INSERT ',
     'ALTER ', 'CREATE ', 'GRANT ', 'REVOKE ', 'COPY ',
     'EXEC ', 'EXECUTE ', 'CALL ', 'INTO OUTFILE', 'INTO DUMPFILE',
+    'LOAD_FILE', 'SELECT INTO', 'OUTFILE', 'DUMPFILE',
 )
 
 def _known_tables_map() -> dict[str, str]:
