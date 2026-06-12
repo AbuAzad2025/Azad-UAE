@@ -54,6 +54,8 @@ class FinancialService:
 
     @staticmethod
     def financial_overview(period, tid, scoped_branch_id):
+        """Tenant-scoped or platform-wide financial overview.
+        If tid is None -> platform-wide (all tenants)."""
         now = datetime.now(timezone.utc)
         if period == 'today':
             start_date = now.date()
@@ -66,11 +68,14 @@ class FinancialService:
         else:
             start_date = now.date().replace(day=1)
 
+        platform_mode = tid is None
+        tenant_filter = [] if platform_mode else [Sale.tenant_id == tid]
+
         sales_total = FinancialService.sum_sales(tid, branch_id=scoped_branch_id, date_from=start_date)
         sales_paid_q = db.session.query(func.sum(Sale.paid_amount_aed)).filter(
             func.date(Sale.sale_date) >= start_date,
             Sale.status == 'confirmed',
-            Sale.tenant_id == tid,
+            *tenant_filter,
         )
         if scoped_branch_id is not None:
             sales_paid_q = sales_paid_q.filter(Sale.branch_id == scoped_branch_id)
@@ -78,7 +83,7 @@ class FinancialService:
         sales_count_q = db.session.query(func.count(Sale.id)).filter(
             func.date(Sale.sale_date) >= start_date,
             Sale.status == 'confirmed',
-            Sale.tenant_id == tid,
+            *tenant_filter,
         )
         if scoped_branch_id is not None:
             sales_count_q = sales_count_q.filter(Sale.branch_id == scoped_branch_id)
@@ -88,7 +93,7 @@ class FinancialService:
         purchases_count_q = db.session.query(func.count(Purchase.id)).filter(
             func.date(Purchase.purchase_date) >= start_date,
             Purchase.status == 'confirmed',
-            Purchase.tenant_id == tid,
+            *tenant_filter,
         )
         if scoped_branch_id is not None:
             purchases_count_q = purchases_count_q.filter(Purchase.branch_id == scoped_branch_id)
@@ -103,7 +108,8 @@ class FinancialService:
             'purchases_total': float(purchases_total),
             'purchases_count': purchases_count,
             'receipts_total': float(receipts_total),
-            'net_revenue': float((sales_data[0] or 0) - (purchases_data[0] or 0)),
+            'net_revenue': float(sales_total - purchases_total),
+            'platform_mode': tid is None,
         }
 
         return render_template('owner/financial_overview.html',

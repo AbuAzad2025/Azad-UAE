@@ -117,3 +117,20 @@ def test_print_service_audit(db_session, sample_tenant):
     ).first()
     assert record is not None
     assert record.action == 'test_audit'
+
+
+def test_api_print_history_rejects_without_view_reports(client, app, db_session, sample_tenant):
+    from models import Role, User
+    with app.app_context():
+        role = Role(name="NoReports", slug="no_reports", is_active=True)
+        db_session.add(role)
+        db_session.commit()
+        user = User(username="noreports", email="nr@test.com", full_name="No Reports", tenant_id=sample_tenant.id, role_id=role.id, is_active=True)
+        user.set_password("testpass")
+        db_session.add(user)
+        db_session.commit()
+        with client.session_transaction() as sess:
+            sess["_user_id"] = str(user.id)
+            sess["_fresh"] = True
+        resp = client.get(url_for('printing.api_print_history'))
+        assert resp.status_code == 403

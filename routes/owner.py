@@ -277,6 +277,70 @@ def dashboard():
 
     stats['recent_actions'] = recent_actions
 
+    # Platform-wide stats for global owner with no active tenant
+    from utils.auth_helpers import is_global_owner_user
+    platform_mode = is_global_owner_user(current_user) and tid is None
+    if platform_mode:
+        stats['platform_total_users'] = User.query.filter_by(is_active=True, is_owner=False).count()
+        stats['platform_total_tenants'] = Tenant.query.filter_by(is_active=True).count()
+        stats['platform_total_customers'] = Customer.query.filter_by(is_active=True).count()
+        stats['platform_total_products'] = Product.query.filter_by(is_active=True).count()
+        
+        platform_today_sales = db.session.query(
+            func.count(Sale.id),
+            func.sum(Sale.amount_aed),
+            func.sum(Sale.amount_aed - Sale.paid_amount_aed)
+        ).filter(
+            func.date(Sale.sale_date) == today,
+            Sale.status == 'confirmed',
+        ).first()
+        stats['platform_today_sales_count'] = platform_today_sales[0] or 0
+        stats['platform_today_sales_amount'] = float(platform_today_sales[1] or 0)
+        stats['platform_today_receivables'] = float(platform_today_sales[2] or 0)
+        
+        platform_month_sales = db.session.query(
+            func.count(Sale.id),
+            func.sum(Sale.amount_aed)
+        ).filter(
+            func.date(Sale.sale_date) >= month_start,
+            Sale.status == 'confirmed',
+        ).first()
+        stats['platform_month_sales_count'] = platform_month_sales[0] or 0
+        stats['platform_month_sales_amount'] = float(platform_month_sales[1] or 0)
+        
+        platform_year_sales = db.session.query(
+            func.sum(Sale.amount_aed)
+        ).filter(
+            func.date(Sale.sale_date) >= year_start,
+            Sale.status == 'confirmed',
+        ).scalar() or Decimal('0')
+        stats['platform_year_sales_amount'] = float(platform_year_sales)
+        
+        platform_month_purchases = db.session.query(
+            func.sum(Purchase.amount_aed)
+        ).filter(
+            func.date(Purchase.purchase_date) >= month_start,
+            Purchase.status == 'confirmed',
+        ).scalar() or Decimal('0')
+        stats['platform_month_purchases_amount'] = float(platform_month_purchases)
+        
+        platform_receivables = db.session.query(
+            func.sum(Sale.amount_aed - Sale.paid_amount_aed),
+            func.count(Sale.id)
+        ).filter(
+            Sale.status == 'confirmed',
+            Sale.amount_aed > Sale.paid_amount_aed,
+        ).first()
+        stats['platform_total_receivables'] = float(platform_receivables[0] or Decimal('0'))
+        stats['platform_overdue_invoices'] = platform_receivables[1] or 0
+        
+        platform_inv = db.session.query(
+            func.sum(func.coalesce(Product.current_stock, 0) * func.coalesce(Product.regular_price, 0)),
+            func.sum(func.coalesce(Product.current_stock, 0) * func.coalesce(Product.cost_price, 0))
+        ).filter(Product.is_active == True).first()
+        stats['platform_inventory_value'] = float(platform_inv[0] or Decimal('0'))
+        stats['platform_inventory_cost'] = float(platform_inv[1] or Decimal('0'))
+
     if scoped_branch_id is not None:
         low_stock = get_visible_products_query(current_user).all()
     else:
@@ -362,6 +426,66 @@ def dashboard():
         build_system_health_summary,
     )
 
+    # Platform-wide branch stats (all tenants)
+    platform_branch_stats = []
+    if is_global_owner_user(current_user) and tid is None:
+        from models import Branch, Warehouse, StockMovement
+        all_branches = Branch.query.all()
+        for branch in all_branches:
+            # Sales Count & Amount for this branch (All time, all tenants)
+            b_sales = db.session.query(
+                func.count(Sale.id),
+                func.sum(Sale.amount_aed)
+            ).filter(
+                Sale.branch_id == branch.id,
+                Sale.status == 'confirmed',
+            ).first()
+
+            # Monthly Sales (all tenants)
+            b_month_sales = db.session.query(
+                func.sum(Sale.amount_aed)
+            ).filter(
+                Sale.branch_id == branch.id,
+                Sale.status == 'confirmed',
+                func.date(Sale.sale_date) >= month_start,
+            ).scalar() or 0
+
+            # Expenses (All time, all tenants)
+            b_expenses = db.session.query(
+                func.sum(Expense.amount_aed)
+            ).filter(
+                Expense.branch_id == branch.id,
+                Expense.is_reversed == False,
+            ).scalar() or 0
+
+            # Inventory value for this branch
+            warehouse_ids = [w.id for w in Warehouse.query.filter_by(branch_id=branch.id, is_active=True).all()]
+            branch_inventory_value = float(0)
+            if warehouse_ids:
+                product_qtys = db.session.query(
+                    StockMovement.product_id,
+                    func.sum(StockMovement.quantity).label('qty')
+                ).filter(StockMovement.warehouse_id.in_(warehouse_ids)).group_by(StockMovement.product_id).all()
+                for pid, qty in product_qtys:
+                    if not qty:
+                        continue
+                    p = Product.query.filter_by(id=pid).first()
+                    if p and getattr(p, 'cost_price', None):
+                        branch_inventory_value += float(qty) * float(p.cost_price)
+
+            platform_branch_stats.append({
+                'id': branch.id,
+                'name': branch.name,
+                'code': branch.code,
+                'tenant_name': branch.tenant.name_ar if branch.tenant else '—',
+                'total_sales_count': b_sales[0] or 0,
+                'total_sales_amount': float(b_sales[1] or 0),
+                'month_sales_amount': float(b_month_sales),
+                'total_expenses': float(b_expenses),
+                'inventory_value': branch_inventory_value,
+                'net_profit_indicator': float(b_sales[1] or 0) - float(b_expenses)
+            })
+
     panel_mode = 'platform' if is_global_owner_user(current_user) else 'legacy'
     platform_overview = None
     tenant_rows = []
@@ -380,6 +504,7 @@ def dashboard():
         'owner/dashboard.html',
         stats=stats,
         branch_stats=branch_stats,
+        platform_branch_stats=platform_branch_stats if 'platform_branch_stats' in locals() else [],
         total_users=stats['total_users'],
         total_customers=stats['total_customers'],
         total_sales=stats.get('month_sales_count', 0),
@@ -777,9 +902,13 @@ def roles_permissions():
 @owner_required
 def financial_overview():
     from services.financial_service import FinancialService
+    from utils.auth_helpers import is_global_owner_user
+    from utils.tenanting import get_active_tenant_id
     period = request.args.get('period', 'month', type=str)
     scoped_branch_id = _owner_branch_scope()
-    tid = get_active_tenant_id(current_user)
+    # Platform owner: check _platform param or no active tenant
+    force_platform = request.args.get('_platform', type=int) == 1
+    tid = None if (is_global_owner_user(current_user) and (force_platform or get_active_tenant_id(current_user) is None)) else get_active_tenant_id(current_user)
     return FinancialService.financial_overview(period, tid, scoped_branch_id)
 
 @owner_bp.route('/config')

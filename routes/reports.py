@@ -51,17 +51,6 @@ def get_confirmed_supplier_paid_aed(supplier_id, purchase_id=None, tenant_id=Non
     if branch_id is not None:
         q = q.filter(Payment.branch_id == branch_id)
     return Decimal(str(q.scalar() or 0))
-    from models import Payment
-    q = db.session.query(func.coalesce(func.sum(Payment.amount_aed), 0)).filter(
-        Payment.sale_id == sale_id,
-        Payment.payment_confirmed == True,
-        Payment.direction == 'incoming',
-    )
-    if tenant_id is not None:
-        q = q.filter(Payment.tenant_id == tenant_id)
-    if branch_id is not None:
-        q = q.filter(Payment.branch_id == branch_id)
-    return Decimal(str(q.scalar() or 0))
 
 
 def _scoped_customer_query():

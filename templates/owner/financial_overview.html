@@ -12,6 +12,15 @@
                 </div>
                 <div class="col-sm-6">
                     <div class="float-left">
+                        {% if financial_data.platform_mode %}
+                        <a href="{{ url_for('owner.financial_overview', period=period) }}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-building mr-1"></i> عرض شركة محددة
+                        </a>
+                        {% else %}
+                        <a href="{{ url_for('owner.financial_overview', period=period, _platform=1) }}" class="btn btn-outline-info btn-sm">
+                            <i class="fas fa-globe mr-1"></i> وضع المنصة
+                        </a>
+                        {% endif %}
                         <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary">
                             <i class="fas fa-arrow-right mr-2"></i>العودة للوحة التحكم
                         </a>
@@ -30,7 +39,14 @@
                 <div class="col-12">
                     <div class="card">
                         <div class="card-header">
-                            <h3 class="card-title">النظرة المالية - {{ period }}</h3>
+                            <h3 class="card-title">
+                                النظرة المالية - {{ period }}
+                                {% if financial_data.platform_mode %}
+                                <span class="badge badge-info ml-2"><i class="fas fa-globe"></i> وضع المنصة (جميع الشركات)</span>
+                                {% else %}
+                                <span class="badge badge-primary ml-2"><i class="fas fa-building"></i> نطاق الشركة الحالية</span>
+                                {% endif %}
+                            </h3>
                         </div>
                         <div class="card-body">
                             <div class="row">

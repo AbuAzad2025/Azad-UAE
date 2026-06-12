@@ -617,3 +617,121 @@ class TestPosTenantCurrency:
                         content = f.read()
                     assert "or 'AED'" not in content
                     assert "or \"AED\"" not in content
+
+class TestPosPermissionGuards:
+    def _no_perm_user(self, app):
+        from models import Tenant, Role, User
+        from extensions import db
+        with app.app_context():
+            tenant = Tenant(name="NoPerm", name_ar="NoPerm", slug="no-perm", country="AE")
+            db.session.add(tenant)
+            db.session.commit()
+            role = Role(name="Cashier", slug="cashier", is_active=True)
+            db.session.add(role)
+            db.session.commit()
+            user = User(username="nocashier", email="nocashier@test.com", full_name="No Perm", tenant_id=tenant.id, role_id=role.id, is_active=True)
+            user.set_password("testpass")
+            db.session.add(user)
+            db.session.commit()
+            return user
+
+    def _login_user(self, client, user):
+        with client.session_transaction() as sess:
+            sess["_user_id"] = str(user.id)
+            sess["_fresh"] = True
+
+    def _enabled(self):
+        from unittest.mock import patch, MagicMock
+        p = patch("routes.pos.SystemSettings")
+        m = p.start()
+        s = MagicMock()
+        s.enable_pos = True
+        m.query.order_by.return_value.first.return_value = s
+        return p
+
+    def _tenant_enabled(self):
+        from unittest.mock import patch, MagicMock
+        p = patch("routes.pos.Tenant")
+        m = p.start()
+        t = MagicMock()
+        t.enable_pos = True
+        m.query.get.return_value = t
+        return p
+
+    def test_kds_orders_rejects_no_permission(self, app, client):
+        user = self._no_perm_user(app)
+        self._login_user(client, user)
+        p1 = self._enabled()
+        p2 = self._tenant_enabled()
+        try:
+            with patch("routes.pos.get_active_tenant_id", return_value=user.tenant_id):
+                resp = client.get("/pos/api/kds/orders")
+                assert resp.status_code == 403
+        finally:
+            p1.stop()
+            p2.stop()
+
+    def test_kds_dashboard_rejects_no_permission(self, app, client):
+        user = self._no_perm_user(app)
+        self._login_user(client, user)
+        p1 = self._enabled()
+        p2 = self._tenant_enabled()
+        try:
+            with patch("routes.pos.get_active_tenant_id", return_value=user.tenant_id):
+                resp = client.get("/pos/kds")
+                assert resp.status_code == 403
+        finally:
+            p1.stop()
+            p2.stop()
+
+    def test_hardware_status_rejects_no_permission(self, app, client):
+        user = self._no_perm_user(app)
+        self._login_user(client, user)
+        p1 = self._enabled()
+        p2 = self._tenant_enabled()
+        try:
+            with patch("routes.pos.get_active_tenant_id", return_value=user.tenant_id):
+                resp = client.get("/pos/api/hardware/status")
+                assert resp.status_code == 403
+        finally:
+            p1.stop()
+            p2.stop()
+
+    def test_hardware_open_drawer_rejects_no_permission(self, app, client):
+        user = self._no_perm_user(app)
+        self._login_user(client, user)
+        p1 = self._enabled()
+        p2 = self._tenant_enabled()
+        try:
+            with patch("routes.pos.get_active_tenant_id", return_value=user.tenant_id):
+                resp = client.post("/pos/api/hardware/open-drawer")
+                assert resp.status_code == 403
+        finally:
+            p1.stop()
+            p2.stop()
+
+    def test_floors_rejects_no_permission(self, app, client):
+        user = self._no_perm_user(app)
+        self._login_user(client, user)
+        p1 = self._enabled()
+        p2 = self._tenant_enabled()
+        try:
+            with patch("routes.pos.get_active_tenant_id", return_value=user.tenant_id):
+                resp = client.get("/pos/api/floors")
+                assert resp.status_code == 403
+        finally:
+            p1.stop()
+            p2.stop()
+
+    def test_floor_tables_rejects_no_permission(self, app, client):
+        user = self._no_perm_user(app)
+        self._login_user(client, user)
+        p1 = self._enabled()
+        p2 = self._tenant_enabled()
+        try:
+            with patch("routes.pos.get_active_tenant_id", return_value=user.tenant_id):
+                resp = client.get("/pos/api/floors/1/tables")
+                assert resp.status_code == 403
+        finally:
+            p1.stop()
+            p2.stop()
