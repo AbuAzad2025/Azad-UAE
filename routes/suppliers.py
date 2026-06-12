@@ -394,26 +394,105 @@ def delete(id):
 @login_required
 @admin_required
 def statement(id):
-    """كشف حساب المورد"""
+    """كشف حساب المورد مع الرصيد الجاري والتصفية حسب التاريخ"""
+    from datetime import datetime, date as date_type
+
     supplier = tenant_get_or_404(Supplier, id)
     if not _supplier_in_scope(id):
         return render_template('errors/403.html'), 403
 
-    tid = get_active_tenant_id(current_user)
-    purchases = supplier.purchases.filter_by(status='confirmed', tenant_id=tid)
-    if branch_scope_id() is not None:
-        purchases = purchases.filter(Purchase.branch_id == branch_scope_id())
-    purchases = purchases.order_by(Purchase.purchase_date.desc()).all()
+    date_from = request.args.get('date_from', type=str)
+    date_to = request.args.get('date_to', type=str)
 
-    payments = Payment.query.filter_by(supplier_id=id, tenant_id=tid)
+    tid = get_active_tenant_id(current_user)
+    purchases_q = supplier.purchases.filter_by(status='confirmed', tenant_id=tid)
+    payments_q = Payment.query.filter_by(supplier_id=id, tenant_id=tid, direction='outgoing')
     if branch_scope_id() is not None:
-        payments = payments.filter(Payment.branch_id == branch_scope_id())
-    payments = payments.order_by(Payment.payment_date.desc()).all()
+        purchases_q = purchases_q.filter(Purchase.branch_id == branch_scope_id())
+        payments_q = payments_q.filter(Payment.branch_id == branch_scope_id())
+    if date_from:
+        purchases_q = purchases_q.filter(func.date(Purchase.purchase_date) >= date_from)
+        payments_q = payments_q.filter(func.date(Payment.payment_date) >= date_from)
+    if date_to:
+        purchases_q = purchases_q.filter(func.date(Purchase.purchase_date) <= date_to)
+        payments_q = payments_q.filter(func.date(Payment.payment_date) <= date_to)
+
+    purchases = purchases_q.order_by(Purchase.purchase_date.asc()).all()
+    payments = payments_q.order_by(Payment.payment_date.asc()).all()
+
+    transactions = []
+    for p in purchases:
+        transactions.append({
+            'date': p.purchase_date,
+            'type': 'purchase',
+            'reference': p.purchase_number,
+            'debit': float(p.base_amount or 0),
+            'credit': 0,
+            'balance': 0,
+            'currency': p.currency or 'AED',
+            'exchange_rate': float(p.exchange_rate or 1),
+            'description': 'فاتورة شراء',
+            'amount': float(p.total_amount or 0),
+            'base_amount': float(p.base_amount or 0),
+        })
+    for pm in payments:
+        pm_amount = float(pm.amount_aed or 0)
+        transactions.append({
+            'date': pm.payment_date,
+            'type': 'payment',
+            'reference': pm.payment_number or pm.reference_number or '',
+            'debit': 0,
+            'credit': pm_amount if pm.payment_confirmed else 0,
+            'balance': 0,
+            'currency': pm.currency or 'AED',
+            'exchange_rate': float(pm.exchange_rate or 1),
+            'description': f'دفعة - {pm.payment_method}',
+            'amount': float(pm.amount or 0),
+            'base_amount': pm_amount,
+            'payment_method': pm.payment_method,
+            'payment_confirmed': pm.payment_confirmed,
+            'payment_number': pm.payment_number,
+            'payment_date': pm.payment_date,
+            'cheque_number': pm.cheque_number,
+            'cheque_bank': pm.bank_name,
+            'cheque_due_date': pm.cheque_date,
+            'notes': pm.notes or '',
+        })
+
+    transactions.sort(key=lambda x: (x['date'] or datetime.min))
+
+    # Opening balance if date_from is set
+    if date_from:
+        opening_balance = 0
+        for t in transactions:
+            if isinstance(t['date'], (datetime, date_type)):
+                d = t['date'].date() if isinstance(t['date'], datetime) else t['date']
+                if d < datetime.strptime(date_from, '%Y-%m-%d').date():
+                    opening_balance += t['debit'] - t['credit']
+        # Insert opening balance entry
+        transactions.insert(0, {
+            'date': date_from,
+            'type': 'opening',
+            'reference': '',
+            'debit': 0,
+            'credit': 0,
+            'balance': opening_balance,
+            'currency': 'AED',
+            'exchange_rate': 1,
+            'description': 'الرصيد الافتتاحي',
+        })
+
+    running_balance = 0
+    for t in transactions:
+        if t['type'] != 'opening':
+            running_balance += t['debit'] - t['credit']
+        t['balance'] = running_balance
 
     return render_template('suppliers/statement.html',
                          supplier=supplier,
-                         purchases=purchases,
-                         payments=payments)
+                         transactions=transactions,
+                         final_balance=running_balance,
+                         filters={'date_from': date_from or '', 'date_to': date_to or ''})
 
 
 @suppliers_bp.route('/api/search')

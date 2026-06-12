@@ -624,11 +624,24 @@ def statement(id):
             }
         })
 
+    # Collect receipt numbers already represented by allocated Payment records
+    allocated_receipt_numbers = set()
+    for t in transactions:
+        if t['type'] == 'payment':
+            ref = t.get('reference', '') or t.get('payment', {}).get('reference_number', '')
+            if ref:
+                allocated_receipt_numbers.add(ref)
+
     for receipt in receipts:
+        receipt_ref = receipt.receipt_number or f'قبض #{receipt.id}'
+        # If this receipt's number appears in any Payment's reference_number, the
+        # receipt amount is already represented by the allocated Payment entries.
+        if receipt_ref in allocated_receipt_numbers:
+            continue
         transactions.append({
             'date': receipt.receipt_date,
             'type': 'receipt',
-            'reference': receipt.receipt_number or f'قبض #{receipt.id}',
+            'reference': receipt_ref,
             'debit': 0,
             'credit': float(receipt.amount_aed or 0),
             'balance': 0,
@@ -642,12 +655,52 @@ def statement(id):
 
     transactions.sort(key=lambda x: (x['date'] or datetime.min))
 
+    # Opening balance: compute from ALL confirmed transactions before date_from
+    opening_balance = 0
+    if date_from:
+        from datetime import date as date_type
+        cutoff = datetime.strptime(date_from, '%Y-%m-%d').date() if isinstance(date_from, str) else date_from
+        remaining = []
+        for trans in transactions:
+            tdate = trans.get('date')
+            if isinstance(tdate, datetime):
+                tdate = tdate.date()
+            if tdate is not None and tdate < cutoff:
+                is_confirmed = trans.get('payment', {}).get('payment_confirmed', True) if trans['type'] == 'payment' else (
+                    trans.get('status') != 'معلقة' if trans['type'] == 'receipt' else True)
+                if is_confirmed:
+                    opening_balance += trans['debit'] - trans['credit']
+            else:
+                remaining.append(trans)
+        transactions = remaining
+
     if transaction_type in {'sale', 'payment', 'receipt'}:
         transactions = [trans for trans in transactions if trans['type'] == transaction_type]
 
+    # Insert opening balance entry
+    if opening_balance != 0 or date_from:
+        transactions.insert(0, {
+            'date': date_from if date_from else '',
+            'type': 'opening',
+            'reference': '',
+            'debit': 0,
+            'credit': 0,
+            'balance': opening_balance,
+            'description': 'الرصيد الافتتاحي',
+            'currency': default_currency,
+            'exchange_rate': 1.0,
+            'paid_amount': 0,
+            'balance_due': 0,
+            'status': '',
+            'is_confirmed': True,
+        })
+
     # الرصيد الجاري: المؤكد فقط
-    running_balance = 0
+    running_balance = opening_balance
     for trans in transactions:
+        if trans['type'] == 'opening':
+            trans['balance'] = running_balance
+            continue
         is_confirmed = trans.get('payment', {}).get('payment_confirmed', True) if trans['type'] == 'payment' else (trans.get('status') != 'معلقة' if trans['type'] == 'receipt' else True)
         if is_confirmed:
             running_balance += trans['debit'] - trans['credit']

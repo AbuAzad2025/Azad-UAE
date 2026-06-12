@@ -21,11 +21,32 @@
   margin-bottom: 20px;
 }
 
-    /* D6: externalized inline styles */
-    .ic-1 { background: #007bff; color: white; }
-    .ic-2 { background: #f8f9fa; font-weight: bold; }
-    .ic-3 { background: #17a2b8; color: white; }
-  </style>
+.ic-1 { background: #007bff; color: white; }
+.ic-2 { background: #f8f9fa; font-weight: bold; }
+.ic-3 { background: #17a2b8; color: white; }
+
+.amount-cell { direction: ltr; text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.final-balance-row td { font-size: 0.82rem; font-weight: 700; background: #f1f3f6; border-top: 1px solid #c2c7d1; }
+
+.transaction-meta { font-size: 0.66rem; color: #555a66; }
+.transaction-meta span + span::before { content: "•"; margin: 0 0.35rem; color: rgba(0,0,0,0.25); }
+
+table.statement-table thead th {
+  white-space: nowrap;
+  background: #e4e7f0;
+  color: #03060f;
+  font-size: 1.05rem;
+  font-weight: 780;
+  border: 0.4px solid #aeb3bd;
+  text-align: left;
+}
+.statement-table th, .statement-table td { padding: 0.3rem 0.5rem; }
+.payment-chip {
+  display: inline-flex; align-items: center; padding: 0.22rem 0.5rem;
+  background: rgba(0,0,0,0.05); border-radius: 4px; font-size: 0.7rem;
+  margin-left: 0.45rem; color: #10121a;
+}
+</style>
 {% endblock %}
 
 {% block page_title %}
@@ -38,18 +59,11 @@
     <button onclick="window.print()" class="btn btn-primary">
       <i class="fas fa-print mr-2"></i>طباعة
     </button>
-    {% if current_user.has_permission('manage_suppliers') %}
     <a href="{{ url_for('suppliers.view', id=supplier.id) }}" class="btn btn-info">
-    {% endif %}
       <i class="fas fa-truck mr-2"></i>تفاصيل المورد
     </a>
-    {% if current_user.has_permission('manage_suppliers') %}
     <a href="{{ url_for('suppliers.index') }}" class="btn btn-secondary">
-    {% endif %}
       <i class="fas fa-arrow-right mr-2"></i>العودة للقائمة
-    </a>
-    <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
-      <i class="fas fa-home mr-2"></i>الرئيسية
     </a>
   </div>
 </div>
@@ -86,105 +100,155 @@
       </div>
     </div>
   </div>
-  
+
   <div class="card-body">
-    
+
     <div class="statement-info">
       <div class="row text-center">
-        <div class="col-md-3">
+        <div class="col-md-4">
           <h6 class="text-muted">إجمالي المشتريات</h6>
-          <h3 class="text-info">{{ purchases|length }}</h3>
+          <h3 class="text-info">{{ transactions|selectattr('type', 'equalto', 'purchase')|list|length }}</h3>
         </div>
-        <div class="col-md-3">
-          <h6 class="text-muted">إجمالي المبلغ</h6>
+        <div class="col-md-4">
+          <h6 class="text-muted">المبلغ الإجمالي</h6>
           <h3 class="text-success">{{ format_currency(supplier.total_purchases_base or 0) }}</h3>
         </div>
-        <div class="col-md-3">
-          <h6 class="text-muted">{{ t('Paid') }}</h6>
-          <h3 class="text-primary">{{ format_currency(supplier.total_paid_base or 0) }}</h3>
-        </div>
-        <div class="col-md-3">
+        <div class="col-md-4">
           <h6 class="text-muted">الرصيد المستحق</h6>
-          <h3 class="{% if supplier.get_balance_base() > 0 %}text-danger{% else %}text-success{% endif %}">
-            {{ format_currency(supplier.get_balance_base()) }}
+          <h3 class="{% if final_balance > 0 %}text-danger{% else %}text-success{% endif %}">
+            {{ format_currency(final_balance) }}
           </h3>
         </div>
       </div>
     </div>
-    
-    
-    {% if purchases %}
+
+    <!-- Filters -->
+    <div class="mb-3 no-print">
+      <form class="form-inline" method="get">
+        <div class="form-group mx-1 mb-2">
+          <label for="date_from" class="sr-only">من تاريخ</label>
+          <input type="date" id="date_from" name="date_from" class="form-control form-control-sm" value="{{ filters.date_from }}" aria-label="من تاريخ">
+        </div>
+        <div class="form-group mx-1 mb-2">
+          <label for="date_to" class="sr-only">إلى تاريخ</label>
+          <input type="date" id="date_to" name="date_to" class="form-control form-control-sm" value="{{ filters.date_to }}" aria-label="إلى تاريخ">
+        </div>
+        <div class="form-group mx-1 mb-2">
+          <button type="submit" class="btn btn-primary btn-sm">تطبيق</button>
+          <a href="{{ url_for('suppliers.statement', id=supplier.id) }}" class="btn btn-light btn-sm ml-1">إعادة تعيين</a>
+        </div>
+      </form>
+    </div>
+
+    <!-- Transactions Table -->
     <div class="table-responsive">
-      <table class="table table-bordered table-striped">
-        <thead class="ic-1">
+      <table class="table table-bordered table-striped statement-table">
+        <thead>
           <tr>
-            <th class="text-center">#</th>
-            <th>رقم الشراء</th>
-            <th>{{ t('Date') }}</th>
-            <th>العملة</th>
-            <th><i class="fas fa-exchange-alt mr-1"></i>سعر الصرف</th>
-            <th class="text-center">عدد المنتجات</th>
-            <th class="text-left">{{ t('Amount') }}</th>
-            <th class="text-left">المبلغ ({{ tenant_currency_symbol }})</th>
-            <th class="text-center">{{ t('Status') }}</th>
+            <th>التاريخ</th>
+            <th>البيان</th>
+            <th>المرجع</th>
+            <th class="text-danger">مدين (مشتريات)</th>
+            <th class="text-success">دائن (مدفوعات)</th>
+            <th>الرصيد الجاري</th>
           </tr>
         </thead>
         <tbody>
-          {% for purchase in purchases %}
-          <tr>
-            <td class="text-center">{{ loop.index }}</td>
-            <td><strong>{{ purchase.purchase_number }}</strong></td>
-            <td>{{ purchase.purchase_date.strftime('%Y-%m-%d') }}</td>
-            <td><span class="badge badge-info">{{ purchase.currency }}</span></td>
+          {% for t in transactions %}
+          <tr class="{% if t.type == 'opening' %}table-info{% elif t.type == 'purchase' %}table-light{% endif %}">
+            <td>{{ t.date.strftime('%Y-%m-%d') if t.date is string else (t.date.strftime('%Y-%m-%d') if t.date else '-') }}</td>
             <td>
-              {% if purchase.exchange_rate and purchase.exchange_rate != 1 %}
-                <span class="badge badge-info" title="سعر الصرف وقت المعاملة">
-                  <i class="fas fa-exchange-alt mr-1"></i>{{ "{:.4f}".format(purchase.exchange_rate) }}
-                </span>
-              {% else %}
-                <span class="text-muted">1.0000</span>
+              <strong>{{ t.description }}</strong>
+              {% if t.type == 'payment' and t.payment_method %}
+              <div class="transaction-meta">
+                <span>{{ t.payment_method }}</span>
+                {% if not t.payment_confirmed %}
+                <span class="text-warning">معلق</span>
+                {% endif %}
+                {% if t.notes %}
+                <span>{{ t.notes }}</span>
+                {% endif %}
+              </div>
+              {% endif %}
+              {% if t.currency and t.currency != 'AED' %}
+              <span class="payment-chip">{{ t.currency }} @ {{ "%.4f"|format(t.exchange_rate) }}</span>
               {% endif %}
             </td>
-            <td class="text-center">{{ purchase.lines|length }}</td>
-            <td class="text-left">{{ format_currency(purchase.total_amount) }}</td>
-            <td class="text-left text-success"><strong>{{ format_currency(purchase.base_amount) }}</strong></td>
-            <td class="text-center">
-              <span class="badge badge-success">
-                <i class="fas fa-check"></i> مؤكد
-              </span>
-            </td>
+            <td>{{ t.reference or '-' }}</td>
+            <td class="amount-cell text-danger">{{ format_currency(t.debit) if t.debit else '0.00' }}</td>
+            <td class="amount-cell text-success">{{ format_currency(t.credit) if t.credit else '0.00' }}</td>
+            <td class="amount-cell"><strong>{{ format_currency(t.balance) }}</strong></td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="6" class="text-center text-muted py-4">لا توجد معاملات للعرض.</td>
           </tr>
           {% endfor %}
+          <tr class="final-balance-row">
+            <td colspan="5" class="text-center">الرصيد النهائي</td>
+            <td class="text-right amount-cell">{{ format_currency(final_balance) }}</td>
+          </tr>
         </tbody>
-        <tfoot class="ic-2">
-          <tr>
-            <td colspan="7" class="text-left">الإجمالي:</td>
-            <td class="text-left text-success">
-              <h5 class="mb-0">{{ format_currency(supplier.total_purchases_base or 0) }}</h5>
-            </td>
-            <td></td>
-          </tr>
-          <tr>
-            <td colspan="7" class="text-left">الرصيد المستحق:</td>
-            <td class="text-left {% if supplier.get_balance_base() > 0 %}text-danger{% else %}text-success{% endif %}">
-              <h5 class="mb-0">{{ format_currency(supplier.get_balance_base()) }}</h5>
-            </td>
-            <td></td>
-          </tr>
-        </tfoot>
       </table>
     </div>
-    {% else %}
-    <div class="text-center text-muted py-5">
-      <i class="fas fa-inbox fa-4x mb-3"></i>
-      <h4>لا توجد مشتريات</h4>
-      <p>لم يتم تسجيل أي مشتريات من هذا المورد حتى الآن</p>
+
+    <!-- Detail Tables (kept for backward compatibility) -->
+    {% set purchases_list = transactions|selectattr('type', 'equalto', 'purchase')|list %}
+    {% if purchases_list %}
+    <div class="mt-4">
+      <h5 class="mb-3"><i class="fas fa-shopping-cart mr-2"></i>تفاصيل المشتريات</h5>
+      <div class="table-responsive">
+        <table class="table table-bordered table-striped">
+          <thead class="ic-1">
+            <tr>
+              <th class="text-center">#</th>
+              <th>رقم الشراء</th>
+              <th>التاريخ</th>
+              <th>العملة</th>
+              <th>سعر الصرف</th>
+              <th class="text-center">عدد المنتجات</th>
+              <th class="text-left">المبلغ</th>
+              <th class="text-left">المبلغ (AED)</th>
+              <th class="text-center">الحالة</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in purchases_list %}
+            <tr>
+              <td class="text-center">{{ loop.index }}</td>
+              <td><strong>{{ p.reference }}</strong></td>
+              <td>{{ p.date.strftime('%Y-%m-%d') if p.date else '-' }}</td>
+              <td><span class="badge badge-info">{{ p.currency }}</span></td>
+              <td>
+                {% if p.exchange_rate and p.exchange_rate != 1 %}
+                <span class="badge badge-info">{{ "{:.4f}".format(p.exchange_rate) }}</span>
+                {% else %}
+                <span class="text-muted">1.0000</span>
+                {% endif %}
+              </td>
+              <td class="text-center">-</td>
+              <td class="text-left">{{ format_currency(p.amount) }}</td>
+              <td class="text-left text-success"><strong>{{ format_currency(p.base_amount) }}</strong></td>
+              <td class="text-center"><span class="badge badge-success">مؤكد</span></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+          <tfoot class="ic-2">
+            <tr>
+              <td colspan="7" class="text-left">الإجمالي:</td>
+              <td class="text-left text-success"><h5 class="mb-0">{{ format_currency(supplier.total_purchases_base or 0) }}</h5></td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
     </div>
     {% endif %}
-    
-    {% if payments %}
+
+    {% set payments_list = transactions|selectattr('type', 'equalto', 'payment')|list %}
+    {% if payments_list %}
     <div class="mt-4">
-      <h4 class="mb-3"><i class="fas fa-money-check-alt mr-2"></i>الدفعات إلى المورد</h4>
+      <h5 class="mb-3"><i class="fas fa-money-check-alt mr-2"></i>تفاصيل الدفعات</h5>
       <div class="table-responsive">
         <table class="table table-bordered table-striped">
           <thead class="ic-3">
@@ -195,38 +259,27 @@
               <th>الطريقة</th>
               <th>الحالة</th>
               <th>تاريخ الاستحقاق/الصرف</th>
-              <th class="text-left">المبلغ ({{ tenant_currency_symbol }})</th>
+              <th class="text-left">المبلغ (AED)</th>
               <th>ملاحظات</th>
             </tr>
           </thead>
           <tbody>
-            {% for p in payments %}
+            {% for p in payments_list %}
             {% set is_cheque = (p.payment_method == 'cheque') %}
-            {% set method_display = (p.get_method_display('ar') if p.get_method_display else p.payment_method) %}
             {% set status_badge = ('badge-success' if p.payment_confirmed else 'badge-warning') %}
             {% set status_text = ('مؤكدة ✅' if p.payment_confirmed else 'معلقة ⏳') %}
-            {% set due_date = (p.cheque.due_date if p.cheque else p.cheque_date) %}
-            {% set clearance_date = (p.cheque.clearance_date if p.cheque else None) %}
             <tr>
               <td class="text-center">{{ loop.index }}</td>
               <td><strong>{{ p.payment_number }}</strong></td>
-              <td>{{ (p.payment_date or now()).strftime('%Y-%m-%d') }}</td>
-              <td>{{ method_display }}</td>
+              <td>{{ p.payment_date.strftime('%Y-%m-%d') if p.payment_date else '-' }}</td>
+              <td>{{ p.payment_method }}</td>
+              <td><span class="badge {{ status_badge }}">{{ status_text }}</span></td>
               <td>
-                <span class="badge {{ status_badge }}">{{ status_text }}</span>
+                {% if is_cheque and p.cheque_due_date %}
+                  {{ p.cheque_due_date.strftime('%Y-%m-%d') }}
+                {% else %}-{% endif %}
               </td>
-              <td>
-                {% if is_cheque %}
-                  {% if p.payment_confirmed %}
-                    {{ (clearance_date.strftime('%Y-%m-%d') if clearance_date else '-') }}
-                  {% else %}
-                    {{ (due_date.strftime('%Y-%m-%d') if due_date else '-') }}
-                  {% endif %}
-                {% else %}
-                  -
-                {% endif %}
-              </td>
-              <td class="text-left text-primary"><strong>{{ format_currency(p.base_amount or 0) }}</strong></td>
+              <td class="text-left text-primary"><strong>{{ format_currency(p.base_amount) }}</strong></td>
               <td>{{ p.notes or '-' }}</td>
             </tr>
             {% endfor %}
@@ -234,23 +287,15 @@
           <tfoot class="ic-2">
             <tr>
               <td colspan="6" class="text-left">إجمالي الدفعات:</td>
-              <td class="text-left text-primary">
-                <h5 class="mb-0">
-                  {{ format_currency(payments|sum(attribute='base_amount') or 0) }}
-                </h5>
-              </td>
+              <td class="text-left text-primary"><h5 class="mb-0">{{ format_currency(payments_list|sum(attribute='base_amount') or 0) }}</h5></td>
               <td></td>
             </tr>
           </tfoot>
         </table>
       </div>
-      <small class="text-muted d-block mt-2">
-        الشيكات المعلقة تُظهر هنا كـ "معلقة" مع تاريخ الاستحقاق، ولا تُحسب في الرصيد حتى تأكيد الصرف.
-      </small>
     </div>
     {% endif %}
-    
-    
+
     <div class="mt-5 pt-4 border-top">
       <div class="row">
         <div class="col-md-6">
@@ -270,16 +315,12 @@
   </div>
 </div>
 
-
 <div class="text-center mt-3 no-print">
   <button onclick="window.print()" class="btn btn-lg btn-primary">
     <i class="fas fa-print mr-2"></i>طباعة كشف الحساب
   </button>
-  {% if current_user.has_permission('manage_suppliers') %}
   <a href="{{ url_for('suppliers.view', id=supplier.id) }}" class="btn btn-lg btn-secondary">
-  {% endif %}
     <i class="fas fa-arrow-right mr-2"></i>العودة للمورد
   </a>
 </div>
 {% endblock %}
-
