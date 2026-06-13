@@ -14,7 +14,7 @@ os.environ.setdefault("FLASK_ENV", "testing")
 os.environ.setdefault("DEBUG", "true")
 os.environ.setdefault("SECRET_KEY", "test-secret-key-for-testing-only")
 os.environ.setdefault("WTF_CSRF_ENABLED", "false")
-os.environ.setdefault("DATABASE_URL", "sqlite:///:memory:")
+os.environ.setdefault("DATABASE_URL", "postgresql+psycopg2://postgres:123@localhost:5432/azad_uae")
 os.environ.setdefault("CACHE_TYPE", "null")
 os.environ.setdefault("CELERY_BROKER_URL", "memory://")
 os.environ.setdefault("CELERY_RESULT_BACKEND", "memory://")
@@ -42,7 +42,7 @@ class TestConfig:
     MAIL_PASSWORD = None
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024
     ENABLE_MWAC = True
-    ENABLE_DYNAMIC_GL_MAPPING = True
+    ENABLE_DYNAMIC_GL_MAPPING = False
     ENABLE_LANDED_COST_CAPITALIZATION = True
     ENABLE_ONLINE_EXCHANGE_RATE_FALLBACK = False
     ENABLE_ADVANCED_RECONCILIATION = True
@@ -78,7 +78,7 @@ class TestConfig:
 
 @pytest.fixture(scope="session")
 def app():
-    """Create and configure the Flask app for testing."""
+    """Create and configure the Flask app for testing against real PostgreSQL."""
     from app import create_app
     from extensions import db
     from services.logging_core import LoggingCore
@@ -91,13 +91,8 @@ def app():
     app = create_app(config_class=TestConfig)
 
     with app.app_context():
-        db.create_all()
         yield app
         db.session.remove()
-        if str(db.engine.url).startswith("sqlite"):
-            with db.engine.connect() as conn:
-                conn.execute(sa_text("PRAGMA foreign_keys=OFF"))
-        db.drop_all()
 
     LoggingCore.log_error = original_log_error
     LoggingCore.log_frontend_error = original_log_frontend
@@ -112,7 +107,10 @@ def client(app):
 def db_session(app):
     from extensions import db
     with app.app_context():
+        db.session.expire_all()
         yield db.session
+        db.session.rollback()
+        db.session.remove()
 
 
 @pytest.fixture
@@ -144,9 +142,9 @@ def sample_permissions(db_session):
     """Create all commonly needed permissions for tests (idempotent)."""
     from models import Permission
     codes = [
-        "admin", "view_reports", "manage_sales", "manage_purchases",
+        "admin", "view_reports", "view_ledger", "manage_sales", "manage_purchases",
         "manage_expenses", "manage_payroll", "manage_payments", "manage_products",
-        "manage_customers", "manage_suppliers", "manage_inventory",
+        "manage_customers", "manage_suppliers", "manage_inventory", "manage_warehouse",
     ]
     existing = {p.code: p for p in Permission.query.all()}
     perms = []
@@ -429,12 +427,14 @@ def sample_sale(db_session, sample_tenant, sample_customer, sample_user):
 
 
 @pytest.fixture
-def sample_warehouse(db_session, sample_tenant):
+def sample_warehouse(db_session, sample_tenant, sample_branch):
     from models import Warehouse
     w = Warehouse(
         tenant_id=sample_tenant.id,
+        branch_id=sample_branch.id,
         name="Main Warehouse",
         name_ar="المستودع الرئيسي",
+        is_active=True,
     )
     db_session.add(w)
     db_session.commit()
@@ -451,10 +451,57 @@ def sample_product(db_session, sample_tenant, sample_warehouse):
         sku="SKU-TEST-001",
         cost_price=Decimal("50.000"),
         regular_price=Decimal("100.000"),
+        current_stock=Decimal("100.000"),
     )
     db_session.add(p)
     db_session.commit()
     return p
 
 
+@pytest.fixture
+def sample_product_with_stock(db_session, sample_tenant, sample_warehouse):
+    """Create a product with real stock via StockService."""
+    from decimal import Decimal
+    from models import Product, ProductWarehouseStock
+    from services.stock_service import StockService
+    p = Product(
+        tenant_id=sample_tenant.id,
+        name="Stocked Product",
+        sku="SKU-STOCK-001",
+        cost_price=Decimal("50.000"),
+        regular_price=Decimal("100.000"),
+        current_stock=Decimal("0"),
+    )
+    db_session.add(p)
+    db_session.commit()
+    StockService.add_stock(p.id, 100, warehouse_id=sample_warehouse.id)
+    db_session.refresh(p)
+    return p
 
+
+@pytest.fixture
+def sample_gl_accounts(db_session, sample_tenant):
+    """Ensure core chart of accounts exists for the tenant."""
+    from services.gl_service import GLService
+    GLService.ensure_core_accounts(tenant_id=sample_tenant.id)
+    db_session.commit()
+    return sample_tenant
+
+
+@pytest.fixture
+def sample_currency_aed(db_session, sample_tenant):
+    """Ensure AED currency exists."""
+    from models import Currency
+    c = Currency.query.filter_by(code="AED").first()
+    if not c:
+        c = Currency(code="AED", name="UAE Dirham", name_ar="درهم إماراتي", symbol="د.إ", rate_to_base=1)
+        db_session.add(c)
+        db_session.commit()
+    return c
+
+
+@pytest.fixture
+def logged_in_client(client, sample_user):
+    """A test client authenticated as sample_user via real login."""
+    client.post('/auth/login', data={'username': sample_user.username, 'password': 'password123'}, follow_redirects=True)
+    return client

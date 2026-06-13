@@ -57,7 +57,7 @@ class TestConfigValues:
         assert len(app.config["SECRET_KEY"]) > 0
 
     def test_database_uri(self, app):
-        assert "sqlite" in app.config["SQLALCHEMY_DATABASE_URI"]
+        assert "postgresql" in app.config["SQLALCHEMY_DATABASE_URI"]
 
     def test_csrf_disabled_in_testing(self, app):
         assert app.config["WTF_CSRF_ENABLED"] is False
