@@ -816,7 +816,9 @@ class TestCogsResolution:
         from services.stock_service import StockService
         from models import Tenant, Product, Warehouse
         with app.app_context():
-            tenant = Tenant(name='CGTest', name_ar='CGTest', slug='cgt', email='c@g.com', phone_1='050', country='AE', subscription_plan='basic')
+            import uuid
+            uid = uuid.uuid4().hex[:6]
+            tenant = Tenant(name='CGTest-' + uid, name_ar='CGTest', slug='cgt-' + uid, email='c@g.com', phone_1='050', country='AE', subscription_plan='basic')
             db_session.add(tenant)
             db_session.flush()
             product = Product(tenant_id=tenant.id, name='NoCost', current_stock=0, regular_price=Decimal('1'))

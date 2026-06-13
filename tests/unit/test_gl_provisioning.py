@@ -60,11 +60,13 @@ class TestGLProvisioningService:
             assert len(missing) == 0
 
     def test_industry_accounts_for_automotive(self, app):
+        import uuid
         with app.app_context():
+            uid = uuid.uuid4().hex[:6]
             tenant = Tenant(
-                name='Automotive Test',
+                name='Automotive Test-' + uid,
                 name_ar='اختبار سيارات',
-                slug='automotive-test',
+                slug='automotive-test-' + uid,
                 business_type='automotive',
             )
             db.session.add(tenant)
@@ -79,11 +81,13 @@ class TestGLProvisioningService:
             assert acc_4105.industry_code == 'automotive'
 
     def test_industry_accounts_for_supermarket(self, app):
+        import uuid
         with app.app_context():
+            uid = uuid.uuid4().hex[:6]
             tenant = Tenant(
-                name='Supermarket Test',
+                name='Supermarket Test-' + uid,
                 name_ar='اختبار سوبرماركت',
-                slug='supermarket-test',
+                slug='supermarket-test-' + uid,
                 business_type='supermarket',
             )
             db.session.add(tenant)
@@ -97,11 +101,13 @@ class TestGLProvisioningService:
             assert acc_1144.name == 'Inventory - Perishable Goods'
 
     def test_no_industry_accounts_for_general(self, app):
+        import uuid
         with app.app_context():
+            uid = uuid.uuid4().hex[:6]
             tenant = Tenant(
-                name='General Test',
+                name='General Test-' + uid,
                 name_ar='اختبار عام',
-                slug='general-test',
+                slug='general-test-' + uid,
                 business_type='general',
             )
             db.session.add(tenant)

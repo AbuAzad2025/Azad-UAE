@@ -11,45 +11,40 @@ from decimal import Decimal
 class TestDocumentSequence:
     """Test smart document sequencing."""
 
-    def test_sequence_generate_next_number(self, app, db_session):
+    def test_sequence_generate_next_number(self, app, db_session, sample_tenant):
         from services.document_sequence_service import DocumentSequenceService
         from models import DocumentSequence
         with app.app_context():
-            # Create sequence
             seq = DocumentSequenceService.get_or_create(
-                tenant_id=1, code='test_inv', prefix='INV',
+                tenant_id=sample_tenant.id, code='test_inv', prefix='INV',
                 pattern='{prefix}-{year}-{counter:04d}', counter_reset='year'
             )
             assert seq.code == 'test_inv'
-
-            # Generate next number
-            num1 = DocumentSequenceService.next_number(tenant_id=1, code='test_inv')
+            num1 = DocumentSequenceService.next_number(tenant_id=sample_tenant.id, code='test_inv')
             assert num1.startswith('INV-')
             assert '-0001' in num1
-
-            num2 = DocumentSequenceService.next_number(tenant_id=1, code='test_inv')
+            num2 = DocumentSequenceService.next_number(tenant_id=sample_tenant.id, code='test_inv')
             assert '-0002' in num2
 
-    def test_sequence_preview_does_not_consume(self, app, db_session):
+    def test_sequence_preview_does_not_consume(self, app, db_session, sample_tenant):
         from services.document_sequence_service import DocumentSequenceService
         with app.app_context():
             DocumentSequenceService.get_or_create(
-                tenant_id=1, code='preview_test', prefix='PRE'
+                tenant_id=sample_tenant.id, code='preview_test', prefix='PRE'
             )
-            preview1 = DocumentSequenceService.preview(tenant_id=1, code='preview_test')
-            preview2 = DocumentSequenceService.preview(tenant_id=1, code='preview_test')
-            # Preview should not consume counter
+            preview1 = DocumentSequenceService.preview(tenant_id=sample_tenant.id, code='preview_test')
+            preview2 = DocumentSequenceService.preview(tenant_id=sample_tenant.id, code='preview_test')
             assert preview1 == preview2
 
-    def test_sequence_branch_scoped(self, app, db_session):
+    def test_sequence_branch_scoped(self, app, db_session, sample_tenant):
         from services.document_sequence_service import DocumentSequenceService
         with app.app_context():
             DocumentSequenceService.get_or_create(
-                tenant_id=1, code='branch_test', prefix='B',
+                tenant_id=sample_tenant.id, code='branch_test', prefix='B',
                 pattern='{prefix}-{branch}-{year}-{counter:04d}', branch_scoped=True
             )
             num = DocumentSequenceService.next_number(
-                tenant_id=1, code='branch_test', branch_code='DUB'
+                tenant_id=sample_tenant.id, code='branch_test', branch_code='DUB'
             )
             assert 'DUB' in num
 

@@ -135,7 +135,7 @@ class TestProductCostPriceWeightedAverageFix:
     Now it recalculates a weighted average across all ProductWarehouseCost records.
     """
 
-    def test_process_purchase_lines_weighted_average_cost(self, app, db_session, sample_tenant, sample_product, sample_warehouse):
+    def test_process_purchase_lines_weighted_average_cost(self, app, db_session, sample_tenant, sample_product, sample_warehouse, sample_supplier, sample_user):
         from services.stock_service import StockService
         from models import Purchase, PurchaseLine, Warehouse, ProductWarehouseCost
         from utils.gl_reference_types import GLRef
@@ -165,10 +165,10 @@ class TestProductCostPriceWeightedAverageFix:
         purchase = Purchase(
             tenant_id=sample_tenant.id,
             purchase_number="PUR-COST-001",
-            supplier_id=1,
+            supplier_id=sample_supplier.id,
             supplier_name="Test Supplier",
             purchase_date=datetime.now(timezone.utc),
-            user_id=1,
+            user_id=sample_user.id,
             total_amount=Decimal("20.000"),
             amount=Decimal("20.000"),
             amount_aed=Decimal("20.000"),
@@ -187,6 +187,7 @@ class TestProductCostPriceWeightedAverageFix:
         )
         db_session.add(line)
         db_session.commit()
+        purchase = Purchase.query.get(purchase.id)
 
         # Mock _update_wac_on_receipt to simulate warehouse 2 getting cost 20
         def mock_update_wac(tenant_id, product_id, warehouse_id, received_qty, unit_cost_aed, reference_type, reference_id):
@@ -211,7 +212,7 @@ class TestProductCostPriceWeightedAverageFix:
 
         with patch.object(StockService, '_update_wac_on_receipt', side_effect=mock_update_wac):
             StockService.process_purchase_lines(purchase, warehouse_id=wh2.id)
-
+        db_session.commit()
         db_session.refresh(sample_product)
         # Weighted average: (10*10 + 1*20) / 11 = 120/11 ≈ 10.909
         pwcs = ProductWarehouseCost.query.filter_by(product_id=sample_product.id).all()
