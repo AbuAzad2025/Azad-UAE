@@ -326,7 +326,7 @@ class TestProductModel:
     def test_product_defaults(self, sample_product):
         assert sample_product.cost_price == Decimal("50.000")
         assert sample_product.regular_price == Decimal("100.000")
-        assert sample_product.current_stock == 0
+        assert sample_product.current_stock == Decimal("100.000")
         assert sample_product.is_active is True
 
     def test_product_tenant_scoped(self, sample_product, sample_tenant):

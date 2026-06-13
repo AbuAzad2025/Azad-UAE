@@ -34,10 +34,12 @@ class TestUserModel:
     """User model tests."""
 
     def test_user_password_hashing(self, db_session, sample_tenant, sample_role):
+        import uuid
         from models import User
+        uid = uuid.uuid4().hex[:6]
         user = User(
-            username="pwtest",
-            email="pw@test.com",
+            username="pwtest-" + uid,
+            email="pw-" + uid + "@test.com",
             full_name="PW Test",
             tenant_id=sample_tenant.id,
             role_id=sample_role.id,
@@ -100,12 +102,15 @@ class TestBankReconciliationModel:
     """BankReconciliation — recently updated with tenant_id."""
 
     def test_bank_reconciliation_tenant_id(self, db_session, sample_tenant):
-        from models import BankReconciliation
+        from models import BankReconciliation, GLAccount
         from datetime import date
+        acc = GLAccount(tenant_id=sample_tenant.id, code='BANK-TEST', name='Test Bank', type='asset')
+        db_session.add(acc)
+        db_session.flush()
         br = BankReconciliation(
             tenant_id=sample_tenant.id,
             reconciliation_number="BR-001",
-            bank_account_id=1,
+            bank_account_id=acc.id,
             period_start=date.today(),
             period_end=date.today(),
         )
@@ -141,11 +146,16 @@ class TestCardVaultModel:
     """CardVault — recently updated with tenant_id."""
 
     def test_card_vault_tenant_id(self, db_session, sample_tenant):
-        from models import CardVault
+        import uuid
+        from models import CardVault, Customer
+        uid = uuid.uuid4().hex[:6]
+        cust = Customer(tenant_id=sample_tenant.id, name='Card Cust', phone='123')
+        db_session.add(cust)
+        db_session.flush()
         cv = CardVault(
             tenant_id=sample_tenant.id,
-            customer_id=1,
-            card_hash="abc123hash",
+            customer_id=cust.id,
+            card_hash="abc123hash-" + uid,
             card_number_encrypted=b"encrypted",
             cardholder_name_encrypted=b"encrypted_name",
             last_four="1234",
@@ -160,10 +170,13 @@ class TestProductSerialModel:
     """ProductSerial — recently updated with tenant_id."""
 
     def test_product_serial_tenant_id(self, db_session, sample_tenant):
-        from models import ProductSerial
+        from models import ProductSerial, Product
+        prod = Product(tenant_id=sample_tenant.id, name='Serial Prod', sku='SN-PROD-001', regular_price=100)
+        db_session.add(prod)
+        db_session.flush()
         ps = ProductSerial(
             tenant_id=sample_tenant.id,
-            product_id=1,
+            product_id=prod.id,
             serial_number="SN123456",
             status="available",
         )
@@ -358,17 +371,20 @@ class TestBranchModel:
 class TestExpenseModel:
     """Expense model tests."""
 
-    def test_expense_tenant_scoped(self, db_session, sample_tenant):
-        from models import Expense
+    def test_expense_tenant_scoped(self, db_session, sample_tenant, sample_user):
+        from models import Expense, ExpenseCategory
+        cat = ExpenseCategory(tenant_id=sample_tenant.id, name='Test Cat', name_ar='اختبار', gl_account_code='6100')
+        db_session.add(cat)
+        db_session.flush()
         e = Expense(
             tenant_id=sample_tenant.id,
             expense_number="EXP-001",
-            category_id=1,
+            category_id=cat.id,
             amount=100.0,
             amount_aed=100.0,
             currency="AED",
             payment_method="cash",
-            user_id=1,
+            user_id=sample_user.id,
             description="Test expense",
         )
         db_session.add(e)
@@ -396,27 +412,31 @@ class TestRoleAndPermissionModel:
     """Role and Permission model tests."""
 
     def test_role_creation(self, db_session):
+        import uuid
         from models import Role
+        uid = uuid.uuid4().hex[:6]
         role = Role(
-            name="Manager",
-            slug="manager",
+            name="Manager-" + uid,
+            slug="manager-" + uid,
             is_active=True,
         )
         db_session.add(role)
         db_session.commit()
         assert role.id is not None
-        assert role.slug == "manager"
+        assert role.slug == "manager-" + uid
 
     def test_permission_creation(self, db_session):
+        import uuid
         from models import Permission
+        uid = uuid.uuid4().hex[:6]
         perm = Permission(
-            code="can_view_sales",
+            code="can_view_sales-" + uid,
             name="View Sales",
         )
         db_session.add(perm)
         db_session.commit()
         assert perm.id is not None
-        assert perm.code == "can_view_sales"
+        assert perm.code == "can_view_sales-" + uid
 
 
 class TestAuditLogModel:
@@ -458,11 +478,15 @@ class TestStockMovementModel:
     """StockMovement model tests."""
 
     def test_stock_movement_tenant_scoped(self, db_session, sample_tenant):
-        from models import StockMovement
+        from models import StockMovement, Product, Warehouse
+        prod = Product(tenant_id=sample_tenant.id, name='Stock Prod', sku='STK-001', regular_price=10)
+        wh = Warehouse(tenant_id=sample_tenant.id, name='Stock WH', code='STK1')
+        db_session.add_all([prod, wh])
+        db_session.flush()
         sm = StockMovement(
             tenant_id=sample_tenant.id,
-            product_id=1,
-            warehouse_id=1,
+            product_id=prod.id,
+            warehouse_id=wh.id,
             movement_type="in",
             quantity=10.0,
             reference_type="Purchase",
@@ -512,17 +536,19 @@ class TestAPIKeyModel:
     """APIKey model tests."""
 
     def test_api_key_creation(self, db_session, sample_user):
+        import uuid
         from models.api_key import APIKey
+        uid = uuid.uuid4().hex[:6]
         ak = APIKey(
             created_by=sample_user.id,
-            name="test-key",
-            key="ak_test12345",
+            name="test-key-" + uid,
+            key="ak_test12345-" + uid,
             service="test",
         )
         db_session.add(ak)
         db_session.commit()
         assert ak.id is not None
-        assert ak.key == "ak_test12345"
+        assert ak.key == "ak_test12345-" + uid
 
 
 class TestInvoiceSettingsModel:
