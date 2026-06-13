@@ -395,16 +395,13 @@ def dashboard():
         warehouse_ids = [w.id for w in Warehouse.query.filter_by(branch_id=branch.id, is_active=True).all()]
         branch_inventory_value = float(0)
         if warehouse_ids:
-            product_qtys = db.session.query(
-                StockMovement.product_id,
-                func.sum(StockMovement.quantity).label('qty')
-            ).filter(StockMovement.warehouse_id.in_(warehouse_ids)).group_by(StockMovement.product_id).all()
-            for pid, qty in product_qtys:
-                if not qty:
-                    continue
-                p = Product.query.filter_by(id=pid, tenant_id=branch.tenant_id).first()
-                if p and getattr(p, 'cost_price', None):
-                    branch_inventory_value += float(qty) * float(p.cost_price)
+            from models.warehouse import ProductWarehouseCost
+            pwc_vals = db.session.query(
+                func.sum(ProductWarehouseCost.total_value)
+            ).filter(
+                ProductWarehouseCost.warehouse_id.in_(warehouse_ids)
+            ).scalar() or Decimal('0')
+            branch_inventory_value = float(pwc_vals)
 
         branch_stats.append({
             'id': branch.id,
@@ -458,20 +455,17 @@ def dashboard():
                 Expense.is_reversed == False,
             ).scalar() or 0
 
-            # Inventory value for this branch
+            # Inventory value for this branch (from MWAC records per warehouse)
             warehouse_ids = [w.id for w in Warehouse.query.filter_by(branch_id=branch.id, is_active=True).all()]
             branch_inventory_value = float(0)
             if warehouse_ids:
-                product_qtys = db.session.query(
-                    StockMovement.product_id,
-                    func.sum(StockMovement.quantity).label('qty')
-                ).filter(StockMovement.warehouse_id.in_(warehouse_ids)).group_by(StockMovement.product_id).all()
-                for pid, qty in product_qtys:
-                    if not qty:
-                        continue
-                    p = Product.query.filter_by(id=pid).first()
-                    if p and getattr(p, 'cost_price', None):
-                        branch_inventory_value += float(qty) * float(p.cost_price)
+                from models.warehouse import ProductWarehouseCost
+                pwc_vals = db.session.query(
+                    func.sum(ProductWarehouseCost.total_value)
+                ).filter(
+                    ProductWarehouseCost.warehouse_id.in_(warehouse_ids)
+                ).scalar() or Decimal('0')
+                branch_inventory_value = float(pwc_vals)
 
             platform_branch_stats.append({
                 'id': branch.id,

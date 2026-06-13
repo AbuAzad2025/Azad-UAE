@@ -793,25 +793,24 @@ def create_voucher_submit():
                     db.session.flush()
                     from services.gl_service import GLService
                     GLService.ensure_core_accounts(tenant_id=tenant_id)
-                credit_account = GLService.get_payment_debit_account(
-                    payment_method,
-                    branch_id=payment.branch_id,
-                    tenant_id=tenant_id,
-                )
-                post_or_fail(
-                    [
-                        {'account': credit_account, 'concept_code': GLService.get_payment_debit_concept(payment_method), 'debit': payment.amount, 'description': f'استرداد من مورد {supplier.name}'},
-                        {'account': '2110', 'concept_code': 'AP', 'credit': payment.amount, 'description': f'سند قبض {payment.payment_number}'},
-                    ],
-                    description=f'Supplier refund {payment.payment_number}',
-                    reference_type=GLRef.PAYMENT,
-                    reference_id=payment.id,
-                    currency=currency,
-                    exchange_rate=exchange_rate,
-                    branch_id=payment.branch_id,
-                    tenant_id=tenant_id,
-                )
-                db.session.commit()
+                    credit_account = GLService.get_payment_debit_account(
+                        payment_method,
+                        branch_id=payment.branch_id,
+                        tenant_id=tenant_id,
+                    )
+                    post_or_fail(
+                        [
+                            {'account': credit_account, 'concept_code': GLService.get_payment_debit_concept(payment_method), 'debit': payment.amount, 'description': f'استرداد من مورد {supplier.name}'},
+                            {'account': '2110', 'concept_code': 'AP', 'credit': payment.amount, 'description': f'سند قبض {payment.payment_number}'},
+                        ],
+                        description=f'Supplier refund {payment.payment_number}',
+                        reference_type=GLRef.PAYMENT,
+                        reference_id=payment.id,
+                        currency=currency,
+                        exchange_rate=exchange_rate,
+                        branch_id=payment.branch_id,
+                        tenant_id=tenant_id,
+                    )
                 flash('تم إنشاء سند قبض من مورد بنجاح', 'success')
                 return redirect(url_for('payments.receipts'))
         
@@ -1553,76 +1552,74 @@ def create_payment(purchase_id):
                     payment_type='supplier_payment',
                     branch_id=purchase.branch_id,
                 )
-            
-            # تعيين حقول المرجع/البنك حسب الطريقة
-            if payment_method_value == 'bank_transfer':
-                payment.bank_name = bank_name_transfer or bank_name
-                payment.reference_number = reference_number_transfer or reference_number
-            elif payment_method_value == 'card':
-                payment.reference_number = reference_number_card or reference_number
-                if card_last4:
-                    payment.notes = f'{payment.notes or ""} بطاقة آخر 4: {card_last4}'.strip()
-            elif payment_method_value == 'e_wallet':
-                from flask import request as _req
-                ref_ew = _req.form.get('reference_number_ewallet')
-                payment.reference_number = ref_ew or reference_number
-            else:
-                payment.reference_number = reference_number
-                payment.bank_name = bank_name
-            
-            db.session.add(payment)
-            db.session.flush()
-            
-            # إنشاء سجل الشيك وربطه إذا كانت طريقة الدفع شيك
-            if payment_method_value == 'cheque' and cheque_number:
-                from models import Cheque
-                cheque = Cheque(
-                    tenant_id=tenant_id,
-                    cheque_number=cheque_number,
-                    cheque_bank_number=cheque_number,
-                    cheque_type='outgoing',
-                    supplier_id=purchase.supplier_id,
-                    payment_id=payment.id,
-                    amount=amount_decimal,
-                    currency=currency,
-                    exchange_rate=exchange_rate_decimal,
-                    amount_aed=amount_aed,
-                    issue_date=datetime.utcnow().date(),
-                    due_date=cheque_date if cheque_date else None,
-                    bank_name=bank_name,
-                    status='pending',
-                    notes=notes,
-                    branch_id=purchase.branch_id,
-                )
-                db.session.add(cheque)
+                
+                # تعيين حقول المرجع/البنك حسب الطريقة
+                if payment_method_value == 'bank_transfer':
+                    payment.bank_name = bank_name_transfer or bank_name
+                    payment.reference_number = reference_number_transfer or reference_number
+                elif payment_method_value == 'card':
+                    payment.reference_number = reference_number_card or reference_number
+                    if card_last4:
+                        payment.notes = f'{payment.notes or ""} بطاقة آخر 4: {card_last4}'.strip()
+                elif payment_method_value == 'e_wallet':
+                    from flask import request as _req
+                    ref_ew = _req.form.get('reference_number_ewallet')
+                    payment.reference_number = ref_ew or reference_number
+                else:
+                    payment.reference_number = reference_number
+                    payment.bank_name = bank_name
+                
+                db.session.add(payment)
                 db.session.flush()
-                payment.cheque_id = cheque.id
-                payment.payment_confirmed = False
-            
-            from services.gl_service import GLService
-            tenant_id = getattr(payment, 'tenant_id', None)
-            GLService.ensure_core_accounts(tenant_id=tenant_id)
-            cash_or_bank = GLService.get_payment_credit_account(
-                payment_method_value,
-                branch_id=payment.branch_id,
-                tenant_id=tenant_id,
-            )
-            lines = [
-                {'account': '2110', 'concept_code': 'AP', 'debit': payment.amount, 'description': f'سداد للمورد {payment.supplier_name}'},
-                {'account': cash_or_bank, 'concept_code': GLService.get_payment_credit_concept(payment_method_value), 'credit': payment.amount, 'description': f'سند صرف {payment.payment_number}'}
-            ]
-            post_or_fail(
-                lines,
-                description=f'Payment {payment.payment_number}',
-                reference_type=GLRef.PAYMENT,
-                reference_id=payment.id,
-                currency=payment.currency,
-                exchange_rate=payment.exchange_rate,
-                branch_id=payment.branch_id,
-                tenant_id=tenant_id,
-            )
-            
-            # atomic_transaction ستقوم بالـ commit تلقائياً
+                
+                # إنشاء سجل الشيك وربطه إذا كانت طريقة الدفع شيك
+                if payment_method_value == 'cheque' and cheque_number:
+                    from models import Cheque
+                    cheque = Cheque(
+                        tenant_id=tenant_id,
+                        cheque_number=cheque_number,
+                        cheque_bank_number=cheque_number,
+                        cheque_type='outgoing',
+                        supplier_id=purchase.supplier_id,
+                        payment_id=payment.id,
+                        amount=amount_decimal,
+                        currency=currency,
+                        exchange_rate=exchange_rate_decimal,
+                        amount_aed=amount_aed,
+                        issue_date=datetime.utcnow().date(),
+                        due_date=cheque_date if cheque_date else None,
+                        bank_name=bank_name,
+                        status='pending',
+                        notes=notes,
+                        branch_id=purchase.branch_id,
+                    )
+                    db.session.add(cheque)
+                    db.session.flush()
+                    payment.cheque_id = cheque.id
+                    payment.payment_confirmed = False
+                
+                from services.gl_service import GLService
+                tenant_id = getattr(payment, 'tenant_id', None)
+                GLService.ensure_core_accounts(tenant_id=tenant_id)
+                cash_or_bank = GLService.get_payment_credit_account(
+                    payment_method_value,
+                    branch_id=payment.branch_id,
+                    tenant_id=tenant_id,
+                )
+                lines = [
+                    {'account': '2110', 'concept_code': 'AP', 'debit': payment.amount, 'description': f'سداد للمورد {payment.supplier_name}'},
+                    {'account': cash_or_bank, 'concept_code': GLService.get_payment_credit_concept(payment_method_value), 'credit': payment.amount, 'description': f'سند صرف {payment.payment_number}'}
+                ]
+                post_or_fail(
+                    lines,
+                    description=f'Payment {payment.payment_number}',
+                    reference_type=GLRef.PAYMENT,
+                    reference_id=payment.id,
+                    currency=payment.currency,
+                    exchange_rate=payment.exchange_rate,
+                    branch_id=payment.branch_id,
+                    tenant_id=tenant_id,
+                )
             
             flash('تم إنشاء سند الصرف بنجاح', 'success')
             return redirect(url_for('purchases.view', id=purchase_id))
