@@ -323,7 +323,7 @@ def print_invoice(id):
             print_tenant_id=tid,
         )
     except Exception:
-        current_app.logger.warning('Invoice template %s not found, falling back to modern', template_name)
+        current_app.logger.warning('Invoice template %s not found, falling back to modern', template)
         return render_template(
             'invoices/modern.html',
             sale=sale,
@@ -349,7 +349,7 @@ def edit(id):
     if scoped_branch_id is not None and sale.branch_id != scoped_branch_id:
         return render_template('errors/403.html'), 403
     
-    # منع التعديل للفواتير المدفوعة أو الملغاة
+    # منع التعديل للفواتير المدفوعة أو الملغاة أو المؤكدة/المنفذة مخزنياً
     if sale.payment_status == 'paid':
         flash('⚠️ لا يمكن تعديل فاتورة مدفوعة بالكامل.\n💡 الفواتير المدفوعة لا يمكن تعديلها محاسبياً.', 'danger')
         return redirect(url_for('sales.view', id=id))
@@ -358,9 +358,20 @@ def edit(id):
         flash('⚠️ لا يمكن تعديل فاتورة ملغاة.\n💡 قم بإنشاء فاتورة جديدة بدلاً من ذلك.', 'danger')
         return redirect(url_for('sales.view', id=id))
     
+    from services.sale_service import SaleService
+    has_gl = SaleService.has_inventory_posted(sale)
+    
     if request.method == 'POST':
         try:
-            # السماح فقط بتعديل الملاحظات والخصم
+            if has_gl:
+                # للفواتير المنفذة مخزنياً: السماح فقط بتعديل الملاحظات (لا تغيير في المبالغ المالية)
+                sale.notes = request.form.get('notes', sale.notes)
+                db.session.commit()
+                LoggingCore.log_audit('update', 'sales', id)
+                flash('✅ تم تحديث الملاحظات بنجاح!', 'success')
+                return redirect(url_for('sales.view', id=id))
+            
+            # للفواتير غير المنفذة: السماح بتعديل الملاحظات والخصم
             sale.notes = request.form.get('notes', '')
             discount_amount = request.form.get('discount_amount', type=float, default=0)
             sale.discount_amount = discount_amount

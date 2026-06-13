@@ -184,6 +184,8 @@ class StockService:
                 warehouse = Warehouse.query.filter_by(id=warehouse_id, is_active=True).first()
                 if not warehouse:
                     raise ValueError(f'⚠️ المستودع المحدد غير موجود أو غير نشط (ID: {warehouse_id}).')
+                if tenant_id is not None and getattr(warehouse, 'tenant_id', None) is not None and warehouse.tenant_id != tenant_id:
+                    raise ValueError(f'⚠️ المستودع (ID: {warehouse_id}) لا ينتمي لنفس شركة المنتج.')
             else:
                 warehouse = Warehouse.query.filter_by(tenant_id=tenant_id, is_active=True, is_main=True).first()
                 if not warehouse:
@@ -225,9 +227,22 @@ class StockService:
             except Exception:
                 pws = q_pws.first()
             if pws:
-                pws.quantity += qty
+                new_qty_pws = pws.quantity + qty
+                if new_qty_pws < 0:
+                    raise ValueError(
+                        f'❌ المخزون غير كافٍ في المستودع للمنتج "{product.name}"!\n'
+                        f'📦 المتوفر في المستودع: {pws.quantity} | المطلوب: {abs(qty)}\n'
+                        f'💡 قلل الكمية أو انقل مخزوناً من مستودع آخر.'
+                    )
+                pws.quantity = new_qty_pws
                 pws.updated_at = datetime.now(timezone.utc)
             else:
+                if qty < 0:
+                    raise ValueError(
+                        f'❌ المخزون غير كافٍ في المستودع للمنتج "{product.name}"!\n'
+                        f'📦 المتوفر في المستودع: 0 | المطلوب: {abs(qty)}\n'
+                        f'💡 أضف مخزوناً أولاً.'
+                    )
                 pws = ProductWarehouseStock(
                     tenant_id=tenant_id,
                     product_id=product_id,

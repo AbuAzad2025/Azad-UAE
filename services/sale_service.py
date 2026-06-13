@@ -65,12 +65,15 @@ class SaleService:
         if shipping_decimal < Decimal('0'):
             raise ValueError('تكلفة الشحن لا يمكن أن تكون سالبة')
         
-        # تحديد المستودع بطريقة ذكية
+        # تحديد المستودع بطريقة ذكية مع عزل التينانت
         from models import Warehouse
+        tenant_id = get_active_tenant_id(seller) or getattr(seller, 'tenant_id', None) or getattr(customer, 'tenant_id', None)
         if not warehouse_id:
             warehouse = None
             seller_branch_id = getattr(seller, 'branch_id', None)
             warehouse_query = Warehouse.query.filter_by(is_active=True)
+            if tenant_id is not None:
+                warehouse_query = warehouse_query.filter_by(tenant_id=tenant_id)
             if seller_branch_id:
                 warehouse_query = warehouse_query.filter_by(branch_id=seller_branch_id)
             warehouse = warehouse_query.filter_by(is_main=True).first() or warehouse_query.first()
@@ -83,7 +86,6 @@ class SaleService:
             raise ValueError('⚠️ لا يوجد مستودع متاح لهذا الفرع.\n💡 أنشئ مستودعاً للفرع أو اختر مستودعاً صحيحاً.')
         
         sale_branch_id = warehouse.branch_id or seller.branch_id
-        tenant_id = get_active_tenant_id(seller) or getattr(seller, 'tenant_id', None) or getattr(customer, 'tenant_id', None)
         tax_rate_decimal = normalize_tax_rate(raw_tax_rate, tenant_id)
 
         try:

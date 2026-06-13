@@ -516,7 +516,7 @@ class GLService:
         if m in ('bank_transfer', 'card'):
             return GLService.get_default_liquidity_account('bank', branch_id=branch_id, tenant_id=tenant_id)
         if m == 'cheque':
-            if tenant_id:
+            if tenant_id and is_dynamic_gl_mapping_enabled():
                 account = resolve_gl_account(
                     tenant_id=tenant_id,
                     concept_code='CHEQUES_UNDER_COLLECTION',
@@ -524,17 +524,18 @@ class GLService:
                 )
                 if account:
                     return account.code
-            raise GLMappingError(
-                tenant_id=tenant_id,
-                concept_code='CHEQUES_UNDER_COLLECTION',
-                branch_id=branch_id,
-                issue="No GL account mapping found for cheque debit account."
-            )
+                raise GLMappingError(
+                    tenant_id=tenant_id,
+                    concept_code='CHEQUES_UNDER_COLLECTION',
+                    branch_id=branch_id,
+                    issue="No GL account mapping found for cheque debit account."
+                )
+            return GL_ACCOUNTS.get('cheques_under_collection', '1150')
         return GLService.get_default_liquidity_account('cash', branch_id=branch_id, tenant_id=tenant_id)
 
     @staticmethod
     def get_customer_credit_account(customer, branch_id=None, tenant_id=None):
-        if tenant_id:
+        if tenant_id and is_dynamic_gl_mapping_enabled():
             concept = GLService.get_customer_credit_concept(customer)
             if concept:
                 account = resolve_gl_account(
@@ -550,7 +551,6 @@ class GLService:
                 branch_id=branch_id,
                 issue="No GL account mapping found for customer credit account."
             )
-        # Legacy fallback only when tenant_id is unavailable (should not happen in normal flow)
         code = '1130'
         if customer and getattr(customer, 'customer_type', None) == 'partner':
             code = '3350'
@@ -1027,7 +1027,7 @@ class GLService:
         customers = Customer.query.filter_by(is_active=True) if not tenant_id else Customer.query.filter_by(tenant_id=int(tenant_id), is_active=True)
         total_customer_balance = sum(Decimal(str(c.balance or 0)) for c in customers.all())
         suppliers = Supplier.query.filter_by(is_active=True) if not tenant_id else Supplier.query.filter_by(tenant_id=int(tenant_id), is_active=True)
-        total_supplier_balance = sum(Decimal(str(s.total_purchases_aed or 0) if hasattr(s, 'total_purchases_aed') else Decimal('0')) for s in suppliers.all())
+        total_supplier_balance = sum(Decimal(str(s.get_balance_base())) for s in suppliers.all())
 
         return {
             'tenant_id': tenant_id,
