@@ -48,7 +48,7 @@
 
     <meta property="og:description" content="{{ 'نظام متكامل لإدارة المستودعات والمبيعات مع ذكاء اصطناعي متقدم. حل احترافي للشركات في دبي والإمارات.' if current_language == 'ar' else 'Warehouse, sales, purchases, and accounting with AI-powered insights.' }}">
 
-    {% set _logo_path = (config.COMPANY_LOGO or 'assets/brand/azad/logos/logo-gold.png') %}
+    {% set _logo_path = (config.COMPANY_LOGO or 'assets/brand/azad/logos/logo-gold-web.png') %}
 
     {% if _logo_path.startswith('/static/') %}
 
@@ -78,28 +78,25 @@
 
     <link rel="canonical" href="{{ request.url }}">
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha384-DyZ88mC6Up2uqS4h/KRgHuoeGwBcD4Ng9SiP4dIRy0EXTlnuz47vAwmeGwVChigm" crossorigin="anonymous">
-
-    {% if current_language == 'en' %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous">
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.min.css') }}">
+
+    {% if current_language == 'en' %}
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" integrity="sha384-SQmEOkBgKgEIh61hWWvG/unqqDDppl6UsaeOX71NjfnDB32XCcgWtNdUamQ7ics0" crossorigin="anonymous" rel="stylesheet">
 
-    {% else %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/landing-page-en.css') }}">
 
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}">
+    {% else %}
 
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=Amiri:wght@400;700&display=swap" integrity="sha384-pnbsgizCJ0gzV/Fe7j7GHh+4w6yQom3MZQAjnF3v/wgkH3rTryrnaRZ7uPweEOB2" crossorigin="anonymous" rel="stylesheet">
 
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/landing-page-ar.css') }}">
+
     <link rel="stylesheet" href="{{ url_for('static', filename='css/accessibility.css') }}">
 
-    {% endif %}
-
-    {% if current_language == 'en' %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/landing-page-en.css') }}">
-    {% else %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/landing-page-ar.css') }}">
     {% endif %}
 
     {% include 'partials/seo-landing.html' %}
@@ -122,7 +119,7 @@
 
             <div class="title">
 
-                <img src="{{ url_for('static', filename=_logo_path) }}" alt="{{ company_name_display }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='assets/brand/azad/logos/logo-gold.png') }}';">
+                <img src="{{ url_for('static', filename=_logo_path) }}" alt="{{ company_name_display }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='assets/brand/azad/logos/logo-gold-web.png') }}';">
 
                 <span>{{ company_name_display }}</span>
 
@@ -164,7 +161,7 @@
 
             <a class="landing-brand" href="{{ url_for('public.landing') }}">
 
-                <img src="{{ url_for('static', filename=_logo_path) }}" alt="{{ company_name_display }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='assets/brand/azad/logos/logo-gold.png') }}';">
+                <img src="{{ url_for('static', filename=_logo_path) }}" alt="{{ company_name_display }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='assets/brand/azad/logos/logo-gold-web.png') }}';">
 
                 <span>{{ company_name_display }}</span>
 
@@ -1041,7 +1038,7 @@
 
             <div class="landing-footer-brand">
 
-                <img src="{{ url_for('static', filename=_logo_path) }}" alt="{{ company_name_display }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='assets/brand/azad/logos/logo.png') }}';">
+                <img src="{{ url_for('static', filename=_logo_path) }}" alt="{{ company_name_display }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='assets/brand/azad/logos/logo-web.png') }}';">
 
                 <div>
 
@@ -1119,7 +1116,7 @@
 
             <div class="title">
 
-                <img src="{{ url_for('static', filename=_logo_path) }}" alt="{{ platform_name_en }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='assets/brand/azad/logos/logo.png') }}';">
+                <img src="{{ url_for('static', filename=_logo_path) }}" alt="{{ platform_name_en }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='assets/brand/azad/logos/logo-web.png') }}';">
 
                 <span>{{ config.COMPANY_NAME if config.COMPANY_NAME != config.COMPANY_NAME_AR else 'Azad Smart Systems' }}</span>
 
@@ -1161,7 +1158,7 @@
 
             <a class="landing-brand" href="{{ url_for('public.landing') }}">
 
-                <img src="{{ url_for('static', filename=_logo_path) }}" alt="{{ platform_name_en }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='assets/brand/azad/logos/logo.png') }}';">
+                <img src="{{ url_for('static', filename=_logo_path) }}" alt="{{ platform_name_en }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='assets/brand/azad/logos/logo-web.png') }}';">
 
                 <span>{{ platform_name_en }}</span>
 
@@ -1473,7 +1470,7 @@
 
             <div class="landing-footer-brand">
 
-                <img src="{{ url_for('static', filename=_logo_path) }}" alt="{{ platform_name_en }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='assets/brand/azad/logos/logo.png') }}';">
+                <img src="{{ url_for('static', filename=_logo_path) }}" alt="{{ platform_name_en }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='assets/brand/azad/logos/logo-web.png') }}';">
 
                 <div>
 

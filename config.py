@@ -161,7 +161,7 @@ class Config:
     CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", REDIS_URL)
     CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND", REDIS_URL)
     
-    DEFAULT_CURRENCY = os.environ.get("DEFAULT_CURRENCY", "AED")
+    DEFAULT_CURRENCY = os.environ.get("DEFAULT_CURRENCY", "ILS")
 
     # --- Feature Flags (Accounting Modernization) ---
     # Phase 1: Dynamic GL Mapping
@@ -252,7 +252,7 @@ class Config:
     APP_VERSION = "2.0.0"
     
     BABEL_DEFAULT_LOCALE = os.environ.get("BABEL_DEFAULT_LOCALE", "ar")
-    BABEL_DEFAULT_TIMEZONE = os.environ.get("BABEL_DEFAULT_TIMEZONE", "Asia/Dubai")
+    BABEL_DEFAULT_TIMEZONE = os.environ.get("BABEL_DEFAULT_TIMEZONE", "Asia/Hebron")
     LANGUAGES = {
         'ar': 'العربية',
         'en': 'English'

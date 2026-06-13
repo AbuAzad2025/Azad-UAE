@@ -50,7 +50,7 @@
 </head>
 <body>
     {% set platform_name_en = config.COMPANY_NAME if config.COMPANY_NAME != config.COMPANY_NAME_AR else 'Azad Smart Systems' %}
-    {% set platform_logo = config.COMPANY_LOGO or 'assets/brand/azad/logos/logo-gold.png' %}
+    {% set platform_logo = config.COMPANY_LOGO or 'assets/brand/azad/logos/logo-gold-web.png' %}
     <div class="navbar">
         <a class="logo" href="{{ url_for('public.landing') }}">
             <img src="{{ url_for('static', filename=platform_logo) }}" alt="{{ platform_name_en }}">

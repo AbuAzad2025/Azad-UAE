@@ -395,7 +395,7 @@ def dashboard():
         warehouse_ids = [w.id for w in Warehouse.query.filter_by(branch_id=branch.id, is_active=True).all()]
         branch_inventory_value = float(0)
         if warehouse_ids:
-            from models.warehouse import ProductWarehouseCost
+            from models import ProductWarehouseCost
             pwc_vals = db.session.query(
                 func.sum(ProductWarehouseCost.total_value)
             ).filter(
@@ -423,11 +423,11 @@ def dashboard():
         build_system_health_summary,
     )
 
-    # Platform-wide branch stats (all tenants)
+    # Platform-wide branch stats (all tenants) — limited to top 50 to avoid timeout
     platform_branch_stats = []
     if is_global_owner_user(current_user) and tid is None:
         from models import Branch, Warehouse, StockMovement
-        all_branches = Branch.query.all()
+        all_branches = Branch.query.order_by(Branch.id).limit(50).all()
         for branch in all_branches:
             # Sales Count & Amount for this branch (All time, all tenants)
             b_sales = db.session.query(
@@ -459,7 +459,7 @@ def dashboard():
             warehouse_ids = [w.id for w in Warehouse.query.filter_by(branch_id=branch.id, is_active=True).all()]
             branch_inventory_value = float(0)
             if warehouse_ids:
-                from models.warehouse import ProductWarehouseCost
+                from models import ProductWarehouseCost
                 pwc_vals = db.session.query(
                     func.sum(ProductWarehouseCost.total_value)
                 ).filter(

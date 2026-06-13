@@ -232,7 +232,7 @@ def login():
         elif branch_to_activate:
             set_active_branch(branch_to_activate, user=user, allow_all=False)
         else:
-            set_active_branch(None, user=user, allow_all=False)
+            clear_active_branch()
         
         session['last_activity'] = datetime.now().isoformat()
         session.permanent = True

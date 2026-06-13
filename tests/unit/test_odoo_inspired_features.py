@@ -52,32 +52,31 @@ class TestDocumentSequence:
 class TestFiscalPosition:
     """Test fiscal position tax/account mapping."""
 
-    def test_fiscal_position_map_tax(self, app, db_session):
-        from models import FiscalPosition, FiscalPositionTaxRule, Tenant
+    def test_fiscal_position_map_tax(self, app, db_session, sample_tenant):
+        from models import FiscalPosition, FiscalPositionTaxRule, CustomsTax, TaxCalculationRule
         with app.app_context():
-            tenant = Tenant(name='FPTest', name_ar='FPTest', slug='fpt', email='fp@test.com', phone_1='050', country='AE', subscription_plan='basic')
-            db_session.add(tenant)
+            tax1 = CustomsTax(tenant_id=sample_tenant.id, name='VAT 5%', rate=5, type='vat', country_code='AE')
+            tax2 = CustomsTax(tenant_id=sample_tenant.id, name='VAT 0%', rate=0, type='vat', country_code='AE')
+            db_session.add_all([tax1, tax2])
             db_session.flush()
-
+            rule1 = TaxCalculationRule(tenant_id=sample_tenant.id, name='R1', name_ar='R1', rule_type='sale', tax_id=tax1.id)
+            rule2 = TaxCalculationRule(tenant_id=sample_tenant.id, name='R2', name_ar='R2', rule_type='sale', tax_id=tax2.id)
+            db_session.add_all([rule1, rule2])
+            db_session.flush()
             fp = FiscalPosition(
-                tenant_id=tenant.id, code='export', name='Export Zero VAT',
+                tenant_id=sample_tenant.id, code='export', name='Export Zero VAT',
                 country_code='US', auto_apply=True, is_active=True
             )
             db_session.add(fp)
             db_session.flush()
-
-            # Create tax rules (using dummy IDs since TaxCalculationRule may not exist in test DB)
             rule = FiscalPositionTaxRule(
-                tenant_id=tenant.id, fiscal_position_id=fp.id,
-                source_tax_id=1, destination_tax_id=2, rule_type='tax'
+                tenant_id=sample_tenant.id, fiscal_position_id=fp.id,
+                source_tax_id=rule1.id, destination_tax_id=rule2.id, rule_type='tax'
             )
             db_session.add(rule)
             db_session.flush()
-
-            mapped = fp.map_tax(1)
-            assert mapped == 2
-
-            # Unmapped should return source
+            mapped = fp.map_tax(rule1.id)
+            assert mapped == rule2.id
             mapped2 = fp.map_tax(999)
             assert mapped2 == 999
 

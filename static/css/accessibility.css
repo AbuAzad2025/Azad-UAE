@@ -1,4 +1,9 @@
 :root {
+  /* Landing/Brand Palette */
+  --gulf-gold: #D4AF37;
+  --gulf-blue: #1B4D89;
+  --gradient-gulf: linear-gradient(135deg, #1B4D89 0%, #6B46C1 50%, #D4AF37 100%);
+
   /* Core Palette */
   --color-surface: #f5f7fa;
   --color-surface-elevated: #ffffff;
