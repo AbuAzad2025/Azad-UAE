@@ -456,12 +456,14 @@ def archived():
     from models import ArchivedRecord
     from datetime import datetime
     
+    from utils.tenanting import get_active_tenant_id
+    tenant_id = get_active_tenant_id(current_user)
+    
     archived_sales_query = db.session.query(ArchivedRecord).filter(
         ArchivedRecord.table_name == 'sales'
     )
-    
-    from utils.tenanting import get_active_tenant_id
-    tenant_id = get_active_tenant_id(current_user)
+    if tenant_id is not None:
+        archived_sales_query = archived_sales_query.filter(ArchivedRecord.tenant_id == tenant_id)
     
     archived_items = []
     
@@ -469,8 +471,6 @@ def archived():
         data = archived.data
         sale = tenant_get(Sale, archived.record_id) if archived.record_id else None
         if sale is None:
-            continue
-        if tenant_id is not None and getattr(sale, 'tenant_id', None) not in (None, tenant_id):
             continue
         archived_items.append({
             'id': archived.record_id,

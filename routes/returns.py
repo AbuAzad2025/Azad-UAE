@@ -73,6 +73,9 @@ def api_create_return():
         if not sale_id or not lines:
             return jsonify({'success': False, 'message': 'Missing sale_id or lines'}), 400
 
+        from utils.tenanting import tenant_get_or_404
+        tenant_get_or_404(Sale, sale_id)
+
         result = ReturnService.create_return(
             sale_id=sale_id,
             return_lines_data=lines,

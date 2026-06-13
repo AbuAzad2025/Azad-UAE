@@ -657,13 +657,11 @@ def delete(id):
             from models import GLJournalEntry
             
             ref_types = ['cheque_receive', 'cheque_issue', 'cheque_cancel', 'cheque_clear', 'cheque_bounce', 'Cheque']
-            tid = get_active_tenant_id(current_user)
             gl_query = GLJournalEntry.query.filter(
                 GLJournalEntry.reference_type.in_(ref_types),
-                GLJournalEntry.reference_id == cheque.id
+                GLJournalEntry.reference_id == cheque.id,
+                GLJournalEntry.tenant_id == cheque.tenant_id,
             )
-            if tid is not None:
-                gl_query = gl_query.filter(GLJournalEntry.tenant_id == tid)
             gl_query.delete(synchronize_session=False)
             
             # حذف الشيك

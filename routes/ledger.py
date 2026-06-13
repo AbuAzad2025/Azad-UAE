@@ -198,6 +198,8 @@ def run_depreciation():
 @permission_required('view_ledger')
 def income_statement():
     from utils.gl_tenant import scope_gl_accounts
+    from utils.tenanting import get_active_tenant_id
+    tid = get_active_tenant_id(current_user)
     date_from = request.args.get('date_from', type=str)
     date_to = request.args.get('date_to', type=str)
     branch_id = _effective_branch_id()
@@ -205,12 +207,17 @@ def income_statement():
     revenue_accounts = scope_gl_accounts(GLAccount.query.filter(GLAccount.type == 'revenue')).all()
     expense_accounts = scope_gl_accounts(GLAccount.query.filter(GLAccount.type == 'expense')).all()
     
+    def _filter_tenant(q):
+        if tid is not None:
+            return q.filter(GLJournalEntry.tenant_id == tid)
+        return q
+    
     revenues = {}
     total_revenue = Decimal('0')
     
     for acc in revenue_accounts:
-        query_credit = db.session.query(func.sum(GLJournalLine.credit)).filter_by(account_id=acc.id).join(GLJournalEntry)
-        query_debit = db.session.query(func.sum(GLJournalLine.debit)).filter_by(account_id=acc.id).join(GLJournalEntry)
+        query_credit = _filter_tenant(db.session.query(func.sum(GLJournalLine.credit)).filter_by(account_id=acc.id).join(GLJournalEntry))
+        query_debit = _filter_tenant(db.session.query(func.sum(GLJournalLine.debit)).filter_by(account_id=acc.id).join(GLJournalEntry))
         
         if date_from:
             query_credit = query_credit.filter(func.date(GLJournalEntry.entry_date) >= date_from)
@@ -235,8 +242,8 @@ def income_statement():
     total_expense = Decimal('0')
     
     for acc in expense_accounts:
-        query_debit = db.session.query(func.sum(GLJournalLine.debit)).filter_by(account_id=acc.id).join(GLJournalEntry)
-        query_credit = db.session.query(func.sum(GLJournalLine.credit)).filter_by(account_id=acc.id).join(GLJournalEntry)
+        query_debit = _filter_tenant(db.session.query(func.sum(GLJournalLine.debit)).filter_by(account_id=acc.id).join(GLJournalEntry))
+        query_credit = _filter_tenant(db.session.query(func.sum(GLJournalLine.credit)).filter_by(account_id=acc.id).join(GLJournalEntry))
         
         if date_from:
             query_debit = query_debit.filter(func.date(GLJournalEntry.entry_date) >= date_from)
@@ -276,6 +283,8 @@ def income_statement():
 @permission_required('view_ledger')
 def balance_sheet():
     from utils.gl_tenant import scope_gl_accounts
+    from utils.tenanting import get_active_tenant_id
+    tid = get_active_tenant_id(current_user)
     branch_id = _effective_branch_id()
     date_to = request.args.get('date_to', type=str)
     assets = {}
@@ -287,6 +296,8 @@ def balance_sheet():
     equity_accounts = scope_gl_accounts(GLAccount.query.filter(GLAccount.type == 'equity')).all()
     
     def _apply_entry_filters(q):
+        if tid is not None:
+            q = q.filter(GLJournalEntry.tenant_id == tid)
         if date_to:
             q = q.filter(func.date(GLJournalEntry.entry_date) <= date_to)
         if branch_id:

@@ -1162,13 +1162,19 @@ def archived_receipts():
     """عرض السندات المؤرشفة"""
     from models import ArchivedRecord
     
+    tid = get_active_tenant_id(current_user)
+    
     # جلب السندات المؤرشفة
     archived_receipts_query = db.session.query(ArchivedRecord).filter(
         ArchivedRecord.table_name == 'receipts'
     )
+    if tid is not None:
+        archived_receipts_query = archived_receipts_query.filter(ArchivedRecord.tenant_id == tid)
     archived_payments_query = db.session.query(ArchivedRecord).filter(
         ArchivedRecord.table_name == 'payments'
     )
+    if tid is not None:
+        archived_payments_query = archived_payments_query.filter(ArchivedRecord.tenant_id == tid)
     
     # دمج النتائج
     archived_items = []
@@ -1243,10 +1249,14 @@ def restore_receipt(id):
     """استعادة سند قبض من الأرشيف"""
     from models import ArchivedRecord
     
-    archived = ArchivedRecord.query.filter_by(
+    tid = get_active_tenant_id(current_user)
+    archived_query = ArchivedRecord.query.filter_by(
         table_name='receipts',
-        record_id=id
-    ).first_or_404()
+        record_id=id,
+    )
+    if tid is not None:
+        archived_query = archived_query.filter_by(tenant_id=tid)
+    archived = archived_query.first_or_404()
     if not _in_scope_branch(_archived_item_branch_id(archived)):
         return render_template('errors/403.html'), 403
     

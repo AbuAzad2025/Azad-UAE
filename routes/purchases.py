@@ -12,7 +12,7 @@ from services.logging_core import LoggingCore
 from utils.helpers import generate_number
 from utils.currency_utils import resolve_default_currency, get_system_default_currency
 from decimal import Decimal
-from utils.tenanting import tenant_query, tenant_get_or_404
+from utils.tenanting import tenant_query, tenant_get_or_404, get_active_tenant_id
 from utils.db_safety import atomic_transaction
 from utils.structured_logging import log_mutation
 from utils.gl_reference_types import GLRef, delete_entries_by_ref
@@ -363,7 +363,13 @@ def purchase_return(id):
             flash(f'❌ حدث خطأ: {str(e)}', 'danger')
             current_app.logger.exception('Purchase return error')
 
-    returns = PurchaseReturn.query.filter_by(purchase_id=purchase.id).order_by(PurchaseReturn.created_at.desc()).all()
+    tid = get_active_tenant_id(current_user)
+    returns_query = PurchaseReturn.query.filter(
+        PurchaseReturn.purchase_id == purchase.id,
+    )
+    if tid is not None:
+        returns_query = returns_query.filter(PurchaseReturn.tenant_id == tid)
+    returns = returns_query.order_by(PurchaseReturn.created_at.desc()).all()
     return_lines = PurchaseReturnLine.query.filter(PurchaseReturnLine.return_id.in_([r.id for r in returns])).all() if returns else []
     return render_template('purchases/return.html', purchase=purchase, returns=returns, return_lines=return_lines)
 
