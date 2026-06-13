@@ -55,6 +55,7 @@ class TestModelIntegrity:
         "PackagePurchase",
         "APIKey",
         "CardPayment",
+        "IndustryFieldDefinition",
     })
 
     @pytest.fixture(scope="class")

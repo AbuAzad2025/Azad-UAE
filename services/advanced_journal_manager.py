@@ -232,14 +232,22 @@ class AdvancedJournalEntryManager:
     @staticmethod
     def get_entry_history(entry_id):
         """الحصول على تاريخ القيد"""
-        return JournalEntryAudit.query.filter_by(journal_entry_id=entry_id)\
-            .order_by(JournalEntryAudit.performed_at.desc()).all()
+        entry = GLJournalEntry.query.get(entry_id)
+        if not entry:
+            return []
+        return JournalEntryAudit.query.filter_by(
+            journal_entry_id=entry_id,
+            tenant_id=entry.tenant_id
+        ).order_by(JournalEntryAudit.performed_at.desc()).all()
     
     @staticmethod
     def _log_audit(entry_id, action, old_values, new_values, reason, user_id):
         """تسجيل تدقيق"""
+        entry = GLJournalEntry.query.get(entry_id)
+        tenant_id = entry.tenant_id if entry else None
         audit = JournalEntryAudit(
             journal_entry_id=entry_id,
+            tenant_id=tenant_id,
             action=action,
             old_values=str(old_values) if old_values else None,
             new_values=str(new_values) if new_values else None,

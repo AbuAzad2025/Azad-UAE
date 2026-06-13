@@ -7,6 +7,7 @@ class JournalEntryAudit(db.Model):
     __tablename__ = 'journal_entry_audits'
 
     id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=True, index=True)
     journal_entry_id = db.Column(db.Integer, db.ForeignKey('gl_journal_entries.id'), nullable=False, index=True)
     action = db.Column(db.String(50), nullable=False)
     old_values = db.Column(db.Text)
