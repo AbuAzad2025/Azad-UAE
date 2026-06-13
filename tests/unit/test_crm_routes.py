@@ -57,8 +57,10 @@ class TestCRMModels:
 class TestCRMTenantIsolation:
     def test_lead_tenant_isolation(self, app, db_session):
         """Create leads for two tenants and verify they don't overlap"""
-        t1 = __import__('models').Tenant(slug='crm1', name='CRM T1', name_ar='سي آر إم 1')
-        t2 = __import__('models').Tenant(slug='crm2', name='CRM T2', name_ar='سي آر إم 2')
+        import uuid
+        uid = uuid.uuid4().hex[:6]
+        t1 = __import__('models').Tenant(slug='crm1-' + uid, name='CRM T1-' + uid, name_ar='سي آر إم 1')
+        t2 = __import__('models').Tenant(slug='crm2-' + uid, name='CRM T2-' + uid, name_ar='سي آر إم 2')
         db_session.add_all([t1, t2])
         db_session.flush()
 
