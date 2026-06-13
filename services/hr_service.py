@@ -62,7 +62,10 @@ class HRService:
         if not att:
             raise ValueError('لا يوجد تسجيل حضور مفتوح اليوم.')
         now = datetime.now(timezone.utc)
-        delta = now - att.check_in
+        check_in = att.check_in
+        if check_in.tzinfo is None:
+            check_in = check_in.replace(tzinfo=timezone.utc)
+        delta = now - check_in
         hours = Decimal(str(round(delta.total_seconds() / 3600, 2)))
         att.check_out = now
         att.work_hours = hours
@@ -121,6 +124,7 @@ class HRService:
             raise ValueError('نوع الإجازة غير صالح.')
         leave = LeaveRequest(
             tenant_id=int(tid) if tid else 0,
+            branch_id=int(user.branch_id) if getattr(user, 'branch_id', None) else None,
             user_id=user.id,
             leave_type_id=int(data['leave_type_id']),
             date_from=date_from,

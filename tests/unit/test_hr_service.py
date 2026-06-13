@@ -42,7 +42,7 @@ class TestHRService:
     def test_request_leave(self, app, db_session, sample_tenant, sample_user):
         with app.app_context():
             from models import LeaveType
-            lt = LeaveType(tenant_id=sample_tenant.id, name='Annual', code='ANNUAL')
+            lt = LeaveType(tenant_id=sample_tenant.id, name='Annual')
             db_session.add(lt)
             db_session.flush()
             data = {
@@ -59,7 +59,7 @@ class TestHRService:
     def test_request_leave_invalid_dates_raises(self, app, db_session, sample_tenant, sample_user):
         with app.app_context():
             from models import LeaveType
-            lt = LeaveType(tenant_id=sample_tenant.id, name='Annual', code='ANNUAL')
+            lt = LeaveType(tenant_id=sample_tenant.id, name='Annual')
             db_session.add(lt)
             db_session.flush()
             data = {
@@ -73,7 +73,7 @@ class TestHRService:
     def test_approve_leave(self, app, db_session, sample_tenant, sample_user):
         with app.app_context():
             from models import LeaveType
-            lt = LeaveType(tenant_id=sample_tenant.id, name='Annual', code='ANNUAL')
+            lt = LeaveType(tenant_id=sample_tenant.id, name='Annual')
             db_session.add(lt)
             db_session.flush()
             data = {
@@ -88,7 +88,7 @@ class TestHRService:
     def test_refuse_leave(self, app, db_session, sample_tenant, sample_user):
         with app.app_context():
             from models import LeaveType
-            lt = LeaveType(tenant_id=sample_tenant.id, name='Annual', code='ANNUAL')
+            lt = LeaveType(tenant_id=sample_tenant.id, name='Annual')
             db_session.add(lt)
             db_session.flush()
             data = {
@@ -104,7 +104,7 @@ class TestHRService:
     def test_list_leaves(self, app, db_session, sample_tenant, sample_user):
         with app.app_context():
             from models import LeaveType
-            lt = LeaveType(tenant_id=sample_tenant.id, name='Annual', code='ANNUAL')
+            lt = LeaveType(tenant_id=sample_tenant.id, name='Annual')
             db_session.add(lt)
             db_session.flush()
             data = {

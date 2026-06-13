@@ -77,8 +77,10 @@ class TestHRModels:
 
 class TestHRTenantIsolation:
     def test_leave_tenant_isolation(self, app, db_session, sample_user):
-        t1 = __import__('models').Tenant(slug='hr1', name='HR T1', name_ar='إتش آر 1')
-        t2 = __import__('models').Tenant(slug='hr2', name='HR T2', name_ar='إتش آر 2')
+        import uuid
+        uid = uuid.uuid4().hex[:6]
+        t1 = __import__('models').Tenant(slug='hr1-' + uid, name='HR T1-' + uid, name_ar='إتش آر 1')
+        t2 = __import__('models').Tenant(slug='hr2-' + uid, name='HR T2-' + uid, name_ar='إتش آر 2')
         db_session.add_all([t1, t2])
         db_session.flush()
         from datetime import date
