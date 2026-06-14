@@ -16,633 +16,225 @@
           {% if is_global_scope_user %}
           <div class="mt-1">
             {% if active_branch %}
-            <small class="text-info">
-              <i class="fas fa-code-branch mr-1"></i>
-              {{ active_branch.name }}{% if active_branch.code %} ({{ active_branch.code }}){% endif %}
-            </small>
+            <small class="text-info"><i class="fas fa-code-branch mr-1"></i>{{ active_branch.name }}{% if active_branch.code %} ({{ active_branch.code }}){% endif %}</small>
             {% else %}
-            <small class="text-success">
-              <i class="fas fa-sitemap mr-1"></i>
-              كل {{ t('Branches') }}
-            </small>
+            <small class="text-success"><i class="fas fa-sitemap mr-1"></i>كل {{ t('Branches') }}</small>
             {% endif %}
           </div>
           {% endif %}
         </div>
       </div>
 
+      {% macro _sec(label, perms) %}
+        {% if perms %}<li class="erp-sidebar-section-label">{{ label }}</li>{% endif %}
+      {% endmacro %}
+
+      {% macro _nav(href, icon, label, active_if=none, perm=true) %}
+        {% if perm %}
+        <li class="nav-item">
+          <a href="{{ href }}" class="nav-link{% if active_if is not none and request.endpoint == active_if %} active{% endif %}"{% if request.endpoint == active_if %} aria-current="page"{% endif %}>
+            <i class="nav-icon {{ icon }}"></i><p>{{ label }}</p>
+          </a>
+        </li>
+        {% endif %}
+      {% endmacro %}
+
+      {% macro _tree(icon, label, match, perm=true) %}
+        {% if perm %}
+        <li class="nav-item has-treeview{% if request.endpoint and match in request.endpoint %} menu-open{% endif %}">
+          <a href="#" class="nav-link{% if request.endpoint and match in request.endpoint %} active{% endif %}" role="button" aria-expanded="{{ 'true' if request.endpoint and match in request.endpoint else 'false' }}" aria-haspopup="true">
+            <i class="nav-icon {{ icon }}"></i><p>{{ label }}<i class="right fas fa-angle-left"></i></p>
+          </a>
+          <ul class="nav nav-treeview">
+        {% endif %}
+      {% endmacro %}
+
+      {% macro _end(perm=true) %}
+        {% if perm %}</ul></li>{% endif %}
+      {% endmacro %}
+
       <nav class="mt-2">
         <ul class="nav nav-pills nav-sidebar flex-column erp-sidebar-nav" data-widget="treeview">
-          <li class="nav-item">
-            <a href="{{ url_for('main.dashboard') }}" class="nav-link {% if request.endpoint == 'main.dashboard' %}active{% endif %}">
-              <i class="nav-icon fas fa-tachometer-alt"></i>
-              <p>{{ t('Dashboard') }}</p>
-            </a>
-          </li>
-          {% if current_user.is_authenticated and (current_user.has_permission('manage_sales') or current_user.has_permission('manage_customers')) %}
-          <li class="erp-sidebar-section-label">{{ t('Sales') }} {{ t('و{{ t('Customers') }}') }}</li>
-          {% endif %}
-          {% if current_user.is_authenticated and current_user.has_permission('manage_sales') %}
-          <li class="nav-item has-treeview {% if request.endpoint and ('sales' in request.endpoint or 'pos' in request.endpoint) %}menu-open{% endif %}">
-            <a href="#" class="nav-link {% if request.endpoint and ('sales' in request.endpoint or 'pos' in request.endpoint) %}active{% endif %}">
-              <i class="nav-icon fas fa-file-invoice"></i>
-              <p>
-                {{ t('Sales') }}
-                <i class="right fas fa-angle-left"></i>
-              </p>
-            </a>
-            <ul class="nav nav-treeview">
-              {% if tenant_enable_pos %}
-              <li class="nav-item">
-                <a href="{{ url_for('pos.index') }}" class="nav-link">
-                  <i class="fas fa-cash-register nav-icon text-info"></i>
-                  <p>POS ({{ t('Cashier') }})</p>
-                </a>
-              </li>
-              {% endif %}
-              <li class="nav-item">
-                {% if current_user.has_permission('manage_sales') %}
-                <a href="{{ url_for('sales.create') }}" class="nav-link">
-                {% endif %}
-                  <i class="fas fa-plus-circle nav-icon text-success"></i>
-                  <p>{{ t('Invoice') }} {{ t('New_3') }}</p>
-                </a>
-              </li>
-              <li class="nav-item">
-                {% if current_user.has_permission('manage_sales') %}
-                <a href="{{ url_for('sales.index') }}" class="nav-link">
-                {% endif %}
-                  <i class="fas fa-list nav-icon"></i>
-                  <p>{{ t('List') }} {{ t('Invoices') }}</p>
-                </a>
-              </li>
-              <li class="nav-item">
-                {% if current_user.has_permission('manage_sales') %}
-                <a href="{{ url_for('returns.index') }}" class="nav-link">
-                {% endif %}
-                  <i class="fas fa-undo-alt nav-icon text-warning"></i>
-                  <p>{{ t('Returns') }}</p>
-                </a>
-              </li>
-            </ul>
-          </li>
-          {% endif %}
-          
-          {% if current_user.is_authenticated and current_user.has_permission('manage_customers') %}
-          <li class="nav-item has-treeview {% if request.endpoint and 'customers' in request.endpoint %}menu-open{% endif %}">
-            <a href="#" class="nav-link {% if request.endpoint and 'customers' in request.endpoint %}active{% endif %}">
-              <i class="nav-icon fas fa-users"></i>
-              <p>
-                {{ t('Customers') }}
-                <i class="right fas fa-angle-left"></i>
-              </p>
-            </a>
-            <ul class="nav nav-treeview">
-              <li class="nav-item">
-                <a href="{{ url_for('customers.create') }}" class="nav-link">
-                  <i class="fas fa-user-plus nav-icon text-success"></i>
-                  <p>{{ t('Customer_3') }} {{ t('New') }}</p>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a href="{{ url_for('customers.index') }}" class="nav-link">
-                  <i class="fas fa-list nav-icon"></i>
-                  <p>{{ t('List') }} {{ t('Customers') }}</p>
-                </a>
-              </li>
-            </ul>
-          </li>
-          {% endif %}
-          {% if current_user.is_authenticated and (current_user.has_permission('manage_products') or current_user.has_permission('manage_purchases') or current_user.has_permission('manage_suppliers') or current_user.has_permission('manage_warehouse')) %}
-          <li class="erp-sidebar-section-label">{{ t('Inventory') }} {{ t('والتوريد') }}</li>
-          {% endif %}
-          {% if current_user.is_authenticated and current_user.has_permission('manage_products') %}
-          <li class="nav-item has-treeview {% if request.endpoint and 'products' in request.endpoint %}menu-open{% endif %}">
-            <a href="#" class="nav-link {% if request.endpoint and 'products' in request.endpoint %}active{% endif %}">
-              <i class="nav-icon fas fa-box"></i>
-              <p>
-                {{ t('Products') }}
-                <i class="right fas fa-angle-left"></i>
-              </p>
-            </a>
-            <ul class="nav nav-treeview">
-              <li class="nav-item">
-                <a href="{{ url_for('products.create') }}" class="nav-link">
-                  <i class="fas fa-plus-circle nav-icon text-success"></i>
-                  <p>{{ t('New Product') }}</p>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a href="{{ url_for('products.index') }}" class="nav-link">
-                  <i class="fas fa-list nav-icon"></i>
-                  <p>{{ t('List') }} {{ t('Products') }}</p>
-                </a>
-              </li>
-            </ul>
-          </li>
-          {% endif %}
-          
-          {% if current_user.is_authenticated and current_user.has_permission('manage_purchases') %}
-          <li class="nav-item has-treeview {% if request.endpoint and 'purchases' in request.endpoint %}menu-open{% endif %}">
-            <a href="#" class="nav-link {% if request.endpoint and 'purchases' in request.endpoint %}active{% endif %}">
-              <i class="nav-icon fas fa-shopping-cart"></i>
-              <p>
-                {{ t('Purchases') }}
-                <i class="right fas fa-angle-left"></i>
-              </p>
-            </a>
-            <ul class="nav nav-treeview">
-              <li class="nav-item">
-                <a href="{{ url_for('purchases.create') }}" class="nav-link">
-                  <i class="fas fa-plus-circle nav-icon text-success"></i>
-                  <p>{{ t('مشترى') }} {{ t('New') }}</p>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a href="{{ url_for('purchases.index') }}" class="nav-link">
-                  <i class="fas fa-list nav-icon"></i>
-                  <p>{{ t('List') }} {{ t('Purchases') }}</p>
-                </a>
-              </li>
-            </ul>
-          </li>
-          {% endif %}
-          
-          {% if current_user.is_authenticated and current_user.has_permission('manage_suppliers') %}
-          <li class="nav-item has-treeview {% if request.endpoint and 'suppliers' in request.endpoint %}menu-open{% endif %}">
-            <a href="#" class="nav-link {% if request.endpoint and 'suppliers' in request.endpoint %}active{% endif %}">
-              <i class="nav-icon fas fa-truck"></i>
-              <p>
-                {{ t('Suppliers') }}
-                <i class="right fas fa-angle-left"></i>
-              </p>
-            </a>
-            <ul class="nav nav-treeview">
-              <li class="nav-item">
-                <a href="{{ url_for('suppliers.create') }}" class="nav-link">
-                  <i class="fas fa-plus-circle nav-icon text-success"></i>
-                  <p>{{ t('Supplier_2') }} {{ t('New') }}</p>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a href="{{ url_for('suppliers.index') }}" class="nav-link">
-                  <i class="fas fa-list nav-icon"></i>
-                  <p>{{ t('List') }} {{ t('Suppliers') }}</p>
-                </a>
-              </li>
-            </ul>
-          </li>
-          {% endif %}
-          {% if current_user.is_authenticated and (current_user.has_permission('manage_payments') or current_user.has_permission('manage_expenses') or current_user.has_permission('manage_payroll') or current_user.has_permission('view_ledger')) %}
-          <li class="erp-sidebar-section-label">{{ t('Finance') }} {{ t('والمحاسبة') }}</li>
-          {% endif %}
-          {% if current_user.is_authenticated and current_user.has_permission('manage_users') %}
-          <li class="nav-item has-treeview {% if request.endpoint and 'users' in request.endpoint %}menu-open{% endif %}">
-            <a href="#" class="nav-link {% if request.endpoint and 'users' in request.endpoint %}active{% endif %}">
-              <i class="nav-icon fas fa-users-cog"></i>
-              <p>
-                {{ t('Users') }}
-                <i class="right fas fa-angle-left"></i>
-              </p>
-            </a>
-            <ul class="nav nav-treeview">
-              <li class="nav-item">
-                <a href="{{ url_for('users.create') }}" class="nav-link">
-                  <i class="fas fa-user-plus nav-icon text-success"></i>
-                  <p>{{ t('User_2') }} {{ t('New') }}</p>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a href="{{ url_for('users.index') }}" class="nav-link">
-                  <i class="fas fa-users nav-icon"></i>
-                  <p>{{ t('List') }} {{ t('Users') }}</p>
-                </a>
-              </li>
-            </ul>
-          </li>
-          {% endif %}
-          
-          {% if current_user.is_authenticated and current_user.has_permission('manage_payments') %}
-          <li class="nav-item has-treeview {% if request.endpoint and 'payments' in request.endpoint %}menu-open{% endif %}">
-            <a href="#" class="nav-link {% if request.endpoint and 'payments' in request.endpoint %}active{% endif %}">
-              <i class="nav-icon fas fa-money-bill-wave"></i>
-              <p>
-                {{ t('Payments') }}
-                <i class="right fas fa-angle-left"></i>
-              </p>
-            </a>
-            <ul class="nav nav-treeview">
-              <li class="nav-item">
-                <a href="{{ url_for('payments.create_voucher') }}" class="nav-link">
-                  <i class="fas fa-plus-circle nav-icon text-success"></i>
-                  <p>{{ t('Voucher_2') }} {{ t('Receipt') }} {{ t('New') }}</p>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a href="{{ url_for('payments.receipts') }}" class="nav-link">
-                  <i class="fas fa-list nav-icon"></i>
-                  <p>{{ t('List') }} {{ t('Vouchers') }}</p>
-                </a>
-              </li>
-            </ul>
-          </li>
-          {% endif %}
-          
-          {% if current_user.is_authenticated and current_user.has_permission('manage_payments') %}
-          <li class="nav-item has-treeview {% if request.endpoint and 'cheques' in request.endpoint %}menu-open{% endif %}">
-            <a href="#" class="nav-link {% if request.endpoint and 'cheques' in request.endpoint %}active{% endif %}">
-              <i class="nav-icon fas fa-money-check-alt"></i>
-              <p>
-                {{ t('Management') }} {{ t('Cheques') }}
-                <i class="right fas fa-angle-left"></i>
-              </p>
-            </a>
-            <ul class="nav nav-treeview">
-              <li class="nav-item">
-                <a href="{{ url_for('cheques.index') }}" class="nav-link">
-                  <i class="fas fa-list nav-icon text-info"></i>
-                  <p>{{ t('Cheques') }}</p>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a href="{{ url_for('cheques.alerts') }}" class="nav-link">
-                  <i class="fas fa-bell nav-icon text-warning"></i>
-                  <p>{{ t('Alerts') }} {{ t('Cheques') }}</p>
-                </a>
-              </li>
-            </ul>
-          </li>
-          {% endif %}
-          
-          {% if current_user.is_authenticated and current_user.has_permission('manage_expenses') %}
-          <li class="nav-item has-treeview {% if request.endpoint and 'expenses' in request.endpoint %}menu-open{% endif %}">
-            <a href="#" class="nav-link {% if request.endpoint and 'expenses' in request.endpoint %}active{% endif %}">
-              <i class="nav-icon fas fa-receipt"></i>
-              <p>
-                {{ t('Expenses') }}
-                <i class="right fas fa-angle-left"></i>
-              </p>
-            </a>
-            <ul class="nav nav-treeview">
-              <li class="nav-item">
-                <a href="{{ url_for('expenses.create') }}" class="nav-link">
-                  <i class="fas fa-plus-circle nav-icon text-success"></i>
-                  <p>{{ t('Expense_3') }} {{ t('New') }}</p>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a href="{{ url_for('expenses.index') }}" class="nav-link">
-                  <i class="fas fa-list nav-icon"></i>
-                  <p>{{ t('List') }} {{ t('Expenses') }}</p>
-                </a>
-              </li>
-            </ul>
-          </li>
-          {% endif %}
 
-          {% if current_user.is_authenticated and current_user.has_permission('manage_payroll') %}
-          <li class="nav-item has-treeview {% if request.endpoint and 'payroll' in request.endpoint %}menu-open{% endif %}">
-            <a href="#" class="nav-link {% if request.endpoint and 'payroll' in request.endpoint %}active{% endif %}">
-              <i class="nav-icon fas fa-users-cog"></i>
-              <p>
-                {{ t('Salaries') }} {{ t('وشؤون') }} {{ t('Employees') }}
-                <i class="right fas fa-angle-left"></i>
-              </p>
-            </a>
-            <ul class="nav nav-treeview">
-              <li class="nav-item">
-                <a href="{{ url_for('payroll.employees_list') }}" class="nav-link">
-                  <i class="fas fa-users nav-icon text-info"></i>
-                  <p>{{ t('Employees') }}</p>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a href="{{ url_for('payroll.advances') }}" class="nav-link">
-                  <i class="fas fa-hand-holding-usd nav-icon text-warning"></i>
-                  <p>{{ t('Advances') }}</p>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a href="{{ url_for('payroll.process_payroll') }}" class="nav-link">
-                  <i class="fas fa-money-check-alt nav-icon text-success"></i>
-                  <p>{{ t('صرف') }} {{ t('Salaries') }}</p>
-                </a>
-              </li>
-            </ul>
-          </li>
-          {% endif %}
-          
-          {% if current_user.is_authenticated and current_user.has_permission('view_ledger') %}
-          <li class="nav-item has-treeview {% if request.endpoint and 'ledger' in request.endpoint %}menu-open{% endif %}">
-            <a href="#" class="nav-link {% if request.endpoint and 'ledger' in request.endpoint %}active{% endif %}">
-              <i class="nav-icon fas fa-book"></i>
-              <p>
-                {{ t('دفتر') }} {{ t('الأستاذ') }}
-                <i class="right fas fa-angle-left"></i>
-              </p>
-            </a>
-            <ul class="nav nav-treeview">
-              <li class="nav-item">
-                <a href="{{ url_for('ledger.index') }}" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
-                  <p>{{ t('Accounts') }}</p>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a href="{{ url_for('ledger.trial_balance') }}" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
-                  <p>{{ t('Balance_2') }} {{ t('Review') }}</p>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a href="{{ url_for('ledger.income_statement') }}" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
-                  <p>{{ t('List') }} {{ t('Income_2') }}</p>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a href="{{ url_for('ledger.balance_sheet') }}" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
-                  <p>{{ t('Balance Sheet') }}</p>
-                </a>
-              </li>
-              {% if current_user.is_admin() %}
-              <li class="nav-item">
-                <a href="{{ url_for('ledger.admin_dashboard') }}" class="nav-link">
-                  <i class="fas fa-cogs nav-icon"></i>
-                  <p>{{ t('Dashboard_2') }} {{ t('Control') }} {{ t('الإدارية') }}</p>
-                </a>
-              </li>
-              {% endif %}
-            </ul>
-          </li>
-          {% endif %}
-          {% if current_user.is_authenticated and current_user.has_permission('view_reports') %}
-          <li class="erp-sidebar-section-label">{{ t('Reports') }} {{ t('و{{ t('Partners') }}') }}</li>
-          {% endif %}
-          {% if current_user.is_authenticated and current_user.has_permission('view_reports') %}
-          <li class="nav-item">
-            <a href="{{ url_for('partners.index') }}" class="nav-link {% if request.endpoint and 'partners' in request.endpoint %}active{% endif %}">
-              <i class="nav-icon fas fa-handshake"></i>
-              <p>{{ t('Partners') }}</p>
-            </a>
-          </li>
-          {% endif %}
+          {{ _nav(url_for('main.dashboard'), 'fas fa-tachometer-alt', t('Dashboard'), 'main.dashboard') }}
 
-          {% if current_user.is_authenticated and current_user.has_permission('view_reports') %}
-          <li class="nav-item has-treeview {% if request.endpoint and 'reports' in request.endpoint %}menu-open{% endif %}">
-            <a href="#" class="nav-link {% if request.endpoint and 'reports' in request.endpoint %}active{% endif %}">
-              <i class="nav-icon fas fa-chart-bar"></i>
-              <p>
-                {{ t('Reports') }}
-                <i class="right fas fa-angle-left"></i>
-              </p>
-            </a>
-            <ul class="nav nav-treeview">
-              <li class="nav-item">
-                <a href="{{ url_for('reports.sales') }}" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
-                  <p>{{ t('Report_2') }} {{ t('Sales') }}</p>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a href="{{ url_for('reports.purchases') }}" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
-                  <p>{{ t('Report_2') }} {{ t('Purchases') }}</p>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a href="{{ url_for('reports.inventory') }}" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
-                  <p>{{ t('Report_2') }} {{ t('Inventory') }}</p>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a href="{{ url_for('reports.receivables') }}" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
-                  <p>{{ t('Receivables_2') }} {{ t('Receivables') }}</p>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a href="{{ url_for('reports.partners') }}" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
-                  <p>{{ t('Report_2') }} {{ t('Partners') }} {{ t('والتجار') }}</p>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a href="{{ url_for('reports.inventory_reconciliation') }}" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
-                  <p>{{ t('Reconciliation') }} {{ t('Inventory') }}</p>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a href="{{ url_for('reports.ar_reconciliation') }}" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
-                  <p>{{ t('Reconciliation_2') }} {{ t('Receivables_2') }}</p>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a href="{{ url_for('reports.top_selling') }}" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
-                  <p>{{ t('الأكثر') }} {{ t('مبيعاً') }}</p>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a href="{{ url_for('treasury.treasury') }}" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
-                  <p>{{ t('مركز') }} {{ t('الخزينة') }}</p>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a href="{{ url_for('treasury.vat_return') }}" class="nav-link">
-                  <i class="far fa-circle nav-icon"></i>
-                  <p>{{ t('إقرار') }} {{ t('Tax_2') }} {{ t('Value') }} {{ t('المضافة') }}</p>
-                </a>
-              </li>
-            </ul>
-          </li>
-          {% endif %}
-          {% if current_user.is_authenticated and (current_user.has_permission('manage_backups') or current_user.has_permission('manage_store')) %}
-          <li class="erp-sidebar-section-label">{{ t('Management_2') }} {{ t('والأدوات') }}</li>
-          {% endif %}
-          {% if current_user.is_authenticated and current_user.has_permission('manage_backups') %}
-          <li class="nav-item {% if request.endpoint and request.endpoint in ['owner.list_backups', 'owner.scheduled_backups'] %}menu-open{% endif %}">
-            <a href="{{ url_for('owner.list_backups') }}" class="nav-link {% if request.endpoint and request.endpoint in ['owner.list_backups', 'owner.scheduled_backups'] %}active{% endif %}">
-              <i class="nav-icon fas fa-database"></i>
-              <p>{{ t('Backups') }} {{ t('Backup') }}</p>
-            </a>
-          </li>
-          {% endif %}
+          {% set _sale_perm = current_user.is_authenticated and (current_user.has_permission('manage_sales') or current_user.has_permission('manage_customers')) %}
+          {{ _sec(t('Sales') ~ ' ' ~ t('والمبيعات'), _sale_perm) }}
 
-          {% if current_user.is_authenticated and current_user.has_permission('manage_store') %}
-          <li class="nav-item has-treeview {% if request.endpoint and 'store' in request.endpoint %}menu-open{% endif %}">
-            <a href="#" class="nav-link {% if request.endpoint and 'store' in request.endpoint %}active{% endif %}">
-              <i class="nav-icon fas fa-store"></i>
-              <p>
-                {{ t('Store') }} {{ t('Email_3') }}
-                <i class="right fas fa-angle-left"></i>
-              </p>
-            </a>
-            <ul class="nav nav-treeview">
-              <li class="nav-item">
-                <a href="{{ url_for('store.admin_index') }}" class="nav-link">
-                  <i class="fas fa-tachometer-alt nav-icon text-info"></i>
-                  <p>{{ t('Dashboard_2') }} {{ t('Store') }}</p>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a href="{{ url_for('store.admin_catalog') }}" class="nav-link">
-                  <i class="fas fa-boxes nav-icon text-success"></i>
-                  <p>{{ t('Products_2') }} {{ t('Store') }}</p>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a href="{{ url_for('store.admin_transfer') }}" class="nav-link">
-                  <i class="fas fa-exchange-alt nav-icon text-warning"></i>
-                  <p>{{ t('Transfer') }} {{ t('Inventory_2') }}</p>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a href="{{ url_for('store.admin_settings') }}" class="nav-link">
-                  <i class="fas fa-cog nav-icon"></i>
-                  <p>{{ t('Settings_2') }} {{ t('Store') }}</p>
-                </a>
-              </li>
-            </ul>
-          </li>
-          {% endif %}
+          {% set _sale = current_user.is_authenticated and current_user.has_permission('manage_sales') %}
+          {{ _tree('fas fa-file-invoice', t('Sales'), 'sales', _sale) }}
+            {% if _sale and tenant_enable_pos %}
+            <li class="nav-item"><a href="{{ url_for('pos.index') }}" class="nav-link"><i class="fas fa-cash-register nav-icon text-info"></i><p>POS ({{ t('Cashier') }})</p></a></li>
+            {% endif %}
+            {% if _sale %}
+            <li class="nav-item"><a href="{{ url_for('sales.create') }}" class="nav-link"><i class="fas fa-plus-circle nav-icon text-success"></i><p>{{ t('Invoice') }} {{ t('New_3') }}</p></a></li>
+            <li class="nav-item"><a href="{{ url_for('sales.index') }}" class="nav-link"><i class="fas fa-list nav-icon"></i><p>{{ t('List') }} {{ t('Invoices') }}</p></a></li>
+            <li class="nav-item"><a href="{{ url_for('returns.index') }}" class="nav-link"><i class="fas fa-undo-alt nav-icon text-warning"></i><p>{{ t('Returns') }}</p></a></li>
+            {% endif %}
+          {{ _end(_sale) }}
 
-          {% if current_user.is_authenticated and current_user.has_permission('manage_warehouse') %}
-          <li class="nav-item has-treeview {% if request.endpoint and 'warehouse' in request.endpoint %}menu-open{% endif %}">
-            <a href="#" class="nav-link {% if request.endpoint and 'warehouse' in request.endpoint %}active{% endif %}">
-              <i class="nav-icon fas fa-warehouse"></i>
-              <p>
-                {{ t('Warehouses') }} {{ t('و{{ t('Inventory') }}') }}
-                <i class="right fas fa-angle-left"></i>
-              </p>
-            </a>
-            <ul class="nav nav-treeview">
-              <li class="nav-item">
-                <a href="{{ url_for('warehouse.index') }}" class="nav-link">
-                  <i class="fas fa-boxes nav-icon text-info"></i>
-                  <p>{{ t('Management') }} {{ t('Inventory') }}</p>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a href="{{ url_for('warehouse.list_warehouses') }}" class="nav-link">
-                  <i class="fas fa-building nav-icon text-primary"></i>
-                  <p>{{ t('Warehouses') }}</p>
-                </a>
-              </li>
-              {% if current_user.is_admin() %}
-              <li class="nav-item">
-                <a href="{{ url_for('warehouse.create_warehouse') }}" class="nav-link">
-                  <i class="fas fa-plus-circle nav-icon text-success"></i>
-                  <p>{{ t('Add') }} {{ t('Warehouse_2') }}</p>
-                </a>
-              </li>
-              {% endif %}
-              <li class="nav-item">
-                <a href="{{ url_for('warehouse.movements') }}" class="nav-link">
-                  <i class="fas fa-exchange-alt nav-icon text-secondary"></i>
-                  <p>{{ t('حركات') }} {{ t('Inventory') }}</p>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a href="{{ url_for('warehouse.low_stock') }}" class="nav-link">
-                  <i class="fas fa-exclamation-triangle nav-icon text-warning"></i>
-                  <p>{{ t('Inventory_2') }} {{ t('Low_2') }}</p>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a href="{{ url_for('warehouse.out_of_stock') }}" class="nav-link">
-                  <i class="fas fa-ban nav-icon text-danger"></i>
-                  <p>{{ t('نفذ') }} من {{ t('Inventory') }}</p>
-                </a>
-              </li>
-            </ul>
-          </li>
-          {% endif %}
-          {% if current_user.is_authenticated and (current_user.is_owner or (current_user.role and current_user.role.slug in ['developer','super_admin','manager'])) %}
-          <li class="erp-sidebar-section-label">{{ t('Management') }} {{ t('Company') }}</li>
-          {% endif %}
+          {% set _cust = current_user.is_authenticated and current_user.has_permission('manage_customers') %}
+          {{ _tree('fas fa-users', t('Customers'), 'customers', _cust) }}
+            {% if _cust %}
+            <li class="nav-item"><a href="{{ url_for('customers.create') }}" class="nav-link"><i class="fas fa-user-plus nav-icon text-success"></i><p>{{ t('Customer_3') }} {{ t('New') }}</p></a></li>
+            <li class="nav-item"><a href="{{ url_for('customers.index') }}" class="nav-link"><i class="fas fa-list nav-icon"></i><p>{{ t('List') }} {{ t('Customers') }}</p></a></li>
+            {% endif %}
+          {{ _end(_cust) }}
+
+          {% set _inv_perm = current_user.is_authenticated and (current_user.has_permission('manage_products') or current_user.has_permission('manage_purchases') or current_user.has_permission('manage_suppliers') or current_user.has_permission('manage_warehouse')) %}
+          {{ _sec(t('Inventory') ~ ' ' ~ t('والتوريد'), _inv_perm) }}
+
+          {% set _prod = current_user.is_authenticated and current_user.has_permission('manage_products') %}
+          {{ _tree('fas fa-box', t('Products'), 'products', _prod) }}
+            {% if _prod %}
+            <li class="nav-item"><a href="{{ url_for('products.create') }}" class="nav-link"><i class="fas fa-plus-circle nav-icon text-success"></i><p>{{ t('New Product') }}</p></a></li>
+            <li class="nav-item"><a href="{{ url_for('products.index') }}" class="nav-link"><i class="fas fa-list nav-icon"></i><p>{{ t('List') }} {{ t('Products') }}</p></a></li>
+            {% endif %}
+          {{ _end(_prod) }}
+
+          {% set _pur = current_user.is_authenticated and current_user.has_permission('manage_purchases') %}
+          {{ _tree('fas fa-shopping-cart', t('Purchases'), 'purchases', _pur) }}
+            {% if _pur %}
+            <li class="nav-item"><a href="{{ url_for('purchases.create') }}" class="nav-link"><i class="fas fa-plus-circle nav-icon text-success"></i><p>{{ t('مشترى') }} {{ t('New') }}</p></a></li>
+            <li class="nav-item"><a href="{{ url_for('purchases.index') }}" class="nav-link"><i class="fas fa-list nav-icon"></i><p>{{ t('List') }} {{ t('Purchases') }}</p></a></li>
+            {% endif %}
+          {{ _end(_pur) }}
+
+          {% set _sup = current_user.is_authenticated and current_user.has_permission('manage_suppliers') %}
+          {{ _tree('fas fa-truck', t('Suppliers'), 'suppliers', _sup) }}
+            {% if _sup %}
+            <li class="nav-item"><a href="{{ url_for('suppliers.create') }}" class="nav-link"><i class="fas fa-plus-circle nav-icon text-success"></i><p>{{ t('Supplier_2') }} {{ t('New') }}</p></a></li>
+            <li class="nav-item"><a href="{{ url_for('suppliers.index') }}" class="nav-link"><i class="fas fa-list nav-icon"></i><p>{{ t('List') }} {{ t('Suppliers') }}</p></a></li>
+            {% endif %}
+          {{ _end(_sup) }}
+
+          {% set _fin_perm = current_user.is_authenticated and (current_user.has_permission('manage_payments') or current_user.has_permission('manage_expenses') or current_user.has_permission('manage_payroll') or current_user.has_permission('view_ledger')) %}
+          {{ _sec(t('Finance') ~ ' ' ~ t('والمحاسبة'), _fin_perm) }}
+
+          {% set _u = current_user.is_authenticated and current_user.has_permission('manage_users') %}
+          {{ _tree('fas fa-users-cog', t('Users'), 'users', _u) }}
+            {% if _u %}
+            <li class="nav-item"><a href="{{ url_for('users.create') }}" class="nav-link"><i class="fas fa-user-plus nav-icon text-success"></i><p>{{ t('User_2') }} {{ t('New') }}</p></a></li>
+            <li class="nav-item"><a href="{{ url_for('users.index') }}" class="nav-link"><i class="fas fa-users nav-icon"></i><p>{{ t('List') }} {{ t('Users') }}</p></a></li>
+            {% endif %}
+          {{ _end(_u) }}
+
+          {% set _pay = current_user.is_authenticated and current_user.has_permission('manage_payments') %}
+          {{ _tree('fas fa-money-bill-wave', t('Payments'), 'payments', _pay) }}
+            {% if _pay %}
+            <li class="nav-item"><a href="{{ url_for('payments.create_voucher') }}" class="nav-link"><i class="fas fa-plus-circle nav-icon text-success"></i><p>{{ t('Voucher_2') }} {{ t('Receipt') }} {{ t('New') }}</p></a></li>
+            <li class="nav-item"><a href="{{ url_for('payments.receipts') }}" class="nav-link"><i class="fas fa-list nav-icon"></i><p>{{ t('List') }} {{ t('Vouchers') }}</p></a></li>
+            {% endif %}
+          {{ _end(_pay) }}
+
+          {{ _tree('fas fa-money-check-alt', t('Management') ~ ' ' ~ t('Cheques'), 'cheques', _pay) }}
+            {% if _pay %}
+            <li class="nav-item"><a href="{{ url_for('cheques.index') }}" class="nav-link"><i class="fas fa-list nav-icon text-info"></i><p>{{ t('Cheques') }}</p></a></li>
+            <li class="nav-item"><a href="{{ url_for('cheques.alerts') }}" class="nav-link"><i class="fas fa-bell nav-icon text-warning"></i><p>{{ t('Alerts') }} {{ t('Cheques') }}</p></a></li>
+            {% endif %}
+          {{ _end(_pay) }}
+
+          {% set _exp = current_user.is_authenticated and current_user.has_permission('manage_expenses') %}
+          {{ _tree('fas fa-receipt', t('Expenses'), 'expenses', _exp) }}
+            {% if _exp %}
+            <li class="nav-item"><a href="{{ url_for('expenses.create') }}" class="nav-link"><i class="fas fa-plus-circle nav-icon text-success"></i><p>{{ t('Expense_3') }} {{ t('New') }}</p></a></li>
+            <li class="nav-item"><a href="{{ url_for('expenses.index') }}" class="nav-link"><i class="fas fa-list nav-icon"></i><p>{{ t('List') }} {{ t('Expenses') }}</p></a></li>
+            {% endif %}
+          {{ _end(_exp) }}
+
+          {% set _pr = current_user.is_authenticated and current_user.has_permission('manage_payroll') %}
+          {{ _tree('fas fa-users-cog', t('Salaries') ~ ' ' ~ t('وشؤون') ~ ' ' ~ t('Employees'), 'payroll', _pr) }}
+            {% if _pr %}
+            <li class="nav-item"><a href="{{ url_for('payroll.employees_list') }}" class="nav-link"><i class="fas fa-users nav-icon text-info"></i><p>{{ t('Employees') }}</p></a></li>
+            <li class="nav-item"><a href="{{ url_for('payroll.advances') }}" class="nav-link"><i class="fas fa-hand-holding-usd nav-icon text-warning"></i><p>{{ t('Advances') }}</p></a></li>
+            <li class="nav-item"><a href="{{ url_for('payroll.process_payroll') }}" class="nav-link"><i class="fas fa-money-check-alt nav-icon text-success"></i><p>{{ t('صرف') }} {{ t('Salaries') }}</p></a></li>
+            {% endif %}
+          {{ _end(_pr) }}
+
+          {% set _led = current_user.is_authenticated and current_user.has_permission('view_ledger') %}
+          {{ _tree('fas fa-book', t('دفتر') ~ ' ' ~ t('الأستاذ'), 'ledger', _led) }}
+            {% if _led %}
+            <li class="nav-item"><a href="{{ url_for('ledger.index') }}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>{{ t('Accounts') }}</p></a></li>
+            <li class="nav-item"><a href="{{ url_for('ledger.trial_balance') }}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>{{ t('Balance_2') }} {{ t('Review') }}</p></a></li>
+            <li class="nav-item"><a href="{{ url_for('ledger.income_statement') }}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>{{ t('List') }} {{ t('Income_2') }}</p></a></li>
+            <li class="nav-item"><a href="{{ url_for('ledger.balance_sheet') }}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>{{ t('Balance Sheet') }}</p></a></li>
+            {% if current_user.is_admin() %}
+            <li class="nav-item"><a href="{{ url_for('ledger.admin_dashboard') }}" class="nav-link"><i class="fas fa-cogs nav-icon"></i><p>{{ t('Dashboard_2') }} {{ t('Control') }} {{ t('الإدارية') }}</p></a></li>
+            {% endif %}
+            {% endif %}
+          {{ _end(_led) }}
+
+          {% set _rep = current_user.is_authenticated and current_user.has_permission('view_reports') %}
+          {{ _sec(t('Reports') ~ ' ' ~ t('والتقارير'), _rep) }}
+
+          {{ _nav(url_for('partners.index'), 'fas fa-handshake', t('Partners'), _rep) }}
+
+          {{ _tree('fas fa-chart-bar', t('Reports'), 'reports', _rep) }}
+            {% if _rep %}
+            <li class="nav-item"><a href="{{ url_for('reports.sales') }}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>{{ t('Report_2') }} {{ t('Sales') }}</p></a></li>
+            <li class="nav-item"><a href="{{ url_for('reports.purchases') }}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>{{ t('Report_2') }} {{ t('Purchases') }}</p></a></li>
+            <li class="nav-item"><a href="{{ url_for('reports.inventory') }}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>{{ t('Report_2') }} {{ t('Inventory') }}</p></a></li>
+            <li class="nav-item"><a href="{{ url_for('reports.receivables') }}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>{{ t('Receivables_2') }} {{ t('Receivables') }}</p></a></li>
+            <li class="nav-item"><a href="{{ url_for('reports.partners') }}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>{{ t('Report_2') }} {{ t('Partners') }} {{ t('والتجار') }}</p></a></li>
+            <li class="nav-item"><a href="{{ url_for('reports.inventory_reconciliation') }}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>{{ t('Reconciliation') }} {{ t('Inventory') }}</p></a></li>
+            <li class="nav-item"><a href="{{ url_for('reports.ar_reconciliation') }}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>{{ t('Reconciliation_2') }} {{ t('Receivables_2') }}</p></a></li>
+            <li class="nav-item"><a href="{{ url_for('reports.top_selling') }}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>{{ t('الأكثر') }} {{ t('مبيعاً') }}</p></a></li>
+            <li class="nav-item"><a href="{{ url_for('treasury.treasury') }}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>{{ t('مركز') }} {{ t('الخزينة') }}</p></a></li>
+            <li class="nav-item"><a href="{{ url_for('treasury.vat_return') }}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>{{ t('إقرار') }} {{ t('Tax_2') }} {{ t('Value') }} {{ t('المضافة') }}</p></a></li>
+            {% endif %}
+          {{ _end(_rep) }}
+
+          {% set _mgt_perm = current_user.is_authenticated and (current_user.has_permission('manage_backups') or current_user.has_permission('manage_store')) %}
+          {{ _sec(t('Management_2') ~ ' ' ~ t('والأدوات'), _mgt_perm) }}
+
+          {% set _bak = current_user.is_authenticated and current_user.has_permission('manage_backups') %}
+          {{ _nav(url_for('owner.list_backups'), 'fas fa-database', t('Backups') ~ ' ' ~ t('Backup'), _bak) }}
+
+          {% set _sto = current_user.is_authenticated and current_user.has_permission('manage_store') %}
+          {{ _tree('fas fa-store', t('Store') ~ ' ' ~ t('Email_3'), 'store', _sto) }}
+            {% if _sto %}
+            <li class="nav-item"><a href="{{ url_for('store.admin_index') }}" class="nav-link"><i class="fas fa-tachometer-alt nav-icon text-info"></i><p>{{ t('Dashboard_2') }} {{ t('Store') }}</p></a></li>
+            <li class="nav-item"><a href="{{ url_for('store.admin_catalog') }}" class="nav-link"><i class="fas fa-boxes nav-icon text-success"></i><p>{{ t('Products_2') }} {{ t('Store') }}</p></a></li>
+            <li class="nav-item"><a href="{{ url_for('store.admin_transfer') }}" class="nav-link"><i class="fas fa-exchange-alt nav-icon text-warning"></i><p>{{ t('Transfer') }} {{ t('Inventory_2') }}</p></a></li>
+            <li class="nav-item"><a href="{{ url_for('store.admin_settings') }}" class="nav-link"><i class="fas fa-cog nav-icon"></i><p>{{ t('Settings_2') }} {{ t('Store') }}</p></a></li>
+            {% endif %}
+          {{ _end(_sto) }}
+
+          {% set _wh = current_user.is_authenticated and current_user.has_permission('manage_warehouse') %}
+          {{ _tree('fas fa-warehouse', t('Warehouses') ~ ' ' ~ t('والمستودعات'), 'warehouse', _wh) }}
+            {% if _wh %}
+            <li class="nav-item"><a href="{{ url_for('warehouse.index') }}" class="nav-link"><i class="fas fa-boxes nav-icon text-info"></i><p>{{ t('Management') }} {{ t('Inventory') }}</p></a></li>
+            <li class="nav-item"><a href="{{ url_for('warehouse.list_warehouses') }}" class="nav-link"><i class="fas fa-building nav-icon text-primary"></i><p>{{ t('Warehouses') }}</p></a></li>
+            {% if current_user.is_admin() %}
+            <li class="nav-item"><a href="{{ url_for('warehouse.create_warehouse') }}" class="nav-link"><i class="fas fa-plus-circle nav-icon text-success"></i><p>{{ t('Add') }} {{ t('Warehouse_2') }}</p></a></li>
+            {% endif %}
+            <li class="nav-item"><a href="{{ url_for('warehouse.movements') }}" class="nav-link"><i class="fas fa-exchange-alt nav-icon text-secondary"></i><p>{{ t('حركات') }} {{ t('Inventory') }}</p></a></li>
+            <li class="nav-item"><a href="{{ url_for('warehouse.low_stock') }}" class="nav-link"><i class="fas fa-exclamation-triangle nav-icon text-warning"></i><p>{{ t('Inventory_2') }} {{ t('Low_2') }}</p></a></li>
+            <li class="nav-item"><a href="{{ url_for('warehouse.out_of_stock') }}" class="nav-link"><i class="fas fa-ban nav-icon text-danger"></i><p>{{ t('نفذ') }} من {{ t('Inventory') }}</p></a></li>
+            {% endif %}
+          {{ _end(_wh) }}
+
+          {% set _co_perm = current_user.is_authenticated and (current_user.is_owner or (current_user.role and current_user.role.slug in ['developer','super_admin','manager'])) %}
+          {{ _sec(t('Management') ~ ' ' ~ t('Company'), _co_perm) }}
+
           {% if current_user.is_authenticated and (current_user.is_owner or (current_user.role and current_user.role.slug == 'developer')) %}
-          <li class="nav-item">
-            <a href="{{ url_for('owner.dashboard') }}" class="nav-link {% if request.endpoint == 'owner.dashboard' %}active{% endif %}">
-              <i class="nav-icon fas fa-crown text-warning"></i>
-              <p>{{ t('Dashboard_2') }} {{ t('المالك') }}</p>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a href="{{ url_for('owner.system_config') }}" class="nav-link {% if request.endpoint == 'owner.system_config' %}active{% endif %}">
-              <i class="nav-icon fas fa-cogs text-info"></i>
-              <p>{{ t('Settings_2') }} {{ t('System') }}</p>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a href="{{ url_for('owner.users_list') }}" class="nav-link">
-              <i class="nav-icon fas fa-users-cog"></i>
-              <p>{{ t('Users_2') }} {{ t('Platform') }}</p>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a href="{{ url_for('owner.list_backups') }}" class="nav-link">
-              <i class="nav-icon fas fa-database"></i>
-              <p>{{ t('Backups_2') }} {{ t('System') }}</p>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a href="{{ url_for('owner.system_health') }}" class="nav-link">
-              <i class="nav-icon fas fa-heartbeat"></i>
-              <p>{{ t('Health') }} {{ t('System') }}</p>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a href="{{ url_for('ai.config') }}" class="nav-link">
-              <i class="nav-icon fas fa-key text-info"></i>
-              <p>{{ t('Keys') }} AI (Groq)</p>
-            </a>
-          </li>
+          {{ _nav(url_for('owner.dashboard'), 'fas fa-crown text-warning', t('Dashboard_2') ~ ' ' ~ t('المالك'), 'owner.dashboard') }}
+          {{ _nav(url_for('owner.system_config'), 'fas fa-cogs text-info', t('Settings_2') ~ ' ' ~ t('System'), 'owner.system_config') }}
+          {{ _nav(url_for('owner.users_list'), 'fas fa-users-cog', t('Users_2') ~ ' ' ~ t('Platform')) }}
+          {{ _nav(url_for('owner.list_backups'), 'fas fa-database', t('Backups_2') ~ ' ' ~ t('System')) }}
+          {{ _nav(url_for('owner.system_health'), 'fas fa-heartbeat', t('Health') ~ ' ' ~ t('System')) }}
+          {{ _nav(url_for('ai.config'), 'fas fa-key text-info', t('Keys') ~ ' AI (Groq)') }}
           {% elif current_user.is_authenticated and current_user.role and current_user.role.slug in ['super_admin', 'manager'] %}
-          <li class="nav-item">
-            <a href="{{ url_for('owner.company_dashboard') }}" class="nav-link {% if request.endpoint == 'owner.company_dashboard' %}active{% endif %}">
-              <i class="nav-icon fas fa-building text-info"></i>
-              <p>{{ t('Dashboard_2') }} {{ t('Company') }}</p>
-            </a>
-          </li>
+          {{ _nav(url_for('owner.company_dashboard'), 'fas fa-building text-info', t('Dashboard_2') ~ ' ' ~ t('Company'), 'owner.company_dashboard') }}
           {% if current_user.has_permission('manage_backups') %}
-          <li class="nav-item">
-            <a href="{{ url_for('owner.list_backups') }}" class="nav-link">
-              <i class="nav-icon fas fa-database"></i>
-              <p>{{ t('Backups_2') }} {{ t('Company') }}</p>
-            </a>
-          </li>
+          {{ _nav(url_for('owner.list_backups'), 'fas fa-database', t('Backups_2') ~ ' ' ~ t('Company')) }}
           {% endif %}
-          <li class="nav-item">
-            <a href="{{ url_for('owner.company_info') }}" class="nav-link">
-              <i class="nav-icon fas fa-id-card"></i>
-              <p>{{ t('Data_2') }} {{ t('Company') }}</p>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a href="{{ url_for('owner.invoice_settings') }}" class="nav-link">
-              <i class="nav-icon fas fa-file-invoice"></i>
-              <p>{{ t('Headers') }} {{ t('Invoices') }}</p>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a href="{{ url_for('printing.print_history') }}" class="nav-link">
-              <i class="nav-icon fas fa-history"></i>
-              <p>{{ t('Log') }} {{ t('Printing') }}</p>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a href="{{ url_for('printing.print_settings') }}" class="nav-link">
-              <i class="nav-icon fas fa-print"></i>
-              <p>{{ t('Settings_2') }} {{ t('Printing') }}</p>
-            </a>
-          </li>
+          {{ _nav(url_for('owner.company_info'), 'fas fa-id-card', t('Data_2') ~ ' ' ~ t('Company')) }}
+          {{ _nav(url_for('owner.invoice_settings'), 'fas fa-file-invoice', t('Headers') ~ ' ' ~ t('Invoices')) }}
+          {{ _nav(url_for('printing.print_history'), 'fas fa-history', t('Log') ~ ' ' ~ t('Printing')) }}
+          {{ _nav(url_for('printing.print_settings'), 'fas fa-print', t('Settings_2') ~ ' ' ~ t('Printing')) }}
           {% endif %}
+
         </ul>
       </nav>
     </div>
