@@ -5,98 +5,55 @@
 <head>
 
     <meta charset="UTF-8">
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <meta name="referrer" content="strict-origin-when-cross-origin">
 
-    <title>{{ 'شركة أزاد للأنظمة الذكية - أفضل برنامج إدارة مستودعات ومبيعات في الإمارات ودبي 2025' if current_language == 'ar' else 'Azad Smart Systems - Best Warehouse &amp; Sales Management Software in UAE 2025' }}</title>
+    <title>{{ 'شركة أزاد للأنظمة الذكية - أفضل برنامج إدارة مستودعات ومبيعات في الإمارات 2025' if not is_en else 'Azad Smart Systems - Best Warehouse &amp; Sales Management Software in UAE 2025' }}</title>
 
-    {% if current_language == 'en' %}
-
+    {% if is_en %}
     <meta name="description" content="Azad Smart Systems: an all-in-one warehouse, sales, purchases, and accounting platform with modern reporting and AI features for businesses in the UAE.">
-
     <meta name="keywords" content="warehouse management UAE, accounting software Dubai, inventory management, invoicing, POS, ERP, sales system, purchases, GL, AI accounting">
-
     <meta name="author" content="Azad Smart Systems">
-
     <meta name="language" content="English">
-
     {% else %}
-
-    <meta name="description" content="شركة أزاد للأنظمة الذكية - نظام إدارة مستودعات ومبيعات ومشتريات متكامل مع ذكاء اصطناعي. برنامج محاسبة احترافي للشركات في الإمارات ودبي وأبوظبي. فواتير إلكترونية، إدارة مخزون، كشوفات حسابات، تقارير مالية شاملة. حل متكامل لقطع غيار السيارات والمحلات التجارية.">
-
-    <meta name="keywords" content="نظام إدارة مستودعات الإمارات، برنامج محاسبة دبي، فواتير إلكترونية الإمارات، إدارة المخزون، برنامج مبيعات، نظام نقاط البيع POS، قطع غيار سيارات، ذكاء اصطناعي محاسبة، ERP الإمارات، كشف حساب، برنامج حسابات، سندات قبض، إدارة شيكات، تقارير مالية، نظام محاسبي، cloud accounting، المحاسبة السحابية، دبي، أبوظبي، الشارقة، عجمان، رأس الخيمة">
-
+    <meta name="description" content="شركة أزاد للأنظمة الذكية - نظام إدارة مستودعات ومبيعات ومشتريات متكامل مع ذكاء اصطناعي. برنامج محاسبة احترافي للشركات في الإمارات ودبي وأبوظبي.">
+    <meta name="keywords" content="نظام إدارة مستودعات الإمارات، برنامج محاسبة دبي، فواتير إلكترونية، إدارة المخزون، ERP">
     <meta name="author" content="شركة أزاد للأنظمة الذكية">
-
     <meta name="language" content="Arabic">
-
     {% endif %}
 
-    <meta name="robots" content="{% if current_language == 'en' %}index, follow{% else %}index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1{% endif %}">
-
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
     <meta name="geo.region" content="AE">
-
     <meta name="geo.placename" content="Dubai, UAE">
 
     <meta property="og:type" content="website">
-
     <meta property="og:url" content="{{ request.url }}">
-
-    <meta property="og:title" content="{{ 'شركة أزاد للأنظمة الذكية - أفضل نظام إدارة مستودعات في الإمارات' if current_language == 'ar' else 'Azad Smart Systems - Warehouse & Sales Management in UAE' }}">
-
-    <meta property="og:description" content="{{ 'نظام متكامل لإدارة المستودعات والمبيعات مع ذكاء اصطناعي متقدم. حل احترافي للشركات في دبي والإمارات.' if current_language == 'ar' else 'Warehouse, sales, purchases, and accounting with AI-powered insights.' }}">
+    <meta property="og:title" content="{{ 'شركة أزاد للأنظمة الذكية - أفضل نظام إدارة مستودعات في الإمارات' if not is_en else 'Azad Smart Systems - Warehouse & Sales Management in UAE' }}">
+    <meta property="og:description" content="{{ 'نظام متكامل لإدارة المستودعات والمبيعات مع ذكاء اصطناعي' if not is_en else 'Warehouse, sales, purchases, and accounting with AI-powered insights.' }}">
+    <meta property="og:locale" content="{{ 'ar_AE' if not is_en else 'en_US' }}">
+    <meta property="og:site_name" content="{{ 'شركة أزاد للأنظمة الذكية' if not is_en else 'Azad Smart Systems' }}">
 
     {% set _logo_path = (config.COMPANY_LOGO or 'assets/brand/azad/logos/logo-gold-web.png') %}
-
-    {% if _logo_path.startswith('/static/') %}
-
-        {% set _logo_path = _logo_path[8:] %}
-
-    {% elif _logo_path.startswith('static/') %}
-
-        {% set _logo_path = _logo_path[7:] %}
-
-    {% endif %}
-
+    {% if _logo_path.startswith('/static/') %}{% set _logo_path = _logo_path[8:] %}{% elif _logo_path.startswith('static/') %}{% set _logo_path = _logo_path[7:] %}{% endif %}
     {% set _logo_external = _logo_path if _logo_path.startswith('http') else url_for('static', filename=_logo_path, _external=True) %}
 
     <meta property="og:image" content="{{ _logo_external }}">
-
-    <meta property="og:locale" content="{{ 'en_US' if current_language == 'en' else 'ar_AE' }}">
-
-    <meta property="og:site_name" content="{{ 'Azad Smart Systems' if current_language == 'en' else 'شركة أزاد للأنظمة الذكية' }}">
-
     <meta name="twitter:card" content="summary_large_image">
-
-    <meta name="twitter:title" content="{{ 'Azad Smart Systems - Warehouse & Sales Management in UAE' if current_language == 'en' else 'شركة أزاد للأنظمة الذكية - نظام إدارة مستودعات ذكي' }}">
-
-    <meta name="twitter:description" content="{{ 'Warehouse, sales, purchases, and accounting with AI-powered insights.' if current_language == 'en' else 'نظام متكامل لإدارة المستودعات والمبيعات مع ذكاء اصطناعي. فواتير، مخزون، حسابات، تقارير.' }}">
-
+    <meta name="twitter:title" content="{{ 'شركة أزاد للأنظمة الذكية - نظام إدارة مستودعات ذكي' if not is_en else 'Azad Smart Systems - Warehouse & Sales Management in UAE' }}">
+    <meta name="twitter:description" content="{{ 'نظام متكامل مع ذكاء اصطناعي. فواتير، مخزون، حسابات، تقارير.' if not is_en else 'Warehouse, sales, purchases, and accounting with AI.' }}">
     <meta name="twitter:image" content="{{ _logo_external }}">
-
     <link rel="canonical" href="{{ request.url }}">
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous">
-
     <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.min.css') }}">
 
-    {% if current_language == 'en' %}
-
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" integrity="sha384-SQmEOkBgKgEIh61hWWvG/unqqDDppl6UsaeOX71NjfnDB32XCcgWtNdUamQ7ics0" crossorigin="anonymous" rel="stylesheet">
-
+    {% if is_en %}
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/landing-page-en.css') }}">
-
     {% else %}
-
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=Amiri:wght@400;700&display=swap" integrity="sha384-pnbsgizCJ0gzV/Fe7j7GHh+4w6yQom3MZQAjnF3v/wgkH3rTryrnaRZ7uPweEOB2" crossorigin="anonymous" rel="stylesheet">
-
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/landing-page-ar.css') }}">
-
     <link rel="stylesheet" href="{{ url_for('static', filename='css/accessibility.css') }}">
-
     {% endif %}
 
     {% include 'partials/seo-landing.html' %}
@@ -106,1441 +63,383 @@
 <body>
 
     {% set is_en = (current_language == 'en') %}
+    {% set _company_name = (config.COMPANY_NAME_AR or 'شركة أزاد للأنظمة الذكية') if not is_en else (config.COMPANY_NAME or 'Azad Smart Systems') %}
+    {% set _company_address_ar = config.COMPANY_ADDRESS_AR or company_address or tenant_address %}
+    {% set _company_address_en = config.COMPANY_ADDRESS_EN or company_address or tenant_address %}
 
-    {% if not is_en %}
+    {# == Shared Text Strings == #}
+    {% set _close = 'إغلاق' if not is_en else 'Close' %}
+    {% set _features = 'المميزات' if not is_en else 'Features' %}
+    {% set _pricing = 'الأسعار' if not is_en else 'Pricing' %}
+    {% set _about = 'من نحن' if not is_en else 'About' %}
+    {% set _benefits = 'لمن' if not is_en else 'Who it is for' %}
+    {% set _faq = 'الأسئلة الشائعة' if not is_en else 'FAQ' %}
+    {% set _contact = 'تواصل' if not is_en else 'Contact' %}
+    {% set _login = 'تسجيل الدخول' if not is_en else 'Login' %}
+    {% set _lang_label = 'English' if not is_en else 'العربية' %}
+    {% set _lang_btn = 'EN' if not is_en else 'AR' %}
+    {% set _lang_url = url_for('language.set_language', lang='ar' if is_en else 'en') %}
+    {% set _lang_alt = 'العربية' if is_en else 'English' %}
+    {% set _menu = 'القائمة' if not is_en else 'Menu' %}
 
-    {% set company_name_display = (config.COMPANY_NAME_AR or 'شركة أزاد للأنظمة الذكية') if not is_en else (config.COMPANY_NAME or 'Azad Smart Systems') %}
+    {% set _hero_subtitle = 'أفضل نظام لإدارة المستودعات والمبيعات في الإمارات 2025' if not is_en else 'Best warehouse &amp; sales management system in UAE 2025' %}
+    {% set _hero_tagline_1 = 'برنامج محاسبة متكامل | فواتير إلكترونية | مخزون | ذكاء اصطناعي' if not is_en else 'Accounting &bull; E-invoices &bull; Inventory &bull; AI insights' %}
+    {% set _hero_tagline_2 = 'حلول احترافية لمحلات قطع غيار السيارات والتجزئة في الإمارات' if not is_en else '' %}
+    {% set _btn_buy = 'شراء الآن' if not is_en else 'Buy now' %}
+    {% set _btn_contact = 'تواصل معنا' if not is_en else 'Contact us' %}
+    {% set _btn_support = 'ادعم المشروع' if not is_en else 'Support' %}
+    {% set _btn_buy_wa = 'شراء النظام عبر واتساب' if not is_en else 'Buy via WhatsApp' %}
+    {% set _btn_buy_code = 'شراء الكود أو التخصيص' if not is_en else 'Buy code / customize' %}
+    {% set _btn_pricing = 'عرض كل الباقات والأسعار' if not is_en else 'View pricing' %}
+    {% set _wa_msg_buy = 'مرحباً، أريد شراء نظام أزاد' if not is_en else 'Hello, I want to buy Azad system' %}
+    {% set _wa_msg_sales = 'مرحباً، أريد شراء النظام أو التحدث مع المبيعات' if not is_en else 'Hello, I want to buy the system or talk to sales' %}
+    {% set _email_subject = 'طلب شراء الكود أو تخصيص النظام' if not is_en else 'Source code or customization request' %}
+    {% set _developer_name = developer_name_ar or config.DEVELOPER_NAME_AR if not is_en else (developer_name or config.DEVELOPER_NAME) %}
 
+    {% set _features_title = 'لماذا تختار نظام أزاد لإدارة المستودعات في الإمارات؟' if not is_en else 'Why choose Azad?' %}
+    {% set _contact_title = 'تواصل معنا' if not is_en else 'Contact' %}
+    {% set _contact_sub = 'فريقنا جاهز لمساعدتك' if not is_en else 'We respond quickly and help you get started.' %}
+    {% set _contact_tagline = '🇵🇸 من فلسطين للعالم العربي 🇦🇪' if not is_en else '' %}
+    {% set _pricing_title = 'باقات مرنة لجميع الأعمال' if not is_en else 'Plans' %}
+    {% set _pricing_sub = 'اختر الباقة المناسبة لك' if not is_en else 'Flexible pricing based on your needs.' %}
+    {% set _footer_quick = 'روابط سريعة' if not is_en else 'Quick links' %}
+    {% set _footer_support = 'الدعم' if not is_en else 'Support' %}
+    {% set _footer_ai = 'مدعوم بالذكاء الاصطناعي' if not is_en else 'AI-powered' %}
+    {% set _footer_rights = 'جميع الحقوق محفوظة.' if not is_en else 'All rights reserved.' %}
+
+    {% set _user_guide = 'دليل المستخدم' if not is_en else 'User guide' %}
+    {% set _guide = 'الدليل' if not is_en else 'Guide' %}
+    {% set _all_features = 'كل المميزات' if not is_en else 'All features' %}
+    {% set _contact_page = 'صفحة الاتصال' if not is_en else 'Contact page' %}
+    {% set _message_us = 'راسلنا' if not is_en else 'Message us' %}
+    {% set _sales_wa = 'واتساب المبيعات' if not is_en else 'Sales WhatsApp' %}
+
+    {# == Sidebar + Nav (shared structure) == #}
     <div class="landing-sidebar-backdrop" id="landingSidebarBackdrop"></div>
 
     <aside class="landing-sidebar" id="landingSidebar" aria-hidden="true">
-
         <div class="landing-sidebar-header">
-
             <div class="title">
-
-                <img src="{{ url_for('static', filename=_logo_path) }}" alt="{{ company_name_display }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='assets/brand/azad/logos/logo-gold-web.png') }}';">
-
-                <span>{{ company_name_display }}</span>
-
+                <img src="{{ url_for('static', filename=_logo_path) }}" alt="{{ _company_name }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='assets/brand/azad/logos/logo-gold-web.png') }}';">
+                <span>{{ _company_name }}</span>
             </div>
-
-            <button type="button" class="landing-icon-btn" id="landingSidebarClose" aria-label="{{ 'إغلاق' if not is_en else 'Close' }}" title="إغلاق">
-
+            <button type="button" class="landing-icon-btn" id="landingSidebarClose" aria-label="{{ _close }}" title="{{ _close }}">
                 <i class="fas fa-times"></i>
-
             </button>
-
         </div>
-
         <div class="landing-sidebar-links">
-
-            <a href="#features" class="landing-scroll-link"><i class="fas fa-star"></i><span>{{ 'المميزات' if not is_en else 'Features' }}</span></a>
-
-            <a href="#pricing" class="landing-scroll-link"><i class="fas fa-tags"></i><span>{{ 'الأسعار' if not is_en else 'Pricing' }}</span></a>
-
-            <a href="#about" class="landing-scroll-link"><i class="fas fa-building"></i><span>{{ 'من نحن' if not is_en else 'About' }}</span></a>
-
-            <a href="#benefits" class="landing-scroll-link"><i class="fas fa-users-cog"></i><span>{{ 'لمن' if not is_en else 'Who it is for' }}</span></a>
-
-            <a href="#faq" class="landing-scroll-link"><i class="fas fa-question-circle"></i><span>{{ 'الأسئلة الشائعة' if not is_en else 'FAQ' }}</span></a>
-
-            <a href="#contact" class="landing-scroll-link"><i class="fas fa-phone-alt"></i><span>{{ 'تواصل' if not is_en else 'Contact' }}</span></a>
-
-            <a href="{{ url_for('auth.login') }}"><i class="fas fa-sign-in-alt"></i><span>{{ 'تسجيل الدخول' if not is_en else 'Login' }}</span></a>
-
-            <a href="{{ url_for('language.set_language', lang='ar' if is_en else 'en') }}"><i class="fas fa-globe"></i><span>{{ 'English' if not is_en else 'العربية' }}</span></a>
-
+            <a href="#features" class="landing-scroll-link"><i class="fas fa-star"></i><span>{{ _features }}</span></a>
+            <a href="#pricing" class="landing-scroll-link"><i class="fas fa-tags"></i><span>{{ _pricing }}</span></a>
+            <a href="#about" class="landing-scroll-link"><i class="fas fa-building"></i><span>{{ _about }}</span></a>
+            <a href="#benefits" class="landing-scroll-link"><i class="fas fa-users-cog"></i><span>{{ _benefits }}</span></a>
+            <a href="#faq" class="landing-scroll-link"><i class="fas fa-question-circle"></i><span>{{ _faq }}</span></a>
+            <a href="#contact" class="landing-scroll-link"><i class="fas fa-phone-alt"></i><span>{{ _contact }}</span></a>
+            <a href="{{ url_for('auth.login') }}"><i class="fas fa-sign-in-alt"></i><span>{{ _login }}</span></a>
+            <a href="{{ _lang_url }}"><i class="fas fa-globe"></i><span>{{ _lang_label }}</span></a>
         </div>
-
     </aside>
 
     <nav class="landing-nav">
-
         <div class="landing-nav-inner">
-
             <a class="landing-brand" href="{{ url_for('public.landing') }}">
-
-                <img src="{{ url_for('static', filename=_logo_path) }}" alt="{{ company_name_display }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='assets/brand/azad/logos/logo-gold-web.png') }}';">
-
-                <span>{{ company_name_display }}</span>
-
+                <img src="{{ url_for('static', filename=_logo_path) }}" alt="{{ _company_name }}">
+                <span>{{ _company_name }}</span>
             </a>
-
             <div class="landing-nav-links">
-
-                <a href="#features"><i class="fas fa-star"></i> {{ 'المميزات' if not is_en else 'Features' }}</a>
-
-                <a href="#pricing"><i class="fas fa-tags"></i> {{ 'الأسعار' if not is_en else 'Pricing' }}</a>
-
-                <a href="#about"><i class="fas fa-building"></i> {{ 'من نحن' if not is_en else 'About' }}</a>
-
-                <a href="#faq"><i class="fas fa-question-circle"></i> {{ 'الأسئلة الشائعة' if not is_en else 'FAQ' }}</a>
-
-                <a href="#contact"><i class="fas fa-phone-alt"></i> {{ 'تواصل' if not is_en else 'Contact' }}</a>
-
+                <a href="#features"><i class="fas fa-star"></i> {{ _features }}</a>
+                <a href="#pricing"><i class="fas fa-tags"></i> {{ _pricing }}</a>
+                <a href="#about"><i class="fas fa-building"></i> {{ _about }}</a>
+                <a href="#faq"><i class="fas fa-question-circle"></i> {{ _faq }}</a>
+                <a href="#contact"><i class="fas fa-phone-alt"></i> {{ _contact }}</a>
             </div>
-
             <div class="landing-nav-actions">
-
-                <a class="landing-lang-btn" href="{{ url_for('language.set_language', lang='ar' if is_en else 'en') }}">
-
+                <a class="landing-lang-btn" href="{{ _lang_url }}">
                     <i class="fas fa-globe"></i>
-
-                    <span>{{ 'EN' if not is_en else 'AR' }}</span>
-
+                    <span>{{ _lang_btn }}</span>
                 </a>
-
                 <a class="landing-login-btn" href="{{ url_for('auth.login') }}">
-
                     <i class="fas fa-sign-in-alt"></i>
-
-                    <span>{{ 'تسجيل الدخول' if not is_en else 'Login' }}</span>
-
+                    <span>{{ _login }}</span>
                 </a>
-
-                <button type="button" class="landing-icon-btn landing-menu-btn" id="landingSidebarOpen" aria-label="{{ 'القائمة' if not is_en else 'Menu' }}" title="القائمة">
-
+                <button type="button" class="landing-icon-btn landing-menu-btn" id="landingSidebarOpen" aria-label="{{ _menu }}" title="{{ _menu }}">
                     <i class="fas fa-bars"></i>
-
                 </button>
-
             </div>
-
         </div>
-
     </nav>
 
+    {# == Hero == #}
     <section class="hero">
-
         <div class="hero-pattern"></div>
-
         <div class="hero-content">
-
-            <div class="logo-badge">
-
-                <div class="flag-icon">
-
-                    🇦🇪 🇵🇸
-
-                </div>
-
-            </div>
-
-            <h1>{{ company_name_display }}</h1>
-
-            <p class="hero-subtitle">
-
-                <strong>{{ t('Best inventory and sales management system in UAE 2025') }}</strong>
-
-            </p>
-
-            <p class="hero-tagline ic-1">
-
-                {{ t('Complete accounting software | E-invoices | Inventory | Advanced AI') }}
-
-            </p>
-
-            <p class="hero-tagline ic-2">
-
-                {{ t('Professional solutions for auto parts and retail in UAE') }}
-
-            </p>
-
+            <div class="logo-badge"><div class="flag-icon">🇦🇪 🇵🇸</div></div>
+            <h1>{{ _company_name }}</h1>
+            <p class="hero-subtitle"><strong>{{ _hero_subtitle }}</strong></p>
+            <p class="hero-tagline ic-1">{{ _hero_tagline_1 }}</p>
+            {% if _hero_tagline_2 %}<p class="hero-tagline ic-2">{{ _hero_tagline_2 }}</p>{% endif %}
             <div class="hero-buttons ic-3">
-
-                <a href="{{ url_for('auth.support') }}?tab=purchase" class="btn-hero btn-success ic-4">
-
-                    <i class="fas fa-shopping-cart"></i> {{ t('Buy Now') }}
-
-                </a>
-
-                <a href="{{ url_for('public.contact') }}" class="btn-hero btn-primary ic-4">
-
-                    <i class="fas fa-phone-alt"></i> {{ 'تواصل معنا' if not is_en else 'Contact us' }}
-
-                </a>
-
-                <a href="{{ url_for('auth.support') }}?tab=donation" class="btn-hero btn-warning ic-4">
-
-                    <i class="fas fa-heart"></i> {{ t('Support Project') }}
-
-                </a>
-
-                <a href="{{ url_for('auth.login') }}" class="btn-hero btn-login ic-4">
-
-                    <i class="fas fa-sign-in-alt"></i> {{ t('Login') }}
-
-                </a>
-
+                <a href="{{ url_for('auth.support') }}?tab=purchase" class="btn-hero btn-success ic-4"><i class="fas fa-shopping-cart"></i> {{ _btn_buy }}</a>
+                <a href="{{ url_for('public.contact') }}" class="btn-hero btn-primary ic-4"><i class="fas fa-phone-alt"></i> {{ _btn_contact }}</a>
+                <a href="{{ url_for('auth.support') }}?tab=donation" class="btn-hero btn-warning ic-4"><i class="fas fa-heart"></i> {{ _btn_support }}</a>
+                <a href="{{ url_for('auth.login') }}" class="btn-hero btn-login ic-4"><i class="fas fa-sign-in-alt"></i> {{ _login }}</a>
             </div>
-
             <div class="ic-5">
-
-                <a href="https://wa.me/{{ developer_whatsapp_link }}?text={{ ('مرحباً، أريد شراء نظام أزاد' if not is_en else 'Hello, I want to buy Azad system') | urlencode }}" class="btn-hero btn-outline ic-6">
-
-                    <i class="fab fa-whatsapp"></i> {{ 'شراء النظام عبر واتساب' if not is_en else 'Buy via WhatsApp' }}
-
-                </a>
-
-                <a href="mailto:{{ developer_email or config.DEVELOPER_EMAIL }}?subject={{ ('طلب شراء الكود أو تخصيص النظام' if not is_en else 'Source code or customization request') | urlencode }}" class="btn-hero btn-outline ic-6">
-
-                    <i class="fas fa-envelope"></i> {{ 'شراء الكود أو التخصيص' if not is_en else 'Buy code / customize' }}
-
-                </a>
-
+                <a href="https://wa.me/{{ developer_whatsapp_link }}?text={{ _wa_msg_buy | urlencode }}" class="btn-hero btn-outline ic-6" target="_blank" rel="noopener"><i class="fab fa-whatsapp"></i> {{ _btn_buy_wa }}</a>
+                <a href="mailto:{{ developer_email or config.DEVELOPER_EMAIL }}?subject={{ _email_subject | urlencode }}" class="btn-hero btn-outline ic-6"><i class="fas fa-envelope"></i> {{ _btn_buy_code }}</a>
             </div>
-
             <div class="ic-7">
-
-                <a href="{{ url_for('public.pricing') }}" class="btn-hero btn-outline ic-8">
-
-                    <i class="fas fa-gem"></i> {{ t('View All Plans and Pricing') }}
-
-                </a>
-
+                <a href="{{ url_for('public.pricing') }}" class="btn-hero btn-outline ic-8"><i class="fas fa-gem"></i> {{ _btn_pricing }}</a>
             </div>
-
         </div>
-
     </section>
 
+    {# == Features == #}
     <section class="features" id="features">
-
-        <h2>{{ t('Why choose Azad system for warehouses in UAE?') }}</h2>
-
+        <h2>{{ _features_title }}</h2>
         <p class="features-subtitle">
-
             {% if not is_en %}
-
-                نقدم لك أفضل <strong>برنامج محاسبة ومستودعات</strong> مع ميزات متقدمة تجعل إدارة أعمالك أسهل وأسرع وأكثر ربحية. 
-
-                مصمم خصيصاً للشركات في <strong>دبي، أبوظبي، الشارقة، عجمان</strong> وجميع إمارات الدولة.
-
+                نقدم لك أفضل <strong>برنامج محاسبة ومستودعات</strong> مع ميزات متقدمة تجعل إدارة أعمالك أسهل وأسرع وأكثر ربحية. مصمم خصيصاً للشركات في <strong>دبي، أبوظبي، الشارقة</strong> وجميع إمارات الدولة.
             {% else %}
-
-                A complete <strong>accounting & inventory</strong> system designed for businesses across <strong>Dubai, Abu Dhabi</strong> and all UAE emirates.
-
+                A complete <strong>accounting &amp; inventory</strong> system designed for businesses across <strong>Dubai, Abu Dhabi</strong> and all UAE emirates.
             {% endif %}
-
         </p>
-
         <div class="features-grid">
-
             <div class="feature-card">
-
                 <div class="feature-icon"><i class="fas fa-brain"></i></div>
-
-                <h3>{{ 'ذكاء اصطناعي متقدم' if not is_en else 'Advanced AI' }}</h3>
-
-                <p>
-
-                    {% if not is_en %}
-
-                        <strong>مساعد AI ذكي</strong> يوفر توصيات أسعار تنافسية، تحليل السوق في الإمارات، تنبؤ بالمبيعات، معرفة توافق قطع السيارات مع الموديلات، واقتراحات لزيادة أرباحك. <strong>يتعلم من بيانات عملك</strong> ويتحسن باستمرار.
-
-                    {% else %}
-
-                        Smart recommendations, sales forecasting, customer insights, and business analytics that get better over time.
-
-                    {% endif %}
-
-                </p>
-
+                <h3>{{ 'ذكاء اصطناعي متقدم' if not is_en else 'AI Insights' }}</h3>
+                <p>{% if not is_en %}<strong>مساعد AI ذكي</strong> يوفر توصيات أسعار تنافسية، تحليل السوق في الإمارات، تنبؤ بالمبيعات، ومعرفة توافق قطع السيارات مع الموديلات.{% else %}Smarter decisions with recommendations and trend analysis.{% endif %}</p>
             </div>
-
             <div class="feature-card">
-
                 <div class="feature-icon"><i class="fas fa-warehouse"></i></div>
-
-                <h3>{{ 'إدارة مخزون احترافية' if not is_en else 'Inventory Management' }}</h3>
-
-                <p>
-
-                    {% if not is_en %}
-
-                        <strong>تتبع دقيق للمخزون</strong> في الوقت الفعلي، تنبيهات تلقائية عند انخفاض الكميات، إدارة متعددة المستودعات والفروع، باركود وQR Code، جرد سريع، ونقل بضائع بين الفروع. مثالي لـ <strong>محلات قطع غيار السيارات</strong>.
-
-                    {% else %}
-
-                        Real-time stock tracking, low-stock alerts, multi-warehouse support, barcode/QR, fast stocktaking, and transfers.
-
-                    {% endif %}
-
-                </p>
-
+                <h3>{{ 'إدارة مخزون احترافية' if not is_en else 'Inventory' }}</h3>
+                <p>{% if not is_en %}<strong>تتبع دقيق للمخزون</strong> في الوقت الفعلي، تنبيهات تلقائية عند انخفاض الكميات، إدارة متعددة المستودعات والفروع، باركود وQR Code.{% else %}Real-time stock, alerts, and multi-warehouse support.{% endif %}</p>
             </div>
-
             <div class="feature-card">
-
                 <div class="feature-icon"><i class="fas fa-cash-register"></i></div>
-
-                <h3>{{ 'مبيعات ومشتريات متكاملة' if not is_en else 'Sales & Purchases' }}</h3>
-
-                <p>
-
-                    {% if not is_en %}
-
-                        <strong>فواتير إلكترونية احترافية</strong> بتصاميم متعددة، 3 مستويات أسعار (جملة، نص جملة، قطاعي)، تحويل عملات تلقائي (درهم، دولار، دينار)، طباعة حرارية، <strong>متوافق مع قوانين الإمارات</strong>، وربط مع نقاط البيع POS.
-
-                    {% else %}
-
-                        Professional e-invoices, multi-price levels, multi-currency, thermal printing, and POS-friendly workflows.
-
-                    {% endif %}
-
-                </p>
-
+                <h3>{{ 'مبيعات ومشتريات متكاملة' if not is_en else 'Sales &amp; Purchases' }}</h3>
+                <p>{% if not is_en %}<strong>فواتير إلكترونية احترافية</strong> بتصاميم متعددة، 3 مستويات أسعار، تحويل عملات تلقائي، طباعة حرارية، وربط مع نقاط البيع POS.{% else %}Invoices, receipts, returns, and streamlined operations.{% endif %}</p>
             </div>
-
             <div class="feature-card">
-
                 <div class="feature-icon"><i class="fas fa-users"></i></div>
-
-                <h3>{{ 'إدارة عملاء وموردين' if not is_en else 'Customers & Suppliers' }}</h3>
-
-                <p>
-
-                    {% if not is_en %}
-
-                        قاعدة بيانات شاملة للعملاء والموردين، <strong>كشوفات حساب تفصيلية</strong>، تصنيف ذكي، تحليل سلوك الشراء، إدارة الشيكات والسندات، متابعة المستحقات، وتقارير الذمم المدينة. <strong>كل عميل بملف كامل!</strong>
-
-                    {% else %}
-
-                        Full customer and supplier profiles, statements, collections tracking, cheque/receipt management, and AR insights.
-
-                    {% endif %}
-
-                </p>
-
+                <h3>{{ 'إدارة عملاء وموردين' if not is_en else 'Customers &amp; Suppliers' }}</h3>
+                <p>{% if not is_en %}<strong>كشوفات حساب تفصيلية</strong>، تصنيف ذكي، تحليل سلوك الشراء، إدارة الشيكات والسندات، متابعة المستحقات، وتقارير الذمم المدينة.{% else %}Full customer and supplier profiles, statements, collections tracking.{% endif %}</p>
             </div>
-
             <div class="feature-card">
-
                 <div class="feature-icon"><i class="fas fa-chart-line"></i></div>
-
-                <h3>{{ 'تقارير شاملة' if not is_en else 'Reports & Analytics' }}</h3>
-
-                <p>{{ 'لوحات تحكم تفاعلية، تقارير مالية دقيقة، دفتر أستاذ GL' if not is_en else 'Dashboards, financial reports, and general ledger (GL) insights.' }}</p>
-
+                <h3>{{ 'تقارير شاملة' if not is_en else 'Reporting' }}</h3>
+                <p>{% if not is_en %}لوحات تحكم تفاعلية، تقارير مالية دقيقة، ودفتر أستاذ GL.{% else %}Dashboards and financial statements that stay accurate.{% endif %}</p>
             </div>
-
             <div class="feature-card">
-
                 <div class="feature-icon"><i class="fas fa-shield-alt"></i></div>
-
-                <h3>{{ 'أمان متقدم' if not is_en else 'Advanced Security' }}</h3>
-
-                <p>{{ 'حماية من SQL Injection و XSS، تشفير البيانات، سجل تدقيق كامل' if not is_en else 'Strong security controls, encryption, and full audit logs.' }}</p>
-
+                <h3>{{ 'أمان متقدم' if not is_en else 'Security' }}</h3>
+                <p>{% if not is_en %}حماية من الاختراق، تشفير البيانات، وسجل تدقيق كامل.{% else %}Permissions, audit logs, and safe-by-default design.{% endif %}</p>
             </div>
-
         </div>
-
     </section>
 
-    {# TODO: Move pricing to database/settings #}
+    {# == Pricing == #}
     <section class="pricing-preview" id="pricing">
-
-        <h2>{{ 'باقات مرنة لجميع الأعمال' if not is_en else 'Flexible Plans for Every Business' }}</h2>
-
-        <p>{{ 'اختر الباقة المناسبة لك - حلول احترافية بأسعار تنافسية' if not is_en else 'Choose the plan that fits you. Professional solutions with competitive pricing.' }}</p>
-
+        <h2>{{ _pricing_title }}</h2>
+        <p>{{ _pricing_sub }}</p>
         <div class="pricing-cards">
-
             <div class="price-card">
-
-                <h3>{{ 'الباقة الأساسية' if not is_en else 'Basic Plan' }}</h3>
-
+                <h3>{{ 'الباقة الأساسية' if not is_en else 'Basic' }}</h3>
                 <div class="price">$299<small>{{ '/شهرياً' if not is_en else '/month' }}</small></div>
-
                 <ul>
-
                     <li><i class="fas fa-check"></i> {{ 'مستخدم واحد' if not is_en else '1 user' }}</li>
-
-                    <li><i class="fas fa-check"></i> {{ 'مبيعات ومشتريات' if not is_en else 'Sales & purchases' }}</li>
-
-                    <li><i class="fas fa-check"></i> {{ 'إدارة مخزون' if not is_en else 'Inventory management' }}</li>
-
+                    <li><i class="fas fa-check"></i> {{ 'مبيعات ومشتريات' if not is_en else 'Sales &amp; purchases' }}</li>
+                    <li><i class="fas fa-check"></i> {{ 'إدارة مخزون' if not is_en else 'Inventory' }}</li>
                     <li><i class="fas fa-check"></i> {{ 'تقارير أساسية' if not is_en else 'Basic reports' }}</li>
-
                 </ul>
-
-                <a href="{{ url_for('public.pricing') }}" class="btn-hero btn-primary ic-9">{{ 'اختر الباقة' if not is_en else 'Choose plan' }}</a>
-
+                <a href="{{ url_for('public.pricing') }}" class="btn-hero btn-primary ic-9">{{ 'اختر الباقة' if not is_en else 'Choose' }}</a>
             </div>
-
             <div class="price-card featured" data-badge="{{ '⭐ الأكثر شعبية' if not is_en else '⭐ Most popular' }}">
-
                 <span class="ic-10">{{ 'الأكثر شعبية' if not is_en else 'Most popular' }}</span>
-
-                <h3>{{ 'الباقة الاحترافية' if not is_en else 'Professional Plan' }}</h3>
-
+                <h3>{{ 'الباقة الاحترافية' if not is_en else 'Professional' }}</h3>
                 <div class="price">$599<small>{{ '/شهرياً' if not is_en else '/month' }}</small></div>
-
                 <ul>
-
                     <li><i class="fas fa-check"></i> {{ '5 مستخدمين' if not is_en else 'Up to 5 users' }}</li>
-
                     <li><i class="fas fa-check"></i> {{ 'كل ميزات الأساسية' if not is_en else 'Everything in Basic' }}</li>
-
                     <li><i class="fas fa-check"></i> {{ 'ذكاء اصطناعي' if not is_en else 'AI features' }}</li>
-
-                    <li><i class="fas fa-check"></i> {{ 'دفتر أستاذ GL' if not is_en else 'General Ledger (GL)' }}</li>
-
+                    <li><i class="fas fa-check"></i> {{ 'دفتر أستاذ GL' if not is_en else 'General ledger (GL)' }}</li>
                     <li><i class="fas fa-check"></i> {{ 'دعم فني 24/7' if not is_en else '24/7 support' }}</li>
-
                 </ul>
-
-                <a href="{{ url_for('public.pricing') }}" class="btn-hero btn-primary ic-9">{{ 'اختر الباقة' if not is_en else 'Choose plan' }}</a>
-
+                <a href="{{ url_for('public.pricing') }}" class="btn-hero btn-primary ic-9">{{ 'اختر الباقة' if not is_en else 'Choose' }}</a>
             </div>
-
             <div class="price-card">
-
                 <h3>{{ 'باقة المؤسسات' if not is_en else 'Enterprise' }}</h3>
-
-                <div class="price">{{ 'تواصل معنا' if not is_en else 'Contact us' }}</div>
-
+                <div class="price">{{ 'تواصل معنا' if not is_en else 'Contact' }}</div>
                 <ul>
-
                     <li><i class="fas fa-check"></i> {{ 'مستخدمين غير محدودين' if not is_en else 'Unlimited users' }}</li>
-
                     <li><i class="fas fa-check"></i> {{ 'كل الميزات المتقدمة' if not is_en else 'All advanced features' }}</li>
-
                     <li><i class="fas fa-check"></i> {{ 'تخصيص كامل' if not is_en else 'Full customization' }}</li>
-
                     <li><i class="fas fa-check"></i> {{ 'تدريب مجاني' if not is_en else 'Free training' }}</li>
-
                     <li><i class="fas fa-check"></i> {{ 'API مخصص' if not is_en else 'Custom API' }}</li>
-
                 </ul>
-
                 <a href="{{ url_for('public.contact') }}" class="btn-hero btn-primary ic-9">{{ 'اتصل بنا' if not is_en else 'Contact' }}</a>
-
             </div>
-
         </div>
-
     </section>
 
+    {# == Contact == #}
     <section class="contact" id="contact">
-
-        <h2>{{ 'تواصل معنا' if not is_en else 'Contact Us' }}</h2>
-
-        <p class="ic-11">{{ 'فريقنا جاهز لمساعدتك' if not is_en else 'Our team is ready to help you.' }}</p>
-
-        <p class="ic-12">{{ '🇵🇸 من فلسطين للعالم العربي 🇦🇪' if not is_en else 'From Palestine to the Arab world' }}</p>
-
+        <h2>{{ _contact_title }}</h2>
+        <p class="ic-11">{{ _contact_sub }}</p>
+        {% if _contact_tagline %}<p class="ic-12">{{ _contact_tagline }}</p>{% endif %}
         <div class="contact-info">
-
             <div class="contact-item">
-
                 <i class="fab fa-whatsapp"></i>
-
                 <strong>{{ 'واتساب' if not is_en else 'WhatsApp' }}</strong>
-
-                <a href="https://wa.me/{{ developer_whatsapp_link }}" target="_blank" rel="noopener noreferrer">{{ developer_whatsapp or config.DEVELOPER_WHATSAPP or '—' }}</a>
-
+                <a href="https://wa.me/{{ developer_whatsapp_link }}" target="_blank" rel="noopener">{{ developer_whatsapp or config.DEVELOPER_WHATSAPP or '—' }}</a>
             </div>
-
             <div class="contact-item">
-
                 <i class="fas fa-phone"></i>
-
                 <strong>{{ 'جوال' if not is_en else 'Phone' }}</strong>
-
                 <a href="tel:{{ developer_phone or config.DEVELOPER_PHONE }}">{{ developer_phone or config.DEVELOPER_PHONE or '—' }}</a>
-
             </div>
-
             <div class="contact-item">
-
                 <i class="fas fa-map-marker-alt"></i>
-
-                <strong>{{ t('Address') }}</strong>
-
-                <a class="ic-13">{{ config.COMPANY_ADDRESS_AR or company_address or tenant_address or '—' }}</a>
-
+                <strong>{{ 'العنوان' if not is_en else 'Address' }}</strong>
+                <a class="ic-13">{{ _company_address_ar if not is_en else _company_address_en }}</a>
             </div>
-
         </div>
-
         <div class="ic-14">
-
-            <a href="{{ url_for('public.user_guide') }}" class="btn-hero btn-primary">
-
-                <i class="fas fa-book"></i> {{ 'دليل المستخدم' if not is_en else 'User guide' }}
-
-            </a>
-
-            <a href="{{ url_for('public.pricing') }}" class="btn-hero btn-outline">
-
-                <i class="fas fa-tags"></i> {{ 'الأسعار' if not is_en else 'Pricing' }}
-
-            </a>
-
-            <a href="https://wa.me/{{ developer_whatsapp_link }}?text={{ ('مرحباً، أريد شراء النظام أو التحدث مع المبيعات' if not is_en else 'Hello, I want to buy the system or talk to sales') | urlencode }}" class="btn-hero btn-outline" target="_blank" rel="noopener noreferrer">
-
-                <i class="fab fa-whatsapp"></i> {{ 'واتساب المبيعات' if not is_en else 'Sales WhatsApp' }}
-
-            </a>
-
-            <a href="{{ url_for('public.contact') }}" class="btn-hero btn-outline">
-
-                <i class="fas fa-envelope"></i> {{ 'راسلنا' if not is_en else 'Message us' }}
-
-            </a>
-
+            <a href="{{ url_for('public.user_guide') }}" class="btn-hero btn-primary"><i class="fas fa-book"></i> {{ _user_guide }}</a>
+            <a href="{{ url_for('public.pricing') }}" class="btn-hero btn-outline"><i class="fas fa-tags"></i> {{ _pricing }}</a>
+            <a href="https://wa.me/{{ developer_whatsapp_link }}?text={{ _wa_msg_sales | urlencode }}" class="btn-hero btn-outline" target="_blank" rel="noopener"><i class="fab fa-whatsapp"></i> {{ _sales_wa }}</a>
+            <a href="{{ url_for('public.contact') }}" class="btn-hero btn-outline"><i class="fas fa-envelope"></i> {{ _message_us }}</a>
         </div>
-
     </section>
 
-    <section id="about" class="ic-15">
-
-        <div class="ic-16">
-
-            <h2 class="ic-17">
-
-                <i class="fas fa-building ic-18"></i>
-
-                {{ 'من نحن - شركة أزاد للأنظمة الذكية' if not is_en else 'About Azad Smart Systems' }}
-
-            </h2>
-
-            <div class="ic-19">
-
-                <p class="ic-20">
-
-                    {% if not is_en %}
-
-                        <strong>شركة أزاد للأنظمة الذكية</strong> هي شركة رائدة في تطوير <strong>حلول برمجيات إدارة الأعمال</strong> في الإمارات العربية المتحدة. نتخصص في تقديم <strong>أنظمة إدارة المستودعات والمبيعات</strong> المدعومة بالذكاء الاصطناعي لمساعدة الشركات في <strong>دبي، أبوظبي، الشارقة</strong> وجميع الإمارات على تحقيق النمو والكفاءة.
-
-                    {% else %}
-
-                        <strong>Azad Smart Systems</strong> builds modern <strong>business management software</strong> for companies across the UAE. We focus on <strong>warehouse, sales, and accounting</strong> systems enhanced with AI to help businesses grow efficiently.
-
-                    {% endif %}
-
-                </p>
-
-                <p class="ic-20">
-
-                    {% if not is_en %}
-
-                        يجمع <strong>نظام أزاد</strong> بين التكنولوجيا المتقدمة والتصميم السهل الاستخدام، مما يجعله <strong>الخيار الأمثل</strong> لأصحاب الأعمال الذين يبحثون عن <strong>برنامج محاسبة شامل</strong> يوفر الوقت ويزيد الأرباح. نحن نفهم تحديات <strong>محلات قطع غيار السيارات، المحلات التجارية، والشركات الصغيرة والمتوسطة</strong> في السوق الإماراتي.
-
-                    {% else %}
-
-                        Azad combines advanced technology with an easy user experience, making it an ideal choice for auto parts stores, retail shops, and SMEs that need accurate accounting and fast operations.
-
-                    {% endif %}
-
-                </p>
-
-                <p class="ic-21">
-
-                    {% if not is_en %}
-
-                        نوفر <strong>دعماً فنياً عربياً مميزاً</strong>، تدريباً عملياً، وتحديثات مستمرة. فريقنا المتخصص جاهز لمساعدتك في <strong>التحول الرقمي</strong> وتحسين إدارة أعمالك بأحدث التقنيات.
-
-                    {% else %}
-
-                        With 150+ customers across the UAE, we provide training, ongoing updates, and dedicated support to help your business digitize and scale.
-
-                    {% endif %}
-
-                </p>
-
+    {# == About (Arabic only) == #}
+    {% if not is_en %}
+    <section id="about" class="about-section">
+        <div class="section-container">
+            <h2 class="section-heading"><i class="fas fa-building icon-margin"></i>من نحن - شركة أزاد للأنظمة الذكية</h2>
+            <div class="about-card">
+                <p class="about-text"><strong>شركة أزاد للأنظمة الذكية</strong> هي شركة رائدة في تطوير <strong>حلول برمجيات إدارة الأعمال</strong> في الإمارات العربية المتحدة. نتخصص في تقديم <strong>أنظمة إدارة المستودعات والمبيعات</strong> المدعومة بالذكاء الاصطناعي لمساعدة الشركات في <strong>دبي، أبوظبي، الشارقة</strong> وجميع الإمارات على تحقيق النمو والكفاءة.</p>
+                <p class="about-text">يجمع <strong>نظام أزاد</strong> بين التكنولوجيا المتقدمة والتصميم السهل الاستخدام، مما يجعله <strong>الخيار الأمثل</strong> لأصحاب الأعمال الذين يبحثون عن <strong>برنامج محاسبة شامل</strong> يوفر الوقت ويزيد الأرباح. نحن نفهم تحديات <strong>محلات قطع غيار السيارات، المحلات التجارية، والشركات الصغيرة والمتوسطة</strong> في السوق الإماراتي.</p>
+                <p class="about-text-last">نوفر <strong>دعماً فنياً عربياً مميزاً</strong>، تدريباً عملياً، وتحديثات مستمرة. فريقنا المتخصص جاهز لمساعدتك في <strong>التحول الرقمي</strong> وتحسين إدارة أعمالك بأحدث التقنيات.</p>
             </div>
-
         </div>
-
     </section>
-
-    <section id="benefits" class="ic-22">
-
-        <div class="ic-16">
-
-            <h2 class="ic-23">
-
-                <i class="fas fa-users-cog ic-18"></i>
-
-                {{ 'من يستفيد من نظام أزاد لإدارة المستودعات؟' if not is_en else 'Who benefits from Azad?' }}
-
-            </h2>
-
-            <p class="ic-24">
-
-                {{ 'حلول مخصصة لمختلف القطاعات التجارية في الإمارات' if not is_en else 'Tailored solutions for multiple business sectors in the UAE.' }}
-
-            </p>
-
-            <div class="ic-25">
-
-                <div class="ic-26">
-
-                    <h3 class="ic-27">
-
-                        <i class="fas fa-car ic-18"></i>
-
-                        {{ 'محلات قطع غيار السيارات' if not is_en else 'Auto Parts Stores' }}
-
-                    </h3>
-
-                    <p class="ic-28">
-
-                        {% if not is_en %}
-
-                            نظام متخصص لـ <strong>قطع غيار السيارات</strong> مع ميزات فريدة: معرفة توافق القطع، 3 مستويات أسعار، باركود، وإدارة مخزون دقيقة. مثالي لمحلات قطع الغيار في <strong>دبي والإمارات</strong>.
-
-                        {% else %}
-
-                            Built for <strong>auto parts</strong> with compatibility insights, multi-price levels, barcode, and accurate stock control.
-
-                        {% endif %}
-
-                    </p>
-
-                </div>
-
-                <div class="ic-29">
-
-                    <h3 class="ic-27">
-
-                        <i class="fas fa-store ic-18"></i>
-
-                        {{ 'المحلات التجارية والسوبرماركت' if not is_en else 'Retail & Supermarkets' }}
-
-                    </h3>
-
-                    <p class="ic-28">
-
-                        {% if not is_en %}
-
-                            <strong>نظام نقاط بيع POS</strong> سريع وسهل، باركود، طباعة حرارية، إدارة موردين، كشوفات حساب، وتقارير يومية. حل متكامل للـ <strong>retail</strong> في الإمارات.
-
-                        {% else %}
-
-                            Fast POS workflows, barcode scanning, thermal printing, supplier management, statements, and daily reports.
-
-                        {% endif %}
-
-                    </p>
-
-                </div>
-
-                <div class="ic-30">
-
-                    <h3 class="ic-27">
-
-                        <i class="fas fa-industry ic-18"></i>
-
-                        {{ 'الشركات الصغيرة والمتوسطة' if not is_en else 'SMEs' }}
-
-                    </h3>
-
-                    <p class="ic-28">
-
-                        {% if not is_en %}
-
-                            <strong>ERP متكامل</strong> لإدارة جميع عملياتك: مبيعات، مشتريات، مخزون، حسابات، موارد بشرية، وتقارير شاملة. <strong>سحابي 100%</strong> - تابع أعمالك من أي مكان.
-
-                        {% else %}
-
-                            A complete system for sales, purchases, inventory, accounting, and reporting. Access your business from anywhere.
-
-                        {% endif %}
-
-                    </p>
-
-                </div>
-
-                <div class="ic-31">
-
-                    <h3 class="ic-27">
-
-                        <i class="fas fa-wrench ic-18"></i>
-
-                        {{ 'ورش الصيانة والخدمات' if not is_en else 'Workshops & Services' }}
-
-                    </h3>
-
-                    <p class="ic-28">
-
-                        {% if not is_en %}
-
-                            إدارة <strong>أوامر العمل</strong>، تتبع القطع المستخدمة، فواتير خدمات، جدولة المواعيد، وإدارة عملاء مع سجل كامل. مثالي لـ <strong>ورش السيارات والصيانة</strong>.
-
-                        {% else %}
-
-                            Track work orders, parts usage, service invoicing, appointments, and complete customer history.
-
-                        {% endif %}
-
-                    </p>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </section>
-
-    <section class="faq-section ic-32" id="faq">
-
-        <div class="ic-33">
-
-            <h2 class="ic-34">
-
-                {{ 'الأسئلة الشائعة - FAQ' if not is_en else 'FAQ' }}
-
-            </h2>
-
-            <p class="ic-35">
-
-                {{ 'إجابات على أكثر الأسئلة شيوعاً حول نظام إدارة المستودعات والمبيعات' if not is_en else 'Answers to the most common questions about the system.' }}
-
-            </p>
-
-            <div class="faq-container">
-
-                <div class="faq-item ic-36">
-
-                    <h3 class="ic-37">
-
-                        <i class="fas fa-question-circle ic-18"></i>
-
-                        {{ 'ما هو نظام إدارة المستودعات من شركة أزاد؟' if not is_en else 'What is Azad warehouse & sales system?' }}
-
-                    </h3>
-
-                    <p class="ic-38">
-
-                        {% if not is_en %}
-
-                            نظام أزاد هو <strong>برنامج محاسبة ومستودعات متكامل</strong> مصمم خصيصاً للشركات في <strong>الإمارات ودبي وأبوظبي</strong>. يوفر النظام إدارة شاملة للمبيعات، المشتريات، المخزون، الفواتير الإلكترونية، كشوفات الحسابات، إدارة الشيكات، والتقارير المالية. مع <strong>ذكاء اصطناعي متقدم</strong> يساعدك في اتخاذ قرارات ذكية لتنمية أعمالك.
-
-                        {% else %}
-
-                            Azad is an all-in-one <strong>accounting and inventory</strong> system built for businesses in the UAE. It covers sales, purchases, inventory, e-invoices, statements, cheques/receipts, and financial reporting with AI-powered insights.
-
-                        {% endif %}
-
-                    </p>
-
-                </div>
-
-                <div class="faq-item ic-36">
-
-                    <h3 class="ic-37">
-
-                        <i class="fas fa-question-circle ic-18"></i>
-
-                        {{ 'هل البرنامج مناسب لمحلات قطع غيار السيارات؟' if not is_en else 'Is it suitable for auto parts stores?' }}
-
-                    </h3>
-
-                    <p class="ic-38">
-
-                        {% if not is_en %}
-
-                            نعم بالتأكيد! النظام مصمم خصيصاً لـ <strong>محلات قطع غيار السيارات</strong> في الإمارات. يتضمن ميزات متخصصة مثل: معرفة توافق القطع مع موديلات السيارات، إدارة 3 مستويات أسعار (جملة، نص جملة، قطاعي)، تتبع المخزون بدقة، <strong>فواتير احترافية</strong> مع شعار شركتك، وتحليل المبيعات بالذكاء الاصطناعي.
-
-                        {% else %}
-
-                            Yes. It supports multi-price levels, accurate stock tracking, professional invoices, and auto-parts workflows.
-
-                        {% endif %}
-
-                    </p>
-
-                </div>
-
-                <div class="faq-item ic-36">
-
-                    <h3 class="ic-37">
-
-                        <i class="fas fa-question-circle ic-18"></i>
-
-                        {{ 'كم يكلف برنامج إدارة المستودعات؟' if not is_en else 'How much does it cost?' }}
-
-                    </h3>
-
-                    <p class="ic-38">
-
-                        {% if not is_en %}
-
-                            نوفر <strong>باقات مرنة</strong> تناسب أحجام الأعمال المختلفة في الإمارات. السعر النهائي يعتمد على احتياجك الفعلي وعدد المستخدمين والميزات المطلوبة. <a href="{{ url_for('public.pricing') }}" class="ic-39">شاهد تفاصيل الباقات</a>
-
-                        {% else %}
-
-                            We offer multiple flexible plans based on your needs. <a href="{{ url_for('public.pricing') }}" class="ic-39">View pricing details</a>
-
-                        {% endif %}
-
-                    </p>
-
-                </div>
-
-                <div class="faq-item ic-36">
-
-                    <h3 class="ic-37">
-
-                        <i class="fas fa-question-circle ic-18"></i>
-
-                        {{ 'هل يدعم النظام الفواتير الإلكترونية المعتمدة في الإمارات؟' if not is_en else 'Does it support e-invoices in the UAE?' }}
-
-                    </h3>
-
-                    <p class="ic-38">
-
-                        {% if not is_en %}
-
-                            نعم! النظام يدعم <strong>الفواتير الإلكترونية</strong> بالكامل. يمكنك إنشاء فواتير احترافية بتصاميم متعددة (كلاسيكية، خليجية، عصرية)، طباعة بأحجام مختلفة (A4, A5, Thermal)، إضافة شعارك وبياناتك، QR Code، وتصدير PDF. كل هذا متوافق مع <strong>قوانين الإمارات</strong> وجاهز للضريبة.
-
-                        {% else %}
-
-                            Yes. Create professional invoices with templates, print sizes (A4/A5/Thermal), QR code, and PDF export.
-
-                        {% endif %}
-
-                    </p>
-
-                </div>
-
-                <div class="faq-item ic-36">
-
-                    <h3 class="ic-37">
-
-                        <i class="fas fa-question-circle ic-18"></i>
-
-                        {{ 'ما هي مميزات الذكاء الاصطناعي في البرنامج؟' if not is_en else 'What AI features are included?' }}
-
-                    </h3>
-
-                    <p class="ic-38">
-
-                        {% if not is_en %}
-
-                            <strong>الذكاء الاصطناعي المتقدم</strong> في نظام أزاد يوفر: توصيات أسعار ذكية بناءً على السوق، تحليل سلوك العملاء، تنبؤ بالمبيعات المستقبلية، تحليل أداء المنتجات، كشف الأنماط المخفية، توصيات لزيادة الأرباح، مساعد محادثة ذكي يجيب عن أسئلتك، ويتعلم من بيانات عملك لتحسين الأداء باستمرار.
-
-                        {% else %}
-
-                            AI-driven insights including pricing recommendations, forecasting, customer behavior analysis, and smart assistance.
-
-                        {% endif %}
-
-                    </p>
-
-                </div>
-
-                <div class="faq-item ic-36">
-
-                    <h3 class="ic-37">
-
-                        <i class="fas fa-question-circle ic-18"></i>
-
-                        {{ 'هل يمكن استخدام البرنامج في أكثر من فرع؟' if not is_en else 'Can I use it for multiple branches?' }}
-
-                    </h3>
-
-                    <p class="ic-38">
-
-                        {% if not is_en %}
-
-                            نعم! النظام يدعم <strong>إدارة متعددة المستودعات</strong> والفروع. يمكنك متابعة المخزون في كل فرع، نقل البضائع بين المستودعات، تقارير منفصلة لكل فرع، ومركزية كاملة في الإدارة. مثالي للشركات التي لديها <strong>عدة فروع في دبي، أبوظبي، الشارقة</strong> أو مدن الإمارات الأخرى.
-
-                        {% else %}
-
-                            Yes. Multi-warehouse and multi-branch support with centralized management and branch-level reporting.
-
-                        {% endif %}
-
-                    </p>
-
-                </div>
-
-                <div class="faq-item ic-36">
-
-                    <h3 class="ic-37">
-
-                        <i class="fas fa-question-circle ic-18"></i>
-
-                        {{ 'كيف أبدأ باستخدام نظام أزاد للمستودعات؟' if not is_en else 'How do I get started?' }}
-
-                    </h3>
-
-                    <p class="ic-38">
-
-                        {% if not is_en %}
-
-                            البداية سهلة جداً! <strong>3 خطوات فقط:</strong> (1) <a href="{{ url_for('public.contact') }}" class="ic-39">تواصل معنا</a>، (2) اختر الباقة المناسبة، (3) ابدأ فوراً! نوفر <strong>تدريب مجاني</strong> لفريقك، استيراد بياناتك القديمة، دعم فني 24/7، ومتابعة مستمرة. <strong>لا حاجة لخبرة تقنية</strong> - النظام بسيط وسهل الاستخدام.
-
-                        {% else %}
-
-                            It is easy: (1) Contact us, (2) choose your plan, (3) start immediately. We provide training, data import, and support.
-
-                        {% endif %}
-
-                    </p>
-
-                </div>
-
-                <div class="faq-item ic-40">
-
-                    <h3 class="ic-37">
-
-                        <i class="fas fa-question-circle ic-18"></i>
-
-                        {{ 'هل النظام آمن ويحمي بياناتي؟' if not is_en else 'Is my data secure?' }}
-
-                    </h3>
-
-                    <p class="ic-38">
-
-                        {% if not is_en %}
-
-                            <strong>الأمان أولويتنا!</strong> نستخدم: تشفير SSL كامل، نسخ احتياطي تلقائي يومي، حماية من الاختراق، صلاحيات متقدمة للمستخدمين، سجل تدقيق شامل، وخزنة آمنة للبطاقات الائتمانية. بياناتك محمية بأعلى معايير الأمان العالمية. <strong>متوافق 100% مع قوانين حماية البيانات</strong> في الإمارات.
-
-                        {% else %}
-
-                            Security-first: SSL, automatic backups, strict permissions, audit logs, and secure storage options.
-
-                        {% endif %}
-
-                    </p>
-
-                </div>
-
-            </div>
-
-            <div class="ic-41">
-
-                <a href="{{ url_for('public.contact') }}" class="btn-hero btn-primary ic-42">
-
-                    <i class="fas fa-phone-alt ic-18"></i>
-
-                    {{ 'تواصل معنا للمزيد من المعلومات' if not is_en else 'Contact us for more information' }}
-
-                </a>
-
-            </div>
-
-        </div>
-
-    </section>
-
-    <footer class="landing-footer">
-
-        <div class="landing-footer-inner">
-
-            <div class="landing-footer-brand">
-
-                <img src="{{ url_for('static', filename=_logo_path) }}" alt="{{ company_name_display }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='assets/brand/azad/logos/logo-web.png') }}';">
-
-                <div>
-
-                    <div class="landing-footer-title">{{ developer_name_ar or config.DEVELOPER_NAME_AR }}</div>
-
-                    <div class="landing-footer-sub">{{ developer_credit or config.DEVELOPER_CREDIT }}</div>
-
-                </div>
-
-            </div>
-
-            <div class="landing-footer-col">
-
-                <h4>{{ 'روابط سريعة' if not is_en else 'Quick links' }}</h4>
-
-                <div class="landing-footer-links">
-
-                    <a href="{{ url_for('public.features') }}">{{ 'المميزات' if not is_en else 'Features' }}</a>
-
-                    <a href="{{ url_for('public.pricing') }}">{{ 'الأسعار' if not is_en else 'Pricing' }}</a>
-
-                    <a href="{{ url_for('public.user_guide') }}">{{ 'الدليل' if not is_en else 'Guide' }}</a>
-
-                    <a href="{{ url_for('public.contact') }}">{{ 'اتصل بنا' if not is_en else 'Contact' }}</a>
-
-                </div>
-
-            </div>
-
-            <div class="landing-footer-col">
-
-                <h4>{{ 'الدعم' if not is_en else 'Support' }}</h4>
-
-                <div class="landing-footer-meta">
-
-                    <span class="landing-footer-chip">v{{ config.APP_VERSION }}</span>
-
-                    <span class="landing-footer-chip"><i class="fas fa-robot"></i> {{ 'مدعوم بالذكاء الاصطناعي' if not is_en else 'AI-powered' }}</span>
-
-                    {% if developer_whatsapp_link %}
-
-                    <a class="landing-footer-chip ic-43" href="https://wa.me/{{ developer_whatsapp_link }}" target="_blank" rel="noopener">
-
-                        <i class="fab fa-whatsapp"></i> {{ 'واتساب' if not is_en else 'WhatsApp' }}
-
-                    </a>
-
-                    {% endif %}
-
-                </div>
-
-            </div>
-
-        </div>
-
-        <div class="landing-footer-bottom">
-
-            &copy; 2025 {{ company_name_display }}. {{ 'جميع الحقوق محفوظة.' if not is_en else 'All rights reserved.' }}
-
-        </div>
-
-    </footer>
-
-    {% else %}
-
-    {% set platform_name_en = config.COMPANY_NAME if config.COMPANY_NAME != config.COMPANY_NAME_AR else 'Azad Smart Systems' %}
-
-    {% set company_address_en = config.COMPANY_ADDRESS_EN or company_address or tenant_address %}
-
-    <div class="landing-sidebar-backdrop" id="landingSidebarBackdrop"></div>
-
-    <aside class="landing-sidebar" id="landingSidebar" aria-hidden="true">
-
-        <div class="landing-sidebar-header">
-
-            <div class="title">
-
-                <img src="{{ url_for('static', filename=_logo_path) }}" alt="{{ platform_name_en }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='assets/brand/azad/logos/logo-web.png') }}';">
-
-                <span>{{ config.COMPANY_NAME if config.COMPANY_NAME != config.COMPANY_NAME_AR else 'Azad Smart Systems' }}</span>
-
-            </div>
-
-            <button type="button" class="landing-icon-btn" id="landingSidebarClose" aria-label="Close" title="إغلاق">
-
-                <i class="fas fa-times"></i>
-
-            </button>
-
-        </div>
-
-        <div class="landing-sidebar-links">
-
-            <a href="#features" class="landing-scroll-link"><i class="fas fa-star"></i><span>Features</span></a>
-
-            <a href="#pricing" class="landing-scroll-link"><i class="fas fa-tags"></i><span>Pricing</span></a>
-
-            <a href="#contact" class="landing-scroll-link"><i class="fas fa-phone-alt"></i><span>Contact</span></a>
-
-            <a href="{{ url_for('public.features') }}"><i class="fas fa-layer-group"></i><span>All features</span></a>
-
-            <a href="{{ url_for('public.pricing') }}"><i class="fas fa-gem"></i><span>All pricing</span></a>
-
-            <a href="{{ url_for('public.contact') }}"><i class="fas fa-envelope"></i><span>Contact page</span></a>
-
-            <a href="{{ url_for('auth.login') }}"><i class="fas fa-sign-in-alt"></i><span>Login</span></a>
-
-            <a href="{{ url_for('language.set_language', lang='ar') }}"><i class="fas fa-globe"></i><span>Arabic</span></a>
-
-        </div>
-
-    </aside>
-
-    <nav class="landing-nav">
-
-        <div class="landing-nav-inner">
-
-            <a class="landing-brand" href="{{ url_for('public.landing') }}">
-
-                <img src="{{ url_for('static', filename=_logo_path) }}" alt="{{ platform_name_en }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='assets/brand/azad/logos/logo-web.png') }}';">
-
-                <span>{{ platform_name_en }}</span>
-
-            </a>
-
-            <div class="landing-nav-links">
-
-                <a href="#features"><i class="fas fa-star"></i> Features</a>
-
-                <a href="#pricing"><i class="fas fa-tags"></i> Pricing</a>
-
-                <a href="{{ url_for('public.features') }}"><i class="fas fa-layer-group"></i> All Features</a>
-
-                <a href="{{ url_for('public.contact') }}"><i class="fas fa-envelope"></i> Contact</a>
-
-            </div>
-
-            <div class="landing-nav-actions">
-
-                <a class="landing-lang-btn" href="{{ url_for('language.set_language', lang='ar') }}">
-
-                    <i class="fas fa-globe"></i>
-
-                    <span>AR</span>
-
-                </a>
-
-                <a class="landing-login-btn" href="{{ url_for('auth.login') }}">
-
-                    <i class="fas fa-sign-in-alt"></i>
-
-                    <span>Login</span>
-
-                </a>
-
-                <button type="button" class="landing-icon-btn landing-menu-btn" id="landingSidebarOpen" aria-label="Menu" title="القائمة">
-
-                    <i class="fas fa-bars"></i>
-
-                </button>
-
-            </div>
-
-        </div>
-
-    </nav>
-
-    <section class="hero">
-
-        <div class="hero-pattern"></div>
-
-        <div class="hero-content">
-
-            <div class="logo-badge">UAE-ready • Fast • Modern</div>
-
-            <h1>{{ platform_name_en }}</h1>
-
-            <p class="hero-subtitle"><strong>Best warehouse &amp; sales management system in UAE 2025</strong></p>
-
-            <p class="hero-tagline">Accounting • E-invoices • Inventory • AI insights</p>
-
-            <div class="hero-buttons">
-
-                <a href="{{ url_for('auth.support') }}?tab=purchase" class="btn-hero btn-success"><i class="fas fa-shopping-cart"></i> Buy now</a>
-
-                <a href="{{ url_for('public.contact') }}" class="btn-hero btn-primary"><i class="fas fa-phone-alt"></i> Contact us</a>
-
-                <a href="{{ url_for('auth.support') }}?tab=donation" class="btn-hero btn-warning"><i class="fas fa-heart"></i> Support</a>
-
-                <a href="{{ url_for('auth.login') }}" class="btn-hero btn-login"><i class="fas fa-sign-in-alt"></i> Login</a>
-
-            </div>
-
-            <div class="ic-1">
-
-                <a href="https://wa.me/{{ developer_whatsapp_link }}?text={{ 'Hello, I want to buy Azad system' | urlencode }}" class="btn-hero btn-outline ic-2"><i class="fab fa-whatsapp"></i> Buy via WhatsApp</a>
-
-                <a href="mailto:{{ developer_email or config.DEVELOPER_EMAIL }}?subject={{ 'Source code or customization request' | urlencode }}" class="btn-hero btn-outline ic-2"><i class="fas fa-envelope"></i> Buy code / customize</a>
-
-            </div>
-
-            <div class="ic-3">
-
-                <a href="{{ url_for('public.pricing') }}" class="btn-hero btn-outline ic-4"><i class="fas fa-gem"></i> View pricing</a>
-
-            </div>
-
-        </div>
-
-    </section>
-
-    <section class="features" id="features">
-
-        <h2>Why choose Azad?</h2>
-
-        <p class="features-subtitle">A complete accounting &amp; inventory suite built for the UAE market with fast workflows and clear reporting.</p>
-
-        <div class="features-grid">
-
-            <div class="feature-card">
-
-                <div class="feature-icon"><i class="fas fa-brain"></i></div>
-
-                <h3>AI Insights</h3>
-
-                <p>Smarter decisions with recommendations and trend analysis.</p>
-
-            </div>
-
-            <div class="feature-card">
-
-                <div class="feature-icon"><i class="fas fa-warehouse"></i></div>
-
-                <h3>Inventory</h3>
-
-                <p>Real-time stock, alerts, and multi-warehouse support.</p>
-
-            </div>
-
-            <div class="feature-card">
-
-                <div class="feature-icon"><i class="fas fa-cash-register"></i></div>
-
-                <h3>Sales &amp; Purchases</h3>
-
-                <p>Invoices, receipts, returns, and streamlined operations.</p>
-
-            </div>
-
-            <div class="feature-card">
-
-                <div class="feature-icon"><i class="fas fa-chart-line"></i></div>
-
-                <h3>Reporting</h3>
-
-                <p>Dashboards and financial statements that stay accurate.</p>
-
-            </div>
-
-            <div class="feature-card">
-
-                <div class="feature-icon"><i class="fas fa-shield-alt"></i></div>
-
-                <h3>Security</h3>
-
-                <p>Permissions, audit logs, and safe-by-default design.</p>
-
-            </div>
-
-            <div class="feature-card">
-
-                <div class="feature-icon"><i class="fas fa-mobile-alt"></i></div>
-
-                <h3>Responsive</h3>
-
-                <p>Works smoothly on desktop, tablet, and mobile.</p>
-
-            </div>
-
-        </div>
-
-    </section>
-
-    <section class="pricing-preview" id="pricing">
-
-        <h2>Plans</h2>
-
-        <p>Flexible pricing based on your needs. See full details on the pricing page.</p>
-
-        <div class="pricing-cards">
-
-            <div class="price-card">
-
-                <h3>Basic</h3>
-
-                <div class="price">$299<small>/month</small></div>
-
-                <ul>
-
-                    <li><i class="fas fa-check"></i> 1 user</li>
-
-                    <li><i class="fas fa-check"></i> Inventory</li>
-
-                    <li><i class="fas fa-check"></i> Sales &amp; purchases</li>
-
-                    <li><i class="fas fa-check"></i> Basic reports</li>
-
-                </ul>
-
-                <a href="{{ url_for('public.pricing') }}" class="btn-hero btn-primary ic-5">Choose</a>
-
-            </div>
-
-            <div class="price-card featured" data-badge="Most popular">
-
-                <h3>Professional</h3>
-
-                <div class="price">$599<small>/month</small></div>
-
-                <ul>
-
-                    <li><i class="fas fa-check"></i> Up to 5 users</li>
-
-                    <li><i class="fas fa-check"></i> AI features</li>
-
-                    <li><i class="fas fa-check"></i> General ledger (GL)</li>
-
-                    <li><i class="fas fa-check"></i> 24/7 support</li>
-
-                </ul>
-
-                <a href="{{ url_for('public.pricing') }}" class="btn-hero btn-primary ic-5">Choose</a>
-
-            </div>
-
-            <div class="price-card">
-
-                <h3>Enterprise</h3>
-
-                <div class="price">Contact</div>
-
-                <ul>
-
-                    <li><i class="fas fa-check"></i> Unlimited users</li>
-
-                    <li><i class="fas fa-check"></i> Customization</li>
-
-                    <li><i class="fas fa-check"></i> Integrations</li>
-
-                    <li><i class="fas fa-check"></i> Training</li>
-
-                </ul>
-
-                <a href="{{ url_for('public.contact') }}" class="btn-hero btn-primary ic-5">Contact</a>
-
-            </div>
-
-        </div>
-
-    </section>
-
-    <section class="contact" id="contact">
-
-        <h2>Contact</h2>
-
-        <p class="ic-6">We respond quickly and help you get started.</p>
-
-        <div class="contact-info">
-
-            <div class="contact-item">
-
-                <i class="fab fa-whatsapp"></i>
-
-                <strong>WhatsApp</strong>
-
-                <a href="https://wa.me/{{ developer_whatsapp_link }}" target="_blank" rel="noopener noreferrer">{{ developer_whatsapp or config.DEVELOPER_WHATSAPP or '—' }}</a>
-
-            </div>
-
-            <div class="contact-item">
-
-                <i class="fas fa-phone"></i>
-
-                <strong>Phone</strong>
-
-                <a href="tel:{{ developer_phone or config.DEVELOPER_PHONE }}">{{ developer_phone or config.DEVELOPER_PHONE or '—' }}</a>
-
-            </div>
-
-            <div class="contact-item">
-
-                <i class="fas fa-envelope"></i>
-
-                <strong>Email</strong>
-
-                <a href="mailto:{{ developer_email or config.DEVELOPER_EMAIL }}">{{ developer_email or config.DEVELOPER_EMAIL or '—' }}</a>
-
-            </div>
-
-            <div class="contact-item">
-
-                <i class="fas fa-map-marker-alt"></i>
-
-                <strong>Address</strong>
-
-                <a class="ic-7">{{ company_address_en }}</a>
-
-            </div>
-
-        </div>
-
-        <div class="ic-8">
-
-            <a href="{{ url_for('public.features') }}" class="btn-hero btn-outline"><i class="fas fa-layer-group"></i> Features</a>
-
-            <a href="{{ url_for('public.pricing') }}" class="btn-hero btn-outline"><i class="fas fa-tags"></i> Pricing</a>
-
-            <a href="https://wa.me/{{ developer_whatsapp_link }}?text={{ 'Hello, I want to buy the system or talk to sales' | urlencode }}" class="btn-hero btn-outline" target="_blank" rel="noopener noreferrer"><i class="fab fa-whatsapp"></i> Sales WhatsApp</a>
-
-            <a href="{{ url_for('public.contact') }}" class="btn-hero btn-primary"><i class="fas fa-phone-alt"></i> Contact us</a>
-
-        </div>
-
-    </section>
-
-    <footer class="landing-footer">
-
-        <div class="landing-footer-inner">
-
-            <div class="landing-footer-brand">
-
-                <img src="{{ url_for('static', filename=_logo_path) }}" alt="{{ platform_name_en }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='assets/brand/azad/logos/logo-web.png') }}';">
-
-                <div>
-
-                    <div class="landing-footer-title">{{ developer_name or config.DEVELOPER_NAME }}</div>
-
-                    <div class="landing-footer-sub">{{ developer_credit or config.DEVELOPER_CREDIT }}</div>
-
-                </div>
-
-            </div>
-
-            <div class="landing-footer-col">
-
-                <h4>Quick links</h4>
-
-                <div class="landing-footer-links">
-
-                    <a href="{{ url_for('public.features') }}">Features</a>
-
-                    <a href="{{ url_for('public.pricing') }}">Pricing</a>
-
-                    <a href="{{ url_for('public.user_guide') }}">Guide</a>
-
-                    <a href="{{ url_for('public.contact') }}">Contact</a>
-
-                </div>
-
-            </div>
-
-            <div class="landing-footer-col">
-
-                <h4>Support</h4>
-
-                <div class="landing-footer-meta">
-
-                    <span class="landing-footer-chip">v{{ config.APP_VERSION }}</span>
-
-                    <span class="landing-footer-chip"><i class="fas fa-robot"></i> AI-powered</span>
-
-                    {% if developer_whatsapp_link %}
-
-                    <a class="landing-footer-chip" href="https://wa.me/{{ developer_whatsapp_link }}" target="_blank" rel="noopener">
-
-                        <i class="fab fa-whatsapp"></i> WhatsApp
-
-                    </a>
-
-                    {% endif %}
-
-                </div>
-
-            </div>
-
-        </div>
-
-        <div class="landing-footer-bottom">
-
-            &copy; 2025 {{ platform_name_en }}. All rights reserved.
-
-        </div>
-
-    </footer>
-
     {% endif %}
 
+    {# == Benefits (Arabic only) == #}
+    {% if not is_en %}
+    <section id="benefits" class="benefits-section">
+        <div class="section-container">
+            <h2 class="benefits-heading"><i class="fas fa-users-cog icon-margin"></i>من يستفيد من نظام أزاد لإدارة المستودعات؟</h2>
+            <p class="benefits-subtitle">حلول مخصصة لمختلف القطاعات التجارية في الإمارات</p>
+            <div class="benefits-grid">
+                <div class="benefit-card-auto">
+                    <h3 class="benefit-card-title"><i class="fas fa-car icon-margin"></i>محلات قطع غيار السيارات</h3>
+                    <p class="benefit-card-text">نظام متخصص لـ <strong>قطع غيار السيارات</strong> مع ميزات فريدة: معرفة توافق القطع، 3 مستويات أسعار، باركود، وإدارة مخزون دقيقة.</p>
+                </div>
+                <div class="benefit-card-retail">
+                    <h3 class="benefit-card-title"><i class="fas fa-store icon-margin"></i>المحلات التجارية والسوبرماركت</h3>
+                    <p class="benefit-card-text"><strong>نظام نقاط بيع POS</strong> سريع وسهل، باركود، طباعة حرارية، إدارة موردين، كشوفات حساب، وتقارير يومية.</p>
+                </div>
+                <div class="benefit-card-sme">
+                    <h3 class="benefit-card-title"><i class="fas fa-industry icon-margin"></i>الشركات الصغيرة والمتوسطة</h3>
+                    <p class="benefit-card-text"><strong>ERP متكامل</strong> لإدارة جميع عملياتك: مبيعات، مشتريات، مخزون، حسابات، موارد بشرية، وتقارير شاملة. <strong>سحابي 100%</strong> - تابع أعمالك من أي مكان.</p>
+                </div>
+                <div class="benefit-card-workshop">
+                    <h3 class="benefit-card-title"><i class="fas fa-wrench icon-margin"></i>ورش الصيانة والخدمات</h3>
+                    <p class="benefit-card-text">إدارة <strong>أوامر العمل</strong>، تتبع القطع المستخدمة، فواتير خدمات، جدولة المواعيد، وإدارة عملاء مع سجل كامل.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    {# == FAQ (Arabic only) == #}
+    {% if not is_en %}
+    <section class="faq-section" id="faq">
+        <div class="faq-container-inner">
+            <h2 class="faq-heading">الأسئلة الشائعة - FAQ</h2>
+            <p class="faq-subtitle">إجابات على أكثر الأسئلة شيوعاً حول نظام إدارة المستودعات والمبيعات</p>
+            <div class="faq-list">
+                <div class="faq-item">
+                    <h3 class="faq-question"><i class="fas fa-question-circle icon-margin"></i>ما هو نظام إدارة المستودعات من شركة أزاد؟</h3>
+                    <p class="faq-answer">نظام أزاد هو <strong>برنامج محاسبة ومستودعات متكامل</strong> مصمم خصيصاً للشركات في <strong>الإمارات ودبي وأبوظبي</strong>. يوفر إدارة شاملة للمبيعات، المشتريات، المخزون، الفواتير الإلكترونية، كشوفات الحسابات، إدارة الشيكات، والتقارير المالية.</p>
+                </div>
+                <div class="faq-item">
+                    <h3 class="faq-question"><i class="fas fa-question-circle icon-margin"></i>هل البرنامج مناسب لمحلات قطع غيار السيارات؟</h3>
+                    <p class="faq-answer">نعم بالتأكيد! النظام مصمم خصيصاً لـ <strong>محلات قطع غيار السيارات</strong> في الإمارات. يتضمن ميزات متخصصة مثل: معرفة توافق القطع مع موديلات السيارات، إدارة 3 مستويات أسعار، تتبع المخزون بدقة، وفواتير احترافية.</p>
+                </div>
+                <div class="faq-item">
+                    <h3 class="faq-question"><i class="fas fa-question-circle icon-margin"></i>كم يكلف برنامج إدارة المستودعات؟</h3>
+                    <p class="faq-answer">نوفر <strong>باقات مرنة</strong> تناسب أحجام الأعمال المختلفة في الإمارات. السعر النهائي يعتمد على احتياجك الفعلي وعدد المستخدمين والميزات المطلوبة. <a href="{{ url_for('public.pricing') }}" class="faq-link">شاهد تفاصيل الباقات</a></p>
+                </div>
+                <div class="faq-item">
+                    <h3 class="faq-question"><i class="fas fa-question-circle icon-margin"></i>هل يدعم النظام الفواتير الإلكترونية المعتمدة في الإمارات؟</h3>
+                    <p class="faq-answer">نعم! النظام يدعم <strong>الفواتير الإلكترونية</strong> بالكامل. يمكنك إنشاء فواتير احترافية بتصاميم متعددة (كلاسيكية، خليجية، عصرية)، طباعة بأحجام مختلفة (A4, A5, Thermal)، إضافة شعارك وبياناتك، QR Code، وتصدير PDF.</p>
+                </div>
+                <div class="faq-item">
+                    <h3 class="faq-question"><i class="fas fa-question-circle icon-margin"></i>ما هي مميزات الذكاء الاصطناعي في البرنامج؟</h3>
+                    <p class="faq-answer"><strong>الذكاء الاصطناعي المتقدم</strong> في نظام أزاد يوفر: توصيات أسعار ذكية، تحليل سلوك العملاء، تنبؤ بالمبيعات المستقبلية، تحليل أداء المنتجات، ومساعد محادثة ذكي.</p>
+                </div>
+                <div class="faq-item">
+                    <h3 class="faq-question"><i class="fas fa-question-circle icon-margin"></i>هل يمكن استخدام البرنامج في أكثر من فرع؟</h3>
+                    <p class="faq-answer">نعم! النظام يدعم <strong>إدارة متعددة المستودعات</strong> والفروع. يمكنك متابعة المخزون في كل فرع، نقل البضائع بين المستودعات، تقارير منفصلة لكل فرع، ومركزية كاملة في الإدارة.</p>
+                </div>
+                <div class="faq-item">
+                    <h3 class="faq-question"><i class="fas fa-question-circle icon-margin"></i>كيف أبدأ باستخدام نظام أزاد للمستودعات؟</h3>
+                    <p class="faq-answer">البداية سهلة جداً! <strong>3 خطوات فقط:</strong> (1) <a href="{{ url_for('public.contact') }}" class="faq-link">تواصل معنا</a>، (2) اختر الباقة المناسبة، (3) ابدأ فوراً! نوفر <strong>تدريب مجاني</strong> لفريقك واستيراد بياناتك القديمة.</p>
+                </div>
+                <div class="faq-item-last">
+                    <h3 class="faq-question"><i class="fas fa-question-circle icon-margin"></i>هل النظام آمن ويحمي بياناتي؟</h3>
+                    <p class="faq-answer"><strong>الأمان أولويتنا!</strong> نستخدم: تشفير SSL كامل، نسخ احتياطي تلقائي يومي، حماية من الاختراق، صلاحيات متقدمة للمستخدمين، وسجل تدقيق شامل.</p>
+                </div>
+            </div>
+            <div class="faq-cta">
+                <a href="{{ url_for('public.contact') }}" class="faq-cta-button"><i class="fas fa-phone-alt icon-margin"></i>تواصل معنا للمزيد من المعلومات</a>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    {# == Footer == #}
+    <footer class="landing-footer">
+        <div class="landing-footer-inner">
+            <div class="landing-footer-brand">
+                <img src="{{ url_for('static', filename=_logo_path) }}" alt="{{ _company_name }}">
+                <div>
+                    <div class="landing-footer-title">{{ _developer_name }}</div>
+                    <div class="landing-footer-sub">{{ developer_credit or config.DEVELOPER_CREDIT }}</div>
+                </div>
+            </div>
+            <div class="landing-footer-col">
+                <h4>{{ _footer_quick }}</h4>
+                <div class="landing-footer-links">
+                    <a href="{{ url_for('public.features') }}">{{ _features }}</a>
+                    <a href="{{ url_for('public.pricing') }}">{{ _pricing }}</a>
+                    <a href="{{ url_for('public.user_guide') }}">{{ _guide }}</a>
+                    <a href="{{ url_for('public.contact') }}">{{ _contact }}</a>
+                </div>
+            </div>
+            <div class="landing-footer-col">
+                <h4>{{ _footer_support }}</h4>
+                <div class="landing-footer-meta">
+                    <span class="landing-footer-chip">v{{ config.APP_VERSION }}</span>
+                    <span class="landing-footer-chip"><i class="fas fa-robot"></i> {{ _footer_ai }}</span>
+                    {% if developer_whatsapp_link %}
+                    <a class="landing-footer-chip wa-link" href="https://wa.me/{{ developer_whatsapp_link }}" target="_blank" rel="noopener">
+                        <i class="fab fa-whatsapp"></i> {{ 'واتساب' if not is_en else 'WhatsApp' }}
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="landing-footer-bottom">
+            &copy; 2025 {{ _company_name }}. {{ _footer_rights }}
+        </div>
+    </footer>
+
     <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
-
-    <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-Fy6S3B9q64WdZWQUiU+q4/2Lc9npb8tCaSX9FK7E8HnRr0Jz8D6OP9dO5Vg3Q9ct" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 

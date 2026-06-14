@@ -458,60 +458,60 @@
 
     }
 
-    .ic-15 { padding: 80px 20px; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); }
+    .about-section { padding: 80px 20px; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); }
 
-    .ic-16 { max-width: 1000px; margin: 0 auto; }
+    .section-container { max-width: 1000px; margin: 0 auto; }
 
-    .ic-17 { text-align: center; font-size: 2.5rem; margin-bottom: 30px; color: var(--gulf-blue); }
+    .section-heading { text-align: center; font-size: 2.5rem; margin-bottom: 30px; color: var(--gulf-blue); }
 
-    .ic-18 { margin-inline-start: 10px; }
+    .icon-margin { margin-inline-start: 10px; }
 
-    .ic-19 { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+    .about-card { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
 
-    .ic-20 { font-size: 1.15rem; line-height: 2; color: #333; text-align: justify; margin-bottom: 25px; }
+    .about-text { font-size: 1.15rem; line-height: 2; color: #333; text-align: justify; margin-bottom: 25px; }
 
-    .ic-21 { font-size: 1.15rem; line-height: 2; color: #333; text-align: justify; }
+    .about-text-last { font-size: 1.15rem; line-height: 2; color: #333; text-align: justify; }
 
-    .ic-22 { padding: 80px 20px; background: white; }
+    .benefits-section { padding: 80px 20px; background: white; }
 
-    .ic-23 { text-align: center; font-size: 2.5rem; margin-bottom: 20px; color: var(--gulf-blue); }
+    .benefits-heading { text-align: center; font-size: 2.5rem; margin-bottom: 20px; color: var(--gulf-blue); }
 
-    .ic-24 { text-align: center; color: #666; margin-bottom: 50px; font-size: 1.1rem; }
+    .benefits-subtitle { text-align: center; color: #666; margin-bottom: 50px; font-size: 1.1rem; }
 
-    .ic-25 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; }
+    .benefits-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; }
 
-    .ic-26 { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 35px; border-radius: 15px; color: white; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
+    .benefit-card-auto { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 35px; border-radius: 15px; color: white; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
 
-    .ic-27 { font-size: 1.5rem; margin-bottom: 15px; }
+    .benefit-card-title { font-size: 1.5rem; margin-bottom: 15px; }
 
-    .ic-28 { line-height: 1.8; opacity: 0.95; }
+    .benefit-card-text { line-height: 1.8; opacity: 0.95; }
 
-    .ic-29 { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 35px; border-radius: 15px; color: white; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
+    .benefit-card-retail { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 35px; border-radius: 15px; color: white; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
 
-    .ic-30 { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); padding: 35px; border-radius: 15px; color: white; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
+    .benefit-card-sme { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); padding: 35px; border-radius: 15px; color: white; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
 
-    .ic-31 { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); padding: 35px; border-radius: 15px; color: white; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
+    .benefit-card-workshop { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); padding: 35px; border-radius: 15px; color: white; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
 
-    .ic-32 { padding: 80px 20px; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: white; }
+    .faq-section { padding: 80px 20px; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: white; }
 
-    .ic-33 { max-width: 900px; margin: 0 auto; }
+    .faq-container-inner { max-width: 900px; margin: 0 auto; }
 
-    .ic-34 { text-align: center; font-size: 2.5rem; margin-bottom: 20px; background: var(--gradient-gulf); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .faq-heading { text-align: center; font-size: 2.5rem; margin-bottom: 20px; background: var(--gradient-gulf); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
-    .ic-35 { text-align: center; color: rgba(255,255,255,0.8); margin-bottom: 50px; font-size: 1.1rem; }
+    .faq-subtitle { text-align: center; color: rgba(255,255,255,0.8); margin-bottom: 50px; font-size: 1.1rem; }
 
-    .ic-36 { background: rgba(255,255,255,0.05); border-radius: 15px; padding: 25px; margin-bottom: 20px; border: 1px solid rgba(212, 175, 55, 0.2); }
+    .faq-item { background: rgba(255,255,255,0.05); border-radius: 15px; padding: 25px; margin-bottom: 20px; border: 1px solid rgba(212, 175, 55, 0.2); }
 
-    .ic-37 { color: var(--gulf-gold); margin-bottom: 15px; font-size: 1.3rem; }
+    .faq-question { color: var(--gulf-gold); margin-bottom: 15px; font-size: 1.3rem; }
 
-    .ic-38 { color: rgba(255,255,255,0.9); line-height: 1.8; font-size: 1.05rem; }
+    .faq-answer { color: rgba(255,255,255,0.9); line-height: 1.8; font-size: 1.05rem; }
 
-    .ic-39 { color: var(--gulf-gold); text-decoration: underline; }
+    .faq-link { color: var(--gulf-gold); text-decoration: underline; }
 
-    .ic-40 { background: rgba(255,255,255,0.05); border-radius: 15px; padding: 25px; border: 1px solid rgba(212, 175, 55, 0.2); }
+    .faq-item-last { background: rgba(255,255,255,0.05); border-radius: 15px; padding: 25px; border: 1px solid rgba(212, 175, 55, 0.2); }
 
-    .ic-41 { text-align: center; margin-top: 50px; }
+    .faq-cta { text-align: center; margin-top: 50px; }
 
-    .ic-42 { display: inline-block; padding: 18px 45px; background: var(--gulf-gold); color: var(--gulf-blue); border-radius: 50px; text-decoration: none; font-weight: 700; font-size: 1.2rem; box-shadow: 0 10px 30px rgba(212, 175, 55, 0.3); }
+    .faq-cta-button { display: inline-block; padding: 18px 45px; background: var(--gulf-gold); color: var(--gulf-blue); border-radius: 50px; text-decoration: none; font-weight: 700; font-size: 1.2rem; box-shadow: 0 10px 30px rgba(212, 175, 55, 0.3); }
 
-    .ic-43 { text-decoration:none; }
+    .wa-link { text-decoration:none; }
