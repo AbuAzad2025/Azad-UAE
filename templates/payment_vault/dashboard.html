@@ -8,13 +8,13 @@
         <i class="fas fa-vault text-danger mr-3 ic-1"></i>
         <div>
             <h1 class="mb-0">🔐 {{ t('Dashboard_2') }} {{ t('تحكم') }} {{ t('الخزينة') }} {{ t('السرية') }}</h1>
-            <p class="text-muted mb-0">{{ t('Management') }} {{ t('Purchases') }} {{ t('و{{ t('ال{{ t('تبرعات') }}') }}') }} {{ t('و{{ t('الباقات') }}') }}</p>
+            <p class="text-muted mb-0">{{ t('Management') }} {{ t('Purchases') }} {{ t('والتبرعات') }} {{ t('والباقات') }}</p>
         </div>
     </div>
     <div>
         <form class="needs-validation" method="POST" action="{{ url_for('payment_vault.trigger_auto_approve') }}" class="ic-2">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
-            <button type="submit" class="btn btn-success mr-2" onclick="return confirm('{{ t('تشغيل') }} {{ t('ال{{ t('قبول') }}') }} {{ t('Auto') }} {{ t('للعمليات') }} {{ t('الأقدم') }} من {{ t('ساعة_2') }}')">
+            <button type="submit" class="btn btn-success mr-2" onclick="return confirm('{{ t('تشغيل') }} {{ t('القبول') }} {{ t('Auto') }} {{ t('للعمليات') }} {{ t('الأقدم') }} من {{ t('ساعة_2') }}')">
                 <i class="fas fa-check-circle"></i> {{ t('قبول') }} {{ t('تلقائي') }}
             </button>
         </form>
@@ -108,7 +108,7 @@
                 <div class="stat-card ic-5">
                     <div class="stat-number" id="live-donations">{{ stats.total_donations }}</div>
                     <div class="stat-label">
-                        <i class="fas fa-heart"></i> {{ t('Total_2') }} {{ t('ال{{ t('تبرعات') }}') }}
+                        <i class="fas fa-heart"></i> {{ t('Total_2') }} {{ t('التبرعات') }}
                     </div>
                     <small class="d-block mt-2 ic-4">{{ t('Today') }}: <span id="today-donations">{{ stats.today_transactions or 0 }}</span></small>
                 </div>
@@ -216,15 +216,15 @@
                 <div class="quick-action" onclick="window.location.href='{{ url_for('payment_vault.view_purchases') }}'">
                     <i class="fas fa-shopping-cart text-primary"></i>
                     <h5>{{ t('Management') }} {{ t('Purchases') }}</h5>
-                    <p class="text-muted mb-0">{{ t('View') }} {{ t('و{{ t('Management') }}') }} {{ t('جميع') }} {{ t('Purchases') }}</p>
+                    <p class="text-muted mb-0">{{ t('View') }} {{ t('وManagement') }} {{ t('جميع') }} {{ t('Purchases') }}</p>
                 </div>
             </div>
             
             <div class="col-md-3">
                 <div class="quick-action" onclick="window.location.href='{{ url_for('payment_vault.donations') }}'">
                     <i class="fas fa-hand-holding-heart text-danger"></i>
-                    <h5>{{ t('Management') }} {{ t('ال{{ t('تبرعات') }}') }}</h5>
-                    <p class="text-muted mb-0">{{ t('View') }} {{ t('و{{ t('Management') }}') }} {{ t('جميع') }} {{ t('ال{{ t('تبرعات') }}') }}</p>
+                    <h5>{{ t('Management') }} {{ t('التبرعات') }}</h5>
+                    <p class="text-muted mb-0">{{ t('View') }} {{ t('وManagement') }} {{ t('جميع') }} {{ t('التبرعات') }}</p>
                 </div>
             </div>
             
@@ -239,7 +239,7 @@
             <div class="col-md-3">
                 <div class="quick-action" onclick="window.location.href='{{ url_for('payment_vault.cards') }}'">
                     <i class="fas fa-credit-card text-primary"></i>
-                    <h5>{{ t('ال{{ t('بطاقات') }}') }} {{ t('المحفوظة') }}</h5>
+                    <h5>{{ t('البطاقات') }} {{ t('المحفوظة') }}</h5>
                     <p class="text-muted mb-0">{{ t('View') }} {{ t('بطاقات') }} {{ t('Payment_2') }} ({{ t('مشفرة') }})</p>
                 </div>
             </div>
@@ -248,7 +248,7 @@
         
         <div class="row mb-4">
             <div class="col-12">
-                <h4 class="mb-3"><i class="fas fa-cog text-info"></i> {{ t('Settings_2') }} {{ t('و{{ t('Reports_3') }}') }}</h4>
+                <h4 class="mb-3"><i class="fas fa-cog text-info"></i> {{ t('Settings_2') }} {{ t('وReports_3') }}</h4>
             </div>
             
             <div class="col-md-4">
@@ -263,14 +263,14 @@
                 <div class="quick-action" onclick="window.location.href='{{ url_for('payment_vault.settings') }}'">
                     <i class="fas fa-cog text-secondary"></i>
                     <h5>{{ t('Settings') }}</h5>
-                    <p class="text-muted mb-0">{{ t('Settings_2') }} {{ t('Payment_2') }} {{ t('و{{ t('الأمان') }}') }}</p>
+                    <p class="text-muted mb-0">{{ t('Settings_2') }} {{ t('Payment_2') }} {{ t('والأمان') }}</p>
                 </div>
             </div>
             
             <div class="col-md-4">
                 <div class="quick-action" onclick="window.location.href='{{ url_for('payment_vault.change_password') }}'">
                     <i class="fas fa-key text-danger"></i>
-                    <h5>{{ t('Change') }} {{ t('كلمة') }} {{ t('ال{{ t('مرور') }}') }}</h5>
+                    <h5>{{ t('Change') }} {{ t('كلمة') }} {{ t('المرور') }}</h5>
                     <p class="text-muted mb-0">{{ t('Update') }} {{ t('كلمة') }} {{ t('مرور') }} {{ t('الخزينة') }}</p>
                 </div>
             </div>
@@ -333,7 +333,7 @@
             <div class="col-md-6">
                 <div class="chart-card">
                     <h5 class="mb-3">
-                        <i class="fas fa-heart text-danger"></i> {{ t('Last') }} {{ t('ال{{ t('تبرعات') }}') }}
+                        <i class="fas fa-heart text-danger"></i> {{ t('Last') }} {{ t('التبرعات') }}
                     </h5>
                     <div class="table-responsive">
                         <table class="table table-sm">
@@ -406,7 +406,7 @@
                 backgroundColor: 'rgba(102, 126, 234, 0.1)',
                 tension: 0.4
             }, {
-                label: '{{ t('ال{{ t('تبرعات') }}') }}',
+                label: '{{ t('التبرعات') }}',
                 data: {{ monthly_donations|tojson }},
                 borderColor: '#f5576c',
                 backgroundColor: 'rgba(245, 87, 108, 0.1)',
@@ -437,8 +437,8 @@
     
     function lockVault() {
         Swal.fire({
-            title: '{{ t('قفل') }} {{ t('{{ t('الخزينة') }}_2') }}',
-            text: 'هل أنت {{ t('متأكد') }} من {{ t('قفل') }} {{ t('الخزينة') }} {{ t('{{ t('السرية') }}_2') }}',
+            title: '{{ t('قفل') }} {{ t('الخزينة_2') }}',
+            text: 'هل أنت {{ t('متأكد') }} من {{ t('قفل') }} {{ t('الخزينة') }} {{ t('السرية_2') }}',
             icon: 'warning',
             showCancelButton: true,
             confirmButtonText: '{{ t('نعم،') }} {{ t('قفل') }}',
@@ -451,7 +451,7 @@
         });
     }
     
-    // {{ t('Update') }} {{ t('Statistics') }} {{ t('ال{{ t('مباشر') }}ة') }} كل 30 {{ t('ثانية') }}
+    // {{ t('Update') }} {{ t('Statistics') }} {{ t('المباشرة') }} كل 30 {{ t('ثانية') }}
     setInterval(async function() {
         try {
             const response = await fetch('{{ url_for("payment_vault.api_live_stats") }}');

@@ -14,7 +14,7 @@
 
         <h1 class="mb-0"><i class="fas fa-receipt text-primary"></i> {{ t('Details') }} {{ t('Purchase_2') }} #{{ purchase.id }}</h1>
 
-        <p class="text-muted mb-0">{{ t('مراجعة') }} {{ t('عملية') }} {{ t('Purchase_2') }} {{ t('و{{ t('ال{{ t('تفعيل') }}') }}') }} من {{ t('الخزينة') }} {{ t('السرية') }}</p>
+        <p class="text-muted mb-0">{{ t('مراجعة') }} {{ t('عملية') }} {{ t('Purchase_2') }} {{ t('والتفعيل') }} من {{ t('الخزينة') }} {{ t('السرية') }}</p>
 
     </div>
 
@@ -192,11 +192,11 @@
 
                                                 {% if purchase.payment_method == 'crypto' %}
 
-                                                    <span class="badge badge-warning"><i class="fab fa-bitcoin"></i> {{ t('عملات') }} {{ t('{{ t('رقم') }}ية') }}</span>
+                                                    <span class="badge badge-warning"><i class="fab fa-bitcoin"></i> {{ t('عملات') }} {{ t('رقمية') }}</span>
 
                                                 {% elif purchase.payment_method == 'card' %}
 
-                                                    <span class="badge badge-primary"><i class="fas fa-credit-card"></i> {{ t('Card') }} {{ t('{{ t('Bank_3') }}ة') }}</span>
+                                                    <span class="badge badge-primary"><i class="fas fa-credit-card"></i> {{ t('Card') }} {{ t('Bank_3ة') }}</span>
 
                                                 {% elif purchase.payment_method == 'paypal' %}
 
@@ -352,7 +352,7 @@
 
                             <div class="mb-4">
 
-                                <h6>{{ t('Status_2') }} {{ t('ال{{ t('تفعيل') }}') }}:</h6>
+                                <h6>{{ t('Status_2') }} {{ t('التفعيل') }}:</h6>
 
                                 <h3>
 
@@ -396,7 +396,7 @@
 
                             <div class="mb-4">
 
-                                <h6>{{ t('History') }} {{ t('ال{{ t('تفعيل') }}') }}:</h6>
+                                <h6>{{ t('History') }} {{ t('التفعيل') }}:</h6>
 
                                 <p><i class="fas fa-calendar-check text-success"></i> {{ purchase.activation_date.strftime('%Y-%m-%d %H:%M') }}</p>
 
@@ -535,7 +535,7 @@ function sendEmailToCustomer() {
 
     const subject = '{{ t('Confirm') }} {{ t('Purchase') }} {{ t('Plan') }} - {{ developer_name_ar or developer_name or "Azad Systems" }}';
 
-    const body = `{{ t('مرحباً') }} {{ purchase.customer_name }},\n\n{{ t('شكراً') }} {{ t('لشرائك') }} ${purchase.package.name_ar if purchase.package else ''}\n{{ t('رقم') }} {{ t('الطلب') }}: #{{ purchase.id }}\n{{ t('Amount') }}: ${{ purchase.amount_paid }}\n\n{{ t('سن{{ t('تواصل') }}') }} {{ t('معك') }} {{ t('قريباً') }} {{ t('لإكمال') }} {{ t('ال{{ t('تفعيل') }}') }}.`;
+    const body = `{{ t('مرحباً') }} {{ purchase.customer_name }},\n\n{{ t('شكراً') }} {{ t('لشرائك') }} ${purchase.package.name_ar if purchase.package else ''}\n{{ t('رقم') }} {{ t('الطلب') }}: #{{ purchase.id }}\n{{ t('Amount') }}: ${{ purchase.amount_paid }}\n\n{{ t('سنتواصل') }} {{ t('معك') }} {{ t('قريباً') }} {{ t('لإكمال') }} {{ t('التفعيل') }}.`;
 
     
 

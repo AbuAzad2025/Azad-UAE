@@ -159,7 +159,7 @@
         <div>{{ (settings.address_ar if settings and settings.address_ar else none) or tenant_address or company_address }}</div>
         <div>📞 {{ (settings.phone_1 if settings and settings.phone_1 else none) or tenant_phone or company_phone }} {% if settings and settings.phone_2 and settings.phone_2 != 'None' %}| {{ settings.phone_2 }}{% endif %}</div>
         <div>📧 {{ (settings.email if settings and settings.email else none) or tenant_email or company_email }} {% if settings and settings.website and settings.website != 'None' %}| 🌐 {{ settings.website }}{% endif %}</div>
-        {% if settings and settings.tax_number and settings.tax_number != 'None' %}<div>{{ t('ال{{ t('رقم') }}') }} {{ t('الضريبي') }}: {{ settings.tax_number }}</div>{% endif %}
+        {% if settings and settings.tax_number and settings.tax_number != 'None' %}<div>{{ t('الرقم') }} {{ t('الضريبي') }}: {{ settings.tax_number }}</div>{% endif %}
       </div>
       {% if print_branch or sale.branch %}
       {% set header_branch = print_branch or sale.branch %}

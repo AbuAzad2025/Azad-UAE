@@ -187,7 +187,7 @@
           
           <div class="col-md-6">
             <div class="form-group">
-              <label><i class="fas fa-user-tie"></i> {{ t('Name_2') }} {{ t('ال{{ t('مستفيد') }}') }}:</label>
+              <label><i class="fas fa-user-tie"></i> {{ t('Name_2') }} {{ t('المستفيد') }}:</label>
               <input type="text" name="payee_name" class="form-control" 
                      value="{{ cheque.payee_name or '' }}" aria-label="payee name" minlength="2" maxlength="100">
             </div>
@@ -204,7 +204,7 @@
       
       <div class="form-group">
         <button type="submit" class="btn btn-success">
-          <i class="fas fa-save mr-2"></i>{{ t('Save') }} {{ t('ال{{ t('Edit') }}ات') }}
+          <i class="fas fa-save mr-2"></i>{{ t('Save') }} {{ t('الEditات') }}
         </button>
         <a href="{{ url_for('cheques.view', id=cheque.id) }}" class="btn btn-secondary">
           <i class="fas fa-times mr-2"></i>{{ t('Cancel') }}
@@ -231,7 +231,7 @@ $('#cheque_type').change(function() {
   }
 });
 
-// Select2 {{ t('للعملاء') }} {{ t('و{{ t('Supplier') }}ين') }}
+// Select2 {{ t('للعملاء') }} {{ t('وSupplierين') }}
 $('.customer-select, .supplier-select').select2({
   theme: 'bootstrap4',
   language: 'ar',

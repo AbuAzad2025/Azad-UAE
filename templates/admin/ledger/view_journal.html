@@ -24,10 +24,10 @@
           <div class="erp-report-print">
           <div class="row mb-4">
             <div class="col-md-6">
-              <h5>{{ t('Info_2') }} {{ t('ال{{ t('قيد') }}') }}</h5>
+              <h5>{{ t('Info_2') }} {{ t('القيد') }}</h5>
               <div class="table-responsive"><table class="table table-bordered">
                 <tr>
-                  <th width="40%">{{ t('رقم') }} {{ t('ال{{ t('قيد') }}') }}</th>
+                  <th width="40%">{{ t('رقم') }} {{ t('القيد') }}</th>
                   <td>{{ entry.entry_number }}</td>
                 </tr>
                 <tr>
@@ -46,14 +46,14 @@
             </div>
             
             <div class="col-md-6">
-              <h5>{{ t('{{ t('Total_3') }}ات') }}</h5>
+              <h5>{{ t('Total_3ات') }}</h5>
               <div class="table-responsive"><table class="table table-bordered">
                 <tr>
-                  <th width="40%">{{ t('Total_2') }} {{ t('ال{{ t('مدين') }}') }}</th>
+                  <th width="40%">{{ t('Total_2') }} {{ t('المدين') }}</th>
                   <td class="text-success">{{ entry.total_debit }} {{ tenant_currency_symbol }}</td>
                 </tr>
                 <tr>
-                  <th>{{ t('Total_2') }} {{ t('ال{{ t('دائن') }}') }}</th>
+                  <th>{{ t('Total_2') }} {{ t('الدائن') }}</th>
                   <td class="text-danger">{{ entry.total_credit }} {{ tenant_currency_symbol }}</td>
                 </tr>
                 <tr>
@@ -71,7 +71,7 @@
           </div>
 
           
-          <h5>{{ t('Details') }} {{ t('ال{{ t('قيد') }}') }}</h5>
+          <h5>{{ t('Details') }} {{ t('القيد') }}</h5>
           <div class="table-responsive"><table class="table table-bordered table-striped">
             <thead>
               <tr>
@@ -105,8 +105,8 @@
           <div class="mt-4">
             <form class="needs-validation" method="post" action="{{ url_for('admin_ledger.reverse_journal', id=entry.id) }}" class="d-inline">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
-              <button type="submit" class="btn btn-warning" onclick="return confirm('هل {{ t('تريد') }} {{ t('عكس') }} هذا {{ t('{{ t('ال{{ t('قيد') }}') }}_2') }}')">
-                <i class="fas fa-undo"></i> {{ t('عكس') }} {{ t('ال{{ t('قيد') }}') }}
+              <button type="submit" class="btn btn-warning" onclick="return confirm('هل {{ t('تريد') }} {{ t('عكس') }} هذا {{ t('القيد_2') }}')">
+                <i class="fas fa-undo"></i> {{ t('عكس') }} {{ t('القيد') }}
               </button>
             </form>
           </div>

@@ -134,7 +134,7 @@
               </tr>
               {% if cheque.deposit_date %}
               <tr>
-                <th>{{ t('History') }} {{ t('ال{{ t('إيداع') }}') }}:</th>
+                <th>{{ t('History') }} {{ t('الإيداع') }}:</th>
                 <td>
                   {% if cheque.deposit_date %}
                     {{ cheque.deposit_date.strftime('%Y-%m-%d') }}
@@ -216,7 +216,7 @@
         {% if cheque.bounce_reason %}
         <div class="alert alert-danger">
           <i class="fas fa-ban mr-2"></i>
-          <strong>{{ t('سبب') }} {{ t('ال{{ t('إرتداد') }}') }}:</strong> {{ cheque.bounce_reason }}
+          <strong>{{ t('سبب') }} {{ t('الإرتداد') }}:</strong> {{ cheque.bounce_reason }}
         </div>
         {% endif %}
       </div>
@@ -356,7 +356,7 @@
           </div>
           
           <div class="form-group">
-            <label>{{ t('Amount') }} {{ t('Actual') }} بـ{{ tenant_currency_name_ar or 'درهم إماراتي' }} ({{ t('ب{{ t('Price') }}') }} {{ t('New_2') }}):</label>
+            <label>{{ t('Amount') }} {{ t('Actual') }} بـ{{ tenant_currency_name_ar or 'درهم إماراتي' }} ({{ t('بPrice') }} {{ t('New_2') }}):</label>
             <input type="text" id="actual_amount_preview" class="form-control font-weight-bold" 
                    value="..." readonly aria-label="actual amount preview">
           </div>
@@ -390,18 +390,18 @@
       <form method="POST" action="{{ url_for('cheques.bounce_cheque', id=cheque.id) }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
         <div class="modal-body">
-          <p>{{ t('تسجيل') }} {{ t('إرتداد') }} {{ t('لل{{ t('Cheque_3') }}') }}: <strong>{{ cheque.cheque_bank_number }}</strong></p>
+          <p>{{ t('تسجيل') }} {{ t('إرتداد') }} {{ t('للCheque_3') }}: <strong>{{ cheque.cheque_bank_number }}</strong></p>
           
           <div class="form-group">
-            <label>{{ t('سبب') }} {{ t('ال{{ t('إرتداد') }}') }}: <span class="text-danger">*</span></label>
+            <label>{{ t('سبب') }} {{ t('الإرتداد') }}: <span class="text-danger">*</span></label>
             <textarea name="bounce_reason" class="form-control" rows="3" 
-                      placeholder="{{ t('اكتب') }} {{ t('سبب') }} {{ t('ال{{ t('إرتداد') }}') }}..." required></textarea>
+                      placeholder="{{ t('اكتب') }} {{ t('سبب') }} {{ t('الإرتداد') }}..." required></textarea>
           </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ t('Cancel') }}</button>
           <button type="submit" class="btn btn-warning">
-            <i class="fas fa-undo mr-2"></i>{{ t('تسجيل') }} {{ t('ال{{ t('إرتداد') }}') }}
+            <i class="fas fa-undo mr-2"></i>{{ t('تسجيل') }} {{ t('الإرتداد') }}
           </button>
         </div>
       </form>
@@ -424,14 +424,14 @@
         <div class="modal-body">
           <div class="alert alert-info">
             <i class="fas fa-info-circle"></i>
-            <strong>{{ t('Note') }}:</strong> بعد {{ t('{{ t('ال{{ t('إيداع') }}') }}،') }} {{ t('سينتقل') }} {{ t('Cheque') }} {{ t('لحالة') }} "{{ t('مودع') }} في {{ t('Bank') }}" {{ t('وننتظر') }} {{ t('Confirm') }} {{ t('Exchange') }}.
+            <strong>{{ t('Note') }}:</strong> بعد {{ t('الإيداع،') }} {{ t('سينتقل') }} {{ t('Cheque') }} {{ t('لحالة') }} "{{ t('مودع') }} في {{ t('Bank') }}" {{ t('وننتظر') }} {{ t('Confirm') }} {{ t('Exchange') }}.
           </div>
           
           <p>{{ t('إيداع') }} {{ t('Cheque') }} {{ t('رقم') }}: <strong>{{ cheque.cheque_bank_number }}</strong></p>
           <p>{{ t('Amount') }}: <strong>{{ format_currency(cheque.base_amount) }}</strong></p>
           
           <div class="form-group">
-            <label>{{ t('History') }} {{ t('ال{{ t('إيداع') }}') }}: <span class="text-danger">*</span></label>
+            <label>{{ t('History') }} {{ t('الإيداع') }}: <span class="text-danger">*</span></label>
             <input type="date" name="deposit_date" class="form-control" 
                    value="{{ today }}" required aria-label="deposit date">
           </div>
@@ -534,7 +534,7 @@ function calculateActualAmount() {
   // {{ t('View') }} {{ t('Amount') }} {{ t('Actual') }}
   $('#actual_amount_preview').val(actualAmount.toFixed(2) + ' {{ tenant_currency_symbol }}');
   
-  // {{ t('View') }} {{ t('ال{{ t('فرق') }}') }}
+  // {{ t('View') }} {{ t('الفرق') }}
   if (Math.abs(difference) > 0.01) {
     const $gainLoss = $('#gain_loss_preview');
     const $amount = $('#gain_loss_amount');

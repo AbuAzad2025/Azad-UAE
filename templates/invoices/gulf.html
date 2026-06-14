@@ -196,7 +196,7 @@
         <div>{{ (settings.address_ar if settings and settings.address_ar else none) or tenant_address or company_address }}</div>
         <div>📞 {{ (settings.phone_1 if settings and settings.phone_1 else none) or tenant_phone or company_phone }} {% if settings and settings.phone_2 and settings.phone_2 != 'None' %}| {{ settings.phone_2 }}{% endif %}</div>
         <div>📧 {{ (settings.email if settings and settings.email else none) or tenant_email or company_email }} {% if settings and settings.website and settings.website != 'None' %}| 🌐 {{ settings.website }}{% endif %}</div>
-        {% if settings and settings.tax_number and settings.tax_number != 'None' %}<div class="ic-2">{{ t('ال{{ t('رقم') }}') }} {{ t('الضريبي') }}: {{ settings.tax_number }}</div>{% endif %}
+        {% if settings and settings.tax_number and settings.tax_number != 'None' %}<div class="ic-2">{{ t('الرقم') }} {{ t('الضريبي') }}: {{ settings.tax_number }}</div>{% endif %}
         {% if print_branch %}
         <div>🏢 {{ t('Branch') }}: {{ print_branch.name }}{% if print_branch.code %} ({{ print_branch.code }}){% endif %}</div>
         {% if print_branch.address %}
@@ -284,7 +284,7 @@
       
       {% if sale.payments %}
       <div class="payments-table">
-        <div class="payments-header">💰 {{ t('{{ t('Payment_2') }}ات') }} {{ t('Paid_3') }}</div>
+        <div class="payments-header">💰 {{ t('Payment_2ات') }} {{ t('Paid_3') }}</div>
         <div class="ic-10">
           {% for payment in sale.payments %}
           <div class="payment-row ic-11">
@@ -339,7 +339,7 @@
 
       <div class="signature-section">
         <div class="signature-box">
-          <div class="ic-15">{{ t('ختم') }} {{ t('و{{ t('توقيع') }}') }} {{ t('البائع') }}</div>
+          <div class="ic-15">{{ t('ختم') }} {{ t('وتوقيع') }} {{ t('البائع') }}</div>
           <div class="signature-line"></div>
         </div>
         <div class="signature-box">

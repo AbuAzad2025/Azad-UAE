@@ -82,7 +82,7 @@
         <div class="col-md-6">
           <div class="form-group">
             <label>
-              <i class="fas fa-folder text-primary"></i> {{ t('ال{{ t('فئة') }}') }} 
+              <i class="fas fa-folder text-primary"></i> {{ t('الفئة') }} 
               <span class="text-danger">*</span>
             </label>
             <div class="input-group">
@@ -227,7 +227,7 @@
           <i class="fas fa-times mr-2"></i>{{ t('Cancel') }}
         </button>
         <button type="button" class="btn btn-success" id="saveExpenseCategoryBtn">
-          <i class="fas fa-save mr-2"></i>{{ t('Save') }} {{ t('ال{{ t('فئة') }}') }}
+          <i class="fas fa-save mr-2"></i>{{ t('Save') }} {{ t('الفئة') }}
         </button>
       </div>
     </div>
@@ -262,16 +262,16 @@ $(function () {
         if (data && data.rate) {
           $('#exchange_rate').val(parseFloat(data.rate).toFixed(6));
         } else if (window.toastr) {
-          toastr.warning('{{ t('تعذر') }} {{ t('جلب') }} {{ t('Price_2') }} {{ t('{{ t('Exchange') }}،') }} {{ t('يرجى') }} {{ t('إدخال') }} {{ t('Value') }} {{ t('Manually') }}.');
+          toastr.warning('{{ t('تعذر') }} {{ t('جلب') }} {{ t('Price_2') }} {{ t('Exchange،') }} {{ t('يرجى') }} {{ t('إدخال') }} {{ t('Value') }} {{ t('Manually') }}.');
         } else {
-          alert('{{ t('تعذر') }} {{ t('جلب') }} {{ t('Price_2') }} {{ t('{{ t('Exchange') }}،') }} {{ t('يرجى') }} {{ t('إدخال') }} {{ t('Value') }} {{ t('Manually') }}.');
+          alert('{{ t('تعذر') }} {{ t('جلب') }} {{ t('Price_2') }} {{ t('Exchange،') }} {{ t('يرجى') }} {{ t('إدخال') }} {{ t('Value') }} {{ t('Manually') }}.');
         }
       },
       error: function() {
         if (window.toastr) {
-          toastr.warning('{{ t('تعذر') }} {{ t('جلب') }} {{ t('Price_2') }} {{ t('{{ t('Exchange') }}،') }} {{ t('يرجى') }} {{ t('إدخال') }} {{ t('Value') }} {{ t('Manually') }}.');
+          toastr.warning('{{ t('تعذر') }} {{ t('جلب') }} {{ t('Price_2') }} {{ t('Exchange،') }} {{ t('يرجى') }} {{ t('إدخال') }} {{ t('Value') }} {{ t('Manually') }}.');
         } else {
-          alert('{{ t('تعذر') }} {{ t('جلب') }} {{ t('Price_2') }} {{ t('{{ t('Exchange') }}،') }} {{ t('يرجى') }} {{ t('إدخال') }} {{ t('Value') }} {{ t('Manually') }}.');
+          alert('{{ t('تعذر') }} {{ t('جلب') }} {{ t('Price_2') }} {{ t('Exchange،') }} {{ t('يرجى') }} {{ t('إدخال') }} {{ t('Value') }} {{ t('Manually') }}.');
         }
       }
     });
@@ -289,7 +289,7 @@ $('#saveExpenseCategoryBtn').click(function() {
   const name_ar = $('#expense_category_name_ar').val().trim();
   
   if (!name) {
-    alert('{{ t('الرجاء') }} {{ t('إدخال') }} {{ t('Name_2') }} {{ t('ال{{ t('فئة') }}') }} {{ t('In English_2') }}');
+    alert('{{ t('الرجاء') }} {{ t('إدخال') }} {{ t('Name_2') }} {{ t('الفئة') }} {{ t('In English_2') }}');
     return;
   }
   
@@ -309,26 +309,26 @@ $('#saveExpenseCategoryBtn').click(function() {
     }),
     success: function(response) {
       if (response.success) {
-        // {{ t('Add') }} {{ t('ال{{ t('فئة') }}') }} {{ t('New_4') }} {{ t('للقائمة') }}
+        // {{ t('Add') }} {{ t('الفئة') }} {{ t('New_4') }} {{ t('للقائمة') }}
         const displayName = response.category.name_ar ? 
           response.category.name_ar + ' - ' + response.category.name : 
           response.category.name;
         const newOption = new Option(displayName, response.category.id, true, true);
         $('#expense_category').append(newOption).trigger('change');
         
-        // {{ t('Close') }} {{ t('النافذة') }} {{ t('وتنظيف') }} {{ t('ال{{ t('حقول') }}') }}
+        // {{ t('Close') }} {{ t('النافذة') }} {{ t('وتنظيف') }} {{ t('الحقول') }}
         $('#addExpenseCategoryModal').modal('hide');
         $('#expense_category_name').val('');
         $('#expense_category_name_ar').val('');
         
         // {{ t('رسالة') }} {{ t('نجاح') }}
         if (typeof UI !== 'undefined') {
-          UI.success('تم {{ t('Add') }} {{ t('ال{{ t('فئة') }}') }} {{ t('ب{{ t('نجاح') }}') }}!');
+          UI.success('تم {{ t('Add') }} {{ t('الفئة') }} {{ t('بنجاح') }}!');
         } else {
-          alert('تم {{ t('Add') }} {{ t('ال{{ t('فئة') }}') }} {{ t('ب{{ t('نجاح') }}') }}!');
+          alert('تم {{ t('Add') }} {{ t('الفئة') }} {{ t('بنجاح') }}!');
         }
       } else {
-        alert('{{ t('Error') }}: ' + (response.error || '{{ t('فشل') }} {{ t('Add') }} {{ t('ال{{ t('فئة') }}') }}'));
+        alert('{{ t('Error') }}: ' + (response.error || '{{ t('فشل') }} {{ t('Add') }} {{ t('الفئة') }}'));
       }
     },
     error: function(xhr) {

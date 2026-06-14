@@ -249,7 +249,7 @@
                                 <div class="col-md-6">
                                     <div class="custom-control custom-switch">
                                         <input type="checkbox" class="custom-control-input" id="donations_enabled" name="donations_enabled" {% if vault.donations_enabled %}checked{% endif %} aria-label="donations enabled">
-                                        <label class="custom-control-label" for="donations_enabled">{{ t('تفعيل') }} {{ t('ال{{ t('تبرعات') }}') }}</label>
+                                        <label class="custom-control-label" for="donations_enabled">{{ t('تفعيل') }} {{ t('التبرعات') }}</label>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
@@ -387,7 +387,7 @@
                             <br>{{ vault.last_access.strftime('%Y-%m-%d %H:%M:%S') }}
                         </div>
                         <div class="mb-3">
-                            <strong>{{ t('ال{{ t('محاولات') }}') }} {{ t('ال{{ t('فاشلة') }}') }}:</strong>
+                            <strong>{{ t('المحاولات') }} {{ t('الفاشلة') }}:</strong>
                             <span class="badge badge-{% if vault.failed_attempts > 0 %}warning{% else %}success{% endif %}">
                                 {{ vault.failed_attempts }}/{{ vault.max_failed_attempts }}
                             </span>

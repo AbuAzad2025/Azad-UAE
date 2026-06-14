@@ -8,7 +8,7 @@
     <div class="col-12">
       <div class="alert alert-warning">
         <i class="fas fa-exclamation-triangle"></i>
-        <strong>{{ t('Alert_2') }} {{ t('Accounting_3') }}:</strong> يمكن {{ t('Edit') }} {{ t('Notes_2') }} {{ t('و{{ t('Discount') }}') }} فقط. لا يمكن {{ t('Edit') }} {{ t('Products') }} أو {{ t('الكميات') }} بعد {{ t('Create') }} {{ t('Invoice_2') }}.
+        <strong>{{ t('Alert_2') }} {{ t('Accounting_3') }}:</strong> يمكن {{ t('Edit') }} {{ t('Notes_2') }} {{ t('وDiscount') }} فقط. لا يمكن {{ t('Edit') }} {{ t('Products') }} أو {{ t('الكميات') }} بعد {{ t('Create') }} {{ t('Invoice_2') }}.
       </div>
 
       <div class="card">
@@ -34,7 +34,7 @@
                 {% endif %}
               </div>
               <div class="col-md-6">
-                <h5>{{ t('{{ t('Total_3') }}ات') }}</h5>
+                <h5>{{ t('Total_3ات') }}</h5>
                 <p><strong>{{ t('Total') }} {{ t('Sub') }}:</strong> {{ sale.subtotal }} {{ tenant_currency_symbol }}</p>
                 <p><strong>{{ t('Tax') }}:</strong> {{ sale.tax_amount }} {{ tenant_currency_symbol }}</p>
                 <p><strong>{{ t('Total_3') }}:</strong> {{ sale.total_amount }} {{ tenant_currency_symbol }}</p>
@@ -44,7 +44,7 @@
             </div>
 
             
-            <h5>{{ t('Products') }} (لا يمكن {{ t('{{ t('Edit') }}ها') }})</h5>
+            <h5>{{ t('Products') }} (لا يمكن {{ t('Editها') }})</h5>
             <div class="table-responsive"><table class="table table-bordered mb-4">
               <thead>
                 <tr>
@@ -89,7 +89,7 @@
 
             <div class="form-group">
               <button type="submit" class="btn btn-success">
-                <i class="fas fa-save"></i> {{ t('Save') }} {{ t('ال{{ t('Edit') }}ات') }}
+                <i class="fas fa-save"></i> {{ t('Save') }} {{ t('الEditات') }}
               </button>
               <a href="{{ url_for('sales.view', id=sale.id) }}" class="btn btn-secondary">
                 <i class="fas fa-times"></i> {{ t('Cancel') }}

@@ -31,7 +31,7 @@
           {% if store.platform_disabled %}
           <div class="alert alert-danger d-flex align-items-center">
             <i class="fas fa-lock mr-2"></i>
-            <span>تم {{ t('تعطيل') }} هذا {{ t('Store') }} من قبل {{ t('مالك') }} {{ t('Platform') }}. لا {{ t('يمكنك') }} {{ t('{{ t('تفعيل') }}ه') }} حتى {{ t('يقوم') }} {{ t('مالك') }} {{ t('Platform') }} {{ t('بفك') }} {{ t('القفل') }}.</span>
+            <span>تم {{ t('تعطيل') }} هذا {{ t('Store') }} من قبل {{ t('مالك') }} {{ t('Platform') }}. لا {{ t('يمكنك') }} {{ t('تفعيله') }} حتى {{ t('يقوم') }} {{ t('مالك') }} {{ t('Platform') }} {{ t('بفك') }} {{ t('القفل') }}.</span>
           </div>
           {% endif %}
 
@@ -173,7 +173,7 @@
 
           <hr>
 
-          <h5 class="mb-3">{{ t('التواصل') }} {{ t('و{{ t('ال{{ t('طلب') }}ات') }}') }}</h5>
+          <h5 class="mb-3">{{ t('التواصل') }} {{ t('والطلبات') }}</h5>
 
           <div class="row">
 
@@ -215,7 +215,7 @@
 
             <input type="checkbox" class="custom-control-input" id="notify_wa" name="notify_whatsapp_on_order" {% if store.notify_whatsapp_on_order %}checked{% endif %} aria-label="notify whatsapp on order">
 
-            <label class="custom-control-label" for="notify_wa">{{ t('تفعيل') }} {{ t('رابط') }} {{ t('واتساب') }} {{ t('{{ t('لل{{ t('طلب') }}') }}ات') }} (من {{ t('Dashboard_2') }} {{ t('ال{{ t('طلب') }}ات') }})</label>
+            <label class="custom-control-label" for="notify_wa">{{ t('تفعيل') }} {{ t('رابط') }} {{ t('واتساب') }} {{ t('للطلبات') }} (من {{ t('Dashboard_2') }} {{ t('الطلبات') }})</label>
 
           </div>
 
@@ -225,7 +225,7 @@
 
             <div class="col-md-6 form-group">
 
-              <label for="input_min_order_amount">{{ t('الحد') }} {{ t('الأدنى') }} {{ t('لل{{ t('طلب') }}') }}</label>
+              <label for="input_min_order_amount">{{ t('الحد') }} {{ t('الأدنى') }} {{ t('للطلب') }}</label>
 
               <input type="number" name="min_order_amount" class="form-control" value="{{ store.min_order_amount or '' }}" min="0" step="0.01" id="input_min_order_amount" aria-label="min order amount">
 
@@ -291,7 +291,7 @@
 
     <div class="card card-outline card-info">
 
-      <div class="card-header"><h3 class="card-title">{{ t('Warehouse_2') }} {{ t('ال{{ t('أونلاين') }}') }}</h3></div>
+      <div class="card-header"><h3 class="card-title">{{ t('Warehouse_2') }} {{ t('الأونلاين') }}</h3></div>
 
       <div class="card-body">
 

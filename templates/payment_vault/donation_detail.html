@@ -139,7 +139,7 @@
                         <div class="info-label">{{ t('طريقة') }} {{ t('Payment_2') }}:</div>
                         <div class="info-value">
                             {% if donation.payment_method == 'crypto' %}
-                                <i class="fab fa-bitcoin text-warning"></i> {{ t('Currency_2') }} {{ t('{{ t('رقم') }}ية') }}
+                                <i class="fab fa-bitcoin text-warning"></i> {{ t('Currency_2') }} {{ t('رقمية') }}
                             {% elif donation.payment_method == 'card' %}
                                 <i class="fas fa-credit-card text-primary"></i> {{ t('Card') }}
                             {% elif donation.payment_method == 'paypal' %}
@@ -154,7 +154,7 @@
                     
                     {% if donation.crypto_type %}
                     <div class="info-row">
-                        <div class="info-label">{{ t('نوع') }} {{ t('Currency') }} {{ t('ال{{ t('{{ t('رقم') }}ية') }}') }}:</div>
+                        <div class="info-label">{{ t('نوع') }} {{ t('Currency') }} {{ t('الرقمية') }}:</div>
                         <div class="info-value">{{ donation.crypto_type|upper }}</div>
                     </div>
                     {% endif %}
@@ -224,7 +224,7 @@
                         <div class="col-md-6">
                             <form class="needs-validation" method="POST" action="{{ url_for('payment_vault.approve_donation', donation_id=donation.id) }}">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
-                                <button type="submit" class="btn btn-success btn-block btn-lg" onclick="return confirm('{{ t('قبول') }} هذا {{ t('{{ t('التبرع') }}_2') }}')">
+                                <button type="submit" class="btn btn-success btn-block btn-lg" onclick="return confirm('{{ t('قبول') }} هذا {{ t('التبرع_2') }}')">
                                     <i class="fas fa-check-circle"></i> {{ t('قبول') }} {{ t('التبرع') }}
                                 </button>
                             </form>
@@ -232,7 +232,7 @@
                         <div class="col-md-6">
                             <form method="POST" action="{{ url_for('payment_vault.reject_donation', donation_id=donation.id) }}">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
-                                <button type="submit" class="btn btn-danger btn-block btn-lg" onclick="return confirm('{{ t('رفض') }} هذا {{ t('{{ t('التبرع') }}_2') }}')">
+                                <button type="submit" class="btn btn-danger btn-block btn-lg" onclick="return confirm('{{ t('رفض') }} هذا {{ t('التبرع_2') }}')">
                                     <i class="fas fa-times-circle"></i> {{ t('رفض') }} {{ t('التبرع') }}
                                 </button>
                             </form>
@@ -262,8 +262,8 @@
 {% block extra_js %}
 <script>
 function sendThankYou(email, name, amount) {
-    const subject = encodeURIComponent('{{ t('{{ t('شكر') }}اً') }} على {{ t('تبرعك') }} {{ t('الكريم') }}');
-    const body = encodeURIComponent(`{{ t('عزيزي') }} ${name},\n\n{{ t('ن{{ t('شكر') }}ك') }} على {{ t('تبرعك') }} {{ t('الكريم') }} {{ t('بمبلغ') }} $${amount}.\n\nمع {{ t('أطيب') }} {{ t('التحيات') }},\n{{ t('فريق') }} {{ developer_name_ar or developer_name or 'Azad Systems' }}`);
+    const subject = encodeURIComponent('{{ t('شكراً') }} على {{ t('تبرعك') }} {{ t('الكريم') }}');
+    const body = encodeURIComponent(`{{ t('عزيزي') }} ${name},\n\n{{ t('نشكرك') }} على {{ t('تبرعك') }} {{ t('الكريم') }} {{ t('بمبلغ') }} $${amount}.\n\nمع {{ t('أطيب') }} {{ t('التحيات') }},\n{{ t('فريق') }} {{ developer_name_ar or developer_name or 'Azad Systems' }}`);
     window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
 }
 </script>

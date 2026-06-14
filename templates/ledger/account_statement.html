@@ -46,7 +46,7 @@
           <div class="info-box bg-light">
             <span class="info-box-icon bg-success"><i class="fas fa-arrow-up"></i></span>
             <div class="info-box-content">
-              <span class="info-box-text">{{ t('Total_2') }} {{ t('ال{{ t('مدين') }}') }}</span>
+              <span class="info-box-text">{{ t('Total_2') }} {{ t('المدين') }}</span>
               <span class="info-box-number text-success">
                 {{ format_currency(statement.total_debit) }}
               </span>
@@ -57,7 +57,7 @@
           <div class="info-box bg-light">
             <span class="info-box-icon bg-danger"><i class="fas fa-arrow-down"></i></span>
             <div class="info-box-content">
-              <span class="info-box-text">{{ t('Total_2') }} {{ t('ال{{ t('دائن') }}') }}</span>
+              <span class="info-box-text">{{ t('Total_2') }} {{ t('الدائن') }}</span>
               <span class="info-box-number text-danger">
                 {{ format_currency(statement.total_credit) }}
               </span>

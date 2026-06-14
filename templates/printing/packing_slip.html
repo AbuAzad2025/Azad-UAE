@@ -50,7 +50,7 @@
     <div class="doc-title">
       <h2>📦 {{ t('إذن') }} {{ t('تسليم') }} / Delivery Note</h2>
       <div style="font-size:9px;color:#666;margin-top:4px;">
-        {{ t('رقم') }} {{ t('ال{{ t('إذن') }}') }}: <strong>{{ delivery.number or sale.sale_number }}</strong> |
+        {{ t('رقم') }} {{ t('الإذن') }}: <strong>{{ delivery.number or sale.sale_number }}</strong> |
         {{ t('Date') }}: <strong>{{ delivery.date.strftime('%Y-%m-%d') if delivery.date else sale.sale_date.strftime('%Y-%m-%d') if sale.sale_date else '' }}</strong>
       </div>
     </div>

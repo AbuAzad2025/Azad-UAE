@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
-{% block title %}{{ t('Management') }} {{ t('ال{{ t('قيود') }}') }} {{ t('Accounting') }} - Journals Management{% endblock %}
-{% block page_title %}{{ t('Management') }} {{ t('ال{{ t('قيود') }}') }} {{ t('Accounting') }}{% endblock %}
+{% block title %}{{ t('Management') }} {{ t('القيود') }} {{ t('Accounting') }} - Journals Management{% endblock %}
+{% block page_title %}{{ t('Management') }} {{ t('القيود') }} {{ t('Accounting') }}{% endblock %}
 
 {% block content %}
 <div class="row mb-3">
@@ -19,7 +19,7 @@
 <div class="card">
   <div class="card-header bg-gradient-primary">
     <h3 class="card-title text-white">
-      <i class="fas fa-book mr-2"></i>{{ t('جميع') }} {{ t('ال{{ t('قيود') }}') }} {{ t('Accounting') }}
+      <i class="fas fa-book mr-2"></i>{{ t('جميع') }} {{ t('القيود') }} {{ t('Accounting') }}
     </h3>
   </div>
   <div class="card-body p-0">
@@ -27,13 +27,13 @@
       <table class="table table-hover mb-0">
         <thead class="bg-light">
           <tr>
-            <th>{{ t('رقم') }} {{ t('ال{{ t('قيد') }}') }}</th>
+            <th>{{ t('رقم') }} {{ t('القيد') }}</th>
             <th>{{ t('Date') }}</th>
             <th>{{ t('Description') }}</th>
             <th>{{ t('النوع') }}</th>
             <th>{{ t('Amount') }}</th>
             <th>{{ t('Status') }}</th>
-            <th>{{ t('{{ t('الإجراء') }}ات') }}</th>
+            <th>{{ t('الإجراءات') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -66,11 +66,11 @@
             </td>
             <td>
               <div class="btn-group btn-group-sm">
-                {% if current_user.has_permission('view_ledger') %}<a href="{{ url_for('ledger.view_entry', id=entry.id) }}" class="btn btn-outline-primary" title="{{ t('View') }} {{ t('ال{{ t('قيد') }}') }}">
+                {% if current_user.has_permission('view_ledger') %}<a href="{{ url_for('ledger.view_entry', id=entry.id) }}" class="btn btn-outline-primary" title="{{ t('View') }} {{ t('القيد') }}">
                   <i class="fas fa-eye"></i>
                 </a>{% endif %}
                 {% if not entry.is_reversed %}
-                <button type="button" class="btn btn-outline-danger" onclick="reverseEntry({{ entry.id }})" title="{{ t('عكس') }} {{ t('ال{{ t('قيد') }}') }}">
+                <button type="button" class="btn btn-outline-danger" onclick="reverseEntry({{ entry.id }})" title="{{ t('عكس') }} {{ t('القيد') }}">
                   <i class="fas fa-undo"></i>
                 </button>
                 {% endif %}
@@ -117,7 +117,7 @@
         <div class="d-flex justify-content-between">
           <div>
             <h4 class="mb-0">{{ entries.total }}</h4>
-            <p class="mb-0">{{ t('Total_2') }} {{ t('ال{{ t('قيود') }}') }}</p>
+            <p class="mb-0">{{ t('Total_2') }} {{ t('القيود') }}</p>
           </div>
           <div class="align-self-center">
             <i class="fas fa-book fa-2x"></i>
@@ -133,7 +133,7 @@
         <div class="d-flex justify-content-between">
           <div>
             <h4 class="mb-0">{{ entries.items|selectattr('is_posted', 'equalto', True)|list|length }}</h4>
-            <p class="mb-0">{{ t('قيود') }} {{ t('{{ t('مرحل') }}ة') }}</p>
+            <p class="mb-0">{{ t('قيود') }} {{ t('مرحلة') }}</p>
           </div>
           <div class="align-self-center">
             <i class="fas fa-check-circle fa-2x"></i>
@@ -165,7 +165,7 @@
         <div class="d-flex justify-content-between">
           <div>
             <h4 class="mb-0">{{ entries.items|selectattr('is_reversed', 'equalto', True)|list|length }}</h4>
-            <p class="mb-0">{{ t('قيود') }} {{ t('{{ t('معكوس') }}ة') }}</p>
+            <p class="mb-0">{{ t('قيود') }} {{ t('معكوسة') }}</p>
           </div>
           <div class="align-self-center">
             <i class="fas fa-undo fa-2x"></i>
@@ -180,7 +180,7 @@
 {% block scripts %}
 <script>
 function reverseEntry(entryId) {
-  if (confirm('هل أنت {{ t('متأكد') }} من {{ t('عكس') }} هذا {{ t('{{ t('ال{{ t('قيد') }}') }}_2') }} لا يمكن {{ t('التراجع') }} عن هذا {{ t('الإجراء') }}.')) {
+  if (confirm('هل أنت {{ t('متأكد') }} من {{ t('عكس') }} هذا {{ t('القيد_2') }} لا يمكن {{ t('التراجع') }} عن هذا {{ t('الإجراء') }}.')) {
     fetch(`/ledger/entry/${entryId}/reverse`, {
       method: 'POST',
       headers: {
@@ -193,10 +193,10 @@ function reverseEntry(entryId) {
       if (data.success) {
         location.reload();
       } else {
-        alert('{{ t('فشل') }} في {{ t('عكس') }} {{ t('ال{{ t('قيد') }}') }}: ' + data.message);
+        alert('{{ t('فشل') }} في {{ t('عكس') }} {{ t('القيد') }}: ' + data.message);
       }
     })
-    .catch(error => {      alert('{{ t('حدث') }} {{ t('Error') }} في {{ t('عكس') }} {{ t('ال{{ t('قيد') }}') }}');
+    .catch(error => {      alert('{{ t('حدث') }} {{ t('Error') }} في {{ t('عكس') }} {{ t('القيد') }}');
     });
   }
 }

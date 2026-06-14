@@ -24,7 +24,7 @@
                   <th style="width:40px"><input type="checkbox" id="selectAll"></th>
                   <th>{{ t('Product') }}</th>
                   <th>{{ t('Quantity') }} {{ t('المشتراة') }}</th>
-                  <th>{{ t('Quantity') }} {{ t('{{ t('Return_3') }}ة') }}</th>
+                  <th>{{ t('Quantity') }} {{ t('Return_3ة') }}</th>
                   <th>{{ t('Price_2') }} {{ t('الوحدة') }}</th>
                   <th>{{ t('Total_3') }}</th>
                 </tr>
@@ -65,7 +65,7 @@
 
     <div class="col-md-4">
       <div class="card card-outline card-secondary">
-        <div class="card-header"><h3 class="card-title">{{ t('Returns') }} {{ t('ال{{ t('سابقة') }}') }}</h3></div>
+        <div class="card-header"><h3 class="card-title">{{ t('Returns') }} {{ t('السابقة') }}</h3></div>
         <div class="card-body p-0">
           {% if returns %}
           <ul class="list-group list-group-flush">
@@ -77,7 +77,7 @@
             {% endfor %}
           </ul>
           {% else %}
-          <p class="text-muted p-3 mb-0">لا {{ t('توجد') }} {{ t('{{ t('Return') }}ات') }} {{ t('سابقة') }} {{ t('لهذه') }} {{ t('Invoice_2') }}.</p>
+          <p class="text-muted p-3 mb-0">لا {{ t('توجد') }} {{ t('Returnات') }} {{ t('سابقة') }} {{ t('لهذه') }} {{ t('Invoice_2') }}.</p>
           {% endif %}
         </div>
       </div>

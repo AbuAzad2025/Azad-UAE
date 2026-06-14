@@ -7,7 +7,7 @@
     <h1 class="mb-0 ic-1">
       <i class="fas fa-ban mr-3"></i>{{ t('نفاد') }} {{ t('Inventory') }}
     </h1>
-    <p class="text-muted">{{ t('Products_2') }} {{ t('{{ t('منفذ') }}ة') }} {{ t('تماماً') }} - {{ t('تحتاج') }} {{ t('إعادة') }} {{ t('تموين') }} {{ t('{{ t('فوري') }}ة') }}</p>
+    <p class="text-muted">{{ t('Products_2') }} {{ t('منفذة') }} {{ t('تماماً') }} - {{ t('تحتاج') }} {{ t('إعادة') }} {{ t('تموين') }} {{ t('فورية') }}</p>
   </div>
   <div>
     <a href="{{ url_for('warehouse.index') }}" class="btn btn-info btn-lg">
@@ -82,7 +82,7 @@
 <div class="card">
   <div class="card-header ic-3">
     <h3 class="card-title text-white mb-0">
-      <i class="fas fa-times-circle mr-2"></i>{{ t('Products_2') }} {{ t('{{ t('منفذ') }}ة') }} من {{ t('Inventory') }}
+      <i class="fas fa-times-circle mr-2"></i>{{ t('Products_2') }} {{ t('منفذة') }} من {{ t('Inventory') }}
     </h3>
   </div>
   <div class="card-body">
@@ -190,7 +190,7 @@ $(document).ready(function() {
     buttons: [
       {
         extend: 'excel', 
-        text: '<i class="fas fa-file-excel mr-1"></i> {{ t('Export') }} {{ t('لل{{ t('Purchase') }}') }}', 
+        text: '<i class="fas fa-file-excel mr-1"></i> {{ t('Export') }} {{ t('للPurchase') }}', 
         className: ' btn-success'
       },
       {extend: 'pdf', text: '<i class="fas fa-file-pdf mr-1"></i> PDF', className: ' btn-danger'},
@@ -202,7 +202,7 @@ $(document).ready(function() {
   if ({{ products|length }} > 0) {
     setTimeout(function() {
       UI.toast(
-        '🚨 {{ t('يوجد') }} {{ products|length }} {{ t('Product_2') }} {{ t('منفذ') }} من {{ t('Inventory') }} - {{ t('يت{{ t('طلب') }}') }} {{ t('إجراء') }} {{ t('عاجل') }}!',
+        '🚨 {{ t('يوجد') }} {{ products|length }} {{ t('Product_2') }} {{ t('منفذ') }} من {{ t('Inventory') }} - {{ t('يتطلب') }} {{ t('إجراء') }} {{ t('عاجل') }}!',
         'error',
         5000
       );

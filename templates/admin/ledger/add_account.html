@@ -52,7 +52,7 @@
           <div class="form-group">
             <label>{{ t('Name_2') }} {{ t('Account') }} ({{ t('Arabic') }}) <span class="text-danger">*</span></label>
             <input type="text" name="name_ar" class="form-control" required 
-                   placeholder="{{ t('مثال') }}: {{ t('{{ t('Fund') }}،') }} {{ t('Receivables_2') }} {{ t('Receivables') }}"
+                   placeholder="{{ t('مثال') }}: {{ t('Fund،') }} {{ t('Receivables_2') }} {{ t('Receivables') }}"
                    value="{{ form_data.get('name_ar', '') }}" minlength="2" maxlength="100">
           </div>
         </div>
@@ -101,7 +101,7 @@
           <div class="form-group">
             <label>{{ t('Description_2') }} {{ t('Account') }}</label>
             <textarea name="description" class="form-control" rows="3" 
-                      placeholder="{{ t('Description_2') }} {{ t('تفصيلي') }} {{ t('لل{{ t('Account_2') }}') }} ({{ t('Optional') }})" maxlength="500">{{ form_data.get('description', '') }}</textarea>
+                      placeholder="{{ t('Description_2') }} {{ t('تفصيلي') }} {{ t('للAccount_2') }} ({{ t('Optional') }})" maxlength="500">{{ form_data.get('description', '') }}</textarea>
           </div>
         </div>
       </div>

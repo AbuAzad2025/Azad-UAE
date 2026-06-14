@@ -33,7 +33,7 @@
                 {% endif %}
               </div>
               <div class="col-md-6">
-                <h5>{{ t('{{ t('Total_3') }}ات') }}</h5>
+                <h5>{{ t('Total_3ات') }}</h5>
                 {% set paid_amount = purchase.get_paid_amount() %}
                 {% set balance_due = purchase.total_amount - paid_amount %}
                 <p><strong>{{ t('Total') }} {{ t('Sub') }}:</strong> {{ purchase.subtotal }} {{ purchase.currency }}</p>
@@ -78,7 +78,7 @@
 
             <div class="form-group">
               <button type="submit" class="btn btn-success btn-lg">
-                <i class="fas fa-save"></i> {{ t('Save') }} {{ t('ال{{ t('Edit') }}ات') }}
+                <i class="fas fa-save"></i> {{ t('Save') }} {{ t('الEditات') }}
               </button>
               <a href="{{ url_for('purchases.view', id=purchase.id) }}" class="btn btn-secondary btn-lg">
                 <i class="fas fa-times"></i> {{ t('Cancel') }}

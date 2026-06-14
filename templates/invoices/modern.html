@@ -130,7 +130,7 @@
       <div class="company-info">
         <div>{{ (settings.address_ar if settings and settings.address_ar else none) or tenant_address or company_address }}</div>
         <div>📞 {{ (settings.phone_1 if settings and settings.phone_1 else none) or tenant_phone or company_phone }} | 📧 {{ (settings.email if settings and settings.email else none) or tenant_email or company_email }}</div>
-        {% if settings and settings.tax_number and settings.tax_number != 'None' %}<div>{{ t('ال{{ t('رقم') }}') }} {{ t('الضريبي') }}: {{ settings.tax_number }}</div>{% endif %}
+        {% if settings and settings.tax_number and settings.tax_number != 'None' %}<div>{{ t('الرقم') }} {{ t('الضريبي') }}: {{ settings.tax_number }}</div>{% endif %}
         {% if print_branch %}
         <div>🏢 {{ t('Branch') }}: {{ print_branch.name }}{% if print_branch.code %} ({{ print_branch.code }}){% endif %}</div>
         {% if print_branch.address %}

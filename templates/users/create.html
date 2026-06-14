@@ -131,7 +131,7 @@
               </label>
               <input type="email" name="email" class="form-control" placeholder="example@domain.com" required
                      value="{{ form_data.get('email', '') }}">
-              <small class="form-text text-muted">{{ t('بريد') }} {{ t('فريد') }} {{ t('لل{{ t('User_2') }}') }} ({{ t('Required') }})</small>
+              <small class="form-text text-muted">{{ t('بريد') }} {{ t('فريد') }} {{ t('للUser_2') }} ({{ t('Required') }})</small>
             </div>
           </div>
         </div>
@@ -182,13 +182,13 @@
 
       
       <div class="field-section">
-        <h5><i class="fas fa-lock mr-2"></i>{{ t('كلمة') }} {{ t('ال{{ t('مرور') }}') }}</h5>
+        <h5><i class="fas fa-lock mr-2"></i>{{ t('كلمة') }} {{ t('المرور') }}</h5>
         
         <div class="row">
           <div class="col-md-6 required-field">
             <div class="form-group">
               <label>
-                <i class="fas fa-key text-danger"></i> {{ t('كلمة') }} {{ t('ال{{ t('مرور') }}') }}
+                <i class="fas fa-key text-danger"></i> {{ t('كلمة') }} {{ t('المرور') }}
                 <span class="text-danger">*</span>
               </label>
               <input type="password" name="password" id="password" class="form-control" placeholder="••••••••" required minlength="6">
@@ -199,11 +199,11 @@
           <div class="col-md-6 required-field">
             <div class="form-group">
               <label>
-                <i class="fas fa-check-circle text-success"></i> {{ t('Confirm') }} {{ t('كلمة') }} {{ t('ال{{ t('مرور') }}') }}
+                <i class="fas fa-check-circle text-success"></i> {{ t('Confirm') }} {{ t('كلمة') }} {{ t('المرور') }}
                 <span class="text-danger">*</span>
               </label>
               <input type="password" name="confirm_password" id="confirm_password" class="form-control" placeholder="••••••••" required minlength="6" data-equal-to="#password">
-              <small class="form-text text-muted">{{ t('أعد') }} {{ t('كتابة') }} {{ t('كلمة') }} {{ t('ال{{ t('مرور') }}') }}</small>
+              <small class="form-text text-muted">{{ t('أعد') }} {{ t('كتابة') }} {{ t('كلمة') }} {{ t('المرور') }}</small>
               <div id="password-match-message" class="mt-2"></div>
             </div>
           </div>
@@ -212,7 +212,7 @@
 
       
       <div class="field-section">
-        <h5><i class="fas fa-user-shield mr-2"></i>{{ t('Permissions_2') }} {{ t('و{{ t('Status') }}') }}</h5>
+        <h5><i class="fas fa-user-shield mr-2"></i>{{ t('Permissions_2') }} {{ t('وStatus') }}</h5>
         
         <div class="row">
           <div class="col-md-6 required-field">
@@ -318,10 +318,10 @@ $(function () {
     }
     
     if (password === confirm) {
-      messageDiv.html('<span class="text-success"><i class="fas fa-check-circle"></i> {{ t('كلمة') }} {{ t('ال{{ t('مرور') }}') }} {{ t('متطابقة') }}</span>');
+      messageDiv.html('<span class="text-success"><i class="fas fa-check-circle"></i> {{ t('كلمة') }} {{ t('المرور') }} {{ t('متطابقة') }}</span>');
       $('#confirm_password').removeClass('is-invalid').addClass('is-valid');
     } else {
-      messageDiv.html('<span class="text-danger"><i class="fas fa-times-circle"></i> {{ t('كلمة') }} {{ t('ال{{ t('مرور') }}') }} غير {{ t('متطابقة') }}</span>');
+      messageDiv.html('<span class="text-danger"><i class="fas fa-times-circle"></i> {{ t('كلمة') }} {{ t('المرور') }} غير {{ t('متطابقة') }}</span>');
       $('#confirm_password').removeClass('is-valid').addClass('is-invalid');
     }
   }
@@ -357,8 +357,8 @@ $(function () {
       e.preventDefault();
       Swal.fire({
         icon: 'error',
-        title: '{{ t('Error') }} في {{ t('كلمة') }} {{ t('ال{{ t('مرور') }}') }}',
-        text: '{{ t('كلمة') }} {{ t('ال{{ t('مرور') }}') }} غير {{ t('متطابقة') }}. {{ t('الرجاء') }} {{ t('التحقق') }} {{ t('والمحاولة') }} {{ t('مرة') }} {{ t('أخرى') }}.',
+        title: '{{ t('Error') }} في {{ t('كلمة') }} {{ t('المرور') }}',
+        text: '{{ t('كلمة') }} {{ t('المرور') }} غير {{ t('متطابقة') }}. {{ t('الرجاء') }} {{ t('التحقق') }} {{ t('والمحاولة') }} {{ t('مرة') }} {{ t('أخرى') }}.',
         confirmButtonText: '{{ t('حسناً') }}'
       });
       $('#confirm_password').focus();
@@ -370,7 +370,7 @@ $(function () {
       Swal.fire({
         icon: 'error',
         title: '{{ t('كلمة') }} {{ t('مرور') }} {{ t('Weak') }}',
-        text: '{{ t('كلمة') }} {{ t('ال{{ t('مرور') }}') }} يجب أن تكون 6 {{ t('أحرف') }} على {{ t('الأقل') }}.',
+        text: '{{ t('كلمة') }} {{ t('المرور') }} يجب أن تكون 6 {{ t('أحرف') }} على {{ t('الأقل') }}.',
         confirmButtonText: '{{ t('حسناً') }}'
       });
       $('#password').focus();

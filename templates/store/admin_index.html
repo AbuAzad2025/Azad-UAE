@@ -12,7 +12,7 @@
 
     <h1 class="mb-0"><i class="fas fa-store mr-2"></i>{{ t('Store') }} {{ t('Email_3') }}</h1>
 
-    <p class="text-muted mb-0 small">{{ t('الكت') }}alog {{ t('مرتبط') }} فقط {{ t('ب{{ t('Warehouse_2') }}') }} {{ t('الأونلاين') }} — {{ t('منفصل') }} عن POS {{ t('والمبيعات') }} {{ t('الداخلية') }}</p>
+    <p class="text-muted mb-0 small">{{ t('الكت') }}alog {{ t('مرتبط') }} فقط {{ t('بWarehouse_2') }} {{ t('الأونلاين') }} — {{ t('منفصل') }} عن POS {{ t('والمبيعات') }} {{ t('الداخلية') }}</p>
 
   </div>
 
@@ -24,7 +24,7 @@
 
     <a href="{{ url_for('store.admin_transfer') }}" class="btn btn-success"><i class="fas fa-exchange-alt mr-1"></i>{{ t('Transfer') }} {{ t('Inventory_2') }}</a>
 
-    <a href="{{ url_for('store.admin_orders') }}" class="btn btn-warning"><i class="fas fa-receipt mr-1"></i>{{ t('{{ t('طلب') }}ات') }} {{ t('Store') }}</a>
+    <a href="{{ url_for('store.admin_orders') }}" class="btn btn-warning"><i class="fas fa-receipt mr-1"></i>{{ t('طلبات') }} {{ t('Store') }}</a>
 
     <a href="{{ url_for('store.admin_stats') }}" class="btn btn-info text-white"><i class="fas fa-chart-line mr-1"></i>{{ t('إحصائيات') }}</a>
 
@@ -54,7 +54,7 @@
 
         <span class="info-box-text">{{ t('Status_2') }} {{ t('Store') }}</span>
 
-        <span class="info-box-number">{% if store.platform_disabled %}{{ t('مقفول') }} من {{ t('Platform') }}{% elif store.is_enabled %}{{ t('م{{ t('فعّل') }}') }}{% else %}{{ t('Stopped') }}{% endif %}</span>
+        <span class="info-box-number">{% if store.platform_disabled %}{{ t('مقفول') }} من {{ t('Platform') }}{% elif store.is_enabled %}{{ t('مفعّل') }}{% else %}{{ t('Stopped') }}{% endif %}</span>
 
       </div>
 
@@ -138,7 +138,7 @@
 
 {% if not platform_stores_on %}
 
-<div class="alert alert-danger"><i class="fas fa-globe mr-1"></i>{{ t('المتاجر') }} {{ t('Stopped_2') }} على {{ t('مستوى') }} {{ t('Platform') }} — {{ t('تواصل') }} مع {{ t('مالك') }} {{ t('System') }} {{ t('لتفعيل') }} «{{ t('المتاجر') }} {{ t('{{ t('Email_3') }}ة') }}» من {{ t('Settings_2') }} {{ t('Platform') }}.</div>
+<div class="alert alert-danger"><i class="fas fa-globe mr-1"></i>{{ t('المتاجر') }} {{ t('Stopped_2') }} على {{ t('مستوى') }} {{ t('Platform') }} — {{ t('تواصل') }} مع {{ t('مالك') }} {{ t('System') }} {{ t('لتفعيل') }} «{{ t('المتاجر') }} {{ t('Email_3ة') }}» من {{ t('Settings_2') }} {{ t('Platform') }}.</div>
 
 {% else %}
 
@@ -154,9 +154,9 @@
 
   <i class="fas fa-bell mr-1"></i>
 
-  <strong>{{ pending_orders }}</strong> {{ t('طلب') }}/{{ t('{{ t('طلب') }}ات') }} {{ t('بانتظار') }} {{ t('Confirm_2') }} —
+  <strong>{{ pending_orders }}</strong> {{ t('طلب') }}/{{ t('طلبات') }} {{ t('بانتظار') }} {{ t('Confirm_2') }} —
 
-  <a href="{{ url_for('store.admin_orders', status='pending') }}">{{ t('View') }} {{ t('ال{{ t('{{ t('طلب') }}ات') }}') }}</a>
+  <a href="{{ url_for('store.admin_orders', status='pending') }}">{{ t('View') }} {{ t('الطلبات') }}</a>
 
 </div>
 
@@ -170,7 +170,7 @@
 
   <i class="fas fa-exclamation-triangle mr-1"></i>
 
-  <strong>{{ low_stock|length }}</strong> {{ t('Product_2') }}/{{ t('Products_2') }} {{ t('ب{{ t('Inventory_2') }}') }} {{ t('Low_2') }} في {{ t('Warehouse_2') }} {{ t('الأونلاين') }} —
+  <strong>{{ low_stock|length }}</strong> {{ t('Product_2') }}/{{ t('Products_2') }} {{ t('بInventory_2') }} {{ t('Low_2') }} في {{ t('Warehouse_2') }} {{ t('الأونلاين') }} —
 
   <a href="{{ url_for('store.admin_stats') }}">{{ t('Details_2') }}</a>
 
@@ -200,7 +200,7 @@
 
     {% elif visible_count == 0 %}
 
-    <div class="alert alert-info mb-0"><i class="fas fa-info-circle mr-1"></i>لا {{ t('Products_2') }} {{ t('ب{{ t('Inventory_2') }}') }} في {{ t('Warehouse_2') }} {{ t('الأونلاين') }}. {{ t('استخدم') }} <a href="{{ url_for('store.admin_transfer') }}">{{ t('Transfer') }} {{ t('Inventory') }}</a>.</div>
+    <div class="alert alert-info mb-0"><i class="fas fa-info-circle mr-1"></i>لا {{ t('Products_2') }} {{ t('بInventory_2') }} في {{ t('Warehouse_2') }} {{ t('الأونلاين') }}. {{ t('استخدم') }} <a href="{{ url_for('store.admin_transfer') }}">{{ t('Transfer') }} {{ t('Inventory') }}</a>.</div>
 
     {% else %}
 

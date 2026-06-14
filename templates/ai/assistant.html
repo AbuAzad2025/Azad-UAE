@@ -7,7 +7,7 @@
     <h1 class="mb-0">
       <i class="fas fa-robot ml-2"></i>{{ t('Assistant') }} {{ t('Smart') }}
     </h1>
-    <p class="text-muted">{{ t('{{ t('تحليل') }}ات') }} {{ t('وتقارير') }} {{ t('واستعلامات') }} {{ t('ذكية') }}</p>
+    <p class="text-muted">{{ t('تحليلات') }} {{ t('وتقارير') }} {{ t('واستعلامات') }} {{ t('ذكية') }}</p>
   </div>
   <div class="d-flex align-items-center">
     <div class="btn-group ml-3" role="group">
@@ -107,7 +107,7 @@
   {% if ai_disable_reason == 'global_disabled' %}
     <p class="mb-0">تم {{ t('تعطيل') }} AI من {{ t('Settings_2') }} {{ t('Platform') }} {{ t('General') }}.</p>
   {% elif ai_disable_reason == 'tenant_disabled' %}
-    <p class="mb-0">تم {{ t('تعطيل') }} AI {{ t('لهذا') }} {{ t('ال{{ t('تينانت') }}') }} من {{ t('Dashboard_2') }} {{ t('مالك') }} {{ t('Platform') }}.</p>
+    <p class="mb-0">تم {{ t('تعطيل') }} AI {{ t('لهذا') }} {{ t('التينانت') }} من {{ t('Dashboard_2') }} {{ t('مالك') }} {{ t('Platform') }}.</p>
   {% elif ai_disable_reason == 'missing_tenant' %}
     <p class="mb-0">لا {{ t('يوجد') }} {{ t('تينانت') }} {{ t('Active') }} {{ t('لهذا') }} {{ t('Account') }}.</p>
   {% else %}
@@ -123,7 +123,7 @@
       <div class="card-body">
         <i class="fas fa-chart-line fa-3x text-primary mb-2"></i>
         <h6>{{ t('توقع') }} {{ t('Sales') }}</h6>
-        <small class="text-muted">{{ t('تنبؤ') }} {{ t('ب{{ t('Sales') }}') }} {{ t('القادمة') }}</small>
+        <small class="text-muted">{{ t('تنبؤ') }} {{ t('بSales') }} {{ t('القادمة') }}</small>
       </div>
     </div>
   </div>
@@ -132,7 +132,7 @@
       <div class="card-body">
         <i class="fas fa-percentage fa-3x text-success mb-2"></i>
         <h6>{{ t('هوامش') }} {{ t('Profit') }}</h6>
-        <small class="text-muted">{{ t('تحليل') }} {{ t('{{ t('Profit') }}ية') }}</small>
+        <small class="text-muted">{{ t('تحليل') }} {{ t('Profitية') }}</small>
       </div>
     </div>
   </div>
@@ -149,7 +149,7 @@
     <div class="card text-center h-100" onclick="quickAsk('{{ t('أنماط') }} {{ t('Sales') }}')" class="erp-clickable">
       <div class="card-body">
         <i class="fas fa-brain fa-3x text-info mb-2"></i>
-        <h6>{{ t('كشف') }} {{ t('ال{{ t('أنماط') }}') }}</h6>
+        <h6>{{ t('كشف') }} {{ t('الأنماط') }}</h6>
         <small class="text-muted">{{ t('سلوكيات') }} {{ t('خفية') }}</small>
       </div>
     </div>
@@ -185,7 +185,7 @@
   <div class="px-3 py-2 bg-white border-top">
     <div class="d-flex justify-content-between mb-2">
       <div class="btn-group btn-group-sm">
-        <button type="button" class="btn btn-outline-danger" onclick="clearChat()" title="{{ t('مسح') }} {{ t('ال{{ t('محادثة') }}_2') }}">
+        <button type="button" class="btn btn-outline-danger" onclick="clearChat()" title="{{ t('مسح') }} {{ t('المحادثة_2') }}">
           <i class="fas fa-trash"></i>
         </button>
         <button type="button" class="btn btn-outline-info" onclick="getSummary()" title="{{ t('Summary') }}">
@@ -319,15 +319,15 @@ function sendMessage() {
 }
 
 window.clearChat = function() {
-  if (!confirm('{{ t('مسح') }} {{ t('{{ t('ال{{ t('محادثة') }}_2') }}') }}')) return;
+  if (!confirm('{{ t('مسح') }} {{ t('المحادثة_2') }}')) return;
   $('#chatBox').empty(); chatHistory = [];
-  addMessage('bot', 'تم {{ t('مسح') }} {{ t('ال{{ t('محادثة') }}_2') }}! {{ t('كيف') }} {{ t('يمكنني') }} {{ t('مساعدتك') }}', true);
+  addMessage('bot', 'تم {{ t('مسح') }} {{ t('المحادثة_2') }}! {{ t('كيف') }} {{ t('يمكنني') }} {{ t('مساعدتك') }}', true);
 };
 
 window.getSummary = function() {
   if (chatHistory.length === 0) { addMessage('bot', '📝 لا {{ t('توجد') }} {{ t('محادثة') }} بعد.', true); return; }
   var q = chatHistory.filter(function(m) { return m.role === 'user'; }).length;
-  addMessage('bot', '📊 **{{ t('Summary') }} {{ t('ال{{ t('محادثة') }}_2') }}:**\n\n• {{ t('الأسئلة') }}: ' + q + '\n• {{ t('ال{{ t('ردود') }}') }}: ' + chatHistory.filter(function(m) { return m.role === 'bot'; }).length, true);
+  addMessage('bot', '📊 **{{ t('Summary') }} {{ t('المحادثة_2') }}:**\n\n• {{ t('الأسئلة') }}: ' + q + '\n• {{ t('الردود') }}: ' + chatHistory.filter(function(m) { return m.role === 'bot'; }).length, true);
 };
 
 window.toggleBeginnersMode = function() {
@@ -373,7 +373,7 @@ function hideExcelUploader() { $('#excelUploaderModal').css('display', 'none'); 
 $('#excelUploadForm').on('submit', function(e) {
   e.preventDefault();
   var file = $('#excelFile')[0];
-  if (!file.files || !file.files[0]) { alert('{{ t('اختر') }} {{ t('{{ t('ملف') }}اً') }}'); return; }
+  if (!file.files || !file.files[0]) { alert('{{ t('اختر') }} {{ t('ملفاً') }}'); return; }
   var fd = new FormData();
   fd.append('file', file.files[0]);
   fd.append('warehouse_id', $('#warehouseSelect').val());

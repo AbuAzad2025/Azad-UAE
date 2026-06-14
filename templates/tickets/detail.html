@@ -15,7 +15,7 @@
       {% if ticket %}
       <form method="POST" action="{{ url_for('tickets.add_comment', ticket_id=ticket.id) }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <div class="form-group"><label>{{ t('ال{{ t('تعليق') }}') }}</label>
+        <div class="form-group"><label>{{ t('التعليق') }}</label>
           <textarea name="body" class="form-control" rows="2" required></textarea></div>
         <div class="checkbox mb-2"><label><input type="checkbox" name="is_internal" value="1"> {{ t('داخلي') }}</label></div>
         <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-reply"></i> {{ t('Add') }} {{ t('تعليق') }}</button>

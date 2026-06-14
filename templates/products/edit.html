@@ -10,7 +10,7 @@
       <i class="fas fa-eye mr-2"></i>{{ t('View') }}
     </a>
     <a href="{{ url_for('products.index') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right mr-2"></i>{{ t('العودة') }} {{ t('لل{{ t('List') }}') }}
+      <i class="fas fa-arrow-right mr-2"></i>{{ t('العودة') }} {{ t('للList') }}
     </a>
     <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
       <i class="fas fa-home mr-2"></i>{{ t('Main_2') }}
@@ -57,7 +57,7 @@
         <div class="col-md-6 col-lg-3">
           <div class="form-group">
             <label>
-              <i class="fas fa-hashtag text-primary"></i> {{ t('رقم') }} {{ t('ال{{ t('قطعة') }}') }} (SKU)
+              <i class="fas fa-hashtag text-primary"></i> {{ t('رقم') }} {{ t('القطعة') }} (SKU)
               <span class="text-danger">*</span>
             </label>
             <input type="text" name="sku" class="form-control" value="{{ product.sku or '' }}" required aria-label="sku" maxlength="50">
@@ -66,8 +66,8 @@
         <div class="col-md-6 col-lg-3">
           <div class="form-group">
             <label>
-              <i class="fas fa-hashtag text-primary"></i> {{ t('رقم') }} {{ t('ال{{ t('قطعة') }}') }} (Part Number)
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('رقم') }} {{ t('Supplier') }} أو {{ t('ال{{ t('رقم') }}') }} {{ t('الداخلي') }} ({{ t('Optional') }})"></i>
+              <i class="fas fa-hashtag text-primary"></i> {{ t('رقم') }} {{ t('القطعة') }} (Part Number)
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('رقم') }} {{ t('Supplier') }} أو {{ t('الرقم') }} {{ t('الداخلي') }} ({{ t('Optional') }})"></i>
             </label>
             <input type="text" name="part_number" class="form-control" value="{{ product.part_number or '' }}" aria-label="part number">
           </div>
@@ -84,11 +84,11 @@
         <div class="col-md-6 col-lg-3">
           <div class="form-group">
             <label>
-              <i class="fas fa-folder text-warning"></i> {{ t('ال{{ t('فئة') }}') }}
+              <i class="fas fa-folder text-warning"></i> {{ t('الفئة') }}
               <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="يمكن {{ t('تركها') }} {{ t('None') }} {{ t('لتصنيف') }} {{ t('Product') }} {{ t('لاحقاً') }} ({{ t('Optional') }})"></i>
             </label>
             <div class="input-group">
-              <select name="category_id" id="product_category" class="form-control select2 ic-1" data-placeholder="{{ t('اختر') }} {{ t('ال{{ t('فئة') }}') }}..." aria-label="category id">
+              <select name="category_id" id="product_category" class="form-control select2 ic-1" data-placeholder="{{ t('اختر') }} {{ t('الفئة') }}..." aria-label="category id">
                 <option value="0" {% if not product.category_id %}selected{% endif %}>{{ t('None') }}</option>
                 {% for category in categories %}
                 <option value="{{ category.id }}" {% if product.category_id == category.id %}selected{% endif %}>{{ category.name }}</option>
@@ -141,7 +141,7 @@
             <label>
               <i class="fas fa-tag text-success"></i> {{ t('Price_2') }} {{ t('عادي') }}
               <span class="text-danger">*</span>
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Price_2') }} {{ t('ال{{ t('تجزئة') }}') }} ({{ t('Required') }})"></i>
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Price_2') }} {{ t('التجزئة') }} ({{ t('Required') }})"></i>
             </label>
             <input type="number" name="regular_price" class="form-control" value="{{ product.regular_price }}" step="0.01" required aria-label="regular price" min="0">
           </div>
@@ -149,7 +149,7 @@
         <div class="col-md-3">
           <div class="form-group">
             <label for="product_merchant_price">
-              <i class="fas fa-store text-primary"></i> {{ t('Discount_2') }} {{ t('ا{{ t('لتاجر') }}') }} (%)
+              <i class="fas fa-store text-primary"></i> {{ t('Discount_2') }} {{ t('التاجر') }} (%)
               <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Rate') }} {{ t('Discount') }} {{ t('للتجار') }} ({{ t('مثال') }}: 10 {{ t('تعني') }} 10%)"></i>
             </label>
             <input type="number" id="product_merchant_price" name="merchant_price" class="form-control" step="0.01" min="0" max="100" value="{{ product.merchant_price or '' }}" placeholder="10" autocomplete="off">
@@ -211,7 +211,7 @@
           <div class="form-group">
             <label>
               <i class="fas fa-boxes text-success"></i> {{ t('Quantity') }} {{ t('الحالية') }}
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="يمكن {{ t('Edit') }} {{ t('Quantity') }} {{ t('{{ t('الحالية') }}،') }} {{ t('وسيتم') }} {{ t('Create') }} {{ t('Movement_2') }} {{ t('Inventory_2') }} {{ t('تلقائية') }} {{ t('بالفرق') }}."></i>
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="يمكن {{ t('Edit') }} {{ t('Quantity') }} {{ t('الحالية،') }} {{ t('وسيتم') }} {{ t('Create') }} {{ t('Movement_2') }} {{ t('Inventory_2') }} {{ t('تلقائية') }} {{ t('بالفرق') }}."></i>
             </label>
             <input type="number" name="current_stock" class="form-control" step="0.001" min="0" value="{{ product.visible_stock if product.visible_stock is defined else (product.current_stock or 0) }}" placeholder="0">
           </div>
@@ -220,7 +220,7 @@
           <div class="form-group">
             <label>
               <i class="fas fa-exclamation-triangle text-warning"></i> حد {{ t('Alert') }}
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="عند {{ t('الوصول') }} {{ t('لهذا') }} {{ t('الحد') }} {{ t('يظهر') }} {{ t('Alert_2') }} {{ t('ب{{ t('Inventory') }}') }} {{ t('Low_3') }}."></i>
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="عند {{ t('الوصول') }} {{ t('لهذا') }} {{ t('الحد') }} {{ t('يظهر') }} {{ t('Alert_2') }} {{ t('بInventory') }} {{ t('Low_3') }}."></i>
             </label>
             <input type="number" name="min_stock_alert" class="form-control" step="0.001" min="0" value="{{ product.min_stock_alert or 0 }}" placeholder="0">
           </div>
@@ -267,18 +267,18 @@
 
       
       <hr>
-      <h5 class="text-primary"><i class="fas fa-users-cog"></i> {{ t('حقوق') }} {{ t('الملكية') }} {{ t('و{{ t('Partners') }}') }}</h5>
+      <h5 class="text-primary"><i class="fas fa-users-cog"></i> {{ t('حقوق') }} {{ t('الملكية') }} {{ t('وPartners') }}</h5>
       <div class="row">
         
         <div class="col-md-6">
           <div class="form-group">
             <label for="merchant_customer_id">
-              <i class="fas fa-user-tie text-purple"></i> {{ t('ا{{ t('لتاجر') }}') }} {{ t('المالك') }} ({{ t('Optional') }})
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('اختر') }} {{ t('ا{{ t('لتاجر') }}') }} إذا كان هذا {{ t('Product') }} {{ t('مملوكاً') }} {{ t('لتاجر') }} {{ t('معين') }}"></i>
+              <i class="fas fa-user-tie text-purple"></i> {{ t('التاجر') }} {{ t('المالك') }} ({{ t('Optional') }})
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('اختر') }} {{ t('التاجر') }} إذا كان هذا {{ t('Product') }} {{ t('مملوكاً') }} {{ t('لتاجر') }} {{ t('معين') }}"></i>
             </label>
             <div class="input-group">
               <select name="merchant_customer_id" id="merchant_customer_id" class="form-control select2" aria-label="merchant customer id">
-                <option value="">-- {{ t('اختر') }} {{ t('ا{{ t('لتاجر') }}') }} --</option>
+                <option value="">-- {{ t('اختر') }} {{ t('التاجر') }} --</option>
                 {% for merchant in merchants %}
                 <option value="{{ merchant.id }}" {% if product.merchant_customer_id == merchant.id %}selected{% endif %}>{{ merchant.name }}</option>
                 {% endfor %}
@@ -289,8 +289,8 @@
         <div class="col-md-6" id="merchantShareContainer" class="{% if product.merchant_customer_id %}d-block{% else %}d-none{% endif %}">
           <div class="form-group">
             <label for="merchant_share">
-              <i class="fas fa-percentage text-warning"></i> {{ t('Rate') }} {{ t('ا{{ t('لتاجر') }}') }} من {{ t('Sales') }} (%)
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Rate_2') }} {{ t('التي') }} {{ t('يحصل') }} عليها {{ t('ا{{ t('لتاجر') }}') }} عند {{ t('Sale') }} {{ t('Product') }} ({{ t('Default') }} 100%)"></i>
+              <i class="fas fa-percentage text-warning"></i> {{ t('Rate') }} {{ t('التاجر') }} من {{ t('Sales') }} (%)
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Rate_2') }} {{ t('التي') }} {{ t('يحصل') }} عليها {{ t('التاجر') }} عند {{ t('Sale') }} {{ t('Product') }} ({{ t('Default') }} 100%)"></i>
             </label>
             <div class="input-group">
               <input type="number" id="merchant_share" name="merchant_share" class="form-control" step="0.01" min="0" max="100" value="{{ product.merchant_share or 100 }}" placeholder="100">
@@ -338,7 +338,7 @@
 
     <div class="card-footer">
       <button type="submit" class="btn btn-warning btn-lg">
-        <i class="fas fa-save mr-2"></i>{{ t('Save') }} {{ t('{{ t('Edit_2') }}ات') }}
+        <i class="fas fa-save mr-2"></i>{{ t('Save') }} {{ t('Edit_2ات') }}
       </button>
       <a href="{{ url_for('products.view', id=product.id) }}" class="btn btn-secondary btn-lg">
         <i class="fas fa-times mr-2"></i>{{ t('Cancel') }}
@@ -364,7 +364,7 @@
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
           <div class="form-group">
             <label>
-              <i class="fas fa-font text-primary"></i> {{ t('Name_2') }} {{ t('ال{{ t('فئة') }}') }}
+              <i class="fas fa-font text-primary"></i> {{ t('Name_2') }} {{ t('الفئة') }}
               <span class="text-danger">*</span>
             </label>
             <input type="text" id="category_name" class="form-control" placeholder="{{ t('مثال') }}: {{ t('زيوت،') }} {{ t('فلاتر،') }} {{ t('إطارات') }}..." required>
@@ -373,7 +373,7 @@
             <label>
               <i class="fas fa-align-right text-info"></i> {{ t('Description') }}
             </label>
-            <textarea id="category_description" class="form-control" rows="3" placeholder="{{ t('Description_2') }} {{ t('ال{{ t('فئة') }}') }} ({{ t('Optional') }})"></textarea>
+            <textarea id="category_description" class="form-control" rows="3" placeholder="{{ t('Description_2') }} {{ t('الفئة') }} ({{ t('Optional') }})"></textarea>
           </div>
         </form>
       </div>
@@ -382,7 +382,7 @@
           <i class="fas fa-times mr-2"></i>{{ t('Cancel') }}
         </button>
         <button type="button" class="btn btn-success" id="saveCategoryBtn">
-          <i class="fas fa-save mr-2"></i>{{ t('Save') }} {{ t('ال{{ t('فئة') }}') }}
+          <i class="fas fa-save mr-2"></i>{{ t('Save') }} {{ t('الفئة') }}
         </button>
       </div>
     </div>
@@ -458,13 +458,13 @@ $(function () {
     {% endfor %}
   {% endif %}
   
-  // {{ t('Save') }} {{ t('ال{{ t('فئة') }}') }} {{ t('New_4') }}
+  // {{ t('Save') }} {{ t('الفئة') }} {{ t('New_4') }}
   $('#saveCategoryBtn').click(function() {
     const name = $('#category_name').val().trim();
     const description = $('#category_description').val().trim();
     
     if (!name) {
-      alert('{{ t('الرجاء') }} {{ t('إدخال') }} {{ t('Name_2') }} {{ t('ال{{ t('فئة') }}') }}');
+      alert('{{ t('الرجاء') }} {{ t('إدخال') }} {{ t('Name_2') }} {{ t('الفئة') }}');
       return;
     }
     
@@ -484,7 +484,7 @@ $(function () {
       }),
       success: function(response) {
         if (response.success) {
-          // {{ t('Add') }} {{ t('ال{{ t('فئة') }}') }} {{ t('New_4') }} {{ t('لل{{ t('List') }}') }}
+          // {{ t('Add') }} {{ t('الفئة') }} {{ t('New_4') }} {{ t('للList') }}
           const newOption = new Option(response.category.name, response.category.id, true, true);
           $('#product_category').append(newOption).trigger('change');
           
@@ -495,12 +495,12 @@ $(function () {
           
           // {{ t('رسالة') }} {{ t('نجاح') }}
           if (typeof UI !== 'undefined') {
-            UI.success('تم {{ t('Add') }} {{ t('ال{{ t('فئة') }}') }} {{ t('ب{{ t('نجاح') }}') }}!');
+            UI.success('تم {{ t('Add') }} {{ t('الفئة') }} {{ t('بنجاح') }}!');
           } else {
-            alert('تم {{ t('Add') }} {{ t('ال{{ t('فئة') }}') }} {{ t('ب{{ t('نجاح') }}') }}!');
+            alert('تم {{ t('Add') }} {{ t('الفئة') }} {{ t('بنجاح') }}!');
           }
         } else {
-          alert('{{ t('Error') }}: ' + (response.error || '{{ t('فشل') }} {{ t('Add') }} {{ t('ال{{ t('فئة') }}') }}'));
+          alert('{{ t('Error') }}: ' + (response.error || '{{ t('فشل') }} {{ t('Add') }} {{ t('الفئة') }}'));
         }
       },
       error: function(xhr) {

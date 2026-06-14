@@ -1,10 +1,10 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ t('{{ t('توزيع') }}ات') }} {{ t('Profits') }}{% endblock %}
+{% block title %}{{ t('توزيعات') }} {{ t('Profits') }}{% endblock %}
 
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
-  <h1 class="text-gradient mb-0"><i class="fas fa-chart-bar me-2"></i>{{ t('{{ t('توزيع') }}ات') }} {{ t('Profits') }}</h1>
+  <h1 class="text-gradient mb-0"><i class="fas fa-chart-bar me-2"></i>{{ t('توزيعات') }} {{ t('Profits') }}</h1>
   {% if current_user.has_permission('manage_users') %}
   <a href="{{ url_for('partners.distribute') }}" class="btn btn-success"><i class="fas fa-plus mr-1"></i> {{ t('توزيع') }} {{ t('New') }}</a>
   {% endif %}
@@ -71,7 +71,7 @@
             </td>
           </tr>
           {% else %}
-          <tr><td colspan="6" class="text-center text-muted py-4">لا {{ t('توجد') }} {{ t('{{ t('توزيع') }}ات') }}.</td></tr>
+          <tr><td colspan="6" class="text-center text-muted py-4">لا {{ t('توجد') }} {{ t('توزيعات') }}.</td></tr>
           {% endfor %}
         </tbody>
       </table>

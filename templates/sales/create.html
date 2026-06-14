@@ -51,7 +51,7 @@
                 <label class="font-weight-bold">
                   <i class="fas fa-warehouse text-info mr-1"></i>{{ t('Warehouse') }}
                   <span class="text-danger">*</span>
-                  <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Warehouse') }} {{ t('الذي') }} {{ t('سيُ{{ t('Discount_2') }}') }} {{ t('منه') }} {{ t('Inventory') }} ({{ t('Required') }})"></i>
+                  <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Warehouse') }} {{ t('الذي') }} {{ t('سيُDiscount_2') }} {{ t('منه') }} {{ t('Inventory') }} ({{ t('Required') }})"></i>
                 </label>
                 <select name="warehouse_id" id="warehouse_id" class="form-control" required aria-label="warehouse id">
                   <option value="" selected>{{ t('None') }}</option>
@@ -68,7 +68,7 @@
                   {% endif %}
                 </select>
                 <small class="form-text text-info">
-                  <i class="fas fa-info-circle"></i> {{ t('سيُ{{ t('Discount_2') }}') }} {{ t('Inventory') }} من هذا {{ t('Warehouse') }}
+                  <i class="fas fa-info-circle"></i> {{ t('سيُDiscount_2') }} {{ t('Inventory') }} من هذا {{ t('Warehouse') }}
                 </small>
               </div>
             </div>
@@ -90,22 +90,22 @@
               <div class="form-group">
                 <label class="font-weight-bold">
                   <i class="fas fa-ticket-alt text-success mr-1"></i>{{ t('كوبون') }} {{ t('Discount_2') }}
-                  <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('أدخل') }} {{ t('Code_2') }} {{ t('ال{{ t('كوبون') }}') }} إذا كان {{ t('Customer') }} لديه ({{ t('Optional') }})"></i>
+                  <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('أدخل') }} {{ t('Code_2') }} {{ t('الكوبون') }} إذا كان {{ t('Customer') }} لديه ({{ t('Optional') }})"></i>
                 </label>
-                <input type="text" name="coupon_code" class="form-control" placeholder="{{ t('Code_2') }} {{ t('ال{{ t('كوبون') }}') }}" autocomplete="off">
+                <input type="text" name="coupon_code" class="form-control" placeholder="{{ t('Code_2') }} {{ t('الكوبون') }}" autocomplete="off">
               </div>
             </div>
             <div class="col-md-2">
               <div class="form-group">
                 <label class="font-weight-bold">
                   <i class="fas fa-money-bill-wave text-success mr-1"></i>{{ t('Currency_2') }} {{ t('Payment_2') }}
-                  <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Currency') }} {{ t('التي') }} {{ t('سي{{ t('Payment') }}') }} {{ t('بها') }} {{ t('Customer') }} - {{ t('Invoice_2') }} {{ t('بال') }}{{ tenant_currency_name_ar or 'درهم إماراتي' }} دائماً ({{ t('Optional') }})"></i>
+                  <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Currency') }} {{ t('التي') }} {{ t('سيPayment') }} {{ t('بها') }} {{ t('Customer') }} - {{ t('Invoice_2') }} {{ t('بال') }}{{ tenant_currency_name_ar or 'درهم إماراتي' }} دائماً ({{ t('Optional') }})"></i>
                 </label>
                 {% set dc = company_default_currency or system_default_currency or 'AED' %}
                 {% from 'macros/currency_options.html' import currency_select %}
                 {{ currency_select(name='currency', id='currency', default_code=dc) }}
                 <small class="form-text text-info">
-                  <i class="fas fa-lightbulb"></i> {{ t('الأسعار') }} {{ t('بال') }}{{ tenant_currency_name_ar or 'درهم إماراتي' }} - {{ t('Currency') }} فقط {{ t('ل{{ t('Transfer') }}') }} {{ t('Paid') }}
+                  <i class="fas fa-lightbulb"></i> {{ t('الأسعار') }} {{ t('بال') }}{{ tenant_currency_name_ar or 'درهم إماراتي' }} - {{ t('Currency') }} فقط {{ t('لTransfer') }} {{ t('Paid') }}
                 </small>
               </div>
             </div>
@@ -113,7 +113,7 @@
               <div class="form-group">
                 <label class="font-weight-bold">
                   <i class="fas fa-exchange-alt text-info mr-1"></i>{{ t('Price_2') }} {{ t('Exchange') }}
-                  <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Price_2') }} {{ t('صرف') }} {{ t('Currency') }} {{ t('م{{ t('قابل') }}') }} {{ tenant_currency_name_ar or 'الدرهم الإماراتي' }} - يمكن {{ t('تعديله') }} {{ t('Manually') }} ({{ t('Optional') }})"></i>
+                  <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Price_2') }} {{ t('صرف') }} {{ t('Currency') }} {{ t('مقابل') }} {{ tenant_currency_name_ar or 'الدرهم الإماراتي' }} - يمكن {{ t('تعديله') }} {{ t('Manually') }} ({{ t('Optional') }})"></i>
                 </label>
                 <input type="number" name="exchange_rate" id="exchange_rate" class="form-control" 
                        value="1.000000" step="0.000001" min="0.000001" 
@@ -140,7 +140,7 @@
     <div class="col-md-4">
       <div class="card">
         <div class="card-header bg-gradient-info">
-          <h3 class="card-title text-white"><i class="fas fa-calculator mr-2"></i>{{ t('{{ t('Total_3') }}ات') }}</h3>
+          <h3 class="card-title text-white"><i class="fas fa-calculator mr-2"></i>{{ t('Total_3ات') }}</h3>
         </div>
         <div class="card-body">
           <div class="form-group">
@@ -213,7 +213,7 @@
           <div class="form-group mt-3">
             <label class="font-weight-bold">
               <i class="fas fa-credit-card text-info"></i> {{ t('طريقة') }} {{ t('Payment_2') }}
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('اختر') }} {{ t('طريقة') }} {{ t('Payment_2') }} أو {{ t('{{ t('اترك') }}ها') }} {{ t('فارغة') }} {{ t('لل{{ t('Payment') }}') }} {{ t('Credit_3') }}"></i>
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('اختر') }} {{ t('طريقة') }} {{ t('Payment_2') }} أو {{ t('اتركها') }} {{ t('فارغة') }} {{ t('للPayment') }} {{ t('Credit_3') }}"></i>
             </label>
             <select name="payment_method" id="payment_method" class="form-control" aria-label="payment method">
               <option value="">{{ t('Credit') }} ({{ t('بدون') }} {{ t('Payment') }})</option>
@@ -221,10 +221,10 @@
               <option value="card">💳 {{ t('Card') }}</option>
               <option value="bank_transfer">🏦 {{ t('Transfer') }} {{ t('Bank_3') }}</option>
               <option value="cheque">📝 {{ t('Cheque_3') }}</option>
-              <option value="e_wallet">💰 {{ t('م{{ t('Save') }}ة') }} {{ t('إلكترونية') }}</option>
+              <option value="e_wallet">💰 {{ t('مSaveة') }} {{ t('إلكترونية') }}</option>
             </select>
             <small class="form-text text-muted">
-              <i class="fas fa-info-circle"></i> {{ t('اترك') }} {{ t('فارغاً') }} {{ t('لل{{ t('Payment') }}') }} {{ t('Credit_3') }} (على {{ t('Account') }})
+              <i class="fas fa-info-circle"></i> {{ t('اترك') }} {{ t('فارغاً') }} {{ t('للPayment') }} {{ t('Credit_3') }} (على {{ t('Account') }})
             </small>
           </div>
 
@@ -234,20 +234,20 @@
           <div class="form-group ic-5" id="payment_amount_group">
             <label class="font-weight-bold">
               <i class="fas fa-hand-holding-usd mr-1"></i>{{ t('Amount') }} {{ t('Paid') }}
-              <i class="fas fa-info-circle text-info" title="{{ t('أدخل') }} {{ t('Amount') }} {{ t('ب{{ t('Currency') }}') }} {{ t('المختارة') }} - {{ t('سيتم') }} {{ t('{{ t('Transfer') }}ه') }} لـ{{ tenant_currency_name_ar or 'درهم إماراتي' }} {{ t('{{ t('تلقائي') }}اً') }}"></i>
+              <i class="fas fa-info-circle text-info" title="{{ t('أدخل') }} {{ t('Amount') }} {{ t('بCurrency') }} {{ t('المختارة') }} - {{ t('سيتم') }} {{ t('Transferه') }} لـ{{ tenant_currency_name_ar or 'درهم إماراتي' }} {{ t('تلقائياً') }}"></i>
             </label>
             <div class="input-group">
               <input type="number" name="payment_amount" id="payment_amount" class="form-control" 
                      value="0" step="0.01" min="0"
-                     title="{{ t('Amount') }} {{ t('Paid') }} {{ t('ب{{ t('Currency_2') }}') }} {{ t('Payment_2') }} {{ t('المختارة') }}">
+                     title="{{ t('Amount') }} {{ t('Paid') }} {{ t('بCurrency_2') }} {{ t('Payment_2') }} {{ t('المختارة') }}">
               <div class="input-group-append">
                 <span class="input-group-text" id="payment_currency_display">{{ tenant_default_currency or 'AED' }}</span>
               </div>
             </div>
             <small class="form-text text-success">
-              <i class="fas fa-calculator"></i> {{ t('سيتم') }} {{ t('Transfer') }} {{ t('Amount') }} لـ{{ tenant_currency_name_ar or 'درهم إماراتي' }} {{ t('{{ t('تلقائي') }}اً') }} {{ t('حسب') }} {{ t('Price_2') }} {{ t('Exchange') }}
+              <i class="fas fa-calculator"></i> {{ t('سيتم') }} {{ t('Transfer') }} {{ t('Amount') }} لـ{{ tenant_currency_name_ar or 'درهم إماراتي' }} {{ t('تلقائياً') }} {{ t('حسب') }} {{ t('Price_2') }} {{ t('Exchange') }}
             </small>
-            <small class="text-muted d-block mt-1">{{ t('اترك') }} {{ t('Zero_2') }} {{ t('لل{{ t('Payment') }}') }} {{ t('Credit_3') }}</small>
+            <small class="text-muted d-block mt-1">{{ t('اترك') }} {{ t('Zero_2') }} {{ t('للPayment') }} {{ t('Credit_3') }}</small>
           </div>
 
           <div class="form-group">
@@ -275,7 +275,7 @@
     <div class="modal-content">
       <div class="modal-header bg-warning">
         <h5 class="modal-title" id="serialNumberModalLabel">
-          <i class="fas fa-fingerprint mr-2"></i>{{ t('إدخال') }} {{ t('الأرقام') }} {{ t('{{ t('Serial_2') }}ة') }}
+          <i class="fas fa-fingerprint mr-2"></i>{{ t('إدخال') }} {{ t('الأرقام') }} {{ t('Serial_2ة') }}
         </h5>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
@@ -291,7 +291,7 @@
         </p>
         
         <div class="form-group">
-          <label>{{ t('امسح') }} {{ t('ال{{ t('رقم') }}') }} {{ t('Serial_2') }} (أو {{ t('{{ t('أدخل') }}ه') }} {{ t('Manually') }}):</label>
+          <label>{{ t('امسح') }} {{ t('الرقم') }} {{ t('Serial_2') }} (أو {{ t('أدخله') }} {{ t('Manually') }}):</label>
           <div class="input-group mb-3">
             <input type="text" id="serial_input" class="form-control" placeholder="Scan or type serial..." autofocus>
             <div class="input-group-append">

@@ -70,9 +70,9 @@
       <div class="row">
         <div class="col-md-6">
           <div class="form-group">
-            <label>{{ t('Description_2') }} {{ t('ال{{ t('قيد') }}') }} <span class="text-danger">*</span></label>
+            <label>{{ t('Description_2') }} {{ t('القيد') }} <span class="text-danger">*</span></label>
             <input type="text" name="description" class="form-control" required 
-                   placeholder="{{ t('مثال') }}: {{ t('قيد') }} {{ t('{{ t('Reconciliation') }}،') }} {{ t('Purchase') }} {{ t('معدات،') }} {{ t('Edit') }} {{ t('Balance_3') }}" maxlength="500">
+                   placeholder="{{ t('مثال') }}: {{ t('قيد') }} {{ t('Reconciliation،') }} {{ t('Purchase') }} {{ t('معدات،') }} {{ t('Edit') }} {{ t('Balance_3') }}" maxlength="500">
           </div>
         </div>
         <div class="col-md-3">
@@ -108,7 +108,7 @@
       <div class="card">
         <div class="card-header bg-light">
           <h5 class="mb-0">
-            <i class="fas fa-list mr-2"></i>{{ t('سطور') }} {{ t('ال{{ t('قيد') }}') }}
+            <i class="fas fa-list mr-2"></i>{{ t('سطور') }} {{ t('القيد') }}
           </h5>
         </div>
         
@@ -160,7 +160,7 @@
       <div class="row mt-3">
         <div class="col-12">
           <button type="submit" class="btn btn-success btn-lg" id="submitBtn" disabled>
-            <i class="fas fa-save mr-2"></i>{{ t('Save') }} {{ t('ال{{ t('قيد') }}') }}
+            <i class="fas fa-save mr-2"></i>{{ t('Save') }} {{ t('القيد') }}
           </button>
           <button type="button" class="btn btn-primary" onclick="addLine()">
             <i class="fas fa-plus mr-2"></i>{{ t('Add') }} {{ t('سطر') }}
@@ -171,7 +171,7 @@
           <div class="float-left">
             <div id="balanceStatus" class="alert alert-warning d-inline-block mb-0 py-2">
               <i class="fas fa-exclamation-triangle mr-2"></i>
-              {{ t('ال{{ t('قيد') }}') }} غير {{ t('متوازن') }}! {{ t('ال{{ t('مدين') }}') }} يجب أن {{ t('يساوي') }} {{ t('ال{{ t('دائن') }}') }}
+              {{ t('القيد') }} غير {{ t('متوازن') }}! {{ t('المدين') }} يجب أن {{ t('يساوي') }} {{ t('الدائن') }}
             </div>
           </div>
         </div>
@@ -222,7 +222,7 @@ function addLine() {
             step="0.01" min="0" value="0" oninput="handleCreditChange(this)" onchange="handleCreditChange(this)" onkeyup="calculateJournalTotals()" aria-label="line ${lineCounter} credit">
   </td>
   <td>
-    <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteLine(this)" title="{{ t('Delete') }} {{ t('ال{{ t('سطر') }}') }}">
+    <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteLine(this)" title="{{ t('Delete') }} {{ t('السطر') }}">
       <i class="fas fa-trash"></i>
     </button>
   </td>
@@ -232,7 +232,7 @@ function addLine() {
   document.getElementById('lineCountHidden').value = lineCounter;
 }
 
-// عند {{ t('Change') }} {{ t('{{ t('ال{{ t('مدين') }}') }}،') }} {{ t('صفّر') }} {{ t('ال{{ t('دائن') }}') }}
+// عند {{ t('Change') }} {{ t('المدين،') }} {{ t('صفّر') }} {{ t('الدائن') }}
 function handleDebitChange(input) {
   const value = parseFloat(input.value) || 0;
   if (value > 0) {
@@ -243,7 +243,7 @@ function handleDebitChange(input) {
   calculateJournalTotals();
 }
 
-// عند {{ t('Change') }} {{ t('{{ t('ال{{ t('دائن') }}') }}،') }} {{ t('صفّر') }} {{ t('ال{{ t('مدين') }}') }}
+// عند {{ t('Change') }} {{ t('الدائن،') }} {{ t('صفّر') }} {{ t('المدين') }}
 function handleCreditChange(input) {
   const value = parseFloat(input.value) || 0;
   if (value > 0) {
@@ -254,7 +254,7 @@ function handleCreditChange(input) {
   calculateJournalTotals();
 }
 
-// {{ t('Account_2') }} {{ t('{{ t('Total_3') }}ات') }} {{ t('والتوازن') }} {{ t('لل{{ t('قيد') }}') }} {{ t('Manual_2') }} - CLIENT SIDE
+// {{ t('Account_2') }} {{ t('Total_3ات') }} {{ t('والتوازن') }} {{ t('للقيد') }} {{ t('Manual_2') }} - CLIENT SIDE
 function calculateJournalTotals() {
   const debitInputs = document.querySelectorAll('.debit-input');
   const creditInputs = document.querySelectorAll('.credit-input');
@@ -288,7 +288,7 @@ function calculateJournalTotals() {
     differenceSpan.innerHTML = '<i class="fas fa-check mr-1"></i> {{ t('متوازن') }}';
     if (balanceStatus) {
       balanceStatus.className = 'alert alert-success d-inline-block mb-0 py-2';
-      balanceStatus.innerHTML = '<i class="fas fa-check-circle mr-2"></i>{{ t('ال{{ t('قيد') }}') }} {{ t('متوازن') }} - {{ t('يمكنك') }} {{ t('Save_2') }} {{ t('الآن_2') }}';
+      balanceStatus.innerHTML = '<i class="fas fa-check-circle mr-2"></i>{{ t('القيد') }} {{ t('متوازن') }} - {{ t('يمكنك') }} {{ t('Save_2') }} {{ t('الآن_2') }}';
     }
     submitBtn.disabled = false;
     submitBtn.removeAttribute('disabled');
@@ -298,7 +298,7 @@ function calculateJournalTotals() {
     differenceSpan.className = 'badge badge-danger';
     if (balanceStatus) {
       balanceStatus.className = 'alert alert-warning d-inline-block mb-0 py-2';
-      balanceStatus.innerHTML = '<i class="fas fa-exclamation-triangle mr-2"></i>{{ t('ال{{ t('قيد') }}') }} غير {{ t('متوازن') }}! {{ t('ال{{ t('مدين') }}') }} يجب أن {{ t('يساوي') }} {{ t('ال{{ t('دائن') }}') }}';
+      balanceStatus.innerHTML = '<i class="fas fa-exclamation-triangle mr-2"></i>{{ t('القيد') }} غير {{ t('متوازن') }}! {{ t('المدين') }} يجب أن {{ t('يساوي') }} {{ t('الدائن') }}';
     }
     submitBtn.disabled = true;
     submitBtn.setAttribute('disabled', 'disabled');
@@ -308,11 +308,11 @@ function calculateJournalTotals() {
 
 // {{ t('إعادة') }} {{ t('تعيين') }} {{ t('النموذج_2') }}
 function resetForm() {
-  if (confirm('هل أنت {{ t('متأكد') }} من {{ t('إعادة') }} {{ t('تعيين') }} {{ t('{{ t('النموذج_2') }}') }} {{ t('سيتم') }} {{ t('مسح') }} {{ t('جميع') }} {{ t('Data') }}.')) {
+  if (confirm('هل أنت {{ t('متأكد') }} من {{ t('إعادة') }} {{ t('تعيين') }} {{ t('النموذج_2') }} {{ t('سيتم') }} {{ t('مسح') }} {{ t('جميع') }} {{ t('Data') }}.')) {
     document.getElementById('journalEntryForm').reset();
     document.getElementById('linesTableBody').innerHTML = '';
     lineCounter = 0;
-    // {{ t('Add') }} {{ t('{{ t('سطر') }}ين') }} {{ t('افتراضيين') }}
+    // {{ t('Add') }} {{ t('سطرين') }} {{ t('افتراضيين') }}
     addLine();
     addLine();
     calculateJournalTotals();
@@ -321,7 +321,7 @@ function resetForm() {
 
 // {{ t('قوالب') }} {{ t('Quick') }}
 function loadTemplate(templateType) {
-  // {{ t('مسح') }} {{ t('ال{{ t('سطور') }}') }} {{ t('{{ t('الحالي') }}ة') }}
+  // {{ t('مسح') }} {{ t('السطور') }} {{ t('الحالية') }}
   document.getElementById('linesTableBody').innerHTML = '';
   lineCounter = 0;
   
@@ -354,7 +354,7 @@ function loadTemplate(templateType) {
       break;
   }
   
-  // {{ t('Account_2') }} {{ t('{{ t('Total_3') }}ات') }} {{ t('فوراً') }} + {{ t('Reserve_3') }}
+  // {{ t('Account_2') }} {{ t('Total_3ات') }} {{ t('فوراً') }} + {{ t('Reserve_3') }}
   calculateJournalTotals();
   setTimeout(() => calculateJournalTotals(), 100);
 }
@@ -415,12 +415,12 @@ function toggleCard(cardName) {
   }
 }
 
-// {{ t('Delete') }} {{ t('سطر') }} من {{ t('ال{{ t('قيد') }}') }}
+// {{ t('Delete') }} {{ t('سطر') }} من {{ t('القيد') }}
 function deleteLine(button) {
   const row = button.closest('tr');
   if (row) {
     row.remove();
-    // {{ t('إعادة') }} {{ t('ترقيم') }} {{ t('الأ{{ t('سطر') }}') }}
+    // {{ t('إعادة') }} {{ t('ترقيم') }} {{ t('الأسطر') }}
     document.querySelectorAll('#linesTableBody tr').forEach((r, idx) => {
       r.cells[0].textContent = idx + 1;
       // {{ t('Update') }} name attributes
@@ -439,13 +439,13 @@ function deleteLine(button) {
   }
 }
 
-// عند {{ t('Download') }} {{ t('{{ t('الصف') }}حة') }}
+// عند {{ t('Download') }} {{ t('الصفحة') }}
 document.addEventListener('DOMContentLoaded', function() {
   // {{ t('تعيين') }} {{ t('Date') }} {{ t('الحالي') }}
   const today = new Date().toISOString().split('T')[0];
   document.querySelector('input[name="entry_date"]').value = today;
   
-  // {{ t('Add') }} {{ t('{{ t('سطر') }}ين') }} {{ t('افتراضيين') }}
+  // {{ t('Add') }} {{ t('سطرين') }} {{ t('افتراضيين') }}
   addLine();
   addLine();
   calculateJournalTotals();

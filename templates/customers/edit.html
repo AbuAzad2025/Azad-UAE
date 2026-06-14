@@ -86,7 +86,7 @@
         <div class="col-md-4">
           <div class="form-group">
             <label>
-              <i class="fas fa-dollar-sign text-success"></i> {{ t('Currency') }} {{ t('ال{{ t('افتراضي') }}ة') }}
+              <i class="fas fa-dollar-sign text-success"></i> {{ t('Currency') }} {{ t('الافتراضية') }}
               <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Currency') }} {{ t('المفضلة') }} ({{ t('افتراضي') }}: {{ tenant_default_currency or 'AED' }})"></i>
             </label>
             <select name="preferred_currency" class="form-control" aria-label="preferred currency">
@@ -117,7 +117,7 @@
 
     <div class="card-footer">
       <button type="submit" class="btn btn-warning">
-        <i class="fas fa-save mr-2"></i>{{ t('Save') }} {{ t('ال{{ t('Edit') }}ات') }}
+        <i class="fas fa-save mr-2"></i>{{ t('Save') }} {{ t('الEditات') }}
       </button>
       <a href="{{ url_for('customers.view', id=customer.id) }}" class="btn btn-secondary">{{ t('Cancel') }}</a>
     </div>

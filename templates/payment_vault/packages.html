@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 
-{% block title %}{{ t('Management') }} {{ t('ال{{ t('باقات') }}') }} - Manage Packages{% endblock %}
+{% block title %}{{ t('Management') }} {{ t('الباقات') }} - Manage Packages{% endblock %}
 
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
     <div>
-        <h1 class="mb-0"><i class="fas fa-box-open text-success"></i> {{ t('Management') }} {{ t('ال{{ t('باقات') }}') }}</h1>
-        <p class="text-muted mb-0">{{ t('Add') }} {{ t('و{{ t('Edit') }}') }} {{ t('باقات') }} {{ t('System') }}</p>
+        <h1 class="mb-0"><i class="fas fa-box-open text-success"></i> {{ t('Management') }} {{ t('الباقات') }}</h1>
+        <p class="text-muted mb-0">{{ t('Add') }} {{ t('وEdit') }} {{ t('باقات') }} {{ t('System') }}</p>
     </div>
     <div>
         <button class="btn btn-primary" type="button" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
@@ -180,7 +180,7 @@
                     </div>
                     <div class="form-check form-check-inline">
                         <input class="form-check-input" type="checkbox" id="is_featured_new" name="is_featured" aria-label="is featured">
-                        <label class="form-check-label" for="is_featured_new">{{ t('م{{ t('ميزة') }}') }}</label>
+                        <label class="form-check-label" for="is_featured_new">{{ t('مميزة') }}</label>
                     </div>
                 </div>
             </div>

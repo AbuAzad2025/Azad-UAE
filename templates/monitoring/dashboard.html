@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}{{ t('Dashboard_2') }} {{ t('ال{{ t('مراقبة') }}') }} - {{ app_name }}{% endblock %}
+{% block title %}{{ t('Dashboard_2') }} {{ t('المراقبة') }} - {{ app_name }}{% endblock %}
 
 {% block content %}
 <div class="content-header">
@@ -128,7 +128,7 @@
                                 <td><strong>{{ health.memory.total_mb }} MB</strong></td>
                             </tr>
                             <tr>
-                                <td>{{ t('Count') }} {{ t('{{ t('المعالج') }}ات') }}</td>
+                                <td>{{ t('Count') }} {{ t('المعالجات') }}</td>
                                 <td><strong>{{ health.cpu.cores }}</strong></td>
                             </tr>
                         </table></div>

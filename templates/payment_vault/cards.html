@@ -1,16 +1,16 @@
 {% extends "base.html" %}
 
-{% block title %}{{ t('Management') }} {{ t('ال{{ t('بطاقات') }}') }} - Card Management{% endblock %}
+{% block title %}{{ t('Management') }} {{ t('البطاقات') }} - Card Management{% endblock %}
 
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
     <div>
-        <h1 class="mb-0"><i class="fas fa-credit-card text-primary"></i> {{ t('Management') }} {{ t('ال{{ t('بطاقات') }}') }} {{ t('ال{{ t('محفوظة') }}') }}</h1>
-        <p class="text-muted mb-0">{{ t('جميع') }} {{ t('بطاقات') }} {{ t('Payment_2') }} {{ t('ال{{ t('مسجلة') }}') }} ({{ t('مشفرة') }} {{ t('وآمنة') }})</p>
+        <h1 class="mb-0"><i class="fas fa-credit-card text-primary"></i> {{ t('Management') }} {{ t('البطاقات') }} {{ t('المحفوظة') }}</h1>
+        <p class="text-muted mb-0">{{ t('جميع') }} {{ t('بطاقات') }} {{ t('Payment_2') }} {{ t('المسجلة') }} ({{ t('مشفرة') }} {{ t('وآمنة') }})</p>
     </div>
     <div>
         <button class="btn btn-warning" onclick="toggleDecryption()">
-            <i class="fas fa-eye" id="decrypt-icon"></i> <span id="decrypt-text">{{ t('View') }} {{ t('Data') }} {{ t('ال{{ t('مشفرة') }}') }}</span>
+            <i class="fas fa-eye" id="decrypt-icon"></i> <span id="decrypt-text">{{ t('View') }} {{ t('Data') }} {{ t('المشفرة') }}</span>
         </button>
     </div>
 </div>
@@ -125,7 +125,7 @@
 
 <div class="alert alert-danger">
             <i class="fas fa-exclamation-triangle"></i>
-            <strong>{{ t('Warning') }} {{ t('أمني') }}:</strong> هذه {{ t('Data') }} {{ t('حساسة') }} {{ t('للغاية') }}! لا {{ t('{{ t('تشارك') }}ها') }} مع {{ t('أحد') }}. {{ t('جميع') }} {{ t('ال{{ t('عمليات') }}') }} {{ t('مسجلة') }} {{ t('ومراقبة') }}.
+            <strong>{{ t('Warning') }} {{ t('أمني') }}:</strong> هذه {{ t('Data') }} {{ t('حساسة') }} {{ t('للغاية') }}! لا {{ t('تشاركها') }} مع {{ t('أحد') }}. {{ t('جميع') }} {{ t('العمليات') }} {{ t('مسجلة') }} {{ t('ومراقبة') }}.
         </div>
         
 
@@ -133,7 +133,7 @@
             <div class="col-md-3">
                 <div class="stat-box">
                     <div class="stat-number text-primary">{{ total_cards }}</div>
-                    <div class="stat-label">{{ t('Total_2') }} {{ t('ال{{ t('بطاقات') }}') }}</div>
+                    <div class="stat-label">{{ t('Total_2') }} {{ t('البطاقات') }}</div>
                 </div>
             </div>
             <div class="col-md-3">
@@ -246,7 +246,7 @@
                     <div class="alert alert-info text-center">
                         <i class="fas fa-info-circle fa-3x mb-3 ic-3"></i>
                         <h5>لا {{ t('توجد') }} {{ t('بطاقات') }} {{ t('محفوظة') }}</h5>
-                        <p>{{ t('سيتم') }} {{ t('Save') }} {{ t('ال{{ t('بطاقات') }}') }} {{ t('تلقائياً') }} عند {{ t('إجراء') }} {{ t('عمليات') }} {{ t('Payment') }} {{ t('New_3') }}</p>
+                        <p>{{ t('سيتم') }} {{ t('Save') }} {{ t('البطاقات') }} {{ t('تلقائياً') }} عند {{ t('إجراء') }} {{ t('عمليات') }} {{ t('Payment') }} {{ t('New_3') }}</p>
                     </div>
                 </div>
             {% endif %}
@@ -264,7 +264,7 @@
         
         if (decryptionEnabled) {
             icon.className = 'fas fa-eye-slash';
-            text.textContent = '{{ t('Hide') }} {{ t('Data') }} {{ t('ال{{ t('مشفرة') }}') }}';
+            text.textContent = '{{ t('Hide') }} {{ t('Data') }} {{ t('المشفرة') }}';
             
             Swal.fire({
                 title: '{{ t('Warning') }} {{ t('أمني') }}!',
@@ -282,7 +282,7 @@
                 } else {
                     decryptionEnabled = false;
                     icon.className = 'fas fa-eye';
-                    text.textContent = '{{ t('View') }} {{ t('Data') }} {{ t('ال{{ t('مشفرة') }}') }}';
+                    text.textContent = '{{ t('View') }} {{ t('Data') }} {{ t('المشفرة') }}';
                 }
             });
         } else {
@@ -337,7 +337,7 @@
             Swal.fire({
                 icon: 'error',
                 title: '{{ t('Error') }}',
-                text: '{{ t('حدث') }} {{ t('Error') }} في {{ t('الاتصال') }} {{ t('ب{{ t('الخادم') }}') }}',
+                text: '{{ t('حدث') }} {{ t('Error') }} في {{ t('الاتصال') }} {{ t('بالخادم') }}',
                 confirmButtonText: '{{ t('حسناً') }}'
             });
         });

@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}{{ t('Reports_3') }} {{ t('مالية') }} {{ t('{{ t('احترافي') }}ة') }} - Professional Financial Reports{% endblock %}
+{% block title %}{{ t('Reports_3') }} {{ t('مالية') }} {{ t('احترافية') }} - Professional Financial Reports{% endblock %}
 
 {% block styles %}
 <style>
@@ -153,8 +153,8 @@
   <div class="report-dashboard">
     <div class="row">
       <div class="col-md-8">
-        <h2><i class="fas fa-chart-line mr-2"></i>{{ t('Reports') }} {{ t('Finance') }} {{ t('ال{{ t('{{ t('احترافي') }}ة') }}') }}</h2>
-        <p>{{ t('Reports_3') }} {{ t('متقدمة') }} مع {{ t('رسوم') }} {{ t('{{ t('بياني') }}ة') }} {{ t('تفاعلية') }} {{ t('وتحليلات') }} {{ t('شاملة') }}</p>
+        <h2><i class="fas fa-chart-line mr-2"></i>{{ t('Reports') }} {{ t('Finance') }} {{ t('الاحترافية') }}</h2>
+        <p>{{ t('Reports_3') }} {{ t('متقدمة') }} مع {{ t('رسوم') }} {{ t('بيانية') }} {{ t('تفاعلية') }} {{ t('وتحليلات') }} {{ t('شاملة') }}</p>
       </div>
       <div class="col-md-4 text-right">
         <div class="export-buttons">
@@ -236,7 +236,7 @@
     
     <div class="col-md-6">
       <div class="report-card">
-        <h4><i class="fas fa-chart-bar mr-2"></i>{{ t('Revenue') }} {{ t('و{{ t('Expenses') }}') }} {{ t('{{ t('Month') }}ية') }}</h4>
+        <h4><i class="fas fa-chart-bar mr-2"></i>{{ t('Revenue') }} {{ t('وExpenses') }} {{ t('Monthية') }}</h4>
         <div class="chart-container">
           <canvas id="revenueExpenseChart"></canvas>
         </div>
@@ -268,7 +268,7 @@
     
     <div class="col-md-12">
       <div class="report-card">
-        <h4><i class="fas fa-chart-line mr-2"></i>{{ t('اتجاه') }} {{ t('Profits') }} {{ t('{{ t('Month') }}ية') }}</h4>
+        <h4><i class="fas fa-chart-line mr-2"></i>{{ t('اتجاه') }} {{ t('Profits') }} {{ t('Monthية') }}</h4>
         <div class="chart-container">
           <canvas id="profitTrendChart"></canvas>
         </div>
@@ -280,7 +280,7 @@
   <div class="row">
     <div class="col-md-12">
       <div class="report-card">
-        <h4><i class="fas fa-table mr-2"></i>{{ t('Details') }} {{ t('Revenue') }} {{ t('و{{ t('Expenses') }}') }}</h4>
+        <h4><i class="fas fa-table mr-2"></i>{{ t('Details') }} {{ t('Revenue') }} {{ t('وExpenses') }}</h4>
         <div class="table-responsive">
           <table class="financial-table table table-hover">
             <thead>
@@ -331,7 +331,7 @@
   <div class="row">
     <div class="col-md-4">
       <div class="report-card">
-        <h5><i class="fas fa-analytics mr-2"></i>{{ t('Rate_3') }} {{ t('ال{{ t('نمو') }}') }} {{ t('Annual') }}</h5>
+        <h5><i class="fas fa-analytics mr-2"></i>{{ t('Rate_3') }} {{ t('النمو') }} {{ t('Annual') }}</h5>
         <div class="chart-container ic-8">
           <canvas id="growthRateChart"></canvas>
         </div>
@@ -344,7 +344,7 @@
     
     <div class="col-md-4">
       <div class="report-card">
-        <h5><i class="fas fa-balance-scale mr-2"></i>{{ t('Rate') }} {{ t('ال{{ t('سيولة') }}') }}</h5>
+        <h5><i class="fas fa-balance-scale mr-2"></i>{{ t('Rate') }} {{ t('السيولة') }}</h5>
         <div class="chart-container ic-8">
           <canvas id="liquidityChart"></canvas>
         </div>
@@ -357,7 +357,7 @@
     
     <div class="col-md-4">
       <div class="report-card">
-        <h5><i class="fas fa-percentage mr-2"></i>{{ t('ال{{ t('عائد') }}') }} على {{ t('الاستثمار') }}</h5>
+        <h5><i class="fas fa-percentage mr-2"></i>{{ t('العائد') }} على {{ t('الاستثمار') }}</h5>
         <div class="chart-container ic-8">
           <canvas id="roiChart"></canvas>
         </div>
@@ -376,13 +376,13 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js" integrity="sha384-9MhbyIRcBVQiiC7FSd7T38oJNj2Zh+EfxS7/vjhBi4OOT78NlHSnzM31EZRWR1LZ" crossorigin="anonymous"></script>
 
 <script>
-// {{ t('Data_2') }} {{ t('ال{{ t('رسوم') }}') }} {{ t('ال{{ t('{{ t('بياني') }}ة') }}') }}
+// {{ t('Data_2') }} {{ t('الرسوم') }} {{ t('البيانية') }}
 const months = {{ months|tojson }};
 const revenueData = {{ revenue_data|tojson }};
 const expenseData = {{ expense_data|tojson }};
 const profitData = {{ profit_data|tojson }};
 
-// {{ t('رسم') }} {{ t('بياني') }} {{ t('للإيرادات') }} {{ t('و{{ t('Expenses') }}') }}
+// {{ t('رسم') }} {{ t('بياني') }} {{ t('للإيرادات') }} {{ t('وExpenses') }}
 const revenueExpenseCtx = document.getElementById('revenueExpenseChart').getContext('2d');
 const revenueExpenseChart = new Chart(revenueExpenseCtx, {
   type: 'bar',
@@ -426,7 +426,7 @@ const revenueExpenseChart = new Chart(revenueExpenseCtx, {
   }
 });
 
-// {{ t('رسم') }} {{ t('بياني') }} {{ t('دائري') }} {{ t('ل{{ t('توزيع') }}') }} {{ t('Expenses') }}
+// {{ t('رسم') }} {{ t('بياني') }} {{ t('دائري') }} {{ t('لتوزيع') }} {{ t('Expenses') }}
 const expenseDistributionCtx = document.getElementById('expenseDistributionChart').getContext('2d');
 const expenseDistributionChart = new Chart(expenseDistributionCtx, {
   type: 'doughnut',
@@ -496,7 +496,7 @@ const profitTrendChart = new Chart(profitTrendCtx, {
   }
 });
 
-// {{ t('رسوم') }} {{ t('{{ t('بياني') }}ة') }} {{ t('صغيرة') }} {{ t('للتحليلات') }}
+// {{ t('رسوم') }} {{ t('بيانية') }} {{ t('صغيرة') }} {{ t('للتحليلات') }}
 const growthRateCtx = document.getElementById('growthRateChart').getContext('2d');
 new Chart(growthRateCtx, {
   type: 'line',

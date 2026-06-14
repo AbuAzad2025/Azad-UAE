@@ -489,7 +489,7 @@
 
               <option value="card" {% if selected_payment_method == 'card' %}selected{% endif %}>{{ t('Card') }} {{ t('ائتمان') }}</option>
 
-              <option value="e_wallet" {% if selected_payment_method == 'e_wallet' %}selected{% endif %}>{{ t('م{{ t('Save') }}ة') }} {{ t('إلكترونية') }}</option>
+              <option value="e_wallet" {% if selected_payment_method == 'e_wallet' %}selected{% endif %}>{{ t('مSaveة') }} {{ t('إلكترونية') }}</option>
 
             </select>
 
@@ -639,7 +639,7 @@
 
           <div class="form-group">
 
-            <label><i class="fas fa-wallet"></i> {{ t('Name_2') }} {{ t('ال{{ t('م{{ t('Save') }}ة') }}_2') }}</label>
+            <label><i class="fas fa-wallet"></i> {{ t('Name_2') }} {{ t('المSaveة_2') }}</label>
 
             <select name="ewallet_name" class="form-control" aria-label="ewallet name">
 
@@ -817,7 +817,7 @@ $(document).ready(function() {
 
   
 
-  // {{ t('Management') }} {{ t('ال{{ t('حقول') }}') }} {{ t('الديناميكية') }} {{ t('حسب') }} {{ t('طريقة') }} {{ t('Payment_2') }}
+  // {{ t('Management') }} {{ t('الحقول') }} {{ t('الديناميكية') }} {{ t('حسب') }} {{ t('طريقة') }} {{ t('Payment_2') }}
 
   $('#payment_method').on('change', function() {
 
@@ -825,13 +825,13 @@ $(document).ready(function() {
 
     
 
-    // {{ t('Hide') }} {{ t('جميع') }} {{ t('ال{{ t('حقول') }}') }} {{ t('الديناميكية') }} {{ t('أولاً') }}
+    // {{ t('Hide') }} {{ t('جميع') }} {{ t('الحقول') }} {{ t('الديناميكية') }} {{ t('أولاً') }}
 
     $('#cheque_fields, #card_fields, #bank_transfer_fields, #ewallet_fields').slideUp();
 
     
 
-    // {{ t('Show') }} {{ t('ال{{ t('حقول') }}') }} {{ t('{{ t('المناسب') }}ة') }}
+    // {{ t('Show') }} {{ t('الحقول') }} {{ t('المناسبة') }}
 
     switch(method) {
 
@@ -871,7 +871,7 @@ $(document).ready(function() {
 
   
 
-  // {{ t('تفعيل') }} {{ t('ال{{ t('حقول') }}') }} عند {{ t('Download_2') }} إذا كانت {{ t('طريقة') }} {{ t('Payment_2') }} {{ t('محددة') }}
+  // {{ t('تفعيل') }} {{ t('الحقول') }} عند {{ t('Download_2') }} إذا كانت {{ t('طريقة') }} {{ t('Payment_2') }} {{ t('محددة') }}
 
   if ($('#payment_method').val()) {
 

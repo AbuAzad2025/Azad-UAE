@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('Management') }} {{ t('Products') }} {{ t('و{{ t('Inventory') }}') }}{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('Management') }} {{ t('Products') }} {{ t('وInventory') }}{% endblock %}
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
   <div>
@@ -314,7 +314,7 @@
             <input type="number" id="adjustmentQuantity" name="adjustment_quantity" class="form-control" step="0.001" min="0" required autocomplete="off" aria-label="adjustment quantity">
           </div>
           <div class="form-group">
-            <label for="adjustmentReason">{{ t('ال{{ t('سبب') }}') }}</label>
+            <label for="adjustmentReason">{{ t('السبب') }}</label>
             <select id="adjustmentReason" name="adjustment_reason" class="form-control" required autocomplete="off" aria-label="adjustment reason">
               <option value="" selected>{{ t('None') }}</option>
               <option value="purchase">{{ t('Purchase') }}</option>

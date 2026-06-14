@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ t('Management') }} {{ t('الجمارك') }} {{ t('وال{{ t('ضرائب') }}') }}{% endblock %}
+{% block title %}{{ t('Management') }} {{ t('الجمارك') }} {{ t('والضرائب') }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
@@ -9,7 +9,7 @@
       <div class="card">
         <div class="card-header">
           <h3 class="card-title">
-            <i class="fas fa-file-invoice-dollar"></i> {{ t('الجمارك') }} {{ t('وال{{ t('ضرائب') }}') }}
+            <i class="fas fa-file-invoice-dollar"></i> {{ t('الجمارك') }} {{ t('والضرائب') }}
           </h3>
           <div class="card-tools">
             <a href="{{ url_for('advanced_ledger.add_customs_tax') }}" class="btn btn-success">

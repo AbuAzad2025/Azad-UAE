@@ -66,14 +66,14 @@
           <tr><th>#</th><th>{{ t('البند') }}</th><th>{{ t('Amount') }}</th></tr>
         </thead>
         <tbody>
-          <tr><td>1</td><td>{{ t('ال{{ t('راتب') }}') }} {{ t('الأساسي') }} / Basic Salary</td><td style="text-align:center;font-weight:700;">{{ format_currency(slip.basic_amount) }}</td></tr>
+          <tr><td>1</td><td>{{ t('الراتب') }} {{ t('الأساسي') }} / Basic Salary</td><td style="text-align:center;font-weight:700;">{{ format_currency(slip.basic_amount) }}</td></tr>
           <tr><td>2</td><td>{{ t('البدلات') }} {{ t('والإضافي') }} / Allowances</td><td style="text-align:center;color:#27ae60;font-weight:700;">{{ format_currency(slip.allowances) }}</td></tr>
           <tr><td>3</td><td>{{ t('الخصومات') }} / Deductions</td><td style="text-align:center;color:#e74c3c;font-weight:700;">({{ format_currency(slip.deductions) }})</td></tr>
           <tr><td>4</td><td>{{ t('Advances') }} {{ t('المستردة') }} / Advances</td><td style="text-align:center;color:#f39c12;font-weight:700;">({{ format_currency(slip.advances_deducted) }})</td></tr>
         </tbody>
         <tfoot>
           <tr class="net-row">
-            <td colspan="2" style="text-align:center;">{{ t('Net') }} {{ t('ال{{ t('راتب') }}') }} / Net Salary</td>
+            <td colspan="2" style="text-align:center;">{{ t('Net') }} {{ t('الراتب') }} / Net Salary</td>
             <td style="text-align:center;">{{ format_currency(slip.net_salary) }} {{ tenant_default_currency or 'AED' }}</td>
           </tr>
         </tfoot>

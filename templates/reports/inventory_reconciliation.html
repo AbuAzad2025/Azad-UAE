@@ -92,12 +92,12 @@
       <i class="fas fa-warehouse mr-2"></i>{{ t('Reconciliation') }} {{ t('حسب') }} {{ t('Warehouse') }}
     </h3>
     {% if report.summary.all_matched_qty %}
-    <span class="badge badge-success"><i class="fas fa-check"></i> {{ t('الكميات') }} {{ t('{{ t('متطابق') }}ة') }}</span>
+    <span class="badge badge-success"><i class="fas fa-check"></i> {{ t('الكميات') }} {{ t('متطابقة') }}</span>
     {% else %}
     <span class="badge badge-warning"><i class="fas fa-exclamation-triangle"></i> {{ t('يوجد') }} {{ t('فروقات') }} {{ t('Qty') }}</span>
     {% endif %}
     {% if report.summary.all_matched_value %}
-    <span class="badge badge-success ml-2"><i class="fas fa-check"></i> {{ t('القيم') }} {{ t('{{ t('متطابق') }}ة') }}</span>
+    <span class="badge badge-success ml-2"><i class="fas fa-check"></i> {{ t('القيم') }} {{ t('متطابقة') }}</span>
     {% else %}
     <span class="badge badge-info ml-2"><i class="fas fa-info-circle"></i> {{ t('مراجعة') }} GL</span>
     {% endif %}
@@ -173,7 +173,7 @@
   <div class="card-footer text-muted small">
     <strong>GL account:</strong> {{ report.summary.inventory_account_code }} - Inventory Asset &nbsp;|&nbsp;
     <strong>{{ t('Quantity') }}:</strong> {{ t('مقارنة') }} بين PWC.total_quantity و SUM(stock_movements.quantity) &nbsp;|&nbsp;
-    <strong>{{ t('Value') }}:</strong> {{ t('مقارنة') }} بين PWC.total_value {{ t('و{{ t('Balance_3') }}') }} {{ t('Account_2') }} GL 1140.
+    <strong>{{ t('Value') }}:</strong> {{ t('مقارنة') }} بين PWC.total_value {{ t('وBalance_3') }} {{ t('Account_2') }} GL 1140.
     {% if report.summary.has_unallocated_gl %}
     &nbsp;|&nbsp; <strong>GL غير {{ t('موزع') }} على {{ t('Warehouse_2') }}:</strong> {{ format_currency(report.summary.unallocated_gl_value) }}
     {% endif %}

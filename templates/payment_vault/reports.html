@@ -7,7 +7,7 @@
     <i class="fas fa-chart-line text-info mr-3 ic-1"></i>
     <div>
         <h1 class="mb-0">📊 {{ t('Reports') }} {{ t('Finance') }}</h1>
-        <p class="text-muted mb-0">{{ t('Reports_3') }} {{ t('شاملة') }} {{ t('Purchases_3') }} {{ t('و{{ t('ال{{ t('تبرع') }}ات') }}') }}</p>
+        <p class="text-muted mb-0">{{ t('Reports_3') }} {{ t('شاملة') }} {{ t('Purchases_3') }} {{ t('والتبرعات') }}</p>
     </div>
 </div>
 {% endblock %}
@@ -69,7 +69,7 @@
                         <select name="report_type" class="form-control" aria-label="report type">
                             <option value="all">{{ t('All') }}</option>
                             <option value="purchases">{{ t('Purchases') }} فقط</option>
-                            <option value="donations">{{ t('ال{{ t('تبرع') }}ات') }} فقط</option>
+                            <option value="donations">{{ t('التبرعات') }} فقط</option>
                         </select>
                     </div>
                     <div class="col-md-3">
@@ -99,7 +99,7 @@
             <div class="col-md-3">
                 <div class="metric-box ic-3">
                     <div class="metric-value">${{ summary.total_donations_amount|default(0) }}</div>
-                    <div class="metric-label">{{ t('Revenues') }} {{ t('ال{{ t('تبرع') }}ات') }}</div>
+                    <div class="metric-label">{{ t('Revenues') }} {{ t('التبرعات') }}</div>
                 </div>
             </div>
             <div class="col-md-3">
@@ -148,7 +148,7 @@
                         <tr>
                             <th>#</th>
                             <th>{{ t('Date') }}</th>
-                            <th>{{ t('ال{{ t('نوع') }}') }}</th>
+                            <th>{{ t('النوع') }}</th>
                             <th>{{ t('Details_2') }}</th>
                             <th>{{ t('Amount') }}</th>
                             <th>{{ t('Currency') }}</th>
@@ -213,7 +213,7 @@
                 backgroundColor: 'rgba(102, 126, 234, 0.1)',
                 tension: 0.4
             }, {
-                label: '{{ t('ال{{ t('تبرع') }}ات') }}',
+                label: '{{ t('التبرعات') }}',
                 data: {{ monthly_donations_data|tojson }},
                 borderColor: '#f5576c',
                 backgroundColor: 'rgba(245, 87, 108, 0.1)',
@@ -231,7 +231,7 @@
     new Chart(distCtx, {
         type: 'pie',
         data: {
-            labels: ['{{ t('Purchases') }}', '{{ t('ال{{ t('تبرع') }}ات') }}'],
+            labels: ['{{ t('Purchases') }}', '{{ t('التبرعات') }}'],
             datasets: [{
                 data: [{{ summary.total_purchases_amount|default(0) }}, {{ summary.total_donations_amount|default(0) }}],
                 backgroundColor: ['#667eea', '#f5576c']

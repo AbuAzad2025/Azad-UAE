@@ -204,7 +204,7 @@
             <div class="form-group">
               <label><i class="fas fa-signature"></i> {{ t('Name_2') }} {{ t('الساحب') }}:</label>
               <input type="text" name="drawer_name" class="form-control" 
-                     placeholder="{{ t('Name_2') }} {{ t('الشخص') }} {{ t('الساحب') }} {{ t('لل{{ t('Cheque_3') }}') }}" minlength="2" maxlength="100">
+                     placeholder="{{ t('Name_2') }} {{ t('الشخص') }} {{ t('الساحب') }} {{ t('للCheque_3') }}" minlength="2" maxlength="100">
             </div>
           </div>
         </div>
@@ -283,7 +283,7 @@ $(function() {
     }
   }).trigger('change');
   
-  // Select2 {{ t('للعملاء') }} {{ t('و{{ t('Supplier') }}ين') }} ({{ t('تأكد') }} من {{ t('Download') }} {{ t('Add_2') }})
+  // Select2 {{ t('للعملاء') }} {{ t('وSupplierين') }} ({{ t('تأكد') }} من {{ t('Download') }} {{ t('Add_2') }})
   if (window.jQuery && $.fn && $.fn.select2) {
     $('.customer-select, .supplier-select').select2({
       theme: 'bootstrap4',
@@ -292,7 +292,7 @@ $(function() {
       allowClear: true
     });
   } else {
-    console.warn('Select2 لم يتم {{ t('{{ t('Download') }}ه،') }} {{ t('سيتم') }} {{ t('استخدام') }} {{ t('Menu') }} {{ t('العادية') }}.');
+    console.warn('Select2 لم يتم {{ t('Downloadه،') }} {{ t('سيتم') }} {{ t('استخدام') }} {{ t('Menu') }} {{ t('العادية') }}.');
   }
   
   // {{ t('Update') }} {{ t('Price_2') }} {{ t('Exchange') }} {{ t('ديناميكياً') }}
@@ -311,16 +311,16 @@ $(function() {
         if (data && data.rate) {
           $('input[name="exchange_rate"]').val(parseFloat(data.rate).toFixed(6));
         } else if (window.toastr) {
-          toastr.warning('{{ t('تعذر') }} {{ t('جلب') }} {{ t('Price_2') }} {{ t('{{ t('Exchange') }}،') }} {{ t('يرجى') }} {{ t('إدخال') }} {{ t('Value') }} {{ t('Manually') }}.');
+          toastr.warning('{{ t('تعذر') }} {{ t('جلب') }} {{ t('Price_2') }} {{ t('Exchange،') }} {{ t('يرجى') }} {{ t('إدخال') }} {{ t('Value') }} {{ t('Manually') }}.');
         } else {
-          alert('{{ t('تعذر') }} {{ t('جلب') }} {{ t('Price_2') }} {{ t('{{ t('Exchange') }}،') }} {{ t('يرجى') }} {{ t('إدخال') }} {{ t('Value') }} {{ t('Manually') }}.');
+          alert('{{ t('تعذر') }} {{ t('جلب') }} {{ t('Price_2') }} {{ t('Exchange،') }} {{ t('يرجى') }} {{ t('إدخال') }} {{ t('Value') }} {{ t('Manually') }}.');
         }
       },
       error: function() {
         if (window.toastr) {
-          toastr.warning('{{ t('تعذر') }} {{ t('جلب') }} {{ t('Price_2') }} {{ t('{{ t('Exchange') }}،') }} {{ t('يرجى') }} {{ t('إدخال') }} {{ t('Value') }} {{ t('Manually') }}.');
+          toastr.warning('{{ t('تعذر') }} {{ t('جلب') }} {{ t('Price_2') }} {{ t('Exchange،') }} {{ t('يرجى') }} {{ t('إدخال') }} {{ t('Value') }} {{ t('Manually') }}.');
         } else {
-          alert('{{ t('تعذر') }} {{ t('جلب') }} {{ t('Price_2') }} {{ t('{{ t('Exchange') }}،') }} {{ t('يرجى') }} {{ t('إدخال') }} {{ t('Value') }} {{ t('Manually') }}.');
+          alert('{{ t('تعذر') }} {{ t('جلب') }} {{ t('Price_2') }} {{ t('Exchange،') }} {{ t('يرجى') }} {{ t('إدخال') }} {{ t('Value') }} {{ t('Manually') }}.');
         }
       }
     });
@@ -346,7 +346,7 @@ $(function() {
     $('input[name="due_date"]').val(dueDate.toISOString().split('T')[0]);
   });
   
-  // {{ t('ضبط') }} {{ t('History') }} {{ t('الإصدار') }} {{ t('{{ t('افتراضي') }}اً') }} إلى {{ t('Today') }} إذا كان {{ t('فارغاً،') }} ثم {{ t('حدّث') }} {{ t('Due') }}
+  // {{ t('ضبط') }} {{ t('History') }} {{ t('الإصدار') }} {{ t('افتراضياً') }} إلى {{ t('Today') }} إذا كان {{ t('فارغاً،') }} ثم {{ t('حدّث') }} {{ t('Due') }}
   (function ensureIssueDateDefault() {
     const $issue = $('input[name="issue_date"]');
     if (!$issue.val()) {

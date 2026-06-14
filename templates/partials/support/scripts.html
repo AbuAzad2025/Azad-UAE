@@ -23,11 +23,11 @@
                 case 'buy_code':
                     return `{{ t('مرحباً') }} ${supportBrand}، {{ t('أريد') }} {{ t('Purchase') }} {{ t('Code') }} {{ t('المصدري') }} أو {{ t('تنفيذ') }} {{ t('تخصيص') }} {{ t('Specific_2') }} {{ t('للنظام') }}.${orderRef}`;
                 case 'donation_help':
-                    return `{{ t('مرحباً') }} ${supportBrand}، {{ t('أريد') }} {{ t('ال{{ t('تبرع') }}') }} أو {{ t('رعاية') }} {{ t('تطوير') }} {{ t('ميزة') }} في {{ t('System') }}. {{ t('Amount') }} {{ t('Expected') }}: ${amount || '{{ t('سأحدده') }} {{ t('معكم') }}'} {{ t('Dollar') }}.${orderRef}`;
+                    return `{{ t('مرحباً') }} ${supportBrand}، {{ t('أريد') }} {{ t('التبرع') }} أو {{ t('رعاية') }} {{ t('تطوير') }} {{ t('ميزة') }} في {{ t('System') }}. {{ t('Amount') }} {{ t('Expected') }}: ${amount || '{{ t('سأحدده') }} {{ t('معكم') }}'} {{ t('Dollar') }}.${orderRef}`;
                 case 'payment_help':
-                    return `{{ t('مرحباً') }} ${supportBrand}، {{ t('أحتاج') }} {{ t('مساعدة') }} في {{ t('إتمام') }} ${currentTab === 'purchase' ? '{{ t('Purchase') }} {{ t('System') }}' : '{{ t('ال{{ t('تبرع') }}') }}'}.${orderRef}`;
+                    return `{{ t('مرحباً') }} ${supportBrand}، {{ t('أحتاج') }} {{ t('مساعدة') }} في {{ t('إتمام') }} ${currentTab === 'purchase' ? '{{ t('Purchase') }} {{ t('System') }}' : '{{ t('التبرع') }}'}.${orderRef}`;
                 case 'refund_help':
-                    return `{{ t('مرحباً') }} ${supportBrand}، {{ t('أريد') }} {{ t('ال{{ t('استفسار') }}') }} عن {{ t('Status_2') }} {{ t('Payment') }} أو {{ t('استرداد') }}.${orderRef}`;
+                    return `{{ t('مرحباً') }} ${supportBrand}، {{ t('أريد') }} {{ t('الاستفسار') }} عن {{ t('Status_2') }} {{ t('Payment') }} أو {{ t('استرداد') }}.${orderRef}`;
                 case 'buy_system':
                 default:
                     return `{{ t('مرحباً') }} ${supportBrand}، {{ t('أريد') }} {{ t('Purchase') }} {{ t('System') }}${currentTab === 'purchase' ? ` {{ t('والباقـة') }} {{ t('الحالية') }}: ${packageLabel}` : ''}. {{ t('Amount') }} {{ t('Expected') }}: ${amount || '{{ t('سأحدده') }} {{ t('معكم') }}'} {{ t('Dollar') }}.${orderRef}`;
@@ -67,7 +67,7 @@
                 </div>
                 <div class="ic-60">
                     <div><i class="fas fa-check-circle ic-61"></i> عند {{ t('النجاح') }} {{ t('ستصلك') }} {{ t('Details') }} {{ t('واضحة') }} أو {{ t('Address_2') }} {{ t('Payment') }} {{ t('مباشر') }}.</div>
-                    <div><i class="fas fa-hourglass-half ic-62"></i> عند {{ t('Review') }} {{ t('Manual_3') }} {{ t('يمكنك') }} {{ t('ال{{ t('متابعة') }}') }} {{ t('فوراً') }} مع {{ t('أزاد') }}.</div>
+                    <div><i class="fas fa-hourglass-half ic-62"></i> عند {{ t('Review') }} {{ t('Manual_3') }} {{ t('يمكنك') }} {{ t('المتابعة') }} {{ t('فوراً') }} مع {{ t('أزاد') }}.</div>
                     <div><i class="fas fa-undo-alt ic-63"></i> {{ t('لأي') }} {{ t('استرداد') }} أو {{ t('Reconciliation') }} {{ t('استخدم') }} {{ t('واتساب') }} أو {{ t('Email_2') }} {{ t('الرسمي') }}.</div>
                 </div>
             `;
@@ -309,7 +309,7 @@
                 Swal.fire({
                     icon: 'error',
                     title: '{{ t('Error') }}',
-                    text: '{{ t('Name') }} {{ t('و{{ t('Email_2') }}') }} {{ t('Email_3') }} {{ t('مطلوبان') }} {{ t('ل{{ t('Purchase') }}') }} {{ t('Plan') }}',
+                    text: '{{ t('Name') }} {{ t('وEmail_2') }} {{ t('Email_3') }} {{ t('مطلوبان') }} {{ t('لPurchase') }} {{ t('Plan') }}',
                     confirmButtonColor: '#667eea'
                 });
                 return null;
@@ -344,7 +344,7 @@
                 Swal.fire({
                     icon: 'error',
                     title: '{{ t('Error') }}',
-                    text: '{{ t('الحد') }} {{ t('الأدنى') }} {{ t('لل{{ t('تبرع') }}') }} هو $15',
+                    text: '{{ t('الحد') }} {{ t('الأدنى') }} {{ t('للتبرع') }} هو $15',
                     confirmButtonColor: '#667eea'
                 });
                 return;
@@ -360,7 +360,7 @@
                 allowOutsideClick: false
             });
             
-            // {{ t('تحديد') }} {{ t('نوع') }} {{ t('المعاملة') }} {{ t('وال{{ t('Data_2') }}') }}
+            // {{ t('تحديد') }} {{ t('نوع') }} {{ t('المعاملة') }} {{ t('والData_2') }}
             let apiEndpoint = '';
             let requestData = {};
             
@@ -376,7 +376,7 @@
                     return;
                 }
                 
-                // {{ t('جلب') }} package_id من {{ t('Card_2') }} {{ t('{{ t('المحدد') }}ة') }}
+                // {{ t('جلب') }} package_id من {{ t('Card_2') }} {{ t('المحددة') }}
                 const packageCard = document.querySelector('.package-card.active');
                 const packageId = packageCard ? packageCard.getAttribute('data-package-id') : null;
                 
@@ -384,7 +384,7 @@
                     Swal.fire({
                         icon: 'error',
                         title: '{{ t('Error') }}',
-                        text: 'لم يتم {{ t('التعرف') }} على {{ t('Plan') }} {{ t('{{ t('المحدد') }}ة') }}',
+                        text: 'لم يتم {{ t('التعرف') }} على {{ t('Plan') }} {{ t('المحددة') }}',
                         confirmButtonColor: '#667eea'
                     });
                     return;
@@ -414,8 +414,8 @@
                     }
                 };
             } else {
-                // {{ t('Data_2') }} {{ t('ال{{ t('تبرع') }}') }} ({{ t('{{ t('Optional') }}ة') }})
-                const formValues = await collectSupportContactData('{{ t('Data_2') }} {{ t('ال{{ t('تبرع') }}') }}');
+                // {{ t('Data_2') }} {{ t('التبرع') }} ({{ t('Optionalة') }})
+                const formValues = await collectSupportContactData('{{ t('Data_2') }} {{ t('التبرع') }}');
                 if (!formValues) {
                     Swal.close();
                     return;
@@ -463,7 +463,7 @@
                                 <div class="ic-70">
                                     <p class="ic-71">${data.message}</p>
                                     <div class="ic-72">
-                                        <p><strong>{{ t('رقم') }} {{ t('ال{{ t('طلب') }}') }}:</strong> #${recordId}</p>
+                                        <p><strong>{{ t('رقم') }} {{ t('الطلب') }}:</strong> #${recordId}</p>
                                         <p><strong>{{ t('Amount') }} {{ t('Required_2') }}:</strong> ${data.payment_amount || paymentAmount} ${data.crypto_currency || cryptoType.toUpperCase()}</p>
                                         <hr>
                                         <p><strong>{{ t('Address_2') }} {{ t('Payment_2') }}:</strong></p>
@@ -477,17 +477,17 @@
                                     </div>
                                     <p class="ic-74">
                                         <i class="fas fa-info-circle"></i>
-                                        {{ t('أرسل') }} {{ t('Amount') }} إلى {{ t('Address') }} {{ t('أعلاه') }} {{ t('وسيتم') }} {{ t('Confirm') }} {{ t('Status') }} {{ t('{{ t('تلقائي') }}اً') }}.
+                                        {{ t('أرسل') }} {{ t('Amount') }} إلى {{ t('Address') }} {{ t('أعلاه') }} {{ t('وسيتم') }} {{ t('Confirm') }} {{ t('Status') }} {{ t('تلقائياً') }}.
                                     </p>
-                                        ${buildSupportStatusHtml(recordId, paymentAmount, '{{ t('ب{{ t('Waiting_2') }}') }} {{ t('{{ t('Transfer') }}ك') }} إلى {{ t('Address_2') }} {{ t('Payment_2') }}')}
+                                        ${buildSupportStatusHtml(recordId, paymentAmount, '{{ t('بWaiting_2') }} {{ t('Transferك') }} إلى {{ t('Address_2') }} {{ t('Payment_2') }}')}
                                 </div>
                             `,
-                            confirmButtonText: '{{ t('تم،') }} {{ t('سأ{{ t('Payment') }}') }} {{ t('الآن_2') }}',
+                            confirmButtonText: '{{ t('تم،') }} {{ t('سأPayment') }} {{ t('الآن_2') }}',
                             confirmButtonColor: '#28a745',
                             showDenyButton: true,
                             denyButtonText: '{{ t('واتساب') }} {{ t('أزاد') }}',
                             showCancelButton: true,
-                            cancelButtonText: '{{ t('راسلنا') }} {{ t('ب{{ t('Email_2') }}') }}',
+                            cancelButtonText: '{{ t('راسلنا') }} {{ t('بEmail_2') }}',
                             width: 650,
                             allowOutsideClick: false
                         }).then((result) => {
@@ -500,22 +500,22 @@
                     } else {
                         Swal.fire({
                             icon: 'success',
-                            title: 'تم {{ t('Save') }} {{ t('ال{{ t('طلب') }}') }} {{ t('بنجاح') }}',
+                            title: 'تم {{ t('Save') }} {{ t('الطلب') }} {{ t('بنجاح') }}',
                             html: `
                                 <div class="ic-70">
                                     <p class="ic-75">${data.message}</p>
                                     <div class="ic-72">
-                                        <p><strong>{{ t('رقم') }} {{ t('ال{{ t('طلب') }}') }}:</strong> #${recordId}</p>
+                                        <p><strong>{{ t('رقم') }} {{ t('الطلب') }}:</strong> #${recordId}</p>
                                         <p><strong>{{ t('Amount') }}:</strong> $${paymentAmount}</p>
                                         <p><strong>{{ t('طريقة') }} {{ t('Payment_2') }}:</strong> ${data.payment_method_display || cryptoType.toUpperCase()}</p>
                                     </div>
-                                    ${buildSupportStatusHtml(recordId, paymentAmount, 'تم {{ t('تسجيل') }} {{ t('ال{{ t('طلب') }}') }} {{ t('ب{{ t('Waiting_2') }}') }} {{ t('ال{{ t('متابعة') }}') }} أو {{ t('Confirm_2') }}')}
+                                    ${buildSupportStatusHtml(recordId, paymentAmount, 'تم {{ t('تسجيل') }} {{ t('الطلب') }} {{ t('بWaiting_2') }} {{ t('المتابعة') }} أو {{ t('Confirm_2') }}')}
                                 </div>
                             `,
                             confirmButtonText: '{{ t('واتساب') }} {{ t('أزاد') }}',
                             confirmButtonColor: '#28a745',
                             showDenyButton: true,
-                            denyButtonText: '{{ t('راسلنا') }} {{ t('ب{{ t('Email_2') }}') }}',
+                            denyButtonText: '{{ t('راسلنا') }} {{ t('بEmail_2') }}',
                             allowOutsideClick: false
                         }).then((result) => {
                             if (result.isConfirmed) {
@@ -527,8 +527,8 @@
                     }
                 } else {
                     showSupportAssistanceModal(
-                        '{{ t('تعذر') }} {{ t('Create') }} {{ t('ال{{ t('طلب') }}') }}',
-                        `<p>${escapeHtml(data.error || '{{ t('حدث') }} {{ t('Error') }} {{ t('أثناء') }} {{ t('Create') }} {{ t('ال{{ t('طلب') }}') }}.')}</p><p>{{ t('يمكنك') }} {{ t('إعادة') }} {{ t('المحاولة') }} أو {{ t('إكمال') }} {{ t('العملية') }} {{ t('{{ t('مباشر') }}ة') }} مع {{ t('Company_2') }} {{ t('أزاد') }}.</p>`,
+                        '{{ t('تعذر') }} {{ t('Create') }} {{ t('الطلب') }}',
+                        `<p>${escapeHtml(data.error || '{{ t('حدث') }} {{ t('Error') }} {{ t('أثناء') }} {{ t('Create') }} {{ t('الطلب') }}.')}</p><p>{{ t('يمكنك') }} {{ t('إعادة') }} {{ t('المحاولة') }} أو {{ t('إكمال') }} {{ t('العملية') }} {{ t('مباشرة') }} مع {{ t('Company_2') }} {{ t('أزاد') }}.</p>`,
                         'payment_help',
                         paymentAmount
                     );
@@ -537,8 +537,8 @@
             .catch(error => {
                 Swal.close();
                 showSupportAssistanceModal(
-                    '{{ t('تعذر') }} {{ t('الاتصال') }} {{ t('ب{{ t('الخادم') }}') }}',
-                    `<p>لم {{ t('نتمكن') }} من {{ t('Create') }} ${currentTab === 'purchase' ? '{{ t('طلب') }} {{ t('Purchase_2') }}' : '{{ t('طلب') }} {{ t('ال{{ t('تبرع') }}') }}'} {{ t('الآن_2') }}.</p><p>{{ t('يمكنك') }} {{ t('ال{{ t('متابعة') }}') }} {{ t('{{ t('مباشر') }}ة') }} مع {{ t('أزاد') }} {{ t('عبر') }} {{ t('واتساب') }} أو {{ t('Email_2') }} {{ t('بنفس') }} {{ t('Amount') }}: <strong>$${paymentAmount}</strong>.</p>`,
+                    '{{ t('تعذر') }} {{ t('الاتصال') }} {{ t('بالخادم') }}',
+                    `<p>لم {{ t('نتمكن') }} من {{ t('Create') }} ${currentTab === 'purchase' ? '{{ t('طلب') }} {{ t('Purchase_2') }}' : '{{ t('طلب') }} {{ t('التبرع') }}'} {{ t('الآن_2') }}.</p><p>{{ t('يمكنك') }} {{ t('المتابعة') }} {{ t('مباشرة') }} مع {{ t('أزاد') }} {{ t('عبر') }} {{ t('واتساب') }} أو {{ t('Email_2') }} {{ t('بنفس') }} {{ t('Amount') }}: <strong>$${paymentAmount}</strong>.</p>`,
                     'payment_help',
                     paymentAmount
                 );
@@ -568,7 +568,7 @@
                 Swal.fire({
                     icon: 'error',
                     title: '{{ t('Error') }}',
-                    text: '{{ t('الحد') }} {{ t('الأدنى') }} {{ t('لل{{ t('تبرع') }}') }} $15',
+                    text: '{{ t('الحد') }} {{ t('الأدنى') }} {{ t('للتبرع') }} $15',
                     confirmButtonColor: '#667eea'
                 });
                 return;
@@ -655,11 +655,11 @@
                                         <i class="fab fa-paypal ic-76"></i> 
                                         <strong>{{ t('Payment') }} {{ t('عبر') }} PayPal</strong>
                                     </p>
-                                    <p>{{ t('رقم') }} {{ t('ال{{ t('طلب') }}') }}: #${data.purchase_id || data.donation_id}</p>
+                                    <p>{{ t('رقم') }} {{ t('الطلب') }}: #${data.purchase_id || data.donation_id}</p>
                                     <div class="ic-72">
                                         <p><strong>{{ t('Amount') }}:</strong> $${paymentAmount}</p>
                                         <p class="ic-77">
-                                            <i class="fas fa-exchange-alt"></i> يتم {{ t('Transfer_2') }} {{ t('{{ t('تلقائي') }}اً') }} إلى Bitcoin
+                                            <i class="fas fa-exchange-alt"></i> يتم {{ t('Transfer_2') }} {{ t('تلقائياً') }} إلى Bitcoin
                                         </p>
                                         <hr>
                                         <p class="ic-78">
@@ -671,7 +671,7 @@
                                         </button>
                                     </div>
                                     <p class="ic-79">
-                                        ✅ تم {{ t('Save') }} {{ t('{{ t('طلب') }}ك') }} {{ t('بنجاح') }}
+                                        ✅ تم {{ t('Save') }} {{ t('طلبك') }} {{ t('بنجاح') }}
                                     </p>
                                     ${buildSupportStatusHtml(data.purchase_id || data.donation_id, paymentAmount, '{{ t('قيد') }} {{ t('Waiting_2') }} {{ t('إتمام') }} {{ t('Payment_2') }} أو {{ t('التواصل') }}')}
                                 </div>
@@ -681,7 +681,7 @@
                             showDenyButton: true,
                             denyButtonText: '{{ t('واتساب') }} {{ t('أزاد') }}',
                             showCancelButton: true,
-                            cancelButtonText: '{{ t('راسلنا') }} {{ t('ب{{ t('Email_2') }}') }}',
+                            cancelButtonText: '{{ t('راسلنا') }} {{ t('بEmail_2') }}',
                             width: 600
                         }).then((result) => {
                             const recordId = data.purchase_id || data.donation_id;
@@ -694,15 +694,15 @@
                     } else {
                         Swal.fire({
                             icon: 'success',
-                            title: 'تم {{ t('Save') }} {{ t('ال{{ t('طلب') }}') }}',
+                            title: 'تم {{ t('Save') }} {{ t('الطلب') }}',
                             html: `
-                                ${buildSupportStatusHtml(data.purchase_id || data.donation_id, paymentAmount, '{{ t('ب{{ t('Waiting_2') }}') }} {{ t('التنسيق') }} مع {{ t('فريق') }} {{ t('أزاد') }}')}
-                                <p class="ic-80">{{ t('يمكنك') }} {{ t('الآن_2') }} {{ t('Select') }} {{ t('واتساب') }} أو {{ t('Email_2') }} {{ t('ل{{ t('إكمال') }}') }} {{ t('Payment_2') }} أو {{ t('ال{{ t('استفسار') }}') }}.</p>
+                                ${buildSupportStatusHtml(data.purchase_id || data.donation_id, paymentAmount, '{{ t('بWaiting_2') }} {{ t('التنسيق') }} مع {{ t('فريق') }} {{ t('أزاد') }}')}
+                                <p class="ic-80">{{ t('يمكنك') }} {{ t('الآن_2') }} {{ t('Select') }} {{ t('واتساب') }} أو {{ t('Email_2') }} {{ t('لإكمال') }} {{ t('Payment_2') }} أو {{ t('الاستفسار') }}.</p>
                             `,
                             confirmButtonText: '{{ t('واتساب') }} {{ t('أزاد') }}',
                             confirmButtonColor: '#25D366',
                             showDenyButton: true,
-                            denyButtonText: '{{ t('راسلنا') }} {{ t('ب{{ t('Email_2') }}') }}'
+                            denyButtonText: '{{ t('راسلنا') }} {{ t('بEmail_2') }}'
                         }).then((result) => {
                             const recordId = data.purchase_id || data.donation_id;
                             if (result.isConfirmed) {
@@ -715,7 +715,7 @@
                 } else {
                     showSupportAssistanceModal(
                         '{{ t('تعذر') }} {{ t('إكمال') }} {{ t('طلب') }} PayPal',
-                        `<p>${escapeHtml(data.error || '{{ t('تعذر') }} {{ t('Save') }} {{ t('طلب') }} PayPal {{ t('حالياً') }}.')}</p><p>{{ t('يمكنك') }} {{ t('ال{{ t('متابعة') }}') }} {{ t('{{ t('مباشر') }}ة') }} مع {{ t('أزاد') }} {{ t('عبر') }} {{ t('واتساب') }} أو {{ t('Email_2') }}.</p>`,
+                        `<p>${escapeHtml(data.error || '{{ t('تعذر') }} {{ t('Save') }} {{ t('طلب') }} PayPal {{ t('حالياً') }}.')}</p><p>{{ t('يمكنك') }} {{ t('المتابعة') }} {{ t('مباشرة') }} مع {{ t('أزاد') }} {{ t('عبر') }} {{ t('واتساب') }} أو {{ t('Email_2') }}.</p>`,
                         'payment_help',
                         paymentAmount
                     );
@@ -723,7 +723,7 @@
             } catch (error) {
                 showSupportAssistanceModal(
                     '{{ t('فشل') }} {{ t('الاتصال') }} {{ t('أثناء') }} PayPal',
-                    `<p>{{ t('تعذر') }} {{ t('التواصل') }} مع {{ t('الخادم') }} {{ t('أثناء') }} {{ t('تجهيز') }} {{ t('ال{{ t('طلب') }}') }}.</p><p>{{ t('استخدم') }} {{ t('واتساب') }} أو {{ t('Email_2') }} {{ t('ل{{ t('إتمام') }}') }} {{ t('Purchase_2') }} أو {{ t('ال{{ t('تبرع') }}') }} {{ t('بنفس') }} {{ t('Details_2') }}.</p>`,
+                    `<p>{{ t('تعذر') }} {{ t('التواصل') }} مع {{ t('الخادم') }} {{ t('أثناء') }} {{ t('تجهيز') }} {{ t('الطلب') }}.</p><p>{{ t('استخدم') }} {{ t('واتساب') }} أو {{ t('Email_2') }} {{ t('لإتمام') }} {{ t('Purchase_2') }} أو {{ t('التبرع') }} {{ t('بنفس') }} {{ t('Details_2') }}.</p>`,
                     'payment_help',
                     paymentAmount
                 );
@@ -742,7 +742,7 @@
                 Swal.fire({
                     icon: 'error',
                     title: '{{ t('Error') }}',
-                    text: '{{ t('الحد') }} {{ t('الأدنى') }} {{ t('لل{{ t('تبرع') }}') }} $15',
+                    text: '{{ t('الحد') }} {{ t('الأدنى') }} {{ t('للتبرع') }} $15',
                     confirmButtonColor: '#667eea'
                 });
                 return;
@@ -827,7 +827,7 @@
                             html: `
                                 <div class="ic-70">
                                     <p class="ic-81">
-                                        <strong>{{ t('رقم') }} {{ t('ال{{ t('طلب') }}') }}: #${data.purchase_id || data.donation_id}</strong>
+                                        <strong>{{ t('رقم') }} {{ t('الطلب') }}: #${data.purchase_id || data.donation_id}</strong>
                                     </p>
                                     <div class="ic-72">
                                         <p><strong>{{ t('Amount') }} {{ t('Required_2') }}:</strong></p>
@@ -835,7 +835,7 @@
                                             ${data.payment_amount || paymentAmount} ${data.crypto_currency || 'BTC'}
                                         </p>
                                         <hr>
-                                        <p><strong>{{ t('Address_2') }} {{ t('الم{{ t('Save') }}ة_2') }}:</strong></p>
+                                        <p><strong>{{ t('Address_2') }} {{ t('المSaveة_2') }}:</strong></p>
                                         <p class="ic-83">
                                             ${data.payment_address}
                                         </p>
@@ -848,7 +848,7 @@
                                         <i class="fas fa-check-circle"></i> 
                                         {{ t('أرسل') }} {{ t('Amount') }} {{ t('المحدد') }} إلى {{ t('Address') }} {{ t('أعلاه') }}
                                     </p>
-                                    ${buildSupportStatusHtml(data.purchase_id || data.donation_id, paymentAmount, '{{ t('ب{{ t('Waiting_2') }}') }} {{ t('إتمام') }} {{ t('Payment_2') }} أو {{ t('ال{{ t('متابعة') }}') }} مع {{ t('أزاد') }}')}
+                                    ${buildSupportStatusHtml(data.purchase_id || data.donation_id, paymentAmount, '{{ t('بWaiting_2') }} {{ t('إتمام') }} {{ t('Payment_2') }} أو {{ t('المتابعة') }} مع {{ t('أزاد') }}')}
                                 </div>
                             `,
                             confirmButtonText: '{{ t('متابعة') }} {{ t('Payment_2') }}',
@@ -856,7 +856,7 @@
                             showDenyButton: true,
                             denyButtonText: '{{ t('واتساب') }} {{ t('أزاد') }}',
                             showCancelButton: true,
-                            cancelButtonText: '{{ t('راسلنا') }} {{ t('ب{{ t('Email_2') }}') }}',
+                            cancelButtonText: '{{ t('راسلنا') }} {{ t('بEmail_2') }}',
                             width: 600,
                             allowOutsideClick: false
                         }).then((result) => {
@@ -870,15 +870,15 @@
                     } else {
                         Swal.fire({
                             icon: 'success',
-                            title: 'تم {{ t('Save') }} {{ t('ال{{ t('طلب') }}') }}',
+                            title: 'تم {{ t('Save') }} {{ t('الطلب') }}',
                             html: `
-                                ${buildSupportStatusHtml(data.purchase_id || data.donation_id, paymentAmount, 'تم {{ t('تسجيل') }} {{ t('ال{{ t('طلب') }}') }} {{ t('ب{{ t('Waiting_2') }}') }} {{ t('Confirm') }} أو {{ t('متابعة') }} {{ t('Manual_4') }}')}
-                                <p class="ic-80">{{ t('يمكنك') }} {{ t('ال{{ t('متابعة') }}') }} {{ t('{{ t('مباشر') }}ة') }} مع {{ t('Company_2') }} {{ t('أزاد') }} {{ t('عبر') }} {{ t('واتساب') }} أو {{ t('Email_2') }}.</p>
+                                ${buildSupportStatusHtml(data.purchase_id || data.donation_id, paymentAmount, 'تم {{ t('تسجيل') }} {{ t('الطلب') }} {{ t('بWaiting_2') }} {{ t('Confirm') }} أو {{ t('متابعة') }} {{ t('Manual_4') }}')}
+                                <p class="ic-80">{{ t('يمكنك') }} {{ t('المتابعة') }} {{ t('مباشرة') }} مع {{ t('Company_2') }} {{ t('أزاد') }} {{ t('عبر') }} {{ t('واتساب') }} أو {{ t('Email_2') }}.</p>
                             `,
                             confirmButtonText: '{{ t('واتساب') }} {{ t('أزاد') }}',
                             confirmButtonColor: '#25D366',
                             showDenyButton: true,
-                            denyButtonText: '{{ t('راسلنا') }} {{ t('ب{{ t('Email_2') }}') }}'
+                            denyButtonText: '{{ t('راسلنا') }} {{ t('بEmail_2') }}'
                         }).then((result) => {
                             const recordId = data.purchase_id || data.donation_id;
                             if (result.isConfirmed) {
@@ -891,7 +891,7 @@
                 } else {
                     showSupportAssistanceModal(
                         '{{ t('تعذر') }} {{ t('تجهيز') }} {{ t('طلب') }} {{ t('Card_2') }}',
-                        `<p>${escapeHtml(data.error || '{{ t('تعذر') }} {{ t('Save') }} {{ t('طلب') }} {{ t('Card_2') }} {{ t('حالياً') }}.')}</p><p>{{ t('يمكنك') }} {{ t('إكمال') }} {{ t('العملية') }} {{ t('{{ t('مباشر') }}ة') }} مع {{ t('أزاد') }} {{ t('عبر') }} {{ t('واتساب') }} أو {{ t('Email_2') }}.</p>`,
+                        `<p>${escapeHtml(data.error || '{{ t('تعذر') }} {{ t('Save') }} {{ t('طلب') }} {{ t('Card_2') }} {{ t('حالياً') }}.')}</p><p>{{ t('يمكنك') }} {{ t('إكمال') }} {{ t('العملية') }} {{ t('مباشرة') }} مع {{ t('أزاد') }} {{ t('عبر') }} {{ t('واتساب') }} أو {{ t('Email_2') }}.</p>`,
                         'payment_help',
                         paymentAmount
                     );
@@ -899,7 +899,7 @@
             } catch (error) {
                 showSupportAssistanceModal(
                     '{{ t('فشل') }} {{ t('الاتصال') }} {{ t('أثناء') }} {{ t('Payment_2') }}',
-                    `<p>{{ t('تعذر') }} {{ t('الوصول') }} إلى {{ t('الخادم') }} {{ t('أثناء') }} {{ t('Processing_2') }} {{ t('ال{{ t('طلب') }}') }}.</p><p>لا {{ t('تقلق،') }} {{ t('يمكنك') }} {{ t('ال{{ t('متابعة') }}') }} {{ t('الآن_2') }} {{ t('{{ t('مباشر') }}ة') }} مع {{ t('Company_2') }} {{ t('أزاد') }}.</p>`,
+                    `<p>{{ t('تعذر') }} {{ t('الوصول') }} إلى {{ t('الخادم') }} {{ t('أثناء') }} {{ t('Processing_2') }} {{ t('الطلب') }}.</p><p>لا {{ t('تقلق،') }} {{ t('يمكنك') }} {{ t('المتابعة') }} {{ t('الآن_2') }} {{ t('مباشرة') }} مع {{ t('Company_2') }} {{ t('أزاد') }}.</p>`,
                     'payment_help',
                     paymentAmount
                 );

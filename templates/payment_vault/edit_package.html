@@ -115,7 +115,7 @@
                                 <input type="checkbox" class="custom-control-input" id="is_featured" 
                                        name="is_featured" {% if package.is_featured %}checked{% endif %} aria-label="is featured">
                                 <label class="custom-control-label" for="is_featured">
-                                    <i class="fas fa-star text-warning"></i> {{ t('م{{ t('ميزة') }}') }}
+                                    <i class="fas fa-star text-warning"></i> {{ t('مميزة') }}
                                 </label>
                             </div>
                         </div>
@@ -125,7 +125,7 @@
                     
                     <div class="form-group mb-0">
                         <button type="submit" class="btn btn-success btn-lg">
-                            <i class="fas fa-save"></i> {{ t('Save') }} {{ t('ال{{ t('Edit') }}ات') }}
+                            <i class="fas fa-save"></i> {{ t('Save') }} {{ t('الEditات') }}
                         </button>
                         <a href="{{ url_for('payment_vault.packages_management') }}" class="btn btn-secondary btn-lg">
                             <i class="fas fa-times"></i> {{ t('Cancel') }}

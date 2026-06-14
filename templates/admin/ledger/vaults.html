@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
-{% block title %}{{ t('Management') }} {{ t('الصناديق') }} {{ t('و{{ t('ال{{ t('محافظ') }}') }}') }} - Vaults Management{% endblock %}
-{% block page_title %}{{ t('Management') }} {{ t('الصناديق') }} {{ t('و{{ t('ال{{ t('محافظ') }}') }}') }}{% endblock %}
+{% block title %}{{ t('Management') }} {{ t('الصناديق') }} {{ t('والمحافظ') }} - Vaults Management{% endblock %}
+{% block page_title %}{{ t('Management') }} {{ t('الصناديق') }} {{ t('والمحافظ') }}{% endblock %}
 
 {% block content %}
 <div class="row mb-3">
@@ -9,7 +9,7 @@
       <i class="fas fa-arrow-right mr-2"></i>{{ t('العودة') }} {{ t('للوحة') }} {{ t('Control') }}
     </a>
     {% if current_user.is_owner %}<a href="{{ url_for('payment_vault.dashboard') }}" class="btn btn-primary">
-      <i class="fas fa-vault mr-2"></i>{{ t('Management') }} {{ t('ال{{ t('محافظ') }}') }}
+      <i class="fas fa-vault mr-2"></i>{{ t('Management') }} {{ t('المحافظ') }}
     </a>{% endif %}
   </div>
 </div>
@@ -17,7 +17,7 @@
 <div class="card">
   <div class="card-header bg-gradient-primary">
     <h3 class="card-title text-white">
-      <i class="fas fa-vault mr-2"></i>{{ t('جميع') }} {{ t('ال{{ t('محافظ') }}') }} {{ t('و{{ t('الصناديق') }}') }}
+      <i class="fas fa-vault mr-2"></i>{{ t('جميع') }} {{ t('المحافظ') }} {{ t('والصناديق') }}
     </h3>
   </div>
   <div class="card-body p-0">
@@ -28,7 +28,7 @@
             <th>{{ t('Name_2') }} {{ t('المحفظة_2') }}</th>
             <th>{{ t('Status') }}</th>
             <th>{{ t('Last') }} {{ t('وصول') }}</th>
-            <th>{{ t('ال{{ t('محاولات') }}') }} {{ t('ال{{ t('فاشلة') }}') }}</th>
+            <th>{{ t('المحاولات') }} {{ t('الفاشلة') }}</th>
             <th>{{ t('History') }} {{ t('Create_2') }}</th>
             <th>{{ t('الإجراءات') }}</th>
           </tr>
@@ -50,7 +50,7 @@
               {% if vault.last_access %}
                 {{ vault.last_access.strftime('%Y-%m-%d %H:%M') }}
               {% else %}
-                <span class="text-muted">لم يتم {{ t('ال{{ t('وصول') }}') }}</span>
+                <span class="text-muted">لم يتم {{ t('الوصول') }}</span>
               {% endif %}
             </td>
             <td>
@@ -91,7 +91,7 @@
         <div class="d-flex justify-content-between">
           <div>
             <h4 class="mb-0">{{ vaults|length }}</h4>
-            <p class="mb-0">{{ t('Total_2') }} {{ t('ال{{ t('محافظ') }}') }}</p>
+            <p class="mb-0">{{ t('Total_2') }} {{ t('المحافظ') }}</p>
           </div>
           <div class="align-self-center">
             <i class="fas fa-vault fa-2x"></i>
@@ -154,13 +154,13 @@
 {% block scripts %}
 <script>
 function unlockVault(vaultId) {
-  if (confirm('هل أنت {{ t('متأكد') }} من {{ t('فتح') }} {{ t('{{ t('المحفظة_2') }}') }}')) {
+  if (confirm('هل أنت {{ t('متأكد') }} من {{ t('فتح') }} {{ t('المحفظة_2') }}')) {
     window.location.href = '/payment-vault/unlock';
   }
 }
 
 function lockVault(vaultId) {
-  if (confirm('هل أنت {{ t('متأكد') }} من {{ t('قفل') }} {{ t('{{ t('المحفظة_2') }}') }}')) {
+  if (confirm('هل أنت {{ t('متأكد') }} من {{ t('قفل') }} {{ t('المحفظة_2') }}')) {
     window.location.href = '/payment-vault/lock';
   }
 }

@@ -1,9 +1,9 @@
 {% extends 'base.html' %}
-{% block title %}{{ t('ال{{ t('أحداث') }}') }} {{ t('Accounting') }} {{ t('الفورية') }}{% endblock %}
+{% block title %}{{ t('الأحداث') }} {{ t('Accounting') }} {{ t('الفورية') }}{% endblock %}
 {% block content %}
 <div class="container-fluid">
   <div class="card">
-    <div class="card-header"><h3><i class="fas fa-stream"></i> {{ t('ال{{ t('أحداث') }}') }} {{ t('Accounting') }} {{ t('الفورية') }}</h3></div>
+    <div class="card-header"><h3><i class="fas fa-stream"></i> {{ t('الأحداث') }} {{ t('Accounting') }} {{ t('الفورية') }}</h3></div>
     <div class="card-body">
       <div class="row mb-4">
         {% for event_type, count in event_stats.items() %}
@@ -18,7 +18,7 @@
         </div>
         {% endfor %}
       </div>
-      <h5>{{ t('ال{{ t('أحداث') }}') }} {{ t('Recent') }}</h5>
+      <h5>{{ t('الأحداث') }} {{ t('Recent') }}</h5>
       <div class="table-responsive"><table class="table table-bordered table-striped">
         <thead>
           <tr><th>{{ t('Time_2') }}</th><th>{{ t('النوع') }}</th><th>{{ t('Description') }}</th><th>{{ t('User') }}</th><th>{{ t('القيد') }} {{ t('المرتبط') }}</th></tr>

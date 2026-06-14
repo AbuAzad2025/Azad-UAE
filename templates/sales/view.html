@@ -367,7 +367,7 @@
 
         {% if sale.payments %}
 
-        <h5 class="text-primary mb-3 mt-4"><i class="fas fa-money-bill-wave mr-2"></i>{{ t('ال{{ t('دفعات') }}') }}</h5>
+        <h5 class="text-primary mb-3 mt-4"><i class="fas fa-money-bill-wave mr-2"></i>{{ t('الدفعات') }}</h5>
 
         <div class="table-responsive">
 
@@ -377,7 +377,7 @@
 
               <tr>
 
-                <th>{{ t('رقم') }} {{ t('{{ t('Payment_2') }}ة') }}</th>
+                <th>{{ t('رقم') }} {{ t('Payment_2ة') }}</th>
 
                 <th>{{ t('Date') }}</th>
 
@@ -495,7 +495,7 @@
 
         <div class="status-badge badge-success">
 
-          <i class="fas fa-check-circle"></i> {{ t('Paid_4') }} {{ t('{{ t('بال') }}كامل') }}
+          <i class="fas fa-check-circle"></i> {{ t('Paid_4') }} {{ t('بالكامل') }}
 
         </div>
 
@@ -531,7 +531,7 @@
 
         <h3 class="card-title text-white mb-0">
 
-          <i class="fas fa-calculator mr-2"></i>{{ t('{{ t('Total_3') }}ات') }}
+          <i class="fas fa-calculator mr-2"></i>{{ t('Total_3ات') }}
 
         </h3>
 
@@ -692,7 +692,7 @@
 
           <i class="fas fa-check-circle fa-2x mb-2"></i>
 
-          <p class="mb-0"><strong>{{ t('Invoice_2') }} {{ t('Paid_4') }} {{ t('{{ t('بال') }}كامل') }}</strong></p>
+          <p class="mb-0"><strong>{{ t('Invoice_2') }} {{ t('Paid_4') }} {{ t('بالكامل') }}</strong></p>
 
         </div>
 
@@ -710,7 +710,7 @@
 
       <div class="card-header">
 
-        <h3 class="card-title"><i class="fas fa-cog mr-2"></i>{{ t('{{ t('الإجراء') }}ات') }}</h3>
+        <h3 class="card-title"><i class="fas fa-cog mr-2"></i>{{ t('الإجراءات') }}</h3>
 
       </div>
 
@@ -820,7 +820,7 @@
 
                   <th>{{ t('Quantity') }} {{ t('المباعة') }}</th>
 
-                  <th>{{ t('Quantity') }} {{ t('{{ t('Return_3') }}ة') }}</th>
+                  <th>{{ t('Quantity') }} {{ t('Return_3ة') }}</th>
 
                   <th>{{ t('Status_2') }} {{ t('Product') }}</th>
 
@@ -1008,7 +1008,7 @@ function submitReturn() {
 
         console.error('Error:', error);
 
-        alert('{{ t('حدث') }} {{ t('Error') }} {{ t('أثناء') }} {{ t('الاتصال') }} {{ t('{{ t('بال') }}خادم') }}');
+        alert('{{ t('حدث') }} {{ t('Error') }} {{ t('أثناء') }} {{ t('الاتصال') }} {{ t('بالخادم') }}');
 
     });
 
@@ -1030,7 +1030,7 @@ function confirmCancel() {
 
 function confirmDelete() {
 
-  if (confirm('هل أنت {{ t('متأكد') }} من {{ t('Delete') }} هذه {{ t('Invoice_3') }}\n\n{{ t('Alert_2') }}: {{ t('سيتم') }} {{ t('أرشفة') }} {{ t('Invoice_2') }} إذا كان لها {{ t('ارتباطات') }} {{ t('مالية') }} ({{ t('دفعات') }}/{{ t('Cheques_2') }})، أو {{ t('{{ t('Delete') }}ها') }} {{ t('نهائياً') }} إذا كانت غير {{ t('مرتبطة') }}.')) {
+  if (confirm('هل أنت {{ t('متأكد') }} من {{ t('Delete') }} هذه {{ t('Invoice_3') }}\n\n{{ t('Alert_2') }}: {{ t('سيتم') }} {{ t('أرشفة') }} {{ t('Invoice_2') }} إذا كان لها {{ t('ارتباطات') }} {{ t('مالية') }} ({{ t('دفعات') }}/{{ t('Cheques_2') }})، أو {{ t('Deleteها') }} {{ t('نهائياً') }} إذا كانت غير {{ t('مرتبطة') }}.')) {
 
     document.getElementById('deleteForm').submit();
 

@@ -18,7 +18,7 @@
 
   <div class="mt-2 mt-md-0">
 
-    <a href="{{ url_for('store.admin_orders') }}" class="btn btn-secondary">كل {{ t('{{ t('ال{{ t('طلب') }}') }}ات') }}</a>
+    <a href="{{ url_for('store.admin_orders') }}" class="btn btn-secondary">كل {{ t('الطلبات') }}</a>
 
     {% if current_user.has_permission('manage_sales') %}
     <a href="{{ url_for('sales.view', id=order.id) }}" class="btn btn-outline-primary">{{ t('View') }} في {{ t('Sales') }}</a>
@@ -38,7 +38,7 @@
 
 <div class="alert alert-warning">
 
-  <strong><i class="fas fa-exclamation-triangle"></i> {{ t('Inventory_2') }} غير {{ t('كافٍ') }} {{ t('لل{{ t('Confirm') }}') }}:</strong>
+  <strong><i class="fas fa-exclamation-triangle"></i> {{ t('Inventory_2') }} غير {{ t('كافٍ') }} {{ t('للConfirm') }}:</strong>
 
   <ul class="mb-0 mt-2">
 
@@ -58,7 +58,7 @@
 
     <div class="card">
 
-      <div class="card-header"><h3 class="card-title mb-0">{{ t('بنود') }} {{ t('ال{{ t('طلب') }}') }}</h3></div>
+      <div class="card-header"><h3 class="card-title mb-0">{{ t('بنود') }} {{ t('الطلب') }}</h3></div>
 
       <div class="card-body table-responsive p-0">
 
@@ -190,7 +190,7 @@
 
     <div class="card">
 
-      <div class="card-header"><h3 class="card-title mb-0">{{ t('Payment_2') }} {{ t('وال{{ t('Status_2') }}') }}</h3></div>
+      <div class="card-header"><h3 class="card-title mb-0">{{ t('Payment_2') }} {{ t('والStatus_2') }}</h3></div>
 
       <div class="card-body">
 
@@ -204,7 +204,7 @@
 
           </dd>
 
-          <dt class="col-5">{{ t('Status_2') }} {{ t('ال{{ t('طلب') }}') }}</dt>
+          <dt class="col-5">{{ t('Status_2') }} {{ t('الطلب') }}</dt>
 
           <dd class="col-7">{{ status_label }}</dd>
 
@@ -252,17 +252,17 @@
 
           <button type="submit" class="btn btn-success btn-block" {% if stock_issues %}disabled title="{{ t('Inventory') }} غير {{ t('كافٍ') }}"{% endif %}>
 
-            <i class="fas fa-check mr-1"></i>{{ t('Confirm') }} {{ t('ال{{ t('طلب') }}') }}
+            <i class="fas fa-check mr-1"></i>{{ t('Confirm') }} {{ t('الطلب') }}
 
           </button>
 
         </form>
 
-        <form method="post" action="{{ url_for('store.admin_order_cancel', order_id=order.id) }}" onsubmit="return confirm('{{ t('Cancel') }} {{ t('ال{{ t('طلب') }}') }} ' + {{ order.sale_number|tojson }} + '؟');">
+        <form method="post" action="{{ url_for('store.admin_order_cancel', order_id=order.id) }}" onsubmit="return confirm('{{ t('Cancel') }} {{ t('الطلب') }} ' + {{ order.sale_number|tojson }} + '؟');">
 
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 
-          <button type="submit" class="btn btn-outline-danger btn-block"><i class="fas fa-times mr-1"></i>{{ t('Cancel') }} {{ t('ال{{ t('طلب') }}') }}</button>
+          <button type="submit" class="btn btn-outline-danger btn-block"><i class="fas fa-times mr-1"></i>{{ t('Cancel') }} {{ t('الطلب') }}</button>
 
         </form>
 
@@ -272,7 +272,7 @@
 
       <div class="card-footer">
 
-        <form method="post" action="{{ url_for('store.admin_order_cancel', order_id=order.id) }}" onsubmit="return confirm('{{ t('Cancel') }} {{ t('طلب') }} {{ t('Confirmed_2') }} {{ t('سيُعيد') }} {{ t('Inventory') }} {{ t('وي{{ t('عكس') }}') }} {{ t('القيود') }} — {{ t('متابعة_2') }}');">
+        <form method="post" action="{{ url_for('store.admin_order_cancel', order_id=order.id) }}" onsubmit="return confirm('{{ t('Cancel') }} {{ t('طلب') }} {{ t('Confirmed_2') }} {{ t('سيُعيد') }} {{ t('Inventory') }} {{ t('ويعكس') }} {{ t('القيود') }} — {{ t('متابعة_2') }}');">
 
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 
@@ -286,7 +286,7 @@
 
       {% if wa_admin_url %}
       <div class="card-footer border-top-0 pt-0">
-        <a href="{{ wa_admin_url }}" target="_blank" rel="noopener" class="btn btn-success btn-block"><i class="fab fa-whatsapp mr-1"></i>{{ t('مشاركة') }} {{ t('ال{{ t('طلب') }}') }} {{ t('عبر') }} {{ t('واتساب') }}</a>
+        <a href="{{ wa_admin_url }}" target="_blank" rel="noopener" class="btn btn-success btn-block"><i class="fab fa-whatsapp mr-1"></i>{{ t('مشاركة') }} {{ t('الطلب') }} {{ t('عبر') }} {{ t('واتساب') }}</a>
       </div>
       {% endif %}
 

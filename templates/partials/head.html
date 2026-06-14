@@ -7,8 +7,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   
   
-  <meta name="description" content="{% block meta_description %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('System_2') }} {{ t('متكامل') }} {{ t('ل{{ t('Management') }}') }} {{ t('Warehouses') }} {{ t('والمبيعات') }} {{ t('والمشتريات') }}{% endblock %}">
-  <meta name="keywords" content="{% block meta_keywords %}{{ t('System_2') }} {{ t('Management') }} {{ t('{{ t('Warehouses') }}،') }} {{ t('برنامج') }} {{ t('محاسبة،') }} {{ t('فواتير') }} {{ t('إلكترونية،') }} {{ t('Management') }} {{ t('المبيعات،') }} {{ t('Management') }} {{ t('Inventory') }}{% endblock %}">
+  <meta name="description" content="{% block meta_description %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('System_2') }} {{ t('متكامل') }} {{ t('لManagement') }} {{ t('Warehouses') }} {{ t('والمبيعات') }} {{ t('والمشتريات') }}{% endblock %}">
+  <meta name="keywords" content="{% block meta_keywords %}{{ t('System_2') }} {{ t('Management') }} {{ t('Warehouses،') }} {{ t('برنامج') }} {{ t('محاسبة،') }} {{ t('فواتير') }} {{ t('إلكترونية،') }} {{ t('Management') }} {{ t('المبيعات،') }} {{ t('Management') }} {{ t('Inventory') }}{% endblock %}">
   <meta name="author" content="{{ developer_name_ar or config.DEVELOPER_NAME_AR }}">
   <meta name="robots" content="{% block robots %}index, follow{% endblock %}">
   <meta name="language" content="{{ current_language }}">
@@ -17,7 +17,7 @@
   <meta property="og:type" content="{% block og_type %}website{% endblock %}">
   <meta property="og:url" content="{{ request.url }}">
   <meta property="og:title" content="{% block og_title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }}{% endblock %}">
-  <meta property="og:description" content="{% block og_description %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('System_2') }} {{ t('متكامل') }} {{ t('ل{{ t('Management') }}') }} {{ t('Warehouses') }} {{ t('والمبيعات') }} {{ t('والمشتريات') }}{% endblock %}">
+  <meta property="og:description" content="{% block og_description %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('System_2') }} {{ t('متكامل') }} {{ t('لManagement') }} {{ t('Warehouses') }} {{ t('والمبيعات') }} {{ t('والمشتريات') }}{% endblock %}">
   {% set _logo_path = tenant_logo_url or developer_logo or 'assets/brand/azad/logos/logo.png' %}
   {% set _logo_external = _logo_path if _logo_path.startswith('http') else url_for('static', filename=_logo_path, _external=True) %}
   {% set _logo_internal = _logo_path if _logo_path.startswith('http') else url_for('static', filename=_logo_path) %}
@@ -29,7 +29,7 @@
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:url" content="{{ request.url }}">
   <meta name="twitter:title" content="{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }}">
-  <meta name="twitter:description" content="{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('System_2') }} {{ t('متكامل') }} {{ t('ل{{ t('Management') }}') }} {{ t('Warehouses') }} {{ t('والمبيعات') }} {{ t('والمشتريات') }}">
+  <meta name="twitter:description" content="{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('System_2') }} {{ t('متكامل') }} {{ t('لManagement') }} {{ t('Warehouses') }} {{ t('والمبيعات') }} {{ t('والمشتريات') }}">
   <meta name="twitter:image" content="{{ _logo_external }}">
   
   
@@ -68,7 +68,7 @@
     "alternateName": "{{ developer_name or 'Azad Smart Systems' }}",
     "url": "{{ request.url_root }}",
     "logo": "{{ _logo_external }}",
-    "description": "{{ t('System_2') }} {{ t('متكامل') }} {{ t('ل{{ t('Management') }}') }} {{ t('Warehouses') }} {{ t('والمبيعات') }} {{ t('والمشتريات') }} مع {{ t('AI_2') }} {{ t('Artificial_2') }} {{ t('متقدم') }}",
+    "description": "{{ t('System_2') }} {{ t('متكامل') }} {{ t('لManagement') }} {{ t('Warehouses') }} {{ t('والمبيعات') }} {{ t('والمشتريات') }} مع {{ t('AI_2') }} {{ t('Artificial_2') }} {{ t('متقدم') }}",
     "address": {
       "@type": "PostalAddress",
       "addressCountry": "AE",

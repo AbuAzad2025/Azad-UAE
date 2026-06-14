@@ -54,7 +54,7 @@
       <div class="company-info">
         <div>{{ settings.address_ar or tenant_address or '' }}</div>
         <div>📞 {{ settings.phone_1 or tenant_phone or '' }} {% if settings.email %} | 📧 {{ settings.email }}{% endif %}</div>
-        {% if settings and settings.tax_number %}<div>{{ t('ال{{ t('رقم') }}') }} {{ t('الضريبي') }}: {{ settings.tax_number }}</div>{% endif %}
+        {% if settings and settings.tax_number %}<div>{{ t('الرقم') }} {{ t('الضريبي') }}: {{ settings.tax_number }}</div>{% endif %}
         {% if expense.branch %}<div>🏢 {{ t('Branch') }}: {{ expense.branch.name }}</div>{% endif %}
       </div>
     </div>

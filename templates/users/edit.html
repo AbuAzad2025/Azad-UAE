@@ -96,7 +96,7 @@
             </div>
 
             <div class="d-flex align-items-center erp-gap-2"
-              <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> {{ t('Save') }} {{ t('ال{{ t('Edit') }}ات') }}</button>
+              <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> {{ t('Save') }} {{ t('الEditات') }}</button>
               {% if current_user.has_permission('manage_users') %}
               <a href="{{ url_for('users.view', id=user.id) }}" class="btn btn-secondary"><i class="fas fa-times"></i> {{ t('Cancel') }}</a>
               {% endif %}
@@ -152,7 +152,7 @@ $(function() {
     if (!validatePassword()) {
       e.preventDefault();
       if (typeof hideLoading === 'function') hideLoading();
-      Swal.fire({icon:'warning',title:'{{ t('تحقق') }} من {{ t('كلمة') }} {{ t('المرور') }}',text:'يجب أن تكون 10 {{ t('أ{{ t('حرف') }}') }} على {{ t('الأقل') }} {{ t('وتحتوي') }} على {{ t('حرف') }} {{ t('Large') }} {{ t('و{{ t('رقم') }}') }} {{ t('ورمز') }} {{ t('خاص،') }} {{ t('ويجب') }} أن {{ t('تتطابق') }} مع {{ t('Confirm_2') }}'});
+      Swal.fire({icon:'warning',title:'{{ t('تحقق') }} من {{ t('كلمة') }} {{ t('المرور') }}',text:'يجب أن تكون 10 {{ t('أحرف') }} على {{ t('الأقل') }} {{ t('وتحتوي') }} على {{ t('حرف') }} {{ t('Large') }} {{ t('ورقم') }} {{ t('ورمز') }} {{ t('خاص،') }} {{ t('ويجب') }} أن {{ t('تتطابق') }} مع {{ t('Confirm_2') }}'});
       return;
     }
     if (branchRequiredForSelectedRole() && !$('#branch_id').val()) {

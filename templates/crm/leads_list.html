@@ -3,7 +3,7 @@
 {% block content %}
 <div class="container-fluid">
   <div class="d-flex justify-content-between align-items-center mb-3">
-    <h4><i class="fas fa-address-card"></i> {{ t('Customers_2') }} {{ t('ال{{ t('متوقعون') }}') }}</h4>
+    <h4><i class="fas fa-address-card"></i> {{ t('Customers_2') }} {{ t('المتوقعون') }}</h4>
     <a href="{{ url_for('crm.pipeline') }}" class="btn btn-outline-primary btn-sm"><i class="fas fa-funnel"></i> خط {{ t('الأنابيب') }}</a>
     <a href="{{ url_for('crm.create_lead') }}" class="btn btn-success btn-sm"><i class="fas fa-plus"></i> {{ t('Add') }}</a>
   </div>

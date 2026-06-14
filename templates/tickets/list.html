@@ -16,7 +16,7 @@
           {% endfor %}
         </select>
         <select name="category_id" class="form-control form-control-sm ml-2">
-          <option value="">كل {{ t('{{ t('التصنيف') }}ات') }}</option>
+          <option value="">كل {{ t('التصنيفات') }}</option>
           {% for c in categories %}
           <option value="{{ c.id }}" {% if request.args.category_id|string == c.id|string %}selected{% endif %}>{{ c.name_ar or c.name }}</option>
           {% endfor %}

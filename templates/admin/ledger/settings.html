@@ -49,8 +49,8 @@
           </div>
           
           <div class="form-group">
-            <label>{{ t('Count') }} {{ t('ال{{ t('أرقام') }}') }} {{ t('العشرية') }}:</label>
-            <select class="form-control" aria-label="{{ t('Count') }} {{ t('ال{{ t('أرقام') }}') }} {{ t('العشرية') }}">
+            <label>{{ t('Count') }} {{ t('الأرقام') }} {{ t('العشرية') }}:</label>
+            <select class="form-control" aria-label="{{ t('Count') }} {{ t('الأرقام') }} {{ t('العشرية') }}">
               <option value="2" selected>2</option>
               <option value="3">3</option>
               <option value="4">4</option>
@@ -94,11 +94,11 @@
           </div>
           
           <div class="form-group">
-            <label>{{ t('التحقق') }} من {{ t('ال{{ t('توازن') }}') }}:</label>
+            <label>{{ t('التحقق') }} من {{ t('التوازن') }}:</label>
             <div class="form-check">
               <input type="checkbox" class="form-check-input" id="balance_check" checked aria-label="balance check">
               <label class="form-check-label" for="balance_check">
-                {{ t('التحقق') }} من {{ t('توازن') }} {{ t('ال{{ t('قيود') }}') }} {{ t('{{ t('تلقائي') }}اً') }}
+                {{ t('التحقق') }} من {{ t('توازن') }} {{ t('القيود') }} {{ t('تلقائياً') }}
               </label>
             </div>
           </div>
@@ -108,7 +108,7 @@
             <div class="form-check">
               <input type="checkbox" class="form-check-input" id="header_check" checked aria-label="header check">
               <label class="form-check-label" for="header_check">
-                {{ t('منع') }} {{ t('ال{{ t('قيود') }}') }} {{ t('المباشرة') }} على {{ t('Accounts') }} {{ t('Main_2') }}
+                {{ t('منع') }} {{ t('القيود') }} {{ t('المباشرة') }} على {{ t('Accounts') }} {{ t('Main_2') }}
               </label>
             </div>
           </div>
@@ -143,8 +143,8 @@
           </div>
           
           <div class="form-group">
-            <label>{{ t('تنسيق') }} {{ t('ال{{ t('أرقام') }}') }}:</label>
-            <select class="form-control" aria-label="{{ t('تنسيق') }} {{ t('ال{{ t('أرقام') }}') }}">
+            <label>{{ t('تنسيق') }} {{ t('الأرقام') }}:</label>
+            <select class="form-control" aria-label="{{ t('تنسيق') }} {{ t('الأرقام') }}">
               <option value="1,234.56" selected>1,234.56</option>
               <option value="1.234,56">1.234,56</option>
               <option value="1 234,56">1 234,56</option>
@@ -182,7 +182,7 @@
     <div class="card">
       <div class="card-header bg-gradient-warning">
         <h5 class="card-title text-white mb-0">
-          <i class="fas fa-shield-alt mr-2"></i>{{ t('Settings_2') }} {{ t('ال{{ t('أمان') }}') }}
+          <i class="fas fa-shield-alt mr-2"></i>{{ t('Settings_2') }} {{ t('الأمان') }}
         </h5>
       </div>
       <div class="card-body">
@@ -362,12 +362,12 @@ function createBackup() {
     .then(response => response.json())
     .then(data => {
       if (data.success) {
-        alert('تم {{ t('Create') }} {{ t('{{ t('Backups') }}ة') }} {{ t('Backup') }} {{ t('بنجاح') }}!');
+        alert('تم {{ t('Create') }} {{ t('Backupsة') }} {{ t('Backup') }} {{ t('بنجاح') }}!');
       } else {
-        alert('{{ t('فشل') }} في {{ t('Create') }} {{ t('{{ t('Backups') }}ة') }} {{ t('Backup') }}: ' + data.message);
+        alert('{{ t('فشل') }} في {{ t('Create') }} {{ t('Backupsة') }} {{ t('Backup') }}: ' + data.message);
       }
     })
-    .catch(error => {      alert('{{ t('حدث') }} {{ t('Error') }} في {{ t('Create') }} {{ t('{{ t('Backups') }}ة') }} {{ t('Backup') }}');
+    .catch(error => {      alert('{{ t('حدث') }} {{ t('Error') }} في {{ t('Create') }} {{ t('Backupsة') }} {{ t('Backup') }}');
     });
   }
 }

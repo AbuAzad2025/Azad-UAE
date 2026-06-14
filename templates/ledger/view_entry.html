@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% block title %}{{ t('قيد') }} {{ t('رقم') }} {{ entry.entry_number }}{% endblock %}
-{% block page_title %}{{ t('Details') }} {{ t('ال{{ t('قيد') }}') }}{% endblock %}
+{% block page_title %}{{ t('Details') }} {{ t('القيد') }}{% endblock %}
 
 {% block content %}
 <div class="row mb-3 no-print">
@@ -13,7 +13,7 @@
     </button>
     {% if not entry.is_reversed and entry.entry_type != 'reversing' %}
     <button class="btn btn-warning" data-toggle="modal" data-target="#reverseModal">
-      <i class="fas fa-undo mr-2"></i>{{ t('عكس') }} {{ t('ال{{ t('قيد') }}') }}
+      <i class="fas fa-undo mr-2"></i>{{ t('عكس') }} {{ t('القيد') }}
     </button>
     {% endif %}
   </div>
@@ -28,10 +28,10 @@
     </h3>
     <div class="card-tools">
       {% if entry.is_reversed %}
-      <span class="badge badge-danger"><i class="fas fa-ban mr-1"></i>تم {{ t('{{ t('عكس') }}ه') }}</span>
+      <span class="badge badge-danger"><i class="fas fa-ban mr-1"></i>تم {{ t('عكسه') }}</span>
       {% endif %}
       {% if entry.entry_type == 'reversing' %}
-      <span class="badge badge-warning"><i class="fas fa-undo mr-1"></i>{{ t('قيد') }} {{ t('{{ t('عكس') }}ي') }}</span>
+      <span class="badge badge-warning"><i class="fas fa-undo mr-1"></i>{{ t('قيد') }} {{ t('عكسي') }}</span>
       {% endif %}
     </div>
   </div>
@@ -39,7 +39,7 @@
     
     <div class="row mb-3">
       <div class="col-md-3">
-        <strong>{{ t('رقم') }} {{ t('ال{{ t('قيد') }}') }}:</strong>
+        <strong>{{ t('رقم') }} {{ t('القيد') }}:</strong>
         <p>{{ entry.entry_number }}</p>
       </div>
       <div class="col-md-3">
@@ -91,7 +91,7 @@
     {% if entry.reversed_entry_id %}
     <div class="alert alert-info">
       <i class="fas fa-info-circle mr-2"></i>
-      هذا {{ t('ال{{ t('قيد') }}') }} هو {{ t('عكس') }} {{ t('لل{{ t('قيد') }}') }} {{ t('رقم') }}: 
+      هذا {{ t('القيد') }} هو {{ t('عكس') }} {{ t('للقيد') }} {{ t('رقم') }}: 
       <a href="{{ url_for('ledger.view_entry', id=entry.reversed_entry_id) }}">
         JE-{{ entry.reversed_entry_id }}
       </a>
@@ -100,7 +100,7 @@
 
     
     <h5 class="mt-4 mb-3">
-      <i class="fas fa-list mr-2"></i>{{ t('سطور') }} {{ t('ال{{ t('قيد') }}') }}
+      <i class="fas fa-list mr-2"></i>{{ t('سطور') }} {{ t('القيد') }}
     </h5>
     <div class="table-responsive">
       <table class="table table-bordered table-striped">
@@ -195,7 +195,7 @@
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
         <div class="modal-header bg-warning">
           <h5 class="modal-title">
-            <i class="fas fa-undo mr-2"></i>{{ t('عكس') }} {{ t('ال{{ t('قيد') }}') }}
+            <i class="fas fa-undo mr-2"></i>{{ t('عكس') }} {{ t('القيد') }}
           </h5>
           <button type="button" class="close" data-dismiss="modal">
             <span>&times;</span>
@@ -204,18 +204,18 @@
         <div class="modal-body">
           <div class="alert alert-warning">
             <i class="fas fa-exclamation-triangle mr-2"></i>
-            <strong>{{ t('Warning') }}:</strong> {{ t('سيتم') }} {{ t('Create') }} {{ t('قيد') }} {{ t('New') }} {{ t('معاكس') }} {{ t('لهذا') }} {{ t('ال{{ t('قيد') }}') }}. هل أنت {{ t('متأكد_2') }}
+            <strong>{{ t('Warning') }}:</strong> {{ t('سيتم') }} {{ t('Create') }} {{ t('قيد') }} {{ t('New') }} {{ t('معاكس') }} {{ t('لهذا') }} {{ t('القيد') }}. هل أنت {{ t('متأكد_2') }}
           </div>
           <div class="form-group">
-            <label>{{ t('سبب') }} {{ t('ال{{ t('عكس') }}') }}:</label>
+            <label>{{ t('سبب') }} {{ t('العكس') }}:</label>
             <textarea name="description" class="form-control" rows="3" 
-                      placeholder="{{ t('Optional') }}: {{ t('اذكر') }} {{ t('سبب') }} {{ t('عكس') }} هذا {{ t('ال{{ t('قيد') }}') }}" maxlength="500"></textarea>
+                      placeholder="{{ t('Optional') }}: {{ t('اذكر') }} {{ t('سبب') }} {{ t('عكس') }} هذا {{ t('القيد') }}" maxlength="500"></textarea>
           </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ t('Cancel') }}</button>
           <button type="submit" class="btn btn-warning">
-            <i class="fas fa-undo mr-2"></i>{{ t('Confirm') }} {{ t('ال{{ t('عكس') }}') }}
+            <i class="fas fa-undo mr-2"></i>{{ t('Confirm') }} {{ t('العكس') }}
           </button>
         </div>
       </form>

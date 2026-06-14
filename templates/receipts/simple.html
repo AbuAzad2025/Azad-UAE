@@ -247,7 +247,7 @@
       
       {% if settings and ((settings.bank_name and settings.bank_name != 'None') or (settings.iban and settings.iban != 'None') or (settings.swift_code and settings.swift_code != 'None')) %}
       <div class="bank-info">
-        <strong>{{ t('لل{{ t('Transfer') }}') }} {{ t('Bank_4') }}:</strong><br>
+        <strong>{{ t('للTransfer') }} {{ t('Bank_4') }}:</strong><br>
         {% if settings.bank_name and settings.bank_name != 'None' %}{{ settings.bank_name }}{% if settings.iban and settings.iban != 'None' %} • {% endif %}{% endif %}
         {% if settings.iban and settings.iban != 'None' %}IBAN: {{ settings.iban }}{% endif %}
         {% if settings.swift_code and settings.swift_code != 'None' %}<br>SWIFT: {{ settings.swift_code }}{% endif %}

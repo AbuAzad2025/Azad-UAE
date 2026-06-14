@@ -90,7 +90,7 @@
     <div class="card">
       <div class="card-header bg-gradient-danger">
         <h3 class="card-title text-white">
-          <i class="fas fa-chart-bar mr-2"></i>{{ t('Liabilities') }} {{ t('و{{ t('حقوق') }}') }} {{ t('الملكية') }}
+          <i class="fas fa-chart-bar mr-2"></i>{{ t('Liabilities') }} {{ t('وحقوق') }} {{ t('الملكية') }}
         </h3>
       </div>
       <div class="card-body p-0">
@@ -138,7 +138,7 @@
                 <th class="text-center text-info">{{ format_currency(equity_total) }}</th>
               </tr>
               <tr>
-                <th colspan="2" class="text-center">{{ t('Total_2') }} {{ t('Liabilities') }} {{ t('و{{ t('حقوق') }}') }} {{ t('الملكية') }}</th>
+                <th colspan="2" class="text-center">{{ t('Total_2') }} {{ t('Liabilities') }} {{ t('وحقوق') }} {{ t('الملكية') }}</th>
                 <th class="text-center text-primary">{{ format_currency(liabilities_total + equity_total) }}</th>
               </tr>
             </tfoot>
@@ -169,7 +169,7 @@
           <div class="col-md-4">
             <div class="text-center">
               <h4 class="text-primary">{{ format_currency(liabilities_total + equity_total) }}</h4>
-              <p class="mb-0">{{ t('Total_2') }} {{ t('Liabilities') }} {{ t('و{{ t('حقوق') }}') }} {{ t('الملكية') }}</p>
+              <p class="mb-0">{{ t('Total_2') }} {{ t('Liabilities') }} {{ t('وحقوق') }} {{ t('الملكية') }}</p>
             </div>
           </div>
           <div class="col-md-4">
@@ -177,7 +177,7 @@
               {% set difference = assets_total - (liabilities_total + equity_total) %}
               {% if difference == 0 %}
                 <h4 class="text-success">{{ t('متوازن') }}</h4>
-                <p class="mb-0">{{ t('Balance Sheet') }} {{ t('{{ t('متوازن') }}ة') }}</p>
+                <p class="mb-0">{{ t('Balance Sheet') }} {{ t('متوازنة') }}</p>
               {% else %}
                 <h4 class="text-danger">{{ format_currency(difference) }}</h4>
                 <p class="mb-0">{{ t('الفرق') }}</p>
@@ -199,7 +199,7 @@
   </div>
   <div class="card-body">
     <ul class="mb-0">
-      <li>{{ t('Balance Sheet') }} {{ t('العمومية') }} {{ t('تعرض') }} {{ t('Mode') }} {{ t('{{ t('المال') }}ي') }} {{ t('للشركة') }} في {{ t('History') }} {{ t('محدد') }}</li>
+      <li>{{ t('Balance Sheet') }} {{ t('العمومية') }} {{ t('تعرض') }} {{ t('Mode') }} {{ t('المالي') }} {{ t('للشركة') }} في {{ t('History') }} {{ t('محدد') }}</li>
       <li>{{ t('Assets') }} {{ t('تمثل') }} ما {{ t('تملكه') }} {{ t('Company') }}</li>
       <li>{{ t('Liabilities') }} {{ t('تمثل') }} ما {{ t('تدين') }} به {{ t('Company') }} {{ t('للآخرين') }}</li>
       <li>{{ t('حقوق') }} {{ t('الملكية') }} {{ t('تمثل') }} {{ t('رأس') }} {{ t('المال') }} {{ t('والأرباح') }} {{ t('المحتجزة') }}</li>
