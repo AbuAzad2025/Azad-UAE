@@ -10,7 +10,7 @@
     <div>
       <button class="btn btn-sm btn-outline-info" onclick="$('#timesheetModal').modal('show')"><i class="fas fa-clock"></i> {{ t('تسجيل') }} {{ t('Time') }}</button>
       <button class="btn btn-sm btn-outline-secondary" onclick="$('#memberModal').modal('show')"><i class="fas fa-user-plus"></i> {{ t('Add') }} {{ t('عضو') }}</button>
-      <a href="{{ url_for('projects.edit_project', project_id=project.id) }}" class="btn btn-sm btn-warning"><i class="fas fa-edit"></i></a>
+      <a href="{{ url_for('projects.edit_project', project_id=project.id) }}" class="btn btn-sm btn-warning" aria-label="{{ t('Edit') }} {{ t('Project') }}"><i class="fas fa-edit"></i></a>
     </div>
   </div>
   <div class="row">

@@ -2,13 +2,13 @@
 <nav class="ps-pagination" aria-label="Pagination">
   <ul>
     {% if page > 1 %}
-    <li><a href="?{% if category_id %}category={{ category_id }}&{% endif %}{% if search %}q={{ search }}&{% endif %}page={{ page - 1 }}"><i class="fas fa-chevron-{{ 'right' if is_rtl else 'left' }}"></i></a></li>
+    <li><a href="?{% if category_id %}category={{ category_id }}&{% endif %}{% if search %}q={{ search }}&{% endif %}page={{ page - 1 }}" aria-label="{{ t('Previous') }} {{ t('Page') }}"><i class="fas fa-chevron-{{ 'right' if is_rtl else 'left' }}"></i></a></li>
     {% endif %}
     {% for p in range(1, pages + 1) %}
     <li{% if p == page %} class="active"{% endif %}><a href="?{% if category_id %}category={{ category_id }}&{% endif %}{% if search %}q={{ search }}&{% endif %}page={{ p }}">{{ p }}</a></li>
     {% endfor %}
     {% if page < pages %}
-    <li><a href="?{% if category_id %}category={{ category_id }}&{% endif %}{% if search %}q={{ search }}&{% endif %}page={{ page + 1 }}"><i class="fas fa-chevron-{{ 'left' if is_rtl else 'right' }}"></i></a></li>
+    <li><a href="?{% if category_id %}category={{ category_id }}&{% endif %}{% if search %}q={{ search }}&{% endif %}page={{ page + 1 }}" aria-label="{{ t('Next') }} {{ t('Page') }}"><i class="fas fa-chevron-{{ 'left' if is_rtl else 'right' }}"></i></a></li>
     {% endif %}
   </ul>
 </nav>

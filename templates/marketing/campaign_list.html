@@ -24,7 +24,7 @@
               <td><span class="badge badge-{{ 'success' if c.status == 'sent' else 'secondary' }}">{{ c.status }}</span></td>
               <td>{{ c.sent_count }}</td>
               <td>{{ c.open_count }}</td>
-              <td><a href="{{ url_for('email_marketing.campaign_detail', campaign_id=c.id) }}" class="btn btn-sm btn-info"><i class="fas fa-chart-bar"></i></a></td>
+              <td><a href="{{ url_for('email_marketing.campaign_detail', campaign_id=c.id) }}" class="btn btn-sm btn-info" aria-label="{{ t('Campaign') }} {{ t('Statistics') }}"><i class="fas fa-chart-bar"></i></a></td>
             </tr>
             {% endfor %}
           </tbody>

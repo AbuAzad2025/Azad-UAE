@@ -21,7 +21,7 @@
           <option value="{{ u.id }}" {% if request.args.user_id|string == u.id|string %}selected{% endif %}>{{ u.name }}</option>
           {% endfor %}
         </select>
-        <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-search"></i></button>
+        <button type="submit" class="btn btn-sm btn-primary" aria-label="{{ t('Search') }} {{ t('Leaves') }}"><i class="fas fa-search"></i></button>
       </form>
       <div class="table-responsive">
         <table class="table table-bordered" id="leavesTable">
@@ -41,11 +41,11 @@
                 {% if l.state == 'draft' %}
                 <form method="POST" action="{{ url_for('hr.approve_leave', leave_id=l.id) }}" style="display:inline">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                  <button class="btn btn-sm btn-success"><i class="fas fa-check"></i></button>
+                  <button class="btn btn-sm btn-success" aria-label="{{ t('Approve') }} {{ t('Leave') }}"><i class="fas fa-check"></i></button>
                 </form>
                 <form method="POST" action="{{ url_for('hr.refuse_leave', leave_id=l.id) }}" style="display:inline">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                  <button class="btn btn-sm btn-danger"><i class="fas fa-times"></i></button>
+                  <button class="btn btn-sm btn-danger" aria-label="{{ t('Refuse') }} {{ t('Leave') }}"><i class="fas fa-times"></i></button>
                 </form>
                 {% endif %}
               </td>

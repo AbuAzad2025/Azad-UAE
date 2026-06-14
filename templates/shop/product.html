@@ -111,9 +111,9 @@
 
 <div class="ps-share">
   <span>{{ t('share') }}:</span>
-  <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.url|urlencode }}" target="_blank" rel="noopener" class="ps-share-btn"><i class="fab fa-facebook"></i></a>
-  <a href="https://twitter.com/intent/tweet?url={{ request.url|urlencode }}&text={{ product.get_display_name(lang)|urlencode }}" target="_blank" rel="noopener" class="ps-share-btn"><i class="fab fa-twitter"></i></a>
-  <a href="https://wa.me/?text={{ product.get_display_name(lang)|urlencode }}%20{{ request.url|urlencode }}" target="_blank" rel="noopener" class="ps-share-btn"><i class="fab fa-whatsapp"></i></a>
+  <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.url|urlencode }}" target="_blank" rel="noopener" class="ps-share-btn" aria-label="Share on Facebook"><i class="fab fa-facebook"></i></a>
+  <a href="https://twitter.com/intent/tweet?url={{ request.url|urlencode }}&text={{ product.get_display_name(lang)|urlencode }}" target="_blank" rel="noopener" class="ps-share-btn" aria-label="Share on Twitter"><i class="fab fa-twitter"></i></a>
+  <a href="https://wa.me/?text={{ product.get_display_name(lang)|urlencode }}%20{{ request.url|urlencode }}" target="_blank" rel="noopener" class="ps-share-btn" aria-label="Share on WhatsApp"><i class="fab fa-whatsapp"></i></a>
 </div>
 
 {% if related_products %}
@@ -138,7 +138,7 @@
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="product_id" value="{{ rp.id }}">
             <input type="hidden" name="quantity" value="1">
-            <button type="submit" class="ps-btn ps-btn-sm"><i class="fas fa-plus"></i></button>
+            <button type="submit" class="ps-btn ps-btn-sm" aria-label="{{ t('Add') }} {{ t('to') }} {{ t('Cart') }}"><i class="fas fa-plus"></i></button>
           </form>
         </div>
       </div>

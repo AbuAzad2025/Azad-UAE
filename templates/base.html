@@ -8,11 +8,12 @@
 {% include 'partials/head.html' %}
 </head>
 <body class="hold-transition sidebar-mini layout-fixed" data-sidebar-side="{{ 'right' if is_rtl else 'left' }}">
+<a href="#main-content" class="sr-only sr-only-focusable">{{ t('تخطي إلى المحتوى الرئيسي') }}</a>
 <div class="wrapper">
   {% set is_global_scope_user = current_user.is_authenticated and (current_user.is_owner or (current_user.role and current_user.role.slug == 'developer')) %}
   {% include 'partials/navbar.html' %}
   {% include 'partials/sidebar.html' %}
-  <div class="content-wrapper">
+  <div class="content-wrapper" id="main-content" tabindex="-1">
     <div class="content-header">
       <div class="container-fluid">
         <h1 class="m-0">{% block page_title %}{% endblock %}</h1>
@@ -22,7 +23,7 @@
       <div class="container-fluid">
         {% with messages = get_flashed_messages(with_categories=true) %}
           {% if messages %}
-            <div id="flash-messages-container" class="erp-flash-container">
+            <div id="flash-messages-container" class="erp-flash-container" aria-live="polite" aria-atomic="true">
               {% for category, message in messages %}
                 {% set _cat = 'danger' if category == 'error' else category %}
                 {% set _erp_class = 'erp-flash-success' if _cat == 'success' else ('erp-flash-danger' if _cat in ['danger'] else ('erp-flash-warning' if _cat == 'warning' else 'erp-flash-info')) %}

@@ -30,7 +30,7 @@
         </select>
         <input name="date_from" type="date" class="form-control form-control-sm ml-2" value="{{ request.args.date_from }}">
         <input name="date_to" type="date" class="form-control form-control-sm ml-2" value="{{ request.args.date_to }}">
-        <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-search"></i></button>
+        <button type="submit" class="btn btn-sm btn-primary" aria-label="{{ t('Search') }} {{ t('Attendance') }}"><i class="fas fa-search"></i></button>
       </form>
       <div class="table-responsive">
         <table class="table table-bordered" id="attendanceTable">
