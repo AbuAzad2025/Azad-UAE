@@ -545,7 +545,7 @@ class StockService:
         if pwc:
             old_qty = pwc.total_quantity
             old_value = pwc.total_value
-            old_avg = pwc.average_cost
+            old_avg = Decimal(str(pwc.average_cost)) if pwc.average_cost is not None else Decimal('0')
             new_qty, new_value, new_avg = StockService._mwac_calc(old_qty, old_value, received_qty, unit_cost_aed)
             
             pwc.total_quantity = new_qty
@@ -641,7 +641,7 @@ class StockService:
                     
                     old_qty = pwc.total_quantity
                     old_value = pwc.total_value
-                    old_avg = pwc.average_cost
+                    old_avg = Decimal(str(pwc.average_cost)) if pwc.average_cost is not None else Decimal('0')
                     new_qty, new_value, new_avg = StockService._mwac_calc(
                         old_qty, old_value, qty,
                         (original_cogs / qty).quantize(Decimal('0.0001')) if qty > 0 else Decimal('0')
@@ -719,7 +719,7 @@ class StockService:
 
                     old_qty = pwc.total_quantity
                     old_value = pwc.total_value
-                    old_avg = pwc.average_cost
+                    old_avg = Decimal(str(pwc.average_cost)) if pwc.average_cost is not None else Decimal('0')
                     reversed_value = qty * original_unit_cost
                     new_qty, new_value, new_avg = StockService._mwac_calc(old_qty, old_value, -qty, original_unit_cost)
 

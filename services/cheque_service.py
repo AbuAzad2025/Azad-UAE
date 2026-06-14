@@ -294,7 +294,7 @@ def process_cheque_clear(cheque, clearance_date=None, clearance_exchange_rate=No
             )
             cheque.clearance_exchange_rate = Decimal(str(rate_info['rate']))
         except Exception:
-            cheque.clearance_exchange_rate = cheque.exchange_rate
+            cheque.clearance_exchange_rate = Decimal(str(cheque.exchange_rate))
     else:
         cheque.clearance_exchange_rate = Decimal('1.0')
     cheque.actual_amount_aed = cheque.amount * cheque.clearance_exchange_rate

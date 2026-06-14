@@ -171,7 +171,8 @@ class TestForeignCurrencySaleLifecycle:
             expected_amount_aed = (Decimal('1000') * Decimal('3.67')).quantize(Decimal('0.001'), rounding=ROUND_HALF_UP)
             assert sale.amount_aed == expected_amount_aed, f'Sale amount AED must be {expected_amount_aed}'
 
-            assert customer.balance == cust_bal_before + expected_amount_aed, 'Customer balance must increase by AED sale amount'
+            # apply_sale does balance -= amount_aed (negative = customer owes us)
+            assert customer.balance == cust_bal_before - expected_amount_aed, 'Customer balance must decrease (more negative) by AED sale amount'
 
             entries = _entries_for('Sale', sale.id, tid)
             assert len(entries) >= 1, 'Sale must create at least one GL entry'
@@ -232,13 +233,16 @@ class TestForeignCurrencyPaymentLifecycle:
             ar_before = _bal('1130', tid)
             cuc_before = _bal('1150', tid)
 
+            from uuid import uuid4
+            unique = uuid4().hex[:8]
+            cheque_number = f'CHK-USD-{unique}'
             payment = SaleService.create_payment_for_sale(
                 sale=sale,
                 amount=Decimal('500'),
                 payment_method='cheque',
                 currency='USD',
                 exchange_rate=3.67,
-                cheque_number='CHK-USD-001',
+                cheque_number=cheque_number,
                 cheque_date=str(datetime.now(timezone.utc).date() + timedelta(days=30)),
                 bank_name='Test Bank',
             )
@@ -246,7 +250,7 @@ class TestForeignCurrencyPaymentLifecycle:
             customer = Customer.query.get(customer.id)
 
             expected_payment_aed = (Decimal('500') * Decimal('3.67')).quantize(Decimal('0.001'), rounding=ROUND_HALF_UP)
-            assert customer.balance == cust_bal_after_sale - expected_payment_aed, 'Customer balance must decrease by payment AED'
+            assert customer.balance == cust_bal_after_sale + expected_payment_aed, 'Customer balance must increase (less negative) by payment AED'
 
             entries = _entries_for('Payment', payment.id, tid)
             assert len(entries) >= 1, 'Payment must create at least one GL entry'

@@ -659,6 +659,7 @@ class SaleService:
             from models import Cheque
             cheque = Cheque(
                 tenant_id=getattr(sale, 'tenant_id', None),
+                branch_id=sale.branch_id,
                 cheque_number=cheque_number,
                 cheque_bank_number=cheque_number,  # نفس رقم الشيك
                 cheque_type='incoming',
@@ -767,7 +768,7 @@ class SaleService:
         if customer:
             from decimal import Decimal as _D
             amount_aed = _D(str(sale.amount_aed or 0))
-            customer.adjust_balance(-amount_aed)
+            customer.adjust_balance(+amount_aed)
             customer.total_purchases = max(
                 (customer.total_purchases or _D('0')) - amount_aed,
                 _D('0')
