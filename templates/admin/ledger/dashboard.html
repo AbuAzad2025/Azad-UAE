@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
-{% block title %}لوحة تحكم دفتر الأستاذ - Admin Ledger Dashboard{% endblock %}
-{% block page_title %}لوحة تحكم دفتر الأستاذ{% endblock %}
+{% block title %}{{ t('Dashboard_2') }} {{ t('تحكم') }} {{ t('دفتر') }} {{ t('الأستاذ') }} - Admin Ledger Dashboard{% endblock %}
+{% block page_title %}{{ t('Dashboard_2') }} {{ t('تحكم') }} {{ t('دفتر') }} {{ t('الأستاذ') }}{% endblock %}
 
 {% block content %}
 <div class="row">
@@ -11,7 +11,7 @@
         <div class="d-flex justify-content-between">
           <div>
             <h4 class="mb-0">{{ total_accounts }}</h4>
-            <p class="mb-0">إجمالي الحسابات</p>
+            <p class="mb-0">{{ t('Total_2') }} {{ t('Accounts') }}</p>
           </div>
           <div class="align-self-center">
             <i class="fas fa-chart-line fa-2x"></i>
@@ -27,7 +27,7 @@
         <div class="d-flex justify-content-between">
           <div>
             <h4 class="mb-0">{{ active_accounts }}</h4>
-            <p class="mb-0">الحسابات النشطة</p>
+            <p class="mb-0">{{ t('Accounts') }} {{ t('Active_2') }}</p>
           </div>
           <div class="align-self-center">
             <i class="fas fa-check-circle fa-2x"></i>
@@ -43,7 +43,7 @@
         <div class="d-flex justify-content-between">
           <div>
             <h4 class="mb-0">{{ total_entries }}</h4>
-            <p class="mb-0">إجمالي القيود</p>
+            <p class="mb-0">{{ t('Total_2') }} {{ t('القيود') }}</p>
           </div>
           <div class="align-self-center">
             <i class="fas fa-book fa-2x"></i>
@@ -59,7 +59,7 @@
         <div class="d-flex justify-content-between">
           <div>
             <h4 class="mb-0">{{ posted_entries }}</h4>
-            <p class="mb-0">القيود المرحلة</p>
+            <p class="mb-0">{{ t('القيود') }} {{ t('ال{{ t('مرحل') }}ة') }}</p>
           </div>
           <div class="align-self-center">
             <i class="fas fa-clipboard-check fa-2x"></i>
@@ -76,12 +76,12 @@
     <div class="card">
       <div class="card-header bg-gradient-success">
         <h5 class="card-title text-white mb-0">
-          <i class="fas fa-coins mr-2"></i>السيولة النقدية
+          <i class="fas fa-coins mr-2"></i>{{ t('السيولة') }} {{ t('Cash') }}
         </h5>
       </div>
       <div class="card-body">
         <h3 class="text-success">{{ format_currency(total_cash) }}</h3>
-        <p class="text-muted mb-0">إجمالي الأرصدة النقدية</p>
+        <p class="text-muted mb-0">{{ t('Total_2') }} {{ t('ال{{ t('أرصدة') }}') }} {{ t('Cash') }}</p>
       </div>
     </div>
   </div>
@@ -90,22 +90,22 @@
     <div class="card">
       <div class="card-header bg-gradient-info">
         <h5 class="card-title text-white mb-0">
-          <i class="fas fa-file-invoice mr-2"></i>الشيكات
+          <i class="fas fa-file-invoice mr-2"></i>{{ t('Cheques') }}
         </h5>
       </div>
       <div class="card-body">
         <div class="row">
           <div class="col-4">
             <h5 class="mb-0">{{ total_cheques }}</h5>
-            <small class="text-muted">إجمالي</small>
+            <small class="text-muted">{{ t('Total_2') }}</small>
           </div>
           <div class="col-4">
             <h5 class="text-warning mb-0">{{ pending_cheques }}</h5>
-            <small class="text-muted">معلقة</small>
+            <small class="text-muted">{{ t('Pending_2') }}</small>
           </div>
           <div class="col-4">
             <h5 class="text-success mb-0">{{ cleared_cheques }}</h5>
-            <small class="text-muted">مصروفة</small>
+            <small class="text-muted">{{ t('مصروفة') }}</small>
           </div>
         </div>
       </div>
@@ -116,18 +116,18 @@
     <div class="card">
       <div class="card-header bg-gradient-primary">
         <h5 class="card-title text-white mb-0">
-          <i class="fas fa-vault mr-2"></i>المحافظ
+          <i class="fas fa-vault mr-2"></i>{{ t('المحافظ') }}
         </h5>
       </div>
       <div class="card-body">
         <div class="row">
           <div class="col-6">
             <h5 class="mb-0">{{ total_vaults }}</h5>
-            <small class="text-muted">إجمالي</small>
+            <small class="text-muted">{{ t('Total_2') }}</small>
           </div>
           <div class="col-6">
             <h5 class="text-success mb-0">{{ active_vaults }}</h5>
-            <small class="text-muted">نشطة</small>
+            <small class="text-muted">{{ t('Active_3') }}</small>
           </div>
         </div>
       </div>
@@ -141,7 +141,7 @@
     <div class="card">
       <div class="card-header bg-gradient-primary">
         <h5 class="card-title text-white mb-0">
-          <i class="fas fa-history mr-2"></i>آخر القيود المحاسبية
+          <i class="fas fa-history mr-2"></i>{{ t('Last') }} {{ t('القيود') }} {{ t('Accounting') }}
         </h5>
       </div>
       <div class="card-body p-0">
@@ -149,12 +149,12 @@
           <table class="table table-hover mb-0">
             <thead class="bg-light">
               <tr>
-                <th>رقم القيد</th>
-                <th>التاريخ</th>
-                <th>الوصف</th>
-                <th>النوع</th>
-                <th>المبلغ</th>
-                <th>الحالة</th>
+                <th>{{ t('رقم') }} {{ t('القيد') }}</th>
+                <th>{{ t('Date') }}</th>
+                <th>{{ t('Description') }}</th>
+                <th>{{ t('النوع') }}</th>
+                <th>{{ t('Amount') }}</th>
+                <th>{{ t('Status') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -175,9 +175,9 @@
                 <td>{{ format_currency(entry.total_debit) }}</td>
                 <td>
                   {% if entry.is_posted %}
-                    <span class="badge badge-success">مرحل</span>
+                    <span class="badge badge-success">{{ t('مرحل') }}</span>
                   {% else %}
-                    <span class="badge badge-warning">مسودة</span>
+                    <span class="badge badge-warning">{{ t('مسودة') }}</span>
                   {% endif %}
                 </td>
               </tr>
@@ -194,7 +194,7 @@
     <div class="card">
       <div class="card-header bg-gradient-warning">
         <h5 class="card-title text-white mb-0">
-          <i class="fas fa-chart-bar mr-2"></i>أرصدة عالية
+          <i class="fas fa-chart-bar mr-2"></i>{{ t('أرصدة') }} {{ t('عالية') }}
         </h5>
       </div>
       <div class="card-body p-0">
@@ -226,29 +226,29 @@
     <div class="card">
       <div class="card-header bg-gradient-secondary">
         <h5 class="card-title text-white mb-0">
-          <i class="fas fa-tools mr-2"></i>الإدارة السريعة
+          <i class="fas fa-tools mr-2"></i>{{ t('Management_2') }} {{ t('Quick_2') }}
         </h5>
       </div>
       <div class="card-body">
         <div class="row">
           <div class="col-md-3 mb-3">
             <a href="{{ url_for('admin_ledger.accounts_management') }}" class="btn btn-outline-primary btn-block">
-              <i class="fas fa-chart-line mr-2"></i>إدارة الحسابات
+              <i class="fas fa-chart-line mr-2"></i>{{ t('Management') }} {{ t('Accounts') }}
             </a>
           </div>
           <div class="col-md-3 mb-3">
             <a href="{{ url_for('admin_ledger.journals_management') }}" class="btn btn-outline-info btn-block">
-              <i class="fas fa-book mr-2"></i>إدارة القيود
+              <i class="fas fa-book mr-2"></i>{{ t('Management') }} {{ t('القيود') }}
             </a>
           </div>
           <div class="col-md-3 mb-3">
             <a href="{{ url_for('admin_ledger.vaults_management') }}" class="btn btn-outline-success btn-block">
-              <i class="fas fa-vault mr-2"></i>إدارة المحافظ
+              <i class="fas fa-vault mr-2"></i>{{ t('Management') }} {{ t('المحافظ') }}
             </a>
           </div>
           <div class="col-md-3 mb-3">
             <a href="{{ url_for('admin_ledger.reports') }}" class="btn btn-outline-warning btn-block">
-              <i class="fas fa-chart-pie mr-2"></i>التقارير المالية
+              <i class="fas fa-chart-pie mr-2"></i>{{ t('Reports') }} {{ t('Finance') }}
             </a>
           </div>
         </div>

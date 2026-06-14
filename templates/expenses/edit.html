@@ -1,19 +1,19 @@
 {% extends 'base.html' %}
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - تعديل المصروف{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('Edit') }} {{ t('Expense_2') }}{% endblock %}
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
   <div>
-    <h1 class="mb-0"><i class="fas fa-edit mr-2"></i>تعديل المصروف: {{ expense.expense_number }}</h1>
+    <h1 class="mb-0"><i class="fas fa-edit mr-2"></i>{{ t('Edit') }} {{ t('Expense_2') }}: {{ expense.expense_number }}</h1>
   </div>
   <div>
     <a href="{{ url_for('expenses.view', id=expense.id) }}" class="btn btn-info">
-      <i class="fas fa-eye mr-2"></i>عرض
+      <i class="fas fa-eye mr-2"></i>{{ t('View') }}
     </a>
     <a href="{{ url_for('expenses.index') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right mr-2"></i>العودة للقائمة
+      <i class="fas fa-arrow-right mr-2"></i>{{ t('العودة') }} {{ t('للقائمة') }}
     </a>
     <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
-      <i class="fas fa-home mr-2"></i>الرئيسية
+      <i class="fas fa-home mr-2"></i>{{ t('Main_2') }}
     </a>
   </div>
 </div>
@@ -29,12 +29,12 @@
         <div class="col-md-6">
           <div class="form-group">
             <label>
-              <i class="fas fa-folder text-primary"></i> الفئة 
+              <i class="fas fa-folder text-primary"></i> {{ t('ال{{ t('فئة') }}') }} 
               <span class="text-danger">*</span>
             </label>
             <div class="input-group">
               <select name="category_id" id="expense_category" class="form-control erp-flex-1" required aria-label="category id">
-                <option value="">بلا</option>
+                <option value="">{{ t('None') }}</option>
                 {% for category in categories %}
                 <option value="{{ category.id }}" {% if expense.category_id == category.id %}selected{% endif %}>
                   {{ category.name_ar }} - {{ category.name }}
@@ -42,7 +42,7 @@
                 {% endfor %}
               </select>
               <div class="input-group-append">
-                <button type="button" class="btn btn-success" data-toggle="modal" data-target="#addExpenseCategoryModal" title="إضافة فئة جديدة">
+                <button type="button" class="btn btn-success" data-toggle="modal" data-target="#addExpenseCategoryModal" title="{{ t('Add') }} {{ t('فئة') }} {{ t('New_3') }}">
                   <i class="fas fa-plus"></i>
                 </button>
               </div>
@@ -53,10 +53,10 @@
         <div class="col-md-6">
           <div class="form-group">
             <label>
-              <i class="fas fa-align-left text-info"></i> الوصف 
+              <i class="fas fa-align-left text-info"></i> {{ t('Description') }} 
               <span class="text-danger">*</span>
             </label>
-            <input type="text" name="description" class="form-control" value="{{ expense.description }}" placeholder="وصف المصروف..." required maxlength="500">
+            <input type="text" name="description" class="form-control" value="{{ expense.description }}" placeholder="{{ t('Description_2') }} {{ t('Expense_2') }}..." required maxlength="500">
           </div>
         </div>
       </div>
@@ -65,7 +65,7 @@
         <div class="col-md-4">
           <div class="form-group">
             <label>
-              <i class="fas fa-money-bill-wave text-success"></i> المبلغ 
+              <i class="fas fa-money-bill-wave text-success"></i> {{ t('Amount') }} 
               <span class="text-danger">*</span>
             </label>
             <input type="number" name="amount" class="form-control" value="{{ expense.amount }}" step="0.01" min="0.01" placeholder="0.00" required>
@@ -75,8 +75,8 @@
         <div class="col-md-4">
           <div class="form-group">
             <label>
-              <i class="fas fa-dollar-sign text-warning"></i> العملة
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="عملة الدفع"></i>
+              <i class="fas fa-dollar-sign text-warning"></i> {{ t('Currency') }}
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Currency_2') }} {{ t('Payment_2') }}"></i>
             </label>
             {% from 'macros/currency_options.html' import currency_select %}
             {{ currency_select(name='currency', id='currency', default_code=expense.currency) }}
@@ -86,10 +86,10 @@
         <div class="col-md-4">
           <div class="form-group">
             <label>
-              <i class="fas fa-user text-secondary"></i> اسم المورد
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="اسم المورد (اختياري)"></i>
+              <i class="fas fa-user text-secondary"></i> {{ t('Name_2') }} {{ t('Supplier') }}
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Name_2') }} {{ t('Supplier') }} ({{ t('Optional') }})"></i>
             </label>
-            <input type="text" name="supplier_name" class="form-control" value="{{ expense.supplier_name or '' }}" placeholder="اسم المورد..." minlength="2" maxlength="100">
+            <input type="text" name="supplier_name" class="form-control" value="{{ expense.supplier_name or '' }}" placeholder="{{ t('Name_2') }} {{ t('Supplier') }}..." minlength="2" maxlength="100">
           </div>
         </div>
       </div>
@@ -98,10 +98,10 @@
         <div class="col-md-6">
           <div class="form-group">
             <label>
-              <i class="fas fa-align-right text-info"></i> الوصف بالعربية
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="الوصف بالعربية (اختياري)"></i>
+              <i class="fas fa-align-right text-info"></i> {{ t('Description') }} {{ t('In Arabic') }}
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Description') }} {{ t('In Arabic') }} ({{ t('Optional') }})"></i>
             </label>
-            <input type="text" name="description_ar" class="form-control" value="{{ expense.description_ar or '' }}" placeholder="الوصف بالعربية..." maxlength="500">
+            <input type="text" name="description_ar" class="form-control" value="{{ expense.description_ar or '' }}" placeholder="{{ t('Description') }} {{ t('In Arabic') }}..." maxlength="500">
           </div>
         </div>
 
@@ -109,9 +109,9 @@
           <div class="form-group">
             <label>
               <i class="fas fa-sticky-note text-secondary"></i> {{ t('Notes') }}
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="ملاحظات إضافية (اختياري)"></i>
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Notes') }} {{ t('Additional') }} ({{ t('Optional') }})"></i>
             </label>
-            <textarea name="notes" class="form-control" rows="2" placeholder="ملاحظات إضافية..." maxlength="500">{{ expense.notes or '' }}</textarea>
+            <textarea name="notes" class="form-control" rows="2" placeholder="{{ t('Notes') }} {{ t('Additional') }}..." maxlength="500">{{ expense.notes or '' }}</textarea>
           </div>
         </div>
       </div>
@@ -119,7 +119,7 @@
 
     <div class="card-footer">
       <button type="submit" class="btn btn-warning btn-lg">
-        <i class="fas fa-save mr-2"></i>حفظ التعديلات
+        <i class="fas fa-save mr-2"></i>{{ t('Save') }} {{ t('ال{{ t('Edit') }}ات') }}
       </button>
       <a href="{{ url_for('expenses.view', id=expense.id) }}" class="btn btn-secondary btn-lg">
         <i class="fas fa-times mr-2"></i>{{ t('Cancel') }}
@@ -134,7 +134,7 @@
     <div class="modal-content">
       <div class="modal-header bg-success text-white">
         <h5 class="modal-title">
-          <i class="fas fa-folder-plus mr-2"></i>إضافة فئة مصروفات جديدة
+          <i class="fas fa-folder-plus mr-2"></i>{{ t('Add') }} {{ t('فئة') }} {{ t('Expenses_2') }} {{ t('New_3') }}
         </h5>
         <button type="button" class="close text-white" data-dismiss="modal">
           <span>&times;</span>
@@ -145,25 +145,25 @@
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
           <div class="form-group">
             <label>
-              <i class="fas fa-font text-primary"></i> الاسم بالإنجليزية
+              <i class="fas fa-font text-primary"></i> {{ t('Name') }} {{ t('In English_2') }}
               <span class="text-danger">*</span>
             </label>
-            <input type="text" id="expense_category_name" class="form-control" placeholder="مثال: Salaries, Rent, Utilities..." required>
+            <input type="text" id="expense_category_name" class="form-control" placeholder="{{ t('مثال') }}: Salaries, Rent, Utilities..." required>
           </div>
           <div class="form-group">
             <label>
-              <i class="fas fa-font text-info"></i> الاسم بالعربية
+              <i class="fas fa-font text-info"></i> {{ t('Name') }} {{ t('In Arabic') }}
             </label>
-            <input type="text" id="expense_category_name_ar" class="form-control" placeholder="مثال: رواتب، إيجارات، مرافق...">
+            <input type="text" id="expense_category_name_ar" class="form-control" placeholder="{{ t('مثال') }}: {{ t('رواتب،') }} {{ t('إيجارات،') }} {{ t('مرافق') }}...">
           </div>
         </form>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">
-          <i class="fas fa-times mr-2"></i>إلغاء
+          <i class="fas fa-times mr-2"></i>{{ t('Cancel') }}
         </button>
         <button type="button" class="btn btn-success" id="saveExpenseCategoryBtn">
-          <i class="fas fa-save mr-2"></i>حفظ الفئة
+          <i class="fas fa-save mr-2"></i>{{ t('Save') }} {{ t('ال{{ t('فئة') }}') }}
         </button>
       </div>
     </div>
@@ -174,23 +174,23 @@
 {% block extra_js %}
 <script>
 $(function () {
-  // تفعيل Tooltips
+  // {{ t('تفعيل') }} Tooltips
   $('[data-toggle="tooltip"]').tooltip({
     placement: 'top',
     trigger: 'hover'
   });
   
-  // حفظ فئة المصروفات الجديدة
+  // {{ t('Save') }} {{ t('فئة') }} {{ t('Expenses') }} {{ t('New_4') }}
   $('#saveExpenseCategoryBtn').click(function() {
     const name = $('#expense_category_name').val().trim();
     const name_ar = $('#expense_category_name_ar').val().trim();
     
     if (!name) {
-      alert('الرجاء إدخال اسم الفئة بالإنجليزية');
+      alert('{{ t('الرجاء') }} {{ t('إدخال') }} {{ t('Name_2') }} {{ t('ال{{ t('فئة') }}') }} {{ t('In English_2') }}');
       return;
     }
     
-    // الحصول على CSRF token
+    // {{ t('الحصول') }} على CSRF token
   const csrfToken = $('input[name="csrf_token"]').val();
   
   $.ajax({
@@ -206,31 +206,31 @@ $(function () {
       }),
       success: function(response) {
         if (response.success) {
-          // إضافة الفئة الجديدة للقائمة
+          // {{ t('Add') }} {{ t('ال{{ t('فئة') }}') }} {{ t('New_4') }} {{ t('للقائمة') }}
           const displayName = response.category.name_ar ? 
             response.category.name_ar + ' - ' + response.category.name : 
             response.category.name;
           const newOption = new Option(displayName, response.category.id, true, true);
           $('#expense_category').append(newOption).trigger('change');
           
-          // إغلاق النافذة وتنظيف الحقول
+          // {{ t('Close') }} {{ t('النافذة') }} {{ t('وتنظيف') }} {{ t('الحقول') }}
           $('#addExpenseCategoryModal').modal('hide');
           $('#expense_category_name').val('');
           $('#expense_category_name_ar').val('');
           
-          // رسالة نجاح
+          // {{ t('رسالة') }} {{ t('نجاح') }}
           if (typeof UI !== 'undefined') {
-            UI.success('تم إضافة الفئة بنجاح!');
+            UI.success('تم {{ t('Add') }} {{ t('ال{{ t('فئة') }}') }} {{ t('ب{{ t('نجاح') }}') }}!');
           } else {
-            alert('تم إضافة الفئة بنجاح!');
+            alert('تم {{ t('Add') }} {{ t('ال{{ t('فئة') }}') }} {{ t('ب{{ t('نجاح') }}') }}!');
           }
         } else {
-          alert('خطأ: ' + (response.error || 'فشل إضافة الفئة'));
+          alert('{{ t('Error') }}: ' + (response.error || '{{ t('فشل') }} {{ t('Add') }} {{ t('ال{{ t('فئة') }}') }}'));
         }
       },
       error: function(xhr) {
-        const error = xhr.responseJSON?.error || 'حدث خطأ أثناء الحفظ';
-        alert('خطأ: ' + error);
+        const error = xhr.responseJSON?.error || '{{ t('حدث') }} {{ t('Error') }} {{ t('أثناء') }} {{ t('Save_2') }}';
+        alert('{{ t('Error') }}: ' + error);
       }
     });
   });

@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 
-{% block title %}VAT Return — الإقرار الضريبي{% endblock %}
+{% block title %}VAT Return — {{ t('الإقرار') }} {{ t('الضريبي') }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
   <div class="row mb-3">
     <div class="col-12">
-      <h2><i class="fas fa-file-invoice-dollar mr-2"></i> VAT Return — الإقرار الضريبي</h2>
+      <h2><i class="fas fa-file-invoice-dollar mr-2"></i> VAT Return — {{ t('الإقرار') }} {{ t('الضريبي') }}</h2>
     </div>
   </div>
 
@@ -17,14 +17,14 @@
           <form class="needs-validation" method="get" class="form-inline">
             <div class="form-group mr-3">
               <label for="date_from" class="mr-2">من:</label>
-              <input type="date" name="date_from" id="date_from" class="form-control" value="{{ request.args.get('date_from', '') }}" aria-label="من تاريخ">
+              <input type="date" name="date_from" id="date_from" class="form-control" value="{{ request.args.get('date_from', '') }}" aria-label="من {{ t('History') }}">
             </div>
             <div class="form-group mr-3">
               <label for="date_to" class="mr-2">إلى:</label>
-              <input type="date" name="date_to" id="date_to" class="form-control" value="{{ request.args.get('date_to', '') }}" aria-label="إلى تاريخ">
+              <input type="date" name="date_to" id="date_to" class="form-control" value="{{ request.args.get('date_to', '') }}" aria-label="إلى {{ t('History') }}">
             </div>
             <button type="submit" class="btn btn-primary">
-              <i class="fas fa-calculator"></i> حساب
+              <i class="fas fa-calculator"></i> {{ t('Account_2') }}
             </button>
           </form>
         </div>
@@ -37,7 +37,7 @@
       <div class="small-box bg-success">
         <div class="inner">
           <h3>{{ format_currency(report.output_vat, report.currency) }}</h3>
-          <p>ضريبة المخرجات (مبيعات)</p>
+          <p>{{ t('Tax_2') }} {{ t('المخرجات') }} ({{ t('Sales_2') }})</p>
         </div>
         <div class="icon"><i class="fas fa-arrow-up"></i></div>
       </div>
@@ -46,7 +46,7 @@
       <div class="small-box bg-info">
         <div class="inner">
           <h3>{{ format_currency(report.input_vat, report.currency) }}</h3>
-          <p>ضريبة المدخلات (مشتريات)</p>
+          <p>{{ t('Tax_2') }} {{ t('المدخلات') }} ({{ t('Purchases_2') }})</p>
         </div>
         <div class="icon"><i class="fas fa-arrow-down"></i></div>
       </div>
@@ -55,7 +55,7 @@
       <div class="small-box bg-{{ 'danger' if report.net_payable > 0 else 'success' }}">
         <div class="inner">
           <h3>{{ format_currency(report.net_payable, report.currency) }}</h3>
-          <p>صافي المستحق ({{ report.currency }})</p>
+          <p>{{ t('Net') }} {{ t('المستحق') }} ({{ report.currency }})</p>
         </div>
         <div class="icon"><i class="fas fa-balance-scale"></i></div>
       </div>
@@ -66,15 +66,15 @@
     <div class="col-md-12">
       <div class="card card-outline card-secondary">
         <div class="card-header">
-          <h3 class="card-title">تفاصيل الإقرار</h3>
+          <h3 class="card-title">{{ t('Details') }} {{ t('الإقرار') }}</h3>
         </div>
         <div class="card-body">
           <div class="table-responsive"><table class="table table-bordered">
             <tbody>
-              <tr><th>الدولة</th><td>{{ report.country }}</td></tr>
-              <tr><th>الفترة</th><td>{{ report.period_start }} إلى {{ report.period_end }}</td></tr>
-              <tr><th>الصيغة</th><td>{{ report.format }}</td></tr>
-              <tr><th>العملة</th><td>{{ report.currency }}</td></tr>
+              <tr><th>{{ t('الدولة') }}</th><td>{{ report.country }}</td></tr>
+              <tr><th>{{ t('Period_2') }}</th><td>{{ report.period_start }} إلى {{ report.period_end }}</td></tr>
+              <tr><th>{{ t('الصيغة') }}</th><td>{{ report.format }}</td></tr>
+              <tr><th>{{ t('Currency') }}</th><td>{{ report.currency }}</td></tr>
             </tbody>
           </table></div>
         </div>

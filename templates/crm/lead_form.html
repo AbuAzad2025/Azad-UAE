@@ -1,10 +1,10 @@
 {% extends 'base.html' %}
-{% block title %}{% if lead %}تعديل عميل متوقع{% else %}إضافة عميل متوقع{% endif %}{% endblock %}
+{% block title %}{% if lead %}{{ t('Edit') }} {{ t('عميل') }} {{ t('Expected_2') }}{% else %}{{ t('Add') }} {{ t('عميل') }} {{ t('Expected_2') }}{% endif %}{% endblock %}
 {% block content %}
 <div class="container-fluid">
   <div class="card">
     <div class="card-header">
-      <h5><i class="fas fa-{% if lead %}edit{% else %}plus{% endif %}"></i> {% if lead %}تعديل عميل متوقع{% else %}إضافة عميل متوقع{% endif %}</h5>
+      <h5><i class="fas fa-{% if lead %}edit{% else %}plus{% endif %}"></i> {% if lead %}{{ t('Edit') }} {{ t('عميل') }} {{ t('Expected_2') }}{% else %}{{ t('Add') }} {{ t('عميل') }} {{ t('Expected_2') }}{% endif %}</h5>
     </div>
     <div class="card-body">
       <form method="POST">
@@ -12,110 +12,110 @@
         {% if view and lead %}
         <div class="row">
           <div class="col-md-6">
-            <div class="form-group"><label>الاسم</label><p class="form-control-static">{{ lead.name }}</p></div>
+            <div class="form-group"><label>{{ t('Name') }}</label><p class="form-control-static">{{ lead.name }}</p></div>
           </div>
           <div class="col-md-6">
-            <div class="form-group"><label>البريد</label><p class="form-control-static">{{ lead.email or '-' }}</p></div>
+            <div class="form-group"><label>{{ t('Email_2') }}</label><p class="form-control-static">{{ lead.email or '-' }}</p></div>
           </div>
           <div class="col-md-6">
-            <div class="form-group"><label>الهاتف</label><p class="form-control-static">{{ lead.phone or '-' }}</p></div>
+            <div class="form-group"><label>{{ t('Phone') }}</label><p class="form-control-static">{{ lead.phone or '-' }}</p></div>
           </div>
           <div class="col-md-6">
-            <div class="form-group"><label>الشركة</label><p class="form-control-static">{{ lead.company or '-' }}</p></div>
+            <div class="form-group"><label>{{ t('Company') }}</label><p class="form-control-static">{{ lead.company or '-' }}</p></div>
           </div>
           <div class="col-md-6">
-            <div class="form-group"><label>الإيراد المتوقع</label><p class="form-control-static">{{ lead.expected_revenue|format_currency }}</p></div>
+            <div class="form-group"><label>{{ t('Revenue_2') }} {{ t('Expected') }}</label><p class="form-control-static">{{ lead.expected_revenue|format_currency }}</p></div>
           </div>
           <div class="col-md-6">
-            <div class="form-group"><label>الحالة</label><p class="form-control-static">{{ lead.status }}</p></div>
+            <div class="form-group"><label>{{ t('Status') }}</label><p class="form-control-static">{{ lead.status }}</p></div>
           </div>
         </div>
-        <a href="{{ url_for('crm.edit_lead', lead_id=lead.id) }}" class="btn btn-primary">تعديل</a>
-        <a href="{{ url_for('crm.leads_list') }}" class="btn btn-secondary">عودة</a>
+        <a href="{{ url_for('crm.edit_lead', lead_id=lead.id) }}" class="btn btn-primary">{{ t('Edit') }}</a>
+        <a href="{{ url_for('crm.leads_list') }}" class="btn btn-secondary">{{ t('عودة') }}</a>
         {% else %}
         <div class="row">
           <div class="col-md-6">
-            <div class="form-group"><label>الاسم <span class="text-danger">*</span></label>
-              <input name="name" class="form-control" value="{{ lead.name if lead else '' }}" required aria-label="الاسم"></div>
+            <div class="form-group"><label>{{ t('Name') }} <span class="text-danger">*</span></label>
+              <input name="name" class="form-control" value="{{ lead.name if lead else '' }}" required aria-label="{{ t('Name') }}"></div>
           </div>
           <div class="col-md-6">
-            <div class="form-group"><label>البريد</label>
-              <input name="email" type="email" class="form-control" value="{{ lead.email if lead else '' }}" aria-label="البريد"></div>
+            <div class="form-group"><label>{{ t('Email_2') }}</label>
+              <input name="email" type="email" class="form-control" value="{{ lead.email if lead else '' }}" aria-label="{{ t('Email_2') }}"></div>
           </div>
           <div class="col-md-6">
-            <div class="form-group"><label>الهاتف</label>
-              <input name="phone" class="form-control" value="{{ lead.phone if lead else '' }}" aria-label="الهاتف"></div>
+            <div class="form-group"><label>{{ t('Phone') }}</label>
+              <input name="phone" class="form-control" value="{{ lead.phone if lead else '' }}" aria-label="{{ t('Phone') }}"></div>
           </div>
           <div class="col-md-6">
-            <div class="form-group"><label>الشركة</label>
-              <input name="company" class="form-control" value="{{ lead.company if lead else '' }}" aria-label="الشركة"></div>
+            <div class="form-group"><label>{{ t('Company') }}</label>
+              <input name="company" class="form-control" value="{{ lead.company if lead else '' }}" aria-label="{{ t('Company') }}"></div>
           </div>
           <div class="col-md-6">
-            <div class="form-group"><label>المرحلة</label>
-              <select name="stage_id" class="form-control" aria-label="المرحلة">
-                <option value="">اختر</option>
+            <div class="form-group"><label>{{ t('المرحلة') }}</label>
+              <select name="stage_id" class="form-control" aria-label="{{ t('المرحلة') }}">
+                <option value="">{{ t('اختر') }}</option>
                 {% for s in stages %}
                 <option value="{{ s.id }}" {% if lead and lead.stage_id == s.id %}selected{% endif %}>{{ s.name_ar or s.name }}</option>
                 {% endfor %}
               </select></div>
           </div>
           <div class="col-md-6">
-            <div class="form-group"><label>فريق المبيعات</label>
-              <select name="team_id" class="form-control" aria-label="فريق المبيعات">
-                <option value="">اختر</option>
+            <div class="form-group"><label>{{ t('فريق') }} {{ t('Sales') }}</label>
+              <select name="team_id" class="form-control" aria-label="{{ t('فريق') }} {{ t('Sales') }}">
+                <option value="">{{ t('اختر') }}</option>
                 {% for t in teams %}
                 <option value="{{ t.id }}" {% if lead and lead.team_id == t.id %}selected{% endif %}>{{ t.name_ar or t.name }}</option>
                 {% endfor %}
               </select></div>
           </div>
           <div class="col-md-6">
-            <div class="form-group"><label>المسؤول</label>
-              <select name="assigned_user_id" class="form-control" aria-label="المسؤول">
-                <option value="">اختر</option>
+            <div class="form-group"><label>{{ t('Responsible') }}</label>
+              <select name="assigned_user_id" class="form-control" aria-label="{{ t('Responsible') }}">
+                <option value="">{{ t('اختر') }}</option>
                 {% for u in users %}
                 <option value="{{ u.id }}" {% if lead and lead.assigned_user_id == u.id %}selected{% endif %}>{{ u.name }}</option>
                 {% endfor %}
               </select></div>
           </div>
           <div class="col-md-6">
-            <div class="form-group"><label>العميل (إن وجد)</label>
-              <select name="customer_id" class="form-control" aria-label="العميل">
-                <option value="">اختر</option>
+            <div class="form-group"><label>{{ t('Customer') }} (إن {{ t('وجد') }})</label>
+              <select name="customer_id" class="form-control" aria-label="{{ t('Customer') }}">
+                <option value="">{{ t('اختر') }}</option>
                 {% for c in customers %}
                 <option value="{{ c.id }}" {% if lead and lead.customer_id == c.id %}selected{% endif %}>{{ c.name }}</option>
                 {% endfor %}
               </select></div>
           </div>
           <div class="col-md-6">
-            <div class="form-group"><label>الإيراد المتوقع</label>
-              <input name="expected_revenue" type="number" step="0.01" class="form-control" value="{{ lead.expected_revenue if lead else '0' }}" aria-label="الإيراد المتوقع"></div>
+            <div class="form-group"><label>{{ t('Revenue_2') }} {{ t('Expected') }}</label>
+              <input name="expected_revenue" type="number" step="0.01" class="form-control" value="{{ lead.expected_revenue if lead else '0' }}" aria-label="{{ t('Revenue_2') }} {{ t('Expected') }}"></div>
           </div>
           <div class="col-md-6">
-            <div class="form-group"><label>الأولوية</label>
-              <select name="priority" class="form-control" aria-label="الأولوية">
-                <option value="low" {% if lead and lead.priority == 'low' %}selected{% endif %}>منخفضة</option>
-                <option value="medium" {% if not lead or lead.priority == 'medium' %}selected{% endif %}>متوسطة</option>
-                <option value="high" {% if lead and lead.priority == 'high' %}selected{% endif %}>عالية</option>
+            <div class="form-group"><label>{{ t('الأولوية') }}</label>
+              <select name="priority" class="form-control" aria-label="{{ t('الأولوية') }}">
+                <option value="low" {% if lead and lead.priority == 'low' %}selected{% endif %}>{{ t('Low') }}</option>
+                <option value="medium" {% if not lead or lead.priority == 'medium' %}selected{% endif %}>{{ t('Medium') }}</option>
+                <option value="high" {% if lead and lead.priority == 'high' %}selected{% endif %}>{{ t('عالية') }}</option>
               </select></div>
           </div>
           <div class="col-md-6">
-            <div class="form-group"><label>المصدر</label>
-              <select name="source" class="form-control" aria-label="المصدر">
-                <option value="">اختر</option>
-                <option value="website" {% if lead and lead.source == 'website' %}selected{% endif %}>الموقع</option>
-                <option value="referral" {% if lead and lead.source == 'referral' %}selected{% endif %}>إحالة</option>
-                <option value="social" {% if lead and lead.source == 'social' %}selected{% endif %}>تواصل اجتماعي</option>
-                <option value="call" {% if lead and lead.source == 'call' %}selected{% endif %}>اتصال</option>
-                <option value="email" {% if lead and lead.source == 'email' %}selected{% endif %}>بريد</option>
+            <div class="form-group"><label>{{ t('المصدر') }}</label>
+              <select name="source" class="form-control" aria-label="{{ t('المصدر') }}">
+                <option value="">{{ t('اختر') }}</option>
+                <option value="website" {% if lead and lead.source == 'website' %}selected{% endif %}>{{ t('Website') }}</option>
+                <option value="referral" {% if lead and lead.source == 'referral' %}selected{% endif %}>{{ t('إحالة') }}</option>
+                <option value="social" {% if lead and lead.source == 'social' %}selected{% endif %}>{{ t('تواصل') }} {{ t('اجتماعي') }}</option>
+                <option value="call" {% if lead and lead.source == 'call' %}selected{% endif %}>{{ t('اتصال') }}</option>
+                <option value="email" {% if lead and lead.source == 'email' %}selected{% endif %}>{{ t('بريد') }}</option>
               </select></div>
           </div>
           <div class="col-12">
-            <div class="form-group"><label>ملاحظات</label>
-              <textarea name="description" class="form-control" rows="3" aria-label="ملاحظات">{{ lead.description if lead else '' }}</textarea></div>
+            <div class="form-group"><label>{{ t('Notes') }}</label>
+              <textarea name="description" class="form-control" rows="3" aria-label="{{ t('Notes') }}">{{ lead.description if lead else '' }}</textarea></div>
           </div>
         </div>
-        <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> حفظ</button>
-        <a href="{{ url_for('crm.leads_list') }}" class="btn btn-secondary">إلغاء</a>
+        <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> {{ t('Save') }}</button>
+        <a href="{{ url_for('crm.leads_list') }}" class="btn btn-secondary">{{ t('Cancel') }}</a>
         {% endif %}
       </form>
     </div>

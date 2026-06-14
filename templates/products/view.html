@@ -1,16 +1,16 @@
 {% extends 'base.html' %}
-{% block title %}شركة أزاد للأنظمة الذكية - تفاصيل المنتج {{ product.name }}{% endblock %}
+{% block title %}{{ t('Company_2') }} {{ t('أزاد') }} {{ t('للأنظمة') }} {{ t('الذكية') }} - {{ t('Details') }} {{ t('Product') }} {{ product.name }}{% endblock %}
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
   <div>
-    <h1 class="mb-0"><i class="fas fa-box mr-2"></i>تفاصيل المنتج: {{ product.name }}</h1>
+    <h1 class="mb-0"><i class="fas fa-box mr-2"></i>{{ t('Details') }} {{ t('Product') }}: {{ product.name }}</h1>
   </div>
   <div>
     <a href="{{ url_for('products.index') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right mr-2"></i>العودة للقائمة
+      <i class="fas fa-arrow-right mr-2"></i>{{ t('العودة') }} {{ t('للقائمة') }}
     </a>
     <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
-      <i class="fas fa-home mr-2"></i>الرئيسية
+      <i class="fas fa-home mr-2"></i>{{ t('Main_2') }}
     </a>
   </div>
 </div>
@@ -28,7 +28,7 @@
         
         <ul class="list-group list-group-unbordered mb-3">
           <li class="list-group-item">
-            <b>رقم القطعة</b>
+            <b>{{ t('رقم') }} {{ t('القطعة') }}</b>
             <span class="float-left">{{ product.part_number or '-' }}</span>
           </li>
           <li class="list-group-item">
@@ -49,11 +49,11 @@
         </ul>
         
         <a href="{{ url_for('products.edit', id=product.id) }}" class="btn btn-warning btn-block mb-2">
-          <i class="fas fa-edit"></i> تعديل
+          <i class="fas fa-edit"></i> {{ t('Edit') }}
         </a>
         <button type="button" class="btn btn-danger btn-block" 
                 data-delete-item="{{product.id}}" data-item-type="products" data-item-name="{{product.name|tojson}}">
-          <i class="fas fa-trash"></i> حذف
+          <i class="fas fa-trash"></i> {{ t('Delete') }}
         </button>
       </div>
     </div>
@@ -62,24 +62,24 @@
   <div class="col-md-8">
     <div class="card">
       <div class="card-header">
-        <h3 class="card-title">معلومات المنتج</h3>
+        <h3 class="card-title">{{ t('Info_2') }} {{ t('Product') }}</h3>
       </div>
       <div class="card-body">
         <dl class="row">
-          <dt class="col-sm-4">الاسم التجاري:</dt>
+          <dt class="col-sm-4">{{ t('Name') }} {{ t('التجاري') }}:</dt>
           <dd class="col-sm-8">{{ product.commercial_name or '-' }}</dd>
           
-          <dt class="col-sm-4">بلد المنشأ:</dt>
+          <dt class="col-sm-4">{{ t('بلد') }} {{ t('المنشأ') }}:</dt>
           <dd class="col-sm-8">{{ product.country_of_origin or '-' }}</dd>
           
-          <dt class="col-sm-4">الفئة:</dt>
+          <dt class="col-sm-4">{{ t('الفئة') }}:</dt>
           <dd class="col-sm-8">{{ product.category.name if product.category else '-' }}</dd>
 
-          <dt class="col-sm-4">التاجر المالك:</dt>
+          <dt class="col-sm-4">{{ t('التاجر') }} {{ t('المالك') }}:</dt>
           <dd class="col-sm-8 text-primary">{{ product.merchant_customer.name if product.merchant_customer else '-' }}</dd>
 
           {% if product.partner_shares %}
-          <dt class="col-sm-4">الشركاء:</dt>
+          <dt class="col-sm-4">{{ t('Partners') }}:</dt>
           <dd class="col-sm-8">
             <ul class="list-unstyled mb-0">
               {% for share in product.partner_shares %}
@@ -89,10 +89,10 @@
           </dd>
           {% endif %}
           
-          <dt class="col-sm-4">سعر التكلفة:</dt>
+          <dt class="col-sm-4">{{ t('Price_2') }} {{ t('Cost') }}:</dt>
           <dd class="col-sm-8">{{ format_currency(product.cost_price or 0) }}</dd>
           
-          <dt class="col-sm-4">خصم التاجر:</dt>
+          <dt class="col-sm-4">{{ t('Discount_2') }} {{ t('التاجر') }}:</dt>
           <dd class="col-sm-8">
             {% if product.merchant_price %}
               {{ product.merchant_price }}% 
@@ -102,7 +102,7 @@
             {% endif %}
           </dd>
           
-          <dt class="col-sm-4">خصم الشريك:</dt>
+          <dt class="col-sm-4">{{ t('Discount_2') }} {{ t('Partner_2') }}:</dt>
           <dd class="col-sm-8">
             {% if product.partner_price %}
               {{ product.partner_price }}%
@@ -112,13 +112,13 @@
             {% endif %}
           </dd>
           
-          <dt class="col-sm-4">الكفالة:</dt>
+          <dt class="col-sm-4">{{ t('Guarantee') }}:</dt>
           <dd class="col-sm-8">{{ product.warranty_period or 0 }} {{ product.warranty_unit or 'شهر' }}</dd>
           
-          <dt class="col-sm-4">قابل للإرجاع:</dt>
+          <dt class="col-sm-4">{{ t('قابل') }} {{ t('Return_2') }}:</dt>
           <dd class="col-sm-8">
             {% if product.is_returnable %}
-            <span class="badge badge-success">نعم ({{ product.return_period_days }} يوم)</span>
+            <span class="badge badge-success">نعم ({{ product.return_period_days }} {{ t('يوم') }})</span>
             {% else %}
             <span class="badge badge-danger">{{ t('No') }}</span>
             {% endif %}
@@ -127,7 +127,7 @@
 
         {% if product.description %}
         <hr>
-        <h5>الوصف:</h5>
+        <h5>{{ t('Description') }}:</h5>
         <p>{{ product.description }}</p>
         {% endif %}
       </div>
@@ -135,16 +135,16 @@
 
     <div class="card">
       <div class="card-header">
-        <h3 class="card-title">آخر الحركات</h3>
+        <h3 class="card-title">{{ t('Last') }} {{ t('Movements') }}</h3>
       </div>
       <div class="card-body p-0">
         <div class="table-responsive"><table class="table table-sm">
           <thead>
             <tr>
-              <th>النوع</th>
+              <th>{{ t('النوع') }}</th>
               <th>{{ t('Quantity') }}</th>
               <th>{{ t('Date') }}</th>
-              <th>المرجع</th>
+              <th>{{ t('المرجع') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -152,14 +152,14 @@
             <tr>
               <td>
                 {% if movement.movement_type in ['in', 'purchase'] %}
-                <span class="badge badge-success">إدخال</span>
+                <span class="badge badge-success">{{ t('إدخال') }}</span>
                 {% elif movement.movement_type in ['out', 'sale'] %}
-                <span class="badge badge-danger">إخراج</span>
+                <span class="badge badge-danger">{{ t('إخراج') }}</span>
                 {% elif movement.movement_type == 'adjustment' %}
                     {% if movement.quantity > 0 %}
-                    <span class="badge badge-info">تعديل (إضافة)</span>
+                    <span class="badge badge-info">{{ t('Edit') }} ({{ t('Add') }})</span>
                     {% else %}
-                    <span class="badge badge-warning">تعديل (خصم)</span>
+                    <span class="badge badge-warning">{{ t('Edit') }} ({{ t('Discount_2') }})</span>
                     {% endif %}
                 {% else %}
                 <span class="badge badge-secondary">{{ movement.movement_type }}</span>
@@ -177,7 +177,7 @@
             </tr>
             {% else %}
             <tr>
-              <td colspan="4" class="text-center text-muted">لا توجد حركات ضمن نطاقك الحالي</td>
+              <td colspan="4" class="text-center text-muted">لا {{ t('توجد') }} {{ t('حركات') }} {{ t('ضمن') }} {{ t('نطاقك') }} {{ t('الحالي') }}</td>
             </tr>
             {% endfor %}
           </tbody>

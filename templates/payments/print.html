@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - سند قبض #{{ receipt.receipt_number }}</title>
+  <title>{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('Voucher_2') }} {{ t('Receipt') }} #{{ receipt.receipt_number }}</title>
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" integrity="sha384-hFO2rIEcBkgZKRO294CPboGlOE8XKpW3hGk1H8x71xs2e52QrbdK/HioDB0ZcIvS" crossorigin="anonymous" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/accessibility.css') }}">
   <style>
@@ -73,7 +73,7 @@
 <body class="receipt-print payment-receipt">
   <div class="no-print ic-1">
     <button data-action="window-print" class="ic-2">
-      <i class="fas fa-print"></i> طباعة
+      <i class="fas fa-print"></i> {{ t('Print') }}
     </button>
   </div>
 
@@ -87,12 +87,12 @@
     <div class="receipt-title">
       <h2>
         {% if is_payment %}
-          سند صرف 💸
+          {{ t('Voucher_2') }} {{ t('صرف') }} 💸
         {% else %}
-          سند قبض 💵
+          {{ t('Voucher_2') }} {{ t('Receipt') }} 💵
         {% endif %}
       </h2>
-      <p class="ic-5">رقم: 
+      <p class="ic-5">{{ t('رقم') }}: 
         {% if is_payment %}
           {{ receipt.payment_number }}
         {% else %}
@@ -103,7 +103,7 @@
 
     <div class="receipt-body">
       <div class="info-row">
-        <span><strong>التاريخ:</strong></span>
+        <span><strong>{{ t('Date') }}:</strong></span>
         <span>
           {% if is_payment %}
             {{ receipt.payment_date.strftime('%Y-%m-%d %H:%M') }}
@@ -114,7 +114,7 @@
       </div>
 
       <div class="info-row">
-        <span><strong>اسم الزبون:</strong></span>
+        <span><strong>{{ t('Name_2') }} {{ t('Customer_2') }}:</strong></span>
         <span>
           {% if is_payment %}
             {% if receipt.customer %}
@@ -129,19 +129,19 @@
       </div>
 
       <div class="info-row">
-        <span><strong>طريقة الدفع:</strong></span>
+        <span><strong>{{ t('طريقة') }} {{ t('Payment_2') }}:</strong></span>
         <span>
-          {% if receipt.payment_method == 'cash' %}نقدي
-          {% elif receipt.payment_method == 'card' %}بطاقة
-          {% elif receipt.payment_method == 'bank_transfer' %}تحويل بنكي
-          {% elif receipt.payment_method == 'cheque' %}شيك
-          {% else %}محفظة إلكترونية{% endif %}
+          {% if receipt.payment_method == 'cash' %}{{ t('Cash_2') }}
+          {% elif receipt.payment_method == 'card' %}{{ t('Card') }}
+          {% elif receipt.payment_method == 'bank_transfer' %}{{ t('Transfer') }} {{ t('Bank_3') }}
+          {% elif receipt.payment_method == 'cheque' %}{{ t('Cheque_3') }}
+          {% else %}{{ t('محفظة') }} {{ t('إلكترونية') }}{% endif %}
         </span>
       </div>
 
       {% if receipt.reference_number %}
       <div class="info-row">
-        <span><strong>رقم المرجع:</strong></span>
+        <span><strong>{{ t('رقم') }} {{ t('المرجع') }}:</strong></span>
         <span>{{ receipt.reference_number }}</span>
       </div>
       {% endif %}
@@ -150,16 +150,16 @@
       <div class="info-row ic-6">
         <div class="ic-7">
           <div class="ic-8">
-            <span><strong>رقم الشيك:</strong></span>
+            <span><strong>{{ t('رقم') }} {{ t('Cheque') }}:</strong></span>
             <span>{{ receipt.cheque_number }}</span>
           </div>
           <div class="ic-8">
-            <span><strong>البنك:</strong></span>
+            <span><strong>{{ t('Bank') }}:</strong></span>
             <span>{{ receipt.bank_name }}</span>
           </div>
           {% if receipt.cheque_date %}
           <div class="ic-9">
-            <span><strong>تاريخ الاستحقاق:</strong></span>
+            <span><strong>{{ t('History') }} {{ t('Due') }}:</strong></span>
             <span class="ic-10">{{ receipt.cheque_date.strftime('%Y-%m-%d') }}</span>
           </div>
           {% endif %}
@@ -168,7 +168,7 @@
       {% endif %}
 
       <div class="amount-box">
-        <p class="ic-11">المبلغ المستلم</p>
+        <p class="ic-11">{{ t('Amount') }} {{ t('المستلم') }}</p>
         <h3>{{ format_currency(receipt.amount, receipt.currency) }}</h3>
         {% if receipt.currency != tenant_default_currency %}
         <p class="ic-12">= {{ format_currency(receipt.base_amount) }}</p>
@@ -177,13 +177,13 @@
 
       {% if receipt.notes %}
       <div class="ic-13">
-        <strong>ملاحظات:</strong> {{ receipt.notes }}
+        <strong>{{ t('Notes') }}:</strong> {{ receipt.notes }}
       </div>
       {% endif %}
 
       <div class="ic-14">
         <div class="ic-15">
-          <strong>توقيع المحاسب</strong>
+          <strong>{{ t('توقيع') }} {{ t('المحاسب') }}</strong>
         </div>
       </div>
     </div>

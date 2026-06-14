@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
-{% block title %}سند صرف - {{ purchase.purchase_number }}{% endblock %}
-{% block page_title %}إنشاء سند صرف{% endblock %}
+{% block title %}{{ t('Voucher_2') }} {{ t('صرف') }} - {{ purchase.purchase_number }}{% endblock %}
+{% block page_title %}{{ t('Create') }} {{ t('Voucher_2') }} {{ t('صرف') }}{% endblock %}
 
 {% block content %}
 {% set submitted = form_data if form_data is defined else None %}
@@ -12,32 +12,32 @@
     <div class="card card-primary">
       <div class="card-header">
         <h3 class="card-title">
-          <i class="fas fa-file-invoice mr-2"></i>معلومات فاتورة المشتريات
+          <i class="fas fa-file-invoice mr-2"></i>{{ t('Info_2') }} {{ t('Invoice') }} {{ t('Purchases') }}
         </h3>
       </div>
       <div class="card-body">
         <div class="row">
           <div class="col-md-6">
             <dl>
-              <dt>رقم الفاتورة:</dt>
+              <dt>{{ t('رقم') }} {{ t('Invoice_2') }}:</dt>
               <dd><strong>{{ purchase.purchase_number }}</strong></dd>
               
-              <dt>المورد:</dt>
+              <dt>{{ t('Supplier') }}:</dt>
               <dd>{{ purchase.supplier_name }}</dd>
               
-              <dt>تاريخ الفاتورة:</dt>
+              <dt>{{ t('History') }} {{ t('Invoice_2') }}:</dt>
               <dd>{{ purchase.purchase_date.strftime('%Y-%m-%d') }}</dd>
             </dl>
           </div>
           <div class="col-md-6">
             <dl>
-              <dt>إجمالي الفاتورة:</dt>
+              <dt>{{ t('Total_2') }} {{ t('Invoice_2') }}:</dt>
               <dd><strong class="text-primary">{{ format_currency(purchase.total_amount) }}</strong></dd>
               
-              <dt>المدفوع:</dt>
+              <dt>{{ t('Paid') }}:</dt>
               <dd class="text-success">{{ format_currency(purchase.paid_amount_aed or 0) }}</dd>
               
-              <dt>المتبقي:</dt>
+              <dt>{{ t('Remaining') }}:</dt>
               <dd><strong class="text-danger">{{ format_currency(balance) }}</strong></dd>
             </dl>
           </div>
@@ -49,7 +49,7 @@
     <div class="card card-danger mt-3">
       <div class="card-header">
         <h3 class="card-title">
-          <i class="fas fa-money-bill-wave mr-2"></i>بيانات سند الصرف
+          <i class="fas fa-money-bill-wave mr-2"></i>{{ t('Data_2') }} {{ t('Voucher_2') }} {{ t('Exchange') }}
         </h3>
       </div>
       {% if current_user.has_permission('manage_payments') %}
@@ -58,7 +58,7 @@
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
         <div class="card-body">
           <div class="form-group">
-            <label for="amount">المبلغ المدفوع <span class="text-danger">*</span></label>
+            <label for="amount">{{ t('Amount') }} {{ t('Paid') }} <span class="text-danger">*</span></label>
             <div class="input-group">
               <input type="number" class="form-control" id="amount" name="amount" 
                      step="0.01" min="0.01" max="{{ balance }}" 
@@ -68,34 +68,34 @@
               </div>
             </div>
             <small class="form-text text-muted">
-              الحد الأقصى: {{ format_currency(balance) }}
+              {{ t('الحد') }} {{ t('الأقصى') }}: {{ format_currency(balance) }}
             </small>
           </div>
 
           <div class="form-group">
-            <label for="payment_method">طريقة الدفع <span class="text-danger">*</span></label>
+            <label for="payment_method">{{ t('طريقة') }} {{ t('Payment_2') }} <span class="text-danger">*</span></label>
             <select class="form-control" id="payment_method" name="payment_method" required aria-label="payment method">
-              <option value="cash" {% if selected_payment_method == 'cash' %}selected{% endif %}>نقدي</option>
-              <option value="bank_transfer" {% if selected_payment_method == 'bank_transfer' %}selected{% endif %}>تحويل بنكي</option>
-              <option value="cheque" {% if selected_payment_method == 'cheque' %}selected{% endif %}>شيك</option>
+              <option value="cash" {% if selected_payment_method == 'cash' %}selected{% endif %}>{{ t('Cash_2') }}</option>
+              <option value="bank_transfer" {% if selected_payment_method == 'bank_transfer' %}selected{% endif %}>{{ t('Transfer') }} {{ t('Bank_3') }}</option>
+              <option value="cheque" {% if selected_payment_method == 'cheque' %}selected{% endif %}>{{ t('Cheque_3') }}</option>
             </select>
           </div>
 
           <div class="form-group">
-            <label for="notes">ملاحظات</label>
+            <label for="notes">{{ t('Notes') }}</label>
             <textarea class="form-control" id="notes" name="notes" rows="3" 
-                      placeholder="أي ملاحظات إضافية..." maxlength="500">دفعة لفاتورة مشتريات {{ purchase.purchase_number }}</textarea>
+                      placeholder="أي {{ t('Notes') }} {{ t('Additional') }}..." maxlength="500">{{ t('دفعة') }} {{ t('ل{{ t('Invoice') }}') }} {{ t('Purchases_2') }} {{ purchase.purchase_number }}</textarea>
           </div>
         </div>
 
         <div class="card-footer">
           <button type="submit" class="btn btn-danger">
-            <i class="fas fa-save mr-2"></i>حفظ سند الصرف
+            <i class="fas fa-save mr-2"></i>{{ t('Save') }} {{ t('Voucher_2') }} {{ t('Exchange') }}
           </button>
           {% if current_user.has_permission('manage_purchases') %}
           <a href="{{ url_for('purchases.view', id=purchase.id) }}" class="btn btn-secondary">
           {% endif %}
-            <i class="fas fa-times mr-2"></i>إلغاء
+            <i class="fas fa-times mr-2"></i>{{ t('Cancel') }}
           </a>
         </div>
       </form>
@@ -107,14 +107,14 @@
 {% block extra_js %}
 <script>
 $(document).ready(function() {
-  // التحقق من المبلغ
+  // {{ t('التحقق') }} من {{ t('Amount') }}
   $('#amount').on('input', function() {
     const value = parseFloat($(this).val());
     const max = parseFloat($(this).attr('max'));
     
     if (value > max) {
       $(this).val(max.toFixed(2));
-      toastr.warning('المبلغ لا يمكن أن يتجاوز المتبقي');
+      toastr.warning('{{ t('Amount') }} لا يمكن أن {{ t('يتجاوز') }} {{ t('Remaining') }}');
     }
   });
 });

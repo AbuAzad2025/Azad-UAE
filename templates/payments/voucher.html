@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - سند مالي موحد{% endblock %}
-{% block page_title %}إنشاء سند مالي (قبض/صرف){% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('Voucher_2') }} {{ t('مالي') }} {{ t('موحد') }}{% endblock %}
+{% block page_title %}{{ t('Create') }} {{ t('Voucher_2') }} {{ t('مالي') }} ({{ t('Receipt') }}/{{ t('صرف') }}){% endblock %}
 
 {% block extra_css %}
 {% include 'partials/select2_assets.html' %}
@@ -50,7 +50,7 @@
 {% block content %}
 <div class="card voucher-form">
   <div class="card-header bg-primary text-white">
-    <h3 class="card-title mb-0"><i class="fas fa-money-bill-wave mr-2"></i>سند مالي جديد</h3>
+    <h3 class="card-title mb-0"><i class="fas fa-money-bill-wave mr-2"></i>{{ t('Voucher_2') }} {{ t('مالي') }} {{ t('New') }}</h3>
   </div>
   <form class="needs-validation" method="POST" action="{{ url_for('payments.create_voucher_submit') }}" id="voucherForm">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
@@ -62,16 +62,16 @@
         <div class="col-md-5">
           <div class="card type-card text-center p-3 selected" id="card-incoming" onclick="selectDirection('incoming')">
             <i class="fas fa-arrow-down fa-2x text-success mb-2"></i>
-            <h4>سند قبض (وارد)</h4>
-            <p class="text-muted small mb-0">استلام أموال من عميل أو مورد</p>
+            <h4>{{ t('Voucher_2') }} {{ t('Receipt') }} ({{ t('Income_3') }})</h4>
+            <p class="text-muted small mb-0">{{ t('استلام') }} {{ t('أموال') }} من {{ t('عميل') }} أو {{ t('Supplier_2') }}</p>
             <input type="radio" name="direction" value="incoming" checked aria-label="direction" class="ic-1">
           </div>
         </div>
         <div class="col-md-5">
           <div class="card type-card text-center p-3" id="card-outgoing" onclick="selectDirection('outgoing')">
             <i class="fas fa-arrow-up fa-2x text-danger mb-2"></i>
-            <h4>سند صرف (صادر)</h4>
-            <p class="text-muted small mb-0">دفع أموال لمورد أو عميل</p>
+            <h4>{{ t('Voucher_2') }} {{ t('صرف') }} ({{ t('Expense') }})</h4>
+            <p class="text-muted small mb-0">{{ t('Payment') }} {{ t('أموال') }} {{ t('ل{{ t('Supplier_2') }}') }} أو {{ t('عميل') }}</p>
             <input type="radio" name="direction" value="outgoing" aria-label="direction" class="ic-1">
           </div>
         </div>
@@ -83,18 +83,18 @@
       <div class="row">
         <div class="col-md-4">
           <div class="form-group">
-            <label class="font-weight-bold">نوع الجهة</label>
+            <label class="font-weight-bold">{{ t('نوع') }} {{ t('الجهة') }}</label>
             <select class="form-control" name="party_type" id="party_type" onchange="updatePartyList()" aria-label="party type">
-              <option value="customer">عميل / شريك / تاجر</option>
-              <option value="supplier">مورد</option>
+              <option value="customer">{{ t('عميل') }} / {{ t('Partner') }} / {{ t('تاجر') }}</option>
+              <option value="supplier">{{ t('Supplier_2') }}</option>
             </select>
           </div>
         </div>
         <div class="col-md-8">
           <div class="form-group">
-            <label class="font-weight-bold">اسم الجهة</label>
+            <label class="font-weight-bold">{{ t('Name_2') }} {{ t('الجهة') }}</label>
             <select class="form-control select2" name="party_id" id="party_id" required aria-label="party id">
-              <option value="">اختر الجهة...</option>
+              <option value="">{{ t('اختر') }} {{ t('الجهة') }}...</option>
               
             </select>
           </div>
@@ -104,7 +104,7 @@
       <div class="row">
         <div class="col-md-4">
           <div class="form-group">
-            <label class="font-weight-bold">المبلغ</label>
+            <label class="font-weight-bold">{{ t('Amount') }}</label>
             <div class="input-group">
               <input type="number" step="0.01" class="form-control font-weight-bold text-center" name="amount" id="amount" required placeholder="0.00" min="0">
               <div class="input-group-append">
@@ -115,9 +115,9 @@
         </div>
         <div class="col-md-4">
           <div class="form-group">
-            <label class="font-weight-bold">العملة</label>
+            <label class="font-weight-bold">{{ t('Currency') }}</label>
             {% set selected_voucher_currency = preselected_currency or tenant_default_currency or 'AED' %}
-            <select class="form-control" name="currency" id="currency" aria-label="العملة">
+            <select class="form-control" name="currency" id="currency" aria-label="{{ t('Currency') }}">
               {% for code in ['AED','USD','EUR','GBP','SAR','QAR','KWD','BHD','OMR','ILS','JOD','EGP'] %}
               <option value="{{ code }}" {% if selected_voucher_currency == code %}selected{% endif %}>{{ code }}</option>
               {% endfor %}
@@ -126,24 +126,24 @@
         </div>
         <div class="col-md-4">
           <div class="form-group">
-            <label class="font-weight-bold">سعر الصرف</label>
+            <label class="font-weight-bold">{{ t('Price_2') }} {{ t('Exchange') }}</label>
             <input type="number" step="0.000001" min="0.000001" class="form-control" name="exchange_rate" id="exchange_rate" value="{{ preselected_exchange_rate or 1 }}" aria-label="exchange rate">
           </div>
         </div>
         <div class="col-md-4">
           <div class="form-group">
-            <label class="font-weight-bold">طريقة الدفع</label>
+            <label class="font-weight-bold">{{ t('طريقة') }} {{ t('Payment_2') }}</label>
             <select class="form-control" name="payment_method" id="payment_method" onchange="toggleChequeFields()" aria-label="payment method">
-              <option value="cash">نقدي</option>
-              <option value="bank_transfer">تحويل بنكي</option>
-              <option value="cheque">شيك</option>
-              <option value="card">بطاقة</option>
+              <option value="cash">{{ t('Cash_2') }}</option>
+              <option value="bank_transfer">{{ t('Transfer') }} {{ t('Bank_3') }}</option>
+              <option value="cheque">{{ t('Cheque_3') }}</option>
+              <option value="card">{{ t('Card') }}</option>
             </select>
           </div>
         </div>
         <div class="col-md-4">
           <div class="form-group">
-            <label for="input_date">التاريخ</label>
+            <label for="input_date">{{ t('Date') }}</label>
             <input type="date" class="form-control" name="date" value="{{ today_date }}" id="input_date" aria-label="date">
           </div>
         </div>
@@ -153,19 +153,19 @@
       <div class="row bg-light p-3 rounded mb-3 ic-2" id="cheque_fields">
         <div class="col-md-4">
           <div class="form-group mb-0">
-            <label for="input_cheque_number">رقم الشيك</label>
+            <label for="input_cheque_number">{{ t('رقم') }} {{ t('Cheque') }}</label>
             <input type="text" class="form-control" name="cheque_number" id="input_cheque_number" aria-label="cheque number">
           </div>
         </div>
         <div class="col-md-4">
           <div class="form-group mb-0">
-            <label for="input_cheque_date">تاريخ الاستحقاق</label>
+            <label for="input_cheque_date">{{ t('History') }} {{ t('Due') }}</label>
             <input type="date" class="form-control" name="cheque_date" id="input_cheque_date" aria-label="cheque date">
           </div>
         </div>
         <div class="col-md-4">
           <div class="form-group mb-0">
-            <label for="input_bank_name">اسم البنك</label>
+            <label for="input_bank_name">{{ t('Name_2') }} {{ t('Bank') }}</label>
             <input type="text" class="form-control" name="bank_name" id="input_bank_name" aria-label="bank name" minlength="2" maxlength="100">
           </div>
         </div>
@@ -174,16 +174,16 @@
       <div class="row">
         <div class="col-md-12">
           <div class="form-group">
-            <label>ملاحظات / البيان</label>
-            <textarea class="form-control" name="notes" rows="3" placeholder="أدخل تفاصيل السند..." maxlength="500"></textarea>
+            <label>{{ t('Notes') }} / {{ t('Description_3') }}</label>
+            <textarea class="form-control" name="notes" rows="3" placeholder="{{ t('أدخل') }} {{ t('Details') }} {{ t('Voucher') }}..." maxlength="500"></textarea>
           </div>
         </div>
       </div>
 
     </div>
     <div class="card-footer text-right">
-      <button type="submit" class="btn btn-primary btn-lg px-5"><i class="fas fa-save mr-2"></i>حفظ السند</button>
-      <a href="{{ url_for('payments.receipts') }}" class="btn btn-secondary btn-lg ml-2">إلغاء</a>
+      <button type="submit" class="btn btn-primary btn-lg px-5"><i class="fas fa-save mr-2"></i>{{ t('Save') }} {{ t('Voucher') }}</button>
+      <a href="{{ url_for('payments.receipts') }}" class="btn btn-secondary btn-lg ml-2">{{ t('Cancel') }}</a>
     </div>
   </form>
 </div>
@@ -219,14 +219,14 @@ function updatePartyList() {
   var type = $('#party_type').val();
   var select = $('#party_id');
   select.empty();
-  select.append('<option value="">اختر الجهة...</option>');
+  select.append('<option value="">{{ t('اختر') }} {{ t('الجهة') }}...</option>');
   
   var list = (type === 'customer') ? customers : suppliers;
   
   list.forEach(function(item) {
     var typeLabel = '';
     if (type === 'customer' && item.type !== 'regular') {
-      typeLabel = ' (' + (item.type === 'merchant' ? 'تاجر' : 'شريك') + ')';
+      typeLabel = ' (' + (item.type === 'merchant' ? '{{ t('تاجر') }}' : '{{ t('Partner') }}') + ')';
     }
     select.append('<option value="' + item.id + '">' + item.name + typeLabel + '</option>');
   });

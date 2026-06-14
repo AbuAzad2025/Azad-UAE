@@ -1,16 +1,16 @@
 {% extends 'base.html' %}
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - إضافة شيك جديد{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('Add') }} {{ t('Cheque_3') }} {{ t('New') }}{% endblock %}
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
   <div>
-    <h1 class="mb-0"><i class="fas fa-plus-circle mr-2"></i>إضافة شيك جديد</h1>
+    <h1 class="mb-0"><i class="fas fa-plus-circle mr-2"></i>{{ t('Add') }} {{ t('Cheque_3') }} {{ t('New') }}</h1>
   </div>
   <div>
     <a href="{{ url_for('cheques.index') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right mr-2"></i>العودة للشيكات
+      <i class="fas fa-arrow-right mr-2"></i>{{ t('العودة') }} {{ t('Cheques_3') }}
     </a>
     <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
-      <i class="fas fa-home mr-2"></i>الرئيسية
+      <i class="fas fa-home mr-2"></i>{{ t('Main_2') }}
     </a>
   </div>
 </div>
@@ -79,7 +79,7 @@
 <div class="card">
   <div class="card-header bg-primary">
     <h3 class="card-title text-white">
-      <i class="fas fa-money-check mr-2"></i>معلومات الشيك
+      <i class="fas fa-money-check mr-2"></i>{{ t('Info_2') }} {{ t('Cheque') }}
     </h3>
   </div>
   <div class="card-body">
@@ -90,20 +90,20 @@
       <div class="row">
         <div class="col-md-6">
           <div class="form-group">
-            <label><i class="fas fa-exchange-alt"></i> نوع الشيك: <span class="text-danger">*</span></label>
+            <label><i class="fas fa-exchange-alt"></i> {{ t('نوع') }} {{ t('Cheque') }}: <span class="text-danger">*</span></label>
             <select name="cheque_type" id="cheque_type" class="form-control" required aria-label="cheque type">
-              <option value="">بلا</option>
-              <option value="incoming">وارد (من عميل)</option>
-              <option value="outgoing">صادر (لمورد)</option>
+              <option value="">{{ t('None') }}</option>
+              <option value="incoming">{{ t('Income_3') }} (من {{ t('عميل') }})</option>
+              <option value="outgoing">{{ t('Expense') }} ({{ t('لمورد') }})</option>
             </select>
           </div>
         </div>
         
         <div class="col-md-6">
           <div class="form-group">
-            <label><i class="fas fa-hashtag"></i> رقم الشيك: <span class="text-danger">*</span></label>
+            <label><i class="fas fa-hashtag"></i> {{ t('رقم') }} {{ t('Cheque') }}: <span class="text-danger">*</span></label>
             <input type="text" name="cheque_bank_number" class="form-control" 
-                   placeholder="رقم الشيك من البنك" required>
+                   placeholder="{{ t('رقم') }} {{ t('Cheque') }} من {{ t('Bank') }}" required>
           </div>
         </div>
       </div>
@@ -112,25 +112,25 @@
       <div class="row">
         <div class="col-md-4">
           <div class="form-group">
-            <label><i class="fas fa-university"></i> البنك: <span class="text-danger">*</span></label>
+            <label><i class="fas fa-university"></i> {{ t('Bank') }}: <span class="text-danger">*</span></label>
             <input type="text" name="bank_name" class="form-control" 
-                   placeholder="اسم البنك" required minlength="2" maxlength="100">
+                   placeholder="{{ t('Name_2') }} {{ t('Bank') }}" required minlength="2" maxlength="100">
           </div>
         </div>
         
         <div class="col-md-4">
           <div class="form-group">
-            <label><i class="fas fa-map-marker-alt"></i> الفرع:</label>
+            <label><i class="fas fa-map-marker-alt"></i> {{ t('Branch') }}:</label>
             <input type="text" name="bank_branch" class="form-control" 
-                   placeholder="فرع البنك">
+                   placeholder="{{ t('Branch_2') }} {{ t('Bank') }}">
           </div>
         </div>
         
         <div class="col-md-4">
           <div class="form-group">
-            <label><i class="fas fa-credit-card"></i> رقم الحساب:</label>
+            <label><i class="fas fa-credit-card"></i> {{ t('رقم') }} {{ t('Account') }}:</label>
             <input type="text" name="account_number" class="form-control" 
-                   placeholder="رقم الحساب" maxlength="34">
+                   placeholder="{{ t('رقم') }} {{ t('Account') }}" maxlength="34">
           </div>
         </div>
       </div>
@@ -139,7 +139,7 @@
       <div class="row">
         <div class="col-md-4">
           <div class="form-group">
-            <label><i class="fas fa-money-bill-wave"></i> المبلغ: <span class="text-danger">*</span></label>
+            <label><i class="fas fa-money-bill-wave"></i> {{ t('Amount') }}: <span class="text-danger">*</span></label>
             <input type="number" name="amount" step="0.01" class="form-control" 
                    placeholder="0.00" required min="0">
           </div>
@@ -147,20 +147,20 @@
         
         <div class="col-md-4">
           <div class="form-group">
-            <label><i class="fas fa-dollar-sign"></i> العملة:</label>
+            <label><i class="fas fa-dollar-sign"></i> {{ t('Currency') }}:</label>
             {% set dc = company_default_currency or system_default_currency or 'AED' %}
-            <select name="currency" id="currency" class="form-control" aria-label="العملة">
+            <select name="currency" id="currency" class="form-control" aria-label="{{ t('Currency') }}">
               <option value="AED" {% if dc == 'AED' %}selected{% endif %}>AED - {{ tenant_currency_name_ar or "درهم إماراتي" }}</option>
-              <option value="USD" {% if dc == 'USD' %}selected{% endif %}>USD - دولار أمريكي</option>
-              <option value="EUR" {% if dc == 'EUR' %}selected{% endif %}>EUR - يورو</option>
-              <option value="SAR" {% if dc == 'SAR' %}selected{% endif %}>SAR - ريال سعودي</option>
+              <option value="USD" {% if dc == 'USD' %}selected{% endif %}>USD - {{ t('Dollar') }} {{ t('أمريكي') }}</option>
+              <option value="EUR" {% if dc == 'EUR' %}selected{% endif %}>EUR - {{ t('Euro') }}</option>
+              <option value="SAR" {% if dc == 'SAR' %}selected{% endif %}>SAR - {{ t('Riyal') }} {{ t('سعودي') }}</option>
             </select>
           </div>
         </div>
         
         <div class="col-md-4">
           <div class="form-group">
-            <label><i class="fas fa-exchange-alt"></i> سعر الصرف:</label>
+            <label><i class="fas fa-exchange-alt"></i> {{ t('Price_2') }} {{ t('Exchange') }}:</label>
             <input type="number" name="exchange_rate" step="0.000001" class="form-control" 
                    placeholder="1.0">
           </div>
@@ -171,7 +171,7 @@
       <div class="row">
         <div class="col-md-6">
           <div class="form-group">
-            <label><i class="far fa-calendar"></i> تاريخ الإصدار: <span class="text-danger">*</span></label>
+            <label><i class="far fa-calendar"></i> {{ t('History') }} {{ t('الإصدار') }}: <span class="text-danger">*</span></label>
             <input type="date" name="issue_date" class="form-control" 
                    value="{{ today }}" required aria-label="issue date">
           </div>
@@ -179,7 +179,7 @@
         
         <div class="col-md-6">
           <div class="form-group">
-            <label><i class="far fa-calendar-check"></i> تاريخ الاستحقاق: <span class="text-danger">*</span></label>
+            <label><i class="far fa-calendar-check"></i> {{ t('History') }} {{ t('Due') }}: <span class="text-danger">*</span></label>
             <input type="date" name="due_date" class="form-control" required aria-label="due date">
           </div>
         </div>
@@ -190,9 +190,9 @@
         <div class="row">
           <div class="col-md-6">
             <div class="form-group">
-              <label><i class="fas fa-user"></i> العميل (اختياري):</label>
+              <label><i class="fas fa-user"></i> {{ t('Customer') }} ({{ t('Optional') }}):</label>
               <select name="customer_id" class="form-control customer-select" aria-label="customer id">
-                <option value="">بلا</option>
+                <option value="">{{ t('None') }}</option>
                 {% for customer in customers %}
                 <option value="{{ customer.id }}">{{ customer.name }}</option>
                 {% endfor %}
@@ -202,17 +202,17 @@
           
           <div class="col-md-6">
             <div class="form-group">
-              <label><i class="fas fa-signature"></i> اسم الساحب:</label>
+              <label><i class="fas fa-signature"></i> {{ t('Name_2') }} {{ t('الساحب') }}:</label>
               <input type="text" name="drawer_name" class="form-control" 
-                     placeholder="اسم الشخص الساحب للشيك" minlength="2" maxlength="100">
+                     placeholder="{{ t('Name_2') }} {{ t('الشخص') }} {{ t('الساحب') }} {{ t('لل{{ t('Cheque_3') }}') }}" minlength="2" maxlength="100">
             </div>
           </div>
         </div>
         
         <div class="form-group">
-          <label><i class="fas fa-id-card"></i> رقم الهوية:</label>
+          <label><i class="fas fa-id-card"></i> {{ t('رقم') }} {{ t('الهوية') }}:</label>
           <input type="text" name="drawer_id_number" class="form-control" 
-                 placeholder="رقم الهوية أو الجواز">
+                 placeholder="{{ t('رقم') }} {{ t('الهوية') }} أو {{ t('الجواز') }}">
         </div>
       </div>
 
@@ -220,9 +220,9 @@
         <div class="row">
           <div class="col-md-6">
             <div class="form-group">
-              <label><i class="fas fa-truck"></i> المورد (اختياري):</label>
+              <label><i class="fas fa-truck"></i> {{ t('Supplier') }} ({{ t('Optional') }}):</label>
               <select name="supplier_id" class="form-control supplier-select" aria-label="supplier id">
-                <option value="">بلا</option>
+                <option value="">{{ t('None') }}</option>
                 {% for supplier in suppliers %}
                 <option value="{{ supplier.id }}">{{ supplier.name }}</option>
                 {% endfor %}
@@ -232,9 +232,9 @@
           
           <div class="col-md-6">
             <div class="form-group">
-              <label><i class="fas fa-user-tie"></i> اسم المستفيد:</label>
+              <label><i class="fas fa-user-tie"></i> {{ t('Name_2') }} {{ t('المستفيد') }}:</label>
               <input type="text" name="payee_name" class="form-control" 
-                     placeholder="اسم المستفيد من الشيك" minlength="2" maxlength="100">
+                     placeholder="{{ t('Name_2') }} {{ t('المستفيد') }} من {{ t('Cheque') }}" minlength="2" maxlength="100">
             </div>
           </div>
         </div>
@@ -242,18 +242,18 @@
 
       
       <div class="form-group">
-        <label><i class="fas fa-sticky-note"></i> ملاحظات:</label>
+        <label><i class="fas fa-sticky-note"></i> {{ t('Notes') }}:</label>
         <textarea name="notes" class="form-control" rows="3" 
-                  placeholder="أي ملاحظات إضافية..." maxlength="500"></textarea>
+                  placeholder="أي {{ t('Notes') }} {{ t('Additional') }}..." maxlength="500"></textarea>
       </div>
 
       
       <div class="form-group">
         <button type="submit" class="btn btn-success">
-          <i class="fas fa-save mr-2"></i>حفظ الشيك
+          <i class="fas fa-save mr-2"></i>{{ t('Save') }} {{ t('Cheque') }}
         </button>
         <a href="{{ url_for('cheques.index') }}" class="btn btn-secondary">
-          <i class="fas fa-times mr-2"></i>إلغاء
+          <i class="fas fa-times mr-2"></i>{{ t('Cancel') }}
         </a>
       </div>
     </form>
@@ -267,7 +267,7 @@
 const TENANT_BASE_CURRENCY = {{ tenant_default_currency|tojson }} || 'AED';
 
 $(function() {
-  // تغيير الحقول حسب نوع الشيك
+  // {{ t('Change') }} {{ t('الحقول') }} {{ t('حسب') }} {{ t('نوع') }} {{ t('Cheque') }}
   $('#cheque_type').on('change', function() {
     const type = $(this).val();
     
@@ -283,19 +283,19 @@ $(function() {
     }
   }).trigger('change');
   
-  // Select2 للعملاء والموردين (تأكد من تحميل الإضافة)
+  // Select2 {{ t('للعملاء') }} {{ t('و{{ t('Supplier') }}ين') }} ({{ t('تأكد') }} من {{ t('Download') }} {{ t('Add_2') }})
   if (window.jQuery && $.fn && $.fn.select2) {
     $('.customer-select, .supplier-select').select2({
       theme: 'bootstrap4',
       language: 'ar',
-      placeholder: 'اختر...',
+      placeholder: '{{ t('اختر') }}...',
       allowClear: true
     });
   } else {
-    console.warn('Select2 لم يتم تحميله، سيتم استخدام القائمة العادية.');
+    console.warn('Select2 لم يتم {{ t('{{ t('Download') }}ه،') }} {{ t('سيتم') }} {{ t('استخدام') }} {{ t('Menu') }} {{ t('العادية') }}.');
   }
   
-  // تحديث سعر الصرف ديناميكياً
+  // {{ t('Update') }} {{ t('Price_2') }} {{ t('Exchange') }} {{ t('ديناميكياً') }}
   $('#currency').on('change', function() {
     const currency = $(this).val();
     
@@ -311,22 +311,22 @@ $(function() {
         if (data && data.rate) {
           $('input[name="exchange_rate"]').val(parseFloat(data.rate).toFixed(6));
         } else if (window.toastr) {
-          toastr.warning('تعذر جلب سعر الصرف، يرجى إدخال القيمة يدوياً.');
+          toastr.warning('{{ t('تعذر') }} {{ t('جلب') }} {{ t('Price_2') }} {{ t('{{ t('Exchange') }}،') }} {{ t('يرجى') }} {{ t('إدخال') }} {{ t('Value') }} {{ t('Manually') }}.');
         } else {
-          alert('تعذر جلب سعر الصرف، يرجى إدخال القيمة يدوياً.');
+          alert('{{ t('تعذر') }} {{ t('جلب') }} {{ t('Price_2') }} {{ t('{{ t('Exchange') }}،') }} {{ t('يرجى') }} {{ t('إدخال') }} {{ t('Value') }} {{ t('Manually') }}.');
         }
       },
       error: function() {
         if (window.toastr) {
-          toastr.warning('تعذر جلب سعر الصرف، يرجى إدخال القيمة يدوياً.');
+          toastr.warning('{{ t('تعذر') }} {{ t('جلب') }} {{ t('Price_2') }} {{ t('{{ t('Exchange') }}،') }} {{ t('يرجى') }} {{ t('إدخال') }} {{ t('Value') }} {{ t('Manually') }}.');
         } else {
-          alert('تعذر جلب سعر الصرف، يرجى إدخال القيمة يدوياً.');
+          alert('{{ t('تعذر') }} {{ t('جلب') }} {{ t('Price_2') }} {{ t('{{ t('Exchange') }}،') }} {{ t('يرجى') }} {{ t('إدخال') }} {{ t('Value') }} {{ t('Manually') }}.');
         }
       }
     });
   }).trigger('change');
   
-  // تاريخ افتراضي للاستحقاق (30 يوم من اليوم)
+  // {{ t('History') }} {{ t('افتراضي') }} {{ t('للاستحقاق') }} (30 {{ t('يوم') }} من {{ t('Today') }})
   $('input[name="issue_date"]').on('change', function() {
     const raw = $(this).val();
     if (!raw) {
@@ -346,7 +346,7 @@ $(function() {
     $('input[name="due_date"]').val(dueDate.toISOString().split('T')[0]);
   });
   
-  // ضبط تاريخ الإصدار افتراضياً إلى اليوم إذا كان فارغاً، ثم حدّث الاستحقاق
+  // {{ t('ضبط') }} {{ t('History') }} {{ t('الإصدار') }} {{ t('{{ t('افتراضي') }}اً') }} إلى {{ t('Today') }} إذا كان {{ t('فارغاً،') }} ثم {{ t('حدّث') }} {{ t('Due') }}
   (function ensureIssueDateDefault() {
     const $issue = $('input[name="issue_date"]');
     if (!$issue.val()) {

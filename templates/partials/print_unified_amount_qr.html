@@ -13,13 +13,13 @@
 
 {% if _display_amount_words %}
 <div class="erp-print-amount-box">
-  <strong>المبلغ بالحروف:</strong> {{ _display_amount_words }}
+  <strong>{{ t('Amount') }} {{ t('بالحروف') }}:</strong> {{ _display_amount_words }}
 </div>
 {% endif %}
 
 {% if qr_data_url %}
 <div class="erp-print-qr-wrap">
   <img src="{{ qr_data_url }}" alt="QR" class="erp-print-qr-img">
-  <div class="erp-print-qr-label">رمز تحقق المستند</div>
+  <div class="erp-print-qr-label">{{ t('Code_3') }} {{ t('تحقق') }} {{ t('المستند') }}</div>
 </div>
 {% endif %}

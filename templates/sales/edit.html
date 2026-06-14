@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}تعديل فاتورة #{{ sale.sale_number }}{% endblock %}
+{% block title %}{{ t('Edit') }} {{ t('Invoice') }} #{{ sale.sale_number }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
@@ -8,13 +8,13 @@
     <div class="col-12">
       <div class="alert alert-warning">
         <i class="fas fa-exclamation-triangle"></i>
-        <strong>تنبيه محاسبي:</strong> يمكن تعديل الملاحظات والخصم فقط. لا يمكن تعديل المنتجات أو الكميات بعد إنشاء الفاتورة.
+        <strong>{{ t('Alert_2') }} {{ t('Accounting_3') }}:</strong> يمكن {{ t('Edit') }} {{ t('Notes_2') }} {{ t('و{{ t('Discount') }}') }} فقط. لا يمكن {{ t('Edit') }} {{ t('Products') }} أو {{ t('الكميات') }} بعد {{ t('Create') }} {{ t('Invoice_2') }}.
       </div>
 
       <div class="card">
         <div class="card-header">
           <h3 class="card-title">
-            <i class="fas fa-edit"></i> تعديل فاتورة #{{ sale.sale_number }}
+            <i class="fas fa-edit"></i> {{ t('Edit') }} {{ t('Invoice') }} #{{ sale.sale_number }}
           </h3>
         </div>
         <div class="card-body">
@@ -24,35 +24,35 @@
             
             <div class="row mb-4">
               <div class="col-md-6">
-                <h5>معلومات الفاتورة</h5>
-                <p><strong>رقم الفاتورة:</strong> {{ sale.sale_number }}</p>
-                <p><strong>التاريخ:</strong> {{ sale.sale_date.strftime('%Y-%m-%d') }}</p>
-                <p><strong>العميل:</strong> {{ sale.customer.name }}</p>
-                <p><strong>البائع:</strong> {{ sale.seller.full_name }}</p>
+                <h5>{{ t('Info_2') }} {{ t('Invoice_2') }}</h5>
+                <p><strong>{{ t('رقم') }} {{ t('Invoice_2') }}:</strong> {{ sale.sale_number }}</p>
+                <p><strong>{{ t('Date') }}:</strong> {{ sale.sale_date.strftime('%Y-%m-%d') }}</p>
+                <p><strong>{{ t('Customer') }}:</strong> {{ sale.customer.name }}</p>
+                <p><strong>{{ t('البائع') }}:</strong> {{ sale.seller.full_name }}</p>
                 {% if sale.warehouse %}
-                <p><strong><i class="fas fa-warehouse text-info"></i> المستودع:</strong> {{ sale.warehouse.name_ar or sale.warehouse.name }}</p>
+                <p><strong><i class="fas fa-warehouse text-info"></i> {{ t('Warehouse') }}:</strong> {{ sale.warehouse.name_ar or sale.warehouse.name }}</p>
                 {% endif %}
               </div>
               <div class="col-md-6">
-                <h5>الإجماليات</h5>
-                <p><strong>المجموع الفرعي:</strong> {{ sale.subtotal }} {{ tenant_currency_symbol }}</p>
-                <p><strong>الضريبة:</strong> {{ sale.tax_amount }} {{ tenant_currency_symbol }}</p>
-                <p><strong>الإجمالي:</strong> {{ sale.total_amount }} {{ tenant_currency_symbol }}</p>
-                <p><strong>المدفوع:</strong> {{ sale.paid_amount }} {{ tenant_currency_symbol }}</p>
-                <p><strong>المتبقي:</strong> {{ sale.balance_due }} {{ tenant_currency_symbol }}</p>
+                <h5>{{ t('{{ t('Total_3') }}ات') }}</h5>
+                <p><strong>{{ t('Total') }} {{ t('Sub') }}:</strong> {{ sale.subtotal }} {{ tenant_currency_symbol }}</p>
+                <p><strong>{{ t('Tax') }}:</strong> {{ sale.tax_amount }} {{ tenant_currency_symbol }}</p>
+                <p><strong>{{ t('Total_3') }}:</strong> {{ sale.total_amount }} {{ tenant_currency_symbol }}</p>
+                <p><strong>{{ t('Paid') }}:</strong> {{ sale.paid_amount }} {{ tenant_currency_symbol }}</p>
+                <p><strong>{{ t('Remaining') }}:</strong> {{ sale.balance_due }} {{ tenant_currency_symbol }}</p>
               </div>
             </div>
 
             
-            <h5>المنتجات (لا يمكن تعديلها)</h5>
+            <h5>{{ t('Products') }} (لا يمكن {{ t('{{ t('Edit') }}ها') }})</h5>
             <div class="table-responsive"><table class="table table-bordered mb-4">
               <thead>
                 <tr>
-                  <th>المنتج</th>
-                  <th>الكمية</th>
-                  <th>السعر</th>
-                  <th>الخصم</th>
-                  <th>الإجمالي</th>
+                  <th>{{ t('Product') }}</th>
+                  <th>{{ t('Quantity') }}</th>
+                  <th>{{ t('Price') }}</th>
+                  <th>{{ t('Discount') }}</th>
+                  <th>{{ t('Total_3') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -72,16 +72,16 @@
             <div class="row">
               <div class="col-md-6">
                 <div class="form-group">
-                  <label for="input_discount_amount">الخصم الإضافي ({{ tenant_currency_symbol }})</label>
+                  <label for="input_discount_amount">{{ t('Discount') }} {{ t('Additional_4') }} ({{ tenant_currency_symbol }})</label>
                   <input type="number" name="discount_amount" class="form-control" 
                          value="{{ sale.discount_amount or 0 }}" step="0.01" min="0" id="input_discount_amount" aria-label="discount amount">
-                  <small class="text-muted">خصم إضافي على إجمالي الفاتورة</small>
+                  <small class="text-muted">{{ t('Discount_2') }} {{ t('Additional_2') }} على {{ t('Total_2') }} {{ t('Invoice_2') }}</small>
                 </div>
               </div>
               
               <div class="col-md-6">
                 <div class="form-group">
-                  <label>الملاحظات</label>
+                  <label>{{ t('Notes_2') }}</label>
                   <textarea name="notes" class="form-control" rows="3" aria-label="notes" maxlength="500">{{ sale.notes or '' }}</textarea>
                 </div>
               </div>
@@ -89,10 +89,10 @@
 
             <div class="form-group">
               <button type="submit" class="btn btn-success">
-                <i class="fas fa-save"></i> حفظ التعديلات
+                <i class="fas fa-save"></i> {{ t('Save') }} {{ t('ال{{ t('Edit') }}ات') }}
               </button>
               <a href="{{ url_for('sales.view', id=sale.id) }}" class="btn btn-secondary">
-                <i class="fas fa-times"></i> إلغاء
+                <i class="fas fa-times"></i> {{ t('Cancel') }}
               </a>
             </div>
           </form>

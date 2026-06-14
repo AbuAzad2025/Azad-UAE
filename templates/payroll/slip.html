@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{{ settings.company_name_ar if settings else tenant_name_ar or company_name_ar }} - قسيمة راتب</title>
+  <title>{{ settings.company_name_ar if settings else tenant_name_ar or company_name_ar }} - {{ t('قسيمة') }} {{ t('راتب') }}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/erp-theme.css') }}">
   {% include 'partials/print_styles.html' %}
   <style>
@@ -46,34 +46,34 @@
     </div>
 
     <div class="doc-title">
-      <h2>📄 قسيمة راتب / Salary Slip</h2>
+      <h2>📄 {{ t('قسيمة') }} {{ t('راتب') }} / Salary Slip</h2>
     </div>
 
     <div class="content">
       <div class="info-row">
         <div>
-          <p><strong>الموظف:</strong> {{ slip.employee.name if slip.employee else '—' }}</p>
-          <p><strong>القسم:</strong> {{ slip.employee.department.name if slip.employee and slip.employee.department else '—' }}</p>
+          <p><strong>{{ t('Employee_2') }}:</strong> {{ slip.employee.name if slip.employee else '—' }}</p>
+          <p><strong>{{ t('القسم') }}:</strong> {{ slip.employee.department.name if slip.employee and slip.employee.department else '—' }}</p>
         </div>
         <div style="text-align:left;">
-          <p><strong>التاريخ:</strong> {{ slip.payment_date }}</p>
-          <p><strong>الفترة:</strong> {{ slip.month }}/{{ slip.year }}</p>
+          <p><strong>{{ t('Date') }}:</strong> {{ slip.payment_date }}</p>
+          <p><strong>{{ t('Period_2') }}:</strong> {{ slip.month }}/{{ slip.year }}</p>
         </div>
       </div>
 
       <table class="slip-table">
         <thead>
-          <tr><th>#</th><th>البند</th><th>المبلغ</th></tr>
+          <tr><th>#</th><th>{{ t('البند') }}</th><th>{{ t('Amount') }}</th></tr>
         </thead>
         <tbody>
-          <tr><td>1</td><td>الراتب الأساسي / Basic Salary</td><td style="text-align:center;font-weight:700;">{{ format_currency(slip.basic_amount) }}</td></tr>
-          <tr><td>2</td><td>البدلات والإضافي / Allowances</td><td style="text-align:center;color:#27ae60;font-weight:700;">{{ format_currency(slip.allowances) }}</td></tr>
-          <tr><td>3</td><td>الخصومات / Deductions</td><td style="text-align:center;color:#e74c3c;font-weight:700;">({{ format_currency(slip.deductions) }})</td></tr>
-          <tr><td>4</td><td>السلف المستردة / Advances</td><td style="text-align:center;color:#f39c12;font-weight:700;">({{ format_currency(slip.advances_deducted) }})</td></tr>
+          <tr><td>1</td><td>{{ t('ال{{ t('راتب') }}') }} {{ t('الأساسي') }} / Basic Salary</td><td style="text-align:center;font-weight:700;">{{ format_currency(slip.basic_amount) }}</td></tr>
+          <tr><td>2</td><td>{{ t('البدلات') }} {{ t('والإضافي') }} / Allowances</td><td style="text-align:center;color:#27ae60;font-weight:700;">{{ format_currency(slip.allowances) }}</td></tr>
+          <tr><td>3</td><td>{{ t('الخصومات') }} / Deductions</td><td style="text-align:center;color:#e74c3c;font-weight:700;">({{ format_currency(slip.deductions) }})</td></tr>
+          <tr><td>4</td><td>{{ t('Advances') }} {{ t('المستردة') }} / Advances</td><td style="text-align:center;color:#f39c12;font-weight:700;">({{ format_currency(slip.advances_deducted) }})</td></tr>
         </tbody>
         <tfoot>
           <tr class="net-row">
-            <td colspan="2" style="text-align:center;">صافي الراتب / Net Salary</td>
+            <td colspan="2" style="text-align:center;">{{ t('Net') }} {{ t('ال{{ t('راتب') }}') }} / Net Salary</td>
             <td style="text-align:center;">{{ format_currency(slip.net_salary) }} {{ tenant_default_currency or 'AED' }}</td>
           </tr>
         </tfoot>
@@ -88,21 +88,21 @@
       <div class="signatures">
         <div class="sig-box">
           <div class="sig-line"></div>
-          <div style="font-size:9px;">توقيع المحاسب</div>
+          <div style="font-size:9px;">{{ t('توقيع') }} {{ t('المحاسب') }}</div>
         </div>
         <div class="sig-box">
           <div class="sig-line"></div>
-          <div style="font-size:9px;">توقيع الموظف</div>
+          <div style="font-size:9px;">{{ t('توقيع') }} {{ t('Employee_2') }}</div>
         </div>
         <div class="sig-box">
           <div class="sig-line"></div>
-          <div style="font-size:9px;">الختم</div>
+          <div style="font-size:9px;">{{ t('الختم') }}</div>
         </div>
       </div>
     </div>
 
     <div class="footer">
-      <p>قسيمة راتب صادرة عن {{ settings.company_name_ar or tenant_name_ar or company_name_ar }}</p>
+      <p>{{ t('قسيمة') }} {{ t('راتب') }} {{ t('صادرة') }} عن {{ settings.company_name_ar or tenant_name_ar or company_name_ar }}</p>
       {% include 'partials/print_developer_footer.html' %}
     </div>
   </div>

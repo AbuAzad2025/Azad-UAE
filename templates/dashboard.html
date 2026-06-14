@@ -1,11 +1,11 @@
 {% extends 'base.html' %}
 
-{% block title %}شركة أزاد للأنظمة الذكية - لوحة التحكم الرئيسية{% endblock %}
+{% block title %}{{ t('Company_2') }} {{ t('أزاد') }} {{ t('للأنظمة') }} {{ t('الذكية') }} - {{ t('Dashboard_2') }} {{ t('Control') }} {{ t('Main_2') }}{% endblock %}
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
   <div>
     <h1 class="text-gradient mb-0">{{ t('Dashboard') }}</h1>
-    <p class="text-muted">مرحباً بك، {{ current_user.full_name or current_user.username }}</p>
+    <p class="text-muted">{{ t('مرحباً') }} {{ t('بك،') }} {{ current_user.full_name or current_user.username }}</p>
   </div>
 </div>
 {% endblock %}
@@ -20,7 +20,7 @@
         <i class="fas fa-shopping-cart"></i>
       </div>
       <div class="stat-value">{{ stats.today_sales_count|default(0) }}</div>
-      <div class="stat-label">مبيعات اليوم</div>
+      <div class="stat-label">{{ t('Sales_2') }} {{ t('Today') }}</div>
       <div class="mt-2">
         <strong class="erp-stat-value-success erp-stat-value-lg">
           {{ "{:,.0f}".format(stats.today_sales_amount|default(0)) }}
@@ -28,7 +28,7 @@
         <small class="text-muted"> {{ tenant_currency_symbol }}</small>
       </div>
       <a href="{{ url_for('sales.index') }}" class="btn btn-primary mt-2 w-100">
-        <i class="fas fa-arrow-left"></i> عرض الكل
+        <i class="fas fa-arrow-left"></i> {{ t('View') }} {{ t('All') }}
       </a>
     </div>
   </div>
@@ -41,12 +41,12 @@
         <i class="fas fa-users"></i>
       </div>
       <div class="stat-value">{{ stats.customers_count|default(0) }}</div>
-      <div class="stat-label">إجمالي الزبائن</div>
+      <div class="stat-label">{{ t('Total_2') }} {{ t('Customers') }}</div>
       <div class="mt-2">
-        <small class="text-muted">زبائن نشطون</small>
+        <small class="text-muted">{{ t('Customers_5') }} {{ t('نشطون') }}</small>
       </div>
       <a href="{{ url_for('customers.index') }}" class="btn btn-success mt-2 w-100 stretched-link">
-        <i class="fas fa-arrow-left"></i> عرض الكل
+        <i class="fas fa-arrow-left"></i> {{ t('View') }} {{ t('All') }}
       </a>
     </div>
   </div>
@@ -59,12 +59,12 @@
         <i class="fas fa-file-invoice-dollar"></i>
       </div>
       <div class="stat-value">{{ "{:,.0f}".format(stats.total_receivables|default(0)) }}</div>
-      <div class="stat-label">الذمم المدينة</div>
+      <div class="stat-label">{{ t('Receivables_2') }} {{ t('Receivables') }}</div>
       <div class="mt-2">
         <small class="text-muted">{{ tenant_currency_name_ar or 'درهم إماراتي' }}</small>
       </div>
       <a href="{{ url_for('reports.receivables') }}" class="btn btn-warning mt-2 w-100 stretched-link">
-        <i class="fas fa-arrow-left"></i> عرض التفاصيل
+        <i class="fas fa-arrow-left"></i> {{ t('View') }} {{ t('Details_2') }}
       </a>
     </div>
   </div>
@@ -79,10 +79,10 @@
       <div class="stat-value">{{ stats.products_count|default(0) }}</div>
       <div class="stat-label">{{ t('Products') }}</div>
       <div class="mt-2">
-        <small class="text-muted">منتجات نشطة</small>
+        <small class="text-muted">{{ t('Products_2') }} {{ t('Active_3') }}</small>
       </div>
       <a href="{{ url_for('products.index') }}" class="btn btn-danger mt-2 w-100 stretched-link">
-        <i class="fas fa-arrow-left"></i> عرض الكل
+        <i class="fas fa-arrow-left"></i> {{ t('View') }} {{ t('All') }}
       </a>
     </div>
   </div>
@@ -98,7 +98,7 @@
         <div class="mb-3">
           <i class="fas fa-wallet fa-3x erp-stat-value-success"></i>
         </div>
-        <h5 class="text-muted">رصيد الصندوق</h5>
+        <h5 class="text-muted">{{ t('Balance_3') }} {{ t('Fund') }}</h5>
         <h2 class="mb-0 erp-stat-value-success erp-stat-value-xl">
           {{ format_currency(stats.cash_balance|default(0)) }}
         </h2>
@@ -113,7 +113,7 @@
         <div class="mb-3">
           <i class="fas fa-university fa-3x erp-stat-value-info"></i>
         </div>
-        <h5 class="text-muted">رصيد البنك</h5>
+        <h5 class="text-muted">{{ t('Balance_3') }} {{ t('Bank') }}</h5>
         <h2 class="mb-0 erp-stat-value-info erp-stat-value-xl">
           {{ format_currency(stats.bank_balance|default(0)) }}
         </h2>
@@ -128,7 +128,7 @@
         <div class="mb-3">
           <i class="fas fa-boxes fa-3x erp-stat-value-warning"></i>
         </div>
-        <h5 class="text-muted">قيمة المخزون</h5>
+        <h5 class="text-muted">{{ t('Value_2') }} {{ t('Inventory') }}</h5>
         <h2 class="mb-0 erp-stat-value-warning erp-stat-value-xl">
           {{ format_currency(stats.inventory_value_gl|default(0)) }}
         </h2>
@@ -147,10 +147,10 @@
       <div class="card-header">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
           <h3 class="card-title mb-0">
-            <i class="fas fa-clock"></i>آخر المبيعات
+            <i class="fas fa-clock"></i>{{ t('Last') }} {{ t('Sales') }}
           </h3>
           <a href="{{ url_for('sales.create') }}" class="btn btn-primary">
-            <i class="fas fa-plus"></i>فاتورة جديدة
+            <i class="fas fa-plus"></i>{{ t('Invoice') }} {{ t('New_3') }}
           </a>
         </div>
       </div>
@@ -160,10 +160,10 @@
             <thead>
               <tr>
                 <th><i class="fas fa-hashtag"></i>{{ t('Invoice Number') }}</th>
-                <th><i class="fas fa-user"></i>الزبون</th>
+                <th><i class="fas fa-user"></i>{{ t('Customer_2') }}</th>
                 <th><i class="far fa-calendar"></i>{{ t('Date') }}</th>
                 <th class="text-center"><i class="fas fa-money-bill-wave"></i>{{ t('Amount') }}</th>
-                <th class="text-center"><i class="fas fa-wallet"></i>الدفع</th>
+                <th class="text-center"><i class="fas fa-wallet"></i>{{ t('Payment_2') }}</th>
                 <th class="text-center"><i class="fas fa-check-circle"></i>{{ t('Status') }}</th>
                 <th class="text-center erp-col-actions"><i class="fas fa-cog"></i>{{ t('Actions') }}</th>
               </tr>
@@ -199,21 +199,21 @@
                   <td class="text-center">
                     {% if sale.payment_status == 'paid' %}
                       <span class="badge badge-success">
-                        <i class="fas fa-check"></i> مدفوع
+                        <i class="fas fa-check"></i> {{ t('Paid_2') }}
                       </span>
                     {% elif sale.payment_status == 'partial' %}
                       <span class="badge badge-warning">
-                        <i class="fas fa-clock"></i> جزئي
+                        <i class="fas fa-clock"></i> {{ t('Partial_2') }}
                       </span>
                     {% else %}
                       <span class="badge badge-danger">
-                        <i class="fas fa-times"></i> آجل
+                        <i class="fas fa-times"></i> {{ t('Credit') }}
                       </span>
                     {% endif %}
                   </td>
                   <td class="text-center">
                     <span class="badge badge-success">
-                      <i class="fas fa-check-circle"></i> مؤكدة
+                      <i class="fas fa-check-circle"></i> {{ t('Confirmed') }}
                     </span>
                   </td>
                   <td class="text-center erp-col-actions">
@@ -236,11 +236,11 @@
                 <tr>
                   <td colspan="7" class="text-center py-5">
                     <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-                    <p class="text-muted">لا توجد مبيعات حتى الآن</p>
+                    <p class="text-muted">لا {{ t('توجد') }} {{ t('Sales_2') }} حتى {{ t('الآن_2') }}</p>
                     {% if current_user.has_permission('manage_sales') %}
                     <a href="{{ url_for('sales.create') }}" class="btn btn-primary">
                     {% endif %}
-                      <i class="fas fa-plus"></i>إنشاء فاتورة جديدة
+                      <i class="fas fa-plus"></i>{{ t('Create') }} {{ t('Invoice') }} {{ t('New_3') }}
                     </a>
                   </td>
                 </tr>
@@ -254,7 +254,7 @@
         {% if current_user.has_permission('manage_sales') %}
         <a href="{{ url_for('sales.index') }}" class="btn btn-link">
         {% endif %}
-          عرض جميع المبيعات <i class="fas fa-arrow-left"></i>
+          {{ t('View') }} {{ t('جميع') }} {{ t('Sales') }} <i class="fas fa-arrow-left"></i>
         </a>
       </div>
       {% endif %}

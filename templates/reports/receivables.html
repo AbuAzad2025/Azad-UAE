@@ -1,12 +1,12 @@
 {% extends 'base.html' %}
-{% block title %}شركة أزاد للأنظمة الذكية - تقرير الذمم المدينة والمستحقات{% endblock %}
-{% block page_title %}تقرير الذمم المدينة - Aging Report{% endblock %}
+{% block title %}{{ t('Company_2') }} {{ t('أزاد') }} {{ t('للأنظمة') }} {{ t('الذكية') }} - {{ t('Report_2') }} {{ t('Receivables_2') }} {{ t('Receivables') }} {{ t('والمستحقات') }}{% endblock %}
+{% block page_title %}{{ t('Report_2') }} {{ t('Receivables_2') }} {{ t('Receivables') }} - Aging Report{% endblock %}
 
 {% block content %}
 <div class="row mb-3">
   <div class="col-12">
     <div class="alert alert-info">
-      <h4><i class="fas fa-info-circle"></i> إجمالي الذمم: {{ format_currency(summary.total_receivables) }}</h4>
+      <h4><i class="fas fa-info-circle"></i> {{ t('Total_2') }} {{ t('Receivables_2') }}: {{ format_currency(summary.total_receivables) }}</h4>
     </div>
   </div>
 </div>
@@ -16,7 +16,7 @@
     <div class="info-box bg-success">
       <span class="info-box-icon"><i class="fas fa-check"></i></span>
       <div class="info-box-content">
-        <span class="info-box-text">حالي (0-30)</span>
+        <span class="info-box-text">{{ t('حالي') }} (0-30)</span>
         <span class="info-box-number">{{ "{:,.0f}".format(summary.current) }}</span>
       </div>
     </div>
@@ -26,7 +26,7 @@
     <div class="info-box bg-info">
       <span class="info-box-icon"><i class="fas fa-clock"></i></span>
       <div class="info-box-content">
-        <span class="info-box-text">31-60 يوم</span>
+        <span class="info-box-text">31-60 {{ t('يوم') }}</span>
         <span class="info-box-number">{{ "{:,.0f}".format(summary.days_30) }}</span>
       </div>
     </div>
@@ -36,7 +36,7 @@
     <div class="info-box bg-warning">
       <span class="info-box-icon"><i class="fas fa-exclamation"></i></span>
       <div class="info-box-content">
-        <span class="info-box-text">61-90 يوم</span>
+        <span class="info-box-text">61-90 {{ t('يوم') }}</span>
         <span class="info-box-number">{{ "{:,.0f}".format(summary.days_60) }}</span>
       </div>
     </div>
@@ -46,7 +46,7 @@
     <div class="info-box bg-orange">
       <span class="info-box-icon"><i class="fas fa-exclamation-triangle"></i></span>
       <div class="info-box-content">
-        <span class="info-box-text">91-120 يوم</span>
+        <span class="info-box-text">91-120 {{ t('يوم') }}</span>
         <span class="info-box-number">{{ "{:,.0f}".format(summary.days_90) }}</span>
       </div>
     </div>
@@ -56,7 +56,7 @@
     <div class="info-box bg-danger">
       <span class="info-box-icon"><i class="fas fa-times-circle"></i></span>
       <div class="info-box-content">
-        <span class="info-box-text">+120 يوم</span>
+        <span class="info-box-text">+120 {{ t('يوم') }}</span>
         <span class="info-box-number">{{ "{:,.0f}".format(summary.over_90) }}</span>
       </div>
     </div>
@@ -65,21 +65,21 @@
 
 <div class="card">
   <div class="card-header d-flex justify-content-between align-items-center">
-    <h3 class="card-title mb-0">تفاصيل الذمم</h3>
+    <h3 class="card-title mb-0">{{ t('Details') }} {{ t('Receivables_2') }}</h3>
     <div>
       <form class="needs-validation" method="get" class="form-inline d-inline mr-2">
-        <label class="mr-2">الزبون</label>
+        <label class="mr-2">{{ t('Customer_2') }}</label>
         <select name="customer" class="form-control form-control-sm mr-2 erp-min-w-200" aria-label="customer">
-          <option value="">الكل</option>
+          <option value="">{{ t('All') }}</option>
           {% for c in customers or [] %}
           <option value="{{ c.id }}" {{ 'selected' if customer_id == c.id else '' }}>{{ c.name }}</option>
           {% endfor %}
         </select>
-        <button type="submit" class="btn btn-outline-primary mr-2">تطبيق</button>
+        <button type="submit" class="btn btn-outline-primary mr-2">{{ t('Apply') }}</button>
       </form>
       <div class="btn-group mr-2">
         <button type="button" class="btn btn-outline-success dropdown-toggle" data-toggle="dropdown">
-          <i class="fas fa-download mr-1"></i>تصدير
+          <i class="fas fa-download mr-1"></i>{{ t('Export') }}
         </button>
         <div class="dropdown-menu dropdown-menu-right">
           <a class="dropdown-item" href="{{ url_for('reports.receivables_export', customer=request.args.get('customer'), format='csv') }}">CSV</a>
@@ -87,7 +87,7 @@
         </div>
       </div>
       <button type="button" class="btn btn-outline-info" id="printReceivablesBtn">
-        <i class="fas fa-print mr-1"></i>طباعة
+        <i class="fas fa-print mr-1"></i>{{ t('Print') }}
       </button>
     </div>
   </div>
@@ -95,12 +95,12 @@
     <div class="table-responsive"><table id="receivablesTable" class="table table-striped table-bordered">
       <thead>
         <tr>
-          <th>الفاتورة</th>
-          <th>الزبون</th>
+          <th>{{ t('Invoice_2') }}</th>
+          <th>{{ t('Customer_2') }}</th>
           <th>{{ t('Date') }}</th>
-          <th>العمر (يوم)</th>
+          <th>{{ t('العمر') }} ({{ t('يوم') }})</th>
           <th>{{ t('Amount') }}</th>
-          <th><i class="fas fa-exchange-alt mr-1"></i>سعر الصرف</th>
+          <th><i class="fas fa-exchange-alt mr-1"></i>{{ t('Price_2') }} {{ t('Exchange') }}</th>
           <th>{{ t('Status') }}</th>
         </tr>
       </thead>
@@ -117,7 +117,7 @@
             <td>{{ format_currency(sale.calculated_balance) }}</td>
             <td>
               {% if sale.exchange_rate and sale.exchange_rate != 1 %}
-                <span class="badge badge-info" title="سعر الصرف وقت المعاملة">
+                <span class="badge badge-info" title="{{ t('Price_2') }} {{ t('Exchange') }} {{ t('Time') }} {{ t('المعاملة') }}">
                   <i class="fas fa-exchange-alt mr-1"></i>{{ "{:.4f}".format(sale.exchange_rate) }}
                 </span>
               {% else %}
@@ -125,11 +125,11 @@
               {% endif %}
             </td>
             <td>
-              {% if category == 'current' %}<span class="badge badge-success">حالي</span>
+              {% if category == 'current' %}<span class="badge badge-success">{{ t('حالي') }}</span>
               {% elif category == 'days_30' %}<span class="badge badge-info">30-60</span>
               {% elif category == 'days_60' %}<span class="badge badge-warning">60-90</span>
               {% elif category == 'days_90' %}<span class="badge badge-orange">90-120</span>
-              {% else %}<span class="badge badge-danger">متأخر</span>{% endif %}
+              {% else %}<span class="badge badge-danger">{{ t('Late_2') }}</span>{% endif %}
             </td>
           </tr>
           {% endfor %}
@@ -146,7 +146,7 @@
 $(document).ready(function() {
   const $tableEl = $('#receivablesTable');
   const printOptions = {
-    title: 'تقرير الذمم المدينة',
+    title: '{{ t('Report_2') }} {{ t('Receivables_2') }} {{ t('Receivables') }}',
     headerColor: '#17a2b8'
   };
 

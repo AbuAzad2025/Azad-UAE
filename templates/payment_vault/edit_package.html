@@ -1,15 +1,15 @@
 {% extends "base.html" %}
 
-{% block title %}تعديل باقة - Edit Package{% endblock %}
+{% block title %}{{ t('Edit') }} {{ t('Plan_2') }} - Edit Package{% endblock %}
 
 {% block page_title %}
 <div class="d-flex align-items-center justify-content-between">
     <div>
-        <h1 class="mb-0"><i class="fas fa-edit text-primary"></i> تعديل باقة</h1>
-        <p class="text-muted">تحديث معلومات الباقة</p>
+        <h1 class="mb-0"><i class="fas fa-edit text-primary"></i> {{ t('Edit') }} {{ t('Plan_2') }}</h1>
+        <p class="text-muted">{{ t('Update') }} {{ t('Info_2') }} {{ t('Plan') }}</p>
     </div>
     <a href="{{ url_for('payment_vault.packages_management') }}" class="btn btn-secondary">
-        <i class="fas fa-arrow-right"></i> رجوع
+        <i class="fas fa-arrow-right"></i> {{ t('Back') }}
     </a>
 </div>
 {% endblock %}
@@ -19,7 +19,7 @@
     <div class="col-md-8 mx-auto">
         <div class="card">
             <div class="card-header bg-primary">
-                <h3 class="card-title"><i class="fas fa-box"></i> تعديل: {{ package.name_ar }}</h3>
+                <h3 class="card-title"><i class="fas fa-box"></i> {{ t('Edit') }}: {{ package.name_ar }}</h3>
             </div>
             <div class="card-body">
                 <form class="needs-validation" method="POST" id="editPackageForm" action="">
@@ -28,14 +28,14 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label>الاسم بالعربية <span class="text-danger">*</span></label>
+                                <label>{{ t('Name') }} {{ t('In Arabic') }} <span class="text-danger">*</span></label>
                                 <input type="text" name="name_ar" class="form-control" 
                                        value="{{ package.name_ar }}" required aria-label="name ar" minlength="2" maxlength="100">
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label>الاسم بالإنجليزية <span class="text-danger">*</span></label>
+                                <label>{{ t('Name') }} {{ t('In English_2') }} <span class="text-danger">*</span></label>
                                 <input type="text" name="name_en" class="form-control" 
                                        value="{{ package.name_en }}" required aria-label="name en" minlength="2" maxlength="100">
                             </div>
@@ -43,33 +43,33 @@
                     </div>
                     
                     <div class="form-group">
-                        <label>الوصف بالعربية</label>
+                        <label>{{ t('Description') }} {{ t('In Arabic') }}</label>
                         <textarea name="description_ar" class="form-control" rows="2" aria-label="description ar" maxlength="500">{{ package.description_ar or '' }}</textarea>
                     </div>
                     
                     <div class="form-group">
-                        <label>الوصف بالإنجليزية</label>
+                        <label>{{ t('Description') }} {{ t('In English_2') }}</label>
                         <textarea name="description_en" class="form-control" rows="2" aria-label="description en" maxlength="500">{{ package.description_en or '' }}</textarea>
                     </div>
                     
                     <div class="row">
                         <div class="col-md-4">
                             <div class="form-group">
-                                <label>السعر (USD) <span class="text-danger">*</span></label>
+                                <label>{{ t('Price') }} (USD) <span class="text-danger">*</span></label>
                                 <input type="number" name="price" class="form-control" step="0.01"
                                        value="{{ package.price }}" required aria-label="price" min="0">
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="form-group">
-                                <label for="input_max_users">عدد المستخدمين</label>
+                                <label for="input_max_users">{{ t('Count') }} {{ t('Users') }}</label>
                                 <input type="number" name="max_users" class="form-control" 
                                        value="{{ package.max_users or 1 }}" id="input_max_users" aria-label="max users">
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="form-group">
-                                <label for="input_max_branches">عدد الفروع</label>
+                                <label for="input_max_branches">{{ t('Count') }} {{ t('Branches') }}</label>
                                 <input type="number" name="max_branches" class="form-control" 
                                        value="{{ package.max_branches or 1 }}" id="input_max_branches" aria-label="max branches">
                             </div>
@@ -79,25 +79,25 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label for="input_support_duration_months">مدة الدعم (شهور)</label>
+                                <label for="input_support_duration_months">{{ t('Duration') }} {{ t('الدعم') }} ({{ t('شهور') }})</label>
                                 <input type="number" name="support_duration_months" class="form-control" 
                                        value="{{ package.support_duration_months }}" id="input_support_duration_months" aria-label="support duration months">
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label for="input_badge_text">نص الشارة (Badge)</label>
+                                <label for="input_badge_text">نص {{ t('الشارة') }} (Badge)</label>
                                 <input type="text" name="badge_text" class="form-control" 
                                        value="{{ package.badge_text or '' }}" 
-                                       placeholder="مثال: الأكثر شعبية" id="input_badge_text">
+                                       placeholder="{{ t('مثال') }}: {{ t('الأكثر') }} {{ t('شعبية') }}" id="input_badge_text">
                             </div>
                         </div>
                     </div>
                     
                     <div class="form-group">
-                        <label>الميزات (كل ميزة في سطر)</label>
+                        <label>{{ t('الميزات') }} (كل {{ t('ميزة') }} في {{ t('سطر') }})</label>
                         <textarea name="features" class="form-control" rows="8" aria-label="features">{% if package.features %}{{ package.features|join('\n') }}{% endif %}</textarea>
-                        <small class="form-text text-muted">اكتب كل ميزة في سطر منفصل</small>
+                        <small class="form-text text-muted">{{ t('اكتب') }} كل {{ t('ميزة') }} في {{ t('سطر') }} {{ t('منفصل') }}</small>
                     </div>
                     
                     <div class="row">
@@ -106,7 +106,7 @@
                                 <input type="checkbox" class="custom-control-input" id="is_active" 
                                        name="is_active" {% if package.is_active %}checked{% endif %} aria-label="is active">
                                 <label class="custom-control-label" for="is_active">
-                                    <i class="fas fa-toggle-on text-success"></i> نشطة
+                                    <i class="fas fa-toggle-on text-success"></i> {{ t('Active_3') }}
                                 </label>
                             </div>
                         </div>
@@ -115,7 +115,7 @@
                                 <input type="checkbox" class="custom-control-input" id="is_featured" 
                                        name="is_featured" {% if package.is_featured %}checked{% endif %} aria-label="is featured">
                                 <label class="custom-control-label" for="is_featured">
-                                    <i class="fas fa-star text-warning"></i> مميزة
+                                    <i class="fas fa-star text-warning"></i> {{ t('م{{ t('ميزة') }}') }}
                                 </label>
                             </div>
                         </div>
@@ -125,10 +125,10 @@
                     
                     <div class="form-group mb-0">
                         <button type="submit" class="btn btn-success btn-lg">
-                            <i class="fas fa-save"></i> حفظ التعديلات
+                            <i class="fas fa-save"></i> {{ t('Save') }} {{ t('ال{{ t('Edit') }}ات') }}
                         </button>
                         <a href="{{ url_for('payment_vault.packages_management') }}" class="btn btn-secondary btn-lg">
-                            <i class="fas fa-times"></i> إلغاء
+                            <i class="fas fa-times"></i> {{ t('Cancel') }}
                         </a>
                     </div>
                 </form>

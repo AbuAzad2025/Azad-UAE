@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}إضافة ضريبة جمركية{% endblock %}
+{% block title %}{{ t('Add') }} {{ t('Tax_2') }} {{ t('جمركية') }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
@@ -9,7 +9,7 @@
       <div class="card">
         <div class="card-header">
           <h3 class="card-title">
-            <i class="fas fa-plus"></i> إضافة ضريبة جمركية
+            <i class="fas fa-plus"></i> {{ t('Add') }} {{ t('Tax_2') }} {{ t('جمركية') }}
           </h3>
         </div>
         <div class="card-body">
@@ -20,14 +20,14 @@
             <div class="row">
               <div class="col-md-6">
                 <div class="form-group">
-                  <label for="input_name">الاسم (EN) *</label>
+                  <label for="input_name">{{ t('Name') }} (EN) *</label>
                   <input type="text" name="name" class="form-control" required value="{{ form_data.get('name', '') }}" id="input_name" aria-label="name" minlength="2" maxlength="100">
                 </div>
               </div>
               
               <div class="col-md-6">
                 <div class="form-group">
-                  <label for="input_name_ar">الاسم (AR) *</label>
+                  <label for="input_name_ar">{{ t('Name') }} (AR) *</label>
                   <input type="text" name="name_ar" class="form-control" required value="{{ form_data.get('name_ar', '') }}" id="input_name_ar" aria-label="name ar" minlength="2" maxlength="100">
                 </div>
               </div>
@@ -36,29 +36,29 @@
             <div class="row">
               <div class="col-md-4">
                 <div class="form-group">
-                  <label for="input_rate">النسبة % *</label>
+                  <label for="input_rate">{{ t('Rate_2') }} % *</label>
                   <input type="number" name="rate" class="form-control" step="0.01" required value="{{ form_data.get('rate', '') }}" id="input_rate" aria-label="rate">
                 </div>
               </div>
               
               <div class="col-md-4">
                 <div class="form-group">
-                  <label>نوع الحساب *</label>
+                  <label>{{ t('نوع') }} {{ t('Account') }} *</label>
                   {% set selected_tax_type = form_data.get('tax_type', 'customs') %}
                   <select name="tax_type" class="form-control" required aria-label="tax type">
-                    <option value="customs" {% if selected_tax_type == 'customs' %}selected{% endif %}>جمارك</option>
-                    <option value="vat" {% if selected_tax_type == 'vat' %}selected{% endif %}>ضريبة القيمة المضافة</option>
-                    <option value="excise" {% if selected_tax_type == 'excise' %}selected{% endif %}>ضريبة انتقائية</option>
-                    <option value="other" {% if selected_tax_type == 'other' %}selected{% endif %}>أخرى</option>
+                    <option value="customs" {% if selected_tax_type == 'customs' %}selected{% endif %}>{{ t('جمارك') }}</option>
+                    <option value="vat" {% if selected_tax_type == 'vat' %}selected{% endif %}>{{ t('Tax_2') }} {{ t('Value') }} {{ t('المضافة') }}</option>
+                    <option value="excise" {% if selected_tax_type == 'excise' %}selected{% endif %}>{{ t('Tax_2') }} {{ t('انتقائية') }}</option>
+                    <option value="other" {% if selected_tax_type == 'other' %}selected{% endif %}>{{ t('أخرى') }}</option>
                   </select>
                 </div>
               </div>
               
               <div class="col-md-4">
                 <div class="form-group">
-                  <label>الحساب المحاسبي *</label>
+                  <label>{{ t('Account') }} {{ t('Accounting_4') }} *</label>
                   <select name="gl_account_id" class="form-control" required aria-label="gl account id">
-                    <option value="" {% if not form_data.get('gl_account_id') %}selected{% endif %}>بلا</option>
+                    <option value="" {% if not form_data.get('gl_account_id') %}selected{% endif %}>{{ t('None') }}</option>
                     {% for account in accounts %}
                     <option value="{{ account.id }}" {% if form_data.get('gl_account_id') and form_data.get('gl_account_id')|int == account.id %}selected{% endif %}>
                       {{ account.code }} - {{ account.name_ar }}
@@ -74,35 +74,35 @@
                 <div class="form-group">
                   <div class="form-check mt-4">
                     <input type="checkbox" name="is_percentage" id="is_percentage" class="form-check-input" {% if form_data.get('is_percentage') %}checked{% endif %} aria-label="is percentage">
-                    <label class="form-check-label" for="is_percentage">احتساب كنسبة مئوية</label>
+                    <label class="form-check-label" for="is_percentage">{{ t('احتساب') }} {{ t('كنسبة') }} {{ t('مئوية') }}</label>
                   </div>
                 </div>
               </div>
               <div class="col-md-4">
                 <div class="form-group">
-                  <label for="input_effective_from">ساري من *</label>
+                  <label for="input_effective_from">{{ t('Active_4') }} من *</label>
                   <input type="date" name="effective_from" class="form-control" required value="{{ form_data.get('effective_from', '') }}" id="input_effective_from" aria-label="effective from">
                 </div>
               </div>
               <div class="col-md-4">
                 <div class="form-group">
-                  <label for="input_effective_to">ساري إلى</label>
+                  <label for="input_effective_to">{{ t('Active_4') }} إلى</label>
                   <input type="date" name="effective_to" class="form-control" value="{{ form_data.get('effective_to', '') }}" id="input_effective_to" aria-label="effective to">
                 </div>
               </div>
             </div>
 
             <div class="form-group">
-              <label>الوصف</label>
+              <label>{{ t('Description') }}</label>
               <textarea name="description" class="form-control" rows="3" aria-label="description" maxlength="500">{{ form_data.get('description', '') }}</textarea>
             </div>
 
             <div class="form-group">
               <button type="submit" class="btn btn-success btn-lg">
-                <i class="fas fa-save"></i> حفظ
+                <i class="fas fa-save"></i> {{ t('Save') }}
               </button>
               <a href="{{ url_for('advanced_ledger.customs_taxes') }}" class="btn btn-secondary btn-lg">
-                <i class="fas fa-times"></i> إلغاء
+                <i class="fas fa-times"></i> {{ t('Cancel') }}
               </a>
             </div>
           </form>

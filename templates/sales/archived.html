@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - أرشيف المبيعات{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('Archive') }} {{ t('Sales') }}{% endblock %}
 
 {% block page_title %}
 
@@ -8,9 +8,9 @@
 
   <div>
 
-    <h1 class="text-gradient mb-0"><i class="fas fa-archive mr-3"></i>أرشيف المبيعات</h1>
+    <h1 class="text-gradient mb-0"><i class="fas fa-archive mr-3"></i>{{ t('Archive') }} {{ t('Sales') }}</h1>
 
-    <p class="text-muted">جميع فواتير البيع المؤرشفة</p>
+    <p class="text-muted">{{ t('جميع') }} {{ t('فواتير') }} {{ t('Sale_2') }} {{ t('Archived') }}</p>
 
   </div>
 
@@ -18,7 +18,7 @@
 
     <a href="{{ url_for('sales.index') }}" class="btn btn-secondary btn-lg">
 
-      <i class="fas fa-arrow-right mr-2"></i>رجوع
+      <i class="fas fa-arrow-right mr-2"></i>{{ t('Back') }}
 
     </a>
 
@@ -70,23 +70,23 @@
 
         <tr>
 
-          <th>رقم الفاتورة</th>
+          <th>{{ t('رقم') }} {{ t('Invoice_2') }}</th>
 
-          <th>الشركة</th>
+          <th>{{ t('Company') }}</th>
 
-          <th>الفرع</th>
+          <th>{{ t('Branch') }}</th>
 
-          <th>التاريخ</th>
+          <th>{{ t('Date') }}</th>
 
-          <th>العميل</th>
+          <th>{{ t('Customer') }}</th>
 
-          <th>المبلغ</th>
+          <th>{{ t('Amount') }}</th>
 
-          <th>حالة الدفع</th>
+          <th>{{ t('Status_2') }} {{ t('Payment_2') }}</th>
 
-          <th>تاريخ الأرشفة</th>
+          <th>{{ t('History') }} {{ t('الأرشفة') }}</th>
 
-          <th>الإجراءات</th>
+          <th>{{ t('الإجراءات') }}</th>
 
         </tr>
 
@@ -126,15 +126,15 @@
 
             {% if sale.payment_status == 'paid' %}
 
-              <span class="badge badge-success">مدفوع</span>
+              <span class="badge badge-success">{{ t('Paid_2') }}</span>
 
             {% elif sale.payment_status == 'partial' %}
 
-              <span class="badge badge-warning">جزئي</span>
+              <span class="badge badge-warning">{{ t('Partial_2') }}</span>
 
             {% else %}
 
-              <span class="badge badge-danger">آجل</span>
+              <span class="badge badge-danger">{{ t('Credit') }}</span>
 
             {% endif %}
 
@@ -148,7 +148,7 @@
 
               <a href="{{ url_for('sales.view', id=sale.id) }}" 
 
-                 class="btn btn-info" title="عرض">
+                 class="btn btn-info" title="{{ t('View') }}">
 
                 <i class="fas fa-eye"></i>
 
@@ -156,7 +156,7 @@
 
               <a href="{{ url_for('sales.print_invoice', id=sale.id) }}" 
 
-                 class="btn btn-secondary" target="_blank" rel="noopener noreferrer" title="طباعة">
+                 class="btn btn-secondary" target="_blank" rel="noopener noreferrer" title="{{ t('Print') }}">
 
                 <i class="fas fa-print"></i>
 
@@ -164,7 +164,7 @@
 
               <button type="button" class="btn btn-success restore-sale-btn" 
 
-                      data-id="{{ sale.id }}" title="استعادة">
+                      data-id="{{ sale.id }}" title="{{ t('Restore') }}">
 
                 <i class="fas fa-undo"></i>
 
@@ -209,7 +209,7 @@ $(document).ready(function() {
 
   
 
-  // استعادة فاتورة
+  // {{ t('Restore') }} {{ t('Invoice') }}
 
   $(document).on('click', '.restore-sale-btn', function(e) {
 

@@ -1,12 +1,12 @@
 {% extends 'base.html' %}
-{% block title %}إضافة حساب محاسبي جديد - Add Account{% endblock %}
-{% block page_title %}إضافة حساب محاسبي جديد{% endblock %}
+{% block title %}{{ t('Add') }} {{ t('Account_2') }} {{ t('Accounting_3') }} {{ t('New') }} - Add Account{% endblock %}
+{% block page_title %}{{ t('Add') }} {{ t('Account_2') }} {{ t('Accounting_3') }} {{ t('New') }}{% endblock %}
 
 {% block content %}
 <div class="row mb-3">
   <div class="col-12">
     <a href="{{ url_for('admin_ledger.accounts_management') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right mr-2"></i>العودة
+      <i class="fas fa-arrow-right mr-2"></i>{{ t('العودة') }}
     </a>
   </div>
 </div>
@@ -14,7 +14,7 @@
 <div class="card">
   <div class="card-header bg-gradient-success">
     <h3 class="card-title text-white">
-      <i class="fas fa-plus-circle mr-2"></i>إضافة حساب محاسبي جديد
+      <i class="fas fa-plus-circle mr-2"></i>{{ t('Add') }} {{ t('Account_2') }} {{ t('Accounting_3') }} {{ t('New') }}
     </h3>
   </div>
   <div class="card-body">
@@ -24,24 +24,24 @@
       <div class="row">
         <div class="col-md-6">
           <div class="form-group">
-            <label>كود الحساب <span class="text-danger">*</span></label>
+            <label>{{ t('Code_2') }} {{ t('Account') }} <span class="text-danger">*</span></label>
             <input type="text" name="code" class="form-control" required 
-                   placeholder="مثال: 1110, 1130, 4100" maxlength="20"
+                   placeholder="{{ t('مثال') }}: 1110, 1130, 4100" maxlength="20"
                    value="{{ form_data.get('code', '') }}">
-            <small class="form-text text-muted">يجب أن يكون فريداً وغير مكرر</small>
+            <small class="form-text text-muted">يجب أن يكون {{ t('فريداً') }} {{ t('وغير') }} {{ t('مكرر') }}</small>
           </div>
         </div>
         <div class="col-md-6">
           <div class="form-group">
-            <label>نوع الحساب <span class="text-danger">*</span></label>
+            <label>{{ t('نوع') }} {{ t('Account') }} <span class="text-danger">*</span></label>
             {% set selected_type = form_data.get('type', '') %}
             <select name="type" class="form-control" required aria-label="type">
-              <option value="" {% if not selected_type %}selected{% endif %}>بلا</option>
-              <option value="asset" {% if selected_type == 'asset' %}selected{% endif %}>أصول</option>
-              <option value="liability" {% if selected_type == 'liability' %}selected{% endif %}>خصوم</option>
-              <option value="equity" {% if selected_type == 'equity' %}selected{% endif %}>حقوق الملكية</option>
-              <option value="revenue" {% if selected_type == 'revenue' %}selected{% endif %}>إيرادات</option>
-              <option value="expense" {% if selected_type == 'expense' %}selected{% endif %}>مصروفات</option>
+              <option value="" {% if not selected_type %}selected{% endif %}>{{ t('None') }}</option>
+              <option value="asset" {% if selected_type == 'asset' %}selected{% endif %}>{{ t('أصول') }}</option>
+              <option value="liability" {% if selected_type == 'liability' %}selected{% endif %}>{{ t('خصوم') }}</option>
+              <option value="equity" {% if selected_type == 'equity' %}selected{% endif %}>{{ t('حقوق') }} {{ t('الملكية') }}</option>
+              <option value="revenue" {% if selected_type == 'revenue' %}selected{% endif %}>{{ t('Revenues') }}</option>
+              <option value="expense" {% if selected_type == 'expense' %}selected{% endif %}>{{ t('Expenses_2') }}</option>
             </select>
           </div>
         </div>
@@ -50,17 +50,17 @@
       <div class="row">
         <div class="col-md-6">
           <div class="form-group">
-            <label>اسم الحساب (عربي) <span class="text-danger">*</span></label>
+            <label>{{ t('Name_2') }} {{ t('Account') }} ({{ t('Arabic') }}) <span class="text-danger">*</span></label>
             <input type="text" name="name_ar" class="form-control" required 
-                   placeholder="مثال: الصندوق، الذمم المدينة"
+                   placeholder="{{ t('مثال') }}: {{ t('{{ t('Fund') }}،') }} {{ t('Receivables_2') }} {{ t('Receivables') }}"
                    value="{{ form_data.get('name_ar', '') }}" minlength="2" maxlength="100">
           </div>
         </div>
         <div class="col-md-6">
           <div class="form-group">
-            <label for="input_name">اسم الحساب (إنجليزي)</label>
+            <label for="input_name">{{ t('Name_2') }} {{ t('Account') }} ({{ t('English') }})</label>
             <input type="text" name="name" class="form-control" 
-                   placeholder="مثال: Cash, Accounts Receivable"
+                   placeholder="{{ t('مثال') }}: Cash, Accounts Receivable"
                    value="{{ form_data.get('name', '') }}" id="input_name" minlength="2" maxlength="100">
           </div>
         </div>
@@ -69,28 +69,28 @@
       <div class="row">
         <div class="col-md-6">
           <div class="form-group">
-            <label>الحساب الرئيسي</label>
+            <label>{{ t('Account') }} {{ t('Main') }}</label>
             {% set selected_parent = form_data.get('parent_id') %}
             <select name="parent_id" class="form-control" aria-label="parent id">
-              <option value="" {% if not selected_parent %}selected{% endif %}>بلا</option>
+              <option value="" {% if not selected_parent %}selected{% endif %}>{{ t('None') }}</option>
               {% for parent in parent_accounts %}
               <option value="{{ parent.id }}" {% if selected_parent and selected_parent|int == parent.id %}selected{% endif %}>
                 {{ parent.full_name }} ({{ parent.code }})
               </option>
               {% endfor %}
             </select>
-            <small class="form-text text-muted">إذا تركت فارغاً، سيصبح حساب رئيسي</small>
+            <small class="form-text text-muted">إذا {{ t('تركت') }} {{ t('فارغاً،') }} {{ t('سيصبح') }} {{ t('Account_2') }} {{ t('رئيسي') }}</small>
           </div>
         </div>
         <div class="col-md-6">
           <div class="form-group">
-            <label>العملة</label>
+            <label>{{ t('Currency') }}</label>
             {% set selected_currency = form_data.get('currency', tenant_default_currency or 'AED') %}
-            <select name="currency" class="form-control" aria-label="العملة">
-              <option value="AED" {% if selected_currency == 'AED' %}selected{% endif %}>درهم إماراتي (AED)</option>
-              <option value="USD" {% if selected_currency == 'USD' %}selected{% endif %}>دولار أمريكي (USD)</option>
-              <option value="EUR" {% if selected_currency == 'EUR' %}selected{% endif %}>يورو (EUR)</option>
-              <option value="SAR" {% if selected_currency == 'SAR' %}selected{% endif %}>ريال سعودي (SAR)</option>
+            <select name="currency" class="form-control" aria-label="{{ t('Currency') }}">
+              <option value="AED" {% if selected_currency == 'AED' %}selected{% endif %}>{{ t('Dirham') }} {{ t('إماراتي') }} (AED)</option>
+              <option value="USD" {% if selected_currency == 'USD' %}selected{% endif %}>{{ t('Dollar') }} {{ t('أمريكي') }} (USD)</option>
+              <option value="EUR" {% if selected_currency == 'EUR' %}selected{% endif %}>{{ t('Euro') }} (EUR)</option>
+              <option value="SAR" {% if selected_currency == 'SAR' %}selected{% endif %}>{{ t('Riyal') }} {{ t('سعودي') }} (SAR)</option>
             </select>
           </div>
         </div>
@@ -99,9 +99,9 @@
       <div class="row">
         <div class="col-md-12">
           <div class="form-group">
-            <label>وصف الحساب</label>
+            <label>{{ t('Description_2') }} {{ t('Account') }}</label>
             <textarea name="description" class="form-control" rows="3" 
-                      placeholder="وصف تفصيلي للحساب (اختياري)" maxlength="500">{{ form_data.get('description', '') }}</textarea>
+                      placeholder="{{ t('Description_2') }} {{ t('تفصيلي') }} {{ t('لل{{ t('Account_2') }}') }} ({{ t('Optional') }})" maxlength="500">{{ form_data.get('description', '') }}</textarea>
           </div>
         </div>
       </div>
@@ -113,9 +113,9 @@
             <input type="checkbox" name="is_header" class="form-check-input" id="is_header" value="on"
                    {% if form_data.get('is_header') == 'on' %}checked{% endif %} aria-label="is header">
             <label class="form-check-label" for="is_header">
-              حساب رئيسي (لا يقبل قيود مباشرة)
+              {{ t('Account_2') }} {{ t('رئيسي') }} (لا {{ t('يقبل') }} {{ t('قيود') }} {{ t('مباشرة') }})
             </label>
-            <small class="form-text text-muted">الحسابات الرئيسية تستخدم للتجميع فقط</small>
+            <small class="form-text text-muted">{{ t('Accounts') }} {{ t('Main_2') }} {{ t('تستخدم') }} {{ t('للتجميع') }} فقط</small>
           </div>
         </div>
         <div class="col-md-6">
@@ -124,9 +124,9 @@
             <input type="checkbox" name="is_active" class="form-check-input" id="is_active" value="on"
                    {% if form_data.get('is_active', 'on') == 'on' %}checked{% endif %} aria-label="is active">
             <label class="form-check-label" for="is_active">
-              حساب نشط
+              {{ t('Account_2') }} {{ t('Active') }}
             </label>
-            <small class="form-text text-muted">الحسابات غير النشطة لا تظهر في القوائم</small>
+            <small class="form-text text-muted">{{ t('Accounts') }} غير {{ t('Active_2') }} لا {{ t('تظهر') }} في {{ t('القوائم') }}</small>
           </div>
         </div>
       </div>
@@ -134,10 +134,10 @@
       <div class="row mt-4">
         <div class="col-12">
           <button type="submit" class="btn btn-success btn-lg">
-            <i class="fas fa-save mr-2"></i>حفظ الحساب
+            <i class="fas fa-save mr-2"></i>{{ t('Save') }} {{ t('Account') }}
           </button>
           <a href="{{ url_for('admin_ledger.accounts_management') }}" class="btn btn-secondary btn-lg">
-            <i class="fas fa-times mr-2"></i>إلغاء
+            <i class="fas fa-times mr-2"></i>{{ t('Cancel') }}
           </a>
         </div>
       </div>
@@ -149,29 +149,29 @@
 <div class="card mt-4">
   <div class="card-header bg-gradient-info">
     <h5 class="card-title text-white mb-0">
-      <i class="fas fa-lightbulb mr-2"></i>مساعدة سريعة
+      <i class="fas fa-lightbulb mr-2"></i>{{ t('مساعدة') }} {{ t('Quick') }}
     </h5>
   </div>
   <div class="card-body">
     <div class="row">
       <div class="col-md-6">
-        <h6>أنواع الحسابات:</h6>
+        <h6>{{ t('أنواع') }} {{ t('Accounts') }}:</h6>
         <ul class="list-unstyled">
-          <li><span class="badge badge-success mr-2">أصول</span> ما تملكه الشركة</li>
-          <li><span class="badge badge-warning mr-2">خصوم</span> ما تدين به الشركة</li>
-          <li><span class="badge badge-info mr-2">حقوق الملكية</span> رأس المال والأرباح</li>
-          <li><span class="badge badge-primary mr-2">إيرادات</span> دخل الشركة</li>
-          <li><span class="badge badge-danger mr-2">مصروفات</span> تكاليف الشركة</li>
+          <li><span class="badge badge-success mr-2">{{ t('أصول') }}</span> ما {{ t('تملكه') }} {{ t('Company') }}</li>
+          <li><span class="badge badge-warning mr-2">{{ t('خصوم') }}</span> ما {{ t('تدين') }} به {{ t('Company') }}</li>
+          <li><span class="badge badge-info mr-2">{{ t('حقوق') }} {{ t('الملكية') }}</span> {{ t('رأس') }} {{ t('المال') }} {{ t('والأرباح') }}</li>
+          <li><span class="badge badge-primary mr-2">{{ t('Revenues') }}</span> {{ t('Income') }} {{ t('Company') }}</li>
+          <li><span class="badge badge-danger mr-2">{{ t('Expenses_2') }}</span> {{ t('تكاليف') }} {{ t('Company') }}</li>
         </ul>
       </div>
       <div class="col-md-6">
-        <h6>أمثلة على أكواد الحسابات:</h6>
+        <h6>{{ t('أمثلة') }} على {{ t('أكواد') }} {{ t('Accounts') }}:</h6>
         <ul class="list-unstyled">
-          <li><code>1110</code> - الصندوق</li>
-          <li><code>1130</code> - الذمم المدينة</li>
-          <li><code>2100</code> - الذمم الدائنة</li>
-          <li><code>4100</code> - إيرادات المبيعات</li>
-          <li><code>5100</code> - المصروفات العامة</li>
+          <li><code>1110</code> - {{ t('Fund') }}</li>
+          <li><code>1130</code> - {{ t('Receivables_2') }} {{ t('Receivables') }}</li>
+          <li><code>2100</code> - {{ t('Receivables_2') }} {{ t('الدائنة') }}</li>
+          <li><code>4100</code> - {{ t('Revenues') }} {{ t('Sales') }}</li>
+          <li><code>5100</code> - {{ t('Expenses') }} {{ t('General') }}</li>
         </ul>
       </div>
     </div>

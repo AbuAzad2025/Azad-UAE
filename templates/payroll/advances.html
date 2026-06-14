@@ -1,33 +1,33 @@
 {% extends 'base.html' %}
-{% block title %}السلف المقدمة{% endblock %}
+{% block title %}{{ t('Advances') }} {{ t('Introduction_2') }}{% endblock %}
 {% block content %}
 <div class="container-fluid">
   <div class="row">
     <div class="col-md-4">
         <div class="card">
             <div class="card-header bg-gradient-warning text-white">
-                <h3 class="card-title">تسجيل سلفة جديدة</h3>
+                <h3 class="card-title">{{ t('تسجيل') }} {{ t('Advance_2') }} {{ t('New_3') }}</h3>
             </div>
             <div class="card-body">
                 <form class="needs-validation" method="post">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
                     <div class="form-group">
-                        <label>الموظف</label>
-                        <select name="employee_id" class="form-control select2" required aria-label="اختر الموظف">
+                        <label>{{ t('Employee_2') }}</label>
+                        <select name="employee_id" class="form-control select2" required aria-label="{{ t('اختر') }} {{ t('Employee_2') }}">
                             {% for emp in employees %}
                             <option value="{{ emp.id }}">{{ emp.name }}</option>
                             {% endfor %}
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="input_amount">قيمة السلفة</label>
+                        <label for="input_amount">{{ t('Value_2') }} {{ t('Advance') }}</label>
                         <input type="number" step="0.01" name="amount" class="form-control" required id="input_amount" aria-label="amount" min="0">
                     </div>
                     <div class="form-group">
-                        <label>ملاحظات</label>
+                        <label>{{ t('Notes') }}</label>
                         <textarea name="description" class="form-control" rows="3" aria-label="description" maxlength="500"></textarea>
                     </div>
-                    <button type="submit" class="btn btn-warning btn-block">صرف السلفة</button>
+                    <button type="submit" class="btn btn-warning btn-block">{{ t('صرف') }} {{ t('Advance') }}</button>
                 </form>
             </div>
         </div>
@@ -36,17 +36,17 @@
     <div class="col-md-8">
         <div class="card">
             <div class="card-header">
-                <h3 class="card-title">آخر السلف</h3>
+                <h3 class="card-title">{{ t('Last') }} {{ t('Advances') }}</h3>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive"><table class="table table-striped">
                     <thead>
                         <tr>
-                            <th>التاريخ</th>
-                            <th>الموظف</th>
-                            <th>المبلغ</th>
-                            <th>الحالة</th>
-                            <th>البيان</th>
+                            <th>{{ t('Date') }}</th>
+                            <th>{{ t('Employee_2') }}</th>
+                            <th>{{ t('Amount') }}</th>
+                            <th>{{ t('Status') }}</th>
+                            <th>{{ t('Description_3') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -57,9 +57,9 @@
                             <td>{{ adv.amount }}</td>
                             <td>
                                 {% if adv.is_deducted %}
-                                <span class="badge badge-success">تم الخصم</span>
+                                <span class="badge badge-success">تم {{ t('Discount') }}</span>
                                 {% else %}
-                                <span class="badge badge-warning">معلق</span>
+                                <span class="badge badge-warning">{{ t('Pending') }}</span>
                                 {% endif %}
                             </td>
                             <td>{{ adv.description }}</td>

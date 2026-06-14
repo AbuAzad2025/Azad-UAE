@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - تسوية المخزون{% endblock %}
-{% block page_title %}تسوية المخزون - PWC vs الحركات vs GL{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('Reconciliation') }} {{ t('Inventory') }}{% endblock %}
+{% block page_title %}{{ t('Reconciliation') }} {{ t('Inventory') }} - PWC vs {{ t('Movements') }} vs GL{% endblock %}
 
 {% block content %}
 <div class="row mb-3">
@@ -8,24 +8,24 @@
     <div class="card">
       <div class="card-body py-2">
         <form class="needs-validation" method="get" class="form-inline">
-          <label class="mr-2">الفرع:</label>
-          <select name="branch_id" class="form-control mr-2" onchange="this.form.submit()" aria-label="اختر الفرع">
-            <option value="">-- الكل --</option>
+          <label class="mr-2">{{ t('Branch') }}:</label>
+          <select name="branch_id" class="form-control mr-2" onchange="this.form.submit()" aria-label="{{ t('اختر') }} {{ t('Branch') }}">
+            <option value="">-- {{ t('All') }} --</option>
             {% for branch in branches %}
             <option value="{{ branch.id }}" {% if selected_branch == branch.id %}selected{% endif %}>{{ branch.name }}</option>
             {% endfor %}
           </select>
-          <label class="mr-2">المستودع:</label>
+          <label class="mr-2">{{ t('Warehouse') }}:</label>
           <select name="warehouse_id" class="form-control mr-2" onchange="this.form.submit()" aria-label="warehouse id">
-            <option value="">-- الكل --</option>
+            <option value="">-- {{ t('All') }} --</option>
             {% for wh in warehouses %}
             <option value="{{ wh.id }}" {% if selected_warehouse == wh.id %}selected{% endif %}>{{ wh.name_ar or wh.name }}</option>
             {% endfor %}
           </select>
           <label class="mr-2" for="input_date_from">من:</label>
-          <input type="date" name="date_from" class="form-control mr-2" value="{{ date_from or '' }}" onchange="this.form.submit()" id="input_date_from" aria-label="من تاريخ">
+          <input type="date" name="date_from" class="form-control mr-2" value="{{ date_from or '' }}" onchange="this.form.submit()" id="input_date_from" aria-label="من {{ t('History') }}">
           <label class="mr-2" for="input_date_to">إلى:</label>
-          <input type="date" name="date_to" class="form-control mr-2" value="{{ date_to or '' }}" onchange="this.form.submit()" id="input_date_to" aria-label="إلى تاريخ">
+          <input type="date" name="date_to" class="form-control mr-2" value="{{ date_to or '' }}" onchange="this.form.submit()" id="input_date_to" aria-label="إلى {{ t('History') }}">
           <div class="ml-auto">
             <a href="{{ url_for('reports.inventory_reconciliation_export', format='xlsx', branch_id=selected_branch, warehouse_id=selected_warehouse, date_from=date_from, date_to=date_to) }}" class="btn btn-success">
               <i class="fas fa-file-excel mr-1"></i>Excel
@@ -34,7 +34,7 @@
               <i class="fas fa-file-csv mr-1"></i>CSV
             </a>
             <a href="{{ url_for('reports.ar_reconciliation') }}" class="btn btn-outline-secondary">
-              <i class="fas fa-balance-scale mr-1"></i>تسوية الذمم
+              <i class="fas fa-balance-scale mr-1"></i>{{ t('Reconciliation') }} {{ t('Receivables_2') }}
             </a>
           </div>
         </form>
@@ -49,7 +49,7 @@
     <div class="card bg-gradient-primary text-white">
       <div class="card-body text-center">
         <h4 class="mb-0">{{ report.summary.record_count }}</h4>
-        <small>منتج / مستودع</small>
+        <small>{{ t('Product_2') }} / {{ t('Warehouse_2') }}</small>
       </div>
     </div>
   </div>
@@ -58,12 +58,12 @@
       <div class="card-body text-center">
         <h4 class="mb-0">
           {% if report.summary.all_matched_qty %}
-            <i class="fas fa-check"></i> متطابق
+            <i class="fas fa-check"></i> {{ t('متطابق') }}
           {% else %}
-            <i class="fas fa-exclamation-triangle"></i> فروقات
+            <i class="fas fa-exclamation-triangle"></i> {{ t('فروقات') }}
           {% endif %}
         </h4>
-        <small>حالة الكميات</small>
+        <small>{{ t('Status_2') }} {{ t('الكميات') }}</small>
       </div>
     </div>
   </div>
@@ -71,7 +71,7 @@
     <div class="card bg-gradient-info text-white">
       <div class="card-body text-center">
         <h4 class="mb-0">{{ format_currency(report.summary.total_pwc_qty) }}</h4>
-        <small>إجمالي كمية PWC</small>
+        <small>{{ t('Total_2') }} {{ t('Qty') }} PWC</small>
       </div>
     </div>
   </div>
@@ -79,7 +79,7 @@
     <div class="card bg-gradient-secondary text-white">
       <div class="card-body text-center">
         <h4 class="mb-0">{{ format_currency(report.summary.total_movement_qty) }}</h4>
-        <small>إجمالي كمية الحركات</small>
+        <small>{{ t('Total_2') }} {{ t('Qty') }} {{ t('Movements') }}</small>
       </div>
     </div>
   </div>
@@ -89,35 +89,35 @@
 <div class="card">
   <div class="card-header bg-gradient-primary d-flex justify-content-between align-items-center">
     <h3 class="card-title text-white mb-0">
-      <i class="fas fa-warehouse mr-2"></i>تسوية حسب المستودع
+      <i class="fas fa-warehouse mr-2"></i>{{ t('Reconciliation') }} {{ t('حسب') }} {{ t('Warehouse') }}
     </h3>
     {% if report.summary.all_matched_qty %}
-    <span class="badge badge-success"><i class="fas fa-check"></i> الكميات متطابقة</span>
+    <span class="badge badge-success"><i class="fas fa-check"></i> {{ t('الكميات') }} {{ t('{{ t('متطابق') }}ة') }}</span>
     {% else %}
-    <span class="badge badge-warning"><i class="fas fa-exclamation-triangle"></i> يوجد فروقات كمية</span>
+    <span class="badge badge-warning"><i class="fas fa-exclamation-triangle"></i> {{ t('يوجد') }} {{ t('فروقات') }} {{ t('Qty') }}</span>
     {% endif %}
     {% if report.summary.all_matched_value %}
-    <span class="badge badge-success ml-2"><i class="fas fa-check"></i> القيم متطابقة</span>
+    <span class="badge badge-success ml-2"><i class="fas fa-check"></i> {{ t('القيم') }} {{ t('{{ t('متطابق') }}ة') }}</span>
     {% else %}
-    <span class="badge badge-info ml-2"><i class="fas fa-info-circle"></i> مراجعة GL</span>
+    <span class="badge badge-info ml-2"><i class="fas fa-info-circle"></i> {{ t('مراجعة') }} GL</span>
     {% endif %}
     {% if report.summary.has_unallocated_gl %}
-    <span class="badge badge-warning ml-2"><i class="fas fa-tags"></i> GL غير موزع</span>
+    <span class="badge badge-warning ml-2"><i class="fas fa-tags"></i> GL غير {{ t('موزع') }}</span>
     {% endif %}
   </div>
   <div class="card-body p-0">
     <table class="table table-bordered table-striped mb-0">
       <thead class="thead-light">
         <tr>
-          <th>المستودع</th>
-          <th class="text-center">المنتجات</th>
-          <th class="text-left">كمية PWC</th>
-          <th class="text-left">كمية الحركات</th>
-          <th class="text-left">فرق الكمية</th>
-          <th class="text-left">قيمة PWC ({{ tenant_currency_symbol }})</th>
-          <th class="text-left">رصيد GL ({{ tenant_currency_symbol }})</th>
-          <th class="text-left">فرق القيمة</th>
-          <th class="text-center">الحالة</th>
+          <th>{{ t('Warehouse') }}</th>
+          <th class="text-center">{{ t('Products') }}</th>
+          <th class="text-left">{{ t('Qty') }} PWC</th>
+          <th class="text-left">{{ t('Qty') }} {{ t('Movements') }}</th>
+          <th class="text-left">{{ t('فرق') }} {{ t('Quantity') }}</th>
+          <th class="text-left">{{ t('Value_2') }} PWC ({{ tenant_currency_symbol }})</th>
+          <th class="text-left">{{ t('Balance_3') }} GL ({{ tenant_currency_symbol }})</th>
+          <th class="text-left">{{ t('فرق') }} {{ t('Value') }}</th>
+          <th class="text-center">{{ t('Status') }}</th>
         </tr>
       </thead>
       <tbody>
@@ -134,7 +134,7 @@
           <td class="text-left">
             {{ format_currency(row.gl_value) }}
             {% if row.gl_untagged %}
-            <span class="badge badge-info" title="قيود GL قديمة بدون warehouse_id">legacy</span>
+            <span class="badge badge-info" title="{{ t('قيود') }} GL {{ t('Old') }} {{ t('بدون') }} warehouse_id">legacy</span>
             {% endif %}
           </td>
           <td class="text-left {% if not row.matched_value %}text-warning{% endif %}">
@@ -144,11 +144,11 @@
             {% if row.matched_qty and row.matched_value %}
             <span class="badge badge-success">OK</span>
             {% elif row.gl_untagged %}
-            <span class="badge badge-warning">GL غير موسوم</span>
+            <span class="badge badge-warning">GL غير {{ t('موسوم') }}</span>
             {% elif row.matched_qty %}
-            <span class="badge badge-warning">مراجعة GL</span>
+            <span class="badge badge-warning">{{ t('مراجعة') }} GL</span>
             {% else %}
-            <span class="badge badge-danger">مراجعة كمية</span>
+            <span class="badge badge-danger">{{ t('مراجعة') }} {{ t('Qty') }}</span>
             {% endif %}
           </td>
         </tr>
@@ -156,7 +156,7 @@
       </tbody>
       <tfoot class="bg-light font-weight-bold">
         <tr>
-          <td colspan="2">الإجمالي</td>
+          <td colspan="2">{{ t('Total_3') }}</td>
           <td class="text-left">{{ '{:,.3f}'.format(report.summary.total_pwc_qty) }}</td>
           <td class="text-left">{{ '{:,.3f}'.format(report.summary.total_movement_qty) }}</td>
           <td class="text-left {% if report.summary.overall_qty_diff|abs > 0.01 %}text-danger{% endif %}">
@@ -172,10 +172,10 @@
   </div>
   <div class="card-footer text-muted small">
     <strong>GL account:</strong> {{ report.summary.inventory_account_code }} - Inventory Asset &nbsp;|&nbsp;
-    <strong>الكمية:</strong> مقارنة بين PWC.total_quantity و SUM(stock_movements.quantity) &nbsp;|&nbsp;
-    <strong>القيمة:</strong> مقارنة بين PWC.total_value ورصيد حساب GL 1140.
+    <strong>{{ t('Quantity') }}:</strong> {{ t('مقارنة') }} بين PWC.total_quantity و SUM(stock_movements.quantity) &nbsp;|&nbsp;
+    <strong>{{ t('Value') }}:</strong> {{ t('مقارنة') }} بين PWC.total_value {{ t('و{{ t('Balance_3') }}') }} {{ t('Account_2') }} GL 1140.
     {% if report.summary.has_unallocated_gl %}
-    &nbsp;|&nbsp; <strong>GL غير موزع على مستودع:</strong> {{ format_currency(report.summary.unallocated_gl_value) }}
+    &nbsp;|&nbsp; <strong>GL غير {{ t('موزع') }} على {{ t('Warehouse_2') }}:</strong> {{ format_currency(report.summary.unallocated_gl_value) }}
     {% endif %}
   </div>
 </div>
@@ -184,7 +184,7 @@
 <div class="card mt-4">
   <div class="card-header bg-gradient-secondary">
     <h3 class="card-title text-white mb-0">
-      <i class="fas fa-boxes mr-2"></i>تفاصيل حسب المنتج / المستودع
+      <i class="fas fa-boxes mr-2"></i>{{ t('Details') }} {{ t('حسب') }} {{ t('Product') }} / {{ t('Warehouse') }}
     </h3>
   </div>
   <div class="card-body p-0">
@@ -192,14 +192,14 @@
       <table class="table table-bordered table-sm table-striped mb-0">
         <thead class="thead-light">
           <tr>
-            <th>المنتج</th>
-            <th>المستودع</th>
-            <th class="text-left">كمية PWC</th>
-            <th class="text-left">كمية الحركات</th>
-            <th class="text-left">فرق الكمية</th>
-            <th class="text-left">متوسط التكلفة</th>
-            <th class="text-left">قيمة PWC</th>
-            <th class="text-center">الحالة</th>
+            <th>{{ t('Product') }}</th>
+            <th>{{ t('Warehouse') }}</th>
+            <th class="text-left">{{ t('Qty') }} PWC</th>
+            <th class="text-left">{{ t('Qty') }} {{ t('Movements') }}</th>
+            <th class="text-left">{{ t('فرق') }} {{ t('Quantity') }}</th>
+            <th class="text-left">{{ t('متوسط') }} {{ t('Cost') }}</th>
+            <th class="text-left">{{ t('Value_2') }} PWC</th>
+            <th class="text-center">{{ t('Status') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -218,7 +218,7 @@
               {% if row.matched_qty %}
               <span class="badge badge-success">OK</span>
               {% else %}
-              <span class="badge badge-danger">مراجعة</span>
+              <span class="badge badge-danger">{{ t('مراجعة') }}</span>
               {% endif %}
             </td>
           </tr>

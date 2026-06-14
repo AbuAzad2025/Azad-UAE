@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}طباعة سند صرف - {{ payment.payment_number }}{% endblock %}
+{% block title %}{{ t('Print') }} {{ t('Voucher_2') }} {{ t('صرف') }} - {{ payment.payment_number }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
@@ -8,30 +8,30 @@
       <div class="card">
         <div class="card-body">
           <div class="text-center mb-4">
-            <h2>سند صرف</h2>
-            <h4>رقم: {{ payment.payment_number }}</h4>
+            <h2>{{ t('Voucher_2') }} {{ t('صرف') }}</h2>
+            <h4>{{ t('رقم') }}: {{ payment.payment_number }}</h4>
           </div>
           
           <div class="row">
             <div class="col-md-6">
               <div class="table-responsive"><table class="table table-borderless">
                 <tr>
-                  <td><strong>المورد:</strong></td>
+                  <td><strong>{{ t('Supplier') }}:</strong></td>
                   <td>{{ payment.supplier_name if payment.supplier_name else '-' }}</td>
                 </tr>
                 <tr>
-                  <td><strong>تاريخ السند:</strong></td>
+                  <td><strong>{{ t('History') }} {{ t('Voucher') }}:</strong></td>
                   <td>{{ payment.payment_date.strftime('%Y-%m-%d') }}</td>
                 </tr>
                 <tr>
-                  <td><strong>نوع الدفع:</strong></td>
+                  <td><strong>{{ t('نوع') }} {{ t('Payment_2') }}:</strong></td>
                   <td>
                     {% if payment.payment_type == 'supplier_payment' %}
-                      دفع مورد
+                      {{ t('Payment') }} {{ t('Supplier_2') }}
                     {% elif payment.payment_type == 'customer_payment' %}
-                      دفع عميل
+                      {{ t('Payment') }} {{ t('عميل') }}
                     {% elif payment.payment_type == 'refund' %}
-                      استرداد
+                      {{ t('استرداد') }}
                     {% else %}
                       {{ payment.payment_type }}
                     {% endif %}
@@ -42,19 +42,19 @@
             <div class="col-md-6">
               <div class="table-responsive"><table class="table table-borderless">
                 <tr>
-                  <td><strong>المبلغ:</strong></td>
+                  <td><strong>{{ t('Amount') }}:</strong></td>
                   <td><strong>{{ format_currency(payment.amount, payment.currency) }}</strong></td>
                 </tr>
                 <tr>
-                  <td><strong>المبلغ بـ{{ tenant_currency_name_ar or 'درهم إماراتي' }}:</strong></td>
+                  <td><strong>{{ t('Amount') }} بـ{{ tenant_currency_name_ar or 'درهم إماراتي' }}:</strong></td>
                   <td><strong>{{ format_currency(payment.base_amount or payment.amount_aed) }}</strong></td>
                 </tr>
                 <tr>
-                  <td><strong>طريقة الدفع:</strong></td>
+                  <td><strong>{{ t('طريقة') }} {{ t('Payment_2') }}:</strong></td>
                   <td>{{ payment.get_method_display() }}</td>
                 </tr>
                 <tr>
-                  <td><strong>الحالة:</strong></td>
+                  <td><strong>{{ t('Status') }}:</strong></td>
                   <td>
                     {% if payment.payment_confirmed %}
                       <span class="badge badge-success">{{ payment.status_ar }}</span>
@@ -70,7 +70,7 @@
           {% if payment.notes %}
           <div class="row mt-3">
             <div class="col-12">
-              <h5>ملاحظات:</h5>
+              <h5>{{ t('Notes') }}:</h5>
               <p>{{ payment.notes }}</p>
             </div>
           </div>
@@ -79,11 +79,11 @@
           <div class="row mt-4">
             <div class="col-6">
               <p>_________________</p>
-              <p>توقيع المحاسب</p>
+              <p>{{ t('توقيع') }} {{ t('المحاسب') }}</p>
             </div>
             <div class="col-6">
               <p>_________________</p>
-              <p>توقيع المدير</p>
+              <p>{{ t('توقيع') }} {{ t('المدير') }}</p>
             </div>
           </div>
         </div>

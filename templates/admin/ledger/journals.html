@@ -1,17 +1,17 @@
 {% extends 'base.html' %}
-{% block title %}إدارة القيود المحاسبية - Journals Management{% endblock %}
-{% block page_title %}إدارة القيود المحاسبية{% endblock %}
+{% block title %}{{ t('Management') }} {{ t('ال{{ t('قيود') }}') }} {{ t('Accounting') }} - Journals Management{% endblock %}
+{% block page_title %}{{ t('Management') }} {{ t('ال{{ t('قيود') }}') }} {{ t('Accounting') }}{% endblock %}
 
 {% block content %}
 <div class="row mb-3">
   <div class="col-12">
     <a href="{{ url_for('ledger.admin_dashboard') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right mr-2"></i>العودة للوحة التحكم
+      <i class="fas fa-arrow-right mr-2"></i>{{ t('العودة') }} {{ t('للوحة') }} {{ t('Control') }}
     </a>
     {% if current_user.has_permission('manage_ledger') %}
     <a href="{{ url_for('ledger.manual_entry') }}" class="btn btn-success">
     {% endif %}
-      <i class="fas fa-plus mr-2"></i>قيد يدوي جديد
+      <i class="fas fa-plus mr-2"></i>{{ t('قيد') }} {{ t('Manual') }} {{ t('New') }}
     </a>
   </div>
 </div>
@@ -19,7 +19,7 @@
 <div class="card">
   <div class="card-header bg-gradient-primary">
     <h3 class="card-title text-white">
-      <i class="fas fa-book mr-2"></i>جميع القيود المحاسبية
+      <i class="fas fa-book mr-2"></i>{{ t('جميع') }} {{ t('ال{{ t('قيود') }}') }} {{ t('Accounting') }}
     </h3>
   </div>
   <div class="card-body p-0">
@@ -27,13 +27,13 @@
       <table class="table table-hover mb-0">
         <thead class="bg-light">
           <tr>
-            <th>رقم القيد</th>
-            <th>التاريخ</th>
-            <th>الوصف</th>
-            <th>النوع</th>
-            <th>المبلغ</th>
-            <th>الحالة</th>
-            <th>الإجراءات</th>
+            <th>{{ t('رقم') }} {{ t('ال{{ t('قيد') }}') }}</th>
+            <th>{{ t('Date') }}</th>
+            <th>{{ t('Description') }}</th>
+            <th>{{ t('النوع') }}</th>
+            <th>{{ t('Amount') }}</th>
+            <th>{{ t('Status') }}</th>
+            <th>{{ t('{{ t('الإجراء') }}ات') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -56,21 +56,21 @@
             <td>{{ format_currency(entry.total_debit) }}</td>
             <td>
               {% if entry.is_posted %}
-                <span class="badge badge-success">مرحل</span>
+                <span class="badge badge-success">{{ t('مرحل') }}</span>
               {% else %}
-                <span class="badge badge-warning">مسودة</span>
+                <span class="badge badge-warning">{{ t('مسودة') }}</span>
               {% endif %}
               {% if entry.is_reversed %}
-                <br><span class="badge badge-danger">معكوس</span>
+                <br><span class="badge badge-danger">{{ t('معكوس') }}</span>
               {% endif %}
             </td>
             <td>
               <div class="btn-group btn-group-sm">
-                {% if current_user.has_permission('view_ledger') %}<a href="{{ url_for('ledger.view_entry', id=entry.id) }}" class="btn btn-outline-primary" title="عرض القيد">
+                {% if current_user.has_permission('view_ledger') %}<a href="{{ url_for('ledger.view_entry', id=entry.id) }}" class="btn btn-outline-primary" title="{{ t('View') }} {{ t('ال{{ t('قيد') }}') }}">
                   <i class="fas fa-eye"></i>
                 </a>{% endif %}
                 {% if not entry.is_reversed %}
-                <button type="button" class="btn btn-outline-danger" onclick="reverseEntry({{ entry.id }})" title="عكس القيد">
+                <button type="button" class="btn btn-outline-danger" onclick="reverseEntry({{ entry.id }})" title="{{ t('عكس') }} {{ t('ال{{ t('قيد') }}') }}">
                   <i class="fas fa-undo"></i>
                 </button>
                 {% endif %}
@@ -90,7 +90,7 @@
     <nav aria-label="Page navigation">
       <ul class="pagination justify-content-center">{%- if entries.has_prev -%}
         <li class="page-item">
-          <a class="page-link" href="{{ url_for('ledger.admin_journals', page=entries.prev_num) }}">السابق</a>
+          <a class="page-link" href="{{ url_for('ledger.admin_journals', page=entries.prev_num) }}">{{ t('السابق') }}</a>
         </li>{%- endif -%}{%- for page_num in entries.iter_pages() -%}{%- if page_num -%}{%- if page_num != entries.page -%}
         <li class="page-item">
           <a class="page-link" href="{{ url_for('ledger.admin_journals', page=page_num) }}">{{ page_num }}</a>
@@ -102,7 +102,7 @@
           <span class="page-link">...</span>
         </li>{%- endif -%}{%- endfor -%}{%- if entries.has_next -%}
         <li class="page-item">
-          <a class="page-link" href="{{ url_for('ledger.admin_journals', page=entries.next_num) }}">التالي</a>
+          <a class="page-link" href="{{ url_for('ledger.admin_journals', page=entries.next_num) }}">{{ t('التالي') }}</a>
         </li>{%- endif -%}
       </ul>
     </nav>
@@ -117,7 +117,7 @@
         <div class="d-flex justify-content-between">
           <div>
             <h4 class="mb-0">{{ entries.total }}</h4>
-            <p class="mb-0">إجمالي القيود</p>
+            <p class="mb-0">{{ t('Total_2') }} {{ t('ال{{ t('قيود') }}') }}</p>
           </div>
           <div class="align-self-center">
             <i class="fas fa-book fa-2x"></i>
@@ -133,7 +133,7 @@
         <div class="d-flex justify-content-between">
           <div>
             <h4 class="mb-0">{{ entries.items|selectattr('is_posted', 'equalto', True)|list|length }}</h4>
-            <p class="mb-0">قيود مرحلة</p>
+            <p class="mb-0">{{ t('قيود') }} {{ t('{{ t('مرحل') }}ة') }}</p>
           </div>
           <div class="align-self-center">
             <i class="fas fa-check-circle fa-2x"></i>
@@ -149,7 +149,7 @@
         <div class="d-flex justify-content-between">
           <div>
             <h4 class="mb-0">{{ entries.items|selectattr('is_posted', 'equalto', False)|list|length }}</h4>
-            <p class="mb-0">مسودات</p>
+            <p class="mb-0">{{ t('مسودات') }}</p>
           </div>
           <div class="align-self-center">
             <i class="fas fa-edit fa-2x"></i>
@@ -165,7 +165,7 @@
         <div class="d-flex justify-content-between">
           <div>
             <h4 class="mb-0">{{ entries.items|selectattr('is_reversed', 'equalto', True)|list|length }}</h4>
-            <p class="mb-0">قيود معكوسة</p>
+            <p class="mb-0">{{ t('قيود') }} {{ t('{{ t('معكوس') }}ة') }}</p>
           </div>
           <div class="align-self-center">
             <i class="fas fa-undo fa-2x"></i>
@@ -180,7 +180,7 @@
 {% block scripts %}
 <script>
 function reverseEntry(entryId) {
-  if (confirm('هل أنت متأكد من عكس هذا القيد؟ لا يمكن التراجع عن هذا الإجراء.')) {
+  if (confirm('هل أنت {{ t('متأكد') }} من {{ t('عكس') }} هذا {{ t('{{ t('ال{{ t('قيد') }}') }}_2') }} لا يمكن {{ t('التراجع') }} عن هذا {{ t('الإجراء') }}.')) {
     fetch(`/ledger/entry/${entryId}/reverse`, {
       method: 'POST',
       headers: {
@@ -193,10 +193,10 @@ function reverseEntry(entryId) {
       if (data.success) {
         location.reload();
       } else {
-        alert('فشل في عكس القيد: ' + data.message);
+        alert('{{ t('فشل') }} في {{ t('عكس') }} {{ t('ال{{ t('قيد') }}') }}: ' + data.message);
       }
     })
-    .catch(error => {      alert('حدث خطأ في عكس القيد');
+    .catch(error => {      alert('{{ t('حدث') }} {{ t('Error') }} في {{ t('عكس') }} {{ t('ال{{ t('قيد') }}') }}');
     });
   }
 }

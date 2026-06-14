@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 
-{% block title %}مركز الخزينة والمركز المالي{% endblock %}
+{% block title %}{{ t('مركز') }} {{ t('الخزينة') }} {{ t('وال{{ t('مركز') }}') }} {{ t('المالي') }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
   <div class="row mb-3">
     <div class="col-12">
-      <h2><i class="fas fa-university mr-2"></i> مركز الخزينة والمركز المالي</h2>
+      <h2><i class="fas fa-university mr-2"></i> {{ t('مركز') }} {{ t('الخزينة') }} {{ t('وال{{ t('مركز') }}') }} {{ t('المالي') }}</h2>
     </div>
   </div>
 
@@ -17,16 +17,16 @@
         <div class="card-body">
           <form class="needs-validation" method="get" class="form-inline">
             <div class="form-group mr-3">
-              <label for="branch_id" class="mr-2">الفرع:</label>
-              <select name="branch_id" id="branch_id" class="form-control" aria-label="اختر الفرع">
-                <option value="">جميع الفروع</option>
+              <label for="branch_id" class="mr-2">{{ t('Branch') }}:</label>
+              <select name="branch_id" id="branch_id" class="form-control" aria-label="{{ t('اختر') }} {{ t('Branch') }}">
+                <option value="">{{ t('جميع') }} {{ t('Branches') }}</option>
                 {% for b in branches %}
                 <option value="{{ b.id }}" {% if selected_branch == b.id %}selected{% endif %}>{{ b.name }}</option>
                 {% endfor %}
               </select>
             </div>
             <button type="submit" class="btn btn-primary mr-2">
-              <i class="fas fa-filter"></i> تصفية
+              <i class="fas fa-filter"></i> {{ t('تصفية') }}
             </button>
             <a href="{{ url_for('treasury.treasury_export', format='xlsx', branch_id=selected_branch) }}" class="btn btn-success mr-2">
               <i class="fas fa-file-excel"></i> Excel
@@ -46,7 +46,7 @@
       <div class="small-box bg-success">
         <div class="inner">
           <h3>{{ format_currency(report.liquidity.kind_summary.get('cash', {}).get('total_balance', 0)) }}</h3>
-          <p>نقدية</p>
+          <p>{{ t('Cash_4') }}</p>
         </div>
         <div class="icon"><i class="fas fa-coins"></i></div>
       </div>
@@ -55,7 +55,7 @@
       <div class="small-box bg-primary">
         <div class="inner">
           <h3>{{ format_currency(report.liquidity.kind_summary.get('bank', {}).get('total_balance', 0)) }}</h3>
-          <p>بنوك</p>
+          <p>{{ t('بنوك') }}</p>
         </div>
         <div class="icon"><i class="fas fa-university"></i></div>
       </div>
@@ -64,7 +64,7 @@
       <div class="small-box bg-warning">
         <div class="inner">
           <h3>{{ format_currency(report.liquidity.kind_summary.get('in_transit', {}).get('total_balance', 0)) }}</h3>
-          <p>تحت التحصيل</p>
+          <p>تحت {{ t('التحصيل') }}</p>
         </div>
         <div class="icon"><i class="fas fa-exchange-alt"></i></div>
       </div>
@@ -73,7 +73,7 @@
       <div class="small-box bg-info">
         <div class="inner">
           <h3>{{ format_currency(report.liquidity.kind_summary.get('gateway', {}).get('total_balance', 0)) }}</h3>
-          <p>بوابات دفع</p>
+          <p>{{ t('بوابات') }} {{ t('Payment') }}</p>
         </div>
         <div class="icon"><i class="fas fa-credit-card"></i></div>
       </div>
@@ -82,7 +82,7 @@
       <div class="small-box bg-dark">
         <div class="inner">
           <h3>{{ format_currency(report.liquidity.total_balance) }}</h3>
-          <p>الإجمالي (AED)</p>
+          <p>{{ t('Total_3') }} (AED)</p>
         </div>
         <div class="icon"><i class="fas fa-wallet"></i></div>
       </div>
@@ -94,18 +94,18 @@
     <div class="col-md-12">
       <div class="card card-outline card-primary">
         <div class="card-header">
-          <h3 class="card-title"><i class="fas fa-list mr-2"></i> حسابات السيولة</h3>
+          <h3 class="card-title"><i class="fas fa-list mr-2"></i> {{ t('Accounts_2') }} {{ t('ال{{ t('سيولة') }}') }}</h3>
         </div>
         <div class="card-body table-responsive p-0">
           <table class="table table-striped table-hover">
             <thead>
               <tr>
-                <th>النوع</th>
-                <th>الرمز</th>
-                <th>الاسم</th>
-                <th>العملة</th>
-                <th class="text-right">الرصيد (AED)</th>
-                <th>المصدر</th>
+                <th>{{ t('النوع') }}</th>
+                <th>{{ t('Code_4') }}</th>
+                <th>{{ t('Name') }}</th>
+                <th>{{ t('Currency') }}</th>
+                <th class="text-right">{{ t('Balance') }} (AED)</th>
+                <th>{{ t('المصدر') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -119,7 +119,7 @@
                 <td>{{ 'CashBox' if a.source == 'cash_box' else 'GL' }}</td>
               </tr>
               {% else %}
-              <tr><td colspan="6" class="text-center text-muted">لا توجد حسابات سيولة</td></tr>
+              <tr><td colspan="6" class="text-center text-muted">لا {{ t('توجد') }} {{ t('Accounts_2') }} {{ t('سيولة') }}</td></tr>
               {% endfor %}
             </tbody>
           </table>
@@ -133,7 +133,7 @@
     <div class="col-md-6">
       <div class="card card-outline card-success">
         <div class="card-header">
-          <h3 class="card-title"><i class="fas fa-arrow-down mr-2"></i> الشيكات الواردة ({{ report.cheques.incoming.total_count }})</h3>
+          <h3 class="card-title"><i class="fas fa-arrow-down mr-2"></i> {{ t('Cheques') }} {{ t('الواردة') }} ({{ report.cheques.incoming.total_count }})</h3>
           <div class="card-tools">
             <span class="badge badge-light">{{ format_currency(report.cheques.incoming.total_amount, 'AED') }}</span>
           </div>
@@ -142,9 +142,9 @@
           <table class="table table-sm table-bordered mb-0">
             <thead class="thead-light">
               <tr>
-                <th>الفئة</th>
-                <th>العدد</th>
-                <th class="text-right">المبلغ (AED)</th>
+                <th>{{ t('الفئة') }}</th>
+                <th>{{ t('Count_2') }}</th>
+                <th class="text-right">{{ t('Amount') }} (AED)</th>
               </tr>
             </thead>
             <tbody>
@@ -163,7 +163,7 @@
     <div class="col-md-6">
       <div class="card card-outline card-danger">
         <div class="card-header">
-          <h3 class="card-title"><i class="fas fa-arrow-up mr-2"></i> الشيكات الصادرة ({{ report.cheques.outgoing.total_count }})</h3>
+          <h3 class="card-title"><i class="fas fa-arrow-up mr-2"></i> {{ t('Cheques') }} {{ t('الصادرة') }} ({{ report.cheques.outgoing.total_count }})</h3>
           <div class="card-tools">
             <span class="badge badge-light">{{ format_currency(report.cheques.outgoing.total_amount, 'AED') }}</span>
           </div>
@@ -172,9 +172,9 @@
           <table class="table table-sm table-bordered mb-0">
             <thead class="thead-light">
               <tr>
-                <th>الفئة</th>
-                <th>العدد</th>
-                <th class="text-right">المبلغ (AED)</th>
+                <th>{{ t('الفئة') }}</th>
+                <th>{{ t('Count_2') }}</th>
+                <th class="text-right">{{ t('Amount') }} (AED)</th>
               </tr>
             </thead>
             <tbody>
@@ -204,11 +204,11 @@
           <table class="table table-sm table-hover">
             <thead>
               <tr>
-                <th>رقم الشيك</th>
-                <th>البنك</th>
-                <th class="text-right">المبلغ</th>
-                <th>الاستحقاق</th>
-                <th>الحالة</th>
+                <th>{{ t('رقم') }} {{ t('Cheque') }}</th>
+                <th>{{ t('Bank') }}</th>
+                <th class="text-right">{{ t('Amount') }}</th>
+                <th>{{ t('Due') }}</th>
+                <th>{{ t('Status') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -221,11 +221,11 @@
                   <td>
                     {% if c.days_until_due is not none %}
                       {% if c.days_until_due < 0 %}
-                        <span class="badge badge-danger">متأخر {{ c.days_until_due|abs }} يوم</span>
+                        <span class="badge badge-danger">{{ t('Late_2') }} {{ c.days_until_due|abs }} {{ t('يوم') }}</span>
                       {% elif c.days_until_due <= 7 %}
-                        <span class="badge badge-warning">{{ c.days_until_due }} يوم</span>
+                        <span class="badge badge-warning">{{ c.days_until_due }} {{ t('يوم') }}</span>
                       {% else %}
-                        <span class="badge badge-info">{{ c.days_until_due }} يوم</span>
+                        <span class="badge badge-info">{{ c.days_until_due }} {{ t('يوم') }}</span>
                       {% endif %}
                     {% endif %}
                   </td>
@@ -246,19 +246,19 @@
     <div class="col-md-12">
       <div class="card card-outline card-secondary">
         <div class="card-header">
-          <h3 class="card-title"><i class="fas fa-balance-scale mr-2"></i> حالة مطابقة البنك (آخر 5)</h3>
+          <h3 class="card-title"><i class="fas fa-balance-scale mr-2"></i> {{ t('Status_2') }} {{ t('Reconciliation_2') }} {{ t('Bank') }} ({{ t('Last') }} 5)</h3>
         </div>
         <div class="card-body table-responsive p-0">
           <table class="table table-sm table-hover">
             <thead>
               <tr>
-                <th>رقم المطابقة</th>
-                <th>الحساب البنكي</th>
-                <th>الفترة</th>
-                <th class="text-right">رصيد الدفاتر</th>
-                <th class="text-right">رصيد البنك</th>
-                <th class="text-right">الفرق</th>
-                <th>الحالة</th>
+                <th>{{ t('رقم') }} {{ t('Reconciliation_3') }}</th>
+                <th>{{ t('Account') }} {{ t('Bank_4') }}</th>
+                <th>{{ t('Period_2') }}</th>
+                <th class="text-right">{{ t('Balance_3') }} {{ t('الدفاتر') }}</th>
+                <th class="text-right">{{ t('Balance_3') }} {{ t('Bank') }}</th>
+                <th class="text-right">{{ t('الفرق') }}</th>
+                <th>{{ t('Status') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -277,7 +277,7 @@
                 </td>
               </tr>
               {% else %}
-              <tr><td colspan="7" class="text-center text-muted">لا توجد عمليات مطابقة</td></tr>
+              <tr><td colspan="7" class="text-center text-muted">لا {{ t('توجد') }} {{ t('عمليات') }} {{ t('Reconciliation_2') }}</td></tr>
               {% endfor %}
             </tbody>
           </table>
@@ -288,7 +288,7 @@
 
   <div class="row">
     <div class="col-12 text-muted text-center">
-      <small>تم التحديث: {{ report.generated_at }}</small>
+      <small>تم {{ t('Update_2') }}: {{ report.generated_at }}</small>
     </div>
   </div>
 </div>

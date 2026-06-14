@@ -1,38 +1,38 @@
 {% extends 'base.html' %}
-{% block title %}كتalog المتجر{% endblock %}
+{% block title %}كتalog {{ t('Store') }}{% endblock %}
 
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center flex-wrap">
-  <h1 class="mb-0"><i class="fas fa-boxes mr-2"></i>كتalog المتجر (مستودع أونلاين)</h1>
+  <h1 class="mb-0"><i class="fas fa-boxes mr-2"></i>كتalog {{ t('Store') }} ({{ t('Warehouse_2') }} {{ t('أونلاين') }})</h1>
   <div>
     {% if include_zero %}
-    <a href="{{ url_for('store.admin_catalog') }}" class="btn btn-outline-secondary">إخفاء بدون مخزون</a>
+    <a href="{{ url_for('store.admin_catalog') }}" class="btn btn-outline-secondary">{{ t('Hide') }} {{ t('بدون') }} {{ t('Inventory_2') }}</a>
     {% else %}
-    <a href="{{ url_for('store.admin_catalog', all=1) }}" class="btn btn-outline-secondary">عرض الكل</a>
+    <a href="{{ url_for('store.admin_catalog', all=1) }}" class="btn btn-outline-secondary">{{ t('View') }} {{ t('All') }}</a>
     {% endif %}
-    <a href="{{ url_for('store.admin_transfer') }}" class="btn btn-success"><i class="fas fa-plus mr-1"></i>تحويل مخزون</a>
+    <a href="{{ url_for('store.admin_transfer') }}" class="btn btn-success"><i class="fas fa-plus mr-1"></i>{{ t('Transfer') }} {{ t('Inventory_2') }}</a>
   </div>
 </div>
 {% endblock %}
 
 {% block content %}
 {% if not online_warehouse %}
-<div class="alert alert-warning">لم يُنشأ مستودع أونلاين بعد. افتح <a href="{{ url_for('store.admin_settings') }}">الإعدادات</a> واحفظ لتوليده.</div>
+<div class="alert alert-warning">لم {{ t('يُنشأ') }} {{ t('Warehouse_2') }} {{ t('أونلاين') }} بعد. {{ t('افتح') }} <a href="{{ url_for('store.admin_settings') }}">{{ t('Settings') }}</a> {{ t('واحفظ') }} {{ t('لتوليده') }}.</div>
 {% else %}
 <div class="alert alert-info py-2">
   <i class="fas fa-warehouse mr-1"></i>
-  المصدر: <strong>{{ online_warehouse.name_ar or online_warehouse.name }}</strong>
-  — {% if include_zero %}كل المنتجات النشطة{% else %}منتجات بمخزون &gt; 0 فقط{% endif %}
+  {{ t('المصدر') }}: <strong>{{ online_warehouse.name_ar or online_warehouse.name }}</strong>
+  — {% if include_zero %}كل {{ t('Products') }} {{ t('Active_2') }}{% else %}{{ t('Products_2') }} {{ t('ب{{ t('Inventory_2') }}') }} &gt; 0 فقط{% endif %}
 </div>
 <div class="card">
   <div class="table-responsive">
     <table class="table table-striped mb-0">
       <thead class="thead-light">
         <tr>
-          <th>المنتج</th>
+          <th>{{ t('Product') }}</th>
           <th>SKU</th>
-          <th>السعر</th>
-          <th>مخزون الأونلاين</th>
+          <th>{{ t('Price') }}</th>
+          <th>{{ t('Inventory_2') }} {{ t('ال{{ t('أونلاين') }}') }}</th>
           <th></th>
         </tr>
       </thead>
@@ -50,11 +50,11 @@
             {% endif %}
           </td>
           <td>
-            <a href="{{ url_for('store.admin_transfer', product_id=row.product.id) }}" class="btn btn-outline-primary">تحويل</a>
+            <a href="{{ url_for('store.admin_transfer', product_id=row.product.id) }}" class="btn btn-outline-primary">{{ t('Transfer') }}</a>
           </td>
         </tr>
         {% else %}
-        <tr><td colspan="5" class="text-center text-muted py-4">لا منتجات{% if not include_zero %} بمخزون في مستودع الأونلاين{% endif %}.</td></tr>
+        <tr><td colspan="5" class="text-center text-muted py-4">لا {{ t('Products_2') }}{% if not include_zero %} {{ t('ب{{ t('Inventory_2') }}') }} في {{ t('Warehouse_2') }} {{ t('ال{{ t('أونلاين') }}') }}{% endif %}.</td></tr>
         {% endfor %}
       </tbody>
     </table>

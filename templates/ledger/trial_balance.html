@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - ميزان المراجعة{% endblock %}
-{% block page_title %}ميزان المراجعة - Trial Balance{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('Balance_2') }} {{ t('Review') }}{% endblock %}
+{% block page_title %}{{ t('Balance_2') }} {{ t('Review') }} - Trial Balance{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/financial-ui.css') }}">
@@ -37,11 +37,11 @@
       <table class="table table-bordered table-striped table-hover mb-0">
         <thead class="thead-light">
           <tr>
-            <th class="text-center" style="width:120px">كود الحساب</th>
-            <th>اسم الحساب</th>
-            <th class="text-center" style="width:150px">مدين</th>
-            <th class="text-center" style="width:150px">دائن</th>
-            <th class="text-center" style="width:150px">الرصيد</th>
+            <th class="text-center" style="width:120px">{{ t('Code_2') }} {{ t('Account') }}</th>
+            <th>{{ t('Name_2') }} {{ t('Account') }}</th>
+            <th class="text-center" style="width:150px">{{ t('مدين') }}</th>
+            <th class="text-center" style="width:150px">{{ t('دائن') }}</th>
+            <th class="text-center" style="width:150px">{{ t('Balance') }}</th>
           </tr>
         </thead>
         <tbody>

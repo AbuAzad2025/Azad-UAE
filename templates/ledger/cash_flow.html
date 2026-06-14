@@ -1,15 +1,15 @@
 {% extends 'base.html' %}
-{% block title %}قائمة التدفقات النقدية - Cash Flow Statement{% endblock %}
-{% block page_title %}قائمة التدفقات النقدية{% endblock %}
+{% block title %}{{ t('List') }} {{ t('{{ t('التدفق') }}ات') }} {{ t('Cash') }} - Cash Flow Statement{% endblock %}
+{% block page_title %}{{ t('List') }} {{ t('{{ t('التدفق') }}ات') }} {{ t('Cash') }}{% endblock %}
 
 {% block content %}
 <div class="row mb-3 no-print">
   <div class="col-12">
     <a href="{{ url_for('ledger.index') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right mr-2"></i>العودة
+      <i class="fas fa-arrow-right mr-2"></i>{{ t('العودة') }}
     </a>
     <button class="btn btn-primary" data-action="window-print">
-      <i class="fas fa-print mr-2"></i>طباعة
+      <i class="fas fa-print mr-2"></i>{{ t('Print') }}
     </button>
   </div>
 </div>
@@ -18,14 +18,14 @@
 <div class="card mb-3 no-print">
   <div class="card-body">
     <form class="needs-validation" method="get" class="form-inline" action="">
-      <label class="ml-2 mr-2" for="input_date_from">من تاريخ:</label>
-      <input type="date" name="date_from" class="form-control mr-3" value="{{ date_from }}" required id="input_date_from" aria-label="من تاريخ">
+      <label class="ml-2 mr-2" for="input_date_from">من {{ t('History') }}:</label>
+      <input type="date" name="date_from" class="form-control mr-3" value="{{ date_from }}" required id="input_date_from" aria-label="من {{ t('History') }}">
       
-      <label class="ml-2 mr-2" for="input_date_to">إلى تاريخ:</label>
-      <input type="date" name="date_to" class="form-control mr-3" value="{{ date_to }}" required id="input_date_to" aria-label="إلى تاريخ">
+      <label class="ml-2 mr-2" for="input_date_to">إلى {{ t('History') }}:</label>
+      <input type="date" name="date_to" class="form-control mr-3" value="{{ date_to }}" required id="input_date_to" aria-label="إلى {{ t('History') }}">
       
       <button type="submit" class="btn btn-primary">
-        <i class="fas fa-filter mr-2"></i>عرض
+        <i class="fas fa-filter mr-2"></i>{{ t('View') }}
       </button>
     </form>
   </div>
@@ -33,7 +33,7 @@
 
 <div class="erp-report-print">
   <div class="erp-report-header">
-    <h2>قائمة التدفقات النقدية</h2>
+    <h2>{{ t('List') }} {{ t('{{ t('التدفق') }}ات') }} {{ t('Cash') }}</h2>
     <div class="erp-report-meta">
       من {{ report.period_start.strftime('%d/%m/%Y') }} إلى {{ report.period_end.strftime('%d/%m/%Y') }}
       {% if company_name_ar %} | {{ company_name_ar }}{% endif %}
@@ -46,7 +46,7 @@
     
     <div class="mb-4">
       <h4 class="bg-success text-white p-2">
-        <i class="fas fa-cog mr-2"></i>التدفقات النقدية من الأنشطة التشغيلية
+        <i class="fas fa-cog mr-2"></i>{{ t('{{ t('التدفق') }}ات') }} {{ t('Cash') }} من {{ t('الأنشطة') }} {{ t('التشغيلية') }}
       </h4>
       <div class="table-responsive"><table class="table table-bordered">
         <tbody>
@@ -61,7 +61,7 @@
         </tbody>
         <tfoot class="bg-light">
           <tr>
-            <th class="text-left">صافي النقدية من الأنشطة التشغيلية:</th>
+            <th class="text-left">{{ t('Net') }} {{ t('Cash') }} من {{ t('الأنشطة') }} {{ t('التشغيلية') }}:</th>
             <th class="text-center {{ 'text-success' if report.operating_activities.net_cash_from_operating > 0 else 'text-danger' }}">
               {{ format_currency(report.operating_activities.net_cash_from_operating) }}
             </th>
@@ -73,7 +73,7 @@
     
     <div class="mb-4">
       <h4 class="bg-info text-white p-2">
-        <i class="fas fa-chart-line mr-2"></i>التدفقات النقدية من الأنشطة الاستثمارية
+        <i class="fas fa-chart-line mr-2"></i>{{ t('{{ t('التدفق') }}ات') }} {{ t('Cash') }} من {{ t('الأنشطة') }} {{ t('الاستثمارية') }}
       </h4>
       <div class="table-responsive"><table class="table table-bordered">
         <tbody>
@@ -90,7 +90,7 @@
         </tbody>
         <tfoot class="bg-light">
           <tr>
-            <th class="text-left">صافي النقدية من الأنشطة الاستثمارية:</th>
+            <th class="text-left">{{ t('Net') }} {{ t('Cash') }} من {{ t('الأنشطة') }} {{ t('الاستثمارية') }}:</th>
             <th class="text-center {{ 'text-success' if report.investing_activities.net_cash_from_investing > 0 else 'text-danger' }}">
               {{ format_currency(report.investing_activities.net_cash_from_investing) }}
             </th>
@@ -102,7 +102,7 @@
     
     <div class="mb-4">
       <h4 class="bg-warning text-white p-2">
-        <i class="fas fa-hand-holding-usd mr-2"></i>التدفقات النقدية من الأنشطة التمويلية
+        <i class="fas fa-hand-holding-usd mr-2"></i>{{ t('{{ t('التدفق') }}ات') }} {{ t('Cash') }} من {{ t('الأنشطة') }} {{ t('التمويلية') }}
       </h4>
       <div class="table-responsive"><table class="table table-bordered">
         <tbody>
@@ -119,7 +119,7 @@
         </tbody>
         <tfoot class="bg-light">
           <tr>
-            <th class="text-left">صافي النقدية من الأنشطة التمويلية:</th>
+            <th class="text-left">{{ t('Net') }} {{ t('Cash') }} من {{ t('الأنشطة') }} {{ t('التمويلية') }}:</th>
             <th class="text-center {{ 'text-success' if report.financing_activities.net_cash_from_financing > 0 else 'text-danger' }}">
               {{ format_currency(report.financing_activities.net_cash_from_financing) }}
             </th>
@@ -133,7 +133,7 @@
       <div class="card-body">
         <div class="table-responsive"><table class="table table-borderless text-white mb-0">
           <tr>
-            <td width="70%"><strong>صافي التغير في النقدية:</strong></td>
+            <td width="70%"><strong>{{ t('Net') }} {{ t('التغير') }} في {{ t('Cash') }}:</strong></td>
             <td width="30%" class="text-center">
               <strong class="{{ 'text-success' if report.net_change_in_cash > 0 else 'text-danger' }}">
                 {{ format_currency(report.net_change_in_cash) }}
@@ -141,13 +141,13 @@
             </td>
           </tr>
           <tr>
-            <td><strong>النقدية في بداية الفترة:</strong></td>
+            <td><strong>{{ t('Cash') }} في {{ t('Start_2') }} {{ t('Period_2') }}:</strong></td>
             <td class="text-center">
               <strong>{{ format_currency(report.cash_beginning) }}</strong>
             </td>
           </tr>
           <tr class="border-top">
-            <td><strong>النقدية في نهاية الفترة:</strong></td>
+            <td><strong>{{ t('Cash') }} في {{ t('End') }} {{ t('Period_2') }}:</strong></td>
             <td class="text-center">
               <strong class="text-warning">{{ format_currency(report.cash_ending) }}</strong>
             </td>
@@ -162,7 +162,7 @@
 <div class="card mt-4 no-print">
   <div class="card-header">
     <h5 class="mb-0">
-      <i class="fas fa-chart-bar mr-2"></i>التحليل البياني
+      <i class="fas fa-chart-bar mr-2"></i>{{ t('التحليل') }} {{ t('البياني') }}
     </h5>
   </div>
   <div class="card-body">
@@ -176,9 +176,9 @@ const ctx = document.getElementById('cashFlowChart').getContext('2d');
 new Chart(ctx, {
     type: 'bar',
     data: {
-        labels: ['الأنشطة التشغيلية', 'الأنشطة الاستثمارية', 'الأنشطة التمويلية', 'صافي التغير'],
+        labels: ['{{ t('الأنشطة') }} {{ t('التشغيلية') }}', '{{ t('الأنشطة') }} {{ t('الاستثمارية') }}', '{{ t('الأنشطة') }} {{ t('التمويلية') }}', '{{ t('Net') }} {{ t('التغير') }}'],
         datasets: [{
-            label: 'التدفق النقدي ({{ tenant_currency_symbol }})',
+            label: '{{ t('التدفق') }} {{ t('Cash_3') }} ({{ tenant_currency_symbol }})',
             data: [
                 {{ report.operating_activities.net_cash_from_operating }},
                 {{ report.investing_activities.net_cash_from_investing }},
@@ -186,10 +186,10 @@ new Chart(ctx, {
                 {{ report.net_change_in_cash }}
             ],
             backgroundColor: [
-                'rgba(40, 167, 69, 0.7)',   // أخضر
-                'rgba(23, 162, 184, 0.7)',  // أزرق
-                'rgba(255, 193, 7, 0.7)',   // أصفر
-                'rgba(108, 117, 125, 0.7)'  // رمادي
+                'rgba(40, 167, 69, 0.7)',   // {{ t('أخضر') }}
+                'rgba(23, 162, 184, 0.7)',  // {{ t('أزرق') }}
+                'rgba(255, 193, 7, 0.7)',   // {{ t('أصفر') }}
+                'rgba(108, 117, 125, 0.7)'  // {{ t('رمادي') }}
             ],
             borderColor: [
                 'rgb(40, 167, 69)',

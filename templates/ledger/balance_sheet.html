@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - الميزانية العمومية{% endblock %}
-{% block page_title %}الميزانية العمومية - Balance Sheet{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('Balance Sheet') }} {{ t('العمومية') }}{% endblock %}
+{% block page_title %}{{ t('Balance Sheet') }} {{ t('العمومية') }} - Balance Sheet{% endblock %}
 
 {% block content %}
 <div class="row mb-3 d-print-none no-print">
@@ -8,17 +8,17 @@
     <div class="card">
       <div class="card-body py-2">
         <form class="needs-validation" method="get" class="form-inline">
-          <label class="mr-2" for="input_date_to">حتى تاريخ:</label>
-          <input type="date" name="date_to" class="form-control mr-2" value="{{ date_to or '' }}" id="input_date_to" aria-label="إلى تاريخ">
-          <label class="mr-2">الفرع:</label>
-          <select name="branch_id" class="form-control mr-2" aria-label="اختر الفرع">
-            <option value="">-- الكل --</option>
+          <label class="mr-2" for="input_date_to">حتى {{ t('History') }}:</label>
+          <input type="date" name="date_to" class="form-control mr-2" value="{{ date_to or '' }}" id="input_date_to" aria-label="إلى {{ t('History') }}">
+          <label class="mr-2">{{ t('Branch') }}:</label>
+          <select name="branch_id" class="form-control mr-2" aria-label="{{ t('اختر') }} {{ t('Branch') }}">
+            <option value="">-- {{ t('All') }} --</option>
             {% for branch in branches %}
             <option value="{{ branch.id }}" {% if selected_branch == branch.id %}selected{% endif %}>{{ branch.name }}</option>
             {% endfor %}
           </select>
-          <button type="submit" class="btn btn-primary mr-2"><i class="fas fa-filter"></i> تصفية</button>
-          <button type="button" data-action="window-print" class="btn btn-secondary"><i class="fas fa-print mr-2"></i>طباعة</button>
+          <button type="submit" class="btn btn-primary mr-2"><i class="fas fa-filter"></i> {{ t('تصفية') }}</button>
+          <button type="button" data-action="window-print" class="btn btn-secondary"><i class="fas fa-print mr-2"></i>{{ t('Print') }}</button>
         </form>
       </div>
     </div>
@@ -27,7 +27,7 @@
 
 <div class="erp-report-print">
   <div class="erp-report-header">
-    <h2>الميزانية العمومية - Balance Sheet</h2>
+    <h2>{{ t('Balance Sheet') }} {{ t('العمومية') }} - Balance Sheet</h2>
     <div class="erp-report-meta">
       {{ date_to }}
       {% if company_name_ar %} | {{ company_name_ar }}{% endif %}
@@ -38,7 +38,7 @@
     <div class="card-body">
       <div class="row">
         <div class="col-md-6">
-          <h4 class="text-success">الأصول (Assets)</h4>
+          <h4 class="text-success">{{ t('Assets') }} (Assets)</h4>
           <div class="table-responsive"><table class="table table-sm table-bordered">
             <tbody>
               {% for name, amount in assets.items() %}
@@ -48,7 +48,7 @@
               </tr>
               {% endfor %}
               <tr class="font-weight-bold bg-light">
-                <td>إجمالي الأصول</td>
+                <td>{{ t('Total_2') }} {{ t('Assets') }}</td>
                 <td class="text-left text-success">{{ format_currency(total_assets) }}</td>
               </tr>
             </tbody>
@@ -56,7 +56,7 @@
         </div>
 
         <div class="col-md-6">
-          <h4 class="text-danger">الخصوم (Liabilities)</h4>
+          <h4 class="text-danger">{{ t('Liabilities') }} (Liabilities)</h4>
           <div class="table-responsive"><table class="table table-sm table-bordered">
             <tbody>
               {% for name, amount in liabilities.items() %}
@@ -66,13 +66,13 @@
               </tr>
               {% endfor %}
               <tr class="font-weight-bold bg-light">
-                <td>إجمالي الخصوم</td>
+                <td>{{ t('Total_2') }} {{ t('Liabilities') }}</td>
                 <td class="text-left text-danger">{{ format_currency(total_liabilities) }}</td>
               </tr>
             </tbody>
           </table></div>
 
-          <h4 class="text-info mt-4">حقوق الملكية (Equity)</h4>
+          <h4 class="text-info mt-4">{{ t('حقوق') }} {{ t('الملكية') }} (Equity)</h4>
           <div class="table-responsive"><table class="table table-sm table-bordered">
             <tbody>
               {% for name, amount in equity.items() %}
@@ -82,7 +82,7 @@
               </tr>
               {% endfor %}
               <tr class="font-weight-bold bg-light">
-                <td>إجمالي حقوق الملكية</td>
+                <td>{{ t('Total_2') }} {{ t('حقوق') }} {{ t('الملكية') }}</td>
                 <td class="text-left text-info">{{ format_currency(total_equity) }}</td>
               </tr>
             </tbody>
@@ -93,8 +93,8 @@
       <hr>
 
       <div class="alert alert-primary text-center">
-        <h4>المعادلة المحاسبية</h4>
-        <h3>الأصول ({{ "{:,.0f}".format(total_assets) }}) = الخصوم ({{ "{:,.0f}".format(total_liabilities) }}) + حقوق الملكية ({{ "{:,.0f}".format(total_equity) }})</h3>
+        <h4>{{ t('المعادلة') }} {{ t('Accounting') }}</h4>
+        <h3>{{ t('Assets') }} ({{ "{:,.0f}".format(total_assets) }}) = {{ t('Liabilities') }} ({{ "{:,.0f}".format(total_liabilities) }}) + {{ t('حقوق') }} {{ t('الملكية') }} ({{ "{:,.0f}".format(total_equity) }})</h3>
       </div>
     </div>
   </div>

@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}إدارة المتجر الإلكتروني{% endblock %}
+{% block title %}{{ t('Management') }} {{ t('Store') }} {{ t('Email_3') }}{% endblock %}
 
 
 
@@ -10,27 +10,27 @@
 
   <div>
 
-    <h1 class="mb-0"><i class="fas fa-store mr-2"></i>المتجر الإلكتروني</h1>
+    <h1 class="mb-0"><i class="fas fa-store mr-2"></i>{{ t('Store') }} {{ t('Email_3') }}</h1>
 
-    <p class="text-muted mb-0 small">الكتalog مرتبط فقط بمستودع الأونلاين — منفصل عن POS والمبيعات الداخلية</p>
+    <p class="text-muted mb-0 small">{{ t('الكت') }}alog {{ t('مرتبط') }} فقط {{ t('ب{{ t('Warehouse_2') }}') }} {{ t('الأونلاين') }} — {{ t('منفصل') }} عن POS {{ t('والمبيعات') }} {{ t('الداخلية') }}</p>
 
   </div>
 
   <div class="mt-2 mt-md-0">
 
-    <a href="{{ url_for('store.admin_settings') }}" class="btn btn-primary"><i class="fas fa-cog mr-1"></i>الإعدادات</a>
+    <a href="{{ url_for('store.admin_settings') }}" class="btn btn-primary"><i class="fas fa-cog mr-1"></i>{{ t('Settings') }}</a>
 
-    <a href="{{ url_for('store.admin_catalog') }}" class="btn btn-info text-white"><i class="fas fa-boxes mr-1"></i>كتalog المتجر</a>
+    <a href="{{ url_for('store.admin_catalog') }}" class="btn btn-info text-white"><i class="fas fa-boxes mr-1"></i>كتalog {{ t('Store') }}</a>
 
-    <a href="{{ url_for('store.admin_transfer') }}" class="btn btn-success"><i class="fas fa-exchange-alt mr-1"></i>تحويل مخزون</a>
+    <a href="{{ url_for('store.admin_transfer') }}" class="btn btn-success"><i class="fas fa-exchange-alt mr-1"></i>{{ t('Transfer') }} {{ t('Inventory_2') }}</a>
 
-    <a href="{{ url_for('store.admin_orders') }}" class="btn btn-warning"><i class="fas fa-receipt mr-1"></i>طلبات المتجر</a>
+    <a href="{{ url_for('store.admin_orders') }}" class="btn btn-warning"><i class="fas fa-receipt mr-1"></i>{{ t('{{ t('طلب') }}ات') }} {{ t('Store') }}</a>
 
-    <a href="{{ url_for('store.admin_stats') }}" class="btn btn-info text-white"><i class="fas fa-chart-line mr-1"></i>إحصائيات</a>
+    <a href="{{ url_for('store.admin_stats') }}" class="btn btn-info text-white"><i class="fas fa-chart-line mr-1"></i>{{ t('إحصائيات') }}</a>
 
-    <a href="{{ url_for('store.admin_coupons') }}" class="btn btn-dark"><i class="fas fa-tags mr-1"></i>كوبونات</a>
+    <a href="{{ url_for('store.admin_coupons') }}" class="btn btn-dark"><i class="fas fa-tags mr-1"></i>{{ t('كوبونات') }}</a>
 
-    <a href="{{ url_for('store.admin_customers') }}" class="btn btn-secondary"><i class="fas fa-user-friends mr-1"></i>عملاء مسجّلون</a>
+    <a href="{{ url_for('store.admin_customers') }}" class="btn btn-secondary"><i class="fas fa-user-friends mr-1"></i>{{ t('Customers_3') }} {{ t('مسجّلون') }}</a>
 
   </div>
 
@@ -52,9 +52,9 @@
 
       <div class="info-box-content">
 
-        <span class="info-box-text">حالة المتجر</span>
+        <span class="info-box-text">{{ t('Status_2') }} {{ t('Store') }}</span>
 
-        <span class="info-box-number">{% if store.platform_disabled %}مقفول من المنصة{% elif store.is_enabled %}مفعّل{% else %}متوقف{% endif %}</span>
+        <span class="info-box-number">{% if store.platform_disabled %}{{ t('مقفول') }} من {{ t('Platform') }}{% elif store.is_enabled %}{{ t('م{{ t('فعّل') }}') }}{% else %}{{ t('Stopped') }}{% endif %}</span>
 
       </div>
 
@@ -70,7 +70,7 @@
 
       <div class="info-box-content">
 
-        <span class="info-box-text">منتجات ظاهرة</span>
+        <span class="info-box-text">{{ t('Products_2') }} {{ t('ظاهرة') }}</span>
 
         <span class="info-box-number">{{ visible_count }}</span>
 
@@ -88,7 +88,7 @@
 
       <div class="info-box-content">
 
-        <span class="info-box-text">وحدات في مستودع الأونلاين</span>
+        <span class="info-box-text">{{ t('وحدات') }} في {{ t('Warehouse_2') }} {{ t('الأونلاين') }}</span>
 
         <span class="info-box-number">{{ '{:,.0f}'.format(total_units) }}</span>
 
@@ -106,7 +106,7 @@
 
       <div class="info-box-content">
 
-        <span class="info-box-text">مستودع الأونلاين</span>
+        <span class="info-box-text">{{ t('Warehouse_2') }} {{ t('الأونلاين') }}</span>
 
         <span class="info-box-number small">
 
@@ -132,17 +132,17 @@
 
 {% if store.platform_disabled %}
 
-<div class="alert alert-danger"><i class="fas fa-lock mr-1"></i>تم تعطيل متجرك من قبل مالك المنصة. لا يمكن تفعيله حتى يفك مالك المنصة القفل.</div>
+<div class="alert alert-danger"><i class="fas fa-lock mr-1"></i>تم {{ t('تعطيل') }} {{ t('متجرك') }} من قبل {{ t('مالك') }} {{ t('Platform') }}. لا يمكن {{ t('تفعيله') }} حتى {{ t('يفك') }} {{ t('مالك') }} {{ t('Platform') }} {{ t('القفل') }}.</div>
 
 {% endif %}
 
 {% if not platform_stores_on %}
 
-<div class="alert alert-danger"><i class="fas fa-globe mr-1"></i>المتاجر متوقفة على مستوى المنصة — تواصل مع مالك النظام لتفعيل «المتاجر الإلكترونية» من إعدادات المنصة.</div>
+<div class="alert alert-danger"><i class="fas fa-globe mr-1"></i>{{ t('المتاجر') }} {{ t('Stopped_2') }} على {{ t('مستوى') }} {{ t('Platform') }} — {{ t('تواصل') }} مع {{ t('مالك') }} {{ t('System') }} {{ t('لتفعيل') }} «{{ t('المتاجر') }} {{ t('{{ t('Email_3') }}ة') }}» من {{ t('Settings_2') }} {{ t('Platform') }}.</div>
 
 {% else %}
 
-<div class="alert alert-light border"><i class="fas fa-credit-card mr-1"></i>طرق الدفع تُدار مركزياً من لوحة مالك المنصة وتنعكس على كل المتاجر.</div>
+<div class="alert alert-light border"><i class="fas fa-credit-card mr-1"></i>{{ t('طرق') }} {{ t('Payment_2') }} {{ t('تُدار') }} {{ t('مركزياً') }} من {{ t('Dashboard_2') }} {{ t('مالك') }} {{ t('Platform') }} {{ t('وتنعكس') }} على كل {{ t('المتاجر') }}.</div>
 
 {% endif %}
 
@@ -154,9 +154,9 @@
 
   <i class="fas fa-bell mr-1"></i>
 
-  <strong>{{ pending_orders }}</strong> طلب/طلبات بانتظار التأكيد —
+  <strong>{{ pending_orders }}</strong> {{ t('طلب') }}/{{ t('{{ t('طلب') }}ات') }} {{ t('بانتظار') }} {{ t('Confirm_2') }} —
 
-  <a href="{{ url_for('store.admin_orders', status='pending') }}">عرض الطلبات</a>
+  <a href="{{ url_for('store.admin_orders', status='pending') }}">{{ t('View') }} {{ t('ال{{ t('{{ t('طلب') }}ات') }}') }}</a>
 
 </div>
 
@@ -170,9 +170,9 @@
 
   <i class="fas fa-exclamation-triangle mr-1"></i>
 
-  <strong>{{ low_stock|length }}</strong> منتج/منتجات بمخزون منخفض في مستودع الأونلاين —
+  <strong>{{ low_stock|length }}</strong> {{ t('Product_2') }}/{{ t('Products_2') }} {{ t('ب{{ t('Inventory_2') }}') }} {{ t('Low_2') }} في {{ t('Warehouse_2') }} {{ t('الأونلاين') }} —
 
-  <a href="{{ url_for('store.admin_stats') }}">التفاصيل</a>
+  <a href="{{ url_for('store.admin_stats') }}">{{ t('Details_2') }}</a>
 
 </div>
 
@@ -184,27 +184,27 @@
 
   <div class="card-body">
 
-    <h5><i class="fas fa-link mr-2"></i>رابط المتجر</h5>
+    <h5><i class="fas fa-link mr-2"></i>{{ t('رابط') }} {{ t('Store') }}</h5>
 
-    <p class="mb-2">المعرّف: <code>/s/{{ store.store_slug }}</code></p>
+    <p class="mb-2">{{ t('المعرّف') }}: <code>/s/{{ store.store_slug }}</code></p>
 
     {% if store.is_enabled and visible_count > 0 %}
 
-    <a href="{{ url_for('shop.catalog', slug=store.store_slug) }}" target="_blank" rel="noopener" class="btn btn-success mb-2"><i class="fas fa-external-link-alt mr-1"></i>معاينة المتجر</a>
+    <a href="{{ url_for('shop.catalog', slug=store.store_slug) }}" target="_blank" rel="noopener" class="btn btn-success mb-2"><i class="fas fa-external-link-alt mr-1"></i>{{ t('Preview') }} {{ t('Store') }}</a>
 
     {% endif %}
 
     {% if not store.is_enabled %}
 
-    <div class="alert alert-warning mb-0"><i class="fas fa-info-circle mr-1"></i>فعّل المتجر من الإعدادات ثم انقل المخزون إلى مستودع الأونلاين ليظهر في الكتalog.</div>
+    <div class="alert alert-warning mb-0"><i class="fas fa-info-circle mr-1"></i>{{ t('فعّل') }} {{ t('Store') }} من {{ t('Settings') }} ثم {{ t('انقل') }} {{ t('Inventory') }} إلى {{ t('Warehouse_2') }} {{ t('الأونلاين') }} {{ t('ليظهر') }} في {{ t('الكت') }}alog.</div>
 
     {% elif visible_count == 0 %}
 
-    <div class="alert alert-info mb-0"><i class="fas fa-info-circle mr-1"></i>لا منتجات بمخزون في مستودع الأونلاين. استخدم <a href="{{ url_for('store.admin_transfer') }}">تحويل المخزون</a>.</div>
+    <div class="alert alert-info mb-0"><i class="fas fa-info-circle mr-1"></i>لا {{ t('Products_2') }} {{ t('ب{{ t('Inventory_2') }}') }} في {{ t('Warehouse_2') }} {{ t('الأونلاين') }}. {{ t('استخدم') }} <a href="{{ url_for('store.admin_transfer') }}">{{ t('Transfer') }} {{ t('Inventory') }}</a>.</div>
 
     {% else %}
 
-    <div class="alert alert-success mb-0"><i class="fas fa-check mr-1"></i>{{ visible_count }} منتج جاهز — <a href="{{ url_for('shop.catalog', slug=store.store_slug) }}" target="_blank" rel="noopener noreferrer">افتح المتجر</a></div>
+    <div class="alert alert-success mb-0"><i class="fas fa-check mr-1"></i>{{ visible_count }} {{ t('Product_2') }} {{ t('جاهز') }} — <a href="{{ url_for('shop.catalog', slug=store.store_slug) }}" target="_blank" rel="noopener noreferrer">{{ t('افتح') }} {{ t('Store') }}</a></div>
 
     {% endif %}
 

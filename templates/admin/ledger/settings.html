@@ -1,12 +1,12 @@
 {% extends 'base.html' %}
-{% block title %}إعدادات النظام المحاسبي - Accounting Settings{% endblock %}
-{% block page_title %}إعدادات النظام المحاسبي{% endblock %}
+{% block title %}{{ t('Settings_2') }} {{ t('System') }} {{ t('Accounting_4') }} - Accounting Settings{% endblock %}
+{% block page_title %}{{ t('Settings_2') }} {{ t('System') }} {{ t('Accounting_4') }}{% endblock %}
 
 {% block content %}
 <div class="row mb-3">
   <div class="col-12">
     <a href="{{ url_for('ledger.admin_dashboard') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right mr-2"></i>العودة للوحة التحكم
+      <i class="fas fa-arrow-right mr-2"></i>{{ t('العودة') }} {{ t('للوحة') }} {{ t('Control') }}
     </a>
   </div>
 </div>
@@ -17,40 +17,40 @@
     <div class="card">
       <div class="card-header bg-gradient-primary">
         <h5 class="card-title text-white mb-0">
-          <i class="fas fa-cogs mr-2"></i>الإعدادات العامة
+          <i class="fas fa-cogs mr-2"></i>{{ t('Settings') }} {{ t('General') }}
         </h5>
       </div>
       <div class="card-body">
         <form class="needs-validation" action="">
           <div class="form-group">
-            <label>العملة الأساسية:</label>
-            <select class="form-control" aria-label="العملة الأساسية">
-              <option value="AED" selected>درهم إماراتي (AED)</option>
-              <option value="USD">دولار أمريكي (USD)</option>
-              <option value="EUR">يورو (EUR)</option>
-              <option value="SAR">ريال سعودي (SAR)</option>
+            <label>{{ t('Currency') }} {{ t('الأساسية') }}:</label>
+            <select class="form-control" aria-label="{{ t('Currency') }} {{ t('الأساسية') }}">
+              <option value="AED" selected>{{ t('Dirham') }} {{ t('إماراتي') }} (AED)</option>
+              <option value="USD">{{ t('Dollar') }} {{ t('أمريكي') }} (USD)</option>
+              <option value="EUR">{{ t('Euro') }} (EUR)</option>
+              <option value="SAR">{{ t('Riyal') }} {{ t('سعودي') }} (SAR)</option>
             </select>
           </div>
           
           <div class="form-group">
-            <label>السنة المالية:</label>
-            <select class="form-control" aria-label="السنة المالية">
-              <option value="calendar">تقويمي (يناير - ديسمبر)</option>
-              <option value="fiscal">مالي (أبريل - مارس)</option>
+            <label>{{ t('Year') }} {{ t('Finance') }}:</label>
+            <select class="form-control" aria-label="{{ t('Year') }} {{ t('Finance') }}">
+              <option value="calendar">{{ t('تقويمي') }} ({{ t('يناير') }} - {{ t('ديسمبر') }})</option>
+              <option value="fiscal">{{ t('مالي') }} ({{ t('أبريل') }} - {{ t('مارس') }})</option>
             </select>
           </div>
           
           <div class="form-group">
-            <label>نظام الترقيم:</label>
-            <select class="form-control" aria-label="نظام الترقيم">
-              <option value="auto">تلقائي</option>
-              <option value="manual">يدوي</option>
+            <label>{{ t('System_2') }} {{ t('الترقيم') }}:</label>
+            <select class="form-control" aria-label="{{ t('System_2') }} {{ t('الترقيم') }}">
+              <option value="auto">{{ t('تلقائي') }}</option>
+              <option value="manual">{{ t('Manual') }}</option>
             </select>
           </div>
           
           <div class="form-group">
-            <label>عدد الأرقام العشرية:</label>
-            <select class="form-control" aria-label="عدد الأرقام العشرية">
+            <label>{{ t('Count') }} {{ t('ال{{ t('أرقام') }}') }} {{ t('العشرية') }}:</label>
+            <select class="form-control" aria-label="{{ t('Count') }} {{ t('ال{{ t('أرقام') }}') }} {{ t('العشرية') }}">
               <option value="2" selected>2</option>
               <option value="3">3</option>
               <option value="4">4</option>
@@ -58,7 +58,7 @@
           </div>
           
           <button type="submit" class="btn btn-primary">
-            <i class="fas fa-save mr-2"></i>حفظ الإعدادات
+            <i class="fas fa-save mr-2"></i>{{ t('Save') }} {{ t('Settings') }}
           </button>
         </form>
       </div>
@@ -70,51 +70,51 @@
     <div class="card">
       <div class="card-header bg-gradient-success">
         <h5 class="card-title text-white mb-0">
-          <i class="fas fa-chart-line mr-2"></i>إعدادات الحسابات
+          <i class="fas fa-chart-line mr-2"></i>{{ t('Settings_2') }} {{ t('Accounts') }}
         </h5>
       </div>
       <div class="card-body">
         <form action="">
           <div class="form-group">
-            <label>طول كود الحساب:</label>
-            <select class="form-control" aria-label="طول كود الحساب">
-              <option value="4" selected>4 أرقام</option>
-              <option value="6">6 أرقام</option>
-              <option value="8">8 أرقام</option>
+            <label>{{ t('طول') }} {{ t('Code_2') }} {{ t('Account') }}:</label>
+            <select class="form-control" aria-label="{{ t('طول') }} {{ t('Code_2') }} {{ t('Account') }}">
+              <option value="4" selected>4 {{ t('أرقام') }}</option>
+              <option value="6">6 {{ t('أرقام') }}</option>
+              <option value="8">8 {{ t('أرقام') }}</option>
             </select>
           </div>
           
           <div class="form-group">
-            <label>مستوى الحسابات:</label>
-            <select class="form-control" aria-label="مستوى الحسابات">
-              <option value="3" selected>3 مستويات</option>
-              <option value="4">4 مستويات</option>
-              <option value="5">5 مستويات</option>
+            <label>{{ t('مستوى') }} {{ t('Accounts') }}:</label>
+            <select class="form-control" aria-label="{{ t('مستوى') }} {{ t('Accounts') }}">
+              <option value="3" selected>3 {{ t('مستويات') }}</option>
+              <option value="4">4 {{ t('مستويات') }}</option>
+              <option value="5">5 {{ t('مستويات') }}</option>
             </select>
           </div>
           
           <div class="form-group">
-            <label>التحقق من التوازن:</label>
+            <label>{{ t('التحقق') }} من {{ t('ال{{ t('توازن') }}') }}:</label>
             <div class="form-check">
               <input type="checkbox" class="form-check-input" id="balance_check" checked aria-label="balance check">
               <label class="form-check-label" for="balance_check">
-                التحقق من توازن القيود تلقائياً
+                {{ t('التحقق') }} من {{ t('توازن') }} {{ t('ال{{ t('قيود') }}') }} {{ t('{{ t('تلقائي') }}اً') }}
               </label>
             </div>
           </div>
           
           <div class="form-group">
-            <label>التحقق من الحسابات الرئيسية:</label>
+            <label>{{ t('التحقق') }} من {{ t('Accounts') }} {{ t('Main_2') }}:</label>
             <div class="form-check">
               <input type="checkbox" class="form-check-input" id="header_check" checked aria-label="header check">
               <label class="form-check-label" for="header_check">
-                منع القيود المباشرة على الحسابات الرئيسية
+                {{ t('منع') }} {{ t('ال{{ t('قيود') }}') }} {{ t('المباشرة') }} على {{ t('Accounts') }} {{ t('Main_2') }}
               </label>
             </div>
           </div>
           
           <button type="submit" class="btn btn-success">
-            <i class="fas fa-save mr-2"></i>حفظ الإعدادات
+            <i class="fas fa-save mr-2"></i>{{ t('Save') }} {{ t('Settings') }}
           </button>
         </form>
       </div>
@@ -128,23 +128,23 @@
     <div class="card">
       <div class="card-header bg-gradient-info">
         <h5 class="card-title text-white mb-0">
-          <i class="fas fa-chart-pie mr-2"></i>إعدادات التقارير
+          <i class="fas fa-chart-pie mr-2"></i>{{ t('Settings_2') }} {{ t('Reports') }}
         </h5>
       </div>
       <div class="card-body">
         <form action="">
           <div class="form-group">
-            <label>تنسيق التواريخ:</label>
-            <select class="form-control" aria-label="تنسيق التواريخ">
-              <option value="dd/mm/yyyy" selected>يوم/شهر/سنة</option>
-              <option value="mm/dd/yyyy">شهر/يوم/سنة</option>
-              <option value="yyyy-mm-dd">سنة-شهر-يوم</option>
+            <label>{{ t('تنسيق') }} {{ t('التواريخ') }}:</label>
+            <select class="form-control" aria-label="{{ t('تنسيق') }} {{ t('التواريخ') }}">
+              <option value="dd/mm/yyyy" selected>{{ t('يوم') }}/{{ t('شهر') }}/{{ t('سنة') }}</option>
+              <option value="mm/dd/yyyy">{{ t('شهر') }}/{{ t('يوم') }}/{{ t('سنة') }}</option>
+              <option value="yyyy-mm-dd">{{ t('سنة') }}-{{ t('شهر') }}-{{ t('يوم') }}</option>
             </select>
           </div>
           
           <div class="form-group">
-            <label>تنسيق الأرقام:</label>
-            <select class="form-control" aria-label="تنسيق الأرقام">
+            <label>{{ t('تنسيق') }} {{ t('ال{{ t('أرقام') }}') }}:</label>
+            <select class="form-control" aria-label="{{ t('تنسيق') }} {{ t('ال{{ t('أرقام') }}') }}">
               <option value="1,234.56" selected>1,234.56</option>
               <option value="1.234,56">1.234,56</option>
               <option value="1 234,56">1 234,56</option>
@@ -152,25 +152,25 @@
           </div>
           
           <div class="form-group">
-            <label>اللغة الافتراضية:</label>
-            <select class="form-control" aria-label="اللغة الافتراضية">
-              <option value="ar" selected>العربية</option>
-              <option value="en">الإنجليزية</option>
+            <label>{{ t('Language') }} {{ t('الافتراضية') }}:</label>
+            <select class="form-control" aria-label="{{ t('Language') }} {{ t('الافتراضية') }}">
+              <option value="ar" selected>{{ t('Arabic_2') }}</option>
+              <option value="en">{{ t('English_2') }}</option>
             </select>
           </div>
           
           <div class="form-group">
-            <label>تضمين الصفحة الرئيسية:</label>
+            <label>{{ t('تضمين') }} {{ t('الصفحة') }} {{ t('Main_2') }}:</label>
             <div class="form-check">
               <input type="checkbox" class="form-check-input" id="header_page" checked aria-label="header page">
               <label class="form-check-label" for="header_page">
-                إضافة رأس الصفحة في التقارير
+                {{ t('Add') }} {{ t('رأس') }} {{ t('الصفحة') }} في {{ t('Reports') }}
               </label>
             </div>
           </div>
           
           <button type="submit" class="btn btn-info">
-            <i class="fas fa-save mr-2"></i>حفظ الإعدادات
+            <i class="fas fa-save mr-2"></i>{{ t('Save') }} {{ t('Settings') }}
           </button>
         </form>
       </div>
@@ -182,43 +182,43 @@
     <div class="card">
       <div class="card-header bg-gradient-warning">
         <h5 class="card-title text-white mb-0">
-          <i class="fas fa-shield-alt mr-2"></i>إعدادات الأمان
+          <i class="fas fa-shield-alt mr-2"></i>{{ t('Settings_2') }} {{ t('ال{{ t('أمان') }}') }}
         </h5>
       </div>
       <div class="card-body">
         <form action="">
           <div class="form-group">
-            <label>مدة انتهاء الجلسة (دقيقة):</label>
-            <input type="number" class="form-control" value="30" min="5" max="480" aria-label="مدة انتهاء الجلسة (دقيقة)">
+            <label>{{ t('Duration') }} {{ t('انتهاء') }} {{ t('Session') }} ({{ t('دقيقة') }}):</label>
+            <input type="number" class="form-control" value="30" min="5" max="480" aria-label="{{ t('Duration') }} {{ t('انتهاء') }} {{ t('Session') }} ({{ t('دقيقة') }})">
           </div>
           
           <div class="form-group">
-            <label>عدد المحاولات المسموحة:</label>
-            <input type="number" class="form-control" value="3" min="1" max="10" aria-label="عدد المحاولات المسموحة">
+            <label>{{ t('Count') }} {{ t('المحاولات') }} {{ t('المسموحة') }}:</label>
+            <input type="number" class="form-control" value="3" min="1" max="10" aria-label="{{ t('Count') }} {{ t('المحاولات') }} {{ t('المسموحة') }}">
           </div>
           
           <div class="form-group">
-            <label>تشفير البيانات:</label>
+            <label>{{ t('تشفير') }} {{ t('Data') }}:</label>
             <div class="form-check">
               <input type="checkbox" class="form-check-input" id="encryption" checked aria-label="encryption">
               <label class="form-check-label" for="encryption">
-                تشفير البيانات الحساسة
+                {{ t('تشفير') }} {{ t('Data') }} {{ t('الحساسة') }}
               </label>
             </div>
           </div>
           
           <div class="form-group">
-            <label>سجل العمليات:</label>
+            <label>{{ t('Log') }} {{ t('العمليات') }}:</label>
             <div class="form-check">
               <input type="checkbox" class="form-check-input" id="audit_log" checked aria-label="audit log">
               <label class="form-check-label" for="audit_log">
-                تسجيل جميع العمليات
+                {{ t('تسجيل') }} {{ t('جميع') }} {{ t('العمليات') }}
               </label>
             </div>
           </div>
           
           <button type="submit" class="btn btn-warning">
-            <i class="fas fa-save mr-2"></i>حفظ الإعدادات
+            <i class="fas fa-save mr-2"></i>{{ t('Save') }} {{ t('Settings') }}
           </button>
         </form>
       </div>
@@ -232,7 +232,7 @@
     <div class="card">
       <div class="card-header bg-gradient-secondary">
         <h5 class="card-title text-white mb-0">
-          <i class="fas fa-database mr-2"></i>إعدادات النسخ الاحتياطي
+          <i class="fas fa-database mr-2"></i>{{ t('Settings_2') }} {{ t('Backups') }} {{ t('Reserve') }}
         </h5>
       </div>
       <div class="card-body">
@@ -240,36 +240,36 @@
           <div class="col-md-6">
             <form action="">
               <div class="form-group">
-                <label>تكرار النسخ الاحتياطي:</label>
-                <select class="form-control" aria-label="تكرار النسخ الاحتياطي">
-                  <option value="daily" selected>يومي</option>
-                  <option value="weekly">أسبوعي</option>
-                  <option value="monthly">شهري</option>
+                <label>{{ t('تكرار') }} {{ t('Backups') }} {{ t('Reserve') }}:</label>
+                <select class="form-control" aria-label="{{ t('تكرار') }} {{ t('Backups') }} {{ t('Reserve') }}">
+                  <option value="daily" selected>{{ t('Daily') }}</option>
+                  <option value="weekly">{{ t('Weekly') }}</option>
+                  <option value="monthly">{{ t('Monthly') }}</option>
                 </select>
               </div>
               
               <div class="form-group">
-                <label>وقت النسخ الاحتياطي:</label>
-                <input type="time" class="form-control" value="02:00" aria-label="وقت النسخ الاحتياطي">
+                <label>{{ t('Time') }} {{ t('Backups') }} {{ t('Reserve') }}:</label>
+                <input type="time" class="form-control" value="02:00" aria-label="{{ t('Time') }} {{ t('Backups') }} {{ t('Reserve') }}">
               </div>
               
               <div class="form-group">
-                <label>عدد النسخ المحفوظة:</label>
-                <input type="number" class="form-control" value="30" min="1" max="365" aria-label="عدد النسخ المحفوظة">
+                <label>{{ t('Count') }} {{ t('Backups') }} {{ t('المحفوظة') }}:</label>
+                <input type="number" class="form-control" value="30" min="1" max="365" aria-label="{{ t('Count') }} {{ t('Backups') }} {{ t('المحفوظة') }}">
               </div>
               
               <button type="submit" class="btn btn-secondary">
-                <i class="fas fa-save mr-2"></i>حفظ الإعدادات
+                <i class="fas fa-save mr-2"></i>{{ t('Save') }} {{ t('Settings') }}
               </button>
             </form>
           </div>
           
           <div class="col-md-6">
             <div class="text-center">
-              <h5>النسخ الاحتياطي اليدوي</h5>
-              <p class="text-muted">إنشاء نسخة احتياطية فورية من قاعدة البيانات</p>
+              <h5>{{ t('Backups') }} {{ t('Reserve') }} {{ t('Manual_2') }}</h5>
+              <p class="text-muted">{{ t('Create') }} {{ t('نسخة') }} {{ t('Reserve_2') }} {{ t('فورية') }} من {{ t('قاعدة') }} {{ t('Data') }}</p>
               <button type="button" class="btn btn-primary btn-lg" onclick="createBackup()">
-                <i class="fas fa-download mr-2"></i>إنشاء نسخة احتياطية
+                <i class="fas fa-download mr-2"></i>{{ t('Create') }} {{ t('نسخة') }} {{ t('Reserve_2') }}
               </button>
             </div>
           </div>
@@ -287,7 +287,7 @@
         <div class="d-flex justify-content-between">
           <div>
             <h4 class="mb-0">50+</h4>
-            <p class="mb-0">حسابات محاسبية</p>
+            <p class="mb-0">{{ t('Accounts_2') }} {{ t('Accounting_2') }}</p>
           </div>
           <div class="align-self-center">
             <i class="fas fa-chart-line fa-2x"></i>
@@ -303,7 +303,7 @@
         <div class="d-flex justify-content-between">
           <div>
             <h4 class="mb-0">12</h4>
-            <p class="mb-0">تقارير متاحة</p>
+            <p class="mb-0">{{ t('Reports_3') }} {{ t('Available') }}</p>
           </div>
           <div class="align-self-center">
             <i class="fas fa-chart-pie fa-2x"></i>
@@ -319,7 +319,7 @@
         <div class="d-flex justify-content-between">
           <div>
             <h4 class="mb-0">5</h4>
-            <p class="mb-0">أنواع قيود</p>
+            <p class="mb-0">{{ t('أنواع') }} {{ t('قيود') }}</p>
           </div>
           <div class="align-self-center">
             <i class="fas fa-book fa-2x"></i>
@@ -335,7 +335,7 @@
         <div class="d-flex justify-content-between">
           <div>
             <h4 class="mb-0">100%</h4>
-            <p class="mb-0">أمان البيانات</p>
+            <p class="mb-0">{{ t('أمان') }} {{ t('Data') }}</p>
           </div>
           <div class="align-self-center">
             <i class="fas fa-shield-alt fa-2x"></i>
@@ -350,8 +350,8 @@
 {% block scripts %}
 <script>
 function createBackup() {
-  if (confirm('هل تريد إنشاء نسخة احتياطية الآن؟')) {
-    // إرسال طلب إنشاء نسخة احتياطية
+  if (confirm('هل {{ t('تريد') }} {{ t('Create') }} {{ t('نسخة') }} {{ t('Reserve_2') }} {{ t('الآن') }}')) {
+    // {{ t('Submit') }} {{ t('طلب') }} {{ t('Create') }} {{ t('نسخة') }} {{ t('Reserve_2') }}
     fetch('{{ url_for("owner.backup_now") }}', {
       method: 'POST',
       headers: {
@@ -362,12 +362,12 @@ function createBackup() {
     .then(response => response.json())
     .then(data => {
       if (data.success) {
-        alert('تم إنشاء النسخة الاحتياطية بنجاح!');
+        alert('تم {{ t('Create') }} {{ t('{{ t('Backups') }}ة') }} {{ t('Backup') }} {{ t('بنجاح') }}!');
       } else {
-        alert('فشل في إنشاء النسخة الاحتياطية: ' + data.message);
+        alert('{{ t('فشل') }} في {{ t('Create') }} {{ t('{{ t('Backups') }}ة') }} {{ t('Backup') }}: ' + data.message);
       }
     })
-    .catch(error => {      alert('حدث خطأ في إنشاء النسخة الاحتياطية');
+    .catch(error => {      alert('{{ t('حدث') }} {{ t('Error') }} في {{ t('Create') }} {{ t('{{ t('Backups') }}ة') }} {{ t('Backup') }}');
     });
   }
 }

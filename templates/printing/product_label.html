@@ -2,7 +2,7 @@
 <html dir="rtl">
 <head>
   <meta charset="utf-8">
-  <title>بطاقات المنتجات</title>
+  <title>{{ t('بطاقات') }} {{ t('Products') }}</title>
   <style>
     @page { size: A4; margin: 8mm; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -27,8 +27,8 @@
 </head>
 <body>
   <div class="no-print">
-    <button data-action="window-print">طباعة</button>
-    <button data-action="window-close">إغلاق</button>
+    <button data-action="window-print">{{ t('Print') }}</button>
+    <button data-action="window-close">{{ t('Close') }}</button>
   </div>
   <div class="label-grid">
     {% for p in products %}
@@ -41,7 +41,7 @@
       {% endif %}
       <div class="details">
         <span class="price">{{ format_currency(p.price) }}</span>
-        {% if p.cost %}<span class="cost">التكلفة: {{ format_currency(p.cost) }}</span>{% endif %}
+        {% if p.cost %}<span class="cost">{{ t('Cost') }}: {{ format_currency(p.cost) }}</span>{% endif %}
       </div>
       {% if p.category %}<div class="category">{{ p.category }}</div>{% endif %}
     </div>

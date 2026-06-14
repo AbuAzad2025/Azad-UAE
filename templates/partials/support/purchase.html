@@ -4,21 +4,21 @@
             <div class="progress-steps" id="purchase-progress">
                 <div class="step active" id="step-package">
                     <div class="step-number">1</div>
-                    <div class="step-label">اختر الباقة</div>
+                    <div class="step-label">{{ t('اختر') }} {{ t('Plan') }}</div>
                 </div>
                 <div class="step" id="step-payment">
                     <div class="step-number">2</div>
-                    <div class="step-label">طريقة الدفع</div>
+                    <div class="step-label">{{ t('طريقة') }} {{ t('Payment_2') }}</div>
                 </div>
                 <div class="step" id="step-complete">
                     <div class="step-number">3</div>
-                    <div class="step-label">إتمام الدفع</div>
+                    <div class="step-label">{{ t('إتمام') }} {{ t('Payment_2') }}</div>
                 </div>
             </div>
             
             <div class="payment-card ic-8">
                 <h3 class="ic-9">
-                    <i class="fas fa-box-open"></i> اختر الباقة المناسبة لك
+                    <i class="fas fa-box-open"></i> {{ t('اختر') }} {{ t('Plan') }} {{ t('المناسبة') }} لك
                 </h3>
                 
                 <div class="package-grid">
@@ -39,7 +39,7 @@
                         {% endfor %}
                     {% else %}
                         <div class="alert alert-warning ic-10">
-                            <i class="fas fa-exclamation-triangle"></i> لا توجد باقات متاحة حالياً. يُرجى المحاولة لاحقاً.
+                            <i class="fas fa-exclamation-triangle"></i> لا {{ t('توجد') }} {{ t('باقات') }} {{ t('Available') }} {{ t('حالياً') }}. {{ t('يُرجى') }} {{ t('المحاولة') }} {{ t('لاحقاً') }}.
                         </div>
                     {% endif %}
                 </div>
@@ -47,23 +47,23 @@
 
             <div class="payment-card ic-11">
                 <h4 class="ic-12">
-                    <i class="fas fa-comments"></i> تفضّل إتمام الشراء مباشرة مع شركة أزاد؟
+                    <i class="fas fa-comments"></i> {{ t('تفضّل') }} {{ t('إتمام') }} {{ t('Purchase_2') }} {{ t('مباشرة') }} مع {{ t('Company_2') }} {{ t('أزاد_2') }}
                 </h4>
                 <p class="ic-13">
-                    يمكنك طلب شراء النظام أو الكود أو عرض سعر مخصص مباشرة دون انتظار البوابة.
+                    {{ t('يمكنك') }} {{ t('طلب') }} {{ t('Purchase') }} {{ t('System') }} أو {{ t('Code') }} أو {{ t('View') }} {{ t('Price_2') }} {{ t('مخصص') }} {{ t('مباشرة') }} دون {{ t('Waiting_2') }} {{ t('البوابة') }}.
                 </p>
                 <div class="quick-contact-actions">
                     <button type="button" class="quick-contact-btn whatsapp" onclick="openWhatsApp('buy_system')">
-                        <i class="fab fa-whatsapp"></i> شراء النظام عبر واتساب
+                        <i class="fab fa-whatsapp"></i> {{ t('Purchase') }} {{ t('System') }} {{ t('عبر') }} {{ t('واتساب') }}
                     </button>
                     <button type="button" class="quick-contact-btn dark" onclick="openWhatsApp('buy_code')">
-                        <i class="fas fa-code"></i> شراء الكود عبر واتساب
+                        <i class="fas fa-code"></i> {{ t('Purchase') }} {{ t('Code') }} {{ t('عبر') }} {{ t('واتساب') }}
                     </button>
                     <button type="button" class="quick-contact-btn email" onclick="openSupportEmail('buy_system')">
-                        <i class="fas fa-envelope"></i> شراء النظام عبر البريد
+                        <i class="fas fa-envelope"></i> {{ t('Purchase') }} {{ t('System') }} {{ t('عبر') }} {{ t('Email_2') }}
                     </button>
                     <button type="button" class="quick-contact-btn email" onclick="openSupportEmail('buy_code')">
-                        <i class="fas fa-file-code"></i> شراء الكود عبر البريد
+                        <i class="fas fa-file-code"></i> {{ t('Purchase') }} {{ t('Code') }} {{ t('عبر') }} {{ t('Email_2') }}
                     </button>
                 </div>
             </div>
@@ -72,27 +72,27 @@
             <div id="purchase-payment-methods" class="ic-14">
                 <div class="payment-card ic-15">
                     <h3 class="ic-16">
-                        <i class="fas fa-credit-card"></i> اختر طريقة الدفع المناسبة
+                        <i class="fas fa-credit-card"></i> {{ t('اختر') }} {{ t('طريقة') }} {{ t('Payment_2') }} {{ t('المناسبة') }}
                     </h3>
-                    <p class="ic-17">جميع الطرق آمنة ومحمية بتشفير SSL</p>
+                    <p class="ic-17">{{ t('جميع') }} {{ t('الطرق') }} {{ t('{{ t('آمن') }}ة') }} {{ t('ومحمية') }} {{ t('ب{{ t('تشفير') }}') }} SSL</p>
                 </div>
                 <div class="payment-methods">
                 
                 <div class="payment-card" onclick="selectMethod('crypto', event)">
                     <i class="fab fa-bitcoin payment-icon"></i>
-                    <div class="payment-title">العملات الرقمية</div>
+                    <div class="payment-title">{{ t('العملات') }} {{ t('الرقمية') }}</div>
                     <p class="payment-desc">
                         Bitcoin, Ethereum, USDT, BNB
-                        <br><small class="text-success"><i class="fas fa-shield-alt"></i> آمن ومجهول</small>
+                        <br><small class="text-success"><i class="fas fa-shield-alt"></i> {{ t('آمن') }} {{ t('ومجهول') }}</small>
                     </p>
                 </div>
                 
                 <div class="payment-card" onclick="selectMethod('card', event)">
                     <i class="fas fa-credit-card payment-icon"></i>
-                    <div class="payment-title">البطاقات البنكية</div>
+                    <div class="payment-title">{{ t('البطاقات') }} {{ t('ال{{ t('Bank_3') }}ة') }}</div>
                     <p class="payment-desc">
                         Visa, Mastercard, Amex
-                        <br><small class="text-info"><i class="fas fa-lock"></i> تشفير SSL</small>
+                        <br><small class="text-info"><i class="fas fa-lock"></i> {{ t('تشفير') }} SSL</small>
                     </p>
                 </div>
                 
@@ -100,17 +100,17 @@
                     <i class="fab fa-paypal payment-icon"></i>
                     <div class="payment-title">PayPal</div>
                     <p class="payment-desc">
-                        دفع سريع وآمن
-                        <br><small class="text-primary"><i class="fas fa-check-circle"></i> حماية المشتري</small>
+                        {{ t('Payment') }} {{ t('Quick_3') }} {{ t('و{{ t('آمن') }}') }}
+                        <br><small class="text-primary"><i class="fas fa-check-circle"></i> {{ t('حماية') }} {{ t('المشتري') }}</small>
                     </p>
                 </div>
                 
                 <div class="payment-card" onclick="selectMethod('bank', event)">
                     <i class="fas fa-university payment-icon"></i>
-                    <div class="payment-title">تحويل بنكي</div>
+                    <div class="payment-title">{{ t('Transfer') }} {{ t('Bank_3') }}</div>
                     <p class="payment-desc">
-                        التحويل المباشر
-                        <br><small class="text-secondary"><i class="fas fa-building"></i> للمبالغ الكبيرة</small>
+                        {{ t('Transfer_2') }} {{ t('المباشر') }}
+                        <br><small class="text-secondary"><i class="fas fa-building"></i> {{ t('للمبالغ') }} {{ t('الكبيرة') }}</small>
                     </p>
                 </div>
                 </div>

@@ -1,9 +1,9 @@
 {% extends 'base.html' %}
 
-{% block title %}توزيع أرباح{% endblock %}
+{% block title %}{{ t('توزيع') }} {{ t('Profit_3') }}{% endblock %}
 
 {% block page_title %}
-<h1 class="text-gradient mb-0"><i class="fas fa-chart-pie mr-2"></i>توزيع أرباح فترة</h1>
+<h1 class="text-gradient mb-0"><i class="fas fa-chart-pie mr-2"></i>{{ t('توزيع') }} {{ t('Profit_3') }} {{ t('Period') }}</h1>
 {% endblock %}
 
 {% block content %}
@@ -12,28 +12,28 @@
     <form class="needs-validation" method="POST" class="card">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
       <div class="card-header bg-success text-white">
-        <i class="fas fa-calculator mr-2"></i>حساب وتوزيع الأرباح
+        <i class="fas fa-calculator mr-2"></i>{{ t('Account_2') }} {{ t('و{{ t('توزيع') }}') }} {{ t('Profits') }}
       </div>
       <div class="card-body">
         <div class="alert alert-info">
-          <i class="fas fa-info-circle mr-2"></i>سيتم إنشاء توزيعات "مسودة" لجميع الشركاء النشطين للفترة المختارة.
+          <i class="fas fa-info-circle mr-2"></i>{{ t('سيتم') }} {{ t('Create') }} {{ t('{{ t('توزيع') }}ات') }} "{{ t('مسودة') }}" {{ t('لجميع') }} {{ t('Partners') }} {{ t('النشطين') }} {{ t('لل{{ t('Period') }}') }} {{ t('المختارة') }}.
         </div>
         <div class="row g-3">
           <div class="col-md-6">
-            <label class="form-label fw-semibold" for="input_period_start">من تاريخ</label>
+            <label class="form-label fw-semibold" for="input_period_start">من {{ t('History') }}</label>
             <input type="date" name="period_start" class="form-control" value="{{ default_start }}" id="input_period_start" aria-label="period start">
           </div>
           <div class="col-md-6">
-            <label class="form-label fw-semibold" for="input_period_end">إلى تاريخ</label>
+            <label class="form-label fw-semibold" for="input_period_end">إلى {{ t('History') }}</label>
             <input type="date" name="period_end" class="form-control" value="{{ default_end }}" id="input_period_end" aria-label="period end">
           </div>
         </div>
       </div>
       <div class="card-footer d-flex justify-content-between">
         {% if current_user.has_permission('view_reports') %}
-        <a href="{{ url_for('partners.index') }}" class="btn btn-secondary">إلغاء</a>
+        <a href="{{ url_for('partners.index') }}" class="btn btn-secondary">{{ t('Cancel') }}</a>
         {% endif %}
-        <button type="submit" class="btn btn-success"><i class="fas fa-calculator me-1"></i> إنشاء التوزيعات</button>
+        <button type="submit" class="btn btn-success"><i class="fas fa-calculator me-1"></i> {{ t('Create') }} {{ t('Distributions') }}</button>
       </div>
     </form>
   </div>

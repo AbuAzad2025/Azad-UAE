@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - قائمة المستودعات{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('List') }} {{ t('Warehouses') }}{% endblock %}
 
 {% block extra_css %}
 {% include 'partials/datatables_assets.html' %}
@@ -41,7 +41,7 @@
       $table.DataTable({
         language: { url: languageUrl },
         pageLength: 25,
-        lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "الكل"]],
+        lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "{{ t('All') }}"]],
         order: [[0, 'asc']],
         autoWidth: false,
         responsive: true,
@@ -62,12 +62,12 @@
   <div class="container-fluid">
     <div class="row mb-2">
       <div class="col-sm-6">
-        <h1 class="m-0"><i class="fas fa-warehouse"></i> المستودعات</h1>
+        <h1 class="m-0"><i class="fas fa-warehouse"></i> {{ t('Warehouses') }}</h1>
       </div>
       <div class="col-sm-6">
         <ol class="breadcrumb float-sm-left">
           <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">{{ t('Dashboard') }}</a></li>
-          <li class="breadcrumb-item active">المستودعات</li>
+          <li class="breadcrumb-item active">{{ t('Warehouses') }}</li>
         </ol>
       </div>
     </div>
@@ -79,49 +79,49 @@
     <div class="row mb-3">
       <div class="col-12 d-flex flex-wrap align-items-center erp-gap-1"
         <a href="{{ url_for('warehouse.create_warehouse') }}" class="btn btn-primary mb-2">
-          <i class="fas fa-plus"></i> إضافة مستودع جديد
+          <i class="fas fa-plus"></i> {{ t('Add') }} {{ t('Warehouse_2') }} {{ t('New') }}
         </a>
         {% if current_user.has_permission('manage_products') %}
         <a href="{{ url_for('products.create') }}" class="btn btn-success mb-2">
         {% endif %}
-          <i class="fas fa-plus-circle"></i> إضافة منتج
+          <i class="fas fa-plus-circle"></i> {{ t('Add') }} {{ t('Product_2') }}
         </a>
       </div>
     </div>
 
     <div class="warehouses-summary mb-3 d-flex flex-wrap erp-gap-1"
       <span class="badge badge-primary">
-        <i class="fas fa-warehouse"></i> الإجمالي: {{ warehouses|length }}
+        <i class="fas fa-warehouse"></i> {{ t('Total_3') }}: {{ warehouses|length }}
       </span>
       <span class="badge badge-warning">
-        <i class="fas fa-star"></i> رئيسي: {{ warehouses|selectattr('is_main')|list|length }}
+        <i class="fas fa-star"></i> {{ t('رئيسي') }}: {{ warehouses|selectattr('is_main')|list|length }}
       </span>
       <span class="badge badge-success">
-        <i class="fas fa-sitemap"></i> فرعي: {{ warehouses|selectattr('parent_id')|list|length }}
+        <i class="fas fa-sitemap"></i> {{ t('Sub_2') }}: {{ warehouses|selectattr('parent_id')|list|length }}
       </span>
     </div>
 
     {% if warehouses %}
     <div class="card">
       <div class="card-header">
-        <h3 class="card-title mb-0"><i class="fas fa-list mr-2"></i>قائمة المستودعات</h3>
+        <h3 class="card-title mb-0"><i class="fas fa-list mr-2"></i>{{ t('List') }} {{ t('Warehouses') }}</h3>
       </div>
       <div class="card-body p-0">
         <div class="table-responsive">
           <table id="warehousesTable" class="table table-hover table-bordered mb-0">
             <thead class="thead-light">
               <tr>
-                <th>المستودع</th>
-                <th>الرمز</th>
-                <th>الموقع</th>
-                <th>الشركة</th>
-                <th>الفرع</th>
-                <th>المدير</th>
-                <th>النوع</th>
-                <th>الهيكل</th>
-                <th>حركات المخزون</th>
-                <th>الحالة</th>
-                <th class="text-center">الإجراءات</th>
+                <th>{{ t('Warehouse') }}</th>
+                <th>{{ t('Code_4') }}</th>
+                <th>{{ t('Website') }}</th>
+                <th>{{ t('Company') }}</th>
+                <th>{{ t('Branch') }}</th>
+                <th>{{ t('المدير') }}</th>
+                <th>{{ t('النوع') }}</th>
+                <th>{{ t('الهيكل') }}</th>
+                <th>{{ t('حركات') }} {{ t('Inventory') }}</th>
+                <th>{{ t('Status') }}</th>
+                <th class="text-center">{{ t('الإجراءات') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -156,17 +156,17 @@
                 <td>{{ warehouse.manager.username if warehouse.manager else '-' }}</td>
                 <td>
                   {% if warehouse.is_online %}
-                  <span class="badge badge-info"><i class="fas fa-globe"></i> أونلاين</span>
+                  <span class="badge badge-info"><i class="fas fa-globe"></i> {{ t('أونلاين') }}</span>
                   {% else %}
-                  <span class="badge badge-secondary">فعلي</span>
+                  <span class="badge badge-secondary">{{ t('Actual_4') }}</span>
                   {% endif %}
                 </td>
                 <td>
                   {% if warehouse.parent %}
-                  <div><small class="text-muted">الأب:</small> {{ warehouse.parent.name_ar or warehouse.parent.name }}</div>
+                  <div><small class="text-muted">{{ t('الأب') }}:</small> {{ warehouse.parent.name_ar or warehouse.parent.name }}</div>
                   {% endif %}
                   <div>
-                    <small class="text-muted">فرعي:</small>
+                    <small class="text-muted">{{ t('Sub_2') }}:</small>
                     <span class="badge badge-warning">{{ warehouse.sub_warehouses|length }}</span>
                   </div>
                 </td>
@@ -175,31 +175,31 @@
                 </td>
                 <td>
                   {% if warehouse.is_main %}
-                  <span class="badge badge-primary mb-1"><i class="fas fa-star"></i> رئيسي</span>
+                  <span class="badge badge-primary mb-1"><i class="fas fa-star"></i> {{ t('رئيسي') }}</span>
                   {% endif %}
                   {% if warehouse.parent_id %}
-                  <span class="badge badge-success mb-1"><i class="fas fa-sitemap"></i> فرعي</span>
+                  <span class="badge badge-success mb-1"><i class="fas fa-sitemap"></i> {{ t('Sub_2') }}</span>
                   {% endif %}
                   {% if warehouse.is_active %}
-                  <span class="badge badge-success mb-1"><i class="fas fa-check"></i> نشط</span>
+                  <span class="badge badge-success mb-1"><i class="fas fa-check"></i> {{ t('Active') }}</span>
                   {% else %}
-                  <span class="badge badge-danger mb-1"><i class="fas fa-times"></i> غير نشط</span>
+                  <span class="badge badge-danger mb-1"><i class="fas fa-times"></i> غير {{ t('Active') }}</span>
                   {% endif %}
                 </td>
                 <td class="text-center actions-cell">
                   <div class="btn-group btn-group-sm" role="group">
-                    <a href="{{ url_for('warehouse.view_warehouse', id=warehouse.id) }}" class="btn btn-primary" title="عرض">
+                    <a href="{{ url_for('warehouse.view_warehouse', id=warehouse.id) }}" class="btn btn-primary" title="{{ t('View') }}">
                       <i class="fas fa-eye"></i>
                     </a>
                     {% if current_user.has_permission('manage_products') %}
-                    <a href="{{ url_for('products.create', warehouse_id=warehouse.id) }}" class="btn btn-success" title="إضافة منتج">
+                    <a href="{{ url_for('products.create', warehouse_id=warehouse.id) }}" class="btn btn-success" title="{{ t('Add') }} {{ t('Product_2') }}">
                     {% endif %}
                       <i class="fas fa-plus-circle"></i>
                     </a>
-                    <a href="{{ url_for('warehouse.movements', warehouse=warehouse.id) }}" class="btn btn-outline-secondary" title="الحركات">
+                    <a href="{{ url_for('warehouse.movements', warehouse=warehouse.id) }}" class="btn btn-outline-secondary" title="{{ t('Movements') }}">
                       <i class="fas fa-exchange-alt"></i>
                     </a>
-                    <button type="button" class="btn btn-outline-danger" data-delete-item="{{warehouse.id}}" data-item-type="warehouses" data-item-name="{{(warehouse.name_ar or warehouse.name)|tojson}}" title="حذف">
+                    <button type="button" class="btn btn-outline-danger" data-delete-item="{{warehouse.id}}" data-item-type="warehouses" data-item-name="{{(warehouse.name_ar or warehouse.name)|tojson}}" title="{{ t('Delete') }}">
                       <i class="fas fa-trash"></i>
                     </button>
                   </div>
@@ -216,7 +216,7 @@
     {% if not warehouses %}
     <div class="alert alert-info text-center">
       <i class="fas fa-info-circle"></i>
-      لا توجد مستودعات مسجلة. يمكنك إضافة مستودع جديد الآن.
+      لا {{ t('توجد') }} {{ t('Warehouses_2') }} {{ t('مسجلة') }}. {{ t('يمكنك') }} {{ t('Add') }} {{ t('Warehouse_2') }} {{ t('New') }} {{ t('الآن_2') }}.
     </div>
     {% endif %}
   </div>

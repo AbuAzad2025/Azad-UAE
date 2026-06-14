@@ -1,16 +1,16 @@
 {% extends 'base.html' %}
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - إضافة مصروف{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('Add') }} {{ t('Expense_3') }}{% endblock %}
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
   <div>
-    <h1 class="mb-0"><i class="fas fa-plus-circle mr-2"></i>إضافة مصروف جديد</h1>
+    <h1 class="mb-0"><i class="fas fa-plus-circle mr-2"></i>{{ t('Add') }} {{ t('Expense_3') }} {{ t('New') }}</h1>
   </div>
   <div>
     <a href="{{ url_for('expenses.index') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right mr-2"></i>العودة للمصروفات
+      <i class="fas fa-arrow-right mr-2"></i>{{ t('العودة') }} {{ t('Expenses_3') }}
     </a>
     <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
-      <i class="fas fa-home mr-2"></i>الرئيسية
+      <i class="fas fa-home mr-2"></i>{{ t('Main_2') }}
     </a>
   </div>
 </div>
@@ -82,18 +82,18 @@
         <div class="col-md-6">
           <div class="form-group">
             <label>
-              <i class="fas fa-folder text-primary"></i> الفئة 
+              <i class="fas fa-folder text-primary"></i> {{ t('ال{{ t('فئة') }}') }} 
               <span class="text-danger">*</span>
             </label>
             <div class="input-group">
               <select name="category_id" id="expense_category" class="form-control erp-flex-1" required aria-label="category id">
-                <option value="">بلا</option>
+                <option value="">{{ t('None') }}</option>
                 {% for category in categories %}
                 <option value="{{ category.id }}">{{ category.name_ar }} - {{ category.name }}</option>
                 {% endfor %}
               </select>
               <div class="input-group-append">
-                <button type="button" class="btn btn-success" data-toggle="modal" data-target="#addExpenseCategoryModal" title="إضافة فئة جديدة">
+                <button type="button" class="btn btn-success" data-toggle="modal" data-target="#addExpenseCategoryModal" title="{{ t('Add') }} {{ t('فئة') }} {{ t('New_3') }}">
                   <i class="fas fa-plus"></i>
                 </button>
               </div>
@@ -104,10 +104,10 @@
         <div class="col-md-6">
           <div class="form-group">
             <label>
-              <i class="fas fa-align-left text-info"></i> الوصف 
+              <i class="fas fa-align-left text-info"></i> {{ t('Description') }} 
               <span class="text-danger">*</span>
             </label>
-            <input type="text" name="description" class="form-control" placeholder="وصف المصروف..." required maxlength="500">
+            <input type="text" name="description" class="form-control" placeholder="{{ t('Description_2') }} {{ t('Expense_2') }}..." required maxlength="500">
           </div>
         </div>
       </div>
@@ -116,7 +116,7 @@
         <div class="col-md-4">
           <div class="form-group">
             <label>
-              <i class="fas fa-money-bill-wave text-success"></i> المبلغ 
+              <i class="fas fa-money-bill-wave text-success"></i> {{ t('Amount') }} 
               <span class="text-danger">*</span>
             </label>
             <input type="number" name="amount" class="form-control" step="0.01" min="0.01" placeholder="0.00" required>
@@ -126,7 +126,7 @@
         <div class="col-md-4">
           <div class="form-group">
             <label>
-              <i class="fas fa-dollar-sign text-warning"></i> العملة
+              <i class="fas fa-dollar-sign text-warning"></i> {{ t('Currency') }}
             </label>
             {% set dc = company_default_currency or system_default_currency or 'AED' %}
             {% from 'macros/currency_options.html' import currency_select %}
@@ -137,7 +137,7 @@
         <div class="col-md-4">
           <div class="form-group">
             <label>
-              <i class="fas fa-exchange-alt text-secondary"></i> سعر الصرف
+              <i class="fas fa-exchange-alt text-secondary"></i> {{ t('Price_2') }} {{ t('Exchange') }}
             </label>
             <input type="number" name="exchange_rate" id="exchange_rate" class="form-control" value="1.00" step="0.000001" readonly aria-label="exchange rate">
           </div>
@@ -148,14 +148,14 @@
         <div class="col-md-6">
           <div class="form-group">
             <label>
-              <i class="fas fa-credit-card text-primary"></i> طريقة الدفع 
+              <i class="fas fa-credit-card text-primary"></i> {{ t('طريقة') }} {{ t('Payment_2') }} 
               <span class="text-danger">*</span>
             </label>
             <select name="payment_method" id="payment_method" class="form-control" required aria-label="payment method">
-              <option value="cash">نقدي</option>
-              <option value="card">بطاقة</option>
-              <option value="bank_transfer">تحويل بنكي</option>
-              <option value="cheque">شيك</option>
+              <option value="cash">{{ t('Cash_2') }}</option>
+              <option value="card">{{ t('Card') }}</option>
+              <option value="bank_transfer">{{ t('Transfer') }} {{ t('Bank_3') }}</option>
+              <option value="cheque">{{ t('Cheque_3') }}</option>
             </select>
           </div>
         </div>
@@ -163,9 +163,9 @@
         <div class="col-md-6">
           <div class="form-group">
             <label>
-              <i class="fas fa-user-tie text-info"></i> اسم المورد/الجهة
+              <i class="fas fa-user-tie text-info"></i> {{ t('Name_2') }} {{ t('Supplier') }}/{{ t('الجهة') }}
             </label>
-            <input type="text" name="supplier_name" class="form-control" placeholder="اسم المستفيد..." minlength="2" maxlength="100">
+            <input type="text" name="supplier_name" class="form-control" placeholder="{{ t('Name_2') }} {{ t('المستفيد') }}..." minlength="2" maxlength="100">
           </div>
         </div>
       </div>
@@ -177,13 +177,13 @@
         <label>
           <i class="fas fa-sticky-note text-secondary"></i> {{ t('Notes') }}
         </label>
-        <textarea name="notes" class="form-control" rows="3" placeholder="أي ملاحظات..." maxlength="500"></textarea>
+        <textarea name="notes" class="form-control" rows="3" placeholder="أي {{ t('Notes') }}..." maxlength="500"></textarea>
       </div>
     </div>
 
     <div class="card-footer">
       <button type="submit" class="btn btn-danger btn-lg">
-        <i class="fas fa-save mr-2"></i>حفظ المصروف
+        <i class="fas fa-save mr-2"></i>{{ t('Save') }} {{ t('Expense_2') }}
       </button>
       <a href="{{ url_for('expenses.index') }}" class="btn btn-secondary btn-lg">
         <i class="fas fa-times mr-2"></i>{{ t('Cancel') }}
@@ -198,7 +198,7 @@
     <div class="modal-content">
       <div class="modal-header bg-success text-white">
         <h5 class="modal-title">
-          <i class="fas fa-folder-plus mr-2"></i>إضافة فئة مصروفات جديدة
+          <i class="fas fa-folder-plus mr-2"></i>{{ t('Add') }} {{ t('فئة') }} {{ t('Expenses_2') }} {{ t('New_3') }}
         </h5>
         <button type="button" class="close text-white" data-dismiss="modal">
           <span>&times;</span>
@@ -209,25 +209,25 @@
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
           <div class="form-group">
             <label>
-              <i class="fas fa-font text-primary"></i> الاسم بالإنجليزية
+              <i class="fas fa-font text-primary"></i> {{ t('Name') }} {{ t('In English_2') }}
               <span class="text-danger">*</span>
             </label>
-            <input type="text" id="expense_category_name" class="form-control" placeholder="مثال: Salaries, Rent, Utilities..." required>
+            <input type="text" id="expense_category_name" class="form-control" placeholder="{{ t('مثال') }}: Salaries, Rent, Utilities..." required>
           </div>
           <div class="form-group">
             <label>
-              <i class="fas fa-font text-info"></i> الاسم بالعربية
+              <i class="fas fa-font text-info"></i> {{ t('Name') }} {{ t('In Arabic') }}
             </label>
-            <input type="text" id="expense_category_name_ar" class="form-control" placeholder="مثال: رواتب، إيجارات، مرافق...">
+            <input type="text" id="expense_category_name_ar" class="form-control" placeholder="{{ t('مثال') }}: {{ t('رواتب،') }} {{ t('إيجارات،') }} {{ t('مرافق') }}...">
           </div>
         </form>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">
-          <i class="fas fa-times mr-2"></i>إلغاء
+          <i class="fas fa-times mr-2"></i>{{ t('Cancel') }}
         </button>
         <button type="button" class="btn btn-success" id="saveExpenseCategoryBtn">
-          <i class="fas fa-save mr-2"></i>حفظ الفئة
+          <i class="fas fa-save mr-2"></i>{{ t('Save') }} {{ t('ال{{ t('فئة') }}') }}
         </button>
       </div>
     </div>
@@ -246,7 +246,7 @@ $(function () {
     trigger: 'hover'
   });
   
-  // تحديث سعر الصرف عند تغيير العملة
+  // {{ t('Update') }} {{ t('Price_2') }} {{ t('Exchange') }} عند {{ t('Change') }} {{ t('Currency') }}
   $('#currency').on('change', function() {
     const currency = $(this).val();
     
@@ -262,38 +262,38 @@ $(function () {
         if (data && data.rate) {
           $('#exchange_rate').val(parseFloat(data.rate).toFixed(6));
         } else if (window.toastr) {
-          toastr.warning('تعذر جلب سعر الصرف، يرجى إدخال القيمة يدوياً.');
+          toastr.warning('{{ t('تعذر') }} {{ t('جلب') }} {{ t('Price_2') }} {{ t('{{ t('Exchange') }}،') }} {{ t('يرجى') }} {{ t('إدخال') }} {{ t('Value') }} {{ t('Manually') }}.');
         } else {
-          alert('تعذر جلب سعر الصرف، يرجى إدخال القيمة يدوياً.');
+          alert('{{ t('تعذر') }} {{ t('جلب') }} {{ t('Price_2') }} {{ t('{{ t('Exchange') }}،') }} {{ t('يرجى') }} {{ t('إدخال') }} {{ t('Value') }} {{ t('Manually') }}.');
         }
       },
       error: function() {
         if (window.toastr) {
-          toastr.warning('تعذر جلب سعر الصرف، يرجى إدخال القيمة يدوياً.');
+          toastr.warning('{{ t('تعذر') }} {{ t('جلب') }} {{ t('Price_2') }} {{ t('{{ t('Exchange') }}،') }} {{ t('يرجى') }} {{ t('إدخال') }} {{ t('Value') }} {{ t('Manually') }}.');
         } else {
-          alert('تعذر جلب سعر الصرف، يرجى إدخال القيمة يدوياً.');
+          alert('{{ t('تعذر') }} {{ t('جلب') }} {{ t('Price_2') }} {{ t('{{ t('Exchange') }}،') }} {{ t('يرجى') }} {{ t('إدخال') }} {{ t('Value') }} {{ t('Manually') }}.');
         }
       }
     });
   }).trigger('change');
 });
 
-// إدارة حقول الدفع الديناميكية
+// {{ t('Management') }} {{ t('حقول') }} {{ t('Payment_2') }} {{ t('الديناميكية') }}
 if (window.PaymentFieldsManager) {
   PaymentFieldsManager.initSelector('#payment_method', '#paymentFieldsContainer');
 }
 
-// حفظ فئة المصروفات الجديدة
+// {{ t('Save') }} {{ t('فئة') }} {{ t('Expenses') }} {{ t('New_4') }}
 $('#saveExpenseCategoryBtn').click(function() {
   const name = $('#expense_category_name').val().trim();
   const name_ar = $('#expense_category_name_ar').val().trim();
   
   if (!name) {
-    alert('الرجاء إدخال اسم الفئة بالإنجليزية');
+    alert('{{ t('الرجاء') }} {{ t('إدخال') }} {{ t('Name_2') }} {{ t('ال{{ t('فئة') }}') }} {{ t('In English_2') }}');
     return;
   }
   
-  // الحصول على CSRF token
+  // {{ t('الحصول') }} على CSRF token
   const csrfToken = $('input[name="csrf_token"]').val();
   
   $.ajax({
@@ -309,31 +309,31 @@ $('#saveExpenseCategoryBtn').click(function() {
     }),
     success: function(response) {
       if (response.success) {
-        // إضافة الفئة الجديدة للقائمة
+        // {{ t('Add') }} {{ t('ال{{ t('فئة') }}') }} {{ t('New_4') }} {{ t('للقائمة') }}
         const displayName = response.category.name_ar ? 
           response.category.name_ar + ' - ' + response.category.name : 
           response.category.name;
         const newOption = new Option(displayName, response.category.id, true, true);
         $('#expense_category').append(newOption).trigger('change');
         
-        // إغلاق النافذة وتنظيف الحقول
+        // {{ t('Close') }} {{ t('النافذة') }} {{ t('وتنظيف') }} {{ t('ال{{ t('حقول') }}') }}
         $('#addExpenseCategoryModal').modal('hide');
         $('#expense_category_name').val('');
         $('#expense_category_name_ar').val('');
         
-        // رسالة نجاح
+        // {{ t('رسالة') }} {{ t('نجاح') }}
         if (typeof UI !== 'undefined') {
-          UI.success('تم إضافة الفئة بنجاح!');
+          UI.success('تم {{ t('Add') }} {{ t('ال{{ t('فئة') }}') }} {{ t('ب{{ t('نجاح') }}') }}!');
         } else {
-          alert('تم إضافة الفئة بنجاح!');
+          alert('تم {{ t('Add') }} {{ t('ال{{ t('فئة') }}') }} {{ t('ب{{ t('نجاح') }}') }}!');
         }
       } else {
-        alert('خطأ: ' + (response.error || 'فشل إضافة الفئة'));
+        alert('{{ t('Error') }}: ' + (response.error || '{{ t('فشل') }} {{ t('Add') }} {{ t('ال{{ t('فئة') }}') }}'));
       }
     },
     error: function(xhr) {
-      const error = xhr.responseJSON?.error || 'حدث خطأ أثناء الحفظ';
-      alert('خطأ: ' + error);
+      const error = xhr.responseJSON?.error || '{{ t('حدث') }} {{ t('Error') }} {{ t('أثناء') }} {{ t('Save_2') }}';
+      alert('{{ t('Error') }}: ' + error);
     }
   });
 });

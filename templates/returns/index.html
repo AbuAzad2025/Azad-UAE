@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}المرتجعات{% endblock %}
+{% block title %}{{ t('Returns') }}{% endblock %}
 
 {% block extra_css %}
 {% include 'partials/datatables_assets.html' %}
@@ -54,12 +54,12 @@
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
   <div>
-    <h1 class="mb-0"><i class="fas fa-undo-alt mr-2"></i>المرتجعات</h1>
-    <p class="text-muted mb-0">سجل مرتجعات فواتير البيع</p>
+    <h1 class="mb-0"><i class="fas fa-undo-alt mr-2"></i>{{ t('Returns') }}</h1>
+    <p class="text-muted mb-0">{{ t('Log') }} {{ t('مرتجعات') }} {{ t('فواتير') }} {{ t('Sale_2') }}</p>
   </div>
   <div>
     <a href="{{ url_for('sales.index') }}" class="btn btn-outline-secondary">
-      <i class="fas fa-file-invoice mr-2"></i>المبيعات
+      <i class="fas fa-file-invoice mr-2"></i>{{ t('Sales') }}
     </a>
   </div>
 </div>
@@ -68,36 +68,36 @@
 {% block content %}
 <div class="mb-3 d-flex flex-wrap erp-gap-1">
   <span class="badge badge-primary">
-    <i class="fas fa-undo-alt"></i> الإجمالي: {{ returns|length }}
+    <i class="fas fa-undo-alt"></i> {{ t('Total_3') }}: {{ returns|length }}
   </span>
   <span class="badge badge-success">
-    <i class="fas fa-check"></i> معتمد: {{ returns|selectattr('status', 'equalto', 'approved')|list|length }}
+    <i class="fas fa-check"></i> {{ t('معتمد') }}: {{ returns|selectattr('status', 'equalto', 'approved')|list|length }}
   </span>
   <span class="badge badge-warning">
-    <i class="fas fa-hourglass-half"></i> قيد المراجعة: {{ returns|selectattr('status', 'equalto', 'pending')|list|length }}
+    <i class="fas fa-hourglass-half"></i> {{ t('قيد') }} {{ t('Review') }}: {{ returns|selectattr('status', 'equalto', 'pending')|list|length }}
   </span>
   <span class="badge badge-danger">
-    <i class="fas fa-times"></i> مرفوض: {{ returns|selectattr('status', 'equalto', 'rejected')|list|length }}
+    <i class="fas fa-times"></i> {{ t('Rejected_2') }}: {{ returns|selectattr('status', 'equalto', 'rejected')|list|length }}
   </span>
 </div>
 <div class="card">
   <div class="card-header">
-    <h3 class="card-title mb-0"><i class="fas fa-list mr-2"></i>قائمة المرتجعات</h3>
+    <h3 class="card-title mb-0"><i class="fas fa-list mr-2"></i>{{ t('List') }} {{ t('Returns') }}</h3>
   </div>
   <div class="card-body">
     <div class="table-responsive">
       <table id="returnsTable" class="table table-hover table-bordered">
         <thead>
           <tr>
-            <th>رقم المرتجع</th>
-            <th>الشركة</th>
-            <th>الفرع</th>
-            <th>فاتورة البيع</th>
-            <th>العميل</th>
-            <th>التاريخ</th>
-            <th>الحالة</th>
-            <th class="text-left">الإجمالي</th>
-            <th class="text-center">إجراءات</th>
+            <th>{{ t('رقم') }} {{ t('Return_3') }}</th>
+            <th>{{ t('Company') }}</th>
+            <th>{{ t('Branch') }}</th>
+            <th>{{ t('Invoice') }} {{ t('Sale_2') }}</th>
+            <th>{{ t('Customer') }}</th>
+            <th>{{ t('Date') }}</th>
+            <th>{{ t('Status') }}</th>
+            <th class="text-left">{{ t('Total_3') }}</th>
+            <th class="text-center">{{ t('Actions') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -123,23 +123,23 @@
             <td>{{ r.return_date.strftime('%Y-%m-%d %H:%M') if r.return_date else '-' }}</td>
             <td>
               {% if r.status == 'approved' %}
-                <span class="badge badge-success">معتمد</span>
+                <span class="badge badge-success">{{ t('معتمد') }}</span>
               {% elif r.status == 'rejected' %}
-                <span class="badge badge-danger">مرفوض</span>
+                <span class="badge badge-danger">{{ t('Rejected_2') }}</span>
               {% else %}
-                <span class="badge badge-warning">قيد المراجعة</span>
+                <span class="badge badge-warning">{{ t('قيد') }} {{ t('Review') }}</span>
               {% endif %}
             </td>
             <td class="text-left">{{ format_currency(r.total_amount or 0, r.currency) }}</td>
             <td class="text-center actions-cell">
               <a href="{{ url_for('returns.view', id=r.id) }}" class="btn btn-outline-primary">
-                <i class="fas fa-eye mr-1"></i>عرض
+                <i class="fas fa-eye mr-1"></i>{{ t('View') }}
               </a>
             </td>
           </tr>
           {% else %}
           <tr>
-            <td colspan="9" class="text-center text-muted">لا توجد مرتجعات</td>
+            <td colspan="9" class="text-center text-muted">لا {{ t('توجد') }} {{ t('مرتجعات') }}</td>
           </tr>
           {% endfor %}
         </tbody>

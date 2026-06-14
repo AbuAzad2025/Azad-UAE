@@ -1,35 +1,35 @@
 {% extends 'base.html' %}
-{% block title %}حملة جديدة{% endblock %}
+{% block title %}{{ t('حملة') }} {{ t('New_3') }}{% endblock %}
 {% block content %}
 <div class="container-fluid">
   <div class="card">
-    <div class="card-header"><h5><i class="fas fa-bullhorn"></i> حملة جديدة</h5></div>
+    <div class="card-header"><h5><i class="fas fa-bullhorn"></i> {{ t('حملة') }} {{ t('New_3') }}</h5></div>
     <div class="card-body">
       <form method="POST">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <div class="form-group"><label>الاسم</label><input name="name" class="form-control" required></div>
+        <div class="form-group"><label>{{ t('Name') }}</label><input name="name" class="form-control" required></div>
         <div class="row">
           <div class="col-md-6">
-            <div class="form-group"><label>القائمة البريدية</label>
+            <div class="form-group"><label>{{ t('Menu') }} {{ t('البريدية') }}</label>
               <select name="list_id" class="form-control">
-                <option value="">اختر</option>
+                <option value="">{{ t('اختر') }}</option>
                 {% for l in lists %}
                 <option value="{{ l.id }}">{{ l.name }}</option>
                 {% endfor %}
               </select></div>
           </div>
           <div class="col-md-6">
-            <div class="form-group"><label>القالب</label>
+            <div class="form-group"><label>{{ t('القالب') }}</label>
               <select name="template_id" class="form-control">
-                <option value="">اختر</option>
+                <option value="">{{ t('اختر') }}</option>
                 {% for t in templates %}
                 <option value="{{ t.id }}">{{ t.name }}</option>
                 {% endfor %}
               </select></div>
           </div>
         </div>
-        <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> حفظ</button>
-        <a href="{{ url_for('email_marketing.campaigns') }}" class="btn btn-secondary">إلغاء</a>
+        <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> {{ t('Save') }}</button>
+        <a href="{{ url_for('email_marketing.campaigns') }}" class="btn btn-secondary">{{ t('Cancel') }}</a>
       </form>
     </div>
   </div>

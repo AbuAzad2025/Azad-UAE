@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}بروفايلي | {{ user.full_name or user.username }}{% endblock %}
+{% block title %}{{ t('Profile') }} | {{ user.full_name or user.username }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid py-4">
@@ -10,7 +10,7 @@
     <div class="col-lg-4">
       <div class="card shadow-sm">
         <div class="card-header bg-primary text-white">
-          <i class="fas fa-user-circle mr-2"></i>بياناتي الشخصية
+          <i class="fas fa-user-circle mr-2"></i>{{ t('بياناتي') }} {{ t('الشخصية') }}
         </div>
         <div class="card-body text-center">
           <div class="mb-3">
@@ -21,7 +21,7 @@
           <h5 class="fw-bold">{{ user.full_name or user.full_name_ar or user.username }}</h5>
           <p class="text-muted mb-1"><code>{{ user.username }}</code></p>
           <a href="#edit-section" class="btn btn-warning mb-2">
-            <i class="fas fa-edit me-1"></i>تعديل بياناتي
+            <i class="fas fa-edit me-1"></i>{{ t('Edit') }} {{ t('بياناتي') }}
           </a>
           <p class="text-muted small mb-2">
             {% if user.role %}
@@ -34,23 +34,23 @@
 
           <ul class="list-group list-group-flush text-start small">
             <li class="list-group-item d-flex justify-content-between">
-              <span><i class="fas fa-envelope text-muted mr-2"></i>البريد</span>
+              <span><i class="fas fa-envelope text-muted mr-2"></i>{{ t('Email_2') }}</span>
               <span class="text-muted">{{ user.email or '—' }}</span>
             </li>
             <li class="list-group-item d-flex justify-content-between">
-              <span><i class="fas fa-phone text-muted mr-2"></i>الهاتف</span>
+              <span><i class="fas fa-phone text-muted mr-2"></i>{{ t('Phone') }}</span>
               <span class="text-muted" dir="ltr">{{ user.phone or '—' }}</span>
             </li>
             <li class="list-group-item d-flex justify-content-between">
-              <span><i class="fas fa-building text-muted mr-2"></i>الفرع</span>
+              <span><i class="fas fa-building text-muted mr-2"></i>{{ t('Branch') }}</span>
               <span class="text-muted">{{ user.branch.name if user.branch else '—' }}</span>
             </li>
             <li class="list-group-item d-flex justify-content-between">
-              <span><i class="fas fa-calendar text-muted mr-2"></i>تاريخ الإنضمام</span>
+              <span><i class="fas fa-calendar text-muted mr-2"></i>{{ t('History') }} {{ t('الإنضمام') }}</span>
               <span class="text-muted">{{ user.created_at.strftime('%Y-%m-%d') if user.created_at else '—' }}</span>
             </li>
             <li class="list-group-item d-flex justify-content-between">
-              <span><i class="fas fa-clock text-muted mr-2"></i>آخر ظهور</span>
+              <span><i class="fas fa-clock text-muted mr-2"></i>{{ t('Last') }} {{ t('ظهور') }}</span>
               <span class="text-muted">{{ user.last_seen.strftime('%Y-%m-%d %H:%M') if user.last_seen else '—' }}</span>
             </li>
           </ul>
@@ -65,7 +65,7 @@
           <div class="card bg-success text-white shadow-sm">
             <div class="card-body text-center">
               <h3 class="mb-1">{{ stats.today_sales_count }}</h3>
-              <small>مبيعات اليوم</small>
+              <small>{{ t('Sales_2') }} {{ t('Today') }}</small>
               <div class="fw-bold mt-1">{{ "%.2f"|format(stats.today_sales_amount) }} {{ tenant.default_currency or 'AED' }}</div>
             </div>
           </div>
@@ -74,7 +74,7 @@
           <div class="card bg-info text-white shadow-sm">
             <div class="card-body text-center">
               <h3 class="mb-1">{{ stats.month_sales_count }}</h3>
-              <small>مبيعات الشهر</small>
+              <small>{{ t('Sales_2') }} {{ t('Month') }}</small>
               <div class="fw-bold mt-1">{{ "%.2f"|format(stats.month_sales_amount) }} {{ tenant.default_currency or 'AED' }}</div>
             </div>
           </div>
@@ -83,7 +83,7 @@
           <div class="card bg-primary text-white shadow-sm">
             <div class="card-body text-center">
               <h3 class="mb-1">{{ stats.total_sales_count }}</h3>
-              <small>إجمالي المبيعات</small>
+              <small>{{ t('Total_2') }} {{ t('Sales') }}</small>
               <div class="fw-bold mt-1">{{ "%.2f"|format(stats.total_sales_amount) }} {{ tenant.default_currency or 'AED' }}</div>
             </div>
           </div>
@@ -93,51 +93,51 @@
       
       <div class="card shadow-sm" id="edit-section">
         <div class="card-header bg-warning text-dark">
-          <i class="fas fa-edit mr-2"></i>تعديل بياناتي
+          <i class="fas fa-edit mr-2"></i>{{ t('Edit') }} {{ t('بياناتي') }}
         </div>
         <div class="card-body">
           <form class="needs-validation" method="POST" action="{{ url_for('main.my_profile_update') }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
             <div class="row g-3">
               <div class="col-md-6">
-                <label class="form-label fw-semibold" for="profile_full_name">الاسم الكامل (إنجليزي)</label>
+                <label class="form-label fw-semibold" for="profile_full_name">{{ t('Name') }} {{ t('الكامل') }} ({{ t('English') }})</label>
                 <input type="text" id="profile_full_name" name="full_name" class="form-control" value="{{ user.full_name or '' }}" aria-label="full name" minlength="2" maxlength="100">
               </div>
               <div class="col-md-6">
-                <label class="form-label fw-semibold" for="profile_full_name_ar">الاسم الكامل (عربي)</label>
+                <label class="form-label fw-semibold" for="profile_full_name_ar">{{ t('Name') }} {{ t('الكامل') }} ({{ t('Arabic') }})</label>
                 <input type="text" id="profile_full_name_ar" name="full_name_ar" class="form-control" value="{{ user.full_name_ar or '' }}" aria-label="full name ar" minlength="2" maxlength="100">
               </div>
               <div class="col-md-6">
-                <label class="form-label fw-semibold" for="profile_email">البريد الإلكتروني</label>
+                <label class="form-label fw-semibold" for="profile_email">{{ t('Email_2') }} {{ t('Email_3') }}</label>
                 <input type="email" id="profile_email" name="email" class="form-control" value="{{ user.email or '' }}" aria-label="email">
               </div>
               <div class="col-md-6">
-                <label class="form-label fw-semibold" for="profile_phone">رقم الهاتف</label>
+                <label class="form-label fw-semibold" for="profile_phone">{{ t('رقم') }} {{ t('Phone') }}</label>
                 <input type="text" id="profile_phone" name="phone" class="form-control" value="{{ user.phone or '' }}" aria-label="phone" pattern="^\+?[0-9\s\-]{8,20}$">
               </div>
             </div>
 
             <hr class="my-4">
 
-            <h6 class="fw-bold text-danger"><i class="fas fa-lock mr-2"></i>تغيير كلمة المرور (اختياري)</h6>
+            <h6 class="fw-bold text-danger"><i class="fas fa-lock mr-2"></i>{{ t('Change') }} {{ t('كلمة') }} {{ t('المرور') }} ({{ t('Optional') }})</h6>
             <div class="row g-3">
               <div class="col-md-4">
-                <label class="form-label fw-semibold" for="input_current_password">كلمة المرور الحالية</label>
+                <label class="form-label fw-semibold" for="input_current_password">{{ t('كلمة') }} {{ t('المرور') }} {{ t('الحالية') }}</label>
                 <input type="password" name="current_password" class="form-control" placeholder="******" id="input_current_password" minlength="6">
               </div>
               <div class="col-md-4">
-                <label class="form-label fw-semibold" for="input_new_password">كلمة المرور الجديدة</label>
+                <label class="form-label fw-semibold" for="input_new_password">{{ t('كلمة') }} {{ t('المرور') }} {{ t('New_4') }}</label>
                 <input type="password" name="new_password" class="form-control" placeholder="******" id="input_new_password" minlength="6">
               </div>
               <div class="col-md-4">
-                <label class="form-label fw-semibold" for="input_confirm_password">تأكيد كلمة المرور</label>
+                <label class="form-label fw-semibold" for="input_confirm_password">{{ t('Confirm') }} {{ t('كلمة') }} {{ t('المرور') }}</label>
                 <input type="password" name="confirm_password" class="form-control" placeholder="******" id="input_confirm_password" minlength="6" data-equal-to="#input_new_password">
               </div>
             </div>
 
             <div class="mt-4 d-flex justify-content-between">
-              <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">العودة للوحة التحكم</a>
-              <button type="submit" class="btn btn-warning"><i class="fas fa-save me-1"></i>حفظ التغييرات</button>
+              <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">{{ t('العودة') }} {{ t('للوحة') }} {{ t('Control') }}</a>
+              <button type="submit" class="btn btn-warning"><i class="fas fa-save me-1"></i>{{ t('Save') }} {{ t('ال{{ t('Change') }}ات') }}</button>
             </div>
           </form>
         </div>
@@ -147,17 +147,17 @@
       {% if recent_sales %}
       <div class="card shadow-sm mt-4">
         <div class="card-header bg-light">
-          <i class="fas fa-shopping-cart mr-2"></i>آخر المبيعات
+          <i class="fas fa-shopping-cart mr-2"></i>{{ t('Last') }} {{ t('Sales') }}
         </div>
         <div class="card-body p-0">
           <div class="table-responsive">
             <table class="table table-sm table-hover mb-0">
               <thead class="table-light">
                 <tr>
-                  <th>رقم الفاتورة</th>
-                  <th>العميل</th>
-                  <th>التاريخ</th>
-                  <th class="text-end">المبلغ</th>
+                  <th>{{ t('رقم') }} {{ t('Invoice_2') }}</th>
+                  <th>{{ t('Customer') }}</th>
+                  <th>{{ t('Date') }}</th>
+                  <th class="text-end">{{ t('Amount') }}</th>
                 </tr>
               </thead>
               <tbody>

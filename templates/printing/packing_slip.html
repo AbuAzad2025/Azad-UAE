@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{{ settings.company_name_ar or tenant_name_ar or company_name_ar }} - إذن تسليم #{{ delivery.number or sale.sale_number }}</title>
+  <title>{{ settings.company_name_ar or tenant_name_ar or company_name_ar }} - {{ t('إذن') }} {{ t('تسليم') }} #{{ delivery.number or sale.sale_number }}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/erp-theme.css') }}">
   {% include 'partials/print_styles.html' %}
   <style>
@@ -37,7 +37,7 @@
 </head>
 <body class="invoice-print">
   <div class="invoice">
-    <div class="watermark">إذن تسليم</div>
+    <div class="watermark">{{ t('إذن') }} {{ t('تسليم') }}</div>
     <div class="header">
       {% include 'partials/print_tenant_logo.html' %}
       <div class="company-name">{{ settings.company_name_ar or tenant_name_ar or company_name_ar }}</div>
@@ -48,32 +48,32 @@
     </div>
 
     <div class="doc-title">
-      <h2>📦 إذن تسليم / Delivery Note</h2>
+      <h2>📦 {{ t('إذن') }} {{ t('تسليم') }} / Delivery Note</h2>
       <div style="font-size:9px;color:#666;margin-top:4px;">
-        رقم الإذن: <strong>{{ delivery.number or sale.sale_number }}</strong> |
-        التاريخ: <strong>{{ delivery.date.strftime('%Y-%m-%d') if delivery.date else sale.sale_date.strftime('%Y-%m-%d') if sale.sale_date else '' }}</strong>
+        {{ t('رقم') }} {{ t('ال{{ t('إذن') }}') }}: <strong>{{ delivery.number or sale.sale_number }}</strong> |
+        {{ t('Date') }}: <strong>{{ delivery.date.strftime('%Y-%m-%d') if delivery.date else sale.sale_date.strftime('%Y-%m-%d') if sale.sale_date else '' }}</strong>
       </div>
     </div>
 
     <div class="content">
       <div class="info-grid">
         <div class="info-box">
-          <h3>👤 بيانات العميل</h3>
-          <p><strong>الاسم:</strong> {{ sale.customer.name if sale and sale.customer else delivery.customer_name or '—' }}</p>
-          <p><strong>الهاتف:</strong> {{ sale.customer.phone if sale and sale.customer else delivery.customer_phone or '—' }}</p>
-          <p><strong>العنوان:</strong> {{ delivery.address or (sale.customer.address if sale and sale.customer else '—') }}</p>
+          <h3>👤 {{ t('Data_2') }} {{ t('Customer') }}</h3>
+          <p><strong>{{ t('Name') }}:</strong> {{ sale.customer.name if sale and sale.customer else delivery.customer_name or '—' }}</p>
+          <p><strong>{{ t('Phone') }}:</strong> {{ sale.customer.phone if sale and sale.customer else delivery.customer_phone or '—' }}</p>
+          <p><strong>{{ t('Address') }}:</strong> {{ delivery.address or (sale.customer.address if sale and sale.customer else '—') }}</p>
         </div>
         <div class="info-box">
-          <h3>🚚 معلومات التوصيل</h3>
-          <p><strong>طريقة التوصيل:</strong> {{ delivery.method or delivery.shipping_method or '—' }}</p>
-          <p><strong>حالة التوصيل:</strong> {{ delivery.status or '—' }}</p>
-          {% if delivery.tracking_number %}<p><strong>رقم التتبع:</strong> {{ delivery.tracking_number }}</p>{% endif %}
+          <h3>🚚 {{ t('Info_2') }} {{ t('التوصيل') }}</h3>
+          <p><strong>{{ t('طريقة') }} {{ t('التوصيل') }}:</strong> {{ delivery.method or delivery.shipping_method or '—' }}</p>
+          <p><strong>{{ t('Status_2') }} {{ t('التوصيل') }}:</strong> {{ delivery.status or '—' }}</p>
+          {% if delivery.tracking_number %}<p><strong>{{ t('رقم') }} {{ t('التتبع') }}:</strong> {{ delivery.tracking_number }}</p>{% endif %}
         </div>
       </div>
 
       <div class="table-responsive"><table>
         <thead>
-          <tr><th>#</th><th>المنتج</th><th>الكمية</th><th>الوحدة</th><th class="check-col">تم التوصيل</th></tr>
+          <tr><th>#</th><th>{{ t('Product') }}</th><th>{{ t('Quantity') }}</th><th>{{ t('الوحدة') }}</th><th class="check-col">تم {{ t('التوصيل') }}</th></tr>
         </thead>
         <tbody>
           {% for line in lines %}
@@ -97,22 +97,22 @@
       <div class="signatures">
         <div class="sig-box">
           <div class="sig-line"></div>
-          <div style="font-size:9px;">توقيع المستلم</div>
+          <div style="font-size:9px;">{{ t('توقيع') }} {{ t('المستلم') }}</div>
         </div>
         <div class="sig-box">
           <div class="sig-line"></div>
-          <div style="font-size:9px;">توقيع المندوب</div>
+          <div style="font-size:9px;">{{ t('توقيع') }} {{ t('Rep_2') }}</div>
         </div>
         <div class="sig-box">
           <div class="sig-line"></div>
-          <div style="font-size:9px;">ختم الشركة</div>
+          <div style="font-size:9px;">{{ t('ختم') }} {{ t('Company') }}</div>
         </div>
       </div>
     </div>
 
     <div class="footer">
-      <p>شكراً لتعاملكم معنا</p>
-      <p style="font-size:8px;color:#999;">هذا المستند يمثل إذن تسليم وليس فاتورة ضريبية</p>
+      <p>{{ t('شكراً') }} {{ t('لتعاملكم') }} {{ t('معنا') }}</p>
+      <p style="font-size:8px;color:#999;">هذا {{ t('المستند') }} {{ t('يمثل') }} {{ t('إذن') }} {{ t('تسليم') }} {{ t('وليس') }} {{ t('Invoice') }} {{ t('ضريبية') }}</p>
       {% include 'partials/print_developer_footer.html' %}
     </div>
   </div>

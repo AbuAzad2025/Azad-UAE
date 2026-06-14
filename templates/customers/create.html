@@ -1,16 +1,16 @@
 {% extends 'base.html' %}
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - إضافة عميل جديد{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('Add') }} {{ t('عميل') }} {{ t('New') }}{% endblock %}
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
   <div>
-    <h1 class="mb-0"><i class="fas fa-user-plus mr-2"></i>إضافة زبون جديد</h1>
+    <h1 class="mb-0"><i class="fas fa-user-plus mr-2"></i>{{ t('Add') }} {{ t('Customer_3') }} {{ t('New') }}</h1>
   </div>
   <div>
     <a href="{{ url_for('customers.index') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right mr-2"></i>العودة للزبائن
+      <i class="fas fa-arrow-right mr-2"></i>{{ t('العودة') }} {{ t('Customers_4') }}
     </a>
     <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
-      <i class="fas fa-home mr-2"></i>الرئيسية
+      <i class="fas fa-home mr-2"></i>{{ t('Main_2') }}
     </a>
   </div>
 </div>
@@ -78,7 +78,7 @@ a.btn.btn-outline-secondary span {
         <div class="col-md-6">
           <div class="form-group">
             <label>
-              <i class="fas fa-user text-primary"></i> الاسم 
+              <i class="fas fa-user text-primary"></i> {{ t('Name') }} 
               <span class="text-danger">*</span>
             </label>
             {{ form.name(class="form-control", placeholder="اسم الزبون", required=true) }}
@@ -87,7 +87,7 @@ a.btn.btn-outline-secondary span {
         <div class="col-md-3">
           <div class="form-group">
             <label>
-              <i class="fas fa-tag text-primary"></i> نوع الزبون 
+              <i class="fas fa-tag text-primary"></i> {{ t('نوع') }} {{ t('Customer_2') }} 
               <span class="text-danger">*</span>
             </label>
             {{ form.customer_type(class="form-control", required=true) }}
@@ -127,7 +127,7 @@ a.btn.btn-outline-secondary span {
         <div class="col-md-4">
           <div class="form-group">
             <label>
-              <i class="fas fa-dollar-sign text-success"></i> العملة الافتراضية
+              <i class="fas fa-dollar-sign text-success"></i> {{ t('Currency') }} {{ t('الافتراضية') }}
             </label>
             {{ form.preferred_currency(class="form-control") }}
           </div>
@@ -151,10 +151,10 @@ a.btn.btn-outline-secondary span {
 
     <div class="card-footer">
       <button type="submit" class="btn btn-primary">
-        <i class="fas fa-save mr-2"></i>حفظ
+        <i class="fas fa-save mr-2"></i>{{ t('Save') }}
       </button>
       <a href="{{ url_for('customers.index') }}" class="btn btn-secondary">
-        <i class="fas fa-times mr-2"></i>إلغاء
+        <i class="fas fa-times mr-2"></i>{{ t('Cancel') }}
       </a>
     </div>
   </form>
@@ -163,7 +163,7 @@ a.btn.btn-outline-secondary span {
 
 {% block extra_js %}
 <script>
-// تفعيل tooltips
+// {{ t('تفعيل') }} tooltips
 $(function () {
   $('[data-toggle="tooltip"]').tooltip({
     placement: 'top',

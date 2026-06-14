@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - إدارة المنتجات والمخزون{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('Management') }} {{ t('Products') }} {{ t('و{{ t('Inventory') }}') }}{% endblock %}
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
   <div>
@@ -8,10 +8,10 @@
   </div>
   <div>
     <a href="{{ url_for('products.import_products') }}" class="btn btn-secondary btn-lg mr-2">
-      <i class="fas fa-file-import mr-2"></i>استيراد
+      <i class="fas fa-file-import mr-2"></i>{{ t('استيراد') }}
     </a>
     <a href="{{ url_for('products.create') }}" class="btn btn-primary btn-lg">
-      <i class="fas fa-plus mr-2"></i>منتج جديد
+      <i class="fas fa-plus mr-2"></i>{{ t('Product_2') }} {{ t('New') }}
     </a>
   </div>
 </div>
@@ -132,20 +132,20 @@
   <div class="card-header">
     <div class="d-flex justify-content-between align-items-center">
       <h3 class="card-title mb-0">
-        <i class="fas fa-list mr-2"></i>كتالوج المنتجات
+        <i class="fas fa-list mr-2"></i>{{ t('كتالوج') }} {{ t('Products') }}
       </h3>
       <div class="btn-group">
         <button type="button" class="btn btn-outline-info" id="printProductsBtn">
-          <i class="fas fa-print mr-1"></i>طباعة
+          <i class="fas fa-print mr-1"></i>{{ t('Print') }}
         </button>
         <button type="button" class="btn btn-outline-success active" id="filterAll">
-          <i class="fas fa-boxes mr-1"></i>الكل
+          <i class="fas fa-boxes mr-1"></i>{{ t('All') }}
         </button>
         <button type="button" class="btn btn-outline-danger" id="filterLow">
-          <i class="fas fa-exclamation-triangle mr-1"></i>مخزون منخفض
+          <i class="fas fa-exclamation-triangle mr-1"></i>{{ t('Inventory_2') }} {{ t('Low_2') }}
         </button>
         <button type="button" class="btn btn-outline-warning" id="filterOut">
-          <i class="fas fa-ban mr-1"></i>نفذ
+          <i class="fas fa-ban mr-1"></i>{{ t('نفذ') }}
         </button>
       </div>
     </div>
@@ -155,13 +155,13 @@
       <table id="productsTable" class="table table-hover table-bordered">
         <thead class="ic-1">
           <tr>
-            <th><i class="fas fa-image mr-2"></i>صورة</th>
-            <th><i class="fas fa-box mr-2"></i>المنتج</th>
+            <th><i class="fas fa-image mr-2"></i>{{ t('صورة') }}</th>
+            <th><i class="fas fa-box mr-2"></i>{{ t('Product') }}</th>
             <th><i class="fas fa-barcode mr-2"></i>SKU</th>
-            <th><i class="fas fa-tag mr-2"></i>الفئة</th>
-            <th><i class="fas fa-building mr-2"></i>الشركة</th>
-            <th><i class="fas fa-code-branch mr-2"></i>الفرع</th>
-            <th><i class="fas fa-warehouse mr-2"></i>المستودع</th>
+            <th><i class="fas fa-tag mr-2"></i>{{ t('الفئة') }}</th>
+            <th><i class="fas fa-building mr-2"></i>{{ t('Company') }}</th>
+            <th><i class="fas fa-code-branch mr-2"></i>{{ t('Branch') }}</th>
+            <th><i class="fas fa-warehouse mr-2"></i>{{ t('Warehouse') }}</th>
             <th><i class="fas fa-warehouse mr-2"></i>{{ t('Inventory') }}</th>
             <th class="text-center"><i class="fas fa-cog mr-2"></i>{{ t('Actions') }}</th>
           </tr>
@@ -224,7 +224,7 @@
             <td>
               {% if shown_stock <= 0 %}
                 <span class="badge badge-danger stock-low px-3 py-2">
-                  <i class="fas fa-times mr-1"></i>نفذ ({{ shown_stock }})
+                  <i class="fas fa-times mr-1"></i>{{ t('نفذ') }} ({{ shown_stock }})
                 </span>
               {% elif shown_stock <= product.min_stock_alert %}
                 <span class="badge badge-warning px-3 py-2">
@@ -249,15 +249,15 @@
                 </a>
                 <button type="button" class="btn btn-danger" 
                         data-delete-item="{{product.id}}" data-item-type="products" data-item-name="{{product.name|tojson}}" 
-                        title="حذف">
+                        title="{{ t('Delete') }}">
                   <i class="fas fa-trash"></i>
                 </button>
                 {% if current_user.has_permission('manage_sales') %}
-                <a href="{{ url_for('sales.create', product_id=product.id) }}" class="btn btn-success" title="بيع">
+                <a href="{{ url_for('sales.create', product_id=product.id) }}" class="btn btn-success" title="{{ t('Sale') }}">
                   <i class="fas fa-shopping-cart"></i>
                 </a>
                 {% endif %}
-                <button type="button" class="btn btn-primary" title="إضافة كمية"
+                <button type="button" class="btn btn-primary" title="{{ t('Add') }} {{ t('Qty') }}"
                         data-action="adjust-stock" data-product-id="{{ product.id }}" data-product-name="{{ product.name|tojson }}" data-current-stock="{{ shown_stock }}">
                   <i class="fas fa-plus"></i>
                 </button>
@@ -276,7 +276,7 @@
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">تعديل المخزون</h5>
+        <h5 class="modal-title">{{ t('Edit') }} {{ t('Inventory') }}</h5>
         <button type="button" class="close" data-dismiss="modal">
           <span>&times;</span>
         </button>
@@ -286,20 +286,20 @@
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
           <input type="hidden" id="productId" name="product_id" aria-label="product id">
           <div class="form-group">
-            <label for="productName">اسم المنتج</label>
+            <label for="productName">{{ t('Name_2') }} {{ t('Product') }}</label>
             <input type="text" id="productName" name="product_name" class="form-control" readonly autocomplete="off" aria-label="product name" minlength="2" maxlength="100">
           </div>
           <div class="form-group">
-            <label for="currentStock">المخزون الحالي</label>
+            <label for="currentStock">{{ t('Inventory') }} {{ t('الحالي') }}</label>
             <input type="number" id="currentStock" name="current_stock" class="form-control" readonly autocomplete="off" aria-label="current stock">
           </div>
           <div class="form-group">
-            <label for="adjustmentType">نوع التعديل</label>
+            <label for="adjustmentType">{{ t('نوع') }} {{ t('Edit_2') }}</label>
             <select id="adjustmentType" name="adjustment_type" class="form-control" required autocomplete="off" aria-label="adjustment type">
-              <option value="" selected>بلا</option>
+              <option value="" selected>{{ t('None') }}</option>
               <option value="add">{{ t('Add') }}</option>
-              <option value="subtract">خصم</option>
-              <option value="set">تعيين</option>
+              <option value="subtract">{{ t('Discount_2') }}</option>
+              <option value="set">{{ t('تعيين') }}</option>
             </select>
           </div>
           <div class="form-group">
@@ -307,13 +307,13 @@
             <input type="number" id="adjustmentQuantity" name="adjustment_quantity" class="form-control" step="0.001" min="0" required autocomplete="off" aria-label="adjustment quantity">
           </div>
           <div class="form-group">
-            <label for="adjustmentReason">السبب</label>
+            <label for="adjustmentReason">{{ t('ال{{ t('سبب') }}') }}</label>
             <select id="adjustmentReason" name="adjustment_reason" class="form-control" required autocomplete="off" aria-label="adjustment reason">
-              <option value="" selected>بلا</option>
-              <option value="purchase">شراء</option>
-              <option value="return">إرجاع</option>
+              <option value="" selected>{{ t('None') }}</option>
+              <option value="purchase">{{ t('Purchase') }}</option>
+              <option value="return">{{ t('إرجاع') }}</option>
               <option value="adjustment">{{ t('Edit') }}</option>
-              <option value="damage">تلف</option>
+              <option value="damage">{{ t('تلف') }}</option>
               <option value="other">{{ t('Other') }}</option>
             </select>
           </div>
@@ -338,7 +338,7 @@
 $(document).ready(function() {
   const $tableEl = $('#productsTable');
   const printOptions = {
-    title: 'كتالوج المنتجات',
+    title: '{{ t('كتالوج') }} {{ t('Products') }}',
     headerColor: '#007A3D'
   };
 
@@ -387,7 +387,7 @@ $(document).ready(function() {
 
   $('#filterOut').off('click.smartPrint').on('click.smartPrint', function() {
     $.fn.dataTable.ext.search.push(function(settings, data) {
-      return data[7].includes('نفذ');
+      return data[7].includes('{{ t('نفذ') }}');
     });
     table.draw();
     $.fn.dataTable.ext.search.pop();
@@ -424,17 +424,17 @@ function saveStockAdjustment() {
   const notes = $('#adjustmentNotes').val();
   
   if (!adjustmentType) {
-    alert('يرجى اختيار نوع التعديل');
+    alert('{{ t('يرجى') }} {{ t('Select') }} {{ t('نوع') }} {{ t('Edit_2') }}');
     return;
   }
   
   if (!reason) {
-    alert('يرجى اختيار سبب التعديل');
+    alert('{{ t('يرجى') }} {{ t('Select') }} {{ t('سبب') }} {{ t('Edit_2') }}');
     return;
   }
   
   if (!quantity || quantity <= 0) {
-    alert('يرجى إدخال كمية صحيحة');
+    alert('{{ t('يرجى') }} {{ t('إدخال') }} {{ t('Qty') }} {{ t('صحيحة') }}');
     return;
   }
   
@@ -453,11 +453,11 @@ function saveStockAdjustment() {
         $('#stockModal').modal('hide');
         location.reload();
       } else {
-        alert('حدث خطأ: ' + response.message);
+        alert('{{ t('حدث') }} {{ t('Error') }}: ' + response.message);
       }
     },
     error: function() {
-      alert('حدث خطأ في الاتصال');
+      alert('{{ t('حدث') }} {{ t('Error') }} في {{ t('الاتصال') }}');
     }
   });
 }

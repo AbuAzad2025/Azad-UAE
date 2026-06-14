@@ -1,15 +1,15 @@
 {% extends "base.html" %}
 
-{% block title %}مشتريات النظام - الخزينة السرية{% endblock %}
+{% block title %}{{ t('Purchases_2') }} {{ t('System') }} - {{ t('الخزينة') }} {{ t('السرية') }}{% endblock %}
 
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
     <div>
-        <h1 class="mb-0"><i class="fas fa-shopping-bag text-primary"></i> مشتريات النظام</h1>
-        <p class="text-muted mb-0">متابعة جميع عمليات شراء الباقات وتفعيلها</p>
+        <h1 class="mb-0"><i class="fas fa-shopping-bag text-primary"></i> {{ t('Purchases_2') }} {{ t('System') }}</h1>
+        <p class="text-muted mb-0">{{ t('متابعة') }} {{ t('جميع') }} {{ t('عمليات') }} {{ t('Purchase') }} {{ t('الباقات') }} {{ t('و{{ t('تفعيل') }}ها') }}</p>
     </div>
     <a href="{{ url_for('payment_vault.dashboard') }}" class="btn btn-secondary">
-        <i class="fas fa-arrow-right"></i> العودة للوحة التحكم
+        <i class="fas fa-arrow-right"></i> {{ t('العودة') }} {{ t('للوحة') }} {{ t('Control') }}
     </a>
 </div>
 {% endblock %}
@@ -97,35 +97,35 @@
 
 <div class="alert alert-warning">
                 <i class="fas fa-shield-alt"></i>
-                <strong>تنبيه أمني:</strong> هذه الصفحة محمية بكلمة مرور الخزينة. جميع العمليات مسجلة ومراقبة.
+                <strong>{{ t('Alert_2') }} {{ t('أمني') }}:</strong> هذه {{ t('الصفحة') }} {{ t('محمية') }} {{ t('بكلمة') }} {{ t('مرور') }} {{ t('الخزينة') }}. {{ t('جميع') }} {{ t('ال{{ t('عمليات') }}') }} {{ t('مسجلة') }} {{ t('ومراقبة') }}.
             </div>
 
 
 <div class="purchase-stats">
                 <div class="stat-box">
                     <div class="stat-number">{{ stats.total }}</div>
-                    <div class="stat-label">إجمالي المشتريات</div>
+                    <div class="stat-label">{{ t('Total_2') }} {{ t('Purchases') }}</div>
                 </div>
                 <div class="stat-box">
                     <div class="stat-number">{{ format_currency(stats.revenue, 'USD') }}</div>
-                    <div class="stat-label">المبلغ الإجمالي</div>
+                    <div class="stat-label">{{ t('Amount') }} {{ t('Total_3') }}</div>
                 </div>
                 <div class="stat-box">
                     <div class="stat-number">{{ stats.completed }}</div>
-                    <div class="stat-label">مشتريات مكتملة</div>
+                    <div class="stat-label">{{ t('Purchases_2') }} {{ t('Completed_2') }}</div>
                 </div>
                 <div class="stat-box">
                     <div class="stat-number">{{ stats.pending }}</div>
-                    <div class="stat-label">مشتريات قيد الانتظار</div>
+                    <div class="stat-label">{{ t('Purchases_2') }} {{ t('قيد') }} {{ t('Waiting') }}</div>
                 </div>
             </div>
 
 
 <div class="purchase-table">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h3><i class="fas fa-list"></i> قائمة المشتريات</h3>
+                    <h3><i class="fas fa-list"></i> {{ t('List') }} {{ t('Purchases') }}</h3>
                     <a href="{{ url_for('payment_vault.dashboard') }}" class="btn btn-secondary">
-                        <i class="fas fa-arrow-left"></i> العودة للوحة التحكم
+                        <i class="fas fa-arrow-left"></i> {{ t('العودة') }} {{ t('للوحة') }} {{ t('Control') }}
                     </a>
                 </div>
 
@@ -134,13 +134,13 @@
                         <thead class="ic-1">
                             <tr>
                                 <th>#</th>
-                                <th>التاريخ</th>
-                                <th>الباقة</th>
-                                <th>العميل</th>
-                                <th>المبلغ</th>
-                                <th>طريقة الدفع</th>
-                                <th>الحالة</th>
-                                <th>الإجراءات</th>
+                                <th>{{ t('Date') }}</th>
+                                <th>{{ t('Plan') }}</th>
+                                <th>{{ t('Customer') }}</th>
+                                <th>{{ t('Amount') }}</th>
+                                <th>{{ t('طريقة') }} {{ t('Payment_2') }}</th>
+                                <th>{{ t('Status') }}</th>
+                                <th>{{ t('الإجراءات') }}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -166,13 +166,13 @@
                                     <td><strong>{{ format_currency(purchase.amount_paid, 'USD') }}</strong></td>
                                     <td>
                                         {% if purchase.payment_method == 'crypto' %}
-                                            <i class="fab fa-bitcoin"></i> عملات رقمية
+                                            <i class="fab fa-bitcoin"></i> {{ t('عملات') }} {{ t('رقمية') }}
                                         {% elif purchase.payment_method == 'card' %}
-                                            <i class="fas fa-credit-card"></i> بطاقة
+                                            <i class="fas fa-credit-card"></i> {{ t('Card') }}
                                         {% elif purchase.payment_method == 'paypal' %}
                                             <i class="fab fa-paypal"></i> PayPal
                                         {% elif purchase.payment_method == 'bank' %}
-                                            <i class="fas fa-university"></i> تحويل بنكي
+                                            <i class="fas fa-university"></i> {{ t('Transfer') }} {{ t('Bank_3') }}
                                         {% else %}
                                             {{ purchase.payment_method }}
                                         {% endif %}
@@ -180,26 +180,26 @@
                                     <td>
                                         <span class="status-badge status-{{ purchase.payment_status }}">
                                             {% if purchase.payment_status == 'completed' %}
-                                                ✓ مكتملة
+                                                ✓ {{ t('Completed_2') }}
                                             {% elif purchase.payment_status == 'pending' %}
-                                                ⏳ قيد الانتظار
+                                                ⏳ {{ t('قيد') }} {{ t('Waiting') }}
                                             {% elif purchase.payment_status == 'failed' %}
-                                                ✗ فشلت
+                                                ✗ {{ t('فشلت') }}
                                             {% elif purchase.payment_status == 'refunded' %}
-                                                ↩ مسترجعة
+                                                ↩ {{ t('مسترجعة') }}
                                             {% else %}
                                                 {{ purchase.payment_status }}
                                             {% endif %}
                                         </span>
                                     </td>
                                     <td>
-                                        <a href="{{ url_for('payment_vault.purchase_detail', id=purchase.id) }}" class="btn btn-info" title="عرض">
+                                        <a href="{{ url_for('payment_vault.purchase_detail', id=purchase.id) }}" class="btn btn-info" title="{{ t('View') }}">
                                             <i class="fas fa-eye"></i>
                                         </a>
                                         {% if purchase.payment_status == 'pending' and purchase.activation_status != 'activated' %}
                                         <form class="needs-validation" method="POST" action="{{ url_for('payment_vault.activate_purchase', id=purchase.id) }}" class="ic-2">
                                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
-                                            <button type="submit" class="btn btn-success" onclick="return confirm('هل تريد تفعيل هذه الباقة؟')" title="تأكيد">
+                                            <button type="submit" class="btn btn-success" onclick="return confirm('هل {{ t('تريد') }} {{ t('تفعيل') }} هذه {{ t('Plan_3') }}')" title="{{ t('Confirm') }}">
                                                 <i class="fas fa-check"></i>
                                             </button>
                                         </form>
@@ -211,7 +211,7 @@
                                 <tr>
                                     <td colspan="8" class="text-center text-muted">
                                         <i class="fas fa-inbox fa-3x mb-3 ic-3"></i>
-                                        لا توجد مشتريات حتى الآن
+                                        لا {{ t('توجد') }} {{ t('Purchases_2') }} حتى {{ t('الآن_2') }}
                                     </td>
                                 </tr>
                             {% endif %}

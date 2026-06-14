@@ -41,7 +41,7 @@
                   <div class="erp-flash-body">{{ message }}</div>
                   <button type="button" class="close" data-dismiss="alert">&times;</button>
                   <div class="progress mt-2 w-100">
-                    <div class="progress-bar flash-timer" role="progressbar" aria-label="مؤقت التنبيه"></div>
+                    <div class="progress-bar flash-timer" role="progressbar" aria-label="{{ t('Temporary') }} {{ t('Alert') }}"></div>
                   </div>
                 </div>
               {% endfor %}
@@ -53,28 +53,28 @@
     </section>
   </div>
   {% include 'partials/footer.html' %}
-  <nav class="erp-mobile-nav d-md-none" aria-label="تنقل سريع">
+  <nav class="erp-mobile-nav d-md-none" aria-label="{{ t('تنقل') }} {{ t('Quick_3') }}">
     <a href="{{ url_for('main.dashboard') }}" class="{% if request.endpoint == 'main.dashboard' %}active{% endif %}">
-      <i class="fas fa-home"></i><span>الرئيسية</span>
+      <i class="fas fa-home"></i><span>{{ t('Main_2') }}</span>
     </a>
     {% if current_user.is_authenticated and current_user.has_permission('manage_sales') %}
     <a href="{{ url_for('sales.index') }}" class="{% if request.endpoint and 'sales' in request.endpoint %}active{% endif %}">
-      <i class="fas fa-file-invoice"></i><span>المبيعات</span>
+      <i class="fas fa-file-invoice"></i><span>{{ t('Sales') }}</span>
     </a>
     {% endif %}
     {% if current_user.is_authenticated and current_user.has_permission('manage_purchases') %}
     <a href="{{ url_for('purchases.index') }}" class="{% if request.endpoint and 'purchases' in request.endpoint %}active{% endif %}">
-      <i class="fas fa-shopping-cart"></i><span>المشتريات</span>
+      <i class="fas fa-shopping-cart"></i><span>{{ t('Purchases') }}</span>
     </a>
     {% endif %}
     {% if current_user.is_authenticated and current_user.has_permission('manage_products') %}
     <a href="{{ url_for('products.index') }}" class="{% if request.endpoint and 'products' in request.endpoint %}active{% endif %}">
-      <i class="fas fa-box"></i><span>المنتجات</span>
+      <i class="fas fa-box"></i><span>{{ t('Products') }}</span>
     </a>
     {% endif %}
     {% if current_user.is_authenticated and current_user.has_permission('view_reports') %}
     <a href="{{ url_for('reports.sales') }}" class="{% if request.endpoint and 'reports' in request.endpoint %}active{% endif %}">
-      <i class="fas fa-chart-bar"></i><span>التقارير</span>
+      <i class="fas fa-chart-bar"></i><span>{{ t('Reports') }}</span>
     </a>
     {% endif %}
   </nav>

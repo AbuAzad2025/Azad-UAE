@@ -1,13 +1,13 @@
 {% extends 'base.html' %}
 
-{% block title %}Budget vs Actual - {% trans %}الموازنة vs الفعلي{% endtrans %}{% endblock %}
+{% block title %}Budget vs Actual - {% trans %}{{ t('Budget') }} vs {{ t('Actual') }}{% endtrans %}{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3 mb-0">{% trans %}تقرير الموازنة مقابل الفعلي{% endtrans %}</h1>
+        <h1 class="h3 mb-0">{% trans %}{{ t('Report_2') }} {{ t('Budget') }} {{ t('مقابل') }} {{ t('Actual') }}{% endtrans %}</h1>
         <div>
-            <a href="{{ url_for('ledger.index') }}" class="btn btn-secondary">{% trans %}العودة لدفتر الأستاذ{% endtrans %}</a>
+            <a href="{{ url_for('ledger.index') }}" class="btn btn-secondary">{% trans %}{{ t('العودة') }} {{ t('لدفتر') }} {{ t('الأستاذ') }}{% endtrans %}</a>
         </div>
     </div>
 
@@ -16,9 +16,9 @@
         <div class="card-body">
             <form method="GET" class="row g-3">
                 <div class="col-md-4">
-                    <label for="branch_id" class="form-label">{% trans %}الفرع{% endtrans %}</label>
+                    <label for="branch_id" class="form-label">{% trans %}{{ t('Branch') }}{% endtrans %}</label>
                     <select name="branch_id" id="branch_id" class="form-select" onchange="this.form.submit()">
-                        <option value="">{% trans %}جميع الفروع{% endtrans %}</option>
+                        <option value="">{% trans %}{{ t('جميع') }} {{ t('Branches') }}{% endtrans %}</option>
                         {% for branch in branches %}
                         <option value="{{ branch.id }}" {% if branch.id == selected_branch %}selected{% endif %}>
                             {{ branch.name }} ({{ branch.code }})
@@ -39,10 +39,10 @@
                     <small>{{ budget_data.budget.fiscal_year }} - {{ budget_data.budget.period_type_ar }} | {{ budget_data.budget.period_start }} إلى {{ budget_data.budget.period_end }}</small>
                 </div>
                 <div class="text-end">
-                    <span class="badge bg-light text-dark me-2">{% trans %}إجمالي المخطط{% endtrans %}: {{ budget_data.total_budgeted|format_currency }}</span>
-                    <span class="badge bg-success me-2">{% trans %}إجمالي الفعلي{% endtrans %}: {{ budget_data.total_actual|format_currency }}</span>
+                    <span class="badge bg-light text-dark me-2">{% trans %}{{ t('Total_2') }} {{ t('المخطط') }}{% endtrans %}: {{ budget_data.total_budgeted|format_currency }}</span>
+                    <span class="badge bg-success me-2">{% trans %}{{ t('Total_2') }} {{ t('Actual') }}{% endtrans %}: {{ budget_data.total_actual|format_currency }}</span>
                     <span class="badge {% if budget_data.total_variance < 0 %}bg-danger{% else %}bg-success{% endif %}">
-                        {% trans %}الانحراف{% endtrans %}: {{ budget_data.total_variance|format_currency }} ({{ budget_data.variance_pct }}%)
+                        {% trans %}{{ t('الانحراف') }}{% endtrans %}: {{ budget_data.total_variance|format_currency }} ({{ budget_data.variance_pct }}%)
                     </span>
                 </div>
             </div>
@@ -51,12 +51,12 @@
                     <table class="table table-hover mb-0">
                         <thead class="table-light">
                             <tr>
-                                <th>{% trans %}الحساب{% endtrans %}</th>
-                                <th class="text-center">{% trans %}المخطط{% endtrans %}</th>
-                                <th class="text-center">{% trans %}الفعلي{% endtrans %}</th>
-                                <th class="text-center">{% trans %}الانحراف{% endtrans %}</th>
-                                <th class="text-center">{% trans %}النسبة%{% endtrans %}</th>
-                                <th class="text-center">{% trans %}الحالة{% endtrans %}</th>
+                                <th>{% trans %}{{ t('Account') }}{% endtrans %}</th>
+                                <th class="text-center">{% trans %}{{ t('المخطط') }}{% endtrans %}</th>
+                                <th class="text-center">{% trans %}{{ t('Actual') }}{% endtrans %}</th>
+                                <th class="text-center">{% trans %}{{ t('الانحراف') }}{% endtrans %}</th>
+                                <th class="text-center">{% trans %}{{ t('Rate_2') }}%{% endtrans %}</th>
+                                <th class="text-center">{% trans %}{{ t('Status') }}{% endtrans %}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -93,9 +93,9 @@
         <div class="card">
             <div class="card-body text-center py-5">
                 <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
-                <h4 class="text-muted">{% trans %}لا توجد موازنات نشطة{% endtrans %}</h4>
-                <p class="text-muted">{% trans %}قم بإنشاء موازنة من قائمة التقارير أو الإدارة للمقارنة مع الأرقام الفعلية.{% endtrans %}</p>
-                <a href="{{ url_for('owner.reports') }}" class="btn btn-primary">{% trans %}إدارة الموازنات{% endtrans %}</a>
+                <h4 class="text-muted">{% trans %}لا {{ t('توجد') }} {{ t('موازنات') }} {{ t('Active_3') }}{% endtrans %}</h4>
+                <p class="text-muted">{% trans %}قم {{ t('بإنشاء') }} {{ t('Budget_2') }} من {{ t('List') }} {{ t('Reports') }} أو {{ t('Management_2') }} {{ t('للمقارنة') }} مع {{ t('الأرقام') }} {{ t('Actual_2') }}.{% endtrans %}</p>
+                <a href="{{ url_for('owner.reports') }}" class="btn btn-primary">{% trans %}{{ t('Management') }} {{ t('Budgets') }}{% endtrans %}</a>
             </div>
         </div>
     {% endif %}

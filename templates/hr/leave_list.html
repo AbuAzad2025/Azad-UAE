@@ -1,22 +1,22 @@
 {% extends 'base.html' %}
-{% block title %}طلبات الإجازات{% endblock %}
+{% block title %}{{ t('{{ t('طلب') }}ات') }} {{ t('الإجازات') }}{% endblock %}
 {% block content %}
 <div class="container-fluid">
   <div class="d-flex justify-content-between align-items-center mb-3">
-    <h4><i class="fas fa-calendar-alt"></i> طلبات الإجازات</h4>
-    <a href="{{ url_for('hr.request_leave') }}" class="btn btn-success btn-sm"><i class="fas fa-plus"></i> طلب إجازة</a>
+    <h4><i class="fas fa-calendar-alt"></i> {{ t('{{ t('طلب') }}ات') }} {{ t('الإجازات') }}</h4>
+    <a href="{{ url_for('hr.request_leave') }}" class="btn btn-success btn-sm"><i class="fas fa-plus"></i> {{ t('طلب') }} {{ t('إجازة') }}</a>
   </div>
   <div class="card">
     <div class="card-body">
       <form class="form-inline mb-3" method="GET">
         <select name="state" class="form-control form-control-sm ml-2">
-          <option value="">الكل</option>
-          <option value="draft" {% if request.args.state == 'draft' %}selected{% endif %}>مسودة</option>
-          <option value="approved" {% if request.args.state == 'approved' %}selected{% endif %}>معتمدة</option>
-          <option value="refused" {% if request.args.state == 'refused' %}selected{% endif %}>مرفوضة</option>
+          <option value="">{{ t('All') }}</option>
+          <option value="draft" {% if request.args.state == 'draft' %}selected{% endif %}>{{ t('مسودة') }}</option>
+          <option value="approved" {% if request.args.state == 'approved' %}selected{% endif %}>{{ t('معتمدة') }}</option>
+          <option value="refused" {% if request.args.state == 'refused' %}selected{% endif %}>{{ t('Rejected') }}</option>
         </select>
         <select name="user_id" class="form-control form-control-sm ml-2">
-          <option value="">الكل</option>
+          <option value="">{{ t('All') }}</option>
           {% for u in users %}
           <option value="{{ u.id }}" {% if request.args.user_id|string == u.id|string %}selected{% endif %}>{{ u.name }}</option>
           {% endfor %}
@@ -26,7 +26,7 @@
       <div class="table-responsive">
         <table class="table table-bordered" id="leavesTable">
           <thead><tr>
-            <th>المستخدم</th><th>النوع</th><th>من</th><th>إلى</th><th>المدة</th><th>الحالة</th><th></th>
+            <th>{{ t('User') }}</th><th>{{ t('النوع') }}</th><th>من</th><th>إلى</th><th>{{ t('Duration_2') }}</th><th>{{ t('Status') }}</th><th></th>
           </tr></thead>
           <tbody>
             {% for l in leaves %}
@@ -35,7 +35,7 @@
               <td>{{ l.leave_type.name_ar or l.leave_type.name if l.leave_type else '-' }}</td>
               <td>{{ l.date_from }}</td>
               <td>{{ l.date_to }}</td>
-              <td>{{ l.duration }} يوم</td>
+              <td>{{ l.duration }} {{ t('يوم') }}</td>
               <td><span class="badge badge-{{ 'success' if l.state == 'approved' else ('danger' if l.state == 'refused' else 'warning') }}">{{ l.state }}</span></td>
               <td>
                 {% if l.state == 'draft' %}

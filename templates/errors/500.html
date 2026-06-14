@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}500 - خطأ في الخادم{% endblock %}
+{% block title %}500 - {{ t('Error') }} في {{ t('الخادم') }}{% endblock %}
 
 {% block content %}
 <div class="container">
@@ -9,9 +9,9 @@
       <div class="card shadow">
         <div class="card-body text-center p-5">
           <h1 class="display-4 text-danger mb-3">500</h1>
-          <h3 class="mb-4">حدث خطأ غير متوقع</h3>
+          <h3 class="mb-4">{{ t('حدث') }} {{ t('Error') }} غير {{ t('Expected_2') }}</h3>
           <p class="text-muted mb-4">
-            يرجى المحاولة لاحقاً. إذا استمرت المشكلة اتصل بالدعم.
+            {{ t('يرجى') }} {{ t('المحاولة') }} {{ t('لاحقاً') }}. إذا {{ t('استمرت') }} {{ t('المشكلة') }} {{ t('اتصل') }} {{ t('بالدعم') }}.
           </p>
           {% if error %}
           <div class="alert alert-danger text-left erp-scroll-200" dir="ltr"
@@ -20,14 +20,14 @@
           </div>
           {% endif %}
           {% if error_id %}
-          <p class="text-muted mb-4">رقم المرجع: {{ error_id }}</p>
+          <p class="text-muted mb-4">{{ t('رقم') }} {{ t('المرجع') }}: {{ error_id }}</p>
           {% endif %}
           <div class="mt-4">
             <a href="{{ url_for('main.dashboard') }}" class="btn btn-danger">
-              العودة للرئيسية
+              {{ t('العودة') }} {{ t('للرئيسية') }}
             </a>
             <a href="javascript:location.reload()" class="btn btn-secondary">
-              إعادة المحاولة
+              {{ t('إعادة') }} {{ t('المحاولة') }}
             </a>
           </div>
         </div>

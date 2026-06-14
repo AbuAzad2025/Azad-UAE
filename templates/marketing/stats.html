@@ -1,45 +1,45 @@
 {% extends 'base.html' %}
-{% block title %}إحصائيات الحملة{% endblock %}
+{% block title %}{{ t('إحصائيات') }} {{ t('الحملة') }}{% endblock %}
 {% block content %}
 <div class="container-fluid">
   <div class="row">
     <div class="col-md-3">
       <div class="card text-center"><div class="card-body">
         <h3>{{ stats.campaign.sent_count }}</h3>
-        <small class="text-muted">أُرسل</small>
+        <small class="text-muted">{{ t('أُرسل') }}</small>
       </div></div>
     </div>
     <div class="col-md-3">
       <div class="card text-center"><div class="card-body">
         <h3>{{ stats.campaign.open_count }}</h3>
-        <small class="text-muted">فتح</small>
+        <small class="text-muted">{{ t('فتح') }}</small>
       </div></div>
     </div>
     <div class="col-md-3">
       <div class="card text-center"><div class="card-body">
         <h3>{{ stats.campaign.click_count }}</h3>
-        <small class="text-muted">نقر</small>
+        <small class="text-muted">{{ t('نقر') }}</small>
       </div></div>
     </div>
     <div class="col-md-3">
       <div class="card text-center"><div class="card-body">
         <h3>{{ stats.campaign.bounce_count }}</h3>
-        <small class="text-muted">ارتداد</small>
+        <small class="text-muted">{{ t('ارتداد') }}</small>
       </div></div>
     </div>
   </div>
   {% if stats.campaign.status == 'draft' %}
   <form method="POST" action="{{ url_for('email_marketing.send_campaign', campaign_id=stats.campaign.id) }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <button class="btn btn-primary"><i class="fas fa-paper-plane"></i> إرسال الآن</button>
+    <button class="btn btn-primary"><i class="fas fa-paper-plane"></i> {{ t('Submit') }} {{ t('الآن_2') }}</button>
   </form>
   {% endif %}
   <div class="card mt-3">
-    <div class="card-header"><h5>سجل الإرسال</h5></div>
+    <div class="card-header"><h5>{{ t('Log') }} {{ t('Submit_2') }}</h5></div>
     <div class="card-body">
       <div class="table-responsive">
         <table class="table table-bordered">
-          <thead><tr><th>الحالة</th><th>أُرسل</th><th>فتح</th></tr></thead>
+          <thead><tr><th>{{ t('Status') }}</th><th>{{ t('أُرسل') }}</th><th>{{ t('فتح') }}</th></tr></thead>
           <tbody>
             {% for log in stats.logs %}
             <tr>
@@ -53,6 +53,6 @@
       </div>
     </div>
   </div>
-  <a href="{{ url_for('email_marketing.campaigns') }}" class="btn btn-secondary">عودة</a>
+  <a href="{{ url_for('email_marketing.campaigns') }}" class="btn btn-secondary">{{ t('عودة') }}</a>
 </div>
 {% endblock %}

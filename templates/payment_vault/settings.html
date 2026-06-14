@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 
-{% block title %}إعدادات الخزينة السرية - Vault Settings{% endblock %}
+{% block title %}{{ t('Settings_2') }} {{ t('الخزينة') }} {{ t('السرية') }} - Vault Settings{% endblock %}
 
 {% block page_title %}
 <div class="d-flex align-items-center">
     <i class="fas fa-cog text-primary mr-3 ic-1"></i>
     <div>
-        <h1 class="mb-0">⚙️ إعدادات الخزينة السرية</h1>
-        <p class="text-muted mb-0">تكوين إعدادات الدفع والأمان</p>
+        <h1 class="mb-0">⚙️ {{ t('Settings_2') }} {{ t('الخزينة') }} {{ t('السرية') }}</h1>
+        <p class="text-muted mb-0">{{ t('تكوين') }} {{ t('Settings_2') }} {{ t('Payment_2') }} {{ t('والأمان') }}</p>
     </div>
 </div>
 {% endblock %}
@@ -24,7 +24,7 @@
                 <div class="card">
                     <div class="card-header bg-primary text-white">
                         <h5 class="mb-0">
-                            <i class="fas fa-cog mr-2"></i>إعدادات الخزينة
+                            <i class="fas fa-cog mr-2"></i>{{ t('Settings_2') }} {{ t('الخزينة') }}
                         </h5>
                     </div>
                     <div class="card-body">
@@ -107,12 +107,12 @@
                             
                             
                             <h5 class="border-bottom pb-2 mb-3">
-                                <i class="fab fa-paypal text-primary"></i> إعدادات PayPal
+                                <i class="fab fa-paypal text-primary"></i> {{ t('Settings_2') }} PayPal
                             </h5>
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label><i class="fas fa-envelope mr-2"></i>البريد التجاري PayPal</label>
+                                        <label><i class="fas fa-envelope mr-2"></i>{{ t('Email_2') }} {{ t('التجاري') }} PayPal</label>
                                         <input type="email" class="form-control" name="paypal_business_email" 
                                                value="{{ vault.paypal_business_email or '' }}" 
                                                placeholder="business@company.com">
@@ -120,10 +120,10 @@
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label><i class="fas fa-cog mr-2"></i>وضع PayPal</label>
+                                        <label><i class="fas fa-cog mr-2"></i>{{ t('وضع') }} PayPal</label>
                                         <select class="form-control" name="paypal_mode" aria-label="paypal mode">
-                                            <option value="sandbox" {% if vault.paypal_mode == 'sandbox' %}selected{% endif %}>Sandbox (اختبار)</option>
-                                            <option value="live" {% if vault.paypal_mode == 'live' %}selected{% endif %}>Live (إنتاج)</option>
+                                            <option value="sandbox" {% if vault.paypal_mode == 'sandbox' %}selected{% endif %}>Sandbox ({{ t('اختبار') }})</option>
+                                            <option value="live" {% if vault.paypal_mode == 'live' %}selected{% endif %}>Live ({{ t('إنتاج') }})</option>
                                         </select>
                                     </div>
                                 </div>
@@ -151,20 +151,20 @@
                             
                             
                             <h5 class="border-bottom pb-2 mb-3">
-                                <i class="fas fa-university text-success"></i> معلومات الحساب البنكي
+                                <i class="fas fa-university text-success"></i> {{ t('Info_2') }} {{ t('Account') }} {{ t('Bank_4') }}
                             </h5>
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label><i class="fas fa-building mr-2"></i>اسم البنك</label>
+                                        <label><i class="fas fa-building mr-2"></i>{{ t('Name_2') }} {{ t('Bank') }}</label>
                                         <input type="text" class="form-control" name="bank_name" 
                                                value="{{ vault.bank_name or '' }}" 
-                                               placeholder="البنك العربي" minlength="2" maxlength="100">
+                                               placeholder="{{ t('Bank') }} {{ t('Arabic_4') }}" minlength="2" maxlength="100">
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label><i class="fas fa-user mr-2"></i>اسم صاحب الحساب</label>
+                                        <label><i class="fas fa-user mr-2"></i>{{ t('Name_2') }} {{ t('صاحب') }} {{ t('Account') }}</label>
                                         <input type="text" class="form-control" name="bank_account_name" 
                                                value="{{ vault.bank_account_name or '' }}" 
                                                placeholder="Azad Systems LLC" minlength="2" maxlength="100">
@@ -174,7 +174,7 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label><i class="fas fa-hashtag mr-2"></i>رقم الحساب</label>
+                                        <label><i class="fas fa-hashtag mr-2"></i>{{ t('رقم') }} {{ t('Account') }}</label>
                                         <input type="text" class="form-control" name="bank_account_number" 
                                                value="{{ vault.bank_account_number or '' }}" 
                                                placeholder="123456789" maxlength="34">
@@ -200,18 +200,18 @@
                                 </div>
                                 <div class="col-md-4">
                                     <div class="form-group">
-                                        <label><i class="fas fa-map-marker-alt mr-2"></i>الفرع</label>
+                                        <label><i class="fas fa-map-marker-alt mr-2"></i>{{ t('Branch') }}</label>
                                         <input type="text" class="form-control" name="bank_branch" 
                                                value="{{ vault.bank_branch or '' }}" 
-                                               placeholder="دبي - الفرع الرئيسي">
+                                               placeholder="{{ t('دبي') }} - {{ t('Branch') }} {{ t('Main') }}">
                                     </div>
                                 </div>
                                 <div class="col-md-4">
                                     <div class="form-group">
-                                        <label><i class="fas fa-flag mr-2"></i>البلد</label>
+                                        <label><i class="fas fa-flag mr-2"></i>{{ t('البلد') }}</label>
                                         <input type="text" class="form-control" name="bank_country" 
                                                value="{{ vault.bank_country or '' }}" 
-                                               placeholder="الإمارات">
+                                               placeholder="{{ t('الإمارات') }}">
                                     </div>
                                 </div>
                             </div>
@@ -220,7 +220,7 @@
                             
                             
                             <h5 class="border-bottom pb-2 mb-3">
-                                <i class="fab fa-stripe-s text-info"></i> إعدادات Stripe
+                                <i class="fab fa-stripe-s text-info"></i> {{ t('Settings_2') }} Stripe
                             </h5>
                             <div class="row">
                                 <div class="col-md-6">
@@ -243,33 +243,33 @@
                             
                             <hr>
                             <h5 class="border-bottom pb-2 mb-3 ic-2">
-                                <i class="fas fa-hand-holding-heart text-success"></i> تبرعات شركة أزاد
+                                <i class="fas fa-hand-holding-heart text-success"></i> {{ t('تبرعات') }} {{ t('Company_2') }} {{ t('أزاد') }}
                             </h5>
                             <div class="row mb-3">
                                 <div class="col-md-6">
                                     <div class="custom-control custom-switch">
                                         <input type="checkbox" class="custom-control-input" id="donations_enabled" name="donations_enabled" {% if vault.donations_enabled %}checked{% endif %} aria-label="donations enabled">
-                                        <label class="custom-control-label" for="donations_enabled">تفعيل التبرعات</label>
+                                        <label class="custom-control-label" for="donations_enabled">{{ t('تفعيل') }} {{ t('ال{{ t('تبرعات') }}') }}</label>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="custom-control custom-switch">
                                         <input type="checkbox" class="custom-control-input" id="donation_page_enabled" name="donation_page_enabled" {% if vault.donation_page_enabled %}checked{% endif %} aria-label="donation page enabled">
-                                        <label class="custom-control-label" for="donation_page_enabled">صفحة <code>/donate</code></label>
+                                        <label class="custom-control-label" for="donation_page_enabled">{{ t('صفحة') }} <code>/donate</code></label>
                                     </div>
                                 </div>
                             </div>
                             <div class="row">
-                                <div class="col-md-6 form-group"><label>عنوان (عربي)</label><input class="form-control" name="donation_title_ar" value="{{ vault.donation_title_ar or 'ادعم شركة أزاد' }}" aria-label="donation title ar"></div>
+                                <div class="col-md-6 form-group"><label>{{ t('Address_2') }} ({{ t('Arabic') }})</label><input class="form-control" name="donation_title_ar" value="{{ vault.donation_title_ar or 'ادعم شركة أزاد' }}" aria-label="donation title ar"></div>
                                 <div class="col-md-6 form-group"><label>Title (EN)</label><input class="form-control" name="donation_title_en" value="{{ vault.donation_title_en or 'Support Azad' }}" dir="ltr" aria-label="donation title en"></div>
                             </div>
                             <div class="row">
-                                <div class="col-md-6 form-group"><label>مقدمة عربي</label><textarea class="form-control" name="donation_intro_ar" rows="2" aria-label="donation intro ar">{{ vault.donation_intro_ar or '' }}</textarea></div>
+                                <div class="col-md-6 form-group"><label>{{ t('Introduction') }} {{ t('Arabic') }}</label><textarea class="form-control" name="donation_intro_ar" rows="2" aria-label="donation intro ar">{{ vault.donation_intro_ar or '' }}</textarea></div>
                                 <div class="col-md-6 form-group"><label>Intro EN</label><textarea class="form-control" name="donation_intro_en" rows="2" dir="ltr" aria-label="donation intro en">{{ vault.donation_intro_en or '' }}</textarea></div>
                             </div>
                             <div class="row">
-                                <div class="col-md-6 form-group"><label>GL مدين (1120 بنك)</label><input class="form-control" name="donation_debit_account" value="{{ vault.donation_debit_account or '1120' }}" dir="ltr" aria-label="donation debit account"></div>
-                                <div class="col-md-6 form-group"><label>GL دائن (4200 إيراد)</label><input class="form-control" name="donation_credit_account" value="{{ vault.donation_credit_account or '4200' }}" dir="ltr" aria-label="donation credit account"></div>
+                                <div class="col-md-6 form-group"><label>GL {{ t('مدين') }} (1120 {{ t('Bank_2') }})</label><input class="form-control" name="donation_debit_account" value="{{ vault.donation_debit_account or '1120' }}" dir="ltr" aria-label="donation debit account"></div>
+                                <div class="col-md-6 form-group"><label>GL {{ t('دائن') }} (4200 {{ t('Revenue_3') }})</label><input class="form-control" name="donation_credit_account" value="{{ vault.donation_credit_account or '4200' }}" dir="ltr" aria-label="donation credit account"></div>
                             </div>
                             
                             
@@ -277,7 +277,7 @@
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <label for="min_donation_amount">
-                                            <i class="fas fa-arrow-up mr-2"></i>الحد الأدنى ($)
+                                            <i class="fas fa-arrow-up mr-2"></i>{{ t('الحد') }} {{ t('الأدنى') }} ($)
                                         </label>
                                         <input type="number" 
                                                class="form-control" 
@@ -290,7 +290,7 @@
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <label for="max_donation_amount">
-                                            <i class="fas fa-arrow-down mr-2"></i>الحد الأقصى ($)
+                                            <i class="fas fa-arrow-down mr-2"></i>{{ t('الحد') }} {{ t('الأقصى') }} ($)
                                         </label>
                                         <input type="number" 
                                                class="form-control" 
@@ -303,7 +303,7 @@
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <label for="daily_limit">
-                                            <i class="fas fa-calendar-day mr-2"></i>الحد اليومي ($)
+                                            <i class="fas fa-calendar-day mr-2"></i>{{ t('الحد') }} {{ t('Daily_2') }} ($)
                                         </label>
                                         <input type="number" 
                                                class="form-control" 
@@ -326,7 +326,7 @@
                                                    name="require_2fa" 
                                                    {% if vault.require_2fa %}checked{% endif %} aria-label="require 2fa">
                                             <label class="form-check-label" for="require_2fa">
-                                                <i class="fas fa-shield-alt mr-2"></i>يتطلب مصادقة ثنائية
+                                                <i class="fas fa-shield-alt mr-2"></i>{{ t('يتطلب') }} {{ t('مصادقة') }} {{ t('ثنائية') }}
                                             </label>
                                         </div>
                                     </div>
@@ -334,7 +334,7 @@
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <label for="auto_lock_minutes">
-                                            <i class="fas fa-clock mr-2"></i>قفل تلقائي (دقيقة)
+                                            <i class="fas fa-clock mr-2"></i>{{ t('قفل') }} {{ t('تلقائي') }} ({{ t('دقيقة') }})
                                         </label>
                                         <input type="number" 
                                                class="form-control" 
@@ -347,7 +347,7 @@
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <label for="max_failed_attempts">
-                                            <i class="fas fa-ban mr-2"></i>محاولات فاشلة
+                                            <i class="fas fa-ban mr-2"></i>{{ t('محاولات') }} {{ t('فاشلة') }}
                                         </label>
                                         <input type="number" 
                                                class="form-control" 
@@ -362,7 +362,7 @@
                             <div class="text-center mt-4">
                                 <button type="submit" class="btn btn-primary btn-lg">
                                     <i class="fas fa-save mr-2"></i>
-                                    حفظ الإعدادات
+                                    {{ t('Save') }} {{ t('Settings') }}
                                 </button>
                             </div>
                         </form>
@@ -374,27 +374,27 @@
                 <div class="card">
                     <div class="card-header bg-success text-white">
                         <h5 class="mb-0">
-                            <i class="fas fa-info-circle mr-2"></i>معلومات الخزينة
+                            <i class="fas fa-info-circle mr-2"></i>{{ t('Info_2') }} {{ t('الخزينة') }}
                         </h5>
                     </div>
                     <div class="card-body">
                         <div class="mb-3">
-                            <strong>حالة الخزينة:</strong>
-                            <span class="badge badge-success">مفتوحة</span>
+                            <strong>{{ t('Status_2') }} {{ t('الخزينة') }}:</strong>
+                            <span class="badge badge-success">{{ t('مفتوحة') }}</span>
                         </div>
                         <div class="mb-3">
-                            <strong>آخر وصول:</strong>
+                            <strong>{{ t('Last') }} {{ t('وصول') }}:</strong>
                             <br>{{ vault.last_access.strftime('%Y-%m-%d %H:%M:%S') }}
                         </div>
                         <div class="mb-3">
-                            <strong>المحاولات الفاشلة:</strong>
+                            <strong>{{ t('ال{{ t('محاولات') }}') }} {{ t('ال{{ t('فاشلة') }}') }}:</strong>
                             <span class="badge badge-{% if vault.failed_attempts > 0 %}warning{% else %}success{% endif %}">
                                 {{ vault.failed_attempts }}/{{ vault.max_failed_attempts }}
                             </span>
                         </div>
                         <div class="mb-3">
-                            <strong>قفل تلقائي:</strong>
-                            <span class="badge badge-info">{{ vault.auto_lock_minutes }} دقيقة</span>
+                            <strong>{{ t('قفل') }} {{ t('تلقائي') }}:</strong>
+                            <span class="badge badge-info">{{ vault.auto_lock_minutes }} {{ t('دقيقة') }}</span>
                         </div>
                     </div>
                 </div>
@@ -402,22 +402,22 @@
                 <div class="card mt-3">
                     <div class="card-header bg-warning text-dark">
                         <h5 class="mb-0">
-                            <i class="fas fa-tools mr-2"></i>إجراءات سريعة
+                            <i class="fas fa-tools mr-2"></i>{{ t('Actions') }} {{ t('Quick') }}
                         </h5>
                     </div>
                     <div class="card-body">
                         <div class="d-grid gap-2">
                             <a href="{{ url_for('payment_vault.change_password') }}" class="btn btn-outline-warning">
                                 <i class="fas fa-key mr-2"></i>
-                                تغيير كلمة المرور
+                                {{ t('Change') }} {{ t('كلمة') }} {{ t('المرور') }}
                             </a>
                             <a href="{{ url_for('payment_vault.lock_vault') }}" class="btn btn-outline-danger">
                                 <i class="fas fa-lock mr-2"></i>
-                                قفل الخزينة
+                                {{ t('قفل') }} {{ t('الخزينة') }}
                             </a>
                             <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary">
                                 <i class="fas fa-arrow-right mr-2"></i>
-                                العودة للوحة المالك
+                                {{ t('العودة') }} {{ t('للوحة') }} {{ t('المالك') }}
                             </a>
                         </div>
                     </div>

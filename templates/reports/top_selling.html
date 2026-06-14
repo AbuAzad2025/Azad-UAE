@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - المنتجات الأكثر مبيعاً{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('Products') }} {{ t('الأكثر') }} {{ t('مبيعاً') }}{% endblock %}
 
 {% block content %}
 <div class="content-wrapper">
@@ -20,17 +20,17 @@
                 <div class="col-12">
                     <div class="card">
                         <div class="card-header">
-                            <h3 class="card-title">المنتجات الأكثر مبيعاً</h3>
+                            <h3 class="card-title">{{ t('Products') }} {{ t('الأكثر') }} {{ t('مبيعاً') }}</h3>
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
                                 <table class="table table-bordered table-striped">
                                     <thead>
                                         <tr>
-                                            <th>الترتيب</th>
-                                            <th>اسم المنتج</th>
-                                            <th>الكمية المباعة</th>
-                                            <th>إجمالي المبيعات</th>
+                                            <th>{{ t('الترتيب') }}</th>
+                                            <th>{{ t('Name_2') }} {{ t('Product') }}</th>
+                                            <th>{{ t('Quantity') }} {{ t('المباعة') }}</th>
+                                            <th>{{ t('Total_2') }} {{ t('Sales') }}</th>
                                         </tr>
                                     </thead>
                                     <tbody>

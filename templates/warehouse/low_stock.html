@@ -1,22 +1,22 @@
 {% extends "base.html" %}
 
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - مخزون منخفض{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('Inventory_2') }} {{ t('Low_2') }}{% endblock %}
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
   <div>
     <h1 class="mb-0 ic-1">
-      <i class="fas fa-exclamation-triangle mr-3"></i>مخزون منخفض
+      <i class="fas fa-exclamation-triangle mr-3"></i>{{ t('Inventory_2') }} {{ t('Low_2') }}
     </h1>
-    <p class="text-muted">منتجات تحتاج إلى إعادة تموين عاجلة</p>
+    <p class="text-muted">{{ t('Products_2') }} {{ t('تحتاج') }} إلى {{ t('إعادة') }} {{ t('تموين') }} {{ t('عاجلة') }}</p>
   </div>
   <div>
     <a href="{{ url_for('warehouse.index') }}" class="btn btn-info btn-lg">
-      <i class="fas fa-warehouse mr-2"></i>المستودع
+      <i class="fas fa-warehouse mr-2"></i>{{ t('Warehouse') }}
     </a>
     {% if current_user.has_permission('manage_purchases') %}
     <a href="{{ url_for('purchases.create') }}" class="btn btn-success btn-lg">
     {% endif %}
-      <i class="fas fa-shopping-cart mr-2"></i>شراء جديد
+      <i class="fas fa-shopping-cart mr-2"></i>{{ t('Purchase') }} {{ t('New') }}
     </a>
   </div>
 </div>
@@ -66,10 +66,10 @@
   <div class="d-flex justify-content-between align-items-center">
     <div>
       <h4 class="mb-2">
-        <i class="fas fa-exclamation-triangle mr-2"></i>تنبيه مخزون!
+        <i class="fas fa-exclamation-triangle mr-2"></i>{{ t('Alert_2') }} {{ t('Inventory_2') }}!
       </h4>
       <p class="mb-0">
-        يوجد <strong>{{ products|length }}</strong> منتج بحاجة إلى إعادة تموين فورية
+        {{ t('يوجد') }} <strong>{{ products|length }}</strong> {{ t('Product_2') }} {{ t('بحاجة') }} إلى {{ t('إعادة') }} {{ t('تموين') }} {{ t('فورية') }}
       </p>
     </div>
     <div>
@@ -81,7 +81,7 @@
 <div class="card">
   <div class="card-header ic-3">
     <h3 class="card-title text-white mb-0">
-      <i class="fas fa-boxes mr-2"></i>المنتجات ذات المخزون المنخفض
+      <i class="fas fa-boxes mr-2"></i>{{ t('Products') }} ذات {{ t('Inventory') }} {{ t('Low_3') }}
     </h3>
   </div>
   <div class="card-body">
@@ -89,12 +89,12 @@
       <table id="lowStockTable" class="table table-hover">
         <thead class="ic-4">
           <tr>
-            <th><i class="fas fa-exclamation-circle mr-2"></i>الأولوية</th>
-            <th><i class="fas fa-box mr-2"></i>المنتج</th>
+            <th><i class="fas fa-exclamation-circle mr-2"></i>{{ t('الأولوية') }}</th>
+            <th><i class="fas fa-box mr-2"></i>{{ t('Product') }}</th>
             <th><i class="fas fa-barcode mr-2"></i>SKU</th>
             <th><i class="fas fa-layer-group mr-2"></i>{{ t('Inventory') }}</th>
-            <th><i class="fas fa-bell mr-2"></i>حد التنبيه</th>
-            <th><i class="fas fa-percentage mr-2"></i>النسبة</th>
+            <th><i class="fas fa-bell mr-2"></i>حد {{ t('Alert') }}</th>
+            <th><i class="fas fa-percentage mr-2"></i>{{ t('Rate_2') }}</th>
             <th><i class="fas fa-money-bill-wave mr-2"></i>{{ t('Price') }}</th>
             <th class="text-center"><i class="fas fa-cog mr-2"></i>{{ t('Actions') }}</th>
           </tr>
@@ -108,7 +108,7 @@
               <div class="urgency-meter">
                 <div class="urgency-bar" style="width: {{ urgency }}%"></div>
               </div>
-              <small class="text-muted">{{ "{:.0f}".format(urgency) }}% نقص</small>
+              <small class="text-muted">{{ "{:.0f}".format(urgency) }}% {{ t('نقص') }}</small>
             </td>
             <td>
               <div class="d-flex align-items-center">
@@ -165,7 +165,7 @@
                 {% if current_user.has_permission('manage_purchases') %}
                 <a href="{{ url_for('purchases.create') }}"
                 {% endif %}
-                   class="btn btn-success" title="طلب شراء">
+                   class="btn btn-success" title="{{ t('طلب') }} {{ t('Purchase') }}">
                   <i class="fas fa-shopping-cart"></i>
                 </a>
               </div>
@@ -202,7 +202,7 @@ $(document).ready(function() {
     buttons: [
       {extend: 'excel', text: '<i class="fas fa-file-excel mr-1"></i> Excel', className: ' btn-success'},
       {extend: 'pdf', text: '<i class="fas fa-file-pdf mr-1"></i> PDF', className: ' btn-danger'},
-      {extend: 'print', text: '<i class="fas fa-print mr-1"></i> طباعة', className: ' btn-info'}
+      {extend: 'print', text: '<i class="fas fa-print mr-1"></i> {{ t('Print') }}', className: ' btn-info'}
     ]
   });
 });

@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ partner.name }} — تفاصيل الشريك{% endblock %}
+{% block title %}{{ partner.name }} — {{ t('Details') }} {{ t('Partner_2') }}{% endblock %}
 
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
@@ -10,9 +10,9 @@
   </div>
   <div>
     {% if current_user.has_permission('manage_users') %}
-    <a href="{{ url_for('partners.edit', id=partner.id) }}" class="btn btn-warning"><i class="fas fa-edit mr-1"></i> تعديل</a>
+    <a href="{{ url_for('partners.edit', id=partner.id) }}" class="btn btn-warning"><i class="fas fa-edit mr-1"></i> {{ t('Edit') }}</a>
     {% endif %}
-    <a href="{{ url_for('partners.statement', id=partner.id) }}" class="btn btn-info"><i class="fas fa-file-invoice mr-1"></i> كشف حساب</a>
+    <a href="{{ url_for('partners.statement', id=partner.id) }}" class="btn btn-info"><i class="fas fa-file-invoice mr-1"></i> {{ t('كشف') }} {{ t('Account_2') }}</a>
   </div>
 </div>
 {% endblock %}
@@ -22,7 +22,7 @@
   <div class="col-md-3">
     <div class="card text-center">
       <div class="card-body">
-        <h5 class="text-muted">رأس المال</h5>
+        <h5 class="text-muted">{{ t('رأس') }} {{ t('المال') }}</h5>
         <h3 class="text-primary">{{ format_currency(balance_summary.investment) }}</h3>
       </div>
     </div>
@@ -30,7 +30,7 @@
   <div class="col-md-3">
     <div class="card text-center">
       <div class="card-body">
-        <h5 class="text-muted">الرصيد الجاري</h5>
+        <h5 class="text-muted">{{ t('Balance') }} {{ t('الجاري') }}</h5>
         <h3 class="{% if balance_summary.current_balance >= 0 %}text-success{% else %}text-danger{% endif %}">
           {{ format_currency(balance_summary.current_balance) }}
         </h3>
@@ -40,7 +40,7 @@
   <div class="col-md-3">
     <div class="card text-center">
       <div class="card-body">
-        <h5 class="text-muted">إجمالي الأرباح</h5>
+        <h5 class="text-muted">{{ t('Total_2') }} {{ t('Profits') }}</h5>
         <h3 class="text-success">{{ format_currency(balance_summary.total_profit) }}</h3>
       </div>
     </div>
@@ -48,7 +48,7 @@
   <div class="col-md-3">
     <div class="card text-center">
       <div class="card-body">
-        <h5 class="text-muted">إجمالي المسحوبات</h5>
+        <h5 class="text-muted">{{ t('Total_2') }} {{ t('المسحوبات') }}</h5>
         <h3 class="text-danger">{{ format_currency(balance_summary.total_withdrawals) }}</h3>
       </div>
     </div>
@@ -58,23 +58,23 @@
 <div class="row">
   <div class="col-md-6">
     <div class="card">
-      <div class="card-header"><i class="fas fa-percentage me-2"></i>نسب الشراكة</div>
+      <div class="card-header"><i class="fas fa-percentage me-2"></i>{{ t('نسب') }} {{ t('الشراكة') }}</div>
       <div class="card-body">
         <ul class="list-group list-group-flush">
           <li class="list-group-item d-flex justify-content-between">
-            <span>نسبة الربح</span><strong>{{ "%.2f"|format(partner.share_percentage or 0) }}%</strong>
+            <span>{{ t('Rate') }} {{ t('Profit') }}</span><strong>{{ "%.2f"|format(partner.share_percentage or 0) }}%</strong>
           </li>
           <li class="list-group-item d-flex justify-content-between">
-            <span>نسبة المصاريف</span><strong>{{ "%.2f"|format(partner.expense_share_percentage or 0) }}%</strong>
+            <span>{{ t('Rate') }} {{ t('المصاريف') }}</span><strong>{{ "%.2f"|format(partner.expense_share_percentage or 0) }}%</strong>
           </li>
           <li class="list-group-item d-flex justify-content-between">
-            <span>نسبة الخسارة</span><strong>{{ "%.2f"|format(partner.loss_share_percentage or 0) }}%</strong>
+            <span>{{ t('Rate') }} {{ t('Loss_2') }}</span><strong>{{ "%.2f"|format(partner.loss_share_percentage or 0) }}%</strong>
           </li>
           <li class="list-group-item d-flex justify-content-between">
-            <span>مبلغ شهري ثابت</span><strong>{{ format_currency(partner.fixed_monthly_amount or 0) }}</strong>
+            <span>{{ t('Amount_2') }} {{ t('Monthly') }} {{ t('Fixed') }}</span><strong>{{ format_currency(partner.fixed_monthly_amount or 0) }}</strong>
           </li>
           <li class="list-group-item d-flex justify-content-between">
-            <span>حد أدنى للربح</span><strong>{{ format_currency(partner.min_profit_threshold or 0) }}</strong>
+            <span>حد {{ t('أدنى') }} {{ t('للربح') }}</span><strong>{{ format_currency(partner.min_profit_threshold or 0) }}</strong>
           </li>
         </ul>
       </div>
@@ -82,7 +82,7 @@
   </div>
   <div class="col-md-6">
     <div class="card">
-      <div class="card-header"><i class="fas fa-address-card me-2"></i>معلومات التواصل</div>
+      <div class="card-header"><i class="fas fa-address-card me-2"></i>{{ t('Info_2') }} {{ t('التواصل') }}</div>
       <div class="card-body">
         <ul class="list-group list-group-flush">
           <li class="list-group-item"><i class="fas fa-phone me-2 text-muted"></i>{{ partner.phone or '—' }}</li>
@@ -99,11 +99,11 @@
   <div class="col-md-6">
     <div class="card">
       <div class="card-header d-flex justify-content-between">
-        <span><i class="fas fa-chart-pie me-2"></i>آخر التوزيعات</span>
+        <span><i class="fas fa-chart-pie me-2"></i>{{ t('Last') }} {{ t('Distributions') }}</span>
       </div>
       <div class="card-body p-0">
         <div class="table-responsive"><table class="table table-sm table-hover mb-0">
-          <thead><tr><th>الفترة</th><th>الربح</th><th>النصيب</th><th>الحالة</th></tr></thead>
+          <thead><tr><th>{{ t('Period_2') }}</th><th>{{ t('Profit') }}</th><th>{{ t('النصيب') }}</th><th>{{ t('Status') }}</th></tr></thead>
           <tbody>
             {% for d in latest_distributions %}
             <tr>
@@ -113,7 +113,7 @@
               <td><span class="badge bg-{{ {'draft':'secondary','approved':'info','paid':'success','cancelled':'danger'}[d.status] }}">{{ d.status_label }}</span></td>
             </tr>
             {% else %}
-            <tr><td colspan="4" class="text-center text-muted">لا توجد توزيعات.</td></tr>
+            <tr><td colspan="4" class="text-center text-muted">لا {{ t('توجد') }} {{ t('توزيعات') }}.</td></tr>
             {% endfor %}
           </tbody>
         </table></div>
@@ -122,10 +122,10 @@
   </div>
   <div class="col-md-6">
     <div class="card">
-      <div class="card-header"><i class="fas fa-exchange-alt me-2"></i>حركات مالية</div>
+      <div class="card-header"><i class="fas fa-exchange-alt me-2"></i>{{ t('حركات') }} {{ t('مالية') }}</div>
       <div class="card-body p-0">
         <div class="table-responsive"><table class="table table-sm table-hover mb-0">
-          <thead><tr><th>التاريخ</th><th>النوع</th><th>المبلغ</th><th>الرصيد</th></tr></thead>
+          <thead><tr><th>{{ t('Date') }}</th><th>{{ t('النوع') }}</th><th>{{ t('Amount') }}</th><th>{{ t('Balance') }}</th></tr></thead>
           <tbody>
             {% for t in latest_transactions %}
             <tr>
@@ -135,7 +135,7 @@
               <td>{{ format_currency(t.balance_after or 0) }}</td>
             </tr>
             {% else %}
-            <tr><td colspan="4" class="text-center text-muted">لا توجد حركات.</td></tr>
+            <tr><td colspan="4" class="text-center text-muted">لا {{ t('توجد') }} {{ t('حركات') }}.</td></tr>
             {% endfor %}
           </tbody>
         </table></div>

@@ -1,14 +1,14 @@
 {% extends 'base.html' %}
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - إدارة الموردين والمتاجر{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('Management') }} {{ t('Suppliers') }} {{ t('والمتاجر') }}{% endblock %}
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
   <div>
-    <h1 class="text-gradient mb-0"><i class="fas fa-truck mr-3"></i>إدارة الموردين</h1>
-    <p class="text-muted">قاعدة بيانات شاملة لجميع الموردين والشركات</p>
+    <h1 class="text-gradient mb-0"><i class="fas fa-truck mr-3"></i>{{ t('Management') }} {{ t('Suppliers') }}</h1>
+    <p class="text-muted">{{ t('قاعدة') }} {{ t('Data_2') }} {{ t('شاملة') }} {{ t('لجميع') }} {{ t('Suppliers') }} {{ t('والشركات') }}</p>
   </div>
   <div>
     <a href="{{ url_for('suppliers.create') }}" class="btn btn-success btn-lg">
-      <i class="fas fa-plus-circle mr-2"></i>مورد جديد
+      <i class="fas fa-plus-circle mr-2"></i>{{ t('Supplier_2') }} {{ t('New') }}
     </a>
   </div>
 </div>
@@ -119,7 +119,7 @@
     <div class="small-box bg-info">
       <div class="inner">
         <h3>{{ stats.total }}</h3>
-        <p>إجمالي الموردين</p>
+        <p>{{ t('Total_2') }} {{ t('Suppliers') }}</p>
       </div>
       <div class="icon">
         <i class="fas fa-truck"></i>
@@ -131,7 +131,7 @@
     <div class="small-box bg-success">
       <div class="inner">
         <h3>{{ stats.verified }}</h3>
-        <p>موردين موثوقين</p>
+        <p>{{ t('Suppliers_3') }} {{ t('{{ t('موثوق') }}ين') }}</p>
       </div>
       <div class="icon">
         <i class="fas fa-check-circle"></i>
@@ -143,7 +143,7 @@
     <div class="small-box bg-warning">
       <div class="inner">
         <h3>{{ stats.parts }}</h3>
-        <p>موردي قطع</p>
+        <p>{{ t('{{ t('Supplier_2') }}ي') }} {{ t('قطع') }}</p>
       </div>
       <div class="icon">
         <i class="fas fa-cogs"></i>
@@ -155,7 +155,7 @@
     <div class="small-box bg-primary">
       <div class="inner">
         <h3>{{ stats.equipment }}</h3>
-        <p>موردي معدات</p>
+        <p>{{ t('{{ t('Supplier_2') }}ي') }} {{ t('معدات') }}</p>
       </div>
       <div class="icon">
         <i class="fas fa-tools"></i>
@@ -168,23 +168,23 @@
   <div class="card-header">
     <div class="d-flex justify-content-between align-items-center">
       <h3 class="card-title mb-0">
-        <i class="fas fa-list mr-2"></i>قائمة الموردين
+        <i class="fas fa-list mr-2"></i>{{ t('List') }} {{ t('Suppliers') }}
       </h3>
       <div class="btn-group">
         <button type="button" class="btn btn-outline-info" id="printSuppliersBtn">
-          <i class="fas fa-print mr-1"></i>طباعة
+          <i class="fas fa-print mr-1"></i>{{ t('Print') }}
         </button>
         <button type="button" class="btn btn-outline-primary" data-filter="all">
-          <i class="fas fa-list mr-1"></i>الكل
+          <i class="fas fa-list mr-1"></i>{{ t('All') }}
         </button>
         <button type="button" class="btn btn-outline-success" data-filter="verified">
-          <i class="fas fa-check-circle mr-1"></i>موثوق
+          <i class="fas fa-check-circle mr-1"></i>{{ t('موثوق') }}
         </button>
         <button type="button" class="btn btn-outline-warning" data-filter="parts">
-          <i class="fas fa-cogs mr-1"></i>قطع
+          <i class="fas fa-cogs mr-1"></i>{{ t('قطع') }}
         </button>
         <button type="button" class="btn btn-outline-info" data-filter="equipment">
-          <i class="fas fa-tools mr-1"></i>معدات
+          <i class="fas fa-tools mr-1"></i>{{ t('معدات') }}
         </button>
       </div>
     </div>
@@ -195,16 +195,16 @@
       <table id="suppliersTable" class="table table-hover">
         <thead class="ic-1">
           <tr>
-            <th><i class="fas fa-building mr-2"></i>المورد</th>
-            <th><i class="fas fa-building mr-2"></i>الشركة</th>
-            <th><i class="fas fa-tag mr-2"></i>النوع</th>
-            <th><i class="fas fa-star mr-2"></i>التقييم</th>
+            <th><i class="fas fa-building mr-2"></i>{{ t('Supplier') }}</th>
+            <th><i class="fas fa-building mr-2"></i>{{ t('Company') }}</th>
+            <th><i class="fas fa-tag mr-2"></i>{{ t('النوع') }}</th>
+            <th><i class="fas fa-star mr-2"></i>{{ t('التقييم') }}</th>
             <th><i class="fas fa-phone mr-2"></i>{{ t('Phone') }}</th>
             <th><i class="fas fa-globe mr-2"></i>{{ t('Country') }}</th>
-            <th><i class="fas fa-coins mr-2"></i>إجمالي المشتريات</th>
+            <th><i class="fas fa-coins mr-2"></i>{{ t('Total_2') }} {{ t('Purchases') }}</th>
             <th><i class="fas fa-wallet mr-2"></i>{{ t('Balance') }}</th>
-            <th><i class="fas fa-code-branch mr-2"></i>الفرع</th>
-            <th class="text-center"><i class="fas fa-cog mr-2"></i>الإجراءات</th>
+            <th><i class="fas fa-code-branch mr-2"></i>{{ t('Branch') }}</th>
+            <th class="text-center"><i class="fas fa-cog mr-2"></i>{{ t('الإجراءات') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -214,7 +214,7 @@
               <div class="d-flex align-items-center">
                 <div class="supplier-icon mr-2 ic-2">
                   {% if supplier.is_verified %}
-                    <i class="fas fa-check-circle text-success" title="مورد موثوق"></i>
+                    <i class="fas fa-check-circle text-success" title="{{ t('Supplier_2') }} {{ t('موثوق') }}"></i>
                   {% else %}
                     <i class="fas fa-truck text-muted"></i>
                   {% endif %}
@@ -277,12 +277,12 @@
                   <i class="fas fa-edit"></i>
                 </a>
                 <a href="{{ url_for('suppliers.statement', id=supplier.id) }}" 
-                   class="btn btn-success" title="كشف الحساب">
+                   class="btn btn-success" title="{{ t('كشف') }} {{ t('Account') }}">
                   <i class="fas fa-file-invoice"></i>
                 </a>
                 <button type="button" class="btn btn-danger" 
                         data-delete-item="{{supplier.id}}" data-item-type="suppliers" data-item-name="{{supplier.name|tojson}}" 
-                        title="حذف">
+                        title="{{ t('Delete') }}">
                   <i class="fas fa-trash"></i>
                 </button>
               </div>
@@ -309,7 +309,7 @@
 $(document).ready(function() {
   const $tableEl = $('#suppliersTable');
   const printOptions = {
-    title: 'قائمة الموردين',
+    title: '{{ t('List') }} {{ t('Suppliers') }}',
     headerColor: '#17a2b8'
   };
 

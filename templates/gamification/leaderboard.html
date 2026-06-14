@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 
-{% block title %}لوحة المتصدرين - {{ app_name }}{% endblock %}
+{% block title %}{{ t('Dashboard_2') }} {{ t('المتصدرين') }} - {{ app_name }}{% endblock %}
 
 {% block content %}
 <div class="content-header">
     <div class="container-fluid">
         <div class="row mb-2">
             <div class="col-sm-6">
-                <h1 class="m-0">🏆 لوحة المتصدرين</h1>
+                <h1 class="m-0">🏆 {{ t('Dashboard_2') }} {{ t('المتصدرين') }}</h1>
             </div>
         </div>
     </div>
@@ -19,16 +19,16 @@
             <div class="col-md-8">
                 <div class="card">
                     <div class="card-header">
-                        <h3 class="card-title">أفضل الموظفين</h3>
+                        <h3 class="card-title">{{ t('أفضل') }} {{ t('Employees') }}</h3>
                     </div>
                     <div class="card-body p-0">
                         <div class="table-responsive"><table class="table table-striped">
                             <thead>
                                 <tr>
-                                    <th>المركز</th>
-                                    <th>الاسم</th>
-                                    <th>النقاط</th>
-                                    <th>الشارة</th>
+                                    <th>{{ t('المركز') }}</th>
+                                    <th>{{ t('Name') }}</th>
+                                    <th>{{ t('النقاط') }}</th>
+                                    <th>{{ t('الشارة') }}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -55,33 +55,33 @@
             <div class="col-md-4">
                 <div class="card">
                     <div class="card-header">
-                        <h3 class="card-title">الشارات المتاحة</h3>
+                        <h3 class="card-title">{{ t('الشارات') }} {{ t('Available_3') }}</h3>
                     </div>
                     <div class="card-body">
                         <div class="list-group">
                             <div class="list-group-item">
-                                <h5>🌱 مستوى أساسي</h5>
-                                <small>0 نقطة</small>
+                                <h5>🌱 {{ t('مستوى') }} {{ t('أساسي') }}</h5>
+                                <small>0 {{ t('نقطة') }}</small>
                             </div>
                             <div class="list-group-item">
-                                <h5>🥉 المستوى 1 (برونزي)</h5>
-                                <small>100 نقطة</small>
+                                <h5>🥉 {{ t('ال{{ t('مستوى') }}') }} 1 ({{ t('برونزي') }})</h5>
+                                <small>100 {{ t('نقطة') }}</small>
                             </div>
                             <div class="list-group-item">
-                                <h5>🥈 المستوى 2 (فضي)</h5>
-                                <small>500 نقطة</small>
+                                <h5>🥈 {{ t('ال{{ t('مستوى') }}') }} 2 ({{ t('فضي') }})</h5>
+                                <small>500 {{ t('نقطة') }}</small>
                             </div>
                             <div class="list-group-item">
-                                <h5>🥇 المستوى 3 (ذهبي)</h5>
-                                <small>1,000 نقطة</small>
+                                <h5>🥇 {{ t('ال{{ t('مستوى') }}') }} 3 ({{ t('ذهبي') }})</h5>
+                                <small>1,000 {{ t('نقطة') }}</small>
                             </div>
                             <div class="list-group-item">
-                                <h5>💎 المستوى المتقدم</h5>
-                                <small>5,000 نقطة</small>
+                                <h5>💎 {{ t('ال{{ t('مستوى') }}') }} {{ t('المتقدم') }}</h5>
+                                <small>5,000 {{ t('نقطة') }}</small>
                             </div>
                             <div class="list-group-item">
-                                <h5>👑 متميز جداً</h5>
-                                <small>10,000 نقطة</small>
+                                <h5>👑 {{ t('متميز') }} {{ t('جداً') }}</h5>
+                                <small>10,000 {{ t('نقطة') }}</small>
                             </div>
                         </div>
                     </div>

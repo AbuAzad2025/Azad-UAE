@@ -1,9 +1,9 @@
 {% extends 'base.html' %}
-{% block title %}نظام الطباعة الاحترافي - Professional Printing System{% endblock %}
+{% block title %}{{ t('System_2') }} {{ t('Printing') }} {{ t('الاحترافي') }} - Professional Printing System{% endblock %}
 
 {% block styles %}
 <style>
-/* تصميم خليجي فاخر للطباعة */
+/* {{ t('تصميم') }} {{ t('Gulf_2') }} {{ t('فاخر') }} {{ t('Printing_2') }} */
 @media print {
   body {
     font-family: 'Arial', 'Tahoma', sans-serif;
@@ -89,7 +89,7 @@
     color: #495057;
   }
   
-  /* جداول فاخرة */
+  /* {{ t('جداول') }} {{ t('{{ t('فاخر') }}ة') }} */
   .luxury-table {
     width: 100%;
     border-collapse: collapse;
@@ -149,7 +149,7 @@
     border-bottom: none;
   }
   
-  /* ألوان خاصة للأرقام */
+  /* {{ t('ألوان') }} {{ t('Specific') }} {{ t('للأرقام') }} */
   .amount-positive {
     color: #28a745;
     font-weight: bold;
@@ -164,7 +164,7 @@
     color: #6c757d;
   }
   
-  /* تذييل فاخر */
+  /* {{ t('تذييل') }} {{ t('فاخر') }} */
   .print-footer {
     margin-top: 50px;
     padding: 30px;
@@ -191,7 +191,7 @@
     height: 40px;
   }
   
-  /* إخفاء العناصر غير المرغوبة */
+  /* {{ t('Hide') }} {{ t('ال{{ t('عناصر') }}') }} غير {{ t('المرغوبة') }} */
   .no-print {
     display: none !important;
   }
@@ -208,14 +208,14 @@
   tfoot { display: table-footer-group; }
   tr { page-break-inside: avoid; break-inside: avoid; }
 
-  /* تحسين الخطوط */
+  /* {{ t('تحسين') }} {{ t('الخطوط') }} */
   * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
 }
 
-/* تصميم الشاشة */
+/* {{ t('تصميم') }} {{ t('الشاشة') }} */
 .print-controls {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   padding: 20px;
@@ -263,19 +263,19 @@
     <div class="row">
       <div class="col-md-6">
         <h3 class="text-white mb-3">
-          <i class="fas fa-print mr-2"></i>نظام الطباعة الاحترافي
+          <i class="fas fa-print mr-2"></i>{{ t('System_2') }} {{ t('Printing') }} {{ t('الاحترافي') }}
         </h3>
-        <p class="text-white-50">طباعة تقارير فاخرة بتصميم خليجي مميز</p>
+        <p class="text-white-50">{{ t('Print') }} {{ t('Reports_3') }} {{ t('{{ t('فاخر') }}ة') }} {{ t('ب{{ t('تصميم') }}') }} {{ t('Gulf_2') }} {{ t('Featured') }}</p>
       </div>
       <div class="col-md-6 text-right">
         <button class="print-btn" onclick="printReport()">
-          <i class="fas fa-print mr-2"></i>طباعة فاخرة
+          <i class="fas fa-print mr-2"></i>{{ t('Print') }} {{ t('{{ t('فاخر') }}ة') }}
         </button>
         <button class="print-btn" onclick="printPDF()">
-          <i class="fas fa-file-pdf mr-2"></i>تصدير PDF
+          <i class="fas fa-file-pdf mr-2"></i>{{ t('Export') }} PDF
         </button>
         <button class="print-btn" onclick="printExcel()">
-          <i class="fas fa-file-excel mr-2"></i>تصدير Excel
+          <i class="fas fa-file-excel mr-2"></i>{{ t('Export') }} Excel
         </button>
       </div>
     </div>
@@ -293,34 +293,34 @@
       <div class="company-details">
         {{ print_branding.address_ar if print_branding is defined else (settings.address_ar if settings else tenant_address) }}<br>
         {% set _phone = print_branding.phone if print_branding is defined else (settings.phone_1 if settings else tenant_phone) %}
-        {% if _phone %}هاتف: {{ _phone }}<br>{% endif %}
+        {% if _phone %}{{ t('Phone_2') }}: {{ _phone }}<br>{% endif %}
         {% set _email = print_branding.email if print_branding is defined else (settings.email if settings else tenant_email) %}
-        {% if _email %}البريد الإلكتروني: {{ _email }}{% endif %}
+        {% if _email %}{{ t('Email_2') }} {{ t('Email_3') }}: {{ _email }}{% endif %}
       </div>
     </div>
 
     
     <div class="report-title">
       <i class="fas fa-chart-line mr-2"></i>
-      تقرير ميزان المراجعة الشامل
+      {{ t('Report_2') }} {{ t('Balance_2') }} {{ t('Review') }} {{ t('الشامل') }}
     </div>
 
     
     <div class="report-info">
       <div class="info-row">
-        <span class="info-label">تاريخ التقرير:</span>
+        <span class="info-label">{{ t('History') }} {{ t('Report') }}:</span>
         <span class="info-value">{{ date.today().strftime('%Y-%m-%d') }}</span>
       </div>
       <div class="info-row">
-        <span class="info-label">فترة التقرير:</span>
+        <span class="info-label">{{ t('Period') }} {{ t('Report') }}:</span>
         <span class="info-value">من {{ date_from.strftime('%Y-%m-%d') }} إلى {{ date_to.strftime('%Y-%m-%d') }}</span>
       </div>
       <div class="info-row">
-        <span class="info-label">العملة:</span>
+        <span class="info-label">{{ t('Currency') }}:</span>
         <span class="info-value">{{ print_branding.default_currency if print_branding is defined else (tenant_default_currency or 'AED') }}</span>
       </div>
       <div class="info-row">
-        <span class="info-label">رقم التقرير:</span>
+        <span class="info-label">{{ t('رقم') }} {{ t('Report') }}:</span>
         <span class="info-value">TB-{{ date.today().strftime('%Y%m%d') }}-001</span>
       </div>
     </div>
@@ -329,12 +329,12 @@
     <div class="table-responsive"><table class="luxury-table">
       <thead>
         <tr>
-          <th>كود الحساب</th>
-          <th>اسم الحساب</th>
-          <th>نوع الحساب</th>
-          <th>الرصيد المدين</th>
-          <th>الرصيد الدائن</th>
-          <th>الرصيد الصافي</th>
+          <th>{{ t('Code_2') }} {{ t('Account') }}</th>
+          <th>{{ t('Name_2') }} {{ t('Account') }}</th>
+          <th>{{ t('نوع') }} {{ t('Account') }}</th>
+          <th>{{ t('Balance') }} {{ t('ال{{ t('مدين') }}') }}</th>
+          <th>{{ t('Balance') }} {{ t('ال{{ t('دائن') }}') }}</th>
+          <th>{{ t('Balance') }} {{ t('Net_2') }}</th>
         </tr>
       </thead>
       <tbody>
@@ -361,13 +361,13 @@
       </tbody>
       <tfoot>
         <tr class="ic-1">
-          <td colspan="3"><strong>الإجمالي</strong></td>
+          <td colspan="3"><strong>{{ t('Total_3') }}</strong></td>
           <td>{{ format_currency(total_debit) }}</td>
           <td>{{ format_currency(total_credit) }}</td>
           <td>
             {% set difference = total_debit - total_credit %}
             {% if difference == 0 %}
-              <span class="badge badge-success">متوازن</span>
+              <span class="badge badge-success">{{ t('متوازن') }}</span>
             {% else %}
               {{ format_currency(difference) }}
             {% endif %}
@@ -378,41 +378,41 @@
 
     
     <div class="alert alert-info ic-2">
-      <h5><i class="fas fa-info-circle mr-2"></i>ملاحظات مهمة:</h5>
+      <h5><i class="fas fa-info-circle mr-2"></i>{{ t('Notes') }} {{ t('Task') }}:</h5>
       <ul class="mb-0">
-        <li>تم إعداد هذا التقرير وفقاً للمعايير المحاسبية الدولية</li>
-        <li>جميع المبالغ بـ{{ tenant_currency_name_ar or "درهم إماراتي" }}</li>
-        <li>التقرير معتمد من النظام المحاسبي المتقدم</li>
-        <li>تاريخ الطباعة: {{ datetime.now().strftime('%Y-%m-%d %H:%M') }}</li>
+        <li>تم {{ t('إعداد') }} هذا {{ t('Report') }} {{ t('وفقاً') }} {{ t('للمعايير') }} {{ t('Accounting') }} {{ t('الدولية') }}</li>
+        <li>{{ t('جميع') }} {{ t('Amounts') }} بـ{{ tenant_currency_name_ar or "درهم إماراتي" }}</li>
+        <li>{{ t('Report') }} {{ t('معتمد') }} من {{ t('System') }} {{ t('Accounting_4') }} {{ t('المتقدم') }}</li>
+        <li>{{ t('History') }} {{ t('Printing') }}: {{ datetime.now().strftime('%Y-%m-%d %H:%M') }}</li>
       </ul>
     </div>
 
     
     <div class="print-footer">
-      <h5><i class="fas fa-certificate mr-2"></i>شهادة صحة البيانات</h5>
-      <p>نؤكد أن البيانات الواردة في هذا التقرير صحيحة ومطابقة للسجلات المحاسبية</p>
+      <h5><i class="fas fa-certificate mr-2"></i>{{ t('شهادة') }} {{ t('Health') }} {{ t('Data') }}</h5>
+      <p>{{ t('نؤكد') }} أن {{ t('Data') }} {{ t('الواردة') }} في هذا {{ t('Report') }} {{ t('صحيحة') }} {{ t('ومطابقة') }} {{ t('للسجلات') }} {{ t('Accounting') }}</p>
       
       <div class="footer-signatures">
         <div class="signature-box">
           <div class="signature-line"></div>
-          <div>المحاسب المختص</div>
-          <div>توقيع وختم</div>
+          <div>{{ t('المحاسب') }} {{ t('المختص') }}</div>
+          <div>{{ t('توقيع') }} {{ t('وختم') }}</div>
         </div>
         <div class="signature-box">
           <div class="signature-line"></div>
-          <div>مدير المالية</div>
-          <div>توقيع وختم</div>
+          <div>{{ t('مدير') }} {{ t('Finance') }}</div>
+          <div>{{ t('توقيع') }} {{ t('وختم') }}</div>
         </div>
         <div class="signature-box">
           <div class="signature-line"></div>
-          <div>المدير العام</div>
-          <div>توقيع وختم</div>
+          <div>{{ t('ال{{ t('مدير') }}') }} {{ t('General_3') }}</div>
+          <div>{{ t('توقيع') }} {{ t('وختم') }}</div>
         </div>
       </div>
       
       <div class="ic-3">
-        <p>© 2025 شركة الإمارات للمرائب - جميع الحقوق محفوظة</p>
-        <p>تم إنشاء هذا التقرير بواسطة النظام المحاسبي المتقدم</p>
+        <p>© 2025 {{ t('Company_2') }} {{ t('الإمارات') }} {{ t('للمرائب') }} - {{ t('جميع') }} {{ t('الحقوق') }} {{ t('محفوظة') }}</p>
+        <p>تم {{ t('Create') }} هذا {{ t('Report') }} {{ t('بواسطة') }} {{ t('System') }} {{ t('Accounting_4') }} {{ t('المتقدم') }}</p>
       </div>
     </div>
   </div>
@@ -422,15 +422,15 @@
 {% block scripts %}
 <script>
 function printReport() {
-  // إخفاء عناصر التحكم
+  // {{ t('Hide') }} {{ t('عناصر') }} {{ t('Control') }}
   document.querySelectorAll('.no-print').forEach(el => {
     el.style.display = 'none';
   });
   
-  // طباعة
+  // {{ t('Print') }}
   window.print();
   
-  // إعادة إظهار عناصر التحكم
+  // {{ t('إعادة') }} {{ t('Show') }} {{ t('عناصر') }} {{ t('Control') }}
   setTimeout(() => {
     document.querySelectorAll('.no-print').forEach(el => {
       el.style.display = '';
@@ -439,27 +439,27 @@ function printReport() {
 }
 
 function printPDF() {
-  // استخدام jsPDF لإنشاء PDF
+  // {{ t('استخدام') }} jsPDF {{ t('ل{{ t('Create') }}') }} PDF
   if (typeof jsPDF !== 'undefined') {
     const doc = new jsPDF('p', 'mm', 'a4');
     const element = document.getElementById('printContent');
     
-    // إضافة النص
+    // {{ t('Add') }} {{ t('النص') }}
     doc.setFontSize(20);
-    doc.text('تقرير ميزان المراجعة', 105, 20, { align: 'center' });
+    doc.text('{{ t('Report_2') }} {{ t('Balance_2') }} {{ t('Review') }}', 105, 20, { align: 'center' });
     
-    // حفظ الملف
+    // {{ t('Save') }} {{ t('File') }}
     doc.save('trial_balance_' + new Date().toISOString().split('T')[0] + '.pdf');
   } else {
-    alert('مكتبة jsPDF غير متوفرة');
+    alert('{{ t('مكتبة') }} jsPDF غير {{ t('متوفرة') }}');
   }
 }
 
 function printExcel() {
-  // إنشاء ملف Excel
+  // {{ t('Create') }} {{ t('ملف') }} Excel
   const data = [];
   
-  // إضافة البيانات
+  // {{ t('Add') }} {{ t('Data') }}
   {% for item in trial_balance_data %}
   data.push([
     '{{ item.account.code }}',
@@ -471,19 +471,19 @@ function printExcel() {
   ]);
   {% endfor %}
   
-  // تصدير Excel
+  // {{ t('Export') }} Excel
   const ws = XLSX.utils.aoa_to_sheet([
-    ['كود الحساب', 'اسم الحساب', 'نوع الحساب', 'مدين', 'دائن', 'رصيد صافي'],
+    ['{{ t('Code_2') }} {{ t('Account') }}', '{{ t('Name_2') }} {{ t('Account') }}', '{{ t('نوع') }} {{ t('Account') }}', '{{ t('مدين') }}', '{{ t('دائن') }}', '{{ t('Balance_3') }} {{ t('Net') }}'],
     ...data
   ]);
   
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'ميزان المراجعة');
+  XLSX.utils.book_append_sheet(wb, ws, '{{ t('Balance_2') }} {{ t('Review') }}');
   
   XLSX.writeFile(wb, 'trial_balance_' + new Date().toISOString().split('T')[0] + '.xlsx');
 }
 
-// تحسين الطباعة
+// {{ t('تحسين') }} {{ t('Printing') }}
 window.addEventListener('beforeprint', function() {
   document.body.style.fontSize = '12px';
 });

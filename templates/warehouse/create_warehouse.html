@@ -1,21 +1,21 @@
 {% extends "base.html" %}
 
-{% block title %}شركة أزاد للأنظمة الذكية - إنشاء مستودع جديد{% endblock %}
+{% block title %}{{ t('Company_2') }} {{ t('أزاد') }} {{ t('للأنظمة') }} {{ t('الذكية') }} - {{ t('Create') }} {{ t('Warehouse_2') }} {{ t('New') }}{% endblock %}
 
 {% block content %}
 <div class="content-header">
   <div class="container-fluid">
     <div class="row mb-2">
       <div class="col-sm-6">
-        <h1 class="m-0"><i class="fas fa-warehouse"></i> إنشاء مستودع جديد</h1>
+        <h1 class="m-0"><i class="fas fa-warehouse"></i> {{ t('Create') }} {{ t('Warehouse_2') }} {{ t('New') }}</h1>
       </div>
       <div class="col-sm-6">
         <ol class="breadcrumb float-sm-left">
           <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">{{ t('Dashboard') }}</a></li>
           {% if current_user.has_permission('manage_warehouse') %}
-          <li class="breadcrumb-item"><a href="{{ url_for('warehouse.list_warehouses') }}">المستودعات</a></li>
+          <li class="breadcrumb-item"><a href="{{ url_for('warehouse.list_warehouses') }}">{{ t('Warehouses') }}</a></li>
           {% endif %}
-          <li class="breadcrumb-item active">إنشاء جديد</li>
+          <li class="breadcrumb-item active">{{ t('Create') }} {{ t('New') }}</li>
         </ol>
       </div>
     </div>
@@ -28,7 +28,7 @@
       <div class="col-md-8">
         <div class="card">
           <div class="card-header bg-success">
-            <h3 class="card-title text-white"><i class="fas fa-plus-circle"></i> معلومات المستودع</h3>
+            <h3 class="card-title text-white"><i class="fas fa-plus-circle"></i> {{ t('Info_2') }} {{ t('Warehouse') }}</h3>
           </div>
           {% set form_data = form_data if form_data is defined else request.form %}
           <form class="needs-validation" method="POST" action="{{ url_for('warehouse.create_warehouse') }}" class="warehouse-create-form">
@@ -38,7 +38,7 @@
                 <div class="col-md-6">
                   <div class="form-group">
                     <label>
-                      <i class="fas fa-warehouse text-primary"></i> الاسم بالإنجليزية 
+                      <i class="fas fa-warehouse text-primary"></i> {{ t('Name') }} {{ t('In English_2') }} 
                       <span class="text-danger">*</span>
                     </label>
                     <input type="text" class="form-control" id="name" name="name" placeholder="Main Warehouse" required value="{{ form_data.get('name', '') }}" minlength="2" maxlength="100">
@@ -47,9 +47,9 @@
                 <div class="col-md-6">
                   <div class="form-group">
                     <label>
-                      <i class="fas fa-font text-info"></i> الاسم بالعربية
+                      <i class="fas fa-font text-info"></i> {{ t('Name') }} {{ t('In Arabic') }}
                     </label>
-                    <input type="text" class="form-control" id="name_ar" name="name_ar" placeholder="المستودع الرئيسي" value="{{ form_data.get('name_ar', '') }}" minlength="2" maxlength="100">
+                    <input type="text" class="form-control" id="name_ar" name="name_ar" placeholder="{{ t('Warehouse') }} {{ t('Main') }}" value="{{ form_data.get('name_ar', '') }}" minlength="2" maxlength="100">
                   </div>
                 </div>
               </div>
@@ -58,7 +58,7 @@
                 <div class="col-md-6">
                   <div class="form-group">
                     <label>
-                      <i class="fas fa-barcode text-secondary"></i> رمز المستودع
+                      <i class="fas fa-barcode text-secondary"></i> {{ t('Code_3') }} {{ t('Warehouse') }}
                     </label>
                     <input type="text" class="form-control" id="code" name="code" placeholder="WH001" value="{{ form_data.get('code', '') }}">
                   </div>
@@ -66,10 +66,10 @@
                 <div class="col-md-6">
                   <div class="form-group">
                     <label>
-                      <i class="fas fa-map-marker-alt text-danger"></i> الموقع
+                      <i class="fas fa-map-marker-alt text-danger"></i> {{ t('Website') }}
                       <span class="text-danger">*</span>
                     </label>
-                    <input type="text" class="form-control" id="location" name="location" placeholder="دبي - الإمارات" required value="{{ form_data.get('location', '') }}">
+                    <input type="text" class="form-control" id="location" name="location" placeholder="{{ t('دبي') }} - {{ t('الإمارات') }}" required value="{{ form_data.get('location', '') }}">
                   </div>
                 </div>
               </div>
@@ -78,10 +78,10 @@
                 <div class="col-md-6">
                   <div class="form-group">
                     <label>
-                      <i class="fas fa-sitemap text-success"></i> المستودع الأب (للفروع)
+                      <i class="fas fa-sitemap text-success"></i> {{ t('Warehouse') }} {{ t('الأب') }} ({{ t('للفروع') }})
                     </label>
                     <select class="form-control" id="parent_id" name="parent_id" aria-label="parent id">
-                      <option value="" {% if not form_data.get('parent_id') %}selected{% endif %}>بلا</option>
+                      <option value="" {% if not form_data.get('parent_id') %}selected{% endif %}>{{ t('None') }}</option>
                       {% if parent_warehouses %}
                         {% for parent in parent_warehouses %}
                         <option value="{{ parent.id }}" {% if form_data.get('parent_id') and form_data.get('parent_id')|int == parent.id %}selected{% endif %}>
@@ -95,10 +95,10 @@
                 <div class="col-md-6">
                   <div class="form-group">
                     <label>
-                      <i class="fas fa-user-tie text-primary"></i> المدير المسؤول
+                      <i class="fas fa-user-tie text-primary"></i> {{ t('المدير') }} {{ t('Responsible') }}
                     </label>
                     <select class="form-control" id="manager_id" name="manager_id" aria-label="manager id">
-                      <option value="" {% if not form_data.get('manager_id') %}selected{% endif %}>بلا</option>
+                      <option value="" {% if not form_data.get('manager_id') %}selected{% endif %}>{{ t('None') }}</option>
                       {% if users %}
                         {% for user in users %}
                         <option value="{{ user.id }}" {% if form_data.get('manager_id') and form_data.get('manager_id')|int == user.id %}selected{% endif %}>
@@ -115,14 +115,14 @@
                 <div class="col-md-6">
                   <div class="form-group">
                     <label>
-                      <i class="fas fa-layer-group text-purple"></i> نوع المستودع
+                      <i class="fas fa-layer-group text-purple"></i> {{ t('نوع') }} {{ t('Warehouse') }}
                     </label>
                     {% set selected_type = form_data.get('warehouse_type', 'physical') %}
                     <select class="form-control" id="warehouse_type" name="warehouse_type" aria-label="warehouse type">
-                      <option value="physical" {% if selected_type == 'physical' %}selected{% endif %}>فعلي (مخزون تقليدي)</option>
-                      <option value="online" {% if selected_type == 'online' %}selected{% endif %}>أونلاين (للمتجر الإلكتروني فقط)</option>
+                      <option value="physical" {% if selected_type == 'physical' %}selected{% endif %}>{{ t('Actual_4') }} ({{ t('Inventory_2') }} {{ t('تقليدي') }})</option>
+                      <option value="online" {% if selected_type == 'online' %}selected{% endif %}>{{ t('أونلاين') }} ({{ t('للمتجر') }} {{ t('Email_3') }} فقط)</option>
                     </select>
-                    <small class="text-muted">مستودع الأونلاين واحد لكل شركة — لا يُستخدم في POS</small>
+                    <small class="text-muted">{{ t('Warehouse_2') }} {{ t('ال{{ t('أونلاين') }}') }} واحد {{ t('لكل') }} {{ t('Company_2') }} — لا {{ t('يُستخدم') }} في POS</small>
                   </div>
                 </div>
               </div>
@@ -131,10 +131,10 @@
                 <div class="col-md-6">
                   <div class="form-group">
                     <label>
-                      <i class="fas fa-building text-info"></i> الفرع
+                      <i class="fas fa-building text-info"></i> {{ t('Branch') }}
                     </label>
-                    <select class="form-control" id="branch_id" name="branch_id" aria-label="اختر الفرع">
-                      <option value="" {% if not form_data.get('branch_id') %}selected{% endif %}>-- عام (بدون فرع محدد) --</option>
+                    <select class="form-control" id="branch_id" name="branch_id" aria-label="{{ t('اختر') }} {{ t('Branch') }}">
+                      <option value="" {% if not form_data.get('branch_id') %}selected{% endif %}>-- {{ t('General_2') }} ({{ t('بدون') }} {{ t('Branch_2') }} {{ t('محدد') }}) --</option>
                       {% if branches %}
                         {% for branch in branches %}
                         <option value="{{ branch.id }}" {% if form_data.get('branch_id') and form_data.get('branch_id')|int == branch.id %}selected{% endif %}>
@@ -151,7 +151,7 @@
                 <div class="custom-control custom-checkbox">
                   <input type="checkbox" class="custom-control-input" id="is_main" name="is_main" {% if form_data.get('is_main') %}checked{% endif %} aria-label="is main">
                   <label class="custom-control-label" for="is_main">
-                    <i class="fas fa-star text-warning"></i> مستودع رئيسي
+                    <i class="fas fa-star text-warning"></i> {{ t('Warehouse_2') }} {{ t('رئيسي') }}
                   </label>
                 </div>
               </div>
@@ -159,12 +159,12 @@
 
             <div class="card-footer">
               <button type="submit" class="btn btn-success btn-lg">
-                <i class="fas fa-save mr-2"></i> إنشاء المستودع
+                <i class="fas fa-save mr-2"></i> {{ t('Create') }} {{ t('Warehouse') }}
               </button>
               {% if current_user.has_permission('manage_warehouse') %}
               <a href="{{ url_for('warehouse.list_warehouses') }}" class="btn btn-secondary btn-lg">
               {% endif %}
-                <i class="fas fa-times mr-2"></i> إلغاء
+                <i class="fas fa-times mr-2"></i> {{ t('Cancel') }}
               </a>
             </div>
           </form>

@@ -3,86 +3,86 @@
             <div class="ic-28">
                 <i class="fab fa-bitcoin ic-19"></i>
                 <h3 class="ic-16">
-                    الدفع بالعملات الرقمية
+                    {{ t('Payment_2') }} {{ t('بالعملات') }} {{ t('ال{{ t('رقم') }}ية') }}
                 </h3>
-                <p class="ic-17">دفع آمن ومجهول بدون رسوم إضافية</p>
+                <p class="ic-17">{{ t('Payment') }} {{ t('آمن') }} {{ t('ومجهول') }} {{ t('بدون') }} {{ t('رسوم') }} {{ t('Additional') }}</p>
             </div>
             
             <div class="alert alert-success ic-29">
                 <i class="fas fa-shield-alt mr-2"></i>
-                <strong>أمان كامل:</strong> لا تتبع، لا رسوم إضافية، تحويل فوري ⚡
+                <strong>{{ t('أمان') }} {{ t('كامل') }}:</strong> لا {{ t('تتبع،') }} لا {{ t('رسوم') }} {{ t('{{ t('Additional') }}،') }} {{ t('Transfer') }} {{ t('فوري') }} ⚡
             </div>
             
             <div class="form-group">
                 <label class="ic-30">
-                    <i class="fas fa-coins mr-2 ic-31"></i>اختر المبلغ (بالدولار)
+                    <i class="fas fa-coins mr-2 ic-31"></i>{{ t('اختر') }} {{ t('Amount') }} ({{ t('بالدولار') }})
                 </label>
                 <div class="amount-options">
                     <button class="amount-btn" onclick="selectAmount(15, event)">
                         <div class="ic-32">$15</div>
-                        <small class="ic-33">شكراً</small>
+                        <small class="ic-33">{{ t('شكراً') }}</small>
                     </button>
                     <button class="amount-btn" onclick="selectAmount(25, event)">
                         <div class="ic-32">$25</div>
-                        <small class="ic-33">رائع</small>
+                        <small class="ic-33">{{ t('رائع') }}</small>
                     </button>
                     <button class="amount-btn" onclick="selectAmount(50, event)">
                         <div class="ic-32">$50</div>
-                        <small class="ic-33">مميز</small>
+                        <small class="ic-33">{{ t('Featured') }}</small>
                     </button>
                     <button class="amount-btn" onclick="selectAmount(100, event)">
                         <div class="ic-32">$100</div>
-                        <small class="ic-33">رهيب</small>
+                        <small class="ic-33">{{ t('رهيب') }}</small>
                     </button>
                     <button class="amount-btn" onclick="selectAmount(250, event)">
                         <div class="ic-32">$250</div>
-                        <small class="ic-33">سخي</small>
+                        <small class="ic-33">{{ t('سخي') }}</small>
                     </button>
                     <button class="amount-btn" onclick="selectAmount(500, event)">
                         <div class="ic-32">$500</div>
                         <small class="ic-33">VIP</small>
                     </button>
                 </div>
-                <input type="number" id="customAmount" class="form-control ic-34" placeholder="💰 أو أدخل مبلغ مخصص (الحد الأدنى $15)" min="15">
+                <input type="number" id="customAmount" class="form-control ic-34" placeholder="💰 أو {{ t('أدخل') }} {{ t('Amount_2') }} {{ t('مخصص') }} ({{ t('الحد') }} {{ t('الأدنى') }} $15)" min="15">
             </div>
             
             <div class="form-group">
                 <label class="ic-30">
-                    <i class="fab fa-bitcoin mr-2 ic-35"></i>اختر العملة الرقمية
+                    <i class="fab fa-bitcoin mr-2 ic-35"></i>{{ t('اختر') }} {{ t('Currency') }} {{ t('ال{{ t('رقم') }}ية') }}
                 </label>
                 <select class="form-control ic-36" id="cryptoType" aria-label="cryptoType">
-                    <option value="btc">🟠 Bitcoin (BTC) - الأكثر أماناً وشهرة</option>
-                    <option value="eth">🔷 Ethereum (ETH) - سريع وموثوق</option>
-                    <option value="usdt">💵 Tether (USDT) - عملة مستقرة (1 USDT = 1 USD)</option>
-                    <option value="usdc">💲 USD Coin (USDC) - عملة مستقرة موثوقة</option>
-                    <option value="bnb">🟡 Binance Coin (BNB) - رسوم منخفضة</option>
+                    <option value="btc">🟠 Bitcoin (BTC) - {{ t('الأكثر') }} {{ t('{{ t('أمان') }}اً') }} {{ t('وشهرة') }}</option>
+                    <option value="eth">🔷 Ethereum (ETH) - {{ t('Quick_3') }} {{ t('وموثوق') }}</option>
+                    <option value="usdt">💵 Tether (USDT) - {{ t('Currency_2') }} {{ t('مستقرة') }} (1 USDT = 1 USD)</option>
+                    <option value="usdc">💲 USD Coin (USDC) - {{ t('Currency_2') }} {{ t('مستقرة') }} {{ t('موثوقة') }}</option>
+                    <option value="bnb">🟡 Binance Coin (BNB) - {{ t('رسوم') }} {{ t('Low') }}</option>
                 </select>
             </div>
             
             <button class="btn btn-donate btn-block ic-37" onclick="generateCryptoPayment()">
                 <i class="fas fa-wallet mr-2"></i>
-                <span>إنشاء عنوان الدفع الآن</span>
+                <span>{{ t('Create') }} {{ t('Address_2') }} {{ t('Payment_2') }} {{ t('الآن_2') }}</span>
                 <i class="fas fa-arrow-left mr-2"></i>
             </button>
             
             <div class="crypto-info ic-14" id="cryptoPaymentInfo">
                 <h4 class="text-center mb-4">
                     <i class="fas fa-qrcode mr-2"></i>
-                    معلومات الدفع
+                    {{ t('Info_2') }} {{ t('Payment_2') }}
                 </h4>
                 
                 <div class="features-list">
                     <div class="feature-item">
                         <i class="fas fa-user-secret"></i>
-                        <strong>خصوصية كاملة:</strong> لا نحتفظ بأي معلومات شخصية
+                        <strong>{{ t('خصوصية') }} {{ t('{{ t('كامل') }}ة') }}:</strong> لا {{ t('نحتفظ') }} {{ t('بأي') }} {{ t('Info_2') }} {{ t('شخصية') }}
                     </div>
                     <div class="feature-item">
                         <i class="fas fa-bolt"></i>
-                        <strong>فوري:</strong> التأكيد خلال 10-30 دقيقة
+                        <strong>{{ t('فوري') }}:</strong> {{ t('Confirm_2') }} خلال 10-30 {{ t('دقيقة') }}
                     </div>
                     <div class="feature-item">
                         <i class="fas fa-shield-alt"></i>
-                        <strong>آمن:</strong> تشفير متقدم وحماية كاملة
+                        <strong>{{ t('آمن') }}:</strong> {{ t('تشفير') }} {{ t('متقدم') }} {{ t('و{{ t('حماية') }}') }} {{ t('{{ t('كامل') }}ة') }}
                     </div>
                 </div>
                 
@@ -96,14 +96,14 @@
                 <div class="wallet-address">
                     <span id="walletAddress">bc1q...</span>
                     <button class="copy-btn" onclick="copyAddress()">
-                        <i class="fas fa-copy"></i> نسخ
+                        <i class="fas fa-copy"></i> {{ t('Backups_2') }}
                     </button>
                 </div>
                 
                 <p class="text-center mt-3 mb-0">
                     <small>
                         <i class="fas fa-info-circle"></i>
-                        أرسل المبلغ المحدد إلى العنوان أعلاه
+                        {{ t('أرسل') }} {{ t('Amount') }} {{ t('المحدد') }} إلى {{ t('Address') }} {{ t('أعلاه') }}
                     </small>
                 </p>
             </div>
@@ -126,28 +126,28 @@
             <div class="ic-38">
                 <i class="fas fa-credit-card ic-19"></i>
                 <h3 class="ic-16">
-                    الدفع بالبطاقة البنكية
+                    {{ t('Payment_2') }} {{ t('ب{{ t('Card_2') }}') }} {{ t('{{ t('Bank_4') }}ة') }}
                 </h3>
                 <p class="ic-17">Visa • Mastercard • American Express</p>
             </div>
             
             <div class="alert alert-info ic-39">
                 <i class="fas fa-lock mr-2"></i>
-                <strong>دفع آمن 100%:</strong> جميع البيانات محمية بتشفير SSL 256-bit 🔒
+                <strong>{{ t('Payment') }} {{ t('آمن') }} 100%:</strong> {{ t('جميع') }} {{ t('Data') }} {{ t('محمية') }} {{ t('ب{{ t('تشفير') }}') }} SSL 256-bit 🔒
             </div>
             
             <form class="needs-validation" id="cardPaymentForm" method="POST" action="">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
                 <div class="form-group">
                     <label class="ic-30">
-                        <i class="fas fa-dollar-sign mr-2 ic-40"></i>المبلغ (USD)
+                        <i class="fas fa-dollar-sign mr-2 ic-40"></i>{{ t('Amount') }} (USD)
                     </label>
-                    <input type="number" id="cardAmount" class="form-control ic-34" min="15" placeholder="💵 أدخل المبلغ (الحد الأدنى $15)" required>
+                    <input type="number" id="cardAmount" class="form-control ic-34" min="15" placeholder="💵 {{ t('أدخل') }} {{ t('Amount') }} ({{ t('الحد') }} {{ t('الأدنى') }} $15)" required>
                 </div>
                 
                 <div class="form-group">
                     <label class="ic-30">
-                        <i class="fas fa-credit-card mr-2 ic-41"></i>رقم البطاقة
+                        <i class="fas fa-credit-card mr-2 ic-41"></i>{{ t('رقم') }} {{ t('Card_2') }}
                     </label>
                     <input type="text" class="form-control ic-42" placeholder="1234 5678 9012 3456" maxlength="19" required>
                 </div>
@@ -156,7 +156,7 @@
                     <div class="col-md-6">
                         <div class="form-group">
                             <label class="ic-43">
-                                <i class="fas fa-calendar mr-2 ic-41"></i>تاريخ الانتهاء
+                                <i class="fas fa-calendar mr-2 ic-41"></i>{{ t('History') }} {{ t('الانتهاء') }}
                             </label>
                             <input type="text" class="form-control ic-36" placeholder="MM/YY" maxlength="5" required>
                         </div>
@@ -173,7 +173,7 @@
                 
                 <button type="submit" class="btn btn-donate btn-block ic-37">
                     <i class="fas fa-check-circle mr-2"></i>
-                    <span>تأكيد الدفع الآن</span>
+                    <span>{{ t('Confirm') }} {{ t('Payment_2') }} {{ t('الآن_2') }}</span>
                     <i class="fas fa-arrow-left mr-2"></i>
                 </button>
                 
@@ -192,24 +192,24 @@
             <div class="ic-47">
                 <i class="fab fa-paypal ic-19"></i>
                 <h3 class="ic-16">
-                    الدفع عبر PayPal
+                    {{ t('Payment_2') }} {{ t('عبر') }} PayPal
                 </h3>
-                <p class="ic-17">دفع سريع وآمن مع حماية المشتري</p>
+                <p class="ic-17">{{ t('Payment') }} {{ t('Quick_3') }} {{ t('و{{ t('آمن') }}') }} مع {{ t('حماية') }} {{ t('المشتري') }}</p>
             </div>
             
             <div class="alert alert-info ic-48">
                 <i class="fas fa-shield-alt mr-2"></i>
-                <strong>حماية كاملة:</strong> استرداد الأموال متاح • لا حاجة لبطاقة ائتمان 💳
+                <strong>{{ t('حماية') }} {{ t('{{ t('كامل') }}ة') }}:</strong> {{ t('استرداد') }} {{ t('الأموال') }} {{ t('Available_2') }} • لا {{ t('حاجة') }} {{ t('لبطاقة') }} {{ t('ائتمان') }} 💳
             </div>
             
             <div class="text-center" id="paypal-button-container">
                 
                 <button class="btn btn-lg ic-49" onclick="handlePayPalPayment()" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 20px rgba(0,0,0,0.3)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 5px 15px rgba(0,0,0,0.2)'">
                     <i class="fab fa-paypal mr-2 ic-50"></i>
-                    <span>متابعة مع PayPal</span>
+                    <span>{{ t('متابعة') }} مع PayPal</span>
                 </button>
                 <p class="mt-3 text-muted">
-                    <i class="fas fa-info-circle"></i> سيتم توجيهك إلى صفحة PayPal الآمنة
+                    <i class="fas fa-info-circle"></i> {{ t('سيتم') }} {{ t('توجيهك') }} إلى {{ t('صفحة') }} PayPal {{ t('ال{{ t('آمن') }}ة') }}
                 </p>
             </div>
         </div>
@@ -219,42 +219,42 @@
             <div class="ic-51">
                 <i class="fas fa-university ic-19"></i>
                 <h3 class="ic-16">
-                    التحويل البنكي المباشر
+                    {{ t('Transfer_2') }} {{ t('Bank_4') }} {{ t('المباشر') }}
                 </h3>
-                <p class="ic-17">للمبالغ الكبيرة والتعاملات الرسمية</p>
+                <p class="ic-17">{{ t('للمبالغ') }} {{ t('الكبيرة') }} {{ t('والتعاملات') }} {{ t('الرسمية') }}</p>
             </div>
             
             <div class="alert alert-warning ic-52">
                 <i class="fas fa-info-circle mr-2"></i>
-                <strong>ملاحظة:</strong> للتحويلات البنكية (+$500)، يُرجى التواصل معنا للحصول على تفاصيل الحساب البنكي
+                <strong>{{ t('Note') }}:</strong> {{ t('لل{{ t('Transfer') }}ات') }} {{ t('{{ t('Bank_4') }}ة') }} (+$500)، {{ t('يُرجى') }} {{ t('ال{{ t('تواصل') }}') }} {{ t('معنا') }} {{ t('للحصول') }} على {{ t('Details') }} {{ t('Account') }} {{ t('Bank_4') }}
             </div>
             
             <div class="text-center">
                 <a href="mailto:{{ developer_email or config.DEVELOPER_EMAIL }}?subject=Bank Transfer Request" class="btn btn-donate btn-lg ic-53">
                     <i class="fas fa-envelope mr-2"></i>
-                    طلب تفاصيل الحساب عبر البريد
+                    {{ t('طلب') }} {{ t('Details') }} {{ t('Account') }} {{ t('عبر') }} {{ t('Email_2') }}
                 </a>
                 
                 <p class="mt-4 ic-54">
-                    <strong>أو تواصل معنا مباشرة:</strong>
+                    <strong>أو {{ t('تواصل') }} {{ t('معنا') }} {{ t('مباشرة') }}:</strong>
                 </p>
                 <a href="https://wa.me/{{ developer_whatsapp_link }}" class="btn btn-lg mt-2 ic-55">
                     <i class="fab fa-whatsapp mr-2 ic-50"></i>
-                    تواصل عبر WhatsApp
+                    {{ t('تواصل') }} {{ t('عبر') }} WhatsApp
                 </a>
 
                 <div class="quick-contact-actions ic-56">
                     <button type="button" class="quick-contact-btn dark" onclick="openWhatsApp('buy_code')">
-                        <i class="fas fa-code"></i> شراء الكود عبر واتساب
+                        <i class="fas fa-code"></i> {{ t('Purchase') }} {{ t('Code') }} {{ t('عبر') }} {{ t('واتساب') }}
                     </button>
                     <button type="button" class="quick-contact-btn email" onclick="openSupportEmail('buy_code')">
-                        <i class="fas fa-file-code"></i> شراء الكود عبر البريد
+                        <i class="fas fa-file-code"></i> {{ t('Purchase') }} {{ t('Code') }} {{ t('عبر') }} {{ t('Email_2') }}
                     </button>
                 </div>
                 
                 <div class="alert alert-info mt-3">
                     <i class="fas fa-info-circle mr-2"></i>
-                    <strong>للمبالغ الكبيرة (+$500):</strong> يُرجى التواصل معنا للحصول على تفاصيل الحساب البنكي
+                    <strong>{{ t('للمبالغ') }} {{ t('الكبيرة') }} (+$500):</strong> {{ t('يُرجى') }} {{ t('ال{{ t('تواصل') }}') }} {{ t('معنا') }} {{ t('للحصول') }} على {{ t('Details') }} {{ t('Account') }} {{ t('Bank_4') }}
                 </div>
             </div>
         </div>

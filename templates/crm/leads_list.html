@@ -1,11 +1,11 @@
 {% extends 'base.html' %}
-{% block title %}عملاء متوقعون{% endblock %}
+{% block title %}{{ t('Customers_3') }} {{ t('متوقعون') }}{% endblock %}
 {% block content %}
 <div class="container-fluid">
   <div class="d-flex justify-content-between align-items-center mb-3">
-    <h4><i class="fas fa-address-card"></i> العملاء المتوقعون</h4>
-    <a href="{{ url_for('crm.pipeline') }}" class="btn btn-outline-primary btn-sm"><i class="fas fa-funnel"></i> خط الأنابيب</a>
-    <a href="{{ url_for('crm.create_lead') }}" class="btn btn-success btn-sm"><i class="fas fa-plus"></i> إضافة</a>
+    <h4><i class="fas fa-address-card"></i> {{ t('Customers_2') }} {{ t('ال{{ t('متوقعون') }}') }}</h4>
+    <a href="{{ url_for('crm.pipeline') }}" class="btn btn-outline-primary btn-sm"><i class="fas fa-funnel"></i> خط {{ t('الأنابيب') }}</a>
+    <a href="{{ url_for('crm.create_lead') }}" class="btn btn-success btn-sm"><i class="fas fa-plus"></i> {{ t('Add') }}</a>
   </div>
   <div class="card">
     <div class="card-body">
@@ -13,14 +13,14 @@
         <table class="table table-bordered table-striped" id="leadsTable">
           <thead>
             <tr>
-              <th>الاسم</th>
-              <th>البريد</th>
-              <th>الهاتف</th>
-              <th>الشركة</th>
-              <th>المرحلة</th>
-              <th>الإيراد</th>
-              <th>الحالة</th>
-              <th>الإجراءات</th>
+              <th>{{ t('Name') }}</th>
+              <th>{{ t('Email_2') }}</th>
+              <th>{{ t('Phone') }}</th>
+              <th>{{ t('Company') }}</th>
+              <th>{{ t('المرحلة') }}</th>
+              <th>{{ t('Revenue_2') }}</th>
+              <th>{{ t('Status') }}</th>
+              <th>{{ t('الإجراءات') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -34,8 +34,8 @@
               <td>{{ (lead.expected_revenue or 0)|format_currency }}</td>
               <td><span class="badge badge-{{ 'success' if lead.status == 'won' else ('danger' if lead.status == 'lost' else 'info') }}">{{ lead.status }}</span></td>
               <td>
-                <a href="{{ url_for('crm.lead_detail', lead_id=lead.id) }}" class="btn btn-sm btn-info" title="عرض"><i class="fas fa-eye"></i></a>
-                <a href="{{ url_for('crm.edit_lead', lead_id=lead.id) }}" class="btn btn-sm btn-warning" title="تعديل"><i class="fas fa-edit"></i></a>
+                <a href="{{ url_for('crm.lead_detail', lead_id=lead.id) }}" class="btn btn-sm btn-info" title="{{ t('View') }}"><i class="fas fa-eye"></i></a>
+                <a href="{{ url_for('crm.edit_lead', lead_id=lead.id) }}" class="btn btn-sm btn-warning" title="{{ t('Edit') }}"><i class="fas fa-edit"></i></a>
               </td>
             </tr>
             {% endfor %}

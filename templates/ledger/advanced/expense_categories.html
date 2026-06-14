@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}فئات المصروفات المتقدمة{% endblock %}
+{% block title %}{{ t('فئات') }} {{ t('Expenses') }} {{ t('المتقدمة') }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
@@ -9,11 +9,11 @@
       <div class="card">
         <div class="card-header">
           <h3 class="card-title">
-            <i class="fas fa-folder-open"></i> فئات المصروفات المتقدمة
+            <i class="fas fa-folder-open"></i> {{ t('فئات') }} {{ t('Expenses') }} {{ t('المتقدمة') }}
           </h3>
           <div class="card-tools">
             <a href="{{ url_for('advanced_ledger.add_expense_category') }}" class="btn btn-success">
-              <i class="fas fa-plus"></i> إضافة فئة
+              <i class="fas fa-plus"></i> {{ t('Add') }} {{ t('فئة') }}
             </a>
           </div>
         </div>
@@ -21,13 +21,13 @@
           <div class="table-responsive"><table class="table table-bordered table-striped">
             <thead>
               <tr>
-                <th>الكود</th>
-                <th>الاسم</th>
-                <th>الفئة الأب</th>
-                <th>الحساب المحاسبي</th>
-                <th>عدد الفرعية</th>
-                <th>الحالة</th>
-                <th>الإجراءات</th>
+                <th>{{ t('Code') }}</th>
+                <th>{{ t('Name') }}</th>
+                <th>{{ t('ال{{ t('فئة') }}') }} {{ t('الأب') }}</th>
+                <th>{{ t('Account') }} {{ t('Accounting_4') }}</th>
+                <th>{{ t('Count') }} {{ t('الفرعية') }}</th>
+                <th>{{ t('Status') }}</th>
+                <th>{{ t('الإجراءات') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -40,20 +40,20 @@
                 <td>{{ category.children.count() }}</td>
                 <td>
                   {% if category.is_active %}
-                    <span class="badge badge-success">نشط</span>
+                    <span class="badge badge-success">{{ t('Active') }}</span>
                   {% else %}
-                    <span class="badge badge-secondary">غير نشط</span>
+                    <span class="badge badge-secondary">غير {{ t('Active') }}</span>
                   {% endif %}
                 </td>
                 <td>
-                  <a href="{{ url_for('advanced_ledger.add_expense_category') }}?id={{ category.id }}" class="btn btn-warning" title="تعديل">
+                  <a href="{{ url_for('advanced_ledger.add_expense_category') }}?id={{ category.id }}" class="btn btn-warning" title="{{ t('Edit') }}">
                     <i class="fas fa-edit"></i>
                   </a>
                 </td>
               </tr>
               {% else %}
               <tr>
-                <td colspan="7" class="text-center">لا توجد فئات</td>
+                <td colspan="7" class="text-center">لا {{ t('توجد') }} {{ t('فئات') }}</td>
               </tr>
               {% endfor %}
             </tbody>

@@ -1,15 +1,15 @@
 {% extends 'base.html' %}
-{% block title %}الميزانية العمومية - Balance Sheet{% endblock %}
-{% block page_title %}الميزانية العمومية{% endblock %}
+{% block title %}{{ t('Balance Sheet') }} {{ t('العمومية') }} - Balance Sheet{% endblock %}
+{% block page_title %}{{ t('Balance Sheet') }} {{ t('العمومية') }}{% endblock %}
 
 {% block content %}
 <div class="row mb-3 no-print">
   <div class="col-12">
     <a href="{{ url_for('ledger.admin_reports') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right mr-2"></i>العودة للتقارير
+      <i class="fas fa-arrow-right mr-2"></i>{{ t('العودة') }} {{ t('Reports_2') }}
     </a>
     <button class="btn btn-success" data-action="window-print">
-      <i class="fas fa-print mr-2"></i>طباعة
+      <i class="fas fa-print mr-2"></i>{{ t('Print') }}
     </button>
   </div>
 </div>
@@ -18,14 +18,14 @@
 <div class="card mb-4 no-print">
   <div class="card-header bg-gradient-primary">
     <h5 class="card-title text-white mb-0">
-      <i class="fas fa-filter mr-2"></i>فلتر التاريخ
+      <i class="fas fa-filter mr-2"></i>{{ t('Filter_2') }} {{ t('Date') }}
     </h5>
   </div>
   <div class="card-body">
     <form class="needs-validation" method="GET" class="row" action="">
       <div class="col-md-6">
         <div class="form-group">
-          <label for="input_as_of_date">اعتباراً من تاريخ:</label>
+          <label for="input_as_of_date">{{ t('اعتباراً') }} من {{ t('History') }}:</label>
           <input type="date" name="as_of_date" class="form-control" value="{{ as_of_date.strftime('%Y-%m-%d') }}" id="input_as_of_date" aria-label="as of date">
         </div>
       </div>
@@ -33,7 +33,7 @@
         <div class="form-group">
           <label>&nbsp;</label>
           <button type="submit" class="btn btn-primary btn-block">
-            <i class="fas fa-search mr-2"></i>تحديث التقرير
+            <i class="fas fa-search mr-2"></i>{{ t('Update') }} {{ t('Report') }}
           </button>
         </div>
       </div>
@@ -48,7 +48,7 @@
     <div class="card">
       <div class="card-header bg-gradient-success">
         <h3 class="card-title text-white">
-          <i class="fas fa-chart-line mr-2"></i>الأصول
+          <i class="fas fa-chart-line mr-2"></i>{{ t('Assets') }}
         </h3>
       </div>
       <div class="card-body p-0">
@@ -56,9 +56,9 @@
           <table class="table table-bordered mb-0">
             <thead class="bg-light">
               <tr>
-                <th width="20%">الكود</th>
-                <th width="50%">اسم الحساب</th>
-                <th width="30%" class="text-center">الرصيد</th>
+                <th width="20%">{{ t('Code') }}</th>
+                <th width="50%">{{ t('Name_2') }} {{ t('Account') }}</th>
+                <th width="30%" class="text-center">{{ t('Balance') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -75,7 +75,7 @@
             </tbody>
             <tfoot class="bg-light">
               <tr>
-                <th colspan="2" class="text-center">إجمالي الأصول</th>
+                <th colspan="2" class="text-center">{{ t('Total_2') }} {{ t('Assets') }}</th>
                 <th class="text-center text-success">{{ format_currency(assets_total) }}</th>
               </tr>
             </tfoot>
@@ -90,7 +90,7 @@
     <div class="card">
       <div class="card-header bg-gradient-danger">
         <h3 class="card-title text-white">
-          <i class="fas fa-chart-bar mr-2"></i>الخصوم وحقوق الملكية
+          <i class="fas fa-chart-bar mr-2"></i>{{ t('Liabilities') }} {{ t('و{{ t('حقوق') }}') }} {{ t('الملكية') }}
         </h3>
       </div>
       <div class="card-body p-0">
@@ -98,9 +98,9 @@
           <table class="table table-bordered mb-0">
             <thead class="bg-light">
               <tr>
-                <th width="20%">الكود</th>
-                <th width="50%">اسم الحساب</th>
-                <th width="30%" class="text-center">الرصيد</th>
+                <th width="20%">{{ t('Code') }}</th>
+                <th width="50%">{{ t('Name_2') }} {{ t('Account') }}</th>
+                <th width="30%" class="text-center">{{ t('Balance') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -130,15 +130,15 @@
             </tbody>
             <tfoot class="bg-light">
               <tr>
-                <th colspan="2" class="text-center">إجمالي الخصوم</th>
+                <th colspan="2" class="text-center">{{ t('Total_2') }} {{ t('Liabilities') }}</th>
                 <th class="text-center text-danger">{{ format_currency(liabilities_total) }}</th>
               </tr>
               <tr>
-                <th colspan="2" class="text-center">إجمالي حقوق الملكية</th>
+                <th colspan="2" class="text-center">{{ t('Total_2') }} {{ t('حقوق') }} {{ t('الملكية') }}</th>
                 <th class="text-center text-info">{{ format_currency(equity_total) }}</th>
               </tr>
               <tr>
-                <th colspan="2" class="text-center">إجمالي الخصوم وحقوق الملكية</th>
+                <th colspan="2" class="text-center">{{ t('Total_2') }} {{ t('Liabilities') }} {{ t('و{{ t('حقوق') }}') }} {{ t('الملكية') }}</th>
                 <th class="text-center text-primary">{{ format_currency(liabilities_total + equity_total) }}</th>
               </tr>
             </tfoot>
@@ -155,7 +155,7 @@
     <div class="card">
       <div class="card-header bg-gradient-warning">
         <h5 class="card-title text-white mb-0">
-          <i class="fas fa-balance-scale mr-2"></i>ملخص التوازن
+          <i class="fas fa-balance-scale mr-2"></i>{{ t('Summary') }} {{ t('التوازن') }}
         </h5>
       </div>
       <div class="card-body">
@@ -163,24 +163,24 @@
           <div class="col-md-4">
             <div class="text-center">
               <h4 class="text-success">{{ format_currency(assets_total) }}</h4>
-              <p class="mb-0">إجمالي الأصول</p>
+              <p class="mb-0">{{ t('Total_2') }} {{ t('Assets') }}</p>
             </div>
           </div>
           <div class="col-md-4">
             <div class="text-center">
               <h4 class="text-primary">{{ format_currency(liabilities_total + equity_total) }}</h4>
-              <p class="mb-0">إجمالي الخصوم وحقوق الملكية</p>
+              <p class="mb-0">{{ t('Total_2') }} {{ t('Liabilities') }} {{ t('و{{ t('حقوق') }}') }} {{ t('الملكية') }}</p>
             </div>
           </div>
           <div class="col-md-4">
             <div class="text-center">
               {% set difference = assets_total - (liabilities_total + equity_total) %}
               {% if difference == 0 %}
-                <h4 class="text-success">متوازن</h4>
-                <p class="mb-0">الميزانية متوازنة</p>
+                <h4 class="text-success">{{ t('متوازن') }}</h4>
+                <p class="mb-0">{{ t('Balance Sheet') }} {{ t('{{ t('متوازن') }}ة') }}</p>
               {% else %}
                 <h4 class="text-danger">{{ format_currency(difference) }}</h4>
-                <p class="mb-0">الفرق</p>
+                <p class="mb-0">{{ t('الفرق') }}</p>
               {% endif %}
             </div>
           </div>
@@ -194,16 +194,16 @@
 <div class="card mt-4">
   <div class="card-header bg-gradient-info">
     <h5 class="card-title text-white mb-0">
-      <i class="fas fa-info-circle mr-2"></i>ملاحظات
+      <i class="fas fa-info-circle mr-2"></i>{{ t('Notes') }}
     </h5>
   </div>
   <div class="card-body">
     <ul class="mb-0">
-      <li>الميزانية العمومية تعرض الوضع المالي للشركة في تاريخ محدد</li>
-      <li>الأصول تمثل ما تملكه الشركة</li>
-      <li>الخصوم تمثل ما تدين به الشركة للآخرين</li>
-      <li>حقوق الملكية تمثل رأس المال والأرباح المحتجزة</li>
-      <li>المعادلة الأساسية: الأصول = الخصوم + حقوق الملكية</li>
+      <li>{{ t('Balance Sheet') }} {{ t('العمومية') }} {{ t('تعرض') }} {{ t('Mode') }} {{ t('{{ t('المال') }}ي') }} {{ t('للشركة') }} في {{ t('History') }} {{ t('محدد') }}</li>
+      <li>{{ t('Assets') }} {{ t('تمثل') }} ما {{ t('تملكه') }} {{ t('Company') }}</li>
+      <li>{{ t('Liabilities') }} {{ t('تمثل') }} ما {{ t('تدين') }} به {{ t('Company') }} {{ t('للآخرين') }}</li>
+      <li>{{ t('حقوق') }} {{ t('الملكية') }} {{ t('تمثل') }} {{ t('رأس') }} {{ t('المال') }} {{ t('والأرباح') }} {{ t('المحتجزة') }}</li>
+      <li>{{ t('المعادلة') }} {{ t('الأساسية') }}: {{ t('Assets') }} = {{ t('Liabilities') }} + {{ t('حقوق') }} {{ t('الملكية') }}</li>
     </ul>
   </div>
 </div>

@@ -1,12 +1,12 @@
 {% extends 'base.html' %}
-{% block title %}شركة أزاد للأنظمة الذكية - إدارة المستخدمين والصلاحيات{% endblock %}
-{% block page_title %}المستخدمين{% endblock %}
+{% block title %}{{ t('Company_2') }} {{ t('أزاد') }} {{ t('للأنظمة') }} {{ t('الذكية') }} - {{ t('Management') }} {{ t('Users') }} {{ t('والصلاحيات') }}{% endblock %}
+{% block page_title %}{{ t('Users') }}{% endblock %}
 
 {% block content %}
 <div class="row mb-3">
   <div class="col-12">
     <a href="{{ url_for('users.create') }}" class="btn btn-primary">
-      <i class="fas fa-user-plus mr-2"></i>إضافة مستخدم
+      <i class="fas fa-user-plus mr-2"></i>{{ t('Add') }} {{ t('User_2') }}
     </a>
   </div>
 </div>
@@ -17,12 +17,12 @@
       <thead>
         <tr>
           <th>{{ t('Username') }}</th>
-          <th>البريد</th>
-          <th>الدور</th>
-          <th>الفرع</th>
+          <th>{{ t('Email_2') }}</th>
+          <th>{{ t('Role') }}</th>
+          <th>{{ t('Branch') }}</th>
           <th>{{ t('Status') }}</th>
-          <th>آخر دخول</th>
-          <th>الإجراءات</th>
+          <th>{{ t('Last') }} {{ t('Sign In') }}</th>
+          <th>{{ t('الإجراءات') }}</th>
         </tr>
       </thead>
       <tbody>
@@ -33,32 +33,32 @@
           <td><span class="badge badge-info">{{ user.role.name_ar if user.role else '-' }}</span></td>
           <td>
             {% if user.branch %}
-            <span class="badge badge-primary" title="فرع المستخدم">
+            <span class="badge badge-primary" title="{{ t('Branch_2') }} {{ t('User') }}">
               {{ user.branch.name }}{% if user.branch.code %} ({{ user.branch.code }}){% endif %}
             </span>
             {% else %}
-            <span class="text-muted">عام / بدون فرع</span>
+            <span class="text-muted">{{ t('General_2') }} / {{ t('بدون') }} {{ t('Branch_2') }}</span>
             {% endif %}
           </td>
           <td>
             {% if user.is_active %}
             <span class="badge badge-success">{{ t('Active') }}</span>
             {% else %}
-            <span class="badge badge-danger">معطل</span>
+            <span class="badge badge-danger">{{ t('معطل') }}</span>
             {% endif %}
           </td>
           <td>{{ user.last_login.strftime('%Y-%m-%d %H:%M') if user.last_login else '-' }}</td>
           <td>
-            <a href="{{ url_for('users.view', id=user.id) }}" class="btn btn-info" title="عرض">
+            <a href="{{ url_for('users.view', id=user.id) }}" class="btn btn-info" title="{{ t('View') }}">
               <i class="fas fa-eye"></i>
             </a>
-            <a href="{{ url_for('users.edit', id=user.id) }}" class="btn btn-warning" title="تعديل">
+            <a href="{{ url_for('users.edit', id=user.id) }}" class="btn btn-warning" title="{{ t('Edit') }}">
               <i class="fas fa-edit"></i>
             </a>
             {% if current_user.is_owner and user.id != current_user.id %}
             <button type="button" class="btn btn-danger" 
                     data-delete-item="{{user.id}}" data-item-type="users" data-item-name="{{user.username|tojson}}" 
-                    title="حذف (المالك فقط)">
+                    title="{{ t('Delete') }} ({{ t('المالك') }} فقط)">
               <i class="fas fa-trash"></i>
             </button>
             {% endif %}

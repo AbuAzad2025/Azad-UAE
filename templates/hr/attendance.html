@@ -1,11 +1,11 @@
 {% extends 'base.html' %}
-{% block title %}الحضور والانصراف{% endblock %}
+{% block title %}{{ t('الحضور') }} {{ t('والانصراف') }}{% endblock %}
 {% block content %}
 <div class="container-fluid">
   <ul class="nav nav-tabs mb-3">
-    <li class="nav-item"><a class="nav-link {% if tab != 'departments' %}active{% endif %}" href="#attendance" data-toggle="tab">الحضور</a></li>
-    <li class="nav-item"><a class="nav-link {% if tab == 'departments' %}active{% endif %}" href="#departments" data-toggle="tab">الأقسام</a></li>
-    <li class="nav-item"><a class="nav-link" href="{{ url_for('hr.leaves_list') }}">الإجازات</a></li>
+    <li class="nav-item"><a class="nav-link {% if tab != 'departments' %}active{% endif %}" href="#attendance" data-toggle="tab">{{ t('الحضور') }}</a></li>
+    <li class="nav-item"><a class="nav-link {% if tab == 'departments' %}active{% endif %}" href="#departments" data-toggle="tab">{{ t('الأقسام') }}</a></li>
+    <li class="nav-item"><a class="nav-link" href="{{ url_for('hr.leaves_list') }}">{{ t('الإجازات') }}</a></li>
   </ul>
   <div class="tab-content">
     <div class="tab-pane {% if tab != 'departments' %}active{% endif %}" id="attendance">
@@ -13,17 +13,17 @@
         <div class="col">
           <form method="POST" action="{{ url_for('hr.clock_in') }}" style="display:inline">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <button class="btn btn-success"><i class="fas fa-sign-in-alt"></i> تسجيل دخول</button>
+            <button class="btn btn-success"><i class="fas fa-sign-in-alt"></i> {{ t('تسجيل') }} {{ t('Sign In') }}</button>
           </form>
           <form method="POST" action="{{ url_for('hr.clock_out') }}" style="display:inline">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <button class="btn btn-danger"><i class="fas fa-sign-out-alt"></i> تسجيل خروج</button>
+            <button class="btn btn-danger"><i class="fas fa-sign-out-alt"></i> {{ t('تسجيل') }} {{ t('خروج') }}</button>
           </form>
         </div>
       </div>
       <form class="form-inline mb-3" method="GET">
         <select name="user_id" class="form-control form-control-sm ml-2">
-          <option value="">الكل</option>
+          <option value="">{{ t('All') }}</option>
           {% for u in users %}
           <option value="{{ u.id }}" {% if request.args.user_id|string == u.id|string %}selected{% endif %}>{{ u.name }}</option>
           {% endfor %}
@@ -34,7 +34,7 @@
       </form>
       <div class="table-responsive">
         <table class="table table-bordered" id="attendanceTable">
-          <thead><tr><th>المستخدم</th><th>الفرع</th><th>دخول</th><th>خروج</th><th>ساعات</th><th>حالة</th></tr></thead>
+          <thead><tr><th>{{ t('User') }}</th><th>{{ t('Branch') }}</th><th>{{ t('Sign In') }}</th><th>{{ t('خروج') }}</th><th>{{ t('ساعات') }}</th><th>{{ t('Status_2') }}</th></tr></thead>
           <tbody>
             {% for r in records %}
             <tr>
@@ -51,10 +51,10 @@
       </div>
     </div>
     <div class="tab-pane {% if tab == 'departments' %}active{% endif %}" id="departments">
-      <button class="btn btn-success btn-sm mb-3" data-toggle="modal" data-target="#deptModal"><i class="fas fa-plus"></i> قسم</button>
+      <button class="btn btn-success btn-sm mb-3" data-toggle="modal" data-target="#deptModal"><i class="fas fa-plus"></i> {{ t('قسم') }}</button>
       <div class="table-responsive">
         <table class="table table-bordered">
-          <thead><tr><th>الاسم</th><th>المدير</th><th>اللون</th></tr></thead>
+          <thead><tr><th>{{ t('Name') }}</th><th>{{ t('المدير') }}</th><th>{{ t('اللون') }}</th></tr></thead>
           <tbody>
             {% for d in departments %}
             <tr>
@@ -71,14 +71,14 @@
 </div>
 <div class="modal fade" id="deptModal">
   <div class="modal-dialog"><div class="modal-content">
-    <div class="modal-header"><h5>قسم جديد</h5></div>
+    <div class="modal-header"><h5>{{ t('قسم') }} {{ t('New') }}</h5></div>
     <form method="POST" action="{{ url_for('hr.create_department') }}">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="modal-body">
-      <div class="form-group"><label>الاسم</label><input name="name" class="form-control" required></div>
-      <div class="form-group"><label>الاسم (عربي)</label><input name="name_ar" class="form-control"></div>
+      <div class="form-group"><label>{{ t('Name') }}</label><input name="name" class="form-control" required></div>
+      <div class="form-group"><label>{{ t('Name') }} ({{ t('Arabic') }})</label><input name="name_ar" class="form-control"></div>
     </div>
-    <div class="modal-footer"><button type="submit" class="btn btn-success">حفظ</button></div>
+    <div class="modal-footer"><button type="submit" class="btn btn-success">{{ t('Save') }}</button></div>
     </form>
   </div></div>
 </div>

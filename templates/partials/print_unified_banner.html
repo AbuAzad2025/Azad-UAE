@@ -4,14 +4,14 @@
     {{ doc_title or 'مستند مالي' }}
   </div>
   <div class="erp-print-banner-sub">
-    رقم المستند: <strong>{{ doc_number or '-' }}</strong>
+    {{ t('رقم') }} {{ t('المستند') }}: <strong>{{ doc_number or '-' }}</strong>
   </div>
   <div class="erp-print-banner-meta">
-    <div><strong>الشركة:</strong> {{ _company_name }}</div>
-    <div><strong>المستخدم:</strong> {{ print_user_name or '—' }}</div>
+    <div><strong>{{ t('Company') }}:</strong> {{ _company_name }}</div>
+    <div><strong>{{ t('User') }}:</strong> {{ print_user_name or '—' }}</div>
     {% if print_branch %}
-    <div><strong>الفرع:</strong> {{ print_branch.name }}{% if print_branch.code %} ({{ print_branch.code }}){% endif %}</div>
-    {% if print_branch.address %}<div><strong>عنوان الفرع:</strong> {{ print_branch.address }}</div>{% endif %}
+    <div><strong>{{ t('Branch') }}:</strong> {{ print_branch.name }}{% if print_branch.code %} ({{ print_branch.code }}){% endif %}</div>
+    {% if print_branch.address %}<div><strong>{{ t('Address_2') }} {{ t('Branch') }}:</strong> {{ print_branch.address }}</div>{% endif %}
     {% endif %}
   </div>
 </div>

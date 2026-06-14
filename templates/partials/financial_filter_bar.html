@@ -6,20 +6,20 @@
         <form method="get" class="form-inline flex-wrap">
           {% if not single_date %}
           <label class="mr-1" for="input_date_from">من:</label>
-          <input type="date" name="date_from" class="form-control form-control-sm mr-2" value="{{ date_from or '' }}" id="input_date_from" aria-label="من تاريخ">
+          <input type="date" name="date_from" class="form-control form-control-sm mr-2" value="{{ date_from or '' }}" id="input_date_from" aria-label="من {{ t('History') }}">
           {% endif %}
           <label class="mr-1" for="input_date_to">{{ show_date_to_label }}</label>
           <input type="date" name="date_to" class="form-control form-control-sm mr-2" value="{{ date_to or '' }}" id="input_date_to" aria-label="{{ show_date_to_label }}">
-          <label class="mr-1">الفرع:</label>
-          <select name="branch_id" class="form-control form-control-sm mr-2" aria-label="اختر الفرع">
-            <option value="">-- الكل --</option>
+          <label class="mr-1">{{ t('Branch') }}:</label>
+          <select name="branch_id" class="form-control form-control-sm mr-2" aria-label="{{ t('اختر') }} {{ t('Branch') }}">
+            <option value="">-- {{ t('All') }} --</option>
             {% for branch in branches %}
             <option value="{{ branch.id }}" {% if selected_branch == branch.id %}selected{% endif %}>{{ branch.name }}</option>
             {% endfor %}
           </select>
           {{ extra_filters }}
-          <button type="submit" class="btn btn-primary btn-sm mr-1"><i class="fas fa-filter"></i> تصفية</button>
-          <button type="button" data-action="window-print" class="btn btn-info btn-sm mr-1"><i class="fas fa-print"></i> طباعة</button>
+          <button type="submit" class="btn btn-primary btn-sm mr-1"><i class="fas fa-filter"></i> {{ t('تصفية') }}</button>
+          <button type="button" data-action="window-print" class="btn btn-info btn-sm mr-1"><i class="fas fa-print"></i> {{ t('Print') }}</button>
           {% for eu in export_urls %}
           <a href="{{ eu.url }}" class="btn btn-{{ eu.color or 'secondary' }} btn-sm mr-1"><i class="fas fa-{{ eu.icon or 'download' }}"></i> {{ eu.label }}</a>
           {% endfor %}

@@ -1,8 +1,8 @@
 {% extends 'base.html' %}
-{% block title %}تحويل مخزون المتجر{% endblock %}
+{% block title %}{{ t('Transfer') }} {{ t('Inventory_2') }} {{ t('Store') }}{% endblock %}
 
 {% block page_title %}
-<h1 class="mb-0"><i class="fas fa-exchange-alt mr-2"></i>تحويل مخزون — المتجر ↔ مستودعات فعلية</h1>
+<h1 class="mb-0"><i class="fas fa-exchange-alt mr-2"></i>{{ t('Transfer') }} {{ t('Inventory_2') }} — {{ t('Store') }} ↔ {{ t('Warehouses_2') }} {{ t('Actual_3') }}</h1>
 {% endblock %}
 
 {% block content %}
@@ -13,54 +13,54 @@
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
         <div class="card-body">
           <div class="form-group">
-            <label>نوع التحويل</label>
+            <label>{{ t('نوع') }} {{ t('Transfer_2') }}</label>
             <select name="direction" id="direction" class="form-control" required aria-label="direction">
-              <option value="to_online">إلى مستودع الأونلاين (نشر للمتجر)</option>
-              <option value="from_online">من مستودع الأونلاين (سحب من المتجر)</option>
+              <option value="to_online">إلى {{ t('Warehouse_2') }} {{ t('ال{{ t('أونلاين') }}') }} ({{ t('نشر') }} {{ t('للمتجر') }})</option>
+              <option value="from_online">من {{ t('Warehouse_2') }} {{ t('ال{{ t('أونلاين') }}') }} ({{ t('سحب') }} من {{ t('Store') }})</option>
             </select>
           </div>
           <div class="form-group">
-            <label>المنتج</label>
+            <label>{{ t('Product') }}</label>
             <select name="product_id" id="product_id" class="form-control select2" required aria-label="product id">
-              <option value="">— اختر —</option>
+              <option value="">— {{ t('اختر') }} —</option>
               {% for product in products %}
               <option value="{{ product.id }}" {% if request.args.get('product_id', type=int) == product.id %}selected{% endif %}>
-                {{ product.name_ar or product.name }} — أونلاين: {{ '{:,.0f}'.format(online_stock.get(product.id, 0)) }}
+                {{ product.name_ar or product.name }} — {{ t('أونلاين') }}: {{ '{:,.0f}'.format(online_stock.get(product.id, 0)) }}
               </option>
               {% endfor %}
             </select>
           </div>
           <div class="form-group" id="source_wh_group">
-            <label id="source_wh_label">المستودع الفعلي (المصدر)</label>
+            <label id="source_wh_label">{{ t('Warehouse') }} {{ t('Actual') }} ({{ t('المصدر') }})</label>
             <select name="source_warehouse_id" class="form-control" required aria-label="source warehouse id">
-              <option value="">— اختر —</option>
+              <option value="">— {{ t('اختر') }} —</option>
               {% for wh in physical_warehouses %}
               <option value="{{ wh.id }}">{{ wh.name_ar or wh.name }} ({{ wh.code or wh.id }})</option>
               {% endfor %}
             </select>
           </div>
           <div class="form-group">
-            <label for="input_quantity">الكمية</label>
+            <label for="input_quantity">{{ t('Quantity') }}</label>
             <input type="number" name="quantity" class="form-control" min="0.001" step="any" required id="input_quantity" aria-label="quantity">
           </div>
           <div class="form-group">
-            <label>ملاحظات</label>
+            <label>{{ t('Notes') }}</label>
             <textarea name="notes" class="form-control" rows="2" aria-label="notes" maxlength="500"></textarea>
           </div>
         </div>
         <div class="card-footer">
-          <button type="submit" class="btn btn-success"><i class="fas fa-check mr-1"></i>تنفيذ التحويل</button>
-          <a href="{{ url_for('store.admin_catalog') }}" class="btn btn-secondary">الكتalog</a>
+          <button type="submit" class="btn btn-success"><i class="fas fa-check mr-1"></i>{{ t('تنفيذ') }} {{ t('Transfer_2') }}</button>
+          <a href="{{ url_for('store.admin_catalog') }}" class="btn btn-secondary">{{ t('الكت') }}alog</a>
         </div>
       </form>
     </div>
   </div>
   <div class="col-lg-5">
     <div class="card card-outline card-info">
-      <div class="card-header"><h3 class="card-title">مستودع الأونلاين</h3></div>
+      <div class="card-header"><h3 class="card-title">{{ t('Warehouse_2') }} {{ t('ال{{ t('أونلاين') }}') }}</h3></div>
       <div class="card-body">
         <p class="mb-1"><strong>{{ online_warehouse.name_ar or online_warehouse.name }}</strong></p>
-        <p class="text-muted small">التحويل لا يغيّر إجمالي مخزون المنتج — ينقل بين المستودعات فقط. المتجر يعرض ما في هذا المستودع.</p>
+        <p class="text-muted small">{{ t('Transfer_2') }} لا {{ t('يغيّر') }} {{ t('Total_2') }} {{ t('Inventory_2') }} {{ t('Product') }} — {{ t('ينقل') }} بين {{ t('Warehouses') }} فقط. {{ t('Store') }} {{ t('يعرض') }} ما في هذا {{ t('Warehouse') }}.</p>
       </div>
     </div>
   </div>
@@ -73,7 +73,7 @@
 $(function() {
   function syncDirection() {
     var toOnline = $('#direction').val() === 'to_online';
-    $('#source_wh_label').text(toOnline ? 'المستودع الفعلي (المصدر)' : 'المستودع الفعلي (الوجهة)');
+    $('#source_wh_label').text(toOnline ? '{{ t('Warehouse') }} {{ t('Actual') }} ({{ t('المصدر') }})' : '{{ t('Warehouse') }} {{ t('Actual') }} ({{ t('الوجهة') }})');
     if (!toOnline && $('select[name="source_warehouse_id"] option').length === 2) {
       /* keep selection */
     }

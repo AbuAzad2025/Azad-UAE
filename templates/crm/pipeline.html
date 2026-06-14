@@ -1,15 +1,15 @@
 {% extends 'base.html' %}
-{% block title %}خط أنابيب CRM{% endblock %}
+{% block title %}خط {{ t('أنابيب') }} CRM{% endblock %}
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/crm/pipeline.css') }}">
 {% endblock %}
 {% block content %}
 <div class="container-fluid">
   <div class="d-flex justify-content-between align-items-center mb-3">
-    <h4><i class="fas fa-funnel-dollar"></i> خط أنابيب المبيعات</h4>
+    <h4><i class="fas fa-funnel-dollar"></i> خط {{ t('أنابيب') }} {{ t('Sales') }}</h4>
     <div>
-      <a href="{{ url_for('crm.leads_list') }}" class="btn btn-outline-primary btn-sm"><i class="fas fa-list"></i> كافة العملاء</a>
-      <a href="{{ url_for('crm.create_lead') }}" class="btn btn-success btn-sm"><i class="fas fa-plus"></i> عميل متوقع</a>
+      <a href="{{ url_for('crm.leads_list') }}" class="btn btn-outline-primary btn-sm"><i class="fas fa-list"></i> {{ t('كافة') }} {{ t('Customers_2') }}</a>
+      <a href="{{ url_for('crm.create_lead') }}" class="btn btn-success btn-sm"><i class="fas fa-plus"></i> {{ t('عميل') }} {{ t('Expected_2') }}</a>
     </div>
   </div>
   <div class="row pipeline-board" id="pipelineBoard">

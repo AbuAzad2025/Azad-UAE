@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 
-{% block title %}الخزينة السرية - Payment Vault{% endblock %}
+{% block title %}{{ t('الخزينة') }} {{ t('السرية') }} - Payment Vault{% endblock %}
 
 {% block page_title %}
 <div class="d-flex align-items-center">
     <i class="fas fa-vault text-warning mr-3 ic-1"></i>
     <div>
-        <h1 class="mb-0">🔐 الخزينة السرية</h1>
-        <p class="text-muted mb-0">وحدة الدفع المحمية بكلمة مرور منفصلة</p>
+        <h1 class="mb-0">🔐 {{ t('الخزينة') }} {{ t('السرية') }}</h1>
+        <p class="text-muted mb-0">{{ t('وحدة') }} {{ t('Payment_2') }} {{ t('ال{{ t('{{ t('محمي') }}ة') }}') }} {{ t('ب{{ t('كلمة') }}') }} {{ t('مرور') }} {{ t('منفصلة') }}</p>
     </div>
 </div>
 {% endblock %}
@@ -109,23 +109,23 @@
                     <i class="fas fa-shield-alt ic-2"></i>
                 </div>
                 
-                <h2 class="text-center mb-4">🔐 الخزينة السرية للدفع</h2>
+                <h2 class="text-center mb-4">🔐 {{ t('الخزينة') }} {{ t('السرية') }} {{ t('للدفع') }}</h2>
                 <p class="text-center mb-4">
-                    وحدة محمية بكلمة مرور منفصلة لإدارة جميع عمليات الدفع والتبرعات
+                    {{ t('وحدة') }} {{ t('{{ t('محمي') }}ة') }} {{ t('ب{{ t('كلمة') }}') }} {{ t('مرور') }} {{ t('منفصلة') }} {{ t('ل{{ t('Management') }}') }} {{ t('جميع') }} {{ t('عمليات') }} {{ t('Payment_2') }} {{ t('والتبرعات') }}
                 </p>
                 
                 <div class="text-center">
                     <span class="security-badge">
-                        <i class="fas fa-lock mr-1"></i>محمي بكلمة مرور
+                        <i class="fas fa-lock mr-1"></i>{{ t('محمي') }} {{ t('ب{{ t('كلمة') }}') }} {{ t('مرور') }}
                     </span>
                     <span class="security-badge">
-                        <i class="fas fa-shield-alt mr-1"></i>تشفير متقدم
+                        <i class="fas fa-shield-alt mr-1"></i>{{ t('تشفير') }} {{ t('متقدم') }}
                     </span>
                     <span class="security-badge">
-                        <i class="fas fa-user-secret mr-1"></i>خصوصية كاملة
+                        <i class="fas fa-user-secret mr-1"></i>{{ t('خصوصية') }} {{ t('كاملة') }}
                     </span>
                     <span class="security-badge">
-                        <i class="fas fa-key mr-1"></i>وصول محدود
+                        <i class="fas fa-key mr-1"></i>{{ t('وصول') }} {{ t('م{{ t('حدود') }}') }}
                     </span>
                 </div>
             </div>
@@ -137,26 +137,26 @@
                 <div class="card">
                     <div class="card-header bg-primary text-white">
                         <h5 class="mb-0">
-                            <i class="fas fa-cogs mr-2"></i>الميزات الأمنية
+                            <i class="fas fa-cogs mr-2"></i>{{ t('الميزات') }} {{ t('ال{{ t('أمني') }}ة') }}
                         </h5>
                     </div>
                     <div class="card-body">
                         <div class="feature-list">
                             <div class="feature-item">
                                 <i class="fas fa-key"></i>
-                                <strong>كلمة مرور منفصلة:</strong> كلمة مرور خاصة للخزينة
+                                <strong>{{ t('كلمة') }} {{ t('مرور') }} {{ t('منفصلة') }}:</strong> {{ t('كلمة') }} {{ t('مرور') }} {{ t('Specific') }} {{ t('للخزينة') }}
                             </div>
                             <div class="feature-item">
                                 <i class="fas fa-clock"></i>
-                                <strong>قفل تلقائي:</strong> قفل تلقائي بعد 30 دقيقة
+                                <strong>{{ t('قفل') }} {{ t('تلقائي') }}:</strong> {{ t('قفل') }} {{ t('تلقائي') }} بعد 30 {{ t('دقيقة') }}
                             </div>
                             <div class="feature-item">
                                 <i class="fas fa-ban"></i>
-                                <strong>حماية من التكرار:</strong> قفل بعد 3 محاولات فاشلة
+                                <strong>{{ t('حماية') }} من {{ t('التكرار') }}:</strong> {{ t('قفل') }} بعد 3 {{ t('محاولات') }} {{ t('فاشلة') }}
                             </div>
                             <div class="feature-item">
                                 <i class="fas fa-history"></i>
-                                <strong>سجل مفصل:</strong> تسجيل جميع العمليات
+                                <strong>{{ t('Log') }} {{ t('مفصل') }}:</strong> {{ t('تسجيل') }} {{ t('جميع') }} {{ t('ال{{ t('عمليات') }}') }}
                             </div>
                         </div>
                     </div>
@@ -167,26 +167,26 @@
                 <div class="card">
                     <div class="card-header bg-success text-white">
                         <h5 class="mb-0">
-                            <i class="fas fa-credit-card mr-2"></i>إدارة الدفع
+                            <i class="fas fa-credit-card mr-2"></i>{{ t('Management') }} {{ t('Payment_2') }}
                         </h5>
                     </div>
                     <div class="card-body">
                         <div class="feature-list">
                             <div class="feature-item">
                                 <i class="fab fa-bitcoin"></i>
-                                <strong>العملات الرقمية:</strong> Bitcoin, Ethereum, USDT
+                                <strong>{{ t('العملات') }} {{ t('الرقمية') }}:</strong> Bitcoin, Ethereum, USDT
                             </div>
                             <div class="feature-item">
                                 <i class="fas fa-chart-line"></i>
-                                <strong>إحصائيات مفصلة:</strong> تتبع جميع المعاملات
+                                <strong>{{ t('إحصائيات') }} {{ t('{{ t('مفصل') }}ة') }}:</strong> {{ t('تتبع') }} {{ t('جميع') }} {{ t('المعاملات') }}
                             </div>
                             <div class="feature-item">
                                 <i class="fas fa-cog"></i>
-                                <strong>إعدادات متقدمة:</strong> حدود وقيود الدفع
+                                <strong>{{ t('Settings_2') }} {{ t('{{ t('متقدم') }}ة') }}:</strong> {{ t('حدود') }} {{ t('وقيود') }} {{ t('Payment_2') }}
                             </div>
                             <div class="feature-item">
                                 <i class="fas fa-bell"></i>
-                                <strong>إشعارات فورية:</strong> تنبيهات للعمليات
+                                <strong>{{ t('Notifications_2') }} {{ t('فورية') }}:</strong> {{ t('Alerts') }} {{ t('لل{{ t('عمليات') }}') }}
                             </div>
                         </div>
                     </div>
@@ -198,22 +198,22 @@
         <div class="text-center mt-4">
             <a href="{{ url_for('payment_vault.unlock_vault') }}" class="btn-vault">
                 <i class="fas fa-unlock mr-2"></i>
-                فتح الخزينة
+                {{ t('فتح') }} {{ t('الخزينة') }}
             </a>
             
             <a href="{{ url_for('owner.dashboard') }}" class="btn-vault">
                 <i class="fas fa-arrow-right mr-2"></i>
-                العودة للوحة المالك
+                {{ t('العودة') }} {{ t('للوحة') }} {{ t('المالك') }}
             </a>
         </div>
         
         
         <div class="alert alert-warning mt-4">
-            <h5><i class="fas fa-exclamation-triangle mr-2"></i>تنبيه أمني</h5>
+            <h5><i class="fas fa-exclamation-triangle mr-2"></i>{{ t('Alert_2') }} {{ t('أمني') }}</h5>
             <p class="mb-0">
-                <strong>كلمة مرور الخزينة:</strong> هي عنوان محفظة Bitcoin الخاص بك
+                <strong>{{ t('كلمة') }} {{ t('مرور') }} {{ t('الخزينة') }}:</strong> هي {{ t('Address_2') }} {{ t('محفظة') }} Bitcoin {{ t('Specific_3') }} بك
                 <br>
-                <strong>مثال:</strong> bc1qyourbtcaddresshere
+                <strong>{{ t('مثال') }}:</strong> bc1qyourbtcaddresshere
             </p>
         </div>
 </div>

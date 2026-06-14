@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}الشيكات المؤرشفة{% endblock %}
+{% block title %}{{ t('Cheques') }} {{ t('Archived') }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
@@ -9,13 +9,13 @@
       <div class="card">
         <div class="card-header">
           <h3 class="card-title">
-            <i class="fas fa-archive"></i> الشيكات المؤرشفة
+            <i class="fas fa-archive"></i> {{ t('Cheques') }} {{ t('Archived') }}
           </h3>
           <div class="card-tools">
             {% if current_user.has_permission('manage_payments') %}
             <a href="{{ url_for('cheques.index') }}" class="btn btn-secondary">
             {% endif %}
-              <i class="fas fa-arrow-left"></i> رجوع
+              <i class="fas fa-arrow-left"></i> {{ t('Back') }}
             </a>
           </div>
         </div>
@@ -23,14 +23,14 @@
           <div class="table-responsive"><table class="table table-bordered table-striped">
             <thead>
               <tr>
-                <th>رقم الشيك</th>
-                <th>النوع</th>
-                <th>المبلغ</th>
-                <th>البنك</th>
-                <th>تاريخ الاستحقاق</th>
-                <th>الحالة</th>
-                <th>تاريخ الأرشفة</th>
-                <th>الإجراءات</th>
+                <th>{{ t('رقم') }} {{ t('Cheque') }}</th>
+                <th>{{ t('النوع') }}</th>
+                <th>{{ t('Amount') }}</th>
+                <th>{{ t('Bank') }}</th>
+                <th>{{ t('History') }} {{ t('Due') }}</th>
+                <th>{{ t('Status') }}</th>
+                <th>{{ t('History') }} {{ t('الأرشفة') }}</th>
+                <th>{{ t('الإجراءات') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -39,9 +39,9 @@
                 <td>{{ cheque.cheque_number }}</td>
                 <td>
                   {% if cheque.cheque_type == 'incoming' %}
-                    <span class="badge badge-success">وارد</span>
+                    <span class="badge badge-success">{{ t('Income_3') }}</span>
                   {% else %}
-                    <span class="badge badge-warning">صادر</span>
+                    <span class="badge badge-warning">{{ t('Expense') }}</span>
                   {% endif %}
                 </td>
                 <td>{{ cheque.amount }} {{ cheque.currency }}</td>
@@ -54,15 +54,15 @@
                 <td>
                   <form class="needs-validation" method="post" action="{{ url_for('cheques.restore', id=cheque.id) }}" class="d-inline">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
-                    <button type="submit" class="btn btn-success" onclick="return confirm('استعادة هذا الشيك؟')">
-                      <i class="fas fa-undo"></i> استعادة
+                    <button type="submit" class="btn btn-success" onclick="return confirm('{{ t('Restore') }} هذا {{ t('Cheque_2') }}')">
+                      <i class="fas fa-undo"></i> {{ t('Restore') }}
                     </button>
                   </form>
                 </td>
               </tr>
               {% else %}
               <tr>
-                <td colspan="8" class="text-center">لا توجد شيكات مؤرشفة</td>
+                <td colspan="8" class="text-center">لا {{ t('توجد') }} {{ t('Cheques_2') }} {{ t('Archived_2') }}</td>
               </tr>
               {% endfor %}
             </tbody>

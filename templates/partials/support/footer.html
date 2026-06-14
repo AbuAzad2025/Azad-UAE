@@ -3,18 +3,18 @@
             <div class="row">
                 <div class="col-md-4 text-center mb-4">
                     <i class="fas fa-shield-alt ic-86"></i>
-                    <h5 class="ic-87">أمان مضمون</h5>
-                    <p class="ic-88">جميع المعاملات محمية بتشفير SSL 256-bit</p>
+                    <h5 class="ic-87">{{ t('أمان') }} {{ t('مضمون') }}</h5>
+                    <p class="ic-88">{{ t('جميع') }} {{ t('المعاملات') }} {{ t('محمية') }} {{ t('بتشفير') }} SSL 256-bit</p>
                 </div>
                 <div class="col-md-4 text-center mb-4">
                     <i class="fas fa-headset ic-86"></i>
-                    <h5 class="ic-87">دعم فني 24/7</h5>
-                    <p class="ic-88">فريق الدعم جاهز لمساعدتك في أي وقت</p>
+                    <h5 class="ic-87">{{ t('دعم') }} {{ t('فني') }} 24/7</h5>
+                    <p class="ic-88">{{ t('فريق') }} {{ t('ال{{ t('دعم') }}') }} {{ t('جاهز') }} {{ t('لمساعدتك') }} في أي {{ t('Time') }}</p>
                 </div>
                 <div class="col-md-4 text-center mb-4">
                     <i class="fas fa-rocket ic-86"></i>
-                    <h5 class="ic-87">تحديثات مستمرة</h5>
-                    <p class="ic-88">نضيف ميزات جديدة باستمرار</p>
+                    <h5 class="ic-87">{{ t('تحديثات') }} {{ t('مستمرة') }}</h5>
+                    <p class="ic-88">{{ t('نضيف') }} {{ t('ميزات') }} {{ t('New_3') }} {{ t('باستمرار') }}</p>
                 </div>
             </div>
             
@@ -35,11 +35,11 @@
                 
                 <p class="ic-94">
                     <i class="fas fa-heart ic-95"></i>
-                    صُنع بحب من فريق {{ developer_name_ar or developer_name or 'Azad Systems' }}
+                    {{ t('صُنع') }} {{ t('بحب') }} من {{ t('فريق') }} {{ developer_name_ar or developer_name or 'Azad Systems' }}
                 </p>
                 
                 <p class="ic-96">
-                    © 2025 {{ developer_name_ar or developer_name or 'Azad Systems' }}. جميع الحقوق محفوظة.
+                    © 2025 {{ developer_name_ar or developer_name or 'Azad Systems' }}. {{ t('جميع') }} {{ t('الحقوق') }} {{ t('محفوظة') }}.
                 </p>
             </div>
         </div>

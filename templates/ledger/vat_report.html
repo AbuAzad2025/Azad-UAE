@@ -1,35 +1,35 @@
 {% extends 'base.html' %}
 
-{% block title %}تقرير ضريبة القيمة المضافة{% endblock %}
+{% block title %}{{ t('Report_2') }} {{ t('Tax_2') }} {{ t('Value') }} {{ t('المضافة') }}{% endblock %}
 
 {% block content %}
 <div class="no-print container py-4">
 
-  <h2 class="mb-2">تقرير VAT — ضريبة القيمة المضافة</h2>
+  <h2 class="mb-2">{{ t('Report_2') }} VAT — {{ t('Tax_2') }} {{ t('Value') }} {{ t('المضافة') }}</h2>
 
   {% if vat_country %}
 
-  <p class="text-muted mb-4">دولة الضريبة: {{ vat_country }}</p>
+  <p class="text-muted mb-4">{{ t('دولة') }} {{ t('Tax') }}: {{ vat_country }}</p>
 
   {% endif %}
 
   <form class="needs-validation" method="get" class="form-row mb-4 align-items-end">
 
-    <div class="col-md-3 mb-2"><label class="small text-muted d-block">من</label><input type="date" name="date_from" class="form-control" value="{{ date_from or '' }}" aria-label="من تاريخ"></div>
+    <div class="col-md-3 mb-2"><label class="small text-muted d-block">من</label><input type="date" name="date_from" class="form-control" value="{{ date_from or '' }}" aria-label="من {{ t('History') }}"></div>
 
-    <div class="col-md-3 mb-2"><label class="small text-muted d-block">إلى</label><input type="date" name="date_to" class="form-control" value="{{ date_to or '' }}" aria-label="إلى تاريخ"></div>
+    <div class="col-md-3 mb-2"><label class="small text-muted d-block">إلى</label><input type="date" name="date_to" class="form-control" value="{{ date_to or '' }}" aria-label="إلى {{ t('History') }}"></div>
 
     <div class="col-md-3 mb-2">
-      <label class="small text-muted d-block">الفرع</label>
-      <select name="branch_id" class="form-control" aria-label="اختر الفرع">
-        <option value="">-- الكل --</option>
+      <label class="small text-muted d-block">{{ t('Branch') }}</label>
+      <select name="branch_id" class="form-control" aria-label="{{ t('اختر') }} {{ t('Branch') }}">
+        <option value="">-- {{ t('All') }} --</option>
         {% for branch in branches %}
         <option value="{{ branch.id }}" {% if selected_branch == branch.id %}selected{% endif %}>{{ branch.name }}</option>
         {% endfor %}
       </select>
     </div>
 
-    <div class="col-md-2 mb-2"><button class="btn btn-primary btn-block">عرض</button></div>
+    <div class="col-md-2 mb-2"><button class="btn btn-primary btn-block">{{ t('View') }}</button></div>
 
   </form>
 
@@ -37,7 +37,7 @@
 
 <div class="erp-report-print container py-4">
   <div class="erp-report-header">
-    <h2>تقرير ضريبة القيمة المضافة - VAT</h2>
+    <h2>{{ t('Report_2') }} {{ t('Tax_2') }} {{ t('Value') }} {{ t('المضافة') }} - VAT</h2>
     <div class="erp-report-meta">
       {{ date_from }} — {{ date_to }}
       {% if vat_country %} | {{ vat_country }}{% endif %}
@@ -47,11 +47,11 @@
 
   <div class="row">
 
-    <div class="col-md-4"><div class="card"><div class="card-body"><h6>VAT Output (2130) — مبيعات</h6><h3>{{ format_currency(report.vat_output) }}</h3></div></div></div>
+    <div class="col-md-4"><div class="card"><div class="card-body"><h6>VAT Output (2130) — {{ t('Sales_2') }}</h6><h3>{{ format_currency(report.vat_output) }}</h3></div></div></div>
 
-    <div class="col-md-4"><div class="card"><div class="card-body"><h6>VAT Input (1170) — مشتريات</h6><h3>{{ format_currency(report.vat_input) }}</h3></div></div></div>
+    <div class="col-md-4"><div class="card"><div class="card-body"><h6>VAT Input (1170) — {{ t('Purchases_2') }}</h6><h3>{{ format_currency(report.vat_input) }}</h3></div></div></div>
 
-    <div class="col-md-4"><div class="card border-primary"><div class="card-body"><h6>صافي VAT مستحق</h6><h3>{{ format_currency(report.net_vat) }}</h3></div></div></div>
+    <div class="col-md-4"><div class="card border-primary"><div class="card-body"><h6>{{ t('Net') }} VAT {{ t('مستحق') }}</h6><h3>{{ format_currency(report.net_vat) }}</h3></div></div></div>
 
   </div>
 </div>

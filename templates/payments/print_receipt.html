@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>طباعة إيصال - {{ doc_number or receipt.receipt_number or receipt.payment_number }}</title>
+  <title>{{ t('Print') }} {{ t('Receipt_4') }} - {{ doc_number or receipt.receipt_number or receipt.payment_number }}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/erp-theme.css') }}">
   <style>
     * { box-sizing: border-box; }
@@ -126,11 +126,11 @@
       <div class="ic-1">{% include 'partials/print_tenant_logo.html' %}</div>
       <h1>{{ company.name_ar if company else (print_branding.company_name_ar if print_branding is defined else (tenant_name_ar or company_name_ar or 'نظام المحاسبة')) }}</h1>
       <p>{{ company.address or '' }}</p>
-      <p>هاتف: {{ company.phone or '' }}</p>
+      <p>{{ t('Phone_2') }}: {{ company.phone or '' }}</p>
       {% if print_branch %}
-      <p><strong>الفرع:</strong> {{ print_branch.name }}{% if print_branch.code %} ({{ print_branch.code }}){% endif %}</p>
+      <p><strong>{{ t('Branch') }}:</strong> {{ print_branch.name }}{% if print_branch.code %} ({{ print_branch.code }}){% endif %}</p>
       {% if print_branch.address %}
-      <p><strong>عنوان الفرع:</strong> {{ print_branch.address }}</p>
+      <p><strong>{{ t('Address_2') }} {{ t('Branch') }}:</strong> {{ print_branch.address }}</p>
       {% endif %}
       {% endif %}
       <h2 class="ic-2">{{ 'سند صرف' if is_payment else 'سند قبض' }}</h2>
@@ -141,8 +141,8 @@
     {% include 'partials/print_unified_banner.html' %}
     
     <div class="info-row">
-      <div><span class="info-label">رقم السند:</span> {{ doc_number or receipt.receipt_number or receipt.payment_number }}</div>
-      <div><span class="info-label">التاريخ:</span> {{ (receipt.receipt_date or receipt.payment_date).strftime('%Y-%m-%d') if (receipt.receipt_date or receipt.payment_date) else '' }}</div>
+      <div><span class="info-label">{{ t('رقم') }} {{ t('Voucher') }}:</span> {{ doc_number or receipt.receipt_number or receipt.payment_number }}</div>
+      <div><span class="info-label">{{ t('Date') }}:</span> {{ (receipt.receipt_date or receipt.payment_date).strftime('%Y-%m-%d') if (receipt.receipt_date or receipt.payment_date) else '' }}</div>
     </div>
     
     <div class="info-row">
@@ -150,55 +150,55 @@
         <span class="info-label">{{ 'المورد' if is_payment else 'العميل' }}:</span>
         {{ receipt.supplier_name if is_payment else (receipt.customer.name if receipt.customer else 'عميل نقدي') }}
       </div>
-      <div><span class="info-label">المستخدم:</span> {{ print_user_name or (receipt.user.full_name if receipt.user else 'موظف') }}</div>
+      <div><span class="info-label">{{ t('User') }}:</span> {{ print_user_name or (receipt.user.full_name if receipt.user else 'موظف') }}</div>
     </div>
     
     <div class="table-responsive"><table>
       <thead>
         <tr>
-          <th>البيان</th>
-          <th>المبلغ</th>
+          <th>{{ t('Description_3') }}</th>
+          <th>{{ t('Amount') }}</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td>المبلغ ({{ receipt.currency or tenant_currency_symbol }})</td>
+          <td>{{ t('Amount') }} ({{ receipt.currency or tenant_currency_symbol }})</td>
           <td>{{ "%.2f"|format(receipt.amount) }} {{ receipt.currency or tenant_currency_symbol }}</td>
         </tr>
         {% if receipt.currency and receipt.currency != 'AED' %}
         <tr>
-          <td>المبلغ (AED)</td>
+          <td>{{ t('Amount') }} (AED)</td>
           <td>{{ "%.2f"|format(receipt.base_amount) }} AED</td>
         </tr>
         {% endif %}
         {% if receipt.payment_method %}
         <tr>
-          <td>طريقة الدفع</td>
+          <td>{{ t('طريقة') }} {{ t('Payment_2') }}</td>
           <td>
-            {% if receipt.payment_method == 'cash' %}نقدي
-            {% elif receipt.payment_method == 'card' %}بطاقة
-            {% elif receipt.payment_method == 'bank_transfer' %}تحويل بنكي
-            {% elif receipt.payment_method == 'cheque' %}شيك
-            {% elif receipt.payment_method == 'e_wallet' %}محفظة إلكترونية
+            {% if receipt.payment_method == 'cash' %}{{ t('Cash_2') }}
+            {% elif receipt.payment_method == 'card' %}{{ t('Card') }}
+            {% elif receipt.payment_method == 'bank_transfer' %}{{ t('Transfer') }} {{ t('Bank_3') }}
+            {% elif receipt.payment_method == 'cheque' %}{{ t('Cheque_3') }}
+            {% elif receipt.payment_method == 'e_wallet' %}{{ t('محفظة') }} {{ t('إلكترونية') }}
             {% else %}{{ receipt.payment_method }}{% endif %}
           </td>
         </tr>
         {% endif %}
         {% if receipt.reference_number %}
         <tr>
-          <td>رقم المرجع</td>
+          <td>{{ t('رقم') }} {{ t('المرجع') }}</td>
           <td>{{ receipt.reference_number }}</td>
         </tr>
         {% endif %}
       </tbody>
       <tfoot>
         <tr class="total">
-          <td>الإجمالي</td>
+          <td>{{ t('Total_3') }}</td>
           <td>{{ "%.2f"|format(receipt.amount) }} {{ receipt.currency or tenant_currency_symbol }}</td>
         </tr>
         {% if receipt.currency and receipt.currency != 'AED' %}
         <tr class="total">
-          <td>الإجمالي (AED)</td>
+          <td>{{ t('Total_3') }} (AED)</td>
           <td>{{ "%.2f"|format(receipt.base_amount) }} AED</td>
         </tr>
         {% endif %}
@@ -207,33 +207,33 @@
 
     {% set _payment_words = amount_in_words or (number_to_arabic_words(receipt.amount or 0, receipt.currency or tenant_default_currency or 'AED') if number_to_arabic_words is defined else '') %}
     <div class="ic-3">
-      <strong>المبلغ بالحروف:</strong> {{ _payment_words or ("{:.2f}".format(receipt.amount) + " " + (receipt.currency or tenant_currency_symbol)) }}
+      <strong>{{ t('Amount') }} {{ t('بالحروف') }}:</strong> {{ _payment_words or ("{:.2f}".format(receipt.amount) + " " + (receipt.currency or tenant_currency_symbol)) }}
     </div>
     {% if qr_data_url %}
     <div class="ic-4">
       <img src="{{ qr_data_url }}" alt="QR" class="ic-5">
-      <div class="ic-6">رمز تحقق السند</div>
+      <div class="ic-6">{{ t('Code_3') }} {{ t('تحقق') }} {{ t('Voucher') }}</div>
     </div>
     {% endif %}
     
     {% if receipt.notes %}
     <div class="ic-7">
-      <strong>ملاحظات:</strong> {{ receipt.notes }}
+      <strong>{{ t('Notes') }}:</strong> {{ receipt.notes }}
     </div>
     {% endif %}
     
     <div class="footer">
-      <p>شكراً لتعاملكم معنا</p>
-      <p class="ic-8">تم الطباعة: {{ printed_at.strftime('%Y-%m-%d %H:%M') }}</p>
+      <p>{{ t('شكراً') }} {{ t('لتعاملكم') }} {{ t('معنا') }}</p>
+      <p class="ic-8">تم {{ t('Printing') }}: {{ printed_at.strftime('%Y-%m-%d %H:%M') }}</p>
     </div>
   </div>
   
   <div class="no-print ic-9">
     <button data-action="window-print" class="btn btn-primary ic-10">
-      <i class="fas fa-print"></i> طباعة
+      <i class="fas fa-print"></i> {{ t('Print') }}
     </button>
     <button data-action="window-close" class="btn btn-secondary ic-11">
-      إغلاق
+      {{ t('Close') }}
     </button>
   </div>
 </body>

@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 
-{% block title %}فتح الخزينة السرية - Unlock Vault{% endblock %}
+{% block title %}{{ t('فتح') }} {{ t('الخزينة') }} {{ t('السرية') }} - Unlock Vault{% endblock %}
 
 {% block page_title %}
 <div class="d-flex align-items-center">
     <i class="fas fa-unlock text-warning mr-3 ic-1"></i>
     <div>
-        <h1 class="mb-0">🔓 فتح الخزينة السرية</h1>
-        <p class="text-muted mb-0">أدخل كلمة مرور الخزينة للوصول</p>
+        <h1 class="mb-0">🔓 {{ t('فتح') }} {{ t('الخزينة') }} {{ t('السرية') }}</h1>
+        <p class="text-muted mb-0">{{ t('أدخل') }} {{ t('كلمة') }} {{ t('مرور') }} {{ t('الخزينة') }} {{ t('للوصول') }}</p>
     </div>
 </div>
 {% endblock %}
@@ -117,45 +117,45 @@
                     <i class="fas fa-shield-alt ic-2"></i>
                 </div>
                 
-                <h3 class="text-center mb-4">🔐 الخزينة السرية</h3>
+                <h3 class="text-center mb-4">🔐 {{ t('الخزينة') }} {{ t('السرية') }}</h3>
                 <p class="text-center mb-4">
-                    أدخل كلمة مرور الخزينة للوصول إلى إدارة الدفع
+                    {{ t('أدخل') }} {{ t('كلمة') }} {{ t('مرور') }} {{ t('الخزينة') }} {{ t('للوصول') }} إلى {{ t('Management') }} {{ t('Payment_2') }}
                 </p>
                 
                 <form class="needs-validation" method="POST" action="{{ url_for('payment_vault.unlock_vault') }}">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
                     <div class="form-group">
                         <label for="vault_password" class="form-label">
-                            <i class="fas fa-key mr-2"></i>كلمة مرور الخزينة
+                            <i class="fas fa-key mr-2"></i>{{ t('كلمة') }} {{ t('مرور') }} {{ t('الخزينة') }}
                         </label>
                         <input type="password" 
                                class="form-control form-control-vault" 
                                id="vault_password" 
                                name="vault_password" 
-                               placeholder="أدخل كلمة مرور الخزينة"
+                               placeholder="{{ t('أدخل') }} {{ t('كلمة') }} {{ t('مرور') }} {{ t('الخزينة') }}"
                                required minlength="6">
                     </div>
                     
                     <button type="submit" class="btn btn-vault-unlock">
                         <i class="fas fa-unlock mr-2"></i>
-                        فتح الخزينة
+                        {{ t('فتح') }} {{ t('الخزينة') }}
                     </button>
                 </form>
                 
                 <div class="security-info">
-                    <h6><i class="fas fa-info-circle mr-2"></i>معلومات الأمان</h6>
+                    <h6><i class="fas fa-info-circle mr-2"></i>{{ t('Info_2') }} {{ t('الأمان') }}</h6>
                     <p class="mb-2">
-                        <strong>كلمة مرور الخزينة:</strong> هي عنوان محفظة Bitcoin الخاص بك
+                        <strong>{{ t('كلمة') }} {{ t('مرور') }} {{ t('الخزينة') }}:</strong> هي {{ t('Address_2') }} {{ t('محفظة') }} Bitcoin {{ t('Specific_3') }} بك
                     </p>
                     <p class="mb-2">
-                        <strong>مثال:</strong>
+                        <strong>{{ t('مثال') }}:</strong>
                     </p>
                     <div class="bitcoin-address">
                         bc1qyourbtcaddresshere
                     </div>
                     <p class="mt-2 mb-0 text-warning">
                         <i class="fas fa-exclamation-triangle mr-1"></i>
-                        <strong>تحذير:</strong> بعد 3 محاولات فاشلة سيتم قفل الخزينة
+                        <strong>{{ t('Warning') }}:</strong> بعد 3 {{ t('محاولات') }} {{ t('فاشلة') }} {{ t('سيتم') }} {{ t('قفل') }} {{ t('الخزينة') }}
                     </p>
                 </div>
             </div>
@@ -165,7 +165,7 @@
         <div class="text-center mt-4">
             <a href="{{ url_for('payment_vault.index') }}" class="btn btn-outline-light">
                 <i class="fas fa-arrow-right mr-2"></i>
-                العودة للخزينة
+                {{ t('العودة') }} {{ t('للخزينة') }}
             </a>
         </div>
 </div>

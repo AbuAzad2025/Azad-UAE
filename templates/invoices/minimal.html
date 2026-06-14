@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>شركة أزاد للأنظمة الذكية - فاتورة مبيعات #{{ sale.sale_number }}</title>
+  <title>{{ t('Company_2') }} {{ t('أزاد') }} {{ t('للأنظمة') }} {{ t('الذكية') }} - {{ t('Invoice') }} {{ t('Sales_2') }} #{{ sale.sale_number }}</title>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;700&display=swap" crossorigin="anonymous" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/erp-theme.css') }}">
   {% include 'partials/print_styles.html' %}
@@ -146,7 +146,7 @@
 <body class="invoice-print minimal-invoice">
   <div class="no-print ic-1">
     <button data-action="window-print" class="erp-invoice-btn-print" style="background: {{ settings.header_color or '#2c3e50' }};">
-      طباعة
+      {{ t('Print') }}
     </button>
   </div>
 
@@ -161,8 +161,8 @@
           {% if settings and settings.website and settings.website != 'None' %}🌐 {{ settings.website }}<br>{% endif %}
           {% if settings and settings.tax_number and settings.tax_number != 'None' %}ض.ر: {{ settings.tax_number }}{% endif %}
           {% if print_branch %}
-          <br>🏢 الفرع: {{ print_branch.name }}{% if print_branch.code %} ({{ print_branch.code }}){% endif %}
-          {% if print_branch.address %}<br>📍 عنوان الفرع: {{ print_branch.address }}{% endif %}
+          <br>🏢 {{ t('Branch') }}: {{ print_branch.name }}{% if print_branch.code %} ({{ print_branch.code }}){% endif %}
+          {% if print_branch.address %}<br>📍 {{ t('Address_2') }} {{ t('Branch') }}: {{ print_branch.address }}{% endif %}
           {% endif %}
         </div>
       </div>
@@ -178,12 +178,12 @@
 
     <div class="info-grid">
       <div class="info-item">
-        <label>العميل</label>
+        <label>{{ t('Customer') }}</label>
         <value><strong>{{ sale.customer.name }}</strong></value>
         {% if sale.customer.phone %}<br><small class="ic-2">{{ sale.customer.phone }}</small>{% endif %}
       </div>
       <div class="info-item">
-        <label>التاريخ / المستخدم</label>
+        <label>{{ t('Date') }} / {{ t('User') }}</label>
         <value>{{ sale.sale_date.strftime('%Y-%m-%d %H:%M') }}</value>
         <br><small class="ic-2">{{ print_user_name or (sale.seller.full_name if sale.seller else '-') }}</small>
       </div>
@@ -193,11 +193,11 @@
       <thead>
         <tr>
           <th class="ic-3">#</th>
-          <th class="ic-4">المنتج</th>
-          <th class="ic-5">الكمية</th>
-          <th class="ic-5">السعر</th>
-          <th class="ic-6">خصم</th>
-          <th class="ic-5">الإجمالي</th>
+          <th class="ic-4">{{ t('Product') }}</th>
+          <th class="ic-5">{{ t('Quantity') }}</th>
+          <th class="ic-5">{{ t('Price') }}</th>
+          <th class="ic-6">{{ t('Discount_2') }}</th>
+          <th class="ic-5">{{ t('Total_3') }}</th>
         </tr>
       </thead>
       <tbody>
@@ -216,23 +216,23 @@
 
     <div class="totals">
       <div class="total-row">
-        <span>المجموع:</span>
+        <span>{{ t('Total') }}:</span>
         <strong>{{ format_currency(sale.subtotal, sale.currency) }}</strong>
       </div>
       {% if sale.discount_amount > 0 %}
       <div class="total-row">
-        <span>الخصم:</span>
+        <span>{{ t('Discount') }}:</span>
         <strong>- {{ format_currency(sale.discount_amount) }}</strong>
       </div>
       {% endif %}
       {% if sale.tax_amount > 0 %}
       <div class="total-row">
-        <span>الضريبة:</span>
+        <span>{{ t('Tax') }}:</span>
         <strong>{{ format_currency(sale.tax_amount) }}</strong>
       </div>
       {% endif %}
       <div class="total-row final">
-        <span>الإجمالي:</span>
+        <span>{{ t('Total_3') }}:</span>
         <strong>{{ format_currency(sale.total_amount, sale.currency) }}</strong>
       </div>
       {% include 'partials/print_unified_amount_qr.html' %}
@@ -241,7 +241,7 @@
     
     {% if sale.payments %}
     <div class="payments-section">
-      <h4>💳 الدفعات</h4>
+      <h4>💳 {{ t('{{ t('Payment_2') }}ات') }}</h4>
       {% for payment in sale.payments %}
       <div class="payment-item">
         <div class="ic-7">
@@ -254,18 +254,18 @@
           </div>
         </div>
         <div class="ic-9">
-          طريقة الدفع: 
-          {% if payment.payment_method == 'cash' %}💵 نقدي
-          {% elif payment.payment_method == 'card' %}💳 بطاقة
-          {% elif payment.payment_method == 'bank_transfer' %}🏦 تحويل
-          {% elif payment.payment_method == 'cheque' %}📝 شيك
-          {% else %}💰 محفظة{% endif %}
+          {{ t('طريقة') }} {{ t('Payment_2') }}: 
+          {% if payment.payment_method == 'cash' %}💵 {{ t('Cash_2') }}
+          {% elif payment.payment_method == 'card' %}💳 {{ t('Card') }}
+          {% elif payment.payment_method == 'bank_transfer' %}🏦 {{ t('Transfer') }}
+          {% elif payment.payment_method == 'cheque' %}📝 {{ t('Cheque_3') }}
+          {% else %}💰 {{ t('محفظة') }}{% endif %}
         </div>
         {% if payment.payment_method == 'cheque' and payment.cheque_number %}
         <div class="cheque-box">
-          <strong>📝 رقم الشيك:</strong> {{ payment.cheque_number }} | 
-          <strong>📅 الاستحقاق:</strong> {{ payment.cheque_date.strftime('%Y-%m-%d') if payment.cheque_date else '-' }} | 
-          <strong>🏦 البنك:</strong> {{ payment.bank_name or '-' }}
+          <strong>📝 {{ t('رقم') }} {{ t('Cheque') }}:</strong> {{ payment.cheque_number }} | 
+          <strong>📅 {{ t('Due') }}:</strong> {{ payment.cheque_date.strftime('%Y-%m-%d') if payment.cheque_date else '-' }} | 
+          <strong>🏦 {{ t('Bank') }}:</strong> {{ payment.bank_name or '-' }}
         </div>
         {% endif %}
       </div>

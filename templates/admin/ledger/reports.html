@@ -1,12 +1,12 @@
 {% extends 'base.html' %}
-{% block title %}التقارير المالية المتقدمة - Advanced Reports{% endblock %}
-{% block page_title %}التقارير المالية المتقدمة{% endblock %}
+{% block title %}{{ t('Reports') }} {{ t('Finance') }} {{ t('ال{{ t('متقدمة') }}') }} - Advanced Reports{% endblock %}
+{% block page_title %}{{ t('Reports') }} {{ t('Finance') }} {{ t('ال{{ t('متقدمة') }}') }}{% endblock %}
 
 {% block content %}
 <div class="row mb-3">
   <div class="col-12">
     <a href="{{ url_for('ledger.admin_dashboard') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right mr-2"></i>العودة للوحة التحكم
+      <i class="fas fa-arrow-right mr-2"></i>{{ t('العودة') }} {{ t('للوحة') }} {{ t('Control') }}
     </a>
   </div>
 </div>
@@ -17,42 +17,42 @@
     <div class="card">
       <div class="card-header bg-gradient-primary">
         <h5 class="card-title text-white mb-0">
-          <i class="fas fa-chart-line mr-2"></i>التقارير الأساسية
+          <i class="fas fa-chart-line mr-2"></i>{{ t('Reports') }} {{ t('ال{{ t('أساسية') }}') }}
         </h5>
       </div>
       <div class="card-body">
         <div class="list-group list-group-flush">
           <a href="{{ url_for('ledger.admin_trial_balance') }}" class="list-group-item list-group-item-action">
             <div class="d-flex w-100 justify-content-between">
-              <h6 class="mb-1">ميزان المراجعة</h6>
+              <h6 class="mb-1">{{ t('Balance_2') }} {{ t('Review') }}</h6>
               <small class="text-muted">Trial Balance</small>
             </div>
-            <p class="mb-1">عرض أرصدة جميع الحسابات في تاريخ محدد</p>
+            <p class="mb-1">{{ t('View') }} {{ t('أرصدة') }} {{ t('جميع') }} {{ t('Accounts') }} في {{ t('History') }} {{ t('محدد') }}</p>
           </a>
           
           <a href="{{ url_for('ledger.admin_balance_sheet') }}" class="list-group-item list-group-item-action">
             <div class="d-flex w-100 justify-content-between">
-              <h6 class="mb-1">الميزانية العمومية</h6>
+              <h6 class="mb-1">{{ t('Balance Sheet') }} {{ t('العمومية') }}</h6>
               <small class="text-muted">Balance Sheet</small>
             </div>
-            <p class="mb-1">عرض الأصول والخصوم وحقوق الملكية</p>
+            <p class="mb-1">{{ t('View') }} {{ t('Assets') }} {{ t('والخصوم') }} {{ t('وحقوق') }} {{ t('الملكية') }}</p>
           </a>
           
           <a href="{{ url_for('ledger.admin_income_statement') }}" class="list-group-item list-group-item-action">
             <div class="d-flex w-100 justify-content-between">
-              <h6 class="mb-1">قائمة الدخل</h6>
+              <h6 class="mb-1">{{ t('List') }} {{ t('Income_2') }}</h6>
               <small class="text-muted">Income Statement</small>
             </div>
-            <p class="mb-1">عرض الإيرادات والمصروفات وصافي الدخل</p>
+            <p class="mb-1">{{ t('View') }} {{ t('Revenue') }} {{ t('والمصروفات') }} {{ t('وصافي') }} {{ t('Income_2') }}</p>
           </a>
           
           {% if current_user.has_permission('view_ledger') %}
           <a href="{{ url_for('ledger.cash_flow') }}" class="list-group-item list-group-item-action">
             <div class="d-flex w-100 justify-content-between">
-              <h6 class="mb-1">قائمة التدفقات النقدية</h6>
+              <h6 class="mb-1">{{ t('List') }} {{ t('التدفقات') }} {{ t('Cash') }}</h6>
               <small class="text-muted">Cash Flow Statement</small>
             </div>
-            <p class="mb-1">عرض التدفقات النقدية التشغيلية والاستثمارية والتمويلية</p>
+            <p class="mb-1">{{ t('View') }} {{ t('التدفقات') }} {{ t('Cash') }} {{ t('التشغيلية') }} {{ t('والاستثمارية') }} {{ t('والتمويلية') }}</p>
           </a>
           {% endif %}
         </div>
@@ -65,7 +65,7 @@
     <div class="card">
       <div class="card-header bg-gradient-success">
         <h5 class="card-title text-white mb-0">
-          <i class="fas fa-chart-bar mr-2"></i>التقارير المتقدمة
+          <i class="fas fa-chart-bar mr-2"></i>{{ t('Reports') }} {{ t('ال{{ t('متقدمة') }}') }}
         </h5>
       </div>
       <div class="card-body">
@@ -73,40 +73,40 @@
           {% if current_user.has_permission('view_ledger') %}
           <a href="{{ url_for('ledger.aging_analysis', type='receivables') }}" class="list-group-item list-group-item-action">
             <div class="d-flex w-100 justify-content-between">
-              <h6 class="mb-1">تحليل عمر الذمم المدينة</h6>
+              <h6 class="mb-1">{{ t('تحليل') }} {{ t('عمر') }} {{ t('Receivables_2') }} {{ t('Receivables') }}</h6>
               <small class="text-muted">Receivables Aging</small>
             </div>
-            <p class="mb-1">تحليل أعمار الديون المستحقة على العملاء</p>
+            <p class="mb-1">{{ t('تحليل') }} {{ t('أعمار') }} {{ t('الديون') }} {{ t('المستحقة') }} على {{ t('Customers_2') }}</p>
           </a>
           {% endif %}
           
           {% if current_user.has_permission('view_ledger') %}
           <a href="{{ url_for('ledger.aging_analysis', type='payables') }}" class="list-group-item list-group-item-action">
             <div class="d-flex w-100 justify-content-between">
-              <h6 class="mb-1">تحليل عمر الذمم الدائنة</h6>
+              <h6 class="mb-1">{{ t('تحليل') }} {{ t('عمر') }} {{ t('Receivables_2') }} {{ t('الدائنة') }}</h6>
               <small class="text-muted">Payables Aging</small>
             </div>
-            <p class="mb-1">تحليل أعمار الديون المستحقة للموردين</p>
+            <p class="mb-1">{{ t('تحليل') }} {{ t('أعمار') }} {{ t('الديون') }} {{ t('المستحقة') }} {{ t('Suppliers_2') }}</p>
           </a>
           {% endif %}
           
           {% if current_user.has_permission('view_ledger') %}
           <a href="{{ url_for('ledger.accounts_tree') }}" class="list-group-item list-group-item-action">
             <div class="d-flex w-100 justify-content-between">
-              <h6 class="mb-1">شجرة الحسابات</h6>
+              <h6 class="mb-1">{{ t('شجرة') }} {{ t('Accounts') }}</h6>
               <small class="text-muted">Chart of Accounts</small>
             </div>
-            <p class="mb-1">عرض هيكل الحسابات المحاسبية</p>
+            <p class="mb-1">{{ t('View') }} {{ t('هيكل') }} {{ t('Accounts') }} {{ t('Accounting') }}</p>
           </a>
           {% endif %}
           
           {% if current_user.has_permission('view_ledger') %}
           <a href="{{ url_for('ledger.journal_entries') }}" class="list-group-item list-group-item-action">
             <div class="d-flex w-100 justify-content-between">
-              <h6 class="mb-1">دفتر اليومية</h6>
+              <h6 class="mb-1">{{ t('دفتر') }} {{ t('اليومية') }}</h6>
               <small class="text-muted">General Journal</small>
             </div>
-            <p class="mb-1">عرض جميع القيود المحاسبية</p>
+            <p class="mb-1">{{ t('View') }} {{ t('جميع') }} {{ t('القيود') }} {{ t('Accounting') }}</p>
           </a>
           {% endif %}
         </div>
@@ -121,47 +121,47 @@
     <div class="card">
       <div class="card-header bg-gradient-info">
         <h5 class="card-title text-white mb-0">
-          <i class="fas fa-cogs mr-2"></i>تقارير مخصصة
+          <i class="fas fa-cogs mr-2"></i>{{ t('Reports_3') }} {{ t('{{ t('مخصص') }}ة') }}
         </h5>
       </div>
       <div class="card-body">
         <div class="row">
           <div class="col-md-6">
-            <h6>تقرير مخصص حسب التاريخ:</h6>
+            <h6>{{ t('Report_2') }} {{ t('مخصص') }} {{ t('حسب') }} {{ t('Date') }}:</h6>
             <form class="needs-validation" method="GET" action="{{ url_for('ledger.admin_trial_balance') }}" class="ledger-reports-form">
               <div class="form-group">
-                <label for="tb_date_from">من تاريخ:</label>
-                <input type="date" id="tb_date_from" name="date_from" class="form-control" required aria-label="من تاريخ">
+                <label for="tb_date_from">من {{ t('History') }}:</label>
+                <input type="date" id="tb_date_from" name="date_from" class="form-control" required aria-label="من {{ t('History') }}">
               </div>
               <div class="form-group">
-                <label for="tb_date_to">إلى تاريخ:</label>
-                <input type="date" id="tb_date_to" name="date_to" class="form-control" required aria-label="إلى تاريخ">
+                <label for="tb_date_to">إلى {{ t('History') }}:</label>
+                <input type="date" id="tb_date_to" name="date_to" class="form-control" required aria-label="إلى {{ t('History') }}">
               </div>
               <button type="submit" class="btn btn-primary">
-                <i class="fas fa-search mr-2"></i>إنشاء التقرير
+                <i class="fas fa-search mr-2"></i>{{ t('Create') }} {{ t('Report') }}
               </button>
             </form>
           </div>
           
           <div class="col-md-6">
-            <h6>تقرير مخصص حسب الحساب:</h6>
+            <h6>{{ t('Report_2') }} {{ t('مخصص') }} {{ t('حسب') }} {{ t('Account') }}:</h6>
             <form method="GET" action="{{ url_for('ledger.account_statement', id=0) }}" id="accountStatementForm" class="ledger-reports-form">
               <div class="form-group">
-                <label for="stmt_account_id">اختر الحساب:</label>
-                <select id="stmt_account_id" name="account_id" class="form-control" required aria-label="اختر الحساب">
-                  <option value="">بلا</option>
+                <label for="stmt_account_id">{{ t('اختر') }} {{ t('Account') }}:</label>
+                <select id="stmt_account_id" name="account_id" class="form-control" required aria-label="{{ t('اختر') }} {{ t('Account') }}">
+                  <option value="">{{ t('None') }}</option>
                 </select>
               </div>
               <div class="form-group">
-                <label for="stmt_date_from">من تاريخ:</label>
-                <input type="date" id="stmt_date_from" name="date_from" class="form-control" aria-label="من تاريخ">
+                <label for="stmt_date_from">من {{ t('History') }}:</label>
+                <input type="date" id="stmt_date_from" name="date_from" class="form-control" aria-label="من {{ t('History') }}">
               </div>
               <div class="form-group">
-                <label for="stmt_date_to">إلى تاريخ:</label>
-                <input type="date" id="stmt_date_to" name="date_to" class="form-control" aria-label="إلى تاريخ">
+                <label for="stmt_date_to">إلى {{ t('History') }}:</label>
+                <input type="date" id="stmt_date_to" name="date_to" class="form-control" aria-label="إلى {{ t('History') }}">
               </div>
               <button type="submit" class="btn btn-success">
-                <i class="fas fa-file-alt mr-2"></i>كشف الحساب
+                <i class="fas fa-file-alt mr-2"></i>{{ t('كشف') }} {{ t('Account') }}
               </button>
             </form>
           </div>
@@ -179,7 +179,7 @@
         <div class="d-flex justify-content-between">
           <div>
             <h4 class="mb-0">12</h4>
-            <p class="mb-0">تقارير متاحة</p>
+            <p class="mb-0">{{ t('Reports_3') }} {{ t('Available') }}</p>
           </div>
           <div class="align-self-center">
             <i class="fas fa-chart-pie fa-2x"></i>
@@ -195,7 +195,7 @@
         <div class="d-flex justify-content-between">
           <div>
             <h4 class="mb-0">4</h4>
-            <p class="mb-0">تقارير أساسية</p>
+            <p class="mb-0">{{ t('Reports_3') }} {{ t('أساسية') }}</p>
           </div>
           <div class="align-self-center">
             <i class="fas fa-chart-line fa-2x"></i>
@@ -211,7 +211,7 @@
         <div class="d-flex justify-content-between">
           <div>
             <h4 class="mb-0">6</h4>
-            <p class="mb-0">تقارير متقدمة</p>
+            <p class="mb-0">{{ t('Reports_3') }} {{ t('متقدمة') }}</p>
           </div>
           <div class="align-self-center">
             <i class="fas fa-chart-bar fa-2x"></i>
@@ -227,7 +227,7 @@
         <div class="d-flex justify-content-between">
           <div>
             <h4 class="mb-0">2</h4>
-            <p class="mb-0">تقارير مخصصة</p>
+            <p class="mb-0">{{ t('Reports_3') }} {{ t('{{ t('مخصص') }}ة') }}</p>
           </div>
           <div class="align-self-center">
             <i class="fas fa-cogs fa-2x"></i>
@@ -241,7 +241,7 @@
 
 {% block scripts %}
 <script>
-// ملء قائمة الحسابات
+// {{ t('ملء') }} {{ t('List') }} {{ t('Accounts') }}
 document.addEventListener('DOMContentLoaded', function() {
   const select = document.querySelector('select[name="account_id"]');
   if (!select) {
@@ -260,23 +260,23 @@ document.addEventListener('DOMContentLoaded', function() {
         option.value = account.id;
         const nameText = account.full_name
           || `${account.code || ''} - ${account.name_ar || account.name || ''}`.trim();
-        option.textContent = nameText || account.code || `حساب رقم ${account.id}`;
+        option.textContent = nameText || account.code || `{{ t('Account_2') }} {{ t('رقم') }} ${account.id}`;
         select.appendChild(option);
       });
     })
     .catch(error => {
-      console.warn('فشل تحميل الحسابات', error);
+      console.warn('{{ t('فشل') }} {{ t('Download') }} {{ t('Accounts') }}', error);
     });
 });
 
-// تحديث رابط كشف الحساب
+// {{ t('Update') }} {{ t('رابط') }} {{ t('كشف') }} {{ t('Account') }}
 document.getElementById('accountStatementForm').addEventListener('submit', function(e) {
   const accountId = document.querySelector('select[name="account_id"]').value;
   if (accountId) {
     this.action = `/ledger/account/${accountId}/statement`;
   } else {
     e.preventDefault();
-    alert('يرجى اختيار حساب');
+    alert('{{ t('يرجى') }} {{ t('Select') }} {{ t('Account_2') }}');
   }
 });
 </script>

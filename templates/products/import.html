@@ -1,10 +1,10 @@
 {% extends 'base.html' %}
-{% block title %}استيراد المنتجات{% endblock %}
+{% block title %}{{ t('استيراد') }} {{ t('Products') }}{% endblock %}
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
-  <h1 class="text-gradient mb-0"><i class="fas fa-file-import mr-3"></i>استيراد المنتجات</h1>
+  <h1 class="text-gradient mb-0"><i class="fas fa-file-import mr-3"></i>{{ t('استيراد') }} {{ t('Products') }}</h1>
   <a href="{{ url_for('products.index') }}" class="btn btn-secondary">
-    <i class="fas fa-arrow-left mr-2"></i>عودة للقائمة
+    <i class="fas fa-arrow-left mr-2"></i>{{ t('عودة') }} {{ t('للقائمة') }}
   </a>
 </div>
 {% endblock %}
@@ -21,16 +21,16 @@
 {% block content %}
 <div class="card shadow-lg">
   <div class="card-header bg-primary text-white">
-    <h3 class="card-title mb-0"><i class="fas fa-upload mr-2"></i>استيراد ملف Excel/CSV</h3>
+    <h3 class="card-title mb-0"><i class="fas fa-upload mr-2"></i>{{ t('استيراد') }} {{ t('ملف') }} Excel/CSV</h3>
   </div>
   <div class="card-body">
     <div class="alert alert-info">
-      <h5><i class="fas fa-info-circle mr-2"></i>تعليمات الاستيراد:</h5>
+      <h5><i class="fas fa-info-circle mr-2"></i>{{ t('تعليمات') }} {{ t('ال{{ t('استيراد') }}') }}:</h5>
       <ul class="mb-0">
-        <li>الملف يجب أن يكون بصيغة <strong>.xlsx</strong> أو <strong>.csv</strong>.</li>
-        <li>الأعمدة المطلوبة: <code>اسم المنتج</code>, <code>السعر</code>.</li>
-        <li>الأعمدة الاختيارية: <code>SKU</code>, <code>الباركود</code>, <code>التكلفة</code>, <code>المخزون</code>.</li>
-        <li>إذا تركت <code>SKU</code> أو <code>الباركود</code> فارغاً، سيقوم النظام بتوليدهما تلقائياً.</li>
+        <li>{{ t('File') }} يجب أن يكون {{ t('بصيغة') }} <strong>.xlsx</strong> أو <strong>.csv</strong>.</li>
+        <li>{{ t('الأعمدة') }} {{ t('المطلوبة') }}: <code>{{ t('Name_2') }} {{ t('Product') }}</code>, <code>{{ t('Price') }}</code>.</li>
+        <li>{{ t('الأعمدة') }} {{ t('ال{{ t('Optional') }}ة') }}: <code>SKU</code>, <code>{{ t('Barcode') }}</code>, <code>{{ t('Cost') }}</code>, <code>{{ t('Inventory') }}</code>.</li>
+        <li>إذا {{ t('تركت') }} <code>SKU</code> أو <code>{{ t('Barcode') }}</code> {{ t('فارغاً،') }} {{ t('سيقوم') }} {{ t('System') }} {{ t('بتوليدهما') }} {{ t('تلقائياً') }}.</li>
       </ul>
     </div>
 
@@ -38,20 +38,20 @@
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
       
       <div class="form-group">
-        <label for="file">اختر الملف</label>
+        <label for="file">{{ t('اختر') }} {{ t('File') }}</label>
         <div class="custom-file">
           <input type="file" class="custom-file-input" id="file" name="file" accept=".xlsx, .xls, .csv" required aria-label="file">
-          <label class="custom-file-label" for="file">اختر ملف...</label>
+          <label class="custom-file-label" for="file">{{ t('اختر') }} {{ t('ملف') }}...</label>
         </div>
       </div>
 
       <div class="form-group form-check">
         <input type="checkbox" class="form-check-input" id="update_existing" name="update_existing" aria-label="update existing">
-        <label class="form-check-label" for="update_existing">تحديث المنتجات الموجودة (إذا تطابق SKU)</label>
+        <label class="form-check-label" for="update_existing">{{ t('Update') }} {{ t('Products') }} {{ t('Available_4') }} (إذا {{ t('تطابق') }} SKU)</label>
       </div>
 
       <button type="submit" class="btn btn-success btn-lg btn-block" id="submitBtn">
-        <i class="fas fa-cloud-upload-alt mr-2"></i>بدء الاستيراد
+        <i class="fas fa-cloud-upload-alt mr-2"></i>{{ t('بدء') }} {{ t('ال{{ t('استيراد') }}') }}
       </button>
     </form>
     
@@ -59,18 +59,18 @@
         <div class="progress ic-1">
             <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated ic-2" role="progressbar">0%</div>
         </div>
-        <p class="text-center mt-2 text-muted">جاري المعالجة... يرجى الانتظار</p>
+        <p class="text-center mt-2 text-muted">{{ t('جاري') }} {{ t('Processing') }}... {{ t('يرجى') }} {{ t('Waiting') }}</p>
     </div>
   </div>
 </div>
 
 <div class="card mt-4 shadow-lg">
   <div class="card-header bg-success text-white">
-    <h3 class="card-title mb-0"><i class="fas fa-edit mr-2"></i>إدخال سريع (Grid Entry)</h3>
+    <h3 class="card-title mb-0"><i class="fas fa-edit mr-2"></i>{{ t('إدخال') }} {{ t('Quick_3') }} (Grid Entry)</h3>
   </div>
   <div class="card-body">
     <div class="alert alert-light border">
-      <i class="fas fa-keyboard mr-2"></i> أدخل المنتجات مباشرة في الجدول أدناه (اضغط Tab للانتقال للخلية التالية).
+      <i class="fas fa-keyboard mr-2"></i> {{ t('أدخل') }} {{ t('Products') }} {{ t('مباشرة') }} في {{ t('الجدول') }} {{ t('أدناه') }} ({{ t('اضغط') }} Tab {{ t('للانتقال') }} {{ t('للخلية') }} {{ t('التالية') }}).
     </div>
     
     <form method="POST" action="{{ url_for('products.import_grid') }}" id="gridForm">
@@ -79,26 +79,26 @@
         <table class="table table-bordered table-sm" id="gridTable">
           <thead class="thead-light">
             <tr>
-              <th class="ic-3">اسم المنتج *</th>
-              <th class="ic-4">السعر *</th>
-              <th class="ic-4">التكلفة</th>
-              <th class="ic-4">المخزون</th>
-              <th class="ic-4">SKU (اختياري)</th>
-              <th class="ic-4">الباركود (اختياري)</th>
+              <th class="ic-3">{{ t('Name_2') }} {{ t('Product') }} *</th>
+              <th class="ic-4">{{ t('Price') }} *</th>
+              <th class="ic-4">{{ t('Cost') }}</th>
+              <th class="ic-4">{{ t('Inventory') }}</th>
+              <th class="ic-4">SKU ({{ t('Optional') }})</th>
+              <th class="ic-4">{{ t('Barcode') }} ({{ t('Optional') }})</th>
               <th class="ic-5"></th>
             </tr>
           </thead>
           <tbody>
             {% for i in range(10) %}
             <tr class="product-row">
-              <td><input type="text" name="name[]" class="form-control form-control-sm" placeholder="اسم المنتج" minlength="2" maxlength="100"></td>
+              <td><input type="text" name="name[]" class="form-control form-control-sm" placeholder="{{ t('Name_2') }} {{ t('Product') }}" minlength="2" maxlength="100"></td>
               <td><input type="number" name="price[]" class="form-control form-control-sm" step="0.01" min="0" aria-label="price[]"></td>
               <td><input type="number" name="cost[]" class="form-control form-control-sm" step="0.01" min="0" aria-label="cost[]"></td>
               <td><input type="number" name="stock[]" class="form-control form-control-sm" step="1" min="0" aria-label="stock[]"></td>
               <td><input type="text" name="sku[]" class="form-control form-control-sm" placeholder="Auto" maxlength="50"></td>
               <td><input type="text" name="barcode[]" class="form-control form-control-sm" placeholder="Auto" maxlength="50"></td>
               <td class="text-center">
-                <button type="button" class="btn btn-outline-danger remove-row" tabindex="-1" title="إغلاق"><i class="fas fa-times"></i></button>
+                <button type="button" class="btn btn-outline-danger remove-row" tabindex="-1" title="{{ t('Close') }}"><i class="fas fa-times"></i></button>
               </td>
             </tr>
             {% endfor %}
@@ -108,10 +108,10 @@
       
       <div class="d-flex justify-content-between mt-3">
         <button type="button" class="btn btn-outline-secondary" id="addRowBtn">
-          <i class="fas fa-plus mr-1"></i> إضافة 10 صفوف
+          <i class="fas fa-plus mr-1"></i> {{ t('Add') }} 10 {{ t('صفوف') }}
         </button>
         <button type="submit" class="btn btn-success px-5">
-          <i class="fas fa-save mr-2"></i> حفظ المنتجات
+          <i class="fas fa-save mr-2"></i> {{ t('Save') }} {{ t('Products') }}
         </button>
       </div>
     </form>
@@ -120,12 +120,12 @@
 
 <div class="card mt-4">
   <div class="card-header">
-    <h3 class="card-title"><i class="fas fa-download mr-2"></i>نموذج الاستيراد</h3>
+    <h3 class="card-title"><i class="fas fa-download mr-2"></i>{{ t('نموذج') }} {{ t('ال{{ t('استيراد') }}') }}</h3>
   </div>
   <div class="card-body">
-    <p>يمكنك تحميل ملف نموذج جاهز لتعبئته:</p>
+    <p>{{ t('يمكنك') }} {{ t('Download') }} {{ t('ملف') }} {{ t('نموذج') }} {{ t('جاهز') }} {{ t('لتعبئته') }}:</p>
     <a href="{{ url_for('products.download_import_template') }}" class="btn btn-outline-primary">
-      <i class="fas fa-file-excel mr-2"></i>تحميل النموذج (Excel)
+      <i class="fas fa-file-excel mr-2"></i>{{ t('Download') }} {{ t('ال{{ t('نموذج') }}_2') }} (Excel)
     </a>
   </div>
 </div>
@@ -140,7 +140,7 @@ $('.custom-file-input').on('change', function() {
 });
 
 $('#importForm').on('submit', function() {
-    $('#submitBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-2"></i>جاري الرفع...');
+    $('#submitBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-2"></i>{{ t('جاري') }} {{ t('Upload_2') }}...');
     $('#progressArea').removeClass('d-none');
     
     // Simulate progress for UX (Real progress requires WebSocket/SSE)

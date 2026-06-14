@@ -2,7 +2,7 @@
 
 
 
-{% block title %}الفترات المحاسبية{% endblock %}
+{% block title %}{{ t('ال{{ t('فترات') }}') }} {{ t('Accounting') }}{% endblock %}
 
 
 
@@ -14,7 +14,7 @@
 
 
 
-  <h2 class="mb-4">إقفال / فتح الفترات المحاسبية</h2>
+  <h2 class="mb-4">{{ t('إقفال') }} / {{ t('فتح') }} {{ t('ال{{ t('فترات') }}') }} {{ t('Accounting') }}</h2>
 
 
 
@@ -26,11 +26,11 @@
 
 
 
-    <div class="col-md-2 mb-2"><input type="number" name="year" class="form-control" placeholder="السنة" required></div>
+    <div class="col-md-2 mb-2"><input type="number" name="year" class="form-control" placeholder="{{ t('Year') }}" required></div>
 
 
 
-    <div class="col-md-2 mb-2"><input type="number" name="month" min="1" max="12" class="form-control" placeholder="الشهر" required></div>
+    <div class="col-md-2 mb-2"><input type="number" name="month" min="1" max="12" class="form-control" placeholder="{{ t('Month') }}" required></div>
 
 
 
@@ -42,11 +42,11 @@
 
 
 
-        <option value="close">إقفال</option>
+        <option value="close">{{ t('إقفال') }}</option>
 
 
 
-        <option value="open">فتح</option>
+        <option value="open">{{ t('فتح') }}</option>
 
 
 
@@ -58,7 +58,7 @@
 
 
 
-    <div class="col-md-2 mb-2"><button class="btn btn-warning btn-block">تطبيق</button></div>
+    <div class="col-md-2 mb-2"><button class="btn btn-warning btn-block">{{ t('Apply') }}</button></div>
 
 
 
@@ -74,7 +74,7 @@
 
 
 
-    <div class="card-header">استهلاك الأصول الثابتة (شهري)</div>
+    <div class="card-header">{{ t('استهلاك') }} {{ t('Assets') }} {{ t('الثابتة') }} ({{ t('Monthly') }})</div>
 
 
 
@@ -90,15 +90,15 @@
 
 
 
-        <div class="col-md-2 mb-2"><input type="number" name="year" class="form-control" placeholder="السنة (اختياري)"></div>
+        <div class="col-md-2 mb-2"><input type="number" name="year" class="form-control" placeholder="{{ t('Year') }} ({{ t('Optional') }})"></div>
 
 
 
-        <div class="col-md-2 mb-2"><input type="number" name="month" min="1" max="12" class="form-control" placeholder="الشهر (اختياري)"></div>
+        <div class="col-md-2 mb-2"><input type="number" name="month" min="1" max="12" class="form-control" placeholder="{{ t('Month') }} ({{ t('Optional') }})"></div>
 
 
 
-        <div class="col-md-3 mb-2"><button class="btn btn-primary btn-block">ترحيل الاستهلاك الشهري</button></div>
+        <div class="col-md-3 mb-2"><button class="btn btn-primary btn-block">{{ t('ترحيل') }} {{ t('ال{{ t('استهلاك') }}') }} {{ t('Monthly_2') }}</button></div>
 
 
 
@@ -106,7 +106,7 @@
 
 
 
-      <small class="text-muted">يُرحّل استهلاك الأصول النشطة للشركة الحالية فقط — لا يُكرّر الشهر إذا رُحّل مسبقاً.</small>
+      <small class="text-muted">{{ t('يُرحّل') }} {{ t('استهلاك') }} {{ t('Assets') }} {{ t('Active_2') }} {{ t('للشركة') }} {{ t('الحالية') }} فقط — لا {{ t('يُكرّر') }} {{ t('Month') }} إذا {{ t('رُحّل') }} {{ t('مسبقاً') }}.</small>
 
 
 
@@ -126,7 +126,7 @@
 
 
 
-    <thead><tr><th>السنة</th><th>الشهر</th><th>الحالة</th></tr></thead>
+    <thead><tr><th>{{ t('Year') }}</th><th>{{ t('Month') }}</th><th>{{ t('Status') }}</th></tr></thead>
 
 
 
@@ -146,7 +146,7 @@
 
 
 
-      <tr><td colspan="3">لا توجد فترات مسجلة بعد.</td></tr>
+      <tr><td colspan="3">لا {{ t('توجد') }} {{ t('فترات') }} {{ t('مسجلة') }} بعد.</td></tr>
 
 
 

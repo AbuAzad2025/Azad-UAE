@@ -33,23 +33,23 @@
           <div class="erp-footer-actions">
             {% if developer_whatsapp_link %}
               <a href="https://wa.me/{{ developer_whatsapp_link }}" target="_blank" rel="noopener noreferrer" class="erp-footer-action">
-                <i class="fab fa-whatsapp"></i><span>واتساب</span>
+                <i class="fab fa-whatsapp"></i><span>{{ t('واتساب') }}</span>
               </a>
             {% endif %}
             {% if _footer_phone %}
               <a href="tel:{{ _footer_phone }}" class="erp-footer-action">
-                <i class="fas fa-phone"></i><span>اتصال</span>
+                <i class="fas fa-phone"></i><span>{{ t('اتصال') }}</span>
               </a>
             {% endif %}
             {% if _footer_email %}
               <a href="mailto:{{ _footer_email }}" class="erp-footer-action">
-                <i class="fas fa-envelope"></i><span>بريد</span>
+                <i class="fas fa-envelope"></i><span>{{ t('بريد') }}</span>
               </a>
             {% endif %}
           </div>
         </div>
         <div class="erp-footer-copyright text-center mt-3 pt-2 border-top small text-muted">
-          &copy; {{ current_year }} {{ tenant_name_ar or company_name_ar or _developer_title }} &mdash; جميع الحقوق محفوظة
+          &copy; {{ current_year }} {{ tenant_name_ar or company_name_ar or _developer_title }} &mdash; {{ t('جميع') }} {{ t('الحقوق') }} {{ t('محفوظة') }}
         </div>
       </div>
     </div>

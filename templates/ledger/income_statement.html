@@ -1,16 +1,16 @@
 {% extends 'base.html' %}
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - قائمة الدخل{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('List') }} {{ t('Income_2') }}{% endblock %}
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
   <div>
-    <h1 class="mb-0">قائمة الدخل - Income Statement</h1>
+    <h1 class="mb-0">{{ t('List') }} {{ t('Income_2') }} - Income Statement</h1>
   </div>
   <div>
     <a href="{{ url_for('ledger.index') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right mr-2"></i>العودة لدفتر الأستاذ
+      <i class="fas fa-arrow-right mr-2"></i>{{ t('العودة') }} {{ t('لدفتر') }} {{ t('الأستاذ') }}
     </a>
     <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
-      <i class="fas fa-home mr-2"></i>الرئيسية
+      <i class="fas fa-home mr-2"></i>{{ t('Main_2') }}
     </a>
   </div>
 </div>
@@ -23,18 +23,18 @@
       <div class="card-body py-2">
         <form class="needs-validation" method="get" class="form-inline">
           <label class="mr-2" for="input_date_from">من:</label>
-          <input type="date" name="date_from" class="form-control mr-2" value="{{ date_from or '' }}" id="input_date_from" aria-label="من تاريخ">
+          <input type="date" name="date_from" class="form-control mr-2" value="{{ date_from or '' }}" id="input_date_from" aria-label="من {{ t('History') }}">
           <label class="mr-2" for="input_date_to">إلى:</label>
-          <input type="date" name="date_to" class="form-control mr-2" value="{{ date_to or '' }}" id="input_date_to" aria-label="إلى تاريخ">
-          <label class="mr-2">الفرع:</label>
-          <select name="branch_id" class="form-control mr-2" aria-label="اختر الفرع">
-            <option value="">-- الكل --</option>
+          <input type="date" name="date_to" class="form-control mr-2" value="{{ date_to or '' }}" id="input_date_to" aria-label="إلى {{ t('History') }}">
+          <label class="mr-2">{{ t('Branch') }}:</label>
+          <select name="branch_id" class="form-control mr-2" aria-label="{{ t('اختر') }} {{ t('Branch') }}">
+            <option value="">-- {{ t('All') }} --</option>
             {% for branch in branches %}
             <option value="{{ branch.id }}" {% if selected_branch == branch.id %}selected{% endif %}>{{ branch.name }}</option>
             {% endfor %}
           </select>
-          <button type="submit" class="btn btn-primary mr-2"><i class="fas fa-filter"></i> تصفية</button>
-          <button type="button" data-action="window-print" class="btn btn-info ml-auto"><i class="fas fa-print"></i> طباعة</button>
+          <button type="submit" class="btn btn-primary mr-2"><i class="fas fa-filter"></i> {{ t('تصفية') }}</button>
+          <button type="button" data-action="window-print" class="btn btn-info ml-auto"><i class="fas fa-print"></i> {{ t('Print') }}</button>
         </form>
       </div>
     </div>
@@ -54,7 +54,7 @@
     <div class="card-body">
       <div class="row">
         <div class="col-md-6">
-          <h4 class="text-success"><i class="fas fa-arrow-up"></i> الإيرادات</h4>
+          <h4 class="text-success"><i class="fas fa-arrow-up"></i> {{ t('Revenue') }}</h4>
           <div class="table-responsive"><table class="table table-sm">
             {% for name, amount in revenues.items() %}
             <tr>
@@ -63,14 +63,14 @@
             </tr>
             {% endfor %}
             <tr class="font-weight-bold bg-light">
-              <td>إجمالي الإيرادات</td>
+              <td>{{ t('Total_2') }} {{ t('Revenue') }}</td>
               <td class="text-left text-success">{{ format_currency(total_revenue) }}</td>
             </tr>
           </table></div>
         </div>
 
         <div class="col-md-6">
-          <h4 class="text-danger"><i class="fas fa-arrow-down"></i> المصروفات</h4>
+          <h4 class="text-danger"><i class="fas fa-arrow-down"></i> {{ t('Expenses') }}</h4>
           <div class="table-responsive"><table class="table table-sm">
             {% for name, amount in expenses.items() %}
             <tr>
@@ -79,7 +79,7 @@
             </tr>
             {% endfor %}
             <tr class="font-weight-bold bg-light">
-              <td>إجمالي المصروفات</td>
+              <td>{{ t('Total_2') }} {{ t('Expenses') }}</td>
               <td class="text-left text-danger">{{ format_currency(total_expense) }}</td>
             </tr>
           </table></div>
@@ -93,9 +93,9 @@
           <div class="alert {% if net_profit >= 0 %}alert-success{% else %}alert-danger{% endif %} text-center">
             <h3>
               {% if net_profit >= 0 %}
-              صافي الربح
+              {{ t('Net') }} {{ t('Profit') }}
               {% else %}
-              صافي الخسارة
+              {{ t('Net') }} {{ t('Loss_2') }}
               {% endif %}
             </h3>
             <h2 class="mb-0">{{ format_currency(net_profit|abs) }}</h2>

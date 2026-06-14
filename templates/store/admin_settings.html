@@ -1,12 +1,12 @@
 {% extends 'base.html' %}
 
-{% block title %}إعدادات المتجر{% endblock %}
+{% block title %}{{ t('Settings_2') }} {{ t('Store') }}{% endblock %}
 
 
 
 {% block page_title %}
 
-<h1 class="mb-0"><i class="fas fa-cog mr-2"></i>إعدادات المتجر</h1>
+<h1 class="mb-0"><i class="fas fa-cog mr-2"></i>{{ t('Settings_2') }} {{ t('Store') }}</h1>
 
 {% endblock %}
 
@@ -26,12 +26,12 @@
 
         <div class="card-body">
 
-          <h5 class="mb-3">عام</h5>
+          <h5 class="mb-3">{{ t('General_2') }}</h5>
 
           {% if store.platform_disabled %}
           <div class="alert alert-danger d-flex align-items-center">
             <i class="fas fa-lock mr-2"></i>
-            <span>تم تعطيل هذا المتجر من قبل مالك المنصة. لا يمكنك تفعيله حتى يقوم مالك المنصة بفك القفل.</span>
+            <span>تم {{ t('تعطيل') }} هذا {{ t('Store') }} من قبل {{ t('مالك') }} {{ t('Platform') }}. لا {{ t('يمكنك') }} {{ t('{{ t('تفعيل') }}ه') }} حتى {{ t('يقوم') }} {{ t('مالك') }} {{ t('Platform') }} {{ t('بفك') }} {{ t('القفل') }}.</span>
           </div>
           {% endif %}
 
@@ -39,7 +39,7 @@
 
             <input type="checkbox" class="custom-control-input" id="is_enabled" name="is_enabled" {% if store.is_enabled %}checked{% endif %} {% if store.platform_disabled %}disabled{% endif %} aria-label="is enabled">
 
-            <label class="custom-control-label font-weight-bold" for="is_enabled">تفعيل المتجر الإلكتروني</label>
+            <label class="custom-control-label font-weight-bold" for="is_enabled">{{ t('تفعيل') }} {{ t('Store') }} {{ t('Email_3') }}</label>
 
           </div>
 
@@ -47,7 +47,7 @@
 
           <div class="form-group">
 
-            <label for="input_title">عنوان المتجر</label>
+            <label for="input_title">{{ t('Address_2') }} {{ t('Store') }}</label>
 
             <input type="text" name="title" class="form-control" value="{{ store.title or '' }}" required id="input_title" aria-label="title">
 
@@ -55,7 +55,7 @@
 
           <div class="form-group">
 
-            <label for="input_tagline">شعار قصير (Tagline)</label>
+            <label for="input_tagline">{{ t('شعار') }} {{ t('قصير') }} (Tagline)</label>
 
             <input type="text" name="tagline" class="form-control" value="{{ store.tagline or '' }}" id="input_tagline" aria-label="tagline">
 
@@ -63,7 +63,7 @@
 
           <div class="form-group">
 
-            <label>شعار المتجر (Logo)</label>
+            <label>{{ t('شعار') }} {{ t('Store') }} (Logo)</label>
 
             {% if store.logo_url() %}
 
@@ -77,7 +77,7 @@
 
           <div class="form-group">
 
-            <label>رابط المتجر (slug)</label>
+            <label>{{ t('رابط') }} {{ t('Store') }} (slug)</label>
 
             <div class="input-group">
 
@@ -135,7 +135,7 @@
 
             <label for="input_meta_keywords">Meta Keywords</label>
 
-            <input type="text" name="meta_keywords" class="form-control" value="{{ store.meta_keywords or '' }}" placeholder="منتجات, فلسطين, ..." id="input_meta_keywords">
+            <input type="text" name="meta_keywords" class="form-control" value="{{ store.meta_keywords or '' }}" placeholder="{{ t('Products_2') }}, {{ t('فلسطين') }}, ..." id="input_meta_keywords">
 
           </div>
 
@@ -145,7 +145,7 @@
 
           <hr>
 
-          <h5 class="mb-3">النطاق</h5>
+          <h5 class="mb-3">{{ t('النطاق') }}</h5>
 
           <div class="row">
 
@@ -155,7 +155,7 @@
 
               <input type="text" name="subdomain" class="form-control" value="{{ store.subdomain or '' }}" dir="ltr" placeholder="myshop" id="input_subdomain">
 
-              <small class="text-muted">مثال: myshop.yourdomain.com</small>
+              <small class="text-muted">{{ t('مثال') }}: myshop.yourdomain.com</small>
 
             </div>
 
@@ -173,13 +173,13 @@
 
           <hr>
 
-          <h5 class="mb-3">التواصل والطلبات</h5>
+          <h5 class="mb-3">{{ t('التواصل') }} {{ t('و{{ t('ال{{ t('طلب') }}ات') }}') }}</h5>
 
           <div class="row">
 
             <div class="col-md-4 form-group">
 
-              <label for="input_phone">هاتف</label>
+              <label for="input_phone">{{ t('Phone_2') }}</label>
 
               <input type="text" name="phone" class="form-control" value="{{ store.phone or '' }}" id="input_phone" aria-label="phone" pattern="^\+?[0-9\s\-]{8,20}$">
 
@@ -187,7 +187,7 @@
 
             <div class="col-md-4 form-group">
 
-              <label for="input_whatsapp">واتساب</label>
+              <label for="input_whatsapp">{{ t('واتساب') }}</label>
 
               <input type="text" name="whatsapp" class="form-control" value="{{ store.whatsapp or '' }}" id="input_whatsapp" aria-label="whatsapp">
 
@@ -195,7 +195,7 @@
 
             <div class="col-md-4 form-group">
 
-              <label for="input_email">بريد</label>
+              <label for="input_email">{{ t('بريد') }}</label>
 
               <input type="email" name="email" class="form-control" value="{{ store.email or '' }}" id="input_email" aria-label="email">
 
@@ -207,7 +207,7 @@
 
             <input type="checkbox" class="custom-control-input" id="notify_email" name="notify_email_on_order" {% if store.notify_email_on_order %}checked{% endif %} aria-label="notify email on order">
 
-            <label class="custom-control-label" for="notify_email">إشعار بريد عند طلب جديد</label>
+            <label class="custom-control-label" for="notify_email">{{ t('Notification') }} {{ t('بريد') }} عند {{ t('طلب') }} {{ t('New') }}</label>
 
           </div>
 
@@ -215,7 +215,7 @@
 
             <input type="checkbox" class="custom-control-input" id="notify_wa" name="notify_whatsapp_on_order" {% if store.notify_whatsapp_on_order %}checked{% endif %} aria-label="notify whatsapp on order">
 
-            <label class="custom-control-label" for="notify_wa">تفعيل رابط واتساب للطلبات (من لوحة الطلبات)</label>
+            <label class="custom-control-label" for="notify_wa">{{ t('تفعيل') }} {{ t('رابط') }} {{ t('واتساب') }} {{ t('{{ t('لل{{ t('طلب') }}') }}ات') }} (من {{ t('Dashboard_2') }} {{ t('ال{{ t('طلب') }}ات') }})</label>
 
           </div>
 
@@ -225,7 +225,7 @@
 
             <div class="col-md-6 form-group">
 
-              <label for="input_min_order_amount">الحد الأدنى للطلب</label>
+              <label for="input_min_order_amount">{{ t('الحد') }} {{ t('الأدنى') }} {{ t('لل{{ t('طلب') }}') }}</label>
 
               <input type="number" name="min_order_amount" class="form-control" value="{{ store.min_order_amount or '' }}" min="0" step="0.01" id="input_min_order_amount" aria-label="min order amount">
 
@@ -233,7 +233,7 @@
 
             <div class="col-md-6 form-group">
 
-              <label for="input_low_stock_threshold">حد تنبيه المخزون المنخفض</label>
+              <label for="input_low_stock_threshold">حد {{ t('Alert_2') }} {{ t('Inventory') }} {{ t('Low_3') }}</label>
 
               <input type="number" name="low_stock_threshold" class="form-control" value="{{ store.low_stock_threshold or 5 }}" min="0" step="1" id="input_low_stock_threshold" aria-label="low stock threshold">
 
@@ -243,7 +243,7 @@
 
           <div class="form-group">
 
-            <label for="input_delivery_note">ملاحظة التوصيل</label>
+            <label for="input_delivery_note">{{ t('Note') }} {{ t('التوصيل') }}</label>
 
             <input type="text" name="delivery_note" class="form-control" value="{{ store.delivery_note or '' }}" maxlength="500" id="input_delivery_note" aria-label="delivery note">
 
@@ -253,11 +253,11 @@
 
           <hr>
 
-          <h5 class="mb-3">سياسة الإرجاع</h5>
+          <h5 class="mb-3">{{ t('سياسة') }} {{ t('الإرجاع') }}</h5>
 
           <div class="form-group">
 
-            <label>بالعربية</label>
+            <label>{{ t('In Arabic') }}</label>
 
             <textarea name="return_policy_ar" class="form-control" rows="4" aria-label="return policy ar">{{ store.return_policy_ar or '' }}</textarea>
 
@@ -275,9 +275,9 @@
 
         <div class="card-footer">
 
-          <button type="submit" class="btn btn-primary"><i class="fas fa-save mr-1"></i>حفظ</button>
+          <button type="submit" class="btn btn-primary"><i class="fas fa-save mr-1"></i>{{ t('Save') }}</button>
 
-          <a href="{{ url_for('store.admin_index') }}" class="btn btn-secondary">رجوع</a>
+          <a href="{{ url_for('store.admin_index') }}" class="btn btn-secondary">{{ t('Back') }}</a>
 
         </div>
 
@@ -291,7 +291,7 @@
 
     <div class="card card-outline card-info">
 
-      <div class="card-header"><h3 class="card-title">مستودع الأونلاين</h3></div>
+      <div class="card-header"><h3 class="card-title">{{ t('Warehouse_2') }} {{ t('ال{{ t('أونلاين') }}') }}</h3></div>
 
       <div class="card-body">
 
@@ -299,10 +299,10 @@
 
         <p><strong>{{ online_warehouse.name_ar or online_warehouse.name }}</strong></p>
 
-        <p class="mb-1"><span class="badge badge-info">أونلاين</span> <code>{{ online_warehouse.code }}</code></p>
+        <p class="mb-1"><span class="badge badge-info">{{ t('أونلاين') }}</span> <code>{{ online_warehouse.code }}</code></p>
 
         {% if current_user.has_permission('manage_warehouse') %}
-        <a href="{{ url_for('warehouse.view_warehouse', id=online_warehouse.id) }}" class="btn btn-outline-info mt-2">عرض المستودع</a>
+        <a href="{{ url_for('warehouse.view_warehouse', id=online_warehouse.id) }}" class="btn btn-outline-info mt-2">{{ t('View') }} {{ t('Warehouse') }}</a>
         {% endif %}
 
         {% endif %}

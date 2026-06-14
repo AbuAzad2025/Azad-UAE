@@ -1,15 +1,15 @@
 {% extends "base.html" %}
 
-{% block title %}تفاصيل التبرع - الخزينة السرية{% endblock %}
+{% block title %}{{ t('Details') }} {{ t('التبرع') }} - {{ t('الخزينة') }} {{ t('السرية') }}{% endblock %}
 
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
     <div>
-        <h1 class="mb-0"><i class="fas fa-heart text-danger"></i> تفاصيل التبرع #{{ donation.id }}</h1>
-        <p class="text-muted mb-0">مراجعة بيانات المتبرع وحالة المعاملة</p>
+        <h1 class="mb-0"><i class="fas fa-heart text-danger"></i> {{ t('Details') }} {{ t('التبرع') }} #{{ donation.id }}</h1>
+        <p class="text-muted mb-0">{{ t('مراجعة') }} {{ t('Data_2') }} {{ t('المتبرع') }} {{ t('وحالة') }} {{ t('المعاملة') }}</p>
     </div>
     <a href="{{ url_for('payment_vault.donations') }}" class="btn btn-secondary">
-        <i class="fas fa-arrow-right"></i> العودة للتبرعات
+        <i class="fas fa-arrow-right"></i> {{ t('العودة') }} {{ t('للتبرعات') }}
     </a>
 </div>
 {% endblock %}
@@ -74,7 +74,7 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h2 class="mb-0">
-                                <i class="fas fa-heart"></i> تفاصيل التبرع #{{ donation.id }}
+                                <i class="fas fa-heart"></i> {{ t('Details') }} {{ t('التبرع') }} #{{ donation.id }}
                             </h2>
                             <p class="mb-0 mt-2 ic-1">
                                 {{ donation.created_at.strftime('%Y-%m-%d %H:%M') if donation.created_at else 'N/A' }}
@@ -82,11 +82,11 @@
                         </div>
                         <div>
                             {% if donation.status == 'completed' %}
-                                <span class="badge badge-success status-badge">✓ مكتمل</span>
+                                <span class="badge badge-success status-badge">✓ {{ t('Completed') }}</span>
                             {% elif donation.status == 'pending' %}
-                                <span class="badge badge-warning status-badge">⏳ قيد الانتظار</span>
+                                <span class="badge badge-warning status-badge">⏳ {{ t('قيد') }} {{ t('Waiting') }}</span>
                             {% elif donation.status == 'failed' %}
-                                <span class="badge badge-danger status-badge">✗ فاشل</span>
+                                <span class="badge badge-danger status-badge">✗ {{ t('فاشل') }}</span>
                             {% else %}
                                 <span class="badge badge-secondary status-badge">{{ donation.status }}</span>
                             {% endif %}
@@ -97,22 +97,22 @@
                 
                 <div class="detail-card">
                     <h4 class="mb-4">
-                        <i class="fas fa-user text-primary"></i> معلومات المتبرع
+                        <i class="fas fa-user text-primary"></i> {{ t('Info_2') }} {{ t('المتبرع') }}
                     </h4>
                     
                     <div class="info-row">
-                        <div class="info-label">الاسم:</div>
+                        <div class="info-label">{{ t('Name') }}:</div>
                         <div class="info-value">{{ donation.donor_name or 'غير محدد' }}</div>
                     </div>
                     
                     <div class="info-row">
-                        <div class="info-label">البريد الإلكتروني:</div>
+                        <div class="info-label">{{ t('Email_2') }} {{ t('Email_3') }}:</div>
                         <div class="info-value">{{ donation.donor_email or 'غير محدد' }}</div>
                     </div>
                     
                     {% if donation.donor_message %}
                     <div class="info-row">
-                        <div class="info-label">الرسالة:</div>
+                        <div class="info-label">{{ t('الرسالة') }}:</div>
                         <div class="info-value">
                             <div class="alert alert-info">
                                 <i class="fas fa-comment"></i> {{ donation.donor_message }}
@@ -125,27 +125,27 @@
                 
                 <div class="detail-card">
                     <h4 class="mb-4">
-                        <i class="fas fa-dollar-sign text-success"></i> معلومات الدفع
+                        <i class="fas fa-dollar-sign text-success"></i> {{ t('Info_2') }} {{ t('Payment_2') }}
                     </h4>
                     
                     <div class="info-row">
-                        <div class="info-label">المبلغ:</div>
+                        <div class="info-label">{{ t('Amount') }}:</div>
                         <div class="info-value text-success">
                             <h3 class="mb-0">${{ donation.amount_usd }}</h3>
                         </div>
                     </div>
                     
                     <div class="info-row">
-                        <div class="info-label">طريقة الدفع:</div>
+                        <div class="info-label">{{ t('طريقة') }} {{ t('Payment_2') }}:</div>
                         <div class="info-value">
                             {% if donation.payment_method == 'crypto' %}
-                                <i class="fab fa-bitcoin text-warning"></i> عملة رقمية
+                                <i class="fab fa-bitcoin text-warning"></i> {{ t('Currency_2') }} {{ t('{{ t('رقم') }}ية') }}
                             {% elif donation.payment_method == 'card' %}
-                                <i class="fas fa-credit-card text-primary"></i> بطاقة
+                                <i class="fas fa-credit-card text-primary"></i> {{ t('Card') }}
                             {% elif donation.payment_method == 'paypal' %}
                                 <i class="fab fa-paypal text-info"></i> PayPal
                             {% elif donation.payment_method == 'bank' %}
-                                <i class="fas fa-university text-secondary"></i> تحويل بنكي
+                                <i class="fas fa-university text-secondary"></i> {{ t('Transfer') }} {{ t('Bank_3') }}
                             {% else %}
                                 {{ donation.payment_method }}
                             {% endif %}
@@ -154,14 +154,14 @@
                     
                     {% if donation.crypto_type %}
                     <div class="info-row">
-                        <div class="info-label">نوع العملة الرقمية:</div>
+                        <div class="info-label">{{ t('نوع') }} {{ t('Currency') }} {{ t('ال{{ t('{{ t('رقم') }}ية') }}') }}:</div>
                         <div class="info-value">{{ donation.crypto_type|upper }}</div>
                     </div>
                     {% endif %}
                     
                     {% if donation.transaction_hash %}
                     <div class="info-row">
-                        <div class="info-label">رقم المعاملة:</div>
+                        <div class="info-label">{{ t('رقم') }} {{ t('المعاملة') }}:</div>
                         <div class="info-value">
                             <code class="ic-2">
                                 {{ donation.transaction_hash }}
@@ -172,7 +172,7 @@
                     
                     {% if donation.wallet_address %}
                     <div class="info-row">
-                        <div class="info-label">عنوان المحفظة:</div>
+                        <div class="info-label">{{ t('Address_2') }} {{ t('المحفظة_2') }}:</div>
                         <div class="info-value">
                             <code class="ic-3">
                                 {{ donation.wallet_address }}
@@ -183,7 +183,7 @@
                     
                     {% if donation.completed_at %}
                     <div class="info-row">
-                        <div class="info-label">تاريخ الإكمال:</div>
+                        <div class="info-label">{{ t('History') }} {{ t('الإكمال') }}:</div>
                         <div class="info-value">{{ donation.completed_at.strftime('%Y-%m-%d %H:%M') }}</div>
                     </div>
                     {% endif %}
@@ -192,7 +192,7 @@
                 
                 <div class="detail-card">
                     <h4 class="mb-4">
-                        <i class="fas fa-info-circle text-info"></i> معلومات تقنية
+                        <i class="fas fa-info-circle text-info"></i> {{ t('Info_2') }} {{ t('تقنية') }}
                     </h4>
                     
                     <div class="info-row">
@@ -224,16 +224,16 @@
                         <div class="col-md-6">
                             <form class="needs-validation" method="POST" action="{{ url_for('payment_vault.approve_donation', donation_id=donation.id) }}">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
-                                <button type="submit" class="btn btn-success btn-block btn-lg" onclick="return confirm('قبول هذا التبرع؟')">
-                                    <i class="fas fa-check-circle"></i> قبول التبرع
+                                <button type="submit" class="btn btn-success btn-block btn-lg" onclick="return confirm('{{ t('قبول') }} هذا {{ t('{{ t('التبرع') }}_2') }}')">
+                                    <i class="fas fa-check-circle"></i> {{ t('قبول') }} {{ t('التبرع') }}
                                 </button>
                             </form>
                         </div>
                         <div class="col-md-6">
                             <form method="POST" action="{{ url_for('payment_vault.reject_donation', donation_id=donation.id) }}">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
-                                <button type="submit" class="btn btn-danger btn-block btn-lg" onclick="return confirm('رفض هذا التبرع؟')">
-                                    <i class="fas fa-times-circle"></i> رفض التبرع
+                                <button type="submit" class="btn btn-danger btn-block btn-lg" onclick="return confirm('{{ t('رفض') }} هذا {{ t('{{ t('التبرع') }}_2') }}')">
+                                    <i class="fas fa-times-circle"></i> {{ t('رفض') }} {{ t('التبرع') }}
                                 </button>
                             </form>
                         </div>
@@ -242,14 +242,14 @@
                         {% if donation.donor_email %}
                         <div class="col-md-6 mt-3">
                             <button class="btn btn-primary btn-block btn-lg" onclick="sendThankYou({{ donation.donor_email|tojson }}, {{ (donation.donor_name or 'متبرع')|tojson }}, {{ donation.amount_usd }})">
-                                <i class="fas fa-envelope"></i> إرسال شكر
+                                <i class="fas fa-envelope"></i> {{ t('Submit') }} {{ t('شكر') }}
                             </button>
                         </div>
                         {% endif %}
                         
                         <div class="col-md-{% if donation.donor_email and donation.status == 'pending' %}6{% elif donation.donor_email %}12{% else %}12{% endif %} mt-3">
                             <a href="{{ url_for('payment_vault.donations') }}" class="btn btn-secondary btn-block btn-lg">
-                                <i class="fas fa-arrow-left"></i> العودة للتبرعات
+                                <i class="fas fa-arrow-left"></i> {{ t('العودة') }} {{ t('للتبرعات') }}
                             </a>
                         </div>
                     </div>
@@ -262,8 +262,8 @@
 {% block extra_js %}
 <script>
 function sendThankYou(email, name, amount) {
-    const subject = encodeURIComponent('شكراً على تبرعك الكريم');
-    const body = encodeURIComponent(`عزيزي ${name},\n\nنشكرك على تبرعك الكريم بمبلغ $${amount}.\n\nمع أطيب التحيات,\nفريق {{ developer_name_ar or developer_name or 'Azad Systems' }}`);
+    const subject = encodeURIComponent('{{ t('{{ t('شكر') }}اً') }} على {{ t('تبرعك') }} {{ t('الكريم') }}');
+    const body = encodeURIComponent(`{{ t('عزيزي') }} ${name},\n\n{{ t('ن{{ t('شكر') }}ك') }} على {{ t('تبرعك') }} {{ t('الكريم') }} {{ t('بمبلغ') }} $${amount}.\n\nمع {{ t('أطيب') }} {{ t('التحيات') }},\n{{ t('فريق') }} {{ developer_name_ar or developer_name or 'Azad Systems' }}`);
     window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
 }
 </script>

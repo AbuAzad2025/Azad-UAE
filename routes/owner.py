@@ -423,61 +423,74 @@ def dashboard():
         build_system_health_summary,
     )
 
-    # Platform-wide branch stats (all tenants) — limited to top 50 to avoid timeout
+    # Platform-wide branch stats (all tenants) — aggregated, top 50 by sales
     platform_branch_stats = []
     if is_global_owner_user(current_user) and tid is None:
-        from models import Branch, Warehouse, StockMovement
-        all_branches = Branch.query.order_by(Branch.id).limit(50).all()
-        for branch in all_branches:
-            # Sales Count & Amount for this branch (All time, all tenants)
-            b_sales = db.session.query(
-                func.count(Sale.id),
-                func.sum(Sale.amount_aed)
-            ).filter(
-                Sale.branch_id == branch.id,
-                Sale.status == 'confirmed',
-            ).first()
+        from models import Branch, Warehouse, ProductWarehouseCost
 
-            # Monthly Sales (all tenants)
-            b_month_sales = db.session.query(
-                func.sum(Sale.amount_aed)
-            ).filter(
-                Sale.branch_id == branch.id,
-                Sale.status == 'confirmed',
-                func.date(Sale.sale_date) >= month_start,
-            ).scalar() or 0
+        # Top 50 branches by all-time confirmed sales amount
+        top_branches = db.session.query(
+            Branch.id,
+            Branch.name,
+            Branch.code,
+            Branch.tenant_id,
+            func.count(Sale.id).label('sale_count'),
+            func.coalesce(func.sum(Sale.amount_aed), 0).label('sale_total'),
+            func.coalesce(func.sum(Sale.amount_aed).filter(
+                func.date(Sale.sale_date) >= month_start), 0).label('sale_month'),
+        ).outerjoin(
+            Sale, db.and_(Sale.branch_id == Branch.id, Sale.status == 'confirmed')
+        ).group_by(
+            Branch.id, Branch.name, Branch.code, Branch.tenant_id
+        ).order_by(
+            desc('sale_total')
+        ).limit(50).all()
 
-            # Expenses (All time, all tenants)
-            b_expenses = db.session.query(
-                func.sum(Expense.amount_aed)
+        branch_ids = [r.id for r in top_branches]
+
+        # Expenses per branch (single aggregated query)
+        expense_map = {}
+        if branch_ids:
+            exp_rows = db.session.query(
+                Expense.branch_id,
+                func.coalesce(func.sum(Expense.amount_aed), 0)
             ).filter(
-                Expense.branch_id == branch.id,
+                Expense.branch_id.in_(branch_ids),
                 Expense.is_reversed == False,
-            ).scalar() or 0
+            ).group_by(Expense.branch_id).all()
+            expense_map = {r[0]: float(r[1]) for r in exp_rows}
 
-            # Inventory value for this branch (from MWAC records per warehouse)
-            warehouse_ids = [w.id for w in Warehouse.query.filter_by(branch_id=branch.id, is_active=True).all()]
-            branch_inventory_value = float(0)
-            if warehouse_ids:
-                from models import ProductWarehouseCost
-                pwc_vals = db.session.query(
-                    func.sum(ProductWarehouseCost.total_value)
-                ).filter(
-                    ProductWarehouseCost.warehouse_id.in_(warehouse_ids)
-                ).scalar() or Decimal('0')
-                branch_inventory_value = float(pwc_vals)
+        # Inventory value per branch (single aggregated query)
+        inv_map = {}
+        if branch_ids:
+            wh_rows = db.session.query(
+                Warehouse.branch_id,
+                func.coalesce(func.sum(ProductWarehouseCost.total_value), 0)
+            ).join(
+                ProductWarehouseCost, ProductWarehouseCost.warehouse_id == Warehouse.id
+            ).filter(
+                Warehouse.branch_id.in_(branch_ids),
+                Warehouse.is_active == True,
+            ).group_by(Warehouse.branch_id).all()
+            inv_map = {r[0]: float(r[1]) for r in wh_rows}
 
+        # Build branch mapping for tenant name
+        tenant_map = {t.id: getattr(t, 'name_ar', t.name) for t in Tenant.query.filter(
+            Tenant.id.in_(set(r.tenant_id for r in top_branches))
+        ).all()}
+
+        for row in top_branches:
             platform_branch_stats.append({
-                'id': branch.id,
-                'name': branch.name,
-                'code': branch.code,
-                'tenant_name': branch.tenant.name_ar if branch.tenant else '—',
-                'total_sales_count': b_sales[0] or 0,
-                'total_sales_amount': float(b_sales[1] or 0),
-                'month_sales_amount': float(b_month_sales),
-                'total_expenses': float(b_expenses),
-                'inventory_value': branch_inventory_value,
-                'net_profit_indicator': float(b_sales[1] or 0) - float(b_expenses)
+                'id': row.id,
+                'name': row.name,
+                'code': row.code,
+                'tenant_name': tenant_map.get(row.tenant_id, '—'),
+                'total_sales_count': row.sale_count,
+                'total_sales_amount': float(row.sale_total),
+                'month_sales_amount': float(row.sale_month),
+                'total_expenses': expense_map.get(row.id, 0),
+                'inventory_value': inv_map.get(row.id, 0),
+                'net_profit_indicator': float(row.sale_total) - expense_map.get(row.id, 0),
             })
 
     panel_mode = 'platform' if is_global_owner_user(current_user) else 'legacy'

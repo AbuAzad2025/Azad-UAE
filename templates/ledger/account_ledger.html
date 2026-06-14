@@ -1,25 +1,25 @@
 {% extends 'base.html' %}
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - دفتر حساب {{ account.name }}{% endblock %}
-{% block page_title %}دفتر حساب: {{ account.code }} - {{ account.name }}{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('دفتر') }} {{ t('Account_2') }} {{ account.name }}{% endblock %}
+{% block page_title %}{{ t('دفتر') }} {{ t('Account_2') }}: {{ account.code }} - {{ account.name }}{% endblock %}
 
 {% block content %}
 <div class="row mb-3 no-print">
   <div class="col-12">
     <form class="needs-validation" method="get" class="form-inline d-inline">
-      <label class="mr-2">الفرع:</label>
-      <select name="branch_id" class="form-control mr-2 ic-1" onchange="this.form.submit()" aria-label="اختر الفرع">
-        <option value="">كل الفروع</option>
+      <label class="mr-2">{{ t('Branch') }}:</label>
+      <select name="branch_id" class="form-control mr-2 ic-1" onchange="this.form.submit()" aria-label="{{ t('اختر') }} {{ t('Branch') }}">
+        <option value="">كل {{ t('Branches') }}</option>
         {% for b in branches or [] %}
         <option value="{{ b.id }}" {{ 'selected' if selected_branch == b.id else '' }}>{{ b.name }} ({{ b.code }})</option>
         {% endfor %}
       </select>
-      <input type="hidden" name="date_from" value="{{ date_from or '' }}" aria-label="من تاريخ">
-      <input type="hidden" name="date_to" value="{{ date_to or '' }}" aria-label="إلى تاريخ">
+      <input type="hidden" name="date_from" value="{{ date_from or '' }}" aria-label="من {{ t('History') }}">
+      <input type="hidden" name="date_to" value="{{ date_to or '' }}" aria-label="إلى {{ t('History') }}">
     </form>
     <button data-action="window-print" class="btn btn-secondary ml-2">
-      <i class="fas fa-print mr-2"></i>طباعة
+      <i class="fas fa-print mr-2"></i>{{ t('Print') }}
     </button>
-    <a href="{{ url_for('ledger.index') }}" class="btn btn-info ml-2">العودة</a>
+    <a href="{{ url_for('ledger.index') }}" class="btn btn-info ml-2">{{ t('العودة') }}</a>
   </div>
 </div>
 
@@ -38,11 +38,11 @@
         <thead>
           <tr>
             <th>{{ t('Date') }}</th>
-            <th>رقم القيد</th>
+            <th>{{ t('رقم') }} {{ t('القيد') }}</th>
             <th>{{ t('Description') }}</th>
-            <th>المرجع</th>
-            <th class="text-danger">مدين</th>
-            <th class="text-success">دائن</th>
+            <th>{{ t('المرجع') }}</th>
+            <th class="text-danger">{{ t('مدين') }}</th>
+            <th class="text-success">{{ t('دائن') }}</th>
             <th>{{ t('Balance') }}</th>
           </tr>
         </thead>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{{ settings.company_name_ar or tenant_name_ar or company_name_ar }} - فاتورة شراء #{{ purchase.purchase_number }}</title>
+  <title>{{ settings.company_name_ar or tenant_name_ar or company_name_ar }} - {{ t('Invoice') }} {{ t('Purchase') }} #{{ purchase.purchase_number }}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/erp-theme.css') }}">
   {% include 'partials/print_styles.html' %}
   <style>
@@ -53,37 +53,37 @@
       <div class="company-info">
         <div>{{ settings.address_ar or tenant_address or '' }}</div>
         <div>📞 {{ settings.phone_1 or tenant_phone or '' }} {% if settings.email %} | 📧 {{ settings.email }}{% endif %}</div>
-        {% if settings and settings.tax_number %}<div>الرقم الضريبي: {{ settings.tax_number }}</div>{% endif %}
-        {% if purchase.branch %}<div>🏢 الفرع: {{ purchase.branch.name }}{% if purchase.branch.code %} ({{ purchase.branch.code }}){% endif %}</div>{% endif %}
+        {% if settings and settings.tax_number %}<div>{{ t('ال{{ t('رقم') }}') }} {{ t('الضريبي') }}: {{ settings.tax_number }}</div>{% endif %}
+        {% if purchase.branch %}<div>🏢 {{ t('Branch') }}: {{ purchase.branch.name }}{% if purchase.branch.code %} ({{ purchase.branch.code }}){% endif %}</div>{% endif %}
       </div>
     </div>
 
     <div class="doc-title">
-      <h2>🧾 فاتورة شراء</h2>
+      <h2>🧾 {{ t('Invoice') }} {{ t('Purchase') }}</h2>
       <div class="invoice-number" style="font-size:9px;color:#666;margin-top:4px;">
-        رقم الفاتورة: <strong>{{ purchase.purchase_number }}</strong> |
-        التاريخ: <strong>{{ purchase.purchase_date.strftime('%Y-%m-%d') if purchase.purchase_date else '' }}</strong>
+        {{ t('رقم') }} {{ t('Invoice_2') }}: <strong>{{ purchase.purchase_number }}</strong> |
+        {{ t('Date') }}: <strong>{{ purchase.purchase_date.strftime('%Y-%m-%d') if purchase.purchase_date else '' }}</strong>
       </div>
     </div>
 
     <div class="content">
       <div class="info-grid">
         <div class="info-box">
-          <h3>🏢 بيانات المورد</h3>
-          <p><strong>المورد:</strong> {{ purchase.supplier.name if purchase.supplier else purchase.supplier_name }}</p>
-          {% if purchase.supplier and purchase.supplier.phone %}<p><strong>الهاتف:</strong> {{ purchase.supplier.phone }}</p>{% endif %}
-          {% if purchase.supplier and purchase.supplier.address %}<p><strong>العنوان:</strong> {{ purchase.supplier.address }}</p>{% endif %}
+          <h3>🏢 {{ t('Data_2') }} {{ t('Supplier') }}</h3>
+          <p><strong>{{ t('Supplier') }}:</strong> {{ purchase.supplier.name if purchase.supplier else purchase.supplier_name }}</p>
+          {% if purchase.supplier and purchase.supplier.phone %}<p><strong>{{ t('Phone') }}:</strong> {{ purchase.supplier.phone }}</p>{% endif %}
+          {% if purchase.supplier and purchase.supplier.address %}<p><strong>{{ t('Address') }}:</strong> {{ purchase.supplier.address }}</p>{% endif %}
         </div>
         <div class="info-box">
-          <h3>📅 معلومات الفاتورة</h3>
-          <p><strong>المستخدم:</strong> {{ print_user_name or (purchase.user.full_name if purchase.user else '-') }}</p>
-          <p><strong>الحالة:</strong> مؤكدة</p>
+          <h3>📅 {{ t('Info_2') }} {{ t('Invoice_2') }}</h3>
+          <p><strong>{{ t('User') }}:</strong> {{ print_user_name or (purchase.user.full_name if purchase.user else '-') }}</p>
+          <p><strong>{{ t('Status') }}:</strong> {{ t('Confirmed') }}</p>
         </div>
       </div>
 
       <div class="table-responsive"><table>
         <thead>
-          <tr><th>#</th><th>المنتج</th><th>الكمية</th><th>سعر الوحدة</th><th>الإجمالي</th></tr>
+          <tr><th>#</th><th>{{ t('Product') }}</th><th>{{ t('Quantity') }}</th><th>{{ t('Price_2') }} {{ t('الوحدة') }}</th><th>{{ t('Total_3') }}</th></tr>
         </thead>
         <tbody>
           {% for line in purchase.lines %}
@@ -99,14 +99,14 @@
       </table></div>
 
       <div class="total-section">
-        <div class="total-row"><span>الإجمالي:</span> <strong>{{ format_currency(purchase.subtotal) }}</strong></div>
+        <div class="total-row"><span>{{ t('Total_3') }}:</span> <strong>{{ format_currency(purchase.subtotal) }}</strong></div>
         {% if purchase.tax_amount and purchase.tax_amount > 0 %}
-        <div class="total-row"><span>الضريبة:</span> <strong>{{ format_currency(purchase.tax_amount) }}</strong></div>
+        <div class="total-row"><span>{{ t('Tax') }}:</span> <strong>{{ format_currency(purchase.tax_amount) }}</strong></div>
         {% endif %}
         {% if purchase.discount_amount and purchase.discount_amount > 0 %}
-        <div class="total-row"><span>الخصم:</span> <strong>-{{ format_currency(purchase.discount_amount) }}</strong></div>
+        <div class="total-row"><span>{{ t('Discount') }}:</span> <strong>-{{ format_currency(purchase.discount_amount) }}</strong></div>
         {% endif %}
-        <div class="total-row final"><span>الإجمالي النهائي:</span> <strong>{{ format_currency(purchase.total_amount) }}</strong></div>
+        <div class="total-row final"><span>{{ t('Total_3') }} {{ t('النهائي') }}:</span> <strong>{{ format_currency(purchase.total_amount) }}</strong></div>
       </div>
 
       {% if purchase.notes %}
@@ -127,7 +127,7 @@
     </div>
 
     <div class="footer">
-      <p>شكراً لتعاملكم معنا</p>
+      <p>{{ t('شكراً') }} {{ t('لتعاملكم') }} {{ t('معنا') }}</p>
       {% if settings and settings.bank_name %}
       <div style="font-size:8px;margin-top:5px;">
         <strong>🏦 {{ settings.bank_name }}</strong> |

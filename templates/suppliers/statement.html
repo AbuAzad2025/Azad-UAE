@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - كشف حساب المورد {{ supplier.name }}{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('كشف') }} {{ t('Account_2') }} {{ t('Supplier') }} {{ supplier.name }}{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -52,18 +52,18 @@ table.statement-table thead th {
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
   <div>
-    <h1 class="mb-0"><i class="fas fa-file-invoice mr-2"></i>كشف حساب المورد</h1>
+    <h1 class="mb-0"><i class="fas fa-file-invoice mr-2"></i>{{ t('كشف') }} {{ t('Account_2') }} {{ t('Supplier') }}</h1>
     <p class="text-muted mb-0">{{ supplier.name }}</p>
   </div>
   <div>
     <button data-action="window-print" class="btn btn-primary">
-      <i class="fas fa-print mr-2"></i>طباعة
+      <i class="fas fa-print mr-2"></i>{{ t('Print') }}
     </button>
     <a href="{{ url_for('suppliers.view', id=supplier.id) }}" class="btn btn-info">
-      <i class="fas fa-truck mr-2"></i>تفاصيل المورد
+      <i class="fas fa-truck mr-2"></i>{{ t('Details') }} {{ t('Supplier') }}
     </a>
     <a href="{{ url_for('suppliers.index') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right mr-2"></i>العودة للقائمة
+      <i class="fas fa-arrow-right mr-2"></i>{{ t('العودة') }} {{ t('للقائمة') }}
     </a>
   </div>
 </div>
@@ -77,7 +77,7 @@ table.statement-table thead th {
         <h2 class="mb-3">
           <i class="fas fa-truck mr-2"></i>{{ supplier.name }}
           {% if supplier.is_verified %}
-            <span class="badge badge-success">✓ موثوق</span>
+            <span class="badge badge-success">✓ {{ t('موثوق') }}</span>
           {% endif %}
         </h2>
         {% if supplier.company_name %}
@@ -91,11 +91,11 @@ table.statement-table thead th {
         {% endif %}
       </div>
       <div class="col-md-6 text-left">
-        <h4 class="mb-3">كشف الحساب</h4>
-        <p class="mb-1"><i class="fas fa-calendar mr-2"></i>التاريخ: {{ now().strftime('%Y-%m-%d') }}</p>
-        <p class="mb-1"><i class="fas fa-hashtag mr-2"></i>رقم المورد: #{{ supplier.id }}</p>
+        <h4 class="mb-3">{{ t('كشف') }} {{ t('Account') }}</h4>
+        <p class="mb-1"><i class="fas fa-calendar mr-2"></i>{{ t('Date') }}: {{ now().strftime('%Y-%m-%d') }}</p>
+        <p class="mb-1"><i class="fas fa-hashtag mr-2"></i>{{ t('رقم') }} {{ t('Supplier') }}: #{{ supplier.id }}</p>
         {% if supplier.tax_number %}
-          <p class="mb-1"><i class="fas fa-receipt mr-2"></i>الرقم الضريبي: {{ supplier.tax_number }}</p>
+          <p class="mb-1"><i class="fas fa-receipt mr-2"></i>{{ t('ال{{ t('رقم') }}') }} {{ t('الضريبي') }}: {{ supplier.tax_number }}</p>
         {% endif %}
       </div>
     </div>
@@ -106,15 +106,15 @@ table.statement-table thead th {
     <div class="statement-info">
       <div class="row text-center">
         <div class="col-md-4">
-          <h6 class="text-muted">إجمالي المشتريات</h6>
+          <h6 class="text-muted">{{ t('Total_2') }} {{ t('Purchases') }}</h6>
           <h3 class="text-info">{{ transactions|selectattr('type', 'equalto', 'purchase')|list|length }}</h3>
         </div>
         <div class="col-md-4">
-          <h6 class="text-muted">المبلغ الإجمالي</h6>
+          <h6 class="text-muted">{{ t('Amount') }} {{ t('Total_3') }}</h6>
           <h3 class="text-success">{{ format_currency(supplier.total_purchases_base or 0) }}</h3>
         </div>
         <div class="col-md-4">
-          <h6 class="text-muted">الرصيد المستحق</h6>
+          <h6 class="text-muted">{{ t('Balance') }} {{ t('المستحق') }}</h6>
           <h3 class="{% if final_balance > 0 %}text-danger{% else %}text-success{% endif %}">
             {{ format_currency(final_balance) }}
           </h3>
@@ -126,16 +126,16 @@ table.statement-table thead th {
     <div class="mb-3 no-print">
       <form class="form-inline" method="get">
         <div class="form-group mx-1 mb-2">
-          <label for="date_from" class="sr-only">من تاريخ</label>
-          <input type="date" id="date_from" name="date_from" class="form-control form-control-sm" value="{{ filters.date_from }}" aria-label="من تاريخ">
+          <label for="date_from" class="sr-only">من {{ t('History') }}</label>
+          <input type="date" id="date_from" name="date_from" class="form-control form-control-sm" value="{{ filters.date_from }}" aria-label="من {{ t('History') }}">
         </div>
         <div class="form-group mx-1 mb-2">
-          <label for="date_to" class="sr-only">إلى تاريخ</label>
-          <input type="date" id="date_to" name="date_to" class="form-control form-control-sm" value="{{ filters.date_to }}" aria-label="إلى تاريخ">
+          <label for="date_to" class="sr-only">إلى {{ t('History') }}</label>
+          <input type="date" id="date_to" name="date_to" class="form-control form-control-sm" value="{{ filters.date_to }}" aria-label="إلى {{ t('History') }}">
         </div>
         <div class="form-group mx-1 mb-2">
-          <button type="submit" class="btn btn-primary btn-sm">تطبيق</button>
-          <a href="{{ url_for('suppliers.statement', id=supplier.id) }}" class="btn btn-light btn-sm ml-1">إعادة تعيين</a>
+          <button type="submit" class="btn btn-primary btn-sm">{{ t('Apply') }}</button>
+          <a href="{{ url_for('suppliers.statement', id=supplier.id) }}" class="btn btn-light btn-sm ml-1">{{ t('إعادة') }} {{ t('تعيين') }}</a>
         </div>
       </form>
     </div>
@@ -145,12 +145,12 @@ table.statement-table thead th {
       <table class="table table-bordered table-striped statement-table">
         <thead>
           <tr>
-            <th>التاريخ</th>
-            <th>البيان</th>
-            <th>المرجع</th>
-            <th class="text-danger">مدين (مشتريات)</th>
-            <th class="text-success">دائن (مدفوعات)</th>
-            <th>الرصيد الجاري</th>
+            <th>{{ t('Date') }}</th>
+            <th>{{ t('Description_3') }}</th>
+            <th>{{ t('المرجع') }}</th>
+            <th class="text-danger">{{ t('مدين') }} ({{ t('Purchases_2') }})</th>
+            <th class="text-success">{{ t('دائن') }} ({{ t('مدفوعات') }})</th>
+            <th>{{ t('Balance') }} {{ t('الجاري') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -163,7 +163,7 @@ table.statement-table thead th {
               <div class="transaction-meta">
                 <span>{{ t.payment_method }}</span>
                 {% if not t.payment_confirmed %}
-                <span class="text-warning">معلق</span>
+                <span class="text-warning">{{ t('Pending') }}</span>
                 {% endif %}
                 {% if t.notes %}
                 <span>{{ t.notes }}</span>
@@ -181,11 +181,11 @@ table.statement-table thead th {
           </tr>
           {% else %}
           <tr>
-            <td colspan="6" class="text-center text-muted py-4">لا توجد معاملات للعرض.</td>
+            <td colspan="6" class="text-center text-muted py-4">لا {{ t('توجد') }} {{ t('معاملات') }} {{ t('للعرض') }}.</td>
           </tr>
           {% endfor %}
           <tr class="final-balance-row">
-            <td colspan="5" class="text-center">الرصيد النهائي</td>
+            <td colspan="5" class="text-center">{{ t('Balance') }} {{ t('النهائي') }}</td>
             <td class="text-right amount-cell">{{ format_currency(final_balance) }}</td>
           </tr>
         </tbody>
@@ -196,20 +196,20 @@ table.statement-table thead th {
     {% set purchases_list = transactions|selectattr('type', 'equalto', 'purchase')|list %}
     {% if purchases_list %}
     <div class="mt-4">
-      <h5 class="mb-3"><i class="fas fa-shopping-cart mr-2"></i>تفاصيل المشتريات</h5>
+      <h5 class="mb-3"><i class="fas fa-shopping-cart mr-2"></i>{{ t('Details') }} {{ t('Purchases') }}</h5>
       <div class="table-responsive">
         <table class="table table-bordered table-striped">
           <thead class="ic-1">
             <tr>
               <th class="text-center">#</th>
-              <th>رقم الشراء</th>
-              <th>التاريخ</th>
-              <th>العملة</th>
-              <th>سعر الصرف</th>
-              <th class="text-center">عدد المنتجات</th>
-              <th class="text-left">المبلغ</th>
-              <th class="text-left">المبلغ (AED)</th>
-              <th class="text-center">الحالة</th>
+              <th>{{ t('رقم') }} {{ t('Purchase_2') }}</th>
+              <th>{{ t('Date') }}</th>
+              <th>{{ t('Currency') }}</th>
+              <th>{{ t('Price_2') }} {{ t('Exchange') }}</th>
+              <th class="text-center">{{ t('Count') }} {{ t('Products') }}</th>
+              <th class="text-left">{{ t('Amount') }}</th>
+              <th class="text-left">{{ t('Amount') }} (AED)</th>
+              <th class="text-center">{{ t('Status') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -229,13 +229,13 @@ table.statement-table thead th {
               <td class="text-center">-</td>
               <td class="text-left">{{ format_currency(p.amount) }}</td>
               <td class="text-left text-success"><strong>{{ format_currency(p.base_amount) }}</strong></td>
-              <td class="text-center"><span class="badge badge-success">مؤكد</span></td>
+              <td class="text-center"><span class="badge badge-success">{{ t('Confirmed_2') }}</span></td>
             </tr>
             {% endfor %}
           </tbody>
           <tfoot class="ic-2">
             <tr>
-              <td colspan="7" class="text-left">الإجمالي:</td>
+              <td colspan="7" class="text-left">{{ t('Total_3') }}:</td>
               <td class="text-left text-success"><h5 class="mb-0">{{ format_currency(supplier.total_purchases_base or 0) }}</h5></td>
               <td></td>
             </tr>
@@ -248,19 +248,19 @@ table.statement-table thead th {
     {% set payments_list = transactions|selectattr('type', 'equalto', 'payment')|list %}
     {% if payments_list %}
     <div class="mt-4">
-      <h5 class="mb-3"><i class="fas fa-money-check-alt mr-2"></i>تفاصيل الدفعات</h5>
+      <h5 class="mb-3"><i class="fas fa-money-check-alt mr-2"></i>{{ t('Details') }} {{ t('الدفعات') }}</h5>
       <div class="table-responsive">
         <table class="table table-bordered table-striped">
           <thead class="ic-3">
             <tr>
               <th class="text-center">#</th>
-              <th>رقم السند</th>
-              <th>التاريخ</th>
-              <th>الطريقة</th>
-              <th>الحالة</th>
-              <th>تاريخ الاستحقاق/الصرف</th>
-              <th class="text-left">المبلغ (AED)</th>
-              <th>ملاحظات</th>
+              <th>{{ t('رقم') }} {{ t('Voucher') }}</th>
+              <th>{{ t('Date') }}</th>
+              <th>{{ t('الطريقة') }}</th>
+              <th>{{ t('Status') }}</th>
+              <th>{{ t('History') }} {{ t('Due') }}/{{ t('Exchange') }}</th>
+              <th class="text-left">{{ t('Amount') }} (AED)</th>
+              <th>{{ t('Notes') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -286,7 +286,7 @@ table.statement-table thead th {
           </tbody>
           <tfoot class="ic-2">
             <tr>
-              <td colspan="6" class="text-left">إجمالي الدفعات:</td>
+              <td colspan="6" class="text-left">{{ t('Total_2') }} {{ t('الدفعات') }}:</td>
               <td class="text-left text-primary"><h5 class="mb-0">{{ format_currency(payments_list|sum(attribute='base_amount') or 0) }}</h5></td>
               <td></td>
             </tr>
@@ -301,13 +301,13 @@ table.statement-table thead th {
         <div class="col-md-6">
           <small class="text-muted">
             <i class="fas fa-info-circle mr-1"></i>
-            تم إنشاء هذا الكشف بواسطة نظام إدارة المشتريات
+            تم {{ t('Create') }} هذا {{ t('ال{{ t('كشف') }}') }} {{ t('بواسطة') }} {{ t('System_2') }} {{ t('Management') }} {{ t('Purchases') }}
           </small>
         </div>
         <div class="col-md-6 text-left">
           <small class="text-muted">
             <i class="fas fa-calendar mr-1"></i>
-            تاريخ الطباعة: {{ now().strftime('%Y-%m-%d %H:%M') }}
+            {{ t('History') }} {{ t('Printing') }}: {{ now().strftime('%Y-%m-%d %H:%M') }}
           </small>
         </div>
       </div>
@@ -317,10 +317,10 @@ table.statement-table thead th {
 
 <div class="text-center mt-3 no-print">
   <button data-action="window-print" class="btn btn-lg btn-primary">
-    <i class="fas fa-print mr-2"></i>طباعة كشف الحساب
+    <i class="fas fa-print mr-2"></i>{{ t('Print') }} {{ t('كشف') }} {{ t('Account') }}
   </button>
   <a href="{{ url_for('suppliers.view', id=supplier.id) }}" class="btn btn-lg btn-secondary">
-    <i class="fas fa-arrow-right mr-2"></i>العودة للمورد
+    <i class="fas fa-arrow-right mr-2"></i>{{ t('العودة') }} {{ t('للمورد') }}
   </a>
 </div>
 {% endblock %}

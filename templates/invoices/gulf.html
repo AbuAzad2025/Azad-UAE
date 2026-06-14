@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - فاتورة #{{ sale.sale_number }}</title>
+  <title>{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('Invoice') }} #{{ sale.sale_number }}</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;700&display=swap" crossorigin="anonymous" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/erp-theme.css') }}">
   {% include 'partials/print_styles.html' %}
@@ -184,7 +184,7 @@
 <body class="invoice-print gulf-invoice">
   <div class="no-print ic-1">
     <button data-action="window-print" class="erp-gradient-btn" style="background: linear-gradient(135deg, {{ settings.header_color or '#c9a961' }} 0%, {{ settings.accent_color or '#8b7355' }} 100%);">
-      🖨️ طباعة الفاتورة
+      🖨️ {{ t('Print') }} {{ t('Invoice_2') }}
     </button>
   </div>
 
@@ -196,11 +196,11 @@
         <div>{{ (settings.address_ar if settings and settings.address_ar else none) or tenant_address or company_address }}</div>
         <div>📞 {{ (settings.phone_1 if settings and settings.phone_1 else none) or tenant_phone or company_phone }} {% if settings and settings.phone_2 and settings.phone_2 != 'None' %}| {{ settings.phone_2 }}{% endif %}</div>
         <div>📧 {{ (settings.email if settings and settings.email else none) or tenant_email or company_email }} {% if settings and settings.website and settings.website != 'None' %}| 🌐 {{ settings.website }}{% endif %}</div>
-        {% if settings and settings.tax_number and settings.tax_number != 'None' %}<div class="ic-2">الرقم الضريبي: {{ settings.tax_number }}</div>{% endif %}
+        {% if settings and settings.tax_number and settings.tax_number != 'None' %}<div class="ic-2">{{ t('ال{{ t('رقم') }}') }} {{ t('الضريبي') }}: {{ settings.tax_number }}</div>{% endif %}
         {% if print_branch %}
-        <div>🏢 الفرع: {{ print_branch.name }}{% if print_branch.code %} ({{ print_branch.code }}){% endif %}</div>
+        <div>🏢 {{ t('Branch') }}: {{ print_branch.name }}{% if print_branch.code %} ({{ print_branch.code }}){% endif %}</div>
         {% if print_branch.address %}
-        <div>📍 عنوان الفرع: {{ print_branch.address }}</div>
+        <div>📍 {{ t('Address_2') }} {{ t('Branch') }}: {{ print_branch.address }}</div>
         {% endif %}
         {% endif %}
       </div>
@@ -213,16 +213,16 @@
     <div class="content">
       <div class="info-boxes">
         <div class="info-box">
-          <h3>🏢 بيانات العميل</h3>
-          <p><strong>الاسم:</strong> {{ sale.customer.name }}</p>
-          {% if sale.customer.phone %}<p><strong>الهاتف:</strong> {{ sale.customer.phone }}</p>{% endif %}
-          {% if sale.customer.email %}<p><strong>البريد:</strong> {{ sale.customer.email }}</p>{% endif %}
+          <h3>🏢 {{ t('Data_2') }} {{ t('Customer') }}</h3>
+          <p><strong>{{ t('Name') }}:</strong> {{ sale.customer.name }}</p>
+          {% if sale.customer.phone %}<p><strong>{{ t('Phone') }}:</strong> {{ sale.customer.phone }}</p>{% endif %}
+          {% if sale.customer.email %}<p><strong>{{ t('Email_2') }}:</strong> {{ sale.customer.email }}</p>{% endif %}
         </div>
         <div class="info-box">
-          <h3>📅 بيانات الفاتورة</h3>
-          <p><strong>التاريخ:</strong> {{ sale.sale_date.strftime('%Y-%m-%d') }}</p>
-          <p><strong>الوقت:</strong> {{ sale.sale_date.strftime('%H:%M') }}</p>
-          <p><strong>المستخدم:</strong> {{ print_user_name or (sale.seller.full_name if sale.seller else '-') }}</p>
+          <h3>📅 {{ t('Data_2') }} {{ t('Invoice_2') }}</h3>
+          <p><strong>{{ t('Date') }}:</strong> {{ sale.sale_date.strftime('%Y-%m-%d') }}</p>
+          <p><strong>{{ t('Time_2') }}:</strong> {{ sale.sale_date.strftime('%H:%M') }}</p>
+          <p><strong>{{ t('User') }}:</strong> {{ print_user_name or (sale.seller.full_name if sale.seller else '-') }}</p>
         </div>
       </div>
 
@@ -230,11 +230,11 @@
         <thead>
           <tr>
             <th class="ic-3">#</th>
-            <th class="ic-4">المنتج</th>
-            <th class="ic-5">الكمية</th>
-            <th class="ic-6">السعر</th>
-            <th class="ic-5">الخصم%</th>
-            <th class="ic-7">الإجمالي</th>
+            <th class="ic-4">{{ t('Product') }}</th>
+            <th class="ic-5">{{ t('Quantity') }}</th>
+            <th class="ic-6">{{ t('Price') }}</th>
+            <th class="ic-5">{{ t('Discount') }}%</th>
+            <th class="ic-7">{{ t('Total_3') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -253,29 +253,29 @@
 
       <div class="totals">
         <div class="total-row">
-          <span>المجموع الفرعي:</span>
+          <span>{{ t('Total') }} {{ t('Sub') }}:</span>
           <strong>{{ format_currency(sale.subtotal, sale.currency) }}</strong>
         </div>
         {% if sale.discount_amount > 0 %}
         <div class="total-row">
-          <span>الخصم:</span>
+          <span>{{ t('Discount') }}:</span>
           <strong class="ic-9">- {{ format_currency(sale.discount_amount) }}</strong>
         </div>
         {% endif %}
         {% if sale.shipping_cost > 0 %}
         <div class="total-row">
-          <span>الشحن:</span>
+          <span>{{ t('Shipping') }}:</span>
           <strong>{{ format_currency(sale.shipping_cost) }}</strong>
         </div>
         {% endif %}
         {% if sale.tax_amount > 0 %}
         <div class="total-row">
-          <span>الضريبة ({{ sale.tax_rate }}%):</span>
+          <span>{{ t('Tax') }} ({{ sale.tax_rate }}%):</span>
           <strong>{{ format_currency(sale.tax_amount) }}</strong>
         </div>
         {% endif %}
         <div class="total-row final">
-          <span>الإجمالي النهائي</span>
+          <span>{{ t('Total_3') }} {{ t('النهائي') }}</span>
           <strong>{{ format_currency(sale.total_amount, sale.currency) }}</strong>
         </div>
         {% include 'partials/print_unified_amount_qr.html' %}
@@ -284,7 +284,7 @@
       
       {% if sale.payments %}
       <div class="payments-table">
-        <div class="payments-header">💰 الدفعات المسددة</div>
+        <div class="payments-header">💰 {{ t('{{ t('Payment_2') }}ات') }} {{ t('Paid_3') }}</div>
         <div class="ic-10">
           {% for payment in sale.payments %}
           <div class="payment-row ic-11">
@@ -299,26 +299,26 @@
               </div>
             </div>
             <div class="ic-15">
-              طريقة الدفع: 
-              {% if payment.payment_method == 'cash' %}💵 نقدي
-              {% elif payment.payment_method == 'card' %}💳 بطاقة ائتمانية
-              {% elif payment.payment_method == 'bank_transfer' %}🏦 تحويل بنكي
-              {% elif payment.payment_method == 'cheque' %}📝 شيك بنكي
-              {% else %}💰 محفظة إلكترونية{% endif %}
+              {{ t('طريقة') }} {{ t('Payment_2') }}: 
+              {% if payment.payment_method == 'cash' %}💵 {{ t('Cash_2') }}
+              {% elif payment.payment_method == 'card' %}💳 {{ t('Card') }} {{ t('ائتمانية') }}
+              {% elif payment.payment_method == 'bank_transfer' %}🏦 {{ t('Transfer') }} {{ t('Bank_3') }}
+              {% elif payment.payment_method == 'cheque' %}📝 {{ t('Cheque_3') }} {{ t('Bank_3') }}
+              {% else %}💰 {{ t('محفظة') }} {{ t('إلكترونية') }}{% endif %}
             </div>
             {% if payment.payment_method == 'cheque' and payment.cheque_number %}
             <div class="cheque-details">
               <div class="ic-16">
                 <div>
-                  <div class="erp-invoice-pay-detail" style="color: {{ settings.header_color or '#c9a961' }};">📝 رقم الشيك</div>
+                  <div class="erp-invoice-pay-detail" style="color: {{ settings.header_color or '#c9a961' }};">📝 {{ t('رقم') }} {{ t('Cheque') }}</div>
                   <div class="ic-17">{{ payment.cheque_number }}</div>
                 </div>
                 <div>
-                  <div class="erp-invoice-pay-detail" style="color: {{ settings.header_color or '#c9a961' }};">📅 تاريخ الاستحقاق</div>
+                  <div class="erp-invoice-pay-detail" style="color: {{ settings.header_color or '#c9a961' }};">📅 {{ t('History') }} {{ t('Due') }}</div>
                   <div class="ic-17">{{ payment.cheque_date.strftime('%Y-%m-%d') if payment.cheque_date else '-' }}</div>
                 </div>
                 <div>
-                  <div class="erp-invoice-pay-detail" style="color: {{ settings.header_color or '#c9a961' }};">🏦 البنك</div>
+                  <div class="erp-invoice-pay-detail" style="color: {{ settings.header_color or '#c9a961' }};">🏦 {{ t('Bank') }}</div>
                   <div class="ic-17">{{ payment.bank_name or '-' }}</div>
                 </div>
               </div>
@@ -332,18 +332,18 @@
 
       {% if sale.notes %}
       <div class="ic-18">
-        <strong class="erp-invoice-pay-detail" style="color: {{ settings.header_color or '#c9a961' }};">📝 ملاحظات:</strong>
+        <strong class="erp-invoice-pay-detail" style="color: {{ settings.header_color or '#c9a961' }};">📝 {{ t('Notes') }}:</strong>
         <p class="ic-19">{{ sale.notes }}</p>
       </div>
       {% endif %}
 
       <div class="signature-section">
         <div class="signature-box">
-          <div class="ic-15">ختم وتوقيع البائع</div>
+          <div class="ic-15">{{ t('ختم') }} {{ t('و{{ t('توقيع') }}') }} {{ t('البائع') }}</div>
           <div class="signature-line"></div>
         </div>
         <div class="signature-box">
-          <div class="ic-15">توقيع العميل</div>
+          <div class="ic-15">{{ t('توقيع') }} {{ t('Customer') }}</div>
           <div class="signature-line"></div>
         </div>
       </div>
@@ -355,9 +355,9 @@
       
       {% if settings and ((settings.bank_name and settings.bank_name != 'None') or (settings.iban and settings.iban != 'None') or (settings.swift_code and settings.swift_code != 'None')) %}
       <div class="ic-21">
-        <p class="ic-22">🏦 معلومات التحويل البنكي</p>
+        <p class="ic-22">🏦 {{ t('Info_2') }} {{ t('Transfer_2') }} {{ t('Bank_4') }}</p>
         <div class="ic-23">
-          {% if settings.bank_name and settings.bank_name != 'None' %}<span><strong>البنك:</strong> {{ settings.bank_name }}</span>{% endif %}
+          {% if settings.bank_name and settings.bank_name != 'None' %}<span><strong>{{ t('Bank') }}:</strong> {{ settings.bank_name }}</span>{% endif %}
           {% if (settings.bank_name and settings.bank_name != 'None') and (settings.iban and settings.iban != 'None') %}<br>{% endif %}
           {% if settings.iban and settings.iban != 'None' %}<span><strong>IBAN:</strong> {{ settings.iban }}</span>{% endif %}
           {% if settings.swift_code and settings.swift_code != 'None' %}<br><span><strong>SWIFT:</strong> {{ settings.swift_code }}</span>{% endif %}
@@ -368,9 +368,9 @@
       
       {% if settings and ((settings.commercial_register and settings.commercial_register != 'None') or (settings.license_number and settings.license_number != 'None')) %}
       <div class="ic-24">
-        {% if settings.commercial_register and settings.commercial_register != 'None' %}<span>السجل التجاري: {{ settings.commercial_register }}</span>{% endif %}
+        {% if settings.commercial_register and settings.commercial_register != 'None' %}<span>{{ t('Log_2') }} {{ t('التجاري') }}: {{ settings.commercial_register }}</span>{% endif %}
         {% if (settings.commercial_register and settings.commercial_register != 'None') and (settings.license_number and settings.license_number != 'None') %} ☪ {% endif %}
-        {% if settings.license_number and settings.license_number != 'None' %}<span>الرخصة: {{ settings.license_number }}</span>{% endif %}
+        {% if settings.license_number and settings.license_number != 'None' %}<span>{{ t('الرخصة') }}: {{ settings.license_number }}</span>{% endif %}
       </div>
       {% endif %}
       
@@ -381,7 +381,7 @@
       </div>
       {% endif %}
       
-      <div>شكراً لتعاملكم الكريم معنا</div>
+      <div>{{ t('شكراً') }} {{ t('لتعاملكم') }} {{ t('الكريم') }} {{ t('معنا') }}</div>
       {% if settings and settings.website and settings.website != 'None' %}
       <div class="ic-19">🌐 {{ settings.website }}</div>
       {% endif %}

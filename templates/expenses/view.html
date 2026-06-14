@@ -2,7 +2,7 @@
 
 
 
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - تفاصيل المصروف{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('Details') }} {{ t('Expense_2') }}{% endblock %}
 
 
 
@@ -18,7 +18,7 @@
 
                 <div class="col-sm-6">
 
-                    <h1 class="m-0">عرض المصروف</h1>
+                    <h1 class="m-0">{{ t('View') }} {{ t('Expense_2') }}</h1>
 
                 </div>
 
@@ -42,7 +42,7 @@
 
                         <div class="card-header">
 
-                            <h3 class="card-title">تفاصيل المصروف</h3>
+                            <h3 class="card-title">{{ t('Details') }} {{ t('Expense_2') }}</h3>
 
                         </div>
 
@@ -52,7 +52,7 @@
 
                                 <tr>
 
-                                    <th>رقم المصروف</th>
+                                    <th>{{ t('رقم') }} {{ t('Expense_2') }}</th>
 
                                     <td>{{ expense.expense_number }}</td>
 
@@ -68,7 +68,7 @@
 
                                 <tr>
 
-                                    <th>الفئة</th>
+                                    <th>{{ t('الفئة') }}</th>
 
                                     <td>{{ expense.category.name if expense.category else 'غير محدد' }}</td>
 
@@ -84,7 +84,7 @@
 
                                 <tr>
 
-                                    <th>الوصف بالعربية</th>
+                                    <th>{{ t('Description') }} {{ t('In Arabic') }}</th>
 
                                     <td>{{ expense.description_ar or '' }}</td>
 
@@ -100,7 +100,7 @@
 
                                 <tr>
 
-                                    <th>المبلغ بـ{{ tenant_currency_name_ar or "درهم إماراتي" }}</th>
+                                    <th>{{ t('Amount') }} بـ{{ tenant_currency_name_ar or "درهم إماراتي" }}</th>
 
                                     <td>{{ "%.2f"|format(expense.base_amount or expense.amount_aed) }} {{ tenant_currency_symbol }}</td>
 
@@ -108,7 +108,7 @@
 
                                 <tr>
 
-                                    <th>طريقة الدفع</th>
+                                    <th>{{ t('طريقة') }} {{ t('Payment_2') }}</th>
 
                                     <td>{{ expense.payment_method }}</td>
 
@@ -116,7 +116,7 @@
 
                                 <tr>
 
-                                    <th>اسم المورد</th>
+                                    <th>{{ t('Name_2') }} {{ t('Supplier') }}</th>
 
                                     <td>{{ expense.supplier_name or '' }}</td>
 
@@ -132,7 +132,7 @@
 
                                 <tr>
 
-                                    <th>رقم الشيك</th>
+                                    <th>{{ t('رقم') }} {{ t('Cheque') }}</th>
 
                                     <td>{{ expense.cheque_number or '' }}</td>
 
@@ -140,7 +140,7 @@
 
                                 <tr>
 
-                                    <th>تاريخ الشيك</th>
+                                    <th>{{ t('History') }} {{ t('Cheque') }}</th>
 
                                     <td>{{ expense.cheque_date.strftime('%Y-%m-%d') if expense.cheque_date else '' }}</td>
 
@@ -148,7 +148,7 @@
 
                                 <tr>
 
-                                    <th>اسم البنك</th>
+                                    <th>{{ t('Name_2') }} {{ t('Bank') }}</th>
 
                                     <td>{{ expense.bank_name or '' }}</td>
 
@@ -164,7 +164,7 @@
 
                                 <tr>
 
-                                    <th>المستخدم</th>
+                                    <th>{{ t('User') }}</th>
 
                                     <td>{{ expense.user.username if expense.user else 'غير محدد' }}</td>
 
@@ -186,7 +186,7 @@
 
                         <div class="card-header">
 
-                            <h3 class="card-title">الإجراءات</h3>
+                            <h3 class="card-title">{{ t('الإجراءات') }}</h3>
 
                         </div>
 
@@ -196,13 +196,13 @@
 
                                 <a href="{{ url_for('expenses.index') }}" class="btn btn-secondary mb-2">
 
-                                    <i class="fas fa-arrow-left"></i> العودة للقائمة
+                                    <i class="fas fa-arrow-left"></i> {{ t('العودة') }} {{ t('للقائمة') }}
 
                                 </a>
 
                                 <a href="{{ url_for('expenses.edit', id=expense.id) }}" class="btn btn-primary mb-2">
 
-                                    <i class="fas fa-edit"></i> تعديل المصروف
+                                    <i class="fas fa-edit"></i> {{ t('Edit') }} {{ t('Expense_2') }}
 
                                 </a>
 
@@ -212,7 +212,7 @@
 
                                    class="btn btn-info mb-2">
 
-                                    <i class="fas fa-print"></i> طباعة
+                                    <i class="fas fa-print"></i> {{ t('Print') }}
 
                                 </a>
 
@@ -226,13 +226,13 @@
 
                                 </a>
 
-                                <form class="needs-validation" action="{{ url_for('expenses.delete', id=expense.id) }}" method="POST" class="w-100" onsubmit="return confirm('هل أنت متأكد من حذف هذا المصروف؟');">
+                                <form class="needs-validation" action="{{ url_for('expenses.delete', id=expense.id) }}" method="POST" class="w-100" onsubmit="return confirm('هل أنت {{ t('متأكد') }} من {{ t('Delete') }} هذا {{ t('Expense_4') }}');">
 
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 
                                     <button type="submit" class="btn btn-danger mb-2 w-100">
 
-                                        <i class="fas fa-trash"></i> حذف المصروف
+                                        <i class="fas fa-trash"></i> {{ t('Delete') }} {{ t('Expense_2') }}
 
                                     </button>
 

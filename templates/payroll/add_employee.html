@@ -1,10 +1,10 @@
 {% extends 'base.html' %}
-{% block title %}إضافة موظف{% endblock %}
+{% block title %}{{ t('Add') }} {{ t('Employee') }}{% endblock %}
 {% block content %}
 <div class="container-fluid">
   <div class="card">
     <div class="card-header bg-gradient-purple text-white">
-      <h3><i class="fas fa-user-plus"></i> إضافة موظف جديد</h3>
+      <h3><i class="fas fa-user-plus"></i> {{ t('Add') }} {{ t('Employee') }} {{ t('New') }}</h3>
     </div>
     <div class="card-body">
       <form class="needs-validation" method="post">
@@ -12,13 +12,13 @@
         <div class="row">
             <div class="col-md-6">
                 <div class="form-group">
-                    <label for="input_name">الاسم الكامل (English)</label>
+                    <label for="input_name">{{ t('Name') }} {{ t('الكامل') }} (English)</label>
                     <input type="text" name="name" class="form-control" required id="input_name" aria-label="name" minlength="2" maxlength="100">
                 </div>
             </div>
             <div class="col-md-6">
                 <div class="form-group">
-                    <label for="input_name_ar">الاسم بالعربية</label>
+                    <label for="input_name_ar">{{ t('Name') }} {{ t('In Arabic') }}</label>
                     <input type="text" name="name_ar" class="form-control" id="input_name_ar" aria-label="name ar" minlength="2" maxlength="100">
                 </div>
             </div>
@@ -27,25 +27,25 @@
         <div class="row">
             <div class="col-md-4">
                 <div class="form-group">
-                    <label for="input_phone">الهاتف</label>
+                    <label for="input_phone">{{ t('Phone') }}</label>
                     <input type="text" name="phone" class="form-control" id="input_phone" aria-label="phone" pattern="^\+?[0-9\s\-]{8,20}$">
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="form-group">
-                    <label>الفرع <span class="text-danger">*</span></label>
-                    <select name="branch_id" class="form-control" required aria-label="اختر الفرع">
-                        <option value="">-- اختر الفرع --</option>
+                    <label>{{ t('Branch') }} <span class="text-danger">*</span></label>
+                    <select name="branch_id" class="form-control" required aria-label="{{ t('اختر') }} {{ t('Branch') }}">
+                        <option value="">-- {{ t('اختر') }} {{ t('Branch') }} --</option>
                         {% for branch in branches %}
                         <option value="{{ branch.id }}">{{ branch.name }}</option>
                         {% endfor %}
                     </select>
-                    <small class="text-muted">إجباري لكل موظف.</small>
+                    <small class="text-muted">{{ t('Required') }} {{ t('لكل') }} {{ t('Employee') }}.</small>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="form-group">
-                    <label for="input_joined_date">تاريخ الانضمام</label>
+                    <label for="input_joined_date">{{ t('History') }} {{ t('الانضمام') }}</label>
                     <input type="date" name="joined_date" class="form-control" value="{{ now().strftime('%Y-%m-%d') }}" id="input_joined_date" aria-label="joined date">
                 </div>
             </div>
@@ -56,23 +56,23 @@
         <div class="row">
             <div class="col-md-4">
                 <div class="form-group">
-                    <label>نظام الدفع</label>
+                    <label>{{ t('System_2') }} {{ t('Payment_2') }}</label>
                     <select name="employment_type" class="form-control" aria-label="employment type">
-                        <option value="salary">راتب شهري (Monthly Salary)</option>
-                        <option value="daily">مياومة (Daily Wages)</option>
+                        <option value="salary">{{ t('راتب') }} {{ t('Monthly') }} (Monthly Salary)</option>
+                        <option value="daily">{{ t('مياومة') }} (Daily Wages)</option>
                     </select>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="form-group">
-                    <label for="input_basic_salary">القيمة الأساسية</label>
-                    <input type="number" step="0.01" name="basic_salary" class="form-control" placeholder="الراتب الشهري أو أجرة اليوم" required id="input_basic_salary" min="0">
+                    <label for="input_basic_salary">{{ t('Value') }} {{ t('الأساسية') }}</label>
+                    <input type="number" step="0.01" name="basic_salary" class="form-control" placeholder="{{ t('ال{{ t('راتب') }}') }} {{ t('Monthly_2') }} أو {{ t('أجرة') }} {{ t('Today') }}" required id="input_basic_salary" min="0">
                 </div>
             </div>
         </div>
         
-        <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> حفظ</button>
-        <a href="{{ url_for('payroll.employees_list') }}" class="btn btn-secondary">إلغاء</a>
+        <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> {{ t('Save') }}</button>
+        <a href="{{ url_for('payroll.employees_list') }}" class="btn btn-secondary">{{ t('Cancel') }}</a>
       </form>
     </div>
   </div>

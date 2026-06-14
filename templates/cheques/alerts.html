@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - تنبيهات الشيكات{% endblock %}
-{% block page_title %}<i class="fas fa-bell"></i> تنبيهات الشيكات{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('Alerts') }} {{ t('Cheques') }}{% endblock %}
+{% block page_title %}<i class="fas fa-bell"></i> {{ t('Alerts') }} {{ t('Cheques') }}{% endblock %}
 
 {% block content %}
 
@@ -9,7 +9,7 @@
     <div class="small-box bg-warning">
       <div class="inner">
         <h3>{{ due_soon|length }}</h3>
-        <p>شيكات قريبة الاستحقاق (7 أيام)</p>
+        <p>{{ t('Cheques_2') }} {{ t('Near') }} {{ t('Due') }} (7 {{ t('Days') }})</p>
       </div>
       <div class="icon">
         <i class="fas fa-clock"></i>
@@ -21,7 +21,7 @@
     <div class="small-box bg-danger">
       <div class="inner">
         <h3>{{ overdue|length }}</h3>
-        <p>شيكات متأخرة</p>
+        <p>{{ t('Cheques_2') }} {{ t('Late') }}</p>
       </div>
       <div class="icon">
         <i class="fas fa-exclamation-triangle"></i>
@@ -33,7 +33,7 @@
     <div class="small-box bg-dark">
       <div class="inner">
         <h3>{{ bounced|length }}</h3>
-        <p>شيكات مرتدة</p>
+        <p>{{ t('Cheques_2') }} {{ t('Returned') }}</p>
       </div>
       <div class="icon">
         <i class="fas fa-ban"></i>
@@ -47,23 +47,23 @@
 <div class="card card-warning">
   <div class="card-header">
     <h3 class="card-title">
-      <i class="fas fa-clock mr-2"></i>شيكات قريبة الاستحقاق (خلال 7 أيام)
+      <i class="fas fa-clock mr-2"></i>{{ t('Cheques_2') }} {{ t('Near') }} {{ t('Due') }} (خلال 7 {{ t('Days') }})
     </h3>
   </div>
   <div class="card-body p-0">
     <div class="table-responsive"><table class="table table-sm">
       <thead>
         <tr>
-          <th>رقم الشيك</th>
-          <th>النوع</th>
-          <th>البنك</th>
-          <th>المبلغ</th>
-          <th>الاستحقاق</th>
-          <th>متبقي</th>
+          <th>{{ t('رقم') }} {{ t('Cheque') }}</th>
+          <th>{{ t('النوع') }}</th>
+          <th>{{ t('Bank') }}</th>
+          <th>{{ t('Amount') }}</th>
+          <th>{{ t('Due') }}</th>
+          <th>{{ t('متبقي') }}</th>
           {% if show_branch_columns %}
-          <th>الفرع</th>
+          <th>{{ t('Branch') }}</th>
           {% endif %}
-          <th>إجراءات</th>
+          <th>{{ t('Actions') }}</th>
         </tr>
       </thead>
       <tbody>
@@ -72,9 +72,9 @@
           <td><strong>{{ cheque.cheque_bank_number }}</strong></td>
           <td>
             {% if cheque.cheque_type == 'incoming' %}
-            <span class="badge badge-success">وارد</span>
+            <span class="badge badge-success">{{ t('Income_3') }}</span>
             {% else %}
-            <span class="badge badge-danger">صادر</span>
+            <span class="badge badge-danger">{{ t('Expense') }}</span>
             {% endif %}
           </td>
           <td>{{ cheque.bank_name }}</td>
@@ -82,7 +82,7 @@
           <td>{{ cheque.due_date.strftime('%Y-%m-%d') }}</td>
           <td>
             <span class="badge badge-warning">
-              <i class="fas fa-clock mr-1"></i>{{ cheque.days_until_due }} يوم
+              <i class="fas fa-clock mr-1"></i>{{ cheque.days_until_due }} {{ t('يوم') }}
             </span>
           </td>
           {% if show_branch_columns %}
@@ -96,10 +96,10 @@
           {% endif %}
           <td>
             <div class="btn-group btn-group-sm">
-              <a href="{{ url_for('cheques.view', id=cheque.id) }}" class="btn btn-info" title="عرض">
+              <a href="{{ url_for('cheques.view', id=cheque.id) }}" class="btn btn-info" title="{{ t('View') }}">
                 <i class="fas fa-eye"></i>
               </a>
-              <button type="button" class="btn btn-danger delete-cheque-btn" data-id="{{ cheque.id }}" title="حذف">
+              <button type="button" class="btn btn-danger delete-cheque-btn" data-id="{{ cheque.id }}" title="{{ t('Delete') }}">
                 <i class="fas fa-trash"></i>
               </button>
             </div>
@@ -117,23 +117,23 @@
 <div class="card card-danger mt-3">
   <div class="card-header">
     <h3 class="card-title">
-      <i class="fas fa-exclamation-triangle mr-2"></i>شيكات متأخرة - تحتاج متابعة فورية!
+      <i class="fas fa-exclamation-triangle mr-2"></i>{{ t('Cheques_2') }} {{ t('Late') }} - {{ t('تحتاج') }} {{ t('متابعة') }} {{ t('فورية') }}!
     </h3>
   </div>
   <div class="card-body p-0">
     <div class="table-responsive"><table class="table table-sm">
       <thead>
         <tr>
-          <th>رقم الشيك</th>
-          <th>النوع</th>
-          <th>الطرف</th>
-          <th>المبلغ</th>
-          <th>الاستحقاق</th>
-          <th>التأخير</th>
+          <th>{{ t('رقم') }} {{ t('Cheque') }}</th>
+          <th>{{ t('النوع') }}</th>
+          <th>{{ t('الطرف') }}</th>
+          <th>{{ t('Amount') }}</th>
+          <th>{{ t('Due') }}</th>
+          <th>{{ t('التأخير') }}</th>
           {% if show_branch_columns %}
-          <th>الفرع</th>
+          <th>{{ t('Branch') }}</th>
           {% endif %}
-          <th>إجراءات</th>
+          <th>{{ t('Actions') }}</th>
         </tr>
       </thead>
       <tbody>
@@ -142,9 +142,9 @@
           <td><strong>{{ cheque.cheque_bank_number }}</strong></td>
           <td>
             {% if cheque.cheque_type == 'incoming' %}
-            <span class="badge badge-success">وارد</span>
+            <span class="badge badge-success">{{ t('Income_3') }}</span>
             {% else %}
-            <span class="badge badge-danger">صادر</span>
+            <span class="badge badge-danger">{{ t('Expense') }}</span>
             {% endif %}
           </td>
           <td>
@@ -161,7 +161,7 @@
           <td>{{ cheque.due_date.strftime('%Y-%m-%d') }}</td>
           <td>
             <span class="badge badge-danger">
-              <i class="fas fa-exclamation-circle mr-1"></i>{{ cheque.days_until_due|abs }} يوم
+              <i class="fas fa-exclamation-circle mr-1"></i>{{ cheque.days_until_due|abs }} {{ t('يوم') }}
             </span>
           </td>
           {% if show_branch_columns %}
@@ -175,10 +175,10 @@
           {% endif %}
           <td>
             <div class="btn-group btn-group-sm">
-              <a href="{{ url_for('cheques.view', id=cheque.id) }}" class="btn btn-info" title="عرض">
+              <a href="{{ url_for('cheques.view', id=cheque.id) }}" class="btn btn-info" title="{{ t('View') }}">
                 <i class="fas fa-eye"></i>
               </a>
-              <button type="button" class="btn btn-danger delete-cheque-btn" data-id="{{ cheque.id }}" title="حذف">
+              <button type="button" class="btn btn-danger delete-cheque-btn" data-id="{{ cheque.id }}" title="{{ t('Delete') }}">
                 <i class="fas fa-trash"></i>
               </button>
             </div>
@@ -196,22 +196,22 @@
 <div class="card card-dark mt-3">
   <div class="card-header">
     <h3 class="card-title">
-      <i class="fas fa-ban mr-2"></i>شيكات مرتدة
+      <i class="fas fa-ban mr-2"></i>{{ t('Cheques_2') }} {{ t('Returned') }}
     </h3>
   </div>
   <div class="card-body p-0">
     <div class="table-responsive"><table class="table table-sm">
       <thead>
         <tr>
-          <th>رقم الشيك</th>
-          <th>البنك</th>
-          <th>الطرف</th>
-          <th>المبلغ</th>
-          <th>سبب الإرتداد</th>
+          <th>{{ t('رقم') }} {{ t('Cheque') }}</th>
+          <th>{{ t('Bank') }}</th>
+          <th>{{ t('الطرف') }}</th>
+          <th>{{ t('Amount') }}</th>
+          <th>{{ t('سبب') }} {{ t('الإرتداد') }}</th>
           {% if show_branch_columns %}
-          <th>الفرع</th>
+          <th>{{ t('Branch') }}</th>
           {% endif %}
-          <th>إجراءات</th>
+          <th>{{ t('Actions') }}</th>
         </tr>
       </thead>
       <tbody>
@@ -244,10 +244,10 @@
           {% endif %}
           <td>
             <div class="btn-group btn-group-sm">
-              <a href="{{ url_for('cheques.view', id=cheque.id) }}" class="btn btn-info" title="عرض">
+              <a href="{{ url_for('cheques.view', id=cheque.id) }}" class="btn btn-info" title="{{ t('View') }}">
                 <i class="fas fa-eye"></i>
               </a>
-              <button type="button" class="btn btn-danger delete-cheque-btn" data-id="{{ cheque.id }}" title="حذف">
+              <button type="button" class="btn btn-danger delete-cheque-btn" data-id="{{ cheque.id }}" title="{{ t('Delete') }}">
                 <i class="fas fa-trash"></i>
               </button>
             </div>
@@ -265,8 +265,8 @@
 <div class="card">
   <div class="card-body text-center py-5">
     <i class="fas fa-check-circle fa-5x text-success mb-3"></i>
-    <h4>لا توجد تنبيهات</h4>
-    <p class="text-muted">لا توجد شيكات مستحقة أو متأخرة حالياً.</p>
+    <h4>لا {{ t('توجد') }} {{ t('Alerts') }}</h4>
+    <p class="text-muted">لا {{ t('توجد') }} {{ t('Cheques_2') }} {{ t('مستحقة') }} أو {{ t('Late') }} {{ t('حالياً') }}.</p>
   </div>
 </div>
 {% endif %}

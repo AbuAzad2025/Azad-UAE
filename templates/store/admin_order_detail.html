@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}طلب {{ order.sale_number }}{% endblock %}
+{% block title %}{{ t('طلب') }} {{ order.sale_number }}{% endblock %}
 
 
 
@@ -10,7 +10,7 @@
 
   <div>
 
-    <h1 class="mb-0"><i class="fas fa-file-invoice mr-2"></i>طلب <code>{{ order.sale_number }}</code></h1>
+    <h1 class="mb-0"><i class="fas fa-file-invoice mr-2"></i>{{ t('طلب') }} <code>{{ order.sale_number }}</code></h1>
 
     <p class="text-muted mb-0 small">{{ status_label }} · {{ order.sale_date.strftime('%Y-%m-%d %H:%M') if order.sale_date else '' }}</p>
 
@@ -18,10 +18,10 @@
 
   <div class="mt-2 mt-md-0">
 
-    <a href="{{ url_for('store.admin_orders') }}" class="btn btn-secondary">كل الطلبات</a>
+    <a href="{{ url_for('store.admin_orders') }}" class="btn btn-secondary">كل {{ t('{{ t('ال{{ t('طلب') }}') }}ات') }}</a>
 
     {% if current_user.has_permission('manage_sales') %}
-    <a href="{{ url_for('sales.view', id=order.id) }}" class="btn btn-outline-primary">عرض في المبيعات</a>
+    <a href="{{ url_for('sales.view', id=order.id) }}" class="btn btn-outline-primary">{{ t('View') }} في {{ t('Sales') }}</a>
     {% endif %}
 
   </div>
@@ -38,7 +38,7 @@
 
 <div class="alert alert-warning">
 
-  <strong><i class="fas fa-exclamation-triangle"></i> مخزون غير كافٍ للتأكيد:</strong>
+  <strong><i class="fas fa-exclamation-triangle"></i> {{ t('Inventory_2') }} غير {{ t('كافٍ') }} {{ t('لل{{ t('Confirm') }}') }}:</strong>
 
   <ul class="mb-0 mt-2">
 
@@ -58,7 +58,7 @@
 
     <div class="card">
 
-      <div class="card-header"><h3 class="card-title mb-0">بنود الطلب</h3></div>
+      <div class="card-header"><h3 class="card-title mb-0">{{ t('بنود') }} {{ t('ال{{ t('طلب') }}') }}</h3></div>
 
       <div class="card-body table-responsive p-0">
 
@@ -68,13 +68,13 @@
 
             <tr>
 
-              <th>المنتج</th>
+              <th>{{ t('Product') }}</th>
 
-              <th class="text-center">الكمية</th>
+              <th class="text-center">{{ t('Quantity') }}</th>
 
-              <th class="text-right">السعر</th>
+              <th class="text-right">{{ t('Price') }}</th>
 
-              <th class="text-right">الإجمالي</th>
+              <th class="text-right">{{ t('Total_3') }}</th>
 
             </tr>
 
@@ -104,7 +104,7 @@
 
             <tr>
 
-              <th colspan="3" class="text-right">المجموع</th>
+              <th colspan="3" class="text-right">{{ t('Total') }}</th>
 
               <th class="text-right">{{ '%.2f'|format(order.subtotal or 0) }} {{ order.currency }}</th>
 
@@ -114,7 +114,7 @@
 
             <tr>
 
-              <td colspan="3" class="text-right">خصم</td>
+              <td colspan="3" class="text-right">{{ t('Discount_2') }}</td>
 
               <td class="text-right">-{{ '%.2f'|format(order.discount_amount) }}</td>
 
@@ -126,7 +126,7 @@
 
             <tr>
 
-              <td colspan="3" class="text-right">ضريبة</td>
+              <td colspan="3" class="text-right">{{ t('Tax_2') }}</td>
 
               <td class="text-right">{{ '%.2f'|format(order.tax_amount) }}</td>
 
@@ -136,7 +136,7 @@
 
             <tr class="table-active">
 
-              <th colspan="3" class="text-right">الإجمالي</th>
+              <th colspan="3" class="text-right">{{ t('Total_3') }}</th>
 
               <th class="text-right">{{ '%.2f'|format(order.total_amount) }} {{ order.currency }}</th>
 
@@ -156,7 +156,7 @@
 
     <div class="card">
 
-      <div class="card-header"><h3 class="card-title mb-0">ملاحظات</h3></div>
+      <div class="card-header"><h3 class="card-title mb-0">{{ t('Notes') }}</h3></div>
 
       <div class="card-body"><pre class="mb-0 erp-pre-wrap erp-font-inherit">{{ order.notes }}</pre></div>
 
@@ -172,7 +172,7 @@
 
     <div class="card">
 
-      <div class="card-header"><h3 class="card-title mb-0">العميل</h3></div>
+      <div class="card-header"><h3 class="card-title mb-0">{{ t('Customer') }}</h3></div>
 
       <div class="card-body">
 
@@ -190,13 +190,13 @@
 
     <div class="card">
 
-      <div class="card-header"><h3 class="card-title mb-0">الدفع والحالة</h3></div>
+      <div class="card-header"><h3 class="card-title mb-0">{{ t('Payment_2') }} {{ t('وال{{ t('Status_2') }}') }}</h3></div>
 
       <div class="card-body">
 
         <dl class="row mb-0 small">
 
-          <dt class="col-5">طريقة الدفع</dt>
+          <dt class="col-5">{{ t('طريقة') }} {{ t('Payment_2') }}</dt>
 
           <dd class="col-7">
 
@@ -204,17 +204,17 @@
 
           </dd>
 
-          <dt class="col-5">حالة الطلب</dt>
+          <dt class="col-5">{{ t('Status_2') }} {{ t('ال{{ t('طلب') }}') }}</dt>
 
           <dd class="col-7">{{ status_label }}</dd>
 
-          <dt class="col-5">حالة الدفع</dt>
+          <dt class="col-5">{{ t('Status_2') }} {{ t('Payment_2') }}</dt>
 
           <dd class="col-7">{{ order.payment_status or 'unpaid' }}</dd>
 
-          <dt class="col-5">المخزون</dt>
+          <dt class="col-5">{{ t('Inventory') }}</dt>
 
-          <dd class="col-7">{% if is_fulfilled %}<span class="text-success">مُخصَم</span>{% else %}<span class="text-warning">محجوز — يُخصَم عند التأكيد</span>{% endif %}</dd>
+          <dd class="col-7">{% if is_fulfilled %}<span class="text-success">{{ t('مُخصَم') }}</span>{% else %}<span class="text-warning">{{ t('Reserved') }} — {{ t('يُخصَم') }} عند {{ t('Confirm_2') }}</span>{% endif %}</dd>
 
         </dl>
 
@@ -234,7 +234,7 @@
 
             <input type="checkbox" class="custom-control-input" id="mark_paid" name="mark_paid" aria-label="mark paid">
 
-            <label class="custom-control-label" for="mark_paid">تسجيل الدفع مع التأكيد</label>
+            <label class="custom-control-label" for="mark_paid">{{ t('تسجيل') }} {{ t('Payment_2') }} مع {{ t('Confirm_2') }}</label>
 
           </div>
 
@@ -244,25 +244,25 @@
 
             <input type="checkbox" class="custom-control-input" id="mark_paid" name="mark_paid" aria-label="mark paid">
 
-            <label class="custom-control-label" for="mark_paid">استلام نقداً (COD) — تسجيل الدفع</label>
+            <label class="custom-control-label" for="mark_paid">{{ t('استلام') }} {{ t('Cash_5') }} (COD) — {{ t('تسجيل') }} {{ t('Payment_2') }}</label>
 
           </div>
 
           {% endif %}
 
-          <button type="submit" class="btn btn-success btn-block" {% if stock_issues %}disabled title="المخزون غير كافٍ"{% endif %}>
+          <button type="submit" class="btn btn-success btn-block" {% if stock_issues %}disabled title="{{ t('Inventory') }} غير {{ t('كافٍ') }}"{% endif %}>
 
-            <i class="fas fa-check mr-1"></i>تأكيد الطلب
+            <i class="fas fa-check mr-1"></i>{{ t('Confirm') }} {{ t('ال{{ t('طلب') }}') }}
 
           </button>
 
         </form>
 
-        <form method="post" action="{{ url_for('store.admin_order_cancel', order_id=order.id) }}" onsubmit="return confirm('إلغاء الطلب ' + {{ order.sale_number|tojson }} + '؟');">
+        <form method="post" action="{{ url_for('store.admin_order_cancel', order_id=order.id) }}" onsubmit="return confirm('{{ t('Cancel') }} {{ t('ال{{ t('طلب') }}') }} ' + {{ order.sale_number|tojson }} + '؟');">
 
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 
-          <button type="submit" class="btn btn-outline-danger btn-block"><i class="fas fa-times mr-1"></i>إلغاء الطلب</button>
+          <button type="submit" class="btn btn-outline-danger btn-block"><i class="fas fa-times mr-1"></i>{{ t('Cancel') }} {{ t('ال{{ t('طلب') }}') }}</button>
 
         </form>
 
@@ -272,11 +272,11 @@
 
       <div class="card-footer">
 
-        <form method="post" action="{{ url_for('store.admin_order_cancel', order_id=order.id) }}" onsubmit="return confirm('إلغاء طلب مؤكد سيُعيد المخزون ويعكس القيود — متابعة؟');">
+        <form method="post" action="{{ url_for('store.admin_order_cancel', order_id=order.id) }}" onsubmit="return confirm('{{ t('Cancel') }} {{ t('طلب') }} {{ t('Confirmed_2') }} {{ t('سيُعيد') }} {{ t('Inventory') }} {{ t('وي{{ t('عكس') }}') }} {{ t('القيود') }} — {{ t('متابعة_2') }}');">
 
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 
-          <button type="submit" class="btn btn-outline-danger btn-block"><i class="fas fa-ban mr-1"></i>إلغاء (مع عكس المخزون)</button>
+          <button type="submit" class="btn btn-outline-danger btn-block"><i class="fas fa-ban mr-1"></i>{{ t('Cancel') }} (مع {{ t('عكس') }} {{ t('Inventory') }})</button>
 
         </form>
 
@@ -286,7 +286,7 @@
 
       {% if wa_admin_url %}
       <div class="card-footer border-top-0 pt-0">
-        <a href="{{ wa_admin_url }}" target="_blank" rel="noopener" class="btn btn-success btn-block"><i class="fab fa-whatsapp mr-1"></i>مشاركة الطلب عبر واتساب</a>
+        <a href="{{ wa_admin_url }}" target="_blank" rel="noopener" class="btn btn-success btn-block"><i class="fab fa-whatsapp mr-1"></i>{{ t('مشاركة') }} {{ t('ال{{ t('طلب') }}') }} {{ t('عبر') }} {{ t('واتساب') }}</a>
       </div>
       {% endif %}
 

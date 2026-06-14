@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 
-{% block title %}لوحة المراقبة - {{ app_name }}{% endblock %}
+{% block title %}{{ t('Dashboard_2') }} {{ t('ال{{ t('مراقبة') }}') }} - {{ app_name }}{% endblock %}
 
 {% block content %}
 <div class="content-header">
     <div class="container-fluid">
         <div class="row mb-2">
             <div class="col-sm-6">
-                <h1 class="m-0">لوحة مراقبة النظام</h1>
+                <h1 class="m-0">{{ t('Dashboard_2') }} {{ t('مراقبة') }} {{ t('System') }}</h1>
             </div>
         </div>
     </div>
@@ -26,7 +26,7 @@
                                 <span class="badge badge-light text-danger">Down</span>
                             {% endif %}
                         </h3>
-                        <p>قاعدة البيانات</p>
+                        <p>{{ t('قاعدة') }} {{ t('Data') }}</p>
                     </div>
                     <div class="icon">
                         <i class="fas fa-database"></i>
@@ -38,7 +38,7 @@
                 <div class="small-box bg-success">
                     <div class="inner">
                         <h3>{{ health.disk.percent }}%</h3>
-                        <p>استخدام القرص</p>
+                        <p>{{ t('استخدام') }} {{ t('القرص') }}</p>
                     </div>
                     <div class="icon">
                         <i class="fas fa-hdd"></i>
@@ -50,7 +50,7 @@
                 <div class="small-box bg-warning">
                     <div class="inner">
                         <h3>{{ health.memory.percent }}%</h3>
-                        <p>استخدام الذاكرة</p>
+                        <p>{{ t('استخدام') }} {{ t('الذاكرة') }}</p>
                     </div>
                     <div class="icon">
                         <i class="fas fa-memory"></i>
@@ -62,7 +62,7 @@
                 <div class="small-box bg-danger">
                     <div class="inner">
                         <h3>{{ health.cpu.percent }}%</h3>
-                        <p>استخدام المعالج</p>
+                        <p>{{ t('استخدام') }} {{ t('المعالج') }}</p>
                     </div>
                     <div class="icon">
                         <i class="fas fa-microchip"></i>
@@ -75,28 +75,28 @@
             <div class="col-md-6">
                 <div class="card">
                     <div class="card-header">
-                        <h3 class="card-title">إحصائيات التطبيق</h3>
+                        <h3 class="card-title">{{ t('إحصائيات') }} {{ t('Apply_2') }}</h3>
                     </div>
                     <div class="card-body">
                         <div class="table-responsive"><table class="table">
                             <tr>
-                                <td>إجمالي الفواتير</td>
+                                <td>{{ t('Total_2') }} {{ t('Invoices') }}</td>
                                 <td><strong>{{ metrics.total_sales or 0 }}</strong></td>
                             </tr>
                             <tr>
-                                <td>إجمالي العملاء</td>
+                                <td>{{ t('Total_2') }} {{ t('Customers_2') }}</td>
                                 <td><strong>{{ metrics.total_customers or 0 }}</strong></td>
                             </tr>
                             <tr>
-                                <td>إجمالي المنتجات</td>
+                                <td>{{ t('Total_2') }} {{ t('Products') }}</td>
                                 <td><strong>{{ metrics.total_products or 0 }}</strong></td>
                             </tr>
                             <tr>
-                                <td>عملاء نشطين</td>
+                                <td>{{ t('Customers_3') }} {{ t('نشطين') }}</td>
                                 <td><strong>{{ metrics.active_customers or 0 }}</strong></td>
                             </tr>
                             <tr>
-                                <td>منتجات منخفضة المخزون</td>
+                                <td>{{ t('Products_2') }} {{ t('Low') }} {{ t('Inventory') }}</td>
                                 <td><strong class="text-danger">{{ metrics.low_stock_products or 0 }}</strong></td>
                             </tr>
                         </table></div>
@@ -107,28 +107,28 @@
             <div class="col-md-6">
                 <div class="card">
                     <div class="card-header">
-                        <h3 class="card-title">معلومات الموارد</h3>
+                        <h3 class="card-title">{{ t('Info_2') }} {{ t('الموارد') }}</h3>
                     </div>
                     <div class="card-body">
                         <div class="table-responsive"><table class="table">
                             <tr>
-                                <td>إجمالي المساحة</td>
+                                <td>{{ t('Total_2') }} {{ t('المساحة') }}</td>
                                 <td><strong>{{ health.disk.total_gb }} GB</strong></td>
                             </tr>
                             <tr>
-                                <td>المساحة المستخدمة</td>
+                                <td>{{ t('المساحة') }} {{ t('المستخدمة') }}</td>
                                 <td><strong>{{ health.disk.used_gb }} GB</strong></td>
                             </tr>
                             <tr>
-                                <td>المساحة المتاحة</td>
+                                <td>{{ t('المساحة') }} {{ t('Available_3') }}</td>
                                 <td><strong>{{ health.disk.free_gb }} GB</strong></td>
                             </tr>
                             <tr>
-                                <td>إجمالي الذاكرة</td>
+                                <td>{{ t('Total_2') }} {{ t('الذاكرة') }}</td>
                                 <td><strong>{{ health.memory.total_mb }} MB</strong></td>
                             </tr>
                             <tr>
-                                <td>عدد المعالجات</td>
+                                <td>{{ t('Count') }} {{ t('{{ t('المعالج') }}ات') }}</td>
                                 <td><strong>{{ health.cpu.cores }}</strong></td>
                             </tr>
                         </table></div>

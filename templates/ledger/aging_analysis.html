@@ -6,10 +6,10 @@
 <div class="row mb-3 no-print">
   <div class="col-12">
     <a href="{{ url_for('ledger.index') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right mr-2"></i>العودة
+      <i class="fas fa-arrow-right mr-2"></i>{{ t('العودة') }}
     </a>
     <button class="btn btn-primary" data-action="window-print">
-      <i class="fas fa-print mr-2"></i>طباعة
+      <i class="fas fa-print mr-2"></i>{{ t('Print') }}
     </button>
     <a href="{{ url_for('ledger.aging_analysis') }}?type={{ 'payables' if analysis_type == 'receivables' else 'receivables' }}&as_of_date={{ as_of_date }}" 
        class="btn btn-info">
@@ -24,10 +24,10 @@
   <div class="card-body">
     <form class="needs-validation" method="get" class="form-inline" action="">
       <input type="hidden" name="type" value="{{ analysis_type }}" aria-label="type">
-      <label class="ml-2 mr-2" for="input_as_of_date">حتى تاريخ:</label>
+      <label class="ml-2 mr-2" for="input_as_of_date">حتى {{ t('History') }}:</label>
       <input type="date" name="as_of_date" class="form-control mr-3" value="{{ as_of_date }}" required id="input_as_of_date" aria-label="as of date">
       <button type="submit" class="btn btn-primary">
-        <i class="fas fa-filter mr-2"></i>عرض
+        <i class="fas fa-filter mr-2"></i>{{ t('View') }}
       </button>
     </form>
   </div>
@@ -37,7 +37,7 @@
   <div class="erp-report-header">
     <h2>{{ title }}</h2>
     <div class="erp-report-meta">
-      حتى تاريخ: {{ as_of_date }}
+      حتى {{ t('History') }}: {{ as_of_date }}
       {% if company_name_ar %} | {{ company_name_ar }}{% endif %}
     </div>
   </div>
@@ -47,7 +47,7 @@
       <div class="info-box bg-success">
         <span class="info-box-icon"><i class="fas fa-calendar-check"></i></span>
         <div class="info-box-content">
-          <span class="info-box-text">0-30 يوم</span>
+          <span class="info-box-text">0-30 {{ t('يوم') }}</span>
           <span class="info-box-number">
             {{ "{:,.0f}".format(report.totals['0-30']) }}
           </span>
@@ -58,7 +58,7 @@
       <div class="info-box bg-info">
         <span class="info-box-icon"><i class="fas fa-calendar-alt"></i></span>
         <div class="info-box-content">
-          <span class="info-box-text">31-60 يوم</span>
+          <span class="info-box-text">31-60 {{ t('يوم') }}</span>
           <span class="info-box-number">
             {{ "{:,.0f}".format(report.totals['31-60']) }}
           </span>
@@ -69,7 +69,7 @@
       <div class="info-box bg-warning">
         <span class="info-box-icon"><i class="fas fa-calendar-times"></i></span>
         <div class="info-box-content">
-          <span class="info-box-text">61-90 يوم</span>
+          <span class="info-box-text">61-90 {{ t('يوم') }}</span>
           <span class="info-box-number">
             {{ "{:,.0f}".format(report.totals['61-90']) }}
           </span>
@@ -80,7 +80,7 @@
       <div class="info-box bg-orange">
         <span class="info-box-icon"><i class="fas fa-exclamation-triangle"></i></span>
         <div class="info-box-content">
-          <span class="info-box-text">91-120 يوم</span>
+          <span class="info-box-text">91-120 {{ t('يوم') }}</span>
           <span class="info-box-number">
             {{ "{:,.0f}".format(report.totals['91-120']) }}
           </span>
@@ -91,7 +91,7 @@
       <div class="info-box bg-danger">
         <span class="info-box-icon"><i class="fas fa-ban"></i></span>
         <div class="info-box-content">
-          <span class="info-box-text">+120 يوم</span>
+          <span class="info-box-text">+120 {{ t('يوم') }}</span>
           <span class="info-box-number">
             {{ "{:,.0f}".format(report.totals['over_120']) }}
           </span>
@@ -102,7 +102,7 @@
       <div class="info-box bg-dark">
         <span class="info-box-icon"><i class="fas fa-calculator"></i></span>
         <div class="info-box-content">
-          <span class="info-box-text">الإجمالي</span>
+          <span class="info-box-text">{{ t('Total_3') }}</span>
           <span class="info-box-number">
             {{ "{:,.0f}".format(report.totals['total']) }}
           </span>
@@ -119,12 +119,12 @@
           <thead class="bg-light">
             <tr>
               <th width="20%">{{ 'العميل' if analysis_type == 'receivables' else 'المورد' }}</th>
-              <th width="13%" class="text-center">0-30 يوم</th>
-              <th width="13%" class="text-center">31-60 يوم</th>
-              <th width="13%" class="text-center">61-90 يوم</th>
-              <th width="13%" class="text-center">91-120 يوم</th>
-              <th width="13%" class="text-center">+120 يوم</th>
-              <th width="15%" class="text-center">الإجمالي</th>
+              <th width="13%" class="text-center">0-30 {{ t('يوم') }}</th>
+              <th width="13%" class="text-center">31-60 {{ t('يوم') }}</th>
+              <th width="13%" class="text-center">61-90 {{ t('يوم') }}</th>
+              <th width="13%" class="text-center">91-120 {{ t('يوم') }}</th>
+              <th width="13%" class="text-center">+120 {{ t('يوم') }}</th>
+              <th width="15%" class="text-center">{{ t('Total_3') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -172,7 +172,7 @@
           </tbody>
           <tfoot class="bg-dark text-white">
             <tr>
-              <th class="text-left">الإجمالي:</th>
+              <th class="text-left">{{ t('Total_3') }}:</th>
               <th class="text-center">{{ format_currency(report.totals['0-30']) }}</th>
               <th class="text-center">{{ format_currency(report.totals['31-60']) }}</th>
               <th class="text-center">{{ format_currency(report.totals['61-90']) }}</th>
@@ -193,7 +193,7 @@
 <div class="card mt-4 no-print">
   <div class="card-header">
     <h5 class="mb-0">
-      <i class="fas fa-chart-pie mr-2"></i>التوزيع حسب الفترات
+      <i class="fas fa-chart-pie mr-2"></i>{{ t('التوزيع') }} {{ t('حسب') }} {{ t('الفترات') }}
     </h5>
   </div>
   <div class="card-body">
@@ -204,7 +204,7 @@
 {% if (analysis_type == 'receivables' and not report.customers) or (analysis_type == 'payables' and not report.suppliers) %}
 <div class="alert alert-info text-center mt-3">
   <i class="fas fa-info-circle mr-2"></i>
-  لا توجد ذمم {{ 'مدينة' if analysis_type == 'receivables' else 'دائنة' }} حالياً
+  لا {{ t('توجد') }} {{ t('ذمم') }} {{ 'مدينة' if analysis_type == 'receivables' else 'دائنة' }} {{ t('حالياً') }}
 </div>
 {% endif %}
 
@@ -214,7 +214,7 @@ const pieCtx = document.getElementById('agingPieChart').getContext('2d');
 new Chart(pieCtx, {
     type: 'doughnut',
     data: {
-        labels: ['0-30 يوم', '31-60 يوم', '61-90 يوم', '91-120 يوم', '+120 يوم'],
+        labels: ['0-30 {{ t('يوم') }}', '31-60 {{ t('يوم') }}', '61-90 {{ t('يوم') }}', '91-120 {{ t('يوم') }}', '+120 {{ t('يوم') }}'],
         datasets: [{
             data: [
                 {{ report.totals['0-30'] }},

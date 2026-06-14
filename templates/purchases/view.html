@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - فاتورة شراء #{{ purchase.purchase_number }}{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('Invoice') }} {{ t('Purchase') }} #{{ purchase.purchase_number }}{% endblock %}
 
 {% block page_title %}
 
@@ -8,7 +8,7 @@
 
   <div>
 
-    <h1 class="mb-0">فاتورة شراء رقم: {{ purchase.purchase_number }}</h1>
+    <h1 class="mb-0">{{ t('Invoice') }} {{ t('Purchase') }} {{ t('رقم') }}: {{ purchase.purchase_number }}</h1>
 
   </div>
 
@@ -16,13 +16,13 @@
 
     <a href="{{ url_for('purchases.index') }}" class="btn btn-secondary">
 
-      <i class="fas fa-arrow-right mr-2"></i>العودة للقائمة
+      <i class="fas fa-arrow-right mr-2"></i>{{ t('العودة') }} {{ t('للقائمة') }}
 
     </a>
 
     <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
 
-      <i class="fas fa-home mr-2"></i>الرئيسية
+      <i class="fas fa-home mr-2"></i>{{ t('Main_2') }}
 
     </a>
 
@@ -44,7 +44,7 @@
 
       <div class="card-header bg-gradient-primary">
 
-        <h3 class="card-title text-white">تفاصيل فاتورة الشراء</h3>
+        <h3 class="card-title text-white">{{ t('Details') }} {{ t('Invoice') }} {{ t('Purchase_2') }}</h3>
 
       </div>
 
@@ -52,25 +52,25 @@
 
         <dl class="row">
 
-          <dt class="col-sm-4">رقم الفاتورة:</dt>
+          <dt class="col-sm-4">{{ t('رقم') }} {{ t('Invoice_2') }}:</dt>
 
           <dd class="col-sm-8"><strong>{{ purchase.purchase_number }}</strong></dd>
 
           
 
-          <dt class="col-sm-4">المورد:</dt>
+          <dt class="col-sm-4">{{ t('Supplier') }}:</dt>
 
           <dd class="col-sm-8">{{ purchase.supplier_name }}</dd>
 
           
 
-          <dt class="col-sm-4">الهاتف:</dt>
+          <dt class="col-sm-4">{{ t('Phone') }}:</dt>
 
           <dd class="col-sm-8">{{ purchase.supplier_phone or '-' }}</dd>
 
           
 
-          <dt class="col-sm-4">التاريخ:</dt>
+          <dt class="col-sm-4">{{ t('Date') }}:</dt>
 
           <dd class="col-sm-8">{{ purchase.purchase_date.strftime('%Y-%m-%d') }}</dd>
 
@@ -88,13 +88,13 @@
 
             <tr>
 
-              <th>المنتج</th>
+              <th>{{ t('Product') }}</th>
 
               <th>{{ t('Quantity') }}</th>
 
-              <th>التكلفة</th>
+              <th>{{ t('Cost') }}</th>
 
-              <th>الخصم%</th>
+              <th>{{ t('Discount') }}%</th>
 
               <th>{{ t('Total') }}</th>
 
@@ -142,7 +142,7 @@
 
       <div class="card-header bg-gradient-success">
 
-        <h3 class="card-title text-white">الإجماليات</h3>
+        <h3 class="card-title text-white">{{ t('{{ t('Total_3') }}ات') }}</h3>
 
       </div>
 
@@ -150,25 +150,25 @@
 
         <dl class="row">
 
-          <dt class="col-6">المجموع قبل الخصم:</dt>
+          <dt class="col-6">{{ t('Total') }} قبل {{ t('Discount') }}:</dt>
 
           <dd class="col-6 text-left">{{ format_currency((purchase.subtotal or 0) + (purchase.discount_amount or 0)) }}</dd>
 
           
 
-          <dt class="col-6">الخصم:</dt>
+          <dt class="col-6">{{ t('Discount') }}:</dt>
 
           <dd class="col-6 text-left text-danger">{{ format_currency(purchase.discount_amount or 0) }}</dd>
 
           
 
-          <dt class="col-6">المجموع بعد الخصم:</dt>
+          <dt class="col-6">{{ t('Total') }} بعد {{ t('Discount') }}:</dt>
 
           <dd class="col-6 text-left">{{ format_currency(purchase.subtotal) }}</dd>
 
           
 
-          <dt class="col-6">الضريبة:</dt>
+          <dt class="col-6">{{ t('Tax') }}:</dt>
 
           <dd class="col-6 text-left">{{ format_currency(purchase.tax_amount) }}</dd>
 
@@ -178,7 +178,7 @@
 
         <dl class="row">
 
-          <dt class="col-6"><h5>الإجمالي:</h5></dt>
+          <dt class="col-6"><h5>{{ t('Total_3') }}:</h5></dt>
 
           <dd class="col-6 text-left"><h5>{{ format_currency(purchase.total_amount, purchase.currency) }}</h5></dd>
 
@@ -196,7 +196,7 @@
 
       <div class="card-header">
 
-        <h3 class="card-title"><i class="fas fa-cog mr-2"></i>الإجراءات</h3>
+        <h3 class="card-title"><i class="fas fa-cog mr-2"></i>{{ t('{{ t('الإجراء') }}ات') }}</h3>
 
       </div>
 
@@ -206,7 +206,7 @@
 
           <a href="{{ url_for('purchases.print_purchase', id=purchase.id) }}" class="btn btn-secondary mb-2" target="_blank" rel="noopener noreferrer">
 
-            <i class="fas fa-print mr-2"></i>طباعة الفاتورة
+            <i class="fas fa-print mr-2"></i>{{ t('Print') }} {{ t('Invoice_2') }}
 
           </a>
 
@@ -224,13 +224,13 @@
 
           <a href="{{ url_for('purchases.purchase_return', id=purchase.id) }}" class="btn btn-info mb-2">
 
-            <i class="fas fa-undo-alt mr-2"></i>مرتجع مشتريات
+            <i class="fas fa-undo-alt mr-2"></i>{{ t('Return') }} {{ t('Purchases_2') }}
 
           </a>
 
           <button type="button" class="btn btn-warning" data-action="cancel-purchase">
 
-            <i class="fas fa-ban mr-2"></i>إلغاء الفاتورة
+            <i class="fas fa-ban mr-2"></i>{{ t('Cancel') }} {{ t('Invoice_2') }}
 
           </button>
 
@@ -250,7 +250,7 @@
 
                   data-delete-item="{{purchase.id}}" data-item-type="purchases" data-item-name="{{purchase.purchase_number|tojson}}">
 
-            <i class="fas fa-trash-alt mr-2"></i>حذف الفاتورة
+            <i class="fas fa-trash-alt mr-2"></i>{{ t('Delete') }} {{ t('Invoice_2') }}
 
           </button>
 
@@ -271,7 +271,7 @@
 $(document).on('click', '[data-action="cancel-purchase"]', confirmCancel);
 
 function confirmCancel() {
-  if (confirm('هل أنت متأكد من إلغاء فاتورة الشراء هذه؟\nسيتم عكس القيد المحاسبي والمخزون ورصيد المورد.\nلا يمكن التراجع عن هذا الإجراء.')) {
+  if (confirm('هل أنت {{ t('متأكد') }} من {{ t('Cancel') }} {{ t('Invoice') }} {{ t('Purchase_2') }} هذه؟\n{{ t('سيتم') }} {{ t('عكس') }} {{ t('القيد') }} {{ t('Accounting_4') }} {{ t('والمخزون') }} {{ t('ورصيد') }} {{ t('Supplier') }}.\nلا يمكن {{ t('التراجع') }} عن هذا {{ t('الإجراء') }}.')) {
     document.getElementById('cancelForm').submit();
   }
 }

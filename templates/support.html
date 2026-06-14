@@ -1,7 +1,7 @@
 {% include 'partials/support/head.html' %}
 <body>
     <a href="{{ url_for('auth.login') }}" class="login-link">
-        <i class="fas fa-sign-in-alt mr-2"></i>تسجيل الدخول
+        <i class="fas fa-sign-in-alt mr-2"></i>{{ t('تسجيل') }} {{ t('الدخول') }}
     </a>
 {% include 'partials/support/hero.html' %}
 {% include 'partials/support/purchase.html' %}

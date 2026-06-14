@@ -1,9 +1,9 @@
 {% extends 'base.html' %}
 
-{% block title %}كشف حساب {{ partner.name }}{% endblock %}
+{% block title %}{{ t('كشف') }} {{ t('Account_2') }} {{ partner.name }}{% endblock %}
 
 {% block page_title %}
-<h1 class="text-gradient mb-0"><i class="fas fa-file-invoice mr-2"></i>كشف حساب: {{ partner.name }}</h1>
+<h1 class="text-gradient mb-0"><i class="fas fa-file-invoice mr-2"></i>{{ t('كشف') }} {{ t('Account_2') }}: {{ partner.name }}</h1>
 {% endblock %}
 
 {% block content %}
@@ -11,16 +11,16 @@
   <div class="card-body">
     <form class="needs-validation" method="GET" class="row g-3 align-items-end">
       <div class="col-md-4">
-        <label class="form-label" for="input_start_date">من تاريخ</label>
+        <label class="form-label" for="input_start_date">من {{ t('History') }}</label>
         <input type="date" name="start_date" class="form-control" value="{{ start_date }}" id="input_start_date" aria-label="start date">
       </div>
       <div class="col-md-4">
-        <label class="form-label" for="input_end_date">إلى تاريخ</label>
+        <label class="form-label" for="input_end_date">إلى {{ t('History') }}</label>
         <input type="date" name="end_date" class="form-control" value="{{ end_date }}" id="input_end_date" aria-label="end date">
       </div>
       <div class="col-md-4 d-flex flex-wrap">
-        <button type="submit" class="btn btn-primary mr-2 mb-2"><i class="fas fa-filter mr-1"></i> عرض</button>
-        <button type="button" class="btn btn-outline-secondary mb-2 no-print" data-action="window-print"><i class="fas fa-print mr-1"></i> طباعة</button>
+        <button type="submit" class="btn btn-primary mr-2 mb-2"><i class="fas fa-filter mr-1"></i> {{ t('View') }}</button>
+        <button type="button" class="btn btn-outline-secondary mb-2 no-print" data-action="window-print"><i class="fas fa-print mr-1"></i> {{ t('Print') }}</button>
       </div>
     </form>
   </div>
@@ -31,7 +31,7 @@
   <div class="col-md-3">
     <div class="card text-center">
       <div class="card-body">
-        <h6 class="text-muted">الرصيد الافتتاحي</h6>
+        <h6 class="text-muted">{{ t('Balance') }} {{ t('الافتتاحي') }}</h6>
         <h4>{{ format_currency(statement.opening_balance) }}</h4>
       </div>
     </div>
@@ -39,7 +39,7 @@
   <div class="col-md-3">
     <div class="card text-center">
       <div class="card-body">
-        <h6 class="text-muted">إجمالي الدائن</h6>
+        <h6 class="text-muted">{{ t('Total_2') }} {{ t('ال{{ t('دائن') }}') }}</h6>
         <h4 class="text-success">{{ format_currency(statement.total_credit) }}</h4>
       </div>
     </div>
@@ -47,7 +47,7 @@
   <div class="col-md-3">
     <div class="card text-center">
       <div class="card-body">
-        <h6 class="text-muted">إجمالي المدين</h6>
+        <h6 class="text-muted">{{ t('Total_2') }} {{ t('ال{{ t('مدين') }}') }}</h6>
         <h4 class="text-danger">{{ format_currency(statement.total_debit) }}</h4>
       </div>
     </div>
@@ -55,7 +55,7 @@
   <div class="col-md-3">
     <div class="card text-center">
       <div class="card-body">
-        <h6 class="text-muted">الرصيد الختامي</h6>
+        <h6 class="text-muted">{{ t('Balance') }} {{ t('الختامي') }}</h6>
         <h4 class="{% if statement.closing_balance >= 0 %}text-success{% else %}text-danger{% endif %}">
           {{ format_currency(statement.closing_balance) }}
         </h4>
@@ -65,19 +65,19 @@
 </div>
 
 <div class="card">
-  <div class="card-header"><i class="fas fa-list mr-2"></i>تفاصيل الحركات</div>
+  <div class="card-header"><i class="fas fa-list mr-2"></i>{{ t('Details') }} {{ t('Movements') }}</div>
   <div class="card-body p-0">
     <div class="table-responsive">
       <table class="table table-hover mb-0">
         <thead>
           <tr>
             <th>#</th>
-            <th>التاريخ</th>
-            <th>النوع</th>
-            <th>البيان</th>
-            <th class="text-center">مدين</th>
-            <th class="text-center">دائن</th>
-            <th class="text-center">الرصيد</th>
+            <th>{{ t('Date') }}</th>
+            <th>{{ t('النوع') }}</th>
+            <th>{{ t('Description_3') }}</th>
+            <th class="text-center">{{ t('مدين') }}</th>
+            <th class="text-center">{{ t('دائن') }}</th>
+            <th class="text-center">{{ t('Balance') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -96,7 +96,7 @@
             <td class="text-center">{{ format_currency(t.balance_after or 0) }}</td>
           </tr>
           {% else %}
-          <tr><td colspan="7" class="text-center text-muted py-4">لا توجد حركات في الفترة المحددة.</td></tr>
+          <tr><td colspan="7" class="text-center text-muted py-4">لا {{ t('توجد') }} {{ t('حركات') }} في {{ t('Period_2') }} {{ t('المحددة') }}.</td></tr>
           {% endfor %}
         </tbody>
       </table>

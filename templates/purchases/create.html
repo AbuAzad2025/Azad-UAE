@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - إنشاء فاتورة شراء{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('Create') }} {{ t('Invoice') }} {{ t('Purchase') }}{% endblock %}
 
 {% block page_title %}
 
@@ -8,7 +8,7 @@
 
   <div>
 
-    <h1 class="mb-0"><i class="fas fa-file-invoice-dollar mr-2"></i>فاتورة شراء جديدة</h1>
+    <h1 class="mb-0"><i class="fas fa-file-invoice-dollar mr-2"></i>{{ t('Invoice') }} {{ t('Purchase') }} {{ t('New_3') }}</h1>
 
   </div>
 
@@ -16,13 +16,13 @@
 
     <a href="{{ url_for('purchases.index') }}" class="purchase-header-link purchase-header-link--primary">
 
-      <i class="fas fa-arrow-right mr-2"></i>العودة للمشتريات
+      <i class="fas fa-arrow-right mr-2"></i>{{ t('العودة') }} {{ t('Purchases_3') }}
 
     </a>
 
     <a href="{{ url_for('main.dashboard') }}" class="purchase-header-link purchase-header-link--secondary">
 
-      <i class="fas fa-home mr-2"></i>الرئيسية
+      <i class="fas fa-home mr-2"></i>{{ t('Main_2') }}
 
     </a>
 
@@ -42,7 +42,7 @@
 
   <div class="card-header">
 
-    <h3 class="card-title"><i class="fas fa-shopping-cart"></i> بيانات فاتورة الشراء</h3>
+    <h3 class="card-title"><i class="fas fa-shopping-cart"></i> {{ t('Data_2') }} {{ t('Invoice') }} {{ t('Purchase_2') }}</h3>
 
   </div>
 
@@ -68,7 +68,7 @@
 
           <h5 class="text-primary mb-3">
 
-            <i class="fas fa-truck"></i> معلومات المورد
+            <i class="fas fa-truck"></i> {{ t('Info_2') }} {{ t('Supplier') }}
 
           </h5>
 
@@ -86,11 +86,11 @@
 
             <label for="supplier_id">
 
-              <i class="fas fa-truck text-success"></i> المورد 
+              <i class="fas fa-truck text-success"></i> {{ t('Supplier') }} 
 
               <span class="text-danger">*</span>
 
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="اختر المورد - الفلتر الذكي (إجباري)"></i>
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('اختر') }} {{ t('Supplier') }} - {{ t('Filter_3') }} {{ t('Smart') }} ({{ t('Required') }})"></i>
 
             </label>
 
@@ -98,14 +98,14 @@
 
               <select name="supplier_id" id="supplier_id" class="form-control supplier-select" required aria-label="supplier id">
 
-                <option value="" selected>بلا</option>
+                <option value="" selected>{{ t('None') }}</option>
 
               </select>
 
               <div class="input-group-append">
 
                 {% if current_user.has_permission('manage_suppliers') %}
-                <a href="{{ url_for('suppliers.create') }}" class="btn btn-success" target="_blank" rel="noopener noreferrer" title="إضافة مورد جديد">
+                <a href="{{ url_for('suppliers.create') }}" class="btn btn-success" target="_blank" rel="noopener noreferrer" title="{{ t('Add') }} {{ t('Supplier_2') }} {{ t('New') }}">
                 {% endif %}
 
                   <i class="fas fa-plus"></i>
@@ -118,7 +118,7 @@
 
             <small class="form-text text-muted">
 
-              💡 لا يوجد المورد؟ اضغط زر الإضافة لفتح صفحة الموردين في نافذة جديدة.
+              💡 لا {{ t('يوجد') }} {{ t('Supplier_3') }} {{ t('اضغط') }} زر {{ t('Add_2') }} {{ t('لفتح') }} {{ t('صفحة') }} {{ t('Suppliers') }} في {{ t('نافذة') }} {{ t('New_3') }}.
 
             </small>
 
@@ -134,17 +134,17 @@
 
             <label for="warehouse_id">
 
-              <i class="fas fa-warehouse text-info"></i> المستودع
+              <i class="fas fa-warehouse text-info"></i> {{ t('Warehouse') }}
 
               <span class="text-danger">*</span>
 
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="المستودع الذي ستُضاف إليه البضاعة (إجباري)"></i>
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Warehouse') }} {{ t('الذي') }} {{ t('ستُضاف') }} {{ t('إليه') }} {{ t('البضاعة') }} ({{ t('Required') }})"></i>
 
             </label>
 
             <select name="warehouse_id" id="warehouse_id" class="form-control" required aria-label="warehouse id">
 
-              <option value="" selected>بلا</option>
+              <option value="" selected>{{ t('None') }}</option>
 
               {% if warehouses %}
 
@@ -168,7 +168,7 @@
 
             <small class="form-text text-info">
 
-              <i class="fas fa-info-circle"></i> ستُضاف البضاعة لهذا المستودع
+              <i class="fas fa-info-circle"></i> {{ t('ستُضاف') }} {{ t('البضاعة') }} {{ t('لهذا') }} {{ t('Warehouse') }}
 
             </small>
 
@@ -184,9 +184,9 @@
 
             <label for="supplier_phone">
 
-              <i class="fas fa-phone text-info"></i> هاتف المورد
+              <i class="fas fa-phone text-info"></i> {{ t('Phone_2') }} {{ t('Supplier') }}
 
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="يُملأ تلقائياً عند اختيار المورد"></i>
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('يُملأ') }} {{ t('تلقائياً') }} عند {{ t('Select') }} {{ t('Supplier') }}"></i>
 
             </label>
 
@@ -204,9 +204,9 @@
 
             <label for="supplier_email">
 
-              <i class="fas fa-envelope text-secondary"></i> بريد المورد
+              <i class="fas fa-envelope text-secondary"></i> {{ t('بريد') }} {{ t('Supplier') }}
 
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="يُملأ تلقائياً عند اختيار المورد"></i>
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('يُملأ') }} {{ t('تلقائياً') }} عند {{ t('Select') }} {{ t('Supplier') }}"></i>
 
             </label>
 
@@ -228,7 +228,7 @@
 
           <h5 class="text-primary mb-3">
 
-            <i class="fas fa-dollar-sign"></i> العملة والضريبة
+            <i class="fas fa-dollar-sign"></i> {{ t('Currency') }} {{ t('و{{ t('Tax') }}') }}
 
           </h5>
 
@@ -246,9 +246,9 @@
 
             <label for="currency">
 
-              <i class="fas fa-dollar-sign text-success"></i> العملة
+              <i class="fas fa-dollar-sign text-success"></i> {{ t('Currency') }}
 
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="عملة الفاتورة (افتراضي: {{ tenant_default_currency or 'AED' }})"></i>
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Currency_2') }} {{ t('Invoice_2') }} ({{ t('افتراضي') }}: {{ tenant_default_currency or 'AED' }})"></i>
 
             </label>
 
@@ -266,13 +266,13 @@
 
           <div class="form-group">
 
-            <label for="exchange_rate">سعر الصرف</label>
+            <label for="exchange_rate">{{ t('Price_2') }} {{ t('Exchange') }}</label>
 
             <input type="number" name="exchange_rate" id="exchange_rate" 
 
                    class="form-control" value="1.000000" step="0.000001" min="0" aria-label="exchange rate">
 
-            <small class="form-text text-muted">سعر الصرف مقابل {{ tenant_currency_name_ar or 'الدرهم الإماراتي' }}</small>
+            <small class="form-text text-muted">{{ t('Price_2') }} {{ t('Exchange') }} {{ t('مقابل') }} {{ tenant_currency_name_ar or 'الدرهم الإماراتي' }}</small>
 
           </div>
 
@@ -284,7 +284,7 @@
 
           <div class="form-group">
 
-            <label for="tax_rate">نسبة الضريبة %</label>
+            <label for="tax_rate">{{ t('Rate') }} {{ t('Tax') }} %</label>
 
             {% set _default_tax_rate = (tenant_default_tax_rate if tenant_enable_tax else 0) %}
 
@@ -292,7 +292,7 @@
 
                    class="form-control" value="{{ _default_tax_rate }}" step="0.01" min="0" max="100" aria-label="tax rate">
 
-            <small class="form-text text-muted">تُفعّل من إعدادات الضرائب للشركة</small>
+            <small class="form-text text-muted">{{ t('تُفعّل') }} من {{ t('Settings_2') }} {{ t('الضرائب') }} {{ t('للشركة') }}</small>
 
           </div>
 
@@ -316,9 +316,9 @@
 
           <h5 class="text-primary mb-3">
 
-            <i class="fas fa-ship"></i> تكاليف الشحن والاستيراد
+            <i class="fas fa-ship"></i> {{ t('تكاليف') }} {{ t('Shipping') }} {{ t('والاستيراد') }}
 
-            <small class="text-muted">(تُضمّن في تكلفة المخزون)</small>
+            <small class="text-muted">({{ t('تُضمّن') }} في {{ t('Cost_2') }} {{ t('Inventory') }})</small>
 
           </h5>
 
@@ -332,7 +332,7 @@
 
           <div class="form-group">
 
-            <label for="freight"><i class="fas fa-truck"></i> الشحن</label>
+            <label for="freight"><i class="fas fa-truck"></i> {{ t('Shipping') }}</label>
 
             <input type="number" name="freight" id="freight" class="form-control" value="0" step="0.01" min="0" aria-label="freight">
 
@@ -344,7 +344,7 @@
 
           <div class="form-group">
 
-            <label for="insurance"><i class="fas fa-shield-alt"></i> التأمين</label>
+            <label for="insurance"><i class="fas fa-shield-alt"></i> {{ t('التأمين') }}</label>
 
             <input type="number" name="insurance" id="insurance" class="form-control" value="0" step="0.01" min="0" aria-label="insurance">
 
@@ -356,7 +356,7 @@
 
           <div class="form-group">
 
-            <label for="customs_duty"><i class="fas fa-landmark"></i> الجمارك</label>
+            <label for="customs_duty"><i class="fas fa-landmark"></i> {{ t('الجمارك') }}</label>
 
             <input type="number" name="customs_duty" id="customs_duty" class="form-control" value="0" step="0.01" min="0" aria-label="customs duty">
 
@@ -368,7 +368,7 @@
 
           <div class="form-group">
 
-            <label for="other_landed_cost"><i class="fas fa-ellipsis-h"></i> أخرى</label>
+            <label for="other_landed_cost"><i class="fas fa-ellipsis-h"></i> {{ t('أخرى') }}</label>
 
             <input type="number" name="other_landed_cost" id="other_landed_cost" class="form-control" value="0" step="0.01" min="0" aria-label="other landed cost">
 
@@ -384,7 +384,7 @@
 
           <h5 class="text-primary mb-3">
 
-            <i class="fas fa-boxes"></i> المنتجات المشتراة
+            <i class="fas fa-boxes"></i> {{ t('Products') }} {{ t('المشتراة') }}
 
           </h5>
 
@@ -400,7 +400,7 @@
 
       <button type="button" id="addLineBtn" class="btn btn-success">
 
-        <i class="fas fa-plus-circle"></i> إضافة منتج
+        <i class="fas fa-plus-circle"></i> {{ t('Add') }} {{ t('Product_2') }}
 
       </button>
 
@@ -418,7 +418,7 @@
 
             <textarea name="notes" id="notes" class="form-control" rows="4" 
 
-                      placeholder="أي ملاحظات إضافية عن فاتورة الشراء..." maxlength="500"></textarea>
+                      placeholder="أي {{ t('Notes') }} {{ t('Additional') }} عن {{ t('Invoice') }} {{ t('Purchase_2') }}..." maxlength="500"></textarea>
 
           </div>
 
@@ -432,13 +432,13 @@
 
             <div class="card-body">
 
-              <h6 class="text-center mb-3"><i class="fas fa-calculator"></i> ملخص الفاتورة</h6>
+              <h6 class="text-center mb-3"><i class="fas fa-calculator"></i> {{ t('Summary') }} {{ t('Invoice_2') }}</h6>
 
               <div class="table-responsive"><table class="table table-sm">
 
                 <tr>
 
-                  <td>المجموع الفرعي:</td>
+                  <td>{{ t('Total') }} {{ t('Sub') }}:</td>
 
                   <td class="text-left" id="summary_subtotal">0.00 {{ tenant_currency_symbol }}</td>
 
@@ -446,7 +446,7 @@
 
                 <tr>
 
-                  <td>الضريبة:</td>
+                  <td>{{ t('Tax') }}:</td>
 
                   <td class="text-left" id="summary_tax">0.00 {{ tenant_currency_symbol }}</td>
 
@@ -454,7 +454,7 @@
 
                 <tr>
 
-                  <td>تكاليف الوصول (Landed Cost):</td>
+                  <td>{{ t('تكاليف') }} {{ t('الوصول') }} (Landed Cost):</td>
 
                   <td class="text-left" id="summary_landed_cost">0.00 {{ tenant_currency_symbol }}</td>
 
@@ -462,7 +462,7 @@
 
                 <tr class="font-weight-bold border-top">
 
-                  <td>الإجمالي:</td>
+                  <td>{{ t('Total_3') }}:</td>
 
                   <td class="text-left text-primary" id="summary_total">0.00 {{ tenant_currency_symbol }}</td>
 
@@ -488,19 +488,19 @@
 
       <button type="submit" class="btn btn-primary btn-lg">
 
-        <i class="fas fa-save mr-2"></i> حفظ فاتورة الشراء
+        <i class="fas fa-save mr-2"></i> {{ t('Save') }} {{ t('Invoice') }} {{ t('Purchase_2') }}
 
       </button>
 
       <a href="{{ url_for('purchases.index') }}" class="btn btn-secondary btn-lg">
 
-        <i class="fas fa-times mr-2"></i> إلغاء
+        <i class="fas fa-times mr-2"></i> {{ t('Cancel') }}
 
       </a>
 
       <button type="button" id="recalcTotalsBtn" class="btn btn-info btn-lg float-left">
 
-        <i class="fas fa-calculator mr-2"></i> إعادة الحساب
+        <i class="fas fa-calculator mr-2"></i> {{ t('إعادة') }} {{ t('Account') }}
 
       </button>
 

@@ -1,20 +1,20 @@
 {% extends 'base.html' %}
-{% block title %}إدارة القيود المحاسبية{% endblock %}
+{% block title %}{{ t('Management') }} {{ t('ال{{ t('قيود') }}') }} {{ t('Accounting') }}{% endblock %}
 {% block content %}
 <div class="container-fluid">
   <div class="card">
     <div class="card-header">
-      <h3><i class="fas fa-book"></i> إدارة القيود المحاسبية</h3>
+      <h3><i class="fas fa-book"></i> {{ t('Management') }} {{ t('ال{{ t('قيود') }}') }} {{ t('Accounting') }}</h3>
       <div class="card-tools">
         {% if current_user.has_permission('manage_ledger') %}
-        <a href="{{ url_for('ledger.manual_entry') }}" class="btn btn-success"><i class="fas fa-plus"></i> قيد يدوي جديد</a>
+        <a href="{{ url_for('ledger.manual_entry') }}" class="btn btn-success"><i class="fas fa-plus"></i> {{ t('قيد') }} {{ t('Manual') }} {{ t('New') }}</a>
         {% endif %}
       </div>
     </div>
     <div class="card-body">
       <div class="table-responsive"><table class="table table-bordered">
         <thead>
-          <tr><th>رقم القيد</th><th>التاريخ</th><th>البيان</th><th>المدين</th><th>الدائن</th><th>الحالة</th><th>الإجراءات</th></tr>
+          <tr><th>{{ t('رقم') }} {{ t('ال{{ t('قيد') }}') }}</th><th>{{ t('Date') }}</th><th>{{ t('Description_3') }}</th><th>{{ t('المدين') }}</th><th>{{ t('الدائن') }}</th><th>{{ t('Status') }}</th><th>{{ t('الإجراءات') }}</th></tr>
         </thead>
         <tbody>
           {% for entry in entries %}
@@ -26,21 +26,21 @@
             <td class="text-danger">{{ entry.total_credit }}</td>
             <td>
               {% if entry.total_debit == entry.total_credit %}
-              <span class="badge badge-success">متوازن</span>
+              <span class="badge badge-success">{{ t('متوازن') }}</span>
               {% else %}
-              <span class="badge badge-danger">غير متوازن</span>
+              <span class="badge badge-danger">غير {{ t('متوازن') }}</span>
               {% endif %}
             </td>
             <td>
-              <a href="{{ url_for('admin_ledger.view_journal', id=entry.id) }}" class="btn btn-info" title="عرض"><i class="fas fa-eye"></i></a>
+              <a href="{{ url_for('admin_ledger.view_journal', id=entry.id) }}" class="btn btn-info" title="{{ t('View') }}"><i class="fas fa-eye"></i></a>
               <form class="needs-validation" method="post" action="{{ url_for('advanced_ledger.reverse_journal_entry', entry_id=entry.id) }}" class="d-inline">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
-                <button type="submit" class="btn btn-warning" onclick="return confirm('عكس هذا القيد؟')" title="تراجع"><i class="fas fa-undo"></i></button>
+                <button type="submit" class="btn btn-warning" onclick="return confirm('{{ t('عكس') }} هذا {{ t('{{ t('ال{{ t('قيد') }}') }}_2') }}')" title="{{ t('تراجع') }}"><i class="fas fa-undo"></i></button>
               </form>
             </td>
           </tr>
           {% else %}
-          <tr><td colspan="7" class="text-center">لا توجد قيود</td></tr>
+          <tr><td colspan="7" class="text-center">لا {{ t('توجد') }} {{ t('قيود') }}</td></tr>
           {% endfor %}
         </tbody>
       </table></div>

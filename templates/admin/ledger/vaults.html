@@ -1,15 +1,15 @@
 {% extends 'base.html' %}
-{% block title %}إدارة الصناديق والمحافظ - Vaults Management{% endblock %}
-{% block page_title %}إدارة الصناديق والمحافظ{% endblock %}
+{% block title %}{{ t('Management') }} {{ t('الصناديق') }} {{ t('و{{ t('ال{{ t('محافظ') }}') }}') }} - Vaults Management{% endblock %}
+{% block page_title %}{{ t('Management') }} {{ t('الصناديق') }} {{ t('و{{ t('ال{{ t('محافظ') }}') }}') }}{% endblock %}
 
 {% block content %}
 <div class="row mb-3">
   <div class="col-12">
     <a href="{{ url_for('ledger.admin_dashboard') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right mr-2"></i>العودة للوحة التحكم
+      <i class="fas fa-arrow-right mr-2"></i>{{ t('العودة') }} {{ t('للوحة') }} {{ t('Control') }}
     </a>
     {% if current_user.is_owner %}<a href="{{ url_for('payment_vault.dashboard') }}" class="btn btn-primary">
-      <i class="fas fa-vault mr-2"></i>إدارة المحافظ
+      <i class="fas fa-vault mr-2"></i>{{ t('Management') }} {{ t('ال{{ t('محافظ') }}') }}
     </a>{% endif %}
   </div>
 </div>
@@ -17,7 +17,7 @@
 <div class="card">
   <div class="card-header bg-gradient-primary">
     <h3 class="card-title text-white">
-      <i class="fas fa-vault mr-2"></i>جميع المحافظ والصناديق
+      <i class="fas fa-vault mr-2"></i>{{ t('جميع') }} {{ t('ال{{ t('محافظ') }}') }} {{ t('و{{ t('الصناديق') }}') }}
     </h3>
   </div>
   <div class="card-body p-0">
@@ -25,12 +25,12 @@
       <table class="table table-hover mb-0">
         <thead class="bg-light">
           <tr>
-            <th>اسم المحفظة</th>
-            <th>الحالة</th>
-            <th>آخر وصول</th>
-            <th>المحاولات الفاشلة</th>
-            <th>تاريخ الإنشاء</th>
-            <th>الإجراءات</th>
+            <th>{{ t('Name_2') }} {{ t('المحفظة_2') }}</th>
+            <th>{{ t('Status') }}</th>
+            <th>{{ t('Last') }} {{ t('وصول') }}</th>
+            <th>{{ t('ال{{ t('محاولات') }}') }} {{ t('ال{{ t('فاشلة') }}') }}</th>
+            <th>{{ t('History') }} {{ t('Create_2') }}</th>
+            <th>{{ t('الإجراءات') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -41,16 +41,16 @@
             </td>
             <td>
               {% if vault.is_locked %}
-                <span class="badge badge-danger">مقفلة</span>
+                <span class="badge badge-danger">{{ t('Locked') }}</span>
               {% else %}
-                <span class="badge badge-success">مفتوحة</span>
+                <span class="badge badge-success">{{ t('مفتوحة') }}</span>
               {% endif %}
             </td>
             <td>
               {% if vault.last_access %}
                 {{ vault.last_access.strftime('%Y-%m-%d %H:%M') }}
               {% else %}
-                <span class="text-muted">لم يتم الوصول</span>
+                <span class="text-muted">لم يتم {{ t('ال{{ t('وصول') }}') }}</span>
               {% endif %}
             </td>
             <td>
@@ -61,15 +61,15 @@
             <td>{{ vault.created_at.strftime('%Y-%m-%d') }}</td>
             <td>
               <div class="btn-group btn-group-sm">
-                {% if current_user.is_owner %}<a href="{{ url_for('payment_vault.dashboard') }}" class="btn btn-outline-primary" title="عرض الخزينة">
+                {% if current_user.is_owner %}<a href="{{ url_for('payment_vault.dashboard') }}" class="btn btn-outline-primary" title="{{ t('View') }} {{ t('الخزينة') }}">
                   <i class="fas fa-eye"></i>
                 </a>{% endif %}
                 {% if vault.is_locked %}
-                <button type="button" class="btn btn-outline-success" onclick="unlockVault({{ vault.id }})" title="فتح الخزينة">
+                <button type="button" class="btn btn-outline-success" onclick="unlockVault({{ vault.id }})" title="{{ t('فتح') }} {{ t('الخزينة') }}">
                   <i class="fas fa-unlock"></i>
                 </button>
                 {% else %}
-                <button type="button" class="btn btn-outline-warning" onclick="lockVault({{ vault.id }})" title="قفل الخزينة">
+                <button type="button" class="btn btn-outline-warning" onclick="lockVault({{ vault.id }})" title="{{ t('قفل') }} {{ t('الخزينة') }}">
                   <i class="fas fa-lock"></i>
                 </button>
                 {% endif %}
@@ -91,7 +91,7 @@
         <div class="d-flex justify-content-between">
           <div>
             <h4 class="mb-0">{{ vaults|length }}</h4>
-            <p class="mb-0">إجمالي المحافظ</p>
+            <p class="mb-0">{{ t('Total_2') }} {{ t('ال{{ t('محافظ') }}') }}</p>
           </div>
           <div class="align-self-center">
             <i class="fas fa-vault fa-2x"></i>
@@ -107,7 +107,7 @@
         <div class="d-flex justify-content-between">
           <div>
             <h4 class="mb-0">{{ vaults|selectattr('is_locked', 'equalto', False)|list|length }}</h4>
-            <p class="mb-0">محافظ مفتوحة</p>
+            <p class="mb-0">{{ t('محافظ') }} {{ t('مفتوحة') }}</p>
           </div>
           <div class="align-self-center">
             <i class="fas fa-unlock fa-2x"></i>
@@ -123,7 +123,7 @@
         <div class="d-flex justify-content-between">
           <div>
             <h4 class="mb-0">{{ vaults|selectattr('is_locked', 'equalto', True)|list|length }}</h4>
-            <p class="mb-0">محافظ مقفلة</p>
+            <p class="mb-0">{{ t('محافظ') }} {{ t('Locked') }}</p>
           </div>
           <div class="align-self-center">
             <i class="fas fa-lock fa-2x"></i>
@@ -139,7 +139,7 @@
         <div class="d-flex justify-content-between">
           <div>
             <h4 class="mb-0">{{ vaults|selectattr('failed_attempts', 'gt', 0)|list|length }}</h4>
-            <p class="mb-0">محاولات فاشلة</p>
+            <p class="mb-0">{{ t('محاولات') }} {{ t('فاشلة') }}</p>
           </div>
           <div class="align-self-center">
             <i class="fas fa-exclamation-triangle fa-2x"></i>
@@ -154,13 +154,13 @@
 {% block scripts %}
 <script>
 function unlockVault(vaultId) {
-  if (confirm('هل أنت متأكد من فتح المحفظة؟')) {
+  if (confirm('هل أنت {{ t('متأكد') }} من {{ t('فتح') }} {{ t('{{ t('المحفظة_2') }}') }}')) {
     window.location.href = '/payment-vault/unlock';
   }
 }
 
 function lockVault(vaultId) {
-  if (confirm('هل أنت متأكد من قفل المحفظة؟')) {
+  if (confirm('هل أنت {{ t('متأكد') }} من {{ t('قفل') }} {{ t('{{ t('المحفظة_2') }}') }}')) {
     window.location.href = '/payment-vault/lock';
   }
 }

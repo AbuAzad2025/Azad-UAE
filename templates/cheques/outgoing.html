@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - الشيكات الصادرة{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('Cheques') }} {{ t('ال{{ t('صادرة') }}') }}{% endblock %}
 
 {% block extra_js %}
 <script>
@@ -8,18 +8,18 @@
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
   <div>
-    <h1 class="text-gradient mb-0"><i class="fas fa-file-export mr-3"></i>الشيكات الصادرة</h1>
-    <p class="text-muted">إدارة ومتابعة الشيكات الصادرة للموردين</p>
+    <h1 class="text-gradient mb-0"><i class="fas fa-file-export mr-3"></i>{{ t('Cheques') }} {{ t('ال{{ t('صادرة') }}') }}</h1>
+    <p class="text-muted">{{ t('Management') }} {{ t('ومتابعة') }} {{ t('Cheques') }} {{ t('ال{{ t('صادرة') }}') }} {{ t('Suppliers_2') }}</p>
   </div>
   <div>
     <a href="{{ url_for('cheques.create') }}" class="btn btn-success">
-      <i class="fas fa-plus-circle mr-2"></i>إضافة شيك جديد
+      <i class="fas fa-plus-circle mr-2"></i>{{ t('Add') }} {{ t('Cheque_3') }} {{ t('New') }}
     </a>
     <a href="{{ url_for('cheques.index') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right mr-2"></i>كل الشيكات
+      <i class="fas fa-arrow-right mr-2"></i>كل {{ t('Cheques') }}
     </a>
     <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
-      <i class="fas fa-home mr-2"></i>الرئيسية
+      <i class="fas fa-home mr-2"></i>{{ t('Main_2') }}
     </a>
   </div>
 </div>
@@ -32,7 +32,7 @@
     <div class="info-box bg-info">
       <span class="info-box-icon"><i class="fas fa-clock"></i></span>
       <div class="info-box-content">
-        <span class="info-box-text">قيد الانتظار</span>
+        <span class="info-box-text">{{ t('قيد') }} {{ t('Waiting') }}</span>
         <span class="info-box-number">{{ stats.outgoing_pending_count or 0 }}</span>
       </div>
     </div>
@@ -41,7 +41,7 @@
     <div class="info-box bg-success">
       <span class="info-box-icon"><i class="fas fa-check-circle"></i></span>
       <div class="info-box-content">
-        <span class="info-box-text">محصّلة</span>
+        <span class="info-box-text">{{ t('{{ t('محصّل') }}ة') }}</span>
         <span class="info-box-number">{{ stats.outgoing_cleared_count or 0 }}</span>
       </div>
     </div>
@@ -50,7 +50,7 @@
     <div class="info-box bg-warning">
       <span class="info-box-icon"><i class="fas fa-exclamation-triangle"></i></span>
       <div class="info-box-content">
-        <span class="info-box-text">مرتجعة</span>
+        <span class="info-box-text">{{ t('{{ t('Return') }}ة') }}</span>
         <span class="info-box-number">{{ stats.outgoing_bounced_count or 0 }}</span>
       </div>
     </div>
@@ -59,7 +59,7 @@
     <div class="info-box bg-danger">
       <span class="info-box-icon"><i class="fas fa-money-bill-wave"></i></span>
       <div class="info-box-content">
-        <span class="info-box-text">الإجمالي</span>
+        <span class="info-box-text">{{ t('Total_3') }}</span>
         <span class="info-box-number">{{ "{:,.0f}".format(stats.outgoing_total_amount or 0) }} {{ tenant_currency_symbol }}</span>
       </div>
     </div>
@@ -71,20 +71,20 @@
   <div class="card-body">
     <form class="needs-validation" method="GET" class="form-inline" action="">
       <div class="form-group ml-2">
-        <label class="ml-2">الحالة:</label>
+        <label class="ml-2">{{ t('Status') }}:</label>
         <select name="status" class="form-control" aria-label="status">
-          <option value="">بلا</option>
-          <option value="pending" {% if request.args.get('status') == 'pending' %}selected{% endif %}>قيد الانتظار</option>
-          <option value="deposited" {% if request.args.get('status') == 'deposited' %}selected{% endif %}>مودع</option>
-          <option value="cleared" {% if request.args.get('status') == 'cleared' %}selected{% endif %}>محصّل</option>
-          <option value="bounced" {% if request.args.get('status') == 'bounced' %}selected{% endif %}>مرتجع</option>
+          <option value="">{{ t('None') }}</option>
+          <option value="pending" {% if request.args.get('status') == 'pending' %}selected{% endif %}>{{ t('قيد') }} {{ t('Waiting') }}</option>
+          <option value="deposited" {% if request.args.get('status') == 'deposited' %}selected{% endif %}>{{ t('مودع') }}</option>
+          <option value="cleared" {% if request.args.get('status') == 'cleared' %}selected{% endif %}>{{ t('محصّل') }}</option>
+          <option value="bounced" {% if request.args.get('status') == 'bounced' %}selected{% endif %}>{{ t('Return') }}</option>
         </select>
       </div>
       <button type="submit" class="btn btn-primary ml-2">
-        <i class="fas fa-filter"></i> تطبيق
+        <i class="fas fa-filter"></i> {{ t('Apply') }}
       </button>
       <a href="{{ url_for('cheques.outgoing') }}" class="btn btn-secondary ml-2">
-        <i class="fas fa-redo"></i> إعادة تعيين
+        <i class="fas fa-redo"></i> {{ t('إعادة') }} {{ t('تعيين') }}
       </a>
     </form>
   </div>
@@ -96,14 +96,14 @@
     <div class="table-responsive"><table class="table table-hover">
       <thead>
         <tr>
-          <th>رقم الشيك</th>
+          <th>{{ t('رقم') }} {{ t('Cheque') }}</th>
           <th>إلى</th>
-          <th>المبلغ</th>
-          <th><i class="fas fa-exchange-alt mr-1"></i>سعر الصرف</th>
-          <th>تاريخ الاستحقاق</th>
-          <th>البنك</th>
-          <th>الحالة</th>
-          <th>إجراءات</th>
+          <th>{{ t('Amount') }}</th>
+          <th><i class="fas fa-exchange-alt mr-1"></i>{{ t('Price_2') }} {{ t('Exchange') }}</th>
+          <th>{{ t('History') }} {{ t('Due') }}</th>
+          <th>{{ t('Bank') }}</th>
+          <th>{{ t('Status') }}</th>
+          <th>{{ t('Actions') }}</th>
         </tr>
       </thead>
       <tbody>
@@ -120,11 +120,11 @@
             {% if cheque.status == 'cleared' and cheque.clearance_exchange_rate and cheque.currency != tenant_default_currency %}
               
               <div>
-                <small class="text-muted">إنشاء:</small>
+                <small class="text-muted">{{ t('Create') }}:</small>
                 <span class="badge badge-info">{{ "{:.4f}".format(cheque.exchange_rate) }}</span>
               </div>
               <div>
-                <small class="text-muted">صرف:</small>
+                <small class="text-muted">{{ t('صرف') }}:</small>
                 <span class="badge badge-success">{{ "{:.4f}".format(cheque.clearance_exchange_rate) }}</span>
               </div>
               {% if cheque.currency_gain_loss and abs(cheque.currency_gain_loss) > 0.01 %}
@@ -135,7 +135,7 @@
               </div>
               {% endif %}
             {% elif cheque.exchange_rate and cheque.exchange_rate != 1 %}
-              <span class="badge badge-info" title="سعر الصرف وقت المعاملة">
+              <span class="badge badge-info" title="{{ t('Price_2') }} {{ t('Exchange') }} {{ t('Time') }} {{ t('المعاملة') }}">
                 <i class="fas fa-exchange-alt mr-1"></i>{{ "{:.4f}".format(cheque.exchange_rate) }}
               </span>
             {% else %}
@@ -146,36 +146,36 @@
           <td>{{ cheque.bank_name }}</td>
           <td>
             {% if cheque.status == 'pending' %}
-              <span class="badge badge-info">قيد الانتظار</span>
+              <span class="badge badge-info">{{ t('قيد') }} {{ t('Waiting') }}</span>
             {% elif cheque.status == 'deposited' %}
-              <span class="badge badge-primary">مودع</span>
+              <span class="badge badge-primary">{{ t('مودع') }}</span>
             {% elif cheque.status == 'cleared' %}
-              <span class="badge badge-success">محصّل</span>
+              <span class="badge badge-success">{{ t('محصّل') }}</span>
             {% elif cheque.status == 'bounced' %}
-              <span class="badge badge-danger">مرتجع</span>
+              <span class="badge badge-danger">{{ t('Return') }}</span>
             {% elif cheque.status == 'cancelled' %}
-              <span class="badge badge-secondary">ملغي</span>
+              <span class="badge badge-secondary">{{ t('Cancelled') }}</span>
             {% endif %}
           </td>
           <td>
-            <a href="{{ url_for('cheques.view', id=cheque.id) }}" class="btn btn-info" title="عرض">
+            <a href="{{ url_for('cheques.view', id=cheque.id) }}" class="btn btn-info" title="{{ t('View') }}">
               <i class="fas fa-eye"></i>
             </a>
             {% if cheque.status not in ['cleared', 'cancelled', 'bounced'] %}
-            <a href="{{ url_for('cheques.edit', id=cheque.id) }}" class="btn btn-warning" title="تعديل">
+            <a href="{{ url_for('cheques.edit', id=cheque.id) }}" class="btn btn-warning" title="{{ t('Edit') }}">
               <i class="fas fa-edit"></i>
             </a>
             {% endif %}
             <button type="button" class="btn btn-danger" 
                     data-delete-item="{{cheque.id}}" data-item-type="cheques" data-item-name="{{cheque.cheque_bank_number|tojson}}" 
-                    title="حذف">
+                    title="{{ t('Delete') }}">
               <i class="fas fa-trash"></i>
             </button>
           </td>
         </tr>
         {% else %}
         <tr>
-          <td colspan="7" class="text-center text-muted">لا توجد شيكات صادرة</td>
+          <td colspan="7" class="text-center text-muted">لا {{ t('توجد') }} {{ t('Cheques_2') }} {{ t('صادرة') }}</td>
         </tr>
         {% endfor %}
       </tbody>

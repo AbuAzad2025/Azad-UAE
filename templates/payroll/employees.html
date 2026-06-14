@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}الموظفين{% endblock %}
+{% block title %}{{ t('Employees') }}{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -36,7 +36,7 @@
       $table.DataTable({
         language: { url: languageUrl },
         pageLength: 25,
-        lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "الكل"]],
+        lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "{{ t('All') }}"]],
         responsive: true,
         autoWidth: false,
         order: [[0, 'asc']],
@@ -56,36 +56,36 @@
 <div class="container-fluid">
   <div class="mb-3 d-flex flex-wrap ic-1">
     <span class="badge badge-primary">
-      <i class="fas fa-users"></i> الإجمالي: {{ employees|length }}
+      <i class="fas fa-users"></i> {{ t('Total_3') }}: {{ employees|length }}
     </span>
     <span class="badge badge-success">
-      <i class="fas fa-money-check"></i> راتب شهري: {{ employees|selectattr('employment_type', 'equalto', 'salary')|list|length }}
+      <i class="fas fa-money-check"></i> {{ t('راتب') }} {{ t('Monthly') }}: {{ employees|selectattr('employment_type', 'equalto', 'salary')|list|length }}
     </span>
     <span class="badge badge-warning">
-      <i class="fas fa-business-time"></i> مياومة: {{ employees|selectattr('employment_type', 'equalto', 'daily')|list|length }}
+      <i class="fas fa-business-time"></i> {{ t('مياومة') }}: {{ employees|selectattr('employment_type', 'equalto', 'daily')|list|length }}
     </span>
   </div>
   <div class="card">
     <div class="card-header bg-gradient-purple text-white d-flex justify-content-between align-items-center flex-wrap gap-2">
-      <h3 class="card-title mb-0"><i class="fas fa-users-cog"></i> الموظفين</h3>
+      <h3 class="card-title mb-0"><i class="fas fa-users-cog"></i> {{ t('Employees') }}</h3>
       <a href="{{ url_for('payroll.add_employee') }}" class="btn btn-light position-relative ic-2">
-        <i class="fas fa-plus"></i> إضافة موظف
+        <i class="fas fa-plus"></i> {{ t('Add') }} {{ t('Employee') }}
       </a>
     </div>
     <div class="card-body">
       <div class="table-responsive"><table id="employeesTable" class="table table-bordered table-striped">
         <thead>
           <tr>
-            <th>الاسم</th>
+            <th>{{ t('Name') }}</th>
             {% if show_branch_columns %}
-            <th>الفرع</th>
+            <th>{{ t('Branch') }}</th>
             {% else %}
-            <th>الوظيفة/الفرع</th>
+            <th>{{ t('الوظيفة') }}/{{ t('Branch') }}</th>
             {% endif %}
-            <th>الهاتف</th>
-            <th>نوع التوظيف</th>
-            <th>الراتب الأساسي</th>
-            <th>الإجراءات</th>
+            <th>{{ t('Phone') }}</th>
+            <th>{{ t('نوع') }} {{ t('التوظيف') }}</th>
+            <th>{{ t('ال{{ t('راتب') }}') }} {{ t('الأساسي') }}</th>
+            <th>{{ t('الإجراءات') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -106,14 +106,14 @@
             <td>{{ emp.phone }}</td>
             <td>
                 {% if emp.employment_type == 'salary' %}
-                <span class="badge badge-success">راتب شهري</span>
+                <span class="badge badge-success">{{ t('راتب') }} {{ t('Monthly') }}</span>
                 {% else %}
-                <span class="badge badge-warning">مياومة</span>
+                <span class="badge badge-warning">{{ t('مياومة') }}</span>
                 {% endif %}
             </td>
             <td>{{ emp.basic_salary }} {{ emp.currency }}</td>
             <td class="actions-cell">
-                <a href="{{ url_for('payroll.statement', id=emp.id) }}" class="btn btn-info" title="كشف حساب"><i class="fas fa-file-invoice"></i></a>
+                <a href="{{ url_for('payroll.statement', id=emp.id) }}" class="btn btn-info" title="{{ t('كشف') }} {{ t('Account_2') }}"><i class="fas fa-file-invoice"></i></a>
             </td>
           </tr>
           {% endfor %}

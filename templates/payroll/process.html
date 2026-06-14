@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}صرف الرواتب{% endblock %}
+{% block title %}{{ t('صرف') }} {{ t('Salaries') }}{% endblock %}
 
 {% block content %}
 
@@ -18,11 +18,11 @@
 
             <div class="card-header">
 
-                <h3 class="card-title"><i class="fas fa-layer-group"></i> توليد رواتب الفرع (دفعة واحدة)</h3>
+                <h3 class="card-title"><i class="fas fa-layer-group"></i> {{ t('توليد') }} {{ t('رواتب') }} {{ t('Branch') }} ({{ t('دفعة') }} {{ t('واحدة') }})</h3>
 
                 <div class="card-tools">
 
-                    <button type="button" class="btn btn-tool" data-card-widget="collapse" title="إضافة"><i class="fas fa-plus"></i></button>
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse" title="{{ t('Add') }}"><i class="fas fa-plus"></i></button>
 
                 </div>
 
@@ -42,9 +42,9 @@
 
                             <div class="form-group">
 
-                                <label>الفرع</label>
+                                <label>{{ t('Branch') }}</label>
 
-                                <select name="branch_id" class="form-control select2" required aria-label="اختر الفرع">
+                                <select name="branch_id" class="form-control select2" required aria-label="{{ t('اختر') }} {{ t('Branch') }}">
 
                                     {% for branch in branches %}
 
@@ -62,9 +62,9 @@
 
                             <div class="form-group">
 
-                                <label>الشهر</label>
+                                <label>{{ t('Month') }}</label>
 
-                                <select name="month" class="form-control" aria-label="الشهر">
+                                <select name="month" class="form-control" aria-label="{{ t('Month') }}">
 
                                     {% for i in range(1, 13) %}
 
@@ -82,9 +82,9 @@
 
                             <div class="form-group">
 
-                                <label for="input_year">السنة</label>
+                                <label for="input_year">{{ t('Year') }}</label>
 
-                                <input type="number" name="year" class="form-control" value="{{ today.year }}" id="input_year" aria-label="السنة">
+                                <input type="number" name="year" class="form-control" value="{{ today.year }}" id="input_year" aria-label="{{ t('Year') }}">
 
                             </div>
 
@@ -96,7 +96,7 @@
 
                                 <label>&nbsp;</label>
 
-                                <button type="submit" class="btn btn-primary btn-block">توليد الرواتب</button>
+                                <button type="submit" class="btn btn-primary btn-block">{{ t('توليد') }} {{ t('Salaries') }}</button>
 
                             </div>
 
@@ -106,7 +106,7 @@
 
                     <div class="alert alert-warning mt-2">
 
-                        <i class="fas fa-info-circle"></i> سيتم توليد رواتب جميع موظفين الفرع (نظام الراتب الشهري) فقط. موظفي المياومة يجب معالجتهم فردياً لتحديد أيام العمل.
+                        <i class="fas fa-info-circle"></i> {{ t('سيتم') }} {{ t('توليد') }} {{ t('رواتب') }} {{ t('جميع') }} {{ t('Employees_2') }} {{ t('Branch') }} ({{ t('System_2') }} {{ t('ال{{ t('راتب') }}') }} {{ t('Monthly_2') }}) فقط. {{ t('{{ t('Employee') }}ي') }} {{ t('المياومة') }} يجب {{ t('معالجتهم') }} {{ t('{{ t('فردي') }}اً') }} {{ t('لتحديد') }} {{ t('Days') }} {{ t('العمل') }}.
 
                     </div>
 
@@ -130,11 +130,11 @@
 
             <div class="card-header bg-gradient-success text-white">
 
-                <h3 class="card-title"><i class="fas fa-money-bill-wave"></i> معالجة راتب موظف (فردي)</h3>
+                <h3 class="card-title"><i class="fas fa-money-bill-wave"></i> {{ t('Processing_2') }} {{ t('راتب') }} {{ t('Employee') }} ({{ t('فردي') }})</h3>
 
                 <div class="card-tools">
 
-                    <button type="button" class="btn btn-tool" data-card-widget="collapse" title="إضافة"><i class="fas fa-plus"></i></button>
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse" title="{{ t('Add') }}"><i class="fas fa-plus"></i></button>
 
                 </div>
 
@@ -152,9 +152,9 @@
 
                             <div class="form-group">
 
-                                <label>الموظف</label>
+                                <label>{{ t('Employee_2') }}</label>
 
-                                <select name="employee_id" class="form-control select2" required aria-label="اختر الموظف">
+                                <select name="employee_id" class="form-control select2" required aria-label="{{ t('اختر') }} {{ t('Employee_2') }}">
 
                                     {% for emp in employees %}
 
@@ -172,9 +172,9 @@
 
                             <div class="form-group">
 
-                                <label>الشهر</label>
+                                <label>{{ t('Month') }}</label>
 
-                                <select name="month" class="form-control" aria-label="الشهر">
+                                <select name="month" class="form-control" aria-label="{{ t('Month') }}">
 
                                     {% for i in range(1, 13) %}
 
@@ -192,9 +192,9 @@
 
                             <div class="form-group">
 
-                                <label for="input_year">السنة</label>
+                                <label for="input_year">{{ t('Year') }}</label>
 
-                                <input type="number" name="year" class="form-control" value="{{ today.year }}" id="input_year" aria-label="السنة">
+                                <input type="number" name="year" class="form-control" value="{{ today.year }}" id="input_year" aria-label="{{ t('Year') }}">
 
                             </div>
 
@@ -204,7 +204,7 @@
 
                             <div class="form-group">
 
-                                <label for="input_days_worked">أيام العمل (للمياومة)</label>
+                                <label for="input_days_worked">{{ t('Days') }} {{ t('العمل') }} ({{ t('للمياومة') }})</label>
 
                                 <input type="number" name="days_worked" class="form-control" value="0" id="input_days_worked" aria-label="days worked">
 
@@ -222,7 +222,7 @@
 
                             <div class="form-group">
 
-                                <label for="input_allowances">بدلات / إضافي</label>
+                                <label for="input_allowances">{{ t('بدلات') }} / {{ t('Additional_2') }}</label>
 
                                 <input type="number" step="0.01" name="allowances" class="form-control" value="0" id="input_allowances" aria-label="allowances">
 
@@ -234,7 +234,7 @@
 
                             <div class="form-group">
 
-                                <label for="input_deductions">خصومات</label>
+                                <label for="input_deductions">{{ t('خصومات') }}</label>
 
                                 <input type="number" step="0.01" name="deductions" class="form-control" value="0" id="input_deductions" aria-label="deductions">
 
@@ -246,7 +246,7 @@
 
                             <div class="alert alert-info mt-4">
 
-                                سيتم خصم السلف المعلقة تلقائياً.
+                                {{ t('سيتم') }} {{ t('Discount_2') }} {{ t('Advances') }} {{ t('Pending_3') }} {{ t('تلقائياً') }}.
 
                             </div>
 
@@ -256,7 +256,7 @@
 
                     
 
-                    <button type="submit" class="btn btn-success">اعتماد وصرف</button>
+                    <button type="submit" class="btn btn-success">{{ t('اعتماد') }} {{ t('و{{ t('صرف') }}') }}</button>
 
                 </form>
 
@@ -278,7 +278,7 @@
 
               <div class="card-header">
 
-                  <h3 class="card-title">سجل الرواتب المصروفة</h3>
+                  <h3 class="card-title">{{ t('Log') }} {{ t('Salaries') }} {{ t('المصروفة') }}</h3>
 
               </div>
 
@@ -290,23 +290,23 @@
 
                           <tr>
 
-                              <th>التاريخ</th>
+                              <th>{{ t('Date') }}</th>
 
-                              <th>الموظف</th>
+                              <th>{{ t('Employee_2') }}</th>
 
-                              <th>الفترة</th>
+                              <th>{{ t('Period_2') }}</th>
 
-                              <th>الأساسي</th>
+                              <th>{{ t('الأساسي') }}</th>
 
-                              <th>إضافي</th>
+                              <th>{{ t('Additional_2') }}</th>
 
-                              <th>خصومات</th>
+                              <th>{{ t('خصومات') }}</th>
 
-                              <th>سلف</th>
+                              <th>{{ t('Advances_2') }}</th>
 
-                              <th>الصافي</th>
+                              <th>{{ t('Net_2') }}</th>
 
-                              <th>طباعة</th>
+                              <th>{{ t('Print') }}</th>
 
                           </tr>
 
@@ -336,7 +336,7 @@
 
                               <td>
 
-                                  <a href="{{ url_for('payroll.salary_slip', id=t.id) }}" target="_blank" rel="noopener noreferrer" class="btn btn-primary" title="طباعة"><i class="fas fa-print"></i></a>
+                                  <a href="{{ url_for('payroll.salary_slip', id=t.id) }}" target="_blank" rel="noopener noreferrer" class="btn btn-primary" title="{{ t('Print') }}"><i class="fas fa-print"></i></a>
 
                               </td>
 

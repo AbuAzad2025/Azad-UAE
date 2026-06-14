@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}تقرير الشركاء والتجار{% endblock %}
+{% block title %}{{ t('Report_2') }} {{ t('Partners') }} {{ t('و{{ t('ال{{ t('تجار') }}') }}') }}{% endblock %}
 
 <style>
     /* D6: externalized inline styles */
@@ -11,11 +11,11 @@
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4 no-print">
         <h1 class="h3 mb-0 text-gray-800">
-            <i class="fas fa-handshake fa-fw me-2 text-primary"></i>تقرير الشركاء والتجار
+            <i class="fas fa-handshake fa-fw me-2 text-primary"></i>{{ t('Report_2') }} {{ t('Partners') }} {{ t('و{{ t('ال{{ t('تجار') }}') }}') }}
         </h1>
         <div class="d-flex gap-2">
             <button data-action="window-print" class="btn btn-outline-secondary">
-                <i class="fas fa-print mr-1"></i> طباعة
+                <i class="fas fa-print mr-1"></i> {{ t('Print') }}
             </button>
         </div>
     </div>
@@ -23,25 +23,25 @@
     
     <div class="card shadow mb-4 border-bottom-primary no-print">
         <div class="card-header py-3 bg-gradient-dark text-white d-flex justify-content-between align-items-center">
-            <h6 class="m-0 font-weight-bold"><i class="fas fa-search me-2"></i>بحث تفصيلي (Statement of Account)</h6>
-            <small class="text-white-50">بحث عن مورد، زبون، شريك، أو تاجر</small>
+            <h6 class="m-0 font-weight-bold"><i class="fas fa-search me-2"></i>{{ t('Search') }} {{ t('تفصيلي') }} (Statement of Account)</h6>
+            <small class="text-white-50">{{ t('Search') }} عن {{ t('{{ t('Supplier_2') }}،') }} {{ t('{{ t('Customer_3') }}،') }} {{ t('{{ t('Partner') }}،') }} أو {{ t('تاجر') }}</small>
         </div>
         <div class="card-body">
             <div class="row g-3 align-items-center">
                 <div class="col-md-3">
-                    <label class="form-label fw-bold">نوع الحساب</label>
+                    <label class="form-label fw-bold">{{ t('نوع') }} {{ t('Account') }}</label>
                     <select class="form-control" id="searchType" aria-label="searchType">
-                        <option value="supplier">مورد (Supplier)</option>
-                        <option value="customer">زبون (Customer)</option>
-                        <option value="partner">شريك (Partner)</option>
-                        <option value="merchant">تاجر (Merchant)</option>
+                        <option value="supplier">{{ t('Supplier_2') }} (Supplier)</option>
+                        <option value="customer">{{ t('Customer_3') }} (Customer)</option>
+                        <option value="partner">{{ t('Partner') }} (Partner)</option>
+                        <option value="merchant">{{ t('تاجر') }} (Merchant)</option>
                     </select>
                 </div>
                 <div class="col-md-9 position-relative">
-                    <label class="form-label fw-bold">بحث بالاسم أو الهاتف</label>
+                    <label class="form-label fw-bold">{{ t('Search') }} {{ t('By name') }} أو {{ t('Phone') }}</label>
                     <div class="input-group">
                         <span class="input-group-text"><i class="fas fa-search"></i></span>
-                        <input type="text" class="form-control" id="searchInput" placeholder="ابدأ بالكتابة للبحث..." autocomplete="off">
+                        <input type="text" class="form-control" id="searchInput" placeholder="{{ t('ابدأ') }} {{ t('بالكتابة') }} {{ t('لل{{ t('Search') }}') }}..." autocomplete="off">
                     </div>
                     <div id="searchResults" class="list-group position-absolute w-100 shadow mt-1 ic-1"></div>
                 </div>
@@ -56,21 +56,21 @@
     
     <div class="card shadow mb-4 no-print">
         <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">تصفية التقرير</h6>
+            <h6 class="m-0 font-weight-bold text-primary">{{ t('تصفية') }} {{ t('Report') }}</h6>
         </div>
         <div class="card-body">
             <form class="needs-validation" method="get" class="row g-3 align-items-end">
                 <div class="col-md-4">
-                    <label class="form-label" for="input_date_from">من تاريخ</label>
-                    <input type="date" name="date_from" class="form-control" value="{{ request.args.get('date_from', '') }}" id="input_date_from" aria-label="من تاريخ">
+                    <label class="form-label" for="input_date_from">من {{ t('History') }}</label>
+                    <input type="date" name="date_from" class="form-control" value="{{ request.args.get('date_from', '') }}" id="input_date_from" aria-label="من {{ t('History') }}">
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label" for="input_date_to">إلى تاريخ</label>
-                    <input type="date" name="date_to" class="form-control" value="{{ request.args.get('date_to', '') }}" id="input_date_to" aria-label="إلى تاريخ">
+                    <label class="form-label" for="input_date_to">إلى {{ t('History') }}</label>
+                    <input type="date" name="date_to" class="form-control" value="{{ request.args.get('date_to', '') }}" id="input_date_to" aria-label="إلى {{ t('History') }}">
                 </div>
                 <div class="col-md-4">
                     <button type="submit" class="btn btn-primary w-100">
-                        <i class="fas fa-filter mr-1"></i> عرض النتائج
+                        <i class="fas fa-filter mr-1"></i> {{ t('View') }} {{ t('ال{{ t('نتائج') }}') }}
                     </button>
                 </div>
             </form>
@@ -80,23 +80,23 @@
     
     <div class="erp-report-print">
     <div class="erp-report-header">
-        <h3>تقرير الشركاء والتجار</h3>
-        <p>ملخص مالي للشركاء والتجار والموردين</p>
+        <h3>{{ t('Report_2') }} {{ t('Partners') }} {{ t('و{{ t('ال{{ t('تجار') }}') }}') }}</h3>
+        <p>{{ t('Summary') }} {{ t('مالي') }} {{ t('Partners_2') }} {{ t('و{{ t('ال{{ t('تجار') }}') }}') }} {{ t('و{{ t('Suppliers') }}') }}</p>
     </div>
     <ul class="nav nav-tabs mb-4 no-print" id="reportTabs" role="tablist">
         <li class="nav-item" role="presentation">
             <button class="nav-link active" id="partners-tab" data-toggle="tab" data-target="#partners" type="button" role="tab">
-                <i class="fas fa-users me-2"></i>حصص الشركاء (Partners)
+                <i class="fas fa-users me-2"></i>{{ t('حصص') }} {{ t('Partners') }} (Partners)
             </button>
         </li>
         <li class="nav-item" role="presentation">
             <button class="nav-link" id="merchants-tab" data-toggle="tab" data-target="#merchants" type="button" role="tab">
-                <i class="fas fa-store me-2"></i>منتجات التجار (Merchants)
+                <i class="fas fa-store me-2"></i>{{ t('Products_2') }} {{ t('ال{{ t('تجار') }}') }} (Merchants)
             </button>
         </li>
         <li class="nav-item" role="presentation">
             <button class="nav-link" id="suppliers-tab" data-toggle="tab" data-target="#suppliers" type="button" role="tab">
-                <i class="fas fa-truck me-2"></i>الموردين (Suppliers)
+                <i class="fas fa-truck me-2"></i>{{ t('Suppliers') }} (Suppliers)
             </button>
         </li>
     </ul>
@@ -108,18 +108,18 @@
             
             <div class="card shadow mb-4">
                 <div class="card-header py-3 bg-gradient-info text-white">
-                    <h6 class="m-0 font-weight-bold"><i class="fas fa-file-invoice-dollar me-2"></i>الملخص المالي للشركاء</h6>
+                    <h6 class="m-0 font-weight-bold"><i class="fas fa-file-invoice-dollar me-2"></i>{{ t('Summary_2') }} {{ t('ال{{ t('مالي') }}') }} {{ t('Partners_2') }}</h6>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-bordered table-hover text-center">
                             <thead class="table-secondary">
                                 <tr>
-                                    <th>الشريك</th>
-                                    <th>إجمالي الحصص المستحقة (Revenue)</th>
-                                    <th>مقبوضات من الشريك (Received)</th>
-                                    <th>مدفوعات للشريك (Paid To)</th>
-                                    <th>صافي الرصيد (Net Balance)</th>
+                                    <th>{{ t('Partner_2') }}</th>
+                                    <th>{{ t('Total_2') }} {{ t('ال{{ t('حصص') }}') }} {{ t('{{ t('المستحق') }}ة') }} (Revenue)</th>
+                                    <th>{{ t('مقبوضات') }} من {{ t('Partner_2') }} (Received)</th>
+                                    <th>{{ t('مدفوعات') }} {{ t('لل{{ t('Partner') }}') }} (Paid To)</th>
+                                    <th>{{ t('Net') }} {{ t('Balance') }} (Net Balance)</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -135,32 +135,32 @@
                                 </tr>
                                 {% else %}
                                 <tr>
-                                    <td colspan="5" class="text-muted">لا توجد حركات مالية للشركاء في الفترة المحددة</td>
+                                    <td colspan="5" class="text-muted">لا {{ t('توجد') }} {{ t('حركات') }} {{ t('{{ t('مالي') }}ة') }} {{ t('Partners_2') }} في {{ t('Period_2') }} {{ t('المحددة') }}</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
                         </table>
                     </div>
-                    <small class="text-muted">* صافي الرصيد = (الحصص المستحقة + المقبوضات) - المدفوعات</small>
+                    <small class="text-muted">* {{ t('Net') }} {{ t('Balance') }} = ({{ t('ال{{ t('حصص') }}') }} {{ t('{{ t('المستحق') }}ة') }} + {{ t('ال{{ t('مقبوضات') }}') }}) - {{ t('Payments') }}</small>
                 </div>
             </div>
 
             <div class="card shadow mb-4">
                 <div class="card-header py-3 bg-gradient-primary text-white">
-                    <h6 class="m-0 font-weight-bold">تفاصيل حصص الشركاء من المبيعات (حسب المنتج)</h6>
+                    <h6 class="m-0 font-weight-bold">{{ t('Details') }} {{ t('حصص') }} {{ t('Partners') }} من {{ t('Sales') }} ({{ t('حسب') }} {{ t('Product') }})</h6>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-bordered table-striped" width="100%" cellspacing="0">
                             <thead class="table-dark">
                                 <tr>
-                                    <th>المنتج</th>
-                                    <th>الشريك</th>
-                                    <th>نسبة الشراكة</th>
-                                    <th>سعر الوحدة (Avg)</th>
-                                    <th>الكمية المباعة</th>
-                                    <th>إجمالي المبيعات ({{ tenant_currency_symbol }})</th>
-                                    <th>حصة الشريك المستحقة ({{ tenant_currency_symbol }})</th>
+                                    <th>{{ t('Product') }}</th>
+                                    <th>{{ t('Partner_2') }}</th>
+                                    <th>{{ t('Rate') }} {{ t('الشراكة') }}</th>
+                                    <th>{{ t('Price_2') }} {{ t('الوحدة') }} (Avg)</th>
+                                    <th>{{ t('Quantity') }} {{ t('المباعة') }}</th>
+                                    <th>{{ t('Total_2') }} {{ t('Sales') }} ({{ tenant_currency_symbol }})</th>
+                                    <th>{{ t('حصة') }} {{ t('Partner_2') }} {{ t('{{ t('المستحق') }}ة') }} ({{ tenant_currency_symbol }})</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -176,14 +176,14 @@
                                 </tr>
                                 {% else %}
                                 <tr>
-                                    <td colspan="7" class="text-center py-4 text-muted">لا توجد مبيعات لمنتجات مشتركة في الفترة المحددة</td>
+                                    <td colspan="7" class="text-center py-4 text-muted">لا {{ t('توجد') }} {{ t('Sales_2') }} {{ t('ل{{ t('Products_2') }}') }} {{ t('Shared') }} في {{ t('Period_2') }} {{ t('المحددة') }}</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
                             {% if partners_data %}
                             <tfoot class="table-light fw-bold">
                                 <tr>
-                                    <td colspan="5" class="text-end">الإجمالي الكلي:</td>
+                                    <td colspan="5" class="text-end">{{ t('Total_3') }} {{ t('الكلي') }}:</td>
                                     <td>{{ format_currency(partners_data|sum(attribute='total_revenue')) }}</td>
                                     <td class="text-success">{{ format_currency(partners_data|sum(attribute='partner_share_amount')) }}</td>
                                 </tr>
@@ -201,18 +201,18 @@
             
             <div class="card shadow mb-4">
                 <div class="card-header py-3 bg-gradient-info text-white">
-                    <h6 class="m-0 font-weight-bold"><i class="fas fa-file-invoice-dollar me-2"></i>الملخص المالي للتجار</h6>
+                    <h6 class="m-0 font-weight-bold"><i class="fas fa-file-invoice-dollar me-2"></i>{{ t('Summary_2') }} {{ t('ال{{ t('مالي') }}') }} {{ t('لل{{ t('تجار') }}') }}</h6>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-bordered table-hover text-center">
                             <thead class="table-secondary">
                                 <tr>
-                                    <th>التاجر</th>
-                                    <th>إجمالي المستحقات من المبيعات (Revenue)</th>
-                                    <th>مقبوضات من التاجر (Received)</th>
-                                    <th>مدفوعات للتاجر (Paid To)</th>
-                                    <th>صافي الرصيد (Net Balance)</th>
+                                    <th>{{ t('ال{{ t('تاجر') }}') }}</th>
+                                    <th>{{ t('Total_2') }} {{ t('Dues') }} من {{ t('Sales') }} (Revenue)</th>
+                                    <th>{{ t('مقبوضات') }} من {{ t('ال{{ t('تاجر') }}') }} (Received)</th>
+                                    <th>{{ t('مدفوعات') }} {{ t('لل{{ t('تاجر') }}') }} (Paid To)</th>
+                                    <th>{{ t('Net') }} {{ t('Balance') }} (Net Balance)</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -228,32 +228,32 @@
                                 </tr>
                                 {% else %}
                                 <tr>
-                                    <td colspan="5" class="text-muted">لا توجد حركات مالية للتجار في الفترة المحددة</td>
+                                    <td colspan="5" class="text-muted">لا {{ t('توجد') }} {{ t('حركات') }} {{ t('{{ t('مالي') }}ة') }} {{ t('لل{{ t('تجار') }}') }} في {{ t('Period_2') }} {{ t('المحددة') }}</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
                         </table>
                     </div>
-                    <small class="text-muted">* صافي الرصيد = (المستحقات + المقبوضات) - المدفوعات</small>
+                    <small class="text-muted">* {{ t('Net') }} {{ t('Balance') }} = ({{ t('Dues') }} + {{ t('ال{{ t('مقبوضات') }}') }}) - {{ t('Payments') }}</small>
                 </div>
             </div>
 
             <div class="card shadow mb-4">
                 <div class="card-header py-3 bg-gradient-success text-white">
-                    <h6 class="m-0 font-weight-bold">تفاصيل مستحقات التجار (المنتجات الخارجية)</h6>
+                    <h6 class="m-0 font-weight-bold">{{ t('Details') }} {{ t('Dues_2') }} {{ t('ال{{ t('تجار') }}') }} ({{ t('Products') }} {{ t('الخارجية') }})</h6>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-bordered table-striped" width="100%" cellspacing="0">
                             <thead class="table-dark">
                                 <tr>
-                                    <th>المنتج</th>
-                                    <th>التاجر المورد</th>
-                                    <th>النسبة المتفق عليها</th>
-                                    <th>سعر الوحدة (Avg)</th>
-                                    <th>الكمية المباعة</th>
-                                    <th>إجمالي المبيعات ({{ tenant_currency_symbol }})</th>
-                                    <th>حصة التاجر المستحقة ({{ tenant_currency_symbol }})</th>
+                                    <th>{{ t('Product') }}</th>
+                                    <th>{{ t('ال{{ t('تاجر') }}') }} {{ t('Supplier') }}</th>
+                                    <th>{{ t('Rate_2') }} {{ t('المتفق') }} عليها</th>
+                                    <th>{{ t('Price_2') }} {{ t('الوحدة') }} (Avg)</th>
+                                    <th>{{ t('Quantity') }} {{ t('المباعة') }}</th>
+                                    <th>{{ t('Total_2') }} {{ t('Sales') }} ({{ tenant_currency_symbol }})</th>
+                                    <th>{{ t('حصة') }} {{ t('ال{{ t('تاجر') }}') }} {{ t('{{ t('المستحق') }}ة') }} ({{ tenant_currency_symbol }})</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -269,14 +269,14 @@
                                 </tr>
                                 {% else %}
                                 <tr>
-                                    <td colspan="7" class="text-center py-4 text-muted">لا توجد مبيعات لمنتجات تجار في الفترة المحددة</td>
+                                    <td colspan="7" class="text-center py-4 text-muted">لا {{ t('توجد') }} {{ t('Sales_2') }} {{ t('ل{{ t('Products_2') }}') }} {{ t('تجار') }} في {{ t('Period_2') }} {{ t('المحددة') }}</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
                             {% if merchants_data %}
                             <tfoot class="table-light fw-bold">
                                 <tr>
-                                    <td colspan="5" class="text-end">الإجمالي الكلي:</td>
+                                    <td colspan="5" class="text-end">{{ t('Total_3') }} {{ t('الكلي') }}:</td>
                                     <td>{{ format_currency(merchants_data|sum(attribute='total_revenue')) }}</td>
                                     <td class="text-success">{{ format_currency(merchants_data|sum(attribute='merchant_share_amount')) }}</td>
                                 </tr>
@@ -292,18 +292,18 @@
         <div class="tab-pane fade" id="suppliers" role="tabpanel">
             <div class="card shadow mb-4">
                 <div class="card-header py-3 bg-gradient-warning text-dark">
-                    <h6 class="m-0 font-weight-bold"><i class="fas fa-truck me-2"></i>ملخص حسابات الموردين</h6>
+                    <h6 class="m-0 font-weight-bold"><i class="fas fa-truck me-2"></i>{{ t('Summary') }} {{ t('Accounts_2') }} {{ t('Suppliers') }}</h6>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-bordered table-striped" width="100%" cellspacing="0">
                             <thead class="table-dark">
                                 <tr>
-                                    <th>المورد</th>
-                                    <th>إجمالي المشتريات (Purchases)</th>
-                                    <th>المدفوع للمورد (Paid To)</th>
-                                    <th>مرتجع من المورد (Refunds)</th>
-                                    <th>الرصيد المستحق للمورد (Balance Due)</th>
+                                    <th>{{ t('Supplier') }}</th>
+                                    <th>{{ t('Total_2') }} {{ t('Purchases') }} (Purchases)</th>
+                                    <th>{{ t('Paid') }} {{ t('لل{{ t('Supplier_2') }}') }} (Paid To)</th>
+                                    <th>{{ t('Return') }} من {{ t('Supplier') }} (Refunds)</th>
+                                    <th>{{ t('Balance') }} {{ t('المستحق') }} {{ t('لل{{ t('Supplier_2') }}') }} (Balance Due)</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -319,14 +319,14 @@
                                 </tr>
                                 {% else %}
                                 <tr>
-                                    <td colspan="5" class="text-center py-4 text-muted">لا توجد بيانات موردين في الفترة المحددة</td>
+                                    <td colspan="5" class="text-center py-4 text-muted">لا {{ t('توجد') }} {{ t('Data_2') }} {{ t('Suppliers_3') }} في {{ t('Period_2') }} {{ t('المحددة') }}</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
                             {% if suppliers_summary %}
                             <tfoot class="table-light fw-bold">
                                 <tr>
-                                    <td class="text-end">الإجمالي الكلي:</td>
+                                    <td class="text-end">{{ t('Total_3') }} {{ t('الكلي') }}:</td>
                                     <td>{{ format_currency(suppliers_summary|sum(attribute='total_purchases')) }}</td>
                                     <td class="text-success">{{ format_currency(suppliers_summary|sum(attribute='paid_to')) }}</td>
                                     <td class="text-primary">{{ format_currency(suppliers_summary|sum(attribute='received_from')) }}</td>
@@ -387,10 +387,10 @@
                             // Backend returns specific type (e.g. partner, merchant, regular)
                             // We need to map it nicely
                             let typeLabel = item.type;
-                            if (item.type === 'supplier') typeLabel = 'مورد';
-                            else if (item.type === 'partner') typeLabel = 'شريك';
-                            else if (item.type === 'merchant') typeLabel = 'تاجر';
-                            else if (item.type === 'regular' || item.type === 'customer') typeLabel = 'زبون';
+                            if (item.type === 'supplier') typeLabel = '{{ t('Supplier_2') }}';
+                            else if (item.type === 'partner') typeLabel = '{{ t('Partner') }}';
+                            else if (item.type === 'merchant') typeLabel = '{{ t('تاجر') }}';
+                            else if (item.type === 'regular' || item.type === 'customer') typeLabel = '{{ t('Customer_3') }}';
                             
                             // For the loadEntityDetails call, if it's not supplier, we can pass the specific type 
                             // or just 'customer' since the ID is unique per table usually? 
@@ -414,7 +414,7 @@
                         });
                         searchResults.show();
                     } else {
-                        searchResults.append('<div class="list-group-item text-muted">لا توجد نتائج</div>');
+                        searchResults.append('<div class="list-group-item text-muted">لا {{ t('توجد') }} {{ t('نتائج') }}</div>');
                         searchResults.show();
                     }
                 });
@@ -432,13 +432,13 @@
             searchResults.hide();
             searchInput.val(name); 
             
-            detailsContainer.html('<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2">جاري تحميل التقرير التفصيلي...</p></div>');
+            detailsContainer.html('<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2">{{ t('جاري') }} {{ t('Download') }} {{ t('Report') }} {{ t('ال{{ t('تفصيلي') }}') }}...</p></div>');
             
             $.get(`/reports/entity_report_fragment/${type}/${id}`, function(html) {
                 detailsContainer.html(html);
             }).fail(function(err) {
                 console.error(err);
-                detailsContainer.html('<div class="alert alert-danger">حدث خطأ أثناء تحميل التقرير. يرجى المحاولة مرة أخرى.</div>');
+                detailsContainer.html('<div class="alert alert-danger">{{ t('حدث') }} {{ t('Error') }} {{ t('أثناء') }} {{ t('Download') }} {{ t('Report') }}. {{ t('يرجى') }} {{ t('المحاولة') }} {{ t('مرة') }} {{ t('أخرى') }}.</div>');
             });
         };
     });

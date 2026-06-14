@@ -1,24 +1,24 @@
 {% extends 'base.html' %}
-{% block title %}المصروفات المتقدمة{% endblock %}
+{% block title %}{{ t('Expenses') }} {{ t('المتقدمة') }}{% endblock %}
 {% block content %}
 <div class="container-fluid">
   <div class="card">
     <div class="card-header">
-      <h3><i class="fas fa-money-bill-wave"></i> المصروفات المتقدمة</h3>
+      <h3><i class="fas fa-money-bill-wave"></i> {{ t('Expenses') }} {{ t('المتقدمة') }}</h3>
       <div class="card-tools">
-        <a href="{{ url_for('advanced_ledger.add_advanced_expense') }}" class="btn btn-success"><i class="fas fa-plus"></i> إضافة مصروف</a>
+        <a href="{{ url_for('advanced_ledger.add_advanced_expense') }}" class="btn btn-success"><i class="fas fa-plus"></i> {{ t('Add') }} {{ t('Expense_3') }}</a>
       </div>
     </div>
     <div class="card-body">
       <div class="table-responsive"><table class="table table-bordered table-striped">
         <thead>
           <tr>
-            <th>التاريخ</th>
-            <th>الفرع</th>
-            <th>الفئة</th>
-            <th>المبلغ</th>
-            <th>البيان</th>
-            <th>الحالة</th>
+            <th>{{ t('Date') }}</th>
+            <th>{{ t('Branch') }}</th>
+            <th>{{ t('الفئة') }}</th>
+            <th>{{ t('Amount') }}</th>
+            <th>{{ t('Description_3') }}</th>
+            <th>{{ t('Status') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -29,7 +29,7 @@
               {% if expense.branch %}
                 <span class="badge badge-info">{{ expense.branch.name }}</span>
               {% else %}
-                <span class="badge badge-secondary">عام</span>
+                <span class="badge badge-secondary">{{ t('General_2') }}</span>
               {% endif %}
             </td>
             <td>{{ expense.category.name_ar if expense.category else '-' }}</td>
@@ -37,14 +37,14 @@
             <td>{{ expense.description }}</td>
             <td>
                 {% if expense.is_reversed %}
-                    <span class="badge badge-danger">معكوس</span>
+                    <span class="badge badge-danger">{{ t('معكوس') }}</span>
                 {% else %}
-                    <span class="badge badge-success">مسجل</span>
+                    <span class="badge badge-success">{{ t('مسجل') }}</span>
                 {% endif %}
             </td>
           </tr>
           {% else %}
-          <tr><td colspan="6" class="text-center">لا توجد مصروفات</td></tr>
+          <tr><td colspan="6" class="text-center">لا {{ t('توجد') }} {{ t('Expenses_2') }}</td></tr>
           {% endfor %}
         </tbody>
       </table></div>

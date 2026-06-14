@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 
-{% block title %}التقارير المالية - Financial Reports{% endblock %}
+{% block title %}{{ t('Reports') }} {{ t('Finance') }} - Financial Reports{% endblock %}
 
 {% block page_title %}
 <div class="d-flex align-items-center">
     <i class="fas fa-chart-line text-info mr-3 ic-1"></i>
     <div>
-        <h1 class="mb-0">📊 التقارير المالية</h1>
-        <p class="text-muted mb-0">تقارير شاملة للمشتريات والتبرعات</p>
+        <h1 class="mb-0">📊 {{ t('Reports') }} {{ t('Finance') }}</h1>
+        <p class="text-muted mb-0">{{ t('Reports_3') }} {{ t('شاملة') }} {{ t('Purchases_3') }} {{ t('و{{ t('ال{{ t('تبرع') }}ات') }}') }}</p>
     </div>
 </div>
 {% endblock %}
@@ -55,27 +55,27 @@
             <div class="card-body">
                 <form class="needs-validation" method="GET" class="row" action="">
                     <div class="col-md-3">
-                        <label for="input_from_date">من تاريخ</label>
+                        <label for="input_from_date">من {{ t('History') }}</label>
                         <input type="date" name="from_date" class="form-control" 
                                value="{{ request.args.get('from_date', '') }}" id="input_from_date" aria-label="from date">
                     </div>
                     <div class="col-md-3">
-                        <label for="input_to_date">إلى تاريخ</label>
+                        <label for="input_to_date">إلى {{ t('History') }}</label>
                         <input type="date" name="to_date" class="form-control" 
                                value="{{ request.args.get('to_date', '') }}" id="input_to_date" aria-label="to date">
                     </div>
                     <div class="col-md-3">
-                        <label>نوع التقرير</label>
+                        <label>{{ t('نوع') }} {{ t('Report') }}</label>
                         <select name="report_type" class="form-control" aria-label="report type">
-                            <option value="all">الكل</option>
-                            <option value="purchases">المشتريات فقط</option>
-                            <option value="donations">التبرعات فقط</option>
+                            <option value="all">{{ t('All') }}</option>
+                            <option value="purchases">{{ t('Purchases') }} فقط</option>
+                            <option value="donations">{{ t('ال{{ t('تبرع') }}ات') }} فقط</option>
                         </select>
                     </div>
                     <div class="col-md-3">
                         <label>&nbsp;</label>
                         <button type="submit" class="btn btn-primary btn-block">
-                            <i class="fas fa-search"></i> عرض التقرير
+                            <i class="fas fa-search"></i> {{ t('View') }} {{ t('Report') }}
                         </button>
                     </div>
                 </form>
@@ -87,32 +87,32 @@
             <div class="col-md-3">
                 <div class="metric-box">
                     <div class="metric-value">${{ summary.total_revenue|default(0) }}</div>
-                    <div class="metric-label">إجمالي الإيرادات</div>
+                    <div class="metric-label">{{ t('Total_2') }} {{ t('Revenue') }}</div>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="metric-box ic-2">
                     <div class="metric-value">${{ summary.total_purchases_amount|default(0) }}</div>
-                    <div class="metric-label">إيرادات المشتريات</div>
+                    <div class="metric-label">{{ t('Revenues') }} {{ t('Purchases') }}</div>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="metric-box ic-3">
                     <div class="metric-value">${{ summary.total_donations_amount|default(0) }}</div>
-                    <div class="metric-label">إيرادات التبرعات</div>
+                    <div class="metric-label">{{ t('Revenues') }} {{ t('ال{{ t('تبرع') }}ات') }}</div>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="metric-box ic-4">
                     <div class="metric-value">{{ summary.total_transactions|default(0) }}</div>
-                    <div class="metric-label">إجمالي العمليات</div>
+                    <div class="metric-label">{{ t('Total_2') }} {{ t('العمليات') }}</div>
                 </div>
             </div>
         </div>
         
 
 <div class="report-card">
-            <h5 class="mb-3"><i class="fas fa-chart-area text-success"></i> الإيرادات الشهرية</h5>
+            <h5 class="mb-3"><i class="fas fa-chart-area text-success"></i> {{ t('Revenue') }} {{ t('الشهرية') }}</h5>
             <canvas id="revenueChart" height="80"></canvas>
         </div>
         
@@ -120,14 +120,14 @@
 <div class="row">
             <div class="col-md-6">
                 <div class="report-card">
-                    <h5 class="mb-3"><i class="fas fa-pie-chart text-primary"></i> توزيع الإيرادات</h5>
+                    <h5 class="mb-3"><i class="fas fa-pie-chart text-primary"></i> {{ t('توزيع') }} {{ t('Revenue') }}</h5>
                     <canvas id="revenueDistChart"></canvas>
                 </div>
             </div>
             
             <div class="col-md-6">
                 <div class="report-card">
-                    <h5 class="mb-3"><i class="fas fa-chart-bar text-warning"></i> المبيعات حسب الباقة</h5>
+                    <h5 class="mb-3"><i class="fas fa-chart-bar text-warning"></i> {{ t('Sales') }} {{ t('حسب') }} {{ t('Plan') }}</h5>
                     <canvas id="packageSalesChart"></canvas>
                 </div>
             </div>
@@ -136,9 +136,9 @@
 
 <div class="report-card mt-4">
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="mb-0"><i class="fas fa-table text-danger"></i> التفاصيل الكاملة</h5>
+                <h5 class="mb-0"><i class="fas fa-table text-danger"></i> {{ t('Details_2') }} {{ t('الكاملة') }}</h5>
                 <button class="btn btn-success" data-action="export-report">
-                    <i class="fas fa-file-excel"></i> تصدير Excel
+                    <i class="fas fa-file-excel"></i> {{ t('Export') }} Excel
                 </button>
             </div>
             
@@ -147,12 +147,12 @@
                     <thead class="thead-dark">
                         <tr>
                             <th>#</th>
-                            <th>التاريخ</th>
-                            <th>النوع</th>
-                            <th>التفاصيل</th>
-                            <th>المبلغ</th>
-                            <th>العملة</th>
-                            <th>الحالة</th>
+                            <th>{{ t('Date') }}</th>
+                            <th>{{ t('ال{{ t('نوع') }}') }}</th>
+                            <th>{{ t('Details_2') }}</th>
+                            <th>{{ t('Amount') }}</th>
+                            <th>{{ t('Currency') }}</th>
+                            <th>{{ t('Status') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -163,9 +163,9 @@
                                 <td>{{ trans.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
                                 <td>
                                     {% if trans.transaction_type == 'purchase' %}
-                                        <span class="badge badge-primary">🛒 مشترية</span>
+                                        <span class="badge badge-primary">🛒 {{ t('مشترية') }}</span>
                                     {% else %}
-                                        <span class="badge badge-danger">💝 تبرع</span>
+                                        <span class="badge badge-danger">💝 {{ t('تبرع') }}</span>
                                     {% endif %}
                                 </td>
                                 <td>
@@ -188,7 +188,7 @@
                             {% endfor %}
                         {% else %}
                             <tr>
-                                <td colspan="7" class="text-center text-muted">لا توجد بيانات</td>
+                                <td colspan="7" class="text-center text-muted">لا {{ t('توجد') }} {{ t('Data_2') }}</td>
                             </tr>
                         {% endif %}
                     </tbody>
@@ -207,13 +207,13 @@
         data: {
             labels: {{ monthly_labels|tojson }},
             datasets: [{
-                label: 'المشتريات',
+                label: '{{ t('Purchases') }}',
                 data: {{ monthly_purchases_data|tojson }},
                 borderColor: '#667eea',
                 backgroundColor: 'rgba(102, 126, 234, 0.1)',
                 tension: 0.4
             }, {
-                label: 'التبرعات',
+                label: '{{ t('ال{{ t('تبرع') }}ات') }}',
                 data: {{ monthly_donations_data|tojson }},
                 borderColor: '#f5576c',
                 backgroundColor: 'rgba(245, 87, 108, 0.1)',
@@ -231,7 +231,7 @@
     new Chart(distCtx, {
         type: 'pie',
         data: {
-            labels: ['المشتريات', 'التبرعات'],
+            labels: ['{{ t('Purchases') }}', '{{ t('ال{{ t('تبرع') }}ات') }}'],
             datasets: [{
                 data: [{{ summary.total_purchases_amount|default(0) }}, {{ summary.total_donations_amount|default(0) }}],
                 backgroundColor: ['#667eea', '#f5576c']
@@ -244,7 +244,7 @@
     new Chart(pkgCtx, {
         type: 'doughnut',
         data: {
-            labels: ['أساسية', 'احترافية', 'شركات'],
+            labels: ['{{ t('أساسية') }}', '{{ t('احترافية') }}', '{{ t('شركات') }}'],
             datasets: [{
                 data: {{ package_stats|tojson }},
                 backgroundColor: ['#667eea', '#f5576c', '#28a745']
@@ -257,9 +257,9 @@
     function exportReport() {
         Swal.fire({
             icon: 'info',
-            title: 'تصدير التقرير',
-            text: 'سيتم تحميل التقرير كملف Excel',
-            confirmButtonText: 'حسناً'
+            title: '{{ t('Export') }} {{ t('Report') }}',
+            text: '{{ t('سيتم') }} {{ t('Download') }} {{ t('Report') }} {{ t('كملف') }} Excel',
+            confirmButtonText: '{{ t('حسناً') }}'
         });
     }
 </script>

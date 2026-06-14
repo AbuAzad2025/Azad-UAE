@@ -1,8 +1,8 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - سند قبض #{{ receipt.receipt_number }}{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('Voucher_2') }} {{ t('Receipt') }} #{{ receipt.receipt_number }}{% endblock %}
 
-{% block page_title %}سند قبض رقم: {{ receipt.receipt_number }}{% endblock %}
+{% block page_title %}{{ t('Voucher_2') }} {{ t('Receipt') }} {{ t('رقم') }}: {{ receipt.receipt_number }}{% endblock %}
 
 
 
@@ -14,7 +14,7 @@
 
     <a href="{{ url_for('payments.print_receipt', id=receipt.id) }}" class="btn btn-secondary" target="_blank" rel="noopener noreferrer">
 
-      <i class="fas fa-print mr-2"></i>طباعة
+      <i class="fas fa-print mr-2"></i>{{ t('Print') }}
 
     </a>
 
@@ -22,13 +22,13 @@
 
     {% if is_payment %}
 
-    <form class="needs-validation" action="{{ url_for('payments.delete_payment', id=receipt.id) }}" method="POST" class="d-inline" onsubmit="return confirm('هل أنت متأكد من حذف سند الصرف هذا؟\n\nتنبيه: سيتم أرشفة السند إذا كان مرتبطاً بشيكات، أو حذفه نهائياً إذا كان غير مرتبط.');">
+    <form class="needs-validation" action="{{ url_for('payments.delete_payment', id=receipt.id) }}" method="POST" class="d-inline" onsubmit="return confirm('هل أنت {{ t('متأكد') }} من {{ t('Delete') }} {{ t('Voucher_2') }} {{ t('Exchange') }} هذا؟\n\n{{ t('Alert_2') }}: {{ t('سيتم') }} {{ t('أرشفة') }} {{ t('Voucher') }} إذا كان {{ t('{{ t('مرتبط') }}اً') }} {{ t('بشيكات،') }} أو {{ t('{{ t('Delete') }}ه') }} {{ t('نهائياً') }} إذا كان غير {{ t('مرتبط') }}.');">
 
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 
       <button type="submit" class="btn btn-danger">
 
-        <i class="fas fa-trash mr-2"></i>حذف
+        <i class="fas fa-trash mr-2"></i>{{ t('Delete') }}
 
       </button>
 
@@ -36,13 +36,13 @@
 
     {% else %}
 
-    <form action="{{ url_for('payments.delete_receipt', id=receipt.id) }}" method="POST" class="d-inline" onsubmit="return confirm('هل أنت متأكد من حذف سند القبض هذا؟\n\nتنبيه: سيتم أرشفة السند إذا كان له تخصيصات أو مرتبط بشيكات، أو حذفه نهائياً إذا كان غير مرتبط.');">
+    <form action="{{ url_for('payments.delete_receipt', id=receipt.id) }}" method="POST" class="d-inline" onsubmit="return confirm('هل أنت {{ t('متأكد') }} من {{ t('Delete') }} {{ t('Voucher_2') }} {{ t('Receipt_3') }} هذا؟\n\n{{ t('Alert_2') }}: {{ t('سيتم') }} {{ t('أرشفة') }} {{ t('Voucher') }} إذا كان له {{ t('تخصيصات') }} أو {{ t('مرتبط') }} {{ t('بشيكات،') }} أو {{ t('{{ t('Delete') }}ه') }} {{ t('نهائياً') }} إذا كان غير {{ t('مرتبط') }}.');">
 
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 
       <button type="submit" class="btn btn-danger">
 
-        <i class="fas fa-trash mr-2"></i>حذف
+        <i class="fas fa-trash mr-2"></i>{{ t('Delete') }}
 
       </button>
 
@@ -54,7 +54,7 @@
 
     <a href="{{ url_for('payments.receipts') }}" class="btn btn-info">
 
-      <i class="fas fa-arrow-right mr-2"></i>العودة
+      <i class="fas fa-arrow-right mr-2"></i>{{ t('العودة') }}
 
     </a>
 
@@ -72,7 +72,7 @@
 
       <div class="card-header bg-gradient-success">
 
-        <h3 class="card-title text-white">تفاصيل السند</h3>
+        <h3 class="card-title text-white">{{ t('Details') }} {{ t('Voucher') }}</h3>
 
       </div>
 
@@ -80,7 +80,7 @@
 
         <dl class="row">
 
-          <dt class="col-sm-5">رقم السند:</dt>
+          <dt class="col-sm-5">{{ t('رقم') }} {{ t('Voucher') }}:</dt>
 
           <dd class="col-sm-7"><strong>
 
@@ -98,7 +98,7 @@
 
           
 
-          <dt class="col-sm-5">الزبون:</dt>
+          <dt class="col-sm-5">{{ t('Customer_2') }}:</dt>
 
           <dd class="col-sm-7">
 
@@ -128,7 +128,7 @@
 
           
 
-          <dt class="col-sm-5">التاريخ:</dt>
+          <dt class="col-sm-5">{{ t('Date') }}:</dt>
 
                 <dd class="col-sm-7">
 
@@ -146,7 +146,7 @@
 
           
 
-          <dt class="col-sm-5">المبلغ:</dt>
+          <dt class="col-sm-5">{{ t('Amount') }}:</dt>
 
           <dd class="col-sm-7"><h4 class="text-success">{{ format_currency(receipt.amount, receipt.currency) }}</h4></dd>
 
@@ -154,7 +154,7 @@
 
           {% if receipt.currency != tenant_default_currency %}
 
-          <dt class="col-sm-5">المبلغ ({{ tenant_currency_name_ar or 'درهم' }}):</dt>
+          <dt class="col-sm-5">{{ t('Amount') }} ({{ tenant_currency_name_ar or 'درهم' }}):</dt>
 
           <dd class="col-sm-7">{{ format_currency(receipt.base_amount) }}</dd>
 
@@ -162,7 +162,7 @@
 
           
 
-          <dt class="col-sm-5">طريقة الدفع:</dt>
+          <dt class="col-sm-5">{{ t('طريقة') }} {{ t('Payment_2') }}:</dt>
 
           <dd class="col-sm-7"><span class="badge badge-success">{{ receipt.payment_method }}</span></dd>
 
@@ -170,7 +170,7 @@
 
           {% if receipt.reference_number %}
 
-          <dt class="col-sm-5">رقم المرجع:</dt>
+          <dt class="col-sm-5">{{ t('رقم') }} {{ t('المرجع') }}:</dt>
 
           <dd class="col-sm-7">{{ receipt.reference_number }}</dd>
 
@@ -180,13 +180,13 @@
 
           {% if receipt.cheque_number %}
 
-          <dt class="col-sm-5">رقم الشيك:</dt>
+          <dt class="col-sm-5">{{ t('رقم') }} {{ t('Cheque') }}:</dt>
 
           <dd class="col-sm-7">{{ receipt.cheque_number }}</dd>
 
           
 
-          <dt class="col-sm-5">البنك:</dt>
+          <dt class="col-sm-5">{{ t('Bank') }}:</dt>
 
           <dd class="col-sm-7">{{ receipt.bank_name }}</dd>
 
@@ -194,7 +194,7 @@
 
           {% if receipt.cheque_date %}
 
-          <dt class="col-sm-5">تاريخ استحقاق الشيك:</dt>
+          <dt class="col-sm-5">{{ t('History') }} {{ t('استحقاق') }} {{ t('Cheque') }}:</dt>
 
           <dd class="col-sm-7"><span class="badge badge-info">{{ receipt.cheque_date.strftime('%Y-%m-%d') }}</span></dd>
 
@@ -210,7 +210,7 @@
 
         <div class="alert alert-warning">
 
-          <strong>📝 ملاحظات:</strong> {{ receipt.notes }}
+          <strong>📝 {{ t('Notes') }}:</strong> {{ receipt.notes }}
 
         </div>
 
@@ -230,7 +230,7 @@
 
       <div class="card-header">
 
-        <h3 class="card-title">التخصيصات</h3>
+        <h3 class="card-title">{{ t('ال{{ t('تخصيصات') }}') }}</h3>
 
       </div>
 
@@ -242,9 +242,9 @@
 
             <tr>
 
-              <th>الفاتورة</th>
+              <th>{{ t('Invoice_2') }}</th>
 
-              <th>المبلغ المخصص</th>
+              <th>{{ t('Amount') }} {{ t('المخصص') }}</th>
 
             </tr>
 
@@ -268,7 +268,7 @@
 
               <tr>
 
-                <td colspan="2" class="text-center text-muted">لا توجد تخصيصات (دفعة عامة)</td>
+                <td colspan="2" class="text-center text-muted">لا {{ t('توجد') }} {{ t('تخصيصات') }} ({{ t('دفعة') }} {{ t('General_4') }})</td>
 
               </tr>
 

@@ -1,25 +1,25 @@
 {% extends 'base.html' %}
-{% block title %}إضافة مصروف متقدم{% endblock %}
+{% block title %}{{ t('Add') }} {{ t('Expense_3') }} {{ t('متقدم') }}{% endblock %}
 {% block content %}
 <div class="container-fluid">
   <div class="card">
-    <div class="card-header"><h3><i class="fas fa-plus"></i> إضافة مصروف متقدم</h3></div>
+    <div class="card-header"><h3><i class="fas fa-plus"></i> {{ t('Add') }} {{ t('Expense_3') }} {{ t('متقدم') }}</h3></div>
     <div class="card-body">
       <form class="needs-validation" method="post" action="">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
         <div class="row">
           <div class="col-md-3">
             <div class="form-group">
-              <label for="input_expense_date">التاريخ *</label>
+              <label for="input_expense_date">{{ t('Date') }} *</label>
               <input type="date" name="expense_date" class="form-control" required value="{{ today }}" id="input_expense_date" aria-label="expense date">
             </div>
           </div>
           <div class="col-md-3">
              <div class="form-group">
-               <label>الفرع *</label>
-               <select name="branch_id" class="form-control" required aria-label="اختر الفرع">
+               <label>{{ t('Branch') }} *</label>
+               <select name="branch_id" class="form-control" required aria-label="{{ t('اختر') }} {{ t('Branch') }}">
                  {% if current_user.is_super_admin() or current_user.is_owner %}
-                    <option value="">-- عام --</option>
+                    <option value="">-- {{ t('General_2') }} --</option>
                     {% for branch in branches %}
                         <option value="{{ branch.id }}">{{ branch.name }}</option>
                     {% endfor %}
@@ -31,7 +31,7 @@
           </div>
           <div class="col-md-3">
             <div class="form-group">
-              <label>الفئة *</label>
+              <label>{{ t('الفئة') }} *</label>
               <select name="category_id" class="form-control" required aria-label="category id">
                 {% for cat in categories %}
                 <option value="{{ cat.id }}">{{ cat.name_ar }}</option>
@@ -41,18 +41,18 @@
           </div>
           <div class="col-md-3">
             <div class="form-group">
-              <label for="input_amount">المبلغ *</label>
+              <label for="input_amount">{{ t('Amount') }} *</label>
               <input type="number" name="amount" class="form-control" step="0.01" required id="input_amount" aria-label="amount" min="0">
             </div>
           </div>
         </div>
         <div class="form-group">
-          <label>البيان</label>
+          <label>{{ t('Description_3') }}</label>
           <textarea name="description" class="form-control" rows="3" aria-label="description" maxlength="500"></textarea>
         </div>
-        <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> حفظ</button>
+        <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> {{ t('Save') }}</button>
         {% if current_user.has_permission('view_ledger') %}
-        <a href="{{ url_for('advanced_ledger.advanced_expenses') }}" class="btn btn-secondary"><i class="fas fa-times"></i> إلغاء</a>
+        <a href="{{ url_for('advanced_ledger.advanced_expenses') }}" class="btn btn-secondary"><i class="fas fa-times"></i> {{ t('Cancel') }}</a>
         {% endif %}
       </form>
     </div>

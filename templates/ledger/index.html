@@ -1,37 +1,37 @@
 {% extends 'base.html' %}
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - دفتر الأستاذ العام{% endblock %}
-{% block page_title %}دفتر الأستاذ - General Ledger{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('دفتر') }} {{ t('الأستاذ') }} {{ t('General_3') }}{% endblock %}
+{% block page_title %}{{ t('دفتر') }} {{ t('الأستاذ') }} - General Ledger{% endblock %}
 
 {% block content %}
 <div class="row mb-3">
   <div class="col-12">
     <a href="{{ url_for('ledger.accounts_tree') }}" class="btn btn-primary">
-      <i class="fas fa-sitemap mr-2"></i>شجرة الحسابات
+      <i class="fas fa-sitemap mr-2"></i>{{ t('شجرة') }} {{ t('Accounts') }}
     </a>
     {% if current_user.has_permission('manage_ledger') %}
     <a href="{{ url_for('ledger.manual_entry') }}" class="btn btn-success">
     {% endif %}
-      <i class="fas fa-plus-circle mr-2"></i>قيد يدوي
+      <i class="fas fa-plus-circle mr-2"></i>{{ t('قيد') }} {{ t('Manual') }}
     </a>
     <a href="{{ url_for('ledger.journal_entries') }}" class="btn btn-info">
-      <i class="fas fa-book mr-2"></i>القيود
+      <i class="fas fa-book mr-2"></i>{{ t('القيود') }}
     </a>
     <a href="{{ url_for('ledger.trial_balance') }}" class="btn btn-warning">
-      <i class="fas fa-balance-scale mr-2"></i>ميزان المراجعة
+      <i class="fas fa-balance-scale mr-2"></i>{{ t('Balance_2') }} {{ t('Review') }}
     </a>
     <a href="{{ url_for('ledger.income_statement') }}" class="btn btn-secondary">
-      <i class="fas fa-chart-line mr-2"></i>قائمة الدخل
+      <i class="fas fa-chart-line mr-2"></i>{{ t('List') }} {{ t('Income_2') }}
     </a>
     <a href="{{ url_for('ledger.balance_sheet') }}" class="btn btn-dark">
-      <i class="fas fa-file-invoice mr-2"></i>الميزانية
+      <i class="fas fa-file-invoice mr-2"></i>{{ t('Balance Sheet') }}
     </a>
     {% if tenant_enable_tax %}
     <a href="{{ url_for('ledger.vat_report') }}" class="btn btn-outline-warning">
-      <i class="fas fa-percent mr-2"></i>تقرير VAT
+      <i class="fas fa-percent mr-2"></i>{{ t('Report_2') }} VAT
     </a>
     {% endif %}
     <a href="{{ url_for('ledger.gl_periods') }}" class="btn btn-outline-secondary">
-      <i class="fas fa-lock mr-2"></i>الفترات المحاسبية
+      <i class="fas fa-lock mr-2"></i>{{ t('الفترات') }} {{ t('Accounting') }}
     </a>
   </div>
 </div>
@@ -39,25 +39,25 @@
 <div class="row mb-3">
   <div class="col-12">
     <a href="{{ url_for('ledger.cash_flow') }}" class="btn btn-outline-primary">
-      <i class="fas fa-money-bill-wave mr-2"></i>قائمة التدفقات النقدية
+      <i class="fas fa-money-bill-wave mr-2"></i>{{ t('List') }} {{ t('التدفقات') }} {{ t('Cash') }}
     </a>
     <a href="{{ url_for('ledger.aging_analysis') }}?type=receivables" class="btn btn-outline-success">
-      <i class="fas fa-user-clock mr-2"></i>تحليل عمر الذمم المدينة
+      <i class="fas fa-user-clock mr-2"></i>{{ t('تحليل') }} {{ t('عمر') }} {{ t('Receivables_2') }} {{ t('Receivables') }}
     </a>
     <a href="{{ url_for('ledger.aging_analysis') }}?type=payables" class="btn btn-outline-danger">
-      <i class="fas fa-building mr-2"></i>تحليل عمر الذمم الدائنة
+      <i class="fas fa-building mr-2"></i>{{ t('تحليل') }} {{ t('عمر') }} {{ t('Receivables_2') }} {{ t('الدائنة') }}
     </a>
   </div>
 </div>
 
 <div class="card">
   <div class="card-header bg-gradient-primary">
-    <h3 class="card-title text-white">الحسابات</h3>
+    <h3 class="card-title text-white">{{ t('Accounts') }}</h3>
   </div>
   <div class="card-body">
     <div class="row">
       <div class="col-md-6">
-        <h5><i class="fas fa-coins text-success"></i> الأصول (Assets)</h5>
+        <h5><i class="fas fa-coins text-success"></i> {{ t('Assets') }} (Assets)</h5>
         <ul class="list-group mb-3">{%- for account in accounts if account.type == 'asset' %}
           <li class="list-group-item d-flex justify-content-between align-items-center">
             <a href="{{ url_for('ledger.account_ledger', id=account.id) }}">
@@ -67,7 +67,7 @@
           </li>{%- endfor %}
         </ul>
 
-        <h5><i class="fas fa-file-invoice-dollar text-danger"></i> الخصوم (Liabilities)</h5>
+        <h5><i class="fas fa-file-invoice-dollar text-danger"></i> {{ t('Liabilities') }} (Liabilities)</h5>
         <ul class="list-group mb-3">{%- for account in accounts if account.type == 'liability' %}
           <li class="list-group-item d-flex justify-content-between align-items-center">
             <a href="{{ url_for('ledger.account_ledger', id=account.id) }}">
@@ -79,7 +79,7 @@
       </div>
 
       <div class="col-md-6">
-        <h5><i class="fas fa-chart-line text-primary"></i> الإيرادات (Revenue)</h5>
+        <h5><i class="fas fa-chart-line text-primary"></i> {{ t('Revenue') }} (Revenue)</h5>
         <ul class="list-group mb-3">{%- for account in accounts if account.type == 'revenue' %}
           <li class="list-group-item d-flex justify-content-between align-items-center">
             <a href="{{ url_for('ledger.account_ledger', id=account.id) }}">
@@ -89,7 +89,7 @@
           </li>{%- endfor %}
         </ul>
 
-        <h5><i class="fas fa-receipt text-warning"></i> المصروفات (Expenses)</h5>
+        <h5><i class="fas fa-receipt text-warning"></i> {{ t('Expenses') }} (Expenses)</h5>
         <ul class="list-group mb-3">{%- for account in accounts if account.type == 'expense' %}
           <li class="list-group-item d-flex justify-content-between align-items-center">
             <a href="{{ url_for('ledger.account_ledger', id=account.id) }}">

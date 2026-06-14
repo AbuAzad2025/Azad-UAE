@@ -1,25 +1,25 @@
 {% extends 'base.html' %}
-{% block title %}كشف الحساب - {{ statement.account.full_name }}{% endblock %}
-{% block page_title %}كشف الحساب التفصيلي{% endblock %}
+{% block title %}{{ t('كشف') }} {{ t('Account') }} - {{ statement.account.full_name }}{% endblock %}
+{% block page_title %}{{ t('كشف') }} {{ t('Account') }} {{ t('التفصيلي') }}{% endblock %}
 
 {% block content %}
 <div class="row mb-3 no-print">
   <div class="col-12">
     <a href="{{ url_for('ledger.accounts_tree') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right mr-2"></i>العودة
+      <i class="fas fa-arrow-right mr-2"></i>{{ t('العودة') }}
     </a>
     <button class="btn btn-primary" data-action="window-print">
-      <i class="fas fa-print mr-2"></i>طباعة
+      <i class="fas fa-print mr-2"></i>{{ t('Print') }}
     </button>
     <a href="{{ url_for('ledger.account_statement', id=statement.account.id) }}?export=excel" class="btn btn-success">
-      <i class="fas fa-file-excel mr-2"></i>تصدير Excel
+      <i class="fas fa-file-excel mr-2"></i>{{ t('Export') }} Excel
     </a>
   </div>
 </div>
 
 <div class="erp-ledger-print">
   <div class="erp-report-header">
-    <h2>كشف حساب: {{ statement.account.full_name }}</h2>
+    <h2>{{ t('كشف') }} {{ t('Account_2') }}: {{ statement.account.full_name }}</h2>
     <div class="erp-report-meta">
       {{ statement.account.type_ar }}
       {% if company_name_ar %} | {{ company_name_ar }}{% endif %}
@@ -35,7 +35,7 @@
           <div class="info-box bg-light">
             <span class="info-box-icon bg-primary"><i class="fas fa-calculator"></i></span>
             <div class="info-box-content">
-              <span class="info-box-text">الرصيد الافتتاحي</span>
+              <span class="info-box-text">{{ t('Balance') }} {{ t('الافتتاحي') }}</span>
               <span class="info-box-number">
                 {{ format_currency(statement.opening_balance) }}
               </span>
@@ -46,7 +46,7 @@
           <div class="info-box bg-light">
             <span class="info-box-icon bg-success"><i class="fas fa-arrow-up"></i></span>
             <div class="info-box-content">
-              <span class="info-box-text">إجمالي المدين</span>
+              <span class="info-box-text">{{ t('Total_2') }} {{ t('ال{{ t('مدين') }}') }}</span>
               <span class="info-box-number text-success">
                 {{ format_currency(statement.total_debit) }}
               </span>
@@ -57,7 +57,7 @@
           <div class="info-box bg-light">
             <span class="info-box-icon bg-danger"><i class="fas fa-arrow-down"></i></span>
             <div class="info-box-content">
-              <span class="info-box-text">إجمالي الدائن</span>
+              <span class="info-box-text">{{ t('Total_2') }} {{ t('ال{{ t('دائن') }}') }}</span>
               <span class="info-box-number text-danger">
                 {{ format_currency(statement.total_credit) }}
               </span>
@@ -70,20 +70,20 @@
         <table class="table table-bordered table-striped table-hover">
           <thead class="bg-light">
             <tr>
-              <th width="100">التاريخ</th>
-              <th width="120">رقم القيد</th>
-              <th width="100">النوع</th>
-              <th>البيان</th>
-              <th width="100">المرجع</th>
-              <th width="120" class="text-center">مدين</th>
-              <th width="120" class="text-center">دائن</th>
-              <th width="120" class="text-center">الرصيد</th>
+              <th width="100">{{ t('Date') }}</th>
+              <th width="120">{{ t('رقم') }} {{ t('القيد') }}</th>
+              <th width="100">{{ t('النوع') }}</th>
+              <th>{{ t('Description_3') }}</th>
+              <th width="100">{{ t('المرجع') }}</th>
+              <th width="120" class="text-center">{{ t('مدين') }}</th>
+              <th width="120" class="text-center">{{ t('دائن') }}</th>
+              <th width="120" class="text-center">{{ t('Balance') }}</th>
             </tr>
           </thead>
           <tbody>
             {% if statement.opening_balance != 0 %}
             <tr class="table-info">
-              <td colspan="7" class="text-center"><strong>الرصيد الافتتاحي</strong></td>
+              <td colspan="7" class="text-center"><strong>{{ t('Balance') }} {{ t('الافتتاحي') }}</strong></td>
               <td class="text-center">
                 <strong>{{ format_currency(statement.opening_balance) }}</strong>
               </td>
@@ -117,7 +117,7 @@
           </tbody>
           <tfoot class="bg-light">
             <tr>
-              <th colspan="5" class="text-left">الإجمالي:</th>
+              <th colspan="5" class="text-left">{{ t('Total_3') }}:</th>
               <th class="text-center text-success">{{ format_currency(statement.total_debit) }}</th>
               <th class="text-center text-danger">{{ format_currency(statement.total_credit) }}</th>
               <th class="text-center">
@@ -133,7 +133,7 @@
       {% if not statement.transactions %}
       <div class="alert alert-info text-center">
         <i class="fas fa-info-circle mr-2"></i>
-        لا توجد حركات على هذا الحساب في الفترة المحددة
+        لا {{ t('توجد') }} {{ t('حركات') }} على هذا {{ t('Account') }} في {{ t('Period_2') }} {{ t('المحددة') }}
       </div>
       {% endif %}
     </div>

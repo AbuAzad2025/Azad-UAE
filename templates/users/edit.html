@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
-{% block title %}تعديل المستخدم - {{ user.username }}{% endblock %}
-{% block page_title %}<i class="fas fa-user-edit mr-2"></i> تعديل المستخدم - {{ user.username }}{% endblock %}
+{% block title %}{{ t('Edit') }} {{ t('User') }} - {{ user.username }}{% endblock %}
+{% block page_title %}<i class="fas fa-user-edit mr-2"></i> {{ t('Edit') }} {{ t('User') }} - {{ user.username }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
@@ -9,7 +9,7 @@
     <div class="col-12">
       <div class="card">
         <div class="card-header">
-          <h3 class="card-title"><i class="fas fa-user-cog"></i> بيانات المستخدم</h3>
+          <h3 class="card-title"><i class="fas fa-user-cog"></i> {{ t('Data_2') }} {{ t('User') }}</h3>
         </div>
         <div class="card-body">
           <form class="needs-validation" id="user-edit-form" method="post" action="{{ url_for('users.edit', id=user.id) }}">
@@ -18,13 +18,13 @@
             <div class="row">
               <div class="col-md-6">
                 <div class="form-group">
-                  <label>اسم المستخدم</label>
-                  <input type="text" class="form-control" value="{{ user.username }}" disabled aria-label="اسم المستخدم">
+                  <label>{{ t('Name_2') }} {{ t('User') }}</label>
+                  <input type="text" class="form-control" value="{{ user.username }}" disabled aria-label="{{ t('Name_2') }} {{ t('User') }}">
                 </div>
               </div>
               <div class="col-md-6">
                 <div class="form-group">
-                  <label for="input_full_name">الاسم الكامل</label>
+                  <label for="input_full_name">{{ t('Name') }} {{ t('الكامل') }}</label>
                   <input type="text" name="full_name" class="form-control" value="{{ user.full_name or '' }}" id="input_full_name" aria-label="full name" minlength="2" maxlength="100">
                 </div>
               </div>
@@ -33,13 +33,13 @@
             <div class="row">
               <div class="col-md-6">
                 <div class="form-group">
-                  <label for="input_full_name_ar">الاسم الكامل بالعربية</label>
+                  <label for="input_full_name_ar">{{ t('Name') }} {{ t('الكامل') }} {{ t('In Arabic') }}</label>
                   <input type="text" name="full_name_ar" class="form-control" value="{{ user.full_name_ar or '' }}" id="input_full_name_ar" aria-label="full name ar" minlength="2" maxlength="100">
                 </div>
               </div>
               <div class="col-md-6">
                 <div class="form-group">
-                  <label for="input_email">البريد الإلكتروني</label>
+                  <label for="input_email">{{ t('Email_2') }} {{ t('Email_3') }}</label>
                   <input type="email" name="email" class="form-control" value="{{ user.email or '' }}" id="input_email" aria-label="email">
                 </div>
               </div>
@@ -48,13 +48,13 @@
             <div class="row">
               <div class="col-md-6">
                 <div class="form-group">
-                  <label for="input_phone">رقم الهاتف</label>
+                  <label for="input_phone">{{ t('رقم') }} {{ t('Phone') }}</label>
                   <input type="text" name="phone" class="form-control" value="{{ user.phone or '' }}" id="input_phone" aria-label="phone" pattern="^\+?[0-9\s\-]{8,20}$">
                 </div>
               </div>
               <div class="col-md-6">
                 <div class="form-group">
-                  <label>الدور</label>
+                  <label>{{ t('Role') }}</label>
                   <select name="role_id" id="role_id" class="form-control" aria-label="role id">
                     {% for r in roles %}
                       <option value="{{ r.id }}" data-role-slug="{{ r.slug }}" {% if user.role_id == r.id %}selected{% endif %}>
@@ -66,16 +66,16 @@
               </div>
               <div class="col-md-6">
                 <div class="form-group">
-                  <label>الفرع</label>
-                  <select name="branch_id" id="branch_id" class="form-control" aria-label="اختر الفرع">
-                    <option value="">-- اختر الفرع --</option>
+                  <label>{{ t('Branch') }}</label>
+                  <select name="branch_id" id="branch_id" class="form-control" aria-label="{{ t('اختر') }} {{ t('Branch') }}">
+                    <option value="">-- {{ t('اختر') }} {{ t('Branch') }} --</option>
                     {% for branch in branches %}
                     <option value="{{ branch.id }}" {% if user.branch_id == branch.id %}selected{% endif %}>
                       {{ branch.name }} ({{ branch.code }})
                     </option>
                     {% endfor %}
                   </select>
-                  <small class="form-text text-muted" id="branch-help-text">إجباري لكل مستخدم غير المالك وغير المطور/السوبر أدمن.</small>
+                  <small class="form-text text-muted" id="branch-help-text">{{ t('Required') }} {{ t('لكل') }} {{ t('User_2') }} غير {{ t('المالك') }} {{ t('وغير') }} {{ t('المطور') }}/{{ t('السوبر') }} {{ t('أدمن') }}.</small>
                 </div>
               </div>
             </div>
@@ -83,29 +83,29 @@
             <div class="row">
               <div class="col-md-6">
                 <div class="form-group">
-                  <label>كلمة المرور الجديدة</label>
+                  <label>{{ t('كلمة') }} {{ t('المرور') }} {{ t('New_4') }}</label>
                   <input type="password" name="new_password" id="new_password" class="form-control" minlength="10" autocomplete="new-password" aria-label="new password">
                 </div>
               </div>
               <div class="col-md-6">
                 <div class="form-group">
-                  <label>تأكيد كلمة المرور</label>
+                  <label>{{ t('Confirm') }} {{ t('كلمة') }} {{ t('المرور') }}</label>
                   <input type="password" id="confirm_password" class="form-control" minlength="10" autocomplete="new-password" aria-label="confirm password" data-equal-to="#new_password">
                 </div>
               </div>
             </div>
 
             <div class="d-flex align-items-center erp-gap-2"
-              <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> حفظ التعديلات</button>
+              <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> {{ t('Save') }} {{ t('ال{{ t('Edit') }}ات') }}</button>
               {% if current_user.has_permission('manage_users') %}
-              <a href="{{ url_for('users.view', id=user.id) }}" class="btn btn-secondary"><i class="fas fa-times"></i> إلغاء</a>
+              <a href="{{ url_for('users.view', id=user.id) }}" class="btn btn-secondary"><i class="fas fa-times"></i> {{ t('Cancel') }}</a>
               {% endif %}
               <form method="post" action="{{ url_for('users.toggle_active', id=user.id) }}" class="d-inline">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
                 {% if user.is_active %}
-                  <button type="submit" class="btn btn-warning"><i class="fas fa-user-slash"></i> إلغاء تفعيل</button>
+                  <button type="submit" class="btn btn-warning"><i class="fas fa-user-slash"></i> {{ t('Cancel') }} {{ t('تفعيل') }}</button>
                 {% else %}
-                  <button type="submit" class="btn btn-primary"><i class="fas fa-user-check"></i> تفعيل</button>
+                  <button type="submit" class="btn btn-primary"><i class="fas fa-user-check"></i> {{ t('تفعيل') }}</button>
                 {% endif %}
               </form>
             </div>
@@ -129,8 +129,8 @@ $(function() {
     const required = branchRequiredForSelectedRole();
     $('#branch_id').prop('required', !!required);
     $('#branch-help-text').text(required
-      ? 'إجباري لكل مستخدم غير المالك وغير المطور/السوبر أدمن.'
-      : 'اختياري فقط للمستخدمين العالميين.'
+      ? '{{ t('Required') }} {{ t('لكل') }} {{ t('User_2') }} غير {{ t('المالك') }} {{ t('وغير') }} {{ t('المطور') }}/{{ t('السوبر') }} {{ t('أدمن') }}.'
+      : '{{ t('Optional') }} فقط {{ t('Users_3') }} {{ t('العالميين') }}.'
     );
   }
 
@@ -152,12 +152,12 @@ $(function() {
     if (!validatePassword()) {
       e.preventDefault();
       if (typeof hideLoading === 'function') hideLoading();
-      Swal.fire({icon:'warning',title:'تحقق من كلمة المرور',text:'يجب أن تكون 10 أحرف على الأقل وتحتوي على حرف كبير ورقم ورمز خاص، ويجب أن تتطابق مع التأكيد'});
+      Swal.fire({icon:'warning',title:'{{ t('تحقق') }} من {{ t('كلمة') }} {{ t('المرور') }}',text:'يجب أن تكون 10 {{ t('أ{{ t('حرف') }}') }} على {{ t('الأقل') }} {{ t('وتحتوي') }} على {{ t('حرف') }} {{ t('Large') }} {{ t('و{{ t('رقم') }}') }} {{ t('ورمز') }} {{ t('خاص،') }} {{ t('ويجب') }} أن {{ t('تتطابق') }} مع {{ t('Confirm_2') }}'});
       return;
     }
     if (branchRequiredForSelectedRole() && !$('#branch_id').val()) {
       e.preventDefault();
-      Swal.fire({icon:'warning',title:'الفرع مطلوب',text:'يجب اختيار فرع لهذا المستخدم قبل الحفظ'});
+      Swal.fire({icon:'warning',title:'{{ t('Branch') }} {{ t('Required_3') }}',text:'يجب {{ t('Select') }} {{ t('Branch_2') }} {{ t('لهذا') }} {{ t('User') }} قبل {{ t('Save_2') }}'});
     }
   });
 });

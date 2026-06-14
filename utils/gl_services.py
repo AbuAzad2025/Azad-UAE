@@ -31,9 +31,12 @@ def gl_create_manual_entry(*args, **kwargs):
 
 
 def gl_post_or_fail(lines, description, reference_type, reference_id,
-                    currency='AED', exchange_rate=1.0, branch_id=None,
+                    currency=None, exchange_rate=1.0, branch_id=None,
                     tenant_id=None):
     from services.gl_posting import post_or_fail
+    from utils.currency_utils import get_system_default_currency
+    if currency is None:
+        currency = get_system_default_currency()
     return post_or_fail(
         lines=lines,
         description=description,
@@ -46,8 +49,11 @@ def gl_post_or_fail(lines, description, reference_type, reference_id,
     )
 
 
-def gl_resolve_exchange_rate(transaction_date, from_currency, to_currency='AED', tenant_id=None):
+def gl_resolve_exchange_rate(transaction_date, from_currency, to_currency=None, tenant_id=None):
     from services.exchange_rate_service import ExchangeRateService
+    from utils.currency_utils import get_system_default_currency
+    if to_currency is None:
+        to_currency = get_system_default_currency()
     return ExchangeRateService.resolve_exchange_rate_for_transaction(
         transaction_date=transaction_date,
         from_currency=from_currency,

@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}تقرير المخزون{% endblock %}
+{% block title %}{{ t('Report_2') }} {{ t('Inventory') }}{% endblock %}
 
 <style>
     /* D6: externalized inline styles */
@@ -15,47 +15,47 @@
       <div class="card">
         <div class="card-header">
           <h3 class="card-title">
-            <i class="fas fa-boxes"></i> تقرير المخزون
+            <i class="fas fa-boxes"></i> {{ t('Report_2') }} {{ t('Inventory') }}
           </h3>
           <div class="card-tools no-print">
             <form class="needs-validation" method="get" class="form-inline d-inline mr-2">
-              <label class="mr-2">الفرع:</label>
-              <select name="branch_id" class="form-control form-control-sm mr-2 ic-1" aria-label="اختر الفرع">
-                <option value="">كل الفروع</option>
+              <label class="mr-2">{{ t('Branch') }}:</label>
+              <select name="branch_id" class="form-control form-control-sm mr-2 ic-1" aria-label="{{ t('اختر') }} {{ t('Branch') }}">
+                <option value="">كل {{ t('Branches') }}</option>
                 {% for b in branches or [] %}
                 <option value="{{ b.id }}" {{ 'selected' if selected_branch_id == b.id else '' }}>{{ b.name }} ({{ b.code }})</option>
                 {% endfor %}
               </select>
 
-              <label class="mr-2">المستودع:</label>
+              <label class="mr-2">{{ t('Warehouse') }}:</label>
               <select name="warehouse_id" class="form-control form-control-sm mr-2 ic-2" aria-label="warehouse id">
-                <option value="">كل المستودعات</option>
+                <option value="">كل {{ t('Warehouses') }}</option>
                 {% for w in warehouses or [] %}
                 <option value="{{ w.id }}" {{ 'selected' if selected_warehouse_id == w.id else '' }}>{{ w.name_ar or w.name }}</option>
                 {% endfor %}
               </select>
 
-              <label class="mr-2" for="input_in_date_from">تاريخ الإدخال:</label>
+              <label class="mr-2" for="input_in_date_from">{{ t('History') }} {{ t('ال{{ t('إدخال') }}') }}:</label>
               <input type="date" name="in_date_from" value="{{ in_date_from or '' }}" class="form-control form-control-sm mr-2" id="input_in_date_from" aria-label="in date from">
               <input type="date" name="in_date_to" value="{{ in_date_to or '' }}" class="form-control form-control-sm mr-2" aria-label="in date to">
 
-              <label class="mr-2" for="input_out_date_from">تاريخ الإخراج:</label>
+              <label class="mr-2" for="input_out_date_from">{{ t('History') }} {{ t('ال{{ t('إخراج') }}') }}:</label>
               <input type="date" name="out_date_from" value="{{ out_date_from or '' }}" class="form-control form-control-sm mr-2" id="input_out_date_from" aria-label="out date from">
               <input type="date" name="out_date_to" value="{{ out_date_to or '' }}" class="form-control form-control-sm mr-2" aria-label="out date to">
 
               <div class="form-check mr-2">
                 <input class="form-check-input" type="checkbox" id="includeZero" name="include_zero" value="1" {{ 'checked' if include_zero else '' }} aria-label="include zero">
-                <label class="form-check-label" for="includeZero">عرض الصفر</label>
+                <label class="form-check-label" for="includeZero">{{ t('View') }} {{ t('Zero') }}</label>
               </div>
 
               {% if category_id %}<input type="hidden" name="category" value="{{ category_id }}" aria-label="category">{% endif %}
               <button type="submit" class="btn btn-outline-primary mr-2">
-                تطبيق
+                {{ t('Apply') }}
               </button>
 
               <div class="btn-group mr-2">
                 <button type="button" class="btn btn-outline-success dropdown-toggle" data-toggle="dropdown">
-                  تصدير
+                  {{ t('Export') }}
                 </button>
                 <div class="dropdown-menu dropdown-menu-right">
                   <a class="dropdown-item" href="{{ url_for('reports.inventory_export', branch_id=selected_branch_id, warehouse_id=selected_warehouse_id, category=category_id, include_zero=('1' if include_zero else ''), in_date_from=in_date_from, in_date_to=in_date_to, out_date_from=out_date_from, out_date_to=out_date_to, format='csv') }}">CSV</a>
@@ -64,7 +64,7 @@
               </div>
             </form>
             <button data-action="window-print" class="btn btn-primary">
-              <i class="fas fa-print"></i> طباعة
+              <i class="fas fa-print"></i> {{ t('Print') }}
             </button>
           </div>
         </div>
@@ -77,7 +77,7 @@
               <div class="info-box">
                 <span class="info-box-icon bg-info"><i class="fas fa-boxes"></i></span>
                 <div class="info-box-content">
-                  <span class="info-box-text">إجمالي المنتجات</span>
+                  <span class="info-box-text">{{ t('Total_2') }} {{ t('Products') }}</span>
                   <span class="info-box-number">{{ stats.total_products }}</span>
                 </div>
               </div>
@@ -86,7 +86,7 @@
               <div class="info-box">
                 <span class="info-box-icon bg-success"><i class="fas fa-check"></i></span>
                 <div class="info-box-content">
-                  <span class="info-box-text">متوفر</span>
+                  <span class="info-box-text">{{ t('متوفر') }}</span>
                   <span class="info-box-number">{{ stats.in_stock }}</span>
                 </div>
               </div>
@@ -95,7 +95,7 @@
               <div class="info-box">
                 <span class="info-box-icon bg-warning"><i class="fas fa-exclamation-triangle"></i></span>
                 <div class="info-box-content">
-                  <span class="info-box-text">ناقص</span>
+                  <span class="info-box-text">{{ t('ناقص') }}</span>
                   <span class="info-box-number">{{ stats.low_stock }}</span>
                 </div>
               </div>
@@ -104,7 +104,7 @@
               <div class="info-box">
                 <span class="info-box-icon bg-danger"><i class="fas fa-times"></i></span>
                 <div class="info-box-content">
-                  <span class="info-box-text">نفذ</span>
+                  <span class="info-box-text">{{ t('نفذ') }}</span>
                   <span class="info-box-number">{{ stats.out_of_stock }}</span>
                 </div>
               </div>
@@ -116,17 +116,17 @@
           <div class="table-responsive"><table class="table table-bordered table-striped">
             <thead>
               <tr>
-                <th>المنتج</th>
-                <th>الكود</th>
-                <th>الكمية المتاحة</th>
-                <th>إدخال (حسب التاريخ)</th>
-                <th>إخراج (حسب التاريخ)</th>
-                <th>مباع (حسب التاريخ)</th>
-                <th>الحد الأدنى</th>
-                <th>سعر التكلفة</th>
-                <th>سعر البيع</th>
-                <th>القيمة الإجمالية</th>
-                <th>الحالة</th>
+                <th>{{ t('Product') }}</th>
+                <th>{{ t('Code') }}</th>
+                <th>{{ t('Quantity') }} {{ t('Available_3') }}</th>
+                <th>{{ t('إدخال') }} ({{ t('حسب') }} {{ t('Date') }})</th>
+                <th>{{ t('إخراج') }} ({{ t('حسب') }} {{ t('Date') }})</th>
+                <th>{{ t('مباع') }} ({{ t('حسب') }} {{ t('Date') }})</th>
+                <th>{{ t('الحد') }} {{ t('الأدنى') }}</th>
+                <th>{{ t('Price_2') }} {{ t('Cost') }}</th>
+                <th>{{ t('Price_2') }} {{ t('Sale_2') }}</th>
+                <th>{{ t('Value') }} {{ t('ال{{ t('Total_2') }}ة') }}</th>
+                <th>{{ t('Status') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -148,17 +148,17 @@
                 <td>{{ (qty * (product.cost_price or 0))|round(2) }}</td>
                 <td>
                   {% if qty == 0 %}
-                    <span class="badge badge-danger">نفذ</span>
+                    <span class="badge badge-danger">{{ t('نفذ') }}</span>
                   {% elif qty <= (product.min_stock_alert or 0) %}
-                    <span class="badge badge-warning">ناقص</span>
+                    <span class="badge badge-warning">{{ t('ناقص') }}</span>
                   {% else %}
-                    <span class="badge badge-success">متوفر</span>
+                    <span class="badge badge-success">{{ t('متوفر') }}</span>
                   {% endif %}
                 </td>
               </tr>
               {% else %}
               <tr>
-                <td colspan="11" class="text-center">لا توجد منتجات</td>
+                <td colspan="11" class="text-center">لا {{ t('توجد') }} {{ t('Products_2') }}</td>
               </tr>
               {% endfor %}
             </tbody>

@@ -1,14 +1,14 @@
 {% extends 'base.html' %}
-{% block title %}عملاء المتجر المسجّلون{% endblock %}
+{% block title %}{{ t('Customers_3') }} {{ t('Store') }} {{ t('الم{{ t('سجّل') }}ون') }}{% endblock %}
 {% block page_title %}
-<h1 class="mb-0"><i class="fas fa-user-friends mr-2"></i>عملاء المتجر (حسابات أونلاين)</h1>
+<h1 class="mb-0"><i class="fas fa-user-friends mr-2"></i>{{ t('Customers_3') }} {{ t('Store') }} ({{ t('Accounts_2') }} {{ t('أونلاين') }})</h1>
 {% endblock %}
 {% block content %}
-<div class="alert alert-info"><i class="fas fa-info-circle mr-1"></i> الزوار غير المسجّلين يتصفحون فقط ويطلبون عبر واتساب. هنا من سجّل حساباً ويمكنه الشراء.</div>
+<div class="alert alert-info"><i class="fas fa-info-circle mr-1"></i> {{ t('الزوار') }} غير {{ t('الم{{ t('سجّل') }}ين') }} {{ t('يتصفحون') }} فقط {{ t('ويطلبون') }} {{ t('عبر') }} {{ t('واتساب') }}. هنا من {{ t('سجّل') }} {{ t('حساباً') }} {{ t('ويمكنه') }} {{ t('Purchase_2') }}.</div>
 <div class="card">
   <div class="card-body table-responsive p-0">
     <table class="table table-hover mb-0">
-      <thead><tr><th>الاسم</th><th>Email</th><th>الهاتف</th><th>تاريخ التسجيل</th><th>آخر دخول</th><th></th></tr></thead>
+      <thead><tr><th>{{ t('Name') }}</th><th>Email</th><th>{{ t('Phone') }}</th><th>{{ t('History') }} {{ t('التسجيل') }}</th><th>{{ t('Last') }} {{ t('Sign In') }}</th><th></th></tr></thead>
       <tbody>
         {% for acc in accounts %}
         <tr>
@@ -22,11 +22,11 @@
           {% endif %}
         </tr>
         {% else %}
-        <tr><td colspan="6" class="text-center text-muted py-4">لا حسابات بعد</td></tr>
+        <tr><td colspan="6" class="text-center text-muted py-4">لا {{ t('Accounts_2') }} بعد</td></tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
 </div>
-<a href="{{ url_for('store.admin_index') }}" class="btn btn-secondary mt-3">رجوع</a>
+<a href="{{ url_for('store.admin_index') }}" class="btn btn-secondary mt-3">{{ t('Back') }}</a>
 {% endblock %}

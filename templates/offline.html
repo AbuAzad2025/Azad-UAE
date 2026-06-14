@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>غير متصل - UAE Sale</title>
+    <title>غير {{ t('متصل') }} - UAE Sale</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/accessibility.css') }}">
     <style>
         body {
@@ -54,9 +54,9 @@
 <body class="keep-theme offline-page">
     <div class="offline-container">
         <div class="offline-icon">📡❌</div>
-        <h1>غير متصل بالإنترنت</h1>
-        <p>يبدو أنك غير متصل بالإنترنت. تحقق من اتصالك وحاول مرة أخرى.</p>
-        <button class="retry-btn" onclick="window.location.reload()">إعادة المحاولة</button>
+        <h1>غير {{ t('متصل') }} {{ t('بالإنترنت') }}</h1>
+        <p>{{ t('يبدو') }} {{ t('أنك') }} غير {{ t('متصل') }} {{ t('بالإنترنت') }}. {{ t('تحقق') }} من {{ t('اتصالك') }} {{ t('وحاول') }} {{ t('مرة') }} {{ t('أخرى') }}.</p>
+        <button class="retry-btn" onclick="window.location.reload()">{{ t('إعادة') }} {{ t('المحاولة') }}</button>
     </div>
 </body>
 </html>

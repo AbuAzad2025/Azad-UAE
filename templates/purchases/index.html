@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
-{% block title %}شركة أزاد للأنظمة الذكية - إدارة المشتريات والفواتير{% endblock %}
-{% block page_title %}المشتريات{% endblock %}
+{% block title %}{{ t('Company_2') }} {{ t('أزاد') }} {{ t('للأنظمة') }} {{ t('الذكية') }} - {{ t('Management') }} {{ t('Purchases') }} {{ t('والفواتير') }}{% endblock %}
+{% block page_title %}{{ t('Purchases') }}{% endblock %}
 
 {% block extra_css %}
 {% include 'partials/datatables_assets.html' %}
@@ -76,14 +76,14 @@
 <div class="card">
   <div class="card-header d-flex justify-content-between align-items-center">
     <h3 class="card-title mb-0">
-      <i class="fas fa-file-invoice-dollar mr-2"></i>سجل المشتريات
+      <i class="fas fa-file-invoice-dollar mr-2"></i>{{ t('Log') }} {{ t('Purchases') }}
     </h3>
     <div class="btn-group">
       <button type="button" class="btn btn-outline-info" id="printPurchasesBtn">
-        <i class="fas fa-print mr-1"></i>طباعة
+        <i class="fas fa-print mr-1"></i>{{ t('Print') }}
       </button>
       <a href="{{ url_for('purchases.create') }}" class="btn btn-primary">
-        <i class="fas fa-plus mr-2"></i>فاتورة شراء جديدة
+        <i class="fas fa-plus mr-2"></i>{{ t('Invoice') }} {{ t('Purchase') }} {{ t('New_3') }}
       </a>
     </div>
   </div>
@@ -93,16 +93,16 @@
       <thead>
         <tr>
           <th>{{ t('Invoice Number') }}</th>
-          <th>الشركة</th>
-          <th>المورد</th>
+          <th>{{ t('Company') }}</th>
+          <th>{{ t('Supplier') }}</th>
           <th>{{ t('Date') }}</th>
-          <th>المبلغ الإجمالي</th>
-          <th>المدفوع</th>
-          <th>المتبقي</th>
-          <th>الحالة</th>
-          <th>العملة</th>
-          <th>الفرع</th>
-          <th>الإجراءات</th>
+          <th>{{ t('Amount') }} {{ t('Total_3') }}</th>
+          <th>{{ t('Paid') }}</th>
+          <th>{{ t('Remaining') }}</th>
+          <th>{{ t('Status') }}</th>
+          <th>{{ t('Currency') }}</th>
+          <th>{{ t('Branch') }}</th>
+          <th>{{ t('الإجراءات') }}</th>
         </tr>
       </thead>
       <tbody>
@@ -124,15 +124,15 @@
             {% set balance = (purchase.total_amount - purchase.get_paid_amount()) %}
             {% if balance <= 0 %}
               <span class="badge badge-success px-3">
-                <i class="fas fa-check mr-1"></i>مدفوع
+                <i class="fas fa-check mr-1"></i>{{ t('Paid_2') }}
               </span>
             {% elif balance > 0 and purchase.get_paid_amount() > 0 %}
               <span class="badge badge-warning px-3">
-                <i class="fas fa-clock mr-1"></i>جزئي
+                <i class="fas fa-clock mr-1"></i>{{ t('Partial_2') }}
               </span>
             {% else %}
               <span class="badge badge-danger px-3">
-                <i class="fas fa-hourglass-half mr-1"></i>آجل
+                <i class="fas fa-hourglass-half mr-1"></i>{{ t('Credit') }}
               </span>
             {% endif %}
           </td>
@@ -155,12 +155,12 @@
               {% if current_user.has_permission('manage_payments') %}
               <a href="{{ url_for('payments.create_payment', purchase_id=purchase.id) }}"
               {% endif %}
-                 class="btn btn-danger" title="سند صرف">
+                 class="btn btn-danger" title="{{ t('Voucher_2') }} {{ t('صرف') }}">
                 <i class="fas fa-money-bill-wave"></i>
               </a>
               {% endif %}
               <button type="button" class="btn btn-danger delete-purchase-btn" 
-                      data-id="{{ purchase.id }}" title="حذف">
+                      data-id="{{ purchase.id }}" title="{{ t('Delete') }}">
                 <i class="fas fa-trash"></i>
               </button>
             </div>
@@ -182,7 +182,7 @@
 $(document).ready(function() {
   const $tableEl = $('#purchasesTable');
   const printOptions = {
-    title: 'سجل المشتريات',
+    title: '{{ t('Log') }} {{ t('Purchases') }}',
     headerColor: '#0d6efd'
   };
 

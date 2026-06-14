@@ -24,9 +24,10 @@ class PaymentService:
 
     @staticmethod
     def _resolve_transaction_rate(currency, user_exchange_rate=None):
+        from utils.currency_utils import get_system_default_currency
         rate_info = ExchangeRateService.resolve_exchange_rate_for_transaction(
             currency,
-            'AED',
+            get_system_default_currency(),
             user_rate=user_exchange_rate,
         )
         return Decimal(str(rate_info['rate']))

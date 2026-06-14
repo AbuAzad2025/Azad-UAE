@@ -1,15 +1,15 @@
 {% extends 'base.html' %}
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - إدارة العملاء{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('Management') }} {{ t('Customers_2') }}{% endblock %}
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
   <div>
-    <h1 class="text-gradient mb-0"><i class="fas fa-users mr-3"></i>إدارة الزبائن</h1>
-    <p class="text-muted">قاعدة بيانات شاملة لجميع العملاء</p>
+    <h1 class="text-gradient mb-0"><i class="fas fa-users mr-3"></i>{{ t('Management') }} {{ t('Customers') }}</h1>
+    <p class="text-muted">{{ t('قاعدة') }} {{ t('Data_2') }} {{ t('شاملة') }} {{ t('لجميع') }} {{ t('Customers_2') }}</p>
   </div>
   <div>
     <div class="btn-group mr-2">
       <button type="button" class="btn btn-outline-success btn-lg dropdown-toggle" data-toggle="dropdown">
-        <i class="fas fa-download mr-2"></i>تصدير
+        <i class="fas fa-download mr-2"></i>{{ t('Export') }}
       </button>
       <div class="dropdown-menu dropdown-menu-right">
         <a class="dropdown-item" href="{{ url_for('customers.export', format='csv', search=request.args.get('search'), type=request.args.get('type')) }}">CSV</a>
@@ -17,7 +17,7 @@
       </div>
     </div>
     <a href="{{ url_for('customers.create') }}" class="btn btn-primary btn-lg">
-      <i class="fas fa-user-plus mr-2"></i>زبون جديد
+      <i class="fas fa-user-plus mr-2"></i>{{ t('Customer_3') }} {{ t('New') }}
     </a>
   </div>
 </div>
@@ -57,44 +57,44 @@
   <div class="card-header">
     <div class="d-flex justify-content-between align-items-center">
       <h3 class="card-title mb-0">
-        <i class="fas fa-list mr-2"></i>قائمة الزبائن
+        <i class="fas fa-list mr-2"></i>{{ t('List') }} {{ t('Customers') }}
       </h3>
       <div class="btn-group">
         <button type="button" class="btn btn-outline-primary" id="filterAll">
-          <i class="fas fa-users mr-1"></i>الكل
+          <i class="fas fa-users mr-1"></i>{{ t('All') }}
         </button>
         <button type="button" class="btn btn-outline-warning" id="filterVIP">
           <i class="fas fa-crown mr-1"></i>VIP
         </button>
         <button type="button" class="btn btn-outline-info" id="filterMerchant">
-          <i class="fas fa-store mr-1"></i>تجار
+          <i class="fas fa-store mr-1"></i>{{ t('تجار') }}
         </button>
         <button type="button" class="btn btn-outline-success" id="filterRegular">
-          <i class="fas fa-user mr-1"></i>عادي
+          <i class="fas fa-user mr-1"></i>{{ t('عادي') }}
         </button>
         <button type="button" class="btn btn-outline-danger" id="filterOverdue">
-          <i class="fas fa-exclamation-triangle mr-1"></i>متأخر
+          <i class="fas fa-exclamation-triangle mr-1"></i>{{ t('Late_2') }}
         </button>
       </div>
     </div>
     <form class="needs-validation" method="get" class="mt-3">
       <div class="form-row">
         <div class="col-md-5 mb-2">
-          <input type="text" name="search" value="{{ request.args.get('search','') }}" class="form-control" placeholder="بحث بالاسم/الهاتف/الإيميل">
+          <input type="text" name="search" value="{{ request.args.get('search','') }}" class="form-control" placeholder="{{ t('Search') }} {{ t('By name') }}/{{ t('Phone') }}/{{ t('الإيميل') }}">
         </div>
         <div class="col-md-3 mb-2">
           <select name="type" class="form-control" aria-label="type">
-            <option value="">كل الأنواع</option>
-            <option value="regular" {{ 'selected' if request.args.get('type') == 'regular' else '' }}>عادي</option>
-            <option value="merchant" {{ 'selected' if request.args.get('type') == 'merchant' else '' }}>تاجر</option>
-            <option value="partner" {{ 'selected' if request.args.get('type') == 'partner' else '' }}>شريك</option>
+            <option value="">كل {{ t('الأنواع') }}</option>
+            <option value="regular" {{ 'selected' if request.args.get('type') == 'regular' else '' }}>{{ t('عادي') }}</option>
+            <option value="merchant" {{ 'selected' if request.args.get('type') == 'merchant' else '' }}>{{ t('تاجر') }}</option>
+            <option value="partner" {{ 'selected' if request.args.get('type') == 'partner' else '' }}>{{ t('Partner') }}</option>
           </select>
         </div>
         <div class="col-md-2 mb-2">
-          <button type="submit" class="btn btn-primary btn-block">تطبيق</button>
+          <button type="submit" class="btn btn-primary btn-block">{{ t('Apply') }}</button>
         </div>
         <div class="col-md-2 mb-2">
-          <a href="{{ url_for('customers.index') }}" class="btn btn-outline-secondary btn-block">مسح</a>
+          <a href="{{ url_for('customers.index') }}" class="btn btn-outline-secondary btn-block">{{ t('مسح') }}</a>
         </div>
       </div>
     </form>
@@ -105,13 +105,13 @@
         <thead class="ic-1">
           <tr>
             <th><i class="fas fa-user mr-2"></i>{{ t('Name') }}</th>
-            <th><i class="fas fa-building mr-2"></i>الشركة</th>
-            <th><i class="fas fa-tag mr-2"></i>النوع</th>
-            <th><i class="fas fa-star mr-2"></i>التصنيف</th>
+            <th><i class="fas fa-building mr-2"></i>{{ t('Company') }}</th>
+            <th><i class="fas fa-tag mr-2"></i>{{ t('النوع') }}</th>
+            <th><i class="fas fa-star mr-2"></i>{{ t('التصنيف') }}</th>
             <th><i class="fas fa-phone mr-2"></i>{{ t('Phone') }}</th>
             <th><i class="fas fa-wallet mr-2"></i>{{ t('Balance') }}</th>
-            <th><i class="fas fa-code-branch mr-2"></i>الفرع</th>
-            <th class="text-center"><i class="fas fa-cog mr-2"></i>الإجراءات</th>
+            <th><i class="fas fa-code-branch mr-2"></i>{{ t('Branch') }}</th>
+            <th class="text-center"><i class="fas fa-cog mr-2"></i>{{ t('الإجراءات') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -135,20 +135,20 @@
             </td>
             <td>
               {% if customer.customer_type == 'regular' %}
-                <span class="badge badge-info"><i class="fas fa-user mr-1"></i>عادي</span>
+                <span class="badge badge-info"><i class="fas fa-user mr-1"></i>{{ t('عادي') }}</span>
               {% elif customer.customer_type == 'merchant' %}
-                <span class="badge badge-warning"><i class="fas fa-store mr-1"></i>تاجر</span>
+                <span class="badge badge-warning"><i class="fas fa-store mr-1"></i>{{ t('تاجر') }}</span>
               {% else %}
-                <span class="badge badge-success"><i class="fas fa-handshake mr-1"></i>شريك</span>
+                <span class="badge badge-success"><i class="fas fa-handshake mr-1"></i>{{ t('Partner') }}</span>
               {% endif %}
             </td>
             <td>
               {% if customer.customer_classification == 'vip' %}
                 <span class="vip-badge"><i class="fas fa-crown mr-1"></i>VIP</span>
               {% elif customer.customer_classification == 'premium' %}
-                <span class="badge badge-warning"><i class="fas fa-medal mr-1"></i>مميز</span>
+                <span class="badge badge-warning"><i class="fas fa-medal mr-1"></i>{{ t('Featured') }}</span>
               {% else %}
-                <span class="badge badge-secondary">عادي</span>
+                <span class="badge badge-secondary">{{ t('عادي') }}</span>
               {% endif %}
             </td>
             <td>
@@ -190,20 +190,20 @@
                 </a>
                 <button type="button" class="btn btn-danger" 
                         data-delete-item="{{customer.id}}" data-item-type="customers" data-item-name="{{customer.name|tojson}}" 
-                        title="حذف">
+                        title="{{ t('Delete') }}">
                   <i class="fas fa-trash"></i>
                 </button>
-                <a href="{{ url_for('customers.statement', id=customer.id) }}" class="btn btn-success ic-3" title="كشف حساب">
+                <a href="{{ url_for('customers.statement', id=customer.id) }}" class="btn btn-success ic-3" title="{{ t('كشف') }} {{ t('Account_2') }}">
                   <i class="fas fa-file-invoice ic-3"></i>
                 </a>
                 {% if current_user.has_permission('manage_payments') %}
                 <a href="{{ url_for('payments.create_voucher', party_type='customer', party_id=customer.id) }}"
                 {% endif %}
-                   class="btn btn-primary" title="قبض / دفع">
+                   class="btn btn-primary" title="{{ t('Receipt') }} / {{ t('Payment') }}">
                   <i class="fas fa-money-bill-wave"></i>
                 </a>
                 {% if current_user.has_permission('manage_sales') %}
-                <a href="{{ url_for('sales.create', customer_id=customer.id) }}" {% endif %} class="btn btn-success ic-3" title="بيع">
+                <a href="{{ url_for('sales.create', customer_id=customer.id) }}" {% endif %} class="btn btn-success ic-3" title="{{ t('Sale') }}">
                   <i class="fas fa-shopping-cart ic-3"></i>
                 </a>
               </div>
@@ -263,7 +263,7 @@ $(document).ready(function() {
       },
       {
         extend: 'print', 
-        text: '<i class="fas fa-print mr-1"></i> طباعة', 
+        text: '<i class="fas fa-print mr-1"></i> {{ t('Print') }}', 
         className: ' btn-info',
         attr: {
           style: 'color: #ffffff !important;'
@@ -286,13 +286,13 @@ $(document).ready(function() {
   });
 
   $('#filterMerchant').click(function() {
-    table.search('تاجر').draw();
+    table.search('{{ t('تاجر') }}').draw();
     $('.btn-group .btn').removeClass('active');
     $(this).addClass('active');
   });
 
   $('#filterRegular').click(function() {
-    table.search('عادي').draw();
+    table.search('{{ t('عادي') }}').draw();
     $('.btn-group .btn').removeClass('active');
     $(this).addClass('active');
   });

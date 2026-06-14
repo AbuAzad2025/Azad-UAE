@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - فاتورة #{{ sale.sale_number }}</title>
+  <title>{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('Invoice') }} #{{ sale.sale_number }}</title>
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;600;700&display=swap" integrity="sha384-hFO2rIEcBkgZKRO294CPboGlOE8XKpW3hGk1H8x71xs2e52QrbdK/HioDB0ZcIvS" crossorigin="anonymous" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/accessibility.css') }}">
   <style>
@@ -243,10 +243,10 @@
 <body class="invoice-print sale-invoice">
   <div class="no-print ic-1">
     <button data-action="window-print" class="ic-2">
-      <i class="fas fa-print"></i> طباعة الفاتورة
+      <i class="fas fa-print"></i> {{ t('Print') }} {{ t('Invoice_2') }}
     </button>
     <button data-action="window-close" class="ic-3">
-      إغلاق
+      {{ t('Close') }}
     </button>
   </div>
 
@@ -267,31 +267,31 @@
           {% if ph %}📞 {{ ph }}{% endif %}{% if em %} | 📧 {{ em }}{% endif %}
         </div>
         {% if settings.tax_number %}
-        <div class="ic-4">الرقم الضريبي: {{ settings.tax_number }}</div>
+        <div class="ic-4">{{ t('ال{{ t('رقم') }}') }} {{ t('الضريبي') }}: {{ settings.tax_number }}</div>
         {% endif %}
       </div>
     </div>
 
     
     <div class="invoice-title">
-      <h2>فاتورة بيع <span class="palestine-flag"></span></h2>
-      <div class="invoice-number">رقم الفاتورة: <strong>{{ sale.sale_number }}</strong></div>
+      <h2>{{ t('Invoice') }} {{ t('Sale') }} <span class="palestine-flag"></span></h2>
+      <div class="invoice-number">{{ t('رقم') }} {{ t('Invoice_2') }}: <strong>{{ sale.sale_number }}</strong></div>
     </div>
 
     
     <div class="invoice-details">
       <div class="details-row">
         <div class="detail-box">
-          <h3>🏢 بيانات الزبون</h3>
-          <p><strong>الاسم:</strong> {{ sale.customer.name if sale.customer else '-' }}</p>
-          <p><strong>الهاتف:</strong> {{ sale.customer.phone if sale.customer else '-' }}</p>
-          <p><strong>العنوان:</strong> {{ sale.customer.address if sale.customer else '-' }}</p>
+          <h3>🏢 {{ t('Data_2') }} {{ t('Customer_2') }}</h3>
+          <p><strong>{{ t('Name') }}:</strong> {{ sale.customer.name if sale.customer else '-' }}</p>
+          <p><strong>{{ t('Phone') }}:</strong> {{ sale.customer.phone if sale.customer else '-' }}</p>
+          <p><strong>{{ t('Address') }}:</strong> {{ sale.customer.address if sale.customer else '-' }}</p>
         </div>
         <div class="detail-box">
-          <h3>📅 بيانات الفاتورة</h3>
-          <p><strong>التاريخ:</strong> {{ sale.sale_date.strftime('%Y-%m-%d') }}</p>
-          <p><strong>الوقت:</strong> {{ sale.sale_date.strftime('%H:%M') }}</p>
-          <p><strong>البائع:</strong> {{ sale.seller.username if sale.seller else '-' }}</p>
+          <h3>📅 {{ t('Data_2') }} {{ t('Invoice_2') }}</h3>
+          <p><strong>{{ t('Date') }}:</strong> {{ sale.sale_date.strftime('%Y-%m-%d') }}</p>
+          <p><strong>{{ t('Time_2') }}:</strong> {{ sale.sale_date.strftime('%H:%M') }}</p>
+          <p><strong>{{ t('البائع') }}:</strong> {{ sale.seller.username if sale.seller else '-' }}</p>
         </div>
       </div>
 
@@ -300,10 +300,10 @@
         <thead>
           <tr>
             <th>#</th>
-            <th>المنتج</th>
+            <th>{{ t('Product') }}</th>
             <th>{{ t('Quantity') }}</th>
             <th>{{ t('Price') }}</th>
-            <th>الخصم%</th>
+            <th>{{ t('Discount') }}%</th>
             <th>{{ t('Total') }}</th>
           </tr>
         </thead>
@@ -324,38 +324,38 @@
       
       <div class="totals-section">
         <div class="total-row">
-          <span>المجموع الفرعي:</span>
+          <span>{{ t('Total') }} {{ t('Sub') }}:</span>
           <span>{{ format_currency(sale.subtotal, sale.currency) }}</span>
         </div>
         {% if sale.discount_amount > 0 %}
         <div class="total-row ic-5">
-          <span>الخصم:</span>
+          <span>{{ t('Discount') }}:</span>
           <span>- {{ format_currency(sale.discount_amount, sale.currency) }}</span>
         </div>
         {% endif %}
         {% if sale.shipping_cost > 0 %}
         <div class="total-row">
-          <span>الشحن:</span>
+          <span>{{ t('Shipping') }}:</span>
           <span>{{ format_currency(sale.shipping_cost, sale.currency) }}</span>
         </div>
         {% endif %}
         {% if sale.tax_amount > 0 %}
         <div class="total-row">
-          <span>الضريبة:</span>
+          <span>{{ t('Tax') }}:</span>
           <span>{{ format_currency(sale.tax_amount, sale.currency) }}</span>
         </div>
         {% endif %}
         <div class="total-row grand-total">
-          <span>الإجمالي النهائي:</span>
+          <span>{{ t('Total_3') }} {{ t('النهائي') }}:</span>
           <span>{{ format_currency(sale.total_amount, sale.currency) }}</span>
         </div>
         <div class="total-row ic-6">
-          <span>المدفوع:</span>
+          <span>{{ t('Paid') }}:</span>
           <span>{{ format_currency(sale.paid_amount, sale.currency) }}</span>
         </div>
         {% if sale.balance_due > 0 %}
         <div class="total-row ic-7">
-          <span>المتبقي:</span>
+          <span>{{ t('Remaining') }}:</span>
           <span>{{ format_currency(sale.balance_due / sale.exchange_rate if sale.exchange_rate and sale.exchange_rate > 0 else sale.balance_due, sale.currency) }}</span>
         </div>
         {% endif %}
@@ -363,7 +363,7 @@
 
       {% if sale.notes %}
       <div class="ic-8">
-        <strong>📝 ملاحظات:</strong> {{ sale.notes }}
+        <strong>📝 {{ t('Notes') }}:</strong> {{ sale.notes }}
       </div>
       {% endif %}
 
@@ -371,11 +371,11 @@
       <div class="signature-section">
         <div class="signature-box">
           <div class="signature-line"></div>
-          <strong>توقيع البائع</strong>
+          <strong>{{ t('توقيع') }} {{ t('البائع') }}</strong>
         </div>
         <div class="signature-box">
           <div class="signature-line"></div>
-          <strong>توقيع الزبون</strong>
+          <strong>{{ t('توقيع') }} {{ t('Customer_2') }}</strong>
         </div>
       </div>
     </div>
@@ -384,16 +384,16 @@
     {% if sale.payments %}
     <div class="ic-9">
       <h3 class="erp-sales-print-h3" style="color: {{ settings.header_color if settings else '#667eea' }};">
-        💰 الدفعات
+        💰 {{ t('الدفعات') }}
       </h3>
       <div class="table-responsive"><table class="ic-10">
         <thead>
           <tr class="erp-sales-print-tr-head" style="border-bottom: 1px solid {{ settings.header_color if settings else '#667eea' }};">
-            <th class="ic-11">رقم الدفعة</th>
-            <th class="ic-12">التاريخ</th>
-            <th class="ic-12">المبلغ</th>
-            <th class="ic-12">الطريقة</th>
-            <th class="ic-11">التفاصيل</th>
+            <th class="ic-11">{{ t('رقم') }} {{ t('الدفعة') }}</th>
+            <th class="ic-12">{{ t('Date') }}</th>
+            <th class="ic-12">{{ t('Amount') }}</th>
+            <th class="ic-12">{{ t('الطريقة') }}</th>
+            <th class="ic-11">{{ t('Details_2') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -403,18 +403,18 @@
             <td class="ic-14">{{ payment.payment_date.strftime('%Y-%m-%d') }}</td>
             <td class="ic-15">{{ format_currency(payment.base_amount) }}</td>
             <td class="ic-14">
-              {% if payment.payment_method == 'cash' %}نقدي
-              {% elif payment.payment_method == 'card' %}بطاقة
-              {% elif payment.payment_method == 'bank_transfer' %}تحويل بنكي
-              {% elif payment.payment_method == 'cheque' %}شيك
-              {% else %}محفظة إلكترونية{% endif %}
+              {% if payment.payment_method == 'cash' %}{{ t('Cash_2') }}
+              {% elif payment.payment_method == 'card' %}{{ t('Card') }}
+              {% elif payment.payment_method == 'bank_transfer' %}{{ t('Transfer') }} {{ t('Bank_3') }}
+              {% elif payment.payment_method == 'cheque' %}{{ t('Cheque_3') }}
+              {% else %}{{ t('محفظة') }} {{ t('إلكترونية') }}{% endif %}
             </td>
             <td class="ic-16">
               {% if payment.payment_method == 'cheque' and payment.cheque_number %}
                 <div class="ic-17">
-                  <strong>📝 شيك:</strong> {{ payment.cheque_number }}<br>
-                  <strong>📅 استحقاق:</strong> {{ payment.cheque_date.strftime('%Y-%m-%d') if payment.cheque_date else '-' }}<br>
-                  <strong>🏦 بنك:</strong> {{ payment.bank_name or '-' }}
+                  <strong>📝 {{ t('Cheque_3') }}:</strong> {{ payment.cheque_number }}<br>
+                  <strong>📅 {{ t('استحقاق') }}:</strong> {{ payment.cheque_date.strftime('%Y-%m-%d') if payment.cheque_date else '-' }}<br>
+                  <strong>🏦 {{ t('Bank_2') }}:</strong> {{ payment.bank_name or '-' }}
                 </div>
               {% elif payment.reference_number %}
                 {{ payment.reference_number }}
@@ -438,7 +438,7 @@
         <div>🌐 {{ developer_website or config.DEVELOPER_WEBSITE }}</div>
       </div>
       <div class="ic-18">
-        شكراً لتعاملكم معنا <span class="palestine-flag"></span> نتمنى لكم تجربة ممتازة
+        {{ t('شكراً') }} {{ t('لتعام{{ t('لكم') }}') }} {{ t('معنا') }} <span class="palestine-flag"></span> {{ t('نتمنى') }} {{ t('لكم') }} {{ t('تجربة') }} {{ t('Excellent_2') }}
       </div>
     </div>
   </div>

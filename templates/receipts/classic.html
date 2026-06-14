@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>سند قبض - {{ receipt.receipt_number }}</title>
+  <title>{{ t('Voucher_2') }} {{ t('Receipt') }} - {{ receipt.receipt_number }}</title>
   <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&display=swap" integrity="sha384-dDRz72nlSV5ma/yzwNSbMrzZHPI1KOMQ92VL3/OBGvurDa2ux91WkpYJpWvZm/of" crossorigin="anonymous" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/accessibility.css') }}">
   <style>
@@ -235,7 +235,7 @@
 <body class="invoice-print receipt-print classic-receipt">
   <div class="no-print ic-1">
     <button data-action="window-print" class="ic-2">
-      طباعة
+      {{ t('Print') }}
     </button>
   </div>
 
@@ -247,13 +247,13 @@
         <div>{{ (settings.address_ar if settings and settings.address_ar else none) or tenant_address or company_address }}</div>
         <div>📞 {{ (settings.phone_1 if settings and settings.phone_1 else none) or tenant_phone or company_phone }} {% if settings and settings.phone_2 and settings.phone_2 != 'None' %}| {{ settings.phone_2 }}{% endif %}</div>
         <div>📧 {{ (settings.email if settings and settings.email else none) or tenant_email or company_email }} {% if settings and settings.website and settings.website != 'None' %}| 🌐 {{ settings.website }}{% endif %}</div>
-        {% if settings and settings.tax_number and settings.tax_number != 'None' %}<div class="ic-3">الرقم الضريبي: {{ settings.tax_number }}</div>{% endif %}
+        {% if settings and settings.tax_number and settings.tax_number != 'None' %}<div class="ic-3">{{ t('ال{{ t('رقم') }}') }} {{ t('الضريبي') }}: {{ settings.tax_number }}</div>{% endif %}
       </div>
       {% if print_branch or receipt.branch %}
       {% set header_branch = print_branch or receipt.branch %}
-      <div class="branch-name">فرع: {{ header_branch.name }}{% if header_branch.code %} ({{ header_branch.code }}){% endif %}</div>
+      <div class="branch-name">{{ t('Branch_2') }}: {{ header_branch.name }}{% if header_branch.code %} ({{ header_branch.code }}){% endif %}</div>
       {% if header_branch.address %}
-      <div class="company-info">📍 عنوان الفرع: {{ header_branch.address }}</div>
+      <div class="company-info">📍 {{ t('Address_2') }} {{ t('Branch') }}: {{ header_branch.address }}</div>
       {% endif %}
       {% endif %}
     </div>
@@ -264,20 +264,20 @@
 
     <div class="info-section">
       <div class="info-box">
-        <h3>بيانات العميل</h3>
-        <p><strong>الاسم:</strong> {{ receipt.customer.name }}</p>
-        {% if receipt.customer.phone %}<p><strong>الهاتف:</strong> {{ receipt.customer.phone }}</p>{% endif %}
-        {% if receipt.customer.email %}<p><strong>البريد:</strong> {{ receipt.customer.email }}</p>{% endif %}
+        <h3>{{ t('Data_2') }} {{ t('Customer') }}</h3>
+        <p><strong>{{ t('Name') }}:</strong> {{ receipt.customer.name }}</p>
+        {% if receipt.customer.phone %}<p><strong>{{ t('Phone') }}:</strong> {{ receipt.customer.phone }}</p>{% endif %}
+        {% if receipt.customer.email %}<p><strong>{{ t('Email_2') }}:</strong> {{ receipt.customer.email }}</p>{% endif %}
       </div>
       <div class="info-box">
-        <h3>بيانات السند</h3>
-        <p><strong>التاريخ:</strong> {{ receipt.receipt_date.strftime('%Y-%m-%d %H:%M') }}</p>
-        <p><strong>المستخدم:</strong> {{ print_user_name or (receipt.user.full_name if receipt.user else 'النظام') }}</p>
+        <h3>{{ t('Data_2') }} {{ t('Voucher') }}</h3>
+        <p><strong>{{ t('Date') }}:</strong> {{ receipt.receipt_date.strftime('%Y-%m-%d %H:%M') }}</p>
+        <p><strong>{{ t('User') }}:</strong> {{ print_user_name or (receipt.user.full_name if receipt.user else 'النظام') }}</p>
       </div>
     </div>
 
     <div class="amount-section">
-      <div class="amount-label">المبلغ المستلم</div>
+      <div class="amount-label">{{ t('Amount') }} {{ t('المستلم') }}</div>
       <div class="amount-value">{{ format_currency(receipt.base_amount) }}</div>
       {% if receipt.currency != tenant_default_currency %}
       <div class="ic-4">
@@ -287,39 +287,39 @@
     </div>
 
     <div class="payment-details">
-      <h4>طريقة الدفع</h4>
+      <h4>{{ t('طريقة') }} {{ t('Payment_2') }}</h4>
       <p class="ic-5">
-        {% if receipt.payment_method == 'cash' %}نقدي
-        {% elif receipt.payment_method == 'card' %}بطاقة
-        {% elif receipt.payment_method == 'bank_transfer' %}تحويل بنكي
-        {% elif receipt.payment_method == 'cheque' %}شيك
-        {% else %}محفظة إلكترونية{% endif %}
+        {% if receipt.payment_method == 'cash' %}{{ t('Cash_2') }}
+        {% elif receipt.payment_method == 'card' %}{{ t('Card') }}
+        {% elif receipt.payment_method == 'bank_transfer' %}{{ t('Transfer') }} {{ t('Bank_3') }}
+        {% elif receipt.payment_method == 'cheque' %}{{ t('Cheque_3') }}
+        {% else %}{{ t('محفظة') }} {{ t('إلكترونية') }}{% endif %}
       </p>
       
       {% if receipt.payment_method == 'cheque' and receipt.cheque_number %}
       <div class="cheque-info">
         <div class="cheque-row">
-          <label>رقم الشيك:</label>
+          <label>{{ t('رقم') }} {{ t('Cheque') }}:</label>
           <value>{{ receipt.cheque_number }}</value>
         </div>
         <div class="cheque-row">
-          <label>تاريخ الاستحقاق:</label>
+          <label>{{ t('History') }} {{ t('Due') }}:</label>
           <value>{{ receipt.cheque_date.strftime('%Y-%m-%d') if receipt.cheque_date else '-' }}</value>
         </div>
         <div class="cheque-row">
-          <label>البنك:</label>
+          <label>{{ t('Bank') }}:</label>
           <value>{{ receipt.bank_name or '-' }}</value>
         </div>
       </div>
       {% elif receipt.reference_number %}
-      <p class="ic-6"><strong>رقم المرجع:</strong> {{ receipt.reference_number }}</p>
+      <p class="ic-6"><strong>{{ t('رقم') }} {{ t('المرجع') }}:</strong> {{ receipt.reference_number }}</p>
       {% endif %}
     </div>
 
     {% set source_info = receipt.get_source_info() %}
     {% if source_info %}
     <div class="allocations">
-      <h4>تفاصيل الفاتورة</h4>
+      <h4>{{ t('Details') }} {{ t('Invoice_2') }}</h4>
       <div class="allocation-row">
         <div><strong>{{ source_info.number }}</strong> - {{ source_info.date }}</div>
         <div class="ic-7">{{ format_currency(receipt.amount, receipt.currency) }}</div>
@@ -329,7 +329,7 @@
 
     {% if receipt.notes %}
     <div class="notes">
-      <h4>ملاحظات وسبب الدفع</h4>
+      <h4>{{ t('Notes') }} {{ t('وسبب') }} {{ t('Payment_2') }}</h4>
       <p>{{ receipt.notes }}</p>
     </div>
     {% endif %}
@@ -340,7 +340,7 @@
       
       {% if settings and (settings.bank_name or settings.iban) %}
       <div class="ic-8">
-        <p class="ic-9">🏦 معلومات التحويل</p>
+        <p class="ic-9">🏦 {{ t('Info_2') }} {{ t('Transfer_2') }}</p>
         <div class="ic-10">
           {% if settings.bank_name and settings.bank_name != 'None' %}{{ settings.bank_name }}{% endif %}
           {% if settings.bank_name and settings.iban %} - {% endif %}
@@ -354,7 +354,7 @@
       <p class="ic-11">
         {% if settings.commercial_register and settings.commercial_register != 'None' %}س.ت: {{ settings.commercial_register }}{% endif %}
         {% if settings.commercial_register and settings.license_number %} | {% endif %}
-        {% if settings.license_number and settings.license_number != 'None' %}رخصة: {{ settings.license_number }}{% endif %}
+        {% if settings.license_number and settings.license_number != 'None' %}{{ t('رخصة') }}: {{ settings.license_number }}{% endif %}
       </p>
       {% endif %}
       
@@ -366,7 +366,7 @@
       {% endif %}
       
       <p>{{ settings.payment_terms_ar if settings and settings.payment_terms_ar else 'نرجو الالتزام بمواعيد الدفع' }}</p>
-      <p class="ic-13">شكراً لتعاملكم معنا</p>
+      <p class="ic-13">{{ t('شكراً') }} {{ t('لتعاملكم') }} {{ t('معنا') }}</p>
       {% if settings and settings.website and settings.website != 'None' %}<p class="ic-3">🌐 {{ settings.website }}</p>{% endif %}
       
       
@@ -380,8 +380,8 @@
     </div>
 
     <div class="signature">
-      <div>المحصل</div>
-      <div>العميل</div>
+      <div>{{ t('المحصل') }}</div>
+      <div>{{ t('Customer') }}</div>
     </div>
     
     

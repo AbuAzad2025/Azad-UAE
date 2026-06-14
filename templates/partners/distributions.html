@@ -1,12 +1,12 @@
 {% extends 'base.html' %}
 
-{% block title %}توزيعات الأرباح{% endblock %}
+{% block title %}{{ t('{{ t('توزيع') }}ات') }} {{ t('Profits') }}{% endblock %}
 
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
-  <h1 class="text-gradient mb-0"><i class="fas fa-chart-bar me-2"></i>توزيعات الأرباح</h1>
+  <h1 class="text-gradient mb-0"><i class="fas fa-chart-bar me-2"></i>{{ t('{{ t('توزيع') }}ات') }} {{ t('Profits') }}</h1>
   {% if current_user.has_permission('manage_users') %}
-  <a href="{{ url_for('partners.distribute') }}" class="btn btn-success"><i class="fas fa-plus mr-1"></i> توزيع جديد</a>
+  <a href="{{ url_for('partners.distribute') }}" class="btn btn-success"><i class="fas fa-plus mr-1"></i> {{ t('توزيع') }} {{ t('New') }}</a>
   {% endif %}
 </div>
 {% endblock %}
@@ -20,12 +20,12 @@
 <div class="card">
   <div class="card-header">
     <div class="d-flex justify-content-between align-items-center">
-      <h3 class="card-title mb-0">قائمة التوزيعات</h3>
+      <h3 class="card-title mb-0">{{ t('List') }} {{ t('Distributions') }}</h3>
       <div class="btn-group btn-group-sm">
-        <a href="{{ url_for('partners.distributions') }}" class="btn btn-outline-secondary {% if not request.args.get('status') %}active{% endif %}">الكل</a>
-        <a href="{{ url_for('partners.distributions', status='draft') }}" class="btn btn-outline-secondary {% if request.args.get('status') == 'draft' %}active{% endif %}">مسودة</a>
-        <a href="{{ url_for('partners.distributions', status='approved') }}" class="btn btn-outline-secondary {% if request.args.get('status') == 'approved' %}active{% endif %}">معتمد</a>
-        <a href="{{ url_for('partners.distributions', status='paid') }}" class="btn btn-outline-secondary {% if request.args.get('status') == 'paid' %}active{% endif %}">مدفوع</a>
+        <a href="{{ url_for('partners.distributions') }}" class="btn btn-outline-secondary {% if not request.args.get('status') %}active{% endif %}">{{ t('All') }}</a>
+        <a href="{{ url_for('partners.distributions', status='draft') }}" class="btn btn-outline-secondary {% if request.args.get('status') == 'draft' %}active{% endif %}">{{ t('مسودة') }}</a>
+        <a href="{{ url_for('partners.distributions', status='approved') }}" class="btn btn-outline-secondary {% if request.args.get('status') == 'approved' %}active{% endif %}">{{ t('معتمد') }}</a>
+        <a href="{{ url_for('partners.distributions', status='paid') }}" class="btn btn-outline-secondary {% if request.args.get('status') == 'paid' %}active{% endif %}">{{ t('Paid_2') }}</a>
       </div>
     </div>
   </div>
@@ -34,12 +34,12 @@
       <table class="table table-hover mb-0">
         <thead>
           <tr>
-            <th>الفترة</th>
-            <th>الشريك</th>
-            <th class="text-center">الربح الصافي</th>
-            <th class="text-center">النصيب</th>
-            <th class="text-center">الحالة</th>
-            <th class="text-center">إجراءات</th>
+            <th>{{ t('Period_2') }}</th>
+            <th>{{ t('Partner_2') }}</th>
+            <th class="text-center">{{ t('Profit') }} {{ t('Net_2') }}</th>
+            <th class="text-center">{{ t('النصيب') }}</th>
+            <th class="text-center">{{ t('Status') }}</th>
+            <th class="text-center">{{ t('Actions') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -58,20 +58,20 @@
               <form class="needs-validation" method="POST" action="{{ url_for('partners.approve_distribution', dist_id=d.id) }}" class="ic-1">
               {% endif %}
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
-                <button type="submit" class="btn btn-info" title="اعتماد"><i class="fas fa-check"></i></button>
+                <button type="submit" class="btn btn-info" title="{{ t('اعتماد') }}"><i class="fas fa-check"></i></button>
               </form>
               {% elif d.status == 'approved' %}
               {% if current_user.has_permission('manage_payments') %}
               <form method="POST" action="{{ url_for('partners.pay_distribution', dist_id=d.id) }}" class="ic-1">
               {% endif %}
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
-                <button type="submit" class="btn btn-success" title="تسجيل دفع"><i class="fas fa-money-bill-wave"></i></button>
+                <button type="submit" class="btn btn-success" title="{{ t('تسجيل') }} {{ t('Payment') }}"><i class="fas fa-money-bill-wave"></i></button>
               </form>
               {% endif %}
             </td>
           </tr>
           {% else %}
-          <tr><td colspan="6" class="text-center text-muted py-4">لا توجد توزيعات.</td></tr>
+          <tr><td colspan="6" class="text-center text-muted py-4">لا {{ t('توجد') }} {{ t('{{ t('توزيع') }}ات') }}.</td></tr>
           {% endfor %}
         </tbody>
       </table>

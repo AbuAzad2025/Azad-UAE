@@ -1,34 +1,34 @@
 {% extends 'base.html' %}
-{% block title %}كشف حساب موظف{% endblock %}
+{% block title %}{{ t('كشف') }} {{ t('Account_2') }} {{ t('Employee') }}{% endblock %}
 {% block content %}
 <div class="container-fluid">
     <div class="card">
         <div class="card-header bg-gradient-info text-white">
-            <h3 class="card-title">كشف حساب: {{ employee.name }}</h3>
+            <h3 class="card-title">{{ t('كشف') }} {{ t('Account_2') }}: {{ employee.name }}</h3>
             <div class="card-tools no-print">
-                <button data-action="window-print" class="btn btn-tool" title="طباعة"><i class="fas fa-print"></i></button>
+                <button data-action="window-print" class="btn btn-tool" title="{{ t('Print') }}"><i class="fas fa-print"></i></button>
             </div>
         </div>
         <div class="card-body">
             <div class="erp-report-print">
             <div class="row mb-3">
                 <div class="col-md-6">
-                    <p><strong>الاسم:</strong> {{ employee.name }}</p>
-                    <p><strong>الفرع:</strong> {{ employee.branch.name if employee.branch else 'عام' }}</p>
+                    <p><strong>{{ t('Name') }}:</strong> {{ employee.name }}</p>
+                    <p><strong>{{ t('Branch') }}:</strong> {{ employee.branch.name if employee.branch else 'عام' }}</p>
                 </div>
                 <div class="col-md-6 text-left">
-                    <p><strong>الراتب الأساسي:</strong> {{ employee.basic_salary }}</p>
-                    <p><strong>تاريخ الطباعة:</strong> {{ now().strftime('%Y-%m-%d %H:%M:%S') }}</p>
+                    <p><strong>{{ t('الراتب') }} {{ t('الأساسي') }}:</strong> {{ employee.basic_salary }}</p>
+                    <p><strong>{{ t('History') }} {{ t('Printing') }}:</strong> {{ now().strftime('%Y-%m-%d %H:%M:%S') }}</p>
                 </div>
             </div>
             
             <div class="table-responsive"><table class="table table-bordered table-striped">
                 <thead>
                     <tr>
-                        <th>التاريخ</th>
-                        <th>النوع</th>
-                        <th>البيان</th>
-                        <th class="text-center">المبلغ</th>
+                        <th>{{ t('Date') }}</th>
+                        <th>{{ t('النوع') }}</th>
+                        <th>{{ t('Description_3') }}</th>
+                        <th class="text-center">{{ t('Amount') }}</th>
                     </tr>
                 </thead>
                 <tbody>

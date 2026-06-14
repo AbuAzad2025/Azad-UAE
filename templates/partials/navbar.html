@@ -1,6 +1,6 @@
 <nav class="main-header navbar navbar-expand navbar-white navbar-light erp-navbar">
     <div class="erp-navbar-brand-zone">
-      <a class="erp-navbar-pushmenu" data-widget="pushmenu" href="#" role="button" title="تبديل القائمة الجانبية">
+      <a class="erp-navbar-pushmenu" data-widget="pushmenu" href="#" role="button" title="{{ t('تبديل') }} {{ t('Menu') }} {{ t('Sidebar') }}">
         <i class="fas fa-bars"></i>
       </a>
       <a href="{{ url_for('main.dashboard') }}" class="erp-navbar-brand-link">
@@ -16,103 +16,103 @@
       {% if current_user.is_authenticated and current_user.has_permission('manage_sales') %}
       <a href="{{ url_for('sales.index') }}" class="erp-nav-main-link {% if request.endpoint and 'sales' in request.endpoint %}active{% endif %}">
         <i class="fas fa-file-invoice"></i>
-        <span class="d-none d-lg-inline">المبيعات</span>
+        <span class="d-none d-lg-inline">{{ t('Sales') }}</span>
       </a>
       {% endif %}
       {% if current_user.is_authenticated and current_user.has_permission('manage_users') %}
       <a href="{{ url_for('users.index') }}" class="erp-nav-main-link {% if request.endpoint and 'users' in request.endpoint %}active{% endif %}">
         <i class="fas fa-users-cog"></i>
-        <span class="d-none d-lg-inline">المستخدمين</span>
+        <span class="d-none d-lg-inline">{{ t('Users') }}</span>
       </a>
       {% endif %}
       {% if current_user.is_authenticated and current_user.has_permission('view_reports') %}
       <a href="{{ url_for('reports.sales') }}" class="erp-nav-main-link {% if request.endpoint and 'reports' in request.endpoint %}active{% endif %}">
         <i class="fas fa-chart-bar"></i>
-        <span class="d-none d-lg-inline">التقارير</span>
+        <span class="d-none d-lg-inline">{{ t('Reports') }}</span>
       </a>
       {% endif %}
       {% if current_user.is_authenticated and (current_user.is_owner or (current_user.role and current_user.role.slug in ['developer','super_admin','manager'])) %}
       <a href="{{ url_for('owner.company_info' if (current_user.role and current_user.role.slug in ['super_admin','manager']) else 'owner.system_config') }}" class="erp-nav-main-link {% if request.endpoint and 'owner.' in request.endpoint %}active{% endif %}">
         <i class="fas fa-cog"></i>
-        <span class="d-none d-lg-inline">الإعدادات</span>
+        <span class="d-none d-lg-inline">{{ t('Settings') }}</span>
       </a>
       {% endif %}
     </div>
     <div class="erp-navbar-actions-zone">
-      <button class="btn btn-outline-light erp-navbar-tool-btn" type="button" onclick="toggleSidebarDirection();" title="تبديل موقع القائمة">
+      <button class="btn btn-outline-light erp-navbar-tool-btn" type="button" onclick="toggleSidebarDirection();" title="{{ t('تبديل') }} {{ t('موقع') }} {{ t('Menu') }}">
         <i class="fas fa-exchange-alt"></i>
       </button>
       <div class="dropdown erp-navbar-tool-dropdown d-none d-md-block">
-        <button class="btn btn-outline-light erp-navbar-tool-btn" type="button" data-toggle="dropdown" aria-expanded="false" title="أدوات النظام">
+        <button class="btn btn-outline-light erp-navbar-tool-btn" type="button" data-toggle="dropdown" aria-expanded="false" title="{{ t('Tools') }} {{ t('System') }}">
           <i class="fas fa-tools"></i>
-          <span class="d-none d-lg-inline">أدوات</span>
+          <span class="d-none d-lg-inline">{{ t('Tools') }}</span>
         </button>
         <div class="dropdown-menu dropdown-menu-left">
-          <span class="dropdown-item dropdown-header">أدوات النظام</span>
+          <span class="dropdown-item dropdown-header">{{ t('Tools') }} {{ t('System') }}</span>
           <div class="dropdown-divider"></div>
           <a class="dropdown-item" href="#" data-toggle="modal" data-target="#fxModal">
-            <i class="fas fa-coins text-warning mr-2"></i>أسعار الصرف
+            <i class="fas fa-coins text-warning mr-2"></i>{{ t('أسعار') }} {{ t('Exchange') }}
           </a>
           <a class="dropdown-item" href="#" data-toggle="modal" data-target="#navbarCalculatorModal">
-            <i class="fas fa-calculator text-info mr-2"></i>الآلة الحاسبة
+            <i class="fas fa-calculator text-info mr-2"></i>{{ t('الآلة') }} {{ t('الحاسبة') }}
           </a>
           <a class="dropdown-item" href="#" onclick="toggleSidebarDirection(); return false;">
-            <i class="fas fa-exchange-alt text-success mr-2"></i>موقع القائمة
+            <i class="fas fa-exchange-alt text-success mr-2"></i>{{ t('موقع') }} {{ t('Menu') }}
           </a>
           {% if current_user.is_authenticated and ai_nav_visible and current_user.has_permission('view_reports') %}
           <a class="dropdown-item" href="{{ url_for('ai.assistant_page') }}">
-            <i class="fas fa-robot text-primary mr-2"></i>المساعد الذكي
+            <i class="fas fa-robot text-primary mr-2"></i>{{ t('Assistant') }} {{ t('Smart') }}
           </a>
           {% endif %}
           <div class="dropdown-divider"></div>
           <a class="dropdown-item" href="#" data-ui-action="toggle-viewmode">
-            <i class="fas fa-desktop text-secondary mr-2"></i><span data-ui-role="viewmode-label">تلقائي</span>
+            <i class="fas fa-desktop text-secondary mr-2"></i><span data-ui-role="viewmode-label">{{ t('تلقائي') }}</span>
           </a>
           {% if is_global_scope_user %}
           <div class="dropdown-divider"></div>
-          <span class="dropdown-item dropdown-header">الشركة / الفرع</span>
+          <span class="dropdown-item dropdown-header">{{ t('Company') }} / {{ t('Branch') }}</span>
           {% if active_branch %}
           <span class="dropdown-item text-muted small">
-            <i class="fas fa-code-branch mr-2"></i>الفرع: {{ active_branch.name }}
+            <i class="fas fa-code-branch mr-2"></i>{{ t('Branch') }}: {{ active_branch.name }}
           </span>
           {% else %}
           <span class="dropdown-item text-muted small">
-            <i class="fas fa-sitemap mr-2"></i>كل الفروع
+            <i class="fas fa-sitemap mr-2"></i>كل {{ t('Branches') }}
           </span>
           {% endif %}
           <a class="dropdown-item" href="{{ url_for('tenants.switch', tenant_id=0) }}">
-            <i class="fas fa-building mr-2"></i>تبديل الشركة
+            <i class="fas fa-building mr-2"></i>{{ t('تبديل') }} {{ t('Company') }}
           </a>
           {% endif %}
         </div>
       </div>
       <div class="dropdown">
-        <button class="btn btn-outline-light erp-navbar-icon-btn" type="button" data-toggle="dropdown" title="تغيير اللغة">
+        <button class="btn btn-outline-light erp-navbar-icon-btn" type="button" data-toggle="dropdown" title="{{ t('Change') }} {{ t('Language') }}">
           <i class="fas fa-globe"></i>
           <span class="d-none d-lg-inline">{{ session.get('language', 'ar')|upper }}</span>
         </button>
         <div class="dropdown-menu dropdown-menu-sm dropdown-menu-left">
           <a href="{{ url_for('language.set_language', lang='ar', next=request.full_path) }}" class="dropdown-item {% if session.get('language', 'ar') == 'ar' %}active{% endif %}">
-            <i class="fas fa-check mr-2 {% if session.get('language', 'ar') != 'ar' %}invisible{% endif %}"></i>العربية
+            <i class="fas fa-check mr-2 {% if session.get('language', 'ar') != 'ar' %}invisible{% endif %}"></i>{{ t('Arabic_2') }}
           </a>
           <a href="{{ url_for('language.set_language', lang='en', next=request.full_path) }}" class="dropdown-item {% if session.get('language') == 'en' %}active{% endif %}">
             <i class="fas fa-check mr-2 {% if session.get('language') != 'en' %}invisible{% endif %}"></i>English
           </a>
         </div>
       </div>
-      <button type="button" class="btn btn-outline-light erp-navbar-icon-btn" data-ui-action="toggle-mode" title="التبديل إلى الوضع الداكن" aria-label="التبديل إلى الوضع الداكن">
+      <button type="button" class="btn btn-outline-light erp-navbar-icon-btn" data-ui-action="toggle-mode" title="{{ t('Toggle') }} إلى {{ t('Mode') }} {{ t('Dark') }}" aria-label="{{ t('Toggle') }} إلى {{ t('Mode') }} {{ t('Dark') }}">
         <i class="fas fa-sun" data-ui-role="mode-icon"></i>
       </button>
-      <div class="erp-theme-switcher d-none d-md-flex" role="group" aria-label="اختيار الثيم">
-        <button type="button" class="erp-theme-option" data-value="palestinian" data-ui-action="set-variant" title="الثيم الفلسطيني">
-          <span>فلسطيني</span>
+      <div class="erp-theme-switcher d-none d-md-flex" role="group" aria-label="{{ t('Select') }} {{ t('الثيم') }}">
+        <button type="button" class="erp-theme-option" data-value="palestinian" data-ui-action="set-variant" title="{{ t('الثيم') }} {{ t('Palestinian_3') }}">
+          <span>{{ t('Palestinian_2') }}</span>
         </button>
-        <button type="button" class="erp-theme-option" data-value="gulf" data-ui-action="set-variant" title="الثيم الخليجي">
-          <span>خليجي</span>
+        <button type="button" class="erp-theme-option" data-value="gulf" data-ui-action="set-variant" title="{{ t('الثيم') }} {{ t('Gulf_3') }}">
+          <span>{{ t('Gulf_2') }}</span>
         </button>
       </div>
       <div class="dropdown">
-        <button class="btn btn-outline-light erp-navbar-user-btn" type="button" data-toggle="dropdown" title="الملف الشخصي">
+        <button class="btn btn-outline-light erp-navbar-user-btn" type="button" data-toggle="dropdown" title="{{ t('File') }} {{ t('Personal') }}">
           <span class="erp-user-avatar"><i class="far fa-user"></i></span>
           <span class="d-none d-lg-inline ml-2">{{ current_user.username }}</span>
         </button>
@@ -120,11 +120,11 @@
           <span class="dropdown-item dropdown-header">{{ current_user.username }}</span>
           <div class="dropdown-divider"></div>
           <a href="{{ url_for('main.my_profile') }}" class="dropdown-item">
-            <i class="fas fa-user-circle mr-2"></i>بروفايلي
+            <i class="fas fa-user-circle mr-2"></i>{{ t('Profile') }}
           </a>
           <div class="dropdown-divider"></div>
           <a href="{{ url_for('auth.logout') }}" class="dropdown-item">
-            <i class="fas fa-sign-out-alt mr-2"></i>تسجيل خروج
+            <i class="fas fa-sign-out-alt mr-2"></i>{{ t('تسجيل') }} {{ t('خروج') }}
           </a>
         </div>
       </div>

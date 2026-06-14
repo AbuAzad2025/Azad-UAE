@@ -1,16 +1,16 @@
 {% extends 'base.html' %}
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - تفاصيل العميل {{ customer.name }}{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('Details') }} {{ t('Customer') }} {{ customer.name }}{% endblock %}
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
   <div>
-    <h1 class="mb-0"><i class="fas fa-user mr-2"></i>تفاصيل الزبون: {{ customer.name }}</h1>
+    <h1 class="mb-0"><i class="fas fa-user mr-2"></i>{{ t('Details') }} {{ t('Customer_2') }}: {{ customer.name }}</h1>
   </div>
   <div>
     <a href="{{ url_for('customers.index') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right mr-2"></i>العودة للقائمة
+      <i class="fas fa-arrow-right mr-2"></i>{{ t('العودة') }} {{ t('للقائمة') }}
     </a>
     <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
-      <i class="fas fa-home mr-2"></i>الرئيسية
+      <i class="fas fa-home mr-2"></i>{{ t('Main_2') }}
     </a>
   </div>
 </div>
@@ -23,28 +23,28 @@
       <div class="card-body box-profile">
         <h3 class="profile-username text-center">{{ customer.name }}</h3>
         <p class="text-muted text-center">
-          {% if customer.customer_type == 'regular' %}زبون عادي
-          {% elif customer.customer_type == 'merchant' %}تاجر
-          {% else %}شريك{% endif %}
+          {% if customer.customer_type == 'regular' %}{{ t('Customer_3') }} {{ t('عادي') }}
+          {% elif customer.customer_type == 'merchant' %}{{ t('تاجر') }}
+          {% else %}{{ t('Partner') }}{% endif %}
         </p>
         <ul class="list-group list-group-unbordered mb-3">
           <li class="list-group-item">
-            <b>التصنيف</b>
+            <b>{{ t('التصنيف') }}</b>
             <span class="float-left">
               {% if customer.customer_classification == 'vip' %}<span class="badge badge-danger">VIP</span>
-              {% elif customer.customer_classification == 'premium' %}<span class="badge badge-warning">مميز</span>
-              {% else %}<span class="badge badge-secondary">عادي</span>{% endif %}
+              {% elif customer.customer_classification == 'premium' %}<span class="badge badge-warning">{{ t('Featured') }}</span>
+              {% else %}<span class="badge badge-secondary">{{ t('عادي') }}</span>{% endif %}
             </span>
           </li>
           <li class="list-group-item">
             <b>{{ t('Balance') }}</b>
             <span class="float-left {% if customer.get_balance_base() > 0 %}text-success{% elif customer.get_balance_base() < 0 %}text-danger{% else %}text-muted{% endif %}">
               {{ format_currency(customer.get_balance_base()) }}
-              {% if customer.get_balance_base() > 0 %}<small class="text-success ms-1">(رصيد للعميل)</small>{% elif customer.get_balance_base() < 0 %}<small class="text-danger ms-1">(ذمة على العميل)</small>{% endif %}
+              {% if customer.get_balance_base() > 0 %}<small class="text-success ms-1">({{ t('Balance_3') }} {{ t('للعميل') }})</small>{% elif customer.get_balance_base() < 0 %}<small class="text-danger ms-1">({{ t('ذمة') }} على {{ t('Customer') }})</small>{% endif %}
             </span>
           </li>
           <li class="list-group-item">
-            <b>إجمالي المشتريات</b>
+            <b>{{ t('Total_2') }} {{ t('Purchases') }}</b>
             <span class="float-left">{{ format_currency(customer.total_purchases) }}</span>
           </li>
         </ul>
@@ -52,21 +52,21 @@
         {% if current_user.has_permission('manage_payments') %}
         <a href="{{ url_for('payments.create_voucher', direction='incoming', party_type='customer', party_id=customer.id) }}" class="btn btn-primary btn-block">
         {% endif %}
-          <i class="fas fa-money-bill-wave"></i> استلام دفعة (للعميل رصيد)
+          <i class="fas fa-money-bill-wave"></i> {{ t('استلام') }} {{ t('دفعة') }} ({{ t('للعميل') }} {{ t('Balance_3') }})
         </a>
         {% endif %}
         {% elif customer.get_balance_base() < 0 %}
         {% if current_user.has_permission('manage_payments') %}
         <a href="{{ url_for('payments.create_voucher', direction='outgoing', party_type='customer', party_id=customer.id) }}" class="btn btn-warning btn-block">
         {% endif %}
-          <i class="fas fa-money-bill-wave"></i> صرف دفعة (ذمة على العميل)
+          <i class="fas fa-money-bill-wave"></i> {{ t('صرف') }} {{ t('دفعة') }} ({{ t('ذمة') }} على {{ t('Customer') }})
         </a>
         {% endif %}
-        <a href="{{ url_for('customers.edit', id=customer.id) }}" class="btn btn-warning btn-block"><i class="fas fa-edit"></i> تعديل</a>
-        <a href="{{ url_for('customers.statement', id=customer.id) }}" class="btn btn-success btn-block"><i class="fas fa-file-alt"></i> كشف حساب</a>
+        <a href="{{ url_for('customers.edit', id=customer.id) }}" class="btn btn-warning btn-block"><i class="fas fa-edit"></i> {{ t('Edit') }}</a>
+        <a href="{{ url_for('customers.statement', id=customer.id) }}" class="btn btn-success btn-block"><i class="fas fa-file-alt"></i> {{ t('كشف') }} {{ t('Account_2') }}</a>
         <button type="button" class="btn btn-danger btn-block" 
                 data-delete-item="{{customer.id}}" data-item-type="customers" data-item-name="{{customer.name|tojson}}" data-redirect-url="{{url_for('customers.index')|tojson}}">
-          <i class="fas fa-trash"></i> حذف
+          <i class="fas fa-trash"></i> {{ t('Delete') }}
         </button>
       </div>
     </div>
@@ -75,17 +75,17 @@
   <div class="col-md-8">
     <div class="card">
       <div class="card-header">
-        <h3 class="card-title">معلومات الاتصال</h3>
+        <h3 class="card-title">{{ t('Info_2') }} {{ t('الاتصال') }}</h3>
       </div>
       <div class="card-body">
         <dl class="row">
-          <dt class="col-sm-4">الهاتف:</dt>
+          <dt class="col-sm-4">{{ t('Phone') }}:</dt>
           <dd class="col-sm-8">{{ customer.phone or '-' }}</dd>
-          <dt class="col-sm-4">البريد:</dt>
+          <dt class="col-sm-4">{{ t('Email_2') }}:</dt>
           <dd class="col-sm-8">{{ customer.email or '-' }}</dd>
-          <dt class="col-sm-4">العنوان:</dt>
+          <dt class="col-sm-4">{{ t('Address') }}:</dt>
           <dd class="col-sm-8">{{ customer.address or '-' }}</dd>
-          <dt class="col-sm-4">العملة الافتراضية:</dt>
+          <dt class="col-sm-4">{{ t('Currency') }} {{ t('الافتراضية') }}:</dt>
           <dd class="col-sm-8">{{ customer.preferred_currency or 'AED' }}</dd>
         </dl>
       </div>
@@ -93,7 +93,7 @@
 
     <div class="card">
       <div class="card-header">
-        <h3 class="card-title">آخر المبيعات</h3>
+        <h3 class="card-title">{{ t('Last') }} {{ t('Sales') }}</h3>
       </div>
       <div class="card-body p-0">
         <div class="table-responsive"><table class="table table-sm">
@@ -103,7 +103,7 @@
               <th>{{ t('Date') }}</th>
               <th>{{ t('Amount') }}</th>
               <th>{{ t('Paid') }}</th>
-              <th>الباقي</th>
+              <th>{{ t('Remaining_2') }}</th>
             </tr>
           </thead>
           <tbody>

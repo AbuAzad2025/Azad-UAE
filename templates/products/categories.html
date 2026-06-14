@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - فئات المنتجات{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('فئات') }} {{ t('Products') }}{% endblock %}
 
 {% block content %}
 <div class="content-wrapper">
@@ -8,18 +8,18 @@
         <div class="container-fluid">
             <div class="row mb-2">
                 <div class="col-sm-6">
-                    <h1 class="m-0">فئات المنتجات</h1>
+                    <h1 class="m-0">{{ t('فئات') }} {{ t('Products') }}</h1>
                 </div>
                 <div class="col-sm-6">
                     <div class="float-right">
                         <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addCategoryModal">
-                            <i class="fas fa-plus"></i> إضافة فئة جديدة
+                            <i class="fas fa-plus"></i> {{ t('Add') }} {{ t('فئة') }} {{ t('New_3') }}
                         </button>
                         <a href="{{ url_for('products.index') }}" class="btn btn-secondary">
-                            <i class="fas fa-arrow-right mr-2"></i>العودة للمنتجات
+                            <i class="fas fa-arrow-right mr-2"></i>{{ t('العودة') }} {{ t('Products_3') }}
                         </a>
                         <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
-                            <i class="fas fa-home mr-2"></i>الرئيسية
+                            <i class="fas fa-home mr-2"></i>{{ t('Main_2') }}
                         </a>
                     </div>
                 </div>
@@ -33,7 +33,7 @@
                 <div class="col-12">
                     <div class="card">
                         <div class="card-header">
-                            <h3 class="card-title">فئات المنتجات</h3>
+                            <h3 class="card-title">{{ t('فئات') }} {{ t('Products') }}</h3>
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
@@ -41,11 +41,11 @@
                                     <thead>
                                         <tr>
                                             <th>{{ t('Name') }}</th>
-                                            <th>الاسم بالعربية</th>
+                                            <th>{{ t('Name') }} {{ t('In Arabic') }}</th>
                                             <th>{{ t('Description') }}</th>
-                                            <th>عدد المنتجات</th>
+                                            <th>{{ t('Count') }} {{ t('Products') }}</th>
                                             <th>{{ t('Status') }}</th>
-                                            <th>الإجراءات</th>
+                                            <th>{{ t('الإجراءات') }}</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -64,10 +64,10 @@
                                             </td>
                                             <td>
                                                 <button type="button" class="btn btn-primary">
-                                                    <i class="fas fa-edit"></i> تعديل
+                                                    <i class="fas fa-edit"></i> {{ t('Edit') }}
                                                 </button>
                                                 <button type="button" class="btn btn-danger">
-                                                    <i class="fas fa-trash"></i> حذف
+                                                    <i class="fas fa-trash"></i> {{ t('Delete') }}
                                                 </button>
                                             </td>
                                         </tr>
@@ -88,7 +88,7 @@
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">إضافة فئة منتج جديدة</h5>
+                <h5 class="modal-title">{{ t('Add') }} {{ t('فئة') }} {{ t('Product_2') }} {{ t('New_3') }}</h5>
                 <button type="button" class="close" data-dismiss="modal">
                     <span>&times;</span>
                 </button>
@@ -97,15 +97,15 @@
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
                 <div class="modal-body">
                     <div class="form-group">
-                        <label for="name">الاسم:</label>
+                        <label for="name">{{ t('Name') }}:</label>
                         <input type="text" class="form-control" id="name" name="name" required aria-label="name" minlength="2" maxlength="100">
                     </div>
                     <div class="form-group">
-                        <label for="name_ar">الاسم بالعربية:</label>
+                        <label for="name_ar">{{ t('Name') }} {{ t('In Arabic') }}:</label>
                         <input type="text" class="form-control" id="name_ar" name="name_ar" aria-label="name ar" minlength="2" maxlength="100">
                     </div>
                     <div class="form-group">
-                        <label for="description">الوصف:</label>
+                        <label for="description">{{ t('Description') }}:</label>
                         <textarea class="form-control" id="description" name="description" rows="3" aria-label="description" maxlength="500"></textarea>
                     </div>
                 </div>

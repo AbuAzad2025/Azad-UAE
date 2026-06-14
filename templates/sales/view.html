@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - فاتورة مبيعات #{{ sale.sale_number }}{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('Invoice') }} {{ t('Sales_2') }} #{{ sale.sale_number }}{% endblock %}
 
 {% block page_title %}
 
@@ -22,19 +22,19 @@
 
     <a href="{{ url_for('sales.print_invoice', id=sale.id) }}" class="btn btn-secondary btn-lg" target="_blank" rel="noopener noreferrer">
 
-      <i class="fas fa-print mr-2"></i>طباعة
+      <i class="fas fa-print mr-2"></i>{{ t('Print') }}
 
     </a>
 
     <button type="button" class="btn btn-warning btn-lg" data-toggle="modal" data-target="#returnModal">
 
-      <i class="fas fa-undo mr-2"></i>مرتجع
+      <i class="fas fa-undo mr-2"></i>{{ t('Return') }}
 
     </button>
 
     <a href="{{ url_for('sales.index') }}" class="btn btn-info btn-lg">
 
-      <i class="fas fa-arrow-right mr-2"></i>العودة للقائمة
+      <i class="fas fa-arrow-right mr-2"></i>{{ t('العودة') }} {{ t('للقائمة') }}
 
     </a>
 
@@ -42,13 +42,13 @@
 
             data-delete-item="{{sale.id}}" data-item-type="sales" data-item-name="{{sale.sale_number|tojson}}">
 
-      <i class="fas fa-trash mr-2"></i>حذف
+      <i class="fas fa-trash mr-2"></i>{{ t('Delete') }}
 
     </button>
 
     <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary btn-lg">
 
-      <i class="fas fa-home mr-2"></i>الرئيسية
+      <i class="fas fa-home mr-2"></i>{{ t('Main_2') }}
 
     </a>
 
@@ -161,11 +161,11 @@
 
           <div class="col-6">
 
-            <h2 class="mb-3"><i class="fas fa-file-invoice mr-2"></i>فاتورة بيع</h2>
+            <h2 class="mb-3"><i class="fas fa-file-invoice mr-2"></i>{{ t('Invoice') }} {{ t('Sale') }}</h2>
 
-            <p class="mb-1"><strong>رقم الفاتورة:</strong> {{ sale.sale_number }}</p>
+            <p class="mb-1"><strong>{{ t('رقم') }} {{ t('Invoice_2') }}:</strong> {{ sale.sale_number }}</p>
 
-            <p class="mb-0"><strong>التاريخ:</strong> {{ sale.sale_date.strftime('%Y-%m-%d %H:%M') }}</p>
+            <p class="mb-0"><strong>{{ t('Date') }}:</strong> {{ sale.sale_date.strftime('%Y-%m-%d %H:%M') }}</p>
 
           </div>
 
@@ -195,13 +195,13 @@
 
           <div class="col-md-6">
 
-            <h5 class="text-primary"><i class="fas fa-user-circle mr-2"></i>معلومات الزبون</h5>
+            <h5 class="text-primary"><i class="fas fa-user-circle mr-2"></i>{{ t('Info_2') }} {{ t('Customer_2') }}</h5>
 
             <div class="p-3 bg-light rounded">
 
               <p class="mb-2">
 
-                <strong>الاسم:</strong> 
+                <strong>{{ t('Name') }}:</strong> 
 
                 {% if current_user.has_permission('manage_customers') %}
                 <a href="{{ url_for('customers.view', id=sale.customer.id) }}" class="text-primary">
@@ -215,13 +215,13 @@
 
               {% if sale.customer.phone %}
 
-              <p class="mb-2"><strong>الهاتف:</strong> {{ sale.customer.phone }}</p>
+              <p class="mb-2"><strong>{{ t('Phone') }}:</strong> {{ sale.customer.phone }}</p>
 
               {% endif %}
 
               {% if sale.customer.email %}
 
-              <p class="mb-0"><strong>البريد:</strong> {{ sale.customer.email }}</p>
+              <p class="mb-0"><strong>{{ t('Email_2') }}:</strong> {{ sale.customer.email }}</p>
 
               {% endif %}
 
@@ -231,17 +231,17 @@
 
           <div class="col-md-6">
 
-            <h5 class="text-success"><i class="fas fa-user-tie mr-2"></i>معلومات البائع</h5>
+            <h5 class="text-success"><i class="fas fa-user-tie mr-2"></i>{{ t('Info_2') }} {{ t('البائع') }}</h5>
 
             <div class="p-3 bg-light rounded">
 
-              <p class="mb-2"><strong>الاسم:</strong> {{ sale.seller.full_name or sale.seller.username }}</p>
+              <p class="mb-2"><strong>{{ t('Name') }}:</strong> {{ sale.seller.full_name or sale.seller.username }}</p>
 
-              <p class="mb-0"><strong>العملة:</strong> {{ sale.currency }}</p>
+              <p class="mb-0"><strong>{{ t('Currency') }}:</strong> {{ sale.currency }}</p>
 
               {% if sale.exchange_rate != 1 %}
 
-              <p class="mb-0"><strong>سعر الصرف:</strong> {{ "{:,.6f}".format(sale.exchange_rate) }}</p>
+              <p class="mb-0"><strong>{{ t('Price_2') }} {{ t('Exchange') }}:</strong> {{ "{:,.6f}".format(sale.exchange_rate) }}</p>
 
               {% endif %}
 
@@ -253,7 +253,7 @@
 
 
 
-        <h5 class="text-primary mb-3"><i class="fas fa-list mr-2"></i>الأصناف</h5>
+        <h5 class="text-primary mb-3"><i class="fas fa-list mr-2"></i>{{ t('Items') }}</h5>
 
         <div class="table-responsive">
 
@@ -265,13 +265,13 @@
 
                 <th>#</th>
 
-                <th>المنتج</th>
+                <th>{{ t('Product') }}</th>
 
                 <th class="text-center">{{ t('Quantity') }}</th>
 
                 <th class="text-center">{{ t('Price') }}</th>
 
-                <th class="text-center">الخصم%</th>
+                <th class="text-center">{{ t('Discount') }}%</th>
 
                 <th class="text-center">{{ t('Total') }}</th>
 
@@ -353,7 +353,7 @@
 
         <div class="alert alert-info mt-3">
 
-          <h6><i class="fas fa-sticky-note mr-2"></i>ملاحظات:</h6>
+          <h6><i class="fas fa-sticky-note mr-2"></i>{{ t('Notes') }}:</h6>
 
           <p class="mb-0">{{ sale.notes }}</p>
 
@@ -367,7 +367,7 @@
 
         {% if sale.payments %}
 
-        <h5 class="text-primary mb-3 mt-4"><i class="fas fa-money-bill-wave mr-2"></i>الدفعات</h5>
+        <h5 class="text-primary mb-3 mt-4"><i class="fas fa-money-bill-wave mr-2"></i>{{ t('ال{{ t('دفعات') }}') }}</h5>
 
         <div class="table-responsive">
 
@@ -377,15 +377,15 @@
 
               <tr>
 
-                <th>رقم الدفعة</th>
+                <th>{{ t('رقم') }} {{ t('{{ t('Payment_2') }}ة') }}</th>
 
-                <th>التاريخ</th>
+                <th>{{ t('Date') }}</th>
 
-                <th>المبلغ</th>
+                <th>{{ t('Amount') }}</th>
 
-                <th>طريقة الدفع</th>
+                <th>{{ t('طريقة') }} {{ t('Payment_2') }}</th>
 
-                <th>التفاصيل</th>
+                <th>{{ t('Details_2') }}</th>
 
               </tr>
 
@@ -407,23 +407,23 @@
 
                   {% if payment.payment_method == 'cash' %}
 
-                    <span class="badge badge-success"><i class="fas fa-money-bill-wave"></i> نقدي</span>
+                    <span class="badge badge-success"><i class="fas fa-money-bill-wave"></i> {{ t('Cash_2') }}</span>
 
                   {% elif payment.payment_method == 'card' %}
 
-                    <span class="badge badge-info"><i class="fas fa-credit-card"></i> بطاقة</span>
+                    <span class="badge badge-info"><i class="fas fa-credit-card"></i> {{ t('Card') }}</span>
 
                   {% elif payment.payment_method == 'bank_transfer' %}
 
-                    <span class="badge badge-primary"><i class="fas fa-university"></i> تحويل بنكي</span>
+                    <span class="badge badge-primary"><i class="fas fa-university"></i> {{ t('Transfer') }} {{ t('Bank_3') }}</span>
 
                   {% elif payment.payment_method == 'cheque' %}
 
-                    <span class="badge badge-warning"><i class="fas fa-file-invoice"></i> شيك</span>
+                    <span class="badge badge-warning"><i class="fas fa-file-invoice"></i> {{ t('Cheque_3') }}</span>
 
                   {% else %}
 
-                    <span class="badge badge-secondary"><i class="fas fa-wallet"></i> محفظة إلكترونية</span>
+                    <span class="badge badge-secondary"><i class="fas fa-wallet"></i> {{ t('محفظة') }} {{ t('إلكترونية') }}</span>
 
                   {% endif %}
 
@@ -437,13 +437,13 @@
 
                       <small>
 
-                        <i class="fas fa-hashtag"></i> <strong>رقم الشيك:</strong> {{ payment.cheque_number }}<br>
+                        <i class="fas fa-hashtag"></i> <strong>{{ t('رقم') }} {{ t('Cheque') }}:</strong> {{ payment.cheque_number }}<br>
 
-                        <i class="fas fa-calendar"></i> <strong>تاريخ الاستحقاق:</strong> 
+                        <i class="fas fa-calendar"></i> <strong>{{ t('History') }} {{ t('Due') }}:</strong> 
 
                         <span class="badge badge-info">{{ payment.cheque_date.strftime('%Y-%m-%d') if payment.cheque_date else '-' }}</span><br>
 
-                        <i class="fas fa-university"></i> <strong>البنك:</strong> {{ payment.bank_name or '-' }}
+                        <i class="fas fa-university"></i> <strong>{{ t('Bank') }}:</strong> {{ payment.bank_name or '-' }}
 
                       </small>
 
@@ -489,13 +489,13 @@
 
       <div class="card-body text-center">
 
-        <h5 class="mb-3">حالة الدفع</h5>
+        <h5 class="mb-3">{{ t('Status_2') }} {{ t('Payment_2') }}</h5>
 
         {% if sale.payment_status == 'paid' %}
 
         <div class="status-badge badge-success">
 
-          <i class="fas fa-check-circle"></i> مدفوعة بالكامل
+          <i class="fas fa-check-circle"></i> {{ t('Paid_4') }} {{ t('{{ t('بال') }}كامل') }}
 
         </div>
 
@@ -503,7 +503,7 @@
 
         <div class="status-badge badge-warning">
 
-          <i class="fas fa-clock"></i> مدفوعة جزئياً
+          <i class="fas fa-clock"></i> {{ t('Paid_4') }} {{ t('Partial') }}
 
         </div>
 
@@ -511,7 +511,7 @@
 
         <div class="status-badge badge-danger">
 
-          <i class="fas fa-hourglass-half"></i> آجلة
+          <i class="fas fa-hourglass-half"></i> {{ t('Credit_2') }}
 
         </div>
 
@@ -531,7 +531,7 @@
 
         <h3 class="card-title text-white mb-0">
 
-          <i class="fas fa-calculator mr-2"></i>الإجماليات
+          <i class="fas fa-calculator mr-2"></i>{{ t('{{ t('Total_3') }}ات') }}
 
         </h3>
 
@@ -543,7 +543,7 @@
 
           <div class="d-flex justify-content-between mb-2">
 
-            <span>المجموع الفرعي:</span>
+            <span>{{ t('Total') }} {{ t('Sub') }}:</span>
 
             <strong>{{ format_currency(sale.subtotal) }}</strong>
 
@@ -555,7 +555,7 @@
 
           <div class="d-flex justify-content-between mb-2">
 
-            <span><i class="fas fa-tag text-danger mr-1"></i>الخصم:</span>
+            <span><i class="fas fa-tag text-danger mr-1"></i>{{ t('Discount') }}:</span>
 
             <strong class="text-danger">-{{ format_currency(sale.discount_amount) }}</strong>
 
@@ -569,7 +569,7 @@
 
           <div class="d-flex justify-content-between mb-2">
 
-            <span><i class="fas fa-truck text-info mr-1"></i>الشحن:</span>
+            <span><i class="fas fa-truck text-info mr-1"></i>{{ t('Shipping') }}:</span>
 
             <strong class="text-info">+{{ format_currency(sale.shipping_cost) }}</strong>
 
@@ -583,7 +583,7 @@
 
           <div class="d-flex justify-content-between mb-2">
 
-            <span><i class="fas fa-percent text-warning mr-1"></i>الضريبة:</span>
+            <span><i class="fas fa-percent text-warning mr-1"></i>{{ t('Tax') }}:</span>
 
             <strong class="text-warning">+{{ format_currency(sale.tax_amount) }}</strong>
 
@@ -601,7 +601,7 @@
 
         <div class="d-flex justify-content-between align-items-center mb-3 ic-3">
 
-          <strong>الإجمالي:</strong>
+          <strong>{{ t('Total_3') }}:</strong>
 
           <strong class="ic-2">
 
@@ -617,7 +617,7 @@
 
         <div class="d-flex justify-content-between mb-3 text-muted">
 
-          <span>بال{{ tenant_currency_name_ar or 'درهم' }}:</span>
+          <span>{{ t('بال') }}{{ tenant_currency_name_ar or 'درهم' }}:</span>
 
           <strong>{{ format_currency(sale.base_amount) }}</strong>
 
@@ -629,7 +629,7 @@
 
         <div class="d-flex justify-content-between mb-2">
 
-          <span><i class="fas fa-check-circle text-success mr-1"></i>المدفوع المؤكد:</span>
+          <span><i class="fas fa-check-circle text-success mr-1"></i>{{ t('Paid') }} {{ t('Confirmed_4') }}:</span>
 
           <strong class="text-success">{{ format_currency(sale.paid_amount, sale.currency) }}</strong>
 
@@ -641,7 +641,7 @@
 
         <div class="d-flex justify-content-between mb-2">
 
-          <span><i class="fas fa-hourglass-half text-warning mr-1"></i>شيكات معلقة:</span>
+          <span><i class="fas fa-hourglass-half text-warning mr-1"></i>{{ t('Cheques_2') }} {{ t('Pending_2') }}:</span>
 
           <strong class="text-warning">{{ format_currency(sale.pending_cheques_amount) }}</strong>
 
@@ -649,7 +649,7 @@
 
         <small class="text-muted d-block mb-2">
 
-          <i class="fas fa-info-circle"></i> هذه الشيكات لم تُصرف بعد من البنك
+          <i class="fas fa-info-circle"></i> هذه {{ t('Cheques') }} لم {{ t('تُصرف') }} بعد من {{ t('Bank') }}
 
         </small>
 
@@ -659,7 +659,7 @@
 
         <div class="d-flex justify-content-between mb-3">
 
-          <span><i class="fas fa-exclamation-circle text-danger mr-1"></i>الباقي:</span>
+          <span><i class="fas fa-exclamation-circle text-danger mr-1"></i>{{ t('Remaining_2') }}:</span>
 
           <strong class="text-danger ic-4">
 
@@ -682,7 +682,7 @@
 
            class="btn btn-success btn-block btn-lg">
 
-          <i class="fas fa-money-bill-wave mr-2"></i>إضافة دفعة
+          <i class="fas fa-money-bill-wave mr-2"></i>{{ t('Add') }} {{ t('دفعة') }}
 
         </a>
 
@@ -692,7 +692,7 @@
 
           <i class="fas fa-check-circle fa-2x mb-2"></i>
 
-          <p class="mb-0"><strong>الفاتورة مدفوعة بالكامل</strong></p>
+          <p class="mb-0"><strong>{{ t('Invoice_2') }} {{ t('Paid_4') }} {{ t('{{ t('بال') }}كامل') }}</strong></p>
 
         </div>
 
@@ -710,7 +710,7 @@
 
       <div class="card-header">
 
-        <h3 class="card-title"><i class="fas fa-cog mr-2"></i>الإجراءات</h3>
+        <h3 class="card-title"><i class="fas fa-cog mr-2"></i>{{ t('{{ t('الإجراء') }}ات') }}</h3>
 
       </div>
 
@@ -722,13 +722,13 @@
 
              class="btn btn-secondary mb-2" target="_blank" rel="noopener noreferrer">
 
-            <i class="fas fa-print mr-2"></i>طباعة الفاتورة
+            <i class="fas fa-print mr-2"></i>{{ t('Print') }} {{ t('Invoice_2') }}
 
           </a>
 
           <a href="{{ url_for('sales.index') }}" class="btn btn-info mb-2">
 
-            <i class="fas fa-list mr-2"></i>كل الفواتير
+            <i class="fas fa-list mr-2"></i>كل {{ t('Invoices') }}
 
           </a>
 
@@ -736,7 +736,7 @@
 
           <button type="button" class="btn btn-danger" data-action="cancel-sale">
 
-            <i class="fas fa-ban mr-2"></i>إلغاء الفاتورة
+            <i class="fas fa-ban mr-2"></i>{{ t('Cancel') }} {{ t('Invoice_2') }}
 
           </button>
 
@@ -754,7 +754,7 @@
 
           <button type="button" class="btn btn-outline-danger w-100" data-action="delete-sale">
 
-            <i class="fas fa-trash-alt mr-2"></i>حذف الفاتورة
+            <i class="fas fa-trash-alt mr-2"></i>{{ t('Delete') }} {{ t('Invoice_2') }}
 
           </button>
 
@@ -790,7 +790,7 @@
 
       <div class="modal-header bg-warning text-white">
 
-        <h5 class="modal-title" id="returnModalLabel"><i class="fas fa-undo mr-2"></i>إنشاء مرتجع مبيعات</h5>
+        <h5 class="modal-title" id="returnModalLabel"><i class="fas fa-undo mr-2"></i>{{ t('Create') }} {{ t('Return') }} {{ t('Sales_2') }}</h5>
 
         <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
 
@@ -816,15 +816,15 @@
 
                 <tr>
 
-                  <th>المنتج</th>
+                  <th>{{ t('Product') }}</th>
 
-                  <th>الكمية المباعة</th>
+                  <th>{{ t('Quantity') }} {{ t('المباعة') }}</th>
 
-                  <th>الكمية المرتجعة</th>
+                  <th>{{ t('Quantity') }} {{ t('{{ t('Return_3') }}ة') }}</th>
 
-                  <th>حالة المنتج</th>
+                  <th>{{ t('Status_2') }} {{ t('Product') }}</th>
 
-                  <th>ملاحظات</th>
+                  <th>{{ t('Notes') }}</th>
 
                 </tr>
 
@@ -852,9 +852,9 @@
 
                     <select class="form-control return-condition" id="return_condition_{{ line.id }}" name="return_condition_{{ line.id }}" aria-label="return condition {{ line.id }}">
 
-                      <option value="good">سليم (لإعادة البيع)</option>
+                      <option value="good">{{ t('سليم') }} ({{ t('لإعادة') }} {{ t('Sale_2') }})</option>
 
-                      <option value="damaged">تالف (للإتلاف)</option>
+                      <option value="damaged">{{ t('تالف') }} ({{ t('للإتلاف') }})</option>
 
                     </select>
 
@@ -862,7 +862,7 @@
 
                   <td>
 
-                    <input type="text" class="form-control return-notes" id="return_notes_{{ line.id }}" name="return_notes_{{ line.id }}" placeholder="سبب الإرجاع" maxlength="500">
+                    <input type="text" class="form-control return-notes" id="return_notes_{{ line.id }}" name="return_notes_{{ line.id }}" placeholder="{{ t('سبب') }} {{ t('الإرجاع') }}" maxlength="500">
 
                   </td>
 
@@ -878,7 +878,7 @@
 
           <div class="form-group">
 
-            <label>ملاحظات عامة على المرتجع</label>
+            <label>{{ t('Notes') }} {{ t('General_4') }} على {{ t('Return_3') }}</label>
 
             <textarea class="form-control" id="return_general_notes" name="return_general_notes" rows="3" aria-label="return general notes" maxlength="500"></textarea>
 
@@ -890,9 +890,9 @@
 
       <div class="modal-footer">
 
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">إلغاء</button>
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ t('Cancel') }}</button>
 
-        <button type="button" class="btn btn-primary" data-action="submit-return">إنشاء المرتجع</button>
+        <button type="button" class="btn btn-primary" data-action="submit-return">{{ t('Create') }} {{ t('Return_3') }}</button>
 
       </div>
 
@@ -946,7 +946,7 @@ function submitReturn() {
 
     if (lines.length === 0) {
 
-        alert('يرجى تحديد كمية لمنتج واحد على الأقل للإرجاع');
+        alert('{{ t('يرجى') }} {{ t('تحديد') }} {{ t('Qty') }} {{ t('لمنتج') }} واحد على {{ t('الأقل') }} {{ t('Return_2') }}');
 
         return;
 
@@ -954,7 +954,7 @@ function submitReturn() {
 
     
 
-    if (!confirm('هل أنت متأكد من إنشاء المرتجع؟ سيتم تحديث المخزون والحسابات تلقائياً.')) {
+    if (!confirm('هل أنت {{ t('متأكد') }} من {{ t('Create') }} {{ t('Return_4') }} {{ t('سيتم') }} {{ t('Update') }} {{ t('Inventory') }} {{ t('والحسابات') }} {{ t('تلقائياً') }}.')) {
 
         return;
 
@@ -992,13 +992,13 @@ function submitReturn() {
 
         if (data.success) {
 
-            alert('تم إنشاء المرتجع بنجاح: ' + data.return_number);
+            alert('تم {{ t('Create') }} {{ t('Return_3') }} {{ t('بنجاح') }}: ' + data.return_number);
 
             window.location.reload();
 
         } else {
 
-            alert('خطأ: ' + data.message);
+            alert('{{ t('Error') }}: ' + data.message);
 
         }
 
@@ -1008,7 +1008,7 @@ function submitReturn() {
 
         console.error('Error:', error);
 
-        alert('حدث خطأ أثناء الاتصال بالخادم');
+        alert('{{ t('حدث') }} {{ t('Error') }} {{ t('أثناء') }} {{ t('الاتصال') }} {{ t('{{ t('بال') }}خادم') }}');
 
     });
 
@@ -1018,7 +1018,7 @@ function submitReturn() {
 
 function confirmCancel() {
 
-  if (confirm('هل أنت متأكد من إلغاء هذه الفاتورة؟\nلا يمكن التراجع عن هذا الإجراء.')) {
+  if (confirm('هل أنت {{ t('متأكد') }} من {{ t('Cancel') }} هذه {{ t('Invoice_3') }}\nلا يمكن {{ t('التراجع') }} عن هذا {{ t('الإجراء') }}.')) {
 
     document.getElementById('cancelForm').submit();
 
@@ -1030,7 +1030,7 @@ function confirmCancel() {
 
 function confirmDelete() {
 
-  if (confirm('هل أنت متأكد من حذف هذه الفاتورة؟\n\nتنبيه: سيتم أرشفة الفاتورة إذا كان لها ارتباطات مالية (دفعات/شيكات)، أو حذفها نهائياً إذا كانت غير مرتبطة.')) {
+  if (confirm('هل أنت {{ t('متأكد') }} من {{ t('Delete') }} هذه {{ t('Invoice_3') }}\n\n{{ t('Alert_2') }}: {{ t('سيتم') }} {{ t('أرشفة') }} {{ t('Invoice_2') }} إذا كان لها {{ t('ارتباطات') }} {{ t('مالية') }} ({{ t('دفعات') }}/{{ t('Cheques_2') }})، أو {{ t('{{ t('Delete') }}ها') }} {{ t('نهائياً') }} إذا كانت غير {{ t('مرتبطة') }}.')) {
 
     document.getElementById('deleteForm').submit();
 

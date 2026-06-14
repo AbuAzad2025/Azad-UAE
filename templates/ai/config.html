@@ -2,9 +2,9 @@
 
 
 
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - إعدادات الذكاء الاصطناعي{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('Settings_2') }} {{ t('AI') }} {{ t('Artificial') }}{% endblock %}
 
-{% block page_title %}إعدادات الذكاء الاصطناعي{% endblock %}
+{% block page_title %}{{ t('Settings_2') }} {{ t('AI') }} {{ t('Artificial') }}{% endblock %}
 
 
 
@@ -30,7 +30,7 @@
 
       <div class="card-header">
 
-        <h3 class="card-title"><i class="fas fa-bolt"></i> Groq API (مجاني - تحديث يومي)</h3>
+        <h3 class="card-title"><i class="fas fa-bolt"></i> Groq API ({{ t('Free') }} - {{ t('Update') }} {{ t('Daily') }})</h3>
 
       </div>
 
@@ -44,9 +44,9 @@
 
           <div class="alert alert-success">
 
-            <i class="fas fa-check-circle"></i> <strong>مفعّل حالياً</strong>
+            <i class="fas fa-check-circle"></i> <strong>{{ t('مفعّل') }} {{ t('حالياً') }}</strong>
 
-            <p class="mb-0 text-warning"><small><i class="fas fa-clock"></i> ينتهي كل 24 ساعة - حدّثه يومياً</small></p>
+            <p class="mb-0 text-warning"><small><i class="fas fa-clock"></i> {{ t('ينتهي') }} كل 24 {{ t('ساعة') }} - {{ t('حدّثه') }} {{ t('{{ t('Daily') }}اً') }}</small></p>
 
           </div>
 
@@ -60,7 +60,7 @@
 
           <div class="form-group">
 
-            <label><i class="fas fa-key"></i> مفتاح Groq الجديد</label>
+            <label><i class="fas fa-key"></i> {{ t('مفتاح') }} Groq {{ t('New_2') }}</label>
 
             <div class="input-group">
 
@@ -70,7 +70,7 @@
 
               <div class="input-group-append">
 
-                <button type="button" class="btn btn-outline-secondary toggle-key" data-target="groq_key" title="عرض">
+                <button type="button" class="btn btn-outline-secondary toggle-key" data-target="groq_key" title="{{ t('View') }}">
 
                   <i class="fas fa-eye"></i>
 
@@ -82,7 +82,7 @@
 
             <small class="form-text text-muted">
 
-              🔗 احصل على مفتاح جديد: <a href="https://console.groq.com/keys" target="_blank" rel="noopener noreferrer" class="font-weight-bold">console.groq.com/keys</a>
+              🔗 {{ t('احصل') }} على {{ t('مفتاح') }} {{ t('New') }}: <a href="https://console.groq.com/keys" target="_blank" rel="noopener noreferrer" class="font-weight-bold">console.groq.com/keys</a>
 
             </small>
 
@@ -92,7 +92,7 @@
 
           <div class="alert alert-info">
 
-            <strong>💡 ملاحظة:</strong> يرجى تحديث مفتاح Groq بشكل دوري لضمان استقرار الخدمة.
+            <strong>💡 {{ t('Note') }}:</strong> {{ t('يرجى') }} {{ t('Update') }} {{ t('مفتاح') }} Groq {{ t('بشكل') }} {{ t('دوري') }} {{ t('لضمان') }} {{ t('استقرار') }} {{ t('الخدمة') }}.
 
           </div>
 
@@ -102,7 +102,7 @@
 
           <button type="submit" class="btn btn-success btn-lg">
 
-            <i class="fas fa-save"></i> تحديث مفتاح Groq
+            <i class="fas fa-save"></i> {{ t('Update') }} {{ t('مفتاح') }} Groq
 
           </button>
 
@@ -120,7 +120,7 @@
 
       <div class="card-header">
 
-        <h3 class="card-title"><i class="fas fa-robot"></i> مفاتيح أخرى (اختياري)</h3>
+        <h3 class="card-title"><i class="fas fa-robot"></i> {{ t('Keys') }} {{ t('أخرى') }} ({{ t('Optional') }})</h3>
 
       </div>
 
@@ -134,7 +134,7 @@
 
           <div class="alert alert-primary">
 
-            <i class="fas fa-check-circle"></i> <strong>OpenAI/Gemini مفعّل</strong>
+            <i class="fas fa-check-circle"></i> <strong>OpenAI/Gemini {{ t('مفعّل') }}</strong>
 
           </div>
 
@@ -144,7 +144,7 @@
 
           <div class="form-group">
 
-            <label>نوع المزود</label>
+            <label>{{ t('نوع') }} {{ t('المزود') }}</label>
 
             <select name="provider" id="other_provider" class="form-control" aria-label="provider">
 
@@ -160,7 +160,7 @@
 
           <div class="form-group">
 
-            <label><i class="fas fa-key"></i> مفتاح API</label>
+            <label><i class="fas fa-key"></i> {{ t('مفتاح') }} API</label>
 
             <div class="input-group">
 
@@ -170,7 +170,7 @@
 
               <div class="input-group-append">
 
-                <button type="button" class="btn btn-outline-secondary toggle-key" data-target="other_key" title="عرض">
+                <button type="button" class="btn btn-outline-secondary toggle-key" data-target="other_key" title="{{ t('View') }}">
 
                   <i class="fas fa-eye"></i>
 
@@ -188,7 +188,7 @@
 
           <button type="submit" class="btn btn-primary">
 
-            <i class="fas fa-save"></i> حفظ
+            <i class="fas fa-save"></i> {{ t('Save') }}
 
           </button>
 
@@ -208,23 +208,23 @@
 
       <div class="card-header">
 
-        <h3 class="card-title"><i class="fas fa-question-circle"></i> المساعدة</h3>
+        <h3 class="card-title"><i class="fas fa-question-circle"></i> {{ t('المساعدة') }}</h3>
 
       </div>
 
       <div class="card-body">
 
-        <h5>الحصول على مفتاح Groq (مجاني)</h5>
+        <h5>{{ t('الحصول') }} على {{ t('مفتاح') }} Groq ({{ t('Free') }})</h5>
 
         <ol>
 
-          <li>سجل في <a href="https://console.groq.com" target="_blank" rel="noopener noreferrer">console.groq.com</a></li>
+          <li>{{ t('Log') }} في <a href="https://console.groq.com" target="_blank" rel="noopener noreferrer">console.groq.com</a></li>
 
-          <li>انتقل إلى API Keys</li>
+          <li>{{ t('انتقل') }} إلى API Keys</li>
 
-          <li>اضغط "Create API Key"</li>
+          <li>{{ t('اضغط') }} "Create API Key"</li>
 
-          <li>انسخ المفتاح والصقه هنا</li>
+          <li>{{ t('انسخ') }} {{ t('ال{{ t('مفتاح') }}') }} {{ t('والصقه') }} هنا</li>
 
         </ol>
 
@@ -234,17 +234,17 @@
 
 
 
-        <h5>الحصول على مفتاح OpenAI</h5>
+        <h5>{{ t('الحصول') }} على {{ t('مفتاح') }} OpenAI</h5>
 
         <ol>
 
-          <li>سجل في <a href="https://platform.openai.com" target="_blank" rel="noopener noreferrer">platform.openai.com</a></li>
+          <li>{{ t('Log') }} في <a href="https://platform.openai.com" target="_blank" rel="noopener noreferrer">platform.openai.com</a></li>
 
-          <li>أضف رصيد (مدفوع)</li>
+          <li>{{ t('أضف') }} {{ t('Balance_3') }} ({{ t('Paid_2') }})</li>
 
-          <li>أنشئ مفتاح API</li>
+          <li>{{ t('أنشئ') }} {{ t('مفتاح') }} API</li>
 
-          <li>انسخه والصقه هنا</li>
+          <li>{{ t('{{ t('انسخ') }}ه') }} {{ t('والصقه') }} هنا</li>
 
         </ol>
 
@@ -254,7 +254,7 @@
 
           <i class="fas fa-exclamation-triangle"></i>
 
-          <strong>تحذير:</strong> احتفظ بالمفتاح آمناً ولا تشاركه
+          <strong>{{ t('Warning') }}:</strong> {{ t('احتفظ') }} {{ t('ب{{ t('ال{{ t('مفتاح') }}') }}') }} {{ t('آمناً') }} {{ t('ولا') }} {{ t('تشاركه') }}
 
         </div>
 
@@ -268,7 +268,7 @@
 
       <div class="card-header">
 
-        <h3 class="card-title"><i class="fas fa-check-circle"></i> الحالة</h3>
+        <h3 class="card-title"><i class="fas fa-check-circle"></i> {{ t('Status') }}</h3>
 
       </div>
 
@@ -278,7 +278,7 @@
 
           <div class="alert alert-success">
 
-            <i class="fas fa-check-circle"></i> AI مفعّل وجاهز!
+            <i class="fas fa-check-circle"></i> AI {{ t('مفعّل') }} {{ t('وجاهز') }}!
 
           </div>
 
@@ -286,11 +286,11 @@
 
           <div class="alert alert-secondary">
 
-            <i class="fas fa-robot"></i> يعمل في الوضع المحلي
+            <i class="fas fa-robot"></i> {{ t('يعمل') }} في {{ t('Mode') }} {{ t('Local_2') }}
 
           </div>
 
-          <p class="text-muted">أضف مفتاح API لتفعيل الميزات الكاملة</p>
+          <p class="text-muted">{{ t('أضف') }} {{ t('مفتاح') }} API {{ t('لتفعيل') }} {{ t('الميزات') }} {{ t('الكاملة') }}</p>
 
         {% endif %}
 
@@ -406,7 +406,7 @@
 
 $(document).ready(function() {
 
-  // إظهار/إخفاء المفتاح
+  // {{ t('Show') }}/{{ t('Hide') }} {{ t('ال{{ t('مفتاح') }}') }}
 
   $('.toggle-key').click(function() {
 
@@ -436,7 +436,7 @@ $(document).ready(function() {
 
 
 
-  // حفظ النماذج
+  // {{ t('Save') }} {{ t('النماذج') }}
 
   $('.api-key-form').submit(function(e) {
 
@@ -452,9 +452,9 @@ $(document).ready(function() {
 
 
 
-    // تعطيل الزر
+    // {{ t('تعطيل') }} {{ t('الزر') }}
 
-    submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...');
+    submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> {{ t('جاري') }} {{ t('Save_2') }}...');
 
 
 
@@ -482,13 +482,13 @@ $(document).ready(function() {
 
             icon: 'success',
 
-            title: 'تم الحفظ! ✅',
+            title: 'تم {{ t('Save_2') }}! ✅',
 
             html: `<p>${response.message}</p>
 
-                   <p class="text-muted"><small>صلاحية: ${response.expires_in}</small></p>`,
+                   <p class="text-muted"><small>{{ t('Permission') }}: ${response.expires_in}</small></p>`,
 
-            confirmButtonText: 'تمام',
+            confirmButtonText: '{{ t('تمام') }}',
 
             timer: 3000
 
@@ -504,7 +504,7 @@ $(document).ready(function() {
 
             icon: 'error',
 
-            title: 'خطأ',
+            title: '{{ t('Error') }}',
 
             text: response.message
 
@@ -524,9 +524,9 @@ $(document).ready(function() {
 
           icon: 'error',
 
-          title: 'خطأ في الحفظ',
+          title: '{{ t('Error') }} في {{ t('Save_2') }}',
 
-          text: 'تأكد من صلاحيتك وحاول مرة أخرى'
+          text: '{{ t('تأكد') }} من {{ t('صلاحيتك') }} {{ t('وحاول') }} {{ t('مرة') }} {{ t('أخرى') }}'
 
         });
 

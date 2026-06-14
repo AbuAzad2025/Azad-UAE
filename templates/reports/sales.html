@@ -1,11 +1,11 @@
 {% extends 'base.html' %}
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - تقرير المبيعات{% endblock %}
-{% block page_title %}تقرير المبيعات{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('Report_2') }} {{ t('Sales') }}{% endblock %}
+{% block page_title %}{{ t('Report_2') }} {{ t('Sales') }}{% endblock %}
 
 {% block content %}
 <div class="card">
   <div class="card-header bg-gradient-success">
-    <h3 class="card-title text-white">ملخص المبيعات</h3>
+    <h3 class="card-title text-white">{{ t('Summary') }} {{ t('Sales') }}</h3>
   </div>
   <div class="card-body">
     <div class="row">
@@ -13,7 +13,7 @@
         <div class="info-box bg-gradient-primary">
           <span class="info-box-icon"><i class="fas fa-file-invoice"></i></span>
           <div class="info-box-content">
-            <span class="info-box-text">عدد الفواتير</span>
+            <span class="info-box-text">{{ t('Count') }} {{ t('Invoices') }}</span>
             <span class="info-box-number">{{ summary.sales_count|default(0) }}</span>
           </div>
         </div>
@@ -23,7 +23,7 @@
         <div class="info-box bg-gradient-success">
           <span class="info-box-icon"><i class="fas fa-dollar-sign"></i></span>
           <div class="info-box-content">
-            <span class="info-box-text">إجمالي المبيعات</span>
+            <span class="info-box-text">{{ t('Total_2') }} {{ t('Sales') }}</span>
             <span class="info-box-number">{{ "{:,.0f}".format(summary.total_sales_aed|default(0)) }}</span>
           </div>
         </div>
@@ -43,7 +43,7 @@
         <div class="info-box bg-gradient-danger">
           <span class="info-box-icon"><i class="fas fa-exclamation-circle"></i></span>
           <div class="info-box-content">
-            <span class="info-box-text">المستحق</span>
+            <span class="info-box-text">{{ t('المستحق') }}</span>
             <span class="info-box-number">{{ "{:,.0f}".format(summary.total_pending_aed|default(0)) }}</span>
           </div>
         </div>
@@ -54,35 +54,35 @@
 
 <div class="card">
   <div class="card-header d-flex justify-content-between align-items-center">
-    <h3 class="card-title mb-0">تفاصيل المبيعات</h3>
+    <h3 class="card-title mb-0">{{ t('Details') }} {{ t('Sales') }}</h3>
     <div class="d-flex align-items-center">
       <form class="needs-validation" method="get" class="form-inline mr-2">
         <label class="mr-2" for="input_date_from">من</label>
-        <input type="date" name="date_from" value="{{ date_from or '' }}" class="form-control form-control-sm mr-2" id="input_date_from" aria-label="من تاريخ">
+        <input type="date" name="date_from" value="{{ date_from or '' }}" class="form-control form-control-sm mr-2" id="input_date_from" aria-label="من {{ t('History') }}">
         <label class="mr-2" for="input_date_to">إلى</label>
-        <input type="date" name="date_to" value="{{ date_to or '' }}" class="form-control form-control-sm mr-2" id="input_date_to" aria-label="إلى تاريخ">
-        <label class="mr-2">الزبون</label>
+        <input type="date" name="date_to" value="{{ date_to or '' }}" class="form-control form-control-sm mr-2" id="input_date_to" aria-label="إلى {{ t('History') }}">
+        <label class="mr-2">{{ t('Customer_2') }}</label>
         <select name="customer" class="form-control form-control-sm mr-2 ic-1" aria-label="customer">
-          <option value="">الكل</option>
+          <option value="">{{ t('All') }}</option>
           {% for c in customers or [] %}
           <option value="{{ c.id }}" {{ 'selected' if customer_id == c.id else '' }}>{{ c.name }}</option>
           {% endfor %}
         </select>
-        <label class="mr-2">البائع</label>
+        <label class="mr-2">{{ t('البائع') }}</label>
         <select name="seller" class="form-control form-control-sm mr-2 ic-2" aria-label="seller">
-          <option value="">الكل</option>
+          <option value="">{{ t('All') }}</option>
           {% for u in sellers or [] %}
           <option value="{{ u.id }}" {{ 'selected' if seller_id == u.id else '' }}>{{ u.get_display_name() if u else '' }}</option>
           {% endfor %}
         </select>
         <button type="submit" class="btn btn-outline-primary mr-2">
-          تطبيق
+          {{ t('Apply') }}
         </button>
       </form>
 
       <div class="btn-group mr-2">
         <button type="button" class="btn btn-outline-success dropdown-toggle" data-toggle="dropdown">
-          <i class="fas fa-download mr-1"></i>تصدير
+          <i class="fas fa-download mr-1"></i>{{ t('Export') }}
         </button>
         <div class="dropdown-menu dropdown-menu-right">
           <a class="dropdown-item" href="{{ url_for('reports.sales_export', date_from=request.args.get('date_from'), date_to=request.args.get('date_to'), customer=request.args.get('customer'), seller=request.args.get('seller'), format='csv') }}">CSV</a>
@@ -91,7 +91,7 @@
       </div>
 
       <button type="button" class="btn btn-outline-info" id="printSalesReportBtn">
-        <i class="fas fa-print mr-1"></i>طباعة
+        <i class="fas fa-print mr-1"></i>{{ t('Print') }}
       </button>
     </div>
   </div>
@@ -99,11 +99,11 @@
     <div class="table-responsive"><table id="salesReportTable" class="table table-striped table-bordered">
       <thead>
         <tr>
-          <th>الفاتورة</th>
-          <th>الزبون</th>
+          <th>{{ t('Invoice_2') }}</th>
+          <th>{{ t('Customer_2') }}</th>
           <th>{{ t('Date') }}</th>
           <th>{{ t('Amount') }}</th>
-          <th><i class="fas fa-exchange-alt mr-1"></i>سعر الصرف</th>
+          <th><i class="fas fa-exchange-alt mr-1"></i>{{ t('Price_2') }} {{ t('Exchange') }}</th>
           <th>{{ t('Status') }}</th>
         </tr>
       </thead>
@@ -118,7 +118,7 @@
           <td>{{ format_currency(sale.base_amount) }}</td>
           <td>
             {% if sale.exchange_rate and sale.exchange_rate != 1 %}
-              <span class="badge badge-info" title="سعر الصرف وقت المعاملة">
+              <span class="badge badge-info" title="{{ t('Price_2') }} {{ t('Exchange') }} {{ t('Time') }} {{ t('المعاملة') }}">
                 <i class="fas fa-exchange-alt mr-1"></i>{{ "{:.4f}".format(sale.exchange_rate) }}
               </span>
             {% else %}
@@ -126,9 +126,9 @@
             {% endif %}
           </td>
           <td>
-            {% if sale.payment_status == 'paid' %}<span class="badge badge-success">مدفوعة</span>
-            {% elif sale.payment_status == 'partial' %}<span class="badge badge-warning">جزئي</span>
-            {% else %}<span class="badge badge-danger">آجل</span>{% endif %}
+            {% if sale.payment_status == 'paid' %}<span class="badge badge-success">{{ t('Paid_4') }}</span>
+            {% elif sale.payment_status == 'partial' %}<span class="badge badge-warning">{{ t('Partial_2') }}</span>
+            {% else %}<span class="badge badge-danger">{{ t('Credit') }}</span>{% endif %}
           </td>
         </tr>
         {% endfor %}
@@ -144,7 +144,7 @@
 $(document).ready(function() {
   const $tableEl = $('#salesReportTable');
   const printOptions = {
-    title: 'تقرير المبيعات',
+    title: '{{ t('Report_2') }} {{ t('Sales') }}',
     headerColor: '#007A3D'
   };
 

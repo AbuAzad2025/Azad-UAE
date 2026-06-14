@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}تعديل فاتورة الشراء #{{ purchase.purchase_number }}{% endblock %}
+{% block title %}{{ t('Edit') }} {{ t('Invoice') }} {{ t('Purchase_2') }} #{{ purchase.purchase_number }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
@@ -8,13 +8,13 @@
     <div class="col-12">
       <div class="alert alert-info">
         <i class="fas fa-info-circle"></i>
-        <strong>ملاحظة:</strong> يمكن تعديل الملاحظات فقط. لا يمكن تعديل المنتجات أو المبالغ بعد إنشاء الفاتورة.
+        <strong>{{ t('Note') }}:</strong> يمكن {{ t('Edit') }} {{ t('Notes_2') }} فقط. لا يمكن {{ t('Edit') }} {{ t('Products') }} أو {{ t('Amounts') }} بعد {{ t('Create') }} {{ t('Invoice_2') }}.
       </div>
 
       <div class="card">
         <div class="card-header">
           <h3 class="card-title">
-            <i class="fas fa-edit"></i> تعديل فاتورة شراء #{{ purchase.purchase_number }}
+            <i class="fas fa-edit"></i> {{ t('Edit') }} {{ t('Invoice') }} {{ t('Purchase') }} #{{ purchase.purchase_number }}
           </h3>
         </div>
         <div class="card-body">
@@ -24,36 +24,36 @@
             
             <div class="row mb-4">
               <div class="col-md-6">
-                <h5>معلومات الفاتورة</h5>
-                <p><strong>رقم الفاتورة:</strong> {{ purchase.purchase_number }}</p>
-                <p><strong>التاريخ:</strong> {{ purchase.purchase_date.strftime('%Y-%m-%d') }}</p>
-                <p><strong>المورد:</strong> {{ purchase.supplier_name }}</p>
+                <h5>{{ t('Info_2') }} {{ t('Invoice_2') }}</h5>
+                <p><strong>{{ t('رقم') }} {{ t('Invoice_2') }}:</strong> {{ purchase.purchase_number }}</p>
+                <p><strong>{{ t('Date') }}:</strong> {{ purchase.purchase_date.strftime('%Y-%m-%d') }}</p>
+                <p><strong>{{ t('Supplier') }}:</strong> {{ purchase.supplier_name }}</p>
                 {% if purchase.warehouse %}
-                <p><strong><i class="fas fa-warehouse text-info"></i> المستودع:</strong> {{ purchase.warehouse.name_ar or purchase.warehouse.name }}</p>
+                <p><strong><i class="fas fa-warehouse text-info"></i> {{ t('Warehouse') }}:</strong> {{ purchase.warehouse.name_ar or purchase.warehouse.name }}</p>
                 {% endif %}
               </div>
               <div class="col-md-6">
-                <h5>الإجماليات</h5>
+                <h5>{{ t('{{ t('Total_3') }}ات') }}</h5>
                 {% set paid_amount = purchase.get_paid_amount() %}
                 {% set balance_due = purchase.total_amount - paid_amount %}
-                <p><strong>المجموع الفرعي:</strong> {{ purchase.subtotal }} {{ purchase.currency }}</p>
-                <p><strong>الضريبة:</strong> {{ purchase.tax_amount }} {{ purchase.currency }}</p>
-                <p><strong>الإجمالي:</strong> {{ purchase.total_amount }} {{ purchase.currency }}</p>
-                <p><strong>المدفوع:</strong> {{ paid_amount }} {{ tenant_currency_symbol }}</p>
-                <p><strong>المتبقي:</strong> {{ balance_due }} {{ tenant_currency_symbol }}</p>
+                <p><strong>{{ t('Total') }} {{ t('Sub') }}:</strong> {{ purchase.subtotal }} {{ purchase.currency }}</p>
+                <p><strong>{{ t('Tax') }}:</strong> {{ purchase.tax_amount }} {{ purchase.currency }}</p>
+                <p><strong>{{ t('Total_3') }}:</strong> {{ purchase.total_amount }} {{ purchase.currency }}</p>
+                <p><strong>{{ t('Paid') }}:</strong> {{ paid_amount }} {{ tenant_currency_symbol }}</p>
+                <p><strong>{{ t('Remaining') }}:</strong> {{ balance_due }} {{ tenant_currency_symbol }}</p>
               </div>
             </div>
 
             
-            <h5>المنتجات</h5>
+            <h5>{{ t('Products') }}</h5>
             <div class="table-responsive"><table class="table table-bordered mb-4">
               <thead class="thead-light">
                 <tr>
-                  <th>المنتج</th>
-                  <th>الكمية</th>
-                  <th>سعر الوحدة</th>
-                  <th>الخصم %</th>
-                  <th>الإجمالي</th>
+                  <th>{{ t('Product') }}</th>
+                  <th>{{ t('Quantity') }}</th>
+                  <th>{{ t('Price_2') }} {{ t('الوحدة') }}</th>
+                  <th>{{ t('Discount') }} %</th>
+                  <th>{{ t('Total_3') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -71,17 +71,17 @@
 
             
             <div class="form-group">
-              <label>الملاحظات</label>
+              <label>{{ t('Notes_2') }}</label>
               <textarea name="notes" class="form-control" rows="4" aria-label="notes" maxlength="500">{{ purchase.notes or '' }}</textarea>
-              <small class="text-muted">يمكنك إضافة أو تعديل الملاحظات</small>
+              <small class="text-muted">{{ t('يمكنك') }} {{ t('Add') }} أو {{ t('Edit') }} {{ t('Notes_2') }}</small>
             </div>
 
             <div class="form-group">
               <button type="submit" class="btn btn-success btn-lg">
-                <i class="fas fa-save"></i> حفظ التعديلات
+                <i class="fas fa-save"></i> {{ t('Save') }} {{ t('ال{{ t('Edit') }}ات') }}
               </button>
               <a href="{{ url_for('purchases.view', id=purchase.id) }}" class="btn btn-secondary btn-lg">
-                <i class="fas fa-times"></i> إلغاء
+                <i class="fas fa-times"></i> {{ t('Cancel') }}
               </a>
             </div>
           </form>

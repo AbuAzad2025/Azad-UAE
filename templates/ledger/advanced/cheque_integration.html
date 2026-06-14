@@ -1,36 +1,36 @@
 {% extends 'base.html' %}
-{% block title %}ربط الشيكات بالمحاسبة{% endblock %}
+{% block title %}{{ t('ربط') }} {{ t('Cheques') }} {{ t('بالمحاسبة') }}{% endblock %}
 {% block content %}
 <div class="container-fluid">
   <div class="card">
-    <div class="card-header"><h3><i class="fas fa-link"></i> ربط الشيكات بالمحاسبة</h3></div>
+    <div class="card-header"><h3><i class="fas fa-link"></i> {{ t('ربط') }} {{ t('Cheques') }} {{ t('بالمحاسبة') }}</h3></div>
     <div class="card-body">
       <div class="row mb-4">
         <div class="col-md-3">
           <div class="small-box bg-info">
-            <div class="inner"><h3>{{ stats.total_cheques }}</h3><p>إجمالي الشيكات</p></div>
+            <div class="inner"><h3>{{ stats.total_cheques }}</h3><p>{{ t('Total_2') }} {{ t('Cheques') }}</p></div>
           </div>
         </div>
         <div class="col-md-3">
           <div class="small-box bg-warning">
-            <div class="inner"><h3>{{ stats.pending_cheques }}</h3><p>قيد الانتظار</p></div>
+            <div class="inner"><h3>{{ stats.pending_cheques }}</h3><p>{{ t('قيد') }} {{ t('Waiting') }}</p></div>
           </div>
         </div>
         <div class="col-md-3">
           <div class="small-box bg-success">
-            <div class="inner"><h3>{{ stats.cleared_cheques }}</h3><p>تم الصرف</p></div>
+            <div class="inner"><h3>{{ stats.cleared_cheques }}</h3><p>تم {{ t('Exchange') }}</p></div>
           </div>
         </div>
         <div class="col-md-3">
           <div class="small-box bg-primary">
-            <div class="inner"><h3>{{ format_currency(stats.total_amount) }}</h3><p>إجمالي المبالغ</p></div>
+            <div class="inner"><h3>{{ format_currency(stats.total_amount) }}</h3><p>{{ t('Total_2') }} {{ t('Amounts') }}</p></div>
           </div>
         </div>
       </div>
-      <h5>الشيكات الأخيرة</h5>
+      <h5>{{ t('Cheques') }} {{ t('Recent') }}</h5>
       <div class="table-responsive"><table class="table table-bordered">
         <thead>
-          <tr><th>رقم الشيك</th><th>المبلغ</th><th>تاريخ الاستحقاق</th><th>الحالة</th><th>القيد المحاسبي</th></tr>
+          <tr><th>{{ t('رقم') }} {{ t('Cheque') }}</th><th>{{ t('Amount') }}</th><th>{{ t('History') }} {{ t('Due') }}</th><th>{{ t('Status') }}</th><th>{{ t('ال{{ t('قيد') }}') }} {{ t('Accounting_4') }}</th></tr>
         </thead>
         <tbody>
           {% for cheque in recent_cheques %}
@@ -42,7 +42,7 @@
             <td>{{ cheque.gl_entry_number or '-' }}</td>
           </tr>
           {% else %}
-          <tr><td colspan="5" class="text-center">لا توجد شيكات</td></tr>
+          <tr><td colspan="5" class="text-center">لا {{ t('توجد') }} {{ t('Cheques_2') }}</td></tr>
           {% endfor %}
         </tbody>
       </table></div>

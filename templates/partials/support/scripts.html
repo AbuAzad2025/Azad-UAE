@@ -16,35 +16,35 @@
 
         function buildSupportMessage(kind, amountOverride = null, recordId = '') {
             const amount = amountOverride || selectedAmount || document.getElementById('customAmount')?.value || document.getElementById('cardAmount')?.value || '';
-            const packageLabel = selectedPackage || 'غير محددة بعد';
-            const orderRef = recordId ? ` رقم المرجع: #${recordId}.` : '';
+            const packageLabel = selectedPackage || 'غير {{ t('محددة') }} بعد';
+            const orderRef = recordId ? ` {{ t('رقم') }} {{ t('المرجع') }}: #${recordId}.` : '';
 
             switch (kind) {
                 case 'buy_code':
-                    return `مرحباً ${supportBrand}، أريد شراء الكود المصدري أو تنفيذ تخصيص خاص للنظام.${orderRef}`;
+                    return `{{ t('مرحباً') }} ${supportBrand}، {{ t('أريد') }} {{ t('Purchase') }} {{ t('Code') }} {{ t('المصدري') }} أو {{ t('تنفيذ') }} {{ t('تخصيص') }} {{ t('Specific_2') }} {{ t('للنظام') }}.${orderRef}`;
                 case 'donation_help':
-                    return `مرحباً ${supportBrand}، أريد التبرع أو رعاية تطوير ميزة في النظام. المبلغ المتوقع: ${amount || 'سأحدده معكم'} دولار.${orderRef}`;
+                    return `{{ t('مرحباً') }} ${supportBrand}، {{ t('أريد') }} {{ t('ال{{ t('تبرع') }}') }} أو {{ t('رعاية') }} {{ t('تطوير') }} {{ t('ميزة') }} في {{ t('System') }}. {{ t('Amount') }} {{ t('Expected') }}: ${amount || '{{ t('سأحدده') }} {{ t('معكم') }}'} {{ t('Dollar') }}.${orderRef}`;
                 case 'payment_help':
-                    return `مرحباً ${supportBrand}، أحتاج مساعدة في إتمام ${currentTab === 'purchase' ? 'شراء النظام' : 'التبرع'}.${orderRef}`;
+                    return `{{ t('مرحباً') }} ${supportBrand}، {{ t('أحتاج') }} {{ t('مساعدة') }} في {{ t('إتمام') }} ${currentTab === 'purchase' ? '{{ t('Purchase') }} {{ t('System') }}' : '{{ t('ال{{ t('تبرع') }}') }}'}.${orderRef}`;
                 case 'refund_help':
-                    return `مرحباً ${supportBrand}، أريد الاستفسار عن حالة دفع أو استرداد.${orderRef}`;
+                    return `{{ t('مرحباً') }} ${supportBrand}، {{ t('أريد') }} {{ t('ال{{ t('استفسار') }}') }} عن {{ t('Status_2') }} {{ t('Payment') }} أو {{ t('استرداد') }}.${orderRef}`;
                 case 'buy_system':
                 default:
-                    return `مرحباً ${supportBrand}، أريد شراء النظام${currentTab === 'purchase' ? ` والباقـة الحالية: ${packageLabel}` : ''}. المبلغ المتوقع: ${amount || 'سأحدده معكم'} دولار.${orderRef}`;
+                    return `{{ t('مرحباً') }} ${supportBrand}، {{ t('أريد') }} {{ t('Purchase') }} {{ t('System') }}${currentTab === 'purchase' ? ` {{ t('والباقـة') }} {{ t('الحالية') }}: ${packageLabel}` : ''}. {{ t('Amount') }} {{ t('Expected') }}: ${amount || '{{ t('سأحدده') }} {{ t('معكم') }}'} {{ t('Dollar') }}.${orderRef}`;
             }
         }
 
         function buildSupportEmail(kind, amountOverride = null, recordId = '') {
             const message = buildSupportMessage(kind, amountOverride, recordId);
             const subjectMap = {
-                buy_system: 'طلب شراء النظام',
-                buy_code: 'طلب شراء الكود أو تخصيص',
-                donation_help: 'استفسار تبرع أو رعاية',
-                payment_help: 'مساعدة في إتمام الدفع',
-                refund_help: 'استفسار استرداد أو حالة دفع'
+                buy_system: '{{ t('طلب') }} {{ t('Purchase') }} {{ t('System') }}',
+                buy_code: '{{ t('طلب') }} {{ t('Purchase') }} {{ t('Code') }} أو {{ t('تخصيص') }}',
+                donation_help: '{{ t('استفسار') }} {{ t('تبرع') }} أو {{ t('رعاية') }}',
+                payment_help: '{{ t('مساعدة') }} في {{ t('إتمام') }} {{ t('Payment_2') }}',
+                refund_help: '{{ t('استفسار') }} {{ t('استرداد') }} أو {{ t('Status_2') }} {{ t('Payment') }}'
             };
-            const subject = `${subjectMap[kind] || 'استفسار'} - ${supportBrand}`;
-            const body = `${message}\n\nبيانات التواصل:\nواتساب: ${supportWhatsappDisplay}\nالبريد: ${supportEmail}`;
+            const subject = `${subjectMap[kind] || '{{ t('استفسار') }}'} - ${supportBrand}`;
+            const body = `${message}\n\n{{ t('Data_2') }} {{ t('التواصل') }}:\n{{ t('واتساب') }}: ${supportWhatsappDisplay}\n{{ t('Email_2') }}: ${supportEmail}`;
             return { subject, body };
         }
 
@@ -61,14 +61,14 @@
         function buildSupportStatusHtml(recordId, paymentAmount, label) {
             return `
                 <div class="ic-57">
-                    <p class="ic-58"><strong>الحالة الحالية:</strong> ${label}</p>
-                    <p class="ic-58"><strong>المرجع:</strong> #${recordId || '—'}</p>
-                    <p class="ic-59"><strong>المبلغ:</strong> $${paymentAmount || '—'}</p>
+                    <p class="ic-58"><strong>{{ t('Status') }} {{ t('الحالية') }}:</strong> ${label}</p>
+                    <p class="ic-58"><strong>{{ t('المرجع') }}:</strong> #${recordId || '—'}</p>
+                    <p class="ic-59"><strong>{{ t('Amount') }}:</strong> $${paymentAmount || '—'}</p>
                 </div>
                 <div class="ic-60">
-                    <div><i class="fas fa-check-circle ic-61"></i> عند النجاح ستصلك تفاصيل واضحة أو عنوان دفع مباشر.</div>
-                    <div><i class="fas fa-hourglass-half ic-62"></i> عند المراجعة اليدوية يمكنك المتابعة فوراً مع أزاد.</div>
-                    <div><i class="fas fa-undo-alt ic-63"></i> لأي استرداد أو تسوية استخدم واتساب أو البريد الرسمي.</div>
+                    <div><i class="fas fa-check-circle ic-61"></i> عند {{ t('النجاح') }} {{ t('ستصلك') }} {{ t('Details') }} {{ t('واضحة') }} أو {{ t('Address_2') }} {{ t('Payment') }} {{ t('مباشر') }}.</div>
+                    <div><i class="fas fa-hourglass-half ic-62"></i> عند {{ t('Review') }} {{ t('Manual_3') }} {{ t('يمكنك') }} {{ t('ال{{ t('متابعة') }}') }} {{ t('فوراً') }} مع {{ t('أزاد') }}.</div>
+                    <div><i class="fas fa-undo-alt ic-63"></i> {{ t('لأي') }} {{ t('استرداد') }} أو {{ t('Reconciliation') }} {{ t('استخدم') }} {{ t('واتساب') }} أو {{ t('Email_2') }} {{ t('الرسمي') }}.</div>
                 </div>
             `;
         }
@@ -87,18 +87,18 @@
                     <div class="ic-64">
                         ${introHtml}
                         <div class="ic-65">
-                            <p class="ic-66"><strong>التواصل الرسمي مع أزاد:</strong></p>
+                            <p class="ic-66"><strong>{{ t('التواصل') }} {{ t('الرسمي') }} مع {{ t('أزاد') }}:</strong></p>
                             <p class="ic-67"><i class="fab fa-whatsapp ic-68"></i> ${supportWhatsappDisplay}</p>
                             <p class="ic-59"><i class="fas fa-envelope ic-69"></i> ${supportEmail}</p>
                         </div>
                     </div>
                 `,
-                confirmButtonText: 'فتح واتساب أزاد',
+                confirmButtonText: '{{ t('فتح') }} {{ t('واتساب') }} {{ t('أزاد') }}',
                 confirmButtonColor: '#25D366',
                 showDenyButton: true,
-                denyButtonText: 'إرسال بريد',
+                denyButtonText: '{{ t('Submit') }} {{ t('بريد') }}',
                 showCancelButton: true,
-                cancelButtonText: 'إغلاق'
+                cancelButtonText: '{{ t('Close') }}'
             }).then((result) => {
                 if (result.isConfirmed) {
                     openWhatsApp(kind, amountOverride, recordId);
@@ -285,14 +285,14 @@
             const { value: formValues } = await Swal.fire({
                 title,
                 html:
-                    '<input id="swal-name" class="swal2-input" placeholder="الاسم الكامل">' +
-                    '<input id="swal-email" class="swal2-input" placeholder="البريد الإلكتروني" type="email">' +
-                    '<input id="swal-phone" class="swal2-input" placeholder="رقم الجوال" type="tel">' +
-                    '<textarea id="swal-message" class="swal2-textarea" placeholder="' + (currentTab === 'purchase' ? 'اسم الشركة أو ملاحظة إضافية (اختياري)' : 'رسالة قصيرة (اختياري)') + '"></textarea>',
+                    '<input id="swal-name" class="swal2-input" placeholder="{{ t('Name') }} {{ t('الكامل') }}">' +
+                    '<input id="swal-email" class="swal2-input" placeholder="{{ t('Email_2') }} {{ t('Email_3') }}" type="email">' +
+                    '<input id="swal-phone" class="swal2-input" placeholder="{{ t('رقم') }} {{ t('Mobile') }}" type="tel">' +
+                    '<textarea id="swal-message" class="swal2-textarea" placeholder="' + (currentTab === 'purchase' ? '{{ t('Name_2') }} {{ t('Company') }} أو {{ t('Note') }} {{ t('Additional') }} ({{ t('Optional') }})' : '{{ t('رسالة') }} {{ t('قصيرة') }} ({{ t('Optional') }})') + '"></textarea>',
                 focusConfirm: false,
                 showCancelButton: true,
-                cancelButtonText: 'إلغاء',
-                confirmButtonText: 'متابعة',
+                cancelButtonText: '{{ t('Cancel') }}',
+                confirmButtonText: '{{ t('متابعة') }}',
                 preConfirm: () => ({
                     name: document.getElementById('swal-name').value.trim(),
                     email: document.getElementById('swal-email').value.trim(),
@@ -308,8 +308,8 @@
             if (currentTab === 'purchase' && (!formValues.name || !formValues.email)) {
                 Swal.fire({
                     icon: 'error',
-                    title: 'خطأ',
-                    text: 'الاسم والبريد الإلكتروني مطلوبان لشراء الباقة',
+                    title: '{{ t('Error') }}',
+                    text: '{{ t('Name') }} {{ t('و{{ t('Email_2') }}') }} {{ t('Email_3') }} {{ t('مطلوبان') }} {{ t('ل{{ t('Purchase') }}') }} {{ t('Plan') }}',
                     confirmButtonColor: '#667eea'
                 });
                 return null;
@@ -343,8 +343,8 @@
             if (!paymentAmount || paymentAmount < 15) {
                 Swal.fire({
                     icon: 'error',
-                    title: 'خطأ',
-                    text: 'الحد الأدنى للتبرع هو $15',
+                    title: '{{ t('Error') }}',
+                    text: '{{ t('الحد') }} {{ t('الأدنى') }} {{ t('لل{{ t('تبرع') }}') }} هو $15',
                     confirmButtonColor: '#667eea'
                 });
                 return;
@@ -354,43 +354,43 @@
             
             // Show loading
             Swal.fire({
-                title: 'جاري إنشاء عنوان الدفع...',
+                title: '{{ t('جاري') }} {{ t('Create') }} {{ t('Address_2') }} {{ t('Payment_2') }}...',
                 html: '<i class="fas fa-spinner fa-spin fa-3x"></i>',
                 showConfirmButton: false,
                 allowOutsideClick: false
             });
             
-            // تحديد نوع المعاملة والبيانات
+            // {{ t('تحديد') }} {{ t('نوع') }} {{ t('المعاملة') }} {{ t('وال{{ t('Data_2') }}') }}
             let apiEndpoint = '';
             let requestData = {};
             
-            // إضافة بيانات المشترية إذا كان شراء
+            // {{ t('Add') }} {{ t('Data_2') }} {{ t('المشترية') }} إذا كان {{ t('Purchase') }}
             if (currentTab === 'purchase') {
                 if (!selectedPackage) {
                     Swal.fire({
                         icon: 'warning',
-                        title: 'تنبيه',
-                        text: 'الرجاء اختيار باقة أولاً',
+                        title: '{{ t('Alert_2') }}',
+                        text: '{{ t('الرجاء') }} {{ t('Select') }} {{ t('Plan_2') }} {{ t('أولاً') }}',
                         confirmButtonColor: '#667eea'
                     });
                     return;
                 }
                 
-                // جلب package_id من البطاقة المحددة
+                // {{ t('جلب') }} package_id من {{ t('Card_2') }} {{ t('{{ t('المحدد') }}ة') }}
                 const packageCard = document.querySelector('.package-card.active');
                 const packageId = packageCard ? packageCard.getAttribute('data-package-id') : null;
                 
                 if (!packageId) {
                     Swal.fire({
                         icon: 'error',
-                        title: 'خطأ',
-                        text: 'لم يتم التعرف على الباقة المحددة',
+                        title: '{{ t('Error') }}',
+                        text: 'لم يتم {{ t('التعرف') }} على {{ t('Plan') }} {{ t('{{ t('المحدد') }}ة') }}',
                         confirmButtonColor: '#667eea'
                     });
                     return;
                 }
                 
-                const formValues = await collectSupportContactData('بيانات شراء الباقة');
+                const formValues = await collectSupportContactData('{{ t('Data_2') }} {{ t('Purchase') }} {{ t('Plan') }}');
                 if (!formValues) {
                     Swal.close();
                     return;
@@ -414,8 +414,8 @@
                     }
                 };
             } else {
-                // بيانات التبرع (اختيارية)
-                const formValues = await collectSupportContactData('بيانات التبرع');
+                // {{ t('Data_2') }} {{ t('ال{{ t('تبرع') }}') }} ({{ t('{{ t('Optional') }}ة') }})
+                const formValues = await collectSupportContactData('{{ t('Data_2') }} {{ t('ال{{ t('تبرع') }}') }}');
                 if (!formValues) {
                     Swal.close();
                     return;
@@ -448,46 +448,46 @@
                 
                 if (data.success) {
                     const recordId = data.purchase_id || data.donation_id;
-                    const recordType = data.purchase_id ? 'شراء' : 'تبرع';
+                    const recordType = data.purchase_id ? '{{ t('Purchase') }}' : '{{ t('تبرع') }}';
                     const paymentUrlButton = data.payment_url
                         ? `<a href="${data.payment_url}" target="_blank" rel="noopener noreferrer" class="btn btn-primary mt-2">
-                                <i class="fas fa-external-link-alt"></i> فتح صفحة الدفع
+                                <i class="fas fa-external-link-alt"></i> {{ t('فتح') }} {{ t('صفحة') }} {{ t('Payment_2') }}
                            </a>`
                         : '';
                     
                     if (data.payment_address) {
                         Swal.fire({
                             icon: 'success',
-                            title: `تم إنشاء ${recordType} بنجاح`,
+                            title: `تم {{ t('Create') }} ${recordType} {{ t('بنجاح') }}`,
                             html: `
                                 <div class="ic-70">
                                     <p class="ic-71">${data.message}</p>
                                     <div class="ic-72">
-                                        <p><strong>رقم الطلب:</strong> #${recordId}</p>
-                                        <p><strong>المبلغ المطلوب:</strong> ${data.payment_amount || paymentAmount} ${data.crypto_currency || cryptoType.toUpperCase()}</p>
+                                        <p><strong>{{ t('رقم') }} {{ t('ال{{ t('طلب') }}') }}:</strong> #${recordId}</p>
+                                        <p><strong>{{ t('Amount') }} {{ t('Required_2') }}:</strong> ${data.payment_amount || paymentAmount} ${data.crypto_currency || cryptoType.toUpperCase()}</p>
                                         <hr>
-                                        <p><strong>عنوان الدفع:</strong></p>
+                                        <p><strong>{{ t('Address_2') }} {{ t('Payment_2') }}:</strong></p>
                                         <p class="ic-73">
                                             ${data.payment_address}
                                         </p>
                                         <button onclick="navigator.clipboard.writeText('${data.payment_address}')" class="btn btn-outline-primary mt-2">
-                                            <i class="fas fa-copy"></i> نسخ العنوان
+                                            <i class="fas fa-copy"></i> {{ t('Backups_2') }} {{ t('Address') }}
                                         </button>
                                         ${paymentUrlButton}
                                     </div>
                                     <p class="ic-74">
                                         <i class="fas fa-info-circle"></i>
-                                        أرسل المبلغ إلى العنوان أعلاه وسيتم تأكيد الحالة تلقائياً.
+                                        {{ t('أرسل') }} {{ t('Amount') }} إلى {{ t('Address') }} {{ t('أعلاه') }} {{ t('وسيتم') }} {{ t('Confirm') }} {{ t('Status') }} {{ t('{{ t('تلقائي') }}اً') }}.
                                     </p>
-                                        ${buildSupportStatusHtml(recordId, paymentAmount, 'بانتظار تحويلك إلى عنوان الدفع')}
+                                        ${buildSupportStatusHtml(recordId, paymentAmount, '{{ t('ب{{ t('Waiting_2') }}') }} {{ t('{{ t('Transfer') }}ك') }} إلى {{ t('Address_2') }} {{ t('Payment_2') }}')}
                                 </div>
                             `,
-                            confirmButtonText: 'تم، سأدفع الآن',
+                            confirmButtonText: '{{ t('تم،') }} {{ t('سأ{{ t('Payment') }}') }} {{ t('الآن_2') }}',
                             confirmButtonColor: '#28a745',
                             showDenyButton: true,
-                            denyButtonText: 'واتساب أزاد',
+                            denyButtonText: '{{ t('واتساب') }} {{ t('أزاد') }}',
                             showCancelButton: true,
-                            cancelButtonText: 'راسلنا بالبريد',
+                            cancelButtonText: '{{ t('راسلنا') }} {{ t('ب{{ t('Email_2') }}') }}',
                             width: 650,
                             allowOutsideClick: false
                         }).then((result) => {
@@ -500,22 +500,22 @@
                     } else {
                         Swal.fire({
                             icon: 'success',
-                            title: 'تم حفظ الطلب بنجاح',
+                            title: 'تم {{ t('Save') }} {{ t('ال{{ t('طلب') }}') }} {{ t('بنجاح') }}',
                             html: `
                                 <div class="ic-70">
                                     <p class="ic-75">${data.message}</p>
                                     <div class="ic-72">
-                                        <p><strong>رقم الطلب:</strong> #${recordId}</p>
-                                        <p><strong>المبلغ:</strong> $${paymentAmount}</p>
-                                        <p><strong>طريقة الدفع:</strong> ${data.payment_method_display || cryptoType.toUpperCase()}</p>
+                                        <p><strong>{{ t('رقم') }} {{ t('ال{{ t('طلب') }}') }}:</strong> #${recordId}</p>
+                                        <p><strong>{{ t('Amount') }}:</strong> $${paymentAmount}</p>
+                                        <p><strong>{{ t('طريقة') }} {{ t('Payment_2') }}:</strong> ${data.payment_method_display || cryptoType.toUpperCase()}</p>
                                     </div>
-                                    ${buildSupportStatusHtml(recordId, paymentAmount, 'تم تسجيل الطلب بانتظار المتابعة أو التأكيد')}
+                                    ${buildSupportStatusHtml(recordId, paymentAmount, 'تم {{ t('تسجيل') }} {{ t('ال{{ t('طلب') }}') }} {{ t('ب{{ t('Waiting_2') }}') }} {{ t('ال{{ t('متابعة') }}') }} أو {{ t('Confirm_2') }}')}
                                 </div>
                             `,
-                            confirmButtonText: 'واتساب أزاد',
+                            confirmButtonText: '{{ t('واتساب') }} {{ t('أزاد') }}',
                             confirmButtonColor: '#28a745',
                             showDenyButton: true,
-                            denyButtonText: 'راسلنا بالبريد',
+                            denyButtonText: '{{ t('راسلنا') }} {{ t('ب{{ t('Email_2') }}') }}',
                             allowOutsideClick: false
                         }).then((result) => {
                             if (result.isConfirmed) {
@@ -527,8 +527,8 @@
                     }
                 } else {
                     showSupportAssistanceModal(
-                        'تعذر إنشاء الطلب',
-                        `<p>${escapeHtml(data.error || 'حدث خطأ أثناء إنشاء الطلب.')}</p><p>يمكنك إعادة المحاولة أو إكمال العملية مباشرة مع شركة أزاد.</p>`,
+                        '{{ t('تعذر') }} {{ t('Create') }} {{ t('ال{{ t('طلب') }}') }}',
+                        `<p>${escapeHtml(data.error || '{{ t('حدث') }} {{ t('Error') }} {{ t('أثناء') }} {{ t('Create') }} {{ t('ال{{ t('طلب') }}') }}.')}</p><p>{{ t('يمكنك') }} {{ t('إعادة') }} {{ t('المحاولة') }} أو {{ t('إكمال') }} {{ t('العملية') }} {{ t('{{ t('مباشر') }}ة') }} مع {{ t('Company_2') }} {{ t('أزاد') }}.</p>`,
                         'payment_help',
                         paymentAmount
                     );
@@ -537,8 +537,8 @@
             .catch(error => {
                 Swal.close();
                 showSupportAssistanceModal(
-                    'تعذر الاتصال بالخادم',
-                    `<p>لم نتمكن من إنشاء ${currentTab === 'purchase' ? 'طلب الشراء' : 'طلب التبرع'} الآن.</p><p>يمكنك المتابعة مباشرة مع أزاد عبر واتساب أو البريد بنفس المبلغ: <strong>$${paymentAmount}</strong>.</p>`,
+                    '{{ t('تعذر') }} {{ t('الاتصال') }} {{ t('ب{{ t('الخادم') }}') }}',
+                    `<p>لم {{ t('نتمكن') }} من {{ t('Create') }} ${currentTab === 'purchase' ? '{{ t('طلب') }} {{ t('Purchase_2') }}' : '{{ t('طلب') }} {{ t('ال{{ t('تبرع') }}') }}'} {{ t('الآن_2') }}.</p><p>{{ t('يمكنك') }} {{ t('ال{{ t('متابعة') }}') }} {{ t('{{ t('مباشر') }}ة') }} مع {{ t('أزاد') }} {{ t('عبر') }} {{ t('واتساب') }} أو {{ t('Email_2') }} {{ t('بنفس') }} {{ t('Amount') }}: <strong>$${paymentAmount}</strong>.</p>`,
                     'payment_help',
                     paymentAmount
                 );
@@ -551,8 +551,8 @@
             navigator.clipboard.writeText(address).then(() => {
                 Swal.fire({
                     icon: 'success',
-                    title: 'تم النسخ!',
-                    text: 'تم نسخ العنوان إلى الحافظة',
+                    title: 'تم {{ t('Backups') }}!',
+                    text: 'تم {{ t('Backups_2') }} {{ t('Address') }} إلى {{ t('الحافظة') }}',
                     timer: 2000,
                     showConfirmButton: false
                 });
@@ -567,25 +567,25 @@
             if (!paymentAmount || paymentAmount < 15) {
                 Swal.fire({
                     icon: 'error',
-                    title: 'خطأ',
-                    text: 'الحد الأدنى للتبرع $15',
+                    title: '{{ t('Error') }}',
+                    text: '{{ t('الحد') }} {{ t('الأدنى') }} {{ t('لل{{ t('تبرع') }}') }} $15',
                     confirmButtonColor: '#667eea'
                 });
                 return;
             }
             
-            // طلب بيانات العميل
+            // {{ t('طلب') }} {{ t('Data_2') }} {{ t('Customer') }}
             const { value: formValues } = await Swal.fire({
-                title: 'بيانات الدفع - PayPal',
+                title: '{{ t('Data_2') }} {{ t('Payment_2') }} - PayPal',
                 html:
-                    '<input id="swal-name" class="swal2-input" placeholder="الاسم الكامل" required>' +
-                    '<input id="swal-email" class="swal2-input" placeholder="البريد الإلكتروني" type="email" required>' +
-                    '<input id="swal-phone" class="swal2-input" placeholder="رقم الجوال" type="tel">' +
-                    (currentTab === 'purchase' ? '<input id="swal-company" class="swal2-input" placeholder="اسم الشركة (اختياري)">' : ''),
+                    '<input id="swal-name" class="swal2-input" placeholder="{{ t('Name') }} {{ t('الكامل') }}" required>' +
+                    '<input id="swal-email" class="swal2-input" placeholder="{{ t('Email_2') }} {{ t('Email_3') }}" type="email" required>' +
+                    '<input id="swal-phone" class="swal2-input" placeholder="{{ t('رقم') }} {{ t('Mobile') }}" type="tel">' +
+                    (currentTab === 'purchase' ? '<input id="swal-company" class="swal2-input" placeholder="{{ t('Name_2') }} {{ t('Company') }} ({{ t('Optional') }})">' : ''),
                 focusConfirm: false,
                 showCancelButton: true,
-                cancelButtonText: 'إلغاء',
-                confirmButtonText: 'متابعة',
+                cancelButtonText: '{{ t('Cancel') }}',
+                confirmButtonText: '{{ t('متابعة') }}',
                 preConfirm: () => {
                     return {
                         name: document.getElementById('swal-name').value,
@@ -600,7 +600,7 @@
                 return;
             }
             
-            // حفظ في DB
+            // {{ t('Save') }} في DB
             const apiEndpoint = currentTab === 'purchase' ? '/payment-vault/api/purchase' : '/payment-vault/api/donation';
             let requestData = {};
             
@@ -609,7 +609,7 @@
                 const packageId = packageCard ? packageCard.getAttribute('data-package-id') : null;
                 
                 if (!packageId) {
-                    Swal.fire({icon: 'error', title: 'خطأ', text: 'الرجاء اختيار باقة'});
+                    Swal.fire({icon: 'error', title: '{{ t('Error') }}', text: '{{ t('الرجاء') }} {{ t('Select') }} {{ t('Plan_2') }}'});
                     return;
                 }
                 
@@ -644,22 +644,22 @@
                 const data = await response.json();
                 
                 if (data.success) {
-                    // إذا كان هناك عنوان دفع (تحويل تلقائي لـ Bitcoin)
+                    // إذا كان هناك {{ t('Address_2') }} {{ t('Payment') }} ({{ t('Transfer') }} {{ t('تلقائي') }} لـ Bitcoin)
                     if (data.payment_address) {
                         Swal.fire({
                             icon: 'success',
-                            title: 'معلومات الدفع',
+                            title: '{{ t('Info_2') }} {{ t('Payment_2') }}',
                             html: `
                                 <div class="ic-70">
                                     <p class="ic-71">
                                         <i class="fab fa-paypal ic-76"></i> 
-                                        <strong>دفع عبر PayPal</strong>
+                                        <strong>{{ t('Payment') }} {{ t('عبر') }} PayPal</strong>
                                     </p>
-                                    <p>رقم الطلب: #${data.purchase_id || data.donation_id}</p>
+                                    <p>{{ t('رقم') }} {{ t('ال{{ t('طلب') }}') }}: #${data.purchase_id || data.donation_id}</p>
                                     <div class="ic-72">
-                                        <p><strong>المبلغ:</strong> $${paymentAmount}</p>
+                                        <p><strong>{{ t('Amount') }}:</strong> $${paymentAmount}</p>
                                         <p class="ic-77">
-                                            <i class="fas fa-exchange-alt"></i> يتم التحويل تلقائياً إلى Bitcoin
+                                            <i class="fas fa-exchange-alt"></i> يتم {{ t('Transfer_2') }} {{ t('{{ t('تلقائي') }}اً') }} إلى Bitcoin
                                         </p>
                                         <hr>
                                         <p class="ic-78">
@@ -667,21 +667,21 @@
                                         </p>
                                         <button onclick="navigator.clipboard.writeText('${data.payment_address}')" 
                                                 class="btn btn-primary">
-                                            <i class="fas fa-copy"></i> نسخ
+                                            <i class="fas fa-copy"></i> {{ t('Backups_2') }}
                                         </button>
                                     </div>
                                     <p class="ic-79">
-                                        ✅ تم حفظ طلبك بنجاح
+                                        ✅ تم {{ t('Save') }} {{ t('{{ t('طلب') }}ك') }} {{ t('بنجاح') }}
                                     </p>
-                                    ${buildSupportStatusHtml(data.purchase_id || data.donation_id, paymentAmount, 'قيد انتظار إتمام الدفع أو التواصل')}
+                                    ${buildSupportStatusHtml(data.purchase_id || data.donation_id, paymentAmount, '{{ t('قيد') }} {{ t('Waiting_2') }} {{ t('إتمام') }} {{ t('Payment_2') }} أو {{ t('التواصل') }}')}
                                 </div>
                             `,
-                            confirmButtonText: 'متابعة الدفع',
+                            confirmButtonText: '{{ t('متابعة') }} {{ t('Payment_2') }}',
                             confirmButtonColor: '#0070ba',
                             showDenyButton: true,
-                            denyButtonText: 'واتساب أزاد',
+                            denyButtonText: '{{ t('واتساب') }} {{ t('أزاد') }}',
                             showCancelButton: true,
-                            cancelButtonText: 'راسلنا بالبريد',
+                            cancelButtonText: '{{ t('راسلنا') }} {{ t('ب{{ t('Email_2') }}') }}',
                             width: 600
                         }).then((result) => {
                             const recordId = data.purchase_id || data.donation_id;
@@ -694,15 +694,15 @@
                     } else {
                         Swal.fire({
                             icon: 'success',
-                            title: 'تم حفظ الطلب',
+                            title: 'تم {{ t('Save') }} {{ t('ال{{ t('طلب') }}') }}',
                             html: `
-                                ${buildSupportStatusHtml(data.purchase_id || data.donation_id, paymentAmount, 'بانتظار التنسيق مع فريق أزاد')}
-                                <p class="ic-80">يمكنك الآن اختيار واتساب أو البريد لإكمال الدفع أو الاستفسار.</p>
+                                ${buildSupportStatusHtml(data.purchase_id || data.donation_id, paymentAmount, '{{ t('ب{{ t('Waiting_2') }}') }} {{ t('التنسيق') }} مع {{ t('فريق') }} {{ t('أزاد') }}')}
+                                <p class="ic-80">{{ t('يمكنك') }} {{ t('الآن_2') }} {{ t('Select') }} {{ t('واتساب') }} أو {{ t('Email_2') }} {{ t('ل{{ t('إكمال') }}') }} {{ t('Payment_2') }} أو {{ t('ال{{ t('استفسار') }}') }}.</p>
                             `,
-                            confirmButtonText: 'واتساب أزاد',
+                            confirmButtonText: '{{ t('واتساب') }} {{ t('أزاد') }}',
                             confirmButtonColor: '#25D366',
                             showDenyButton: true,
-                            denyButtonText: 'راسلنا بالبريد'
+                            denyButtonText: '{{ t('راسلنا') }} {{ t('ب{{ t('Email_2') }}') }}'
                         }).then((result) => {
                             const recordId = data.purchase_id || data.donation_id;
                             if (result.isConfirmed) {
@@ -714,16 +714,16 @@
                     }
                 } else {
                     showSupportAssistanceModal(
-                        'تعذر إكمال طلب PayPal',
-                        `<p>${escapeHtml(data.error || 'تعذر حفظ طلب PayPal حالياً.')}</p><p>يمكنك المتابعة مباشرة مع أزاد عبر واتساب أو البريد.</p>`,
+                        '{{ t('تعذر') }} {{ t('إكمال') }} {{ t('طلب') }} PayPal',
+                        `<p>${escapeHtml(data.error || '{{ t('تعذر') }} {{ t('Save') }} {{ t('طلب') }} PayPal {{ t('حالياً') }}.')}</p><p>{{ t('يمكنك') }} {{ t('ال{{ t('متابعة') }}') }} {{ t('{{ t('مباشر') }}ة') }} مع {{ t('أزاد') }} {{ t('عبر') }} {{ t('واتساب') }} أو {{ t('Email_2') }}.</p>`,
                         'payment_help',
                         paymentAmount
                     );
                 }
             } catch (error) {
                 showSupportAssistanceModal(
-                    'فشل الاتصال أثناء PayPal',
-                    `<p>تعذر التواصل مع الخادم أثناء تجهيز الطلب.</p><p>استخدم واتساب أو البريد لإتمام الشراء أو التبرع بنفس التفاصيل.</p>`,
+                    '{{ t('فشل') }} {{ t('الاتصال') }} {{ t('أثناء') }} PayPal',
+                    `<p>{{ t('تعذر') }} {{ t('التواصل') }} مع {{ t('الخادم') }} {{ t('أثناء') }} {{ t('تجهيز') }} {{ t('ال{{ t('طلب') }}') }}.</p><p>{{ t('استخدم') }} {{ t('واتساب') }} أو {{ t('Email_2') }} {{ t('ل{{ t('إتمام') }}') }} {{ t('Purchase_2') }} أو {{ t('ال{{ t('تبرع') }}') }} {{ t('بنفس') }} {{ t('Details_2') }}.</p>`,
                     'payment_help',
                     paymentAmount
                 );
@@ -741,25 +741,25 @@
             if (!paymentAmount || paymentAmount < 15) {
                 Swal.fire({
                     icon: 'error',
-                    title: 'خطأ',
-                    text: 'الحد الأدنى للتبرع $15',
+                    title: '{{ t('Error') }}',
+                    text: '{{ t('الحد') }} {{ t('الأدنى') }} {{ t('لل{{ t('تبرع') }}') }} $15',
                     confirmButtonColor: '#667eea'
                 });
                 return;
             }
             
-            // طلب بيانات العميل
+            // {{ t('طلب') }} {{ t('Data_2') }} {{ t('Customer') }}
             const { value: formValues } = await Swal.fire({
-                title: 'بيانات الدفع',
+                title: '{{ t('Data_2') }} {{ t('Payment_2') }}',
                 html:
-                    '<input id="swal-name" class="swal2-input" placeholder="الاسم الكامل" required>' +
-                    '<input id="swal-email" class="swal2-input" placeholder="البريد الإلكتروني" type="email" required>' +
-                    '<input id="swal-phone" class="swal2-input" placeholder="رقم الجوال" type="tel">' +
-                    (currentTab === 'purchase' ? '<input id="swal-company" class="swal2-input" placeholder="اسم الشركة (اختياري)">' : ''),
+                    '<input id="swal-name" class="swal2-input" placeholder="{{ t('Name') }} {{ t('الكامل') }}" required>' +
+                    '<input id="swal-email" class="swal2-input" placeholder="{{ t('Email_2') }} {{ t('Email_3') }}" type="email" required>' +
+                    '<input id="swal-phone" class="swal2-input" placeholder="{{ t('رقم') }} {{ t('Mobile') }}" type="tel">' +
+                    (currentTab === 'purchase' ? '<input id="swal-company" class="swal2-input" placeholder="{{ t('Name_2') }} {{ t('Company') }} ({{ t('Optional') }})">' : ''),
                 focusConfirm: false,
                 showCancelButton: true,
-                cancelButtonText: 'إلغاء',
-                confirmButtonText: 'متابعة',
+                cancelButtonText: '{{ t('Cancel') }}',
+                confirmButtonText: '{{ t('متابعة') }}',
                 preConfirm: () => {
                     return {
                         name: document.getElementById('swal-name').value,
@@ -774,7 +774,7 @@
                 return;
             }
             
-            // إنشاء السجل
+            // {{ t('Create') }} {{ t('Log_2') }}
             const apiEndpoint = currentTab === 'purchase' ? '/payment-vault/api/purchase' : '/payment-vault/api/donation';
             let requestData = {};
             
@@ -783,7 +783,7 @@
                 const packageId = packageCard ? packageCard.getAttribute('data-package-id') : null;
                 
                 if (!packageId) {
-                    Swal.fire({icon: 'error', title: 'خطأ', text: 'الرجاء اختيار باقة'});
+                    Swal.fire({icon: 'error', title: '{{ t('Error') }}', text: '{{ t('الرجاء') }} {{ t('Select') }} {{ t('Plan_2') }}'});
                     return;
                 }
                 
@@ -808,7 +808,7 @@
                 };
             }
             
-            // حفظ في DB
+            // {{ t('Save') }} في DB
             try {
                 const response = await fetch(apiEndpoint, {
                     method: 'POST',
@@ -819,44 +819,44 @@
                 const data = await response.json();
                 
                 if (data.success) {
-                    // إذا كان هناك عنوان دفع (من NOWPayments)
+                    // إذا كان هناك {{ t('Address_2') }} {{ t('Payment') }} (من NOWPayments)
                     if (data.payment_address) {
                         Swal.fire({
                             icon: 'success',
-                            title: 'تم إنشاء عنوان الدفع!',
+                            title: 'تم {{ t('Create') }} {{ t('Address_2') }} {{ t('Payment_2') }}!',
                             html: `
                                 <div class="ic-70">
                                     <p class="ic-81">
-                                        <strong>رقم الطلب: #${data.purchase_id || data.donation_id}</strong>
+                                        <strong>{{ t('رقم') }} {{ t('ال{{ t('طلب') }}') }}: #${data.purchase_id || data.donation_id}</strong>
                                     </p>
                                     <div class="ic-72">
-                                        <p><strong>المبلغ المطلوب:</strong></p>
+                                        <p><strong>{{ t('Amount') }} {{ t('Required_2') }}:</strong></p>
                                         <p class="ic-82">
                                             ${data.payment_amount || paymentAmount} ${data.crypto_currency || 'BTC'}
                                         </p>
                                         <hr>
-                                        <p><strong>عنوان المحفظة:</strong></p>
+                                        <p><strong>{{ t('Address_2') }} {{ t('الم{{ t('Save') }}ة_2') }}:</strong></p>
                                         <p class="ic-83">
                                             ${data.payment_address}
                                         </p>
                                         <button onclick="navigator.clipboard.writeText('${data.payment_address}')" 
                                                 class="btn btn-primary mt-2">
-                                            <i class="fas fa-copy"></i> نسخ العنوان
+                                            <i class="fas fa-copy"></i> {{ t('Backups_2') }} {{ t('Address') }}
                                         </button>
                                     </div>
                                     <p class="ic-84">
                                         <i class="fas fa-check-circle"></i> 
-                                        أرسل المبلغ المحدد إلى العنوان أعلاه
+                                        {{ t('أرسل') }} {{ t('Amount') }} {{ t('المحدد') }} إلى {{ t('Address') }} {{ t('أعلاه') }}
                                     </p>
-                                    ${buildSupportStatusHtml(data.purchase_id || data.donation_id, paymentAmount, 'بانتظار إتمام الدفع أو المتابعة مع أزاد')}
+                                    ${buildSupportStatusHtml(data.purchase_id || data.donation_id, paymentAmount, '{{ t('ب{{ t('Waiting_2') }}') }} {{ t('إتمام') }} {{ t('Payment_2') }} أو {{ t('ال{{ t('متابعة') }}') }} مع {{ t('أزاد') }}')}
                                 </div>
                             `,
-                            confirmButtonText: 'متابعة الدفع',
+                            confirmButtonText: '{{ t('متابعة') }} {{ t('Payment_2') }}',
                             confirmButtonColor: '#28a745',
                             showDenyButton: true,
-                            denyButtonText: 'واتساب أزاد',
+                            denyButtonText: '{{ t('واتساب') }} {{ t('أزاد') }}',
                             showCancelButton: true,
-                            cancelButtonText: 'راسلنا بالبريد',
+                            cancelButtonText: '{{ t('راسلنا') }} {{ t('ب{{ t('Email_2') }}') }}',
                             width: 600,
                             allowOutsideClick: false
                         }).then((result) => {
@@ -870,15 +870,15 @@
                     } else {
                         Swal.fire({
                             icon: 'success',
-                            title: 'تم حفظ الطلب',
+                            title: 'تم {{ t('Save') }} {{ t('ال{{ t('طلب') }}') }}',
                             html: `
-                                ${buildSupportStatusHtml(data.purchase_id || data.donation_id, paymentAmount, 'تم تسجيل الطلب بانتظار تأكيد أو متابعة يدوية')}
-                                <p class="ic-80">يمكنك المتابعة مباشرة مع شركة أزاد عبر واتساب أو البريد.</p>
+                                ${buildSupportStatusHtml(data.purchase_id || data.donation_id, paymentAmount, 'تم {{ t('تسجيل') }} {{ t('ال{{ t('طلب') }}') }} {{ t('ب{{ t('Waiting_2') }}') }} {{ t('Confirm') }} أو {{ t('متابعة') }} {{ t('Manual_4') }}')}
+                                <p class="ic-80">{{ t('يمكنك') }} {{ t('ال{{ t('متابعة') }}') }} {{ t('{{ t('مباشر') }}ة') }} مع {{ t('Company_2') }} {{ t('أزاد') }} {{ t('عبر') }} {{ t('واتساب') }} أو {{ t('Email_2') }}.</p>
                             `,
-                            confirmButtonText: 'واتساب أزاد',
+                            confirmButtonText: '{{ t('واتساب') }} {{ t('أزاد') }}',
                             confirmButtonColor: '#25D366',
                             showDenyButton: true,
-                            denyButtonText: 'راسلنا بالبريد'
+                            denyButtonText: '{{ t('راسلنا') }} {{ t('ب{{ t('Email_2') }}') }}'
                         }).then((result) => {
                             const recordId = data.purchase_id || data.donation_id;
                             if (result.isConfirmed) {
@@ -890,16 +890,16 @@
                     }
                 } else {
                     showSupportAssistanceModal(
-                        'تعذر تجهيز طلب البطاقة',
-                        `<p>${escapeHtml(data.error || 'تعذر حفظ طلب البطاقة حالياً.')}</p><p>يمكنك إكمال العملية مباشرة مع أزاد عبر واتساب أو البريد.</p>`,
+                        '{{ t('تعذر') }} {{ t('تجهيز') }} {{ t('طلب') }} {{ t('Card_2') }}',
+                        `<p>${escapeHtml(data.error || '{{ t('تعذر') }} {{ t('Save') }} {{ t('طلب') }} {{ t('Card_2') }} {{ t('حالياً') }}.')}</p><p>{{ t('يمكنك') }} {{ t('إكمال') }} {{ t('العملية') }} {{ t('{{ t('مباشر') }}ة') }} مع {{ t('أزاد') }} {{ t('عبر') }} {{ t('واتساب') }} أو {{ t('Email_2') }}.</p>`,
                         'payment_help',
                         paymentAmount
                     );
                 }
             } catch (error) {
                 showSupportAssistanceModal(
-                    'فشل الاتصال أثناء الدفع',
-                    `<p>تعذر الوصول إلى الخادم أثناء معالجة الطلب.</p><p>لا تقلق، يمكنك المتابعة الآن مباشرة مع شركة أزاد.</p>`,
+                    '{{ t('فشل') }} {{ t('الاتصال') }} {{ t('أثناء') }} {{ t('Payment_2') }}',
+                    `<p>{{ t('تعذر') }} {{ t('الوصول') }} إلى {{ t('الخادم') }} {{ t('أثناء') }} {{ t('Processing_2') }} {{ t('ال{{ t('طلب') }}') }}.</p><p>لا {{ t('تقلق،') }} {{ t('يمكنك') }} {{ t('ال{{ t('متابعة') }}') }} {{ t('الآن_2') }} {{ t('{{ t('مباشر') }}ة') }} مع {{ t('Company_2') }} {{ t('أزاد') }}.</p>`,
                     'payment_help',
                     paymentAmount
                 );

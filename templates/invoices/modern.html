@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - فاتورة #{{ sale.sale_number }}</title>
+  <title>{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('Invoice') }} #{{ sale.sale_number }}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/erp-theme.css') }}">
   {% include 'partials/print_styles.html' %}
   <style>
@@ -130,11 +130,11 @@
       <div class="company-info">
         <div>{{ (settings.address_ar if settings and settings.address_ar else none) or tenant_address or company_address }}</div>
         <div>📞 {{ (settings.phone_1 if settings and settings.phone_1 else none) or tenant_phone or company_phone }} | 📧 {{ (settings.email if settings and settings.email else none) or tenant_email or company_email }}</div>
-        {% if settings and settings.tax_number and settings.tax_number != 'None' %}<div>الرقم الضريبي: {{ settings.tax_number }}</div>{% endif %}
+        {% if settings and settings.tax_number and settings.tax_number != 'None' %}<div>{{ t('ال{{ t('رقم') }}') }} {{ t('الضريبي') }}: {{ settings.tax_number }}</div>{% endif %}
         {% if print_branch %}
-        <div>🏢 الفرع: {{ print_branch.name }}{% if print_branch.code %} ({{ print_branch.code }}){% endif %}</div>
+        <div>🏢 {{ t('Branch') }}: {{ print_branch.name }}{% if print_branch.code %} ({{ print_branch.code }}){% endif %}</div>
         {% if print_branch.address %}
-        <div>📍 عنوان الفرع: {{ print_branch.address }}</div>
+        <div>📍 {{ t('Address_2') }} {{ t('Branch') }}: {{ print_branch.address }}</div>
         {% endif %}
         {% endif %}
       </div>
@@ -147,16 +147,16 @@
     <div class="content">
       <div class="info-grid">
         <div class="info-box">
-          <h3>🏢 بيانات الزبون</h3>
-          <p><strong>الاسم:</strong> {{ sale.customer.name }}</p>
-          <p><strong>الهاتف:</strong> {{ sale.customer.phone }}</p>
-          <p><strong>العنوان:</strong> {{ sale.customer.address }}</p>
+          <h3>🏢 {{ t('Data_2') }} {{ t('Customer_2') }}</h3>
+          <p><strong>{{ t('Name') }}:</strong> {{ sale.customer.name }}</p>
+          <p><strong>{{ t('Phone') }}:</strong> {{ sale.customer.phone }}</p>
+          <p><strong>{{ t('Address') }}:</strong> {{ sale.customer.address }}</p>
         </div>
         <div class="info-box">
-          <h3>📅 بيانات الفاتورة</h3>
-          <p><strong>التاريخ:</strong> {{ sale.sale_date.strftime('%Y-%m-%d') }}</p>
-          <p><strong>الحالة:</strong> <span class="ic-1">مكتملة</span></p>
-          <p><strong>المستخدم:</strong> {{ print_user_name or (sale.seller.full_name if sale.seller else '-') }}</p>
+          <h3>📅 {{ t('Data_2') }} {{ t('Invoice_2') }}</h3>
+          <p><strong>{{ t('Date') }}:</strong> {{ sale.sale_date.strftime('%Y-%m-%d') }}</p>
+          <p><strong>{{ t('Status') }}:</strong> <span class="ic-1">{{ t('Completed_2') }}</span></p>
+          <p><strong>{{ t('User') }}:</strong> {{ print_user_name or (sale.seller.full_name if sale.seller else '-') }}</p>
         </div>
       </div>
 
@@ -164,7 +164,7 @@
         <thead>
           <tr>
             <th>#</th>
-            <th>المنتج</th>
+            <th>{{ t('Product') }}</th>
             <th>{{ t('Quantity') }}</th>
             <th>{{ t('Price') }}</th>
             <th>{{ t('Total') }}</th>
@@ -185,17 +185,17 @@
 
       <div class="total-section">
         <div class="total-row">
-          <span>الإجمالي الفرعي:</span>
+          <span>{{ t('Total_3') }} {{ t('Sub') }}:</span>
           <strong>{{ format_currency(sale.subtotal) }}</strong>
         </div>
         {% if sale.tax_amount > 0 %}
         <div class="total-row">
-          <span>الضريبة ({{ sale.tax_rate }}%):</span>
+          <span>{{ t('Tax') }} ({{ sale.tax_rate }}%):</span>
           <strong>{{ format_currency(sale.tax_amount) }}</strong>
         </div>
         {% endif %}
         <div class="total-row final">
-          <span>الإجمالي النهائي:</span>
+          <span>{{ t('Total_3') }} {{ t('النهائي') }}:</span>
           <strong>{{ format_currency(sale.total_amount) }}</strong>
         </div>
       </div>
@@ -203,15 +203,15 @@
       
       {% if sale.payments %}
       <div class="ic-2">
-        <h4 class="erp-invoice-h3" style="color: {{ settings.header_color if settings else '#667eea' }};">💰 الدفعات</h4>
+        <h4 class="erp-invoice-h3" style="color: {{ settings.header_color if settings else '#667eea' }};">💰 {{ t('الدفعات') }}</h4>
         <div class="table-responsive"><table class="ic-3">
           <thead>
             <tr>
-              <th class="ic-4">رقم الدفعة</th>
-              <th class="ic-4">التاريخ</th>
-              <th class="ic-4">المبلغ</th>
-              <th class="ic-4">الطريقة</th>
-              <th class="ic-4">التفاصيل</th>
+              <th class="ic-4">{{ t('رقم') }} {{ t('الدفعة') }}</th>
+              <th class="ic-4">{{ t('Date') }}</th>
+              <th class="ic-4">{{ t('Amount') }}</th>
+              <th class="ic-4">{{ t('الطريقة') }}</th>
+              <th class="ic-4">{{ t('Details_2') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -221,11 +221,11 @@
               <td class="ic-5">{{ payment.payment_date.strftime('%Y-%m-%d') }}</td>
               <td class="ic-6">{{ format_currency(payment.base_amount) }}</td>
               <td class="ic-5">
-                {% if payment.payment_method == 'cash' %}نقدي
-                {% elif payment.payment_method == 'card' %}بطاقة
-                {% elif payment.payment_method == 'bank_transfer' %}تحويل
-                {% elif payment.payment_method == 'cheque' %}شيك
-                {% else %}محفظة{% endif %}
+                {% if payment.payment_method == 'cash' %}{{ t('Cash_2') }}
+                {% elif payment.payment_method == 'card' %}{{ t('Card') }}
+                {% elif payment.payment_method == 'bank_transfer' %}{{ t('Transfer') }}
+                {% elif payment.payment_method == 'cheque' %}{{ t('Cheque_3') }}
+                {% else %}{{ t('محفظة') }}{% endif %}
               </td>
               <td class="ic-7">
                 {% if payment.payment_method == 'cheque' and payment.cheque_number %}
@@ -254,12 +254,12 @@
       
       {% if settings and ((settings.bank_name and settings.bank_name != 'None') or (settings.iban and settings.iban != 'None') or (settings.swift_code and settings.swift_code != 'None')) %}
       <div class="erp-modern-bank-box" style="border-right: 3px solid {{ settings.header_color if settings else '#667eea' }};">
-        <p class="erp-invoice-bank-title" style="color: {{ settings.header_color if settings else '#667eea' }};">🏦 معلومات التحويل البنكي</p>
+        <p class="erp-invoice-bank-title" style="color: {{ settings.header_color if settings else '#667eea' }};">🏦 {{ t('Info_2') }} {{ t('Transfer_2') }} {{ t('Bank_4') }}</p>
         {% if settings.bank_name and settings.bank_name != 'None' %}
-        <p class="ic-9"><strong>البنك:</strong> {{ settings.bank_name }}</p>
+        <p class="ic-9"><strong>{{ t('Bank') }}:</strong> {{ settings.bank_name }}</p>
         {% endif %}
         {% if settings.bank_account_number %}
-        <p class="ic-9"><strong>رقم الحساب:</strong> {{ settings.bank_account_number }}</p>
+        <p class="ic-9"><strong>{{ t('رقم') }} {{ t('Account') }}:</strong> {{ settings.bank_account_number }}</p>
         {% endif %}
         {% if settings.iban and settings.iban != 'None' %}
         <p class="ic-9"><strong>IBAN:</strong> {{ settings.iban }}</p>
@@ -274,11 +274,11 @@
       {% if settings and ((settings.commercial_register and settings.commercial_register != 'None') or (settings.license_number and settings.license_number != 'None')) %}
       <div class="ic-10">
         {% if settings.commercial_register and settings.commercial_register != 'None' %}
-        <span>السجل التجاري: {{ settings.commercial_register }}</span>
+        <span>{{ t('Log_2') }} {{ t('التجاري') }}: {{ settings.commercial_register }}</span>
         {% endif %}
         {% if settings.commercial_register and settings.license_number %} | {% endif %}
         {% if settings.license_number and settings.license_number != 'None' %}
-        <span>رقم الرخصة: {{ settings.license_number }}</span>
+        <span>{{ t('رقم') }} {{ t('الرخصة') }}: {{ settings.license_number }}</span>
         {% endif %}
       </div>
       {% endif %}
@@ -290,7 +290,7 @@
       </div>
       {% endif %}
       
-      <p class="ic-13">شكراً لتعاملكم معنا</p>
+      <p class="ic-13">{{ t('شكراً') }} {{ t('لتعاملكم') }} {{ t('معنا') }}</p>
       
       
       {% if settings and (settings.facebook_url or settings.instagram_url or settings.whatsapp_number) %}

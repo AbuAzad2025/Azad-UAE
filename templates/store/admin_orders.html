@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}طلبات المتجر{% endblock %}
+{% block title %}{{ t('طلبات') }} {{ t('Store') }}{% endblock %}
 
 
 
@@ -8,9 +8,9 @@
 
 <div class="d-flex justify-content-between align-items-center flex-wrap">
 
-  <h1 class="mb-0"><i class="fas fa-receipt mr-2"></i>طلبات المتجر الإلكتروني</h1>
+  <h1 class="mb-0"><i class="fas fa-receipt mr-2"></i>{{ t('طلبات') }} {{ t('Store') }} {{ t('Email_3') }}</h1>
 
-  <a href="{{ url_for('store.admin_index') }}" class="btn btn-secondary">رجوع</a>
+  <a href="{{ url_for('store.admin_index') }}" class="btn btn-secondary">{{ t('Back') }}</a>
 
 </div>
 
@@ -30,7 +30,7 @@
 
       <div class="info-box-content">
 
-        <span class="info-box-text">بانتظار التأكيد</span>
+        <span class="info-box-text">{{ t('بانتظار') }} {{ t('Confirm_2') }}</span>
 
         <span class="info-box-number">{{ order_counts.pending }}</span>
 
@@ -48,7 +48,7 @@
 
       <div class="info-box-content">
 
-        <span class="info-box-text">مؤكدة</span>
+        <span class="info-box-text">{{ t('Confirmed') }}</span>
 
         <span class="info-box-number">{{ order_counts.confirmed }}</span>
 
@@ -66,7 +66,7 @@
 
       <div class="info-box-content">
 
-        <span class="info-box-text">ملغاة</span>
+        <span class="info-box-text">{{ t('Cancelled_2') }}</span>
 
         <span class="info-box-number">{{ order_counts.cancelled }}</span>
 
@@ -84,7 +84,7 @@
 
       <div class="info-box-content">
 
-        <span class="info-box-text">إجمالي الطلبات</span>
+        <span class="info-box-text">{{ t('Total_2') }} {{ t('{{ t('الطلب') }}ات') }}</span>
 
         <span class="info-box-number">{{ order_counts.total }}</span>
 
@@ -104,13 +104,13 @@
 
     <div class="btn-group btn-group-sm flex-wrap" role="group">
 
-      <a href="{{ url_for('store.admin_orders') }}" class="btn btn-{% if not status_filter %}primary{% else %}outline-secondary{% endif %}">الكل</a>
+      <a href="{{ url_for('store.admin_orders') }}" class="btn btn-{% if not status_filter %}primary{% else %}outline-secondary{% endif %}">{{ t('All') }}</a>
 
-      <a href="{{ url_for('store.admin_orders', status='pending') }}" class="btn btn-{% if status_filter == 'pending' %}warning{% else %}outline-secondary{% endif %}">معلّقة</a>
+      <a href="{{ url_for('store.admin_orders', status='pending') }}" class="btn btn-{% if status_filter == 'pending' %}warning{% else %}outline-secondary{% endif %}">{{ t('معلّقة') }}</a>
 
-      <a href="{{ url_for('store.admin_orders', status='confirmed') }}" class="btn btn-{% if status_filter == 'confirmed' %}success{% else %}outline-secondary{% endif %}">مؤكدة</a>
+      <a href="{{ url_for('store.admin_orders', status='confirmed') }}" class="btn btn-{% if status_filter == 'confirmed' %}success{% else %}outline-secondary{% endif %}">{{ t('Confirmed') }}</a>
 
-      <a href="{{ url_for('store.admin_orders', status='cancelled') }}" class="btn btn-{% if status_filter == 'cancelled' %}secondary{% else %}outline-secondary{% endif %}">ملغاة</a>
+      <a href="{{ url_for('store.admin_orders', status='cancelled') }}" class="btn btn-{% if status_filter == 'cancelled' %}secondary{% else %}outline-secondary{% endif %}">{{ t('Cancelled_2') }}</a>
 
     </div>
 
@@ -130,19 +130,19 @@
 
         <tr>
 
-          <th>رقم الطلب</th>
+          <th>{{ t('رقم') }} {{ t('الطلب') }}</th>
 
-          <th>التاريخ</th>
+          <th>{{ t('Date') }}</th>
 
-          <th>العميل</th>
+          <th>{{ t('Customer') }}</th>
 
-          <th>طريقة الدفع</th>
+          <th>{{ t('طريقة') }} {{ t('Payment_2') }}</th>
 
-          <th>الإجمالي</th>
+          <th>{{ t('Total_3') }}</th>
 
-          <th>الدفع</th>
+          <th>{{ t('Payment_2') }}</th>
 
-          <th>الحالة</th>
+          <th>{{ t('Status') }}</th>
 
           <th></th>
 
@@ -202,15 +202,15 @@
 
           <td class="text-nowrap">
 
-            <a href="{{ url_for('store.admin_order_detail', order_id=order.id) }}" class="btn btn-primary">تفاصيل</a>
+            <a href="{{ url_for('store.admin_order_detail', order_id=order.id) }}" class="btn btn-primary">{{ t('Details') }}</a>
 
             {% if order.status == 'pending' %}
 
-            <form class="needs-validation" method="post" action="{{ url_for('store.admin_order_confirm', order_id=order.id) }}" class="d-inline" onsubmit="return confirm('تأكيد الطلب ' + {{ order.sale_number|tojson }} + '؟');">
+            <form class="needs-validation" method="post" action="{{ url_for('store.admin_order_confirm', order_id=order.id) }}" class="d-inline" onsubmit="return confirm('{{ t('Confirm') }} {{ t('الطلب') }} ' + {{ order.sale_number|tojson }} + '؟');">
 
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 
-              <button type="submit" class="btn btn-success">تأكيد</button>
+              <button type="submit" class="btn btn-success">{{ t('Confirm') }}</button>
 
             </form>
 
@@ -222,7 +222,7 @@
 
         {% else %}
 
-        <tr><td colspan="8" class="text-center text-muted py-4">لا طلبات أونلاين بعد</td></tr>
+        <tr><td colspan="8" class="text-center text-muted py-4">لا {{ t('طلبات') }} {{ t('أونلاين') }} بعد</td></tr>
 
         {% endfor %}
 
@@ -239,9 +239,9 @@
     <nav>
 
       <ul class="pagination pagination-sm mb-0 justify-content-center">{%- if pagination.has_prev %}
-        <li class="page-item"><a class="page-link" href="{{ url_for('store.admin_orders', page=pagination.prev_num, status=status_filter or none) }}">السابق</a></li>{%- endif %}
+        <li class="page-item"><a class="page-link" href="{{ url_for('store.admin_orders', page=pagination.prev_num, status=status_filter or none) }}">{{ t('السابق') }}</a></li>{%- endif %}
         <li class="page-item disabled"><span class="page-link">{{ pagination.page }} / {{ pagination.pages }}</span></li>{%- if pagination.has_next %}
-        <li class="page-item"><a class="page-link" href="{{ url_for('store.admin_orders', page=pagination.next_num, status=status_filter or none) }}">التالي</a></li>{%- endif %}
+        <li class="page-item"><a class="page-link" href="{{ url_for('store.admin_orders', page=pagination.next_num, status=status_filter or none) }}">{{ t('التالي') }}</a></li>{%- endif %}
       </ul>
 
     </nav>
@@ -256,7 +256,7 @@
 
   <i class="fas fa-info-circle"></i>
 
-  الطلبات الجديدة لا تخصم المخزون حتى التأكيد — عند التأكيد يُرحّل المخزون والمحاسبة تلقائياً.
+  {{ t('{{ t('الطلب') }}ات') }} {{ t('New_4') }} لا {{ t('تخصم') }} {{ t('Inventory') }} حتى {{ t('Confirm_2') }} — عند {{ t('Confirm_2') }} {{ t('يُرحّل') }} {{ t('Inventory') }} {{ t('والمحاسبة') }} {{ t('تلقائياً') }}.
 
 </p>
 

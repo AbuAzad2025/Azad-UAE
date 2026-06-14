@@ -1,9 +1,9 @@
 {% extends 'base.html' %}
-{% block title %}إضافة فئة مصروفات{% endblock %}
+{% block title %}{{ t('Add') }} {{ t('فئة') }} {{ t('Expenses_2') }}{% endblock %}
 {% block content %}
 <div class="container-fluid">
   <div class="card">
-    <div class="card-header"><h3><i class="fas fa-plus"></i> إضافة فئة مصروفات</h3></div>
+    <div class="card-header"><h3><i class="fas fa-plus"></i> {{ t('Add') }} {{ t('فئة') }} {{ t('Expenses_2') }}</h3></div>
     <div class="card-body">
       {% set form_data = form_data if form_data is defined else request.form %}
       <form class="needs-validation" method="post" action="">
@@ -11,13 +11,13 @@
         <div class="row">
           <div class="col-md-6">
             <div class="form-group">
-              <label for="input_name">الاسم (EN) *</label>
+              <label for="input_name">{{ t('Name') }} (EN) *</label>
               <input type="text" name="name" class="form-control" required value="{{ form_data.get('name', '') }}" id="input_name" aria-label="name" minlength="2" maxlength="100">
             </div>
           </div>
           <div class="col-md-6">
             <div class="form-group">
-              <label for="input_name_ar">الاسم (AR) *</label>
+              <label for="input_name_ar">{{ t('Name') }} (AR) *</label>
               <input type="text" name="name_ar" class="form-control" required value="{{ form_data.get('name_ar', '') }}" id="input_name_ar" aria-label="name ar" minlength="2" maxlength="100">
             </div>
           </div>
@@ -25,9 +25,9 @@
         <div class="row">
           <div class="col-md-6">
             <div class="form-group">
-              <label>الفئة الأب</label>
+              <label>{{ t('ال{{ t('فئة') }}') }} {{ t('الأب') }}</label>
               <select name="parent_id" class="form-control" aria-label="parent id">
-                <option value="" {% if not form_data.get('parent_id') %}selected{% endif %}>بلا</option>
+                <option value="" {% if not form_data.get('parent_id') %}selected{% endif %}>{{ t('None') }}</option>
                 {% for parent in parent_categories %}
                 <option value="{{ parent.id }}" {% if form_data.get('parent_id') and form_data.get('parent_id')|int == parent.id %}selected{% endif %}>
                   {{ parent.name_ar }}
@@ -38,7 +38,7 @@
           </div>
           <div class="col-md-6">
             <div class="form-group">
-              <label>الحساب المحاسبي *</label>
+              <label>{{ t('Account') }} {{ t('Accounting_4') }} *</label>
               <select name="gl_account_id" class="form-control" required aria-label="gl account id">
                 {% for account in accounts %}
                 <option value="{{ account.id }}" {% if form_data.get('gl_account_id') and form_data.get('gl_account_id')|int == account.id %}selected{% endif %}>
@@ -49,8 +49,8 @@
             </div>
           </div>
         </div>
-        <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> حفظ</button>
-        <a href="{{ url_for('advanced_ledger.expense_categories') }}" class="btn btn-secondary"><i class="fas fa-times"></i> إلغاء</a>
+        <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> {{ t('Save') }}</button>
+        <a href="{{ url_for('advanced_ledger.expense_categories') }}" class="btn btn-secondary"><i class="fas fa-times"></i> {{ t('Cancel') }}</a>
       </form>
     </div>
   </div>

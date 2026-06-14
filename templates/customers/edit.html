@@ -1,19 +1,19 @@
 {% extends 'base.html' %}
-{% block title %}شركة أزاد للأنظمة الذكية - تعديل بيانات العميل {{ customer.name }}{% endblock %}
+{% block title %}{{ t('Company_2') }} {{ t('أزاد') }} {{ t('للأنظمة') }} {{ t('الذكية') }} - {{ t('Edit') }} {{ t('Data_2') }} {{ t('Customer') }} {{ customer.name }}{% endblock %}
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
   <div>
-    <h1 class="mb-0"><i class="fas fa-edit mr-2"></i>تعديل الزبون: {{ customer.name }}</h1>
+    <h1 class="mb-0"><i class="fas fa-edit mr-2"></i>{{ t('Edit') }} {{ t('Customer_2') }}: {{ customer.name }}</h1>
   </div>
   <div>
     <a href="{{ url_for('customers.view', id=customer.id) }}" class="btn btn-info">
-      <i class="fas fa-eye mr-2"></i>عرض
+      <i class="fas fa-eye mr-2"></i>{{ t('View') }}
     </a>
     <a href="{{ url_for('customers.index') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right mr-2"></i>العودة للقائمة
+      <i class="fas fa-arrow-right mr-2"></i>{{ t('العودة') }} {{ t('للقائمة') }}
     </a>
     <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
-      <i class="fas fa-home mr-2"></i>الرئيسية
+      <i class="fas fa-home mr-2"></i>{{ t('Main_2') }}
     </a>
   </div>
 </div>
@@ -28,24 +28,24 @@
         <div class="col-md-6">
           <div class="form-group">
             <label>
-              <i class="fas fa-user text-primary"></i> الاسم 
+              <i class="fas fa-user text-primary"></i> {{ t('Name') }} 
               <span class="text-danger">*</span>
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="اسم العميل الكامل (إجباري)"></i>
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Name_2') }} {{ t('Customer') }} {{ t('الكامل') }} ({{ t('Required') }})"></i>
             </label>
-            <input type="text" name="name" class="form-control" value="{{ customer.name }}" placeholder="اسم الزبون" required minlength="2" maxlength="100">
+            <input type="text" name="name" class="form-control" value="{{ customer.name }}" placeholder="{{ t('Name_2') }} {{ t('Customer_2') }}" required minlength="2" maxlength="100">
           </div>
         </div>
         <div class="col-md-3">
           <div class="form-group">
             <label>
-              <i class="fas fa-tag text-primary"></i> نوع الزبون 
+              <i class="fas fa-tag text-primary"></i> {{ t('نوع') }} {{ t('Customer_2') }} 
               <span class="text-danger">*</span>
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="عادي: سعر التجزئة | تاجر: خصم 10% | شريك: خصم 15%"></i>
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('عادي') }}: {{ t('Price_2') }} {{ t('التجزئة') }} | {{ t('تاجر') }}: {{ t('Discount_2') }} 10% | {{ t('Partner') }}: {{ t('Discount_2') }} 15%"></i>
             </label>
             <select name="customer_type" class="form-control" required aria-label="customer type">
-              <option value="regular" {% if customer.customer_type == 'regular' %}selected{% endif %}>عادي</option>
-              <option value="merchant" {% if customer.customer_type == 'merchant' %}selected{% endif %}>تاجر</option>
-              <option value="partner" {% if customer.customer_type == 'partner' %}selected{% endif %}>شريك</option>
+              <option value="regular" {% if customer.customer_type == 'regular' %}selected{% endif %}>{{ t('عادي') }}</option>
+              <option value="merchant" {% if customer.customer_type == 'merchant' %}selected{% endif %}>{{ t('تاجر') }}</option>
+              <option value="partner" {% if customer.customer_type == 'partner' %}selected{% endif %}>{{ t('Partner') }}</option>
             </select>
           </div>
         </div>
@@ -53,7 +53,7 @@
           <div class="form-group">
             <label>
               <i class="fas fa-toggle-on text-success"></i> {{ t('Status') }}
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="حالة تفعيل العميل"></i>
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Status_2') }} {{ t('تفعيل') }} {{ t('Customer') }}"></i>
             </label>
             <select name="is_active" class="form-control" aria-label="is active">
               <option value="1" {% if customer.is_active %}selected{% endif %}>{{ t('Active') }}</option>
@@ -69,7 +69,7 @@
             <label>
               <i class="fas fa-phone text-primary"></i> {{ t('Phone') }} 
               <span class="text-danger">*</span>
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="رقم الهاتف (يجب أن يكون فريداً)"></i>
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('رقم') }} {{ t('Phone') }} (يجب أن يكون {{ t('فريداً') }})"></i>
             </label>
             <input type="text" name="phone" class="form-control" value="{{ customer.phone or '' }}" placeholder="+971-5x-xxx-xxxx" required pattern="^\+?[0-9\s\-]{8,20}$">
           </div>
@@ -77,8 +77,8 @@
         <div class="col-md-4">
           <div class="form-group">
             <label>
-              <i class="fas fa-envelope text-info"></i> البريد
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="البريد الإلكتروني (اختياري - للإشعارات)"></i>
+              <i class="fas fa-envelope text-info"></i> {{ t('Email_2') }}
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Email_2') }} {{ t('Email_3') }} ({{ t('Optional') }} - {{ t('للإشعارات') }})"></i>
             </label>
             <input type="email" name="email" class="form-control" value="{{ customer.email or '' }}" placeholder="email@example.com">
           </div>
@@ -86,13 +86,13 @@
         <div class="col-md-4">
           <div class="form-group">
             <label>
-              <i class="fas fa-dollar-sign text-success"></i> العملة الافتراضية
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="العملة المفضلة (افتراضي: {{ tenant_default_currency or 'AED' }})"></i>
+              <i class="fas fa-dollar-sign text-success"></i> {{ t('Currency') }} {{ t('ال{{ t('افتراضي') }}ة') }}
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Currency') }} {{ t('المفضلة') }} ({{ t('افتراضي') }}: {{ tenant_default_currency or 'AED' }})"></i>
             </label>
             <select name="preferred_currency" class="form-control" aria-label="preferred currency">
-              <option value="AED" {% if customer.preferred_currency == 'AED' %}selected{% endif %}>درهم</option>
-              <option value="USD" {% if customer.preferred_currency == 'USD' %}selected{% endif %}>دولار</option>
-              <option value="EUR" {% if customer.preferred_currency == 'EUR' %}selected{% endif %}>يورو</option>
+              <option value="AED" {% if customer.preferred_currency == 'AED' %}selected{% endif %}>{{ t('Dirham') }}</option>
+              <option value="USD" {% if customer.preferred_currency == 'USD' %}selected{% endif %}>{{ t('Dollar') }}</option>
+              <option value="EUR" {% if customer.preferred_currency == 'EUR' %}selected{% endif %}>{{ t('Euro') }}</option>
             </select>
           </div>
         </div>
@@ -101,23 +101,23 @@
       <div class="form-group">
         <label>
           <i class="fas fa-map-marker-alt text-warning"></i> {{ t('Address') }}
-          <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="عنوان العميل (اختياري - للتوصيل)"></i>
+          <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Address_2') }} {{ t('Customer') }} ({{ t('Optional') }} - {{ t('للتوصيل') }})"></i>
         </label>
-        <textarea name="address" class="form-control" rows="2" placeholder="العنوان الكامل..." maxlength="255">{{ customer.address or '' }}</textarea>
+        <textarea name="address" class="form-control" rows="2" placeholder="{{ t('Address') }} {{ t('الكامل') }}..." maxlength="255">{{ customer.address or '' }}</textarea>
       </div>
 
       <div class="form-group">
         <label>
           <i class="fas fa-sticky-note text-secondary"></i> {{ t('Notes') }}
-          <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="ملاحظات إضافية (اختياري)"></i>
+          <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Notes') }} {{ t('Additional') }} ({{ t('Optional') }})"></i>
         </label>
-        <textarea name="notes" class="form-control" rows="3" placeholder="أي ملاحظات عن العميل..." maxlength="500">{{ customer.notes or '' }}</textarea>
+        <textarea name="notes" class="form-control" rows="3" placeholder="أي {{ t('Notes') }} عن {{ t('Customer') }}..." maxlength="500">{{ customer.notes or '' }}</textarea>
       </div>
     </div>
 
     <div class="card-footer">
       <button type="submit" class="btn btn-warning">
-        <i class="fas fa-save mr-2"></i>حفظ التعديلات
+        <i class="fas fa-save mr-2"></i>{{ t('Save') }} {{ t('ال{{ t('Edit') }}ات') }}
       </button>
       <a href="{{ url_for('customers.view', id=customer.id) }}" class="btn btn-secondary">{{ t('Cancel') }}</a>
     </div>

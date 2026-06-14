@@ -1,16 +1,16 @@
 {% extends 'base.html' %}
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - إضافة مورد جديد{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('Add') }} {{ t('Supplier_2') }} {{ t('New') }}{% endblock %}
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
   <div>
-    <h1 class="mb-0"><i class="fas fa-truck mr-2"></i>إضافة مورد جديد</h1>
+    <h1 class="mb-0"><i class="fas fa-truck mr-2"></i>{{ t('Add') }} {{ t('Supplier_2') }} {{ t('New') }}</h1>
   </div>
   <div>
     <a href="{{ url_for('suppliers.index') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right mr-2"></i>العودة للموردين
+      <i class="fas fa-arrow-right mr-2"></i>{{ t('العودة') }} {{ t('Suppliers_2') }}
     </a>
     <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
-      <i class="fas fa-home mr-2"></i>الرئيسية
+      <i class="fas fa-home mr-2"></i>{{ t('Main_2') }}
     </a>
   </div>
 </div>
@@ -90,7 +90,7 @@
 {% block content %}
 <div class="card card-success">
   <div class="card-header">
-    <h3 class="card-title"><i class="fas fa-plus-circle mr-2"></i>بيانات المورد</h3>
+    <h3 class="card-title"><i class="fas fa-plus-circle mr-2"></i>{{ t('Data_2') }} {{ t('Supplier') }}</h3>
   </div>
   
   <form class="needs-validation" method="POST" action="{{ url_for('suppliers.create') }}" class="supplier-create-form">
@@ -103,7 +103,7 @@
       <div class="row">
         <div class="col-md-12">
           <h5 class="text-success mb-3">
-            <i class="fas fa-info-circle"></i> المعلومات الأساسية
+            <i class="fas fa-info-circle"></i> {{ t('Info_3') }} {{ t('الأساسية') }}
           </h5>
         </div>
       </div>
@@ -112,18 +112,18 @@
         <div class="col-md-4">
           <div class="form-group">
             <label>
-              <i class="fas fa-truck text-success"></i> الاسم 
+              <i class="fas fa-truck text-success"></i> {{ t('Name') }} 
               <span class="text-danger">*</span>
             </label>
             <input type="text" name="name" class="form-control" required
-                   placeholder="اسم المورد بالعربي" minlength="2" maxlength="100">
+                   placeholder="{{ t('Name_2') }} {{ t('Supplier') }} {{ t('بالعربي') }}" minlength="2" maxlength="100">
           </div>
         </div>
         
         <div class="col-md-4">
           <div class="form-group">
             <label>
-              <i class="fas fa-font text-info"></i> الاسم بالإنجليزية
+              <i class="fas fa-font text-info"></i> {{ t('Name') }} {{ t('In English_2') }}
             </label>
             <input type="text" name="name_en" class="form-control"
                    placeholder="Supplier Name" minlength="2" maxlength="100">
@@ -133,7 +133,7 @@
         <div class="col-md-4">
           <div class="form-group">
             <label>
-              <i class="fas fa-building text-primary"></i> اسم الشركة
+              <i class="fas fa-building text-primary"></i> {{ t('Name_2') }} {{ t('Company') }}
             </label>
             <input type="text" name="company_name" class="form-control"
                    placeholder="Company Name LLC" minlength="2" maxlength="100">
@@ -145,15 +145,15 @@
         <div class="col-md-3">
           <div class="form-group">
             <label>
-              <i class="fas fa-tag text-success"></i> نوع المورد 
+              <i class="fas fa-tag text-success"></i> {{ t('نوع') }} {{ t('Supplier') }} 
               <span class="text-danger">*</span>
             </label>
             <select name="supplier_type" class="form-control" required aria-label="supplier type">
-              <option value="" {% if supplier_type_value == '' %}selected{% endif %}>بلا</option>
-              <option value="parts" {% if supplier_type_value == 'parts' %}selected{% endif %}>قطع غيار</option>
-              <option value="equipment" {% if supplier_type_value == 'equipment' %}selected{% endif %}>معدات</option>
-              <option value="services" {% if supplier_type_value == 'services' %}selected{% endif %}>خدمات</option>
-              <option value="materials" {% if supplier_type_value == 'materials' %}selected{% endif %}>مواد خام</option>
+              <option value="" {% if supplier_type_value == '' %}selected{% endif %}>{{ t('None') }}</option>
+              <option value="parts" {% if supplier_type_value == 'parts' %}selected{% endif %}>{{ t('قطع') }} {{ t('غيار') }}</option>
+              <option value="equipment" {% if supplier_type_value == 'equipment' %}selected{% endif %}>{{ t('معدات') }}</option>
+              <option value="services" {% if supplier_type_value == 'services' %}selected{% endif %}>{{ t('خدمات') }}</option>
+              <option value="materials" {% if supplier_type_value == 'materials' %}selected{% endif %}>{{ t('مواد') }} {{ t('Gross') }}</option>
               <option value="other" {% if supplier_type_value == 'other' %}selected{% endif %}>{{ t('Other') }}</option>
             </select>
           </div>
@@ -162,15 +162,15 @@
         <div class="col-md-3">
           <div class="form-group">
             <label>
-              <i class="fas fa-star text-warning"></i> التقييم
+              <i class="fas fa-star text-warning"></i> {{ t('التقييم') }}
             </label>
             <select name="rating" class="form-control" aria-label="rating">
-              <option value="" {% if rating_value == '' %}selected{% endif %}>بلا</option>
-              <option value="1" {% if rating_value == '1' %}selected{% endif %}>⭐ نجمة واحدة</option>
-              <option value="2" {% if rating_value == '2' %}selected{% endif %}>⭐⭐ نجمتان</option>
-              <option value="3" {% if rating_value == '3' %}selected{% endif %}>⭐⭐⭐ 3 نجوم</option>
-              <option value="4" {% if rating_value == '4' %}selected{% endif %}>⭐⭐⭐⭐ 4 نجوم</option>
-              <option value="5" {% if rating_value == '5' %}selected{% endif %}>⭐⭐⭐⭐⭐ 5 نجوم</option>
+              <option value="" {% if rating_value == '' %}selected{% endif %}>{{ t('None') }}</option>
+              <option value="1" {% if rating_value == '1' %}selected{% endif %}>⭐ {{ t('نجمة') }} {{ t('واحدة') }}</option>
+              <option value="2" {% if rating_value == '2' %}selected{% endif %}>⭐⭐ {{ t('نجمتان') }}</option>
+              <option value="3" {% if rating_value == '3' %}selected{% endif %}>⭐⭐⭐ 3 {{ t('نجوم') }}</option>
+              <option value="4" {% if rating_value == '4' %}selected{% endif %}>⭐⭐⭐⭐ 4 {{ t('نجوم') }}</option>
+              <option value="5" {% if rating_value == '5' %}selected{% endif %}>⭐⭐⭐⭐⭐ 5 {{ t('نجوم') }}</option>
             </select>
           </div>
         </div>
@@ -178,13 +178,13 @@
         <div class="col-md-3">
           <div class="form-group">
             <label>
-              <i class="fas fa-dollar-sign text-success"></i> العملة المفضلة
+              <i class="fas fa-dollar-sign text-success"></i> {{ t('Currency') }} {{ t('المفضلة') }}
             </label>
             <select name="preferred_currency" class="form-control" aria-label="preferred currency">
-              <option value="AED">AED - درهم</option>
-              <option value="USD">USD - دولار</option>
-              <option value="EUR">EUR - يورو</option>
-              <option value="SAR">SAR - ريال</option>
+              <option value="AED">AED - {{ t('Dirham') }}</option>
+              <option value="USD">USD - {{ t('Dollar') }}</option>
+              <option value="EUR">EUR - {{ t('Euro') }}</option>
+              <option value="SAR">SAR - {{ t('Riyal') }}</option>
             </select>
           </div>
         </div>
@@ -195,7 +195,7 @@
             <div class="custom-control custom-checkbox">
               <input type="checkbox" class="custom-control-input" id="is_verified" name="is_verified" aria-label="is verified">
               <label class="custom-control-label" for="is_verified">
-                <i class="fas fa-check-circle text-success"></i> مورد موثوق
+                <i class="fas fa-check-circle text-success"></i> {{ t('Supplier_2') }} {{ t('موثوق') }}
               </label>
             </div>
           </div>
@@ -207,7 +207,7 @@
       <div class="row">
         <div class="col-md-12">
           <h5 class="text-success mb-3">
-            <i class="fas fa-phone"></i> معلومات الاتصال
+            <i class="fas fa-phone"></i> {{ t('Info_2') }} {{ t('الاتصال') }}
           </h5>
         </div>
       </div>
@@ -216,7 +216,7 @@
         <div class="col-md-3">
           <div class="form-group">
             <label>
-              <i class="fas fa-phone text-primary"></i> الهاتف 1
+              <i class="fas fa-phone text-primary"></i> {{ t('Phone') }} 1
               <span class="text-danger">*</span>
             </label>
             <input type="text" name="phone" class="form-control" required
@@ -227,7 +227,7 @@
         <div class="col-md-3">
           <div class="form-group">
             <label>
-              <i class="fas fa-mobile-alt text-info"></i> الهاتف 2
+              <i class="fas fa-mobile-alt text-info"></i> {{ t('Phone') }} 2
             </label>
             <input type="text" name="phone2" class="form-control"
                    placeholder="+971-xx-xxx-xxxx" pattern="^\+?[0-9\s\-]{8,20}$">
@@ -247,7 +247,7 @@
         <div class="col-md-3">
           <div class="form-group">
             <label>
-              <i class="fas fa-globe text-success"></i> الموقع الإلكتروني
+              <i class="fas fa-globe text-success"></i> {{ t('Website') }} {{ t('Email_3') }}
             </label>
             <input type="url" name="website" class="form-control"
                    placeholder="https://example.com">
@@ -259,7 +259,7 @@
         <div class="col-md-4">
           <div class="form-group">
             <label for="input_city">{{ t('City') }}</label>
-            <input type="text" name="city" class="form-control" placeholder="دبي" id="input_city">
+            <input type="text" name="city" class="form-control" placeholder="{{ t('دبي') }}" id="input_city">
           </div>
         </div>
         
@@ -284,7 +284,7 @@
       <div class="row">
         <div class="col-md-12">
           <h5 class="text-success mb-3">
-            <i class="fas fa-file-contract"></i> المعلومات القانونية والمالية
+            <i class="fas fa-file-contract"></i> {{ t('Info_3') }} {{ t('القانونية') }} {{ t('والمالية') }}
           </h5>
         </div>
       </div>
@@ -293,8 +293,8 @@
         <div class="col-md-3">
           <div class="form-group">
             <label>
-              <i class="fas fa-file-invoice text-info"></i> الرقم الضريبي (TRN)
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="الرقم الضريبي للمورد (15 رقم)"></i>
+              <i class="fas fa-file-invoice text-info"></i> {{ t('ال{{ t('رقم') }}') }} {{ t('الضريبي') }} (TRN)
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('ال{{ t('رقم') }}') }} {{ t('الضريبي') }} {{ t('لل{{ t('Supplier_2') }}') }} (15 {{ t('رقم') }})"></i>
             </label>
             <input type="text" name="tax_number" class="form-control"
                    placeholder="123456789012345" maxlength="20">
@@ -304,23 +304,23 @@
         <div class="col-md-3">
           <div class="form-group">
             <label>
-              <i class="fas fa-certificate text-warning"></i> السجل التجاري
+              <i class="fas fa-certificate text-warning"></i> {{ t('Log_2') }} {{ t('التجاري') }}
             </label>
             <input type="text" name="commercial_registration" class="form-control"
-                   placeholder="رقم السجل التجاري">
+                   placeholder="{{ t('رقم') }} {{ t('Log_2') }} {{ t('التجاري') }}">
           </div>
         </div>
         
         <div class="col-md-3">
           <div class="form-group">
             <label>
-              <i class="fas fa-wallet text-success"></i> الرصيد الابتدائي ({{ tenant_currency_symbol }})
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="المبلغ المستحق للمورد عند بداية التسجيل"></i>
+              <i class="fas fa-wallet text-success"></i> {{ t('Balance') }} {{ t('الابتدائي') }} ({{ tenant_currency_symbol }})
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Amount') }} {{ t('المستحق') }} {{ t('لل{{ t('Supplier_2') }}') }} عند {{ t('Start_2') }} {{ t('ا{{ t('لتسجيل') }}') }}"></i>
             </label>
             <input type="number" name="initial_balance" class="form-control"
                    value="0" step="0.01" min="0" placeholder="0.00">
             <small class="form-text text-muted">
-              <i class="fas fa-info-circle"></i> المبلغ المستحق للمورد من قبل (إن وجد)
+              <i class="fas fa-info-circle"></i> {{ t('Amount') }} {{ t('المستحق') }} {{ t('لل{{ t('Supplier_2') }}') }} من قبل (إن {{ t('وجد') }})
             </small>
           </div>
         </div>
@@ -328,8 +328,8 @@
         <div class="col-md-3">
           <div class="form-group">
             <label>
-              <i class="fas fa-coins text-info"></i> الحد الائتماني ({{ tenant_currency_symbol }})
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="الحد الأقصى للديون المسموح به"></i>
+              <i class="fas fa-coins text-info"></i> {{ t('الحد') }} {{ t('الائتماني') }} ({{ tenant_currency_symbol }})
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('الحد') }} {{ t('الأقصى') }} {{ t('للديون') }} {{ t('المسموح') }} به"></i>
             </label>
             <input type="number" name="credit_limit" class="form-control"
                    value="0" step="0.01" min="0" placeholder="0.00">
@@ -341,8 +341,8 @@
         <div class="col-md-3">
           <div class="form-group">
             <label>
-              <i class="fas fa-calendar-alt text-primary"></i> شروط الدفع (أيام)
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="عدد الأيام المسموح للدفع (30 يوم افتراضي)"></i>
+              <i class="fas fa-calendar-alt text-primary"></i> {{ t('شروط') }} {{ t('Payment_2') }} ({{ t('Days') }})
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Count') }} {{ t('Days_2') }} {{ t('المسموح') }} {{ t('للدفع') }} (30 {{ t('يوم') }} {{ t('افتراضي') }})"></i>
             </label>
             <input type="number" name="payment_terms_days" class="form-control"
                    value="30" min="0" placeholder="30">
@@ -352,7 +352,7 @@
         <div class="col-md-9">
           <div class="alert alert-info mb-0">
             <i class="fas fa-lightbulb"></i> 
-            <strong>ملاحظة:</strong> الرصيد الابتدائي يُستخدم لتسجيل المبالغ المستحقة للمورد من قبل تفعيل النظام
+            <strong>{{ t('Note') }}:</strong> {{ t('Balance') }} {{ t('الابتدائي') }} {{ t('يُستخدم') }} {{ t('لتسجيل') }} {{ t('Amounts') }} {{ t('{{ t('المستحق') }}ة') }} {{ t('لل{{ t('Supplier_2') }}') }} من قبل {{ t('تفعيل') }} {{ t('System') }}
           </div>
         </div>
       </div>
@@ -362,11 +362,11 @@
       <div class="row">
         <div class="col-md-6">
           <div class="form-group">
-            <label for="input_tags">الوسوم (Tags)</label>
+            <label for="input_tags">{{ t('الوسوم') }} (Tags)</label>
             <input type="text" name="tags" class="form-control"
-                   placeholder="مثال: محلي، سريع، مضمون (افصل بفاصلة)" id="input_tags">
+                   placeholder="{{ t('مثال') }}: {{ t('محلي،') }} {{ t('سريع،') }} {{ t('مضمون') }} ({{ t('افصل') }} {{ t('بفاصلة') }})" id="input_tags">
             <small class="form-text text-muted">
-              <i class="fas fa-info-circle"></i> افصل الوسوم بفاصلة
+              <i class="fas fa-info-circle"></i> {{ t('افصل') }} {{ t('الوسوم') }} {{ t('بفاصلة') }}
             </small>
           </div>
         </div>
@@ -375,7 +375,7 @@
           <div class="form-group">
             <label>{{ t('Notes') }}</label>
             <textarea name="notes" class="form-control" rows="3"
-                      placeholder="أي ملاحظات إضافية عن المورد..." maxlength="500"></textarea>
+                      placeholder="أي {{ t('Notes') }} {{ t('Additional') }} عن {{ t('Supplier') }}..." maxlength="500"></textarea>
           </div>
         </div>
       </div>
@@ -383,10 +383,10 @@
     
     <div class="card-footer">
       <button type="submit" class="btn btn-success btn-lg">
-        <i class="fas fa-save mr-2"></i> حفظ المورد
+        <i class="fas fa-save mr-2"></i> {{ t('Save') }} {{ t('Supplier') }}
       </button>
       <a href="{{ url_for('suppliers.index') }}" class="btn btn-secondary btn-lg">
-        <i class="fas fa-times mr-2"></i> إلغاء
+        <i class="fas fa-times mr-2"></i> {{ t('Cancel') }}
       </a>
     </div>
   </form>
@@ -397,27 +397,27 @@
 {% include 'partials/select2_assets.html' %}
 <script>
 $(document).ready(function() {
-  // تفعيل Tooltips
+  // {{ t('تفعيل') }} Tooltips
   $('[data-toggle="tooltip"]').tooltip({
     placement: 'top',
     trigger: 'hover'
   });
   
-  // التحقق من النموذج
+  // {{ t('التحقق') }} من {{ t('النموذج_2') }}
   $('form').on('submit', function(e) {
     const name = $('input[name="name"]').val().trim();
     const phone = $('input[name="phone"]').val().trim();
     
     if (!name) {
       e.preventDefault();
-      toastr.error('❌ يجب إدخال اسم المورد');
+      toastr.error('❌ يجب {{ t('إدخال') }} {{ t('Name_2') }} {{ t('Supplier') }}');
       $('input[name="name"]').focus();
       return false;
     }
     
     if (!phone) {
       e.preventDefault();
-      toastr.error('❌ يجب إدخال رقم الهاتف');
+      toastr.error('❌ يجب {{ t('إدخال') }} {{ t('رقم') }} {{ t('Phone') }}');
       $('input[name="phone"]').focus();
       return false;
     }

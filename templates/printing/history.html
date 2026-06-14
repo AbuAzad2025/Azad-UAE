@@ -1,12 +1,12 @@
 {% extends 'base.html' %}
-{% block title %}سجل الطباعة{% endblock %}
+{% block title %}{{ t('Log') }} {{ t('Printing') }}{% endblock %}
 {% block content %}
 <div class="container-fluid">
   <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
-      <h3 class="card-title mb-0"><i class="fas fa-history ml-2"></i>سجل الطباعة</h3>
+      <h3 class="card-title mb-0"><i class="fas fa-history ml-2"></i>{{ t('Log') }} {{ t('Printing') }}</h3>
       <button class="btn btn-sm btn-outline-primary" data-action="window-print">
-        <i class="fas fa-print ml-1"></i> طباعة
+        <i class="fas fa-print ml-1"></i> {{ t('Print') }}
       </button>
     </div>
     <div class="card-body">
@@ -15,11 +15,11 @@
           <thead>
             <tr>
               <th>#</th>
-              <th>نوع المستند</th>
-              <th>رقم المستند</th>
-              <th>الإجراء</th>
-              <th>المستخدم</th>
-              <th>التاريخ</th>
+              <th>{{ t('نوع') }} {{ t('المستند') }}</th>
+              <th>{{ t('رقم') }} {{ t('المستند') }}</th>
+              <th>{{ t('الإجراء') }}</th>
+              <th>{{ t('User') }}</th>
+              <th>{{ t('Date') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -27,22 +27,22 @@
             <tr>
               <td>{{ record.id }}</td>
               <td>
-                {% if record.document_type == 'purchase' %}فاتورة شراء
-                {% elif record.document_type == 'expense' %}سند مصروف
-                {% elif record.document_type == 'payroll_slip' %}قسيمة راتب
-                {% elif record.document_type == 'cheque' %}شيك
-                {% elif record.document_type == 'packing_slip' %}إذن تسليم
-                {% elif record.document_type == 'sale' %}فاتورة بيع
+                {% if record.document_type == 'purchase' %}{{ t('Invoice') }} {{ t('Purchase') }}
+                {% elif record.document_type == 'expense' %}{{ t('Voucher_2') }} {{ t('Expense_3') }}
+                {% elif record.document_type == 'payroll_slip' %}{{ t('قسيمة') }} {{ t('راتب') }}
+                {% elif record.document_type == 'cheque' %}{{ t('Cheque_3') }}
+                {% elif record.document_type == 'packing_slip' %}{{ t('إذن') }} {{ t('تسليم') }}
+                {% elif record.document_type == 'sale' %}{{ t('Invoice') }} {{ t('Sale') }}
                 {% else %}{{ record.document_type }}{% endif %}
               </td>
               <td>{{ record.document_id }}</td>
               <td>
                 {% if record.action == 'print' %}
-                  <span class="badge badge-info"><i class="fas fa-print ml-1"></i> طباعة</span>
+                  <span class="badge badge-info"><i class="fas fa-print ml-1"></i> {{ t('Print') }}</span>
                 {% elif record.action == 'pdf_download' %}
                   <span class="badge badge-success"><i class="fas fa-file-pdf ml-1"></i> PDF</span>
                 {% elif record.action == 'bulk_print' %}
-                  <span class="badge badge-warning"><i class="fas fa-copy ml-1"></i> طباعة جماعية</span>
+                  <span class="badge badge-warning"><i class="fas fa-copy ml-1"></i> {{ t('Print') }} {{ t('جماعية') }}</span>
                 {% else %}
                   <span class="badge badge-secondary">{{ record.action }}</span>
                 {% endif %}
