@@ -94,6 +94,22 @@
     const closeBtn = e.target.closest('[data-action="window-close"]');
     if (closeBtn) { e.preventDefault(); window.close(); }
   });
+  document.addEventListener('submit', function(ev) {
+    var btn = ev.target.querySelector('button[type="submit"]');
+    if (btn && !btn.disabled) {
+      setTimeout(function() {
+        btn.disabled = true;
+        var icon = btn.querySelector('.fa-spinner');
+        if (!icon) btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>' + btn.innerHTML;
+      }, 10);
+    }
+  }, true);
+  document.addEventListener('change', function(ev) {
+    if (ev.target.matches('[data-calc-totals]') && typeof calculateTotals === 'function') calculateTotals();
+  });
+  document.addEventListener('keyup', function(ev) {
+    if (ev.target.matches('[data-calc-totals]') && typeof calculateTotals === 'function') calculateTotals();
+  });
 </script>
 {% include 'partials/scripts.html' %}
 {% include 'partials/modals.html' %}
