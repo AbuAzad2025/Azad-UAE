@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿{% extends 'base.html' %}
+﻿﻿{% extends 'base.html' %}
 
 {% block title %}شركة أزاد للأنظمة الذكية - إضافة مستخدم جديد وإدارة الصلاحيات{% endblock %}
 
@@ -11,7 +11,7 @@
       </div>
       <div class="col-sm-6 d-flex justify-content-end">
         <div class="d-flex align-items-center">
-          <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary ml-2">
+          <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary ml-2" aria-label="الرجوع للوحة المالك">
             <i class="fas fa-arrow-right mr-1"></i> الرجوع للوحة المالك
           </a>
           <ol class="breadcrumb float-sm-left mb-0">
@@ -27,13 +27,13 @@
 
 <div class="container-fluid mb-3">
   <div class="btn-group quick-nav" role="group">
-    <a href="{{ url_for('owner.users_list') }}" class="btn btn-primary">
+    <a href="{{ url_for('owner.users_list') }}" class="btn btn-primary" aria-label="قائمة المستخدمين">
       <i class="fas fa-users"></i> قائمة المستخدمين
     </a>
-    <a href="{{ url_for('owner.create_user') }}" class="btn btn-outline-primary active">
+    <a href="{{ url_for('owner.create_user') }}" class="btn btn-outline-primary active" aria-label="إضافة مستخدم جديد">
       <i class="fas fa-user-plus"></i> إضافة مستخدم
     </a>
-    <a href="{{ url_for('owner.roles_permissions') }}" class="btn btn-outline-secondary">
+    <a href="{{ url_for('owner.roles_permissions') }}" class="btn btn-outline-secondary" aria-label="الأدوار والصلاحيات">
       <i class="fas fa-user-shield"></i> الأدوار والصلاحيات
     </a>
   </div>
@@ -199,10 +199,10 @@
       
       <div class="row">
         <div class="col-12">
-          <button type="submit" class="btn btn-primary btn-lg">
+          <button type="submit" class="btn btn-primary btn-lg" aria-label="حفظ المستخدم">
             <i class="fas fa-save mr-2"></i>حفظ المستخدم
           </button>
-          <a href="{{ url_for('owner.users_list') }}" class="btn btn-secondary btn-lg">
+          <a href="{{ url_for('owner.users_list') }}" class="btn btn-secondary btn-lg" aria-label="إلغاء والعودة">
             <i class="fas fa-times mr-2"></i>إلغاء
           </a>
         </div>

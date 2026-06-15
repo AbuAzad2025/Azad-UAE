@@ -1,7 +1,7 @@
 """Coverage-driven tests for high-statement-count services."""
 import pytest
 from decimal import Decimal
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from unittest.mock import MagicMock, patch, PropertyMock
 
 
@@ -58,6 +58,120 @@ class TestCurrencyService:
 class TestPartnerService:
     def test_import(self):
         import services.partner_service
+
+
+class TestPartnerServiceScope:
+    def test_get_scope_revenue_warehouse_uses_line_total(self, db_session, sample_tenant, sample_warehouse):
+        from services.partner_service import PartnerService
+        from models import Sale, SaleLine, Customer
+        c = Customer.query.filter_by(tenant_id=sample_tenant.id).first()
+        if not c:
+            c = Customer(tenant_id=sample_tenant.id, name='Test Customer')
+            db_session.add(c)
+            db_session.flush()
+        s = Sale(
+            tenant_id=sample_tenant.id,
+            sale_number='S-TEST-001',
+            customer_id=c.id,
+            seller_id=1,
+            status='confirmed',
+            total_amount=Decimal('300'),
+            amount=Decimal('300'),
+            amount_aed=Decimal('300'),
+            currency='AED',
+            exchange_rate=Decimal('1'),
+        )
+        db_session.add(s)
+        db_session.flush()
+        sl1 = SaleLine(tenant_id=sample_tenant.id, sale_id=s.id, product_id=1,
+                       quantity=Decimal('1'), unit_price=Decimal('100'), line_total=Decimal('100'),
+                       warehouse_id=sample_warehouse.id)
+        sl2 = SaleLine(tenant_id=sample_tenant.id, sale_id=s.id, product_id=2,
+                       quantity=Decimal('1'), unit_price=Decimal('200'), line_total=Decimal('200'),
+                       warehouse_id=sample_warehouse.id)
+        db_session.add_all([sl1, sl2])
+        db_session.commit()
+        rev = PartnerService.get_scope_revenue(
+            sample_tenant.id, date.today() - timedelta(days=1), date.today() + timedelta(days=1),
+            scope_type='warehouse', scope_id=sample_warehouse.id)
+        assert rev == Decimal('300'), f"Expected 300, got {rev}"
+
+    def test_get_scope_revenue_warehouse_not_multiplied_by_line_count(self, db_session, sample_tenant, sample_warehouse):
+        from services.partner_service import PartnerService
+        from models import Sale, SaleLine, Customer
+        c = Customer.query.filter_by(tenant_id=sample_tenant.id).first()
+        if not c:
+            c = Customer(tenant_id=sample_tenant.id, name='Test Customer')
+            db_session.add(c)
+            db_session.flush()
+        s = Sale(
+            tenant_id=sample_tenant.id,
+            sale_number='S-TEST-002',
+            customer_id=c.id,
+            seller_id=1,
+            status='confirmed',
+            total_amount=Decimal('300'),
+            amount=Decimal('300'),
+            amount_aed=Decimal('300'),
+            currency='AED',
+            exchange_rate=Decimal('1'),
+        )
+        db_session.add(s)
+        db_session.flush()
+        sl1 = SaleLine(tenant_id=sample_tenant.id, sale_id=s.id, product_id=1,
+                       quantity=Decimal('1'), unit_price=Decimal('100'), line_total=Decimal('100'),
+                       warehouse_id=sample_warehouse.id)
+        sl2 = SaleLine(tenant_id=sample_tenant.id, sale_id=s.id, product_id=2,
+                       quantity=Decimal('1'), unit_price=Decimal('200'), line_total=Decimal('200'),
+                       warehouse_id=sample_warehouse.id)
+        db_session.add_all([sl1, sl2])
+        db_session.commit()
+        rev = PartnerService.get_scope_revenue(
+            sample_tenant.id, date.today() - timedelta(days=1), date.today() + timedelta(days=1),
+            scope_type='warehouse', scope_id=sample_warehouse.id)
+        assert rev == Decimal('300'), f"Expected 300, got {rev}"
+
+    def test_get_scope_expenses_warehouse_returns_zero(self, db_session, sample_tenant):
+        from services.partner_service import PartnerService
+        exp = PartnerService.get_scope_expenses(
+            sample_tenant.id, date.today() - timedelta(days=1), date.today() + timedelta(days=1),
+            scope_type='warehouse', scope_id=1)
+        assert exp == Decimal('0'), f"Expected 0, got {exp}"
+
+    def test_approve_distribution_requires_tenant_match(self, db_session, sample_tenant):
+        from services.partner_service import PartnerService
+        from models import Partner, PartnerProfitDistribution
+        p = Partner(tenant_id=sample_tenant.id, name='Test Partner', scope_type='company',
+                    share_percentage=Decimal('50'))
+        db_session.add(p)
+        db_session.flush()
+        d = PartnerProfitDistribution(
+            tenant_id=sample_tenant.id, partner_id=p.id,
+            period_start=date.today() - timedelta(days=30),
+            period_end=date.today(), net_profit=100, net_due=50,
+            share_percentage=50, status='draft')
+        db_session.add(d)
+        db_session.commit()
+        assert PartnerService.approve_distribution(d.id, approved_by=1, tenant_id=sample_tenant.id + 9999) is False
+        ok = PartnerService.approve_distribution(d.id, approved_by=1, tenant_id=sample_tenant.id)
+        assert ok is True
+
+    def test_pay_distribution_requires_tenant_match(self, db_session, sample_tenant):
+        from services.partner_service import PartnerService
+        from models import Partner, PartnerProfitDistribution
+        p = Partner(tenant_id=sample_tenant.id, name='TP2', scope_type='company')
+        db_session.add(p)
+        db_session.flush()
+        d = PartnerProfitDistribution(
+            tenant_id=sample_tenant.id, partner_id=p.id,
+            period_start=date.today() - timedelta(days=30),
+            period_end=date.today(), net_profit=100, net_due=50,
+            status='approved')
+        db_session.add(d)
+        db_session.commit()
+        assert PartnerService.pay_distribution(d.id, tenant_id=sample_tenant.id + 9999) is False
+        ok = PartnerService.pay_distribution(d.id, tenant_id=sample_tenant.id)
+        assert ok is True
 
 
 class TestChequeService:

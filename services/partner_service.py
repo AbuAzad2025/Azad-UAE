@@ -42,12 +42,12 @@ class PartnerService:
             from models import SaleLine
             q = db.session.query(
                 func.sum(SaleLine.line_total * func.coalesce(Sale.exchange_rate, 1))
-            ).join(SaleLine, SaleLine.sale_id == Sale.id).filter(
+            ).select_from(SaleLine).join(Sale, SaleLine.sale_id == Sale.id).filter(
                 Sale.tenant_id == tenant_id,
                 Sale.status == 'confirmed',
                 func.date(Sale.sale_date) >= period_start,
                 func.date(Sale.sale_date) <= period_end,
-                SaleLine.warehouse_id == scope_id,
+                Sale.warehouse_id == scope_id,
             )
             return q.scalar() or Decimal('0')
 
@@ -88,7 +88,7 @@ class PartnerService:
         if scope_type == 'branch' and scope_id:
             q = q.filter(Sale.branch_id == scope_id)
         elif scope_type == 'warehouse' and scope_id:
-            q = q.filter(SaleLine.warehouse_id == scope_id)
+            q = q.filter(Sale.warehouse_id == scope_id)
         result = q.scalar() or Decimal('0')
         return result
 
