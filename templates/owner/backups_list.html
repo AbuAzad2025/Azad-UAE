@@ -12,15 +12,15 @@
   </div>
   <div>
     {% if current_user.is_owner or (current_user.role and current_user.role.slug == 'developer') %}
-      <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary">
+      <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary" aria-label="لوحة المالك">
         <i class="fas fa-arrow-right mr-2"></i>لوحة المالك
       </a>
     {% else %}
-      <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">
+      <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary" aria-label="لوحة التحكم">
         <i class="fas fa-arrow-right mr-2"></i>لوحة التحكم
       </a>
     {% endif %}
-    <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
+    <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary" aria-label="الصفحة الرئيسية">
       <i class="fas fa-home mr-2"></i>الرئيسية
     </a>
   </div>
@@ -28,35 +28,6 @@
 {% endblock %}
 
 {% block extra_css %}
-<style>
-.backup-card {
-  transition: all 0.3s;
-  border-left: 4px solid #007bff;
-}
-.backup-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-}
-.backup-card.manual {
-  border-left-color: #28a745;
-}
-.backup-card.auto {
-  border-left-color: #17a2b8;
-}
-.checksum-badge {
-  font-family: 'Courier New', monospace;
-  font-size: 0.7rem;
-}
-
-    /* D6: externalized inline styles */
-    .ic-1 { word-break: break-all; }
-    .ic-2 { word-break: break-word; }
-    .ic-3 { border-radius: 10px; border-left: 4px solid #17a2b8; }
-    .ic-4 { font-size: 1.5rem; margin-top: 3px; }
-    .ic-5 { padding-right: 20px; }
-    .ic-6 { display:none; }
-    .ic-7 { display: inline-block; }
-  </style>
 {% endblock %}
 
 {% block content %}
@@ -195,7 +166,7 @@
 <div class="row mb-3">
   <div class="col-md-12">
     <div class="card shadow">
-      <div class="card-header bg-gradient-primary">
+      <div class="card-header bg-primary">
         <h5 class="card-title mb-0">
           <i class="fas fa-tools mr-2"></i>إجراءات النسخ الاحتياطي
         </h5>
@@ -602,4 +573,6 @@ function verifyBackup(filename) {
 }
 </script>
 {% endblock %}
+
+
 

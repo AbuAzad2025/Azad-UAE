@@ -15,14 +15,26 @@
       </a>
       {% if current_user.is_authenticated and current_user.has_permission('manage_sales') %}
       <a href="{{ url_for('sales.index') }}" class="erp-nav-main-link {% if request.endpoint and 'sales' in request.endpoint %}active{% endif %}"{% if request.endpoint and 'sales' in request.endpoint %} aria-current="page"{% endif %}>
-        <i class="fas fa-file-invoice"></i>
+        <i class="fas fa-shopping-cart"></i>
         <span class="d-none d-lg-inline">{{ t('Sales') }}</span>
       </a>
       {% endif %}
-      {% if current_user.is_authenticated and current_user.has_permission('manage_users') %}
-      <a href="{{ url_for('users.index') }}" class="erp-nav-main-link {% if request.endpoint and 'users' in request.endpoint %}active{% endif %}"{% if request.endpoint and 'users' in request.endpoint %} aria-current="page"{% endif %}>
-        <i class="fas fa-users-cog"></i>
-        <span class="d-none d-lg-inline">{{ t('Users') }}</span>
+      {% if current_user.is_authenticated and (current_user.has_permission('manage_purchases') or current_user.has_permission('manage_suppliers')) %}
+      <a href="{{ url_for('purchases.index') }}" class="erp-nav-main-link {% if request.endpoint and 'purchases' in request.endpoint %}active{% endif %}"{% if request.endpoint and 'purchases' in request.endpoint %} aria-current="page"{% endif %}>
+        <i class="fas fa-truck"></i>
+        <span class="d-none d-lg-inline">{{ t('Procurement') }}</span>
+      </a>
+      {% endif %}
+      {% if current_user.is_authenticated and (current_user.has_permission('manage_products') or current_user.has_permission('manage_warehouse')) %}
+      <a href="{{ url_for('products.index') }}" class="erp-nav-main-link {% if request.endpoint and 'products' in request.endpoint %}active{% endif %}"{% if request.endpoint and 'products' in request.endpoint %} aria-current="page"{% endif %}>
+        <i class="fas fa-warehouse"></i>
+        <span class="d-none d-lg-inline">{{ t('Inventory') }}</span>
+      </a>
+      {% endif %}
+      {% if current_user.is_authenticated and (current_user.has_permission('manage_payments') or current_user.has_permission('manage_expenses')) %}
+      <a href="{{ url_for('payments.receipts') }}" class="erp-nav-main-link {% if request.endpoint and 'payments' in request.endpoint %}active{% endif %}"{% if request.endpoint and 'payments' in request.endpoint %} aria-current="page"{% endif %}>
+        <i class="fas fa-money-bill-wave"></i>
+        <span class="d-none d-lg-inline">{{ t('Finance') }}</span>
       </a>
       {% endif %}
       {% if current_user.is_authenticated and current_user.has_permission('view_reports') %}

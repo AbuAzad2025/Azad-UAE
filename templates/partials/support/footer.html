@@ -1,44 +1,44 @@
-    <footer class="ic-85">
+    <footer class="sp-footer">
         <div class="container">
             <div class="row">
                 <div class="col-md-4 text-center mb-4">
-                    <i class="fas fa-shield-alt ic-86"></i>
-                    <h5 class="ic-87">{{ t('أمان') }} {{ t('مضمون') }}</h5>
-                    <p class="ic-88">{{ t('جميع') }} {{ t('المعاملات') }} {{ t('محمية') }} {{ t('بتشفير') }} SSL 256-bit</p>
+                    <i class="fas fa-shield-alt sp-footer-column-icon"></i>
+                    <h5 class="sp-footer-column-title">{{ t('أمان') }} {{ t('مضمون') }}</h5>
+                    <p class="sp-footer-column-text">{{ t('جميع') }} {{ t('المعاملات') }} {{ t('محمية') }} {{ t('بتشفير') }} SSL 256-bit</p>
                 </div>
                 <div class="col-md-4 text-center mb-4">
-                    <i class="fas fa-headset ic-86"></i>
-                    <h5 class="ic-87">{{ t('دعم') }} {{ t('فني') }} 24/7</h5>
-                    <p class="ic-88">{{ t('فريق') }} {{ t('الدعم') }} {{ t('جاهز') }} {{ t('لمساعدتك') }} في أي {{ t('Time') }}</p>
+                    <i class="fas fa-headset sp-footer-column-icon"></i>
+                    <h5 class="sp-footer-column-title">{{ t('دعم') }} {{ t('فني') }} 24/7</h5>
+                    <p class="sp-footer-column-text">{{ t('فريق') }} {{ t('الدعم') }} {{ t('جاهز') }} {{ t('لمساعدتك') }} في أي {{ t('Time') }}</p>
                 </div>
                 <div class="col-md-4 text-center mb-4">
-                    <i class="fas fa-rocket ic-86"></i>
-                    <h5 class="ic-87">{{ t('تحديثات') }} {{ t('مستمرة') }}</h5>
-                    <p class="ic-88">{{ t('نضيف') }} {{ t('ميزات') }} {{ t('New_3') }} {{ t('باستمرار') }}</p>
+                    <i class="fas fa-rocket sp-footer-column-icon"></i>
+                    <h5 class="sp-footer-column-title">{{ t('تحديثات') }} {{ t('مستمرة') }}</h5>
+                    <p class="sp-footer-column-text">{{ t('نضيف') }} {{ t('ميزات') }} {{ t('New_3') }} {{ t('باستمرار') }}</p>
                 </div>
             </div>
-            
-            <hr class="ic-89">
-            
+
+            <hr class="sp-footer-divider">
+
             <div class="text-center">
-                <div class="ic-90">
-                    <a href="https://wa.me/{{ developer_whatsapp_link }}" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 5px 15px rgba(0,0,0,0.2)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'" class="ic-91">
-                        <i class="fab fa-whatsapp ic-50"></i>
+                <div class="sp-footer-icon-wrap">
+                    <a href="https://wa.me/{{ developer_whatsapp_link }}" class="sp-footer-icon sp-footer-icon-wa">
+                        <i class="fab fa-whatsapp sp-btn-icon"></i>
                     </a>
-                    <a href="mailto:{{ developer_email or config.DEVELOPER_EMAIL }}" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 5px 15px rgba(0,0,0,0.2)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'" title="Envelope" class="ic-92">
+                    <a href="mailto:{{ developer_email or config.DEVELOPER_EMAIL }}" class="sp-footer-icon sp-footer-icon-email" title="Envelope">
                         <i class="fas fa-envelope"></i>
                     </a>
-                    <a href="{{ developer_website or config.DEVELOPER_WEBSITE or 'https://azadsystems.com' }}" target="_blank" rel="noopener noreferrer" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 5px 15px rgba(0,0,0,0.2)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'" title="Globe" class="ic-93">
+                    <a href="{{ developer_website or config.DEVELOPER_WEBSITE or 'https://azadsystems.com' }}" target="_blank" rel="noopener noreferrer" class="sp-footer-icon sp-footer-icon-web" title="Globe">
                         <i class="fas fa-globe"></i>
                     </a>
                 </div>
-                
-                <p class="ic-94">
-                    <i class="fas fa-heart ic-95"></i>
+
+                <p class="sp-footer-text">
+                    <i class="fas fa-heart sp-footer-heart"></i>
                     {{ t('صُنع') }} {{ t('بحب') }} من {{ t('فريق') }} {{ developer_name_ar or developer_name or 'Azad Systems' }}
                 </p>
-                
-                <p class="ic-96">
+
+                <p class="sp-footer-copyright">
                     © 2025 {{ developer_name_ar or developer_name or 'Azad Systems' }}. {{ t('جميع') }} {{ t('الحقوق') }} {{ t('محفوظة') }}.
                 </p>
             </div>

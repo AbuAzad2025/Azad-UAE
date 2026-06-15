@@ -1,14 +1,1 @@
-    .ic-1 { font-size: 1.2rem; margin-top: 15px; }
-    .ic-2 { font-size: 1rem; margin-top: 10px; color: rgba(255,255,255,0.9); }
-    .ic-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; max-width: 900px; margin: 0 auto; }
-    .ic-4 { flex: 1; }
-    .ic-5 { margin-top: 18px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
-    .ic-6 { display: inline-flex; min-width: 240px; }
-    .ic-7 { margin-top: 30px; text-align: center; }
-    .ic-8 { display: inline-block; min-width: 250px; }
-    .ic-9 { margin-top: 20px; display: inline-block; }
-    .ic-10 { background: #667eea; color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.9rem; }
-    .ic-11 { color: rgba(255,255,255,0.9); font-size: 1rem; margin-bottom: 8px; }
-    .ic-12 { color: var(--gulf-gold); font-weight: 700; font-size: 1rem; }
-    .ic-13 { cursor: default; }
-    .ic-14 { margin-top: 30px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; }
+body { font-family: 'Tajawal', 'Amiri', 'Segoe UI', system-ui, sans-serif; }

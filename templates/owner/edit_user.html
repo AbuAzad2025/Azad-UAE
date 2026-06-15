@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿﻿﻿﻿﻿﻿﻿﻿{% extends 'base.html' %}
 
 {% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - تعديل مستخدم {{ user.username }}{% endblock %}
 
@@ -48,7 +48,7 @@
         
         <div class="col-md-6">
           <div class="card">
-            <div class="card-header bg-gradient-primary">
+            <div class="card-header bg-primary">
               <h3 class="card-title text-white">📋 المعلومات الأساسية</h3>
             </div>
             <div class="card-body">
@@ -93,7 +93,7 @@
         
         <div class="col-md-6">
           <div class="card">
-            <div class="card-header bg-gradient-success">
+            <div class="card-header bg-success">
               <h3 class="card-title text-white">🔐 الدور والصلاحيات</h3>
             </div>
             <div class="card-body">
@@ -146,7 +146,7 @@
           
           
           <div class="card">
-            <div class="card-header bg-gradient-info">
+            <div class="card-header bg-info">
               <h3 class="card-title text-white">📊 المعلومات</h3>
             </div>
             <div class="card-body">
@@ -233,50 +233,9 @@ $(document).ready(function() {
 });
 </script>
 
-<style>
-  .quick-nav .btn {
-    min-width: 170px;
-  }
-
-  .quick-nav .btn + .btn {
-    margin-left: 0.5rem;
-  }
-
-  .edit-user-form .form-control,
-  .edit-user-form textarea.form-control,
-  .edit-user-form select.form-control {
-    height: auto !important;
-    min-height: 56px;
-    padding: 0.95rem 1.35rem;
-    font-size: 0.95rem;
-    border-radius: 10px;
-    line-height: 1.7;
-    width: 100%;
-  }
-
-  .edit-user-form .form-control::placeholder {
-    color: #64748b;
-    opacity: 0.85;
-    text-align: center;
-  }
-
-  .edit-user-form select.form-control {
-    text-align-last: center;
-    padding-inline-start: 2.2rem;
-    padding-inline-end: 2.2rem;
-    -webkit-appearance: none;appearance: none;
-    
-    background-color: #fff;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23647894' d='M6 8a1 1 0 0 1-.707-.293l-5-5a1 1 0 0 1 1.414-1.414L6 5.586 10.293 1.293a1 1 0 0 1 1.414 1.414l-5 5A1 1 0 0 1 6 8'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: left 0.8rem center;
-    background-size: 12px;
-  }
-
-  .edit-user-form select.form-control option {
-    text-align: center;
-    padding: 0.75rem 1rem;
-  }
-</style>
 {% endblock %}
+
+
+
+
 

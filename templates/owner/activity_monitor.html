@@ -3,17 +3,17 @@
 {% block content %}
 <div class="container-fluid">
   <div class="mb-3">
-    <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary">
+    <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary" aria-label="العودة للوحة المالك">
       <i class="fas fa-arrow-right"></i> رجوع للوحة المالك
     </a>
-    <a href="{{ url_for('owner.system_health') }}" class="btn btn-success">
-      <i class="fas fa-link"></i> صحة النظام
+    <a href="{{ url_for('owner.system_health') }}" class="btn btn-success" aria-label="صحة النظام">
+      <i class="fas fa-heartbeat"></i> صحة النظام
     </a>
-    <a href="{{ url_for('owner.error_logs') }}" class="btn btn-danger">
-      <i class="fas fa-link"></i> الأخطاء
+    <a href="{{ url_for('owner.error_logs') }}" class="btn btn-danger" aria-label="سجلات الأخطاء">
+      <i class="fas fa-bug"></i> الأخطاء
     </a>
-    <a href="{{ url_for('owner.login_history') }}" class="btn btn-primary">
-      <i class="fas fa-link"></i> سجل الدخول
+    <a href="{{ url_for('owner.login_history') }}" class="btn btn-primary" aria-label="سجل الدخول">
+      <i class="fas fa-history"></i> سجل الدخول
     </a>
   </div>
   

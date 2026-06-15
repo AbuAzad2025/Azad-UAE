@@ -4,38 +4,6 @@
 
 {% block extra_css %}
 {{ super() }}
-<style>
-  body.error-audit-modal-open .modal-backdrop {
-    z-index: 2040 !important;
-  }
-
-  #errorDetailModal {
-    z-index: 2050 !important;
-  }
-
-  #errorDetailModal .modal-content {
-    direction: rtl;
-  }
-
-  #errorDetailModal pre,
-  #errorDetailModal code {
-    direction: ltr;
-    text-align: left;
-  }
-
-    /* D6: externalized inline styles */
-    .ic-1 { width: 60px; }
-    .ic-2 { width: 80px; }
-    .ic-3 { width: 100px; }
-    .ic-4 { width: 70px; }
-    .ic-5 { width: 110px; }
-    .ic-6 { width: 140px; }
-    .ic-7 { width: 90px; }
-    .ic-8 { font-size: 11px; }
-    .ic-9 { font-size: 10px; }
-    .ic-10 { white-space: pre-wrap; }
-    .ic-11 { max-height: 300px; overflow: auto; }
-  </style>
 {% endblock %}
 
 {% block content %}
@@ -213,6 +181,7 @@
               <td>
                 {% if not log.is_resolved %}
                 <form method="post" action="{{ url_for('owner.resolve_error_log', log_id=log.id) }}" class="d-inline">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
                   <input type="hidden" name="note" value="" aria-label="note">
                   <button type="submit" class="btn btn-success" title="تحديد كمحلول">
                     <i class="fas fa-check"></i>
@@ -406,3 +375,4 @@
 </script>
 
 {% endblock %}
+

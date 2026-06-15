@@ -47,11 +47,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}">
 
-    {% if is_en %}
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
+    {% if is_en %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/landing-page-en.css') }}">
     {% else %}
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/landing-page-ar.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/accessibility.css') }}">
     {% endif %}
@@ -82,9 +81,9 @@
     {% set _lang_alt = 'العربية' if is_en else 'English' %}
     {% set _menu = 'القائمة' if not is_en else 'Menu' %}
 
-    {% set _hero_subtitle = 'أفضل نظام لإدارة المستودعات والمبيعات في الإمارات 2025' if not is_en else 'Best warehouse &amp; sales management system in UAE 2025' %}
-    {% set _hero_tagline_1 = 'برنامج محاسبة متكامل | فواتير إلكترونية | مخزون | ذكاء اصطناعي' if not is_en else 'Accounting &bull; E-invoices &bull; Inventory &bull; AI insights' %}
-    {% set _hero_tagline_2 = 'حلول احترافية لمحلات قطع غيار السيارات والتجزئة في الإمارات' if not is_en else '' %}
+    {% set _hero_subtitle = 'منصة ERP متكاملة لإدارة المبيعات والمخزون والمحاسبة والموارد البشرية' if not is_en else 'Complete ERP platform: sales, inventory, accounting, HR &amp; more' %}
+    {% set _hero_tagline_1 = 'محاسبة القيد المزدوج | فواتير إلكترونية | مخزون | نقاط بيع | متجر إلكتروني | ذكاء اصطناعي' if not is_en else 'Double-entry GL &bull; E-invoices &bull; Inventory &bull; POS &bull; Online store &bull; AI' %}
+    {% set _hero_tagline_2 = 'حلول متكاملة لمحلات قطع السيارات والتجزئة والشركات في الإمارات' if not is_en else 'For auto parts, retail, SMEs, and enterprises across the UAE' %}
     {% set _btn_buy = 'شراء الآن' if not is_en else 'Buy now' %}
     {% set _btn_contact = 'تواصل معنا' if not is_en else 'Contact us' %}
     {% set _btn_support = 'ادعم المشروع' if not is_en else 'Support' %}
@@ -198,41 +197,51 @@
         <h2>{{ _features_title }}</h2>
         <p class="features-subtitle">
             {% if not is_en %}
-                نقدم لك أفضل <strong>برنامج محاسبة ومستودعات</strong> مع ميزات متقدمة تجعل إدارة أعمالك أسهل وأسرع وأكثر ربحية. مصمم خصيصاً للشركات في <strong>دبي، أبوظبي، الشارقة</strong> وجميع إمارات الدولة.
+                منصة <strong>ERP</strong> متعددة المستأجرين تضم <strong>25+ وحدة</strong> متكاملة: محاسبة القيد المزدوج، مبيعات، مشتريات، مخزون، موارد بشرية، رواتب، نقاط بيع، متجر إلكتروني، CRM، وشؤون العملاء.
             {% else %}
-                A complete <strong>accounting &amp; inventory</strong> system designed for businesses across <strong>Dubai, Abu Dhabi</strong> and all UAE emirates.
+                A multi-tenant <strong>ERP platform</strong> with <strong>25+ integrated modules</strong>: double-entry accounting, sales, purchases, inventory, HR, payroll, POS, e-commerce, CRM, and more.
             {% endif %}
         </p>
         <div class="features-grid">
             <div class="feature-card">
-                <div class="feature-icon"><i class="fas fa-brain"></i></div>
-                <h3>{{ 'ذكاء اصطناعي متقدم' if not is_en else 'AI Insights' }}</h3>
-                <p>{% if not is_en %}<strong>مساعد AI ذكي</strong> يوفر توصيات أسعار تنافسية، تحليل السوق في الإمارات، تنبؤ بالمبيعات، ومعرفة توافق قطع السيارات مع الموديلات.{% else %}Smarter decisions with recommendations and trend analysis.{% endif %}</p>
+                <div class="feature-icon"><i class="fas fa-book"></i></div>
+                <h3>{{ 'محاسبة القيد المزدوج' if not is_en else 'Double-Entry GL' }}</h3>
+                <p>{% if not is_en %}<strong>دفتر أستاذ عام</strong> كامل مع دورة محاسبية متكاملة: قيود اليومية، ميزان المراجعة، الميزانية العمومية، قائمة الدخل، التدفق النقدي، الإهلاك، الموازنات، التقارير الضريبية (VAT).{% else %}Full GL with journal entries, trial balance, balance sheet, income statement, cash flow, depreciation, budgets, and UAE VAT reports.{% endif %}</p>
             </div>
             <div class="feature-card">
                 <div class="feature-icon"><i class="fas fa-warehouse"></i></div>
-                <h3>{{ 'إدارة مخزون احترافية' if not is_en else 'Inventory' }}</h3>
-                <p>{% if not is_en %}<strong>تتبع دقيق للمخزون</strong> في الوقت الفعلي، تنبيهات تلقائية عند انخفاض الكميات، إدارة متعددة المستودعات والفروع، باركود وQR Code.{% else %}Real-time stock, alerts, and multi-warehouse support.{% endif %}</p>
+                <h3>{{ 'مخزون ومستودعات' if not is_en else 'Warehouse &amp; Stock' }}</h3>
+                <p>{% if not is_en %}<strong>إدارة متعددة المستودعات</strong> مع تتبع دقيق للكميات والتكلفة، حركات المخزن، التنبيه عند انخفاض الكميات، الباركود، QR Code، نقل بين المستودعات، وتتبع الأرقام التسلسلية.{% else %}Multi-warehouse stock with cost tracking, movements, low-stock alerts, barcode/QR, transfers, and serial number tracking.{% endif %}</p>
             </div>
             <div class="feature-card">
                 <div class="feature-icon"><i class="fas fa-cash-register"></i></div>
-                <h3>{{ 'مبيعات ومشتريات متكاملة' if not is_en else 'Sales &amp; Purchases' }}</h3>
-                <p>{% if not is_en %}<strong>فواتير إلكترونية احترافية</strong> بتصاميم متعددة، 3 مستويات أسعار، تحويل عملات تلقائي، طباعة حرارية، وربط مع نقاط البيع POS.{% else %}Invoices, receipts, returns, and streamlined operations.{% endif %}</p>
+                <h3>{{ 'مبيعات ومشتريات' if not is_en else 'Sales &amp; Purchases' }}</h3>
+                <p>{% if not is_en %}<strong>فواتير إلكترونية</strong> بتصاميم متعددة، 3 مستويات أسعار، تحويل عملات تلقائي، طباعة حرارية (A4/A5/Thermal)، خصومات، ضريبة القيمة المضافة، وإدارة مرتجعات المبيعات والمشتريات.{% else %}E-invoices with multiple designs, 3 price tiers, auto currency conversion, thermal printing, discounts, VAT, and return management.{% endif %}</p>
             </div>
             <div class="feature-card">
-                <div class="feature-icon"><i class="fas fa-users"></i></div>
-                <h3>{{ 'إدارة عملاء وموردين' if not is_en else 'Customers &amp; Suppliers' }}</h3>
-                <p>{% if not is_en %}<strong>كشوفات حساب تفصيلية</strong>، تصنيف ذكي، تحليل سلوك الشراء، إدارة الشيكات والسندات، متابعة المستحقات، وتقارير الذمم المدينة.{% else %}Full customer and supplier profiles, statements, collections tracking.{% endif %}</p>
+                <div class="feature-icon"><i class="fas fa-brain"></i></div>
+                <h3>{{ 'ذكاء اصطناعي' if not is_en else 'AI-Powered' }}</h3>
+                <p>{% if not is_en %}<strong>مساعد AI</strong> مدمج (Groq) لتنفيذ الأوامر، توصيات أسعار ذكية، تحليل أداء المنتجات، تنبؤ بالمبيعات، ومعرفة توافق قطع غيار السيارات.{% else %}Built-in AI assistant (Groq) for ERP actions, pricing recommendations, sales forecasting, and auto parts compatibility checking.{% endif %}</p>
             </div>
             <div class="feature-card">
-                <div class="feature-icon"><i class="fas fa-chart-line"></i></div>
-                <h3>{{ 'تقارير شاملة' if not is_en else 'Reporting' }}</h3>
-                <p>{% if not is_en %}لوحات تحكم تفاعلية، تقارير مالية دقيقة، ودفتر أستاذ GL.{% else %}Dashboards and financial statements that stay accurate.{% endif %}</p>
+                <div class="feature-icon"><i class="fas fa-store"></i></div>
+                <h3>{{ 'نقاط بيع ومتجر إلكتروني' if not is_en else 'POS &amp; Online Store' }}</h3>
+                <p>{% if not is_en %}<strong>POS</strong> سريع مع شاشة عرض للعميل ونظام المطبخ (KDS). <strong>متجر إلكتروني</strong> متكامل مع سلة شراء، تقييمات، قائمة أمنيات، برنامج ولاء، وقسائم خصم.{% else %}Fast POS with customer display and KDS. Built-in <strong>online store</strong> with cart, reviews, wishlist, loyalty program, and coupons.{% endif %}</p>
             </div>
             <div class="feature-card">
-                <div class="feature-icon"><i class="fas fa-shield-alt"></i></div>
-                <h3>{{ 'أمان متقدم' if not is_en else 'Security' }}</h3>
-                <p>{% if not is_en %}حماية من الاختراق، تشفير البيانات، وسجل تدقيق كامل.{% else %}Permissions, audit logs, and safe-by-default design.{% endif %}</p>
+                <div class="feature-icon"><i class="fas fa-users-gear"></i></div>
+                <h3>{{ 'موارد بشرية ورواتب' if not is_en else 'HR &amp; Payroll' }}</h3>
+                <p>{% if not is_en %}<strong>إدارة الموظفين</strong> والعقود والإجازات والحضور والانصراف. معالجة <strong>الرواتب</strong>، السلف، وكشوف الرواتب مع الترحيل المحاسبي الآلي.{% else %}Employee management, contracts, attendance, leave. <strong>Payroll</strong> processing, salary advances, payslips with auto GL posting.{% endif %}</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-handshake"></i></div>
+                <h3>{{ 'CRM وإدارة العملاء' if not is_en else 'CRM &amp; Customers' }}</h3>
+                <p>{% if not is_en %}<strong>CRM</strong> متكامل: إدارة العملاء المحتملين، مراحل البيع، فرق العمل. <strong>كشوفات حساب</strong>، تحليل سلوك الشراء، إدارة الشيكات والسندات، وتحصيل المستحقات.{% else %}Full CRM: lead pipeline, stages, teams. Customer/supplier statements, cheque management, collection tracking.{% endif %}</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-chart-pie"></i></div>
+                <h3>{{ 'تقارير وتحليلات' if not is_en else 'Reports &amp; Analytics' }}</h3>
+                <p>{% if not is_en %}<strong>لوحات تحكم</strong> تفاعلية، تقارير مبيعات ومشتريات ومخزون، تحليل الذمم، التسوية المحاسبية، التقارير الضريبية، تحليل الخزينة، وتصدير PDF و Excel.{% else %}Interactive dashboards, sales/purchase/inventory reports, AR/AP analysis, VAT returns, treasury reports, PDF/Excel export.{% endif %}</p>
             </div>
         </div>
     </section>
@@ -243,38 +252,43 @@
         <p>{{ _pricing_sub }}</p>
         <div class="pricing-cards">
             <div class="price-card">
-                <h3>{{ 'الباقة الأساسية' if not is_en else 'Basic' }}</h3>
-                <div class="price">$299<small>{{ '/شهرياً' if not is_en else '/month' }}</small></div>
+                <h3>{{ 'الباقة الأساسية' if not is_en else 'Starter' }}</h3>
+                <div class="price">{{ 'تواصل معنا' if not is_en else 'Contact us' }}</div>
                 <ul>
                     <li><i class="fas fa-check"></i> {{ 'مستخدم واحد' if not is_en else '1 user' }}</li>
                     <li><i class="fas fa-check"></i> {{ 'مبيعات ومشتريات' if not is_en else 'Sales &amp; purchases' }}</li>
-                    <li><i class="fas fa-check"></i> {{ 'إدارة مخزون' if not is_en else 'Inventory' }}</li>
+                    <li><i class="fas fa-check"></i> {{ 'إدارة مخزون ومستودعات' if not is_en else 'Inventory &amp; warehouse' }}</li>
+                    <li><i class="fas fa-check"></i> {{ 'فواتير إلكترونية' if not is_en else 'E-invoices &amp; receipts' }}</li>
                     <li><i class="fas fa-check"></i> {{ 'تقارير أساسية' if not is_en else 'Basic reports' }}</li>
+                    <li><i class="fas fa-check"></i> {{ 'إدارة العملاء والموردين' if not is_en else 'Customers &amp; suppliers' }}</li>
                 </ul>
-                <a href="{{ url_for('public.pricing') }}" class="btn-hero btn-primary ic-9">{{ 'اختر الباقة' if not is_en else 'Choose' }}</a>
+                <a href="{{ url_for('public.pricing') }}" class="btn-hero btn-primary ic-9">{{ 'عرض التفاصيل' if not is_en else 'Details' }}</a>
             </div>
             <div class="price-card featured" data-badge="{{ '⭐ الأكثر شعبية' if not is_en else '⭐ Most popular' }}">
-                <span class="ic-10">{{ 'الأكثر شعبية' if not is_en else 'Most popular' }}</span>
                 <h3>{{ 'الباقة الاحترافية' if not is_en else 'Professional' }}</h3>
-                <div class="price">$599<small>{{ '/شهرياً' if not is_en else '/month' }}</small></div>
+                <div class="price">{{ 'تواصل معنا' if not is_en else 'Contact us' }}</div>
                 <ul>
                     <li><i class="fas fa-check"></i> {{ '5 مستخدمين' if not is_en else 'Up to 5 users' }}</li>
-                    <li><i class="fas fa-check"></i> {{ 'كل ميزات الأساسية' if not is_en else 'Everything in Basic' }}</li>
+                    <li><i class="fas fa-check"></i> {{ 'كل ميزات الأساسية' if not is_en else 'Everything in Starter' }}</li>
+                    <li><i class="fas fa-check"></i> {{ 'دفتر أستاذ عام (GL)' if not is_en else 'General ledger (GL)' }}</li>
+                    <li><i class="fas fa-check"></i> {{ 'قيود اليومية والميزانيات' if not is_en else 'Journal entries &amp; budgets' }}</li>
+                    <li><i class="fas fa-check"></i> {{ 'نقاط بيع (POS)' if not is_en else 'Point of Sale (POS)' }}</li>
+                    <li><i class="fas fa-check"></i> {{ 'إدارة الشيكات' if not is_en else 'Cheque management' }}</li>
                     <li><i class="fas fa-check"></i> {{ 'ذكاء اصطناعي' if not is_en else 'AI features' }}</li>
-                    <li><i class="fas fa-check"></i> {{ 'دفتر أستاذ GL' if not is_en else 'General ledger (GL)' }}</li>
-                    <li><i class="fas fa-check"></i> {{ 'دعم فني 24/7' if not is_en else '24/7 support' }}</li>
                 </ul>
-                <a href="{{ url_for('public.pricing') }}" class="btn-hero btn-primary ic-9">{{ 'اختر الباقة' if not is_en else 'Choose' }}</a>
+                <a href="{{ url_for('public.pricing') }}" class="btn-hero btn-primary ic-9">{{ 'عرض التفاصيل' if not is_en else 'Details' }}</a>
             </div>
             <div class="price-card">
                 <h3>{{ 'باقة المؤسسات' if not is_en else 'Enterprise' }}</h3>
-                <div class="price">{{ 'تواصل معنا' if not is_en else 'Contact' }}</div>
+                <div class="price">{{ 'تواصل معنا' if not is_en else 'Contact us' }}</div>
                 <ul>
                     <li><i class="fas fa-check"></i> {{ 'مستخدمين غير محدودين' if not is_en else 'Unlimited users' }}</li>
                     <li><i class="fas fa-check"></i> {{ 'كل الميزات المتقدمة' if not is_en else 'All advanced features' }}</li>
-                    <li><i class="fas fa-check"></i> {{ 'تخصيص كامل' if not is_en else 'Full customization' }}</li>
-                    <li><i class="fas fa-check"></i> {{ 'تدريب مجاني' if not is_en else 'Free training' }}</li>
-                    <li><i class="fas fa-check"></i> {{ 'API مخصص' if not is_en else 'Custom API' }}</li>
+                    <li><i class="fas fa-check"></i> {{ 'متجر إلكتروني' if not is_en else 'Online storefront' }}</li>
+                    <li><i class="fas fa-check"></i> {{ 'CRM وإدارة المشاريع' if not is_en else 'CRM &amp; projects' }}</li>
+                    <li><i class="fas fa-check"></i> {{ 'HR والرواتب' if not is_en else 'HR &amp; payroll' }}</li>
+                    <li><i class="fas fa-check"></i> {{ 'API وتخصيص كامل' if not is_en else 'API &amp; customization' }}</li>
+                    <li><i class="fas fa-check"></i> {{ 'دعم فني وأولوية' if not is_en else 'Priority support' }}</li>
                 </ul>
                 <a href="{{ url_for('public.contact') }}" class="btn-hero btn-primary ic-9">{{ 'اتصل بنا' if not is_en else 'Contact' }}</a>
             </div>
@@ -311,94 +325,149 @@
         </div>
     </section>
 
-    {# == About (Arabic only) == #}
-    {% if not is_en %}
+    {# == About == #}
     <section id="about" class="about-section">
         <div class="section-container">
-            <h2 class="section-heading"><i class="fas fa-building icon-margin"></i>من نحن - شركة أزاد للأنظمة الذكية</h2>
+            {% if not is_en %}
+            <h2 class="section-heading"><i class="fas fa-building icon-margin"></i>عن المنصة</h2>
             <div class="about-card">
-                <p class="about-text"><strong>شركة أزاد للأنظمة الذكية</strong> هي شركة رائدة في تطوير <strong>حلول برمجيات إدارة الأعمال</strong> في الإمارات العربية المتحدة. نتخصص في تقديم <strong>أنظمة إدارة المستودعات والمبيعات</strong> المدعومة بالذكاء الاصطناعي لمساعدة الشركات في <strong>دبي، أبوظبي، الشارقة</strong> وجميع الإمارات على تحقيق النمو والكفاءة.</p>
-                <p class="about-text">يجمع <strong>نظام أزاد</strong> بين التكنولوجيا المتقدمة والتصميم السهل الاستخدام، مما يجعله <strong>الخيار الأمثل</strong> لأصحاب الأعمال الذين يبحثون عن <strong>برنامج محاسبة شامل</strong> يوفر الوقت ويزيد الأرباح. نحن نفهم تحديات <strong>محلات قطع غيار السيارات، المحلات التجارية، والشركات الصغيرة والمتوسطة</strong> في السوق الإماراتي.</p>
-                <p class="about-text-last">نوفر <strong>دعماً فنياً عربياً مميزاً</strong>، تدريباً عملياً، وتحديثات مستمرة. فريقنا المتخصص جاهز لمساعدتك في <strong>التحول الرقمي</strong> وتحسين إدارة أعمالك بأحدث التقنيات.</p>
+                <p class="about-text"><strong>أزاديكسا (Azadexa)</strong> منصة <strong>ERP</strong> متعددة المستأجرين (Multi-Tenant) مطورة بالكامل في <strong>الإمارات العربية المتحدة</strong>. تضم المنصة أكثر من <strong>25 وحدة</strong> متكاملة تغطي جميع جوانب إدارة الأعمال: المحاسبة، المبيعات، المشتريات، المخزون، الموارد البشرية، الرواتب، نقاط البيع، المتجر الإلكتروني، CRM، وإدارة المشاريع.</p>
+                <p class="about-text">تستند المنصة إلى <strong>محاسبة القيد المزدوج</strong> مع دورة محاسبية كاملة: دفتر أستاذ عام، قيود يومية، ميزان مراجعة، ميزانية عمومية، قائمة دخل، تدفق نقدي، إهلاك الأصول الثابتة، الموازنات، والتقارير الضريبية لدولة الإمارات (VAT بنسبة 5%).</p>
+                <p class="about-text">تدعم المنصة <strong>11 قطاعاً</strong> تجارياً (سيارات، إلكترونيات، سوبرماركت، صيدليات، مطاعم، مقاولات، ملابس، ذهب، وغيرها) مع ميزات متخصصة لكل قطاع. جميع البيانات مشفرة ومحمية وفق أعلى معايير الأمان.</p>
+                <p class="about-text-last">تحت إشراف <strong>المبرمج أحمد غنام</strong>. نوفر دعماً فنياً وتحديثات مستمرة. المنصة موجهة للشركات في <strong>دبي، أبوظبي، الشارقة</strong> وجميع إمارات الدولة.</p>
             </div>
+            {% else %}
+            <h2 class="section-heading"><i class="fas fa-building icon-margin"></i>About the Platform</h2>
+            <div class="about-card">
+                <p class="about-text"><strong>Azadexa</strong> is a multi-tenant <strong>ERP platform</strong> built entirely in the <strong>United Arab Emirates</strong>. It features <strong>25+ integrated modules</strong> covering accounting, sales, purchases, inventory, HR, payroll, POS, e-commerce, CRM, and project management.</p>
+                <p class="about-text">Built on <strong>double-entry accounting</strong> with a complete financial cycle: general ledger, journal entries, trial balance, balance sheet, income statement, cash flow, fixed-asset depreciation, budgets, and UAE VAT (5%) reports.</p>
+                <p class="about-text">Supports <strong>11 industry verticals</strong> including automotive, electronics, supermarket, pharmacy, restaurant, construction, textile, jewelry, and more — each with specialized features. All data is encrypted and secured to the highest standards.</p>
+                <p class="about-text-last">Managed by <strong>developer Ahmad Ghanam</strong>. Ongoing support and updates provided. Designed for businesses across <strong>Dubai, Abu Dhabi, Sharjah</strong> and all UAE emirates.</p>
+            </div>
+            {% endif %}
         </div>
     </section>
-    {% endif %}
 
-    {# == Benefits (Arabic only) == #}
-    {% if not is_en %}
+    {# == Benefits == #}
     <section id="benefits" class="benefits-section">
         <div class="section-container">
-            <h2 class="benefits-heading"><i class="fas fa-users-cog icon-margin"></i>من يستفيد من نظام أزاد لإدارة المستودعات؟</h2>
-            <p class="benefits-subtitle">حلول مخصصة لمختلف القطاعات التجارية في الإمارات</p>
+            {% if not is_en %}
+            <h2 class="benefits-heading"><i class="fas fa-users-cog icon-margin"></i>لمن هذه المنصة؟</h2>
+            <p class="benefits-subtitle">حلول متكاملة تناسب مختلف القطاعات التجارية في الإمارات</p>
             <div class="benefits-grid">
                 <div class="benefit-card-auto">
                     <h3 class="benefit-card-title"><i class="fas fa-car icon-margin"></i>محلات قطع غيار السيارات</h3>
-                    <p class="benefit-card-text">نظام متخصص لـ <strong>قطع غيار السيارات</strong> مع ميزات فريدة: معرفة توافق القطع، 3 مستويات أسعار، باركود، وإدارة مخزون دقيقة.</p>
+                    <p class="benefit-card-text">نظام متخصص مع <strong>توافق القطع</strong> مع الموديلات، 3 مستويات أسعار (قطعي/جملة/مميز)، باركود، طباعة حرارية، وإدارة موردين متعددة.</p>
                 </div>
                 <div class="benefit-card-retail">
-                    <h3 class="benefit-card-title"><i class="fas fa-store icon-margin"></i>المحلات التجارية والسوبرماركت</h3>
-                    <p class="benefit-card-text"><strong>نظام نقاط بيع POS</strong> سريع وسهل، باركود، طباعة حرارية، إدارة موردين، كشوفات حساب، وتقارير يومية.</p>
+                    <h3 class="benefit-card-title"><i class="fas fa-store icon-margin"></i>المتاجر والسوبرماركت</h3>
+                    <p class="benefit-card-text"><strong>POS</strong> سريع مع شاشة عرض للعميل، طباعة حرارية، باركود، إدارة مخزون دقيقة، ومتجر إلكتروني متكامل للبيع أونلاين.</p>
                 </div>
                 <div class="benefit-card-sme">
-                    <h3 class="benefit-card-title"><i class="fas fa-industry icon-margin"></i>الشركات الصغيرة والمتوسطة</h3>
-                    <p class="benefit-card-text"><strong>ERP متكامل</strong> لإدارة جميع عملياتك: مبيعات، مشتريات، مخزون، حسابات، موارد بشرية، وتقارير شاملة. <strong>سحابي 100%</strong> - تابع أعمالك من أي مكان.</p>
+                    <h3 class="benefit-card-title"><i class="fas fa-building icon-margin"></i>الشركات الصغيرة والمتوسطة</h3>
+                    <p class="benefit-card-text"><strong>ERP كامل</strong>: محاسبة القيد المزدوج، مبيعات، مشتريات، مخزون، HR، رواتب، تقارير مالية، وتحليلات متقدمة. <strong>سحابي 100%</strong>.</p>
                 </div>
                 <div class="benefit-card-workshop">
                     <h3 class="benefit-card-title"><i class="fas fa-wrench icon-margin"></i>ورش الصيانة والخدمات</h3>
-                    <p class="benefit-card-text">إدارة <strong>أوامر العمل</strong>، تتبع القطع المستخدمة، فواتير خدمات، جدولة المواعيد، وإدارة عملاء مع سجل كامل.</p>
+                    <p class="benefit-card-text">إدارة <strong>أوامر العمل</strong>، تتبع القطع المستخدمة، فواتير خدمات، جدولة المواعيد، وسجل عملاء كامل مع تكامل المخزون.</p>
                 </div>
             </div>
+            {% else %}
+            <h2 class="benefits-heading"><i class="fas fa-users-cog icon-margin"></i>Who is it for?</h2>
+            <p class="benefits-subtitle">Tailored solutions for diverse business sectors in the UAE</p>
+            <div class="benefits-grid">
+                <div class="benefit-card-auto">
+                    <h3 class="benefit-card-title"><i class="fas fa-car icon-margin"></i>Auto Parts Shops</h3>
+                    <p class="benefit-card-text">Specialized system with <strong>parts compatibility</strong> checking, 3 price tiers, barcode labels, thermal printing, and multi-supplier management.</p>
+                </div>
+                <div class="benefit-card-retail">
+                    <h3 class="benefit-card-title"><i class="fas fa-store icon-margin"></i>Retail &amp; Supermarkets</h3>
+                    <p class="benefit-card-text">Fast <strong>POS</strong> with customer display, thermal printing, barcode scanning, accurate inventory, and an integrated <strong>online store</strong>.</p>
+                </div>
+                <div class="benefit-card-sme">
+                    <h3 class="benefit-card-title"><i class="fas fa-building icon-margin"></i>SMEs &amp; Enterprises</h3>
+                    <p class="benefit-card-text"><strong>Full ERP</strong>: double-entry accounting, sales, purchases, inventory, HR, payroll, financial reports, and advanced analytics. <strong>100% cloud</strong>.</p>
+                </div>
+                <div class="benefit-card-workshop">
+                    <h3 class="benefit-card-title"><i class="fas fa-wrench icon-margin"></i>Service Workshops</h3>
+                    <p class="benefit-card-text"><strong>Work order</strong> management, parts tracking, service invoicing, appointment scheduling, and full customer history with inventory integration.</p>
+                </div>
+            </div>
+            {% endif %}
         </div>
     </section>
-    {% endif %}
 
-    {# == FAQ (Arabic only) == #}
-    {% if not is_en %}
+    {# == FAQ == #}
     <section class="faq-section" id="faq">
         <div class="faq-container-inner">
-            <h2 class="faq-heading">الأسئلة الشائعة - FAQ</h2>
-            <p class="faq-subtitle">إجابات على أكثر الأسئلة شيوعاً حول نظام إدارة المستودعات والمبيعات</p>
+            {% if not is_en %}
+            <h2 class="faq-heading">الأسئلة الشائعة</h2>
+            <p class="faq-subtitle">إجابات على أكثر الأسئلة شيوعاً حول المنصة</p>
             <div class="faq-list">
                 <div class="faq-item">
-                    <h3 class="faq-question"><i class="fas fa-question-circle icon-margin"></i>ما هو نظام إدارة المستودعات من شركة أزاد؟</h3>
-                    <p class="faq-answer">نظام أزاد هو <strong>برنامج محاسبة ومستودعات متكامل</strong> مصمم خصيصاً للشركات في <strong>الإمارات ودبي وأبوظبي</strong>. يوفر إدارة شاملة للمبيعات، المشتريات، المخزون، الفواتير الإلكترونية، كشوفات الحسابات، إدارة الشيكات، والتقارير المالية.</p>
+                    <h3 class="faq-question"><i class="fas fa-question-circle icon-margin"></i>ما هي منصة أزاديكسا؟</h3>
+                    <p class="faq-answer"><strong>أزاديكسا (Azadexa)</strong> هي منصة ERP متعددة المستأجرين (Multi-Tenant) مطورة في الإمارات. تضم أكثر من 25 وحدة متكاملة تشمل محاسبة القيد المزدوج، المبيعات، المشتريات، المخزون، الموارد البشرية، الرواتب، نقاط البيع، المتجر الإلكتروني، CRM، وإدارة المشاريع.</p>
                 </div>
                 <div class="faq-item">
-                    <h3 class="faq-question"><i class="fas fa-question-circle icon-margin"></i>هل البرنامج مناسب لمحلات قطع غيار السيارات؟</h3>
-                    <p class="faq-answer">نعم بالتأكيد! النظام مصمم خصيصاً لـ <strong>محلات قطع غيار السيارات</strong> في الإمارات. يتضمن ميزات متخصصة مثل: معرفة توافق القطع مع موديلات السيارات، إدارة 3 مستويات أسعار، تتبع المخزون بدقة، وفواتير احترافية.</p>
+                    <h3 class="faq-question"><i class="fas fa-question-circle icon-margin"></i>ما الفرق بين أزاديكسا وبرامج المحاسبة العادية؟</h3>
+                    <p class="faq-answer">المنصة تعمل بـ <strong>محاسبة القيد المزدوج</strong> (Double-Entry) وليس القيد المفرد. توفر دورة محاسبية متكاملة: قيود يومية، ميزان مراجعة، ميزانية عمومية، قائمة دخل، تدفق نقدي، وإهلاك الأصول الثابتة. معظم برامج المحاسبة البسيطة لا توفر هذه المستوى من التكامل المحاسبي.</p>
                 </div>
                 <div class="faq-item">
-                    <h3 class="faq-question"><i class="fas fa-question-circle icon-margin"></i>كم يكلف برنامج إدارة المستودعات؟</h3>
-                    <p class="faq-answer">نوفر <strong>باقات مرنة</strong> تناسب أحجام الأعمال المختلفة في الإمارات. السعر النهائي يعتمد على احتياجك الفعلي وعدد المستخدمين والميزات المطلوبة. <a href="{{ url_for('public.pricing') }}" class="faq-link">شاهد تفاصيل الباقات</a></p>
+                    <h3 class="faq-question"><i class="fas fa-question-circle icon-margin"></i>هل تدعم المنصة ضريبة القيمة المضافة في الإمارات؟</h3>
+                    <p class="faq-answer">نعم، تدعم <strong>VAT بنسبة 5%</strong> وفق متطلبات الهيئة الاتحادية للضرائب في الإمارات. توفر تقارير ضريبية شاملة، فواتير ضريبية إلكترونية مع QR Code، وتصنيف ضريبي حسب المنتج والخدمة.</p>
                 </div>
                 <div class="faq-item">
-                    <h3 class="faq-question"><i class="fas fa-question-circle icon-margin"></i>هل يدعم النظام الفواتير الإلكترونية المعتمدة في الإمارات؟</h3>
-                    <p class="faq-answer">نعم! النظام يدعم <strong>الفواتير الإلكترونية</strong> بالكامل. يمكنك إنشاء فواتير احترافية بتصاميم متعددة (كلاسيكية، خليجية، عصرية)، طباعة بأحجام مختلفة (A4, A5, Thermal)، إضافة شعارك وبياناتك، QR Code، وتصدير PDF.</p>
+                    <h3 class="faq-question"><i class="fas fa-question-circle icon-margin"></i>هل يوجد متجر إلكتروني مدمج؟</h3>
+                    <p class="faq-answer">نعم، المنصة تتضمن <strong>متجراً إلكترونياً</strong> متكاملاً مع سلة شراء، تقييمات ومنتجات، قائمة أمنيات، برنامج ولاء ونقاط مكافآت، قسائم خصم، وحجوزات العملاء. المتجر مربوط مباشرة مع المخزون والمحاسبة.</p>
                 </div>
                 <div class="faq-item">
-                    <h3 class="faq-question"><i class="fas fa-question-circle icon-margin"></i>ما هي مميزات الذكاء الاصطناعي في البرنامج؟</h3>
-                    <p class="faq-answer"><strong>الذكاء الاصطناعي المتقدم</strong> في نظام أزاد يوفر: توصيات أسعار ذكية، تحليل سلوك العملاء، تنبؤ بالمبيعات المستقبلية، تحليل أداء المنتجات، ومساعد محادثة ذكي.</p>
+                    <h3 class="faq-question"><i class="fas fa-question-circle icon-margin"></i>هل تدعم المنصة إدارة الفروع المتعددة؟</h3>
+                    <p class="faq-answer">نعم، المنصة تدعم <strong>الفروع والمستودعات المتعددة</strong> مع إمكانية تحديد صلاحيات لكل فرع، تقارير منفصلة، نقل مخزون بين الفروع، ومركزية كاملة مع إمكانية الفصل المحاسبي حسب الفرع.</p>
                 </div>
                 <div class="faq-item">
-                    <h3 class="faq-question"><i class="fas fa-question-circle icon-margin"></i>هل يمكن استخدام البرنامج في أكثر من فرع؟</h3>
-                    <p class="faq-answer">نعم! النظام يدعم <strong>إدارة متعددة المستودعات</strong> والفروع. يمكنك متابعة المخزون في كل فرع، نقل البضائع بين المستودعات، تقارير منفصلة لكل فرع، ومركزية كاملة في الإدارة.</p>
-                </div>
-                <div class="faq-item">
-                    <h3 class="faq-question"><i class="fas fa-question-circle icon-margin"></i>كيف أبدأ باستخدام نظام أزاد للمستودعات؟</h3>
-                    <p class="faq-answer">البداية سهلة جداً! <strong>3 خطوات فقط:</strong> (1) <a href="{{ url_for('public.contact') }}" class="faq-link">تواصل معنا</a>، (2) اختر الباقة المناسبة، (3) ابدأ فوراً! نوفر <strong>تدريب مجاني</strong> لفريقك واستيراد بياناتك القديمة.</p>
+                    <h3 class="faq-question"><i class="fas fa-question-circle icon-margin"></i>كيف تتم حماية البيانات؟</h3>
+                    <p class="faq-answer">المنصة تطبق <strong>عزل تام للبيانات</strong> بين المستأجرين (Tenant Isolation). جميع البيانات مشفرة عبر SSL، صلاحيات مستخدمين متقدمة، سجل تدقيق (Audit Log) لكل عملية، نسخ احتياطي تلقائي يومي، وكشف الاختراق.</p>
                 </div>
                 <div class="faq-item-last">
-                    <h3 class="faq-question"><i class="fas fa-question-circle icon-margin"></i>هل النظام آمن ويحمي بياناتي؟</h3>
-                    <p class="faq-answer"><strong>الأمان أولويتنا!</strong> نستخدم: تشفير SSL كامل، نسخ احتياطي تلقائي يومي، حماية من الاختراق، صلاحيات متقدمة للمستخدمين، وسجل تدقيق شامل.</p>
+                    <h3 class="faq-question"><i class="fas fa-question-circle icon-margin"></i>كيف أبدأ باستخدام المنصة؟</h3>
+                    <p class="faq-answer">تواصل معنا عبر <a href="{{ url_for('public.contact') }}" class="faq-link">صفحة الاتصال</a> أو واتساب. نحدد الباقة المناسبة لعملك، نجهز البيئة السحابية لك، ونقدم <strong>تدريباً مجاني</strong> لفريقك. يمكنك البدء فوراً. <a href="{{ url_for('public.pricing') }}" class="faq-link">شاهد الباقات</a></p>
                 </div>
             </div>
+            {% else %}
+            <h2 class="faq-heading">Frequently Asked Questions</h2>
+            <p class="faq-subtitle">Answers to common questions about the Azadexa ERP platform</p>
+            <div class="faq-list">
+                <div class="faq-item">
+                    <h3 class="faq-question"><i class="fas fa-question-circle icon-margin"></i>What is Azadexa?</h3>
+                    <p class="faq-answer"><strong>Azadexa</strong> is a multi-tenant ERP platform developed in the UAE with 25+ integrated modules: double-entry accounting, sales, purchases, inventory, HR, payroll, POS, e-commerce, CRM, and project management.</p>
+                </div>
+                <div class="faq-item">
+                    <h3 class="faq-question"><i class="fas fa-question-circle icon-margin"></i>What makes it different from basic accounting software?</h3>
+                    <p class="faq-answer">Azadexa uses <strong>double-entry accounting</strong> — not single-entry. It provides a complete financial cycle: journal entries, trial balance, balance sheet, income statement, cash flow, and fixed-asset depreciation. Basic software does not offer this level of accounting integration.</p>
+                </div>
+                <div class="faq-item">
+                    <h3 class="faq-question"><i class="fas fa-question-circle icon-margin"></i>Does it support UAE VAT?</h3>
+                    <p class="faq-answer">Yes. Full <strong>5% VAT</strong> compliance per FTA requirements. Tax reports, e-invoices with QR codes, and product/service-level tax classification are all supported.</p>
+                </div>
+                <div class="faq-item">
+                    <h3 class="faq-question"><i class="fas fa-question-circle icon-margin"></i>Is there a built-in online store?</h3>
+                    <p class="faq-answer">Yes. A full <strong>e-commerce storefront</strong> is integrated: product catalog, cart, checkout, reviews, wishlist, loyalty points program, discount coupons, and customer reservations — all linked to inventory and accounting.</p>
+                </div>
+                <div class="faq-item">
+                    <h3 class="faq-question"><i class="fas fa-question-circle icon-margin"></i>Does it support multiple branches?</h3>
+                    <p class="faq-answer">Yes. <strong>Multi-branch and multi-warehouse</strong> support with per-branch permissions, separate reports, stock transfers between branches, and centralized or per-branch accounting.</p>
+                </div>
+                <div class="faq-item-last">
+                    <h3 class="faq-question"><i class="fas fa-question-circle icon-margin"></i>How do I get started?</h3>
+                    <p class="faq-answer"><a href="{{ url_for('public.contact') }}" class="faq-link">Contact us</a> or WhatsApp. We'll help you choose the right plan, set up your cloud environment, and provide <strong>free training</strong> for your team. <a href="{{ url_for('public.pricing') }}" class="faq-link">View plans</a></p>
+                </div>
+            </div>
+            {% endif %}
             <div class="faq-cta">
-                <a href="{{ url_for('public.contact') }}" class="faq-cta-button"><i class="fas fa-phone-alt icon-margin"></i>تواصل معنا للمزيد من المعلومات</a>
+                <a href="{{ url_for('public.contact') }}" class="faq-cta-button"><i class="fas fa-phone-alt icon-margin"></i>{{ 'تواصل معنا للمزيد من المعلومات' if not is_en else 'Contact us for more information' }}</a>
             </div>
         </div>
     </section>
-    {% endif %}
 
     {# == Footer == #}
     <footer class="landing-footer">
@@ -438,8 +507,6 @@
     </footer>
 
     <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 

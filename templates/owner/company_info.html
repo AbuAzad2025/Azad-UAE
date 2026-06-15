@@ -99,7 +99,7 @@
       
       
       <div class="card">
-        <div class="card-header bg-gradient-primary">
+        <div class="card-header bg-primary">
           <h3 class="card-title text-white">📋 المعلومات الأساسية</h3>
         </div>
         <div class="card-body">
@@ -152,7 +152,7 @@
 
       
       <div class="card">
-        <div class="card-header bg-gradient-success">
+        <div class="card-header bg-success">
           <h3 class="card-title text-white">📞 معلومات الاتصال</h3>
         </div>
         <div class="card-body">
@@ -231,7 +231,7 @@
 
       
       <div class="card">
-        <div class="card-header bg-gradient-warning">
+        <div class="card-header bg-warning">
           <h3 class="card-title text-white">⚖️ المعلومات القانونية</h3>
         </div>
         <div class="card-body">
@@ -260,7 +260,7 @@
 
       
       <div class="card">
-        <div class="card-header bg-gradient-info">
+        <div class="card-header bg-info">
           <h3 class="card-title text-white">🎨 العلامة التجارية</h3>
         </div>
         <div class="card-body">
@@ -304,278 +304,6 @@
 {% endblock %}
 
 {% block extra_css %}
-<style>
-.company-profile-wrapper {
-  display: grid;
-  grid-template-columns: minmax(260px, 320px) 1fr;
-  gap: 24px;
-}
-
-.company-profile__sidebar {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  position: sticky;
-  top: 100px;
-  align-self: start;
-}
-
-.profile-card {
-  background: linear-gradient(180deg, #ffffff 0%, #f8f9fc 100%);
-  border-radius: 18px;
-  box-shadow: 0 15px 35px rgba(15, 23, 42, 0.12);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-.profile-card__header {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 22px 24px;
-  background: linear-gradient(135deg, rgba(0, 122, 61, 0.12) 0%, rgba(212, 175, 55, 0.12) 100%);
-}
-
-.profile-card__logo {
-  width: 64px;
-  height: 64px;
-  border-radius: 20px;
-  background: #0f172a;
-  display: grid;
-  place-items: center;
-  overflow: hidden;
-}
-
-.profile-card__logo img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.logo-placeholder {
-  font-size: 22px;
-  color: #fff;
-  font-weight: 700;
-}
-
-.profile-card__name {
-  font-size: 1.25rem;
-  font-weight: 700;
-  margin: 0;
-  color: #0f172a;
-}
-
-.profile-card__industry {
-  margin: 6px 0 0;
-  color: #475569;
-  font-weight: 600;
-}
-
-.profile-card__body {
-  padding: 18px 24px;
-  display: grid;
-  gap: 12px;
-}
-
-.profile-card__stat {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.profile-card__stat .label {
-  font-size: 0.85rem;
-  color: #64748b;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.profile-card__stat .value {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #0f172a;
-}
-
-.profile-card__footer {
-  border-top: 1px solid rgba(15, 23, 42, 0.06);
-  padding: 18px 24px;
-  display: grid;
-  gap: 14px;
-}
-
-.brand-colors {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  color: #475569;
-  font-weight: 600;
-}
-
-.brand-colors__swatches {
-  display: flex;
-  gap: 10px;
-}
-
-.brand-colors__swatches .color {
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  border: 2px solid #fff;
-  box-shadow: 0 5px 10px rgba(15, 23, 42, 0.2);
-  background: var(--color);
-}
-
-.quick-links .card-body {
-  display: grid;
-  gap: 12px;
-  padding: 18px;
-}
-
-.quick-link {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  border-radius: 12px;
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  transition: all 0.25s ease;
-  color: #0f172a;
-  text-decoration: none;
-  font-weight: 600;
-}
-
-.quick-link i {
-  font-size: 1.15rem;
-  color: #007A3D;
-}
-
-.quick-link:hover {
-  transform: translateX(-4px);
-  border-color: rgba(0, 122, 61, 0.25);
-  background: rgba(0, 122, 61, 0.06);
-}
-
-.company-profile__form .card {
-  border-radius: 18px;
-  border: 1px solid rgba(15, 23, 42, 0.06);
-  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.04);
-  overflow: hidden;
-  margin-bottom: 24px;
-}
-
-.company-profile__form .card-header {
-  padding: 16px 22px;
-}
-
-.company-profile__form .card-body {
-  padding: 24px;
-}
-
-.company-profile__form .form-control,
-.company-profile__form textarea.form-control,
-.company-profile__form select.form-control,
-.form-control.compact-control,
-.form-control.compact-textarea {
-  min-height: 56px;
-  padding: 0.95rem 1.35rem;
-  font-size: 0.95rem;
-  border-radius: 10px;
-  text-align: center;
-  line-height: 1.7;
-  border: 1px solid rgba(15, 23, 42, 0.12);
-  width: 100%;
-  height: auto !important;
-}
-
-.company-profile__form .form-control::placeholder,
-.company-profile__form select.form-control:not([multiple]) {
-  text-align: center;
-  color: #64748b;
-  opacity: 0.8;
-}
-
-.company-profile__form textarea.form-control,
-.form-control.compact-textarea {
-  min-height: 96px;
-  text-align: right;
-  line-height: 1.6;
-}
-
-.company-profile__form textarea.form-control::placeholder {
-  text-align: right;
-}
-
-.company-profile__form select.form-control,
-.select-center {
-  text-align-last: center;
-  padding-inline-start: 2.2rem;
-  padding-inline-end: 2.2rem;
-  -webkit-appearance: none;appearance: none;
-  
-  background-color: #fff;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23647894' d='M6 8a1 1 0 0 1-.707-.293l-5-5a1 1 0 0 1 1.414-1.414L6 5.586 10.293 1.293a1 1 0 0 1 1.414 1.414l-5 5A1 1 0 0 1 6 8'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: left 0.8rem center;
-  background-size: 12px;
-}
-
-.company-profile__form select.form-control option,
-.select-center option {
-  padding: 0.75rem 1rem;
-}
-
-.company-profile__form select.form-control:focus,
-.select-center:focus {
-  border-color: rgba(0, 122, 61, 0.35);
-  box-shadow: 0 0 0 0.15rem rgba(0, 122, 61, 0.15);
-}
-
-.company-profile__form .form-group {
-  margin-bottom: 1.35rem;
-}
-
-.company-profile__form .input-group .input-group-text {
-  border-radius: 12px;
-  min-height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
-}
-
-.company-profile__form input[type="color"].form-control {
-  padding: 0;
-  height: 52px;
-  cursor: pointer;
-}
-
-.company-profile__form label {
-  font-weight: 700;
-  color: #0f172a;
-}
-
-.company-profile__form .btn-lg {
-  border-radius: 14px;
-  padding: 14px 28px;
-  font-weight: 700;
-}
-
-@media (max-width: 992px) {
-  .company-profile-wrapper {
-    grid-template-columns: 1fr;
-  }
-  
-  .company-profile__sidebar {
-    position: relative;
-    top: 0;
-    flex-direction: row;
-    flex-wrap: wrap;
-  }
-  
-  .profile-card {
-    flex: 1 1 100%;
-  }
-}
-</style>
 {% endblock %}
+
+

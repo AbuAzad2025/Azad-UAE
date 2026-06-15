@@ -79,10 +79,10 @@
     
     <div class="row mb-3">
       <div class="col-12">
-        <a href="{{ url_for('owner.create_user') }}" class="btn btn-primary btn-lg">
+        <a href="{{ url_for('owner.create_user') }}" class="btn btn-primary btn-lg" aria-label="إضافة مستخدم جديد">
           <i class="fas fa-user-plus mr-2"></i>إضافة مستخدم جديد
         </a>
-        <button type="button" class="btn btn-info btn-lg" onclick="$('#users-table').DataTable().search('').draw();">
+        <button type="button" class="btn btn-info btn-lg" onclick="$('#users-table').DataTable().search('').draw();" aria-label="تحديث القائمة">
           <i class="fas fa-sync mr-2"></i>تحديث
         </button>
       </div>
@@ -90,7 +90,7 @@
     
     
     <div class="card">
-      <div class="card-header bg-gradient-primary">
+      <div class="card-header bg-primary">
         <h3 class="card-title text-white">
           <i class="fas fa-users mr-2"></i>قائمة المستخدمين
         </h3>
@@ -211,30 +211,6 @@
     
   </div>
 </div>
-
-<style>
-.user-avatar {
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.small-box {
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-}
-
-.small-box .icon {
-  font-size: 70px;
-}
-
-    /* D6: externalized inline styles */
-    .ic-1 { color: #000; }
-    .ic-2 { font-size: 1.2rem; }
-    .ic-3 { display: inline; }
-  </style>
 
 <script>
 $(document).ready(function() {

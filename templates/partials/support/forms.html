@@ -1,56 +1,56 @@
-        
-        <div id="crypto-form" class="donation-form">
-            <div class="ic-28">
-                <i class="fab fa-bitcoin ic-19"></i>
-                <h3 class="ic-16">
+
+        <div id="crypto-form" class="sp-donation-form">
+            <div class="sp-banner-crypto">
+                <i class="fab fa-bitcoin sp-section-icon-large"></i>
+                <h3 class="sp-payment-header-title">
                     {{ t('Payment_2') }} {{ t('بالعملات') }} {{ t('الرقمية') }}
                 </h3>
-                <p class="ic-17">{{ t('Payment') }} {{ t('آمن') }} {{ t('ومجهول') }} {{ t('بدون') }} {{ t('رسوم') }} {{ t('Additional') }}</p>
+                <p class="sp-payment-header-sub">{{ t('Payment') }} {{ t('آمن') }} {{ t('ومجهول') }} {{ t('بدون') }} {{ t('رسوم') }} {{ t('Additional') }}</p>
             </div>
-            
-            <div class="alert alert-success ic-29">
+
+            <div class="alert alert-success sp-alert-border-success">
                 <i class="fas fa-shield-alt mr-2"></i>
                 <strong>{{ t('أمان') }} {{ t('كامل') }}:</strong> لا {{ t('تتبع،') }} لا {{ t('رسوم') }} {{ t('Additional،') }} {{ t('Transfer') }} {{ t('فوري') }} ⚡
             </div>
-            
+
             <div class="form-group">
-                <label class="ic-30">
-                    <i class="fas fa-coins mr-2 ic-31"></i>{{ t('اختر') }} {{ t('Amount') }} ({{ t('بالدولار') }})
+                <label class="sp-form-label">
+                    <i class="fas fa-coins mr-2 sp-text-warning"></i>{{ t('اختر') }} {{ t('Amount') }} ({{ t('بالدولار') }})
                 </label>
-                <div class="amount-options">
-                    <button class="amount-btn" onclick="selectAmount(15, event)">
-                        <div class="ic-32">$15</div>
-                        <small class="ic-33">{{ t('شكراً') }}</small>
+                <div class="sp-amount-options">
+                    <button class="sp-amount-btn" onclick="selectAmount(15, event)">
+                        <div class="sp-amount-btn-value">$15</div>
+                        <small class="sp-amount-btn-label">{{ t('شكراً') }}</small>
                     </button>
-                    <button class="amount-btn" onclick="selectAmount(25, event)">
-                        <div class="ic-32">$25</div>
-                        <small class="ic-33">{{ t('رائع') }}</small>
+                    <button class="sp-amount-btn" onclick="selectAmount(25, event)">
+                        <div class="sp-amount-btn-value">$25</div>
+                        <small class="sp-amount-btn-label">{{ t('رائع') }}</small>
                     </button>
-                    <button class="amount-btn" onclick="selectAmount(50, event)">
-                        <div class="ic-32">$50</div>
-                        <small class="ic-33">{{ t('Featured') }}</small>
+                    <button class="sp-amount-btn" onclick="selectAmount(50, event)">
+                        <div class="sp-amount-btn-value">$50</div>
+                        <small class="sp-amount-btn-label">{{ t('Featured') }}</small>
                     </button>
-                    <button class="amount-btn" onclick="selectAmount(100, event)">
-                        <div class="ic-32">$100</div>
-                        <small class="ic-33">{{ t('رهيب') }}</small>
+                    <button class="sp-amount-btn" onclick="selectAmount(100, event)">
+                        <div class="sp-amount-btn-value">$100</div>
+                        <small class="sp-amount-btn-label">{{ t('رهيب') }}</small>
                     </button>
-                    <button class="amount-btn" onclick="selectAmount(250, event)">
-                        <div class="ic-32">$250</div>
-                        <small class="ic-33">{{ t('سخي') }}</small>
+                    <button class="sp-amount-btn" onclick="selectAmount(250, event)">
+                        <div class="sp-amount-btn-value">$250</div>
+                        <small class="sp-amount-btn-label">{{ t('سخي') }}</small>
                     </button>
-                    <button class="amount-btn" onclick="selectAmount(500, event)">
-                        <div class="ic-32">$500</div>
-                        <small class="ic-33">VIP</small>
+                    <button class="sp-amount-btn" onclick="selectAmount(500, event)">
+                        <div class="sp-amount-btn-value">$500</div>
+                        <small class="sp-amount-btn-label">VIP</small>
                     </button>
                 </div>
-                <input type="number" id="customAmount" class="form-control ic-34" placeholder="💰 أو {{ t('أدخل') }} {{ t('Amount_2') }} {{ t('مخصص') }} ({{ t('الحد') }} {{ t('الأدنى') }} $15)" min="15">
+                <input type="number" id="customAmount" class="form-control sp-input-amount" placeholder="💰 أو {{ t('أدخل') }} {{ t('Amount_2') }} {{ t('مخصص') }} ({{ t('الحد') }} {{ t('الأدنى') }} $15)" min="15">
             </div>
-            
+
             <div class="form-group">
-                <label class="ic-30">
-                    <i class="fab fa-bitcoin mr-2 ic-35"></i>{{ t('اختر') }} {{ t('Currency') }} {{ t('الرقمية') }}
+                <label class="sp-form-label">
+                    <i class="fab fa-bitcoin mr-2 sp-crypto-color"></i>{{ t('اختر') }} {{ t('Currency') }} {{ t('الرقمية') }}
                 </label>
-                <select class="form-control ic-36" id="cryptoType" aria-label="cryptoType">
+                <select class="form-control sp-select-crypto" id="cryptoType" aria-label="cryptoType">
                     <option value="btc">🟠 Bitcoin (BTC) - {{ t('الأكثر') }} {{ t('أماناً') }} {{ t('وشهرة') }}</option>
                     <option value="eth">🔷 Ethereum (ETH) - {{ t('Quick_3') }} {{ t('وموثوق') }}</option>
                     <option value="usdt">💵 Tether (USDT) - {{ t('Currency_2') }} {{ t('مستقرة') }} (1 USDT = 1 USD)</option>
@@ -58,48 +58,47 @@
                     <option value="bnb">🟡 Binance Coin (BNB) - {{ t('رسوم') }} {{ t('Low') }}</option>
                 </select>
             </div>
-            
-            <button class="btn btn-donate btn-block ic-37" onclick="generateCryptoPayment()">
+
+            <button class="btn btn-donate btn-block sp-btn-payment" onclick="generateCryptoPayment()">
                 <i class="fas fa-wallet mr-2"></i>
                 <span>{{ t('Create') }} {{ t('Address_2') }} {{ t('Payment_2') }} {{ t('الآن_2') }}</span>
                 <i class="fas fa-arrow-left mr-2"></i>
             </button>
-            
-            <div class="crypto-info ic-14" id="cryptoPaymentInfo">
+
+            <div class="sp-crypto-info sp-hidden" id="cryptoPaymentInfo">
                 <h4 class="text-center mb-4">
                     <i class="fas fa-qrcode mr-2"></i>
                     {{ t('Info_2') }} {{ t('Payment_2') }}
                 </h4>
-                
-                <div class="features-list">
-                    <div class="feature-item">
+
+                <div class="sp-features-list">
+                    <div class="sp-feature-item">
                         <i class="fas fa-user-secret"></i>
                         <strong>{{ t('خصوصية') }} {{ t('كاملة') }}:</strong> لا {{ t('نحتفظ') }} {{ t('بأي') }} {{ t('Info_2') }} {{ t('شخصية') }}
                     </div>
-                    <div class="feature-item">
+                    <div class="sp-feature-item">
                         <i class="fas fa-bolt"></i>
                         <strong>{{ t('فوري') }}:</strong> {{ t('Confirm_2') }} خلال 10-30 {{ t('دقيقة') }}
                     </div>
-                    <div class="feature-item">
+                    <div class="sp-feature-item">
                         <i class="fas fa-shield-alt"></i>
                         <strong>{{ t('آمن') }}:</strong> {{ t('تشفير') }} {{ t('متقدم') }} {{ t('وحماية') }} {{ t('كاملة') }}
                     </div>
                 </div>
-                
+
                 <div class="text-center">
-                    <div class="qr-code" id="qrCode">
-                        
+                    <div class="sp-qr-code" id="qrCode">
                         <canvas id="qrCanvas"></canvas>
                     </div>
                 </div>
-                
-                <div class="wallet-address">
+
+                <div class="sp-wallet-address">
                     <span id="walletAddress">bc1q...</span>
-                    <button class="copy-btn" onclick="copyAddress()">
+                    <button class="sp-copy-btn" onclick="copyAddress()">
                         <i class="fas fa-copy"></i> {{ t('Backups_2') }}
                     </button>
                 </div>
-                
+
                 <p class="text-center mt-3 mb-0">
                     <small>
                         <i class="fas fa-info-circle"></i>
@@ -107,105 +106,64 @@
                     </small>
                 </p>
             </div>
-            
+
             <div class="text-center mt-4">
-                <span class="security-badge">
-                    <i class="fas fa-lock mr-1"></i>SSL Encrypted
-                </span>
-                <span class="security-badge">
-                    <i class="fas fa-shield-alt mr-1"></i>Anonymous
-                </span>
-                <span class="security-badge">
-                    <i class="fas fa-bolt mr-1"></i>Instant
-                </span>
+                <span class="sp-security-badge"><i class="fas fa-lock mr-1"></i>SSL Encrypted</span>
+                <span class="sp-security-badge"><i class="fas fa-shield-alt mr-1"></i>Anonymous</span>
+                <span class="sp-security-badge"><i class="fas fa-bolt mr-1"></i>Instant</span>
             </div>
         </div>
 
-        
-        <div id="card-form" class="donation-form">
-            <div class="ic-38">
-                <i class="fas fa-credit-card ic-19"></i>
-                <h3 class="ic-16">
+        <div id="card-form" class="sp-donation-form">
+            <div class="sp-banner-card">
+                <i class="fas fa-credit-card sp-section-icon-large"></i>
+                <h3 class="sp-payment-header-title">
                     {{ t('Payment_2') }} {{ t('بCard_2') }} {{ t('Bank_4ة') }}
                 </h3>
-                <p class="ic-17">Visa • Mastercard • American Express</p>
+                <p class="sp-payment-header-sub">Visa • Mastercard • American Express</p>
             </div>
-            
-            <div class="alert alert-info ic-39">
+
+            <div class="alert alert-info sp-alert-border-info">
                 <i class="fas fa-lock mr-2"></i>
                 <strong>{{ t('Payment') }} {{ t('آمن') }} 100%:</strong> {{ t('جميع') }} {{ t('Data') }} {{ t('محمية') }} {{ t('بتشفير') }} SSL 256-bit 🔒
             </div>
-            
-            <form class="needs-validation" id="cardPaymentForm" method="POST" action="">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
-                <div class="form-group">
-                    <label class="ic-30">
-                        <i class="fas fa-dollar-sign mr-2 ic-40"></i>{{ t('Amount') }} (USD)
-                    </label>
-                    <input type="number" id="cardAmount" class="form-control ic-34" min="15" placeholder="💵 {{ t('أدخل') }} {{ t('Amount') }} ({{ t('الحد') }} {{ t('الأدنى') }} $15)" required>
+
+            <div class="text-center py-4">
+                <p class="mb-3" style="font-size:1.2rem;color:#666;">
+                    <i class="fas fa-shield-alt sp-text-primary"></i>
+                    {{ t('نستخدم') }} {{ t('بوابة') }} {{ t('Payment') }} {{ t('آمنة') }} {{ t('ومشفرة') }} {{ t('بالكامل') }}.
+                </p>
+                <p class="mb-4" style="font-size:1rem;color:#888;">
+                    {{ t('للدفع') }} {{ t('بCard_2') }} {{ t('Bank_4ة') }}، {{ t('الرجاء') }} {{ t('استخدام') }} {{ t('PayPal') }} {{ t('أو') }} {{ t('التواصل') }} {{ t('معنا') }} {{ t('لإتمام') }} {{ t('العملية') }} {{ t('بأمان') }}.
+                </p>
+                <div class="sp-quick-contact-actions" style="justify-content:center;">
+                    <button type="button" class="sp-quick-contact-btn sp-btn-whatsapp" onclick="openWhatsApp(currentTab === 'purchase' ? 'buy_system' : 'donation_help')">
+                        <i class="fab fa-whatsapp"></i> {{ t('تواصل') }} {{ t('عبر') }} WhatsApp
+                    </button>
+                    <button type="button" class="sp-quick-contact-btn sp-btn-email" onclick="openSupportEmail(currentTab === 'purchase' ? 'buy_system' : 'donation_help')">
+                        <i class="fas fa-envelope"></i> {{ t('راسلنا') }} {{ t('بالبريد') }}
+                    </button>
                 </div>
-                
-                <div class="form-group">
-                    <label class="ic-30">
-                        <i class="fas fa-credit-card mr-2 ic-41"></i>{{ t('رقم') }} {{ t('Card_2') }}
-                    </label>
-                    <input type="text" class="form-control ic-42" placeholder="1234 5678 9012 3456" maxlength="19" required>
-                </div>
-                
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label class="ic-43">
-                                <i class="fas fa-calendar mr-2 ic-41"></i>{{ t('History') }} {{ t('الانتهاء') }}
-                            </label>
-                            <input type="text" class="form-control ic-36" placeholder="MM/YY" maxlength="5" required>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label class="ic-43">
-                                <i class="fas fa-lock mr-2 ic-40"></i>CVV
-                            </label>
-                            <input type="text" class="form-control ic-44" placeholder="123" maxlength="4" required>
-                        </div>
-                    </div>
-                </div>
-                
-                <button type="submit" class="btn btn-donate btn-block ic-37">
-                    <i class="fas fa-check-circle mr-2"></i>
-                    <span>{{ t('Confirm') }} {{ t('Payment_2') }} {{ t('الآن_2') }}</span>
-                    <i class="fas fa-arrow-left mr-2"></i>
-                </button>
-                
-                <div class="text-center mt-4">
-                    <div class="ic-45">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/0/04/Visa.svg" alt="Visa" class="ic-46">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="Mastercard" class="ic-46">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/3/30/American_Express_logo.svg" alt="Amex" class="ic-46">
-                    </div>
-                </div>
-            </form>
+            </div>
         </div>
 
-        
-        <div id="paypal-form" class="donation-form">
-            <div class="ic-47">
-                <i class="fab fa-paypal ic-19"></i>
-                <h3 class="ic-16">
+        <div id="paypal-form" class="sp-donation-form">
+            <div class="sp-banner-paypal">
+                <i class="fab fa-paypal sp-section-icon-large"></i>
+                <h3 class="sp-payment-header-title">
                     {{ t('Payment_2') }} {{ t('عبر') }} PayPal
                 </h3>
-                <p class="ic-17">{{ t('Payment') }} {{ t('Quick_3') }} {{ t('وآمن') }} مع {{ t('حماية') }} {{ t('المشتري') }}</p>
+                <p class="sp-payment-header-sub">{{ t('Payment') }} {{ t('Quick_3') }} {{ t('وآمن') }} مع {{ t('حماية') }} {{ t('المشتري') }}</p>
             </div>
-            
-            <div class="alert alert-info ic-48">
+
+            <div class="alert alert-info sp-alert-border-paypal">
                 <i class="fas fa-shield-alt mr-2"></i>
                 <strong>{{ t('حماية') }} {{ t('كاملة') }}:</strong> {{ t('استرداد') }} {{ t('الأموال') }} {{ t('Available_2') }} • لا {{ t('حاجة') }} {{ t('لبطاقة') }} {{ t('ائتمان') }} 💳
             </div>
-            
+
             <div class="text-center" id="paypal-button-container">
-                
-                <button class="btn btn-lg ic-49" onclick="handlePayPalPayment()" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 20px rgba(0,0,0,0.3)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 5px 15px rgba(0,0,0,0.2)'">
-                    <i class="fab fa-paypal mr-2 ic-50"></i>
+                <button class="btn btn-lg sp-btn-paypal" onclick="handlePayPalPayment()">
+                    <i class="fab fa-paypal mr-2 sp-btn-icon"></i>
                     <span>{{ t('متابعة') }} مع PayPal</span>
                 </button>
                 <p class="mt-3 text-muted">
@@ -214,44 +172,43 @@
             </div>
         </div>
 
-        
-        <div id="bank-form" class="donation-form">
-            <div class="ic-51">
-                <i class="fas fa-university ic-19"></i>
-                <h3 class="ic-16">
+        <div id="bank-form" class="sp-donation-form">
+            <div class="sp-banner-bank">
+                <i class="fas fa-university sp-section-icon-large"></i>
+                <h3 class="sp-payment-header-title">
                     {{ t('Transfer_2') }} {{ t('Bank_4') }} {{ t('المباشر') }}
                 </h3>
-                <p class="ic-17">{{ t('للمبالغ') }} {{ t('الكبيرة') }} {{ t('والتعاملات') }} {{ t('الرسمية') }}</p>
+                <p class="sp-payment-header-sub">{{ t('للمبالغ') }} {{ t('الكبيرة') }} {{ t('والتعاملات') }} {{ t('الرسمية') }}</p>
             </div>
-            
-            <div class="alert alert-warning ic-52">
+
+            <div class="alert alert-warning sp-alert-border-warning">
                 <i class="fas fa-info-circle mr-2"></i>
                 <strong>{{ t('Note') }}:</strong> {{ t('للTransferات') }} {{ t('Bank_4ة') }} (+$500)، {{ t('يُرجى') }} {{ t('التواصل') }} {{ t('معنا') }} {{ t('للحصول') }} على {{ t('Details') }} {{ t('Account') }} {{ t('Bank_4') }}
             </div>
-            
+
             <div class="text-center">
-                <a href="mailto:{{ developer_email or config.DEVELOPER_EMAIL }}?subject=Bank Transfer Request" class="btn btn-donate btn-lg ic-53">
+                <a href="mailto:{{ developer_email or config.DEVELOPER_EMAIL }}?subject=Bank Transfer Request" class="btn btn-donate btn-lg sp-btn-lg">
                     <i class="fas fa-envelope mr-2"></i>
                     {{ t('طلب') }} {{ t('Details') }} {{ t('Account') }} {{ t('عبر') }} {{ t('Email_2') }}
                 </a>
-                
-                <p class="mt-4 ic-54">
-                    <strong>أو {{ t('تواصل') }} {{ t('معنا') }} {{ t('مباشرة') }}:</strong>
+
+                <p class="mt-4 sp-text-muted">
+                    <strong>{{ t('أو') }} {{ t('تواصل') }} {{ t('معنا') }} {{ t('مباشرة') }}:</strong>
                 </p>
-                <a href="https://wa.me/{{ developer_whatsapp_link }}" class="btn btn-lg mt-2 ic-55">
-                    <i class="fab fa-whatsapp mr-2 ic-50"></i>
+                <a href="https://wa.me/{{ developer_whatsapp_link }}" class="btn btn-lg mt-2 sp-btn-whatsapp-lg">
+                    <i class="fab fa-whatsapp mr-2 sp-btn-icon"></i>
                     {{ t('تواصل') }} {{ t('عبر') }} WhatsApp
                 </a>
 
-                <div class="quick-contact-actions ic-56">
-                    <button type="button" class="quick-contact-btn dark" onclick="openWhatsApp('buy_code')">
+                <div class="sp-quick-contact-actions sp-actions-center">
+                    <button type="button" class="sp-quick-contact-btn sp-btn-dark" onclick="openWhatsApp('buy_code')">
                         <i class="fas fa-code"></i> {{ t('Purchase') }} {{ t('Code') }} {{ t('عبر') }} {{ t('واتساب') }}
                     </button>
-                    <button type="button" class="quick-contact-btn email" onclick="openSupportEmail('buy_code')">
+                    <button type="button" class="sp-quick-contact-btn sp-btn-email" onclick="openSupportEmail('buy_code')">
                         <i class="fas fa-file-code"></i> {{ t('Purchase') }} {{ t('Code') }} {{ t('عبر') }} {{ t('Email_2') }}
                     </button>
                 </div>
-                
+
                 <div class="alert alert-info mt-3">
                     <i class="fas fa-info-circle mr-2"></i>
                     <strong>{{ t('للمبالغ') }} {{ t('الكبيرة') }} (+$500):</strong> {{ t('يُرجى') }} {{ t('التواصل') }} {{ t('معنا') }} {{ t('للحصول') }} على {{ t('Details') }} {{ t('Account') }} {{ t('Bank_4') }}
@@ -259,5 +216,3 @@
             </div>
         </div>
     </div>
-
-    

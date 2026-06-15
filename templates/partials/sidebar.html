@@ -58,6 +58,7 @@
 
           {{ _nav(url_for('main.dashboard'), 'fas fa-tachometer-alt', t('Dashboard'), 'main.dashboard') }}
 
+          {# ─────────── 1. المبيعات والعملاء (Sales & CRM) ─────────── #}
           {% set _sale_perm = current_user.is_authenticated and (current_user.has_permission('manage_sales') or current_user.has_permission('manage_customers')) %}
           {{ _sec(t('Sales') ~ ' ' ~ t('والمبيعات'), _sale_perm) }}
 
@@ -81,16 +82,12 @@
             {% endif %}
           {{ _end(_cust) }}
 
-          {% set _inv_perm = current_user.is_authenticated and (current_user.has_permission('manage_products') or current_user.has_permission('manage_purchases') or current_user.has_permission('manage_suppliers') or current_user.has_permission('manage_warehouse')) %}
-          {{ _sec(t('Inventory') ~ ' ' ~ t('والتوريد'), _inv_perm) }}
+          {% set _rep = current_user.is_authenticated and current_user.has_permission('view_reports') %}
+          {{ _nav(url_for('partners.index'), 'fas fa-handshake', t('Partners'), _rep) }}
 
-          {% set _prod = current_user.is_authenticated and current_user.has_permission('manage_products') %}
-          {{ _tree('fas fa-box', t('Products'), 'products', _prod) }}
-            {% if _prod %}
-            <li class="nav-item"><a href="{{ url_for('products.create') }}" class="nav-link"><i class="fas fa-plus-circle nav-icon text-success"></i><p>{{ t('New Product') }}</p></a></li>
-            <li class="nav-item"><a href="{{ url_for('products.index') }}" class="nav-link"><i class="fas fa-list nav-icon"></i><p>{{ t('List') }} {{ t('Products') }}</p></a></li>
-            {% endif %}
-          {{ _end(_prod) }}
+          {# ─────────── 2. المشتريات والتوريد (Procurement) ─────────── #}
+          {% set _pur_perm = current_user.is_authenticated and (current_user.has_permission('manage_purchases') or current_user.has_permission('manage_suppliers')) %}
+          {{ _sec(t('Purchases') ~ ' ' ~ t('والتوريد'), _pur_perm) }}
 
           {% set _pur = current_user.is_authenticated and current_user.has_permission('manage_purchases') %}
           {{ _tree('fas fa-shopping-cart', t('Purchases'), 'purchases', _pur) }}
@@ -108,16 +105,45 @@
             {% endif %}
           {{ _end(_sup) }}
 
-          {% set _fin_perm = current_user.is_authenticated and (current_user.has_permission('manage_payments') or current_user.has_permission('manage_expenses') or current_user.has_permission('manage_payroll') or current_user.has_permission('view_ledger')) %}
-          {{ _sec(t('Finance') ~ ' ' ~ t('والمحاسبة'), _fin_perm) }}
+          {# ─────────── 3. المخزون والمستودعات (Inventory & Warehouse) ─────────── #}
+          {% set _inv_perm = current_user.is_authenticated and (current_user.has_permission('manage_products') or current_user.has_permission('manage_warehouse') or current_user.has_permission('manage_store')) %}
+          {{ _sec(t('Inventory') ~ ' ' ~ t('والمستودعات'), _inv_perm) }}
 
-          {% set _u = current_user.is_authenticated and current_user.has_permission('manage_users') %}
-          {{ _tree('fas fa-users-cog', t('Users'), 'users', _u) }}
-            {% if _u %}
-            <li class="nav-item"><a href="{{ url_for('users.create') }}" class="nav-link"><i class="fas fa-user-plus nav-icon text-success"></i><p>{{ t('User_2') }} {{ t('New') }}</p></a></li>
-            <li class="nav-item"><a href="{{ url_for('users.index') }}" class="nav-link"><i class="fas fa-users nav-icon"></i><p>{{ t('List') }} {{ t('Users') }}</p></a></li>
+          {% set _prod = current_user.is_authenticated and current_user.has_permission('manage_products') %}
+          {{ _tree('fas fa-box', t('Products'), 'products', _prod) }}
+            {% if _prod %}
+            <li class="nav-item"><a href="{{ url_for('products.create') }}" class="nav-link"><i class="fas fa-plus-circle nav-icon text-success"></i><p>{{ t('New Product') }}</p></a></li>
+            <li class="nav-item"><a href="{{ url_for('products.index') }}" class="nav-link"><i class="fas fa-list nav-icon"></i><p>{{ t('List') }} {{ t('Products') }}</p></a></li>
             {% endif %}
-          {{ _end(_u) }}
+          {{ _end(_prod) }}
+
+          {% set _wh = current_user.is_authenticated and current_user.has_permission('manage_warehouse') %}
+          {{ _tree('fas fa-warehouse', t('Warehouses') ~ ' ' ~ t('والمستودعات'), 'warehouse', _wh) }}
+            {% if _wh %}
+            <li class="nav-item"><a href="{{ url_for('warehouse.index') }}" class="nav-link"><i class="fas fa-boxes nav-icon text-info"></i><p>{{ t('Management') }} {{ t('Inventory') }}</p></a></li>
+            <li class="nav-item"><a href="{{ url_for('warehouse.list_warehouses') }}" class="nav-link"><i class="fas fa-building nav-icon text-primary"></i><p>{{ t('Warehouses') }}</p></a></li>
+            {% if current_user.is_admin() %}
+            <li class="nav-item"><a href="{{ url_for('warehouse.create_warehouse') }}" class="nav-link"><i class="fas fa-plus-circle nav-icon text-success"></i><p>{{ t('Add') }} {{ t('Warehouse_2') }}</p></a></li>
+            {% endif %}
+            <li class="nav-item"><a href="{{ url_for('warehouse.movements') }}" class="nav-link"><i class="fas fa-exchange-alt nav-icon text-secondary"></i><p>{{ t('حركات') }} {{ t('Inventory') }}</p></a></li>
+            <li class="nav-item"><a href="{{ url_for('warehouse.low_stock') }}" class="nav-link"><i class="fas fa-exclamation-triangle nav-icon text-warning"></i><p>{{ t('Inventory_2') }} {{ t('Low_2') }}</p></a></li>
+            <li class="nav-item"><a href="{{ url_for('warehouse.out_of_stock') }}" class="nav-link"><i class="fas fa-ban nav-icon text-danger"></i><p>{{ t('نفذ') }} من {{ t('Inventory') }}</p></a></li>
+            {% endif %}
+          {{ _end(_wh) }}
+
+          {% set _sto = current_user.is_authenticated and current_user.has_permission('manage_store') %}
+          {{ _tree('fas fa-store', t('Store') ~ ' ' ~ t('Email_3'), 'store', _sto) }}
+            {% if _sto %}
+            <li class="nav-item"><a href="{{ url_for('store.admin_index') }}" class="nav-link"><i class="fas fa-tachometer-alt nav-icon text-info"></i><p>{{ t('Dashboard_2') }} {{ t('Store') }}</p></a></li>
+            <li class="nav-item"><a href="{{ url_for('store.admin_catalog') }}" class="nav-link"><i class="fas fa-boxes nav-icon text-success"></i><p>{{ t('Products_2') }} {{ t('Store') }}</p></a></li>
+            <li class="nav-item"><a href="{{ url_for('store.admin_transfer') }}" class="nav-link"><i class="fas fa-exchange-alt nav-icon text-warning"></i><p>{{ t('Transfer') }} {{ t('Inventory_2') }}</p></a></li>
+            <li class="nav-item"><a href="{{ url_for('store.admin_settings') }}" class="nav-link"><i class="fas fa-cog nav-icon"></i><p>{{ t('Settings_2') }} {{ t('Store') }}</p></a></li>
+            {% endif %}
+          {{ _end(_sto) }}
+
+          {# ─────────── 4. المالية والمحاسبة (Finance & Accounting) ─────────── #}
+          {% set _fin_perm = current_user.is_authenticated and (current_user.has_permission('manage_payments') or current_user.has_permission('manage_expenses') or current_user.has_permission('view_ledger')) %}
+          {{ _sec(t('Finance') ~ ' ' ~ t('والمحاسبة'), _fin_perm) }}
 
           {% set _pay = current_user.is_authenticated and current_user.has_permission('manage_payments') %}
           {{ _tree('fas fa-money-bill-wave', t('Payments'), 'payments', _pay) }}
@@ -142,15 +168,6 @@
             {% endif %}
           {{ _end(_exp) }}
 
-          {% set _pr = current_user.is_authenticated and current_user.has_permission('manage_payroll') %}
-          {{ _tree('fas fa-users-cog', t('Salaries') ~ ' ' ~ t('وشؤون') ~ ' ' ~ t('Employees'), 'payroll', _pr) }}
-            {% if _pr %}
-            <li class="nav-item"><a href="{{ url_for('payroll.employees_list') }}" class="nav-link"><i class="fas fa-users nav-icon text-info"></i><p>{{ t('Employees') }}</p></a></li>
-            <li class="nav-item"><a href="{{ url_for('payroll.advances') }}" class="nav-link"><i class="fas fa-hand-holding-usd nav-icon text-warning"></i><p>{{ t('Advances') }}</p></a></li>
-            <li class="nav-item"><a href="{{ url_for('payroll.process_payroll') }}" class="nav-link"><i class="fas fa-money-check-alt nav-icon text-success"></i><p>{{ t('صرف') }} {{ t('Salaries') }}</p></a></li>
-            {% endif %}
-          {{ _end(_pr) }}
-
           {% set _led = current_user.is_authenticated and current_user.has_permission('view_ledger') %}
           {{ _tree('fas fa-book', t('دفتر') ~ ' ' ~ t('الأستاذ'), 'ledger', _led) }}
             {% if _led %}
@@ -161,13 +178,22 @@
             {% if current_user.is_admin() %}
             <li class="nav-item"><a href="{{ url_for('ledger.admin_dashboard') }}" class="nav-link"><i class="fas fa-cogs nav-icon"></i><p>{{ t('Dashboard_2') }} {{ t('Control') }} {{ t('الإدارية') }}</p></a></li>
             {% endif %}
-            {% endif %}
           {{ _end(_led) }}
 
-          {% set _rep = current_user.is_authenticated and current_user.has_permission('view_reports') %}
-          {{ _sec(t('Reports') ~ ' ' ~ t('والتقارير'), _rep) }}
+          {# ─────────── 5. الموارد البشرية والرواتب (HR & Payroll) ─────────── #}
+          {% set _pr = current_user.is_authenticated and current_user.has_permission('manage_payroll') %}
+          {{ _sec(t('Human Resources') ~ ' ' ~ t('والرواتب'), _pr) }}
 
-          {{ _nav(url_for('partners.index'), 'fas fa-handshake', t('Partners'), _rep) }}
+          {% if _pr %}
+          {{ _tree('fas fa-users-cog', t('Salaries') ~ ' ' ~ t('وشؤون') ~ ' ' ~ t('Employees'), 'payroll', _pr) }}
+            <li class="nav-item"><a href="{{ url_for('payroll.employees_list') }}" class="nav-link"><i class="fas fa-users nav-icon text-info"></i><p>{{ t('Employees') }}</p></a></li>
+            <li class="nav-item"><a href="{{ url_for('payroll.advances') }}" class="nav-link"><i class="fas fa-hand-holding-usd nav-icon text-warning"></i><p>{{ t('Advances') }}</p></a></li>
+            <li class="nav-item"><a href="{{ url_for('payroll.process_payroll') }}" class="nav-link"><i class="fas fa-money-check-alt nav-icon text-success"></i><p>{{ t('صرف') }} {{ t('Salaries') }}</p></a></li>
+          {{ _end(_pr) }}
+          {% endif %}
+
+          {# ─────────── 6. التقارير (Reports) ─────────── #}
+          {{ _sec(t('Reports') ~ ' ' ~ t('والتقارير'), _rep) }}
 
           {{ _tree('fas fa-chart-bar', t('Reports'), 'reports', _rep) }}
             {% if _rep %}
@@ -184,36 +210,24 @@
             {% endif %}
           {{ _end(_rep) }}
 
-          {% set _mgt_perm = current_user.is_authenticated and (current_user.has_permission('manage_backups') or current_user.has_permission('manage_store')) %}
-          {{ _sec(t('Management_2') ~ ' ' ~ t('والأدوات'), _mgt_perm) }}
+          {# ─────────── 7. الإدارة والنظام (Administration) ─────────── #}
+          {% set _mgt_perm = current_user.is_authenticated and (current_user.has_permission('manage_users') or current_user.has_permission('manage_backups')) %}
+          {{ _sec(t('Management_2') ~ ' ' ~ t('والنظام'), _mgt_perm) }}
+
+          {% set _u = current_user.is_authenticated and current_user.has_permission('manage_users') %}
+          {{ _tree('fas fa-users-cog', t('Users'), 'users', _u) }}
+            {% if _u %}
+            <li class="nav-item"><a href="{{ url_for('users.create') }}" class="nav-link"><i class="fas fa-user-plus nav-icon text-success"></i><p>{{ t('User_2') }} {{ t('New') }}</p></a></li>
+            <li class="nav-item"><a href="{{ url_for('users.index') }}" class="nav-link"><i class="fas fa-users nav-icon"></i><p>{{ t('List') }} {{ t('Users') }}</p></a></li>
+            {% endif %}
+          {{ _end(_u) }}
 
           {% set _bak = current_user.is_authenticated and current_user.has_permission('manage_backups') %}
           {{ _nav(url_for('owner.list_backups'), 'fas fa-database', t('Backups') ~ ' ' ~ t('Backup'), _bak) }}
 
-          {% set _sto = current_user.is_authenticated and current_user.has_permission('manage_store') %}
-          {{ _tree('fas fa-store', t('Store') ~ ' ' ~ t('Email_3'), 'store', _sto) }}
-            {% if _sto %}
-            <li class="nav-item"><a href="{{ url_for('store.admin_index') }}" class="nav-link"><i class="fas fa-tachometer-alt nav-icon text-info"></i><p>{{ t('Dashboard_2') }} {{ t('Store') }}</p></a></li>
-            <li class="nav-item"><a href="{{ url_for('store.admin_catalog') }}" class="nav-link"><i class="fas fa-boxes nav-icon text-success"></i><p>{{ t('Products_2') }} {{ t('Store') }}</p></a></li>
-            <li class="nav-item"><a href="{{ url_for('store.admin_transfer') }}" class="nav-link"><i class="fas fa-exchange-alt nav-icon text-warning"></i><p>{{ t('Transfer') }} {{ t('Inventory_2') }}</p></a></li>
-            <li class="nav-item"><a href="{{ url_for('store.admin_settings') }}" class="nav-link"><i class="fas fa-cog nav-icon"></i><p>{{ t('Settings_2') }} {{ t('Store') }}</p></a></li>
-            {% endif %}
-          {{ _end(_sto) }}
-
-          {% set _wh = current_user.is_authenticated and current_user.has_permission('manage_warehouse') %}
-          {{ _tree('fas fa-warehouse', t('Warehouses') ~ ' ' ~ t('والمستودعات'), 'warehouse', _wh) }}
-            {% if _wh %}
-            <li class="nav-item"><a href="{{ url_for('warehouse.index') }}" class="nav-link"><i class="fas fa-boxes nav-icon text-info"></i><p>{{ t('Management') }} {{ t('Inventory') }}</p></a></li>
-            <li class="nav-item"><a href="{{ url_for('warehouse.list_warehouses') }}" class="nav-link"><i class="fas fa-building nav-icon text-primary"></i><p>{{ t('Warehouses') }}</p></a></li>
-            {% if current_user.is_admin() %}
-            <li class="nav-item"><a href="{{ url_for('warehouse.create_warehouse') }}" class="nav-link"><i class="fas fa-plus-circle nav-icon text-success"></i><p>{{ t('Add') }} {{ t('Warehouse_2') }}</p></a></li>
-            {% endif %}
-            <li class="nav-item"><a href="{{ url_for('warehouse.movements') }}" class="nav-link"><i class="fas fa-exchange-alt nav-icon text-secondary"></i><p>{{ t('حركات') }} {{ t('Inventory') }}</p></a></li>
-            <li class="nav-item"><a href="{{ url_for('warehouse.low_stock') }}" class="nav-link"><i class="fas fa-exclamation-triangle nav-icon text-warning"></i><p>{{ t('Inventory_2') }} {{ t('Low_2') }}</p></a></li>
-            <li class="nav-item"><a href="{{ url_for('warehouse.out_of_stock') }}" class="nav-link"><i class="fas fa-ban nav-icon text-danger"></i><p>{{ t('نفذ') }} من {{ t('Inventory') }}</p></a></li>
-            {% endif %}
-          {{ _end(_wh) }}
-
+          {# ═══════════════════════════════════════════════════════ #}
+          {#  8. الشركة والمالك (Company & Owner)                        #}
+          {# ═══════════════════════════════════════════════════════ #}
           {% set _co_perm = current_user.is_authenticated and (current_user.is_owner or (current_user.role and current_user.role.slug in ['developer','super_admin','manager'])) %}
           {{ _sec(t('Management') ~ ' ' ~ t('Company'), _co_perm) }}
 

@@ -1,101 +1,96 @@
-        
-        <div class="tab-content" id="donation-tab">
-            <div class="payment-card ic-18">
-                <div class="ic-19">❤️</div>
-                <h3 class="ic-20">
+
+        <div class="sp-tab-content" id="donation-tab">
+            <div class="sp-payment-card sp-section-donation">
+                <div class="sp-section-icon-large">❤️</div>
+                <h3 class="sp-donation-title">
                     <i class="fas fa-heart"></i> {{ t('ساهم') }} في {{ t('تطوير') }} {{ t('المشروع') }}
                 </h3>
-                <p class="ic-21">
+                <p class="sp-donation-desc">
                     {{ t('تبرعك') }} {{ t('يساعدنا') }} في {{ t('تحسين') }} {{ t('System') }} {{ t('وإضافة') }} {{ t('ميزات') }} {{ t('New_3') }} {{ t('وتقديم') }} {{ t('خدمات') }} {{ t('أفضل') }} {{ t('للجميع') }}
                 </p>
-                <div class="ic-22">
-                    <div class="ic-23">
-                        <i class="fas fa-code ic-24"></i>
-                        <p class="ic-25">{{ t('تطوير') }} {{ t('ميزات') }} {{ t('New_3') }}</p>
+                <div class="sp-benefits-grid">
+                    <div class="sp-benefit-card">
+                        <i class="fas fa-code sp-benefit-icon"></i>
+                        <p class="sp-benefit-text">{{ t('تطوير') }} {{ t('ميزات') }} {{ t('New_3') }}</p>
                     </div>
-                    <div class="ic-23">
-                        <i class="fas fa-bug ic-24"></i>
-                        <p class="ic-25">{{ t('إصلاح') }} {{ t('الأخطاء') }}</p>
+                    <div class="sp-benefit-card">
+                        <i class="fas fa-bug sp-benefit-icon"></i>
+                        <p class="sp-benefit-text">{{ t('إصلاح') }} {{ t('الأخطاء') }}</p>
                     </div>
-                    <div class="ic-23">
-                        <i class="fas fa-headset ic-24"></i>
-                        <p class="ic-25">{{ t('تحسين') }} {{ t('الدعم') }} {{ t('الفني') }}</p>
+                    <div class="sp-benefit-card">
+                        <i class="fas fa-headset sp-benefit-icon"></i>
+                        <p class="sp-benefit-text">{{ t('تحسين') }} {{ t('الدعم') }} {{ t('الفني') }}</p>
                     </div>
                 </div>
             </div>
 
-            <div class="payment-card ic-11">
-                <h4 class="ic-26">
+            <div class="sp-payment-card sp-section-contact">
+                <h4 class="sp-status-title">
                     <i class="fas fa-life-ring"></i> {{ t('ماذا') }} {{ t('يحدث') }} بعد {{ t('Submit') }} {{ t('التبرع') }} أو {{ t('الطلب_2') }}
                 </h4>
-                <p class="ic-27">
+                <p class="sp-status-text">
                     نحن {{ t('نعطيك') }} {{ t('رسالة') }} {{ t('Status_2') }} {{ t('واضحة') }} عند كل {{ t('خطوة،') }} {{ t('ويمكنك') }} دائماً {{ t('التحول') }} إلى {{ t('التواصل') }} {{ t('المباشر') }} مع {{ t('أزاد') }} {{ t('عبر') }} {{ t('واتساب') }} أو {{ t('Email_2') }} إذا {{ t('رغبت') }} في {{ t('متابعة') }} {{ t('أسرع') }} أو {{ t('ترتيب') }} {{ t('Transfer') }} {{ t('رسمي') }}.
                 </p>
-                <div class="status-grid">
-                    <div class="status-card success">
+                <div class="sp-status-grid">
+                    <div class="sp-status-card success">
                         <h5><i class="fas fa-check-circle"></i> {{ t('نجاح') }}</h5>
                         <p>تم {{ t('Create') }} {{ t('الطلب') }} أو {{ t('Address_2') }} {{ t('Payment_2') }} {{ t('بنجاح') }} {{ t('ويمكنك') }} {{ t('الإكمال') }} {{ t('فوراً') }} أو {{ t('مراسلتنا') }} {{ t('للمتابعة') }}.</p>
                     </div>
-                    <div class="status-card warning">
+                    <div class="sp-status-card warning">
                         <h5><i class="fas fa-hourglass-half"></i> {{ t('قيد') }} {{ t('Review') }}</h5>
                         <p>بعض {{ t('الطرق') }} {{ t('تحتاج') }} {{ t('متابعة') }} {{ t('بشرية') }} أو {{ t('Waiting_2') }} {{ t('Confirm') }} {{ t('البوابة،') }} {{ t('وسنوضح') }} لك ذلك {{ t('Inside') }} {{ t('الرسالة') }}.</p>
                     </div>
-                    <div class="status-card danger">
+                    <div class="sp-status-card danger">
                         <h5><i class="fas fa-times-circle"></i> {{ t('تعذر') }} أو {{ t('فشل') }}</h5>
                         <p>لن {{ t('نتركك') }} {{ t('أمام') }} {{ t('رسالة') }} {{ t('General_4') }} {{ t('فقط،') }} بل {{ t('سنعرض') }} {{ t('واتساب') }} {{ t('وبريد') }} {{ t('أزاد') }} {{ t('كخيارين') }} {{ t('مباشرَين') }} {{ t('لإكمال') }} {{ t('العملية') }}.</p>
                     </div>
-                    <div class="status-card info">
+                    <div class="sp-status-card info">
                         <h5><i class="fas fa-undo-alt"></i> {{ t('استرداد') }} أو {{ t('Reconciliation') }}</h5>
                         <p>أي {{ t('استفسار') }} {{ t('بخصوص') }} {{ t('الاسترداد') }} أو {{ t('Review') }} {{ t('Manual_3') }} يمكن {{ t('ترتيبه') }} {{ t('مباشرة') }} مع {{ t('فريق') }} {{ t('أزاد') }} {{ t('عبر') }} {{ t('القنوات') }} {{ t('الرسمية') }}.</p>
                     </div>
                 </div>
-                <div class="quick-contact-actions">
-                    <button type="button" class="quick-contact-btn whatsapp" onclick="openWhatsApp('donation_help')">
+                <div class="sp-quick-contact-actions">
+                    <button type="button" class="sp-quick-contact-btn sp-btn-whatsapp" onclick="openWhatsApp('donation_help')">
                         <i class="fab fa-whatsapp"></i> {{ t('واتساب') }} {{ t('التبرع') }}
                     </button>
-                    <button type="button" class="quick-contact-btn email" onclick="openSupportEmail('donation_help')">
+                    <button type="button" class="sp-quick-contact-btn sp-btn-email" onclick="openSupportEmail('donation_help')">
                         <i class="fas fa-envelope"></i> {{ t('بريد') }} {{ t('التبرع') }}
                     </button>
                 </div>
             </div>
-            
-            
-            <div class="payment-methods">
-                <div class="payment-card" onclick="selectMethod('crypto', event)">
-                <i class="fab fa-bitcoin payment-icon"></i>
-                <div class="payment-title">{{ t('العملات') }} {{ t('الرقمية') }}</div>
-                <p class="payment-desc">
-                    Bitcoin, Ethereum, USDT, BNB
-                    <br><small class="text-success"><i class="fas fa-shield-alt"></i> {{ t('آمن') }} {{ t('ومجهول') }}</small>
-                </p>
-            </div>
-            
-            <div class="payment-card" onclick="selectMethod('card', event)">
-                <i class="fas fa-credit-card payment-icon"></i>
-                <div class="payment-title">{{ t('البطاقات') }} {{ t('الBank_3ة') }}</div>
-                <p class="payment-desc">
-                    Visa, Mastercard, Amex
-                    <br><small class="text-info"><i class="fas fa-lock"></i> {{ t('تشفير') }} SSL</small>
-                </p>
-            </div>
-            
-            <div class="payment-card" onclick="selectMethod('paypal', event)">
-                <i class="fab fa-paypal payment-icon"></i>
-                <div class="payment-title">PayPal</div>
-                <p class="payment-desc">
-                    {{ t('Payment') }} {{ t('Quick_3') }} {{ t('وآمن') }}
-                    <br><small class="text-primary"><i class="fas fa-check-circle"></i> {{ t('حماية') }} {{ t('المشتري') }}</small>
-                </p>
-            </div>
-            
-            <div class="payment-card" onclick="selectMethod('bank', event)">
-                <i class="fas fa-university payment-icon"></i>
-                <div class="payment-title">{{ t('Transfer') }} {{ t('Bank_3') }}</div>
-                <p class="payment-desc">
-                    {{ t('Transfer_2') }} {{ t('المباشر') }}
-                    <br><small class="text-secondary"><i class="fas fa-building"></i> {{ t('للمبالغ') }} {{ t('الكبيرة') }}</small>
-                </p>
-            </div>
+
+            <div class="sp-payment-methods">
+                <div class="sp-payment-card" onclick="selectMethod('crypto', event)">
+                    <i class="fab fa-bitcoin sp-payment-icon"></i>
+                    <div class="sp-payment-title">{{ t('العملات') }} {{ t('الرقمية') }}</div>
+                    <p class="sp-payment-desc">
+                        Bitcoin, Ethereum, USDT, BNB
+                        <br><small class="text-success"><i class="fas fa-shield-alt"></i> {{ t('آمن') }} {{ t('ومجهول') }}</small>
+                    </p>
+                </div>
+                <div class="sp-payment-card" onclick="selectMethod('card', event)">
+                    <i class="fas fa-credit-card sp-payment-icon"></i>
+                    <div class="sp-payment-title">{{ t('البطاقات') }} {{ t('الBank_3ة') }}</div>
+                    <p class="sp-payment-desc">
+                        Visa, Mastercard, Amex
+                        <br><small class="text-info"><i class="fas fa-lock"></i> {{ t('تشفير') }} SSL</small>
+                    </p>
+                </div>
+                <div class="sp-payment-card" onclick="selectMethod('paypal', event)">
+                    <i class="fab fa-paypal sp-payment-icon"></i>
+                    <div class="sp-payment-title">PayPal</div>
+                    <p class="sp-payment-desc">
+                        {{ t('Payment') }} {{ t('Quick_3') }} {{ t('وآمن') }}
+                        <br><small class="text-primary"><i class="fas fa-check-circle"></i> {{ t('حماية') }} {{ t('المشتري') }}</small>
+                    </p>
+                </div>
+                <div class="sp-payment-card" onclick="selectMethod('bank', event)">
+                    <i class="fas fa-university sp-payment-icon"></i>
+                    <div class="sp-payment-title">{{ t('Transfer') }} {{ t('Bank_3') }}</div>
+                    <p class="sp-payment-desc">
+                        {{ t('Transfer_2') }} {{ t('المباشر') }}
+                        <br><small class="text-secondary"><i class="fas fa-building"></i> {{ t('للمبالغ') }} {{ t('الكبيرة') }}</small>
+                    </p>
+                </div>
             </div>
         </div>
-

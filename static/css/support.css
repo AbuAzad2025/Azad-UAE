@@ -1,0 +1,1020 @@
+/* ============================================================
+   Azadexa — Support / Donation / Purchase Page Styles
+   ============================================================ */
+
+* { font-family: 'Cairo', sans-serif; }
+
+body {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  padding: 16px;
+}
+
+/* ── Container ── */
+.sp-container {
+  max-width: 1160px;
+  margin: 0 auto;
+}
+
+/* ── Hero ── */
+.sp-hero-section {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 20px;
+  padding: 42px 26px 32px;
+  text-align: center;
+  margin-bottom: 24px;
+  box-shadow: 0 18px 44px rgba(31, 41, 55, 0.18);
+  position: relative;
+  overflow: hidden;
+}
+.sp-hero-section::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(102,126,234,0.1) 0%, transparent 70%);
+  animation: sp-pulse 4s ease-in-out infinite;
+}
+@keyframes sp-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+.sp-hero-content { position: relative; z-index: 1; }
+.sp-hero-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: rgba(102,126,234,0.12);
+  color: #4c51bf;
+  font-weight: 800;
+  font-size: 0.95rem;
+  margin-bottom: 16px;
+}
+.sp-hero-title {
+  font-size: 3rem;
+  font-weight: 900;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 12px;
+  line-height: 1.2;
+}
+.sp-hero-subtitle {
+  font-size: 1.16rem;
+  color: #555;
+  margin: 0 auto 24px;
+  max-width: 760px;
+  line-height: 1.9;
+}
+.sp-hero-summary-card {
+  background: rgba(102,126,234,0.08);
+  padding: 18px 20px;
+  border-radius: 18px;
+  margin: 0 auto 22px;
+  border-right: 4px solid #667eea;
+  max-width: 940px;
+  text-align: right;
+}
+.sp-hero-summary-card h4 {
+  color: #667eea;
+  margin-bottom: 14px;
+  font-size: 1.05rem;
+  font-weight: 900;
+}
+.sp-hero-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+.sp-hero-summary-item {
+  background: rgba(255,255,255,0.78);
+  border: 1px solid rgba(102,126,234,0.10);
+  border-radius: 14px;
+  padding: 12px 14px;
+  text-align: right;
+  font-weight: 700;
+  color: #374151;
+}
+.sp-hero-summary-item i {
+  color: #22c55e;
+  margin-left: 8px;
+}
+.sp-hero-icon {
+  font-size: 5rem;
+  color: #667eea;
+}
+
+/* ── Quick Contact Strip ── */
+.sp-strip {
+  background: linear-gradient(135deg, rgba(15,23,42,0.96) 0%, rgba(88,28,135,0.94) 100%);
+  color: white;
+  border-radius: 22px;
+  padding: 22px;
+  margin: 0 0 22px;
+  box-shadow: 0 16px 34px rgba(15,23,42,0.20);
+  text-align: right;
+}
+.sp-strip p { margin-bottom: 0; }
+.sp-strip-title { margin: 0 0 10px; font-weight: 900; }
+.sp-strip-text {
+  margin: 0;
+  color: rgba(255,255,255,0.88);
+  line-height: 1.9;
+}
+.sp-strip-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+  margin-top: 16px;
+}
+.sp-strip-card {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 18px;
+  padding: 16px;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+.sp-strip-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 14px 26px rgba(15,23,42,0.18);
+  border-color: rgba(255,255,255,0.28);
+}
+.sp-strip-card h5 {
+  margin: 12px 0 8px;
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+.sp-strip-card p {
+  margin: 0;
+  color: rgba(255,255,255,0.85);
+  line-height: 1.8;
+  font-size: 0.95rem;
+}
+.sp-card-icon-yellow { font-size: 1.6rem; color: #facc15; }
+.sp-card-icon-blue   { font-size: 1.6rem; color: #60a5fa; }
+.sp-card-icon-pink   { font-size: 1.6rem; color: #fb7185; }
+
+/* ── Quick Contact Actions ── */
+.sp-quick-contact-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+.sp-quick-contact-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: none;
+  border-radius: 999px;
+  padding: 13px 22px;
+  font-weight: 800;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+  min-height: 46px;
+  min-width: 158px;
+  box-shadow: 0 10px 22px rgba(15,23,42,0.14);
+}
+.sp-quick-contact-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 26px rgba(15,23,42,0.18);
+  opacity: 0.96;
+  text-decoration: none;
+}
+.sp-btn-whatsapp { background: #25D366; color: white; }
+.sp-btn-email    { background: #667eea; color: white; }
+.sp-btn-dark     { background: #111827; color: white; }
+
+/* ── Tabs ── */
+.sp-tab-section-label {
+  margin: 4px 0 14px;
+  color: #64748b;
+  font-size: 0.98rem;
+  font-weight: 700;
+}
+.sp-tab-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+.sp-tab-btn {
+  padding: 14px 28px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  border: 3px solid #e0e0e0;
+  border-radius: 18px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.3s;
+  min-width: 220px;
+}
+.sp-tab-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+.sp-tab-btn.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-color: #667eea;
+}
+.sp-tab-btn-sub {
+  display: block;
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+.sp-tab-content { display: none; }
+.sp-tab-content.active { display: block; }
+
+/* ── Payment Badge Row ── */
+.sp-payment-badge-row {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+.sp-crypto-badge {
+  display: inline-block;
+  padding: 9px 16px;
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+  border-radius: 30px;
+  font-weight: 700;
+  margin: 4px;
+  animation: sp-float 3s ease-in-out infinite;
+  font-size: 0.92rem;
+}
+@keyframes sp-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+/* ── Package Grid ── */
+.sp-package-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+.sp-package-card {
+  background: white;
+  border-radius: 15px;
+  padding: 30px;
+  text-align: center;
+  transition: all 0.3s;
+  cursor: pointer;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+  border: 3px solid transparent;
+}
+.sp-package-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+  border-color: #667eea;
+}
+.sp-package-card.active {
+  border-color: #28a745;
+  background: linear-gradient(135deg, rgba(40,167,69,0.05) 0%, rgba(32,201,151,0.05) 100%);
+  position: relative;
+}
+.sp-package-card.active::after {
+  content: '✓ {{ t('محدد') }}';
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: #28a745;
+  color: white;
+  padding: 5px 15px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+.sp-package-name {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #667eea;
+  margin-bottom: 15px;
+}
+.sp-package-price {
+  font-size: 2.5rem;
+  font-weight: 900;
+  color: #333;
+  margin-bottom: 20px;
+}
+.sp-package-features {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 20px 0;
+  text-align: right;
+}
+.sp-package-features li {
+  padding: 8px 0;
+  color: #666;
+  border-bottom: 1px solid #f0f0f0;
+}
+.sp-package-features li:last-child { border-bottom: none; }
+.sp-package-features i { color: #28a745; margin-left: 8px; }
+
+.sp-full-width { grid-column: 1 / -1; }
+.sp-hidden { display: none; }
+
+.sp-section-title {
+  text-align: center;
+  color: #667eea;
+  margin-bottom: 30px;
+}
+.sp-donation-title {
+  color: #ff6b6b;
+  margin-bottom: 20px;
+  font-size: 2rem;
+}
+.sp-donation-desc {
+  font-size: 1.2rem;
+  color: #666;
+  margin-bottom: 20px;
+  line-height: 1.8;
+}
+.sp-contact-title {
+  color: #111827;
+  font-weight: 900;
+  margin-bottom: 10px;
+}
+.sp-contact-desc {
+  color: #6b7280;
+  margin-bottom: 18px;
+  line-height: 1.9;
+}
+
+/* ── Donation Benefits ── */
+.sp-benefits-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+  margin-top: 25px;
+}
+.sp-benefit-card {
+  background: white;
+  padding: 15px;
+  border-radius: 10px;
+  border-right: 4px solid #28a745;
+}
+.sp-benefit-icon { color: #667eea; font-size: 1.5rem; }
+.sp-benefit-text { margin: 10px 0 0 0; color: #666; }
+
+/* ── Status Grid ── */
+.sp-status-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+  margin-top: 25px;
+}
+.sp-status-card {
+  background: white;
+  border-radius: 16px;
+  padding: 18px;
+  box-shadow: 0 10px 22px rgba(15,23,42,0.08);
+  border-top: 4px solid #667eea;
+  text-align: right;
+}
+.sp-status-card h5 {
+  margin-bottom: 8px;
+  font-size: 1rem;
+  font-weight: 800;
+  color: #1f2937;
+}
+.sp-status-card p {
+  margin: 0;
+  color: #6b7280;
+  line-height: 1.8;
+  font-size: 0.95rem;
+}
+.sp-status-card.success { border-top-color: #28a745; }
+.sp-status-card.warning { border-top-color: #f59e0b; }
+.sp-status-card.danger  { border-top-color: #ef4444; }
+.sp-status-card.info    { border-top-color: #0ea5e9; }
+.sp-status-title { font-weight: 900; color: #111827; margin-bottom: 12px; }
+.sp-status-text  { color: #6b7280; line-height: 1.9; margin-bottom: 0; }
+
+/* ── Payment Methods ── */
+.sp-payment-methods {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+.sp-payment-card {
+  background: white;
+  border-radius: 15px;
+  padding: 30px;
+  text-align: center;
+  transition: all 0.3s;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(15,23,42,0.08);
+  border: 3px solid transparent;
+  position: relative;
+  overflow: hidden;
+}
+.sp-payment-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: linear-gradient(90deg, #667eea, #764ba2);
+}
+.sp-payment-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+  border-color: #667eea;
+}
+.sp-payment-card.active {
+  border-color: #28a745;
+  background: linear-gradient(135deg, rgba(102,126,234,0.05) 0%, rgba(118,75,162,0.05) 100%);
+  position: relative;
+}
+.sp-payment-card.active::after {
+  content: '✓';
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: #28a745;
+  color: white;
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: 900;
+}
+.sp-payment-icon {
+  font-size: 4rem;
+  margin-bottom: 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.sp-payment-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+  color: #333;
+}
+.sp-payment-desc { color: #666; font-size: 0.95rem; }
+.sp-section-icon-large { font-size: 3rem; margin-bottom: 15px; }
+
+/* ── Payment Header Cards ── */
+.sp-payment-header {
+  margin-bottom: 30px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+}
+.sp-payment-header-title { margin: 0; font-size: 1.8rem; }
+.sp-payment-header-sub { margin: 10px 0 0 0; opacity: 0.9; }
+
+/* ── Section Cards (after .sp-payment-card for cursor override) ── */
+.sp-section-purchase {
+  max-width: 1000px;
+  margin: 0 auto 30px;
+  cursor: default;
+}
+.sp-section-donation {
+  max-width: 900px;
+  margin: 0 auto 30px;
+  text-align: center;
+  cursor: default;
+  background: linear-gradient(135deg, rgba(255,107,107,0.1) 0%, rgba(238,90,36,0.1) 100%);
+  border: 2px solid #ff6b6b;
+}
+.sp-section-contact {
+  max-width: 1000px;
+  margin: 0 auto 30px;
+  text-align: right;
+  cursor: default;
+}
+
+/* ── Payment Method Banners ── */
+.sp-banner-crypto {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  padding: 25px;
+  border-radius: 15px;
+  margin-bottom: 30px;
+  color: white;
+  text-align: center;
+}
+.sp-banner-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 25px;
+  border-radius: 15px;
+  margin-bottom: 30px;
+  color: white;
+  text-align: center;
+}
+.sp-banner-paypal {
+  background: linear-gradient(135deg, #0070ba 0%, #1546a0 100%);
+  padding: 25px;
+  border-radius: 15px;
+  margin-bottom: 30px;
+  color: white;
+  text-align: center;
+}
+.sp-banner-bank {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  padding: 25px;
+  border-radius: 15px;
+  margin-bottom: 30px;
+  color: white;
+  text-align: center;
+}
+
+/* ── Alert Borders ── */
+.sp-alert-border-success { border-right: 4px solid #28a745; }
+.sp-alert-border-info    { border-right: 4px solid #17a2b8; }
+.sp-alert-border-paypal  { border-right: 4px solid #0070ba; }
+.sp-alert-border-warning { border-right: 4px solid #ffc107; }
+
+/* ── Text Colors ── */
+.sp-text-success { color: #28a745; }
+.sp-text-primary { color: #667eea; }
+.sp-text-warning { color: #f5a623; }
+.sp-text-muted   { font-size: 1.1rem; color: #666; }
+
+/* ── Form Elements ── */
+.sp-donation-form {
+  background: white;
+  border-radius: 15px;
+  padding: 40px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+  display: none;
+}
+.sp-donation-form.active {
+  display: block;
+  animation: sp-slideIn 0.5s ease;
+}
+@keyframes sp-slideIn {
+  from { opacity: 0; transform: translateY(30px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.sp-amount-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 15px;
+  margin-bottom: 30px;
+}
+.sp-amount-btn {
+  padding: 15px;
+  border: 2px solid #dee2e6;
+  border-radius: 10px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-weight: 700;
+  font-size: 1.1rem;
+  position: relative;
+  overflow: hidden;
+}
+.sp-amount-btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(102,126,234,0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+.sp-amount-btn:hover {
+  border-color: #667eea;
+  background: rgba(102,126,234,0.05);
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+.sp-amount-btn:hover::before { width: 300px; height: 300px; }
+.sp-amount-btn.active {
+  border-color: #28a745;
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+  transform: scale(1.05);
+  box-shadow: 0 5px 20px rgba(40,167,69,0.3);
+}
+.sp-amount-btn.active::after {
+  content: '✓';
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: white;
+  color: #28a745;
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  font-weight: 900;
+}
+.sp-amount-btn-value { font-size: 1.3rem; font-weight: 900; }
+.sp-amount-btn-label { opacity: 0.7; }
+.sp-form-label {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #333;
+}
+.sp-input-amount {
+  font-size: 1.1rem;
+  padding: 15px;
+  border: 2px solid #dee2e6;
+}
+.sp-crypto-color { color: #f7931a; }
+.sp-select-crypto {
+  font-size: 1.05rem;
+  padding: 15px;
+  border: 2px solid #dee2e6;
+}
+.sp-btn-payment {
+  font-size: 1.2rem;
+  padding: 18px;
+  margin-top: 25px;
+}
+.sp-card-label { font-weight: 700; color: #333; }
+.sp-input-card {
+  font-size: 1.1rem;
+  padding: 15px;
+  border: 2px solid #dee2e6;
+  letter-spacing: 2px;
+}
+.sp-input-cvv {
+  font-size: 1.05rem;
+  padding: 15px;
+  border: 2px solid #dee2e6;
+  text-align: center;
+}
+.sp-card-logos {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.sp-card-logo-img { height: 30px; }
+.sp-btn-lg {
+  font-size: 1.2rem;
+  padding: 18px 40px;
+  margin: 10px;
+}
+.sp-actions-center {
+  justify-content: center;
+  margin-top: 16px;
+}
+
+/* ── Crypto Info ── */
+.sp-crypto-info {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 30px;
+  border-radius: 15px;
+  margin-top: 30px;
+}
+.sp-wallet-address {
+  background: rgba(255,255,255,0.2);
+  padding: 15px;
+  border-radius: 10px;
+  word-break: break-all;
+  font-family: monospace;
+  font-size: 0.9rem;
+  margin: 10px 0;
+  position: relative;
+}
+.sp-copy-btn {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255,255,255,0.3);
+  border: none;
+  color: white;
+  padding: 8px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.sp-copy-btn:hover { background: rgba(255,255,255,0.5); }
+.sp-qr-code {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  display: inline-block;
+  margin: 20px 0;
+}
+.sp-btn-donate {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  color: white;
+  padding: 15px 40px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+.sp-btn-donate:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+}
+.sp-btn-donate:active {
+  transform: translateY(0);
+  box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+}
+.sp-btn-icon { font-size: 1.5rem; }
+.sp-btn-paypal {
+  background: #0070ba;
+  color: white;
+  font-size: 1.3rem;
+  padding: 20px 50px;
+  border-radius: 50px;
+  border: none;
+  font-weight: 700;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+  transition: all 0.3s;
+}
+.sp-btn-whatsapp-lg {
+  background: #25D366;
+  color: white;
+  font-size: 1.2rem;
+  padding: 18px 40px;
+  border-radius: 50px;
+  font-weight: 700;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+/* ── Misc ── */
+.sp-form-control:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 0.2rem rgba(102,126,234,0.25);
+}
+.sp-features-list {
+  text-align: right;
+  margin: 30px 0;
+}
+.sp-feature-item {
+  padding: 15px;
+  margin: 10px 0;
+  background: rgba(255,255,255,0.05);
+  border-radius: 10px;
+  border-right: 4px solid #28a745;
+}
+.sp-feature-item i {
+  margin-left: 10px;
+  color: #28a745;
+}
+.sp-security-badge {
+  display: inline-block;
+  padding: 8px 15px;
+  background: rgba(40,167,69,0.1);
+  color: #28a745;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin: 5px;
+}
+.sp-login-link {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  background: white;
+  padding: 10px 20px;
+  border-radius: 30px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+  text-decoration: none;
+  color: #667eea;
+  font-weight: 700;
+  transition: all 0.3s;
+  z-index: 1000;
+}
+.sp-login-link:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+  color: #764ba2;
+  text-decoration: none;
+}
+
+/* ── Progress Steps ── */
+.sp-progress-steps {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 30px 0;
+  padding: 20px;
+  background: rgba(255,255,255,0.95);
+  border-radius: 15px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+.sp-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  flex: 1;
+  max-width: 200px;
+}
+.sp-step::after {
+  content: '';
+  position: absolute;
+  top: 20px;
+  left: 60%;
+  width: 100%;
+  height: 3px;
+  background: #e0e0e0;
+  z-index: -1;
+}
+.sp-step:last-child::after { display: none; }
+.sp-step-number {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #e0e0e0;
+  color: #999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  margin-bottom: 10px;
+  transition: all 0.3s;
+}
+.sp-step.active .sp-step-number {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  transform: scale(1.2);
+  box-shadow: 0 5px 15px rgba(102,126,234,0.4);
+}
+.sp-step.completed .sp-step-number {
+  background: #28a745;
+  color: white;
+}
+.sp-step.completed .sp-step-number::before {
+  content: '✓';
+  font-size: 1.2rem;
+}
+.sp-step-label {
+  font-size: 0.85rem;
+  color: #666;
+  text-align: center;
+}
+.sp-step.active .sp-step-label {
+  color: #667eea;
+  font-weight: 700;
+}
+
+/* ── Footer ── */
+.sp-footer {
+  background: rgba(255,255,255,0.95);
+  padding: 40px 20px;
+  border-radius: 20px;
+  margin-top: 50px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+}
+.sp-footer-column-icon { font-size: 3rem; color: #667eea; margin-bottom: 15px; }
+.sp-footer-column-title { color: #333; font-weight: 700; }
+.sp-footer-column-text { color: #666; }
+.sp-footer-divider { border-color: #dee2e6; margin: 30px 0; }
+.sp-footer-icon-wrap { margin-bottom: 20px; }
+.sp-footer-icon {
+  margin: 5px;
+  display: inline-block;
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  line-height: 45px;
+  text-decoration: none;
+  transition: all 0.3s;
+  text-align: center;
+  color: white;
+}
+.sp-footer-icon-wa { background: #25D366; }
+.sp-footer-icon-email { background: #667eea; }
+.sp-footer-icon-web { background: #333; }
+.sp-footer-icon:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+.sp-footer-text { color: #666; margin: 15px 0; }
+.sp-footer-heart { color: #ff6b6b; }
+.sp-footer-copyright { color: #999; font-size: 0.9rem; margin: 0; }
+
+/* ── JS-generated Status Box ── */
+.sp-status-box {
+  background: #f8fafc;
+  padding: 16px;
+  border-radius: 14px;
+  margin: 18px 0;
+  text-align: right;
+}
+.sp-status-box-label { margin: 0 0 8px; }
+.sp-status-box-value { margin: 0; }
+.sp-status-details { text-align: right; color: #6b7280; line-height: 1.8; }
+.sp-status-icon-success { color: #16a34a; }
+.sp-status-icon-warning { color: #d97706; }
+.sp-status-icon-info    { color: #2563eb; }
+
+/* ── JS-generated Modal / Result Styles ── */
+.sp-result-center { text-align: center; }
+.sp-result-title { font-size: 1.1rem; margin-bottom: 15px; }
+.sp-result-box {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 10px;
+  margin: 20px 0;
+}
+.sp-result-address {
+  word-break: break-all;
+  font-family: monospace;
+  background: white;
+  padding: 12px;
+  border-radius: 8px;
+}
+.sp-result-hint { color: #667eea; font-size: 0.95rem; }
+.sp-result-label { color: #28a745; font-size: 0.9rem; }
+.sp-result-amount { font-size: 1.2rem; margin: 20px 0; }
+.sp-result-contact { font-size: 1.2rem; margin: 20px 0; }
+.sp-result-wallet {
+  word-break: break-all;
+  font-family: monospace;
+  font-size: 0.85rem;
+}
+.sp-result-actions { margin-top: 14px; }
+.sp-result-paypal-icon { color: #0070ba; }
+.sp-result-confirmed { color: #28a745; font-size: 0.95rem; }
+.sp-result-cta { font-size: 1.2rem; color: #667eea; font-weight: 900; }
+.sp-result-mono {
+  word-break: break-all;
+  font-family: monospace;
+  background: white;
+  padding: 10px;
+  border-radius: 5px;
+}
+.sp-result-highlight { color: #28a745; font-size: 0.95rem; }
+.sp-result-rtl { text-align: right; }
+.sp-result-bg {
+  background: #f8fafc;
+  padding: 16px;
+  border-radius: 14px;
+  margin-top: 16px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  body { padding: 12px; }
+  .sp-hero-section {
+    padding: 28px 16px 22px;
+    border-radius: 18px;
+  }
+  .sp-hero-title { font-size: 2.1rem; }
+  .sp-hero-subtitle { font-size: 1rem; margin-bottom: 18px; }
+  .sp-hero-summary-card,
+  .sp-strip,
+  .sp-payment-card { padding: 16px; }
+  .sp-hero-summary-grid,
+  .sp-strip-grid,
+  .sp-status-grid { grid-template-columns: 1fr; }
+  .sp-tab-buttons { gap: 10px; }
+  .sp-tab-btn {
+    width: 100%;
+    min-width: 0;
+    border-radius: 16px;
+    padding: 13px 18px;
+  }
+  .sp-quick-contact-actions { flex-direction: column; }
+  .sp-quick-contact-btn { width: 100%; }
+  .sp-login-link {
+    position: static;
+    display: inline-flex;
+    margin-bottom: 14px;
+  }
+  .sp-progress-steps { gap: 10px; }
+  .sp-step { max-width: none; }
+  .sp-step::after { display: none; }
+}
+
+@media (max-width: 480px) {
+  .sp-hero-title { font-size: 1.8rem; }
+  .sp-hero-kicker { font-size: 0.85rem; padding: 8px 12px; }
+  .sp-crypto-badge {
+    width: calc(50% - 8px);
+    margin: 0;
+    text-align: center;
+  }
+  .sp-payment-badge-row { gap: 10px; }
+}

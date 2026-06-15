@@ -641,7 +641,7 @@
         
         <div class="col-lg-4">
           <div class="card card-widget sticky-top ic-4">
-            <div class="card-header bg-gradient-primary">
+            <div class="card-header bg-primary">
               <h3 class="card-title"><i class="fas fa-desktop"></i> معاينة حية</h3>
             </div>
             <div class="card-body text-center" id="live-preview">
@@ -735,81 +735,6 @@
   </div>
 </section>
 
-<style>
-  :root {
-    --header-color: {{ settings.header_color or '#667eea' }};
-    --accent-color: {{ settings.accent_color or '#764ba2' }};
-  }
-  
-  .invoice-preview {
-    transition: all 0.3s ease;
-  }
-  
-  .sticky-top {
-    position: sticky !important;
-  }
-
-  .invoice-settings-form .form-control,
-  .invoice-settings-form textarea.form-control,
-  .invoice-settings-form select.form-control {
-    height: auto !important;
-    min-height: 56px;
-    padding: 0.95rem 1.35rem;
-    font-size: 0.95rem;
-    border-radius: 10px;
-    line-height: 1.7;
-  }
-
-  .invoice-settings-form textarea.form-control {
-    text-align: right;
-  }
-
-  .invoice-settings-form textarea.form-control::placeholder {
-    text-align: right;
-  }
-
-  .invoice-settings-form select.form-control {
-    text-align-last: center;
-    padding-inline-start: 2.2rem;
-    padding-inline-end: 2.2rem;
-    -webkit-appearance: none;appearance: none;
-    
-    background-color: #fff;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23647894' d='M6 8a1 1 0 0 1-.707-.293l-5-5a1 1 0 0 1 1.414-1.414L6 5.586 10.293 1.293a1 1 0 0 1 1.414 1.414l-5 5A1 1 0 0 1 6 8'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: left 0.8rem center;
-    background-size: 12px;
-  }
-
-  .invoice-settings-form select.form-control option {
-    text-align: center;
-    padding: 0.75rem 1rem;
-  }
-
-  .invoice-settings-form .form-control::placeholder {
-    color: #64748b;
-    opacity: 0.85;
-    text-align: center;
-  }
-
-    /* D6: externalized inline styles */
-    .ic-1 { height: 45px; }
-    .ic-2 { max-height: 60px; border: 1px solid #ddd; padding: 5px; background: white; }
-    .ic-3 { max-height: 50px; opacity: 0.3; border: 1px dashed #ffc107; padding: 5px; }
-    .ic-4 { top: 70px; }
-    .ic-5 { background: white; border: 2px solid #ddd; border-radius: 8px; min-height: 400px; }
-    .ic-6 { border-bottom: 3px solid var(--header-color, #667eea); padding-bottom: 15px; margin-bottom: 15px; }
-    .ic-7 { height: 50px; margin-bottom: 10px; }
-    .ic-8 { color: var(--header-color, #667eea); margin: 0; }
-    .ic-9 { font-size: 12px; color: #666; margin: 5px 0; }
-    .ic-10 { font-size: 11px; color: #999; }
-    .ic-11 { text-align: right; font-size: 11px; color: #333; }
-    .ic-12 { font-size: 11px; }
-    .ic-13 { background: var(--accent-color, #764ba2); color: white; }
-    .ic-14 { font-size: 10px; color: #999; }
-    .ic-15 { border-top: 1px solid #ddd; padding-top: 10px; font-size: 10px; color: #666; }
-  </style>
-
 <script>
 // Live preview update
 $(document).ready(function() {
@@ -886,4 +811,6 @@ function resetToDefaults() {
 </script>
 
 {% endblock %}
+
+
 

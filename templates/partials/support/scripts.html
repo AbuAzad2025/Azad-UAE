@@ -1,910 +1,139 @@
-    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.min.js" integrity="sha384-UG8ao2jwOWB7/oDdObZc6ItJmwUkR/PfMyt9Qs5AwX7PsnYn1CRKCTWyncPTWvaS" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-Fy6S3B9q64WdZWQUiU+q4/2Lc9npb8tCaSX9FK7E8HnRr0Jz8D6OP9dO5Vg3Q9ct" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11" integrity="sha384-nLoOnA/BDh8A/jxqtckg4DumuCGOBYUnNJLZdQz/zfYNp3wcjGSoWTAzgko06G/2" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js" integrity="sha384-3zSEDfvllQohrq0PHL1fOXJuC/jSOO34H46t6UQfobFOmxE5BpjjaIJY5F2/bMnU" crossorigin="anonymous"></script>
-    
-    <script>
-        let selectedAmount = 0;
-        let selectedMethod = '';
-        let selectedCrypto = 'btc';
-        let selectedPackage = '';
-        let currentTab = 'purchase';
-        const supportWhatsapp = "{{ developer_whatsapp_link }}";
-        const supportWhatsappDisplay = "{{ developer_whatsapp or config.DEVELOPER_WHATSAPP or '+972562150193' }}";
-        const supportEmail = "{{ developer_email or config.DEVELOPER_EMAIL }}";
-        const supportBrand = "{{ developer_name_ar or developer_name or 'Azad Systems' }}";
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.min.js" integrity="sha384-UG8ao2jwOWB7/oDdObZc6ItJmwUkR/PfMyt9Qs5AwX7PsnYn1CRKCTWyncPTWvaS" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-Fy6S3B9q64WdZWQUiU+q4/2Lc9npb8tCaSX9FK7E8HnRr0Jz8D6OP9dO5Vg3Q9ct" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11" integrity="sha384-nLoOnA/BDh8A/jxqtckg4DumuCGOBYUnNJLZdQz/zfYNp3wcjGSoWTAzgko06G/2" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js" integrity="sha384-3zSEDfvllQohrq0PHL1fOXJuC/jSOO34H46t6UQfobFOmxE5BpjjaIJY5F2/bMnU" crossorigin="anonymous"></script>
 
-        function buildSupportMessage(kind, amountOverride = null, recordId = '') {
-            const amount = amountOverride || selectedAmount || document.getElementById('customAmount')?.value || document.getElementById('cardAmount')?.value || '';
-            const packageLabel = selectedPackage || 'غير {{ t('محددة') }} بعد';
-            const orderRef = recordId ? ` {{ t('رقم') }} {{ t('المرجع') }}: #${recordId}.` : '';
-
-            switch (kind) {
-                case 'buy_code':
-                    return `{{ t('مرحباً') }} ${supportBrand}، {{ t('أريد') }} {{ t('Purchase') }} {{ t('Code') }} {{ t('المصدري') }} أو {{ t('تنفيذ') }} {{ t('تخصيص') }} {{ t('Specific_2') }} {{ t('للنظام') }}.${orderRef}`;
-                case 'donation_help':
-                    return `{{ t('مرحباً') }} ${supportBrand}، {{ t('أريد') }} {{ t('التبرع') }} أو {{ t('رعاية') }} {{ t('تطوير') }} {{ t('ميزة') }} في {{ t('System') }}. {{ t('Amount') }} {{ t('Expected') }}: ${amount || '{{ t('سأحدده') }} {{ t('معكم') }}'} {{ t('Dollar') }}.${orderRef}`;
-                case 'payment_help':
-                    return `{{ t('مرحباً') }} ${supportBrand}، {{ t('أحتاج') }} {{ t('مساعدة') }} في {{ t('إتمام') }} ${currentTab === 'purchase' ? '{{ t('Purchase') }} {{ t('System') }}' : '{{ t('التبرع') }}'}.${orderRef}`;
-                case 'refund_help':
-                    return `{{ t('مرحباً') }} ${supportBrand}، {{ t('أريد') }} {{ t('الاستفسار') }} عن {{ t('Status_2') }} {{ t('Payment') }} أو {{ t('استرداد') }}.${orderRef}`;
-                case 'buy_system':
-                default:
-                    return `{{ t('مرحباً') }} ${supportBrand}، {{ t('أريد') }} {{ t('Purchase') }} {{ t('System') }}${currentTab === 'purchase' ? ` {{ t('والباقـة') }} {{ t('الحالية') }}: ${packageLabel}` : ''}. {{ t('Amount') }} {{ t('Expected') }}: ${amount || '{{ t('سأحدده') }} {{ t('معكم') }}'} {{ t('Dollar') }}.${orderRef}`;
-            }
-        }
-
-        function buildSupportEmail(kind, amountOverride = null, recordId = '') {
-            const message = buildSupportMessage(kind, amountOverride, recordId);
-            const subjectMap = {
-                buy_system: '{{ t('طلب') }} {{ t('Purchase') }} {{ t('System') }}',
-                buy_code: '{{ t('طلب') }} {{ t('Purchase') }} {{ t('Code') }} أو {{ t('تخصيص') }}',
-                donation_help: '{{ t('استفسار') }} {{ t('تبرع') }} أو {{ t('رعاية') }}',
-                payment_help: '{{ t('مساعدة') }} في {{ t('إتمام') }} {{ t('Payment_2') }}',
-                refund_help: '{{ t('استفسار') }} {{ t('استرداد') }} أو {{ t('Status_2') }} {{ t('Payment') }}'
-            };
-            const subject = `${subjectMap[kind] || '{{ t('استفسار') }}'} - ${supportBrand}`;
-            const body = `${message}\n\n{{ t('Data_2') }} {{ t('التواصل') }}:\n{{ t('واتساب') }}: ${supportWhatsappDisplay}\n{{ t('Email_2') }}: ${supportEmail}`;
-            return { subject, body };
-        }
-
-        function openWhatsApp(kind, amountOverride = null, recordId = '') {
-            const message = buildSupportMessage(kind, amountOverride, recordId);
-            window.open(`https://wa.me/${supportWhatsapp}?text=${encodeURIComponent(message)}`, '_blank');
-        }
-
-        function openSupportEmail(kind, amountOverride = null, recordId = '') {
-            const payload = buildSupportEmail(kind, amountOverride, recordId);
-            window.location.href = `mailto:${supportEmail}?subject=${encodeURIComponent(payload.subject)}&body=${encodeURIComponent(payload.body)}`;
-        }
-
-        function buildSupportStatusHtml(recordId, paymentAmount, label) {
-            return `
-                <div class="ic-57">
-                    <p class="ic-58"><strong>{{ t('Status') }} {{ t('الحالية') }}:</strong> ${label}</p>
-                    <p class="ic-58"><strong>{{ t('المرجع') }}:</strong> #${recordId || '—'}</p>
-                    <p class="ic-59"><strong>{{ t('Amount') }}:</strong> $${paymentAmount || '—'}</p>
-                </div>
-                <div class="ic-60">
-                    <div><i class="fas fa-check-circle ic-61"></i> عند {{ t('النجاح') }} {{ t('ستصلك') }} {{ t('Details') }} {{ t('واضحة') }} أو {{ t('Address_2') }} {{ t('Payment') }} {{ t('مباشر') }}.</div>
-                    <div><i class="fas fa-hourglass-half ic-62"></i> عند {{ t('Review') }} {{ t('Manual_3') }} {{ t('يمكنك') }} {{ t('المتابعة') }} {{ t('فوراً') }} مع {{ t('أزاد') }}.</div>
-                    <div><i class="fas fa-undo-alt ic-63"></i> {{ t('لأي') }} {{ t('استرداد') }} أو {{ t('Reconciliation') }} {{ t('استخدم') }} {{ t('واتساب') }} أو {{ t('Email_2') }} {{ t('الرسمي') }}.</div>
-                </div>
-            `;
-        }
-
-        function escapeHtml(value) {
-            const div = document.createElement('div');
-            div.textContent = value || '';
-            return div.innerHTML;
-        }
-
-        function showSupportAssistanceModal(title, introHtml, kind, amountOverride = null, recordId = '') {
-            Swal.fire({
-                icon: 'info',
-                title,
-                html: `
-                    <div class="ic-64">
-                        ${introHtml}
-                        <div class="ic-65">
-                            <p class="ic-66"><strong>{{ t('التواصل') }} {{ t('الرسمي') }} مع {{ t('أزاد') }}:</strong></p>
-                            <p class="ic-67"><i class="fab fa-whatsapp ic-68"></i> ${supportWhatsappDisplay}</p>
-                            <p class="ic-59"><i class="fas fa-envelope ic-69"></i> ${supportEmail}</p>
-                        </div>
-                    </div>
-                `,
-                confirmButtonText: '{{ t('فتح') }} {{ t('واتساب') }} {{ t('أزاد') }}',
-                confirmButtonColor: '#25D366',
-                showDenyButton: true,
-                denyButtonText: '{{ t('Submit') }} {{ t('بريد') }}',
-                showCancelButton: true,
-                cancelButtonText: '{{ t('Close') }}'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    openWhatsApp(kind, amountOverride, recordId);
-                } else if (result.isDenied) {
-                    openSupportEmail(kind, amountOverride, recordId);
-                }
-            });
-        }
-        
-        // Check URL parameters on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const tabParam = urlParams.get('tab');
-            
-            if (tabParam === 'donation') {
-                // Switch to donation tab
-                document.querySelectorAll('.tab-btn').forEach(btn => {
-                    btn.classList.remove('active');
-                });
-                document.querySelectorAll('.tab-btn')[1].classList.add('active');
-                
-                document.querySelectorAll('.tab-content').forEach(content => {
-                    content.classList.remove('active');
-                });
-                document.getElementById('donation-tab').classList.add('active');
-                
-                // Update hero icon
-                const heroIcon = document.querySelector('.hero-section .mb-4 i');
-                heroIcon.className = 'fas fa-heart';
-                heroIcon.style.color = '#e74c3c';
-                
-                currentTab = 'donation';
-            }
-        });
-        
-        // Switch between tabs
-        function switchTab(tab, event) {
-            currentTab = tab;
-            
-            // Update tab buttons
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            if (event && event.target) {
-                event.target.classList.add('active');
-            } else {
-                // fallback
-                document.querySelectorAll('.tab-btn').forEach((btn, idx) => {
-                    if ((tab === 'purchase' && idx === 0) || (tab === 'donation' && idx === 1)) {
-                        btn.classList.add('active');
-                    }
-                });
-            }
-            
-            // Update tab content
-            document.querySelectorAll('.tab-content').forEach(content => {
-                content.classList.remove('active');
-            });
-            document.getElementById(tab + '-tab').classList.add('active');
-            
-            // Hide purchase payment methods when switching tabs
-            const purchasePaymentMethods = document.getElementById('purchase-payment-methods');
-            if (purchasePaymentMethods && tab !== 'purchase') {
-                purchasePaymentMethods.style.display = 'none';
-            }
-            
-            // Reset selected package when switching to donation
-            if (tab === 'donation') {
-                document.querySelectorAll('.package-card').forEach(card => {
-                    card.classList.remove('active');
-                });
-                selectedPackage = null;
-                selectedAmount = 0;
-            }
-            
-            // Update hero icon
-            const heroIcon = document.querySelector('.hero-section .mb-4 i');
-            if (tab === 'purchase') {
-                heroIcon.className = 'fas fa-shopping-cart';
-                heroIcon.style.color = '#667eea';
-            } else {
-                heroIcon.className = 'fas fa-heart';
-                heroIcon.style.color = '#e74c3c';
-            }
-        }
-        
-        // Select package
-        function selectPackage(packageName, price, event) {
-            selectedPackage = packageName;
-            selectedAmount = price;
-            
-            // Update UI
-            document.querySelectorAll('.package-card').forEach(card => {
-                card.classList.remove('active');
-            });
-            if (event && event.currentTarget) {
-                event.currentTarget.classList.add('active');
-            }
-            
-            // Update progress
-            updateProgress('step-package', 'completed');
-            updateProgress('step-payment', 'active');
-            updateProgress('step-complete', '');
-            
-            // Show payment methods for purchase
-            const purchasePaymentMethods = document.getElementById('purchase-payment-methods');
-            if (purchasePaymentMethods) {
-                purchasePaymentMethods.style.display = 'grid';
-                
-                // Scroll to payment methods
-                setTimeout(() => {
-                    purchasePaymentMethods.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }, 100);
-            }
-        }
-        
-        function updateProgress(stepId, status) {
-            const step = document.getElementById(stepId);
-            if (!step) return;
-            
-            step.className = 'step';
-            if (status) {
-                step.classList.add(status);
-            }
-        }
-        
-        function selectMethod(method, event) {
-            // Hide all forms
-            document.querySelectorAll('.donation-form').forEach(form => {
-                form.classList.remove('active');
-            });
-            
-            // Remove active class from all cards
-            document.querySelectorAll('.payment-card').forEach(card => {
-                card.classList.remove('active');
-            });
-            
-            // Show selected form
-            const selectedForm = document.getElementById(method + '-form');
-            if (selectedForm) {
-                selectedForm.classList.add('active');
-                
-                // Pre-fill amount ONLY if in purchase tab and package was selected
-                if (currentTab === 'purchase' && selectedAmount > 0) {
-                    if (method === 'card') {
-                        const cardAmountInput = document.getElementById('cardAmount');
-                        if (cardAmountInput) {
-                            cardAmountInput.value = selectedAmount;
-                        }
-                    } else if (method === 'crypto') {
-                        const customAmountInput = document.getElementById('customAmount');
-                        if (customAmountInput) {
-                            customAmountInput.value = selectedAmount;
-                        }
-                    }
-                } else {
-                    // Clear amount fields for donation
-                    if (method === 'card') {
-                        const cardAmountInput = document.getElementById('cardAmount');
-                        if (cardAmountInput) {
-                            cardAmountInput.value = '';
-                        }
-                    } else if (method === 'crypto') {
-                        const customAmountInput = document.getElementById('customAmount');
-                        if (customAmountInput) {
-                            customAmountInput.value = '';
-                        }
-                    }
-                }
-                
-                // Scroll to form
-                selectedForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-            
-            // Add active class to selected card
-            if (event && event.currentTarget) {
-                event.currentTarget.classList.add('active');
-            }
-            
-            selectedMethod = method;
-        }
-        
-        async function collectSupportContactData(title) {
-            const { value: formValues } = await Swal.fire({
-                title,
-                html:
-                    '<input id="swal-name" class="swal2-input" placeholder="{{ t('Name') }} {{ t('الكامل') }}">' +
-                    '<input id="swal-email" class="swal2-input" placeholder="{{ t('Email_2') }} {{ t('Email_3') }}" type="email">' +
-                    '<input id="swal-phone" class="swal2-input" placeholder="{{ t('رقم') }} {{ t('Mobile') }}" type="tel">' +
-                    '<textarea id="swal-message" class="swal2-textarea" placeholder="' + (currentTab === 'purchase' ? '{{ t('Name_2') }} {{ t('Company') }} أو {{ t('Note') }} {{ t('Additional') }} ({{ t('Optional') }})' : '{{ t('رسالة') }} {{ t('قصيرة') }} ({{ t('Optional') }})') + '"></textarea>',
-                focusConfirm: false,
-                showCancelButton: true,
-                cancelButtonText: '{{ t('Cancel') }}',
-                confirmButtonText: '{{ t('متابعة') }}',
-                preConfirm: () => ({
-                    name: document.getElementById('swal-name').value.trim(),
-                    email: document.getElementById('swal-email').value.trim(),
-                    phone: document.getElementById('swal-phone').value.trim(),
-                    extra: document.getElementById('swal-message').value.trim()
-                })
-            });
-
-            if (!formValues) {
-                return null;
-            }
-
-            if (currentTab === 'purchase' && (!formValues.name || !formValues.email)) {
-                Swal.fire({
-                    icon: 'error',
-                    title: '{{ t('Error') }}',
-                    text: '{{ t('Name') }} {{ t('وEmail_2') }} {{ t('Email_3') }} {{ t('مطلوبان') }} {{ t('لPurchase') }} {{ t('Plan') }}',
-                    confirmButtonColor: '#667eea'
-                });
-                return null;
-            }
-
-            return formValues;
-        }
-
-        function selectAmount(amount, event) {
-            selectedAmount = amount;
-            
-            // Remove active class from all buttons
-            document.querySelectorAll('.amount-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            
-            // Add active class to selected button
-            if (event && event.currentTarget) {
-                event.currentTarget.classList.add('active');
-            }
-            
-            // Clear custom amount
-            document.getElementById('customAmount').value = '';
-        }
-        
-        async function generateCryptoPayment() {
-            // Get amount
-            const customAmount = document.getElementById('customAmount').value;
-            const paymentAmount = customAmount || selectedAmount;
-            
-            if (!paymentAmount || paymentAmount < 15) {
-                Swal.fire({
-                    icon: 'error',
-                    title: '{{ t('Error') }}',
-                    text: '{{ t('الحد') }} {{ t('الأدنى') }} {{ t('للتبرع') }} هو $15',
-                    confirmButtonColor: '#667eea'
-                });
-                return;
-            }
-            
-            const cryptoType = document.getElementById('cryptoType').value;
-            
-            // Show loading
-            Swal.fire({
-                title: '{{ t('جاري') }} {{ t('Create') }} {{ t('Address_2') }} {{ t('Payment_2') }}...',
-                html: '<i class="fas fa-spinner fa-spin fa-3x"></i>',
-                showConfirmButton: false,
-                allowOutsideClick: false
-            });
-            
-            // {{ t('تحديد') }} {{ t('نوع') }} {{ t('المعاملة') }} {{ t('والData_2') }}
-            let apiEndpoint = '';
-            let requestData = {};
-            
-            // {{ t('Add') }} {{ t('Data_2') }} {{ t('المشترية') }} إذا كان {{ t('Purchase') }}
-            if (currentTab === 'purchase') {
-                if (!selectedPackage) {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: '{{ t('Alert_2') }}',
-                        text: '{{ t('الرجاء') }} {{ t('Select') }} {{ t('Plan_2') }} {{ t('أولاً') }}',
-                        confirmButtonColor: '#667eea'
-                    });
-                    return;
-                }
-                
-                // {{ t('جلب') }} package_id من {{ t('Card_2') }} {{ t('المحددة') }}
-                const packageCard = document.querySelector('.package-card.active');
-                const packageId = packageCard ? packageCard.getAttribute('data-package-id') : null;
-                
-                if (!packageId) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: '{{ t('Error') }}',
-                        text: 'لم يتم {{ t('التعرف') }} على {{ t('Plan') }} {{ t('المحددة') }}',
-                        confirmButtonColor: '#667eea'
-                    });
-                    return;
-                }
-                
-                const formValues = await collectSupportContactData('{{ t('Data_2') }} {{ t('Purchase') }} {{ t('Plan') }}');
-                if (!formValues) {
-                    Swal.close();
-                    return;
-                }
-                
-                apiEndpoint = '/payment-vault/api/purchase';
-                requestData = {
-                    package_id: parseInt(packageId),
-                    customer_name: formValues.name,
-                    customer_email: formValues.email,
-                    customer_phone: formValues.phone || '',
-                    company_name: formValues.extra || '',
-                    payment_method: 'crypto',
-                    amount_paid: paymentAmount,
-                    currency: 'USD',
-                    crypto_currency: cryptoType,
-                    transaction_id: 'CRYPTO_' + Date.now(),
-                    payment_details: {
-                        crypto_type: cryptoType,
-                        amount: paymentAmount
-                    }
-                };
-            } else {
-                // {{ t('Data_2') }} {{ t('التبرع') }} ({{ t('Optionalة') }})
-                const formValues = await collectSupportContactData('{{ t('Data_2') }} {{ t('التبرع') }}');
-                if (!formValues) {
-                    Swal.close();
-                    return;
-                }
-                
-                apiEndpoint = '/payment-vault/api/donation';
-                requestData = {
-                    amount: paymentAmount,
-                    payment_method: 'crypto',
-                    crypto_type: cryptoType,
-                    crypto_currency: cryptoType,
-                    donor_name: formValues.name || null,
-                    donor_email: formValues.email || null,
-                    message: formValues.extra || null,
-                    transaction_id: 'DONATION_' + Date.now()
-                };
-            }
-            
-            // Create payment via API
-            fetch(apiEndpoint, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(requestData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                Swal.close();
-                
-                if (data.success) {
-                    const recordId = data.purchase_id || data.donation_id;
-                    const recordType = data.purchase_id ? '{{ t('Purchase') }}' : '{{ t('تبرع') }}';
-                    const paymentUrlButton = data.payment_url
-                        ? `<a href="${data.payment_url}" target="_blank" rel="noopener noreferrer" class="btn btn-primary mt-2">
-                                <i class="fas fa-external-link-alt"></i> {{ t('فتح') }} {{ t('صفحة') }} {{ t('Payment_2') }}
-                           </a>`
-                        : '';
-                    
-                    if (data.payment_address) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: `تم {{ t('Create') }} ${recordType} {{ t('بنجاح') }}`,
-                            html: `
-                                <div class="ic-70">
-                                    <p class="ic-71">${data.message}</p>
-                                    <div class="ic-72">
-                                        <p><strong>{{ t('رقم') }} {{ t('الطلب') }}:</strong> #${recordId}</p>
-                                        <p><strong>{{ t('Amount') }} {{ t('Required_2') }}:</strong> ${data.payment_amount || paymentAmount} ${data.crypto_currency || cryptoType.toUpperCase()}</p>
-                                        <hr>
-                                        <p><strong>{{ t('Address_2') }} {{ t('Payment_2') }}:</strong></p>
-                                        <p class="ic-73">
-                                            ${data.payment_address}
-                                        </p>
-                                        <button onclick="navigator.clipboard.writeText('${data.payment_address}')" class="btn btn-outline-primary mt-2">
-                                            <i class="fas fa-copy"></i> {{ t('Backups_2') }} {{ t('Address') }}
-                                        </button>
-                                        ${paymentUrlButton}
-                                    </div>
-                                    <p class="ic-74">
-                                        <i class="fas fa-info-circle"></i>
-                                        {{ t('أرسل') }} {{ t('Amount') }} إلى {{ t('Address') }} {{ t('أعلاه') }} {{ t('وسيتم') }} {{ t('Confirm') }} {{ t('Status') }} {{ t('تلقائياً') }}.
-                                    </p>
-                                        ${buildSupportStatusHtml(recordId, paymentAmount, '{{ t('بWaiting_2') }} {{ t('Transferك') }} إلى {{ t('Address_2') }} {{ t('Payment_2') }}')}
-                                </div>
-                            `,
-                            confirmButtonText: '{{ t('تم،') }} {{ t('سأPayment') }} {{ t('الآن_2') }}',
-                            confirmButtonColor: '#28a745',
-                            showDenyButton: true,
-                            denyButtonText: '{{ t('واتساب') }} {{ t('أزاد') }}',
-                            showCancelButton: true,
-                            cancelButtonText: '{{ t('راسلنا') }} {{ t('بEmail_2') }}',
-                            width: 650,
-                            allowOutsideClick: false
-                        }).then((result) => {
-                            if (result.isDenied) {
-                                openWhatsApp('payment_help', paymentAmount, recordId);
-                            } else if (result.dismiss === Swal.DismissReason.cancel) {
-                                openSupportEmail('payment_help', paymentAmount, recordId);
-                            }
-                        });
-                    } else {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'تم {{ t('Save') }} {{ t('الطلب') }} {{ t('بنجاح') }}',
-                            html: `
-                                <div class="ic-70">
-                                    <p class="ic-75">${data.message}</p>
-                                    <div class="ic-72">
-                                        <p><strong>{{ t('رقم') }} {{ t('الطلب') }}:</strong> #${recordId}</p>
-                                        <p><strong>{{ t('Amount') }}:</strong> $${paymentAmount}</p>
-                                        <p><strong>{{ t('طريقة') }} {{ t('Payment_2') }}:</strong> ${data.payment_method_display || cryptoType.toUpperCase()}</p>
-                                    </div>
-                                    ${buildSupportStatusHtml(recordId, paymentAmount, 'تم {{ t('تسجيل') }} {{ t('الطلب') }} {{ t('بWaiting_2') }} {{ t('المتابعة') }} أو {{ t('Confirm_2') }}')}
-                                </div>
-                            `,
-                            confirmButtonText: '{{ t('واتساب') }} {{ t('أزاد') }}',
-                            confirmButtonColor: '#28a745',
-                            showDenyButton: true,
-                            denyButtonText: '{{ t('راسلنا') }} {{ t('بEmail_2') }}',
-                            allowOutsideClick: false
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                openWhatsApp('payment_help', paymentAmount, recordId);
-                            } else if (result.isDenied) {
-                                openSupportEmail('payment_help', paymentAmount, recordId);
-                            }
-                        });
-                    }
-                } else {
-                    showSupportAssistanceModal(
-                        '{{ t('تعذر') }} {{ t('Create') }} {{ t('الطلب') }}',
-                        `<p>${escapeHtml(data.error || '{{ t('حدث') }} {{ t('Error') }} {{ t('أثناء') }} {{ t('Create') }} {{ t('الطلب') }}.')}</p><p>{{ t('يمكنك') }} {{ t('إعادة') }} {{ t('المحاولة') }} أو {{ t('إكمال') }} {{ t('العملية') }} {{ t('مباشرة') }} مع {{ t('Company_2') }} {{ t('أزاد') }}.</p>`,
-                        'payment_help',
-                        paymentAmount
-                    );
-                }
-            })
-            .catch(error => {
-                Swal.close();
-                showSupportAssistanceModal(
-                    '{{ t('تعذر') }} {{ t('الاتصال') }} {{ t('بالخادم') }}',
-                    `<p>لم {{ t('نتمكن') }} من {{ t('Create') }} ${currentTab === 'purchase' ? '{{ t('طلب') }} {{ t('Purchase_2') }}' : '{{ t('طلب') }} {{ t('التبرع') }}'} {{ t('الآن_2') }}.</p><p>{{ t('يمكنك') }} {{ t('المتابعة') }} {{ t('مباشرة') }} مع {{ t('أزاد') }} {{ t('عبر') }} {{ t('واتساب') }} أو {{ t('Email_2') }} {{ t('بنفس') }} {{ t('Amount') }}: <strong>$${paymentAmount}</strong>.</p>`,
-                    'payment_help',
-                    paymentAmount
-                );
-            });
-        }
-        
-        function copyAddress() {
-            const address = document.getElementById('walletAddress').textContent;
-            
-            navigator.clipboard.writeText(address).then(() => {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'تم {{ t('Backups') }}!',
-                    text: 'تم {{ t('Backups_2') }} {{ t('Address') }} إلى {{ t('الحافظة') }}',
-                    timer: 2000,
-                    showConfirmButton: false
-                });
-            });
-        }
-        
-        // Handle PayPal payment
-        async function handlePayPalPayment() {
-            const customAmount = document.getElementById('customAmount').value;
-            const paymentAmount = customAmount || selectedAmount || 0;
-            
-            if (!paymentAmount || paymentAmount < 15) {
-                Swal.fire({
-                    icon: 'error',
-                    title: '{{ t('Error') }}',
-                    text: '{{ t('الحد') }} {{ t('الأدنى') }} {{ t('للتبرع') }} $15',
-                    confirmButtonColor: '#667eea'
-                });
-                return;
-            }
-            
-            // {{ t('طلب') }} {{ t('Data_2') }} {{ t('Customer') }}
-            const { value: formValues } = await Swal.fire({
-                title: '{{ t('Data_2') }} {{ t('Payment_2') }} - PayPal',
-                html:
-                    '<input id="swal-name" class="swal2-input" placeholder="{{ t('Name') }} {{ t('الكامل') }}" required>' +
-                    '<input id="swal-email" class="swal2-input" placeholder="{{ t('Email_2') }} {{ t('Email_3') }}" type="email" required>' +
-                    '<input id="swal-phone" class="swal2-input" placeholder="{{ t('رقم') }} {{ t('Mobile') }}" type="tel">' +
-                    (currentTab === 'purchase' ? '<input id="swal-company" class="swal2-input" placeholder="{{ t('Name_2') }} {{ t('Company') }} ({{ t('Optional') }})">' : ''),
-                focusConfirm: false,
-                showCancelButton: true,
-                cancelButtonText: '{{ t('Cancel') }}',
-                confirmButtonText: '{{ t('متابعة') }}',
-                preConfirm: () => {
-                    return {
-                        name: document.getElementById('swal-name').value,
-                        email: document.getElementById('swal-email').value,
-                        phone: document.getElementById('swal-phone').value,
-                        company: currentTab === 'purchase' ? document.getElementById('swal-company')?.value : ''
-                    }
-                }
-            });
-            
-            if (!formValues || !formValues.name || !formValues.email) {
-                return;
-            }
-            
-            // {{ t('Save') }} في DB
-            const apiEndpoint = currentTab === 'purchase' ? '/payment-vault/api/purchase' : '/payment-vault/api/donation';
-            let requestData = {};
-            
-            if (currentTab === 'purchase') {
-                const packageCard = document.querySelector('.package-card.active');
-                const packageId = packageCard ? packageCard.getAttribute('data-package-id') : null;
-                
-                if (!packageId) {
-                    Swal.fire({icon: 'error', title: '{{ t('Error') }}', text: '{{ t('الرجاء') }} {{ t('Select') }} {{ t('Plan_2') }}'});
-                    return;
-                }
-                
-                requestData = {
-                    package_id: parseInt(packageId),
-                    customer_name: formValues.name,
-                    customer_email: formValues.email,
-                    customer_phone: formValues.phone,
-                    company_name: formValues.company,
-                    payment_method: 'paypal',
-                    amount_paid: paymentAmount,
-                    currency: 'USD',
-                    transaction_id: 'PAYPAL_PENDING_' + Date.now()
-                };
-            } else {
-                requestData = {
-                    amount: paymentAmount,
-                    payment_method: 'paypal',
-                    donor_name: formValues.name,
-                    donor_email: formValues.email,
-                    transaction_id: 'PAYPAL_DONATION_' + Date.now()
-                };
-            }
-            
-            try {
-                const response = await fetch(apiEndpoint, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(requestData)
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    // إذا كان هناك {{ t('Address_2') }} {{ t('Payment') }} ({{ t('Transfer') }} {{ t('تلقائي') }} لـ Bitcoin)
-                    if (data.payment_address) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: '{{ t('Info_2') }} {{ t('Payment_2') }}',
-                            html: `
-                                <div class="ic-70">
-                                    <p class="ic-71">
-                                        <i class="fab fa-paypal ic-76"></i> 
-                                        <strong>{{ t('Payment') }} {{ t('عبر') }} PayPal</strong>
-                                    </p>
-                                    <p>{{ t('رقم') }} {{ t('الطلب') }}: #${data.purchase_id || data.donation_id}</p>
-                                    <div class="ic-72">
-                                        <p><strong>{{ t('Amount') }}:</strong> $${paymentAmount}</p>
-                                        <p class="ic-77">
-                                            <i class="fas fa-exchange-alt"></i> يتم {{ t('Transfer_2') }} {{ t('تلقائياً') }} إلى Bitcoin
-                                        </p>
-                                        <hr>
-                                        <p class="ic-78">
-                                            ${data.payment_address}
-                                        </p>
-                                        <button onclick="navigator.clipboard.writeText('${data.payment_address}')" 
-                                                class="btn btn-primary">
-                                            <i class="fas fa-copy"></i> {{ t('Backups_2') }}
-                                        </button>
-                                    </div>
-                                    <p class="ic-79">
-                                        ✅ تم {{ t('Save') }} {{ t('طلبك') }} {{ t('بنجاح') }}
-                                    </p>
-                                    ${buildSupportStatusHtml(data.purchase_id || data.donation_id, paymentAmount, '{{ t('قيد') }} {{ t('Waiting_2') }} {{ t('إتمام') }} {{ t('Payment_2') }} أو {{ t('التواصل') }}')}
-                                </div>
-                            `,
-                            confirmButtonText: '{{ t('متابعة') }} {{ t('Payment_2') }}',
-                            confirmButtonColor: '#0070ba',
-                            showDenyButton: true,
-                            denyButtonText: '{{ t('واتساب') }} {{ t('أزاد') }}',
-                            showCancelButton: true,
-                            cancelButtonText: '{{ t('راسلنا') }} {{ t('بEmail_2') }}',
-                            width: 600
-                        }).then((result) => {
-                            const recordId = data.purchase_id || data.donation_id;
-                            if (result.isDenied) {
-                                openWhatsApp('payment_help', paymentAmount, recordId);
-                            } else if (result.dismiss === Swal.DismissReason.cancel) {
-                                openSupportEmail('payment_help', paymentAmount, recordId);
-                            }
-                        });
-                    } else {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'تم {{ t('Save') }} {{ t('الطلب') }}',
-                            html: `
-                                ${buildSupportStatusHtml(data.purchase_id || data.donation_id, paymentAmount, '{{ t('بWaiting_2') }} {{ t('التنسيق') }} مع {{ t('فريق') }} {{ t('أزاد') }}')}
-                                <p class="ic-80">{{ t('يمكنك') }} {{ t('الآن_2') }} {{ t('Select') }} {{ t('واتساب') }} أو {{ t('Email_2') }} {{ t('لإكمال') }} {{ t('Payment_2') }} أو {{ t('الاستفسار') }}.</p>
-                            `,
-                            confirmButtonText: '{{ t('واتساب') }} {{ t('أزاد') }}',
-                            confirmButtonColor: '#25D366',
-                            showDenyButton: true,
-                            denyButtonText: '{{ t('راسلنا') }} {{ t('بEmail_2') }}'
-                        }).then((result) => {
-                            const recordId = data.purchase_id || data.donation_id;
-                            if (result.isConfirmed) {
-                                openWhatsApp('payment_help', paymentAmount, recordId);
-                            } else if (result.isDenied) {
-                                openSupportEmail('payment_help', paymentAmount, recordId);
-                            }
-                        });
-                    }
-                } else {
-                    showSupportAssistanceModal(
-                        '{{ t('تعذر') }} {{ t('إكمال') }} {{ t('طلب') }} PayPal',
-                        `<p>${escapeHtml(data.error || '{{ t('تعذر') }} {{ t('Save') }} {{ t('طلب') }} PayPal {{ t('حالياً') }}.')}</p><p>{{ t('يمكنك') }} {{ t('المتابعة') }} {{ t('مباشرة') }} مع {{ t('أزاد') }} {{ t('عبر') }} {{ t('واتساب') }} أو {{ t('Email_2') }}.</p>`,
-                        'payment_help',
-                        paymentAmount
-                    );
-                }
-            } catch (error) {
-                showSupportAssistanceModal(
-                    '{{ t('فشل') }} {{ t('الاتصال') }} {{ t('أثناء') }} PayPal',
-                    `<p>{{ t('تعذر') }} {{ t('التواصل') }} مع {{ t('الخادم') }} {{ t('أثناء') }} {{ t('تجهيز') }} {{ t('الطلب') }}.</p><p>{{ t('استخدم') }} {{ t('واتساب') }} أو {{ t('Email_2') }} {{ t('لإتمام') }} {{ t('Purchase_2') }} أو {{ t('التبرع') }} {{ t('بنفس') }} {{ t('Details_2') }}.</p>`,
-                    'payment_help',
-                    paymentAmount
-                );
-            }
-        }
-        
-        // Handle card payment form
-        document.getElementById('cardPaymentForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            // Get form data
-            const cardAmountInput = document.getElementById('cardAmount');
-            const paymentAmount = parseFloat(cardAmountInput.value) || selectedAmount || 0;
-            
-            if (!paymentAmount || paymentAmount < 15) {
-                Swal.fire({
-                    icon: 'error',
-                    title: '{{ t('Error') }}',
-                    text: '{{ t('الحد') }} {{ t('الأدنى') }} {{ t('للتبرع') }} $15',
-                    confirmButtonColor: '#667eea'
-                });
-                return;
-            }
-            
-            // {{ t('طلب') }} {{ t('Data_2') }} {{ t('Customer') }}
-            const { value: formValues } = await Swal.fire({
-                title: '{{ t('Data_2') }} {{ t('Payment_2') }}',
-                html:
-                    '<input id="swal-name" class="swal2-input" placeholder="{{ t('Name') }} {{ t('الكامل') }}" required>' +
-                    '<input id="swal-email" class="swal2-input" placeholder="{{ t('Email_2') }} {{ t('Email_3') }}" type="email" required>' +
-                    '<input id="swal-phone" class="swal2-input" placeholder="{{ t('رقم') }} {{ t('Mobile') }}" type="tel">' +
-                    (currentTab === 'purchase' ? '<input id="swal-company" class="swal2-input" placeholder="{{ t('Name_2') }} {{ t('Company') }} ({{ t('Optional') }})">' : ''),
-                focusConfirm: false,
-                showCancelButton: true,
-                cancelButtonText: '{{ t('Cancel') }}',
-                confirmButtonText: '{{ t('متابعة') }}',
-                preConfirm: () => {
-                    return {
-                        name: document.getElementById('swal-name').value,
-                        email: document.getElementById('swal-email').value,
-                        phone: document.getElementById('swal-phone').value,
-                        company: currentTab === 'purchase' ? document.getElementById('swal-company')?.value : ''
-                    }
-                }
-            });
-            
-            if (!formValues || !formValues.name || !formValues.email) {
-                return;
-            }
-            
-            // {{ t('Create') }} {{ t('Log_2') }}
-            const apiEndpoint = currentTab === 'purchase' ? '/payment-vault/api/purchase' : '/payment-vault/api/donation';
-            let requestData = {};
-            
-            if (currentTab === 'purchase') {
-                const packageCard = document.querySelector('.package-card.active');
-                const packageId = packageCard ? packageCard.getAttribute('data-package-id') : null;
-                
-                if (!packageId) {
-                    Swal.fire({icon: 'error', title: '{{ t('Error') }}', text: '{{ t('الرجاء') }} {{ t('Select') }} {{ t('Plan_2') }}'});
-                    return;
-                }
-                
-                requestData = {
-                    package_id: parseInt(packageId),
-                    customer_name: formValues.name,
-                    customer_email: formValues.email,
-                    customer_phone: formValues.phone,
-                    company_name: formValues.company,
-                    payment_method: 'card',
-                    amount_paid: paymentAmount,
-                    currency: 'USD',
-                    transaction_id: 'CARD_PENDING_' + Date.now()
-                };
-            } else {
-                requestData = {
-                    amount: paymentAmount,
-                    payment_method: 'card',
-                    donor_name: formValues.name,
-                    donor_email: formValues.email,
-                    transaction_id: 'CARD_DONATION_' + Date.now()
-                };
-            }
-            
-            // {{ t('Save') }} في DB
-            try {
-                const response = await fetch(apiEndpoint, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(requestData)
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    // إذا كان هناك {{ t('Address_2') }} {{ t('Payment') }} (من NOWPayments)
-                    if (data.payment_address) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'تم {{ t('Create') }} {{ t('Address_2') }} {{ t('Payment_2') }}!',
-                            html: `
-                                <div class="ic-70">
-                                    <p class="ic-81">
-                                        <strong>{{ t('رقم') }} {{ t('الطلب') }}: #${data.purchase_id || data.donation_id}</strong>
-                                    </p>
-                                    <div class="ic-72">
-                                        <p><strong>{{ t('Amount') }} {{ t('Required_2') }}:</strong></p>
-                                        <p class="ic-82">
-                                            ${data.payment_amount || paymentAmount} ${data.crypto_currency || 'BTC'}
-                                        </p>
-                                        <hr>
-                                        <p><strong>{{ t('Address_2') }} {{ t('المSaveة_2') }}:</strong></p>
-                                        <p class="ic-83">
-                                            ${data.payment_address}
-                                        </p>
-                                        <button onclick="navigator.clipboard.writeText('${data.payment_address}')" 
-                                                class="btn btn-primary mt-2">
-                                            <i class="fas fa-copy"></i> {{ t('Backups_2') }} {{ t('Address') }}
-                                        </button>
-                                    </div>
-                                    <p class="ic-84">
-                                        <i class="fas fa-check-circle"></i> 
-                                        {{ t('أرسل') }} {{ t('Amount') }} {{ t('المحدد') }} إلى {{ t('Address') }} {{ t('أعلاه') }}
-                                    </p>
-                                    ${buildSupportStatusHtml(data.purchase_id || data.donation_id, paymentAmount, '{{ t('بWaiting_2') }} {{ t('إتمام') }} {{ t('Payment_2') }} أو {{ t('المتابعة') }} مع {{ t('أزاد') }}')}
-                                </div>
-                            `,
-                            confirmButtonText: '{{ t('متابعة') }} {{ t('Payment_2') }}',
-                            confirmButtonColor: '#28a745',
-                            showDenyButton: true,
-                            denyButtonText: '{{ t('واتساب') }} {{ t('أزاد') }}',
-                            showCancelButton: true,
-                            cancelButtonText: '{{ t('راسلنا') }} {{ t('بEmail_2') }}',
-                            width: 600,
-                            allowOutsideClick: false
-                        }).then((result) => {
-                            const recordId = data.purchase_id || data.donation_id;
-                            if (result.isDenied) {
-                                openWhatsApp('payment_help', paymentAmount, recordId);
-                            } else if (result.dismiss === Swal.DismissReason.cancel) {
-                                openSupportEmail('payment_help', paymentAmount, recordId);
-                            }
-                        });
-                    } else {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'تم {{ t('Save') }} {{ t('الطلب') }}',
-                            html: `
-                                ${buildSupportStatusHtml(data.purchase_id || data.donation_id, paymentAmount, 'تم {{ t('تسجيل') }} {{ t('الطلب') }} {{ t('بWaiting_2') }} {{ t('Confirm') }} أو {{ t('متابعة') }} {{ t('Manual_4') }}')}
-                                <p class="ic-80">{{ t('يمكنك') }} {{ t('المتابعة') }} {{ t('مباشرة') }} مع {{ t('Company_2') }} {{ t('أزاد') }} {{ t('عبر') }} {{ t('واتساب') }} أو {{ t('Email_2') }}.</p>
-                            `,
-                            confirmButtonText: '{{ t('واتساب') }} {{ t('أزاد') }}',
-                            confirmButtonColor: '#25D366',
-                            showDenyButton: true,
-                            denyButtonText: '{{ t('راسلنا') }} {{ t('بEmail_2') }}'
-                        }).then((result) => {
-                            const recordId = data.purchase_id || data.donation_id;
-                            if (result.isConfirmed) {
-                                openWhatsApp('payment_help', paymentAmount, recordId);
-                            } else if (result.isDenied) {
-                                openSupportEmail('payment_help', paymentAmount, recordId);
-                            }
-                        });
-                    }
-                } else {
-                    showSupportAssistanceModal(
-                        '{{ t('تعذر') }} {{ t('تجهيز') }} {{ t('طلب') }} {{ t('Card_2') }}',
-                        `<p>${escapeHtml(data.error || '{{ t('تعذر') }} {{ t('Save') }} {{ t('طلب') }} {{ t('Card_2') }} {{ t('حالياً') }}.')}</p><p>{{ t('يمكنك') }} {{ t('إكمال') }} {{ t('العملية') }} {{ t('مباشرة') }} مع {{ t('أزاد') }} {{ t('عبر') }} {{ t('واتساب') }} أو {{ t('Email_2') }}.</p>`,
-                        'payment_help',
-                        paymentAmount
-                    );
-                }
-            } catch (error) {
-                showSupportAssistanceModal(
-                    '{{ t('فشل') }} {{ t('الاتصال') }} {{ t('أثناء') }} {{ t('Payment_2') }}',
-                    `<p>{{ t('تعذر') }} {{ t('الوصول') }} إلى {{ t('الخادم') }} {{ t('أثناء') }} {{ t('Processing_2') }} {{ t('الطلب') }}.</p><p>لا {{ t('تقلق،') }} {{ t('يمكنك') }} {{ t('المتابعة') }} {{ t('الآن_2') }} {{ t('مباشرة') }} مع {{ t('Company_2') }} {{ t('أزاد') }}.</p>`,
-                    'payment_help',
-                    paymentAmount
-                );
-            }
-        });
-    </script>
-    
-    
+<script>
+window.spConfig = {
+  whatsappLink: "{{ developer_whatsapp_link }}",
+  whatsappDisplay: "{{ developer_whatsapp or config.DEVELOPER_WHATSAPP or '+972562150193' }}",
+  email: "{{ developer_email or config.DEVELOPER_EMAIL }}",
+  brand: "{{ developer_name_ar or developer_name or 'Azad Systems' }}",
+  csrf: "{{ csrf_token() }}"
+};
+window.spI18n = {
+  "مرحباً": "{{ t('مرحباً') }}",
+  "أريد": "{{ t('أريد') }}",
+  "Purchase": "{{ t('Purchase') }}",
+  "Code": "{{ t('Code') }}",
+  "المصدري": "{{ t('المصدري') }}",
+  "أو": "{{ t('أو') }}",
+  "تنفيذ": "{{ t('تنفيذ') }}",
+  "تخصيص": "{{ t('تخصيص') }}",
+  "Specific_2": "{{ t('Specific_2') }}",
+  "للنظام": "{{ t('للنظام') }}",
+  "التبرع": "{{ t('التبرع') }}",
+  "رعاية": "{{ t('رعاية') }}",
+  "تطوير": "{{ t('تطوير') }}",
+  "ميزة": "{{ t('ميزة') }}",
+  "في": "{{ t('في') }}",
+  "System": "{{ t('System') }}",
+  "Amount": "{{ t('Amount') }}",
+  "Expected": "{{ t('Expected') }}",
+  "سأحدده معكم": "{{ t('سأحدده معكم') }}",
+  "Dollar": "{{ t('Dollar') }}",
+  "أحتاج": "{{ t('أحتاج') }}",
+  "مساعدة": "{{ t('مساعدة') }}",
+  "إتمام": "{{ t('إتمام') }}",
+  "الاستفسار": "{{ t('الاستفسار') }}",
+  "عن": "{{ t('عن') }}",
+  "Status_2": "{{ t('Status_2') }}",
+  "Payment": "{{ t('Payment') }}",
+  "استرداد": "{{ t('استرداد') }}",
+  "والباقة الحالية": "{{ t('والباقة الحالية') }}",
+  "غير محددة بعد": "{{ t('غير محددة بعد') }}",
+  "رقم المرجع": "{{ t('رقم المرجع') }}",
+  "طلب Purchase System": "{{ t('طلب Purchase System') }}",
+  "طلب Purchase Code أو تخصيص": "{{ t('طلب Purchase Code أو تخصيص') }}",
+  "استفسار تبرع أو رعاية": "{{ t('استفسار تبرع أو رعاية') }}",
+  "مساعدة في إتمام Payment": "{{ t('مساعدة في إتمام Payment') }}",
+  "استفسار استرداد أو Status Payment": "{{ t('استفسار استرداد أو Status Payment') }}",
+  "استفسار": "{{ t('استفسار') }}",
+  "بيانات التواصل": "{{ t('بيانات التواصل') }}",
+  "واتساب": "{{ t('واتساب') }}",
+  "بريد": "{{ t('بريد') }}",
+  "Status الحالية": "{{ t('Status الحالية') }}",
+  "المرجع": "{{ t('المرجع') }}",
+  "عند النجاح ستصلك Details واضحة أو Address Payment مباشر": "{{ t('عند النجاح ستصلك Details واضحة أو Address Payment مباشر') }}",
+  "عند Review يدوية يمكنك المتابعة فوراً مع أزاد": "{{ t('عند Review يدوية يمكنك المتابعة فوراً مع أزاد') }}",
+  "لأي استرداد أو Reconciliation استخدم واتساب أو بريد الرسمي": "{{ t('لأي استرداد أو Reconciliation استخدم واتساب أو بريد الرسمي') }}",
+  "التواصل الرسمي مع أزاد": "{{ t('التواصل الرسمي مع أزاد') }}",
+  "فتح واتساب أزاد": "{{ t('فتح واتساب أزاد') }}",
+  "إرسال بريد": "{{ t('إرسال بريد') }}",
+  "إغلاق": "{{ t('إغلاق') }}",
+  "Error": "{{ t('Error') }}",
+  "الحد الأدنى للتبرع هو": "{{ t('الحد الأدنى للتبرع هو') }}",
+  "الحد الأدنى للتبرع": "{{ t('الحد الأدنى للتبرع') }}",
+  "جاري إنشاء Address Payment...": "{{ t('جاري إنشاء Address Payment...') }}",
+  "Alert": "{{ t('Alert') }}",
+  "الرجاء اختيار باقة أولاً": "{{ t('الرجاء اختيار باقة أولاً') }}",
+  "لم يتم التعرف على Plan المحددة": "{{ t('لم يتم التعرف على Plan المحددة') }}",
+  "بيانات شراء Plan": "{{ t('بيانات شراء Plan') }}",
+  "بيانات التبرع": "{{ t('بيانات التبرع') }}",
+  "تم إنشاء": "{{ t('تم إنشاء') }}",
+  "بنجاح": "{{ t('بنجاح') }}",
+  "رقم الطلب": "{{ t('رقم الطلب') }}",
+  "Amount المطلوب": "{{ t('Amount المطلوب') }}",
+  "Address Payment": "{{ t('Address Payment') }}",
+  "نسخ Address": "{{ t('نسخ Address') }}",
+  "فتح صفحة Payment": "{{ t('فتح صفحة Payment') }}",
+  "أرسل Amount إلى Address أعلاه وسيتم Confirm Status تلقائياً": "{{ t('أرسل Amount إلى Address أعلاه وسيتم Confirm Status تلقائياً') }}",
+  "بانتظار تحويلك إلى Address Payment": "{{ t('بانتظار تحويلك إلى Address Payment') }}",
+  "تم، سأدفع الآن": "{{ t('تم، سأدفع الآن') }}",
+  "واتساب أزاد": "{{ t('واتساب أزاد') }}",
+  "راسلنا ببريد": "{{ t('راسلنا ببريد') }}",
+  "تم حفظ الطلب بنجاح": "{{ t('تم حفظ الطلب بنجاح') }}",
+  "طريقة Payment": "{{ t('طريقة Payment') }}",
+  "تم تسجيل الطلب بانتظار المتابعة أو التأكيد": "{{ t('تم تسجيل الطلب بانتظار المتابعة أو التأكيد') }}",
+  "تعذر إنشاء الطلب": "{{ t('تعذر إنشاء الطلب') }}",
+  "حدث Error أثناء إنشاء الطلب": "{{ t('حدث Error أثناء إنشاء الطلب') }}",
+  "يمكنك إعادة المحاولة أو إكمال العملية مباشرة مع Company أزاد": "{{ t('يمكنك إعادة المحاولة أو إكمال العملية مباشرة مع Company أزاد') }}",
+  "تعذر الاتصال بالخادم": "{{ t('تعذر الاتصال بالخادم') }}",
+  "لم نتمكن من إنشاء": "{{ t('لم نتمكن من إنشاء') }}",
+  "طلب شراء": "{{ t('طلب شراء') }}",
+  "طلب تبرع": "{{ t('طلب تبرع') }}",
+  "الآن": "{{ t('الآن') }}",
+  "يمكنك المتابعة مباشرة مع أزاد عبر واتساب أو بريد بنفس المبلغ": "{{ t('يمكنك المتابعة مباشرة مع أزاد عبر واتساب أو بريد بنفس المبلغ') }}",
+  "تم النسخ!": "{{ t('تم النسخ!') }}",
+  "تم نسخ Address إلى الحافظة": "{{ t('تم نسخ Address إلى الحافظة') }}",
+  "بيانات Payment": "{{ t('بيانات Payment') }}",
+  "Name الكامل": "{{ t('Name الكامل') }}",
+  "بريد إلكتروني": "{{ t('بريد إلكتروني') }}",
+  "رقم Mobile": "{{ t('رقم Mobile') }}",
+  "Name Company": "{{ t('Name Company') }}",
+  "Optional": "{{ t('Optional') }}",
+  "Payment عبر PayPal": "{{ t('Payment عبر PayPal') }}",
+  "يتم التحويل تلقائياً إلى Bitcoin": "{{ t('يتم التحويل تلقائياً إلى Bitcoin') }}",
+  "نسخ": "{{ t('نسخ') }}",
+  "تم حفظ طلبك بنجاح": "{{ t('تم حفظ طلبك بنجاح') }}",
+  "قيد انتظار إتمام Payment أو التواصل": "{{ t('قيد انتظار إتمام Payment أو التواصل') }}",
+  "متابعة Payment": "{{ t('متابعة Payment') }}",
+  "تم حفظ الطلب": "{{ t('تم حفظ الطلب') }}",
+  "بانتظار التنسيق مع فريق أزاد": "{{ t('بانتظار التنسيق مع فريق أزاد') }}",
+  "يمكنك الآن اختيار واتساب أو بريد لإكمال Payment أو الاستفسار": "{{ t('يمكنك الآن اختيار واتساب أو بريد لإكمال Payment أو الاستفسار') }}",
+  "تعذر إكمال طلب PayPal": "{{ t('تعذر إكمال طلب PayPal') }}",
+  "تعذر حفظ طلب PayPal حالياً": "{{ t('تعذر حفظ طلب PayPal حالياً') }}",
+  "يمكنك المتابعة مباشرة مع أزاد عبر واتساب أو بريد": "{{ t('يمكنك المتابعة مباشرة مع أزاد عبر واتساب أو بريد') }}",
+  "فشل الاتصال أثناء PayPal": "{{ t('فشل الاتصال أثناء PayPal') }}",
+  "تعذر التواصل مع الخادم أثناء تجهيز الطلب": "{{ t('تعذر التواصل مع الخادم أثناء تجهيز الطلب') }}",
+  "استخدم واتساب أو بريد لإتمام الشراء أو التبرع بنفس التفاصيل": "{{ t('استخدم واتساب أو بريد لإتمام الشراء أو التبرع بنفس التفاصيل') }}",
+  "الرجاء اختيار باقة": "{{ t('الرجاء اختيار باقة') }}",
+  "تعذر تجهيز طلب Card": "{{ t('تعذر تجهيز طلب Card') }}",
+  "تعذر حفظ طلب Card حالياً": "{{ t('تعذر حفظ طلب Card حالياً') }}",
+  "يمكنك إكمال العملية مباشرة مع أزاد عبر واتساب أو بريد": "{{ t('يمكنك إكمال العملية مباشرة مع أزاد عبر واتساب أو بريد') }}",
+  "فشل الاتصال أثناء Payment": "{{ t('فشل الاتصال أثناء Payment') }}",
+  "تعذر الوصول إلى الخادم أثناء معالجة الطلب": "{{ t('تعذر الوصول إلى الخادم أثناء معالجة الطلب') }}",
+  "لا تقلق، يمكنك المتابعة الآن مباشرة مع Company أزاد": "{{ t('لا تقلق، يمكنك المتابعة الآن مباشرة مع Company أزاد') }}",
+  "تم إنشاء Address Payment!": "{{ t('تم إنشاء Address Payment!') }}",
+  "Address المحفوظة": "{{ t('Address المحفوظة') }}",
+  "تم تسجيل الطلب بانتظار التأكيد أو متابعة يدوية": "{{ t('تم تسجيل الطلب بانتظار التأكيد أو متابعة يدوية') }}",
+  "يمكنك المتابعة مباشرة مع Company أزاد عبر واتساب أو بريد": "{{ t('يمكنك المتابعة مباشرة مع Company أزاد عبر واتساب أو بريد') }}",
+  "Cancel": "{{ t('Cancel') }}",
+  "متابعة": "{{ t('متابعة') }}",
+  "Name وبريد إلكتروني مطلوبان لشراء Plan": "{{ t('Name وبريد إلكتروني مطلوبان لشراء Plan') }}",
+  "Name": "{{ t('Name') }}",
+  "رسالة قصيرة (Optional)": "{{ t('رسالة قصيرة (Optional)') }}",
+  "Name Company أو Note Additional (Optional)": "{{ t('Name Company أو Note Additional (Optional)') }}"
+};
+</script>
+<script src="{{ url_for('static', filename='js/support.js') }}"></script>
