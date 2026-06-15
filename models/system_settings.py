@@ -70,7 +70,7 @@ class SystemSettings(db.Model):
     enable_gl = db.Column(db.Boolean, default=True)
     enable_reports = db.Column(db.Boolean, default=True)
     enable_ai_assistant = db.Column(db.Boolean, default=True)
-    enable_pos = db.Column(db.Boolean, default=False)
+    enable_pos = db.Column(db.Boolean, default=True)
     enable_ecommerce = db.Column(db.Boolean, default=False)
     
     # Features - المميزات

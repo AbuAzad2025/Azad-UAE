@@ -35,7 +35,12 @@ class TestConfig:
     SECRET_KEY = "test-secret-key"
     SQLALCHEMY_DATABASE_URI = os.environ["DATABASE_URL"]
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SQLALCHEMY_ENGINE_OPTIONS = {}
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        "pool_size": 3,
+        "max_overflow": 2,
+        "pool_pre_ping": True,
+        "pool_timeout": 10,
+    }
     WTF_CSRF_ENABLED = False
     CACHE_TYPE = "null"
     CELERY_BROKER_URL = "memory://"

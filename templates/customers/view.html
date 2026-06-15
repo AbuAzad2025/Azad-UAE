@@ -53,6 +53,7 @@
         <a href="{{ url_for('payments.create_voucher', direction='incoming', party_type='customer', party_id=customer.id) }}" class="btn btn-primary btn-block">
         {% endif %}
           <i class="fas fa-money-bill-wave"></i> {{ t('استلام') }} {{ t('دفعة') }} ({{ t('للعميل') }} {{ t('Balance_3') }})
+        {% if current_user.has_permission('manage_payments') %}
         </a>
         {% endif %}
         {% elif customer.get_balance_base() < 0 %}
@@ -60,7 +61,9 @@
         <a href="{{ url_for('payments.create_voucher', direction='outgoing', party_type='customer', party_id=customer.id) }}" class="btn btn-warning btn-block">
         {% endif %}
           <i class="fas fa-money-bill-wave"></i> {{ t('صرف') }} {{ t('دفعة') }} ({{ t('ذمة') }} على {{ t('Customer') }})
+        {% if current_user.has_permission('manage_payments') %}
         </a>
+        {% endif %}
         {% endif %}
         <a href="{{ url_for('customers.edit', id=customer.id) }}" class="btn btn-warning btn-block"><i class="fas fa-edit"></i> {{ t('Edit') }}</a>
         <a href="{{ url_for('customers.statement', id=customer.id) }}" class="btn btn-success btn-block"><i class="fas fa-file-alt"></i> {{ t('كشف') }} {{ t('Account_2') }}</a>

@@ -263,9 +263,12 @@ def get_visible_products_query(user=None):
         return query
     if not warehouse_ids:
         return query.filter(Product.id < 0)
-    return query.join(Product.stock_movements).filter(
+    subq = db.session.query(Product.id).join(
+        Product.stock_movements
+    ).filter(
         StockMovement.warehouse_id.in_(warehouse_ids)
-    ).distinct()
+    ).distinct().subquery()
+    return query.filter(Product.id.in_(db.session.query(subq.c.id)))
 
 
 def user_can_access_warehouse(warehouse_id, user=None):
