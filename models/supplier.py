@@ -146,11 +146,22 @@ class Supplier(db.Model):
             p.amount_aed or Decimal('0') for p in confirmed_purchases
         )
         
-        # Calculate total paid from Payment table
+        # Calculate total paid from Payment table.
+        # An outgoing payment reduces Accounts Payable when it is either a
+        # confirmed payment, or a still-pending cheque (issuing an outgoing
+        # cheque posts Dr AP / Cr Deferred Cheques, so it reduces AP before it
+        # clears). Bounced/cancelled cheques carry a rejection_reason and have
+        # already had their AP restored, so they must be excluded.
         total_paid = db.session.query(db.func.sum(Payment.amount_aed)).filter(
             Payment.supplier_id == self.id,
             Payment.direction == 'outgoing',
-            Payment.payment_confirmed == True
+            db.or_(
+                Payment.payment_confirmed == True,
+                db.and_(
+                    Payment.payment_method == 'cheque',
+                    Payment.rejection_reason.is_(None),
+                ),
+            ),
         ).scalar()
         
         self.total_paid_aed = total_paid or Decimal('0')

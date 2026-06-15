@@ -438,6 +438,17 @@ def process_cheque_bounce(cheque, reason):
     payment = pmt_q.first()
     if payment:
         payment.reject_payment(reason)
+    # Outgoing cheque to a supplier reduced the supplier's paid total at issue
+    # (Dr AP / Cr Deferred Cheques). The bounce restores AP in the GL, so the
+    # cached supplier balance must be restored to stay consistent with the ledger.
+    if cheque.cheque_type == 'outgoing' and cheque.supplier_id and not cheque.expense_id:
+        from models.supplier import Supplier
+        supplier_q = Supplier.query.filter_by(id=cheque.supplier_id)
+        if tid:
+            supplier_q = supplier_q.filter(Supplier.tenant_id == tid)
+        supplier = supplier_q.first()
+        if supplier:
+            supplier.apply_payment(-Decimal(str(cheque.amount_aed or 0)))
     rcpt_q = Receipt.query.filter_by(cheque_id=cheque.id)
     if tid:
         rcpt_q = rcpt_q.filter(Receipt.tenant_id == tid)
@@ -541,6 +552,18 @@ def process_cheque_cancel(cheque, reason=None, *, create_gl=True):
         payment.reject_payment(reason or 'تم إلغاء الشيك')
     for receipt in Receipt.query.filter_by(cheque_id=cheque.id).all():
         receipt.reject_receipt(reason or 'تم إلغاء الشيك')
+
+    # Cancelling an outgoing supplier cheque restores AP in the GL, so restore
+    # the cached supplier paid total to keep the balance consistent.
+    if create_gl and cheque.cheque_type == 'outgoing' and cheque.supplier_id and not cheque.expense_id:
+        from models.supplier import Supplier
+        tid = getattr(cheque, 'tenant_id', None)
+        supplier_q = Supplier.query.filter_by(id=cheque.supplier_id)
+        if tid:
+            supplier_q = supplier_q.filter(Supplier.tenant_id == tid)
+        supplier = supplier_q.first()
+        if supplier:
+            supplier.apply_payment(-Decimal(str(cheque.amount_aed or 0)))
 
 
 def register_cheque_event_listeners():

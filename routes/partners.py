@@ -262,7 +262,7 @@ def distribute():
 @login_required
 @permission_required('manage_users')
 def approve_distribution(dist_id):
-    ok = PartnerService.approve_distribution(dist_id, current_user.id)
+    ok = PartnerService.approve_distribution(dist_id, current_user.id, tenant_id=_tenant_id())
     if ok:
         flash('✅ تم اعتماد التوزيع.', 'success')
     else:
@@ -274,7 +274,7 @@ def approve_distribution(dist_id):
 @login_required
 @permission_required('manage_payments')
 def pay_distribution(dist_id):
-    ok = PartnerService.pay_distribution(dist_id)
+    ok = PartnerService.pay_distribution(dist_id, tenant_id=_tenant_id())
     if ok:
         flash('✅ تم تسجيل الدفع.', 'success')
     else:
@@ -297,13 +297,17 @@ def add_transaction(id):
         if tx_type == 'withdrawal':
             amount = -abs(amount)
 
-        PartnerService.add_transaction(
+        tx_id = PartnerService.add_transaction(
             partner_id=id,
             transaction_type=tx_type,
             amount=amount,
             notes=notes,
             created_by=current_user.id,
+            tenant_id=_tenant_id(),
         )
+        if tx_id is None:
+            flash('❌ الشريك غير موجود أو خارج نطاق المستأجر.', 'danger')
+            return redirect(url_for('partners.index'))
         flash('✅ تم تسجيل الحركة.', 'success')
     except Exception as e:
         flash(f'❌ خطأ: {e}', 'danger')

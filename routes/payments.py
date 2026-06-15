@@ -811,6 +811,10 @@ def create_voucher_submit():
                         branch_id=payment.branch_id,
                         tenant_id=tenant_id,
                     )
+                    # A refund received from the supplier offsets AP (the GL
+                    # entry above credits AP). Reduce the cached paid total so
+                    # the supplier balance and statement reflect the refund.
+                    supplier.apply_payment(-Decimal(str(payment.amount_aed or 0)))
                 flash('تم إنشاء سند قبض من مورد بنجاح', 'success')
                 return redirect(url_for('payments.receipts'))
         

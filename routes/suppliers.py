@@ -406,7 +406,9 @@ def statement(id):
 
     tid = get_active_tenant_id(current_user)
     purchases_q = supplier.purchases.filter_by(status='confirmed', tenant_id=tid)
-    payments_q = Payment.query.filter_by(supplier_id=id, tenant_id=tid, direction='outgoing')
+    # Include both outgoing payments (credit) and incoming refunds (debit) so
+    # the statement balance matches the supplier's ledger balance.
+    payments_q = Payment.query.filter_by(supplier_id=id, tenant_id=tid)
     if branch_scope_id() is not None:
         purchases_q = purchases_q.filter(Purchase.branch_id == branch_scope_id())
         payments_q = payments_q.filter(Payment.branch_id == branch_scope_id())
@@ -437,16 +439,27 @@ def statement(id):
         })
     for pm in payments:
         pm_amount = float(pm.amount_aed or 0)
+        # A payment affects the balance when it is confirmed, or when it is a
+        # still-pending cheque (issuing an outgoing cheque reduces AP
+        # immediately). Bounced/cancelled cheques carry a rejection_reason and
+        # have had their AP restored, so they have no effect.
+        affects_balance = bool(pm.payment_confirmed) or (
+            pm.payment_method == 'cheque' and not pm.rejection_reason
+        )
+        # Outgoing payments reduce the balance owed (credit); incoming refunds
+        # from the supplier offset AP and increase the balance owed (debit).
+        is_refund = pm.direction == 'incoming'
         transactions.append({
             'date': pm.payment_date,
-            'type': 'payment',
+            'type': 'refund' if is_refund else 'payment',
             'reference': pm.payment_number or pm.reference_number or '',
-            'debit': 0,
-            'credit': pm_amount if pm.payment_confirmed else 0,
+            'debit': (pm_amount if affects_balance else 0) if is_refund else 0,
+            'credit': 0 if is_refund else (pm_amount if affects_balance else 0),
             'balance': 0,
             'currency': pm.currency or 'AED',
             'exchange_rate': float(pm.exchange_rate or 1),
-            'description': f'دفعة - {pm.payment_method}',
+            'description': (f'استرداد من المورد - {pm.payment_method}' if is_refund
+                            else f'دفعة - {pm.payment_method}'),
             'amount': float(pm.amount or 0),
             'base_amount': pm_amount,
             'payment_method': pm.payment_method,

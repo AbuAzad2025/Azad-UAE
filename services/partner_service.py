@@ -31,8 +31,25 @@ class PartnerService:
         scope_type: str = 'company',
         scope_id: Optional[int] = None,
     ) -> Decimal:
-        """Total confirmed sales revenue for the scope in the period."""
+        """Total confirmed sales revenue for the scope in the period (base currency)."""
         from models import Sale
+
+        # Warehouse scope is line-based: a single sale may contain lines from
+        # several warehouses, so summing Sale.amount_aed over a SaleLine join
+        # would multiply the sale total by its line count. Sum line revenue
+        # (converted to base currency) attributable to this warehouse instead.
+        if scope_type == 'warehouse' and scope_id:
+            from models import SaleLine
+            q = db.session.query(
+                func.sum(SaleLine.line_total * func.coalesce(Sale.exchange_rate, 1))
+            ).join(SaleLine, SaleLine.sale_id == Sale.id).filter(
+                Sale.tenant_id == tenant_id,
+                Sale.status == 'confirmed',
+                func.date(Sale.sale_date) >= period_start,
+                func.date(Sale.sale_date) <= period_end,
+                SaleLine.warehouse_id == scope_id,
+            )
+            return q.scalar() or Decimal('0')
 
         q = db.session.query(func.sum(Sale.amount_aed)).filter(
             Sale.tenant_id == tenant_id,
@@ -42,10 +59,6 @@ class PartnerService:
         )
         if scope_type == 'branch' and scope_id:
             q = q.filter(Sale.branch_id == scope_id)
-        elif scope_type == 'warehouse' and scope_id:
-            # Sales whose lines originated from this warehouse
-            from models import SaleLine
-            q = q.join(SaleLine).filter(SaleLine.warehouse_id == scope_id)
         result = q.scalar() or Decimal('0')
         return result
 
@@ -57,18 +70,23 @@ class PartnerService:
         scope_type: str = 'company',
         scope_id: Optional[int] = None,
     ) -> Decimal:
-        """Cost of goods sold (approximate via product cost_price)."""
-        from models import SaleLine, Product
-        q = db.session.query(func.sum(SaleLine.quantity * Product.cost_price)).join(
-            Product, SaleLine.product_id == Product.id
-        ).filter(
+        """Cost of goods sold using the historical cost captured on each sale line.
+
+        Uses SaleLine.cost_price (cost at time of sale) rather than the product's
+        current cost, and aligns the period filter with the sale date and
+        confirmed status so revenue and COGS cover the same transactions.
+        """
+        from models import SaleLine, Sale
+        q = db.session.query(
+            func.sum(SaleLine.quantity * func.coalesce(SaleLine.cost_price, 0))
+        ).join(Sale, SaleLine.sale_id == Sale.id).filter(
             SaleLine.tenant_id == tenant_id,
-            func.date(SaleLine.created_at) >= period_start,
-            func.date(SaleLine.created_at) <= period_end,
+            Sale.status == 'confirmed',
+            func.date(Sale.sale_date) >= period_start,
+            func.date(Sale.sale_date) <= period_end,
         )
         if scope_type == 'branch' and scope_id:
-            from models import Sale
-            q = q.join(Sale).filter(Sale.branch_id == scope_id)
+            q = q.filter(Sale.branch_id == scope_id)
         elif scope_type == 'warehouse' and scope_id:
             q = q.filter(SaleLine.warehouse_id == scope_id)
         result = q.scalar() or Decimal('0')
@@ -82,8 +100,18 @@ class PartnerService:
         scope_type: str = 'company',
         scope_id: Optional[int] = None,
     ) -> Decimal:
-        """Total confirmed expenses for the scope."""
+        """Total confirmed expenses for the scope.
+
+        Expenses are only tracked at company/branch granularity (the Expense
+        model has no warehouse dimension). Warehouse-scoped partners therefore
+        share gross profit (revenue - COGS) and are not charged company-wide
+        operating expenses, which previously inflated their loss share.
+        """
         from models import Expense
+
+        if scope_type == 'warehouse':
+            return Decimal('0')
+
         q = db.session.query(func.sum(Expense.amount_aed)).filter(
             Expense.tenant_id == tenant_id,
             Expense.is_reversed == False,
@@ -213,12 +241,18 @@ class PartnerService:
     # ── Distribution lifecycle ──────────────────────────────────
 
     @staticmethod
-    def approve_distribution(dist_id: int, approved_by: int) -> bool:
-        """Approve a draft distribution and create profit_share transaction."""
+    def approve_distribution(dist_id: int, approved_by: int, tenant_id: Optional[int] = None) -> bool:
+        """Approve a draft distribution and create profit_share transaction.
+
+        When tenant_id is provided the distribution must belong to it, preventing
+        cross-tenant access via a guessed id.
+        """
         from models import PartnerProfitDistribution, PartnerTransaction, Partner
 
         dist = PartnerProfitDistribution.query.get(dist_id)
         if not dist or dist.status != 'draft':
+            return False
+        if tenant_id is not None and dist.tenant_id != tenant_id:
             return False
 
         dist.status = 'approved'
@@ -262,12 +296,14 @@ class PartnerService:
         return True
 
     @staticmethod
-    def pay_distribution(dist_id: int) -> bool:
-        """Mark distribution as paid."""
+    def pay_distribution(dist_id: int, tenant_id: Optional[int] = None) -> bool:
+        """Mark distribution as paid (tenant-scoped when tenant_id is given)."""
         from models import PartnerProfitDistribution
 
         dist = PartnerProfitDistribution.query.get(dist_id)
         if not dist or dist.status != 'approved':
+            return False
+        if tenant_id is not None and dist.tenant_id != tenant_id:
             return False
 
         dist.status = 'paid'
@@ -291,8 +327,13 @@ class PartnerService:
         notes: str = '',
         created_by: Optional[int] = None,
         reference_number: str = '',
+        tenant_id: Optional[int] = None,
     ) -> Optional[int]:
-        """Record a manual transaction and update partner balance."""
+        """Record a manual transaction and update partner balance.
+
+        When tenant_id is provided the partner must belong to it, preventing
+        cross-tenant manipulation via a guessed id.
+        """
         from models import Partner, PartnerTransaction
         from utils.currency_utils import get_system_default_currency
 
@@ -300,6 +341,8 @@ class PartnerService:
             currency = get_system_default_currency()
         partner = Partner.query.get(partner_id)
         if not partner:
+            return None
+        if tenant_id is not None and partner.tenant_id != tenant_id:
             return None
 
         amount_base = (amount * exchange_rate).quantize(Decimal('0.001'))

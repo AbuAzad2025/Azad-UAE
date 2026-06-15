@@ -58,11 +58,11 @@
         <h3 class="card-title"><i class="fas fa-tools mr-2"></i>روابط سريعة</h3>
       </div>
       <div class="card-body">
-        <a href="{{ url_for('owner.invoice_settings') }}" class="quick-link">
+        <a href="{{ url_for('owner.invoice_settings') }}" class="quick-link" aria-label="إعدادات الفواتير">
           <i class="fas fa-file-invoice"></i>
           <span>إعدادات الفواتير</span>
         </a>
-        <a href="{{ url_for('warehouse.index') }}" class="quick-link">
+        <a href="{{ url_for('warehouse.index') }}" class="quick-link" aria-label="المستودعات">
           <i class="fas fa-warehouse"></i>
           <span>المستودعات</span>
         </a>
@@ -79,7 +79,7 @@
       </div>
       <div class="col-sm-6 d-flex justify-content-end">
         <div class="d-flex align-items-center">
-          <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary ml-2">
+          <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary ml-2" aria-label="الرجوع للوحة المالك">
             <i class="fas fa-arrow-right mr-1"></i> الرجوع للوحة المالك
           </a>
           <ol class="breadcrumb float-sm-left mb-0">
@@ -288,10 +288,10 @@
       
       <div class="row">
         <div class="col-12">
-          <button type="submit" class="btn btn-primary btn-lg">
+          <button type="submit" class="btn btn-primary btn-lg" aria-label="حفظ المعلومات">
             <i class="fas fa-save mr-2"></i>حفظ المعلومات
           </button>
-          <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary btn-lg">
+          <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary btn-lg" aria-label="إلغاء والعودة">
             <i class="fas fa-times mr-2"></i>إلغاء
           </a>
         </div>

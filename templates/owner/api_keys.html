@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿{% extends 'base.html' %}
+﻿﻿{% extends 'base.html' %}
 {% block title %}API Keys{% endblock %}
 {% block content %}
 <div class="content-header">
@@ -9,7 +9,7 @@
       </div>
       <div class="col-sm-6 d-flex justify-content-end">
         <div class="d-flex align-items-center">
-          <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary ml-2">
+          <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary ml-2" aria-label="الرجوع للوحة المالك">
             <i class="fas fa-arrow-right mr-1"></i> الرجوع للوحة المالك
           </a>
           <ol class="breadcrumb float-sm-left mb-0">
@@ -22,10 +22,10 @@
     <div class="row">
       <div class="col-12">
         <div class="btn-group quick-nav" role="group">
-          <a href="{{ url_for('owner.api_keys') }}" class="btn btn-warning">
+          <a href="{{ url_for('owner.api_keys') }}" class="btn btn-warning" aria-label="مفاتيح API">
             <i class="fas fa-key"></i> API Keys
           </a>
-          <a href="{{ url_for('owner.ip_whitelist') }}" class="btn btn-outline-warning">
+          <a href="{{ url_for('owner.ip_whitelist') }}" class="btn btn-outline-warning" aria-label="قائمة IP المسموحة">
             <i class="fas fa-network-wired"></i> IP Whitelist
           </a>
         </div>
@@ -64,7 +64,7 @@
               </div>
             </div>
             <div class="col-md-2">
-              <button type="submit" class="btn btn-warning btn-block">
+              <button type="submit" class="btn btn-warning btn-block" aria-label="إنشاء مفتاح API جديد">
                 <i class="fas fa-plus mr-1"></i> إنشاء
               </button>
             </div>
