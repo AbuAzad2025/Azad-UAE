@@ -1,8 +1,14 @@
 """Full storefront isolation test suite — development only."""
 from __future__ import annotations
 
+import os
 import re
+import sys
 from decimal import Decimal
+
+_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+if _ROOT not in sys.path:
+    sys.path.insert(0, _ROOT)
 
 from dotenv import load_dotenv
 

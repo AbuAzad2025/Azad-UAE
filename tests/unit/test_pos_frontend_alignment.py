@@ -14,14 +14,16 @@ def pos_owner(app):
     with app.app_context():
         from models import Tenant, Role, User
         from extensions import db
-        tenant = Tenant(name="POS Align Tenant", name_ar="Align", slug="pos-align-tenant", country="AE")
+        import uuid
+        _suf = uuid.uuid4().hex[:8]
+        tenant = Tenant(name=f"POS Align Tenant {_suf}", name_ar="Align", slug=f"pos-align-tenant-{_suf}", country="AE")
         db.session.add(tenant)
         db.session.commit()
-        role = Role(name="POS Align Owner", slug="pos_align_owner", is_active=True)
+        role = Role(name=f"POS Align Owner {_suf}", slug=f"pos_align_owner_{_suf}", is_active=True)
         db.session.add(role)
         db.session.commit()
         user = User(
-            username="pos_align_owner", email="align@test.com", full_name="POS Align Owner",
+            username=f"pos_align_owner_{_suf}", email=f"align_{_suf}@test.com", full_name="POS Align Owner",
             tenant_id=tenant.id, role_id=role.id, is_active=True, is_owner=True,
         )
         user.set_password("testpass")

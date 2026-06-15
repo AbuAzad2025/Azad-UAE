@@ -330,7 +330,7 @@ class BankReconciliationService:
             BankStatementLine.tenant_id == tenant_id,
             BankStatementLine.bank_account_id == bank_account_id,
             BankStatementLine.transaction_date.between(period_start, period_end),
-            BankStatementLine.matched == False,
+            BankStatementLine.status.in_(['imported', 'suggested_match']),
         ).all()
 
         matches = []
@@ -406,7 +406,7 @@ class BankReconciliationService:
             if not stmt or not gl:
                 continue
 
-            stmt.matched = True
+            stmt.status = 'matched'
             stmt.match_type = m['match_type']
             stmt.matched_journal_entry_id = gl.entry_id
 

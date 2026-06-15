@@ -52,11 +52,14 @@ class TestDocumentSequence:
 class TestFiscalPosition:
     """Test fiscal position tax/account mapping."""
 
-    def test_fiscal_position_map_tax(self, app, db_session, sample_tenant):
-        from models import FiscalPosition, FiscalPositionTaxRule, CustomsTax, TaxCalculationRule
+    def test_fiscal_position_map_tax(self, app, db_session, sample_tenant, sample_gl_accounts):
+        from datetime import date
+        from decimal import Decimal
+        from models import FiscalPosition, FiscalPositionTaxRule, CustomsTax, TaxCalculationRule, GLAccount
         with app.app_context():
-            tax1 = CustomsTax(tenant_id=sample_tenant.id, name='VAT 5%', rate=5, type='vat', country_code='AE')
-            tax2 = CustomsTax(tenant_id=sample_tenant.id, name='VAT 0%', rate=0, type='vat', country_code='AE')
+            gl_tax = GLAccount.query.filter_by(tenant_id=sample_tenant.id).first()
+            tax1 = CustomsTax(tenant_id=sample_tenant.id, name='VAT 5%', name_ar='ضريبة القيمة المضافة 5%', rate=Decimal('0.05'), tax_type='vat', gl_account_id=gl_tax.id, effective_from=date(2026, 1, 1))
+            tax2 = CustomsTax(tenant_id=sample_tenant.id, name='VAT 0%', name_ar='ضريبة القيمة المضافة 0%', rate=Decimal('0'), tax_type='vat', gl_account_id=gl_tax.id, effective_from=date(2026, 1, 1))
             db_session.add_all([tax1, tax2])
             db_session.flush()
             rule1 = TaxCalculationRule(tenant_id=sample_tenant.id, name='R1', name_ar='R1', rule_type='sale', tax_id=tax1.id)
@@ -110,20 +113,26 @@ class TestFiscalPosition:
 class TestBankReconciliationEnhancement:
     """Test bank statement import and auto-matching."""
 
-    def test_import_bank_statement(self, app, db_session):
+    def test_import_bank_statement(self, app, db_session, sample_tenant):
         from services.bank_reconciliation_service import BankReconciliationService
-        from models import BankStatementLine
+        from models import BankStatementLine, GLAccount
         with app.app_context():
             from datetime import date
+            bank_account = GLAccount(
+                tenant_id=sample_tenant.id, code='1100', name='Test Bank',
+                type='asset', sub_type='bank', is_active=True,
+            )
+            db_session.add(bank_account)
+            db_session.flush()
             rows = [
                 {'date': date(2026, 6, 1), 'reference': 'REF001', 'description': 'Payment', 'amount': '1500'},
                 {'date': date(2026, 6, 2), 'reference': 'REF002', 'description': 'Transfer', 'amount': '-500'},
             ]
             count = BankReconciliationService.import_bank_statement(
-                tenant_id=1, bank_account_id=1, csv_rows=rows, statement_date=date(2026, 6, 1)
+                tenant_id=sample_tenant.id, bank_account_id=bank_account.id, csv_rows=rows, statement_date=date(2026, 6, 1)
             )
             assert count == 2
-            lines = BankStatementLine.query.filter_by(tenant_id=1).all()
+            lines = BankStatementLine.query.filter_by(tenant_id=sample_tenant.id).all()
             assert len(lines) == 2
             assert lines[0].reference == 'REF001'
             assert Decimal(str(lines[0].amount)) == Decimal('1500')

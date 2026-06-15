@@ -12,7 +12,7 @@ def _login_mock_owner():
     user = MagicMock()
     user.is_authenticated = True
     user.is_owner = True
-    user.tenant_id = 1
+    user.tenant_id = None
     user.id = 1
     user.get_id.return_value = '1'
     login_user(user)

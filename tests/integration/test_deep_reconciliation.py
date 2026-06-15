@@ -100,9 +100,9 @@ def env(app, db_session):
         db.session.add(branch)
         db.session.flush()
 
-    # Clean up pre-existing test cheques (nullify FK refs first)
+    # Clean up ALL cheques for the tenant (nullify FK refs first)
     from models import Cheque, Payment, Receipt, GLAccount as _GlAcct
-    for chk in Cheque.query.filter(Cheque.tenant_id == tenant_id, Cheque.cheque_number.in_(['CHK001', 'CHKOUT001', 'CHKDP', 'RETCHK'])).all():
+    for chk in Cheque.query.filter(Cheque.tenant_id == tenant_id).all():
         for pmt in Payment.query.filter_by(cheque_id=chk.id, tenant_id=tenant_id).all():
             pmt.cheque_id = None
         for rct in Receipt.query.filter_by(cheque_id=chk.id, tenant_id=tenant_id).all():

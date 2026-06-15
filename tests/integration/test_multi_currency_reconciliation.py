@@ -53,11 +53,11 @@ def env(app, db_session):
     from services.gl_service import GLService
     from models import Tenant, Branch, User, Customer, Supplier, Product, Warehouse, ProductWarehouseCost
 
-    tid = Tenant.query.order_by(Tenant.id).first()
-    if not tid:
-        tid = Tenant(name='RecTest', name_ar='RecTest', slug='rectest', email='r@t.com', phone_1='0500000000', country='AE', subscription_plan='basic')
-        db.session.add(tid)
-        db.session.flush()
+    from uuid import uuid4
+    uid = uuid4().hex[:8]
+    tid = Tenant(name=f'FxTenant_{uid}', name_ar=f'FxTenant_{uid}', slug=f'fx-tenant-{uid}', email=f'fx-{uid}@t.com', phone_1='0500000000', country='AE', subscription_plan='basic')
+    db.session.add(tid)
+    db.session.flush()
     tenant_id = tid.id
     GLService.ensure_core_accounts(tenant_id=tenant_id)
     from services.gl_provisioning_service import GLProvisioningService
@@ -75,36 +75,26 @@ def env(app, db_session):
         role = Role(name='Owner', slug='owner')
         db.session.add(role)
         db.session.flush()
-    user = User.query.filter_by(tenant_id=tenant_id).first()
-    if not user:
-        user = User(tenant_id=tenant_id, username='rectestuser', email='u@t.com', full_name='Test', is_active=True, is_owner=True, branch_id=branch.id, role_id=role.id)
-        user.set_password('p')
-        db.session.add(user)
-        db.session.flush()
+    user = User(tenant_id=tenant_id, username=f'rectestuser-{uid}', email=f'u-{uid}@t.com', full_name='Test', is_active=True, is_owner=True, branch_id=branch.id, role_id=role.id)
+    user.set_password('p')
+    db.session.add(user)
+    db.session.flush()
 
-    customer = Customer.query.filter_by(tenant_id=tenant_id).first()
-    if not customer:
-        customer = Customer(tenant_id=tenant_id, name='Test Customer', phone='0500000001')
-        db.session.add(customer)
-        db.session.flush()
+    customer = Customer(tenant_id=tenant_id, name=f'Test Customer {uid}', phone='0500000001')
+    db.session.add(customer)
+    db.session.flush()
 
-    supplier = Supplier.query.filter_by(tenant_id=tenant_id).first()
-    if not supplier:
-        supplier = Supplier(tenant_id=tenant_id, name='Test Supplier', phone='0500000002')
-        db.session.add(supplier)
-        db.session.flush()
+    supplier = Supplier(tenant_id=tenant_id, name=f'Test Supplier {uid}', phone='0500000002')
+    db.session.add(supplier)
+    db.session.flush()
 
-    product = Product.query.filter_by(tenant_id=tenant_id, name='Reconciliation Test Product').first()
-    if not product:
-        product = Product(tenant_id=tenant_id, name='Reconciliation Test Product', current_stock=0, cost_price=Decimal('600'), regular_price=Decimal('1000'), has_serial_number=False)
-        db.session.add(product)
-        db.session.flush()
+    product = Product(tenant_id=tenant_id, name=f'FxRecon Prod {uid}', current_stock=0, cost_price=Decimal('600'), regular_price=Decimal('1000'), has_serial_number=False)
+    db.session.add(product)
+    db.session.flush()
 
-    wh = Warehouse.query.filter_by(tenant_id=tenant_id).first()
-    if not wh:
-        wh = Warehouse(tenant_id=tenant_id, name='Test WH', code='TWH', branch_id=branch.id)
-        db.session.add(wh)
-        db.session.flush()
+    wh = Warehouse(tenant_id=tenant_id, name=f'FXWH-{uid}', code=f'FXWH-{uid[:4].upper()}', branch_id=branch.id)
+    db.session.add(wh)
+    db.session.flush()
 
     pwc = ProductWarehouseCost.query.filter_by(tenant_id=tenant_id, product_id=product.id, warehouse_id=wh.id).first()
     if not pwc:
@@ -395,6 +385,7 @@ class TestMultiTenantIsolation:
             from services.gl_provisioning_service import GLProvisioningService
             from models import Tenant, Branch, User, Customer, Product, Warehouse, ProductWarehouseCost
             from unittest.mock import patch
+            from uuid import uuid4
 
             tid_a = env['tenant_id']
             user_a = env['user']
@@ -417,7 +408,8 @@ class TestMultiTenantIsolation:
                 )
             db.session.commit()
 
-            tid_b = Tenant(name='TenantB', name_ar='TenantB', slug='tenantb', email='b@t.com', phone_1='0500000003', country='AE', subscription_plan='basic')
+            uid_b = uuid4().hex[:8]
+            tid_b = Tenant(name=f'TenantB-{uid_b}', name_ar=f'TenantB-{uid_b}', slug=f'tenantb-{uid_b}', email=f'b-{uid_b}@t.com', phone_1='0500000003', country='AE', subscription_plan='basic')
             db.session.add(tid_b)
             db.session.flush()
             GLService.ensure_core_accounts(tenant_id=tid_b.id)
@@ -427,20 +419,20 @@ class TestMultiTenantIsolation:
             db.session.add(branch_b)
             db.session.flush()
 
-            user_b = User(tenant_id=tid_b.id, username='userb', email='u@b.com', full_name='User B', is_active=True, is_owner=True, branch_id=branch_b.id, role_id=user_a.role_id)
+            user_b = User(tenant_id=tid_b.id, username=f'userb-{uid_b}', email=f'u-{uid_b}@b.com', full_name='User B', is_active=True, is_owner=True, branch_id=branch_b.id, role_id=user_a.role_id)
             user_b.set_password('p')
             db.session.add(user_b)
             db.session.flush()
 
-            customer_b = Customer(tenant_id=tid_b.id, name='Customer B', phone='0500000004')
+            customer_b = Customer(tenant_id=tid_b.id, name=f'Customer B {uid_b}', phone='0500000004')
             db.session.add(customer_b)
             db.session.flush()
 
-            product_b = Product(tenant_id=tid_b.id, name='Product B', current_stock=100, cost_price=Decimal('600'), regular_price=Decimal('1000'), has_serial_number=False)
+            product_b = Product(tenant_id=tid_b.id, name=f'Product B {uid_b}', current_stock=100, cost_price=Decimal('600'), regular_price=Decimal('1000'), has_serial_number=False)
             db.session.add(product_b)
             db.session.flush()
 
-            wh_b = Warehouse(tenant_id=tid_b.id, name='WHB', code='WHB', branch_id=branch_b.id)
+            wh_b = Warehouse(tenant_id=tid_b.id, name=f'WHB-{uid_b}', code=f'WHB-{uid_b[:4].upper()}', branch_id=branch_b.id)
             db.session.add(wh_b)
             db.session.flush()
 

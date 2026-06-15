@@ -1,17 +1,17 @@
 {% macro currency_options(default_code='AED', constants=None) %}
   {% if not constants %}
     {% set constants = [
-      ('AED', {'ar': '{{ t('Dirham') }} {{ t('إماراتي') }}', 'symbol': 'د.إ'}),
-      ('USD', {'ar': '{{ t('Dollar') }} {{ t('أمريكي') }}', 'symbol': '$'}),
-      ('ILS', {'ar': '{{ t('Shekel') }} {{ t('إسرائيلي') }}', 'symbol': '₪'}),
-      ('EUR', {'ar': '{{ t('Euro') }}', 'symbol': '€'}),
-      ('GBP', {'ar': '{{ t('Pound') }} {{ t('إسترليني') }}', 'symbol': '£'}),
-      ('SAR', {'ar': '{{ t('Riyal') }} {{ t('سعودي') }}', 'symbol': 'ر.س'}),
-      ('JOD', {'ar': '{{ t('Dinar') }} {{ t('أردني') }}', 'symbol': 'د.أ'}),
-      ('KWD', {'ar': '{{ t('Dinar') }} {{ t('كويتي') }}', 'symbol': 'د.ك'}),
-      ('QAR', {'ar': '{{ t('Riyal') }} {{ t('قطري') }}', 'symbol': 'ر.ق'}),
-      ('OMR', {'ar': '{{ t('Riyal') }} {{ t('عماني') }}', 'symbol': 'ر.ع'}),
-      ('BHD', {'ar': '{{ t('Dinar') }} {{ t('بحريني') }}', 'symbol': 'د.ب'}),
+      ('AED', {'ar': t('Dirham') ~ ' ' ~ t('إماراتي'), 'symbol': 'د.إ'}),
+      ('USD', {'ar': t('Dollar') ~ ' ' ~ t('أمريكي'), 'symbol': '$'}),
+      ('ILS', {'ar': t('Shekel') ~ ' ' ~ t('إسرائيلي'), 'symbol': '₪'}),
+      ('EUR', {'ar': t('Euro'), 'symbol': '€'}),
+      ('GBP', {'ar': t('Pound') ~ ' ' ~ t('إسترليني'), 'symbol': '£'}),
+      ('SAR', {'ar': t('Riyal') ~ ' ' ~ t('سعودي'), 'symbol': 'ر.س'}),
+      ('JOD', {'ar': t('Dinar') ~ ' ' ~ t('أردني'), 'symbol': 'د.أ'}),
+      ('KWD', {'ar': t('Dinar') ~ ' ' ~ t('كويتي'), 'symbol': 'د.ك'}),
+      ('QAR', {'ar': t('Riyal') ~ ' ' ~ t('قطري'), 'symbol': 'ر.ق'}),
+      ('OMR', {'ar': t('Riyal') ~ ' ' ~ t('عماني'), 'symbol': 'ر.ع'}),
+      ('BHD', {'ar': t('Dinar') ~ ' ' ~ t('بحريني'), 'symbol': 'د.ب'}),
     ] %}
   {% endif %}
   {% for code, data in constants %}

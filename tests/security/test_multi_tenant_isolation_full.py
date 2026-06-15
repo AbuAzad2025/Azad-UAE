@@ -383,13 +383,13 @@ class TestPlatformOwnerContextSwitch:
     """Only platform owner/developer can switch active tenant context."""
 
     @pytest.fixture
-    def owner_user(self, db_session, sample_tenant, sample_role):
+    def owner_user(self, db_session, sample_role):
         import uuid
         uid = str(uuid.uuid4())[:8]
         from models import User
         u = User(
             username=f"test-owner-{uid}", email=f"owner-{uid}@test.test",
-            full_name="Test Owner", tenant_id=sample_tenant.id,
+            full_name="Test Owner", tenant_id=None,
             role_id=sample_role.id,
             is_owner=True, is_active=True,
         )
@@ -403,9 +403,11 @@ class TestPlatformOwnerContextSwitch:
         import uuid
         uid = str(uuid.uuid4())[:8]
         from models import User, Role
-        dev_role = Role(name=f"Developer {uid}", slug="developer", is_active=True)
-        db_session.add(dev_role)
-        db_session.flush()
+        dev_role = Role.query.filter_by(slug='developer').first()
+        if not dev_role:
+            dev_role = Role(name=f"Developer {uid}", slug="developer", is_active=True)
+            db_session.add(dev_role)
+            db_session.flush()
         u = User(
             username=f"test-dev-{uid}", email=f"dev-{uid}@test.test",
             full_name="Test Dev", role_id=dev_role.id,

@@ -19,12 +19,13 @@ def pos_env(app, db_session):
     from models.system_settings import SystemSettings
     from models.pos_session import PosSession
 
-    ss = SystemSettings.query.first()
+    ss = SystemSettings.query.order_by(SystemSettings.id.desc()).first()
     if not ss:
         ss = SystemSettings(enable_pos=True, default_currency="AED")
         db.session.add(ss)
         db.session.flush()
-    ss.enable_pos = True
+    else:
+        ss.enable_pos = True
 
     tid = Tenant.query.order_by(Tenant.id).first()
     if not tid:
@@ -48,22 +49,18 @@ def pos_env(app, db_session):
         db.session.add(role)
         db.session.flush()
 
-    user = User.query.filter_by(tenant_id=tenant_id).first()
-    if not user:
-        user = User(tenant_id=tenant_id, username="postestuser", email="u@t.com", full_name="Test", is_active=True, is_owner=True, branch_id=branch.id, role_id=role.id)
-        user.set_password("p")
-        db.session.add(user)
-        db.session.flush()
-
-    customer = Customer.query.filter_by(tenant_id=tenant_id).first()
-    if not customer:
-        customer = Customer(tenant_id=tenant_id, name="Walk-in Customer", phone="0500000001", customer_type="walkin")
-        db.session.add(customer)
-        db.session.flush()
-
     from uuid import uuid4
-    uid = str(uuid4())[:8]
-    product = Product(tenant_id=tenant_id, name=f"POS Test Product {uid}", cost_price=Decimal("50"), regular_price=Decimal("100"), has_serial_number=False, is_active=True)
+    _uid = str(uuid4())[:8]
+    user = User(tenant_id=tenant_id, username=f"posuser_{_uid}", email=f"u_{_uid}@t.com", full_name="Test", is_active=True, is_owner=True, branch_id=branch.id, role_id=role.id)
+    user.set_password("p")
+    db.session.add(user)
+    db.session.flush()
+
+    customer = Customer(tenant_id=tenant_id, name=f"Walk-in Customer {_uid}", phone=f"0500000001{_uid[:2]}", customer_type="walkin")
+    db.session.add(customer)
+    db.session.flush()
+
+    product = Product(tenant_id=tenant_id, name=f"POS Test Product {_uid}", cost_price=Decimal("50"), regular_price=Decimal("100"), has_serial_number=False, is_active=True)
     db.session.add(product)
     db.session.flush()
 

@@ -6,7 +6,8 @@ from config import Config
 def smoke_app():
     class SmokeConfig(Config):
         TESTING = True
-        SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
+        SQLALCHEMY_DATABASE_URI = "postgresql+psycopg2://postgres:123@localhost:5432/azad_uae"
+        SQLALCHEMY_TRACK_MODIFICATIONS = False
         SQLALCHEMY_ENGINE_OPTIONS = {}
         WTF_CSRF_ENABLED = False
     

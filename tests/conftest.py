@@ -2,12 +2,20 @@
 Pytest configuration and shared fixtures for the Azad UAE ERP test suite.
 """
 import os
+import shutil
 import sys
 import pytest
 from sqlalchemy import text as sa_text
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(__file__))
 sys.path.insert(0, PROJECT_ROOT)
+
+
+def pytest_configure(config):
+    """Clean up previous pytest temp dir to prevent PermissionError at exit on Windows."""
+    temp_dir = os.path.join(PROJECT_ROOT, "tests", ".pytest-temp")
+    if os.path.isdir(temp_dir):
+        shutil.rmtree(temp_dir, ignore_errors=True)
 
 os.environ.setdefault("APP_ENV", "testing")
 os.environ.setdefault("FLASK_ENV", "testing")
@@ -25,13 +33,9 @@ os.environ.setdefault("SKIP_SYSTEM_INTEGRITY", "1")
 class TestConfig:
     TESTING = True
     SECRET_KEY = "test-secret-key"
-    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL", "sqlite:///:memory:")
+    SQLALCHEMY_DATABASE_URI = os.environ["DATABASE_URL"]
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SQLALCHEMY_ENGINE_OPTIONS = (
-        {"connect_args": {"check_same_thread": False}}
-        if os.environ.get("DATABASE_URL", "sqlite").startswith("sqlite")
-        else {}
-    )
+    SQLALCHEMY_ENGINE_OPTIONS = {}
     WTF_CSRF_ENABLED = False
     CACHE_TYPE = "null"
     CELERY_BROKER_URL = "memory://"
@@ -314,6 +318,7 @@ def sample_purchase(db_session, sample_tenant, sample_supplier, sample_user):
         total_amount=Decimal("105.000"),
         amount=Decimal("105.000"),
         amount_aed=Decimal("105.000"),
+        currency="AED",
     )
     db_session.add(p)
     db_session.commit()
@@ -420,6 +425,7 @@ def sample_sale(db_session, sample_tenant, sample_customer, sample_user):
         amount_aed=Decimal("210.000"),
         paid_amount=Decimal("0"),
         balance_due=Decimal("210.000"),
+        currency="AED",
     )
     db_session.add(s)
     db_session.commit()

@@ -108,7 +108,7 @@ class TestReceiptAllocationFlushFix:
         payment_data = {
             'customer_id': sample_customer.id,
             'amount': Decimal('100'),
-            'currency': 'AED',
+            'currency': 'ILS',
             'payment_method': 'cash',
             'branch_id': sample_branch.id,
             'allocate_to_sales': {str(sale.id): Decimal('100')},

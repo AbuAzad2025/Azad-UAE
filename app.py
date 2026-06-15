@@ -228,6 +228,9 @@ def create_app(config_class=Config):
         from utils.tenant_branding import document_logo_relative_path
         return document_logo_relative_path(settings, tenant_id)
 
+    # make t() available as a Jinja2 global so macros can use it
+    app.jinja_env.globals.setdefault('t', __import__('utils.i18n', fromlist=['t']).t)
+
     # Context Processors
     @app.context_processor
     def utility_processor():
