@@ -1,13 +1,3 @@
-"""
-Partner Service — Profit/Loss Calculation & Distribution
-
-Handles:
-  • Period revenue/expense aggregation per scope (company / branch / warehouse)
-  • Profit/loss share calculation per partner
-  • Distribution creation (draft → approved → paid)
-  • Running balance updates
-  • GL journal generation (optional)
-"""
 from __future__ import annotations
 
 from datetime import date, datetime, timezone, timedelta
@@ -19,7 +9,6 @@ from extensions import db
 
 
 class PartnerService:
-    """Core business logic for partner profit/loss distribution."""
 
     # ── Period aggregation ──────────────────────────────────────
 
@@ -31,13 +20,7 @@ class PartnerService:
         scope_type: str = 'company',
         scope_id: Optional[int] = None,
     ) -> Decimal:
-        """Total confirmed sales revenue for the scope in the period (base currency)."""
         from models import Sale
-
-        # Warehouse scope is line-based: a single sale may contain lines from
-        # several warehouses, so summing Sale.amount_aed over a SaleLine join
-        # would multiply the sale total by its line count. Sum line revenue
-        # (converted to base currency) attributable to this warehouse instead.
         if scope_type == 'warehouse' and scope_id:
             from models import SaleLine
             q = db.session.query(
@@ -70,12 +53,6 @@ class PartnerService:
         scope_type: str = 'company',
         scope_id: Optional[int] = None,
     ) -> Decimal:
-        """Cost of goods sold using the historical cost captured on each sale line.
-
-        Uses SaleLine.cost_price (cost at time of sale) rather than the product's
-        current cost, and aligns the period filter with the sale date and
-        confirmed status so revenue and COGS cover the same transactions.
-        """
         from models import SaleLine, Sale
         q = db.session.query(
             func.sum(SaleLine.quantity * func.coalesce(SaleLine.cost_price, 0))
@@ -100,13 +77,6 @@ class PartnerService:
         scope_type: str = 'company',
         scope_id: Optional[int] = None,
     ) -> Decimal:
-        """Total confirmed expenses for the scope.
-
-        Expenses are only tracked at company/branch granularity (the Expense
-        model has no warehouse dimension). Warehouse-scoped partners therefore
-        share gross profit (revenue - COGS) and are not charged company-wide
-        operating expenses, which previously inflated their loss share.
-        """
         from models import Expense
 
         if scope_type == 'warehouse':
@@ -242,11 +212,6 @@ class PartnerService:
 
     @staticmethod
     def approve_distribution(dist_id: int, approved_by: int, tenant_id: Optional[int] = None) -> bool:
-        """Approve a draft distribution and create profit_share transaction.
-
-        When tenant_id is provided the distribution must belong to it, preventing
-        cross-tenant access via a guessed id.
-        """
         from models import PartnerProfitDistribution, PartnerTransaction, Partner
 
         dist = PartnerProfitDistribution.query.get(dist_id)
@@ -258,8 +223,6 @@ class PartnerService:
         dist.status = 'approved'
         dist.approved_by = approved_by
         dist.approved_at = datetime.now(timezone.utc)
-
-        # Create transaction
         net = float(dist.net_due)
         if net != 0:
             tx_type = 'profit_share' if net > 0 else 'loss_share'
@@ -274,8 +237,6 @@ class PartnerService:
                 notes=f'توزيع فترة {dist.period_start} – {dist.period_end}',
             )
             db.session.add(tx)
-
-            # Update partner balance
             partner = Partner.query.get(dist.partner_id)
             if partner:
                 old_bal = Decimal(str(partner.current_balance or 0))
@@ -297,7 +258,6 @@ class PartnerService:
 
     @staticmethod
     def pay_distribution(dist_id: int, tenant_id: Optional[int] = None) -> bool:
-        """Mark distribution as paid (tenant-scoped when tenant_id is given)."""
         from models import PartnerProfitDistribution
 
         dist = PartnerProfitDistribution.query.get(dist_id)
@@ -329,11 +289,6 @@ class PartnerService:
         reference_number: str = '',
         tenant_id: Optional[int] = None,
     ) -> Optional[int]:
-        """Record a manual transaction and update partner balance.
-
-        When tenant_id is provided the partner must belong to it, preventing
-        cross-tenant manipulation via a guessed id.
-        """
         from models import Partner, PartnerTransaction
         from utils.currency_utils import get_system_default_currency
 
@@ -363,8 +318,6 @@ class PartnerService:
             reference_number=reference_number,
         )
         db.session.add(tx)
-
-        # Update partner aggregates
         partner.current_balance = new_bal
         if transaction_type == 'withdrawal':
             partner.total_withdrawals = (Decimal(str(partner.total_withdrawals or 0)) + abs(amount_base))

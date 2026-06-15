@@ -184,7 +184,7 @@
               <div class="input-group">
                 <input type="text" name="description" placeholder="وصف (اختياري)" class="form-control" maxlength="500">
                 <div class="input-group-append">
-                  <button type="submit" class="btn btn-danger">
+                  <button type="submit" class="btn btn-danger" aria-label="إنشاء نسخة نظام كاملة">
                     <i class="fas fa-database mr-1"></i> System backup
                   </button>
                 </div>
@@ -231,7 +231,7 @@
               <div class="input-group">
                 <input type="text" name="description" placeholder="وصف (اختياري)" class="form-control" maxlength="500">
                 <div class="input-group-append">
-                  <button type="submit" class="btn btn-success">
+                  <button type="submit" class="btn btn-success" aria-label="إنشاء نسخة احتياطية محددة النطاق">
                     <i class="fas fa-download mr-1"></i> إنشاء
                   </button>
                 </div>
@@ -247,7 +247,7 @@
               النسخ الاحتياطي المجدول التلقائي
             </label>
             <div>
-              <a href="{{ url_for('owner.scheduled_backups') }}" class="btn btn-primary btn-block">
+              <a href="{{ url_for('owner.scheduled_backups') }}" class="btn btn-primary btn-block" aria-label="إعدادات النسخ الاحتياطي المجدول">
                 <i class="fas fa-cog mr-1"></i> إعدادات الجدولة
               </a>
             </div>
@@ -355,22 +355,21 @@
 
         <div class="card-footer">
           <a href="{{ url_for('owner.prepare_restore_backup', filename=backup.get('filename')) }}"
-             class="btn btn-warning" title="تعليمات استعادة آمنة">
+             class="btn btn-warning" title="تعليمات استعادة آمنة" aria-label="تعليمات استعادة النسخة الاحتياطية">
             <i class="fas fa-book mr-1"></i> تعليمات الاستعادة
           </a>
           {% if is_platform_owner and (backup.get('backup_scope') == 'system' or backup.get('filename').startswith('azad_backup_system_') or 'system' in backup.get('filename')) %}
           <button type="button" class="btn btn-outline-warning"
                   onclick="openTargetRestore({{ backup.get('filename')|tojson }})"
-                  title="استعادة system إلى قاعدة جديدة فقط">
+                  title="استعادة system إلى قاعدة جديدة فقط" aria-label="استعادة النسخة لقاعدة بيانات جديدة">
             <i class="fas fa-database mr-1"></i> استعادة لقاعدة جديدة
           </button>
           {% endif %}
-
           
           <form method="POST" action="{{ url_for('owner.delete_backup') }}" onsubmit="return confirm('⚠️ هل أنت متأكد من حذف النسخة الاحتياطية؟\n\n📁 ' + {{ backup.get('filename')|tojson }} + '\n\n{% if not backup.get('manual') %}⚠️ تنبيه: هذه نسخة تلقائية.\n{% endif %}⚠️ لا يمكن التراجع عن هذا الإجراء!');" class="ic-7">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
             <input type="hidden" name="filename" value="{{ backup.get('filename') }}" aria-label="filename" minlength="2" maxlength="100">
-            <button type="submit" class="btn btn-danger" title="حذف النسخة نهائياً">
+            <button type="submit" class="btn btn-danger" title="حذف النسخة نهائياً" aria-label="حذف النسخة الاحتياطية">
               <i class="fas fa-trash mr-1"></i> حذف
             </button>
           </form>

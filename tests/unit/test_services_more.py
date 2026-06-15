@@ -1,4 +1,3 @@
-"""Coverage-driven tests for high-statement-count services."""
 import pytest
 from decimal import Decimal
 from datetime import date, datetime, timedelta, timezone
@@ -63,17 +62,22 @@ class TestPartnerService:
 class TestPartnerServiceScope:
     def test_get_scope_revenue_warehouse_uses_line_total(self, db_session, sample_tenant, sample_warehouse):
         from services.partner_service import PartnerService
-        from models import Sale, SaleLine, Customer
+        from models import Sale, SaleLine, Customer, Product
         c = Customer.query.filter_by(tenant_id=sample_tenant.id).first()
         if not c:
             c = Customer(tenant_id=sample_tenant.id, name='Test Customer')
             db_session.add(c)
             db_session.flush()
+        p1 = Product(tenant_id=sample_tenant.id, name='P1', sku='SKU-P1', cost_price=Decimal('50'), regular_price=Decimal('100'), current_stock=Decimal('10'))
+        p2 = Product(tenant_id=sample_tenant.id, name='P2', sku='SKU-P2', cost_price=Decimal('50'), regular_price=Decimal('100'), current_stock=Decimal('10'))
+        db_session.add_all([p1, p2])
+        db_session.flush()
         s = Sale(
             tenant_id=sample_tenant.id,
             sale_number='S-TEST-001',
             customer_id=c.id,
             seller_id=1,
+            warehouse_id=sample_warehouse.id,
             status='confirmed',
             total_amount=Decimal('300'),
             amount=Decimal('300'),
@@ -83,12 +87,10 @@ class TestPartnerServiceScope:
         )
         db_session.add(s)
         db_session.flush()
-        sl1 = SaleLine(tenant_id=sample_tenant.id, sale_id=s.id, product_id=1,
-                       quantity=Decimal('1'), unit_price=Decimal('100'), line_total=Decimal('100'),
-                       warehouse_id=sample_warehouse.id)
-        sl2 = SaleLine(tenant_id=sample_tenant.id, sale_id=s.id, product_id=2,
-                       quantity=Decimal('1'), unit_price=Decimal('200'), line_total=Decimal('200'),
-                       warehouse_id=sample_warehouse.id)
+        sl1 = SaleLine(tenant_id=sample_tenant.id, sale_id=s.id, product_id=p1.id,
+                       quantity=Decimal('1'), unit_price=Decimal('100'), line_total=Decimal('100'))
+        sl2 = SaleLine(tenant_id=sample_tenant.id, sale_id=s.id, product_id=p2.id,
+                       quantity=Decimal('1'), unit_price=Decimal('200'), line_total=Decimal('200'))
         db_session.add_all([sl1, sl2])
         db_session.commit()
         rev = PartnerService.get_scope_revenue(
@@ -98,17 +100,22 @@ class TestPartnerServiceScope:
 
     def test_get_scope_revenue_warehouse_not_multiplied_by_line_count(self, db_session, sample_tenant, sample_warehouse):
         from services.partner_service import PartnerService
-        from models import Sale, SaleLine, Customer
+        from models import Sale, SaleLine, Customer, Product
         c = Customer.query.filter_by(tenant_id=sample_tenant.id).first()
         if not c:
             c = Customer(tenant_id=sample_tenant.id, name='Test Customer')
             db_session.add(c)
             db_session.flush()
+        p1 = Product(tenant_id=sample_tenant.id, name='P1b', sku='SKU-P1B', cost_price=Decimal('50'), regular_price=Decimal('100'), current_stock=Decimal('10'))
+        p2 = Product(tenant_id=sample_tenant.id, name='P2b', sku='SKU-P2B', cost_price=Decimal('50'), regular_price=Decimal('100'), current_stock=Decimal('10'))
+        db_session.add_all([p1, p2])
+        db_session.flush()
         s = Sale(
             tenant_id=sample_tenant.id,
             sale_number='S-TEST-002',
             customer_id=c.id,
             seller_id=1,
+            warehouse_id=sample_warehouse.id,
             status='confirmed',
             total_amount=Decimal('300'),
             amount=Decimal('300'),
@@ -118,12 +125,10 @@ class TestPartnerServiceScope:
         )
         db_session.add(s)
         db_session.flush()
-        sl1 = SaleLine(tenant_id=sample_tenant.id, sale_id=s.id, product_id=1,
-                       quantity=Decimal('1'), unit_price=Decimal('100'), line_total=Decimal('100'),
-                       warehouse_id=sample_warehouse.id)
-        sl2 = SaleLine(tenant_id=sample_tenant.id, sale_id=s.id, product_id=2,
-                       quantity=Decimal('1'), unit_price=Decimal('200'), line_total=Decimal('200'),
-                       warehouse_id=sample_warehouse.id)
+        sl1 = SaleLine(tenant_id=sample_tenant.id, sale_id=s.id, product_id=p1.id,
+                       quantity=Decimal('1'), unit_price=Decimal('100'), line_total=Decimal('100'))
+        sl2 = SaleLine(tenant_id=sample_tenant.id, sale_id=s.id, product_id=p2.id,
+                       quantity=Decimal('1'), unit_price=Decimal('200'), line_total=Decimal('200'))
         db_session.add_all([sl1, sl2])
         db_session.commit()
         rev = PartnerService.get_scope_revenue(
