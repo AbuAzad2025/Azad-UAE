@@ -61,28 +61,22 @@
   - [x] `roles_permissions.html`, `scheduled_backups.html`, `sms_settings.html`
   - [x] `user_profile.html`, `users_list.html`
 
-## ✅ Phase 3: تحسين إمكانية الوصول - قيد التنفيذ
+## ✅ Phase 3: تحسين إمكانية الوصول - مكتمل
 
 ### المهام المنجزة:
-- [x] إضافة `aria-label` للأزرار والروابط في `users_list.html`
-- [x] إضافة `aria-label` للأزرار والروابط في `activity_monitor.html`
-- [x] إضافة `aria-label` للأزرار والروابط في `dashboard.html`
-- [x] إضافة `aria-label` للأزرار والروابط في `system_config.html`
-- [x] إضافة `aria-label` للأزرار والروابط في `backups_list.html`
+- [x] إضافة `aria-label` للأزرار والروابط في `users_list.html`, `activity_monitor.html`, `dashboard.html`, `system_config.html`, `backups_list.html`
+- [x] إضافة `aria-label` لكل الأزرار/الروابط ذات الأيقونات فقط في باقي القوالب: `_platform_dashboard_sections.html`, `store_payment_methods.html`, `error_logs.html`, `error_audit_logs.html`, `audit_logs.html`, `api_keys.html`, `security_alerts.html`
+- [x] **مؤشرات التركيز (Focus indicators)**: قواعد `:focus-visible` في `owner-panels.css` مفعّلة على كل صفحات المالك عبر `owner/base.html`
+- [x] **نسب التباين (Contrast ratios)**: إصلاح النص الأبيض على خلفية التحذير الصفراء في `reports.html`, `dashboard.html`, `api_keys.html`, `company_info.html` + قاعدة CSS شاملة تُجبر النص الداكن على كل أسطح `bg-warning`
 
-### المهام قيد التنفيذ:
-- [ ] إضافة `aria-label` للأزرار والروابط في القوالب المتبقية
-- [ ] تحسين نسب التباين (Contrast ratios) - 4.5:1 للنصوص العادية، 3:1 للنصوص الكبيرة
-- [ ] تحسين مؤشرات التركيز (Focus indicators)
-- [ ] إضافة `aria-describedby` للعناصر المعقدة
+## ✅ Phase 4: توحيد أنماط التنسيق - قيد التنفيذ
 
-## 📋 Phase 4: توحيد أنماط التنسيق - لم يبدأ
+### المهام المنجزة:
+- [x] **توحيد الألوان**: ربط `owner-panels.css` بنظام الـ design tokens الموجود (`--ui-*` في `erp-theme.css`) مع قيم احتياطية — الألوان والشارات وحلقة التركيز ونصف القطر والظلال أصبحت موحّدة مع الثيم العام
 
-### المهام:
-- [ ] إنشاء إطار تنسيق أساسي (CSS Framework)
-- [ ] توحيد أحجام الأيقونات
-- [ ] توحيد تدرجات الألوان
-- [ ] إنشاء دليل التصميم (Design System)
+### المهام المتبقية:
+- [ ] توحيد أحجام الأيقونات (مكتبة واحدة: FontAwesome مقابل bootstrap-icons)
+- [ ] إنشاء دليل التصميم (Design System) موثّق للـ tokens الموجودة
 
 ## 📋 Phase 5: تحسين الأداء - لم يبدأ
 
@@ -93,9 +87,9 @@
 ---
 
 ## 📍 الموقع الحالي:
-- **Phase 2**: 85% مكتمل (باقي إزالة CSS المضمن من 18 قالب)
-- **Phase 3**: 10% مكتمل (باقي إضافة ARIA labels وتحسين التباين)
-- **Phase 3-4**: لم تبدأ
+- **Phase 2**: مكتمل
+- **Phase 3**: مكتمل (ARIA labels + مؤشرات التركيز + تباين التحذير)
+- **Phase 4**: قيد التنفيذ (تم توحيد الألوان عبر design tokens؛ يتبقى توحيد الأيقونات ودليل التصميم)
 
 ## 🎯 المهام الفورية التالية:
 

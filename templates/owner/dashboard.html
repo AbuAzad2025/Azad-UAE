@@ -47,8 +47,8 @@
   <div class="col-lg-3 col-md-6 col-sm-6">
     <div class="small-box bg-warning shadow">
       <div class="inner">
-        <h3 class="text-white">{{ total_sales }}</h3>
-        <p class="text-white"><i class="fas fa-shopping-cart mr-1"></i> المبيعات</p>
+        <h3 class="text-dark">{{ total_sales }}</h3>
+        <p class="text-dark"><i class="fas fa-shopping-cart mr-1"></i> المبيعات</p>
       </div>
       <div class="icon"><i class="fas fa-chart-line"></i></div>
       <a href="{% if current_user.has_permission('manage_sales') %}{{ url_for('sales.index') }}{% else %}#{% endif %}" class="small-box-footer" aria-label="عرض جميع المبيعات">
@@ -135,7 +135,7 @@
       <div class="card-header bg-purple text-white">
         <h3 class="card-title"><i class="fas fa-building mr-2"></i> أداء الفروع (Branch Performance)</h3>
         <div class="card-tools">
-          <button type="button" class="btn btn-tool" data-card-widget="collapse" title="طي/توسيع"><i class="fas fa-minus"></i></button>
+          <button type="button" class="btn btn-tool" data-card-widget="collapse" title="طي/توسيع" aria-label="طي/توسيع"><i class="fas fa-minus"></i></button>
         </div>
       </div>
       <div class="card-body p-0">
@@ -207,7 +207,7 @@
       <div class="card-header bg-purple text-white">
         <h3 class="card-title"><i class="fas fa-globe mr-2"></i> أداء فروع المنصة (جميع الشركات)</h3>
         <div class="card-tools">
-          <button type="button" class="btn btn-tool" data-card-widget="collapse" title="طي/توسيع"><i class="fas fa-minus"></i></button>
+          <button type="button" class="btn btn-tool" data-card-widget="collapse" title="طي/توسيع" aria-label="طي/توسيع"><i class="fas fa-minus"></i></button>
         </div>
       </div>
       <div class="card-body p-0">
@@ -438,7 +438,7 @@
 
   <div class="col-lg-3 col-md-6">
     <div class="card shadow-sm border-0 hover-lift">
-      <div class="card-header bg-warning text-white">
+      <div class="card-header bg-warning text-dark">
         <h5 class="mb-0"><i class="fas fa-cog mr-2"></i> إعدادات متقدمة</h5>
       </div>
       <div class="card-body">

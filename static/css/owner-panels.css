@@ -1,22 +1,53 @@
-/* Owner / company admin panels — scoped UI polish */
+/* Owner / company admin panels — scoped UI polish.
+   Colors, radius, shadows and focus ring are bound to the global
+   --ui-* design tokens (erp-theme.css) with safe fallbacks. */
 .owner-panel-card {
-  border-radius: 10px;
+  border-radius: var(--ui-radius-sm, 10px);
   border: 0;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  box-shadow: var(--ui-shadow, 0 2px 12px rgba(0, 0, 0, 0.06));
 }
-.owner-badge-active { background: #28a745; color: #fff; }
-.owner-badge-suspended { background: #6c757d; color: #fff; }
-.owner-badge-missing { background: #dc3545; color: #fff; }
-.owner-badge-warn { background: #ffc107; color: #212529; }
+.owner-badge-active { background: var(--ui-success, #188A4C); color: #fff; }
+.owner-badge-suspended { background: var(--ui-muted, #6c757d); color: #fff; }
+.owner-badge-missing { background: var(--ui-danger, #B11E2B); color: #fff; }
+.owner-badge-warn { background: var(--ui-warning, #C97C10); color: #fff; }
 .owner-tenant-logo {
   width: 40px;
   height: 40px;
   object-fit: contain;
-  border-radius: 6px;
-  background: #f8f9fa;
+  border-radius: var(--ui-radius-sm, 6px);
+  background: var(--ui-surface-2, #f8f9fa);
 }
 .owner-table-tenants td { vertical-align: middle; }
 @media (max-width: 768px) {
   .owner-table-tenants { font-size: 0.85rem; }
   .owner-tenant-logo { width: 32px; height: 32px; }
+}
+.btn:focus-visible,
+a:focus-visible,
+.form-control:focus-visible,
+.custom-select:focus-visible,
+.page-link:focus-visible,
+[tabindex]:focus-visible {
+  outline: 3px solid var(--ui-primary, #0E5A3A);
+  outline-offset: 2px;
+  box-shadow: var(--ui-focus-ring, 0 0 0 3px rgba(14, 90, 58, 0.22));
+}
+.btn:focus-visible {
+  position: relative;
+  z-index: 2;
+}
+.small-box.bg-warning,
+.small-box.bg-warning .inner h3,
+.small-box.bg-warning .inner p,
+.small-box.bg-warning .icon,
+.small-box.bg-warning .small-box-footer,
+.info-box .info-box-icon.bg-warning,
+.card-header.bg-warning,
+.card-header.bg-warning .card-title,
+.card.bg-warning,
+.card.bg-warning .card-body {
+  color: #212529;
+}
+.small-box.bg-warning .small-box-footer {
+  background-color: rgba(0, 0, 0, 0.1);
 }

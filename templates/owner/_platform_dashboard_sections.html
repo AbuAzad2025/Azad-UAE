@@ -94,10 +94,10 @@
           <td class="text-center"><span class="badge owner-badge-{{ row.backup_status }}">{{ row.backup_label }}</span></td>
           <td class="text-center"><span class="badge owner-badge-{{ row.status }}">{{ row.status_label }}</span></td>
           <td class="text-nowrap">
-            <a href="{{ url_for('tenants.switch', tenant_id=row.tenant.id) }}" class="btn btn-outline-primary" title="تبديل"><i class="fas fa-exchange-alt"></i></a>
-            <a href="{{ url_for('tenants.switch', tenant_id=row.tenant.id) }}" class="btn btn-outline-secondary" title="تعديل بعد التبديل"><i class="fas fa-edit"></i></a>
-            <a href="{{ url_for('owner.create_user', tenant_id=row.tenant.id) }}" class="btn btn-outline-success" title="مستخدم"><i class="fas fa-user-plus"></i></a>
-            <a href="{{ url_for('owner.list_backups') }}" class="btn btn-outline-info" title="نسخ"><i class="fas fa-database"></i></a>
+            <a href="{{ url_for('tenants.switch', tenant_id=row.tenant.id) }}" class="btn btn-outline-primary" title="تبديل" aria-label="تبديل"><i class="fas fa-exchange-alt"></i></a>
+            <a href="{{ url_for('tenants.switch', tenant_id=row.tenant.id) }}" class="btn btn-outline-secondary" title="تعديل بعد التبديل" aria-label="تعديل بعد التبديل"><i class="fas fa-edit"></i></a>
+            <a href="{{ url_for('owner.create_user', tenant_id=row.tenant.id) }}" class="btn btn-outline-success" title="مستخدم" aria-label="إضافة مستخدم"><i class="fas fa-user-plus"></i></a>
+            <a href="{{ url_for('owner.list_backups') }}" class="btn btn-outline-info" title="نسخ" aria-label="النسخ الاحتياطية"><i class="fas fa-database"></i></a>
           </td>
         </tr>
         {% endfor %}

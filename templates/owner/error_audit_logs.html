@@ -183,12 +183,12 @@
                 <form method="post" action="{{ url_for('owner.resolve_error_log', log_id=log.id) }}" class="d-inline">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
                   <input type="hidden" name="note" value="" aria-label="note">
-                  <button type="submit" class="btn btn-success" title="تحديد كمحلول">
+                  <button type="submit" class="btn btn-success" title="تحديد كمحلول" aria-label="تحديد كمحلول">
                     <i class="fas fa-check"></i>
                   </button>
                 </form>
                 {% endif %}
-                <button class="btn btn-info" data-toggle="modal" data-target="#errorDetailModal" data-error-id="{{ log.id }}" title="تفاصيل">
+                <button class="btn btn-info" data-toggle="modal" data-target="#errorDetailModal" data-error-id="{{ log.id }}" title="تفاصيل" aria-label="تفاصيل">
                   <i class="fas fa-eye"></i>
                 </button>
               </td>

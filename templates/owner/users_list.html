@@ -186,16 +186,16 @@
               </td>
               <td>
                 <div class="btn-group btn-group-sm">
-                  <a href="{{ url_for('owner.user_profile', user_id=user.id) }}" class="btn btn-info" title="الملف الشخصي">
+                  <a href="{{ url_for('owner.user_profile', user_id=user.id) }}" class="btn btn-info" title="الملف الشخصي" aria-label="الملف الشخصي">
                     <i class="fas fa-eye"></i>
                   </a>
-                  <a href="{{ url_for('owner.edit_user', user_id=user.id) }}" class="btn btn-primary" title="{{ t('Edit') }}">
+                  <a href="{{ url_for('owner.edit_user', user_id=user.id) }}" class="btn btn-primary" title="{{ t('Edit') }}" aria-label="{{ t('Edit') }}">
                     <i class="fas fa-edit"></i>
                   </a>
                   {% if not user.is_owner and user.id != current_user.id %}
                   <form class="needs-validation" method="POST" action="{{ url_for('owner.delete_user', user_id=user.id) }}" onsubmit="return confirm('هل تريد تعطيل هذا المستخدم؟');" class="ic-3">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
-                    <button type="submit" class="btn btn-danger" title="تعطيل">
+                    <button type="submit" class="btn btn-danger" title="تعطيل" aria-label="تعطيل المستخدم">
                       <i class="fas fa-ban"></i>
                     </button>
                   </form>
