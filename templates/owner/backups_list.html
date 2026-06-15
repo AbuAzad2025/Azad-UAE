@@ -375,17 +375,19 @@
           </form>
 
           
+          
           <a href="{{ url_for('owner.download_backup', filename=backup.get('filename')) }}" 
              class="btn btn-success"
              title="تحميل النسخة الاحتياطية"
-             download>
+             download
+             aria-label="تحميل النسخة الاحتياطية">
             <i class="fas fa-download mr-1"></i> تحميل
           </a>
-
           
           <button type="button" class="btn btn-info" 
                   onclick="verifyBackup({{ backup.get('filename')|tojson }})"
-                  title="التحقق من سلامة النسخة">
+                  title="التحقق من سلامة النسخة"
+                  aria-label="التحقق من سلامة النسخة الاحتياطية">
             <i class="fas fa-check-circle mr-1"></i> تحقق
           </button>
         </div>

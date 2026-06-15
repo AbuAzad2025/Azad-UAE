@@ -30,6 +30,8 @@ class GLRef:
     DONATION = "Donation"
     AZAD_PLATFORM_FEE = "AzadPlatformFee"
     AZAD_SUBSCRIPTION_FEE = "AzadSubscriptionFee"
+    PARTNER_DISTRIBUTION = "PartnerDistribution"
+    PARTNER_TRANSACTION = "PartnerTransaction"
 
 
 LEGACY_REF_MAP: dict[str, str] = {

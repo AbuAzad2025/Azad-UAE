@@ -259,6 +259,9 @@ class PartnerService:
     @staticmethod
     def pay_distribution(dist_id: int, tenant_id: Optional[int] = None) -> bool:
         from models import PartnerProfitDistribution
+        from services.gl_service import GLService, GL_ACCOUNTS
+        from services.gl_posting import post_or_fail
+        from utils.gl_reference_types import GLRef
 
         dist = PartnerProfitDistribution.query.get(dist_id)
         if not dist or dist.status != 'approved':
@@ -267,6 +270,19 @@ class PartnerService:
             return False
 
         dist.status = 'paid'
+        net = float(dist.net_due)
+        if net != 0:
+            amount = abs(net)
+            try:
+                partner_account = GLService.get_account_code_for_concept('PARTNER_CURRENT_ACCOUNT', tenant_id=dist.tenant_id)
+            except Exception:
+                partner_account = '3350'
+            bank_account = GL_ACCOUNTS.get('bank', '1120')
+            lines = [
+                {'account': partner_account, 'concept_code': 'PARTNER_CURRENT_ACCOUNT', 'debit': amount, 'description': f'دفع مستحق شريك - توزيع {dist.id}'},
+                {'account': bank_account, 'concept_code': 'BANK', 'credit': amount, 'description': f'دفع مستحق شريك - توزيع {dist.id}'},
+            ]
+            post_or_fail(lines, description=f'دفع توزيع شريك #{dist.id}', reference_type=GLRef.PARTNER_DISTRIBUTION, reference_id=dist.id, tenant_id=dist.tenant_id)
         try:
             db.session.commit()
         except Exception:
@@ -323,7 +339,27 @@ class PartnerService:
             partner.total_withdrawals = (Decimal(str(partner.total_withdrawals or 0)) + abs(amount_base))
         elif transaction_type == 'additional_investment':
             partner.total_additional_investment = (Decimal(str(partner.total_additional_investment or 0)) + amount_base)
-
+        if amount_base != 0:
+            from services.gl_service import GLService, GL_ACCOUNTS
+            from services.gl_posting import post_or_fail
+            from utils.gl_reference_types import GLRef
+            try:
+                partner_account = GLService.get_account_code_for_concept('PARTNER_CURRENT_ACCOUNT', tenant_id=partner.tenant_id)
+            except Exception:
+                partner_account = '3350'
+            bank_account = GL_ACCOUNTS.get('bank', '1120')
+            amt = float(abs(amount_base))
+            if amount_base > 0:
+                lines = [
+                    {'account': bank_account, 'concept_code': 'BANK', 'debit': amt, 'description': notes or f'{transaction_type} - شريك {partner_id}'},
+                    {'account': partner_account, 'concept_code': 'PARTNER_CURRENT_ACCOUNT', 'credit': amt, 'description': notes or f'{transaction_type} - شريك {partner_id}'},
+                ]
+            else:
+                lines = [
+                    {'account': partner_account, 'concept_code': 'PARTNER_CURRENT_ACCOUNT', 'debit': amt, 'description': notes or f'{transaction_type} - شريك {partner_id}'},
+                    {'account': bank_account, 'concept_code': 'BANK', 'credit': amt, 'description': notes or f'{transaction_type} - شريك {partner_id}'},
+                ]
+            post_or_fail(lines, description=f'حركة شريك - {transaction_type} #{tx.id}', reference_type=GLRef.PARTNER_TRANSACTION, reference_id=tx.id, tenant_id=partner.tenant_id)
         try:
             db.session.commit()
         except Exception:
