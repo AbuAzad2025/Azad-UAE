@@ -183,6 +183,22 @@ class TestPartnerServiceScope:
         ok = PartnerService.pay_distribution(d.id, tenant_id=sample_tenant.id)
         assert ok is True
 
+    def test_add_transaction_requires_tenant_match(self, db_session, sample_tenant, sample_gl_accounts):
+        from services.partner_service import PartnerService
+        from services.gl_service import GLService
+        from models import Branch, Partner
+        branch = Branch(tenant_id=sample_tenant.id, name='Main', code='MAIN', is_active=True, is_main=True)
+        db_session.add(branch)
+        db_session.commit()
+        GLService.ensure_core_accounts(tenant_id=sample_tenant.id)
+        p = Partner(tenant_id=sample_tenant.id, name='TP3', scope_type='company')
+        db_session.add(p)
+        db_session.flush()
+        tx_id = PartnerService.add_transaction(p.id, 'additional_investment', Decimal('100'), tenant_id=sample_tenant.id + 9999)
+        assert tx_id is None
+        tx_id = PartnerService.add_transaction(p.id, 'additional_investment', Decimal('100'), tenant_id=sample_tenant.id)
+        assert tx_id is not None
+
 
 class TestChequeService:
     def test_import(self):
