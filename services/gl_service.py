@@ -57,6 +57,7 @@ GL_ACCOUNTS = {
     'fx_loss': '6600',
     'bank_charges': '6260',
     'misc_expense': '6500',
+    'partner_current_account': '2150',
     'azad_platform_payable': '2180',
     'azad_platform_fee_accrued': '2181',
     'azad_platform_fee_paid': '2182',
@@ -91,6 +92,7 @@ GL_ACCOUNT_CONCEPTS = {
     'fx_loss': 'FX_LOSS',
     'bank_charges': 'BANK_FEES',
     'misc_expense': 'MISC_EXPENSE',
+    'partner_current_account': 'PARTNER_CURRENT_ACCOUNT',
     'azad_platform_payable': 'AZAD_PLATFORM_PAYABLE',
     'azad_platform_fee_accrued': 'AZAD_PLATFORM_FEE_ACCRUED',
     'azad_platform_fee_paid': 'AZAD_PLATFORM_FEE_PAID',
@@ -553,7 +555,7 @@ class GLService:
             )
         code = '1130'
         if customer and getattr(customer, 'customer_type', None) == 'partner':
-            code = '3350'
+            code = '2150'
         elif customer and getattr(customer, 'customer_type', None) == 'merchant':
             code = '2115'
         return code

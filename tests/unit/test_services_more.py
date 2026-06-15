@@ -161,9 +161,14 @@ class TestPartnerServiceScope:
         ok = PartnerService.approve_distribution(d.id, approved_by=1, tenant_id=sample_tenant.id)
         assert ok is True
 
-    def test_pay_distribution_requires_tenant_match(self, db_session, sample_tenant):
+    def test_pay_distribution_requires_tenant_match(self, db_session, sample_tenant, sample_gl_accounts):
         from services.partner_service import PartnerService
-        from models import Partner, PartnerProfitDistribution
+        from services.gl_service import GLService
+        from models import Branch, Partner, PartnerProfitDistribution
+        branch = Branch(tenant_id=sample_tenant.id, name='Main', code='MAIN', is_active=True, is_main=True)
+        db_session.add(branch)
+        db_session.commit()
+        GLService.ensure_core_accounts(tenant_id=sample_tenant.id)
         p = Partner(tenant_id=sample_tenant.id, name='TP2', scope_type='company')
         db_session.add(p)
         db_session.flush()

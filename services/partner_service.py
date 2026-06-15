@@ -276,8 +276,11 @@ class PartnerService:
             try:
                 partner_account = GLService.get_account_code_for_concept('PARTNER_CURRENT_ACCOUNT', tenant_id=dist.tenant_id)
             except Exception:
-                partner_account = '3350'
-            bank_account = GL_ACCOUNTS.get('bank', '1120')
+                partner_account = '2150'
+            try:
+                bank_account = GLService.get_default_liquidity_account('bank', tenant_id=dist.tenant_id)
+            except Exception:
+                bank_account = GL_ACCOUNTS.get('bank', '1120')
             lines = [
                 {'account': partner_account, 'concept_code': 'PARTNER_CURRENT_ACCOUNT', 'debit': amount, 'description': f'دفع مستحق شريك - توزيع {dist.id}'},
                 {'account': bank_account, 'concept_code': 'BANK', 'credit': amount, 'description': f'دفع مستحق شريك - توزيع {dist.id}'},
@@ -346,8 +349,11 @@ class PartnerService:
             try:
                 partner_account = GLService.get_account_code_for_concept('PARTNER_CURRENT_ACCOUNT', tenant_id=partner.tenant_id)
             except Exception:
-                partner_account = '3350'
-            bank_account = GL_ACCOUNTS.get('bank', '1120')
+                partner_account = '2150'
+            try:
+                bank_account = GLService.get_default_liquidity_account('bank', tenant_id=partner.tenant_id)
+            except Exception:
+                bank_account = GL_ACCOUNTS.get('bank', '1120')
             amt = float(abs(amount_base))
             if amount_base > 0:
                 lines = [
