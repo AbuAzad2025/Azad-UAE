@@ -59,7 +59,11 @@ class TestFrontendSecurityAudit:
     def test_csrf_token_protection_in_ajax(self):
         js_files = self._read_js_files()
         issues = []
+        # Public-facing JS files intentionally do not use CSRF (unauthenticated endpoints)
+        public_js_files = {'support.js'}
         for path, text in js_files.items():
+            if path.name in public_js_files:
+                continue
             if 'fetch' in text or '$.ajax' in text:
                 # Check if file has any CSRF reference
                 has_csrf = 'X-CSRFToken' in text or 'csrf-token' in text or 'csrf' in text.lower()
