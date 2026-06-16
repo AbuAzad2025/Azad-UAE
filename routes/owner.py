@@ -3159,11 +3159,15 @@ def exchange_rates():
         elif action == 'delete':
             record_id = request.form.get('record_id', type=int)
             if record_id:
-                rec = ExchangeRateRecord.query.get(record_id)
+                rec = ExchangeRateRecord.query.filter_by(
+                    id=record_id, tenant_id=tenant_id
+                ).first()
                 if rec:
                     db.session.delete(rec)
                     db.session.commit()
                     flash('✅ تم حذف السجل.', 'success')
+                else:
+                    flash('⚠️ السجل غير موجود أو لا يخصك.', 'warning')
 
         return redirect(url_for('owner.exchange_rates'))
 
