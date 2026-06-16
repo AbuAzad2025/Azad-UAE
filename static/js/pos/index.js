@@ -60,6 +60,18 @@
         el.classList.remove('d-none');
         setTimeout(()=>{ el.classList.add('d-none'); }, 5000);
     };
+    const showModalAlert = (modalId, msg, level='danger') => {
+        const el = qs('#' + modalId + 'Alert');
+        if (!el) { showAlert(msg, level); return; }
+        el.className = 'alert alert-' + level + ' mb-3';
+        el.textContent = msg;
+        el.classList.remove('d-none');
+        setTimeout(()=>{ el.classList.add('d-none'); }, 6000);
+    };
+    const hideModalAlert = (modalId) => {
+        const el = qs('#' + modalId + 'Alert');
+        if (el) el.classList.add('d-none');
+    };
     const customerHint = () => {
         const el = qs('#customerSelectedHint');
         if (state.customer) {
@@ -466,6 +478,7 @@
     qs('#openSessionConfirm').addEventListener('click', async () => {
         const balance = toNum(qs('#openSessionBalance').value);
         const notes = qs('#openSessionNotes').value.trim();
+        hideModalAlert('openSession');
         qs('#openSessionConfirm').disabled = true;
         try {
             const r = await fetch('/pos/api/session/open', {
@@ -480,13 +493,15 @@
             await loadSession();
             showAlert('تم فتح الجلسة: ' + j.session.number, 'success');
         } catch (err) {
-            showAlert(err.message, 'danger');
+            showModalAlert('openSession', err.message, 'danger');
         } finally {
             qs('#openSessionConfirm').disabled = false;
         }
     });
 
     qs('#closeSessionBtn').addEventListener('click', async () => {
+        hideModalAlert('closeSession');
+        let reportLoaded = false;
         try {
             const r = await fetch('/pos/api/session/report', { credentials: 'same-origin' });
             const j = await r.json();
@@ -494,8 +509,11 @@
                 qs('#closeOpening').textContent = fmt(j.session.opening_balance);
                 qs('#closeCashSales').textContent = fmt(j.session.total_cash_sales);
                 qs('#closeExpected').textContent = fmt((j.session.opening_balance || 0) + (j.session.total_cash_sales || 0));
+                reportLoaded = true;
             }
-        } catch (_) {}
+        } catch (err) {
+            showModalAlert('closeSession', 'تعذر تحميل بيانات الجلسة: ' + (err.message || 'خطأ غير معروف'), 'warning');
+        }
         qs('#closeSessionBalance').value = '';
         qs('#closeSessionNotes').value = '';
         $('#closeSessionModal').modal('show');
@@ -503,11 +521,12 @@
 
     qs('#closeSessionConfirm').addEventListener('click', async () => {
         const balance = toNum(qs('#closeSessionBalance').value);
-        if (!balance && balance !== 0) {
-            showAlert('يرجى إدخال رصيد الإغلاق.', 'warning');
+        if (balance === '' || Number.isNaN(Number(qs('#closeSessionBalance').value))) {
+            showModalAlert('closeSession', 'يرجى إدخال رصيد الإغلاق.', 'warning');
             return;
         }
         const notes = qs('#closeSessionNotes').value.trim();
+        hideModalAlert('closeSession');
         qs('#closeSessionConfirm').disabled = true;
         try {
             const r = await fetch('/pos/api/session/close', {
@@ -527,11 +546,14 @@
                 showAlert('تم إغلاق الجلسة بنجاح. الرصيد مطابق.', 'success');
             }
         } catch (err) {
-            showAlert(err.message, 'danger');
+            showModalAlert('closeSession', err.message, 'danger');
         } finally {
             qs('#closeSessionConfirm').disabled = false;
         }
     });
 
+    $('#posDoneModal').on('hidden.bs.modal', function () {
+        qs('#productSearch').focus();
+    });
     loadSession();
 })();

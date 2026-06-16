@@ -26,6 +26,10 @@
 .pos-payment-presets { display: flex; gap: .5rem; flex-wrap: wrap; }
 .pos-payment-presets .btn { flex: 1; min-width: 60px; }
 .pos-table-footer { background: #f8f9fa; font-weight: 600; }
+/* Modal alerts — must be visible above modal body */
+.modal-body .alert { position: relative; z-index: 1; }
+/* Session bar enhanced visibility */
+.pos-session-bar { position: relative; z-index: 10; }
 @media (max-width: 991px) {
   .pos-right { margin-top: 12px; }
   .pos-wrap .form-control, .pos-wrap .btn { min-height: 52px; }
