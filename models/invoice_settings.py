@@ -161,6 +161,10 @@ class InvoiceSettings(db.Model):
                 return settings
             from models.tenant import Tenant
             tenant = db.session.get(Tenant, tid)
+            if tenant is None:
+                return InvoiceSettings.query.filter_by(is_active=True).filter(
+                    InvoiceSettings.tenant_id.is_(None)
+                ).first()
             settings = InvoiceSettings(is_active=True, tenant_id=tid)
             InvoiceSettings._seed_from_tenant(settings, tenant)
             db.session.add(settings)
