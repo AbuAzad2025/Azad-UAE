@@ -31,7 +31,7 @@
 
               <div class="form-group">
                 <label>من عملة</label>
-                <select name="from_currency" class="form-control">
+                <select name="from_currency" class="form-control" aria-label="من عملة">
                   {% for c in currencies %}
                   <option value="{{ c }}" {{ 'selected' if c == 'USD' }}>{{ c }}</option>
                   {% endfor %}
@@ -40,7 +40,7 @@
 
               <div class="form-group">
                 <label>إلى عملة</label>
-                <select name="to_currency" class="form-control">
+                <select name="to_currency" class="form-control" aria-label="إلى عملة">
                   {% for c in currencies %}
                   <option value="{{ c }}" {{ 'selected' if c == 'AED' }}>{{ c }}</option>
                   {% endfor %}
@@ -54,7 +54,7 @@
 
               <div class="form-group">
                 <label>تاريخ السريان</label>
-                <input type="date" name="effective_date" class="form-control" value="{{ today }}">
+                <input type="date" name="effective_date" class="form-control" value="{{ today }}" aria-label="تاريخ السريان">
               </div>
 
               <button type="submit" class="btn btn-info btn-block">
@@ -104,7 +104,7 @@
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <input type="hidden" name="action" value="delete">
                         <input type="hidden" name="record_id" value="{{ r.id }}">
-                        <button type="submit" class="btn btn-xs btn-outline-danger">
+                        <button type="submit" class="btn btn-xs btn-outline-danger" aria-label="حذف" title="حذف">
                           <i class="fas fa-trash"></i>
                         </button>
                       </form>

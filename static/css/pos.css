@@ -4,7 +4,7 @@
 .pos-cart-table input { min-height: 40px; }
 .pos-cart-table .qty-btn { width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; }
 .pos-cart-table .qty-display { display: inline-block; min-width: 36px; text-align: center; font-weight: 600; }
-.pos-cart-table input[type="number"] { -moz-appearance: textfield; }
+.pos-cart-table input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
 .pos-cart-table input[type="number"]::-webkit-inner-spin-button,
 .pos-cart-table input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 .pos-results { max-height: 280px; overflow: auto; }

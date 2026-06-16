@@ -101,7 +101,7 @@
 }
 /* Settings panel */
 .pos-settings { border-top: 1px solid #e2e8f0; }
-.pos-settings-toggle { padding: .5rem 1rem; cursor: pointer; font-size: .85rem; font-weight: 600; color: #10b981; background: #f8fafc; user-select: none; }
+.pos-settings-toggle { padding: .5rem 1rem; cursor: pointer; font-size: .85rem; font-weight: 600; color: #10b981; background: #f8fafc; -webkit-user-select: none; user-select: none; }
 .pos-settings-toggle:hover { background: #f1f5f9; }
 .pos-settings-body { padding: .5rem 1rem 1rem; background: #fafcff; max-height: 400px; overflow-y: auto; }
 .pos-settings-body .form-group-sm { margin-bottom: .6rem; }
