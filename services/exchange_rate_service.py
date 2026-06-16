@@ -324,27 +324,32 @@ class ExchangeRateService:
         *,
         user_rate: float | Decimal | None = None,
         fixed_rate: float | Decimal | None = None,
+        tenant_id: int | None = None,
+        effective_date: str | None = None,
     ) -> dict[str, Any]:
         """
         Resolve the rate to store inside a transaction document (invoice, payment,
         receipt, purchase order, etc.).
 
-        Priority:
-          1) fixed_rate  — already frozen in an existing document (read-only)
-          2) user_rate   — manual input from the user (has absolute priority)
-          3) CurrencyService.get_exchange_rate()  — system rate at creation time
+        Priority (correct order):
+          1) fixed_rate     — already frozen in an existing document (read-only)
+          2) user_rate      — manual input from the user in the form (override)
+          3) admin_rate     — manager's stored manual rate in exchange_rate_records
+          4) online_rate    — API online rate (auto-saved to exchange_rate_records)
+          5) last_record    — last known rate from exchange_rate_records
+          6) needs_input    — nothing found; caller MUST show a modal for user input
 
         Return dict includes 'rate_mode':
-          - "frozen"   : rate already saved in document; never touch again.
-          - "editable" : rate resolved BEFORE saving; caller MAY still let user
-                         edit it, but once the document is saved the rate MUST
-                         be treated as frozen forever.
+          - "frozen"      : rate already saved in document; never touch again.
+          - "editable"    : rate resolved BEFORE saving; caller MAY still let user edit.
+          - "needs_input" : no rate found at all; show modal to user.
 
         Contract for callers:
           - On CREATE: call this once, store the returned 'rate' in the document's
             exchange_rate field, then never update that field automatically.
           - On READ/UPDATE: pass the stored rate as fixed_rate so this method
             returns rate_mode="frozen" and refuses any automatic change.
+          - On needs_input: stop form submission, show modal, then re-submit with user_rate.
         """
         from_currency = (from_currency or "AED").upper()
         to_currency = (to_currency or "AED").upper()
@@ -366,7 +371,7 @@ class ExchangeRateService:
             except Exception:
                 pass
 
-        # 2. Manual/user rate has absolute priority (pre-save, editable until saved)
+        # 2. User manual input — highest priority for NEW documents
         if user_rate is not None:
             try:
                 rate = Decimal(str(user_rate))
@@ -383,7 +388,7 @@ class ExchangeRateService:
             except (ValueError, TypeError):
                 pass
 
-        # 3. Same currency → parity (pre-save, editable until saved)
+        # 3. Same currency → parity
         if from_currency == to_currency:
             return {
                 "ok": True,
@@ -395,20 +400,206 @@ class ExchangeRateService:
                 "note": "Same currency. Caller MUST store 1.0 in document on save and then treat as frozen.",
             }
 
-        # 4. System rate at creation time — fetch once, store forever
-        from services.currency_service import CurrencyService
-        rate_decimal = CurrencyService.get_exchange_rate(
-            from_currency, to_currency, user_rate=None
+        # 4. Admin manual rate (stored by manager in exchange_rate_records)
+        admin_rate = ExchangeRateService._get_admin_rate(
+            from_currency, to_currency, tenant_id, effective_date
         )
+        if admin_rate:
+            return {
+                "ok": True,
+                "from": from_currency,
+                "to": to_currency,
+                "rate": admin_rate,
+                "source": "admin_manual",
+                "rate_mode": "editable",
+                "note": "Manager-stored rate from exchange_rate_records. Caller MUST store in document on save and then treat as frozen.",
+            }
+
+        # 5. Online rate — fetch, then auto-save to exchange_rate_records for next time
+        online_rate = ExchangeRateService._fetch_and_store_online_rate(
+            from_currency, to_currency, tenant_id
+        )
+        if online_rate:
+            return {
+                "ok": True,
+                "from": from_currency,
+                "to": to_currency,
+                "rate": online_rate,
+                "source": "online_api",
+                "rate_mode": "editable",
+                "note": "Online API rate (auto-saved to exchange_rate_records). Caller MUST store in document on save and then treat as frozen.",
+            }
+
+        # 6. Last known rate from exchange_rate_records (any date, any source)
+        last_rate = ExchangeRateService._get_last_known_rate(
+            from_currency, to_currency, tenant_id
+        )
+        if last_rate:
+            return {
+                "ok": True,
+                "from": from_currency,
+                "to": to_currency,
+                "rate": last_rate,
+                "source": "last_record",
+                "rate_mode": "editable",
+                "note": "Last known rate from history. Caller MUST store in document on save and then treat as frozen.",
+            }
+
+        # 7. Nothing found — caller MUST show modal
         return {
-            "ok": True,
+            "ok": False,
             "from": from_currency,
             "to": to_currency,
-            "rate": float(rate_decimal.quantize(Decimal("0.000001"))),
-            "source": "system_at_creation",
-            "rate_mode": "editable",
-            "note": "System rate at creation time. Caller MUST store in document on save and then treat as frozen.",
+            "rate": None,
+            "source": "needs_input",
+            "rate_mode": "needs_input",
+            "note": "No exchange rate found. Caller MUST show a modal for the user to input a rate.",
         }
+
+    @staticmethod
+    def _get_admin_rate(
+        from_currency: str,
+        to_currency: str,
+        tenant_id: int | None = None,
+        effective_date: str | None = None,
+    ) -> float | None:
+        """Lookup manager's manual rate in exchange_rate_records for today (or given date)."""
+        try:
+            from models import ExchangeRateRecord
+            from extensions import db
+            from datetime import date
+
+            target_date = effective_date or date.today().isoformat()
+            record = (
+                ExchangeRateRecord.query.filter_by(
+                    tenant_id=tenant_id,
+                    from_currency=from_currency,
+                    to_currency=to_currency,
+                    effective_date=target_date,
+                    source="manual",
+                )
+                .order_by(ExchangeRateRecord.created_at.desc())
+                .first()
+            )
+            if record and record.rate:
+                return float(record.rate)
+        except Exception:
+            pass
+        return None
+
+    @staticmethod
+    def _fetch_and_store_online_rate(
+        from_currency: str,
+        to_currency: str,
+        tenant_id: int | None = None,
+    ) -> float | None:
+        """Fetch online rate, auto-save to exchange_rate_records, return the rate."""
+        try:
+            from services.currency_service import CurrencyService
+            rate_decimal = CurrencyService.get_exchange_rate(
+                from_currency, to_currency, user_rate=None
+            )
+            if rate_decimal and rate_decimal > Decimal("0"):
+                rate_float = float(rate_decimal.quantize(Decimal("0.000001")))
+                # Auto-save to exchange_rate_records as 'api_primary' for today
+                ExchangeRateService._save_rate_record(
+                    from_currency=from_currency,
+                    to_currency=to_currency,
+                    rate=rate_float,
+                    source="api_primary",
+                    tenant_id=tenant_id,
+                )
+                return rate_float
+        except Exception:
+            pass
+        return None
+
+    @staticmethod
+    def _get_last_known_rate(
+        from_currency: str,
+        to_currency: str,
+        tenant_id: int | None = None,
+    ) -> float | None:
+        """Get the most recent exchange_rate_record regardless of date or source."""
+        try:
+            from models import ExchangeRateRecord
+            record = (
+                ExchangeRateRecord.query.filter_by(
+                    tenant_id=tenant_id,
+                    from_currency=from_currency,
+                    to_currency=to_currency,
+                )
+                .order_by(ExchangeRateRecord.effective_date.desc(), ExchangeRateRecord.created_at.desc())
+                .first()
+            )
+            if record and record.rate:
+                return float(record.rate)
+        except Exception:
+            pass
+        return None
+
+    @staticmethod
+    def _save_rate_record(
+        from_currency: str,
+        to_currency: str,
+        rate: float,
+        source: str,
+        tenant_id: int | None = None,
+        api_provider: str | None = None,
+    ) -> None:
+        """Save a rate record to exchange_rate_records (idempotent for same day)."""
+        try:
+            from models import ExchangeRateRecord
+            from extensions import db
+            from datetime import date
+
+            today = date.today().isoformat()
+            existing = ExchangeRateRecord.query.filter_by(
+                tenant_id=tenant_id,
+                from_currency=from_currency,
+                to_currency=to_currency,
+                effective_date=today,
+                source=source,
+            ).first()
+            if existing:
+                existing.rate = Decimal(str(rate))
+                db.session.commit()
+                return
+
+            record = ExchangeRateRecord(
+                tenant_id=tenant_id,
+                from_currency=from_currency,
+                to_currency=to_currency,
+                rate=Decimal(str(rate)),
+                source=source,
+                api_provider=api_provider,
+                effective_date=today,
+            )
+            db.session.add(record)
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+
+    @staticmethod
+    def save_manual_rate(
+        from_currency: str,
+        to_currency: str,
+        rate: float,
+        tenant_id: int | None = None,
+        created_by: int | None = None,
+    ) -> dict[str, Any]:
+        """Public API: save a manager's manual rate."""
+        try:
+            ExchangeRateService._save_rate_record(
+                from_currency=from_currency,
+                to_currency=to_currency,
+                rate=rate,
+                source="manual",
+                tenant_id=tenant_id,
+            )
+            return {"ok": True, "message": "Rate saved successfully"}
+        except Exception as e:
+            return {"ok": False, "error": str(e)}
 
     @staticmethod
     def get_manual_rate_for_calculation(

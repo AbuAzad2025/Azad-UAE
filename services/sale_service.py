@@ -100,7 +100,14 @@ class SaleService:
                 currency,
                 base_currency,
                 user_rate=user_exchange_rate,
+                tenant_id=tenant_id,
             )
+            if rate_info.get('rate_mode') == 'needs_input':
+                raise ValueError(
+                    '⚠️ سعر الصرف غير متوفر.\n'
+                    '💡 اذهب إلى إعدادات المالك ← أسعار الصرف ← أدخل سعر يدوي، '
+                    'أو أدخل سعراً في حقل "سعر الصرف" بالفاتورة.'
+                )
             exchange_rate = Decimal(str(rate_info['rate']))
             
             # Validate exchange rate

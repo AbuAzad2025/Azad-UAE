@@ -25,6 +25,9 @@
           <a href="{{ url_for('owner.currency_settings') }}" class="btn btn-success" aria-label="العملات">
             <i class="fas fa-dollar-sign"></i> العملات
           </a>
+          <a href="{{ url_for('owner.exchange_rates') }}" class="btn btn-outline-info" aria-label="أسعار الصرف">
+            <i class="fas fa-exchange-alt"></i> أسعار الصرف
+          </a>
           <a href="{{ url_for('owner.tax_settings') }}" class="btn btn-outline-success" aria-label="الضرائب">
             <i class="fas fa-percent"></i> الضرائب
           </a>
@@ -101,4 +104,3 @@
 </section>
 
 {% endblock %}
-

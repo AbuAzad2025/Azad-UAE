@@ -23,13 +23,20 @@ from utils.field_validators import (
 class PaymentService:
 
     @staticmethod
-    def _resolve_transaction_rate(currency, user_exchange_rate=None):
+    def _resolve_transaction_rate(currency, user_exchange_rate=None, tenant_id=None):
         from utils.currency_utils import get_system_default_currency
         rate_info = ExchangeRateService.resolve_exchange_rate_for_transaction(
             currency,
             get_system_default_currency(),
             user_rate=user_exchange_rate,
+            tenant_id=tenant_id,
         )
+        if rate_info.get('rate_mode') == 'needs_input':
+            raise ValueError(
+                '⚠️ سعر الصرف غير متوفر.\n'
+                '💡 اذهب إلى إعدادات المالك ← أسعار الصرف ← أدخل سعر يدوي، '
+                'أو أدخل سعراً في حقل "سعر الصرف".'
+            )
         return Decimal(str(rate_info['rate']))
 
     @staticmethod
