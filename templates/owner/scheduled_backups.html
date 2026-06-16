@@ -63,7 +63,7 @@
       <div class="mt-2 ic-1">{{ schedule_state.last_error }}</div>
       <div class="mt-2 text-muted">
         {% if schedule_state.last_run_at %}<span>آخر تشغيل: {{ schedule_state.last_run_at }}</span>{% endif %}
-        {% if schedule_state.last_filename %}<span>{% if schedule_state.last_run_at %} | {% endif %}الملف: {{ schedule_state.last_filename }}</span>{% endif %}
+        {% if schedule_state.last_filename %}<span>{% if schedule_state.last_run_at %} | {% endif %}{{ t('File') }}schedule_state.last_filename }}</span>{% endif %}
       </div>
     </div>
   </div>
@@ -97,7 +97,7 @@
           <div class="form-group">
             <label><i class="fas fa-sync"></i> التكرار:</label>
             <select name="frequency" class="form-control" required aria-label="frequency">
-              <option value="hourly" {% if settings.frequency == 'hourly' %}selected{% endif %}>كل ساعة</option>
+              <option value="hourly" {% if settings.frequency == 'hourly' %}selected{% endif %}>{{ t('Every_Hour') }}</option>
               <option value="daily" {% if settings.frequency == 'daily' %}selected{% endif %}>يومياً (موصى به)</option>
               <option value="weekly" {% if settings.frequency == 'weekly' %}selected{% endif %}>أسبوعياً</option>
               <option value="monthly" {% if settings.frequency == 'monthly' %}selected{% endif %}>شهرياً</option>
@@ -219,7 +219,6 @@
   </div>
 </div>
 
-
 <div class="row">
   <div class="col-md-12">
     <div class="card card-outline card-info">
@@ -271,5 +270,4 @@
   </div>
 </div>
 {% endblock %}
-
 

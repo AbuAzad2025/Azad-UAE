@@ -25,11 +25,11 @@
                         <div class="card-body">
                             <div class="table-responsive"><table class="table table-bordered">
                                 <tr>
-                                    <th>العميل</th>
+                                    <th>{{ t('Customer') }}</th>
                                     <td>{{ card.customer.name if card.customer else 'غير محدد' }}</td>
                                 </tr>
                                 <tr>
-                                    <th>نوع البطاقة</th>
+                                    <th>{{ t('Card_Type') }}</th>
                                     <td>
                                         {% if card.card_type == 'visa' %}
                                             <span class="badge badge-primary">Visa</span>
@@ -49,7 +49,7 @@
                                     <td>{{ card_data.cardholder_name if card_data else 'غير محدد' }}</td>
                                 </tr>
                                 <tr>
-                                    <th>تاريخ الانتهاء</th>
+                                    <th>{{ t('Expiry_Date') }}</th>
                                     <td>{{ card.expiry_month }}/{{ card.expiry_year }}</td>
                                 </tr>
                                 <tr>
@@ -57,15 +57,15 @@
                                     <td>{{ card_data.cvv if card_data else '***' }}</td>
                                 </tr>
                                 <tr>
-                                    <th>عدد الاستخدام</th>
+                                    <th>{{ t('Usage_Count') }}</th>
                                     <td>{{ card.usage_count }}</td>
                                 </tr>
                                 <tr>
-                                    <th>تاريخ الإنشاء</th>
+                                    <th>{{ t('Created_Date') }}</th>
                                     <td>{{ card.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
                                 </tr>
                                 <tr>
-                                    <th>آخر استخدام</th>
+                                    <th>{{ t('Last_Used') }}</th>
                                     <td>{{ card.last_used_at.strftime('%Y-%m-%d %H:%M') if card.last_used_at else 'لم يتم الاستخدام' }}</td>
                                 </tr>
                             </table></div>

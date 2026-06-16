@@ -189,8 +189,8 @@
 </div>
 
 
-<div id="customers-data" class="ic-1">{{ customers_json|tojson|safe }}</div>
-<div id="suppliers-data" class="ic-1">{{ suppliers_json|tojson|safe }}</div>
+{{ customers_json|tojson|json_script:"customers-data" }}
+{{ suppliers_json|tojson|json_script:"suppliers-data" }}
 
 {% endblock %}
 

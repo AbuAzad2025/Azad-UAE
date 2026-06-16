@@ -131,6 +131,44 @@
         </div>
       </div>
 
+      <div id="bank_fields" class="row mt-4" style="display: none;">
+        <div class="col-12">
+          <h5 class="mb-3"><i class="fas fa-university mr-2"></i>معلومات البنك</h5>
+        </div>
+        <div class="col-md-6">
+          <div class="form-group">
+            <label>اسم البنك</label>
+            <input type="text" name="bank_name" class="form-control"
+                   placeholder="مثال: بنك الإمارات دبي الوطني"
+                   value="{{ form_data.get('bank_name', '') }}" maxlength="200">
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-group">
+            <label>رقم الحساب</label>
+            <input type="text" name="bank_account_number" class="form-control"
+                   placeholder="مثال: 1234567890"
+                   value="{{ form_data.get('bank_account_number', '') }}" maxlength="100">
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-group">
+            <label>رقم IBAN</label>
+            <input type="text" name="bank_iban" class="form-control"
+                   placeholder="مثال: AE123456789012345678901"
+                   value="{{ form_data.get('bank_iban', '') }}" maxlength="50">
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-group">
+            <label>كود SWIFT</label>
+            <input type="text" name="bank_swift_code" class="form-control"
+                   placeholder="مثال: EBILAEAD"
+                   value="{{ form_data.get('bank_swift_code', '') }}" maxlength="20">
+          </div>
+        </div>
+      </div>
+
       <div class="row mt-4">
         <div class="col-12">
           <button type="submit" class="btn btn-success btn-lg">
@@ -224,4 +262,18 @@
     padding: 0.75rem 1rem;
   }
 </style>
+<script>
+$(document).ready(function() {
+  function toggleBankFields() {
+    var accountType = $('select[name="type"]').val();
+    if (accountType === 'asset') {
+      $('#bank_fields').show();
+    } else {
+      $('#bank_fields').hide();
+    }
+  }
+  $('select[name="type"]').on('change', toggleBankFields);
+  toggleBankFields();
+});
+</script>
 {% endblock %}

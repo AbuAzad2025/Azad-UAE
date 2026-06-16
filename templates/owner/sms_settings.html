@@ -13,7 +13,7 @@
             <i class="fas fa-arrow-right mr-1"></i> الرجوع للوحة المالك
           </a>
           <ol class="breadcrumb float-sm-left mb-0">
-            <li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">لوحة المالك</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">{{ t('Owner_Dashboard') }}</a></li>
             <li class="breadcrumb-item active">إعدادات الرسائل</li>
           </ol>
         </div>
@@ -50,7 +50,7 @@
           <div class="form-group">
             <label>مزود الخدمة</label>
             <select name="sms_provider" class="form-control" aria-label="sms provider">
-              <option value="" {{ 'selected' if not settings.sms_provider }}>بلا</option>
+              <option value="" {{ 'selected' if not settings.sms_provider }}>{{ t('None') }}</option>
               <option value="twilio" {{ 'selected' if settings.sms_provider == 'twilio' }}>Twilio</option>
               <option value="nexmo" {{ 'selected' if settings.sms_provider == 'nexmo' }}>Nexmo (Vonage)</option>
               <option value="local" {{ 'selected' if settings.sms_provider == 'local' }}>مزود محلي</option>
@@ -109,6 +109,4 @@
 </section>
 
 {% endblock %}
-
-
 

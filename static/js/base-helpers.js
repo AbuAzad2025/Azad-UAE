@@ -65,7 +65,18 @@ async function loadFxRates() {
     return;
   }
   const tbody = document.getElementById('fx-rates-body');
-  if (tbody) tbody.innerHTML = '<tr><td colspan="3"><span class="spinner-border spinner-border-sm text-muted"></span> جارٍ التحميل...</td></tr>';
+  if (tbody) {
+    tbody.textContent = '';
+    const tr = document.createElement('tr');
+    const td = document.createElement('td');
+    td.colSpan = 3;
+    const span = document.createElement('span');
+    span.className = 'spinner-border spinner-border-sm text-muted';
+    td.appendChild(span);
+    td.appendChild(document.createTextNode(' جارٍ التحميل...'));
+    tr.appendChild(td);
+    tbody.appendChild(tr);
+  }
   try {
     const res = await fetch(window._FX_API_URL, { cache: 'no-store' });
     if (!res.ok) throw new Error('HTTP ' + res.status);

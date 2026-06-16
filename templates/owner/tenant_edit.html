@@ -45,19 +45,19 @@
               <input type="text" name="phone_2" class="form-control" value="{{ tenant.phone_2 or '' }}" id="input_phone_2" aria-label="phone 2" pattern="^\+?[0-9\s\-]{8,20}$">
             </div>
             <div class="col-md-6">
-              <label class="form-label fw-semibold" for="input_email">البريد الإلكتروني</label>
+              <label class="form-label fw-semibold" for="input_email">{{ t('Email') }}</label>
               <input type="email" name="email" class="form-control" value="{{ tenant.email or '' }}" id="input_email" aria-label="email">
             </div>
             <div class="col-md-6">
-              <label class="form-label fw-semibold">العملة الافتراضية</label>
+              <label class="form-label fw-semibold">{{ t('Default_Currency') }}</label>
               <select name="default_currency" class="form-select" aria-label="default currency">
                 <option value="AED" {% if tenant.default_currency == 'AED' %}selected{% endif %}>AED - درهم إماراتي</option>
-                <option value="ILS" {% if tenant.default_currency == 'ILS' %}selected{% endif %}>ILS - شيكل</option>
-                <option value="USD" {% if tenant.default_currency == 'USD' %}selected{% endif %}>USD - دولار</option>
+                <option value="ILS" {% if tenant.default_currency == 'ILS' %}selected{% endif %}>ILS - {{ t('Shekel') }}</option>
+                <option value="USD" {% if tenant.default_currency == 'USD' %}selected{% endif %}>USD - {{ t('Dollar') }}</option>
               </select>
             </div>
             <div class="col-12">
-              <label class="form-label fw-semibold">العنوان</label>
+              <label class="form-label fw-semibold">{{ t('Address') }}</label>
               <textarea name="address_ar" class="form-control" rows="2" aria-label="address ar" maxlength="255">{{ tenant.address_ar or '' }}</textarea>
             </div>
             <div class="col-md-4">
@@ -104,25 +104,25 @@
             <div class="col-md-3">
               <div class="custom-control custom-switch">
                 <input type="checkbox" class="custom-control-input" name="enable_pos" id="enable_pos" {% if tenant.enable_pos %}checked{% endif %} aria-label="enable pos">
-                <label class="custom-control-label" for="enable_pos">POS كاشير</label>
+                <label class="custom-control-label" for="enable_pos">POS {{ t('Cashier') }}</label>
               </div>
             </div>
             <div class="col-md-3">
               <div class="custom-control custom-switch">
                 <input type="checkbox" class="custom-control-input" name="enable_payroll" id="enable_payroll" {% if tenant.enable_payroll %}checked{% endif %} aria-label="enable payroll">
-                <label class="custom-control-label" for="enable_payroll">الرواتب</label>
+                <label class="custom-control-label" for="enable_payroll">{{ t('Salaries') }}</label>
               </div>
             </div>
             <div class="col-md-3">
               <div class="custom-control custom-switch">
                 <input type="checkbox" class="custom-control-input" name="enable_cheques" id="enable_cheques" {% if tenant.enable_cheques %}checked{% endif %} aria-label="enable cheques">
-                <label class="custom-control-label" for="enable_cheques">الشيكات</label>
+                <label class="custom-control-label" for="enable_cheques">{{ t('Cheques') }}</label>
               </div>
             </div>
             <div class="col-md-3">
               <div class="custom-control custom-switch">
                 <input type="checkbox" class="custom-control-input" name="enable_expenses" id="enable_expenses" {% if tenant.enable_expenses %}checked{% endif %} aria-label="enable expenses">
-                <label class="custom-control-label" for="enable_expenses">المصاريف</label>
+                <label class="custom-control-label" for="enable_expenses">{{ t('المصاريف') }}</label>
               </div>
             </div>
             <div class="col-md-3">
@@ -146,7 +146,7 @@
           </div>
         </div>
         <div class="card-footer d-flex justify-content-between">
-          <a href="{{ url_for('owner.tenants_list') }}" class="btn btn-secondary">إلغاء</a>
+          <a href="{{ url_for('owner.tenants_list') }}" class="btn btn-secondary">{{ t('Cancel') }}</a>
           <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i>حفظ التغييرات</button>
         </div>
       </form>
@@ -159,21 +159,21 @@
         </div>
         <div class="card-body">
           <ul class="list-group list-group-flush"><li class="list-group-item d-flex justify-content-between">
-              <span>الحالة</span>
+              <span>{{ t('Status') }}</span>
               {% if tenant.is_suspended %}
-                <span class="badge bg-danger">معلق</span>
+                <span class="badge bg-danger">{{ t('Pending') }}</span>
               {% elif not tenant.is_active %}
-                <span class="badge bg-secondary">معطل</span>
+                <span class="badge bg-secondary">{{ t('معطل') }}</span>
               {% else %}
-                <span class="badge bg-success">نشط</span>
+                <span class="badge bg-success">{{ t('Active') }}</span>
               {% endif %}
             </li>
             <li class="list-group-item d-flex justify-content-between">
-              <span>تاريخ الإنشاء</span>
+              <span>{{ t('Created_Date') }}</span>
               <span class="text-muted">{{ tenant.created_at.strftime('%Y-%m-%d') if tenant.created_at else '—' }}</span>
             </li>
             <li class="list-group-item d-flex justify-content-between">
-              <span>آخر تحديث</span>
+              <span>{{ t('Last_Updated') }}</span>
               <span class="text-muted">{{ tenant.updated_at.strftime('%Y-%m-%d %H:%M') if tenant.updated_at else '—' }}</span>
             </li>
             {% if tenant.suspension_reason %}

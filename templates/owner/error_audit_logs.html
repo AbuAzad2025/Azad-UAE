@@ -12,22 +12,16 @@
     <div class="row mb-2 align-items-center">
       <div class="col-sm-6">
         <h1 class="m-0">
-          <i class="fas fa-bug text-danger mr-2"></i>
-          سجل أخطاء النظام
-          <span class="badge badge-dark ml-2">Error Audit</span>
+          <i class="fas fa-bug text-danger mr-2"></i>{{ t('System_Error_Log') }}<span class="badge badge-dark ml-2">Error Audit</span>
         </h1>
-        <p class="text-muted mt-1 mb-0">
-          <i class="fas fa-info-circle mr-1"></i>
-          جميع الأخطاء Backend / DB / Frontend / API — مصنّفة ومفلترة
-        </p>
-      </div>
+        </div>
       <div class="col-sm-6 d-flex justify-content-end">
         <div class="d-flex align-items-center">
           <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary ml-2">
             <i class="fas fa-arrow-right mr-1"></i> الرجوع للوحة المالك
           </a>
           <ol class="breadcrumb float-sm-left mb-0">
-            <li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">لوحة المالك</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">{{ t('Owner_Dashboard') }}</a></li>
             <li class="breadcrumb-item active">سجل الأخطاء</li>
           </ol>
         </div>
@@ -70,27 +64,27 @@
       <div class="card-body">
         <form class="needs-validation" method="get" action="{{ url_for('owner.error_audit_logs') }}" class="form-inline">
           <div class="form-group mr-3 mb-2">
-            <label for="category" class="mr-2">الفئة</label>
+            <label for="category" class="mr-2">{{ t('الفئة') }}</label>
             <select name="category" id="category" class="form-control form-control-sm" aria-label="category">
-              <option value="">الكل</option>
+              <option value="">{{ t('All') }}</option>
               {% for cat in categories %}
               <option value="{{ cat }}" {% if cat == selected_category %}selected{% endif %}>{{ cat }}</option>
               {% endfor %}
             </select>
           </div>
           <div class="form-group mr-3 mb-2">
-            <label for="level" class="mr-2">المستوى</label>
+            <label for="level" class="mr-2">{{ t('المستوى') }}</label>
             <select name="level" id="level" class="form-control form-control-sm" aria-label="level">
-              <option value="">الكل</option>
+              <option value="">{{ t('All') }}</option>
               {% for lvl in levels %}
               <option value="{{ lvl }}" {% if lvl == selected_level %}selected{% endif %}>{{ lvl }}</option>
               {% endfor %}
             </select>
           </div>
           <div class="form-group mr-3 mb-2">
-            <label for="resolved" class="mr-2">الحالة</label>
+            <label for="resolved" class="mr-2">{{ t('Status') }}</label>
             <select name="resolved" id="resolved" class="form-control form-control-sm" aria-label="resolved">
-              <option value="" {% if selected_resolved == '' %}selected{% endif %}>الكل</option>
+              <option value="" {% if selected_resolved == '' %}selected{% endif %}>{{ t('All') }}</option>
               <option value="0" {% if selected_resolved == '0' %}selected{% endif %}>غير محلول</option>
               <option value="1" {% if selected_resolved == '1' %}selected{% endif %}>محلول</option>
             </select>
@@ -124,14 +118,14 @@
           <thead class="thead-light">
             <tr>
               <th class="ic-1">#</th>
-              <th class="ic-2">المستوى</th>
-              <th class="ic-3">الفئة</th>
-              <th>الرسالة</th>
-              <th class="ic-4">التكرار</th>
-              <th class="ic-3">المصدر</th>
-              <th class="ic-5">المستخدم</th>
+              <th class="ic-2">{{ t('المستوى') }}</th>
+              <th class="ic-3">{{ t('الفئة') }}</th>
+              <th>{{ t('الرسالة') }}</th>
+              <th class="ic-4">{{ t('التكرار') }}</th>
+              <th class="ic-3">{{ t('المصدر') }}</th>
+              <th class="ic-5">{{ t('User') }}</th>
               <th class="ic-6">آخر ظهور</th>
-              <th class="ic-7">الحالة</th>
+              <th class="ic-7">{{ t('Status') }}</th>
               <th class="ic-7"></th>
             </tr>
           </thead>
@@ -209,7 +203,7 @@
         <nav>
           <ul class="pagination pagination-sm justify-content-center mb-0">{%- if pagination.has_prev %}
             <li class="page-item">
-              <a class="page-link" href="{{ url_for('owner.error_audit_logs', page=pagination.prev_num, category=selected_category, level=selected_level, resolved=selected_resolved) }}">السابق</a>
+              <a class="page-link" href="{{ url_for('owner.error_audit_logs', page=pagination.prev_num, category=selected_category, level=selected_level, resolved=selected_resolved) }}">{{ t('السابق') }}</a>
             </li>{%- endif -%}{%- for page_num in pagination.iter_pages() -%}{%- if page_num -%}{%- if page_num != pagination.page %}
                 <li class="page-item">
                   <a class="page-link" href="{{ url_for('owner.error_audit_logs', page=page_num, category=selected_category, level=selected_level, resolved=selected_resolved) }}">{{ page_num }}</a>
@@ -217,7 +211,7 @@
                 <li class="page-item active"><span class="page-link">{{ page_num }}</span></li>{%- endif -%}{%- else %}
                 <li class="page-item disabled"><span class="page-link">...</span></li>{%- endif -%}{%- endfor -%}{%- if pagination.has_next %}
             <li class="page-item">
-              <a class="page-link" href="{{ url_for('owner.error_audit_logs', page=pagination.next_num, category=selected_category, level=selected_level, resolved=selected_resolved) }}">التالي</a>
+              <a class="page-link" href="{{ url_for('owner.error_audit_logs', page=pagination.next_num, category=selected_category, level=selected_level, resolved=selected_resolved) }}">{{ t('التالي') }}</a>
             </li>{%- endif %}
           </ul>
         </nav>
@@ -241,7 +235,7 @@
         {# Populated by JavaScript #}
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">إغلاق</button>
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ t('Close') }}</button>
       </div>
     </div>
   </div>
@@ -303,21 +297,21 @@
 
   function buildDetailHtml(data) {
     var html = '<dl class="row small">' +
-      '<dt class="col-sm-3">الفئة</dt><dd class="col-sm-9">' + esc(data.category) + '</dd>' +
-      '<dt class="col-sm-3">المستوى</dt><dd class="col-sm-9">' + esc(data.level) + '</dd>' +
-      '<dt class="col-sm-3">المصدر</dt><dd class="col-sm-9">' + esc(data.source) + '</dd>' +
+      '<dt class="col-sm-3">{{ t('الفئة') }}</dt><dd class="col-sm-9">' + esc(data.category) + '</dd>' +
+      '<dt class="col-sm-3">{{ t('المستوى') }}</dt><dd class="col-sm-9">' + esc(data.level) + '</dd>' +
+      '<dt class="col-sm-3">{{ t('المصدر') }}</dt><dd class="col-sm-9">' + esc(data.source) + '</dd>' +
       '<dt class="col-sm-3">Fingerprint</dt><dd class="col-sm-9"><code>' + esc((data.fingerprint || '').slice(0,16)) + '...</code></dd>' +
-      '<dt class="col-sm-3">التكرار</dt><dd class="col-sm-9">' + (data.occurrence_count || 1) + '</dd>' +
+      '<dt class="col-sm-3">{{ t('التكرار') }}</dt><dd class="col-sm-9">' + (data.occurrence_count || 1) + '</dd>' +
       '<dt class="col-sm-3">أول ظهور</dt><dd class="col-sm-9">' + esc(data.first_seen_at || '-') + '</dd>' +
       '<dt class="col-sm-3">آخر ظهور</dt><dd class="col-sm-9">' + esc(data.last_seen_at || '-') + '</dd>' +
       '<dt class="col-sm-3">Request ID</dt><dd class="col-sm-9"><code>' + esc(data.request_id || '-') + '</code></dd>' +
       '<dt class="col-sm-3">البيئة</dt><dd class="col-sm-9">' + esc((data.environment || '-') + ' ' + (data.app_version || '')) + '</dd>' +
-      '<dt class="col-sm-3">الرابط</dt><dd class="col-sm-9">' + esc(data.url || '-') + '</dd>' +
-      '<dt class="col-sm-3">الطريقة</dt><dd class="col-sm-9">' + esc(data.method || '-') + '</dd>' +
+      '<dt class="col-sm-3">{{ t('الرابط') }}</dt><dd class="col-sm-9">' + esc(data.url || '-') + '</dd>' +
+      '<dt class="col-sm-3">{{ t('الطريقة') }}</dt><dd class="col-sm-9">' + esc(data.method || '-') + '</dd>' +
       '<dt class="col-sm-3">IP</dt><dd class="col-sm-9">' + esc(data.ip_address || '-') + '</dd>' +
-      '<dt class="col-sm-3">المستخدم</dt><dd class="col-sm-9">' + (data.user_id || '-') + '</dd>' +
-      '<dt class="col-sm-3">التينانت</dt><dd class="col-sm-9">' + (data.tenant_id || '-') + '</dd>' +
-      '</dl><hr><h6>الرسالة</h6>' +
+      '<dt class="col-sm-3">{{ t('User') }}</dt><dd class="col-sm-9">' + (data.user_id || '-') + '</dd>' +
+      '<dt class="col-sm-3">{{ t('التينانت') }}</dt><dd class="col-sm-9">' + (data.tenant_id || '-') + '</dd>' +
+      '</dl><hr><h6>{{ t('الرسالة') }}</h6>' +
       '<pre class="bg-light p-2 small ic-10">' + esc(data.message) + '</pre>';
 
     if (data.exception_type) {

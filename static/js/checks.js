@@ -167,12 +167,27 @@
         console.log('📋 ملء جدول ' + tableId + ' بـ ' + checks.length + ' شيك');
         
         if (checks.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="10" class="text-center"><div class="empty-state"><i class="fas fa-inbox"></i><p>لا توجد شيكات</p></div></td></tr>';
+            tbody.textContent = '';
+            const tr = document.createElement('tr');
+            const td = document.createElement('td');
+            td.colSpan = 10;
+            td.className = 'text-center';
+            const div = document.createElement('div');
+            div.className = 'empty-state';
+            const icon = document.createElement('i');
+            icon.className = 'fas fa-inbox';
+            const p = document.createElement('p');
+            p.textContent = 'لا توجد شيكات';
+            div.appendChild(icon);
+            div.appendChild(p);
+            td.appendChild(div);
+            tr.appendChild(td);
+            tbody.appendChild(tr);
             return;
         }
         
         // تنظيف الجدول
-        tbody.innerHTML = '';
+        tbody.textContent = '';
         
         let allRows = '';
         checks.forEach(function(check, index) {

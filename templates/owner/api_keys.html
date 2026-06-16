@@ -13,7 +13,7 @@
             <i class="fas fa-arrow-right mr-1"></i> الرجوع للوحة المالك
           </a>
           <ol class="breadcrumb float-sm-left mb-0">
-            <li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">لوحة المالك</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">{{ t('Owner_Dashboard') }}</a></li>
             <li class="breadcrumb-item active">API Keys</li>
           </ol>
         </div>
@@ -53,9 +53,9 @@
             </div>
             <div class="col-md-5">
               <div class="form-group">
-                <label>الخدمة</label>
+                <label>{{ t('الخدمة') }}</label>
                 <select name="service" class="form-control" required aria-label="service">
-                  <option value="api">API عام</option>
+                  <option value="api">API {{ t('General_2') }}</option>
                   <option value="integration">Integration</option>
                   <option value="webhook">Webhook</option>
                   <option value="mobile">Mobile App</option>
@@ -76,12 +76,12 @@
           <table class="table table-bordered table-hover">
             <thead class="thead-light">
               <tr>
-                <th>الاسم</th>
-                <th>الخدمة</th>
+                <th>{{ t('Name') }}</th>
+                <th>{{ t('الخدمة') }}</th>
                 <th>جزء من المفتاح</th>
-                <th>آخر استخدام</th>
-                <th>الحالة</th>
-                <th class="text-center">إجراء</th>
+                <th>{{ t('Last_Used') }}</th>
+                <th>{{ t('Status') }}</th>
+                <th class="text-center">{{ t('إجراء') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -94,9 +94,9 @@
                   <td>{{ key.last_used.strftime('%Y-%m-%d %H:%M') if key.last_used else 'لم يُستخدم بعد' }}</td>
                   <td>
                     {% if key.is_active %}
-                    <span class="badge badge-success">نشط</span>
+                    <span class="badge badge-success">{{ t('Active') }}</span>
                     {% else %}
-                    <span class="badge badge-secondary">معطل</span>
+                    <span class="badge badge-secondary">{{ t('معطل') }}</span>
                     {% endif %}
                   </td>
                   <td class="text-center">
@@ -125,7 +125,4 @@
 </section>
 
 {% endblock %}
-
-
-
 

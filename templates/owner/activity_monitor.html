@@ -9,12 +9,11 @@
     <a href="{{ url_for('owner.system_health') }}" class="btn btn-success" aria-label="صحة النظام">
       <i class="fas fa-heartbeat"></i> صحة النظام
     </a>
-    <a href="{{ url_for('owner.error_logs') }}" class="btn btn-danger" aria-label="سجلات الأخطاء">
+    <a href="{{ url_for('owner.error_audit_logs') }}" class="btn btn-danger" aria-label="سجلات الأخطاء">
       <i class="fas fa-bug"></i> الأخطاء
     </a>
     <a href="{{ url_for('owner.login_history') }}" class="btn btn-primary" aria-label="سجل الدخول">
-      <i class="fas fa-history"></i> سجل الدخول
-    </a>
+      <i class="fas fa-history"></i>{{ t('Login_Log') }}</a>
   </div>
   
   <div class="row">
@@ -65,7 +64,7 @@
           <div class="table-responsive"><table class="table table-sm table-hover">
             <thead>
               <tr>
-                <th>المستخدم</th>
+                <th>{{ t('User') }}</th>
                 <th>آخر ظهور</th>
               </tr>
             </thead>
@@ -94,9 +93,9 @@
           <div class="table-responsive"><table class="table table-sm">
             <thead>
               <tr>
-                <th>الإجراء</th>
-                <th>المستخدم</th>
-                <th>الوقت</th>
+                <th>{{ t('الإجراء') }}</th>
+                <th>{{ t('User') }}</th>
+                <th>{{ t('Time_2') }}</th>
               </tr>
             </thead>
             <tbody>

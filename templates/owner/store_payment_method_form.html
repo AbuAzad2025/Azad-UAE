@@ -24,7 +24,7 @@
               </div>
               {% else %}
               <div class="form-group">
-                <label>الرمز</label>
+                <label>{{ t('Code_4') }}</label>
                 <input type="text" class="form-control" value="{{ method.code }}" disabled aria-label="الرمز">
               </div>
               {% endif %}
@@ -57,7 +57,7 @@
                   <input type="text" name="icon" class="form-control" value="{{ method.icon if method else 'fas fa-money-bill-wave' }}" dir="ltr" id="input_icon" aria-label="icon">
                 </div>
                 <div class="col-md-4 form-group">
-                  <label for="input_sort_order">الترتيب</label>
+                  <label for="input_sort_order">{{ t('الترتيب') }}</label>
                   <input type="number" name="sort_order" class="form-control" value="{{ method.sort_order if method else 100 }}" id="input_sort_order" aria-label="sort order">
                 </div>
                 <div class="col-md-4 form-group pt-4">
@@ -91,8 +91,8 @@
               </div>
             </div>
             <div class="card-footer">
-              <button type="submit" class="btn btn-primary"><i class="fas fa-save mr-1"></i>حفظ</button>
-              <a href="{{ url_for('owner.store_payment_methods') }}" class="btn btn-secondary">إلغاء</a>
+              <button type="submit" class="btn btn-primary"><i class="fas fa-save mr-1"></i>{{ t('Save') }}</button>
+              <a href="{{ url_for('owner.store_payment_methods') }}" class="btn btn-secondary">{{ t('Cancel') }}</a>
             </div>
           </form>
         </div>

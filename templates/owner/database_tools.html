@@ -10,16 +10,13 @@
   <div>
     {% if current_user.is_owner or (current_user.role and current_user.role.slug == 'developer') %}
       <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary">
-        <i class="fas fa-arrow-right mr-2"></i>لوحة المالك
-      </a>
+        <i class="fas fa-arrow-right mr-2"></i>{{ t('Owner_Dashboard') }}</a>
     {% else %}
       <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">
-        <i class="fas fa-arrow-right mr-2"></i>لوحة التحكم
-      </a>
+        <i class="fas fa-arrow-right mr-2"></i>{{ t('Dashboard') }}</a>
     {% endif %}
     <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
-      <i class="fas fa-home mr-2"></i>الرئيسية
-    </a>
+      <i class="fas fa-home mr-2"></i>{{ t('Main_2') }}</a>
   </div>
 </div>
 {% endblock %}
@@ -34,12 +31,12 @@
       <div class="card-body">
         <div class="alert alert-danger">
           <i class="fas fa-skull-crossbones"></i>
-          <strong>تحذير:</strong> هذه الأدوات قوية جداً. استخدمها بحذر شديد!
+          <strong>{{ t('Warning') }}</strong> هذه الأدوات قوية جداً. استخدمها بحذر شديد!
         </div>
         {% if restricted_tables %}
         <div class="alert alert-info">
           <i class="fas fa-shield-alt"></i>
-          <strong>حماية:</strong> {{ restricted_tables }} جدول حساس مخفي (مثل المستخدمين والصلاحيات والخزائن).
+          <strong>{{ t('حماية') }}</strong> {{ restricted_tables }} جدول حساس مخفي (مثل المستخدمين والصلاحيات والخزائن).
         </div>
         {% endif %}
 
@@ -85,9 +82,9 @@
             <thead>
               <tr>
                 <th>اسم الجدول</th>
-                <th>الوصف</th>
-                <th>عدد السجلات</th>
-                <th>الإجراءات</th>
+                <th>{{ t('Description') }}</th>
+                <th>{{ t('Record_Count') }}</th>
+                <th>{{ t('الإجراءات') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -214,10 +211,10 @@ function truncateTable(tableName) {
   Swal.fire({
     title: 'تحذير خطير!',
     html: `
-      <p>أنت على وشك مسح <strong>جميع</strong> البيانات من جدول:</p>
+      <p>أنت على وشك مسح <strong>{{ t('جميع') }}</strong> البيانات من جدول:</p>
       <h3 class="ic-3">${tableName}</h3>
       <p>هذا الإجراء <strong>لا يمكن التراجع عنه!</strong></p>
-      <p>اكتب <code>YES_DELETE_ALL</code> للتأكيد:</p>
+      <p>{{ t('اكتب') }}<code>YES_DELETE_ALL</code> للتأكيد:</p>
     `,
     input: 'text',
     inputPlaceholder: 'YES_DELETE_ALL',

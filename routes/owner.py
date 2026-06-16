@@ -169,16 +169,21 @@ def dashboard():
 
     stats['month_purchases_amount'] = float(month_purchases)
 
-    from utils.tenanting import tenant_query
-    total_profit = Decimal('0')
-    month_sales_q = tenant_query(Sale).filter(
+    profit_expr = func.sum(
+        (SaleLine.unit_price - func.coalesce(SaleLine.cost_price, 0))
+        * SaleLine.quantity
+        * (100 - func.coalesce(SaleLine.discount_percent, 0)) / 100
+    )
+    profit_q = db.session.query(profit_expr).select_from(SaleLine).join(
+        Sale, SaleLine.sale_id == Sale.id
+    ).filter(
         func.date(Sale.sale_date) >= month_start,
-        Sale.status == 'confirmed'
+        Sale.status == 'confirmed',
+        Sale.tenant_id == tid,
     )
     if scoped_branch_id is not None:
-        month_sales_q = month_sales_q.filter(Sale.branch_id == scoped_branch_id)
-    for sale in month_sales_q.limit(3000).all():
-        total_profit += (sale.get_profit() or Decimal('0'))
+        profit_q = profit_q.filter(Sale.branch_id == scoped_branch_id)
+    total_profit = profit_q.scalar() or Decimal('0')
 
     stats['month_profit'] = float(total_profit)
     stats['profit_margin'] = (float(total_profit) / float(month_sales[1] or 1)) * 100 if month_sales[1] else 0
@@ -503,7 +508,7 @@ def dashboard():
 
         backups = BackupService.list_backups()
         platform_overview = build_platform_overview(backups)
-        tenant_rows = build_tenant_management_rows(backups)
+        tenant_rows = build_tenant_management_rows(backups, overview=platform_overview)
         branding_rows = build_branding_overview_rows()
         health_summary = build_system_health_summary()
 
@@ -1846,7 +1851,7 @@ def export_database():
             pg_dump = BackupService._resolve_pg_tool("pg_dump", "PG_DUMP_PATH")
             if not params or not pg_dump:
                 flash("pg_dump غير متوفر", "danger")
-                return redirect(url_for("owner.backups_list"))
+                return redirect(url_for("owner.list_backups"))
             env = os.environ.copy()
             if params.get("password"):
                 env["PGPASSWORD"] = params["password"]
@@ -2476,12 +2481,10 @@ def store_payment_method_delete(method_id):
 @owner_or_company_admin
 def invoice_settings():
     """إعدادات ترويسات الفواتير وسندات القبض"""
-    from utils.tenanting import assign_tenant_id
     settings = InvoiceSettings.get_active()
 
     if request.method == 'POST':
         try:
-            assign_tenant_id(settings)
             # Company Info
             settings.company_name_ar = request.form.get('company_name_ar', '').strip()
             settings.company_name_en = request.form.get('company_name_en', '').strip()
@@ -2861,51 +2864,6 @@ def activity_monitor():
                          recent_sales=ctx['recent_sales'],
                          stats=ctx['stats'])
 
-@owner_bp.route('/error-logs')
-@login_required
-@owner_required
-def error_logs():
-    from services.logging_core import LoggingCore
-
-    page = request.args.get('page', 1, type=int)
-    search = request.args.get('search', '', type=str)
-    level_filter = request.args.get('level', '', type=str)
-
-    errors, total_pages, total_errors, stats = LoggingCore.parse_error_log(
-        page=page,
-        search=search,
-        level_filter=level_filter
-    )
-
-    return render_template('owner/error_logs.html',
-                         errors=errors,
-                         page=page,
-                         total_pages=total_pages,
-                         total_errors=total_errors,
-                         search=search,
-                         level_filter=level_filter,
-                         stats=stats)
-
-@owner_bp.route('/error-logs/export')
-@login_required
-@owner_required
-def export_error_logs():
-    """Export raw errors.log as text file download."""
-    import os
-    basedir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
-    log_path = os.path.join(basedir, 'logs', 'errors.log')
-    if not os.path.exists(log_path):
-        flash('ملف سجلات الأخطاء غير موجود.', 'warning')
-        return redirect(url_for('owner.error_logs'))
-    with open(log_path, 'r', encoding='utf-8') as f:
-        content = f.read()
-    from datetime import datetime, timezone
-    ts = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
-    return content, 200, {
-        'Content-Type': 'text/plain; charset=utf-8',
-        'Content-Disposition': f'attachment; filename="errors_{ts}.txt"',
-    }
-
 @owner_bp.route('/login-history')
 @login_required
 @owner_required
@@ -2941,8 +2899,8 @@ def login_history():
     if tid:
         base_stats = base_stats.join(User, LoginHistory.user_id == User.id).filter(User.tenant_id == tid)
     stats = {
-        'total_logins': base_stats.filter_by(success=True).count(),
-        'failed_logins': base_stats.filter_by(success=False).count(),
+        'total_logins': base_stats.filter(LoginHistory.success == True).count(),
+        'failed_logins': base_stats.filter(LoginHistory.success == False).count(),
         'today_logins': base_stats.filter(
             LoginHistory.login_time >= datetime.now(timezone.utc).replace(hour=0, minute=0)
         ).count()

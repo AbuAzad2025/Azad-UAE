@@ -28,11 +28,11 @@
           <span class="value">{{ tenant.get_business_type_display() if tenant.get_business_type_display else 'غير محدد' }}</span>
         </div>
         <div class="profile-card__stat">
-          <span class="label">الدولة</span>
+          <span class="label">{{ t('الدولة') }}</span>
           <span class="value">{{ tenant.get_country_display() if tenant.get_country_display else 'غير محددة' }}</span>
         </div>
         <div class="profile-card__stat">
-          <span class="label">المدينة</span>
+          <span class="label">{{ t('Receivables') }}</span>
           <span class="value">{{ tenant.city or '---' }}</span>
         </div>
       </div>
@@ -60,11 +60,11 @@
       <div class="card-body">
         <a href="{{ url_for('owner.invoice_settings') }}" class="quick-link" aria-label="إعدادات الفواتير">
           <i class="fas fa-file-invoice"></i>
-          <span>إعدادات الفواتير</span>
+          <span>{{ t('Invoice_Settings_2') }}</span>
         </a>
         <a href="{{ url_for('warehouse.index') }}" class="quick-link" aria-label="المستودعات">
           <i class="fas fa-warehouse"></i>
-          <span>المستودعات</span>
+          <span>{{ t('Warehouses') }}</span>
         </a>
       </div>
     </div>
@@ -83,7 +83,7 @@
             <i class="fas fa-arrow-right mr-1"></i> الرجوع للوحة المالك
           </a>
           <ol class="breadcrumb float-sm-left mb-0">
-            <li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">لوحة المالك</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">{{ t('Owner_Dashboard') }}</a></li>
             <li class="breadcrumb-item active">بيانات التينانت</li>
           </ol>
         </div>
@@ -129,7 +129,7 @@
               <div class="form-group">
                 <label>نوع النشاط</label>
                 <select name="business_type" class="form-control compact-control select-center" aria-label="business type">
-                  <option value="garage" {{ 'selected' if tenant.business_type == 'garage' }}>كراج</option>
+                  <option value="garage" {{ 'selected' if tenant.business_type == 'garage' }}>{{ t('كراج') }}</option>
                   <option value="workshop" {{ 'selected' if tenant.business_type == 'workshop' }}>ورشة</option>
                   <option value="parts_shop" {{ 'selected' if tenant.business_type == 'parts_shop' }}>محل قطع</option>
                   <option value="equipment" {{ 'selected' if tenant.business_type == 'equipment' }}>معدات ثقيلة</option>
@@ -140,7 +140,7 @@
               <div class="form-group">
                 <label>الصناعة</label>
                 <select name="industry" class="form-control compact-control select-center" aria-label="industry">
-                  <option value="automotive" {{ 'selected' if tenant.industry == 'automotive' }}>سيارات</option>
+                  <option value="automotive" {{ 'selected' if tenant.industry == 'automotive' }}>{{ t('سيارات') }}</option>
                   <option value="heavy_equipment" {{ 'selected' if tenant.industry == 'heavy_equipment' }}>معدات ثقيلة</option>
                   <option value="mixed" {{ 'selected' if tenant.industry == 'mixed' }}>مختلط</option>
                 </select>
@@ -181,9 +181,9 @@
               <div class="form-group">
                 <label>{{ t('Country') }}</label>
                 <select name="country" class="form-control compact-control select-center" aria-label="country">
-                  <option value="UAE" {{ 'selected' if tenant.country == 'UAE' }}>الإمارات</option>
+                  <option value="UAE" {{ 'selected' if tenant.country == 'UAE' }}>{{ t('الإمارات') }}</option>
                   <option value="Saudi" {{ 'selected' if tenant.country == 'Saudi' }}>السعودية</option>
-                  <option value="Palestine" {{ 'selected' if tenant.country == 'Palestine' }}>فلسطين</option>
+                  <option value="Palestine" {{ 'selected' if tenant.country == 'Palestine' }}>{{ t('فلسطين') }}</option>
                   <option value="Jordan" {{ 'selected' if tenant.country == 'Jordan' }}>الأردن</option>
                   <option value="Other" {{ 'selected' if tenant.country == 'Other' }}>{{ t('Other') }}</option>
                 </select>
@@ -280,7 +280,7 @@
           </div>
           <div class="alert alert-info">
             <i class="fas fa-info-circle"></i>
-            <strong>ملاحظة:</strong> لتغيير الشعار، استخدم إعدادات ترويسات الفواتير.
+            <strong>{{ t('Note') }}</strong> لتغيير الشعار، استخدم إعدادات ترويسات الفواتير.
           </div>
         </div>
       </div>
@@ -292,8 +292,7 @@
             <i class="fas fa-save mr-2"></i>حفظ المعلومات
           </button>
           <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary btn-lg" aria-label="إلغاء والعودة">
-            <i class="fas fa-times mr-2"></i>إلغاء
-          </a>
+            <i class="fas fa-times mr-2"></i>{{ t('Cancel') }}</a>
         </div>
       </div>
     </form>
@@ -305,5 +304,4 @@
 
 {% block extra_css %}
 {% endblock %}
-
 

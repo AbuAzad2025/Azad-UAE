@@ -200,6 +200,24 @@ class TestPartnerServiceScope:
         assert tx_id is not None
 
 
+class TestCacheDecorators:
+    def test_cached_query_decorates_function(self, app, db_session):
+        from utils.cache_decorators import cached_query
+        call_count = [0]
+
+        @cached_query(timeout=10, key_prefix='test_fn')
+        def sample_fn(x):
+            call_count[0] += 1
+            return x * 2
+
+        with app.app_context():
+            r1 = sample_fn(5)
+            r2 = sample_fn(5)
+            assert r1 == 10
+            assert r2 == 10
+            assert call_count[0] == 1 or call_count[0] == 2
+
+
 class TestChequeService:
     def test_import(self):
         import services.cheque_service

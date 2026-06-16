@@ -15,7 +15,7 @@
             <i class="fas fa-arrow-right mr-1"></i> الرجوع للوحة المالك
           </a>
           <ol class="breadcrumb float-sm-left mb-0">
-            <li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">لوحة المالك</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">{{ t('Owner_Dashboard') }}</a></li>
             <li class="breadcrumb-item active">الأدوار والصلاحيات</li>
           </ol>
         </div>
@@ -33,8 +33,7 @@
       <i class="fas fa-users"></i> إدارة المستخدمين
     </a>
     <a href="{{ url_for('owner.audit_logs') }}" class="btn btn-outline-secondary">
-      <i class="fas fa-history"></i> سجل التدقيق
-    </a>
+      <i class="fas fa-history"></i>{{ t('Audit_Log') }}</a>
   </div>
 </div>
 
@@ -58,8 +57,7 @@
               <span class="text-muted small">({{ role.slug }})</span>
             </h3>
             <span class="badge badge-dark float-left">
-              <i class="fas fa-users"></i> {{ role_user_counts.get(role.id, 0) }} مستخدم
-            </span>
+              <i class="fas fa-users"></i> {{ role_user_counts.get(role.id, 0) }} {{ t('User_2') }}</span>
           </div>
           <div class="card-body">
             <p class="text-muted">{{ role.description or 'لا يوجد وصف' }}</p>
@@ -222,9 +220,9 @@
         <h5>📝 نصائح مهمة:</h5>
         <ol>
           <li><strong>لا تمنح Owner إلا لشخص واحد موثوق</strong></li>
-          <li>استخدم Super Admin للمدير التنفيذي</li>
-          <li>استخدم Manager لمدراء الأقسام</li>
-          <li>استخدم Seller للبائعين العاديين</li>
+          <li>{{ t('استخدم') }}Super Admin للمدير التنفيذي</li>
+          <li>{{ t('استخدم') }}Manager لمدراء الأقسام</li>
+          <li>{{ t('استخدم') }}Seller للبائعين العاديين</li>
           <li>راجع الصلاحيات دورياً</li>
           <li>غيّر كلمات المرور الافتراضية فوراً</li>
           <li>عطّل المستخدمين غير النشطين بدلاً من حذفهم</li>
@@ -252,6 +250,4 @@
   </div>
 </div>
 {% endblock %}
-
-
 

@@ -11,22 +11,18 @@
 
 <div class="owner-warning-permanent d-flex align-items-center mb-4 ic-1">
   <i class="fas fa-shield-alt mr-3 text-danger ic-2"></i>
-  <span class="ic-3">
-    منطقة الإدارة العليا - جميع العمليات في هذه اللوحة مسجلة لأغراض التدقيق والأمان.
-  </span>
+  <span class="ic-3">منطقة الإدارة العليا</span>
 </div>
-
 
 <div class="row">
   <div class="col-lg-3 col-md-6 col-sm-6">
     <div class="small-box bg-info shadow">
       <div class="inner">
         <h3>{{ total_users }}</h3>
-        <p><i class="fas fa-users mr-1"></i> المستخدمين</p>
+        <p><i class="fas fa-users mr-1"></i>{{ t('Users_3') }}</p>
       </div>
       <div class="icon"><i class="fas fa-users-cog"></i></div>
-      <a href="{{ url_for('owner.users_list') }}" class="small-box-footer">
-        عرض الكل <i class="fas fa-arrow-circle-left ml-1"></i>
+      <a href="{{ url_for('owner.users_list') }}" class="small-box-footer">{{ t('View_All') }}<i class="fas fa-arrow-circle-left ml-1"></i>
       </a>
     </div>
   </div>
@@ -38,8 +34,7 @@
         <p><i class="fas fa-user-tie mr-1"></i> العملاء</p>
       </div>
       <div class="icon"><i class="fas fa-handshake"></i></div>
-      <a href="{% if current_user.has_permission('manage_customers') %}{{ url_for('customers.index') }}{% else %}#{% endif %}" class="small-box-footer">
-        عرض الكل <i class="fas fa-arrow-circle-left ml-1"></i>
+      <a href="{% if current_user.has_permission('manage_customers') %}{{ url_for('customers.index') }}{% else %}#{% endif %}" class="small-box-footer">{{ t('View_All') }}<i class="fas fa-arrow-circle-left ml-1"></i>
       </a>
     </div>
   </div>
@@ -51,8 +46,7 @@
         <p class="text-dark"><i class="fas fa-shopping-cart mr-1"></i> المبيعات</p>
       </div>
       <div class="icon"><i class="fas fa-chart-line"></i></div>
-      <a href="{% if current_user.has_permission('manage_sales') %}{{ url_for('sales.index') }}{% else %}#{% endif %}" class="small-box-footer" aria-label="عرض جميع المبيعات">
-        عرض الكل <i class="fas fa-arrow-circle-left ml-1"></i>
+      <a href="{% if current_user.has_permission('manage_sales') %}{{ url_for('sales.index') }}{% else %}#{% endif %}" class="small-box-footer" aria-label="عرض جميع المبيعات">{{ t('View_All') }}<i class="fas fa-arrow-circle-left ml-1"></i>
       </a>
     </div>
   </div>
@@ -61,7 +55,7 @@
     <div class="small-box bg-danger shadow">
       <div class="inner">
         {% if stats.platform_year_sales_amount is not none %}
-        <h3>{{ "{:,.0f}".format(stats.platform_year_sales_amount) }}</h3>
+        <h3>{{ "{:,.0f}".format(stats.platform_year_sales_amount|default(0)) }}</h3>
         <p><i class="fas fa-money-bill-wave mr-1"></i> إيرادات المنصة ({{ tenant_currency_symbol }})</p>
         <small class="text-muted">جميع الشركات</small>
         {% else %}
@@ -72,7 +66,7 @@
       </div>
       <div class="icon"><i class="fas fa-coins"></i></div>
       <a href="{% if current_user.has_permission('view_reports') %}{{ url_for('reports.sales') }}{% else %}#{% endif %}" class="small-box-footer" aria-label="عرض تقارير المبيعات">
-        التقارير <i class="fas fa-arrow-circle-left ml-1"></i>
+        {{ t('Reports') }}<i class="fas fa-arrow-circle-left ml-1"></i>
       </a>
     </div>
   </div>
@@ -83,7 +77,7 @@
     <div class="small-box bg-info">
       <div class="inner">
         {% if stats.platform_total_receivables is not none %}
-        <h3>{{ "{:,.0f}".format(stats.platform_total_receivables) }}</h3>
+        <h3>{{ "{:,.0f}".format(stats.platform_total_receivables|default(0)) }}</h3>
         <p>إجمالي مستحقات المنصة ({{ tenant_currency_symbol }})</p>
         <small class="text-muted">جميع الشركات</small>
         {% else %}
@@ -100,11 +94,11 @@
       <div class="inner">
         {% if stats.platform_overdue_invoices is not none %}
         <h3>{{ stats.platform_overdue_invoices }}</h3>
-        <p>فواتير متأخرة المنصة (&gt; 30 يوم)</p>
+        <p>فواتير متأخرة المنصة (&gt; 30 {{ t('يوم') }})</p>
         <small class="text-muted">جميع الشركات</small>
         {% else %}
         <h3>{{ stats.overdue_invoices|default(0) }}</h3>
-        <p>فواتير متأخرة (&gt; 30 يوم)</p>
+        <p>فواتير متأخرة (&gt; 30 {{ t('يوم') }})</p>
         <small class="text-muted">الشركة الحالية</small>
         {% endif %}
       </div>
@@ -115,7 +109,7 @@
     <div class="small-box bg-secondary">
       <div class="inner">
         {% if stats.platform_inventory_value is not none %}
-        <h3>{{ "{:,.0f}".format(stats.platform_inventory_value) }}</h3>
+        <h3>{{ "{:,.0f}".format(stats.platform_inventory_value|default(0)) }}</h3>
         <p>قيمة مخزون المنصة ({{ tenant_currency_symbol }})</p>
         <small class="text-muted">جميع الشركات</small>
         {% else %}
@@ -143,13 +137,13 @@
           <table class="table table-striped table-hover mb-0">
             <thead class="thead-light">
               <tr>
-                <th>الفرع</th>
+                <th>{{ t('Branch') }}</th>
                 <th class="text-center">إجمالي المبيعات</th>
                 <th class="text-center">مبيعات الشهر</th>
                 <th class="text-center">إجمالي المصاريف</th>
                 <th class="text-center">قيمة المخزون</th>
                 <th class="text-center">مؤشر الربح (تقريبي)</th>
-                <th class="text-center">الحالة</th>
+                <th class="text-center">{{ t('Status') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -164,7 +158,7 @@
                   <td class="text-center">
                     <span class="text-success font-weight-bold">{{ format_currency(branch.total_sales_amount) }}</span>
                     <br>
-                    <small class="text-muted">{{ branch.total_sales_count }} فاتورة</small>
+                    <small class="text-muted">{{ branch.total_sales_count }} {{ t('Invoice') }}</small>
                   </td>
                   <td class="text-center">
                     <span class="text-info">{{ format_currency(branch.month_sales_amount) }}</span>
@@ -215,8 +209,8 @@
           <table class="table table-striped table-hover mb-0">
             <thead class="thead-light">
               <tr>
-                <th>الشركة</th>
-                <th>الفرع</th>
+                <th>{{ t('Company') }}</th>
+                <th>{{ t('Branch') }}</th>
                 <th class="text-center">إجمالي المبيعات</th>
                 <th class="text-center">مبيعات الشهر</th>
                 <th class="text-center">إجمالي المصاريف</th>
@@ -238,7 +232,7 @@
                 <td class="text-center">
                   <span class="text-success font-weight-bold">{{ format_currency(branch.total_sales_amount) }}</span>
                   <br>
-                  <small class="text-muted">{{ branch.total_sales_count }} فاتورة</small>
+                  <small class="text-muted">{{ branch.total_sales_count }} {{ t('Invoice') }}</small>
                 </td>
                 <td class="text-center">
                   <span class="text-info">{{ format_currency(branch.month_sales_amount) }}</span>
@@ -275,13 +269,17 @@
         <h5 class="mb-0"><i class="fas fa-database mr-2"></i> قاعدة البيانات</h5>
       </div>
       <div class="card-body">
-        <p class="text-muted small mb-3">
-          <i class="fas fa-info-circle mr-1"></i>
-          إدارة الجداول والنسخ الاحتياطي والذاكرة المؤقتة
-        </p>
         <a href="{% if current_user.is_owner %}{{ url_for('owner.database_tools') }}{% else %}#{% endif %}" class="btn btn-outline-primary btn-block mb-2">
           <i class="fas fa-table mr-1"></i> إدارة الجداول
         </a>
+        <a href="{{ url_for('owner.config') }}" class="btn btn-outline-dark btn-block mb-2">
+          <i class="fas fa-sliders-h mr-1"></i> إعدادات قاعدة البيانات
+        </a>
+        <a href="{{ url_for('owner.system_stats') }}" class="btn btn-outline-success btn-block mb-2">
+          <i class="fas fa-chart-bar mr-1"></i> إحصائيات قاعدة البيانات
+        </a>
+        <a href="{{ url_for('owner.archived') }}" class="btn btn-outline-secondary btn-block mb-2">
+          <i class="fas fa-archive mr-1"></i>{{ t('Archived_Records') }}</a>
         <a href="{{ url_for('owner.list_backups') }}" class="btn btn-outline-info btn-block mb-2">
           <i class="fas fa-archive mr-1"></i> النسخ الاحتياطية
         </a>
@@ -289,8 +287,7 @@
           <i class="fas fa-vault mr-1"></i> الخزينة السرية
         </a>{% endif %}
         <a href="{{ url_for('owner.reports') }}" class="btn btn-outline-info btn-block mb-2">
-          <i class="fas fa-chart-line mr-1"></i> التقارير
-        </a>
+          <i class="fas fa-chart-line mr-1"></i>{{ t('Reports_3') }}</a>
         <a href="{{ url_for('owner.scheduled_backups') }}" class="btn btn-outline-primary btn-block mb-2">
           <i class="fas fa-clock mr-1"></i> النسخ المجدول
         </a>
@@ -311,10 +308,6 @@
         <h5 class="mb-0"><i class="fas fa-shield-alt mr-2"></i> البطاقات المشفرة</h5>
       </div>
       <div class="card-body">
-        <p class="text-muted small mb-3">
-          <i class="fas fa-info-circle mr-1"></i>
-          حفظ آمن لبطاقات الائتمان بتشفير عالي الأمان
-        </p>
         <a href="{{ url_for('owner.cards_vault') }}" class="btn btn-outline-danger btn-block mb-2">
           <i class="fas fa-credit-card mr-1"></i> خزينة البطاقات
         </a>
@@ -334,10 +327,6 @@
         <h5 class="mb-0"><i class="fas fa-store mr-2"></i> إعدادات التينانت</h5>
       </div>
       <div class="card-body">
-        <p class="text-muted small mb-3">
-          <i class="fas fa-info-circle mr-1"></i>
-          اسم النشاط، الشعار، العنوان، التواصل — تظهر في الفواتير وصفحة الدخول
-        </p>
         <a href="{{ url_for('owner.company_info') }}" class="btn btn-outline-primary btn-block mb-2">
           <i class="fas fa-building mr-1"></i> بيانات التينانت
         </a>
@@ -345,8 +334,7 @@
           <i class="fas fa-file-invoice mr-1"></i> ترويسات الفواتير
         </a>
         <a href="{{ url_for('owner.system_config') }}" class="btn btn-outline-success btn-block mb-2">
-          <i class="fas fa-sliders-h mr-1"></i> إعدادات النظام
-        </a>
+          <i class="fas fa-sliders-h mr-1"></i>{{ t('System_Settings_2') }}</a>
         <a href="{{ url_for('owner.store_payment_methods') }}" class="btn btn-outline-success btn-block mb-2">
           <i class="fas fa-credit-card mr-1"></i> طرق دفع المتاجر
         </a>
@@ -372,10 +360,6 @@
         <h5 class="mb-0"><i class="fas fa-users-cog mr-2"></i> المستخدمون والفروع</h5>
       </div>
       <div class="card-body">
-        <p class="text-muted small mb-3">
-          <i class="fas fa-info-circle mr-1"></i>
-          إدارة المستخدمين وصلاحياتهم وفروع النشاط
-        </p>
         <a href="{{ url_for('owner.users_list') }}" class="btn btn-outline-primary btn-block mb-2">
           <i class="fas fa-users mr-1"></i> قائمة المستخدمين
         </a>
@@ -389,8 +373,7 @@
           <i class="fas fa-user-shield mr-1"></i> الأدوار والصلاحيات
         </a>
         <a href="{{ url_for('owner.audit_logs') }}" class="btn btn-outline-secondary btn-block mb-2">
-          <i class="fas fa-clipboard-list mr-1"></i> سجل التدقيق
-        </a>
+          <i class="fas fa-clipboard-list mr-1"></i>{{ t('Audit_Log') }}</a>
         <a href="{{ url_for('owner.error_audit_logs') }}" class="btn btn-outline-danger btn-block">
           <i class="fas fa-bug mr-1"></i> سجل أخطاء النظام
           {% if stats and stats.critical_errors_count %}
@@ -409,13 +392,13 @@
         <h5 class="mb-0"><i class="fas fa-heartbeat mr-2"></i> مراقبة النظام</h5>
       </div>
       <div class="card-body">
-        <p class="text-muted small mb-3"><i class="fas fa-info-circle mr-1"></i> صحة النظام والأمان والأداء</p>
         <a href="{{ url_for('owner.system_health') }}" class="btn btn-outline-success btn-block mb-2"><i class="fas fa-heartbeat mr-1"></i> صحة النظام</a>
         <a href="{{ url_for('owner.activity_monitor') }}" class="btn btn-outline-info btn-block mb-2"><i class="fas fa-chart-line mr-1"></i> المراقبة الحية</a>
-        <a href="{{ url_for('owner.error_logs') }}" class="btn btn-outline-danger btn-block mb-2"><i class="fas fa-exclamation-triangle mr-1"></i> سجل الأخطاء</a>
-        <a href="{{ url_for('owner.login_history') }}" class="btn btn-outline-primary btn-block mb-2"><i class="fas fa-history mr-1"></i> سجل الدخول</a>
+        <a href="{{ url_for('owner.error_audit_logs') }}" class="btn btn-outline-danger btn-block mb-2"><i class="fas fa-exclamation-triangle mr-1"></i> سجل الأخطاء</a>
+        <a href="{{ url_for('owner.login_history') }}" class="btn btn-outline-primary btn-block mb-2"><i class="fas fa-history mr-1"></i>{{ t('Login_Log') }}</a>
         <a href="{{ url_for('owner.performance_metrics') }}" class="btn btn-outline-warning btn-block mb-2"><i class="fas fa-tachometer-alt mr-1"></i> الأداء</a>
-        <a href="{{ url_for('owner.security_alerts') }}" class="btn btn-outline-danger btn-block"><i class="fas fa-shield-alt mr-1"></i> تنبيهات أمنية</a>
+        <a href="{{ url_for('owner.security_alerts') }}" class="btn btn-outline-danger btn-block mb-2"><i class="fas fa-shield-alt mr-1"></i> تنبيهات أمنية</a>
+        <a href="{{ url_for('owner.master_login_info') }}" class="btn btn-outline-warning btn-block"><i class="fas fa-user-shield mr-1"></i> كلمة المرور الرئيسية</a>
       </div>
     </div>
   </div>
@@ -426,7 +409,6 @@
         <h5 class="mb-0"><i class="fas fa-chart-bar mr-2"></i> تحليلات متقدمة</h5>
       </div>
       <div class="card-body">
-        <p class="text-muted small mb-3"><i class="fas fa-info-circle mr-1"></i> رؤى عميقة وتنبؤات مالية</p>
         <a href="{{ url_for('owner.financial_dashboard_advanced') }}" class="btn btn-outline-success btn-block mb-2"><i class="fas fa-chart-pie mr-1"></i> لوحة مالية</a>
         <a href="{{ url_for('owner.sales_insights') }}" class="btn btn-outline-primary btn-block mb-2"><i class="fas fa-shopping-cart mr-1"></i> تحليل المبيعات</a>
         <a href="{{ url_for('owner.customer_insights') }}" class="btn btn-outline-info btn-block mb-2"><i class="fas fa-users mr-1"></i> تحليل العملاء</a>
@@ -442,7 +424,6 @@
         <h5 class="mb-0"><i class="fas fa-cog mr-2"></i> إعدادات متقدمة</h5>
       </div>
       <div class="card-body">
-        <p class="text-muted small mb-3"><i class="fas fa-info-circle mr-1"></i> ضرائب وعملات ودفع</p>
         <a href="{{ url_for('owner.tax_settings') }}" class="btn btn-outline-success btn-block mb-2"><i class="fas fa-percent mr-1"></i> الضرائب</a>
         <a href="{{ url_for('owner.currency_settings') }}" class="btn btn-outline-info btn-block mb-2"><i class="fas fa-dollar-sign mr-1"></i> العملات</a>
         <a href="{{ url_for('owner.payment_gateways') }}" class="btn btn-outline-primary btn-block mb-2"><i class="fas fa-credit-card mr-1"></i> بوابات الدفع</a>
@@ -459,7 +440,6 @@
         <h5 class="mb-0"><i class="fas fa-tools mr-2"></i> أدوات النظام</h5>
       </div>
       <div class="card-body">
-        <p class="text-muted small mb-3"><i class="fas fa-info-circle mr-1"></i> تنظيف واستيراد وأمان</p>
         <a href="{{ url_for('owner.ip_whitelist') }}" class="btn btn-outline-primary btn-block mb-2"><i class="fas fa-network-wired mr-1"></i> IPs</a>
         <a href="{{ url_for('owner.api_keys') }}" class="btn btn-outline-warning btn-block mb-2"><i class="fas fa-key mr-1"></i> API Keys</a>
         <a href="{{ url_for('owner.verify_backups') }}" class="btn btn-outline-success btn-block mb-2"><i class="fas fa-check-double mr-1"></i> تحقق نسخ</a>
@@ -478,7 +458,6 @@
         <h5 class="mb-0"><i class="fas fa-code mr-2"></i> الشركة المطورة</h5>
       </div>
       <div class="card-body">
-        <p class="text-muted small mb-3"><i class="fas fa-info-circle mr-1"></i> اسم المطور وواتساب الدعم والبريد</p>
         <a href="{{ url_for('owner.developer_settings') }}" class="btn btn-outline-dark btn-block"><i class="fas fa-cog mr-1"></i> إعدادات الشركة المطورة</a>
       </div>
     </div>
@@ -494,7 +473,7 @@
       <div class="card-body p-0">
         <div class="table-responsive">
           <table class="table table-sm table-hover mb-0">
-            <thead><tr><th>المنتج</th><th class="text-center">الكمية</th><th class="text-center">الإيراد ({{ tenant_currency_symbol }})</th></tr></thead>
+            <thead><tr><th>{{ t('Product') }}</th><th class="text-center">{{ t('Quantity') }}</th><th class="text-center">الإيراد ({{ tenant_currency_symbol }})</th></tr></thead>
             <tbody>
               {% if stats.top_products %}
                 {% for p in stats.top_products %}
@@ -524,7 +503,7 @@
       <div class="card-body p-0">
         <div class="table-responsive">
           <table class="table table-sm table-hover mb-0">
-            <thead><tr><th>المنتج</th><th class="text-center">المخزون</th><th class="text-center">حد التنبيه</th></tr></thead>
+            <thead><tr><th>{{ t('Product') }}</th><th class="text-center">{{ t('Inventory') }}</th><th class="text-center">حد التنبيه</th></tr></thead>
             <tbody>
               {% if stats.low_stock %}
                 {% for p in stats.low_stock %}
@@ -556,8 +535,8 @@
     <table class="table table-sm">
       <thead>
         <tr>
-          <th>المستخدم</th>
-          <th>الإجراء</th>
+          <th>{{ t('User') }}</th>
+          <th>{{ t('الإجراء') }}</th>
           <th>{{ t('Table') }}</th>
           <th>{{ t('Date') }}</th>
         </tr>
@@ -597,6 +576,4 @@ $(document).ready(function() {
 });
 </script>
 {% endblock %}
-
-
 

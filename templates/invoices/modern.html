@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ current_language }}" dir="{{ 'rtl' if is_rtl else 'ltr' }}">
+<html lang="ar" dir="{{ 'rtl' if is_rtl else 'ltr' }}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -120,6 +120,8 @@
     .ic-18 { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 0.05; z-index: 0; pointer-events: none; }
     .ic-19 { width: 100%; max-height: 400px; }
     .ic-20 { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg); font-size: 80px; color: rgba(0,0,0,0.05); font-weight: 700; z-index: 0; pointer-events: none; white-space: nowrap; }
+    .erp-invoice-accent-color { color: {{ settings.header_color if settings else '#667eea' }}; }
+    .erp-invoice-accent-border { border-right: 3px solid {{ settings.header_color if settings else '#667eea' }}; }
   </style>
 </head>
 <body class="invoice-print modern-invoice">
@@ -203,7 +205,7 @@
       
       {% if sale.payments %}
       <div class="ic-2">
-        <h4 class="erp-invoice-h3" style="color: {{ settings.header_color if settings else '#667eea' }};">💰 {{ t('الدفعات') }}</h4>
+        <h4 class="erp-invoice-h3 erp-invoice-accent-color">💰 {{ t('الدفعات') }}</h4>
         <div class="table-responsive"><table class="ic-3">
           <thead>
             <tr>
@@ -253,8 +255,8 @@
       
       
       {% if settings and ((settings.bank_name and settings.bank_name != 'None') or (settings.iban and settings.iban != 'None') or (settings.swift_code and settings.swift_code != 'None')) %}
-      <div class="erp-modern-bank-box" style="border-right: 3px solid {{ settings.header_color if settings else '#667eea' }};">
-        <p class="erp-invoice-bank-title" style="color: {{ settings.header_color if settings else '#667eea' }};">🏦 {{ t('Info_2') }} {{ t('Transfer_2') }} {{ t('Bank_4') }}</p>
+      <div class="erp-modern-bank-box erp-invoice-accent-border">
+        <p class="erp-invoice-bank-title erp-invoice-accent-color">🏦 {{ t('Info_2') }} {{ t('Transfer_2') }} {{ t('Bank_4') }}</p>
         {% if settings.bank_name and settings.bank_name != 'None' %}
         <p class="ic-9"><strong>{{ t('Bank') }}:</strong> {{ settings.bank_name }}</p>
         {% endif %}

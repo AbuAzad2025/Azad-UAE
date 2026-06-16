@@ -16,7 +16,7 @@
   </div>
 </div>
 <div class="card">
-  <div class="card-header"><strong>الحالة</strong></div>
+  <div class="card-header"><strong>{{ t('Status') }}</strong></div>
   <div class="card-body">
     <ul class="mb-0">
       <li>مفعّل: {{ 'نعم' if status.enabled else 'لا' }}</li>
@@ -30,5 +30,5 @@
     </p>
   </div>
 </div>
-<a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary mt-3">رجوع</a>
+<a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary mt-3">{{ t('Back') }}</a>
 {% endblock %}

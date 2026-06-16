@@ -38,6 +38,9 @@ logs/
 *.log
 
 # Environment
+
+# Deferred deletion staging area (templates moved here for review before permanent removal)
+templates/to-delete/
 .env
 .env.local
 .env.production
@@ -152,3 +155,8 @@ scripts/backup/*.json
 security-reports/
 *.patch
 *-status.txt
+
+# Temporary maintenance outputs
+scripts/maintenance/screenshots/
+scripts/maintenance/*.txt
+backup/

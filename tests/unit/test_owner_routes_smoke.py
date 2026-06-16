@@ -24,8 +24,6 @@ def test_routes_exist(smoke_app):
         targets = [
             "/owner/error-audit-logs",
             "/owner/error-audit-logs/export",
-            "/owner/error-logs",
-            "/owner/error-logs/export",
             "/owner/backups/list",
             "/owner/system-health",
             "/owner/activity-monitor",
@@ -45,8 +43,6 @@ def test_routes_no_500(smoke_client):
     targets = [
         "/owner/error-audit-logs",
         "/owner/error-audit-logs/export?format=json",
-        "/owner/error-logs",
-        "/owner/error-logs/export",
         "/owner/backups/list",
         "/owner/system-health",
         "/owner/activity-monitor",

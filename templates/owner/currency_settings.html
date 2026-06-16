@@ -13,7 +13,7 @@
             <i class="fas fa-arrow-right mr-1"></i> الرجوع للوحة المالك
           </a>
           <ol class="breadcrumb float-sm-left mb-0">
-            <li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">لوحة المالك</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">{{ t('Owner_Dashboard') }}</a></li>
             <li class="breadcrumb-item active">إدارة العملات</li>
           </ol>
         </div>
@@ -45,12 +45,13 @@
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 
           <div class="form-group">
-            <label>العملة الافتراضية</label>
+            <label>{{ t('Default_Currency') }}</label>
             <select name="default_currency" class="form-control" aria-label="default currency">
               <option value="AED" {{ 'selected' if settings.default_currency == 'AED' }}>AED - درهم إماراتي</option>
               <option value="USD" {{ 'selected' if settings.default_currency == 'USD' }}>USD - دولار أمريكي</option>
-              <option value="EUR" {{ 'selected' if settings.default_currency == 'EUR' }}>EUR - يورو</option>
+              <option value="EUR" {{ 'selected' if settings.default_currency == 'EUR' }}>EUR - {{ t('Euro') }}</option>
               <option value="SAR" {{ 'selected' if settings.default_currency == 'SAR' }}>SAR - ريال سعودي</option>
+              <option value="ILS" {{ 'selected' if settings.default_currency == 'ILS' }}>ILS - شيقل إسرائيلي</option>
             </select>
           </div>
 
@@ -80,7 +81,7 @@
           <table class="table table-bordered table-hover">
             <thead class="thead-light">
               <tr>
-                <th>العملة</th>
+                <th>{{ t('Currency') }}</th>
                 <th>السعر مقابل {{ tenant_currency_symbol }}</th>
               </tr>
             </thead>
@@ -100,6 +101,4 @@
 </section>
 
 {% endblock %}
-
-
 

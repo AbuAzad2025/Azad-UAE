@@ -5,24 +5,17 @@
 <div class="d-flex justify-content-between align-items-center">
   <div>
     <h1 class="mb-0"><i class="fas fa-database mr-2"></i>إدارة النسخ الاحتياطية</h1>
-    <p class="text-muted mb-0 mt-1">
-      <i class="fas fa-info-circle mr-1"></i>
-      حماية بياناتك واستعادتها بسهولة - نسخ يدوية أو تلقائية مجدولة
-    </p>
-  </div>
+    </div>
   <div>
     {% if current_user.is_owner or (current_user.role and current_user.role.slug == 'developer') %}
       <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary" aria-label="لوحة المالك">
-        <i class="fas fa-arrow-right mr-2"></i>لوحة المالك
-      </a>
+        <i class="fas fa-arrow-right mr-2"></i>{{ t('Owner_Dashboard') }}</a>
     {% else %}
       <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary" aria-label="لوحة التحكم">
-        <i class="fas fa-arrow-right mr-2"></i>لوحة التحكم
-      </a>
+        <i class="fas fa-arrow-right mr-2"></i>{{ t('Dashboard') }}</a>
     {% endif %}
     <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary" aria-label="الصفحة الرئيسية">
-      <i class="fas fa-home mr-2"></i>الرئيسية
-    </a>
+      <i class="fas fa-home mr-2"></i>{{ t('Main_2') }}</a>
   </div>
 </div>
 {% endblock %}
@@ -47,7 +40,7 @@
             <div><strong><i class="fas fa-clock mr-1"></i>الجدولة:</strong></div>
             <div class="text-muted">
               {% if schedule_settings and schedule_settings.enabled %}
-                مفعلة ({{ schedule_settings.frequency }} @ {{ schedule_settings.backup_time }}) | احتفاظ: {{ schedule_settings.keep_count }}
+                {{ t('مفعلة') }}schedule_settings.frequency }} @ {{ schedule_settings.backup_time }}) | احتفاظ: {{ schedule_settings.keep_count }}
               {% else %}
                 غير مفعلة
               {% endif %}
@@ -70,8 +63,8 @@
             <div><strong><i class="fas fa-exclamation-triangle mr-1"></i>آخر خطأ:</strong></div>
             <div class="ic-2">{{ schedule_state.last_error }}</div>
             <div class="mt-2 text-muted">
-              {% if schedule_state.last_action %}<span>العملية: {{ schedule_state.last_action }}</span>{% endif %}
-              {% if schedule_state.last_filename %}<span>{% if schedule_state.last_action %} | {% endif %}الملف: {{ schedule_state.last_filename }}</span>{% endif %}
+              {% if schedule_state.last_action %}<span>{{ t('العملية') }}schedule_state.last_action }}</span>{% endif %}
+              {% if schedule_state.last_filename %}<span>{% if schedule_state.last_action %} | {% endif %}{{ t('File') }}schedule_state.last_filename }}</span>{% endif %}
             </div>
           </div>
         {% elif schedule_state and schedule_state.last_success_at %}
@@ -84,7 +77,6 @@
     </div>
   </div>
 </div>
-
 
 <div class="row">
   <div class="col-lg-3 col-6">
@@ -136,7 +128,6 @@
   </div>
 </div>
 
-
 <div class="row mb-3">
   <div class="col-md-12">
     <div class="alert alert-info d-flex align-items-start ic-3">
@@ -147,21 +138,20 @@
           <li><strong>مستويات النسخ:</strong> System · Tenant · Branch · Store</li>
           <li><strong>System:</strong> <code>azad_backup_system_*.tar.gz</code> — <code>pg_dump -Fc</code> + كل uploads</li>
           <li><strong>Scoped:</strong> <code>data/*.jsonl</code> + uploads + <code>checksums.sha256</code></li>
-          <li><strong>لا يشمل:</strong> ملف <code>.env</code> الحقيقي، أسرار، أو ذاكرة AI التشغيلية</li>
-          <li><strong>الاستعادة:</strong> إلى قاعدة PostgreSQL <strong>جديدة</strong> فقط — لا تستعد فوق DB الإنتاج الحية</li>
-          <li><strong>التحقق:</strong> checksums + <code>pg_restore --list</code> على <code>db.dump</code></li>
+          <li><strong>لا يشمل:</strong> {{ t('ملف') }}<code>.env</code> الحقيقي، أسرار، أو ذاكرة AI {{ t('التشغيلية') }}</li>
+          <li><strong>الاستعادة:</strong> إلى قاعدة PostgreSQL <strong>{{ t('New_3') }}</strong> فقط — لا تستعد فوق DB الإنتاج الحية</li>
+          <li><strong>{{ t('التحقق') }}</strong> checksums + <code>pg_restore --list</code> على <code>db.dump</code></li>
         </ul>
         {% if pg_tools %}
         <p class="mb-0 mt-2 small">
           <strong>pg_dump:</strong>
-          {% if pg_tools.available %}متاح ({{ pg_tools.pg_dump_version or 'OK' }}){% else %}<span class="text-danger">غير متاح — عيّن PG_DUMP_PATH</span>{% endif %}
+          {% if pg_tools.available %}{{ t('Available_2') }}pg_tools.pg_dump_version or 'OK' }}){% else %}<span class="text-danger">غير متاح — عيّن PG_DUMP_PATH</span>{% endif %}
         </p>
         {% endif %}
       </div>
     </div>
   </div>
 </div>
-
 
 <div class="row mb-3">
   <div class="col-md-12">
@@ -201,12 +191,12 @@
                 نسخة محددة النطاق
               </label>
               <select name="scope" id="backupScopeSelect" class="form-control mb-2" required aria-label="scope">
-                <option value="tenant">Tenant — شركة</option>
+                <option value="tenant">Tenant — {{ t('Company_2') }}</option>
                 {% if is_platform_owner or branches %}
-                <option value="branch">Branch — فرع</option>
+                <option value="branch">Branch — {{ t('Branch_2') }}</option>
                 {% endif %}
                 {% if is_platform_owner or stores %}
-                <option value="store">Store — متجر</option>
+                <option value="store">Store — {{ t('Store_2') }}</option>
                 {% endif %}
               </select>
               {% if is_platform_owner and tenants %}
@@ -236,7 +226,7 @@
                   </button>
                 </div>
               </div>
-              <small class="form-text text-muted">data/ JSONL + uploads — لا تستعد على DATABASE_URL الحالية</small>
+              <small class="form-text text-muted">data/ JSONL + uploads — لا تستعد على DATABASE_URL {{ t('الحالية') }}</small>
             </form>
           </div>
           
@@ -251,11 +241,7 @@
                 <i class="fas fa-cog mr-1"></i> إعدادات الجدولة
               </a>
             </div>
-            <small class="form-text text-muted">
-              <i class="fas fa-info-circle mr-1"></i>
-              جدولة نسخ تلقائية كل 24 ساعة أو حسب الإعدادات المخصصة
-            </small>
-          </div>
+            </div>
         </div>
         
         <hr class="my-3">
@@ -275,7 +261,6 @@
   </div>
 </div>
 
-
 <div class="row">
   {% if backups %}
     {% for backup in backups %}
@@ -294,13 +279,13 @@
           
           <p class="mb-2">
             <i class="far fa-calendar-alt text-primary"></i>
-            <strong>التاريخ:</strong> 
+            <strong>{{ t('Date') }}</strong> 
             {% set ts = backup.get('timestamp', '') %}{{ ts[:4] }}-{{ ts[4:6] }}-{{ ts[6:8] }}
           </p>
           
           <p class="mb-2">
             <i class="far fa-clock text-info"></i>
-            <strong>الوقت:</strong> 
+            <strong>{{ t('Time_2') }}</strong> 
             {% set ts2 = backup.get('timestamp', '') %}{{ ts2[9:11] }}:{{ ts2[11:13] }}:{{ ts2[13:15] }}
           </p>
 
@@ -414,7 +399,6 @@
   {% endif %}
 </div>
 
-
 {% if stats.latest_backup %}
 <div class="row mt-3">
   <div class="col-md-12">
@@ -425,7 +409,7 @@
       <div class="card-body">
         <div class="row">
           <div class="col-md-3">
-            <strong>التاريخ:</strong><br>
+            <strong>{{ t('Date') }}</strong><br>
             {% set latest_ts = stats.latest_backup.get('timestamp', '') %}{{ latest_ts[:8] }}
           </div>
           <div class="col-md-3">
@@ -433,11 +417,11 @@
             {{ stats.latest_backup.get('size_mb') }} MB
           </div>
           <div class="col-md-3">
-            <strong>النوع:</strong><br>
+            <strong>{{ t('النوع') }}</strong><br>
             {% if stats.latest_backup.get('manual') %}يدوية{% else %}تلقائية{% endif %}
           </div>
           <div class="col-md-3">
-            <strong>الحالة:</strong><br>
+            <strong>{{ t('Status') }}</strong><br>
             <span class="badge badge-success">
               <i class="fas fa-check-circle"></i> جاهزة
             </span>
@@ -448,7 +432,6 @@
   </div>
 </div>
 {% endif %}
-
 
 <div class="modal fade" id="targetRestoreModal" tabindex="-1">
   <div class="modal-dialog">
@@ -463,7 +446,7 @@
           <div class="alert alert-danger">
             ممنوع استخدام <code>DATABASE_URL</code> الحالية. استخدم قاعدة اختبار/جديدة فقط.
           </div>
-          <p class="small text-muted">الملف: <strong id="targetRestoreFilename"></strong></p>
+          <p class="small text-muted">{{ t('File') }}<strong id="targetRestoreFilename"></strong></p>
           <div class="form-group">
             <label for="input_target_database_url">رابط PostgreSQL للهدف (TARGET_TEST_DATABASE_URL)</label>
             <input type="password" name="target_database_url" class="form-control" autocomplete="off"
@@ -476,7 +459,7 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-dismiss="modal">إلغاء</button>
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ t('Cancel') }}</button>
           <button type="submit" class="btn btn-warning">تنفيذ على قاعدة الهدف</button>
         </div>
       </form>
@@ -574,6 +557,4 @@ function verifyBackup(filename) {
 }
 </script>
 {% endblock %}
-
-
 

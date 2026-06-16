@@ -8,16 +8,14 @@
         <div class="container-fluid">
             <div class="row mb-2">
                 <div class="col-sm-6">
-                    <h1 class="m-0"><i class="fas fa-archive mr-2"></i>السجلات المؤرشفة</h1>
+                    <h1 class="m-0"><i class="fas fa-archive mr-2"></i>{{ t('Archived_Records') }}</h1>
                 </div>
                 <div class="col-sm-6">
                     <div class="float-left">
                         <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary" aria-label="لوحة المالك">
-                            <i class="fas fa-arrow-right mr-2"></i>لوحة المالك
-                        </a>
+                            <i class="fas fa-arrow-right mr-2"></i>{{ t('Owner_Dashboard') }}</a>
                         <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary" aria-label="الصفحة الرئيسية">
-                            <i class="fas fa-home mr-2"></i>الرئيسية
-                        </a>
+                            <i class="fas fa-home mr-2"></i>{{ t('Main_2') }}</a>
                     </div>
                 </div>
             </div>
@@ -30,7 +28,7 @@
                 <div class="col-12">
                     <div class="card">
                         <div class="card-header">
-                            <h3 class="card-title">السجلات المؤرشفة</h3>
+                            <h3 class="card-title">{{ t('Archived_Records') }}</h3>
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
@@ -39,9 +37,9 @@
                                         <tr>
                                             <th>تاريخ الأرشفة</th>
                                             <th>{{ t('Table') }}</th>
-                                            <th>المعرف</th>
-                                            <th>المستخدم</th>
-                                            <th>السبب</th>
+                                            <th>{{ t('المعرف') }}</th>
+                                            <th>{{ t('User') }}</th>
+                                            <th>{{ t('السبب') }}</th>
                                         </tr>
                                     </thead>
                                     <tbody>

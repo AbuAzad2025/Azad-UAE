@@ -23,12 +23,12 @@
           <thead class="thead-dark">
             <tr>
               <th>#</th>
-              <th>العميل</th>
+              <th>{{ t('Customer') }}</th>
               <th>إجمالي المشتريات</th>
               <th>عدد الفواتير</th>
               <th>متوسط الفاتورة</th>
               <th>آخر شراء</th>
-              <th>الحالة</th>
+              <th>{{ t('Status') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -39,7 +39,7 @@
               <td>{{ "%.2f"|format(c.lifetime_value) }} {{ tenant_currency_symbol }}</td>
               <td>{{ c.sales_count }}</td>
               <td>{{ "%.2f"|format(c.avg_sale) }} {{ tenant_currency_symbol }}</td>
-              <td>{{ c.days_since_last }} يوم</td>
+              <td>{{ c.days_since_last }} {{ t('يوم') }}</td>
               <td>
                 <span class="badge badge-{{ 'success' if c.status == 'نشط' else 'warning' if c.status == 'خامل' else 'danger' }}">
                   {{ c.status }}

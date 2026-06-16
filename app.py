@@ -5,7 +5,7 @@ import uuid
 from datetime import datetime, timezone
 import time
 from decimal import Decimal
-from flask import Flask, render_template, request, g, redirect, url_for, flash, abort, jsonify, send_from_directory
+from flask import Flask, render_template, request, g, redirect, url_for, flash, abort, jsonify, send_from_directory, current_app
 from flask_login import current_user, login_required
 from flask_wtf.csrf import CSRFError
 from werkzeug.exceptions import HTTPException
@@ -377,7 +377,7 @@ def create_app(config_class=Config):
             if current_user.is_authenticated and is_global_tenant_user(current_user):
                 active_tenant_id = get_active_tenant_id(current_user)
                 from models.tenant import Tenant as TenantModel
-                available_tenants = TenantModel.query.filter_by(is_active=True).order_by(TenantModel.id.asc()).all()
+                available_tenants = TenantModel.query.filter_by(is_active=True).order_by(TenantModel.id.desc()).limit(200).all()
         except Exception as e:
             try:
                 LoggingCore.log_error(

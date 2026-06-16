@@ -8,10 +8,10 @@
   </div>
   <div>
     <div class="btn-group mr-2">
-      <button type="button" class="btn btn-outline-success btn-lg dropdown-toggle" data-toggle="dropdown">
+      <button type="button" class="btn btn-outline-success btn-lg dropdown-toggle" data-bs-toggle="dropdown">
         <i class="fas fa-download mr-2"></i>{{ t('Export') }}
       </button>
-      <div class="dropdown-menu dropdown-menu-right">
+      <div class="dropdown-menu dropdown-menu-end">
         <a class="dropdown-item" href="{{ url_for('customers.export', format='csv', search=request.args.get('search'), type=request.args.get('type')) }}">CSV</a>
         <a class="dropdown-item" href="{{ url_for('customers.export', format='xlsx', search=request.args.get('search'), type=request.args.get('type')) }}">Excel</a>
       </div>

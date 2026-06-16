@@ -26,39 +26,18 @@
       </div>
 
       {% macro _sec(label, perms) %}
-        {% if perms %}<li class="erp-sidebar-section-label">{{ label }}</li>{% endif %}
+        {% if perms %}<li class="nav-item erp-sidebar-section-label" role="separator" aria-label="{{ label }}"><span class="nav-link py-1 text-muted text-uppercase small font-weight-bold">{{ label }}</span></li>{% endif %}
       {% endmacro %}
 
       {% macro _nav(href, icon, label, active_if=none, perm=true) %}
-        {% if perm %}
-        <li class="nav-item">
+        {% if perm %}<li class="nav-item">
           <a href="{{ href }}" class="nav-link{% if active_if is not none and request.endpoint == active_if %} active{% endif %}"{% if request.endpoint == active_if %} aria-current="page"{% endif %}>
             <i class="nav-icon {{ icon }}"></i><p>{{ label }}</p>
           </a>
-        </li>
-        {% endif %}
+        </li>{% endif %}
       {% endmacro %}
 
-      {% macro _tree(icon, label, match, perm=true) %}
-        {% if perm %}
-        <li class="nav-item has-treeview{% if request.endpoint and match in request.endpoint %} menu-open{% endif %}">
-          <a href="#" class="nav-link{% if request.endpoint and match in request.endpoint %} active{% endif %}" role="button" aria-expanded="{{ 'true' if request.endpoint and match in request.endpoint else 'false' }}" aria-haspopup="true">
-            <i class="nav-icon {{ icon }}"></i><p>{{ label }}<i class="right fas fa-angle-left"></i></p>
-          </a>
-          <ul class="nav nav-treeview">
-        {% endif %}
-      {% endmacro %}
-
-      {% macro _end(perm=true) %}
-        {% if perm %}</ul></li>{% endif %}
-      {% endmacro %}
-
-      <nav class="mt-2">
-        <ul class="nav nav-pills nav-sidebar flex-column erp-sidebar-nav" data-widget="treeview">
-
-          {{ _nav(url_for('main.dashboard'), 'fas fa-tachometer-alt', t('Dashboard'), 'main.dashboard') }}
-
-          {# ─────────── 1. المبيعات والعملاء (Sales & CRM) ─────────── #}
+      {% macro _tree(icon, label, match, perm=true) %}{% if perm %}{% set _is_open = request.endpoint and match in request.endpoint %}<li class="nav-item has-treeview{% if _is_open %} menu-open{% endif %}"><a href="#" class="nav-link{% if _is_open %} active{% endif %}" role="button" aria-haspopup="true"><i class="nav-icon {{ icon }}"></i><p>{{ label }}<i class="right fas fa-angle-left"></i></p></a><ul class="nav nav-treeview">{% endif %}{% endmacro %}{% macro _end(perm=true) %}{% if perm %}</ul></li>{% endif %}{% endmacro %}<nav class="mt-2"><ul class="nav nav-pills nav-sidebar flex-column erp-sidebar-nav" data-widget="treeview">{{ _nav(url_for('main.dashboard'), 'fas fa-tachometer-alt', t('Dashboard'), 'main.dashboard') }}{# ─────────── 1. المبيعات والعملاء (Sales & CRM) ─────────── #}
           {% set _sale_perm = current_user.is_authenticated and (current_user.has_permission('manage_sales') or current_user.has_permission('manage_customers')) %}
           {{ _sec(t('Sales') ~ ' ' ~ t('والمبيعات'), _sale_perm) }}
 
@@ -170,7 +149,6 @@
 
           {% set _led = current_user.is_authenticated and current_user.has_permission('view_ledger') %}
           {{ _tree('fas fa-book', t('دفتر') ~ ' ' ~ t('الأستاذ'), 'ledger', _led) }}
-            {% if _led %}
             <li class="nav-item"><a href="{{ url_for('ledger.index') }}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>{{ t('Accounts') }}</p></a></li>
             <li class="nav-item"><a href="{{ url_for('ledger.trial_balance') }}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>{{ t('Balance_2') }} {{ t('Review') }}</p></a></li>
             <li class="nav-item"><a href="{{ url_for('ledger.income_statement') }}" class="nav-link"><i class="far fa-circle nav-icon"></i><p>{{ t('List') }} {{ t('Income_2') }}</p></a></li>
@@ -238,7 +216,8 @@
           {{ _nav(url_for('owner.list_backups'), 'fas fa-database', t('Backups_2') ~ ' ' ~ t('System')) }}
           {{ _nav(url_for('owner.system_health'), 'fas fa-heartbeat', t('Health') ~ ' ' ~ t('System')) }}
           {{ _nav(url_for('ai.config'), 'fas fa-key text-info', t('Keys') ~ ' AI (Groq)') }}
-          {% elif current_user.is_authenticated and current_user.role and current_user.role.slug in ['super_admin', 'manager'] %}
+          {% endif %}
+          {% if current_user.is_authenticated and current_user.role and current_user.role.slug in ['super_admin', 'manager'] %}
           {{ _nav(url_for('owner.company_dashboard'), 'fas fa-building text-info', t('Dashboard_2') ~ ' ' ~ t('Company'), 'owner.company_dashboard') }}
           {% if current_user.has_permission('manage_backups') %}
           {{ _nav(url_for('owner.list_backups'), 'fas fa-database', t('Backups_2') ~ ' ' ~ t('Company')) }}

@@ -25,7 +25,20 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!filtersRow || document.getElementById('btnExportCsv')) return;
     const wrap = document.createElement('div');
     wrap.className = 'col-auto d-flex gap-2';
-    wrap.innerHTML = '<button id="btnPrint" class="btn btn-outline-secondary"><i class="fas fa-print me-1"></i> طباعة كشف</button><button id="btnExportCsv" class="btn btn-outline-success"><i class="fas fa-file-csv me-1"></i> تصدير CSV</button>';
+    
+    const btnPrint = document.createElement('button');
+    btnPrint.id = 'btnPrint';
+    btnPrint.className = 'btn btn-outline-secondary';
+    btnPrint.innerHTML = '<i class="fas fa-print me-1"></i> طباعة كشف';
+    
+    const btnExport = document.createElement('button');
+    btnExport.id = 'btnExportCsv';
+    btnExport.className = 'btn btn-outline-success';
+    btnExport.innerHTML = '<i class="fas fa-file-csv me-1"></i> تصدير CSV';
+    
+    wrap.appendChild(btnPrint);
+    wrap.appendChild(btnExport);
+    
     filtersRow.appendChild(wrap);
     document.getElementById('btnPrint').addEventListener('click', printStatement);
     document.getElementById('btnExportCsv').addEventListener('click', exportCsv);
@@ -135,7 +148,16 @@ document.addEventListener('DOMContentLoaded', function () {
   function setLoading(is) {
     const tbody = document.querySelector('#paymentsTable tbody');
     if (!tbody) return;
-    if (is) tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted py-4"><div class="spinner-border spinner-border-sm me-2"></div>جارِ التحميل…</td></tr>';
+    if (is) {
+        tbody.innerHTML = '';
+        const tr = document.createElement('tr');
+        const td = document.createElement('td');
+        td.colSpan = 9;
+        td.className = 'text-center text-muted py-4';
+        td.innerHTML = '<div class="spinner-border spinner-border-sm me-2"></div>جارِ التحميل…';
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+    }
   }
 
   function badgeForDirection(dir) {
@@ -185,32 +207,80 @@ document.addEventListener('DOMContentLoaded', function () {
     tbody.innerHTML = '';
     if (!list.length) {
       const tr = document.createElement('tr');
-      tr.innerHTML = '<td colspan="9" class="text-center text-muted py-4">لا توجد بيانات</td>';
+      const td = document.createElement('td');
+      td.colSpan = 9;
+      td.className = 'text-center text-muted py-4';
+      td.textContent = 'لا توجد بيانات';
+      tr.appendChild(td);
       tbody.appendChild(tr);
       return;
     }
     let pageSum = 0;
     list.forEach(function (p) {
+      pageSum += toNumber(p.total_amount);
+      const tr = document.createElement('tr');
+      
+      const tdId = document.createElement('td');
+      tdId.textContent = p.id;
+      tr.appendChild(tdId);
+      
+      const tdDate = document.createElement('td');
+      tdDate.textContent = (p.payment_date || '').split('T')[0] || '';
+      tr.appendChild(tdDate);
+      
+      const tdAmount = document.createElement('td');
+      tdAmount.textContent = fmtAmount(p.total_amount);
+      tr.appendChild(tdAmount);
+      
+      const tdCurr = document.createElement('td');
+      tdCurr.textContent = (p.currency || '');
+      tr.appendChild(tdCurr);
+      
+      const tdMethod = document.createElement('td');
       const splitsHtml = (p.splits || []).map(function (s) {
         return '<span class="badge bg-secondary me-1">' + String((s.method || '')).toUpperCase() + ': ' + fmtAmount(s.amount) + ' ' + (p.currency || '') + '</span>';
       }).join(' ');
-      const dateOnly = (p.payment_date || '').split('T')[0] || '';
-      pageSum += toNumber(p.total_amount);
-      const tr = document.createElement('tr');
-      tr.innerHTML =
-        '<td>' + p.id + '</td>' +
-        '<td>' + dateOnly + '</td>' +
-        '<td>' + fmtAmount(p.total_amount) + '</td>' +
-        '<td>' + (p.currency || '') + '</td>' +
-        '<td>' + (splitsHtml || (p.method || '')) + '</td>' +
-        '<td>' + badgeForDirection(p.direction) + '</td>' +
-        '<td>' + badgeForStatus(p.status) + '</td>' +
-        '<td>' + deriveEntityLabel(p) + '</td>' +
-        '<td><a href="/payments/' + p.id + '" class="btn btn-info btn-sm">عرض</a></td>';
+      tdMethod.innerHTML = splitsHtml || (p.method || '');
+      tr.appendChild(tdMethod);
+      
+      const tdDir = document.createElement('td');
+      tdDir.innerHTML = badgeForDirection(p.direction);
+      tr.appendChild(tdDir);
+      
+      const tdStatus = document.createElement('td');
+      tdStatus.innerHTML = badgeForStatus(p.status);
+      tr.appendChild(tdStatus);
+      
+      const tdEntity = document.createElement('td');
+      tdEntity.textContent = deriveEntityLabel(p);
+      tr.appendChild(tdEntity);
+      
+      const tdAction = document.createElement('td');
+      const a = document.createElement('a');
+      a.href = '/payments/' + p.id;
+      a.className = 'btn btn-info btn-sm';
+      a.textContent = 'عرض';
+      tdAction.appendChild(a);
+      tr.appendChild(tdAction);
+      
       tbody.appendChild(tr);
     });
     const t = document.createElement('tr');
-    t.innerHTML = '<td></td><td class="text-end fw-bold">إجمالي الصفحة</td><td class="fw-bold">' + fmtAmount(pageSum) + '</td><td colspan="6"></td>';
+    const tdLabel = document.createElement('td');
+    tdLabel.colSpan = 2;
+    tdLabel.className = 'text-end fw-bold';
+    tdLabel.textContent = 'إجمالي الصفحة';
+    t.appendChild(tdLabel);
+    
+    const tdSum = document.createElement('td');
+    tdSum.className = 'fw-bold';
+    tdSum.textContent = fmtAmount(pageSum);
+    t.appendChild(tdSum);
+    
+    const tdEmpty = document.createElement('td');
+    tdEmpty.colSpan = 6;
+    t.appendChild(tdEmpty);
+    
     tbody.appendChild(t);
   }
 
@@ -224,7 +294,17 @@ document.addEventListener('DOMContentLoaded', function () {
     function add(page, label, disabled, active, isEllipsis=false) {
       const li = document.createElement('li');
       li.className = 'page-item ' + (disabled ? 'disabled' : '') + ' ' + (active ? 'active' : '');
-      li.innerHTML = '<a class="page-link" href="#" ' + (isEllipsis ? 'tabindex="-1" aria-disabled="true"' : 'data-page="' + page + '"') + '>' + label + '</a>';
+      const a = document.createElement('a');
+      a.className = 'page-link';
+      a.href = '#';
+      if (isEllipsis) {
+          a.tabIndex = -1;
+          a.setAttribute('aria-disabled', 'true');
+      } else {
+          a.setAttribute('data-page', page);
+      }
+      a.textContent = label;
+      li.appendChild(a);
       ul.appendChild(li);
     }
 
@@ -376,7 +456,18 @@ function initSmartSearch() {
       results.forEach((item, index) => {
         const itemDiv = document.createElement('div');
         itemDiv.className = `smart-search-item p-2 border-bottom ${index === selectedIndex ? 'bg-light' : ''}`;
-        itemDiv.innerHTML = `<span class="fw-bold">${item.name}</span> <small class="text-muted">(${item.id})</small>`;
+        
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'fw-bold';
+        nameSpan.textContent = item.name;
+        
+        const idSmall = document.createElement('small');
+        idSmall.className = 'text-muted';
+        idSmall.textContent = ` (${item.id})`;
+        
+        itemDiv.appendChild(nameSpan);
+        itemDiv.appendChild(idSmall);
+        
         itemDiv.addEventListener('click', () => selectItem(item));
         resultsList.appendChild(itemDiv);
       });

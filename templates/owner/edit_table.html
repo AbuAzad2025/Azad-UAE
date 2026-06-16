@@ -8,8 +8,7 @@
   </div>
   <div>
     <a href="{{ url_for('owner.database_tools') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right mr-2"></i>العودة
-    </a>
+      <i class="fas fa-arrow-right mr-2"></i>{{ t('العودة') }}</a>
   </div>
 </div>
 {% endblock %}
@@ -25,15 +24,15 @@
   <div class="card-body">
     <div class="alert alert-warning">
       <i class="fas fa-exclamation-triangle mr-2"></i>
-      <strong>تحذير:</strong> يمكنك تعديل البيانات مباشرة. التعديلات ستحفظ في قاعدة البيانات فوراً!
+      <strong>{{ t('Warning') }}</strong> يمكنك تعديل البيانات مباشرة. التعديلات ستحفظ في قاعدة البيانات فوراً!
     </div>
 
     <div class="alert alert-info">
       <strong>📝 طريقة التعديل:</strong>
       <ol class="mb-0">
-        <li>اضغط زر <span class="badge badge-warning">تعديل</span> على السطر المطلوب</li>
+        <li>اضغط زر <span class="badge badge-warning">{{ t('Edit') }}</span> على السطر المطلوب</li>
         <li>عدّل البيانات في الخانات</li>
-        <li>اضغط <span class="badge badge-success">حفظ</span> لحفظ التغييرات</li>
+        <li>{{ t('اضغط') }}<span class="badge badge-success">{{ t('Save') }}</span> لحفظ التغييرات</li>
       </ol>
     </div>
 
@@ -44,7 +43,7 @@
             {% for col in columns %}
             <th><i class="fas fa-database mr-1"></i>{{ col }}</th>
             {% endfor %}
-            <th width="200"><i class="fas fa-tools mr-1"></i>الإجراءات</th>
+            <th width="200"><i class="fas fa-tools mr-1"></i>{{ t('الإجراءات') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -160,7 +159,7 @@ function saveRow(btn) {
     title: 'تأكيد الحفظ',
     html: `
       <p>هل أنت متأكد من حفظ التعديلات؟</p>
-      <p class="text-muted small">الجدول: <code>{{ table_name }}</code></p>
+      <p class="text-muted small">{{ t('الجدول') }}<code>{{ table_name }}</code></p>
       <p class="text-muted small">السطر ID: ${rowId}</p>
     `,
     icon: 'warning',

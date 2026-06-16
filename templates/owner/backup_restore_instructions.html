@@ -5,7 +5,7 @@
 {% endblock %}
 {% block content %}
 <div class="alert alert-danger">
-  <strong>تحذير:</strong> {{ warning or 'لا تستعد فوق قاعدة البيانات الحية. أنشئ قاعدة PostgreSQL جديدة أولاً.' }}
+  <strong>{{ t('Warning') }}</strong> {{ warning or 'لا تستعد فوق قاعدة البيانات الحية. أنشئ قاعدة PostgreSQL جديدة أولاً.' }}
 </div>
 {% if info and info.manifest %}
 <div class="card mb-3">

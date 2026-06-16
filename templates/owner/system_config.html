@@ -15,7 +15,7 @@
             <i class="fas fa-arrow-right mr-1"></i> الرجوع للوحة المالك
           </a>
           <ol class="breadcrumb float-sm-left mb-0">
-            <li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">لوحة المالك</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">{{ t('Owner_Dashboard') }}</a></li>
             <li class="breadcrumb-item active">{{ t('System Settings') }}</li>
           </ol>
         </div>
@@ -91,8 +91,7 @@
               <div class="custom-control custom-switch">
                 <input type="checkbox" class="custom-control-input" id="enable_reports" name="enable_reports" {{ 'checked' if settings.enable_reports }} aria-label="enable reports">
                 <label class="custom-control-label" for="enable_reports">
-                  <i class="fas fa-chart-line text-success"></i> التقارير
-                </label>
+                  <i class="fas fa-chart-line text-success"></i>{{ t('Reports_3') }}</label>
               </div>
             </div>
             <div class="col-md-3">
@@ -194,11 +193,11 @@
           <div class="row">
             <div class="col-md-3">
               <div class="form-group">
-                <label>العملة الافتراضية</label>
+                <label>{{ t('Default_Currency') }}</label>
                 <select name="default_currency" class="form-control" aria-label="default currency">
                   <option value="AED" {{ 'selected' if settings.default_currency == 'AED' }}>AED - درهم إماراتي</option>
                   <option value="USD" {{ 'selected' if settings.default_currency == 'USD' }}>USD - دولار أمريكي</option>
-                  <option value="EUR" {{ 'selected' if settings.default_currency == 'EUR' }}>EUR - يورو</option>
+                  <option value="EUR" {{ 'selected' if settings.default_currency == 'EUR' }}>EUR - {{ t('Euro') }}</option>
                   <option value="SAR" {{ 'selected' if settings.default_currency == 'SAR' }}>SAR - ريال سعودي</option>
                 </select>
               </div>
@@ -207,7 +206,7 @@
               <div class="form-group">
                 <label>اللغة الافتراضية</label>
                 <select name="default_language" class="form-control" aria-label="default language">
-                  <option value="ar" {{ 'selected' if settings.default_language == 'ar' }}>العربية</option>
+                  <option value="ar" {{ 'selected' if settings.default_language == 'ar' }}>{{ t('Arabic_2') }}</option>
                   <option value="en" {{ 'selected' if settings.default_language == 'en' }}>English</option>
                 </select>
               </div>
@@ -239,8 +238,7 @@
             <i class="fas fa-save mr-2"></i>حفظ الإعدادات
           </button>
           <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary btn-lg" aria-label="إلغاء والعودة">
-            <i class="fas fa-times mr-2"></i>إلغاء
-          </a>
+            <i class="fas fa-times mr-2"></i>{{ t('Cancel') }}</a>
         </div>
       </div>
     </form>

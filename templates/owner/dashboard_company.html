@@ -4,15 +4,11 @@
 
 {% block page_title %}<i class="fas fa-building text-info"></i> لوحة مدير الشركة{% endblock %}
 
-
-
 {% block extra_css %}
 
 <link rel="stylesheet" href="{{ url_for('static', filename='css/owner-panels.css') }}">
 
 {% endblock %}
-
-
 
 {% block content %}
 
@@ -23,8 +19,6 @@
   <strong>{{ tenant.name_ar or tenant.name }}</strong> — عرض بيانات شركتك فقط. لا يظهر هنا نسخ النظام الكامل ولا شركات أخرى.
 
 </div>
-
-
 
 {% if readiness_warnings %}
 
@@ -39,8 +33,6 @@
 </div>
 
 {% endif %}
-
-
 
 <div class="row mb-3">
 
@@ -109,8 +101,6 @@
   </div>
 
 </div>
-
-
 
 <div class="row">
 

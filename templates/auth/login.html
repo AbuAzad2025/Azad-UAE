@@ -169,9 +169,14 @@
       }
 
       if (form && submitBtn) {
+        var submitOriginalHtml = submitBtn.innerHTML;
         form.addEventListener('submit', function () {
           submitBtn.classList.add('is-loading');
           submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin" aria-hidden="true"></i> جاري التحقق...';
+          setTimeout(function () {
+            submitBtn.classList.remove('is-loading');
+            submitBtn.innerHTML = submitOriginalHtml;
+          }, 15000);
         });
       }
     })();

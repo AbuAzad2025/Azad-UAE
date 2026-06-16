@@ -1,10 +1,6 @@
 {% extends 'base.html' %}
 
-
-
 {% block title %}شركة أزاد للأنظمة الذكية - الملف الشخصي {{ user.username }}{% endblock %}
-
-
 
 {% block content %}
 
@@ -24,7 +20,7 @@
 
         <ol class="breadcrumb float-sm-left">
 
-          <li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">لوحة المالك</a></li>
+          <li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">{{ t('Owner_Dashboard') }}</a></li>
 
           <li class="breadcrumb-item"><a href="{{ url_for('owner.users_list') }}">{{ t('Users') }}</a></li>
 
@@ -39,8 +35,6 @@
   </div>
 
 </div>
-
-
 
 <div class="content">
 
@@ -84,11 +78,7 @@
 
             </div>
 
-
-
             <h3 class="profile-username text-center mt-3">{{ user.full_name or user.username }}</h3>
-
-
 
             <p class="text-muted text-center">
 
@@ -108,8 +98,6 @@
 
             </p>
 
-
-
             <ul class="list-group list-group-unbordered mb-3">
 
               <li class="list-group-item">
@@ -122,7 +110,7 @@
 
               <li class="list-group-item">
 
-                <b><i class="fas fa-envelope mr-2"></i>البريد</b>
+                <b><i class="fas fa-envelope mr-2"></i>{{ t('Email_2') }}</b>
 
                 <span class="float-left">{{ user.email or '-' }}</span>
 
@@ -140,7 +128,7 @@
 
                   {% else %}
 
-                    <span class="badge badge-danger">معطل</span>
+                    <span class="badge badge-danger">{{ t('معطل') }}</span>
 
                   {% endif %}
 
@@ -177,8 +165,6 @@
               </li>
 
             </ul>
-
-
 
             <a href="{{ url_for('owner.edit_user', user_id=user.id) }}" class="btn btn-primary btn-block">
 
@@ -288,7 +274,7 @@
 
               <div class="info-box-content">
 
-                <span class="info-box-text">سجل التدقيق</span>
+                <span class="info-box-text">{{ t('Audit_Log') }}</span>
 
                 <span class="info-box-number">{{ stats.audits_count }}</span>
 
@@ -326,7 +312,7 @@
 
                   <th>#</th>
 
-                  <th>الزبون</th>
+                  <th>{{ t('Customer_2') }}</th>
 
                   <th>{{ t('Amount') }}</th>
 
@@ -410,11 +396,11 @@
 
                   <tr>
 
-                    <th>النوع</th>
+                    <th>{{ t('النوع') }}</th>
 
-                    <th>الإجراء</th>
+                    <th>{{ t('الإجراء') }}</th>
 
-                    <th>التفاصيل</th>
+                    <th>{{ t('Details_2') }}</th>
 
                     <th>{{ t('Date') }}</th>
 
@@ -493,8 +479,4 @@
 </div>
 
 {% endblock %}
-
-
-
-
 

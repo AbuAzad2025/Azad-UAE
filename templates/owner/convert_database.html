@@ -11,11 +11,9 @@
       <i class="fas fa-tools mr-2"></i>أدوات DB
     </a>
     <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right mr-2"></i>لوحة المالك
-    </a>
+      <i class="fas fa-arrow-right mr-2"></i>{{ t('Owner_Dashboard') }}</a>
     <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
-      <i class="fas fa-home mr-2"></i>الرئيسية
-    </a>
+      <i class="fas fa-home mr-2"></i>{{ t('Main_2') }}</a>
   </div>
 </div>
 {% endblock %}
@@ -32,13 +30,13 @@
         <div class="card-body">
           <div class="alert alert-info">
             <i class="fas fa-info-circle"></i>
-            <strong>ملاحظة:</strong> النظام حالياً يعمل على SQLite. يمكنك التحويل إلى PostgreSQL.
+            <strong>{{ t('Note') }}</strong> النظام حالياً يعمل على SQLite. يمكنك التحويل إلى PostgreSQL.
           </div>
 
           <div class="form-group">
             <label for="target_db">قاعدة البيانات المستهدفة:</label>
             <select name="target_db" id="target_db" class="form-control" onchange="toggleConfig()" aria-label="target db">
-              <option value="">بلا</option>
+              <option value="">{{ t('None') }}</option>
               <option value="postgresql">PostgreSQL (موصى به للإنتاج)</option>
             </select>
           </div>
@@ -48,7 +46,7 @@
               <label for="input_postgresql_uri">PostgreSQL Connection URI:</label>
               <input type="text" name="postgresql_uri" class="form-control" placeholder="postgresql://user:password@host:port/dbname" id="input_postgresql_uri">
               <small class="form-text text-muted">
-                مثال: postgresql://myuser:mypass@localhost:5432/garage_db
+                {{ t('مثال') }}postgresql://myuser:mypass@localhost:5432/garage_db
               </small>
             </div>
           </div>
@@ -79,7 +77,7 @@
         <h3 class="card-title"><i class="fas fa-question-circle"></i> معلومات التحويل</h3>
       </div>
       <div class="card-body">
-        <h5>لماذا PostgreSQL؟</h5>
+        <h5>{{ t('لماذا') }}PostgreSQL؟</h5>
         <ul>
           <li>أداء أفضل للأنظمة الكبيرة</li>
           <li>دعم أفضل للـ concurrent connections</li>
@@ -95,7 +93,7 @@
           <li>احصل على connection URI</li>
           <li>أدخله هنا واضغط "ابدأ التحويل"</li>
           <li>انتظر حتى يكتمل</li>
-          <li>حدث DATABASE_URL في .env</li>
+          <li>{{ t('حدث') }}DATABASE_URL في .env</li>
         </ol>
       </div>
     </div>

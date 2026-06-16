@@ -779,6 +779,10 @@ def admin_add_account():
             currency = request.form.get('currency') or default_currency
             is_header = bool(request.form.get('is_header'))
             description = request.form.get('description')
+            bank_name = request.form.get('bank_name')
+            bank_account_number = request.form.get('bank_account_number')
+            bank_iban = request.form.get('bank_iban')
+            bank_swift_code = request.form.get('bank_swift_code')
             
             # التحقق من عدم تكرار الكود
             existing = gl_account_query().filter_by(code=code).first()
@@ -803,6 +807,10 @@ def admin_add_account():
                 level=level,
                 description=description,
                 tenant_id=active_tenant_id(),
+                bank_name=bank_name,
+                bank_account_number=bank_account_number,
+                bank_iban=bank_iban,
+                bank_swift_code=bank_swift_code,
             )
             
             db.session.add(account)

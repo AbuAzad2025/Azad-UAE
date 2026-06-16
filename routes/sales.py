@@ -64,6 +64,8 @@ def index():
     branch_id = branch_scope_id()
     if branch_id is not None:
         query = query.filter(Sale.branch_id == branch_id)
+    from sqlalchemy.orm import joinedload
+    query = query.options(joinedload(Sale.customer))
     pagination = query.order_by(Sale.sale_date.desc()).paginate(
         page=page,
         per_page=per_page,

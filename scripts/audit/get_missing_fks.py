@@ -1,5 +1,5 @@
-import sys
-sys.path.insert(0, r'D:\Data\karaj\UAE\Azad-UAE')
+import sys, os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 from app import create_app
 from sqlalchemy import inspect
 from extensions import db

@@ -14,7 +14,7 @@
           <i class="fas fa-arrow-right mr-1"></i> الرجوع للوحة المالك
         </a>
         <ol class="breadcrumb float-sm-left mb-0">
-          <li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">لوحة المالك</a></li>
+          <li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">{{ t('Owner_Dashboard') }}</a></li>
           <li class="breadcrumb-item active">الشركة المطورة</li>
         </ol>
       </div>
@@ -25,7 +25,7 @@
 <div class="container-fluid">
   <div class="alert alert-info">
     <i class="fas fa-info-circle"></i>
-    <strong>ملاحظة:</strong> هذه البيانات تظهر في تذييل الصفحات وروابط «طور بواسطة» و«واتساب المطور» — ولا علاقة لها ببيانات التينانت (النشاط/العميل).
+    <strong>{{ t('Note') }}</strong> هذه البيانات تظهر في تذييل الصفحات وروابط «طور بواسطة» و«واتساب المطور» — ولا علاقة لها ببيانات التينانت (النشاط/العميل).
   </div>
 
   <form class="needs-validation" method="POST" action="{{ url_for('owner.developer_settings') }}">
@@ -65,7 +65,7 @@
         <div class="row">
           <div class="col-md-6">
             <div class="form-group">
-              <label for="input_developer_phone">الهاتف</label>
+              <label for="input_developer_phone">{{ t('Phone') }}</label>
               <input type="text" name="developer_phone" class="form-control" value="{{ dev.developer_phone or '' }}" placeholder="+972562150193" id="input_developer_phone" pattern="^\+?[0-9\s\-]{8,20}$">
             </div>
           </div>
@@ -79,7 +79,7 @@
         <div class="row">
           <div class="col-md-6">
             <div class="form-group">
-              <label for="input_developer_email">البريد الإلكتروني</label>
+              <label for="input_developer_email">{{ t('Email') }}</label>
               <input type="email" name="developer_email" class="form-control" value="{{ dev.developer_email or '' }}" placeholder="support@example.com" id="input_developer_email">
             </div>
           </div>
@@ -99,7 +99,7 @@
 
     <div class="mb-4">
       <button type="submit" class="btn btn-primary btn-lg"><i class="fas fa-save mr-2"></i>حفظ إعدادات المطور</button>
-      <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary btn-lg">إلغاء</a>
+      <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary btn-lg">{{ t('Cancel') }}</a>
     </div>
   </form>
 </div>

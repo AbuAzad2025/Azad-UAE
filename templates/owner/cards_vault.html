@@ -13,11 +13,9 @@
                 <div class="col-sm-6">
                     <div class="float-left">
                         <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary">
-                            <i class="fas fa-arrow-right mr-2"></i>لوحة المالك
-                        </a>
+                            <i class="fas fa-arrow-right mr-2"></i>{{ t('Owner_Dashboard') }}</a>
                         <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
-                            <i class="fas fa-home mr-2"></i>الرئيسية
-                        </a>
+                            <i class="fas fa-home mr-2"></i>{{ t('Main_2') }}</a>
                     </div>
                 </div>
             </div>
@@ -86,13 +84,13 @@
                                 <table class="table table-bordered table-striped">
                                     <thead>
                                         <tr>
-                                            <th>العميل</th>
-                                            <th>نوع البطاقة</th>
+                                            <th>{{ t('Customer') }}</th>
+                                            <th>{{ t('Card_Type') }}</th>
                                             <th>آخر 4 أرقام</th>
-                                            <th>تاريخ الانتهاء</th>
-                                            <th>عدد الاستخدام</th>
-                                            <th>تاريخ الإنشاء</th>
-                                            <th>الإجراءات</th>
+                                            <th>{{ t('Expiry_Date') }}</th>
+                                            <th>{{ t('Usage_Count') }}</th>
+                                            <th>{{ t('Created_Date') }}</th>
+                                            <th>{{ t('الإجراءات') }}</th>
                                         </tr>
                                     </thead>
                                     <tbody>

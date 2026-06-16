@@ -8,6 +8,7 @@ from extensions import db
 from models import PartnerCommissionEntry, Sale, SaleLine, Purchase, Product, Customer, ProductPartner
 from utils.decorators import permission_required, report_branch_scope_id
 from utils.tenanting import get_active_tenant_id, tenant_query, apply_tenant_scope, require_report_tenant_id, tenant_get_or_404
+from utils.cache_decorators import cached_query
 
 reports_bp = Blueprint('reports', __name__, url_prefix='/reports')
 
@@ -23,6 +24,7 @@ def _enforce_report_tenant_scope():
         require_report_tenant_id()
 
 
+@cached_query(timeout=60, key_prefix='sale_paid')
 def get_confirmed_sale_paid_aed(sale_id, tenant_id=None, branch_id=None):
     from models import Payment
     q = db.session.query(func.coalesce(func.sum(Payment.amount_aed), 0)).filter(
@@ -37,6 +39,7 @@ def get_confirmed_sale_paid_aed(sale_id, tenant_id=None, branch_id=None):
     return Decimal(str(q.scalar() or 0))
 
 
+@cached_query(timeout=60, key_prefix='supplier_paid')
 def get_confirmed_supplier_paid_aed(supplier_id, purchase_id=None, tenant_id=None, branch_id=None):
     from models import Payment
     q = db.session.query(func.coalesce(func.sum(Payment.amount_aed), 0)).filter(

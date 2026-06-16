@@ -25,8 +25,7 @@
                             <i class="fas fa-arrow-right mr-2"></i>العودة للوحة التحكم
                         </a>
                         <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
-                            <i class="fas fa-home mr-2"></i>الرئيسية
-                        </a>
+                            <i class="fas fa-home mr-2"></i>{{ t('Main_2') }}</a>
                     </div>
                 </div>
             </div>
@@ -63,7 +62,7 @@
                                     <div class="info-box">
                                         <span class="info-box-icon bg-info"><i class="fas fa-money-bill-wave"></i></span>
                                         <div class="info-box-content">
-                                            <span class="info-box-text">المبلغ المدفوع</span>
+                                            <span class="info-box-text">{{ t('Paid Amount') }}</span>
                                             <span class="info-box-number">{{ "%.2f"|format(financial_data.sales_paid) }} {{ tenant_currency_symbol }}</span>
                                         </div>
                                     </div>
@@ -97,7 +96,7 @@
                                         <div class="card-body">
                                             <p><strong>عدد الفواتير:</strong> {{ financial_data.sales_count }}</p>
                                             <p><strong>إجمالي المبيعات:</strong> {{ "%.2f"|format(financial_data.sales_total) }} {{ tenant_currency_symbol }}</p>
-                                            <p><strong>المبلغ المدفوع:</strong> {{ "%.2f"|format(financial_data.sales_paid) }} {{ tenant_currency_symbol }}</p>
+                                            <p><strong>{{ t('Paid Amount') }}</strong> {{ "%.2f"|format(financial_data.sales_paid) }} {{ tenant_currency_symbol }}</p>
                                         </div>
                                     </div>
                                 </div>

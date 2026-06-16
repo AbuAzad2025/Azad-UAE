@@ -1,5 +1,5 @@
-import traceback, sys
-sys.path.insert(0, r'D:\Data\karaj\UAE\Azad-UAE')
+import traceback, sys, os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 def main():
     from app import create_app

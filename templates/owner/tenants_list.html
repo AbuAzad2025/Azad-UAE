@@ -23,20 +23,20 @@
           <thead class="table-light">
             <tr>
               <th>#</th>
-              <th>الاسم</th>
+              <th>{{ t('Name') }}</th>
               <th>الSlug</th>
-              <th>العملة</th>
-              <th>المستخدمين</th>
-              <th>الفروع</th>
-              <th>المتاجر</th>
+              <th>{{ t('Currency') }}</th>
+              <th>{{ t('Users') }}</th>
+              <th>{{ t('Branches') }}</th>
+              <th>{{ t('المتاجر') }}</th>
               <th class="text-center">POS</th>
-              <th class="text-center">متجر</th>
-              <th class="text-center">رواتب</th>
-              <th class="text-center">شيكات</th>
+              <th class="text-center">{{ t('Store_2') }}</th>
+              <th class="text-center">{{ t('رواتب') }}</th>
+              <th class="text-center">{{ t('Cheques_2') }}</th>
               <th class="text-center">مصاريف</th>
-              <th>الحالة</th>
-              <th>السبب</th>
-              <th class="text-end">الإجراءات</th>
+              <th>{{ t('Status') }}</th>
+              <th>{{ t('السبب') }}</th>
+              <th class="text-end">{{ t('الإجراءات') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -59,11 +59,11 @@
               <td class="text-center">{% if t.enable_expenses %}<i class="bi bi-check-circle-fill text-success" title="مفعل"></i>{% else %}<i class="bi bi-x-circle-fill text-danger" title="معطل"></i>{% endif %}</td>
               <td>
                 {% if t.is_suspended %}
-                  <span class="badge bg-danger"><i class="bi bi-pause-circle me-1"></i>معلق</span>
+                  <span class="badge bg-danger"><i class="bi bi-pause-circle me-1"></i>{{ t('Pending') }}</span>
                 {% elif not t.is_active %}
-                  <span class="badge bg-secondary"><i class="bi bi-x-circle me-1"></i>معطل</span>
+                  <span class="badge bg-secondary"><i class="bi bi-x-circle me-1"></i>{{ t('معطل') }}</span>
                 {% else %}
-                  <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>نشط</span>
+                  <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>{{ t('Active') }}</span>
                 {% endif %}
               </td>
               <td>
@@ -75,25 +75,25 @@
               </td>
               <td class="text-end">
                 <div class="btn-group btn-group-sm">
-                  <a href="{{ url_for('owner.tenant_edit', tenant_id=t.id) }}" class="btn btn-outline-primary" title="تعديل">
-                    <i class="bi bi-pencil"></i>
+                  <a href="{{ url_for('owner.tenant_edit', tenant_id=t.id) }}" class="btn btn-outline-primary">
+                    <i class="bi bi-pencil"></i> تعديل
                   </a>
 
                   {% if t.is_active and not t.is_suspended %}
-                  <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#suspendModal{{ t.id }}" title="تعليق">
-                    <i class="bi bi-pause-circle"></i>
+                  <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#suspendModal{{ t.id }}">
+                    <i class="bi bi-pause-circle"></i> تعليق
                   </button>
                   {% else %}
                   <form class="needs-validation" method="POST" action="{{ url_for('owner.tenant_activate', tenant_id=t.id) }}" class="d-inline" onsubmit="return confirm('تأكيد تفعيل التينانت؟');">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
-                    <button type="submit" class="btn btn-outline-success" title="تفعيل">
-                      <i class="bi bi-play-circle"></i>
+                    <button type="submit" class="btn btn-outline-success">
+                      <i class="bi bi-play-circle"></i> تفعيل
                     </button>
                   </form>
                   {% endif %}
 
-                  <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ t.id }}" title="حذف">
-                    <i class="bi bi-trash"></i>
+                  <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ t.id }}">
+                    <i class="bi bi-trash"></i> حذف
                   </button>
                 </div>
               </td>
@@ -105,7 +105,6 @@
     </div>
   </div>
 </div>
-
 
 {% for t in tenants %}
 {% if t.is_active and not t.is_suspended %}
@@ -128,15 +127,14 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-          <button type="submit" class="btn btn-warning"><i class="bi bi-pause-circle me-1"></i>تعليق</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ t('Cancel') }}</button>
+          <button type="submit" class="btn btn-warning"><i class="bi bi-pause-circle me-1"></i>{{ t('تعليق') }}</button>
         </div>
       </form>
     </div>
   </div>
 </div>
 {% endif %}
-
 
 <div class="modal fade" id="deleteModal{{ t.id }}" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
@@ -155,8 +153,8 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-          <button type="submit" class="btn btn-danger"><i class="bi bi-trash me-1"></i>حذف</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ t('Cancel') }}</button>
+          <button type="submit" class="btn btn-danger"><i class="bi bi-trash me-1"></i>{{ t('Delete') }}</button>
         </div>
       </form>
     </div>

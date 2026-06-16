@@ -11,7 +11,7 @@
       </div>
       <div class="col-sm-6 text-left">
         <a href="{{ url_for('owner.store_payment_method_create') }}" class="btn btn-success"><i class="fas fa-plus mr-1"></i>إضافة طريقة</a>
-        <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary">رجوع</a>
+        <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary">{{ t('Back') }}</a>
       </div>
     </div>
   </div>
@@ -29,12 +29,12 @@
         <table class="table table-hover mb-0">
           <thead>
             <tr>
-              <th>الترتيب</th>
-              <th>الرمز</th>
-              <th>الاسم</th>
-              <th>النوع</th>
-              <th>الحالة</th>
-              <th class="text-left">إجراءات</th>
+              <th>{{ t('الترتيب') }}</th>
+              <th>{{ t('Code_4') }}</th>
+              <th>{{ t('Name') }}</th>
+              <th>{{ t('النوع') }}</th>
+              <th>{{ t('Status') }}</th>
+              <th class="text-left">{{ t('Actions') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -46,7 +46,7 @@
                 <i class="{{ m.icon }} mr-1 text-muted"></i>
                 {{ m.name_ar }}<br><small class="text-muted">{{ m.name_en }}</small>
               </td>
-              <td>{% if m.is_builtin %}<span class="badge badge-secondary">أساسية</span>{% else %}<span class="badge badge-primary">مخصصة</span>{% endif %}</td>
+              <td>{% if m.is_builtin %}<span class="badge badge-secondary">{{ t('أساسية') }}</span>{% else %}<span class="badge badge-primary">{{ t('مخصصة') }}</span>{% endif %}</td>
               <td>
                 <form class="needs-validation" method="post" action="{{ url_for('owner.store_payment_method_toggle', method_id=m.id) }}" class="d-inline">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">

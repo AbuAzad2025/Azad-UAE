@@ -57,9 +57,9 @@ def build_platform_overview(backups: list | None = None) -> dict:
     from services.backup_service import BackupService
 
     backups = backups if backups is not None else BackupService.list_backups()
-    tenants = Tenant.query.order_by(Tenant.name_ar, Tenant.name).all()
-    active_tenants = [t for t in tenants if getattr(t, "is_active", True)]
-    suspended = [t for t in tenants if not getattr(t, "is_active", True)]
+    tenant_count = db.session.query(func.count(Tenant.id)).scalar() or 0
+    active_tenant_count = db.session.query(func.count(Tenant.id)).filter(Tenant.is_active == True).scalar() or 0
+    suspended_tenant_count = tenant_count - active_tenant_count
 
     user_counts = dict(
         db.session.query(User.tenant_id, func.count(User.id))
@@ -100,23 +100,24 @@ def build_platform_overview(backups: list | None = None) -> dict:
     sys_backup = _system_backup_status(backups)
     warnings: list[str] = []
 
-    for t in active_tenants:
+    recent_active = Tenant.query.filter(Tenant.is_active == True).order_by(Tenant.id.desc()).limit(200).all()
+    for t in recent_active:
         uc = int(user_counts.get(t.id) or 0)
         if uc == 0 and (t.slug or "").lower() != "nasrallah":
             warnings.append(f"Tenant {t.slug or t.id}: no users")
         if t.id not in backup_by_tenant:
             warnings.append(f"Tenant {t.slug or t.id}: no tenant backup")
 
-    nasrallah = next((t for t in tenants if (t.slug or "").lower() == "nasrallah"), None)
+    nasrallah = next((t for t in recent_active if (t.slug or "").lower() == "nasrallah"), None)
     if nasrallah:
         n_users = int(user_counts.get(nasrallah.id) or 0)
         if n_users == 0:
             warnings.append("Nasrallah: active tenant with zero users (expected until manager created)")
 
     return {
-        "tenant_count": len(tenants),
-        "active_tenant_count": len(active_tenants),
-        "suspended_tenant_count": len(suspended),
+        "tenant_count": tenant_count,
+        "active_tenant_count": active_tenant_count,
+        "suspended_tenant_count": suspended_tenant_count,
         "total_users": User.query.filter_by(is_owner=False).count(),
         "total_branches": Branch.query.filter_by(is_active=True).count(),
         "system_backup": sys_backup,
@@ -129,13 +130,16 @@ def build_platform_overview(backups: list | None = None) -> dict:
     }
 
 
-def build_tenant_management_rows(backups: list | None = None) -> list[dict]:
+def build_tenant_management_rows(backups: list | None = None, overview: dict | None = None, limit: int | None = 200) -> list[dict]:
     from services.backup_service import BackupService
 
     backups = backups if backups is not None else BackupService.list_backups()
-    overview = build_platform_overview(backups)
+    overview = overview if overview is not None else build_platform_overview(backups)
     rows = []
-    for tenant in Tenant.query.order_by(Tenant.name_ar, Tenant.name).all():
+    tenant_query = Tenant.query.order_by(Tenant.is_active.desc(), Tenant.id.desc())
+    if limit is not None:
+        tenant_query = tenant_query.limit(limit)
+    for tenant in tenant_query.all():
         tid = tenant.id
         branding = resolve_tenant_branding(tid)
         path_warns = branding_path_warnings(branding)
@@ -172,9 +176,12 @@ def build_tenant_management_rows(backups: list | None = None) -> list[dict]:
     return rows
 
 
-def build_branding_overview_rows() -> list[dict]:
+def build_branding_overview_rows(limit: int | None = 200) -> list[dict]:
     rows = []
-    for tenant in Tenant.query.filter_by(is_active=True).order_by(Tenant.slug).all():
+    branding_query = Tenant.query.filter_by(is_active=True).order_by(Tenant.id.desc())
+    if limit is not None:
+        branding_query = branding_query.limit(limit)
+    for tenant in branding_query.all():
         branding = resolve_tenant_branding(tenant.id)
         rows.append(
             {

@@ -48,7 +48,7 @@
               <input type="text" name="phone_2" class="form-control" id="input_phone_2" aria-label="phone 2" pattern="^\+?[0-9\s\-]{8,20}$">
             </div>
             <div class="col-md-6">
-              <label class="form-label fw-semibold" for="input_email">البريد الإلكتروني</label>
+              <label class="form-label fw-semibold" for="input_email">{{ t('Email') }}</label>
               <input type="email" name="email" class="form-control" id="input_email" aria-label="email">
             </div>
             <div class="col-md-6">
@@ -57,7 +57,7 @@
               {{ currency_select(name='default_currency', id='input_default_currency', default_code='AED', extra_classes='form-select') }}
             </div>
             <div class="col-12">
-              <label class="form-label fw-semibold">العنوان</label>
+              <label class="form-label fw-semibold">{{ t('Address') }}</label>
               <textarea name="address_ar" class="form-control" rows="2" aria-label="address ar" maxlength="255"></textarea>
             </div>
             <div class="col-md-4">
@@ -104,25 +104,25 @@
             <div class="col-md-3">
               <div class="custom-control custom-switch">
                 <input type="checkbox" class="custom-control-input" name="enable_pos" id="enable_pos" checked aria-label="enable pos">
-                <label class="custom-control-label" for="enable_pos">POS كاشير</label>
+                <label class="custom-control-label" for="enable_pos">POS {{ t('Cashier') }}</label>
               </div>
             </div>
             <div class="col-md-3">
               <div class="custom-control custom-switch">
                 <input type="checkbox" class="custom-control-input" name="enable_payroll" id="enable_payroll" checked aria-label="enable payroll">
-                <label class="custom-control-label" for="enable_payroll">الرواتب</label>
+                <label class="custom-control-label" for="enable_payroll">{{ t('Salaries') }}</label>
               </div>
             </div>
             <div class="col-md-3">
               <div class="custom-control custom-switch">
                 <input type="checkbox" class="custom-control-input" name="enable_cheques" id="enable_cheques" checked aria-label="enable cheques">
-                <label class="custom-control-label" for="enable_cheques">الشيكات</label>
+                <label class="custom-control-label" for="enable_cheques">{{ t('Cheques') }}</label>
               </div>
             </div>
             <div class="col-md-3">
               <div class="custom-control custom-switch">
                 <input type="checkbox" class="custom-control-input" name="enable_expenses" id="enable_expenses" checked aria-label="enable expenses">
-                <label class="custom-control-label" for="enable_expenses">المصاريف</label>
+                <label class="custom-control-label" for="enable_expenses">{{ t('المصاريف') }}</label>
               </div>
             </div>
             <div class="col-md-3">
@@ -146,7 +146,7 @@
           </div>
         </div>
         <div class="card-footer d-flex justify-content-between">
-          <a href="{{ url_for('owner.tenants_list') }}" class="btn btn-secondary">إلغاء</a>
+          <a href="{{ url_for('owner.tenants_list') }}" class="btn btn-secondary">{{ t('Cancel') }}</a>
           <button type="submit" class="btn btn-success"><i class="bi bi-plus-circle me-1"></i>إنشاء التينانت</button>
         </div>
       </form>
@@ -155,8 +155,7 @@
     <div class="col-lg-4">
       <div class="card shadow-sm border-0 mb-3">
         <div class="card-header bg-info text-white">
-          <i class="bi bi-info-circle me-2"></i>تعليمات
-        </div>
+          <i class="bi bi-info-circle me-2"></i>{{ t('تعليمات') }}</div>
         <div class="card-body">
           <p class="text-muted small">
             <i class="bi bi-check-circle me-1"></i> الاسم العربي والSlug إلزاميان

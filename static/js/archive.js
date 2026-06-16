@@ -30,7 +30,10 @@ function archiveSale(saleId) {
     }    
     if (confirm('هل أنت متأكد من أرشفة هذه المبيعة؟')) {        // إظهار رسالة تحميل
         const loadingMsg = document.createElement('div');
-        loadingMsg.innerHTML = '<div class="alert alert-info">جاري أرشفة المبيعة...</div>';
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-info';
+        alertDiv.textContent = 'جاري أرشفة المبيعة...';
+        loadingMsg.appendChild(alertDiv);
         document.body.appendChild(loadingMsg);
         
         const form = document.createElement('form');

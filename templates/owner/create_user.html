@@ -15,7 +15,7 @@
             <i class="fas fa-arrow-right mr-1"></i> الرجوع للوحة المالك
           </a>
           <ol class="breadcrumb float-sm-left mb-0">
-            <li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">لوحة المالك</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">{{ t('Owner_Dashboard') }}</a></li>
             <li class="breadcrumb-item"><a href="{{ url_for('owner.users_list') }}">{{ t('Users') }}</a></li>
             <li class="breadcrumb-item active">إضافة مستخدم</li>
           </ol>
@@ -54,7 +54,7 @@
             </div>
             <div class="card-body">
               <div class="form-group">
-                <label>اسم المستخدم * <small class="text-muted">(للدخول)</small></label>
+                <label>{{ t('Username') }}* <small class="text-muted">(للدخول)</small></label>
                 <input type="text" name="username" class="form-control" required 
                        pattern="[a-zA-Z0-9_]{3,20}" 
                        placeholder="مثال: ahmad_manager"
@@ -75,7 +75,7 @@
               </div>
               
               <div class="form-group">
-                <label>كلمة المرور * <small class="text-muted">(10+ أحرف، حرف كبير، رقم، رمز خاص)</small></label>
+                <label>{{ t('Password') }}* <small class="text-muted">(10+ أحرف، حرف كبير، رقم، رمز خاص)</small></label>
                 <input type="password" name="password" class="form-control" required minlength="10" 
                        placeholder="••••••••" id="password">
                 <div class="mt-2 ic-1" id="password-strength">
@@ -114,7 +114,7 @@
                 <label for="role_select">الدور الوظيفي *</label>
                 {% set selected_role = form_data.get('role_id') %}
                 <select name="role_id" class="form-control" required id="role_select" aria-label="role id">
-                  <option value="" {% if not selected_role %}selected{% endif %}>بلا</option>
+                  <option value="" {% if not selected_role %}selected{% endif %}>{{ t('None') }}</option>
                   {% for role in roles %}
                   <option value="{{ role.id }}" data-role-slug="{{ role.slug }}" {% if selected_role and selected_role|int == role.id %}selected{% endif %}>
                     {{ role.name }}
@@ -139,7 +139,7 @@
               {% endif %}
 
               <div class="form-group">
-                <label for="branch_id">الفرع <span class="text-danger branch-required-indicator">*</span></label>
+                <label for="branch_id">{{ t('Branch') }}<span class="text-danger branch-required-indicator">*</span></label>
                 <select name="branch_id" id="branch_id" class="form-control" aria-label="اختر الفرع">
                   <option value="">-- اختر الفرع --</option>
                   {% for branch in branches %}
@@ -161,7 +161,7 @@
                   <input type="checkbox" class="custom-control-input" id="is_owner" name="is_owner"
                          {% if form_data.get('is_owner') == 'on' %}checked{% endif %} aria-label="is owner">
                   <label class="custom-control-label" for="is_owner">
-                    <i class="fas fa-crown text-warning"></i> <strong>مالك النظام</strong>
+                    <i class="fas fa-crown text-warning"></i> <strong>{{ t('System_Owner') }}</strong>
                     <br><small class="text-danger">⚠️ صلاحيات كاملة - استخدم بحذر!</small>
                   </label>
                 </div>
@@ -187,8 +187,8 @@
             <div class="card-body">
               <ul class="mb-0 ic-5">
                 <li><strong>Owner</strong>: كل الصلاحيات بدون قيود</li>
-                <li><strong>Super Admin</strong>: إدارة + تقارير كاملة</li>
-                <li><strong>Manager</strong>: مبيعات + مشتريات + زبائن</li>
+                <li><strong>Super Admin</strong>: {{ t('Management') }}+ تقارير كاملة</li>
+                <li><strong>Manager</strong>: {{ t('Sales_2') }}+ {{ t('مشتريات') }}+ {{ t('Customers_5') }}</li>
                 <li><strong>Seller</strong>: مبيعات فقط</li>
               </ul>
             </div>
@@ -203,8 +203,7 @@
             <i class="fas fa-save mr-2"></i>حفظ المستخدم
           </button>
           <a href="{{ url_for('owner.users_list') }}" class="btn btn-secondary btn-lg" aria-label="إلغاء والعودة">
-            <i class="fas fa-times mr-2"></i>إلغاء
-          </a>
+            <i class="fas fa-times mr-2"></i>{{ t('Cancel') }}</a>
         </div>
       </div>
     </form>
@@ -448,9 +447,4 @@ $(document).ready(function() {
 </script>
 
 {% endblock %}
-
-
-
-
-
 
