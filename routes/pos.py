@@ -327,9 +327,10 @@ def api_checkout():
             notes=notes,
             payment_data=payment_data,
         )
-    except ValueError:
-        return jsonify({"success": False, "error": "تعذر إنشاء الفاتورة من البيانات المرسلة."}), 400
-    except Exception:
+    except ValueError as exc:
+        return jsonify({"success": False, "error": str(exc)}), 400
+    except Exception as exc:
+        current_app.logger.error(f"POS checkout error: {exc}")
         return jsonify(
             {"success": False, "error": "فشل إنشاء الفاتورة. تحقق من البيانات وحاول مرة أخرى."}
         ), 500
