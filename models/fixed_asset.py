@@ -215,6 +215,7 @@ class FixedAsset(db.Model):
         
         # إنشاء سجل في جدول الاستهلاك
         schedule = DepreciationSchedule(
+            tenant_id=self.tenant_id,
             asset_id=self.id,
             period_date=period_date,
             depreciation_amount=depreciation_amount,
@@ -323,6 +324,7 @@ class DepreciationSchedule(db.Model):
     __tablename__ = 'depreciation_schedules'
     
     id = db.Column(db.Integer, primary_key=True)
+    tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=False, index=True)
     asset_id = db.Column(db.Integer, db.ForeignKey('fixed_assets.id'), nullable=False, index=True)
     
     period_date = db.Column(db.Date, nullable=False, index=True)  # نهاية الشهر/الفترة
@@ -338,6 +340,7 @@ class DepreciationSchedule(db.Model):
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
     
     # Relationships
+    tenant = db.relationship('Tenant', foreign_keys=[tenant_id])
     asset = db.relationship('FixedAsset', back_populates='depreciation_schedules')
     journal_entry = db.relationship('GLJournalEntry')
     
