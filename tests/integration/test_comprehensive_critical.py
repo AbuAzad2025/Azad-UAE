@@ -87,6 +87,28 @@ def env():
             _db.session.add(branch)
             _db.session.flush()
 
+        # Canonical GL provisioning: registry-driven accounts + tenant-level mappings
+        from services.gl_provisioning_service import GLProvisioningService
+        prov_result = GLProvisioningService.provision_tenant(tenant.id)
+        assert not prov_result.errors, f"GL provisioning errors: {prov_result.errors}"
+
+        # Verify tenant chart readiness
+        report = GLProvisioningService.validate_tenant_chart(tenant.id)
+        assert report["accounts_ok"] is True, f"Missing accounts: {report['missing_accounts']}"
+        assert report["mappings_ok"] is True, f"Missing mappings: {report['missing_mappings']}"
+
+        # Regression assertion: tenant-level AR mapping exists and points to postable same-tenant account
+        from models.gl import GLAccountMapping, GLAccount
+        ar_mapping = GLAccountMapping.query.filter_by(
+            tenant_id=tenant.id, concept_code='AR', branch_id=None, is_active=True
+        ).first()
+        assert ar_mapping is not None, "Tenant-level AR mapping not created"
+        ar_account = GLAccount.query.get(ar_mapping.gl_account_id)
+        assert ar_account is not None, "AR mapping points to missing GL account"
+        assert ar_account.tenant_id == tenant.id, "AR account belongs to different tenant"
+        assert ar_account.is_active is True, "AR account is inactive"
+        assert ar_account.is_header is False, "AR account is header (not postable)"
+
         customer = Customer.query.filter_by(
             tenant_id=tid, name='_test_cust_'
         ).first()

@@ -14,7 +14,15 @@ import sqlalchemy as sa
 
 from extensions import db
 from models import Branch, GLAccountMapping, Tenant
-from models._constants import GL_CONCEPT_REGISTRY, REQUIRED_GL_CONCEPTS, VALID_GL_CONCEPT_CODES
+from models._constants import (
+    GL_CONCEPT_REGISTRY,
+    REQUIRED_GL_CONCEPTS,
+    VALID_GL_CONCEPT_CODES,
+    RESOLUTION_MODE_MAPPING,
+    RESOLUTION_MODE_LIQUIDITY,
+    RESOLUTION_MODE_RECORD,
+    RESOLUTION_MODE_NON_POSTING,
+)
 from models.gl import GLAccount
 
 
@@ -74,6 +82,12 @@ def _recommended_fix(status: str, issue: str) -> str:
     if "duplicate" in issue.lower():
         return "Keep one approved mapping for this tenant/concept scope and remove the duplicate after finance review."
     return "Review and correct the GL mapping manually."
+
+
+def _is_mapping_owned(concept_code: str) -> bool:
+    """Return True if the concept should be resolved via GLAccountMapping."""
+    meta = GL_CONCEPT_REGISTRY.get(concept_code, {})
+    return meta.get('resolution_mode', RESOLUTION_MODE_MAPPING) == RESOLUTION_MODE_MAPPING
 
 
 def _row(
@@ -494,6 +508,8 @@ class GLMappingValidationService:
         rows: list[GLMappingSeedPreviewRow] = []
 
         for concept_code in sorted(GL_CONCEPT_REGISTRY):
+            if not _is_mapping_owned(concept_code):
+                continue
             meta = GL_CONCEPT_REGISTRY[concept_code]
             legacy_code = meta.get("legacy_code")
             is_required = meta.get("required", False)
@@ -875,6 +891,8 @@ class GLMappingValidationService:
                 defaults_by_concept[mapping.concept_code].append(mapping)
 
         for concept_code in sorted(REQUIRED_GL_CONCEPTS):
+            if not _is_mapping_owned(concept_code):
+                continue
             default_mappings = defaults_by_concept.get(concept_code, [])
             if not default_mappings:
                 rows.append(
@@ -932,6 +950,20 @@ class GLMappingValidationService:
                 seen_defaults[mapping.concept_code] += 1
             else:
                 seen_branch_overrides[(mapping.concept_code, mapping.branch_id)] += 1
+
+        # Flag stale mappings for non-mapping-owned concepts as warnings
+        for concept_code in seen_defaults:
+            if not _is_mapping_owned(concept_code):
+                rows.append(
+                    _row(
+                        tenant,
+                        concept_code,
+                        "warning",
+                        f"Concept '{concept_code}' is {GL_CONCEPT_REGISTRY.get(concept_code, {}).get('resolution_mode', 'unknown')}-owned; its mapping is stale and will be ignored during posting.",
+                        severity="warning",
+                        recommended_fix="Remove this mapping after finance review; the concept is resolved via a different mechanism.",
+                    )
+                )
 
         for concept_code, count in seen_defaults.items():
             if count > 1 and concept_code not in REQUIRED_GL_CONCEPTS:

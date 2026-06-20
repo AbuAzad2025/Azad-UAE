@@ -239,15 +239,14 @@ GL_MODULE_DEFINITIONS = {
             GLConceptMappingTemplate('COGS', '5100', 'core_purchases'),
             GLConceptMappingTemplate('FREIGHT_IN', '5301', 'core_purchases'),
             GLConceptMappingTemplate('CUSTOMS_DUTY', '5302', 'core_purchases'),
-            GLConceptMappingTemplate('LANDED_COST', '5300', 'core_purchases'),
+            # LANDED_COST is non-posting — no mapping template
         ],
     ),
     'core_payments': GLModuleDefinition(
         'core_payments', True,
         accounts=[],
         mappings=[
-            GLConceptMappingTemplate('CASH', '1111', 'core_payments'),
-            GLConceptMappingTemplate('BANK', '1120', 'core_payments'),
+            # CASH and BANK are liquidity-owned — no mapping template
             GLConceptMappingTemplate('CHEQUES_UNDER_COLLECTION', '1150', 'core_payments'),
             GLConceptMappingTemplate('DEFERRED_CHEQUES_PAYABLE', '2130', 'core_payments'),
             GLConceptMappingTemplate('BANK_FEES', '6260', 'core_payments'),
@@ -311,9 +310,8 @@ GL_MODULE_DEFINITIONS = {
         'fixed_assets', False, 'enable_fixed_assets',
         accounts=[],
         mappings=[
-            GLConceptMappingTemplate('FIXED_ASSET_ASSET', '1180', 'fixed_assets'),
-            GLConceptMappingTemplate('DEPRECIATION_EXPENSE', '6300', 'fixed_assets'),
-            GLConceptMappingTemplate('ACCUMULATED_DEPRECIATION', '1190', 'fixed_assets'),
+            # FIXED_ASSET_ASSET, DEPRECIATION_EXPENSE, ACCUMULATED_DEPRECIATION
+            # are record-owned — no mapping template
             GLConceptMappingTemplate('FIXED_ASSET_GAIN', '4600', 'fixed_assets'),
             GLConceptMappingTemplate('FIXED_ASSET_LOSS', '6700', 'fixed_assets'),
         ],

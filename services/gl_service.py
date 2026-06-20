@@ -2,6 +2,7 @@ from decimal import Decimal
 from datetime import datetime, timezone
 from extensions import db
 from models import GLAccount, GLJournalEntry, GLJournalLine, Currency
+from models._constants import GL_CONCEPT_REGISTRY, RESOLUTION_MODE_MAPPING, RESOLUTION_MODE_LIQUIDITY, RESOLUTION_MODE_RECORD, RESOLUTION_MODE_NON_POSTING
 from services import gl_helpers
 from services.gl_account_resolver import (
     GLMappingError,
@@ -151,40 +152,95 @@ class GLService:
         account_code = line.get('account_code') or line.get('account')
         concept_code = line.get('concept_code')
 
+        # ---- Determine resolution mode ----
+        resolution_mode = None
         if concept_code:
-            account = resolve_gl_account(
-                tenant_id=tenant_id,
-                concept_code=concept_code,
-                branch_id=branch_id,
-            )
-            if account is not None:
-                return account
+            meta = GL_CONCEPT_REGISTRY.get(concept_code, {})
+            resolution_mode = meta.get('resolution_mode', RESOLUTION_MODE_MAPPING)
 
+        # ---- Helper: validate an explicit account (tenant-owned, active, postable) ----
+        def _validate_explicit(acct_code):
+            acct = gl_helpers.get_account(acct_code, tenant_id)
+            if acct is None:
+                raise GLMappingError(
+                    tenant_id=tenant_id,
+                    concept_code=concept_code or 'EXPLICIT_ACCOUNT',
+                    branch_id=branch_id,
+                    issue=f"Explicit GL account {acct_code} does not exist for this tenant.",
+                )
+            if not acct.is_active:
+                raise GLMappingError(
+                    tenant_id=tenant_id,
+                    concept_code=concept_code or 'EXPLICIT_ACCOUNT',
+                    branch_id=branch_id,
+                    issue=f"Explicit GL account {acct_code} is inactive.",
+                )
+            if acct.is_header:
+                raise GLMappingError(
+                    tenant_id=tenant_id,
+                    concept_code=concept_code or 'EXPLICIT_ACCOUNT',
+                    branch_id=branch_id,
+                    issue=f"Explicit GL account {acct_code} is a header/group account.",
+                )
+            return acct
+
+        # ---- Mode-specific resolution (only when dynamic mapping is enabled) ----
         if is_dynamic_gl_mapping_enabled():
-            if line.get('explicit_account_allowed') and account_code:
-                account = gl_helpers.get_account(account_code, tenant_id)
-                if account is None:
+            if resolution_mode == RESOLUTION_MODE_LIQUIDITY:
+                if not account_code:
                     raise GLMappingError(
                         tenant_id=tenant_id,
-                        concept_code='EXPLICIT_ACCOUNT',
+                        concept_code=concept_code,
                         branch_id=branch_id,
-                        issue=f"Explicit configured GL account {account_code} does not exist for this tenant.",
+                        issue="Liquidity-owned concept requires an explicit GL account code.",
                     )
-                if not account.is_active:
+                acct = _validate_explicit(account_code)
+                # Verify the account has the correct liquidity_kind
+                expected_kind = 'cash' if concept_code == 'CASH' else 'bank'
+                if getattr(acct, 'liquidity_kind', None) != expected_kind:
                     raise GLMappingError(
                         tenant_id=tenant_id,
-                        concept_code='EXPLICIT_ACCOUNT',
+                        concept_code=concept_code,
                         branch_id=branch_id,
-                        issue=f"Explicit configured GL account {account_code} is inactive.",
+                        issue=f"Account {account_code} liquidity_kind is '{getattr(acct, 'liquidity_kind', None)}', expected '{expected_kind}'.",
                     )
-                if account.is_header:
+                return acct
+
+            if resolution_mode == RESOLUTION_MODE_RECORD:
+                if not line.get('explicit_account_allowed'):
                     raise GLMappingError(
                         tenant_id=tenant_id,
-                        concept_code='EXPLICIT_ACCOUNT',
+                        concept_code=concept_code,
                         branch_id=branch_id,
-                        issue=f"Explicit configured GL account {account_code} is a header/group account.",
+                        issue="Record-owned concept requires explicit_account_allowed=True.",
                     )
-                return account
+                if not account_code:
+                    raise GLMappingError(
+                        tenant_id=tenant_id,
+                        concept_code=concept_code,
+                        branch_id=branch_id,
+                        issue="Record-owned concept requires an explicit GL account code.",
+                    )
+                return _validate_explicit(account_code)
+
+            if resolution_mode == RESOLUTION_MODE_NON_POSTING:
+                raise GLMappingError(
+                    tenant_id=tenant_id,
+                    concept_code=concept_code,
+                    branch_id=branch_id,
+                    issue="Non-posting concept cannot be resolved in a journal entry.",
+                )
+
+            # Mapping-owned (default) — resolve only through GLAccountMapping
+            if concept_code:
+                account = resolve_gl_account(
+                    tenant_id=tenant_id,
+                    concept_code=concept_code,
+                    branch_id=branch_id,
+                )
+                if account is not None:
+                    return account
+
             if account_code:
                 raise GLMappingError(
                     tenant_id=tenant_id,
@@ -196,6 +252,17 @@ class GLService:
                     ),
                 )
 
+        # ---- Dynamic mapping disabled: try resolve (will return None) ----
+        if concept_code:
+            account = resolve_gl_account(
+                tenant_id=tenant_id,
+                concept_code=concept_code,
+                branch_id=branch_id,
+            )
+            if account is not None:
+                return account
+
+        # ---- Legacy fallback (no concept, or dynamic mapping disabled) ----
         if not account_code:
             raise ValueError('GL account code is required when dynamic mapping is disabled.')
 

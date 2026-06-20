@@ -186,6 +186,7 @@ class FixedAsset(db.Model):
             {
                 'account': str(self.expense_account.code),
                 'concept_code': 'DEPRECIATION_EXPENSE',
+                'explicit_account_allowed': True,
                 'debit': depreciation_amount,
                 'credit': 0,
                 'description': f'استهلاك شهري - {self.name_ar}'
@@ -193,6 +194,7 @@ class FixedAsset(db.Model):
             {
                 'account': str(self.depreciation_account.code),
                 'concept_code': 'ACCUMULATED_DEPRECIATION',
+                'explicit_account_allowed': True,
                 'debit': 0,
                 'credit': depreciation_amount,
                 'description': f'مجمع استهلاك - {self.name_ar}'
@@ -236,6 +238,7 @@ class FixedAsset(db.Model):
         """
         التخلص من الأصل (بيع أو إتلاف)
         """
+        from utils.gl_reference_types import GLRef
         if self.status in ['disposed', 'sold']:
             raise ValueError('تم التخلص من الأصل مسبقاً')
         
@@ -257,6 +260,7 @@ class FixedAsset(db.Model):
         lines.append({
             'account': str(self.depreciation_account.code),
             'concept_code': 'ACCUMULATED_DEPRECIATION',
+            'explicit_account_allowed': True,
             'debit': self.accumulated_depreciation,
             'credit': 0,
             'description': f'إقفال مجمع استهلاك - {self.name_ar}'
@@ -300,6 +304,7 @@ class FixedAsset(db.Model):
         lines.append({
             'account': str(self.asset_account.code),
             'concept_code': 'FIXED_ASSET_ASSET',
+            'explicit_account_allowed': True,
             'debit': 0,
             'credit': self.purchase_price,
             'description': f'إقفال حساب الأصل - {self.name_ar}'

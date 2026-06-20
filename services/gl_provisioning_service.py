@@ -9,6 +9,7 @@ from typing import Optional
 from extensions import db
 from models import Tenant
 from models.gl import GLAccount, GLAccountMapping
+from models._constants import GL_CONCEPT_REGISTRY, RESOLUTION_MODE_MAPPING
 from models.gl_account_registry import (
     BASE_ACCOUNTS,
     INDUSTRY_EXTENSIONS,
@@ -136,6 +137,11 @@ class GLProvisioningService:
                     continue
             for mapping in mod.mappings:
                 if mapping.concept_code in existing_mappings:
+                    result.skipped_mappings += 1
+                    continue
+                # Only provision mapping-owned concepts
+                concept_meta = GL_CONCEPT_REGISTRY.get(mapping.concept_code, {})
+                if concept_meta.get('resolution_mode', RESOLUTION_MODE_MAPPING) != RESOLUTION_MODE_MAPPING:
                     result.skipped_mappings += 1
                     continue
                 account = GLAccount.query.filter_by(
