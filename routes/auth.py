@@ -14,7 +14,7 @@ from utils.branching import (
     user_can_access_branch,
 )
 from utils.tenanting import set_active_tenant, clear_active_tenant
-from utils.auth_helpers import is_global_owner_user
+from utils.auth_helpers import is_global_owner_user, user_may_have_null_tenant
 
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
@@ -205,10 +205,7 @@ def login():
                 remember_checked=remember,
             )
 
-        from utils.session_security import rotate_session
-        rotate_session()
-        login_user(user, remember=remember)
-
+        # Resolve branch_obj early for tenant resolution
         effective_branch_id = getattr(user, "branch_id", None)
         branch_obj = None
         if effective_branch_id:
@@ -217,9 +214,80 @@ def login():
             except Exception:
                 branch_obj = None
 
-        tenant_id = getattr(user, 'tenant_id', None) or getattr(branch_obj, 'tenant_id', None)
-        set_active_tenant(tenant_id)
+        # Build effective_tenant_id before login
+        user_tenant_id = getattr(user, "tenant_id", None)
+        if user_tenant_id is not None:
+            effective_tenant_id = user_tenant_id
+        elif getattr(user, "is_owner", False) and branch_obj:
+            effective_tenant_id = getattr(branch_obj, "tenant_id", None)
+        else:
+            effective_tenant_id = None
 
+        # Determine if user may have null tenant (bootstrap owner or developer)
+        role = getattr(user, "role", None)
+        may_have_null_tenant = user_may_have_null_tenant(is_owner=getattr(user, "is_owner", False), role=role)
+
+        # Validate tenant if effective_tenant_id exists (applies to all user types)
+        if effective_tenant_id is not None:
+            from models.tenant import Tenant
+            tenant = Tenant.query.get(effective_tenant_id)
+            if not tenant or not tenant.is_active or getattr(tenant, "is_suspended", False):
+                LoggingCore.log_security(
+                    event_type="login_inactive_tenant",
+                    message=f"User {user.username} effective tenant is inactive or suspended",
+                    user=user.username,
+                    ip=request.remote_addr or "-",
+                    severity="high"
+                )
+                flash('⚠️ الشركة المحددة غير نشطة أو معلقة.', 'danger')
+                return _render_login(
+                    access_mode=access_mode,
+                    username_value=username,
+                    remember_checked=remember,
+                )
+        else:
+            # effective_tenant_id is None - only allowed for permitted users
+            if not may_have_null_tenant:
+                LoggingCore.log_security(
+                    event_type="login_no_tenant",
+                    message=f"User {user.username} has no tenant assigned and is not permitted to have null tenant",
+                    user=user.username,
+                    ip=request.remote_addr or "-",
+                    severity="high"
+                )
+                flash('⚠️ لا توجد شركة مرتبطة بهذا الحساب.', 'danger')
+                return _render_login(
+                    access_mode=access_mode,
+                    username_value=username,
+                    remember_checked=remember,
+                )
+
+        # Validate branch-tenant consistency for users with tenant_id
+        if getattr(user, "tenant_id", None) is not None and branch_obj:
+            if branch_obj.tenant_id != user.tenant_id:
+                LoggingCore.log_security(
+                    event_type="branch_tenant_mismatch",
+                    message=f"User {user.username} has branch from different tenant",
+                    user=user.username,
+                    ip=request.remote_addr or "-",
+                    severity="high"
+                )
+                flash('⚠️ الفرع المحدد لا ينتمي لنفس الشركة.', 'danger')
+                return _render_login(
+                    access_mode=access_mode,
+                    username_value=username,
+                    remember_checked=remember,
+                )
+
+        # All validations passed - proceed with login
+        from utils.session_security import rotate_session
+        rotate_session()
+        login_user(user, remember=remember)
+
+        # Set active tenant using the effective_tenant_id
+        set_active_tenant(effective_tenant_id, user=user)
+
+        # Set active branch - use is_global_user from utils.branching for branch behavior
         branch_to_activate = getattr(user, 'branch_id', None)
         if branch_to_activate and not user_can_access_branch(branch_to_activate, user):
             branch_to_activate = None

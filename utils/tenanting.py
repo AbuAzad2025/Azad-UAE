@@ -163,11 +163,50 @@ def require_report_tenant_id(user=None) -> int:
     return require_active_tenant_id(user)
 
 
-def set_active_tenant(tenant_id):
+def set_active_tenant(tenant_id, user=None):
+    from models.tenant import Tenant
+
     if tenant_id is None or tenant_id == "":
         session.pop(ACTIVE_TENANT_SESSION_KEY, None)
         return
-    session[ACTIVE_TENANT_SESSION_KEY] = int(tenant_id)
+
+    user = _resolve_user(user)
+
+    # Validate tenant_id is integer
+    try:
+        tenant_id = int(tenant_id)
+    except (TypeError, ValueError):
+        raise ValueError("Invalid tenant ID")
+
+    # If not authenticated, reject non-empty tenant_id
+    if not user or not getattr(user, "is_authenticated", False):
+        raise ValueError("Unauthenticated users cannot set tenant_id")
+
+    # Platform owner may set any active tenant
+    if is_platform_owner(user):
+        pass  # Allow platform owner to set any tenant
+    else:
+        # Normal user may only set their own user.tenant_id
+        user_tenant_id = getattr(user, "tenant_id", None)
+        if user_tenant_id is None:
+            raise ValueError("Normal users must have a tenant_id")
+        try:
+            user_tenant_id = int(user_tenant_id)
+        except (TypeError, ValueError):
+            raise ValueError("Normal users must have a valid integer tenant_id")
+        if tenant_id != user_tenant_id:
+            raise ValueError("Normal users can only set their own tenant_id")
+
+    # Validate tenant exists and is active
+    tenant = Tenant.query.get(tenant_id)
+    if not tenant:
+        raise ValueError("Tenant not found")
+
+    if not tenant.is_active or getattr(tenant, "is_suspended", False):
+        raise ValueError("Tenant is not active or is suspended")
+
+    # Store tenant_id in session
+    session[ACTIVE_TENANT_SESSION_KEY] = tenant_id
 
 
 def clear_active_tenant():
