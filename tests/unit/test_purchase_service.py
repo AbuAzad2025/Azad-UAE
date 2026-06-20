@@ -7,14 +7,14 @@ class TestPurchaseServiceValidations:
     def test_create_purchase_rejects_missing_warehouse(self, app):
         from services.purchase_service import PurchaseService
         user = MagicMock()
-        with pytest.raises(ValueError, match='ÙŠØ¬Ø¨ Ø§Ø®ØªÙŠØ§Ø± Ø§Ù„Ù…Ø³ØªÙˆØ¯Ø¹'):
+        with pytest.raises(ValueError, match='يجب اختيار المستودع'):
             PurchaseService.create_purchase(user, {'supplier_name': 'Test'}, [])
 
     def test_create_purchase_rejects_missing_supplier_name(self, app):
         from services.purchase_service import PurchaseService
         user = MagicMock()
         with patch('services.purchase_service.ensure_warehouse_access'):
-            with pytest.raises(ValueError, match='ÙŠØ¬Ø¨ Ø¥Ø¯Ø®Ø§Ù„ Ø§Ø³Ù… Ø§Ù„Ù…ÙˆØ±Ø¯'):
+            with pytest.raises(ValueError, match='يجب إدخال اسم المورد'):
                 PurchaseService.create_purchase(user, {}, [], warehouse_id=1)
 
     def test_create_purchase_rejects_empty_lines(self, app):
@@ -28,7 +28,7 @@ class TestPurchaseServiceValidations:
             wh.branch_id = 1
             wh.tenant_id = 1
             mock_wh.return_value = wh
-            with pytest.raises(ValueError, match='ÙŠØ¬Ø¨ Ø¥Ø¶Ø§ÙØ© Ù…Ù†ØªØ¬'):
+            with pytest.raises(ValueError, match='يجب إضافة منتج'):
                 PurchaseService.create_purchase(user, {'supplier_name': 'Test'}, [], warehouse_id=1)
 
     def test_create_purchase_rejects_zero_quantity(self, app):
@@ -49,7 +49,7 @@ class TestPurchaseServiceValidations:
                 mock_ex.resolve_exchange_rate_for_transaction.return_value = {'rate': 1.0}
                 with patch('services.purchase_service.validate_currency_code', return_value='AED'):
                     with patch('services.purchase_service.generate_number', return_value='P-001'):
-                        with pytest.raises(ValueError, match='ÙŠØ¬Ø¨ Ø¥Ø¶Ø§ÙØ© Ù…Ù†ØªØ¬'):
+                        with pytest.raises(ValueError, match='يجب إضافة منتج'):
                             PurchaseService.create_purchase(user, {'supplier_name': 'Test'}, lines, warehouse_id=1)
 
 
@@ -304,7 +304,7 @@ class TestPurchaseServiceTenantIsolation:
                     with patch('services.purchase_service.generate_number', return_value='P-001'):
                         with patch('services.purchase_service.Product') as mock_product_class:
                             mock_product_class.query.get.return_value = product
-                            with pytest.raises(ValueError, match='ÙŠØªØ·Ù„Ø¨'):
+                            with pytest.raises(ValueError, match='يتطلب'):
                                 PurchaseService.create_purchase(
                                     user,
                                     {'supplier_name': 'Test'},
