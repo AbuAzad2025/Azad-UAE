@@ -150,16 +150,26 @@ class GLService:
     @staticmethod
     def _resolve_journal_line_account(line, tenant_id, branch_id=None, ensure_core=True, missing_ok=False):
         account_code = line.get('account_code') or line.get('account')
-        concept_code = line.get('concept_code')
+        raw_concept = line.get("concept_code")
+        concept_code = str(raw_concept or "").strip().upper() or None
 
         # ---- Determine resolution mode ----
         resolution_mode = None
         if concept_code:
             meta = GL_CONCEPT_REGISTRY.get(concept_code, {})
             resolution_mode = meta.get('resolution_mode', RESOLUTION_MODE_MAPPING)
+            
+            # A non-empty unknown concept must raise GLMappingError immediately
+            if raw_concept and concept_code not in GL_CONCEPT_REGISTRY:
+                raise GLMappingError(
+                    tenant_id=tenant_id,
+                    concept_code=raw_concept,
+                    branch_id=branch_id,
+                    issue=f"Unknown GL concept code: {raw_concept}",
+                )
 
         # ---- Helper: validate an explicit account (tenant-owned, active, postable) ----
-        def _validate_explicit(acct_code):
+        def _validate_explicit(acct_code, branch_id=None):
             acct = gl_helpers.get_account(acct_code, tenant_id)
             if acct is None:
                 raise GLMappingError(
@@ -182,9 +192,66 @@ class GLService:
                     branch_id=branch_id,
                     issue=f"Explicit GL account {acct_code} is a header/group account.",
                 )
+            
+            # Validate branch_id belongs to tenant_id when branch_id is supplied
+            if branch_id is not None:
+                from models import Branch
+                branch = Branch.query.get(branch_id)
+                if branch is None:
+                    raise GLMappingError(
+                        tenant_id=tenant_id,
+                        concept_code=concept_code or 'EXPLICIT_ACCOUNT',
+                        branch_id=branch_id,
+                        issue=f"Branch {branch_id} does not exist.",
+                    )
+                if branch.tenant_id != tenant_id:
+                    raise GLMappingError(
+                        tenant_id=tenant_id,
+                        concept_code=concept_code or 'EXPLICIT_ACCOUNT',
+                        branch_id=branch_id,
+                        issue=f"Branch {branch_id} belongs to a different tenant.",
+                    )
+                
+                # For record mode: account.branch_id is None or equals branch_id
+                # For liquidity mode: account.branch_id must equal branch_id exactly
+                if resolution_mode == RESOLUTION_MODE_RECORD:
+                    if getattr(acct, 'branch_id', None) is not None and getattr(acct, 'branch_id', None) != branch_id:
+                        raise GLMappingError(
+                            tenant_id=tenant_id,
+                            concept_code=concept_code or 'EXPLICIT_ACCOUNT',
+                            branch_id=branch_id,
+                            issue=f"Account {acct.code} branch_id {getattr(acct, 'branch_id', None)} does not match required branch_id {branch_id} for record mode.",
+                        )
+                elif resolution_mode == RESOLUTION_MODE_LIQUIDITY:
+                    if getattr(acct, 'branch_id', None) != branch_id:
+                        raise GLMappingError(
+                            tenant_id=tenant_id,
+                            concept_code=concept_code or 'EXPLICIT_ACCOUNT',
+                            branch_id=branch_id,
+                            issue=f"Account {acct.code} branch_id {getattr(acct, 'branch_id', None)} does not match required branch_id {branch_id} for liquidity mode.",
+                        )
+            else:
+                # Without branch_id: account.branch_id must be None exactly
+                if getattr(acct, 'branch_id', None) is not None:
+                    raise GLMappingError(
+                        tenant_id=tenant_id,
+                        concept_code=concept_code or 'EXPLICIT_ACCOUNT',
+                        branch_id=branch_id,
+                        issue=f"Account {acct.code} has branch_id {getattr(acct, 'branch_id', None)} but branch_id is required to be None.",
+                    )
+            
             return acct
 
-        # ---- Mode-specific resolution (only when dynamic mapping is enabled) ----
+        # ---- Mode-specific resolution ----
+        # Non-posting is absolute - must fail regardless of dynamic mapping setting
+        if resolution_mode == RESOLUTION_MODE_NON_POSTING:
+            raise GLMappingError(
+                tenant_id=tenant_id,
+                concept_code=concept_code,
+                branch_id=branch_id,
+                issue="Non-posting concept cannot be resolved in a journal entry.",
+            )
+
         if is_dynamic_gl_mapping_enabled():
             if resolution_mode == RESOLUTION_MODE_LIQUIDITY:
                 if not account_code:
@@ -194,7 +261,7 @@ class GLService:
                         branch_id=branch_id,
                         issue="Liquidity-owned concept requires an explicit GL account code.",
                     )
-                acct = _validate_explicit(account_code)
+                acct = _validate_explicit(account_code, branch_id)
                 # Verify the account has the correct liquidity_kind
                 expected_kind = 'cash' if concept_code == 'CASH' else 'bank'
                 if getattr(acct, 'liquidity_kind', None) != expected_kind:
@@ -221,15 +288,7 @@ class GLService:
                         branch_id=branch_id,
                         issue="Record-owned concept requires an explicit GL account code.",
                     )
-                return _validate_explicit(account_code)
-
-            if resolution_mode == RESOLUTION_MODE_NON_POSTING:
-                raise GLMappingError(
-                    tenant_id=tenant_id,
-                    concept_code=concept_code,
-                    branch_id=branch_id,
-                    issue="Non-posting concept cannot be resolved in a journal entry.",
-                )
+                return _validate_explicit(account_code, branch_id)
 
             # Mapping-owned (default) — resolve only through GLAccountMapping
             if concept_code:

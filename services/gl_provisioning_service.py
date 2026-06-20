@@ -152,6 +152,22 @@ class GLProvisioningService:
                         f"Mapping skipped: account {mapping.account_code} not found for concept {mapping.concept_code}"
                     )
                     continue
+                # Add provisioning postability guard
+                if account.tenant_id != tenant.id:
+                    result.errors.append(
+                        f"Mapping skipped: account {mapping.account_code} belongs to different tenant for concept {mapping.concept_code}"
+                    )
+                    continue
+                if not account.is_active:
+                    result.errors.append(
+                        f"Mapping skipped: account {mapping.account_code} is inactive for concept {mapping.concept_code}"
+                    )
+                    continue
+                if account.is_header:
+                    result.errors.append(
+                        f"Mapping skipped: account {mapping.account_code} is header for concept {mapping.concept_code}"
+                    )
+                    continue
                 am = GLAccountMapping(
                     tenant_id=tenant.id,
                     concept_code=mapping.concept_code,
