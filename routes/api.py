@@ -130,7 +130,7 @@ def _scoped_supplier_query():
 def _customer_balance(customer_id):
     scoped_branch_id = branch_scope_id()
     if scoped_branch_id is None:
-        customer = db.session.get(Customer, customer_id)
+        customer = _scoped_customer_query().filter(Customer.id == customer_id).first()
         return float(customer.get_balance_aed()) if customer else 0.0
     return float(PaymentService.get_customer_balance_scoped(customer_id, branch_id=scoped_branch_id))
 
@@ -138,7 +138,7 @@ def _customer_balance(customer_id):
 def _supplier_balance(supplier_id):
     scoped_branch_id = branch_scope_id()
     if scoped_branch_id is None:
-        supplier = db.session.get(Supplier, supplier_id)
+        supplier = _scoped_supplier_query().filter(Supplier.id == supplier_id).first()
         return float(supplier.get_balance_aed()) if supplier else 0.0
     return float(PaymentService.get_supplier_balance_scoped(supplier_id, branch_id=scoped_branch_id))
 

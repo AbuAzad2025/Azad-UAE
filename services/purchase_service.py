@@ -63,21 +63,22 @@ class PurchaseService:
         
         supplier = None
         if supplier_id:
-            supplier = Supplier.query.get(supplier_id)
-            if supplier:
-                supplier_name = supplier.name
-                supplier_data['phone'] = supplier.phone or ''
-                supplier_data['email'] = supplier.email or ''
+            # Validate supplier belongs to the same tenant as the warehouse
+            supplier = Supplier.query.filter_by(id=supplier_id, tenant_id=warehouse.tenant_id).first()
+            if not supplier:
+                raise ValueError('⚠️ المورد المحدد غير موجود أو لا ينتمي لنفس الشركة.')
+            supplier_name = supplier.name
+            supplier_data['phone'] = supplier.phone or ''
+            supplier_data['email'] = supplier.email or ''
         
         if not supplier_name:
             raise ValueError('⚠️ يجب إدخال اسم المورد.')
 
-        # Resolve tenant before numbering, tax normalization, header, lines, and GL posting.
+        # Resolve tenant from warehouse (validated above) or active context
         tenant_id = (
             get_active_tenant_id(user)
             or getattr(user, 'tenant_id', None)
             or getattr(warehouse, 'tenant_id', None)
-            or (getattr(supplier, 'tenant_id', None) if supplier else None)
         )
 
         # Generate Number
