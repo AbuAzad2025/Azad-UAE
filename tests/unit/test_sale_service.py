@@ -120,7 +120,6 @@ class TestSaleServiceValidations:
 
 
 class TestSaleServiceCreate:
-    @pytest.mark.skip(reason="MagicMock unpack bug — fix pending")
     def test_create_sale_success(self, app):
         from services.sale_service import SaleService
         customer = MagicMock()
@@ -144,6 +143,7 @@ class TestSaleServiceCreate:
         lines = [{'product': product, 'quantity': 2, 'unit_price': 100}]
         with patch('services.sale_service.StockService') as mock_stock:
             mock_stock.check_availability_in_warehouse.return_value = (True, '')
+            mock_stock._resolve_cogs_unit_cost.return_value = (Decimal('50'), 'test')
             with patch('models.Warehouse') as mock_wh:
                 wh = MagicMock()
                 wh.id = 1
@@ -161,11 +161,15 @@ class TestSaleServiceCreate:
                                             with patch('services.sale_service.SaleLine') as mock_line:
                                                 line_instance = MagicMock()
                                                 line_instance.line_total = Decimal('200')
+                                                line_instance.quantity = 2
+                                                line_instance.cost_price = Decimal('50')
+                                                line_instance.id = 1
+                                                line_instance.product_id = 1
+                                                line_instance.calculate_line_total = MagicMock()
                                                 mock_line.return_value = line_instance
                                                 result = SaleService.create_sale(customer, seller, lines)
                                                 assert result is not None
 
-    @pytest.mark.skip(reason="MagicMock unpack bug — fix pending")
     def test_create_sale_with_discount(self, app):
         from services.sale_service import SaleService
         customer = MagicMock()
@@ -188,6 +192,7 @@ class TestSaleServiceCreate:
         lines = [{'product': product, 'quantity': 1, 'unit_price': 100, 'discount_percent': 10}]
         with patch('services.sale_service.StockService') as mock_stock:
             mock_stock.check_availability_in_warehouse.return_value = (True, '')
+            mock_stock._resolve_cogs_unit_cost.return_value = (Decimal('50'), 'test')
             with patch('models.Warehouse') as mock_wh:
                 wh = MagicMock()
                 wh.id = 1
@@ -205,11 +210,15 @@ class TestSaleServiceCreate:
                                             with patch('services.sale_service.SaleLine') as mock_line:
                                                 line_instance = MagicMock()
                                                 line_instance.line_total = Decimal('90')
+                                                line_instance.quantity = 1
+                                                line_instance.cost_price = Decimal('50')
+                                                line_instance.id = 1
+                                                line_instance.product_id = 1
+                                                line_instance.calculate_line_total = MagicMock()
                                                 mock_line.return_value = line_instance
                                                 result = SaleService.create_sale(customer, seller, lines, discount_amount=10)
                                                 assert result is not None
 
-    @pytest.mark.skip(reason="MagicMock unpack bug — fix pending")
     def test_create_sale_with_payment(self, app):
         from services.sale_service import SaleService
         customer = MagicMock()
@@ -233,6 +242,7 @@ class TestSaleServiceCreate:
         payment_data = {'amount': 100, 'currency': 'AED', 'exchange_rate': 1.0, 'method': 'cash'}
         with patch('services.sale_service.StockService') as mock_stock:
             mock_stock.check_availability_in_warehouse.return_value = (True, '')
+            mock_stock._resolve_cogs_unit_cost.return_value = (Decimal('50'), 'test')
             with patch('models.Warehouse') as mock_wh:
                 wh = MagicMock()
                 wh.id = 1
@@ -250,12 +260,16 @@ class TestSaleServiceCreate:
                                             with patch('services.sale_service.SaleLine') as mock_line:
                                                 line_instance = MagicMock()
                                                 line_instance.line_total = Decimal('100')
+                                                line_instance.quantity = 1
+                                                line_instance.cost_price = Decimal('50')
+                                                line_instance.id = 1
+                                                line_instance.product_id = 1
+                                                line_instance.calculate_line_total = MagicMock()
                                                 mock_line.return_value = line_instance
                                                 with patch('services.sale_service.Payment') as mock_pay:
                                                     result = SaleService.create_sale(customer, seller, lines, payment_data=payment_data)
                                                     assert result is not None
 
-    @pytest.mark.skip(reason="MagicMock unpack bug — fix pending")
     def test_create_sale_serial_number_validation(self, app):
         from services.sale_service import SaleService
         customer = MagicMock()
@@ -278,6 +292,7 @@ class TestSaleServiceCreate:
         lines = [{'product': product, 'quantity': 1, 'unit_price': 100, 'serials': ['SN001']}]
         with patch('services.sale_service.StockService') as mock_stock:
             mock_stock.check_availability_in_warehouse.return_value = (True, '')
+            mock_stock._resolve_cogs_unit_cost.return_value = (Decimal('50'), 'test')
             with patch('models.Warehouse') as mock_wh:
                 wh = MagicMock()
                 wh.id = 1
@@ -295,8 +310,13 @@ class TestSaleServiceCreate:
                                             with patch('services.sale_service.SaleLine') as mock_line:
                                                 line_instance = MagicMock()
                                                 line_instance.line_total = Decimal('100')
+                                                line_instance.quantity = 1
+                                                line_instance.cost_price = Decimal('50')
+                                                line_instance.id = 1
+                                                line_instance.product_id = 1
+                                                line_instance.calculate_line_total = MagicMock()
                                                 mock_line.return_value = line_instance
-                                                with patch('models.ProductSerial') as mock_sn:
+                                                with patch('models.product_serial.ProductSerial') as mock_sn:
                                                     sn_obj = MagicMock()
                                                     sn_obj.status = 'available'
                                                     sn_obj.warehouse_id = 1
@@ -350,7 +370,6 @@ class TestSaleServiceCreate:
                                         with pytest.raises(ValueError, match='Stock not available'):
                                             SaleService.create_sale(customer, seller, lines)
 
-    @pytest.mark.skip(reason="MagicMock unpack bug — fix pending")
     def test_create_sale_with_currency_conversion(self, app):
         from services.sale_service import SaleService
         customer = MagicMock()
@@ -373,6 +392,7 @@ class TestSaleServiceCreate:
         lines = [{'product': product, 'quantity': 1, 'unit_price': 100}]
         with patch('services.sale_service.StockService') as mock_stock:
             mock_stock.check_availability_in_warehouse.return_value = (True, '')
+            mock_stock._resolve_cogs_unit_cost.return_value = (Decimal('50'), 'test')
             with patch('models.Warehouse') as mock_wh:
                 wh = MagicMock()
                 wh.id = 1
@@ -390,6 +410,11 @@ class TestSaleServiceCreate:
                                             with patch('services.sale_service.SaleLine') as mock_line:
                                                 line_instance = MagicMock()
                                                 line_instance.line_total = Decimal('100')
+                                                line_instance.quantity = 1
+                                                line_instance.cost_price = Decimal('50')
+                                                line_instance.id = 1
+                                                line_instance.product_id = 1
+                                                line_instance.calculate_line_total = MagicMock()
                                                 mock_line.return_value = line_instance
                                                 result = SaleService.create_sale(customer, seller, lines, currency='USD')
                                                 assert result is not None

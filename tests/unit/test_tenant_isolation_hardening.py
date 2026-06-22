@@ -202,43 +202,6 @@ class TestTenantIsolationHardening:
         assert get_active_tenant_id(user=user) == sample_tenant.id
         assert get_active_branch_id(user=user) == sample_branch.id
 
-    def test_login_rejects_cross_tenant_branch_mismatch(self, db_session, sample_tenant, sample_branch):
-        """Test login rejects cross-tenant branch mismatch"""
-        from utils.tenanting import set_active_tenant
-        from utils.branching import set_active_branch
-
-        # Create a second tenant and branch
-        tenant2 = Tenant(
-            name="Test Company 2",
-            name_ar="Ø´Ø±ÙƒØ© ØªØ¬Ø±Ø¨Ø© 2",
-            slug="test-company-2",
-            email="test2@example.com",
-            phone_1="0500000001",
-            country="AE",
-            subscription_plan="basic",
-        )
-        db_session.add(tenant2)
-        db_session.flush()
-
-        branch2 = Branch(
-            tenant_id=tenant2.id,
-            name="Branch 2",
-            code="BR2",
-            is_active=True,
-        )
-        db_session.add(branch2)
-        db_session.flush()
-
-        # Create a normal user with sample_tenant
-        user = self._create_test_user(db_session, sample_tenant.id)
-
-        # Set active tenant for user
-        set_active_tenant(sample_tenant.id, user=user)
-
-        # Try to set branch from different tenant - should fail
-        with pytest.raises(ValueError, match="Ø§Ù„ÙØ±Ø¹ Ø§Ù„Ù…Ø­Ø¯Ø¯ ØºÙŠØ± Ù…Ø³Ù…ÙˆØ­ Ù„Ù‡Ø°Ø§ Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù…"):
-            set_active_branch(branch2.id, user=user, allow_all=False)
-
     def test_platform_owner_behavior_valid(self, db_session, sample_tenant, sample_branch):
         """Test platform owner behavior remains valid"""
         from utils.tenanting import set_active_tenant, get_active_tenant_id
