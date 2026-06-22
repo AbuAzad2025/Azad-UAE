@@ -192,7 +192,7 @@ DEFAULT_CONCEPT_RULES: dict[str, ConceptSetupRule] = {
         search_names=("discount", "discounts given", "خصم مبيعات"),
         expected_types=("expense", "revenue"),
         creation_template={
-            "code_near": "5200",
+            "code_near": "6130",
             "name": "Sales Discount",
             "name_ar": "خصم مبيعات",
             "type": "expense",
@@ -290,6 +290,28 @@ DEFAULT_CONCEPT_RULES.update({
             "type": "liability",
         },
     ),
+    "END_OF_SERVICE_PROVISION": ConceptSetupRule(
+        legacy_code="6190",
+        search_names=("end of service", "eos provision", "مخصص نهاية خدمة", "تعويض نهاية خدمة"),
+        expected_types=("expense",),
+        creation_template={
+            "code_near": "6190",
+            "name": "End of Service Provision",
+            "name_ar": "مصروف مخصص نهاية خدمة",
+            "type": "expense",
+        },
+    ),
+    "LEAVE_ACCRUAL_LIABILITY": ConceptSetupRule(
+        legacy_code="2160",
+        search_names=("leave accrual", "vacation accrual", "استحقاقات إجازة", "إلتزام إجازات"),
+        expected_types=("liability",),
+        creation_template={
+            "code_near": "2160",
+            "name": "Leave Accrual Liability",
+            "name_ar": "إلتزام استحقاقات إجازة",
+            "type": "liability",
+        },
+    ),
     "PARTNER_CURRENT_ACCOUNT": ConceptSetupRule(
         legacy_code="3350",
         search_names=("partner current", "partners current", "جاري الشركاء"),
@@ -368,14 +390,36 @@ DEFAULT_CONCEPT_RULES.update({
         },
     ),
     "PAYROLL_PAYABLE": ConceptSetupRule(
-        legacy_code="2140",
+        legacy_code="2141",
         search_names=("salary payable", "payroll payable", "رواتب مستحقة"),
         expected_types=("liability",),
         creation_template={
-            "code_near": "2140",
+            "code_near": "2141",
             "name": "Payroll Payable",
             "name_ar": "رواتب مستحقة",
             "type": "liability",
+        },
+    ),
+    "END_OF_SERVICE_LIABILITY": ConceptSetupRule(
+        legacy_code="2140",
+        search_names=("end of service liability", "eos provision", "مخصص نهاية خدمة", "تعويض نهاية خدمة"),
+        expected_types=("liability",),
+        creation_template={
+            "code_near": "2140",
+            "name": "End of Service Benefits Provision",
+            "name_ar": "مخصص نهاية الخدمة للموظفين",
+            "type": "liability",
+        },
+    ),
+    "PAYROLL_EXPENSE": ConceptSetupRule(
+        legacy_code="6220",
+        search_names=("salary", "payroll", "wages", "رواتب"),
+        expected_types=("expense",),
+        creation_template={
+            "code_near": "6220",
+            "name": "Payroll Expense",
+            "name_ar": "رواتب وأجور",
+            "type": "expense",
         },
     ),
     "BANK_FEES": ConceptSetupRule(

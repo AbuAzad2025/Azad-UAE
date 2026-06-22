@@ -51,6 +51,9 @@ GL_CONCEPT_BEVERAGE_SALES_REVENUE = 'BEVERAGE_SALES_REVENUE'
 GL_CONCEPT_POS_CASH_DIFFERENCE = 'POS_CASH_DIFFERENCE'
 GL_CONCEPT_OPENING_BALANCE_EQUITY = 'OPENING_BALANCE_EQUITY'
 GL_CONCEPT_ACCOUNTS_PAYABLE = 'ACCOUNTS_PAYABLE'
+GL_CONCEPT_END_OF_SERVICE_PROVISION = 'END_OF_SERVICE_PROVISION'
+GL_CONCEPT_END_OF_SERVICE_LIABILITY = 'END_OF_SERVICE_LIABILITY'
+GL_CONCEPT_LEAVE_ACCRUAL_LIABILITY = 'LEAVE_ACCRUAL_LIABILITY'
 
 # Resolution modes for GL authority model
 RESOLUTION_MODE_MAPPING = 'mapping'
@@ -122,6 +125,9 @@ GL_CONCEPT_CODES = (
     GL_CONCEPT_AZAD_SUBSCRIPTION_REVENUE,
     GL_CONCEPT_OPENING_BALANCE_EQUITY,
     GL_CONCEPT_ACCOUNTS_PAYABLE,
+    GL_CONCEPT_END_OF_SERVICE_PROVISION,
+    GL_CONCEPT_END_OF_SERVICE_LIABILITY,
+    GL_CONCEPT_LEAVE_ACCRUAL_LIABILITY,
 )
 
 GL_CONCEPT_REGISTRY = {
@@ -183,6 +189,9 @@ GL_CONCEPT_REGISTRY = {
     GL_CONCEPT_AZAD_SUBSCRIPTION_REVENUE: {'meaning': 'Azad Subscription Revenue', 'legacy_code': '4700', 'required': False, 'normal_balance': 'credit', 'resolution_mode': RESOLUTION_MODE_MAPPING},
     GL_CONCEPT_OPENING_BALANCE_EQUITY: {'meaning': 'Opening Balance Equity', 'legacy_code': '3130', 'required': False, 'normal_balance': 'credit', 'resolution_mode': RESOLUTION_MODE_MAPPING},
     GL_CONCEPT_ACCOUNTS_PAYABLE: {'meaning': 'Accounts Payable (Legacy)', 'legacy_code': '2110', 'required': False, 'normal_balance': 'credit', 'resolution_mode': RESOLUTION_MODE_MAPPING},
+    GL_CONCEPT_END_OF_SERVICE_PROVISION: {'meaning': 'End of Service Provision Expense', 'legacy_code': '6190', 'required': False, 'normal_balance': 'debit', 'resolution_mode': RESOLUTION_MODE_MAPPING},
+    GL_CONCEPT_END_OF_SERVICE_LIABILITY: {'meaning': 'End of Service Benefits Provision', 'legacy_code': '2140', 'required': False, 'normal_balance': 'credit', 'resolution_mode': RESOLUTION_MODE_MAPPING},
+    GL_CONCEPT_LEAVE_ACCRUAL_LIABILITY: {'meaning': 'Leave Accrual Liability', 'legacy_code': '2160', 'required': False, 'normal_balance': 'credit', 'resolution_mode': RESOLUTION_MODE_MAPPING},
 }
 
 VALID_GL_CONCEPT_CODES = frozenset(GL_CONCEPT_CODES)

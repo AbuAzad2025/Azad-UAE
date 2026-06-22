@@ -513,6 +513,9 @@
 {% endblock %}
 
 {% block extra_js %}
+<script>
+  window._PRICES_INCLUDE_VAT = {{ 'true' if prices_include_vat else 'false' }};
+</script>
 <script src="{{ url_for('static', filename='js/purchases/create.js') }}"></script>
 {% endblock %}
 

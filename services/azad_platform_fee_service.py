@@ -11,6 +11,7 @@ from models.payment_vault import PaymentVault, PaymentTransaction
 from services.gl_posting import post_or_fail
 from services.gl_service import GL_ACCOUNTS, GLService
 from utils.gl_reference_types import GLRef
+from utils.tax_settings import _resolve_main_branch
 
 
 class AzadPlatformFeeService:
@@ -212,6 +213,7 @@ class AzadPlatformFeeService:
                 reference_id=fees[0].id,
                 date=settlement_date,
                 exchange_rate=1.0,
+                branch_id=_resolve_main_branch(tid),
                 tenant_id=tid,
             )
             for fee in fees:

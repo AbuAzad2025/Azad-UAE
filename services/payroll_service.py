@@ -157,7 +157,7 @@ class PayrollService:
 
         )
 
-        
+
 
         advance.gl_entry_id = gl_entry.id
 
@@ -202,11 +202,11 @@ class PayrollService:
 
             basic_amount = employee.basic_salary * Decimal(days_worked)
 
-            
+
 
         pending_advances = SalaryAdvance.query.filter_by(
-            employee_id=employee_id, 
-            is_deducted=False, 
+            employee_id=employee_id,
+            is_deducted=False,
             status='approved',
             tenant_id=tenant_id
         ).all()
@@ -305,7 +305,7 @@ class PayrollService:
 
         lines = [
 
-            {'account': '6100', 'concept_code': 'PAYROLL_EXPENSE', 'debit': Decimal(str(total_expense)), 'credit': 0, 'description': f'Salary {month}/{year} - {employee.name}'},
+            {'account': GLService.get_account_code_for_concept('PAYROLL_EXPENSE', branch_id=employee.branch_id, tenant_id=tenant_id, fallback_key='salaries_expense'), 'concept_code': 'PAYROLL_EXPENSE', 'debit': Decimal(str(total_expense)), 'credit': 0, 'description': f'Salary {month}/{year} - {employee.name}'},
 
             {'account': cash_account, 'concept_code': 'CASH', 'debit': 0, 'credit': Decimal(str(net_salary)), 'description': 'Net Salary Payment'},
 
@@ -313,7 +313,7 @@ class PayrollService:
 
         if deductions > 0:
 
-            lines.append({'account': '2140', 'concept_code': 'PAYROLL_PAYABLE', 'debit': 0, 'credit': Decimal(str(deductions)), 'description': 'Salary Deductions'})
+            lines.append({'account': GLService.get_account_code_for_concept('PAYROLL_PAYABLE', branch_id=employee.branch_id, tenant_id=tenant_id, fallback_key='salaries_payable'), 'concept_code': 'PAYROLL_PAYABLE', 'debit': 0, 'credit': Decimal(str(deductions)), 'description': 'Salary Deductions'})
 
         if actual_deduction > 0:
 
@@ -337,9 +337,19 @@ class PayrollService:
 
         )
 
-        
+
 
         transaction.gl_entry_id = gl_entry.id
+
+        # Post monthly accruals (end-of-service provision + leave accrual)
+        try:
+            PayrollService.post_payroll_accruals(employee, month, year, user_id)
+        except Exception as accrual_err:
+            from flask import current_app
+            current_app.logger.warning(
+                'Payroll accrual posting failed for employee %s %s/%s: %s',
+                employee.name, month, year, accrual_err
+            )
 
         try:
             db.session.commit()
@@ -351,9 +361,117 @@ class PayrollService:
         return transaction
 
 
+    @staticmethod
+    def _calculate_eos_monthly_provision(basic_salary, contract_type='limited'):
+        """Calculate monthly end-of-service provision (UAE labor law basis).
+        Limited contract: 21 days/year for first 5 years, 30 days after.
+        Unlimited contract: 30 days/year.
+        Monthly provision = (basic_salary / 30) * (days_per_year / 12).
+        """
+        from decimal import Decimal
+        basic = Decimal(str(basic_salary or 0))
+        if basic <= 0:
+            return Decimal('0')
+        if contract_type == 'unlimited':
+            days_per_year = Decimal('30')
+        else:
+            days_per_year = Decimal('21')
+        monthly = (basic / Decimal('30')) * (days_per_year / Decimal('12'))
+        return monthly.quantize(Decimal('0.001'))
 
     @staticmethod
+    def _calculate_leave_monthly_accrual(basic_salary, annual_leave_days=30):
+        """Calculate monthly leave accrual liability.
+        Monthly = (basic_salary / 30) * (annual_leave_days / 12).
+        """
+        from decimal import Decimal
+        basic = Decimal(str(basic_salary or 0))
+        if basic <= 0:
+            return Decimal('0')
+        days = Decimal(str(annual_leave_days or 30))
+        monthly = (basic / Decimal('30')) * (days / Decimal('12'))
+        return monthly.quantize(Decimal('0.001'))
 
+    @staticmethod
+    def post_payroll_accruals(employee, month, year, user_id):
+        """Post monthly end-of-service and leave accrual GL entries.
+
+        Accounting entries:
+        - EOS:   Dr 6190 (END_OF_SERVICE_PROVISION expense) / Cr 2140 (END_OF_SERVICE_LIABILITY)
+        - Leave: Dr 6220 (PAYROLL_EXPENSE) / Cr 2160 (LEAVE_ACCRUAL_LIABILITY)
+        """
+        from decimal import Decimal
+        tenant_id = PayrollService._require_employee_tenant_id(employee)
+        branch_id = employee.branch_id
+
+        eos_amount = PayrollService._calculate_eos_monthly_provision(
+            employee.basic_salary, getattr(employee, 'contract_type', 'limited')
+        )
+        leave_amount = PayrollService._calculate_leave_monthly_accrual(
+            employee.basic_salary, getattr(employee, 'annual_leave_days', 30)
+        )
+
+        if eos_amount <= Decimal('0') and leave_amount <= Decimal('0'):
+            return None
+
+        GLService.ensure_core_accounts(tenant_id=tenant_id)
+        accrual_lines = []
+
+        if eos_amount > Decimal('0'):
+            accrual_lines.append({
+                'account': GLService.get_account_code_for_concept(
+                    'END_OF_SERVICE_PROVISION', branch_id=branch_id, tenant_id=tenant_id, fallback_key='end_of_service_provision'
+                ),
+                'concept_code': 'END_OF_SERVICE_PROVISION',
+                'debit': eos_amount,
+                'credit': 0,
+                'description': f'End of Service Provision Expense - {employee.name} {month}/{year}'
+            })
+            accrual_lines.append({
+                'account': GLService.get_account_code_for_concept(
+                    'END_OF_SERVICE_LIABILITY', branch_id=branch_id, tenant_id=tenant_id, fallback_key='end_of_service_liability'
+                ),
+                'concept_code': 'END_OF_SERVICE_LIABILITY',
+                'debit': 0,
+                'credit': eos_amount,
+                'description': f'End of Service Liability - {employee.name} {month}/{year}'
+            })
+
+        if leave_amount > Decimal('0'):
+            accrual_lines.append({
+                'account': GLService.get_account_code_for_concept(
+                    'PAYROLL_EXPENSE', branch_id=branch_id, tenant_id=tenant_id, fallback_key='salaries_expense'
+                ),
+                'concept_code': 'PAYROLL_EXPENSE',
+                'debit': leave_amount,
+                'credit': 0,
+                'description': f'Leave Accrual Expense - {employee.name} {month}/{year}'
+            })
+            accrual_lines.append({
+                'account': GLService.get_account_code_for_concept(
+                    'LEAVE_ACCRUAL_LIABILITY', branch_id=branch_id, tenant_id=tenant_id, fallback_key='leave_accrual_liability'
+                ),
+                'concept_code': 'LEAVE_ACCRUAL_LIABILITY',
+                'debit': 0,
+                'credit': leave_amount,
+                'description': f'Leave Accrual Liability - {employee.name} {month}/{year}'
+            })
+
+        if not accrual_lines:
+            return None
+
+        gl_entry = post_or_fail(
+            accrual_lines,
+            description=f"Payroll Accruals {month}/{year} - {employee.name}",
+            reference_type=GLRef.PAYROLL,
+            reference_id=employee.id,
+            branch_id=branch_id,
+            tenant_id=tenant_id,
+            user_id=user_id,
+        )
+        return gl_entry
+
+    @staticmethod
     def generate_branch_payroll(branch_id, month, year, user_id):
         tenant_id = PayrollService._branch_tenant_id(branch_id)
         employees = Employee.query.filter_by(branch_id=branch_id, tenant_id=tenant_id, is_active=True).all()
@@ -362,7 +480,7 @@ class PayrollService:
 
         skipped_count = 0
 
-        
+
 
         for emp in employees:
 
@@ -372,7 +490,7 @@ class PayrollService:
 
             ).first()
 
-            
+
 
             if exists:
 
@@ -380,7 +498,7 @@ class PayrollService:
 
                 continue
 
-                
+
 
             if emp.employment_type == 'salary':
 
@@ -408,7 +526,7 @@ class PayrollService:
 
                 skipped_count += 1
 
-            
+
 
         return generated_count, skipped_count
 

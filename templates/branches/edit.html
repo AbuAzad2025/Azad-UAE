@@ -37,6 +37,19 @@
             </div>
           </div>
         </div>
+        <div class="row">
+          <div class="col-md-6">
+            <div class="form-group">
+              <label for="prices_include_vat">طريقة احتساب الضريبة في {{ t('Branch') }}</label>
+              <select name="prices_include_vat" class="form-control" id="prices_include_vat" aria-label="prices include vat">
+                <option value="" {% if branch.prices_include_vat is none %}selected{% endif %}>الافتراضي (حسب الشركة)</option>
+                <option value="on" {% if branch.prices_include_vat is true %}selected{% endif %}>الأسعار شاملة الضريبة</option>
+                <option value="off" {% if branch.prices_include_vat is false %}selected{% endif %}>الأسعار غير شاملة الضريبة</option>
+              </select>
+              <small class="text-muted">إذا اخترت "الافتراضي"، سيتم استخدام إعداد الشركة.</small>
+            </div>
+          </div>
+        </div>
         <div class="form-group">
           <label>{{ t('Address') }}</label>
           <textarea name="address" class="form-control" aria-label="address" maxlength="255">{{ branch.address }}</textarea>

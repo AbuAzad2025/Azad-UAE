@@ -191,6 +191,9 @@
                     <a href="{{ url_for('warehouse.view_warehouse', id=warehouse.id) }}" class="btn btn-primary" title="{{ t('View') }}">
                       <i class="fas fa-eye"></i>
                     </a>
+                    <a href="{{ url_for('warehouse.edit_warehouse', id=warehouse.id) }}" class="btn btn-warning" title="{{ t('Edit') }}">
+                      <i class="fas fa-edit"></i>
+                    </a>
                     {% if current_user.has_permission('manage_products') %}
                     <a href="{{ url_for('products.create', warehouse_id=warehouse.id) }}" class="btn btn-success" title="{{ t('Add') }} {{ t('Product_2') }}">
                     {% endif %}

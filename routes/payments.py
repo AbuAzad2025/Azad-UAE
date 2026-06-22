@@ -14,7 +14,8 @@ from services.gl_posting import post_or_fail, GlPostingError
 from utils.gl_reference_types import GLRef, delete_entries_by_ref
 from utils.decorators import permission_required
 from utils.branching import should_show_all_branch_columns
-from utils.currency_utils import resolve_default_currency, get_system_default_currency
+from utils.currency_utils import resolve_default_currency, get_system_default_currency, resolve_tenant_base_currency
+from utils.tenanting import get_active_tenant_id
 from services.logging_core import LoggingCore
 from utils.number_to_arabic import number_to_arabic_words
 from utils.qr_generator import generate_qr_data_url
@@ -45,10 +46,12 @@ def _current_branch_id(default=None):
 
 def _resolve_transaction_rate(currency, user_rate=None):
     from decimal import Decimal
-
+    from utils.currency_utils import resolve_tenant_base_currency
+    from utils.tenanting import get_active_tenant_id
+    base_currency = resolve_tenant_base_currency(tenant_id=get_active_tenant_id(current_user))
     rate_info = ExchangeRateService.resolve_exchange_rate_for_transaction(
         currency,
-        'AED',
+        base_currency,
         user_rate=user_rate,
     )
     return Decimal(str(rate_info['rate']))
@@ -144,16 +147,16 @@ def _scoped_suppliers_query():
 def receipts():
     """عرض جميع المدفوعات (سندات القبض والصرف) في قائمة موحدة"""
     from models import Payment
-    
+
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 20, type=int)
     search = request.args.get('search', '', type=str)
     direction_filter = request.args.get('direction', '', type=str)  # incoming, outgoing, all
-    
+
     # جمع سندات القبض والصرف
     receipts_query = tenant_query(Receipt)
     payments_query = tenant_query(Payment)
-    
+
     if search:
         search_filter = f'%{search}%'
         receipts_query = receipts_query.join(Customer).filter(
@@ -168,7 +171,7 @@ def receipts():
                 Payment.supplier_name.ilike(search_filter)
             )
         )
-    
+
     # فلترة الاتجاه
     if direction_filter == 'incoming':
         receipts_query = receipts_query.filter(Receipt.direction == 'incoming')
@@ -176,7 +179,7 @@ def receipts():
     elif direction_filter == 'outgoing':
         receipts_query = receipts_query.filter(Receipt.direction == 'outgoing')
         payments_query = payments_query.filter(Payment.direction == 'outgoing')
-    
+
     # إخفاء السندات المؤرشفة
     from models import ArchivedRecord
     tid = get_active_tenant_id(current_user)
@@ -189,10 +192,10 @@ def receipts():
     if tid is not None:
         archived_receipts_select = archived_receipts_select.where(ArchivedRecord.tenant_id == tid)
         archived_payments_select = archived_payments_select.where(ArchivedRecord.tenant_id == tid)
-    
+
     receipts_query = receipts_query.filter(Receipt.id.notin_(archived_receipts_select))
     payments_query = payments_query.filter(Payment.id.notin_(archived_payments_select))
-    
+
     if current_user.is_seller():
         receipts_query = receipts_query.filter(Receipt.user_id == current_user.id)
         payments_query = payments_query.filter(Payment.user_id == current_user.id)
@@ -206,10 +209,10 @@ def receipts():
     total = receipts_query.count() + payments_query.count()
     all_receipts = receipts_query.order_by(Receipt.receipt_date.desc()).limit(fetch_limit).all()
     all_payments = payments_query.order_by(Payment.payment_date.desc()).limit(fetch_limit).all()
-    
+
     # دمج النتائج مع إضافة نوع السند
     combined_items = []
-    
+
     for receipt in all_receipts:
         receipt_branch_label = (
             f"{receipt.branch.name} ({receipt.branch.code})"
@@ -233,7 +236,7 @@ def receipts():
             'notes': receipt.notes,
             'branch_label': receipt_branch_label,
         })
-    
+
     for payment in all_payments:
         payment_branch_label = (
             f"{payment.branch.name} ({payment.branch.code})"
@@ -257,15 +260,15 @@ def receipts():
             'notes': payment.notes,
             'branch_label': payment_branch_label,
         })
-    
+
     # ترتيب حسب التاريخ
     combined_items.sort(key=lambda x: x['date'], reverse=True)
-    
+
     # تطبيق pagination يدوياً
     start = (page - 1) * per_page
     end = start + per_page
     paginated_items = combined_items[start:end]
-    
+
     # إنشاء pagination object يدوياً
     class SimplePagination:
         def __init__(self, page, per_page, total, items):
@@ -344,7 +347,7 @@ def receipts():
             'total_pages': pagination.pages or 1,
             'totals': totals,
         })
-    
+
     return render_template('payments/receipts.html',
                          receipts=paginated_items,
                          pagination=pagination,
@@ -483,11 +486,11 @@ def archive_payment(id):
     """أرشفة سند صرف"""
     from models import Payment
     from services.archive_service import ArchiveService
-    
+
     payment = tenant_get_or_404(Payment, id)
     if not _in_scope_branch(payment.branch_id):
         return render_template('errors/403.html'), 403
-    
+
     try:
         archive_service = ArchiveService()
         archive_service.archive_record('payments', payment, reason='تم أرشفة سند الصرف', commit=False)
@@ -495,13 +498,13 @@ def archive_payment(id):
 
         # Commit all
         db.session.commit()
-        
+
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f'Failed to archive payment {id}: {e}')
         flash(f'فشلت الأرشفة: {str(e)}', 'danger')
         return redirect(url_for('payments.receipts'))
-    
+
     return redirect(url_for('payments.receipts'))
 
 
@@ -511,7 +514,7 @@ def archive_payment(id):
 def restore_payment(id):
     """استعادة سند صرف من الأرشيف"""
     from models import ArchivedRecord, Payment
-    
+
     tid = get_active_tenant_id(current_user)
     archived_query = ArchivedRecord.query.filter_by(
         table_name='payments',
@@ -522,14 +525,14 @@ def restore_payment(id):
     archived = archived_query.first_or_404()
     if not _in_scope_branch(_archived_item_branch_id(archived)):
         return render_template('errors/403.html'), 403
-    
+
     try:
         db.session.delete(archived)
         db.session.commit()
         LoggingCore.log_audit('restore', 'payments', id)
     except Exception as e:
         db.session.rollback()
-    
+
     return redirect(url_for('payments.archived_receipts'))
 
 
@@ -541,7 +544,7 @@ def restore_payment(id):
 def create_from_sale(sale_id):
     """إنشاء سند دفع من فاتورة بيع معينة"""
     from models import Sale
-    
+
     sale = tenant_get_or_404(Sale, sale_id)
     if not _in_scope_branch(sale.branch_id):
         return render_template('errors/403.html'), 403
@@ -553,7 +556,7 @@ def create_from_sale(sale_id):
         suggested_sale_amount = sale_balance_aed / sale_rate
     else:
         suggested_sale_amount = sale_balance_aed
-    
+
     if request.method == 'POST':
         try:
             amount = request.form.get('amount', type=float)
@@ -591,16 +594,16 @@ def create_from_sale(sale_id):
                                      exchange_rates=exchange_rates,
                                      sale=sale,
                                      form_data=request.form)
-            
+
             reference_number = request.form.get('reference_number')
             cheque_number = request.form.get('cheque_number')
             cheque_date = request.form.get('cheque_date') or None
             bank_name = request.form.get('bank_name')
             notes = request.form.get('notes')
-            
+
             # تخصيص المبلغ للفاتورة المحددة
             allocate_to_sales = {sale.id: amount}
-            
+
             receipt_data = {
                 'customer_id': sale.customer_id,
                 'amount': amount,
@@ -615,17 +618,17 @@ def create_from_sale(sale_id):
                 'allocate_to_sales': allocate_to_sales,
                 'branch_id': sale.branch_id,
             }
-            
+
             receipt = PaymentService.create_receipt(receipt_data)
-            
+
             LoggingCore.log_audit('create', 'receipts', receipt.id)
-            
+
             flash('تم إنشاء سند القبض بنجاح', 'success')
             return redirect(url_for('payments.view_receipt', id=receipt.id))
-        
+
         except Exception as e:
             flash(f'حدث خطأ: {str(e)}\nتحقق من البيانات المدخلة وحاول مرة أخرى.', 'danger')
-    
+
     return redirect(url_for(
         'payments.create_voucher',
         direction='incoming',
@@ -651,12 +654,12 @@ def create_voucher():
         'name': c.name,
         'type': c.customer_type
     } for c in customers]
-    
+
     suppliers_data = [{
         'id': s.id,
         'name': s.name
     } for s in suppliers]
-    
+
     preselected_direction = request.args.get('direction', 'incoming')
     preselected_party_type = request.args.get('party_type', 'customer')
     preselected_party_id = (
@@ -693,7 +696,7 @@ def create_voucher_submit():
         date_str = request.form.get('date')
         notes = request.form.get('notes')
         branch_id = _current_branch_id()
-        
+
         # العملة وسعر الصرف (افتراضي: AED بمعدل 1)
         try:
             from models import Tenant
@@ -717,7 +720,7 @@ def create_voucher_submit():
             default_currency = get_system_default_currency()
         currency = request.form.get('currency') or default_currency
         user_exchange_rate = request.form.get('exchange_rate', type=float, default=1.0)
-        
+
         # بيانات الشيك
         cheque_number = request.form.get('cheque_number')
         cheque_date = request.form.get('cheque_date')
@@ -750,20 +753,20 @@ def create_voucher_submit():
                 receipt = PaymentService.create_receipt(receipt_data)
                 flash(f'تم إنشاء سند القبض رقم {receipt.receipt_number} بنجاح', 'success')
                 return redirect(url_for('payments.receipts'))
-            
+
             elif party_type == 'supplier':
                 # سند قبض من مورد (مرتجع مشتريات أو تسوية)
                 # نحتاج منطق جديد أو استخدام Payment بـ direction='incoming'
                 # حالياً Payment يدعم direction='incoming' حسب الموديل
-                
+
                 from models import Payment
                 from utils.helpers import generate_number
                 from decimal import Decimal
-                
+
                 exchange_rate = _resolve_transaction_rate(currency, user_exchange_rate)
                 amount_decimal = Decimal(str(amount))
                 amount_aed = amount_decimal * exchange_rate
-                
+
                 supplier = _ensure_supplier_scope(party_id)
                 if not supplier:
                     flash('المورد المحدد خارج نطاق الفرع الحالي', 'danger')
@@ -817,17 +820,17 @@ def create_voucher_submit():
                     supplier.apply_payment(-Decimal(str(payment.amount_aed or 0)))
                 flash('تم إنشاء سند قبض من مورد بنجاح', 'success')
                 return redirect(url_for('payments.receipts'))
-        
+
         # 2. معالجة سند الصرف (Payment) - صادر
         elif direction == 'outgoing':
             from models import Payment
             from utils.helpers import generate_number
             from decimal import Decimal
-            
+
             exchange_rate = _resolve_transaction_rate(currency, user_exchange_rate)
             amount_decimal = Decimal(str(amount))
             amount_aed = amount_decimal * exchange_rate
-            
+
             if party_type == 'supplier':
                 # دفع لمورد (المنطق المعتاد)
                 supplier = _ensure_supplier_scope(party_id)
@@ -885,9 +888,9 @@ def create_voucher_submit():
                         db.session.flush()
                         payment.cheque_id = cheque.id
                         payment.payment_confirmed = False
-                        
+
                         process_cheque_issue(cheque)
-                        
+
                     else:
                         from services.gl_service import GLService
                         GLService.ensure_core_accounts(tenant_id=tenant_id)
@@ -917,7 +920,7 @@ def create_voucher_submit():
                 db.session.commit()
                 flash('تم إنشاء سند صرف لمورد بنجاح', 'success')
                 return redirect(url_for('payments.receipts'))
-            
+
             elif party_type == 'customer':
                 # دفع لعميل (استرداد أو تسوية أو سحب شريك)
                 # Payment model has customer_id field
@@ -975,7 +978,7 @@ def create_voucher_submit():
                         db.session.flush()
                         payment.cheque_id = cheque.id
                         payment.payment_confirmed = False
-                        
+
                         process_cheque_issue(cheque)
 
                     else:
@@ -1048,11 +1051,11 @@ def view_receipt(id):
         receipt_branch_id = sale.branch_id if sale else None
     if not _in_scope_branch(receipt_branch_id):
         return render_template('errors/403.html'), 403
-    
+
     if current_user.is_seller() and not current_user.is_owner and receipt.user_id != current_user.id:
         flash('ليس لديك صلاحية لعرض هذا السند', 'danger')
         return redirect(url_for('payments.receipts'))
-    
+
     return render_template('payments/view_receipt.html', receipt=receipt)
 
 
@@ -1074,11 +1077,11 @@ def print_receipt(id):
         receipt_branch_id = sale.branch_id if sale else None
     if not _in_scope_branch(receipt_branch_id):
         return render_template('errors/403.html'), 403
-    
+
     if current_user.is_seller() and not current_user.is_owner and receipt.user_id != current_user.id:
         flash('ليس لديك صلاحية لطباعة هذا السند', 'danger')
         return redirect(url_for('payments.receipts'))
-    
+
     from utils.tenant_branding import get_print_header_context
     tid = receipt.tenant_id
     settings = InvoiceSettings.get_active(tid)
@@ -1086,7 +1089,7 @@ def print_receipt(id):
 
     template = settings.active_template if settings and settings.active_template else 'modern'
     template_path = f'receipts/{template}.html'
-    
+
     from models import Branch
     tenant, settings, company = InvoiceSettings.company_print_context(tid)
     print_branch = Branch.query.filter_by(id=receipt_branch_id, tenant_id=tid).first() if receipt_branch_id else None
@@ -1165,9 +1168,9 @@ def print_receipt(id):
 def archived_receipts():
     """عرض السندات المؤرشفة"""
     from models import ArchivedRecord
-    
+
     tid = get_active_tenant_id(current_user)
-    
+
     # جلب السندات المؤرشفة
     archived_receipts_query = db.session.query(ArchivedRecord).filter(
         ArchivedRecord.table_name == 'receipts'
@@ -1179,10 +1182,10 @@ def archived_receipts():
     )
     if tid is not None:
         archived_payments_query = archived_payments_query.filter(ArchivedRecord.tenant_id == tid)
-    
+
     # دمج النتائج
     archived_items = []
-    
+
     for archived in archived_receipts_query.all():
         if not _in_scope_branch(_archived_item_branch_id(archived)):
             continue
@@ -1200,7 +1203,7 @@ def archived_receipts():
             'source_type': data.get('source_type'),
             'archived_at': archived.archived_at
         })
-    
+
     for archived in archived_payments_query.all():
         if not _in_scope_branch(_archived_item_branch_id(archived)):
             continue
@@ -1218,10 +1221,10 @@ def archived_receipts():
             'source_type': data.get('payment_type'),
             'archived_at': archived.archived_at
         })
-    
+
     # ترتيب حسب تاريخ الأرشفة
     archived_items.sort(key=lambda x: x['archived_at'], reverse=True)
-    
+
     return render_template('payments/archived.html', archived_items=archived_items)
 
 
@@ -1231,18 +1234,18 @@ def archived_receipts():
 def archive_receipt(id):
     """أرشفة سند قبض"""
     from services.archive_service import ArchiveService
-    
+
     receipt = tenant_get_or_404(Receipt, id)
     if not _in_scope_branch(receipt.branch_id):
         return render_template('errors/403.html'), 403
-    
+
     try:
         archive_service = ArchiveService()
         archive_service.archive_record('receipts', receipt, reason='تم أرشفة سند القبض')
         LoggingCore.log_audit('archive', 'receipts', receipt.id)
     except Exception as e:
         db.session.rollback()
-    
+
     return redirect(url_for('payments.receipts'))
 
 
@@ -1252,7 +1255,7 @@ def archive_receipt(id):
 def restore_receipt(id):
     """استعادة سند قبض من الأرشيف"""
     from models import ArchivedRecord
-    
+
     tid = get_active_tenant_id(current_user)
     archived_query = ArchivedRecord.query.filter_by(
         table_name='receipts',
@@ -1263,14 +1266,14 @@ def restore_receipt(id):
     archived = archived_query.first_or_404()
     if not _in_scope_branch(_archived_item_branch_id(archived)):
         return render_template('errors/403.html'), 403
-    
+
     try:
         db.session.delete(archived)
         db.session.commit()
         LoggingCore.log_audit('restore', 'receipts', id)
     except Exception as e:
         db.session.rollback()
-    
+
     return redirect(url_for('payments.archived_receipts'))
 
 
@@ -1281,18 +1284,18 @@ def delete_receipt(id):
     """حذف أو أرشفة سند قبض"""
     from models import Receipt, Cheque
     from services.archive_service import ArchiveService
-    
+
     receipt = tenant_get_or_404(Receipt, id)
     if not _in_scope_branch(receipt.branch_id):
         return render_template('errors/403.html'), 403
-    
+
     # التحقق من الارتباطات
     has_links = False
     if receipt.source_type == 'sale' and receipt.source_id:
         has_links = True
     if receipt.cheque_id:
         has_links = True
-    
+
     try:
         # 1. عكس التخصيصات (إعادة الرصيد للفاتورة)
         if receipt.source_type == 'sale' and receipt.source_id:
@@ -1301,14 +1304,14 @@ def delete_receipt(id):
             if sale:
                 sale.paid_amount -= receipt.amount
                 sale.paid_amount_aed -= receipt.amount_aed
-                
+
                 # منع القيم السالبة
                 if sale.paid_amount < 0: sale.paid_amount = 0
                 if sale.paid_amount_aed < 0: sale.paid_amount_aed = 0
-                
+
                 # تحديث الرصيد المتبقي (باستخدام عملة الأساس AED)
                 sale.balance_due = sale.amount_aed - sale.paid_amount_aed
-                
+
                 # تحديث حالة الدفع
                 if sale.balance_due <= 0:
                     sale.payment_status = 'paid'
@@ -1323,11 +1326,11 @@ def delete_receipt(id):
             # أرشفة (بدون عكس القيد المحاسبي - الأرشفة إخفاء إداري فقط)
             archive_service = ArchiveService()
             archive_service.archive_record('receipts', receipt, reason='تم أرشفة السند لوجود ارتباطات', commit=False)
-            
+
             # أرشفة الشيكات المرتبطة
             if receipt.cheque:
                 archive_service.archive_record('cheques', receipt.cheque, reason='تم أرشفة الشيك لارتباطه بسند مؤرشف', commit=False)
-            
+
             LoggingCore.log_audit('archive', 'receipts', id)
             db.session.commit()
             flash(f'تم أرشفة سند القبض "{receipt.receipt_number}" (لوجود حركات مرتبطة)', 'warning')
@@ -1363,14 +1366,14 @@ def delete_receipt(id):
             # حذف الشيكات المرتبطة أولاً لتجنب خطأ المفتاح الأجنبي
             if receipt.cheque:
                 db.session.delete(receipt.cheque)
-                
+
             db.session.delete(receipt)
             LoggingCore.log_audit('delete', 'receipts', id)
             db.session.commit()
             flash(f'تم حذف سند القبض "{receipt.receipt_number}" نهائياً', 'success')
-            
+
         return redirect(url_for('payments.receipts'))
-    
+
     except Exception as e:
         db.session.rollback()
         flash(f'فشل الحذف: {str(e)}', 'danger')
@@ -1388,20 +1391,20 @@ def delete_payment(id):
     payment = tenant_get_or_404(Payment, id)
     if not _in_scope_branch(payment.branch_id):
         return render_template('errors/403.html'), 403
-    
+
     # التحقق من الارتباطات
     has_links = False
     if payment.cheque_id:
         has_links = True
     # يمكن إضافة شروط أخرى للارتباط هنا
-    
+
     try:
         # 1. القرار: أرشفة أو حذف
         if has_links:
             # أرشفة (بدون عكس القيد المحاسبي - الأرشفة إخفاء إداري فقط)
             archive_service = ArchiveService()
             archive_service.archive_record('payments', payment, reason='تم أرشفة السند لوجود ارتباطات', commit=False)
-            
+
             # أرشفة الشيكات المرتبطة
             if payment.cheque:
                 archive_service.archive_record('cheques', payment.cheque, reason='تم أرشفة الشيك لارتباطه بسند مؤرشف', commit=False)
@@ -1435,9 +1438,9 @@ def delete_payment(id):
             LoggingCore.log_audit('delete', 'payments', id)
             db.session.commit()
             flash(f'تم حذف سند الصرف "{payment.payment_number}" نهائياً', 'success')
-            
+
         return redirect(url_for('payments.receipts'))
-        
+
     except Exception as e:
         db.session.rollback()
         flash(f'فشل الحذف: {str(e)}', 'danger')
@@ -1452,18 +1455,19 @@ def create_payment(purchase_id):
     from models import Purchase, Payment, Supplier
     from utils.helpers import generate_number
     from sqlalchemy import func
-    
+
     purchase = tenant_get_or_404(Purchase, purchase_id)
     if not _in_scope_branch(purchase.branch_id):
         return render_template('errors/403.html'), 403
     supplier = tenant_get(Supplier, purchase.supplier_id, or_404=False) if purchase.supplier_id else None
-    
+
     # حساب المبلغ المدفوع من جدول payments (مرتبط بالمشتريات عبر purchase_id)
     paid_amount = db.session.query(func.sum(Payment.amount_aed)).filter(
         Payment.purchase_id == purchase.id,
+        Payment.tenant_id == purchase.tenant_id,
         Payment.payment_confirmed == True,
     ).scalar() or 0
-    
+
     # حساب المبلغ المتبقي
     balance_aed = float(purchase.amount_aed or 0) - float(paid_amount)
     purchase_rate = float(purchase.exchange_rate or 1)
@@ -1484,11 +1488,11 @@ def create_payment(purchase_id):
             currency=purchase.currency,
             exchange_rate=float(purchase.exchange_rate or 1),
         ))
-    
+
     if request.method == 'POST':
         try:
             from decimal import Decimal
-            
+
             amount = request.form.get('amount', type=float)
             payment_method_value = (request.form.get('payment_method') or '').strip()
             if not payment_method_value:
@@ -1522,7 +1526,7 @@ def create_payment(purchase_id):
                     pass
                 default_currency = (purchase.currency or '').strip() or resolve_default_currency()
             currency = request.form.get('currency') or default_currency
-            
+
             reference_number = request.form.get('reference_number')
             cheque_number = request.form.get('cheque_number')
             cheque_date = request.form.get('cheque_date') or None
@@ -1532,11 +1536,11 @@ def create_payment(purchase_id):
             reference_number_transfer = request.form.get('reference_number_transfer')
             card_last4 = request.form.get('card_last4')
             reference_number_card = request.form.get('reference_number_card')
-            
+
             if amount <= 0:
                 flash('المبلغ غير صحيح.\nتحقق من الصيغة الصحيحة وحاول مرة أخرى.', 'danger')
                 return redirect(url_for('payments.create_payment', purchase_id=purchase_id))
-            
+
             # تحويل إلى Decimal للحسابات الدقيقة
             amount_decimal = Decimal(str(amount))
             exchange_rate_decimal = _resolve_transaction_rate(currency, user_exchange_rate)
@@ -1544,7 +1548,7 @@ def create_payment(purchase_id):
             if amount_aed > Decimal(str(balance_aed)):
                 flash('المبلغ غير صحيح.\nتحقق من الصيغة الصحيحة وحاول مرة أخرى.', 'danger')
                 return redirect(url_for('payments.create_payment', purchase_id=purchase_id))
-            
+
             # إنشاء سند الصرف
             tenant_id = getattr(purchase, 'tenant_id', None) or get_active_tenant_id(current_user)
             with atomic_transaction('purchase_payment_creation'):
@@ -1566,7 +1570,7 @@ def create_payment(purchase_id):
                     payment_type='supplier_payment',
                     branch_id=purchase.branch_id,
                 )
-                
+
                 # تعيين حقول المرجع/البنك حسب الطريقة
                 if payment_method_value == 'bank_transfer':
                     payment.bank_name = bank_name_transfer or bank_name
@@ -1582,10 +1586,10 @@ def create_payment(purchase_id):
                 else:
                     payment.reference_number = reference_number
                     payment.bank_name = bank_name
-                
+
                 db.session.add(payment)
                 db.session.flush()
-                
+
                 # إنشاء سجل الشيك وربطه إذا كانت طريقة الدفع شيك
                 if payment_method_value == 'cheque' and cheque_number:
                     from models import Cheque
@@ -1611,7 +1615,7 @@ def create_payment(purchase_id):
                     db.session.flush()
                     payment.cheque_id = cheque.id
                     payment.payment_confirmed = False
-                
+
                 from services.gl_service import GLService
                 tenant_id = getattr(payment, 'tenant_id', None)
                 GLService.ensure_core_accounts(tenant_id=tenant_id)
@@ -1634,14 +1638,14 @@ def create_payment(purchase_id):
                     branch_id=payment.branch_id,
                     tenant_id=tenant_id,
                 )
-            
+
             flash('تم إنشاء سند الصرف بنجاح', 'success')
             return redirect(url_for('purchases.view', id=purchase_id))
-            
+
         except Exception as e:
             db.session.rollback()
             flash(f'حدث خطأ: {str(e)}', 'danger')
-    
+
     # استخدام نفس القالب الموحد لسندات القبض/الصرف
     return render_template('payments/create_receipt.html',
                          purchase=purchase,

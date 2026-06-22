@@ -568,7 +568,7 @@ class TestStaleMappings:
                     assert row['severity'] == 'warning', (
                         f"{row['concept_code']} should be warning, got {row['severity']}: {row['issue']}"
                     )
-            # Additional assertion: stale mappings should be warnings regardless of 
+            # Additional assertion: stale mappings should be warnings regardless of
             # unrelated required mapping gaps (they are ignored during posting)
             stale_warnings = [r for r in result['rows'] if r['concept_code'] in stale_concepts]
             assert len(stale_warnings) == len(stale_concepts), \
@@ -577,18 +577,20 @@ class TestStaleMappings:
                 assert warning['severity'] == 'warning', \
                     f"Stale concept {warning['concept_code']} should be warning, got {warning['severity']}"
 
-    def test_provisioner_rejects_header_target_mapping(self, app):
-        """Test that provisioning service rejects header account targets."""
+    def test_provisioner_rejects_header_target_mapping(self, app, monkeypatch):
+        """Test that provisioning service rejects header account targets for mapping-owned concepts."""
         from extensions import db
-        from models import Tenant, GLAccount
+        from models import Tenant
         from services.gl_provisioning_service import GLProvisioningService
+        from models.gl_account_registry import GL_MODULE_DEFINITIONS, GLModuleDefinition, GLConceptMappingTemplate
 
         with app.app_context():
             tenant = Tenant(name=f"HdrTgt-{uuid.uuid4().hex[:6]}", name_ar='هدر هدف', name_en='HdrTgt', slug=f"hdr-tgt-{uuid.uuid4().hex[:6]}", default_currency='AED')
             db.session.add(tenant)
             db.session.flush()
 
-            # Create a header account
+            # Create a header account (code 1000)
+            from models import GLAccount
             header_acc = GLAccount(
                 tenant_id=tenant.id,
                 code='1000',
@@ -602,7 +604,416 @@ class TestStaleMappings:
             db.session.add(header_acc)
             db.session.flush()
 
-            # Verify our validation logic would reject header targets
-            # (The actual prevention happens in _provision_module_mappings)
-            assert header_acc.is_header == True
-            # This documents that header accounts should not be used as mapping targets
+            # Inject a mapping-owned concept targeting the header account code 1000
+            injected_module = GLModuleDefinition(
+                module_code='test_header_target',
+                required=True,
+                accounts=[],
+                mappings=[GLConceptMappingTemplate('TEST_HEADER_TARGET', '1000', 'test_header_target')],
+            )
+            monkeypatch.setitem(GL_MODULE_DEFINITIONS, 'test_header_target', injected_module)
+
+            prov = GLProvisioningService.provision_tenant(tenant.id)
+
+            # No mapping should be created for the injected concept
+            from models.gl import GLAccountMapping
+            bad_mapping = GLAccountMapping.query.filter_by(
+                tenant_id=tenant.id, concept_code='TEST_HEADER_TARGET'
+            ).first()
+            assert bad_mapping is None, "Mapping to header account should not be created"
+
+            # Provisioning should report an error mentioning header
+            assert any('is header' in e.lower() or 'header' in e.lower() for e in prov.errors), \
+                f"Expected header error in prov.errors: {prov.errors}"
+
+
+# ===================================================================
+# 6. Tenant/Branch Isolation Validation
+# ===================================================================
+
+class TestTenantBranchIsolation:
+    """Test tenant/branch isolation validation in GLService.create_journal_entry."""
+
+    def test_entry_branch_from_another_tenant_is_rejected(self, app):
+        """Entry branch from another tenant should be rejected."""
+        from extensions import db
+        from models import Tenant, Branch
+        from services.gl_service import GLService, GLMappingError
+
+        with app.app_context():
+            # Create two tenants
+            tenant1 = Tenant(name=f"Tenant1-{uuid.uuid4().hex[:6]}", name_ar=' tenant1', name_en='Tenant1', slug=f"tenant1-{uuid.uuid4().hex[:6]}", default_currency='AED')
+            tenant2 = Tenant(name=f"Tenant2-{uuid.uuid4().hex[:6]}", name_ar=' tenant2', name_en='Tenant2', slug=f"tenant2-{uuid.uuid4().hex[:6]}", default_currency='AED')
+            db.session.add_all([tenant1, tenant2])
+            db.session.flush()
+
+            # Create a branch for tenant2
+            branch2 = Branch(tenant_id=tenant2.id, name='Branch2', code='BR2', is_main=True)
+            db.session.add(branch2)
+            db.session.flush()
+
+            # Provision both tenants
+            from services.gl_provisioning_service import GLProvisioningService
+            GLProvisioningService.provision_tenant(tenant1.id)
+            GLProvisioningService.provision_tenant(tenant2.id)
+            db.session.commit()
+
+            # Use balanced mapping-owned lines (AR + SALES_REVENUE) to prove boundary failure occurs before posting
+            with pytest.raises(GLMappingError, match=f"Branch {branch2.id} belongs to tenant {tenant2.id}, not tenant {tenant1.id}"):
+                GLService.create_journal_entry(
+                    date=datetime(2026, 6, 1, tzinfo=timezone.utc),
+                    description='Test entry with wrong branch',
+                    lines=[
+                        {'concept_code': 'AR', 'debit': 100, 'credit': 0, 'description': 'AR line'},
+                        {'concept_code': 'SALES_REVENUE', 'debit': 0, 'credit': 100, 'description': 'Revenue line'},
+                    ],
+                    branch_id=branch2.id,  # This branch belongs to tenant2
+                    tenant_id=tenant1.id,  # But we're trying to use it with tenant1
+                )
+
+    def test_line_branch_from_another_tenant_is_rejected(self, app):
+        """Line branch from another tenant should be rejected."""
+        from extensions import db
+        from models import Tenant, Branch
+        from services.gl_service import GLService, GLMappingError
+
+        with app.app_context():
+            # Create two tenants
+            tenant1 = Tenant(name=f"Tenant1-{uuid.uuid4().hex[:6]}", name_ar=' tenant1', name_en='Tenant1', slug=f"tenant1-{uuid.uuid4().hex[:6]}", default_currency='AED')
+            tenant2 = Tenant(name=f"Tenant2-{uuid.uuid4().hex[:6]}", name_ar=' tenant2', name_en='Tenant2', slug=f"tenant2-{uuid.uuid4().hex[:6]}", default_currency='AED')
+            db.session.add_all([tenant1, tenant2])
+            db.session.flush()
+
+            # Create a branch for tenant2
+            branch2 = Branch(tenant_id=tenant2.id, name='Branch2', code='BR2', is_main=True)
+            db.session.add(branch2)
+            db.session.flush()
+
+            # Provision both tenants
+            from services.gl_provisioning_service import GLProvisioningService
+            GLProvisioningService.provision_tenant(tenant1.id)
+            GLProvisioningService.provision_tenant(tenant2.id)
+            db.session.commit()
+
+            # Try to create journal entry with tenant1 and its own branch, but line with branch from tenant2
+            with pytest.raises(GLMappingError, match=f"Line branch {branch2.id} belongs to tenant {tenant2.id}, not tenant {tenant1.id}"):
+                GLService.create_journal_entry(
+                    date=datetime(2026, 6, 1, tzinfo=timezone.utc),
+                    description='Test entry with wrong line branch',
+                    lines=[
+                        {'concept_code': 'AR', 'debit': 100, 'credit': 0, 'description': 'AR line', 'branch_id': branch2.id},
+                        {'concept_code': 'SALES_REVENUE', 'debit': 0, 'credit': 100, 'description': 'Revenue line', 'branch_id': branch2.id},
+                    ],
+                    branch_id=None,  # Entry has no specific branch
+                    tenant_id=tenant1.id,  # But line uses tenant2's branch
+                )
+
+    def test_valid_same_tenant_different_line_branch_is_allowed(self, app):
+        """Valid same-tenant different line branch should be allowed."""
+        from extensions import db
+        from models import Tenant, Branch
+        from services.gl_service import GLService
+        from services.gl_provisioning_service import GLProvisioningService
+        from services.gl_tree_builder import GLTreeBuilder
+
+        with app.app_context():
+            # Create tenant with two branches
+            tenant = Tenant(name=f"Tenant-{uuid.uuid4().hex[:6]}", name_ar=' tenant', name_en='Tenant', slug=f"tenant-{uuid.uuid4().hex[:6]}", default_currency='AED')
+            db.session.add(tenant)
+            db.session.flush()
+
+            # Create two branches for the same tenant
+            branch1 = Branch(tenant_id=tenant.id, name='Branch1', code='BR1', is_main=True)
+            branch2 = Branch(tenant_id=tenant.id, name='Branch2', code='BR2', is_main=False)
+            db.session.add_all([branch1, branch2])
+            db.session.flush()
+
+            # Provision tenant and build tree
+            GLProvisioningService.provision_tenant(tenant.id)
+            GLTreeBuilder.build(tenant.id)
+            db.session.commit()
+
+            # This should work - same tenant, different branches for entry and line
+            # Both journal lines explicitly use branch2; entry branch is branch1
+            entry = GLService.create_journal_entry(
+                date=datetime(2026, 6, 1, tzinfo=timezone.utc),
+                description='Test entry with same tenant different branches',
+                lines=[
+                    {'concept_code': 'AR', 'debit': 100, 'credit': 0, 'description': 'AR line', 'branch_id': branch2.id},
+                    {'concept_code': 'SALES_REVENUE', 'debit': 0, 'credit': 100, 'description': 'Revenue line', 'branch_id': branch2.id},
+                ],
+                branch_id=branch1.id,  # Entry uses branch1 (same tenant)
+                tenant_id=tenant.id,
+            )
+
+            # Verify the entry was created successfully
+            assert entry is not None
+            assert entry.tenant_id == tenant.id
+            assert entry.branch_id == branch1.id
+
+            # Verify exactly two journal lines were created, both with branch_id == branch2.id
+            from models import GLJournalLine
+            lines = GLJournalLine.query.filter_by(entry_id=entry.id).all()
+            assert len(lines) == 2
+            for line in lines:
+                assert line.branch_id == branch2.id
+
+
+# ===================================================================
+# 7. Additional authority model edge cases
+# ===================================================================
+
+class TestAuthorityModelEdgeCases:
+    """Focused tests for GL authority model edge cases."""
+
+    def test_ar_concept_code_case_insensitive(self, app):
+        """' ar ' (with spaces, lowercase) resolves to same account as 'AR'."""
+        from extensions import db
+        from models import Tenant, Branch
+        from services.gl_provisioning_service import GLProvisioningService
+        from services.gl_tree_builder import GLTreeBuilder
+        from services.gl_service import GLService
+        from services.gl_account_resolver import resolve_gl_account
+
+        with app.app_context():
+            tenant = Tenant(name=f"ArCase-{uuid.uuid4().hex[:6]}", name_ar='ar case', name_en='ArCase', slug=f"arcase-{uuid.uuid4().hex[:6]}", default_currency='AED')
+            db.session.add(tenant)
+            db.session.flush()
+            branch = Branch(tenant_id=tenant.id, name='Main', code='ACM', is_main=True)
+            db.session.add(branch)
+            db.session.flush()
+
+            GLProvisioningService.provision_tenant(tenant.id)
+            GLTreeBuilder.build(tenant.id)
+            db.session.commit()
+
+            # Resolve AR with canonical case
+            ar_canonical = resolve_gl_account(tenant_id=tenant.id, concept_code='AR', branch_id=branch.id)
+            # Resolve ' ar ' with spaces and lowercase
+            ar_variant = resolve_gl_account(tenant_id=tenant.id, concept_code=' ar ', branch_id=branch.id)
+
+            assert ar_canonical is not None
+            assert ar_variant is not None
+            assert ar_canonical.id == ar_variant.id
+
+    def test_unknown_concept_raises_glmappingerror(self, app):
+        """Unknown non-empty concept raises GLMappingError containing 'Unknown GL concept'."""
+        from extensions import db
+        from models import Tenant, Branch
+        from services.gl_provisioning_service import GLProvisioningService
+        from services.gl_tree_builder import GLTreeBuilder
+        from services.gl_account_resolver import resolve_gl_account, GLMappingError
+
+        with app.app_context():
+            tenant = Tenant(name=f"UnkConcept-{uuid.uuid4().hex[:6]}", name_ar='unk', name_en='UnkConcept', slug=f"unkconcept-{uuid.uuid4().hex[:6]}", default_currency='AED')
+            db.session.add(tenant)
+            db.session.flush()
+            branch = Branch(tenant_id=tenant.id, name='Main', code='UCM', is_main=True)
+            db.session.add(branch)
+            db.session.flush()
+
+            GLProvisioningService.provision_tenant(tenant.id)
+            GLTreeBuilder.build(tenant.id)
+            db.session.commit()
+
+            with pytest.raises(GLMappingError, match='Unknown GL concept'):
+                resolve_gl_account(tenant_id=tenant.id, concept_code='DOES_NOT_EXIST', branch_id=branch.id)
+
+    def test_branch_a_cash_rejected_when_resolved_with_branch_b(self, app):
+        """Branch A CASH account is rejected when entry branch is B but account is from A."""
+        from extensions import db
+        from models import Tenant, Branch, GLAccount
+        from services.gl_provisioning_service import GLProvisioningService
+        from services.gl_tree_builder import GLTreeBuilder
+        from services.gl_service import GLService
+        from services.gl_account_resolver import GLMappingError
+
+        with app.app_context():
+            tenant = Tenant(name=f"LiqBranch-{uuid.uuid4().hex[:6]}", name_ar='liq', name_en='LiqBranch', slug=f"liqbranch-{uuid.uuid4().hex[:6]}", default_currency='AED')
+            db.session.add(tenant)
+            db.session.flush()
+            branch_a = Branch(tenant_id=tenant.id, name='BranchA', code='BRA', is_main=True)
+            branch_b = Branch(tenant_id=tenant.id, name='BranchB', code='BRB', is_main=False)
+            db.session.add_all([branch_a, branch_b])
+            db.session.flush()
+
+            GLProvisioningService.provision_tenant(tenant.id)
+            GLTreeBuilder.build(tenant.id)
+            db.session.commit()
+
+            # Get branch A's CASH liquidity account
+            cash_acc_a = GLAccount.query.filter_by(
+                tenant_id=tenant.id, branch_id=branch_a.id, liquidity_kind='cash'
+            ).first()
+            assert cash_acc_a is not None
+
+            # Create a balanced entry with branch_a using branch A's CASH account - should work
+            entry_a = GLService.create_journal_entry(
+                date=datetime(2026, 6, 1, tzinfo=timezone.utc),
+                description='Test cash branch A',
+                lines=[
+                    {'account_code': cash_acc_a.code, 'concept_code': 'CASH', 'debit': 100, 'credit': 0, 'description': 'Cash line', 'branch_id': branch_a.id},
+                    {'concept_code': 'AR', 'debit': 0, 'credit': 100, 'description': 'Balancing AR', 'branch_id': branch_a.id},
+                ],
+                branch_id=branch_a.id,
+                tenant_id=tenant.id,
+            )
+            assert entry_a is not None
+
+            # Try to create entry with entry branch=branch_b but using branch A's CASH account
+            # This should be rejected because entry branch B doesn't match account's branch A
+            with pytest.raises(GLMappingError, match="does not match required branch_id"):
+                GLService.create_journal_entry(
+                    date=datetime(2026, 6, 1, tzinfo=timezone.utc),
+                    description='Test cash branch B rejection',
+                    lines=[
+                        {'account_code': cash_acc_a.code, 'concept_code': 'CASH', 'debit': 100, 'credit': 0, 'description': 'Cash line', 'branch_id': branch_b.id},
+                        {'concept_code': 'AR', 'debit': 0, 'credit': 100, 'description': 'Balancing AR', 'branch_id': branch_b.id},
+                    ],
+                    branch_id=branch_b.id,
+                    tenant_id=tenant.id,
+                )
+
+    def test_branch_a_bank_rejected_when_resolved_with_branch_b(self, app):
+        """Branch A BANK account is rejected when entry branch is B but account is from A."""
+        from extensions import db
+        from models import Tenant, Branch, GLAccount
+        from services.gl_provisioning_service import GLProvisioningService
+        from services.gl_tree_builder import GLTreeBuilder
+        from services.gl_service import GLService
+        from services.gl_account_resolver import GLMappingError
+
+        with app.app_context():
+            tenant = Tenant(name=f"LiqBranchB-{uuid.uuid4().hex[:6]}", name_ar='liq', name_en='LiqBranchB', slug=f"liqbranchb-{uuid.uuid4().hex[:6]}", default_currency='AED')
+            db.session.add(tenant)
+            db.session.flush()
+            branch_a = Branch(tenant_id=tenant.id, name='BranchA', code='BRA', is_main=True)
+            branch_b = Branch(tenant_id=tenant.id, name='BranchB', code='BRB', is_main=False)
+            db.session.add_all([branch_a, branch_b])
+            db.session.flush()
+
+            GLProvisioningService.provision_tenant(tenant.id)
+            GLTreeBuilder.build(tenant.id)
+            db.session.commit()
+
+            # Get branch A's BANK liquidity account
+            bank_acc_a = GLAccount.query.filter_by(
+                tenant_id=tenant.id, branch_id=branch_a.id, liquidity_kind='bank'
+            ).first()
+            assert bank_acc_a is not None
+
+            # Create a balanced entry with branch_a using branch A's BANK account - should work
+            entry_a = GLService.create_journal_entry(
+                date=datetime(2026, 6, 1, tzinfo=timezone.utc),
+                description='Test bank branch A',
+                lines=[
+                    {'account_code': bank_acc_a.code, 'concept_code': 'BANK', 'debit': 100, 'credit': 0, 'description': 'Bank line', 'branch_id': branch_a.id},
+                    {'concept_code': 'AR', 'debit': 0, 'credit': 100, 'description': 'Balancing AR', 'branch_id': branch_a.id},
+                ],
+                branch_id=branch_a.id,
+                tenant_id=tenant.id,
+            )
+            assert entry_a is not None
+
+            # Try to create entry with entry branch=branch_b but using branch A's BANK account
+            # This should be rejected because entry branch B doesn't match account's branch A
+            with pytest.raises(GLMappingError, match="does not match required branch_id"):
+                GLService.create_journal_entry(
+                    date=datetime(2026, 6, 1, tzinfo=timezone.utc),
+                    description='Test bank branch B rejection',
+                    lines=[
+                        {'account_code': bank_acc_a.code, 'concept_code': 'BANK', 'debit': 100, 'credit': 0, 'description': 'Bank line', 'branch_id': branch_b.id},
+                        {'concept_code': 'AR', 'debit': 0, 'credit': 100, 'description': 'Balancing AR', 'branch_id': branch_b.id},
+                    ],
+                    branch_id=branch_b.id,
+                    tenant_id=tenant.id,
+                )
+
+    def test_landed_cost_raises_with_dynamic_mapping_disabled(self, app, monkeypatch):
+        """With ENABLE_DYNAMIC_GL_MAPPING=False, LANDED_COST still raises GLMappingError via GLService."""
+        from extensions import db
+        from models import Tenant, Branch
+        from services.gl_provisioning_service import GLProvisioningService
+        from services.gl_tree_builder import GLTreeBuilder
+        from services.gl_service import GLService
+        from services.gl_account_resolver import GLMappingError
+
+        with app.app_context():
+            # Disable dynamic GL mapping
+            monkeypatch.setitem(app.config, 'ENABLE_DYNAMIC_GL_MAPPING', False)
+
+            tenant = Tenant(name=f"LcDisabled-{uuid.uuid4().hex[:6]}", name_ar='lc', name_en='LcDisabled', slug=f"lcdisabled-{uuid.uuid4().hex[:6]}", default_currency='AED')
+            db.session.add(tenant)
+            db.session.flush()
+            branch = Branch(tenant_id=tenant.id, name='Main', code='LDM', is_main=True)
+            db.session.add(branch)
+            db.session.flush()
+
+            GLProvisioningService.provision_tenant(tenant.id)
+            GLTreeBuilder.build(tenant.id)
+            db.session.commit()
+
+            # LANDED_COST is non-posting; should raise even with dynamic mapping disabled
+            # Use GLService._resolve_journal_line_account which has the non-posting check
+            with pytest.raises(GLMappingError, match="Non-posting concept cannot be resolved"):
+                GLService._resolve_journal_line_account(
+                    {'concept_code': 'LANDED_COST'}, tenant_id=tenant.id, branch_id=branch.id
+                )
+
+    def test_cash_bank_readiness_before_build(self, app):
+        """Before GLTreeBuilder.build(), dry_run reports critical CASH_READINESS and BANK_READINESS."""
+        from extensions import db
+        from models import Tenant, Branch
+        from services.gl_provisioning_service import GLProvisioningService
+        from services.gl_mapping_validation import GLMappingValidationService
+
+        with app.app_context():
+            tenant = Tenant(name=f"ReadyBefore-{uuid.uuid4().hex[:6]}", name_ar='ready', name_en='ReadyBefore', slug=f"readybefore-{uuid.uuid4().hex[:6]}", default_currency='AED')
+            db.session.add(tenant)
+            db.session.flush()
+            branch = Branch(tenant_id=tenant.id, name='Main', code='RBM', is_main=True)
+            db.session.add(branch)
+            db.session.flush()
+
+            # Provision only (no GLTreeBuilder.build yet)
+            GLProvisioningService.provision_tenant(tenant.id)
+            db.session.commit()
+
+            result = GLMappingValidationService.dry_run(tenant_id=tenant.id, include_ready=True)
+
+            cash_rows = [r for r in result['rows'] if r['concept_code'] == 'CASH_READINESS']
+            bank_rows = [r for r in result['rows'] if r['concept_code'] == 'BANK_READINESS']
+
+            assert len(cash_rows) == 1, f"Expected 1 CASH_READINESS row, got {len(cash_rows)}"
+            assert cash_rows[0]['severity'] == 'critical'
+            assert len(bank_rows) == 1, f"Expected 1 BANK_READINESS row, got {len(bank_rows)}"
+            assert bank_rows[0]['severity'] == 'critical'
+
+    def test_cash_bank_readiness_after_build(self, app):
+        """After GLTreeBuilder.build(), CASH_READINESS and BANK_READINESS rows are absent."""
+        from extensions import db
+        from models import Tenant, Branch
+        from services.gl_provisioning_service import GLProvisioningService
+        from services.gl_tree_builder import GLTreeBuilder
+        from services.gl_mapping_validation import GLMappingValidationService
+
+        with app.app_context():
+            tenant = Tenant(name=f"ReadyAfter-{uuid.uuid4().hex[:6]}", name_ar='ready', name_en='ReadyAfter', slug=f"readyafter-{uuid.uuid4().hex[:6]}", default_currency='AED')
+            db.session.add(tenant)
+            db.session.flush()
+            branch = Branch(tenant_id=tenant.id, name='Main', code='RAM', is_main=True)
+            db.session.add(branch)
+            db.session.flush()
+
+            GLProvisioningService.provision_tenant(tenant.id)
+            GLTreeBuilder.build(tenant.id)
+            db.session.commit()
+
+            result = GLMappingValidationService.dry_run(tenant_id=tenant.id, include_ready=True)
+
+            cash_rows = [r for r in result['rows'] if r['concept_code'] == 'CASH_READINESS']
+            bank_rows = [r for r in result['rows'] if r['concept_code'] == 'BANK_READINESS']
+
+            # After build, liquidity accounts exist so readiness rows should be absent
+            assert len(cash_rows) == 0, f"Expected 0 CASH_READINESS rows after build, got {len(cash_rows)}"
+            assert len(bank_rows) == 0, f"Expected 0 BANK_READINESS rows after build, got {len(bank_rows)}"

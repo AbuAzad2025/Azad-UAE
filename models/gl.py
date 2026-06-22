@@ -104,7 +104,7 @@ class GLAccount(db.Model):
         
         balance_sum = db.session.query(func.sum(GLJournalLine.amount_aed))\
             .join(GLJournalLine.entry)\
-            .filter(GLJournalLine.account_id == self.id, GLJournalEntry.is_posted == True)\
+            .filter(GLJournalLine.account_id == self.id, GLJournalEntry.is_posted == True, GLJournalEntry.tenant_id == self.tenant_id)\
             .scalar() or 0
         
         if self.type in ['asset', 'expense']:

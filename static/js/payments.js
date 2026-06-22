@@ -234,7 +234,7 @@ document.addEventListener('DOMContentLoaded', function() {
       return;
     }
     let pageSum = 0;
-    let pageSumILS = 0; // مجموع الصفحة بالشيكل
+    let pageSumBase = 0; // مجموع الصفحة بالعملة الأساسية
     list.forEach(function (p) {
       const splitsHtml = (p.splits || []).map(function (s) {
         return '<span class="badge bg-secondary me-1">' + String((s.method || '')).toUpperCase() + ': ' + fmtAmount(s.amount) + ' ' + (p.currency || '') + '</span>';
@@ -254,7 +254,7 @@ document.addEventListener('DOMContentLoaded', function() {
         '</div>';
       const tr = document.createElement('tr');
       // عرض المبلغ المحول فقط إذا أرسله الخادم، وإلا عرض نص توضيحي
-      let amountInILSDisplay = (p.amount_ils !== null && p.amount_ils !== undefined) ? fmtAmount(p.amount_ils) + ' ₪' : '<small class="text-muted">غير متاح</small>';
+      let amountInILSDisplay = (p.amount_ils !== null && p.amount_ils !== undefined) ? fmtAmount(p.amount_ils) + ' ' + (window._CURRENCY_SYMBOL || '₪') : '<small class="text-muted">غير متاح</small>';
 
       // إنشاء عمود التفاصيل المحسّن
       const entityDetails = deriveEntityLabel(p);

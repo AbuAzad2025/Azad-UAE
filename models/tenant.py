@@ -14,51 +14,51 @@ class Tenant(db.Model):
     معلومات الكراج/الشركة المستأجرة للنظام
     """
     __tablename__ = 'tenants'
-    
+
     id = db.Column(db.Integer, primary_key=True)
-    
+
     # Basic Info - معلومات أساسية
     name = db.Column(db.String(200), nullable=False, unique=True)
     name_ar = db.Column(db.String(200), nullable=False)
     name_en = db.Column(db.String(200))
     slug = db.Column(db.String(100), unique=True, nullable=False, index=True)
-    
+
     # Business Type - نوع النشاط
     business_type = db.Column(db.String(50), default='general')  # retail, wholesale, services, etc.
     industry = db.Column(db.String(100))  # automotive, heavy_equipment, etc.
-    
+
     # Contact Info - معلومات التواصل
     address_ar = db.Column(db.Text)
     address_en = db.Column(db.Text)
     city = db.Column(db.String(100))
     country = db.Column(db.String(100), default='PS')
-    
+
     phone_1 = db.Column(db.String(50))
     phone_2 = db.Column(db.String(50))
     mobile = db.Column(db.String(50))
     email = db.Column(db.String(120))
     website = db.Column(db.String(200))
-    
+
     # Legal Info - معلومات قانونية
     tax_number = db.Column(db.String(100), index=True)  # TRN
     commercial_register = db.Column(db.String(100))
     license_number = db.Column(db.String(100))
     license_expiry = db.Column(db.Date)
-    
+
     # Branding - العلامة التجارية
     logo_url = db.Column(db.String(500))
     logo_dark_url = db.Column(db.String(500))
     favicon_url = db.Column(db.String(500))
     brand_color_primary = db.Column(db.String(20), default='#007A3D')
     brand_color_secondary = db.Column(db.String(20), default='#D4AF37')
-    
+
     # Subscription - الاشتراك
     subscription_plan = db.Column(db.String(50), default='basic')  # basic, pro, enterprise
     subscription_start = db.Column(db.DateTime)
     subscription_end = db.Column(db.DateTime)
     is_trial = db.Column(db.Boolean, default=False)
     trial_days_remaining = db.Column(db.Integer, default=0)
-    
+
     # Limits - الحدود
     max_users = db.Column(db.Integer, default=5)
     max_products = db.Column(db.Integer, default=1000)
@@ -70,7 +70,7 @@ class Tenant(db.Model):
     max_invoices_per_month = db.Column(db.Integer, default=1000)
     max_sales_per_month = db.Column(db.Integer, default=5000)
     data_retention_days = db.Column(db.Integer, default=365)
-    
+
     # Features - المميزات المفعلة
     enable_multi_warehouse = db.Column(db.Boolean, default=True)
     enable_multi_currency = db.Column(db.Boolean, default=True)
@@ -85,38 +85,54 @@ class Tenant(db.Model):
     enable_store = db.Column(db.Boolean, default=False)
     allow_data_export = db.Column(db.Boolean, default=True)
     allow_custom_integrations = db.Column(db.Boolean, default=False)
-    
+
     # Preferences - التفضيلات
     default_currency = db.Column(db.String(3), default=context_aware_default_currency)  # TODO: use Config.DEFAULT_CURRENCY
     default_language = db.Column(db.String(10), default='ar')
     timezone = db.Column(db.String(50), default='Asia/Hebron')
     date_format = db.Column(db.String(20), default='%Y-%m-%d')
     time_format = db.Column(db.String(20), default='%H:%M')
-    
+
     # Financial Settings - إعدادات مالية
     fiscal_year_start = db.Column(db.Integer, default=1)  # Month: 1-12
     enable_tax = db.Column(db.Boolean, default=True)
     default_tax_rate = db.Column(db.Numeric(5, 2), default=Decimal('5.00'))
     vat_country = db.Column(db.String(2), default='PS')  # PS, IL, AE
+
+    # Dynamic Base Currency - العملة الأساسية الديناميكية للمستأجر
+    base_currency = db.Column(db.String(3), default='ILS')  # ILS, AED, USD, JOD, etc.
+
+    # Pricing Method - هل الأسعار تشمل الضريبة؟
+    prices_include_vat = db.Column(db.Boolean, default=False, nullable=False)
+
+    @property
+    def get_base_currency(self):
+        """Return the tenant's base currency. Falls back to default_currency if base_currency is not set."""
+        return (self.base_currency or self.default_currency or 'ILS').strip().upper()
+
+    def get_currency_for_display(self):
+        """Return the currency symbol for the tenant's base currency."""
+        from utils.currency_utils import get_currency_symbol
+        return get_currency_symbol(self.get_base_currency)
     vat_number = db.Column(db.String(100))
-    
+
     # Status - الحالة
     is_active = db.Column(db.Boolean, default=True, nullable=False, index=True)
     is_suspended = db.Column(db.Boolean, default=False, index=True)
     suspension_reason = db.Column(db.Text)
-    
+
     # Meta
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
-    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), 
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc),
                           onupdate=lambda: datetime.now(timezone.utc))
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True, index=True)
-    
+
     # Relationships
     created_by_user = db.relationship('User', foreign_keys=[created_by])
-    
+
     def __repr__(self):
         return f'<Tenant {self.name}>'
-    
+
     @staticmethod
     def get_current():
         """Current tenant for branding/settings — never leaks another company to logged-in users."""
@@ -165,20 +181,20 @@ class Tenant(db.Model):
                 except Exception:
                     db.session.rollback()
         return tenant
-    
+
     def is_subscription_active(self):
         """Check if subscription is active"""
         if self.subscription_end:
             return datetime.now(timezone.utc) < self.subscription_end
         return True
-    
+
     def get_remaining_days(self):
         """Get remaining subscription days"""
         if self.subscription_end:
             delta = self.subscription_end - datetime.now(timezone.utc)
             return max(0, delta.days)
         return 9999
-    
+
     def to_dict(self):
         return {
             'id': self.id,

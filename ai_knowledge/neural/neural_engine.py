@@ -537,7 +537,10 @@ class AzadNeuralEngine:
         from models import Sale, Purchase, Expense, Receipt, Payment
         from extensions import db
         from sqlalchemy import func
-        
+        from utils.tenanting import get_active_tenant_id
+
+        tid = get_active_tenant_id()
+
         # جمع البيانات المالية الشهرية
         monthly_data = []
         
@@ -548,22 +551,26 @@ class AzadNeuralEngine:
             # المبيعات
             sales = db.session.query(func.sum(Sale.amount_aed)).filter(
                 Sale.sale_date.between(start_date, end_date),
-                Sale.status == 'confirmed'
+                Sale.status == 'confirmed',
+                Sale.tenant_id == tid if tid is not None else True
             ).scalar() or 0
             
             # المشتريات
             purchases = db.session.query(func.sum(Purchase.amount_aed)).filter(
-                Purchase.purchase_date.between(start_date, end_date)
+                Purchase.purchase_date.between(start_date, end_date),
+                Purchase.tenant_id == tid if tid is not None else True
             ).scalar() or 0
             
             # المصروفات
             expenses = db.session.query(func.sum(Expense.amount_aed)).filter(
-                Expense.expense_date.between(start_date, end_date)
+                Expense.expense_date.between(start_date, end_date),
+                Expense.tenant_id == tid if tid is not None else True
             ).scalar() or 0
             
             # المقبوضات
             receipts = db.session.query(func.sum(Receipt.amount_aed)).filter(
-                Receipt.receipt_date.between(start_date, end_date)
+                Receipt.receipt_date.between(start_date, end_date),
+                Receipt.tenant_id == tid if tid is not None else True
             ).scalar() or 0
             
             # الصافي
@@ -650,7 +657,10 @@ class AzadNeuralEngine:
         from models import Sale, Purchase, Expense, Receipt
         from extensions import db
         from sqlalchemy import func
-        
+        from utils.tenanting import get_active_tenant_id
+
+        tid = get_active_tenant_id()
+
         if not self._load_model('financial_planner'):
             return {'predictions': [], 'trend': 'unknown', 'error': 'Model not trained'}
         
@@ -659,19 +669,23 @@ class AzadNeuralEngine:
         start_month = current_month - timedelta(days=30)
         
         sales = db.session.query(func.sum(Sale.amount_aed)).filter(
-            Sale.sale_date >= start_month
+            Sale.sale_date >= start_month,
+            Sale.tenant_id == tid if tid is not None else True
         ).scalar() or 0
         
         purchases = db.session.query(func.sum(Purchase.amount_aed)).filter(
-            Purchase.purchase_date >= start_month
+            Purchase.purchase_date >= start_month,
+            Purchase.tenant_id == tid if tid is not None else True
         ).scalar() or 0
         
         expenses = db.session.query(func.sum(Expense.amount_aed)).filter(
-            Expense.expense_date >= start_month
+            Expense.expense_date >= start_month,
+            Expense.tenant_id == tid if tid is not None else True
         ).scalar() or 0
         
         receipts = db.session.query(func.sum(Receipt.amount_aed)).filter(
-            Receipt.receipt_date >= start_month
+            Receipt.receipt_date >= start_month,
+            Receipt.tenant_id == tid if tid is not None else True
         ).scalar() or 0
         
         net_cash = float(receipts - purchases - expenses)

@@ -87,6 +87,7 @@
   window._LOG_ENDPOINT = '{{ url_for("api.log_client_error") }}';
   window._FX_API_URL = '{{ url_for("api.exchange_rates_display") }}?base={{ tenant_default_currency or 'USD' }}';
   window._FX_FALLBACK_BASE = '{{ tenant_default_currency or 'USD' }}';
+  window._BASE_CURRENCY = '{{ tenant_default_currency or 'USD' }}';
   window._CURRENCY_NAME_AR = '{{ tenant_currency_name_ar or 'درهم إماراتي' }}';
   window._CURRENCY_SYMBOL = '{{ tenant_currency_symbol or 'د.إ' }}';
   document.addEventListener('click', function(e) {

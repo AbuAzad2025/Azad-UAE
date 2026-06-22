@@ -12,19 +12,19 @@ from utils.branching import ensure_warehouse_access
 from utils.helpers import generate_number
 from services.logging_core import LoggingCore
 from utils.tenanting import get_active_tenant_id
-from utils.currency_utils import resolve_default_currency, get_system_default_currency
+from utils.currency_utils import resolve_default_currency, get_system_default_currency, resolve_tenant_base_currency
 from utils.field_validators import validate_currency_code
 from utils.tax_settings import normalize_tax_rate, should_post_vat_gl
 
 class PurchaseService:
     @staticmethod
-    def create_purchase(user, supplier_data, lines_data, warehouse_id=None, 
-                       currency=None, user_exchange_rate=None, 
+    def create_purchase(user, supplier_data, lines_data, warehouse_id=None,
+                       currency=None, user_exchange_rate=None,
                        discount_amount=0, tax_rate=0, notes=None,
                        freight=0, insurance=0, customs_duty=0, other_landed_cost=0):
         """
         Create a new purchase invoice with stock update and GL entries.
-        
+
         Args:
             user: Current user object (creator)
             supplier_data: Dict containing supplier_id or name/phone/email
@@ -54,13 +54,13 @@ class PurchaseService:
         # Validate Warehouse
         if not warehouse_id:
             raise ValueError('⚠️ يجب اختيار المستودع الذي ستُضاف إليه البضاعة.')
-        
+
         warehouse = ensure_warehouse_access(warehouse_id, user=user)
 
         # Validate Supplier
         supplier_id = supplier_data.get('supplier_id')
         supplier_name = supplier_data.get('supplier_name')
-        
+
         supplier = None
         if supplier_id:
             # Validate supplier belongs to the same tenant as the warehouse
@@ -70,7 +70,7 @@ class PurchaseService:
             supplier_name = supplier.name
             supplier_data['phone'] = supplier.phone or ''
             supplier_data['email'] = supplier.email or ''
-        
+
         if not supplier_name:
             raise ValueError('⚠️ يجب إدخال اسم المورد.')
 
@@ -90,10 +90,13 @@ class PurchaseService:
             branch_id=purchase_branch_id,
             tenant_id=tenant_id,
         )
-        
-        # Currency Handling
-        from utils.currency_utils import get_system_default_currency
-        base_currency = get_system_default_currency()
+
+        from utils.tax_settings import get_prices_include_vat
+        prices_include_vat = get_prices_include_vat(tenant_id=tenant_id, branch_id=purchase_branch_id)
+
+        # Currency Handling - Dynamic Tenant Base Currency
+        from utils.currency_utils import resolve_tenant_base_currency
+        base_currency = resolve_tenant_base_currency(tenant_id=tenant_id)
         rate_info = ExchangeRateService.resolve_exchange_rate_for_transaction(
             currency,
             base_currency,
@@ -107,7 +110,7 @@ class PurchaseService:
                 'أو أدخل سعراً في حقل "سعر الصرف".'
             )
         exchange_rate = Decimal(str(rate_info['rate']))
-        
+
         # Create Purchase Header
         effective_tax_rate = normalize_tax_rate(tax_rate, tenant_id)
         purchase = Purchase(
@@ -123,6 +126,7 @@ class PurchaseService:
             exchange_rate=exchange_rate,
             discount_amount=Decimal(str(discount_amount or 0)),
             tax_rate=effective_tax_rate,
+            prices_include_vat=prices_include_vat,
             notes=notes,
             user_id=user.id,
             subtotal=Decimal('0'),
@@ -135,20 +139,20 @@ class PurchaseService:
             customs_duty=Decimal(str(customs_duty or 0)),
             other_landed_cost=Decimal(str(other_landed_cost or 0)),
         )
-        
+
         db.session.add(purchase)
         db.session.flush()
-        
+
         # Process Lines
         subtotal = Decimal('0')
         lines_added = 0
-        
+
         for line_data in lines_data:
             product_id = line_data.get('product_id')
             quantity = Decimal(str(line_data.get('quantity') or 0))
             unit_cost = Decimal(str(line_data.get('unit_cost') or 0))
             discount_percent = Decimal(str(line_data.get('discount_percent') or 0))
-            
+
             if product_id and quantity > 0 and unit_cost >= 0:
                 product = Product.query.get(product_id)
                 if product:
@@ -160,12 +164,12 @@ class PurchaseService:
                         unit_cost=unit_cost,
                         discount_percent=discount_percent
                     )
-                    
+
                     # Calculate line totals
                     line_subtotal = quantity * unit_cost
                     line_discount = line_subtotal * (discount_percent / Decimal('100'))
                     line_total = line_subtotal - line_discount
-                    
+
                     line.line_total = line_total
                     db.session.add(line)
                     db.session.flush()
@@ -198,12 +202,12 @@ class PurchaseService:
                                 serial_obj.warranty_start_date = datetime.now()
                                 serial_obj.warranty_end_date = datetime.now() + timedelta(days=int(product.warranty_days))
                             db.session.add(serial_obj)
-        
+
         if lines_added == 0:
             current_app.logger.warning('Purchase creation rolled back: no lines added for purchase %s', purchase.purchase_number)
             db.session.rollback()
             raise ValueError('⚠️ يجب إضافة منتج واحد على الأقل للفاتورة.')
-            
+
         purchase.subtotal = subtotal
         purchase.calculate_totals()
 
@@ -225,7 +229,8 @@ class PurchaseService:
 
         capitalize_landed = current_app.config.get('ENABLE_LANDED_COST_CAPITALIZATION', True)
 
-        inventory_debit = (purchase.subtotal or Decimal('0')) - (purchase.discount_amount or Decimal('0'))
+        # Inventory debit should be VAT-exclusive (taxable_amount) plus landed costs if capitalized
+        inventory_debit = (purchase.taxable_amount or Decimal('0'))
         if capitalize_landed:
             inventory_debit += total_landed
         if inventory_debit < Decimal('0'):
@@ -268,36 +273,36 @@ class PurchaseService:
                     'debit': purchase.other_landed_cost,
                     'description': f'تكاليف إضافية أخرى - {purchase.purchase_number}'
                 })
-        
+
         if purchase.tax_amount > 0 and should_post_vat_gl(tenant_id):
             lines.append({
                 'account': GL_ACCOUNTS['vat_input'],
                 'concept_code': 'VAT_INPUT',
-                'debit': purchase.tax_amount, 
+                'debit': purchase.tax_amount,
                 'description': f'ضريبة مدخلات (شراء) {purchase.purchase_number}'
             })
-            
+
         post_or_fail(
-                lines, 
-                description=f'Purchase {purchase.purchase_number}', 
-                reference_type=GLRef.PURCHASE, 
-                reference_id=purchase.id, 
-                currency=purchase.currency, 
+                lines,
+                description=f'Purchase {purchase.purchase_number}',
+                reference_type=GLRef.PURCHASE,
+                reference_id=purchase.id,
+                currency=purchase.currency,
                 exchange_rate=purchase.exchange_rate,
                 branch_id=purchase.branch_id,
                 tenant_id=tenant_id,
             )
-        
+
         if supplier:
             try:
                 from decimal import Decimal as _D
                 supplier.apply_purchase(_D(str(purchase.amount_aed or 0)))
             except Exception as e:
                 current_app.logger.warning(f'Supplier stats update failed: {e}')
-        
+
         db.session.commit()
         LoggingCore.log_audit('create', 'purchases', purchase.id)
-        
+
         return purchase
 
     @staticmethod
@@ -309,6 +314,7 @@ class PurchaseService:
         from models import Payment
         direct_paid = db.session.query(db.func.sum(Payment.amount_aed)).filter(
             Payment.purchase_id == purchase.id,
+            Payment.tenant_id == purchase.tenant_id,
             Payment.direction == 'outgoing',
             Payment.payment_confirmed == True,
         ).scalar()
@@ -490,8 +496,16 @@ class PurchaseService:
         purchase_return.subtotal = subtotal
         purchase_return.tax_amount = tax_amount
 
-        # حساب رصيد المخزون شامل التكاليف الجمركية المرسملة
+        # حساب رصيد المخزون شامل التكاليف الجمركية المرسملة (VAT-exclusive إذا كانت الأسعار شاملة)
         inventory_credit = subtotal
+        if purchase.prices_include_vat:
+            _tr = purchase.tax_rate
+            try:
+                tax_rate = Decimal(str(_tr)) if _tr is not None else Decimal('0')
+            except Exception:
+                tax_rate = Decimal('0')
+            if tax_rate > 0:
+                inventory_credit = (subtotal / (Decimal('1') + (tax_rate / Decimal('100')))).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
         if capitalized:
             for return_line in purchase_return.lines:
                 if return_line.purchase_line_id:

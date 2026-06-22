@@ -11,7 +11,7 @@ from services.commission_gl_service import post_sale_commissions
 from services.gl_service import GLService
 from utils.branching import ensure_warehouse_access
 from utils.constants import normalize_payment_method_code
-from utils.currency_utils import resolve_default_currency, get_system_default_currency
+from utils.currency_utils import resolve_default_currency, get_system_default_currency, resolve_tenant_base_currency
 from utils.field_validators import (
     canonical_payment_type,
     validate_currency_code,
@@ -24,7 +24,7 @@ from utils.tax_settings import normalize_tax_rate, should_post_vat_gl
 
 
 class SaleService:
-    
+
     @staticmethod
     def create_sale(customer, seller, lines_data, warehouse_id=None, currency=None, user_exchange_rate=None,
                     discount_amount=0, shipping_cost=0, tax_rate=0, notes=None, payment_data=None,
@@ -38,10 +38,10 @@ class SaleService:
         # Input validations
         if not customer or not customer.is_active:
             raise ValueError('⚠️ العميل غير صالح أو غير نشط.\n💡 اختر عميل نشط من القائمة أو قم بتفعيله.')
-        
+
         if not seller or not seller.is_active:
             raise ValueError('البائع غير صالح أو غير نشط')
-        
+
         if not lines_data or len(lines_data) == 0:
             raise ValueError('⚠️ يجب إضافة منتج واحد على الأقل للفاتورة.\n💡 اضغط زر "➕ إضافة صف" واختر منتجاً.')
 
@@ -58,13 +58,13 @@ class SaleService:
         discount_decimal = Decimal(str(discount_amount)) if discount_amount else Decimal('0')
         shipping_decimal = Decimal(str(shipping_cost)) if shipping_cost else Decimal('0')
         raw_tax_rate = Decimal(str(tax_rate)) if tax_rate else Decimal('0')
-        
+
         if discount_decimal < Decimal('0'):
             raise ValueError('قيمة الخصم لا يمكن أن تكون سالبة')
-        
+
         if shipping_decimal < Decimal('0'):
             raise ValueError('تكلفة الشحن لا يمكن أن تكون سالبة')
-        
+
         # تحديد المستودع بطريقة ذكية مع عزل التينانت
         from models import Warehouse
         tenant_id = get_active_tenant_id(seller) or getattr(seller, 'tenant_id', None) or getattr(customer, 'tenant_id', None)
@@ -84,18 +84,21 @@ class SaleService:
 
         if not warehouse_id or not warehouse:
             raise ValueError('⚠️ لا يوجد مستودع متاح لهذا الفرع.\n💡 أنشئ مستودعاً للفرع أو اختر مستودعاً صحيحاً.')
-        
+
         sale_branch_id = warehouse.branch_id or seller.branch_id
         tax_rate_decimal = normalize_tax_rate(raw_tax_rate, tenant_id)
+
+        from utils.tax_settings import get_prices_include_vat
+        prices_include_vat = get_prices_include_vat(tenant_id=tenant_id, branch_id=sale_branch_id)
 
         try:
             sale_number = generate_number(
                 'S', Sale, 'sale_number', branch_id=sale_branch_id, tenant_id=tenant_id
             )
             paid_amount_aed = Decimal('0')
-            
-            from utils.currency_utils import get_system_default_currency
-            base_currency = get_system_default_currency()
+
+            from utils.currency_utils import resolve_tenant_base_currency
+            base_currency = resolve_tenant_base_currency(tenant_id=tenant_id)
             rate_info = ExchangeRateService.resolve_exchange_rate_for_transaction(
                 currency,
                 base_currency,
@@ -109,11 +112,11 @@ class SaleService:
                     'أو أدخل سعراً في حقل "سعر الصرف" بالفاتورة.'
                 )
             exchange_rate = Decimal(str(rate_info['rate']))
-            
+
             # Validate exchange rate
             if exchange_rate <= Decimal('0'):
                 raise ValueError('سعر الصرف غير صالح')
-            
+
             # Create Sale Header
             sale = Sale(
                 tenant_id=tenant_id,
@@ -128,46 +131,47 @@ class SaleService:
                 discount_amount=discount_decimal,
                 shipping_cost=shipping_decimal,
                 tax_rate=tax_rate_decimal,
+                prices_include_vat=prices_include_vat,
                 total_amount=Decimal('0'),
                 amount=Decimal('0'),
                 amount_aed=Decimal('0'),
                 notes=notes
             )
-            
+
             db.session.add(sale)
             db.session.flush() # Get ID for lines
-            
+
             subtotal = Decimal('0')
-            
+
             for line_data in lines_data:
                 product = line_data['product']
                 quantity = Decimal(str(line_data['quantity']))
-                
+
                 # Validate quantity
                 if quantity <= Decimal('0'):
                     raise ValueError(f'⚠️ المنتج "{product.name}": الكمية يجب أن تكون أكبر من صفر.\n💡 أدخل كمية صحيحة مثل: 1, 2, 5, 10')
-                
+
                 # Check stock availability
                 available, msg = StockService.check_availability_in_warehouse(product.id, quantity, warehouse_id)
                 if not available:
                     raise ValueError(f'{product.name}: {msg}')
-                
+
                 # Get unit price
                 if line_data.get('unit_price'):
                     unit_price = Decimal(str(line_data['unit_price']))
                 else:
                     unit_price = product.get_price_for_customer(customer.customer_type)
-                
+
                 # Validate unit price
                 if unit_price <= Decimal('0'):
                     raise ValueError(f'⚠️ المنتج "{product.name}": السعر يجب أن يكون أكبر من صفر.\n💡 أدخل سعر صحيح بالدرهم.')
-                
+
                 discount_percent = Decimal(str(line_data.get('discount_percent', 0)))
-                
+
                 # Validate line discount
                 if discount_percent < Decimal('0') or discount_percent > Decimal('100'):
                     raise ValueError(f'{product.name}: نسبة الخصم يجب أن تكون بين 0 و 100')
-                
+
                 # --- Serial Number Handling ---
                 if product.has_serial_number:
                     from utils.serial_helpers import extract_serials, validate_serials
@@ -203,7 +207,7 @@ class SaleService:
                 # ------------------------------
 
                 # Create Sale Line
-                
+
                 # Create Sale Line
                 line = SaleLine(
                     tenant_id=tenant_id,
@@ -216,13 +220,13 @@ class SaleService:
                     line_total=Decimal('0'), # Initialize with 0
                     notes=line_data.get('notes') # Pass notes if any
                 )
-                
+
                 # Calculate total before flush
                 line.calculate_line_total()
-                
+
                 db.session.add(line)
                 db.session.flush() # Get Line ID for serials
-                
+
                 subtotal += line.line_total
 
                 try:
@@ -235,6 +239,19 @@ class SaleService:
                 for ps in getattr(product, 'partner_shares', []) or []:
                     partner_customer_id = getattr(ps, 'partner_customer_id', None)
                     if not partner_customer_id:
+                        continue
+                    # Validate partner belongs to same tenant
+                    from models import Customer
+                    partner = Customer.query.filter_by(
+                        id=partner_customer_id,
+                        tenant_id=tenant_id,
+                        customer_type='partner',
+                    ).first()
+                    if not partner:
+                        current_app.logger.warning(
+                            'Partner commission skipped: partner_customer_id=%s not found or not a partner in tenant=%s',
+                            partner_customer_id, tenant_id
+                        )
                         continue
                     pct = Decimal(str(getattr(ps, 'percentage', 0) or 0))
                     if pct <= Decimal('0'):
@@ -256,7 +273,7 @@ class SaleService:
                         commission_amount_aed=commission_amount_aed,
                     )
                     db.session.add(entry)
-                
+
                 # --- Link Serials to Sale Line ---
                 if product.has_serial_number:
                     from models import ProductSerial
@@ -279,44 +296,44 @@ class SaleService:
                                 serial_obj.warranty_end_date = datetime.now() + timedelta(days=product.warranty_days)
                             db.session.add(serial_obj)
                 # ---------------------------------
-            
+
             sale.subtotal = subtotal
             sale.calculate_totals()
-            
+
             # Handle payment if provided
             if payment_data:
                 paid_amount = Decimal(str(payment_data.get('amount', 0)))
                 payment_currency = payment_data.get('currency', get_system_default_currency())
                 payment_exchange_rate = payment_data.get('exchange_rate', 1.0)
-                
+
                 # Convert payment to AED
                 payment_exchange_decimal = Decimal(str(payment_exchange_rate)) if payment_exchange_rate else Decimal('1')
                 paid_amount_aed = (paid_amount * payment_exchange_decimal).quantize(
                     Decimal('0.001'), rounding=ROUND_HALF_UP
                 )
-                
+
                 # Validate payment amount (in AED)
                 if paid_amount_aed < Decimal('0'):
                     raise ValueError('مبلغ الدفع لا يمكن أن يكون سالب')
-                
+
                 # Store payment in AED
                 sale.paid_amount = paid_amount  # في عملة الفاتورة
                 sale.paid_amount_aed = paid_amount_aed  # محول للدرهم
-                
+
                 # Handle overpayment (credit to customer)
                 if paid_amount_aed > sale.amount_aed:
                     overpayment = paid_amount_aed - sale.amount_aed
                     payment_note = f"\n[دفع زائد] مبلغ {overpayment} AED سُجّل كرصيد للزبون"
                     sale.notes = (sale.notes or '') + payment_note
-                
+
                 # Add payment currency info to notes if not default
                 default_curr = get_system_default_currency()
                 if payment_currency.upper() != default_curr.upper():
                     payment_note = f"\n[دفعة] {paid_amount} {payment_currency} = {paid_amount_aed} {default_curr} (سعر: {payment_exchange_rate})"
                     sale.notes = (sale.notes or '') + payment_note
-            
+
             sale.calculate_totals()
-            
+
             db.session.flush()
 
             sale.source = source or 'internal'
@@ -345,16 +362,16 @@ class SaleService:
                 db.session.rollback()
                 raise
 
-            
+
             current_app.logger.info(f'Sale created: {sale.sale_number}')
-            
+
             return sale
-        
+
         except Exception:
             current_app.logger.exception('Sale creation failed for customer %s', getattr(customer, 'id', None))
             db.session.rollback()
             raise
-    
+
     @staticmethod
     def fulfill_sale(sale, payment_data=None, paid_amount_aed=None):
         """
@@ -484,6 +501,23 @@ class SaleService:
             customer, branch_id=sale.branch_id, tenant_id=tenant_id
         )
 
+        # When prices_include_vat=True, revenue/shipping/discount must be VAT-exclusive for GL balance
+        if sale.prices_include_vat:
+            tax_rate = Decimal(str(sale.tax_rate)) if sale.tax_rate else Decimal('0')
+            if tax_rate > 0:
+                divisor = Decimal('1') + (tax_rate / Decimal('100'))
+                discount_debit = (sale.discount_amount / divisor).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+                shipping_credit = (sale.shipping_cost / divisor).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+                revenue_credit = (sale.taxable_amount - shipping_credit + discount_debit).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+            else:
+                revenue_credit = sale.subtotal
+                shipping_credit = sale.shipping_cost
+                discount_debit = sale.discount_amount
+        else:
+            revenue_credit = sale.subtotal
+            shipping_credit = sale.shipping_cost
+            discount_debit = sale.discount_amount
+
         gl_lines = [
             {
                 'account': ar_account,
@@ -496,28 +530,28 @@ class SaleService:
                     'SALES_REVENUE', branch_id=sale.branch_id, tenant_id=tenant_id, fallback_key='sales_revenue'
                 ),
                 'concept_code': 'SALES_REVENUE',
-                'credit': sale.subtotal,
+                'credit': revenue_credit,
                 'description': 'إيرادات المبيعات',
             },
         ]
 
-        if sale.shipping_cost > Decimal('0'):
+        if shipping_credit > Decimal('0'):
             gl_lines.append({
                 'account': GLService.get_account_code_for_concept(
                     'SHIPPING_REVENUE', branch_id=sale.branch_id, tenant_id=tenant_id, fallback_key='shipping_revenue'
                 ),
                 'concept_code': 'SHIPPING_REVENUE',
-                'credit': sale.shipping_cost,
+                'credit': shipping_credit,
                 'description': 'إيرادات الشحن',
             })
 
-        if sale.discount_amount > Decimal('0'):
+        if discount_debit > Decimal('0'):
             gl_lines.append({
                 'account': GLService.get_account_code_for_concept(
                     'SALES_DISCOUNT', branch_id=sale.branch_id, tenant_id=tenant_id, fallback_key='discounts_given'
                 ),
                 'concept_code': 'SALES_DISCOUNT',
-                'debit': sale.discount_amount,
+                'debit': discount_debit,
                 'description': 'خصومات ممنوحة',
             })
 
@@ -584,10 +618,10 @@ class SaleService:
             reference_id=sale.id,
             movement_type='sale',
         ).first() is not None
-    
+
     @staticmethod
     def create_payment_for_sale(sale, amount, payment_method, currency=None, exchange_rate=1.0,
-                                reference_number=None, cheque_number=None, cheque_date=None, 
+                                reference_number=None, cheque_number=None, cheque_date=None,
                                 bank_name=None, notes=None):
         """
         Create a payment for a sale with proper validations
@@ -595,17 +629,17 @@ class SaleService:
         """
         from utils.helpers import generate_number
         from datetime import datetime, date
-        
+
         # Validate payment amount
         amount_decimal = Decimal(str(amount))
         if amount_decimal <= Decimal('0'):
             raise ValueError('مبلغ الدفع يجب أن يكون أكبر من صفر')
-        
+
         payment_method = validate_payment_method(payment_method)
         if not currency:
             currency = get_system_default_currency()
         currency = validate_currency_code(currency)
-        
+
         # Validate cheque details if payment method is cheque
         if payment_method == 'cheque':
             if not cheque_number:
@@ -614,14 +648,14 @@ class SaleService:
                 raise ValueError('⚠️ تاريخ الاستحقاق مطلوب للشيك.\n💡 حدد تاريخ صرف الشيك من البنك.')
             if not bank_name:
                 raise ValueError('⚠️ اسم البنك مطلوب للشيك.\n💡 أدخل اسم البنك المسحوب عليه الشيك.')
-            
+
             # Convert cheque_date to date object if it's a string
             if isinstance(cheque_date, str):
                 try:
                     cheque_date = datetime.strptime(cheque_date, '%Y-%m-%d').date()
                 except ValueError:
                     raise ValueError('تاريخ الشيك غير صالح')
-        
+
         payment_number = generate_number(
             'PAY',
             Payment,
@@ -629,13 +663,13 @@ class SaleService:
             branch_id=sale.branch_id,
             tenant_id=getattr(sale, 'tenant_id', None),
         )
-        
+
         # Calculate AED amount with proper rounding using PROVIDED exchange rate
         exchange_rate_decimal = Decimal(str(exchange_rate))
         amount_aed = (amount_decimal * exchange_rate_decimal).quantize(
             Decimal('0.001'), rounding=ROUND_HALF_UP
         )
-        
+
         payment = Payment(
             tenant_id=getattr(sale, 'tenant_id', None),
             payment_number=payment_number,
@@ -657,10 +691,10 @@ class SaleService:
             user_id=sale.seller_id,
             branch_id=sale.branch_id,
         )
-        
+
         db.session.add(payment)
         db.session.flush()
-        
+
         # إنشاء سجل الشيك إذا كانت طريقة الدفع شيك
         if payment_method == 'cheque' and cheque_number:
             from models import Cheque
@@ -683,14 +717,14 @@ class SaleService:
             )
             db.session.add(cheque)
             db.session.flush()
-            
+
             # ربط الشيك بالدفعة
             payment.cheque_id = cheque.id
 
         # GL Integration for Payment
         try:
             GLService.ensure_core_accounts(tenant_id=getattr(sale, 'tenant_id', None))
-            
+
             if payment_method == 'cheque':
                 debit_account = GLService.get_account_code_for_concept(
                     'CHEQUES_UNDER_COLLECTION',
@@ -740,13 +774,74 @@ class SaleService:
         sale.customer.apply_receipt(_D(str(amount_aed or 0)))
         sale.recalculate_payment_status()
         db.session.flush()
+
+        # FX Gain/Loss auto-posting for direct payments (same currency, different rate)
+        if currency and str(currency).upper() == str(sale.currency).upper():
+            sale_rate = Decimal(str(sale.exchange_rate or 1))
+            if sale_rate != exchange_rate_decimal and amount_decimal > 0:
+                expected_aed = (amount_decimal * sale_rate).quantize(Decimal('0.001'), rounding=ROUND_HALF_UP)
+                fx_diff = (amount_aed - expected_aed).quantize(Decimal('0.001'), rounding=ROUND_HALF_UP)
+                if abs(fx_diff) > Decimal('0.01'):
+                    try:
+                        fx_lines = []
+                        if fx_diff > 0:
+                            fx_lines = [
+                                {
+                                    'account': GLService.get_account_code_for_concept(
+                                        'AR', branch_id=sale.branch_id, tenant_id=getattr(sale, 'tenant_id', None), fallback_key='receivable'
+                                    ),
+                                    'concept_code': 'AR',
+                                    'debit': fx_diff,
+                                    'description': f'FX Gain Adjustment - Payment {payment.payment_number}'
+                                },
+                                {
+                                    'account': GLService.get_account_code_for_concept(
+                                        'FX_GAIN', branch_id=sale.branch_id, tenant_id=getattr(sale, 'tenant_id', None), fallback_key='fx_gain'
+                                    ),
+                                    'concept_code': 'FX_GAIN',
+                                    'credit': fx_diff,
+                                    'description': f'FX Gain - Payment {payment.payment_number}'
+                                },
+                            ]
+                        else:
+                            fx_lines = [
+                                {
+                                    'account': GLService.get_account_code_for_concept(
+                                        'FX_LOSS', branch_id=sale.branch_id, tenant_id=getattr(sale, 'tenant_id', None), fallback_key='fx_loss'
+                                    ),
+                                    'concept_code': 'FX_LOSS',
+                                    'debit': abs(fx_diff),
+                                    'description': f'FX Loss - Payment {payment.payment_number}'
+                                },
+                                {
+                                    'account': GLService.get_account_code_for_concept(
+                                        'AR', branch_id=sale.branch_id, tenant_id=getattr(sale, 'tenant_id', None), fallback_key='receivable'
+                                    ),
+                                    'concept_code': 'AR',
+                                    'credit': abs(fx_diff),
+                                    'description': f'FX Loss Adjustment - Payment {payment.payment_number}'
+                                },
+                            ]
+                        post_or_fail(
+                            fx_lines,
+                            description=f'FX Gain/Loss - Payment {payment.payment_number}',
+                            reference_type=GLRef.PAYMENT,
+                            reference_id=payment.id,
+                            currency=get_system_default_currency(),
+                            exchange_rate=1.0,
+                            branch_id=sale.branch_id,
+                            tenant_id=getattr(sale, 'tenant_id', None),
+                        )
+                    except Exception as fx_err:
+                        current_app.logger.warning('FX auto-posting skipped for payment %s: %s', payment.payment_number, fx_err)
+
         return payment
-    
+
     @staticmethod
     def cancel_sale(sale):
         if sale.status == 'cancelled':
             raise ValueError('الفاتورة ملغاة بالفعل')
-        
+
         from models import Payment
         confirmed_payments = Payment.query.filter_by(
             sale_id=sale.id,
@@ -754,7 +849,7 @@ class SaleService:
         ).count()
         if confirmed_payments > 0:
             raise ValueError('لا يمكن إلغاء فاتورة لها دفعات مؤكدة. قم بإلغاء الدفعات أولاً.')
-        
+
         # Reject any pending payments/cheques linked to this sale
         pending_payments = Payment.query.filter_by(
             sale_id=sale.id,
@@ -768,9 +863,9 @@ class SaleService:
                 if cheque and cheque.status not in ['cancelled', 'bounced']:
                     process_cheque_cancel(cheque, reason=f'إلغاء فاتورة {sale.sale_number}')
             pmt.reject_payment(f'إلغاء فاتورة {sale.sale_number}')
-        
+
         customer = sale.customer
-        
+
         # عكس رصيد العميل وإحصائيات الشراء
         if customer:
             from decimal import Decimal as _D
@@ -781,12 +876,12 @@ class SaleService:
                 _D('0')
             )
             customer.update_classification()
-        
+
         sale.status = 'cancelled'
-        
+
         if SaleService.has_inventory_posted(sale):
             StockService.reverse_sale(sale)
-        
+
             # Reverse GL Entry for Sale (Revenue & AR)
             try:
                 GLService.reverse_entry(
@@ -805,10 +900,10 @@ class SaleService:
                 current_app.logger.exception('GL reversal failed for cancelled sale %s', sale.sale_number)
                 db.session.rollback()
                 raise ValueError(f'فشل عكس القيد المحاسبي: {_e}') from _e
-            
+
         # إعادة حساب حالة الدفع بعد الإلغاء
         sale.recalculate_payment_status()
-        
+
         try:
             db.session.commit()
         except Exception:
@@ -816,9 +911,9 @@ class SaleService:
             db.session.rollback()
             raise
 
-        
+
         current_app.logger.info(f'Sale cancelled: {sale.sale_number}')
-    
+
     @staticmethod
     def update_payment_status(sale):
         """

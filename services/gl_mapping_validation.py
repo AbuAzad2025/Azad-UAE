@@ -404,8 +404,65 @@ class GLMappingValidationService:
         return rows
 
     @staticmethod
-    def _validate_liquidity_readiness(tenant: Tenant) -> list[GLMappingValidationRow]:
-        \"\"\"Read-only validate liquidity readiness for all active branches. For every active branch, validate: one or more active postable cash liquidity accounts scoped to that branch; one or more active postable bank liquidity accounts scoped to that branch. Missing cash or bank is severity critical. Does not create accounts automatically.\"\"\n        from sqlalchemy import or_\n        \n        rows: list[GLMappingValidationRow] = []\n        \n        # Get all active branches for this tenant\n        active_branches = Branch.query.filter_by(\n            tenant_id=tenant.id,\n            is_active=True\n        ).all()\n        \n        for branch in active_branches:\n            # Check for cash liquidity accounts\n            cash_accounts = GLAccount.query.filter_by(\n                tenant_id=tenant.id,\n                branch_id=branch.id,\n                liquidity_kind='cash',\n                is_active=True\n            ).filter(GLAccount.is_header == False).all()\n            \n            # Check for bank liquidity accounts\n            bank_accounts = GLAccount.query.filter_by(\n                tenant_id=tenant.id,\n                branch_id=branch.id,\n                liquidity_kind='bank',\n                is_active=True\n            ).filter(GLAccount.is_header == False).all()\n            \n            # Validate cash readiness\n            if not cash_accounts:\n                rows.append(GLMappingValidationRow(\n                    tenant_id=tenant.id,\n                    tenant_name=tenant.name or tenant.name_en or tenant.name_ar or f\"Tenant {tenant.id}\",\n                    concept_code='CASH_READINESS',\n                    expected_legacy_code=None,\n                    status=\"missing\",\n                    issue=f\"Branch {branch.code} ({branch.name}) has no active postable cash liquidity account\",\n                    severity=\"critical\",\n                    recommended_fix=f\"Create or activate an active postable cash GL account for branch {branch.code}\"\n                ))\n            \n            # Validate bank readiness\n            if not bank_accounts:\n                rows.append(GLMappingValidationRow(\n                    tenant_id=tenant.id,\n                    tenant_name=tenant.name or tenant.name_en or tenant.name_ar or f\"Tenant {tenant.id}\",\n                    concept_code='BANK_READINESS',\n                    expected_legacy_code=None,\n                    status=\"missing\",\n                    issue=f\"Branch {branch.code} ({branch.name}) has no active postable bank liquidity account\",\n                    severity=\"critical\",\n                    recommended_fix=f\"Create or activate an active postable bank GL account for branch {branch.code}\"\n                ))\n        \n        return rows
+    def _validate_liquidity_readiness(
+        tenant: Tenant,
+    ) -> list[GLMappingValidationRow]:
+        """Read-only validate cash and bank readiness for every active branch."""
+        rows: list[GLMappingValidationRow] = []
+        tenant_name = (
+            tenant.name
+            or tenant.name_en
+            or tenant.name_ar
+            or f"Tenant {tenant.id}"
+        )
+
+        checks = (
+            ("cash", "CASH_READINESS"),
+            ("bank", "BANK_READINESS"),
+        )
+
+        active_branches = Branch.query.filter_by(
+            tenant_id=tenant.id,
+            is_active=True,
+        ).all()
+
+        for branch in active_branches:
+            for liquidity_kind, concept_code in checks:
+                account = (
+                    GLAccount.query
+                    .filter_by(
+                        tenant_id=tenant.id,
+                        branch_id=branch.id,
+                        liquidity_kind=liquidity_kind,
+                        is_active=True,
+                    )
+                    .filter(GLAccount.is_header.is_(False))
+                    .first()
+                )
+
+                if account is not None:
+                    continue
+
+                rows.append(
+                    GLMappingValidationRow(
+                        tenant_id=tenant.id,
+                        tenant_name=tenant_name,
+                        concept_code=concept_code,
+                        expected_legacy_code=None,
+                        status="missing",
+                        issue=(
+                            f"Branch {branch.code} ({branch.name}) has no "
+                            f"active postable {liquidity_kind} liquidity account."
+                        ),
+                        severity="critical",
+                        recommended_fix=(
+                            f"Create or activate an active postable "
+                            f"{liquidity_kind} GL account for branch {branch.code}."
+                        ),
+                    )
+                )
+
+        return rows
 
     @staticmethod
     def dry_run(
@@ -950,28 +1007,47 @@ class GLMappingValidationService:
         rows: list[GLMappingValidationRow] = []
         seen_defaults: dict[str, int] = defaultdict(int)
         seen_branch_overrides: dict[tuple[str, int], int] = defaultdict(int)
+        ignored_non_mapping_mapping_ids: set[int] = set()
 
+        # First pass: count mappings and identify non-mapping-owned ones for warnings
         for mapping in mappings:
             if mapping.branch_id is None:
                 seen_defaults[mapping.concept_code] += 1
             else:
                 seen_branch_overrides[(mapping.concept_code, mapping.branch_id)] += 1
 
-        # Flag stale mappings for non-mapping-owned concepts as warnings
-        for concept_code in seen_defaults:
-            if not _is_mapping_owned(concept_code):
+            # Identify non-mapping-owned mappings for exact one warning per mapping
+            if not _is_mapping_owned(mapping.concept_code):
+                ignored_non_mapping_mapping_ids.add(mapping.id)
+
+        # Flag stale mappings for non-mapping-owned concepts as warnings (exactly one per mapping)
+        for mapping in mappings:
+            if mapping.id in ignored_non_mapping_mapping_ids:
                 rows.append(
                     _row(
                         tenant,
-                        concept_code,
+                        mapping.concept_code,
                         "warning",
-                        f"Concept '{concept_code}' is {GL_CONCEPT_REGISTRY.get(concept_code, {}).get('resolution_mode', 'unknown')}-owned; its mapping is stale and will be ignored during posting.",
+                        f"Concept '{mapping.concept_code}' is {GL_CONCEPT_REGISTRY.get(mapping.concept_code, {}).get('resolution_mode', 'unknown')}-owned; its mapping is stale and will be ignored during posting.",
                         severity="warning",
                         recommended_fix="Remove this mapping after finance review; the concept is resolved via a different mechanism.",
                     )
                 )
 
-        for concept_code, count in seen_defaults.items():
+        # Count remaining mappings for duplicate detection (excluding ignored non-mapping-owned)
+        seen_defaults_filtered: dict[str, int] = defaultdict(int)
+        seen_branch_overrides_filtered: dict[tuple[str, int], int] = defaultdict(int)
+
+        for mapping in mappings:
+            if mapping.id in ignored_non_mapping_mapping_ids:
+                continue  # Skip ignored non-mapping-owned mappings
+            if mapping.branch_id is None:
+                seen_defaults_filtered[mapping.concept_code] += 1
+            else:
+                seen_branch_overrides_filtered[(mapping.concept_code, mapping.branch_id)] += 1
+
+        # Check for duplicates in tenant-level mappings (excluding ignored non-mapping-owned)
+        for concept_code, count in seen_defaults_filtered.items():
             if count > 1 and concept_code not in REQUIRED_GL_CONCEPTS:
                 rows.append(
                     _row(
@@ -982,7 +1058,8 @@ class GLMappingValidationService:
                     )
                 )
 
-        for (concept_code, _branch_id), count in seen_branch_overrides.items():
+        # Check for duplicates in branch-level mappings (excluding ignored non-mapping-owned)
+        for (concept_code, _branch_id), count in seen_branch_overrides_filtered.items():
             if count > 1:
                 rows.append(
                     _row(
@@ -993,7 +1070,13 @@ class GLMappingValidationService:
                     )
                 )
 
+        # Process mappings for validation issues, but skip non-mapping-owned concepts to avoid duplicate warnings
         for mapping in mappings:
+            # Skip validation for non-mapping-owned concepts to prevent duplicate warnings
+            # (they were already warned about above as stale mappings)
+            if not _is_mapping_owned(mapping.concept_code):
+                continue
+            # Skip required concepts without branch_id (they're handled in _validate_required_defaults)
             if mapping.concept_code in REQUIRED_GL_CONCEPTS and mapping.branch_id is None:
                 continue
             for issue in GLMappingValidationService._mapping_issues(tenant, mapping):

@@ -52,7 +52,7 @@
   };
 
   const money = n => {
-    const symbol = document.body.dataset.currencySymbol || '₪';
+    const symbol = document.body.dataset.currencySymbol || window._CURRENCY_SYMBOL || '₪';
     return (Number(n) || 0).toFixed(2) + ' ' + symbol;
   };
 

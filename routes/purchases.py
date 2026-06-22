@@ -143,7 +143,15 @@ def create():
     exchange_rates = CurrencyService.get_all_rates(base_currency)
     warehouses = get_accessible_warehouses(current_user)
     
-    return render_template('purchases/create.html', exchange_rates=exchange_rates, warehouses=warehouses)
+    from utils.tax_settings import get_prices_include_vat
+    from utils.currency_utils import resolve_default_currency
+    prices_include_vat = get_prices_include_vat(
+        tenant_id=get_active_tenant_id(current_user),
+        branch_id=get_active_branch_id()
+    )
+    tenant_currency_symbol = base_currency
+
+    return render_template('purchases/create.html', exchange_rates=exchange_rates, warehouses=warehouses, prices_include_vat=prices_include_vat, tenant_currency_symbol=tenant_currency_symbol)
 
 
 @purchases_bp.route('/<int:id>')
@@ -419,8 +427,20 @@ def api_calculate_purchase_totals():
         landed_total = freight + insurance + customs_duty + other_landed_cost
 
         # حساب الضريبة والإجمالي
-        tax_amount = subtotal * (tax_rate / Decimal('100'))
-        total = subtotal + tax_amount + landed_total
+        prices_include_vat = bool(data.get('prices_include_vat', False))
+        if prices_include_vat:
+            if tax_rate > 0:
+                taxable_amount = (subtotal / (Decimal('1') + (tax_rate / Decimal('100')))).quantize(
+                    Decimal('0.01'), rounding=ROUND_HALF_UP
+                )
+                tax_amount = subtotal - taxable_amount
+            else:
+                taxable_amount = subtotal
+                tax_amount = Decimal('0')
+            total = subtotal + landed_total
+        else:
+            tax_amount = subtotal * (tax_rate / Decimal('100'))
+            total = subtotal + tax_amount + landed_total
 
         return jsonify({
             'success': True,
@@ -429,6 +449,7 @@ def api_calculate_purchase_totals():
             'tax_amount': float(tax_amount),
             'landed_cost': float(landed_total),
             'total': float(total),
+            'prices_include_vat': prices_include_vat,
             'line_count': len([l for l in lines if Decimal(str(l.get('quantity', 0))) > 0])
         }), 200
         

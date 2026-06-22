@@ -290,7 +290,7 @@ def dashboard():
         stats['platform_total_tenants'] = Tenant.query.filter_by(is_active=True).count()
         stats['platform_total_customers'] = Customer.query.filter_by(is_active=True).count()
         stats['platform_total_products'] = Product.query.filter_by(is_active=True).count()
-        
+
         platform_today_sales = db.session.query(
             func.count(Sale.id),
             func.sum(Sale.amount_aed),
@@ -302,7 +302,7 @@ def dashboard():
         stats['platform_today_sales_count'] = platform_today_sales[0] or 0
         stats['platform_today_sales_amount'] = float(platform_today_sales[1] or 0)
         stats['platform_today_receivables'] = float(platform_today_sales[2] or 0)
-        
+
         platform_month_sales = db.session.query(
             func.count(Sale.id),
             func.sum(Sale.amount_aed)
@@ -312,7 +312,7 @@ def dashboard():
         ).first()
         stats['platform_month_sales_count'] = platform_month_sales[0] or 0
         stats['platform_month_sales_amount'] = float(platform_month_sales[1] or 0)
-        
+
         platform_year_sales = db.session.query(
             func.sum(Sale.amount_aed)
         ).filter(
@@ -320,7 +320,7 @@ def dashboard():
             Sale.status == 'confirmed',
         ).scalar() or Decimal('0')
         stats['platform_year_sales_amount'] = float(platform_year_sales)
-        
+
         platform_month_purchases = db.session.query(
             func.sum(Purchase.amount_aed)
         ).filter(
@@ -328,7 +328,7 @@ def dashboard():
             Purchase.status == 'confirmed',
         ).scalar() or Decimal('0')
         stats['platform_month_purchases_amount'] = float(platform_month_purchases)
-        
+
         platform_receivables = db.session.query(
             func.sum(Sale.amount_aed - Sale.paid_amount_aed),
             func.count(Sale.id)
@@ -338,7 +338,7 @@ def dashboard():
         ).first()
         stats['platform_total_receivables'] = float(platform_receivables[0] or Decimal('0'))
         stats['platform_overdue_invoices'] = platform_receivables[1] or 0
-        
+
         platform_inv = db.session.query(
             func.sum(func.coalesce(Product.current_stock, 0) * func.coalesce(Product.regular_price, 0)),
             func.sum(func.coalesce(Product.current_stock, 0) * func.coalesce(Product.cost_price, 0))
@@ -952,20 +952,31 @@ def cards_vault():
     if customer_id:
         query = query.filter_by(customer_id=customer_id)
 
+    tid = get_active_tenant_id(current_user)
+    if tid is not None:
+        query = query.filter(CardVault.tenant_id == tid)
+
     pagination = query.order_by(CardVault.created_at.desc()).paginate(
         page=page,
         per_page=50,
         error_out=False
     )
 
-    total_cards = CardVault.query.filter_by(is_active=True).count()
-    total_usage = db.session.query(func.sum(CardVault.usage_count)).scalar() or 0
+    total_cards = CardVault.query.filter_by(is_active=True)
+    if tid is not None:
+        total_cards = total_cards.filter(CardVault.tenant_id == tid)
+    total_cards = total_cards.count()
+
+    total_usage = db.session.query(func.sum(CardVault.usage_count))
+    if tid is not None:
+        total_usage = total_usage.filter(CardVault.tenant_id == tid)
+    total_usage = total_usage.scalar() or 0
 
     stats = {
         'total_cards': total_cards,
         'total_usage': total_usage,
-        'visa_count': CardVault.query.filter_by(card_type='visa', is_active=True).count(),
-        'mastercard_count': CardVault.query.filter_by(card_type='mastercard', is_active=True).count(),
+        'visa_count': CardVault.query.filter_by(card_type='visa', is_active=True).filter(CardVault.tenant_id == tid).count() if tid is not None else CardVault.query.filter_by(card_type='visa', is_active=True).count(),
+        'mastercard_count': CardVault.query.filter_by(card_type='mastercard', is_active=True).filter(CardVault.tenant_id == tid).count() if tid is not None else CardVault.query.filter_by(card_type='mastercard', is_active=True).count(),
     }
 
     _audit_owner_db_action('view_card_vault_list', {'total_cards': total_cards})
@@ -3662,6 +3673,7 @@ def tenant_edit(tenant_id):
             tenant.enable_store = request.form.get('enable_store') == 'on'
             tenant.allow_data_export = request.form.get('allow_data_export') == 'on'
             tenant.allow_custom_integrations = request.form.get('allow_custom_integrations') == 'on'
+            tenant.prices_include_vat = request.form.get('prices_include_vat') == 'on'
             tenant.updated_at = datetime.now(timezone.utc)
 
             db.session.commit()

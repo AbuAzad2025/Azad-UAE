@@ -75,11 +75,13 @@ BASE_ACCOUNTS = [
     GLAccountTemplate('2121', 'VAT Output', 'ضريبة مخرجات', 'liability', 3, False, '2120'),
     GLAccountTemplate('2122', 'VAT Input', 'ضريبة مدخلات', 'liability', 3, False, '2120'),
     GLAccountTemplate('2130', 'Deferred Cheques Payable', 'شيكات برسم الدفع', 'liability', 2, False, '2100'),
-    GLAccountTemplate('2140', 'Payroll Payable', 'رواتب مستحقة', 'liability', 2, False, '2100'),
+    GLAccountTemplate('2140', 'End of Service Benefits Provision', 'مخصص نهاية الخدمة للموظفين', 'liability', 2, False, '2100'),
+    GLAccountTemplate('2141', 'Payroll Payable', 'رواتب مستحقة', 'liability', 2, False, '2100'),
     GLAccountTemplate('2150', 'Partner Current Accounts', 'حسابات الشركاء الجارية', 'liability', 2, False, '2100'),
     GLAccountTemplate('2151', 'Partner - Merchant Account', 'حساب التاجر', 'liability', 3, False, '2150'),
     GLAccountTemplate('2152', 'Partner - Commission Hold', 'عمولات محتجزة', 'liability', 3, False, '2150'),
-    GLAccountTemplate('2160', 'Loyalty Points Liability', 'التزام نقاط الولاء', 'liability', 2, False, '2100'),
+    GLAccountTemplate('2160', 'Accrued Vacations Provision', 'مخصص استحقاقات الإجازات السنوية', 'liability', 2, False, '2100'),
+    GLAccountTemplate('2161', 'Loyalty Points Liability', 'التزام نقاط الولاء', 'liability', 2, False, '2100'),
     GLAccountTemplate('2170', 'Customer Deposits', 'عربون العملاء', 'liability', 2, False, '2100'),
     GLAccountTemplate('2180', 'Azad Platform Payable', 'ذمم دائنة - منصة أزاد', 'liability', 2, False, '2100'),
     GLAccountTemplate('2181', 'Azad Platform Fee Accrued', 'رسوم منصة متراكمة', 'liability', 3, False, '2180'),
@@ -109,6 +111,7 @@ BASE_ACCOUNTS = [
     GLAccountTemplate('5200', 'Inventory Adjustments', 'تسويات المخزون', 'expense', 1, True, '5000'),
     GLAccountTemplate('5201', 'Inventory Gain', 'ربح مخزوني', 'expense', 2, False, '5200'),
     GLAccountTemplate('5202', 'Inventory Loss', 'خسارة مخزونية', 'expense', 2, False, '5200'),
+    GLAccountTemplate('5150', 'Inventory Adjustment', 'تسوية تكلفة المخزون', 'expense', 1, False, '5000'),
     GLAccountTemplate('5300', 'Landed Costs', 'تكاليف الشحن والجمارك', 'expense', 1, True, '5000'),
     GLAccountTemplate('5301', 'Freight In', 'شحن وارد', 'expense', 2, False, '5300'),
     GLAccountTemplate('5302', 'Customs Duty', 'رسوم جمركية', 'expense', 2, False, '5300'),
@@ -135,6 +138,7 @@ BASE_ACCOUNTS = [
     GLAccountTemplate('6410', 'Platform Subscription Expense', 'مصروف اشتراك المنصة', 'expense', 2, False, '6000'),
     GLAccountTemplate('6500', 'Miscellaneous Expenses', 'مصروفات متنوعة', 'expense', 1, False, '6000'),
     GLAccountTemplate('6600', 'FX Losses', 'خسائر صرف العملات', 'expense', 1, False, '6000'),
+    GLAccountTemplate('6190', 'End of Service Provision Expenses', 'مصروف مخصص نهاية الخدمة', 'expense', 1, False, '6000'),
     GLAccountTemplate('6700', 'Fixed Asset Disposal Loss', 'خسائر بيع الأصول', 'expense', 1, False, '6000'),
 ]
 
@@ -223,7 +227,7 @@ GL_MODULE_DEFINITIONS = {
         mappings=[
             GLConceptMappingTemplate('SALES_REVENUE', '4100', 'core_sales'),
             GLConceptMappingTemplate('SALES_RETURNS', '4100', 'core_sales'),
-            GLConceptMappingTemplate('SALES_DISCOUNT', '4100', 'core_sales'),
+            GLConceptMappingTemplate('SALES_DISCOUNT', '6130', 'core_sales'),
             GLConceptMappingTemplate('SALES_COMMISSION', '6120', 'core_sales'),
             GLConceptMappingTemplate('TIER_DISCOUNT', '4100', 'core_sales'),
             GLConceptMappingTemplate('AR', '1130', 'core_sales'),
@@ -260,8 +264,8 @@ GL_MODULE_DEFINITIONS = {
             GLConceptMappingTemplate('INVENTORY_ASSET', '1140', 'core_inventory'),
             GLConceptMappingTemplate('COGS', '5100', 'core_inventory'),
             GLConceptMappingTemplate('COGS_REVERSAL', '5100', 'core_inventory'),
-            GLConceptMappingTemplate('INVENTORY_ADJUSTMENT_GAIN', '5201', 'core_inventory'),
-            GLConceptMappingTemplate('INVENTORY_ADJUSTMENT_LOSS', '5202', 'core_inventory'),
+            GLConceptMappingTemplate('INVENTORY_ADJUSTMENT_GAIN', '5150', 'core_inventory'),
+            GLConceptMappingTemplate('INVENTORY_ADJUSTMENT_LOSS', '5150', 'core_inventory'),
         ],
     ),
     'shop_online': GLModuleDefinition(
@@ -270,7 +274,7 @@ GL_MODULE_DEFINITIONS = {
         mappings=[
             GLConceptMappingTemplate('SHOP_SALES_REVENUE', '4103', 'shop_online'),
             GLConceptMappingTemplate('COUPON_EXPENSE', '6130', 'shop_online'),
-            GLConceptMappingTemplate('LOYALTY_LIABILITY', '2160', 'shop_online'),
+            GLConceptMappingTemplate('LOYALTY_LIABILITY', '2161', 'shop_online'),
         ],
     ),
     'shipments': GLModuleDefinition(
@@ -302,7 +306,10 @@ GL_MODULE_DEFINITIONS = {
         accounts=[],
         mappings=[
             GLConceptMappingTemplate('PAYROLL_EXPENSE', '6220', 'payroll'),
-            GLConceptMappingTemplate('PAYROLL_PAYABLE', '2140', 'payroll'),
+            GLConceptMappingTemplate('PAYROLL_PAYABLE', '2141', 'payroll'),
+            GLConceptMappingTemplate('END_OF_SERVICE_PROVISION', '6190', 'payroll'),
+            GLConceptMappingTemplate('END_OF_SERVICE_LIABILITY', '2140', 'payroll'),
+            GLConceptMappingTemplate('LEAVE_ACCRUAL_LIABILITY', '2160', 'payroll'),
             GLConceptMappingTemplate('EMPLOYEE_ADVANCES', '1170', 'payroll'),
         ],
     ),

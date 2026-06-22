@@ -51,7 +51,7 @@ def index():
     stock_filter = request.args.get('stock', '', type=str)
 
     query = StockService.get_visible_products_query(current_user)
-    
+
     if search:
         search_filter = f'%{search}%'
         query = query.filter(
@@ -61,7 +61,7 @@ def index():
                 Product.barcode.ilike(search_filter)
             )
         )
-    
+
     if category_id:
         query = query.filter_by(category_id=category_id)
 
@@ -127,7 +127,7 @@ def movements():
     product_id = request.args.get('product', type=int)
     movement_type = request.args.get('type', '', type=str)
     warehouse_id = request.args.get('warehouse', type=int)
-    
+
     branch_id = branch_scope_id()
     tid = get_active_tenant_id(current_user)
     if branch_id is not None:
@@ -139,16 +139,16 @@ def movements():
             warehouse_ids = [-1]
     else:
         warehouse_ids = None
-    
+
     query = StockMovement.query
     if tid is not None:
         query = query.filter(StockMovement.tenant_id == tid)
     if warehouse_ids is not None:
         query = query.filter(StockMovement.warehouse_id.in_(warehouse_ids))
-    
+
     if product_id:
         query = query.filter_by(product_id=product_id)
-    
+
     if movement_type:
         query = query.filter_by(movement_type=movement_type)
 
@@ -159,17 +159,17 @@ def movements():
             abort(403)
     else:
         current_warehouse = None
-    
+
     pagination = query.order_by(StockMovement.created_at.desc()).paginate(
         page=page,
         per_page=per_page,
         error_out=False
     )
-    
+
     warehouses = tenant_query(Warehouse).filter_by(is_active=True).order_by(Warehouse.name).all()
     if branch_id is not None:
         warehouses = [w for w in warehouses if w.branch_id == branch_id]
-    
+
     return render_template('warehouse/movements.html',
                          movements=pagination.items,
                          pagination=pagination,
@@ -201,13 +201,13 @@ def view_warehouse(id):
     branch_id = branch_scope_id()
     if branch_id is not None and warehouse.branch_id != branch_id:
         abort(403)
-    
+
     # Calculate stock for this warehouse from movements
     stock_query = db.session.query(
         StockMovement.product_id,
         db.func.sum(StockMovement.quantity).label('total_quantity')
     ).filter_by(warehouse_id=id).group_by(StockMovement.product_id).all()
-    
+
     warehouse_stock = []
     for product_id, quantity in stock_query:
         # Convert quantity to float for comparison and display, handling None
@@ -219,9 +219,9 @@ def view_warehouse(id):
                     'product': product,
                     'quantity': qty
                 })
-    
-    return render_template('warehouse/view_warehouse.html', 
-                         warehouse=warehouse, 
+
+    return render_template('warehouse/view_warehouse.html',
+                         warehouse=warehouse,
                          stock=warehouse_stock)
 
 
@@ -231,7 +231,7 @@ def view_warehouse(id):
 @admin_required
 def create_warehouse():
     from models import User
-    
+
     tid = get_active_tenant_id(current_user)
     parent_warehouses = Warehouse.query.filter_by(is_active=True, parent_id=None)
     if tid is not None:
@@ -239,7 +239,7 @@ def create_warehouse():
     parent_warehouses = parent_warehouses.all()
     users = scoped_user_query(active_only=True, exclude_owners=True).all()
     branches = get_accessible_branches_query(current_user).order_by(Branch.is_main.desc(), Branch.code, Branch.name).all()
-    
+
     if request.method == 'POST':
         try:
             name = request.form.get('name', '').strip()
@@ -271,7 +271,7 @@ def create_warehouse():
                                        users=users,
                                        branches=branches,
                                        form_data=request.form)
-            
+
             if not location:
                 flash('الموقع مطلوب', 'warning')
                 return render_template('warehouse/create_warehouse.html',
@@ -279,7 +279,7 @@ def create_warehouse():
                                        users=users,
                                        branches=branches,
                                        form_data=request.form)
-            
+
             if code:
                 existing = Warehouse.query.filter_by(code=code, tenant_id=tenant_id).first()
                 if existing:
@@ -289,7 +289,7 @@ def create_warehouse():
                                            users=users,
                                            branches=branches,
                                            form_data=request.form)
-            
+
             if parent_id:
                 parent_warehouse = Warehouse.query.filter_by(id=parent_id, tenant_id=tenant_id).first()
                 if not parent_warehouse:
@@ -306,7 +306,7 @@ def create_warehouse():
                                            users=users,
                                            branches=branches,
                                            form_data=request.form)
-            
+
             # Check tenant warehouse limit
             try:
                 from utils.tenant_limits import check_warehouses_limit, TenantLimitError
@@ -327,9 +327,10 @@ def create_warehouse():
                 is_main=is_main,
                 manager_id=manager_id,
                 warehouse_type=warehouse_type,
+                allow_negative_inventory=request.form.get('allow_negative_inventory') == 'on',
                 is_active=True
             )
-            
+
             db.session.add(warehouse)
             db.session.flush()
 
@@ -340,11 +341,11 @@ def create_warehouse():
                     store.warehouse_id = warehouse.id
 
             # (atomic_transaction ستقوم بالـ commit عند الخروج)
-            
+
             type_label = 'أونلاين' if warehouse_type == Warehouse.TYPE_ONLINE else ('فرعي' if parent_id else 'مستقل')
             flash(f'✓ تم إنشاء المستودع ({type_label}) "{name}" بنجاح', 'success')
             return redirect(url_for('warehouse.list_warehouses'))
-            
+
         except ValueError as e:
             db.session.rollback()
             current_app.logger.warning(f"ValueError creating warehouse: {e}")
@@ -363,8 +364,70 @@ def create_warehouse():
                                    users=users,
                                    branches=branches,
                                    form_data=request.form)
-    
-    return render_template('warehouse/create_warehouse.html', 
+
+    return render_template('warehouse/create_warehouse.html',
+                         parent_warehouses=parent_warehouses,
+                         users=users,
+                         branches=branches)
+
+
+@warehouse_bp.route('/<int:id>/edit', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def edit_warehouse(id):
+    """Edit warehouse settings."""
+    from models import User
+    warehouse = tenant_get_or_404(Warehouse, id)
+    tid = get_active_tenant_id(current_user)
+
+    # 🔒 Branch-level access enforcement
+    ensure_warehouse_access(warehouse.id, user=current_user)
+
+    parent_warehouses = Warehouse.query.filter_by(is_active=True, parent_id=None)
+    if tid is not None:
+        parent_warehouses = parent_warehouses.filter(Warehouse.tenant_id == tid)
+    parent_warehouses = [w for w in parent_warehouses.all() if w.id != id]
+    users = scoped_user_query(active_only=True, exclude_owners=True).all()
+    branches = get_accessible_branches_query(current_user).order_by(Branch.is_main.desc(), Branch.code, Branch.name).all()
+
+    accessible_branch_ids = {b.id for b in branches}
+    accessible_wh_ids = {w.id for w in parent_warehouses}
+
+    if request.method == 'POST':
+        try:
+            # Validate branch_id is within accessible branches
+            new_branch_id = request.form.get('branch_id', type=int) or None
+            if new_branch_id is not None and new_branch_id not in accessible_branch_ids:
+                raise ValueError('⚠️ الفرع المحدد غير متاح لك.')
+
+            # Validate parent_id is within accessible warehouses
+            new_parent_id = request.form.get('parent_id', type=int) or None
+            if new_parent_id is not None and new_parent_id not in accessible_wh_ids:
+                raise ValueError('⚠️ المستودع الأب المحدد غير متاح لك.')
+
+            warehouse.name = request.form.get('name', warehouse.name).strip()
+            warehouse.name_ar = request.form.get('name_ar', warehouse.name_ar).strip() or None
+            warehouse.code = request.form.get('code', warehouse.code).strip() or None
+            warehouse.location = request.form.get('location', warehouse.location).strip()
+            warehouse.parent_id = new_parent_id
+            warehouse.manager_id = request.form.get('manager_id', type=int) or None
+            warehouse.branch_id = new_branch_id
+            warehouse.allow_negative_inventory = request.form.get('allow_negative_inventory') == 'on'
+            warehouse.is_main = request.form.get('is_main') == 'on'
+
+            db.session.commit()
+            flash(f'✓ تم تحديث المستودع "{warehouse.name}" بنجاح', 'success')
+            return redirect(url_for('warehouse.list_warehouses'))
+        except ValueError as ve:
+            db.session.rollback()
+            flash(str(ve), 'error')
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Error editing warehouse {id}: {e}")
+            flash(ErrorMessages.update_failed('warehouse'), 'error')
+
+    return render_template('warehouse/edit_warehouse.html',
+                         warehouse=warehouse,
                          parent_warehouses=parent_warehouses,
                          users=users,
                          branches=branches)
@@ -392,12 +455,12 @@ def list_warehouses():
 def delete_warehouse(id):
     """حذف مستودع"""
     warehouse = tenant_get_or_404(Warehouse, id)
-    
+
     # Check if main warehouse
     if warehouse.is_main:
         flash('لا يمكن حذف المستودع الرئيسي', 'danger')
         return redirect(url_for('warehouse.list_warehouses'))
-        
+
     try:
         # Check for stock
         has_stock = StockMovement.query.filter_by(warehouse_id=id).first()
@@ -410,12 +473,12 @@ def delete_warehouse(id):
             db.session.delete(warehouse)
             db.session.commit()
             flash(f'تم حذف المستودع "{warehouse.name}" بنجاح', 'success')
-            
+
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Error deleting warehouse {id}: {e}")
         flash(ErrorMessages.delete_failed('warehouse'), 'danger')
-        
+
     return redirect(url_for('warehouse.list_warehouses'))
 
 
@@ -428,10 +491,10 @@ def add_stock(product_id):
         quantity = Decimal(request.form.get('quantity', 0))
         notes = request.form.get('notes', '').strip()
         warehouse_id = request.form.get('warehouse_id', type=int)
-        
+
         if quantity <= 0:
             return jsonify({'success': False, 'message': 'الكمية يجب أن تكون أكبر من صفر'}), 400
-        
+
         if not warehouse_id:
             accessible_query = tenant_query(Warehouse).filter_by(is_active=True)
             scoped_branch_id = branch_scope_id()
@@ -446,23 +509,23 @@ def add_stock(product_id):
             warehouse_id = warehouse.id
         else:
             ensure_warehouse_access(warehouse_id, current_user)
-        
+
         movement = StockService.adjust_stock(
             product_id=product_id,
             warehouse_id=warehouse_id,
             quantity=quantity,
             notes=notes or 'إضافة كمية يدوية'
         )
-        
+
         db.session.commit()
         product = movement.product
-        
+
         return jsonify({
             'success': True,
             'message': f'تم إضافة {quantity} وحدة للمنتج {product.name}',
             'new_stock': float(product.current_stock)
         })
-        
+
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Error adding stock: {e}")

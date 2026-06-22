@@ -1,40 +1,56 @@
-﻿(function(){
+(function(){
 const csrf=document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')||'';
 const state={customer:null,cart:[],lastProductResults:[],barcodeScanner:null,selectedCategory:'',numpadBuffer:'',numpadMode:null,selectedLine:null};
 const qs=(s,r=document)=>r.querySelector(s);
 const qsa=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const fmt=(n)=>(Number(n||0)).toFixed(2);
 const toNum=(v)=>{const n=Number(v);return Number.isFinite(n)?n:0;};
-const baseCurrency=document.querySelector('meta[name="pos-base-currency"]')?.getAttribute('content')||'AED';
+const baseCurrency=document.querySelector('meta[name="pos-base-currency"]')?.getAttribute('content')||window._FX_FALLBACK_BASE||'AED';
+const pricesIncludeVatMeta=document.querySelector('meta[name="pos-prices-include-vat"]')?.getAttribute('content')==='true';
+const currencySymbol=document.querySelector('meta[name="pos-currency-symbol"]')?.getAttribute('content')||baseCurrency;
 const esc=(s)=>{if(s==null)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');};
 const showAlert=(msg,level='danger')=>{let el=qs('#posAlert');if(!el){el=document.createElement('div');el.id='posAlert';el.className='alert d-none';document.querySelector('.pos-cart-panel').prepend(el);}el.className='alert alert-'+level;el.innerHTML=msg;el.classList.remove('d-none');setTimeout(()=>{el.classList.add('d-none');},5000);};
 const selectedCurrency=()=>qs('#currency')?.value||baseCurrency;
 const currentRate=()=>toNum(qs('#exchangeRate')?.value)||1;
 const priceForCurrency=(basePrice)=>{const rate=currentRate();if(selectedCurrency()!==baseCurrency&&rate>0){return toNum(basePrice)/rate;}return toNum(basePrice);};
-const loadRateForCurrency=async()=>{const cur=selectedCurrency();if(cur===baseCurrency){if(qs('#exchangeRate'))qs('#exchangeRate').value='1';updateCartPrices();return;}try{const r=await fetch('/api/currency-rate/'+encodeURIComponent(cur)+'/'+encodeURIComponent(baseCurrency));const d=await r.json();if(d.success&&d.rate&&qs('#exchangeRate')){qs('#exchangeRate').value=Number(d.rate).toFixed(6);}}catch(_){}updateCartPrices();};
-const updateCartPrices=()=>{state.cart.forEach(it=>{if(!Number.isFinite(Number(it.basePrice))){it.basePrice=it.price;}it.price=priceForCurrency(it.basePrice);});renderCart();};
+const loadRateForCurrency=async()=>{const cur=selectedCurrency();if(cur===baseCurrency){if(qs('#exchangeRate'))qs('#exchangeRate').value='1';await updateCartPrices();return;}try{const r=await fetch('/api/currency-rate/'+encodeURIComponent(cur)+'/'+encodeURIComponent(baseCurrency));const d=await r.json();if(d.success&&d.rate&&qs('#exchangeRate')){qs('#exchangeRate').value=Number(d.rate).toFixed(6);}}catch(_){}await updateCartPrices();};
+const updateCartPrices=async ()=>{state.cart.forEach(it=>{if(!Number.isFinite(Number(it.basePrice))){it.basePrice=it.price;}it.price=priceForCurrency(it.basePrice);});await renderCart();};
 
-const recalc=()=>{
+const recalc=async ()=>{
   const taxRate=Math.max(0,Math.min(100,toNum(qs('#taxRate')?.value)));
   const shipping=Math.max(0,toNum(qs('#shippingCost')?.value));
   const discountAmount=Math.max(0,toNum(qs('#discountAmount')?.value));
   let subtotal=0,lineDiscount=0;
   state.cart.forEach(it=>{const lineBase=it.qty*it.price;const lineDisc=lineBase*(it.discountPercent/100);subtotal+=lineBase-lineDisc;lineDiscount+=lineDisc;});
-  const tax=subtotal*(taxRate/100);
-  const total=Math.max(0,subtotal+tax+shipping-discountAmount);
+  const quickTax=pricesIncludeVatMeta?0:subtotal*(taxRate/100);
+  const quickTotal=Math.max(0,subtotal+quickTax+shipping-discountAmount);
   qs('#kpiSubtotal').textContent=fmt(subtotal);
-  qs('#kpiTax').textContent=fmt(tax);
+  qs('#kpiTax').textContent=fmt(quickTax);
   qs('#kpiDiscount').textContent=fmt(lineDiscount+discountAmount);
   qs('#kpiShipping').textContent=fmt(shipping);
-  qs('#kpiTotal').textContent=fmt(total);
-  qs('#kpiCurrency').textContent=selectedCurrency();
+  qs('#kpiTotal').textContent=fmt(quickTotal);
+  qs('#kpiCurrency').textContent=currencySymbol;
   const taxRow=qs('#taxRow');if(taxRow)taxRow.style.display=taxRate>0?'':'none';
   if(state.cart.length>0){qs('#cartEmpty')?.classList.add('d-none');qs('#cartItems')?.classList.remove('d-none');}
   else{qs('#cartEmpty')?.classList.remove('d-none');qs('#cartItems')?.classList.add('d-none');}
-  return{subtotal,tax,shipping,discountAmount,lineDiscount,taxRate,total};
+  if(state.cart.length>0){
+    try{
+      const r=await fetch('/sales/api/calculate-totals',{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':csrf},credentials:'same-origin',body:JSON.stringify({lines:state.cart.map(it=>({quantity:it.qty,unit_price:it.price,discount_percent:it.discountPercent})),discount_amount:discountAmount,shipping_cost:shipping,tax_rate:taxRate,prices_include_vat:pricesIncludeVatMeta})});
+      const data=await r.json();
+      if(data.success){
+        qs('#kpiSubtotal').textContent=fmt(data.subtotal);
+        qs('#kpiTax').textContent=fmt(data.tax_amount);
+        qs('#kpiDiscount').textContent=fmt(data.discount);
+        qs('#kpiTotal').textContent=fmt(data.total);
+        qs('#kpiCurrency').textContent=currencySymbol;
+        return{subtotal:data.subtotal,tax:data.tax_amount,shipping,discountAmount,lineDiscount,taxRate,total:data.total,prices_include_vat:data.prices_include_vat};
+      }
+    }catch(_){}
+  }
+  return{subtotal,tax:quickTax,shipping,discountAmount,lineDiscount,taxRate,total:quickTotal,prices_include_vat:pricesIncludeVatMeta};
 };
 
-const renderCart=()=>{
+const renderCart=async ()=>{
   const container=qs('#cartItems');
   container.innerHTML='';
   state.cart.forEach((it,idx)=>{
@@ -45,20 +61,20 @@ const renderCart=()=>{
     div.innerHTML=`<div class="item-info"><div class="item-name">${esc(it.name)}</div><div class="item-price">${fmt(it.price)} x ${it.qty}${it.discountPercent?' ('+it.discountPercent+'% خصم)':''}</div></div><div class="item-qty"><button class="qty-minus" data-idx="${idx}">-</button><span>${it.qty}</span><button class="qty-plus" data-idx="${idx}">+</button></div><div class="item-total">${fmt(lineTotal)}</div><div class="item-remove" data-idx="${idx}"><i class="fas fa-times"></i></div>`;
     container.appendChild(div);
   });
-  qsa('.qty-minus').forEach(b=>b.addEventListener('click',e=>{const idx=Number(e.target.dataset.idx);if(state.cart[idx]?.qty>1){state.cart[idx].qty--;renderCart();recalc();}else{state.cart.splice(idx,1);renderCart();recalc();}}));
-  qsa('.qty-plus').forEach(b=>b.addEventListener('click',e=>{const idx=Number(e.target.dataset.idx);if(state.cart[idx]){state.cart[idx].qty++;renderCart();recalc();}}));
-  qsa('.item-remove').forEach(b=>b.addEventListener('click',e=>{const idx=Number(e.target.closest('.item-remove').dataset.idx);state.cart.splice(idx,1);renderCart();recalc();}));
+  qsa('.qty-minus').forEach(b=>b.addEventListener('click',async e=>{const idx=Number(e.target.dataset.idx);if(state.cart[idx]?.qty>1){state.cart[idx].qty--;await renderCart();await recalc();}else{state.cart.splice(idx,1);await renderCart();await recalc();}}));
+  qsa('.qty-plus').forEach(b=>b.addEventListener('click',async e=>{const idx=Number(e.target.dataset.idx);if(state.cart[idx]){state.cart[idx].qty++;await renderCart();await recalc();}}));
+  qsa('.item-remove').forEach(b=>b.addEventListener('click',async e=>{const idx=Number(e.target.closest('.item-remove').dataset.idx);state.cart.splice(idx,1);await renderCart();await recalc();}));
   qsa('.pos-cart-item').forEach(item=>item.addEventListener('click',e=>{const idx=Number(e.currentTarget.dataset.idx);state.selectedLine=idx;renderCart();}));
-  recalc();
+  await recalc();
 };
 
-const addToCart=(product,qty=1)=>{
+const addToCart=async (product,qty=1)=>{
   const p=product.product||product;
   const existing=state.cart.find(c=>c.productId===p.id);
   const price=priceForCurrency(toNum(p.price));
   if(existing){existing.qty+=qty;existing.price=price;}
   else{state.cart.push({productId:p.id,name:p.name_ar||p.name,price:price,basePrice:toNum(p.price),qty:qty,discountPercent:0,sku:p.sku||'',barcode:p.barcode||''});}
-  renderCart();
+  await renderCart();
 };
 
 const renderProductGrid=(products)=>{
@@ -70,7 +86,7 @@ const renderProductGrid=(products)=>{
     card.dataset.id=p.id;
     const img=p.image_url?`<img src="${esc(p.image_url)}" class="prod-img" alt="">`:`<div class="prod-img d-flex align-items-center justify-content-center text-muted"><i class="fas fa-box fa-2x"></i></div>`;
     card.innerHTML=`${img}<div class="prod-name">${esc(p.name_ar||p.name)}</div><div class="prod-price">${fmt(p.price)}</div><div class="prod-stock ${p.stock<=0?'out':p.stock<=5?'low':''}">${p.stock_label||''}</div>`;
-    if(!p.is_out_of_stock){card.addEventListener('click',()=>{addToCart(p,1);});}
+    if(!p.is_out_of_stock){card.addEventListener('click',async ()=>{await addToCart(p,1);});}
     grid.appendChild(card);
   });
 };

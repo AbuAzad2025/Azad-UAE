@@ -154,6 +154,7 @@ class Supplier(db.Model):
         # already had their AP restored, so they must be excluded.
         total_paid = db.session.query(db.func.sum(Payment.amount_aed)).filter(
             Payment.supplier_id == self.id,
+            Payment.tenant_id == self.tenant_id,
             Payment.direction == 'outgoing',
             db.or_(
                 Payment.payment_confirmed == True,

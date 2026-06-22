@@ -15,6 +15,7 @@
           {% if warehouse.is_online %}
           <span class="badge badge-info text-sm ml-2"><i class="fas fa-globe"></i> {{ t('أونلاين') }} — {{ t('Store') }}</span>
           {% endif %}
+          <a href="{{ url_for('warehouse.edit_warehouse', id=warehouse.id) }}" class="btn btn-sm btn-warning ml-2"><i class="fas fa-edit"></i> {{ t('Edit') }}</a>
         </h1>
       </div>
       <div class="col-sm-6">
@@ -49,6 +50,14 @@
           </div>
           <div class="col-md-3">
             <strong>{{ t('النوع') }}:</strong> {{ warehouse.type_label_ar() }}
+          </div>
+          <div class="col-md-3">
+            <strong>سحب السالب:</strong>
+            {% if warehouse.allow_negative_inventory %}
+              <span class="badge badge-warning">مسموح</span>
+            {% else %}
+              <span class="badge badge-secondary">غير مسموح</span>
+            {% endif %}
           </div>
         </div>
         {% if warehouse.is_online and current_user.has_permission('manage_store') %}

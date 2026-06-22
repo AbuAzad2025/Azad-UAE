@@ -149,6 +149,15 @@
 
               <div class="form-group">
                 <div class="custom-control custom-checkbox">
+                  <input type="checkbox" class="custom-control-input" id="allow_negative_inventory" name="allow_negative_inventory" {% if form_data.get('allow_negative_inventory') %}checked{% endif %} aria-label="allow negative inventory">
+                  <label class="custom-control-label" for="allow_negative_inventory">
+                    <i class="fas fa-exclamation-triangle text-warning"></i> السماح بسحب المخزون السالب
+                  </label>
+                  <small class="text-muted d-block">عند التفعيل، يمكن بيع منتجات تجاوزت مخزونها الصفر بدون حظر.</small>
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="custom-control custom-checkbox">
                   <input type="checkbox" class="custom-control-input" id="is_main" name="is_main" {% if form_data.get('is_main') %}checked{% endif %} aria-label="is main">
                   <label class="custom-control-label" for="is_main">
                     <i class="fas fa-star text-warning"></i> {{ t('Warehouse_2') }} {{ t('رئيسي') }}

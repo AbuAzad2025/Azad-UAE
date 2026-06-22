@@ -48,24 +48,56 @@ def _require_pos_enabled():
 @login_required
 @permission_required("manage_sales")
 def index():
+    from utils.tax_settings import get_prices_include_vat
+    from utils.currency_utils import context_aware_default_currency, resolve_default_currency
     warehouses = [
         w
         for w in get_accessible_warehouses(current_user)
         if w.is_active and w.warehouse_type != w.TYPE_ONLINE
     ]
-    return render_template("pos/index.html", warehouses=warehouses)
+    tenant = tenant_get(current_user)
+    tenant_default_currency = resolve_default_currency(tenant) if tenant else 'AED'
+    currency_symbol = tenant_default_currency if tenant_default_currency else 'AED'
+    branch_id = get_active_branch_id()
+    prices_include_vat = get_prices_include_vat(
+        tenant_id=get_active_tenant_id(current_user),
+        branch_id=branch_id
+    )
+    return render_template(
+        "pos/index.html",
+        warehouses=warehouses,
+        tenant_default_currency=tenant_default_currency,
+        currency_symbol=currency_symbol,
+        prices_include_vat=prices_include_vat,
+    )
 
 
 @pos_bp.route("/grid")
 @login_required
 @permission_required("manage_sales")
 def grid():
+    from utils.tax_settings import get_prices_include_vat
+    from utils.currency_utils import context_aware_default_currency, resolve_default_currency
     warehouses = [
         w
         for w in get_accessible_warehouses(current_user)
         if w.is_active and w.warehouse_type != w.TYPE_ONLINE
     ]
-    return render_template("pos/grid.html", warehouses=warehouses)
+    tenant = tenant_get(current_user)
+    tenant_default_currency = resolve_default_currency(tenant) if tenant else 'AED'
+    currency_symbol = tenant_default_currency if tenant_default_currency else 'AED'
+    branch_id = get_active_branch_id()
+    prices_include_vat = get_prices_include_vat(
+        tenant_id=get_active_tenant_id(current_user),
+        branch_id=branch_id
+    )
+    return render_template(
+        "pos/grid.html",
+        warehouses=warehouses,
+        tenant_default_currency=tenant_default_currency,
+        currency_symbol=currency_symbol,
+        prices_include_vat=prices_include_vat,
+    )
 
 
 @pos_bp.route("/api/categories")

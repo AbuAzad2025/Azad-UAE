@@ -628,6 +628,7 @@ def api_calculate_sale_totals():
         discount_amount = Decimal(str(data.get('discount_amount', 0)))
         shipping_cost = Decimal(str(data.get('shipping_cost', 0)))
         tax_rate = Decimal(str(data.get('tax_rate', 0)))
+        prices_include_vat = bool(data.get('prices_include_vat', False))
         from utils.tax_settings import normalize_tax_rate
         tax_rate = normalize_tax_rate(tax_rate)
         
@@ -649,8 +650,19 @@ def api_calculate_sale_totals():
         
         # حساب الإجماليات
         after_discount = subtotal - discount_amount + shipping_cost
-        tax_amount = after_discount * (tax_rate / Decimal('100'))
-        total = after_discount + tax_amount
+        if prices_include_vat:
+            if tax_rate > 0:
+                taxable_amount = (after_discount / (Decimal('1') + (tax_rate / Decimal('100')))).quantize(
+                    Decimal('0.01'), rounding=ROUND_HALF_UP
+                )
+                tax_amount = after_discount - taxable_amount
+            else:
+                taxable_amount = after_discount
+                tax_amount = Decimal('0')
+            total = after_discount
+        else:
+            tax_amount = after_discount * (tax_rate / Decimal('100'))
+            total = after_discount + tax_amount
         
         return jsonify({
             'success': True,
@@ -660,6 +672,7 @@ def api_calculate_sale_totals():
             'tax_rate': float(tax_rate),
             'tax_amount': float(tax_amount),
             'total': float(total),
+            'prices_include_vat': prices_include_vat,
             'line_count': len([l for l in lines if Decimal(str(l.get('quantity', 0))) > 0])
         }), 200
         

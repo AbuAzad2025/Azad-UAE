@@ -27,6 +27,7 @@ class Warehouse(db.Model):
     manager_id = db.Column(db.Integer, db.ForeignKey('users.id'), index=True)
     is_active = db.Column(db.Boolean, default=True, index=True)
     is_main = db.Column(db.Boolean, default=False)
+    allow_negative_inventory = db.Column(db.Boolean, default=False, index=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     
     extra_fields = db.Column(db.JSON, default=dict)

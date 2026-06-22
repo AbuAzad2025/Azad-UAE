@@ -348,17 +348,20 @@ def partners():
         # Total Purchases
         purchases_query = db.session.query(func.sum(Purchase.amount_aed)).filter(
             Purchase.supplier_id == sup.id,
+            Purchase.tenant_id == sup.tenant_id,
             Purchase.status == 'confirmed'
         )
         # Paid TO Supplier (Outgoing)
         paid_query = db.session.query(func.sum(Payment.amount_aed)).filter(
             Payment.supplier_id == sup.id,
+            Payment.tenant_id == sup.tenant_id,
             Payment.direction == 'outgoing',
             Payment.payment_confirmed == True
         )
         # Received FROM Supplier (Incoming - Refunds)
         received_query = db.session.query(func.sum(Payment.amount_aed)).filter(
             Payment.supplier_id == sup.id,
+            Payment.tenant_id == sup.tenant_id,
             Payment.direction == 'incoming',
             Payment.payment_confirmed == True
         )

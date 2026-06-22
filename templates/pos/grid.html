@@ -1,4 +1,4 @@
-﻿{% extends 'base.html' %}
+{% extends 'base.html' %}
 {% block title %}نقطة البيع POS{% endblock %}
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
@@ -216,5 +216,7 @@
 {% block extra_js %}
 <script src="{{ url_for('static', filename='js/barcode-scanner.js') }}"></script>
 <meta name="pos-base-currency" content="{{ tenant_default_currency }}">
+<meta name="pos-currency-symbol" content="{{ currency_symbol }}">
+<meta name="pos-prices-include-vat" content="{{ 'true' if prices_include_vat else 'false' }}">
 <script src="{{ url_for('static', filename='js/pos/grid.js') }}"></script>
 {% endblock %}

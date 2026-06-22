@@ -16,7 +16,7 @@ class _MWACHelper:
     def calc(old_qty: Decimal, old_value: Decimal, change_qty: Decimal, unit_cost: Decimal) -> tuple[Decimal, Decimal, Decimal]:
         new_qty = old_qty + change_qty
         new_value = old_value + (change_qty * unit_cost)
-        new_avg = (new_value / new_qty).quantize(Decimal('0.0001')) if new_qty > 0 else Decimal('0')
+        new_avg = (new_value / new_qty).quantize(Decimal('0.0001')) if new_qty != 0 else Decimal('0')
         return new_qty, new_value, new_avg
 
 
@@ -54,7 +54,7 @@ class StockService:
             notes=notes,
             warehouse_id=warehouse_id
         )
-    
+
     @staticmethod
     def remove_stock(product_id, quantity, reference_type=None, reference_id=None, notes=None, warehouse_id=None):
         return StockService.create_movement(
@@ -66,7 +66,7 @@ class StockService:
             notes=notes,
             warehouse_id=warehouse_id
         )
-    
+
     @staticmethod
     def _post_adjustment_gl(movement):
         from services.gl_posting import post_or_fail
@@ -158,7 +158,7 @@ class StockService:
                     tenant_id=tenant_id,
                 )
         return movement
-    
+
     @staticmethod
     def create_movement(product_id, quantity, movement_type, reference_type=None, reference_id=None, notes=None, warehouse_id=None):
         from utils.field_validators import validate_stock_movement_type
@@ -167,10 +167,10 @@ class StockService:
         qty = Decimal(str(quantity))
         try:
             product = Product.query.get(product_id)
-            
+
             if not product:
                 raise ValueError(f'⚠️ المنتج غير موجود (ID: {product_id}).\n💡 تأكد من اختيار منتج صحيح من القائمة.')
-            
+
             try:
                 user_id = current_user.id if current_user and current_user.is_authenticated else None
             except Exception:
@@ -178,7 +178,7 @@ class StockService:
                 user_id = None
 
             tenant_id = getattr(product, "tenant_id", None)
-            
+
             # تحديد المستودع
             if warehouse_id:
                 warehouse = Warehouse.query.filter_by(id=warehouse_id, is_active=True).first()
@@ -190,7 +190,7 @@ class StockService:
                 warehouse = Warehouse.query.filter_by(tenant_id=tenant_id, is_active=True, is_main=True).first()
                 if not warehouse:
                     warehouse = Warehouse.query.filter_by(tenant_id=tenant_id, is_active=True).first()
-                
+
                 if not warehouse:
                     warehouse = Warehouse(
                         name='Main Warehouse', name_ar='المستودع الرئيسي',
@@ -198,10 +198,10 @@ class StockService:
                     )
                     db.session.add(warehouse)
                     db.session.flush()
-            
+
             if getattr(warehouse, "tenant_id", None) is None and tenant_id is not None:
                 warehouse.tenant_id = tenant_id
-            
+
             movement = StockMovement(
                 tenant_id=tenant_id,
                 product_id=product_id,
@@ -213,9 +213,9 @@ class StockService:
                 user_id=user_id,
                 notes=notes
             )
-            
+
             db.session.add(movement)
-            
+
             # Update ProductWarehouseStock (per-warehouse tracking) with row lock
             q_pws = ProductWarehouseStock.query.filter_by(
                 tenant_id=tenant_id,
@@ -228,7 +228,7 @@ class StockService:
                 pws = q_pws.first()
             if pws:
                 new_qty_pws = pws.quantity + qty
-                if new_qty_pws < 0:
+                if new_qty_pws < 0 and not warehouse.allow_negative_inventory:
                     raise ValueError(
                         f'❌ المخزون غير كافٍ في المستودع للمنتج "{product.name}"!\n'
                         f'📦 المتوفر في المستودع: {pws.quantity} | المطلوب: {abs(qty)}\n'
@@ -237,7 +237,7 @@ class StockService:
                 pws.quantity = new_qty_pws
                 pws.updated_at = datetime.now(timezone.utc)
             else:
-                if qty < 0:
+                if qty < 0 and not warehouse.allow_negative_inventory:
                     raise ValueError(
                         f'❌ المخزون غير كافٍ في المستودع للمنتج "{product.name}"!\n'
                         f'📦 المتوفر في المستودع: 0 | المطلوب: {abs(qty)}\n'
@@ -250,21 +250,19 @@ class StockService:
                     quantity=qty,
                 )
                 db.session.add(pws)
-            
+
             # Update global current_stock (legacy)
             product.current_stock += qty
-            
-            if product.current_stock < 0:
+
+            if product.current_stock < 0 and not warehouse.allow_negative_inventory:
                 raise ValueError(f'❌ المخزون غير كافٍ للمنتج "{product.name}"!\n📦 المتوفر: {product.current_stock} | المطلوب: {quantity}\n💡 قلل الكمية أو اطلب مخزون جديد من المورد.')
-            
-            db.session.flush()
-            
+
             current_app.logger.info(
                 f'Stock movement: {movement_type} {quantity} of product #{product_id}'
             )
-            
+
             return movement
-        
+
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(f'Stock movement failed: {e}')
@@ -329,14 +327,14 @@ class StockService:
             warehouse_id=to_wh.id,
         )
         return out_movement, in_movement
-    
+
     @staticmethod
     def process_sale_lines(sale, warehouse_id=None):
         """معالجة بيوع مع خصم من مستودع محدد"""
         # استخدام warehouse_id من sale إذا لم يُمرر
         if not warehouse_id and hasattr(sale, 'warehouse_id'):
             warehouse_id = sale.warehouse_id
-        
+
         for line in sale.lines:
             StockService.remove_stock(
                 product_id=line.product_id,
@@ -346,7 +344,7 @@ class StockService:
                 notes=f'بيع: {sale.sale_number}',
                 warehouse_id=warehouse_id  # ← تمرير المستودع
             )
-    
+
     @staticmethod
     def _resolve_cogs_unit_cost(product_id, warehouse_id, tenant_id, line_cost_price=None):
         """Resolve unit cost for COGS using Odoo-style fallback chain:
@@ -387,20 +385,30 @@ class StockService:
         Returns total COGS in AED (Decimal).
         Falls back to SaleLine.cost_price when ENABLE_MWAC is False.
         Never silently posts COGS=0 — raises error if cost cannot be resolved.
+
+        Negative inventory support:
+        - If warehouse allows negative inventory, COGS is calculated using the best
+          available cost (MWAC, last purchase, or cost_price) and PWC is updated
+          even if quantity goes negative. This preserves the cost for future
+          retrospective adjustment when the purchase arrives.
         """
         from datetime import datetime, timezone
         from config import Config
-        
+
         if not warehouse_id and hasattr(sale, 'warehouse_id'):
             warehouse_id = sale.warehouse_id
-        
+
         tenant_id = getattr(sale, 'tenant_id', None)
         mwac_enabled = current_app.config.get('ENABLE_MWAC', False)
         total_cogs = Decimal('0')
-        
+
+        # Determine if negative inventory is allowed for this warehouse
+        warehouse = Warehouse.query.get(warehouse_id) if warehouse_id else None
+        allow_negative = getattr(warehouse, 'allow_negative_inventory', False) if warehouse else False
+
         for line in sale.lines:
             qty = Decimal(str(line.quantity))
-            
+
             if mwac_enabled and tenant_id and warehouse_id:
                 query = ProductWarehouseCost.query.filter_by(
                     tenant_id=tenant_id,
@@ -411,8 +419,9 @@ class StockService:
                     pwc = query.with_for_update().first()
                 except Exception:
                     pwc = query.first()
-                
+
                 if pwc and pwc.total_quantity > 0:
+                    # Normal positive-stock case
                     avg_cost = Decimal(str(pwc.average_cost)) if pwc.average_cost is not None else Decimal('0')
                     cogs = (avg_cost * qty).quantize(Decimal('0.001'), rounding=ROUND_HALF_UP)
                     old_qty = Decimal(str(pwc.total_quantity)) if pwc.total_quantity is not None else Decimal('0')
@@ -443,7 +452,67 @@ class StockService:
                         movement_unit_cost=avg_cost.quantize(Decimal('0.0001')),
                     )
                     db.session.add(pch)
+                elif allow_negative:
+                    # Negative inventory allowed: use fallback cost and update PWC (even if negative)
+                    avg_cost, source = StockService._resolve_cogs_unit_cost(
+                        line.product_id, warehouse_id, tenant_id, line_cost_price=line.cost_price
+                    )
+                    cogs = (avg_cost * qty).quantize(Decimal('0.001'), rounding=ROUND_HALF_UP)
+                    current_app.logger.warning(
+                        'Negative inventory sale (%s) for product %s sale %s: unit_cost=%s, qty=%s',
+                        source, line.product_id, sale.sale_number, avg_cost, qty
+                    )
+
+                    if pwc:
+                        old_qty = Decimal(str(pwc.total_quantity)) if pwc.total_quantity is not None else Decimal('0')
+                        old_value = Decimal(str(pwc.total_value)) if pwc.total_value is not None else Decimal('0')
+                        old_avg = Decimal(str(pwc.average_cost)) if pwc.average_cost is not None else Decimal('0')
+                        new_qty, new_value, new_avg = StockService._mwac_calc(
+                            old_qty, old_value, -qty,
+                            avg_cost.quantize(Decimal('0.0001'))
+                        )
+                        pwc.total_quantity = new_qty
+                        pwc.total_value = new_value
+                        pwc.average_cost = new_avg.quantize(Decimal('0.0001'))
+                        pwc.last_updated = datetime.now(timezone.utc)
+                    else:
+                        # Create PWC with negative quantity (first negative sale for this product+warehouse)
+                        old_qty = Decimal('0')
+                        old_value = Decimal('0')
+                        old_avg = None
+                        new_qty = -qty
+                        new_value = -(qty * avg_cost)
+                        new_avg = avg_cost
+
+                        pwc = ProductWarehouseCost(
+                            tenant_id=tenant_id,
+                            product_id=line.product_id,
+                            warehouse_id=warehouse_id,
+                            total_quantity=new_qty,
+                            total_value=new_value,
+                            average_cost=new_avg.quantize(Decimal('0.0001')),
+                        )
+                        db.session.add(pwc)
+
+                    pch = ProductCostHistory(
+                        tenant_id=tenant_id,
+                        product_id=line.product_id,
+                        warehouse_id=warehouse_id,
+                        movement_type='sale',
+                        reference_type=GLRef.SALE,
+                        reference_id=sale.id,
+                        old_average_cost=old_avg.quantize(Decimal('0.0001')) if old_avg is not None else None,
+                        new_average_cost=pwc.average_cost,
+                        quantity_change=-qty,
+                        old_total_quantity=old_qty,
+                        new_total_quantity=new_qty,
+                        old_total_value=old_value,
+                        new_total_value=new_value,
+                        movement_unit_cost=avg_cost.quantize(Decimal('0.0001')),
+                    )
+                    db.session.add(pch)
                 else:
+                    # Negative inventory not allowed and stock is zero/negative
                     avg_cost, source = StockService._resolve_cogs_unit_cost(
                         line.product_id, warehouse_id, tenant_id, line_cost_price=line.cost_price
                     )
@@ -457,20 +526,20 @@ class StockService:
                     line.product_id, warehouse_id, tenant_id, line_cost_price=line.cost_price
                 )
                 cogs = (avg_cost * qty).quantize(Decimal('0.001'), rounding=ROUND_HALF_UP)
-            
+
             total_cogs += cogs
-        
+
         return total_cogs.quantize(Decimal('0.001'), rounding=ROUND_HALF_UP)
-    
+
     @staticmethod
     def process_purchase_lines(purchase, warehouse_id=None):
         if not warehouse_id and hasattr(purchase, 'warehouse_id'):
             warehouse_id = purchase.warehouse_id
-        
+
         tenant_id = getattr(purchase, 'tenant_id', None)
         mwac_enabled = current_app.config.get('ENABLE_MWAC', False)
         processed_product_ids = set()
-        
+
         for line in purchase.lines:
             StockService.add_stock(
                 product_id=line.product_id,
@@ -480,21 +549,21 @@ class StockService:
                 notes=f'شراء: {purchase.purchase_number}',
                 warehouse_id=warehouse_id
             )
-            
+
             product = Product.query.get(line.product_id)
             if not product:
                 continue
             processed_product_ids.add(product.id)
-                
-            # Phase 5: Use landed_unit_cost (FOB + allocated landed cost) for valuation
+
+            # Phase 5: Use landed_inventory_unit_cost (FOB + allocated landed cost, VAT-excl if applicable) for valuation
             capitalize_landed = current_app.config.get('ENABLE_LANDED_COST_CAPITALIZATION', True)
             if capitalize_landed:
-                unit_cost_for_valuation = line.landed_unit_cost
+                unit_cost_for_valuation = line.landed_inventory_unit_cost
             else:
-                unit_cost_for_valuation = Decimal(str(line.unit_cost)) if line.unit_cost else Decimal('0')
+                unit_cost_for_valuation = line.inventory_unit_cost
             exchange_rate_decimal = Decimal(str(purchase.exchange_rate))
             cost_in_aed = unit_cost_for_valuation * exchange_rate_decimal
-            
+
             # MWAC recalculation (Phase 4)
             if mwac_enabled and tenant_id and warehouse_id:
                 StockService._update_wac_on_receipt(
@@ -506,7 +575,7 @@ class StockService:
                     reference_type=GLRef.PURCHASE,
                     reference_id=purchase.id,
                 )
-        
+
         # Recalculate global product.cost_price as weighted average across all warehouses
         # to prevent a single warehouse receipt from corrupting the global cost
         for pid in processed_product_ids:
@@ -526,12 +595,84 @@ class StockService:
                 product.cost_price = (total_val / total_qty).quantize(Decimal('0.001'), rounding=ROUND_HALF_UP)
             else:
                 product.cost_price = Decimal('0')
-    
+
+    @staticmethod
+    def _post_retrospective_cost_adjustment(tenant_id, product_id, warehouse_id, old_qty, old_avg, unit_cost_aed, received_qty, reference_type, reference_id):
+        """
+        Post a GL adjustment when a purchase is received for a product that had negative stock.
+        The accumulated cost difference (between the fallback cost used for negative sales
+        and the actual new purchase cost) is posted to the inventory adjustment account.
+        """
+        from services.gl_posting import post_or_fail
+        from services.gl_service import GLService
+
+        # Only adjust if there was negative stock before this purchase
+        if old_qty >= 0:
+            return Decimal('0')
+
+        if old_avg is None or old_avg <= 0:
+            return Decimal('0')
+
+        if unit_cost_aed is None or unit_cost_aed <= 0:
+            return Decimal('0')
+
+        negative_qty = abs(old_qty)
+        # Variance = negative_qty * (new_cost - old_avg)
+        variance = (negative_qty * (unit_cost_aed - old_avg)).quantize(Decimal('0.001'))
+        if abs(variance) <= Decimal('0.001'):
+            return Decimal('0')
+
+        product = Product.query.get(product_id)
+        warehouse = Warehouse.query.get(warehouse_id) if warehouse_id else None
+        branch_id = warehouse.branch_id if warehouse else None
+        product_name = product.name if product else f'Product #{product_id}'
+
+        GLService.ensure_core_accounts(tenant_id=tenant_id)
+        asset_account = _resolve_gl_concept_account('INVENTORY_ASSET', '1140', tenant_id)
+
+        if variance > 0:
+            # New cost > old average: inventory value needs to be reduced (loss)
+            loss_account = _resolve_gl_concept_account('INVENTORY_ADJUSTMENT_LOSS', '5150', tenant_id)
+            lines = [
+                {'account': loss_account, 'concept_code': 'INVENTORY_ADJUSTMENT_LOSS', 'debit': variance, 'credit': 0, 'description': f'Retrospective cost adjustment (negative stock) - {product_name}'},
+                {'account': asset_account, 'concept_code': 'INVENTORY_ASSET', 'debit': 0, 'credit': variance, 'description': f'Retrospective cost adjustment (negative stock) - {product_name}'},
+            ]
+            description = f'Retrospective Cost Adjustment (Loss) — {product_name}'
+        else:
+            # New cost < old average: inventory value needs to be increased (gain)
+            gain_account = _resolve_gl_concept_account('INVENTORY_ADJUSTMENT_GAIN', '5150', tenant_id)
+            lines = [
+                {'account': asset_account, 'concept_code': 'INVENTORY_ASSET', 'debit': abs(variance), 'credit': 0, 'description': f'Retrospective cost adjustment (negative stock) - {product_name}'},
+                {'account': gain_account, 'concept_code': 'INVENTORY_ADJUSTMENT_GAIN', 'debit': 0, 'credit': abs(variance), 'description': f'Retrospective cost adjustment (negative stock) - {product_name}'},
+            ]
+            description = f'Retrospective Cost Adjustment (Gain) — {product_name}'
+
+        try:
+            post_or_fail(
+                lines=lines,
+                description=description,
+                reference_type=reference_type,
+                reference_id=reference_id,
+                branch_id=branch_id,
+                tenant_id=tenant_id,
+            )
+            current_app.logger.info(
+                'Retrospective cost adjustment posted for product %s, warehouse %s: variance=%s',
+                product_id, warehouse_id, variance
+            )
+        except Exception as e:
+            current_app.logger.warning(
+                'Failed to post retrospective cost adjustment for product %s, warehouse %s: %s',
+                product_id, warehouse_id, e
+            )
+
+        return variance
+
     @staticmethod
     def _update_wac_on_receipt(tenant_id, product_id, warehouse_id, received_qty, unit_cost_aed, reference_type, reference_id):
         """Recalculate MWAC when stock is received. Must run inside an existing transaction."""
         from datetime import datetime, timezone
-        
+
         query = ProductWarehouseCost.query.filter_by(
             tenant_id=tenant_id,
             product_id=product_id,
@@ -541,17 +682,31 @@ class StockService:
             pwc = query.with_for_update().first()
         except Exception:
             pwc = query.first()
-        
+
         if pwc:
             old_qty = pwc.total_quantity
             old_value = pwc.total_value
             old_avg = Decimal(str(pwc.average_cost)) if pwc.average_cost is not None else Decimal('0')
             new_qty, new_value, new_avg = StockService._mwac_calc(old_qty, old_value, received_qty, unit_cost_aed)
-            
+
             pwc.total_quantity = new_qty
             pwc.total_value = new_value
             pwc.average_cost = new_avg.quantize(Decimal('0.0001'))
             pwc.last_updated = datetime.now(timezone.utc)
+
+            # Retrospective cost adjustment for negative stock
+            if old_qty < 0 and old_avg > 0:
+                StockService._post_retrospective_cost_adjustment(
+                    tenant_id=tenant_id,
+                    product_id=product_id,
+                    warehouse_id=warehouse_id,
+                    old_qty=old_qty,
+                    old_avg=old_avg,
+                    unit_cost_aed=unit_cost_aed,
+                    received_qty=received_qty,
+                    reference_type=reference_type,
+                    reference_id=reference_id,
+                )
         else:
             # First receipt for this product+warehouse
             old_qty = Decimal('0')
@@ -560,7 +715,7 @@ class StockService:
             new_qty = received_qty
             new_value = received_qty * unit_cost_aed
             new_avg = unit_cost_aed
-            
+
             pwc = ProductWarehouseCost(
                 tenant_id=tenant_id,
                 product_id=product_id,
@@ -570,7 +725,7 @@ class StockService:
                 average_cost=new_avg.quantize(Decimal('0.0001')),
             )
             db.session.add(pwc)
-        
+
         # Immutable audit trail
         pch = ProductCostHistory(
             tenant_id=tenant_id,
@@ -589,7 +744,7 @@ class StockService:
             movement_unit_cost=unit_cost_aed.quantize(Decimal('0.0001')),
         )
         db.session.add(pch)
-    
+
     @staticmethod
     def reverse_sale(sale):
         """إلغاء بيع - إرجاع للمستودع الأصلي مع عكس MWAC"""
@@ -597,7 +752,7 @@ class StockService:
         warehouse_id = getattr(sale, 'warehouse_id', None)
         tenant_id = getattr(sale, 'tenant_id', None)
         mwac_enabled = current_app.config.get('ENABLE_MWAC', False)
-        
+
         for line in sale.lines:
             StockService.add_stock(
                 product_id=line.product_id,
@@ -607,7 +762,7 @@ class StockService:
                 notes=f'إلغاء بيع: {sale.sale_number}',
                 warehouse_id=warehouse_id
             )
-            
+
             # عكس MWAC إذا كان مفعلاً
             if mwac_enabled and tenant_id and warehouse_id:
                 q_rev = ProductWarehouseCost.query.filter_by(
@@ -619,7 +774,7 @@ class StockService:
                     pwc = q_rev.with_for_update().first()
                 except Exception:
                     pwc = q_rev.first()
-                
+
                 if pwc:
                     # البحث عن سجل التكلفة الأصلي للبيع لاستخدام قيمة COGS الأصلية
                     cost_history = ProductCostHistory.query.filter_by(
@@ -630,7 +785,7 @@ class StockService:
                         reference_type=GLRef.SALE,
                         reference_id=sale.id,
                     ).order_by(ProductCostHistory.id.desc()).first()
-                    
+
                     qty = Decimal(str(line.quantity))
                     if cost_history:
                         # استخدام قيم COGS الأصلية من سجل التكلفة
@@ -638,7 +793,7 @@ class StockService:
                     else:
                         # Fallback: استخدام متوسط التكلفة الحالي
                         original_cogs = pwc.average_cost * qty if pwc.average_cost else Decimal('0')
-                    
+
                     old_qty = pwc.total_quantity
                     old_value = pwc.total_value
                     old_avg = Decimal(str(pwc.average_cost)) if pwc.average_cost is not None else Decimal('0')
@@ -646,12 +801,12 @@ class StockService:
                         old_qty, old_value, qty,
                         (original_cogs / qty).quantize(Decimal('0.0001')) if qty > 0 else Decimal('0')
                     )
-                    
+
                     pwc.total_quantity = new_qty
                     pwc.total_value = new_value
                     pwc.average_cost = new_avg.quantize(Decimal('0.0001'))
                     pwc.last_updated = datetime.now(timezone.utc)
-                    
+
                     # سجل تدقيق عكس التكلفة
                     pch = ProductCostHistory(
                         tenant_id=tenant_id,
@@ -670,7 +825,7 @@ class StockService:
                         movement_unit_cost=(original_cogs / qty).quantize(Decimal('0.0001')) if qty > 0 else Decimal('0'),
                     )
                     db.session.add(pch)
-    
+
     @staticmethod
     def reverse_purchase(purchase):
         """إلغاء شراء - حذف المخزون مع عكس MWAC واستخدام التكلفة الأصلية من سجل التدقيق"""
@@ -749,16 +904,16 @@ class StockService:
     @staticmethod
     def check_availability(product_id, quantity):
         product = Product.query.get(product_id)
-        
+
         if not product:
             return False, 'المنتج غير موجود'
-        
+
         if not product.is_active:
             return False, 'المنتج غير نشط'
-        
+
         if product.current_stock < Decimal(str(quantity)):
             return False, f'المخزون غير كافٍ (المتوفر: {product.current_stock})'
-        
+
         return True, 'متوفر'
 
     @staticmethod
@@ -774,6 +929,10 @@ class StockService:
         warehouse = Warehouse.query.filter_by(id=warehouse_id, is_active=True).first()
         if not warehouse:
             return False, 'المستودع غير موجود أو غير نشط'
+
+        # Negative inventory guard: if warehouse allows negative inventory, always allow
+        if warehouse.allow_negative_inventory:
+            return True, 'متوفر (البيع بالسالب مفعل)'
 
         available_qty = StockService.get_product_stock(product_id, warehouse_id=warehouse_id)
         if available_qty < Decimal(str(quantity)):
@@ -796,7 +955,7 @@ class StockService:
         from utils.branching import get_visible_products_query
 
         return get_visible_products_query(user)
-    
+
     @staticmethod
     def get_low_stock_products(limit=None, user=None):
         branch_warehouse_ids = get_accessible_warehouse_ids(user)
@@ -825,7 +984,7 @@ class StockService:
             products = products[:limit]
 
         return products
-    
+
     @staticmethod
     def get_out_of_stock_products(user=None):
         branch_warehouse_ids = get_accessible_warehouse_ids(user)

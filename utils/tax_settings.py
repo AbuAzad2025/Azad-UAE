@@ -28,6 +28,16 @@ def _resolve_tenant(tenant_id=None):
         return None
 
 
+def _resolve_main_branch(tenant_id):
+    """Resolve the main branch for a tenant; returns None if no branch exists."""
+    from models.branch import Branch
+    if tenant_id is not None:
+        branch = Branch.query.filter_by(tenant_id=int(tenant_id), is_main=True).first()
+        if branch:
+            return branch.id
+    return None
+
+
 def is_tax_enabled(tenant_id=None) -> bool:
     tenant = _resolve_tenant(tenant_id)
     if tenant is None:
@@ -43,6 +53,7 @@ def vat_country(tenant_id=None) -> str:
 
 
 def default_tax_rate(tenant_id=None) -> Decimal:
+    """Return tenant-configured tax rate. Falls back to 0 if not set."""
     if not is_tax_enabled(tenant_id):
         return Decimal('0')
     tenant = _resolve_tenant(tenant_id)
@@ -51,7 +62,27 @@ def default_tax_rate(tenant_id=None) -> Decimal:
     stored = getattr(tenant, 'default_tax_rate', None)
     if stored is not None and Decimal(str(stored)) >= Decimal('0'):
         return Decimal(str(stored))
-    return VAT_RATES_BY_COUNTRY.get(vat_country(tenant_id), Decimal('0'))
+    return Decimal('0')  # Removed hardcoded VAT_RATES_BY_COUNTRY fallback
+
+
+def get_prices_include_vat(tenant_id=None, branch_id=None) -> bool:
+    """Return True if the tenant/branch uses VAT-inclusive pricing.
+
+    Priority:
+      1. Branch-level setting (if explicitly set)
+      2. Tenant-level setting
+      3. False (default)
+    """
+    if branch_id is not None:
+        from models.branch import Branch
+        from extensions import db
+        branch = db.session.get(Branch, int(branch_id))
+        if branch and branch.prices_include_vat is not None:
+            return bool(branch.prices_include_vat)
+    tenant = _resolve_tenant(tenant_id)
+    if tenant is not None:
+        return bool(getattr(tenant, 'prices_include_vat', False))
+    return False
 
 
 def normalize_tax_rate(tax_rate, tenant_id=None) -> Decimal:

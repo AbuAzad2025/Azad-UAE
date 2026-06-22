@@ -371,7 +371,7 @@ function calculateTotalsClientSide() {
 /**
  * Load Exchange Rate
  */
-function loadExchangeRate(fromCurrency, toCurrency = 'AED') {
+function loadExchangeRate(fromCurrency, toCurrency = window._FX_FALLBACK_BASE || 'AED') {
     if (fromCurrency === toCurrency) {
         $('#exchange_rate').val('1.00');
         return;

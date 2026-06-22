@@ -47,8 +47,8 @@ function addLine() {
                     <input type="number" name="lines[${lineIndex}][unit_price]" class="form-control price-input" 
                            placeholder="السعر" step="0.01" min="0" required 
                            id="price_${lineIndex}" onchange="calculateTotals()" onkeyup="calculateTotals()"
-                           title="سعر الوحدة بالدرهم">
-                    <small class="text-muted">درهم/وحدة</small>
+                           title="سعر الوحدة بالعملة الأساسية">
+                    <small class="text-muted">${window._CURRENCY_SYMBOL || 'AED'}/وحدة</small>
                 </div>
                 <div class="col-md-2">
                     <label class="font-weight-bold mb-1">
@@ -159,7 +159,7 @@ function addLine() {
                         }
                     }
                     if (data.cost_price) {
-                        $(`#cost_${currentIndex}`).text(parseFloat(data.cost_price).toFixed(2) + ' AED');
+                        $(`#cost_${currentIndex}`).text(parseFloat(data.cost_price).toFixed(2) + ' ' + (window._CURRENCY_SYMBOL || 'AED'));
                     }
                     calculateTotals();
                 },
@@ -184,7 +184,7 @@ function addLine() {
         }
         
         if (selectedData.cost) {
-            $(`#cost_${currentIndex}`).text(parseFloat(selectedData.cost).toFixed(2) + ' AED');
+            $(`#cost_${currentIndex}`).text(parseFloat(selectedData.cost).toFixed(2) + ' ' + (window._CURRENCY_SYMBOL || 'AED'));
         }
         
         // حساب الإجماليات
@@ -223,7 +223,7 @@ function loadProductPrice(index) {
             customer_id: customerId 
         },
         success: function(data) {
-            // Store base price in AED
+            // Store base price in base currency
             $(`#price_${index}`).data('base-price', data.price);
             
             // Calculate price based on current currency
@@ -231,7 +231,7 @@ function loadProductPrice(index) {
             const currency = $('#currency').val();
             
             let finalPrice = data.price;
-            if (currency !== 'AED' && rate > 0) {
+            if (currency !== (window._FX_FALLBACK_BASE || 'AED') && rate > 0) {
                 finalPrice = data.price / rate;
             }
             
@@ -247,7 +247,7 @@ function loadProductPrice(index) {
             }
             
             if (data.cost_price && data.cost_price > 0) {
-                $(`#cost_${index}`).text(data.cost_price.toFixed(2) + ' AED');
+                $(`#cost_${index}`).text(data.cost_price.toFixed(2) + ' ' + (window._CURRENCY_SYMBOL || 'AED'));
             }
             
             // Check Serial Number Requirement (Outside cost check, always check product data)
@@ -306,7 +306,7 @@ function updateLinePrices() {
         
         if (!isNaN(basePrice)) {
             let finalPrice = basePrice;
-            if (currency !== 'AED' && rate > 0) {
+            if (currency !== (window._FX_FALLBACK_BASE || 'AED') && rate > 0) {
                 finalPrice = basePrice / rate;
             }
             $priceInput.val(finalPrice.toFixed(2));
@@ -443,20 +443,20 @@ $('#currency').on('change', function() {
     // Update payment currency display
     $('#payment_currency_display').text(currency);
     
-    if (currency === 'AED') {
+    if (currency === (window._FX_FALLBACK_BASE || 'AED')) {
         $rateInput.val('1.000000');
         $rateInput.data('server-rate', 1);
         serverExchangeRate = 1;
         $rateInput.prop('readonly', false);
         $rateInput.css('background-color', '#e9ecef');
-        azad.showInfo('💡 العملة: درهم - الأسعار والمدفوع بالدرهم');
+        azad.showInfo(`💡 العملة: ${window._CURRENCY_NAME_AR || 'درهم'} - الأسعار والمدفوع بالـ${window._CURRENCY_NAME_AR || 'درهم'}`);
         return;
     }
     
     $rateInput.val('...').css('background-color', '#fff8dc');
     
     $.ajax({
-        url: `/api/currency-rate/${currency}/AED`,
+        url: `/api/currency-rate/${currency}/${window._FX_FALLBACK_BASE || 'AED'}`,
         success: function(data) {
             if (data.rate) {
                 serverExchangeRate = data.rate;
@@ -465,8 +465,8 @@ $('#currency').on('change', function() {
                 $rateInput.prop('readonly', false);
                 $rateInput.css('background-color', '#d4edda');
                 const examplePayment = 100;
-                const exampleAED = (examplePayment * data.rate).toFixed(2);
-                azad.showSuccess(`✅ تم جلب سعر الصرف: 1 ${currency} = ${data.rate.toFixed(3)} AED`);
+                const exampleBase = (examplePayment * data.rate).toFixed(2);
+                azad.showSuccess(`✅ تم جلب سعر الصرف: 1 ${currency} = ${data.rate.toFixed(3)} ${window._FX_FALLBACK_BASE || 'AED'}`);
                 updateLinePrices();
             } else if (data.manual_input_required) {
                 serverExchangeRate = null;

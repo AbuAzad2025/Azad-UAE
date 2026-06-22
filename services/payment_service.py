@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from utils.tenanting import get_active_tenant_id
 from decimal import Decimal
 from flask import current_app
 from flask_login import current_user
@@ -12,7 +12,7 @@ from utils.gl_reference_types import GLRef
 from utils.helpers import generate_number
 from utils.branching import branch_scope_id_for
 from utils.constants import normalize_payment_method_code
-from utils.currency_utils import get_system_default_currency
+from utils.currency_utils import get_system_default_currency, resolve_tenant_base_currency
 from utils.field_validators import (
     canonical_payment_type,
     validate_currency_code,
@@ -24,10 +24,11 @@ class PaymentService:
 
     @staticmethod
     def _resolve_transaction_rate(currency, user_exchange_rate=None, tenant_id=None):
-        from utils.currency_utils import get_system_default_currency
+        from utils.currency_utils import resolve_tenant_base_currency
+        base_currency = resolve_tenant_base_currency(tenant_id=tenant_id)
         rate_info = ExchangeRateService.resolve_exchange_rate_for_transaction(
             currency,
-            get_system_default_currency(),
+            base_currency,
             user_rate=user_exchange_rate,
             tenant_id=tenant_id,
         )
@@ -51,12 +52,12 @@ class PaymentService:
         if user is not None and getattr(user, "branch_id", None):
             return user.branch_id
         return getattr(current_user, "branch_id", None) if getattr(current_user, "is_authenticated", False) else None
-    
+
     @staticmethod
     def create_payment(payment_data):
         """
         Create outgoing payment (to supplier)
-        
+
         Args:
             payment_data (dict): {
                 'supplier_id': int,
@@ -68,7 +69,7 @@ class PaymentService:
             }
         """
         from models import Supplier, Payment
-        
+
         supplier_id = payment_data.get('supplier_id')
         amount = payment_data.get('amount')
         currency = validate_currency_code(payment_data.get('currency', get_system_default_currency()))
@@ -83,11 +84,11 @@ class PaymentService:
             payment_data.get('branch_id'),
             user=current_user if getattr(current_user, 'is_authenticated', False) else None,
         )
-        
+
         supplier = db.session.get(Supplier, supplier_id)
         if not supplier:
              raise ValueError('المورد غير موجود')
-             
+
         try:
             payment_number = generate_number(
                 'PAY',
@@ -96,9 +97,9 @@ class PaymentService:
                 branch_id=branch_id,
                 tenant_id=getattr(supplier, 'tenant_id', None),
             )
-            
+
             exchange_rate = PaymentService._resolve_transaction_rate(currency, user_exchange_rate)
-            
+
             payment = Payment(
                 tenant_id=getattr(supplier, 'tenant_id', None) or (getattr(current_user, 'tenant_id', None) if current_user and getattr(current_user, 'is_authenticated', False) else None),
                 payment_number=payment_number,
@@ -117,7 +118,7 @@ class PaymentService:
                 branch_id=branch_id,
                 payment_confirmed=(payment_method != 'cheque')
             )
-            
+
             db.session.add(payment)
             db.session.flush()
 
@@ -149,14 +150,14 @@ class PaymentService:
             if payment.payment_confirmed or payment_method == 'cheque':
                 from decimal import Decimal as _D
                 supplier.apply_payment(_D(str(payment.amount_aed or 0)))
-            
+
             # GL Entries
             tenant_id = getattr(supplier, 'tenant_id', None) or (getattr(current_user, 'tenant_id', None) if current_user and getattr(current_user, 'is_authenticated', False) else None)
             try:
                 GLService.ensure_core_accounts(tenant_id=tenant_id)
                 # Debit: Accounts Payable (2110)
                 # Credit: Cash/Bank (1110/1120)
-                
+
                 credit_account = GLService.get_payment_credit_account(
                     payment_method,
                     branch_id=payment.branch_id,
@@ -180,7 +181,7 @@ class PaymentService:
                 current_app.logger.exception('GL posting failed for payment: %s', _e)
                 db.session.rollback()
                 raise ValueError(f'فشل الترحيل المحاسبي للدفعة: {_e}') from _e
-                
+
             try:
                 db.session.commit()
             except Exception:
@@ -189,7 +190,7 @@ class PaymentService:
                 raise
 
             return payment
-            
+
         except Exception:
             current_app.logger.exception('Payment creation failed')
             db.session.rollback()
@@ -199,7 +200,7 @@ class PaymentService:
     def create_receipt(payment_data):
         """
         Create receipt from payment data dict
-        
+
         Args:
             payment_data (dict): {
                 'customer_id': int,
@@ -211,7 +212,7 @@ class PaymentService:
             }
         """
         from models import Customer
-        
+
         customer_id = payment_data.get('customer_id')
         amount = payment_data.get('amount')
         currency = validate_currency_code(payment_data.get('currency', get_system_default_currency()))
@@ -224,7 +225,7 @@ class PaymentService:
         bank_name = payment_data.get('bank_name') or 'Bank'
         allocate_to_sales = payment_data.get('allocate_to_sales')
         source_sale = None
-        
+
         # Convert cheque_date to date object if it's a string
         if cheque_date and isinstance(cheque_date, str):
             from datetime import datetime
@@ -232,7 +233,7 @@ class PaymentService:
                 cheque_date = datetime.strptime(cheque_date, '%Y-%m-%d').date()
             except ValueError:
                 raise ValueError('تاريخ الشيك غير صالح')
-        
+
         customer = db.session.get(Customer, customer_id)
         if not customer:
             raise ValueError('Customer not found.')
@@ -247,7 +248,7 @@ class PaymentService:
             source_type = 'manual'  # افتراضي
             source_id = None
             direction = 'incoming'  # سندات القبض دائماً وارد
-            
+
             if allocate_to_sales:
                 # إذا كان مرتبط بفاتورة بيع
                 source_type = 'sale'
@@ -267,9 +268,9 @@ class PaymentService:
                 branch_id=branch_id,
                 tenant_id=tenant_id,
             )
-            
+
             exchange_rate = PaymentService._resolve_transaction_rate(currency, user_exchange_rate)
-            
+
             receipt = Receipt(
                 tenant_id=tenant_id,
                 receipt_number=receipt_number,
@@ -291,10 +292,10 @@ class PaymentService:
                 user_id=current_user.id if current_user and current_user.is_authenticated else 1,
                 branch_id=branch_id,
             )
-            
+
             db.session.add(receipt)
             db.session.flush()
-            
+
             # إنشاء سجل الشيك إذا كانت طريقة الدفع شيك
             if payment_method == 'cheque' and cheque_number:
                 from models import Cheque
@@ -317,10 +318,10 @@ class PaymentService:
                 )
                 db.session.add(cheque)
                 db.session.flush()
-                
+
                 # ربط الشيك بالسند
                 receipt.cheque_id = cheque.id
-                
+
                 # استخدام منطق الشيك المحاسبي (شيكات تحت التحصيل -> ذمم مدينة)
                 gl_entry = process_cheque_receive(cheque)
                 if gl_entry is None:
@@ -328,7 +329,7 @@ class PaymentService:
                 # تحديث رصيد العميل فوراً لأن قيد الاستلام (Dr CUC / Cr AR) يخفض الذمم
                 from decimal import Decimal as _D
                 customer.apply_receipt(_D(str(receipt.amount_aed or 0)))
-            
+
             else:
                 # GL Entry for Standard Receipt (Cash/Bank)
                 try:
@@ -359,6 +360,40 @@ class PaymentService:
                         branch_id=receipt.branch_id,
                         tenant_id=tenant_id,
                     )
+
+                    # FX Gain/Loss auto-posting for direct receipt (same currency, different rate vs original invoice)
+                    if allocate_to_sales and source_sale and source_sale.currency == receipt.currency:
+                        sale_rate = Decimal(str(source_sale.exchange_rate or 1))
+                        receipt_rate = Decimal(str(receipt.exchange_rate or 1))
+                        if sale_rate != receipt_rate and receipt.amount > 0:
+                            expected_aed = (receipt.amount * sale_rate).quantize(Decimal('0.001'), rounding=ROUND_HALF_UP)
+                            actual_aed = (receipt.amount * receipt_rate).quantize(Decimal('0.001'), rounding=ROUND_HALF_UP)
+                            fx_diff = (actual_aed - expected_aed).quantize(Decimal('0.001'), rounding=ROUND_HALF_UP)
+                            if abs(fx_diff) > Decimal('0.01'):
+                                try:
+                                    fx_lines = []
+                                    if fx_diff > 0:
+                                        fx_lines = [
+                                            {'account': GLService.get_account_code_for_concept('AR', branch_id=receipt.branch_id, tenant_id=tenant_id, fallback_key='receivable'), 'concept_code': 'AR', 'debit': fx_diff, 'description': f'FX Gain Adjustment - Receipt {receipt.receipt_number}'},
+                                            {'account': GLService.get_account_code_for_concept('FX_GAIN', branch_id=receipt.branch_id, tenant_id=tenant_id, fallback_key='fx_gain'), 'concept_code': 'FX_GAIN', 'credit': fx_diff, 'description': f'FX Gain - Receipt {receipt.receipt_number}'},
+                                        ]
+                                    else:
+                                        fx_lines = [
+                                            {'account': GLService.get_account_code_for_concept('FX_LOSS', branch_id=receipt.branch_id, tenant_id=tenant_id, fallback_key='fx_loss'), 'concept_code': 'FX_LOSS', 'debit': abs(fx_diff), 'description': f'FX Loss - Receipt {receipt.receipt_number}'},
+                                            {'account': GLService.get_account_code_for_concept('AR', branch_id=receipt.branch_id, tenant_id=tenant_id, fallback_key='receivable'), 'concept_code': 'AR', 'credit': abs(fx_diff), 'description': f'FX Loss Adjustment - Receipt {receipt.receipt_number}'},
+                                        ]
+                                    post_or_fail(
+                                        fx_lines,
+                                        description=f'FX Gain/Loss - Receipt {receipt.receipt_number}',
+                                        reference_type=GLRef.RECEIPT,
+                                        reference_id=receipt.id,
+                                        currency=resolve_tenant_base_currency(tenant_id=tenant_id),
+                                        exchange_rate=1.0,
+                                        branch_id=receipt.branch_id,
+                                        tenant_id=tenant_id,
+                                    )
+                                except Exception as fx_err:
+                                    current_app.logger.warning('FX auto-posting skipped for receipt %s: %s', receipt.receipt_number, fx_err)
                 except Exception as _e:
                     current_app.logger.exception('GL posting failed for receipt: %s', _e)
                     db.session.rollback()
@@ -367,20 +402,20 @@ class PaymentService:
                 # تحديث رصيد العميل التراكمي (ما دُفع منه)
                 from decimal import Decimal as _D
                 customer.apply_receipt(_D(str(receipt.amount_aed or 0)))
-            
+
             # Allocation Logic (Restored & Improved)
             if allocate_to_sales:
                 remaining_amount_aed = Decimal(str(receipt.amount_aed or 0))
-                
+
                 for sale_id, allocated in allocate_to_sales.items():
                     if remaining_amount_aed <= 0:
                         break
-                    
+
                     sale = Sale.query.get(sale_id)
-                    
+
                     if not sale or sale.customer_id != customer.id:
                         continue
-                    
+
                     sale_balance_aed = Decimal(str(sale.balance_due or 0))
                     requested_amount = Decimal(str(allocated or 0))
                     requested_amount_aed = (requested_amount * exchange_rate).quantize(
@@ -392,7 +427,7 @@ class PaymentService:
                     allocated_amount = (allocated_amount_aed / exchange_rate).quantize(
                         Decimal('0.001')
                     )
-                    
+
                     # Create Payment record linked to Sale (Crucial for recalculation)
                     from models import Payment
                     sale_payment = Payment(
@@ -422,7 +457,7 @@ class PaymentService:
                     )
                     db.session.add(sale_payment)
                     db.session.flush()
-                    
+
                     # Direct update (will be overwritten by recalculate, but good for immediate state)
                     sale.paid_amount_aed += allocated_amount_aed
                     sale_rate = Decimal(str(sale.exchange_rate or 1))
@@ -431,12 +466,12 @@ class PaymentService:
                             Decimal('0.001')
                         )
                     # sale.balance_due -= allocated_amount # Let recalculate handle this
-                    
+
                     # Trigger recalculation
                     sale.recalculate_payment_status()
-                    
+
                     remaining_amount_aed -= allocated_amount_aed
-            
+
             try:
                 db.session.commit()
             except Exception:
@@ -444,28 +479,31 @@ class PaymentService:
                 db.session.rollback()
                 raise
 
-            
+
             current_app.logger.info(f'Receipt created: {receipt.receipt_number}')
-            
+
             return receipt
-        
+
         except Exception:
             current_app.logger.exception('Receipt creation failed')
             db.session.rollback()
             raise
-    
+
     @staticmethod
     def get_customer_balance_aed(customer):
         """مصدر واحد لرصيد العميل بالدرهم - يستخدم نموذج العميل."""
         return Decimal(str(customer.get_balance_aed() or 0))
 
     @staticmethod
-    def get_customer_balance_scoped(customer_id, branch_id=None):
-        """رصيد العميل مقيد بالفرع. يحسب من SQL مباشر.
+    def get_customer_balance_scoped(customer_id, branch_id=None, tenant_id=None):
+        """رصيد العميل مقيد بالتينانت والفرع. يحسب من SQL مباشر.
         الدلالة: موجب = رصيد للعميل، سالب = ذمة على العميل.
         الصيغة: Receipts - Sales - Outgoing_Payments_to_customer (refunds)
-        يعيد Decimal. إذا كان branch_id = None يُرجع الرصيد الكامل (غير مقيد)."""
+        يعيد Decimal. إذا كان branch_id = None يُرجع الرصيد الكامل (غير مقيد بالفرع)."""
         from models import Payment as PaymentModel
+
+        if tenant_id is None:
+            tenant_id = get_active_tenant_id()
 
         sales_total = db.session.query(db.func.sum(Sale.amount_aed)).filter(
             Sale.customer_id == customer_id,
@@ -478,6 +516,10 @@ class PaymentService:
             PaymentModel.customer_id == customer_id,
             PaymentModel.direction == 'outgoing',
         )
+        if tenant_id is not None:
+            sales_total = sales_total.filter(Sale.tenant_id == tenant_id)
+            receipts_total = receipts_total.filter(Receipt.tenant_id == tenant_id)
+            outgoing_total = outgoing_total.filter(PaymentModel.tenant_id == tenant_id)
         if branch_id is not None:
             sales_total = sales_total.filter(Sale.branch_id == branch_id)
             receipts_total = receipts_total.filter(Receipt.branch_id == branch_id)
@@ -490,10 +532,13 @@ class PaymentService:
         )
 
     @staticmethod
-    def get_supplier_balance_scoped(supplier_id, branch_id=None):
-        """رصيد المورد مقيد بالفرع. يحسب من SQL مباشر.
+    def get_supplier_balance_scoped(supplier_id, branch_id=None, tenant_id=None):
+        """رصيد المورد مقيد بالتينانت والفرع. يحسب من SQL مباشر.
         الدلالة: موجب = مستحق للمورد (نحن ندين له)، سالب = المورد مدين لنا.
         الصيغة: Purchases - Outgoing_Payments + Incoming_Payments (refunds from supplier)"""
+        if tenant_id is None:
+            tenant_id = get_active_tenant_id()
+
         purchases_total = db.session.query(db.func.sum(Purchase.amount_aed)).filter(
             Purchase.supplier_id == supplier_id,
             Purchase.status == 'confirmed',
@@ -506,6 +551,10 @@ class PaymentService:
             Payment.supplier_id == supplier_id,
             Payment.direction == 'incoming',
         )
+        if tenant_id is not None:
+            purchases_total = purchases_total.filter(Purchase.tenant_id == tenant_id)
+            outgoing_total = outgoing_total.filter(Payment.tenant_id == tenant_id)
+            incoming_total = incoming_total.filter(Payment.tenant_id == tenant_id)
         if branch_id is not None:
             purchases_total = purchases_total.filter(Purchase.branch_id == branch_id)
             outgoing_total = outgoing_total.filter(Payment.branch_id == branch_id)
@@ -539,26 +588,26 @@ class PaymentService:
             Sale.status == 'confirmed',
             Sale.balance_due > 0
         ).order_by(Sale.sale_date.asc()).all()
-    
+
     @staticmethod
     def allocate_receipt_to_oldest_sales(receipt, customer):
         try:
             remaining_amount_aed = Decimal(str(receipt.amount_aed or 0))
             customer.apply_receipt(remaining_amount_aed)
-            
+
             unpaid_sales = PaymentService.get_unpaid_sales(customer)
-            
+
             for sale in unpaid_sales:
                 if remaining_amount_aed <= 0:
                     break
-                
+
                 sale_balance_aed = Decimal(str(sale.balance_due or 0))
                 allocated_aed = min(remaining_amount_aed, sale_balance_aed)
                 if allocated_aed <= 0:
                     continue
                 sale_rate = Decimal(str(sale.exchange_rate or 1))
                 allocated = (allocated_aed / sale_rate).quantize(Decimal('0.001'))
-                
+
                 from models import Payment
                 sale_payment = Payment(
                     tenant_id=getattr(sale, 'tenant_id', None) or getattr(customer, 'tenant_id', None),
@@ -586,7 +635,7 @@ class PaymentService:
                 db.session.add(sale_payment)
                 sale.recalculate_payment_status()
                 remaining_amount_aed -= allocated_aed
-            
+
             try:
                 db.session.commit()
             except Exception:

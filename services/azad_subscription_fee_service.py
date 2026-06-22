@@ -84,6 +84,8 @@ class AzadSubscriptionFeeService:
 
         # Post GL: Dr Subscription Expense, Cr Azad Platform Payable
         GLService.ensure_core_accounts(tenant_id=int(tenant_id))
+        from utils.tax_settings import _resolve_main_branch
+        branch_id = _resolve_main_branch(tenant_id)
         post_or_fail(
             [
                 {
@@ -103,6 +105,7 @@ class AzadSubscriptionFeeService:
             reference_type=GLRef.AZAD_SUBSCRIPTION_FEE,
             reference_id=fee.id,
             exchange_rate=1.0,
+            branch_id=branch_id,
             tenant_id=int(tenant_id),
         )
         fee.gl_posted = True
@@ -148,6 +151,8 @@ class AzadSubscriptionFeeService:
             credit_code = GL_ACCOUNTS.get('cash')
 
         GLService.ensure_core_accounts(tenant_id=int(tid))
+        from utils.tax_settings import _resolve_main_branch
+        branch_id = _resolve_main_branch(tid)
         post_or_fail(
             [
                 {
@@ -167,6 +172,7 @@ class AzadSubscriptionFeeService:
             reference_type=GLRef.AZAD_SUBSCRIPTION_FEE,
             reference_id=fee.id,
             exchange_rate=1.0,
+            branch_id=branch_id,
             tenant_id=int(tid),
         )
 

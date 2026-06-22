@@ -158,7 +158,7 @@
           if (res.success && res.totals) {
             var totalEl = document.querySelector('.ps-summary-row.total span:last-child');
             if (totalEl && res.totals.subtotal) {
-              totalEl.textContent = parseFloat(res.totals.subtotal).toFixed(2) + ' ' + (res.totals.currency || 'AED');
+              totalEl.textContent = parseFloat(res.totals.subtotal).toFixed(2) + ' ' + (res.totals.currency || window._CURRENCY_SYMBOL || 'AED');
             }
           }
         });

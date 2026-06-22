@@ -1,4 +1,5 @@
 from config import Config
+from decimal import Decimal
 
 
 def get_system_default_currency() -> str:
@@ -39,6 +40,52 @@ def resolve_default_currency(tenant=None) -> str:
             return val.upper()
     except Exception:
         pass
+    return get_system_default_currency()
+
+
+def get_tenant_base_currency(tenant_id: int | None = None) -> str:
+    """Return the tenant's base currency dynamically.
+    Priority:
+      1. tenant.base_currency
+      2. tenant.default_currency
+      3. system default (ILS)
+    """
+    if tenant_id is not None:
+        try:
+            from models.tenant import Tenant
+            tenant = Tenant.query.get(int(tenant_id))
+            if tenant:
+                base = getattr(tenant, 'base_currency', None)
+                if base:
+                    val = base.strip().upper()
+                    if val:
+                        return val
+                # fallback to default_currency
+                default = getattr(tenant, 'default_currency', None)
+                if default:
+                    val = default.strip().upper()
+                    if val:
+                        return val
+        except Exception:
+            pass
+    return get_system_default_currency()
+
+
+def resolve_tenant_base_currency(tenant=None, tenant_id=None) -> str:
+    """Resolve the base currency for a tenant instance or tenant_id."""
+    if tenant is not None:
+        base = getattr(tenant, 'base_currency', None)
+        if base:
+            val = base.strip().upper()
+            if val:
+                return val
+        default = getattr(tenant, 'default_currency', None)
+        if default:
+            val = default.strip().upper()
+            if val:
+                return val
+    if tenant_id is not None:
+        return get_tenant_base_currency(tenant_id)
     return get_system_default_currency()
 
 

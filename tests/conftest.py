@@ -140,6 +140,8 @@ def sample_tenant(db_session):
         phone_1="0500000000",
         country="AE",
         subscription_plan="basic",
+        default_currency="AED",
+        base_currency="AED",
     )
     db_session.add(tenant)
     db_session.commit()
@@ -486,6 +488,7 @@ def sample_product_with_stock(db_session, sample_tenant, sample_warehouse):
     db_session.add(p)
     db_session.commit()
     StockService.add_stock(p.id, 100, warehouse_id=sample_warehouse.id)
+    db_session.commit()  # Commit the stock movement before refreshing
     db_session.refresh(p)
     return p
 

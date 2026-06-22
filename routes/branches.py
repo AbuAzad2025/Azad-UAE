@@ -88,6 +88,8 @@ def edit(id):
 
         branch.phone = normalize_phone_optional(request.form.get('phone'))
         branch.is_main = request.form.get('is_main') == 'on'
+        raw_piv = request.form.get('prices_include_vat')
+        branch.prices_include_vat = True if raw_piv == 'on' else (False if raw_piv == 'off' else None)
 
         db.session.flush()
         _sync_branch_financial_accounts(branch.tenant_id)

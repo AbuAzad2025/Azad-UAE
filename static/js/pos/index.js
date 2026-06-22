@@ -1,4 +1,4 @@
-﻿(function(){
+(function(){
     const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
     const state = {
         customer: null,
@@ -13,7 +13,7 @@
         const n = Number(v);
         return Number.isFinite(n) ? n : 0;
     };
-    const baseCurrency = document.querySelector('meta[name="pos-base-currency"]')?.getAttribute('content') || 'AED';
+    const baseCurrency = document.querySelector('meta[name="pos-base-currency"]')?.getAttribute('content') || window._FX_FALLBACK_BASE || 'AED';
     const selectedCurrency = () => qs('#currency').value || baseCurrency;
     const currentRate = () => toNum(qs('#exchangeRate').value) || 1;
     const priceForCurrency = (basePrice) => {
@@ -23,20 +23,20 @@
         }
         return toNum(basePrice);
     };
-    const updateCartPrices = () => {
+    const updateCartPrices = async () => {
         state.cart.forEach(it => {
             if (!Number.isFinite(Number(it.basePrice))) {
                 it.basePrice = it.price;
             }
             it.price = priceForCurrency(it.basePrice);
         });
-        renderCart();
+        await renderCart();
     };
     const loadRateForCurrency = async () => {
         const currency = selectedCurrency();
         if (currency === baseCurrency) {
             qs('#exchangeRate').value = '1';
-            updateCartPrices();
+            await updateCartPrices();
             return;
         }
         try {
@@ -47,7 +47,7 @@
             }
         } catch (_) {
         }
-        updateCartPrices();
+        await updateCartPrices();
     };
     const esc = (s) => {
         if (s == null) return '';
@@ -82,7 +82,9 @@
             el.className = 'text-muted mt-2';
         }
     };
-    const recalc = () => {
+    const pricesIncludeVatMeta = document.querySelector('meta[name="pos-prices-include-vat"]')?.getAttribute('content') === 'true';
+    const currencySymbol = document.querySelector('meta[name="pos-currency-symbol"]')?.getAttribute('content') || baseCurrency;
+    const recalc = async () => {
         const taxRate = Math.max(0, Math.min(100, toNum(qs('#taxRate').value)));
         const shipping = Math.max(0, toNum(qs('#shippingCost').value));
         const discountAmount = Math.max(0, toNum(qs('#discountAmount').value));
@@ -94,20 +96,53 @@
             subtotal += lineBase - lineDisc;
             discount += lineDisc;
         });
-        const tax = subtotal * (taxRate / 100);
-        const total = Math.max(0, subtotal + tax + shipping - discountAmount);
+        // Quick local estimate (for responsive UI)
+        const quickTax = pricesIncludeVatMeta ? 0 : subtotal * (taxRate / 100);
+        const quickTotal = Math.max(0, subtotal + quickTax + shipping - discountAmount);
         qs('#kpiSubtotal').textContent = fmt(subtotal);
         qs('#kpiDiscount').textContent = fmt(discount + discountAmount);
-        qs('#kpiTotal').textContent = fmt(total);
-        qs('#kpiCurrency').textContent = qs('#currency').value;
-        return { subtotal, tax, shipping, discountAmount, taxRate, total };
+        qs('#kpiTotal').textContent = fmt(quickTotal);
+        qs('#kpiCurrency').textContent = currencySymbol;
+        // Backend API for exact calculation (handles prices_include_vat correctly)
+        if (state.cart.length > 0) {
+            try {
+                const r = await fetch('/sales/api/calculate-totals', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrf
+                    },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({
+                        lines: state.cart.map(it => ({
+                            quantity: it.qty,
+                            unit_price: it.price,
+                            discount_percent: it.discountPercent
+                        })),
+                        discount_amount: discountAmount,
+                        shipping_cost: shipping,
+                        tax_rate: taxRate,
+                        prices_include_vat: pricesIncludeVatMeta
+                    })
+                });
+                const data = await r.json();
+                if (data.success) {
+                    qs('#kpiSubtotal').textContent = fmt(data.subtotal);
+                    qs('#kpiDiscount').textContent = fmt(data.discount);
+                    qs('#kpiTotal').textContent = fmt(data.total);
+                    qs('#kpiCurrency').textContent = currencySymbol;
+                    return { subtotal: data.subtotal, tax: data.tax_amount, shipping, discountAmount, taxRate, total: data.total, prices_include_vat: data.prices_include_vat };
+                }
+            } catch (_) {}
+        }
+        return { subtotal, tax: quickTax, shipping, discountAmount, taxRate, total: quickTotal, prices_include_vat: pricesIncludeVatMeta };
     };
-    const renderCart = () => {
+    const renderCart = async () => {
         const body = qs('#cartBody');
         body.innerHTML = '';
         if (!state.cart.length) {
             body.innerHTML = '<tr id="cartEmptyRow"><td colspan="6" class="text-center text-muted py-4">السلة فارغة</td></tr>';
-            recalc();
+            await recalc();
             return;
         }
         state.cart.forEach((it, idx) => {
@@ -127,9 +162,9 @@
             `;
             body.appendChild(tr);
         });
-        recalc();
+        await recalc();
     };
-    const addToCart = (p) => {
+    const addToCart = async (p) => {
         const existing = state.cart.find(x => x.id === p.id);
         if (existing) {
             existing.qty = Number(existing.qty) + 1;
@@ -145,7 +180,7 @@
                 discountPercent: 0
             });
         }
-        renderCart();
+        await renderCart();
     };
     const warehouseParam = () => {
         const w = qs('#warehouseId').value;
@@ -222,9 +257,9 @@
                 : `<span class="badge badge-secondary badge-pill ml-1">${fmt(p.stock)}</span>`;
             a.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center';
             a.innerHTML = `<span>${esc(p.text)}${p.is_inactive ? ' <small class="text-danger">(غير نشط)</small>' : ''}</span><span>${stockBadge} <span class="badge badge-primary badge-pill">${fmt(p.price)}</span></span>`;
-            a.addEventListener('click', () => {
+            a.addEventListener('click', async () => {
                 if (p.is_inactive) { showAlert('المنتج غير نشط.', 'warning'); return; }
-                addToCart(p);
+                await addToCart(p);
                 qs('#productSearch').value = '';
                 box.classList.add('d-none');
                 qs('#productSearch').focus();
@@ -237,7 +272,7 @@
         if (!q) return;
         const first = (state.lastProductResults || [])[0];
         if (first && (first.barcode === q || first.sku === q)) {
-            addToCart(first);
+            await addToCart(first);
             qs('#productSearch').value = '';
             qs('#productResults').classList.add('d-none');
             return;
@@ -247,13 +282,13 @@
             if (p && p.id) {
                 if (p.is_inactive) { showAlert(p.warning || 'المنتج غير نشط.', 'warning'); return; }
                 if (p.warning) showAlert(p.warning, 'warning');
-                addToCart(p);
+                await addToCart(p);
                 qs('#productSearch').value = '';
                 qs('#productResults').classList.add('d-none');
             }
         } catch (err) {
             if ((state.lastProductResults || []).length) {
-                addToCart(state.lastProductResults[0]);
+                await addToCart(state.lastProductResults[0]);
                 qs('#productSearch').value = '';
                 qs('#productResults').classList.add('d-none');
             } else {
@@ -342,7 +377,7 @@
             showAlert('السلة فارغة.', 'warning');
             return;
         }
-        const totals = recalc();
+        const totals = await recalc();
         const payload = {
             customer_id: state.customer.id,
             quick_customer: !!state.customer.is_walkin,
@@ -392,7 +427,7 @@
                 window.open(j.print_url, '_blank', 'noopener');
             }
             state.cart = [];
-            renderCart();
+            await renderCart();
             qs('#paidAmount').value = 0;
             qs('#paymentMethod').value = '';
             qs('#referenceNumber').value = '';
@@ -437,7 +472,7 @@
                 const p = await fetchJson('/pos/api/product?code=' + encodeURIComponent(code.trim()) + warehouseParam());
                 if (p && p.id) {
                     if (p.is_inactive) { showAlert(p.warning || 'المنتج غير نشط.', 'warning'); return; }
-                    addToCart(p);
+                    await addToCart(p);
                     qs('#productSearch').value = '';
                     qs('#productResults').classList.add('d-none');
                     showAlert('تمت إضافة ' + p.name, 'success');
