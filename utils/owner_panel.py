@@ -10,7 +10,7 @@ from decimal import Decimal
 from sqlalchemy import func
 
 from extensions import db
-from models import Branch, Sale, User
+from models import Branch, Sale, SaleLine, User, Warehouse
 from models.tenant import Tenant
 from utils.tenant_branding import resolve_tenant_branding, branding_path_warnings
 
@@ -272,6 +272,37 @@ def build_company_dashboard_context(tenant_id: int, branch_id: int | None = None
         if b.get("backup_scope") == "tenant" and int(b.get("tenant_id") or -1) == int(tenant_id)
     ]
 
+    # COGS (cost of goods sold) for the month
+    cogs_q = db.session.query(
+        func.coalesce(func.sum(SaleLine.cost_price * SaleLine.quantity), 0)
+    ).select_from(SaleLine).join(
+        Sale, SaleLine.sale_id == Sale.id
+    ).filter(
+        func.date(Sale.sale_date) >= month_start,
+        Sale.status == 'confirmed',
+        Sale.tenant_id == tenant_id,
+    )
+    if branch_id is not None:
+        cogs_q = cogs_q.filter(Sale.branch_id == branch_id)
+    month_cogs = float(cogs_q.scalar() or Decimal('0'))
+
+    # Partner Commission total for the month
+    try:
+        from models.partner_commission import PartnerCommissionEntry
+        comm_q = db.session.query(
+            func.coalesce(func.sum(PartnerCommissionEntry.commission_amount_aed), 0)
+        ).filter(
+            PartnerCommissionEntry.tenant_id == tenant_id,
+            func.date(PartnerCommissionEntry.created_at) >= month_start,
+        )
+        if branch_id is not None:
+            comm_q = comm_q.filter(PartnerCommissionEntry.branch_id == branch_id)
+        month_commissions = float(comm_q.scalar() or Decimal('0'))
+    except Exception:
+        month_commissions = 0.0
+
+    warehouses = Warehouse.query.filter_by(tenant_id=tenant_id).order_by(Warehouse.name).all()
+
     return {
         "tenant": tenant,
         "branding": branding,
@@ -281,12 +312,16 @@ def build_company_dashboard_context(tenant_id: int, branch_id: int | None = None
         "today_sales_amount": float(today_sales[1] or 0),
         "month_sales_count": month_sales[0] or 0,
         "month_sales_amount": float(month_sales[1] or 0),
+        "month_cogs": month_cogs,
+        "month_commissions": month_commissions,
+        "month_net_profit": float(month_sales[1] or 0) - month_cogs - month_commissions,
         "products_count": prod_q.count(),
         "customers_count": cust_q.count(),
         "users_count": users_count,
         "branches_count": branches_count,
         "tenant_backup_count": len(tenant_backups),
         "scoped_branch_id": branch_id,
+        "warehouses": warehouses,
     }
 
 

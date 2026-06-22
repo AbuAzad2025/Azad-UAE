@@ -149,6 +149,18 @@ class User(UserMixin, db.Model):
     
     def can_see_costs(self):
         return self.is_owner or self.is_super_admin() or self.is_manager()
+
+    def can_apply_discount(self):
+        """Cashiers cannot apply discounts without supervisor override."""
+        if self.is_owner:
+            return True
+        return self.role and self.role.slug not in ('seller', 'cashier')
+
+    def can_edit_price(self):
+        """Cashiers cannot edit prices without supervisor override."""
+        if self.is_owner:
+            return True
+        return self.role and self.role.slug not in ('seller', 'cashier')
     
     def get_display_name(self, lang='ar'):
         """Get display name in specified language"""

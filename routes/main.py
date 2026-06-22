@@ -192,6 +192,9 @@ def dashboard():
             stats['my_today_sales_count'] = my_today_sales[0] or 0
             stats['my_today_sales_amount'] = float(my_today_sales[1] or 0)
         
+        stats['can_apply_discount'] = current_user.can_apply_discount()
+        stats['can_edit_price'] = current_user.can_edit_price()
+        
         return render_template('dashboard.html', stats=stats)
 
     except Exception:

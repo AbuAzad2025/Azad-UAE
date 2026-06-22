@@ -7,7 +7,7 @@ from extensions import db, limiter
 from models import (
     User, Customer, Product, Sale, SaleLine, Purchase, Payment, Receipt,
     StockMovement, AuditLog, ArchivedRecord, ProductReturn, CardVault, InvoiceSettings,
-    Tenant, SystemSettings, IntegrationSettings, Expense, Branch
+    Tenant, SystemSettings, IntegrationSettings, Expense, Branch, Warehouse
 )
 from models.login_history import LoginHistory
 from models.security_alert import SecurityAlert
@@ -3758,6 +3758,168 @@ def resolve_error_log(log_id):
     return redirect(
         safe_redirect_target(request.referrer, 'owner.error_audit_logs')
     )
+
+@owner_bp.route('/api/update-tenant-settings', methods=['POST'])
+@login_required
+@company_admin_required
+def api_update_tenant_settings():
+    """AJAX endpoint to update tenant-level settings from the company dashboard."""
+    if not request.is_json:
+        return jsonify({'success': False, 'error': 'JSON required'}), 400
+    try:
+        data = request.get_json()
+        tenant = Tenant.query.get(get_active_tenant_id())
+        if not tenant:
+            return jsonify({'success': False, 'error': 'Tenant not found'}), 404
+        field = data.get('field')
+        value = data.get('value')
+        if field == 'default_tax_rate':
+            try:
+                tenant.default_tax_rate = Decimal(str(value))
+            except Exception:
+                return jsonify({'success': False, 'error': 'Invalid tax rate value'}), 400
+        elif field == 'prices_include_vat':
+            tenant.prices_include_vat = bool(value)
+        elif field == 'logo_url':
+            tenant.logo_url = str(value).strip()
+        else:
+            return jsonify({'success': False, 'error': f'Unknown field: {field}'}), 400
+        tenant.updated_at = datetime.now(timezone.utc)
+        db.session.commit()
+        _invalidate_owner_changes()
+        _audit_owner_db_action('api_update_tenant_settings', {'field': field, 'tenant_id': tenant.id})
+        return jsonify({'success': True, 'message': f'تم تحديث {field} بنجاح'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@owner_bp.route('/api/toggle-warehouse-negative', methods=['POST'])
+@login_required
+@company_admin_required
+def api_toggle_warehouse_negative():
+    """AJAX endpoint to toggle allow_negative_inventory for a warehouse."""
+    if not request.is_json:
+        return jsonify({'success': False, 'error': 'JSON required'}), 400
+    try:
+        data = request.get_json()
+        warehouse_id = data.get('warehouse_id')
+        if not warehouse_id:
+            return jsonify({'success': False, 'error': 'warehouse_id required'}), 400
+        tenant_id = get_active_tenant_id()
+        warehouse = Warehouse.query.filter_by(id=warehouse_id, tenant_id=tenant_id).first()
+        if not warehouse:
+            return jsonify({'success': False, 'error': 'Warehouse not found'}), 404
+        warehouse.allow_negative_inventory = not warehouse.allow_negative_inventory
+        db.session.commit()
+        _invalidate_owner_changes()
+        return jsonify({
+            'success': True,
+            'allow_negative_inventory': warehouse.allow_negative_inventory,
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@owner_bp.route('/api/supervisor-override', methods=['POST'])
+@login_required
+def api_supervisor_override():
+    """Verify supervisor credentials for cashier override actions."""
+    if not request.is_json:
+        return jsonify({'success': False, 'error': 'JSON required'}), 400
+    try:
+        data = request.get_json()
+        action = data.get('action', '')
+        supervisor_id = data.get('supervisor_id')
+        password = data.get('password', '')
+        if not supervisor_id or not password:
+            return jsonify({'success': False, 'error': 'معرّف المشرف وكلمة المرور مطلوبان'}), 400
+        supervisor = User.query.get(supervisor_id)
+        if not supervisor or not supervisor.is_active:
+            return jsonify({'success': False, 'error': 'المشرف غير موجود أو غير نشط'}), 404
+        if not supervisor.is_manager() and not supervisor.is_admin():
+            return jsonify({'success': False, 'error': 'المستخدم ليس مشرفاً'}), 403
+        if not supervisor.check_password(password):
+            return jsonify({'success': False, 'error': 'كلمة المرور غير صحيحة'}), 403
+        LoggingCore.log_audit(
+            'supervisor_override', 'system', None,
+            {'supervisor_id': supervisor_id, 'action': action, 'cashier_id': current_user.id}
+        )
+        return jsonify({
+            'success': True,
+            'message': 'تم تفويض المشرف بنجاح',
+            'supervisor_username': supervisor.username,
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@owner_bp.route('/api/tenant/<int:tenant_id>/toggle-status', methods=['POST'])
+@login_required
+@owner_required
+def api_tenant_toggle_status(tenant_id):
+    """AJAX endpoint to toggle tenant active/suspended status from super admin dashboard."""
+    if not request.is_json:
+        return jsonify({'success': False, 'error': 'JSON required'}), 400
+    try:
+        tenant = Tenant.query.get_or_404(tenant_id)
+        if tenant.id == 1:
+            return jsonify({'success': False, 'error': 'لا يمكن تعطيل التينانت الرئيسي'}), 400
+        tenant.is_active = not tenant.is_active
+        tenant.is_suspended = not tenant.is_active
+        if not tenant.is_active:
+            tenant.suspension_reason = 'Disabled via API'
+        else:
+            tenant.suspension_reason = None
+        tenant.updated_at = datetime.now(timezone.utc)
+        db.session.commit()
+        _invalidate_owner_changes()
+        _audit_owner_db_action('api_tenant_toggle_status', {
+            'tenant_id': tenant_id, 'is_active': tenant.is_active
+        })
+        status_label = 'مفعل' if tenant.is_active else 'معطل'
+        return jsonify({
+            'success': True,
+            'is_active': tenant.is_active,
+            'message': f'تم {status_label} التينانت "{tenant.name_ar or tenant.name}" بنجاح',
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@owner_bp.route('/api/tenant/<int:tenant_id>/update-package', methods=['POST'])
+@login_required
+@owner_required
+def api_tenant_update_package(tenant_id):
+    """AJAX endpoint to update tenant package limits from super admin dashboard."""
+    if not request.is_json:
+        return jsonify({'success': False, 'error': 'JSON required'}), 400
+    try:
+        data = request.get_json()
+        tenant = Tenant.query.get_or_404(tenant_id)
+        field = data.get('field')
+        value = data.get('value')
+        allowed_fields = [
+            'max_users', 'max_products', 'max_customers', 'max_suppliers',
+            'max_branches', 'max_warehouses', 'max_invoices_per_month', 'max_sales_per_month',
+        ]
+        if field not in allowed_fields:
+            return jsonify({'success': False, 'error': f'Unknown field: {field}'}), 400
+        try:
+            setattr(tenant, field, int(value))
+        except (ValueError, TypeError):
+            return jsonify({'success': False, 'error': 'Invalid integer value'}), 400
+        tenant.updated_at = datetime.now(timezone.utc)
+        db.session.commit()
+        _invalidate_owner_changes()
+        _audit_owner_db_action('api_tenant_update_package', {
+            'tenant_id': tenant_id, 'field': field, 'value': value
+        })
+        return jsonify({
+            'success': True,
+            'message': f'تم تحديث {field} إلى {value}',
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 @owner_bp.route('/error-audit-logs/export')
 @login_required

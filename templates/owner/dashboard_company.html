@@ -44,7 +44,7 @@
 
         <h3>{{ "{:,.0f}".format(month_sales_amount) }}</h3>
 
-        <p>مبيعات الشهر ({{ tenant.default_currency or 'AED' }})</p>
+        <p>مبيعات الشهر ({{ tenant.get_base_currency }})</p>
 
       </div>
 
@@ -93,6 +93,58 @@
         <h3>{{ users_count }}</h3>
 
         <p>مستخدمون</p>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<div class="row mb-3">
+
+  <div class="col-md-4">
+
+    <div class="small-box bg-danger owner-panel-card">
+
+      <div class="inner">
+
+        <h3>{{ "{:,.0f}".format(month_cogs) }}</h3>
+
+        <p>تكلفة البضاعة المباعة ({{ tenant.get_base_currency }})</p>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="col-md-4">
+
+    <div class="small-box bg-primary owner-panel-card">
+
+      <div class="inner">
+
+        <h3>{{ "{:,.0f}".format(month_commissions) }}</h3>
+
+        <p>العمولات الشهرية ({{ tenant.get_base_currency }})</p>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="col-md-4">
+
+    <div class="small-box bg-dark owner-panel-card">
+
+      <div class="inner">
+
+        <h3>{{ "{:,.0f}".format(month_net_profit) }}</h3>
+
+        <p>صافي الربح ({{ tenant.get_base_currency }})</p>
 
       </div>
 
@@ -185,6 +237,238 @@
   </div>
 
 </div>
+
+<div class="row mt-3">
+
+  <div class="col-12">
+
+    <div class="card owner-panel-card">
+
+      <div class="card-header">
+
+        <i class="fas fa-cog"></i> إعدادات سريعة
+
+      </div>
+
+      <div class="card-body">
+
+        <div class="row">
+
+          <div class="col-md-3 mb-2">
+
+            <label class="d-block small">نسبة الضريبة (VAT)</label>
+
+            <div class="input-group input-group-sm">
+
+              <input type="number" id="taxRateInput" class="form-control" value="{{ tenant.default_tax_rate or 0 }}" step="0.01" min="0" max="100">
+
+              <div class="input-group-append">
+
+                <button class="btn btn-outline-success btn-sm" onclick="updateTenantSetting('default_tax_rate', $('#taxRateInput').val())">
+
+                  <i class="fas fa-save"></i>
+
+                </button>
+
+              </div>
+
+            </div>
+
+          </div>
+
+          <div class="col-md-3 mb-2">
+
+            <label class="d-block small">الأسعار شاملة الضريبة</label>
+
+            <div class="custom-control custom-switch">
+
+              <input type="checkbox" class="custom-control-input" id="pricesIncludeVatSwitch"
+
+                {% if tenant.prices_include_vat %}checked{% endif %}
+
+                onchange="updateTenantSetting('prices_include_vat', this.checked)">
+
+              <label class="custom-control-label" for="pricesIncludeVatSwitch">
+
+                {% if tenant.prices_include_vat %}نعم{% else %}لا{% endif %}
+
+              </label>
+
+            </div>
+
+          </div>
+
+          <div class="col-md-3 mb-2">
+
+            <label class="d-block small">رابط الشعار</label>
+
+            <div class="input-group input-group-sm">
+
+              <input type="text" id="logoUrlInput" class="form-control" value="{{ tenant.logo_url or '' }}" placeholder="URL الشعار">
+
+              <div class="input-group-append">
+
+                <button class="btn btn-outline-success btn-sm" onclick="updateTenantSetting('logo_url', $('#logoUrlInput').val())">
+
+                  <i class="fas fa-save"></i>
+
+                </button>
+
+              </div>
+
+            </div>
+
+          </div>
+
+          <div class="col-md-3 mb-2">
+
+            <label class="d-block small">البيع بالسالب للمستودعات</label>
+
+            <div class="custom-control custom-switch">
+
+              <input type="checkbox" class="custom-control-input" id="warehouseNegSwitch"
+
+                onchange="toggleWarehouseNegative()">
+
+              <label class="custom-control-label" for="warehouseNegSwitch"></label>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        <div id="settingsResult" class="alert d-none mt-2 mb-0"></div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+
+<script>
+
+function updateTenantSetting(field, value) {
+
+  var btn = event && event.target ? $(event.target) : $('button:first');
+
+  btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+
+  $('#settingsResult').addClass('d-none');
+
+  $.ajax({
+
+    url: '{{ url_for("owner.api_update_tenant_settings") }}',
+
+    method: 'POST',
+
+    contentType: 'application/json',
+
+    data: JSON.stringify({ field: field, value: value }),
+
+    headers: { 'X-CSRFToken': '{{ csrf_token() }}' }
+
+  }).done(function(res) {
+
+    if (res.success) {
+
+      $('#settingsResult').removeClass('d-none alert-danger').addClass('alert-success').html(
+
+        '<i class="fas fa-check-circle"></i> ' + (res.message || 'تم التحديث بنجاح')
+
+      );
+
+      if (field === 'prices_include_vat') {
+
+        var lbl = $('#pricesIncludeVatSwitch').next('label');
+
+        lbl.text($('#pricesIncludeVatSwitch').is(':checked') ? 'نعم' : 'لا');
+
+      }
+
+    } else {
+
+      $('#settingsResult').removeClass('d-none alert-success').addClass('alert-danger').html(
+
+        '<i class="fas fa-times-circle"></i> ' + (res.error || 'فشل التحديث')
+
+      );
+
+    }
+
+  }).fail(function(xhr) {
+
+    var msg = 'خطأ في الاتصال';
+
+    try { msg = xhr.responseJSON.error || msg; } catch(e) {}
+
+    $('#settingsResult').removeClass('d-none alert-success').addClass('alert-danger').html(
+
+      '<i class="fas fa-times-circle"></i> ' + msg
+
+    );
+
+  }).always(function() {
+
+    btn.prop('disabled', false).html('<i class="fas fa-save"></i>');
+
+  });
+
+}
+
+function toggleWarehouseNegative() {
+
+  var btn = $('#warehouseNegSwitch');
+
+  $.ajax({
+
+    url: '{{ url_for("owner.api_toggle_warehouse_negative") }}',
+
+    method: 'POST',
+
+    contentType: 'application/json',
+
+    data: JSON.stringify({ warehouse_id: {{ warehouses[0].id if warehouses else 0 }} }),
+
+    headers: { 'X-CSRFToken': '{{ csrf_token() }}' }
+
+  }).done(function(res) {
+
+    if (res.success) {
+
+      $('#settingsResult').removeClass('d-none alert-danger').addClass('alert-success').html(
+
+        '<i class="fas fa-check-circle"></i> البيع بالسالب: ' + (res.allow_negative_inventory ? 'مفعل' : 'معطل')
+
+      );
+
+      btn.prop('checked', res.allow_negative_inventory);
+
+    }
+
+  }).fail(function(xhr) {
+
+    var msg = 'خطأ';
+
+    try { msg = xhr.responseJSON.error || msg; } catch(e) {}
+
+    $('#settingsResult').removeClass('d-none alert-success').addClass('alert-danger').html(
+
+      '<i class="fas fa-times-circle"></i> ' + msg
+
+    );
+
+  });
+
+}
+
+</script>
 
 {% endblock %}
 
