@@ -1,5 +1,7 @@
 # Azadexa
 
+![CI](https://github.com/AbuAzad2025/Azad-UAE/actions/workflows/ci.yml/badge.svg)
+
 **Azadexa** / **أزاديكسا** is an intelligent **multi-tenant ERP, accounting, inventory, and commerce platform** by **AZAD Intelligent Systems**.
 
 This repository represents a real business operating system. It is not a single online store, a demo Flask app, or a generic accounting template. The codebase includes tenant ERP operations, branch-aware workflows, inventory, general ledger accounting, tenant storefronts, public platform-owner flows, payment vault, monitoring, APIs, AI surfaces, and owner administration.
