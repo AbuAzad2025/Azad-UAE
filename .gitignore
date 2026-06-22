@@ -160,3 +160,6 @@ security-reports/
 scripts/maintenance/screenshots/
 scripts/maintenance/*.txt
 backup/
+
+.github/AGENTS.md
+

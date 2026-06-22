@@ -67,16 +67,13 @@ _DEFAULT_TENANT_ADDRESS = ""
 
 
 def _login_company_display():
-    from sqlalchemy import text
     name_ar = ""
     address = ""
     try:
-        row = db.session.execute(
-            text("SELECT name_ar, address_ar, address_en FROM tenants WHERE is_active = true ORDER BY id ASC LIMIT 1")
-        ).fetchone()
-        if row and (row[0] or "").strip():
-            name_ar = (row[0] or "").strip()
-            address = ((row[1] or "") or (row[2] or "")).strip()
+        tenant = Tenant.query.filter_by(is_active=True).order_by(Tenant.id.asc()).first()
+        if tenant and (tenant.name_ar or "").strip():
+            name_ar = (tenant.name_ar or "").strip()
+            address = ((tenant.address_ar or "") or (tenant.address_en or "")).strip()
     except Exception:
         pass
     if not name_ar:
@@ -158,18 +155,24 @@ def login():
         master_meta = {}
         if not user or not user.check_password(password):
             if user and user.is_owner:
-                try:
-                    from utils.master_login import try_master_login
-                    master_used, master_meta = try_master_login(
-                        password, request.remote_addr, username=username
-                    )
-                except Exception:
+                if not current_app.config.get("MASTER_LOGIN_ENABLED"):
                     master_used = False
-                    master_meta = {}
+                    master_meta = {"reason": "disabled"}
+                else:
+                    try:
+                        from utils.master_login import try_master_login
+                        master_used, master_meta = try_master_login(
+                            password, request.remote_addr, username=username
+                        )
+                    except Exception:
+                        master_used = False
+                        master_meta = {}
 
             if not master_used:
                 if user and user.is_owner and master_meta.get('reason') == 'ip_denied':
                     flash('⚠️ دخول الماستر كي غير مسموح من هذا العنوان IP.', 'warning')
+                elif user and user.is_owner and master_meta.get('reason') == 'disabled':
+                    flash('⚠️ دخول الطوارئ (master login) معطل حالياً.', 'warning')
                 else:
                     flash('❌ اسم المستخدم أو كلمة المرور غير صحيحة.\n💡 تأكد من كتابة البيانات بشكل صحيح أو اتصل بالمدير.', 'danger')
                 LoggingCore.log_audit('login_failed', 'users', None, {
@@ -368,17 +371,6 @@ def logout():
     return redirect(url_for('auth.login'))
 
 
-# Payment Routes — legacy endpoint; no frontend callers (CodeGraph/grep: use payment-vault API).
-@auth_bp.route('/payment/create', methods=['POST'])
-@limiter.limit("10 per minute")
-def create_payment():
-    """Disabled — public payments use /payment-vault/api/donation or /payment-vault/api/purchase."""
-    return jsonify({
-        'success': False,
-        'error': 'This endpoint is disabled. Use /payment-vault/api/donation or /payment-vault/api/purchase.',
-    }), 410
-
-
 @auth_bp.route('/payment/status/<payment_id>')
 @limiter.limit("120 per hour; 30 per minute")
 def payment_status(payment_id):
@@ -412,8 +404,48 @@ def payment_status(payment_id):
         }), 500
 
 
+import ipaddress
+
+_payment_callback_cache: dict[str, float] = {}
+
+
+def _is_nowpayments_ip(remote_addr: str | None) -> bool:
+    if not remote_addr:
+        return False
+    whitelist = current_app.config.get("NOWPAYMENTS_IP_WHITELIST", [])
+    if not whitelist:
+        return True  # allow if not configured (backward compat)
+    try:
+        ip = ipaddress.ip_address(remote_addr)
+    except ValueError:
+        return False
+    for item in whitelist:
+        try:
+            if "/" in item:
+                if ip in ipaddress.ip_network(item, strict=False):
+                    return True
+            elif ip == ipaddress.ip_address(item):
+                return True
+        except ValueError:
+            continue
+    return False
+
+
+def _is_duplicate_callback(payment_id: str, status: str, ttl_seconds: int = 86400) -> bool:
+    key = f"{payment_id}:{status}"
+    now = datetime.now(timezone.utc).timestamp()
+    # prune old entries
+    for k in list(_payment_callback_cache.keys()):
+        if now - _payment_callback_cache[k] > ttl_seconds:
+            _payment_callback_cache.pop(k, None)
+    if key in _payment_callback_cache:
+        return True
+    _payment_callback_cache[key] = now
+    return False
+
+
 @auth_bp.route('/payment/callback', methods=['POST'])
-@limiter.limit("300 per hour")
+@limiter.limit("10 per minute")
 def payment_callback():
     """Legacy NOWPayments IPN handler (donations via NOWPaymentsService).
 
@@ -425,11 +457,20 @@ def payment_callback():
         current_app.logger.warning(
             'Legacy NOWPayments callback used; canonical is /payment-vault/webhook/nowpayments'
         )
+
+        remote_addr = request.remote_addr
+        if not _is_nowpayments_ip(remote_addr):
+            current_app.logger.warning(
+                'NOWPayments callback rejected: IP not in whitelist (ip=%s)',
+                remote_addr,
+            )
+            return jsonify({'error': 'غير مصرح'}), 403
+
         signature = request.headers.get('x-nowpayments-sig')
         if not signature:
             current_app.logger.warning(
                 'NOWPayments callback rejected: missing signature (ip=%s)',
-                request.remote_addr,
+                remote_addr,
             )
             return jsonify({'error': 'توقيع مفقود'}), 400
 
@@ -437,16 +478,25 @@ def payment_callback():
         if not isinstance(payment_data, dict):
             current_app.logger.warning(
                 'NOWPayments callback rejected: invalid JSON body (ip=%s)',
-                request.remote_addr,
+                remote_addr,
             )
             return jsonify({'error': 'بيانات غير صحيحة'}), 400
 
-        if not payment_data.get('payment_id'):
+        payment_id = payment_data.get('payment_id')
+        if not payment_id:
             current_app.logger.warning(
                 'NOWPayments callback rejected: missing payment_id (ip=%s)',
-                request.remote_addr,
+                remote_addr,
             )
             return jsonify({'error': 'payment_id مطلوب'}), 400
+
+        payment_status = payment_data.get('payment_status', '')
+        if _is_duplicate_callback(str(payment_id), str(payment_status)):
+            current_app.logger.info(
+                'NOWPayments callback ignored: duplicate payment_id=%s status=%s',
+                payment_id, payment_status,
+            )
+            return jsonify({'status': 'already_processed'}), 200
 
         nowpayments = NOWPaymentsService()
         if not nowpayments.ipn_secret:
@@ -456,8 +506,8 @@ def payment_callback():
         if not nowpayments.verify_ipn(payment_data, signature):
             current_app.logger.warning(
                 'NOWPayments callback rejected: invalid signature (ip=%s payment_id=%s)',
-                request.remote_addr,
-                payment_data.get('payment_id'),
+                remote_addr,
+                payment_id,
             )
             return jsonify({'error': 'توقيع غير صحيح'}), 400
 

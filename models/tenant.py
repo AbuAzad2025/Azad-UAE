@@ -153,34 +153,13 @@ class Tenant(db.Model):
         except Exception:
             pass
 
-        tenant = Tenant.query.filter_by(is_active=True).order_by(Tenant.id.asc()).first()
-        if not tenant:
-            # Create default tenant
-            tenant = Tenant(
-                name='Default System',
-                name_ar='النظام الافتراضي',
-                slug='default',
-                business_type='general'
-            )
-            db.session.add(tenant)
-            db.session.commit()
-        else:
-            updated = False
-            if (tenant.name_ar or '').strip() == 'كراج افتراضي':
-                tenant.name_ar = 'النظام الافتراضي'
-                updated = True
-            if (tenant.name or '').strip() == 'Default Garage':
-                tenant.name = 'Default System'
-                updated = True
-            if (tenant.business_type or '').strip() == 'garage':
-                tenant.business_type = 'general'
-                updated = True
-            if updated:
-                try:
-                    db.session.commit()
-                except Exception:
-                    db.session.rollback()
-        return tenant
+        import logging
+        logger = logging.getLogger("azad.security")
+        logger.warning(
+            "Tenant.get_current() returned None — unauthenticated or no active tenant resolved (ip=%s)",
+            getattr(getattr(__import__('flask', fromlist=['request']), 'request', None), 'remote_addr', 'unknown')
+        )
+        return None
 
     def is_subscription_active(self):
         """Check if subscription is active"""

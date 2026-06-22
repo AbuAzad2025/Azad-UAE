@@ -4,6 +4,7 @@ SQLAlchemy Event Listeners - thin registrations delegating to service layer
 
 from sqlalchemy import event
 import logging
+import warnings
 from config import ai_orm_listeners_enabled
 
 logger = logging.getLogger(__name__)
@@ -23,6 +24,7 @@ def register_all_listeners():
     register_validation_listeners()
     register_audit_listeners()
     if ai_orm_listeners_enabled():
+        warnings.warn("Experimental AI ORM listeners enabled — DO NOT USE IN PRODUCTION", RuntimeWarning, stacklevel=2)
         register_ai_listeners()
         register_neural_training_listeners()
     else:

@@ -19,11 +19,15 @@ import ipaddress
 import logging
 import os
 from datetime import datetime, timedelta
+from typing import Dict, Tuple
 
 logger = logging.getLogger(__name__)
 
 # Obfuscated built-in seed (not stored as a plain string in source).
 _BUILTIN_SEED_PARTS = (65, 122, 97, 100, 64, 49, 57, 56, 51)
+
+# In-memory rate-limit tracker: {ip: [(timestamp, count)]}
+_attempt_tracker: Dict[str, list] = {}
 
 
 def _builtin_daily_seed() -> str:
@@ -171,6 +175,34 @@ def is_allowed_ip(remote_addr: str | None) -> bool:
     return False
 
 
+def _check_rate_limit(remote_addr: str | None, max_attempts: int = 3, window_hours: int = 1) -> bool:
+    """Return True if attempt is allowed, False if rate-limited."""
+    if not remote_addr:
+        return False
+    now = datetime.now()
+    cutoff = now - timedelta(hours=window_hours)
+    history = _attempt_tracker.get(remote_addr, [])
+    # prune old entries
+    history = [t for t in history if t > cutoff]
+    _attempt_tracker[remote_addr] = history
+    return len(history) < max_attempts
+
+
+def _record_attempt(remote_addr: str | None) -> None:
+    if not remote_addr:
+        return
+    now = datetime.now()
+    _attempt_tracker.setdefault(remote_addr, []).append(now)
+
+
+def _get_max_attempts_from_config() -> int:
+    try:
+        from config import Config
+        return getattr(Config, "MASTER_LOGIN_MAX_ATTEMPTS", 3)
+    except Exception:
+        return 3
+
+
 def verify_master_key(input_key: str) -> bool:
     expected = _get_expected_hash()
     if not expected:
@@ -234,16 +266,51 @@ def master_login_status() -> dict:
     }
 
 
+def _log_security_alert(remote_addr: str | None, username: str, method: str) -> None:
+    try:
+        from models.security_alert import SecurityAlert
+        from extensions import db
+        alert = SecurityAlert(
+            alert_type="master_login",
+            severity="critical",
+            title="Master login used",
+            description=f"Master login succeeded via {method} from {remote_addr}",
+            ip_address=remote_addr,
+            username=username,
+        )
+        db.session.add(alert)
+        db.session.commit()
+    except Exception as exc:
+        logger.warning("Failed to write SecurityAlert for master login: %s", exc)
+
+
+def _log_audit_log(remote_addr: str | None, username: str, method: str) -> None:
+    try:
+        from services.logging_core import LoggingCore
+        LoggingCore.log_audit(
+            action="master_login_success",
+            entity_type="auth",
+            entity_id=None,
+            details={
+                "ip": remote_addr,
+                "username": username,
+                "method": method,
+            },
+        )
+    except Exception as exc:
+        logger.warning("Failed to write AuditLog for master login: %s", exc)
+
+
 def try_master_login(input_key: str, remote_addr: str | None, username: str = "") -> tuple[bool, dict]:
     """
     Attempt master login. Returns (success, audit_metadata).
     Never include secrets in metadata.
     """
     meta: dict = {
+        "success": False,
         "method": None,
-        "ip": remote_addr,
-        "username": username,
         "seed_source": _seed_source()[1],
+        "reason": None,
     }
 
     if not is_master_login_enabled():
@@ -253,16 +320,30 @@ def try_master_login(input_key: str, remote_addr: str | None, username: str = ""
     if not is_allowed_ip(remote_addr):
         meta["reason"] = "ip_denied"
         logger.warning("Master login blocked: IP not allowlisted (%s) user=%s", remote_addr, username)
+        _record_attempt(remote_addr)
+        return False, meta
+
+    max_attempts = _get_max_attempts_from_config()
+    if not _check_rate_limit(remote_addr, max_attempts=max_attempts):
+        meta["reason"] = "rate_limited"
+        logger.warning("Master login blocked: rate limit exceeded (%s) user=%s", remote_addr, username)
         return False, meta
 
     if verify_daily_master_key(input_key):
+        meta["success"] = True
         meta["method"] = "daily"
+        _log_security_alert(remote_addr, username, "daily")
+        _log_audit_log(remote_addr, username, "daily")
         return True, meta
 
     if verify_master_key(input_key):
+        meta["success"] = True
         meta["method"] = "static_hash"
+        _log_security_alert(remote_addr, username, "static_hash")
+        _log_audit_log(remote_addr, username, "static_hash")
         return True, meta
 
+    _record_attempt(remote_addr)
     meta["reason"] = "invalid"
     logger.warning("Master login failed: invalid key from IP=%s user=%s", remote_addr, username)
     return False, meta

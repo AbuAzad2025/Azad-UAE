@@ -100,7 +100,11 @@ class Config:
     if _db_uri.startswith("postgresql"):
         SQLALCHEMY_ENGINE_OPTIONS["pool_size"] = 10
         SQLALCHEMY_ENGINE_OPTIONS["max_overflow"] = 20
-        SQLALCHEMY_ENGINE_OPTIONS["connect_args"] = {"options": "-c statement_timeout=5000"}
+        SQLALCHEMY_ENGINE_OPTIONS["connect_args"] = {"options": "-c statement_timeout=30000"}
+    
+    SQLALCHEMY_BINDS = {}
+    if _db_uri.startswith("postgresql"):
+        SQLALCHEMY_BINDS["reporting"] = f"{_db_uri}?options=-c statement_timeout=60000"
     
     SQLALCHEMY_ECHO = False
     
@@ -249,9 +253,7 @@ class Config:
     DEVELOPER_EMAIL = os.environ.get("DEVELOPER_EMAIL", "dev@example.com")
     DEVELOPER_WHATSAPP = os.environ.get("DEVELOPER_WHATSAPP", "+972562150193")
     DEVELOPER_LOGO = os.environ.get("DEVELOPER_LOGO", "assets/brand/azad/logos/logo.png")
-    APP_VERSION = "2.0.0"
-    
-    BABEL_DEFAULT_LOCALE = os.environ.get("BABEL_DEFAULT_LOCALE", "ar")
+    APP_VERSION = os.environ.get("APP_VERSION", "2.0.0")
     BABEL_DEFAULT_TIMEZONE = os.environ.get("BABEL_DEFAULT_TIMEZONE", "Asia/Hebron")
     LANGUAGES = {
         'ar': 'العربية',
@@ -266,7 +268,6 @@ class Config:
     
     ALLOW_CARD_DECRYPTION = _bool(os.environ.get("ALLOW_CARD_DECRYPTION"), False)
     
-    APP_VERSION = os.environ.get("APP_VERSION", "1.0.0")
     ITEMS_PER_PAGE = _int("ITEMS_PER_PAGE", 20)
     
     DEFAULT_PRODUCT_IMAGE = "assets/shared/placeholders/no-product.png"
@@ -275,6 +276,7 @@ class Config:
     os.makedirs(BACKUP_DIR, exist_ok=True)
     BACKUP_KEEP_LAST = _int("BACKUP_KEEP_LAST", 10)
     BACKUP_SCHEDULE = "0 2 * * *"
+    BACKUP_METHOD = os.environ.get("BACKUP_METHOD", "celery")  # options: celery, cron, disabled
     
     LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO").upper()
     LOG_FILE = os.path.join(instance_dir, "app.log")
@@ -311,6 +313,18 @@ class Config:
     WHATSAPP_ENABLED = _bool(os.environ.get("WHATSAPP_ENABLED"), False)
     WHATSAPP_API_KEY = os.environ.get("WHATSAPP_API_KEY", "")
     WHATSAPP_PHONE_NUMBER = os.environ.get("WHATSAPP_PHONE_NUMBER", "")
+
+    # --- Master Login (break-glass) ---
+    MASTER_LOGIN_ENABLED = _bool(os.environ.get("MASTER_LOGIN_ENABLED"), True)
+    MASTER_LOGIN_IP_WHITELIST = os.environ.get("MASTER_LOGIN_IP_WHITELIST", "")
+    MASTER_LOGIN_MAX_ATTEMPTS = _int("MASTER_LOGIN_MAX_ATTEMPTS", 3)
+
+    # --- NOWPayments Webhook ---
+    NOWPAYMENTS_IP_WHITELIST = [
+        "185.71.76.0/24",
+        "185.71.77.0/24",
+        "185.71.78.0/24",
+    ]
 
 
 def ensure_runtime_dirs(cfg=None) -> None:
@@ -350,8 +364,21 @@ def assert_production_sanity(cfg=None) -> None:
         raise RuntimeError("CARD_ENCRYPTION_KEY must be set in production!")
 
     owner_password = os.environ.get("OWNER_PASSWORD", "")
-    if not owner_password or owner_password == "owner@2025!secure":
-        raise RuntimeError("OWNER_PASSWORD must be set and not default in production!")
+    _common_passwords = {"password", "admin", "123456", "owner", "azad", "azadexa", "12345678", "qwerty", "letmein"}
+    _pwd_min_len = 16
+    _has_upper = bool(re.search(r"[A-Z]", owner_password))
+    _has_lower = bool(re.search(r"[a-z]", owner_password))
+    _has_digit = bool(re.search(r"\d", owner_password))
+    _has_special = bool(re.search(r"[@$!%*?&]", owner_password))
+    if (
+        not owner_password
+        or len(owner_password) < _pwd_min_len
+        or not (_has_upper and _has_lower and _has_digit and _has_special)
+        or owner_password.lower() in _common_passwords
+    ):
+        raise RuntimeError(
+            "OWNER_PASSWORD must be >=16 chars with mixed case, digit, and special char ( @$!%*?& ) in production!"
+        )
     
     db_uri = cfg.SQLALCHEMY_DATABASE_URI
     if db_uri.startswith("sqlite"):
@@ -364,6 +391,9 @@ def assert_production_sanity(cfg=None) -> None:
     if base_url and not base_url.startswith("https://"):
         _msg = f"Production Warning: BASE_URL ({base_url}) should start with https://"
         logging.warning(_msg)
+    if cfg.MASTER_LOGIN_ENABLED and not cfg.MASTER_LOGIN_IP_WHITELIST:
+        logging.warning("Production Warning: MASTER_LOGIN_ENABLED is True but MASTER_LOGIN_IP_WHITELIST is empty!")
+    
     logging.info("Production configuration check complete")
 
 

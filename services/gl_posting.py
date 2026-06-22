@@ -61,7 +61,23 @@ def post_or_fail(
         raise GlPostingError(str(exc)) from exc
 
 
-def assert_balanced_lines(lines, *, tolerance=Decimal('0.001')):
+_CURRENCY_TOLERANCE = {
+    'JOD': Decimal('0.001'),
+    'BHD': Decimal('0.001'),
+    'KWD': Decimal('0.001'),
+    'OMR': Decimal('0.001'),
+    'QAR': Decimal('0.001'),
+    'ILS': Decimal('0.001'),
+    'AED': Decimal('0.001'),
+    'USD': Decimal('0.001'),
+    'EUR': Decimal('0.001'),
+}
+_DEFAULT_TOLERANCE = Decimal('0.001')
+
+
+def assert_balanced_lines(lines, *, currency=None, tolerance=None):
+    if tolerance is None:
+        tolerance = _CURRENCY_TOLERANCE.get((currency or '').upper(), _DEFAULT_TOLERANCE)
     total_debit = sum(Decimal(str(l.get('debit', 0) or 0)) for l in lines)
     total_credit = sum(Decimal(str(l.get('credit', 0) or 0)) for l in lines)
     if abs(total_debit - total_credit) > tolerance:

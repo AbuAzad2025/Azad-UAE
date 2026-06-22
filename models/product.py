@@ -184,12 +184,10 @@ class Product(db.Model):
         return self.name
 
     def get_cost(self):
-        from services.product_service import product_get_cost
-        return product_get_cost(self)
+        return self.cost_price
 
     def get_stock(self):
-        from services.product_service import product_get_stock
-        return product_get_stock(self)
+        return self.current_stock
 
     def to_dict(self, include_cost=False):
         data = {

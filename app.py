@@ -2,6 +2,7 @@ import os
 import re
 import sys
 import uuid
+import click
 from datetime import datetime, timezone
 import time
 from decimal import Decimal
@@ -54,6 +55,15 @@ def create_app(config_class=Config):
     
     # Verify production sanity (Database check)
     assert_production_sanity(config_class)
+    
+    # Dev mode: auto-generate owner password if empty
+    if app.config.get("DEBUG") or app.config.get("APP_ENV", "production") != "production":
+        if not os.environ.get("OWNER_PASSWORD"):
+            import secrets, string
+            _generated = ''.join(secrets.choice(string.ascii_letters + string.digits + "@$!%*?&") for _ in range(20))
+            app.config["OWNER_PASSWORD"] = _generated
+            os.environ["OWNER_PASSWORD"] = _generated
+            print(f"\n{'='*60}\n[DEV MODE] Auto-generated OWNER_PASSWORD: {_generated}\n{'='*60}\n")
     
     # Initialize Extensions
     init_extensions(app)
@@ -575,79 +585,17 @@ if __name__ == '__main__':
         import logging
         logging.getLogger(__name__).exception("Failed to create app: %s", e)
         raise
-    
+
     from services.backup_service import BackupService
     BackupService.initialize()
-    
+
     try:
         from services.auto_approval_service import schedule_auto_approval
         schedule_auto_approval(app)
         app.logger.info("Auto-approval service scheduler started")
     except Exception as e:
         app.logger.warning("Auto-approval service failed: %s", e)
-    
-    import threading
-    import time
-    import json
-    
-    def schedule_daily_backup():
-        """جدولة النسخ الاحتياطي اليومي"""
-        while True:
-            try:
-                # Use absolute path for settings
-                basedir = os.path.abspath(os.path.dirname(__file__))
-                settings_path = os.path.join(basedir, 'instance', 'backup_settings.json')
-                
-                if os.path.exists(settings_path):
-                    with open(settings_path, 'r', encoding='utf-8') as f:
-                        settings = json.load(f)
-                else:
-                    settings = {
-                        'enabled': True,
-                        'frequency': 'daily',
-                        'backup_time': '02:00',
-                        'keep_count': 5
-                    }
-                
-                if settings.get('enabled', True):
-                    now = datetime.now()
-                    backup_time = settings.get('backup_time', '02:00')
-                    
-                    if settings.get('frequency', 'daily') == 'daily':
-                        target_hour, target_minute = map(int, backup_time.split(':'))
-                        next_backup = now.replace(hour=target_hour, minute=target_minute, second=0, microsecond=0)
-                        
-                        if next_backup <= now:
-                            from datetime import timedelta
-                            next_backup += timedelta(days=1)
-                        
-                        wait_seconds = (next_backup - now).total_seconds()
-                        
-                        app.logger.info("Next automatic backup scheduled at %s", next_backup.strftime('%Y-%m-%d %H:%M:%S'))
-                        time.sleep(wait_seconds)
-                        
-                        with app.app_context():
-                            backup = BackupService.auto_backup_daily()
-                            if backup:
-                                app.logger.info("Automatic backup completed: %s", backup['filename'])
-                            else:
-                                app.logger.warning("Automatic backup failed")
-                    else:
-                        time.sleep(86400)
-                else:
-                    time.sleep(3600)
-                    
-            except Exception as e:
-                app.logger.error("Backup scheduler error: %s", e)
-                time.sleep(3600)
-    
-    try:
-        backup_thread = threading.Thread(target=schedule_daily_backup, daemon=True)
-        backup_thread.start()
-        app.logger.info("Automatic backup scheduler started")
-    except:
-        pass
-    
+
     port = int(os.environ.get('PORT', 5000))
     host = os.environ.get('HOST', '0.0.0.0')
     debug_mode = bool(app.config.get('DEBUG', False))

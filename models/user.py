@@ -168,11 +168,11 @@ class User(UserMixin, db.Model):
             return self.full_name_ar
         return self.full_name or self.username
     
-    def to_dict(self, include_sensitive=False):
+    def to_dict(self, viewer=None, include_sensitive=False):
         data = {
             'id': self.id,
-            'username': self.username if not self.is_owner else '***',
-            'email': self.email if not self.is_owner else '***@***.***',
+            'username': self.username,
+            'email': self.email,
             'full_name': self.full_name,
             'full_name_ar': self.full_name_ar,
             'phone': self.phone,
@@ -181,8 +181,12 @@ class User(UserMixin, db.Model):
             'last_seen': self.last_seen.isoformat() if self.last_seen else None,
             'created_at': self.created_at.isoformat(),
         }
+
+        if self.is_owner and viewer != self:
+            data['username'] = '***'
+            data['email'] = '***@***.***'
         
-        if include_sensitive and not self.is_owner:
+        if include_sensitive and (viewer == self or not self.is_owner):
             data.update({
                 'email_verified': self.email_verified,
                 'login_attempts': self.login_attempts,
