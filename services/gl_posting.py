@@ -62,11 +62,11 @@ def post_or_fail(
 
 
 _CURRENCY_TOLERANCE = {
-    'JOD': Decimal('0.001'),
-    'BHD': Decimal('0.001'),
-    'KWD': Decimal('0.001'),
-    'OMR': Decimal('0.001'),
-    'QAR': Decimal('0.001'),
+    'JOD': Decimal('0.00001'),
+    'BHD': Decimal('0.00001'),
+    'KWD': Decimal('0.00001'),
+    'OMR': Decimal('0.00001'),
+    'QAR': Decimal('0.00001'),
     'ILS': Decimal('0.001'),
     'AED': Decimal('0.001'),
     'USD': Decimal('0.001'),
