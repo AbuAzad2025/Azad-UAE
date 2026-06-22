@@ -3716,17 +3716,6 @@ def tenant_delete(tenant_id):
     flash(f'تم حذف التينانت "{tenant.name_ar or tenant.name}" بنجاح.', 'success')
     return redirect(url_for('owner.tenants_list'))
 
-@owner_bp.route('/tenants/<int:tenant_id>/suspend-page')
-def tenant_suspend_page(tenant_id):
-    """Public page shown when a tenant is suspended."""
-    tenant = Tenant.query.get_or_404(tenant_id)
-    return render_template(
-        'public/tenant_suspended.html',
-        tenant=tenant,
-        reason=tenant.suspension_reason or 'Tenant suspended',
-    )
-
-# ── Error Audit Logs ────────────────────────────────────────────────
 
 @owner_bp.route('/error-audit-logs')
 @login_required

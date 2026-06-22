@@ -224,5 +224,14 @@ Sitemap: {base_url}/sitemap.xml
 Crawl-delay: 1
 """
     
-    return Response(robots_content, mimetype='text/plain')
+@public_bp.route('/suspended/<int:tenant_id>')
+def tenant_suspend_page(tenant_id):
+    """Public page shown when a tenant is suspended."""
+    from models import Tenant
+    tenant = Tenant.query.get_or_404(tenant_id)
+    return render_template(
+        'public/tenant_suspended.html',
+        tenant=tenant,
+        reason=tenant.suspension_reason or 'Tenant suspended',
+    )
 

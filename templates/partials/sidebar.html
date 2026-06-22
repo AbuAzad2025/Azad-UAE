@@ -224,8 +224,12 @@
           {% endif %}
           {{ _nav(url_for('owner.company_info'), 'fas fa-id-card', t('Data_2') ~ ' ' ~ t('Company')) }}
           {{ _nav(url_for('owner.invoice_settings'), 'fas fa-file-invoice', t('Headers') ~ ' ' ~ t('Invoices')) }}
+          {% if current_user.has_permission('view_reports') %}
           {{ _nav(url_for('printing.print_history'), 'fas fa-history', t('Log') ~ ' ' ~ t('Printing')) }}
+          {% endif %}
+          {% if current_user.has_permission('manage_settings') %}
           {{ _nav(url_for('printing.print_settings'), 'fas fa-print', t('Settings_2') ~ ' ' ~ t('Printing')) }}
+          {% endif %}
           {% endif %}
 
         </ul>

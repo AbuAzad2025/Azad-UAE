@@ -275,7 +275,7 @@ def view(id):
 
 @users_bp.route('/<int:id>/edit', methods=['GET', 'POST'])
 @login_required
-@admin_required
+@permission_required('manage_users')
 @limiter.limit("10 per minute", methods=['POST'])
 def edit(id):
     tid = get_active_tenant_id(current_user)
@@ -340,7 +340,7 @@ def edit(id):
 
 @users_bp.route('/<int:id>/toggle-active', methods=['POST'])
 @login_required
-@admin_required
+@permission_required('manage_users')
 def toggle_active(id):
     tid = get_active_tenant_id(current_user)
     user_query = User.query.filter_by(id=id, is_owner=False)

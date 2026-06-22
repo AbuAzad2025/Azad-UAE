@@ -671,6 +671,12 @@ def api_product_info(pid):
     if tid is not None and product.tenant_id != tid:
         return jsonify({'success': False, 'error': 'المنتج غير موجود'}), 404
     warehouse_id = request.args.get('warehouse_id', type=int)
+    if warehouse_id:
+        from utils.branching import ensure_warehouse_access
+        try:
+            ensure_warehouse_access(warehouse_id, user=current_user)
+        except Exception:
+            return jsonify({'success': False, 'error': 'غير مصرح بالوصول إلى المستودع'}), 403
     stock = float(product.current_stock or 0)
     if warehouse_id:
         stock_map = get_branch_stock_map(

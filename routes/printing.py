@@ -7,6 +7,7 @@ from io import BytesIO
 
 from flask import Blueprint, render_template, request, jsonify, send_file, url_for, flash, redirect, current_app
 from flask_login import login_required, current_user
+from utils.decorators import admin_required
 from extensions import db
 
 from models import Purchase, Expense, PayrollTransaction, Cheque, Sale, Shipment
@@ -305,7 +306,7 @@ def api_print_history():
 
 @printing_bp.route('/settings', methods=['GET', 'POST'])
 @login_required
-@permission_required('admin')
+@admin_required
 def print_settings():
     tid = get_active_tenant_id(current_user)
     settings = InvoiceSettings.get_active(tid)
