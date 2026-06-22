@@ -34,7 +34,6 @@ _ORM_EXEMPT_MODELS = frozenset({"User"})
 #
 # 2. Tenant resolution is URL-driven: every route calls _resolve_store(slug)
 #    which resolves tenant_id from TenantStore.store_slug, not from the
-#    session's active_tenant_id. This is a different resolution strategy than
 #    the ORM scoping which relies on g.active_tenant_id.
 #
 # 3. Every shop route and every StoreService/StoreCheckoutService method

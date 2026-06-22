@@ -32,7 +32,6 @@ class UserDashboardLayout(db.Model):
     tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=False, index=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
     
-    # Stores positions, widget keys, sizes
     layout_json = db.Column(JSONB, nullable=False) 
     
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)

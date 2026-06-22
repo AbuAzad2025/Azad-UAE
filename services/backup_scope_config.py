@@ -20,7 +20,6 @@ SCOPE_STORE = "store"
 
 BACKUP_VERSION = 3
 
-# Tables never included in scoped backups.
 SCOPED_BACKUP_EXCLUDED_TABLES = frozenset(
     {
         "alembic_version",

@@ -46,7 +46,6 @@ class Package(db.Model):
     has_training = db.Column(db.Boolean, default=False)  # تدريب
     has_priority_support = db.Column(db.Boolean, default=False)  # دعم أولوية
     
-    # Timestamps
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -117,7 +116,6 @@ class PackagePurchase(db.Model):
     # ملاحظات
     notes = db.Column(db.Text)
     
-    # Timestamps
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     

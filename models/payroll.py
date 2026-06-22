@@ -22,7 +22,6 @@ class Employee(db.Model):
     # Branch Link
     branch_id = db.Column(db.Integer, db.ForeignKey('branches.id'), nullable=True, index=True)
     
-    # Status/Dates
     is_active = db.Column(db.Boolean, default=True, index=True)
     joined_date = db.Column(db.Date, default=datetime.now)
     termination_date = db.Column(db.Date)
@@ -33,7 +32,6 @@ class Employee(db.Model):
     
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     
-    # Relationships
     branch = db.relationship('Branch', backref='employees')
     advances = db.relationship('SalaryAdvance', backref='employee', lazy='dynamic')
     payments = db.relationship('PayrollTransaction', backref='employee', lazy='dynamic')
@@ -96,7 +94,6 @@ class PayrollTransaction(db.Model):
     tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=False, index=True)
     employee_id = db.Column(db.Integer, db.ForeignKey('employees.id'), nullable=False, index=True)
     
-    # Period
     month = db.Column(db.Integer) # 1-12
     year = db.Column(db.Integer)
     

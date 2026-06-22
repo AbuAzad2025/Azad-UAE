@@ -26,7 +26,6 @@ class ProductCostHistory(db.Model):
     reference_type = db.Column(db.String(50), nullable=True)
     reference_id = db.Column(db.Integer, nullable=True)
 
-    # Cost snapshot before/after
     old_average_cost = db.Column(db.Numeric(18, 6), nullable=True)
     new_average_cost = db.Column(db.Numeric(18, 6), nullable=False)
     quantity_change = db.Column(db.Numeric(18, 3), nullable=False)
@@ -35,14 +34,12 @@ class ProductCostHistory(db.Model):
     old_total_value = db.Column(db.Numeric(18, 3), nullable=True)
     new_total_value = db.Column(db.Numeric(18, 3), nullable=False)
 
-    # Unit cost of this movement (for purchases)
     movement_unit_cost = db.Column(db.Numeric(18, 6), nullable=True)
 
     currency = db.Column(db.String(3), default=context_aware_default_currency, nullable=False)  # TODO: use Config.DEFAULT_CURRENCY
 
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
 
-    # Relationships
     product = db.relationship('Product', backref='cost_history')
     warehouse = db.relationship('Warehouse', backref='cost_history')
     tenant = db.relationship('Tenant', backref='product_cost_history', foreign_keys=[tenant_id])

@@ -94,7 +94,6 @@ class PurchaseService:
         from utils.tax_settings import get_prices_include_vat
         prices_include_vat = get_prices_include_vat(tenant_id=tenant_id, branch_id=purchase_branch_id)
 
-        # Currency Handling - Dynamic Tenant Base Currency
         from utils.currency_utils import resolve_tenant_base_currency
         base_currency = resolve_tenant_base_currency(tenant_id=tenant_id)
         rate_info = ExchangeRateService.resolve_exchange_rate_for_transaction(
@@ -143,7 +142,6 @@ class PurchaseService:
         db.session.add(purchase)
         db.session.flush()
 
-        # Process Lines
         subtotal = Decimal('0')
         lines_added = 0
 
@@ -211,7 +209,6 @@ class PurchaseService:
         purchase.subtotal = subtotal
         purchase.calculate_totals()
 
-        # Phase 5: Allocate landed costs proportionally by line value
         total_landed = purchase.total_landed_cost
         if total_landed > 0 and purchase.subtotal > 0:
             for line in purchase.lines:
@@ -514,7 +511,6 @@ class PurchaseService:
                         landed_ratio = _D(str(pl.landed_cost)) / _D(str(pl.line_total)) if pl.line_total > 0 else _D('0')
                         inventory_credit += (_D(str(return_line.line_total)) * landed_ratio).quantize(_D('0.001'), rounding=ROUND_HALF_UP)
 
-        # total_amount يجب أن يساوي (inventory_credit + tax) لضمان توازن القيد
         purchase_return.total_amount = inventory_credit + tax_amount
         purchase_return.calculate_totals()
         db.session.flush()

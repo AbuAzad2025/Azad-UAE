@@ -21,7 +21,6 @@ _JE_SEQ = {}
 # إيرادات: 4100 مبيعات، 4200 خدمات، 4300 شحن، 4400 أرباح فرق عملة، 4500 أخرى
 # مصروفات: 5100 تكلفة بضاعة، 5150 تعديلات مخزون، 6130 خصومات ممنوحة، 6100 رواتب، 6600 خسائر فرق عملة، 6500 متنوعة
 # 'cash' and 'bank' are retained as header account references for legacy callers.
-# Operational postings must resolve branch-specific accounts through
 # get_default_liquidity_account().
 GL_ACCOUNTS = {
     'cash': '1110',
@@ -270,7 +269,6 @@ class GLService:
                         issue="Liquidity-owned concept requires an explicit GL account code.",
                     )
                 acct = _validate_explicit(account_code, branch_id)
-                # Verify the account has the correct liquidity_kind
                 expected_kind = 'cash' if concept_code == 'CASH' else 'bank'
                 if getattr(acct, 'liquidity_kind', None) != expected_kind:
                     raise GLMappingError(

@@ -133,7 +133,6 @@ def normalize_payment_method_code(method):
     value = str(method).strip().lower()
     return PAYMENT_METHOD_ALIASES.get(value, value)
 
-# Role hierarchy for user management (higher = more privileged)
 ROLE_LEVELS = {
     'seller': 10,
     'accountant': 15,

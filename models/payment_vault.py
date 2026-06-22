@@ -17,7 +17,6 @@ class PaymentVault(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
 
-    # NULL is the Azad/platform vault; non-NULL is a project/tenant vault.
     tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=True, index=True, unique=True)
 
     # Vault Security - أمان الخزينة
@@ -81,7 +80,6 @@ class PaymentVault(db.Model):
     max_failed_attempts = db.Column(db.Integer, default=3)  # محاولات فاشلة
     failed_attempts = db.Column(db.Integer, default=0)  # عدد المحاولات الفاشلة
     
-    # Timestamps - الطوابع الزمنية
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -155,7 +153,6 @@ class PaymentTransaction(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     
-    # Transaction Info - معلومات المعاملة
     transaction_id = db.Column(db.String(100), unique=True, nullable=False)  # معرف المعاملة
     amount_usd = db.Column(db.Numeric(15, 2), nullable=False)  # المبلغ بالدولار
     amount_crypto = db.Column(db.Numeric(20, 8))  # المبلغ بالعملة الرقمية
@@ -176,12 +173,10 @@ class PaymentTransaction(db.Model):
     user_agent = db.Column(db.String(500))  # User Agent
     is_verified = db.Column(db.Boolean, default=False)  # هل تم التحقق
     
-    # Timestamps - الطوابع الزمنية
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     completed_at = db.Column(db.DateTime)  # وقت الإكمال
     
-    # Relations - العلاقات
     vault_id = db.Column(db.Integer, db.ForeignKey('payment_vault.id'), nullable=False, index=True)
     vault = db.relationship('PaymentVault', backref='transactions')
     
@@ -225,10 +220,8 @@ class PaymentLog(db.Model):
     ip_address = db.Column(db.String(50))  # عنوان IP
     user_agent = db.Column(db.String(500))  # User Agent
     
-    # Timestamps - الطوابع الزمنية
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
     
-    # Relations - العلاقات
     vault_id = db.Column(db.Integer, db.ForeignKey('payment_vault.id'), nullable=False, index=True)
     vault = db.relationship('PaymentVault', backref='logs')
     

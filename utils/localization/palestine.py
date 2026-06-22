@@ -39,7 +39,6 @@ class PalestineStrategy(LocalizationStrategy):
         }
 
     def generate_einvoice(self, sale) -> dict:
-        # Ministry of Finance XML placeholder
         xml = f"""<Invoice>
   <Country>PS</Country>
   <TaxRate>16.00</TaxRate>

@@ -249,7 +249,6 @@ def distribute():
         except Exception as e:
             flash(f'❌ خطأ: {e}', 'danger')
 
-    # Default: last month
     today = datetime.now(timezone.utc).date()
     last_month_end = today.replace(day=1) - timedelta(days=1)
     last_month_start = last_month_end.replace(day=1)

@@ -378,7 +378,6 @@ def delete(id):
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Error deleting supplier {id}: {e}")
-        # Fallback to soft delete if hard delete fails
         try:
             supplier.is_active = False
             db.session.commit()
@@ -474,7 +473,6 @@ def statement(id):
 
     transactions.sort(key=lambda x: (x['date'] or datetime.min))
 
-    # Opening balance if date_from is set
     # الدلالة للموردين: موجب = مستحق للمورد، سالب = المورد مدين لنا
     # المشتريات (debit) تزيد المستحق، المدفوعات (credit) تنقصه
     if date_from:

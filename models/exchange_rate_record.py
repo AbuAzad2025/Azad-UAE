@@ -32,7 +32,6 @@ class ExchangeRateRecord(db.Model):
     # Effective date (rate is valid for this calendar day)
     effective_date = db.Column(db.Date, nullable=False, index=True)
 
-    # Optional: the document that locked this rate
     locked_by_document_type = db.Column(db.String(50), nullable=True)
     locked_by_document_id = db.Column(db.Integer, nullable=True)
 
@@ -40,7 +39,6 @@ class ExchangeRateRecord(db.Model):
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True, index=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
 
-    # Relationships
     tenant = db.relationship('Tenant', backref='exchange_rate_records', foreign_keys=[tenant_id])
     creator = db.relationship('User', foreign_keys=[created_by])
 

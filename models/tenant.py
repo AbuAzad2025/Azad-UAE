@@ -17,13 +17,11 @@ class Tenant(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
 
-    # Basic Info - معلومات أساسية
     name = db.Column(db.String(200), nullable=False, unique=True)
     name_ar = db.Column(db.String(200), nullable=False)
     name_en = db.Column(db.String(200))
     slug = db.Column(db.String(100), unique=True, nullable=False, index=True)
 
-    # Business Type - نوع النشاط
     business_type = db.Column(db.String(50), default='general')  # retail, wholesale, services, etc.
     industry = db.Column(db.String(100))  # automotive, heavy_equipment, etc.
 
@@ -59,7 +57,6 @@ class Tenant(db.Model):
     is_trial = db.Column(db.Boolean, default=False)
     trial_days_remaining = db.Column(db.Integer, default=0)
 
-    # Limits - الحدود
     max_users = db.Column(db.Integer, default=5)
     max_products = db.Column(db.Integer, default=1000)
     max_customers = db.Column(db.Integer, default=500)
@@ -71,7 +68,6 @@ class Tenant(db.Model):
     max_sales_per_month = db.Column(db.Integer, default=5000)
     data_retention_days = db.Column(db.Integer, default=365)
 
-    # Features - المميزات المفعلة
     enable_multi_warehouse = db.Column(db.Boolean, default=True)
     enable_multi_currency = db.Column(db.Boolean, default=True)
     enable_gl = db.Column(db.Boolean, default=True)
@@ -116,7 +112,6 @@ class Tenant(db.Model):
         return get_currency_symbol(self.get_base_currency)
     vat_number = db.Column(db.String(100))
 
-    # Status - الحالة
     is_active = db.Column(db.Boolean, default=True, nullable=False, index=True)
     is_suspended = db.Column(db.Boolean, default=False, index=True)
     suspension_reason = db.Column(db.Text)
@@ -127,7 +122,6 @@ class Tenant(db.Model):
                           onupdate=lambda: datetime.now(timezone.utc))
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True, index=True)
 
-    # Relationships
     created_by_user = db.relationship('User', foreign_keys=[created_by])
 
     def __repr__(self):

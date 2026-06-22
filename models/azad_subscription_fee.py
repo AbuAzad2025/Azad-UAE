@@ -16,7 +16,6 @@ class AzadSubscriptionFee(db.Model):
 
     tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=False, index=True)
 
-    # Fee configuration set by platform owner via SystemSettings
     fee_type = db.Column(db.String(20), nullable=False, default='monthly')  # monthly, yearly, perpetual
     amount_aed = db.Column(db.Numeric(15, 3), nullable=False)
 
@@ -25,7 +24,6 @@ class AzadSubscriptionFee(db.Model):
 
     # accrued = posted to GL as payable (expense + liability)
     # paid = tenant actually paid cash/bank (liability + asset reduction)
-    # cancelled = reversed / waived
     status = db.Column(db.String(20), nullable=False, default='accrued', index=True)
 
     gl_posted = db.Column(db.Boolean, nullable=False, default=False)

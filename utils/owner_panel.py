@@ -286,7 +286,6 @@ def build_company_dashboard_context(tenant_id: int, branch_id: int | None = None
         cogs_q = cogs_q.filter(Sale.branch_id == branch_id)
     month_cogs = float(cogs_q.scalar() or Decimal('0'))
 
-    # Partner Commission total for the month
     try:
         from models.partner_commission import PartnerCommissionEntry
         comm_q = db.session.query(

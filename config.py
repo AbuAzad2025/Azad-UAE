@@ -168,35 +168,27 @@ class Config:
     DEFAULT_CURRENCY = os.environ.get("DEFAULT_CURRENCY", "ILS")
 
     # --- Feature Flags (Accounting Modernization) ---
-    # Phase 1: Dynamic GL Mapping
     # When False (default): legacy hardcoded GL code lookups remain active.
     ENABLE_DYNAMIC_GL_MAPPING = _bool(os.environ.get("ENABLE_DYNAMIC_GL_MAPPING"), True)
 
-    # Phase 3-4: Moving Weighted Average Cost (MWAC)
     # When False: stock valuation uses Last Purchase Cost.
     ENABLE_MWAC = _bool(os.environ.get("ENABLE_MWAC"), True)
 
-    # Phase 5: Landed Cost Capitalization
     # When False: freight/customs/insurance are expensed directly to P&L.
     ENABLE_LANDED_COST_CAPITALIZATION = _bool(os.environ.get("ENABLE_LANDED_COST_CAPITALIZATION"), True)
 
-    # Phase 6: Exchange Rate Framework
     # When False: exchange rates are not locked on posted documents.
     ENABLE_ONLINE_EXCHANGE_RATE_FALLBACK = _bool(os.environ.get("ENABLE_ONLINE_EXCHANGE_RATE_FALLBACK"), False)
 
-    # Phase 7: Advanced Reconciliation
     # When False: stock-to-GL reconciliation dashboards are hidden.
     ENABLE_ADVANCED_RECONCILIATION = _bool(os.environ.get("ENABLE_ADVANCED_RECONCILIATION"), False)
 
-    # Phase 8: Treasury & Cash Position Reporting
     # When False: treasury dashboard and liquidity reports are hidden.
     ENABLE_TREASURY = _bool(os.environ.get("ENABLE_TREASURY"), True)
 
-    # Phase 9: Localization Framework
     # When False: regional tax/invoice engines are disabled.
     ENABLE_LOCALIZATION_FRAMEWORK = _bool(os.environ.get("ENABLE_LOCALIZATION_FRAMEWORK"), False)
 
-    # Phase 10: Testing & Rollout Flags
     # When False: load tests and regression suites are skipped in CI.
     ENABLE_LOAD_TESTING = _bool(os.environ.get("ENABLE_LOAD_TESTING"), False)
     ENABLE_FULL_REGRESSION = _bool(os.environ.get("ENABLE_FULL_REGRESSION"), False)
@@ -213,10 +205,8 @@ class Config:
         "https://api.frankfurter.dev/v1/latest?base={base}",
     ]
 
-    # Cache for accounting currency service (CurrencyService)
     CURRENCY_CACHE_TIMEOUT = _int("CURRENCY_CACHE_TIMEOUT", 3600)
 
-    # Cache for display-only online rates (ExchangeRateService) — navbar / fxModal
     CURRENCY_ONLINE_CACHE_TIMEOUT = _int("CURRENCY_ONLINE_CACHE_TIMEOUT", 43200)
 
     CURRENCY_API_TIMEOUT = _int("CURRENCY_API_TIMEOUT", 5)

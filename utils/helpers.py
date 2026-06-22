@@ -241,9 +241,7 @@ def create_audit_log(action, table_name=None, record_id=None, changes=None):
     
     try:
         user_id = None
-        # Check if we are in a request context and have a user
         if current_user:
-             # Check if it's a real user object or AnonymousUserMixin
              if hasattr(current_user, 'is_authenticated') and current_user.is_authenticated:
                  user_id = current_user.id
              elif hasattr(current_user, 'id'): # In case we mocked it with a simple object

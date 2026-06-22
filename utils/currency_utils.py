@@ -60,7 +60,6 @@ def get_tenant_base_currency(tenant_id: int | None = None) -> str:
                     val = base.strip().upper()
                     if val:
                         return val
-                # fallback to default_currency
                 default = getattr(tenant, 'default_currency', None)
                 if default:
                     val = default.strip().upper()

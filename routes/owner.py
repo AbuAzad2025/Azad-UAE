@@ -655,7 +655,6 @@ def create_user():
     preselect_tenant_id = request.args.get('tenant_id', type=int)
 
     if request.method == 'POST':
-        # Capture form values helper (defined outside try to survive exceptions)
         def _form_values():
             values = request.form.to_dict()
             values['is_owner'] = 'on' if request.form.get('is_owner') == 'on' else 'off'
@@ -704,7 +703,6 @@ def create_user():
             if role_requires_branch(role, is_owner=is_owner) and not branch_id:
                 flash('⚠️ يجب ربط هذا المستخدم بفرع محدد.', 'warning')
                 return render_template('owner/create_user.html', roles=roles, branches=branches, tenants=tenants, show_tenant_picker=True, form_data=_form_values())
-            # Server-side role-level hierarchy enforcement
             if role_level_for(getattr(role, 'slug', None)) > current_level:
                 flash('⚠️ لا يمكنك تعيين دور أعلى من دورك.', 'danger')
                 return render_template('owner/create_user.html', roles=roles, branches=branches, tenants=tenants, show_tenant_picker=True, form_data=_form_values())
@@ -792,7 +790,6 @@ def edit_user(user_id):
             if role_requires_branch(role, is_owner=is_owner) and not branch_id:
                 flash('⚠️ يجب ربط هذا المستخدم بفرع محدد.', 'warning')
                 return render_template('owner/edit_user.html', user=user, roles=roles, branches=branches)
-            # Server-side role-level hierarchy enforcement
             if role_level_for(getattr(role, 'slug', None)) > current_level:
                 flash('⚠️ لا يمكنك تعيين دور أعلى من دورك.', 'danger')
                 return render_template('owner/edit_user.html', user=user, roles=roles, branches=branches)
@@ -2097,7 +2094,6 @@ def company_info():
 
     if request.method == 'POST':
         try:
-            # Basic Info
             tenant.name_ar = request.form.get('name_ar', '').strip()
             tenant.name_en = request.form.get('name_en', '').strip()
             tenant.name = tenant.name_en or tenant.name_ar
@@ -2206,7 +2202,6 @@ def system_config():
 
     if request.method == 'POST':
         try:
-            # Modules
             settings.enable_sales = request.form.get('enable_sales') == 'on'
             settings.enable_purchases = request.form.get('enable_purchases') == 'on'
             settings.enable_inventory = request.form.get('enable_inventory') == 'on'
@@ -2217,7 +2212,6 @@ def system_config():
             settings.enable_ai_assistant = request.form.get('enable_ai_assistant') == 'on'
             settings.enable_pos = request.form.get('enable_pos') == 'on'
 
-            # Features
             settings.enable_barcode_scanner = request.form.get('enable_barcode_scanner') == 'on'
             settings.enable_multi_warehouse = request.form.get('enable_multi_warehouse') == 'on'
             settings.enable_multi_currency = request.form.get('enable_multi_currency') == 'on'
@@ -2244,7 +2238,6 @@ def system_config():
             except Exception:
                 pass
 
-            # General
             try:
                 default_currency = request.form.get('default_currency', 'ILS')
                 settings.default_currency = default_currency
@@ -2368,7 +2361,6 @@ def tenant_store_platform_toggle(store_id):
         flash('المتجر غير موجود.', 'warning')
         return redirect(url_for('owner.tenant_stores'))
 
-    # disabled=1 means platform force-OFF lock; disabled=0 means unlock (delegate to tenant)
     disabled = request.form.get('platform_disabled') == '1'
     try:
         StoreService.set_platform_disabled(store, disabled)
@@ -2508,7 +2500,6 @@ def invoice_settings():
             settings.email = request.form.get('email', '').strip()
             settings.website = request.form.get('website', '').strip()
 
-            # Business Info
             settings.tax_number = request.form.get('tax_number', '').strip()
             settings.commercial_register = request.form.get('commercial_register', '').strip()
             settings.license_number = request.form.get('license_number', '').strip()
@@ -2552,7 +2543,6 @@ def invoice_settings():
             settings.enable_watermark = request.form.get('enable_watermark') == 'on'
             settings.watermark_text = request.form.get('watermark_text', '').strip()
 
-            # Print
             settings.paper_size = request.form.get('paper_size', 'A4')
             settings.orientation = request.form.get('orientation', 'portrait')
             settings.default_language = request.form.get('default_language', 'ar')

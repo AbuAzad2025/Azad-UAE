@@ -26,11 +26,9 @@ class CashBox(db.Model):
     name_ar = db.Column(db.String(200), nullable=False)
     name_en = db.Column(db.String(200), nullable=True)
 
-    # Type of liquidity
     box_type = db.Column(db.String(30), default='cash', nullable=False)
     # cash, bank_account, payment_gateway, cheque_under_collection, digital_wallet
 
-    # Currency
     currency = db.Column(db.String(3), default=context_aware_default_currency, nullable=False)  # TODO: use Config.DEFAULT_CURRENCY
 
     # Balance tracking (denormalized for fast reads)
@@ -46,7 +44,6 @@ class CashBox(db.Model):
     gateway_provider = db.Column(db.String(50), nullable=True)  # stripe, nowpayments, etc.
     gateway_merchant_id = db.Column(db.String(100), nullable=True)
 
-    # Status
     is_active = db.Column(db.Boolean, default=True, nullable=False, index=True)
     is_default = db.Column(db.Boolean, default=False, nullable=False)
 
@@ -58,7 +55,6 @@ class CashBox(db.Model):
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc),
                           onupdate=lambda: datetime.now(timezone.utc))
 
-    # Relationships
     tenant = db.relationship('Tenant', backref='cash_boxes', foreign_keys=[tenant_id])
     branch = db.relationship('Branch', backref='cash_boxes', foreign_keys=[branch_id])
     gl_account = db.relationship('GLAccount', foreign_keys=[gl_account_id])

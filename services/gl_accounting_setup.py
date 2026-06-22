@@ -568,14 +568,12 @@ class SetupResult:
 
 
 # ---------------------------------------------------------------------------
-# Service
 # ---------------------------------------------------------------------------
 
 class GLAccountingSetupService:
     """Reusable service to prepare a tenant's GL concept mappings."""
 
     # ================================================================
-    # Public API
     # ================================================================
 
     @staticmethod
@@ -628,7 +626,6 @@ class GLAccountingSetupService:
         skipped_concepts: list[dict[str, object]] = []
         errors: list[str] = []
 
-        # Phase A – create missing accounts
         for action in plan:
             if action.action_type != "create_account":
                 continue
@@ -650,7 +647,6 @@ class GLAccountingSetupService:
         # Rebuild plan so new account IDs are visible
         plan = GLAccountingSetupService._build_plan(tenant)
 
-        # Phase B – create mappings
         for action in plan:
             if action.action_type != "map_concept":
                 continue
@@ -660,7 +656,6 @@ class GLAccountingSetupService:
                     "reason": action.reason,
                 })
                 continue
-            # Idempotency guard
             existing = (
                 GLAccountMapping.query
                 .filter_by(
@@ -736,7 +731,6 @@ class GLAccountingSetupService:
         )
 
     # ================================================================
-    # Internal – plan builder
     # ================================================================
 
     @staticmethod
@@ -808,7 +802,6 @@ class GLAccountingSetupService:
         return actions
 
     # ================================================================
-    # Internal – candidate discovery
     # ================================================================
 
     @staticmethod
@@ -865,7 +858,6 @@ class GLAccountingSetupService:
         return None
 
     # ================================================================
-    # Internal – account creation
     # ================================================================
 
     @staticmethod

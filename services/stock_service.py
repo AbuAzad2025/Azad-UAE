@@ -453,7 +453,6 @@ class StockService:
                     )
                     db.session.add(pch)
                 elif allow_negative:
-                    # Negative inventory allowed: use fallback cost and update PWC (even if negative)
                     avg_cost, source = StockService._resolve_cogs_unit_cost(
                         line.product_id, warehouse_id, tenant_id, line_cost_price=line.cost_price
                     )
@@ -512,7 +511,6 @@ class StockService:
                     )
                     db.session.add(pch)
                 else:
-                    # Negative inventory not allowed and stock is zero/negative
                     avg_cost, source = StockService._resolve_cogs_unit_cost(
                         line.product_id, warehouse_id, tenant_id, line_cost_price=line.cost_price
                     )
@@ -555,7 +553,6 @@ class StockService:
                 continue
             processed_product_ids.add(product.id)
 
-            # Phase 5: Use landed_inventory_unit_cost (FOB + allocated landed cost, VAT-excl if applicable) for valuation
             capitalize_landed = current_app.config.get('ENABLE_LANDED_COST_CAPITALIZATION', True)
             if capitalize_landed:
                 unit_cost_for_valuation = line.landed_inventory_unit_cost
@@ -791,7 +788,6 @@ class StockService:
                         # استخدام قيم COGS الأصلية من سجل التكلفة
                         original_cogs = abs(Decimal(str(cost_history.movement_unit_cost)) * qty)
                     else:
-                        # Fallback: استخدام متوسط التكلفة الحالي
                         original_cogs = pwc.average_cost * qty if pwc.average_cost else Decimal('0')
 
                     old_qty = pwc.total_quantity
@@ -930,7 +926,6 @@ class StockService:
         if not warehouse:
             return False, 'المستودع غير موجود أو غير نشط'
 
-        # Negative inventory guard: if warehouse allows negative inventory, always allow
         if warehouse.allow_negative_inventory:
             return True, 'متوفر (البيع بالسالب مفعل)'
 

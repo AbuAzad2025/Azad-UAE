@@ -35,7 +35,6 @@ class InvoiceSettings(db.Model):
     email = db.Column(db.String(100))
     website = db.Column(db.String(200))
     
-    # Business Info - المعلومات التجارية
     tax_number = db.Column(db.String(100))  # الرقم الضريبي
     commercial_register = db.Column(db.String(100))  # السجل التجاري
     license_number = db.Column(db.String(100))  # رقم الرخصة
@@ -51,7 +50,6 @@ class InvoiceSettings(db.Model):
     accent_color = db.Column(db.String(20), default='#764ba2')  # اللون الثانوي
     text_color = db.Column(db.String(20), default='#333333')
     
-    # Header Layout - تخطيط الترويسة
     show_logo = db.Column(db.Boolean, default=True)
     logo_position = db.Column(db.String(20), default='left')  # left, center, right
     logo_size = db.Column(db.String(20), default='medium')  # small, medium, large
@@ -89,7 +87,6 @@ class InvoiceSettings(db.Model):
     paper_size = db.Column(db.String(20), default='A4')  # A4, A5, Letter
     orientation = db.Column(db.String(20), default='portrait')  # portrait, landscape
     
-    # Language - اللغة
     default_language = db.Column(db.String(10), default='ar')  # ar, en, both
     
     # Additional Fields - حقول إضافية
@@ -102,7 +99,6 @@ class InvoiceSettings(db.Model):
     instagram_url = db.Column(db.String(200))
     whatsapp_number = db.Column(db.String(50))
     
-    # Active Template - القالب النشط
     active_template = db.Column(db.String(50), default='modern')  # modern, classic, minimal
     
     # Meta
@@ -112,7 +108,6 @@ class InvoiceSettings(db.Model):
                           onupdate=lambda: datetime.now(timezone.utc))
     updated_by = db.Column(db.Integer, db.ForeignKey('users.id'), index=True)
     
-    # Relationships
     tenant = db.relationship('Tenant', backref='invoice_settings', foreign_keys=[tenant_id])
     user = db.relationship('User', foreign_keys=[updated_by])
     

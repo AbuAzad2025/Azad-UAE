@@ -370,7 +370,6 @@ class GLAccountMapping(db.Model):
         onupdate=lambda: datetime.now(timezone.utc),
     )
 
-    # Relationships
     tenant = db.relationship('Tenant', backref='gl_account_mappings', foreign_keys=[tenant_id])
     gl_account = db.relationship('GLAccount', backref='concept_mappings', foreign_keys=[gl_account_id])
     branch = db.relationship('Branch', backref='gl_account_mappings', foreign_keys=[branch_id])

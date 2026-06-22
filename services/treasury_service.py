@@ -100,7 +100,6 @@ class TreasuryService:
                 })
                 total_balance += balance
 
-        # Group by kind
         kind_summary = {}
         for a in accounts:
             k = a['kind']

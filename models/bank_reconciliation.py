@@ -54,7 +54,6 @@ class BankReconciliation(db.Model):
                           onupdate=lambda: datetime.now(timezone.utc))
     approved_at = db.Column(db.DateTime)
     
-    # Relationships
     tenant = db.relationship('Tenant', backref='bank_reconciliations', foreign_keys=[tenant_id])
     bank_account = db.relationship('GLAccount', foreign_keys=[bank_account_id])
     creator = db.relationship('User', foreign_keys=[created_by])
@@ -142,7 +141,6 @@ class BankReconciliationItem(db.Model):
 
     notes = db.Column(db.Text)
 
-    # Relationships
     tenant = db.relationship('Tenant', backref='bank_reconciliation_items', foreign_keys=[tenant_id])
     reconciliation = db.relationship('BankReconciliation', back_populates='items')
     journal_entry = db.relationship('GLJournalEntry')
@@ -183,7 +181,6 @@ class BankStatementLine(db.Model):
     imported_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'), index=True)
 
-    # Transaction data
     transaction_date = db.Column(db.Date, nullable=False, index=True)
     reference = db.Column(db.String(120), index=True)
     description = db.Column(db.String(255))

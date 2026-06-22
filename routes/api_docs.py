@@ -53,7 +53,6 @@ def _protect_api_docs_in_production():
     return None
 
 
-# OpenAPI 3.0 Specification
 OPENAPI_SPEC = {
     "openapi": "3.0.3",
     "info": {

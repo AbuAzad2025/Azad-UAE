@@ -205,7 +205,6 @@ def set_active_tenant(tenant_id, user=None):
     if not tenant.is_active or getattr(tenant, "is_suspended", False):
         raise ValueError("Tenant is not active or is suspended")
 
-    # Store tenant_id in session
     session[ACTIVE_TENANT_SESSION_KEY] = tenant_id
 
 

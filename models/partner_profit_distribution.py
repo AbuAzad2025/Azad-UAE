@@ -15,7 +15,6 @@ class PartnerProfitDistribution(db.Model):
     tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=False, index=True)
     partner_id = db.Column(db.Integer, db.ForeignKey('partners.id'), nullable=False, index=True)
 
-    # Period
     period_start = db.Column(db.Date, nullable=False)
     period_end = db.Column(db.Date, nullable=False)
 
@@ -29,7 +28,6 @@ class PartnerProfitDistribution(db.Model):
     total_expenses = db.Column(db.Numeric(15, 3), default=0)
     net_profit = db.Column(db.Numeric(15, 3), default=0)
 
-    # Partner share
     share_percentage = db.Column(db.Numeric(5, 2), default=0)
     share_amount = db.Column(db.Numeric(15, 3), default=0)
 
@@ -48,7 +46,6 @@ class PartnerProfitDistribution(db.Model):
     net_due = db.Column(db.Numeric(15, 3), default=0)
     # formula: share_amount - expense_share_amount - loss_share_amount + fixed_amount
 
-    # Status
     status = db.Column(db.String(20), default='draft', index=True)  # draft / approved / paid / cancelled
 
     # Audit
@@ -62,7 +59,6 @@ class PartnerProfitDistribution(db.Model):
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc),
                           onupdate=lambda: datetime.now(timezone.utc))
 
-    # Relationships
     tenant = db.relationship('Tenant', foreign_keys=[tenant_id])
     creator = db.relationship('User', foreign_keys=[created_by])
     approver = db.relationship('User', foreign_keys=[approved_by])

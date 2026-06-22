@@ -305,7 +305,6 @@ class LoggingCore:
     _json_mode = False
 
     # ──────────────────────────────────────────────────────────────
-    #  SETUP
     # ──────────────────────────────────────────────────────────────
 
     @classmethod
@@ -707,7 +706,6 @@ class LoggingCore:
         _user_id = ctx["user_id"]
         _tenant_id = ctx["tenant_id"]
 
-        # Environment
         environment = "production"
         app_version = ""
         try:
@@ -734,7 +732,6 @@ class LoggingCore:
                 pass
             request_data = _sanitize_dict(payload)
 
-        # Endpoint path for fingerprint
         endpoint_path = ""
         try:
             if category == "FRONTEND" and _url:
@@ -750,7 +747,6 @@ class LoggingCore:
             fp_message = str(request_data.get("fingerprint_key") or message)
         fingerprint = _make_fingerprint(category, exc_type or "", source, endpoint_path, fp_message)
 
-        # Rate monitor
         cls._rate_monitor.record(category)
 
         # Dedup check
@@ -1177,7 +1173,6 @@ class LoggingCore:
             return {"healthy": True, "error": "psutil not available"}
 
     # ──────────────────────────────────────────────────────────────
-    #  PERFORMANCE
     # ──────────────────────────────────────────────────────────────
 
     @classmethod
@@ -1423,7 +1418,6 @@ class LoggingCore:
         }
 
     # ──────────────────────────────────────────────────────────────
-    #  PERFORMANCE METRICS (from monitoring_service)
     # ──────────────────────────────────────────────────────────────
 
     @classmethod
@@ -1550,7 +1544,6 @@ class LoggingCore:
         from sqlalchemy import text
         results: dict[str, int] = {}
 
-        # Disk health check
         try:
             import shutil
             _total, _used, _free = shutil.disk_usage(os.path.abspath(os.sep))

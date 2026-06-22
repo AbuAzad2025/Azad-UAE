@@ -48,7 +48,6 @@ class Budget(db.Model):
                           onupdate=lambda: datetime.now(timezone.utc))
     approved_at = db.Column(db.DateTime)
     
-    # Relationships
     tenant = db.relationship('Tenant', backref='budgets', foreign_keys=[tenant_id])
     lines = db.relationship('BudgetLine', back_populates='budget', cascade='all, delete-orphan')
     creator = db.relationship('User', foreign_keys=[created_by])
@@ -169,7 +168,6 @@ class BudgetLine(db.Model):
     
     notes = db.Column(db.Text)
     
-    # Relationships
     tenant = db.relationship('Tenant', backref='budget_lines', foreign_keys=[tenant_id])
     budget = db.relationship('Budget', back_populates='lines')
     account = db.relationship('GLAccount')

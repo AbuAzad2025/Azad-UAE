@@ -49,7 +49,6 @@ def create():
             flash(str(e), 'danger')
             return redirect(url_for('branches.create'))
 
-        # Check if code exists
         if tenant_query(Branch).filter_by(code=code).first():
             flash('الكود مستخدم مسبقاً', 'danger')
             return redirect(url_for('branches.create'))

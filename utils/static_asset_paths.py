@@ -17,7 +17,6 @@ AZAD_FAVICON = "assets/brand/azad/favicons/favicon.png"
 AZAD_ICON_192 = "assets/brand/azad/icons/icon-192.png"
 AZAD_ICON_512 = "assets/brand/azad/icons/icon-512.png"
 
-# Shown when a product has no image (not tenant-specific branding)
 DEFAULT_PRODUCT_IMAGE = "assets/shared/placeholders/no-product.png"
 
 TENANT_ASSET_LAYOUT: dict[str, str] = {

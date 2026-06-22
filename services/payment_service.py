@@ -467,7 +467,6 @@ class PaymentService:
                         )
                     # sale.balance_due -= allocated_amount # Let recalculate handle this
 
-                    # Trigger recalculation
                     sale.recalculate_payment_status()
 
                     remaining_amount_aed -= allocated_amount_aed

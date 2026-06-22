@@ -525,7 +525,6 @@ class AIService:
                     try:
                         delay = (first_payment_dt - sale_created_at).days
                     except TypeError:
-                        # Fallback: ignore invalid datetime arithmetic
                         continue
                     pay_delays.append(delay)
             
@@ -629,7 +628,6 @@ class AIService:
         if len(values) < 7:
             return {'prediction': None, 'confidence': 0, 'message': 'بيانات غير كافية (يحتاج 7 أيام)'}
         
-        # Simple linear regression
         n = len(values)
         x = list(range(n))
         y = values

@@ -1,4 +1,3 @@
-# models/user.py
 # User, Role, and Permission models
 
 from datetime import datetime, timezone
@@ -6,7 +5,6 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 from extensions import db
 
-# Association table for Role-Permission many-to-many
 role_permissions = db.Table(
     'role_permissions',
     db.Column('role_id', db.Integer, db.ForeignKey('roles.id'), primary_key=True),
@@ -52,7 +50,6 @@ class Role(db.Model):
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     
-    # Relationships
     permissions = db.relationship('Permission', secondary=role_permissions, backref='roles', lazy='joined')
     users = db.relationship('User', back_populates='role', lazy='dynamic')
     
@@ -87,7 +84,6 @@ class User(UserMixin, db.Model):
     full_name_ar = db.Column(db.String(100))
     phone = db.Column(db.String(50))
     
-    # Role
     role_id = db.Column(db.Integer, db.ForeignKey('roles.id'), nullable=False, index=True)
     role = db.relationship('Role', back_populates='users')
     tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=True, index=True)
@@ -106,11 +102,9 @@ class User(UserMixin, db.Model):
     login_attempts = db.Column(db.Integer, default=0)
     locked_until = db.Column(db.DateTime)
     
-    # Timestamps
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     
-    # Relationships
     sales = db.relationship('Sale', back_populates='seller', lazy='dynamic', foreign_keys='Sale.seller_id')
     audit_logs = db.relationship('AuditLog', back_populates='user', lazy='dynamic')
     

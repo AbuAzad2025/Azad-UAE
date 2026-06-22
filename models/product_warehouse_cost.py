@@ -28,7 +28,6 @@ class ProductWarehouseCost(db.Model):
     total_quantity = db.Column(db.Numeric(18, 3), default=0, nullable=False)
     total_value = db.Column(db.Numeric(18, 3), default=0, nullable=False)
 
-    # Currency of the stored cost (usually AED or tenant default)
     currency = db.Column(db.String(3), default=context_aware_default_currency, nullable=False)  # TODO: use Config.DEFAULT_CURRENCY
 
     # Lock to prevent concurrent WAC updates
@@ -40,7 +39,6 @@ class ProductWarehouseCost(db.Model):
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc),
                           onupdate=lambda: datetime.now(timezone.utc))
 
-    # Relationships
     product = db.relationship('Product', backref='warehouse_costs')
     warehouse = db.relationship('Warehouse', backref='product_costs')
     tenant = db.relationship('Tenant', backref='product_warehouse_costs', foreign_keys=[tenant_id])

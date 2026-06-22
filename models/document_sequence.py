@@ -28,11 +28,9 @@ class DocumentSequence(db.Model):
     pattern = db.Column(db.String(200), nullable=False, default='{prefix}-{year}-{counter:04d}')
     prefix = db.Column(db.String(20), nullable=False, default='DOC')
 
-    # Counter state (atomically incremented)
     counter = db.Column(db.Integer, nullable=False, default=1)
     counter_reset = db.Column(db.String(20), nullable=False, default='year')  # never, yearly, monthly, daily
 
-    # Scope
     branch_scoped = db.Column(db.Boolean, nullable=False, default=False)
     is_active = db.Column(db.Boolean, nullable=False, default=True)
 
@@ -71,7 +69,6 @@ class DocumentSequence(db.Model):
             'counter': self.counter,
         }
 
-        # Format with zero-padding support for counter
         pattern = self.pattern
         for pad in [2, 3, 4, 5, 6]:
             placeholder = f'{{counter:0{pad}d}}'

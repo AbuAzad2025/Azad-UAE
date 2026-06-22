@@ -140,7 +140,6 @@ class StoreOrderService:
         from models.shop_loyalty import ShopLoyaltyTransaction
         from services.store_service import StoreService
 
-        # Idempotency: check if loyalty already awarded for this sale
         existing = ShopLoyaltyTransaction.query.filter_by(
             sale_id=sale.id,
             reason='order',

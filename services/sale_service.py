@@ -347,7 +347,6 @@ class SaleService:
                 if paid_amount_aed < Decimal('0'):
                     raise ValueError('مبلغ الدفع لا يمكن أن يكون سالب')
 
-                # Store payment in AED
                 sale.paid_amount = paid_amount  # في عملة الفاتورة
                 sale.paid_amount_aed = paid_amount_aed  # محول للدرهم
 

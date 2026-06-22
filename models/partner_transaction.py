@@ -32,13 +32,11 @@ class PartnerTransaction(db.Model):
     # withdrawal | additional_investment | expense_payment | adjustment
 
     amount = db.Column(db.Numeric(15, 3), nullable=False)
-    # positive = credit to partner, negative = debit from partner
 
     currency = db.Column(db.String(3), default=context_aware_default_currency)  # TODO: use Config.DEFAULT_CURRENCY
     exchange_rate = db.Column(db.Numeric(15, 6), default=1)
     amount_base = db.Column(db.Numeric(15, 3), nullable=False)
 
-    # Running balance after this transaction
     balance_after = db.Column(db.Numeric(15, 3), default=0)
 
     # Document reference
@@ -46,7 +44,6 @@ class PartnerTransaction(db.Model):
     reference_type = db.Column(db.String(30))  # payment_voucher | journal_entry | manual
     reference_id = db.Column(db.Integer, nullable=True)
 
-    # Date
     transaction_date = db.Column(db.Date, nullable=False,
                                default=lambda: datetime.now(timezone.utc).date())
 
@@ -55,7 +52,6 @@ class PartnerTransaction(db.Model):
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True, index=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
 
-    # Relationships
     tenant = db.relationship('Tenant', foreign_keys=[tenant_id])
     distribution = db.relationship('PartnerProfitDistribution',
                                   foreign_keys=[distribution_id])

@@ -65,10 +65,8 @@ def create_app(config_class=Config):
             os.environ["OWNER_PASSWORD"] = _generated
             print(f"\n{'='*60}\n[DEV MODE] Auto-generated OWNER_PASSWORD: {_generated}\n{'='*60}\n")
     
-    # Initialize Extensions
     init_extensions(app)
 
-    # Initialize User Loader for Flask-Login
     from extensions import login_manager
     from models.user import User
 
@@ -113,7 +111,6 @@ def create_app(config_class=Config):
             return redirect(url_for('shop.catalog', slug=store.store_slug))
         return None
 
-    # Error Handlers — use LoggingCore (independent of db.session)
     @app.route('/favicon.ico')
     def favicon():
         return send_from_directory(
@@ -241,7 +238,6 @@ def create_app(config_class=Config):
     # make t() available as a Jinja2 global so macros can use it
     app.jinja_env.globals.setdefault('t', __import__('utils.i18n', fromlist=['t']).t)
 
-    # Context Processors
     @app.context_processor
     def utility_processor():
         from utils.helpers import format_currency, timeago
@@ -506,7 +502,6 @@ def create_app(config_class=Config):
             if _bp not in _skip and request.endpoint != "static":
                 if not is_global_owner_user(_cu) and g.active_tenant_id is None:
                     abort(403)
-                # Check if tenant is suspended / inactive
                 if g.active_tenant_id is not None and not is_global_owner_user(_cu):
                     status = get_tenant_status(g.active_tenant_id)
                     if not status["ok"]:
@@ -551,7 +546,6 @@ def create_app(config_class=Config):
     # Models Import (to ensure they are known to SQLAlchemy)
     from models import User, Customer, ProductCategory
     
-    # Initialize Listeners
     try:
         from models.events import register_all_listeners
         with app.app_context():

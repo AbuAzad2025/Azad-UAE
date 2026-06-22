@@ -399,7 +399,6 @@ def donations():
     per_page = request.args.get('per_page', 20, type=int)
     search_query = request.args.get('search', '')
     
-    # Query (مُفلترة بـ tenant_id)
     tid = None
     query = Donation.query.filter_by(tenant_id=tid, transaction_type='donation')
 
@@ -584,7 +583,6 @@ def edit_package(package_id):
             package.is_featured = request.form.get('is_featured') == 'on'
             package.badge_text = request.form.get('badge_text', package.badge_text or '').strip()
             
-            # Features
             features = request.form.get('features', '').strip()
             package.features = features.split('\n') if features else []
             
@@ -1202,7 +1200,6 @@ def view_purchases():
     per_page = request.args.get('per_page', 20, type=int)
     status_filter = request.args.get('status', '')
     
-    # Query مع Filtering
     query = PackagePurchase.query
     if status_filter:
         query = query.filter_by(payment_status=status_filter)
@@ -1683,7 +1680,6 @@ def system_metrics():
 @limiter.limit("60 per minute")
 def api_v2_purchases():
     """API v2 للمشتريات - محسن مع Filtering & Pagination"""
-    # Parameters
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 20, type=int)
     status = request.args.get('status', '')
@@ -1692,7 +1688,6 @@ def api_v2_purchases():
     sort_by = request.args.get('sort_by', 'created_at')
     order = request.args.get('order', 'desc')
     
-    # Query
     query = PackagePurchase.query
     
     # Filters
@@ -1744,13 +1739,11 @@ def api_v2_purchases():
 @limiter.limit("60 per minute")
 def api_v2_donations():
     """API v2 للتبرعات - محسن مع Filtering & Pagination"""
-    # Parameters
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 20, type=int)
     status = request.args.get('status', '')
     search = request.args.get('search', '')
     
-    # Query (مُفلترة بـ tenant_id)
     tid = None
     query = Donation.query.filter_by(tenant_id=tid, transaction_type='donation')
 

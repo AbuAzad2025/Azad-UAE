@@ -120,7 +120,6 @@ class AdvancedFinancialAnalytics:
             lines = lines_query.all()
             
             for line in lines:
-                # amount_aed represents (Debit - Credit) in AED
                 # Asset/Expense: Normal Balance is Debit (+)
                 # Liability/Equity/Revenue: Normal Balance is Credit (-)
                 

@@ -177,7 +177,6 @@ class ErrorAuditService:
         extra: dict[str, Any] | None = None,
     ) -> int | None:
         """Called by the JS-error endpoint (pre-validated payload)."""
-        # Client-side stack traces can be huge — truncate
         if stack and len(stack) > _MAX_TRACE_LEN:
             stack = stack[:_MAX_TRACE_LEN] + "\n...[truncated]"
         return ErrorAuditService._persist(
@@ -283,7 +282,6 @@ class ErrorAuditService:
         # Request ID
         request_id = ErrorAuditService.get_or_create_request_id()
 
-        # Environment / version
         environment = "production"
         app_version = ""
         try:
@@ -307,7 +305,6 @@ class ErrorAuditService:
                 pass
             request_data = ErrorAuditService._sanitize_dict(payload)
 
-        # Endpoint path (for fingerprint consistency)
         endpoint_path = ""
         try:
             if category == "FRONTEND" and _url:

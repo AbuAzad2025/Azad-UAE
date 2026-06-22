@@ -36,7 +36,6 @@ class FiscalPositionService:
             if pos:
                 return pos
 
-        # Default fallback: local position
         return FiscalPosition.query.filter_by(
             tenant_id=tenant_id, code='local', is_active=True
         ).first()

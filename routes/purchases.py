@@ -383,7 +383,6 @@ def purchase_return(id):
 
 
 # =====================================
-# API Endpoints - Backend Calculations
 # =====================================
 
 @purchases_bp.route('/api/calculate-totals', methods=['POST'])

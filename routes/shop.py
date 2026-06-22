@@ -63,7 +63,6 @@ def _resolve_store(slug):
 
 
 def _closed_response(store, reason):
-    # closed.html extends base.html, which needs the full shop context
     # (tenant, lang, t, theme...). Build it so the page never 500s.
     ctx = _store_context(store)
     return render_template('shop/closed.html', reason=reason, **ctx), 503

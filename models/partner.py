@@ -26,12 +26,10 @@ class Partner(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=False, index=True)
 
-    # Identity
     name = db.Column(db.String(200), nullable=False)
     name_en = db.Column(db.String(200))
     code = db.Column(db.String(50), nullable=True, index=True)
 
-    # Partnership scope
     scope_type = db.Column(db.String(20), default='company', nullable=False)
     # 'company' | 'branch' | 'warehouse'
 
@@ -76,7 +74,6 @@ class Partner(db.Model):
     total_withdrawals = db.Column(db.Numeric(15, 3), default=0)
     total_additional_investment = db.Column(db.Numeric(15, 3), default=0)
 
-    # Status
     is_active = db.Column(db.Boolean, default=True, nullable=False, index=True)
     start_date = db.Column(db.Date, default=lambda: datetime.now(timezone.utc).date())
     end_date = db.Column(db.Date, nullable=True)
@@ -87,7 +84,6 @@ class Partner(db.Model):
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc),
                           onupdate=lambda: datetime.now(timezone.utc))
 
-    # Relationships
     tenant = db.relationship('Tenant', foreign_keys=[tenant_id])
     distributions = db.relationship('PartnerProfitDistribution',
                                      backref='partner',

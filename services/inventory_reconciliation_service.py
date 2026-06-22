@@ -265,7 +265,6 @@ class InventoryReconciliationService:
             acc_q = scope_gl_accounts(acc_q, tenant_id=tenant_id)
         inventory_account = acc_q.first()
 
-        # Aggregate PWC / movement data per warehouse from product rows
         warehouse_map = defaultdict(
             lambda: {
                 "pwc_qty": Decimal("0"),

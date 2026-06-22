@@ -44,7 +44,6 @@ class CostCenter(db.Model):
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), 
                           onupdate=lambda: datetime.now(timezone.utc))
     
-    # Relationships
     parent = db.relationship('CostCenter', remote_side=[id], backref='children')
     manager = db.relationship('User', foreign_keys=[manager_id])
     tenant = db.relationship('Tenant', backref='cost_centers', foreign_keys=[tenant_id])

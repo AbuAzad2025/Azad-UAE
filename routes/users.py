@@ -128,7 +128,6 @@ def create():
             branch_id = _clean_branch_id(request.form.get('branch_id'))
             role = _validate_user_branch(role_id, branch_id)
 
-            # Server-side role-level hierarchy enforcement
             if role_level_for(getattr(role, 'slug', None)) > current_level:
                 flash('⚠️ لا يمكنك تعيين دور أعلى من دورك.', 'danger')
                 form_values = request.form.to_dict()
@@ -302,7 +301,6 @@ def edit(id):
             branch_id = _clean_branch_id(request.form.get('branch_id'))
             role = _validate_user_branch(role_id, branch_id)
 
-            # Server-side role-level hierarchy enforcement
             if role_level_for(getattr(role, 'slug', None)) > current_level:
                 flash('⚠️ لا يمكنك تعيين دور أعلى من دورك.', 'danger')
                 return render_template('users/edit.html', user=user, roles=roles, branches=branches)
@@ -373,7 +371,6 @@ def delete(id):
     user = user_query.first_or_404()
     _ensure_user_in_scope(user)
 
-    # Server-side role-level hierarchy enforcement on delete
     current_level = role_level_for_user(current_user)
     target_role = getattr(user, 'role', None)
     target_slug = getattr(target_role, 'slug', None) if target_role else None

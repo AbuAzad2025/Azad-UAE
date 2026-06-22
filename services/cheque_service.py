@@ -440,7 +440,6 @@ def process_cheque_bounce(cheque, reason):
         payment.reject_payment(reason)
     # Outgoing cheque to a supplier reduced the supplier's paid total at issue
     # (Dr AP / Cr Deferred Cheques). The bounce restores AP in the GL, so the
-    # cached supplier balance must be restored to stay consistent with the ledger.
     if cheque.cheque_type == 'outgoing' and cheque.supplier_id and not cheque.expense_id:
         from models.supplier import Supplier
         supplier_q = Supplier.query.filter_by(id=cheque.supplier_id)

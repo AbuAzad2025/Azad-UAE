@@ -427,7 +427,6 @@ def delete(id):
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Error deleting customer {id}: {e}")
-        # Fallback to soft delete if hard delete fails (e.g. other constraints)
         try:
             # Re-fetch customer to ensure it's attached to the new session transaction
             customer = Customer.query.filter_by(id=id, tenant_id=tid).first()
@@ -624,7 +623,6 @@ def statement(id):
             }
         })
 
-    # Collect receipt numbers already represented by allocated Payment records
     allocated_receipt_numbers = set()
     for t in transactions:
         if t['type'] == 'payment':
@@ -655,7 +653,6 @@ def statement(id):
 
     transactions.sort(key=lambda x: (x['date'] or datetime.min))
 
-    # Opening balance: compute from ALL confirmed transactions before date_from
     # الدلالة: credit - debit (موجب = رصيد للعميل)
     opening_balance = 0
     if date_from:

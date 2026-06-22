@@ -18,15 +18,12 @@ class Branch(db.Model):
     city = db.Column(db.String(50), nullable=True)
     phone = db.Column(db.String(50), nullable=True)
 
-    # Status
     is_active = db.Column(db.Boolean, default=True, index=True)
     is_main = db.Column(db.Boolean, default=False) # Is this the HQ?
 
     # Pricing Method - هل الأسعار في هذا الفرع تشمل الضريبة؟
-    # NULL = يرث من إعدادات التينانت
     prices_include_vat = db.Column(db.Boolean, default=None, nullable=True)
 
-    # Timestamps
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 

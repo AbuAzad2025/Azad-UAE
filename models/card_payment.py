@@ -57,7 +57,6 @@ class CardPayment(db.Model):
     user_agent = db.Column(db.String(500))
     country_code = db.Column(db.String(10))
     
-    # Timestamps
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
     completed_at = db.Column(db.DateTime)
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), 

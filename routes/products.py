@@ -231,13 +231,11 @@ def import_products():
                 filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
                 file.save(filepath)
                 
-                # Read file
                 if filename.endswith('.csv'):
                     df = pd.read_csv(filepath)
                 else:
                     df = pd.read_excel(filepath)
                 
-                # Process Data
                 success_count = 0
                 error_count = 0
                 errors = []
@@ -268,7 +266,6 @@ def import_products():
                     flash('⚠️ الملف يفتقد للأعمدة المطلوبة: اسم المنتج، السعر', 'danger')
                     return redirect(request.url)
                 
-                # Default Warehouse
                 from models import Warehouse, ProductCategory
                 tid = get_active_tenant_id(current_user)
                 warehouse = Warehouse.query.filter_by(is_active=True, is_main=True, tenant_id=tid).first()
@@ -435,7 +432,6 @@ def import_grid():
             barcode = barcodes[i].strip() if i < len(barcodes) else ''
             if not barcode: barcode = sku
             
-            # Create
             new_product = Product(
                 name=name,
                 sku=sku,

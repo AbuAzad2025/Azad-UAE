@@ -137,7 +137,6 @@ class CurrencyService:
                 # Ensure base currency is 1.0
                 rates[base] = Decimal('1.00')
                 
-                # Cache the result
                 CurrencyService._rates_cache[base] = {'timestamp': time.time(), 'rates': rates}
                 return rates.copy()
             except Exception as e:
@@ -149,7 +148,6 @@ class CurrencyService:
             CurrencyService._rates_cache[base] = {'timestamp': time.time(), 'rates': http_rates}
             return http_rates.copy()
         
-        # Fallback if API fails or not available
         # Recalculate fallback rates based on the requested base
         # Our static FALLBACK_RATES are "Value of 1 AED in X Currency"
         

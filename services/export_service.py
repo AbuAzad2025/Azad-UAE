@@ -34,7 +34,6 @@ class ExportService:
         for row in data:
             writer.writerow(row)
             
-        # Get the string content
         csv_content = str_output.getvalue()
         
         # Create bytes buffer with BOM for Excel compatibility

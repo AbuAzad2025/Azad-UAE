@@ -40,7 +40,6 @@ class DashboardService:
         """
         Save a user's custom layout
         """
-        # Basic validation: ensure it's a dict and not too large
         if not isinstance(layout_json, dict) or len(str(layout_json)) > 10000:
             raise ValueError("Invalid layout format or size")
 

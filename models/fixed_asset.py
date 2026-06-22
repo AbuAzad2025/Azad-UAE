@@ -58,7 +58,6 @@ class FixedAsset(db.Model):
     
     # الحالة
     status = db.Column(db.String(20), default='active', index=True)
-    # active: نشط
     # fully_depreciated: مستهلك بالكامل
     # disposed: تم التخلص منه
     # sold: تم بيعه
@@ -75,7 +74,6 @@ class FixedAsset(db.Model):
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), 
                           onupdate=lambda: datetime.now(timezone.utc))
     
-    # Relationships
     tenant = db.relationship('Tenant', backref='fixed_assets', foreign_keys=[tenant_id])
     asset_account = db.relationship('GLAccount', foreign_keys=[asset_account_id])
     depreciation_account = db.relationship('GLAccount', foreign_keys=[depreciation_account_id])
@@ -344,7 +342,6 @@ class DepreciationSchedule(db.Model):
     
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
     
-    # Relationships
     tenant = db.relationship('Tenant', foreign_keys=[tenant_id])
     asset = db.relationship('FixedAsset', back_populates='depreciation_schedules')
     journal_entry = db.relationship('GLJournalEntry')

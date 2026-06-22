@@ -54,7 +54,6 @@ def check_limit(resource: str, *, model, tenant_id_field: str = "tenant_id",
     if not tenant:
         return  # no tenant context — skip (owner/platform mode)
 
-    # Build the limit attribute name from resource
     limit_attr = f"max_{resource}"
     limit_val = getattr(tenant, limit_attr, None)
     if limit_val is None:

@@ -57,7 +57,6 @@ class Payment(db.Model):
     # حالة الدفعة - للشيكات فقط
     # confirmed: مؤكدة (الشيك صُرف)
     # pending: معلقة (الشيك لم يُصرف بعد)
-    # rejected: مرفوضة (الشيك رُفض)
     payment_confirmed = db.Column(db.Boolean, default=True, index=True)  # True للنقد/بطاقة، False للشيكات المعلقة
     confirmation_date = db.Column(db.DateTime)  # تاريخ التأكيد
     rejection_reason = db.Column(db.String(500))  # سبب الرفض

@@ -44,14 +44,12 @@ class ExchangeRateService:
     Backend service for fetching online exchange rates for DISPLAY only.
     """
 
-    # Cache for online display rates (separate from CurrencyService cache)
     _display_cache: dict[str, Any] = {}
     _display_cache_ttl: int = 43200  # 12 hours default for display
 
     # Supported display currencies
     DISPLAY_CURRENCIES = ("USD", "ILS", "JOD", "EUR", "AED", "SAR", "EGP", "GBP")
 
-    # Static fallback for display (never used in accounting)
     DISPLAY_FALLBACK = {
         "USD": 1.0,
         "ILS": 3.65,
@@ -294,7 +292,6 @@ class ExchangeRateService:
                 if aed_rate_from_base and sym in ExchangeRateService.DISPLAY_FALLBACK:
                     # 1 base = X AED; 1 AED = Y sym => 1 base = X*Y sym
                     # But DISPLAY_FALLBACK is "1 USD = X sym" — need careful cross-calc
-                    # Simpler: just copy from fallback if available
                     rates[sym] = ExchangeRateService.DISPLAY_FALLBACK.get(sym, 1.0)
 
         last_updated = datetime.now(timezone.utc).isoformat()

@@ -456,7 +456,6 @@ def delete_warehouse(id):
     """حذف مستودع"""
     warehouse = tenant_get_or_404(Warehouse, id)
 
-    # Check if main warehouse
     if warehouse.is_main:
         flash('لا يمكن حذف المستودع الرئيسي', 'danger')
         return redirect(url_for('warehouse.list_warehouses'))

@@ -32,7 +32,6 @@ class ProductSerial(db.Model):
     # defective: Marked as bad/damaged
     # lost: Lost/Stolen
     
-    # Tracking
     purchase_line_id = db.Column(db.Integer, db.ForeignKey('purchase_lines.id'), nullable=True, index=True) # Where did we get it?
     sale_line_id = db.Column(db.Integer, db.ForeignKey('sale_lines.id'), nullable=True, index=True) # Who did we sell it to?
     
@@ -43,7 +42,6 @@ class ProductSerial(db.Model):
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     
-    # Relationships
     tenant = db.relationship('Tenant', backref='product_serials', foreign_keys=[tenant_id])
     product = db.relationship('Product', backref='serials')
     purchase_line = db.relationship('PurchaseLine', backref='serials')

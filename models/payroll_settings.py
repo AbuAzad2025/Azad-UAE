@@ -17,7 +17,6 @@ class PayrollSettings(db.Model):
     # End of Service/Gratuity Policy
     eos_calculation_method = db.Column(db.String(50), default='standard') # standard, custom
     
-    # Rounding/Currency
     rounding_policy = db.Column(db.String(20), default='round_half_up')
     
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), 

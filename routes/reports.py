@@ -269,13 +269,11 @@ def partners():
                 'merchant_share_amount': merchant_amount
             })
             
-            # Aggregate for summary
             m_id = merchant.id if merchant else product.merchant_customer_id
             if m_id is not None:
                 merchant_share_totals[m_id] = merchant_share_totals.get(m_id, Decimal('0')) + merchant_amount
 
     # --- 2. FINANCIAL SUMMARIES (Partners & Merchants) ---
-    # Helper to get payments/receipts
     def get_financials(customer_type, share_totals_dict):
         customers = _scoped_customer_query().filter_by(customer_type=customer_type).all()
         summary_list = []
@@ -345,7 +343,6 @@ def partners():
     suppliers_summary = []
     
     for sup in suppliers:
-        # Total Purchases
         purchases_query = db.session.query(func.sum(Purchase.amount_aed)).filter(
             Purchase.supplier_id == sup.id,
             Purchase.tenant_id == sup.tenant_id,
@@ -625,7 +622,6 @@ def purchases():
     
     # Calculate purchase-level confirmed payments (FIFO allocation)
     
-    # Group payments by supplier for FIFO allocation
     from models import Payment
     supplier_payments = {}
     pmt_query = tenant_query(Payment).filter(
@@ -1679,7 +1675,6 @@ def entity_report_fragment(type, id):
             context['allocation_exact'] = has_direct_allocation
             context['unallocated_supplier_credit'] = unallocated_credit
             
-            # Transactions (Payments TO Supplier)
             payments = Payment.query.filter_by(supplier_id=id, payment_confirmed=True)
             if tenant_id is not None:
                 payments = payments.filter(Payment.tenant_id == tenant_id)
@@ -1843,7 +1838,6 @@ def entity_report_fragment(type, id):
                 'balance': (s.amount_aed or 0) - (s.paid_amount_aed or 0)
             } for s in sales]
             
-            # Transactions (Receipts + Payments)
             receipts = Receipt.query.filter_by(customer_id=id, payment_confirmed=True)
             payments_out = Payment.query.filter_by(customer_id=id, direction='outgoing', payment_confirmed=True)
             if tenant_id is not None:

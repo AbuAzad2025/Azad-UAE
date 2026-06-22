@@ -1039,7 +1039,6 @@ def create_receipt():
 def view_receipt(id):
     receipt = tenant_get(Receipt, id, or_404=False)
     if not receipt:
-        # Fallback: if this id belongs to a payment voucher, redirect to its proper view route.
         payment = tenant_get(Payment, id, or_404=False)
         if payment:
             return redirect(url_for('payments.view_payment', id=id))
@@ -1065,7 +1064,6 @@ def view_receipt(id):
 def print_receipt(id):
     receipt = tenant_get(Receipt, id, or_404=False)
     if not receipt:
-        # Fallback: if this id belongs to a payment voucher, redirect to the proper print route.
         payment = tenant_get(Payment, id, or_404=False)
         if payment:
             return redirect(url_for('payments.print_payment', id=id))

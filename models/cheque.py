@@ -69,9 +69,7 @@ class Cheque(db.Model):
     status = db.Column(db.String(20), default='pending', index=True)
     # pending: معلق (استُلم الشيك)
     # deposited: مودع في البنك
-    # cleared: تم الصرف (مؤكد من البنك)
     # bounced: مرتد (رُفض من البنك)
-    # cancelled: ملغي
     # under_collection: تحت التحصيل
     
     # معلومات الطرف الآخر
@@ -109,7 +107,6 @@ class Cheque(db.Model):
                           onupdate=lambda: datetime.now(timezone.utc))
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), index=True)
     
-    # Relationships
     customer = db.relationship('Customer', backref='cheques', foreign_keys=[customer_id])
     supplier = db.relationship('Supplier', backref='cheques', foreign_keys=[supplier_id])
     sale = db.relationship('Sale', backref='cheques', foreign_keys=[sale_id])

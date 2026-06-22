@@ -16,11 +16,9 @@ class Donation(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
 
-    # NULL means Azad/platform donation; tenant_id means a project/tenant donation.
     tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=True, index=True)
     tenant = db.relationship('Tenant', backref='donations', foreign_keys=[tenant_id])
 
-    # Amount Info - معلومات المبلغ
     amount_usd = db.Column(db.Numeric(15, 2), nullable=False)  # المبلغ بالدولار
     amount_crypto = db.Column(db.Numeric(20, 8))  # المبلغ بالعملة الرقمية
     
@@ -32,7 +30,6 @@ class Donation(db.Model):
     wallet_address = db.Column(db.String(200))  # عنوان المحفظة المستخدم
     transaction_hash = db.Column(db.String(200))  # Transaction ID/Hash
     
-    # Status - الحالة
     status = db.Column(db.String(20), default='pending', index=True)  # pending, confirmed, completed, failed
     
     # Donor Info - معلومات المتبرع (اختياري)
@@ -66,7 +63,6 @@ class Donation(db.Model):
     thank_you_sent = db.Column(db.Boolean, default=False)
     notification_sent = db.Column(db.Boolean, default=False)
     
-    # Timestamps
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
     confirmed_at = db.Column(db.DateTime)  # وقت التأكيد
     completed_at = db.Column(db.DateTime)  # وقت الاكتمال

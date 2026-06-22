@@ -151,7 +151,6 @@ def create():
             currency = currency_value if currency_value else default_currency
             user_exchange_rate = request.form.get('exchange_rate', type=float)
             
-            # Track manual exchange rate changes for audit
             exchange_rate_manual = request.form.get('exchange_rate_manual') == 'true'
             exchange_rate_server = request.form.get('exchange_rate_server', type=float)
             exchange_rate_diff = request.form.get('exchange_rate_difference', type=float)
@@ -609,7 +608,6 @@ def restore(id):
 
 
 # =====================================
-# API Endpoints - Backend Calculations
 # =====================================
 
 @sales_bp.route('/api/calculate-totals', methods=['POST'])

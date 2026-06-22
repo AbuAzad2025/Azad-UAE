@@ -135,7 +135,6 @@ class GLMappingSeedPreviewRow:
 
 
 # ------------------------------------------------------------------
-# Phase 1G.1 – Candidate Discovery Rules (read-only)
 # ------------------------------------------------------------------
 
 # Each rule defines how to discover a postable GL account candidate for a
@@ -685,7 +684,6 @@ class GLMappingValidationService:
         return issues
 
     # ------------------------------------------------------------------
-    # Phase 1G.1 – Candidate Discovery (read-only)
     # ------------------------------------------------------------------
 
     DISCOVERY_FIELDS = (
@@ -876,7 +874,6 @@ class GLMappingValidationService:
         name_partial = rule.get("name_partial", [])
         parent_code_hint = rule.get("parent_code_hint")
 
-        # Helper to check if account passes basic postability checks
         def _is_postable(account: GLAccount) -> bool:
             return (
                 account.tenant_id == tenant.id
@@ -1034,7 +1031,6 @@ class GLMappingValidationService:
                     )
                 )
 
-        # Count remaining mappings for duplicate detection (excluding ignored non-mapping-owned)
         seen_defaults_filtered: dict[str, int] = defaultdict(int)
         seen_branch_overrides_filtered: dict[tuple[str, int], int] = defaultdict(int)
 

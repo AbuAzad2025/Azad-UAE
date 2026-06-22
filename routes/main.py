@@ -326,7 +326,6 @@ def my_profile_update():
             from utils.field_validators import normalize_phone_optional
             user.phone = normalize_phone_optional(request.form.get('phone', ''))
 
-        # Password change (requires current password)
         current_password = request.form.get('current_password', '').strip()
         new_password = request.form.get('new_password', '').strip()
         confirm_password = request.form.get('confirm_password', '').strip()
@@ -388,7 +387,6 @@ def tenant_public_profile(slug):
             reason=tenant.suspension_reason or 'Tenant suspended',
         ), 503
 
-    # Public-safe info only
     branches = Branch.query.filter_by(
         tenant_id=tenant.id,
         is_active=True
