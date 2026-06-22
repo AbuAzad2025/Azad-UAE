@@ -80,7 +80,7 @@
           <h3>💳 {{ t('Amounts') }}</h3>
           <p><strong>{{ t('Amount') }}:</strong> {{ "{:,.2f}".format(expense.amount) }} {{ expense.currency }}</p>
           <p><strong>{{ t('Price_2') }} {{ t('Exchange') }}:</strong> {{ "{:,.6f}".format(expense.exchange_rate) }}</p>
-          <p><strong>{{ t('Amount') }} بـ{{ tenant_currency_name_ar or 'درهم' }}:</strong> <strong style="color:{{ settings.header_color if settings else '#e74c3c' }};">{{ format_currency(expense.base_amount or expense.amount_aed) }}</strong></p>
+          <p><strong>{{ t('Amount') }} بـ{{ tenant_currency_name_ar or tenant_default_currency }}:</strong> <strong style="color:{{ settings.header_color if settings else '#e74c3c' }};">{{ format_currency(expense.base_amount or expense.amount_aed) }}</strong></p>
           <p><strong>{{ t('طريقة') }} {{ t('Payment_2') }}:</strong> {{ expense.payment_method or '-' }}</p>
         </div>
       </div>

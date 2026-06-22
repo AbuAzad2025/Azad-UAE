@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('Invoice') }} #{{ sale.sale_number }}</title>
+  <title>{{ tenant_name_ar or company_name_ar or '' }} - {{ t('Invoice') }} #{{ sale.sale_number }}</title>
   <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&display=swap" crossorigin="anonymous" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/erp-theme.css') }}">
   {% include 'partials/print_styles.html' %}
@@ -206,9 +206,9 @@
           <td>{{ loop.index }}</td>
           <td><strong>{{ line.product.name if line.product else '-' }}</strong></td>
           <td>{{ line.quantity }}</td>
-          <td>{{ format_currency(line.unit_price) }}</td>
+          <td>{{ format_currency(line.unit_price, sale.currency) }}</td>
           <td>{{ line.discount_percent if line.discount_percent else '-' }}</td>
-          <td><strong>{{ format_currency(line.line_total) }}</strong></td>
+          <td><strong>{{ format_currency(line.line_total, sale.currency) }}</strong></td>
         </tr>
         {% endfor %}
       </tbody>
@@ -263,7 +263,7 @@
           <tr>
             <td>{{ payment.payment_number }}</td>
             <td>{{ payment.payment_date.strftime('%Y-%m-%d') }}</td>
-            <td class="ic-7">{{ format_currency(payment.amount_aed, 'AED') }}</td>
+            <td class="ic-7">{{ format_currency(payment.amount_aed, tenant_default_currency) }}</td>
             <td>
               {% if payment.payment_method == 'cash' %}{{ t('Cash_2') }}
               {% elif payment.payment_method == 'card' %}{{ t('Card') }}

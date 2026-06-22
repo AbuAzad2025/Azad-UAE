@@ -645,10 +645,12 @@
                 <div class="header ic-6">
                   {% if settings.show_logo %}
                   {% set _logo_path = tenant_document_logo(settings) %}
+                  {% if _logo_path %}
                   {% if _logo_path.startswith('http') %}
                     <img src="{{ _logo_path }}" alt="Logo" class="ic-7">
                   {% else %}
                     <img src="{{ url_for('static', filename=_logo_path) }}" alt="Logo" class="ic-7">
+                  {% endif %}
                   {% endif %}
                   {% endif %}
                   <h4 class="ic-8">

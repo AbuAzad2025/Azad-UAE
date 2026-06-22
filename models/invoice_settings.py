@@ -18,8 +18,8 @@ class InvoiceSettings(db.Model):
     tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=False, index=True)
     
     # Company Info - معلومات الشركة
-    company_name_ar = db.Column(db.String(200), nullable=False, default='شركة أزاد')
-    company_name_en = db.Column(db.String(200), nullable=False, default='Azad Company')
+    company_name_ar = db.Column(db.String(200), nullable=False, default='')
+    company_name_en = db.Column(db.String(200), nullable=False, default='')
     
     # Logos - الشعارات
     logo_url = db.Column(db.String(500))  # Main logo (URL)

@@ -117,7 +117,7 @@
 
       <div style="margin-top:10px;">
         {% set amount_value = purchase.total_amount or 0 %}
-        {% set amount_currency = tenant_default_currency or 'AED' %}
+        {% set amount_currency = tenant_default_currency or get_system_default_currency() %}
         {% set qr_data_url = '' %}
         {% if settings and settings.enable_qr_code %}
           {% set qr_data = purchase.purchase_number ~ '|' ~ (purchase.purchase_date.strftime('%Y-%m-%d') if purchase.purchase_date else '') ~ '|' ~ (purchase.total_amount or 0) %}

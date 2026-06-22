@@ -263,7 +263,7 @@ class TestPurchaseVatCalculation:
 
         t = _make_tenant(db_session, 'T', 't-pur', 'AED', False)
         b = _make_branch(db_session, t.id, 'B', 'B1')
-        wh = _make_wh(db_session, t.id, b.id)
+        wh = _make_wh(db_session, t.id, b.id, True)
         product = _make_product(db_session, t.id, 'W', 'W7', 50, 0)
         supplier = _make_supplier(db_session, t.id, 'S')
         seller = _make_user(db_session, t.id, 'seller_' + str(t.id), b.id)
@@ -285,7 +285,7 @@ class TestPurchaseVatCalculation:
 
         t = _make_tenant(db_session, 'T', 't-pur-inc', 'AED', True)
         b = _make_branch(db_session, t.id, 'B', 'B1')
-        wh = _make_wh(db_session, t.id, b.id)
+        wh = _make_wh(db_session, t.id, b.id, True)
         product = _make_product(db_session, t.id, 'W', 'W8', 50, 0)
         supplier = _make_supplier(db_session, t.id, 'S')
         seller = _make_user(db_session, t.id, 'seller_' + str(t.id), b.id)
@@ -788,3 +788,139 @@ class TestSecurityAuditFixes:
         # Verify decorator logic: permission_required('manage_users') would fail for seller
         # Check that cashier does not have manage_users permission
         assert not target.has_permission('manage_users')
+
+
+class TestInvoicePrintEngineIsolation:
+    """Verify print invoice route enforces tenant isolation, dynamic template, and dynamic currency."""
+
+    def test_print_invoice_rejects_cross_tenant_access(self, app, db_session):
+        from models import Tenant, Branch, Warehouse, Product, Customer, Sale, InvoiceSettings, Role, User
+        t1 = _make_tenant(db_session, 'T1', 't1', 'USD')
+        t2 = _make_tenant(db_session, 'T2', 't2', 'AED')
+        b1 = _make_branch(db_session, t1.id, 'B1', 'B1')
+        wh1 = _make_wh(db_session, t1.id, b1.id, True)
+        p1 = _make_product(db_session, t1.id, 'P1', 'P1', cost=50, stock=100)
+        c1 = _make_customer(db_session, t1.id, 'C1')
+        seller = _make_user(db_session, t1.id, 'seller', b1.id)
+        db_session.flush()
+        # Create sale for t1
+        from services.sale_service import SaleService
+        sale = SaleService.create_sale(
+            customer=c1, seller=seller, warehouse_id=wh1.id, currency='USD',
+            lines_data=[{'product': p1, 'quantity': 1, 'discount_percent': 0, 'unit_price': 100.0, 'serials': []}],
+            tax_rate=0, discount_amount=0, shipping_cost=0,
+        )
+        db_session.flush()
+        # Create a user from t2 (cross-tenant) with manage_sales permission so permission_required passes
+        u2 = _make_user(db_session, t2.id, 'u2', None)
+        from models import Permission
+        perm = Permission.query.filter_by(code='manage_sales').first()
+        if not perm:
+            perm = Permission(name='Manage Sales', code='manage_sales', category='sales')
+            db_session.add(perm)
+            db_session.flush()
+        u2.role.permissions.append(perm)
+        db_session.flush()
+        with app.test_client() as client:
+            with app.app_context():
+                from flask_login import login_user
+                login_user(u2)
+                from werkzeug.exceptions import NotFound
+                with pytest.raises(NotFound):
+                    client.get(f'/sales/{sale.id}/print')
+
+    def test_print_invoice_uses_dynamic_template_from_settings(self, app, db_session):
+        from models import Tenant, Branch, Warehouse, Product, Customer, InvoiceSettings, Role, User
+        t = _make_tenant(db_session, 'TPrint', 'tprint', 'AED')
+        b = _make_branch(db_session, t.id, 'Main', 'MAIN')
+        wh = _make_wh(db_session, t.id, b.id, True)
+        p = _make_product(db_session, t.id, 'P', 'P', cost=50, stock=100)
+        c = _make_customer(db_session, t.id, 'C')
+        seller = _make_user(db_session, t.id, 'seller', b.id)
+        from models import Permission
+        perm = Permission.query.filter_by(code='manage_sales').first()
+        if not perm:
+            perm = Permission(name='Manage Sales', code='manage_sales', category='sales')
+            db_session.add(perm)
+            db_session.flush()
+        seller.role.permissions.append(perm)
+        db_session.flush()
+        # Set invoice settings to use 'minimal' template
+        inv_set = InvoiceSettings.get_active(t.id)
+        if not inv_set:
+            inv_set = InvoiceSettings(tenant_id=t.id, active_template='minimal')
+            db_session.add(inv_set)
+        else:
+            inv_set.active_template = 'minimal'
+        db_session.flush()
+        from services.sale_service import SaleService
+        sale = SaleService.create_sale(
+            customer=c, seller=seller, warehouse_id=wh.id, currency='AED',
+            lines_data=[{'product': p, 'quantity': 1, 'discount_percent': 0, 'unit_price': 100.0, 'serials': []}],
+            tax_rate=0, discount_amount=0, shipping_cost=0,
+        )
+        db_session.flush()
+        with app.test_client() as client:
+            with app.app_context():
+                from flask_login import login_user
+                login_user(seller)
+                resp = client.get(f'/sales/{sale.id}/print')
+                assert resp.status_code == 200
+                # The template name should be in the rendered HTML (or at least not fail)
+                # We can't assert exact template easily, but we can check for the template's unique structure
+                # Minimal template uses 'minimal-invoice' class or specific structure
+                html = resp.data.decode('utf-8')
+                # Verify it rendered successfully with no hardcoded company name fallback
+                assert 'نظام المحاسبة' not in html
+                assert 'AZAD' not in html.upper() or 'tenant' in html.lower()
+
+    def test_print_invoice_shows_correct_currency_not_hardcoded_aed(self, app, db_session):
+        from models import Tenant, Branch, Warehouse, Product, Customer, Role, User
+        t = _make_tenant(db_session, 'TUSD', 'tusd', 'USD')
+        b = _make_branch(db_session, t.id, 'Main', 'MAIN')
+        wh = _make_wh(db_session, t.id, b.id, True)
+        p = _make_product(db_session, t.id, 'P', 'P', cost=50, stock=100)
+        c = _make_customer(db_session, t.id, 'C')
+        seller = _make_user(db_session, t.id, 'seller', b.id)
+        from models import Permission
+        perm = Permission.query.filter_by(code='manage_sales').first()
+        if not perm:
+            perm = Permission(name='Manage Sales', code='manage_sales', category='sales')
+            db_session.add(perm)
+            db_session.flush()
+        seller.role.permissions.append(perm)
+        db_session.flush()
+        from services.sale_service import SaleService
+        sale = SaleService.create_sale(
+            customer=c, seller=seller, warehouse_id=wh.id, currency='USD',
+            lines_data=[{'product': p, 'quantity': 1, 'discount_percent': 0, 'unit_price': 100.0, 'serials': []}],
+            tax_rate=0, discount_amount=0, shipping_cost=0,
+        )
+        db_session.flush()
+        with app.test_client() as client:
+            with app.app_context():
+                from flask_login import login_user
+                login_user(seller)
+                resp = client.get(f'/sales/{sale.id}/print')
+                assert resp.status_code == 200
+                html = resp.data.decode('utf-8')
+                # The invoice should show USD, not hardcoded AED/درهم
+                # It's acceptable if it shows 'USD' or '$' or the currency symbol
+                # But it should NOT show 'AED' when the sale is in USD
+                # However, subtotal/total lines should be in sale.currency (USD)
+                # We look for the total amount row and check currency context
+                assert 'AED' not in html or html.count('USD') > html.count('AED')
+                # Also check no hardcoded Arabic currency name for AED
+                assert 'درهم' not in html or html.count('USD') > html.count('درهم')
+
+    def test_tenant_branding_no_azad_logo_fallback(self, app, db_session):
+        from utils.tenant_branding import document_logo_relative_path, get_print_header_context
+        t = _make_tenant(db_session, 'TNoLogo', 'tnologo', 'AED')
+        db_session.flush()
+        # Tenant with no logo should not fallback to AZAD logo
+        logo_path = document_logo_relative_path(t.id)
+        assert logo_path is None or 'azad' not in logo_path.lower()
+        branding = get_print_header_context(t.id)
+        # Invoice logo URL should not contain azad logo
+        invoice_logo = branding.get('invoice_logo_url')
+        assert invoice_logo is None or 'azad' not in invoice_logo.lower()

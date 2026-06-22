@@ -90,7 +90,7 @@ def resolve_tenant_branding(tenant_id: int | None = None) -> dict[str, Any]:
     company_name_ar = (
         (settings.company_name_ar if settings else None)
         or (tenant.name_ar if tenant else None)
-        or "نظام المحاسبة"
+        or ""
     )
     company_name_en = (
         (settings.company_name_en if settings else None)
@@ -112,14 +112,14 @@ def resolve_tenant_branding(tenant_id: int | None = None) -> dict[str, Any]:
     return {
         "tenant_id": tenant.id if tenant else None,
         "tenant_slug": slug,
-        "logo_url": logo or AZAD_LOGO,
+        "logo_url": logo,
         "logo_dark_url": _first_existing(
             tenant.logo_dark_url if tenant else None,
             disk.get("logo_dark_url"),
         ),
         "favicon_url": favicon,
         "letterhead_url": letterhead,
-        "invoice_logo_url": logo or AZAD_LOGO,
+        "invoice_logo_url": logo,
         "company_name_ar": company_name_ar,
         "company_name_en": company_name_en,
         "address_ar": address_ar,
@@ -162,7 +162,7 @@ def document_logo_relative_path(
         )
         if explicit:
             return explicit
-    return branding["logo_url"] or AZAD_LOGO
+    return branding["logo_url"]
 
 
 def get_print_header_context(tenant_id: int | None = None) -> dict[str, Any]:

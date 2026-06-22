@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('Invoice') }} #{{ sale.sale_number }}</title>
+  <title>{{ tenant_name_ar or company_name_ar or '' }} - {{ t('Invoice') }} #{{ sale.sale_number }}</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;700&display=swap" crossorigin="anonymous" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/erp-theme.css') }}">
   {% include 'partials/print_styles.html' %}
@@ -243,9 +243,9 @@
             <td>{{ loop.index }}</td>
             <td class="ic-8"><strong>{{ line.product.name if line.product else '-' }}</strong></td>
             <td>{{ line.quantity }}</td>
-            <td>{{ format_currency(line.unit_price) }}</td>
+            <td>{{ format_currency(line.unit_price, sale.currency) }}</td>
             <td>{{ line.discount_percent if line.discount_percent else '-' }}</td>
-            <td><strong>{{ format_currency(line.line_total) }}</strong></td>
+            <td><strong>{{ format_currency(line.line_total, sale.currency) }}</strong></td>
           </tr>
           {% endfor %}
         </tbody>
@@ -259,19 +259,19 @@
         {% if sale.discount_amount > 0 %}
         <div class="total-row">
           <span>{{ t('Discount') }}:</span>
-          <strong class="ic-9">- {{ format_currency(sale.discount_amount) }}</strong>
+          <strong class="ic-9">- {{ format_currency(sale.discount_amount, sale.currency) }}</strong>
         </div>
         {% endif %}
         {% if sale.shipping_cost > 0 %}
         <div class="total-row">
           <span>{{ t('Shipping') }}:</span>
-          <strong>{{ format_currency(sale.shipping_cost) }}</strong>
+          <strong>{{ format_currency(sale.shipping_cost, sale.currency) }}</strong>
         </div>
         {% endif %}
         {% if sale.tax_amount > 0 %}
         <div class="total-row">
           <span>{{ t('Tax') }} ({{ sale.tax_rate }}%):</span>
-          <strong>{{ format_currency(sale.tax_amount) }}</strong>
+          <strong>{{ format_currency(sale.tax_amount, sale.currency) }}</strong>
         </div>
         {% endif %}
         <div class="total-row final">
@@ -295,7 +295,7 @@
                 {{ payment.payment_date.strftime('%Y-%m-%d') }}
               </div>
               <div class="ic-14">
-                {{ format_currency(payment.amount_aed, 'AED') }}
+                {{ format_currency(payment.amount_aed, tenant_default_currency) }}
               </div>
             </div>
             <div class="ic-15">

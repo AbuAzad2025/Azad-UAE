@@ -178,8 +178,8 @@
           <td>{{ loop.index }}</td>
           <td>{{ line.product.name if line.product else '-' }}</td>
           <td>{{ format_currency(line.quantity) }}</td>
-          <td>{{ format_currency(line.unit_price) }}</td>
-          <td><strong>{{ format_currency(line.line_total) }}</strong></td>
+          <td>{{ format_currency(line.unit_price, sale.currency) }}</td>
+          <td><strong>{{ format_currency(line.line_total, sale.currency) }}</strong></td>
         </tr>
         {% endfor %}
       </tbody>

@@ -165,10 +165,10 @@
           <td>{{ t('Amount') }} ({{ receipt.currency or tenant_currency_symbol }})</td>
           <td>{{ "%.2f"|format(receipt.amount) }} {{ receipt.currency or tenant_currency_symbol }}</td>
         </tr>
-        {% if receipt.currency and receipt.currency != 'AED' %}
+        {% if receipt.currency and receipt.currency != tenant_default_currency %}
         <tr>
-          <td>{{ t('Amount') }} (AED)</td>
-          <td>{{ "%.2f"|format(receipt.base_amount) }} AED</td>
+          <td>{{ t('Amount') }} ({{ tenant_default_currency }})</td>
+          <td>{{ "%.2f"|format(receipt.base_amount) }} {{ tenant_default_currency }}</td>
         </tr>
         {% endif %}
         {% if receipt.payment_method %}
@@ -196,16 +196,16 @@
           <td>{{ t('Total_3') }}</td>
           <td>{{ "%.2f"|format(receipt.amount) }} {{ receipt.currency or tenant_currency_symbol }}</td>
         </tr>
-        {% if receipt.currency and receipt.currency != 'AED' %}
+        {% if receipt.currency and receipt.currency != tenant_default_currency %}
         <tr class="total">
-          <td>{{ t('Total_3') }} (AED)</td>
-          <td>{{ "%.2f"|format(receipt.base_amount) }} AED</td>
+          <td>{{ t('Total_3') }} ({{ tenant_default_currency }})</td>
+          <td>{{ "%.2f"|format(receipt.base_amount) }} {{ tenant_default_currency }}</td>
         </tr>
         {% endif %}
       </tfoot>
     </table></div>
 
-    {% set _payment_words = amount_in_words or (number_to_arabic_words(receipt.amount or 0, receipt.currency or tenant_default_currency or 'AED') if number_to_arabic_words is defined else '') %}
+    {% set _payment_words = amount_in_words or (number_to_arabic_words(receipt.amount or 0, receipt.currency or tenant_default_currency or get_system_default_currency()) if number_to_arabic_words is defined else '') %}
     <div class="ic-3">
       <strong>{{ t('Amount') }} {{ t('بالحروف') }}:</strong> {{ _payment_words or ("{:.2f}".format(receipt.amount) + " " + (receipt.currency or tenant_currency_symbol)) }}
     </div>

@@ -381,7 +381,7 @@
       <div class="amount-showcase">
         <div class="amount-label-top">⭐ {{ t('Amount') }} {{ t('المستلم') }} ⭐</div>
         <div class="amount-huge">{{ format_currency(receipt.base_amount) }}</div>
-        <div class="amount-label-bottom">{{ tenant_currency_name_ar or 'درهم إماراتي' }}</div>
+        <div class="amount-label-bottom">{{ tenant_currency_name_ar or tenant_default_currency }}</div>
         {% if receipt.currency != tenant_default_currency %}
         <div class="ic-4">
           ({{ format_currency(receipt.amount, receipt.currency) }})

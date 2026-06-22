@@ -300,7 +300,7 @@ def print_invoice(id):
             'co': (
                 settings.company_name_ar
                 if settings and settings.company_name_ar and settings.company_name_ar != 'None'
-                else 'نظام المحاسبة'
+                else (tenant.name_ar if tenant and tenant.name_ar else '')
             ),
             'u': print_user_name,
             'b': print_branch.name if print_branch else '',

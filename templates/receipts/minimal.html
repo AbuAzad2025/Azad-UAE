@@ -292,7 +292,7 @@
       <div class="amount-display">
         <div class="amount-text">{{ t('Amount') }} {{ t('المستلم') }}</div>
         <div class="amount-big">{{ format_currency(receipt.base_amount) }}</div>
-        <div class="amount-text">{{ tenant_currency_name_ar or 'درهم إماراتي' }}</div>
+        <div class="amount-text">{{ tenant_currency_name_ar or tenant_default_currency }}</div>
       </div>
 
       <div class="payment-box">
