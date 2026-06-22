@@ -258,13 +258,7 @@ def close_pos_session(session: PosSession, closing_cash: Decimal, notes: str = N
     tenant_id = session.tenant_id
     sales_in_session = Sale.query.filter(
         Sale.tenant_id == int(tenant_id),
-        Sale.seller_id == session.user_id,
-        Sale.branch_id == session.branch_id,
-        Sale.sale_date >= session.opened_at,
-        db.or_(
-            Sale.sale_date <= (session.closed_at or datetime.now(timezone.utc)),
-            Sale.sale_date == None,
-        ),
+        Sale.pos_session_id == session.id,
     ).all()
 
     total = Decimal('0')
@@ -285,4 +279,67 @@ def close_pos_session(session: PosSession, closing_cash: Decimal, notes: str = N
     session.total_card_sales = card_total
     session.close(closing_cash, notes)
     db.session.flush()
+
+    # Post GL for shortage/overage if difference exists
+    if session.difference != 0:
+        from services.gl_service import GLService, GL_ACCOUNTS
+        from services.gl_tree_builder import GLTreeBuilder
+        from services import gl_helpers
+        GLService.ensure_core_accounts(tenant_id=tenant_id)
+        diff_aed = Decimal(str(session.difference))
+        cash_parent_code = GL_ACCOUNTS.get('cash', '1110')
+        cash_acct_code = GLTreeBuilder._branch_account_code(cash_parent_code, session.branch_id)
+        # Verify branch-specific cash account exists and is postable
+        cash_account = gl_helpers.get_account(cash_acct_code, tenant_id=tenant_id)
+        if cash_account is None or getattr(cash_account, 'is_header', False):
+            cash_acct_code = GLService.get_account_code_for_concept(
+                'CASH', tenant_id=tenant_id, branch_id=session.branch_id, fallback_key='cash'
+            )
+        diff_acct_code = GLService.get_account_code_for_concept(
+            'POS_CASH_DIFFERENCE', tenant_id=tenant_id, branch_id=session.branch_id, fallback_key='pos_cash_difference'
+        )
+        lines = []
+        if diff_aed < 0:
+            # Shortage: debit expense, credit cash
+            lines.append({
+                'account': diff_acct_code,
+                'concept_code': 'POS_CASH_DIFFERENCE',
+                'debit': abs(diff_aed),
+                'credit': 0,
+                'description': f'عجز كاشير POS — جلسة {session.session_number}',
+            })
+            lines.append({
+                'account': cash_acct_code,
+                'concept_code': 'CASH',
+                'debit': 0,
+                'credit': abs(diff_aed),
+                'description': f'تسوية عجز كاشير POS — جلسة {session.session_number}',
+            })
+        else:
+            # Overage: debit cash, credit income (credit to difference account)
+            lines.append({
+                'account': cash_acct_code,
+                'concept_code': 'CASH',
+                'debit': diff_aed,
+                'credit': 0,
+                'description': f'فائض كاشير POS — جلسة {session.session_number}',
+            })
+            lines.append({
+                'account': diff_acct_code,
+                'concept_code': 'POS_CASH_DIFFERENCE',
+                'debit': 0,
+                'credit': diff_aed,
+                'description': f'تسوية فائض كاشير POS — جلسة {session.session_number}',
+            })
+        from utils.gl_reference_types import GLRef
+        GLService.create_journal_entry(
+            tenant_id=tenant_id,
+            branch_id=session.branch_id,
+            reference_type=GLRef.POS_CASH_DIFFERENCE,
+            reference_id=session.id,
+            date=session.closed_at,
+            description=f'تسوية جلسة POS {session.session_number} — رصيد مغلق: {closing_cash} | متوقع: {session.expected_balance} | فرق: {diff_aed}',
+            lines=lines,
+            user_id=session.user_id,
+        )
     return session

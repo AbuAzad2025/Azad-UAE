@@ -5,7 +5,7 @@ const qs=(s,r=document)=>r.querySelector(s);
 const qsa=(s,r=document)=>Array.from(r.querySelectorAll(s));
 const fmt=(n)=>(Number(n||0)).toFixed(2);
 const toNum=(v)=>{const n=Number(v);return Number.isFinite(n)?n:0;};
-const baseCurrency=document.querySelector('meta[name="pos-base-currency"]')?.getAttribute('content')||window._FX_FALLBACK_BASE||'AED';
+const baseCurrency=document.querySelector('meta[name="pos-base-currency"]')?.getAttribute('content')||window._FX_FALLBACK_BASE||'';
 const pricesIncludeVatMeta=document.querySelector('meta[name="pos-prices-include-vat"]')?.getAttribute('content')==='true';
 const currencySymbol=document.querySelector('meta[name="pos-currency-symbol"]')?.getAttribute('content')||baseCurrency;
 const esc=(s)=>{if(s==null)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');};

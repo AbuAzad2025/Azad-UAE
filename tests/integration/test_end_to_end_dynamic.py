@@ -1172,3 +1172,238 @@ class TestFxGainLossAutoPosting:
         total_debit = sum(Decimal(str(l.debit or 0)) for l in receipt_gl.lines)
         total_credit = sum(Decimal(str(l.credit or 0)) for l in receipt_gl.lines)
         assert total_debit == total_credit
+
+
+class TestPOSSessionAndDrawerIsolation:
+    def test_pos_session_isolation_tenant_branch(self, app, db_session):
+        from models import Tenant, Branch, User, Role, PosSession
+        from utils.pos_helpers import create_pos_session, get_active_session, close_pos_session
+
+        t = Tenant(name='POS-TA-'+str(uuid.uuid4())[:4], name_ar='POS-TA-'+str(uuid.uuid4())[:4], slug='pos-test-a-'+str(uuid.uuid4())[:4], default_currency='AED')
+        db_session.add(t)
+        db_session.flush()
+        b = Branch(name='POS Branch', code='POS-B1', tenant_id=t.id, is_active=True)
+        db_session.add(b)
+        db_session.flush()
+        r = Role(name='cashier-'+str(uuid.uuid4())[:4], slug='cashier-'+str(uuid.uuid4())[:4], is_active=True)
+        db_session.add(r)
+        db_session.flush()
+        u = User(username='pos-cashier-'+str(uuid.uuid4())[:4], email='cashier-'+str(uuid.uuid4())[:4]+'@pos.com', password_hash='x',
+                 role_id=r.id, tenant_id=t.id, branch_id=b.id, is_active=True)
+        db_session.add(u)
+        db_session.flush()
+
+        # Create session scoped to tenant+branch+user
+        session = create_pos_session(user=u, branch_id=b.id, opening_balance=Decimal('500'))
+        db_session.flush()
+        assert session.tenant_id == t.id
+        assert session.branch_id == b.id
+        assert session.user_id == u.id
+        assert session.status == 'open'
+
+        # get_active_session returns the correct session
+        active = get_active_session(user=u, branch_id=b.id)
+        assert active.id == session.id
+
+        # Another user in same branch should not see this session
+        u2 = User(username='pos-cashier2-'+str(uuid.uuid4())[:4], email='cashier2-'+str(uuid.uuid4())[:4]+'@pos.com', password_hash='x',
+                  role_id=r.id, tenant_id=t.id, branch_id=b.id, is_active=True)
+        db_session.add(u2)
+        db_session.flush()
+        active_u2 = get_active_session(user=u2, branch_id=b.id)
+        assert active_u2 is None
+
+        # Close session with shortage (closing 400, expected 500)
+        close_pos_session(session=session, closing_cash=Decimal('400'))
+        db_session.flush()
+        assert session.status == 'closed'
+        assert session.expected_balance == Decimal('500')
+        assert session.difference == Decimal('-100')
+
+        # Verify GL entry posted for shortage
+        from models import GLJournalEntry
+        from models import GLJournalEntry
+        from utils.gl_reference_types import GLRef
+        gl_entry = GLJournalEntry.query.filter_by(
+            reference_type=GLRef.POS_CASH_DIFFERENCE,
+            reference_id=session.id,
+            tenant_id=t.id,
+        ).first()
+        assert gl_entry is not None
+        assert gl_entry.branch_id == b.id
+        total_debit = sum(Decimal(str(l.debit or 0)) for l in gl_entry.lines)
+        total_credit = sum(Decimal(str(l.credit or 0)) for l in gl_entry.lines)
+        assert total_debit == total_credit
+        assert total_debit == Decimal('100')
+
+    def test_pos_session_overage_gl_posted(self, app, db_session):
+        from models import Tenant, Branch, User, Role, PosSession
+        from utils.pos_helpers import create_pos_session, close_pos_session
+
+        t = Tenant(name='POS-TO-'+str(uuid.uuid4())[:4], name_ar='POS-TO-'+str(uuid.uuid4())[:4], slug='pos-test-o-'+str(uuid.uuid4())[:4], default_currency='AED')
+        db_session.add(t)
+        db_session.flush()
+        b = Branch(name='POS Branch O', code='POS-B2', tenant_id=t.id, is_active=True)
+        db_session.add(b)
+        db_session.flush()
+        r = Role(name='cashier-'+str(uuid.uuid4())[:4], slug='cashier-'+str(uuid.uuid4())[:4], is_active=True)
+        db_session.add(r)
+        db_session.flush()
+        u = User(username='pos-cashier-o-'+str(uuid.uuid4())[:4], email='cashier-o-'+str(uuid.uuid4())[:4]+'@pos.com', password_hash='x',
+                 role_id=r.id, tenant_id=t.id, branch_id=b.id, is_active=True)
+        db_session.add(u)
+        db_session.flush()
+
+        session = create_pos_session(user=u, branch_id=b.id, opening_balance=Decimal('200'))
+        db_session.flush()
+
+        # Close with overage (closing 300, expected 200)
+        close_pos_session(session=session, closing_cash=Decimal('300'))
+        db_session.flush()
+        assert session.difference == Decimal('100')
+
+        from models import GLJournalEntry
+        from utils.gl_reference_types import GLRef
+        gl_entry = GLJournalEntry.query.filter_by(
+            reference_type=GLRef.POS_CASH_DIFFERENCE,
+            reference_id=session.id,
+            tenant_id=t.id,
+        ).first()
+        assert gl_entry is not None
+        total_debit = sum(Decimal(str(l.debit or 0)) for l in gl_entry.lines)
+        total_credit = sum(Decimal(str(l.credit or 0)) for l in gl_entry.lines)
+        assert total_debit == total_credit
+        assert total_debit == Decimal('100')
+
+    def test_pos_checkout_warehouse_isolation(self, app, db_session):
+        from models import Tenant, Branch, User, Role, Warehouse, Product, ProductCategory, Customer
+        from utils.pos_helpers import create_pos_session
+        from services.sale_service import SaleService
+        from services.stock_service import StockService
+
+        t = Tenant(name='POS-WH-'+str(uuid.uuid4())[:4], name_ar='POS-WH-'+str(uuid.uuid4())[:4], slug='pos-wh-'+str(uuid.uuid4())[:4], default_currency='AED')
+        db_session.add(t)
+        db_session.flush()
+        b = Branch(name='POS-WH Branch', code='POS-WH', tenant_id=t.id, is_active=True)
+        db_session.add(b)
+        db_session.flush()
+        r = Role(name='cashier-'+str(uuid.uuid4())[:4], slug='cashier-'+str(uuid.uuid4())[:4], is_active=True)
+        db_session.add(r)
+        db_session.flush()
+        u = User(username='pos-wh-cashier-'+str(uuid.uuid4())[:4], email='wh-'+str(uuid.uuid4())[:4]+'@pos.com', password_hash='x',
+                 role_id=r.id, tenant_id=t.id, branch_id=b.id, is_active=True)
+        db_session.add(u)
+        db_session.flush()
+
+        # Create two warehouses: one for this branch, one for another
+        w1 = Warehouse(name='Main WH', tenant_id=t.id, branch_id=b.id, is_active=True, allow_negative_inventory=False)
+        w2 = Warehouse(name='Other WH', tenant_id=t.id, branch_id=b.id, is_active=True, allow_negative_inventory=False)
+        db_session.add_all([w1, w2])
+        db_session.flush()
+
+        cat = ProductCategory(name='POS Cat', tenant_id=t.id, is_active=True)
+        db_session.add(cat)
+        db_session.flush()
+
+        p = Product(
+            name='POS Product', sku='POS-001', tenant_id=t.id,
+            category_id=cat.id, regular_price=Decimal('100'), cost_price=Decimal('50'), is_active=True,
+        )
+        db_session.add(p)
+        db_session.flush()
+
+        # Stock p in w1 only (10 units)
+        from services.stock_service import StockService
+        StockService.add_stock(p.id, Decimal('10'), warehouse_id=w1.id)
+        db_session.flush()
+
+        customer = Customer(
+            name='POS Customer', customer_type='cash', tenant_id=t.id, is_active=True,
+        )
+        db_session.add(customer)
+        db_session.flush()
+
+        session = create_pos_session(user=u, branch_id=b.id)
+        db_session.flush()
+
+        # Sale from w1 with sufficient stock → should succeed
+        sale1 = SaleService.create_sale(
+            customer=customer, seller=u, lines_data=[{'product': p, 'quantity': 2, 'unit_price': Decimal('100')}],
+            warehouse_id=w1.id, currency='AED',
+        )
+        sale1.pos_session_id = session.id
+        db_session.add(sale1)
+        db_session.flush()
+        assert sale1 is not None
+
+        # Sale from w2 with NO stock → should fail due to negative inventory guard
+        try:
+            sale2 = SaleService.create_sale(
+                customer=customer, seller=u, lines_data=[{'product': p, 'quantity': 1, 'unit_price': Decimal('100')}],
+                warehouse_id=w2.id, currency='AED',
+            )
+            sale2.pos_session_id = session.id
+            db_session.add(sale2)
+            db_session.flush()
+            assert False, 'Expected negative inventory block'
+        except ValueError as e:
+            assert 'المخزون غير كافٍ' in str(e) or 'insufficient' in str(e).lower() or 'mismatch' in str(e).lower()
+
+    def test_pos_checkout_negative_inventory_allowed(self, app, db_session):
+        from models import Tenant, Branch, User, Role, Warehouse, Product, ProductCategory, Customer
+        from utils.pos_helpers import create_pos_session
+        from services.sale_service import SaleService
+        from services.stock_service import StockService
+
+        t = Tenant(name='POS-NEG-'+str(uuid.uuid4())[:4], name_ar='POS-NEG-'+str(uuid.uuid4())[:4], slug='pos-neg-'+str(uuid.uuid4())[:4], default_currency='AED')
+        db_session.add(t)
+        db_session.flush()
+        b = Branch(name='POS-NEG Branch', code='POS-NEG', tenant_id=t.id, is_active=True)
+        db_session.add(b)
+        db_session.flush()
+        r = Role(name='cashier-'+str(uuid.uuid4())[:4], slug='cashier-'+str(uuid.uuid4())[:4], is_active=True)
+        db_session.add(r)
+        db_session.flush()
+        u = User(username='pos-neg-cashier-'+str(uuid.uuid4())[:4], email='neg-'+str(uuid.uuid4())[:4]+'@pos.com', password_hash='x',
+                 role_id=r.id, tenant_id=t.id, branch_id=b.id, is_active=True)
+        db_session.add(u)
+        db_session.flush()
+
+        w = Warehouse(name='Neg WH', tenant_id=t.id, branch_id=b.id, is_active=True, allow_negative_inventory=True)
+        db_session.add(w)
+        db_session.flush()
+
+        cat = ProductCategory(name='Neg Cat', tenant_id=t.id, is_active=True)
+        db_session.add(cat)
+        db_session.flush()
+
+        p = Product(
+            name='Neg Product', sku='NEG-001', tenant_id=t.id,
+            category_id=cat.id, regular_price=Decimal('50'), cost_price=Decimal('30'), is_active=True,
+        )
+        db_session.add(p)
+        db_session.flush()
+
+        customer = Customer(
+            name='Neg Customer', customer_type='cash', tenant_id=t.id, is_active=True,
+        )
+        db_session.add(customer)
+        db_session.flush()
+
+        session = create_pos_session(user=u, branch_id=b.id)
+        db_session.flush()
+
+        # Sale with no stock but allow_negative_inventory=True → should succeed
+        sale = SaleService.create_sale(
+            customer=customer, seller=u, lines_data=[{'product': p, 'quantity': 5, 'unit_price': Decimal('50')}],
+            warehouse_id=w.id, currency='AED',
+        )
+        sale.pos_session_id = session.id
+        db_session.add(sale)
+        db_session.flush()
+        assert sale is not None
+        assert sale.warehouse_id == w.id
+
+        # Verify stock went negative
+        stock = StockService.get_product_stock(p.id, warehouse_id=w.id)
+        assert stock < 0

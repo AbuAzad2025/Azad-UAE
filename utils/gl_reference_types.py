@@ -32,6 +32,8 @@ class GLRef:
     AZAD_SUBSCRIPTION_FEE = "AzadSubscriptionFee"
     PARTNER_DISTRIBUTION = "PartnerDistribution"
     PARTNER_TRANSACTION = "PartnerTransaction"
+    POS_CASH_DIFFERENCE = "PosCashDifference"
+    FX_GAIN_LOSS = "FxGainLoss"
 
 
 LEGACY_REF_MAP: dict[str, str] = {
@@ -55,6 +57,8 @@ LEGACY_REF_MAP: dict[str, str] = {
     "Product Creation": GLRef.PRODUCT_CREATION,
     "Product Update": GLRef.PRODUCT_UPDATE,
     "Cheque": GLRef.CHEQUE_ISSUE,
+    "pos_cash_difference": GLRef.POS_CASH_DIFFERENCE,
+    "fx_gain_loss": GLRef.FX_GAIN_LOSS,
 }
 
 

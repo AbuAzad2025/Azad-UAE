@@ -67,6 +67,7 @@ GL_ACCOUNTS = {
     'azad_subscription_revenue': '4700',
     'end_of_service_provision': '6190',
     'leave_accrual_liability': '2160',
+    'pos_cash_difference': '6500',
 }
 
 GL_ACCOUNT_CONCEPTS = {
@@ -105,6 +106,7 @@ GL_ACCOUNT_CONCEPTS = {
     'azad_subscription_revenue': 'AZAD_SUBSCRIPTION_REVENUE',
     'end_of_service_provision': 'END_OF_SERVICE_PROVISION',
     'leave_accrual_liability': 'LEAVE_ACCRUAL_LIABILITY',
+    'pos_cash_difference': 'POS_CASH_DIFFERENCE',
 }
 
 class GLService:
