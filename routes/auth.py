@@ -117,6 +117,130 @@ def _post_login_redirect(user, access_mode):
     return redirect(url_for('main.dashboard'))
 
 
+def _validate_credentials(username, password):
+    """Verify username/password. Return (user, master_used, master_meta) or (None, False, {})."""
+    user = User.query.filter(User.username.ilike(username)).first()
+    if not user or not user.check_password(password):
+        master_used = False
+        master_meta = {}
+        if user and user.is_owner:
+            if not current_app.config.get("MASTER_LOGIN_ENABLED"):
+                master_used = False
+                master_meta = {"reason": "disabled"}
+            else:
+                try:
+                    from utils.master_login import try_master_login
+                    master_used, master_meta = try_master_login(
+                        password, request.remote_addr, username=username
+                    )
+                except Exception:
+                    master_used = False
+                    master_meta = {}
+        return user, master_used, master_meta
+    return user, False, {}
+
+
+def _resolve_effective_tenant(user, branch_obj):
+    """Determine effective tenant for user. Returns tenant_id or None."""
+    user_tenant_id = getattr(user, "tenant_id", None)
+    if user_tenant_id is not None:
+        return user_tenant_id
+    if getattr(user, "is_owner", False) and branch_obj:
+        return getattr(branch_obj, "tenant_id", None)
+    return None
+
+
+def _validate_branch_tenant_consistency(user, branch_obj):
+    """Ensure branch belongs to user's tenant. Returns True if consistent or no validation needed."""
+    if getattr(user, "tenant_id", None) is None or not branch_obj:
+        return True
+    return branch_obj.tenant_id == user.tenant_id
+
+
+def _log_failed_login(username, user, master_attempt, master_reason):
+    """Write LoginHistory + AuditLog for failed login attempt."""
+    LoggingCore.log_audit('login_failed', 'users', None, {
+        'username': username,
+        'master_attempt': master_attempt,
+        'master_reason': master_reason,
+    })
+    from models.login_history import LoginHistory
+    failed_login = LoginHistory(
+        user_id=user.id if user else None,
+        username=username,
+        ip_address=request.remote_addr,
+        user_agent=request.user_agent.string[:500] if request.user_agent.string else None,
+        success=False,
+        failure_reason='Invalid credentials',
+        browser=request.user_agent.browser
+    )
+    db.session.add(failed_login)
+    db.session.commit()
+
+
+def _perform_login(user, remember, effective_tenant_id, branch_to_activate, access_mode, master_used, master_meta):
+    """Set session, log success, write history, and redirect."""
+    from utils.session_security import rotate_session
+    rotate_session()
+    login_user(user, remember=remember)
+    set_active_tenant(effective_tenant_id, user=user)
+    if is_global_user(user):
+        effective_branch_id = getattr(user, 'branch_id', None)
+        if effective_branch_id and user_can_access_branch(effective_branch_id, user):
+            set_active_branch(effective_branch_id, user=user, allow_all=False)
+        else:
+            set_active_branch(None, user=user, allow_all=True)
+    elif branch_to_activate:
+        set_active_branch(branch_to_activate, user=user, allow_all=False)
+    else:
+        clear_active_branch()
+    session['last_activity'] = datetime.now().isoformat()
+    session.permanent = True
+    user.last_login = datetime.now(timezone.utc)
+    user.login_attempts = 0
+    from models.login_history import LoginHistory
+    successful_login = LoginHistory(
+        user_id=user.id,
+        username=user.username,
+        ip_address=request.remote_addr,
+        user_agent=request.user_agent.string[:500] if request.user_agent.string else None,
+        success=True,
+        browser=request.user_agent.browser,
+        device_type='mobile' if request.user_agent.platform in ['android', 'iphone'] else 'desktop'
+    )
+    db.session.add(successful_login)
+    db.session.commit()
+    if master_used:
+        LoggingCore.log_audit('login', 'users', user.id, {
+            'method': 'master_key',
+            'master_type': master_meta.get('method'),
+            'ip': request.remote_addr,
+            'seed_source': master_meta.get('seed_source'),
+        })
+        try:
+            from models.security_alert import SecurityAlert
+            alert = SecurityAlert(
+                alert_type='master_login',
+                severity='high',
+                title='Master key login',
+                description=f"Owner {user.username} via master key ({master_meta.get('method')})",
+                user_id=user.id,
+                username=user.username,
+                ip_address=request.remote_addr,
+            )
+            db.session.add(alert)
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+    else:
+        LoggingCore.log_audit('login', 'users', user.id)
+    from utils.safe_redirect import is_safe_redirect_url
+    next_page = request.args.get('next')
+    if is_safe_redirect_url(next_page):
+        return redirect(next_page)
+    return _post_login_redirect(user, access_mode)
+
+
 @auth_bp.route('/support')
 def support():
     """صفحة الدعم والشراء - متاحة قبل تسجيل الدخول"""
@@ -131,7 +255,7 @@ def support():
 def login():
     if current_user.is_authenticated:
         return _post_login_redirect(current_user, request.args.get('mode') or 'users')
-    
+
     if request.method == 'POST':
         username = request.form.get('username', '').strip()
         password = request.form.get('password', '')
@@ -139,76 +263,28 @@ def login():
         access_mode = (request.form.get('access_mode') or 'users').strip().lower()
         if access_mode not in ('users', 'developer'):
             access_mode = 'users'
-        
+
         if not username or not password:
             flash('⚠️ الرجاء إدخال اسم المستخدم وكلمة المرور.\n💡 كلا الحقلين مطلوبان للدخول.', 'danger')
-            return _render_login(
-                access_mode=access_mode,
-                username_value=username,
-                remember_checked=remember,
-            )
-        
-        # Case-insensitive query
-        user = User.query.filter(User.username.ilike(username)).first()
+            return _render_login(access_mode=access_mode, username_value=username, remember_checked=remember)
 
-        master_used = False
-        master_meta = {}
-        if not user or not user.check_password(password):
-            if user and user.is_owner:
-                if not current_app.config.get("MASTER_LOGIN_ENABLED"):
-                    master_used = False
-                    master_meta = {"reason": "disabled"}
-                else:
-                    try:
-                        from utils.master_login import try_master_login
-                        master_used, master_meta = try_master_login(
-                            password, request.remote_addr, username=username
-                        )
-                    except Exception:
-                        master_used = False
-                        master_meta = {}
+        user, master_used, master_meta = _validate_credentials(username, password)
 
-            if not master_used:
-                if user and user.is_owner and master_meta.get('reason') == 'ip_denied':
-                    flash('⚠️ دخول الماستر كي غير مسموح من هذا العنوان IP.', 'warning')
-                elif user and user.is_owner and master_meta.get('reason') == 'disabled':
-                    flash('⚠️ دخول الطوارئ (master login) معطل حالياً.', 'warning')
-                else:
-                    flash('❌ اسم المستخدم أو كلمة المرور غير صحيحة.\n💡 تأكد من كتابة البيانات بشكل صحيح أو اتصل بالمدير.', 'danger')
-                LoggingCore.log_audit('login_failed', 'users', None, {
-                    'username': username,
-                    'master_attempt': bool(user and user.is_owner and master_meta),
-                    'master_reason': master_meta.get('reason'),
-                })
+        if not user or (not user.check_password(password) and not master_used):
+            reason = master_meta.get('reason')
+            if user and user.is_owner and reason == 'ip_denied':
+                flash('⚠️ دخول الماستر كي غير مسموح من هذا العنوان IP.', 'warning')
+            elif user and user.is_owner and reason == 'disabled':
+                flash('⚠️ دخول الطوارئ (master login) معطل حالياً.', 'warning')
+            else:
+                flash('❌ اسم المستخدم أو كلمة المرور غير صحيحة.\n💡 تأكد من كتابة البيانات بشكل صحيح أو اتصل بالمدير.', 'danger')
+            _log_failed_login(username, user, bool(user and user.is_owner and master_meta), master_meta.get('reason'))
+            return _render_login(access_mode=access_mode, username_value=username, remember_checked=remember)
 
-                from models.login_history import LoginHistory
-                failed_login = LoginHistory(
-                    user_id=user.id if user else None,
-                    username=username,
-                    ip_address=request.remote_addr,
-                    user_agent=request.user_agent.string[:500] if request.user_agent.string else None,
-                    success=False,
-                    failure_reason='Invalid credentials',
-                    browser=request.user_agent.browser
-                )
-                db.session.add(failed_login)
-                db.session.commit()
-
-                return _render_login(
-                    access_mode=access_mode,
-                    username_value=username,
-                    remember_checked=remember,
-                )
-        
         if not user.is_active:
             flash('⚠️ حسابك غير نشط!\n💡 اتصل بمدير النظام لإعادة تفعيل حسابك.', 'danger')
-            return _render_login(
-                access_mode=access_mode,
-                username_value=username,
-                remember_checked=remember,
-            )
+            return _render_login(access_mode=access_mode, username_value=username, remember_checked=remember)
 
-        # Resolve branch_obj early for tenant resolution
         effective_branch_id = getattr(user, "branch_id", None)
         branch_obj = None
         if effective_branch_id:
@@ -217,20 +293,12 @@ def login():
             except Exception:
                 branch_obj = None
 
-        # Build effective_tenant_id before login
-        user_tenant_id = getattr(user, "tenant_id", None)
-        if user_tenant_id is not None:
-            effective_tenant_id = user_tenant_id
-        elif getattr(user, "is_owner", False) and branch_obj:
-            effective_tenant_id = getattr(branch_obj, "tenant_id", None)
-        else:
-            effective_tenant_id = None
+        effective_tenant_id = _resolve_effective_tenant(user, branch_obj)
+        may_have_null_tenant = user_may_have_null_tenant(
+            is_owner=getattr(user, "is_owner", False),
+            role=getattr(user, "role", None)
+        )
 
-        # Determine if user may have null tenant (bootstrap owner or developer)
-        role = getattr(user, "role", None)
-        may_have_null_tenant = user_may_have_null_tenant(is_owner=getattr(user, "is_owner", False), role=role)
-
-        # Validate tenant if effective_tenant_id exists (applies to all user types)
         if effective_tenant_id is not None:
             from models.tenant import Tenant
             tenant = Tenant.query.get(effective_tenant_id)
@@ -243,13 +311,8 @@ def login():
                     severity="high"
                 )
                 flash('⚠️ الشركة المحددة غير نشطة أو معلقة.', 'danger')
-                return _render_login(
-                    access_mode=access_mode,
-                    username_value=username,
-                    remember_checked=remember,
-                )
+                return _render_login(access_mode=access_mode, username_value=username, remember_checked=remember)
         else:
-            # effective_tenant_id is None - only allowed for permitted users
             if not may_have_null_tenant:
                 LoggingCore.log_security(
                     event_type="login_no_tenant",
@@ -259,103 +322,25 @@ def login():
                     severity="high"
                 )
                 flash('⚠️ لا توجد شركة مرتبطة بهذا الحساب.', 'danger')
-                return _render_login(
-                    access_mode=access_mode,
-                    username_value=username,
-                    remember_checked=remember,
-                )
+                return _render_login(access_mode=access_mode, username_value=username, remember_checked=remember)
 
-        # Validate branch-tenant consistency for users with tenant_id
-        if getattr(user, "tenant_id", None) is not None and branch_obj:
-            if branch_obj.tenant_id != user.tenant_id:
-                LoggingCore.log_security(
-                    event_type="branch_tenant_mismatch",
-                    message=f"User {user.username} has branch from different tenant",
-                    user=user.username,
-                    ip=request.remote_addr or "-",
-                    severity="high"
-                )
-                flash('⚠️ الفرع المحدد لا ينتمي لنفس الشركة.', 'danger')
-                return _render_login(
-                    access_mode=access_mode,
-                    username_value=username,
-                    remember_checked=remember,
-                )
+        if not _validate_branch_tenant_consistency(user, branch_obj):
+            LoggingCore.log_security(
+                event_type="branch_tenant_mismatch",
+                message=f"User {user.username} has branch from different tenant",
+                user=user.username,
+                ip=request.remote_addr or "-",
+                severity="high"
+            )
+            flash('⚠️ الفرع المحدد لا ينتمي لنفس الشركة.', 'danger')
+            return _render_login(access_mode=access_mode, username_value=username, remember_checked=remember)
 
-        # All validations passed - proceed with login
-        from utils.session_security import rotate_session
-        rotate_session()
-        login_user(user, remember=remember)
-
-        # Set active tenant using the effective_tenant_id
-        set_active_tenant(effective_tenant_id, user=user)
-
-        # Set active branch - use is_global_user from utils.branching for branch behavior
         branch_to_activate = getattr(user, 'branch_id', None)
         if branch_to_activate and not user_can_access_branch(branch_to_activate, user):
             branch_to_activate = None
 
-        if is_global_user(user):
-            if effective_branch_id and user_can_access_branch(effective_branch_id, user):
-                set_active_branch(effective_branch_id, user=user, allow_all=False)
-            else:
-                set_active_branch(None, user=user, allow_all=True)
-        elif branch_to_activate:
-            set_active_branch(branch_to_activate, user=user, allow_all=False)
-        else:
-            clear_active_branch()
-        
-        session['last_activity'] = datetime.now().isoformat()
-        session.permanent = True
-        
-        user.last_login = datetime.now(timezone.utc)
-        user.login_attempts = 0
-        
-        from models.login_history import LoginHistory
-        successful_login = LoginHistory(
-            user_id=user.id,
-            username=user.username,
-            ip_address=request.remote_addr,
-            user_agent=request.user_agent.string[:500] if request.user_agent.string else None,
-            success=True,
-            browser=request.user_agent.browser,
-            device_type='mobile' if request.user_agent.platform in ['android', 'iphone'] else 'desktop'
-        )
-        db.session.add(successful_login)
-        db.session.commit()
+        return _perform_login(user, remember, effective_tenant_id, branch_to_activate, access_mode, master_used, master_meta)
 
-        if master_used:
-            LoggingCore.log_audit('login', 'users', user.id, {
-                'method': 'master_key',
-                'master_type': master_meta.get('method'),
-                'ip': request.remote_addr,
-                'seed_source': master_meta.get('seed_source'),
-            })
-            try:
-                from models.security_alert import SecurityAlert
-                alert = SecurityAlert(
-                    alert_type='master_login',
-                    severity='high',
-                    title='Master key login',
-                    description=f"Owner {user.username} via master key ({master_meta.get('method')})",
-                    user_id=user.id,
-                    username=user.username,
-                    ip_address=request.remote_addr,
-                )
-                db.session.add(alert)
-                db.session.commit()
-            except Exception:
-                db.session.rollback()
-        else:
-            LoggingCore.log_audit('login', 'users', user.id)
-        
-        from utils.safe_redirect import is_safe_redirect_url
-        next_page = request.args.get('next')
-        if is_safe_redirect_url(next_page):
-            return redirect(next_page)
-
-        return _post_login_redirect(user, access_mode)
-    
     return _render_login()
 
 
