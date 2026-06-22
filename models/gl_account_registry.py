@@ -120,6 +120,7 @@ BASE_ACCOUNTS = [
     GLAccountTemplate('6100', 'Sales & Marketing Expenses', 'مصروفات تسويق ومبيعات', 'expense', 1, True, '6000'),
     GLAccountTemplate('6110', 'Advertising & Marketing', 'إعلان وتسويق', 'expense', 2, False, '6100'),
     GLAccountTemplate('6120', 'Sales Commissions', 'عمولات المبيعات', 'expense', 2, False, '6100'),
+    GLAccountTemplate('6150', 'Partner Commissions', 'عمولات الشركاء', 'expense', 2, False, '6100'),
     GLAccountTemplate('6130', 'Store Discounts & Coupons', 'خصومات وكوبونات', 'expense', 2, False, '6100'),
     GLAccountTemplate('6131', 'Campaign Discounts', 'خصومات الحملات', 'expense', 2, False, '6100'),
     GLAccountTemplate('6140', 'Shipping & Delivery Cost', 'تكلفة الشحن والتوصيل', 'expense', 2, False, '6100'),

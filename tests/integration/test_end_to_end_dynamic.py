@@ -411,3 +411,161 @@ class TestWarehouseEditSecurity:
         # Verify branch validation logic (as implemented in route)
         new_branch_id = b2.id
         assert new_branch_id not in accessible_ids, "Inaccessible branch should be rejected by route"
+
+
+class TestPartnerCommissionDynamicProfitMargin:
+    """Verify partner commissions are calculated on net profit margin (revenue - COGS) not gross revenue."""
+
+    def test_commission_on_exclusive_vat_uses_profit_margin(self, app, db_session):
+        from services.sale_service import SaleService
+
+        t = _make_tenant(db_session, 'T', 't-comm', 'AED', False)
+        b = _make_branch(db_session, t.id, 'B', 'B1')
+        wh = _make_wh(db_session, t.id, b.id, True)
+        # Product: cost=50, price=100 → profit=50 per unit
+        product = _make_product(db_session, t.id, 'Widget', 'W1', cost=50, stock=100)
+        # Set product cost_price for MWAC fallback
+        product.cost_price = Decimal('50')
+        db_session.flush()
+
+        # Create a partner customer
+        from models import Customer
+        partner = Customer(tenant_id=t.id, name='Partner1', phone='0501111111', customer_type='partner')
+        db_session.add(partner)
+        db_session.flush()
+
+        # Link partner to product at 20%
+        from models import ProductPartner
+        pp = ProductPartner(tenant_id=t.id, product_id=product.id, partner_customer_id=partner.id, percentage=Decimal('20'))
+        db_session.add(pp)
+        db_session.flush()
+
+        customer = _make_customer(db_session, t.id, 'C1')
+        seller = _make_user(db_session, t.id, 'seller_' + str(t.id), b.id)
+
+        lines = [{'product': product, 'quantity': 2, 'discount_percent': 0, 'unit_price': 100.00, 'serials': []}]
+
+        sale = SaleService.create_sale(
+            customer=customer, seller=seller, lines_data=lines,
+            warehouse_id=wh.id, currency='AED', tax_rate=5.0,
+            discount_amount=0, shipping_cost=0,
+        )
+
+        # Revenue excl VAT = 2 * 100 = 200
+        # Cost = 2 * 50 = 100
+        # Profit margin = 100
+        # Commission = 100 * 20% = 20
+        from models import PartnerCommissionEntry
+        entries = PartnerCommissionEntry.query.filter_by(sale_id=sale.id).all()
+        assert len(entries) == 1
+        entry = entries[0]
+        assert entry.profit_margin == Decimal('100')
+        assert entry.cost_basis == Decimal('100')
+        assert entry.commission_amount_aed == Decimal('20')
+        assert entry.warehouse_id == wh.id
+        assert entry.tenant_id == t.id
+
+    def test_commission_on_inclusive_vat_excludes_vat_from_profit(self, app, db_session):
+        from services.sale_service import SaleService
+
+        t = _make_tenant(db_session, 'T', 't-comm-inc', 'AED', True)
+        b = _make_branch(db_session, t.id, 'B', 'B1')
+        wh = _make_wh(db_session, t.id, b.id, True)
+        product = _make_product(db_session, t.id, 'Widget', 'W2', cost=50, stock=100)
+        product.cost_price = Decimal('50')
+        db_session.flush()
+
+        from models import Customer
+        partner = Customer(tenant_id=t.id, name='Partner2', phone='0502222222', customer_type='partner')
+        db_session.add(partner)
+        db_session.flush()
+
+        from models import ProductPartner
+        pp = ProductPartner(tenant_id=t.id, product_id=product.id, partner_customer_id=partner.id, percentage=Decimal('10'))
+        db_session.add(pp)
+        db_session.flush()
+
+        customer = _make_customer(db_session, t.id, 'C1')
+        seller = _make_user(db_session, t.id, 'seller_' + str(t.id), b.id)
+
+        # unit_price = 100 (inclusive of 5% VAT)
+        # Revenue excl VAT = 100 / 1.05 = 95.24 per unit
+        # For 2 units: 190.48
+        # Cost = 2 * 50 = 100
+        # Profit = 90.48
+        # Commission = 90.48 * 10% = 9.05
+        lines = [{'product': product, 'quantity': 2, 'discount_percent': 0, 'unit_price': 100.00, 'serials': []}]
+
+        sale = SaleService.create_sale(
+            customer=customer, seller=seller, lines_data=lines,
+            warehouse_id=wh.id, currency='AED', tax_rate=5.0,
+        )
+
+        from models import PartnerCommissionEntry
+        entries = PartnerCommissionEntry.query.filter_by(sale_id=sale.id).all()
+        assert len(entries) == 1
+        entry = entries[0]
+        # profit_margin should be ~90.48 (190.48 - 100)
+        assert entry.profit_margin > Decimal('80')
+        assert entry.profit_margin < Decimal('100')
+        assert entry.cost_basis == Decimal('100')
+        assert entry.commission_amount_aed > Decimal('8')
+        assert entry.commission_amount_aed < Decimal('10')
+
+    def test_no_commission_when_no_partner_linked(self, app, db_session):
+        from services.sale_service import SaleService
+
+        t = _make_tenant(db_session, 'T', 't-comm-none', 'AED', False)
+        b = _make_branch(db_session, t.id, 'B', 'B1')
+        wh = _make_wh(db_session, t.id, b.id, True)
+        product = _make_product(db_session, t.id, 'Widget', 'W3', cost=50, stock=100)
+        customer = _make_customer(db_session, t.id, 'C1')
+        seller = _make_user(db_session, t.id, 'seller_' + str(t.id), b.id)
+
+        lines = [{'product': product, 'quantity': 1, 'discount_percent': 0, 'unit_price': 100.00, 'serials': []}]
+
+        sale = SaleService.create_sale(
+            customer=customer, seller=seller, lines_data=lines,
+            warehouse_id=wh.id, currency='AED', tax_rate=0,
+        )
+
+        from models import PartnerCommissionEntry
+        entries = PartnerCommissionEntry.query.filter_by(sale_id=sale.id).all()
+        assert len(entries) == 0
+
+    def test_commission_tenant_isolation(self, app, db_session):
+        """Partner commission entries must be tenant-isolated."""
+        t1 = _make_tenant(db_session, 'T1', 't1-iso', 'AED', False)
+        t2 = _make_tenant(db_session, 'T2', 't2-iso', 'AED', False)
+        b1 = _make_branch(db_session, t1.id, 'B1', 'B1')
+        wh1 = _make_wh(db_session, t1.id, b1.id, True)
+        product1 = _make_product(db_session, t1.id, 'W', 'W4', cost=50, stock=100)
+
+        from models import Customer
+        partner1 = Customer(tenant_id=t1.id, name='P1', phone='0503333333', customer_type='partner')
+        db_session.add(partner1)
+        db_session.flush()
+
+        from models import ProductPartner
+        pp = ProductPartner(tenant_id=t1.id, product_id=product1.id, partner_customer_id=partner1.id, percentage=Decimal('10'))
+        db_session.add(pp)
+        db_session.flush()
+
+        customer = _make_customer(db_session, t1.id, 'C')
+        seller = _make_user(db_session, t1.id, 'seller_' + str(t1.id), b1.id)
+
+        from services.sale_service import SaleService
+        lines = [{'product': product1, 'quantity': 1, 'discount_percent': 0, 'unit_price': 100.00, 'serials': []}]
+        sale = SaleService.create_sale(
+            customer=customer, seller=seller, lines_data=lines,
+            warehouse_id=wh1.id, currency='AED', tax_rate=0,
+        )
+
+        from models import PartnerCommissionEntry
+        entries = PartnerCommissionEntry.query.filter_by(sale_id=sale.id).all()
+        assert len(entries) == 1
+        assert entries[0].tenant_id == t1.id
+
+        # Cross-tenant query should return nothing
+        cross = PartnerCommissionEntry.query.filter_by(sale_id=sale.id, tenant_id=t2.id).all()
+        assert len(cross) == 0

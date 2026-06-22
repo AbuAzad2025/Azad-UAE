@@ -229,12 +229,38 @@ class SaleService:
 
                 subtotal += line.line_total
 
-                try:
-                    base_amount_aed = (Decimal(str(line.line_total)) * exchange_rate).quantize(
+                # --- Partner Commission: calculated on NET PROFIT MARGIN (revenue - COGS) ---
+                # Revenue excl VAT
+                line_total_dec = Decimal(str(line.line_total))
+                if sale.prices_include_vat and sale.tax_rate > 0:
+                    revenue_excl_vat = (line_total_dec / (Decimal('1') + Decimal(str(sale.tax_rate)) / Decimal('100'))).quantize(
                         Decimal('0.001'), rounding=ROUND_HALF_UP
                     )
+                else:
+                    revenue_excl_vat = line_total_dec
+
+                # Resolve unit cost from MWAC (or fallback to line.cost_price)
+                try:
+                    unit_cost, cost_source = StockService._resolve_cogs_unit_cost(
+                        product.id, warehouse_id, tenant_id, line_cost_price=line.cost_price
+                    )
                 except Exception:
-                    base_amount_aed = Decimal('0')
+                    unit_cost = Decimal(str(line.cost_price)) if line.cost_price else Decimal('0')
+                    cost_source = 'line_cost_price'
+
+                qty_dec = Decimal(str(line.quantity)) if line.quantity else Decimal('0')
+                cost_basis = (unit_cost * qty_dec).quantize(Decimal('0.001'), rounding=ROUND_HALF_UP)
+                profit_margin = (revenue_excl_vat - cost_basis).quantize(Decimal('0.001'), rounding=ROUND_HALF_UP)
+
+                if profit_margin > Decimal('0'):
+                    try:
+                        base_amount = (profit_margin * exchange_rate).quantize(
+                            Decimal('0.001'), rounding=ROUND_HALF_UP
+                        )
+                    except Exception:
+                        base_amount = profit_margin
+                else:
+                    base_amount = Decimal('0')
 
                 for ps in getattr(product, 'partner_shares', []) or []:
                     partner_customer_id = getattr(ps, 'partner_customer_id', None)
@@ -256,21 +282,26 @@ class SaleService:
                     pct = Decimal(str(getattr(ps, 'percentage', 0) or 0))
                     if pct <= Decimal('0'):
                         continue
-                    commission_amount_aed = (base_amount_aed * (pct / Decimal('100'))).quantize(
+                    commission_amount = (base_amount * (pct / Decimal('100'))).quantize(
                         Decimal('0.001'), rounding=ROUND_HALF_UP
                     )
-                    if commission_amount_aed <= Decimal('0'):
+                    if commission_amount <= Decimal('0'):
                         continue
                     entry = PartnerCommissionEntry(
                         tenant_id=tenant_id,
                         branch_id=sale_branch_id,
+                        warehouse_id=warehouse_id,
                         sale_id=sale.id,
                         sale_line_id=line.id,
                         partner_customer_id=partner_customer_id,
                         product_id=product.id,
                         percentage=pct,
-                        base_amount_aed=base_amount_aed,
-                        commission_amount_aed=commission_amount_aed,
+                        currency=currency,
+                        base_currency=base_currency,
+                        cost_basis=cost_basis,
+                        profit_margin=profit_margin,
+                        base_amount_aed=base_amount,
+                        commission_amount_aed=commission_amount,
                     )
                     db.session.add(entry)
 

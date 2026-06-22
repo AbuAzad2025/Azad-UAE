@@ -19,6 +19,15 @@ def post_sale_commissions(sale):
     if total <= Decimal('0'):
         return None
 
+    # Dynamic currency: use sale's exchange rate and base currency
+    exchange_rate = Decimal(str(sale.exchange_rate)) if sale.exchange_rate else Decimal('1')
+    base_currency = getattr(sale, 'currency', 'AED')
+    try:
+        from utils.currency_utils import resolve_tenant_base_currency
+        base_currency = resolve_tenant_base_currency(tenant_id=sale.tenant_id) or base_currency
+    except Exception:
+        pass
+
     GLService.ensure_core_accounts(tenant_id=getattr(sale, 'tenant_id', None))
     return post_or_fail(
         [
@@ -29,7 +38,7 @@ def post_sale_commissions(sale):
                 'description': f'عمولات شركاء — {sale.sale_number}',
             },
             {
-                'account': '3350',
+                'account': GL_ACCOUNTS['partner_current_account'],
                 'concept_code': 'PARTNER_CURRENT_ACCOUNT',
                 'credit': total,
                 'description': f'جاري شركاء — {sale.sale_number}',
@@ -38,7 +47,7 @@ def post_sale_commissions(sale):
         description=f'Partner commissions {sale.sale_number}',
         reference_type=GLRef.PARTNER_COMMISSION,
         reference_id=sale.id,
-        exchange_rate=1.0,
+        exchange_rate=exchange_rate,
         branch_id=sale.branch_id,
         tenant_id=getattr(sale, 'tenant_id', None),
     )

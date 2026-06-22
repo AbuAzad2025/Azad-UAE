@@ -9,6 +9,7 @@ class PartnerCommissionEntry(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     tenant_id = db.Column(db.Integer, db.ForeignKey('tenants.id', ondelete='CASCADE'), nullable=False, index=True)
     branch_id = db.Column(db.Integer, db.ForeignKey('branches.id'), nullable=True, index=True)
+    warehouse_id = db.Column(db.Integer, db.ForeignKey('warehouses.id'), nullable=True, index=True)
 
     sale_id = db.Column(db.Integer, db.ForeignKey('sales.id'), nullable=False, index=True)
     sale_line_id = db.Column(db.Integer, db.ForeignKey('sale_lines.id'), nullable=True, index=True)
@@ -18,7 +19,12 @@ class PartnerCommissionEntry(db.Model):
 
     percentage = db.Column(db.Numeric(5, 2), nullable=False)
     currency = db.Column(db.String(3), default=context_aware_default_currency)
-    base_amount_aed = db.Column(db.Numeric(15, 3), nullable=False)
+    base_currency = db.Column(db.String(3), default=context_aware_default_currency)
+
+    # Financial basis for commission (Dynamic Profit Margin)
+    cost_basis = db.Column(db.Numeric(15, 3), default=0)          # MWAC unit cost * qty
+    profit_margin = db.Column(db.Numeric(15, 3), default=0)       # Net profit = revenue - cost - vat
+    base_amount_aed = db.Column(db.Numeric(15, 3), nullable=False)  # profit margin in base currency
     commission_amount_aed = db.Column(db.Numeric(15, 3), nullable=False)
     
     @property
@@ -50,6 +56,7 @@ class PartnerCommissionEntry(db.Model):
 
     tenant = db.relationship('Tenant', foreign_keys=[tenant_id])
     branch = db.relationship('Branch', foreign_keys=[branch_id])
+    warehouse = db.relationship('Warehouse', foreign_keys=[warehouse_id])
     sale = db.relationship('Sale', foreign_keys=[sale_id])
     sale_line = db.relationship('SaleLine', foreign_keys=[sale_line_id])
     partner_customer = db.relationship('Customer', foreign_keys=[partner_customer_id])
