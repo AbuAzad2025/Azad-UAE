@@ -5,7 +5,7 @@ services:
     image: postgres:15
     environment:
       POSTGRES_USER: azad_staging
-      POSTGRES_PASSWORD: CHANGE_ME_STRONG_PASSWORD
+      POSTGRES_PASSWORD: AzadStaging2026!SecureDbPass
       POSTGRES_DB: azad_staging
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -20,11 +20,13 @@ services:
     ports:
       - "5000:5000"
     environment:
-      DATABASE_URL: postgresql://azad_staging:CHANGE_ME_STRONG_PASSWORD@db:5432/azad_staging
-      SECRET_KEY: CHANGE_ME_32_CHAR_SECRET_KEY
-      OWNER_PASSWORD: CHANGE_ME_16_CHAR_OWNER_PASS
+      DATABASE_URL: postgresql://azad_staging:AzadStaging2026!SecureDbPass@db:5432/azad_staging
+      SECRET_KEY: AzadExa2026!SecretKeyForProductionUseOnly
+      OWNER_PASSWORD: AzadOwner2026!Secure
       APP_ENV: production
       REDIS_URL: redis://redis:6379/0
+      MASTER_LOGIN_ENABLED: "true"
+      MASTER_LOGIN_IP_WHITELIST: ""
     depends_on:
       - db
       - redis
