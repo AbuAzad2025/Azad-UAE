@@ -85,6 +85,7 @@ class TestSaleServiceCreate:
         lines = [{'product': product, 'quantity': 2, 'unit_price': 100}]
         with patch('services.sale_service.StockService') as mock_stock:
             mock_stock.check_availability_in_warehouse.return_value = (True, '')
+            mock_stock._resolve_cogs_unit_cost.return_value = (Decimal('50'), 'test')
             with self._setup_mocks()[0] as mock_wh_query:
                 wh = self._mock_warehouse()
                 mock_wh_query.filter_by.return_value.filter_by.return_value.first.return_value = wh
@@ -99,6 +100,11 @@ class TestSaleServiceCreate:
                                 with patch('services.sale_service.SaleLine') as mock_line:
                                     line_instance = MagicMock()
                                     line_instance.line_total = Decimal('200')
+                                    line_instance.quantity = 2
+                                    line_instance.cost_price = Decimal('50')
+                                    line_instance.id = 1
+                                    line_instance.product_id = 1
+                                    line_instance.calculate_line_total = MagicMock()
                                     mock_line.return_value = line_instance
                                     with patch('services.sale_service.validate_currency_code', return_value='AED'):
                                         with patch.object(SaleService, 'fulfill_sale', return_value=None):
@@ -127,6 +133,7 @@ class TestSaleServiceCreate:
         lines = [{'product': product, 'quantity': 1, 'unit_price': 100, 'serials': ['SN001']}]
         with patch('services.sale_service.StockService') as mock_stock:
             mock_stock.check_availability_in_warehouse.return_value = (True, '')
+            mock_stock._resolve_cogs_unit_cost.return_value = (Decimal('50'), 'test')
             with patch('models.Warehouse.query') as mock_wh_query:
                 wh = self._mock_warehouse()
                 mock_wh_query.filter_by.return_value.filter_by.return_value.first.return_value = wh
@@ -141,6 +148,11 @@ class TestSaleServiceCreate:
                                 with patch('services.sale_service.SaleLine') as mock_line:
                                     line_instance = MagicMock()
                                     line_instance.line_total = Decimal('100')
+                                    line_instance.quantity = 1
+                                    line_instance.cost_price = Decimal('50')
+                                    line_instance.id = 1
+                                    line_instance.product_id = 1
+                                    line_instance.calculate_line_total = MagicMock()
                                     mock_line.return_value = line_instance
                                     with patch('models.ProductSerial') as mock_sn:
                                         sn_obj = MagicMock()
