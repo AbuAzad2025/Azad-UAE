@@ -2,6 +2,7 @@ from decimal import Decimal
 from datetime import datetime, timezone
 from extensions import db
 from models import GLAccount, GLJournalEntry, GLJournalLine, Currency
+from models.tenant import Tenant
 from models._constants import GL_CONCEPT_REGISTRY, RESOLUTION_MODE_MAPPING, RESOLUTION_MODE_LIQUIDITY, RESOLUTION_MODE_RECORD, RESOLUTION_MODE_NON_POSTING
 from services import gl_helpers
 from services.gl_account_resolver import (
@@ -391,7 +392,6 @@ class GLService:
         # Resolve currency from tenant if not provided
         if currency is None:
             try:
-                from models.tenant import Tenant
                 tenant = Tenant.query.get(tenant_id)
                 currency = resolve_tenant_base_currency(tenant)
             except Exception:

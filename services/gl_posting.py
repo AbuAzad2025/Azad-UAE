@@ -6,6 +6,9 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from decimal import Decimal
 
+from models.tenant import Tenant
+from services.gl_helpers import assert_period_open
+from services.gl_service import GLService
 from utils.currency_utils import get_system_default_currency, resolve_default_currency
 
 
@@ -29,14 +32,10 @@ def post_or_fail(
     # Resolve currency from tenant if not explicitly provided
     if currency is None:
         try:
-            from models.tenant import Tenant
             t = Tenant.query.get(tenant_id) if tenant_id else Tenant.get_current()
             currency = resolve_default_currency(t)
         except Exception:
             currency = get_system_default_currency()
-
-    from services.gl_helpers import assert_period_open
-    from services.gl_service import GLService
 
     if not lines:
         raise GlPostingError(f'لا يمكن ترحيل "{description}" بدون سطور قيد.')
