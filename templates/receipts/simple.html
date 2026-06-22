@@ -150,7 +150,7 @@
     
     <div class="header">
       {% include 'partials/print_tenant_logo.html' %}
-      <div class="company-name">{{ (settings.company_name_ar if settings and settings.company_name_ar else none) or tenant_name_ar or company_name_ar or 'نظام المحاسبة' }}</div>
+      <div class="company-name">{{ (settings.company_name_ar if settings and settings.company_name_ar else none) or tenant_name_ar or company_name_ar or '' }}</div>
       <div class="company-info">
         {{ (settings.address_ar if settings and settings.address_ar else none) or tenant_address or company_address or '—' }}<br>
         📞 {{ (settings.phone_1 if settings and settings.phone_1 else none) or tenant_phone or company_phone or '—' }}

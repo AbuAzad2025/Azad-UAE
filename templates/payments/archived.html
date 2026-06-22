@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ t('Company_2') }} {{ t('أزاد') }} {{ t('للأنظمة') }} {{ t('الذكية') }} - {{ t('Archive_2') }}{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar }} - {{ t('Archive_2') }}{% endblock %}
 
 {% block page_title %}{{ t('Archive') }} {{ t('Payments') }}{% endblock %}
 

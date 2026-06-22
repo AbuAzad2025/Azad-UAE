@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('Voucher_2') }} {{ t('Receipt') }} #{{ receipt.receipt_number }}{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar }} - {{ t('Voucher_2') }} {{ t('Receipt') }} #{{ receipt.receipt_number }}{% endblock %}
 
 {% block page_title %}{{ t('Voucher_2') }} {{ t('Receipt') }} {{ t('رقم') }}: {{ receipt.receipt_number }}{% endblock %}
 

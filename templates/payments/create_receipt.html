@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {% if is_payment %}{{ t('Create') }} {{ t('Voucher_2') }} {{ t('صرف') }}{% else %}{{ t('Create') }} {{ t('Voucher_2') }} {{ t('Receipt') }}{% endif %}{% endblock %}
+{% block title %}{{ tenant_name_ar or company_name_ar }} - {% if is_payment %}{{ t('Create') }} {{ t('Voucher_2') }} {{ t('صرف') }}{% else %}{{ t('Create') }} {{ t('Voucher_2') }} {{ t('Receipt') }}{% endif %}{% endblock %}
 
 {% block page_title %}{% if is_payment %}{{ t('Voucher_2') }} {{ t('صرف') }} {{ t('New') }}{% else %}{{ t('Voucher_2') }} {{ t('Receipt') }} {{ t('New') }}{% endif %}{% endblock %}
 

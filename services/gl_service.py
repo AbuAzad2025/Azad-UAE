@@ -46,7 +46,7 @@ GL_ACCOUNTS = {
     'cogs': '5100',
     'inventory_adjustments': '5150',
     'discounts_given': '6130',
-    'salaries_expense': '6100',
+    'salaries_expense': '6220',
     'commission_expense': '6150',
     'depreciation_expense': '6180',
     'accumulated_depreciation': '1190',  # Contra-asset: Accumulated Depreciation

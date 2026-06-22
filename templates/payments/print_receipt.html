@@ -124,7 +124,7 @@
   <div class="receipt">
     <div class="header">
       <div class="ic-1">{% include 'partials/print_tenant_logo.html' %}</div>
-      <h1>{{ company.name_ar if company else (print_branding.company_name_ar if print_branding is defined else (tenant_name_ar or company_name_ar or 'نظام المحاسبة')) }}</h1>
+      <h1>{{ company.name_ar if company else (print_branding.company_name_ar if print_branding is defined else (tenant_name_ar or company_name_ar or '')) }}</h1>
       <p>{{ company.address or '' }}</p>
       <p>{{ t('Phone_2') }}: {{ company.phone or '' }}</p>
       {% if print_branch %}

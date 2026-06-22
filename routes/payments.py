@@ -458,7 +458,7 @@ def print_payment(id):
             'a': float(payment.amount or 0),
             'c': payment.currency or default_currency,
             'd': payment.payment_date.strftime('%Y-%m-%d') if payment.payment_date else '',
-            'co': company.get('name_ar') or 'نظام المحاسبة',
+            'co': company.get('name_ar') or (tenant.name_ar if tenant else ''),
             'u': print_user_name,
             'b': print_branch.name if print_branch else '',
         })
@@ -1111,7 +1111,7 @@ def print_receipt(id):
             'a': float(receipt.amount or 0),
             'c': receipt.currency or default_currency,
             'd': receipt.receipt_date.strftime('%Y-%m-%d') if receipt.receipt_date else '',
-            'co': company.get('name_ar') or 'نظام المحاسبة',
+            'co': company.get('name_ar') or (tenant.name_ar if tenant else ''),
             'u': print_user_name,
             'b': print_branch.name if print_branch else '',
         })
