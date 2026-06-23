@@ -283,44 +283,44 @@ def _create_clearing_journal_entry(cheque):
 def process_cheque_clear(cheque, clearance_date=None, clearance_exchange_rate=None):
     if cheque.status not in ['deposited', 'pending']:
         raise ValueError(f'لا يمكن تأكيد صرف شيك بحالة: {cheque.status_ar}')
-    cheque.status = 'cleared'
-    cheque.clearance_date = clearance_date or datetime.now().date()
-    if cheque.currency != 'AED' and clearance_exchange_rate:
-        cheque.clearance_exchange_rate = Decimal(str(clearance_exchange_rate))
-    elif cheque.currency != 'AED':
-        try:
-            rate_info = gl_resolve_exchange_rate(
-                cheque.issue_date, cheque.currency, 'AED', getattr(cheque, 'tenant_id', None)
-            )
-            cheque.clearance_exchange_rate = Decimal(str(rate_info['rate']))
-        except Exception:
-            cheque.clearance_exchange_rate = Decimal(str(cheque.exchange_rate))
-    else:
-        cheque.clearance_exchange_rate = Decimal('1.0')
-    cheque.actual_amount_aed = cheque.amount * cheque.clearance_exchange_rate
-    cheque.currency_gain_loss = cheque.actual_amount_aed - cheque.amount_aed
-    _create_clearing_journal_entry(cheque)
-    from models.payment import Payment, Receipt
-    tid = getattr(cheque, 'tenant_id', None)
-    
-    # تأكيد الدفعات/السندات المرتبطة
-    pmt_q = Payment.query.filter_by(cheque_id=cheque.id)
-    if tid:
-        pmt_q = pmt_q.filter(Payment.tenant_id == tid)
-    payment = pmt_q.first()
-    if payment:
-        payment.confirm_payment()
-        # رصيد المورد تم تحديثه عند إصدار الشيك (Dr AP / Cr Deferred)
-        # صرف الشيك ينقل من Deferred إلى Bank دون تأثير على AP
-    
-    rcpt_q = Receipt.query.filter_by(cheque_id=cheque.id)
-    if tid:
-        rcpt_q = rcpt_q.filter(Receipt.tenant_id == tid)
-    receipt = rcpt_q.first()
-    if receipt:
-        receipt.confirm_receipt()
-        # رصيد العميل تم تحديثه عند استلام الشيك (Dr CUC / Cr AR)
-        # صرف الشيك ينقل من CUC إلى Bank دون تأثير على AR
+    try:
+        cheque.status = 'cleared'
+        cheque.clearance_date = clearance_date or datetime.now().date()
+        if cheque.currency != 'AED' and clearance_exchange_rate:
+            cheque.clearance_exchange_rate = Decimal(str(clearance_exchange_rate))
+        elif cheque.currency != 'AED':
+            try:
+                rate_info = gl_resolve_exchange_rate(
+                    cheque.issue_date, cheque.currency, 'AED', getattr(cheque, 'tenant_id', None)
+                )
+                cheque.clearance_exchange_rate = Decimal(str(rate_info['rate']))
+            except Exception:
+                cheque.clearance_exchange_rate = Decimal(str(cheque.exchange_rate))
+        else:
+            cheque.clearance_exchange_rate = Decimal('1.0')
+        cheque.actual_amount_aed = cheque.amount * cheque.clearance_exchange_rate
+        cheque.currency_gain_loss = cheque.actual_amount_aed - cheque.amount_aed
+        _create_clearing_journal_entry(cheque)
+        from models.payment import Payment, Receipt
+        tid = getattr(cheque, 'tenant_id', None)
+        
+        # تأكيد الدفعات/السندات المرتبطة
+        pmt_q = Payment.query.filter_by(cheque_id=cheque.id)
+        if tid:
+            pmt_q = pmt_q.filter(Payment.tenant_id == tid)
+        payment = pmt_q.first()
+        if payment:
+            payment.confirm_payment()
+        
+        rcpt_q = Receipt.query.filter_by(cheque_id=cheque.id)
+        if tid:
+            rcpt_q = rcpt_q.filter(Receipt.tenant_id == tid)
+        receipt = rcpt_q.first()
+        if receipt:
+            receipt.confirm_receipt()
+    except Exception:
+        logger.exception(f'Fatal error processing clear for cheque {cheque.id}')
+        raise
 
 
 def _create_bounce_journal_entry(cheque):
@@ -415,45 +415,72 @@ def _create_bounce_journal_entry(cheque):
         )
 
 
-def process_cheque_bounce(cheque, reason):
+def process_cheque_bounce(cheque, reason, bounce_fee=None):
     if cheque.status not in ['deposited', 'pending']:
         raise ValueError(f'لا يمكن رفض شيك بحالة: {cheque.status_ar}')
-    cheque.status = 'bounced'
-    cheque.bounce_reason = reason
-    cheque.clearance_date = datetime.now().date()
-    _create_bounce_journal_entry(cheque)
-    if cheque.cheque_type == 'incoming' and cheque.customer_id:
-        try:
-            # Bounce reverses the receipt: AR increases (customer owes more again)
-            # adjust_balance(+x) increases credit balance; we need to INCREASE debt
-            # so we pass negative to reduce credit / increase debit balance
-            cheque.customer.adjust_balance(-(cheque.amount_aed or Decimal('0')))
-        except Exception:
-            pass
-    from models.payment import Payment, Receipt
-    tid = getattr(cheque, 'tenant_id', None)
-    pmt_q = Payment.query.filter_by(cheque_id=cheque.id)
-    if tid:
-        pmt_q = pmt_q.filter(Payment.tenant_id == tid)
-    payment = pmt_q.first()
-    if payment:
-        payment.reject_payment(reason)
-    # Outgoing cheque to a supplier reduced the supplier's paid total at issue
-    # (Dr AP / Cr Deferred Cheques). The bounce restores AP in the GL, so the
-    if cheque.cheque_type == 'outgoing' and cheque.supplier_id and not cheque.expense_id:
-        from models.supplier import Supplier
-        supplier_q = Supplier.query.filter_by(id=cheque.supplier_id)
+    try:
+        cheque.status = 'bounced'
+        cheque.bounce_reason = reason
+        cheque.clearance_date = datetime.now().date()
+        _create_bounce_journal_entry(cheque)
+        if bounce_fee is not None and bounce_fee > 0:
+            try:
+                from services.gl_posting import post_or_fail
+                expense_account = GLService.get_account_code_for_concept(
+                    'MISC_EXPENSE',
+                    branch_id=cheque.branch_id,
+                    tenant_id=getattr(cheque, 'tenant_id', None),
+                    fallback_key='misc_expense',
+                )
+                bank_account = gl_get_default_liquidity_account(
+                    'bank',
+                    branch_id=cheque.branch_id,
+                    tenant_id=getattr(cheque, 'tenant_id', None),
+                )
+                fee_lines = [
+                    {'account': expense_account, 'concept_code': 'MISC_EXPENSE', 'debit': Decimal(str(bounce_fee)), 'credit': 0, 'description': f'رسوم ارتداد شيك رقم {cheque.cheque_bank_number}'},
+                    {'account': bank_account, 'concept_code': 'BANK', 'debit': 0, 'credit': Decimal(str(bounce_fee)), 'description': f'خصم رسوم ارتداد شيك رقم {cheque.cheque_bank_number}'},
+                ]
+                post_or_fail(
+                    fee_lines,
+                    description=f'رسوم ارتداد شيك {cheque.cheque_type_ar} رقم {cheque.cheque_bank_number}',
+                    reference_type=GLRef.CHEQUE_BOUNCE,
+                    reference_id=cheque.id,
+                    branch_id=cheque.branch_id,
+                    tenant_id=getattr(cheque, 'tenant_id', None),
+                )
+            except Exception as fee_err:
+                logger.error(f'Failed to post bounce fee for cheque {cheque.id}: {fee_err}')
+        if cheque.cheque_type == 'incoming' and cheque.customer_id:
+            try:
+                cheque.customer.adjust_balance(-(cheque.amount_aed or Decimal('0')))
+            except Exception as cust_err:
+                logger.error(f'Failed to adjust customer balance on bounce cheque {cheque.id}: {cust_err}')
+        from models.payment import Payment, Receipt
+        tid = getattr(cheque, 'tenant_id', None)
+        pmt_q = Payment.query.filter_by(cheque_id=cheque.id)
         if tid:
-            supplier_q = supplier_q.filter(Supplier.tenant_id == tid)
-        supplier = supplier_q.first()
-        if supplier:
-            supplier.apply_payment(-Decimal(str(cheque.amount_aed or 0)))
-    rcpt_q = Receipt.query.filter_by(cheque_id=cheque.id)
-    if tid:
-        rcpt_q = rcpt_q.filter(Receipt.tenant_id == tid)
-    receipt = rcpt_q.first()
-    if receipt:
-        receipt.reject_receipt(reason)
+            pmt_q = pmt_q.filter(Payment.tenant_id == tid)
+        payment = pmt_q.first()
+        if payment:
+            payment.reject_payment(reason)
+        if cheque.cheque_type == 'outgoing' and cheque.supplier_id and not cheque.expense_id:
+            from models.supplier import Supplier
+            supplier_q = Supplier.query.filter_by(id=cheque.supplier_id)
+            if tid:
+                supplier_q = supplier_q.filter(Supplier.tenant_id == tid)
+            supplier = supplier_q.first()
+            if supplier:
+                supplier.apply_payment(-Decimal(str(cheque.amount_aed or 0)))
+        rcpt_q = Receipt.query.filter_by(cheque_id=cheque.id)
+        if tid:
+            rcpt_q = rcpt_q.filter(Receipt.tenant_id == tid)
+        receipt = rcpt_q.first()
+        if receipt:
+            receipt.reject_receipt(reason)
+    except Exception:
+        logger.exception(f'Fatal error processing bounce for cheque {cheque.id}')
+        raise
 
 
 def _create_cancel_journal_entry(cheque):

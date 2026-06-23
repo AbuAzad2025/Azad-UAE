@@ -1,12 +1,21 @@
+import logging
 from datetime import datetime, timezone, date
 from decimal import Decimal
 from extensions import db
 from models import (
-    Department, JobPosition, HRContract, Attendance, LeaveType, LeaveRequest, User, Branch
+    Department, JobPosition, HRContract, Attendance, LeaveType, LeaveRequest, User, Branch,
+    PayrollTransaction,
 )
 from utils.tenanting import get_active_tenant_id
 from utils.branching import branch_scope_id_for
 from utils.auth_helpers import is_global_owner_user
+
+logger = logging.getLogger(__name__)
+
+
+class ImmutableRecordError(Exception):
+    """Raised when attempting to modify an immutable (approved/paid) payroll or HR record."""
+    pass
 
 
 class HRService:
@@ -249,3 +258,208 @@ class HRService:
             db.session.rollback()
             raise
         return contract
+
+
+class PayrollEngine:
+    LOCKED_STATUSES = ('approved', 'paid')
+    _debt_registry = []
+
+    @staticmethod
+    def assert_mutable(transaction):
+        if transaction.status in PayrollEngine.LOCKED_STATUSES:
+            raise ImmutableRecordError(
+                f'لا يمكن تعديل معاملة راتب في حالة {transaction.status}.'
+            )
+
+    @staticmethod
+    def register_employee_debt(employee_id, tenant_id, amount, month, year, reason='payroll_shortfall'):
+        entry = {
+            'employee_id': int(employee_id),
+            'tenant_id': int(tenant_id) if tenant_id is not None else None,
+            'amount': Decimal(str(amount)).quantize(Decimal('0.01')),
+            'month': month,
+            'year': year,
+            'reason': reason,
+            'registered_at': datetime.now(timezone.utc),
+        }
+        PayrollEngine._debt_registry.append(entry)
+        logger.warning(
+            'Payroll debt registered: employee=%s amount=%s period=%s/%s',
+            employee_id, entry['amount'], month, year,
+        )
+        return entry
+
+    @staticmethod
+    def compute_net_salary(basic_salary, allowances=0, deductions=0, unpaid_leave_days=0, daily_rate=None, days_worked=None):
+        allow = Decimal(str(allowances or 0))
+        deduct = Decimal(str(deductions or 0))
+        leave_days = Decimal(str(unpaid_leave_days or 0))
+        raw_basic = Decimal(str(basic_salary or 0))
+
+        if daily_rate is not None:
+            rate = Decimal(str(daily_rate))
+            if days_worked is not None:
+                earned = rate * Decimal(str(days_worked))
+            elif raw_basic > 0 and raw_basic <= Decimal('31'):
+                earned = rate * raw_basic
+            else:
+                earned = raw_basic
+            leave_penalty = rate * leave_days
+        else:
+            earned = raw_basic
+            rate = (earned / Decimal('30')).quantize(Decimal('0.01')) if earned > 0 else Decimal('0')
+            leave_penalty = rate * leave_days
+
+        net = earned + allow - deduct - leave_penalty
+        return net.quantize(Decimal('0.01'))
+
+    @staticmethod
+    def process_with_negative_guard(
+        basic_salary, allowances=0, deductions=0, unpaid_leave_days=0, daily_rate=None,
+        days_worked=None, convert_to_debt=False, employee_id=None, tenant_id=None, month=None, year=None,
+    ):
+        net = PayrollEngine.compute_net_salary(
+            basic_salary, allowances, deductions, unpaid_leave_days, daily_rate, days_worked,
+        )
+        if net >= Decimal('0'):
+            return {'net_salary': net, 'clamped': False, 'debt': Decimal('0')}
+        debt = abs(net)
+        if employee_id is not None and (convert_to_debt or debt > 0):
+            PayrollEngine.register_employee_debt(
+                employee_id, tenant_id, debt, month, year,
+            )
+        return {'net_salary': Decimal('0'), 'clamped': True, 'debt': debt}
+
+    @staticmethod
+    def can_edit(transaction):
+        try:
+            PayrollEngine.assert_mutable(transaction)
+            return True
+        except ImmutableRecordError:
+            return False
+
+    @staticmethod
+    def get_unpaid_leave_deduction(employee, month, year):
+        from models.payroll import EmployeeLeave
+        leaves = EmployeeLeave.query.filter(
+            EmployeeLeave.employee_id == employee.id,
+            EmployeeLeave.leave_type == 'unpaid',
+            EmployeeLeave.status == 'approved',
+        ).all()
+        total_days = 0
+        for leave in leaves:
+            if leave.start_date.year == year and leave.start_date.month == month:
+                total_days += leave.days_taken
+            elif leave.end_date.year == year and leave.end_date.month == month:
+                total_days += leave.days_taken
+        return total_days
+
+
+class PayrollBatch:
+    """In-memory payroll run grouping for approval and GL provisioning."""
+
+    def __init__(self, transactions, status='draft', tenant_id=None, branch_id=None, month=None, year=None):
+        self.transactions = list(transactions)
+        self.status = status
+        self.tenant_id = tenant_id
+        self.branch_id = branch_id
+        self.month = month
+        self.year = year
+
+
+class PayrollService:
+    """HR payroll orchestration — locks, net-salary guards, and GL approval."""
+
+    @staticmethod
+    def assert_batch_mutable(batch):
+        if batch.status in PayrollEngine.LOCKED_STATUSES:
+            raise ImmutableRecordError(
+                f'لا يمكن تعديل دفعة رواتب في حالة {batch.status}.'
+            )
+
+    @staticmethod
+    def update_allowances(transaction, new_allowances, batch=None):
+        if batch is not None:
+            PayrollService.assert_batch_mutable(batch)
+        PayrollEngine.assert_mutable(transaction)
+        transaction.allowances = Decimal(str(new_allowances))
+        return transaction
+
+    @staticmethod
+    def delete_transaction(transaction, batch=None):
+        if batch is not None:
+            PayrollService.assert_batch_mutable(batch)
+        PayrollEngine.assert_mutable(transaction)
+        db.session.delete(transaction)
+
+    @staticmethod
+    def approve_batch(batch, user_id):
+        PayrollService.assert_batch_mutable(batch)
+        if not batch.transactions:
+            raise ValueError('لا توجد معاملات راتب في الدفعة.')
+
+        from services.gl_posting import post_or_fail
+        from services.gl_service import GLService
+        from utils.gl_reference_types import GLRef
+
+        tenant_id = batch.tenant_id
+        branch_id = batch.branch_id
+        GLService.ensure_core_accounts(tenant_id=tenant_id)
+
+        total_expense = Decimal('0')
+        total_net = Decimal('0')
+        total_deductions = Decimal('0')
+        for tx in batch.transactions:
+            total_expense += Decimal(str(tx.basic_amount or 0)) + Decimal(str(tx.allowances or 0))
+            total_net += Decimal(str(tx.net_salary or 0))
+            total_deductions += Decimal(str(tx.deductions or 0))
+
+        expense_acct = GLService.get_account_code_for_concept(
+            'PAYROLL_EXPENSE', branch_id=branch_id, tenant_id=tenant_id, fallback_key='salaries_expense',
+        )
+        payable_acct = GLService.get_account_code_for_concept(
+            'PAYROLL_PAYABLE', branch_id=branch_id, tenant_id=tenant_id, fallback_key='salaries_payable',
+        )
+
+        lines = [
+            {
+                'account': expense_acct,
+                'concept_code': 'PAYROLL_EXPENSE',
+                'debit': total_expense,
+                'credit': Decimal('0'),
+                'description': f'Payroll expense {batch.month}/{batch.year}',
+            },
+            {
+                'account': payable_acct,
+                'concept_code': 'PAYROLL_PAYABLE',
+                'debit': Decimal('0'),
+                'credit': total_net,
+                'description': f'Payroll payable {batch.month}/{batch.year}',
+            },
+        ]
+        if total_deductions > Decimal('0'):
+            lines.append({
+                'account': payable_acct,
+                'concept_code': 'PAYROLL_PAYABLE',
+                'debit': Decimal('0'),
+                'credit': total_deductions,
+                'description': f'Payroll deductions {batch.month}/{batch.year}',
+            })
+
+        ref_id = batch.transactions[0].id
+        gl_entry = post_or_fail(
+            lines,
+            description=f'Payroll batch approval {batch.month}/{batch.year}',
+            reference_type=GLRef.PAYROLL,
+            reference_id=ref_id,
+            branch_id=branch_id,
+            tenant_id=tenant_id,
+            user_id=user_id,
+        )
+
+        batch.status = 'approved'
+        for tx in batch.transactions:
+            tx.status = 'approved'
+            tx.gl_entry_id = gl_entry.id
+
+        return gl_entry
