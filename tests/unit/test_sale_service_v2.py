@@ -77,12 +77,12 @@ class TestSaleServiceCreate:
         product = MagicMock()
         product.id = 1
         product.name = 'Test'
-        product.cost_price = 50
+        product.cost_price = Decimal('50')
         product.has_serial_number = False
         product.warranty_days = 0
         product.get_price_for_customer.return_value = Decimal('100')
         product.partner_shares = []
-        lines = [{'product': product, 'quantity': 2, 'unit_price': 100}]
+        lines = [{'product': product, 'quantity': 2, 'unit_price': Decimal('100')}]
         with patch('services.sale_service.StockService') as mock_stock:
             mock_stock.check_availability_in_warehouse.return_value = (True, '')
             mock_stock._resolve_cogs_unit_cost.return_value = (Decimal('50'), 'test')
@@ -125,12 +125,12 @@ class TestSaleServiceCreate:
         product = MagicMock()
         product.id = 1
         product.name = 'Test'
-        product.cost_price = 50
+        product.cost_price = Decimal('50')
         product.has_serial_number = True
         product.warranty_days = 0
         product.get_price_for_customer.return_value = Decimal('100')
         product.partner_shares = []
-        lines = [{'product': product, 'quantity': 1, 'unit_price': 100, 'serials': ['SN001']}]
+        lines = [{'product': product, 'quantity': 1, 'unit_price': Decimal('100'), 'serials': ['SN001']}]
         with patch('services.sale_service.StockService') as mock_stock:
             mock_stock.check_availability_in_warehouse.return_value = (True, '')
             mock_stock._resolve_cogs_unit_cost.return_value = (Decimal('50'), 'test')
@@ -159,8 +159,7 @@ class TestSaleServiceCreate:
                                         sn_obj.status = 'available'
                                         sn_obj.warehouse_id = None
                                         mock_sn.query.filter_by.return_value.first.return_value = sn_obj
-                                        with patch('services.sale_service.current_app'):
-                                            with patch('services.sale_service.validate_currency_code', return_value='AED'):
+                                        with patch('services.sale_service.validate_currency_code', return_value='AED'):
                                                 with patch.object(SaleService, 'fulfill_sale', return_value=None):
                                                     result = SaleService.create_sale(customer, seller, lines, currency='AED')
                                                     assert result is not None
