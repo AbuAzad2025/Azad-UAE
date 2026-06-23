@@ -112,6 +112,116 @@ def _validate_public_api_origin():
     return jsonify({'success': False, 'error': 'Origin أو Referer مطلوب'}), 403
 
 
+# ---------------------------------------------------------------------------
+# Replay protection — reject webhook payloads older than 5 minutes
+# ---------------------------------------------------------------------------
+
+_WEBHOOK_MAX_AGE = 300  # 5 minutes
+
+
+def _reject_stale_webhook_timestamp(data: dict | None) -> tuple | None:
+    """Reject webhook payloads whose ``timestamp`` (or ``created_at``) is
+    older than ``_WEBHOOK_MAX_AGE`` seconds.
+
+    Returns ``(jsonify_response, status_code)`` if stale, else ``None``
+    (graceful degradation when no timestamp is present).
+    """
+    if not data:
+        return None
+    ts_str = data.get('timestamp') or data.get('created_at')
+    if not ts_str:
+        return None
+    try:
+        if isinstance(ts_str, (int, float)):
+            ts = datetime.fromtimestamp(ts_str, tz=timezone.utc)
+        else:
+            ts = datetime.fromisoformat(ts_str.replace('Z', '+00:00'))
+        age = (datetime.now(timezone.utc) - ts).total_seconds()
+        if age > _WEBHOOK_MAX_AGE:
+            logger.warning('Webhook replay blocked: age=%.0fs', age)
+            return jsonify({'error': 'Stale webhook — timestamp too old'}), 401
+        if age < 0:
+            logger.warning('Webhook replay blocked: future timestamp')
+            return jsonify({'error': 'Invalid timestamp'}), 401
+    except (ValueError, TypeError, AttributeError):
+        logger.exception('Webhook timestamp parse failed')
+    return None
+
+
+# ---------------------------------------------------------------------------
+# Idempotency-key cache for public API endpoints
+# ---------------------------------------------------------------------------
+
+import threading
+
+_idempotency_lock = threading.Lock()
+_idempotency_store: dict[str, tuple] = {}
+_IDEMPOTENCY_TTL = 86400  # 24 hours
+
+
+def _check_idempotency_key() -> tuple | None:
+    """If the request carries an ``Idempotency-Key`` header that was already
+    processed, return ``(jsonify, status)`` from the cache."""
+    key = (request.headers.get('Idempotency-Key') or '').strip()
+    if not key:
+        return None
+    with _idempotency_lock:
+        cached = _idempotency_store.get(key)
+        if cached is not None:
+            response_data, status_code = cached
+            logger.info('Idempotency key %s hit — returning cached', key)
+            return jsonify(response_data), status_code
+    return None
+
+
+def _save_idempotency_key(response_data: dict, status_code: int) -> None:
+    """Persist the response for the current request's ``Idempotency-Key``."""
+    key = (request.headers.get('Idempotency-Key') or '').strip()
+    if not key:
+        return
+    with _idempotency_lock:
+        _idempotency_store[key] = (response_data, status_code)
+
+
+# ---------------------------------------------------------------------------
+# API-key validation & scope enforcement
+# ---------------------------------------------------------------------------
+
+_API_KEY_SCOPES = frozenset({'read', 'write'})
+
+
+def _validate_api_key(*, required_scope: str = 'write') -> tuple | None:
+    """Check ``X-API-Key`` header and ensure it has the required scope.
+
+    Returns ``None`` on success, or ``(jsonify, status)`` on failure.
+    """
+    raw_key = (request.headers.get('X-API-Key') or '').strip()
+    if not raw_key:
+        return jsonify({'success': False, 'error': 'API key is required'}), 401
+
+    from models import APIKey
+    api_key = APIKey.query.filter_by(key=raw_key, is_active=True).first()
+    if not api_key:
+        return jsonify({'success': False, 'error': 'Invalid or inactive API key'}), 403
+
+    scope = getattr(api_key, 'scope', 'write') or 'write'
+    if required_scope == 'write' and scope == 'read':
+        return jsonify({
+            'success': False,
+            'error': 'Read-only API key cannot perform this action',
+        }), 403
+
+    # Track usage
+    try:
+        api_key.last_used = datetime.now(timezone.utc)
+        api_key.usage_count = (api_key.usage_count or 0) + 1
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+
+    return None
+
+
 @payment_vault_bp.before_request
 def _protect_owner_vault_pages():
     path = request.path or ''
@@ -916,6 +1026,14 @@ def api_create_purchase():
         if origin_error:
             return origin_error
 
+        api_key_err = _validate_api_key(required_scope='write')
+        if api_key_err:
+            return api_key_err
+
+        idempotent = _check_idempotency_key()
+        if idempotent:
+            return idempotent
+
         if not request.is_json:
             return jsonify({'success': False, 'error': 'Content-Type must be application/json'}), 400
         
@@ -1066,6 +1184,7 @@ def api_create_purchase():
                 'payment_url': payment_result.get('invoice_url')
             })
         
+        _save_idempotency_key(response_data, 201)
         return jsonify(response_data), 201
         
     except Exception:
@@ -1084,7 +1203,14 @@ def api_create_donation():
         if origin_error:
             return origin_error
 
-        # التحقق من Origin
+        api_key_err = _validate_api_key(required_scope='write')
+        if api_key_err:
+            return api_key_err
+
+        idempotent = _check_idempotency_key()
+        if idempotent:
+            return idempotent
+
         if not request.is_json:
             return jsonify({'success': False, 'error': 'Content-Type must be application/json'}), 400
         
@@ -1183,6 +1309,7 @@ def api_create_donation():
                 'payment_url': payment_result.get('invoice_url')
             })
         
+        _save_idempotency_key(response_data, 201)
         return jsonify(response_data), 201
         
     except Exception:
@@ -1547,13 +1674,17 @@ def export_report_pdf():
 @limiter.limit("100 per minute")
 def nowpayments_webhook():
     """Webhook من NOWPayments"""
-    # TODO: Add timestamp verification and event ID deduplication to prevent replay attacks.
     try:
         from services.webhook_service import WebhookService
         
         # الحصول على البيانات
         payload = request.data
+        data = request.get_json()
         signature = request.headers.get('x-nowpayments-sig', '')
+
+        stale = _reject_stale_webhook_timestamp(data)
+        if stale:
+            return stale
         
         # التحقق من التوقيع
         vault = _get_vault_for_current_tenant()
@@ -1573,7 +1704,6 @@ def nowpayments_webhook():
             logger.warning('NOWPayments webhook signature verification failed')
             return jsonify({'error': 'Invalid signature'}), 403
 
-        data = request.get_json()
         event_id = data.get('payment_id') if data else None
         if _is_duplicate_webhook('nowpayments', event_id):
             return jsonify({'status': 'duplicate'}), 200
@@ -1606,13 +1736,17 @@ def nowpayments_webhook():
 @limiter.limit("100 per minute")
 def stripe_webhook():
     """Webhook من Stripe"""
-    # TODO: Add timestamp verification and event ID deduplication to prevent replay attacks.
     try:
         from services.webhook_service import WebhookService
         
         # الحصول على البيانات
         payload = request.data
+        data = request.get_json()
         signature = request.headers.get('Stripe-Signature', '')
+
+        stale = _reject_stale_webhook_timestamp(data)
+        if stale:
+            return stale
         
         # التحقق من التوقيع
         vault = _get_vault_for_current_tenant()
@@ -1629,7 +1763,6 @@ def stripe_webhook():
             logger.warning('Stripe webhook signature verification failed')
             return jsonify({'error': 'Invalid signature'}), 403
 
-        data = request.get_json()
         event_id = data.get('id') if data else None
         if _is_duplicate_webhook('stripe', event_id):
             return jsonify({'status': 'duplicate'}), 200
