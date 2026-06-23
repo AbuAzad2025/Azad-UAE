@@ -760,18 +760,22 @@ def decrypt_card(card_id):
 def process_payment():
     """معالجة الدفع (كريبتو أو بطاقة) - متاح للمالك فقط لتوثيق العمليات اليدوية"""
     try:
-        data = request.get_json()
-        
+        data = request.get_json(silent=True)
+
         if not data:
             return jsonify({'success': False, 'error': 'بيانات غير صحيحة'}), 400
-        
-        payment_method = data.get('payment_method', 'crypto')  # crypto or card
-        
+
+        payment_method = data.get('payment_method', 'crypto')
+
         if payment_method == 'crypto':
-            # معالجة الكريبتو عبر NOWPayments
+            try:
+                amount = float(data.get('amount', 0))
+            except (ValueError, TypeError):
+                return jsonify({'success': False, 'error': 'المبلغ غير صحيح'}), 422
+
             nowpayments = NOWPaymentsService()
             result = nowpayments.create_payment(
-                amount=float(data.get('amount', 0)),
+                amount=amount,
                 crypto_currency=data.get('crypto_currency', 'btc'),
                 customer_email=data.get('customer_email') or data.get('donor_email', ''),
                 description=data.get('description', ''),
@@ -784,17 +788,20 @@ def process_payment():
                 donor_message=data.get('donor_message', '')
             )
             return jsonify(result)
-            
+
         elif payment_method == 'card':
-            # معالجة البطاقات
-            amount = float(data.get('amount', 0))
+            try:
+                amount = float(data.get('amount', 0))
+            except (ValueError, TypeError):
+                return jsonify({'success': False, 'error': 'المبلغ غير صحيح'}), 422
+
+            if amount < 1:
+                return jsonify({'success': False, 'error': 'الحد الأدنى هو $1'}), 400
+
             card_number = data.get('card_number', '').replace(' ', '')
             cvv = data.get('cvv', '')
             expiry = data.get('expiry', '')
-            
-            if amount < 1:
-                return jsonify({'success': False, 'error': 'الحد الأدنى هو $1'}), 400
-            
+
             if not card_number or len(card_number) < 13:
                 return jsonify({'success': False, 'error': 'رقم البطاقة غير صحيح'}), 400
             

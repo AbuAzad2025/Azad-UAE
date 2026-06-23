@@ -297,18 +297,26 @@ def create_final_options(action_name, item_name, item_id):
 @limiter.limit("60 per minute")
 def recommend_price():
     """API: توصية السعر"""
-    data = request.get_json()
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({'error': 'Request body must be JSON'}), 400
+
     product_id = data.get('product_id')
     customer_id = data.get('customer_id')
-    
+
     if not product_id or not customer_id:
         return jsonify({'error': 'Product and Customer required'}), 400
-    
-    recommendation = AIService.recommend_price(product_id, customer_id)
-    
+
+    try:
+        recommendation = AIService.recommend_price(product_id, customer_id)
+    except TimeoutError:
+        return jsonify({'error': 'AI service timed out, please try again'}), 503
+    except Exception:
+        return jsonify({'error': 'AI service error, please try again'}), 503
+
     if not recommendation:
         return jsonify({'error': 'Not found'}), 404
-    
+
     return jsonify(recommendation)
 
 
@@ -318,18 +326,30 @@ def recommend_price():
 @limiter.limit("60 per minute")
 def check_stock():
     """API: فحص المخزون"""
-    data = request.get_json()
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({'error': 'Request body must be JSON'}), 400
+
     product_id = data.get('product_id')
-    quantity = data.get('quantity', 0)
-    
+
     if not product_id:
         return jsonify({'error': 'Product required'}), 400
-    
-    alert = AIService.check_stock_alert(product_id, quantity)
-    
+
+    try:
+        quantity = int(data.get('quantity', 0))
+    except (TypeError, ValueError):
+        return jsonify({'error': 'Quantity must be a number'}), 422
+
+    try:
+        alert = AIService.check_stock_alert(product_id, quantity)
+    except TimeoutError:
+        return jsonify({'error': 'AI service timed out, please try again'}), 503
+    except Exception:
+        return jsonify({'error': 'AI service error, please try again'}), 503
+
     if alert:
         return jsonify(alert)
-    
+
     return jsonify({'type': 'success', 'message': 'المخزون كافٍ'})
 
 
@@ -338,11 +358,16 @@ def check_stock():
 @permission_required('view_customers')
 def analyze_customer(customer_id):
     """API: تحليل سلوك العميل"""
-    analysis = AIService.analyze_customer_behavior(customer_id)
-    
+    try:
+        analysis = AIService.analyze_customer_behavior(customer_id)
+    except TimeoutError:
+        return jsonify({'error': 'AI service timed out, please try again'}), 503
+    except Exception:
+        return jsonify({'error': 'AI service error, please try again'}), 503
+
     if not analysis:
         return jsonify({'error': 'Customer not found'}), 404
-    
+
     return jsonify(analysis)
 
 

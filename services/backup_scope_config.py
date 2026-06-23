@@ -512,7 +512,7 @@ def _path_from_urlish(value: str, base_dir: str) -> Optional[str]:
     else:
         rel = os.path.join("uploads", v.lstrip("/"))
     full = os.path.normpath(os.path.join(base_dir, rel))
-    uploads_root = os.path.normpath(os.path.join(base_dir, "static", "uploads"))
+    uploads_root = os.path.normpath(os.path.join(base_dir, "uploads"))
     if not full.startswith(uploads_root + os.sep) and full != uploads_root:
         return None
     if os.path.isfile(full):

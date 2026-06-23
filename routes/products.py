@@ -57,6 +57,27 @@ def _ensure_product_scope(product):
     """
     return product
 
+def safe_float(value, default=0.0):
+    """Parse a float from form data — returns *default* on empty/invalid input."""
+    if value is None or (isinstance(value, str) and value.strip() == ''):
+        return default
+    try:
+        return float(value)
+    except (ValueError, TypeError):
+        return default
+
+
+def require_float(value):
+    """Parse a float for API/stock-update endpoints — raises ValueError on
+    empty/invalid input so the caller can return a strict 422."""
+    if value is None or (isinstance(value, str) and value.strip() == ''):
+        raise ValueError("Empty or None value")
+    try:
+        return float(value)
+    except (ValueError, TypeError):
+        raise ValueError("قيمة رقمية غير صحيحة")
+
+
 def _parse_product_partners(form):
     raw_partner_ids = form.getlist('partner_customer_id[]')
     raw_percentages = form.getlist('partner_percentage[]')
@@ -568,15 +589,6 @@ def create():
                 if not sku:
                     sku = generate_sku()
                 
-                # تحويل الأسعار إلى float مع التعامل مع القيم الفارغة
-                def safe_float(value, default=0.0):
-                    if not value or value.strip() == '':
-                        return default
-                    try:
-                        return float(value)
-                    except (ValueError, TypeError):
-                        return default
-                
                 warehouse_id = request.form.get('warehouse_id', type=int)
                 current_stock = safe_float(request.form.get('current_stock'))
                 initial_stock = current_stock
@@ -774,14 +786,6 @@ def edit(id):
     
     if request.method == 'POST' and form.validate_on_submit():
         try:
-            def safe_float(value, default=None):
-                if value is None or value == '':
-                    return default
-                try:
-                    return float(value)
-                except (ValueError, TypeError):
-                    return default
-            
             warehouse_id = request.form.get('warehouse_id', type=int)
             scoped_branch_id = branch_scope_id()
             if warehouse_id:
@@ -817,9 +821,9 @@ def edit(id):
             product.barcode = request.form.get('barcode')
             product.category_id = (form.category_id.data or None)
             product.regular_price = safe_float(request.form.get('regular_price'), default=0)
-            product.merchant_price = safe_float(request.form.get('merchant_price'))
+            product.merchant_price = safe_float(request.form.get('merchant_price'), default=None)
             product.merchant_share = safe_float(request.form.get('merchant_share'), default=100.0)
-            product.partner_price = safe_float(request.form.get('partner_price'))
+            product.partner_price = safe_float(request.form.get('partner_price'), default=None)
             product.min_stock_alert = safe_float(request.form.get('min_stock_alert'), default=0)
             unit_value = request.form.get('unit')
             if 'unit' in request.form:
@@ -844,6 +848,8 @@ def edit(id):
                     from services.stock_service import StockService
                     total_stock = StockService.get_product_stock(product.id)
                     if total_stock > 0:
+                        if request.is_json:
+                            return jsonify({'success': False, 'error': 'لا يمكن تعديل سعر التكلفة لوجود مخزون. قم بتسوية المخزون أولاً.'}), 400
                         flash('⚠️ لا يمكن تعديل سعر التكلفة لوجود مخزون. قم بتسوية المخزون أولاً.', 'warning')
                         return render_template('products/edit.html', form=form, product=product, categories=categories, warehouses=warehouses, merchants=merchants, partners=partners)
                     product.cost_price = new_cost
@@ -941,10 +947,11 @@ def delete(id):
     """حذف (إلغاء تفعيل) المنتج - soft delete"""
     product = tenant_get_or_404(Product, id)
     if not _ensure_product_scope(product):
+        if request.is_json:
+            return jsonify({'success': False, 'error': 'المنتج خارج النطاق'}), 403
         return render_template('errors/403.html'), 403
     
     try:
-        # التحقق من وجود عمليات مرتبطة
         from models import SaleLine, PurchaseLine
         tid = get_active_tenant_id(current_user)
         sales_query = SaleLine.query.filter_by(product_id=id)
@@ -956,23 +963,27 @@ def delete(id):
         purchases_count = purchases_query.count()
         
         if sales_count > 0 or purchases_count > 0:
-            # soft delete
             product.is_active = False
             db.session.commit()
-            flash(f'⚠️ تم إلغاء تفعيل المنتج "{product.name}" (لديه عمليات مسجلة).\n💡 لا يمكن حذفه نهائياً للحفاظ على السجلات.', 'warning')
             LoggingCore.log_audit('deactivate', 'products', id)
+            if request.is_json:
+                return jsonify({'success': True, 'message': f'تم إلغاء تفعيل المنتج "{product.name}" (لديه عمليات مسجلة).'})
+            flash(f'⚠️ تم إلغاء تفعيل المنتج "{product.name}" (لديه عمليات مسجلة).\n💡 لا يمكن حذفه نهائياً للحفاظ على السجلات.', 'warning')
         else:
-            # hard delete
             db.session.delete(product)
             db.session.commit()
-            flash(f'✅ تم حذف المنتج "{product.name}" نهائياً!', 'success')
             LoggingCore.log_audit('delete', 'products', id)
+            if request.is_json:
+                return jsonify({'success': True, 'message': f'تم حذف المنتج "{product.name}" نهائياً!'})
+            flash(f'✅ تم حذف المنتج "{product.name}" نهائياً!', 'success')
         
         return redirect(url_for('products.index'))
     
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Error deleting product {id}: {e}")
+        if request.is_json:
+            return jsonify({'success': False, 'error': 'فشل حذف المنتج. حدث خطأ غير متوقع.'}), 500
         flash('❌ فشل حذف المنتج. حدث خطأ غير متوقع.', 'danger')
         return redirect(url_for('products.view', id=id))
 
@@ -1009,10 +1020,10 @@ def api_search():
         'code': p.sku or '',
         'text': f"{p.name} ({p.sku})" if p.sku else p.name,
         'sku': p.sku,
-        'price': float(p.regular_price),
-        'stock': float(stock_map.get(p.id, p.current_stock or 0)),
+        'price': float(p.regular_price or 0),
+        'stock': float(stock_map.get(p.id, p.current_stock or 0) or 0),
         'unit': p.unit,
-        'is_low_stock': float(stock_map.get(p.id, p.current_stock or 0)) <= float(p.min_stock_alert or 0),
+        'is_low_stock': float(stock_map.get(p.id, p.current_stock or 0) or 0) <= float(p.min_stock_alert or 0),
     } for p in products]
     
     return jsonify(results)
@@ -1032,7 +1043,9 @@ def categories():
 def create_category():
     try:
         # دعم JSON و Form Data
-        data = request.get_json() if request.is_json else request.form
+        data = request.get_json(silent=True) if request.is_json else request.form
+        if request.is_json and data is None:
+            return jsonify({'success': False, 'error': 'بيانات غير صحيحة'}), 400
 
         name = (data.get('name') or '').strip()
         name_ar = (data.get('name_ar') or '').strip() or None
@@ -1097,6 +1110,31 @@ def create_category():
         return redirect(url_for('products.categories'))
 
 
+def _get_alternative_warehouses(product_id, exclude_warehouse_id):
+    """Return structured list of alternative warehouses with available stock
+    for *product_id*, excluding *exclude_warehouse_id*.
+
+    Uses StockService.get_product_stock per warehouse since
+    get_branch_stock_map aggregates across all warehouse IDs."""
+    accessible = get_accessible_warehouses(current_user)
+    alt_warehouses = [w for w in accessible if not exclude_warehouse_id or w.id != exclude_warehouse_id]
+    if not alt_warehouses:
+        return []
+    results = []
+    for w in alt_warehouses:
+        wh_stock = StockService.get_product_stock(
+            product_id, warehouse_id=w.id, user=current_user
+        )
+        if wh_stock and wh_stock > 0:
+            results.append({
+                'warehouse_id': w.id,
+                'name': w.name,
+                'name_ar': getattr(w, 'name_ar', None),
+                'available_stock': float(wh_stock),
+            })
+    return results
+
+
 @products_bp.route('/<int:id>/adjust-stock', methods=['POST'])
 @login_required
 @permission_required('manage_products')
@@ -1107,7 +1145,10 @@ def adjust_stock(id):
     
     try:
         adjustment_type = request.form.get('adjustment_type')
-        quantity = float(request.form.get('quantity', 0))
+        try:
+            quantity = require_float(request.form.get('quantity', 0))
+        except ValueError:
+            return jsonify({'success': False, 'message': 'الكمية غير صحيحة'}), 422
         reason = request.form.get('reason', 'adjustment')
         notes = request.form.get('notes', '')
         warehouse_id = request.form.get('warehouse_id', type=int)
@@ -1123,7 +1164,7 @@ def adjust_stock(id):
                 return jsonify({'success': False, 'message': 'يجب اختيار مستودع داخل الفرع الحالي لتعديل المخزون'}), 400
         
         if quantity <= 0:
-            return jsonify({'success': False, 'message': 'الكمية يجب أن تكون أكبر من صفر'})
+            return jsonify({'success': False, 'message': 'الكمية يجب أن تكون أكبر من صفر'}), 400
         
         old_stock = StockService.get_product_stock(product.id, warehouse_id=(warehouse.id if warehouse else None), user=current_user) if (warehouse or scoped_branch_id is not None) else product.current_stock
         
@@ -1132,11 +1173,23 @@ def adjust_stock(id):
         elif adjustment_type == 'subtract':
             new_stock = old_stock - quantity
             if new_stock < 0:
-                return jsonify({'success': False, 'message': 'لا يمكن أن يكون المخزون سالباً'})
+                try:
+                    alternatives = _get_alternative_warehouses(product.id, warehouse.id if warehouse else None)
+                except Exception:
+                    alternatives = []
+                return jsonify({
+                    'success': False,
+                    'message': 'لا يمكن أن يكون المخزون سالباً — المخزون المتاح غير كافٍ',
+                    'insufficient': True,
+                    'current_warehouse_id': warehouse.id if warehouse else None,
+                    'requested_quantity': quantity,
+                    'available_stock': float(old_stock),
+                    'alternative_locations': alternatives,
+                }), 400
         elif adjustment_type == 'set':
             new_stock = quantity
         else:
-            return jsonify({'success': False, 'message': 'نوع التعديل غير صحيح'})
+            return jsonify({'success': False, 'message': 'نوع التعديل غير صحيح'}), 400
         
         delta = quantity if adjustment_type != 'set' else (new_stock - old_stock)
         StockService.adjust_stock(
@@ -1158,7 +1211,7 @@ def adjust_stock(id):
     except Exception:
         db.session.rollback()
         current_app.logger.exception('Product stock update failed')
-        return jsonify({'success': False, 'message': 'تعذر تحديث المخزون حالياً'})
+        return jsonify({'success': False, 'message': 'تعذر تحديث المخزون حالياً'}), 500
 
 
 @products_bp.route('/<int:id>/print-label')
