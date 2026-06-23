@@ -124,13 +124,30 @@ class PartnerService:
         period_end: date,
         created_by: Optional[int] = None,
     ) -> List[int]:
-        """Create draft distributions for ALL active partners for the period."""
+        """Create draft distributions for ALL active partners for the period.
+
+        Validates:
+        - Total profit-share percentages across partners ≤ 100 %
+        - Loss-sharing percentages are set when net profit < 0
+        - Each partner's scope P&L can be resolved
+        """
         from models import Partner, PartnerProfitDistribution
 
         partners = Partner.query.filter_by(
             tenant_id=tenant_id,
             is_active=True,
         ).all()
+
+        if not partners:
+            return []
+
+        total_share_pct = sum(
+            Decimal(str(p.share_percentage or 0)) for p in partners
+        )
+        if total_share_pct > Decimal('100'):
+            raise ValueError(
+                f'إجمالي نسب الأرباح ({total_share_pct}%) يتجاوز 100%'
+            )
 
         distribution_ids = []
         for partner in partners:
@@ -144,14 +161,20 @@ class PartnerService:
                 continue
 
             # Get scope P&L
-            pnl = PartnerService.calculate_scope_profit(
-                tenant_id, period_start, period_end,
-                partner.scope_type, partner.scope_id,
-            )
+            try:
+                pnl = PartnerService.calculate_scope_profit(
+                    tenant_id, period_start, period_end,
+                    partner.scope_type, partner.scope_id,
+                )
+            except Exception as exc:
+                raise ValueError(
+                    f'فشل حساب أرباح النطاق للشريك {partner.id} '
+                    f'({partner.scope_type}/{partner.scope_id}): {exc}'
+                ) from exc
 
             net_profit = Decimal(str(pnl['net_profit']))
+            total_expenses_dec = Decimal(str(pnl['expenses']))
 
-            # Calculate shares
             share_pct = Decimal(str(partner.share_percentage or 0))
             expense_pct = Decimal(str(partner.expense_share_percentage or 0))
             loss_pct = Decimal(str(partner.loss_share_percentage or 0))
@@ -163,14 +186,17 @@ class PartnerService:
             loss_share = Decimal('0')
 
             if net_profit > 0:
-                # Profit: apply share percentage, check threshold
                 if net_profit >= threshold:
                     share_amount = (net_profit * share_pct / 100).quantize(Decimal('0.001'))
-                expense_share = (Decimal(str(pnl['expenses'])) * expense_pct / 100).quantize(Decimal('0.001'))
+                expense_share = (total_expenses_dec * expense_pct / 100).quantize(Decimal('0.001'))
             elif net_profit < 0:
-                # Loss: partner bears loss share
+                if loss_pct <= Decimal('0'):
+                    raise ValueError(
+                        f'الشريك {partner.id} ليس لديه نسبة تحمل خسارة '
+                        f'بينما صافي الربح سالب ({net_profit})'
+                    )
                 loss_share = (abs(net_profit) * loss_pct / 100).quantize(Decimal('0.001'))
-                expense_share = (Decimal(str(pnl['expenses'])) * expense_pct / 100).quantize(Decimal('0.001'))
+                expense_share = (total_expenses_dec * expense_pct / 100).quantize(Decimal('0.001'))
 
             net_due = share_amount - expense_share - loss_share + fixed
 

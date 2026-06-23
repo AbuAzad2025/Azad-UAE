@@ -390,6 +390,143 @@ class BankReconciliationService:
         db.session.flush()
         return count
 
+    # ------------------------------------------------------------------
+    # Suspense-account routing for orphan bank statement lines
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def match_transaction(tenant_id, bank_account_id, stmt_line_id,
+                          amount_tolerance=Decimal('0.01'),
+                          date_tolerance_days=3):
+        """
+        Attempt to uniquely pair a single bank statement line with a GL
+        journal line.  Returns the match dict on success, or ``None`` if
+        no unique match is found (caller should route to Suspense).
+        """
+        from decimal import Decimal as _D
+        from sqlalchemy import and_
+
+        stmt = BankStatementLine.query.get(stmt_line_id)
+        if not stmt or stmt.status not in ('imported', 'suggested_match'):
+            return None
+
+        stmt_amount = _D(str(stmt.amount))
+
+        gl_lines = db.session.query(GLJournalLine).join(
+            GLJournalEntry, GLJournalLine.entry_id == GLJournalEntry.id
+        ).filter(
+            GLJournalLine.account_id == bank_account_id,
+            GLJournalEntry.entry_date.between(
+                stmt.transaction_date - timedelta(days=date_tolerance_days),
+                stmt.transaction_date + timedelta(days=date_tolerance_days),
+            ),
+            GLJournalEntry.tenant_id == tenant_id,
+            GLJournalEntry.is_posted == True,
+        ).all()
+
+        candidates = []
+        for gl in gl_lines:
+            gl_amount = _D(str(gl.debit or 0)) - _D(str(gl.credit or 0))
+            if abs(stmt_amount - gl_amount) <= amount_tolerance:
+                date_diff = abs((stmt.transaction_date - gl.entry.entry_date).days)
+                candidates.append((date_diff, gl))
+
+        if len(candidates) != 1:
+            return None
+
+        date_diff, gl = candidates[0]
+        match_type = 'exact' if abs(stmt_amount - _D(str(gl.debit or 0)) - _D(str(gl.credit or 0))) < _D('0.001') else 'amount_date'
+        return {
+            'statement_line_id': stmt.id,
+            'journal_line_id': gl.id,
+            'match_type': match_type,
+            'amount_diff': float(abs(stmt_amount - (_D(str(gl.debit or 0)) - _D(str(gl.credit or 0))))),
+            'date_diff': date_diff,
+        }
+
+    @staticmethod
+    def route_orphans_to_suspense(tenant_id, bank_account_id, period_start, period_end,
+                                  description_prefix='Unmatched bank transaction'):
+        """
+        Find all unmatched bank statement lines in the period and post a
+        suspense GL entry for each, routing the unmapped amount to the
+        Suspense account (concept code ``SUSPENSE``).
+
+        Returns a list of dicts ``{statement_line_id, suspense_entry_id}``.
+        """
+        from decimal import Decimal as _D
+        from datetime import datetime, timezone
+        from services.gl_posting import post_or_fail, UnbalancedJournalEntryError
+        from services.gl_service import GLService
+        from models import GLAccount
+
+        orphans = BankStatementLine.query.filter(
+            BankStatementLine.tenant_id == tenant_id,
+            BankStatementLine.bank_account_id == bank_account_id,
+            BankStatementLine.transaction_date.between(period_start, period_end),
+            BankStatementLine.status.in_(['imported', 'suggested_match']),
+        ).all()
+
+        if not orphans:
+            return []
+
+        suspense_account_code = str(GLAccount.query.filter_by(
+            tenant_id=tenant_id,
+            type='liability',
+        ).filter(
+            GLAccount.code.like('2999%')
+        ).first().code) if GLAccount.query.filter_by(
+            tenant_id=tenant_id,
+        ).filter(
+            GLAccount.code.like('2999%')
+        ).first() else '2999'
+
+        results = []
+        for stmt in orphans:
+            amount = abs(_D(str(stmt.amount)))
+            if amount <= _D('0.01'):
+                stmt.status = 'ignored'
+                continue
+
+            lines = [
+                {
+                    'account': str(stmt.bank_account.code) if getattr(stmt, 'bank_account', None) and getattr(stmt.bank_account, 'code', None) else str(bank_account_id),
+                    'concept_code': 'BANK',
+                    'debit': amount if _D(str(stmt.amount)) > 0 else _D('0'),
+                    'credit': _D('0') if _D(str(stmt.amount)) > 0 else amount,
+                    'description': f'{description_prefix}: {stmt.description or stmt.reference or ""}',
+                },
+                {
+                    'account': suspense_account_code,
+                    'concept_code': 'SUSPENSE',
+                    'debit': _D('0') if _D(str(stmt.amount)) > 0 else amount,
+                    'credit': amount if _D(str(stmt.amount)) > 0 else _D('0'),
+                    'description': f'Suspense — {stmt.description or stmt.reference or "orphan"}',
+                },
+            ]
+
+            try:
+                entry = post_or_fail(
+                    lines=lines,
+                    description=f'Suspense routing — {description_prefix} #{stmt.id}',
+                    reference_type=GLRef.BANK_RECONCILIATION,
+                    reference_id=stmt.id,
+                    branch_id=None,
+                    tenant_id=tenant_id,
+                )
+                stmt.status = 'suggested_match'
+                results.append({'statement_line_id': stmt.id, 'suspense_entry_id': entry.id if hasattr(entry, 'id') else None})
+            except (UnbalancedJournalEntryError, Exception):
+                stmt.status = 'ignored'
+
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
+
+        return results
+
     @staticmethod
     def apply_matches(reconciliation_id, matches):
         """

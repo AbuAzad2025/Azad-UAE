@@ -476,7 +476,8 @@ class GLService:
         entry.total_credit = total_credit
 
         if abs(total_debit - total_credit) > Decimal('0.001'):
-            raise ValueError(f'القيد غير متوازن: مدين={total_debit} دائن={total_credit}')
+            from services.gl_posting import UnbalancedJournalEntryError
+            raise UnbalancedJournalEntryError(f'القيد غير متوازن: مدين={total_debit} دائن={total_credit}')
 
         return entry
 

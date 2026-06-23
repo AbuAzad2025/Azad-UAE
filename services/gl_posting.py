@@ -16,6 +16,10 @@ class GlPostingError(Exception):
     """Raised when a journal entry cannot be posted."""
 
 
+class UnbalancedJournalEntryError(GlPostingError):
+    """Raised when Sum(debit) != Sum(credit) in a journal entry."""
+
+
 def post_or_fail(
     lines,
     *,
@@ -39,6 +43,8 @@ def post_or_fail(
 
     if not lines:
         raise GlPostingError(f'لا يمكن ترحيل "{description}" بدون سطور قيد.')
+
+    assert_balanced_lines(lines, currency=currency)
 
     entry_date = date or datetime.now(timezone.utc)
     assert_period_open(entry_date, tenant_id)
@@ -80,6 +86,6 @@ def assert_balanced_lines(lines, *, currency=None, tolerance=None):
     total_debit = sum(Decimal(str(l.get('debit', 0) or 0)) for l in lines)
     total_credit = sum(Decimal(str(l.get('credit', 0) or 0)) for l in lines)
     if abs(total_debit - total_credit) > tolerance:
-        raise GlPostingError(
+        raise UnbalancedJournalEntryError(
             f'القيد غير متوازن: مدين={total_debit} دائن={total_credit}'
         )

@@ -54,6 +54,7 @@ GL_CONCEPT_ACCOUNTS_PAYABLE = 'ACCOUNTS_PAYABLE'
 GL_CONCEPT_END_OF_SERVICE_PROVISION = 'END_OF_SERVICE_PROVISION'
 GL_CONCEPT_END_OF_SERVICE_LIABILITY = 'END_OF_SERVICE_LIABILITY'
 GL_CONCEPT_LEAVE_ACCRUAL_LIABILITY = 'LEAVE_ACCRUAL_LIABILITY'
+GL_CONCEPT_SUSPENSE = 'SUSPENSE'
 
 # Resolution modes for GL authority model
 RESOLUTION_MODE_MAPPING = 'mapping'
@@ -128,6 +129,7 @@ GL_CONCEPT_CODES = (
     GL_CONCEPT_END_OF_SERVICE_PROVISION,
     GL_CONCEPT_END_OF_SERVICE_LIABILITY,
     GL_CONCEPT_LEAVE_ACCRUAL_LIABILITY,
+    GL_CONCEPT_SUSPENSE,
 )
 
 GL_CONCEPT_REGISTRY = {
@@ -192,6 +194,7 @@ GL_CONCEPT_REGISTRY = {
     GL_CONCEPT_END_OF_SERVICE_PROVISION: {'meaning': 'End of Service Provision Expense', 'legacy_code': '6190', 'required': False, 'normal_balance': 'debit', 'resolution_mode': RESOLUTION_MODE_MAPPING},
     GL_CONCEPT_END_OF_SERVICE_LIABILITY: {'meaning': 'End of Service Benefits Provision', 'legacy_code': '2140', 'required': False, 'normal_balance': 'credit', 'resolution_mode': RESOLUTION_MODE_MAPPING},
     GL_CONCEPT_LEAVE_ACCRUAL_LIABILITY: {'meaning': 'Leave Accrual Liability', 'legacy_code': '2160', 'required': False, 'normal_balance': 'credit', 'resolution_mode': RESOLUTION_MODE_MAPPING},
+    GL_CONCEPT_SUSPENSE: {'meaning': 'Suspense Account', 'legacy_code': '2999', 'required': False, 'normal_balance': 'debit', 'resolution_mode': RESOLUTION_MODE_MAPPING},
 }
 
 VALID_GL_CONCEPT_CODES = frozenset(GL_CONCEPT_CODES)

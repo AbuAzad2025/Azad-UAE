@@ -393,7 +393,8 @@ class GLAccountMapping(db.Model):
 def _validate_journal_entry_balance(mapper, connection, target):
     diff = abs((target.total_debit or Decimal('0')) - (target.total_credit or Decimal('0')))
     if diff > Decimal('0.001'):
-        raise ValueError(
+        from services.gl_posting import UnbalancedJournalEntryError
+        raise UnbalancedJournalEntryError(
             f'Journal entry {target.entry_number or "(new)"} is not balanced: '
             f'debit={target.total_debit} credit={target.total_credit}'
         )
