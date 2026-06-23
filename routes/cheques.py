@@ -349,7 +349,8 @@ def create():
             db.session.rollback()
             current_app.logger.error(f"Error in cheque operation: {e}")
             from utils.error_messages import ErrorMessages
-            flash(ErrorMessages.unexpected_error(), 'danger')
+            import uuid as _uuid
+            flash(ErrorMessages.unexpected_error(error_id=_uuid.uuid4().hex[:8]), 'danger')
     
     try:
         from models import Tenant
@@ -454,7 +455,8 @@ def edit(id):
             db.session.rollback()
             current_app.logger.error(f"Error in cheque operation: {e}")
             from utils.error_messages import ErrorMessages
-            flash(ErrorMessages.unexpected_error(), 'danger')
+            import uuid as _uuid
+            flash(ErrorMessages.unexpected_error(error_id=_uuid.uuid4().hex[:8]), 'danger')
     
     try:
         from models import Tenant

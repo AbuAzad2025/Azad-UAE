@@ -136,7 +136,6 @@ def create():
                 sys.stderr.write(f"[SALES_WARNING] Failed to get tenant default currency (create sale): {e}\n")
                 traceback.print_exc()
                 try:
-                    from services.logging_core import LoggingCore
                     LoggingCore.log_error(
                         message=str(e),
                         category="SALES",
