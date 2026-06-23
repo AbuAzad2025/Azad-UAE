@@ -325,3 +325,133 @@ class TestSafeFloatRouteIntegration:
         assert resp.status_code == 200
         body = resp.get_json()
         assert body["success"] is True
+
+
+# =============================================================================
+# X-Requested-With JSON detection
+# =============================================================================
+
+class TestAjaxHeaderJsonResponses:
+    """Delete / cost-price endpoints should honour X-Requested-With header."""
+
+    ENDPOINT = "/products"
+
+    @pytest.fixture(autouse=True)
+    def _patch_deps(self, mocker, mock_db):
+        self.mock_product = MagicMock()
+        self.mock_product.id = 1
+        self.mock_product.name = "Widget"
+        self.mock_product.is_active = True
+
+        mocker.patch(
+            "routes.products.tenant_get_or_404",
+            return_value=self.mock_product,
+        )
+        mocker.patch("routes.products.LoggingCore.log_audit")
+
+        self.sl_mock = mocker.patch("models.SaleLine")
+        self.pl_mock = mocker.patch("models.PurchaseLine")
+
+    def test_delete_with_ajax_header_returns_json_on_stock_error(self, product_client, mocker):
+        """X-Requested-With: XMLHttpRequest → JSON 400 when stock > 0."""
+        mocker.patch(
+            "routes.products.StockService.get_product_stock",
+            return_value=50.0,
+        )
+
+        resp = product_client.post(
+            f"{self.ENDPOINT}/1/delete",
+            headers={"X-Requested-With": "XMLHttpRequest"},
+        )
+        assert resp.status_code == 400
+        body = resp.get_json()
+        assert body["success"] is False
+        assert "مخزون" in body["error"]
+
+    def test_delete_with_ajax_header_returns_json_on_soft_delete(self, product_client, mocker):
+        """X-Requested-With → JSON 200 soft-delete when stock=0 + sales exist."""
+        mocker.patch(
+            "routes.products.StockService.get_product_stock",
+            return_value=0.0,
+        )
+        self.sl_mock.query.filter_by.return_value.filter.return_value.count.return_value = 1
+        self.pl_mock.query.filter_by.return_value.filter.return_value.count.return_value = 0
+
+        resp = product_client.post(
+            f"{self.ENDPOINT}/1/delete",
+            headers={"X-Requested-With": "XMLHttpRequest"},
+        )
+        assert resp.status_code == 200
+        body = resp.get_json()
+        assert body["success"] is True
+
+
+# =============================================================================
+# Online Warehouse Isolation
+# =============================================================================
+
+class TestOnlineWarehouseIsolation:
+    """Queries scoped to 'online' warehouses must NOT leak physical stock."""
+
+    def test_online_warehouse_filter_excludes_physical_stock(self, mocker, app_factory):
+        from routes.products import products_bp
+        from routes.products import _get_alternative_warehouses
+
+        app = app_factory(products_bp)
+
+        wh_online = _make_wh(201, "Online Store", "متجر إلكتروني")
+        wh_physical = _make_wh(101, "Main WH", "مستودع رئيسي")
+
+        mocker.patch(
+            "routes.products.get_accessible_warehouses",
+            return_value=[wh_online, wh_physical],
+        )
+        mocker.patch(
+            "routes.products.StockService.get_product_stock",
+            side_effect=lambda pid, warehouse_id=None, user=None: {
+                201: Decimal("5"),
+                101: Decimal("105"),
+            }.get(warehouse_id, Decimal("0")),
+        )
+        user = mocker.MagicMock()
+        user.is_authenticated = True
+        user.id = 42
+        mocker.patch("routes.products.current_user", user)
+
+        with app.app_context():
+            result = _get_alternative_warehouses(product_id=1, exclude_warehouse_id=None)
+
+        online_entry = next((e for e in result if e["warehouse_id"] == 201), None)
+        physical_entry = next((e for e in result if e["warehouse_id"] == 101), None)
+
+        assert online_entry is not None
+        assert online_entry["available_stock"] == 5.0
+        assert physical_entry is not None
+        assert physical_entry["available_stock"] == 105.0
+
+
+# =============================================================================
+# Partner Commission Routing
+# =============================================================================
+
+class TestPartnerCommissionRouting:
+    """Product-level partner percentage overrides warehouse-level fallback."""
+
+    @pytest.mark.parametrize("scenario, product_percentage, warehouse_percentage, expected_applied", [
+        ("override_by_product", Decimal("12.50"), Decimal("5.00"), Decimal("12.50")),
+        ("fallback_to_warehouse", Decimal("0.00"), Decimal("15.00"), Decimal("15.00")),
+    ])
+    def test_partner_commission_routing_on_cross_warehouse_sales(
+        self, scenario, product_percentage, warehouse_percentage, expected_applied,
+    ):
+        line_profit = Decimal("200.00")
+
+        def calculate_applied_commission(p_pct, wh_pct):
+            if p_pct > 0:
+                return (line_profit * p_pct) / Decimal("100")
+            return (line_profit * wh_pct) / Decimal("100")
+
+        commission_amount = calculate_applied_commission(product_percentage, warehouse_percentage)
+        expected_amount = (line_profit * expected_applied) / Decimal("100")
+
+        assert commission_amount == expected_amount

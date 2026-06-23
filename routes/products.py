@@ -848,7 +848,7 @@ def edit(id):
                     from services.stock_service import StockService
                     total_stock = StockService.get_product_stock(product.id)
                     if total_stock > 0:
-                        if request.is_json:
+                        if _wants_json():
                             return jsonify({'success': False, 'error': 'لا يمكن تعديل سعر التكلفة لوجود مخزون. قم بتسوية المخزون أولاً.'}), 400
                         flash('⚠️ لا يمكن تعديل سعر التكلفة لوجود مخزون. قم بتسوية المخزون أولاً.', 'warning')
                         return render_template('products/edit.html', form=form, product=product, categories=categories, warehouses=warehouses, merchants=merchants, partners=partners)
@@ -947,11 +947,19 @@ def delete(id):
     """حذف (إلغاء تفعيل) المنتج - soft delete"""
     product = tenant_get_or_404(Product, id)
     if not _ensure_product_scope(product):
-        if request.is_json:
+        if _wants_json():
             return jsonify({'success': False, 'error': 'المنتج خارج النطاق'}), 403
         return render_template('errors/403.html'), 403
     
     try:
+        from services.stock_service import StockService
+        total_stock = StockService.get_product_stock(product.id, user=current_user)
+        if total_stock > 0:
+            if _wants_json():
+                return jsonify({'success': False, 'error': 'لا يمكن حذف منتج لديه مخزون. قم بتسوية المخزون أولاً.'}), 400
+            flash('⚠️ لا يمكن حذف منتج لديه مخزون. قم بتسوية المخزون أولاً.', 'warning')
+            return redirect(url_for('products.view', id=id))
+
         from models import SaleLine, PurchaseLine
         tid = get_active_tenant_id(current_user)
         sales_query = SaleLine.query.filter_by(product_id=id)
@@ -966,14 +974,14 @@ def delete(id):
             product.is_active = False
             db.session.commit()
             LoggingCore.log_audit('deactivate', 'products', id)
-            if request.is_json:
+            if _wants_json():
                 return jsonify({'success': True, 'message': f'تم إلغاء تفعيل المنتج "{product.name}" (لديه عمليات مسجلة).'})
             flash(f'⚠️ تم إلغاء تفعيل المنتج "{product.name}" (لديه عمليات مسجلة).\n💡 لا يمكن حذفه نهائياً للحفاظ على السجلات.', 'warning')
         else:
             db.session.delete(product)
             db.session.commit()
             LoggingCore.log_audit('delete', 'products', id)
-            if request.is_json:
+            if _wants_json():
                 return jsonify({'success': True, 'message': f'تم حذف المنتج "{product.name}" نهائياً!'})
             flash(f'✅ تم حذف المنتج "{product.name}" نهائياً!', 'success')
         
@@ -982,7 +990,7 @@ def delete(id):
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Error deleting product {id}: {e}")
-        if request.is_json:
+        if _wants_json():
             return jsonify({'success': False, 'error': 'فشل حذف المنتج. حدث خطأ غير متوقع.'}), 500
         flash('❌ فشل حذف المنتج. حدث خطأ غير متوقع.', 'danger')
         return redirect(url_for('products.view', id=id))
@@ -1133,6 +1141,15 @@ def _get_alternative_warehouses(product_id, exclude_warehouse_id):
                 'available_stock': float(wh_stock),
             })
     return results
+
+
+def _wants_json():
+    """Return True when the incoming request expects a JSON response.
+
+    Checks both ``request.is_json`` (Content-Type: application/json) and
+    the ``X-Requested-With: XMLHttpRequest`` header used by many front-end
+    frameworks."""
+    return request.is_json or request.headers.get("X-Requested-With") == "XMLHttpRequest"
 
 
 @products_bp.route('/<int:id>/adjust-stock', methods=['POST'])
