@@ -39,7 +39,7 @@ jobs:
           pip install -r requirements.txt
           pip install -r requirements-dev.txt
 
-      - name: Run tests
+      - name: Run tests with coverage
         env:
           DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
           SECRET_KEY: test-secret-key-not-for-production
@@ -48,7 +48,12 @@ jobs:
         run: |
           # Initialize database schema before running tests
           python -c "from app import create_app; from extensions import db; app = create_app(); db.create_all()" || true
-          pytest tests/ -v --tb=short
+          pytest tests/ -v --tb=short --cov=app --cov=models --cov=routes --cov=services --cov-report=term --cov-report=xml
+      - name: Upload coverage to Codecov (optional)
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage.xml
+          fail_ci_if_error: false
 
       - name: Verify app boots
         env:
