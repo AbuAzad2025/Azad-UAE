@@ -6,6 +6,47 @@ from extensions import db
 class CampaignService:
 
     @staticmethod
+    def calculate_roi(cost, revenue):
+        cost_d = Decimal(str(cost or 0))
+        revenue_d = Decimal(str(revenue or 0))
+        if cost_d == 0:
+            return Decimal('0')
+        return ((revenue_d - cost_d) / cost_d * Decimal('100')).quantize(Decimal('0.01'))
+
+    @staticmethod
+    def get_campaign_roi_metrics(campaign, total_revenue=None):
+        from decimal import Decimal
+        cost = Decimal(str(campaign.discount_value or 0))
+        usage = int(getattr(campaign, 'usage_count', 0) or 0)
+        total_cost = cost * Decimal(str(usage))
+        revenue = Decimal(str(total_revenue or 0))
+        roi = CampaignService.calculate_roi(total_cost, revenue)
+        return {
+            'campaign_id': campaign.id,
+            'campaign_name': getattr(campaign, 'name', ''),
+            'unit_cost': float(cost),
+            'usage_count': usage,
+            'total_cost': float(total_cost),
+            'total_revenue': float(revenue),
+            'roi': float(roi),
+        }
+
+    @staticmethod
+    def safe_commission_rate(commission_rate):
+        rate = Decimal(str(commission_rate or 0))
+        if rate < 0:
+            rate = Decimal('0')
+        if rate > Decimal('100'):
+            rate = Decimal('100')
+        return rate
+
+    @staticmethod
+    def calculate_safe_commission(total_revenue, commission_rate):
+        revenue = Decimal(str(total_revenue or 0))
+        rate = CampaignService.safe_commission_rate(commission_rate)
+        return (revenue * rate / Decimal('100')).quantize(Decimal('0.01'))
+
+    @staticmethod
     def get_active_campaigns(tenant_id, product_ids=None, category_ids=None):
         from models.campaign import Campaign
 
