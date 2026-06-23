@@ -3850,7 +3850,9 @@ def api_tenant_toggle_status(tenant_id):
     if not request.is_json:
         return jsonify({'success': False, 'error': 'JSON required'}), 400
     try:
-        tenant = Tenant.query.get_or_404(tenant_id)
+        tenant = Tenant.query.get(tenant_id)
+        if not tenant:
+            return jsonify({'success': False, 'error': 'Tenant not found'}), 404
         if tenant.id == 1:
             return jsonify({'success': False, 'error': 'لا يمكن تعطيل التينانت الرئيسي'}), 400
         tenant.is_active = not tenant.is_active
@@ -3884,7 +3886,9 @@ def api_tenant_update_package(tenant_id):
         return jsonify({'success': False, 'error': 'JSON required'}), 400
     try:
         data = request.get_json()
-        tenant = Tenant.query.get_or_404(tenant_id)
+        tenant = Tenant.query.get(tenant_id)
+        if not tenant:
+            return jsonify({'success': False, 'error': 'Tenant not found'}), 404
         field = data.get('field')
         value = data.get('value')
         allowed_fields = [

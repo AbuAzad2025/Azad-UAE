@@ -1,0 +1,221 @@
+"""
+tests/unit/conftest.py — Isolated route unit tests (zero database dependency).
+Every fixture mocks auth, DB, and service layers so tests run instantly.
+"""
+from datetime import datetime
+from decimal import Decimal
+from itertools import cycle
+
+import pytest
+from flask import Flask
+from unittest.mock import MagicMock
+
+
+# ---------------------------------------------------------------------------
+# App & client factories
+# ---------------------------------------------------------------------------
+
+@pytest.fixture
+def app_factory():
+    def _create_app(blueprint, config_overrides=None):
+        app = Flask(__name__)
+        app.config.update(
+            TESTING=True,
+            SECRET_KEY="test-secret",
+            WTF_CSRF_ENABLED=False,
+            DEBUG=True,
+            JSON_AS_ASCII=False,
+            JSON_SORT_KEYS=False,
+            SERVER_NAME="test.local",
+        )
+        if config_overrides:
+            app.config.update(config_overrides)
+        app.register_blueprint(blueprint)
+        return app
+    return _create_app
+
+
+# ---------------------------------------------------------------------------
+# Auth bypass fixtures  (/owner/* routes)
+# ---------------------------------------------------------------------------
+
+@pytest.fixture
+def mock_owner_user(mocker):
+    user = mocker.MagicMock()
+    user.is_authenticated = True
+    user.is_active = True
+    user.is_owner = True
+    user.tenant_id = None
+    user.id = 1
+    user.username = "owner-test"
+    user.email = "owner@test.com"
+    user.full_name = "Test Platform Owner"
+    user.branch_id = None
+    return user
+
+
+@pytest.fixture
+def bypass_owner_auth(mocker, mock_owner_user):
+    mocker.patch("flask_login.utils._get_user", return_value=mock_owner_user)
+    mocker.patch("utils.decorators.is_global_owner_user", return_value=True)
+    mocker.patch("utils.auth_helpers.is_global_owner_user", return_value=True)
+    mocker.patch("extensions.limiter.limit", return_value=lambda f: f)
+    mocker.patch("utils.security_helpers.enforce_owner_ip_if_needed", return_value=None)
+    mocker.patch("utils.tenanting.get_active_tenant_id", return_value=None)
+    mocker.patch("utils.branching.get_active_branch_id", return_value=None)
+
+
+@pytest.fixture
+def owner_client(app_factory, bypass_owner_auth):
+    from routes.owner import owner_bp
+    app = app_factory(owner_bp)
+    return app.test_client()
+
+
+# ---------------------------------------------------------------------------
+# Company-admin client  (for @company_admin_required endpoints)
+# ---------------------------------------------------------------------------
+
+@pytest.fixture
+def bypass_company_admin_auth(mocker, mock_owner_user):
+    """
+    Bypass @company_admin_required + @login_required for company-level routes.
+
+    Does NOT patch ``company_admin_required`` itself (that decorator is already
+    applied at import time).  Instead it patches the runtime checks the
+    decorator performs: ``is_global_owner_user`` returns ``False``, the user
+    mock has ``is_super_admin()`` returning a truthy, and
+    ``get_active_tenant_id`` returns a valid tenant id.
+    """
+    mock_owner_user.is_super_admin.return_value = True
+    mocker.patch("flask_login.utils._get_user", return_value=mock_owner_user)
+    mocker.patch("utils.decorators.is_global_owner_user", return_value=False)
+    mocker.patch("extensions.limiter.limit", return_value=lambda f: f)
+    mocker.patch("utils.tenanting.get_active_tenant_id", return_value=1)
+
+
+@pytest.fixture
+def company_admin_client(app_factory, bypass_company_admin_auth):
+    from routes.owner import owner_bp
+    app = app_factory(owner_bp)
+    return app.test_client()
+
+
+# ---------------------------------------------------------------------------
+# Reusable mock helpers for route tests
+# ---------------------------------------------------------------------------
+
+# Safe defaults for model column attributes used in filter comparisons.
+_SAFE_COLUMNS = {
+    "amount_aed": Decimal("0"),
+    "paid_amount_aed": Decimal("0"),
+    "balance": Decimal("0"),
+    "current_stock": Decimal("0"),
+    "min_stock_alert": Decimal("0"),
+    "regular_price": Decimal("0"),
+    "cost_price": Decimal("0"),
+    "unit_price": Decimal("0"),
+    "discount_percent": Decimal("0"),
+    "quantity": Decimal("0"),
+    "line_total": Decimal("0"),
+    "sale_date": datetime(2020, 1, 1),
+    "purchase_date": datetime(2020, 1, 1),
+    "sale_id": 0,
+    "product_id": 0,
+    "warehouse_id": 0,
+    "customer_id": 0,
+    "status": "confirmed",
+    "is_active": True,
+    "is_owner": False,
+    "is_reversed": False,
+    "tenant_id": None,
+}
+
+
+@pytest.fixture
+def mock_db_query(mocker):
+    """
+    Self-chaining mock for ``db.session.query``.
+
+    Chain methods (``.filter``, ``.filter_by``, ``.order_by``, ``.join``,
+    ``.options``, etc.) all return the same mock, so arbitrary SQLAlchemy
+    chains never crash.  Use ``.return_value`` to configure call results:
+
+    >>> q = mock_db_query
+    >>> q.filter.return_value.first.return_value = (0, 0.0, 0.0)
+    >>> q.filter.return_value.scalar.return_value = Decimal("0")
+    >>> q.filter.return_value.all.return_value = []
+    """
+    q = MagicMock(name="db_session_query")
+    q.return_value = q  # db.session.query(X) calls q(X) → returns q
+
+    for method in ("filter", "filter_by", "order_by", "join", "options",
+                   "group_by", "limit", "offset", "select_from"):
+        getattr(q, method).return_value = q
+
+    q.filter.return_value.first.side_effect = cycle([(0, 0.0, 0.0)])
+    q.filter.return_value.scalar.side_effect = cycle([Decimal("0")])
+    q.filter.return_value.all.return_value = []
+    q.join.return_value.filter.return_value.group_by.return_value.order_by.return_value.limit.return_value.all.return_value = []
+    return q
+
+
+@pytest.fixture
+def model_patch(mocker):
+    """
+    Factory fixture for patching a model class reference in a target module.
+
+    Usage in a test::
+
+        User = model_patch("routes.owner.User", count=5)
+        User.query.filter_by.return_value.count.return_value  # → 5
+
+    The patched model class has safe defaults on column attributes
+    (``Decimal("0")``, ``datetime(...)``, etc.) to prevent crashes
+    from filter-expression comparisons.  Override via ``cols=``.
+
+    ``.query`` supports:
+      * ``.filter_by(..).count()``
+      * ``.filter_by(..).join(..).distinct().count()``
+      * ``.filter_by(..).order_by(..).limit(N).all()``
+      * ``.filter(..).count()``
+      * ``.filter(..).order_by(..).limit(N).all()``
+    """
+    def _patch(target_path, *, count=0, cols=None):
+        q = MagicMock(name=f"query_{target_path}")
+
+        fbm = MagicMock(name="filter_by_mock")
+        fbm.count.return_value = count
+        fbm.join.return_value.distinct.return_value.count.return_value = count
+        fbm.order_by.return_value.limit.return_value.all.return_value = []
+        fbm.all.return_value = []
+        q.filter_by.return_value = fbm
+
+        fm = MagicMock(name="filter_mock")
+        fm.count.return_value = count
+        fm.order_by.return_value.limit.return_value.all.return_value = []
+        fm.all.return_value = []
+        q.filter.return_value = fm
+
+        mc = MagicMock(name=f"model_{target_path}")
+        mc.query = q
+
+        attrs = dict(_SAFE_COLUMNS)
+        if cols:
+            attrs.update(cols)
+        for attr, val in attrs.items():
+            setattr(mc, attr, val)
+
+        mocker.patch(target_path, mc)
+        return mc
+
+    return _patch
+
+
+@pytest.fixture
+def mock_db(mocker):
+    """Patch ``extensions.db.session`` so add/commit/rollback are no-ops."""
+    from extensions import db
+    mock_session = mocker.MagicMock(name="mock_db_session")
+    mocker.patch.object(db, "session", mock_session)
+    return mock_session
