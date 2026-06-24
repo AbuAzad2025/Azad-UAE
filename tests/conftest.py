@@ -109,6 +109,18 @@ def app():
     LoggingCore.log_frontend_error = original_log_frontend
 
 
+@pytest.fixture(autouse=True)
+def _restore_session_app_config(app):
+    """Prevent session-scoped app config mutations from leaking across tests."""
+    snapshot = {
+        key: app.config.get(key)
+        for key in ('DEBUG', 'APP_ENV', 'CORS_ORIGINS', 'PORT', 'CLIENT_ERROR_TRUSTED_ORIGINS')
+    }
+    yield
+    for key, value in snapshot.items():
+        app.config[key] = value
+
+
 @pytest.fixture
 def client(app):
     return app.test_client()

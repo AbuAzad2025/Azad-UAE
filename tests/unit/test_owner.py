@@ -35,8 +35,12 @@ class TestOwnerDashboardAccess:
                 'password': 'password123',
             }, follow_redirects=True)
 
-            with pytest.raises(werkzeug.exceptions.NotFound):
-                client.get('/owner/dashboard', follow_redirects=False)
+            try:
+                resp = client.get('/owner/dashboard', follow_redirects=False)
+            except werkzeug.exceptions.NotFound:
+                pass
+            else:
+                assert resp.status_code == 404
 
     def test_owner_dashboard_renders_for_platform_owner(self, client, db_session):
         import uuid

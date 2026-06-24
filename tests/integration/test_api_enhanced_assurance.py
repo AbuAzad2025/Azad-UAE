@@ -37,8 +37,12 @@ class TestEnhancedSalesCustomers:
     def test_sale_detail_not_found(self, app, auth_client):
         from werkzeug.exceptions import NotFound
         with app.app_context():
-            with pytest.raises(NotFound):
-                auth_client.get('/api/v2/sales/999999999')
+            try:
+                resp = auth_client.get('/api/v2/sales/999999999')
+            except NotFound:
+                pass
+            else:
+                assert resp.status_code == 404
 
     def test_customers_list(self, app, auth_client, sample_customer):
         with app.app_context():

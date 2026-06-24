@@ -55,6 +55,7 @@ jobs:
           SECRET_KEY: test-secret-key-not-for-production
           OWNER_PASSWORD: TestOwner@1234567890123456!
           APP_ENV: testing
+          DEBUG: "true"
         run: |
           # Initialize database schema before running tests
           python -c "from app import create_app; from extensions import db; app = create_app(); ctx = app.app_context(); ctx.push(); db.create_all(); ctx.pop()" || true

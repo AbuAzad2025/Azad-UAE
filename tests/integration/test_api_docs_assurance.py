@@ -48,8 +48,12 @@ class TestApiDocsProtection:
         with patch('routes.api_docs._api_docs_public', return_value=False):
             with patch('routes.api_docs.current_user', MagicMock(is_authenticated=False)):
                 with app.app_context():
-                    with pytest.raises(NotFound):
-                        client.get('/api-docs/openapi.json')
+                    try:
+                        resp = client.get('/api-docs/openapi.json')
+                    except NotFound:
+                        pass
+                    else:
+                        assert resp.status_code == 404
 
     def test_protected_allows_authenticated_user(self, app, client):
         with patch('routes.api_docs._api_docs_public', return_value=False):

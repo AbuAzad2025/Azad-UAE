@@ -10,13 +10,17 @@ class TestCorsOrigins:
     """_socketio_cors_origins — production vs dev."""
 
     def test_production_uses_cors_origins_config(self, app):
-        app.config['DEBUG'] = False
-        app.config['APP_ENV'] = 'production'
-        app.config['CORS_ORIGINS'] = ['https://app.example.com/']
-        from services.websocket_service import _socketio_cors_origins
+        original = {k: app.config.get(k) for k in ('DEBUG', 'APP_ENV', 'CORS_ORIGINS')}
+        try:
+            app.config['DEBUG'] = False
+            app.config['APP_ENV'] = 'production'
+            app.config['CORS_ORIGINS'] = ['https://app.example.com/']
+            from services.websocket_service import _socketio_cors_origins
 
-        origins = _socketio_cors_origins(app)
-        assert origins == ['https://app.example.com']
+            origins = _socketio_cors_origins(app)
+            assert origins == ['https://app.example.com']
+        finally:
+            app.config.update(original)
 
     def test_dev_includes_localhost(self, app):
         app.config['DEBUG'] = True

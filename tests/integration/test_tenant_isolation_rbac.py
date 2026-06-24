@@ -214,5 +214,9 @@ class TestRoleHierarchy:
         with client:
             client.post('/auth/login', data={'username': user.username, 'password': 'x'},
                         follow_redirects=True)
-            with pytest.raises(NotFound):
-                client.get('/owner/dashboard')
+            try:
+                resp = client.get('/owner/dashboard')
+            except NotFound:
+                pass
+            else:
+                assert resp.status_code == 404
