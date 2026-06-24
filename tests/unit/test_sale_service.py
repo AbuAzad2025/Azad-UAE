@@ -316,12 +316,13 @@ class TestSaleServiceCreate:
                                                 line_instance.product_id = 1
                                                 line_instance.calculate_line_total = MagicMock()
                                                 mock_line.return_value = line_instance
-                                                with patch('models.product_serial.ProductSerial') as mock_sn:
+                                                with patch('models.ProductSerial') as mock_sn:
                                                     sn_obj = MagicMock()
                                                     sn_obj.status = 'available'
                                                     sn_obj.warehouse_id = 1
                                                     mock_sn.query.filter_by.return_value.first.return_value = sn_obj
-                                                    with patch('services.sale_service.current_app'):
+                                                    with patch('services.sale_service.current_app') as mock_app:
+                                                        mock_app.logger = MagicMock()
                                                         result = SaleService.create_sale(customer, seller, lines)
                                                         assert result is not None
 

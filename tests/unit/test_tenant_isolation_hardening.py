@@ -39,8 +39,18 @@ class TestTenantIsolationHardening:
         data.update(overrides)
         tenant2 = Tenant(**data)
         db_session.add(tenant2)
-        db_session.flush()
+        db_session.commit()
+        db_session.refresh(tenant2)
         return tenant2
+
+    def _ensure_tenant_active(self, db_session, tenant):
+        """Persist active/switchable tenant state visible to db.session.get in tenanting."""
+        row = db_session.get(Tenant, tenant.id)
+        row.is_active = True
+        row.is_suspended = False
+        db_session.commit()
+        db_session.refresh(row)
+        return row
 
     def _create_test_user(self, db_session, tenant_id, branch_id=None, is_owner=False):
         """Create a test user for testing"""
@@ -89,7 +99,9 @@ class TestTenantIsolationHardening:
         owner = self._create_test_user(db_session, sample_tenant.id, is_owner=True)
 
         # Create a second tenant
-        tenant2 = self._create_second_tenant(db_session)
+        tenant2 = self._ensure_tenant_active(
+            db_session, self._create_second_tenant(db_session)
+        )
 
         # Platform owner should be able to set tenant2
         set_active_tenant(tenant2.id, user=owner)
@@ -131,7 +143,9 @@ class TestTenantIsolationHardening:
         owner = self._create_test_user(db_session, sample_tenant.id, is_owner=True)
 
         # Create a second tenant
-        tenant2 = self._create_second_tenant(db_session)
+        tenant2 = self._ensure_tenant_active(
+            db_session, self._create_second_tenant(db_session)
+        )
 
         # Platform owner should be able to set tenant2
         set_active_tenant(tenant2.id, user=owner)
