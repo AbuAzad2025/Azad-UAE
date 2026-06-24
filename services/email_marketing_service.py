@@ -1,13 +1,21 @@
+"""Email marketing lists, templates, campaigns, and delivery."""
+from __future__ import annotations
+
 from datetime import datetime, timezone
-from decimal import Decimal
+
 from extensions import db
-from models import EmailList, EmailSubscriber, EmailTemplate, EmailCampaign, CampaignLog, Customer
-from utils.tenanting import get_active_tenant_id
+from models import (
+    CampaignLog,
+    EmailCampaign,
+    EmailList,
+    EmailSubscriber,
+    EmailTemplate,
+)
 from utils.auth_helpers import is_global_owner_user
+from utils.tenanting import get_active_tenant_id
 
 
 class EmailMarketingService:
-
     @staticmethod
     def _tid(user):
         return get_active_tenant_id(user)
@@ -86,7 +94,9 @@ class EmailMarketingService:
             query = query.filter_by(list_id=int(list_id))
         if tenant_id:
             from models.email_marketing import EmailList
-            query = query.join(EmailList, EmailSubscriber.list_id == EmailList.id).filter(EmailList.tenant_id == int(tenant_id))
+            query = query.join(
+                EmailList, EmailSubscriber.list_id == EmailList.id,
+            ).filter(EmailList.tenant_id == int(tenant_id))
         subs = query.all()
         now = datetime.now(timezone.utc)
         for sub in subs:
@@ -169,7 +179,7 @@ class EmailMarketingService:
         if not campaign.template_id:
             raise ValueError('الحملة لا تحتوي على قالب بريد إلكتروني.')
         subscribers = EmailSubscriber.query.filter_by(
-            list_id=campaign.list_id, status='subscribed'
+            list_id=campaign.list_id, status='subscribed',
         ).all()
         if not subscribers:
             raise ValueError('لا يوجد مشتركون نشطون في القائمة.')
