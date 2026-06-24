@@ -23,10 +23,17 @@ os.environ.setdefault("CELERY_RESULT_BACKEND", "memory://")
 os.environ.setdefault("RATELIMIT_STORAGE_URI", "memory://")
 os.environ.setdefault("SKIP_SYSTEM_INTEGRITY", "1")
 
+from unittest.mock import MagicMock, AsyncMock
+
+# Global Python 3.14 Introspection Safeguard
+if not hasattr(MagicMock, '__name__'):
+    MagicMock.__name__ = "MagicMock"
+if not hasattr(AsyncMock, '__name__'):
+    AsyncMock.__name__ = "AsyncMock"
+
 from app import create_app  # noqa: E402
 from extensions import db  # noqa: E402
 from services.logging_core import LoggingCore  # noqa: E402
-from unittest.mock import MagicMock  # noqa: E402
 
 
 def make_sync_logger_mock(name="logger"):
