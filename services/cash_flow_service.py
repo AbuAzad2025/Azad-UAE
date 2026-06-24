@@ -63,7 +63,7 @@ class CashFlowService:
             financing['net_cash_from_financing']
         )
         
-        cash_ending = cash_beginning + net_cash_flow
+        cash_ending = float(cash_beginning) + net_cash_flow
         
         return {
             'period_start': period_start,

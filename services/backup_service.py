@@ -561,7 +561,6 @@ class BackupService:
 
     @classmethod
     def sanitize_filename(cls, filename: str) -> Optional[str]:
-        """Public wrapper for path traversal-safe backup names."""
         return cls._safe_filename(filename)
 
     @classmethod
@@ -1292,45 +1291,6 @@ This archive does NOT include secrets, .env, or AI runtime memory.
         )
 
     @classmethod
-    def get_list_backups_context(cls, user) -> Dict[str, Any]:
-        from models.tenant import Tenant
-        from models.branch import Branch
-        from models.tenant_store import TenantStore
-
-        is_owner = is_global_owner_user(user)
-        if is_owner:
-            backups = cls.list_backups()
-            tenants = Tenant.query.filter_by(is_active=True).order_by(Tenant.name).all()
-            branches = Branch.query.filter_by(is_active=True).order_by(Branch.name).all()
-            stores = TenantStore.query.order_by(TenantStore.store_slug).all()
-        else:
-            backups = cls.list_backups_for_user(user)
-            tenants = []
-            active_tid = get_active_tenant_id(user)
-            if active_tid:
-                branches = Branch.query.filter_by(
-                    tenant_id=active_tid, is_active=True
-                ).order_by(Branch.name).all()
-                stores = TenantStore.query.filter_by(tenant_id=active_tid).all()
-            else:
-                branches = []
-                stores = []
-
-        return {
-            'backups': backups,
-            'stats': cls.get_backup_stats(),
-            'schedule_settings': cls.get_schedule_settings(),
-            'schedule_state': cls.get_schedule_state(),
-            'backup_dir': cls.BACKUP_DIR,
-            'pg_tools': cls.pg_tools_status(),
-            'tenants': tenants,
-            'branches': branches,
-            'stores': stores,
-            'is_platform_owner': is_owner,
-            'now': datetime.now()
-        }
-
-    @classmethod
     def get_backup_info(cls, filename: str) -> Optional[Dict[str, Any]]:
         path = cls._backup_path(filename)
         if not path or not os.path.exists(path):
@@ -1865,7 +1825,6 @@ This archive does NOT include secrets, .env, or AI runtime memory.
 
     @classmethod
     def restore_backup(cls, backup_filename: str) -> bool:
-        """Deprecated: refuses in-place restore on current DATABASE_URL."""
         logger.warning(
             "restore_backup(%s) blocked — use restore_backup_to_target_db with a new database",
             backup_filename,
@@ -1893,7 +1852,3 @@ This archive does NOT include secrets, .env, or AI runtime memory.
         except Exception as e:
             logger.error("Failed to delete backup %s: %s", backup_filename, e)
             return False
-
-    @classmethod
-    def _calculate_checksum(cls, file_path: str) -> str:
-        return cls._sha256_file(file_path)
