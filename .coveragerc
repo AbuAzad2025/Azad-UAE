@@ -1,4 +1,8 @@
 [run]
+# Application Python inventory (packages + root modules):
+#   app/  models/  routes/  services/  ai_knowledge/  utils/  forms/
+#   bootstrap/  ai_training/  app.py  config.py  cli_commands.py  extensions.py
+# Excluded via omit: static/AdminLTE, tests, migrations, scripts/, tools/, venv
 source =
     app
     models
@@ -8,26 +12,27 @@ source =
     utils
     forms
     bootstrap
+    ai_training
+    config
+    cli_commands
     extensions
-omit = 
-    */migrations/*
-    */templates/*
+relative_files = true
+omit =
     */static/*
+    */node_modules/*
+    */adminlte/*
     tests/*
-    */__pycache__/*
-    config.py
-    wsgi.py
-    run.py
-    app_factory.py
     */test_*.py
     conftest.py
-    celery_worker.py
-    manage.py
-    */cli/*
-    */commands/*
-    */scripts/*
+    migrations/*
+    scripts/*
+    tools/*
+    */templates/*
     docs/*
     */fixtures/*
+    */__pycache__/*
+    .pytest_cache/*
+    tests/.pytest-temp/*
     .venv/*
     venv/*
     env/*
