@@ -1,4 +1,14 @@
 [run]
+source =
+    app
+    models
+    routes
+    services
+    ai_knowledge
+    utils
+    forms
+    bootstrap
+    extensions
 omit = 
     */migrations/*
     */templates/*

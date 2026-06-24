@@ -1166,7 +1166,7 @@ class TestCoverageGaps:
         assert AIService.get_system_guide('x') == {}
         mocker.patch('services.ai_service.search_knowledge', side_effect=RuntimeError())
         assert AIService.get_system_knowledge('x') == {}
-        mocker.patch('services.ai_service.advanced_laws.get_customs_info', side_effect=RuntimeError())
+        mocker.patch('services.ai_service.AdvancedLaws.get_customs_info', side_effect=RuntimeError())
         assert AIService.get_advanced_law_info('customs') == {}
 
     def test_neural_product_not_found(self, mocker):

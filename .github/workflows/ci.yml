@@ -59,7 +59,7 @@ jobs:
         run: |
           # Initialize database schema before running tests
           python -c "from app import create_app; from extensions import db; app = create_app(); ctx = app.app_context(); ctx.push(); db.create_all(); ctx.pop()" || true
-          pytest tests/ -v --tb=short --cov=app --cov=models --cov=routes --cov=services --cov-report=term --cov-report=xml
+          pytest tests/ -v --tb=short --cov --cov-report=term --cov-report=xml
       - name: Upload coverage to Codecov (optional)
         uses: codecov/codecov-action@v4
         with:

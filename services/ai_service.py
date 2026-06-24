@@ -20,12 +20,12 @@ from ai_knowledge.knowledge import (
     search_knowledge,
 )
 from ai_knowledge.specialized import (
-    advanced_laws,
     get_customer_service_tip,
     get_guide,
     get_system_guide as lookup_system_guide,
     get_tax_advice,
 )
+from ai_knowledge.specialized_knowledge import AdvancedLaws
 from ai_knowledge.analytics import get_market_insights
 
 logger = logging.getLogger(__name__)
@@ -1532,12 +1532,12 @@ class AIService:
     def get_advanced_law_info(law_topic):
         """معلومات قانونية متقدمة."""
         try:
-            topic = law_topic.lower()
-            if 'customs' in topic or 'جمارك' in law_topic:
-                return advanced_laws.get_customs_info('uae')
-            if 'shipping' in topic or 'شحن' in law_topic:
-                return advanced_laws.get_shipping_info('air')
-            return advanced_laws.get_tax_info('uae', law_topic)
+            topic = str(law_topic).lower()
+            if 'customs' in topic or 'جمارك' in str(law_topic):
+                return AdvancedLaws.get_customs_info('uae')
+            if 'shipping' in topic or 'شحن' in str(law_topic):
+                return AdvancedLaws.get_shipping_info('air')
+            return AdvancedLaws.get_tax_info('uae', law_topic)
         except Exception as e:
             logger.warning('get_advanced_law_info failed: %s', e)
             return {}
