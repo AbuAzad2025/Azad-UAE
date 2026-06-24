@@ -76,6 +76,13 @@ def create_app(config_class=Config):
     def load_user(user_id):
         return db.session.get(User, int(user_id))
 
+    @login_manager.unauthorized_handler
+    def _handle_unauthorized():
+        if request.path.startswith('/owner/'):
+            abort(404)
+        flash('الرجاء تسجيل الدخول للوصول لهذه الصفحة', 'warning')
+        return redirect(url_for('auth.login'))
+
     LoggingCore.setup(app)
     LoggingCore.schedule_cleanup(app, interval_hours=24)
 

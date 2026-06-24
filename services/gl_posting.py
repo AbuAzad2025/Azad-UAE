@@ -6,6 +6,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from decimal import Decimal
 
+from extensions import db
 from models.tenant import Tenant
 from services.gl_helpers import assert_period_open
 from services.gl_service import GLService
@@ -36,7 +37,7 @@ def post_or_fail(
     # Resolve currency from tenant if not explicitly provided
     if currency is None:
         try:
-            t = Tenant.query.get(tenant_id) if tenant_id else Tenant.get_current()
+            t = db.session.get(Tenant, tenant_id) if tenant_id else Tenant.get_current()
             currency = resolve_default_currency(t)
         except Exception:
             currency = get_system_default_currency()

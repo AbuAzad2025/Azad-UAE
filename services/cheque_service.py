@@ -368,7 +368,7 @@ def _create_bounce_journal_entry(cheque):
         })
         if cheque.expense_id:
             from models.expense import Expense
-            expense = Expense.query.get(cheque.expense_id)
+            expense = db.session.get(Expense,cheque.expense_id)
             credit_account = (expense.category.gl_account_code if expense and expense.category and expense.category.gl_account_code else GLService.get_account_code_for_concept(
                 'MISC_EXPENSE',
                 branch_id=cheque.branch_id,
@@ -508,7 +508,7 @@ def _create_cancel_journal_entry(cheque):
     elif cheque.cheque_type == 'outgoing':
         if cheque.expense_id:
             from models.expense import Expense
-            expense = Expense.query.get(cheque.expense_id)
+            expense = db.session.get(Expense,cheque.expense_id)
             if expense and expense.category and expense.category.gl_account_code:
                 credit_account = expense.category.gl_account_code
                 credit_concept = None

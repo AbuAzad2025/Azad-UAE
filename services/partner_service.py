@@ -240,7 +240,7 @@ class PartnerService:
     def approve_distribution(dist_id: int, approved_by: int, tenant_id: Optional[int] = None) -> bool:
         from models import PartnerProfitDistribution, PartnerTransaction, Partner
 
-        dist = PartnerProfitDistribution.query.get(dist_id)
+        dist = db.session.get(PartnerProfitDistribution,dist_id)
         if not dist or dist.status != 'draft':
             return False
         if tenant_id is not None and dist.tenant_id != tenant_id:
@@ -263,7 +263,7 @@ class PartnerService:
                 notes=f'توزيع فترة {dist.period_start} – {dist.period_end}',
             )
             db.session.add(tx)
-            partner = Partner.query.get(dist.partner_id)
+            partner = db.session.get(Partner,dist.partner_id)
             if partner:
                 old_bal = Decimal(str(partner.current_balance or 0))
                 new_bal = old_bal + Decimal(str(tx.amount))
@@ -289,7 +289,7 @@ class PartnerService:
         from services.gl_posting import post_or_fail
         from utils.gl_reference_types import GLRef
 
-        dist = PartnerProfitDistribution.query.get(dist_id)
+        dist = db.session.get(PartnerProfitDistribution,dist_id)
         if not dist or dist.status != 'approved':
             return False
         if tenant_id is not None and dist.tenant_id != tenant_id:
@@ -341,7 +341,7 @@ class PartnerService:
 
         if not currency:
             currency = get_system_default_currency()
-        partner = Partner.query.get(partner_id)
+        partner = db.session.get(Partner,partner_id)
         if not partner:
             return None
         if tenant_id is not None and partner.tenant_id != tenant_id:
@@ -411,7 +411,7 @@ class PartnerService:
         """Full statement for a partner in a date range."""
         from models import Partner, PartnerTransaction
 
-        partner = Partner.query.get(partner_id)
+        partner = db.session.get(Partner,partner_id)
         if not partner:
             return {}
 

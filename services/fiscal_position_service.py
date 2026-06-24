@@ -15,13 +15,13 @@ class FiscalPositionService:
         Return the fiscal position applicable for a customer.
         Checks explicit assignment first, then auto-matching rules.
         """
-        customer = Customer.query.get(customer_id)
+        customer = db.session.get(Customer,customer_id)
         if not customer:
             return None
 
         # Explicit assignment
         if hasattr(customer, 'fiscal_position_id') and customer.fiscal_position_id:
-            return FiscalPosition.query.get(customer.fiscal_position_id)
+            return db.session.get(FiscalPosition,customer.fiscal_position_id)
 
         # Auto-match by country
         tenant_id = customer.tenant_id
@@ -93,10 +93,10 @@ class FiscalPositionService:
             if rule and rule.destination_tax:
                 tax_rate = Decimal(str(rule.destination_tax.rate or 0))
             else:
-                tax = TaxCalculationRule.query.get(source_tax_id)
+                tax = db.session.get(TaxCalculationRule,source_tax_id)
                 tax_rate = Decimal(str(tax.rate if tax else 0))
         else:
-            tax = TaxCalculationRule.query.get(source_tax_id) if source_tax_id else None
+            tax = db.session.get(TaxCalculationRule,source_tax_id) if source_tax_id else None
             tax_rate = Decimal(str(tax.rate if tax else 0))
 
         net = Decimal(str(line.unit_price or 0)) * Decimal(str(line.quantity or 1))

@@ -76,7 +76,7 @@ class GLTreeBuilder:
         industry_tree = []
         try:
             from models.tenant import Tenant
-            tenant = Tenant.query.get(tenant_id)
+            tenant = db.session.get(Tenant, tenant_id)
             if tenant and tenant.business_type:
                 industry_tree = _get_industry_tree(tenant.business_type)
         except Exception:
@@ -234,7 +234,7 @@ class GLTreeBuilder:
     def _resolve_tenant_currency(tenant_id):
         """Resolve default currency using utility helper for consistent priority."""
         from models.tenant import Tenant
-        tenant = Tenant.query.get(int(tenant_id))
+        tenant = db.session.get(Tenant, int(tenant_id))
         return resolve_default_currency(tenant)
 
     @staticmethod

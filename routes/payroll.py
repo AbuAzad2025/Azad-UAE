@@ -69,7 +69,7 @@ def advances():
             scoped_branch_id = branch_scope_id()
             employee_id = int(request.form.get('employee_id'))
             # التحقق من نطاق الفرع
-            employee = Employee.query.get(employee_id)
+            employee = db.session.get(Employee, employee_id)
             if not employee:
                 raise ValueError('الموظف غير موجود.')
             if scoped_branch_id is not None and employee.branch_id != scoped_branch_id:
@@ -121,7 +121,7 @@ def process_payroll():
             try:
                 employee_id = int(request.form.get('employee_id'))
                 # التحقق من نطاق الفرع للموظف
-                employee = Employee.query.get(employee_id)
+                employee = db.session.get(Employee, employee_id)
                 if not employee:
                     raise ValueError('الموظف غير موجود.')
                 if scoped_branch_id is not None and employee.branch_id != scoped_branch_id:

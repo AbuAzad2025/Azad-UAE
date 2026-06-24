@@ -204,7 +204,7 @@ class GLService:
             # Validate branch_id belongs to tenant_id when branch_id is supplied
             if branch_id is not None:
                 from models import Branch
-                branch = Branch.query.get(branch_id)
+                branch = db.session.get(Branch, branch_id)
                 if branch is None:
                     raise GLMappingError(
                         tenant_id=tenant_id,
@@ -370,7 +370,7 @@ class GLService:
 
         # Validate tenant/branch isolation at journal-entry boundary
         if branch_id is not None:
-            branch = Branch.query.get(branch_id)
+            branch = db.session.get(Branch, branch_id)
             if branch is None:
                 raise GLMappingError(
                     tenant_id=tenant_id,
@@ -392,7 +392,7 @@ class GLService:
         # Resolve currency from tenant if not provided
         if currency is None:
             try:
-                tenant = Tenant.query.get(tenant_id)
+                tenant = db.session.get(Tenant, tenant_id)
                 currency = resolve_tenant_base_currency(tenant)
             except Exception:
                 currency = resolve_tenant_base_currency(tenant_id=tenant_id)
@@ -403,7 +403,7 @@ class GLService:
         for line in lines:
             line_branch_id = line.get('branch_id')
             if line_branch_id is not None:
-                line_branch = Branch.query.get(line_branch_id)
+                line_branch = db.session.get(Branch, line_branch_id)
                 if line_branch is None:
                     raise GLMappingError(
                         tenant_id=tenant_id,
@@ -749,7 +749,7 @@ class GLService:
         if not branch_id:
             if created_by:
                 from models import User
-                user = User.query.get(created_by)
+                user = db.session.get(User, created_by)
                 if user:
                     branch_id = user.branch_id
             elif hasattr(current_user, 'is_authenticated') and current_user.is_authenticated:
@@ -793,7 +793,7 @@ class GLService:
     def get_account_balance_for_branch(account_id, branch_id=None):
         """رصيد حساب محدد مع عزل اختياري للفرع (عند اللزوم). branch_id=None = كل الفروع."""
         from sqlalchemy import func
-        account = GLAccount.query.get(account_id)
+        account = db.session.get(GLAccount, account_id)
         if not account:
             return None
         q = db.session.query(func.sum(GLJournalLine.amount_aed)).filter(

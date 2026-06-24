@@ -2,6 +2,7 @@
 مرجع مركزي موحد للصلاحيات وترتيب الأدوار.
 يُستورد من routes/users.py و routes/owner.py بدل تكرار _role_level و _current_user_level.
 """
+from extensions import db
 from utils.constants import ROLE_LEVELS
 
 
@@ -75,7 +76,7 @@ def enforce_company_user_tenant(user, *, role=None, is_owner=None):
     if branch_id:
         from models import Branch
 
-        branch = Branch.query.get(int(branch_id))
+        branch = db.session.get(Branch, int(branch_id))
         if branch and getattr(branch, 'tenant_id', None):
             user.tenant_id = int(branch.tenant_id)
             return user

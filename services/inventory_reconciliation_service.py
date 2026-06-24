@@ -186,8 +186,8 @@ class InventoryReconciliationService:
         total_movement_qty = Decimal("0")
 
         for pwc in pwc_records:
-            product = Product.query.get(pwc.product_id)
-            warehouse = Warehouse.query.get(pwc.warehouse_id)
+            product = db.session.get(Product,pwc.product_id)
+            warehouse = db.session.get(Warehouse,pwc.warehouse_id)
 
             movement_qty = cls._movement_net_qty(
                 pwc.tenant_id,

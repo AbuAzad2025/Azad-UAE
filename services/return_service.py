@@ -71,7 +71,7 @@ class ReturnService:
     @staticmethod
     def create_return(sale_id, return_lines_data, user=None, user_id=None, notes=None, manual_refund_amount=None):
         try:
-            sale = Sale.query.get(sale_id)
+            sale = db.session.get(Sale, sale_id)
             if not sale:
                 raise ValueError(f'Sale with ID {sale_id} not found.')
 
@@ -130,7 +130,7 @@ class ReturnService:
                 if quantity <= 0:
                     continue
 
-                sale_line = SaleLine.query.get(sale_line_id)
+                sale_line = db.session.get(SaleLine, sale_line_id)
                 if not sale_line:
                     raise ValueError(f'Sale line {sale_line_id} not found.')
 
@@ -140,7 +140,7 @@ class ReturnService:
                 if int(sale_line.tenant_id) != int(tenant_id):
                     raise ValueError('Sale line is outside tenant scope.')
 
-                product = sale_line.product or Product.query.get(sale_line.product_id)
+                product = sale_line.product or db.session.get(Product, sale_line.product_id)
                 if not product:
                     raise ValueError('Returned product was not found.')
 

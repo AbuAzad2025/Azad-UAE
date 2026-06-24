@@ -301,7 +301,7 @@ def login():
 
         if effective_tenant_id is not None:
             from models.tenant import Tenant
-            tenant = Tenant.query.get(effective_tenant_id)
+            tenant = db.session.get(Tenant, effective_tenant_id)
             if not tenant or not tenant.is_active or getattr(tenant, "is_suspended", False):
                 LoggingCore.log_security(
                     event_type="login_inactive_tenant",

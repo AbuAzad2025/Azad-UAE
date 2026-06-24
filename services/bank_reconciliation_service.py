@@ -406,7 +406,7 @@ class BankReconciliationService:
         from decimal import Decimal as _D
         from sqlalchemy import and_
 
-        stmt = BankStatementLine.query.get(stmt_line_id)
+        stmt = db.session.get(BankStatementLine,stmt_line_id)
         if not stmt or stmt.status not in ('imported', 'suggested_match'):
             return None
 
@@ -538,8 +538,8 @@ class BankReconciliationService:
             raise ValueError('لا يمكن تعديل مطابقة معتمدة')
 
         for m in matches:
-            stmt = BankStatementLine.query.get(m['statement_line_id'])
-            gl = GLJournalLine.query.get(m['journal_line_id'])
+            stmt = db.session.get(BankStatementLine,m['statement_line_id'])
+            gl = db.session.get(GLJournalLine,m['journal_line_id'])
             if not stmt or not gl:
                 continue
 

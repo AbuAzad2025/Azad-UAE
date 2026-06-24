@@ -4,6 +4,7 @@ Phase 8: Treasury & Cash Position Reporting
 """
 
 from datetime import datetime, timezone
+from extensions import db
 from flask import Blueprint, render_template, request, send_file
 from flask_login import login_required, current_user
 from utils.decorators import permission_required, report_branch_scope_id
@@ -120,7 +121,7 @@ def wps_export():
 
     tenant_id = get_active_tenant_id(current_user)
     from models import Tenant
-    tenant = Tenant.query.get(tenant_id) if tenant_id else None
+    tenant = db.session.get(Tenant, tenant_id) if tenant_id else None
     country = (getattr(tenant, 'vat_country', None) or 'AE').strip().upper()
     strategy = get_strategy(country)
 

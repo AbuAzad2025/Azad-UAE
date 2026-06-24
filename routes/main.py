@@ -214,7 +214,7 @@ def my_profile():
     from models.user import User
 
     user = current_user
-    tenant = Tenant.query.get(user.tenant_id) if user.tenant_id else None
+    tenant = db.session.get(Tenant, user.tenant_id) if user.tenant_id else None
 
     # Personal stats
     today = datetime.now(timezone.utc).date()

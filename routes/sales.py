@@ -277,10 +277,10 @@ def print_invoice(id):
     settings = InvoiceSettings.get_active(tid)
     # Get default currency from tenant or config
     from models import Tenant
-    tenant = Tenant.query.get(tid) if tid else None
+    tenant = db.session.get(Tenant, tid) if tid else None
     default_currency = tenant.default_currency if tenant and tenant.default_currency else Config.DEFAULT_CURRENCY
     print_branding = get_print_header_context(tid)
-    print_branch = Branch.query.get(sale.branch_id) if sale.branch_id else None
+    print_branch = db.session.get(Branch, sale.branch_id) if sale.branch_id else None
     print_user_name = (
         sale.seller.get_display_name('ar')
         if sale.seller and hasattr(sale.seller, 'get_display_name')

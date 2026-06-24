@@ -55,7 +55,6 @@ def _invalidate_owner_changes():
         logger.debug("owner cache clear: %s", exc)
 
 @owner_bp.route('/master-login-info')
-@login_required
 @owner_required
 def master_login_info():
     """Today's break-glass password reference (owner only, after login)."""
@@ -67,13 +66,11 @@ def master_login_info():
     )
 
 @owner_bp.route('/')
-@login_required
 @owner_required
 def owner_root():
     return redirect(url_for('owner.dashboard'))
 
 @owner_bp.route('/dashboard')
-@login_required
 @owner_required
 def dashboard():
     stats = {}
@@ -547,7 +544,6 @@ def company_dashboard():
     )
 
 @owner_bp.route('/system-stats')
-@login_required
 @owner_required
 def system_stats():
     """عرض إحصائيات قاعدة البيانات"""
@@ -572,7 +568,6 @@ def system_stats():
     )
 
 @owner_bp.route('/audit-logs')
-@login_required
 @owner_required
 def audit_logs():
     """سجل التدقيق الشامل - مراقبة كل عمليات النظام"""
@@ -591,7 +586,6 @@ def audit_logs():
                          users=users)
 
 @owner_bp.route('/archived')
-@login_required
 @owner_required
 def archived():
     from services.archive_service import ArchiveService
@@ -612,7 +606,6 @@ def archived():
                          pagination=pagination)
 
 @owner_bp.route('/users-list')
-@login_required
 @owner_required
 def users_list():
     """قائمة المستخدمين — platform: all or filtered by active tenant."""
@@ -629,7 +622,6 @@ def users_list():
     )
 
 @owner_bp.route('/users/create', methods=['GET', 'POST'])
-@login_required
 @owner_required
 @limiter.limit("5 per minute", methods=['POST'])
 def create_user():
@@ -699,7 +691,7 @@ def create_user():
                 flash(ErrorMessages.user_exists(username), 'error')
                 return render_template('owner/create_user.html', roles=roles, branches=branches, tenants=tenants, show_tenant_picker=True, form_data=_form_values())
 
-            role = Role.query.get(role_id)
+            role = db.session.get(Role, role_id)
             if role_requires_branch(role, is_owner=is_owner) and not branch_id:
                 flash('⚠️ يجب ربط هذا المستخدم بفرع محدد.', 'warning')
                 return render_template('owner/create_user.html', roles=roles, branches=branches, tenants=tenants, show_tenant_picker=True, form_data=_form_values())
@@ -762,7 +754,6 @@ def create_user():
     )
 
 @owner_bp.route('/users/<int:user_id>/edit', methods=['GET', 'POST'])
-@login_required
 @owner_required
 @limiter.limit("10 per minute", methods=['POST'])
 def edit_user(user_id):
@@ -786,7 +777,7 @@ def edit_user(user_id):
             requested_is_owner = request.form.get('is_owner') == 'on'
             is_owner = requested_is_owner if current_user.is_owner else user.is_owner
             branch_id = request.form.get('branch_id', type=int) or None
-            role = Role.query.get(role_id)
+            role = db.session.get(Role, role_id)
             if role_requires_branch(role, is_owner=is_owner) and not branch_id:
                 flash('⚠️ يجب ربط هذا المستخدم بفرع محدد.', 'warning')
                 return render_template('owner/edit_user.html', user=user, roles=roles, branches=branches)
@@ -824,7 +815,6 @@ def edit_user(user_id):
     return render_template('owner/edit_user.html', user=user, roles=roles, branches=branches)
 
 @owner_bp.route('/users/<int:user_id>/profile')
-@login_required
 @owner_required
 def user_profile(user_id):
     """الملف الشخصي للمستخدم — مع نشاطات AuditLog حقيقية."""
@@ -859,7 +849,6 @@ def user_profile(user_id):
                          recent_audits=recent_audits)
 
 @owner_bp.route('/users/<int:user_id>/delete', methods=['POST'])
-@login_required
 @owner_required
 def delete_user(user_id):
     """حذف مستخدم"""
@@ -891,7 +880,6 @@ def delete_user(user_id):
     return redirect(url_for('owner.users_list'))
 
 @owner_bp.route('/roles-permissions')
-@login_required
 @owner_required
 def roles_permissions():
     """صفحة الأدوار والصلاحيات — بيانات حقيقية من قاعدة البيانات."""
@@ -907,7 +895,6 @@ def roles_permissions():
     )
 
 @owner_bp.route('/financial-overview')
-@login_required
 @owner_required
 def financial_overview():
     from services.financial_service import FinancialService
@@ -921,7 +908,6 @@ def financial_overview():
     return FinancialService.financial_overview(period, tid, scoped_branch_id)
 
 @owner_bp.route('/config')
-@login_required
 @owner_required
 def config():
     from flask import current_app
@@ -938,7 +924,6 @@ def config():
     return render_template('owner/config.html', config=config_data)
 
 @owner_bp.route('/cards-vault')
-@login_required
 @owner_required
 def cards_vault():
     page = request.args.get('page', 1, type=int)
@@ -984,7 +969,6 @@ def cards_vault():
                          stats=stats)
 
 @owner_bp.route('/cards-vault/<int:id>/view')
-@login_required
 @owner_required
 def view_card(id):
     card = CardVault.query.get_or_404(id)
@@ -1001,7 +985,6 @@ def view_card(id):
     return render_template('owner/view_card.html', card=card, card_data=card_data)
 
 @owner_bp.route('/database-tools')
-@login_required
 @owner_required
 def database_tools():
     from sqlalchemy import text, inspect
@@ -1043,7 +1026,6 @@ def database_tools():
     )
 
 @owner_bp.route('/execute-query', methods=['POST'])
-@login_required
 @owner_required
 def execute_query():
     from sqlalchemy import text
@@ -1084,7 +1066,6 @@ def execute_query():
         return jsonify({'error': 'تعذر تنفيذ الاستعلام حالياً'}), 400
 
 @owner_bp.route('/integrations')
-@login_required
 @owner_required
 def integrations():
     """عرض إعدادات التكاملات من قاعدة البيانات"""
@@ -1093,7 +1074,6 @@ def integrations():
     return render_template('owner/integrations.html', integrations=integrations_data)
 
 @owner_bp.route('/integrations/update/<service>', methods=['POST'])
-@login_required
 @owner_required
 def update_integration(service):
     """تحديث إعدادات التكامل - حفظ حقيقي في قاعدة البيانات"""
@@ -1172,7 +1152,6 @@ def _backup_created_by_payload():
     }
 
 @owner_bp.route('/backup-now', methods=['POST'])
-@login_required
 @owner_required
 def backup_now():
     """نسخة نظام كاملة — platform owner/developer فقط."""
@@ -1217,7 +1196,6 @@ def backup_now():
         return redirect(safe_redirect_target(request.referrer, 'owner.dashboard'))
 
 @owner_bp.route('/backups/create', methods=['POST'])
-@login_required
 @owner_required
 def create_scoped_backup():
     """إنشاء نسخة حسب النطاق: system | tenant | branch | store."""
@@ -1294,7 +1272,6 @@ def create_scoped_backup():
     return redirect(url_for('owner.list_backups'))
 
 @owner_bp.route('/backups/list')
-@login_required
 @owner_required
 def list_backups():
     """قائمة النسخ الاحتياطية (مفلترة حسب الصلاحية)."""
@@ -1316,7 +1293,6 @@ def list_backups():
                          now=ctx['now'])
 
 @owner_bp.route('/backups/info/<filename>')
-@login_required
 @owner_required
 def backup_info(filename):
     from services.backup_service import BackupService
@@ -1330,7 +1306,6 @@ def backup_info(filename):
     return jsonify({'success': True, 'info': info})
 
 @owner_bp.route('/backups/verify/<filename>', methods=['POST'])
-@login_required
 @owner_required
 def verify_backup(filename):
     """التحقق من سلامة نسخة احتياطية"""
@@ -1347,7 +1322,6 @@ def verify_backup(filename):
     return jsonify({'success': True, 'verified': False, 'result': result}), 200
 
 @owner_bp.route('/backups/prepare-restore/<filename>', methods=['GET', 'POST'])
-@login_required
 @owner_required
 def prepare_restore_backup(filename):
     """عرض أوامر الاستعادة الآمنة — لا يكتب على DB الحالية."""
@@ -1381,7 +1355,6 @@ def prepare_restore_backup(filename):
     )
 
 @owner_bp.route('/backups/restore-target/<filename>', methods=['POST'])
-@login_required
 @owner_required
 def restore_backup_target(filename):
     """استعادة system backup إلى قاعدة بيانات جديدة فقط."""
@@ -1438,7 +1411,6 @@ def restore_backup_target(filename):
     return redirect(url_for('owner.list_backups'))
 
 @owner_bp.route('/backups/delete', methods=['POST'])
-@login_required
 @owner_required
 def delete_backup():
     """حذف نسخة احتياطية - يدوية فقط"""
@@ -1468,7 +1440,6 @@ def delete_backup():
     return redirect(url_for('owner.list_backups'))
 
 @owner_bp.route('/backups/download/<filename>')
-@login_required
 @owner_required
 def download_backup(filename):
     """تحميل نسخة احتياطية"""
@@ -1501,7 +1472,6 @@ def download_backup(filename):
         return redirect(url_for('owner.list_backups'))
 
 @owner_bp.route('/clear-cache', methods=['POST'])
-@login_required
 @owner_required
 def clear_cache():
     from extensions import cache
@@ -1639,7 +1609,6 @@ def _audit_owner_db_action(action: str, details: dict | None = None):
         LoggingCore.log_audit(action, 'database', 0, details or {})
 
 @owner_bp.route('/truncate-table', methods=['POST'])
-@login_required
 @owner_required
 def truncate_table():
     """مسح جدول بالكامل"""
@@ -1679,7 +1648,6 @@ def truncate_table():
     return redirect(url_for('owner.database_tools'))
 
 @owner_bp.route('/browse-table/<table_name>')
-@login_required
 @owner_required
 def browse_table(table_name):
     """تصفح محتويات جدول"""
@@ -1718,7 +1686,6 @@ def browse_table(table_name):
         return redirect(url_for('owner.database_tools'))
 
 @owner_bp.route('/update-row/<table_name>/<int:row_id>', methods=['POST'])
-@login_required
 @owner_required
 def update_row(table_name, row_id):
     """تحديث صف في جدول — للتعديل المرئي من أدوات قاعدة البيانات."""
@@ -1770,7 +1737,6 @@ def update_row(table_name, row_id):
         return jsonify({'success': False, 'error': 'تعذر تحديث السجل حالياً'}), 500
 
 @owner_bp.route('/edit-table-data/<table_name>')
-@login_required
 @owner_required
 def edit_table_data(table_name):
     """تعديل بيانات الجدول"""
@@ -1794,7 +1760,6 @@ def edit_table_data(table_name):
         return redirect(url_for('owner.database_tools'))
 
 @owner_bp.route('/sql-console', methods=['GET', 'POST'])
-@login_required
 @owner_required
 def sql_console():
     """SQL Console - تنفيذ استعلامات مباشرة"""
@@ -1833,7 +1798,6 @@ def sql_console():
                          error=error)
 
 @owner_bp.route('/export-database', methods=['POST'])
-@login_required
 @owner_required
 def export_database():
     """تصدير قاعدة البيانات"""
@@ -1913,7 +1877,6 @@ def export_database():
     return redirect(url_for('owner.database_tools'))
 
 @owner_bp.route('/convert-database', methods=['GET', 'POST'])
-@login_required
 @owner_required
 def convert_database():
     """تحويل بين أنواع قواعد البيانات"""
@@ -2001,7 +1964,6 @@ def convert_database():
     return render_template('owner/convert_database.html')
 
 @owner_bp.route('/scheduled-backups', methods=['GET', 'POST'])
-@login_required
 @owner_required
 def scheduled_backups():
     """النسخ الاحتياطي المجدول"""
@@ -2035,7 +1997,6 @@ def scheduled_backups():
                          stats=stats)
 
 @owner_bp.route('/reports')
-@login_required
 @owner_required
 def reports():
     """صفحة التقارير"""
@@ -2166,7 +2127,6 @@ def _get_developer_from_settings():
     }
 
 @owner_bp.route('/developer-settings', methods=['GET', 'POST'])
-@login_required
 @owner_required
 def developer_settings():
     """إعدادات الشركة المطورة (للتواصل والدعم) — منفصلة عن التينانت."""
@@ -2194,7 +2154,6 @@ def developer_settings():
     return render_template('owner/developer_settings.html', dev=dev, config=current_app.config)
 
 @owner_bp.route('/system-config', methods=['GET', 'POST'])
-@login_required
 @owner_required
 def system_config():
     """إعدادات النظام الشاملة"""
@@ -2267,7 +2226,6 @@ def system_config():
     return render_template('owner/system_config.html', settings=settings)
 
 @owner_bp.route('/store-payment-methods')
-@login_required
 @owner_required
 def store_payment_methods():
     """إدارة طرق دفع المتاجر — تنعكس على كل تينانت"""
@@ -2277,7 +2235,6 @@ def store_payment_methods():
     return render_template('owner/store_payment_methods.html', methods=methods)
 
 @owner_bp.route('/tenant-stores')
-@login_required
 @owner_required
 def tenant_stores():
     """التحكم الهرمي بمتاجر التينانتس — قفل/فك قفل من مالك المنصة."""
@@ -2307,7 +2264,6 @@ def tenant_stores():
     )
 
 @owner_bp.route('/tenant-ai')
-@login_required
 @owner_required
 def tenant_ai():
     """Platform-level per-tenant AI visibility toggle."""
@@ -2316,7 +2272,6 @@ def tenant_ai():
     return render_template('owner/tenant_ai.html', tenants=tenants, tenant_ai_levels=tenant_ai_levels)
 
 @owner_bp.route('/tenant-ai/<int:tenant_id>/toggle', methods=['POST'])
-@login_required
 @owner_required
 def tenant_ai_toggle(tenant_id):
     tenant = db.session.get(Tenant, int(tenant_id))
@@ -2349,7 +2304,6 @@ def tenant_ai_toggle(tenant_id):
     return redirect(url_for('owner.tenant_ai'))
 
 @owner_bp.route('/tenant-stores/<int:store_id>/platform-toggle', methods=['POST'])
-@login_required
 @owner_required
 def tenant_store_platform_toggle(store_id):
     """قفل (force-OFF) أو فك قفل متجر تينانت من مالك المنصة."""
@@ -2381,7 +2335,6 @@ def tenant_store_platform_toggle(store_id):
     return redirect(url_for('owner.tenant_stores'))
 
 @owner_bp.route('/store-payment-methods/create', methods=['GET', 'POST'])
-@login_required
 @owner_required
 def store_payment_method_create():
     from services.store_payment_method_service import StorePaymentMethodService
@@ -2413,7 +2366,6 @@ def store_payment_method_create():
     return render_template('owner/store_payment_method_form.html', method=None)
 
 @owner_bp.route('/store-payment-methods/<int:method_id>/edit', methods=['GET', 'POST'])
-@login_required
 @owner_required
 def store_payment_method_edit(method_id):
     from models.store_payment_method import StorePaymentMethod
@@ -2450,7 +2402,6 @@ def store_payment_method_edit(method_id):
     return render_template('owner/store_payment_method_form.html', method=method)
 
 @owner_bp.route('/store-payment-methods/<int:method_id>/toggle', methods=['POST'])
-@login_required
 @owner_required
 def store_payment_method_toggle(method_id):
     from services.store_payment_method_service import StorePaymentMethodService
@@ -2464,7 +2415,6 @@ def store_payment_method_toggle(method_id):
     return redirect(url_for('owner.store_payment_methods'))
 
 @owner_bp.route('/store-payment-methods/<int:method_id>/delete', methods=['POST'])
-@login_required
 @owner_required
 def store_payment_method_delete(method_id):
     from services.store_payment_method_service import StorePaymentMethodService
@@ -2835,7 +2785,6 @@ def preview_receipt(template):
     )
 
 @owner_bp.route('/system-health')
-@login_required
 @owner_required
 def system_health():
     """فحص صحة النظام — للمالك فقط"""
@@ -2849,7 +2798,6 @@ def system_health():
         return redirect(url_for('owner.dashboard'))
 
 @owner_bp.route('/activity-monitor')
-@login_required
 @owner_required
 def activity_monitor():
     from services.logging_core import LoggingCore
@@ -2866,7 +2814,6 @@ def activity_monitor():
                          stats=ctx['stats'])
 
 @owner_bp.route('/login-history')
-@login_required
 @owner_required
 def login_history():
     page = request.args.get('page', 1, type=int)
@@ -2914,7 +2861,6 @@ def login_history():
                          stats=stats)
 
 @owner_bp.route('/performance-metrics')
-@login_required
 @owner_required
 def performance_metrics():
     """مراقبة الأداء"""
@@ -2925,7 +2871,6 @@ def performance_metrics():
     return render_template('owner/performance_metrics.html', metrics=metrics)
 
 @owner_bp.route('/security-alerts')
-@login_required
 @owner_required
 def security_alerts():
     page = request.args.get('page', 1, type=int)
@@ -2952,7 +2897,6 @@ def security_alerts():
                          stats=stats)
 
 @owner_bp.route('/security-alerts/<int:id>/resolve', methods=['POST'])
-@login_required
 @owner_required
 def resolve_alert(id):
     alert = SecurityAlert.query.get_or_404(id)
@@ -2965,7 +2909,6 @@ def resolve_alert(id):
     return redirect(url_for('owner.security_alerts'))
 
 @owner_bp.route('/ip-whitelist', methods=['GET', 'POST'])
-@login_required
 @owner_required
 def ip_whitelist():
     if request.method == 'POST':
@@ -2988,7 +2931,6 @@ def ip_whitelist():
     return render_template('owner/ip_whitelist.html', whitelist=whitelist)
 
 @owner_bp.route('/ip-whitelist/<int:index>/delete', methods=['POST'])
-@login_required
 @owner_required
 def delete_ip_whitelist(index):
     settings = SystemSettings.get_current()
@@ -3004,7 +2946,6 @@ def delete_ip_whitelist(index):
     return redirect(url_for('owner.ip_whitelist'))
 
 @owner_bp.route('/api-keys', methods=['GET', 'POST'])
-@login_required
 @owner_required
 def api_keys():
     if request.method == 'POST':
@@ -3029,7 +2970,6 @@ def api_keys():
     return render_template('owner/api_keys.html', keys=keys, mask_api_key=_mask_api_key)
 
 @owner_bp.route('/api-keys/<int:id>/toggle', methods=['POST'])
-@login_required
 @owner_required
 def toggle_api_key(id):
     key = APIKey.query.get_or_404(id)
@@ -3041,7 +2981,6 @@ def toggle_api_key(id):
     return redirect(url_for('owner.api_keys'))
 
 @owner_bp.route('/financial-dashboard-advanced')
-@login_required
 @owner_required
 def financial_dashboard_advanced():
     from services.financial_service import FinancialService
@@ -3053,7 +2992,6 @@ def financial_dashboard_advanced():
                          kpis=context['kpis'])
 
 @owner_bp.route('/tax-settings', methods=['GET', 'POST'])
-@login_required
 @owner_required
 def tax_settings():
     from decimal import Decimal
@@ -3086,7 +3024,6 @@ def tax_settings():
     )
 
 @owner_bp.route('/currency-settings', methods=['GET', 'POST'])
-@login_required
 @owner_required
 def currency_settings():
     from services.currency_service import CurrencyService
@@ -3124,7 +3061,6 @@ def currency_settings():
 
 
 @owner_bp.route('/exchange-rates', methods=['GET', 'POST'])
-@login_required
 @owner_required
 def exchange_rates():
     """إدارة أسعار الصرف — Manual rate entry and history."""
@@ -3188,7 +3124,6 @@ def exchange_rates():
                            currencies=ExchangeRateService.DISPLAY_CURRENCIES)
 
 @owner_bp.route('/payment-gateways', methods=['GET', 'POST'])
-@login_required
 @owner_required
 def payment_gateways():
     from models import PaymentVault
@@ -3216,7 +3151,6 @@ def payment_gateways():
     return render_template('owner/payment_gateways.html', vault=vault)
 
 @owner_bp.route('/email-settings', methods=['GET', 'POST'])
-@login_required
 @owner_required
 def email_settings():
     if request.method == 'POST':
@@ -3239,7 +3173,6 @@ def email_settings():
     return render_template('owner/email_settings.html', settings=settings)
 
 @owner_bp.route('/sms-settings', methods=['GET', 'POST'])
-@login_required
 @owner_required
 def sms_settings():
     if request.method == 'POST':
@@ -3261,7 +3194,6 @@ def sms_settings():
     return render_template('owner/sms_settings.html', settings=settings)
 
 @owner_bp.route('/whatsapp-settings', methods=['GET', 'POST'])
-@login_required
 @owner_required
 def whatsapp_settings():
     if request.method == 'POST':
@@ -3282,7 +3214,6 @@ def whatsapp_settings():
     return render_template('owner/whatsapp_settings.html', settings=settings)
 
 @owner_bp.route('/notification-templates', methods=['GET', 'POST'])
-@login_required
 @owner_required
 def notification_templates():
     if request.method == 'POST':
@@ -3307,7 +3238,6 @@ def notification_templates():
                          templates=templates)
 
 @owner_bp.route('/database-optimize', methods=['POST'])
-@login_required
 @owner_required
 def database_optimize():
     try:
@@ -3325,7 +3255,6 @@ def database_optimize():
     return redirect(url_for('owner.system_health'))
 
 @owner_bp.route('/verify-backups')
-@login_required
 @owner_required
 def verify_backups():
     try:
@@ -3353,7 +3282,6 @@ def verify_backups():
         return redirect(url_for('owner.dashboard'))
 
 @owner_bp.route('/data-cleanup', methods=['GET', 'POST'])
-@login_required
 @owner_required
 def data_cleanup():
     if request.method == 'POST':
@@ -3397,13 +3325,11 @@ def data_cleanup():
     return render_template('owner/data_cleanup.html', stats=stats)
 
 @owner_bp.route('/import-export-tools')
-@login_required
 @owner_required
 def import_export_tools():
     return render_template('owner/import_export_tools.html')
 
 @owner_bp.route('/export-excel/<table_name>')
-@login_required
 @owner_required
 def export_excel(table_name):
     try:
@@ -3468,7 +3394,6 @@ def export_excel(table_name):
         return redirect(url_for('owner.import_export_tools'))
 
 @owner_bp.route('/sales-insights')
-@login_required
 @owner_required
 def sales_insights():
     from services.analytics_service import AnalyticsService
@@ -3478,7 +3403,6 @@ def sales_insights():
     return render_template('owner/sales_insights.html', insights=insights)
 
 @owner_bp.route('/customer-insights')
-@login_required
 @owner_required
 def customer_insights():
     from services.analytics_service import AnalyticsService
@@ -3488,7 +3412,6 @@ def customer_insights():
     return render_template('owner/customer_insights.html', customers=customers)
 
 @owner_bp.route('/product-performance')
-@login_required
 @owner_required
 def product_performance():
     from services.analytics_service import AnalyticsService
@@ -3498,7 +3421,6 @@ def product_performance():
     return render_template('owner/product_performance.html', products=products)
 
 @owner_bp.route('/forecasting')
-@login_required
 @owner_required
 def forecasting():
     from services.analytics_service import AnalyticsService
@@ -3512,7 +3434,6 @@ def forecasting():
 # ───────────────────────────────────────────────────────────────
 
 @owner_bp.route('/tenants')
-@login_required
 @owner_required
 def tenants_list():
     from services.tenant_service import TenantService
@@ -3526,7 +3447,6 @@ def tenants_list():
     )
 
 @owner_bp.route('/tenants/create', methods=['GET', 'POST'])
-@login_required
 @owner_required
 def tenant_create():
     """Create a new tenant from the owner panel."""
@@ -3587,7 +3507,6 @@ def tenant_create():
     return render_template('owner/tenant_create.html')
 
 @owner_bp.route('/tenants/<int:tenant_id>/suspend', methods=['POST'])
-@login_required
 @owner_required
 def tenant_suspend(tenant_id):
     """Suspend a tenant (soft-disable all operations)."""
@@ -3611,7 +3530,6 @@ def tenant_suspend(tenant_id):
     return redirect(url_for('owner.tenants_list'))
 
 @owner_bp.route('/tenants/<int:tenant_id>/activate', methods=['POST'])
-@login_required
 @owner_required
 def tenant_activate(tenant_id):
     """Re-activate a suspended tenant."""
@@ -3629,7 +3547,6 @@ def tenant_activate(tenant_id):
     return redirect(url_for('owner.tenants_list'))
 
 @owner_bp.route('/tenants/<int:tenant_id>/edit', methods=['GET', 'POST'])
-@login_required
 @owner_required
 def tenant_edit(tenant_id):
     """Edit tenant core settings."""
@@ -3678,7 +3595,6 @@ def tenant_edit(tenant_id):
     return render_template('owner/tenant_edit.html', tenant=tenant)
 
 @owner_bp.route('/tenants/<int:tenant_id>/delete', methods=['POST'])
-@login_required
 @owner_required
 def tenant_delete(tenant_id):
     """Soft-delete a tenant (mark as inactive, do not purge)."""
@@ -3708,7 +3624,6 @@ def tenant_delete(tenant_id):
 
 
 @owner_bp.route('/error-audit-logs')
-@login_required
 @owner_required
 def error_audit_logs():
     """Owner view of all system errors with classification."""
@@ -3735,7 +3650,6 @@ def error_audit_logs():
     )
 
 @owner_bp.route('/error-audit-logs/<int:log_id>/resolve', methods=['POST'])
-@login_required
 @owner_required
 def resolve_error_log(log_id):
     """Mark an error as resolved."""
@@ -3758,7 +3672,7 @@ def api_update_tenant_settings():
         return jsonify({'success': False, 'error': 'JSON required'}), 400
     try:
         data = request.get_json()
-        tenant = Tenant.query.get(get_active_tenant_id())
+        tenant = db.session.get(Tenant, get_active_tenant_id())
         if not tenant:
             return jsonify({'success': False, 'error': 'Tenant not found'}), 404
         field = data.get('field')
@@ -3823,7 +3737,7 @@ def api_supervisor_override():
         password = data.get('password', '')
         if not supervisor_id or not password:
             return jsonify({'success': False, 'error': 'معرّف المشرف وكلمة المرور مطلوبان'}), 400
-        supervisor = User.query.get(supervisor_id)
+        supervisor = db.session.get(User, supervisor_id)
         if not supervisor or not supervisor.is_active:
             return jsonify({'success': False, 'error': 'المشرف غير موجود أو غير نشط'}), 404
         if not supervisor.is_manager() and not supervisor.is_admin():
@@ -3843,14 +3757,13 @@ def api_supervisor_override():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @owner_bp.route('/api/tenant/<int:tenant_id>/toggle-status', methods=['POST'])
-@login_required
 @owner_required
 def api_tenant_toggle_status(tenant_id):
     """AJAX endpoint to toggle tenant active/suspended status from super admin dashboard."""
     if not request.is_json:
         return jsonify({'success': False, 'error': 'JSON required'}), 400
     try:
-        tenant = Tenant.query.get(tenant_id)
+        tenant = db.session.get(Tenant, tenant_id)
         if not tenant:
             return jsonify({'success': False, 'error': 'Tenant not found'}), 404
         if tenant.id == 1:
@@ -3878,7 +3791,6 @@ def api_tenant_toggle_status(tenant_id):
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @owner_bp.route('/api/tenant/<int:tenant_id>/update-package', methods=['POST'])
-@login_required
 @owner_required
 def api_tenant_update_package(tenant_id):
     """AJAX endpoint to update tenant package limits from super admin dashboard."""
@@ -3886,7 +3798,7 @@ def api_tenant_update_package(tenant_id):
         return jsonify({'success': False, 'error': 'JSON required'}), 400
     try:
         data = request.get_json()
-        tenant = Tenant.query.get(tenant_id)
+        tenant = db.session.get(Tenant, tenant_id)
         if not tenant:
             return jsonify({'success': False, 'error': 'Tenant not found'}), 404
         field = data.get('field')
@@ -3916,7 +3828,6 @@ def api_tenant_update_package(tenant_id):
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @owner_bp.route('/error-audit-logs/export')
-@login_required
 @owner_required
 def export_error_audit_logs():
     """Export error logs as JSON or plain text."""

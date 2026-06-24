@@ -29,7 +29,7 @@ def _active_tenant():
         from models import Tenant
         tid = get_active_tenant_id(current_user)
         if tid:
-            return Tenant.query.get(int(tid))
+            return db.session.get(Tenant, int(tid))
     except Exception:
         pass
     return None

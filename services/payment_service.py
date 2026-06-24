@@ -411,7 +411,7 @@ class PaymentService:
                     if remaining_amount_aed <= 0:
                         break
 
-                    sale = Sale.query.get(sale_id)
+                    sale = db.session.get(Sale, sale_id)
 
                     if not sale or sale.customer_id != customer.id:
                         continue

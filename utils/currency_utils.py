@@ -1,5 +1,6 @@
 from config import Config
 from decimal import Decimal
+from extensions import db
 
 
 def get_system_default_currency() -> str:
@@ -17,7 +18,7 @@ def context_aware_default_currency() -> str:
                 tenant_id = getattr(current_user, 'tenant_id', None)
                 if tenant_id:
                     from models.tenant import Tenant
-                    tenant = Tenant.query.get(tenant_id)
+                    tenant = db.session.get(Tenant, tenant_id)
                     if tenant and getattr(tenant, 'default_currency', None):
                         val = tenant.default_currency.strip()
                         if val:
@@ -53,7 +54,7 @@ def get_tenant_base_currency(tenant_id: int | None = None) -> str:
     if tenant_id is not None:
         try:
             from models.tenant import Tenant
-            tenant = Tenant.query.get(int(tenant_id))
+            tenant = db.session.get(Tenant, int(tenant_id))
             if tenant:
                 base = getattr(tenant, 'base_currency', None)
                 if base:

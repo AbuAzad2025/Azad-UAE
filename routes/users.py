@@ -37,13 +37,13 @@ def _clean_branch_id(raw_value):
 
 def _username_example():
     tid = get_active_tenant_id(current_user)
-    tenant = Tenant.query.get(int(tid)) if tid else None
+    tenant = db.session.get(Tenant, int(tid)) if tid else None
     prefix = tenant_username_prefix(tenant) if tenant else 'CODE'
     return f'{prefix}_ahmad'
 
 
 def _validate_user_branch(role_id, branch_id):
-    role = Role.query.get(role_id) if role_id else None
+    role = db.session.get(Role, role_id) if role_id else None
     if not role:
         raise ValueError('⚠️ يرجى اختيار الدور الوظيفي.')
 
@@ -154,7 +154,7 @@ def create():
                 )
 
             tid = get_active_tenant_id(current_user)
-            tenant = Tenant.query.get(int(tid)) if tid else None
+            tenant = db.session.get(Tenant, int(tid)) if tid else None
             uname_err = validate_username_for_user(username, is_owner=False, tenant=tenant)
             if uname_err:
                 prefix = tenant_username_prefix(tenant) if tenant else 'CODE'

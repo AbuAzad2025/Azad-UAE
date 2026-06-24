@@ -291,7 +291,7 @@ class Receipt(db.Model):
         """معلومات المصدر"""
         if self.source_type == 'sale' and self.source_id:
             from models import Sale
-            sale = Sale.query.get(self.source_id)
+            sale = db.session.get(Sale,self.source_id)
             if sale:
                 return {
                     'type': 'فاتورة بيع',

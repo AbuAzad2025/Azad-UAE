@@ -889,7 +889,7 @@ class SaleService:
             if pmt.cheque_id:
                 from services.cheque_service import process_cheque_cancel
                 from models import Cheque
-                cheque = Cheque.query.get(pmt.cheque_id)
+                cheque = db.session.get(Cheque,pmt.cheque_id)
                 if cheque and cheque.status not in ['cancelled', 'bounced']:
                     process_cheque_cancel(cheque, reason=f'إلغاء فاتورة {sale.sale_number}')
             pmt.reject_payment(f'إلغاء فاتورة {sale.sale_number}')

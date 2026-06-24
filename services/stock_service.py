@@ -72,13 +72,13 @@ class StockService:
         from services.gl_posting import post_or_fail
         from services.gl_service import GLService
 
-        product = Product.query.get(movement.product_id)
+        product = db.session.get(Product,movement.product_id)
         if not product or not product.cost_price:
             return
         cost_value = abs(Decimal(str(movement.quantity))) * Decimal(str(product.cost_price))
         if cost_value <= 0:
             return
-        warehouse = Warehouse.query.get(movement.warehouse_id) if getattr(movement, 'warehouse_id', None) else None
+        warehouse = db.session.get(Warehouse, movement.warehouse_id) if getattr(movement, 'warehouse_id', None) else None
         tenant_id = getattr(movement, 'tenant_id', None) or getattr(product, 'tenant_id', None)
         loss_account = _resolve_gl_concept_account('INVENTORY_ADJUSTMENT_LOSS', '5150', tenant_id)
         asset_account = _resolve_gl_concept_account('INVENTORY_ASSET', '1140', tenant_id)
@@ -137,8 +137,8 @@ class StockService:
         from services.gl_posting import post_or_fail
         from services.gl_service import GLService
         from models import Product, Warehouse
-        product = Product.query.get(product_id)
-        warehouse = Warehouse.query.get(warehouse_id) if warehouse_id else None
+        product = db.session.get(Product,product_id)
+        warehouse = db.session.get(Warehouse, warehouse_id) if warehouse_id else None
         if product and product.cost_price:
             cost_value = Decimal(str(quantity)) * Decimal(str(product.cost_price))
             if cost_value > 0:
@@ -166,7 +166,7 @@ class StockService:
         movement_type = validate_stock_movement_type(movement_type)
         qty = Decimal(str(quantity))
         try:
-            product = Product.query.get(product_id)
+            product = db.session.get(Product,product_id)
 
             if not product:
                 raise ValueError(f'⚠️ المنتج غير موجود (ID: {product_id}).\n💡 تأكد من اختيار منتج صحيح من القائمة.')
@@ -275,7 +275,7 @@ class StockService:
         if qty <= 0:
             raise ValueError('الكمية يجب أن تكون أكبر من صفر.')
 
-        product = Product.query.get(product_id)
+        product = db.session.get(Product,product_id)
         if not product:
             raise ValueError('المنتج غير موجود.')
         tenant_id = getattr(product, 'tenant_id', None)
@@ -403,7 +403,7 @@ class StockService:
         total_cogs = Decimal('0')
 
         # Determine if negative inventory is allowed for this warehouse
-        warehouse = Warehouse.query.get(warehouse_id) if warehouse_id else None
+        warehouse = db.session.get(Warehouse, warehouse_id) if warehouse_id else None
         allow_negative = getattr(warehouse, 'allow_negative_inventory', False) if warehouse else False
 
         for line in sale.lines:
@@ -548,7 +548,7 @@ class StockService:
                 warehouse_id=warehouse_id
             )
 
-            product = Product.query.get(line.product_id)
+            product = db.session.get(Product,line.product_id)
             if not product:
                 continue
             processed_product_ids.add(product.id)
@@ -576,7 +576,7 @@ class StockService:
         # Recalculate global product.cost_price as weighted average across all warehouses
         # to prevent a single warehouse receipt from corrupting the global cost
         for pid in processed_product_ids:
-            product = Product.query.get(pid)
+            product = db.session.get(Product,pid)
             if not product:
                 continue
             pwc_list = ProductWarehouseCost.query.filter_by(
@@ -619,8 +619,8 @@ class StockService:
         if abs(variance) <= Decimal('0.001'):
             return Decimal('0')
 
-        product = Product.query.get(product_id)
-        warehouse = Warehouse.query.get(warehouse_id) if warehouse_id else None
+        product = db.session.get(Product,product_id)
+        warehouse = db.session.get(Warehouse, warehouse_id) if warehouse_id else None
         branch_id = warehouse.branch_id if warehouse else None
         product_name = product.name if product else f'Product #{product_id}'
 
@@ -899,7 +899,7 @@ class StockService:
 
     @staticmethod
     def check_availability(product_id, quantity):
-        product = Product.query.get(product_id)
+        product = db.session.get(Product,product_id)
 
         if not product:
             return False, 'المنتج غير موجود'
@@ -914,7 +914,7 @@ class StockService:
 
     @staticmethod
     def check_availability_in_warehouse(product_id, quantity, warehouse_id):
-        product = Product.query.get(product_id)
+        product = db.session.get(Product,product_id)
 
         if not product:
             return False, 'المنتج غير موجود'
@@ -1060,7 +1060,7 @@ class StockService:
 
         for (pid, wid), move_qty in mov_map.items():
             if (pid, wid) not in existing_keys:
-                warehouse = Warehouse.query.get(wid)
+                warehouse = db.session.get(Warehouse, wid)
                 if warehouse:
                     tid = warehouse.tenant_id if tenant_id is None else tenant_id
                     pws = ProductWarehouseStock(

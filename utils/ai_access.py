@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from flask_login import current_user
 
+from extensions import db
 from models.system_settings import SystemSettings
 from models.tenant import Tenant
 from utils.auth_helpers import is_global_owner_user
@@ -71,7 +72,7 @@ def get_ai_access_state(user=None) -> dict:
         state["reason"] = "missing_tenant"
         return state
 
-    tenant = Tenant.query.get(int(tenant_id))
+    tenant = db.session.get(Tenant, int(tenant_id))
     if not tenant or not getattr(tenant, "is_active", False):
         state["tenant_enabled"] = False
         state["reason"] = "tenant_inactive"

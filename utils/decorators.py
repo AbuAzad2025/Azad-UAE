@@ -1,5 +1,5 @@
 from functools import wraps
-from flask import abort, flash, redirect, url_for
+from flask import abort, flash, redirect, url_for, request
 from flask_login import current_user
 
 from utils.branching import branch_scope_id_for, report_branch_scope_id_for
@@ -62,6 +62,8 @@ def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if not current_user.is_authenticated:
+            if request.path.startswith('/owner/'):
+                abort(404)
             flash('الرجاء تسجيل الدخول أولاً', 'warning')
             return redirect(url_for('auth.login'))
         
@@ -77,6 +79,8 @@ def seller_or_above(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if not current_user.is_authenticated:
+            if request.path.startswith('/owner/'):
+                abort(404)
             flash('الرجاء تسجيل الدخول أولاً', 'warning')
             return redirect(url_for('auth.login'))
 
@@ -127,6 +131,8 @@ def company_admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if not current_user.is_authenticated:
+            if request.path.startswith('/owner/'):
+                abort(404)
             flash('الرجاء تسجيل الدخول أولاً', 'warning')
             return redirect(url_for('auth.login'))
 
@@ -150,6 +156,8 @@ def owner_or_company_admin(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if not current_user.is_authenticated:
+            if request.path.startswith('/owner/'):
+                abort(404)
             flash('الرجاء تسجيل الدخول أولاً', 'warning')
             return redirect(url_for('auth.login'))
 

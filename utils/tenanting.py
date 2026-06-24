@@ -198,7 +198,7 @@ def set_active_tenant(tenant_id, user=None):
             raise ValueError("Normal users can only set their own tenant_id")
 
     # Validate tenant exists and is active
-    tenant = Tenant.query.get(tenant_id)
+    tenant = db.session.get(Tenant, tenant_id)
     if not tenant:
         raise ValueError("Tenant not found")
 

@@ -1064,7 +1064,7 @@ def api_create_purchase():
         company_name = sanitize(data.get('company_name', ''), 100)
         
         # التحقق من وجود الباقة
-        package = Package.query.get(data['package_id'])
+        package = db.session.get(Package,data['package_id'])
         if not package or not package.is_active:
             return jsonify({'success': False, 'error': 'الباقة غير متاحة'}), 404
         

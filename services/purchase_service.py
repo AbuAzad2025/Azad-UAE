@@ -152,7 +152,7 @@ class PurchaseService:
             discount_percent = Decimal(str(line_data.get('discount_percent') or 0))
 
             if product_id and quantity > 0 and unit_cost >= 0:
-                product = Product.query.get(product_id)
+                product = db.session.get(Product, product_id)
                 if product:
                     line = PurchaseLine(
                         tenant_id=tenant_id,

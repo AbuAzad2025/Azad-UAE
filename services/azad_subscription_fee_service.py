@@ -124,7 +124,7 @@ class AzadSubscriptionFeeService:
         tenant_id: int | None = None,
     ) -> AzadSubscriptionFee:
         """Record tenant payment for a subscription fee (accrued -> paid)."""
-        fee = AzadSubscriptionFee.query.get(fee_id)
+        fee = db.session.get(AzadSubscriptionFee,fee_id)
         if not fee:
             raise ValueError(f'Subscription fee {fee_id} not found')
         if fee.status != 'accrued':
@@ -187,7 +187,7 @@ class AzadSubscriptionFeeService:
     @classmethod
     def waive_fee(cls, fee_id: int, *, notes: str | None = None, tenant_id: int | None = None) -> AzadSubscriptionFee:
         """Waive / cancel a subscription fee and reverse its GL entry."""
-        fee = AzadSubscriptionFee.query.get(fee_id)
+        fee = db.session.get(AzadSubscriptionFee,fee_id)
         if not fee:
             raise ValueError(f'Subscription fee {fee_id} not found')
         if fee.status == 'cancelled':

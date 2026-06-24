@@ -35,7 +35,7 @@ class GLProvisioningService:
     @staticmethod
     def provision_tenant(tenant_id: int, force: bool = False) -> ProvisionResult:
         result = ProvisionResult(tenant_id=tenant_id)
-        tenant = Tenant.query.get(tenant_id)
+        tenant = db.session.get(Tenant, tenant_id)
         if not tenant:
             result.errors.append(f"Tenant {tenant_id} not found")
             return result
@@ -181,7 +181,7 @@ class GLProvisioningService:
                 result.created_mappings += 1
     @staticmethod
     def get_missing_accounts(tenant_id: int) -> list:
-        tenant = Tenant.query.get(tenant_id)
+        tenant = db.session.get(Tenant, tenant_id)
         if not tenant:
             return []
         existing = {
@@ -200,7 +200,7 @@ class GLProvisioningService:
         return missing
     @staticmethod
     def get_missing_mappings(tenant_id: int) -> list:
-        tenant = Tenant.query.get(tenant_id)
+        tenant = db.session.get(Tenant, tenant_id)
         if not tenant:
             return []
         existing = {
@@ -229,7 +229,7 @@ class GLProvisioningService:
             'missing_mappings': [],
             'errors': [],
         }
-        tenant = Tenant.query.get(tenant_id)
+        tenant = db.session.get(Tenant, tenant_id)
         if not tenant:
             result['errors'].append('Tenant not found')
             return result
