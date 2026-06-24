@@ -3,6 +3,17 @@ from decimal import Decimal
 from unittest.mock import MagicMock, patch, PropertyMock
 
 
+def make_sync_logger_mock(name="logger"):
+    """Synchronous logger MagicMock with __name__ for Python 3.14 introspection."""
+    logger_mock = MagicMock(name=name)
+    logger_mock.__name__ = name
+    for method_name in ("debug", "info", "warning", "error", "exception", "critical"):
+        method_mock = MagicMock(name=f"{name}.{method_name}")
+        method_mock.__name__ = method_name
+        setattr(logger_mock, method_name, method_mock)
+    return logger_mock
+
+
 class TestSaleServiceValidations:
     def test_create_sale_rejects_inactive_customer(self, app):
         from services.sale_service import SaleService
@@ -322,7 +333,8 @@ class TestSaleServiceCreate:
                                                     sn_obj.warehouse_id = 1
                                                     mock_sn.query.filter_by.return_value.first.return_value = sn_obj
                                                     with patch('services.sale_service.current_app') as mock_app:
-                                                        mock_app.logger = MagicMock()
+                                                        mock_app.__name__ = "current_app"
+                                                        mock_app.logger = make_sync_logger_mock("logger")
                                                         result = SaleService.create_sale(customer, seller, lines)
                                                         assert result is not None
 

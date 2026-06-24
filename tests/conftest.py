@@ -26,6 +26,26 @@ os.environ.setdefault("SKIP_SYSTEM_INTEGRITY", "1")
 from app import create_app  # noqa: E402
 from extensions import db  # noqa: E402
 from services.logging_core import LoggingCore  # noqa: E402
+from unittest.mock import MagicMock  # noqa: E402
+
+
+def make_sync_logger_mock(name="logger"):
+    """Synchronous logger MagicMock with __name__ for Python 3.14 introspection."""
+    logger_mock = MagicMock(name=name)
+    logger_mock.__name__ = name
+    for method_name in ("debug", "info", "warning", "error", "exception", "critical"):
+        method_mock = MagicMock(name=f"{name}.{method_name}")
+        method_mock.__name__ = method_name
+        setattr(logger_mock, method_name, method_mock)
+    return logger_mock
+
+
+def make_sync_current_app_mock(name="current_app"):
+    """Patch-safe current_app stand-in with a named synchronous logger."""
+    mock_app = MagicMock(name=name)
+    mock_app.__name__ = name
+    mock_app.logger = make_sync_logger_mock("logger")
+    return mock_app
 
 
 class TestConfig:
@@ -141,9 +161,17 @@ def auto_cleanup_isolation(app):
         with app.test_request_context():
             session.clear()
 
+    def _restore_app_logger():
+        import logging
+        with app.app_context():
+            logger = getattr(app, "logger", None)
+            if isinstance(logger, MagicMock):
+                app.logger = logging.getLogger(app.import_name)
+
     yield
     _scrub_db()
     _scrub_flask_session()
+    _restore_app_logger()
 
 
 @pytest.fixture(autouse=True)
