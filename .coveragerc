@@ -1,21 +1,6 @@
 [run]
-# Application Python inventory (packages + root modules):
-#   app/  models/  routes/  services/  ai_knowledge/  utils/  forms/
-#   bootstrap/  ai_training/  app.py  config.py  cli_commands.py  extensions.py
-# Excluded via omit: static/AdminLTE, tests, migrations, scripts/, tools/, venv
-source =
-    app
-    models
-    routes
-    services
-    ai_knowledge
-    utils
-    forms
-    bootstrap
-    ai_training
-    config
-    cli_commands
-    extensions
+# All application Python under repo root; omit dev/static/test paths below.
+source = .
 relative_files = true
 omit =
     */static/*
@@ -41,6 +26,8 @@ omit =
     *.egg-info/*
 
 [report]
+# Included: app/, models/, routes/, services/, ai_knowledge/, utils/, forms/,
+# bootstrap/, ai_training/, app.py, config.py, cli_commands.py, extensions.py
 exclude_lines =
     pragma: no cover
     def __repr__
