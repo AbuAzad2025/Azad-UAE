@@ -22,6 +22,7 @@ class TestApiUpdateTenantSettings:
 
     def test_unknown_field_returns_400(self, company_admin_client, mock_db, model_patch):
         model_patch("routes.owner.Tenant")
+        mock_db.get.return_value = MagicMock(id=1)
         resp = company_admin_client.post(
             "/owner/api/update-tenant-settings",
             json={"field": "bogus", "value": "x"},
@@ -33,6 +34,7 @@ class TestApiUpdateTenantSettings:
         self, company_admin_client, mock_db, model_patch,
     ):
         model_patch("routes.owner.Tenant")
+        mock_db.get.return_value = MagicMock(id=1)
         resp = company_admin_client.post(
             "/owner/api/update-tenant-settings",
             json={"field": "default_tax_rate", "value": "not-a-number"},
@@ -44,7 +46,7 @@ class TestApiUpdateTenantSettings:
         self, company_admin_client, mock_db, model_patch,
     ):
         Tenant = model_patch("routes.owner.Tenant")
-        Tenant.query.get.return_value = None
+        mock_db.get.return_value = None
         resp = company_admin_client.post(
             "/owner/api/update-tenant-settings",
             json={"field": "default_tax_rate", "value": "10"},
@@ -57,7 +59,7 @@ class TestApiUpdateTenantSettings:
     ):
         Tenant = model_patch("routes.owner.Tenant")
         inst = MagicMock()
-        Tenant.query.get.return_value = inst
+        mock_db.get.return_value = inst
         mocker.patch("routes.owner._invalidate_owner_changes")
         mocker.patch("routes.owner._audit_owner_db_action")
 
@@ -74,7 +76,7 @@ class TestApiUpdateTenantSettings:
     ):
         Tenant = model_patch("routes.owner.Tenant")
         inst = MagicMock()
-        Tenant.query.get.return_value = inst
+        mock_db.get.return_value = inst
         mocker.patch("routes.owner._invalidate_owner_changes")
         mocker.patch("routes.owner._audit_owner_db_action")
 
@@ -90,7 +92,7 @@ class TestApiUpdateTenantSettings:
     ):
         Tenant = model_patch("routes.owner.Tenant")
         inst = MagicMock()
-        Tenant.query.get.return_value = inst
+        mock_db.get.return_value = inst
         mocker.patch("routes.owner._invalidate_owner_changes")
         mocker.patch("routes.owner._audit_owner_db_action")
 
@@ -102,10 +104,10 @@ class TestApiUpdateTenantSettings:
         assert inst.logo_url == "https://example.com/logo.png"
 
     def test_exception_path_returns_500(
-        self, company_admin_client, mocker, model_patch,
+        self, company_admin_client, mocker, mock_db, model_patch,
     ):
         Tenant = model_patch("routes.owner.Tenant")
-        Tenant.query.get.side_effect = RuntimeError("DB exploded")
+        mock_db.get.side_effect = RuntimeError("DB exploded")
         mocker.patch("routes.owner._invalidate_owner_changes")
         mocker.patch("routes.owner._audit_owner_db_action")
 
@@ -124,6 +126,7 @@ class TestApiUpdateTenantSettings:
         self, company_admin_client, mock_db, model_patch,
     ):
         model_patch("routes.owner.Tenant")
+        mock_db.get.return_value = MagicMock(id=1)
         resp = company_admin_client.post(
             "/owner/api/update-tenant-settings",
             json={"value": "x"},
@@ -137,7 +140,7 @@ class TestApiUpdateTenantSettings:
     ):
         Tenant = model_patch("routes.owner.Tenant")
         inst = MagicMock()
-        Tenant.query.get.return_value = inst
+        mock_db.get.return_value = inst
         mocker.patch("routes.owner._invalidate_owner_changes")
         mocker.patch("routes.owner._audit_owner_db_action")
 
@@ -164,7 +167,7 @@ class TestApiTenantToggleStatus:
         self, owner_client, mock_db, model_patch,
     ):
         Tenant = model_patch("routes.owner.Tenant")
-        Tenant.query.get.return_value = None
+        mock_db.get.return_value = None
 
         resp = owner_client.post(
             "/owner/api/tenant/999/toggle-status", json={},
@@ -178,7 +181,7 @@ class TestApiTenantToggleStatus:
         Tenant = model_patch("routes.owner.Tenant")
         inst = MagicMock()
         inst.id = 1
-        Tenant.query.get.return_value = inst
+        mock_db.get.return_value = inst
 
         resp = owner_client.post(
             "/owner/api/tenant/1/toggle-status", json={},
@@ -195,7 +198,7 @@ class TestApiTenantToggleStatus:
         inst.is_active = True
         inst.name_ar = "شركة اختبار"
         inst.name = "Test Co"
-        Tenant.query.get.return_value = inst
+        mock_db.get.return_value = inst
         mocker.patch("routes.owner._invalidate_owner_changes")
         mocker.patch("routes.owner._audit_owner_db_action")
 
@@ -218,7 +221,7 @@ class TestApiTenantToggleStatus:
         inst.is_active = False
         inst.name_ar = "شركة اختبار"
         inst.name = "Test Co"
-        Tenant.query.get.return_value = inst
+        mock_db.get.return_value = inst
         mocker.patch("routes.owner._invalidate_owner_changes")
         mocker.patch("routes.owner._audit_owner_db_action")
 
@@ -233,10 +236,10 @@ class TestApiTenantToggleStatus:
         assert inst.suspension_reason is None
 
     def test_exception_path_returns_500(
-        self, owner_client, mocker, model_patch,
+        self, owner_client, mocker, mock_db, model_patch,
     ):
         Tenant = model_patch("routes.owner.Tenant")
-        Tenant.query.get.side_effect = RuntimeError("DB exploded")
+        mock_db.get.side_effect = RuntimeError("DB exploded")
         mocker.patch("routes.owner._invalidate_owner_changes")
         mocker.patch("routes.owner._audit_owner_db_action")
 
@@ -268,7 +271,7 @@ class TestApiTenantUpdatePackage:
         self, owner_client, mock_db, model_patch,
     ):
         Tenant = model_patch("routes.owner.Tenant")
-        Tenant.query.get.return_value = None
+        mock_db.get.return_value = None
 
         resp = owner_client.post(
             "/owner/api/tenant/999/update-package", json={},
@@ -280,6 +283,7 @@ class TestApiTenantUpdatePackage:
         self, owner_client, mock_db, model_patch,
     ):
         model_patch("routes.owner.Tenant")
+        mock_db.get.return_value = MagicMock(id=2)
 
         resp = owner_client.post(
             "/owner/api/tenant/2/update-package",
@@ -292,6 +296,7 @@ class TestApiTenantUpdatePackage:
         self, owner_client, mock_db, model_patch,
     ):
         model_patch("routes.owner.Tenant")
+        mock_db.get.return_value = MagicMock(id=2)
 
         resp = owner_client.post(
             "/owner/api/tenant/2/update-package",
@@ -304,6 +309,7 @@ class TestApiTenantUpdatePackage:
         self, owner_client, mock_db, model_patch,
     ):
         model_patch("routes.owner.Tenant")
+        mock_db.get.return_value = MagicMock(id=2)
 
         resp = owner_client.post(
             "/owner/api/tenant/2/update-package",
@@ -317,7 +323,7 @@ class TestApiTenantUpdatePackage:
     ):
         Tenant = model_patch("routes.owner.Tenant")
         inst = MagicMock()
-        Tenant.query.get.return_value = inst
+        mock_db.get.return_value = inst
         mocker.patch("routes.owner._invalidate_owner_changes")
         mocker.patch("routes.owner._audit_owner_db_action")
 
@@ -332,10 +338,10 @@ class TestApiTenantUpdatePackage:
             assert getattr(inst, field) == value
 
     def test_exception_path_returns_500(
-        self, owner_client, mocker, model_patch,
+        self, owner_client, mocker, mock_db, model_patch,
     ):
         Tenant = model_patch("routes.owner.Tenant")
-        Tenant.query.get.side_effect = RuntimeError("DB exploded")
+        mock_db.get.side_effect = RuntimeError("DB exploded")
         mocker.patch("routes.owner._invalidate_owner_changes")
         mocker.patch("routes.owner._audit_owner_db_action")
 

@@ -13,7 +13,7 @@ class TestCustomerBranchIsolation:
         from models import Tenant, Branch, Role, User, Customer, Sale
         from services.gl_service import GLService
 
-        tid = uuid.uuid4().hex[:4]
+        tid = uuid.uuid4().hex[:12]
         tenant = Tenant(name=f'BrT {tid}', name_ar=f'BrT {tid}', slug=f'br-{tid}', default_currency='AED', base_currency='AED')
         db_session.add(tenant); db_session.flush()
 
@@ -76,7 +76,7 @@ class TestCustomerBranchIsolation:
         from models import Tenant, Branch, Role, User, Customer, Sale
         from services.gl_service import GLService
 
-        tid = uuid.uuid4().hex[:4]
+        tid = uuid.uuid4().hex[:12]
         tenant = Tenant(name=f'BrR {tid}', name_ar=f'BrR {tid}', slug=f'brr-{tid}', default_currency='AED', base_currency='AED')
         db_session.add(tenant); db_session.flush()
 
@@ -132,7 +132,7 @@ class TestCustomerStatement:
         from models import Tenant, Branch, Role, User, Customer, Sale, Receipt, GLJournalEntry
         from services.gl_service import GLService
 
-        tid = uuid.uuid4().hex[:4]
+        tid = uuid.uuid4().hex[:12]
         tenant = Tenant(name=f'Stmt {tid}', name_ar=f'Stmt {tid}', slug=f'stmt-{tid}', default_currency='AED', base_currency='AED')
         db_session.add(tenant); db_session.flush()
 
@@ -188,7 +188,7 @@ class TestCustomerStatement:
         from services.gl_service import GLService
 
 
-        tid = uuid.uuid4().hex[:4]
+        tid = uuid.uuid4().hex[:12]
         tenant = Tenant(name=f'Stm2 {tid}', name_ar=f'Stm2 {tid}', slug=f'stm2-{tid}', default_currency='AED', base_currency='AED')
         db_session.add(tenant); db_session.flush()
 
@@ -254,7 +254,7 @@ class TestCustomerDelete:
         from models import Tenant, Branch, Role, User, Customer, Sale
         from services.gl_service import GLService
 
-        tid = uuid.uuid4().hex[:4]
+        tid = uuid.uuid4().hex[:12]
         tenant = Tenant(name=f'Del {tid}', name_ar=f'Del {tid}', slug=f'del-{tid}', default_currency='AED', base_currency='AED')
         db_session.add(tenant); db_session.flush()
 
@@ -302,7 +302,7 @@ class TestCustomerDelete:
         from models import Tenant, Branch, Role, User, Customer, Sale
         from services.gl_service import GLService
 
-        tid = uuid.uuid4().hex[:4]
+        tid = uuid.uuid4().hex[:12]
         tenant = Tenant(name=f'Del2 {tid}', name_ar=f'Del2 {tid}', slug=f'del2-{tid}', default_currency='AED', base_currency='AED')
         db_session.add(tenant); db_session.flush()
 
@@ -344,7 +344,7 @@ class TestCustomerView:
         from models import Tenant, Branch, Role, User, Customer, Sale
         from services.gl_service import GLService
 
-        tid = uuid.uuid4().hex[:4]
+        tid = uuid.uuid4().hex[:12]
         tenant = Tenant(name=f'View {tid}', name_ar=f'View {tid}', slug=f'view-{tid}', default_currency='AED', base_currency='AED')
         db_session.add(tenant); db_session.flush()
 
@@ -391,7 +391,7 @@ class TestCustomerSearch:
         from models import Tenant, Branch, Role, User, Customer, Sale
         from services.gl_service import GLService
 
-        tid = uuid.uuid4().hex[:4]
+        tid = uuid.uuid4().hex[:12]
         tenant = Tenant(name=f'Sch {tid}', name_ar=f'Sch {tid}', slug=f'sch-{tid}', default_currency='AED', base_currency='AED')
         db_session.add(tenant); db_session.flush()
 
@@ -445,7 +445,7 @@ class TestReceivablesReport:
         from models import Tenant, Branch, Role, User, Customer, Sale
         from services.gl_service import GLService
 
-        tid = uuid.uuid4().hex[:4]
+        tid = uuid.uuid4().hex[:12]
         tenant = Tenant(name=f'Recv {tid}', name_ar=f'Recv {tid}', slug=f'recv-{tid}', default_currency='AED', base_currency='AED')
         db_session.add(tenant); db_session.flush()
 
@@ -493,7 +493,7 @@ class TestReceivablesReport:
         from models import Tenant, Branch, Role, User, Customer, Sale, Payment
         from services.gl_service import GLService
 
-        tid = uuid.uuid4().hex[:4]
+        tid = uuid.uuid4().hex[:12]
         tenant = Tenant(name=f'Rec2 {tid}', name_ar=f'Rec2 {tid}', slug=f'rec2-{tid}', default_currency='AED', base_currency='AED')
         db_session.add(tenant); db_session.flush()
 
@@ -547,7 +547,7 @@ class TestReceivablesReport:
         from models import Tenant, Branch, Role, User, Customer, Sale
         from services.gl_service import GLService
 
-        tid = uuid.uuid4().hex[:4]
+        tid = uuid.uuid4().hex[:12]
         tenant = Tenant(name=f'Rec3 {tid}', name_ar=f'Rec3 {tid}', slug=f'rec3-{tid}', default_currency='AED', base_currency='AED')
         db_session.add(tenant); db_session.flush()
 
@@ -595,7 +595,7 @@ class TestCustomerApi:
         from models import Tenant, Branch, Role, User, Customer, Sale
         from services.gl_service import GLService
 
-        tid = uuid.uuid4().hex[:4]
+        tid = uuid.uuid4().hex[:12]
         tenant = Tenant(name=f'API {tid}', name_ar=f'API {tid}', slug=f'api-{tid}', default_currency='AED', base_currency='AED')
         db_session.add(tenant); db_session.flush()
 
@@ -642,7 +642,7 @@ class TestCustomerApi:
         from models import Tenant, Branch, Role, User, Customer, Sale
         from services.gl_service import GLService
 
-        tid = uuid.uuid4().hex[:4]
+        tid = uuid.uuid4().hex[:12]
         tenant = Tenant(name=f'BAL {tid}', name_ar=f'BAL {tid}', slug=f'bal-{tid}', default_currency='AED', base_currency='AED')
         db_session.add(tenant); db_session.flush()
 

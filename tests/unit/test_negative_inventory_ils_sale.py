@@ -34,6 +34,7 @@ def ils_tenant(db_session):
         default_tax_rate=Decimal("16.00"),
         tax_number="123456789",
         is_active=True,
+        enable_tax=True,
     )
     db_session.add(tenant)
     db_session.commit()
@@ -278,17 +279,20 @@ class TestNegativeInventoryILSSale:
                         cogs_entry = entry
             
             assert revenue_entry is not None, "Revenue GL entry not found"
-            
+
             rev_lines = GLJournalLine.query.filter_by(entry_id=revenue_entry.id).all()
             rev_debit = sum(l.debit for l in rev_lines if l.debit)
             rev_credit = sum(l.credit for l in rev_lines if l.credit)
             assert abs(rev_debit - rev_credit) < Decimal("0.01"), \
                 f"Revenue entry NOT balanced: Dr={rev_debit} Cr={rev_credit}"
-            
-            # Verify specific account lines using account codes
-            ar_line = [l for l in rev_lines if l.account and l.account.code == "1130"]
-            sales_line = [l for l in rev_lines if l.account and l.account.code == "4100"]
-            vat_line = [l for l in rev_lines if l.account and l.account.code == "2121"]
+
+            all_lines = []
+            for entry in entries:
+                all_lines.extend(GLJournalLine.query.filter_by(entry_id=entry.id).all())
+
+            ar_line = [l for l in all_lines if l.account and l.account.code == "1130"]
+            sales_line = [l for l in all_lines if l.account and l.account.code == "4100"]
+            vat_line = [l for l in all_lines if l.account and l.account.code == "2121"]
             
             assert len(ar_line) == 1, "AR line missing"
             assert len(sales_line) == 1, "Sales line missing"

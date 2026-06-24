@@ -122,17 +122,17 @@ class TestBuildReport:
         product.name = 'SKU-A'
         warehouse = MagicMock()
         warehouse.name = 'Main WH'
-        mocker.patch.object(
-            __import__('models', fromlist=['Product']).Product,
-            'query',
-            new_callable=mocker.PropertyMock,
-            return_value=MagicMock(get=MagicMock(return_value=product)),
-        )
-        mocker.patch.object(
-            __import__('models', fromlist=['Warehouse']).Warehouse,
-            'query',
-            new_callable=mocker.PropertyMock,
-            return_value=MagicMock(get=MagicMock(return_value=warehouse)),
+
+        def _session_get(model, pk):
+            if getattr(model, '__name__', model) == 'Product':
+                return product
+            if getattr(model, '__name__', model) == 'Warehouse':
+                return warehouse
+            return None
+
+        mocker.patch(
+            'services.inventory_reconciliation_service.db.session.get',
+            side_effect=_session_get,
         )
         mocker.patch(
             'services.inventory_reconciliation_service.InventoryReconciliationService._movement_net_qty',
@@ -162,17 +162,9 @@ class TestBuildReport:
             new_callable=mocker.PropertyMock,
             return_value=pwc_q,
         )
-        mocker.patch.object(
-            __import__('models', fromlist=['Product']).Product,
-            'query',
-            new_callable=mocker.PropertyMock,
-            return_value=MagicMock(get=MagicMock(return_value=None)),
-        )
-        mocker.patch.object(
-            __import__('models', fromlist=['Warehouse']).Warehouse,
-            'query',
-            new_callable=mocker.PropertyMock,
-            return_value=MagicMock(get=MagicMock(return_value=None)),
+        mocker.patch(
+            'services.inventory_reconciliation_service.db.session.get',
+            return_value=None,
         )
         mocker.patch(
             'services.inventory_reconciliation_service.InventoryReconciliationService._movement_net_qty',

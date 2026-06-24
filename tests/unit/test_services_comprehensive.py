@@ -267,35 +267,31 @@ class TestStockService:
 
     def test_check_availability_product_not_found(self):
         from services.stock_service import StockService
-        with patch('services.stock_service.Product.query') as mock_pq:
-            mock_pq.get.return_value = None
+        with patch('services.stock_service.db.session.get', return_value=None):
             ok, msg = StockService.check_availability(1, Decimal('5'))
             assert ok is False
             assert 'غير موجود' in msg
 
     def test_check_availability_inactive_product(self):
         from services.stock_service import StockService
-        with patch('services.stock_service.Product.query') as mock_pq:
-            p = MagicMock(is_active=False, current_stock=Decimal('10'))
-            mock_pq.get.return_value = p
+        p = MagicMock(is_active=False, current_stock=Decimal('10'))
+        with patch('services.stock_service.db.session.get', return_value=p):
             ok, msg = StockService.check_availability(1, Decimal('5'))
             assert ok is False
             assert 'غير نشط' in msg
 
     def test_check_availability_insufficient_stock(self):
         from services.stock_service import StockService
-        with patch('services.stock_service.Product.query') as mock_pq:
-            p = MagicMock(is_active=True, current_stock=Decimal('3'))
-            mock_pq.get.return_value = p
+        p = MagicMock(is_active=True, current_stock=Decimal('3'))
+        with patch('services.stock_service.db.session.get', return_value=p):
             ok, msg = StockService.check_availability(1, Decimal('5'))
             assert ok is False
             assert 'غير كافٍ' in msg
 
     def test_check_availability_sufficient(self):
         from services.stock_service import StockService
-        with patch('services.stock_service.Product.query') as mock_pq:
-            p = MagicMock(is_active=True, current_stock=Decimal('10'))
-            mock_pq.get.return_value = p
+        p = MagicMock(is_active=True, current_stock=Decimal('10'))
+        with patch('services.stock_service.db.session.get', return_value=p):
             ok, msg = StockService.check_availability(1, Decimal('5'))
             assert ok is True
             assert msg == 'متوفر'

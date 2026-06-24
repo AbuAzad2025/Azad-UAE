@@ -164,13 +164,11 @@ class TestBankAutoMatchingAndSuspenseRouting:
     """Auto-match on clean hits; route orphans to Suspense."""
 
     def _setup_match_mocks(self, mocker, stmt, gl_lines):
-        BSL = mocker.patch('services.bank_reconciliation_service.BankStatementLine')
-        BSL.query.get.return_value = stmt
+        mocker.patch('services.bank_reconciliation_service.db.session.get', return_value=stmt)
         mock_q = MagicMock()
         mock_q.return_value = mock_q
         mock_q.join.return_value.filter.return_value.all.return_value = gl_lines
         mocker.patch('services.bank_reconciliation_service.db.session.query', return_value=mock_q)
-        return BSL
 
     def test_auto_match_exact_hit(self, app, mocker):
         stmt = MagicMock()
@@ -277,8 +275,7 @@ class TestBankAutoMatchingAndSuspenseRouting:
         gl_b = MagicMock(id=11, debit=Decimal('1500'), credit=Decimal('0'))
         gl_b.entry = MagicMock(entry_date=date(2026, 2, 16))
 
-        BSL = mocker.patch('services.bank_reconciliation_service.BankStatementLine')
-        BSL.query.get.return_value = stmt
+        mocker.patch('services.bank_reconciliation_service.db.session.get', return_value=stmt)
         mock_q = MagicMock()
         mock_q.return_value = mock_q
         mock_q.join.return_value.filter.return_value.all.return_value = [gl_a, gl_b]

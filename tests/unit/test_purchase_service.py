@@ -85,7 +85,7 @@ class TestPurchaseServiceCreate:
                                 line_instance.line_total = Decimal('100')
                                 mock_line.return_value = line_instance
                                 with patch('services.purchase_service.Product') as mock_product_class:
-                                    mock_product_class.query.get.return_value = product
+                                    patch('services.purchase_service.db.session.get', return_value=product).start()
                                     with patch('services.purchase_service.post_or_fail', return_value=None):
                                         result = PurchaseService.create_purchase(
                                         user,
@@ -127,7 +127,7 @@ class TestPurchaseServiceCreate:
                                 line_instance.line_total = Decimal('100')
                                 mock_line.return_value = line_instance
                                 with patch('services.purchase_service.Product') as mock_product_class:
-                                    mock_product_class.query.get.return_value = product
+                                    patch('services.purchase_service.db.session.get', return_value=product).start()
                                     with patch('services.purchase_service.post_or_fail', return_value=None):
                                         with patch('models.product_serial.ProductSerial') as mock_sn:
                                             mock_sn.query.filter_by.return_value.first.return_value = None
@@ -225,7 +225,7 @@ class TestPurchaseServiceTenantIsolation:
                                     line_instance.line_total = 100
                                     mock_line.return_value = line_instance
                                     with patch('services.purchase_service.Product') as mock_product_class:
-                                        mock_product_class.query.get.return_value = product
+                                        patch('services.purchase_service.db.session.get', return_value=product).start()
                                         with patch('services.purchase_service.post_or_fail', return_value=None):
                                             result = PurchaseService.create_purchase(
                                                 user,
@@ -270,7 +270,7 @@ class TestPurchaseServiceTenantIsolation:
                                 line_instance.line_total = 100
                                 mock_line.return_value = line_instance
                                 with patch('services.purchase_service.Product') as mock_product_class:
-                                    mock_product_class.query.get.return_value = product
+                                    patch('services.purchase_service.db.session.get', return_value=product).start()
                                     with patch('services.purchase_service.post_or_fail', return_value=None):
                                         result = PurchaseService.create_purchase(
                                             user,
@@ -304,7 +304,7 @@ class TestPurchaseServiceTenantIsolation:
                 with patch('services.purchase_service.validate_currency_code', return_value='AED'):
                     with patch('services.purchase_service.generate_number', return_value='P-001'):
                         with patch('services.purchase_service.Product') as mock_product_class:
-                            mock_product_class.query.get.return_value = product
+                            patch('services.purchase_service.db.session.get', return_value=product).start()
                             with pytest.raises(ValueError, match='يتطلب'):
                                 PurchaseService.create_purchase(
                                     user,
@@ -345,7 +345,7 @@ class TestPurchaseServiceTenantIsolation:
                                 line_instance.line_total = Decimal('100')
                                 mock_line.return_value = line_instance
                                 with patch('services.purchase_service.Product') as mock_product_class:
-                                    mock_product_class.query.get.return_value = product
+                                    patch('services.purchase_service.db.session.get', return_value=product).start()
                                     with patch('services.purchase_service.post_or_fail', return_value=None):
                                         result = PurchaseService.create_purchase(
                                             user,

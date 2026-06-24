@@ -215,7 +215,7 @@ class TestRoleHierarchy:
             client.post('/auth/login', data={'username': user.username, 'password': 'x'},
                         follow_redirects=True)
             try:
-                resp = client.get('/owner/dashboard')
+                resp = client.get('/owner/dashboard', follow_redirects=False)
             except NotFound:
                 pass
             else:

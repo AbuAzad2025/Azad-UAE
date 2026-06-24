@@ -256,8 +256,10 @@ def mock_db(mocker):
     """Patch ``extensions.db.session`` so add/commit/rollback are no-ops."""
     from extensions import db
     mock_session = mocker.MagicMock(name="mock_db_session")
+    mock_session.get.return_value = None
     mocker.patch.object(db, "session", mock_session)
-    return mock_session
+    yield mock_session
+    mock_session.get.reset_mock(side_effect=True, return_value=True)
 
 
 # ---------------------------------------------------------------------------

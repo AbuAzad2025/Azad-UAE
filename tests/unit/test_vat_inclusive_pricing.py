@@ -24,25 +24,35 @@ from decimal import Decimal, ROUND_HALF_UP
 import pytest
 
 
+@pytest.fixture(autouse=True)
+def _vat_app_context(app):
+    with app.app_context():
+        yield
+
+
 # ──────────────────────────────────────────────────────────────
 # Fixtures
 # ──────────────────────────────────────────────────────────────
-
-@pytest.fixture
-def vat_inclusive_tenant(db_session, sample_tenant):
-    """Tenant configured with prices_include_vat=True."""
-    sample_tenant.prices_include_vat = True
-    sample_tenant.default_tax_rate = Decimal("16.00")
-    db_session.commit()
-    return sample_tenant
-
 
 @pytest.fixture
 def vat_exclusive_tenant(db_session, sample_tenant):
     """Tenant configured with prices_include_vat=False (default)."""
     sample_tenant.prices_include_vat = False
     sample_tenant.default_tax_rate = Decimal("16.00")
+    sample_tenant.enable_tax = True
     db_session.commit()
+    db_session.refresh(sample_tenant)
+    return sample_tenant
+
+
+@pytest.fixture
+def vat_inclusive_tenant(db_session, sample_tenant):
+    """Tenant configured with prices_include_vat=True."""
+    sample_tenant.prices_include_vat = True
+    sample_tenant.default_tax_rate = Decimal("16.00")
+    sample_tenant.enable_tax = True
+    db_session.commit()
+    db_session.refresh(sample_tenant)
     return sample_tenant
 
 

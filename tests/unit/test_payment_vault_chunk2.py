@@ -314,7 +314,7 @@ class TestPurchaseEndpointIdempotency:
         self.mock_pkg.price = 50
         self.mock_pkg.name_ar = "Basic"
         self.mock_pkg.slug = "basic"
-        mock_pkg_cls.query.get.return_value = self.mock_pkg
+        mocker.patch('routes.payment_vault.db.session.get', return_value=self.mock_pkg)
         mocker.patch("routes.payment_vault.LoggingCore.log_audit")
         mocker.patch("routes.payment_vault.Donation.query.filter_by", return_value=MagicMock(first=MagicMock(return_value=None)))
 

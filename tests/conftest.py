@@ -44,7 +44,7 @@ class TestConfig:
     CELERY_BROKER_URL = "memory://"
     CELERY_RESULT_BACKEND = "memory://"
     RATELIMIT_STORAGE_URI = "memory://"
-    RATELIMIT_DEFAULT = "10000 per day;1000 per hour"
+    RATELIMIT_DEFAULT = None
     MAIL_USERNAME = None
     MAIL_PASSWORD = None
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024
@@ -110,6 +110,60 @@ def app():
 
 
 @pytest.fixture(autouse=True)
+def auto_cleanup_isolation(app):
+    """Force a clean DB + Flask session slate after every test."""
+    from unittest.mock import MagicMock
+    from flask import session
+
+    def _scrub_db():
+        with app.app_context():
+            if isinstance(db.session, MagicMock):
+                ext = app.extensions['sqlalchemy']
+                object.__setattr__(
+                    db,
+                    'session',
+                    ext._make_scoped_session(getattr(ext, '_session_options', {})),
+                )
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
+            try:
+                db.session.expire_all()
+            except Exception:
+                pass
+            try:
+                db.session.remove()
+            except Exception:
+                pass
+
+    def _scrub_flask_session():
+        with app.test_request_context():
+            session.clear()
+
+    yield
+    _scrub_db()
+    _scrub_flask_session()
+
+
+@pytest.fixture(autouse=True)
+def _reset_rate_limiter(app):
+    """Prevent in-memory rate-limit counters from accumulating across tests."""
+    from extensions import limiter
+
+    def _clear():
+        with app.app_context():
+            try:
+                limiter.reset()
+            except Exception:
+                pass
+
+    _clear()
+    yield
+    _clear()
+
+
+@pytest.fixture(autouse=True)
 def _restore_session_app_config(app):
     """Prevent session-scoped app config mutations from leaking across tests."""
     snapshot = {
@@ -123,15 +177,28 @@ def _restore_session_app_config(app):
 
 @pytest.fixture
 def client(app):
-    return app.test_client()
+    test_client = app.test_client()
+    yield test_client
+    try:
+        with test_client.session_transaction() as sess:
+            sess.clear()
+    except Exception:
+        pass
 
 
 @pytest.fixture
 def db_session(app):
     with app.app_context():
+        try:
+            db.session.rollback()
+        except Exception:
+            db.session.remove()
         db.session.expire_all()
         yield db.session
-        db.session.rollback()
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
         db.session.remove()
 
 
@@ -157,6 +224,12 @@ def sample_tenant(db_session):
         base_currency="AED",
     )
     db_session.add(tenant)
+    db_session.commit()
+    db_session.refresh(tenant)
+    tenant.is_active = True
+    tenant.is_suspended = False
+    tenant.suspension_reason = None
+    tenant.enable_tax = True
     db_session.commit()
     return tenant
 

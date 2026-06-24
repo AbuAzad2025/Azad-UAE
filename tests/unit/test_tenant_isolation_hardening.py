@@ -1,4 +1,6 @@
 ﻿"""Tests for tenant isolation hardening"""
+import uuid
+
 import pytest
 from decimal import Decimal
 from datetime import date
@@ -10,18 +12,51 @@ from models.tenant import Tenant
 from extensions import db
 
 
+@pytest.fixture(autouse=True)
+def _tenant_test_request_context(app):
+    """Keep an active Flask request context so session-based tenanting works."""
+    with app.test_request_context():
+        yield
+
+
 class TestTenantIsolationHardening:
     """Test tenant isolation hardening in auth and tenanting"""
 
+    def _create_second_tenant(self, db_session, **overrides):
+        """Create an isolated second tenant (unique slug avoids cross-suite DB pollution)."""
+        uid = uuid.uuid4().hex[:8]
+        data = {
+            "name": f"Test Company 2 {uid}",
+            "name_ar": "شركة تجربة 2",
+            "slug": f"test-company-2-{uid}",
+            "email": f"test2-{uid}@example.com",
+            "phone_1": "0500000001",
+            "country": "AE",
+            "subscription_plan": "basic",
+            "is_active": True,
+            "is_suspended": False,
+        }
+        data.update(overrides)
+        tenant2 = Tenant(**data)
+        db_session.add(tenant2)
+        db_session.flush()
+        return tenant2
+
     def _create_test_user(self, db_session, tenant_id, branch_id=None, is_owner=False):
         """Create a test user for testing"""
+        uid = uuid.uuid4().hex[:8]
+        role = Role.query.filter_by(slug=f"test-role-{uid}").first()
+        if not role:
+            role = Role(name=f"Test Role {uid}", slug=f"test-role-{uid}", is_active=True)
+            db_session.add(role)
+            db_session.flush()
         user = User(
-            username=f"testuser_{tenant_id}",
-            email=f"testuser_{tenant_id}@example.com",
+            username=f"testuser_{tenant_id}_{uid}",
+            email=f"testuser_{tenant_id}_{uid}@example.com",
             full_name="Test User",
-            full_name_ar="Ù…Ø³ØªØ®Ø¯Ù… ØªØ¬Ø±Ø¨Ø©",
+            full_name_ar="مستخدم تجربة",
             phone="0500000000",
-            role_id=1,  # Default role
+            role_id=role.id,
             tenant_id=tenant_id,
             branch_id=branch_id,
             is_owner=is_owner,
@@ -40,17 +75,7 @@ class TestTenantIsolationHardening:
         user = self._create_test_user(db_session, sample_tenant.id)
 
         # Create a second tenant
-        tenant2 = Tenant(
-            name="Test Company 2",
-            name_ar="Ø´Ø±ÙƒØ© ØªØ¬Ø±Ø¨Ø© 2",
-            slug="test-company-2",
-            email="test2@example.com",
-            phone_1="0500000001",
-            country="AE",
-            subscription_plan="basic",
-        )
-        db_session.add(tenant2)
-        db_session.flush()
+        tenant2 = self._create_second_tenant(db_session)
 
         # Try to set tenant2 as active tenant for user
         with pytest.raises(ValueError, match="Normal users can only set their own tenant_id"):
@@ -64,17 +89,7 @@ class TestTenantIsolationHardening:
         owner = self._create_test_user(db_session, sample_tenant.id, is_owner=True)
 
         # Create a second tenant
-        tenant2 = Tenant(
-            name="Test Company 2",
-            name_ar="Ø´Ø±ÙƒØ© ØªØ¬Ø±Ø¨Ø© 2",
-            slug="test-company-2",
-            email="test2@example.com",
-            phone_1="0500000001",
-            country="AE",
-            subscription_plan="basic",
-        )
-        db_session.add(tenant2)
-        db_session.flush()
+        tenant2 = self._create_second_tenant(db_session)
 
         # Platform owner should be able to set tenant2
         set_active_tenant(tenant2.id, user=owner)
@@ -91,17 +106,7 @@ class TestTenantIsolationHardening:
         user = self._create_test_user(db_session, sample_tenant.id, branch_id=sample_branch.id)
 
         # Create a second tenant and branch
-        tenant2 = Tenant(
-            name="Test Company 2",
-            name_ar="Ø´Ø±ÙƒØ© ØªØ¬Ø±Ø¨Ø© 2",
-            slug="test-company-2",
-            email="test2@example.com",
-            phone_1="0500000001",
-            country="AE",
-            subscription_plan="basic",
-        )
-        db_session.add(tenant2)
-        db_session.flush()
+        tenant2 = self._create_second_tenant(db_session)
 
         branch2 = Branch(
             tenant_id=tenant2.id,
@@ -126,17 +131,7 @@ class TestTenantIsolationHardening:
         owner = self._create_test_user(db_session, sample_tenant.id, is_owner=True)
 
         # Create a second tenant
-        tenant2 = Tenant(
-            name="Test Company 2",
-            name_ar="Ø´Ø±ÙƒØ© ØªØ¬Ø±Ø¨Ø© 2",
-            slug="test-company-2",
-            email="test2@example.com",
-            phone_1="0500000001",
-            country="AE",
-            subscription_plan="basic",
-        )
-        db_session.add(tenant2)
-        db_session.flush()
+        tenant2 = self._create_second_tenant(db_session)
 
         # Platform owner should be able to set tenant2
         set_active_tenant(tenant2.id, user=owner)
@@ -153,18 +148,7 @@ class TestTenantIsolationHardening:
         owner = self._create_test_user(db_session, sample_tenant.id, is_owner=True)
 
         # Create an inactive tenant
-        tenant2 = Tenant(
-            name="Test Company 2",
-            name_ar="Ø´Ø±ÙƒØ© ØªØ¬Ø±Ø¨Ø© 2",
-            slug="test-company-2",
-            email="test2@example.com",
-            phone_1="0500000001",
-            country="AE",
-            subscription_plan="basic",
-            is_active=False,
-        )
-        db_session.add(tenant2)
-        db_session.flush()
+        tenant2 = self._create_second_tenant(db_session, is_active=False)
 
         # Platform owner should NOT be able to set inactive tenant
         with pytest.raises(ValueError, match="Tenant is not active or is suspended"):
@@ -214,17 +198,7 @@ class TestTenantIsolationHardening:
         db_session.commit()
 
         # Create a second tenant and branch
-        tenant2 = Tenant(
-            name="Test Company 2",
-            name_ar="Ø´Ø±ÙƒØ© ØªØ¬Ø±Ø¨Ø© 2",
-            slug="test-company-2",
-            email="test2@example.com",
-            phone_1="0500000001",
-            country="AE",
-            subscription_plan="basic",
-        )
-        db_session.add(tenant2)
-        db_session.flush()
+        tenant2 = self._create_second_tenant(db_session)
 
         branch2 = Branch(
             tenant_id=tenant2.id,
@@ -394,19 +368,15 @@ class TestTenantIsolationHardening:
         db_session.flush()
 
         # Create a suspended tenant
-        suspended_tenant = Tenant(
+        suspended_tenant = self._create_second_tenant(
+            db_session,
             name="Suspended Company",
-            name_ar="Ø´Ø±ÙƒØ© Ù…Ø¹Ù„Ù‚Ø©",
-            slug="suspended-company",
+            name_ar="شركة معلقة",
+            slug=f"suspended-company-{uuid.uuid4().hex[:8]}",
             email="suspended@example.com",
-            phone_1="0500000001",
-            country="AE",
-            subscription_plan="basic",
             is_active=True,
             is_suspended=True,
         )
-        db_session.add(suspended_tenant)
-        db_session.flush()
 
         # Set active tenant to sample_tenant first
         set_active_tenant(sample_tenant.id, user=owner)
@@ -456,11 +426,16 @@ class TestLoginRouteLevel:
         return user
 
     def test_normal_user_login_redirects_never_500(self, client, app, db_session, sample_tenant, sample_branch):
-        """Valid normal-user POST /auth/login â†’ redirect (302), never 500."""
+        """Valid normal-user POST /auth/login → redirect (302), never 500."""
+        from services.gl_service import GLService
+
         user = self._make_user(
             db_session, "loginok1", "pass1234",
             sample_tenant.id, branch_id=sample_branch.id,
         )
+        sample_tenant.is_active = True
+        sample_tenant.is_suspended = False
+        GLService.ensure_core_accounts(tenant_id=sample_tenant.id)
         db_session.commit()
 
         with client.session_transaction() as sess:
@@ -577,6 +552,8 @@ class TestLoginRouteLevel:
             db_session, "switchowner", "pass1234",
             sample_tenant.id, is_owner=True,
         )
+        sample_tenant.is_active = True
+        sample_tenant.is_suspended = False
         db_session.commit()
 
         unique = str(uuid.uuid4())[:8]

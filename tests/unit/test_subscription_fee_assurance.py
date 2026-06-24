@@ -78,9 +78,8 @@ class TestRecordPayment:
     """record_payment — accrued -> paid with GL settlement."""
 
     def test_rejects_missing_fee(self, app, mocker):
-        mocker.patch('models.AzadSubscriptionFee.query')  # noqa: F841
-        mock_get = mocker.patch('services.azad_subscription_fee_service.AzadSubscriptionFee.query')
-        mock_get.get.return_value = None
+        mock_get = mocker.patch('services.azad_subscription_fee_service.db.session.get')
+        mock_get.return_value = None
 
         from services.azad_subscription_fee_service import AzadSubscriptionFeeService
         with app.app_context():
@@ -89,8 +88,7 @@ class TestRecordPayment:
 
     def test_rejects_non_accrued_status(self, app, mocker):
         fee = MagicMock(status='paid', amount_aed=Decimal('100'), tenant_id=1)
-        mocker.patch('services.azad_subscription_fee_service.AzadSubscriptionFee.query') \
-            .get.return_value = fee
+        mocker.patch('services.azad_subscription_fee_service.db.session.get', return_value=fee)
 
         from services.azad_subscription_fee_service import AzadSubscriptionFeeService
         with app.app_context():
@@ -99,7 +97,7 @@ class TestRecordPayment:
 
     def test_records_payment_and_posts_gl(self, app, mocker):
         fee = MagicMock(id=5, status='accrued', amount_aed=Decimal('250'), fee_type='monthly', tenant_id=1)
-        mocker.patch('services.azad_subscription_fee_service.AzadSubscriptionFee.query').get.return_value = fee
+        mocker.patch('services.azad_subscription_fee_service.db.session.get', return_value=fee)
         mocker.patch('services.azad_subscription_fee_service.GLService.ensure_core_accounts')
         mocker.patch('services.azad_subscription_fee_service.GLService.get_payment_credit_concept', return_value='BANK')
         mocker.patch(
@@ -123,7 +121,7 @@ class TestWaiveFee:
 
     def test_idempotent_on_already_cancelled(self, app, mocker):
         fee = MagicMock(status='cancelled', tenant_id=1)
-        mocker.patch('services.azad_subscription_fee_service.AzadSubscriptionFee.query').get.return_value = fee
+        mocker.patch('services.azad_subscription_fee_service.db.session.get', return_value=fee)
 
         from services.azad_subscription_fee_service import AzadSubscriptionFeeService
         with app.app_context():
@@ -132,7 +130,7 @@ class TestWaiveFee:
 
     def test_waives_accrued_and_reverses_gl(self, app, mocker):
         fee = MagicMock(id=7, status='accrued', gl_posted=True, fee_type='monthly', tenant_id=1, notes='')
-        mocker.patch('services.azad_subscription_fee_service.AzadSubscriptionFee.query').get.return_value = fee
+        mocker.patch('services.azad_subscription_fee_service.db.session.get', return_value=fee)
         mock_reverse = mocker.patch('services.azad_subscription_fee_service.GLService.reverse_entry')
 
         from services.azad_subscription_fee_service import AzadSubscriptionFeeService
