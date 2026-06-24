@@ -93,6 +93,7 @@ celerybeat.pid
 .pytest-temp/
 .coverage
 htmlcov/
+node_modules/
 
 # Generated artifacts / reports
 tools/reports/

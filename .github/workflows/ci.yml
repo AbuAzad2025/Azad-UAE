@@ -39,6 +39,16 @@ jobs:
           pip install -r requirements.txt
           pip install -r requirements-dev.txt
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run frontend unit tests
+        run: |
+          npm install
+          npm run test:frontend
+
       - name: Run tests with coverage
         env:
           DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test

@@ -1,0 +1,16 @@
+{
+  "name": "azad-uae",
+  "private": true,
+  "scripts": {
+    "test:frontend": "jest"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": [
+      "<rootDir>/tests/frontend/**/*.test.js"
+    ]
+  }
+}
