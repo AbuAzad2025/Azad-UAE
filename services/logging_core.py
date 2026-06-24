@@ -518,7 +518,8 @@ class LoggingCore:
             original_showwarning = _builtin_warnings.showwarning
 
             def _log_warning(message, category, filename, lineno, file=None, line=None):
-                msg = f"{category.__name__}: {message}"
+                category_name = getattr(category, "__name__", None) or repr(category)
+                msg = f"{category_name}: {message}"
                 if has_request_context():
                     try:
                         msg += f" | route={request.method} {request.path}"

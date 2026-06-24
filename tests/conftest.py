@@ -23,13 +23,22 @@ os.environ.setdefault("CELERY_RESULT_BACKEND", "memory://")
 os.environ.setdefault("RATELIMIT_STORAGE_URI", "memory://")
 os.environ.setdefault("SKIP_SYSTEM_INTEGRITY", "1")
 
-from unittest.mock import MagicMock, AsyncMock
+from unittest.mock import MagicMock, AsyncMock, NonCallableMock
 
-# Global Python 3.14 Introspection Safeguard
-if not hasattr(MagicMock, '__name__'):
-    MagicMock.__name__ = "MagicMock"
-if not hasattr(AsyncMock, '__name__'):
-    AsyncMock.__name__ = "AsyncMock"
+# Global Python 3.14 Introspection Safeguard — instances raise AttributeError on __name__
+if not getattr(NonCallableMock, "_azad_py314_name_guard", False):
+    _orig_mock_getattr = NonCallableMock.__getattr__
+
+    def _safe_mock_getattr(self, name):
+        if name == "__name__":
+            try:
+                return _orig_mock_getattr(self, name)
+            except AttributeError:
+                return getattr(self, "_mock_name", None) or type(self).__name__
+        return _orig_mock_getattr(self, name)
+
+    NonCallableMock.__getattr__ = _safe_mock_getattr
+    NonCallableMock._azad_py314_name_guard = True
 
 from app import create_app  # noqa: E402
 from extensions import db  # noqa: E402
