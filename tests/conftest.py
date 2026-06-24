@@ -637,11 +637,19 @@ def sample_product_with_stock(db_session, sample_tenant, sample_warehouse):
 
 
 @pytest.fixture
-def sample_gl_accounts(db_session, sample_tenant):
+def sample_gl_accounts(db_session, sample_tenant, app):
     """Ensure core chart of accounts exists for the tenant."""
     from services.gl_service import GLService
-    GLService.ensure_core_accounts(tenant_id=sample_tenant.id)
-    db_session.commit()
+    from services.gl_accounting_setup import GLAccountingSetupService
+
+    with app.app_context():
+        GLService.ensure_core_accounts(tenant_id=sample_tenant.id)
+        if app.config.get('ENABLE_DYNAMIC_GL_MAPPING'):
+            GLAccountingSetupService.execute(
+                tenant_id=sample_tenant.id,
+                dry_run=False,
+            )
+        db_session.commit()
     return sample_tenant
 
 

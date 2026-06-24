@@ -16,10 +16,18 @@ from decimal import Decimal
 
 @pytest.fixture(scope='module', autouse=True)
 def _enable_dynamic_gl_mapping(app):
+    prev = {
+        'ENABLE_DYNAMIC_GL_MAPPING': app.config.get('ENABLE_DYNAMIC_GL_MAPPING'),
+        'SERVER_NAME': app.config.get('SERVER_NAME'),
+    }
     app.config.update({
         'SERVER_NAME': 'test.local',
         'ENABLE_DYNAMIC_GL_MAPPING': True,
     })
+    yield
+    app.config['ENABLE_DYNAMIC_GL_MAPPING'] = prev['ENABLE_DYNAMIC_GL_MAPPING']
+    if prev['SERVER_NAME'] is not None:
+        app.config['SERVER_NAME'] = prev['SERVER_NAME']
 
 
 # ===================================================================
