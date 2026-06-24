@@ -147,19 +147,31 @@ def app():
 
 @pytest.fixture(autouse=True)
 def auto_cleanup_isolation(app):
-    """Force a clean DB + Flask session slate after every test."""
-    from unittest.mock import MagicMock
+    """Force a clean DB + Flask session slate before and after every test."""
+    from unittest.mock import MagicMock, NonCallableMock
     from flask import session
 
-    def _scrub_db():
+    def _restore_real_db_session():
         with app.app_context():
-            if isinstance(db.session, MagicMock):
-                ext = app.extensions['sqlalchemy']
+            ext = app.extensions['sqlalchemy']
+            session_obj = db.session
+            needs_restore = isinstance(session_obj, (MagicMock, NonCallableMock))
+            if not needs_restore:
+                try:
+                    get_fn = session_obj.get
+                    needs_restore = isinstance(get_fn, (MagicMock, NonCallableMock))
+                except Exception:
+                    needs_restore = True
+            if needs_restore:
                 object.__setattr__(
                     db,
                     'session',
                     ext._make_scoped_session(getattr(ext, '_session_options', {})),
                 )
+
+    def _scrub_db():
+        with app.app_context():
+            _restore_real_db_session()
             try:
                 db.session.rollback()
             except Exception:
@@ -184,6 +196,7 @@ def auto_cleanup_isolation(app):
             if isinstance(logger, MagicMock):
                 app.logger = logging.getLogger(app.import_name)
 
+    _scrub_db()
     yield
     _scrub_db()
     _scrub_flask_session()

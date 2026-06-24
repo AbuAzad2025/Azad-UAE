@@ -40,17 +40,31 @@ class TestTenantIsolationHardening:
         tenant2 = Tenant(**data)
         db_session.add(tenant2)
         db_session.commit()
-        db_session.refresh(tenant2)
-        return tenant2
+        tenant_id = tenant2.id
+        return db_session.get(Tenant, tenant_id)
 
     def _ensure_tenant_active(self, db_session, tenant):
         """Persist active/switchable tenant state visible to db.session.get in tenanting."""
-        row = db_session.get(Tenant, tenant.id)
+        from unittest.mock import MagicMock, NonCallableMock
+
+        tenant_id = int(tenant.id)
+        db_session.commit()
+
+        def _fetch():
+            row = db_session.get(Tenant, tenant_id)
+            if row is None or isinstance(row, (MagicMock, NonCallableMock)):
+                db_session.expire_all()
+                row = db_session.get(Tenant, tenant_id)
+            if row is None or isinstance(row, (MagicMock, NonCallableMock)):
+                row = Tenant.query.filter_by(id=tenant_id).first()
+            return row
+
+        row = _fetch()
+        assert row is not None, f"Tenant {tenant_id} not found in database"
         row.is_active = True
         row.is_suspended = False
         db_session.commit()
-        db_session.refresh(row)
-        return row
+        return _fetch()
 
     def _create_test_user(self, db_session, tenant_id, branch_id=None, is_owner=False):
         """Create a test user for testing"""
@@ -74,8 +88,8 @@ class TestTenantIsolationHardening:
         )
         user.set_password("testpassword")
         db_session.add(user)
-        db_session.flush()
-        return user
+        db_session.commit()
+        return db_session.get(User, user.id)
 
     def test_normal_user_cannot_set_another_tenant(self, db_session, sample_tenant, sample_branch):
         """Test normal user cannot set session tenant to another tenant"""
