@@ -93,7 +93,6 @@ class StorePaymentMethodService:
             db.session.rollback()
             raise
 
-
     @staticmethod
     def list_all(*, enabled_only=False):
         q = StorePaymentMethod.query
@@ -237,7 +236,6 @@ class StorePaymentMethodService:
         except Exception:
             db.session.rollback()
             raise
-
 
     @staticmethod
     def format_checkout_instructions(method: StorePaymentMethod, lang='ar') -> str:
