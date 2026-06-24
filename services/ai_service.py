@@ -1,73 +1,34 @@
-"""
-AZAD AI SERVICE
-المساعد الذكي الخبير في المحاسبة والمعدات الثقيلة
+"""AZAD AI service — business intelligence, chat, and knowledge integration."""
+from __future__ import annotations
 
-شركة أزاد للأنظمة الذكية - Azad Smart Systems
-المطور: م. أحمد غنام
-دبي - الإمارات العربية المتحدة
-
-Features:
-- UAE Tax & Customs Expert (خبير ضرائب وجمارك الإمارات)
-- Heavy Equipment & Auto Parts Specialist (خبير المعدات الثقيلة وقطع الغيار)
-- Predictive Analytics (تنبؤات ذكية)
-- Customer Service Excellence (خدمة عملاء متميزة)
-- Business Intelligence (ذكاء أعمال)
-- Market Insights (فهم السوق)
-"""
+import logging
 import os
-import json
 import re
 from datetime import datetime, timedelta, timezone
-from decimal import Decimal, ROUND_HALF_UP
-from sqlalchemy import func, or_, and_, desc
+from decimal import Decimal
+
+from sqlalchemy import func, or_
 from sqlalchemy.orm import joinedload
+
 from extensions import db
-
-# التكامل الكامل مع جميع وحدات AI
-# from ai_knowledge.personality.azad_responses import AzadResponses
-# from ai_knowledge.core.learning_system import AzadLearningSystem
-# from ai_knowledge.core.context_engine import ContextEngine
-# from ai_knowledge.analytics.analytics_predictions import SalesAnalytics, InventoryAnalytics, ProfitAnalytics
-# from ai_knowledge.analytics.data_analyzer import DataAnalyzer
-# from ai_knowledge.personality.azad_personality import AzadPersonality
-# from ai_knowledge.core.system_integration import SystemIntegrator
-# from ai_knowledge.expansion.knowledge_expansion import KnowledgeExpander
-# from ai_knowledge.improvement.self_improvement import AzadSelfImprovement
-# from ai_knowledge.generation.document_generator import DocumentGenerator
-# from ai_knowledge.expansion.global_knowledge import GlobalKnowledgeConnector
-# from ai_knowledge.personality.dialects import DialectManager
-# from ai_knowledge.specialized.security_rules import SecurityRules
-# from ai_knowledge.personality.beginners_mode import BeginnersGuide
-# from ai_knowledge.neural.neural_engine import AzadNeuralEngine, get_neural_engine
-# from ai_knowledge.core.reasoning_engine import ReasoningEngine, get_reasoning_engine
-# from ai_knowledge.core.memory_system import LongTermMemory, get_memory_system
-# from ai_knowledge.generation.code_generator import CodeGenerator, get_code_generator
-# from ai_knowledge.agents.multi_agent_system import MultiAgentCoordinator, get_agent_coordinator
-# from ai_knowledge.improvement.self_reflection import SelfReflectionEngine, get_reflection_engine
-# from ai_knowledge.core.conversation_manager import ConversationManager, get_conversation_manager
-# from ai_knowledge.neural.vision_processor import VisionProcessor, get_vision_processor
-# from ai_knowledge.agents.master_brain import MasterBrain, get_master_brain, ask_azad, quick_calc, explain_concept
-# from ai_knowledge.neural.transformers_brain import TransformersBrain, get_transformers_brain
-# from ai_knowledge.learning.external_learning import get_external_learning
-
-# قواعد المعرفة المتخصصة
 from ai_knowledge.knowledge import (
+    COMPANY_INFO,
+    get_automotive_ecu_knowledge,
+    get_customs_advice,
     get_part_info,
     get_tax_info,
-    get_customs_advice,
-    get_module_help,
-    COMPANY_INFO,
+    search_knowledge,
 )
 from ai_knowledge.specialized import (
-    get_customer_service_tip,
-    get_system_guide,
-    get_guide,
-    get_tax_advice,
     advanced_laws,
+    get_customer_service_tip,
+    get_guide,
+    get_system_guide as lookup_system_guide,
+    get_tax_advice,
 )
-from ai_knowledge.analytics import (
-    get_market_insights,
-)
+from ai_knowledge.analytics import get_market_insights
+
+logger = logging.getLogger(__name__)
 
 
 class AIService:
@@ -299,8 +260,6 @@ class AIService:
         التحقق من أن الطلب يتعلق بمعلومات سرية
         يعيد: (is_sensitive, requires_owner, response)
         """
-        import re
-        
         message_lower = message.lower()
         
         # إزالة "ال" التعريف للمقارنة الذكية
@@ -347,53 +306,57 @@ class AIService:
         return False, False, None
     
     @staticmethod
+    def _escape_ilike(term: str) -> str:
+        """Escape SQL LIKE wildcards in user-provided search terms."""
+        return (
+            term.replace('\\', '\\\\')
+            .replace('%', '\\%')
+            .replace('_', '\\_')
+        )
+
+    @staticmethod
+    def _user_summary(user):
+        return {
+            'id': user.id,
+            'username': user.username,
+            'email': user.email,
+            'role': user.role.name_ar if user.role else 'لا يوجد',
+            'is_active': user.is_active,
+            'is_owner': user.is_owner,
+        }
+
+    @staticmethod
     def get_user_info_for_owner(username=None):
-        """جلب معلومات المستخدم (للمالك فقط)"""
+        """جلب معلومات المستخدم (للمالك فقط) — بدون كشف password_hash."""
         from models import User
-        
+
         if username:
+            safe = AIService._escape_ilike(username.strip())
             user = User.query.filter(
                 or_(
-                    User.username.ilike(f'%{username}%'),
-                    User.email.ilike(f'%{username}%')
+                    User.username.ilike(f'%{safe}%', escape='\\'),
+                    User.email.ilike(f'%{safe}%', escape='\\'),
                 )
             ).first()
-            
+
             if not user:
                 return {
                     'success': False,
-                    'message': f'لم يتم العثور على مستخدم بالاسم: {username}'
+                    'message': f'لم يتم العثور على مستخدم بالاسم: {username}',
                 }
-            
-            return {
-                'success': True,
-                'user': {
-                    'id': user.id,
-                    'username': user.username,
-                    'email': user.email,
-                    'password_hash': user.password_hash,  # كلمة المرور المشفرة
-                    'role': user.role.name_ar if user.role else 'لا يوجد',
-                    'is_active': user.is_active,
-                    'is_owner': user.is_owner,
-                    'created_at': user.created_at.strftime('%Y-%m-%d') if user.created_at else None
-                }
-            }
-        else:
-            # جلب جميع المستخدمين
-            users = User.query.all()
-            return {
-                'success': True,
-                'users': [{
-                    'id': u.id,
-                    'username': u.username,
-                    'email': u.email,
-                    'password_hash': u.password_hash,
-                    'role': u.role.name_ar if u.role else 'لا يوجد',
-                    'is_active': u.is_active,
-                    'is_owner': u.is_owner
-                } for u in users],
-                'count': len(users)
-            }
+
+            summary = AIService._user_summary(user)
+            summary['created_at'] = (
+                user.created_at.strftime('%Y-%m-%d') if user.created_at else None
+            )
+            return {'success': True, 'user': summary}
+
+        users = User.query.all()
+        return {
+            'success': True,
+            'users': [AIService._user_summary(u) for u in users],
+            'count': len(users),
+        }
     
     @staticmethod
     def recommend_price(product_id, customer_id):
@@ -803,24 +766,24 @@ class AIService:
     def chat_response(message, context=None):
         """🤖 أزاد يرد على سؤالك - تعاون متكامل بين المحلي وGroq"""
         from ai_knowledge.agents.intelligent_assistant import intelligent_assistant
-        
-        # ========== المرحلة 1: التحليل المحلي الشامل ==========
-        user_id = context.get('current_user').id if context and context.get('current_user') else None
-        
-        # الرد المحلي الذكي (يشمل: فهم النية + بيانات حقيقية + تحليل)
+
+        ctx = context or {}
+        current_user = ctx.get('current_user')
+        user_id = current_user.id if current_user else None
+
         local_result = intelligent_assistant.process(message, user_id, context)
         local_response = local_result.get('response', '')
-        
-        force_local = context.get('force_local', False) if context else False
+
+        force_local = ctx.get('force_local', False)
         knowledge_context = '' if force_local else AIService._gather_relevant_knowledge(message, local_result)
-        
-        # إضافة سياق معرفة النظام الشامل (جدول النظام، الأدوار، الصلاحيات)
+
         system_context = ''
         try:
             from ai_knowledge.system_knowledge import search_knowledge
-            ctx = search_knowledge(message, user_role=context.get('current_user').role.slug if context.get('current_user') else None)
-            if ctx:
-                system_context = '\n📘 **معلومات النظام:**\n' + ctx[:2000]
+            role_slug = current_user.role.slug if current_user and getattr(current_user, 'role', None) else None
+            sys_ctx = search_knowledge(message, user_role=role_slug)
+            if sys_ctx:
+                system_context = '\n📘 **معلومات النظام:**\n' + sys_ctx[:2000]
         except Exception:
             pass
         
@@ -839,7 +802,7 @@ class AIService:
         # ========== المرحلة 3: مسار المعرفة المضمنة (للأسئلة المعرفية) ==========
         try:
             from ai_knowledge.agents_core import ask_azad_enhanced
-            fast_path = ask_azad_enhanced(message, current_user=context.get('current_user'))
+            fast_path = ask_azad_enhanced(message, current_user=current_user)
             if fast_path and fast_path.get('answer') and fast_path.get('source') != 'local':
                 return f"{fast_path['answer']}\n\n<sub>🤖 المصدر: GROQ API + معرفة النظام</sub>"
         except Exception:
@@ -868,7 +831,7 @@ class AIService:
                     model = "gpt-4"
                 
                 # بناء البرومبت مع معرفة النظام الشاملة
-                role_slug = context.get('current_user').role.slug if context.get('current_user') else 'user'
+                role_slug = current_user.role.slug if current_user and getattr(current_user, 'role', None) else 'user'
                 expert_prompt = f"""أنت أزاد - مساعد ذكي خبير لنظام إدارة كراجات وورش المعدات الثقيلة.
 
 دور المستخدم: {role_slug}
@@ -941,13 +904,13 @@ class AIService:
                     try:
                         AIService._train_local_from_groq(message, str(local_response), str(groq_response), user_id)
                     except Exception as e:
-                        print(f"Training skipped: {e}")
+                        logger.debug('Training skipped: %s', e)
                     
                     provider = AIService.get_provider()
                     return f"{groq_response}\n\n<sub>🤖 المصدر: {provider.upper()} API + التحليل المحلي</sub>"
             
             except Exception as e:
-                print(f"Groq collaboration failed: {str(e)}")
+                logger.warning('Groq collaboration failed: %s', e)
                 try:
                     from services.logging_core import LoggingCore
                     LoggingCore.log_error(
@@ -1049,7 +1012,7 @@ class AIService:
             return None
             
         except Exception as e:
-            print(f"Action execution error: {e}")
+            logger.warning('Action execution error: %s', e)
             try:
                 from services.logging_core import LoggingCore
                 LoggingCore.log_error(message=str(e), category="AI", source="services.ai_service._execute_ai_action", level="WARNING", exception=e)
@@ -1074,7 +1037,7 @@ class AIService:
             learning_system.learn_from_groq_feedback(learning_data)
             
         except Exception as e:
-            print(f"Training from Groq failed: {e}")
+            logger.debug('Training from Groq failed: %s', e)
     
     @staticmethod
     def _gather_relevant_knowledge(message, local_result):
@@ -1442,288 +1405,203 @@ class AIService:
     
     @staticmethod
     def analyze_sales_with_predictions(days_ahead=30):
-        """
-        تحليل المبيعات مع التوقعات
-        متكامل مع: SalesAnalytics + DataAnalyzer
-        """
+        """تحليل المبيعات مع التوقعات."""
         try:
-            # استخدام محلل المبيعات
-            sales_analytics = SalesAnalytics()
-            historical_data = sales_analytics.get_historical_trends(days=90)
-            predictions = sales_analytics.predict_next_period(days_ahead)
-            
-            # تحليل إضافي
-            data_analyzer = DataAnalyzer()
-            deep_insights = data_analyzer.analyze_sales_patterns(historical_data)
-            
+            trend = AIService.predict_sales_trend(days_ahead=days_ahead)
+            from ai_knowledge.analytics.analytics_predictions import SalesAnalytics
+            from ai_knowledge.analytics.data_analyzer import DataAnalyzer
+            from models import Sale
+
+            last_90_days = datetime.now(timezone.utc) - timedelta(days=90)
+            sales = Sale.query.filter(Sale.sale_date >= last_90_days).all()
+            historical = [float(s.amount_aed or 0) for s in sales]
+            predictions = SalesAnalytics.predict_next_month_sales(historical)
+            pattern = SalesAnalytics.analyze_sales_pattern(sales)
+            deep_insights = DataAnalyzer().analyze_sales_performance(period_days=days_ahead)
             return {
-                'historical': historical_data,
+                'historical': historical,
                 'predictions': predictions,
-                'insights': deep_insights
+                'insights': deep_insights,
+                'trend': trend,
             }
-        
         except Exception as e:
+            logger.warning('analyze_sales_with_predictions failed: %s', e)
             return {}
     
     @staticmethod
     def optimize_inventory_with_ai():
-        """
-        تحسين المخزون بالذكاء الاصطناعي
-        متكامل مع: InventoryAnalytics + DataAnalyzer
-        """
+        """تحسين المخزون بالذكاء الاصطناعي."""
         try:
-            inventory_analytics = InventoryAnalytics()
-            
-            # تحليل المخزون
-            analysis = inventory_analytics.analyze_stock_levels()
-            
-            # توصيات الطلب
-            reorder_recommendations = inventory_analytics.calculate_reorder_points()
-            
-            # كشف البضائع الراكدة
-            slow_moving = inventory_analytics.detect_slow_moving_items()
-            
-            return {
-                'analysis': analysis,
-                'recommendations': reorder_recommendations,
-                'slow_moving': slow_moving
-            }
-        
+            return AIService.optimize_inventory_levels()
         except Exception as e:
+            logger.warning('optimize_inventory_with_ai failed: %s', e)
             return {}
     
     @staticmethod
     def analyze_profitability():
-        """
-        تحليل الربحية الشامل
-        متكامل مع: ProfitAnalytics + DataAnalyzer
-        """
+        """تحليل الربحية الشامل."""
         try:
-            profit_analytics = ProfitAnalytics()
-            
-            # تحليل الهوامش
-            margins = profit_analytics.analyze_profit_margins()
-            
-            # تحليل الربحية حسب المنتج
-            by_product = profit_analytics.profitability_by_product()
-            
-            # تحليل الربحية حسب العميل
-            by_customer = profit_analytics.profitability_by_customer()
-            
-            return {
-                'margins': margins,
-                'by_product': by_product,
-                'by_customer': by_customer
-            }
-        
+            return AIService.analyze_profit_margins()
         except Exception as e:
+            logger.warning('analyze_profitability failed: %s', e)
             return {}
     
     @staticmethod
     def get_tax_and_customs_info(query):
-        """
-        الحصول على معلومات الضرائب والجمارك
-        متكامل مع: tax_system + customs + tax_customs_knowledge
-        """
+        """معلومات الضرائب والجمارك."""
         try:
-            # معلومات الضرائب
-            if 'vat' in query.lower() or 'ضريبة' in query:
-                tax_info = tax_system.get_vat_info()
-                return tax_info
-            
-            # معلومات الجمارك
-            if 'customs' in query.lower() or 'جمارك' in query:
-                customs_info = customs.get_customs_procedures()
-                return customs_info
-            
-            # معلومات شاملة
-            return tax_customs_knowledge.get_comprehensive_guide()
-        
+            q = query.lower()
+            if 'vat' in q or 'ضريبة' in query:
+                return get_tax_info('uae') or get_tax_advice(query)
+            if 'customs' in q or 'جمارك' in query:
+                return get_customs_advice(query)
+            return get_tax_advice(query)
         except Exception as e:
+            logger.warning('get_tax_and_customs_info failed: %s', e)
             return {}
     
     @staticmethod
     def get_parts_information(part_query):
-        """
-        معلومات قطع الغيار والمعدات
-        متكامل مع: parts_knowledge
-        """
+        """معلومات قطع الغيار والمعدات."""
         try:
-            parts_info = parts_knowledge.search_part(part_query)
-            return parts_info
-        
+            return get_part_info(part_query)
         except Exception as e:
+            logger.warning('get_parts_information failed: %s', e)
             return {}
     
     @staticmethod
     def get_market_insights_report():
-        """
-        تقرير رؤى السوق
-        متكامل مع: market_insights
-        """
+        """تقرير رؤى السوق."""
         try:
-            insights = market_insights.generate_market_report()
-            return insights
-        
+            return get_market_insights()
         except Exception as e:
+            logger.warning('get_market_insights_report failed: %s', e)
             return {}
     
     @staticmethod
     def get_customer_service_response(customer_query):
-        """
-        رد خدمة العملاء الذكي
-        متكامل مع: customer_service
-        """
+        """رد خدمة العملاء الذكي."""
         try:
-            response = customer_service.handle_customer_query(customer_query)
-            return response
-        
+            tip = get_customer_service_tip()
+            if customer_query:
+                return f'{tip}\n\n(استفسار: {customer_query})'
+            return tip
         except Exception as e:
-            return "عذراً، حدث خطأ. يرجى المحاولة مرة أخرى."
-    
+            logger.warning('get_customer_service_response failed: %s', e)
+            return 'عذراً، حدث خطأ. يرجى المحاولة مرة أخرى.'
+
     @staticmethod
     def get_system_guide(topic):
-        """
-        دليل استخدام النظام
-        متكامل مع: system_guide + user_guide
-        """
+        """دليل استخدام النظام."""
         try:
-            # دليل النظام
-            system_info = system_guide.get_guide_for_topic(topic)
-            
-            # دليل المستخدم
-            user_info = user_guide.get_user_guide(topic)
-            
             return {
-                'system_guide': system_info,
-                'user_guide': user_info
+                'system_guide': lookup_system_guide(),
+                'user_guide': get_guide(topic),
             }
-        
         except Exception as e:
+            logger.warning('get_system_guide failed: %s', e)
             return {}
     
     @staticmethod
     def generate_document_with_ai(document_type, data):
-        """
-        توليد مستند ذكي
-        متكامل مع: DocumentGenerator
-        """
+        """توليد مستند ذكي."""
         try:
+            from ai_knowledge.generation.document_generator import DocumentGenerator
+
             doc_generator = DocumentGenerator()
-            document = doc_generator.generate(document_type, data)
-            return document
-        
+            return doc_generator.generate(document_type, data)
         except Exception as e:
+            logger.warning('generate_document_with_ai failed: %s', e)
             return None
     
     @staticmethod
     def get_company_information():
-        """
-        معلومات الشركة
-        متكامل مع: company_info
-        """
-        try:
-            info = company_info.get_company_details()
-            return info
-        
-        except Exception as e:
-            return {}
+        """معلومات الشركة."""
+        return COMPANY_INFO
     
     @staticmethod
     def get_system_knowledge(query):
-        """
-        المعرفة بالنظام
-        متكامل مع: system_knowledge
-        """
+        """المعرفة بالنظام."""
         try:
-            knowledge = system_knowledge.search_knowledge(query)
-            return knowledge
-        
+            return search_knowledge(query)
         except Exception as e:
+            logger.warning('get_system_knowledge failed: %s', e)
             return {}
     
     @staticmethod
     def get_advanced_law_info(law_topic):
-        """
-        معلومات قانونية متقدمة
-        متكامل مع: advanced_laws
-        """
+        """معلومات قانونية متقدمة."""
         try:
-            laws = advanced_laws.AdvancedLaws()
-            law_info = laws.get_law_information(law_topic)
-            return law_info
-        
+            topic = law_topic.lower()
+            if 'customs' in topic or 'جمارك' in law_topic:
+                return advanced_laws.get_customs_info('uae')
+            if 'shipping' in topic or 'شحن' in law_topic:
+                return advanced_laws.get_shipping_info('air')
+            return advanced_laws.get_tax_info('uae', law_topic)
         except Exception as e:
+            logger.warning('get_advanced_law_info failed: %s', e)
             return {}
     
     @staticmethod
     def expand_knowledge_base(new_topic):
-        """
-        توسيع قاعدة المعرفة
-        متكامل مع: KnowledgeExpander
-        """
+        """توسيع قاعدة المعرفة."""
         try:
+            from ai_knowledge.expansion.knowledge_expansion import KnowledgeExpander
+
             expander = KnowledgeExpander()
-            result = expander.expand_knowledge(new_topic)
-            return result
-        
+            return expander.search_knowledge(new_topic)
         except Exception as e:
+            logger.warning('expand_knowledge_base failed: %s', e)
             return {}
     
     @staticmethod
     def perform_self_improvement():
-        """
-        التحسين الذاتي للمساعد
-        متكامل مع: AzadSelfImprovement
-        """
+        """التحسين الذاتي للمساعد."""
         try:
+            from ai_knowledge.improvement.self_improvement import AzadSelfImprovement
+
             self_improvement = AzadSelfImprovement()
-            improvements = self_improvement.analyze_and_improve()
-            return improvements
-        
+            return self_improvement.analyze_performance()
         except Exception as e:
+            logger.warning('perform_self_improvement failed: %s', e)
             return {}
-    
+
     @staticmethod
     def integrate_with_system(operation_type, data):
-        """
-        التكامل مع أنظمة النظام
-        متكامل مع: SystemIntegrator
-        """
+        """التكامل مع أنظمة النظام."""
         try:
+            from ai_knowledge.core.system_integration import SystemIntegrator
+
             integrator = SystemIntegrator()
-            result = integrator.execute_integration(operation_type, data)
-            return result
-        
+            if operation_type == 'summary':
+                return integrator.get_system_summary()
+            return integrator.search_data(str(data), data_type=operation_type)
         except Exception as e:
+            logger.warning('integrate_with_system failed: %s', e)
             return {}
     
     @staticmethod
     def get_global_knowledge(query):
-        """
-        المعرفة العالمية والتحديثات
-        متكامل مع: GlobalKnowledgeConnector
-        """
+        """المعرفة العالمية والتحديثات."""
         try:
+            from ai_knowledge.expansion.global_knowledge import GlobalKnowledgeConnector
+
             global_connector = GlobalKnowledgeConnector()
-            knowledge = global_connector.fetch_knowledge(query)
-            return knowledge
-        
+            return global_connector.fetch_knowledge(query)
         except Exception as e:
+            logger.warning('get_global_knowledge failed: %s', e)
             return {}
     
     @staticmethod
     def get_beginners_help(topic):
-        """
-        مساعدة المبتدئين
-        متكامل مع: BeginnersGuide
-        """
+        """مساعدة المبتدئين."""
         try:
+            from ai_knowledge.personality.beginners_mode import BeginnersGuide
+
             beginners_guide = BeginnersGuide()
-            help_content = beginners_guide.get_help(topic)
-            return help_content
-        
+            return beginners_guide.get_help(topic)
         except Exception as e:
+            logger.warning('get_beginners_help failed: %s', e)
             return {}
     
     @staticmethod
@@ -2370,44 +2248,30 @@ class AIService:
     
     @staticmethod
     def get_learning_sources():
-        """
-        الحصول على مصادر التعلم الخارجية (30+ مصدر)
-        
-        Returns:
-            قائمة بأضخم مصادر المعرفة في العالم
-        """
+        """مصادر التعلم الخارجية."""
         try:
+            from ai_knowledge.learning.external_learning import get_external_learning
+
             learning = get_external_learning()
             sources = learning.get_knowledge_sources_list()
             stats = learning.get_statistics()
-            
             return {
                 'sources': sources,
                 'total_sources': len(sources),
-                'statistics': stats
+                'statistics': stats,
             }
-        
         except Exception as e:
+            logger.warning('get_learning_sources failed: %s', e)
             return {'sources': [], 'error': str(e)}
     
     @staticmethod
     def learn_from_external(source_type: str, topic: str, content: str):
-        """
-        التعلم من مصدر خارجي
-        
-        Args:
-            source_type: wikipedia, stackoverflow, github, etc
-            topic: الموضوع
-            content: المحتوى
-        
-        Returns:
-            {success: bool}
-        """
+        """التعلم من مصدر خارجي."""
         try:
+            from ai_knowledge.learning.external_learning import get_external_learning
+
             learning = get_external_learning()
-            result = learning.learn_from_source(source_type, topic, content)
-            
-            return result
-        
+            return learning.learn_from_source(source_type, topic, content)
         except Exception as e:
+            logger.warning('learn_from_external failed: %s', e)
             return {'success': False, 'error': str(e)}
