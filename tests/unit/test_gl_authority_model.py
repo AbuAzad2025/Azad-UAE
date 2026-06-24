@@ -11,25 +11,15 @@ from decimal import Decimal
 
 
 # ---------------------------------------------------------------------------
-# Module-level fixture: app with dynamic GL mapping enabled
+# Module-level: reuse session app; enable dynamic GL mapping for this module
 # ---------------------------------------------------------------------------
 
-@pytest.fixture(scope='module')
-def app():
-    from app import create_app
-    from extensions import db as _db
-
-    app = create_app()
+@pytest.fixture(scope='module', autouse=True)
+def _enable_dynamic_gl_mapping(app):
     app.config.update({
-        'TESTING': True,
-        'WTF_CSRF_ENABLED': False,
         'SERVER_NAME': 'test.local',
         'ENABLE_DYNAMIC_GL_MAPPING': True,
     })
-
-    with app.app_context():
-        yield app
-        _db.session.remove()
 
 
 # ===================================================================

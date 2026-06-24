@@ -4,18 +4,12 @@ Pytest configuration and shared fixtures for the Azad UAE ERP test suite.
 import os
 import shutil
 import sys
+
 import pytest
 from sqlalchemy import text as sa_text
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(__file__))
 sys.path.insert(0, PROJECT_ROOT)
-
-
-def pytest_configure(config):
-    """Clean up previous pytest temp dir to prevent PermissionError at exit on Windows."""
-    temp_dir = os.path.join(PROJECT_ROOT, "tests", ".pytest-temp")
-    if os.path.isdir(temp_dir):
-        shutil.rmtree(temp_dir, ignore_errors=True)
 
 os.environ.setdefault("APP_ENV", "testing")
 os.environ.setdefault("FLASK_ENV", "testing")
@@ -28,6 +22,10 @@ os.environ.setdefault("CELERY_BROKER_URL", "memory://")
 os.environ.setdefault("CELERY_RESULT_BACKEND", "memory://")
 os.environ.setdefault("RATELIMIT_STORAGE_URI", "memory://")
 os.environ.setdefault("SKIP_SYSTEM_INTEGRITY", "1")
+
+from app import create_app  # noqa: E402
+from extensions import db  # noqa: E402
+from services.logging_core import LoggingCore  # noqa: E402
 
 
 class TestConfig:
@@ -85,22 +83,26 @@ class TestConfig:
     PORT = 5000
 
 
+def pytest_configure(config):
+    """Clean up previous pytest temp dir to prevent PermissionError at exit on Windows."""
+    temp_dir = os.path.join(PROJECT_ROOT, "tests", ".pytest-temp")
+    if os.path.isdir(temp_dir):
+        shutil.rmtree(temp_dir, ignore_errors=True)
+
+
 @pytest.fixture(scope="session")
 def app():
     """Create and configure the Flask app for testing against real PostgreSQL."""
-    from app import create_app
-    from extensions import db
-    from services.logging_core import LoggingCore
-
     original_log_error = LoggingCore.log_error
     original_log_frontend = LoggingCore.log_frontend_error
     LoggingCore.log_error = lambda *args, **kwargs: None
     LoggingCore.log_frontend_error = lambda *args, **kwargs: None
 
-    app = create_app(config_class=TestConfig)
+    _app = create_app(config_class=TestConfig)
 
-    with app.app_context():
-        yield app
+    with _app.app_context():
+        db.create_all()
+        yield _app
         db.session.remove()
 
     LoggingCore.log_error = original_log_error
@@ -114,7 +116,6 @@ def client(app):
 
 @pytest.fixture
 def db_session(app):
-    from extensions import db
     with app.app_context():
         db.session.expire_all()
         yield db.session
