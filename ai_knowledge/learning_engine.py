@@ -112,8 +112,8 @@ class AutoRetrainingScheduler:
                     history = json.load(f)
                     if history:
                         return history[-1]
-        except (json.JSONDecodeError, OSError):
-            pass
+        except (json.JSONDecodeError, OSError) as exc:
+            logger.debug('Could not load training log: %s', exc)
         return None
     
     @staticmethod
@@ -243,8 +243,8 @@ class ContinuousLearner:
             try:
                 with open(history_file, 'r', encoding='utf-8') as f:
                     return json.load(f)
-            except (json.JSONDecodeError, OSError):
-                pass
+            except (json.JSONDecodeError, OSError) as exc:
+                logger.debug('Could not load learning history: %s', exc)
         
         return []
     
@@ -800,8 +800,8 @@ class ExternalLearningSystem:
             try:
                 with open(learned_file, 'r', encoding='utf-8') as f:
                     return json.load(f)
-            except (json.JSONDecodeError, OSError):
-                pass
+            except (json.JSONDecodeError, OSError) as exc:
+                logger.debug('Could not load learning history: %s', exc)
         
         return {
             'articles': [],

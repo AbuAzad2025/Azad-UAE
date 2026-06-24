@@ -2,6 +2,8 @@
 🧠 محرك السياق الذكي - Context Engine
 يفهم السياق ويربط جميع ملفات المعرفة والمحركات
 """
+import logging
+
 from .system_integration import system_integrator
 from ai_knowledge.analytics.data_analyzer import data_analyzer
 from .learning_system import learning_system
@@ -9,6 +11,8 @@ from ai_knowledge.expansion.global_knowledge import global_connector
 from ai_knowledge.expansion.knowledge_expansion import knowledge_expander
 from ai_knowledge.generation.document_generator import document_generator
 from ai_knowledge.specialized.advanced_laws import advanced_laws
+
+logger = logging.getLogger(__name__)
 
 
 class ContextEngine:
@@ -92,8 +96,8 @@ class ContextEngine:
                     if ratios:
                         additional_info.append(f"• هامش الربح الإجمالي: {ratios.get('gross_profit_margin', 0):.1f}%")
                         additional_info.append(f"• هامش الربح الصافي: {ratios.get('net_profit_margin', 0):.1f}%")
-            except:
-                pass
+            except Exception as exc:
+                logger.debug('Financial ratios enrichment failed: %s', exc)
         
         elif intent == 'data_query':
             # استخدام محرك التكامل
@@ -105,8 +109,8 @@ class ContextEngine:
                     additional_info.append(f"• إجمالي العملاء: {sys_data.get('total_customers', 0)}")
                     additional_info.append(f"• إجمالي المنتجات: {sys_data.get('total_products', 0)}")
                     additional_info.append(f"• المبيعات اليوم: {sys_data.get('today_sales', 0)} درهم")
-            except:
-                pass
+            except Exception as exc:
+                logger.debug('System summary enrichment failed: %s', exc)
         
         elif intent == 'prediction':
             # استخدام التحليلات التنبؤية
@@ -130,8 +134,8 @@ class ContextEngine:
                     additional_info.append("\n\n🔍 **نتائج البحث في قاعدة المعرفة:**")
                     for result in search_results['results'][:3]:
                         additional_info.append(f"• {result.get('title', 'نتيجة')}")
-            except:
-                pass
+            except Exception as exc:
+                logger.debug('Knowledge search enrichment failed: %s', exc)
         
         # إضافة رؤى من التعلم الذاتي
         try:
@@ -141,8 +145,8 @@ class ContextEngine:
                 top_topic = learning_insights.get('top_topics', [{}])[0] if learning_insights.get('top_topics') else {}
                 if top_topic:
                     additional_info.append(f"• أكثر موضوع تهتم به: {top_topic.get('topic', 'غير محدد')}")
-        except:
-            pass
+        except Exception as exc:
+            logger.debug('Learning insights enrichment failed: %s', exc)
         
         # دمج المعلومات الإضافية
         if additional_info:

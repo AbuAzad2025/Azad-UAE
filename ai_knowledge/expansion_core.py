@@ -16,10 +16,13 @@ Old import paths still work via backward-compatible shims in the original files.
 import requests
 from bs4 import BeautifulSoup
 import json
+import logging
 import os
 from datetime import datetime
 from urllib.parse import urlparse, urljoin
 import time
+
+_expansion_logger = logging.getLogger(__name__)
 
 
 class KnowledgeExpander:
@@ -42,8 +45,8 @@ class KnowledgeExpander:
             try:
                 with open(self.sources_file, 'r', encoding='utf-8') as f:
                     return json.load(f)
-            except:
-                pass
+            except (json.JSONDecodeError, OSError) as exc:
+                _expansion_logger.debug('Could not load knowledge sources: %s', exc)
         
         return {
             'books': [],

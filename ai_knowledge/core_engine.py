@@ -12,11 +12,15 @@ Old import paths still work via backward-compatible shims in the original files.
 🧠 محرك السياق الذكي - Context Engine
 يفهم السياق ويربط جميع ملفات المعرفة والمحركات
 """
+import logging
+
 from ai_knowledge.analytics.data_analyzer import data_analyzer
 from ai_knowledge.expansion.global_knowledge import global_connector
 from ai_knowledge.expansion.knowledge_expansion import knowledge_expander
 from ai_knowledge.generation.document_generator import document_generator
 from ai_knowledge.specialized.advanced_laws import advanced_laws
+
+_context_logger = logging.getLogger(__name__)
 
 
 class ContextEngine:
@@ -100,8 +104,8 @@ class ContextEngine:
                     if ratios:
                         additional_info.append(f"• هامش الربح الإجمالي: {ratios.get('gross_profit_margin', 0):.1f}%")
                         additional_info.append(f"• هامش الربح الصافي: {ratios.get('net_profit_margin', 0):.1f}%")
-            except:
-                pass
+            except Exception as exc:
+                _context_logger.debug('Financial ratios enrichment failed: %s', exc)
         
         elif intent == 'data_query':
             # استخدام محرك التكامل
@@ -113,8 +117,8 @@ class ContextEngine:
                     additional_info.append(f"• إجمالي العملاء: {sys_data.get('total_customers', 0)}")
                     additional_info.append(f"• إجمالي المنتجات: {sys_data.get('total_products', 0)}")
                     additional_info.append(f"• المبيعات اليوم: {sys_data.get('today_sales', 0)} درهم")
-            except:
-                pass
+            except Exception as exc:
+                _context_logger.debug('System summary enrichment failed: %s', exc)
         
         elif intent == 'prediction':
             # استخدام التحليلات التنبؤية
@@ -138,8 +142,8 @@ class ContextEngine:
                     additional_info.append("\n\n🔍 **نتائج البحث في قاعدة المعرفة:**")
                     for result in search_results['results'][:3]:
                         additional_info.append(f"• {result.get('title', 'نتيجة')}")
-            except:
-                pass
+            except Exception as exc:
+                _context_logger.debug('Knowledge search enrichment failed: %s', exc)
         
         # إضافة رؤى من التعلم الذاتي
         try:
@@ -149,8 +153,8 @@ class ContextEngine:
                 top_topic = learning_insights.get('top_topics', [{}])[0] if learning_insights.get('top_topics') else {}
                 if top_topic:
                     additional_info.append(f"• أكثر موضوع تهتم به: {top_topic.get('topic', 'غير محدد')}")
-        except:
-            pass
+        except Exception as exc:
+            _context_logger.debug('Learning insights enrichment failed: %s', exc)
         
         # دمج المعلومات الإضافية
         if additional_info:
@@ -624,8 +628,8 @@ class LongTermMemory:
             try:
                 with open(file_path, 'r', encoding='utf-8') as f:
                     return json.load(f)
-            except:
-                pass
+            except (json.JSONDecodeError, OSError) as exc:
+                logger.debug('Could not load %s memory: %s', memory_type, exc)
         
         return {'memories': [], 'metadata': {'created': datetime.now().isoformat()}}
     

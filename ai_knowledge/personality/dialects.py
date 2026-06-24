@@ -189,12 +189,12 @@ class DialectManager:
     
     def get_encouragement(self, dialect=None):
         """الحصول على عبارة تشجيع باللهجة"""
-        import random
+        import secrets
         if dialect is None:
             dialect = self.current_dialect
         
         if dialect in self.dialects and 'encouragement' in self.dialects[dialect]:
-            return random.choice(self.dialects[dialect]['encouragement'])
+            return secrets.choice(self.dialects[dialect]['encouragement'])
         
         return 'ممتاز! 👍'
     
@@ -240,6 +240,6 @@ def get_dialectal_greeting(dialect='palestinian'):
         ]
     }
     
-    import random
-    return random.choice(greetings.get(dialect, greetings['formal']))
+    import secrets
+    return secrets.choice(greetings.get(dialect, greetings['formal']))
 

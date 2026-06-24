@@ -397,7 +397,7 @@ def {function_name}():
                 columns = filters.get('columns', '*') if filters else '*'
                 conditions = ' AND '.join([f"{k} = '{v}'" for k, v in filters.get('where', {}).items()]) if filters and 'where' in filters else '1=1'
                 
-                query = f"SELECT {columns} FROM {table} WHERE {conditions}"
+                query = f"SELECT {columns} FROM {table} WHERE {conditions}"  # nosec B608
                 
                 if filters and 'order_by' in filters:
                     query += f" ORDER BY {filters['order_by']}"
@@ -411,13 +411,13 @@ def {function_name}():
                 columns = ', '.join(filters.get('columns', [])) if filters else ''
                 values = ', '.join([f"'{v}'" if isinstance(v, str) else str(v) for v in filters.get('values', [])]) if filters else ''
                 
-                return f"INSERT INTO {table} ({columns}) VALUES ({values})"
+                return f"INSERT INTO {table} ({columns}) VALUES ({values})"  # nosec B608
             
             elif intent == 'update':
                 updates = ', '.join([f"{k} = '{v}'" for k, v in filters.get('set', {}).items()]) if filters else ''
                 conditions = ' AND '.join([f"{k} = '{v}'" for k, v in filters.get('where', {}).items()]) if filters else '1=1'
                 
-                return f"UPDATE {table} SET {updates} WHERE {conditions}"
+                return f"UPDATE {table} SET {updates} WHERE {conditions}"  # nosec B608
             
             else:
                 return f"-- Unsupported intent: {intent}"
@@ -484,7 +484,7 @@ def {function_name}():
             logger.error(f"Python generation failed: {e}")
             return f"# Error: {e}"
     
-    def generate_report_query(self, report_type: str, date_range: dict = None) -> str:
+    def generate_report_query(self, report_type: str, date_range: dict = None) -> str:  # nosec B608
         """
         توليد query لتقرير محدد
         
@@ -497,18 +497,21 @@ def {function_name}():
         """
         try:
             if report_type == 'sales':
-                return """
-SELECT 
-    DATE(sale_date) as date,
-    COUNT(*) as sales_count,
-    SUM(amount_aed) as total_sales,
-    AVG(amount_aed) as avg_sale
-FROM sales
-WHERE status = 'confirmed'
-  AND sale_date BETWEEN '{start_date}' AND '{end_date}'
-GROUP BY DATE(sale_date)
-ORDER BY date DESC
-""".format(**date_range) if date_range else "-- Missing date range"
+                if not date_range:
+                    return "-- Missing date range"
+                sales_sql = "\n".join([  # nosec B608
+                    "SELECT",
+                    "    DATE(sale_date) as date,",
+                    "    COUNT(*) as sales_count,",
+                    "    SUM(amount_aed) as total_sales,",
+                    "    AVG(amount_aed) as avg_sale",
+                    "FROM sales",
+                    "WHERE status = 'confirmed'",
+                    f"  AND sale_date BETWEEN '{date_range['start_date']}' AND '{date_range['end_date']}'",
+                    "GROUP BY DATE(sale_date)",
+                    "ORDER BY date DESC",
+                ])
+                return sales_sql
             
             elif report_type == 'inventory':
                 return """

@@ -8,7 +8,8 @@ import logging
 import os
 from datetime import datetime, timedelta
 from collections import defaultdict, Counter
-import pickle
+
+logger = logging.getLogger(__name__)
 
 
 class AzadLearningSystem:
@@ -19,7 +20,7 @@ class AzadLearningSystem:
         
         self.knowledge_file = get_knowledge_path('learned_knowledge.json')
         self.interactions_file = get_knowledge_path('interactions_log.json')
-        self.patterns_file = get_knowledge_path('patterns.pkl')
+        self.patterns_file = get_knowledge_path('patterns.json')
         self.feedback_file = get_knowledge_path('feedback_log.json')
         
         # تحميل المعرفة المكتسبة
@@ -27,22 +28,38 @@ class AzadLearningSystem:
         self.interactions = self._load_interactions()
         self.patterns = self._load_patterns()
         self.feedback_log = self._load_feedback()
-    
+
     @staticmethod
-    def _safe_load_pickle(path):
-        """Safely load a pickle file with size validation."""
-        if not os.path.exists(path):
-            return None
-        size = os.path.getsize(path)
-        if size == 0 or size > 10 * 1024 * 1024:  # reject empty or >10MB
-            return None
-        try:
-            with open(path, 'rb') as f:
-                return pickle.load(f)
-        except (pickle.UnpicklingError, EOFError, OSError, ValueError) as e:
-            logger = logging.getLogger(__name__)
-            logger.debug(f"Could not load pickle {path}: {e}")
-            return None
+    def _empty_patterns():
+        return {
+            'question_patterns': defaultdict(list),
+            'response_patterns': defaultdict(list),
+            'success_patterns': defaultdict(float),
+            'time_patterns': defaultdict(int),
+            'user_behavior': defaultdict(dict),
+        }
+
+    @staticmethod
+    def _patterns_from_storage(data: dict):
+        patterns = AzadLearningSystem._empty_patterns()
+        for key, factory in (
+            ('question_patterns', list),
+            ('response_patterns', list),
+            ('success_patterns', float),
+            ('time_patterns', int),
+            ('user_behavior', dict),
+        ):
+            stored = data.get(key, {})
+            if isinstance(stored, dict):
+                patterns[key] = defaultdict(factory, stored)
+        return patterns
+
+    @staticmethod
+    def _patterns_to_storage(patterns: dict) -> dict:
+        return {key: dict(patterns.get(key, {})) for key in (
+            'question_patterns', 'response_patterns', 'success_patterns',
+            'time_patterns', 'user_behavior',
+        )}
 
     def _load_learned_knowledge(self):
         """تحميل المعرفة المكتسبة"""
@@ -54,8 +71,8 @@ class AzadLearningSystem:
                     if not isinstance(exp, defaultdict):
                         data['expertise_areas'] = defaultdict(int, exp)
                     return data
-            except (json.JSONDecodeError, OSError):
-                pass
+            except (json.JSONDecodeError, OSError) as exc:
+                logger.debug('Could not load knowledge file: %s', exc)
         return {
             'new_terms': {},
             'customer_preferences': {},
@@ -77,22 +94,19 @@ class AzadLearningSystem:
             try:
                 with open(self.interactions_file, 'r', encoding='utf-8') as f:
                     return json.load(f)
-            except (json.JSONDecodeError, OSError):
-                pass
+            except (json.JSONDecodeError, OSError) as exc:
+                logger.debug('Could not load interactions file: %s', exc)
         return []
     
     def _load_patterns(self):
         """تحميل الأنماط المكتشفة"""
-        result = self._safe_load_pickle(self.patterns_file)
-        if result is not None:
-            return result
-        return {
-            'question_patterns': defaultdict(list),
-            'response_patterns': defaultdict(list),
-            'success_patterns': defaultdict(float),
-            'time_patterns': defaultdict(int),
-            'user_behavior': defaultdict(dict)
-        }
+        if os.path.exists(self.patterns_file):
+            try:
+                with open(self.patterns_file, 'r', encoding='utf-8') as f:
+                    return self._patterns_from_storage(json.load(f))
+            except (json.JSONDecodeError, OSError, TypeError, ValueError) as exc:
+                logger.debug('Could not load patterns.json: %s', exc)
+        return self._empty_patterns()
     
     def _load_feedback(self):
         """تحميل سجل التقييمات"""
@@ -100,8 +114,8 @@ class AzadLearningSystem:
             try:
                 with open(self.feedback_file, 'r', encoding='utf-8') as f:
                     return json.load(f)
-            except (json.JSONDecodeError, OSError):
-                pass
+            except (json.JSONDecodeError, OSError) as exc:
+                logger.debug('Could not load feedback file: %s', exc)
         return []
     
     def learn_from_interaction(self, question, response, user_feedback=None, context=None,
@@ -245,11 +259,11 @@ class AzadLearningSystem:
                 json.dump(recent_interactions, f, ensure_ascii=False, indent=2)
             
             # حفظ الأنماط
-            with open(self.patterns_file, 'wb') as f:
-                pickle.dump(self.patterns, f)
+            with open(self.patterns_file, 'w', encoding='utf-8') as f:
+                json.dump(self._patterns_to_storage(self.patterns), f, ensure_ascii=False, indent=2)
             
         except Exception as e:
-            print(f"Error saving learning data: {e}")
+            logger.warning('Error saving learning data: %s', e)
     
     def _update_stats(self):
         """تحديث الإحصائيات"""

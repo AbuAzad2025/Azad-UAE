@@ -4,7 +4,7 @@
 """
 
 from datetime import datetime
-import random
+import secrets
 
 
 class AzadPersonality:
@@ -111,52 +111,52 @@ class AzadPersonality:
     @staticmethod
     def get_greeting():
         """الحصول على تحية مرحبة"""
-        return random.choice(AzadPersonality.GREETINGS)
+        return secrets.choice(AzadPersonality.GREETINGS)
     
     @staticmethod
     def get_positive_response():
         """الحصول على رد إيجابي"""
-        return random.choice(AzadPersonality.POSITIVE_RESPONSES)
+        return secrets.choice(AzadPersonality.POSITIVE_RESPONSES)
     
     @staticmethod
     def get_success_response():
         """الحصول على رد نجاح"""
-        return random.choice(AzadPersonality.SUCCESS_RESPONSES)
+        return secrets.choice(AzadPersonality.SUCCESS_RESPONSES)
     
     @staticmethod
     def get_silly_response():
         """الرد على الأسئلة السخيفة"""
-        return random.choice(AzadPersonality.SILLY_RESPONSES)
+        return secrets.choice(AzadPersonality.SILLY_RESPONSES)
     
     @staticmethod
     def get_inappropriate_response():
         """الرد على الاقتراحات غير المناسبة"""
-        return random.choice(AzadPersonality.INAPPROPRIATE_RESPONSES)
+        return secrets.choice(AzadPersonality.INAPPROPRIATE_RESPONSES)
     
     @staticmethod
     def get_insult_response():
         """الرد على الإهانات"""
-        return random.choice(AzadPersonality.INSULT_RESPONSES)
+        return secrets.choice(AzadPersonality.INSULT_RESPONSES)
     
     @staticmethod
     def get_professional_joke():
         """الحصول على نكتة مهنية"""
-        return random.choice(AzadPersonality.PROFESSIONAL_JOKES)
+        return secrets.choice(AzadPersonality.PROFESSIONAL_JOKES)
     
     @staticmethod
     def get_encouragement():
         """الحصول على تشجيع"""
-        return random.choice(AzadPersonality.ENCOURAGEMENT)
+        return secrets.choice(AzadPersonality.ENCOURAGEMENT)
     
     @staticmethod
     def get_help_intro():
         """الحصول على مقدمة المساعدة"""
-        return random.choice(AzadPersonality.HELP_INTRO)
+        return secrets.choice(AzadPersonality.HELP_INTRO)
     
     @staticmethod
     def get_thanks_response():
         """الرد على الشكر"""
-        return random.choice(AzadPersonality.THANKS_RESPONSES)
+        return secrets.choice(AzadPersonality.THANKS_RESPONSES)
     
     @staticmethod
     def add_personality_to_response(response, mood="happy"):

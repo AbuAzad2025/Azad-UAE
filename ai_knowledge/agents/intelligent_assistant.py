@@ -248,10 +248,8 @@ class IntelligentAssistant:
             if has_request_context():
                 try:
                     tid = get_active_tenant_id(current_user)
-                except Exception:
-                    pass
-
-            data = {}
+                except Exception as exc:
+                    logger.debug('Tenant resolution failed: %s', exc)
             
             def _f(model):
                 q = model.query
@@ -359,10 +357,8 @@ class IntelligentAssistant:
                         analysis['predictions'].append(
                             f"🔮 التوقع للأسبوع القادم: {prediction['predicted_amount']:,.0f} درهم"
                         )
-                except:
-                    pass
-            
-            elif intent == 'inventory_check' and 'low_stock_products' in data:
+                except Exception as exc:
+                    logger.debug('Sales prediction failed: %s', exc)
                 low_stock = data['low_stock_products']
                 
                 if len(low_stock) == 0:
@@ -416,14 +412,14 @@ class IntelligentAssistant:
             
             # المقدمة الديناميكية
             if intent == 'greeting':
-                import random
+                import secrets
                 greetings = [
                     "يا هلا! 🌹 أنا أزاد، مساعدك الذكي. آمرني؟",
                     "هلا والله! جاهز للمساعدة في أي وقت 💪",
                     "وعليكم السلام! كيف أقدر أساعدك اليوم في الكراج؟ 🚗",
                     "أهلاً بك! معك أزاد، المحاسب والمهندس والمدير المالي 😉"
                 ]
-                response_parts.append(random.choice(greetings))
+                response_parts.append(secrets.choice(greetings))
 
             elif intent == 'who_are_you':
                 response_parts.append("🤖 **أنا أزاد (AZAD)**\n")
@@ -435,14 +431,14 @@ class IntelligentAssistant:
                 response_parts.append("• 🧠 **ذكي:** أتعلم منك كل يوم!")
 
             elif intent == 'praise':
-                import random
+                import secrets
                 thanks = [
                     "تسلم! هذا واجبي 🌹",
                     "كفوك الطيب! حاضرين للطيبين 💪",
                     "شكراً لك! شهادة أعتز فيها 🌟",
                     "الله يعافيك! نحن بالخدمة دائماً"
                 ]
-                response_parts.append(random.choice(thanks))
+                response_parts.append(secrets.choice(thanks))
 
             elif intent == 'complaint':
                 response_parts.append("😔 **حقك علي!**\n")

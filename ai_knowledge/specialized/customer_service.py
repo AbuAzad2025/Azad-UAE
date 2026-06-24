@@ -39,7 +39,7 @@ CUSTOMER_SERVICE = {
 
 def get_customer_service_tip():
     """نصيحة في خدمة العملاء"""
-    import random
+    import secrets
     
     tips = [
         "😊 **الابتسامة أولاً:** حتى بالهاتف، الابتسامة تُسمع في نبرة الصوت",
@@ -54,4 +54,4 @@ def get_customer_service_tip():
         "🌟 **تميز:** افعل شيئاً يتوقعه - ويفاجئ به!"
     ]
     
-    return random.choice(tips)
+    return secrets.choice(tips)

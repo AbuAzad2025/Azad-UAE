@@ -288,8 +288,8 @@ class ExternalLearningSystem:
             try:
                 with open(learned_file, 'r', encoding='utf-8') as f:
                     return json.load(f)
-            except:
-                pass
+            except (json.JSONDecodeError, OSError) as exc:
+                logger.debug('Could not load external learned data: %s', exc)
         
         return {
             'articles': [],

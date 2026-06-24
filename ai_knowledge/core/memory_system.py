@@ -58,10 +58,8 @@ class LongTermMemory:
             try:
                 with open(file_path, 'r', encoding='utf-8') as f:
                     return json.load(f)
-            except:
-                pass
-        
-        return {'memories': [], 'metadata': {'created': datetime.now().isoformat()}}
+            except (json.JSONDecodeError, OSError) as exc:
+                logger.debug('Could not load %s memory: %s', memory_type, exc)
     
     def _save_memory(self, memory_type, data):
         """حفظ الذاكرة"""

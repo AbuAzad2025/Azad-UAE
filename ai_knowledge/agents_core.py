@@ -23,11 +23,10 @@ from ai_knowledge.agents.master_brain import (
 def intelligent_response(message: str, user_id: int = None, context: dict = None) -> str:
     """Get AI response - tries action dispatch first, then local intelligence."""
     try:
-        # Seed trainer on first call
         from ai_knowledge.trainer import trainer
         trainer.seed()
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.debug('Trainer seed skipped: %s', exc)
     try:
         from ai_knowledge.action_dispatcher import action_dispatcher
         parsed = action_dispatcher.parse_chat_action(message)
@@ -62,8 +61,8 @@ def intelligent_response(message: str, user_id: int = None, context: dict = None
         try:
             from ai_knowledge.action_dispatcher import _log_ai_error
             _log_ai_error("intelligent_response_error", str(e), request_data={"message": message[:200]})
-        except Exception:
-            pass
+        except Exception as log_exc:
+            logger.debug('Failed to log intelligent_response error: %s', log_exc)
         return f"عذراً، حدث خطأ أثناء المعالجة. يرجى المحاولة مرة أخرى."
 
 # ============================================================================
@@ -82,8 +81,8 @@ def _check_llm_availability() -> bool:
     try:
         from dotenv import load_dotenv
         load_dotenv(override=True)
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.debug('dotenv load skipped: %s', exc)
     _llm_available = bool(os.environ.get('GROQ_API_KEY') or
                           os.environ.get('GEMINI_API_KEY') or
                           os.environ.get('OPENAI_API_KEY'))
@@ -96,8 +95,8 @@ def _get_llm_response(system_prompt: str, user_message: str) -> str | None:
     try:
         from dotenv import load_dotenv
         load_dotenv(override=True)
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.debug('dotenv load skipped: %s', exc)
 
     groq_key = os.environ.get('GROQ_API_KEY')
     if groq_key:
@@ -119,8 +118,8 @@ def _get_llm_response(system_prompt: str, user_message: str) -> str | None:
             )
             if resp.status_code == 200:
                 return resp.json()["choices"][0]["message"]["content"]
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.debug('Groq LLM request failed: %s', exc)
 
     gemini_key = os.environ.get('GEMINI_API_KEY')
     if gemini_key:
@@ -138,8 +137,8 @@ def _get_llm_response(system_prompt: str, user_message: str) -> str | None:
                     parts = candidates[0].get("content", {}).get("parts", [])
                     if parts:
                         return parts[0].get("text", "")
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.debug('Gemini LLM request failed: %s', exc)
 
     return None
 
@@ -230,8 +229,8 @@ def ask_azad_enhanced(question: str, context: dict = None, user_id: int = None) 
                     result["answer"] += f"**ميزة {k['name']}**: {info['name_ar']}\n  {info['description']}\n"
                     result["source"] = "system_knowledge"
                     result["confidence"] = 0.9
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.debug('System knowledge lookup failed: %s', exc)
 
     # Step 2: If no system knowledge answer, try LLM
     if not result["answer"] and _check_llm_availability():

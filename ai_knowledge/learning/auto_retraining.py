@@ -65,9 +65,8 @@ class AutoRetrainingScheduler:
                     history = json.load(f)
                     if history:
                         return history[-1]
-        except:
-            pass
-        return None
+        except (json.JSONDecodeError, OSError) as exc:
+            logger.debug('Could not load training log: %s', exc)
     
     @staticmethod
     def log_training(sales_count: int, results: dict):

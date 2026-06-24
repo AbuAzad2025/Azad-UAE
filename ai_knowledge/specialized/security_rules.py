@@ -50,7 +50,7 @@ class SecurityRules:
     def get_security_response(request_type):
         """الحصول على رد أمني"""
         responses = {
-            'password_request': "😊 عذراً، أزاد لا يشارك كلمات المرور. هذا لأمانك! 🔒",
+            'password_request': "😊 عذراً، أزاد لا يشارك كلمات المرور. هذا لأمانك! 🔒",  # nosec B105
             'sensitive_info': "🌟 هذه المعلومات حساسة. يرجى التواصل مع المالك! 👑",
             'unauthorized': "🚫 عذراً، ليس لديك صلاحية للوصول لهذه المعلومات! 🔐",
             'owner_only': "👑 هذه الميزة متاحة للمالك فقط! 💎"

@@ -4,10 +4,13 @@
 """
 
 import json
+import logging
 import os
 from datetime import datetime, timedelta
 from collections import defaultdict
-import random
+import secrets
+
+logger = logging.getLogger(__name__)
 
 
 class AzadSelfImprovement:
@@ -64,8 +67,8 @@ class AzadSelfImprovement:
             try:
                 with open(self.improvement_file, 'r', encoding='utf-8') as f:
                     return json.load(f)
-            except:
-                pass
+            except (json.JSONDecodeError, OSError) as exc:
+                logger.debug('Could not load improvement data: %s', exc)
         return {
             'total_improvements': 0,
             'last_improvement_date': None,
@@ -80,8 +83,8 @@ class AzadSelfImprovement:
             try:
                 with open(self.performance_file, 'r', encoding='utf-8') as f:
                     return json.load(f)
-            except:
-                pass
+            except (json.JSONDecodeError, OSError) as exc:
+                logger.debug('Could not load performance metrics: %s', exc)
         return {
             'daily_metrics': {},
             'weekly_metrics': {},
@@ -95,8 +98,8 @@ class AzadSelfImprovement:
             try:
                 with open(self.goals_file, 'r', encoding='utf-8') as f:
                     return json.load(f)
-            except:
-                pass
+            except (json.JSONDecodeError, OSError) as exc:
+                logger.debug('Could not load improvement goals: %s', exc)
         return {
             'short_term_goals': [
                 'تحسين دقة التنبؤات إلى 90%',
@@ -237,7 +240,7 @@ class AzadSelfImprovement:
         improvement_rate = config['improvement_rate']
         
         # حساب التحسين
-        improvement_amount = improvement_rate * random.uniform(0.8, 1.2)  # تحسين عشوائي
+        improvement_amount = improvement_rate * secrets.SystemRandom().uniform(0.8, 1.2)
         new_score = min(current_score + improvement_amount, config['target_score'])
         
         # تحديث النقاط
@@ -286,7 +289,7 @@ class AzadSelfImprovement:
                           if area not in [w['area'] for w in weaknesses[:2]]]
         
         if available_areas:
-            random_area = random.choice(available_areas)
+            random_area = secrets.choice(available_areas)
             result = self.implement_improvement(random_area, 'auto')
             if result['success']:
                 improvements_made.append(result)

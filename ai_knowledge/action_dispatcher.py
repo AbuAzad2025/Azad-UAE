@@ -3,7 +3,10 @@ Action Dispatcher - Secure ERP operation execution via AI.
 Maps user intents to system operations with permission validation,
 input sanitization, error handling, and audit logging.
 """
+from __future__ import annotations
+
 import json
+import logging
 import re
 from datetime import datetime
 from decimal import Decimal
@@ -17,7 +20,18 @@ from werkzeug.security import generate_password_hash
 from extensions import db
 from services.logging_core import LoggingCore
 
+logger = logging.getLogger(__name__)
+
 # ===== HELPERS =====
+
+def _escape_ilike(term: str) -> str:
+    """Escape SQL LIKE wildcards in user-provided search terms."""
+    return (
+        term.replace('\\', '\\\\')
+        .replace('%', '\\%')
+        .replace('_', '\\_')
+    )
+
 
 def _get_active_tenant_id():
     """Get current tenant ID from Flask g or user."""
@@ -27,7 +41,7 @@ def _get_active_tenant_id():
         if tenant_id:
             return tenant_id
     except RuntimeError:
-        pass
+        logger.debug('No Flask app context for tenant lookup')
     user = getattr(current_user, 'is_authenticated', False)
     if user:
         return getattr(current_user, 'tenant_id', None)
@@ -39,8 +53,8 @@ def _has_permission(perm_code: str) -> bool:
     try:
         if hasattr(current_user, 'has_permission') and current_user.is_authenticated:
             return current_user.has_permission(perm_code)
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.debug('Permission check failed: %s', exc)
     return False
 
 
@@ -48,7 +62,8 @@ def _is_owner() -> bool:
     """Check if current user is owner."""
     try:
         return getattr(current_user, 'is_owner', False) or _has_permission('admin')
-    except Exception:
+    except Exception as exc:
+        logger.debug('Owner check failed: %s', exc)
         return False
 
 
@@ -57,8 +72,8 @@ def _audit(action: str, entity: str, entity_id: int | None = None, details: dict
     try:
         LoggingCore.log_audit(action=action, table_name=entity,
                               record_id=entity_id, changes=details or {})
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.warning('Audit log failed for %s/%s: %s', action, entity, exc)
 
 
 def _log_ai_error(error_type: str, message: str, endpoint: str = "ai_chat",
@@ -77,8 +92,9 @@ def _log_ai_error(error_type: str, message: str, endpoint: str = "ai_chat",
         )
         db.session.add(log)
         db.session.commit()
-    except Exception:
+    except Exception as exc:
         db.session.rollback()
+        logger.warning('AI error log failed (%s): %s', error_type, exc)
 
 
 # ===== ACTION DEFINITIONS =====
@@ -158,7 +174,8 @@ class ActionDispatcher:
                 q = Customer.query.filter_by(tenant_id=tid, is_active=True)
                 search = args.get("search", "")
                 if search:
-                    q = q.filter(Customer.name.ilike(f"%{search}%"))
+                    safe = _escape_ilike(search.strip())
+                    q = q.filter(Customer.name.ilike(f'%{safe}%', escape='\\'))
                 customers = q.order_by(Customer.name).limit(20).all()
                 data = [{"id": c.id, "name": c.name, "phone": c.phone,
                          "balance": float(c.balance or 0)} for c in customers]
@@ -227,7 +244,8 @@ class ActionDispatcher:
                 q = Product.query.filter_by(tenant_id=tid, is_active=True)
                 search = args.get("search", "")
                 if search:
-                    q = q.filter(Product.name.ilike(f"%{search}%"))
+                    safe = _escape_ilike(search.strip())
+                    q = q.filter(Product.name.ilike(f'%{safe}%', escape='\\'))
                 products = q.order_by(Product.name).limit(20).all()
                 data = [{"id": p.id, "name": p.name, "sku": p.sku,
                          "price": float(p.selling_price or 0),

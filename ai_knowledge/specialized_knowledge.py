@@ -49,7 +49,7 @@ CUSTOMER_SERVICE = {
 
 def get_customer_service_tip():
     """نصيحة في خدمة العملاء"""
-    import random
+    import secrets
     
     tips = [
         "😊 **الابتسامة أولاً:** حتى بالهاتف، الابتسامة تُسمع في نبرة الصوت",
@@ -64,7 +64,7 @@ def get_customer_service_tip():
         "🌟 **تميز:** افعل شيئاً يتوقعه - ويفاجئ به!"
     ]
     
-    return random.choice(tips)
+    return secrets.choice(tips)
 
 
 # ===== Consolidated from: specialized/tax_system.py =====
@@ -301,7 +301,7 @@ class SecurityRules:
     def get_security_response(request_type):
         """الحصول على رد أمني"""
         responses = {
-            'password_request': "😊 عذراً، أزاد لا يشارك كلمات المرور. هذا لأمانك! 🔒",
+            'password_request': "😊 عذراً، أزاد لا يشارك كلمات المرور. هذا لأمانك! 🔒",  # nosec B105
             'sensitive_info': "🌟 هذه المعلومات حساسة. يرجى التواصل مع المالك! 👑",
             'unauthorized': "🚫 عذراً، ليس لديك صلاحية للوصول لهذه المعلومات! 🔐",
             'owner_only': "👑 هذه الميزة متاحة للمالك فقط! 💎"
