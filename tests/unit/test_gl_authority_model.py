@@ -76,7 +76,7 @@ class TestProvisioningScope:
 
             mappings = GLAccountMapping.query.filter_by(tenant_id=tenant.id).all()
             for mapping in mappings:
-                account = GLAccount.query.get(mapping.gl_account_id)
+                account = db.session.get(GLAccount, mapping.gl_account_id)
                 assert account is not None, f"Mapping {mapping.concept_code} -> missing account"
                 assert account.is_active, f"Mapping {mapping.concept_code} -> inactive {account.code}"
                 assert not account.is_header, f"Mapping {mapping.concept_code} -> header {account.code}"
@@ -166,7 +166,7 @@ class TestLiquidityMode:
             cash_line = GLJournalLine.query.filter_by(entry_id=entry.id).filter(
                 GLJournalLine.debit > 0
             ).first()
-            posted = GLAccount.query.get(cash_line.account_id)
+            posted = db.session.get(GLAccount, cash_line.account_id)
             assert posted.id == cash_acc.id, (
                 f"Expected {cash_acc.id} ({cash_acc.code}), got {posted.id} ({posted.code})"
             )
@@ -218,7 +218,7 @@ class TestLiquidityMode:
             bank_line = GLJournalLine.query.filter_by(entry_id=entry.id).filter(
                 GLJournalLine.debit > 0
             ).first()
-            posted = GLAccount.query.get(bank_line.account_id)
+            posted = db.session.get(GLAccount, bank_line.account_id)
             assert posted.id == bank_acc.id, (
                 f"Expected {bank_acc.id} ({bank_acc.code}), got {posted.id} ({posted.code})"
             )
@@ -316,8 +316,8 @@ class TestRecordMode:
             ).order_by(GLJournalLine.id).all()
             assert len(lines) == 2
 
-            acc0 = GLAccount.query.get(lines[0].account_id)
-            acc1 = GLAccount.query.get(lines[1].account_id)
+            acc0 = db.session.get(GLAccount, lines[0].account_id)
+            acc1 = db.session.get(GLAccount, lines[1].account_id)
 
             assert acc0.id == dep_exp_acc.id, (
                 f"Expected expense {dep_exp_acc.id}, got {acc0.id}"
@@ -379,7 +379,7 @@ class TestRecordMode:
             lines = GLJournalLine.query.filter_by(entry_id=entry.id).all()
             asset_line = None
             for line in lines:
-                acct = GLAccount.query.get(line.account_id)
+                acct = db.session.get(GLAccount, line.account_id)
                 if acct and acct.id == asset_acc.id:
                     asset_line = line
                     break
@@ -458,7 +458,7 @@ class TestMappingMode:
                     tenant_id=tenant.id, concept_code=code
                 ).first()
                 assert mapping is not None, f"{code} mapping missing"
-                account = GLAccount.query.get(mapping.gl_account_id)
+                account = db.session.get(GLAccount, mapping.gl_account_id)
                 assert account is not None, f"{code} -> missing"
                 assert account.is_active, f"{code} -> inactive"
                 assert not account.is_header, f"{code} -> header"

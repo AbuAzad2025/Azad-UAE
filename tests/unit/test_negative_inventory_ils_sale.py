@@ -38,6 +38,7 @@ def ils_tenant(db_session):
     )
     db_session.add(tenant)
     db_session.commit()
+    db_session.refresh(tenant)
     return tenant
 
 
@@ -168,6 +169,9 @@ def ils_coa(db_session, ils_tenant, ils_branch, negative_warehouse):
     """Build full GL chart for the tenant."""
     GLTreeBuilder.build(tenant_id=ils_tenant.id, cleanup_extra=False)
     GLAccountingSetupService.execute(tenant_id=ils_tenant.id, dry_run=False)
+    tenant = db_session.get(Tenant, ils_tenant.id)
+    tenant.enable_tax = True
+    tenant.default_tax_rate = Decimal("16.00")
     db_session.commit()
     return ils_tenant
 
@@ -197,11 +201,29 @@ class TestNegativeInventoryILSSale:
             
             ar_acct = GLAccount.query.filter_by(tenant_id=ils_tenant.id, code="1130").first()
             sales_acct = GLAccount.query.filter_by(tenant_id=ils_tenant.id, code="4100").first()
-            vat_acct = GLAccount.query.filter_by(tenant_id=ils_tenant.id, code="2121").first()
             cogs_acct = GLAccount.query.filter_by(tenant_id=ils_tenant.id, code="5100").first()
             inv_acct = GLAccount.query.filter_by(tenant_id=ils_tenant.id, code="1140").first()
+
+            from utils.tax_settings import should_post_vat_gl
+
+            tenant_row = db_session.get(Tenant, ils_tenant.id)
+            tenant_row.enable_tax = True
+            tenant_row.default_tax_rate = Decimal("16.00")
+            db_session.commit()
+            db_session.refresh(tenant_row)
+            assert should_post_vat_gl(ils_tenant.id) is True
+
+            vat_account_code = GLService.get_account_code_for_concept(
+                'VAT_OUTPUT',
+                branch_id=ils_branch.id,
+                tenant_id=ils_tenant.id,
+                fallback_key='tax_payable',
+            )
+            vat_acct = GLAccount.query.filter_by(
+                tenant_id=ils_tenant.id, code=vat_account_code
+            ).first()
             assert all([ar_acct, sales_acct, vat_acct, cogs_acct, inv_acct]), "Key accounts missing"
-            
+
             # Step 2: Create the sale
             quantity = 1
             unit_price = Decimal("100.00")
@@ -235,6 +257,7 @@ class TestNegativeInventoryILSSale:
             assert sale.subtotal == expected_subtotal
             assert sale.tax_amount == expected_vat
             assert sale.total_amount == expected_total
+            assert should_post_vat_gl(sale.tenant_id) is True
             
             # Step 4: Verify stock went negative
             pws = ProductWarehouseStock.query.filter_by(
@@ -264,18 +287,23 @@ class TestNegativeInventoryILSSale:
                 tenant_id=ils_tenant.id,
                 reference_id=sale.id,
             ).all()
-            
+
             assert len(entries) > 0, "No GL entries for sale"
-            
+
+            def _line_account_code(line):
+                acc = db_session.get(GLAccount, line.account_id)
+                return acc.code if acc else None
+
             # Separate revenue and COGS entries
             revenue_entry = None
             cogs_entry = None
             for entry in entries:
                 lines = GLJournalLine.query.filter_by(entry_id=entry.id).all()
                 for line in lines:
-                    if line.account and line.account.code == "4100":
+                    code = _line_account_code(line)
+                    if code == "4100":
                         revenue_entry = entry
-                    if line.account and line.account.code == "5100":
+                    if code == "5100":
                         cogs_entry = entry
             
             assert revenue_entry is not None, "Revenue GL entry not found"
@@ -290,9 +318,9 @@ class TestNegativeInventoryILSSale:
             for entry in entries:
                 all_lines.extend(GLJournalLine.query.filter_by(entry_id=entry.id).all())
 
-            ar_line = [l for l in all_lines if l.account and l.account.code == "1130"]
-            sales_line = [l for l in all_lines if l.account and l.account.code == "4100"]
-            vat_line = [l for l in all_lines if l.account and l.account.code == "2121"]
+            ar_line = [l for l in all_lines if _line_account_code(l) == "1130"]
+            sales_line = [l for l in all_lines if _line_account_code(l) == "4100"]
+            vat_line = [l for l in all_lines if _line_account_code(l) == vat_account_code]
             
             assert len(ar_line) == 1, "AR line missing"
             assert len(sales_line) == 1, "Sales line missing"
@@ -315,8 +343,8 @@ class TestNegativeInventoryILSSale:
             assert abs(cogs_debit - cogs_credit) < Decimal("0.01"), \
                 f"COGS entry NOT balanced: Dr={cogs_debit} Cr={cogs_credit}"
             
-            cogs_dr = [l for l in cogs_lines if l.account and l.account.code == "5100"]
-            inv_cr = [l for l in cogs_lines if l.account and l.account.code == "1140"]
+            cogs_dr = [l for l in cogs_lines if _line_account_code(l) == "5100"]
+            inv_cr = [l for l in cogs_lines if _line_account_code(l) == "1140"]
             
             assert len(cogs_dr) == 1, "COGS debit line missing"
             assert cogs_dr[0].debit > 0, \
