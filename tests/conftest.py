@@ -282,11 +282,12 @@ def auto_cleanup_isolation(app):
     def _restore_real_db_session():
         with app.app_context():
             ext = app.extensions['sqlalchemy']
-            object.__setattr__(
-                db,
-                'session',
-                ext._make_scoped_session(getattr(ext, '_session_options', {})),
-            )
+            if _session_is_polluted(db.session):
+                object.__setattr__(
+                    db,
+                    'session',
+                    ext._make_scoped_session(getattr(ext, '_session_options', {})),
+                )
 
     def _scrub_db():
         with app.app_context():
