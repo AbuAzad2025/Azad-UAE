@@ -1,6 +1,7 @@
 """Analytics service — POS insights, product performance, branch filtering."""
 from __future__ import annotations
 
+import inspect
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from unittest.mock import MagicMock
@@ -14,25 +15,28 @@ def _patch_tenanting_active_id(mocker):
     mocker.patch.object(tenanting_mod, 'active_tenant_id', lambda: 1, create=True)
 
 
+def _patch_session_query(mocker, handler):
+    """Patch analytics_service.db.session.query with a per-model handler."""
+    session = mocker.patch('services.analytics_service.db.session')
+
+    def _query(target):
+        result = handler(target)
+        return result if result is not None else MagicMock()
+
+    session.query.side_effect = _query
+    return session
+
+
 class TestCustomerInsights:
     """get_customer_insights — LTV sorting and branch scope."""
 
     def test_sorts_by_lifetime_value_desc_and_caps_fifty(self, mocker):
+        from models import Customer, Sale
+
         customers = [MagicMock(id=i, name=f'C{i}') for i in range(55)]
         cust_q = MagicMock()
         cust_q.filter_by.return_value = cust_q
         cust_q.all.return_value = customers
-        mocker.patch.object(
-            __import__('models', fromlist=['Customer']).Customer,
-            'query',
-            new_callable=mocker.PropertyMock,
-            return_value=cust_q,
-        )
-
-        session = mocker.patch('services.analytics_service.db.session')
-        session.query.return_value.filter.return_value.scalar.side_effect = [
-            1000 - i for i in range(55)
-        ]
 
         sale_count_q = MagicMock()
         sale_count_q.filter_by.return_value = sale_count_q
@@ -46,16 +50,24 @@ class TestCustomerInsights:
         last_sale = MagicMock(sale_date=datetime.now())
         last_sale_q.first.return_value = last_sale
 
-        mocker.patch.object(
-            __import__('models', fromlist=['Sale']).Sale,
-            'query',
-            new_callable=mocker.PropertyMock,
-            return_value=MagicMock(
-                filter_by=MagicMock(
-                    side_effect=lambda **kw: sale_count_q if 'status' in kw else last_sale_q
-                )
-            ),
-        )
+        sum_q = MagicMock()
+        sum_q.filter.return_value = sum_q
+        sum_q.scalar.side_effect = [1000 - i for i in range(55)]
+
+        def _handler(target):
+            if target is Customer:
+                q = MagicMock()
+                q.filter_by.return_value = cust_q
+                return q
+            if target is Sale:
+                q = MagicMock()
+                q.filter_by.side_effect = lambda **kw: sale_count_q if 'status' in kw else last_sale_q
+                return q
+            if not inspect.isclass(target):
+                return sum_q
+            return None
+
+        _patch_session_query(mocker, _handler)
 
         from services.analytics_service import AnalyticsService
 
@@ -64,18 +76,23 @@ class TestCustomerInsights:
         assert result[0]['lifetime_value'] >= result[1]['lifetime_value']
 
     def test_branch_filter_applied_to_customer_query(self, mocker):
+        from models import Customer
+
         cust_q = MagicMock()
         cust_q.filter_by.return_value = cust_q
         cust_q.join.return_value = cust_q
         cust_q.filter.return_value = cust_q
         cust_q.distinct.return_value = cust_q
         cust_q.all.return_value = []
-        mocker.patch.object(
-            __import__('models', fromlist=['Customer']).Customer,
-            'query',
-            new_callable=mocker.PropertyMock,
-            return_value=cust_q,
-        )
+
+        def _handler(target):
+            if target is Customer:
+                q = MagicMock()
+                q.filter_by.return_value = cust_q
+                return q
+            return None
+
+        _patch_session_query(mocker, _handler)
 
         from services.analytics_service import AnalyticsService
 
@@ -218,16 +235,12 @@ class TestForecastingAndPackages:
         assert forecast['confidence'] in ('عالية', 'متوسطة', 'منخفضة')
 
     def test_package_performance_completed_vs_pending(self, mocker):
+        from models import Package, PackagePurchase
+
         pkg = MagicMock(id=1, name_ar='Gold')
         pkg_q = MagicMock()
         pkg_q.filter_by.return_value = pkg_q
         pkg_q.all.return_value = [pkg]
-        mocker.patch.object(
-            __import__('models', fromlist=['Package']).Package,
-            'query',
-            new_callable=mocker.PropertyMock,
-            return_value=pkg_q,
-        )
 
         purchases = [
             MagicMock(payment_status='completed', amount_paid=100),
@@ -236,12 +249,19 @@ class TestForecastingAndPackages:
         pp_q = MagicMock()
         pp_q.filter_by.return_value = pp_q
         pp_q.all.return_value = purchases
-        mocker.patch.object(
-            __import__('models', fromlist=['PackagePurchase']).PackagePurchase,
-            'query',
-            new_callable=mocker.PropertyMock,
-            return_value=pp_q,
-        )
+
+        def _handler(target):
+            if target is Package:
+                q = MagicMock()
+                q.filter_by.return_value = pkg_q
+                return q
+            if target is PackagePurchase:
+                q = MagicMock()
+                q.filter_by.return_value = pp_q
+                return q
+            return None
+
+        _patch_session_query(mocker, _handler)
 
         from services.analytics_service import AnalyticsService
 
@@ -255,6 +275,8 @@ class TestDonationAnalytics:
     """get_payment_method_stats, predict_revenue, get_daily_stats."""
 
     def test_payment_method_aggregation(self, mocker):
+        from models import Donation
+
         donations = [
             MagicMock(payment_method='card', amount_usd=50, status='completed'),
             MagicMock(payment_method='card', amount_usd=30, status='completed'),
@@ -263,12 +285,15 @@ class TestDonationAnalytics:
         don_q = MagicMock()
         don_q.filter_by.return_value = don_q
         don_q.all.return_value = donations
-        mocker.patch.object(
-            __import__('models', fromlist=['Donation']).Donation,
-            'query',
-            new_callable=mocker.PropertyMock,
-            return_value=don_q,
-        )
+
+        def _handler(target):
+            if target is Donation:
+                q = MagicMock()
+                q.filter_by.return_value = don_q
+                return q
+            return None
+
+        _patch_session_query(mocker, _handler)
 
         from services.analytics_service import AnalyticsService
 

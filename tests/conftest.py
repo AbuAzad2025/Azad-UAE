@@ -155,6 +155,8 @@ _POLLUTED_MODEL_SPECS = (
     ('expense', 'Expense'),
     ('supplier', 'Supplier'),
     ('cheque', 'Cheque'),
+    ('donation', 'Donation'),
+    ('package', 'Package'),
 )
 
 

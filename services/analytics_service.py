@@ -18,12 +18,13 @@ class AnalyticsService:
     def get_customer_insights(tenant_id, branch_id=None):
         # TODO: optimize N+1 queries in a separate behavior-preserving patch
         customers_data = []
-        customers_query = Customer.query.filter_by(is_active=True, tenant_id=tenant_id)
+        session = db.session
+        customers_query = session.query(Customer).filter_by(is_active=True, tenant_id=tenant_id)
         if branch_id is not None:
             customers_query = customers_query.join(Sale, Customer.id == Sale.customer_id).filter(Sale.branch_id == branch_id).distinct()
 
         for customer in customers_query.all():
-            total_sales = db.session.query(func.sum(Sale.total_amount)).filter(
+            total_sales = session.query(func.sum(Sale.total_amount)).filter(
                 Sale.customer_id == customer.id,
                 Sale.status == 'confirmed',
                 Sale.tenant_id == tenant_id,
@@ -32,12 +33,12 @@ class AnalyticsService:
                 total_sales = total_sales.filter(Sale.branch_id == branch_id)
             total_sales = total_sales.scalar() or 0
 
-            sales_count = Sale.query.filter_by(customer_id=customer.id, status='confirmed', tenant_id=tenant_id)
+            sales_count = session.query(Sale).filter_by(customer_id=customer.id, status='confirmed', tenant_id=tenant_id)
             if branch_id is not None:
                 sales_count = sales_count.filter(Sale.branch_id == branch_id)
             sales_count = sales_count.count()
 
-            last_sale = Sale.query.filter_by(customer_id=customer.id, tenant_id=tenant_id)
+            last_sale = session.query(Sale).filter_by(customer_id=customer.id, tenant_id=tenant_id)
             if branch_id is not None:
                 last_sale = last_sale.filter(Sale.branch_id == branch_id)
             last_sale = last_sale.order_by(Sale.sale_date.desc()).first()
@@ -209,7 +210,7 @@ class AnalyticsService:
         start_date = end_date - timedelta(days=30 * months)
 
         # جلب جميع المعاملات المكتملة للمستأجر
-        query = Donation.query.filter(
+        query = db.session.query(Donation).filter(
             Donation.status == 'completed',
             Donation.created_at >= start_date
         )
@@ -266,14 +267,14 @@ class AnalyticsService:
         from utils.tenanting import active_tenant_id
         tid = tenant_id or active_tenant_id()
 
-        query = Package.query.filter_by(is_active=True)
+        query = db.session.query(Package).filter_by(is_active=True)
         if tid:
             query = query.filter_by(tenant_id=tid)
         packages = query.all()
 
         performance = []
         for package in packages:
-            purchases = PackagePurchase.query.filter_by(package_id=package.id)
+            purchases = db.session.query(PackagePurchase).filter_by(package_id=package.id)
             if tid:
                 purchases = purchases.filter_by(tenant_id=tid)
             purchases = purchases.all()
@@ -300,7 +301,7 @@ class AnalyticsService:
         from utils.tenanting import active_tenant_id
         tid = tenant_id or active_tenant_id()
 
-        query = Donation.query.filter_by(status='completed')
+        query = db.session.query(Donation).filter_by(status='completed')
         if tid:
             query = query.filter_by(tenant_id=tid)
         donations = query.all()
@@ -327,7 +328,7 @@ class AnalyticsService:
         tid = tenant_id or active_tenant_id()
 
         # جلب جميع المشتريات
-        query = PackagePurchase.query
+        query = db.session.query(PackagePurchase)
         if tid:
             query = query.filter_by(tenant_id=tid)
         purchases = query.all()
@@ -402,7 +403,7 @@ class AnalyticsService:
         tid = tenant_id or active_tenant_id()
         today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
 
-        query = Donation.query.filter(Donation.created_at >= today_start)
+        query = db.session.query(Donation).filter(Donation.created_at >= today_start)
         if tid:
             query = query.filter_by(tenant_id=tid)
         today_donations = query.all()

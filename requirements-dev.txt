@@ -1,5 +1,19 @@
+# Development & CI — install after requirements.txt:
+#   pip install -r requirements.txt -r requirements-dev.txt
+#
+# Notes:
+# - pytest-mock provides the `mocker` fixture used across unit tests
+# - bandit runs in CI security scan (.github/workflows/ci.yml)
+# - tinycss2 used by tools/verify_css_validity.py
+
+# Testing
 pytest==9.1.1
 pytest-cov==7.1.0
 pytest-flask==1.3.0
 pytest-mock>=3.14
+
+# Security scanning (CI)
 bandit==1.7.9
+
+# Dev tools
+tinycss2>=1.2.0

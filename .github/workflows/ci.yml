@@ -77,6 +77,5 @@ jobs:
 
       - name: Security scan (bandit)
         run: |
-          pip install bandit
           bandit -r . -f json -o bandit-report.json || true
           bandit -r . || true
