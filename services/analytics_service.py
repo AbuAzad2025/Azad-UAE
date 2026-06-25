@@ -202,8 +202,8 @@ class AnalyticsService:
         """
         الحصول على الإيرادات حسب الفترة
         """
-        from utils.tenanting import active_tenant_id
-        tid = tenant_id or active_tenant_id()
+        from utils.tenanting import get_active_tenant_id
+        tid = tenant_id or get_active_tenant_id()
         end_date = datetime.now(timezone.utc)
         start_date = end_date - timedelta(days=30 * months)
 
@@ -262,8 +262,8 @@ class AnalyticsService:
     @staticmethod
     def get_package_performance(tenant_id=None):
         """تحليل أداء الباقات"""
-        from utils.tenanting import active_tenant_id
-        tid = tenant_id or active_tenant_id()
+        from utils.tenanting import get_active_tenant_id
+        tid = tenant_id or get_active_tenant_id()
 
         query = db.session.query(models.Package).filter_by(is_active=True)
         if tid:
@@ -296,8 +296,8 @@ class AnalyticsService:
     @staticmethod
     def get_payment_method_stats(tenant_id=None):
         """إحصائيات طرق الدفع"""
-        from utils.tenanting import active_tenant_id
-        tid = tenant_id or active_tenant_id()
+        from utils.tenanting import get_active_tenant_id
+        tid = tenant_id or get_active_tenant_id()
 
         query = db.session.query(models.Donation).filter_by(status='completed')
         if tid:
@@ -322,8 +322,8 @@ class AnalyticsService:
     @staticmethod
     def get_customer_behavior(tenant_id=None):
         """تحليل سلوك العملاء"""
-        from utils.tenanting import active_tenant_id
-        tid = tenant_id or active_tenant_id()
+        from utils.tenanting import get_active_tenant_id
+        tid = tenant_id or get_active_tenant_id()
 
         # جلب جميع المشتريات
         query = db.session.query(models.PackagePurchase)
@@ -397,8 +397,8 @@ class AnalyticsService:
     @staticmethod
     def get_daily_stats(tenant_id=None):
         """إحصائيات اليوم"""
-        from utils.tenanting import active_tenant_id
-        tid = tenant_id or active_tenant_id()
+        from utils.tenanting import get_active_tenant_id
+        tid = tenant_id or get_active_tenant_id()
         today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
 
         query = db.session.query(models.Donation).filter(models.Donation.created_at >= today_start)

@@ -206,6 +206,52 @@ def _resync_service_model_bindings():
                 setattr(mod, name, real)
 
 
+_SESSION_METHODS_TO_CHECK = (
+    'query', 'get', 'add', 'commit', 'rollback', 'flush', 'delete',
+    'execute', 'scalar', 'remove', 'expire_all',
+)
+
+
+def _session_is_polluted(session_obj):
+    """True when the scoped session or any common method was replaced by a mock."""
+    from unittest.mock import MagicMock, NonCallableMock
+
+    polluted_types = (MagicMock, NonCallableMock)
+    if isinstance(session_obj, polluted_types):
+        return True
+    for method_name in _SESSION_METHODS_TO_CHECK:
+        try:
+            if isinstance(getattr(session_obj, method_name), polluted_types):
+                return True
+        except Exception:
+            return True
+    return False
+
+
+def _resync_service_db_bindings():
+    """Rebind services.*.db to the real extensions.db after mock patches."""
+    import sys
+    from unittest.mock import MagicMock, NonCallableMock
+
+    import extensions
+
+    polluted_types = (MagicMock, NonCallableMock)
+    real_db = extensions.db
+    if isinstance(real_db, polluted_types):
+        import importlib
+        extensions = importlib.reload(extensions)
+        real_db = extensions.db
+
+    for mod_name, mod in list(sys.modules.items()):
+        if not mod_name.startswith('services.'):
+            continue
+        if mod is None or not hasattr(mod, 'db'):
+            continue
+        bound = getattr(mod, 'db')
+        if bound is not real_db or isinstance(bound, polluted_types):
+            setattr(mod, 'db', real_db)
+
+
 @pytest.fixture(autouse=True)
 def auto_cleanup_isolation(app):
     """Force a clean DB + Flask session slate before and after every test."""
@@ -215,15 +261,7 @@ def auto_cleanup_isolation(app):
     def _restore_real_db_session():
         with app.app_context():
             ext = app.extensions['sqlalchemy']
-            session_obj = db.session
-            needs_restore = isinstance(session_obj, (MagicMock, NonCallableMock))
-            if not needs_restore:
-                try:
-                    get_fn = session_obj.get
-                    needs_restore = isinstance(get_fn, (MagicMock, NonCallableMock))
-                except Exception:
-                    needs_restore = True
-            if needs_restore:
+            if _session_is_polluted(db.session):
                 object.__setattr__(
                     db,
                     'session',
@@ -260,12 +298,14 @@ def auto_cleanup_isolation(app):
     _scrub_db()
     _restore_polluted_model_queries()
     _resync_service_model_bindings()
+    _resync_service_db_bindings()
     yield
     _scrub_db()
     _scrub_flask_session()
     _restore_app_logger()
     _restore_polluted_model_queries()
     _resync_service_model_bindings()
+    _resync_service_db_bindings()
 
 
 @pytest.fixture(autouse=True)

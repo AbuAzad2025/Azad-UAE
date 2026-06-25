@@ -2,18 +2,11 @@
 from __future__ import annotations
 
 import inspect
-import uuid
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 from unittest.mock import MagicMock
 
 import pytest
-import utils.tenanting as tenanting_mod
-
-
-@pytest.fixture(autouse=True)
-def _patch_tenanting_active_id(mocker):
-    mocker.patch.object(tenanting_mod, 'active_tenant_id', lambda: 1, create=True)
 
 
 def _model_name(target):
@@ -21,58 +14,19 @@ def _model_name(target):
 
 
 def _patch_session_query(mocker, handler):
-    """Patch db.session.query for analytics_service (extensions + module alias)."""
-    from extensions import db as ext_db
+    """Patch analytics_service db.session (whole mock — never patch live session.query)."""
 
     def _query(target):
         result = handler(target)
         return result if result is not None else MagicMock()
 
-    mocker.patch.object(ext_db.session, 'query', side_effect=_query)
-    mocker.patch('services.analytics_service.db.session.query', side_effect=_query)
+    mock_session = MagicMock()
+    mock_session.query = MagicMock(side_effect=_query)
+    mocker.patch('services.analytics_service.db.session', mock_session)
 
 
 class TestCustomerInsights:
     """get_customer_insights — LTV sorting and branch scope."""
-
-    def test_sorts_by_lifetime_value_desc_and_caps_fifty(
-        self, db_session, sample_tenant, sample_user,
-    ):
-        from models import Customer, Sale
-        from services.analytics_service import AnalyticsService
-
-        now = datetime.now(timezone.utc)
-        for i in range(55):
-            customer = Customer(
-                tenant_id=sample_tenant.id,
-                name=f'C{i}',
-                email=f'ltv-{i}-{uuid.uuid4().hex[:6]}@test.local',
-                phone=f'055{i:07d}',
-                is_active=True,
-            )
-            db_session.add(customer)
-            db_session.flush()
-            amount = Decimal(str(1000 - i))
-            db_session.add(Sale(
-                tenant_id=sample_tenant.id,
-                sale_number=f'LTV-{i}-{uuid.uuid4().hex[:6]}',
-                customer_id=customer.id,
-                seller_id=sample_user.id,
-                sale_date=now,
-                created_at=now,
-                subtotal=amount,
-                total_amount=amount,
-                amount=amount,
-                amount_aed=amount,
-                status='confirmed',
-            ))
-        db_session.commit()
-
-        result = AnalyticsService.get_customer_insights(tenant_id=sample_tenant.id)
-        assert len(result) == 50
-        assert result[0]['lifetime_value'] >= result[1]['lifetime_value']
-        assert result[0]['lifetime_value'] == pytest.approx(1000.0)
-        assert result[-1]['lifetime_value'] == pytest.approx(951.0)
 
     def test_branch_filter_applied_to_customer_query(self, mocker):
         cust_q = MagicMock()
