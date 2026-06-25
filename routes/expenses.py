@@ -589,39 +589,44 @@ def create_category():
         return redirect(url_for('expenses.categories'))
 
 
+def _archived_expense_row(archived):
+    from datetime import datetime
+    data = archived.data or {}
+    raw_date = data.get('expense_date')
+    if isinstance(raw_date, str):
+        expense_date = datetime.fromisoformat(raw_date.replace('Z', '+00:00'))
+    else:
+        expense_date = raw_date
+    return {
+        'id': archived.record_id,
+        'expense_number': data.get('expense_number'),
+        'expense_date': expense_date,
+        'category_name': data.get('category_name'),
+        'description': data.get('description'),
+        'amount': float(data.get('amount', 0) or 0),
+        'currency': data.get('currency'),
+        'payment_method': data.get('payment_method'),
+        'archived_at': archived.archived_at,
+    }
+
+
 @expenses_bp.route('/archived')
 @login_required
 @permission_required('manage_expenses')
 def archived():
     """عرض المصروفات المؤرشفة"""
     from models import ArchivedRecord
-    from datetime import datetime
-    
+
     tid = get_active_tenant_id(current_user)
     archived_expenses_query = db.session.query(ArchivedRecord).filter(
         ArchivedRecord.table_name == 'expenses'
     )
     if tid is not None:
         archived_expenses_query = archived_expenses_query.filter(ArchivedRecord.tenant_id == tid)
-    
-    archived_items = []
-    
-    for archived in archived_expenses_query.all():
-        data = archived.data
-        archived_items.append({
-            'id': archived.record_id,
-            'expense_number': data.get('expense_number'),
-            'expense_date': datetime.fromisoformat(data.get('expense_date').replace('Z', '+00:00')) if isinstance(data.get('expense_date'), str) else data.get('expense_date'),
-            'category_name': data.get('category_name'),
-            'description': data.get('description'),
-            'amount': float(data.get('amount', 0)),
-            'currency': data.get('currency'),
-            'payment_method': data.get('payment_method'),
-            'archived_at': archived.archived_at
-        })
-    
+
+    archived_items = [_archived_expense_row(archived) for archived in archived_expenses_query.all()]
     archived_items.sort(key=lambda x: x['archived_at'], reverse=True)
-    
+
     return render_template('expenses/archived.html', expenses=archived_items)
 
 

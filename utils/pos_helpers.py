@@ -2,8 +2,6 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from datetime import datetime, timezone
-
 from extensions import db
 from models import Customer, PosSession, Product
 from services.stock_service import StockService
@@ -253,7 +251,7 @@ def create_pos_session(user, branch_id: int, opening_balance: Decimal = Decimal(
 
 
 def close_pos_session(session: PosSession, closing_cash: Decimal, notes: str = None):
-    from models import Payment, Sale
+    from models import Sale
 
     tenant_id = session.tenant_id
     sales_in_session = Sale.query.filter(

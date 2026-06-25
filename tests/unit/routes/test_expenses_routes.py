@@ -78,6 +78,14 @@ def expenses_client(app_factory, bypass_permission_auth):
     return app.test_client()
 
 
+def _archived_records_query(records):
+    scoped = MagicMock()
+    scoped.all.return_value = records
+    root = MagicMock()
+    root.filter.return_value = scoped
+    return root
+
+
 class TestExpensesAuth:
     def test_index_requires_login(self, expenses_client):
         with unauthenticated_client(expenses_client):
@@ -504,11 +512,32 @@ class TestExpensesArchive:
                 'payment_method': 'cash',
             },
         )
-        q = MagicMock()
-        q.filter.return_value.all.return_value = [archived]
-        with _expense_patches(), patch('extensions.db.session.query', return_value=q):
+        q = _archived_records_query([archived])
+        with _expense_patches(), patch('routes.expenses.db.session.query', return_value=q), \
+             patch('routes.expenses.get_active_tenant_id', return_value=1):
             resp = expenses_client.get('/expenses/archived')
         assert resp.status_code == 200
+
+    def test_archived_list_populates_items(self, expenses_client):
+        archived = MagicMock(
+            record_id=3,
+            archived_at=datetime(2026, 3, 1),
+            data={
+                'expense_number': 'EXP-ARC',
+                'expense_date': '2026-03-01T10:00:00',
+                'category_name': 'Travel',
+                'description': 'Trip',
+                'amount': '120',
+                'currency': 'AED',
+                'payment_method': 'card',
+            },
+        )
+        q = _archived_records_query([archived])
+        with _expense_patches(), patch('routes.expenses.db.session.query', return_value=q), \
+             patch('routes.expenses.get_active_tenant_id', return_value=1):
+            resp = expenses_client.get('/expenses/archived')
+        assert resp.status_code == 200
+        assert archived.data.get('expense_number') == 'EXP-ARC'
 
     def test_archive_expense(self, expenses_client):
         expense = _mock_expense()
@@ -540,9 +569,8 @@ class TestExpensesArchive:
                 'payment_method': 'cash',
             },
         )
-        q = MagicMock()
-        q.filter.return_value.all.return_value = [archived]
-        with _expense_patches(), patch('extensions.db.session.query', return_value=q), \
+        q = _archived_records_query([archived])
+        with _expense_patches(), patch('routes.expenses.db.session.query', return_value=q), \
              patch('routes.expenses.get_active_tenant_id', return_value=1):
             resp = expenses_client.get('/expenses/archived')
         assert resp.status_code == 200
@@ -567,6 +595,30 @@ class TestExpensesArchive:
             ar.query.filter_by.return_value.first_or_404.return_value = archived
             resp = expenses_client.post('/expenses/1/restore', follow_redirects=False)
         assert resp.status_code == 302
+
+
+class TestArchivedExpenseRow:
+    def test_archived_expense_row_parses_string_date(self):
+        from routes.expenses import _archived_expense_row
+        archived = MagicMock(
+            record_id=5,
+            archived_at=datetime(2026, 4, 1),
+            data={
+                'expense_number': 'EXP-5',
+                'expense_date': '2026-04-01T08:00:00',
+                'amount': '75',
+            },
+        )
+        row = _archived_expense_row(archived)
+        assert row['expense_number'] == 'EXP-5'
+        assert row['amount'] == 75.0
+
+    def test_archived_expense_row_handles_missing_data(self):
+        from routes.expenses import _archived_expense_row
+        archived = MagicMock(record_id=6, archived_at=datetime(2026, 4, 2), data=None)
+        row = _archived_expense_row(archived)
+        assert row['id'] == 6
+        assert row['amount'] == 0.0
 
 
 class TestBuildExpenseGlLines:

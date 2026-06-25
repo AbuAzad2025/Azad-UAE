@@ -1,7 +1,8 @@
 from decimal import Decimal
 from datetime import datetime, timezone
+import json
 
-from flask import Blueprint, jsonify, render_template, request
+from flask import Blueprint, jsonify, render_template, request, current_app
 from flask_login import current_user, login_required
 from extensions import csrf, db
 from models import Customer, PosSession, Product
@@ -29,6 +30,29 @@ from utils.currency_utils import context_aware_default_currency
 
 pos_bp = Blueprint("pos", __name__, url_prefix="/pos")
 
+
+def _pos_register_context():
+    from utils.tax_settings import get_prices_include_vat
+    from utils.currency_utils import resolve_default_currency
+    warehouses = [
+        w
+        for w in get_accessible_warehouses(current_user)
+        if w.is_active and w.warehouse_type != w.TYPE_ONLINE
+    ]
+    tenant = Tenant.get_current()
+    tenant_default_currency = resolve_default_currency(tenant) if tenant else 'AED'
+    branch_id = get_active_branch_id()
+    return {
+        'warehouses': warehouses,
+        'tenant_default_currency': tenant_default_currency,
+        'currency_symbol': tenant_default_currency or 'AED',
+        'prices_include_vat': get_prices_include_vat(
+            tenant_id=get_active_tenant_id(current_user),
+            branch_id=branch_id,
+        ),
+    }
+
+
 @pos_bp.before_request
 def _require_pos_enabled():
     global_setting = SystemSettings.query.order_by(SystemSettings.id.desc()).first()
@@ -48,56 +72,14 @@ def _require_pos_enabled():
 @login_required
 @permission_required("manage_sales")
 def index():
-    from utils.tax_settings import get_prices_include_vat
-    from utils.currency_utils import context_aware_default_currency, resolve_default_currency
-    warehouses = [
-        w
-        for w in get_accessible_warehouses(current_user)
-        if w.is_active and w.warehouse_type != w.TYPE_ONLINE
-    ]
-    tenant = tenant_get(current_user)
-    tenant_default_currency = resolve_default_currency(tenant) if tenant else 'AED'
-    currency_symbol = tenant_default_currency if tenant_default_currency else 'AED'
-    branch_id = get_active_branch_id()
-    prices_include_vat = get_prices_include_vat(
-        tenant_id=get_active_tenant_id(current_user),
-        branch_id=branch_id
-    )
-    return render_template(
-        "pos/index.html",
-        warehouses=warehouses,
-        tenant_default_currency=tenant_default_currency,
-        currency_symbol=currency_symbol,
-        prices_include_vat=prices_include_vat,
-    )
+    return render_template("pos/index.html", **_pos_register_context())
 
 
 @pos_bp.route("/grid")
 @login_required
 @permission_required("manage_sales")
 def grid():
-    from utils.tax_settings import get_prices_include_vat
-    from utils.currency_utils import context_aware_default_currency, resolve_default_currency
-    warehouses = [
-        w
-        for w in get_accessible_warehouses(current_user)
-        if w.is_active and w.warehouse_type != w.TYPE_ONLINE
-    ]
-    tenant = tenant_get(current_user)
-    tenant_default_currency = resolve_default_currency(tenant) if tenant else 'AED'
-    currency_symbol = tenant_default_currency if tenant_default_currency else 'AED'
-    branch_id = get_active_branch_id()
-    prices_include_vat = get_prices_include_vat(
-        tenant_id=get_active_tenant_id(current_user),
-        branch_id=branch_id
-    )
-    return render_template(
-        "pos/grid.html",
-        warehouses=warehouses,
-        tenant_default_currency=tenant_default_currency,
-        currency_symbol=currency_symbol,
-        prices_include_vat=prices_include_vat,
-    )
+    return render_template("pos/grid.html", **_pos_register_context())
 
 
 @pos_bp.route("/api/categories")
@@ -381,7 +363,6 @@ def api_checkout():
     order_type = (payload.get('order_type') or '').strip()
     if order_type in ('dine_in', 'takeaway', 'delivery'):
         from models import PosKdsOrder
-        from flask import current_app
         kds_order = PosKdsOrder(
             tenant_id=sale.tenant_id,
             sale_id=sale.id,
@@ -390,7 +371,7 @@ def api_checkout():
             order_number=sale.sale_number,
             items_json=json.dumps([{
                 'name': getattr(ld['product'], 'name_ar', None) or ld['product'].name,
-                'quantity': ld['quantity'],
+                'quantity': float(ld['quantity']),
                 'unit_price': float(ld.get('unit_price') or 0),
                 'notes': ld.get('notes', ''),
             } for ld in lines_data]),

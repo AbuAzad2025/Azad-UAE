@@ -1,9 +1,4 @@
-from functools import wraps
-from flask import current_app
 from sqlalchemy.orm import joinedload, selectinload, subqueryload
-from extensions import db, cache
-
-
 def optimize_query(model, relationships=None, strategy='joined'):
     if not relationships:
         return model.query
