@@ -252,6 +252,27 @@ def _resync_service_db_bindings():
             setattr(mod, 'db', real_db)
 
 
+def _restore_polluted_service_class_methods():
+    """Reload service modules when leaked patches replaced class methods with mocks."""
+    import importlib
+    from unittest.mock import MagicMock, Mock, NonCallableMock
+
+    polluted_types = (MagicMock, Mock, NonCallableMock)
+    specs = (
+        ('services.analytics_service', 'AnalyticsService', (
+            'get_customer_insights', 'get_sales_insights', 'get_product_performance',
+            'get_forecasting_data', 'get_daily_stats', 'get_revenue_by_period',
+            'get_payment_method_stats', 'get_customer_behavior', 'get_package_performance',
+            'predict_revenue',
+        )),
+    )
+    for mod_name, cls_name, method_names in specs:
+        mod = importlib.import_module(mod_name)
+        cls = getattr(mod, cls_name)
+        if any(isinstance(getattr(cls, name, None), polluted_types) for name in method_names):
+            importlib.reload(mod)
+
+
 @pytest.fixture(autouse=True)
 def auto_cleanup_isolation(app):
     """Force a clean DB + Flask session slate before and after every test."""
@@ -261,12 +282,11 @@ def auto_cleanup_isolation(app):
     def _restore_real_db_session():
         with app.app_context():
             ext = app.extensions['sqlalchemy']
-            if _session_is_polluted(db.session):
-                object.__setattr__(
-                    db,
-                    'session',
-                    ext._make_scoped_session(getattr(ext, '_session_options', {})),
-                )
+            object.__setattr__(
+                db,
+                'session',
+                ext._make_scoped_session(getattr(ext, '_session_options', {})),
+            )
 
     def _scrub_db():
         with app.app_context():
@@ -299,6 +319,7 @@ def auto_cleanup_isolation(app):
     _restore_polluted_model_queries()
     _resync_service_model_bindings()
     _resync_service_db_bindings()
+    _restore_polluted_service_class_methods()
     yield
     _scrub_db()
     _scrub_flask_session()
@@ -306,6 +327,7 @@ def auto_cleanup_isolation(app):
     _restore_polluted_model_queries()
     _resync_service_model_bindings()
     _resync_service_db_bindings()
+    _restore_polluted_service_class_methods()
 
 
 @pytest.fixture(autouse=True)

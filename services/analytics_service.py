@@ -3,12 +3,16 @@ Analytics Service - خدمة التحليلات
 تحليلات متقدمة للمدفوعات والعملاء
 """
 from datetime import datetime, timezone, timedelta
-from extensions import db
 import models
 from sqlalchemy import func, desc
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+def _db_session():
+    from extensions import db
+    return db.session
 
 
 class AnalyticsService:
@@ -18,7 +22,7 @@ class AnalyticsService:
     def get_customer_insights(tenant_id, branch_id=None):
         # TODO: optimize N+1 queries in a separate behavior-preserving patch
         customers_data = []
-        session = db.session
+        session = _db_session()
         customers_query = session.query(models.Customer).filter_by(is_active=True, tenant_id=tenant_id)
         if branch_id is not None:
             customers_query = customers_query.join(models.Sale, models.Customer.id == models.Sale.customer_id).filter(models.Sale.branch_id == branch_id).distinct()
@@ -65,7 +69,7 @@ class AnalyticsService:
         today = datetime.now().date()
         last_30_days = today - timedelta(days=30)
 
-        daily_sales = db.session.query(
+        daily_sales = _db_session().query(
             func.date(models.Sale.sale_date).label('date'),
             func.count(models.Sale.id).label('count'),
             func.sum(models.Sale.total_amount).label('total')
@@ -78,7 +82,7 @@ class AnalyticsService:
             daily_sales = daily_sales.filter(models.Sale.branch_id == branch_id)
         daily_sales = daily_sales.group_by(func.date(models.Sale.sale_date)).all()
 
-        top_products = db.session.query(
+        top_products = _db_session().query(
             models.Product.name,
             func.sum(models.SaleLine.quantity).label('total_qty'),
             func.sum(models.SaleLine.line_total).label('total_revenue')
@@ -109,7 +113,7 @@ class AnalyticsService:
         from decimal import Decimal
         last_90_days = datetime.now().date() - timedelta(days=90)
 
-        query = db.session.query(
+        query = _db_session().query(
             models.Product.id,
             models.Product.name,
             models.Product.sku,
@@ -172,7 +176,7 @@ class AnalyticsService:
                 month_end = month_start.replace(year=month_start.year+1, month=1, day=1) - timedelta(days=1)
             else:
                 month_end = month_start.replace(month=month_start.month+1, day=1) - timedelta(days=1)
-            revenue = db.session.query(func.sum(models.Sale.total_amount)).filter(
+            revenue = _db_session().query(func.sum(models.Sale.total_amount)).filter(
                 models.Sale.sale_date >= month_start,
                 models.Sale.sale_date <= month_end,
                 models.Sale.status == 'confirmed',
@@ -208,7 +212,7 @@ class AnalyticsService:
         start_date = end_date - timedelta(days=30 * months)
 
         # جلب جميع المعاملات المكتملة للمستأجر
-        query = db.session.query(models.Donation).filter(
+        query = _db_session().query(models.Donation).filter(
             models.Donation.status == 'completed',
             models.Donation.created_at >= start_date
         )
@@ -265,14 +269,14 @@ class AnalyticsService:
         from utils.tenanting import get_active_tenant_id
         tid = tenant_id or get_active_tenant_id()
 
-        query = db.session.query(models.Package).filter_by(is_active=True)
+        query = _db_session().query(models.Package).filter_by(is_active=True)
         if tid:
             query = query.filter_by(tenant_id=tid)
         packages = query.all()
 
         performance = []
         for package in packages:
-            purchases = db.session.query(models.PackagePurchase).filter_by(package_id=package.id)
+            purchases = _db_session().query(models.PackagePurchase).filter_by(package_id=package.id)
             if tid:
                 purchases = purchases.filter_by(tenant_id=tid)
             purchases = purchases.all()
@@ -299,7 +303,7 @@ class AnalyticsService:
         from utils.tenanting import get_active_tenant_id
         tid = tenant_id or get_active_tenant_id()
 
-        query = db.session.query(models.Donation).filter_by(status='completed')
+        query = _db_session().query(models.Donation).filter_by(status='completed')
         if tid:
             query = query.filter_by(tenant_id=tid)
         donations = query.all()
@@ -326,7 +330,7 @@ class AnalyticsService:
         tid = tenant_id or get_active_tenant_id()
 
         # جلب جميع المشتريات
-        query = db.session.query(models.PackagePurchase)
+        query = _db_session().query(models.PackagePurchase)
         if tid:
             query = query.filter_by(tenant_id=tid)
         purchases = query.all()
@@ -401,7 +405,7 @@ class AnalyticsService:
         tid = tenant_id or get_active_tenant_id()
         today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
 
-        query = db.session.query(models.Donation).filter(models.Donation.created_at >= today_start)
+        query = _db_session().query(models.Donation).filter(models.Donation.created_at >= today_start)
         if tid:
             query = query.filter_by(tenant_id=tid)
         today_donations = query.all()

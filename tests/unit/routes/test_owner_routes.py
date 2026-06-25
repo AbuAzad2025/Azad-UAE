@@ -234,7 +234,6 @@ def _owner_route_patches(**overrides):
     mock_db.session.execute.return_value = execute_result
     mock_db.engine = MagicMock()
 
-    stack = ExitStack()
     patches = [
         ("routes.owner.render_template", patch("routes.owner.render_template", return_value="ok")),
         ("routes.owner.db", patch("routes.owner.db", mock_db)),
@@ -326,12 +325,13 @@ def _owner_route_patches(**overrides):
         ("models.api_key.APIKey.generate_key", patch("models.api_key.APIKey.generate_key", return_value="generated-key")),
         ("routes.owner.IntegrationSettings.get_service_config", patch("routes.owner.IntegrationSettings.get_service_config", return_value=MagicMock())),
     ]
-    for name, p in patches:
-        stack.enter_context(p)
-    stack.enter_context(patch("models.Role.query", new=_model_query(all=[role])))
-    if overrides.get("role_query"):
-        stack.enter_context(patch("models.Role.query", new=overrides["role_query"]))
-    yield stack
+    with ExitStack() as stack:
+        for name, p in patches:
+            stack.enter_context(p)
+        stack.enter_context(patch("models.Role.query", new=_model_query(all=[role])))
+        if overrides.get("role_query"):
+            stack.enter_context(patch("models.Role.query", new=overrides["role_query"]))
+        yield
 
 
 @pytest.fixture
