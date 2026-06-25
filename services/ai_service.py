@@ -559,7 +559,7 @@ class AIService:
         
         last_7_days = target_date - timedelta(days=7)
         
-        recent_sales = Sale.query.filter(
+        recent_sales = db.session.query(Sale).filter(
             Sale.currency == currency,
             Sale.created_at >= last_7_days,
             Sale.exchange_rate > 0
@@ -597,7 +597,7 @@ class AIService:
         from models import Sale
         
         last_30_days = datetime.now(timezone.utc) - timedelta(days=30)
-        sales = Sale.query.filter(
+        sales = db.session.query(Sale).filter(
             Sale.sale_date >= last_30_days,
             Sale.status == 'confirmed'
         ).all()
@@ -657,7 +657,7 @@ class AIService:
         from models import Sale
         
         last_30_days = datetime.now(timezone.utc) - timedelta(days=30)
-        sales = Sale.query.filter(
+        sales = db.session.query(Sale).filter(
             Sale.sale_date >= last_30_days,
             Sale.status == 'confirmed'
         ).all()
@@ -723,7 +723,7 @@ class AIService:
         from models import Sale
         
         last_90_days = datetime.now(timezone.utc) - timedelta(days=90)
-        sales = Sale.query.filter(
+        sales = db.session.query(Sale).filter(
             Sale.sale_date >= last_90_days,
             Sale.status == 'confirmed'
         ).all()
@@ -764,7 +764,7 @@ class AIService:
         """📦 تحليل صحة المخزون — يستوجب tenant_id للعزل البيني"""
         from models import Product
         
-        q = Product.query.filter(Product.is_active == True)
+        q = db.session.query(Product).filter(Product.is_active == True)
         if tenant_id:
             q = q.filter(Product.tenant_id == int(tenant_id))
         products = q.all()
@@ -1090,31 +1090,31 @@ class AIService:
             # 📊 إحصائيات الشركة النشطة (User معفى من ORM — scoped يدوياً)
             tid = ctx_user.tenant_id
             users_count = scoped_user_query(ctx_user, exclude_owners=True).count()
-            customers_count = Customer.query.filter_by(is_active=True, tenant_id=tid).count()
-            suppliers_count = Supplier.query.filter_by(is_active=True, tenant_id=tid).count()
-            products_count = Product.query.filter_by(is_active=True, tenant_id=tid).count()
+            customers_count = db.session.query(Customer).filter_by(is_active=True, tenant_id=tid).count()
+            suppliers_count = db.session.query(Supplier).filter_by(is_active=True, tenant_id=tid).count()
+            products_count = db.session.query(Product).filter_by(is_active=True, tenant_id=tid).count()
             
-            sales_30d = Sale.query.filter(
+            sales_30d = db.session.query(Sale).filter(
                 Sale.sale_date >= datetime.now() - timedelta(days=30),
                 Sale.tenant_id == tid
             ).count()
             
-            purchases_30d = Purchase.query.filter(
+            purchases_30d = db.session.query(Purchase).filter(
                 Purchase.purchase_date >= datetime.now() - timedelta(days=30),
                 Purchase.tenant_id == tid
             ).count()
             
-            expenses_30d = Expense.query.filter(
+            expenses_30d = db.session.query(Expense).filter(
                 Expense.expense_date >= datetime.now() - timedelta(days=30),
                 Expense.tenant_id == tid
             ).count()
             
-            payments_30d = Payment.query.filter(
+            payments_30d = db.session.query(Payment).filter(
                 Payment.payment_date >= datetime.now() - timedelta(days=30),
                 Payment.tenant_id == tid
             ).count()
             
-            cheques_count = Cheque.query.filter_by(tenant_id=tid).count()
+            cheques_count = db.session.query(Cheque).filter_by(tenant_id=tid).count()
             
             total_sales_amount = db.session.query(func.sum(Sale.total_amount)).filter(
                 Sale.sale_date >= datetime.now() - timedelta(days=30),
@@ -1178,7 +1178,7 @@ class AIService:
             insights = []
             
             # رؤية 1: المخزون المنخفض
-            low_stock_count = Product.query.filter(
+            low_stock_count = db.session.query(Product).filter(
                 Product.is_active == True,
                 Product.current_stock <= Product.min_stock_alert
             ).count()
@@ -1193,7 +1193,7 @@ class AIService:
                 })
             
             # رؤية 2: العملاء المتأخرين
-            high_balance_customers = Customer.query.filter(
+            high_balance_customers = db.session.query(Customer).filter(
                 Customer.is_active == True
             ).all()
             
@@ -1210,7 +1210,7 @@ class AIService:
             
             # رؤية 3: أداء المبيعات
             today = datetime.now().date()
-            today_sales = Sale.query.filter(
+            today_sales = db.session.query(Sale).filter(
                 db.func.date(Sale.sale_date) == today
             ).count()
             
@@ -1244,7 +1244,7 @@ class AIService:
             products_to_order = []
             
             # المنتجات التي تحتاج طلب
-            low_stock = Product.query.filter(
+            low_stock = db.session.query(Product).filter(
                 Product.is_active == True,
                 Product.current_stock <= Product.min_stock_alert
             ).all()
@@ -1347,9 +1347,9 @@ class AIService:
 
             three_months_ago = datetime.now() - timedelta(days=90)
             at_risk = []
-            active_customers = Customer.query.filter_by(is_active=True).all()
+            active_customers = db.session.query(Customer).filter_by(is_active=True).all()
             for customer in active_customers:
-                last_sale = Sale.query.filter_by(customer_id=customer.id)\
+                last_sale = db.session.query(Sale).filter_by(customer_id=customer.id)\
                     .order_by(Sale.sale_date.desc()).first()
                 if last_sale and last_sale.sale_date < three_months_ago:
                     at_risk.append({
@@ -1441,7 +1441,7 @@ class AIService:
             from models import Sale
 
             last_90_days = datetime.now(timezone.utc) - timedelta(days=90)
-            sales = Sale.query.filter(Sale.sale_date >= last_90_days).all()
+            sales = db.session.query(Sale).filter(Sale.sale_date >= last_90_days).all()
             historical = [float(s.amount_aed or 0) for s in sales]
             predictions = SalesAnalytics.predict_next_month_sales(historical)
             pattern = SalesAnalytics.analyze_sales_pattern(sales)

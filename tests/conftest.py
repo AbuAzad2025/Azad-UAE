@@ -145,6 +145,38 @@ def app():
     LoggingCore.log_frontend_error = original_log_frontend
 
 
+_POLLUTED_MODEL_SPECS = (
+    ('sale', 'Sale'),
+    ('product', 'Product'),
+    ('customer', 'Customer'),
+    ('payment', 'Payment'),
+    ('user', 'User'),
+    ('purchase', 'Purchase'),
+    ('expense', 'Expense'),
+    ('supplier', 'Supplier'),
+    ('cheque', 'Cheque'),
+)
+
+
+def _restore_polluted_model_queries():
+    """Undo leaked MagicMock assignments on ORM model classes/query descriptors."""
+    import importlib
+    from unittest.mock import MagicMock, NonCallableMock
+
+    import models
+
+    polluted_types = (MagicMock, NonCallableMock)
+    for mod_name, cls_name in _POLLUTED_MODEL_SPECS:
+        mod = importlib.import_module(f'models.{mod_name}')
+        real_cls = getattr(mod, cls_name)
+        pkg_cls = getattr(models, cls_name, None)
+        if isinstance(pkg_cls, polluted_types):
+            setattr(models, cls_name, real_cls)
+        query = getattr(real_cls, 'query', None)
+        if isinstance(query, polluted_types) and 'query' in real_cls.__dict__:
+            delattr(real_cls, 'query')
+
+
 @pytest.fixture(autouse=True)
 def auto_cleanup_isolation(app):
     """Force a clean DB + Flask session slate before and after every test."""
@@ -197,10 +229,12 @@ def auto_cleanup_isolation(app):
                 app.logger = logging.getLogger(app.import_name)
 
     _scrub_db()
+    _restore_polluted_model_queries()
     yield
     _scrub_db()
     _scrub_flask_session()
     _restore_app_logger()
+    _restore_polluted_model_queries()
 
 
 @pytest.fixture(autouse=True)

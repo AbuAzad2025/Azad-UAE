@@ -47,6 +47,75 @@ def _mock_customer_analysis_queries(mocker, *, sales=None, payments=None):
     mocker.patch.object(db.session, 'query', side_effect=_query)
 
 
+def _mock_sale_query(mocker, *, filter_all=None, filter_count=0):
+    """Patch db.session.query for Sale analytics paths."""
+
+    def _query(model):
+        q = MagicMock(name=f'query_{getattr(model, "__name__", model)}')
+        if model is Sale:
+            q.filter.return_value.all.return_value = [] if filter_all is None else filter_all
+            q.filter.return_value.count.return_value = filter_count
+        return q
+
+    mocker.patch.object(db.session, 'query', side_effect=_query)
+
+
+def _mock_gather_knowledge_queries(mocker, *, sum_scalar=100, counts=None):
+    """Patch db.session.query for _gather_relevant_knowledge stats."""
+    import inspect
+    from models import Cheque, Customer, Expense, Payment, Product, Purchase, Sale, Supplier
+
+    default_counts = {
+        Customer: 2,
+        Supplier: 1,
+        Product: 3,
+        Sale: 4,
+        Purchase: 1,
+        Expense: 1,
+        Payment: 1,
+        Cheque: 0,
+    }
+    if counts:
+        default_counts.update(counts)
+
+    def _query(target):
+        q = MagicMock(name='session_query')
+        if inspect.isclass(target):
+            count = default_counts.get(target, 0)
+            q.filter_by.return_value.count.return_value = count
+            q.filter.return_value.count.return_value = count
+            return q
+        q.filter.return_value.scalar.return_value = sum_scalar
+        return q
+
+    mocker.patch.object(db.session, 'query', side_effect=_query)
+
+
+def _mock_business_insights_queries(
+    mocker, *, product_count=0, customers=None, sale_count=0, product_all=None, product_error=False,
+):
+    """Patch db.session.query for generate_business_insights / optimize_inventory_levels."""
+    from models import Customer, Product, Sale
+
+    customers = [] if customers is None else customers
+
+    def _query(model):
+        q = MagicMock()
+        if model is Product:
+            if product_error:
+                q.filter.side_effect = RuntimeError('x')
+            else:
+                q.filter.return_value.count.return_value = product_count
+                q.filter.return_value.all.return_value = [] if product_all is None else product_all
+        elif model is Customer:
+            q.filter.return_value.all.return_value = customers
+        elif model is Sale:
+            q.filter.return_value.count.return_value = sale_count
+        return q
+
+    mocker.patch.object(db.session, 'query', side_effect=_query)
+
+
 @pytest.fixture(autouse=True)
 def _app_context(app):
     with app.app_context():
@@ -334,8 +403,7 @@ def _confirmed_sale(db_session, sample_tenant, sample_customer, sample_user, **k
 
 class TestSalesTrend:
     def test_no_data(self, mocker):
-        mocker.patch.object(Sale, 'query')
-        Sale.query.filter.return_value.all.return_value = []
+        _mock_sale_query(mocker, filter_all=[])
         result = AIService.predict_sales_trend()
         assert result['prediction'] is None
 
@@ -347,8 +415,7 @@ class TestSalesTrend:
                 amount_aed=Decimal('100'),
                 status='confirmed',
             ))
-        mocker.patch.object(Sale, 'query')
-        Sale.query.filter.return_value.all.return_value = sales
+        _mock_sale_query(mocker, filter_all=sales)
         result = AIService.predict_sales_trend()
         assert '7 أيام' in result['message']
 
@@ -360,8 +427,7 @@ class TestSalesTrend:
                 amount_aed=Decimal(str(100 + i * 5)),
                 status='confirmed',
             ))
-        mocker.patch.object(Sale, 'query')
-        Sale.query.filter.return_value.all.return_value = sales
+        _mock_sale_query(mocker, filter_all=sales)
         result = AIService.predict_sales_trend(days_ahead=3)
         assert result['prediction'] is not None
         assert result['confidence'] >= 0
@@ -369,8 +435,7 @@ class TestSalesTrend:
 
 class TestProfitMargins:
     def test_no_sales(self, mocker):
-        mocker.patch.object(Sale, 'query')
-        Sale.query.filter.return_value.all.return_value = []
+        _mock_sale_query(mocker, filter_all=[])
         assert AIService.analyze_profit_margins()['success'] is False
 
     def test_with_lines(self, mocker, sample_product):
@@ -387,16 +452,14 @@ class TestProfitMargins:
             exchange_rate=Decimal('1'),
             lines=[line],
         )
-        mocker.patch.object(Sale, 'query')
-        Sale.query.filter.return_value.all.return_value = [sale]
+        _mock_sale_query(mocker, filter_all=[sale])
         result = AIService.analyze_profit_margins()
         assert result['success'] is True
 
 
 class TestSalesPatterns:
     def test_insufficient_data(self, mocker):
-        mocker.patch.object(Sale, 'query')
-        Sale.query.filter.return_value.all.return_value = []
+        _mock_sale_query(mocker, filter_all=[])
         assert AIService.detect_sales_patterns()['success'] is False
 
     def test_patterns(self, db_session, sample_tenant, sample_customer, sample_user):
@@ -412,7 +475,7 @@ class TestSalesPatterns:
 
 class TestInventoryHealth:
     def test_no_products(self, db_session, sample_tenant):
-        Product.query.filter_by(tenant_id=sample_tenant.id).delete()
+        db.session.query(Product).filter_by(tenant_id=sample_tenant.id).delete()
         db_session.commit()
         assert AIService.analyze_inventory_health(tenant_id=sample_tenant.id)['success'] is False
 
@@ -582,20 +645,7 @@ class TestExecuteAiAction:
 class TestGatherKnowledge:
     def test_success(self, app, mocker):
         mocker.patch('utils.tenanting.scoped_user_query', return_value=MagicMock(count=MagicMock(return_value=1)))
-        from models import Customer, Supplier, Product, Sale, Purchase, Expense, Payment, Cheque
-        for model in (Customer, Supplier, Product, Sale, Purchase, Expense, Payment, Cheque):
-            mocker.patch.object(model, 'query', MagicMock())
-        Customer.query.filter_by.return_value.count.return_value = 2
-        Supplier.query.filter_by.return_value.count.return_value = 1
-        Product.query.filter_by.return_value.count.return_value = 3
-        Sale.query.filter.return_value.count.return_value = 4
-        Purchase.query.filter.return_value.count.return_value = 1
-        Expense.query.filter.return_value.count.return_value = 1
-        Payment.query.filter.return_value.count.return_value = 1
-        Cheque.query.filter_by.return_value.count.return_value = 0
-        sum_query = MagicMock()
-        sum_query.filter.return_value.scalar.return_value = 100
-        mocker.patch.object(db.session, 'query', return_value=sum_query)
+        _mock_gather_knowledge_queries(mocker, sum_scalar=100)
         user = MagicMock(tenant_id=1, username='admin', is_owner=False)
         user.role = SimpleNamespace(name_ar='مدير')
         local = {'context': {'current_user': user}}
@@ -610,18 +660,15 @@ class TestGatherKnowledge:
 
 class TestBusinessInsights:
     def test_generate_insights(self, mocker):
-        mocker.patch.object(Product, 'query')
-        Product.query.filter.return_value.count.return_value = 2
         cust = MagicMock(get_balance_aed=MagicMock(return_value=Decimal('2000')))
-        mocker.patch.object(Customer, 'query')
-        Customer.query.filter.return_value.all.return_value = [cust]
-        mocker.patch.object(Sale, 'query')
-        Sale.query.filter.return_value.count.return_value = 0
+        _mock_business_insights_queries(
+            mocker, product_count=2, customers=[cust], sale_count=0,
+        )
         insights = AIService.generate_business_insights()
         assert len(insights) >= 2
 
     def test_insights_error(self, mocker):
-        mocker.patch.object(Product, 'query', side_effect=RuntimeError('x'))
+        _mock_business_insights_queries(mocker, product_error=True)
         insights = AIService.generate_business_insights()
         assert insights[0]['type'] == 'error'
 
@@ -630,16 +677,13 @@ class TestBusinessInsights:
             id=1, name='P', current_stock=Decimal('1'),
             min_stock_alert=Decimal('5'), cost_price=Decimal('10'),
         )
-        mocker.patch.object(Product, 'query')
-        Product.query.filter.return_value.all.return_value = [prod]
+        _mock_business_insights_queries(mocker, product_all=[prod])
         result = AIService.optimize_inventory_levels()
         assert result['success'] is True
         assert result['total_products'] == 1
 
     def test_optimize_inventory_error(self, mocker):
-        q = MagicMock()
-        q.filter.side_effect = RuntimeError('x')
-        mocker.patch.object(Product, 'query', q)
+        _mock_business_insights_queries(mocker, product_error=True)
         assert AIService.optimize_inventory_levels()['success'] is False
 
 
@@ -674,9 +718,7 @@ class TestMiscHelpers:
         assert r10['discount_percentage'] == 10.0
 
     def test_smart_pricing_error(self, mocker):
-        q = MagicMock()
-        q.get.side_effect = RuntimeError()
-        mocker.patch.object(Product, 'query', q)
+        mocker.patch.object(db.session, 'get', side_effect=RuntimeError())
         assert AIService.smart_pricing_engine(999999, 1) is None
 
     def test_predict_churn(self, db_session, sample_customer, sample_tenant, sample_user):
@@ -699,9 +741,15 @@ class TestMiscHelpers:
         assert result['success'] is True
 
     def test_predict_churn_error(self, mocker):
-        q = MagicMock()
-        q.filter_by.side_effect = RuntimeError()
-        mocker.patch.object(Customer, 'query', q)
+        from models import Customer as CustomerModel
+
+        def _query(model):
+            q = MagicMock()
+            if model is CustomerModel:
+                q.filter_by.side_effect = RuntimeError()
+            return q
+
+        mocker.patch.object(db.session, 'query', side_effect=_query)
         assert AIService.predict_customer_churn()['success'] is False
 
     def test_train_local_from_groq(self, mocker):
@@ -793,8 +841,7 @@ class TestContextualResponse:
 class TestIntegrationWrappers:
     def test_analyze_sales_with_predictions(self, mocker):
         mocker.patch('services.ai_service.AIService.predict_sales_trend', return_value={'t': 1})
-        mocker.patch.object(Sale, 'query')
-        Sale.query.filter.return_value.all.return_value = []
+        _mock_sale_query(mocker, filter_all=[])
         analyzer = MagicMock(analyze_sales_performance=MagicMock(return_value={}))
         mocker.patch('ai_knowledge.analytics.data_analyzer.DataAnalyzer', return_value=analyzer)
         mocker.patch(
@@ -1137,24 +1184,25 @@ class TestCoverageGaps:
         assert 'خطأ' in out
 
     def test_gather_flask_current_user(self, app, mocker):
+        from models import Customer, Expense, Payment, Product, Purchase, Sale, Supplier
+
         user = MagicMock(tenant_id=1, username='u', is_owner=False)
         user.role = SimpleNamespace(name_ar='مدير')
         mocker.patch('flask_login.current_user', user)
         mocker.patch('utils.tenanting.scoped_user_query', return_value=MagicMock(count=MagicMock(return_value=1)))
-        from models import Customer, Supplier, Product, Sale, Purchase, Expense, Payment, Cheque
-        for model in (Customer, Supplier, Product, Sale, Purchase, Expense, Payment, Cheque):
-            mocker.patch.object(model, 'query', MagicMock())
-        Customer.query.filter_by.return_value.count.return_value = 1
-        Supplier.query.filter_by.return_value.count.return_value = 1
-        Product.query.filter_by.return_value.count.return_value = 1
-        Sale.query.filter.return_value.count.return_value = 1
-        Purchase.query.filter.return_value.count.return_value = 1
-        Expense.query.filter.return_value.count.return_value = 1
-        Payment.query.filter.return_value.count.return_value = 1
-        Cheque.query.filter_by.return_value.count.return_value = 0
-        sum_query = MagicMock()
-        sum_query.filter.return_value.scalar.return_value = 50
-        mocker.patch.object(db.session, 'query', return_value=sum_query)
+        _mock_gather_knowledge_queries(
+            mocker,
+            sum_scalar=50,
+            counts={
+                Customer: 1,
+                Supplier: 1,
+                Product: 1,
+                Sale: 1,
+                Purchase: 1,
+                Expense: 1,
+                Payment: 1,
+            },
+        )
         out = AIService._gather_relevant_knowledge('x', {})
         assert 'بيانات النظام' in out
 
