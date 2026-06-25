@@ -208,7 +208,6 @@ class StoreCheckoutService:
             delivery_block += f"\nملاحظات: {notes}"
 
         from models import Tenant
-        from decimal import Decimal
         from services.store_coupon_service import StoreCouponService
         from services.store_notification_service import StoreNotificationService
 

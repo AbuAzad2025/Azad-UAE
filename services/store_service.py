@@ -7,8 +7,8 @@ from decimal import Decimal
 from extensions import db
 from models import Product, Tenant, TenantStore, Warehouse, Branch
 from models.system_settings import SystemSettings
-from utils.branching import get_branch_stock_map
-from utils.tenanting import get_active_tenant_id, require_active_tenant_id
+from utils.branching import get_branch_stock_map, get_accessible_warehouses
+from utils.tenanting import require_active_tenant_id
 
 
 class StoreService:
@@ -199,8 +199,6 @@ class StoreService:
 
     @staticmethod
     def get_physical_warehouses(tenant_id: int, *, user=None):
-        from utils.branching import get_accessible_warehouses
-
         warehouses = get_accessible_warehouses(user) if user else Warehouse.query.filter_by(is_active=True).all()
         return [
             wh for wh in warehouses

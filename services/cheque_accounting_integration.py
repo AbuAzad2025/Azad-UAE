@@ -1,14 +1,13 @@
-from datetime import datetime, timezone
 from extensions import db
-from decimal import Decimal
 from models.cheque import Cheque
-from models.gl import GLAccount, GLJournalEntry, GLJournalLine
+from models.gl import GLJournalEntry
 from services.cheque_service import (
     process_cheque_receive,
     process_cheque_issue,
     process_cheque_clear,
     process_cheque_bounce,
 )
+from utils.currency_utils import get_system_default_currency
 from utils.gl_reference_types import GLRef
 from utils.gl_tenant import scope_journal_entries, get_gl_account_by_code, active_tenant_id
 
@@ -24,18 +23,7 @@ class ChequeAccountingIntegration:
         for key, val in filters.items():
             q = q.filter_by(**{key: val})
         return q
-    # حسابات الشيكات الافتراضية
-    CHEQUE_ACCOUNTS = {
-        'incoming_under_collection': '1150',  # شيكات تحت التحصيل
-        'outgoing_deferred': '2120',          # شيكات مؤجلة الدفع
-        'bank_account': '1120',               # حساب البنك
-        'cash_account': '1110',               # صندوق
-        'accounts_receivable': '1130',        # الذمم المدينة
-        'accounts_payable': '2110',           # الذمم الدائنة
-        'exchange_gain': '4400',              # أرباح فرق العملة
-        'exchange_loss': '6900',              # خسائر فرق العملة
-    }
-    
+
     @staticmethod
     def receive_cheque(cheque_id, received_by=None):
         """تسجيل استلام شيك وارد"""
