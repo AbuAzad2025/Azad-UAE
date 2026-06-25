@@ -114,6 +114,20 @@ class TestUserInfoForOwner:
     def test_escape_ilike(self):
         assert AIService._escape_ilike('a%b_c') == r'a\%b\_c'
 
+    def test_ilike_contains_skips_escape_for_plain_terms(self):
+        from models import User
+        from sqlalchemy.dialects import postgresql
+        clause = AIService._ilike_contains(User.username, 'testuser-abc')
+        sql = str(clause.compile(dialect=postgresql.dialect(), compile_kwargs={'literal_binds': True}))
+        assert 'ESCAPE' not in sql.upper()
+
+    def test_ilike_contains_uses_escape_for_metacharacters(self):
+        from models import User
+        from sqlalchemy.dialects import postgresql
+        clause = AIService._ilike_contains(User.username, 'a%b')
+        sql = str(clause.compile(dialect=postgresql.dialect(), compile_kwargs={'literal_binds': True}))
+        assert 'ESCAPE' in sql.upper()
+
     def test_user_not_found(self, db_session):
         result = AIService.get_user_info_for_owner('nobody-here-xyz')
         assert result['success'] is False

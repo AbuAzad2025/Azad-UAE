@@ -315,6 +315,14 @@ class AIService:
         )
 
     @staticmethod
+    def _ilike_contains(column, term: str):
+        """Case-insensitive substring match; ESCAPE only when term has LIKE metacharacters."""
+        if any(ch in term for ch in ('%', '_', '\\')):
+            safe = AIService._escape_ilike(term)
+            return column.ilike(f'%{safe}%', escape='\\')
+        return column.ilike(f'%{term}%')
+
+    @staticmethod
     def _user_summary(user):
         return {
             'id': user.id,
@@ -331,13 +339,17 @@ class AIService:
         from models import User
 
         if username:
-            safe = AIService._escape_ilike(username.strip())
+            term = username.strip()
             user = User.query.filter(
-                or_(
-                    User.username.ilike(f'%{safe}%', escape='\\'),
-                    User.email.ilike(f'%{safe}%', escape='\\'),
-                )
+                or_(User.username == term, User.email == term)
             ).first()
+            if not user:
+                user = User.query.filter(
+                    or_(
+                        AIService._ilike_contains(User.username, term),
+                        AIService._ilike_contains(User.email, term),
+                    )
+                ).first()
 
             if not user:
                 return {
