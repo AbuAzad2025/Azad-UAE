@@ -36,6 +36,46 @@ def _resolve_transaction_rate(currency, user_rate=None):
     return Decimal(str(rate_info['rate']))
 
 
+def _build_expense_gl_lines(expense, tenant_id):
+    category = expense.category
+    expense_account = category.gl_account_code if category and category.gl_account_code else '6990'
+    expense_concept = None if category and category.gl_account_code else 'MISC_EXPENSE'
+    from models import GLAccount
+    tid = tenant_id
+    acc_check = GLAccount.query.filter_by(
+        code=str(expense_account),
+        tenant_id=int(tid) if tid else None,
+    ).first()
+    if acc_check and acc_check.is_header:
+        expense_account = '6990'
+        expense_concept = 'MISC_EXPENSE'
+    if expense.payment_method == 'cheque':
+        payment_account = '2120'
+        payment_concept = 'DEFERRED_CHEQUES_PAYABLE'
+    else:
+        payment_account = GLService.get_payment_credit_account(
+            expense.payment_method,
+            branch_id=expense.branch_id,
+            tenant_id=tid,
+        )
+        payment_concept = GLService.get_payment_credit_concept(expense.payment_method)
+    return [
+        {
+            'account': expense_account,
+            'concept_code': expense_concept,
+            'explicit_account_allowed': expense_concept is None,
+            'debit': expense.amount,
+            'description': expense.description or '',
+        },
+        {
+            'account': payment_account,
+            'concept_code': payment_concept,
+            'credit': expense.amount,
+            'description': f'دفع {expense.payment_method}',
+        },
+    ]
+
+
 @expenses_bp.route('/')
 @login_required
 @permission_required('manage_expenses')
@@ -173,43 +213,8 @@ def create():
                 from utils.tenanting import get_active_tenant_id
                 GLService.ensure_core_accounts(tenant_id=getattr(expense, 'tenant_id', None) or get_active_tenant_id(current_user))
                 
-                category = expense.category
-                expense_account = category.gl_account_code if category and category.gl_account_code else '6990'
-                expense_concept = None if category and category.gl_account_code else 'MISC_EXPENSE'
-                from models import GLAccount
                 tid = getattr(expense, 'tenant_id', None) or get_active_tenant_id(current_user)
-                acc_check = GLAccount.query.filter_by(code=str(expense_account), tenant_id=int(tid) if tid else None).first()
-                if acc_check and acc_check.is_header:
-                    expense_account = '6990'
-                    expense_concept = 'MISC_EXPENSE'
-                
-                # Determine Payment Account
-                if expense.payment_method == 'cheque':
-                    payment_account = '2120'  # Deferred Cheques Payable مباشرة (بدون AP وسيط)
-                    payment_concept = 'DEFERRED_CHEQUES_PAYABLE'
-                else:
-                    payment_account = GLService.get_payment_credit_account(
-                        expense.payment_method,
-                        branch_id=expense.branch_id,
-                        tenant_id=tid,
-                    )
-                    payment_concept = GLService.get_payment_credit_concept(expense.payment_method)
-                
-                lines = [
-                    {
-                        'account': expense_account,
-                        'concept_code': expense_concept,
-                        'explicit_account_allowed': expense_concept is None,
-                        'debit': expense.amount,
-                        'description': expense.description,
-                    },
-                    {
-                        'account': payment_account,
-                        'concept_code': payment_concept,
-                        'credit': expense.amount,
-                        'description': f'دفع {expense.payment_method}',
-                    }
-                ]
+                lines = _build_expense_gl_lines(expense, tid)
                 
                 post_or_fail(
                     lines,
@@ -354,7 +359,7 @@ def edit(id):
             expense.notes = new_notes
             
             # إعادة حساب المبلغ بالدرهم
-            exchange_rate = CurrencyService.get_rate(expense.currency)
+            exchange_rate = CurrencyService.get_exchange_rate(expense.currency)
             expense.exchange_rate = exchange_rate
             expense.amount_aed = new_amount * exchange_rate
             
@@ -363,42 +368,8 @@ def edit(id):
                 from utils.tenanting import get_active_tenant_id
                 GLService.ensure_core_accounts(tenant_id=expense.tenant_id or get_active_tenant_id(current_user))
                 
-                category = expense.category
-                expense_account = category.gl_account_code if category and category.gl_account_code else '6990'
-                expense_concept = None if category and category.gl_account_code else 'MISC_EXPENSE'
-                from models import GLAccount
                 tid = expense.tenant_id or get_active_tenant_id(current_user)
-                acc_check = GLAccount.query.filter_by(code=str(expense_account), tenant_id=int(tid) if tid else None).first()
-                if acc_check and acc_check.is_header:
-                    expense_account = '6990'
-                    expense_concept = 'MISC_EXPENSE'
-                
-                if expense.payment_method == 'cheque':
-                    payment_account = '2120'
-                    payment_concept = 'DEFERRED_CHEQUES_PAYABLE'
-                else:
-                    payment_account = GLService.get_payment_credit_account(
-                        expense.payment_method,
-                        branch_id=expense.branch_id,
-                        tenant_id=tid,
-                    )
-                    payment_concept = GLService.get_payment_credit_concept(expense.payment_method)
-                
-                lines = [
-                    {
-                        'account': expense_account,
-                        'concept_code': expense_concept,
-                        'explicit_account_allowed': expense_concept is None,
-                        'debit': expense.amount,
-                        'description': expense.description or '',
-                    },
-                    {
-                        'account': payment_account,
-                        'concept_code': payment_concept,
-                        'credit': expense.amount,
-                        'description': f'دفع {expense.payment_method}',
-                    }
-                ]
+                lines = _build_expense_gl_lines(expense, tid)
                 from services.gl_posting import post_or_fail
                 post_or_fail(
                     lines,

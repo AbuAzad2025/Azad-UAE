@@ -23,16 +23,17 @@ def _ip_allowed(client_ip: str | None, allowlist) -> bool:
         return False
     try:
         ip = ipaddress.ip_address(client_ip)
-    except Exception:
+    except ValueError:
         return False
     for item in allowlist:
         try:
             if '/' in item:
-                if ip in ipaddress.ip_network(item, strict=False):
+                network = ipaddress.ip_network(item, strict=False)
+                if ip in network:
                     return True
             elif ip == ipaddress.ip_address(item):
                 return True
-        except Exception:
+        except ValueError:
             continue
     return False
 
